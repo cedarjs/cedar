@@ -65,7 +65,7 @@ export const verifyServerConfig = (config) => {
     throwMissingConfig('repo')
   }
 
-  if (config.freeSpaceRequired && !/^\d+$/.test(config.freeSpaceRequired)) {
+  if (!/^\d+$/.test(config.freeSpaceRequired)) {
     throw new Error('"freeSpaceRequired" must be an integer >= 0')
   }
 
@@ -308,18 +308,10 @@ export const deployTasks = (yargs, ssh, serverConfig, serverLifecycle) => {
           )
 
           if (dfMb < freeSpaceRequired) {
-            if (typeof serverConfig.freeSpaceRequired === 'undefined') {
-              return task.skip(
-                c.warning(
-                  'Warning: Your server is running low on disk space. (' +
-                    `${Math.round(dfMb)}MB available)`,
-                ),
-              )
-            }
-
             throw new Error(
               `Not enough disk space. You need at least ${freeSpaceRequired}` +
-                'MB free space to continue.',
+                `MB free space to continue. (Currently ${Math.round(dfMb)}MB ` +
+                'available)',
             )
           }
         },
