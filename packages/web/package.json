@@ -150,7 +150,7 @@
     "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.9.21",
     "apollo-upload-client": "18.0.1",
-    "cookie": "0.7.2",
+    "cookie": "1.0.2",
     "core-js": "3.42.0",
     "graphql": "16.9.0",
     "graphql-sse": "2.5.4",
