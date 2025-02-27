@@ -18,18 +18,6 @@ import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
-type ExecArgs = Record<string, unknown> & {
-  name?: string
-  prisma?: boolean
-  list?: boolean
-  silent?: boolean
-  _?: unknown[]
-  $0?: string
-  l?: boolean
-  s?: boolean
-}
-type ExecTask = ListrTask
-
 const printAvailableScriptsToConsole = () => {
   // Loop through all scripts and get their relative path
   // Also group scripts with the same name but different extensions
@@ -62,11 +50,19 @@ const printAvailableScriptsToConsole = () => {
   console.log()
 }
 
-export const handler = async (args: ExecArgs) => {
+interface ExecOptions {
+  name?: string
+  prisma?: boolean
+  list?: boolean
+  silent?: boolean
+  [key: string]: unknown
+}
+
+export const handler = async (args: ExecOptions) => {
   recordTelemetryAttributes({
     command: 'exec',
-    prisma: args.prisma,
-    list: args.list,
+    prisma: !!args.prisma,
+    list: !!args.list,
   })
 
   const { name, prisma, list, ...scriptArgs } = args
@@ -74,6 +70,36 @@ export const handler = async (args: ExecArgs) => {
     printAvailableScriptsToConsole()
     return
   }
+
+  // The command the user is running is something like this:
+  //
+  // yarn cedar exec scriptName arg1 arg2 --positional1=foo --positional2=bar
+  //
+  // Further up in the command chain we've parsed this with yargs. We asked
+  // yargs to parse the command `exec [name]`. So it plucked `scriptName` from
+  // the command and placed that in a named variable called `name`.
+  // And even further up the chain yargs has already eaten the `yarn` part and
+  // assigned 'cedar' to `$0`
+  // So what yargs has left in args._ is ['exec', 'arg1', 'arg2'] (and it has
+  // also assigned 'foo' to `args.positional1` and 'bar' to `args.positional2`).
+  // 'exec', 'arg1' and 'arg2' are in `args._` because those are positional
+  // arguments we haven't given a name.
+  // `'exec'` is of no interest to the user, as its not meant to be an argument
+  // to their script. And so we remove it from the array.
+  if (Array.isArray(scriptArgs._)) {
+    scriptArgs._ = scriptArgs._.slice(1)
+  }
+
+  // 'cedar' is not meant for the script's args, so delete that
+  delete scriptArgs.$0
+
+  // Other arguments that yargs adds are `prisma`, `list`, `l`, `silent` and
+  // `s`.
+  // We eat `prisma` and `list` above. So that leaves us with `l`, `s` and
+  // `silent` that we need to delete as well
+  delete scriptArgs.l
+  delete scriptArgs.s
+  delete scriptArgs.silent
 
   const scriptPath = resolveScriptPath(name)
 
@@ -86,15 +112,15 @@ export const handler = async (args: ExecArgs) => {
     process.exit(1)
   }
 
-  const scriptTasks: ExecTask[] = [
+  const scriptTasks: ListrTask[] = [
     {
       title: 'Generating Prisma client',
-      enabled: () => Boolean(prisma),
+      enabled: () => !!prisma,
       task: () =>
         generatePrismaClient({
           force: false,
           verbose: !args.silent,
-          silent: args.silent,
+          silent: !!args.silent,
         }),
     },
     {
@@ -125,7 +151,7 @@ export const handler = async (args: ExecArgs) => {
   })
 }
 
-function resolveScriptPath(name: string): string | null {
+function resolveScriptPath(name: string) {
   const scriptPath = path.join(getPaths().scripts, name)
 
   // If scriptPath already has an extension, and it's a valid path, return it
