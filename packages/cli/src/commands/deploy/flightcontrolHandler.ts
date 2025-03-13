@@ -6,7 +6,19 @@ import fs from 'fs-extra'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths } from '@cedarjs/project-config'
 
-export const handler = async ({ side, serve, prisma, dm: dataMigrate }) => {
+export interface HandlerArgs {
+  side: 'api' | 'web'
+  prisma: boolean
+  serve: boolean
+  dm: boolean
+}
+
+export const handler = async ({
+  side,
+  serve,
+  prisma,
+  dm: dataMigrate,
+}: HandlerArgs) => {
   recordTelemetryAttributes({
     command: 'deploy flightcontrol',
     side,
@@ -16,28 +28,37 @@ export const handler = async ({ side, serve, prisma, dm: dataMigrate }) => {
   })
   const rwjsPaths = getPaths()
 
-  const execaConfig = {
+  const execaConfig: execa.Options = {
     cwd: rwjsPaths.base,
     shell: true,
     stdio: 'inherit',
   }
 
+  async function runExecaCommand(command: string) {
+    const result = await execa.command(command, execaConfig)
+
+    if (result.failed) {
+      throw new Error(`Command (${command}) failed`)
+    }
+
+    return result
+  }
+
   async function runApiCommands() {
     if (!serve) {
       console.log('Building api...')
-      execa.commandSync('yarn rw build api --verbose', execaConfig)
+      await runExecaCommand('yarn rw build api --verbose')
 
       if (prisma) {
         console.log('Running database migrations...')
-        execa.commandSync(
+        await runExecaCommand(
           `node_modules/.bin/prisma migrate deploy --config "${rwjsPaths.api.prismaConfig}"`,
-          execaConfig,
         )
       }
 
       if (dataMigrate) {
         console.log('Running data migrations...')
-        execa.commandSync('yarn rw dataMigrate up', execaConfig)
+        await runExecaCommand('yarn rw dataMigrate up')
       }
 
       return
@@ -58,12 +79,12 @@ export const handler = async ({ side, serve, prisma, dm: dataMigrate }) => {
 
   async function runWebCommands() {
     console.log('Building web...')
-    execa.commandSync('yarn rw build web --verbose', execaConfig)
+    await runExecaCommand('yarn rw build web --verbose')
   }
 
   if (side === 'api') {
-    runApiCommands()
+    await runApiCommands()
   } else if (side === 'web') {
-    runWebCommands()
+    await runWebCommands()
   }
 }
