@@ -1,4 +1,5 @@
-import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest'
+import { vi, describe, it, expect, afterAll, beforeEach } from 'vitest'
+import type { Mock } from 'vitest'
 import yargs from 'yargs'
 
 import { handler, builder } from '../flightcontrol'
@@ -23,6 +24,12 @@ vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
     ...originalCliHelpers,
     recordTelemetryAttributes: vi.fn(),
   }
+})
+
+vi.spyOn(console, 'log').mockImplementation(() => {})
+
+afterAll(() => {
+  vi.restoreAllMocks()
 })
 
 describe('builder', () => {
