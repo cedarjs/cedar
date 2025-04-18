@@ -25,6 +25,7 @@ export const DEFAULT_SERVER_CONFIG = {
   monitorCommand: 'pm2',
   sides: ['api', 'web'],
   keepReleases: 5,
+  freeSpaceRequired: 2048,
 }
 
 // force all paths to have forward slashes so that you can deploy to *nix
