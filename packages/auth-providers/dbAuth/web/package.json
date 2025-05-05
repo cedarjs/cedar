@@ -41,12 +41,12 @@
   },
   "dependencies": {
     "@cedarjs/auth": "1.1.0",
-    "@simplewebauthn/browser": "7.4.0"
+    "@simplewebauthn/browser": "9.0.1"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "@simplewebauthn/typescript-types": "7.4.0",
+    "@simplewebauthn/types": "9.0.1",
     "@types/react": "^18.2.55",
     "concurrently": "8.2.2",
     "publint": "0.3.12",

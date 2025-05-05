@@ -2574,48 +2574,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cbor-extract/cbor-extract-darwin-arm64@npm:2.1.1":
-  version: 2.1.1
-  resolution: "@cbor-extract/cbor-extract-darwin-arm64@npm:2.1.1"
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@cbor-extract/cbor-extract-darwin-x64@npm:2.1.1":
-  version: 2.1.1
-  resolution: "@cbor-extract/cbor-extract-darwin-x64@npm:2.1.1"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@cbor-extract/cbor-extract-linux-arm64@npm:2.1.1":
-  version: 2.1.1
-  resolution: "@cbor-extract/cbor-extract-linux-arm64@npm:2.1.1"
-  conditions: os=linux & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@cbor-extract/cbor-extract-linux-arm@npm:2.1.1":
-  version: 2.1.1
-  resolution: "@cbor-extract/cbor-extract-linux-arm@npm:2.1.1"
-  conditions: os=linux & cpu=arm
-  languageName: node
-  linkType: hard
-
-"@cbor-extract/cbor-extract-linux-x64@npm:2.1.1":
-  version: 2.1.1
-  resolution: "@cbor-extract/cbor-extract-linux-x64@npm:2.1.1"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@cbor-extract/cbor-extract-win32-x64@npm:2.1.1":
-  version: 2.1.1
-  resolution: "@cbor-extract/cbor-extract-win32-x64@npm:2.1.1"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
 "@cedarjs/api-server@npm:1.1.0, @cedarjs/api-server@workspace:packages/api-server":
   version: 0.0.0-use.local
   resolution: "@cedarjs/api-server@workspace:packages/api-server"
@@ -2893,7 +2851,7 @@ __metadata:
     "@cedarjs/api": "npm:1.1.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "npm:1.1.0"
-    "@simplewebauthn/server": "npm:7.4.0"
+    "@simplewebauthn/server": "npm:9.0.3"
     "@types/md5": "npm:2.3.5"
     "@types/uuid": "npm:10.0.0"
     base64url: "npm:3.0.1"
@@ -2936,8 +2894,8 @@ __metadata:
     "@babel/runtime-corejs3": "npm:7.27.6"
     "@cedarjs/cli-helpers": "npm:1.1.0"
     "@prisma/internals": "npm:5.20.0"
-    "@simplewebauthn/browser": "npm:7.4.0"
-    "@simplewebauthn/typescript-types": "npm:7.4.0"
+    "@simplewebauthn/browser": "npm:9.0.1"
+    "@simplewebauthn/types": "npm:9.0.1"
     "@types/yargs": "npm:17.0.33"
     core-js: "npm:3.42.0"
     prompts: "npm:2.4.2"
@@ -2955,8 +2913,8 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/auth": "npm:1.1.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@simplewebauthn/browser": "npm:7.4.0"
-    "@simplewebauthn/typescript-types": "npm:7.4.0"
+    "@simplewebauthn/browser": "npm:9.0.1"
+    "@simplewebauthn/types": "npm:9.0.1"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
@@ -7295,10 +7253,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hexagon/base64@npm:^1.1.25":
-  version: 1.1.26
-  resolution: "@hexagon/base64@npm:1.1.26"
-  checksum: 10c0/3c334f179961871476bcf1b58e12773b97dcf1697dfca93895275a1bf4e0485b02ba91a4f1aa32581fb1743fcac96874609c2f8b3a7c6e68ba3324c4d79e0311
+"@hexagon/base64@npm:^1.1.27":
+  version: 1.1.28
+  resolution: "@hexagon/base64@npm:1.1.28"
+  checksum: 10c0/f90876938cda7c369444f9abcf268a9d93fe26269ae9a16a95fa1f294a5e8f9d172a77905fac205d315b4538ab4da90c866ba73cc035cc0fcf5a6062bb6691ca
   languageName: node
   linkType: hard
 
@@ -7862,6 +7820,13 @@ __metadata:
     yargs: "npm:17.7.2"
     yargs-parser: "npm:21.1.1"
   checksum: 10c0/e484e41cff8233bdaca72872c96abe5b10423033b0c6464c55fc56a87c43f01ee236ef2cae616a5a93beb2c432e87866f8e15a16e46ea2b3949938d796ec6c78
+  languageName: node
+  linkType: hard
+
+"@levischuck/tiny-cbor@npm:^0.2.2":
+  version: 0.2.11
+  resolution: "@levischuck/tiny-cbor@npm:0.2.11"
+  checksum: 10c0/b34b4b2df5d601f0b260f2cae012168439e6128963959a716ea264586d621d4c411a120219a6abd8c96482de6f11cb34e77365fb6d9f61d99a89c1db5f43ddf3
   languageName: node
   linkType: hard
 
@@ -8879,42 +8844,42 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@peculiar/asn1-android@npm:^2.3.3":
-  version: 2.3.6
-  resolution: "@peculiar/asn1-android@npm:2.3.6"
+"@peculiar/asn1-android@npm:^2.3.10":
+  version: 2.3.16
+  resolution: "@peculiar/asn1-android@npm:2.3.16"
   dependencies:
-    "@peculiar/asn1-schema": "npm:^2.3.6"
+    "@peculiar/asn1-schema": "npm:^2.3.15"
     asn1js: "npm:^3.0.5"
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/e7e6d91b72671386863a1451c622b7728ff346a4dc22ea3dcf58c042d58af02baab0bda133ad725f44d20d9590ba78cf13b37fd841a27426447eacecc2f30fc7
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/349e424bca4b013829a5521206294e6c7ca7432a852d7557b137f6c8a4797719318ea6d66fd1e70dbdb2af3b4d440ce5744c9c705bb5c4f3cf113c4cacdbd839
   languageName: node
   linkType: hard
 
-"@peculiar/asn1-ecc@npm:^2.3.4":
-  version: 2.3.6
-  resolution: "@peculiar/asn1-ecc@npm:2.3.6"
+"@peculiar/asn1-ecc@npm:^2.3.8":
+  version: 2.3.15
+  resolution: "@peculiar/asn1-ecc@npm:2.3.15"
   dependencies:
-    "@peculiar/asn1-schema": "npm:^2.3.6"
-    "@peculiar/asn1-x509": "npm:^2.3.6"
+    "@peculiar/asn1-schema": "npm:^2.3.15"
+    "@peculiar/asn1-x509": "npm:^2.3.15"
     asn1js: "npm:^3.0.5"
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/60d5baf5fc36fbfe68d6d4f427f025b9f4f8c5bcb675b70db6e07dfe991529da4c351a8befaf41975237a70c7fbb2b0d05cfccc692145a34d78d296ebba68b4b
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/410aee8742616bee2abe01a46fc054c5b8d5e4c81446adf2ebbae7a76e8e6eafd0acac360255d927ed08643633382fc7439d3b7a8395eb2245683d9ae4be8f84
   languageName: node
   linkType: hard
 
-"@peculiar/asn1-rsa@npm:^2.3.4":
-  version: 2.3.6
-  resolution: "@peculiar/asn1-rsa@npm:2.3.6"
+"@peculiar/asn1-rsa@npm:^2.3.8":
+  version: 2.3.15
+  resolution: "@peculiar/asn1-rsa@npm:2.3.15"
   dependencies:
-    "@peculiar/asn1-schema": "npm:^2.3.6"
-    "@peculiar/asn1-x509": "npm:^2.3.6"
+    "@peculiar/asn1-schema": "npm:^2.3.15"
+    "@peculiar/asn1-x509": "npm:^2.3.15"
     asn1js: "npm:^3.0.5"
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/a3408a687174e439125a6c36418192de4984c640952fa53d283843495c16270f818a58f962ef8721858ebf9def5ec6cf5a0cf369a984eb7ef29a0f7bd88ec9ec
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/38f29c5ae6d6303832733536c58b2aa01bbf1fcdc22b4fc913669ef2601f67db76b9c3cac3971c337c84234ae3adf2ebb93593623d27728b713124eada03add4
   languageName: node
   linkType: hard
 
-"@peculiar/asn1-schema@npm:^2.3.0, @peculiar/asn1-schema@npm:^2.3.3, @peculiar/asn1-schema@npm:^2.3.6":
+"@peculiar/asn1-schema@npm:^2.3.0, @peculiar/asn1-schema@npm:^2.3.15, @peculiar/asn1-schema@npm:^2.3.6, @peculiar/asn1-schema@npm:^2.3.8":
   version: 2.3.15
   resolution: "@peculiar/asn1-schema@npm:2.3.15"
   dependencies:
@@ -8925,16 +8890,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@peculiar/asn1-x509@npm:^2.3.4, @peculiar/asn1-x509@npm:^2.3.6":
-  version: 2.3.6
-  resolution: "@peculiar/asn1-x509@npm:2.3.6"
+"@peculiar/asn1-x509@npm:^2.3.15, @peculiar/asn1-x509@npm:^2.3.8":
+  version: 2.3.15
+  resolution: "@peculiar/asn1-x509@npm:2.3.15"
   dependencies:
-    "@peculiar/asn1-schema": "npm:^2.3.6"
+    "@peculiar/asn1-schema": "npm:^2.3.15"
     asn1js: "npm:^3.0.5"
-    ipaddr.js: "npm:^2.0.1"
-    pvtsutils: "npm:^1.3.2"
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/9513a471270fbfa45501f50a3c82cb7827a53951114ae791a79081d50597b94e3919fe4507b96ff875d7f5323c581138901d8bd1a620db9c387fd361dee44f2c
+    pvtsutils: "npm:^1.3.6"
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/a97b5f26d6ce4ebfa2e5102ac076802839e3008571c672f02fda78a047dbf786042b62fd9fd6f6ee615de9b7d32a92433ff1a71ba203447b8a16eedaa89d3e11
   languageName: node
   linkType: hard
 
@@ -10355,50 +10319,36 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@simplewebauthn/browser@npm:7.4.0":
-  version: 7.4.0
-  resolution: "@simplewebauthn/browser@npm:7.4.0"
+"@simplewebauthn/browser@npm:9.0.1":
+  version: 9.0.1
+  resolution: "@simplewebauthn/browser@npm:9.0.1"
   dependencies:
-    "@simplewebauthn/typescript-types": "npm:^7.4.0"
-  checksum: 10c0/cd69d51511e1bb75603b254b706194e8b7c3849e8f02fcb373cc8bb8c789df803a1bb900de7853c0cc63c0ad81fd56497ca63885638d566137afa387674099ad
+    "@simplewebauthn/types": "npm:^9.0.1"
+  checksum: 10c0/141f3f55d99ad2b4dcf697026d2470fa10b65a36286b616ead71b56ddd5636c30eb001599d27c2509a87c93def6636a2c7081ae362910268b78733a676af3ebf
   languageName: node
   linkType: hard
 
-"@simplewebauthn/iso-webcrypto@npm:^7.4.0":
-  version: 7.4.0
-  resolution: "@simplewebauthn/iso-webcrypto@npm:7.4.0"
+"@simplewebauthn/server@npm:9.0.3":
+  version: 9.0.3
+  resolution: "@simplewebauthn/server@npm:9.0.3"
   dependencies:
-    "@simplewebauthn/typescript-types": "npm:^7.4.0"
-    "@types/node": "npm:^18.11.9"
-  checksum: 10c0/66a3eabb8fca5a8f779d428b358c8fc02dd2496f9cafda882f3b19562e5c9d21a8af3082f635c7ff0a1914e33a87817be0d16307f5327606149a52e854406cbb
+    "@hexagon/base64": "npm:^1.1.27"
+    "@levischuck/tiny-cbor": "npm:^0.2.2"
+    "@peculiar/asn1-android": "npm:^2.3.10"
+    "@peculiar/asn1-ecc": "npm:^2.3.8"
+    "@peculiar/asn1-rsa": "npm:^2.3.8"
+    "@peculiar/asn1-schema": "npm:^2.3.8"
+    "@peculiar/asn1-x509": "npm:^2.3.8"
+    "@simplewebauthn/types": "npm:^9.0.1"
+    cross-fetch: "npm:^4.0.0"
+  checksum: 10c0/e1eae9b48020e37e5accef3832c14ac8d8fe4006e60ace24bcea6fb1c353c76e36daa02449f7aa1c0bc58915fd134ae984fc28e985f43ecdfa111068402ce701
   languageName: node
   linkType: hard
 
-"@simplewebauthn/server@npm:7.4.0":
-  version: 7.4.0
-  resolution: "@simplewebauthn/server@npm:7.4.0"
-  dependencies:
-    "@hexagon/base64": "npm:^1.1.25"
-    "@peculiar/asn1-android": "npm:^2.3.3"
-    "@peculiar/asn1-ecc": "npm:^2.3.4"
-    "@peculiar/asn1-rsa": "npm:^2.3.4"
-    "@peculiar/asn1-schema": "npm:^2.3.3"
-    "@peculiar/asn1-x509": "npm:^2.3.4"
-    "@simplewebauthn/iso-webcrypto": "npm:^7.4.0"
-    "@simplewebauthn/typescript-types": "npm:^7.4.0"
-    "@types/debug": "npm:^4.1.7"
-    "@types/node": "npm:^18.11.9"
-    cbor-x: "npm:^1.4.1"
-    cross-fetch: "npm:^3.1.5"
-    debug: "npm:^4.3.2"
-  checksum: 10c0/51858ad0bcfb55b96c8dd4a337ed93baf000ccf55cdf13f9f87c96e54c0fa80b0fb0eb96fc570d9e039a2526d770a1a21811a03a15f9ad23a02142ff9ba8ad6e
-  languageName: node
-  linkType: hard
-
-"@simplewebauthn/typescript-types@npm:7.4.0, @simplewebauthn/typescript-types@npm:^7.4.0":
-  version: 7.4.0
-  resolution: "@simplewebauthn/typescript-types@npm:7.4.0"
-  checksum: 10c0/b7aefd742d2f483531ff96509475571339660addba1f140883d8e489601d6a3a5b1c6759aa5ba27a9da5b502709aee9f060a4d4e57010f32c94eb5c42ef562a3
+"@simplewebauthn/types@npm:9.0.1, @simplewebauthn/types@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "@simplewebauthn/types@npm:9.0.1"
+  checksum: 10c0/397f079ac029ada1413d6001850e3b49f99297a9933822758bdca9c47c36d6558e1dc81682725e0b03c501551c94fea040cead76883dcd2bb3a34b32984900f5
   languageName: node
   linkType: hard
 
@@ -12460,30 +12410,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express-serve-static-core@npm:^5.0.0":
-  version: 5.0.7
-  resolution: "@types/express-serve-static-core@npm:5.0.7"
-  dependencies:
-    "@types/node": "npm:*"
-    "@types/qs": "npm:*"
-    "@types/range-parser": "npm:*"
-    "@types/send": "npm:*"
-  checksum: 10c0/28666f6a0743b8678be920a6eed075bc8afc96fc7d8ef59c3c049bd6b51533da3b24daf3b437d061e053fba1475e4f3175cb4972f5e8db41608e817997526430
-  languageName: node
-  linkType: hard
-
-"@types/express@npm:*":
-  version: 5.0.3
-  resolution: "@types/express@npm:5.0.3"
-  dependencies:
-    "@types/body-parser": "npm:*"
-    "@types/express-serve-static-core": "npm:^5.0.0"
-    "@types/serve-static": "npm:*"
-  checksum: 10c0/f0fbc8daa7f40070b103cf4d020ff1dd08503477d866d1134b87c0390bba71d5d7949cb8b4e719a81ccba89294d8e1573414e6dcbb5bb1d097a7b820928ebdef
-  languageName: node
-  linkType: hard
-
-"@types/express@npm:4, @types/express@npm:^4.17.17, @types/express@npm:^4.7.0":
+"@types/express@npm:*, @types/express@npm:4, @types/express@npm:^4.17.17, @types/express@npm:^4.7.0":
   version: 4.17.23
   resolution: "@types/express@npm:4.17.23"
   dependencies:
@@ -12845,7 +12772,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.0.0, @types/node@npm:^18.11.9":
+"@types/node@npm:^18.0.0":
   version: 18.19.3
   resolution: "@types/node@npm:18.19.3"
   dependencies:
@@ -15407,49 +15334,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cbor-extract@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "cbor-extract@npm:2.1.1"
-  dependencies:
-    "@cbor-extract/cbor-extract-darwin-arm64": "npm:2.1.1"
-    "@cbor-extract/cbor-extract-darwin-x64": "npm:2.1.1"
-    "@cbor-extract/cbor-extract-linux-arm": "npm:2.1.1"
-    "@cbor-extract/cbor-extract-linux-arm64": "npm:2.1.1"
-    "@cbor-extract/cbor-extract-linux-x64": "npm:2.1.1"
-    "@cbor-extract/cbor-extract-win32-x64": "npm:2.1.1"
-    node-gyp: "npm:latest"
-    node-gyp-build-optional-packages: "npm:5.0.3"
-  dependenciesMeta:
-    "@cbor-extract/cbor-extract-darwin-arm64":
-      optional: true
-    "@cbor-extract/cbor-extract-darwin-x64":
-      optional: true
-    "@cbor-extract/cbor-extract-linux-arm":
-      optional: true
-    "@cbor-extract/cbor-extract-linux-arm64":
-      optional: true
-    "@cbor-extract/cbor-extract-linux-x64":
-      optional: true
-    "@cbor-extract/cbor-extract-win32-x64":
-      optional: true
-  bin:
-    download-cbor-prebuilds: bin/download-prebuilds.js
-  checksum: 10c0/e7471f9ad421d352d60079faa63234ea7795d4ae64ce617a49a5f3b82a1a95e81c141f75bc1d7c0ae3d7dca924a78f9109aab5ee2a2113830bf67705c08839d0
-  languageName: node
-  linkType: hard
-
-"cbor-x@npm:^1.4.1":
-  version: 1.5.3
-  resolution: "cbor-x@npm:1.5.3"
-  dependencies:
-    cbor-extract: "npm:^2.1.1"
-  dependenciesMeta:
-    cbor-extract:
-      optional: true
-  checksum: 10c0/ac0c0671d38b916d964de446a3d2efc5434d948777d607c6dec2756f87c36c177c7d143ef9539168fc58d23dcd5e6945b1e0911b60aff898d54aacdefeb26c10
-  languageName: node
-  linkType: hard
-
 "chai@npm:^5.2.0":
   version: 5.2.0
   resolution: "chai@npm:5.2.0"
@@ -16623,6 +16507,15 @@ __metadata:
   dependencies:
     node-fetch: "npm:^2.6.12"
   checksum: 10c0/4c5e022ffe6abdf380faa6e2373c0c4ed7ef75e105c95c972b6f627c3f083170b6886f19fb488a7fa93971f4f69dcc890f122b0d97f0bf5f41ca1d9a8f58c8af
+  languageName: node
+  linkType: hard
+
+"cross-fetch@npm:^4.0.0":
+  version: 4.1.0
+  resolution: "cross-fetch@npm:4.1.0"
+  dependencies:
+    node-fetch: "npm:^2.7.0"
+  checksum: 10c0/628b134ea27cfcada67025afe6ef1419813fffc5d63d175553efa75a2334522d450300a0f3f0719029700da80e96327930709d5551cf6deb39bb62f1d536642e
   languageName: node
   linkType: hard
 
@@ -21359,13 +21252,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ipaddr.js@npm:^2.0.1":
-  version: 2.2.0
-  resolution: "ipaddr.js@npm:2.2.0"
-  checksum: 10c0/e4ee875dc1bd92ac9d27e06cfd87cdb63ca786ff9fd7718f1d4f7a8ef27db6e5d516128f52d2c560408cbb75796ac2f83ead669e73507c86282d45f84c5abbb6
-  languageName: node
-  linkType: hard
-
 "is-absolute-url@npm:^3.0.0":
   version: 3.0.3
   resolution: "is-absolute-url@npm:3.0.3"
@@ -25383,7 +25269,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.0.0, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.12, node-fetch@npm:^2.6.7, node-fetch@npm:^2.6.9":
+"node-fetch@npm:^2.0.0, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.12, node-fetch@npm:^2.6.7, node-fetch@npm:^2.6.9, node-fetch@npm:^2.7.0":
   version: 2.7.0
   resolution: "node-fetch@npm:2.7.0"
   dependencies:
@@ -25401,17 +25287,6 @@ __metadata:
   version: 1.3.1
   resolution: "node-forge@npm:1.3.1"
   checksum: 10c0/e882819b251a4321f9fc1d67c85d1501d3004b4ee889af822fd07f64de3d1a8e272ff00b689570af0465d65d6bf5074df9c76e900e0aff23e60b847f2a46fbe8
-  languageName: node
-  linkType: hard
-
-"node-gyp-build-optional-packages@npm:5.0.3":
-  version: 5.0.3
-  resolution: "node-gyp-build-optional-packages@npm:5.0.3"
-  bin:
-    node-gyp-build-optional-packages: bin.js
-    node-gyp-build-optional-packages-optional: optional.js
-    node-gyp-build-optional-packages-test: build-test.js
-  checksum: 10c0/334336bdefb398469a115a2c9d4c141d28e093fd703be7adc1448f9dd3e1b5525281a789be8a60a778c91212daaa310155b1908b1fb9a987cec61a9fe04d774a
   languageName: node
   linkType: hard
 

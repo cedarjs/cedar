@@ -132,7 +132,7 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
   "private": true,
   "dependencies": {
     "@cedarjs/auth-dbauth-web": "7.0.0",
-    "@simplewebauthn/browser": "7.4.0"
+    "@simplewebauthn/browser": "9.0.1"
   }
 }
 `

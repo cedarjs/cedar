@@ -10,7 +10,7 @@ import type {
 import type {
   AuthenticationResponseJSON,
   RegistrationResponseJSON,
-} from '@simplewebauthn/typescript-types'
+} from '@simplewebauthn/types'
 import type { APIGatewayProxyEvent, Context as LambdaContext } from 'aws-lambda'
 import base64url from 'base64url'
 import md5 from 'md5'
@@ -948,7 +948,7 @@ export class DbAuthHandler<
       rpID: webAuthnOptions.domain,
     }
 
-    const authOptions = generateAuthenticationOptions(someOptions)
+    const authOptions = await generateAuthenticationOptions(someOptions)
 
     await this._saveChallenge(
       user[this.options.authFields.id],
@@ -994,7 +994,7 @@ export class DbAuthHandler<
       )
     }
 
-    const regOptions = generateRegistrationOptions(options)
+    const regOptions = await generateRegistrationOptions(options)
 
     await this._saveChallenge(
       user[this.options.authFields.id],
