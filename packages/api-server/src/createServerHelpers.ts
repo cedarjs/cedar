@@ -20,8 +20,11 @@ export interface CreateServerOptions {
   /** The prefix for all routes. Defaults to `/` */
   apiRootPath?: string
 
+  // TODO: This should probably be split, to match Fastify's way of doing things
   /** Logger instance or options */
-  logger?: FastifyServerOptions['logger']
+  logger?:
+    | FastifyServerOptions['logger']
+    | FastifyServerOptions['loggerInstance']
 
   /**
    * Options for the fastify server instance.
@@ -81,6 +84,14 @@ type ResolvedOptions = Required<
   }
 >
 
+function isCustomLoggerInstance(
+  logger:
+    | FastifyServerOptions['logger']
+    | FastifyServerOptions['loggerInstance'],
+): logger is FastifyServerOptions['loggerInstance'] {
+  return !!logger && typeof logger === 'object' && 'info' in logger
+}
+
 export function resolveOptions(
   options: CreateServerOptions = {},
   args?: string[],
@@ -88,8 +99,7 @@ export function resolveOptions(
   options.parseArgs ??= true
 
   const defaults = getDefaultCreateServerOptions()
-
-  options.logger ??= defaults.logger
+  const logger = options.logger ?? defaults.logger
 
   // Set defaults.
   const resolvedOptions: ResolvedOptions = {
@@ -97,7 +107,6 @@ export function resolveOptions(
 
     fastifyServerOptions: options.fastifyServerOptions ?? {
       requestTimeout: defaults.fastifyServerOptions.requestTimeout,
-      logger: options.logger ?? defaults.logger,
       bodyLimit: defaults.fastifyServerOptions.bodyLimit,
     },
     discoverFunctionsGlob:
@@ -109,9 +118,15 @@ export function resolveOptions(
   }
 
   // Merge fastifyServerOptions.
+
   resolvedOptions.fastifyServerOptions.requestTimeout ??=
     defaults.fastifyServerOptions.requestTimeout
-  resolvedOptions.fastifyServerOptions.logger = options.logger
+
+  if (isCustomLoggerInstance(logger)) {
+    resolvedOptions.fastifyServerOptions.loggerInstance = logger
+  } else {
+    resolvedOptions.fastifyServerOptions.logger = logger
+  }
 
   if (options.parseArgs) {
     const { values } = parseArgs({

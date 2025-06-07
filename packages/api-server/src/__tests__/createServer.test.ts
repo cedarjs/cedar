@@ -160,7 +160,6 @@ describe('createServer', () => {
       level: 30,
       msg: 'incoming request',
       req: {
-        hostname: 'localhost:80',
         method: 'GET',
         remoteAddress: '127.0.0.1',
         url: '/hello',
