@@ -61,6 +61,7 @@ module.exports = {
     'packages/cli/**/__testfixtures__/**/*',
     'packages/prerender/src/babelPlugins/__tests__/__fixtures__/**/*',
     'packages/storage/src/__tests__/prisma-client/*',
+    'packages/testing/config/jest/babelPlugins/__tests__/__fixtures__/**/*',
     'packages/vite/src/plugins/__tests__/__fixtures__/**/*',
   ],
   rules: {
