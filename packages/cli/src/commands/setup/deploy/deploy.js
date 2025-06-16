@@ -1,6 +1,6 @@
 export const command = 'deploy <target>'
 export const description = 'Setup deployment to various targets'
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import * as setupDeployBaremetal from './providers/baremetal.js'
 import * as setupDeployCoherence from './providers/coherence.js'

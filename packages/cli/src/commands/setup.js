@@ -1,4 +1,4 @@
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import detectRxVersion from '../middleware/detectProjectRxVersion.js'
 

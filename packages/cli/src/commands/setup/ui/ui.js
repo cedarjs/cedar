@@ -1,4 +1,4 @@
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import * as libraryChakraUi from './libraries/chakra-ui.js'
 import * as libraryMantine from './libraries/mantine.js'

@@ -1,4 +1,4 @@
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import { getYargsDefaults, createHandler } from '../yargsCommandHelpers.js'
 
