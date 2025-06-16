@@ -1,6 +1,4 @@
-import { parse } from 'path'
-
-import type { PluginObj, types } from '@babel/core'
+const { parse } = require('path')
 
 // This wraps a file that has a suffix of `Cell` in Redwood's `createCell` higher
 // order component. The HOC deals with the lifecycle methods during a GraphQL query.
@@ -31,12 +29,12 @@ const EXPECTED_EXPORTS_FROM_CELL = [
   'Empty',
 ]
 
-export default function ({ types: t }: { types: typeof types }): PluginObj {
+module.exports = function ({ types: t }) {
   // This array will collect exports from the Cell file during
   // ExportNamedDeclaration
   // - collected exports will then be passed to `createCell`
   // - The array is reset every time we `enter` a new Program
-  let exportNames: string[] = []
+  let exportNames = []
   let hasDefaultExport = false
 
   return {
@@ -54,7 +52,7 @@ export default function ({ types: t }: { types: typeof types }): PluginObj {
 
         let name
         if (declaration.type === 'VariableDeclaration') {
-          const id = declaration.declarations[0].id as types.Identifier
+          const id = declaration.declarations[0].id
           name = id.name
         }
         if (declaration.type === 'FunctionDeclaration') {
@@ -129,9 +127,7 @@ export default function ({ types: t }: { types: typeof types }): PluginObj {
                   // after the filename.
                   t.objectProperty(
                     t.identifier('displayName'),
-                    t.stringLiteral(
-                      parse(this.file.opts.filename as string).name,
-                    ),
+                    t.stringLiteral(parse(this.file.opts.filename).name),
                     false,
                     true,
                   ),
