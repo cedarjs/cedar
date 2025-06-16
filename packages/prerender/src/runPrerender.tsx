@@ -40,7 +40,9 @@ async function recursivelyRender(
   queryCache: Record<string, QueryInfo>,
 ): Promise<string> {
   // Load this async, to prevent rwjs/web being loaded before shims
-  const { CellCacheContextProvider, getOperationName } = require('@cedarjs/web')
+  const { CellCacheContextProvider, getOperationName } = await import(
+    '@cedarjs/web'
+  )
 
   let shouldShowGraphqlHandlerNotFoundWarn = false
   // Execute all gql queries we haven't already fetched
@@ -298,14 +300,14 @@ export const runPrerender = async ({
   })
 
   const indexContent = fs.readFileSync(getRootHtmlPath()).toString()
-  const { default: App } = await bundleRequire({ filepath: getPaths().web.app })
-  const { default: Routes } = await bundleRequire({
+  const { mod: App } = await bundleRequire({ filepath: getPaths().web.app })
+  const { mod: Routes } = await bundleRequire({
     filepath: getPaths().web.routes,
   })
 
   const componentAsHtml = await recursivelyRender(
-    App,
-    Routes,
+    App.default,
+    Routes.default,
     renderPath,
     gqlHandler,
     queryCache,
