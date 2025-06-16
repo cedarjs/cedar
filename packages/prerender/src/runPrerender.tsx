@@ -4,6 +4,7 @@ import path from 'path'
 import React from 'react'
 
 import { ApolloClient, InMemoryCache } from '@apollo/client'
+import { bundleRequire } from 'bundle-require'
 import type { CheerioAPI } from 'cheerio'
 import { load as loadHtml } from 'cheerio'
 import ReactDOMServer from 'react-dom/server'
@@ -297,8 +298,10 @@ export const runPrerender = async ({
   })
 
   const indexContent = fs.readFileSync(getRootHtmlPath()).toString()
-  const { default: App } = require(getPaths().web.app)
-  const { default: Routes } = require(getPaths().web.routes)
+  const { default: App } = await bundleRequire({ filepath: getPaths().web.app })
+  const { default: Routes } = await bundleRequire({
+    filepath: getPaths().web.routes,
+  })
 
   const componentAsHtml = await recursivelyRender(
     App,

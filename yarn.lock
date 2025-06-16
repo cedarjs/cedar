@@ -3233,6 +3233,7 @@ __metadata:
     "@whatwg-node/fetch": "npm:0.9.21"
     babel-plugin-ignore-html-and-css-imports: "npm:0.1.0"
     babel-plugin-tester: "npm:11.0.4"
+    bundle-require: "npm:^5.1.0"
     cheerio: "npm:1.0.0"
     concurrently: "npm:8.2.2"
     graphql: "npm:16.9.0"

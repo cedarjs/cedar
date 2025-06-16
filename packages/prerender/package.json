@@ -47,6 +47,7 @@
     "@cedarjs/web": "workspace:*",
     "@whatwg-node/fetch": "0.9.21",
     "babel-plugin-ignore-html-and-css-imports": "0.1.0",
+    "bundle-require": "^5.1.0",
     "cheerio": "1.0.0",
     "graphql": "16.9.0",
     "mime-types": "2.1.35"
