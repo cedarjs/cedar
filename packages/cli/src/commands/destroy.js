@@ -1,7 +1,7 @@
 export const command = 'destroy <type>'
 export const aliases = ['d']
 export const description = 'Rollback changes made by the generate command'
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import * as destroyCell from './destroy/cell/cell.js'
 import * as destroyComponent from './destroy/component/component.js'

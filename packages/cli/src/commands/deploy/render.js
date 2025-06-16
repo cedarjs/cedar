@@ -1,4 +1,4 @@
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 // It's easy for the api side to exceed Render's free-plan limit.
 // Because telemetryMiddleware is added to Yargs as middleware,

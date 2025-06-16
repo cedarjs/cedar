@@ -3,7 +3,7 @@
 import fs from 'node:fs'
 
 import envinfo from 'envinfo'
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths } from '@cedarjs/project-config'

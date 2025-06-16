@@ -1,6 +1,6 @@
 export const command = 'deploy <target>'
 export const description = 'Deploy your Redwood project'
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import * as deployBaremetal from './deploy/baremetal.js'
 import * as deployFlightcontrol from './deploy/flightcontrol.js'

@@ -1,4 +1,4 @@
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import c from '../lib/colors.js'
 import { exitWithError } from '../lib/exit.js'

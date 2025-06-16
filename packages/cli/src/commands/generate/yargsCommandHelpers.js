@@ -1,5 +1,5 @@
 // This file is safe to statically import in the CLI
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 // Don't import anything here that isn't already imported by the CLI
 import { isTypeScriptProject } from '@cedarjs/cli-helpers'

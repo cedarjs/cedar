@@ -1,7 +1,7 @@
 import path from 'path'
 
 import fs from 'fs-extra'
-import terminalLink from 'terminal-link'
+import { terminalLink } from 'termi-link'
 
 import * as apiServerCLIConfig from '@cedarjs/api-server/dist/apiCLIConfig.js'
 import * as bothServerCLIConfig from '@cedarjs/api-server/dist/bothCLIConfig.js'
