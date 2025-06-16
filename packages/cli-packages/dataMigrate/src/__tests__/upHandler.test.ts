@@ -31,6 +31,22 @@ jest.mock('fs', () => require('memfs').fs)
 
 const mockDataMigrations: { current: any[] } = { current: [] }
 
+jest.mock('bundle-require', () => {
+  return {
+    bundleRequire: ({ filepath }: { filepath: string }) => {
+      return {
+        mod: {
+          default: () => {
+            if (filepath.endsWith('20230822075443-wip.ts')) {
+              throw new Error('oops')
+            }
+          },
+        },
+      }
+    },
+  }
+})
+
 jest.mock(
   '/redwood-app/api/dist/lib/db.js',
   () => {
@@ -69,74 +85,6 @@ jest.mock(
     }
   },
   { virtual: true },
-)
-
-jest.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075442-wip.ts',
-  () => {
-    return { default: () => {} }
-  },
-  {
-    virtual: true,
-  },
-)
-
-jest.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075442-wip.ts',
-  () => {
-    return { default: () => {} }
-  },
-  {
-    virtual: true,
-  },
-)
-
-jest.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075443-wip.ts',
-  () => {
-    return {
-      default: () => {
-        throw new Error('oops')
-      },
-    }
-  },
-  {
-    virtual: true,
-  },
-)
-
-jest.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075443-wip.ts',
-  () => {
-    return {
-      default: () => {
-        throw new Error('oops')
-      },
-    }
-  },
-  {
-    virtual: true,
-  },
-)
-
-jest.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075444-wip.ts',
-  () => {
-    return { default: () => {} }
-  },
-  {
-    virtual: true,
-  },
-)
-
-jest.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075444-wip.ts',
-  () => {
-    return { default: () => {} }
-  },
-  {
-    virtual: true,
-  },
 )
 
 const RWJS_CWD = process.env.RWJS_CWD
@@ -196,7 +144,7 @@ describe('upHandler', () => {
     )
   })
 
-  it("noops if there's no pending migrations", async () => {
+  it('noops if there are no pending migrations', async () => {
     mockDataMigrations.current = [ranDataMigration]
 
     vol.fromNestedJSON(
