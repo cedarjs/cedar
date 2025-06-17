@@ -1,67 +1,42 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
-import { fetch } from '@whatwg-node/fetch'
 import { parseConfigFileTextToJson } from 'typescript'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { getPaths, resolveFile } from '@cedarjs/project-config'
 
-const INDEX_FILE = path.join(getPaths().web.dist, 'index.html')
-const DEFAULT_INDEX = path.join(getPaths().web.dist, '200.html')
+export function getNewPath(importPath: string, importer: string) {
+  const dirname = path.dirname(importPath)
+  const basename = path.basename(importPath)
 
-export const getRootHtmlPath = () => {
-  if (fs.existsSync(DEFAULT_INDEX)) {
-    return DEFAULT_INDEX
+  // We try to resolve `index.[js*|ts*]` modules first,
+  // since that's the desired default behaviour
+  const indexImportPath = [dirname, basename, 'index'].join('/')
+  console.log('getNewPath indexImportPath', indexImportPath)
+  const resolvedIndexPath = path.resolve(
+    path.dirname(importer),
+    indexImportPath,
+  )
+
+  if (resolveFile(resolvedIndexPath)) {
+    return indexImportPath
   } else {
-    return INDEX_FILE
-  }
-}
+    // No index file found, so try to import the directory-named-module instead
+    const dirnameImportPath = [dirname, basename, basename].join('/')
+    console.log('getNewPath dirnameImportPath', dirnameImportPath)
+    const resolvedDirnamePath = path.resolve(
+      path.dirname(importer),
+      dirnameImportPath,
+    )
+    console.log('getNewPath resolvedDirnamePath', resolvedDirnamePath)
 
-export const registerShims = (routerPath: string) => {
-  const rwjsConfig = getConfig()
-
-  globalThis.RWJS_ENV = {
-    RWJS_API_GRAPHQL_URL:
-      rwjsConfig.web.apiGraphQLUrl ?? rwjsConfig.web.apiUrl + '/graphql',
-    RWJS_API_URL: rwjsConfig.web.apiUrl,
-    __REDWOOD__APP_TITLE: rwjsConfig.web.title,
-  }
-
-  globalThis.RWJS_DEBUG_ENV = {
-    RWJS_SRC_ROOT: getPaths().web.src,
+    const resolvedFile = resolveFile(resolvedDirnamePath)
+    if (resolvedFile) {
+      return resolvedFile
+    }
   }
 
-  globalThis.__REDWOOD__PRERENDERING = true
-
-  globalThis.__REDWOOD__HELMET_CONTEXT = {}
-
-  // Let routes auto loader plugin know
-  process.env.__REDWOOD__PRERENDERING = '1'
-
-  // This makes code like globalThis.location.pathname work also outside of the
-  // router
-  globalThis.location = {
-    ...globalThis.location,
-    pathname: routerPath,
-  }
-  // Shim fetch in the node.js context
-  // This is to avoid using cross-fetch when configuring apollo-client
-  // which would cause the client bundle size to increase
-  if (!globalThis.fetch) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore-next-line
-    globalThis.fetch = fetch
-  }
-}
-
-export const writeToDist = (outputHtmlPath: string, renderOutput: string) => {
-  const dirName = path.dirname(outputHtmlPath)
-  const exist = fs.existsSync(dirName)
-  if (!exist) {
-    fs.mkdirSync(dirName, { recursive: true })
-  }
-
-  fs.writeFileSync(outputHtmlPath, renderOutput)
+  return null
 }
 
 /**
@@ -73,15 +48,12 @@ export const parseTypeScriptConfigFiles = () => {
 
   const parseConfigFile = (basePath: string) => {
     let configPath = path.join(basePath, 'tsconfig.json')
-
     if (!fs.existsSync(configPath)) {
       configPath = path.join(basePath, 'jsconfig.json')
-
       if (!fs.existsSync(configPath)) {
         return null
       }
     }
-
     return parseConfigFileTextToJson(
       configPath,
       fs.readFileSync(configPath, 'utf-8'),
@@ -104,17 +76,18 @@ type CompilerOptionsForPaths = {
  * Extracts and formats the paths from the [ts|js]config.json file
  * @param config The config object
  * @param rootDir {string} Where the jsconfig/tsconfig is loaded from
+ * @returns {Record<string, string>} The paths object
  */
-export function getPathsFromTypeScriptConfig(
+export const getPathsFromTypeScriptConfig = (
   config: CompilerOptionsForPaths,
   rootDir: string,
-) {
+): Record<string, string> => {
   if (!config) {
-    return []
+    return {}
   }
 
   if (!config.compilerOptions?.paths) {
-    return []
+    return {}
   }
 
   const { baseUrl, paths } = config.compilerOptions
@@ -129,8 +102,7 @@ export function getPathsFromTypeScriptConfig(
     absoluteBase = rootDir
   }
 
-  const aliases: { find: string; replacement: string }[] = []
-
+  const pathsObj: Record<string, string> = {}
   for (const [key, value] of Object.entries(paths)) {
     // exclude the default paths that are included in the tsconfig.json file
     // "src/*"
@@ -143,8 +115,7 @@ export function getPathsFromTypeScriptConfig(
     const aliasKey = key.replace('/*', '')
     const aliasValue = path.join(absoluteBase, value[0].replace('/*', ''))
 
-    aliases.push({ find: aliasKey, replacement: aliasValue })
+    pathsObj[aliasKey] = aliasValue
   }
-
-  return aliases
+  return pathsObj
 }
