@@ -1,24 +1,35 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { Plugin } from 'rollup'
 
 import { resolveFile } from '@cedarjs/project-config'
 
-const getNewPath = (value: string, filename: string): string | null => {
+function getNewPath(value: string, filename: string) {
   const dirname = path.dirname(value)
   const basename = path.basename(value)
 
   // We try to resolve `index.[js*|ts*]` modules first,
   // since that's the desired default behavior
   const indexImportPath = [dirname, basename, 'index'].join('/')
-  if (resolveFile(path.resolve(path.dirname(filename), indexImportPath))) {
-    return indexImportPath
+  const resolvedFile = resolveFile(
+    path.resolve(path.dirname(filename), indexImportPath),
+  )
+
+  if (resolvedFile) {
+    // return indexImportPath
+    return resolvedFile
   } else {
     // No index file found, so try to import the directory-named-module instead
     const dirnameImportPath = [dirname, basename, basename].join('/')
 
-    if (resolveFile(path.resolve(path.dirname(filename), dirnameImportPath))) {
-      return dirnameImportPath
+    const dirnameResolvedFile = resolveFile(
+      path.resolve(path.dirname(filename), dirnameImportPath),
+    )
+
+    if (dirnameResolvedFile) {
+      // return dirnameImportPath
+      return dirnameResolvedFile
     }
   }
 
@@ -35,17 +46,15 @@ export function cedarjsDirectoryNamedImportPlugin(): Plugin {
         return null
       }
 
-      // Skip relative imports that start with . or absolute paths
-      if (id.startsWith('.') || path.isAbsolute(id)) {
-        return null
-      }
-
       // We only need this plugin when the module could not be found
-      try {
-        require.resolve(id, { paths: [path.dirname(importer)] })
-        return null // Module can be resolved normally
-      } catch {
-        // Continue with custom resolution
+      const resolvedPath = path.resolve(path.dirname(importer), id)
+      if (fs.existsSync(resolvedPath)) {
+        const stats = fs.statSync(resolvedPath)
+
+        if (stats.isFile()) {
+          console.log('🌲 cedarjs directory-named-imports isFile', resolvedPath)
+          return null
+        }
       }
 
       const newPath = getNewPath(id, importer)
@@ -54,8 +63,13 @@ export function cedarjsDirectoryNamedImportPlugin(): Plugin {
       }
 
       // Convert to absolute path for Rollup
-      const resolvedPath = path.resolve(path.dirname(importer), newPath)
-      return resolvedPath
+      const resolvedDirnamePath = path.resolve(path.dirname(importer), newPath)
+      console.log(
+        '🌲 cedarjs directory-named-imports resolvedDirnamePath',
+        resolvedDirnamePath,
+      )
+
+      return resolvedDirnamePath
     },
   }
 }

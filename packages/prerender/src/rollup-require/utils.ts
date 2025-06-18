@@ -1,8 +1,13 @@
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 
-import type { RequireFunction } from './rollup-require'
+/** Match .mjs, .cts, .ts, .jsx etc */
+export const JS_EXT_RE = /\.([mc]?[tj]s|[tj]sx)$/
+
+export type RequireFunction = (
+  outfile: string,
+  ctx: { format: 'cjs' | 'esm' },
+) => any
 
 function getPkgType() {
   try {
@@ -35,9 +40,6 @@ export function guessFormat(inputFile: string): 'esm' | 'cjs' {
   return 'cjs'
 }
 
-// Injected by TSUP
-declare const TSUP_FORMAT: 'esm' | 'cjs'
-
 declare const jest: any
 
 // Stolen from https://github.com/vitejs/vite/blob/0713446fa4df678422c84bd141b189a930c100e7/packages/vite/src/node/utils.ts#L606
@@ -56,17 +58,15 @@ export const dynamicImport: RequireFunction = async (
   id: string,
   { format },
 ) => {
-  console.log('dynamicImport', format, id)
-  const fn =
-    format === 'esm'
-      ? (file: string) => import(file)
-      : TSUP_FORMAT === 'esm'
-        ? createRequire(import.meta.url)
-        : require
+  const fn = format === 'esm' ? (file: string) => import(file) : require
 
   return fn(id)
 }
 
 export const getRandomId = () => {
   return Math.random().toString(36).substring(2, 15)
+}
+
+export function isValidJsFile(filepath: string) {
+  return JS_EXT_RE.test(filepath)
 }

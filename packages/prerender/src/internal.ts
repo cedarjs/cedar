@@ -64,6 +64,7 @@ export const writeToDist = (outputHtmlPath: string, renderOutput: string) => {
   fs.writeFileSync(outputHtmlPath, renderOutput)
 }
 
+// TODO: Move this closer to where it's used
 /**
  * Finds, reads and parses the [ts|js]config.json file
  * @returns The config object

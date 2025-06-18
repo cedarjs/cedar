@@ -3,7 +3,10 @@ import path from 'node:path'
 
 import { test, assert } from 'vitest'
 
-import { rollupRequire, JS_EXT_RE } from '../build'
+import {
+  rollupRequire,
+  JS_EXT_RE,
+} from '../../../dist/rollup-require/rollup-require'
 
 test('main', async () => {
   const { mod, dependencies } = await rollupRequire({
