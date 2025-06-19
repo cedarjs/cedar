@@ -23,7 +23,7 @@ import { isValidJsFile } from './utils'
 
 const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   return Object.keys(paths || {}).map((key) => {
-    return new RegExp(`^${key.replace(/\*/, '.*')}$`)
+    return new RegExp(`^${key.replace(/\*/g, '.*')}$`)
   })
 }
 
