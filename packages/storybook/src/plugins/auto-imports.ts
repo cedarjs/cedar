@@ -1,6 +1,6 @@
-import AutoImport from 'unplugin-auto-import/vite'
+import autoImport from 'unplugin-auto-import/vite'
 
-export const autoImports = AutoImport({
+export const autoImports = autoImport({
   // targets to transform
   include: [
     /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
