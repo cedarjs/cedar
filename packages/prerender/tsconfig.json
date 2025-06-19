@@ -6,6 +6,7 @@
     "allowJs": true
   },
   "include": ["."],
+  "exclude": ["dist", "node_modules", "**/__tests__/fixtures"],
   "references": [
     { "path": "../babel-config" },
     { "path": "../project-config" },
@@ -13,6 +14,5 @@
     { "path": "../structure" },
     { "path": "../web/tsconfig.build.json" },
     { "path": "../framework-tools" }
-  ],
-  "exclude": ["dist", "node_modules", "**/__mocks__", "**/__tests__/fixtures"]
+  ]
 }

@@ -6,6 +6,7 @@ export interface Options {
   /** The filepath to bundle and require */
   filepath: string
 
+  // TODO: Should I keep or remove this?
   /** rollup options */
   rollupOptions?: RollupOptions & {
     watch?: undefined | never
@@ -39,4 +40,7 @@ export interface Options {
 
   /** Provide bundle format explicitly to skip the default format inference */
   format?: 'cjs' | 'esm'
+
+  /** Returns the name of the output file */
+  getOutputFile?: (filepath: string, format: 'cjs' | 'esm') => string
 }

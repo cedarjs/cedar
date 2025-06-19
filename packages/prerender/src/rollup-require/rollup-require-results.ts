@@ -9,7 +9,9 @@ import { dynamicImport, getRandomId, guessFormat, JS_EXT_RE } from './utils'
 
 export async function extractResult(build: RollupBuild, options: Options) {
   const format = options.format ?? guessFormat(options.filepath)
-  const outfile = getOutputFile(options.filepath, format)
+  const outfile = options.getOutputFile
+    ? options.getOutputFile(options.filepath, format)
+    : defaultGetOutputFile(options.filepath, format)
 
   const outputOptions: OutputOptions = {
     file: outfile,
@@ -56,7 +58,7 @@ export async function extractResult(build: RollupBuild, options: Options) {
 }
 
 // Use a random path to avoid import cache
-function getOutputFile(filepath: string, format: 'esm' | 'cjs') {
+function defaultGetOutputFile(filepath: string, format: 'esm' | 'cjs') {
   return filepath.replace(
     JS_EXT_RE,
     `.bundled_${getRandomId()}.${format === 'esm' ? 'mjs' : 'cjs'}`,
