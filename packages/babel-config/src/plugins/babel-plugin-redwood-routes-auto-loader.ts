@@ -14,14 +14,13 @@ export interface PluginOptions {
   forPrerender?: boolean
 }
 
-/**
- * When running from the CLI: Babel-plugin-module-resolver will convert:
- * - For dev/build/prerender (forJest == false):
-     'src/pages/ExamplePage' -> './pages/ExamplePage'
- * - For test (forJest == true):
-     'src/pages/ExamplePage' -> '/Users/blah/pathToProject/web/src/pages/ExamplePage'
- */
-export const getPathRelativeToSrc = (maybeAbsolutePath: string) => {
+// When running from the CLI: Babel-plugin-module-resolver will convert:
+// - For dev/build/prerender (forJest == false):
+//   'src/pages/ExamplePage' -> './pages/ExamplePage'
+// - For test (forJest == true):
+//   'src/pages/ExamplePage' -> '/Users/blah/pathToProject/web/src/pages/ExamplePage'
+
+const getPathRelativeToSrc = (maybeAbsolutePath: string) => {
   // If the path is already relative
   if (!path.isAbsolute(maybeAbsolutePath)) {
     return maybeAbsolutePath
@@ -30,7 +29,7 @@ export const getPathRelativeToSrc = (maybeAbsolutePath: string) => {
   return `./${path.relative(getPaths().web.src, maybeAbsolutePath)}`
 }
 
-export const withRelativeImports = (page: PagesDependency) => {
+const withRelativeImports = (page: PagesDependency) => {
   return {
     ...page,
     relativeImport: ensurePosixPath(getPathRelativeToSrc(page.importPath)),
@@ -44,9 +43,10 @@ export default function (
   // @NOTE: This var gets mutated inside the visitors
   let pages = processPagesDir().map(withRelativeImports)
 
-  // Currently processPagesDir() can return duplicate entries when there are multiple files
-  // ending in Page in the individual page directories. This will cause an error upstream.
-  // Here we check for duplicates and throw a more helpful error message.
+  // Currently processPagesDir() can return duplicate entries when there are
+  // multiple files ending in Page in the individual page directories. This will
+  // cause an error upstream. Here we check for duplicates and throw a more
+  // helpful error message.
   const duplicatePageImportNames = new Set<string>()
   const sortedPageImportNames = pages.map((page) => page.importName).sort()
   for (let i = 0; i < sortedPageImportNames.length - 1; i++) {
