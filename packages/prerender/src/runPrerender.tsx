@@ -138,8 +138,6 @@ async function recursivelyRender(
     </LocationProvider>,
   )
 
-  console.log('componentAsHtml', componentAsHtml)
-
   if (Object.values(queryCache).some((value) => !value.hasProcessed)) {
     // We found new queries that we haven't fetched yet. Execute all new
     // queries and render again
@@ -311,8 +309,6 @@ export const runPrerender = async ({
     cwd: getPaths().web.base,
     filepath: getPaths().web.routes,
   })
-
-  console.log('Routes', Routes.default.toString())
 
   const componentAsHtml = await recursivelyRender(
     App.default,

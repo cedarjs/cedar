@@ -42,5 +42,9 @@ export interface Options {
   format?: 'cjs' | 'esm'
 
   /** Returns the name of the output file */
-  getOutputFile?: (filepath: string, format: 'cjs' | 'esm') => string
+  getOutputFile?: (
+    filepath: string,
+    format: 'cjs' | 'esm',
+    randomId: string,
+  ) => string
 }

@@ -30,37 +30,58 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         graphql: {},
       }
     },
+    processPagesDir: () => {
+      const pagePaths = [
+        '/mocked/project/web/src/pages/HomePage/HomePage.tsx',
+        '/mocked/project/web/src/pages/TestPage/TestPage.tsx',
+      ]
+
+      return pagePaths.map((pagePath) => {
+        const p = path.parse(pagePath)
+
+        const importName = p.dir.replace(/\//g, '')
+        const importPath = originalProjectConfig.importStatementPath(
+          path.join('/mocked/project/web/src/pages', p.dir, p.name),
+        )
+
+        const importStatement = `const ${importName} = { name: '${importName}', loader: import('${importPath}') }`
+        return {
+          importName,
+          constName: importName,
+          importPath,
+          path: path.join('/mocked/project/web/src/pages', pagePath),
+          importStatement,
+        }
+      })
+    },
   }
 })
 
-function getFixtureFile(folderName: string, fileName?: string) {
-  const filepath = path.join(
-    __dirname,
-    'fixtures',
-    folderName,
-    fileName || 'input.ts',
-  )
+function getCwd(folderName: string) {
+  const cwd = path.join(__dirname, 'fixtures', folderName)
 
-  return filepath
+  return cwd
 }
 
 test('main', async () => {
-  const { mod, dependencies } = await rollupRequire({
-    filepath: getFixtureFile('main'),
-  })
+  const cwd = getCwd('main')
+  const filepath = path.join(cwd, 'input.ts')
+  const { mod, dependencies } = await rollupRequire({ filepath, cwd })
 
   expect(mod.default.a.filename).toMatch(/[\\/]main[\\/]a\.ts$/)
   expect(dependencies.length).toEqual(2)
-  expect(dependencies[0]).toMatch(/[\\/]main[\\/]a.ts$/)
-  expect(dependencies[1]).toMatch(/[\\/]main[\\/]input.ts$/)
+  expect(dependencies[0]).toMatch('a.ts')
+  expect(dependencies[1]).toMatch('input.ts')
 })
 
 test('preserveTemporaryFile', async () => {
-  const filepath = getFixtureFile('preserve-temporary-file')
+  const cwd = getCwd('preserve-temporary-file')
+  const filepath = path.join(cwd, 'input.ts')
 
   await rollupRequire({
     filepath,
     preserveTemporaryFile: true,
+    cwd,
     getOutputFile: (filepath: string) => {
       // Doing this to set a deterministic filename
       return filepath.replace(JS_EXT_RE, `.bundled.mjs`)
@@ -77,10 +98,11 @@ test('preserveTemporaryFile', async () => {
 })
 
 test('ignore node_modules', async () => {
-  const filepath = getFixtureFile('ignore-node_modules')
+  const cwd = getCwd('ignore-node_modules')
+  const filepath = path.join(cwd, 'input.ts')
 
   try {
-    await rollupRequire({ filepath })
+    await rollupRequire({ filepath, cwd })
     assert.equal(true, false)
   } catch (error: any) {
     expect(error.message).toMatch(/Failed to load url foo/)
@@ -88,23 +110,21 @@ test('ignore node_modules', async () => {
 })
 
 test('resolve tsconfig paths', async () => {
-  const filepath = getFixtureFile('resolve-tsconfig-paths')
+  const cwd = getCwd('resolve-tsconfig-paths')
+  const filepath = path.join(cwd, 'input.ts')
 
-  const { mod } = await rollupRequire({
-    filepath,
-    cwd: path.join(__dirname, './fixtures/resolve-tsconfig-paths'),
-  })
+  const { mod } = await rollupRequire({ filepath, cwd })
 
   assert.equal(mod.foo, 'foo')
 })
 
 test('replace import.meta.url', async () => {
-  const dir = path.join(__dirname, './fixtures/replace-path')
-  const filepath = getFixtureFile('replace-path')
+  const cwd = getCwd('replace-path')
+  const filepath = path.join(cwd, 'input.ts')
 
-  const { mod } = await rollupRequire({ filepath, cwd: dir })
+  const { mod } = await rollupRequire({ filepath, cwd })
 
-  assert.equal(mod.dir, dir)
+  assert.equal(mod.dir, cwd)
   assert.equal(mod.file, filepath)
-  assert.equal(mod.importMetaUrl, `file://${path.join(dir, 'input.ts')}`)
+  assert.equal(mod.importMetaUrl, `file://${filepath}`)
 })
