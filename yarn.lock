@@ -3228,6 +3228,7 @@ __metadata:
     "@swc/core": "npm:1.12.1"
     "@types/mime-types": "npm:2.1.4"
     "@whatwg-node/fetch": "npm:0.9.21"
+    babel-plugin-ignore-html-and-css-imports: "npm:0.1.0"
     babel-plugin-tester: "npm:11.0.4"
     cheerio: "npm:1.0.0"
     concurrently: "npm:8.2.2"
@@ -12937,6 +12938,13 @@ __metadata:
     "@babel/core": ^7.0.0
     graphql-tag: ^2.10.1
   checksum: 10c0/6616bf9d03f5e905413ea024e0609bf70a2b18b875c19da1e00fe787a16e71ce36244bd097f65c7faa269d4e97e683ab53ca532d15827298c0381a05b8341add
+  languageName: node
+  linkType: hard
+
+"babel-plugin-ignore-html-and-css-imports@npm:0.1.0":
+  version: 0.1.0
+  resolution: "babel-plugin-ignore-html-and-css-imports@npm:0.1.0"
+  checksum: 10c0/cb83c0d66134ab5bcd12332e6c33a0e13475929cf729b7f26c8d324037371e3c3e60ea9bd7a6ac87a1fca268c5665991878c47bf92be21157a63032c6f86b633
   languageName: node
   linkType: hard
 
