@@ -1,6 +1,7 @@
 import { extname, join, relative, dirname } from 'path'
 
 import type { PluginObj, types, NodePath } from '@babel/core'
+// @ts-expect-error - using deprecated CJS vite
 import type { ManifestChunk as ViteManifestChunk } from 'vite'
 
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
