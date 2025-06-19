@@ -3,6 +3,7 @@ import path from 'path'
 
 import React from 'react'
 
+// @ts-expect-error CJS vs ESM
 import { ApolloClient, InMemoryCache } from '@apollo/client'
 import type { CheerioAPI } from 'cheerio'
 import { load as loadHtml } from 'cheerio'
