@@ -4,10 +4,8 @@ exports[`creates a TS component and test 1`] = `
 "const TypescriptUser = () => {
   return (
     <div>
-      <h2>{'TypescriptUser'}</h2>
-      <p>
-        {'Find me in ./web/src/components/TypescriptUser/TypescriptUser.tsx'}
-      </p>
+      <h2>TypescriptUser</h2>
+      <p>Find me in ./web/src/components/TypescriptUser/TypescriptUser.tsx</p>
     </div>
   )
 }
@@ -38,8 +36,8 @@ exports[`creates a multi word component 1`] = `
 "const UserProfile = () => {
   return (
     <div>
-      <h2>{'UserProfile'}</h2>
-      <p>{'Find me in ./web/src/components/UserProfile/UserProfile.jsx'}</p>
+      <h2>UserProfile</h2>
+      <p>Find me in ./web/src/components/UserProfile/UserProfile.jsx</p>
     </div>
   )
 }
@@ -91,8 +89,8 @@ exports[`creates a single word component 1`] = `
 "const User = () => {
   return (
     <div>
-      <h2>{'User'}</h2>
-      <p>{'Find me in ./web/src/components/User/User.jsx'}</p>
+      <h2>User</h2>
+      <p>Find me in ./web/src/components/User/User.jsx</p>
     </div>
   )
 }
