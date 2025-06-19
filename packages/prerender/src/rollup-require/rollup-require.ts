@@ -87,7 +87,7 @@ export async function rollupRequire<T = any>(
           ...getPathsFromTypeScriptConfig(tsConfigs.web, webBase),
         ],
       }),
-      cedarjsRoutesAutoLoaderPlugin(),
+      cedarjsRoutesAutoLoaderPlugin({ forPrerender: true }),
       cedarjsDirectoryNamedImportPlugin(),
       commonjs(),
       typescriptPlugin(options.filepath, tsconfig),

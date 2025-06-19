@@ -38,7 +38,7 @@ function withRelativeImports(page: PagesDependency) {
 
 function prerenderLoaderImpl(forPrerender: boolean, relativeImport: string) {
   if (forPrerender) {
-    return `await import('${relativeImport}')`
+    return `require('${relativeImport}')`
   }
 
   // This code will be output when building the web side (i.e. not when
@@ -145,14 +145,14 @@ export function cedarjsRoutesAutoLoaderPlugin({
         })
 
         if (pageThatUserImported) {
-          if (forPrerender) {
-            // Update the import name with the user's import name
-            // So that the JSX name stays consistent
-            pageThatUserImported.importName = defaultImportName
+          // if (forPrerender) {
+          //   // Update the import name with the user's import name
+          //   // So that the JSX name stays consistent
+          //   pageThatUserImported.importName = defaultImportName
 
-            // Remove the import statement from the code
-            modifiedCode = modifiedCode.replace(fullMatch, '')
-          }
+          //   // Remove the import statement from the code
+          //   modifiedCode = modifiedCode.replace(fullMatch, '')
+          // }
 
           // Always remove the page from currentPages list if it's explicitly
           // imported so that we don't add loaders for these pages

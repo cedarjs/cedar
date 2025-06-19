@@ -138,6 +138,8 @@ async function recursivelyRender(
     </LocationProvider>,
   )
 
+  console.log('componentAsHtml', componentAsHtml)
+
   if (Object.values(queryCache).some((value) => !value.hasProcessed)) {
     // We found new queries that we haven't fetched yet. Execute all new
     // queries and render again
@@ -300,26 +302,17 @@ export const runPrerender = async ({
     },
   })
 
-  console.log('')
-  console.log()
-  console.log('before rollupRequire\n\n')
   const { mod: App } = await rollupRequire({
     cwd: getPaths().web.base,
     filepath: getPaths().web.app,
   })
-
-  console.log('\nApp\n', App({}))
 
   const { mod: Routes } = await rollupRequire({
     cwd: getPaths().web.base,
     filepath: getPaths().web.routes,
   })
 
-  console.log('\nRoutes\n', Routes({}))
-
-  if (Math.random() < 5) {
-    throw new Error('Happy Exit')
-  }
+  console.log('Routes', Routes.default.toString())
 
   const componentAsHtml = await recursivelyRender(
     App.default,
