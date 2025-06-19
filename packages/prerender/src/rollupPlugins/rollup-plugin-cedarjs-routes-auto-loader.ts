@@ -96,15 +96,14 @@ export function cedarjsRoutesAutoLoaderPlugin({
 
       // Reset pages for each transform
       let currentPages = [...pages]
-      let modifiedCode = code
 
       // Parse existing imports to remove explicitly imported pages
       const importRegex = /import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g
-      let match
+      let match: RegExpExecArray | null
       const excludedPages = new Set<string>()
 
       while ((match = importRegex.exec(code)) !== null) {
-        const [fullMatch, defaultImportName, importPath] = match
+        const [_fullMatch, defaultImportName, importPath] = match
 
         // For explicitly imported pages we need to check both formats:
         // 'src/pages/FooPage' and 'src/pages/FooPage/FooPage'
@@ -164,12 +163,12 @@ export function cedarjsRoutesAutoLoaderPlugin({
       }
 
       if (currentPages.length === 0) {
-        return { code: modifiedCode, map: null }
+        return { code, map: null }
       }
 
       // Generate the auto-loader code
-      const imports = []
-      const declarations = []
+      const imports: string[] = []
+      const declarations: string[] = []
 
       // Add "import { lazy } from 'react'"
       imports.push(`import { lazy } from 'react'`)
@@ -191,7 +190,7 @@ export function cedarjsRoutesAutoLoaderPlugin({
 
       // Prepend the imports and declarations to the code
       const autoLoaderCode = [...imports, ...declarations].join('\n\n')
-      const finalCode = `${autoLoaderCode}\n\n${modifiedCode}`
+      const finalCode = `${autoLoaderCode}\n\n${code}`
 
       return {
         code: finalCode,
