@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { vi, expect, test, assert } from 'vitest'
 
@@ -125,7 +126,8 @@ test('replace import.meta.url', async () => {
 
   const { mod } = await rollupRequire({ filepath, cwd })
 
-  assert.equal(mod.dir, cwd)
-  assert.equal(mod.file, filepath)
-  assert.equal(mod.importMetaUrl, `file://${ensurePosixPath(filepath)}`)
+  expect(mod.dir).toEqual(cwd)
+  expect(mod.file).toEqual(filepath)
+  expect(mod.importMetaUrl).toMatch(/^file:\/\//)
+  expect(mod.importMetaUrl).toEqual(pathToFileURL(filepath).href)
 })
