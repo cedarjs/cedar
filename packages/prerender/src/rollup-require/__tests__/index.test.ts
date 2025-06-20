@@ -5,7 +5,6 @@ import { pathToFileURL } from 'node:url'
 import { vi, expect, test, assert } from 'vitest'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
-import { ensurePosixPath } from '@cedarjs/project-config'
 
 import { rollupRequire } from '../rollup-require'
 import { JS_EXT_RE } from '../utils'
