@@ -4,6 +4,7 @@ import path from 'node:path'
 import { vi, expect, test, assert } from 'vitest'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
+import { ensurePosixPath } from '@cedarjs/project-config'
 
 import { rollupRequire } from '../rollup-require'
 import { JS_EXT_RE } from '../utils'
@@ -126,5 +127,5 @@ test('replace import.meta.url', async () => {
 
   assert.equal(mod.dir, cwd)
   assert.equal(mod.file, filepath)
-  assert.equal(mod.importMetaUrl, `file://${filepath}`)
+  assert.equal(mod.importMetaUrl, `file://${ensurePosixPath(filepath)}`)
 })
