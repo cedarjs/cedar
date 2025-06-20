@@ -18,7 +18,6 @@ import { LocationProvider } from '@cedarjs/router'
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
-import redwoodCellsPlugin from './babelPlugins/babel-plugin-redwood-cell'
 import mediaImportsPlugin from './babelPlugins/babel-plugin-redwood-prerender-media-imports'
 import { detectPrerenderRoutes } from './detection'
 import {
@@ -28,6 +27,7 @@ import {
 } from './errors'
 import { executeQuery, getGqlHandler } from './graphql/graphql'
 import { getRootHtmlPath, registerShims, writeToDist } from './internal'
+import { rollupRequire } from './rollup-require/rollup-require'
 
 // Create an apollo client that we can use to prepopulate the cache and restore it client-side
 const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
@@ -40,7 +40,9 @@ async function recursivelyRender(
   queryCache: Record<string, QueryInfo>,
 ): Promise<string> {
   // Load this async, to prevent rwjs/web being loaded before shims
-  const { CellCacheContextProvider, getOperationName } = require('@cedarjs/web')
+  const { CellCacheContextProvider, getOperationName } = await import(
+    '@cedarjs/web'
+  )
 
   let shouldShowGraphqlHandlerNotFoundWarn = false
   // Execute all gql queries we haven't already fetched
@@ -287,23 +289,25 @@ export const runPrerender = async ({
           [mediaImportsPlugin],
         ],
       },
-      {
-        test: /.+Cell.(js|tsx|jsx)$/,
-        plugins: [redwoodCellsPlugin],
-      },
     ],
     options: {
       forPrerender: true,
     },
   })
 
-  const indexContent = fs.readFileSync(getRootHtmlPath()).toString()
-  const { default: App } = require(getPaths().web.app)
-  const { default: Routes } = require(getPaths().web.routes)
+  const { mod: App } = await rollupRequire({
+    cwd: getPaths().web.base,
+    filepath: getPaths().web.app,
+  })
+
+  const { mod: Routes } = await rollupRequire({
+    cwd: getPaths().web.base,
+    filepath: getPaths().web.routes,
+  })
 
   const componentAsHtml = await recursivelyRender(
-    App,
-    Routes,
+    App.default,
+    Routes.default,
     renderPath,
     gqlHandler,
     queryCache,
@@ -322,6 +326,7 @@ export const runPrerender = async ({
     })
   })
 
+  const indexContent = fs.readFileSync(getRootHtmlPath()).toString()
   const indexHtmlTree = loadHtml(indexContent)
 
   if (helmet) {

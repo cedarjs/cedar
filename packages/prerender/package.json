@@ -45,11 +45,19 @@
     "@cedarjs/router": "workspace:*",
     "@cedarjs/structure": "workspace:*",
     "@cedarjs/web": "workspace:*",
+    "@rollup/plugin-alias": "5.1.1",
+    "@rollup/plugin-commonjs": "28.0.5",
+    "@rollup/plugin-node-resolve": "16.0.1",
+    "@swc/core": "1.12.1",
     "@whatwg-node/fetch": "0.9.21",
     "babel-plugin-ignore-html-and-css-imports": "0.1.0",
     "cheerio": "1.0.0",
     "graphql": "16.9.0",
-    "mime-types": "2.1.35"
+    "load-tsconfig": "0.2.5",
+    "mime-types": "2.1.35",
+    "rollup": "4.24.0",
+    "rollup-plugin-swc3": "0.12.1",
+    "unimport": "5.0.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
