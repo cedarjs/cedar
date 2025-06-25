@@ -11,6 +11,7 @@ import {
   getPathsFromTypeScriptConfig,
   parseTypeScriptConfigFiles,
 } from '../internal'
+import { cellTransformPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-cell'
 import { cedarjsDirectoryNamedImportPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-directory-named-imports'
 import { externalPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-external'
 import { ignoreHtmlAndCssImportsPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-ignore-html-and-css-imports'
@@ -89,6 +90,7 @@ export async function rollupRequire<T = any>(
         ],
       }),
       ignoreHtmlAndCssImportsPlugin(),
+      cellTransformPlugin(),
       cedarjsRoutesAutoLoaderPlugin({ forPrerender: true }),
       cedarjsDirectoryNamedImportPlugin(),
       commonjs(),
