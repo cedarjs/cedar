@@ -13,6 +13,7 @@ import {
 } from '../internal'
 import { cedarjsDirectoryNamedImportPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-directory-named-imports'
 import { externalPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-external'
+import { ignoreHtmlAndCssImportsPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-ignore-html-and-css-imports'
 import { injectFileGlobalsPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-inject-file-globals'
 import { cedarjsRoutesAutoLoaderPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader'
 import { typescriptPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-typescript'
@@ -87,6 +88,7 @@ export async function rollupRequire<T = any>(
           ...getPathsFromTypeScriptConfig(tsConfigs.web, webBase),
         ],
       }),
+      ignoreHtmlAndCssImportsPlugin(),
       cedarjsRoutesAutoLoaderPlugin({ forPrerender: true }),
       cedarjsDirectoryNamedImportPlugin(),
       commonjs(),
