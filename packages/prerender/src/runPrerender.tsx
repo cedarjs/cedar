@@ -238,6 +238,11 @@ interface PrerenderParams {
   renderPath: string // The path (url) to render e.g. /about, /dashboard/me, /blog-post/3
 }
 
+const renderCache: {
+  App?: React.FunctionComponent
+  Routes?: React.FunctionComponent
+} = {}
+
 export const runPrerender = async ({
   queryCache,
   renderPath,
@@ -295,19 +300,37 @@ export const runPrerender = async ({
     },
   })
 
-  const { mod: App } = await rollupRequire({
-    cwd: getPaths().web.base,
-    filepath: getPaths().web.app,
-  })
+  if (!renderCache.App) {
+    const { mod: App } = await rollupRequire({
+      cwd: getPaths().web.base,
+      filepath: getPaths().web.app,
+    })
 
-  const { mod: Routes } = await rollupRequire({
-    cwd: getPaths().web.base,
-    filepath: getPaths().web.routes,
-  })
+    renderCache.App = App.default
+  }
+
+  if (!renderCache.Routes) {
+    const { mod: Routes } = await rollupRequire({
+      cwd: getPaths().web.base,
+      filepath: getPaths().web.routes,
+    })
+
+    renderCache.Routes = Routes.default
+  }
+
+  const { App, Routes } = renderCache
+
+  if (!App) {
+    throw new Error('App not found')
+  }
+
+  if (!Routes) {
+    throw new Error('Routes not found')
+  }
 
   const componentAsHtml = await recursivelyRender(
-    App.default,
-    Routes.default,
+    App,
+    Routes,
     renderPath,
     gqlHandler,
     queryCache,
