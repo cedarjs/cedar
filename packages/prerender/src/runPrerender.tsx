@@ -241,7 +241,9 @@ interface PrerenderParams {
 const renderCache: {
   App?: React.FunctionComponent
   Routes?: React.FunctionComponent
-} = {}
+} = {
+  // Routes: () => null,
+}
 
 export const runPrerender = async ({
   queryCache,
@@ -304,6 +306,7 @@ export const runPrerender = async ({
     const { mod: App } = await rollupRequire({
       cwd: getPaths().web.base,
       filepath: getPaths().web.app,
+      preserveTemporaryFile: true,
     })
 
     renderCache.App = App.default
@@ -313,6 +316,7 @@ export const runPrerender = async ({
     const { mod: Routes } = await rollupRequire({
       cwd: getPaths().web.base,
       filepath: getPaths().web.routes,
+      preserveTemporaryFile: true,
     })
 
     renderCache.Routes = Routes.default
@@ -338,8 +342,9 @@ export const runPrerender = async ({
 
   const { helmet } = globalThis.__REDWOOD__HELMET_CONTEXT
 
-  // Loop over ther queryCache and write the queries to the apollo client cache this will normalize the data
-  // and make it available to the app when it hydrates
+  // Loop over ther queryCache and write the queries to the apollo client cache
+  // This will normalize the data and make it available to the app when it
+  // hydrates
   Object.keys(queryCache).forEach((queryKey) => {
     const { query, variables, data } = queryCache[queryKey]
     prerenderApolloClient.writeQuery({

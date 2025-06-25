@@ -52,7 +52,6 @@ export function cedarjsDirectoryNamedImportPlugin(): Plugin {
         const stats = fs.statSync(resolvedPath)
 
         if (stats.isFile()) {
-          console.log('🌲 cedarjs directory-named-imports isFile', resolvedPath)
           return null
         }
       }
@@ -64,10 +63,6 @@ export function cedarjsDirectoryNamedImportPlugin(): Plugin {
 
       // Convert to absolute path for Rollup
       const resolvedDirnamePath = path.resolve(path.dirname(importer), newPath)
-      console.log(
-        '🌲 cedarjs directory-named-imports resolvedDirnamePath',
-        resolvedDirnamePath,
-      )
 
       return resolvedDirnamePath
     },

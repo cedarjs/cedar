@@ -155,7 +155,7 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
  * By default, the entry point is the index.html file - even if you don't
  * specify it in RollupOptions
  *
- * With streaming SSR, out entrypoint is different - either entry.client.tsx or
+ * With streaming SSR, our entrypoint is different - either entry.client.tsx or
  * entry.server.tsx and the html file is not used at all, because it is defined
  * in Document.tsx
  *

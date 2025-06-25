@@ -4,14 +4,14 @@ import path from 'node:path'
 import type { OutputOptions, RollupBuild } from 'rollup'
 
 import type { Options } from './types'
-import { guessFormat, JS_EXT_RE } from './utils'
+import { guessFormat } from './utils'
 
-export async function extractResult(build: RollupBuild, options: Options) {
+export async function extractResult<T>(
+  build: RollupBuild,
+  options: Options,
+  outDir: string,
+) {
   const format = options.format ?? guessFormat(options.filepath)
-  const getOutputFileFn = options.getOutputFile ?? defaultGetOutputFile
-  const timestamp = Date.now().toString()
-
-  const outDir = options.cwd ?? process.cwd()
 
   const outputOptions: OutputOptions = {
     dir: outDir,
@@ -27,38 +27,43 @@ export async function extractResult(build: RollupBuild, options: Options) {
       throw new Error('[bundle-require] Expected chunk output')
     }
 
-    const outPath = path.join(
-      outDir,
-      getOutputFileFn(chunk.fileName, format, timestamp),
-    )
+    let code = chunk.code
 
-    await fs.promises.writeFile(outPath, chunk.code, 'utf8')
+    if (chunk.code.includes('__PRERENDER_CHUNK_ID.js')) {
+      // const ContactContactPage = {
+      //     name: "ContactContactPage",
+      //     prerenderLoader: (name)=>require('./ContactPage-__PRERENDER_CHUNK_ID.js'),
+      //     LazyComponent: /*#__PURE__*/ React.lazy(()=>Promise.resolve().then(function () { return require('./ContactPage-pvUUt2sr.js'); }))
+      // };
+      // const AboutPage = {
+      //     name: "AboutPage",
+      //     prerenderLoader: (name)=>require('./AboutPage-__PRERENDER_CHUNK_ID.js'),
+      //     LazyComponent: /*#__PURE__*/ React.lazy(()=>Promise.resolve().then(function () { return require('./AboutPage-pvUUt2sr.js'); }))
+      // };
+      code = chunk.code.replace(
+        /'\.\/([^']+Page-)__PRERENDER_CHUNK_ID\.js'/g,
+        (_match, pageName) => {
+          const chunkName = chunk.dynamicImports.find((importedChunk) =>
+            importedChunk.startsWith(pageName),
+          )
+          return `'./${chunkName}'`
+        },
+      )
+    }
+
+    await fs.promises.writeFile(path.join(outDir, chunk.fileName), code, 'utf8')
   }
 
-  let mod: any
+  let mod: T
 
   try {
-    const outPath = path.join(
-      outDir,
-      getOutputFileFn(output[0].fileName, format, timestamp),
-    )
+    const outPath = path.join(outDir, output[0].fileName)
 
     mod = await import(outPath)
   } finally {
     if (!options.preserveTemporaryFile) {
       // Remove the output files after execution
-      for (const chunk of output) {
-        if (chunk.type !== 'chunk') {
-          continue
-        }
-
-        const outPath = path.join(
-          outDir,
-          getOutputFileFn(chunk.fileName, format, timestamp),
-        )
-
-        await fs.promises.unlink(outPath)
-      }
+      await fs.promises.rm(outDir, { recursive: true, force: true })
     }
   }
 
@@ -72,16 +77,4 @@ export async function extractResult(build: RollupBuild, options: Options) {
     mod,
     dependencies,
   }
-}
-
-// Use a random path to avoid import cache
-function defaultGetOutputFile(
-  filepath: string,
-  format: 'esm' | 'cjs',
-  randomId: string,
-) {
-  return filepath.replace(
-    JS_EXT_RE,
-    `.bundled_${randomId}.${format === 'esm' ? 'mjs' : 'cjs'}`,
-  )
 }

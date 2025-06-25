@@ -19,10 +19,14 @@ import { swapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.j
  * Pre-configured vite plugin, with required config for Redwood apps.
  */
 export default function redwoodPluginVite(): PluginOption[] {
+  console.log('redwoodPluginVite')
+
   const rwPaths = getPaths()
   const rwConfig = getConfig()
 
   const clientEntryPath = rwPaths.web.entryClient
+
+  console.log('redwoodPluginVite', clientEntryPath)
 
   if (!clientEntryPath) {
     throw new Error(
@@ -31,6 +35,7 @@ export default function redwoodPluginVite(): PluginOption[] {
   }
 
   const relativeEntryPath = path.relative(rwPaths.web.src, clientEntryPath)
+  console.log('redwoodPluginVite relativeEntryPath', relativeEntryPath)
 
   // If realtime is enabled, we want to include the sseLink in the bundle.
   // Right now the only way we have of telling is if the package is installed on the api side.

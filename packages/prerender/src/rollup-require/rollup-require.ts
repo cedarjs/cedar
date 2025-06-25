@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
 import alias from '@rollup/plugin-alias'
 import commonjs from '@rollup/plugin-commonjs'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
@@ -29,7 +32,9 @@ const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   })
 }
 
-export async function rollupRequire<T = any>(
+export async function rollupRequire<
+  T extends { default: React.FunctionComponent },
+>(
   options: Options,
 ): Promise<{
   mod: T
@@ -60,13 +65,23 @@ export async function rollupRequire<T = any>(
 
   const tsConfigs = parseTypeScriptConfigFiles()
   const webBase = getPaths().web.base
+  const outDir = path.join(getPaths().web.dist, '__prerender')
+
+  if (!fs.existsSync(outDir)) {
+    fs.mkdirSync(outDir, { recursive: true })
+  }
 
   const build = await rollup({
-    input: options.filepath,
+    input: [options.filepath],
+    output: {
+      dir: outDir,
+    },
     jsx: 'react-jsx',
+    logLevel: 'debug',
+    external: ['react', 'react-dom'],
     plugins: [
       externalPlugin({
-        external: options.external,
+        external: options.external || ['react', 'react-dom'],
         notExternal: [...(options.notExternal || []), ...resolvePaths],
         filepath: options.filepath,
         externalNodeModules: options.externalNodeModules,
@@ -121,7 +136,7 @@ export async function rollupRequire<T = any>(
   })
 
   try {
-    return await extractResult(build, options)
+    return await extractResult<T>(build, options, outDir)
   } finally {
     await build.close()
   }
