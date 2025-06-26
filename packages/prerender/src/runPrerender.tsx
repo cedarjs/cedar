@@ -18,6 +18,7 @@ import { LocationProvider } from '@cedarjs/router'
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
+import { buildAndImport } from './build-and-import/buildAndImport'
 import { detectPrerenderRoutes } from './detection'
 import {
   GqlHandlerImportError,
@@ -26,7 +27,6 @@ import {
 } from './errors'
 import { executeQuery, getGqlHandler } from './graphql/graphql'
 import { getRootHtmlPath, registerShims, writeToDist } from './internal'
-import { buildAndImport } from './rollup-require/buildAndImport'
 
 // Create an apollo client that we can use to prepopulate the cache and restore it client-side
 const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
