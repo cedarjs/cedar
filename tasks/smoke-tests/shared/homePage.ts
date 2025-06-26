@@ -9,7 +9,7 @@ export async function checkHomePageCellRender(page: Page) {
   expect(cellSuccessState).toMatch(/What is the meaning of life\?/)
 
   const navTitle = await page.locator('header >> h1').innerText()
-  expect(navTitle).toBe('Redwood Blog')
+  expect(navTitle).toBe('Cedar Blog')
 
   const navLinks = await page.locator('nav >> ul').innerText()
   expect(navLinks.split('\n')).toEqual([
