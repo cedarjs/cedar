@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 import React from 'react'
 
@@ -10,7 +9,11 @@ import type { CheerioAPI } from 'cheerio'
 import { load as loadHtml } from 'cheerio'
 import ReactDOMServer from 'react-dom/server'
 
-import { getPaths, ensurePosixPath } from '@cedarjs/project-config'
+import {
+  getPaths,
+  ensurePosixPath,
+  importStatementPath,
+} from '@cedarjs/project-config'
 import { LocationProvider } from '@cedarjs/router'
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
@@ -242,10 +245,10 @@ interface Args {
 
 async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
   const combinedContent = `
-    // import App from "${appPath.replace('.tsx', '')}";
-    // import Routes from "${routesPath.replace('.tsx', '')}";
-    import App from "../../src/App";
-    import Routes from "../../src/Routes";
+    import App from "${importStatementPath(appPath.replace('.tsx', ''))}";
+    import Routes from "${importStatementPath(routesPath.replace('.tsx', ''))}";
+    // import App from "../../src/App";
+    // import Routes from "../../src/Routes";
     import { CellCacheContextProvider } from '@cedarjs/web'
 
     export { App, Routes, CellCacheContextProvider };
@@ -280,8 +283,8 @@ export const runPrerender = async ({
 
   if (!renderCache.App) {
     const entryPath = await createCombinedEntry({
-      appPath: pathToFileURL(getPaths().web.app).href,
-      routesPath: pathToFileURL(getPaths().web.routes).href,
+      appPath: getPaths().web.app,
+      routesPath: getPaths().web.routes,
       outDir: prerenderDistPath,
     })
 
