@@ -159,7 +159,7 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
  * entry.server.tsx and the html file is not used at all, because it is defined
  * in Document.tsx
  *
- * @param ssr {boolean} Whether to return the SSR inputs or not
+ * @param ssr Whether to return the SSR inputs or not
  * @returns Rollup input Options
  */
 function getRollupInput(ssr: boolean): InputOption | undefined {
