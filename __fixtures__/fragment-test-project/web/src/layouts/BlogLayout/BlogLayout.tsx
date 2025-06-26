@@ -17,7 +17,7 @@ const BlogLayout = ({ children }: BlogLayoutProps) => {
             className="text-blue-400 transition duration-100 hover:text-blue-100"
             to={routes.home()}
           >
-            Redwood Blog
+            Cedar Blog
           </Link>
         </h1>
         <nav>

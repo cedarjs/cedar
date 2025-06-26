@@ -171,7 +171,7 @@ test('Check that a specific blog post is prerendered', async () => {
   expect(mainContent).not.toMatch(/A little more about me/)
 
   const navTitle = await pageWithoutJs.locator('header >> h1').innerText()
-  expect(navTitle).toBe('Redwood Blog')
+  expect(navTitle).toBe('Cedar Blog')
 
   const navLinks = await pageWithoutJs.locator('nav >> ul').innerText()
   expect(navLinks.split('\n')).toEqual([

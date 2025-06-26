@@ -30,7 +30,7 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
   )
 
   const textBlue400 = 'rgb(96, 165, 250)'
-  expect(await page.getByRole('link', { name: 'Redwood Blog' })).toHaveCSS(
+  expect(await page.getByRole('link', { name: 'Cedar Blog' })).toHaveCSS(
     'color',
     textBlue400,
   )

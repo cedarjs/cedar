@@ -82,7 +82,7 @@ export const test_pages = () =>
       path.join(BASE_DIR, 'web/src/pages/AboutPage/AboutPage.jsx'),
       Step2_2_PagesAbout,
     )
-    cy.get('h1').should('contain', 'Redwood Blog')
+    cy.get('h1').should('contain', 'Cedar Blog')
     cy.contains('Return home').click()
   })
 
@@ -98,7 +98,7 @@ export const test_layouts = () =>
       path.join(BASE_DIR, 'web/src/pages/HomePage/HomePage.jsx'),
       Step3_3_PagesHome,
     )
-    cy.contains('Redwood Blog').click()
+    cy.contains('Cedar Blog').click()
     cy.get('main').should('contain', 'Home')
 
     cy.writeFile(

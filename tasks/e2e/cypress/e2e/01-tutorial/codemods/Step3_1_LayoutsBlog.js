@@ -8,7 +8,7 @@ const BlogLayout = ({ children }) => {
     <>
       <header>
         <h1>
-          <Link to={routes.home()}>Redwood Blog</Link>
+          <Link to={routes.home()}>Cedar Blog</Link>
         </h1>
         <nav>
           <ul>
