@@ -6,8 +6,30 @@ import { vi, expect, test, assert } from 'vitest'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
 
-import { rollupRequire } from '../rollup-require'
+import { buildAndImport } from '../buildAndImport'
 import { JS_EXT_RE } from '../utils'
+
+vi.mock('node:fs', async (importOriginal) => {
+  const originalFs = await importOriginal<typeof fs>()
+
+  return {
+    ...originalFs,
+    default: {
+      ...originalFs,
+      existsSync: () => true,
+      mkdirSync: () => {},
+      readFileSync: () => '',
+      statSync: () => {},
+      promises: {
+        exists: () => true,
+        mkdir: () => {},
+        readFile: () => '',
+        writeFile: () => {},
+        rm: () => {},
+      },
+    },
+  }
+})
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
@@ -67,19 +89,16 @@ function getCwd(folderName: string) {
 test('main', async () => {
   const cwd = getCwd('main')
   const filepath = path.join(cwd, 'input.ts')
-  const { mod, dependencies } = await rollupRequire({ filepath, cwd })
+  const imported = await buildAndImport({ filepath, cwd })
 
-  expect(mod.default.a.filename).toMatch(/[\\/]main[\\/]a\.ts$/)
-  expect(dependencies.length).toEqual(2)
-  expect(dependencies[0]).toMatch('a.ts')
-  expect(dependencies[1]).toMatch('input.ts')
+  expect(imported.a.filename).toMatch(/[\\/]main[\\/]a\.ts$/)
 })
 
 test('preserveTemporaryFile', async () => {
   const cwd = getCwd('preserve-temporary-file')
   const filepath = path.join(cwd, 'input.ts')
 
-  await rollupRequire({
+  await buildAndImport({
     filepath,
     preserveTemporaryFile: true,
     cwd,
@@ -103,7 +122,7 @@ test('ignore node_modules', async () => {
   const filepath = path.join(cwd, 'input.ts')
 
   try {
-    await rollupRequire({ filepath, cwd })
+    await buildAndImport({ filepath, cwd })
     assert.equal(true, false)
   } catch (error: any) {
     expect(error.message).toMatch(/Failed to load url foo/)
@@ -114,19 +133,19 @@ test('resolve tsconfig paths', async () => {
   const cwd = getCwd('resolve-tsconfig-paths')
   const filepath = path.join(cwd, 'input.ts')
 
-  const { mod } = await rollupRequire({ filepath, cwd })
+  const imported = await buildAndImport({ filepath, cwd })
 
-  assert.equal(mod.foo, 'foo')
+  assert.equal(imported.foo, 'foo')
 })
 
 test('replace import.meta.url', async () => {
   const cwd = getCwd('replace-path')
   const filepath = path.join(cwd, 'input.ts')
 
-  const { mod } = await rollupRequire({ filepath, cwd })
+  const imported = await buildAndImport({ filepath, cwd })
 
-  expect(mod.dir).toEqual(cwd)
-  expect(mod.file).toEqual(filepath)
-  expect(mod.importMetaUrl).toMatch(/^file:\/\//)
-  expect(mod.importMetaUrl).toEqual(pathToFileURL(filepath).href)
+  expect(imported.dir).toEqual(cwd)
+  expect(imported.file).toEqual(filepath)
+  expect(imported.importMetaUrl).toMatch(/^file:\/\//)
+  expect(imported.importMetaUrl).toEqual(pathToFileURL(filepath).href)
 })

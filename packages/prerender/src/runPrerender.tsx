@@ -9,16 +9,11 @@ import type { CheerioAPI } from 'cheerio'
 import { load as loadHtml } from 'cheerio'
 import ReactDOMServer from 'react-dom/server'
 
-import {
-  registerApiSideBabelHook,
-  registerWebSideBabelHook,
-} from '@cedarjs/babel-config'
 import { getPaths, ensurePosixPath } from '@cedarjs/project-config'
 import { LocationProvider } from '@cedarjs/router'
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
-import mediaImportsPlugin from './babelPlugins/babel-plugin-redwood-prerender-media-imports'
 import { detectPrerenderRoutes } from './detection'
 import {
   GqlHandlerImportError,
@@ -27,7 +22,7 @@ import {
 } from './errors'
 import { executeQuery, getGqlHandler } from './graphql/graphql'
 import { getRootHtmlPath, registerShims, writeToDist } from './internal'
-import { rollupRequire } from './rollup-require/rollup-require'
+import { buildAndImport } from './rollup-require/buildAndImport'
 
 // Create an apollo client that we can use to prepopulate the cache and restore it client-side
 const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
@@ -273,57 +268,7 @@ export const runPrerender = async ({
 }: PrerenderParams): Promise<string | void> => {
   registerShims(renderPath)
 
-  // registerApiSideBabelHook already includes the default api side babel
-  // config. So what we define here is additions to the default config
-  registerApiSideBabelHook({
-    plugins: [
-      [
-        'babel-plugin-module-resolver',
-        {
-          alias: {
-            api: getPaths().api.base,
-            web: getPaths().web.base,
-          },
-          loglevel: 'silent', // to silence the unnecessary warnings
-        },
-      ],
-    ],
-    overrides: [
-      {
-        test: ['./api/'],
-        plugins: [
-          [
-            'babel-plugin-module-resolver',
-            {
-              alias: {
-                src: getPaths().api.src,
-              },
-              loglevel: 'silent',
-            },
-            'exec-api-src-module-resolver',
-          ],
-        ],
-      },
-    ],
-  })
-
   const gqlHandler = await getGqlHandler()
-
-  // Prerender specific configuration
-  // extends projects web/babelConfig
-  registerWebSideBabelHook({
-    overrides: [
-      {
-        plugins: [
-          ['ignore-html-and-css-imports'], // webpack/postcss handles CSS imports
-          [mediaImportsPlugin],
-        ],
-      },
-    ],
-    options: {
-      forPrerender: true,
-    },
-  })
 
   const prerenderDistPath = path.join(getPaths().web.dist, '__prerender')
   fs.mkdirSync(prerenderDistPath, { recursive: true })
@@ -333,10 +278,9 @@ export const runPrerender = async ({
       getPaths().web.app,
       getPaths().web.routes,
       prerenderDistPath,
-      // path.join(getPaths().web.src),
     )
 
-    const required = await rollupRequire({
+    const required = await buildAndImport({
       cwd: getPaths().web.base,
       filepath: entryPath,
       preserveTemporaryFile: true,

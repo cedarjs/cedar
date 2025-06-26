@@ -20,6 +20,7 @@ import { cedarjsDirectoryNamedImportPlugin } from '../rollupPlugins/rollup-plugi
 import { externalPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-external'
 import { ignoreHtmlAndCssImportsPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-ignore-html-and-css-imports'
 import { injectFileGlobalsPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-inject-file-globals'
+import { cedarjsPrerenderMediaImportsPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-prerender-media-imports'
 import { cedarjsRoutesAutoLoaderPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader'
 import { typescriptPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-typescript'
 
@@ -32,7 +33,7 @@ const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   })
 }
 
-export async function rollupRequire(
+export async function buildAndImport(
   options: Options,
 ): Promise<Record<string, React.FunctionComponent>> {
   if (!isValidJsFile(options.filepath)) {
@@ -107,6 +108,7 @@ export async function rollupRequire(
       cellTransformPlugin(),
       cedarjsRoutesAutoLoaderPlugin({ forPrerender: true }),
       cedarjsDirectoryNamedImportPlugin(),
+      cedarjsPrerenderMediaImportsPlugin(),
       commonjs(),
       typescriptPlugin(options.filepath, tsconfig),
       unimportPlugin.rollup({
