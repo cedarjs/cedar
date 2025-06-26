@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 /** Match .mjs, .cts, .ts, .jsx etc */
 export const JS_EXT_RE = /\.([mc]?[tj]s|[tj]sx)$/
@@ -75,4 +76,12 @@ export function setPrerenderChunkIds(
   )
 
   return newCode
+}
+
+/**
+ * Converts a file path to a URL path (file://...)
+ * Without this, absolute paths can't be imported on Windows
+ */
+export function makeFilePath(path: string) {
+  return pathToFileURL(path).href
 }

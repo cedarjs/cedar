@@ -9,7 +9,11 @@ import { loadTsConfig } from 'load-tsconfig'
 import { rollup } from 'rollup'
 import unimportPlugin from 'unimport/unplugin'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getPaths,
+  importStatementPath,
+} from '@cedarjs/project-config'
 
 import {
   getPathsFromTypeScriptConfig,
@@ -25,7 +29,12 @@ import { cedarjsRoutesAutoLoaderPlugin } from '../rollupPlugins/rollup-plugin-ce
 import { typescriptPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-typescript'
 
 import type { Options } from './types'
-import { guessFormat, isValidJsFile, setPrerenderChunkIds } from './utils'
+import {
+  guessFormat,
+  isValidJsFile,
+  makeFilePath,
+  setPrerenderChunkIds,
+} from './utils'
 
 const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   return Object.keys(paths || {}).map((key) => {
@@ -159,12 +168,28 @@ export async function buildAndImport(
 
     const outPath = path.join(outDir, output[0].fileName)
 
+    console.log('[DEBUG] buildAndImport - outPath:', outPath)
+    console.log(
+      '[DEBUG] buildAndImport - isAbsolute(outPath):',
+      path.isAbsolute(outPath),
+    )
+    console.log('[DEBUG] buildAndImport - filePath:', makeFilePath(outPath))
+    console.log(
+      '[DEBUG] buildAndImport - importStatementPath:',
+      importStatementPath(outPath),
+    )
+    console.log(
+      '[DEBUG] buildAndImport - makeFilePath(importStatementPath):',
+      makeFilePath(importStatementPath(outPath)),
+    )
+
     // Convert Windows absolute paths to file:// URLs for ESM import
     let importPath = outPath
     if (process.platform === 'win32' && path.isAbsolute(outPath)) {
       // Convert backslashes to forward slashes and prepend file://
       importPath = `file:///${outPath.replace(/\\/g, '/')}`
     }
+    console.log('[DEBUG] buildAndImport - importPath:', importPath)
 
     return import(importPath)
   } finally {
