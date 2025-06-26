@@ -1,5 +1,6 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import React from 'react'
 
@@ -233,14 +234,18 @@ function insertChunkLoadingScript(
   })
 }
 
-async function createCombinedEntry(
-  appPath: string,
-  routesPath: string,
-  outDir: string,
-) {
+interface Args {
+  appPath: string
+  routesPath: string
+  outDir: string
+}
+
+async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
   const combinedContent = `
-    import App from "${appPath.replace('.tsx', '')}";
-    import Routes from "${routesPath.replace('.tsx', '')}";
+    // import App from "${appPath.replace('.tsx', '')}";
+    // import Routes from "${routesPath.replace('.tsx', '')}";
+    import App from "../../src/App";
+    import Routes from "../../src/Routes";
     import { CellCacheContextProvider } from '@cedarjs/web'
 
     export { App, Routes, CellCacheContextProvider };
@@ -274,11 +279,11 @@ export const runPrerender = async ({
   fs.mkdirSync(prerenderDistPath, { recursive: true })
 
   if (!renderCache.App) {
-    const entryPath = await createCombinedEntry(
-      getPaths().web.app,
-      getPaths().web.routes,
-      prerenderDistPath,
-    )
+    const entryPath = await createCombinedEntry({
+      appPath: pathToFileURL(getPaths().web.app).href,
+      routesPath: pathToFileURL(getPaths().web.routes).href,
+      outDir: prerenderDistPath,
+    })
 
     const required = await buildAndImport({
       cwd: getPaths().web.base,
