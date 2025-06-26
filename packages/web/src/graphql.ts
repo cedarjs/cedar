@@ -17,9 +17,8 @@ import { Kind, type DocumentNode } from 'graphql'
  *   `
  * ```
  *
- * @param {DocumentNode} document
- *   graphql query or mutation to get the operation name for
- * @returns {string} empty string if no operation name could be found
+ * @param document graphql query or mutation to get the operation name for
+ * @returns empty string if no operation name could be found
  */
 export function getOperationName(document: DocumentNode) {
   for (const definition of document.definitions) {
