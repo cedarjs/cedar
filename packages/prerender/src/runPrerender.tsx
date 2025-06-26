@@ -35,14 +35,13 @@ const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
 async function recursivelyRender(
   App: React.ElementType,
   Routes: React.ElementType,
+  CellCacheContextProvider: React.ElementType,
   renderPath: string,
   gqlHandler: any,
   queryCache: Record<string, QueryInfo>,
 ): Promise<string> {
   // Load this async, to prevent rwjs/web being loaded before shims
-  const { CellCacheContextProvider, getOperationName } = await import(
-    '@cedarjs/web'
-  )
+  const { getOperationName } = await import('@cedarjs/web')
 
   let shouldShowGraphqlHandlerNotFoundWarn = false
   // Execute all gql queries we haven't already fetched
@@ -79,10 +78,9 @@ async function recursivelyRender(
             result.errors[0].message ?? JSON.stringify(result.errors, null, 4)
 
           if (result.errors[0]?.extensions?.code === 'UNAUTHENTICATED') {
+            const queryName = getOperationName(value.query)
             console.error(
-              `\n \n 🛑  Cannot prerender the query ${getOperationName(
-                value.query,
-              )} as it requires auth. \n`,
+              `\n \n 🛑  Cannot prerender the query ${queryName} as it requires auth. \n`,
             )
           }
 
@@ -140,7 +138,14 @@ async function recursivelyRender(
   if (Object.values(queryCache).some((value) => !value.hasProcessed)) {
     // We found new queries that we haven't fetched yet. Execute all new
     // queries and render again
-    return recursivelyRender(App, Routes, renderPath, gqlHandler, queryCache)
+    return recursivelyRender(
+      App,
+      Routes,
+      CellCacheContextProvider,
+      renderPath,
+      gqlHandler,
+      queryCache,
+    )
   } else {
     if (shouldShowGraphqlHandlerNotFoundWarn) {
       console.warn(
@@ -233,16 +238,33 @@ function insertChunkLoadingScript(
   })
 }
 
-interface PrerenderParams {
-  queryCache: Record<string, QueryInfo>
-  renderPath: string // The path (url) to render e.g. /about, /dashboard/me, /blog-post/3
+async function createCombinedEntry(
+  appPath: string,
+  routesPath: string,
+  outDir: string,
+) {
+  const combinedContent = `
+    import App from "${appPath.replace('.tsx', '')}";
+    import Routes from "${routesPath.replace('.tsx', '')}";
+    import { CellCacheContextProvider } from '@cedarjs/web'
+
+    export { App, Routes, CellCacheContextProvider };
+  `
+
+  const tempFilePath = path.join(outDir, '__prerender-temp-entry.tsx')
+  await fs.promises.writeFile(tempFilePath, combinedContent, 'utf8')
+  return tempFilePath
 }
 
 const renderCache: {
   App?: React.FunctionComponent
   Routes?: React.FunctionComponent
-} = {
-  // Routes: () => null,
+  CellCacheContextProvider?: React.FunctionComponent
+} = {}
+
+interface PrerenderParams {
+  queryCache: Record<string, QueryInfo>
+  renderPath: string // The path (url) to render e.g. /about, /dashboard/me, /blog-post/3
 }
 
 export const runPrerender = async ({
@@ -250,6 +272,7 @@ export const runPrerender = async ({
   renderPath,
 }: PrerenderParams): Promise<string | void> => {
   registerShims(renderPath)
+
   // registerApiSideBabelHook already includes the default api side babel
   // config. So what we define here is additions to the default config
   registerApiSideBabelHook({
@@ -302,27 +325,29 @@ export const runPrerender = async ({
     },
   })
 
+  const prerenderDistPath = path.join(getPaths().web.dist, '__prerender')
+  fs.mkdirSync(prerenderDistPath, { recursive: true })
+
   if (!renderCache.App) {
-    const { mod: App } = await rollupRequire({
+    const entryPath = await createCombinedEntry(
+      getPaths().web.app,
+      getPaths().web.routes,
+      prerenderDistPath,
+      // path.join(getPaths().web.src),
+    )
+
+    const required = await rollupRequire({
       cwd: getPaths().web.base,
-      filepath: getPaths().web.app,
+      filepath: entryPath,
       preserveTemporaryFile: true,
     })
 
-    renderCache.App = App.default
+    renderCache.App = required.App
+    renderCache.Routes = required.Routes
+    renderCache.CellCacheContextProvider = required.CellCacheContextProvider
   }
 
-  if (!renderCache.Routes) {
-    const { mod: Routes } = await rollupRequire({
-      cwd: getPaths().web.base,
-      filepath: getPaths().web.routes,
-      preserveTemporaryFile: true,
-    })
-
-    renderCache.Routes = Routes.default
-  }
-
-  const { App, Routes } = renderCache
+  const { App, Routes, CellCacheContextProvider } = renderCache
 
   if (!App) {
     throw new Error('App not found')
@@ -332,9 +357,14 @@ export const runPrerender = async ({
     throw new Error('Routes not found')
   }
 
+  if (!CellCacheContextProvider) {
+    throw new Error('CellCacheContextProvider not found')
+  }
+
   const componentAsHtml = await recursivelyRender(
     App,
     Routes,
+    CellCacheContextProvider,
     renderPath,
     gqlHandler,
     queryCache,

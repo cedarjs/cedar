@@ -4,6 +4,7 @@ import path from 'node:path'
 import alias from '@rollup/plugin-alias'
 import commonjs from '@rollup/plugin-commonjs'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
+import replace from '@rollup/plugin-replace'
 import { loadTsConfig } from 'load-tsconfig'
 import { rollup } from 'rollup'
 import unimportPlugin from 'unimport/unplugin'
@@ -22,9 +23,8 @@ import { injectFileGlobalsPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-
 import { cedarjsRoutesAutoLoaderPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader'
 import { typescriptPlugin } from '../rollupPlugins/rollup-plugin-cedarjs-typescript'
 
-import { extractResult } from './rollup-require-results'
 import type { Options } from './types'
-import { isValidJsFile } from './utils'
+import { guessFormat, isValidJsFile, setPrerenderChunkIds } from './utils'
 
 const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   return Object.keys(paths || {}).map((key) => {
@@ -32,14 +32,9 @@ const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   })
 }
 
-export async function rollupRequire<
-  T extends { default: React.FunctionComponent },
->(
+export async function rollupRequire(
   options: Options,
-): Promise<{
-  mod: T
-  dependencies: string[]
-}> {
+): Promise<Record<string, React.FunctionComponent>> {
   if (!isValidJsFile(options.filepath)) {
     throw new Error(`${options.filepath} is not a valid JS file`)
   }
@@ -91,6 +86,10 @@ export async function rollupRequire<
         exportConditions: ['node'],
         extensions: ['.js', '.ts', '.tsx', '.mjs', '.cjs'],
       }),
+      replace({
+        preventAssignment: true,
+        'process.env.NODE_ENV': '"production"',
+      }),
       alias({
         entries: [
           {
@@ -136,8 +135,35 @@ export async function rollupRequire<
   })
 
   try {
-    return await extractResult<T>(build, options, outDir)
+    const format = options.format ?? guessFormat(options.filepath)
+
+    const { output } = await build.generate({
+      dir: outDir,
+      format: format === 'esm' ? 'es' : 'cjs',
+      exports: 'auto',
+      sourcemap: 'inline',
+    })
+
+    for (const chunk of output) {
+      if (chunk.type !== 'chunk') {
+        throw new Error('[bundle-require] Expected chunk output')
+      }
+
+      const code = setPrerenderChunkIds(chunk.code, chunk.dynamicImports)
+      const chunkPath = path.join(outDir, chunk.fileName)
+
+      await fs.promises.writeFile(chunkPath, code, 'utf8')
+    }
+
+    const outPath = path.join(outDir, output[0].fileName)
+
+    return import(outPath)
   } finally {
+    if (!options.preserveTemporaryFile) {
+      // Remove the output files after execution
+      await fs.promises.rm(outDir, { recursive: true, force: true })
+    }
+
     await build.close()
   }
 }
