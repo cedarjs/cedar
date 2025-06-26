@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from 'vitest'
 
-import InMemoryClient from '../clients/InMemoryClient.js'
+import { InMemoryClient } from '../clients/InMemoryClient.js'
 import { CacheTimeoutError } from '../errors.js'
 import { createCache } from '../index.js'
 

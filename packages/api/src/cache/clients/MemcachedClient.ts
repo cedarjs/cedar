@@ -1,8 +1,8 @@
 import type { Client as ClientType, ClientOptions, ServerOptions } from 'memjs'
 
-import BaseClient from './BaseClient.js'
+import { BaseClient } from './BaseClient.js'
 
-export default class MemcachedClient extends BaseClient {
+export class MemcachedClient extends BaseClient {
   client?: ClientType | null
   servers
   options
