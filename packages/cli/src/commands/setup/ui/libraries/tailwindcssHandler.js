@@ -151,6 +151,12 @@ export const handler = async ({ force, install }) => {
                     ['workspace', 'web', 'add', '-D', ...webWorkspacePackages],
                     {
                       cwd: rwPaths.base,
+                      env: {
+                        // For some reason yarn started installing deprecated
+                        // typescript types when installing tailwind. This
+                        // prevents it from happening.
+                        YARN_TS_ENABLE_AUTO_TYPES: 'false',
+                      },
                     },
                   )
                 },
