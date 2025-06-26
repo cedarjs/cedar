@@ -77,7 +77,7 @@ export async function buildAndImport(
     external: ['react', 'react-dom'],
     plugins: [
       externalPlugin({
-        external: options.external || ['react', 'react-dom'],
+        external: options.external,
         notExternal: [...(options.notExternal || []), ...resolvePaths],
         filepath: options.filepath,
         externalNodeModules: options.externalNodeModules,
@@ -85,7 +85,7 @@ export async function buildAndImport(
       nodeResolve({
         preferBuiltins: true,
         exportConditions: ['node'],
-        extensions: ['.js', '.ts', '.tsx', '.mjs', '.cjs'],
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'],
       }),
       replace({
         preventAssignment: true,
