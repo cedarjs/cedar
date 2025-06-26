@@ -247,8 +247,6 @@ async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
   const combinedContent = `
     import App from "${importStatementPath(appPath.replace('.tsx', ''))}";
     import Routes from "${importStatementPath(routesPath.replace('.tsx', ''))}";
-    // import App from "../../src/App";
-    // import Routes from "../../src/Routes";
     import { CellCacheContextProvider } from '@cedarjs/web'
 
     export { App, Routes, CellCacheContextProvider };

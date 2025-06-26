@@ -1,13 +1,10 @@
 import { parse as parsePath } from 'node:path'
 
-import babelGenerator from '@babel/generator'
+import generate from '@babel/generator'
 import { parse } from '@babel/parser'
-import babelTraverse from '@babel/traverse'
+import traverse from '@babel/traverse'
 import type * as t from '@babel/types'
 import type { Plugin } from 'rollup'
-
-const traverse = babelTraverse //.default
-const generate = babelGenerator //.default
 
 // A cell can export the declarations below.
 const EXPECTED_EXPORTS_FROM_CELL = [
