@@ -398,20 +398,12 @@ export const ensurePosixPath = (path: string) => {
  * @param path Filesystem path
  */
 export const importStatementPath = (path: string) => {
-  console.log('[DEBUG] importStatementPath - input path:', path)
-  console.log(
-    '[DEBUG] importStatementPath - process.platform:',
-    process.platform,
-  )
-
   let importPath = path
 
   if (process.platform === 'win32') {
     importPath = importPath.replaceAll('\\', '/')
-    console.log('[DEBUG] importStatementPath - converted path:', importPath)
   }
 
-  console.log('[DEBUG] importStatementPath - final path:', importPath)
   return importPath
 }
 

@@ -63,16 +63,9 @@ export async function buildAndImport(
   const webBase = getPaths().web.base
   const outDir = path.join(getPaths().web.dist, '__prerender')
 
-  console.log('[DEBUG] buildAndImport - outDir:', outDir)
-  console.log('[DEBUG] buildAndImport - filepath:', options.filepath)
-  console.log('[DEBUG] buildAndImport - cwd:', cwd)
-
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true })
   }
-
-  console.log('[DEBUG] buildAndImport - rollup input:', [options.filepath])
-  console.log('[DEBUG] buildAndImport - rollup output dir:', outDir)
 
   const build = await rollup({
     input: [options.filepath],
@@ -145,7 +138,6 @@ export async function buildAndImport(
 
   try {
     const format = options.format ?? guessFormat(options.filepath)
-    console.log('[DEBUG] buildAndImport - detected format:', format)
 
     const { output } = await build.generate({
       dir: outDir,
@@ -154,50 +146,26 @@ export async function buildAndImport(
       sourcemap: 'inline',
     })
 
-    console.log(
-      '[DEBUG] buildAndImport - generated output chunks:',
-      output.length,
-    )
-
     for (const chunk of output) {
       if (chunk.type !== 'chunk') {
         throw new Error('[bundle-require] Expected chunk output')
       }
 
-      console.log('[DEBUG] buildAndImport - processing chunk:', chunk.fileName)
-      console.log('[DEBUG] buildAndImport - chunk imports:', chunk.imports)
-      console.log(
-        '[DEBUG] buildAndImport - chunk dynamicImports:',
-        chunk.dynamicImports,
-      )
-
       const code = setPrerenderChunkIds(chunk.code, chunk.dynamicImports)
       const chunkPath = path.join(outDir, chunk.fileName)
-      console.log('[DEBUG] buildAndImport - writing chunk to:', chunkPath)
 
       await fs.promises.writeFile(chunkPath, code, 'utf8')
     }
 
     const outPath = path.join(outDir, output[0].fileName)
-    console.log('[DEBUG] buildAndImport - outPath before import:', outPath)
-    console.log('[DEBUG] buildAndImport - process.platform:', process.platform)
-    console.log(
-      '[DEBUG] buildAndImport - path.isAbsolute(outPath):',
-      path.isAbsolute(outPath),
-    )
 
     // Convert Windows absolute paths to file:// URLs for ESM import
     let importPath = outPath
     if (process.platform === 'win32' && path.isAbsolute(outPath)) {
       // Convert backslashes to forward slashes and prepend file://
       importPath = `file:///${outPath.replace(/\\/g, '/')}`
-      console.log(
-        '[DEBUG] buildAndImport - converted importPath for Windows:',
-        importPath,
-      )
     }
 
-    console.log('[DEBUG] buildAndImport - final importPath:', importPath)
     return import(importPath)
   } finally {
     if (!options.preserveTemporaryFile) {

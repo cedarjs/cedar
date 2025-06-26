@@ -244,22 +244,9 @@ interface Args {
 }
 
 async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
-  console.log('[DEBUG] createCombinedEntry - appPath:', appPath)
-  console.log('[DEBUG] createCombinedEntry - routesPath:', routesPath)
-  console.log('[DEBUG] createCombinedEntry - outDir:', outDir)
-
-  const appImportPath = importStatementPath(appPath.replace('.tsx', ''))
-  const routesImportPath = importStatementPath(routesPath.replace('.tsx', ''))
-
-  console.log('[DEBUG] createCombinedEntry - appImportPath:', appImportPath)
-  console.log(
-    '[DEBUG] createCombinedEntry - routesImportPath:',
-    routesImportPath,
-  )
-
   const combinedContent = `
-    import App from "${appImportPath}";
-    import Routes from "${routesImportPath}";
+    import App from "${importStatementPath(appPath.replace('.tsx', ''))}";
+    import Routes from "${importStatementPath(routesPath.replace('.tsx', ''))}";
     // import App from "../../src/App";
     // import Routes from "../../src/Routes";
     import { CellCacheContextProvider } from '@cedarjs/web'
@@ -268,28 +255,6 @@ async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
   `
 
   const tempFilePath = path.join(outDir, '__prerender-temp-entry.tsx')
-  console.log('[DEBUG] createCombinedEntry - tempFilePath:', tempFilePath)
-  console.log('[DEBUG] createCombinedEntry - combinedContent:', combinedContent)
-
-  // Check if paths are absolute Windows paths that might cause issues
-  if (process.platform === 'win32') {
-    console.log(
-      '[DEBUG] createCombinedEntry - Windows detected, checking paths:',
-    )
-    console.log(
-      '[DEBUG] createCombinedEntry - appPath is absolute:',
-      path.isAbsolute(appPath),
-    )
-    console.log(
-      '[DEBUG] createCombinedEntry - routesPath is absolute:',
-      path.isAbsolute(routesPath),
-    )
-    console.log(
-      '[DEBUG] createCombinedEntry - tempFilePath is absolute:',
-      path.isAbsolute(tempFilePath),
-    )
-  }
-
   await fs.promises.writeFile(tempFilePath, combinedContent, 'utf8')
   return tempFilePath
 }
@@ -313,35 +278,18 @@ export const runPrerender = async ({
 
   const gqlHandler = await getGqlHandler()
 
-  const paths = getPaths()
-  console.log(
-    '[DEBUG] runPrerender - All paths object:',
-    JSON.stringify(paths, null, 2),
-  )
-
-  const prerenderDistPath = path.join(paths.web.dist, '__prerender')
-  console.log('[DEBUG] runPrerender - prerenderDistPath:', prerenderDistPath)
+  const prerenderDistPath = path.join(getPaths().web.dist, '__prerender')
   fs.mkdirSync(prerenderDistPath, { recursive: true })
 
   if (!renderCache.App) {
-    console.log('[DEBUG] runPrerender - web.app path:', paths.web.app)
-    console.log('[DEBUG] runPrerender - web.routes path:', paths.web.routes)
-    console.log('[DEBUG] runPrerender - web.base path:', paths.web.base)
-    console.log('[DEBUG] runPrerender - web.dist path:', paths.web.dist)
-
     const entryPath = await createCombinedEntry({
-      appPath: paths.web.app,
-      routesPath: paths.web.routes,
+      appPath: getPaths().web.app,
+      routesPath: getPaths().web.routes,
       outDir: prerenderDistPath,
     })
 
-    console.log(
-      '[DEBUG] runPrerender - entryPath before buildAndImport:',
-      entryPath,
-    )
-
     const required = await buildAndImport({
-      cwd: paths.web.base,
+      cwd: getPaths().web.base,
       filepath: entryPath,
       preserveTemporaryFile: true,
     })
