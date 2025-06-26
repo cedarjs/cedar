@@ -27,7 +27,7 @@ runs:
   steps:
     - name: ⬢ Enable Corepack
       shell: bash
-      run: corepack enable
+      run: npm install --global corepack
 
     - name: ⬢ Set up Node.js
       uses: actions/setup-node@v4
@@ -40,7 +40,7 @@ runs:
     - name: ⬢ Enable Corepack
       if: runner.os == 'Windows'
       shell: bash
-      run: corepack enable
+      run: npm install --global corepack
 
     - name: 🐈 Set up yarn cache
       if: inputs.set-up-yarn-cache == 'true'

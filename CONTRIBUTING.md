@@ -55,7 +55,7 @@ Replace `your-username` with your GitHub username below:
 ```terminal
 git clone https://github.com/your-username/cedar.git
 cd cedar
-corepack enable
+npm install --global corepack
 yarn install
 ```
 

@@ -6,12 +6,10 @@
 
 ## Installing yarn
 
-> "The preferred way to manage Yarn is through [Corepack](https://nodejs.org/dist/latest/docs/api/corepack.html), a new binary shipped with all Node.js releases starting from 16.10." <br />-[from the Yarn documentation](https://yarnpkg.com/getting-started/install)
-
-Corepack is included with all Node.js >=16.10 installs, but you must opt-in. To enable it, run the following command:
+The official installation instructions can be found at https://yarnpkg.com/getting-started/install, but basically you have to first install Corepack, and let that manage yarn for you.
 
 ```bash
-corepack enable
+npm install --global corepack
 ```
 
 ## Using the correct version of yarn
@@ -24,19 +22,26 @@ yarn --version
 
 **Redwood requires Yarn (>=1.22.21)**
 
-You can upgrade yarn by running the following command:
+You can upgrade your global yarn version by running the following command:
 
 ```bash
-corepack prepare yarn@stable --activate
+corepack install --global yarn@stable
+```
+
+If you want to upgrade the version of yarn that is used in your project these are the commands to use:
+
+```bash
+yarn set version stable
+yarn install
 ```
 
 :::info
-If this command fails, you may need to [uninstall the current version of Yarn first](#uninstalling-yarn).
+If the `set version` command fails, you may need to [uninstall the current version of Yarn first](#uninstalling-yarn).
 
 ```terminal
 corepack disable
 npm uninstall -g yarn --force
-corepack enable
+npm install --global corepack
 ```
 
 :::

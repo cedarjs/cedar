@@ -47,9 +47,9 @@ export function checkYarnInstallation(config: Config) {
   if (!allYarns) {
     console.log('')
     console.log('Could not find `yarn`')
-    console.log('Please enable yarn by running `corepack enable`')
+    console.log('Please enable yarn by running `npm install --global corepack`')
     console.log(
-      'and then upgrade by running `corepack install --global yarn@latest',
+      'and then upgrade by running `corepack install --global yarn@stable',
     )
     throw new ExitCodeError(1, 'Yarn not found')
   }
