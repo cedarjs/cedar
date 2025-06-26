@@ -26,7 +26,7 @@ vi.mock('@cedarjs/project-config', async () => {
   }
 })
 
-vi.mock('../../babelPlugins/utils', () => ({
+vi.mock('../utils', () => ({
   convertToDataUrl: (assetPath: string) =>
     `data:image/jpg;base64,xxx-mock-b64-${path.basename(assetPath)}`,
 }))
