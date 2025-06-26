@@ -28,7 +28,7 @@ let createServer: typeof tCreateServer
 
 beforeAll(async () => {
   original_RWJS_CWD = process.env.RWJS_CWD
-  process.env.RWJS_CWD = path.join(__dirname, './fixtures/redwood-app')
+  process.env.RWJS_CWD = path.join(__dirname, './fixtures/graphql/cedar-app')
   createServer = (await import('../createServer.js')).createServer
 })
 

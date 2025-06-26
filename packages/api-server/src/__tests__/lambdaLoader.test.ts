@@ -24,7 +24,7 @@ let original_RWJS_CWD: string | undefined
 
 beforeAll(() => {
   original_RWJS_CWD = process.env.RWJS_CWD
-  process.env.RWJS_CWD = path.resolve(__dirname, 'fixtures/redwood-app')
+  process.env.RWJS_CWD = path.resolve(__dirname, 'fixtures/graphql/cedar-app')
 })
 
 afterAll(() => {
@@ -45,6 +45,7 @@ describe('loadFunctionsFromDist', () => {
     await loadFunctionsFromDist()
 
     expect(LAMBDA_FUNCTIONS).toEqual({
+      'another-graphql': expect.any(Function),
       env: expect.any(Function),
       graphql: expect.any(Function),
       health: expect.any(Function),

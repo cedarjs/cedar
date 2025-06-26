@@ -30,7 +30,7 @@ console.log = vi.fn()
 
 // Set up RWJS_CWD.
 let original_RWJS_CWD: string | undefined
-const FIXTURE_PATH = '/redwood-app'
+const FIXTURE_PATH = '/graphql/cedar-app'
 
 beforeAll(() => {
   original_RWJS_CWD = process.env.RWJS_CWD
@@ -52,7 +52,7 @@ const userConfig = {
   requestTimeout: 25_000,
 }
 
-vi.mock('/redwood-app/api/server.config.js', () => {
+vi.mock('/graphql/cedar-app/api/server.config.js', () => {
   return {
     default: {
       config: userConfig,

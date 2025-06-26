@@ -19,7 +19,7 @@ let original_RWJS_CWD: string | undefined
 
 beforeAll(async () => {
   original_RWJS_CWD = process.env.RWJS_CWD
-  process.env.RWJS_CWD = path.join(__dirname, './fixtures/redwood-app')
+  process.env.RWJS_CWD = path.join(__dirname, './fixtures/graphql/cedar-app')
 })
 
 afterAll(() => {
