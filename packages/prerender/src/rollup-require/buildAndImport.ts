@@ -9,11 +9,7 @@ import { loadTsConfig } from 'load-tsconfig'
 import { rollup } from 'rollup'
 import unimportPlugin from 'unimport/unplugin'
 
-import {
-  getConfig,
-  getPaths,
-  importStatementPath,
-} from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import {
   getPathsFromTypeScriptConfig,
@@ -166,30 +162,7 @@ export async function buildAndImport(
       await fs.promises.writeFile(chunkPath, code, 'utf8')
     }
 
-    const outPath = path.join(outDir, output[0].fileName)
-
-    console.log('[DEBUG] buildAndImport - outPath:', outPath)
-    console.log(
-      '[DEBUG] buildAndImport - isAbsolute(outPath):',
-      path.isAbsolute(outPath),
-    )
-    console.log('[DEBUG] buildAndImport - filePath:', makeFilePath(outPath))
-    console.log(
-      '[DEBUG] buildAndImport - importStatementPath:',
-      importStatementPath(outPath),
-    )
-    console.log(
-      '[DEBUG] buildAndImport - makeFilePath(importStatementPath):',
-      makeFilePath(importStatementPath(outPath)),
-    )
-
-    // Convert Windows absolute paths to file:// URLs for ESM import
-    let importPath = outPath
-    if (process.platform === 'win32' && path.isAbsolute(outPath)) {
-      // Convert backslashes to forward slashes and prepend file://
-      importPath = `file:///${outPath.replace(/\\/g, '/')}`
-    }
-    console.log('[DEBUG] buildAndImport - importPath:', importPath)
+    const importPath = makeFilePath(path.join(outDir, output[0].fileName))
 
     return import(importPath)
   } finally {
