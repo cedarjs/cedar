@@ -1,12 +1,12 @@
 // Simple in-memory cache client for testing. NOT RECOMMENDED FOR PRODUCTION
 
-import BaseClient from './BaseClient.js'
+import { BaseClient } from './BaseClient.js'
 
 type CacheOptions = {
   expires?: number
 }
 
-export default class InMemoryClient extends BaseClient {
+export class InMemoryClient extends BaseClient {
   storage: Record<string, { expires: number; value: string }>
 
   // initialize with pre-cached data if needed

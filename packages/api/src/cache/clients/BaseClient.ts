@@ -1,4 +1,4 @@
-export default abstract class BaseClient {
+export abstract class BaseClient {
   constructor() {}
 
   // if your client won't automatically reconnect, implement this function

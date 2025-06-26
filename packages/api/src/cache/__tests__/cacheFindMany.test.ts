@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { describe, afterEach, it, vi, expect } from 'vitest'
 
-import InMemoryClient from '../clients/InMemoryClient.js'
+import { InMemoryClient } from '../clients/InMemoryClient.js'
 import { createCache } from '../index.js'
 
 const mockFindFirst = vi.fn()

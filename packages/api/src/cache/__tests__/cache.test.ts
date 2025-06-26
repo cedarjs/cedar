@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import InMemoryClient from '../clients/InMemoryClient.js'
+import { InMemoryClient } from '../clients/InMemoryClient.js'
 import { createCache } from '../index.js'
 
 describe('cache', () => {
