@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url'
 
 import type { Plugin as RollupPlugin } from 'rollup'
 
-import { JS_EXT_RE } from '../rollup-require/utils'
+import { JS_EXT_RE } from '../utils'
 
 const DIRNAME_VAR_NAME = '__injected_dirname__'
 const FILENAME_VAR_NAME = '__injected_filename__'
