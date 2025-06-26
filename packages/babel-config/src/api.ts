@@ -144,7 +144,7 @@ export const getApiSideBabelPlugins = ({
     ],
   ]
 
-  return plugins.filter(Boolean) as PluginList // ts doesn't play nice with filter(Boolean)
+  return plugins.filter(<T>(n: T | boolean): n is T => Boolean(n))
 }
 
 export const getApiSideBabelConfigPath = () => {
