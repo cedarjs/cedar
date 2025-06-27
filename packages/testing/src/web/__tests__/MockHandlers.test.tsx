@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect } from 'vitest'
 import 'whatwg-fetch'
 
-import { mockGraphQLQuery } from '../mockRequests'
+import { mockGraphQLQuery } from '../mockRequests.js'
 
 vi.setConfig({ testTimeout: 6_000 })
 
@@ -86,7 +86,7 @@ describe('GraphQLMockHandlers', () => {
 
     await waitFor(
       () =>
-        expect(JSON.parse(result.textContent)).toEqual({
+        expect(JSON.parse(result.textContent || '')).toEqual({
           data: onceResult,
         }),
       {
@@ -98,7 +98,7 @@ describe('GraphQLMockHandlers', () => {
 
     await waitFor(
       () =>
-        expect(JSON.parse(result.textContent)).toEqual({
+        expect(JSON.parse(result.textContent || '')).toEqual({
           data: baseResult,
         }),
       {
@@ -111,7 +111,7 @@ describe('GraphQLMockHandlers', () => {
     await waitFor(
       () => {
         expect(status).toHaveTextContent('false')
-        expect(JSON.parse(result.textContent)).toEqual({
+        expect(JSON.parse(result.textContent || '')).toEqual({
           data: baseResult,
         })
       },

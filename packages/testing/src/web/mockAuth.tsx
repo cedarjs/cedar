@@ -4,7 +4,7 @@ import React from 'react'
 // override exports with the same name
 export * from '@cedarjs/auth'
 
-import { mockedUserMeta } from './mockRequests'
+import { mockedUserMeta } from './mockRequests.js'
 
 interface Props {
   children: React.ReactNode

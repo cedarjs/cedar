@@ -5,10 +5,10 @@
 // TL;DR, we need to resolve uuid to a CommonJS version. So we leverage jest's default resolver,
 // but use `packageFilter` to process parsed `package.json` before resolution. In doing so,
 // we only override how jest resolves uuid.
-module.exports = (path, options) => {
+module.exports = (path: string, options: any) => {
   return options.defaultResolver(path, {
     ...options,
-    packageFilter: (pkg) => {
+    packageFilter: (pkg: Record<string, any>) => {
       if (OVERRIDE_EXPORTS_LIST.has(pkg.name)) {
         delete pkg['exports']
         delete pkg['module']

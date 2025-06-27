@@ -1,17 +1,15 @@
-/* eslint-env jest */
+import '@testing-library/jest-dom'
+import 'whatwg-fetch'
 
-require('@testing-library/jest-dom')
-require('whatwg-fetch')
-
-const { findCellMocks } = require('@cedarjs/testing/dist/web/findCellMocks')
-const {
+import { findCellMocks } from '@cedarjs/testing/dist/web/findCellMocks.js'
+import {
   startMSW,
   setupRequestHandlers,
   closeServer,
   mockGraphQLMutation,
   mockGraphQLQuery,
   mockCurrentUser,
-} = require('@cedarjs/testing/dist/web/mockRequests')
+} from '@cedarjs/testing/dist/web/mockRequests.js'
 
 global.mockGraphQLQuery = mockGraphQLQuery
 global.mockGraphQLMutation = mockGraphQLMutation

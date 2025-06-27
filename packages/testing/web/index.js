@@ -1,2 +1,1 @@
-/* eslint-env es6, commonjs */
-module.exports = require('../dist/web')
+export default '../dist/web/index.js'

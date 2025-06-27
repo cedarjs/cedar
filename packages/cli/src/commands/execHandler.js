@@ -5,10 +5,6 @@ import { context } from '@opentelemetry/api'
 import { suppressTracing } from '@opentelemetry/core'
 import { Listr } from 'listr2'
 
-import {
-  getWebSideDefaultBabelConfig,
-  registerApiSideBabelHook,
-} from '@cedarjs/babel-config'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
 
@@ -87,64 +83,7 @@ export const handler = async (args) => {
   delete scriptArgs.s
   delete scriptArgs.silent
 
-  const {
-    overrides: _overrides,
-    plugins: webPlugins,
-    ...otherWebConfig
-  } = getWebSideDefaultBabelConfig()
-
-  // Import babel config for running script
-  registerApiSideBabelHook({
-    plugins: [
-      [
-        'babel-plugin-module-resolver',
-        {
-          alias: {
-            $api: getPaths().api.base,
-            $web: getPaths().web.base,
-            api: getPaths().api.base,
-            web: getPaths().web.base,
-          },
-          loglevel: 'silent', // to silence the unnecessary warnings
-        },
-        'exec-$side-module-resolver',
-      ],
-    ],
-    overrides: [
-      {
-        test: ['./api/'],
-        plugins: [
-          [
-            'babel-plugin-module-resolver',
-            {
-              alias: {
-                src: getPaths().api.src,
-              },
-              loglevel: 'silent',
-            },
-            'exec-api-src-module-resolver',
-          ],
-        ],
-      },
-      {
-        test: ['./web/'],
-        plugins: [
-          ...webPlugins,
-          [
-            'babel-plugin-module-resolver',
-            {
-              alias: {
-                src: getPaths().web.src,
-              },
-              loglevel: 'silent',
-            },
-            'exec-web-src-module-resolver',
-          ],
-        ],
-        ...otherWebConfig,
-      },
-    ],
-  })
+  // Configuration is now handled in the runScriptFunction
 
   const scriptPath = resolveScriptPath(name)
 

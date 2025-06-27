@@ -8,7 +8,7 @@
     "directory": "packages/testing"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "files": [
     "config",
     "web",
@@ -20,6 +20,7 @@
     "build": "tsx ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-testing.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
+    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext 'js,jsx,ts,tsx' --ignore dist --exec 'yarn build'",
     "check:attw": "yarn rw-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
@@ -49,6 +50,7 @@
     "jest-watch-typeahead": "2.2.2",
     "msw": "1.3.4",
     "ts-toolbelt": "9.6.0",
+    "vitest": "2.1.9",
     "whatwg-fetch": "3.6.20"
   },
   "devDependencies": {
@@ -57,8 +59,7 @@
     "jsdom": "24.1.3",
     "publint": "0.3.12",
     "tsx": "4.19.4",
-    "typescript": "5.6.2",
-    "vitest": "2.1.9"
+    "typescript": "5.6.2"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

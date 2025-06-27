@@ -41,7 +41,7 @@ export const startMSW = async <Target extends 'node' | 'browsers'>(
     SERVER_INSTANCE = setupWorker()
     await SERVER_INSTANCE.start(options)
   } else {
-    const { setupServer } = require('msw/node')
+    const { setupServer } = await import('msw/node')
     SERVER_INSTANCE = setupServer()
     await SERVER_INSTANCE.listen(options)
   }

@@ -1,3 +1,5 @@
+/// <reference types="vitest/config" />
+
 import dns from 'dns'
 
 import { defineConfig } from 'vite'
@@ -10,4 +12,8 @@ dns.setDefaultResultOrder('verbatim')
 
 export default defineConfig({
   plugins: [redwood()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+  },
 })

@@ -75,10 +75,7 @@ function createBuilder(cmd: string, dir = '') {
   }
 }
 
-export async function webTasks(
-  outputPath: string,
-  { linkWithLatestFwBuild }: { linkWithLatestFwBuild: boolean },
-) {
+export async function webTasks(outputPath: string) {
   OUTPUT_PATH = outputPath
 
   const execaOptions = getExecaOptions(outputPath)
@@ -671,7 +668,7 @@ export default DoublePage`
           )
           fs.writeFileSync(pathRoutes, resultsRoutesNewContact)
 
-          const blogPostRouteHooks = `import { db } from '$api/src/lib/db'
+          const blogPostRouteHooks = `import { db } from '$api/src/lib/db.js'
 
       export async function routeParameters() {
         return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))

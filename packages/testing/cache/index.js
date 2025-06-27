@@ -1,2 +1,1 @@
-/* eslint-env es6, commonjs */
-module.exports = require('../dist/cache')
+export default '../dist/cache/index.js'

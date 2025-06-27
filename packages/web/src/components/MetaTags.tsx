@@ -2,7 +2,7 @@ import React from 'react'
 
 import * as helmetPkg from 'react-helmet-async'
 
-const { Helmet: HelmetHead } = helmetPkg
+const { Helmet: HelmetHead } = helmetPkg.default || helmetPkg
 // Ideally we wouldn't include this for non experiment builds
 // But.... not worth the effort to remove it from bundle atm
 import PortalHead from './PortalHead.js'

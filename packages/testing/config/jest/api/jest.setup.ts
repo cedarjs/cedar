@@ -1,32 +1,41 @@
-/* eslint-env jest */
-// @ts-check
+// import type { SuiteAPI, TestAPI } from 'vitest'
+
+import type { Global as jest } from '@jest/types'
+
+type TestAPI = jest.It
+type SuiteAPI = jest.Describe
+
+declare global {
+  // eslint-disable-next-line no-var
+  var mockCurrentUser: (currentUser: Record<string, unknown> | null) => void
+}
 
 // @NOTE without these imports in the setup file, mockCurrentUser
 // will remain undefined in the user's tests
 // Remember to use specific imports
-const { defineScenario } = require('@cedarjs/testing/dist/api/scenario')
+import { defineScenario } from '@cedarjs/testing/dist/api/scenario.js'
 
 // @NOTE we do this because jest.setup.js runs every time in each context
 // while jest-preset runs once. This significantly reduces memory footprint, and testing time
 // The key is to reduce the amount of imports in this file, because the require.cache is not shared between each test context
 const { apiSrcPath, tearDownCachePath, dbSchemaPath } =
-  global.__RWJS__TEST_IMPORTS
+  globalThis.__RWJS__TEST_IMPORTS
 
-global.defineScenario = defineScenario
+globalThis.defineScenario = defineScenario
 
 // Error codes thrown by [MySQL, SQLite, Postgres] when foreign key constraint
 // fails on DELETE
 const FOREIGN_KEY_ERRORS = [1451, 1811, 23503]
 const TEARDOWN_CACHE_PATH = tearDownCachePath
 const DEFAULT_SCENARIO = 'standard'
-let teardownOrder = []
-let originalTeardownOrder = []
+let teardownOrder: any[] = []
+let originalTeardownOrder: any[] = []
 
-const deepCopy = (obj) => {
+const deepCopy = (obj: unknown[]) => {
   return JSON.parse(JSON.stringify(obj))
 }
 
-const isIdenticalArray = (a, b) => {
+const isIdenticalArray = (a: unknown[], b: unknown[]) => {
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
@@ -38,7 +47,9 @@ const configureTeardown = async () => {
   // But avoid importing them, to prevent memory leaks in jest
   const datamodel = await getSchema(dbSchemaPath)
   const schema = await getDMMF({ datamodel })
-  const schemaModels = schema.datamodel.models.map((m) => m.dbName || m.name)
+  const schemaModels = schema.datamodel.models.map(
+    (m: Record<string, string>) => m.dbName || m.name,
+  )
 
   // check if pre-defined delete order already exists and if so, use it to start
   if (fs.existsSync(TEARDOWN_CACHE_PATH)) {
@@ -54,7 +65,7 @@ const configureTeardown = async () => {
   originalTeardownOrder = deepCopy(teardownOrder)
 }
 
-let quoteStyle
+let quoteStyle: string
 // determine what kind of quotes are needed around table names in raw SQL
 const getQuoteStyle = async () => {
   const { getConfig: getPrismaConfig, getSchema } = require('@prisma/internals')
@@ -91,8 +102,16 @@ const getProjectDb = () => {
  * This one passes scenario data to the test function
  */
 const buildScenario =
-  (itFunc, testPath) =>
-  (...args) => {
+  (itFunc: TestAPI, testPath: string) =>
+  (
+    ...args:
+      | [
+          scenarioName: string,
+          testName: string,
+          testFunc: (scenarioData: any) => any,
+        ]
+      | [testName: string, testFunc: (scenarioData: any) => any]
+  ) => {
     let scenarioName, testName, testFunc
 
     if (args.length === 3) {
@@ -105,7 +124,7 @@ const buildScenario =
     }
 
     return itFunc(testName, async () => {
-      let { scenario } = loadScenarios(testPath, scenarioName)
+      const { scenario } = loadScenarios(testPath, scenarioName)
 
       const scenarioData = await seedScenario(scenario)
       try {
@@ -126,8 +145,12 @@ const buildScenario =
  * Note that you need to use the getScenario() function to get the data.
  */
 const buildDescribeScenario =
-  (describeFunc, testPath) =>
-  (...args) => {
+  (describeFunc: SuiteAPI, testPath: string) =>
+  (
+    ...args:
+      | [string, string, (getScenario: () => any) => any]
+      | [string, (getScenario: () => any) => any]
+  ) => {
     let scenarioName, describeBlockName, describeBlock
 
     if (args.length === 3) {
@@ -140,9 +163,10 @@ const buildDescribeScenario =
     }
 
     return describeFunc(describeBlockName, () => {
-      let scenarioData
+      let scenarioData: Record<string, any>
+
       beforeAll(async () => {
-        let { scenario } = loadScenarios(testPath, scenarioName)
+        const { scenario } = loadScenarios(testPath, scenarioName)
         scenarioData = await seedScenario(scenario)
       })
 
@@ -169,7 +193,8 @@ const teardown = async () => {
         `DELETE FROM ${quoteStyle}${modelName}${quoteStyle}`,
       )
     } catch (e) {
-      const match = e.message.match(/Code: `(\d+)`/)
+      const match = isErrorWithMessage(e) && e.message.match(/Code: `(\d+)`/)
+
       if (match && FOREIGN_KEY_ERRORS.includes(parseInt(match[1]))) {
         const index = teardownOrder.indexOf(modelName)
         teardownOrder[index] = null
@@ -190,11 +215,13 @@ const teardown = async () => {
   }
 }
 
-const seedScenario = async (scenario) => {
+const seedScenario = async (scenario: Record<string, any>) => {
   if (scenario) {
-    const scenarios = {}
+    const scenarios: Record<string, any> = {}
+
     for (const [model, namedFixtures] of Object.entries(scenario)) {
       scenarios[model] = {}
+
       for (const [name, createArgs] of Object.entries(namedFixtures)) {
         if (typeof createArgs === 'function') {
           scenarios[model][name] = await getProjectDb()[model].create(
@@ -206,6 +233,7 @@ const seedScenario = async (scenario) => {
         }
       }
     }
+
     return scenarios
   } else {
     return {}
@@ -240,7 +268,7 @@ const wasDbUsed = () => {
     return Object.keys(require.cache).some((module) => {
       return module === libDbPath
     })
-  } catch (e) {
+  } catch {
     // If db wasn't resolved, no point trying to perform db resets
     return false
   }
@@ -249,7 +277,7 @@ const wasDbUsed = () => {
 // Attempt to emulate the request context isolation behavior
 // This is a little more complicated than it would necessarily need to be
 // but we're following the same pattern as in `@cedarjs/context`
-const mockContextStore = new Map()
+const mockContextStore = new Map<string, any>()
 const mockContext = new Proxy(
   {},
   {
@@ -270,7 +298,7 @@ const mockContext = new Proxy(
 jest.mock('@cedarjs/context', () => {
   return {
     context: mockContext,
-    setContext: (newContext) => {
+    setContext: (newContext: any) => {
       mockContextStore.set('context', newContext)
     },
   }
@@ -278,7 +306,7 @@ jest.mock('@cedarjs/context', () => {
 beforeEach(() => {
   mockContextStore.set('context', {})
 })
-global.mockCurrentUser = (currentUser) => {
+global.mockCurrentUser = (currentUser: Record<string, unknown> | null) => {
   mockContextStore.set('context', { currentUser })
 }
 
@@ -294,7 +322,7 @@ afterAll(async () => {
   }
 })
 
-function loadScenarios(testPath, scenarioName) {
+function loadScenarios(testPath: string, scenarioName: string) {
   const path = require('path')
   const testFileDir = path.parse(testPath)
   // e.g. ['comments', 'test'] or ['signup', 'state', 'machine', 'test']
@@ -308,8 +336,14 @@ function loadScenarios(testPath, scenarioName) {
     allScenarios = require(testFilePath)
   } catch (e) {
     // ignore error if scenario file not found, otherwise re-throw
-    if (e.code !== 'MODULE_NOT_FOUND') {
-      throw e
+    if (isErrorWithCode(e)) {
+      if (e instanceof Error) {
+        throw e
+      } else {
+        console.error('unexpected error type', e)
+        // eslint-disable-next-line
+        throw e
+      }
     }
   }
 
@@ -323,4 +357,19 @@ function loadScenarios(testPath, scenarioName) {
     }
   }
   return { scenario }
+}
+
+function isErrorWithMessage(e: unknown): e is { message: string } {
+  return (
+    !!e &&
+    typeof e === 'object' &&
+    'message' in e &&
+    typeof e.message === 'string'
+  )
+}
+
+function isErrorWithCode(e: unknown): e is { code: string } {
+  return (
+    !!e && typeof e === 'object' && 'code' in e && typeof e.code === 'string'
+  )
 }
