@@ -26,7 +26,7 @@ vi.mock('fastify', () => {
 })
 
 // Suppress terminal logging.
-// console.log = vi.fn()
+console.log = vi.fn()
 
 // Set up RWJS_CWD.
 let original_RWJS_CWD: string | undefined
@@ -55,10 +55,9 @@ const userConfig = {
 const configPath = await vi.hoisted(async () => {
   const path = await import('node:path')
 
-  // This will be `D:\` on Windows, `/` on Unix.
+  // This will be `D:\` on Windows (or some other drive letter) and `/` on Unix
   const osRoot = path.parse(__dirname).root.replace('\\', '/')
 
-  console.log('full path', osRoot + 'graphql/cedar-app/api/server.config.js')
   return osRoot + 'graphql/cedar-app/api/server.config.js'
 })
 
