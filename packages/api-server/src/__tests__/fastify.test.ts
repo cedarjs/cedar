@@ -1,5 +1,4 @@
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 import fastify from 'fastify'
 import { vol } from 'memfs'
@@ -56,26 +55,17 @@ const userConfig = {
 }
 
 // This will be `D:\` on Windows, `/` on Unix.
-const osRoot = path.parse(__dirname).root
+const osRoot = path.parse(__dirname).root.replace('\\', '/')
 
-console.log(
-  'full path',
-  path.join(osRoot, 'graphql/cedar-app/api/server.config.js'),
-)
+console.log('full path', osRoot + 'graphql/cedar-app/api/server.config.js')
 
-vi.mock(
-  import(
-    pathToFileURL(path.join(osRoot, 'graphql/cedar-app/api/server.config.js'))
-      .href
-  ),
-  () => {
-    return {
-      default: {
-        config: userConfig,
-      },
-    }
-  },
-)
+vi.mock(osRoot + 'graphql/cedar-app/api/server.config.js', () => {
+  return {
+    default: {
+      config: userConfig,
+    },
+  }
+})
 
 describe('createFastifyInstance', () => {
   it('instantiates a fastify instance with default config', async () => {
