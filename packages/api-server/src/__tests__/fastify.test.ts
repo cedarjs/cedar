@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import fastify from 'fastify'
 import { vol } from 'memfs'
 import {
@@ -54,12 +52,17 @@ const userConfig = {
   requestTimeout: 25_000,
 }
 
-// This will be `D:\` on Windows, `/` on Unix.
-const osRoot = path.parse(__dirname).root.replace('\\', '/')
+const configPath = await vi.hoisted(async () => {
+  const path = await import('node:path')
 
-console.log('full path', osRoot + 'graphql/cedar-app/api/server.config.js')
+  // This will be `D:\` on Windows, `/` on Unix.
+  const osRoot = path.parse(__dirname).root.replace('\\', '/')
 
-vi.mock(osRoot + 'graphql/cedar-app/api/server.config.js', () => {
+  console.log('full path', osRoot + 'graphql/cedar-app/api/server.config.js')
+  return osRoot + 'graphql/cedar-app/api/server.config.js'
+})
+
+vi.mock(configPath, () => {
   return {
     default: {
       config: userConfig,
