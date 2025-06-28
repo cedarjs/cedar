@@ -35,7 +35,7 @@ describe('addRoutingLogic', () => {
   it('modifies the Routes.{jsx,tsx} file', () => {
     vol.fromJSON({
       'Routes.tsx':
-        "// In this file, all Page components from 'src/pages' are auto-imported.\n" +
+        "// In this file, all Page components from 'src/pages' are auto-imported." +
         `
 import { Router, Route } from '@cedarjs/router'
 
@@ -58,37 +58,35 @@ export default Routes
     addRoutingLogic.task()
 
     expect(fs.readFileSync('Routes.tsx', 'utf-8')).toMatchInlineSnapshot(`
-          "// In this file, all Page components from 'src/pages' are auto-imported.
+      "// In this file, all Page components from 'src/pages' are auto-imported.
+      import { canHandleRoute, getRoutingComponent } from 'supertokens-auth-react/ui'
 
-          import { canHandleRoute, getRoutingComponent } from 'supertokens-auth-react/ui'
+      import { Router, Route } from '@cedarjs/router'
 
-          import { Router, Route } from '@cedarjs/router'
+      import { useAuth, PreBuiltUI } from './auth'
 
-          import { useAuth, PreBuiltUI } from './auth'
+      const Routes = () => {
+        if (canHandleRoute(PreBuiltUI)) {
+          return getRoutingComponent(PreBuiltUI)
+        }
+        return (
+          <Router useAuth={useAuth}>
+            <Route path="/login" page={LoginPage} name="login" />
+            <Route path="/signup" page={SignupPage} name="signup" />
+            <Route notfound page={NotFoundPage} />
+          </Router>
+        )
+      }
 
-          const Routes = () => {
-            if (canHandleRoute(PreBuiltUI)) {
-              return getRoutingComponent(PreBuiltUI)
-            }
-
-            return (
-              <Router useAuth={useAuth}>
-                <Route path="/login" page={LoginPage} name="login" />
-                <Route path="/signup" page={SignupPage} name="signup" />
-                <Route notfound page={NotFoundPage} />
-              </Router>
-            )
-          }
-
-          export default Routes
-          "
-      `)
+      export default Routes
+      "
+    `)
   })
 
   it('handles a Routes.{jsx,tsx} file with a legacy setup', () => {
     vol.fromJSON({
       'Routes.tsx':
-        "// In this file, all Page components from 'src/pages' are auto-imported.\n" +
+        "// In this file, all Page components from 'src/pages' are auto-imported." +
         `
 import SuperTokens from 'supertokens-auth-react'
 
@@ -119,8 +117,6 @@ export default Routes
     expect(fs.readFileSync('Routes.tsx', 'utf-8')).toMatchInlineSnapshot(`
       "// In this file, all Page components from 'src/pages' are auto-imported.
 
-
-
       import { canHandleRoute, getRoutingComponent } from 'supertokens-auth-react/ui'
 
       import { Router, Route } from '@cedarjs/router'
@@ -131,8 +127,6 @@ export default Routes
         if (canHandleRoute(PreBuiltUI)) {
           return getRoutingComponent(PreBuiltUI)
         }
-
-
 
         return (
           <Router useAuth={useAuth}>

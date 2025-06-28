@@ -46,8 +46,8 @@ export const addRoutingLogic = {
 
     // Remove the old setup if it's there.
     content = content
-      .replace("import SuperTokens from 'supertokens-auth-react'", '')
-      .replace(/if \(SuperTokens.canHandleRoute\(\)\) {[^}]+}/, '')
+      .replace("import SuperTokens from 'supertokens-auth-react'\n", '')
+      .replace(/[ \t]*if \(SuperTokens.canHandleRoute\(\)\) {[^}]+}\n/, '')
 
     if (!/\s*if\s*\(canHandleRoute\(PreBuiltUI\)\)\s*\{/.test(content)) {
       let hasImportedSuperTokensFunctions = false
@@ -84,7 +84,7 @@ export const addRoutingLogic = {
         'const Routes = () => {\n' +
           '  if (canHandleRoute(PreBuiltUI)) {\n' +
           '    return getRoutingComponent(PreBuiltUI)\n' +
-          '  }\n\n',
+          '  }\n',
       )
 
       fs.writeFileSync(routesPath, content)
