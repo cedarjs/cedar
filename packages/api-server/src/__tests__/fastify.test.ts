@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import fastify from 'fastify'
 import { vol } from 'memfs'
@@ -63,7 +64,10 @@ console.log(
 )
 
 vi.mock(
-  import(path.join(osRoot, 'graphql/cedar-app/api/server.config.js')),
+  import(
+    pathToFileURL(path.join(osRoot, 'graphql/cedar-app/api/server.config.js'))
+      .href
+  ),
   () => {
     return {
       default: {
