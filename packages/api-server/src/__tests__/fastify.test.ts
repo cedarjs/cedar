@@ -54,38 +54,24 @@ const userConfig = {
   requestTimeout: 25_000,
 }
 
-console.log('dirname', __dirname)
-const fileOSRoot = path.parse(__dirname).root
-console.log('fileOSRoot', fileOSRoot)
+// This will be `D:\` on Windows, `/` on Unix.
+const osRoot = path.parse(__dirname).root
 
-vi.mock('/graphql/cedar-app/api/server.config.js', () => {
-  return {
-    default: {
-      config: userConfig,
-    },
-  }
-})
-vi.mock('/D:/graphql/cedar-app/api/server.config.js', () => {
-  return {
-    default: {
-      config: userConfig,
-    },
-  }
-})
-vi.mock('D:/graphql/cedar-app/api/server.config.js', () => {
-  return {
-    default: {
-      config: userConfig,
-    },
-  }
-})
-vi.mock('\\graphql\\cedar-app\\api\\server.config.js', () => {
-  return {
-    default: {
-      config: userConfig,
-    },
-  }
-})
+console.log(
+  'full path',
+  path.join(osRoot, 'graphql/cedar-app/api/server.config.js'),
+)
+
+vi.mock(
+  import(path.join(osRoot, 'graphql/cedar-app/api/server.config.js')),
+  () => {
+    return {
+      default: {
+        config: userConfig,
+      },
+    }
+  },
+)
 
 describe('createFastifyInstance', () => {
   it('instantiates a fastify instance with default config', async () => {
