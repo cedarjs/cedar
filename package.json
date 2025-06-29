@@ -21,6 +21,7 @@
     "changesets": "tsx ./tasks/changesets/changesets.mts",
     "check": "cross-env yarn constraints && yarn dedupe --check",
     "check:package": "nx run-many -t check:package --output-style static",
+    "clean-build": "node ./tasks/clean-build.mjs",
     "clean:prisma": "rimraf node_modules/.prisma/client && node node_modules/@prisma/client/scripts/postinstall.js",
     "e2e": "node ./tasks/run-e2e",
     "e2e:background-jobs": "tsx ./tasks/e2e-background-jobs/run.mts",
