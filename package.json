@@ -26,7 +26,7 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "generate-dependency-graph": "node ./tasks/generateDependencyGraph.mjs",
-    "git-clean-build": "node ./tasks/clean-build.mjs",
+    "git-clean-build": "node $(git rev-parse --show-toplevel)/tasks/git-clean-build.mjs",
     "install:all": "concurrently -g -c auto -n install:fw \"yarn install\" npm:install:crwrsca",
     "install:ci": "concurrently -g -c auto -n install:fw:ci \"yarn install --inline-builds\" npm:install:crwrsca:ci",
     "install:crwrsca": "yarn --cwd packages/create-cedar-rsc-app install",
