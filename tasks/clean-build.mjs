@@ -4,7 +4,7 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { $ } from 'zx'
+import { $, question } from 'zx'
 
 // Get the directory of this script
 const __filename = fileURLToPath(import.meta.url)
@@ -13,21 +13,18 @@ const __dirname = path.dirname(__filename)
 // Get the repo root (parent of tasks directory)
 const repoRoot = path.resolve(__dirname, '..')
 
-// Save the current working directory
 const originalCwd = process.cwd()
 
-// Function to restore original directory
-const cleanup = () => {
+const restoreCwd = () => {
   process.chdir(originalCwd)
 }
 
-// Set up cleanup on exit
-process.on('exit', cleanup)
-process.on('SIGINT', cleanup)
-process.on('SIGTERM', cleanup)
+process.on('exit', restoreCwd)
+process.on('SIGINT', restoreCwd)
+process.on('SIGTERM', restoreCwd)
 process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error)
-  cleanup()
+  restoreCwd()
   process.exit(1)
 })
 
@@ -35,8 +32,39 @@ try {
   console.log(`Original directory: ${originalCwd}`)
   console.log(`Repo root: ${repoRoot}`)
 
-  // Change to repo root
   process.chdir(repoRoot)
+
+  console.log('Checking for untracked files...')
+  const statusResult =
+    await $`git status --porcelain --untracked-files=all`.quiet()
+  const untrackedFiles = statusResult.stdout
+    .trim()
+    .split('\n')
+    .filter((line) => line.startsWith('??'))
+    .map((line) => line.substring(3))
+    .filter((file) => file.trim())
+
+  if (untrackedFiles.length > 0) {
+    console.log(
+      `\n⚠️  WARNING: git clean -fdx will delete ${untrackedFiles.length} untracked files/directories:`,
+    )
+
+    if (untrackedFiles.length <= 5) {
+      untrackedFiles.forEach((file) => {
+        console.log(`  - ${file}`)
+      })
+    } else {
+      console.log(
+        `  (${untrackedFiles.length} files/directories - too many to list)`,
+      )
+    }
+
+    const confirmed = await question('\nDo you want to proceed? (y/N): ')
+    if (!confirmed || !['y', 'yes'].includes(confirmed.toLowerCase())) {
+      console.log('Operation cancelled.')
+      process.exit(0)
+    }
+  }
 
   console.log('Running git clean -fdx...')
   await $`git clean -fdx`
