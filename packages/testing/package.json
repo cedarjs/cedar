@@ -8,7 +8,7 @@
     "directory": "packages/testing"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "files": [
     "config",
     "web",
@@ -20,6 +20,7 @@
     "build": "tsx ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-testing.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
+    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext 'js,jsx,ts,tsx' --ignore dist --exec 'yarn build'",
     "check:attw": "yarn rw-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",

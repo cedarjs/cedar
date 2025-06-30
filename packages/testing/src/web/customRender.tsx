@@ -8,7 +8,7 @@ import type {
   RenderHookResult,
 } from '@testing-library/react'
 
-import { MockProviders } from './MockProviders'
+import { MockProviders } from './MockProviders.js'
 
 export type CustomRenderHookOptions<Props> = RenderHookOptions<Props>
 

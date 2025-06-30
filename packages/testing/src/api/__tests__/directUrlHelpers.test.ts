@@ -3,7 +3,7 @@ import path from 'path'
 
 import { it, expect } from 'vitest'
 
-import { checkAndReplaceDirectUrl, getDefaultDb } from '../directUrlHelpers'
+import { checkAndReplaceDirectUrl, getDefaultDb } from '../directUrlHelpers.js'
 
 const FIXTURE_DIR_PATH = path.resolve('..', '..', '__fixtures__')
 

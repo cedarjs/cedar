@@ -4,14 +4,14 @@ import { test, expect } from 'vitest'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
 
-import { findCellMocks } from '../findCellMocks'
+import { findCellMocks } from '../findCellMocks.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
   '../../../../../__fixtures__/example-todo-main',
 )
 
-const cleanPaths = (p) => {
+const cleanPaths = (p: string) => {
   return ensurePosixPath(path.relative(FIXTURE_PATH, p))
 }
 

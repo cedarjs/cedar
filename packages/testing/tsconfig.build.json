@@ -8,6 +8,7 @@
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src"],
+  "exclude": ["**/__tests__"],
   "references": [
     { "path": "../router/tsconfig.build.json" },
     { "path": "../babel-config" },
