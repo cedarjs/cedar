@@ -1,7 +1,7 @@
 import type {
   mockGraphQLQuery as _mockGraphQLQuery,
   mockGraphQLMutation as _mockGraphQLMutation,
-} from './mockRequests'
+} from './mockRequests.js'
 
 declare global {
   const mockGraphQLQuery: typeof _mockGraphQLQuery
