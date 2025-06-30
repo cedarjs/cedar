@@ -9,6 +9,24 @@
   },
   "license": "MIT",
   "type": "module",
+  "exports": {
+    "./config/jest/web": {
+      "default": "./config/jest/web/index.js"
+    },
+    "./config/jest/api": {
+      "default": "./config/jest/api/index.js"
+    },
+    "./api": {
+      "import": {
+        "types": "./api/index.d.ts",
+        "default": "./api/index.js"
+      },
+      "require": {
+        "types": "./cjs/api/index.d.ts",
+        "default": "./cjs/api/index.js"
+      }
+    }
+  },
   "files": [
     "config",
     "web",
