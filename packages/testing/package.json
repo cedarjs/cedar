@@ -16,14 +16,20 @@
     "./config/jest/api": {
       "default": "./config/jest/api/index.js"
     },
+    "./config/jest/api/jest-preset": {
+      "default": "./config/jest/api/jest-preset.js"
+    },
+    "./dist/cjs/api/scenario": {
+      "default": "./dist/cjs/api/scenario.js"
+    },
     "./api": {
       "import": {
-        "types": "./api/index.d.ts",
-        "default": "./api/index.js"
+        "types": "./dist/api/index.d.ts",
+        "default": "./dist/api/index.js"
       },
       "require": {
-        "types": "./cjs/api/index.d.ts",
-        "default": "./cjs/api/index.js"
+        "types": "./dist/cjs/api/index.d.ts",
+        "default": "./dist/cjs/api/index.js"
       }
     }
   },
