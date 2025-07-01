@@ -52,7 +52,7 @@ module.exports = {
     // We replace imports to "@cedarjs/router" with our own "mock" implementation.
     '^@cedarjs/router$': path.join(
       NODE_MODULES_PATH,
-      '@cedarjs/testing/dist/web/MockRouter.js',
+      '@cedarjs/testing/dist/cjs/web/MockRouter.js',
     ),
     '^@cedarjs/web$': path.join(NODE_MODULES_PATH, '@cedarjs/web/dist/cjs'),
 
@@ -60,7 +60,7 @@ module.exports = {
     // clients, which in turn lets us mock `useAuth` in tests
     '^@cedarjs/auth$': path.join(
       NODE_MODULES_PATH,
-      '@cedarjs/testing/dist/web/mockAuth.js',
+      '@cedarjs/testing/dist/cjs/web/mockAuth.js',
     ),
 
     // @NOTE: Import @cedarjs/testing in web tests, and it automatically remaps to the web side only
