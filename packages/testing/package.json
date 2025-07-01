@@ -51,6 +51,16 @@
         "default": "./dist/cjs/api/index.js"
       }
     },
+    "./cache": {
+      "import": {
+        "types": "./dist/cache/index.d.ts",
+        "default": "./dist/cache/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/cache/index.d.ts",
+        "default": "./dist/cjs/cache/index.js"
+      }
+    },
     "./web": {
       "import": {
         "types": "./dist/web/index.d.ts",
