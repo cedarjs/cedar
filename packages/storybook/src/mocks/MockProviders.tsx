@@ -5,7 +5,7 @@
 import React from 'react'
 
 import { LocationProvider } from '@cedarjs/router'
-import { useAuth } from '@cedarjs/testing/web'
+import { useAuth } from '@cedarjs/testing/dist/web/mockAuth.js'
 import { RedwoodProvider } from '@cedarjs/web'
 import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
 

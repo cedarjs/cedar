@@ -32,7 +32,14 @@
       "default": "./dist/cjs/web/mockRequests.js"
     },
     "./dist/web/mockAuth.js": {
-      "default": "./dist/web/mockAuth.js"
+      "import": {
+        "types": "./dist/web/index.d.ts",
+        "default": "./dist/web/mockAuth.js"
+      },
+      "require": {
+        "types": "./dist/cjs/web/index.d.ts",
+        "default": "./dist/cjs/web/mockAuth.js"
+      }
     },
     "./api": {
       "import": {
