@@ -4,12 +4,11 @@
  */
 import React from 'react'
 
-// @ts-expect-error - We inject useAuth when testing, so it will be available
-import { useAuth } from '@cedarjs/auth'
 import { LocationProvider } from '@cedarjs/router'
 import { RedwoodProvider } from '@cedarjs/web'
 import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
 
+import { useAuth } from './mockAuth.js'
 import { MockParamsProvider } from './MockParamsProvider.js'
 
 // Import the user's Routes from `./web/src/Routes.{tsx,jsx}`,
