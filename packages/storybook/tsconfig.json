@@ -4,7 +4,10 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@cedarjs/testing/auth": ["../testing/dist/web/mockAuth.d.ts"]
+    }
   },
   "include": ["src/**/*"]
 }

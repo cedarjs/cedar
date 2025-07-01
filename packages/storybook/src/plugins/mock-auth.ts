@@ -15,7 +15,7 @@ export function mockAuth(): PluginOption {
         )
         // Add import to mocked `createAuth` at the top of the file.
         code =
-          "import { createAuthentication as createAuth } from '@cedarjs/testing/dist/web/mockAuth.js'\n" +
+          "import { createAuthentication as createAuth } from '@cedarjs/testing/auth'\n" +
           code
       }
       return code
