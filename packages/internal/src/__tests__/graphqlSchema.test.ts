@@ -34,8 +34,9 @@ test('Generates GraphQL schema', async () => {
     },
   )
 
-  const { schemaPath } = await generateGraphQLSchema()
+  const { schemaPath, errors } = await generateGraphQLSchema()
 
+  expect(errors).toEqual([])
   expect(schemaPath).toMatch(expectedPath)
 })
 

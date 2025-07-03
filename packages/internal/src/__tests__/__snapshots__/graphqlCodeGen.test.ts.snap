@@ -69,6 +69,8 @@ export type MutationupdateTodoStatusArgs = {
 /** About the Redwood queries. */
 export type Query = {
   __typename?: 'Query';
+  /** Fetches the CedarJS root schema. */
+  cedarjs?: Maybe<Redwood>;
   currentUser?: Maybe<Scalars['JSON']>;
   /** Fetches the Redwood root schema. */
   redwood?: Maybe<Redwood>;
@@ -87,7 +89,7 @@ export type Redwood = {
   currentUser?: Maybe<Scalars['JSON']>;
   /** The version of Prisma. */
   prismaVersion?: Maybe<Scalars['String']>;
-  /** The version of Redwood. */
+  /** The version of CedarJS. */
   version?: Maybe<Scalars['String']>;
 };
 
@@ -247,6 +249,7 @@ export type MutationRelationResolvers<ContextType = RedwoodGraphQLContext, Paren
 };
 
 export type QueryResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  cedarjs: OptArgsResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   currentUser: OptArgsResolverFn<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
   redwood: OptArgsResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   todos: OptArgsResolverFn<Maybe<Array<Maybe<ResolversTypes['Todo']>>>, ParentType, ContextType>;
@@ -254,6 +257,7 @@ export type QueryResolvers<ContextType = RedwoodGraphQLContext, ParentType exten
 };
 
 export type QueryRelationResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  cedarjs?: RequiredResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   currentUser?: RequiredResolverFn<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
   redwood?: RequiredResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   todos?: RequiredResolverFn<Maybe<Array<Maybe<ResolversTypes['Todo']>>>, ParentType, ContextType>;
@@ -365,6 +369,8 @@ export type MutationupdateTodoStatusArgs = {
 /** About the Redwood queries. */
 export type Query = {
   __typename?: 'Query';
+  /** Fetches the CedarJS root schema. */
+  cedarjs?: Maybe<Redwood>;
   currentUser?: Maybe<Scalars['JSON']>;
   /** Fetches the Redwood root schema. */
   redwood?: Maybe<Redwood>;
@@ -383,7 +389,7 @@ export type Redwood = {
   currentUser?: Maybe<Scalars['JSON']>;
   /** The version of Prisma. */
   prismaVersion?: Maybe<Scalars['String']>;
-  /** The version of Redwood. */
+  /** The version of CedarJS. */
   version?: Maybe<Scalars['String']>;
 };
 

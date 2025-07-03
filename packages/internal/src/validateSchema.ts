@@ -83,10 +83,12 @@ export function validateSchema(
 
           const isRedwoodQuery =
             fieldName === 'redwood' && fieldTypeName === 'Query'
+          const isCedarJsQuery =
+            fieldName === 'cedarjs' && fieldTypeName === 'Query'
           const isCurrentUserQuery =
             fieldName === 'currentUser' && fieldTypeName === 'Query'
           // skip validation for redwood query and currentUser
-          if (!(isRedwoodQuery || isCurrentUserQuery)) {
+          if (!(isRedwoodQuery || isCedarJsQuery || isCurrentUserQuery)) {
             const hasDirective = field.directives?.length
 
             if (!hasDirective) {

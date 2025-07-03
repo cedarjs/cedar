@@ -58,7 +58,7 @@ test('Generate gql typedefs web', async () => {
   )
 
   const { typeDefFiles, errors } = await generateTypeDefGraphQLWeb()
-  expect(errors).toHaveLength(0)
+  expect(errors).toEqual([])
 
   expect(typeDefFiles).toHaveLength(1)
   expect(typeDefFiles[0]).toMatch(path.join('web', 'types', 'graphql.d.ts'))

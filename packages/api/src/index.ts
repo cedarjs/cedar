@@ -40,3 +40,4 @@ if (packageJson?.name !== '@cedarjs/api') {
 
 export const prismaVersion = packageJson?.dependencies['@prisma/client']
 export const redwoodVersion = packageJson?.version
+export const cedarjsVersion = packageJson?.version

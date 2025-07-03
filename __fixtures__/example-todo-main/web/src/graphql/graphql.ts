@@ -51,6 +51,8 @@ export type MutationUpdateTodoStatusArgs = {
 /** About the Redwood queries. */
 export type Query = {
   __typename?: 'Query';
+  /** Fetches the CedarJS root schema. */
+  cedarjs?: Maybe<Redwood>;
   currentUser?: Maybe<Scalars['JSON']['output']>;
   /** Fetches the Redwood root schema. */
   redwood?: Maybe<Redwood>;
@@ -69,7 +71,7 @@ export type Redwood = {
   currentUser?: Maybe<Scalars['JSON']['output']>;
   /** The version of Prisma. */
   prismaVersion?: Maybe<Scalars['String']['output']>;
-  /** The version of Redwood. */
+  /** The version of CedarJS. */
   version?: Maybe<Scalars['String']['output']>;
 };
 

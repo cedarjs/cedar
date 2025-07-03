@@ -27,6 +27,8 @@ type Mutation {
 
 """About the Redwood queries."""
 type Query {
+  """Fetches the CedarJS root schema."""
+  cedarjs: Redwood
   currentUser: JSON
 
   """Fetches the Redwood root schema."""
@@ -47,7 +49,7 @@ type Redwood {
   """The version of Prisma."""
   prismaVersion: String
 
-  """The version of Redwood."""
+  """The version of CedarJS."""
   version: String
 }
 
@@ -100,6 +102,8 @@ type Mutation {
 
 """About the Redwood queries."""
 type Query {
+  """Fetches the CedarJS root schema."""
+  cedarjs: Redwood
   currentUser: JSON
 
   """Fetches the Redwood root schema."""
@@ -120,7 +124,7 @@ type Redwood {
   """The version of Prisma."""
   prismaVersion: String
 
-  """The version of Redwood."""
+  """The version of CedarJS."""
   version: String
 }
 

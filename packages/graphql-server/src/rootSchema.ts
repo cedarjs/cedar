@@ -9,7 +9,7 @@ import {
 } from 'graphql-scalars'
 import gql from 'graphql-tag'
 
-import { prismaVersion, redwoodVersion } from '@cedarjs/api'
+import { prismaVersion, redwoodVersion, cedarjsVersion } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
 
 /**
@@ -34,7 +34,7 @@ export const schema = gql`
   Defines details about Cedar such as the current user and version information.
   """
   type Redwood {
-    "The version of Redwood."
+    "The version of CedarJS."
     version: String
     "The current user."
     currentUser: JSON
@@ -48,6 +48,8 @@ export const schema = gql`
   type Query {
     "Fetches the Redwood root schema."
     redwood: Redwood
+    "Fetches the CedarJS root schema."
+    cedarjs: Redwood
   }
 `
 
@@ -79,6 +81,13 @@ export const resolvers: Resolvers = {
   Query: {
     redwood: () => ({
       version: redwoodVersion,
+      prismaVersion: prismaVersion,
+      currentUser: (_args: any, context: GlobalContext) => {
+        return context?.currentUser
+      },
+    }),
+    cedarjs: () => ({
+      version: cedarjsVersion,
       prismaVersion: prismaVersion,
       currentUser: (_args: any, context: GlobalContext) => {
         return context?.currentUser
