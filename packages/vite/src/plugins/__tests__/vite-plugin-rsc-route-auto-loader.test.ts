@@ -292,7 +292,7 @@ describe('rscRoutesAutoLoader', () => {
     `)
   })
 
-  it('should throw for duplicate page import names', () => {
+  it('should throw for duplicate page import names', async () => {
     vi.mocked(processPagesDir).mockReturnValue(pagesWithDuplicate)
 
     const getOutput = async () => {
@@ -329,7 +329,7 @@ describe('rscRoutesAutoLoader', () => {
       return output
     }
 
-    expect(getOutput).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(getOutput).rejects.toThrowErrorMatchingInlineSnapshot(
       "[Error: Unable to find only a single file ending in 'Page.{js,jsx,ts,tsx}' in the following page directories: 'AboutPage']",
     )
   })

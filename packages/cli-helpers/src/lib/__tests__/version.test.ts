@@ -357,7 +357,7 @@ describe('version compatibility detection', () => {
       }),
     )
 
-    expect(
+    await expect(
       getCompatibilityData('@scope/package-name', 'latest'),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
       `[Error: No compatible version of '@scope/package-name' was found]`,
