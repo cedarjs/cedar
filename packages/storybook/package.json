@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@cedarjs/testing": "workspace:*",
-    "@joshwooding/vite-plugin-react-docgen-typescript": "0.4.2",
+    "@joshwooding/vite-plugin-react-docgen-typescript": "0.6.1",
     "@rollup/pluginutils": "5.1.4",
     "@storybook/addon-essentials": "7.6.20",
     "@storybook/builder-vite": "7.6.20",
