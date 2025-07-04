@@ -9,7 +9,7 @@ import { useAuth } from '@cedarjs/testing/auth'
 import { RedwoodProvider } from '@cedarjs/web'
 import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
 
-import { MockParamsProvider } from './MockParamsProvider'
+import { MockParamsProvider } from './MockParamsProvider.js'
 
 // Import the user's Routes from `./web/src/Routes.{tsx,jsx}`,
 // we pass the `children` from the user's Routes to `./MockRouter.Router`

@@ -7,7 +7,7 @@ import {
   mockCurrentUser,
 } from '@cedarjs/testing/web'
 
-import { MockProviders } from './MockProviders'
+import { MockProviders } from './MockProviders.js'
 
 export const MockingLoader = async () => {
   /**

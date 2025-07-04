@@ -6,11 +6,11 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { autoImports } from './plugins/auto-imports'
-import { mockAuth } from './plugins/mock-auth'
-import { mockRouter } from './plugins/mock-router'
-import { reactDocgen } from './plugins/react-docgen'
-import type { StorybookConfig } from './types'
+import { autoImports } from './plugins/auto-imports.js'
+import { mockAuth } from './plugins/mock-auth.js'
+import { mockRouter } from './plugins/mock-router.js'
+import { reactDocgen } from './plugins/react-docgen.js'
+import type { StorybookConfig } from './types.js'
 
 const getAbsolutePath = (input: string) =>
   path.dirname(require.resolve(path.join(input, 'package.json')))

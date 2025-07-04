@@ -12,7 +12,7 @@ import {
 } from 'react-docgen'
 import type { PluginOption } from 'vite'
 
-import actualNameHandler from './docgen-handlers/actualNameHandler'
+import actualNameHandler from './docgen-handlers/actualNameHandler.js'
 
 type DocObj = Documentation & { actualName: string }
 

@@ -2,7 +2,7 @@ import React from 'react'
 
 import type { Addon_DecoratorFunction, Addon_Loader } from '@storybook/types'
 
-import { MockingLoader, StorybookProvider } from './mocks/StorybookProvider'
+import { MockingLoader, StorybookProvider } from './mocks/StorybookProvider.js'
 
 const decorators: Addon_DecoratorFunction<any>[] = [
   (storyFn, { id }) => {
