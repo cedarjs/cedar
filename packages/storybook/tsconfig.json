@@ -6,11 +6,7 @@
     "moduleResolution": "nodenext",
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["node", "vite/client"],
-    "paths": {
-      "@cedarjs/testing/auth": ["../testing/dist/web/mockAuth.d.ts"],
-      "@cedarjs/testing/web": ["../testing/dist/web/index.d.ts"]
-    }
+    "types": ["node", "vite/client"]
   },
   "include": ["src/**/*"]
 }
