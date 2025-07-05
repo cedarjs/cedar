@@ -1,4 +1,4 @@
-import type docgenTypescript from '@joshwooding/vite-plugin-react-docgen-typescript'
+import type { default as docgenTypescript } from '@joshwooding/vite-plugin-react-docgen-typescript'
 import type {
   StorybookConfigVite,
   BuilderOptions,
@@ -41,6 +41,8 @@ type StorybookConfigFramework = {
   }
 }
 
+type TDocgenTypescript = (typeof docgenTypescript)['default']
+
 type TypescriptOptions = TypescriptOptionsBase & {
   /**
    * Sets the type of Docgen when working with React and TypeScript
@@ -51,7 +53,7 @@ type TypescriptOptions = TypescriptOptionsBase & {
   /**
    * Configures `@joshwooding/vite-plugin-react-docgen-typescript`
    */
-  reactDocgenTypescriptOptions: Parameters<typeof docgenTypescript>[0]
+  reactDocgenTypescriptOptions: Parameters<TDocgenTypescript>[0]
 }
 
 /**
