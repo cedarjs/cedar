@@ -91,7 +91,7 @@
     "humanize-string": "2.1.0",
     "jsonwebtoken": "9.0.2",
     "pascalcase": "1.0.0",
-    "pino": "9.4.0",
+    "pino": "9.7.0",
     "title-case": "3.0.3"
   },
   "devDependencies": {
