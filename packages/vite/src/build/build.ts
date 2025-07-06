@@ -45,21 +45,33 @@ export async function transform(srcPath: string) {
  */
 export const prebuildWebFiles = async (srcFiles: string[], flags?: Flags) => {
   const rwjsPaths = getPaths()
+  const { performance } = await import('node:perf_hooks')
 
   const processFile = async (srcPath: string) => {
+    const perfStart = performance.now()
     const relativePathFromSrc = path.relative(rwjsPaths.base, srcPath)
     const dstPath = path
       .join(rwjsPaths.generated.prebuild, relativePathFromSrc)
       .replace(/\.(ts)$/, '.js')
 
     try {
+      const perfStartPrebuild = performance.now()
+
       const result = await prebuildWebFile(srcPath, flags)
+
+      const perfEndPrebuild = performance.now()
+      const perfDeltaPrebuild = Math.round(perfEndPrebuild - perfStartPrebuild)
+      console.log(`Prebuilt ${relativePathFromSrc} in ${perfDeltaPrebuild}ms`)
+
       if (!result?.code) {
         throw new Error('No code returned from prebuildWebFile')
       }
 
       fs.mkdirSync(path.dirname(dstPath), { recursive: true })
       fs.writeFileSync(dstPath, result.code)
+      const perfEnd = performance.now()
+      const perfDelta = Math.round(perfEnd - perfStart)
+      console.log(`Processed ${relativePathFromSrc} in ${perfDelta}ms`)
     } catch {
       console.warn('Error:', srcPath, 'could not prebuilt.')
       return undefined
@@ -72,6 +84,7 @@ export const prebuildWebFiles = async (srcFiles: string[], flags?: Flags) => {
   for (const srcPath of srcFiles) {
     promises.push(processFile(srcPath))
   }
+
   return await Promise.all(promises)
 }
 
