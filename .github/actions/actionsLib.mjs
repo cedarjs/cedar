@@ -95,7 +95,7 @@ export async function createCacheKeys({
           'package.json',
           'babel.config.js',
           'tsconfig.json',
-          'tsconfig.compilerOption.json',
+          'tsconfig.base.json',
           'nx.json',
           'lerna.json',
           'packages',
