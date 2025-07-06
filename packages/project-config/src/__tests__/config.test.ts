@@ -55,6 +55,9 @@ describe('getConfig', () => {
               },
             ],
           },
+          "dev": {
+            "defaultSides": [],
+          },
           "opentelemetry": {
             "enabled": false,
             "wrapApi": true,
@@ -69,6 +72,7 @@ describe('getConfig', () => {
           "rsc": {
             "enabled": false,
           },
+          "sides": {},
           "streamingSsr": {
             "enabled": false,
           },

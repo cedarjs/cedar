@@ -73,6 +73,14 @@ interface StudioConfig {
   graphiql?: GraphiQLStudioConfig
 }
 
+type Sides = Record<
+  string,
+  {
+    workspace: string
+    devScript: string
+  }
+>
+
 export interface Config {
   web: BrowserTargetConfig
   api: NodeTargetConfig
@@ -118,6 +126,10 @@ export interface Config {
     reactCompiler: {
       enabled: boolean
       lintOnly: boolean
+    }
+    sides: Sides
+    dev: {
+      defaultSides: string[]
     }
   }
 }
@@ -204,6 +216,10 @@ const DEFAULT_CONFIG: Config = {
     reactCompiler: {
       enabled: false,
       lintOnly: false,
+    },
+    sides: {},
+    dev: {
+      defaultSides: [],
     },
   },
 }

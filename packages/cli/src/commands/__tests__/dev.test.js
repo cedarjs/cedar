@@ -176,6 +176,25 @@ describe('yarn rw dev', () => {
     expect(generateCommand.command).toEqual('yarn rw-gen-watch')
   })
 
+  it('Should run custom side', async () => {
+    getConfig.mockReturnValue({
+      web: { port: 8910 },
+      api: { port: 8911 },
+      experimental: {
+        sides: { app: { workspace: 'app', devScript: 'android' } },
+        dev: { defaultSides: ['app'] },
+      },
+    })
+
+    await handler({ side: ['app'] })
+
+    const concurrentlyArgs = concurrently.mock.lastCall[0]
+
+    const appCommand = find(concurrentlyArgs, { name: 'app' })
+
+    expect(appCommand.command).toEqual('yarn workspace app run android')
+  })
+
   it('Debug port passed in command line overrides TOML', async () => {
     getConfig.mockReturnValue({
       web: {
