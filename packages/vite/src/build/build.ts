@@ -16,18 +16,13 @@ export const cleanWebBuild = () => {
 }
 
 export async function prebuildWebFile(srcPath: string, flags: Flags = {}) {
-  const { performance } = await import('node:perf_hooks')
-  const code = fs.readFileSync(srcPath, 'utf-8')
+  const code = await fs.promises.readFile(srcPath, 'utf-8')
   const config = getWebSideDefaultBabelConfig(flags)
-  const perfStart = performance.now()
   const result = babel.transform(code, {
     ...config,
     cwd: getPaths().web.base,
     filename: srcPath,
   })
-  const perfEnd = performance.now()
-  const perfDelta = Math.round(perfEnd - perfStart)
-  console.log(`Babel transformed ${srcPath} in ${perfDelta}ms`)
 
   return result
 }
@@ -50,33 +45,22 @@ export async function transform(srcPath: string) {
  */
 export const prebuildWebFiles = async (srcFiles: string[], flags?: Flags) => {
   const rwjsPaths = getPaths()
-  const { performance } = await import('node:perf_hooks')
 
   const processFile = async (srcPath: string) => {
-    const perfStart = performance.now()
     const relativePathFromSrc = path.relative(rwjsPaths.base, srcPath)
     const dstPath = path
       .join(rwjsPaths.generated.prebuild, relativePathFromSrc)
       .replace(/\.(ts)$/, '.js')
 
     try {
-      const perfStartPrebuild = performance.now()
-
       const result = await prebuildWebFile(srcPath, flags)
-
-      const perfEndPrebuild = performance.now()
-      const perfDeltaPrebuild = Math.round(perfEndPrebuild - perfStartPrebuild)
-      console.log(`Prebuilt ${relativePathFromSrc} in ${perfDeltaPrebuild}ms`)
 
       if (!result?.code) {
         throw new Error('No code returned from prebuildWebFile')
       }
 
-      fs.mkdirSync(path.dirname(dstPath), { recursive: true })
-      fs.writeFileSync(dstPath, result.code)
-      const perfEnd = performance.now()
-      const perfDelta = Math.round(perfEnd - perfStart)
-      console.log(`Processed ${relativePathFromSrc} in ${perfDelta}ms`)
+      await fs.promises.mkdir(path.dirname(dstPath), { recursive: true })
+      await fs.promises.writeFile(dstPath, result.code)
     } catch {
       console.warn('Error:', srcPath, 'could not prebuilt.')
       return undefined

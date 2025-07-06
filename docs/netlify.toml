@@ -8,6 +8,11 @@ command = "yarn build"
 NODE_OPTIONS = "--max-old-space-size=4096"
 
 [[redirects]]
+from = "/discord"
+to = "https://discord.gg/8mNkAgby5m"
+status = 302
+
+[[redirects]]
 from = "/docs"
 to = "/docs/introduction"
 status = 301

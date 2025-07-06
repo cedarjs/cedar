@@ -26,7 +26,7 @@ afterAll(() => {
   delete process.env.RWJS_CWD
 })
 
-test('web files are prebuilt (no prerender)', async () => {
+test('web files are prebuilt (no prerender)', { timeout: 10_000 }, async () => {
   let perfNow = performance.now()
   const webFiles = findWebFiles()
 
@@ -41,12 +41,15 @@ test('web files are prebuilt (no prerender)', async () => {
     forJest: true,
   })
 
+  console.log('prebuildWebFiles perf', performance.now() - perfNow)
+
   // This is ~500ms on my local machine.
   // ~1200ms on Ubuntu CI, ~1900ms on Windows CI
+  // Occationally this is > 6s on CI
   expect(
     performance.now() - perfNow,
     'prebuildWebFiles execution time',
-  ).toBeLessThan(2500)
+  ).toBeLessThan(7500)
 
   const relativePaths = prebuiltFiles
     .filter((x) => typeof x !== 'undefined')
