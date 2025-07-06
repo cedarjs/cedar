@@ -1,8 +1,16 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 
 import { cedarCellTransform } from '../vite-plugin-cedar-cell.js'
 
 describe('redwoodCellTransform', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.mocked(console).warn.mockRestore()
+  })
+
   const plugin = cedarCellTransform()
 
   it('should transform a basic cell with QUERY export', async () => {

@@ -16,7 +16,7 @@ export const cleanWebBuild = () => {
 }
 
 export async function prebuildWebFile(srcPath: string, flags: Flags = {}) {
-  const code = fs.readFileSync(srcPath, 'utf-8')
+  const code = await fs.promises.readFile(srcPath, 'utf-8')
   const config = getWebSideDefaultBabelConfig(flags)
   const result = babel.transform(code, {
     ...config,
@@ -54,12 +54,13 @@ export const prebuildWebFiles = async (srcFiles: string[], flags?: Flags) => {
 
     try {
       const result = await prebuildWebFile(srcPath, flags)
+
       if (!result?.code) {
         throw new Error('No code returned from prebuildWebFile')
       }
 
-      fs.mkdirSync(path.dirname(dstPath), { recursive: true })
-      fs.writeFileSync(dstPath, result.code)
+      await fs.promises.mkdir(path.dirname(dstPath), { recursive: true })
+      await fs.promises.writeFile(dstPath, result.code)
     } catch {
       console.warn('Error:', srcPath, 'could not prebuilt.')
       return undefined
@@ -72,6 +73,7 @@ export const prebuildWebFiles = async (srcFiles: string[], flags?: Flags) => {
   for (const srcPath of srcFiles) {
     promises.push(processFile(srcPath))
   }
+
   return await Promise.all(promises)
 }
 
