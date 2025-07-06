@@ -37,11 +37,12 @@ test('web files are prebuilt (no prerender)', async () => {
     forJest: true,
   })
 
-  // This is ~500ms on my local machine. On Ubuntu CI, it's ~1200ms.
+  // This is ~500ms on my local machine.
+  // ~1200ms on Ubuntu CI, ~1900ms on Windows CI
   expect(
     performance.now() - perfNow,
     'prebuildWebFiles execution time',
-  ).toBeLessThan(1500)
+  ).toBeLessThan(2500)
 
   const relativePaths = prebuiltFiles
     .filter((x) => typeof x !== 'undefined')
