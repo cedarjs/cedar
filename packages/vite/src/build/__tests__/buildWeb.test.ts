@@ -30,7 +30,11 @@ test('web files are prebuilt (no prerender)', async () => {
   let perfNow = performance.now()
   const webFiles = findWebFiles()
 
-  expect(performance.now() - perfNow).toBeLessThan(50)
+  console.log('webFiles perf', performance.now() - perfNow)
+
+  // This is ~5ms on my local machine.
+  // It failed once on Ubutu CI taking ~65ms when I had the limit be 50ms
+  expect(performance.now() - perfNow).toBeLessThan(100)
 
   perfNow = performance.now()
   const prebuiltFiles = await prebuildWebFiles(webFiles, {
