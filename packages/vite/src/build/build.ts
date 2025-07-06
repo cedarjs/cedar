@@ -16,13 +16,18 @@ export const cleanWebBuild = () => {
 }
 
 export async function prebuildWebFile(srcPath: string, flags: Flags = {}) {
+  const { performance } = await import('node:perf_hooks')
   const code = fs.readFileSync(srcPath, 'utf-8')
   const config = getWebSideDefaultBabelConfig(flags)
+  const perfStart = performance.now()
   const result = babel.transform(code, {
     ...config,
     cwd: getPaths().web.base,
     filename: srcPath,
   })
+  const perfEnd = performance.now()
+  const perfDelta = Math.round(perfEnd - perfStart)
+  console.log(`Babel transformed ${srcPath} in ${perfDelta}ms`)
 
   return result
 }
