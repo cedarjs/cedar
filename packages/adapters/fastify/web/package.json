@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "fastify": "5.3.3",
+    "fastify": "5.4.0",
     "tsx": "4.20.5",
     "typescript": "5.9.2",
     "vitest": "3.2.4"
