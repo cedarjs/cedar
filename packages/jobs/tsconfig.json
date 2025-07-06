@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.compilerOption.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "moduleResolution": "Node16",
     "module": "Node16",

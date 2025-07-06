@@ -1,4 +1,5 @@
-import path from 'path'
+import path from 'node:path'
+import { performance } from 'node:perf_hooks'
 
 import { beforeEach, test, expect, afterAll } from 'vitest'
 
@@ -12,7 +13,7 @@ const FIXTURE_PATH = path.resolve(
   '../../../../../__fixtures__/example-todo-main',
 )
 
-const cleanPaths = (p) => {
+function cleanPaths(p: string) {
   return ensurePosixPath(path.relative(FIXTURE_PATH, p))
 }
 
@@ -20,15 +21,28 @@ beforeEach(() => {
   process.env.RWJS_CWD = FIXTURE_PATH
   cleanWebBuild()
 })
+
 afterAll(() => {
   delete process.env.RWJS_CWD
 })
 
 test('web files are prebuilt (no prerender)', async () => {
+  let perfNow = performance.now()
   const webFiles = findWebFiles()
+
+  expect(performance.now() - perfNow).toBeLessThan(50)
+
+  perfNow = performance.now()
   const prebuiltFiles = await prebuildWebFiles(webFiles, {
     forJest: true,
   })
+
+  // This is ~500ms on my local machine.
+  // ~1200ms on Ubuntu CI, ~1900ms on Windows CI
+  expect(
+    performance.now() - perfNow,
+    'prebuildWebFiles execution time',
+  ).toBeLessThan(2500)
 
   const relativePaths = prebuiltFiles
     .filter((x) => typeof x !== 'undefined')
