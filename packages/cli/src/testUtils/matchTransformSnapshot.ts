@@ -30,7 +30,7 @@ export const matchTransformSnapshot: MatchTransformSnapshotFunction = async (
   const testPath = expect.getState().testPath
 
   if (!testPath) {
-    throw new Error('Could not find test path')
+    throw new Error('Could not find test path ' + testPath)
   }
 
   let fixturePath
