@@ -1,7 +1,11 @@
 import React from 'react'
 
-import type {
-  OperationVariables,
+import type { OperationVariables } from '@apollo/client'
+import {
+  useQuery as apolloUseQuery,
+  useMutation as apolloUseMutation,
+  useSubscription as apolloUseSubscription,
+  useSuspenseQuery as apolloUseSuspenseQuery,
   useBackgroundQuery as apolloUseBackgroundQuery,
   useReadQuery as apolloUseReadQuery,
 } from '@apollo/client'
@@ -69,39 +73,12 @@ export interface GraphQLHooks<
 }
 
 export const GraphQLHooksContext = React.createContext<GraphQLHooks>({
-  useQuery: () => {
-    throw new Error(
-      'You must register a useQuery hook via the `GraphQLHooksProvider`',
-    )
-  },
-  useMutation: () => {
-    throw new Error(
-      'You must register a useMutation hook via the `GraphQLHooksProvider`',
-    )
-  },
-  useSubscription: () => {
-    throw new Error(
-      'You must register a useSubscription hook via the `GraphQLHooksProvider`',
-    )
-  },
-  useSuspenseQuery: () => {
-    throw new Error(
-      'You must register a useSuspenseQuery hook via the `GraphQLHooksProvider`.',
-    )
-  },
-
-  //  These are apollo specific hooks!
-  useBackgroundQuery: () => {
-    throw new Error(
-      'You must register a useBackgroundQuery hook via the `GraphQLHooksProvider`.',
-    )
-  },
-
-  useReadQuery: () => {
-    throw new Error(
-      'You must register a useReadQuery hook via the `GraphQLHooksProvider`.',
-    )
-  },
+  useQuery: apolloUseQuery,
+  useMutation: apolloUseMutation,
+  useSubscription: apolloUseSubscription,
+  useSuspenseQuery: apolloUseSuspenseQuery,
+  useBackgroundQuery: apolloUseBackgroundQuery,
+  useReadQuery: apolloUseReadQuery,
 })
 
 interface GraphQlHooksProviderProps<
