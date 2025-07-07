@@ -179,7 +179,7 @@ export interface JobDefinition<
    * See https://github.com/harrisiirak/cron-parser#cron-format for the
    * supported syntax.
    */
-  cron?: string
+  cron?: string | undefined
 
   /**
    * The function to run when this job is executed.
@@ -193,12 +193,12 @@ export type JobComputedProperties = {
   /**
    * The name of the job that was defined in the job file.
    */
-  name: string
+  name?: string
 
   /**
    * The path to the job file that this job was defined in.
    */
-  path: string
+  path?: string
 }
 
 export type Job<
@@ -233,8 +233,21 @@ type PriorityValue = IntRange<1, 101>
  *  - you may optionally pass the scheduler options
  * If the job has arguments:
  *  - you must pass the arguments and then optionally pass the scheduler options
+ * If the job has a cron schedule defined:
+ *  - options are not allowed (cron jobs are scheduled automatically)
  */
 export type CreateSchedulerArgs<TJob extends Job<QueueNames>> =
-  Parameters<TJob['perform']> extends []
-    ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
-    : [Parameters<TJob['perform']>, ScheduleJobOptions?]
+  TJob['cron'] extends '' | undefined
+    ? // empty string or undefined cron, allow options
+      Parameters<TJob['perform']> extends []
+      ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
+      : [Parameters<TJob['perform']>, ScheduleJobOptions?]
+    : TJob['cron'] extends string
+      ? // non-empty string cron, disallow options
+        Parameters<TJob['perform']> extends []
+        ? [] | [[]]
+        : [Parameters<TJob['perform']>]
+      : // fallback, allow options
+        Parameters<TJob['perform']> extends []
+        ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
+        : [Parameters<TJob['perform']>, ScheduleJobOptions?]

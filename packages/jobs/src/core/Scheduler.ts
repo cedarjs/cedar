@@ -66,6 +66,16 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       throw new QueueNotDefinedError()
     }
 
+    if (job.cron && (wait || waitUntil)) {
+      throw new Error(
+        'Cannot schedule a cron job with wait or waitUntil options',
+      )
+    }
+
+    if (typeof job.name === 'undefined' || typeof job.path === 'undefined') {
+      throw new Error('Job name or path is not defined')
+    }
+
     return {
       name: job.name,
       path: job.path,
