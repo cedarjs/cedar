@@ -5,5 +5,8 @@ export default defineConfig({
     testTimeout: 15_000,
     exclude: [...configDefaults.exclude, '**/fixtures', '**/dist'],
     logHeapUsage: true,
+    typecheck: {
+      enabled: true,
+    },
   },
 })
