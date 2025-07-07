@@ -219,16 +219,16 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
     }
   }
 
-  override async error({ job, error }: ErrorOptions<PrismaJob>) {
+  // There was an error processing the job. Record the failure data and the new
+  // runAt time.
+  override async error({ job, runAt, error }: ErrorOptions<PrismaJob>) {
     this.logger.debug(`[RedwoodJob] Job ${job.id} failure`)
 
     const data: FailureData = {
       lockedAt: null,
       lockedBy: null,
       lastError: `${error.message}\n\n${error.stack}`,
-      runAt: new Date(
-        new Date().getTime() + this.backoffMilliseconds(job.attempts),
-      ),
+      runAt,
     }
 
     await this.accessor.update({
@@ -270,9 +270,5 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
 
   override async clear() {
     await this.accessor.deleteMany()
-  }
-
-  backoffMilliseconds(attempts: number) {
-    return 1000 * attempts ** 4
   }
 }

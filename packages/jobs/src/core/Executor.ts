@@ -77,6 +77,9 @@ export class Executor {
 
       await this.adapter.error({
         job: this.job,
+        runAt: new Date(
+          new Date().getTime() + this.backoffMilliseconds(this.job.attempts),
+        ),
         error,
       })
 
@@ -92,5 +95,9 @@ export class Executor {
         })
       }
     }
+  }
+
+  backoffMilliseconds(attempts: number) {
+    return 1000 * attempts ** 4
   }
 }

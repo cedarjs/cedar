@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, vi, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest'
 
 import { DEFAULT_LOGGER } from '../../consts.js'
 import * as errors from '../../errors.js'
@@ -86,6 +86,11 @@ describe('constructor', () => {
 
 describe('perform', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
     vi.resetAllMocks()
   })
 
@@ -179,7 +184,7 @@ describe('perform', () => {
     })
   })
 
-  it('invokes the `failure` method on the adapter when job fails', async () => {
+  it('invokes the `error` method on the adapter when job fails', async () => {
     const mockAdapter = new MockAdapter()
     const mockError = new Error('mock error in the job perform method')
     const mockJob = {
@@ -200,16 +205,78 @@ describe('perform', () => {
     }
     const executor = new Executor(options)
 
-    // spy on the success function of the adapter
+    // spy on the error function of the adapter
     const adapterSpy = vi.spyOn(mockAdapter, 'error')
     // mock the `loadJob` loader to return the job mock
     loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const date = new Date(2012, 1, 1, 13)
+    vi.setSystemTime(date)
 
     await executor.perform()
 
     expect(adapterSpy).toHaveBeenCalledWith({
       job: options.job,
+      runAt: date,
       error: mockError,
     })
+  })
+
+  it('passes the correct runAt time to the `error` method on the adapter when job fails', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockError = new Error('mock error in the job perform method')
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 2,
+
+      perform: vi.fn(() => {
+        throw mockError
+      }),
+    }
+    const options = {
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+    }
+    const executor = new Executor(options)
+
+    // spy on the error function of the adapter
+    const adapterSpy = vi.spyOn(mockAdapter, 'error')
+    // mock the `loadJob` loader to return the job mock
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const date = new Date(2025, 6, 7, 9, 50)
+    vi.setSystemTime(date)
+
+    await executor.perform()
+
+    expect(adapterSpy).toHaveBeenCalledWith({
+      job: options.job,
+      runAt: new Date(date.getTime() + 16_000),
+      error: mockError,
+    })
+  })
+})
+
+describe('backoffMilliseconds()', () => {
+  it('returns the number of milliseconds to wait for the next run', () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob: BaseJob = {
+      id: 1,
+      name: 'mockJob',
+      path: 'mockJob/mockJob',
+      args: [],
+      attempts: 0,
+    }
+    const options = { adapter: mockAdapter, job: mockJob }
+
+    expect(new Executor(options).backoffMilliseconds(0)).toEqual(0)
+    expect(new Executor(options).backoffMilliseconds(1)).toEqual(1_000)
+    expect(new Executor(options).backoffMilliseconds(2)).toEqual(16_000)
+    expect(new Executor(options).backoffMilliseconds(3)).toEqual(81_000)
+    expect(new Executor(options).backoffMilliseconds(20)).toEqual(160_000_000)
   })
 })
