@@ -70,6 +70,7 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       name: job.name,
       path: job.path,
       args: args ?? [],
+      cron: job.cron,
       runAt: this.computeRunAt({ wait, waitUntil }),
       queue: queue,
       priority: priority,

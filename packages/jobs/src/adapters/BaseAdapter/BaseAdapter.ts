@@ -6,6 +6,7 @@ export interface SchedulePayload {
   name: string
   path: string
   args: unknown[]
+  cron?: string | undefined
   runAt: Date
   queue: string
   priority: number
@@ -23,6 +24,7 @@ export interface BaseAdapterOptions {
 
 export interface SuccessOptions<TJob extends BaseJob = BaseJob> {
   job: TJob
+  runAt: Date | undefined
   deleteJob?: boolean
 }
 

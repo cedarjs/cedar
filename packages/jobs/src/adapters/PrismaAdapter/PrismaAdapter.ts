@@ -201,7 +201,7 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
   // Prisma queries are lazily evaluated and only sent to the db when they are
   // awaited, so do the await here to ensure they actually run (if the user
   // doesn't await the Promise then the queries will never be executed!)
-  override async success({ job, deleteJob }: SuccessOptions<PrismaJob>) {
+  override async success({ job, runAt, deleteJob }: SuccessOptions<PrismaJob>) {
     this.logger.debug(`[RedwoodJob] Job ${job.id} success`)
 
     if (deleteJob) {
@@ -213,7 +213,7 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
           lockedAt: null,
           lockedBy: null,
           lastError: null,
-          runAt: null,
+          runAt: runAt || null,
         },
       })
     }

@@ -305,6 +305,46 @@ describe('perform', () => {
       deleteJob: true,
     })
   })
+
+  it('reschedules cron jobs', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 0,
+      cron: '0 10 * * *',
+
+      perform: vi.fn(() => {
+        console.log('Performing job')
+      }),
+    }
+    const options = {
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+    }
+    const executor = new Executor(options)
+
+    // spy on the success function of the adapter
+    const adapterSpy = vi.spyOn(mockAdapter, 'success')
+    // mock the `loadJob` loader to return the job mock
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const date = new Date(2025, 6, 7, 13, 50)
+    vi.setSystemTime(date)
+
+    await executor.perform()
+
+    expect(mockJob.perform).toHaveBeenCalled()
+    expect(adapterSpy).toHaveBeenCalledWith({
+      job: options.job,
+      // 0 10 * * * = Every day at 10:00 AM
+      runAt: new Date(2025, 6, 8, 10, 0),
+      deleteJob: false,
+    })
+  })
 })
 
 describe('backoffMilliseconds()', () => {

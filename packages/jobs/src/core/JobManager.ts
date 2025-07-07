@@ -50,7 +50,7 @@ export class JobManager<
   createScheduler(schedulerConfig: CreateSchedulerConfig<TAdapters>) {
     const scheduler = new Scheduler({
       adapter: this.adapters[schedulerConfig.adapter],
-      logger: this.logger,
+      logger: schedulerConfig.logger ?? this.logger,
     })
 
     return <TJob extends Job<TQueues, any[]>>(

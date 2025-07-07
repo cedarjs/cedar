@@ -40,6 +40,7 @@
   "dependencies": {
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
+    "cron-parser": "5.3.0",
     "type-fest": "4.26.1"
   },
   "devDependencies": {

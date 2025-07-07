@@ -3092,6 +3092,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@prisma/client": "npm:5.20.0"
     concurrently: "npm:8.2.2"
+    cron-parser: "npm:5.3.0"
     publint: "npm:0.3.12"
     tsx: "npm:4.19.4"
     type-fest: "npm:4.26.1"
@@ -15045,6 +15046,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cron-parser@npm:5.3.0":
+  version: 5.3.0
+  resolution: "cron-parser@npm:5.3.0"
+  dependencies:
+    luxon: "npm:^3.6.1"
+  checksum: 10c0/770d88db93af031ecc0fa7e7fc4f587af32df66eaff985137f86a02fee9af038533788dd36d5bc6ac283392e9db82b55fd4841e7e02098617fc7b73a813c5b7a
+  languageName: node
+  linkType: hard
+
 "cross-env@npm:7.0.3":
   version: 7.0.3
   resolution: "cross-env@npm:7.0.3"
@@ -22362,6 +22372,13 @@ __metadata:
     lodash.clonedeep: "npm:^4.5.0"
     lru-cache: "npm:~4.0.0"
   checksum: 10c0/b2d38600f8f5b936c9e54fd3459aac8d2d3872920bce231a22cffb3b44521ccdfca9df11c8d5b091c8764e0cb2560fd5fc440acadddcec102e2ba03f6fa2c282
+  languageName: node
+  linkType: hard
+
+"luxon@npm:^3.6.1":
+  version: 3.6.1
+  resolution: "luxon@npm:3.6.1"
+  checksum: 10c0/906d57a9dc4d1de9383f2e9223e378c298607c1b4d17b6657b836a3cd120feb1c1de3b5d06d846a3417e1ca764de8476e8c23b3cd4083b5cdb870adcb06a99d5
   languageName: node
   linkType: hard
 

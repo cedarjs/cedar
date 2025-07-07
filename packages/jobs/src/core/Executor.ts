@@ -1,5 +1,7 @@
 // Used by the job runner to execute a job and track success or failure
 
+import { CronExpressionParser } from 'cron-parser'
+
 import type { BaseAdapter } from '../adapters/BaseAdapter/BaseAdapter.js'
 import {
   DEFAULT_MAX_ATTEMPTS,
@@ -69,9 +71,14 @@ export class Executor {
       const job = await loadJob({ name: this.job.name, path: this.job.path })
       await job.perform(...this.job.args)
 
+      const runAt = job.cron
+        ? CronExpressionParser.parse(job.cron).next().toDate()
+        : undefined
+
       await this.adapter.success({
         job: this.job,
-        deleteJob: this.deleteSuccessfulJobs,
+        runAt,
+        deleteJob: !runAt && this.deleteSuccessfulJobs,
       })
     } catch (error: any) {
       const errorMessage = `[RedwoodJob] Error in job ${this.jobIdentifier}: ${error.message}`

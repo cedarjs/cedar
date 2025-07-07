@@ -15,7 +15,7 @@ export interface BasicLogger {
 }
 
 /**
- *This is the minimum interface that a "job" must conform to in order to be
+ * This is the minimum interface that a "job" must conform to in order to be
  * scheduled and executed by Redwood's job engine.
  */
 export interface BaseJob {
@@ -24,6 +24,7 @@ export interface BaseJob {
   path: string
   args: unknown[]
   attempts: number
+  cron?: string | undefined
 }
 export type PossibleBaseJob = BaseJob | undefined
 
@@ -174,6 +175,13 @@ export interface JobDefinition<
   priority?: PriorityValue
 
   /**
+   * If this is specified it will be the recurring schedule this job will run at
+   * See https://github.com/harrisiirak/cron-parser#cron-format for the
+   * supported syntax.
+   */
+  cron?: string
+
+  /**
    * The function to run when this job is executed.
    *
    * @param args The arguments that were passed when the job was scheduled.
@@ -201,8 +209,8 @@ export type Job<
 export type ScheduleJobOptions =
   | {
       /**
-       * The number of seconds to wait before scheduling this job. This is mutually
-       * exclusive with `waitUntil`.
+       * The number of seconds to wait before scheduling this job. This is
+       * mutually exclusive with `waitUntil`.
        */
       wait: number
       waitUntil?: never
@@ -210,19 +218,22 @@ export type ScheduleJobOptions =
   | {
       wait?: never
       /**
-       * The date and time to schedule this job for. This is mutually exclusive with
-       * `wait`.
+       * The date and time to schedule this job for. This is mutually exclusive
+       * with `wait`.
        */
       waitUntil: Date
     }
 
 type PriorityValue = IntRange<1, 101>
 
-// If the job has no arguments:
-//  - you may pass an empty array for the arguments and then optionally pass the scheduler options
-//  - you may optionally pass the scheduler options
-// If the job has arguments:
-//  - you must pass the arguments and then optionally pass the scheduler options
+/**
+ * If the job has no arguments:
+ *  - you may pass an empty array for the arguments and then optionally pass the
+ *    scheduler options
+ *  - you may optionally pass the scheduler options
+ * If the job has arguments:
+ *  - you must pass the arguments and then optionally pass the scheduler options
+ */
 export type CreateSchedulerArgs<TJob extends Job<QueueNames>> =
   Parameters<TJob['perform']> extends []
     ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]

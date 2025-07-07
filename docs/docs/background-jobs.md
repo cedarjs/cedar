@@ -530,15 +530,15 @@ export const jobs = new JobManager({
 
 This is an array of objects. Each object represents the config for a single "group" of workers. By default, there is only one worker group. It uses the `PrismaAdapter` and will look for jobs in all queues. If you want to start fine tuning your workers by working with different adapters, or only working on some named queues, you can add additional members to this array, each with a unique set of options.
 
-- `adapter` : **[required]** the name of the adapter this worker group will use. Must be one of the keys that you gave to the `adapters` option on the `JobManager` itself.
-- `logger` : the logger to use when working on jobs. If not provided, defaults to the `logger` set on the `JobManager`. You can use this logger in the `perform()` function of your job by accessing `jobs.logger`
-- queue : **[required]** the named queue(s) in which this worker group will watch for jobs. There is a reserved `'*'` value you can use which means "all queues." This can be an array of queues as well: `['default', 'email']` for example.
-- `count` : **[required]** the number of workers to start with this config.
+- `adapter`: **[required]** the name of the adapter this worker group will use. Must be one of the keys that you gave to the `adapters` option on the `JobManager` itself.
+- `logger`: the logger to use when working on jobs. If not provided, defaults to the `logger` set on the `JobManager`. You can use this logger in the `perform()` function of your job by accessing `jobs.logger`
+- queue: **[required]** the named queue(s) in which this worker group will watch for jobs. There is a reserved `'*'` value you can use which means "all queues." This can be an array of queues as well: `['default', 'email']` for example.
+- `count`: **[required]** the number of workers to start with this config.
 - `maxAttempts`: the maximum number of times to retry a job before giving up. A job that throws an error will be set to retry in the future with an exponential backoff in time equal to the number of previous attempts \*\* 4. After this number, a job is considered "failed" and will not be re-attempted. Default: `24`.
-- `maxRuntime` : the maximum amount of time, in seconds, to try running a job before another worker will pick it up and try again. It's up to you to make sure your job doesn't run for longer than this amount of time! Default: `14_400` (4 hours).
-- `deleteFailedJobs` : when a job has failed (maximum number of retries has occurred) you can keep the job in the database, or delete it. Default: `false`.
-- `deleteSuccessfulJobs` : when a job has succeeded, you can keep the job in the database, or delete it. It's generally assumed that your jobs _will_ succeed so it usually makes sense to clear them out and keep the queue lean. Default: `true`.
-- `sleepDelay` : the amount of time, in seconds, to wait before checkng the queue for another job to run. Too low and you'll be thrashing your storage system looking for jobs, too high and you start to have a long delay before any job is run. Default: `5`.
+- `maxRuntime`: the maximum amount of time, in seconds, to try running a job before another worker will pick it up and try again. It's up to you to make sure your job doesn't run for longer than this amount of time! Default: `14_400` (4 hours).
+- `deleteFailedJobs`: when a job has failed (maximum number of retries has occurred) you can keep the job in the database, or delete it. Default: `false`.
+- `deleteSuccessfulJobs`: when a job has succeeded, you can keep the job in the database, or delete it. It's generally assumed that your jobs _will_ succeed so it usually makes sense to clear them out and keep the queue lean. Default: `true`.
+- `sleepDelay`: the amount of time, in seconds, to wait before checking the queue for another job to run. Too low and you'll be thrashing your storage system looking for jobs, too high and you start to have a long delay before any job is run. Default: `5`.
 
 See the next section for advanced usage examples, like multiple worker groups.
 
