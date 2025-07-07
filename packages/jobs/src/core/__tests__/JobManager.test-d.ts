@@ -1,4 +1,4 @@
-import { describe, it, expectTypeOf } from 'vitest'
+import { describe, it, expectTypeOf, assertType } from 'vitest'
 
 import type { JobDefinition } from '../../types.js'
 import { JobManager } from '../JobManager.js'
@@ -125,12 +125,34 @@ describe('JobManager Type Tests', () => {
       expectTypeOf(scheduler(cronJob, [])).toEqualTypeOf<Promise<boolean>>()
     })
 
-    // I want to test that you're not allowed to pass an options object as the
-    // third parameter (like { wait: 30 }) when job.cron is truthy. But I
-    // don't know how to do it.
-    // it('should not accept options', () => {
-    //   expectTypeOf(scheduler).parameter(1).toEqualTypeOf<{}>()
-    // })
+    it('should not accept options when a cron schedule is defined', () => {
+      // @ts-expect-error - should not be allowed to pass options
+      assertType(scheduler(cronJob, [], { wait: 30 }))
+    })
+
+    it('should accept options if `cron` is undefined', () => {
+      const job = manager.createJob({
+        queue: 'default',
+        cron: undefined,
+        perform: () => {
+          return void 0
+        },
+      })
+
+      assertType(scheduler(job, [], { wait: 30 }))
+    })
+
+    it('should accept options if `cron` is an empty string', () => {
+      const job = manager.createJob({
+        queue: 'default',
+        cron: '',
+        perform: () => {
+          return void 0
+        },
+      })
+
+      assertType(scheduler(job, [], { wait: 30 }))
+    })
   })
 
   describe('createJob', () => {
