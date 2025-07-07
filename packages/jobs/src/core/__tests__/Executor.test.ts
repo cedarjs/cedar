@@ -316,9 +316,7 @@ describe('perform', () => {
       attempts: 0,
       cron: '0 10 * * *',
 
-      perform: vi.fn(() => {
-        console.log('Performing job')
-      }),
+      perform: vi.fn(() => {}),
     }
     const options = {
       adapter: mockAdapter,
