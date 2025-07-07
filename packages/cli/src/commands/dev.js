@@ -15,8 +15,8 @@ export const builder = (yargs) => {
     .positional('side', {
       choices: ['api', 'web', ...Object.keys(projectConfig.experimental.sides)],
       default:
-        projectConfig.experimental.dev.defaultSides.length > 0
-          ? projectConfig.experimental.dev.defaultSides
+        projectConfig.experimental.cli.dev.defaultSides.length > 0
+          ? projectConfig.experimental.cli.dev.defaultSides
           : ['api', 'web'],
       description: 'Which dev server(s) to start',
       type: 'array',

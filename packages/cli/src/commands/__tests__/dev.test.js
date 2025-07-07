@@ -182,7 +182,7 @@ describe('yarn rw dev', () => {
       api: { port: 8911 },
       experimental: {
         sides: { app: { workspace: 'app', devScript: 'android' } },
-        dev: { defaultSides: ['app'] },
+        cli: { dev: { defaultSides: ['app'] } },
       },
     })
 

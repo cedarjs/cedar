@@ -112,6 +112,9 @@ export interface Config {
     cli: {
       autoInstall: boolean
       plugins: CLIPlugin[]
+      dev: {
+        defaultSides: string[]
+      }
     }
     useSDLCodeGenForGraphQLTypes: boolean
     streamingSsr: {
@@ -128,9 +131,6 @@ export interface Config {
       lintOnly: boolean
     }
     sides: Sides
-    dev: {
-      defaultSides: string[]
-    }
   }
 }
 
@@ -202,6 +202,9 @@ const DEFAULT_CONFIG: Config = {
           package: '@cedarjs/cli-data-migrate',
         },
       ],
+      dev: {
+        defaultSides: [],
+      },
     },
     useSDLCodeGenForGraphQLTypes: false,
     streamingSsr: {
@@ -218,9 +221,6 @@ const DEFAULT_CONFIG: Config = {
       lintOnly: false,
     },
     sides: {},
-    dev: {
-      defaultSides: [],
-    },
   },
 }
 

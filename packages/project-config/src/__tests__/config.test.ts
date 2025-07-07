@@ -46,6 +46,9 @@ describe('getConfig', () => {
         "experimental": {
           "cli": {
             "autoInstall": true,
+            "dev": {
+              "defaultSides": [],
+            },
             "plugins": [
               {
                 "package": "@cedarjs/cli-storybook-vite",
@@ -54,9 +57,6 @@ describe('getConfig', () => {
                 "package": "@cedarjs/cli-data-migrate",
               },
             ],
-          },
-          "dev": {
-            "defaultSides": [],
           },
           "opentelemetry": {
             "enabled": false,
