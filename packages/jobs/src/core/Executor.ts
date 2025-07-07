@@ -15,8 +15,11 @@ export interface ExecutorOptions {
   adapter: BaseAdapter
   job: BaseJob
   logger?: BasicLogger
+  /** Defaults to DEFAULT_MAX_ATTEMPTS */
   maxAttempts?: number
+  /** Defaults to DEFAULT_DELETE_FAILED_JOBS */
   deleteFailedJobs?: boolean
+  /** Defaults to DEFAULT_DELETE_SUCCESSFUL_JOBS */
   deleteSuccessfulJobs?: boolean
 }
 

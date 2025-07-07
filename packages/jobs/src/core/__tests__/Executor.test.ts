@@ -210,7 +210,7 @@ describe('perform', () => {
     // mock the `loadJob` loader to return the job mock
     loadersMockFns.loadJob.mockImplementation(() => mockJob)
 
-    const date = new Date(2012, 1, 1, 13)
+    const date = new Date(2025, 6, 7, 9, 50)
     vi.setSystemTime(date)
 
     await executor.perform()
@@ -257,6 +257,52 @@ describe('perform', () => {
       job: options.job,
       runAt: new Date(date.getTime() + 16_000),
       error: mockError,
+    })
+  })
+
+  it('invokes the `failure` method on the adapter when job fails >= maxAttempts times', async () => {
+    const mockAdapter = new MockAdapter()
+    const mockError = new Error('mock error in the job perform method')
+    const mockJob = {
+      id: 1,
+      name: 'TestJob',
+      path: 'TestJob/TestJob',
+      args: ['foo'],
+      attempts: 5,
+
+      perform: vi.fn(() => {
+        throw mockError
+      }),
+    }
+    const options: ExecutorOptions = {
+      adapter: mockAdapter,
+      logger: mockLogger,
+      job: mockJob,
+      maxAttempts: 5,
+      deleteFailedJobs: true,
+    }
+    const executor = new Executor(options)
+
+    // spy on the error function of the adapter
+    const adapterErrorSpy = vi.spyOn(mockAdapter, 'error')
+    const adapterFailureSpy = vi.spyOn(mockAdapter, 'failure')
+    // mock the `loadJob` loader to return the job mock
+    loadersMockFns.loadJob.mockImplementation(() => mockJob)
+
+    const date = new Date(2025, 6, 7, 10, 50)
+    vi.setSystemTime(date)
+
+    await executor.perform()
+
+    expect(adapterErrorSpy).toHaveBeenCalledWith({
+      job: options.job,
+      runAt: new Date(date.getTime() + 625_000),
+      error: mockError,
+    })
+
+    expect(adapterFailureSpy).toHaveBeenCalledWith({
+      job: options.job,
+      deleteJob: true,
     })
   })
 })
