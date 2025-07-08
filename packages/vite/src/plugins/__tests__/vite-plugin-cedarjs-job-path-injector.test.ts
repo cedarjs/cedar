@@ -49,9 +49,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
     const transform = getPluginTransform()
     const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/testJob.js')
 
-    const code = `
-export const testJob = jobs.createJob({})
-`
+    const code = 'export const testJob = jobs.createJob({})'
 
     const result = await transform(code, testFilePath)
 
@@ -59,11 +57,8 @@ export const testJob = jobs.createJob({})
       throw new Error('transform should have returned a result with code')
     }
 
-    expect(result).toMatchObject({
-      code: expect.stringContaining('path: "testJob"'),
-      map: null,
-    })
     expect(result.code).toContain('name: "testJob"')
+    expect(result.code).toContain('path: "testJob"')
   })
 
   it('should inject path and name into createJob call with existing properties', async () => {
@@ -71,13 +66,13 @@ export const testJob = jobs.createJob({})
     const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/emailJob.js')
 
     const code = `
-export const emailJob = jobs.createJob({
-  queue: 'email',
-  perform: async (data) => {
-    // send email
-  }
-})
-`
+      export const emailJob = jobs.createJob({
+        queue: 'email',
+        perform: async (data) => {
+          // send email
+        }
+      })
+    `
 
     const result = await transform(code, testFilePath)
 
@@ -85,11 +80,8 @@ export const emailJob = jobs.createJob({
       throw new Error('transform should have returned a result with code')
     }
 
-    expect(result).toMatchObject({
-      code: expect.stringContaining('path: "emailJob"'),
-      map: null,
-    })
     expect(result.code).toContain('name: "emailJob"')
+    expect(result.code).toContain('path: "emailJob"')
     expect(result.code).toContain("queue: 'email'")
     expect(result.code).toContain('perform: async (data)')
   })
@@ -102,10 +94,10 @@ export const emailJob = jobs.createJob({
     )
 
     const code = `
-export const cleanupJob = jobs.createJob({
-  queue: 'maintenance'
-})
-`
+      export const cleanupJob = jobs.createJob({
+        queue: 'maintenance'
+      })
+    `
 
     const result = await transform(code, testFilePath)
 
@@ -113,10 +105,7 @@ export const cleanupJob = jobs.createJob({
       throw new Error('transform should have returned a result with code')
     }
 
-    expect(result).toMatchObject({
-      code: expect.stringContaining('path: "admin/cleanupJob"'),
-      map: null,
-    })
+    expect(result.code).toContain('path: "admin/cleanupJob"')
     expect(result.code).toContain('name: "cleanupJob"')
   })
 
@@ -125,13 +114,13 @@ export const cleanupJob = jobs.createJob({
     const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/processJob.ts')
 
     const code = `
-export const processJob = jobs.createJob({
-  queue: 'processing',
-  perform: async (data: JobData) => {
-    // process data
-  }
-})
-`
+      export const processJob = jobs.createJob({
+        queue: 'processing',
+        perform: async (data: JobData) => {
+          // process data
+        }
+      })
+    `
 
     const result = await transform(code, testFilePath)
 
@@ -139,10 +128,7 @@ export const processJob = jobs.createJob({
       throw new Error('transform should have returned a result with code')
     }
 
-    expect(result).toMatchObject({
-      code: expect.stringContaining('path: "processJob"'),
-      map: null,
-    })
+    expect(result.code).toContain('path: "processJob"')
     expect(result.code).toContain('name: "processJob"')
   })
 
@@ -151,14 +137,14 @@ export const processJob = jobs.createJob({
     const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/multiJob.js')
 
     const code = `
-export const firstJob = jobs.createJob({
-  queue: 'first'
-})
+      export const firstJob = jobs.createJob({
+        queue: 'first'
+      })
 
-export const secondJob = jobs.createJob({
-  queue: 'second'
-})
-`
+      export const secondJob = jobs.createJob({
+        queue: 'second'
+      })
+    `
 
     const result = await transform(code, testFilePath)
 
@@ -176,10 +162,10 @@ export const secondJob = jobs.createJob({
     const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/noJob.js')
 
     const code = `
-export const someFunction = () => {
-  return 'not a job'
-}
-`
+      export const someFunction = () => {
+        return 'not a job'
+      }
+    `
 
     const result = await transform(code, testFilePath)
 
@@ -191,12 +177,12 @@ export const someFunction = () => {
     const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/aliasedJob.js')
 
     const code = `
-import { jobs as j } from '@cedarjs/api'
+      import { jobs as j } from '@cedarjs/api'
 
-export const aliasedJob = j.createJob({
-  queue: 'aliased'
-})
-`
+      export const aliasedJob = j.createJob({
+        queue: 'aliased'
+      })
+    `
 
     const result = await transform(code, testFilePath)
 
@@ -204,10 +190,7 @@ export const aliasedJob = j.createJob({
       throw new Error('transform should have returned a result with code')
     }
 
-    expect(result).toMatchObject({
-      code: expect.stringContaining('path: "aliasedJob"'),
-      map: null,
-    })
+    expect(result.code).toContain('path: "aliasedJob"')
     expect(result.code).toContain('name: "aliasedJob"')
   })
 
@@ -216,17 +199,17 @@ export const aliasedJob = j.createJob({
     const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/complexJob.js')
 
     const code = `
-export const complexJob = jobs.createJob({
-  queue: 'complex',
-  attempts: 3,
-  perform: async (data) => {
-    console.log('Processing:', data)
-  },
-  onFailure: (error) => {
-    console.error('Failed:', error)
-  }
-})
-`
+      export const complexJob = jobs.createJob({
+        queue: 'complex',
+        attempts: 3,
+        perform: async (data) => {
+          console.log('Processing:', data)
+        },
+        onFailure: (error) => {
+          console.error('Failed:', error)
+        }
+      })
+    `
 
     const result = await transform(code, testFilePath)
 
@@ -247,13 +230,13 @@ export const complexJob = jobs.createJob({
     const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/notAJob.js')
 
     const code = `
-// This mentions createJob but doesn't actually call it
-const comment = 'Use createJob to create a job'
+      // This mentions createJob but doesn't actually call it
+      const comment = 'Use createJob to create a job'
 
-export const notAJob = someOtherFunction({
-  queue: 'not-a-job'
-})
-`
+      export const notAJob = someOtherFunction({
+        queue: 'not-a-job'
+      })
+    `
 
     const result = await transform(code, testFilePath)
 

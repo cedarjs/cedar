@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import * as acorn from 'acorn-loose'
+import * as swc from '@swc/core'
 import type { Plugin } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -14,15 +14,20 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
         return null
       }
 
+      const isTypescript = id.endsWith('.ts') || id.endsWith('.tsx')
+
       let ast
       try {
-        ast = acorn.parse(code, {
-          ecmaVersion: 2024,
-          sourceType: 'module',
+        ast = swc.parseSync(code, {
+          target: 'es2022',
+          syntax: isTypescript ? 'typescript' : 'ecmascript',
+          tsx: id.endsWith('.tsx'),
+          jsx: id.endsWith('.jsx'),
         })
       } catch (error) {
         console.warn('Failed to parse file:', id)
         console.warn(error)
+
         // If we can't parse, just return the original code
         return null
       }
@@ -41,8 +46,8 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
           return
         }
 
-        // Look for export named declarations
-        if (node.type === 'ExportNamedDeclaration' && node.declaration) {
+        // Look for export declarations
+        if (node.type === 'ExportDeclaration' && node.declaration) {
           const declaration = node.declaration
 
           // Check if it's a variable declaration
@@ -63,13 +68,13 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
                   if (
                     property &&
                     property.type === 'Identifier' &&
-                    property.name === 'createJob'
+                    property.value === 'createJob'
                   ) {
                     // We found a createJob call, let's inject the path and name
                     const variableId = declarator.id
 
                     if (variableId && variableId.type === 'Identifier') {
-                      const importName = variableId.name
+                      const importName = variableId.value
                       const importPath = path.relative(paths.api.jobs, id)
                       const importPathWithoutExtension = importPath.replace(
                         /\.[^/.]+$/,
@@ -79,18 +84,25 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
                       // Get the first argument (should be an object)
                       const firstArg = init.arguments[0]
 
-                      if (firstArg && firstArg.type === 'ObjectExpression') {
+                      if (firstArg?.expression?.type === 'ObjectExpression') {
                         // Find the end of the object properties to insert our new properties
-                        const properties = firstArg.properties
+                        const objectExpr = firstArg.expression
+                        const properties = objectExpr.properties
                         let insertPosition: number
 
                         if (properties.length > 0) {
                           // Insert after the last property
                           const lastProperty = properties[properties.length - 1]
-                          insertPosition = lastProperty.end
+                          // SWC properties don't have direct span, calculate from key and value
+                          if (lastProperty.type === 'KeyValueProperty') {
+                            insertPosition = lastProperty.value.span.end
+                          } else {
+                            // Fallback: use the object's end minus 1 (before closing brace)
+                            insertPosition = objectExpr.span.end - 1
+                          }
                         } else {
                           // Empty object, insert after the opening brace
-                          insertPosition = firstArg.start + 1
+                          insertPosition = objectExpr.span.start + 1
                         }
 
                         // Build the properties to insert
@@ -125,7 +137,8 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
           if (
             key === 'parent' ||
             key === 'leadingComments' ||
-            key === 'trailingComments'
+            key === 'trailingComments' ||
+            key === 'span'
           ) {
             continue
           }
