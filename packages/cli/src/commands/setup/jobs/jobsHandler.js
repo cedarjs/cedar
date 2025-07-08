@@ -18,6 +18,7 @@ model BackgroundJob {
   queue     String
   priority  Int
   runAt     DateTime?
+  cron      String?
   lockedAt  DateTime?
   lockedBy  String?
   lastError String?
