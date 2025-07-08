@@ -19,7 +19,7 @@ export async function runScriptFunction({
   args,
 }) {
   const rwConfig = getConfig()
-  const streamingEnabled = rwConfig.experimental.streamingSsr.enabled
+  const streamingEnabled = rwConfig?.experimental.streamingSsr.enabled
 
   const server = await createServer({
     optimizeDeps: {

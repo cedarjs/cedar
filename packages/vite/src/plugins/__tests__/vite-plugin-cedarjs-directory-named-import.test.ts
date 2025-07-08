@@ -1,114 +1,135 @@
-import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 
 import { build } from 'vite'
-import { describe, expect, it, beforeAll, afterAll } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { cedarjsDirectoryNamedImportPlugin } from '../vite-plugin-cedarjs-directory-named-import.js'
 
-const testCases = [
-  // Directory named imports (unused imports become bare imports)
-  {
-    input:
-      'import { ImpModule } from "./__fixtures__/directory-named-imports/Module"',
-    output: 'import "./__fixtures__/directory-named-imports/Module";',
-  },
-  // Directory named imports TSX (unused imports become bare imports)
-  {
-    input:
-      'import { ImpTSX } from "./__fixtures__/directory-named-imports/TSX"',
-    output: `import "./__fixtures__/directory-named-imports/TSX";`,
-  },
-  // Directory named exports (transformed to import + export)
-  {
-    input:
-      'export { ExpModule } from "./__fixtures__/directory-named-imports/Module"',
-    output: `import { ExpModule } from "./__fixtures__/directory-named-imports/Module";`,
-  },
-  // Gives preferences to `index.*`
-  {
-    input:
-      'export { ExpIndex } from "./__fixtures__/directory-named-imports/indexModule"',
-    output: `import { ExpIndex } from "./__fixtures__/directory-named-imports/indexModule";`,
-  },
-  {
-    input:
-      'export { TSWithIndex } from "./__fixtures__/directory-named-imports/TSWithIndex"',
-    output: `import { TSWithIndex } from "./__fixtures__/directory-named-imports/TSWithIndex";`,
-  },
-  // Supports "*.ts"
-  {
-    input: 'export { pew } from "./__fixtures__/directory-named-imports/TS"',
-    output: `import { pew } from "./__fixtures__/directory-named-imports/TS";`,
-  },
-  // Supports "*.tsx"
-  {
-    input: 'export { pew } from "./__fixtures__/directory-named-imports/TSX"',
-    output: `import { pew } from "./__fixtures__/directory-named-imports/TSX";`,
-  },
-  // Supports "*.jsx"
-  {
-    input: 'export { pew } from "./__fixtures__/directory-named-imports/JSX"',
-    output: `import { pew } from "./__fixtures__/directory-named-imports/JSX";`,
-  },
-]
+const rootDir = path.join(__dirname, '__fixtures__', 'directory-named-imports')
+
+async function testTransformation(fileName: string) {
+  const result = await build({
+    root: rootDir,
+    plugins: [cedarjsDirectoryNamedImportPlugin()],
+    build: {
+      lib: {
+        entry: fileName,
+        formats: ['es'],
+      },
+      write: false,
+      minify: false,
+    },
+    logLevel: 'silent',
+  })
+
+  // Extract the generated code
+  const outputBundle = Array.isArray(result) ? result[0] : result
+
+  if (!('output' in outputBundle)) {
+    throw new Error('Build output is not in expected format')
+  }
+
+  const chunk = outputBundle.output.find(
+    (chunk) => chunk.type === 'chunk' && chunk.isEntry,
+  )
+
+  if (!chunk || !('code' in chunk)) {
+    throw new Error('Could not find entry chunk in build output')
+  }
+
+  // The build process should have resolved the import to the correct path
+  // We check that the resolved import path matches our expected output
+  return chunk.code
+}
 
 describe('directory named imports', () => {
-  let tempDir: string
+  it('should transform directory named imports', async () => {
+    const code = await testTransformation('moduleImport.js')
 
-  beforeAll(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vite-plugin-test-'))
+    expect(code).toMatchInlineSnapshot(`
+      "const ImpModule = { name: "ImpModule" };
+      console.log(ImpModule);
+      "
+    `)
   })
 
-  afterAll(() => {
-    fs.rmSync(tempDir, { recursive: true, force: true })
+  it('should transform directory named imports TSX', async () => {
+    const code = await testTransformation('tsxImport.ts')
+
+    expect(code).toMatchInlineSnapshot(`
+      "const ImpTSX = () => null;
+      console.log(ImpTSX);
+      "
+    `)
   })
 
-  testCases.forEach(({ input, output }) => {
-    it(`should resolve ${input} to ${output}`, async () => {
-      // Create a test file with the input code
-      const rndId = Math.random().toString(36).slice(2, 11)
-      const testFileName = `test-${Date.now()}-${rndId}.js`
-      const testFilePath = path.join(tempDir, testFileName)
-      fs.writeFileSync(testFilePath, input)
+  it('should transform directory named exports', async () => {
+    const code = await testTransformation('moduleExport.js')
 
-      // Build with Vite
-      const result = await build({
-        root: tempDir,
-        plugins: [cedarjsDirectoryNamedImportPlugin()],
-        build: {
-          lib: {
-            entry: testFileName,
-            formats: ['es'],
-          },
-          rollupOptions: {
-            external: (id) => id.startsWith('.'), // Externalize relative imports to preserve them
-          },
-          write: false, // Don't write to disk
-          minify: false, // Don't minify to preserve import paths
-        },
-        logLevel: 'silent',
-      })
+    expect(code).toMatchInlineSnapshot(`
+      "const ImpModule = { name: "ImpModule" };
+      export {
+        ImpModule
+      };
+      "
+    `)
+  })
 
-      // Extract the generated code
-      const outputBundle = Array.isArray(result) ? result[0] : result
+  it('should give preferences to index files', async () => {
+    const code = await testTransformation('indexModuleExport.js')
 
-      if (!('output' in outputBundle)) {
-        throw new Error('Build output is not in expected format')
-      }
+    expect(code).toMatchInlineSnapshot(`
+      "const ExpIndex = "index.js";
+      export {
+        ExpIndex
+      };
+      "
+    `)
+  })
 
-      const chunk = outputBundle.output.find(
-        (chunk) => chunk.type === 'chunk' && chunk.isEntry,
-      )
+  it('should give preferences to index files with TypeScript', async () => {
+    const code = await testTransformation('indexModuleExport.ts')
 
-      if (!chunk || !('code' in chunk)) {
-        throw new Error('Could not find entry chunk in build output')
-      }
+    expect(code).toMatchInlineSnapshot(`
+      "const TSWithIndex = "index.js";
+      export {
+        TSWithIndex
+      };
+      "
+    `)
+  })
 
-      // The build process should have resolved the import to the correct path
-      // We check that the resolved import path matches our expected output
-      expect(chunk.code).toContain(output)
-    })
+  it('should support .ts files', async () => {
+    const code = await testTransformation('tsImport.ts')
+
+    expect(code).toMatchInlineSnapshot(`
+      "const pew = "pew";
+      console.log(pew);
+      "
+    `)
+  })
+
+  it('should support .tsx files', async () => {
+    const code = await testTransformation('tsxExport.ts')
+
+    expect(code).toMatchInlineSnapshot(`
+      "const pew = () => "pew";
+      export {
+        pew
+      };
+      "
+    `)
+  })
+
+  it('should support .jsx files', async () => {
+    const code = await testTransformation('jsxExport.ts')
+
+    expect(code).toMatchInlineSnapshot(`
+      "const pew = () => "pew";
+      export {
+        pew
+      };
+      "
+    `)
   })
 })
