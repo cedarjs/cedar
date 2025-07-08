@@ -105,8 +105,8 @@ describe('cedarjsJobPathInjectorPlugin', () => {
       throw new Error('transform should have returned a result with code')
     }
 
-    expect(result.code).toContain('path: "admin/cleanupJob"')
-    expect(result.code).toContain('name: "cleanupJob"')
+    expect(result.code).toMatch(/path: "admin(\/|\\\\)cleanupJob"/)
+    expect(result.code).toMatch('name: "cleanupJob"')
   })
 
   it('should handle TypeScript files', async () => {
