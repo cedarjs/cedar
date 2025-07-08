@@ -125,12 +125,10 @@ describe('JobManager Type Tests', () => {
       expectTypeOf(scheduler(cronJob, [])).toEqualTypeOf<Promise<boolean>>()
     })
 
-    // Commenting this out until I can fix the types
-    //
-    // it('should not accept options when a cron schedule is defined', () => {
-    //   // @ts-expect-error - should not be allowed to pass options
-    //   assertType(scheduler(cronJob, [], { wait: 30 }))
-    // })
+    it('should not accept options when a cron schedule is defined', () => {
+      // @ts-expect-error - should not be allowed to pass options
+      assertType(scheduler(cronJob, [], { wait: 30 }))
+    })
 
     it('should accept options if `cron` is undefined', () => {
       const job = manager.createJob({
@@ -147,7 +145,7 @@ describe('JobManager Type Tests', () => {
     it('should accept options if `cron` is an empty string', () => {
       const job = manager.createJob({
         queue: 'default',
-        cron: '',
+        cron: '' as const,
         perform: () => {
           return void 0
         },

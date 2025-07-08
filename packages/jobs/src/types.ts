@@ -237,8 +237,8 @@ type PriorityValue = IntRange<1, 101>
  *  - options are not allowed (cron jobs are scheduled automatically)
  */
 export type CreateSchedulerArgs<TJob extends Job<QueueNames>> =
-  TJob['cron'] extends '' | undefined
-    ? // empty string or undefined cron, allow options
+  TJob['cron'] extends ''
+    ? // empty string cron, allow options
       Parameters<TJob['perform']> extends []
       ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
       : [Parameters<TJob['perform']>, ScheduleJobOptions?]
@@ -247,7 +247,7 @@ export type CreateSchedulerArgs<TJob extends Job<QueueNames>> =
         Parameters<TJob['perform']> extends []
         ? [] | [[]]
         : [Parameters<TJob['perform']>]
-      : // fallback, allow options
+      : // undefined or not present, allow options
         Parameters<TJob['perform']> extends []
         ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
         : [Parameters<TJob['perform']>, ScheduleJobOptions?]
