@@ -194,12 +194,12 @@ export type JobComputedProperties = {
   /**
    * The name of the job that was defined in the job file.
    */
-  name?: string
+  name: string
 
   /**
    * The path to the job file that this job was defined in.
    */
-  path?: string
+  path: string
 }
 
 export type Job<

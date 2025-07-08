@@ -68,27 +68,11 @@ export class JobManager<
     }
   }
 
-  // Function overloads to preserve literal types for cron property
   createJob<
-    TArgs extends unknown[],
-    TCron extends string,
-    TJobDef extends JobDefinition<TQueues, TArgs, TCron> & { cron: TCron },
-  >(jobDefinition: TJobDef): TJobDef & JobComputedProperties
-
-  createJob<
-    TArgs extends unknown[],
-    TJobDef extends JobDefinition<TQueues, TArgs, undefined> & {
-      cron?: undefined
-    },
-  >(jobDefinition: TJobDef): TJobDef & JobComputedProperties
-
-  createJob<TJobDef extends JobDefinition<TQueues, any, any>>(
-    jobDefinition: TJobDef,
-  ): TJobDef & JobComputedProperties
-
-  createJob<TJobDef extends JobDefinition<TQueues, any, any>>(
-    jobDefinition: TJobDef,
-  ): TJobDef & JobComputedProperties {
+    TArgs extends any[],
+    TCron extends string | undefined,
+    TJobDef extends JobDefinition<TQueues, TArgs, TCron> & { cron?: TCron },
+  >(jobDefinition: TJobDef): TJobDef & JobComputedProperties {
     // The cast is necessary because the JobDefinition type lacks the `name` and
     // `path` properties that are required by the Job type. These properties are
     // added to the job at build time by a plugin in the build process.

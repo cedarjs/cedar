@@ -45,12 +45,6 @@ export const loadJob = async ({
   name: jobName,
   path: jobPath,
 }: JobComputedProperties): Promise<Job<QueueNames, unknown[]>> => {
-  if (typeof jobName === 'undefined' || !jobPath) {
-    throw new Error(
-      'jobName or jobPath is undefined - This is an error in our build tooling',
-    )
-  }
-
   // Confirm the specific job file exists
   const completeJobPath = path.join(getPaths().api.distJobs, jobPath) + '.js'
 

@@ -72,10 +72,6 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       )
     }
 
-    if (typeof job.name === 'undefined' || typeof job.path === 'undefined') {
-      throw new Error('Job name or path is not defined')
-    }
-
     return {
       name: job.name,
       path: job.path,
