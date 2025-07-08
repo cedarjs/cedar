@@ -7,6 +7,7 @@ import {
 } from '@cedarjs/babel-config'
 import { getPaths } from '@cedarjs/project-config'
 
+// This function is used both by the "exec" and "prerender" commands
 export async function runScriptFunction({
   path: scriptPath,
   functionName,
@@ -26,7 +27,7 @@ export async function runScriptFunction({
   return returnValue
 }
 
-export async function configureBabel() {
+export function configureBabel() {
   const {
     overrides: _overrides,
     plugins: webPlugins,

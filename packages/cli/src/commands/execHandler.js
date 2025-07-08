@@ -5,15 +5,11 @@ import { context } from '@opentelemetry/api'
 import { suppressTracing } from '@opentelemetry/core'
 import { Listr } from 'listr2'
 
-import {
-  getWebSideDefaultBabelConfig,
-  registerApiSideBabelHook,
-} from '@cedarjs/babel-config'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
 
 import c from '../lib/colors.js'
-import { runScriptFunction } from '../lib/exec.js'
+import { configureBabel, runScriptFunction } from '../lib/exec.js'
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 import { getPaths } from '../lib/index.js'
 
@@ -87,65 +83,6 @@ export const handler = async (args) => {
   delete scriptArgs.s
   delete scriptArgs.silent
 
-  const {
-    overrides: _overrides,
-    plugins: webPlugins,
-    ...otherWebConfig
-  } = getWebSideDefaultBabelConfig()
-
-  // Import babel config for running script
-  registerApiSideBabelHook({
-    plugins: [
-      [
-        'babel-plugin-module-resolver',
-        {
-          alias: {
-            $api: getPaths().api.base,
-            $web: getPaths().web.base,
-            api: getPaths().api.base,
-            web: getPaths().web.base,
-          },
-          loglevel: 'silent', // to silence the unnecessary warnings
-        },
-        'exec-$side-module-resolver',
-      ],
-    ],
-    overrides: [
-      {
-        test: ['./api/'],
-        plugins: [
-          [
-            'babel-plugin-module-resolver',
-            {
-              alias: {
-                src: getPaths().api.src,
-              },
-              loglevel: 'silent',
-            },
-            'exec-api-src-module-resolver',
-          ],
-        ],
-      },
-      {
-        test: ['./web/'],
-        plugins: [
-          ...webPlugins,
-          [
-            'babel-plugin-module-resolver',
-            {
-              alias: {
-                src: getPaths().web.src,
-              },
-              loglevel: 'silent',
-            },
-            'exec-web-src-module-resolver',
-          ],
-        ],
-        ...otherWebConfig,
-      },
-    ],
-  })
-
   const scriptPath = resolveScriptPath(name)
 
   if (!scriptPath) {
@@ -156,6 +93,8 @@ export const handler = async (args) => {
     printAvailableScriptsToConsole()
     process.exit(1)
   }
+
+  configureBabel()
 
   const scriptTasks = [
     {
