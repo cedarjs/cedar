@@ -21,7 +21,10 @@ export async function runScriptFunction({
   const rwConfig = getConfig()
   const streamingEnabled = rwConfig?.experimental.streamingSsr.enabled
 
+  const NODE_ENV = process.env.NODE_ENV
+  process.env.NODE_ENV = 'production'
   const server = await createServer({
+    mode: 'production',
     optimizeDeps: {
       // This is recommended in the vite-node readme
       noDiscovery: true,
@@ -97,10 +100,10 @@ export async function runScriptFunction({
     db.$disconnect()
   } catch (e) {
     // silence
-    console.log(e)
   }
 
   await server.close()
+  process.env.NODE_ENV = NODE_ENV
 
   return returnValue
 }
