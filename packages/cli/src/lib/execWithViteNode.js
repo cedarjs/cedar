@@ -12,22 +12,34 @@ export async function runScriptFunction({
   functionName,
   args,
 }) {
-  console.log(
-    'execWithViteNode.js runScriptFunction',
-    scriptPath,
-    functionName,
-    args,
-  )
-  const relativePath = path.relative(getPaths().scripts, scriptPath)
-  console.log(
-    'execWithViteNode.js runScriptFunction relativePath',
-    relativePath,
-  )
-  // create vite server
   const server = await createServer({
     optimizeDeps: {
       // This is recommended in the vite-node readme
-      disabled: true,
+      noDiscovery: true,
+      include: undefined,
+    },
+    resolve: {
+      alias: [
+        {
+          find: /^src\//,
+          replacement: 'src/',
+          customResolver: (id, importer, _options) => {
+            // When importing a file from the api directory (using api/src/...
+            // in the script), that file in turn might import another file using
+            // just src/... That's a problem for Vite when it's running a file
+            // from scripts/ because it doesn't know what the src/ alias is.
+            // So we have to tell it to use the correct path based on what file
+            // is doing the importing.
+            if (importer.startsWith(getPaths().api.base)) {
+              return { id: id.replace('src', getPaths().api.src) }
+            } else if (importer.startsWith(getPaths().web.base)) {
+              return { id: id.replace('src', getPaths().web.src) }
+            }
+
+            return null
+          },
+        },
+      ],
     },
   })
 
@@ -37,6 +49,10 @@ export async function runScriptFunction({
   }
 
   const node = new ViteNodeServer(server, {
+    transformMode: {
+      ssr: [/.*/],
+      web: [/\/web\//],
+    },
     deps: {
       fallbackCJS: true,
     },
@@ -58,23 +74,18 @@ export async function runScriptFunction({
     },
   })
 
-  const imp = await runner.interopedImport(scriptPath)
-  console.log('imp', imp)
-  const returnValue = '5'
-
-  // execute the file
-  // await runner.executeFile('./example.ts')
-
-  // close the vite server
-  await server.close()
+  const script = await runner.executeFile(scriptPath)
+  const returnValue = script[functionName](args)
 
   try {
-    // TODO: Enable this again
-    // const { db } = createdRequire(path.join(getPaths().api.lib, 'db'))
-    // db.$disconnect()
+    const { db } = await runner.executeFile(path.join(getPaths().api.lib, 'db'))
+    db.$disconnect()
   } catch (e) {
     // silence
+    console.log(e)
   }
+
+  await server.close()
 
   return returnValue
 }
