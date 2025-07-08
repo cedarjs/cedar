@@ -2751,6 +2751,7 @@ __metadata:
     typescript: "npm:5.6.2"
     unionfs: "npm:4.5.4"
     uuid: "npm:10.0.0"
+    vite-node: "npm:3.2.4"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
   bin:
