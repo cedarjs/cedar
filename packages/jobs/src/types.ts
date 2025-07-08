@@ -159,6 +159,7 @@ export interface CreateSchedulerConfig<TAdapters extends Adapters> {
 export interface JobDefinition<
   TQueues extends QueueNames,
   TArgs extends unknown[] = [],
+  TCron extends string | undefined = string | undefined,
 > {
   /**
    * The name of the queue that this job should always be scheduled on. This
@@ -179,7 +180,7 @@ export interface JobDefinition<
    * See https://github.com/harrisiirak/cron-parser#cron-format for the
    * supported syntax.
    */
-  cron?: string | undefined
+  cron?: TCron
 
   /**
    * The function to run when this job is executed.
@@ -204,7 +205,8 @@ export type JobComputedProperties = {
 export type Job<
   TQueues extends QueueNames,
   TArgs extends unknown[] = [],
-> = JobDefinition<TQueues, TArgs> & JobComputedProperties
+  TCron extends string | undefined = string | undefined,
+> = JobDefinition<TQueues, TArgs, TCron> & JobComputedProperties
 
 export type ScheduleJobOptions =
   | {
@@ -236,7 +238,7 @@ type PriorityValue = IntRange<1, 101>
  * If the job has a cron schedule defined:
  *  - options are not allowed (cron jobs are scheduled automatically)
  */
-export type CreateSchedulerArgs<TJob extends Job<QueueNames>> =
+export type CreateSchedulerArgs<TJob extends Job<QueueNames, any[], any>> =
   TJob['cron'] extends ''
     ? // empty string cron, allow options
       Parameters<TJob['perform']> extends []

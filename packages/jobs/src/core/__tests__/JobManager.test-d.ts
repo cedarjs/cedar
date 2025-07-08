@@ -145,7 +145,7 @@ describe('JobManager Type Tests', () => {
     it('should accept options if `cron` is an empty string', () => {
       const job = manager.createJob({
         queue: 'default',
-        cron: '' as const,
+        cron: '',
         perform: () => {
           return void 0
         },

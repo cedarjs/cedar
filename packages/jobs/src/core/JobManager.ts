@@ -54,7 +54,7 @@ export class JobManager<
       logger: schedulerConfig.logger ?? this.logger,
     })
 
-    return <TJob extends Job<TQueues, any[]>>(
+    return <TJob extends Job<TQueues, any[], any>>(
       job: TJob,
       ...argsAndOptions: CreateSchedulerArgs<TJob>
     ) => {
@@ -68,7 +68,25 @@ export class JobManager<
     }
   }
 
-  createJob<TJobDef extends JobDefinition<TQueues, any>>(
+  // Function overloads to preserve literal types for cron property
+  createJob<
+    TArgs extends unknown[],
+    TCron extends string,
+    TJobDef extends JobDefinition<TQueues, TArgs, TCron> & { cron: TCron },
+  >(jobDefinition: TJobDef): TJobDef & JobComputedProperties
+
+  createJob<
+    TArgs extends unknown[],
+    TJobDef extends JobDefinition<TQueues, TArgs, undefined> & {
+      cron?: undefined
+    },
+  >(jobDefinition: TJobDef): TJobDef & JobComputedProperties
+
+  createJob<TJobDef extends JobDefinition<TQueues, any, any>>(
+    jobDefinition: TJobDef,
+  ): TJobDef & JobComputedProperties
+
+  createJob<TJobDef extends JobDefinition<TQueues, any, any>>(
     jobDefinition: TJobDef,
   ): TJobDef & JobComputedProperties {
     // The cast is necessary because the JobDefinition type lacks the `name` and
