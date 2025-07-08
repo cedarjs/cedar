@@ -5,13 +5,22 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  cedarCellTransform,
+  cedarjsDirectoryNamedImportPlugin,
+  cedarjsJobPathInjectorPlugin,
+  swapApolloProvider,
+} from '@cedarjs/vite/plugins'
 
 export async function runScriptFunction({
   path: scriptPath,
   functionName,
   args,
 }) {
+  const rwConfig = getConfig()
+  const streamingEnabled = rwConfig.experimental.streamingSsr.enabled
+
   const server = await createServer({
     optimizeDeps: {
       // This is recommended in the vite-node readme
@@ -41,6 +50,12 @@ export async function runScriptFunction({
         },
       ],
     },
+    plugins: [
+      cedarjsDirectoryNamedImportPlugin(),
+      cedarCellTransform(),
+      cedarjsJobPathInjectorPlugin(),
+      streamingEnabled && swapApolloProvider(),
+    ],
   })
 
   // For old Vite, this is needed to initialize the plugins.
