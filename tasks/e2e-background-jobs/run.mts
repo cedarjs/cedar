@@ -225,7 +225,6 @@ async function generateJob(
     }
   }
 
-  // Step 4: Alter the job to perform some test logic
   console.log('Action: Altering the job to perform some test logic')
   const jobPath = path.join(projectPath, 'api/src/jobs/SampleJob/SampleJob.ts')
   let jobContents = fs.readFileSync(jobPath, 'utf8')
@@ -236,12 +235,10 @@ async function generateJob(
   )
   fs.writeFileSync(jobPath, jobContents)
 
-  // Step 5: Add a function to trigger scheduling a job
   console.log('Action: Adding a function to trigger scheduling a job')
   const functionPath = path.join(projectPath, 'api/src/functions/run.ts')
   fs.writeFileSync(functionPath, SAMPLE_FUNCTION)
 
-  // Step 6: Start the api server
   console.log('Action: Running `yarn rw serve api`')
   await $`yarn rw build api`
   const apiServer = $`yarn rw serve api`.nothrow()
@@ -255,7 +252,6 @@ async function generateJob(
     })
   })
 
-  // Step 7: Trigger the function
   console.log('Action: Triggering the function')
   await fetch(`http://localhost:8911/run`, {
     method: 'POST',
@@ -268,7 +264,6 @@ async function generateJob(
     }),
   })
 
-  // Step 8: Stop the api server
   console.log('Action: Stopping the api server')
   await apiServer.kill('SIGINT')
 }
