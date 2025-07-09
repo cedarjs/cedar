@@ -495,7 +495,7 @@ async function confirmJobWasRemoved(job: Job) {
 async function runCronJob(projectPath: string) {
   console.log('\n❓ Testing: Cron Job')
   try {
-    const { stdout } = await $({
+    const { stdout, stderr } = await $({
       timeout: 3600,
       nothrow: true,
       quiet: true,
@@ -504,6 +504,7 @@ async function runCronJob(projectPath: string) {
     if (!stdout.includes('SampleCronJob: Writing report to')) {
       console.error("💥 Error: Couldn't find expected output")
       console.error(stdout)
+      console.error(stderr)
       process.exit(1)
     }
 
