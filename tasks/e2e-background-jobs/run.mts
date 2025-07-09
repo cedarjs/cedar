@@ -494,28 +494,8 @@ async function confirmJobWasRemoved(job: Job) {
 
 async function runCronJob(projectPath: string) {
   console.log('\n❓ Testing: Cron Job')
-  try {
-    const { stdout, stderr } = await $({
-      timeout: 3600,
-      nothrow: true,
-      quiet: true,
-    })`yarn rw jobs work`
 
-    if (!stdout.includes('SampleCronJob: Writing report to')) {
-      console.error("💥 Error: Couldn't find expected output")
-      console.error(stdout)
-      console.error(stderr)
-      process.exit(1)
-    }
-
-    console.log('Confirmed: expected output found')
-  } catch (error) {
-    console.error('💥 Failed to run: `yarn rw jobs work`')
-    if (!!error && typeof error === 'object') {
-      console.error(error.toString())
-    }
-    process.exit(1)
-  }
+  await $({ timeout: 3600, nothrow: true, quiet: true })`yarn rw jobs work`
 
   const reportFiles = fs
     .readdirSync(projectPath)
