@@ -216,14 +216,12 @@ async function main() {
   const rawJobs = (await $`yarn rw exec jobs --silent`).toString()
   let job = undefined
   try {
-    console.log('e2e-background-jobs rawJobs', rawJobs)
     const jobs = JSON.parse(rawJobs)
     if (!jobs?.length) {
       console.error('Expected job not found in the database')
       process.exit(1)
     }
     job = jobs[0]
-    console.log('e2e-background-jobs job', job)
     const handler = JSON.parse(job?.handler ?? '{}')
     const args = handler.args ?? []
     if (args[0] !== location || args[1] !== data) {

@@ -21,8 +21,11 @@ export async function runScriptFunction({
   const rwConfig = getConfig()
   const streamingEnabled = rwConfig?.experimental.streamingSsr.enabled
 
+  // Setting 'production' here mainly to silence some Prisma output they have in
+  // dev mode
   const NODE_ENV = process.env.NODE_ENV
   process.env.NODE_ENV = 'production'
+
   const server = await createServer({
     mode: 'production',
     optimizeDeps: {
@@ -92,8 +95,15 @@ export async function runScriptFunction({
     },
   })
 
-  const script = await runner.executeFile(scriptPath)
-  const returnValue = script[functionName](args)
+  let returnValue
+
+  try {
+    const script = await runner.executeFile(scriptPath)
+    returnValue = script[functionName](args)
+  } catch (error) {
+    // Log errors, but continue execution
+    console.error(error)
+  }
 
   try {
     const { db } = await runner.executeFile(path.join(getPaths().api.lib, 'db'))
