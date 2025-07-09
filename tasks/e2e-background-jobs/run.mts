@@ -51,8 +51,29 @@ async function main() {
     }
   }
 
-  // Step 1: Run the jobs setup command
+  const testFileName = 'BACKGROUND_JOB_TEST.txt'
+  const testFileLocation = path.join(projectPath, testFileName)
+  const testFileData = Math.floor(Math.random() * 1_000_000)
+    .toString()
+    .padStart(7, '0')
+
+  // Run all test steps
+  await runJobsSetup(projectPath)
+  await migrateDatabase(projectPath)
+  await confirmPrismaModelExists()
+  await generateJob(projectPath, testFileLocation, testFileData)
+  await confirmJobDidNotRunSynchronously(projectPath, testFileName)
+  const job = await confirmJobWasScheduled(testFileLocation, testFileData)
+  await runJobsWorker()
+  await confirmJobRan(projectPath, testFileName, testFileLocation, testFileData)
+  await confirmJobWasRemoved(job)
+
+  console.log('\n✅ All tests passed 🎉')
+}
+
+async function runJobsSetup(projectPath: string) {
   console.log('\n❓ Testing: `yarn rw setup jobs`')
+
   try {
     await $`yarn rw setup jobs`
   } catch (error) {
@@ -100,8 +121,9 @@ async function main() {
     process.exit(1)
   }
   console.log('Confirmed: jobs dependency in api package.json')
+}
 
-  // Step 2: Migrate the database
+async function migrateDatabase(projectPath: string) {
   console.log('\n❓ Testing: `yarn rw prisma migrate dev`')
   try {
     await $`yarn rw prisma migrate dev --name e2e-background-jobs`
@@ -121,15 +143,21 @@ async function main() {
   fs.writeFileSync(jobsScriptPath, JOBS_SCRIPT)
   const prismaScriptPath = path.join(projectPath, 'scripts/prisma.ts')
   fs.writeFileSync(prismaScriptPath, PRISMA_SCRIPT)
+}
 
+async function confirmPrismaModelExists() {
   console.log('\n❓ Testing: the prisma model exists in the database')
+
   const prismaData = (await $`yarn rw exec prisma --silent`).toString()
+
   try {
     const { name } = JSON.parse(prismaData)
+
     if (name !== 'BackgroundJob') {
       console.error('Expected model not found in the database')
       process.exit(1)
     }
+
     console.log('Confirmed: prisma model exists')
   } catch (error) {
     console.error('Error: Failed to parse prisma script output')
@@ -137,8 +165,13 @@ async function main() {
     console.error(error?.toString())
     process.exit(1)
   }
+}
 
-  // Step 3: Generate a job
+async function generateJob(
+  projectPath: string,
+  testFileLocation: string,
+  testFileData: string,
+) {
   console.log('\n❓ Testing: `yarn rw generate job SampleJob`')
   try {
     await $`yarn rw generate job SampleJob`
@@ -196,12 +229,6 @@ async function main() {
   })
 
   // Step 7: Trigger the function
-  const testFileName = 'BACKGROUND_JOB_TEST.txt'
-  const location = path.join(projectPath, testFileName)
-  const data = Math.floor(Math.random() * 1_000_000)
-    .toString()
-    .padStart(7, '0')
-
   console.log('Action: Triggering the function')
   await fetch(`http://localhost:8911/run`, {
     method: 'POST',
@@ -209,16 +236,20 @@ async function main() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      location,
-      data,
+      location: testFileLocation,
+      data: testFileData,
     }),
   })
 
   // Step 8: Stop the api server
   console.log('Action: Stopping the api server')
   await apiServer.kill('SIGINT')
+}
 
-  // Step 9: Confirm the job did not run synchronously
+async function confirmJobDidNotRunSynchronously(
+  projectPath: string,
+  testFileName: string,
+) {
   console.log('\n❓ Testing: Confirming the job did not run synchronously')
   if (
     projectFileExists({
@@ -230,8 +261,12 @@ async function main() {
     process.exit(1)
   }
   console.log('Confirmed: job did not run synchronously')
+}
 
-  // Step 10: Confirm the job was scheduled into the database
+async function confirmJobWasScheduled(
+  testFileLocation: string,
+  testFileData: string,
+) {
   console.log(
     '\n❓ Testing: Confirming the job was scheduled into the database',
   )
@@ -246,7 +281,7 @@ async function main() {
     job = jobs[0]
     const handler = JSON.parse(job?.handler ?? '{}')
     const args = handler.args ?? []
-    if (args[0] !== location || args[1] !== data) {
+    if (args[0] !== testFileLocation || args[1] !== testFileData) {
       console.error('Expected job arguments do not match')
       process.exit(1)
     }
@@ -259,11 +294,37 @@ async function main() {
     console.error(error)
     process.exit(1)
   }
+  return job
+}
 
-  // Step 11: Run the jobs worker
+async function runJobsWorker() {
   console.log('\n❓ Testing: `yarn rw jobs workoff`')
   try {
-    await $`yarn rw jobs workoff`
+    const { stdout } = await $`yarn rw jobs workoff`
+
+    if (stdout.includes('Starting 1 worker')) {
+      console.log('Confirmed: worker started')
+    } else {
+      console.error('Error: Failed to start worker')
+      console.error(stdout)
+      process.exit(1)
+    }
+
+    if (stdout.includes('Started job')) {
+      console.log('Confirmed: job started')
+    } else {
+      console.error('Error: Failed to start job')
+      console.error(stdout)
+      process.exit(1)
+    }
+
+    if (stdout.includes('Worker finished, shutting down')) {
+      console.log('Confirmed: worker finished')
+    } else {
+      console.error('Error: Worker did not finish')
+      console.error(stdout)
+      process.exit(1)
+    }
   } catch (error) {
     if (error instanceof ProcessOutput) {
       console.error("Failed to run: 'yarn rw jobs workoff'")
@@ -273,8 +334,14 @@ async function main() {
       throw error
     }
   }
+}
 
-  // Step 12: Confirm the job ran
+async function confirmJobRan(
+  projectPath: string,
+  testFileName: string,
+  testFileLocation: string,
+  testFileData: string,
+) {
   console.log('\n❓ Testing: Confirming the job ran')
   if (
     !projectFileExists({
@@ -285,25 +352,24 @@ async function main() {
     console.error('Expected file not found')
     process.exit(1)
   }
-  const fileContents = fs.readFileSync(location, 'utf8')
-  if (fileContents !== data) {
+  const fileContents = fs.readFileSync(testFileLocation, 'utf8')
+  if (fileContents !== testFileData) {
     console.error('Expected file contents do not match')
     process.exit(1)
   }
   console.log('Confirmed: job ran')
+}
 
-  // Step 13: Confirm the job was removed from the database
+async function confirmJobWasRemoved(job: any) {
   console.log('\n❓ Testing: Confirming the job was removed from the database')
   const rawJobsAfter = (await $`yarn rw exec jobs --silent`).toString()
   const jobsAfter = JSON.parse(rawJobsAfter)
   const jobAfter = jobsAfter.find((j: any) => j.id === job.id)
   if (jobAfter) {
-    console.error('Expected job found in the database')
+    console.error('Job found in the database. It should have been removed')
     process.exit(1)
   }
   console.log('Confirmed: job was removed from the database')
-
-  console.log('\n✅ All tests passed 🎉')
 }
 
 main()
