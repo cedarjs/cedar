@@ -9,8 +9,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
 
 import c from '../lib/colors.js'
-import { configureBabel /*, runScriptFunction */ } from '../lib/exec.js'
-import { runScriptFunction } from '../lib/execWithViteNode.js'
+import { runScriptFunction } from '../lib/exec.js'
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 import { getPaths } from '../lib/index.js'
 
@@ -94,8 +93,6 @@ export const handler = async (args) => {
     printAvailableScriptsToConsole()
     process.exit(1)
   }
-
-  configureBabel()
 
   const scriptTasks = [
     {

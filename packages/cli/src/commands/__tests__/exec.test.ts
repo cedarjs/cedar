@@ -4,7 +4,7 @@ import { fs as memfs, vol } from 'memfs'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 // @ts-expect-error - No types for .js files
-import { runScriptFunction } from '../../lib/execWithViteNode.js'
+import { runScriptFunction } from '../../lib/exec.js'
 import '../../lib/mockTelemetry'
 // @ts-expect-error - No types for .js files
 import { handler } from '../execHandler.js'
@@ -43,12 +43,6 @@ vi.mock('@cedarjs/internal/dist/files', () => ({
 
 vi.mock('../../lib/exec', () => ({
   runScriptFunction: vi.fn(),
-  configureBabel: vi.fn(),
-}))
-
-vi.mock('../../lib/execWithViteNode', () => ({
-  runScriptFunction: vi.fn(),
-  configureBabel: vi.fn(),
 }))
 
 vi.mock('fs', () => ({ ...memfs, default: { ...memfs } }))
