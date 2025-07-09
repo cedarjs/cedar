@@ -6,7 +6,7 @@ import c from '../lib/colors.js'
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'dev [side..]'
-export const description = 'Start development servers all your sides'
+export const description = 'Start development servers for your sides'
 
 export const builder = (yargs) => {
   const projectConfig = getConfig()
