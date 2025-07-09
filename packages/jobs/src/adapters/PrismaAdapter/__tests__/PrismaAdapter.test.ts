@@ -238,6 +238,7 @@ const mockPrismaJob = {
   handler: '',
   attempts: 10,
   runAt: new Date(),
+  cron: null,
   lockedAt: new Date(),
   lockedBy: 'test-process',
   lastError: null,
