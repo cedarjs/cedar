@@ -1,6 +1,7 @@
 # E2E Background jobs
 
-This script runs an E2E style test against the Redwood Jobs feature. Testing that jobs can be setup, generated, scheduled and executed.
+This script runs an E2E style test against the CedarJS Jobs feature. Testing
+that jobs can be setup, generated, scheduled and executed.
 
 ## Usage
 
@@ -16,4 +17,6 @@ Then you can execute the script like so:
 yarn e2e:background-jobs ../rw-test-project
 ```
 
-You will likely find it helpful to set up git in the test project so you can easily rollback the project to the default state if you need to rerun the test multiple times.
+You will likely find it helpful to set up git in the test project so you can
+easily rollback the project to the default state if you need to rerun the test
+multiple times.

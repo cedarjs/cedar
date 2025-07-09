@@ -10,7 +10,8 @@ import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../lib/colors.js'
-import { configureBabel, runScriptFunction } from '../lib/exec.js'
+import { runScriptFunction } from '../lib/exec.js'
+import { configureBabel } from '../lib/execBabel.js'
 
 class PathParamError extends Error {}
 

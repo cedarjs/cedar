@@ -30,8 +30,6 @@ test('web files are prebuilt (no prerender)', { timeout: 10_000 }, async () => {
   let perfNow = performance.now()
   const webFiles = findWebFiles()
 
-  console.log('webFiles perf', performance.now() - perfNow)
-
   // This is ~5ms on my local machine.
   // It failed once on Ubutu CI taking ~65ms when I had the limit be 50ms
   expect(performance.now() - perfNow).toBeLessThan(100)
@@ -40,8 +38,6 @@ test('web files are prebuilt (no prerender)', { timeout: 10_000 }, async () => {
   const prebuiltFiles = await prebuildWebFiles(webFiles, {
     forJest: true,
   })
-
-  console.log('prebuildWebFiles perf', performance.now() - perfNow)
 
   // This is ~500ms on my local machine.
   // ~1200ms on Ubuntu CI, ~1900ms on Windows CI

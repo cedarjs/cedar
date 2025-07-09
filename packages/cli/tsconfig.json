@@ -14,6 +14,7 @@
     { "path": "../prerender/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../structure" },
-    { "path": "../telemetry" }
+    { "path": "../telemetry" },
+    { "path": "../vite/tsconfig.build.json" }
   ]
 }
