@@ -36,12 +36,20 @@ export async function runScriptFunction({
     resolve: {
       alias: [
         {
-          find: /^\$api\/src\//,
-          replacement: getPaths().api.src + '/',
+          find: /^\$api\//,
+          replacement: getPaths().api.base + '/',
         },
         {
-          find: /^\$web\/src\//,
-          replacement: getPaths().web.src + '/',
+          find: /^\$web\//,
+          replacement: getPaths().web.base + '/',
+        },
+        {
+          find: /^api\//,
+          replacement: getPaths().api.base + '/',
+        },
+        {
+          find: /^web\//,
+          replacement: getPaths().web.base + '/',
         },
         {
           find: /^src\//,
