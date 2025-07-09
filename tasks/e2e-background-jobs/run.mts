@@ -18,8 +18,11 @@ import {
 $.env.DATABASE_URL = 'file:./dev.db'
 
 async function main() {
-  // We expect the first argument to be a path to a redwood project to run the test in
-  const inputPath = process.argv[2]
+  // Parse command line arguments
+  const args = process.argv.slice(2)
+  const cleanFlag = args.includes('--clean')
+  const inputPath = args.find((arg) => !arg.startsWith('--'))
+
   if (!inputPath) {
     console.error('No project path provided')
     process.exit(1)
@@ -31,8 +34,25 @@ async function main() {
 
   console.log(`Running background jobs E2E tests in project: ${projectPath}`)
 
+  // Run git clean if --clean flag is provided
+  if (cleanFlag) {
+    console.log('\n🧹 Running git clean...')
+    try {
+      await $`git clean -fdx -e node_modules && yarn`
+      console.log('Git clean completed')
+    } catch (error) {
+      if (error instanceof ProcessOutput) {
+        console.error('Failed to run git clean')
+        console.error(error.toString())
+        process.exit(1)
+      } else {
+        throw error
+      }
+    }
+  }
+
   // Step 1: Run the jobs setup command
-  console.log('Testing: `yarn rw setup jobs`')
+  console.log('\n❓ Testing: `yarn rw setup jobs`')
   try {
     await $`yarn rw setup jobs`
   } catch (error) {
@@ -82,7 +102,7 @@ async function main() {
   console.log('Confirmed: jobs dependency in api package.json')
 
   // Step 2: Migrate the database
-  console.log('Testing: `yarn rw prisma migrate dev`')
+  console.log('\n❓ Testing: `yarn rw prisma migrate dev`')
   try {
     await $`yarn rw prisma migrate dev --name e2e-background-jobs`
   } catch (error) {
@@ -102,7 +122,7 @@ async function main() {
   const prismaScriptPath = path.join(projectPath, 'scripts/prisma.ts')
   fs.writeFileSync(prismaScriptPath, PRISMA_SCRIPT)
 
-  console.log('Testing: the prisma model exists in the database')
+  console.log('\n❓ Testing: the prisma model exists in the database')
   const prismaData = (await $`yarn rw exec prisma --silent`).toString()
   try {
     const { name } = JSON.parse(prismaData)
@@ -119,7 +139,7 @@ async function main() {
   }
 
   // Step 3: Generate a job
-  console.log('Testing: `yarn rw generate job SampleJob`')
+  console.log('\n❓ Testing: `yarn rw generate job SampleJob`')
   try {
     await $`yarn rw generate job SampleJob`
   } catch (error) {
@@ -199,7 +219,7 @@ async function main() {
   await apiServer.kill('SIGINT')
 
   // Step 9: Confirm the job did not run synchronously
-  console.log('Testing: Confirming the job did not run synchronously')
+  console.log('\n❓ Testing: Confirming the job did not run synchronously')
   if (
     projectFileExists({
       projectPath,
@@ -212,7 +232,9 @@ async function main() {
   console.log('Confirmed: job did not run synchronously')
 
   // Step 10: Confirm the job was scheduled into the database
-  console.log('Testing: Confirming the job was scheduled into the database')
+  console.log(
+    '\n❓ Testing: Confirming the job was scheduled into the database',
+  )
   const rawJobs = (await $`yarn rw exec jobs --silent`).toString()
   let job = undefined
   try {
@@ -239,7 +261,7 @@ async function main() {
   }
 
   // Step 11: Run the jobs worker
-  console.log('Testing: `yarn rw jobs workoff`')
+  console.log('\n❓ Testing: `yarn rw jobs workoff`')
   try {
     await $`yarn rw jobs workoff`
   } catch (error) {
@@ -253,7 +275,7 @@ async function main() {
   }
 
   // Step 12: Confirm the job ran
-  console.log('Testing: Confirming the job ran')
+  console.log('\n❓ Testing: Confirming the job ran')
   if (
     !projectFileExists({
       projectPath,
@@ -271,7 +293,7 @@ async function main() {
   console.log('Confirmed: job ran')
 
   // Step 13: Confirm the job was removed from the database
-  console.log('Testing: Confirming the job was removed from the database')
+  console.log('\n❓ Testing: Confirming the job was removed from the database')
   const rawJobsAfter = (await $`yarn rw exec jobs --silent`).toString()
   const jobsAfter = JSON.parse(rawJobsAfter)
   const jobAfter = jobsAfter.find((j: any) => j.id === job.id)
@@ -281,7 +303,7 @@ async function main() {
   }
   console.log('Confirmed: job was removed from the database')
 
-  console.log('All tests passed')
+  console.log('\n✅ All tests passed 🎉')
 }
 
 main()
