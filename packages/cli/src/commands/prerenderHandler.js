@@ -10,7 +10,7 @@ import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../lib/colors.js'
-import { runScriptFunction } from '../lib/exec.js'
+import { configureBabel, runScriptFunction } from '../lib/execBabel.js'
 
 class PathParamError extends Error {}
 
@@ -139,6 +139,8 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
     process.exit(1)
     // TODO: Run this automatically at this point.
   }
+
+  configureBabel()
 
   const expandedRouteParameters = await Promise.all(
     prerenderRoutes.map((route) => expandRouteParameters(route)),
