@@ -98,9 +98,10 @@ async function main() {
   await scheduleCronJob(projectPath)
   await confirmJobDidNotRunSynchronously(projectPath, testFileName)
   const job = await confirmJobsWereScheduled(testFileLocation, testFileData)
-  await runJobsWorker()
+  await jobsWorkoff()
   await confirmJobRan(projectPath, testFileName, testFileLocation, testFileData)
   await confirmJobWasRemoved(job)
+  await runCronJob(projectPath)
 
   console.log('\n✅ All tests passed 🎉')
 }
@@ -112,7 +113,7 @@ async function runJobsSetup(projectPath: string) {
     await $`yarn rw setup jobs`
   } catch (error) {
     if (error instanceof ProcessOutput) {
-      console.error("Failed to run: 'yarn rw setup jobs'")
+      console.error("💥 Failed to run: 'yarn rw setup jobs'")
       console.error(error.toString())
       process.exit(1)
     } else {
@@ -127,10 +128,40 @@ async function runJobsSetup(projectPath: string) {
       filePath: 'api/src/lib/jobs.ts',
     })
   ) {
-    console.error("Expected file 'api/src/lib/jobs.ts' not found")
+    console.error("💥 Expected file 'api/src/lib/jobs.ts' not found")
     process.exit(1)
   }
-  console.log('Confirmed: job config file')
+  console.log('Confirmed: job config file exists')
+
+  const jobsTs = fs.readFileSync(
+    path.join(projectPath, 'api/src/lib/jobs.ts'),
+    'utf8',
+  )
+
+  if (!/import \{.*JobManager.*\} from ['"]@cedarjs\/jobs['"]/.test(jobsTs)) {
+    console.error(
+      "💥 Expected import from '@cedarjs/jobs' not found in 'api/src/lib/jobs.ts'",
+    )
+    process.exit(1)
+  }
+
+  if (
+    !/adapter: ['"]prisma['"]/.test(jobsTs) ||
+    !/queue: ['"]\*['"]/.test(jobsTs) ||
+    !jobsTs.includes('sleepDelay: 5')
+  ) {
+    console.error("💥 Expected config not found in 'api/src/lib/jobs.ts'")
+    process.exit(1)
+  }
+
+  console.log('Action: Altering the JobManager config to poll more often')
+  const updatedJobsTs = jobsTs.replace('sleepDelay: 5', 'sleepDelay: 1')
+
+  fs.writeFileSync(
+    path.join(projectPath, 'api/src/lib/jobs.ts'),
+    updatedJobsTs,
+    'utf8',
+  )
 
   // Confirm jobs directory
   if (
@@ -139,7 +170,7 @@ async function runJobsSetup(projectPath: string) {
       directoryPath: 'api/src/jobs',
     })
   ) {
-    console.error("Expected directory 'api/src/jobs' not found")
+    console.error("💥 Expected directory 'api/src/jobs' not found")
     process.exit(1)
   }
   console.log('Confirmed: jobs directory')
@@ -150,7 +181,7 @@ async function runJobsSetup(projectPath: string) {
   )
   if (!apiPackageJson.dependencies['@cedarjs/jobs']) {
     console.error(
-      "Expected dependency '@cedarjs/jobs' not found in 'api/package.json'",
+      "💥 Expected dependency '@cedarjs/jobs' not found in 'api/package.json'",
     )
     process.exit(1)
   }
@@ -163,7 +194,7 @@ async function migrateDatabase(projectPath: string) {
     await $`yarn rw prisma migrate dev --name e2e-background-jobs`
   } catch (error) {
     if (error instanceof ProcessOutput) {
-      console.error("Failed to run: 'yarn rw prisma migrate dev'")
+      console.error("💥 Failed to run: 'yarn rw prisma migrate dev'")
       console.error(error.toString())
       process.exit(1)
     } else {
@@ -188,13 +219,13 @@ async function confirmPrismaModelExists() {
     const { name } = JSON.parse(prismaData)
 
     if (name !== 'BackgroundJob') {
-      console.error('Expected model not found in the database')
+      console.error('💥 Expected model not found in the database')
       process.exit(1)
     }
 
     console.log('Confirmed: prisma model exists')
   } catch (error) {
-    console.error('Error: Failed to parse prisma script output')
+    console.error('💥 Error: Failed to parse prisma script output')
     console.error(prismaData)
     console.error(error?.toString())
     process.exit(1)
@@ -211,7 +242,7 @@ async function generateJob(
     await $`yarn rw generate job SampleJob`
   } catch (error) {
     if (error instanceof ProcessOutput) {
-      console.error("Failed to run: 'yarn rw generate job SampleJob'")
+      console.error("💥 Failed to run: 'yarn rw generate job SampleJob'")
       console.error(error.toString())
       process.exit(1)
     } else {
@@ -227,7 +258,7 @@ async function generateJob(
   ]
   for (const file of expectedFiles) {
     if (!projectFileExists({ projectPath, filePath: file })) {
-      console.error(`Expected file '${file}' not found`)
+      console.error(`💥 Expected file '${file}' not found`)
       process.exit(1)
     }
   }
@@ -312,7 +343,7 @@ async function confirmJobDidNotRunSynchronously(
       filePath: testFileName,
     })
   ) {
-    console.error('Expected file to not exist yet')
+    console.error('💥 Expected file to not exist yet')
     process.exit(1)
   }
   console.log('Confirmed: job did not run synchronously')
@@ -365,14 +396,14 @@ async function confirmJobsWereScheduled(
     const args = handler.args ?? []
 
     if (args[0] !== testFileLocation || args[1] !== testFileData) {
-      console.error('Expected job arguments do not match')
+      console.error('💥 Expected job arguments do not match')
       process.exit(1)
     }
 
     console.log('Confirmed: data job was scheduled into the database')
   } catch (error) {
     console.error(
-      'Error: Failed to confirm data job was scheduled into the database',
+      '💥 Error: Failed to confirm data job was scheduled into the database',
     )
     console.error(rawJobs)
     console.error(error)
@@ -382,37 +413,38 @@ async function confirmJobsWereScheduled(
   return dataJob
 }
 
-async function runJobsWorker() {
+async function jobsWorkoff() {
   console.log('\n❓ Testing: `yarn rw jobs workoff`')
+
   try {
     const { stdout } = await $`yarn rw jobs workoff`
 
-    if (stdout.includes('Starting 1 worker')) {
-      console.log('Confirmed: worker started')
-    } else {
-      console.error('Error: Failed to start worker')
+    if (!stdout.includes('Starting 1 worker')) {
+      console.error('💥 Error: Failed to start worker')
       console.error(stdout)
       process.exit(1)
     }
 
-    if (stdout.includes('Started job')) {
-      console.log('Confirmed: job started')
-    } else {
-      console.error('Error: Failed to start job')
+    console.log('Confirmed: worker started')
+
+    if (!stdout.includes('Started job')) {
+      console.error('💥 Error: Failed to start job')
       console.error(stdout)
       process.exit(1)
     }
 
-    if (stdout.includes('Worker finished, shutting down')) {
-      console.log('Confirmed: worker finished')
-    } else {
-      console.error('Error: Worker did not finish')
+    console.log('Confirmed: job started')
+
+    if (!stdout.includes('Worker finished, shutting down')) {
+      console.error('💥 Error: Worker did not finish')
       console.error(stdout)
       process.exit(1)
     }
+
+    console.log('Confirmed: worker finished')
   } catch (error) {
     if (error instanceof ProcessOutput) {
-      console.error("Failed to run: 'yarn rw jobs workoff'")
+      console.error('💥 Failed to run: `yarn rw jobs workoff`')
       console.error(error.toString())
       process.exit(1)
     } else {
@@ -434,12 +466,12 @@ async function confirmJobRan(
       filePath: testFileName,
     })
   ) {
-    console.error('Expected file not found')
+    console.error('💥 Expected file not found')
     process.exit(1)
   }
   const fileContents = fs.readFileSync(testFileLocation, 'utf8')
   if (fileContents !== testFileData) {
-    console.error('Expected file contents do not match')
+    console.error('💥 Expected file contents do not match')
     process.exit(1)
   }
   console.log('Confirmed: job ran')
@@ -453,11 +485,47 @@ async function confirmJobWasRemoved(job: Job) {
   const jobAfter = jobsAfter.find((j) => j.id === job.id)
 
   if (jobAfter) {
-    console.error('Job found in the database. It should have been removed')
+    console.error('💥 Job found in the database. It should have been removed')
     process.exit(1)
   }
 
   console.log('Confirmed: job was removed from the database')
+}
+
+async function runCronJob(projectPath: string) {
+  console.log('\n❓ Testing: Cron Job')
+  try {
+    const { stdout } = await $({
+      timeout: 3600,
+      nothrow: true,
+      quiet: true,
+    })`yarn rw jobs work`
+
+    if (!stdout.includes('SampleCronJob: Writing report to')) {
+      console.error("💥 Error: Couldn't find expected output")
+      console.error(stdout)
+      process.exit(1)
+    }
+
+    console.log('Confirmed: expected output found')
+  } catch (error) {
+    console.error('💥 Failed to run: `yarn rw jobs work`')
+    if (!!error && typeof error === 'object') {
+      console.error(error.toString())
+    }
+    process.exit(1)
+  }
+
+  const reportFiles = fs
+    .readdirSync(projectPath)
+    .filter((file) => /^report-.*\.txt$/.test(file))
+
+  if (reportFiles.length < 3) {
+    console.error('💥 Too few report files found')
+    process.exit(1)
+  }
+
+  console.log(`Confirmed: ${reportFiles.length} reports found`)
 }
 
 main()
