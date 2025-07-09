@@ -24,7 +24,7 @@ export interface BaseJob {
   path: string
   args: unknown[]
   attempts: number
-  cron?: string | undefined
+  cron?: string | undefined | null
 }
 export type PossibleBaseJob = BaseJob | undefined
 

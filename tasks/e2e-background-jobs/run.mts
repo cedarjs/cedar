@@ -8,6 +8,8 @@ import {
   SAMPLE_FUNCTION,
   SAMPLE_JOB_PERFORM_ARGS,
   SAMPLE_JOB_PERFORM_BODY,
+  SAMPLE_CRON_JOB,
+  SCHEDULE_CRON_JOB_SCRIPT,
 } from './fixtures.mjs'
 import {
   makeFilePath,
@@ -29,6 +31,7 @@ import {
 //   queue: 'default',
 //   priority: 50,
 //   runAt: '2025-07-09T10:45:28.723Z',
+//   cron: null,
 //   lockedAt: null,
 //   lockedBy: null,
 //   lastError: null,
@@ -40,6 +43,8 @@ import {
 type Job = {
   id: string
   handler: string
+  runAt: string | null
+  cron: string | null
 }
 
 $.env.DATABASE_URL = 'file:./dev.db'
@@ -65,7 +70,7 @@ async function main() {
   if (cleanFlag) {
     console.log('\n🧹 Running git clean...')
     try {
-      await $`git clean -fdx -e node_modules && yarn`
+      await $`git clean -fdx -e node_modules && git reset --hard && yarn`
       console.log('Git clean completed')
     } catch (error) {
       if (error instanceof ProcessOutput) {
@@ -89,8 +94,10 @@ async function main() {
   await migrateDatabase(projectPath)
   await confirmPrismaModelExists()
   await generateJob(projectPath, testFileLocation, testFileData)
+  await generateCronJob(projectPath)
+  await scheduleCronJob(projectPath)
   await confirmJobDidNotRunSynchronously(projectPath, testFileName)
-  const job = await confirmJobWasScheduled(testFileLocation, testFileData)
+  const job = await confirmJobsWereScheduled(testFileLocation, testFileData)
   await runJobsWorker()
   await confirmJobRan(projectPath, testFileName, testFileLocation, testFileData)
   await confirmJobWasRemoved(job)
@@ -268,6 +275,32 @@ async function generateJob(
   await apiServer.kill('SIGINT')
 }
 
+async function generateCronJob(projectPath: string) {
+  console.log('\n❓ Testing: Manually create cron job')
+
+  console.log('Action: Writing a sample cron job')
+  fs.mkdirSync(path.join(projectPath, 'api/src/jobs/SampleCronJob'), {
+    recursive: true,
+  })
+  fs.writeFileSync(
+    path.join(projectPath, 'api/src/jobs/SampleCronJob/SampleCronJob.ts'),
+    SAMPLE_CRON_JOB,
+  )
+}
+
+async function scheduleCronJob(projectPath: string) {
+  console.log('\n❓ Testing: Schedule cron job')
+  console.log('Action: Adding a script to schedule the cron job')
+  const scriptPath = path.join(projectPath, 'scripts/scheduleCronJob.ts')
+  fs.writeFileSync(scriptPath, SCHEDULE_CRON_JOB_SCRIPT)
+
+  console.log('Action: Building the api side')
+  await $`yarn rw build api`
+
+  console.log('Action: Running script')
+  await $`yarn rw exec scheduleCronJob`
+}
+
 async function confirmJobDidNotRunSynchronously(
   projectPath: string,
   testFileName: string,
@@ -285,28 +318,50 @@ async function confirmJobDidNotRunSynchronously(
   console.log('Confirmed: job did not run synchronously')
 }
 
-async function confirmJobWasScheduled(
+async function confirmJobsWereScheduled(
   testFileLocation: string,
   testFileData: string,
 ) {
   console.log(
-    '\n❓ Testing: Confirming the job was scheduled into the database',
+    '\n❓ Testing: Confirming the jobs were scheduled into the database',
   )
 
   const rawJobs = (await $`yarn rw exec jobs --silent`).toString()
-  let job = undefined
+  let dataJob = undefined
+  let cronJob = undefined
 
   try {
     const jobs: Job[] = JSON.parse(rawJobs)
 
     if (!jobs?.length) {
-      console.error('Expected job not found in the database')
+      console.error('💥 Expected job not found in the database')
       process.exit(1)
     }
 
-    job = jobs[0]
+    dataJob = jobs[0]
+    cronJob = jobs[1]
 
-    const handler = JSON.parse(job?.handler ?? '{}')
+    if (
+      !dataJob?.runAt ||
+      typeof dataJob.cron === 'undefined' ||
+      typeof (dataJob as any).shouldBeUndefined !== 'undefined'
+    ) {
+      console.error('💥 Data job does not have the expected properties')
+      process.exit(1)
+    }
+
+    if (
+      !cronJob?.runAt ||
+      !cronJob?.cron ||
+      typeof (cronJob as any).shouldBeUndefined !== 'undefined'
+    ) {
+      console.error('💥 Cron job does not have the expected properties')
+      process.exit(1)
+    }
+
+    console.log('Confirmed: job has expected properties')
+
+    const handler = JSON.parse(dataJob?.handler ?? '{}')
     const args = handler.args ?? []
 
     if (args[0] !== testFileLocation || args[1] !== testFileData) {
@@ -314,17 +369,17 @@ async function confirmJobWasScheduled(
       process.exit(1)
     }
 
-    console.log('Confirmed: job was scheduled into the database')
+    console.log('Confirmed: data job was scheduled into the database')
   } catch (error) {
     console.error(
-      'Error: Failed to confirm job was scheduled into the database',
+      'Error: Failed to confirm data job was scheduled into the database',
     )
     console.error(rawJobs)
     console.error(error)
     process.exit(1)
   }
 
-  return job
+  return dataJob
 }
 
 async function runJobsWorker() {

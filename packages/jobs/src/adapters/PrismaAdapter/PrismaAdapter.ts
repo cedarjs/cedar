@@ -19,6 +19,7 @@ export interface PrismaJob extends BaseJob {
   id: number
   handler: string
   runAt: Date
+  cron: string | null | undefined
   lockedAt: Date
   lockedBy: string
   lastError: string | null
@@ -62,6 +63,7 @@ interface FailureData {
  *   queue     String
  *   priority  Int
  *   runAt     DateTime
+ *   cron      String?
  *   lockedAt  DateTime?
  *   lockedBy  String?
  *   lastError String?
@@ -255,6 +257,7 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
     path,
     args,
     runAt,
+    cron,
     queue,
     priority,
   }: SchedulePayload) {
@@ -262,6 +265,7 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
       data: {
         handler: JSON.stringify({ name, path, args }),
         runAt,
+        cron,
         queue,
         priority,
       },
