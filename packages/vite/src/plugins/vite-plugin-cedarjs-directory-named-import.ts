@@ -17,7 +17,6 @@ function getNewPath(value: string, filename: string) {
   )
 
   if (resolvedFile) {
-    // return indexImportPath
     return resolvedFile
   } else {
     // No index file found, so try to import the directory-named-module instead
@@ -27,7 +26,6 @@ function getNewPath(value: string, filename: string) {
     const dirnameResolvedFile = resolveFile(resolvedPath)
 
     if (dirnameResolvedFile) {
-      // return dirnameImportPath
       return dirnameResolvedFile
     }
   }
@@ -60,7 +58,7 @@ export function cedarjsDirectoryNamedImportPlugin(): Plugin {
         return null
       }
 
-      // Convert to absolute path for Rollup
+      // Convert to absolute path
       const resolvedDirnamePath = path.resolve(path.dirname(importer), newPath)
 
       return resolvedDirnamePath
