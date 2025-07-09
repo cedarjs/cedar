@@ -15,6 +15,33 @@ import {
   projectFileExists,
 } from './util.mjs'
 
+// job {
+//   id: 1,
+//   attempts: 0,
+//   handler: `{
+//     "name":"SampleJob",
+//     "path":"SampleJob/SampleJob",
+//     "args":[
+//       "/Users/tobbe/tmp/cj-test-project-e2e-cron/BACKGROUND_JOB_TEST.txt",
+//       "0049550"
+//     ]
+//   }`,
+//   queue: 'default',
+//   priority: 50,
+//   runAt: '2025-07-09T10:45:28.723Z',
+//   lockedAt: null,
+//   lockedBy: null,
+//   lastError: null,
+//   failedAt: null,
+//   createdAt: '2025-07-09T10:45:28.726Z',
+//   updatedAt: '2025-07-09T10:45:28.726Z'
+// }
+// This is not a complete type, but it's enough for the purpose of this test
+type Job = {
+  id: string
+  handler: string
+}
+
 $.env.DATABASE_URL = 'file:./dev.db'
 
 async function main() {
@@ -270,21 +297,28 @@ async function confirmJobWasScheduled(
   console.log(
     '\n❓ Testing: Confirming the job was scheduled into the database',
   )
+
   const rawJobs = (await $`yarn rw exec jobs --silent`).toString()
   let job = undefined
+
   try {
-    const jobs = JSON.parse(rawJobs)
+    const jobs: Job[] = JSON.parse(rawJobs)
+
     if (!jobs?.length) {
       console.error('Expected job not found in the database')
       process.exit(1)
     }
+
     job = jobs[0]
+
     const handler = JSON.parse(job?.handler ?? '{}')
     const args = handler.args ?? []
+
     if (args[0] !== testFileLocation || args[1] !== testFileData) {
       console.error('Expected job arguments do not match')
       process.exit(1)
     }
+
     console.log('Confirmed: job was scheduled into the database')
   } catch (error) {
     console.error(
@@ -294,6 +328,7 @@ async function confirmJobWasScheduled(
     console.error(error)
     process.exit(1)
   }
+
   return job
 }
 
@@ -360,15 +395,18 @@ async function confirmJobRan(
   console.log('Confirmed: job ran')
 }
 
-async function confirmJobWasRemoved(job: any) {
+async function confirmJobWasRemoved(job: Job) {
   console.log('\n❓ Testing: Confirming the job was removed from the database')
+
   const rawJobsAfter = (await $`yarn rw exec jobs --silent`).toString()
-  const jobsAfter = JSON.parse(rawJobsAfter)
-  const jobAfter = jobsAfter.find((j: any) => j.id === job.id)
+  const jobsAfter: Job[] = JSON.parse(rawJobsAfter)
+  const jobAfter = jobsAfter.find((j) => j.id === job.id)
+
   if (jobAfter) {
     console.error('Job found in the database. It should have been removed')
     process.exit(1)
   }
+
   console.log('Confirmed: job was removed from the database')
 }
 
