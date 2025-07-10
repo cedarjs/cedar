@@ -55,6 +55,16 @@ export async function runScriptFunction({
           find: /^src\//,
           replacement: 'src/',
           customResolver: (id, importer, _options) => {
+            console.log('lib/exex.js: customResolver id', id)
+            console.log('lib/exex.js: customResolver importer', importer)
+            console.log(
+              'lib/exex.js: customResolver api.base',
+              getPaths().api.base,
+            )
+            console.log(
+              'lib/exex.js: customResolver importer starts with api base',
+              importer.startsWith(getPaths().api.base),
+            )
             // When importing a file from the api directory (using api/src/...
             // in the script), that file in turn might import another file using
             // just src/... That's a problem for Vite when it's running a file
