@@ -511,7 +511,24 @@ async function runCronJob(projectPath: string) {
 
   const rawJobsAfter = (await $`yarn rw exec jobs --silent`).toString()
   const jobsAfter: Job[] = JSON.parse(rawJobsAfter)
-  console.log('jobsAfter', jobsAfter)
+  const cronJob = jobsAfter.find((j) => {
+    const handler = JSON.parse(j.handler)
+    return handler.name === 'SampleCronJob'
+  })
+
+  if (!cronJob) {
+    console.error('💥 Cron job not found in the database')
+    process.exit(1)
+  }
+
+  console.log('Confirmed: cron job exists in the database')
+
+  const runAt = new Date(cronJob.runAt ?? 0).toISOString().slice(11, 19)
+  const nowMs = Date.now()
+  const now = new Date(nowMs).toISOString().slice(11, 19)
+  const delta = new Date(cronJob.runAt ?? 0).getTime() - nowMs
+  console.log(`Confirmed: cron job scheduled to run at ${runAt}`)
+  console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
   try {
     // const { stdout, stderr } = await $({
@@ -520,9 +537,11 @@ async function runCronJob(projectPath: string) {
     //   quiet: true,
     // })`yarn rw jobs work`
     const output = await $({
-      timeout: 13600,
+      // 3600 was enough for the test to pass locally, but I had to increase it
+      // for CI
+      timeout: 5600,
       nothrow: true,
-      // quiet: true,
+      quiet: true,
     })`yarn rw jobs work`
 
     console.log('=== jobs work output start ===')
