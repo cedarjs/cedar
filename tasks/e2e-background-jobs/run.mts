@@ -428,6 +428,9 @@ async function jobsWorkoff() {
   try {
     const { stdout } = await $`yarn rw jobs workoff`
 
+    console.log('workoff')
+    console.log(stdout)
+
     if (!stdout.includes('Starting 1 worker')) {
       console.error('💥 Error: Failed to start worker')
       console.error(stdout)
@@ -540,15 +543,13 @@ async function runCronJob(projectPath: string) {
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
   try {
-    const output = await $({
+    const { stdout, stderr } = await $({
       // 3600 was enough for the test to pass locally, but I had to increase it
       // for CI
       timeout: 9600,
       nothrow: true,
       quiet: true,
     })`yarn rw jobs work`
-
-    const { stdout, stderr } = output
 
     if (!stdout.includes('SampleCronJob: Writing report to')) {
       console.error("💥 Error: Couldn't find expected output")
