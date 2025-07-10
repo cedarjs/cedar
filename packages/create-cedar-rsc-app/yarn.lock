@@ -943,7 +943,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/fs-extra@npm:>=11, @types/fs-extra@npm:^11":
+"@types/fs-extra@npm:^11":
   version: 11.0.4
   resolution: "@types/fs-extra@npm:11.0.4"
   dependencies:
@@ -978,7 +978,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=20, @types/node@npm:^22.10.2":
+"@types/node@npm:*, @types/node@npm:^22.10.2":
   version: 22.10.2
   resolution: "@types/node@npm:22.10.2"
   dependencies:
@@ -1484,7 +1484,7 @@ __metadata:
     untildify: "npm:5.0.0"
     which: "npm:4.0.0"
     yauzl-promise: "npm:4.0.0"
-    zx: "npm:^8.1.4"
+    zx: "npm:8.6.2"
   bin:
     create-cedar-rsc-app: dist/index.js
   languageName: unknown
@@ -4284,19 +4284,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zx@npm:^8.1.4":
-  version: 8.1.9
-  resolution: "zx@npm:8.1.9"
-  dependencies:
-    "@types/fs-extra": "npm:>=11"
-    "@types/node": "npm:>=20"
-  dependenciesMeta:
-    "@types/fs-extra":
-      optional: true
-    "@types/node":
-      optional: true
+"zx@npm:8.6.2":
+  version: 8.6.2
+  resolution: "zx@npm:8.6.2"
   bin:
     zx: build/cli.js
-  checksum: 10c0/b11f0e75b8ed618ededc88ecba1d01bc1415bb6966bd68539f8b47bb13d7bf43bf7b64a80798b0cafb308742a19c14df2b08a09ca60703f227bc1a6122547556
+  checksum: 10c0/50b29728d9d8db61cfc8274029572c32d3d7e40b34c7c195b906be7e5c4153893e213b28efe97b05f7736866e76a9132c056bea10dd47f6431903d7b9a7df808
   languageName: node
   linkType: hard

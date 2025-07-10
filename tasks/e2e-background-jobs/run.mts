@@ -334,9 +334,7 @@ async function scheduleCronJob(projectPath: string) {
   await $`yarn rw build api`
 
   console.log('Action: Running script')
-  const { stdout } = await $`yarn rw exec scheduleCronJob`
-  console.log('scheduleCronJob output')
-  console.log(stdout)
+  await $`yarn rw exec scheduleCronJob`
 }
 
 async function confirmJobDidNotRunSynchronously(
@@ -378,8 +376,6 @@ async function confirmJobsWereScheduled(
 
     dataJob = jobs[0]
     cronJob = jobs[1]
-
-    console.log('cronJob', cronJob)
 
     if (
       !dataJob?.runAt ||
@@ -542,14 +538,18 @@ async function runCronJob(projectPath: string) {
   console.log(`Confirmed: cron job scheduled to run at ${runAt}`)
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
+  // if (process.platform === 'win32') {
+  //   console.log('⚠️ Skipping rest of the test on Windows')
+  //   return
+  // }
+
   try {
-    const { stdout, stderr } = await $({
+    const { stdout, stderr } = await $`yarn rw jobs work`
       // 3600 was enough for the test to pass locally, but I had to increase it
       // for CI
-      timeout: 9600,
-      nothrow: true,
-      quiet: true,
-    })`yarn rw jobs work`
+      .timeout(9600)
+      .nothrow()
+      .quiet()
 
     if (!stdout.includes('SampleCronJob: Writing report to')) {
       console.error("💥 Error: Couldn't find expected output")
