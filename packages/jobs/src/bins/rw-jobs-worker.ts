@@ -19,7 +19,7 @@ setupEnv()
 const parseArgs = (argv: string[]) => {
   return yargs(hideBin(argv))
     .usage(
-      'Starts a single RedwoodJob worker to process background jobs\n\n' +
+      'Starts a single CedarJS Jobs worker to process background jobs\n\n' +
         'Usage: $0 [options]',
     )
     .option('index', {

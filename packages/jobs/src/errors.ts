@@ -1,9 +1,9 @@
 const JOBS_CONFIG_FILENAME = 'jobs.{ts,js}'
 
 /**
- * Parent class for any RedwoodJob-related error
+ * Parent class for any CedarJS Jobs-related error
  */
-export class RedwoodJobError extends Error {
+export class CedarJSJobsError extends Error {
   constructor(message: string) {
     super(message)
     this.name = this.constructor.name
@@ -13,7 +13,7 @@ export class RedwoodJobError extends Error {
 /**
  * Thrown when trying to configure a scheduler without an adapter
  */
-export class AdapterNotConfiguredError extends RedwoodJobError {
+export class AdapterNotConfiguredError extends CedarJSJobsError {
   constructor() {
     super('No adapter configured for the job scheduler')
   }
@@ -22,7 +22,7 @@ export class AdapterNotConfiguredError extends RedwoodJobError {
 /**
  * Thrown when the Worker or Executor is instantiated without an adapter
  */
-export class AdapterRequiredError extends RedwoodJobError {
+export class AdapterRequiredError extends CedarJSJobsError {
   constructor() {
     super('`adapter` is required to perform a job')
   }
@@ -31,7 +31,7 @@ export class AdapterRequiredError extends RedwoodJobError {
 /**
  * Thrown when the Worker is instantiated without an array of queues
  */
-export class QueuesRequiredError extends RedwoodJobError {
+export class QueuesRequiredError extends CedarJSJobsError {
   constructor() {
     super('`queues` is required to find a job to run')
   }
@@ -40,7 +40,7 @@ export class QueuesRequiredError extends RedwoodJobError {
 /**
  * Thrown when the Executor is instantiated without a job
  */
-export class JobRequiredError extends RedwoodJobError {
+export class JobRequiredError extends CedarJSJobsError {
   constructor() {
     super('`job` is required to perform a job')
   }
@@ -49,7 +49,7 @@ export class JobRequiredError extends RedwoodJobError {
 /**
  * Thrown when a job with the given handler is not found in the filesystem
  */
-export class JobNotFoundError extends RedwoodJobError {
+export class JobNotFoundError extends CedarJSJobsError {
   constructor(name: string) {
     super(`Job \`${name}\` not found in the filesystem`)
   }
@@ -58,7 +58,7 @@ export class JobNotFoundError extends RedwoodJobError {
 /**
  * Thrown when a job file exists, but the export does not match the filename
  */
-export class JobExportNotFoundError extends RedwoodJobError {
+export class JobExportNotFoundError extends CedarJSJobsError {
   constructor(name: string) {
     super(`Job file \`${name}\` does not export a class with the same name`)
   }
@@ -68,7 +68,7 @@ export class JobExportNotFoundError extends RedwoodJobError {
  * Thrown when the runner tries to import `adapter` from api/src/lib/jobs.js|ts and
  * the file does not exist
  */
-export class JobsLibNotFoundError extends RedwoodJobError {
+export class JobsLibNotFoundError extends CedarJSJobsError {
   constructor() {
     super(
       `api/src/lib/${JOBS_CONFIG_FILENAME} not found. Run \`yarn rw setup ` +
@@ -82,7 +82,7 @@ export class JobsLibNotFoundError extends RedwoodJobError {
 /**
  * Thrown when the runner tries to import `adapter` from api/src/lib/jobs.js|ts
  */
-export class AdapterNotFoundError extends RedwoodJobError {
+export class AdapterNotFoundError extends CedarJSJobsError {
   constructor(name: string) {
     super(
       `api/src/lib/${JOBS_CONFIG_FILENAME} does not export an adapter named \`${name}\``,
@@ -93,7 +93,7 @@ export class AdapterNotFoundError extends RedwoodJobError {
 /**
  * Thrown when the runner tries to import `logger` from api/src/lib/jobs.js|ts
  */
-export class LoggerNotFoundError extends RedwoodJobError {
+export class LoggerNotFoundError extends CedarJSJobsError {
   constructor(name: string) {
     super(
       `api/src/lib/${JOBS_CONFIG_FILENAME} does not export a logger named \`${name}\``,
@@ -104,7 +104,7 @@ export class LoggerNotFoundError extends RedwoodJobError {
 /**
  * Thrown when the runner tries to import `workerConfig` from api/src/lib/jobs.js|ts
  */
-export class WorkerConfigNotFoundError extends RedwoodJobError {
+export class WorkerConfigNotFoundError extends CedarJSJobsError {
   constructor(name: string) {
     super(`api/src/lib/#{JOBS_CONFIG_FILENAME} does not export \`${name}\``)
   }
@@ -123,7 +123,7 @@ export class WorkerConfigNotFoundError extends RedwoodJobError {
  * }
  * ```
  */
-export class RethrownJobError extends RedwoodJobError {
+export class RethrownJobError extends CedarJSJobsError {
   originalError: Error
   stackBeforeRethrow: string | undefined
 
@@ -168,13 +168,13 @@ export class PerformError extends RethrownJobError {
   }
 }
 
-export class QueueNotDefinedError extends RedwoodJobError {
+export class QueueNotDefinedError extends CedarJSJobsError {
   constructor() {
     super('Scheduler requires a named `queue` to place jobs in')
   }
 }
 
-export class WorkerConfigIndexNotFoundError extends RedwoodJobError {
+export class WorkerConfigIndexNotFoundError extends CedarJSJobsError {
   constructor(index: number) {
     super(`Worker index ${index} not found in jobs config`)
   }

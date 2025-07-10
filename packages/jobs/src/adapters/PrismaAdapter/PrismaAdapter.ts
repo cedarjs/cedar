@@ -204,7 +204,7 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
   // awaited, so do the await here to ensure they actually run (if the user
   // doesn't await the Promise then the queries will never be executed!)
   override async success({ job, runAt, deleteJob }: SuccessOptions<PrismaJob>) {
-    this.logger.debug(`[RedwoodJob] Job ${job.id} success`)
+    this.logger.debug(`[CedarJS Jobs] Job ${job.id} success`)
 
     if (deleteJob) {
       await this.accessor.delete({ where: { id: job.id } })
@@ -224,7 +224,7 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
   // There was an error processing the job. Record the failure data and the new
   // runAt time.
   override async error({ job, runAt, error }: ErrorOptions<PrismaJob>) {
-    this.logger.debug(`[RedwoodJob] Job ${job.id} failure`)
+    this.logger.debug(`[CedarJS Jobs] Job ${job.id} failure`)
 
     const data: FailureData = {
       lockedAt: null,

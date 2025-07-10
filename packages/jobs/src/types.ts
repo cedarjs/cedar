@@ -1,12 +1,12 @@
-// Defines the basic shape of a logger that RedwoodJob will invoke to print
-// debug messages. RedwoodJob will fallback to use `console` if no
-// logger is passed in to RedwoodJob or any adapter. Luckily both Redwood's
+// Defines the basic shape of a logger that CedarJS's Jobs will invoke to print
+// debug messages. CedarJS's Jobs will fallback to use `console` if no logger is
+// passed in to CedarJS or any adapter.
 
 import type { IntRange } from 'type-fest'
 
 import type { BaseAdapter } from './adapters/BaseAdapter/BaseAdapter.js'
 
-/** Redwood's logger and the standard console logger conform to this shape. */
+/** CedarJS's logger and the standard console logger conform to this shape. */
 export interface BasicLogger {
   debug: (message?: any, ...optionalParams: any[]) => void
   info: (message?: any, ...optionalParams: any[]) => void
@@ -16,7 +16,7 @@ export interface BasicLogger {
 
 /**
  * This is the minimum interface that a "job" must conform to in order to be
- * scheduled and executed by Redwood's job engine.
+ * scheduled and executed by CedarJS's job engine.
  */
 export interface BaseJob {
   id: string | number
@@ -144,8 +144,8 @@ export interface JobManagerConfig<
 
 export interface CreateSchedulerConfig<TAdapters extends Adapters> {
   /**
-   * The name of the adapter to use for this scheduler. This must be one of the keys
-   * in the `adapters` object when you created the `JobManager`.
+   * The name of the adapter to use for this scheduler. This must be one of the
+   * keys in the `adapters` object when you created the `JobManager`.
    */
   adapter: keyof TAdapters
 

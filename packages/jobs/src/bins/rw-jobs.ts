@@ -40,7 +40,7 @@ const parseArgs = (argv: string[]) => {
 
   const parsed: Record<string, any> = yargs(commandString)
     .usage(
-      'Starts the RedwoodJob runner to process background jobs\n\n' +
+      'Starts the CedarJS Jobs runner to process background jobs\n\n' +
         'Usage: rw jobs <command> [options]',
     )
     .command('work', 'Start a worker and process jobs')
@@ -279,7 +279,7 @@ const main = async () => {
   const numWorkers = buildNumWorkers(workerConfig)
   const logger = jobsConfig.logger ?? DEFAULT_LOGGER
 
-  logger.warn(`Starting RedwoodJob Runner at ${new Date().toISOString()}...`)
+  logger.warn(`Starting CedarJS Jobs Runner at ${new Date().toISOString()}...`)
 
   switch (command) {
     case 'start':

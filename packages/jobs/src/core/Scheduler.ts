@@ -98,14 +98,14 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       options,
     })
 
-    this.logger.info(payload, `[RedwoodJob] Scheduling ${job.name}`)
+    this.logger.info(payload, `[CedarJS Jobs] Scheduling ${job.name}`)
 
     try {
       await this.adapter.schedule(payload)
       return true
     } catch (e) {
       throw new SchedulingError(
-        `[RedwoodJob] Exception when scheduling ${payload.name}`,
+        `[CedarJS Jobs] Exception when scheduling ${payload.name}`,
         e as Error,
       )
     }
