@@ -329,7 +329,9 @@ async function scheduleCronJob(projectPath: string) {
   await $`yarn rw build api`
 
   console.log('Action: Running script')
-  await $`yarn rw exec scheduleCronJob`
+  const { stdout } = await $`yarn rw exec scheduleCronJob`
+  console.log('scheduleCronJob output')
+  console.log(stdout)
 }
 
 async function confirmJobDidNotRunSynchronously(
