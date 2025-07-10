@@ -419,6 +419,12 @@ async function jobsWorkoff() {
   try {
     const { stdout } = await $`yarn rw jobs workoff`
 
+    console.log('=== jobs workoff output start ===')
+    console.log()
+    console.log(stdout)
+    console.log()
+    console.log('=== jobs workoff output end ===')
+
     if (!stdout.includes('Starting 1 worker')) {
       console.error('💥 Error: Failed to start worker')
       console.error(stdout)
@@ -494,6 +500,11 @@ async function confirmJobWasRemoved(job: Job) {
 
 async function runCronJob(projectPath: string) {
   console.log('\n❓ Testing: Cron Job')
+
+  const rawJobsAfter = (await $`yarn rw exec jobs --silent`).toString()
+  const jobsAfter: Job[] = JSON.parse(rawJobsAfter)
+  console.log('jobsAfter', jobsAfter)
+
   try {
     // const { stdout, stderr } = await $({
     //   timeout: 3600,
