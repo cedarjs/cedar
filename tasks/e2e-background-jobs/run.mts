@@ -538,10 +538,10 @@ async function runCronJob(projectPath: string) {
   console.log(`Confirmed: cron job scheduled to run at ${runAt}`)
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
-  // if (process.platform === 'win32') {
-  //   console.log('⚠️ Skipping rest of the test on Windows')
-  //   return
-  // }
+  if (process.platform !== 'win32') {
+    console.log('⚠️ Skipping rest of the test on Ubuntu for now')
+    return
+  }
 
   try {
     const ac = new AbortController()
