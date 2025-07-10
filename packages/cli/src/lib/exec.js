@@ -86,9 +86,11 @@ export async function runScriptFunction({
             // So we have to tell it to use the correct path based on what file
             // is doing the importing.
             if (importer.startsWith(apiImportBase)) {
-              return { id: id.replace('src', apiImportBase) }
+              const apiImportSrc = importStatementPath(getPaths().api.src)
+              return { id: id.replace('src', apiImportSrc) }
             } else if (importer.startsWith(webImportBase)) {
-              return { id: id.replace('src', webImportBase) }
+              const webImportSrc = importStatementPath(getPaths().web.src)
+              return { id: id.replace('src', webImportSrc) }
             }
 
             return null
