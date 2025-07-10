@@ -370,25 +370,40 @@ await SampleEmailJob.perform(user.id)
 
 ## Recurring Jobs
 
-A common task for a background job is that it does something on a schedule: run reports every night at midnight, check for abandoned carts every 15 minutes, that sort of thing. We call these recurring jobs.
+A common task for a background job is that it does something on a schedule: run
+reports every night at midnight, check for abandoned carts every 15 minutes,
+that sort of thing. We call these recurring jobs.
 
-Redwood's job system will soon have native syntax for setting a job to run repeatedly, but in the meantime you can accomplish this by simply having your job schedule another copy of itself at some interval in the future:
+CedarJS's job system has native support for these kinds of jobs by specifying a
+`cron` schedule when creating a job:
 
 ```js
-import { later, jobs } from 'src/lib/jobs'
+import { jobs } from 'src/lib/jobs'
 
 export const NightlyReportJob = jobs.createJob({
   queue: 'default',
+  // highlight-start
+  // Run every day at midnight
+  cron: '0 0 * * *',
+  // highlight-end
   perform: async () => {
     await DailyUsageReport.run()
-    // highlight-start
-    await later(NightlyReportJob, [], {
-      wait: new Date(new Date().getTime() + 86_400 * 1000),
-    })
-    // highlight-end
   },
 })
 ```
+
+CedarJS uses https://github.com/harrisiirak/cron-parser under the hood for
+parsing the `cron` schedule. So all the syntax supported by `cron-parser` is
+supported. Including, for example, the six-groups format for seconds, and their
+[predefined expressions](https://github.com/harrisiirak/cron-parser#predefined-expressions)
+like `@hourly`, `@daily`, `@weekends`, etc. So the cron schedule from the
+example above could also have been written as `cron: '0 0 0 * * *'` and
+`cron: '@daily'`.
+
+When you create recurring jobs you can not specify any options when you later
+schedule the job (like `wait` or `waitUntil`). Those options don't make sense
+for recurring jobs because they are scheduled automatically according to the
+given schedule.
 
 ## Configuration
 
