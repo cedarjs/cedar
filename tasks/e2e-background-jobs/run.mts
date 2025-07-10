@@ -424,9 +424,6 @@ async function jobsWorkoff() {
   try {
     const { stdout } = await $`yarn rw jobs workoff`
 
-    console.log('workoff')
-    console.log(stdout)
-
     if (!stdout.includes('Starting 1 worker')) {
       console.error('💥 Error: Failed to start worker')
       console.error(stdout)
