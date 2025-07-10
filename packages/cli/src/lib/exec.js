@@ -61,24 +61,7 @@ export async function runScriptFunction({
           customResolver: (id, importer, _options) => {
             const apiImportBase = importStatementPath(getPaths().api.base)
             const webImportBase = importStatementPath(getPaths().web.base)
-            // lib/exex.js: customResolver id src/lib/jobs
-            // lib/exex.js: customResolver importer D:/a/cedar/test-project/api/src/jobs/SampleCronJob/SampleCronJob.ts
-            // lib/exex.js: customResolver api.base D:\a\cedar\test-project\api
-            // lib/exex.js: customResolver importer starts with api base false
-            console.log('lib/exex.js: customResolver id', id)
-            console.log('lib/exex.js: customResolver importer', importer)
-            console.log(
-              'lib/exex.js: customResolver api.base',
-              getPaths().api.base,
-            )
-            console.log(
-              'lib/exex.js: customResolver importer starts with api base',
-              importer.startsWith(getPaths().api.base),
-            )
-            console.log(
-              'lib/exex.js: customResolver importer starts with apiImportBase',
-              importer.startsWith(apiImportBase),
-            )
+
             // When importing a file from the api directory (using api/src/...
             // in the script), that file in turn might import another file using
             // just src/... That's a problem for Vite when it's running a file
