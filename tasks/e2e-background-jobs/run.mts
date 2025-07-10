@@ -531,24 +531,13 @@ async function runCronJob(projectPath: string) {
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
   try {
-    // const { stdout, stderr } = await $({
-    //   timeout: 3600,
-    //   nothrow: true,
-    //   quiet: true,
-    // })`yarn rw jobs work`
     const output = await $({
       // 3600 was enough for the test to pass locally, but I had to increase it
       // for CI
-      timeout: 5600,
+      timeout: 9600,
       nothrow: true,
       quiet: true,
     })`yarn rw jobs work`
-
-    console.log('=== jobs work output start ===')
-    console.log()
-    console.log(output)
-    console.log()
-    console.log('=== jobs work output end ===')
 
     const { stdout, stderr } = output
 
