@@ -99,7 +99,12 @@ async function main() {
   await confirmJobDidNotRunSynchronously(projectPath, testFileName)
   const job = await confirmJobsWereScheduled(testFileLocation, testFileData)
   await jobsWorkoff()
-  await confirmJobRan(projectPath, testFileName, testFileLocation, testFileData)
+  await confirmJobsRan(
+    projectPath,
+    testFileName,
+    testFileLocation,
+    testFileData,
+  )
   await confirmJobWasRemoved(job)
   await runCronJob(projectPath)
 
@@ -374,6 +379,8 @@ async function confirmJobsWereScheduled(
     dataJob = jobs[0]
     cronJob = jobs[1]
 
+    console.log('cronJob', cronJob)
+
     if (
       !dataJob?.runAt ||
       typeof dataJob.cron === 'undefined' ||
@@ -392,13 +399,13 @@ async function confirmJobsWereScheduled(
       process.exit(1)
     }
 
-    console.log('Confirmed: job has expected properties')
+    console.log('Confirmed: jobs have expected properties')
 
     const handler = JSON.parse(dataJob?.handler ?? '{}')
     const args = handler.args ?? []
 
     if (args[0] !== testFileLocation || args[1] !== testFileData) {
-      console.error('💥 Expected job arguments do not match')
+      console.error('💥 Expected data job arguments do not match')
       process.exit(1)
     }
 
@@ -455,13 +462,13 @@ async function jobsWorkoff() {
   }
 }
 
-async function confirmJobRan(
+async function confirmJobsRan(
   projectPath: string,
   testFileName: string,
   testFileLocation: string,
   testFileData: string,
 ) {
-  console.log('\n❓ Testing: Confirming the job ran')
+  console.log('\n❓ Testing: Confirming the jobs ran')
 
   if (
     !projectFileExists({
@@ -469,16 +476,16 @@ async function confirmJobRan(
       filePath: testFileName,
     })
   ) {
-    console.error('💥 Expected file not found')
+    console.error('💥 Expected data file not found')
     process.exit(1)
   }
 
   const fileContents = fs.readFileSync(testFileLocation, 'utf8')
   if (fileContents !== testFileData) {
-    console.error('💥 Expected file contents do not match')
+    console.error('💥 Expected data file contents do not match')
     process.exit(1)
   }
-  console.log('Confirmed: job ran')
+  console.log('Confirmed: data job ran')
 
   const reportFiles = fs
     .readdirSync(projectPath)
