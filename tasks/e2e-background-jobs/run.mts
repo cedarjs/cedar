@@ -544,12 +544,25 @@ async function runCronJob(projectPath: string) {
   // }
 
   try {
-    const { stdout, stderr } = await $`yarn rw jobs work`
+    const jobsProcess = $`yarn rw jobs work`
       // 3600 was enough for the test to pass locally, but I had to increase it
       // for CI
       .timeout(9600)
       .nothrow()
       .quiet()
+
+    // setTimeout(() => jobsProcess.kill('SIGINT'), 9600)
+
+    // // Wait for the api server to start
+    // await new Promise((resolve) => {
+    //   jobsProcess.stdout.on('data', (data) => {
+    //     if (data.includes('API server listening at')) {
+    //       resolve(null)
+    //     }
+    //   })
+    // })
+
+    const { stdout, stderr } = await jobsProcess
 
     if (!stdout.includes('SampleCronJob: Writing report to')) {
       console.error("💥 Error: Couldn't find expected output")
