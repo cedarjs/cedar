@@ -547,11 +547,14 @@ async function runCronJob(projectPath: string) {
     const jobsProcess = $`yarn rw jobs work`
       // 3600 was enough for the test to pass locally, but I had to increase it
       // for CI
-      .timeout(9600)
+      .timeout(19600)
       .nothrow()
       .quiet()
 
-    // setTimeout(() => jobsProcess.kill('SIGINT'), 9600)
+    setTimeout(() => {
+      console.log('Killing jobsProcess')
+      jobsProcess.kill('SIGINT')
+    }, 9600)
 
     // // Wait for the api server to start
     // await new Promise((resolve) => {
