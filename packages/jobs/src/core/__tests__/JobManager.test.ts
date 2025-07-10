@@ -89,7 +89,7 @@ describe('createScheduler()', () => {
     )
   })
 
-  it('initializes the scheduler with a logger', () => {
+  it('initializes the scheduler with the correct logger', () => {
     const manager = new JobManager({
       adapters: {
         mock: mockAdapter,
@@ -98,10 +98,23 @@ describe('createScheduler()', () => {
       logger: mockLogger,
       workers: [],
     })
-    manager.createScheduler({ adapter: 'mock', logger: mockLogger })
+
+    // When not passing a logger it should use the default logger
+    manager.createScheduler({ adapter: 'mock' })
 
     expect(Scheduler).toHaveBeenCalledWith(
       expect.objectContaining({ logger: mockLogger }),
+    )
+
+    // When passing a custom logger it should use that one
+    const customLogger = { ...mockLogger, custom: true }
+    manager.createScheduler({
+      adapter: 'mock',
+      logger: customLogger,
+    })
+
+    expect(Scheduler).toHaveBeenCalledWith(
+      expect.objectContaining({ logger: customLogger }),
     )
   })
 
