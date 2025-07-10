@@ -544,12 +544,14 @@ async function runCronJob(projectPath: string) {
   // }
 
   try {
-    const jobsProcess = $`yarn rw jobs work`
+    const ac = new AbortController()
+
+    const jobsProcess = $({ signal: ac.signal })`yarn rw jobs work`
       // 3600 was enough for the test to pass locally, but I had to increase it
       // for CI
       .timeout(19600)
-      .nothrow()
-      .quiet()
+    // .nothrow()
+    // .quiet()
 
     jobsProcess.stdout.on('data', (data) => {
       console.log('jobsProcess stdout data', data.toString())
@@ -571,6 +573,10 @@ async function runCronJob(projectPath: string) {
         await jobsProcess.kill('SIGKILL')
         console.log('After killing jobsProcess with SIGKILL')
       }, 400)
+      setTimeout(() => {
+        console.log('Aborting jobsProcess')
+        ac.abort('Should be done by now')
+      }, 1000)
     }, 9600)
 
     // // Wait for the api server to start
