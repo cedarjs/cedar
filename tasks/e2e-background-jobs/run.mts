@@ -551,17 +551,26 @@ async function runCronJob(projectPath: string) {
       .nothrow()
       .quiet()
 
+    jobsProcess.stdout.on('data', (data) => {
+      console.log('jobsProcess stdout data', data.toString())
+    })
+
     setTimeout(() => {
-      console.log('Killing jobsProcess 1')
+      console.log('Killing jobsProcess SIGINT')
       jobsProcess.kill('SIGINT')
       setTimeout(() => {
-        console.log('Killing jobsProcess 2')
-        jobsProcess.kill('SIGKILL')
+        console.log('Killing jobsProcess SIGTERM')
+        jobsProcess.kill('SIGTERM')
       }, 100)
       setTimeout(() => {
-        console.log('Killing jobsProcess 3')
-        jobsProcess.kill('SIGKILL')
+        console.log('Killing jobsProcess SIGTERM')
+        jobsProcess.kill('SIGTERM')
       }, 200)
+      setTimeout(async () => {
+        console.log('Killing jobsProcess SIGKILL')
+        await jobsProcess.kill('SIGKILL')
+        console.log('After killing jobsProcess with SIGKILL')
+      }, 400)
     }, 9600)
 
     // // Wait for the api server to start
