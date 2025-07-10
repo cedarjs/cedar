@@ -62,7 +62,8 @@ export const SampleCronJob = jobs.createJob({
   queue: 'default',
   cron: '* * * * * *',
   perform: async () => {
-    const fileName = \`report-\${new Date().toISOString()}.txt\`
+    const timestamp = new Date().toISOString().replace(/:/g, '_')
+    const fileName = \`report-\${timestamp}.txt\`
     const fullPath = path.join(__dirname, '..', '..', '..', '..', fileName)
     jobs.logger.info('SampleCronJob: Writing report to ' + fullPath)
     await fs.writeFile(fullPath, 'Sample report')
