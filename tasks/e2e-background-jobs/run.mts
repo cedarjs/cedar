@@ -419,12 +419,6 @@ async function jobsWorkoff() {
   try {
     const { stdout } = await $`yarn rw jobs workoff`
 
-    console.log('=== jobs workoff output start ===')
-    console.log()
-    console.log(stdout)
-    console.log()
-    console.log('=== jobs workoff output end ===')
-
     if (!stdout.includes('Starting 1 worker')) {
       console.error('💥 Error: Failed to start worker')
       console.error(stdout)
@@ -487,8 +481,14 @@ async function confirmJobRan(
   const reportFiles = fs
     .readdirSync(projectPath)
     .filter((file) => /^report-.*\.txt$/.test(file))
-  console.log()
-  console.log(reportFiles.length, 'reprorts generated')
+
+  const nbrOfReports = reportFiles.length
+
+  if (nbrOfReports !== 1) {
+    console.error('💥 Expected 1 cron job report, but found', nbrOfReports)
+    process.exit(1)
+  }
+  console.log('Confirmed: cron job ran')
 }
 
 async function confirmJobWasRemoved(job: Job) {
@@ -520,7 +520,7 @@ async function runCronJob(projectPath: string) {
     //   quiet: true,
     // })`yarn rw jobs work`
     const output = await $({
-      timeout: 3600,
+      timeout: 13600,
       nothrow: true,
       // quiet: true,
     })`yarn rw jobs work`
