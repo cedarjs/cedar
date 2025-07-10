@@ -538,55 +538,16 @@ async function runCronJob(projectPath: string) {
   console.log(`Confirmed: cron job scheduled to run at ${runAt}`)
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
-  if (process.platform !== 'win32') {
-    console.log('⚠️ Skipping rest of the test on Ubuntu for now')
+  if (process.platform === 'win32') {
+    // TODO: Also run on Windows once https://github.com/google/zx/issues/1263
+    // has an answer
+    console.log('⚠️ Skipping rest of the test on Windows')
     return
   }
 
   try {
-    const ac = new AbortController()
-
-    const jobsProcess = $({ signal: ac.signal })`yarn rw jobs work`
-      // 3600 was enough for the test to pass locally, but I had to increase it
-      // for CI
-      .timeout(19600)
-    // .nothrow()
-    // .quiet()
-
-    jobsProcess.stdout.on('data', (data) => {
-      console.log('jobsProcess stdout data', data.toString())
-    })
-
-    setTimeout(() => {
-      console.log('Killing jobsProcess SIGINT')
-      jobsProcess.kill('SIGINT')
-      setTimeout(() => {
-        console.log('Killing jobsProcess SIGTERM')
-        jobsProcess.kill('SIGTERM')
-      }, 100)
-      setTimeout(() => {
-        console.log('Killing jobsProcess SIGTERM')
-        jobsProcess.kill('SIGTERM')
-      }, 200)
-      setTimeout(async () => {
-        console.log('Killing jobsProcess SIGKILL')
-        await jobsProcess.kill('SIGKILL')
-        console.log('After killing jobsProcess with SIGKILL')
-      }, 400)
-      setTimeout(() => {
-        console.log('Aborting jobsProcess')
-        ac.abort('Should be done by now')
-      }, 1000)
-    }, 9600)
-
-    // // Wait for the api server to start
-    // await new Promise((resolve) => {
-    //   jobsProcess.stdout.on('data', (data) => {
-    //     if (data.includes('API server listening at')) {
-    //       resolve(null)
-    //     }
-    //   })
-    // })
+    // 3600 was enough of a timeout locally, but I had to increase it for CI
+    const jobsProcess = $`yarn rw jobs work`.timeout(9600).nothrow().quiet()
 
     const { stdout, stderr } = await jobsProcess
 
