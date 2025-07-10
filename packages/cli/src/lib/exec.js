@@ -5,7 +5,11 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getPaths,
+  importStatementPath,
+} from '@cedarjs/project-config'
 import {
   cedarCellTransform,
   cedarjsDirectoryNamedImportPlugin,
@@ -55,6 +59,12 @@ export async function runScriptFunction({
           find: /^src\//,
           replacement: 'src/',
           customResolver: (id, importer, _options) => {
+            const apiImportBase = importStatementPath(getPaths().api.base)
+            const webImportBase = importStatementPath(getPaths().web.base)
+            // lib/exex.js: customResolver id src/lib/jobs
+            // lib/exex.js: customResolver importer D:/a/cedar/test-project/api/src/jobs/SampleCronJob/SampleCronJob.ts
+            // lib/exex.js: customResolver api.base D:\a\cedar\test-project\api
+            // lib/exex.js: customResolver importer starts with api base false
             console.log('lib/exex.js: customResolver id', id)
             console.log('lib/exex.js: customResolver importer', importer)
             console.log(
@@ -65,16 +75,20 @@ export async function runScriptFunction({
               'lib/exex.js: customResolver importer starts with api base',
               importer.startsWith(getPaths().api.base),
             )
+            console.log(
+              'lib/exex.js: customResolver importer starts with apiImportBase',
+              importer.startsWith(apiImportBase),
+            )
             // When importing a file from the api directory (using api/src/...
             // in the script), that file in turn might import another file using
             // just src/... That's a problem for Vite when it's running a file
             // from scripts/ because it doesn't know what the src/ alias is.
             // So we have to tell it to use the correct path based on what file
             // is doing the importing.
-            if (importer.startsWith(getPaths().api.base)) {
-              return { id: id.replace('src', getPaths().api.src) }
-            } else if (importer.startsWith(getPaths().web.base)) {
-              return { id: id.replace('src', getPaths().web.src) }
+            if (importer.startsWith(apiImportBase)) {
+              return { id: id.replace('src', apiImportBase) }
+            } else if (importer.startsWith(webImportBase)) {
+              return { id: id.replace('src', webImportBase) }
             }
 
             return null
