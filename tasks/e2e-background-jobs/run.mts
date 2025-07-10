@@ -466,6 +466,7 @@ async function confirmJobRan(
   testFileData: string,
 ) {
   console.log('\n❓ Testing: Confirming the job ran')
+
   if (
     !projectFileExists({
       projectPath,
@@ -475,12 +476,19 @@ async function confirmJobRan(
     console.error('💥 Expected file not found')
     process.exit(1)
   }
+
   const fileContents = fs.readFileSync(testFileLocation, 'utf8')
   if (fileContents !== testFileData) {
     console.error('💥 Expected file contents do not match')
     process.exit(1)
   }
   console.log('Confirmed: job ran')
+
+  const reportFiles = fs
+    .readdirSync(projectPath)
+    .filter((file) => /^report-.*\.txt$/.test(file))
+  console.log()
+  console.log(reportFiles.length, 'reprorts generated')
 }
 
 async function confirmJobWasRemoved(job: Job) {
