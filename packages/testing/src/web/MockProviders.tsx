@@ -20,7 +20,13 @@ let UserRoutes: React.FC
 try {
   const userRoutesModule = require('~__REDWOOD__USER_ROUTES_FOR_MOCK')
   UserRoutes = userRoutesModule.default
-} catch {
+} catch (error) {
+  if (!isModuleNotFoundError(error, '~__REDWOOD__USER_ROUTES_FOR_MOCK')) {
+    // if it's not "MODULE_NOT_FOUND" it's more likely a user error. Let's
+    // surface that to help the user debug the issue.
+    console.warn(error)
+  }
+
   UserRoutes = () => <></>
 }
 
@@ -37,5 +43,16 @@ export const MockProviders: React.FunctionComponent<{
         </LocationProvider>
       </RedwoodApolloProvider>
     </RedwoodProvider>
+  )
+}
+
+function isModuleNotFoundError(error: unknown, module: string) {
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === 'MODULE_NOT_FOUND' &&
+    'moduleName' in error &&
+    error.moduleName === module
   )
 }
