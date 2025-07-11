@@ -20,12 +20,12 @@
     "@cedarjs/web": "9.0.0-canary.620",
     "@tobbe.dev/rsc-test": "0.0.5",
     "client-only": "0.0.1",
-    "react": "19.0.0-rc-f2df5694-20240916",
-    "react-dom": "19.0.0-rc-f2df5694-20240916"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@cedarjs/vite": "9.0.0-canary.620",
-    "@types/react": "^18.2.55",
-    "@types/react-dom": "^18.2.19"
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6"
   }
 }

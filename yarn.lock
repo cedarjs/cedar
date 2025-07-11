@@ -2093,10 +2093,10 @@ __metadata:
     "@auth0/auth0-spa-js": "npm:2.1.3"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
@@ -2148,10 +2148,10 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/netlify-identity-widget": "npm:1.9.6"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
@@ -2200,10 +2200,10 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/clerk-react": "npm:5.31.7"
     "@clerk/types": "npm:4.59.2"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
@@ -2300,9 +2300,9 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@simplewebauthn/browser": "npm:9.0.1"
     "@simplewebauthn/types": "npm:9.0.1"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     core-js: "npm:3.42.0"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2347,11 +2347,11 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     concurrently: "npm:8.2.2"
     firebase: "npm:10.14.1"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
@@ -2401,10 +2401,10 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/netlify-identity-widget": "npm:1.9.6"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
@@ -2477,10 +2477,10 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.5.1"
     "@supabase/supabase-js": "npm:2.45.4"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
@@ -2532,10 +2532,10 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     supertokens-auth-react: "npm:0.39.1"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
@@ -2557,7 +2557,7 @@ __metadata:
     core-js: "npm:3.42.0"
     msw: "npm:1.3.4"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
     tsx: "npm:4.19.4"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.6.2"
@@ -2947,21 +2947,21 @@ __metadata:
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.5.2"
     "@types/pascalcase": "npm:1.0.3"
-    "@types/react": "npm:^18.2.55"
-    "@types/react-dom": "npm:^18.2.19"
+    "@types/react": "npm:^19.1.8"
+    "@types/react-dom": "npm:^19.1.6"
     concurrently: "npm:8.2.2"
     graphql: "npm:16.9.0"
     nodemon: "npm:3.1.10"
     pascalcase: "npm:1.0.0"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-dom: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
+    react-dom: "npm:19.1.0"
     react-hook-form: "npm:7.54.2"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
+    react: 19.1.0
   languageName: unknown
   linkType: soft
 
@@ -3204,8 +3204,8 @@ __metadata:
     "@playwright/test": "npm:1.49.1"
     fast-glob: "npm:3.3.3"
     lodash: "npm:4.17.21"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-dom: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
+    react-dom: "npm:19.1.0"
     ts-toolbelt: "npm:9.6.0"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
@@ -3246,8 +3246,8 @@ __metadata:
     unimport: "npm:5.0.1"
     vitest: "npm:3.2.4"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: 19.1.0
+    react-dom: 19.1.0
   languageName: unknown
   linkType: soft
 
@@ -3330,21 +3330,21 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/server-store": "workspace:*"
     "@testing-library/jest-dom": "npm:6.5.0"
-    "@types/react": "npm:^18.2.55"
-    "@types/react-dom": "npm:^18.2.19"
+    "@types/react": "npm:^19.1.8"
+    "@types/react-dom": "npm:^19.1.6"
     concurrently: "npm:8.2.2"
     core-js: "npm:3.42.0"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-dom: "npm:19.0.0-rc-f2df5694-20240916"
-    react-server-dom-webpack: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
+    react-dom: "npm:19.1.0"
+    react-server-dom-webpack: "npm:19.1.0"
     tstyche: "npm:3.0.0"
     tsx: "npm:4.19.4"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: 19.1.0
+    react-dom: 19.1.0
   languageName: unknown
   linkType: soft
 
@@ -3515,7 +3515,7 @@ __metadata:
     "@types/busboy": "npm:^1"
     "@types/express": "npm:4"
     "@types/fs-extra": "npm:11.0.4"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.1.8"
     "@types/ws": "npm:^8"
     "@types/yargs-parser": "npm:21.0.3"
     "@vitejs/plugin-react": "npm:4.3.4"
@@ -3537,8 +3537,8 @@ __metadata:
     isbot: "npm:5.1.28"
     memfs: "npm:4.17.2"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-server-dom-webpack: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
+    react-server-dom-webpack: "npm:19.1.0"
     rimraf: "npm:6.0.1"
     rollup: "npm:4.24.0"
     tsx: "npm:4.19.4"
@@ -3597,8 +3597,8 @@ __metadata:
     "@testing-library/jest-dom": "npm:6.5.0"
     "@testing-library/react": "npm:14.3.1"
     "@types/apollo-upload-client": "npm:^18"
-    "@types/react": "npm:^18.2.55"
-    "@types/react-dom": "npm:^18.2.19"
+    "@types/react": "npm:^19.1.8"
+    "@types/react-dom": "npm:^19.1.6"
     "@whatwg-node/fetch": "npm:0.9.21"
     apollo-upload-client: "npm:18.0.1"
     concurrently: "npm:8.2.2"
@@ -3609,8 +3609,8 @@ __metadata:
     graphql-tag: "npm:2.12.6"
     nodemon: "npm:3.1.10"
     publint: "npm:0.3.12"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-dom: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.1.0"
+    react-dom: "npm:19.1.0"
     react-helmet-async: "npm:2.0.5"
     react-hot-toast: "npm:2.4.1"
     stacktracey: "npm:2.1.8"
@@ -3620,8 +3620,8 @@ __metadata:
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: 19.1.0
+    react-dom: 19.1.0
   bin:
     cross-env: ./dist/cjs/bins/cross-env.js
     msw: ./dist/cjs/bins/msw.js
@@ -11464,13 +11464,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/prop-types@npm:*":
-  version: 15.7.5
-  resolution: "@types/prop-types@npm:15.7.5"
-  checksum: 10c0/648aae41423821c61c83823ae36116c8d0f68258f8b609bdbc257752dcd616438d6343d554262aa9a7edaee5a19aca2e028a74fa2d0f40fffaf2816bc7056857
-  languageName: node
-  linkType: hard
-
 "@types/qs@npm:*, @types/qs@npm:6.9.16, @types/qs@npm:^6.9.5":
   version: 6.9.16
   resolution: "@types/qs@npm:6.9.16"
@@ -11485,7 +11478,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^18.0.0, @types/react-dom@npm:^18.2.19":
+"@types/react-dom@npm:^18.0.0":
   version: 18.2.19
   resolution: "@types/react-dom@npm:18.2.19"
   dependencies:
@@ -11494,23 +11487,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^19.0.0":
-  version: 19.1.5
-  resolution: "@types/react-dom@npm:19.1.5"
+"@types/react-dom@npm:^19.0.0, @types/react-dom@npm:^19.1.6":
+  version: 19.1.6
+  resolution: "@types/react-dom@npm:19.1.6"
   peerDependencies:
     "@types/react": ^19.0.0
-  checksum: 10c0/2a29e77cf6bb6e9f57bcfa54509c216cad2e16e244f0bd56369966ec88c072b9c91f6011d14f9e18fbfe2b801b18b86f616de75e5c8aef0be73c1f74abb33b49
+  checksum: 10c0/7ba74eee2919e3f225e898b65fdaa16e54952aaf9e3472a080ddc82ca54585e46e60b3c52018d21d4b7053f09d27b8293e9f468b85f9932ff452cd290cc131e8
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:>=16, @types/react@npm:^18.2.55":
-  version: 18.2.55
-  resolution: "@types/react@npm:18.2.55"
+"@types/react@npm:*, @types/react@npm:>=16, @types/react@npm:^19.1.8":
+  version: 19.1.8
+  resolution: "@types/react@npm:19.1.8"
   dependencies:
-    "@types/prop-types": "npm:*"
-    "@types/scheduler": "npm:*"
     csstype: "npm:^3.0.2"
-  checksum: 10c0/6b1c73beafbbc582dc54ffd92b3779f6d850e8f6b5ce5d04b31e9498a3d77bfc416bb08f0d8d63ab4f4649ccd6639996472416871c01c74a528b16a55faeaf38
+  checksum: 10c0/4908772be6dc941df276931efeb0e781777fa76e4d5d12ff9f75eb2dcc2db3065e0100efde16fde562c5bafa310cc8f50c1ee40a22640459e066e72cd342143e
   languageName: node
   linkType: hard
 
@@ -11546,13 +11537,6 @@ __metadata:
   version: 1.20.6
   resolution: "@types/resolve@npm:1.20.6"
   checksum: 10c0/a9b0549d816ff2c353077365d865a33655a141d066d0f5a3ba6fd4b28bc2f4188a510079f7c1f715b3e7af505a27374adce2a5140a3ece2a059aab3d6e1a4244
-  languageName: node
-  linkType: hard
-
-"@types/scheduler@npm:*":
-  version: 0.16.3
-  resolution: "@types/scheduler@npm:0.16.3"
-  checksum: 10c0/c249d4b96fa05165ac22c214f94a045ee0af8beedefdbc54b769febd0044cab3a874e55419841a0dcc76439e379a63e257f3253c87168e3261e7bc783d623302
   languageName: node
   linkType: hard
 
@@ -26006,14 +25990,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:19.0.0-rc-f2df5694-20240916":
-  version: 19.0.0-rc-f2df5694-20240916
-  resolution: "react-dom@npm:19.0.0-rc-f2df5694-20240916"
+"react-dom@npm:19.1.0":
+  version: 19.1.0
+  resolution: "react-dom@npm:19.1.0"
   dependencies:
-    scheduler: "npm:0.25.0-rc-f2df5694-20240916"
+    scheduler: "npm:^0.26.0"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-  checksum: 10c0/43577e8aa0a69095bce3821c370d0f73be2d87fe7f01de48ef91166373221daa13898e093ea9e0e3c31a3967579d768c69045197b139c1182c2f15e680c49e20
+    react: ^19.1.0
+  checksum: 10c0/3e26e89bb6c67c9a6aa86cb888c7a7f8258f2e347a6d2a15299c17eb16e04c19194e3452bc3255bd34000a61e45e2cb51e46292392340432f133e5a5d2dfb5fc
   languageName: node
   linkType: hard
 
@@ -26174,18 +26158,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-server-dom-webpack@npm:19.0.0-rc-f2df5694-20240916":
-  version: 19.0.0-rc-f2df5694-20240916
-  resolution: "react-server-dom-webpack@npm:19.0.0-rc-f2df5694-20240916"
+"react-server-dom-webpack@npm:19.1.0":
+  version: 19.1.0
+  resolution: "react-server-dom-webpack@npm:19.1.0"
   dependencies:
     acorn-loose: "npm:^8.3.0"
     neo-async: "npm:^2.6.1"
     webpack-sources: "npm:^3.2.0"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: ^19.1.0
+    react-dom: ^19.1.0
     webpack: ^5.59.0
-  checksum: 10c0/ff1890ceca1306df12073fdac579077c35cd411d1a21c6f43bf60065e0121fdfe860f1befccb9e367ba73a37c99add0233780af07528dde77c43d35e641faaf7
+  checksum: 10c0/ba423b34eabc50fa7d6ae5738878f9fd93ee6d6720975626ed71e3db4c0c8601a2ef575c8b1f91436090add9b93a182ba3561676f6c627e79655da4327d389e5
   languageName: node
   linkType: hard
 
@@ -26206,10 +26190,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:19.0.0-rc-f2df5694-20240916":
-  version: 19.0.0-rc-f2df5694-20240916
-  resolution: "react@npm:19.0.0-rc-f2df5694-20240916"
-  checksum: 10c0/15ea40edcea5f14b702e971f7aefbb87f8644be2e0480d563b4e21ee8d6dcc5332d608941c5c69889c035d9d80601fbd6ab303be4ed9f716e6c7ace441ea527a
+"react@npm:19.1.0":
+  version: 19.1.0
+  resolution: "react@npm:19.1.0"
+  checksum: 10c0/530fb9a62237d54137a13d2cfb67a7db6a2156faed43eecc423f4713d9b20c6f2728b026b45e28fcd72e8eadb9e9ed4b089e99f5e295d2f0ad3134251bdd3698
   languageName: node
   linkType: hard
 
@@ -27353,10 +27337,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"scheduler@npm:0.25.0-rc-f2df5694-20240916":
-  version: 0.25.0-rc-f2df5694-20240916
-  resolution: "scheduler@npm:0.25.0-rc-f2df5694-20240916"
-  checksum: 10c0/f8a59d85497ccb97a4e1408fcfd2c48a179608c531bd6a10ca1e41d3830c3f5557a02b2aab63e302c42052f70f8ca089ce38a8496efe44edf17f604e098fb531
+"scheduler@npm:^0.26.0":
+  version: 0.26.0
+  resolution: "scheduler@npm:0.26.0"
+  checksum: 10c0/5b8d5bfddaae3513410eda54f2268e98a376a429931921a81b5c3a2873aab7ca4d775a8caac5498f8cbc7d0daeab947cf923dbd8e215d61671f9f4e392d34356
   languageName: node
   linkType: hard
 
@@ -28142,8 +28126,8 @@ __metadata:
   peerDependencies:
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: 19.1.0
+    react-dom: 19.1.0
     storybook: 7.6.20
   languageName: unknown
   linkType: soft
