@@ -176,9 +176,12 @@ export interface JobDefinition<
   priority?: PriorityValue
 
   /**
-   * If this is specified it will be the recurring schedule this job will run at
-   * See https://github.com/harrisiirak/cron-parser#cron-format for the
-   * supported syntax.
+   * If `cron` is specified it will be the recurring schedule this job will run
+   * at
+   *
+   * The supported format is described in the [cron-parser
+   * documentation](https://github.com/harrisiirak/cron-parser#cron-format).
+   * @see {@link https://github.com/harrisiirak/cron-parser#cron-format}
    */
   cron?: TCron
 
