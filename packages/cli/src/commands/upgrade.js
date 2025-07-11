@@ -185,14 +185,20 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
           ]
           // Show links when switching to 'latest' or 'rc', undefined is essentially an alias of 'latest'
           if ([undefined, 'latest', 'rc'].includes(tag)) {
+            const ghReleasesLink = terminalLink(
+              `GitHub Release notes`,
+              `https://github.com/cedarjs/cedar/releases`, // intentionally not linking to specific version
+            )
+            const discordLink = terminalLink(
+              `Discord`,
+              `https://cedarjs.com/discord`,
+            )
+
             messageSections.push(
-              `   Please review the release notes for any manual steps: \n   ❖ ${terminalLink(
-                `Redwood community discussion`,
-                `https://community.redwoodjs.com/c/announcements/releases-and-upgrade-guides/`,
-              )}\n   ❖ ${terminalLink(
-                `GitHub Release notes`,
-                `https://github.com/cedarjs/cedar/releases`, // intentionally not linking to specific version
-              )} \n\n`,
+              '   Please review the release notes for any manual steps:\n' +
+                `   ❖ ${ghReleasesLink}\n` +
+                '   Join our Discord community if you have any questions or need support:\n' +
+                `   ❖ ${discordLink}\n`,
             )
           }
           // @MARK
