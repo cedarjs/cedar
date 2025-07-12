@@ -309,8 +309,6 @@ async function generateJob(
     }),
   })
 
-  console.log('apiServer pid', apiServer.pid)
-
   const apiServerPid = apiServer.pid
 
   if (!apiServerPid) {
@@ -321,7 +319,6 @@ async function generateJob(
   console.log('ptree', JSON.stringify(ptree, null, 2))
 
   console.log('Action: Stopping the api server')
-  // await apiServer.kill('SIGINT')
   await new Promise((resolve) => {
     kill(apiServerPid, 'SIGKILL', () => {
       resolve(null)
@@ -569,16 +566,23 @@ async function runCronJob(projectPath: string) {
   console.log(`Confirmed: cron job scheduled to run at ${runAt}`)
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
-  if (process.platform === 'win32') {
-    // TODO: Also run on Windows once https://github.com/google/zx/issues/1263
-    // has an answer
-    console.log('⚠️ Skipping rest of the test on Windows')
-    return
-  }
+  // if (process.platform === 'win32') {
+  //   // TODO: Also run on Windows once https://github.com/google/zx/issues/1263
+  //   // has an answer
+  //   console.log('⚠️ Skipping rest of the test on Windows')
+  //   return
+  // }
 
   try {
+    const jobsProcess = $`yarn rw jobs work`.nothrow().quiet()
+
+    const jobsProcessPid = jobsProcess.pid
+    if (!jobsProcessPid) {
+      throw new Error('jobsProcessPid is undefined')
+    }
+
     // 3600 was enough of a timeout locally, but I had to increase it for CI
-    const jobsProcess = $`yarn rw jobs work`.timeout(9600).nothrow().quiet()
+    setTimeout(() => kill(jobsProcessPid, 'SIGKILL'), 9600)
 
     const { stdout, stderr } = await jobsProcess
 
