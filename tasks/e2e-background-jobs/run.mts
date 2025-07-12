@@ -285,7 +285,9 @@ async function generateJob(
 
   console.log('Action: Running `yarn rw serve api`')
   await $`yarn rw build api`
-  const apiServer = $`yarn rw serve api`.nothrow()
+  const apiServer = $({
+    nothrow: process.platform !== 'win32',
+  })`yarn rw serve api`
 
   // Wait for the api server to start
   await new Promise((resolve) => {
