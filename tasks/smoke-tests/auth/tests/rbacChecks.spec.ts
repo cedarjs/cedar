@@ -89,7 +89,7 @@ test('RBAC: Admin user should be able to delete contacts', async ({ page }) => {
       'scripts/makeAdmin.ts',
     ),
     `\
-import { db } from 'api/src/lib/db'
+import { db } from 'api/src/lib/db.js'
 
 export default async ({ args }) => {
   await db.user.update({

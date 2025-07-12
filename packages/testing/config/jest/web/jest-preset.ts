@@ -1,6 +1,6 @@
-const path = require('path')
+import path from 'node:path'
 
-const { getPaths } = require('@cedarjs/project-config')
+import { getPaths } from '@cedarjs/project-config'
 
 const rwjsPaths = getPaths()
 const NODE_MODULES_PATH = path.join(rwjsPaths.base, 'node_modules')

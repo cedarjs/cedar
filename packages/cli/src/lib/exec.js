@@ -19,7 +19,7 @@ import {
 
 export async function runScriptFunction({
   path: scriptPath,
-  functionName,
+  functionName = 'default',
   args,
 }) {
   const rwConfig = getConfig()

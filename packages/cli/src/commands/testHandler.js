@@ -36,12 +36,13 @@ function isJestConfigFile(sides) {
       if (sides.includes(side)) {
         const jestConfigExists =
           fs.existsSync(path.join(side, 'jest.config.js')) ||
+          fs.existsSync(path.join(side, 'jest.config.cjs')) ||
           fs.existsSync(path.join(side, 'jest.config.ts'))
 
         if (!jestConfigExists) {
           console.error(
             c.error(
-              `\nError: Missing Jest config file ${side}/jest.config.js` +
+              `\nError: Missing Jest config file ${side}/jest.config.cjs` +
                 '\nTo add this file, run `npx @cedarjs/codemods update-jest-config`\n',
             ),
           )

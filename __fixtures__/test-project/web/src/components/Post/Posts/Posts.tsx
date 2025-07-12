@@ -10,7 +10,7 @@ import type { TypedDocumentNode } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
 import { QUERY } from 'src/components/Post/PostsCell'
-import { timeTag, truncate } from 'src/lib/formatters'
+import { timeTag, truncate } from 'src/lib/formatters.js'
 
 const DELETE_POST_MUTATION: TypedDocumentNode<
   DeletePostMutation,

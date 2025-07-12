@@ -71,7 +71,7 @@ describe('fragments graphQLClientConfig', () => {
 
       import FatalErrorPage from \"src/pages/FatalErrorPage\";
 
-      import { AuthProvider, useAuth } from \"./auth\";
+      import { AuthProvider, useAuth } from \"./auth.js\";
 
       import \"./index.css\";
       import \"./scaffold.css\";

@@ -1,7 +1,13 @@
-const { TestEnvironment } = require('jest-environment-node')
+import type {
+  EnvironmentContext,
+  JestEnvironmentConfig,
+} from '@jest/environment'
+import { TestEnvironment } from 'jest-environment-node'
 
 class RedwoodApiJestEnvironment extends TestEnvironment {
-  constructor(config, context) {
+  testPath: string
+
+  constructor(config: JestEnvironmentConfig, context: EnvironmentContext) {
     super(config, context)
     this.testPath = context.testPath
   }

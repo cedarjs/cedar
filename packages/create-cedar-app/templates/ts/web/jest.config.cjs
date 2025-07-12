@@ -2,7 +2,6 @@
 
 const config = {
   rootDir: '../',
-  preset: '@cedarjs/testing/config/jest/web',
 }
 
 module.exports = config

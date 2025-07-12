@@ -16,5 +16,4 @@ const BlogPostPage = ({ id }: BlogPostPageProps) => {
     </>
   )
 }
-
 export default BlogPostPage
