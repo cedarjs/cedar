@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process'
 import process from 'node:process'
 
-import { $, cd, path, ProcessOutput, fs } from 'zx'
+import { $, cd, path, ProcessOutput, fs, ps } from 'zx'
 
 import {
   JOBS_SCRIPT,
@@ -308,8 +308,22 @@ async function generateJob(
     }),
   })
 
+  console.log('apiServer pid', apiServer.pid)
+
+  const apiServerPid = apiServer.pid
+
+  if (apiServerPid) {
+    const ptree = await ps.tree({ pid: apiServerPid, recursive: true })
+    console.log('ptree', JSON.stringify(ptree, null, 2))
+  }
+
   console.log('Action: Stopping the api server')
   await apiServer.kill('SIGINT')
+
+  if (apiServerPid) {
+    const pinfo = await ps.lookup({ pid: apiServerPid })
+    console.log('pinfo', JSON.stringify(pinfo, null, 2))
+  }
 }
 
 async function generateCronJob(projectPath: string) {
