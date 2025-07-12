@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process'
 import process from 'node:process'
 
+import kill from 'tree-kill'
 import { $, cd, path, ProcessOutput, fs, ps } from 'zx'
 
 import {
@@ -314,18 +315,23 @@ async function generateJob(
 
   const apiServerPid = apiServer.pid
 
-  if (apiServerPid) {
-    const ptree = await ps.tree({ pid: apiServerPid, recursive: true })
-    console.log('ptree', JSON.stringify(ptree, null, 2))
+  if (!apiServerPid) {
+    throw new Error('apiServerPid is undefined')
   }
+
+  const ptree = await ps.tree({ pid: apiServerPid, recursive: true })
+  console.log('ptree', JSON.stringify(ptree, null, 2))
 
   console.log('Action: Stopping the api server')
-  await apiServer.kill('SIGINT')
+  // await apiServer.kill('SIGINT')
+  await new Promise((resolve) => {
+    kill(apiServerPid, 'SIGKILL', () => {
+      resolve(null)
+    })
+  })
 
-  if (apiServerPid) {
-    const pinfo = await ps.lookup({ pid: apiServerPid })
-    console.log('pinfo', JSON.stringify(pinfo, null, 2))
-  }
+  const pinfo = await ps.lookup({ pid: apiServerPid })
+  console.log('pinfo', JSON.stringify(pinfo, null, 2))
 }
 
 async function generateCronJob(projectPath: string) {
