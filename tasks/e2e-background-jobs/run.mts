@@ -309,7 +309,6 @@ async function generateJob(
   })
 
   const apiServerPid = apiServer.pid
-
   if (!apiServerPid) {
     throw new Error('apiServerPid is undefined')
   }
