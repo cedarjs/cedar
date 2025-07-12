@@ -21,8 +21,12 @@ jobs:
       issues: read
       pull-requests: read
     steps:
-      - uses: mheap/github-action-required-labels@388fd6af37b34cdfe5a23b37060e763217e58b03 # v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: ⬢ Set up Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
         with:
-          mode: exactly
-          count: 1
-          labels: 'release:docs, release:chore, release:experimental-breaking, release:fix, release:feature, release:breaking, release:dependency'
+          node-version: 20
+
+      - name: ✅ Check release label requirement
+        uses: ./.github/actions/require-release-label-or-cc-message
