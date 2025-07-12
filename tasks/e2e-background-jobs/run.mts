@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import process from 'node:process'
 
 import { $, cd, path, ProcessOutput, fs } from 'zx'
@@ -324,6 +325,19 @@ async function generateCronJob(projectPath: string) {
   )
 }
 
+// await new Promise((resolve, reject) => {
+//   exec('yarn rw build api', (error, stdout, stderr) => {
+//     if (error) {
+//       console.error('Error executing command:', error)
+//       console.error('stderr:', stderr)
+//       reject(error)
+//     } else {
+//       console.log('stdout:', stdout)
+//       resolve(null)
+//     }
+//   })
+// })
+
 async function scheduleCronJob(projectPath: string) {
   console.log('\n❓ Testing: Schedule cron job')
   console.log('Action: Adding a script to schedule the cron job')
@@ -331,7 +345,7 @@ async function scheduleCronJob(projectPath: string) {
   fs.writeFileSync(scriptPath, SCHEDULE_CRON_JOB_SCRIPT)
 
   console.log('Action: Building the api side')
-  await $`yarn rw build api`
+  execSync('yarn rw build api', { stdio: 'inherit' })
 
   console.log('Action: Running script')
   await $`yarn rw exec scheduleCronJob`
