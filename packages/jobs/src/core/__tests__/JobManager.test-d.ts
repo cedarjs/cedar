@@ -81,6 +81,12 @@ describe('JobManager Type Tests', () => {
     it('should accept no arguments at all', () => {
       expectTypeOf(scheduler(jobWithNoArgs)).toEqualTypeOf<Promise<boolean>>()
     })
+
+    it('should accept no arguments, but with options', () => {
+      expectTypeOf(scheduler(jobWithNoArgs, { wait: 30 })).toEqualTypeOf<
+        Promise<boolean>
+      >()
+    })
   })
 
   describe('scheduler with optional arguments', () => {
@@ -97,6 +103,19 @@ describe('JobManager Type Tests', () => {
       expectTypeOf(
         scheduler(jobWithOptionalArgs, ['1st', '2nd']),
       ).toEqualTypeOf<Promise<boolean>>()
+    })
+
+    it('should accept only one argument', () => {
+      expectTypeOf(scheduler(jobWithOptionalArgs, ['1st'])).toEqualTypeOf<
+        Promise<boolean>
+      >()
+    })
+
+    it('should require array even for just one argument', () => {
+      // @ts-expect-error - array required
+      expectTypeOf(scheduler(jobWithOptionalArgs, '1st')).toEqualTypeOf<
+        Promise<boolean>
+      >()
     })
 
     it('should accept empty array', () => {

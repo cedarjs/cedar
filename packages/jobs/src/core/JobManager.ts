@@ -5,7 +5,6 @@ import type {
   CreateSchedulerArgs,
   CreateSchedulerConfig,
   Job,
-  JobComputedProperties,
   JobDefinition,
   JobManagerConfig,
   QueueNames,
@@ -68,13 +67,13 @@ export class JobManager<
     }
   }
 
-  createJob<TArgs extends any[], TJobDef extends JobDefinition<TQueues, TArgs>>(
-    jobDefinition: TJobDef,
-  ): TJobDef & JobComputedProperties {
+  createJob<TArgs extends unknown[]>(
+    jobDefinition: JobDefinition<TQueues, TArgs>,
+  ): Job<TQueues, TArgs> {
     // The cast is necessary because the JobDefinition type lacks the `name` and
     // `path` properties that are required by the Job type. These properties are
     // added to the job at build time by a plugin in the build process.
-    return jobDefinition as TJobDef & JobComputedProperties
+    return jobDefinition as Job<TQueues, TArgs>
   }
 
   createWorker({ index, workoff, clear, processName }: CreateWorkerArgs) {
