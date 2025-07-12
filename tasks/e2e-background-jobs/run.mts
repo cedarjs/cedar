@@ -1,8 +1,7 @@
-import { execSync } from 'node:child_process'
 import process from 'node:process'
 
 import kill from 'tree-kill'
-import { $, cd, path, ProcessOutput, fs, ps } from 'zx'
+import { $, cd, path, ProcessOutput, fs } from 'zx'
 
 import {
   JOBS_SCRIPT,
@@ -315,18 +314,12 @@ async function generateJob(
     throw new Error('apiServerPid is undefined')
   }
 
-  const ptree = await ps.tree({ pid: apiServerPid, recursive: true })
-  console.log('ptree', JSON.stringify(ptree, null, 2))
-
   console.log('Action: Stopping the api server')
   await new Promise((resolve) => {
     kill(apiServerPid, 'SIGKILL', () => {
       resolve(null)
     })
   })
-
-  const pinfo = await ps.lookup({ pid: apiServerPid })
-  console.log('pinfo', JSON.stringify(pinfo, null, 2))
 }
 
 async function generateCronJob(projectPath: string) {
@@ -342,19 +335,6 @@ async function generateCronJob(projectPath: string) {
   )
 }
 
-// await new Promise((resolve, reject) => {
-//   exec('yarn rw build api', (error, stdout, stderr) => {
-//     if (error) {
-//       console.error('Error executing command:', error)
-//       console.error('stderr:', stderr)
-//       reject(error)
-//     } else {
-//       console.log('stdout:', stdout)
-//       resolve(null)
-//     }
-//   })
-// })
-
 async function scheduleCronJob(projectPath: string) {
   console.log('\n❓ Testing: Schedule cron job')
   console.log('Action: Adding a script to schedule the cron job')
@@ -362,7 +342,7 @@ async function scheduleCronJob(projectPath: string) {
   fs.writeFileSync(scriptPath, SCHEDULE_CRON_JOB_SCRIPT)
 
   console.log('Action: Building the api side')
-  execSync('yarn rw build api', { stdio: 'inherit' })
+  await $`yarn rw build api`
 
   console.log('Action: Running script')
   await $`yarn rw exec scheduleCronJob`
@@ -565,13 +545,6 @@ async function runCronJob(projectPath: string) {
   const delta = new Date(cronJob.runAt ?? 0).getTime() - nowMs
   console.log(`Confirmed: cron job scheduled to run at ${runAt}`)
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
-
-  // if (process.platform === 'win32') {
-  //   // TODO: Also run on Windows once https://github.com/google/zx/issues/1263
-  //   // has an answer
-  //   console.log('⚠️ Skipping rest of the test on Windows')
-  //   return
-  // }
 
   try {
     const jobsProcess = $`yarn rw jobs work`.nothrow().quiet()
