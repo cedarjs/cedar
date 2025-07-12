@@ -165,24 +165,6 @@ describe('createJob()', () => {
 
     expect(job).toEqual(jobDefinition)
   })
-
-  it('allows you to specify a cron schedule to run the job at', () => {
-    const manager = new JobManager({
-      adapters: {},
-      queues: ['default'] as const,
-      logger: mockLogger,
-      workers: [],
-    })
-    const jobDefinition: JobDefinition<['default'], unknown[]> = {
-      queue: 'default',
-      cron: '0 0 * * *',
-      perform: vi.fn(),
-    }
-
-    const job = manager.createJob(jobDefinition)
-
-    expect(job).toEqual(jobDefinition)
-  })
 })
 
 describe('createWorker()', () => {

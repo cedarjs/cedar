@@ -159,7 +159,6 @@ export interface CreateSchedulerConfig<TAdapters extends Adapters> {
 export interface JobDefinition<
   TQueues extends QueueNames,
   TArgs extends unknown[] = [],
-  TCron extends string | undefined = string | undefined,
 > {
   /**
    * The name of the queue that this job should always be scheduled on. This
@@ -174,16 +173,6 @@ export interface JobDefinition<
    * @default 50
    */
   priority?: PriorityValue
-
-  /**
-   * If `cron` is specified it will be the recurring schedule this job will run
-   * at
-   *
-   * The supported format is described in the [cron-parser
-   * documentation](https://github.com/harrisiirak/cron-parser#cron-format).
-   * @see {@link https://github.com/harrisiirak/cron-parser#cron-format}
-   */
-  cron?: TCron
 
   /**
    * The function to run when this job is executed.
@@ -208,25 +197,39 @@ export type JobComputedProperties = {
 export type Job<
   TQueues extends QueueNames,
   TArgs extends unknown[] = [],
-  TCron extends string | undefined = string | undefined,
-> = JobDefinition<TQueues, TArgs, TCron> & JobComputedProperties
+> = JobDefinition<TQueues, TArgs> & JobComputedProperties
 
 export type ScheduleJobOptions =
   | {
       /**
        * The number of seconds to wait before scheduling this job. This is
-       * mutually exclusive with `waitUntil`.
+       * mutually exclusive with `waitUntil` and `cron`.
        */
       wait: number
       waitUntil?: never
+      cron?: never
     }
   | {
       wait?: never
       /**
        * The date and time to schedule this job for. This is mutually exclusive
-       * with `wait`.
+       * with `wait` and `cron`.
        */
       waitUntil: Date
+      cron?: never
+    }
+  | {
+      wait?: never
+      waitUntil?: never
+      /**
+       * The cron schedule for this job. This is mutually exclusive with `wait`
+       * and `waitUntil`.
+       *
+       * The supported format is described in the [cron-parser
+       * documentation](https://github.com/harrisiirak/cron-parser#cron-format).
+       * @see {@link https://github.com/harrisiirak/cron-parser#cron-format}
+       */
+      cron: string
     }
 
 type PriorityValue = IntRange<1, 101>
@@ -238,21 +241,8 @@ type PriorityValue = IntRange<1, 101>
  *  - you may optionally pass the scheduler options
  * If the job has arguments:
  *  - you must pass the arguments and then optionally pass the scheduler options
- * If the job has a cron schedule defined:
- *  - options are not allowed (cron jobs are scheduled automatically)
  */
-export type CreateSchedulerArgs<TJob extends Job<QueueNames, any[], any>> =
-  TJob['cron'] extends ''
-    ? // empty string cron, allow options
-      Parameters<TJob['perform']> extends []
-      ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
-      : [Parameters<TJob['perform']>, ScheduleJobOptions?]
-    : TJob['cron'] extends string
-      ? // non-empty string cron, disallow options
-        Parameters<TJob['perform']> extends []
-        ? [] | [[]]
-        : [Parameters<TJob['perform']>]
-      : // undefined or not present, allow options
-        Parameters<TJob['perform']> extends []
-        ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
-        : [Parameters<TJob['perform']>, ScheduleJobOptions?]
+export type CreateSchedulerArgs<TJob extends Job<QueueNames, any[]>> =
+  Parameters<TJob['perform']> extends []
+    ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]
+    : [Parameters<TJob['perform']>, ScheduleJobOptions?]

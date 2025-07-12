@@ -71,8 +71,8 @@ export class Executor {
       const job = await loadJob({ name: this.job.name, path: this.job.path })
       await job.perform(...this.job.args)
 
-      const runAt = job.cron
-        ? CronExpressionParser.parse(job.cron).next().toDate()
+      const runAt = this.job.cron
+        ? CronExpressionParser.parse(this.job.cron).next().toDate()
         : undefined
 
       await this.adapter.success({

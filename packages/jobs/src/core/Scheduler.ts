@@ -61,12 +61,13 @@ export class Scheduler<TAdapter extends BaseAdapter> {
     const priority = job.priority ?? DEFAULT_PRIORITY
     const wait = options?.wait ?? DEFAULT_WAIT
     const waitUntil = options?.waitUntil ?? DEFAULT_WAIT_UNTIL
+    const cron = options?.cron
 
     if (!queue) {
       throw new QueueNotDefinedError()
     }
 
-    if (job.cron && (wait || waitUntil)) {
+    if (cron && (wait || waitUntil)) {
       throw new Error(
         'Cannot schedule a cron job with wait or waitUntil options',
       )
@@ -76,10 +77,10 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       name: job.name,
       path: job.path,
       args: args ?? [],
-      cron: job.cron,
+      cron,
       runAt: this.computeRunAt({ wait, waitUntil }),
-      queue: queue,
-      priority: priority,
+      queue,
+      priority,
     }
   }
 

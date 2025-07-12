@@ -1,4 +1,4 @@
-import { describe, it, expectTypeOf, assertType } from 'vitest'
+import { describe, it, expectTypeOf } from 'vitest'
 
 import type { JobDefinition } from '../../types.js'
 import { JobManager } from '../JobManager.js'
@@ -106,10 +106,9 @@ describe('JobManager Type Tests', () => {
     })
   })
 
-  describe('scheduler for cron jobs', () => {
-    const cronJob = manager.createJob({
+  describe('scheduler with cron options', () => {
+    const job = manager.createJob({
       queue: 'default',
-      cron: '0 0 * * *',
       perform: () => {
         return void 0
       },
@@ -117,54 +116,45 @@ describe('JobManager Type Tests', () => {
 
     const scheduler = manager.createScheduler({ adapter: 'mock' })
 
-    it('should accept no arguments', () => {
-      expectTypeOf(scheduler(cronJob)).toEqualTypeOf<Promise<boolean>>()
+    it('should accept cron as an option', () => {
+      expectTypeOf(scheduler(job, [], { cron: '0 0 * * *' })).toEqualTypeOf<
+        Promise<boolean>
+      >()
     })
 
-    it('should accept empty array as arguments', () => {
-      expectTypeOf(scheduler(cronJob, [])).toEqualTypeOf<Promise<boolean>>()
+    it('should not accept cron with wait option', () => {
+      // @ts-expect-error - should not be allowed to pass both cron and wait
+      scheduler(job, [], { cron: '0 0 * * *', wait: 30 })
     })
 
-    it('should not accept options when a cron schedule is defined', () => {
-      // @ts-expect-error - should not be allowed to pass options
-      assertType(scheduler(cronJob, [], { wait: 30 }))
+    it('should not accept cron with waitUntil option', () => {
+      // @ts-expect-error - should not be allowed to pass both cron and waitUntil
+      scheduler(job, [], { cron: '0 0 * * *', waitUntil: new Date() })
     })
 
-    it('should accept options if `cron` is undefined', () => {
-      const job = manager.createJob({
-        queue: 'default',
-        cron: undefined,
-        perform: () => {
-          return void 0
-        },
-      })
-
-      assertType(scheduler(job, [], { wait: 30 }))
+    it('should accept wait option without cron', () => {
+      expectTypeOf(scheduler(job, [], { wait: 30 })).toEqualTypeOf<
+        Promise<boolean>
+      >()
     })
 
-    it('should accept options if `cron` is an empty string', () => {
-      const job = manager.createJob({
-        queue: 'default',
-        cron: '',
-        perform: () => {
-          return void 0
-        },
-      })
-
-      assertType(scheduler(job, [], { wait: 30 }))
+    it('should accept waitUntil option without cron', () => {
+      expectTypeOf(scheduler(job, [], { waitUntil: new Date() })).toEqualTypeOf<
+        Promise<boolean>
+      >()
     })
   })
 
   describe('createJob', () => {
-    it('should preserve cron schedule in job definition', () => {
-      const cronJobDefinition: JobDefinition<['default'], unknown[]> = {
+    it('should create job without cron schedule in definition', () => {
+      const jobDefinition: JobDefinition<['default'], unknown[]> = {
         queue: 'default',
-        cron: '0 0 * * *',
         perform: () => {},
       }
 
-      const createdCronJob = manager.createJob(cronJobDefinition)
-      expectTypeOf(createdCronJob).toHaveProperty('cron')
+      const createdJob = manager.createJob(jobDefinition)
+      expectTypeOf(createdJob).toHaveProperty('queue')
+      expectTypeOf(createdJob).toHaveProperty('perform')
     })
   })
 

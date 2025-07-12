@@ -60,7 +60,6 @@ import { jobs } from 'src/lib/jobs'
 
 export const SampleCronJob = jobs.createJob({
   queue: 'default',
-  cron: '* * * * * *',
   perform: async () => {
     const timestamp = new Date().toISOString().replace(/:/g, '_')
     const fileName = \`report-\${timestamp}.txt\`
@@ -77,7 +76,7 @@ import { SampleCronJob } from 'api/src/jobs/SampleCronJob/SampleCronJob'
 import { later } from 'api/src/lib/jobs'
 
 export default async () => {
-  await later(SampleCronJob)
+  await later(SampleCronJob, [], { cron: '* * * * * *' })
 }
 
 `
