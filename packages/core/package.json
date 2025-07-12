@@ -10,6 +10,8 @@
   "license": "MIT",
   "type": "module",
   "bin": {
+    "cedarjs": "./dist/bins/cedarjs.js",
+    "cj": "./dist/bins/cedarjs.js",
     "cross-env": "./dist/bins/cross-env.js",
     "eslint": "./dist/bins/eslint.js",
     "jest": "./dist/bins/jest.js",
