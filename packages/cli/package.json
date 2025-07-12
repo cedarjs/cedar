@@ -10,6 +10,8 @@
   "license": "MIT",
   "type": "module",
   "bin": {
+    "cedarjs": "./dist/index.js",
+    "cj": "./dist/index.js",
     "redwood": "./dist/index.js",
     "rw": "./dist/index.js",
     "rwfw": "./dist/rwfw.js"
