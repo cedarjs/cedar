@@ -2,4 +2,4 @@ name: 'Require Release Label Conditional'
 description: 'Require release labels on PRs unless title starts with conventional commit prefixes'
 runs:
   using: 'node20'
-  main: 'requireReleaseLabelOrCCMessage.mjs'
+  main: 'requireReleaseLabelOrCcMessage.mjs'
