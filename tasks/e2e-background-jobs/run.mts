@@ -1,6 +1,5 @@
 import process from 'node:process'
 
-import kill from 'tree-kill'
 import { $, cd, path, ProcessOutput, fs } from 'zx'
 
 import {
@@ -308,17 +307,8 @@ async function generateJob(
     }),
   })
 
-  const apiServerPid = apiServer.pid
-  if (!apiServerPid) {
-    throw new Error('apiServerPid is undefined')
-  }
-
   console.log('Action: Stopping the api server')
-  await new Promise((resolve) => {
-    kill(apiServerPid, 'SIGKILL', () => {
-      resolve(null)
-    })
-  })
+  await apiServer.kill('SIGKILL')
 }
 
 async function generateCronJob(projectPath: string) {
@@ -546,17 +536,10 @@ async function runCronJob(projectPath: string) {
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
   try {
-    const jobsProcess = $`yarn rw jobs work`.nothrow().quiet()
-
-    const jobsProcessPid = jobsProcess.pid
-    if (!jobsProcessPid) {
-      throw new Error('jobsProcessPid is undefined')
-    }
-
-    // 3600 was enough of a timeout locally, but I had to increase it for CI
-    setTimeout(() => kill(jobsProcessPid, 'SIGKILL'), 9600)
-
-    const { stdout, stderr } = await jobsProcess
+    const { stdout, stderr } = await $`yarn rw jobs work`
+      .nothrow()
+      .quiet()
+      .timeout(9600)
 
     if (!stdout.includes('SampleCronJob: Writing report to')) {
       console.error("💥 Error: Couldn't find expected output")
