@@ -1,16 +1,13 @@
 import dns from 'dns'
 
-import type { UserConfig } from 'vite'
 import { defineConfig } from 'vite'
 
-// See: https://vitejs.dev/config/server-options.html#server-host
-// So that Vite will load on local instead of 127.0.0.1
+import { cedar } from '@cedarjs/vite'
+
+// So that Vite will load on localhost instead of `127.0.0.1`.
+// See: https://vitejs.dev/config/server-options.html#server-host.
 dns.setDefaultResultOrder('verbatim')
 
-import redwood from '@cedarjs/vite'
-
-const viteConfig: UserConfig = {
-  plugins: [redwood()],
-}
-
-export default defineConfig(viteConfig)
+export default defineConfig({
+  plugins: [cedar()],
+})

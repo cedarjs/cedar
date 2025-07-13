@@ -16,9 +16,9 @@ import { removeFromBundle } from './plugins/vite-plugin-remove-from-bundle.js'
 import { swapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 
 /**
- * Pre-configured vite plugin, with required config for Redwood apps.
+ * Pre-configured vite plugin, with required config for CedarJS apps.
  */
-export default function redwoodPluginVite(): PluginOption[] {
+export function cedar(): PluginOption[] {
   const rwPaths = getPaths()
   const rwConfig = getConfig()
 
@@ -26,14 +26,16 @@ export default function redwoodPluginVite(): PluginOption[] {
 
   if (!clientEntryPath) {
     throw new Error(
-      'Vite client entry point not found. Please check that your project has an entry.client.{jsx,tsx} file in the web/src directory.',
+      'Vite client entry point not found. Please check that your project has ' +
+        'an entry.client.{jsx,tsx} file in the web/src directory.',
     )
   }
 
   const relativeEntryPath = path.relative(rwPaths.web.src, clientEntryPath)
 
   // If realtime is enabled, we want to include the sseLink in the bundle.
-  // Right now the only way we have of telling is if the package is installed on the api side.
+  // Right now the only way we have of telling is if the package is installed on
+  // the api side.
   const apiPackageJsonPath = path.join(rwPaths.api.base, 'package.json')
   const realtimeEnabled =
     fs.existsSync(apiPackageJsonPath) &&
@@ -127,7 +129,8 @@ export default function redwoodPluginVite(): PluginOption[] {
           if (fs.existsSync(clientEntryPath)) {
             return html.replace(
               '</head>',
-              // @NOTE the slash in front, for windows compatibility and for pages in subdirectories
+              // @NOTE the slash in front, for windows compatibility and for
+              // pages in subdirectories
               `<script type="module" src="/${relativeEntryPath}"></script>
         </head>`,
             )
@@ -189,3 +192,5 @@ export default function redwoodPluginVite(): PluginOption[] {
     }),
   ]
 }
+
+export default cedar
