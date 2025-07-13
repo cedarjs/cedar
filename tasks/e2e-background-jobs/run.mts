@@ -539,6 +539,7 @@ async function runCronJob(projectPath: string) {
     const { stdout, stderr } = await $`yarn rw jobs work`
       .nothrow()
       .quiet()
+      // 3600 was enough of a timeout locally, but I had to increase it for CI
       .timeout(9600)
 
     if (!stdout.includes('SampleCronJob: Writing report to')) {
