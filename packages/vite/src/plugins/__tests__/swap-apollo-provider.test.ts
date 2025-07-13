@@ -1,6 +1,16 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 import { cedarSwapApolloProvider } from '../vite-plugin-swap-apollo-provider.js'
+
+vi.mock('@cedarjs/project-config', () => ({
+  getConfig: vi.fn().mockReturnValue({
+    experimental: {
+      streamingSsr: {
+        enabled: true,
+      },
+    },
+  }),
+}))
 
 describe('excludeModule', () => {
   it('should swap the import', async () => {
