@@ -22,7 +22,7 @@ const EXPECTED_EXPORTS_FROM_CELL = [
 ]
 
 /**
- * Vite plugin that wraps files with a suffix of `Cell` in Redwood's `createCell`
+ * Vite plugin that wraps files with a suffix of `Cell` in CedarJS's `createCell`
  * higher order component. The HOC deals with the lifecycle methods during a GraphQL query.
  *
  * This transforms:

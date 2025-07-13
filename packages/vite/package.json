@@ -33,10 +33,6 @@
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
     },
-    "./plugins": {
-      "import": "./dist/plugins/index.js",
-      "default": "./dist/cjs/plugins/index.js"
-    },
     "./bins/rw-vite-build.mjs": "./bins/rw-vite-build.mjs"
   },
   "bin": {

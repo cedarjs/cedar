@@ -5,26 +5,19 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 
-import {
-  getConfig,
-  getPaths,
-  importStatementPath,
-} from '@cedarjs/project-config'
+import { getPaths, importStatementPath } from '@cedarjs/project-config'
 import {
   cedarCellTransform,
   cedarjsDirectoryNamedImportPlugin,
   cedarjsJobPathInjectorPlugin,
-  swapApolloProvider,
-} from '@cedarjs/vite/plugins'
+  cedarSwapApolloProvider,
+} from '@cedarjs/vite'
 
 export async function runScriptFunction({
   path: scriptPath,
   functionName,
   args,
 }) {
-  const rwConfig = getConfig()
-  const streamingEnabled = rwConfig?.experimental.streamingSsr.enabled
-
   // Setting 'production' here mainly to silence some Prisma output they have in
   // dev mode
   const NODE_ENV = process.env.NODE_ENV
@@ -85,7 +78,7 @@ export async function runScriptFunction({
       cedarjsDirectoryNamedImportPlugin(),
       cedarCellTransform(),
       cedarjsJobPathInjectorPlugin(),
-      streamingEnabled && swapApolloProvider(),
+      cedarSwapApolloProvider(),
     ],
   })
 

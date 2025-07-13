@@ -369,7 +369,10 @@ module.exports = {
     },
     // Allow computed member access on process.env in NodeJS contexts and tests
     {
-      files: ['packages/testing/**', 'packages/vite/src/index.ts'],
+      files: [
+        'packages/testing/**',
+        'packages/vite/src/plugins/vite-plugin-cedar-html-env.ts',
+      ],
       rules: {
         '@cedarjs/process-env-computed': 'off',
       },
