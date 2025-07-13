@@ -1484,7 +1484,7 @@ __metadata:
     untildify: "npm:5.0.0"
     which: "npm:4.0.0"
     yauzl-promise: "npm:4.0.0"
-    zx: "npm:8.7.0"
+    zx: "npm:8.7.1-dev.3b9aaeb"
   bin:
     create-cedar-rsc-app: dist/index.js
   languageName: unknown
@@ -4284,11 +4284,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zx@npm:8.7.0":
-  version: 8.7.0
-  resolution: "zx@npm:8.7.0"
+"zx@npm:8.7.1-dev.3b9aaeb":
+  version: 8.7.1-dev.3b9aaeb
+  resolution: "zx@npm:8.7.1-dev.3b9aaeb"
   bin:
     zx: build/cli.js
-  checksum: 10c0/0773448306ef0b5e2fb46723c29048b611781e987aeb89eb153e2ef07ff60cd16bae88666a9d272f4486fee09258ef30775d14dece3599f401dacad965fb30ef
+  checksum: 10c0/ae7c0066958f6ff524b5a9fe13cb35e7cf94dd7b6a429cdbd04efc785d02b21133fef6c7caf1671ed651a830bdfb3290a74d786e5993e682478654e170a7f925
   languageName: node
   linkType: hard
