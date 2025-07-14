@@ -1,11 +1,20 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { describe, test } from 'vitest'
+import { beforeAll, describe, test } from 'vitest'
 
 import { findUp } from '@cedarjs/project-config'
 
 describe('fragments graphQLClientConfig', () => {
+  beforeAll(async () => {
+    // Was running into this issue
+    // https://github.com/vitest-dev/vitest/discussions/6511
+    //   Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+    // One workaround that was posted there was this:
+    // TODO: Remove this workaround once the issue is fixed
+    await new Promise((res) => setImmediate(res))
+  })
+
   test('App.tsx with no graphQLClientConfig', async () => {
     await matchFolderTransform('appGqlConfigTransform', 'config-simple', {
       useJsCodeshift: true,
