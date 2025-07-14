@@ -35,7 +35,7 @@
     "esbuild": "0.25.0",
     "fast-glob": "3.3.3",
     "fs-extra": "11.2.0",
-    "zx": "8.7.1-dev.3b9aaeb"
+    "zx": "8.7.1-dev.afcb0eb"
   },
   "devDependencies": {
     "@types/fs-extra": "11.0.4",
