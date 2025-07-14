@@ -3,7 +3,7 @@ import type { APIGatewayProxyEvent } from 'aws-lambda'
 import type {
   VerifyOptions,
   SupportedVerifierTypes,
-} from '../auth/verifiers/index.js'
+} from '../auth/verifiers/common.js'
 import {
   createVerifier,
   WebhookVerificationError,
