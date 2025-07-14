@@ -11,13 +11,8 @@ import {
   DEFAULT_TOLERANCE,
 } from '../auth/verifiers/index.js'
 
-export {
-  VerifyOptions,
-  WebhookVerificationError,
-  DEFAULT_WEBHOOK_SECRET,
-  SupportedVerifierTypes,
-} from '../auth/verifiers/index.js'
-
+export type { VerifyOptions, SupportedVerifierTypes }
+export { WebhookVerificationError, DEFAULT_WEBHOOK_SECRET }
 export const DEFAULT_WEBHOOK_SIGNATURE_HEADER = 'RW-WEBHOOK-SIGNATURE'
 
 /**
