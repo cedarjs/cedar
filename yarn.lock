@@ -2983,7 +2983,7 @@ __metadata:
     tsx: "npm:4.19.4"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.6.2"
-    zx: "npm:8.7.1-dev.afcb0eb"
+    zx: "npm:8.7.1"
   bin:
     rw-fwtools-attw: ./dist/bins/rw-fwtools-attw.js
   languageName: unknown
@@ -27200,7 +27200,7 @@ __metadata:
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
-    zx: "npm:8.7.1-dev.afcb0eb"
+    zx: "npm:8.7.1"
   languageName: unknown
   linkType: soft
 
@@ -31163,11 +31163,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zx@npm:8.7.1-dev.afcb0eb":
-  version: 8.7.1-dev.afcb0eb
-  resolution: "zx@npm:8.7.1-dev.afcb0eb"
+"zx@npm:8.7.1":
+  version: 8.7.1
+  resolution: "zx@npm:8.7.1"
   bin:
     zx: build/cli.js
-  checksum: 10c0/776cfde93e7e2815d83379b9da9809ebb039e400dc91b333d5ddb2830fd3ecd43e889baafdf12428abf079ef6aea08508164c91efb2183f97f9fc1382fec604f
+  checksum: 10c0/48a7e3c3a15c6620bc5d205bc492c3ecd1b8cb1be5ee709a0c3d1866bbb7b167ad53270d8ebeb273dc796f73367ec11666ba6d155eb2957ed62f1476008f71c2
   languageName: node
   linkType: hard
