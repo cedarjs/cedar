@@ -38,7 +38,7 @@
     "@envelop/core": "5.0.2",
     "@envelop/testing": "7.0.0",
     "@envelop/types": "5.0.0",
-    "ioredis": "5.6.0",
+    "ioredis": "5.6.1",
     "nodemon": "3.1.10",
     "tsx": "4.20.3",
     "typescript": "5.6.2",
