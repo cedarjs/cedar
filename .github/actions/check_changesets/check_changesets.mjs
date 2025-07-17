@@ -13,6 +13,14 @@ async function main() {
     return
   }
 
+  // Skip check if the PR is created by renovate
+  const { user } = github.context.payload.pull_request
+  const renovateUsernames = ['renovate[bot]', 'renovate-bot', 'renovate']
+  if (user && renovateUsernames.includes(user.login)) {
+    console.log('Skipping check because the PR is created by', user.login)
+    return
+  }
+
   // We only enforce changesets on PRs that are not marked as "chore" or "SSR" or "RSC"
   const skipOnMilestone = ['chore', 'SSR', 'RSC']
   const { milestone } = github.context.payload.pull_request

@@ -927,15 +927,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/eslint__js@npm:^8.42.3":
-  version: 8.42.3
-  resolution: "@types/eslint__js@npm:8.42.3"
-  dependencies:
-    "@types/eslint": "npm:*"
-  checksum: 10c0/ccc5180b92155929a089ffb03ed62625216dcd5e46dd3197c6f82370ce8b52c7cb9df66c06b0a3017995409e023bc9eafe5a3f009e391960eacefaa1b62d9a56
-  languageName: node
-  linkType: hard
-
 "@types/estree@npm:*, @types/estree@npm:^1.0.6":
   version: 1.0.6
   resolution: "@types/estree@npm:1.0.6"
@@ -1446,7 +1437,6 @@ __metadata:
     "@eslint-community/eslint-plugin-eslint-comments": "npm:^4.3.0"
     "@eslint/js": "npm:^9.7.0"
     "@types/eslint-plugin-markdown": "npm:^2.0.2"
-    "@types/eslint__js": "npm:^8.42.3"
     "@types/fs-extra": "npm:^11"
     "@types/node": "npm:^22.10.2"
     "@types/semver": "npm:7.5.8"
