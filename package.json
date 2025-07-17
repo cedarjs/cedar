@@ -88,7 +88,7 @@
     "@types/prompts": "2.4.9",
     "@typescript-eslint/eslint-plugin": "8.19.1",
     "@typescript-eslint/parser": "8.19.1",
-    "@yarnpkg/types": "4.0.0",
+    "@yarnpkg/types": "4.0.1",
     "babel-jest": "^29.7.0",
     "babel-plugin-auto-import": "1.1.0",
     "babel-plugin-remove-code": "0.0.6",
@@ -135,6 +135,6 @@
     "yargs": "17.7.2",
     "zx": "8.7.1"
   },
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.9.2",
   "npmClient": "yarn"
 }
