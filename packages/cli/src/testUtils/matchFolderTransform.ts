@@ -159,7 +159,9 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     if (useJsCodeshift) {
       if (typeof transformFunctionOrName !== 'string') {
         throw new Error(
-          'When running matchFolderTransformFast with useJsCodeshift, transformFunction must be a string (file name of jscodeshift transform)',
+          'When running matchFolderTransform with useJsCodeshift, ' +
+            'transformFunction must be a string (file name of jscodeshift ' +
+            'transform)',
         )
       }
 

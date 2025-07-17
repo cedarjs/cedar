@@ -19,9 +19,6 @@ globalThis.matchTransformSnapshot = (
 globalThis.matchFolderTransform = (
   await import('./src/testUtils/matchFolderTransform')
 ).matchFolderTransform
-globalThis.matchFolderTransformFast = (
-  await import('./src/testUtils/matchFolderTransformFast')
-).matchFolderTransformFast
 
 // Custom matcher for checking fixtures using paths
 // e.g. expect(transformedPath).toMatchFileContents(expectedPath)
