@@ -1,7 +1,7 @@
-import { beforeAll, describe, test } from 'vitest'
+import { afterEach, describe, test } from 'vitest'
 
 describe('fragments possibleTypes import', () => {
-  beforeAll(async () => {
+  afterEach(async () => {
     // Was running into this issue
     // https://github.com/vitest-dev/vitest/discussions/6511
     //   Error: [vitest-worker]: Timeout calling "onTaskUpdate"
