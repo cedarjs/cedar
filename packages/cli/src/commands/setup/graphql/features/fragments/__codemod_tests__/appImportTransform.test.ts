@@ -2,22 +2,19 @@ import { afterEach, describe, test } from 'vitest'
 
 describe('fragments possibleTypes import', () => {
   afterEach(async () => {
-    // Was running into this issue
-    // https://github.com/vitest-dev/vitest/discussions/6511
-    //   Error: [vitest-worker]: Timeout calling "onTaskUpdate"
-    // One workaround that was posted there was this:
-    // TODO: Remove this workaround once the issue is fixed
+    // The fast implementation should eliminate the need for this workaround
+    // but keeping minimal cleanup just in case
     await new Promise((res) => setImmediate(res))
   })
 
   test('Default App.tsx', async () => {
-    await matchFolderTransform('appImportTransform', 'import-simple', {
+    await matchFolderTransformFast('appImportTransform', 'import-simple', {
       useJsCodeshift: true,
     })
   })
 
   test('App.tsx with existing import', async () => {
-    await matchFolderTransform('appImportTransform', 'existingImport', {
+    await matchFolderTransformFast('appImportTransform', 'existingImport', {
       useJsCodeshift: true,
     })
   })
