@@ -2305,7 +2305,7 @@ __metadata:
     "@types/yargs": "npm:17.0.33"
     core-js: "npm:3.42.0"
     prompts: "npm:2.4.2"
-    terminal-link: "npm:2.1.1"
+    termi-link: "npm:1.1.0"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -28647,16 +28647,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"supports-hyperlinks@npm:^2.0.0":
-  version: 2.3.0
-  resolution: "supports-hyperlinks@npm:2.3.0"
-  dependencies:
-    has-flag: "npm:^4.0.0"
-    supports-color: "npm:^7.0.0"
-  checksum: 10c0/4057f0d86afb056cd799602f72d575b8fdd79001c5894bcb691176f14e870a687e7981e50bc1484980e8b688c6d5bcd4931e1609816abb5a7dc1486b7babf6a1
-  languageName: node
-  linkType: hard
-
 "supports-hyperlinks@npm:^3.0.0":
   version: 3.0.0
   resolution: "supports-hyperlinks@npm:3.0.0"
@@ -28888,16 +28878,6 @@ __metadata:
   version: 1.1.0
   resolution: "termi-link@npm:1.1.0"
   checksum: 10c0/e692ce12d95b64951eafb7778617d7d46799924bf4b3c6254d66929d9643502ca7ca38b887b47f77e2bc74b470a6b90cef800faa1472c14fa8ecc6fde4ea3b98
-  languageName: node
-  linkType: hard
-
-"terminal-link@npm:2.1.1":
-  version: 2.1.1
-  resolution: "terminal-link@npm:2.1.1"
-  dependencies:
-    ansi-escapes: "npm:^4.2.1"
-    supports-hyperlinks: "npm:^2.0.0"
-  checksum: 10c0/947458a5cd5408d2ffcdb14aee50bec8fb5022ae683b896b2f08ed6db7b2e7d42780d5c8b51e930e9c322bd7c7a517f4fa7c76983d0873c83245885ac5ee13e3
   languageName: node
   linkType: hard
 
