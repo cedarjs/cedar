@@ -2169,7 +2169,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.1"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/backend": "npm:1.33.1"
+    "@clerk/backend": "npm:1.34.0"
     "@types/aws-lambda": "npm:8.10.145"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
@@ -3676,12 +3676,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/backend@npm:1.33.1":
-  version: 1.33.1
-  resolution: "@clerk/backend@npm:1.33.1"
+"@clerk/backend@npm:1.34.0":
+  version: 1.34.0
+  resolution: "@clerk/backend@npm:1.34.0"
   dependencies:
-    "@clerk/shared": "npm:^3.9.4"
-    "@clerk/types": "npm:^4.59.2"
+    "@clerk/shared": "npm:^3.9.5"
+    "@clerk/types": "npm:^4.59.3"
     cookie: "npm:1.0.2"
     snakecase-keys: "npm:8.0.1"
     tslib: "npm:2.8.1"
@@ -3690,7 +3690,7 @@ __metadata:
   peerDependenciesMeta:
     svix:
       optional: true
-  checksum: 10c0/9158047d3ee156ce7aa26c9771302d7c0b406b73fc25bebbb6cc5cd2d0355c67854a21be11a5661354b7f2b52c0ed6354f1db44b8dc6af81a362e250aeee3718
+  checksum: 10c0/ac0d1da4990ae1880d266753e45ac97a55a824f5fd93810cc271d7a6a9f5c8a239e6160635841d20b8c365f804a955ab763f2ab7a7ee75e598fad2c7e6d2fd1f
   languageName: node
   linkType: hard
 
@@ -3708,11 +3708,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.9.4":
-  version: 3.9.4
-  resolution: "@clerk/shared@npm:3.9.4"
+"@clerk/shared@npm:^3.9.4, @clerk/shared@npm:^3.9.5":
+  version: 3.12.3
+  resolution: "@clerk/shared@npm:3.12.3"
   dependencies:
-    "@clerk/types": "npm:^4.59.2"
+    "@clerk/types": "npm:^4.67.0"
     dequal: "npm:2.0.3"
     glob-to-regexp: "npm:0.4.1"
     js-cookie: "npm:3.0.5"
@@ -3726,16 +3726,25 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: 10c0/dae58bf57c55acfd60c27bd8c47b2728efcac64453818491ffbac1fe93f1c9c073225c24770425cde54820b07dbda3a15a0e373fdbe482e7758d0459d683a2f2
+  checksum: 10c0/03405e75ba2568a488a7adbe21927714b146d46cf569a88f88436224930d69ab8be90656132ec21e07424bfe5f0ef6b07226824589bee0f25d81f81cfa7eef0b
   languageName: node
   linkType: hard
 
-"@clerk/types@npm:4.59.2, @clerk/types@npm:^4.59.2":
+"@clerk/types@npm:4.59.2":
   version: 4.59.2
   resolution: "@clerk/types@npm:4.59.2"
   dependencies:
     csstype: "npm:3.1.3"
   checksum: 10c0/0def3b4f4afd6f074acb160ed2c3055755eee2d0d7b463c6fce7f80618978d567656455012486aa60567feff28bcf60b36aaa1a06b0fcb66b3adf04e6bd14200
+  languageName: node
+  linkType: hard
+
+"@clerk/types@npm:^4.59.2, @clerk/types@npm:^4.59.3, @clerk/types@npm:^4.67.0":
+  version: 4.67.0
+  resolution: "@clerk/types@npm:4.67.0"
+  dependencies:
+    csstype: "npm:3.1.3"
+  checksum: 10c0/f98cbce416ca32890e364d44d295786ad41cba78d09b55cf9caa9aada538c4df1a5487f60728ed3f336eb0d5b6a1778941faa675c973363d81bd22d945d47ceb
   languageName: node
   linkType: hard
 
