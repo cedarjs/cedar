@@ -2783,7 +2783,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "npm:1.1.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/backend": "npm:1.33.1"
+    "@clerk/backend": "npm:1.34.0"
     "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
@@ -4312,12 +4312,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/backend@npm:1.33.1":
-  version: 1.33.1
-  resolution: "@clerk/backend@npm:1.33.1"
+"@clerk/backend@npm:1.34.0":
+  version: 1.34.0
+  resolution: "@clerk/backend@npm:1.34.0"
   dependencies:
-    "@clerk/shared": "npm:^3.9.4"
-    "@clerk/types": "npm:^4.59.2"
+    "@clerk/shared": "npm:^3.9.5"
+    "@clerk/types": "npm:^4.59.3"
     cookie: "npm:1.0.2"
     snakecase-keys: "npm:8.0.1"
     tslib: "npm:2.8.1"
@@ -4326,7 +4326,7 @@ __metadata:
   peerDependenciesMeta:
     svix:
       optional: true
-  checksum: 10c0/9158047d3ee156ce7aa26c9771302d7c0b406b73fc25bebbb6cc5cd2d0355c67854a21be11a5661354b7f2b52c0ed6354f1db44b8dc6af81a362e250aeee3718
+  checksum: 10c0/ac0d1da4990ae1880d266753e45ac97a55a824f5fd93810cc271d7a6a9f5c8a239e6160635841d20b8c365f804a955ab763f2ab7a7ee75e598fad2c7e6d2fd1f
   languageName: node
   linkType: hard
 
@@ -4344,7 +4344,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.9.4":
+"@clerk/shared@npm:^3.9.4, @clerk/shared@npm:^3.9.5":
   version: 3.12.3
   resolution: "@clerk/shared@npm:3.12.3"
   dependencies:
@@ -4375,7 +4375,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/types@npm:^4.59.2, @clerk/types@npm:^4.67.0":
+"@clerk/types@npm:^4.59.2, @clerk/types@npm:^4.59.3, @clerk/types@npm:^4.67.0":
   version: 4.67.0
   resolution: "@clerk/types@npm:4.67.0"
   dependencies:
