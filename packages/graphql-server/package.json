@@ -52,7 +52,7 @@
     "@cedarjs/realtime": "workspace:*",
     "@envelop/types": "5.0.0",
     "@types/aws-lambda": "8.10.145",
-    "@types/jsonwebtoken": "9.0.8",
+    "@types/jsonwebtoken": "9.0.10",
     "@types/lodash": "4.17.15",
     "@types/uuid": "10.0.0",
     "@whatwg-node/fetch": "0.9.21",
