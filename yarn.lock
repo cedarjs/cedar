@@ -3172,7 +3172,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
-    resend: "npm:3.5.0"
+    resend: "npm:4.6.0"
     tsx: "npm:4.20.3"
     typescript: "npm:5.6.2"
   languageName: unknown
@@ -9011,20 +9011,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-email/render@npm:0.0.16":
-  version: 0.0.16
-  resolution: "@react-email/render@npm:0.0.16"
-  dependencies:
-    html-to-text: "npm:9.0.5"
-    js-beautify: "npm:^1.14.11"
-    react-promise-suspense: "npm:0.3.4"
-  peerDependencies:
-    react: ^18.2.0
-    react-dom: ^18.2.0
-  checksum: 10c0/1cc3479f674f070f8564b8944dcb86081b7f52b67742d0c255d79b6cea989be0e2207d2adcd5a920ff4b41fbe360d655ac97a71f8ebd5e6d78441cafcfc668dc
-  languageName: node
-  linkType: hard
-
 "@react-email/render@npm:0.0.17":
   version: 0.0.17
   resolution: "@react-email/render@npm:0.0.17"
@@ -9036,6 +9022,20 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
   checksum: 10c0/34a1c5a55586d7cd723638d8cd5328fddf30015e5065a2e9d5204772e0532e84d63af1b2b1b8ec02cef52a8f57d34871200c0075a9ed7b2861362d8138d3db5e
+  languageName: node
+  linkType: hard
+
+"@react-email/render@npm:1.1.2":
+  version: 1.1.2
+  resolution: "@react-email/render@npm:1.1.2"
+  dependencies:
+    html-to-text: "npm:^9.0.5"
+    prettier: "npm:^3.5.3"
+    react-promise-suspense: "npm:^0.3.4"
+  peerDependencies:
+    react: ^18.0 || ^19.0 || ^19.0.0-rc
+    react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
+  checksum: 10c0/def0039a24b797d962d7dcb3a3401c093aa0115545284e00863de4066a826a3e4977b8f2c65b1f3bf77352bee5595e0dedf166ea52467dcb7080e14785e1c3ac
   languageName: node
   linkType: hard
 
@@ -19346,7 +19346,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-to-text@npm:9.0.5":
+"html-to-text@npm:9.0.5, html-to-text@npm:^9.0.5":
   version: 9.0.5
   resolution: "html-to-text@npm:9.0.5"
   dependencies:
@@ -25496,6 +25496,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"prettier@npm:^3.5.3":
+  version: 3.6.2
+  resolution: "prettier@npm:3.6.2"
+  bin:
+    prettier: bin/prettier.cjs
+  checksum: 10c0/488cb2f2b99ec13da1e50074912870217c11edaddedeadc649b1244c749d15ba94e846423d062e2c4c9ae683e2d65f754de28889ba06e697ac4f988d44f45812
+  languageName: node
+  linkType: hard
+
 "pretty-bytes@npm:5.6.0, pretty-bytes@npm:^5.6.0":
   version: 5.6.0
   resolution: "pretty-bytes@npm:5.6.0"
@@ -26189,7 +26198,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-promise-suspense@npm:0.3.4":
+"react-promise-suspense@npm:0.3.4, react-promise-suspense@npm:^0.3.4":
   version: 0.3.4
   resolution: "react-promise-suspense@npm:0.3.4"
   dependencies:
@@ -26763,12 +26772,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resend@npm:3.5.0":
-  version: 3.5.0
-  resolution: "resend@npm:3.5.0"
+"resend@npm:4.6.0":
+  version: 4.6.0
+  resolution: "resend@npm:4.6.0"
   dependencies:
-    "@react-email/render": "npm:0.0.16"
-  checksum: 10c0/9920a456b926ef7be165a550c1c02355a8390fb215f05778118e3758a636411d49e4fa1ce3c648f42499e5928e7e159e2ebcce89b991c5708ae8b3393a84c242
+    "@react-email/render": "npm:1.1.2"
+  checksum: 10c0/ffd82d406fff0ebf7b66078df8bb5348a8aa01f0dadb8b3700184a2c4104e193cb8ed63902e0034d0492d3bbb318a67504d6cb826ef60fe67c753ffa9f800799
   languageName: node
   linkType: hard
 
