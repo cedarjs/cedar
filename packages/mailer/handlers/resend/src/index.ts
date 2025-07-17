@@ -58,7 +58,7 @@ export class ResendMailHandler extends AbstractMailHandler {
       cc: sendOptions.cc,
       from: sendOptions.from,
       headers: sendOptions.headers,
-      reply_to: sendOptions.replyTo,
+      replyTo: sendOptions.replyTo,
       subject: sendOptions.subject,
       to: sendOptions.to,
 
