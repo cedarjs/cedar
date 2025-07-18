@@ -1,11 +1,9 @@
 import type { SpawnSyncOptions } from 'node:child_process'
-
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import process from 'node:process'
 
 import type { Config } from './config.js'
-
 import { ExitCodeError } from './error.js'
 import { getCrxrscaVersion } from './version.js'
 
