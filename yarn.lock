@@ -2315,15 +2315,16 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-web@workspace:packages/auth-providers/dbAuth/web"
   dependencies:
-    "@babel/cli": "npm:7.27.2"
-    "@babel/core": "npm:^7.26.10"
-    "@babel/runtime-corejs3": "npm:7.27.6"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/auth": "workspace:*"
+    "@cedarjs/framework-tools": "workspace:*"
     "@simplewebauthn/browser": "npm:9.0.1"
     "@simplewebauthn/types": "npm:9.0.1"
     "@types/react": "npm:^18.2.55"
-    core-js: "npm:3.42.0"
+    concurrently: "npm:8.2.2"
+    publint: "npm:0.3.12"
     react: "npm:19.0.0-rc-f2df5694-20240916"
+    tsx: "npm:4.20.3"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
   languageName: unknown

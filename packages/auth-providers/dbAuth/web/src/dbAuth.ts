@@ -4,7 +4,7 @@ import {
   getCurrentUserFromMiddleware,
 } from '@cedarjs/auth'
 
-import type { WebAuthnClientType } from './webAuthn'
+import type { WebAuthnClientType } from './webAuthn.js'
 
 export interface LoginAttributes {
   username: string
@@ -63,7 +63,7 @@ export function createDbAuthClient({
   webAuthn,
   dbAuthUrl,
   fetchConfig,
-  middleware = RWJS_ENV.RWJS_EXP_STREAMING_SSR,
+  middleware = globalThis.RWJS_ENV.RWJS_EXP_STREAMING_SSR,
 }: DbAuthClientArgs = {}) {
   const credentials = fetchConfig?.credentials || 'same-origin'
   webAuthn?.setAuthApiUrl(dbAuthUrl)
@@ -77,7 +77,7 @@ export function createDbAuthClient({
       return dbAuthUrl
     }
 
-    return middleware ? `/middleware/dbauth` : `${RWJS_API_URL}/auth`
+    return middleware ? `/middleware/dbauth` : `${globalThis.RWJS_API_URL}/auth`
   }
 
   const resetAndFetch = async (...params: Parameters<typeof fetch>) => {
