@@ -7,7 +7,6 @@ import { CodeFileLoader } from '@graphql-tools/code-file-loader'
 import type { LoadSchemaOptions } from '@graphql-tools/load'
 import { loadSchema } from '@graphql-tools/load'
 import { getSchema } from '@prisma/internals'
-import chalk from 'chalk'
 import type { DocumentNode } from 'graphql'
 import { print } from 'graphql'
 import { terminalLink } from 'termi-link'
@@ -15,6 +14,8 @@ import { terminalLink } from 'termi-link'
 import { rootSchema } from '@cedarjs/graphql-server'
 import type { ScalarSchemaKeys } from '@cedarjs/graphql-server/src/rootSchema'
 import { getPaths, getConfig, resolveFile } from '@cedarjs/project-config'
+
+const ansis = require('ansis')
 
 export const generateGraphQLSchema = async () => {
   const redwoodProjectPaths = getPaths()
@@ -93,19 +94,19 @@ export const generateGraphQLSchema = async () => {
         errorObject.message = [
           errorObject.message,
           '',
-          `  ${chalk.bgYellow(` ${chalk.black.bold('Heads up')} `)}`,
+          `  ${ansis.bgYellow(` ${ansis.black.bold('Heads up')} `)}`,
           '',
-          chalk.yellow(
+          ansis.yellow(
             `  It looks like you have a ${name} model in your Prisma schema.`,
           ),
-          chalk.yellow(
+          ansis.yellow(
             `  If it's part of a relation, you may have to generate SDL or scaffolding for ${name} too.`,
           ),
-          chalk.yellow(
+          ansis.yellow(
             `  So, if you haven't done that yet, ignore this error message and run the SDL or scaffold generator for ${name} now.`,
           ),
           '',
-          chalk.yellow(
+          ansis.yellow(
             `  See the ${terminalLink(
               'Troubleshooting Generators',
               'https://redwoodjs.com/docs/schema-relations#troubleshooting-generators',

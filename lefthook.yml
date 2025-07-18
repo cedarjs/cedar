@@ -25,7 +25,11 @@ pre-commit:
       exclude:
         - __fixtures__/*
 
-    - run: yarn prettier --log-level=silent --check {staged_files}
+    - name: prettier staged files
+      run: yarn prettier --log-level=silent --check {staged_files}
+      glob: '*.{js,mjs,ts,mts,jsx,tsx}'
+      exclude:
+        - __fixtures__/*
 #
 #     - name: rubocop
 #       glob: "*.rb"

@@ -25,7 +25,7 @@
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
-    "chalk": "4.1.2",
+    "ansis": "4.1.0",
     "execa": "5.1.1",
     "semver": "7.6.3",
     "storybook": "7.6.20",

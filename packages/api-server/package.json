@@ -36,7 +36,7 @@
     "@cedarjs/web-server": "workspace:*",
     "@fastify/multipart": "9.0.3",
     "@fastify/url-data": "6.0.3",
-    "chalk": "4.1.2",
+    "ansis": "4.1.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",

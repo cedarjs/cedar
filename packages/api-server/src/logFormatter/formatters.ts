@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import ansis from 'ansis'
 import prettyBytes from 'pretty-bytes'
 import prettyMs from 'pretty-ms'
 
@@ -43,7 +43,7 @@ export const isWideEmoji = (character: string) => {
 export const formatBundleSize = (bundle: string) => {
   const bytes = parseInt(bundle, 10)
   const size = prettyBytes(bytes).replace(/ /, '')
-  return chalk.gray(size)
+  return ansis.gray(size)
 }
 
 export const formatCustom = (query?: Record<string, unknown>) => {
@@ -56,7 +56,7 @@ export const formatCustom = (query?: Record<string, unknown>) => {
   })
 
   if (!isEmptyObject(query)) {
-    return chalk.white(
+    return ansis.white(
       NEWLINE + '🗒 Custom' + NEWLINE + JSON.stringify(query, null, 2),
     )
   }
@@ -66,7 +66,7 @@ export const formatCustom = (query?: Record<string, unknown>) => {
 
 export const formatData = (data?: Record<string, unknown>) => {
   if (!isEmptyObject(data)) {
-    return chalk.white(
+    return ansis.white(
       NEWLINE + '📦 Result Data' + NEWLINE + JSON.stringify(data, null, 2),
     )
   }
@@ -80,7 +80,7 @@ export const formatDate = (instant: Date) => {
   const minutes = date.getMinutes().toString().padStart(2, '0')
   const seconds = date.getSeconds().toString().padStart(2, '0')
   const prettyDate = hours + ':' + minutes + ':' + seconds
-  return chalk.gray(prettyDate)
+  return ansis.gray(prettyDate)
 }
 
 export const formatErrorProp = (errorPropValue: Record<string, unknown>) => {
@@ -90,7 +90,7 @@ export const formatErrorProp = (errorPropValue: Record<string, unknown>) => {
   delete errorPropValue['stack']
   delete errorPropValue['type']
 
-  return chalk.redBright(
+  return ansis.redBright(
     NEWLINE +
       NEWLINE +
       `🚨 ${errorType} Info` +
@@ -110,7 +110,7 @@ export const formatLevel = (level: any) => {
 export const formatLoadTime = (elapsedTime: any) => {
   const elapsed = parseInt(elapsedTime, 10)
   const time = prettyMs(elapsed)
-  return chalk.gray(time)
+  return ansis.gray(time)
 }
 
 export const formatMessage = (logData: any) => {
@@ -119,41 +119,41 @@ export const formatMessage = (logData: any) => {
   const msg = formatMessageName(message)
   let pretty
   if (level === 'error') {
-    pretty = chalk.red(msg)
+    pretty = ansis.red(msg)
   }
   if (level === 'trace') {
-    pretty = chalk.white(msg)
+    pretty = ansis.white(msg)
   }
   if (level === 'warn') {
     const orange = '#ffa500'
-    pretty = chalk.hex(orange)(msg)
+    pretty = ansis.hex(orange)(msg)
   }
   if (level === 'debug') {
-    pretty = chalk.yellow(msg)
+    pretty = ansis.yellow(msg)
   }
   if (level === 'info' || level === 'customlevel') {
-    pretty = chalk.green(msg)
+    pretty = ansis.green(msg)
   }
   if (level === 'fatal') {
-    pretty = chalk.white.bgRed(msg)
+    pretty = ansis.white.bgRed(msg)
   }
   return pretty
 }
 
 export const formatMethod = (method: string) => {
-  return method && chalk.white(method)
+  return method && ansis.white(method)
 }
 
 export const formatRequestId = (requestId: string) => {
-  return requestId && chalk.cyan(requestId)
+  return requestId && ansis.cyan(requestId)
 }
 
 export const formatNs = (ns: string) => {
-  return ns && chalk.cyan(ns)
+  return ns && ansis.cyan(ns)
 }
 
 export const formatName = (name: string) => {
-  return name && chalk.blue(name)
+  return name && ansis.blue(name)
 }
 
 export const formatMessageName = (message: string) => {
@@ -171,12 +171,12 @@ export const formatMessageName = (message: string) => {
 }
 
 export const formatOperationName = (operationName: string) => {
-  return chalk.white(NEWLINE + '🏷  ' + operationName)
+  return ansis.white(NEWLINE + '🏷  ' + operationName)
 }
 
 export const formatQuery = (query?: Record<string, unknown>) => {
   if (!isEmptyObject(query)) {
-    return chalk.white(
+    return ansis.white(
       NEWLINE + '🔭 Query' + NEWLINE + JSON.stringify(query, null, 2),
     )
   }
@@ -188,7 +188,7 @@ export const formatResponseCache = (
   responseCache?: Record<string, unknown>,
 ) => {
   if (!isEmptyObject(responseCache)) {
-    return chalk.white(
+    return ansis.white(
       NEWLINE +
         '💾 Response Cache' +
         NEWLINE +
@@ -201,11 +201,11 @@ export const formatResponseCache = (
 
 export const formatStatusCode = (statusCode: string) => {
   statusCode = statusCode || 'xxx'
-  return chalk.white(statusCode)
+  return ansis.white(statusCode)
 }
 
 export const formatStack = (stack?: string | Record<string, unknown>) => {
-  return chalk.redBright(
+  return ansis.redBright(
     stack
       ? NEWLINE + '🥞 Error Stack' + NEWLINE + NEWLINE + stack + NEWLINE
       : '',
@@ -214,7 +214,7 @@ export const formatStack = (stack?: string | Record<string, unknown>) => {
 
 export const formatTracing = (data?: Record<string, unknown>) => {
   if (!isEmptyObject(data)) {
-    return chalk.white(
+    return ansis.white(
       NEWLINE + '⏰ Timing' + NEWLINE + JSON.stringify(data, null, 2),
     )
   }
@@ -223,11 +223,11 @@ export const formatTracing = (data?: Record<string, unknown>) => {
 }
 
 export const formatUrl = (url: string) => {
-  return chalk.white(url)
+  return ansis.white(url)
 }
 
 export const formatUserAgent = (userAgent: string) => {
-  return chalk.grey(NEWLINE + '🕵️‍♀️ ' + userAgent)
+  return ansis.gray(NEWLINE + '🕵️‍♀️ ' + userAgent)
 }
 
 export const noEmpty = (value: any) => {

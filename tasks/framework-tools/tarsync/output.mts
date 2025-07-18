@@ -1,4 +1,5 @@
-import { chalk, ProcessOutput } from 'zx'
+import ansis from 'ansis'
+import { ProcessOutput } from 'zx'
 
 import { FRAMEWORK_PATH } from './lib.mjs'
 
@@ -94,23 +95,23 @@ export class OutputManager {
 
   private generateLines() {
     const lines = [
-      chalk.cyan('[TarSync]'),
-      chalk.dim(FRAMEWORK_PATH),
-      chalk.dim(
+      ansis.cyan('[TarSync]'),
+      ansis.dim(FRAMEWORK_PATH),
+      ansis.dim(
         `${this.triggeredAt.toLocaleTimeString()}: ${this.triggeredBy}`,
       ),
       '',
     ]
 
     if (this.error) {
-      lines.push(chalk.red('Error:'))
-      lines.push(chalk.red('--- start ---'))
+      lines.push(ansis.red('Error:'))
+      lines.push(ansis.red('--- start ---'))
       if (this.error instanceof ProcessOutput) {
         lines.push(this.error.valueOf())
       } else {
         lines.push(this.error.toString())
       }
-      lines.push(chalk.red('--- end ---'))
+      lines.push(ansis.red('--- end ---'))
       return lines
     }
 
@@ -138,7 +139,7 @@ export class OutputManager {
     if (this.stage === Stage.DONE) {
       const totalTime = Date.now() - this.triggeredAt.getTime()
       lines.push(
-        chalk.green('Done!') + chalk.dim(` (${totalTime.toLocaleString()}ms)`),
+        ansis.green('Done!') + ansis.dim(` (${totalTime.toLocaleString()}ms)`),
       )
       lines.push('')
     }
@@ -149,21 +150,21 @@ export class OutputManager {
   }
 
   private getPrefix(stage: Stage) {
-    const color = this.error ? chalk.red : chalk.yellow
+    const color = this.error ? ansis.red : ansis.yellow
     let prefix = '[ ]'
     if (this.stage === stage) {
       prefix = color(`[${this.blinker}]`)
     } else if (this.stage < stage) {
       prefix = '[ ]'
     } else if (this.stage > stage) {
-      prefix = chalk.green('[x]')
+      prefix = ansis.green('[x]')
     }
     return prefix
   }
 
   private getSuffix(stage: Stage) {
     if (this.timings.has(stage)) {
-      return chalk.dim(` (${this.timings.get(stage)}ms)`)
+      return ansis.dim(` (${this.timings.get(stage)}ms)`)
     }
     return ''
   }

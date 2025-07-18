@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import execa from 'execa'
 import yargs from 'yargs/yargs'
 
@@ -62,12 +62,12 @@ const testProjectPath =
 if (testProjectPath === undefined) {
   console.error(
     [
-      chalk.red('Error: No test project to run against.'),
+      ansis.red('Error: No test project to run against.'),
       "If you haven't generated a test project, do so first via...",
       '',
       '  yarn build:test-project --link <your test project path>',
       '',
-      `Then set the ${chalk.magenta(
+      `Then set the ${ansis.magenta(
         'REDWOOD_TEST_PROJECT_PATH',
       )} env var to the path of your test project and run this script again.`,
     ].join('\n'),

@@ -1,6 +1,6 @@
 import path from 'path'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import fs from 'fs-extra'
 import { terminalLink } from 'termi-link'
 
@@ -29,8 +29,8 @@ export const getEpilogue = (
 
 export const printTaskEpilogue = (command, description, topicId) => {
   console.log(
-    `${chalk.hex('#ff845e')(
-      `------------------------------------------------------------------\n 🧪 ${chalk.green(
+    `${ansis.hex('#ff845e')(
+      `------------------------------------------------------------------\n 🧪 ${ansis.green(
         'Experimental Feature',
       )} 🧪\n------------------------------------------------------------------`,
     )}`,
@@ -38,7 +38,7 @@ export const printTaskEpilogue = (command, description, topicId) => {
   console.log(getEpilogue(command, description, topicId, false))
 
   console.log(
-    `${chalk.hex('#ff845e')(
+    `${ansis.hex('#ff845e')(
       '------------------------------------------------------------------',
     )}\n`,
   )

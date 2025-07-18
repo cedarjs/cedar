@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import chalk from 'chalk'
 import fse from 'fs-extra'
 import { rimraf } from 'rimraf'
 import { hideBin } from 'yargs/helpers'
@@ -23,6 +22,8 @@ import {
   ExecaError,
   exec,
 } from './util'
+
+const ansis = require('ansis')
 
 const args = yargs(hideBin(process.argv))
   .usage('Usage: $0 [option]')
@@ -216,7 +217,7 @@ function skipFn(startStep: string, currentStep: string) {
 
 if (resume) {
   console.error(
-    chalk.red.bold(
+    ansis.red.bold(
       '\n`resume` option is not supported yet. ' +
         'Please use `resumePath` instead.\n',
     ),
@@ -227,7 +228,7 @@ if (resume) {
 
 if (resumePath && !fs.existsSync(path.join(resumePath, 'redwood.toml'))) {
   console.error(
-    chalk.red.bold(
+    ansis.red.bold(
       `
       No redwood.toml file found at the given path: ${resumePath}
       `,

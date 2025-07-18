@@ -20,8 +20,8 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
+    "ansis": "4.1.0",
     "boxen": "5.1.2",
-    "chalk": "4.1.2",
     "enquirer": "2.4.1",
     "stdout-update": "1.6.8"
   },

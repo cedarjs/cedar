@@ -1,6 +1,6 @@
 import path from 'path'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import chokidar from 'chokidar'
 import dotenv from 'dotenv'
 
@@ -31,7 +31,7 @@ if (!process.env.REDWOOD_ENV_FILES_LOADED) {
 
 async function buildAndServe(options: BuildAndRestartOptions) {
   const buildTs = Date.now()
-  console.log(chalk.dim.italic('Building...'))
+  console.log(ansis.dim.italic('Building...'))
 
   if (options.clean) {
     await cleanApiBuild()
@@ -45,7 +45,7 @@ async function buildAndServe(options: BuildAndRestartOptions) {
 
   await serverManager.restartApiServer()
 
-  console.log(chalk.dim.italic('Took ' + (Date.now() - buildTs) + ' ms'))
+  console.log(ansis.dim.italic('Took ' + (Date.now() - buildTs) + ' ms'))
 }
 
 const buildManager = new BuildManager(buildAndServe)
@@ -57,10 +57,10 @@ async function validateSdls() {
   } catch (e: any) {
     serverManager.killApiServer()
     console.error(
-      chalk.redBright(`[GQL Server Error] - Schema validation failed`),
+      ansis.redBright(`[GQL Server Error] - Schema validation failed`),
     )
-    console.error(chalk.red(e?.message))
-    console.error(chalk.redBright('-'.repeat(40)))
+    console.error(ansis.red(e?.message))
+    console.error(ansis.redBright('-'.repeat(40)))
 
     buildManager.cancelScheduledBuild()
     return false
@@ -127,7 +127,7 @@ chokidar
     }
 
     console.log(
-      chalk.dim(`[${eventName}] ${filePath.replace(rwjsPaths.api.base, '')}`),
+      ansis.dim(`[${eventName}] ${filePath.replace(rwjsPaths.api.base, '')}`),
     )
 
     buildManager.cancelScheduledBuild()

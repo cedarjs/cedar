@@ -5,11 +5,12 @@ import { types } from '@babel/core'
 import type { ParserPlugin } from '@babel/parser'
 import { parse as babelParse } from '@babel/parser'
 import traverse from '@babel/traverse'
-import chalk from 'chalk'
 
 import { getPaths } from '@cedarjs/project-config'
 
 import { isFileInsideFolder } from './files'
+
+const ansis = require('ansis')
 
 export const fileToAst = (filePath: string): types.Node => {
   const code = fs.readFileSync(filePath, 'utf-8')
@@ -32,7 +33,7 @@ export const fileToAst = (filePath: string): types.Node => {
       plugins,
     })
   } catch (e: any) {
-    console.error(chalk.red(`Error parsing: ${filePath}`))
+    console.error(ansis.red(`Error parsing: ${filePath}`))
     console.error(e)
     throw new Error(e?.message) // we throw, so typescript doesn't complain about returning
   }

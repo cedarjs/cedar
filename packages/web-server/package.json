@@ -27,7 +27,7 @@
   "dependencies": {
     "@cedarjs/fastify-web": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "chalk": "4.1.2",
+    "ansis": "4.1.0",
     "dotenv-defaults": "5.0.2",
     "fastify": "5.4.0",
     "fs-extra": "11.2.0",
