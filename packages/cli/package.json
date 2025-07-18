@@ -40,7 +40,7 @@
     "@cedarjs/structure": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
-    "@listr2/prompt-adapter-enquirer": "2.0.12",
+    "@listr2/prompt-adapter-enquirer": "2.0.16",
     "@opentelemetry/api": "1.8.0",
     "@opentelemetry/core": "1.22.0",
     "@opentelemetry/exporter-trace-otlp-http": "0.49.1",

@@ -2722,7 +2722,7 @@ __metadata:
     "@cedarjs/structure": "workspace:*"
     "@cedarjs/telemetry": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
-    "@listr2/prompt-adapter-enquirer": "npm:2.0.12"
+    "@listr2/prompt-adapter-enquirer": "npm:2.0.16"
     "@opentelemetry/api": "npm:1.8.0"
     "@opentelemetry/core": "npm:1.22.0"
     "@opentelemetry/exporter-trace-otlp-http": "npm:0.49.1"
@@ -7123,12 +7123,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@listr2/prompt-adapter-enquirer@npm:2.0.12":
-  version: 2.0.12
-  resolution: "@listr2/prompt-adapter-enquirer@npm:2.0.12"
+"@listr2/prompt-adapter-enquirer@npm:2.0.16":
+  version: 2.0.16
+  resolution: "@listr2/prompt-adapter-enquirer@npm:2.0.16"
   peerDependencies:
     enquirer: ">= 2.3.0 < 3"
-  checksum: 10c0/53bfaac3b71560f009d94dfb107ed00fb9ea36d17ab1ae57680f330f88656e8a836839bb8cdc85478b4e173fb4d9b863097ab1b5d5912d6f0c6cc906cc311606
+  checksum: 10c0/f93c4eb433525d5ce8ea7ff75902ab1f074665b4a6a58388b44c843fc7c8c43c3b3e2ef0c2293534a2f1e7b62f1ae901047feec4028ce2f6a704a466289d3efc
   languageName: node
   linkType: hard
 
