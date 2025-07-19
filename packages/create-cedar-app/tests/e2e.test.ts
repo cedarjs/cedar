@@ -1,14 +1,23 @@
 /* eslint-env node */
 
+import path from 'node:path'
+
 import { describe, test, expect, it } from 'vitest'
 import { cd, fs, $ } from 'zx'
 
 if (!process.env.PROJECT_PATH) {
   throw new Error('PROJECT_PATH environment variable is not set')
 }
-const projectPath = await fs.realpath(process.env.PROJECT_PATH)
 
+const projectPath = await fs.realpath(process.env.PROJECT_PATH)
 cd(projectPath)
+console.log('>> projectPath: ', {
+  projectPath,
+  snapshotFile: path.join(
+    projectPath,
+    './tests/snapshots/create-cedar-app.out',
+  ),
+})
 
 describe('create-cedar-app', () => {
   test('--help', async () => {
@@ -56,7 +65,7 @@ describe('create-cedar-app', () => {
     // `.yarnrc.yml` which is necessary for configuring a proper install.
     const p = await $`yarn create-cedar-app ./cedar-app --no-yarn-install --yes`
     const expected = await fs.readFile(
-      './tests/snapshots/create-cedar-app.out',
+      path.join(projectPath, './tests/snapshots/create-cedar-app.out'),
       'utf8',
     )
 
