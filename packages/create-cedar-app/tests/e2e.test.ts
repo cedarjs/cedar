@@ -1,6 +1,7 @@
 /* eslint-env node */
 
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { describe, test, expect, it } from 'vitest'
 import { cd, fs, $ } from 'zx'
@@ -10,13 +11,13 @@ if (!process.env.PROJECT_PATH) {
 }
 
 const projectPath = await fs.realpath(process.env.PROJECT_PATH)
+const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots', import.meta.url))
+
 cd(projectPath)
 console.log('>> projectPath: ', {
+  SNAPSHOT_DIR,
   projectPath,
-  snapshotFile: path.join(
-    projectPath,
-    './tests/snapshots/create-cedar-app.out',
-  ),
+  snapshotFile: path.join(SNAPSHOT_DIR, 'create-cedar-app.out'),
 })
 
 describe('create-cedar-app', () => {
@@ -65,7 +66,7 @@ describe('create-cedar-app', () => {
     // `.yarnrc.yml` which is necessary for configuring a proper install.
     const p = await $`yarn create-cedar-app ./cedar-app --no-yarn-install --yes`
     const expected = await fs.readFile(
-      path.join(projectPath, './tests/snapshots/create-cedar-app.out'),
+      path.join(SNAPSHOT_DIR, 'create-cedar-app.out'),
       'utf8',
     )
 
