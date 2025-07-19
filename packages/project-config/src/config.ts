@@ -73,6 +73,14 @@ interface StudioConfig {
   graphiql?: GraphiQLStudioConfig
 }
 
+type Sides = Record<
+  string,
+  {
+    workspace: string
+    devScript: string
+  }
+>
+
 export interface Config {
   web: BrowserTargetConfig
   api: NodeTargetConfig
@@ -104,6 +112,9 @@ export interface Config {
     cli: {
       autoInstall: boolean
       plugins: CLIPlugin[]
+      dev: {
+        defaultSides: string[]
+      }
     }
     useSDLCodeGenForGraphQLTypes: boolean
     streamingSsr: {
@@ -119,6 +130,7 @@ export interface Config {
       enabled: boolean
       lintOnly: boolean
     }
+    sides: Sides
   }
 }
 
@@ -190,6 +202,9 @@ const DEFAULT_CONFIG: Config = {
           package: '@cedarjs/cli-data-migrate',
         },
       ],
+      dev: {
+        defaultSides: [],
+      },
     },
     useSDLCodeGenForGraphQLTypes: false,
     streamingSsr: {
@@ -205,6 +220,7 @@ const DEFAULT_CONFIG: Config = {
       enabled: false,
       lintOnly: false,
     },
+    sides: {},
   },
 }
 

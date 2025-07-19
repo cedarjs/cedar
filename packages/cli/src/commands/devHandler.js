@@ -193,23 +193,34 @@ export const handler = async ({
         NODE_ENV: 'development',
         NODE_OPTIONS: getDevNodeOptions(),
       },
-      prefixColor: 'cyan',
       runWhen: () => fs.existsSync(rwjsPaths.api.src),
     },
     web: {
       name: 'web',
       command: webCommand,
-      prefixColor: 'blue',
       cwd: rwjsPaths.web.base,
       runWhen: () => fs.existsSync(rwjsPaths.web.src),
     },
     gen: {
       name: 'gen',
       command: 'yarn rw-gen-watch',
-      prefixColor: 'green',
       runWhen: () => generate,
     },
   }
+
+  side
+    .filter((sideName) => sideName !== 'api' && sideName !== 'web')
+    .forEach((sideName) => {
+      const sideConfig = getConfig().experimental.sides[sideName]
+
+      if (sideConfig) {
+        jobs[sideName] = {
+          name: sideName,
+          command: `yarn workspace ${sideConfig.workspace} run ${sideConfig.devScript}`,
+          runWhen: () => true,
+        }
+      }
+    })
 
   // TODO: Convert jobs to an array and supply cwd command.
   const { result } = concurrently(
@@ -224,6 +235,7 @@ export const handler = async ({
       prefix: '{name} |',
       timestampFormat: 'HH:mm:ss',
       handleInput: true,
+      prefixColors: 'auto',
     },
   )
   result.catch((e) => {
