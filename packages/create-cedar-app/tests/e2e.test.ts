@@ -56,7 +56,7 @@ describe('create-cedar-app', () => {
     // `.yarnrc.yml` which is necessary for configuring a proper install.
     const p = await $`yarn create-cedar-app ./cedar-app --no-yarn-install --yes`
     const expected = await fs.readFile(
-      'tests/snapshots/create-cedar-app.out',
+      './tests/snapshots/create-cedar-app.out',
       'utf8',
     )
 
