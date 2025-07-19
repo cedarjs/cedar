@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
-  },
-  "include": ["src", "ambient.d.ts"]
-}

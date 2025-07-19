@@ -45,7 +45,9 @@
   "scripts": {
     "build": "tsx build.ts && yarn build:types",
     "build:pack": "yarn pack -o storybook-framework-cedarjs.tgz",
-    "build:types": "tsc --build --verbose"
+    "build:types": "tsc --build --verbose",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
   },
   "dependencies": {
     "@cedarjs/testing": "workspace:*",
@@ -63,7 +65,8 @@
     "@types/node": "20.17.10",
     "tsx": "4.20.3",
     "typescript": "5.6.2",
-    "vite": "5.4.19"
+    "vite": "5.4.19",
+    "vitest": "3.2.4"
   },
   "peerDependencies": {
     "@cedarjs/project-config": "workspace:*",
