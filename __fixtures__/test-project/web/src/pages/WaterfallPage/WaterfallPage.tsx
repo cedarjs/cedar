@@ -7,5 +7,4 @@ type WaterfallPageProps = {
 const WaterfallPage = ({ id }: WaterfallPageProps) => (
   <WaterfallBlogPostCell id={id} />
 )
-
 export default WaterfallPage

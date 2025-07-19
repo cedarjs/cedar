@@ -30,6 +30,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@babel/preset-typescript": "7.27.1",
     "@babel/runtime-corejs3": "7.27.6",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
@@ -62,6 +63,7 @@
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",
     "envinfo": "7.14.0",
+    "esbuild": "0.25.0",
     "execa": "5.1.1",
     "fast-glob": "3.3.3",
     "fs-extra": "11.2.0",

@@ -3,8 +3,8 @@ import type { APIGatewayProxyEvent, Context } from 'aws-lambda'
 import { DbAuthHandler } from '@cedarjs/auth-dbauth-api'
 import type { DbAuthHandlerOptions, UserType } from '@cedarjs/auth-dbauth-api'
 
-import { cookieName } from 'src/lib/auth'
-import { db } from 'src/lib/db'
+import { cookieName } from 'src/lib/auth.js'
+import { db } from 'src/lib/db.js'
 
 export const handler = async (
   event: APIGatewayProxyEvent,

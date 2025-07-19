@@ -1,11 +1,11 @@
-const { getSchema } = require('@prisma/internals')
+import { getSchema } from '@prisma/internals'
 
-const { getPaths } = require('@cedarjs/project-config')
+import { getPaths } from '@cedarjs/project-config'
 
-const {
+import {
   getDefaultDb,
   checkAndReplaceDirectUrl,
-} = require('../../../dist/api/directUrlHelpers')
+} from '../../../dist/api/directUrlHelpers.js'
 
 const rwjsPaths = getPaths()
 
@@ -39,7 +39,9 @@ module.exports = async function () {
       shell: true,
       env: {
         DATABASE_URL: process.env.DATABASE_URL,
-        [directUrlEnvVar]: process.env[directUrlEnvVar],
+        ...(directUrlEnvVar
+          ? { [directUrlEnvVar]: process.env[directUrlEnvVar] }
+          : {}),
       },
     })
   }

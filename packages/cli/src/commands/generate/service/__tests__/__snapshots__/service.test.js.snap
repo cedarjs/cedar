@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`in javascript mode > creates a multi word service file 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const userProfiles = () => {
   return db.userProfile.findMany()
@@ -171,7 +171,7 @@ describe('scalarTypes', () => {
 `;
 
 exports[`in javascript mode > creates a single word service file 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -214,7 +214,7 @@ export const User = {
 `;
 
 exports[`in javascript mode > creates a single word service file with CRUD actions 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const posts = () => {
   return db.post.findMany()
@@ -254,7 +254,7 @@ export const Post = {
 `;
 
 exports[`in javascript mode > creates a single word service file with a belongsTo relation 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -275,7 +275,7 @@ export const User = {
 `;
 
 exports[`in javascript mode > creates a single word service file with a hasMany relation 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -296,7 +296,7 @@ export const User = {
 `;
 
 exports[`in javascript mode > creates a single word service file with multiple relations 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -385,7 +385,7 @@ exports[`in typescript mode > creates a multi word service file 1`] = `
   UserProfileRelationResolvers,
 } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const userProfiles: QueryResolvers['userProfiles'] = () => {
   return db.userProfile.findMany()
@@ -576,7 +576,7 @@ exports[`in typescript mode > creates a single word service file 1`] = `
   UserRelationResolvers,
 } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()
@@ -625,7 +625,7 @@ exports[`in typescript mode > creates a single word service file with CRUD actio
   PostRelationResolvers,
 } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const posts: QueryResolvers['posts'] = () => {
   return db.post.findMany()
@@ -667,7 +667,7 @@ export const Post: PostRelationResolvers = {
 exports[`in typescript mode > creates a single word service file with a belongsTo relation 1`] = `
 "import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()
@@ -690,7 +690,7 @@ export const User: UserRelationResolvers = {
 exports[`in typescript mode > creates a single word service file with a hasMany relation 1`] = `
 "import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()
@@ -713,7 +713,7 @@ export const User: UserRelationResolvers = {
 exports[`in typescript mode > creates a single word service file with multiple relations 1`] = `
 "import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()

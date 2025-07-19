@@ -107,7 +107,7 @@ describe('users', () => {
 
 exports[`handler > can be called with PascalCase model name 4`] = `
 {
-  "fileContent": "import { db } from 'src/lib/db'
+  "fileContent": "import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -259,7 +259,7 @@ describe('customDatums', () => {
 
 exports[`handler > can be called with PascalCase model name 8`] = `
 {
-  "fileContent": "import { db } from 'src/lib/db'
+  "fileContent": "import { db } from 'src/lib/db.js'
 
 export const customDatums = () => {
   return db.customData.findMany()
@@ -401,7 +401,7 @@ describe('users', () => {
 
 exports[`handler > can be called with camelCase model name 4`] = `
 {
-  "fileContent": "import { db } from 'src/lib/db'
+  "fileContent": "import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -553,7 +553,7 @@ describe('customDatums', () => {
 
 exports[`handler > can be called with camelCase model name 8`] = `
 {
-  "fileContent": "import { db } from 'src/lib/db'
+  "fileContent": "import { db } from 'src/lib/db.js'
 
 export const customDatums = () => {
   return db.customData.findMany()

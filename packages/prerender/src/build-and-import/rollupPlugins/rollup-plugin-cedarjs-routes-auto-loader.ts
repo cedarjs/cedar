@@ -81,7 +81,7 @@ export function cedarjsRoutesAutoLoaderPlugin({
     )
   }
 
-  const filter = createFilter(['**/Routes.{tsx,jsx,js,ts}'])
+  const filter = createFilter(['**/src/Routes.{tsx,jsx,js,ts}'])
 
   return {
     name: 'cedarjs-routes-auto-loader',

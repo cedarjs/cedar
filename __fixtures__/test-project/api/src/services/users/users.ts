@@ -1,6 +1,6 @@
 import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export {}
 

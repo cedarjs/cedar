@@ -34,7 +34,7 @@ export * from './components/MetaTags.js'
 export * from './components/Metadata.js'
 import * as helmetPkg from 'react-helmet-async'
 
-const { Helmet } = helmetPkg
+const { Helmet } = helmetPkg.default || helmetPkg
 export { Helmet as Head, Helmet }
 
 export * from './components/htmlTags.js'

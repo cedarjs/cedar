@@ -26,7 +26,6 @@ describe('TS template', () => {
         "/api",
         "/api/db",
         "/api/db/schema.prisma",
-        "/api/jest.config.js",
         "/api/package.json",
         "/api/src",
         "/api/src/directives",
@@ -47,18 +46,18 @@ describe('TS template', () => {
         "/api/src/services",
         "/api/src/services/.keep",
         "/api/tsconfig.json",
+        "/api/vitest.config.ts",
         "/gitignore.template",
-        "/graphql.config.js",
-        "/jest.config.js",
+        "/graphql.config.cjs",
         "/package.json",
-        "/prettier.config.js",
+        "/prettier.config.cjs",
         "/redwood.toml",
         "/scripts",
         "/scripts/.keep",
         "/scripts/seed.ts",
         "/scripts/tsconfig.json",
+        "/vitest.config.ts",
         "/web",
-        "/web/jest.config.js",
         "/web/package.json",
         "/web/public",
         "/web/public/README.md",
@@ -81,6 +80,7 @@ describe('TS template', () => {
         "/web/src/pages/NotFoundPage/NotFoundPage.tsx",
         "/web/tsconfig.json",
         "/web/vite.config.ts",
+        "/web/vitest.setup.ts",
       ]
     `)
   })
@@ -108,7 +108,6 @@ describe('JS template', () => {
         "/api",
         "/api/db",
         "/api/db/schema.prisma",
-        "/api/jest.config.js",
         "/api/jsconfig.json",
         "/api/package.json",
         "/api/src",
@@ -129,18 +128,18 @@ describe('JS template', () => {
         "/api/src/lib/logger.js",
         "/api/src/services",
         "/api/src/services/.keep",
+        "/api/vitest.config.js",
         "/gitignore.template",
-        "/graphql.config.js",
-        "/jest.config.js",
+        "/graphql.config.cjs",
         "/package.json",
-        "/prettier.config.js",
+        "/prettier.config.cjs",
         "/redwood.toml",
         "/scripts",
         "/scripts/.keep",
         "/scripts/jsconfig.json",
         "/scripts/seed.js",
+        "/vitest.config.mjs",
         "/web",
-        "/web/jest.config.js",
         "/web/jsconfig.json",
         "/web/package.json",
         "/web/public",
@@ -163,15 +162,18 @@ describe('JS template', () => {
         "/web/src/pages/NotFoundPage",
         "/web/src/pages/NotFoundPage/NotFoundPage.jsx",
         "/web/vite.config.js",
+        "/web/vitest.setup.js",
       ]
     `)
   })
 })
 
 /**
- * Used to get the directory structure of the CRWA templates for snapshot testing.
+ * Used to get the directory structure of the create-cedar-app templates for
+ * snapshot testing.
  *
- * Between CI and our branch strategy, this function has to handle some edge cases:
+ * Between CI and our branch strategy, this function has to handle some edge
+ * cases:
  *
  * - the yarn lint edge case
  *
@@ -182,7 +184,7 @@ describe('JS template', () => {
  *
  * - the yarn.lock edge case
  *
- *   When we release , we add lock files to the templates to speed up yarn install.
+ *   When we release, we add lock files to the templates to speed up yarn install.
  *   We remove these lock files after releasing.
  *   But before we release, we run all our unit tests, so these test sees an extra file and fails.
  *   While introduces a blind spot (if a lock file gets added, it won't be caught), that's the tradeoff we're making.

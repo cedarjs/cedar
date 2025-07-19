@@ -4,7 +4,7 @@ import type {
   PostRelationResolvers,
 } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const posts: QueryResolvers['posts'] = () => {
   return db.post.findMany()

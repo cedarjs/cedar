@@ -125,7 +125,7 @@ export const getWebSideOverrides = (
     // Automatically import files in `./web/src/pages/*` in to
     // the `./web/src/Routes.[ts|jsx]` file.
     {
-      test: /Routes.(js|tsx|jsx)$/,
+      test: /src\/Routes.(js|tsx|jsx)$/,
       plugins: [
         [
           require('./plugins/babel-plugin-redwood-routes-auto-loader').default,

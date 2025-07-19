@@ -182,7 +182,9 @@ module.exports = {
         'babel.config.js',
         '.eslintrc.js',
         '*.config.js',
+        '*.config.cjs',
         'jest.setup.js',
+        'jest.setup.cjs',
       ],
       env: {
         node: true,

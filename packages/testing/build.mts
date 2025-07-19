@@ -1,8 +1,12 @@
 import fs from 'node:fs'
 
-import { buildCjs, buildEsm } from '@cedarjs/framework-tools'
 import {
-  generateTypesCjs,
+  build,
+  defaultBuildOptions,
+  defaultIgnorePatterns,
+  buildEsm,
+} from '@cedarjs/framework-tools'
+import {
   generateTypesEsm,
   insertCommonJsPackageJson,
 } from '@cedarjs/framework-tools/generateTypes'
@@ -10,8 +14,20 @@ import {
 await buildEsm()
 await generateTypesEsm()
 
-await buildCjs()
-await generateTypesCjs()
+// CJS Build
+await build({
+  entryPointOptions: {
+    ignore: [...defaultIgnorePatterns, '**/globRoutesImporter.ts'],
+  },
+  buildOptions: {
+    ...defaultBuildOptions,
+    tsconfig: 'tsconfig.cjs.json',
+    outdir: 'dist/cjs',
+  },
+})
+// Skipping this for now. Need to decide if I should support both ESM and CJS
+// projects once ESM support is done or not
+// await generateTypesCjs()
 await insertCommonJsPackageJson({
   buildFileUrl: import.meta.url,
 })

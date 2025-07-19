@@ -65,6 +65,7 @@
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
+    "@cedarjs/testing": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "@swc/core": "1.12.1",
     "@vitejs/plugin-react": "4.3.4",

@@ -15,7 +15,7 @@ import {
 
 export async function runScriptFunction({
   path: scriptPath,
-  functionName,
+  functionName = 'default',
   args,
 }) {
   // Setting 'production' here mainly to silence some Prisma output they have in

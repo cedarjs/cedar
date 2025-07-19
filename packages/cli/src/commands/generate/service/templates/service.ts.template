@@ -1,6 +1,6 @@
 import type { QueryResolvers<% if (crud) { %>, MutationResolvers<% } %><% if (relations.length) { %>, ${singularPascalName}RelationResolvers<% } %> } from 'types/graphql'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const ${pluralCamelName}: QueryResolvers['${pluralCamelName}'] = () => {
   return db.${singularCamelName}.findMany()
