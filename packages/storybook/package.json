@@ -60,7 +60,7 @@
     "vite-plugin-node-polyfills": "0.23.0"
   },
   "devDependencies": {
-    "@types/node": "20.17.10",
+    "@types/node": "22.16.5",
     "tsx": "4.20.3",
     "typescript": "5.6.2",
     "vite": "5.4.19"
@@ -73,7 +73,7 @@
     "storybook": "7.6.20"
   },
   "engines": {
-    "node": "=20.x"
+    "node": "=22.17.1"
   },
   "publishConfig": {
     "access": "public"
