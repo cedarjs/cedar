@@ -1,6 +1,6 @@
 import path from 'path'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import Fastify from 'fastify'
 import fs from 'fs-extra'
 
@@ -11,7 +11,7 @@ import type { ParsedOptions } from './types'
 
 export async function serveWeb(options: ParsedOptions = {}) {
   const start = Date.now()
-  console.log(chalk.dim.italic('Starting Web Server...'))
+  console.log(ansis.dim.italic('Starting Web Server...'))
 
   const distIndexExists = await fs.pathExists(
     path.join(getPaths().web.dist, 'index.html'),
@@ -53,6 +53,6 @@ export async function serveWeb(options: ParsedOptions = {}) {
     host: options.host,
   })
 
-  console.log(chalk.dim.italic('Took ' + (Date.now() - start) + ' ms'))
-  console.log(`Web server listening at ${chalk.green(address)}`)
+  console.log(ansis.dim.italic('Took ' + (Date.now() - start) + ' ms'))
+  console.log(`Web server listening at ${ansis.green(address)}`)
 }

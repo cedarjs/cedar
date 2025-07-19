@@ -1,7 +1,7 @@
 import path from 'path'
 
+import ansis from 'ansis'
 import boxen from 'boxen'
-import chalk from 'chalk'
 import { config } from 'dotenv-defaults'
 import execa from 'execa'
 import fs from 'fs-extra'
@@ -110,7 +110,7 @@ export const handler = async (yargs) => {
     await tasks.run()
 
     if (yargs.firstRun) {
-      const SETUP_MARKER = chalk.bgBlue(chalk.black('First Setup '))
+      const SETUP_MARKER = ansis.bgBlue.black('First Setup ')
       console.log()
 
       console.log(SETUP_MARKER, c.success('Starting first setup wizard...'))

@@ -3,7 +3,6 @@
 import fs from 'fs'
 import path from 'path'
 
-import chalk from 'chalk'
 import chokidar from 'chokidar'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -32,6 +31,8 @@ import {
   mirrorPathForDirectoryNamedModules,
   mirrorPathForCell,
 } from './typeDefinitions'
+
+const ansis = require('ansis')
 
 const rwjsPaths = getPaths()
 
@@ -83,7 +84,7 @@ watcher
   })
   .on('all', async (eventName, p) => {
     cliLogger.trace(
-      `File system change: ${chalk.magenta(eventName)} ${chalk.dim(p)}`,
+      `File system change: ${ansis.magenta(eventName)} ${ansis.dim(p)}`,
     )
     if (!['add', 'change', 'unlink'].includes(eventName)) {
       return
@@ -97,8 +98,8 @@ watcher
       cliLogger.debug(
         action[eventTigger],
         type + ':',
-        chalk.dim(p),
-        chalk.dim.italic(Date.now() - start + ' ms'),
+        ansis.dim(p),
+        ansis.dim.italic(Date.now() - start + ' ms'),
       )
 
     if (absPath.includes('Cell') && isCellFile(absPath)) {

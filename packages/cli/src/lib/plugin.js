@@ -1,6 +1,6 @@
 import path from 'path'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import enquirer from 'enquirer'
 import fs from 'fs-extra'
 
@@ -139,7 +139,7 @@ export function checkPluginListAndWarn(plugins) {
   for (const plugin of plugins) {
     if (!plugin.package) {
       console.warn(
-        chalk.yellow(`⚠️  A plugin is missing a package, it cannot be loaded.`),
+        ansis.yellow(`⚠️  A plugin is missing a package, it cannot be loaded.`),
       )
     }
   }
@@ -150,7 +150,7 @@ export function checkPluginListAndWarn(plugins) {
     .filter((p) => p !== undefined)
   if (pluginPackages.length !== new Set(pluginPackages).size) {
     console.warn(
-      chalk.yellow(
+      ansis.yellow(
         '⚠️  Duplicate plugin packages found in redwood.toml, duplicates will be ignored.',
       ),
     )
@@ -161,7 +161,7 @@ export function checkPluginListAndWarn(plugins) {
   namespaces.forEach((ns) => {
     if (ns !== undefined && !ns.startsWith('@')) {
       console.warn(
-        chalk.yellow(
+        ansis.yellow(
           `⚠️  Plugin "${ns}" is missing a scope/namespace, it will not be loaded.`,
         ),
       )
@@ -190,7 +190,7 @@ export async function loadPluginPackage(
 
   if (!autoInstall) {
     console.warn(
-      chalk.yellow(
+      ansis.yellow(
         `⚠️  Plugin "${packageName}" cannot be loaded because it is not installed and "autoInstall" is disabled.`,
       ),
     )
@@ -198,7 +198,7 @@ export async function loadPluginPackage(
   }
 
   // Attempt to install the plugin
-  console.log(chalk.green(`Installing plugin "${packageName}"...`))
+  console.log(ansis.green(`Installing plugin "${packageName}"...`))
   const installed = await installPluginPackage(packageName, packageVersion)
   if (installed) {
     return await import(packageName)
@@ -229,7 +229,7 @@ async function installPluginPackage(packageName, packageVersion) {
       )
       versionToInstall = compatibilityData.compatible.version
       console.log(
-        chalk.green(
+        ansis.green(
           `Installing the latest compatible version: ${versionToInstall}`,
         ),
       )

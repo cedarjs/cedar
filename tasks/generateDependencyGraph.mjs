@@ -8,7 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import { default as enquirer } from 'enquirer'
 
 const rootDir = fileURLToPath(new URL('../', import.meta.url))
@@ -81,13 +81,13 @@ async function main() {
   execSync(`${depcruiseCommand} | ${dotCommand}`)
 
   console.log(
-    `Wrote ${chalk.magenta(base)} dependency graph to ${chalk.magenta(
+    `Wrote ${ansis.magenta(base)} dependency graph to ${ansis.magenta(
       outputPath,
     )}`,
   )
 
   if (values.open) {
-    console.log(`Opening ${chalk.magenta(outputPath)}...`)
+    console.log(`Opening ${ansis.magenta(outputPath)}...`)
     execSync(`open ${outputPath}`)
   }
 }

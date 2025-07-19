@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import url from 'node:url'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import type { ExecaChildProcess } from 'execa'
 import execa from 'execa'
 import fg from 'fast-glob'
@@ -85,7 +85,7 @@ const stopServer = async () => {
 }
 
 async function main() {
-  const divider = chalk.blue('~'.repeat(process.stdout.columns))
+  const divider = ansis.blue('~'.repeat(process.stdout.columns))
 
   console.log(`${divider}\nK6 tests\n${divider}`)
   console.log('Benchmark tests will be run in the following directory:')
@@ -226,7 +226,7 @@ async function main() {
         console.log(
           `Running test ${i * API_SERVER_COMMANDS.length + j + 1}/${runForTests.length * API_SERVER_COMMANDS.length}: ${runForTests[i]}`,
         )
-        console.log(chalk.dim(API_SERVER_COMMANDS[j].cmd))
+        console.log(ansis.dim(API_SERVER_COMMANDS[j].cmd))
         console.log(`${divider}`)
 
         // Start the server
@@ -279,11 +279,11 @@ async function main() {
   // Print results
   console.log(`\n${divider}\nResults:\n${divider}`)
   for (const setup in results) {
-    console.log(chalk.bgBlue(`\nSetup: ${setup}`))
+    console.log(ansis.bgBlue(`\nSetup: ${setup}`))
     for (const test in results[setup]) {
       for (const serverCommand in results[setup][test]) {
         const passed = results[setup][test][serverCommand].passed
-        const bgColor = passed ? chalk.bgGreen : chalk.bgRed
+        const bgColor = passed ? ansis.bgGreen : ansis.bgRed
         const bgPrefix = bgColor(' ')
         console.log(passed ? bgColor(' PASS ') : bgColor(' FAIL '))
         console.log(`${bgPrefix} Test: ${test} [${serverCommand}]`)

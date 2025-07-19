@@ -154,7 +154,7 @@ export const fileToAst = (filePath: string): types.Node => {
       plugins,
     })
   } catch (e: any) {
-    // console.error(chalk.red(`Error parsing: ${filePath}`))
+    // console.error(ansis.red(`Error parsing: ${filePath}`))
     console.error(e)
     throw new Error(e?.message) // we throw, so typescript doesn't complain about returning
   }

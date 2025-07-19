@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import execa from 'execa'
 import fg from 'fast-glob'
 import fs from 'fs-extra'
@@ -204,7 +204,7 @@ export function initGit({
 }
 
 export function cleanUp({ projectPath }: { projectPath: string }) {
-  const divider = chalk.blue('~'.repeat(process.stdout.columns))
+  const divider = ansis.blue('~'.repeat(process.stdout.columns))
   console.log(`\n${divider}`)
   console.log('Cleaning up files (may take a few seconds)...')
   if (fs.existsSync(projectPath)) {

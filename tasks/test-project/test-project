@@ -4,7 +4,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const chalk = require('chalk')
+const ansis = require('ansis')
 const execa = require('execa')
 const fse = require('fs-extra')
 const Listr = require('listr2').Listr
@@ -76,7 +76,7 @@ const {
 
 if (rebuildFixture) {
   console.log(
-    chalk.red.bold(
+    ansis.red.bold(
       `
       --rebuildFixture is deprecated. Please run \`yarn rebuild-test-project-fixture\` instead.
       `,
@@ -88,7 +88,7 @@ if (rebuildFixture) {
 // Require 1 and only 1 arg if not rebuildFixture
 if (args._.length > 1) {
   console.log(
-    chalk.red.bold(
+    ansis.red.bold(
       `
       Multiple <project directory> arguments
       Specify ONE project directory outside the framework directory (no spaces allowed)
@@ -99,7 +99,7 @@ if (args._.length > 1) {
   process.exit(1)
 } else if (args._.length < 1) {
   console.log(
-    chalk.red.bold(
+    ansis.red.bold(
       `
       Missing <project directory> argument
       Specify a project directory outside the framework directory
@@ -122,7 +122,7 @@ if (
   !path.isAbsolute(relativePathCheck)
 ) {
   console.log(
-    chalk.red.bold(
+    ansis.red.bold(
       `
       Project Directory CANNOT be a subdirectory of '${RW_FRAMEWORKPATH}'
       Specify a project directory outside the framework directory

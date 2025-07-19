@@ -659,7 +659,7 @@ We also use methods that we want to affect all commands here, like `demandComman
 
 #### lib/colors.js
 
-[colors.js](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/lib/colors.js) provides a declarative way of coloring output to the console using [chalk](https://github.com/chalk/chalk#styles). You'll see it imported like:
+[colors.js](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/lib/colors.js) provides a declarative way of coloring output to the console using [ansis](https://github.com/webdiscus/ansis#styles). You'll see it imported like:
 
 ```javascript
 import c from '../lib/colors'
@@ -685,10 +685,10 @@ Adding a new color is as simple as adding a new property to the default export:
 // ./src/lib/colors.js
 
 export default {
-  error: chalk.bold.red,
-  warning: chalk.keyword('orange'),
-  green: chalk.green,
-  info: chalk.grey,
+  error: ansis.bold.red,
+  warning: ansis.hex('#ffa500'),
+  green: ansis.green,
+  info: ansis.gray,
 }
 ```
 

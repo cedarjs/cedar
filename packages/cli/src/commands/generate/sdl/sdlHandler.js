@@ -1,8 +1,8 @@
 import path from 'path'
 
+import ansis from 'ansis'
 import boxen from 'boxen'
 import camelcase from 'camelcase'
-import chalk from 'chalk'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -35,12 +35,12 @@ const DEFAULT_IGNORE_FIELDS_FOR_INPUT = ['createdAt', 'updatedAt']
 
 const missingIdConsoleMessage = () => {
   const line1 =
-    chalk.bold.yellow('WARNING') +
+    ansis.bold.yellow('WARNING') +
     ': Cannot generate CRUD SDL without an `@id` database column.'
   const line2 = 'If you are trying to generate for a many-to-many join table '
   const line3 = "you'll need to update your schema definition to include"
   const line4 = 'an `@id` column. Read more here: '
-  const line5 = chalk.underline.blue(
+  const line5 = ansis.underline.blue(
     'https://redwoodjs.com/docs/schema-relations',
   )
 

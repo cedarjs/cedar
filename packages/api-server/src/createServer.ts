@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import { config } from 'dotenv-defaults'
 import fg from 'fast-glob'
 import fastify from 'fastify'
@@ -81,7 +81,7 @@ export async function createServer(options: CreateServerOptions = {}) {
 
   if (fs.existsSync(serverConfigPath)) {
     console.warn(
-      chalk.yellow(
+      ansis.yellow(
         [
           '',
           `Ignoring \`config\` and \`configureServer\` in api/server.config.js.`,
@@ -155,7 +155,7 @@ export async function createServer(options: CreateServerOptions = {}) {
 
   server.addHook('onListen', (done) => {
     console.log(
-      `Server listening at ${chalk.magenta(
+      `Server listening at ${ansis.magenta(
         `${server.listeningOrigin}${apiRootPath}`,
       )}`,
     )

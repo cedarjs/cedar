@@ -1,14 +1,24 @@
 /* eslint-env node */
 
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import { describe, test, expect, it } from 'vitest'
 import { cd, fs, $ } from 'zx'
 
 if (!process.env.PROJECT_PATH) {
   throw new Error('PROJECT_PATH environment variable is not set')
 }
+
 const projectPath = await fs.realpath(process.env.PROJECT_PATH)
+const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots', import.meta.url))
 
 cd(projectPath)
+console.log('>> projectPath: ', {
+  SNAPSHOT_DIR,
+  projectPath,
+  snapshotFile: path.join(SNAPSHOT_DIR, 'create-cedar-app.out'),
+})
 
 describe('create-cedar-app', () => {
   test('--help', async () => {
@@ -55,41 +65,13 @@ describe('create-cedar-app', () => {
     // generating types, is also flakey since `yarn pack` seems to skip
     // `.yarnrc.yml` which is necessary for configuring a proper install.
     const p = await $`yarn create-cedar-app ./cedar-app --no-yarn-install --yes`
+    const expected = await fs.readFile(
+      path.join(SNAPSHOT_DIR, 'create-cedar-app.out'),
+      'utf8',
+    )
 
     expect(p.exitCode).toEqual(0)
-    expect(p.stdout).toMatchInlineSnapshot(`
-      "
-      🌲🌲🌲🌲🌲
-      🌲🌲
-      🌲🌲  Welcome to CedarJS!
-      🌲🌲
-      🌲🌲🌲🌲🌲
-
-      [?25l⠋ Checking node and yarn compatibility
-      [?25h[?25l✔ Compatibility checks passed
-      [?25h✔ Creating your CedarJS app in ./cedar-app based on command line argument
-      ✔ Using TypeScript based on command line flag
-      ✔ Will initialize a git repo based on command line flag
-      ✔ Will not run yarn install based on command line flag
-      [?25l⠋ Creating project files
-      [?25h[?25l✔ Project files created
-      [?25hℹ Skipped yarn install step
-      [?25l⠋ Initializing a git repo
-      [?25h[?25l✔ Initialized a git repo with commit message "Initial commit"
-      [?25h
-      Thanks for trying out CedarJS!
-
-       ⚡️ Get up and running fast with this Quick Start guide: https://redwoodjs.com/quick-start
-
-      Fire it up! 🚀
-
-       > cd cedar-app
-       > yarn install
-       > yarn rw dev
-
-      [?25l✔ Initialized a git repo with commit message "Initial commit"
-      [?25h"
-    `)
+    expect(p.stdout).toBe(expected)
     expect(p.stderr).toMatchInlineSnapshot(
       `"[?25l[?25h[?25l[?25h[?25l[?25h[?25l[?25h[?25l[?25h[?25l[?25h[?25l[?25h"`,
     )

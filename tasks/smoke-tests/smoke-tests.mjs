@@ -26,9 +26,10 @@
 import { fileURLToPath } from 'node:url'
 import util from 'node:util'
 
+import ansis from 'ansis'
 import execa from 'execa'
 import prompts from 'prompts'
-import { cd, chalk, fs, path, within, $ } from 'zx'
+import { cd, fs, path, within, $ } from 'zx'
 
 async function main() {
   let options
@@ -44,7 +45,7 @@ async function main() {
 
   for (const smokeTest of smokeTests) {
     console.log(
-      `Running ${chalk.magenta(smokeTest)} smoke test against ${chalk.magenta(
+      `Running ${ansis.magenta(smokeTest)} smoke test against ${ansis.magenta(
         testProjectPath,
       )}\n`,
     )
@@ -82,7 +83,7 @@ async function parseArgs() {
 
   const options = {
     testProjectPath: {
-      description: `Path to the test project. Defaults to the ${chalk.magenta(
+      description: `Path to the test project. Defaults to the ${ansis.magenta(
         'REDWOOD_TEST_PROJECT_PATH',
       )} env var`,
       short: 'p',
@@ -92,7 +93,7 @@ async function parseArgs() {
     },
 
     playwrightOptions: {
-      description: `Options to forward to ${chalk.cyan('npx playwright test')}`,
+      description: `Options to forward to ${ansis.cyan('npx playwright test')}`,
       type: /** @type {const} */ ('string'),
       default: '',
     },
@@ -128,7 +129,7 @@ async function parseArgs() {
 
       throw new Error(
         [
-          chalk.red(`Error: ${unknownOptionMessage}.`),
+          ansis.red(`Error: ${unknownOptionMessage}.`),
           '',
           getHelp(options),
           '',
@@ -151,12 +152,12 @@ async function parseArgs() {
     process.exitCode = 1
     throw new Error(
       [
-        chalk.red('Error: No test project to run smoke tests against.'),
+        ansis.red('Error: No test project to run smoke tests against.'),
         '',
-        `If you haven't generated a test project, do so first: ${chalk.green(
+        `If you haven't generated a test project, do so first: ${ansis.green(
           'yarn build:test-project --link <path>',
         )}.`,
-        `Then set the ${chalk.magenta(
+        `Then set the ${ansis.magenta(
           'REDWOOD_TEST_PROJECT_PATH',
         )} env var to the path of your test project.`,
         '',
@@ -168,22 +169,22 @@ async function parseArgs() {
     // This should never happen. Node's parseArgs should make sure of that.
     // Only have this to make TypeScript happy.
     process.exitCode = 1
-    throw new Error(chalk.red('Error: playwrightOptions must be a string.'))
+    throw new Error(ansis.red('Error: playwrightOptions must be a string.'))
   }
 
   if (!(await fs.exists(testProjectPath))) {
     process.exitCode = 1
     throw new Error(
       [
-        chalk.red("Error: Test project doesn't exist."),
+        ansis.red("Error: Test project doesn't exist."),
         '',
-        `The test project path you specified (${chalk.magenta(
+        `The test project path you specified (${ansis.magenta(
           testProjectPath,
         )}) doesn't exist.`,
-        `Make sure you've generated a test project: ${chalk.green(
+        `Make sure you've generated a test project: ${ansis.green(
           'yarn build:test-project --link <path>',
         )}.`,
-        `Then set the ${chalk.magenta(
+        `Then set the ${ansis.magenta(
           'REDWOOD_TEST_PROJECT_PATH',
         )} env var to the path of your test project.`,
         '',
@@ -215,11 +216,11 @@ async function parseArgs() {
     process.exitCode = 1
     throw new Error(
       [
-        chalk.red(`Error: Invalid smoke test \`${invalidSmokeTest}\`.`),
+        ansis.red(`Error: Invalid smoke test \`${invalidSmokeTest}\`.`),
         '',
         'Available smoke tests:',
         '',
-        ...availableSmokeTests.map((test) => `• ${chalk.green(test)}`),
+        ...availableSmokeTests.map((test) => `• ${ansis.green(test)}`),
         '',
         getHelp(options),
         '',
@@ -233,7 +234,7 @@ async function parseArgs() {
 
   if (!isProjectSyncRunning) {
     console.warn(
-      chalk.yellow(
+      ansis.yellow(
         'Warning: If you want to test against the framework, you must have `yarn rwfw project:sync` running in your test project.',
       ),
     )
@@ -296,12 +297,12 @@ async function parseArgs() {
     process.exitCode = 1
     throw new Error(
       [
-        chalk.red(
+        ansis.red(
           'Error: You must build the test project before running the prerender or serve smoke tests.',
         ),
         '',
-        chalk.green(`  cd ${testProjectPath}`),
-        chalk.green(`  yarn rw build`),
+        ansis.green(`  cd ${testProjectPath}`),
+        ansis.green(`  yarn rw build`),
         '',
       ].join('\n'),
     )
@@ -325,44 +326,44 @@ function getHelp(options) {
     const paddedFlag = name.padEnd(longestOptionLength, ' ')
     return [
       '•',
-      chalk.green(`--${paddedFlag}`),
+      ansis.green(`--${paddedFlag}`),
       config.description,
-      config.default && chalk.dim(`(default: ${config.default})`),
+      config.default && ansis.dim(`(default: ${config.default})`),
     ]
       .filter(Boolean)
       .join(' ')
   })
 
   return [
-    chalk.bold('# 🔄 Smoke tests'),
+    ansis.bold('# 🔄 Smoke tests'),
     '',
     "Use this script to run Redwood's smoke tests locally.",
     '',
-    chalk.bold('## Usage'),
+    ansis.bold('## Usage'),
     '',
-    chalk.green('  yarn smoke-tests [options] [smoke-test..]'),
+    ansis.green('  yarn smoke-tests [options] [smoke-test..]'),
     '',
-    `Make sure you've got a test project. (You can make one via ${chalk.green(
+    `Make sure you've got a test project. (You can make one via ${ansis.green(
       'yarn build:test-project --link <path>',
     )}.)`,
-    `Then set the ${chalk.magenta(
+    `Then set the ${ansis.magenta(
       'REDWOOD_TEST_PROJECT_PATH',
     )} env var to the path of your test project.`,
     '',
-    chalk.dim('  # Let this script prompt you for which smoke test to run'),
-    chalk.cyan('  REDWOOD_TEST_PROJECT_PATH=<path> yarn smoke-tests '),
+    ansis.dim('  # Let this script prompt you for which smoke test to run'),
+    ansis.cyan('  REDWOOD_TEST_PROJECT_PATH=<path> yarn smoke-tests '),
     '',
-    chalk.dim('  # Run the dev smoke test'),
-    chalk.cyan('  REDWOOD_TEST_PROJECT_PATH=<path> yarn smoke-tests dev'),
+    ansis.dim('  # Run the dev smoke test'),
+    ansis.cyan('  REDWOOD_TEST_PROJECT_PATH=<path> yarn smoke-tests dev'),
     '',
-    chalk.dim(
+    ansis.dim(
       '  # Pass flags to `npx playwright test` (see `npx playwright test --help`)',
     ),
-    chalk.cyan(
+    ansis.cyan(
       '  REDWOOD_TEST_PROJECT_PATH=<path> yarn smoke-tests --playwrightOptions="--debug"',
     ),
     '',
-    chalk.bold('## Options'),
+    ansis.bold('## Options'),
     '',
     ...justifiedOptions,
   ].join('\n')

@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
 import { vi, beforeAll, afterAll, afterEach, test, expect } from 'vitest'
 
@@ -75,19 +75,19 @@ test('Returns error message when schema loading fails', async () => {
       [
         'Schema loading failed. Unknown type: "Shelf".',
         '',
-        `  ${chalk.bgYellow(` ${chalk.black.bold('Heads up')} `)}`,
+        `  ${ansis.bgYellow(` ${ansis.black.bold('Heads up')} `)}`,
         '',
-        chalk.yellow(
+        ansis.yellow(
           `  It looks like you have a Shelf model in your Prisma schema.`,
         ),
-        chalk.yellow(
+        ansis.yellow(
           `  If it's part of a relation, you may have to generate SDL or scaffolding for Shelf too.`,
         ),
-        chalk.yellow(
+        ansis.yellow(
           `  So, if you haven't done that yet, ignore this error message and run the SDL or scaffold generator for Shelf now.`,
         ),
         '',
-        chalk.yellow(
+        ansis.yellow(
           `  See the ${terminalLink(
             'Troubleshooting Generators',
             'https://redwoodjs.com/docs/schema-relations#troubleshooting-generators',

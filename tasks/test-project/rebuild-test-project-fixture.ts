@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import chalk from 'chalk'
 import fse from 'fs-extra'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
@@ -24,6 +23,8 @@ import {
   ExecaError,
   exec,
 } from './util'
+
+const ansis = require('ansis')
 
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
@@ -232,7 +233,7 @@ function skipFn(startStep: string, currentStep: string) {
 
 if (resume) {
   console.error(
-    chalk.red.bold(
+    ansis.red.bold(
       '\n`resume` option is not supported yet. ' +
         'Please use `resumePath` instead.\n',
     ),
@@ -243,7 +244,7 @@ if (resume) {
 
 if (resumePath && !fs.existsSync(path.join(resumePath, 'redwood.toml'))) {
   console.error(
-    chalk.red.bold(
+    ansis.red.bold(
       `
       No redwood.toml file found at the given path: ${resumePath}
       `,

@@ -1,4 +1,5 @@
-import { chalk, fs } from 'zx'
+import ansis from 'ansis'
+import { fs } from 'zx'
 
 import {
   getChangesetFilePath,
@@ -21,7 +22,7 @@ async function main() {
   await fs.outputFile(changesetFilePath, placeholder)
   console.log(
     [
-      `📝 Created a changeset at ${chalk.magenta(changesetFilePath)}`,
+      `📝 Created a changeset at ${ansis.magenta(changesetFilePath)}`,
       "   Commit it when you're done and push your branch up to GitHub. Thank you! 🙏",
     ].join('\n'),
   )

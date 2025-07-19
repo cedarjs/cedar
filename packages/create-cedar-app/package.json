@@ -34,7 +34,7 @@
     "@opentelemetry/sdk-trace-node": "1.22.0",
     "@opentelemetry/semantic-conventions": "1.22.0",
     "@types/babel__core": "7.20.5",
-    "chalk": "4.1.2",
+    "ansis": "4.1.0",
     "check-node-version": "4.2.1",
     "ci-info": "4.0.0",
     "envinfo": "7.14.0",

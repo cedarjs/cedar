@@ -1,9 +1,7 @@
-//
-
 import stream from 'stream'
 
+import ansis from 'ansis'
 import boxen from 'boxen'
-import chalk from 'chalk'
 import { prompt as enquirerPrompt } from 'enquirer'
 import { UpdateManager } from 'stdout-update'
 
@@ -11,17 +9,17 @@ import { UpdateManager } from 'stdout-update'
  * A default set of styling for the TUI, designed for a cohesive look and feel around the Redwood CLI, CRWA and vairous plugins
  */
 export const RedwoodStyling = {
-  error: chalk.bold.red,
-  warning: chalk.keyword('orange'),
-  success: chalk.greenBright,
-  info: chalk.grey,
+  error: ansis.bold.red,
+  warning: ansis.hex('#ffa500'),
+  success: ansis.greenBright,
+  info: ansis.gray,
 
-  header: chalk.bold.underline.hex('#e8e8e8'),
-  cmd: chalk.hex('#808080'),
-  redwood: chalk.hex('#ff845e'),
-  love: chalk.redBright,
+  header: ansis.bold.underline.hex('#e8e8e8'),
+  cmd: ansis.hex('#808080'),
+  redwood: ansis.hex('#ff845e'),
+  love: ansis.redBright,
 
-  green: chalk.green,
+  green: ansis.green,
 }
 
 /**
