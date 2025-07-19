@@ -2803,7 +2803,7 @@ __metadata:
     "@types/fs-extra": "npm:11.0.4"
     "@types/jscodeshift": "npm:0.12.0"
     "@types/yargs": "npm:17.0.33"
-    "@vscode/ripgrep": "npm:1.15.9"
+    "@vscode/ripgrep": "npm:1.15.14"
     "@whatwg-node/fetch": "npm:0.9.21"
     cheerio: "npm:1.0.0"
     core-js: "npm:3.42.0"
@@ -12010,14 +12010,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vscode/ripgrep@npm:1.15.9":
-  version: 1.15.9
-  resolution: "@vscode/ripgrep@npm:1.15.9"
+"@vscode/ripgrep@npm:1.15.14":
+  version: 1.15.14
+  resolution: "@vscode/ripgrep@npm:1.15.14"
   dependencies:
     https-proxy-agent: "npm:^7.0.2"
     proxy-from-env: "npm:^1.1.0"
     yauzl: "npm:^2.9.2"
-  checksum: 10c0/4e26172bbe5abb34485c0d95332188890a6ef93d7f20eb300bf126d238c6b1f694ef96e04759b512977f02918dc06b77ef673af5d587e31b44f7da6a7215f3b0
+  checksum: 10c0/3d045d19e18ece54c67cf37f9413053be3d694d553617221724c4885011c34f6a70014d768a66501b7f44b5bd18846b43fb322f0ad799018cbc16d58ebed7e33
   languageName: node
   linkType: hard
 
