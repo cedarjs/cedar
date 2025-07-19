@@ -100,7 +100,7 @@
     "chalk": "4.1.2",
     "core-js": "3.42.0",
     "deepmerge": "4.3.1",
-    "esbuild": "0.25.0",
+    "esbuild": "0.25.8",
     "fast-glob": "3.3.3",
     "fs-extra": "11.2.0",
     "graphql": "16.9.0",
