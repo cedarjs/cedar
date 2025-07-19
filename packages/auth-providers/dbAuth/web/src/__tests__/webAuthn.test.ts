@@ -1,6 +1,6 @@
 import { vi, beforeEach, describe, it, expect } from 'vitest'
 
-import WebAuthnClient from '../webAuthn'
+import WebAuthnClient from '../webAuthn.js'
 
 globalThis.RWJS_API_URL = '/.redwood/functions'
 
@@ -13,7 +13,7 @@ vi.mock('@simplewebauthn/browser', () => {
 })
 
 vi.mock('@whatwg-node/fetch', () => {
-  return
+  return ''
 })
 
 const mockOpen = vi.fn()

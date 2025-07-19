@@ -200,11 +200,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@arethetypeswrong/cli@npm:0.18.1":
-  version: 0.18.1
-  resolution: "@arethetypeswrong/cli@npm:0.18.1"
+"@arethetypeswrong/cli@npm:0.18.2":
+  version: 0.18.2
+  resolution: "@arethetypeswrong/cli@npm:0.18.2"
   dependencies:
-    "@arethetypeswrong/core": "npm:0.18.1"
+    "@arethetypeswrong/core": "npm:0.18.2"
     chalk: "npm:^4.1.2"
     cli-table3: "npm:^0.6.3"
     commander: "npm:^10.0.1"
@@ -213,13 +213,13 @@ __metadata:
     semver: "npm:^7.5.4"
   bin:
     attw: dist/index.js
-  checksum: 10c0/65cb47d9e0564dd5b1312236e620c327215a9717a4e770a36dc6a08b98ad1a699fc29ef8df4878e23cddec14bb00d29719631cb01ea6f73f14b7e09b57eb3dc8
+  checksum: 10c0/15fa8ee8659aa7b163c08f3d739247fe44d838b1aa5cefe125d8c90c03955fbc1e5a7c76885c354ec217a07c8fdcb5f5dc297188cadf626b303b1ae85232c51e
   languageName: node
   linkType: hard
 
-"@arethetypeswrong/core@npm:0.18.1":
-  version: 0.18.1
-  resolution: "@arethetypeswrong/core@npm:0.18.1"
+"@arethetypeswrong/core@npm:0.18.2":
+  version: 0.18.2
+  resolution: "@arethetypeswrong/core@npm:0.18.2"
   dependencies:
     "@andrewbranch/untar.js": "npm:^1.0.3"
     "@loaderkit/resolve": "npm:^1.0.2"
@@ -229,7 +229,7 @@ __metadata:
     semver: "npm:^7.5.4"
     typescript: "npm:5.6.1-rc"
     validate-npm-package-name: "npm:^5.0.0"
-  checksum: 10c0/ba2a5c259f36980a487d728d28ebba761c28a1f9674eefe059ae6e26c820dac0816e39a769b8f40fd37c2da9c554178bbacc08902d3c4ac4636ec170eaaa3b7f
+  checksum: 10c0/465b4e6bf41a236b265108d21e88e75f6940959d6611d7daf989b69c875cf84fdaf77a539d0d5ce1d2602b7eadeba22da54994247a4825d8ad473685ad7e860e
   languageName: node
   linkType: hard
 
@@ -1993,7 +1993,7 @@ __metadata:
     "@cedarjs/web-server": "workspace:*"
     "@fastify/multipart": "npm:9.0.3"
     "@fastify/url-data": "npm:6.0.3"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     "@types/lodash": "npm:4.17.20"
     "@types/qs": "npm:6.9.16"
     "@types/split2": "npm:4.2.3"
@@ -2034,7 +2034,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@prisma/client": "npm:5.20.0"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     "@types/jsonwebtoken": "npm:9.0.10"
     "@types/memjs": "npm:1"
     "@types/pascalcase": "npm:1.0.3"
@@ -2077,7 +2077,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-api@workspace:packages/auth-providers/auth0/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -2095,7 +2095,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-setup@workspace:packages/auth-providers/auth0/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
@@ -2130,10 +2130,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-azure-active-directory-api@workspace:packages/auth-providers/azureActiveDirectory/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.2"
@@ -2149,7 +2149,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-azure-active-directory-setup@workspace:packages/auth-providers/azureActiveDirectory/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
@@ -2185,11 +2185,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-clerk-api@workspace:packages/auth-providers/clerk/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/backend": "npm:1.34.0"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
     tsx: "npm:4.20.3"
@@ -2202,7 +2202,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-clerk-setup@workspace:packages/auth-providers/clerk/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
@@ -2237,7 +2237,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-custom-setup@workspace:packages/auth-providers/custom/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
@@ -2253,7 +2253,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
@@ -2275,13 +2275,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-middleware@workspace:packages/auth-providers/dbAuth/middleware"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth-dbauth-api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/web": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
     ts-toolbelt: "npm:9.6.0"
@@ -2315,15 +2315,16 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-web@workspace:packages/auth-providers/dbAuth/web"
   dependencies:
-    "@babel/cli": "npm:7.27.2"
-    "@babel/core": "npm:^7.26.10"
-    "@babel/runtime-corejs3": "npm:7.27.6"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/auth": "workspace:*"
+    "@cedarjs/framework-tools": "workspace:*"
     "@simplewebauthn/browser": "npm:9.0.1"
     "@simplewebauthn/types": "npm:9.0.1"
     "@types/react": "npm:^18.2.55"
-    core-js: "npm:3.42.0"
+    concurrently: "npm:8.2.2"
+    publint: "npm:0.3.12"
     react: "npm:19.0.0-rc-f2df5694-20240916"
+    tsx: "npm:4.20.3"
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2333,10 +2334,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-firebase-api@workspace:packages/auth-providers/firebase/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
     firebase-admin: "npm:12.6.0"
     publint: "npm:0.3.12"
@@ -2350,7 +2351,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-firebase-setup@workspace:packages/auth-providers/firebase/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
@@ -2385,10 +2386,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-netlify-api@workspace:packages/auth-providers/netlify/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.2"
@@ -2403,7 +2404,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-netlify-setup@workspace:packages/auth-providers/netlify/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
@@ -2438,11 +2439,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-api@workspace:packages/auth-providers/supabase/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.5.1"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.2"
@@ -2457,7 +2458,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-middleware@workspace:packages/auth-providers/supabase/middleware"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/auth-supabase-api": "workspace:*"
@@ -2465,7 +2466,7 @@ __metadata:
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/web": "workspace:*"
     "@supabase/ssr": "npm:0.5.1"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
     ts-toolbelt: "npm:9.6.0"
@@ -2479,7 +2480,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-setup@workspace:packages/auth-providers/supabase/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
@@ -2514,7 +2515,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supertokens-api@workspace:packages/auth-providers/supertokens/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -2534,7 +2535,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supertokens-setup@workspace:packages/auth-providers/supertokens/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
@@ -2570,7 +2571,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth@workspace:packages/auth"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/framework-tools": "workspace:*"
     "@testing-library/jest-dom": "npm:6.5.0"
     "@testing-library/react": "npm:14.3.1"
@@ -2722,7 +2723,7 @@ __metadata:
     "@cedarjs/structure": "workspace:*"
     "@cedarjs/telemetry": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
-    "@listr2/prompt-adapter-enquirer": "npm:2.0.12"
+    "@listr2/prompt-adapter-enquirer": "npm:2.0.16"
     "@opentelemetry/api": "npm:1.8.0"
     "@opentelemetry/core": "npm:1.22.0"
     "@opentelemetry/exporter-trace-otlp-http": "npm:0.49.1"
@@ -2830,7 +2831,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/context@workspace:packages/context"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/framework-tools": "workspace:*"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
@@ -2994,7 +2995,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/framework-tools@workspace:packages/framework-tools"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@types/fs-extra": "npm:11.0.4"
     esbuild: "npm:0.25.0"
     fast-glob: "npm:3.3.3"
@@ -3032,7 +3033,7 @@ __metadata:
     "@graphql-tools/utils": "npm:10.5.4"
     "@graphql-yoga/plugin-persisted-operations": "npm:3.7.0"
     "@opentelemetry/api": "npm:1.8.0"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     "@types/jsonwebtoken": "npm:9.0.10"
     "@types/lodash": "npm:4.17.20"
     "@types/uuid": "npm:10.0.0"
@@ -3056,7 +3057,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/internal@workspace:packages/internal"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.27.5"
     "@babel/plugin-transform-react-jsx": "npm:7.27.1"
@@ -3250,7 +3251,7 @@ __metadata:
     "@cedarjs/structure": "workspace:*"
     "@cedarjs/web": "workspace:*"
     "@rollup/plugin-alias": "npm:5.1.1"
-    "@rollup/plugin-commonjs": "npm:28.0.5"
+    "@rollup/plugin-commonjs": "npm:28.0.6"
     "@rollup/plugin-node-resolve": "npm:16.0.1"
     "@rollup/plugin-replace": "npm:6.0.2"
     "@swc/core": "npm:1.12.1"
@@ -3280,7 +3281,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/project-config@workspace:packages/project-config"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/framework-tools": "workspace:*"
     concurrently: "npm:8.2.2"
     deepmerge: "npm:4.3.1"
@@ -3308,12 +3309,12 @@ __metadata:
     "@graphql-tools/utils": "npm:10.5.4"
     "@graphql-yoga/plugin-defer-stream": "npm:3.7.0"
     "@graphql-yoga/plugin-graphql-sse": "npm:3.7.0"
-    "@graphql-yoga/redis-event-target": "npm:3.0.1"
-    "@graphql-yoga/subscription": "npm:5.0.1"
+    "@graphql-yoga/redis-event-target": "npm:3.0.3"
+    "@graphql-yoga/subscription": "npm:5.0.5"
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
     graphql: "npm:16.9.0"
-    ioredis: "npm:5.6.0"
+    ioredis: "npm:5.6.1"
     nodemon: "npm:3.1.10"
     tsx: "npm:4.20.3"
     typescript: "npm:5.6.2"
@@ -3347,7 +3348,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/router@workspace:packages/router"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/cli": "npm:7.27.2"
     "@babel/core": "npm:^7.26.10"
     "@babel/runtime-corejs3": "npm:7.27.6"
@@ -3393,7 +3394,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/storage@workspace:packages/storage"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@prisma/client": "npm:5.20.0"
@@ -3485,7 +3486,7 @@ __metadata:
     "@testing-library/jest-dom": "npm:6.5.0"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.5.2"
-    "@types/aws-lambda": "npm:8.10.145"
+    "@types/aws-lambda": "npm:8.10.152"
     "@types/babel-core": "npm:6.25.10"
     "@types/jest": "npm:29.5.14"
     "@types/node": "npm:20.17.10"
@@ -3524,7 +3525,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/generator": "npm:7.27.5"
     "@babel/parser": "npm:7.27.5"
     "@babel/traverse": "npm:7.27.4"
@@ -3608,7 +3609,7 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:3.13.8"
     "@apollo/client-react-streaming": "npm:0.12.2"
-    "@arethetypeswrong/cli": "npm:0.18.1"
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/cli": "npm:7.27.2"
     "@babel/core": "npm:^7.26.10"
     "@babel/plugin-transform-runtime": "npm:7.27.4"
@@ -6518,37 +6519,37 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/redis-event-target@npm:3.0.1":
-  version: 3.0.1
-  resolution: "@graphql-yoga/redis-event-target@npm:3.0.1"
+"@graphql-yoga/redis-event-target@npm:3.0.3":
+  version: 3.0.3
+  resolution: "@graphql-yoga/redis-event-target@npm:3.0.3"
   dependencies:
-    "@graphql-yoga/typed-event-target": "npm:^3.0.0"
+    "@graphql-yoga/typed-event-target": "npm:^3.0.2"
     "@whatwg-node/events": "npm:^0.1.0"
   peerDependencies:
     ioredis: ^5.0.6
-  checksum: 10c0/501db555950800eac29257ab413c2e73fbf3524d4b5b30c69a4de7c74071e2a756ed0a6405c3b7614ba931972bc8e89bec491593d327f558a5ec6ea82f88ed87
+  checksum: 10c0/dcb800c066d25b644f67d0ab042d3edd6895b8213a0d9b4c204950efefd4b13b5d1133ca87fadf3a5a38952e4fe27ba92e52fd9c8b0f371054c2dd47ebaa8e82
   languageName: node
   linkType: hard
 
-"@graphql-yoga/subscription@npm:5.0.1, @graphql-yoga/subscription@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "@graphql-yoga/subscription@npm:5.0.1"
+"@graphql-yoga/subscription@npm:5.0.5, @graphql-yoga/subscription@npm:^5.0.1":
+  version: 5.0.5
+  resolution: "@graphql-yoga/subscription@npm:5.0.5"
   dependencies:
-    "@graphql-yoga/typed-event-target": "npm:^3.0.0"
+    "@graphql-yoga/typed-event-target": "npm:^3.0.2"
     "@repeaterjs/repeater": "npm:^3.0.4"
     "@whatwg-node/events": "npm:^0.1.0"
-    tslib: "npm:^2.5.2"
-  checksum: 10c0/fccbdb1497edc085437d83127dbe6fde399b30e0277d5d6cdfc4aad16d733b00fe8b65e3d0eda3ba50250123545e59a7e684b9de5f9050721933ff1bf9950a58
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/5828800163da6bdd936dca08d6fa80954bb3c56be1d79f0d0a2682ff54a523f971d4f2b2bcaba2fe2ecf0d06e42a49d3c2f770b641dd97c74b75ad90a3437c59
   languageName: node
   linkType: hard
 
-"@graphql-yoga/typed-event-target@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "@graphql-yoga/typed-event-target@npm:3.0.0"
+"@graphql-yoga/typed-event-target@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "@graphql-yoga/typed-event-target@npm:3.0.2"
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.4"
-    tslib: "npm:^2.5.2"
-  checksum: 10c0/563c26e4ef8f116e3b2991651acc2a80a37e1c53c6df4159e46e948b226624fc3c414663deef063fa19a7a63bc6a2d2ed8b950782b4d57f34eea775e3312d61c
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/51b4205aa25d47273aa887507040e702e6d9bb26fbc48c3187d38f4919f34b9fc0b22f28cdc83079c72912bf0d563619c141fae10a5d34ef69740da8b897ff81
   languageName: node
   linkType: hard
 
@@ -7038,16 +7039,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lerna/create@npm:8.1.9":
-  version: 8.1.9
-  resolution: "@lerna/create@npm:8.1.9"
+"@lerna/create@npm:8.2.3":
+  version: 8.2.3
+  resolution: "@lerna/create@npm:8.2.3"
   dependencies:
     "@npmcli/arborist": "npm:7.5.4"
     "@npmcli/package-json": "npm:5.2.0"
     "@npmcli/run-script": "npm:8.1.0"
     "@nx/devkit": "npm:>=17.1.2 < 21"
     "@octokit/plugin-enterprise-rest": "npm:6.0.1"
-    "@octokit/rest": "npm:19.0.11"
+    "@octokit/rest": "npm:20.1.2"
     aproba: "npm:2.0.0"
     byte-size: "npm:8.1.1"
     chalk: "npm:4.1.0"
@@ -7065,7 +7066,6 @@ __metadata:
     get-stream: "npm:6.0.0"
     git-url-parse: "npm:14.0.0"
     glob-parent: "npm:6.0.2"
-    globby: "npm:11.1.0"
     graceful-fs: "npm:4.2.11"
     has-unicode: "npm:2.0.1"
     ini: "npm:^1.3.8"
@@ -7100,10 +7100,10 @@ __metadata:
     slash: "npm:^3.0.0"
     ssri: "npm:^10.0.6"
     string-width: "npm:^4.2.3"
-    strip-ansi: "npm:^6.0.1"
-    strong-log-transformer: "npm:2.1.0"
     tar: "npm:6.2.1"
     temp-dir: "npm:1.0.0"
+    through: "npm:2.3.8"
+    tinyglobby: "npm:0.2.12"
     upath: "npm:2.0.1"
     uuid: "npm:^10.0.0"
     validate-npm-package-license: "npm:^3.0.4"
@@ -7113,7 +7113,7 @@ __metadata:
     write-pkg: "npm:4.0.0"
     yargs: "npm:17.7.2"
     yargs-parser: "npm:21.1.1"
-  checksum: 10c0/f050e79c0bd982c6fdf9b7347275a94cc80f7a6599094f1cf114c10d5373c21afac9bd1a5c0b2ca400e6aaf18da883c384dfd6e5c84a186a2c09c912bf9b2238
+  checksum: 10c0/e484e41cff8233bdaca72872c96abe5b10423033b0c6464c55fc56a87c43f01ee236ef2cae616a5a93beb2c432e87866f8e15a16e46ea2b3949938d796ec6c78
   languageName: node
   linkType: hard
 
@@ -7124,12 +7124,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@listr2/prompt-adapter-enquirer@npm:2.0.12":
-  version: 2.0.12
-  resolution: "@listr2/prompt-adapter-enquirer@npm:2.0.12"
+"@listr2/prompt-adapter-enquirer@npm:2.0.16":
+  version: 2.0.16
+  resolution: "@listr2/prompt-adapter-enquirer@npm:2.0.16"
   peerDependencies:
     enquirer: ">= 2.3.0 < 3"
-  checksum: 10c0/53bfaac3b71560f009d94dfb107ed00fb9ea36d17ab1ae57680f330f88656e8a836839bb8cdc85478b4e173fb4d9b863097ab1b5d5912d6f0c6cc906cc311606
+  checksum: 10c0/f93c4eb433525d5ce8ea7ff75902ab1f074665b4a6a58388b44c843fc7c8c43c3b3e2ef0c2293534a2f1e7b62f1ae901047feec4028ce2f6a704a466289d3efc
   languageName: node
   linkType: hard
 
@@ -7571,54 +7571,53 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@octokit/auth-token@npm:^3.0.0":
-  version: 3.0.4
-  resolution: "@octokit/auth-token@npm:3.0.4"
-  checksum: 10c0/abdf5e2da36344de9727c70ba782d58004f5ae1da0f65fa9bc9216af596ef23c0e4675f386df2f6886806612558091d603564051b693b0ad1986aa6160b7a231
+"@octokit/auth-token@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@octokit/auth-token@npm:4.0.0"
+  checksum: 10c0/57acaa6c394c5abab2f74e8e1dcf4e7a16b236f713c77a54b8f08e2d14114de94b37946259e33ec2aab0566b26f724c2b71d2602352b59e541a9854897618f3c
   languageName: node
   linkType: hard
 
-"@octokit/core@npm:^4.2.1":
-  version: 4.2.4
-  resolution: "@octokit/core@npm:4.2.4"
+"@octokit/core@npm:^5.0.2":
+  version: 5.2.2
+  resolution: "@octokit/core@npm:5.2.2"
   dependencies:
-    "@octokit/auth-token": "npm:^3.0.0"
-    "@octokit/graphql": "npm:^5.0.0"
-    "@octokit/request": "npm:^6.0.0"
-    "@octokit/request-error": "npm:^3.0.0"
-    "@octokit/types": "npm:^9.0.0"
+    "@octokit/auth-token": "npm:^4.0.0"
+    "@octokit/graphql": "npm:^7.1.0"
+    "@octokit/request": "npm:^8.4.1"
+    "@octokit/request-error": "npm:^5.1.1"
+    "@octokit/types": "npm:^13.0.0"
     before-after-hook: "npm:^2.2.0"
     universal-user-agent: "npm:^6.0.0"
-  checksum: 10c0/e54081a56884e628d1804837fddcd48c10d516117bb891551c8dc9d8e3dad449aeb9b4677ca71e8f0e76268c2b7656c953099506679aaa4666765228474a3ce6
+  checksum: 10c0/b4484d85552303b839613e2133dcd064fa06a7c10fe0ebd11ba8f67cb8e3384e48983c589f4d1dc0fa3754857784e3d90ff4eab9782e118baf13ddd1b834957c
   languageName: node
   linkType: hard
 
-"@octokit/endpoint@npm:^7.0.0":
-  version: 7.0.6
-  resolution: "@octokit/endpoint@npm:7.0.6"
+"@octokit/endpoint@npm:^9.0.6":
+  version: 9.0.6
+  resolution: "@octokit/endpoint@npm:9.0.6"
   dependencies:
-    "@octokit/types": "npm:^9.0.0"
-    is-plain-object: "npm:^5.0.0"
+    "@octokit/types": "npm:^13.1.0"
     universal-user-agent: "npm:^6.0.0"
-  checksum: 10c0/fd147a55010b54af7567bf90791359f7096a1c9916a2b7c72f8afd0c53141338b3d78da3a4ab3e3bdfeb26218a1b73735432d8987ccc04996b1019219299f115
+  checksum: 10c0/8e06197b21869aeb498e0315093ca6fbee12bd1bdcfc1667fcd7d79d827d84f2c5a30702ffd28bba7879780e367d14c30df5b20d47fcaed5de5fdc05f5d4e013
   languageName: node
   linkType: hard
 
-"@octokit/graphql@npm:^5.0.0":
-  version: 5.0.6
-  resolution: "@octokit/graphql@npm:5.0.6"
+"@octokit/graphql@npm:^7.1.0":
+  version: 7.1.1
+  resolution: "@octokit/graphql@npm:7.1.1"
   dependencies:
-    "@octokit/request": "npm:^6.0.0"
-    "@octokit/types": "npm:^9.0.0"
+    "@octokit/request": "npm:^8.4.1"
+    "@octokit/types": "npm:^13.0.0"
     universal-user-agent: "npm:^6.0.0"
-  checksum: 10c0/de1d839d97fe6d96179925f6714bf96e7af6f77929892596bb4211adab14add3291fc5872b269a3d0e91a4dcf248d16096c82606c4a43538cf241b815c2e2a36
+  checksum: 10c0/c27216200f3f4ce7ce2a694fb7ea43f8ea4a807fbee3a423c41ed137dd7948dfc0bbf6ea1656f029a7625c84b583acdef740a7032266d0eff55305c91c3a1ed6
   languageName: node
   linkType: hard
 
-"@octokit/openapi-types@npm:^18.0.0":
-  version: 18.0.0
-  resolution: "@octokit/openapi-types@npm:18.0.0"
-  checksum: 10c0/d90fab10d962be71e72b85ffab2055cffd9c3196ff1edc3e4106deb78e99e8782965cf7aa6a4c1398f828e4d0c3e0f905915debfe34396d956dfce8e75b21664
+"@octokit/openapi-types@npm:^24.2.0":
+  version: 24.2.0
+  resolution: "@octokit/openapi-types@npm:24.2.0"
+  checksum: 10c0/8f47918b35e9b7f6109be6f7c8fc3a64ad13a48233112b29e92559e64a564b810eb3ebf81b4cd0af1bb2989d27b9b95cca96e841ec4e23a3f68703cefe62fd9e
   languageName: node
   linkType: hard
 
@@ -7629,97 +7628,78 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@octokit/plugin-paginate-rest@npm:^6.1.2":
-  version: 6.1.2
-  resolution: "@octokit/plugin-paginate-rest@npm:6.1.2"
+"@octokit/plugin-paginate-rest@npm:11.4.4-cjs.2":
+  version: 11.4.4-cjs.2
+  resolution: "@octokit/plugin-paginate-rest@npm:11.4.4-cjs.2"
   dependencies:
-    "@octokit/tsconfig": "npm:^1.0.2"
-    "@octokit/types": "npm:^9.2.3"
+    "@octokit/types": "npm:^13.7.0"
   peerDependencies:
-    "@octokit/core": ">=4"
-  checksum: 10c0/def241c4f00b864822ab6414eaadd8679a6d332004c7e77467cfc1e6d5bdcc453c76bd185710ee942e4df201f9dd2170d960f46af5b14ef6f261a0068f656364
+    "@octokit/core": 5
+  checksum: 10c0/1d61a63c98a18c171bccdc6cf63ffe279fe852e8bdc9db6647ffcb27f4ea485fdab78fb71b552ed0f2186785cf5264f8ed3f9a8f33061e4697b5f73b097accb1
   languageName: node
   linkType: hard
 
-"@octokit/plugin-request-log@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "@octokit/plugin-request-log@npm:1.0.4"
+"@octokit/plugin-request-log@npm:^4.0.0":
+  version: 4.0.1
+  resolution: "@octokit/plugin-request-log@npm:4.0.1"
   peerDependencies:
-    "@octokit/core": ">=3"
-  checksum: 10c0/7238585445555db553912e0cdef82801c89c6e5cbc62c23ae086761c23cc4a403d6c3fddd20348bbd42fb7508e2c2fce370eb18fdbe3fbae2c0d2c8be974f4cc
+    "@octokit/core": 5
+  checksum: 10c0/6f556f86258c5fbff9b1821075dc91137b7499f2ad0fd12391f0876064a6daa88abe1748336b2d483516505771d358aa15cb4bcdabc348a79e3d951fe9726798
   languageName: node
   linkType: hard
 
-"@octokit/plugin-rest-endpoint-methods@npm:^7.1.2":
-  version: 7.2.3
-  resolution: "@octokit/plugin-rest-endpoint-methods@npm:7.2.3"
+"@octokit/plugin-rest-endpoint-methods@npm:13.3.2-cjs.1":
+  version: 13.3.2-cjs.1
+  resolution: "@octokit/plugin-rest-endpoint-methods@npm:13.3.2-cjs.1"
   dependencies:
-    "@octokit/types": "npm:^10.0.0"
+    "@octokit/types": "npm:^13.8.0"
   peerDependencies:
-    "@octokit/core": ">=3"
-  checksum: 10c0/8bffbc5852695dd08d65cc64b6ab7d2871ed9df1e791608f48b488a3908b5b655e3686b5dd72fc37c824e82bdd4dfc9d24e2e50205bbc324667def1d705bc9da
+    "@octokit/core": ^5
+  checksum: 10c0/810fe5cb1861386746bf0218ea969d87c56e553ff339490526483b4b66f53c4b4c6092034bec30c5d453172eb6f33e75b5748ade1b401b76774b5a994e2c10b0
   languageName: node
   linkType: hard
 
-"@octokit/request-error@npm:^3.0.0":
-  version: 3.0.3
-  resolution: "@octokit/request-error@npm:3.0.3"
+"@octokit/request-error@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "@octokit/request-error@npm:5.1.1"
   dependencies:
-    "@octokit/types": "npm:^9.0.0"
+    "@octokit/types": "npm:^13.1.0"
     deprecation: "npm:^2.0.0"
     once: "npm:^1.4.0"
-  checksum: 10c0/1e252ac193c8af23b709909911aa327ed5372cbafcba09e4aff41e0f640a7c152579ab0a60311a92e37b4e7936392d59ee4c2feae5cdc387ee8587a33d8afa60
+  checksum: 10c0/dc9fc76ea5e4199273e4665ce9ddf345fe8f25578d9999c9a16f276298e61ee6fe0e6f5a6147b91ba3b34fdf5b9e6b7af6ae13d6333175e95b30c574088f7a2d
   languageName: node
   linkType: hard
 
-"@octokit/request@npm:^6.0.0":
-  version: 6.2.8
-  resolution: "@octokit/request@npm:6.2.8"
+"@octokit/request@npm:^8.4.1":
+  version: 8.4.1
+  resolution: "@octokit/request@npm:8.4.1"
   dependencies:
-    "@octokit/endpoint": "npm:^7.0.0"
-    "@octokit/request-error": "npm:^3.0.0"
-    "@octokit/types": "npm:^9.0.0"
-    is-plain-object: "npm:^5.0.0"
-    node-fetch: "npm:^2.6.7"
+    "@octokit/endpoint": "npm:^9.0.6"
+    "@octokit/request-error": "npm:^5.1.1"
+    "@octokit/types": "npm:^13.1.0"
     universal-user-agent: "npm:^6.0.0"
-  checksum: 10c0/6b6079ed45bac44c4579b40990bfd1905b03d4bc4e5255f3d5a10cf5182171578ebe19abeab32ebb11a806f1131947f2a06b7a077bd7e77ade7b15fe2882174b
+  checksum: 10c0/1a69dcb7336de708a296db9e9a58040e5b284a87495a63112f80eb0007da3fc96a9fadecb9e875fc63cf179c23a0f81031fbef2a6f610a219e45805ead03fcf3
   languageName: node
   linkType: hard
 
-"@octokit/rest@npm:19.0.11":
-  version: 19.0.11
-  resolution: "@octokit/rest@npm:19.0.11"
+"@octokit/rest@npm:20.1.2":
+  version: 20.1.2
+  resolution: "@octokit/rest@npm:20.1.2"
   dependencies:
-    "@octokit/core": "npm:^4.2.1"
-    "@octokit/plugin-paginate-rest": "npm:^6.1.2"
-    "@octokit/plugin-request-log": "npm:^1.0.4"
-    "@octokit/plugin-rest-endpoint-methods": "npm:^7.1.2"
-  checksum: 10c0/a14ae31fc5e70e76d2492aae63d3453cbb71f44e7492400f885ab5ac6b2612bcb244bafa29e45a59461f3e5d99807ff9c88d48af8317ffa4f8ad3f8f11fdd035
+    "@octokit/core": "npm:^5.0.2"
+    "@octokit/plugin-paginate-rest": "npm:11.4.4-cjs.2"
+    "@octokit/plugin-request-log": "npm:^4.0.0"
+    "@octokit/plugin-rest-endpoint-methods": "npm:13.3.2-cjs.1"
+  checksum: 10c0/712e08c43c7af37c5c219f95ae289b3ac2646270be4e8a7141fa2aa9340ed8f7134f117c9467e89206c5a9797c49c8d2c039b884d4865bb3bde91bc5adb3c38c
   languageName: node
   linkType: hard
 
-"@octokit/tsconfig@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@octokit/tsconfig@npm:1.0.2"
-  checksum: 10c0/84db70b495beeed69259dd4def14cdfb600edeb65ef32811558c99413ee2b414ed10bff9c4dcc7a43451d0fd36b4925ada9ef7d4272b5eae38cb005cc2f459ac
-  languageName: node
-  linkType: hard
-
-"@octokit/types@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "@octokit/types@npm:10.0.0"
+"@octokit/types@npm:^13.0.0, @octokit/types@npm:^13.1.0, @octokit/types@npm:^13.7.0, @octokit/types@npm:^13.8.0":
+  version: 13.10.0
+  resolution: "@octokit/types@npm:13.10.0"
   dependencies:
-    "@octokit/openapi-types": "npm:^18.0.0"
-  checksum: 10c0/9bbbec1e452c271752e5ba735c161a558933f2e35f3004bb0b6e8d6ba574af48b68bab2f293112a8e68c595435a2fbcc76f3e7333f45ba1888bb5193777a943e
-  languageName: node
-  linkType: hard
-
-"@octokit/types@npm:^9.0.0, @octokit/types@npm:^9.2.3":
-  version: 9.3.2
-  resolution: "@octokit/types@npm:9.3.2"
-  dependencies:
-    "@octokit/openapi-types": "npm:^18.0.0"
-  checksum: 10c0/2925479aa378a4491762b4fcf381bdc7daca39b4e0b2dd7062bce5d74a32ed7d79d20d3c65ceaca6d105cf4b1f7417fea634219bf90f79a57d03e2dac629ec45
+    "@octokit/openapi-types": "npm:^24.2.0"
+  checksum: 10c0/f66a401b89d653ec28e5c1529abdb7965752db4d9d40fa54c80e900af4c6bf944af6bd0a83f5b4f1eecb72e3d646899dfb27ffcf272ac243552de7e3b97a038d
   languageName: node
   linkType: hard
 
@@ -9133,9 +9113,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-commonjs@npm:28.0.5":
-  version: 28.0.5
-  resolution: "@rollup/plugin-commonjs@npm:28.0.5"
+"@rollup/plugin-commonjs@npm:28.0.6":
+  version: 28.0.6
+  resolution: "@rollup/plugin-commonjs@npm:28.0.6"
   dependencies:
     "@rollup/pluginutils": "npm:^5.0.1"
     commondir: "npm:^1.0.1"
@@ -9149,7 +9129,7 @@ __metadata:
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: 10c0/257b53477bcd3f1ec9e7105aa18d9529bb6b5e737cd365010ff08048657ee38457c996577e8982a9a9a285a9f15947462f048c191b03d2e0ab17b3b15dcd5162
+  checksum: 10c0/67fa297384c2494c8f85df102c030e7f8ed8f600cfccdd1143266112ee4037d37faa1bda44a571dab35b48297342024551e995ad2f8a4d86da0aa1f33ec61868
   languageName: node
   linkType: hard
 
@@ -10853,10 +10833,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/aws-lambda@npm:8.10.145":
-  version: 8.10.145
-  resolution: "@types/aws-lambda@npm:8.10.145"
-  checksum: 10c0/22086185f975e797aa7bfc4937be328b37901b580eba88ce2c5082f99dca722984ad9d0aab8f3ce52f62251ffc1ced09cf17517b54d7c5fb669ecf1dd27dc22d
+"@types/aws-lambda@npm:8.10.152":
+  version: 8.10.152
+  resolution: "@types/aws-lambda@npm:8.10.152"
+  checksum: 10c0/ddb3858d961b88a3c5eb947ddd8890bf6d0ae8d24ce5bf7d4fd8b54f7d45646864da10cdde038755d191e834201624a40eb3240dbe48f633f4dd18137ac2e3d7
   languageName: node
   linkType: hard
 
@@ -12255,12 +12235,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/types@npm:4.0.0":
-  version: 4.0.0
-  resolution: "@yarnpkg/types@npm:4.0.0"
+"@yarnpkg/types@npm:4.0.1":
+  version: 4.0.1
+  resolution: "@yarnpkg/types@npm:4.0.1"
   dependencies:
     tslib: "npm:^2.4.0"
-  checksum: 10c0/41f67a4aa5c414c1e228f51453451fa15e0dd70c5cf2b1ae1ca142a3f018f25e4a37e60372cd0f5970c755e1804a2e31e208bff427add1cf13f899b0b9adc1e0
+  checksum: 10c0/90226789475680ba599833571dd76c0718dd5b4c5022481263ef309d6a628f6246671cd6ca86e49c966ddefa7aca6ccef82240dc1476d2cea702ea5bee2a6b72
   languageName: node
   linkType: hard
 
@@ -13126,13 +13106,13 @@ __metadata:
   linkType: hard
 
 "axios@npm:^1.7.4":
-  version: 1.7.7
-  resolution: "axios@npm:1.7.7"
+  version: 1.10.0
+  resolution: "axios@npm:1.10.0"
   dependencies:
     follow-redirects: "npm:^1.15.6"
     form-data: "npm:^4.0.0"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/4499efc89e86b0b49ffddc018798de05fab26e3bf57913818266be73279a6418c3ce8f9e934c7d2d707ab8c095e837fc6c90608fb7715b94d357720b5f568af7
+  checksum: 10c0/2239cb269cc789eac22f5d1aabd58e1a83f8f364c92c2caa97b6f5cbb4ab2903d2e557d9dc670b5813e9bcdebfb149e783fb8ab3e45098635cd2f559b06bd5d8
   languageName: node
   linkType: hard
 
@@ -16143,13 +16123,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"duplexer@npm:^0.1.1":
-  version: 0.1.2
-  resolution: "duplexer@npm:0.1.2"
-  checksum: 10c0/c57bcd4bdf7e623abab2df43a7b5b23d18152154529d166c1e0da6bee341d84c432d157d7e97b32fecb1bf3a8b8857dd85ed81a915789f550637ed25b8e64fc2
-  languageName: node
-  linkType: hard
-
 "duplexify@npm:^3.5.0, duplexify@npm:^3.6.0":
   version: 3.7.1
   resolution: "duplexify@npm:3.7.1"
@@ -17883,7 +17856,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fdir@npm:^6.2.0, fdir@npm:^6.4.4, fdir@npm:^6.4.6":
+"fdir@npm:^6.2.0, fdir@npm:^6.4.3, fdir@npm:^6.4.4, fdir@npm:^6.4.6":
   version: 6.4.6
   resolution: "fdir@npm:6.4.6"
   peerDependencies:
@@ -18849,7 +18822,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"globby@npm:11.1.0, globby@npm:^11.0.1, globby@npm:^11.0.2, globby@npm:^11.0.3":
+"globby@npm:^11.0.1, globby@npm:^11.0.2, globby@npm:^11.0.3":
   version: 11.1.0
   resolution: "globby@npm:11.1.0"
   dependencies:
@@ -19813,9 +19786,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ioredis@npm:5.6.0":
-  version: 5.6.0
-  resolution: "ioredis@npm:5.6.0"
+"ioredis@npm:5.6.1":
+  version: 5.6.1
+  resolution: "ioredis@npm:5.6.1"
   dependencies:
     "@ioredis/commands": "npm:^1.1.1"
     cluster-key-slot: "npm:^1.1.0"
@@ -19826,7 +19799,7 @@ __metadata:
     redis-errors: "npm:^1.2.0"
     redis-parser: "npm:^3.0.0"
     standard-as-callback: "npm:^2.1.0"
-  checksum: 10c0/a885e5146640fc448706871290ef424ffa39af561f7ee3cf1590085209a509f85e99082bdaaf3cd32fa66758aea3fc2055d1109648ddca96fac4944bf2092c30
+  checksum: 10c0/26ae49cf448e807e454a9bdea5a9dfdcf669e2fdbf2df341900a0fb693c5662fea7e39db3227ce8972d1bda0ba7da9b7410e5163b12d8878a579548d847220ac
   languageName: node
   linkType: hard
 
@@ -21848,17 +21821,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lerna@npm:8.1.9":
-  version: 8.1.9
-  resolution: "lerna@npm:8.1.9"
+"lerna@npm:8.2.3":
+  version: 8.2.3
+  resolution: "lerna@npm:8.2.3"
   dependencies:
-    "@lerna/create": "npm:8.1.9"
+    "@lerna/create": "npm:8.2.3"
     "@npmcli/arborist": "npm:7.5.4"
     "@npmcli/package-json": "npm:5.2.0"
     "@npmcli/run-script": "npm:8.1.0"
     "@nx/devkit": "npm:>=17.1.2 < 21"
     "@octokit/plugin-enterprise-rest": "npm:6.0.1"
-    "@octokit/rest": "npm:19.0.11"
+    "@octokit/rest": "npm:20.1.2"
     aproba: "npm:2.0.0"
     byte-size: "npm:8.1.1"
     chalk: "npm:4.1.0"
@@ -21879,7 +21852,6 @@ __metadata:
     get-stream: "npm:6.0.0"
     git-url-parse: "npm:14.0.0"
     glob-parent: "npm:6.0.2"
-    globby: "npm:11.1.0"
     graceful-fs: "npm:4.2.11"
     has-unicode: "npm:2.0.1"
     import-local: "npm:3.1.0"
@@ -21919,10 +21891,10 @@ __metadata:
     slash: "npm:3.0.0"
     ssri: "npm:^10.0.6"
     string-width: "npm:^4.2.3"
-    strip-ansi: "npm:^6.0.1"
-    strong-log-transformer: "npm:2.1.0"
     tar: "npm:6.2.1"
     temp-dir: "npm:1.0.0"
+    through: "npm:2.3.8"
+    tinyglobby: "npm:0.2.12"
     typescript: "npm:>=3 < 6"
     upath: "npm:2.0.1"
     uuid: "npm:^10.0.0"
@@ -21935,7 +21907,7 @@ __metadata:
     yargs-parser: "npm:21.1.1"
   bin:
     lerna: dist/cli.js
-  checksum: 10c0/e3362d66324f5ee9606dbdb332a6b09eeb2df6378177e36a1bbcf532927d921beb4d25dbcc717c4adf3a7dcd67e0bcee67bedf81fdbe7e78bbecce310358d762
+  checksum: 10c0/618d2adb5504227ca0b4dbeca920fbc188a907e71df39ace105af3696393c3aefb75cf7a98899ec728b15ea9e92aca29cdfc21d479d23163e2fd812281fd10a1
   languageName: node
   linkType: hard
 
@@ -27252,7 +27224,7 @@ __metadata:
     "@types/prompts": "npm:2.4.9"
     "@typescript-eslint/eslint-plugin": "npm:8.19.1"
     "@typescript-eslint/parser": "npm:8.19.1"
-    "@yarnpkg/types": "npm:4.0.0"
+    "@yarnpkg/types": "npm:4.0.1"
     babel-jest: "npm:^29.7.0"
     babel-plugin-auto-import: "npm:1.1.0"
     babel-plugin-remove-code: "npm:0.0.6"
@@ -27276,7 +27248,7 @@ __metadata:
     jest: "npm:29.7.0"
     jscodeshift: "npm:17.0.0"
     lefthook: "npm:^1.11.14"
-    lerna: "npm:8.1.9"
+    lerna: "npm:8.2.3"
     listr2: "npm:7.0.2"
     make-dir-cli: "npm:4.0.0"
     msw: "npm:1.3.4"
@@ -28245,6 +28217,7 @@ __metadata:
     unplugin-auto-import: "npm:19.3.0"
     vite: "npm:5.4.19"
     vite-plugin-node-polyfills: "npm:0.23.0"
+    vitest: "npm:3.2.4"
   peerDependencies:
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
@@ -28574,19 +28547,6 @@ __metadata:
   version: 1.0.5
   resolution: "strnum@npm:1.0.5"
   checksum: 10c0/64fb8cc2effbd585a6821faa73ad97d4b553c8927e49086a162ffd2cc818787643390b89d567460a8e74300148d11ac052e21c921ef2049f2987f4b1b89a7ff1
-  languageName: node
-  linkType: hard
-
-"strong-log-transformer@npm:2.1.0":
-  version: 2.1.0
-  resolution: "strong-log-transformer@npm:2.1.0"
-  dependencies:
-    duplexer: "npm:^0.1.1"
-    minimist: "npm:^1.2.0"
-    through: "npm:^2.3.4"
-  bin:
-    sl-log-transformer: bin/sl-log-transformer.js
-  checksum: 10c0/3c3b8aa8f34d661910563ff996412e2f527fc814e699a376854b554d4a4294ab7e285b4e2c08a080a7b19c5600a9b93a98798d3ac600fe3de545ca6605c07829
   languageName: node
   linkType: hard
 
@@ -28966,7 +28926,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"through@npm:2, through@npm:>=2.2.7 <3, through@npm:^2.3.4, through@npm:^2.3.6, through@npm:^2.3.8":
+"through@npm:2, through@npm:2.3.8, through@npm:>=2.2.7 <3, through@npm:^2.3.6, through@npm:^2.3.8":
   version: 2.3.8
   resolution: "through@npm:2.3.8"
   checksum: 10c0/4b09f3774099de0d4df26d95c5821a62faee32c7e96fb1f4ebd54a2d7c11c57fe88b0a0d49cf375de5fee5ae6bf4eb56dbbf29d07366864e2ee805349970d3cc
@@ -29000,6 +28960,16 @@ __metadata:
   version: 0.3.2
   resolution: "tinyexec@npm:0.3.2"
   checksum: 10c0/3efbf791a911be0bf0821eab37a3445c2ba07acc1522b1fa84ae1e55f10425076f1290f680286345ed919549ad67527d07281f1c19d584df3b74326909eb1f90
+  languageName: node
+  linkType: hard
+
+"tinyglobby@npm:0.2.12":
+  version: 0.2.12
+  resolution: "tinyglobby@npm:0.2.12"
+  dependencies:
+    fdir: "npm:^6.4.3"
+    picomatch: "npm:^4.0.2"
+  checksum: 10c0/7c9be4fd3625630e262dcb19015302aad3b4ba7fc620f269313e688f2161ea8724d6cb4444baab5ef2826eb6bed72647b169a33ec8eea37501832a2526ff540f
   languageName: node
   linkType: hard
 

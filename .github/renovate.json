@@ -7,6 +7,10 @@
   "rebaseWhen": "conflicted",
   "packageRules": [
     {
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
       "matchUpdateTypes": ["patch"],
       "automerge": true,
       "labels": ["release:dependency", "changesets-ok"],

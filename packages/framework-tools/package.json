@@ -31,7 +31,7 @@
     "build:types": "tsc --build --verbose"
   },
   "dependencies": {
-    "@arethetypeswrong/cli": "0.18.1",
+    "@arethetypeswrong/cli": "0.18.2",
     "esbuild": "0.25.0",
     "fast-glob": "3.3.3",
     "fs-extra": "11.2.0",

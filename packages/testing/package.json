@@ -102,7 +102,7 @@
     "@testing-library/jest-dom": "6.5.0",
     "@testing-library/react": "14.3.1",
     "@testing-library/user-event": "14.5.2",
-    "@types/aws-lambda": "8.10.145",
+    "@types/aws-lambda": "8.10.152",
     "@types/babel-core": "6.25.10",
     "@types/jest": "29.5.14",
     "@types/node": "20.17.10",

@@ -92,7 +92,7 @@
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.1",
+    "@arethetypeswrong/cli": "0.18.2",
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",
     "@types/busboy": "^1",
     "@types/express": "4",

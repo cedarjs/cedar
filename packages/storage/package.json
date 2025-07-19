@@ -58,7 +58,7 @@
     "ulid": "2.3.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.1",
+    "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/client": "5.20.0",
     "@types/mime-types": "2.1.4",

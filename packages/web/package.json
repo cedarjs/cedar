@@ -161,7 +161,7 @@
   },
   "devDependencies": {
     "@apollo/client-react-streaming": "0.12.2",
-    "@arethetypeswrong/cli": "0.18.1",
+    "@arethetypeswrong/cli": "0.18.2",
     "@babel/cli": "7.27.2",
     "@babel/core": "^7.26.10",
     "@babel/plugin-transform-runtime": "7.27.4",
