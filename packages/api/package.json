@@ -98,7 +98,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/aws-lambda": "8.10.145",
+    "@types/aws-lambda": "8.10.152",
     "@types/jsonwebtoken": "9.0.10",
     "@types/memjs": "1",
     "@types/pascalcase": "1.0.3",
