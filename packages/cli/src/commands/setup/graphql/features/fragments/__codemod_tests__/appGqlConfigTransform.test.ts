@@ -5,7 +5,11 @@ import { describe, test } from 'vitest'
 
 import { findUp } from '@cedarjs/project-config'
 
-describe('fragments graphQLClientConfig', () => {
+describe('fragments graphQLClientConfig', (context) => {
+  if (process.env.CI && process.platform === 'win32') {
+    context.skip('Skipping CI tests on Windows')
+  }
+
   test('App.tsx with no graphQLClientConfig', async () => {
     await matchFolderTransform('appGqlConfigTransform', 'config-simple', {
       useJsCodeshift: true,

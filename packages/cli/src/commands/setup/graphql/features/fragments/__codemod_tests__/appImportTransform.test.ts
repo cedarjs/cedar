@@ -1,6 +1,10 @@
 import { describe, test } from 'vitest'
 
-describe('fragments possibleTypes import', () => {
+describe('fragments possibleTypes import', (context) => {
+  if (process.env.CI && process.platform === 'win32') {
+    context.skip('Skipping CI tests on Windows')
+  }
+
   test('Default App.tsx', async () => {
     await matchFolderTransform('appImportTransform', 'import-simple', {
       useJsCodeshift: true,

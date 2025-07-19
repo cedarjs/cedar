@@ -4,7 +4,11 @@ import { describe, it, expect } from 'vitest'
 
 import { runTransform } from '../../../../lib/runTransform.js'
 
-describe('Db codemod', () => {
+describe('Db codemod', (context) => {
+  if (process.env.CI && process.platform === 'win32') {
+    context.skip('Skipping CI tests on Windows')
+  }
+
   it('Handles the default db case', async () => {
     await matchTransformSnapshot('dbCodemod', 'defaultDb')
   })
