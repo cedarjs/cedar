@@ -3,10 +3,10 @@ import { vi, beforeAll, afterAll, describe, it, expect } from 'vitest'
 
 import type { CustomProviderHooks } from '@cedarjs/auth'
 
-import type { DbAuthClientArgs } from '../dbAuth.js'
-import { createDbAuthClient, createAuth } from '../dbAuth.js'
+import type { DbAuthClientArgs } from '../dbAuth'
+import { createDbAuthClient, createAuth } from '../dbAuth'
 
-import { fetchMock } from './dbAuth.test.js'
+import { fetchMock } from './dbAuth.test'
 
 const defaultArgs = {
   fetchConfig: {
