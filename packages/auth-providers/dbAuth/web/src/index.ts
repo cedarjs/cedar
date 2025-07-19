@@ -1,1 +1,1 @@
-export * from './dbAuth.js'
+export * from './dbAuth'

@@ -2,11 +2,9 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "strict": true,
-    "isolatedModules": true,
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext",
+    "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["."],
+  "include": ["src", "ambient.d.ts"],
   "references": [{ "path": "../../../auth/tsconfig.build.json" }]
 }
