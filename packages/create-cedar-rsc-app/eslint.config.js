@@ -37,7 +37,7 @@ export default tseslint.config(
   },
   perfectionist.configs['recommended-natural'],
   {
-    // Apply the same rules used in .eslintrc.js
+    // Apply the same rules as we use for import/order in .eslintrc.js
     rules: {
       'perfectionist/sort-imports': [
         'error',

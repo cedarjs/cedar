@@ -1,9 +1,7 @@
 // @ts-check
 
-// @ts-expect-error types
 import fs from 'node:fs'
 
-// @ts-expect-error types
 import core from '@actions/core'
 import { codeChanges } from './cases/code_changes.mjs'
 import { rscChanged } from './cases/rsc.mjs'
@@ -167,7 +165,7 @@ async function fetchJson(url, retries = 0) {
   try {
     const res = await fetch(url, {
       headers: {
-        Authorization: githubToken ? `Bearer ${githubToken}` : undefined,
+        ...(githubToken ? { Authorization: `Bearer ${githubToken}` } : {}),
         ['X-GitHub-Api-Version']: '2022-11-28',
         Accept: 'application/vnd.github+json',
       },
