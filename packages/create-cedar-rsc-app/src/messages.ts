@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import ansis from 'ansis'
 
 import type { Config } from './config.js'
 import { getCrxrscaVersion } from './version.js'
@@ -6,8 +6,8 @@ import { getCrxrscaVersion } from './version.js'
 export function printWelcome() {
   console.log()
   console.log(
-    chalk
-      .hex('bf4722')
+    ansis
+      .hex('#bf4722')
       .bold(
         '🌲 Welcome to the Cedar RSC quick-start installer ' +
           `v${getCrxrscaVersion()} 🌲`,
@@ -33,6 +33,6 @@ export function printDone(config: Config) {
       'example application',
   )
   console.log()
-  console.log(chalk.hex('cef792')('> cd ' + config.installationDir))
-  console.log(chalk.hex('cef792')('> yarn rw build -v && yarn rw serve'))
+  console.log(ansis.hex('#cef792')('> cd ' + config.installationDir))
+  console.log(ansis.hex('#cef792')('> yarn rw build -v && yarn rw serve'))
 }

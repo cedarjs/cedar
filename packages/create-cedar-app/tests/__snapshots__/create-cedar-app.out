@@ -1,0 +1,31 @@
+
+🌲🌲🌲🌲🌲
+🌲🌲
+🌲🌲  [1m[4m[38;2;232;232;232mWelcome to CedarJS![39m[24m[22m
+🌲🌲
+🌲🌲🌲🌲🌲
+
+[?25l[38;2;255;132;94m⠋[39m Checking node and yarn compatibility
+[?25h[?25l[32m✔[39m Compatibility checks passed
+[?25h[32m✔[39m Creating your CedarJS app in ./cedar-app based on command line argument
+[32m✔[39m Using TypeScript based on command line flag
+[32m✔[39m Will initialize a git repo based on command line flag
+[32m✔[39m Will not run yarn install based on command line flag
+[?25l[38;2;255;132;94m⠋[39m Creating project files
+[?25h[?25l[32m✔[39m Project files created
+[?25h[90mℹ[39m Skipped yarn install step
+[?25l[38;2;255;132;94m⠋[39m Initializing a git repo
+[?25h[?25l[32m✔[39m Initialized a git repo with commit message "Initial commit"
+[?25h
+[92mThanks for trying out CedarJS![39m
+
+ ⚡️ [38;2;255;132;94mGet up and running fast with this Quick Start guide[39m: https://redwoodjs.com/quick-start
+
+[1m[4m[38;2;232;232;232mFire it up![39m[24m[22m 🚀
+
+[38;2;255;132;94m > [32mcd cedar-app[38;2;255;132;94m[39m
+[38;2;255;132;94m > [32myarn install[38;2;255;132;94m[39m
+[38;2;255;132;94m > [32myarn rw dev[38;2;255;132;94m[39m
+
+[?25l[32m✔[39m Initialized a git repo with commit message "Initial commit"
+[?25h

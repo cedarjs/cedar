@@ -1,11 +1,11 @@
 import path from 'path'
 
-import chalk from 'chalk'
-
 import { getPaths, getRouteHookForPage } from '@cedarjs/project-config'
 import { getRouteRegexAndParams } from '@cedarjs/router/dist/util'
 import { getProject } from '@cedarjs/structure/dist/index.js'
 import type { RWRoute } from '@cedarjs/structure/dist/model/RWRoute'
+
+const ansis = require('ansis')
 
 export interface RouteInformation {
   name?: string
@@ -52,11 +52,11 @@ export function warningForDuplicateRoutes() {
   const duplicatedRoutes = getDuplicateRoutes()
   let message = ''
   if (duplicatedRoutes.length > 0) {
-    message += chalk.keyword('orange')(
+    message += ansis.hex('#ffa500')(
       `Warning: ${duplicatedRoutes.length} duplicate routes have been detected, only the route(s) closest to the top of the file will be used.\n`,
     )
     duplicatedRoutes.forEach((route) => {
-      message += ` ${chalk.keyword('orange')('->')} Name: "${
+      message += ` ${ansis.hex('#ffa500')('->')} Name: "${
         route.name
       }", Path: "${route.path}", Page: "${route.page}"\n`
     })

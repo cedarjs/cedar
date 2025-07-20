@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -36,7 +36,7 @@ export function exitWithError(
   // the error in telemetry if needed and if the user chooses to share it
   const errorReferenceCode = uuidv4()
 
-  const line = chalk.red('-'.repeat(process.stderr.columns))
+  const line = ansis.red('-'.repeat(process.stderr.columns))
 
   // Generate and print a nice message to the user
   const content = !includeEpilogue

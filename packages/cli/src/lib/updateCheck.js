@@ -1,7 +1,7 @@
 import path from 'path'
 
+import ansis from 'ansis'
 import boxen from 'boxen'
-import chalk from 'chalk'
 import fs from 'fs-extra'
 import latestVersion from 'latest-version'
 import semver from 'semver'
@@ -189,7 +189,7 @@ function getUpdateMessage() {
       updateCount += 1
 
       if (tag === localTag) {
-        message += `\n\n ❖  ${chalk.underline(chalk.bold(tag))}:\n     v${
+        message += `\n\n ❖  ${ansis.underline.bold(tag)}:\n     v${
           data.localVersion
         } -> v${version} `
       } else {
