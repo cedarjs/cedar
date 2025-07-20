@@ -11,14 +11,9 @@ if (!process.env.PROJECT_PATH) {
 }
 
 const projectPath = await fs.realpath(process.env.PROJECT_PATH)
-const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots', import.meta.url))
+const SNAPSHOT_DIR = fileURLToPath(new URL('./__snapshots__', import.meta.url))
 
 cd(projectPath)
-console.log('>> projectPath: ', {
-  SNAPSHOT_DIR,
-  projectPath,
-  snapshotFile: path.join(SNAPSHOT_DIR, 'create-cedar-app.out'),
-})
 
 describe('create-cedar-app', () => {
   test('--help', async () => {
