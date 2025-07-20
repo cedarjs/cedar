@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+
 import fetch from 'node-fetch'
 
 import type { Config } from './config.js'

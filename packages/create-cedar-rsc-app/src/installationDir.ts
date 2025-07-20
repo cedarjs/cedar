@@ -1,9 +1,9 @@
-import enquirer from 'enquirer'
 import fs from 'node:fs'
+
+import enquirer from 'enquirer'
 import untildify from 'untildify'
 
 import type { Config } from './config.js'
-
 import { ExitCodeError } from './error.js'
 
 export async function setInstallationDir(config: Config) {

@@ -1,7 +1,6 @@
 import chalk from 'chalk'
 
 import type { Config } from './config.js'
-
 import { getCrxrscaVersion } from './version.js'
 
 export function printWelcome() {
