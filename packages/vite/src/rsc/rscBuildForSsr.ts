@@ -67,7 +67,7 @@ export async function rscBuildForSsr({
           '@cedarjs/forms',
           '@cedarjs/prerender/*',
           '@cedarjs/auth-*-api',
-          '@cedarjs/auth-*-web',
+          '@cedarjs/auth-!(dbauth)-web',
         ],
       }),
       rscRoutesAutoLoader(),

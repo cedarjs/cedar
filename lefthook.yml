@@ -21,11 +21,19 @@ pre-commit:
   jobs:
     - name: lint staged files
       run: yarn cross-env RWJS_CWD=packages/create-cedar-app/templates/ts yarn eslint {staged_files}
-      glob: '*.{js,ts,jsx,tsx}'
+      glob: '*.{js,ts,jsx,tsx,cjs,mjs}'
       exclude:
         - __fixtures__/*
+        - '**/__snapshots__/**'
 
-    - run: yarn prettier --log-level=silent --check {staged_files}
+    - name: format staged files
+      run: yarn prettier --check --log-level=silent {staged_files}
+      glob:
+        - '*.{js,mjs,cjs,ts,mts,jsx,tsx,json,yml,md,mdx,css,sh}'
+        - Dockerfile|.gitignore|.gitattributes
+      exclude:
+        - __fixtures__/*
+        - '**/__snapshots__/**'
 #
 #     - name: rubocop
 #       glob: "*.rb"
