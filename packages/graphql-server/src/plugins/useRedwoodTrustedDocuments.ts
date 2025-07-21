@@ -26,9 +26,9 @@ export type RedwoodTrustedDocumentOptions = Omit<
 
 const REDWOOD__AUTH_GET_CURRENT_USER_QUERY =
   '{"query":"query __REDWOOD__AUTH_GET_CURRENT_USER { redwood { currentUser } }"}'
-const REDWOOD__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION =
+const CEDAR__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION =
   '{"query":"mutation { resyncMailRenderers }"}'
-const REDWOOD__STUDIO_TEMPLATE_MUTATION =
+const CEDAR__STUDIO_TEMPLATE_MUTATION =
   '{"query":"mutation { resyncMailTemplate }"}'
 
 /**
@@ -59,18 +59,21 @@ const allowRedwoodAuthCurrentUserQuery = async (request: Request) => {
 }
 
 /**
- * When using Studio, we want to allow the `resyncMailRenderers` and `resyncMailTemplate` mutations to be
- * executed without a persisted operation. This is only allowed in local development, ensure you have NODE_ENV=development set.
+ * When using Studio, we want to allow the `resyncMailRenderers` and
+ * `resyncMailTemplate` mutations to be executed without a persisted operation.
+ * This is only allowed in local development, ensure you have
+ * NODE_ENV=development set.
  *
- * This is because the `resyncMailRenderers` mutation is a special case that is used by
- * Studio to sync mail renderers from the mailer configuration.
+ * This is because the `resyncMailRenderers` mutation is a special case that is
+ * used by Studio to sync mail renderers from the mailer configuration.
  *
- * This function checks if the request is for the `resyncMailRenderers` or `resyncMailTemplate` mutations and has the correct headers.
+ * This function checks if the request is for the `resyncMailRenderers` or
+ * `resyncMailTemplate` mutations and has the correct headers.
  *
- * If you need Studio in production, you just have to add the above mutations to your
- * SDL schema and as dummy resolvers so Trusted Documents can pick them up.
+ * If you need Studio in production, you just have to add the above mutations to
+ * your SDL schema and as dummy resolvers so Trusted Documents can pick them up.
  */
-const allowRedwoodStudioResyncMailMutations = async (request: Request) => {
+const allowCedarStudioResyncMailMutations = async (request: Request) => {
   const isLocalDevelopment = process.env.NODE_ENV === 'development'
   if (!isLocalDevelopment) {
     return false
@@ -80,11 +83,11 @@ const allowRedwoodStudioResyncMailMutations = async (request: Request) => {
   const hasContentType = headers.get('content-type') === 'application/json'
 
   const query = await request.text()
-  const hasAllowedQuery =
-    query === REDWOOD__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION ||
-    query === REDWOOD__STUDIO_TEMPLATE_MUTATION
+  const isAllowedQuery =
+    query === CEDAR__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION ||
+    query === CEDAR__STUDIO_TEMPLATE_MUTATION
 
-  return hasContentType && hasAllowedQuery && isLocalDevelopment
+  return hasContentType && isAllowedQuery
 }
 
 export const useRedwoodTrustedDocuments = (
@@ -113,7 +116,10 @@ export const useRedwoodTrustedDocuments = (
           }
         }
       }
-      return allowRedwoodAuthCurrentUserQuery(request) || allowRedwoodStudioResyncMailMutations(request)
+      return (
+        allowRedwoodAuthCurrentUserQuery(request) ||
+        allowCedarStudioResyncMailMutations(request)
+      )
     },
   })
 }
