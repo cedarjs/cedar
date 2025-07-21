@@ -60,14 +60,22 @@ const allowRedwoodAuthCurrentUserQuery = async (request: Request) => {
 
 /**
  * When using Studio, we want to allow the `resyncMailRenderers` and `resyncMailTemplate` mutations to be
- * executed without a persisted operation.
+ * executed without a persisted operation. This is only allowed in local development, ensure you have NODE_ENV=development set.
  *
  * This is because the `resyncMailRenderers` mutation is a special case that is used by
  * Studio to sync mail renderers from the mailer configuration.
  *
  * This function checks if the request is for the `resyncMailRenderers` or `resyncMailTemplate` mutations and has the correct headers.
+ *
+ * If you need Studio in production, you just have to add the above mutations to your
+ * SDL schema and as dummy resolvers so Trusted Documents can pick them up.
  */
 const allowRedwoodStudioResyncMailMutations = async (request: Request) => {
+  const isLocalDevelopment = process.env.NODE_ENV === 'development'
+  if (!isLocalDevelopment) {
+    return false
+  }
+
   const headers = request.headers
   const hasContentType = headers.get('content-type') === 'application/json'
 
@@ -76,7 +84,7 @@ const allowRedwoodStudioResyncMailMutations = async (request: Request) => {
     query === REDWOOD__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION ||
     query === REDWOOD__STUDIO_TEMPLATE_MUTATION
 
-  return hasContentType && hasAllowedQuery
+  return hasContentType && hasAllowedQuery && isLocalDevelopment
 }
 
 export const useRedwoodTrustedDocuments = (
