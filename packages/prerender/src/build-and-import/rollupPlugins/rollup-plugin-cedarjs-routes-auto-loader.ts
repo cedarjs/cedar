@@ -38,9 +38,10 @@ function withRelativeImports(page: PagesDependency) {
 
 function prerenderLoaderImpl(forPrerender: boolean, relativeImport: string) {
   if (forPrerender) {
-    return `require('./${relativeImport.split('/').at(-1)}-__PRERENDER_CHUNK_ID.js')`
-    // return `import('${relativeImport}')`
-    // return `require('${relativeImport}')`
+    return `{
+      const chunkId = './${relativeImport.split('/').at(-1)}-__PRERENDER_CHUNK_ID.js';
+      return require(chunkId);
+    }`
   }
 
   // This code will be output when building the web side (i.e. not when
