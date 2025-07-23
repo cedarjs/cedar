@@ -65,7 +65,7 @@ test('RBAC: Should not be able to delete contact as non-admin user', async ({
 
   await page.locator('text=Delete').first().click()
 
-  await expect(
+  expect(
     page
       .locator('.rw-scaffold')
       .locator("text=You don't have permission to do that"),
@@ -77,7 +77,7 @@ test('RBAC: Should not be able to delete contact as non-admin user', async ({
     page.locator('.rw-scaffold').locator('text=Contact deleted'),
   ).toBeHidden()
 
-  await expect(
+  expect(
     await page.locator('text=charlie@chimichanga.com').count(),
   ).toBeGreaterThan(0)
 })
@@ -137,7 +137,7 @@ export default async ({ args }) => {
     page.locator('.rw-scaffold').locator('text=Contact deleted'),
   ).toBeVisible()
 
-  await expect(await page.locator('text=charlie@chimichanga.com').count()).toBe(
+  expect(await page.locator('text=charlie@chimichanga.com').count()).toBe(
     contactCountBefore - 1,
   )
 })
