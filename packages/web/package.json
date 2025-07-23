@@ -152,7 +152,7 @@
     "cookie": "1.0.2",
     "core-js": "3.42.0",
     "graphql": "16.9.0",
-    "graphql-sse": "2.5.3",
+    "graphql-sse": "2.5.4",
     "graphql-tag": "2.12.6",
     "react-helmet-async": "2.0.5",
     "react-hot-toast": "2.4.1",
