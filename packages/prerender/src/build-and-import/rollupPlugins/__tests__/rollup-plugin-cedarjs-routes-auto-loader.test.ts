@@ -67,7 +67,6 @@ describe('page auto loader correctly imports pages', () => {
 
   beforeAll(() => {
     process.env.RWJS_CWD = FIXTURE_PATH
-    result = transform(getPaths().web.routes)
   })
 
   afterAll(() => {
@@ -75,13 +74,38 @@ describe('page auto loader correctly imports pages', () => {
   })
 
   test('Pages get both a LazyComponent and a prerenderLoader', () => {
-    expect(result?.code).toContain(`const HomePage = {
-  name: "HomePage",
-  prerenderLoader: (name) => ({
-    default: globalThis.__REDWOOD__PRERENDER_PAGES[name]
-  }),
-  LazyComponent: lazy(() => import("./pages/HomePage/HomePage"))
-}`)
+    result = transform(getPaths().web.routes)
+
+    expect(result?.code).toContain(
+      `const HomePage = {
+        name: "HomePage",
+        prerenderLoader: (name) => ({
+          default: globalThis.__REDWOOD__PRERENDER_PAGES[name]
+        }),
+        LazyComponent: lazy(() => import("./pages/HomePage/HomePage"))
+      }`
+        .split('\n')
+        .map((line) => line.replace(/^\s{6}/, ''))
+        .join('\n'),
+    )
+  })
+
+  test('Pages get both a LazyComponent and a prerenderLoader for prerender', () => {
+    result = transform(getPaths().web.routes, true)
+
+    expect(result?.code).toContain(
+      `const HomePage = {
+        name: "HomePage",
+        prerenderLoader: (name) => {
+            const chunkId = './HomePage-__PRERENDER_CHUNK_ID.js';
+            return require(chunkId);
+          },
+        LazyComponent: lazy(() => import("./pages/HomePage/HomePage"))
+      }`
+        .split('\n')
+        .map((line) => line.replace(/^\s{6}/, ''))
+        .join('\n'),
+    )
   })
 
   test('Already imported pages are left alone.', () => {
