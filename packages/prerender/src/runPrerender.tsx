@@ -287,7 +287,6 @@ export const runPrerender = async ({
     })
 
     const required = await buildAndImport({
-      cwd: getPaths().web.base,
       filepath: entryPath,
       preserveTemporaryFile: true,
     })

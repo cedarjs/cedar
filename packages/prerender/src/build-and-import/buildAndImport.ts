@@ -5,7 +5,6 @@ import alias from '@rollup/plugin-alias'
 import commonjs from '@rollup/plugin-commonjs'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
-import { loadTsConfig } from 'load-tsconfig'
 import { rollup } from 'rollup'
 import unimportPlugin from 'unimport/unplugin'
 
@@ -24,7 +23,6 @@ import { injectFileGlobalsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-i
 import { cedarjsPrerenderMediaImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-prerender-media-imports'
 import { cedarjsRoutesAutoLoaderPlugin } from './rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader'
 import { typescriptPlugin } from './rollupPlugins/rollup-plugin-cedarjs-typescript'
-import type { Options } from './types'
 import {
   getPkgType,
   isValidJsFile,
@@ -38,6 +36,17 @@ const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   })
 }
 
+interface Options {
+  /** The filepath to bundle and require */
+  filepath: string
+
+  /**
+   * Preserve compiled temporary file for debugging
+   * Default to `process.env.BUNDLE_REQUIRE_PRESERVE`
+   */
+  preserveTemporaryFile?: boolean
+}
+
 export async function buildAndImport(
   options: Options,
 ): Promise<Record<string, React.FunctionComponent>> {
@@ -45,16 +54,17 @@ export async function buildAndImport(
     throw new Error(`${options.filepath} is not a valid JS file`)
   }
 
-  const cwd = options.cwd || process.cwd()
-  const tsconfig =
-    options.tsconfig === false
-      ? undefined
-      : typeof options.tsconfig === 'string' || !options.tsconfig
-        ? loadTsConfig(cwd, options.tsconfig)
-        : { data: options.tsconfig, path: undefined }
+  console.log('options', options)
+
+  const tsConfigs = parseTypeScriptConfigFiles()
+
+  console.log(
+    'tsConfigs.web?.data.compilerOptions',
+    tsConfigs.web?.data.compilerOptions,
+  )
 
   const resolvePaths = tsconfigPathsToRegExp(
-    tsconfig?.data.compilerOptions?.paths || {},
+    tsConfigs.web?.data.compilerOptions?.paths || {},
   )
 
   // Need the project config to know if trusted graphql documents is being used
@@ -64,7 +74,6 @@ export async function buildAndImport(
 
   const useTrustedDocumentsGqlTag = config.graphql.trustedDocuments
 
-  const tsConfigs = parseTypeScriptConfigFiles()
   const webBase = getPaths().web.base
   const outDir = path.join(getPaths().web.dist, '__prerender')
 
@@ -82,10 +91,8 @@ export async function buildAndImport(
     external: ['react', 'react-dom'],
     plugins: [
       externalPlugin({
-        external: options.external,
-        notExternal: [...(options.notExternal || []), ...resolvePaths],
+        notExternal: resolvePaths,
         filepath: options.filepath,
-        externalNodeModules: options.externalNodeModules,
       }),
       nodeResolve({
         preferBuiltins: true,
@@ -115,7 +122,7 @@ export async function buildAndImport(
       cedarjsDirectoryNamedImportPlugin(),
       cedarjsPrerenderMediaImportsPlugin(),
       commonjs(),
-      typescriptPlugin(options.filepath, tsconfig),
+      typescriptPlugin(options.filepath, tsConfigs.web),
       unimportPlugin.rollup({
         imports: [
           // import React from 'react'
