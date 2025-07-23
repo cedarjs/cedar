@@ -60,11 +60,11 @@ export async function buildAndImport(
 
   console.log(
     'tsConfigs.web?.data.compilerOptions',
-    tsConfigs.web?.data.compilerOptions,
+    tsConfigs.web?.compilerOptions,
   )
 
   const resolvePaths = tsconfigPathsToRegExp(
-    tsConfigs.web?.data.compilerOptions?.paths || {},
+    tsConfigs.web?.compilerOptions?.paths || {},
   )
 
   // Need the project config to know if trusted graphql documents is being used
