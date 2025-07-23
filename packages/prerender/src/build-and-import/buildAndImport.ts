@@ -26,7 +26,7 @@ import { cedarjsRoutesAutoLoaderPlugin } from './rollupPlugins/rollup-plugin-ced
 import { typescriptPlugin } from './rollupPlugins/rollup-plugin-cedarjs-typescript'
 import type { Options } from './types'
 import {
-  guessFormat,
+  getPkgType,
   isValidJsFile,
   makeFilePath,
   setPrerenderChunkIds,
@@ -142,11 +142,9 @@ export async function buildAndImport(
   })
 
   try {
-    const format = options.format ?? guessFormat(options.filepath)
-
     const { output } = await build.generate({
       dir: outDir,
-      format: format === 'esm' ? 'es' : 'cjs',
+      format: getPkgType() === 'module' ? 'es' : 'cjs',
       exports: 'auto',
       sourcemap: 'inline',
     })

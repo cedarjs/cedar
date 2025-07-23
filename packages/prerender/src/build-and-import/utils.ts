@@ -10,7 +10,7 @@ export type RequireFunction = (
   ctx: { format: 'cjs' | 'esm' },
 ) => any
 
-function getPkgType() {
+export function getPkgType() {
   try {
     const pkg = JSON.parse(
       fs.readFileSync(path.resolve('package.json'), 'utf-8'),
@@ -22,19 +22,6 @@ function getPkgType() {
   }
 
   return undefined
-}
-
-export function guessFormat(inputFile: string): 'esm' | 'cjs' {
-  const ext = path.extname(inputFile)
-  const type = getPkgType()
-  if (ext === '.js') {
-    return type === 'module' ? 'esm' : 'cjs'
-  } else if (ext === '.ts' || ext === '.mts') {
-    return 'esm'
-  } else if (ext === '.mjs') {
-    return 'esm'
-  }
-  return 'cjs'
 }
 
 export const getRandomId = () => {
