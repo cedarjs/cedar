@@ -22209,16 +22209,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magic-string@npm:0.30.11":
-  version: 0.30.11
-  resolution: "magic-string@npm:0.30.11"
-  dependencies:
-    "@jridgewell/sourcemap-codec": "npm:^1.5.0"
-  checksum: 10c0/b9eb370773d0bd90ca11a848753409d8e5309b1ad56d2a1aa49d6649da710a6d2fe7237ad1a643c5a5d3800de2b9946ed9690acdfc00e6cc1aeafff3ab1752c4
-  languageName: node
-  linkType: hard
-
-"magic-string@npm:^0.30.0, magic-string@npm:^0.30.17, magic-string@npm:^0.30.3, magic-string@npm:^0.30.5":
+"magic-string@npm:0.30.17, magic-string@npm:^0.30.0, magic-string@npm:^0.30.17, magic-string@npm:^0.30.3, magic-string@npm:^0.30.5":
   version: 0.30.17
   resolution: "magic-string@npm:0.30.17"
   dependencies:
@@ -27959,7 +27950,7 @@ __metadata:
     "@storybook/builder-vite": "npm:7.6.20"
     "@storybook/react": "npm:7.6.20"
     "@types/node": "npm:20.17.10"
-    magic-string: "npm:0.30.11"
+    magic-string: "npm:0.30.17"
     react-docgen: "npm:7.0.3"
     tsx: "npm:4.20.3"
     typescript: "npm:5.6.2"
