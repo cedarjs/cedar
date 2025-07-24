@@ -23,12 +23,7 @@ import { injectFileGlobalsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-i
 import { cedarjsPrerenderMediaImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-prerender-media-imports'
 import { cedarjsRoutesAutoLoaderPlugin } from './rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader'
 import { typescriptPlugin } from './rollupPlugins/rollup-plugin-cedarjs-typescript'
-import {
-  getPkgType,
-  isValidJsFile,
-  makeFilePath,
-  setPrerenderChunkIds,
-} from './utils'
+import { getPkgType, isValidJsFile, makeFilePath } from './utils'
 
 const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   return Object.keys(paths || {}).map((key) => {
@@ -161,10 +156,9 @@ export async function buildAndImport(
         throw new Error('[bundle-require] Expected chunk output')
       }
 
-      const code = setPrerenderChunkIds(chunk.code, chunk.dynamicImports)
       const chunkPath = path.join(outDir, chunk.fileName)
 
-      await fs.promises.writeFile(chunkPath, code, 'utf8')
+      await fs.promises.writeFile(chunkPath, chunk.code, 'utf8')
     }
 
     const importPath = makeFilePath(path.join(outDir, output[0].fileName))

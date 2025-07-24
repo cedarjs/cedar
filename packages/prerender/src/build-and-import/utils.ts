@@ -32,39 +32,6 @@ export function isValidJsFile(filepath: string) {
   return JS_EXT_RE.test(filepath)
 }
 
-import type { OutputChunk } from 'rollup'
-
-export function setPrerenderChunkIds(
-  code: string,
-  dynamicImports: OutputChunk['dynamicImports'],
-) {
-  if (!code.includes('__PRERENDER_CHUNK_ID.js')) {
-    return code
-  }
-
-  // const ContactContactPage = {
-  //     name: "ContactContactPage",
-  //     prerenderLoader: (name)=>require('./ContactPage-__PRERENDER_CHUNK_ID.js'),
-  //     LazyComponent: /*#__PURE__*/ React.lazy(()=>Promise.resolve().then(function () { return require('./ContactPage-pvUUt2sr.js'); }))
-  // };
-  // const AboutPage = {
-  //     name: "AboutPage",
-  //     prerenderLoader: (name)=>require('./AboutPage-__PRERENDER_CHUNK_ID.js'),
-  //     LazyComponent: /*#__PURE__*/ React.lazy(()=>Promise.resolve().then(function () { return require('./AboutPage-pvUUt2sr.js'); }))
-  // };
-  const newCode = code.replace(
-    /'\.\/([^']+Page-)__PRERENDER_CHUNK_ID\.js'/g,
-    (_match, pageName) => {
-      const chunkName = dynamicImports.find((importedChunk) =>
-        importedChunk.startsWith(pageName),
-      )
-      return `'./${chunkName}'`
-    },
-  )
-
-  return newCode
-}
-
 /**
  * Converts a file path to a URL path (file://...)
  * Without this, absolute paths can't be imported on Windows
