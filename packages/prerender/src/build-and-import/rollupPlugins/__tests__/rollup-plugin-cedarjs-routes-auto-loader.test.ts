@@ -79,10 +79,7 @@ describe('page auto loader correctly imports pages', () => {
     expect(result?.code).toContain(
       dedent(6)`const AboutPage = {
         name: "AboutPage",
-        prerenderLoader: (name) => {
-          const chunkId = './AboutPage-__PRERENDER_CHUNK_ID.js';
-          return require(chunkId);
-        },
+        prerenderLoader: (name) => ({ default: __cedarjs_prerender__AboutPage }),
         LazyComponent: lazy(() => import("./pages/AboutPage/AboutPage"))
       }`,
     )
@@ -93,10 +90,7 @@ describe('page auto loader correctly imports pages', () => {
     expect(result?.code).toContain(
       dedent(6)`const ContactNewContactPage = {
         name: "ContactNewContactPage",
-        prerenderLoader: (name) => {
-          const chunkId = './NewContactPage-__PRERENDER_CHUNK_ID.js';
-          return require(chunkId);
-        },
+        prerenderLoader: (name) => ({ default: __cedarjs_prerender__ContactNewContactPage }),
         LazyComponent: lazy(() => import("./pages/Contact/NewContactPage/NewContactPage"))
       }`,
     )
