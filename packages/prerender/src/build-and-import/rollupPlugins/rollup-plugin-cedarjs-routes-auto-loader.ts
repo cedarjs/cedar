@@ -38,14 +38,28 @@ function withRelativeImports(page: PagesDependency) {
   }
 }
 
-function prerenderLoaderImpl(importName: string) {
-  return `{
-    const chunkId = './${importName}-__PRERENDER_CHUNK_ID.js';
-    return require(chunkId);
-  }`
+function prerenderLoaderImpl(forPrerender: boolean, relativeImport: string) {
+  if (forPrerender) {
+    return dedent(2)`{
+      const chunkId = './${relativeImport.split('/').at(-1)}-__PRERENDER_CHUNK_ID.js';
+      return require(chunkId);
+    }`
+  }
+
+  // This code will be output when building the web side (i.e. not when
+  // prerendering)
+  // active-route-loader will use this code for auto-imported pages, for the
+  // first load of a prerendered page
+  // Manually imported pages will be bundled in the main bundle and will be
+  // loaded by the code in `normalizePage` in util.ts
+  return `({
+    default: globalThis.__REDWOOD__PRERENDER_PAGES[name]
+  })`
 }
 
-export function cedarjsRoutesAutoLoaderPlugin(): Plugin {
+export function cedarjsRoutesAutoLoaderPlugin({
+  forPrerender = false,
+}: PluginOptions = {}): Plugin {
   // @NOTE: This var gets mutated inside the transform function
   let pages = processPagesDir().map(withRelativeImports)
 
@@ -173,7 +187,7 @@ export function cedarjsRoutesAutoLoaderPlugin(): Plugin {
 
         const declaration = dedent(8)`const ${importName} = {
           name: "${importName}",
-          prerenderLoader: (name) => ${prerenderLoaderImpl(importName)},
+          prerenderLoader: (name) => ${prerenderLoaderImpl(forPrerender, relativeImport)},
           LazyComponent: lazy(() => import("${relativeImport}"))
         }`
         declarations.push(declaration)

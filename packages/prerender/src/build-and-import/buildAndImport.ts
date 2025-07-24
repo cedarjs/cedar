@@ -118,7 +118,7 @@ export async function buildAndImport(
       }),
       ignoreHtmlAndCssImportsPlugin(),
       cellTransformPlugin(),
-      cedarjsRoutesAutoLoaderPlugin(),
+      cedarjsRoutesAutoLoaderPlugin({ forPrerender: true }),
       cedarjsDirectoryNamedImportPlugin(),
       cedarjsPrerenderMediaImportsPlugin(),
       commonjs(),
