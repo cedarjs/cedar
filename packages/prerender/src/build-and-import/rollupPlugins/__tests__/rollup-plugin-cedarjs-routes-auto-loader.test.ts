@@ -76,6 +76,21 @@ describe('page auto loader correctly imports pages', () => {
   })
 
   test('Pages get both a LazyComponent and a prerenderLoader', () => {
+    const clientBuildResult = transform(getPaths().web.routes)
+    expect(clientBuildResult?.code).toContain(
+      dedent(6)`const AboutPage = {
+        name: "AboutPage",
+        prerenderLoader: (name) => ({
+          default: globalThis.__REDWOOD__PRERENDER_PAGES[name]
+        }),
+        LazyComponent: lazy(() => import("./pages/AboutPage/AboutPage"))
+      }`,
+    )
+  })
+
+  test('Pages get both a LazyComponent and a prerenderLoader for prerender', () => {
+    result = transform(getPaths().web.routes, true)
+
     expect(result?.code).toContain(
       dedent(6)`const AboutPage = {
         name: "AboutPage",
