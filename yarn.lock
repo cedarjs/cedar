@@ -2577,7 +2577,7 @@ __metadata:
     "@testing-library/react": "npm:14.3.1"
     concurrently: "npm:8.2.2"
     core-js: "npm:3.42.0"
-    msw: "npm:1.3.4"
+    msw: "npm:1.3.5"
     publint: "npm:0.3.12"
     react: "npm:19.0.0-rc-f2df5694-20240916"
     tsx: "npm:4.20.3"
@@ -3497,7 +3497,7 @@ __metadata:
     jest-environment-jsdom: "npm:29.7.0"
     jest-watch-typeahead: "npm:2.2.2"
     jsdom: "npm:24.1.3"
-    msw: "npm:1.3.4"
+    msw: "npm:1.3.5"
     publint: "npm:0.3.12"
     ts-toolbelt: "npm:9.6.0"
     tsx: "npm:4.20.3"
@@ -23339,9 +23339,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"msw@npm:1.3.4":
-  version: 1.3.4
-  resolution: "msw@npm:1.3.4"
+"msw@npm:1.3.5":
+  version: 1.3.5
+  resolution: "msw@npm:1.3.5"
   dependencies:
     "@mswjs/cookies": "npm:^0.2.2"
     "@mswjs/interceptors": "npm:^0.17.10"
@@ -23358,7 +23358,7 @@ __metadata:
     js-levenshtein: "npm:^1.1.6"
     node-fetch: "npm:^2.6.7"
     outvariant: "npm:^1.4.0"
-    path-to-regexp: "npm:^6.2.0"
+    path-to-regexp: "npm:^6.3.0"
     strict-event-emitter: "npm:^0.4.3"
     type-fest: "npm:^2.19.0"
     yargs: "npm:^17.3.1"
@@ -23369,7 +23369,7 @@ __metadata:
       optional: true
   bin:
     msw: cli/index.js
-  checksum: 10c0/8e7e0f2aa0f571cc77fc21830a07535118c956f113efed8ac0538da75b4c0eff666b322a62b90efc62e25431bbb8820f42adbfafcf9d1d02954e0cc01b8971f6
+  checksum: 10c0/bb0b3625b68f1750bfe90ade6e9e98c64f509138ce7b09c8a53af19f8f662ac79881dad64fbc74c9426247b725e3ec5e6d45eea2f6b71ddc02184e0ddf743e4d
   languageName: node
   linkType: hard
 
@@ -24812,10 +24812,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"path-to-regexp@npm:^6.2.0":
-  version: 6.2.1
-  resolution: "path-to-regexp@npm:6.2.1"
-  checksum: 10c0/7a73811ca703e5c199e5b50b9649ab8f6f7b458a37f7dff9ea338815203f5b1f95fe8cb24d4fdfe2eab5d67ce43562d92534330babca35cdf3231f966adb9360
+"path-to-regexp@npm:^6.3.0":
+  version: 6.3.0
+  resolution: "path-to-regexp@npm:6.3.0"
+  checksum: 10c0/73b67f4638b41cde56254e6354e46ae3a2ebc08279583f6af3d96fe4664fc75788f74ed0d18ca44fa4a98491b69434f9eee73b97bb5314bd1b5adb700f5c18d6
   languageName: node
   linkType: hard
 
@@ -26991,7 +26991,7 @@ __metadata:
     lerna: "npm:8.2.3"
     listr2: "npm:7.0.2"
     make-dir-cli: "npm:4.0.0"
-    msw: "npm:1.3.4"
+    msw: "npm:1.3.5"
     ncp: "npm:2.0.0"
     nodemon: "npm:3.1.10"
     npm-packlist: "npm:8.0.2"
