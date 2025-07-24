@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { extname, join, relative, dirname } from 'node:path'
 
 import type { Plugin } from 'rollup'
@@ -66,8 +67,7 @@ export function cedarjsPrerenderMediaImportsPlugin(
           getPaths().web.dist,
           'client-build-manifest.json',
         )
-        delete require.cache[require.resolve(manifestPath)]
-        buildManifest = require(manifestPath)
+        buildManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
       } catch {
         // Manifest not found, all imports will fallback to data URLs
         buildManifest = {}
