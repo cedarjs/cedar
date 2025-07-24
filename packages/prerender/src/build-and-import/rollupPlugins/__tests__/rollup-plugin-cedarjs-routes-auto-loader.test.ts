@@ -6,10 +6,11 @@ import type { TransformPluginContext } from 'rollup'
 import { getPaths } from '@cedarjs/project-config'
 
 import { cedarjsRoutesAutoLoaderPlugin } from '../rollup-plugin-cedarjs-routes-auto-loader'
+import { dedent } from '../utils'
 
-const transform = (filename: string, forPrerender = false) => {
+const transform = (filename: string) => {
   const code = fs.readFileSync(filename, 'utf-8')
-  const plugin = cedarjsRoutesAutoLoaderPlugin({ forPrerender })
+  const plugin = cedarjsRoutesAutoLoaderPlugin()
   const pluginTransform = plugin.transform
 
   if (typeof pluginTransform !== 'function') {
@@ -77,34 +78,14 @@ describe('page auto loader correctly imports pages', () => {
     result = transform(getPaths().web.routes)
 
     expect(result?.code).toContain(
-      `const HomePage = {
-        name: "HomePage",
-        prerenderLoader: (name) => ({
-          default: globalThis.__REDWOOD__PRERENDER_PAGES[name]
-        }),
-        LazyComponent: lazy(() => import("./pages/HomePage/HomePage"))
-      }`
-        .split('\n')
-        .map((line) => line.replace(/^\s{6}/, ''))
-        .join('\n'),
-    )
-  })
-
-  test('Pages get both a LazyComponent and a prerenderLoader for prerender', () => {
-    result = transform(getPaths().web.routes, true)
-
-    expect(result?.code).toContain(
-      `const HomePage = {
+      dedent(6)`const HomePage = {
         name: "HomePage",
         prerenderLoader: (name) => {
-            const chunkId = './HomePage-__PRERENDER_CHUNK_ID.js';
-            return require(chunkId);
-          },
+          const chunkId = './HomePage-__PRERENDER_CHUNK_ID.js';
+          return require(chunkId);
+        },
         LazyComponent: lazy(() => import("./pages/HomePage/HomePage"))
-      }`
-        .split('\n')
-        .map((line) => line.replace(/^\s{6}/, ''))
-        .join('\n'),
+      }`,
     )
   })
 
