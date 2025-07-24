@@ -107,7 +107,7 @@
     "kill-port": "1.6.1",
     "prettier": "3.5.3",
     "rimraf": "6.0.1",
-    "source-map": "0.7.4",
+    "source-map": "0.7.6",
     "string-env-interpolation": "1.0.1",
     "systeminformation": "5.23.8",
     "termi-link": "1.1.0",

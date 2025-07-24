@@ -3096,7 +3096,7 @@ __metadata:
     prettier: "npm:3.5.3"
     publint: "npm:0.3.12"
     rimraf: "npm:6.0.1"
-    source-map: "npm:0.7.4"
+    source-map: "npm:0.7.6"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.23.8"
     termi-link: "npm:1.1.0"
@@ -27707,10 +27707,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map@npm:0.7.4":
-  version: 0.7.4
-  resolution: "source-map@npm:0.7.4"
-  checksum: 10c0/dc0cf3768fe23c345ea8760487f8c97ef6fca8a73c83cd7c9bf2fde8bc2c34adb9c0824d6feb14bc4f9e37fb522e18af621543f1289038a66ac7586da29aa7dc
+"source-map@npm:0.7.6":
+  version: 0.7.6
+  resolution: "source-map@npm:0.7.6"
+  checksum: 10c0/59f6f05538539b274ba771d2e9e32f6c65451982510564438e048bc1352f019c6efcdc6dd07909b1968144941c14015c2c7d4369fb7c4d7d53ae769716dcc16c
   languageName: node
   linkType: hard
 
