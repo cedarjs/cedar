@@ -8,9 +8,9 @@ import { getPaths } from '@cedarjs/project-config'
 import { cedarjsRoutesAutoLoaderPlugin } from '../rollup-plugin-cedarjs-routes-auto-loader'
 import { dedent } from '../utils'
 
-const transform = (filename: string, forPrerender = false) => {
+const transform = (filename: string) => {
   const code = fs.readFileSync(filename, 'utf-8')
-  const plugin = cedarjsRoutesAutoLoaderPlugin({ forPrerender })
+  const plugin = cedarjsRoutesAutoLoaderPlugin()
   const pluginTransform = plugin.transform
 
   if (typeof pluginTransform !== 'function') {
@@ -68,7 +68,7 @@ describe('page auto loader correctly imports pages', () => {
 
   beforeAll(() => {
     process.env.RWJS_CWD = FIXTURE_PATH
-    result = transform(getPaths().web.routes, true)
+    result = transform(getPaths().web.routes)
   })
 
   afterAll(() => {
@@ -76,21 +76,6 @@ describe('page auto loader correctly imports pages', () => {
   })
 
   test('Pages get both a LazyComponent and a prerenderLoader', () => {
-    const clientBuildResult = transform(getPaths().web.routes)
-    expect(clientBuildResult?.code).toContain(
-      dedent(6)`const AboutPage = {
-        name: "AboutPage",
-        prerenderLoader: (name) => ({
-          default: globalThis.__REDWOOD__PRERENDER_PAGES[name]
-        }),
-        LazyComponent: lazy(() => import("./pages/AboutPage/AboutPage"))
-      }`,
-    )
-  })
-
-  test('Pages get both a LazyComponent and a prerenderLoader for prerender', () => {
-    result = transform(getPaths().web.routes, true)
-
     expect(result?.code).toContain(
       dedent(6)`const AboutPage = {
         name: "AboutPage",
