@@ -94,7 +94,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} CedarJS. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} CedarJS.`,
     },
   } satisfies PresetClassic.ThemeConfig,
   themes: [
