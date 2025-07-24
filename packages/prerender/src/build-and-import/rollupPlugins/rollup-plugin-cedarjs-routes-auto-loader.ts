@@ -38,13 +38,6 @@ function withRelativeImports(page: PagesDependency) {
   }
 }
 
-function prerenderLoaderImpl(relativeImport: string) {
-  return `{
-    const chunkId = './${relativeImport.split('/').at(-1)}-__PRERENDER_CHUNK_ID.js';
-    return require(chunkId);
-  }`
-}
-
 export function cedarjsRoutesAutoLoaderPlugin(): Plugin {
   // @NOTE: This var gets mutated inside the transform function
   let pages = processPagesDir().map(withRelativeImports)
@@ -171,9 +164,12 @@ export function cedarjsRoutesAutoLoaderPlugin(): Plugin {
           continue
         }
 
+        imports.push(
+          `import __cedarjs_prerender__${importName} from '${relativeImport}';`,
+        )
         const declaration = dedent(8)`const ${importName} = {
           name: "${importName}",
-          prerenderLoader: (name) => ${prerenderLoaderImpl(relativeImport)},
+          prerenderLoader: (name) => ({ default: __cedarjs_prerender__${importName} }),
           LazyComponent: lazy(() => import("${relativeImport}"))
         }`
         declarations.push(declaration)
