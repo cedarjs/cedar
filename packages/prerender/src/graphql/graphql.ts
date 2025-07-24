@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises'
 import path from 'path'
 
 import type { DocumentNode } from 'graphql'
@@ -46,8 +45,7 @@ export async function executeQuery(
   // generated on the web side)
   if (config.graphql.trustedDocuments) {
     const documentsPath = path.join(getPaths().web.graphql, 'graphql')
-    const documentsText = await fs.readFile(documentsPath, 'utf8')
-    const documents = JSON.parse(documentsText)
+    const documents = require(documentsPath)
     const documentName =
       operationName[0].toUpperCase() + operationName.slice(1) + 'Document'
     const queryHash = documents?.[documentName]?.__meta__?.hash
