@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import React from 'react'
+import type { ElementType, FunctionComponent } from 'react'
 
 // @ts-expect-error CJS vs ESM
 import { ApolloClient, InMemoryCache } from '@apollo/client'
@@ -14,7 +15,6 @@ import {
   ensurePosixPath,
   importStatementPath,
 } from '@cedarjs/project-config'
-import { LocationProvider } from '@cedarjs/router'
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
@@ -32,9 +32,10 @@ import { getRootHtmlPath, registerShims, writeToDist } from './internal'
 const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
 
 async function recursivelyRender(
-  App: React.ElementType,
-  Routes: React.ElementType,
-  CellCacheContextProvider: React.ElementType,
+  App: ElementType,
+  Routes: ElementType,
+  CellCacheContextProvider: ElementType,
+  LocationProvider: ElementType,
   renderPath: string,
   gqlHandler: any,
   queryCache: Record<string, QueryInfo>,
@@ -141,6 +142,7 @@ async function recursivelyRender(
       App,
       Routes,
       CellCacheContextProvider,
+      LocationProvider,
       renderPath,
       gqlHandler,
       queryCache,
@@ -245,11 +247,13 @@ interface Args {
 
 async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
   const combinedContent = `
-    import App from "${importStatementPath(appPath.replace('.tsx', ''))}";
-    import Routes from "${importStatementPath(routesPath.replace('.tsx', ''))}";
+    import { LocationProvider } from '@cedarjs/router'
     import { CellCacheContextProvider } from '@cedarjs/web'
 
-    export { App, Routes, CellCacheContextProvider };
+    import App from "${importStatementPath(appPath.replace('.tsx', ''))}";
+    import Routes from "${importStatementPath(routesPath.replace('.tsx', ''))}";
+
+    export { LocationProvider, CellCacheContextProvider, App, Routes };
   `
 
   const tempFilePath = path.join(outDir, '__prerender-temp-entry.tsx')
@@ -258,9 +262,10 @@ async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
 }
 
 const renderCache: {
-  App?: React.FunctionComponent
-  Routes?: React.FunctionComponent
-  CellCacheContextProvider?: React.FunctionComponent
+  App?: FunctionComponent
+  Routes?: FunctionComponent
+  CellCacheContextProvider?: FunctionComponent
+  LocationProvider?: FunctionComponent
 } = {}
 
 interface PrerenderParams {
@@ -294,9 +299,11 @@ export const runPrerender = async ({
     renderCache.App = required.App
     renderCache.Routes = required.Routes
     renderCache.CellCacheContextProvider = required.CellCacheContextProvider
+    renderCache.LocationProvider = required.LocationProvider
   }
 
-  const { App, Routes, CellCacheContextProvider } = renderCache
+  const { LocationProvider, App, Routes, CellCacheContextProvider } =
+    renderCache
 
   if (!App) {
     throw new Error('App not found')
@@ -310,10 +317,15 @@ export const runPrerender = async ({
     throw new Error('CellCacheContextProvider not found')
   }
 
+  if (!LocationProvider) {
+    throw new Error('LocationProvider not found')
+  }
+
   const componentAsHtml = await recursivelyRender(
     App,
     Routes,
     CellCacheContextProvider,
+    LocationProvider,
     renderPath,
     gqlHandler,
     queryCache,

@@ -49,14 +49,7 @@ export async function buildAndImport(
     throw new Error(`${options.filepath} is not a valid JS file`)
   }
 
-  console.log('options', options)
-
   const tsConfigs = parseTypeScriptConfigFiles()
-
-  console.log(
-    'tsConfigs.web?.data.compilerOptions',
-    tsConfigs.web?.compilerOptions,
-  )
 
   const resolvePaths = tsconfigPathsToRegExp(
     tsConfigs.web?.compilerOptions?.paths || {},
