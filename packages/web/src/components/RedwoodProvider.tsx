@@ -1,7 +1,7 @@
 import React from 'react'
 
 // @NOTE: Helmet is not used in SSR & RSC
-import * as helmetPkg from 'react-helmet-async'
+import * as helmetPkg from '@dr.pogodin/react-helmet'
 const { Helmet, HelmetProvider } = helmetPkg
 
 interface RedwoodProviderProps {

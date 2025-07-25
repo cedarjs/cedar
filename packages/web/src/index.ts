@@ -32,7 +32,7 @@ export * from './components/RedwoodProvider.js'
 
 export * from './components/MetaTags.js'
 export * from './components/Metadata.js'
-import * as helmetPkg from 'react-helmet-async'
+import * as helmetPkg from '@dr.pogodin/react-helmet'
 
 const { Helmet } = helmetPkg
 export { Helmet as Head, Helmet }

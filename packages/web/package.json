@@ -147,6 +147,7 @@
     "@babel/runtime-corejs3": "7.27.6",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
+    "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.9.21",
     "apollo-upload-client": "18.0.1",
     "cookie": "1.0.2",
@@ -154,7 +155,6 @@
     "graphql": "16.9.0",
     "graphql-sse": "2.5.4",
     "graphql-tag": "2.12.6",
-    "react-helmet-async": "2.0.5",
     "react-hot-toast": "2.4.1",
     "stacktracey": "2.1.8",
     "ts-toolbelt": "9.6.0"

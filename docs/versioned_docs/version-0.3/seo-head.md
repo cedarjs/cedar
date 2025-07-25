@@ -72,7 +72,7 @@ Prior to Redwood 6.6.0 this component was called `<MetaTags>` and had several sp
 
 ### What About Nested Tags?
 
-Redwood uses [react-helmet-async](https://github.com/staylor/react-helmet-async) underneath, which will use the tags furthest down your component tree.
+Redwood uses [@dr.pogodin/react-helmet](https://github.com/birdofpreyru/react-helmet) underneath, which will use the tags furthest down your component tree.
 
 For example, if you set title in your Layout, and a title in your Page, it'll render the one in Page - this way you can override the tags you wish, while sharing the tags defined in Layout.
 

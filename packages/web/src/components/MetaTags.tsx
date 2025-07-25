@@ -1,6 +1,6 @@
 import React from 'react'
 
-import * as helmetPkg from 'react-helmet-async'
+import * as helmetPkg from '@dr.pogodin/react-helmet'
 
 const { Helmet: HelmetHead } = helmetPkg
 // Ideally we wouldn't include this for non experiment builds
