@@ -101,7 +101,7 @@
     "@types/ws": "^8",
     "@types/yargs-parser": "21.0.3",
     "concurrently": "8.2.2",
-    "glob": "11.0.0",
+    "glob": "11.0.3",
     "memfs": "4.17.2",
     "publint": "0.3.12",
     "rollup": "4.24.0",
