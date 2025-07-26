@@ -4,5 +4,12 @@
     "rootDir": "src",
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
-  "include": ["ambient.d.ts", "src"]
+  "include": ["ambient.d.ts", "src"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/__mocks__",
+    "**/__fixtures__",
+    "**/__tests__"
+  ]
 }
