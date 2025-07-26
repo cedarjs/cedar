@@ -3,6 +3,9 @@ import babelTraverse from '@babel/traverse'
 
 import { getJsxAttributeValue } from './jsxAttributeValue.js'
 
+// See https://github.com/babel/babel/discussions/13093
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 const traverse = babelTraverse.default || babelTraverse
 
 interface JsxElement {

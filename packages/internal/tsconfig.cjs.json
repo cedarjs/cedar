@@ -2,11 +2,6 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "outDir": "dist/cjs",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    "target": "ES2022",
-    "declaration": true,
-    "emitDeclarationOnly": false,
     "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
   }
 }

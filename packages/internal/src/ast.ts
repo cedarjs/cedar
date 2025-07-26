@@ -5,12 +5,19 @@ import { types } from '@babel/core'
 import type { ParserPlugin } from '@babel/parser'
 import { parse as babelParse } from '@babel/parser'
 import babelTraverse from '@babel/traverse'
+// Here's an explanation of why we do ts-ignore:
+// https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import ansis from 'ansis'
 
 import { getPaths } from '@cedarjs/project-config'
 
 import { isFileInsideFolder } from './files.js'
 
+// See https://github.com/babel/babel/discussions/13093
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 const traverse = babelTraverse.default || babelTraverse
 
 export const fileToAst = (filePath: string): types.Node => {

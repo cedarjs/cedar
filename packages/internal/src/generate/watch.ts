@@ -3,6 +3,8 @@
 import fs from 'fs'
 import path from 'path'
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import ansis from 'ansis'
 import chokidar from 'chokidar'
 

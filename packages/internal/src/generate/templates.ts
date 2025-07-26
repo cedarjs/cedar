@@ -1,27 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-// ESM/CJS compatible __dirname equivalent
-function getDirname(): string {
-  // Try ESM first
-  try {
-    // In ESM, import.meta.url is available
-    if (import.meta?.url) {
-      return path.dirname(fileURLToPath(import.meta.url))
-    }
-  } catch {
-    // Fall through to CJS approach
-  }
-
-  // Fallback to CJS __dirname if available
-  if (typeof __dirname !== 'undefined') {
-    return __dirname
-  }
-
-  // Last resort: use process.cwd()
-  return process.cwd()
-}
+const ___dirname =
+  // __dirname will work for CJS, and import.meta.dirname will work for ESM
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  typeof __dirname !== 'undefined' ? __dirname : import.meta?.dirname
 
 /**
  * Write the contents of the template to the destination and interpolate the variables.
@@ -32,9 +16,8 @@ export const writeTemplate = (
   destination: string,
   templateValues: Record<string, unknown> = {},
 ) => {
-  const dirname = getDirname()
   const templateString = fs.readFileSync(
-    path.join(dirname, templatePath),
+    path.join(___dirname, templatePath),
     'utf-8',
   )
 

@@ -1,5 +1,9 @@
 import path from 'node:path'
 
+// Here's an explanation of why we do ts-ignore:
+// https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import ansis from 'ansis'
 
 import { getPaths, getRouteHookForPage } from '@cedarjs/project-config'
