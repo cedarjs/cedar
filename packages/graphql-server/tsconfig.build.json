@@ -5,11 +5,5 @@
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["ambient.d.ts", "src"],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "**/__mocks__",
-    "**/__fixtures__",
-    "**/__tests__"
-  ]
+  "exclude": ["**/__mocks__", "**/__fixtures__", "**/__tests__"]
 }

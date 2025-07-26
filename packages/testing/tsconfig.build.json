@@ -16,6 +16,6 @@
     { "path": "../project-config" },
     { "path": "../web/tsconfig.build.json" },
     { "path": "../auth/tsconfig.build.json" },
-    { "path": "../graphql-server" }
+    { "path": "../graphql-server/tsconfig.build.json" }
   ]
 }
