@@ -4,12 +4,14 @@ import path from 'path'
 import { types } from '@babel/core'
 import type { ParserPlugin } from '@babel/parser'
 import { parse as babelParse } from '@babel/parser'
-import traverse from '@babel/traverse'
+import babelTraverse from '@babel/traverse'
 import ansis from 'ansis'
 
 import { getPaths } from '@cedarjs/project-config'
 
 import { isFileInsideFolder } from './files.js'
+
+const traverse = babelTraverse.default || babelTraverse
 
 export const fileToAst = (filePath: string): types.Node => {
   const code = fs.readFileSync(filePath, 'utf-8')

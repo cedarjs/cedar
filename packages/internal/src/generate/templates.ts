@@ -2,6 +2,27 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+// ESM/CJS compatible __dirname equivalent
+function getDirname(): string {
+  // Try ESM first
+  try {
+    // In ESM, import.meta.url is available
+    if (import.meta?.url) {
+      return path.dirname(fileURLToPath(import.meta.url))
+    }
+  } catch {
+    // Fall through to CJS approach
+  }
+
+  // Fallback to CJS __dirname if available
+  if (typeof __dirname !== 'undefined') {
+    return __dirname
+  }
+
+  // Last resort: use process.cwd()
+  return process.cwd()
+}
+
 /**
  * Write the contents of the template to the destination and interpolate the variables.
  * The template is a string that uses standard es6 template literals which allow embded expression.
@@ -11,7 +32,7 @@ export const writeTemplate = (
   destination: string,
   templateValues: Record<string, unknown> = {},
 ) => {
-  const dirname = path.dirname(fileURLToPath(import.meta.url))
+  const dirname = getDirname()
   const templateString = fs.readFileSync(
     path.join(dirname, templatePath),
     'utf-8',
