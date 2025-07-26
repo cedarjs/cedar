@@ -1,9 +1,7 @@
 import type { types } from '@babel/core'
-import babelTraverse from '@babel/traverse'
+import traverse from '@babel/traverse'
 
 import { getJsxAttributeValue } from './jsxAttributeValue.js'
-
-const traverse = babelTraverse.default
 
 interface JsxElement {
   name: string
