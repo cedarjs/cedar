@@ -9,7 +9,7 @@ export function autoImportsPlugin() {
 
     // global imports to register
     imports: [
-      // import gql from 'graphql-tag'
+      // import { gql } from 'graphql-tag'
       {
         'graphql-tag': ['gql'],
       },

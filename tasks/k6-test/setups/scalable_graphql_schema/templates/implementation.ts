@@ -1,4 +1,4 @@
-import type { MutationResolvers, QueryResolvers } from 'types/graphql'
+import type { MutationResolvers, QueryResolvers } from 'types/graphql.js'
 
 type DataItem = {
   id: number

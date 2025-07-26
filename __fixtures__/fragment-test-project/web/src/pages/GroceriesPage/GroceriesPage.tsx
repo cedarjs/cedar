@@ -1,5 +1,5 @@
-import type { GetGroceries, GetProduce } from "types/graphql";
-import { Metadata, useQuery } from '@cedarjs/web';
+// import { Link, routes } from '@cedarjs/router'
+import { Metadata, useQuery } from "@cedarjs/web";
 
 import FruitInfo from "src/components/FruitInfo";
 import ProduceInfo from "src/components/ProduceInfo";
@@ -50,6 +50,6 @@ const GroceriesPage = () => {
       </div>
     </div>
   )
-}
+};
 
-export default GroceriesPage
+export default GroceriesPage;

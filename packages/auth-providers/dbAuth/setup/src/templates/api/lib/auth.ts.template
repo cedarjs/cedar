@@ -1,7 +1,7 @@
 import type { Decoded } from '@cedarjs/api'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
-import { db } from './db'
+import { db } from './db.js'
 
 /**
  * The name of the cookie that dbAuth sets

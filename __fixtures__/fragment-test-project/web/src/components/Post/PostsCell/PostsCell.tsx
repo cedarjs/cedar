@@ -1,4 +1,4 @@
-import type { FindPosts, FindPostsVariables } from 'types/graphql'
+import type { FindPosts, FindPostsVariables } from 'types/graphql.js'
 
 import { Link, routes } from '@cedarjs/router'
 import type {
@@ -26,9 +26,9 @@ export const Loading = () => <div>Loading...</div>
 export const Empty = () => {
   return (
     <div className="rw-text-center">
-      {'No posts yet. '}
+      No posts yet.{' '}
       <Link to={routes.newPost()} className="rw-link">
-        {'Create one?'}
+        Create one?
       </Link>
     </div>
   )

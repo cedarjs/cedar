@@ -137,7 +137,7 @@ export default isSubscriber
 Since validator directives can access arguments (such as `roles`), you can quickly provide RBAC (Role-based Access Control) to fields, queries and mutations.
 
 ```tsx
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 
 import { createValidatorDirective } from '@cedarjs/graphql-server'
 

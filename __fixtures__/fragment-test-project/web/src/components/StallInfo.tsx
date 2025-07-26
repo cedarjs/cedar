@@ -1,15 +1,13 @@
-import type { Stall } from 'types/graphql'
+import type { Stall } from 'types/graphql.js'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 
-const { useRegisteredFragment } = registerFragment(
-  gql`
-    fragment Stall_info on Stall {
-      id
-      name
-    }
-  `
-)
+const { useRegisteredFragment } = registerFragment(gql`
+  fragment Stall_info on Stall {
+    id
+    name
+  }
+`)
 
 const StallInfo = ({ id }: { id: string }) => {
   const { data, complete } = useRegisteredFragment<Stall>(id)

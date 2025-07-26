@@ -3,5 +3,12 @@
   "compilerOptions": {
     "outDir": "dist/cjs",
     "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
-  }
+  },
+  "exclude": [
+    "**/__tests__",
+    "",
+    "// The following files are only used by ESM projects",
+    "src/web/globRoutesImporter.ts",
+    "src/vitest"
+  ]
 }

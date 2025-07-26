@@ -1,4 +1,4 @@
-import type { EditPostById, UpdatePostInput } from 'types/graphql'
+import type { EditPostById, UpdatePostInput } from 'types/graphql.js'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {

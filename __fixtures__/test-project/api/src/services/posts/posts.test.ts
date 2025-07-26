@@ -1,7 +1,7 @@
 import type { Post } from '@prisma/client'
 
-import { posts, post, createPost, updatePost, deletePost } from './posts'
-import type { StandardScenario } from './posts.scenarios'
+import { posts, post, createPost, updatePost, deletePost } from './posts.js'
+import type { StandardScenario } from './posts.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.

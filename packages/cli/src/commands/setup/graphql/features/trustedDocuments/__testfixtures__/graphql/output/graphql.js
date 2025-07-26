@@ -9,7 +9,7 @@ import { cookieName, getCurrentUser } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 import { logger } from 'src/lib/logger'
 
-import { store } from 'src/lib/trustedDocumentsStore'
+import { store } from 'src/lib/trustedDocumentsStore.js'
 
 const authDecoder = createAuthDecoder(cookieName)
 

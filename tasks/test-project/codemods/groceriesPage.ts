@@ -37,7 +37,7 @@ export default (file: FileInfo, api: API) => {
   // Replace
   // import { Link, routes } from '@cedarjs/router'
   // with
-  // import type { GetGroceries, GetProduce } from 'types/graphql'
+  // import type { GetGroceries, GetProduce } from 'types/graphql.js'
   root
     .find(j.ImportDeclaration, {
       source: {

@@ -1,5 +1,6 @@
 {
   "name": "web",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "browserslist": {
@@ -11,22 +12,21 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/auth-dbauth-web": "7.0.0",
-    "@cedarjs/forms": "7.0.0",
-    "@cedarjs/router": "7.0.0",
-    "@cedarjs/web": "7.0.0",
+    "@cedarjs/auth-dbauth-web": "0.0.5",
+    "@cedarjs/forms": "0.0.5",
+    "@cedarjs/router": "0.0.5",
+    "@cedarjs/web": "0.0.5",
     "humanize-string": "2.1.0",
     "react": "19.0.0-rc-f2df5694-20240916",
     "react-dom": "19.0.0-rc-f2df5694-20240916"
   },
   "devDependencies": {
-    "@cedarjs/vite": "7.0.0",
-    "@types/react": "18.2.37",
-    "@types/react-dom": "18.2.15",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.33",
-    "postcss-loader": "^7.3.4",
-    "prettier-plugin-tailwindcss": "^0.5.12",
-    "tailwindcss": "^3.4.1"
+    "@cedarjs/vite": "0.0.5",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "postcss-loader": "^8.1.1",
+    "tailwindcss": "^3.4.17"
   }
 }

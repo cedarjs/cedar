@@ -6,8 +6,8 @@ import {
   createContact,
   updateContact,
   deleteContact,
-} from './contacts'
-import type { StandardScenario } from './contacts.scenarios'
+} from './contacts.js'
+import type { StandardScenario } from './contacts.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
@@ -39,7 +39,9 @@ describe('contacts', () => {
   })
 
   scenario('updates a contact', async (scenario: StandardScenario) => {
-    const original = (await contact({ id: scenario.contact.one.id })) as Contact
+    const original = (await contact({
+      id: scenario.contact.one.id,
+    })) as Contact
     const result = await updateContact({
       id: original.id,
       input: { name: 'String2' },

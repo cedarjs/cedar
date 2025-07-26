@@ -51,4 +51,4 @@ export const schema = gql`
       @skipAuth
     deleteProduce(id: String!): Produce! @skipAuth
   }
-`
+`;

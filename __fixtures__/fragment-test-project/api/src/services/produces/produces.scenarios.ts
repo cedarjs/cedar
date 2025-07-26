@@ -1,27 +1,28 @@
-import type { Prisma, Produce } from '@prisma/client'
-import type { ScenarioData } from '@cedarjs/testing/api'
+import type { Prisma, Produce } from "@prisma/client";
+
+import type { ScenarioData } from "@cedarjs/testing/api";
 
 export const standard = defineScenario<Prisma.ProduceCreateArgs>({
   produce: {
     one: {
       data: {
-        name: 'String6430168',
-        quantity: 7893718,
-        price: 1113110,
-        region: 'String',
-        stall: { create: { name: 'String', stallNumber: 'String1437797' } },
+        name: "String2278482",
+        quantity: 9057347,
+        price: 7001521,
+        region: "String",
+        stall: { create: { name: "String", stallNumber: "String7691378" } },
       },
     },
     two: {
       data: {
-        name: 'String2325729',
-        quantity: 9170370,
-        price: 9020391,
-        region: 'String',
-        stall: { create: { name: 'String', stallNumber: 'String8553241' } },
+        name: "String85307",
+        quantity: 9698308,
+        price: 4477131,
+        region: "String",
+        stall: { create: { name: "String", stallNumber: "String9433316" } },
       },
     },
   },
-})
+});
 
-export type StandardScenario = ScenarioData<Produce, 'produce'>
+export type StandardScenario = ScenarioData<Produce, "produce">;

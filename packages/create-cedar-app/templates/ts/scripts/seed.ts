@@ -1,4 +1,4 @@
-// import { db } from 'api/src/lib/db'
+// import { db } from 'api/src/lib/db.js'
 
 // Manually apply seeds via the `yarn rw prisma db seed` command.
 //

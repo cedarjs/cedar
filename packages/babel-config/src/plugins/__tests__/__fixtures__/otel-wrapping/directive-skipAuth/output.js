@@ -1,5 +1,5 @@
 import { trace as RW_OTEL_WRAPPER_TRACE } from '@opentelemetry/api'
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { createValidatorDirective } from '@cedarjs/graphql-server'
 export const schema = gql`
   """

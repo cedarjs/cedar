@@ -26,4 +26,4 @@ export const schema = gql`
     updateStall(id: String!, input: UpdateStallInput!): Stall! @requireAuth
     deleteStall(id: String!): Stall! @requireAuth
   }
-`
+`;

@@ -2,9 +2,9 @@ import type {
   QueryResolvers,
   MutationResolvers,
   PostRelationResolvers,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const posts: QueryResolvers['posts'] = () => {
   return db.post.findMany()

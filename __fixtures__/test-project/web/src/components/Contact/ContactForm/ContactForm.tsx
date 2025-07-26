@@ -1,4 +1,4 @@
-import type { EditContactById, UpdateContactInput } from 'types/graphql'
+import type { EditContactById, UpdateContactInput } from 'types/graphql.js'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {

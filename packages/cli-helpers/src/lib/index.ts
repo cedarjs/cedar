@@ -55,7 +55,7 @@ export const transformTSToJS = (filename: string, content: string) => {
 export const getPrettierOptions = async () => {
   try {
     const { default: options } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.js')}`
+      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
     )
 
     if (options.tailwindConfig?.startsWith('.')) {
@@ -82,7 +82,10 @@ export const prettify = async (
   const parser = {
     '.css': 'css',
     '.js': 'babel',
+    '.cjs': 'babel',
+    '.mjs': 'babel',
     '.ts': 'babel-ts',
+    '.mts': 'babel-ts',
     '.tsx': 'babel-ts',
   }[path.extname(templateFilename.replace('.template', ''))]
 

@@ -1,3 +1,8 @@
+// We use a Vite plugin to swap out imports from `@cedarjs/router` to this
+// file. @see ../vitest/cedarJsRoutesImportTransformPlugin.ts
+//
+// It's therefore important to reexport everything that we *don't* want to mock.
+
 import type React from 'react'
 
 import { flattenAll } from '@cedarjs/router/dist/react-util'
@@ -7,14 +12,12 @@ import { flattenAll } from '@cedarjs/router/dist/react-util'
 import { isValidRoute } from '@cedarjs/router/dist/route-validators'
 import type { RouterProps } from '@cedarjs/router/dist/router'
 import { replaceParams } from '@cedarjs/router/dist/util'
+
 export * from '@cedarjs/router/dist/index'
 
 export const routes: { [routeName: string]: () => string } = {}
 
 /**
- * We overwrite the default `Router` export (see jest-preset). So every import
- * of @cedarjs/router will import this Router instead
- *
  * This router populates the `routes.<pageName>()` utility object.
  */
 export const Router: React.FC<RouterProps> = ({ children }) => {

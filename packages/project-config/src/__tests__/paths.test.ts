@@ -68,7 +68,7 @@ const DEFAULT_PATHS = {
     html: ['web', 'src', 'index.html'],
     config: ['web', 'config'],
     viteConfig: ['web', 'vite.config.ts'],
-    postcss: ['web', 'config', 'postcss.config.js'],
+    postcss: ['web', 'config', 'postcss.config.cjs'],
     storybookConfig: ['web', '.storybook', 'main.js'],
     storybookPreviewConfig: ['web', '.storybook', 'preview.js'],
     storybookManagerConfig: ['web', '.storybook', 'manager.js'],

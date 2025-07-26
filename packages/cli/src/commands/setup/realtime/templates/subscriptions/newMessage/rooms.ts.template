@@ -1,4 +1,4 @@
-import type { SendMessageInput } from 'types/graphql'
+import type { SendMessageInput } from 'types/graphql.js'
 
 import type { NewMessageChannelType } from 'src/subscriptions/newMessage/newMessage'
 

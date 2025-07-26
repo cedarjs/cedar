@@ -18,8 +18,8 @@ import {
 
 import { apiSideFiles, generateUniqueFileNames } from './authFiles.js'
 
-const AUTH_PROVIDER_HOOK_IMPORT = `import { AuthProvider, useAuth } from './auth'`
-const AUTH_HOOK_IMPORT = `import { useAuth } from './auth'`
+const AUTH_PROVIDER_HOOK_IMPORT = `import { AuthProvider, useAuth } from './auth.js'`
+const AUTH_HOOK_IMPORT = `import { useAuth } from './auth.js'`
 
 export const getWebAppPath = () => getPaths().web.app
 
@@ -110,15 +110,15 @@ export const addApiConfig = ({
   }
 
   const hasCurrentUserImport =
-    /(^import {.*?getCurrentUser(?!getCurrentUser).*?} from ['"]src\/lib\/auth['"])/s.test(
+    /(^import {.*?getCurrentUser(?!getCurrentUser).*?} from ['"]src\/lib\/auth(?:\.js)?['"])/s.test(
       newContent,
     )
 
   if (!hasCurrentUserImport) {
     // add import statement
     newContent = newContent.replace(
-      /^(import { db } from ['"]src\/lib\/db['"])$/m,
-      `import { getCurrentUser } from 'src/lib/auth'\n$1`,
+      /^(import { db } from ['"]src\/lib\/db(?:\.js)?['"])$/m,
+      `import { getCurrentUser } from 'src/lib/auth.js'\n$1`,
     )
 
     // add object to handler

@@ -1,6 +1,6 @@
 import { mockRedwoodDirective, getDirectiveName } from '@cedarjs/testing/api'
 
-import requireAuth from './requireAuth'
+import requireAuth from './requireAuth.js'
 
 describe('requireAuth directive', () => {
   it('declares the directive sdl as schema, with the correct name', () => {

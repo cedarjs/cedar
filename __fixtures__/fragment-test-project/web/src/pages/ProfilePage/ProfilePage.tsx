@@ -1,7 +1,7 @@
-import { Link, routes } from '@cedarjs/router'
 import { Metadata } from '@cedarjs/web'
 
 import { useAuth } from 'src/auth'
+// import { Link, routes } from '@cedarjs/router'
 
 const ProfilePage = () => {
   const { currentUser, isAuthenticated, hasRole, loading } = useAuth()

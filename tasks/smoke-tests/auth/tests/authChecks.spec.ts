@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-import { loginAsTestUser, signUpTestUser } from '../../shared/common'
+import { loginAsTestUser, signUpTestUser } from '../../shared/common.js'
 
 const testUser = {
   email: 'testuser@bazinga.com',

@@ -32,7 +32,7 @@ const propsInterface = `
 interface Props extends FindBlogPostQuery {}
 `
 
-const typeImport = `import { FindBlogPostQuery } from 'types/graphql'`
+const typeImport = `import { FindBlogPostQuery } from 'types/graphql.js'`
 const authorCellImport = `import Author from 'src/components/Author'`
 
 export default (file, api) => {

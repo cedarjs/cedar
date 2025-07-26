@@ -1,4 +1,4 @@
-import type { BlogPostsQuery, BlogPostsQueryVariables } from 'types/graphql'
+import type { BlogPostsQuery, BlogPostsQueryVariables } from 'types/graphql.js'
 
 import type {
   CellSuccessProps,

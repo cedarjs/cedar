@@ -1,4 +1,4 @@
-import type { ${operationName}, ${operationName}Variables } from 'types/graphql'
+import type { ${operationName}, ${operationName}Variables } from 'types/graphql.js'
 
 import type {
   CellSuccessProps,

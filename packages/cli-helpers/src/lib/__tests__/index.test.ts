@@ -1,6 +1,6 @@
 import path from 'path'
 
-import { vi, test, expect } from 'vitest'
+import { beforeAll, afterAll, vi, test, expect } from 'vitest'
 
 import { prettify } from '../index.js'
 
@@ -10,11 +10,24 @@ vi.mock('../paths', () => {
       return {
         base: path.resolve(
           __dirname,
-          '../../../../../__fixtures__/example-todo-main',
+          '../../../../../__fixtures__/test-project',
         ),
       }
     },
   }
+})
+
+const RWJS_CWD = process.env.RWJS_CWD
+
+beforeAll(() => {
+  process.env.RWJS_CWD = path.resolve(
+    __dirname,
+    '../../../../../__fixtures__/test-project',
+  )
+})
+
+afterAll(() => {
+  process.env.RWJS_CWD = RWJS_CWD
 })
 
 test('prettify formats tsx content', async () => {
@@ -35,6 +48,9 @@ test('prettify formats tsx content', async () => {
 
     return <>{foo}, {bar}</>}`
 
+  // The test project we're pointing to during this test uses tailwind, so for
+  // this `expect` to pass, we need to have prettier-plugin-tailwindcss
+  // installed. That's why it's a dev dependency for this package
   expect(
     await prettify('FooBarComponent.template.tsx', content),
   ).toMatchSnapshot()

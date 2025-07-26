@@ -80,7 +80,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
 
       import FatalErrorPage from \"src/pages/FatalErrorPage\";
 
-      import { AuthProvider, useAuth } from \"./auth\";
+      import { AuthProvider, useAuth } from \"./auth.js\";
 
       import \"./index.css\";
       import \"./scaffold.css\";

@@ -1,3 +1,5 @@
+// TODO: Is this used?
+
 /* eslint-disable no-var */
 import type { Global as jest } from '@jest/types'
 type TestAPI = jest.It
@@ -11,20 +13,20 @@ import type {
 import type { DefineScenario } from './src/api/scenario.ts'
 
 declare global {
-  var scenario: (
-    ...args:
-      | [
-          scenarioName: string,
-          testName: string,
-          testFunc: (scenarioData: any) => any,
-        ]
-      | [testName: string, testFunc: (scenarioData: any) => any]
-  ) => void
-  var describeScenario: (
-    ...args:
-      | [string, string, (getScenario: () => any) => any]
-      | [string, (getScenario: () => any) => any]
-  ) => ReturnType<SuiteAPI>
+  // var scenario: (
+  //   ...args:
+  //     | [
+  //         scenarioName: string,
+  //         testName: string,
+  //         testFunc: (scenarioData: any) => any,
+  //       ]
+  //     | [testName: string, testFunc: (scenarioData: any) => any]
+  // ) => void
+  // var describeScenario: (
+  //   ...args:
+  //     | [string, string, (getScenario: () => any) => any]
+  //     | [string, (getScenario: () => any) => any]
+  // ) => ReturnType<SuiteAPI>
   var describe: SuiteAPI
   var it: TestAPI
   var testPath: string

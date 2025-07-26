@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`in javascript mode > creates a multi word service file 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const userProfiles = () => {
   return db.userProfile.findMany()
@@ -22,7 +22,7 @@ export const UserProfile = {
 `;
 
 exports[`in javascript mode > creates a multi word service test file 1`] = `
-"import { userProfiles } from './userProfiles'
+"import { userProfiles } from './userProfiles.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
@@ -47,7 +47,7 @@ exports[`in javascript mode > creates a multi word service test file with crud a
   createTransaction,
   updateTransaction,
   deleteTransaction,
-} from './transactions'
+} from './transactions.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
@@ -107,7 +107,7 @@ exports[`in javascript mode > creates a multi word service test file with multip
   createScalarType,
   updateScalarType,
   deleteScalarType,
-} from './scalarTypes'
+} from './scalarTypes.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
@@ -171,7 +171,7 @@ describe('scalarTypes', () => {
 `;
 
 exports[`in javascript mode > creates a single word service file 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -214,7 +214,7 @@ export const User = {
 `;
 
 exports[`in javascript mode > creates a single word service file with CRUD actions 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const posts = () => {
   return db.post.findMany()
@@ -254,7 +254,7 @@ export const Post = {
 `;
 
 exports[`in javascript mode > creates a single word service file with a belongsTo relation 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -275,7 +275,7 @@ export const User = {
 `;
 
 exports[`in javascript mode > creates a single word service file with a hasMany relation 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -296,7 +296,7 @@ export const User = {
 `;
 
 exports[`in javascript mode > creates a single word service file with multiple relations 1`] = `
-"import { db } from 'src/lib/db'
+"import { db } from 'src/lib/db.js'
 
 export const users = () => {
   return db.user.findMany()
@@ -330,7 +330,7 @@ exports[`in javascript mode > creates a single word service scenario file 1`] = 
 `;
 
 exports[`in javascript mode > creates a single word service test file 1`] = `
-"import { users, user, createUser, updateUser, deleteUser } from './users'
+"import { users, user, createUser, updateUser, deleteUser } from './users.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
@@ -383,9 +383,9 @@ exports[`in typescript mode > creates a multi word service file 1`] = `
 "import type {
   QueryResolvers,
   UserProfileRelationResolvers,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const userProfiles: QueryResolvers['userProfiles'] = () => {
   return db.userProfile.findMany()
@@ -408,8 +408,8 @@ export const UserProfile: UserProfileRelationResolvers = {
 exports[`in typescript mode > creates a multi word service test file 1`] = `
 "import type { UserProfile } from '@prisma/client'
 
-import { userProfiles } from './userProfiles'
-import type { StandardScenario } from './userProfiles.scenarios'
+import { userProfiles } from './userProfiles.js'
+import type { StandardScenario } from './userProfiles.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
@@ -436,8 +436,8 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
-} from './transactions'
-import type { StandardScenario } from './transactions.scenarios'
+} from './transactions.js'
+import type { StandardScenario } from './transactions.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
@@ -502,8 +502,8 @@ import {
   createScalarType,
   updateScalarType,
   deleteScalarType,
-} from './scalarTypes'
-import type { StandardScenario } from './scalarTypes.scenarios'
+} from './scalarTypes.js'
+import type { StandardScenario } from './scalarTypes.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
@@ -574,9 +574,9 @@ exports[`in typescript mode > creates a single word service file 1`] = `
   QueryResolvers,
   MutationResolvers,
   UserRelationResolvers,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()
@@ -623,9 +623,9 @@ exports[`in typescript mode > creates a single word service file with CRUD actio
   QueryResolvers,
   MutationResolvers,
   PostRelationResolvers,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const posts: QueryResolvers['posts'] = () => {
   return db.post.findMany()
@@ -665,9 +665,9 @@ export const Post: PostRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a single word service file with a belongsTo relation 1`] = `
-"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql.js'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()
@@ -688,9 +688,9 @@ export const User: UserRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a single word service file with a hasMany relation 1`] = `
-"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql.js'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()
@@ -711,9 +711,9 @@ export const User: UserRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a single word service file with multiple relations 1`] = `
-"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql.js'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()
@@ -755,8 +755,8 @@ export type StandardScenario = ScenarioData<User, 'user'>
 exports[`in typescript mode > creates a single word service test file 1`] = `
 "import type { User } from '@prisma/client'
 
-import { users, user, createUser, updateUser, deleteUser } from './users'
-import type { StandardScenario } from './users.scenarios'
+import { users, user, createUser, updateUser, deleteUser } from './users.js'
+import type { StandardScenario } from './users.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.

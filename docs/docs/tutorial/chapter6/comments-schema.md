@@ -829,7 +829,10 @@ describe('comments', () => {
 import { comments, createComment } from './comments'
 
 // highlight-next-line
-import type { StandardScenario, PostOnlyScenario } from './comments.scenarios'
+import type {
+  StandardScenario,
+  PostOnlyScenario,
+} from './comments.scenarios.js'
 
 describe('comments', () => {
   scenario('returns all comments', async (scenario: StandardScenario) => {

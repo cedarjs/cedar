@@ -1,4 +1,4 @@
-import { Link, routes } from '@cedarjs/router'
+// import { Link, routes } from '@cedarjs/router'
 import { Metadata } from '@cedarjs/web'
 
 type BlogPostPageProps = {
@@ -16,5 +16,4 @@ const BlogPostPage = ({ id }: BlogPostPageProps) => {
     </>
   )
 }
-
 export default BlogPostPage

@@ -26,6 +26,7 @@ pre-commit:
       exclude:
         - __fixtures__/*
         - '**/__snapshots__/**'
+        - '**/templates/**/*.tsx'
 
     - name: format staged files
       run: yarn prettier --check --log-level=silent {staged_files}
@@ -35,6 +36,7 @@ pre-commit:
       exclude:
         - __fixtures__/*
         - '**/__snapshots__/**'
+        - '**/templates/**/*.tsx'
 #
 #     - name: rubocop
 #       glob: "*.rb"

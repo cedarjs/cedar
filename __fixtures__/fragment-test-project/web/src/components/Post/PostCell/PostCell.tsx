@@ -1,4 +1,4 @@
-import type { FindPostById, FindPostByIdVariables } from 'types/graphql'
+import type { FindPostById, FindPostByIdVariables } from 'types/graphql.js'
 
 import type {
   CellSuccessProps,
@@ -8,20 +8,18 @@ import type {
 
 import Post from 'src/components/Post/Post'
 
-export const QUERY: TypedDocumentNode<
-  FindPostById,
-  FindPostByIdVariables
-> = gql`
-  query FindPostById($id: Int!) {
-    post: post(id: $id) {
-      id
-      title
-      body
-      authorId
-      createdAt
+export const QUERY: TypedDocumentNode<FindPostById, FindPostByIdVariables> =
+  gql`
+    query FindPostById($id: Int!) {
+      post: post(id: $id) {
+        id
+        title
+        body
+        authorId
+        createdAt
+      }
     }
-  }
-`
+  `
 
 export const Loading = () => <div>Loading...</div>
 

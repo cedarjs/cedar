@@ -123,16 +123,15 @@ export async function buildAndImport(
             as: 'React',
             from: 'react',
           },
-          // import gql from 'graphql-tag'
-          !useTrustedDocumentsGqlTag && {
-            name: 'default',
-            as: 'gql',
+          // import { gql } from 'graphql-tag'
+          {
+            name: 'gql',
             from: 'graphql-tag',
           },
           // import { gql } from 'src/graphql/gql'
           useTrustedDocumentsGqlTag && {
             name: 'gql',
-            from: `web/src/graphql/gql`,
+            from: `src/graphql/gql.js`,
           },
         ].filter(<T>(v?: T | false): v is T => Boolean(v)),
       }),

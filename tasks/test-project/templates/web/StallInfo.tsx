@@ -1,4 +1,4 @@
-import type { Stall } from 'types/graphql'
+import type { Stall } from 'types/graphql.js'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 

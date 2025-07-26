@@ -51,6 +51,10 @@
         "default": "./dist/cjs/api/index.js"
       }
     },
+    "./api/vitest": {
+      "types": "./dist/api/vitest/index.d.ts",
+      "default": "./dist/api/vitest/index.js"
+    },
     "./cache": {
       "import": {
         "types": "./dist/cache/index.d.ts",
@@ -70,6 +74,31 @@
         "types": "./dist/cjs/web/index.d.ts",
         "default": "./dist/cjs/web/index.js"
       }
+    },
+    "./web/MockRouter.js": {
+      "import": {
+        "types": "./dist/web/MockRouter.d.ts",
+        "default": "./dist/web/MockRouter.js"
+      },
+      "require": {
+        "types": "./dist/cjs/web/MockRouter.d.ts",
+        "default": "./dist/cjs/web/MockRouter.js"
+      }
+    },
+    "./web/vitest": {
+      "types": "./dist/web/vitest/index.d.ts",
+      "default": "./dist/web/vitest/index.js"
+    },
+    "./mockContext": {
+      "// TODO": "./is the mockContext export still needed?",
+      "import": {
+        "types": "./dist/api/mockContext.d.ts",
+        "default": "./dist/api/mockContext.js"
+      },
+      "require": {
+        "types": "./dist/cjs/api/mockContext.d.ts",
+        "default": "./dist/cjs/api/mockContext.js"
+      }
     }
   },
   "files": [
@@ -83,7 +112,7 @@
     "build": "tsx ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-testing.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
+    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext 'js,jsx,ts,tsx' --ignore dist --exec 'yarn build'",
     "check:attw": "yarn rw-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
@@ -113,6 +142,8 @@
     "jest-watch-typeahead": "2.2.2",
     "msw": "1.3.5",
     "ts-toolbelt": "9.6.0",
+    "unplugin-auto-import": "19.3.0",
+    "vitest": "3.2.4",
     "whatwg-fetch": "3.6.20"
   },
   "devDependencies": {
@@ -121,7 +152,9 @@
     "jsdom": "24.1.3",
     "publint": "0.3.12",
     "tsx": "4.20.3",
-    "typescript": "5.6.2",
+    "typescript": "5.6.2"
+  },
+  "peerDependencies": {
     "vitest": "3.2.4"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"

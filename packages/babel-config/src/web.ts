@@ -89,8 +89,8 @@ export const getWebSideBabelPlugins = (
           // If projects do not use trusted documents (default)
           // it auto-imports the gql tag from graphql-tag
           !useTrustedDocumentsGqlTag && {
-            // import gql from 'graphql-tag'
-            default: 'gql',
+            // import { gql } from 'graphql-tag'
+            members: ['gql'],
             path: 'graphql-tag',
           },
           // if projects use trusted documents
@@ -125,7 +125,7 @@ export const getWebSideOverrides = (
     // Automatically import files in `./web/src/pages/*` in to
     // the `./web/src/Routes.[ts|jsx]` file.
     {
-      test: /Routes.(js|tsx|jsx)$/,
+      test: /src\/Routes.(js|tsx|jsx)$/,
       plugins: [
         [
           require('./plugins/babel-plugin-redwood-routes-auto-loader').default,

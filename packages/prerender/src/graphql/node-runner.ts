@@ -4,11 +4,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 
-import {
-  getPaths,
-  importStatementPath,
-  projectIsEsm,
-} from '@cedarjs/project-config'
+import { getPaths, projectIsEsm } from '@cedarjs/project-config'
 import {
   cedarCellTransform,
   cedarjsDirectoryNamedImportPlugin,
@@ -47,29 +43,29 @@ async function createViteServer() {
         },
         {
           find: /^src\//,
-          replacement: 'src/',
-          customResolver: (id, importer, _options) => {
-            const apiImportBase = importStatementPath(getPaths().api.base)
-            const webImportBase = importStatementPath(getPaths().web.base)
+          replacement: getPaths().api.src + '/',
+          // customResolver: (id, importer, _options) => {
+          //   const apiImportBase = importStatementPath(getPaths().api.base)
+          //   const webImportBase = importStatementPath(getPaths().web.base)
 
-            let resolved: { id: string } | null = null
+          //   let resolved: { id: string } | null = null
 
-            // When importing a file from the api directory (using api/src/...
-            // in the script), that file in turn might import another file using
-            // just src/... That's a problem for Vite when it's running a file
-            // from scripts/ because it doesn't know what the src/ alias is.
-            // So we have to tell it to use the correct path based on what file
-            // is doing the importing.
-            if (importer?.startsWith(apiImportBase)) {
-              const apiImportSrc = importStatementPath(getPaths().api.src)
-              resolved = { id: id.replace('src', apiImportSrc) }
-            } else if (importer?.startsWith(webImportBase)) {
-              const webImportSrc = importStatementPath(getPaths().web.src)
-              resolved = { id: id.replace('src', webImportSrc) }
-            }
+          //   // When importing a file from the api directory (using api/src/...
+          //   // in the script), that file in turn might import another file using
+          //   // just src/... That's a problem for Vite when it's running a file
+          //   // from scripts/ because it doesn't know what the src/ alias is.
+          //   // So we have to tell it to use the correct path based on what file
+          //   // is doing the importing.
+          //   if (importer?.startsWith(apiImportBase)) {
+          //     const apiImportSrc = importStatementPath(getPaths().api.src)
+          //     resolved = { id: id.replace('src', apiImportSrc) }
+          //   } else if (importer?.startsWith(webImportBase)) {
+          //     const webImportSrc = importStatementPath(getPaths().web.src)
+          //     resolved = { id: id.replace('src', webImportSrc) }
+          //   }
 
-            return resolved
-          },
+          //   return resolved
+          // },
         },
       ],
     },

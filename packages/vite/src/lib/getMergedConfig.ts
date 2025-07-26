@@ -1,8 +1,8 @@
 import path from 'node:path'
 
 import type { InputOption } from 'rollup'
-import type { ConfigEnv, UserConfig } from 'vite'
 import { mergeConfig } from 'vite'
+import type { ConfigEnv, ViteUserConfig } from 'vitest/config'
 
 import type { Config, Paths } from '@cedarjs/project-config'
 import { getConfig, getPaths } from '@cedarjs/project-config'
@@ -17,7 +17,7 @@ import { getEnvVarDefinitions } from './envVarDefinitions.js'
  * build
  */
 export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
-  return (userConfig: UserConfig, env: ConfigEnv): UserConfig => {
+  return (userConfig: ViteUserConfig, env: ConfigEnv): ViteUserConfig => {
     let apiHost = process.env.REDWOOD_API_HOST
     apiHost ??= rwConfig.api.host
     apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '[::]'
@@ -33,7 +33,9 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
       apiPort = rwConfig.api.port
     }
 
-    const defaultRwViteConfig: UserConfig = {
+    // const NODE_MODULES_PATH = path.join(rwPaths.base, 'node_modules')
+
+    const defaultRwViteConfig: ViteUserConfig = {
       root: rwPaths.web.src,
       // @MARK: when we have these aliases, the warnings from the FE server go
       // away BUT, if you have imports like this:
@@ -142,6 +144,57 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
             global: 'globalThis',
           },
         },
+      },
+      ssr: {
+        // `@cedarjs/testing` is not externalized in order to support
+        // `import.meta.glob`, which we use in one of the files in the package
+        noExternal: env.mode == 'test' ? ['@cedarjs/testing'] : [],
+      },
+      resolve: {
+        alias:
+          env.mode === 'test'
+            ? [
+                // Mock implementations
+                // {
+                //   find: /^@cedarjs\/router$/,
+                //   replacement: path.join(
+                //     NODE_MODULES_PATH,
+                //     '@cedarjs/testing/dist/web/MockRouter.js',
+                //   ),
+                // },
+                // {
+                //   find: /^@cedarjs\/auth$/,
+                //   replacement: path.join(
+                //     NODE_MODULES_PATH,
+                //     '@cedarjs/auth/dist/index.js',
+                //   ),
+                //   customResolver: (id, importer) => {
+                //     // console.log('getMergedConfig auth customResolver id', id)
+                //     console.log(
+                //       'getMergedConfig auth customResolver importer',
+                //       importer,
+                //     )
+                //     if (importer?.endsWith('mockAuth.js')) {
+                //       console.log('returning id', id)
+                //       return id
+                //     }
+                //     const mockAuthId = path.join(
+                //       NODE_MODULES_PATH,
+                //       '@cedarjs/testing/dist/web/mockAuth.js',
+                //     )
+                //     console.log('returning id', mockAuthId)
+                //     return path.join(
+                //       NODE_MODULES_PATH,
+                //       '@cedarjs/testing/dist/web/mockAuth.js',
+                //     )
+                //   },
+                // },
+              ]
+            : [],
+      },
+      test: {
+        globals: false,
+        environment: 'jsdom',
       },
     }
 
