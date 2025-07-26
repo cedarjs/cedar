@@ -1,5 +1,6 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 /**
  * Write the contents of the template to the destination and interpolate the variables.
@@ -10,8 +11,9 @@ export const writeTemplate = (
   destination: string,
   templateValues: Record<string, unknown> = {},
 ) => {
+  const dirname = path.dirname(fileURLToPath(import.meta.url))
   const templateString = fs.readFileSync(
-    path.join(__dirname, templatePath),
+    path.join(dirname, templatePath),
     'utf-8',
   )
 
