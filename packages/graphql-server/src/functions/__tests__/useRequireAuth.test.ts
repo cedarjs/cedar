@@ -2,8 +2,8 @@ import type { APIGatewayEvent, Context } from 'aws-lambda'
 import jwt from 'jsonwebtoken'
 import { describe, expect, it } from 'vitest'
 
-import { AuthenticationError } from '../../errors'
-import type { UseRequireAuth } from '../useRequireAuth'
+import { AuthenticationError } from '../../errors.js'
+import type { UseRequireAuth } from '../useRequireAuth.js'
 
 import { getCurrentUser } from './fixtures/auth'
 

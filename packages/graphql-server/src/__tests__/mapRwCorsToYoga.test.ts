@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mapRwCorsOptionsToYoga } from '../cors'
+import { mapRwCorsOptionsToYoga } from '../cors.js'
 
 /** Yoga CORS Options looks like
  *

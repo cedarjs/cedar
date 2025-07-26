@@ -1,4 +1,4 @@
-import type { GraphiQLOptions } from './types'
+import type { GraphiQLOptions } from './types.js'
 // import { isDevEnv } from './util'
 
 const DEFAULT_QUERY = `query Redwood {

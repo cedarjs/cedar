@@ -2,7 +2,7 @@ import type { Plugin } from 'graphql-yoga'
 
 import { setContext } from '@cedarjs/context'
 
-import type { RedwoodGraphQLContext } from '../types'
+import type { RedwoodGraphQLContext } from '../types.js'
 
 /**
  * This Envelop plugin waits until the GraphQL context is done building and sets the

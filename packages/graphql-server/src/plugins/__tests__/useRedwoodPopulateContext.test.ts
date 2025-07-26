@@ -7,7 +7,7 @@ import {
   createSpiedPlugin,
   createTestkit,
 } from '../__fixtures__/envelop-testing'
-import { useRedwoodPopulateContext } from '../useRedwoodPopulateContext'
+import { useRedwoodPopulateContext } from '../useRedwoodPopulateContext.js'
 
 describe('Populates context', () => {
   const spiedPlugin = createSpiedPlugin()

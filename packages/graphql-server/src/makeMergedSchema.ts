@@ -18,16 +18,16 @@ import type {
 } from 'graphql'
 import { merge, omitBy } from 'lodash'
 
-import type { RedwoodDirective } from './plugins/useRedwoodDirective'
-import * as rootGqlSchema from './rootSchema'
-import type { RedwoodSubscription } from './subscriptions/makeSubscriptions'
+import type { RedwoodDirective } from './plugins/useRedwoodDirective.js'
+import * as rootGqlSchema from './rootSchema.js'
+import type { RedwoodSubscription } from './subscriptions/makeSubscriptions.js'
 import type {
   Services,
   ServicesGlobImports,
   GraphQLTypeWithFields,
   SdlGlobImports,
   RedwoodScalarConfig,
-} from './types'
+} from './types.js'
 
 const wrapWithOpenTelemetry = async (
   func: any,

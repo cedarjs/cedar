@@ -8,8 +8,8 @@ import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
 import { testSchema, testQuery } from '../__fixtures__/common'
 import { createTestkit } from '../__fixtures__/envelop-testing'
-import { useRedwoodGlobalContextSetter } from '../useRedwoodGlobalContextSetter'
-import { useRedwoodPopulateContext } from '../useRedwoodPopulateContext'
+import { useRedwoodGlobalContextSetter } from '../useRedwoodGlobalContextSetter.js'
+import { useRedwoodPopulateContext } from '../useRedwoodPopulateContext.js'
 
 test('Context is correctly populated', async () => {
   const testkit = createTestkit(

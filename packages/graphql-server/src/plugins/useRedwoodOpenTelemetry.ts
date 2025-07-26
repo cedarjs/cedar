@@ -6,7 +6,7 @@ import { SpanKind } from '@opentelemetry/api'
 import * as opentelemetry from '@opentelemetry/api'
 import { print } from 'graphql'
 
-import type { RedwoodOpenTelemetryConfig } from '../types'
+import type { RedwoodOpenTelemetryConfig } from '../types.js'
 
 export enum AttributeName {
   EXECUTION_ERROR = 'graphql.execute.error',

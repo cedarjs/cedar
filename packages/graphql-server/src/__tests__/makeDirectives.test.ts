@@ -6,7 +6,7 @@ import {
   makeDirectivesForPlugin,
   createTransformerDirective,
   createValidatorDirective,
-} from '../directives/makeDirectives'
+} from '../directives/makeDirectives.js'
 
 const fooSchema = gql`
   directive @foo on FIELD_DEFINITION

@@ -8,7 +8,7 @@ import type {
 } from '@cedarjs/api'
 import { createLogger } from '@cedarjs/api/logger'
 
-import { createGraphQLHandler } from '../../functions/graphql'
+import { createGraphQLHandler } from '../../functions/graphql.js'
 
 vi.mock('../../makeMergedSchema', async () => {
   const { createGraphQLError } = await import('graphql-yoga')

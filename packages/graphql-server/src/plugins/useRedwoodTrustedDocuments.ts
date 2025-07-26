@@ -2,7 +2,7 @@ import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operation
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations'
 import type { Plugin } from 'graphql-yoga'
 
-import type { RedwoodGraphQLContext } from '../types'
+import type { RedwoodGraphQLContext } from '../types.js'
 
 export type RedwoodTrustedDocumentOptions = Omit<
   UsePersistedOperationsOptions,

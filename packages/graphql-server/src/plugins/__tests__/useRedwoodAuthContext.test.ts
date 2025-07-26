@@ -9,7 +9,7 @@ import {
   createSpiedPlugin,
   createTestkit,
 } from '../__fixtures__/envelop-testing'
-import { useRedwoodAuthContext } from '../useRedwoodAuthContext'
+import { useRedwoodAuthContext } from '../useRedwoodAuthContext.js'
 
 const authDecoder = async (token: string) => ({ token })
 

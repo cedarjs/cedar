@@ -7,7 +7,7 @@ import {
   JSONObjectResolver,
   ByteResolver,
 } from 'graphql-scalars'
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 
 import { prismaVersion, redwoodVersion, cedarjsVersion } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'

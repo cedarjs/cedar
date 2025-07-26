@@ -7,13 +7,13 @@ import {
   makeDirectivesForPlugin,
   createTransformerDirective,
   createValidatorDirective,
-} from '../directives/makeDirectives'
-import { makeMergedSchema } from '../makeMergedSchema'
+} from '../directives/makeDirectives.js'
+import { makeMergedSchema } from '../makeMergedSchema.js'
 import type {
   GraphQLTypeWithFields,
   ServicesGlobImports,
   SdlGlobImports,
-} from '../types'
+} from '../types.js'
 
 vi.mock('@cedarjs/project-config', () => {
   return {
