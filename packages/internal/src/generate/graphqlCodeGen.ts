@@ -217,32 +217,20 @@ export function getLoadDocumentsOptions(filename: string) {
 async function getPrismaClient(hasGenerated = false): Promise<{
   ModelName: Record<string, string>
 }> {
-  const { default: localPrisma } = await import('@prisma/client')
+  // Use cache-busting query parameter to force fresh import
+  const cacheBuster = hasGenerated ? `?t=${Date.now()}` : ''
+  const { default: localPrisma } = await import(`@prisma/client${cacheBuster}`)
 
-  // @ts-expect-error I believe this type will only exist if the prisma client has been generated
   if (!localPrisma.ModelName) {
     if (hasGenerated) {
       return { ModelName: {} }
     } else {
       execa.sync('yarn rw prisma generate', { shell: true })
 
-      // Purge Prisma Client from node's require cache, so that the newly
-      // generated client gets picked up by any script that uses it
-      Object.keys(require.cache).forEach((key) => {
-        if (
-          key.includes('/node_modules/@prisma/client/') ||
-          key.includes('/node_modules/.prisma/client/')
-        ) {
-          delete require.cache[key]
-        }
-      })
-
       return getPrismaClient(true)
     }
   }
 
-  // @ts-expect-error See above, the generated client should contain a ModelName property that
-  // satisfies Record<string, string>
   return localPrisma
 }
 

@@ -38,10 +38,12 @@ export const generateGraphQLSchema = async () => {
     }
   }
 
-  // If we're serverful and the user is using realtime, we need to include the live directive for realtime support.
-  // Note the `ERR_  prefix in`ERR_MODULE_NOT_FOUND`. Since we're using `await import`,
-  // if the package (here, `@cedarjs/realtime`) can't be found, it throws this error, with the prefix.
-  // Whereas `require('@cedarjs/realtime')` would throw `MODULE_NOT_FOUND`.
+  // If we're serverful and the user is using realtime, we need to include the
+  // live directive for realtime support.
+  // Note the `ERR_  prefix in `ERR_MODULE_NOT_FOUND`. Since we're using
+  // `await import`, if the package (here, `@cedarjs/realtime`) can't be found,
+  // it throws this error, with the prefix. Whereas
+  // `require('@cedarjs/realtime')` would throw `MODULE_NOT_FOUND`.
   if (resolveFile(`${getPaths().api.src}/server`)) {
     try {
       const { liveDirectiveTypeDefs } = await import('@cedarjs/realtime')
