@@ -31,7 +31,7 @@ afterAll(() => {
   delete process.env.RWJS_CWD
 })
 
-const cleanPaths = (p) => {
+const cleanPaths = (p: string) => {
   return ensurePosixPath(path.relative(FIXTURE_PATH, p))
 }
 
@@ -139,7 +139,9 @@ declare global {
 test('generates global page imports source maps', () => {
   const paths = generateTypeDefRouterPages()
   const sourceMap = JSON.parse(fs.readFileSync(paths[0] + '.map', 'utf-8'))
-  sourceMap.sources = sourceMap.sources.map((source) => ensurePosixPath(source))
+  sourceMap.sources = sourceMap.sources.map((source: string) =>
+    ensurePosixPath(source),
+  )
   expect(sourceMap).toMatchSnapshot()
 })
 
