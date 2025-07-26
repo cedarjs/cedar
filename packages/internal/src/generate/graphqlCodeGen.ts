@@ -217,9 +217,24 @@ export function getLoadDocumentsOptions(filename: string) {
 async function getPrismaClient(hasGenerated = false): Promise<{
   ModelName: Record<string, string>
 }> {
-  // Use cache-busting query parameter to force fresh import
-  const cacheBuster = hasGenerated ? `?t=${Date.now()}` : ''
-  const { default: localPrisma } = await import(`@prisma/client${cacheBuster}`)
+  let localPrisma
+
+  if (hasGenerated) {
+    // Use file path with cache-busting query parameter to force fresh import
+    const cacheBuster = `?t=${Date.now()}`
+    const prismaClientPath = path.resolve(
+      process.cwd(),
+      'node_modules/.prisma/client/index.js',
+    )
+    const { default: freshPrisma } = await import(
+      `file://${prismaClientPath}${cacheBuster}`
+    )
+    localPrisma = freshPrisma
+  } else {
+    // First attempt - use package name
+    const { default: packagePrisma } = await import('@prisma/client')
+    localPrisma = packagePrisma
+  }
 
   if (!localPrisma.ModelName) {
     if (hasGenerated) {
