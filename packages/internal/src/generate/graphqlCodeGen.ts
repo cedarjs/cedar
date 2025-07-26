@@ -242,6 +242,9 @@ async function getPrismaClient(hasGenerated = false): Promise<{
     } else {
       execa.sync('yarn rw prisma generate', { shell: true })
 
+      // Import the newly generated Prisma client. To make sure we actually get
+      // the newly generated Prisma client we pass `true` for `hasGenerated` so
+      // that the code above will bypass Node.js's module cache.
       return getPrismaClient(true)
     }
   }
