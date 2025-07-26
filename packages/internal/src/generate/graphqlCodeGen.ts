@@ -19,9 +19,9 @@ import { Kind, type DocumentNode } from 'graphql'
 
 import { getPaths, getConfig } from '@cedarjs/project-config'
 
-import { getTsConfigs } from '../project'
+import { getTsConfigs } from '../project.js'
 
-import * as rwTypescriptResolvers from './plugins/rw-typescript-resolvers'
+import * as rwTypescriptResolvers from './plugins/rw-typescript-resolvers/index.js'
 enum CodegenSide {
   API,
   WEB,

@@ -3,13 +3,11 @@ import {
   getCachedDocumentNodeFromSchema,
   oldVisit,
 } from '@graphql-codegen/plugin-helpers'
-import {
-  TypeScriptResolversPluginConfig,
-  plugin as originalPlugin,
-} from '@graphql-codegen/typescript-resolvers'
+import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers'
+import { plugin as originalPlugin } from '@graphql-codegen/typescript-resolvers'
 import type { GraphQLSchema } from 'graphql'
 
-import { RwTypeScriptResolversVisitor } from './visitor'
+import { RwTypeScriptResolversVisitor } from './visitor.js'
 
 export const plugin: PluginFunction<
   TypeScriptResolversPluginConfig,
@@ -95,4 +93,5 @@ export const plugin: PluginFunction<
   }
 }
 
-export { RwTypeScriptResolversVisitor, TypeScriptResolversPluginConfig }
+export { RwTypeScriptResolversVisitor }
+export type { TypeScriptResolversPluginConfig }

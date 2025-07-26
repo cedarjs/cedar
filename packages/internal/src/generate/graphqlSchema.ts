@@ -7,14 +7,13 @@ import { CodeFileLoader } from '@graphql-tools/code-file-loader'
 import type { LoadSchemaOptions } from '@graphql-tools/load'
 import { loadSchema } from '@graphql-tools/load'
 import { getSchema } from '@prisma/internals'
+import ansis from 'ansis'
 import type { DocumentNode } from 'graphql'
 import { print } from 'graphql'
 import { terminalLink } from 'termi-link'
 
 import { rootSchema } from '@cedarjs/graphql-server'
 import { getPaths, getConfig, resolveFile } from '@cedarjs/project-config'
-
-const ansis = require('ansis')
 
 export const generateGraphQLSchema = async () => {
   const redwoodProjectPaths = getPaths()

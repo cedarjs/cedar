@@ -5,7 +5,7 @@ import { beforeAll, afterAll, test, expect } from 'vitest'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
 
-import { findCells, findDirectoryNamedModules } from '../files'
+import { findCells, findDirectoryNamedModules } from '../files.js'
 import {
   generateMirrorCells,
   generateMirrorDirectoryNamedModules,
@@ -17,7 +17,7 @@ import {
   mirrorPathForDirectoryNamedModules,
   mirrorPathForCell,
   generateTypeDefScenarios,
-} from '../generate/typeDefinitions'
+} from '../generate/typeDefinitions.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,

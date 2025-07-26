@@ -4,7 +4,7 @@ import fg, { type Options as FastGlobOptions } from 'fast-glob'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { getNamedExports, hasDefaultExport, fileToAst } from './ast'
+import { getNamedExports, hasDefaultExport, fileToAst } from './ast.js'
 
 export const findCells = (cwd: string = getPaths().web.src) => {
   const modules = fg.sync('**/*Cell.{js,jsx,ts,tsx}', {

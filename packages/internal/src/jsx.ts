@@ -1,7 +1,9 @@
 import type { types } from '@babel/core'
-import traverse from '@babel/traverse'
+import babelTraverse from '@babel/traverse'
 
-import { getJsxAttributeValue } from './jsxAttributeValue'
+import { getJsxAttributeValue } from './jsxAttributeValue.js'
+
+const traverse = babelTraverse.default
 
 interface JsxElement {
   name: string
@@ -12,13 +14,14 @@ interface JsxElement {
     column: number
   }
 }
+
 /**
  * Extract JSX elements, children and props from static code.
  */
 export const getJsxElements = (ast: types.Node, name: string) => {
   let elements: JsxElement[] = []
   traverse(ast, {
-    JSXIdentifier(path) {
+    JSXIdentifier(path: any) {
       if (
         path.node.name === name &&
         path.parentPath.type === 'JSXOpeningElement'

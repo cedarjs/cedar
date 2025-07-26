@@ -2,7 +2,7 @@ import path from 'path'
 
 import { beforeAll, afterAll, test, expect } from 'vitest'
 
-import { loadAndValidateSdls } from '../validateSchema'
+import { loadAndValidateSdls } from '../validateSchema.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,

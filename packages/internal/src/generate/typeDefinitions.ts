@@ -10,16 +10,16 @@ import {
   fileToAst,
   getDefaultExportLocation,
   getNamedExports,
-} from '../ast'
-import { findCells, findDirectoryNamedModules } from '../files'
-import { parseGqlQueryToAst } from '../gql'
-import { getJsxElements } from '../jsx'
+} from '../ast.js'
+import { findCells, findDirectoryNamedModules } from '../files.js'
+import { parseGqlQueryToAst } from '../gql.js'
+import { getJsxElements } from '../jsx.js'
 
 import {
   generateTypeDefGraphQLApi,
   generateTypeDefGraphQLWeb,
-} from './graphqlCodeGen'
-import { writeTemplate } from './templates'
+} from './graphqlCodeGen.js'
+import { writeTemplate } from './templates.js'
 
 // TODO:
 // Common return format for CLI output:

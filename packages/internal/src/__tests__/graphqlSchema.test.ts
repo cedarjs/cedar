@@ -5,7 +5,7 @@ import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
 import { vi, beforeAll, afterAll, afterEach, test, expect } from 'vitest'
 
-import { generateGraphQLSchema } from '../generate/graphqlSchema'
+import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,

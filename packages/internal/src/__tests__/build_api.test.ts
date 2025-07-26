@@ -11,8 +11,8 @@ import {
 } from '@cedarjs/babel-config'
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
-import { cleanApiBuild } from '../build/api'
-import { findApiFiles } from '../files'
+import { cleanApiBuild } from '../build/api.js'
+import { findApiFiles } from '../files.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,

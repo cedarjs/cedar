@@ -8,7 +8,7 @@ import {
 } from '@cedarjs/babel-config'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
-import { findApiFiles } from '../files'
+import { findApiFiles } from '../files.js'
 
 let BUILD_CTX: BuildContext | null = null
 

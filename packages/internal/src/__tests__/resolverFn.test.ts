@@ -10,7 +10,7 @@ import {
   afterEach,
 } from 'vitest'
 
-import { getResolverFnType } from '../generate/graphqlCodeGen'
+import { getResolverFnType } from '../generate/graphqlCodeGen.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,

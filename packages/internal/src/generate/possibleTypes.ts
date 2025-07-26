@@ -8,7 +8,7 @@ import { format } from 'prettier'
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
-import { getLoadDocumentsOptions } from './graphqlCodeGen'
+import { getLoadDocumentsOptions } from './graphqlCodeGen.js'
 
 type PossibleTypesResult = {
   possibleTypesFiles: string[]

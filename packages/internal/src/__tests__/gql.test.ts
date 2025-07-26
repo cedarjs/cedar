@@ -1,9 +1,9 @@
 import path from 'path'
 
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { test, expect } from 'vitest'
 
-import { listQueryTypeFieldsInProject, parseDocumentAST } from '../gql'
+import { listQueryTypeFieldsInProject, parseDocumentAST } from '../gql.js'
 
 test('parses a document AST', () => {
   const QUERY = gql`
