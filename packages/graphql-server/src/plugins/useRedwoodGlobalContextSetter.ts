@@ -5,16 +5,15 @@ import { setContext } from '@cedarjs/context'
 import type { RedwoodGraphQLContext } from '../types'
 
 /**
- * This Envelop plugin waits until the GraphQL context is done building and sets the
- * Redwood global context which can be imported with:
- * // import { context } from '@cedarjs/graphql-server'
- * @returns
+ * This Envelop plugin waits until the GraphQL context is done building and sets
+ * the CedarJS global context which can be imported with:
+ * `import { context } from '@cedarjs/context'`
  */
 export const useRedwoodGlobalContextSetter =
   (): Plugin<RedwoodGraphQLContext> => ({
     onContextBuilding() {
-      return ({ context: redwoodGraphqlContext }) => {
-        setContext(redwoodGraphqlContext)
+      return ({ context }) => {
+        setContext(context)
       }
     },
   })
