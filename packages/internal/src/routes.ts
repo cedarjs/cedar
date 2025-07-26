@@ -1,4 +1,11 @@
+import path from 'node:path'
+
 import ansis from 'ansis'
+
+import { getPaths, getRouteHookForPage } from '@cedarjs/project-config'
+import { getRouteRegexAndParams } from '@cedarjs/router/dist/util'
+import { getProject } from '@cedarjs/structure/dist/index.js'
+import type { RWRoute } from '@cedarjs/structure/dist/model/RWRoute.js'
 
 export interface RouteInformation {
   name?: string
@@ -8,24 +15,47 @@ export interface RouteInformation {
 
 /**
  * Returns an array of routes which conflict on their defined names
- * TODO: Implement proper route detection when structure package is stable
  */
 export function getDuplicateRoutes(): RouteInformation[] {
-  // Stub implementation - returns empty array
-  return []
+  const duplicateRoutes: RouteInformation[] = []
+  const allRoutes: RWRoute[] = getProject(getPaths().base).router.routes
+  const uniqueNames = new Set(
+    allRoutes
+      .filter((route) => route.name !== undefined)
+      .map((route) => route.name),
+  )
+  uniqueNames.forEach((name) => {
+    const routesWithName = allRoutes.filter((route) => {
+      return route.name === name
+    })
+    if (routesWithName.length > 1) {
+      duplicateRoutes.push(
+        ...routesWithName.map((route) => {
+          return {
+            name: route.name,
+            page: route.page_identifier_str,
+            path: route.path,
+          }
+        }),
+      )
+    }
+  })
+  return duplicateRoutes
 }
 
 /**
  * Detects any potential duplicate routes and returns a formatted warning message
  * @see {@link getDuplicateRoutes} for how duplicate routes are detected
- * @return {string} Warning message when duplicate routes found, empty string if not
+ * @return Warning message when duplicate routes found, empty string if not
  */
-export function warningForDuplicateRoutes(): string {
+export function warningForDuplicateRoutes() {
   const duplicatedRoutes = getDuplicateRoutes()
   let message = ''
   if (duplicatedRoutes.length > 0) {
     message += ansis.hex('#ffa500')(
-      `Warning: ${duplicatedRoutes.length} duplicate routes have been detected, only the route(s) closest to the top of the file will be used.\n`,
+      `Warning: ${duplicatedRoutes.length} duplicate routes have been ` +
+        'detected, only the route(s) closest to the top of the file will be ' +
+        'used.\n',
     )
     duplicatedRoutes.forEach((route) => {
       message += ` ${ansis.hex('#ffa500')('->')} Name: "${
@@ -61,10 +91,38 @@ export interface RouteSpec extends RWRouteManifestItem {
   relativeFilePath: string
 }
 
-/**
- * TODO: Implement proper route detection when structure package is stable
- */
 export const getProjectRoutes = (): RouteSpec[] => {
-  // Stub implementation - returns empty array
-  return []
+  const rwProject = getProject(getPaths().base)
+  const routes = rwProject.getRouter().routes
+
+  // @ts-expect-error "Bundle" is not found but is in the Spec type?
+  return routes.map((route: any) => {
+    const { matchRegexString, routeParams } = route.isNotFound
+      ? { matchRegexString: null, routeParams: null }
+      : getRouteRegexAndParams(route.path)
+
+    return {
+      name: route.isNotFound ? 'NotFoundPage' : route.name,
+      pathDefinition: route.isNotFound ? 'notfound' : route.path,
+      hasParams: route.hasParameters,
+      id: route.id,
+      isNotFound: route.isNotFound,
+      filePath: route.page?.filePath,
+      relativeFilePath: route.page?.filePath
+        ? path.relative(getPaths().web.src, route.page?.filePath)
+        : undefined,
+      routeHooks: getRouteHookForPage(route.page?.filePath),
+      renderMode: route.renderMode,
+      matchRegexString: matchRegexString,
+      paramNames: routeParams,
+      // TODO (STREAMING) deal with permanent/temp later
+      redirect: route.redirect
+        ? { to: route.redirect, permanent: false }
+        : null,
+      isPrivate: route.isPrivate,
+      unauthenticated: route.unauthenticated,
+      roles: route.roles,
+      pageIdentifier: route.page_identifier_str,
+    }
+  })
 }
