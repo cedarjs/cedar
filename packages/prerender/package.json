@@ -58,7 +58,6 @@
     "babel-plugin-ignore-html-and-css-imports": "0.1.0",
     "cheerio": "1.0.0",
     "graphql": "16.9.0",
-    "load-tsconfig": "0.2.5",
     "mime-types": "2.1.35",
     "rollup": "4.24.0",
     "rollup-plugin-swc3": "0.12.1",
