@@ -12,7 +12,6 @@ import { print } from 'graphql'
 import { terminalLink } from 'termi-link'
 
 import { rootSchema } from '@cedarjs/graphql-server'
-import type { ScalarSchemaKeys } from '@cedarjs/graphql-server/src/rootSchema'
 import { getPaths, getConfig, resolveFile } from '@cedarjs/project-config'
 
 const ansis = require('ansis')
@@ -29,7 +28,11 @@ export const generateGraphQLSchema = async () => {
   }
 
   for (const [name, schema] of Object.entries(rootSchema.scalarSchemas)) {
-    if (redwoodProjectConfig.graphql.includeScalars[name as ScalarSchemaKeys]) {
+    if (
+      redwoodProjectConfig.graphql.includeScalars[
+        name as rootSchema.ScalarSchemaKeys
+      ]
+    ) {
       schemaPointerMap[print(schema)] = {}
     }
   }

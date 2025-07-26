@@ -10,7 +10,7 @@ import type { GraphQLTypeWithFields } from '../../index.js'
 import {
   assertSingleExecutionValue,
   createTestkit,
-} from '../__fixtures__/envelop-testing'
+} from '../__fixtures__/envelop-testing.js'
 import { useRedwoodDirective, DirectiveType } from '../useRedwoodDirective.js'
 
 //  ===== Test Setup ======

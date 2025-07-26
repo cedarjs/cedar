@@ -7,6 +7,7 @@
     "outDir": "dist"
   },
   "include": ["."],
+  "exclude": ["dist", "node_modules", "**/__mocks__", "**/__fixtures__"],
   "references": [
     { "path": "../api/tsconfig.build.json" },
     { "path": "../context/tsconfig.build.json" },

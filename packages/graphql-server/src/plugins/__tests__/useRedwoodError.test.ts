@@ -14,7 +14,7 @@ vi.mock('../../makeMergedSchema', async () => {
   const { createGraphQLError } = await import('graphql-yoga')
   const { makeExecutableSchema } = await import('@graphql-tools/schema')
   const { ForbiddenError, RedwoodGraphQLError } = await import(
-    '@cedarjs/graphql-server/dist/errors'
+    '../../errors.js'
   )
   const { CurrencyResolver } = await import('graphql-scalars')
   const { RedwoodError, EmailValidationError } = (await import(

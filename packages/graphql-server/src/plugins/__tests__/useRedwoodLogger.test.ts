@@ -16,8 +16,8 @@ import {
   testParseErrorQuery,
   testFilteredQuery,
   testValidationErrorQuery,
-} from '../__fixtures__/common'
-import { createTestkit } from '../__fixtures__/envelop-testing'
+} from '../__fixtures__/common.js'
+import { createTestkit } from '../__fixtures__/envelop-testing.js'
 import type { LoggerConfig } from '../useRedwoodLogger.js'
 import { useRedwoodLogger } from '../useRedwoodLogger.js'
 

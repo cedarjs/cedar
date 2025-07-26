@@ -1,4 +1,4 @@
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { describe, expect, it } from 'vitest'
 
 import { makeSubscriptions } from '../subscriptions/makeSubscriptions.js'

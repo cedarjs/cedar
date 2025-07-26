@@ -1,6 +1,6 @@
 import type { GraphQLResolveInfo } from 'graphql'
 import { parse, graphql, GraphQLError } from 'graphql'
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { vi, describe, expect, it } from 'vitest'
 
 import {
