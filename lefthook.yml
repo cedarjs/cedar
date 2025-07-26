@@ -9,6 +9,7 @@ pre-push:
     - ref: next
     - ref: release/*
   jobs:
+    - run: yarn build
     - run: yarn lint
     - run: yarn prettier --check --log-level=silent .
     - run: yarn check
