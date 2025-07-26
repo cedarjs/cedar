@@ -9,7 +9,7 @@
   "include": ["src/**/*", "./ambient.d.ts", "./modules.d.ts"],
   "references": [
     { "path": "../cookie-jar" },
-    { "path": "../internal" },
+    { "path": "../internal/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../router/tsconfig.build.json" },
     { "path": "../server-store" },
