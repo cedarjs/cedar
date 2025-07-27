@@ -50,8 +50,8 @@ export const builder = (yargs) => {
     })
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/authentication#self-hosted-auth-installation-and-setup',
+        'CedarJS dbAuth Reference',
+        'https://redwoodjs.com/docs/auth/dbauth',
       )}`,
     )
 

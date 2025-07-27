@@ -159,7 +159,7 @@ export const handler = async ({ force }: Args) => {
           notes.push(
             `${colors.underline(
               'Make sure you implement the Sentry Envelop plugin:',
-            )} https://redwoodjs.com/docs/cli-commands#sentry-envelop-plugin`,
+            )} https://cedarjs.com/docs/cli-commands#sentry-envelop-plugin`,
           )
         } else {
           notes.push(

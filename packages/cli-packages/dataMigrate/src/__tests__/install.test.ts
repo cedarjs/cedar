@@ -38,7 +38,7 @@ describe('install', () => {
     // to avoid having to match control characters that might not even always
     // be there
     expect(yargs.epilogue).toHaveBeenCalledWith(
-      expect.stringMatching(/Also see the .*Redwood CLI Reference.*/),
+      expect.stringMatching(/Also see the .*CedarJS CLI Reference.*/),
     )
     expect(yargs.epilogue).toHaveBeenCalledWith(
       expect.stringMatching(

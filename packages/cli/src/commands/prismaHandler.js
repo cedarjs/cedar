@@ -98,7 +98,7 @@ const printWrapInfo = () => {
     'Use `yarn prisma` to skip Redwood CLI automatic options.',
     '',
     'Find more information in our docs:',
-    c.underline('https://redwoodjs.com/docs/cli-commands#prisma'),
+    c.underline('https://cedarjs.com/docs/cli-commands#prisma'),
   ]
 
   console.log(

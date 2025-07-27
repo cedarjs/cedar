@@ -29,7 +29,7 @@ Your browser should automatically open to [http://localhost:8910](http://localho
 > yarn redwood --help
 > ```
 >
-> For all the details, see the [CLI reference](https://redwoodjs.com/docs/cli-commands).
+> For all the details, see the [CLI reference](https://cedarjs.com/docs/cli-commands).
 
 ## Prisma and the database
 

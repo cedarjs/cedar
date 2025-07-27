@@ -34,8 +34,8 @@ export const builder = (yargs) => {
     })
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#generate-job',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#generate-job',
       )}`,
     )
 

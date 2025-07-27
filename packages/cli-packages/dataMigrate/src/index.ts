@@ -25,8 +25,8 @@ function builder(yargs: Argv) {
     .command(upCommand, upDescription, upBuilder, upHandler)
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#datamigrate',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#datamigrate',
       )}`,
     )
 }

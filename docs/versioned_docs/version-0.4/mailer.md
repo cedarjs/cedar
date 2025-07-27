@@ -100,7 +100,7 @@ The Mailer is not set up by default when you create a new CedarJS app, but it is
 yarn rw setup mailer
 ```
 
-This command sets up the necessary files and dependencies. You can find more information on this command at [this](https://redwoodjs.com/docs/cli-commands#setup-mailer) specific section of our docs.
+This command sets up the necessary files and dependencies. You can find more information on this command at [this](https://cedarjs.com/docs/cli-commands#setup-mailer) specific section of our docs.
 
 ## Usage
 

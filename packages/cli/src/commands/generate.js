@@ -59,7 +59,7 @@ export const builder = (yargs) =>
     .demandCommand()
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#generate-alias-g',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#generate-alias-g',
       )}`,
     )

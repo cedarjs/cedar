@@ -38,8 +38,8 @@ export const builder = (yargs) => {
     })
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#generate-service',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#generate-service',
       )}`,
     )
   Object.entries(defaults()).forEach(([option, config]) => {

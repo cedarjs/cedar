@@ -7,8 +7,8 @@ export const description = 'Add the RW_DataMigration model to your schema'
 export function builder(yargs: Argv): Argv {
   return yargs.epilogue(
     `Also see the ${terminalLink(
-      'Redwood CLI Reference',
-      'https://redwoodjs.com/docs/cli-commands#datamigrate-install',
+      'CedarJS CLI Reference',
+      'https://cedarjs.com/docs/cli-commands#datamigrate-install',
     )}`,
   )
 }

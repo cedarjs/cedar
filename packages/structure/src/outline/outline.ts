@@ -134,9 +134,7 @@ function _components(project: RWProject): TreeItem2 {
     menu: {
       kind: 'group',
       add: Command_cli('rw generate component ...'),
-      doc: Command_open(
-        'https://redwoodjs.com/docs/cli-commands.html#component',
-      ),
+      doc: Command_open('https://cedarjs.com/docs/cli-commands.html#component'),
     },
   }
 }
@@ -175,7 +173,7 @@ function _services(project: RWProject): TreeItem2 {
     menu: {
       kind: 'group',
       add: Command_cli('rw generate service ...'),
-      doc: Command_open('https://redwoodjs.com/docs/cli-commands.html#service'),
+      doc: Command_open('https://cedarjs.com/docs/cli-commands.html#service'),
     },
   }
 }
@@ -266,7 +264,7 @@ function _rwcli_command_group(...opts: RWOpts[]): TreeItem2 {
     children: () => opts.map(_rwcli_command),
     menu: {
       kind: 'withDoc',
-      doc: Command_open('https://redwoodjs.com/docs/cli-commands'),
+      doc: Command_open('https://cedarjs.com/docs/cli-commands'),
     },
   }
 }
