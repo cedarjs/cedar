@@ -75,7 +75,7 @@ export class ServerManager {
       )
     } else {
       this.httpServerProcess = fork(
-        path.join(__dirname, 'bin.js'),
+        path.join(import.meta.dirname, 'bin.js'),
         ['api', '--port', port.toString()],
         forkOpts,
       )
