@@ -5,7 +5,7 @@ import {
 } from '@cedarjs/framework-tools'
 import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
 
-// ESM
+// Build the main package as an ES Module
 await build({
   buildOptions: {
     ...defaultBuildOptions,
