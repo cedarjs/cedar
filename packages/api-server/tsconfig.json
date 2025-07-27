@@ -2,10 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "isolatedModules": true,
-    "emitDeclarationOnly": false,
-    "noEmit": true
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "outDir": "dist"
   },
   "include": ["."],
+  "exclude": ["dist", "node_modules", "**/__tests__/fixtures"],
   "references": [
     { "path": "../context/tsconfig.build.json" },
     { "path": "../internal/tsconfig.build.json" },
@@ -14,6 +16,5 @@
     { "path": "../adapters/fastify/web" },
     { "path": "../web-server" },
     { "path": "../realtime" }
-  ],
-  "exclude": ["dist", "node_modules", "**/__mocks__", "**/__tests__/fixtures"]
+  ]
 }

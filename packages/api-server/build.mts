@@ -3,9 +3,16 @@ import {
   defaultBuildOptions,
   defaultIgnorePatterns,
 } from '@cedarjs/framework-tools'
+import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
 
-// Build the package
+// ESM
 await build({
+  buildOptions: {
+    ...defaultBuildOptions,
+    tsconfig: 'tsconfig.build.json',
+    format: 'esm',
+    packages: 'external',
+  },
   entryPointOptions: {
     ignore: [
       ...defaultIgnorePatterns,
@@ -16,6 +23,7 @@ await build({
     ],
   },
 })
+await generateTypesEsm()
 
 // Build the rw-server bin
 await build({

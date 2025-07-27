@@ -6,7 +6,7 @@ import type {
   FastifyInstance,
 } from 'fastify'
 
-import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers'
+import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 
 import { getAPIHost, getAPIPort } from './cliHelpers.js'
 

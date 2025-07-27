@@ -21,8 +21,8 @@ const rwjsPaths = getPaths()
 if (!process.env.REDWOOD_ENV_FILES_LOADED) {
   dotenv.config({
     path: path.join(rwjsPaths.base, '.env'),
-    // @ts-expect-error The types for dotenv-defaults are using an outdated version of dotenv
     defaults: path.join(rwjsPaths.base, '.env.defaults'),
+    // @ts-expect-error The types for dotenv-defaults are using an outdated version of dotenv
     multiline: true,
   })
 

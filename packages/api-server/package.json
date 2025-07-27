@@ -8,6 +8,7 @@
     "directory": "packages/api-server"
   },
   "license": "MIT",
+  "type": "module",
   "main": "./dist/createServer.js",
   "types": "./dist/createServer.d.ts",
   "bin": {
@@ -23,6 +24,8 @@
     "build:pack": "yarn pack -o cedarjs-api-server.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
+    "check:attw": "yarn attw -P",
+    "check:package": "concurrently npm:check:attw yarn:publint",
     "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",

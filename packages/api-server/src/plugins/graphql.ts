@@ -10,7 +10,7 @@ import type {
 
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers'
+import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getPaths } from '@cedarjs/project-config'

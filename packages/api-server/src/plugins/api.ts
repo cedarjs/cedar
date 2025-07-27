@@ -5,7 +5,7 @@ import fastifyRawBody from 'fastify-raw-body'
 
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers'
+import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 
 import type { Server } from '../createServerHelpers.js'
 import { loadFastifyConfig } from '../fastify.js'
