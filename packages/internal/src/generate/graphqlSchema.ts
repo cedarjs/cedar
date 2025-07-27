@@ -6,16 +6,20 @@ import * as schemaAstPlugin from '@graphql-codegen/schema-ast'
 import { CodeFileLoader } from '@graphql-tools/code-file-loader'
 import type { LoadSchemaOptions } from '@graphql-tools/load'
 import { loadSchema } from '@graphql-tools/load'
-import { getSchema } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
+// Here's an explanation of why we do ts-ignore:
+// https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 import type { DocumentNode } from 'graphql'
 import { print } from 'graphql'
 import { terminalLink } from 'termi-link'
 
 import { rootSchema } from '@cedarjs/graphql-server'
-import type { ScalarSchemaKeys } from '@cedarjs/graphql-server/src/rootSchema'
 import { getPaths, getConfig, resolveFile } from '@cedarjs/project-config'
 
-const ansis = require('ansis')
+const { getSchema } = prismaInternals
 
 export const generateGraphQLSchema = async () => {
   const redwoodProjectPaths = getPaths()
@@ -29,15 +33,21 @@ export const generateGraphQLSchema = async () => {
   }
 
   for (const [name, schema] of Object.entries(rootSchema.scalarSchemas)) {
-    if (redwoodProjectConfig.graphql.includeScalars[name as ScalarSchemaKeys]) {
+    if (
+      redwoodProjectConfig.graphql.includeScalars[
+        name as rootSchema.ScalarSchemaKeys
+      ]
+    ) {
       schemaPointerMap[print(schema)] = {}
     }
   }
 
-  // If we're serverful and the user is using realtime, we need to include the live directive for realtime support.
-  // Note the `ERR_  prefix in`ERR_MODULE_NOT_FOUND`. Since we're using `await import`,
-  // if the package (here, `@cedarjs/realtime`) can't be found, it throws this error, with the prefix.
-  // Whereas `require('@cedarjs/realtime')` would throw `MODULE_NOT_FOUND`.
+  // If we're serverful and the user is using realtime, we need to include the
+  // live directive for realtime support.
+  // Note the `ERR_  prefix in `ERR_MODULE_NOT_FOUND`. Since we're using
+  // `await import`, if the package (here, `@cedarjs/realtime`) can't be found,
+  // it throws this error, with the prefix. Whereas
+  // `require('@cedarjs/realtime')` would throw `MODULE_NOT_FOUND`.
   if (resolveFile(`${getPaths().api.src}/server`)) {
     try {
       const { liveDirectiveTypeDefs } = await import('@cedarjs/realtime')

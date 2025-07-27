@@ -11,8 +11,8 @@ import {
 } from '@cedarjs/babel-config'
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
-import { cleanApiBuild } from '../build/api'
-import { findApiFiles } from '../files'
+import { cleanApiBuild } from '../build/api.js'
+import { findApiFiles } from '../files.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
@@ -46,13 +46,13 @@ export const prebuildApiFiles = async (srcFiles: string[]) => {
   )
 }
 
-const cleanPaths = (p) => {
+const cleanPaths = (p: string) => {
   return ensurePosixPath(path.relative(FIXTURE_PATH, p))
 }
 
 // Fixtures, filled in beforeAll
-let prebuiltFiles
-let relativePaths
+let prebuiltFiles: string[]
+let relativePaths: string[]
 
 beforeAll(async () => {
   process.env.RWJS_CWD = FIXTURE_PATH
@@ -88,7 +88,7 @@ test('api files are prebuilt', () => {
 
 test('api prebuild uses babel config only from the api side root', () => {
   const p = prebuiltFiles.filter((p) => p.endsWith('dog.js')).pop()
-  const code = fs.readFileSync(p, 'utf-8')
+  const code = fs.readFileSync(p || '', 'utf-8')
   expect(code).toContain(`import dog from "dog-bless";`)
 
   // Should ignore root babel config
@@ -96,14 +96,14 @@ test('api prebuild uses babel config only from the api side root', () => {
 })
 
 // Still a bit of a mystery why this plugin isn't transforming gql tags
-test.skip('api prebuild transforms gql with `babel-plugin-graphql-tag`', () => {
+test.skip('api prebuild transforms gql with `babel-plugin-graphql-tag`', async () => {
   // babel-plugin-graphql-tag should transpile the "gql" parts of our files,
   // achieving the following:
   // 1. removing the `graphql-tag` import
   // 2. convert the gql syntax into graphql's ast.
   //
   // https://www.npmjs.com/package/babel-plugin-graphql-tag
-  const builtFiles = prebuildApiFiles(findApiFiles())
+  const builtFiles = await prebuildApiFiles(findApiFiles())
   const p = builtFiles
     .filter((x) => typeof x !== 'undefined')
     .filter((p) => p.endsWith('todos.sdl.js'))
@@ -131,7 +131,7 @@ test('jest mock statements also handle', () => {
     filename: pathToTest,
     cwd: getPaths().api.base,
     // We override the plugins, to match packages/testing/config/jest/api/index.js
-    plugins: getApiSideBabelPlugins({ forJest: true }),
+    plugins: getApiSideBabelPlugins(),
   })?.code
 
   // Step 2: check that output has correct import statement path

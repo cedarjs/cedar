@@ -1,6 +1,3 @@
-export const command = 'destroy <type>'
-export const aliases = ['d']
-export const description = 'Rollback changes made by the generate command'
 import { terminalLink } from 'termi-link'
 
 import * as destroyCell from './destroy/cell/cell.js'
@@ -13,6 +10,9 @@ import * as destroyScaffold from './destroy/scaffold/scaffold.js'
 import * as destroySdl from './destroy/sdl/sdl.js'
 import * as destroyService from './destroy/service/service.js'
 
+export const command = 'destroy <type>'
+export const aliases = ['d']
+export const description = 'Rollback changes made by the generate command'
 export const builder = (yargs) =>
   yargs
     .command(destroyCell)

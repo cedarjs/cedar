@@ -7,8 +7,8 @@ import { getConfig, getPaths } from '@cedarjs/project-config'
 import {
   trustedDocumentsStore,
   replaceGqlTagWithTrustedDocumentGraphql,
-} from './trustedDocuments'
-import type { GeneratedFile } from './types'
+} from './trustedDocuments.js'
+import type { GeneratedFile } from './types.js'
 
 export const shouldGenerateTrustedDocuments = (): boolean => {
   const config = getConfig()

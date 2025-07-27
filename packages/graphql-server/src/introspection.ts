@@ -1,4 +1,4 @@
-import type { GraphQLYogaOptions } from './types'
+import type { GraphQLYogaOptions } from './types.js'
 
 export const configureGraphQLIntrospection = ({
   allowIntrospection,

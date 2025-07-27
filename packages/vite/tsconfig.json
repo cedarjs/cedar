@@ -11,7 +11,7 @@
   "references": [
     { "path": "../cookie-jar" },
     { "path": "../framework-tools" },
-    { "path": "../internal" },
+    { "path": "../internal/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../router/tsconfig.build.json" },
     { "path": "../server-store" },

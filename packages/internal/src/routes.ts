@@ -1,11 +1,15 @@
-import path from 'path'
+import path from 'node:path'
+
+// Here's an explanation of why we do ts-ignore:
+// https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 
 import { getPaths, getRouteHookForPage } from '@cedarjs/project-config'
 import { getRouteRegexAndParams } from '@cedarjs/router/dist/util'
 import { getProject } from '@cedarjs/structure/dist/index.js'
-import type { RWRoute } from '@cedarjs/structure/dist/model/RWRoute'
-
-const ansis = require('ansis')
+import type { RWRoute } from '@cedarjs/structure/dist/model/RWRoute.js'
 
 export interface RouteInformation {
   name?: string
@@ -16,7 +20,7 @@ export interface RouteInformation {
 /**
  * Returns an array of routes which conflict on their defined names
  */
-export function getDuplicateRoutes() {
+export function getDuplicateRoutes(): RouteInformation[] {
   const duplicateRoutes: RouteInformation[] = []
   const allRoutes: RWRoute[] = getProject(getPaths().base).router.routes
   const uniqueNames = new Set(
@@ -46,14 +50,16 @@ export function getDuplicateRoutes() {
 /**
  * Detects any potential duplicate routes and returns a formatted warning message
  * @see {@link getDuplicateRoutes} for how duplicate routes are detected
- * @return {string} Warning message when duplicate routes found, empty string if not
+ * @return Warning message when duplicate routes found, empty string if not
  */
 export function warningForDuplicateRoutes() {
   const duplicatedRoutes = getDuplicateRoutes()
   let message = ''
   if (duplicatedRoutes.length > 0) {
     message += ansis.hex('#ffa500')(
-      `Warning: ${duplicatedRoutes.length} duplicate routes have been detected, only the route(s) closest to the top of the file will be used.\n`,
+      `Warning: ${duplicatedRoutes.length} duplicate routes have been ` +
+        'detected, only the route(s) closest to the top of the file will be ' +
+        'used.\n',
     )
     duplicatedRoutes.forEach((route) => {
       message += ` ${ansis.hex('#ffa500')('->')} Name: "${

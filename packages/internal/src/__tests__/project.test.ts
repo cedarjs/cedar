@@ -2,7 +2,7 @@ import path from 'path'
 
 import { describe, afterAll, it, expect } from 'vitest'
 
-import { getTsConfigs } from '../project'
+import { getTsConfigs } from '../project.js'
 
 describe('Retrieves TSConfig settings', () => {
   afterAll(() => {

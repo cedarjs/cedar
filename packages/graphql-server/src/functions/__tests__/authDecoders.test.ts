@@ -4,8 +4,8 @@ import { vi, describe, expect, it } from 'vitest'
 import type { Decoder } from '@cedarjs/api'
 import { createLogger } from '@cedarjs/api/logger'
 
-import { createGraphQLHandler } from '../../functions/graphql'
-import type { GetCurrentUser, GraphQLHandlerOptions } from '../../types'
+import { createGraphQLHandler } from '../../functions/graphql.js'
+import type { GetCurrentUser, GraphQLHandlerOptions } from '../../types.js'
 
 vi.mock('../../makeMergedSchema', () => {
   const { makeExecutableSchema } = require('@graphql-tools/schema')

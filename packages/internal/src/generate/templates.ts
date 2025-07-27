@@ -1,5 +1,11 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
+
+const ___dirname =
+  // __dirname will work for CJS, and import.meta.dirname will work for ESM
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  typeof __dirname !== 'undefined' ? __dirname : import.meta?.dirname
 
 /**
  * Write the contents of the template to the destination and interpolate the variables.
@@ -11,7 +17,7 @@ export const writeTemplate = (
   templateValues: Record<string, unknown> = {},
 ) => {
   const templateString = fs.readFileSync(
-    path.join(__dirname, templatePath),
+    path.join(___dirname, templatePath),
     'utf-8',
   )
 

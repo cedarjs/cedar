@@ -3,7 +3,8 @@ import { vi, describe, expect, it } from 'vitest'
 
 import { createLogger } from '@cedarjs/api/logger'
 
-import { createGraphQLHandler } from '../../functions/graphql'
+import { createGraphQLHandler } from '../../functions/graphql.js'
+import type { ArmorConfig } from '../../types.js'
 
 vi.mock('../../makeMergedSchema', () => {
   const { makeExecutableSchema } = require('@graphql-tools/schema')
@@ -51,7 +52,7 @@ vi.mock('../../makeMergedSchema', () => {
                 },
               ]
             },
-            post: (id) => {
+            post: (id: number) => {
               return {
                 id,
                 title: 'Ba',
@@ -102,7 +103,7 @@ const mockLambdaEvent = ({
 }
 
 describe('useArmor secures the GraphQLHandler endpoint for depth, aliases, cost, and other optimistic protections', () => {
-  const createHandler = (armorConfig) => {
+  const createHandler = (armorConfig?: ArmorConfig) => {
     return createGraphQLHandler({
       armorConfig,
       loggerConfig: {
@@ -123,13 +124,16 @@ describe('useArmor secures the GraphQLHandler endpoint for depth, aliases, cost,
     httpMethod: 'POST',
   })
 
-  const mockQuery = (query) => {
+  const mockQuery = (query: string) => {
     const event = mockedEvent
     mockedEvent.body = JSON.stringify({ query })
     return event
   }
 
-  const mockGraphQLRequest = async (query, armorConfig?) => {
+  const mockGraphQLRequest = async (
+    query: string,
+    armorConfig?: ArmorConfig,
+  ) => {
     const handler = createHandler(armorConfig)
     return await handler(mockQuery(query), {} as Context)
   }

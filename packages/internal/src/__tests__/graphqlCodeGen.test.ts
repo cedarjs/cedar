@@ -14,8 +14,8 @@ import {
 import {
   generateTypeDefGraphQLApi,
   generateTypeDefGraphQLWeb,
-} from '../generate/graphqlCodeGen'
-import { generateGraphQLSchema } from '../generate/graphqlSchema'
+} from '../generate/graphqlCodeGen.js'
+import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,

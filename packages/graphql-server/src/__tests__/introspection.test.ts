@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { configureGraphQLIntrospection } from '../introspection'
+import { configureGraphQLIntrospection } from '../introspection.js'
 
 describe('configureGraphQLIntrospection', () => {
   describe('when not in development environment', () => {

@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 
 import {
-  buildExternalCjs,
   build,
   defaultBuildOptions,
   defaultIgnorePatterns,
@@ -15,7 +14,18 @@ import {
 //    it'd be placed inside ./dist/ (because outDir is dist/cjs and the default
 //    is to place it at one level up from outDir).
 
-await buildExternalCjs()
+await build({
+  buildOptions: {
+    ...defaultBuildOptions,
+    tsconfig: 'tsconfig.cjs.json',
+    outdir: 'dist/cjs',
+    packages: 'external',
+    logOverride: {
+      // We need this for src/index.ts when we create a require function
+      'empty-import-meta': 'silent',
+    },
+  },
+})
 await build({
   entryPointOptions: {
     // NOTE: building the bins as CJS only so they can still use

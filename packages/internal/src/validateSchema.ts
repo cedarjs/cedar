@@ -7,7 +7,7 @@ import { Kind, visit } from 'graphql'
 import { rootSchema } from '@cedarjs/graphql-server'
 import { getPaths } from '@cedarjs/project-config'
 
-import { isServerFileSetup, isRealtimeSetup } from './project'
+import { isServerFileSetup, isRealtimeSetup } from './project.js'
 
 export const DIRECTIVE_REQUIRED_ERROR_MESSAGE =
   'You must specify one of @requireAuth, @skipAuth or a custom directive'

@@ -6,7 +6,7 @@ import type { GlobalContext } from '@cedarjs/context'
 import { context as globalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
-import type { GetCurrentUser } from '../types'
+import type { GetCurrentUser } from '../types.js'
 
 interface Args {
   authDecoder?: Decoder | Decoder[]

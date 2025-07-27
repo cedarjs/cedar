@@ -19,9 +19,9 @@ import { Kind, type DocumentNode } from 'graphql'
 
 import { getPaths, getConfig } from '@cedarjs/project-config'
 
-import { getTsConfigs } from '../project'
+import { getTsConfigs } from '../project.js'
 
-import * as rwTypescriptResolvers from './plugins/rw-typescript-resolvers'
+import * as rwTypescriptResolvers from './plugins/rw-typescript-resolvers/index.js'
 enum CodegenSide {
   API,
   WEB,
@@ -217,32 +217,38 @@ export function getLoadDocumentsOptions(filename: string) {
 async function getPrismaClient(hasGenerated = false): Promise<{
   ModelName: Record<string, string>
 }> {
-  const { default: localPrisma } = await import('@prisma/client')
+  let localPrisma
 
-  // @ts-expect-error I believe this type will only exist if the prisma client has been generated
+  if (hasGenerated) {
+    // Use file path with cache-busting query parameter to force fresh import
+    const cacheBuster = `?t=${Date.now()}`
+    const prismaClientPath = path.resolve(
+      process.cwd(),
+      'node_modules/.prisma/client/index.js',
+    )
+    const { default: freshPrisma } = await import(
+      `file://${prismaClientPath}${cacheBuster}`
+    )
+    localPrisma = freshPrisma
+  } else {
+    // First attempt - use package name
+    const { default: packagePrisma } = await import('@prisma/client')
+    localPrisma = packagePrisma
+  }
+
   if (!localPrisma.ModelName) {
     if (hasGenerated) {
       return { ModelName: {} }
     } else {
       execa.sync('yarn rw prisma generate', { shell: true })
 
-      // Purge Prisma Client from node's require cache, so that the newly
-      // generated client gets picked up by any script that uses it
-      Object.keys(require.cache).forEach((key) => {
-        if (
-          key.includes('/node_modules/@prisma/client/') ||
-          key.includes('/node_modules/.prisma/client/')
-        ) {
-          delete require.cache[key]
-        }
-      })
-
+      // Import the newly generated Prisma client. To make sure we actually get
+      // the newly generated Prisma client we pass `true` for `hasGenerated` so
+      // that the code above will bypass Node.js's module cache.
       return getPrismaClient(true)
     }
   }
 
-  // @ts-expect-error See above, the generated client should contain a ModelName property that
-  // satisfies Record<string, string>
   return localPrisma
 }
 

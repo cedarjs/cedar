@@ -5,8 +5,8 @@ import { afterEach, describe, test, expect, vi } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { generateGraphQLSchema } from '../generate/graphqlSchema'
-import { generatePossibleTypes } from '../generate/possibleTypes'
+import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
+import { generatePossibleTypes } from '../generate/possibleTypes.js'
 
 afterEach(() => {
   delete process.env.RWJS_CWD

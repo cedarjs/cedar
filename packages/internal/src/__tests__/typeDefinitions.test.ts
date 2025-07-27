@@ -5,7 +5,7 @@ import { beforeAll, afterAll, test, expect } from 'vitest'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
 
-import { findCells, findDirectoryNamedModules } from '../files'
+import { findCells, findDirectoryNamedModules } from '../files.js'
 import {
   generateMirrorCells,
   generateMirrorDirectoryNamedModules,
@@ -17,7 +17,7 @@ import {
   mirrorPathForDirectoryNamedModules,
   mirrorPathForCell,
   generateTypeDefScenarios,
-} from '../generate/typeDefinitions'
+} from '../generate/typeDefinitions.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
@@ -31,7 +31,7 @@ afterAll(() => {
   delete process.env.RWJS_CWD
 })
 
-const cleanPaths = (p) => {
+const cleanPaths = (p: string) => {
   return ensurePosixPath(path.relative(FIXTURE_PATH, p))
 }
 
@@ -139,7 +139,9 @@ declare global {
 test('generates global page imports source maps', () => {
   const paths = generateTypeDefRouterPages()
   const sourceMap = JSON.parse(fs.readFileSync(paths[0] + '.map', 'utf-8'))
-  sourceMap.sources = sourceMap.sources.map((source) => ensurePosixPath(source))
+  sourceMap.sources = sourceMap.sources.map((source: string) =>
+    ensurePosixPath(source),
+  )
   expect(sourceMap).toMatchSnapshot()
 })
 

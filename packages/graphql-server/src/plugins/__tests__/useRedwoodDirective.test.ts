@@ -6,12 +6,12 @@ import type { Plugin } from 'graphql-yoga'
 import { createSchema } from 'graphql-yoga'
 import { describe, expect, it } from 'vitest'
 
-import type { GraphQLTypeWithFields } from '../../index'
+import type { GraphQLTypeWithFields } from '../../index.js'
 import {
   assertSingleExecutionValue,
   createTestkit,
-} from '../__fixtures__/envelop-testing'
-import { useRedwoodDirective, DirectiveType } from '../useRedwoodDirective'
+} from '../__fixtures__/envelop-testing.js'
+import { useRedwoodDirective, DirectiveType } from '../useRedwoodDirective.js'
 
 //  ===== Test Setup ======
 const AUTH_ERROR_MESSAGE = 'Sorry, you cannot do that'

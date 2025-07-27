@@ -7,7 +7,7 @@
   },
   "include": ["."],
   "references": [
-    { "path": "../internal" },
+    { "path": "../internal/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../adapters/fastify/web" },
     { "path": "../web-server" },

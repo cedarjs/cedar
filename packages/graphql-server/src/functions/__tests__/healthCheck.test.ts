@@ -3,7 +3,7 @@ import { vi, describe, expect, it } from 'vitest'
 
 import { createLogger } from '@cedarjs/api/logger'
 
-import { createGraphQLHandler } from '../../functions/graphql'
+import { createGraphQLHandler } from '../../functions/graphql.js'
 
 vi.mock('../../makeMergedSchema', () => {
   const { makeExecutableSchema } = require('@graphql-tools/schema')

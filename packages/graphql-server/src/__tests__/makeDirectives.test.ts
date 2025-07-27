@@ -1,12 +1,12 @@
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { describe, expect, it } from 'vitest'
 
-import type { DirectiveParams } from '..'
 import {
   makeDirectivesForPlugin,
   createTransformerDirective,
   createValidatorDirective,
-} from '../directives/makeDirectives'
+} from '../directives/makeDirectives.js'
+import type { DirectiveParams } from '../index.js'
 
 const fooSchema = gql`
   directive @foo on FIELD_DEFINITION

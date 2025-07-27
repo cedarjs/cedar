@@ -6,7 +6,7 @@
   },
   "include": ["src", "ambient.d.ts"],
   "references": [
-    { "path": "../internal" },
+    { "path": "../internal/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../context/tsconfig.build.json" },
     { "path": "../adapters/fastify/web" },
