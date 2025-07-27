@@ -42,7 +42,7 @@ describe('install', () => {
     )
     expect(yargs.epilogue).toHaveBeenCalledWith(
       expect.stringMatching(
-        /https:\/\/redwoodjs\.com\/docs\/cli-commands#datamigrate-install/,
+        /https:\/\/cedarjs\.com\/docs\/cli-commands#datamigrate-install/,
       ),
     )
   })
