@@ -9,7 +9,7 @@ import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { getPaths, getConfig } from '@cedarjs/project-config'
 
-import type { FastifySideConfigFn } from './types'
+import type { FastifySideConfigFn } from './types.js'
 
 // Exported for testing.
 export const DEFAULT_OPTIONS = {

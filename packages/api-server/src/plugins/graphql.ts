@@ -15,7 +15,7 @@ import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getPaths } from '@cedarjs/project-config'
 
-import { lambdaEventForFastifyRequest } from '../requestHandlers/awsLambdaFastify'
+import { lambdaEventForFastifyRequest } from '../requestHandlers/awsLambdaFastify.js'
 
 export interface RedwoodFastifyGraphQLOptions {
   redwood: {

@@ -12,9 +12,9 @@ import {
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
-import type { BuildAndRestartOptions } from './buildManager'
-import { BuildManager } from './buildManager'
-import { serverManager } from './serverManager'
+import type { BuildAndRestartOptions } from './buildManager.js'
+import { BuildManager } from './buildManager.js'
+import { serverManager } from './serverManager.js'
 
 const rwjsPaths = getPaths()
 

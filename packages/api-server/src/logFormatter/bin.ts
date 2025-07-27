@@ -1,6 +1,6 @@
 import split from 'split2'
 
-import { LogFormatter } from './index'
+import { LogFormatter } from './index.js'
 
 const input = process.stdin
 const output = process.stdout

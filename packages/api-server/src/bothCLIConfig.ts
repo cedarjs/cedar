@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs'
 
-import type { BothParsedOptions } from './types'
+import type { BothParsedOptions } from './types.js'
 
 export const description = 'Start a server for serving the api and web sides'
 

@@ -2,8 +2,8 @@ import ansis from 'ansis'
 
 import { coerceRootPath } from '@cedarjs/fastify-web'
 
-import { createServer } from './createServer'
-import type { APIParsedOptions } from './types'
+import { createServer } from './createServer.js'
+import type { APIParsedOptions } from './types.js'
 
 export async function handler(options: APIParsedOptions = {}) {
   const timeStart = Date.now()

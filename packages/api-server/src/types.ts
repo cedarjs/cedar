@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 
-import type { RedwoodFastifyAPIOptions } from './plugins/api'
+import type { RedwoodFastifyAPIOptions } from './plugins/api.js'
 
 // Types for using server.config.js
 export type FastifySideConfigFnOptions = {

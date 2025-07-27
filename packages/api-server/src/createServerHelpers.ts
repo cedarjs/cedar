@@ -8,7 +8,7 @@ import type {
 
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers'
 
-import { getAPIHost, getAPIPort } from './cliHelpers'
+import { getAPIHost, getAPIPort } from './cliHelpers.js'
 
 export type StartOptions = Omit<FastifyListenOptions, 'port' | 'host'>
 

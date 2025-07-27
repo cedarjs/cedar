@@ -7,10 +7,10 @@ import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers'
 
-import type { Server } from '../createServerHelpers'
-import { loadFastifyConfig } from '../fastify'
+import type { Server } from '../createServerHelpers.js'
+import { loadFastifyConfig } from '../fastify.js'
 
-import { lambdaRequestHandler, loadFunctionsFromDist } from './lambdaLoader'
+import { lambdaRequestHandler, loadFunctionsFromDist } from './lambdaLoader.js'
 
 export interface RedwoodFastifyAPIOptions {
   redwood: {
