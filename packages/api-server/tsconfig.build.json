@@ -6,7 +6,9 @@
   },
   "include": ["src", "ambient.d.ts"],
   "references": [
+    { "path": "../context/tsconfig.build.json" },
     { "path": "../internal/tsconfig.build.json" },
+    { "path": "../graphql-server/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../context/tsconfig.build.json" },
     { "path": "../adapters/fastify/web" },
