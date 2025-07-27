@@ -3269,7 +3269,6 @@ __metadata:
     cheerio: "npm:1.0.0"
     concurrently: "npm:8.2.2"
     graphql: "npm:16.9.0"
-    load-tsconfig: "npm:0.2.5"
     mime-types: "npm:2.1.35"
     publint: "npm:0.3.12"
     rollup: "npm:4.24.0"
@@ -21871,7 +21870,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"load-tsconfig@npm:0.2.5, load-tsconfig@npm:^0.2.3":
+"load-tsconfig@npm:^0.2.3":
   version: 0.2.5
   resolution: "load-tsconfig@npm:0.2.5"
   checksum: 10c0/bf2823dd26389d3497b6567f07435c5a7a58d9df82e879b0b3892f87d8db26900f84c85bc329ef41c0540c0d6a448d1c23ddc64a80f3ff6838b940f3915a3fcb
