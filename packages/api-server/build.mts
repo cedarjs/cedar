@@ -29,6 +29,8 @@ await generateTypesEsm()
 await build({
   buildOptions: {
     ...defaultBuildOptions,
+    tsconfig: 'tsconfig.build.json',
+    format: 'esm',
     banner: {
       js: '#!/usr/bin/env node',
     },
@@ -43,6 +45,8 @@ await build({
 await build({
   buildOptions: {
     ...defaultBuildOptions,
+    tsconfig: 'tsconfig.build.json',
+    format: 'esm',
     banner: {
       js: '#!/usr/bin/env node',
     },
@@ -58,6 +62,8 @@ await build({
 await build({
   buildOptions: {
     ...defaultBuildOptions,
+    tsconfig: 'tsconfig.build.json',
+    format: 'esm',
     banner: {
       js: '#!/usr/bin/env node',
     },
