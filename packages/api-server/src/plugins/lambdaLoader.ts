@@ -9,11 +9,11 @@ import type {
   FastifyRequest,
   RequestGenericInterface,
 } from 'fastify'
-import { escape } from 'lodash'
 
 import { getPaths } from '@cedarjs/project-config'
 
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
+import { escape } from '../utils.js'
 
 export type Lambdas = Record<string, Handler>
 export const LAMBDA_FUNCTIONS: Lambdas = {}

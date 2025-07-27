@@ -43,7 +43,6 @@
     "fast-json-parse": "1.0.3",
     "fastify": "5.4.0",
     "fastify-raw-body": "5.0.0",
-    "lodash": "4.17.21",
     "pretty-bytes": "5.6.0",
     "pretty-ms": "7.0.1",
     "qs": "6.13.0",
@@ -53,7 +52,6 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/aws-lambda": "8.10.152",
-    "@types/lodash": "4.17.20",
     "@types/qs": "6.9.16",
     "@types/split2": "4.2.3",
     "@types/yargs": "17.0.33",
