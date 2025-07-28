@@ -12,6 +12,14 @@ import { hideBin } from 'yargs/helpers'
 
 import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
 
+// An esbuild plugin will take care of import.meta.dirname
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+const dirnameTop = import.meta.dirname
+console.log('serverManager.ts dirnameTop', dirnameTop)
+const binPathTop = path.join(dirnameTop, 'bin.js')
+console.log('serverManager.ts binPathTop', binPathTop)
+
 const argv = yargs(hideBin(process.argv))
   .option('debugPort', {
     description: 'Port on which to expose API server debugger',
