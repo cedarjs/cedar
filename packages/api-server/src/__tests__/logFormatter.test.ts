@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { LogFormatter } from '../logFormatter/index'
+import { LogFormatter } from '../logFormatter/index.js'
 
 const logFormatter = LogFormatter()
 

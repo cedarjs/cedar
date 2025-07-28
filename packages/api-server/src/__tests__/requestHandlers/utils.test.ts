@@ -1,6 +1,9 @@
 import { describe, test, expect } from 'vitest'
 
-import { parseBody, mergeMultiValueHeaders } from '../../requestHandlers/utils'
+import {
+  parseBody,
+  mergeMultiValueHeaders,
+} from '../../requestHandlers/utils.js'
 
 describe('Tests AWS Lambda to Fastify utility functions', () => {
   describe('Tests parseBody', () => {

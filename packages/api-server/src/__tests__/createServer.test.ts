@@ -19,7 +19,7 @@ import type { createServer as tCreateServer } from '../createServer.js'
 import {
   resolveOptions,
   getDefaultCreateServerOptions,
-} from '../createServerHelpers'
+} from '../createServerHelpers.js'
 
 // Set up RWJS_CWD.
 let original_RWJS_CWD: string | undefined

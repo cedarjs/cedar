@@ -11,7 +11,7 @@ import {
   it,
 } from 'vitest'
 
-import { createFastifyInstance, DEFAULT_OPTIONS } from '../fastify'
+import { createFastifyInstance, DEFAULT_OPTIONS } from '../fastify.js'
 
 // We'll be testing how fastify is instantiated, so we'll mock it here.
 vi.mock('fastify', () => {

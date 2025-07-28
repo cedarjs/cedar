@@ -13,7 +13,7 @@ import {
 import {
   LAMBDA_FUNCTIONS,
   loadFunctionsFromDist,
-} from '../plugins/lambdaLoader'
+} from '../plugins/lambdaLoader.js'
 
 // Suppress terminal logging.
 console.log = vi.fn()

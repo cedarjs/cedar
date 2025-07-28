@@ -11,8 +11,8 @@ import {
   expect,
 } from 'vitest'
 
-import createFastifyInstance from '../fastify'
-import { redwoodFastifyGraphQLServer } from '../plugins/graphql'
+import createFastifyInstance from '../fastify.js'
+import { redwoodFastifyGraphQLServer } from '../plugins/graphql.js'
 
 // Set up RWJS_CWD.
 let original_RWJS_CWD: string | undefined

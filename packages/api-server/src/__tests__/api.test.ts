@@ -2,8 +2,8 @@ import path from 'path'
 
 import { vi, beforeAll, afterAll, describe, it, expect } from 'vitest'
 
-import createFastifyInstance from '../fastify'
-import { redwoodFastifyAPI } from '../plugins/api'
+import createFastifyInstance from '../fastify.js'
+import { redwoodFastifyAPI } from '../plugins/api.js'
 
 // Suppress terminal logging.
 console.log = vi.fn()
