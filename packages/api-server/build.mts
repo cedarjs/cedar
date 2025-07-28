@@ -40,7 +40,7 @@ function dirnamePlugin(): Plugin {
   return {
     name: 'dirname',
     setup(build) {
-      build.onLoad({ filter: /\/src\/.*/ }, async ({ path: filePath }) => {
+      build.onLoad({ filter: /[\/]src[\/].*/ }, async ({ path: filePath }) => {
         const originalContents = await fs.promises.readFile(filePath, 'utf8')
         const contents = originalContents.replaceAll(
           'import.meta.dirname',
