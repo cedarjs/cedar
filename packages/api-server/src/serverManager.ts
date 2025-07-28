@@ -1,6 +1,9 @@
 console.log('Module system check:')
 console.log('typeof require:', typeof require)
 console.log('typeof __dirname:', typeof __dirname)
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+console.log('__dirname value:', __dirname) // Add this line
 console.log('typeof __filename:', typeof __filename)
 console.log('typeof module:', typeof module)
 
