@@ -12,6 +12,11 @@ import { hideBin } from 'yargs/helpers'
 
 import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
 
+// Just debugging
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+console.log('globalDirname', globalDirname)
+
 // An esbuild plugin will take care of import.meta.dirname
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

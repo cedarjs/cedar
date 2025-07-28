@@ -108,6 +108,12 @@ await buildBinEsm({
 await buildBinCjs({
   buildOptions: {
     entryPoints: ['./src/watch.ts'],
+    banner: {
+      js:
+        '#!/usr/bin/env node\n\n' +
+        'console.log("top __dirname", __dirname);\n\n' +
+        'var globalDirname = __dirname;\n',
+    },
   },
 })
 
