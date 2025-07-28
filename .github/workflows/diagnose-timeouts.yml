@@ -1,0 +1,119 @@
+name: 🔍 Diagnose Timeout Issues
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: 'Operating system to test'
+        required: true
+        default: 'windows-latest'
+        type: choice
+        options:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+      iterations:
+        description: 'Number of test iterations to run'
+        required: true
+        default: '20'
+        type: string
+      timeout_ms:
+        description: 'Timeout in milliseconds'
+        required: true
+        default: '30000'
+        type: string
+      enable_debug:
+        description: 'Enable detailed debug logging'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  timeout-diagnostics:
+    name: 🔍 Timeout Diagnostics / ${{ inputs.os }}
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: Display test configuration
+        run: |
+          echo "::notice::Running timeout diagnostics with the following configuration:"
+          echo "::notice::OS: ${{ inputs.os }}"
+          echo "::notice::Iterations: ${{ inputs.iterations }}"
+          echo "::notice::Timeout: ${{ inputs.timeout_ms }}ms"
+          echo "::notice::Debug logging: ${{ inputs.enable_debug }}"
+          echo "::notice::Platform: ${{ runner.os }}"
+          echo "::notice::Node version: $(node --version)"
+
+      - name: Run timeout diagnostics
+        id: diagnostics
+        run: |
+          cd packages/api-server
+          yarn diagnose:timeouts ${{ inputs.iterations }} ${{ inputs.timeout_ms }}
+        env:
+          CEDAR_DEBUG_TIMEOUT: ${{ inputs.enable_debug && '1' || '0' }}
+        continue-on-error: true
+
+      - name: Upload diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: timeout-diagnostic-report-${{ inputs.os }}-${{ github.run_number }}
+          path: packages/api-server/timeout-diagnostic-report.json
+          retention-days: 30
+
+      - name: Display quick summary
+        if: always()
+        run: |
+          if [ -f packages/api-server/timeout-diagnostic-report.json ]; then
+            echo "::group::Diagnostic Summary"
+            cd packages/api-server
+            node -e "
+              const report = JSON.parse(require('fs').readFileSync('timeout-diagnostic-report.json', 'utf8'));
+              console.log('Total iterations:', report.metadata.iterations);
+              console.log('Success rate:', report.summary.successRate + '%');
+              console.log('Timeout rate:', report.summary.timeoutRate + '%');
+              console.log('Average time:', report.summary.avgTime.toFixed(2) + 'ms');
+              console.log('Max time:', report.summary.maxTime.toFixed(2) + 'ms');
+              if (report.summary.timeoutRate > 0) {
+                console.log('::warning::Timeouts detected - this confirms the issue exists');
+              } else {
+                console.log('::notice::No timeouts detected - issue may be environment-specific');
+              }
+            "
+            echo "::endgroup::"
+          else
+            echo "::error::No diagnostic report generated"
+          fi
+        shell: bash
+
+      - name: Set job conclusion
+        if: always()
+        run: |
+          if [ -f packages/api-server/timeout-diagnostic-report.json ]; then
+            cd packages/api-server
+            TIMEOUT_RATE=$(node -e "
+              const report = JSON.parse(require('fs').readFileSync('timeout-diagnostic-report.json', 'utf8'));
+              console.log(report.summary.timeoutRate);
+            ")
+
+            if (( $(echo "$TIMEOUT_RATE > 0" | bc -l) )); then
+              echo "::warning::Timeout diagnostics completed with $TIMEOUT_RATE% timeout rate"
+              exit 1
+            else
+              echo "::notice::Timeout diagnostics completed successfully - no timeouts detected"
+              exit 0
+            fi
+          else
+            echo "::error::Diagnostic script failed to generate report"
+            exit 1
+          fi
+        shell: bash

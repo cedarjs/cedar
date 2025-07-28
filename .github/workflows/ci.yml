@@ -123,6 +123,26 @@ jobs:
       - name: 🧪 Test
         run: yarn test-ci --minWorkers=1 --maxWorkers=${{ steps.cpu-cores.outputs.count }}
 
+      # Run timeout diagnostics if tests failed on Windows
+      - name: 🔍 Diagnose Timeout Issues (Windows)
+        if: failure() && matrix.os == 'windows-latest'
+        run: |
+          echo "::group::Running timeout diagnostics for Windows"
+          cd packages/api-server
+          yarn diagnose:timeouts 10 30000
+          echo "::endgroup::"
+        continue-on-error: true
+
+      # Upload diagnostic report if it was generated
+      - name: 📋 Upload Timeout Diagnostic Report
+        if: failure() && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: timeout-diagnostic-report-${{ matrix.os }}
+          path: packages/api-server/timeout-diagnostic-report.json
+          retention-days: 30
+        continue-on-error: true
+
   build-lint-test-skip:
     needs: detect-changes
     if: needs.detect-changes.outputs.code == 'false'

@@ -21,6 +21,15 @@ import {
   getDefaultCreateServerOptions,
 } from '../createServerHelpers'
 
+// Performance monitoring for debugging timeouts
+const perfLog = (message: string, startTime?: number) => {
+  const timestamp = new Date().toISOString()
+  const duration = startTime
+    ? ` (${(performance.now() - startTime).toFixed(2)}ms)`
+    : ''
+  console.log(`[PERF] ${timestamp} - ${message}${duration}`)
+}
+
 // Set up RWJS_CWD.
 let original_RWJS_CWD: string | undefined
 
@@ -44,9 +53,16 @@ describe('createServer', () => {
   let server: Awaited<ReturnType<typeof createServer>>
 
   beforeAll(async () => {
+    const startTime = performance.now()
+    perfLog('beforeAll: Starting server creation')
+
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    perfLog('beforeAll: Console spies set up, creating server')
     server = await createServer()
+
+    perfLog('beforeAll: Server creation complete', startTime)
   })
 
   afterEach(() => {
@@ -54,9 +70,19 @@ describe('createServer', () => {
   })
 
   afterAll(async () => {
-    await server?.close()
+    const startTime = performance.now()
+    perfLog('afterAll: Starting cleanup')
+
+    if (server) {
+      perfLog('afterAll: Closing server')
+      await server.close()
+      perfLog('afterAll: Server closed')
+    }
+
     vi.mocked(console.log).mockRestore()
     vi.mocked(console.warn).mockRestore()
+
+    perfLog('afterAll: Cleanup complete', startTime)
   })
 
   it('serves functions', async () => {
@@ -108,6 +134,9 @@ describe('createServer', () => {
   //
   // This should be fixed so that all logs go to the same place
   it("doesn't handle logs consistently", async () => {
+    const testStartTime = performance.now()
+    perfLog('logs test: Starting')
+
     // Here we create a logger that outputs to an array.
     const loggerLogs: Record<string, Record<string, string> | string>[] = []
     const stream = build(async (source) => {
@@ -118,14 +147,21 @@ describe('createServer', () => {
     const logger = pino(stream)
 
     // Generate some logs.
+    perfLog('logs test: Creating server with custom logger')
     const server = await createServer({ logger })
+    perfLog('logs test: Server created, making request')
+
     const res = await server.inject({
       method: 'GET',
       url: '/hello',
     })
     expect(res.json()).toEqual({ data: 'hello function' })
+
+    perfLog('logs test: Request completed, starting server listen')
     await server.listen({ port: 8910 })
+    perfLog('logs test: Server listening, closing server')
     await server.close()
+    perfLog('logs test: Server closed', testStartTime)
 
     // We expect console log to be called with `withFunctions` logs.
     expect(consoleLogSpy.mock.calls[0][0]).toMatch(/Importing Server Functions/)
@@ -192,8 +228,13 @@ describe('createServer', () => {
 
   describe('`server.start`', () => {
     it('starts the server using [api].port in redwood.toml if none is specified', async () => {
+      const testStartTime = performance.now()
+      perfLog('server.start test: Starting')
+
       const server = await createServer()
+      perfLog('server.start test: Server created, starting server')
       await server.start()
+      perfLog('server.start test: Server started, checking address')
 
       const address = server.server.address()
 
@@ -203,14 +244,22 @@ describe('createServer', () => {
 
       expect(address.port).toBe(getConfig().api.port)
 
+      perfLog('server.start test: Closing server')
       await server.close()
+      perfLog('server.start test: Complete', testStartTime)
     })
 
     it('the `REDWOOD_API_PORT` env var takes precedence over [api].port', async () => {
+      const testStartTime = performance.now()
+      perfLog('REDWOOD_API_PORT test: Starting')
+
       process.env.REDWOOD_API_PORT = '8920'
 
+      perfLog('REDWOOD_API_PORT test: Creating server')
       const server = await createServer()
+      perfLog('REDWOOD_API_PORT test: Server created, starting')
       await server.start()
+      perfLog('REDWOOD_API_PORT test: Server started, checking address')
 
       const address = server.server.address()
 
@@ -220,9 +269,11 @@ describe('createServer', () => {
 
       expect(address.port).toBe(+process.env.REDWOOD_API_PORT)
 
+      perfLog('REDWOOD_API_PORT test: Closing server')
       await server.close()
 
       delete process.env.REDWOOD_API_PORT
+      perfLog('REDWOOD_API_PORT test: Complete', testStartTime)
     })
   })
 })

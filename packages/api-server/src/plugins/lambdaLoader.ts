@@ -15,12 +15,24 @@ import { getPaths } from '@cedarjs/project-config'
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
 import { escape } from '../utils.js'
 
+// Diagnostic logging for timeout debugging
+const isDiagnosticMode =
+  process.env.NODE_ENV === 'test' && process.env.CEDAR_DEBUG_TIMEOUT
+function debugLog(message: string) {
+  if (isDiagnosticMode) {
+    console.log(`[CEDAR_DEBUG] ${new Date().toISOString()} - ${message}`)
+  }
+}
+
 export type Lambdas = Record<string, Handler>
 export const LAMBDA_FUNCTIONS: Lambdas = {}
 
 // Import the API functions and add them to the LAMBDA_FUNCTIONS object
 
 export const setLambdaFunctions = async (foundFunctions: string[]) => {
+  debugLog(
+    `setLambdaFunctions: Starting import of ${foundFunctions.length} functions`,
+  )
   const tsImport = Date.now()
   console.log(ansis.dim.italic('Importing Server Functions... '))
 
@@ -28,7 +40,11 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     const ts = Date.now()
     const routeName = path.basename(fnPath).replace('.js', '')
 
+    debugLog(
+      `setLambdaFunctions: Importing function ${routeName} from ${fnPath}`,
+    )
     const fnImport = await import(`file://${fnPath}`)
+    debugLog(`setLambdaFunctions: Import of ${routeName} completed`)
     const handler: Handler = (() => {
       if ('handler' in fnImport) {
         // ESModule export of handler - when using
@@ -69,7 +85,9 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     )
   })
 
+  debugLog('setLambdaFunctions: Waiting for all imports to complete')
   await Promise.all(imports)
+  debugLog('setLambdaFunctions: All imports completed')
 
   console.log(
     ansis.dim.italic('...Done importing in ' + (Date.now() - tsImport) + ' ms'),
@@ -85,19 +103,26 @@ type LoadFunctionsFromDistOptions = {
 export const loadFunctionsFromDist = async (
   options: LoadFunctionsFromDistOptions = {},
 ) => {
+  debugLog('loadFunctionsFromDist: Starting function discovery')
   const serverFunctions = findApiDistFunctions({
     cwd: getPaths().api.base,
     options: options?.fastGlobOptions,
     discoverFunctionsGlob: options?.discoverFunctionsGlob,
   })
+  debugLog(
+    `loadFunctionsFromDist: Found ${serverFunctions.length} functions: ${serverFunctions.map((f) => path.basename(f)).join(', ')}`,
+  )
 
   // Place `GraphQL` serverless function at the start.
   const i = serverFunctions.findIndex((x) => path.basename(x) === 'graphql.js')
   if (i >= 0) {
     const graphQLFn = serverFunctions.splice(i, 1)[0]
     serverFunctions.unshift(graphQLFn)
+    debugLog('loadFunctionsFromDist: Moved GraphQL function to front')
   }
+  debugLog('loadFunctionsFromDist: Starting function loading')
   await setLambdaFunctions(serverFunctions)
+  debugLog('loadFunctionsFromDist: Function loading complete')
 }
 
 // NOTE: Copied from @cedarjs/internal/dist/files to avoid depending on

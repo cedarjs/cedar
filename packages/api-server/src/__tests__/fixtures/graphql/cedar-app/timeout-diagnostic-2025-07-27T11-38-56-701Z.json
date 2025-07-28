@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "platform": "darwin",
+    "nodeVersion": "v20.19.4",
+    "isCI": false,
+    "timestamp": "2025-07-27T11:38:54.432Z",
+    "iterations": 3,
+    "timeoutMs": 15000,
+    "testCommand": "/usr/local/bin/node /Users/tobbe/dev/cedarjs/cedar/packages/api-server/scripts/diagnose-timeouts.mjs 3 15000"
+  },
+  "summary": {
+    "successful": 3,
+    "timeouts": 0,
+    "errors": 0,
+    "successRate": 100,
+    "timeoutRate": 0,
+    "avgTime": 66.55741699999983,
+    "minTime": 9.01766699999962,
+    "maxTime": 178.42075
+  },
+  "details": [
+    {
+      "iteration": 1,
+      "status": "success",
+      "duration": 178.42075,
+      "timestamp": "2025-07-27T11:38:54.676Z"
+    },
+    {
+      "iteration": 2,
+      "status": "success",
+      "duration": 12.233833999999888,
+      "timestamp": "2025-07-27T11:38:55.690Z"
+    },
+    {
+      "iteration": 3,
+      "status": "success",
+      "duration": 9.01766699999962,
+      "timestamp": "2025-07-27T11:38:56.700Z"
+    }
+  ]
+}
