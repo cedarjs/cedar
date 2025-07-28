@@ -26,6 +26,35 @@ import {
 // useful consts
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
+// Utility function to find bin path from package.json
+function findBinPath(
+  projectPath: string,
+  packageName: string,
+  binName: string,
+) {
+  try {
+    const packageJsonPath = path.join(
+      projectPath,
+      'node_modules',
+      packageName,
+      'package.json',
+    )
+    const packageJson = fs.readJsonSync(packageJsonPath)
+
+    if (packageJson.bin?.[binName]) {
+      return path.resolve(
+        path.dirname(packageJsonPath),
+        packageJson.bin[binName],
+      )
+    }
+
+    throw new Error(`Bin '${binName}' not found in ${packageName} package.json`)
+  } catch (error) {
+    console.error(`Error finding bin path for ${packageName}:`, error)
+    throw error
+  }
+}
+
 // Parse input
 const args = yargs(hideBin(process.argv))
   .positional('project-directory', {
@@ -52,16 +81,27 @@ const REDWOOD_PROJECT_DIRECTORY =
 
 const SETUPS_DIR = path.join(__dirname, 'setups')
 const TESTS_DIR = path.join(__dirname, 'tests')
-const API_SERVER_COMMANDS = [
-  {
-    cmd: `node ${path.resolve(REDWOOD_PROJECT_DIRECTORY, 'node_modules/@cedarjs/cli/dist/index.js')} serve api`,
-    host: 'http://localhost:8911',
-  },
-  {
-    cmd: `node ${path.resolve(REDWOOD_PROJECT_DIRECTORY, 'node_modules/@cedarjs/api-server/dist/bin.js')} api`,
-    host: 'http://localhost:8911',
-  },
-]
+
+// Function to get API server commands with dynamic bin paths
+function getApiServerCommands(projectPath: string) {
+  const cliPath = findBinPath(projectPath, '@cedarjs/cli', 'rw')
+  const apiServerPath = findBinPath(
+    projectPath,
+    '@cedarjs/api-server',
+    'rw-server',
+  )
+
+  return [
+    {
+      cmd: `node ${cliPath} serve api`,
+      host: 'http://localhost:8911',
+    },
+    {
+      cmd: `node ${apiServerPath} api`,
+      host: 'http://localhost:8911',
+    },
+  ]
+}
 let cleanUpExecuted = false
 
 let serverSubprocess: ExecaChildProcess | undefined
@@ -79,7 +119,7 @@ const stopServer = async () => {
   serverSubprocess.cancel()
   try {
     await serverSubprocess
-  } catch (_error) {
+  } catch {
     // ignore
   }
 }
@@ -98,17 +138,13 @@ async function main() {
     console.log('\nThe directory will be deleted after the tests are run')
     process.on('SIGINT', () => {
       if (!cleanUpExecuted) {
-        cleanUp({
-          projectPath: REDWOOD_PROJECT_DIRECTORY,
-        })
+        cleanUp({ projectPath: REDWOOD_PROJECT_DIRECTORY })
         cleanUpExecuted = true
       }
     })
     process.on('exit', () => {
       if (!cleanUpExecuted) {
-        cleanUp({
-          projectPath: REDWOOD_PROJECT_DIRECTORY,
-        })
+        cleanUp({ projectPath: REDWOOD_PROJECT_DIRECTORY })
         cleanUpExecuted = true
       }
     })
@@ -171,11 +207,11 @@ async function main() {
   })
 
   // Results collection
-  const results = {}
+  const results: Record<string, Record<string, any>> = {}
 
   console.log('The following setups will be run:')
-  for (let i = 0; i < setups.length; i++) {
-    console.log(`- ${setups[i]}`)
+  for (const setup of setups) {
+    console.log('-', setup)
   }
 
   for (const setup of setups) {
@@ -218,20 +254,23 @@ async function main() {
       stdio: args.verbose ? 'inherit' : 'ignore',
     })
 
+    // Get API server commands with dynamic paths
+    const apiServerCommands = getApiServerCommands(REDWOOD_PROJECT_DIRECTORY)
+
     // Run the tests
     for (let i = 0; i < runForTests.length; i++) {
       // Run for different server commands
-      for (let j = 0; j < API_SERVER_COMMANDS.length; j++) {
+      for (let j = 0; j < apiServerCommands.length; j++) {
         console.log(`\n${divider}`)
         console.log(
-          `Running test ${i * API_SERVER_COMMANDS.length + j + 1}/${runForTests.length * API_SERVER_COMMANDS.length}: ${runForTests[i]}`,
+          `Running test ${i * apiServerCommands.length + j + 1}/${runForTests.length * apiServerCommands.length}: ${runForTests[i]}`,
         )
-        console.log(ansis.dim(API_SERVER_COMMANDS[j].cmd))
+        console.log(ansis.dim(apiServerCommands[j].cmd))
         console.log(`${divider}`)
 
         // Start the server
         await startServer(
-          API_SERVER_COMMANDS[j].cmd,
+          apiServerCommands[j].cmd,
           setupModule.startupGracePeriod,
         )
 
@@ -244,7 +283,7 @@ async function main() {
               'run',
               path.join(TESTS_DIR, `${runForTests[i]}.js`),
               '--env',
-              `TEST_HOST=${API_SERVER_COMMANDS[j].host}`,
+              `TEST_HOST=${apiServerCommands[j].host}`,
             ],
             {
               cwd: REDWOOD_PROJECT_DIRECTORY,
@@ -252,13 +291,13 @@ async function main() {
             },
           )
           passed = true
-        } catch (_error) {
+        } catch {
           // ignore
         }
 
         results[setup] ??= {}
         results[setup][runForTests[i]] ??= {}
-        results[setup][runForTests[i]][API_SERVER_COMMANDS[j].cmd] =
+        results[setup][runForTests[i]][apiServerCommands[j].cmd] =
           fs.readJSONSync(
             path.join(REDWOOD_PROJECT_DIRECTORY, 'summary.json'),
             {
@@ -267,8 +306,7 @@ async function main() {
               encoding: 'utf-8',
             },
           ) ?? {}
-        results[setup][runForTests[i]][API_SERVER_COMMANDS[j].cmd].passed =
-          passed
+        results[setup][runForTests[i]][apiServerCommands[j].cmd].passed = passed
 
         // Stop the server
         await stopServer()
