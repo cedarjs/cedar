@@ -61,7 +61,7 @@ await build({
   buildOptions: {
     ...defaultBuildOptions,
     tsconfig: 'tsconfig.cjs.json',
-    format: 'cjs',
+    outdir: 'dist/cjs',
     packages: 'external',
     plugins: [dirnamePlugin()],
   },
