@@ -114,9 +114,9 @@ await buildBinCjs({
 async function buildBinEsm({ buildOptions }: { buildOptions: ESBuildOptions }) {
   await buildBin({
     buildOptions: {
-      ...buildOptions,
       tsconfig: 'tsconfig.build.json',
       format: 'esm',
+      ...buildOptions,
     },
   })
 }
@@ -124,10 +124,10 @@ async function buildBinEsm({ buildOptions }: { buildOptions: ESBuildOptions }) {
 async function buildBinCjs({ buildOptions }: { buildOptions: ESBuildOptions }) {
   await buildBin({
     buildOptions: {
-      ...buildOptions,
       tsconfig: 'tsconfig.cjs.json',
       outdir: './dist/cjs',
       plugins: [dirnamePlugin()],
+      ...buildOptions,
     },
   })
 }
