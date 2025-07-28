@@ -36,8 +36,8 @@ export const builder = (yargs) => {
       `For all available flags, run jest cli directly ${c.tip(
         'yarn jest --help',
       )}\n\nAlso see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#test',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#test',
       )}\n`,
     )
 }

@@ -13,8 +13,8 @@ export const description = 'Print your system environment information'
 export const builder = (yargs) => {
   yargs.epilogue(
     `Also see the ${terminalLink(
-      'Redwood CLI Reference',
-      'https://redwoodjs.com/docs/cli-commands#info',
+      'CedarJS CLI Reference',
+      'https://cedarjs.com/docs/cli-commands#info',
     )}`,
   )
 }

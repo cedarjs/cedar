@@ -33,8 +33,8 @@ Options:
   -d, --dist-path                           Path to the api dist directory
          [string] [default: "/Users/dom/projects/redwood/test-project/api/dist"]
 
-Also see the Redwood CLI Reference
-(https://redwoodjs.com/docs/cli-commands#datamigrate-up)`
+Also see the CedarJS CLI Reference
+(https://cedarjs.com/docs/cli-commands#datamigrate-up)`
 
 const expectedBinNoPendingDataMigrations = `\
 
@@ -50,8 +50,8 @@ Options:
   --help     Show help                                                 [boolean]
   --version  Show version number                                       [boolean]
 
-Also see the Redwood CLI Reference
-(https://redwoodjs.com/docs/cli-commands#datamigrate-install)`
+Also see the CedarJS CLI Reference
+(https://cedarjs.com/docs/cli-commands#datamigrate-install)`
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
