@@ -3,6 +3,9 @@ import { fork } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
+// See https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import ansis from 'ansis'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
@@ -75,6 +78,9 @@ export class ServerManager {
       )
     } else {
       this.httpServerProcess = fork(
+        // An esbuild plugin will take care of import.meta.dirname
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         path.join(import.meta.dirname, 'bin.js'),
         ['api', '--port', port.toString()],
         forkOpts,

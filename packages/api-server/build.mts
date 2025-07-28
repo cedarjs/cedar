@@ -1,11 +1,28 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+import type { BuildOptions as ESBuildOptions, Plugin } from 'esbuild'
+
 import {
   build,
   defaultBuildOptions,
   defaultIgnorePatterns,
 } from '@cedarjs/framework-tools'
-import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
+import {
+  generateTypesCjs,
+  generateTypesEsm,
+  insertCommonJsPackageJson,
+} from '@cedarjs/framework-tools/generateTypes'
 
-// Build the main package as an ES Module
+const ignorePatterns = [
+  ...defaultIgnorePatterns,
+  './src/bin.ts',
+  './src/logFormatter/bin.ts',
+  './src/types.ts',
+  './src/watch.ts',
+]
+
+// Build the main package as ESM
 await build({
   buildOptions: {
     ...defaultBuildOptions,
@@ -14,62 +31,128 @@ await build({
     packages: 'external',
   },
   entryPointOptions: {
-    ignore: [
-      ...defaultIgnorePatterns,
-      './src/bin.ts',
-      './src/logFormatter/bin.ts',
-      './src/types.ts',
-      './src/watch.ts',
-    ],
+    ignore: ignorePatterns,
   },
 })
 await generateTypesEsm()
 
-// Build the rw-server bin
+function dirnamePlugin(): Plugin {
+  return {
+    name: 'dirname',
+    setup(build) {
+      build.onLoad({ filter: /\/src\/.*/ }, async ({ path: filePath }) => {
+        const originalContents = await fs.promises.readFile(filePath, 'utf8')
+        const contents = originalContents.replaceAll(
+          'import.meta.dirname',
+          '__dirname',
+        )
+
+        return {
+          contents,
+          loader: path.extname(filePath) === '.ts' ? 'ts' : 'js',
+        }
+      })
+    },
+  }
+}
+
+// Build the main package as CJS
 await build({
   buildOptions: {
     ...defaultBuildOptions,
-    tsconfig: 'tsconfig.build.json',
-    format: 'esm',
-    banner: {
-      js: '#!/usr/bin/env node',
-    },
-    bundle: true,
-    entryPoints: ['./src/bin.ts'],
+    tsconfig: 'tsconfig.cjs.json',
+    format: 'cjs',
     packages: 'external',
+    plugins: [dirnamePlugin()],
   },
-  metafileName: 'meta.rwServer.json',
+  entryPointOptions: {
+    ignore: ignorePatterns,
+  },
+})
+await generateTypesCjs()
+
+await insertCommonJsPackageJson({ buildFileUrl: import.meta.url })
+
+// Build the rw-server bin
+await buildBinEsm({
+  buildOptions: {
+    entryPoints: ['./src/bin.ts'],
+  },
+})
+await buildBinCjs({
+  buildOptions: {
+    entryPoints: ['./src/bin.ts'],
+  },
 })
 
 // Build the logFormatter bin
-await build({
+await buildBinEsm({
   buildOptions: {
-    ...defaultBuildOptions,
-    tsconfig: 'tsconfig.build.json',
-    format: 'esm',
-    banner: {
-      js: '#!/usr/bin/env node',
-    },
-    bundle: true,
     entryPoints: ['./src/logFormatter/bin.ts'],
     outdir: './dist/logFormatter',
-    packages: 'external',
   },
-  metafileName: 'meta.logFormatter.json',
+})
+await buildBinCjs({
+  buildOptions: {
+    entryPoints: ['./src/logFormatter/bin.ts'],
+    outdir: './dist/cjs/logFormatter',
+  },
 })
 
 // Build the watch bin
-await build({
+await buildBinEsm({
   buildOptions: {
-    ...defaultBuildOptions,
-    tsconfig: 'tsconfig.build.json',
-    format: 'esm',
-    banner: {
-      js: '#!/usr/bin/env node',
-    },
-    bundle: true,
     entryPoints: ['./src/watch.ts'],
-    packages: 'external',
   },
-  metafileName: 'meta.watch.json',
 })
+await buildBinCjs({
+  buildOptions: {
+    entryPoints: ['./src/watch.ts'],
+  },
+})
+
+async function buildBinEsm({ buildOptions }: { buildOptions: ESBuildOptions }) {
+  await buildBin({
+    buildOptions: {
+      ...buildOptions,
+      tsconfig: 'tsconfig.build.json',
+      format: 'esm',
+    },
+  })
+}
+
+async function buildBinCjs({ buildOptions }: { buildOptions: ESBuildOptions }) {
+  await buildBin({
+    buildOptions: {
+      ...buildOptions,
+      tsconfig: 'tsconfig.cjs.json',
+      format: 'cjs',
+      plugins: [dirnamePlugin()],
+    },
+  })
+}
+
+async function buildBin({ buildOptions }: { buildOptions: ESBuildOptions }) {
+  const entryPoints = buildOptions.entryPoints
+  if (!Array.isArray(entryPoints) || typeof entryPoints[0] !== 'string') {
+    throw new Error('Invalid entry points')
+  }
+
+  const metafileName = (entryPoints[0] || '')
+    .replace('./src/', 'meta.' + buildOptions.format + '.')
+    .replaceAll('/', '_')
+    .replace('.ts', '.json')
+
+  await build({
+    buildOptions: {
+      ...defaultBuildOptions,
+      ...buildOptions,
+      banner: {
+        js: '#!/usr/bin/env node',
+      },
+      bundle: true,
+      packages: 'external',
+    },
+    metafileName,
+  })
+}

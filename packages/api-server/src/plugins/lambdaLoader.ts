@@ -1,5 +1,8 @@
 import path from 'path'
 
+// See https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
 import fg from 'fast-glob'
