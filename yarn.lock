@@ -1994,6 +1994,7 @@ __metadata:
     "@fastify/multipart": "npm:9.0.3"
     "@fastify/url-data": "npm:6.0.3"
     "@types/aws-lambda": "npm:8.10.152"
+    "@types/dotenv-defaults": "npm:^2.0.4"
     "@types/qs": "npm:6.9.16"
     "@types/split2": "npm:4.2.3"
     "@types/yargs": "npm:17.0.33"

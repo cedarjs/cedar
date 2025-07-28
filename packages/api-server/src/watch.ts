@@ -2,7 +2,7 @@ import path from 'path'
 
 import ansis from 'ansis'
 import chokidar from 'chokidar'
-import dotenv from 'dotenv'
+import { config } from 'dotenv-defaults'
 
 import {
   buildApi,
@@ -19,9 +19,8 @@ import { serverManager } from './serverManager.js'
 const rwjsPaths = getPaths()
 
 if (!process.env.REDWOOD_ENV_FILES_LOADED) {
-  dotenv.config({
+  config({
     path: path.join(rwjsPaths.base, '.env'),
-    // @ts-expect-error The types for dotenv-defaults are using an outdated version of dotenv
     defaults: path.join(rwjsPaths.base, '.env.defaults'),
     multiline: true,
   })

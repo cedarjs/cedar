@@ -52,6 +52,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/aws-lambda": "8.10.152",
+    "@types/dotenv-defaults": "^2.0.4",
     "@types/qs": "6.9.16",
     "@types/split2": "4.2.3",
     "@types/yargs": "17.0.33",
