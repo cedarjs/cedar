@@ -77,11 +77,15 @@ export class ServerManager {
         forkOpts,
       )
     } else {
+      // An esbuild plugin will take care of import.meta.dirname
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const dirname = import.meta.dirname
+      console.log('serverManager.ts dirname', dirname)
+      const binPath = path.join(dirname, 'bin.js')
+      console.log('serverManager.ts binPath', binPath)
       this.httpServerProcess = fork(
-        // An esbuild plugin will take care of import.meta.dirname
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        path.join(import.meta.dirname, 'bin.js'),
+        binPath,
         ['api', '--port', port.toString()],
         forkOpts,
       )
