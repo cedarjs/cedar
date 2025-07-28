@@ -108,6 +108,9 @@ await buildBinEsm({
 await buildBinCjs({
   buildOptions: {
     entryPoints: ['./src/watch.ts'],
+    banner: {
+      js: '#!/usr/bin/env node\n\nvar __dirname = __dirname || "windows_debug";',
+    },
   },
 })
 
@@ -146,12 +149,12 @@ async function buildBin({ buildOptions }: { buildOptions: ESBuildOptions }) {
   await build({
     buildOptions: {
       ...defaultBuildOptions,
-      ...buildOptions,
       banner: {
         js: '#!/usr/bin/env node',
       },
       bundle: true,
       packages: 'external',
+      ...buildOptions,
     },
     metafileName,
   })
