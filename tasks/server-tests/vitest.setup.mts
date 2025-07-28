@@ -7,14 +7,9 @@ import type { ProcessPromise } from 'zx'
 import { getConfig } from '@cedarjs/project-config'
 
 /** Utility function to find bin path from package.json */
-function findBinPath(appPath: string, packageName: string, binName: string) {
+function findBinPath(packagePath: string, binName: string) {
   try {
-    const packageJsonPath = path.join(
-      appPath,
-      'node_modules',
-      packageName,
-      'package.json',
-    )
+    const packageJsonPath = path.join(packagePath, 'package.json')
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
     if (packageJson.bin?.[binName]) {
@@ -24,9 +19,9 @@ function findBinPath(appPath: string, packageName: string, binName: string) {
       )
     }
 
-    throw new Error(`Bin '${binName}' not found in ${packageName} package.json`)
+    throw new Error(`Bin '${binName}' not found in ${packagePath} package.json`)
   } catch (error) {
-    console.error(`Error finding bin path for ${packageName}`, error)
+    console.error(`Error finding bin path for ${packagePath}`, error)
     throw error
   }
 }
@@ -45,15 +40,22 @@ export const testContext: TestContext = {
   projectConfig: {} as ReturnType<typeof getConfig>,
 }
 
-// Function to get bin paths dynamically
+/** Function to get bin paths dynamically */
 function getBinPaths() {
-  const appUrl = new URL('./fixtures/redwood-app', import.meta.url)
-  const appPath = fileURLToPath(appUrl)
+  const cliPackagePath = path.resolve(import.meta.dirname, '../../packages/cli')
+  const apiServerPackagePath = path.resolve(
+    import.meta.dirname,
+    '../../packages/api-server',
+  )
+  const webServerPackagePath = path.resolve(
+    import.meta.dirname,
+    '../../packages/web-server',
+  )
 
   return {
-    rw: findBinPath(appPath, '@cedarjs/cli', 'rw'),
-    rwServer: findBinPath(appPath, '@cedarjs/api-server', 'rw-server'),
-    rwWebServer: findBinPath(appPath, '@cedarjs/web-server', 'rw-web-server'),
+    rw: findBinPath(cliPackagePath, 'rw'),
+    rwServer: findBinPath(apiServerPackagePath, 'rw-server'),
+    rwWebServer: findBinPath(webServerPackagePath, 'rw-web-server'),
   }
 }
 

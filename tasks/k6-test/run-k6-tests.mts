@@ -27,10 +27,14 @@ import {
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 // Utility function to find bin path from package.json
-function findBinPath(appPath: string, packageName: string, binName: string) {
+function findBinPath(
+  projectPath: string,
+  packageName: string,
+  binName: string,
+) {
   try {
     const packageJsonPath = path.join(
-      appPath,
+      projectPath,
       'node_modules',
       packageName,
       'package.json',
@@ -134,17 +138,13 @@ async function main() {
     console.log('\nThe directory will be deleted after the tests are run')
     process.on('SIGINT', () => {
       if (!cleanUpExecuted) {
-        cleanUp({
-          projectPath: REDWOOD_PROJECT_DIRECTORY,
-        })
+        cleanUp({ projectPath: REDWOOD_PROJECT_DIRECTORY })
         cleanUpExecuted = true
       }
     })
     process.on('exit', () => {
       if (!cleanUpExecuted) {
-        cleanUp({
-          projectPath: REDWOOD_PROJECT_DIRECTORY,
-        })
+        cleanUp({ projectPath: REDWOOD_PROJECT_DIRECTORY })
         cleanUpExecuted = true
       }
     })
