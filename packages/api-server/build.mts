@@ -109,7 +109,7 @@ await buildBinCjs({
   buildOptions: {
     entryPoints: ['./src/watch.ts'],
     banner: {
-      js: '#!/usr/bin/env node\n\nvar __dirname = __dirname || "windows_debug";',
+      js: '#!/usr/bin/env node\n\nconsole.log("watch.js __dirname", __dirname);\n',
     },
   },
 })
