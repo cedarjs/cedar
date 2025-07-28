@@ -1,3 +1,9 @@
+console.log('Module system check:')
+console.log('typeof require:', typeof require)
+console.log('typeof __dirname:', typeof __dirname)
+console.log('typeof __filename:', typeof __filename)
+console.log('typeof module:', typeof module)
+
 import type { ChildProcess } from 'child_process'
 import { fork } from 'child_process'
 import fs from 'fs'
