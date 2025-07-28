@@ -1,6 +1,6 @@
 import path from 'path'
 
-import pino from 'pino'
+import { pino } from 'pino'
 import build from 'pino-abstract-transport'
 import {
   vi,
