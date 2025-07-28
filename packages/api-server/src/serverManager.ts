@@ -6,6 +6,24 @@ console.log('typeof __dirname:', typeof __dirname)
 console.log('__dirname value:', __dirname) // Add this line
 console.log('typeof __filename:', typeof __filename)
 console.log('typeof module:', typeof module)
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+console.log('typeof import.meta', typeof import.meta)
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+console.log('import.meta', import.meta)
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+console.log('typeof import.meta.dirname', typeof import.meta.dirname)
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+console.log('import.meta.dirname', import.meta.dirname)
+console.log(
+  'import.meta.dirname === __dirname',
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  import.meta.dirname === __dirname,
+)
 
 import type { ChildProcess } from 'child_process'
 import { fork } from 'child_process'
@@ -31,6 +49,7 @@ console.log('globalDirname', globalDirname)
 // @ts-ignore
 const dirnameTop = import.meta.dirname
 console.log('serverManager.ts dirnameTop', dirnameTop)
+console.log('serverManager.ts __dirname', __dirname)
 const binPathTop = path.join(dirnameTop, 'bin.js')
 console.log('serverManager.ts binPathTop', binPathTop)
 
