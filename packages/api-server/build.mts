@@ -126,7 +126,7 @@ async function buildBinCjs({ buildOptions }: { buildOptions: ESBuildOptions }) {
     buildOptions: {
       tsconfig: 'tsconfig.cjs.json',
       outdir: './dist/cjs',
-      plugins: [dirnamePlugin()],
+      plugins: [dirnameInjectorPlugin()],
       ...buildOptions,
     },
   })
