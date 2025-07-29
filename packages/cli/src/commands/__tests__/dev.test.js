@@ -17,7 +17,7 @@ vi.mock('fs-extra', async () => {
       ...actualFs,
       readFileSync: (filePath) => {
         if (filePath.endsWith('.json')) {
-          if (filePath === '/mocked/esm-project/package.json') {
+          if (filePath.includes('esm-project')) {
             return '{ "type": "module" }'
           }
 
