@@ -36,25 +36,22 @@ await build({
 })
 await generateTypesEsm()
 
-function dirnamePlugin(): Plugin {
+function dirnameInjectorPlugin(): Plugin {
   return {
     name: '__dirname injector',
     setup(build) {
-      build.onLoad(
-        { filter: /[\\/]src[\\/].*\.ts/ },
-        async ({ path: filePath }) => {
-          const originalContents = await fs.promises.readFile(filePath, 'utf8')
-          const contents = originalContents.replaceAll(
-            'import.meta.dirname',
-            '__dirname',
-          )
+      build.onLoad({ filter: /.*/ }, async ({ path: filePath }) => {
+        const originalContents = await fs.promises.readFile(filePath, 'utf8')
+        const contents = originalContents.replaceAll(
+          'import.meta.dirname',
+          '__dirname',
+        )
 
-          return {
-            contents,
-            loader: path.extname(filePath) === '.ts' ? 'ts' : 'js',
-          }
-        },
-      )
+        return {
+          contents,
+          loader: path.extname(filePath) === '.ts' ? 'ts' : 'js',
+        }
+      })
     },
   }
 }
@@ -66,7 +63,7 @@ await build({
     tsconfig: 'tsconfig.cjs.json',
     outdir: 'dist/cjs',
     packages: 'external',
-    plugins: [dirnamePlugin()],
+    plugins: [dirnameInjectorPlugin()],
   },
   entryPointOptions: {
     ignore: ignorePatterns,
