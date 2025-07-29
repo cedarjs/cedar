@@ -1,22 +1,28 @@
 import { terminalLink } from 'termi-link'
 
+import { getConfig } from '@cedarjs/project-config'
+
 import c from '../lib/colors.js'
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'dev [side..]'
-export const description = 'Start development servers for api, and web'
+export const description = 'Start development servers for your sides'
 
 export const builder = (yargs) => {
-  // The reason `forward` is hidden is that it's been broken with Vite
-  // and it's not clear how to fix it.
+  const projectConfig = getConfig()
 
   yargs
     .positional('side', {
-      choices: ['api', 'web'],
-      default: ['api', 'web'],
+      choices: ['api', 'web', ...Object.keys(projectConfig.experimental.sides)],
+      default:
+        projectConfig.experimental.cli.dev.defaultSides.length > 0
+          ? projectConfig.experimental.cli.dev.defaultSides
+          : ['api', 'web'],
       description: 'Which dev server(s) to start',
       type: 'array',
     })
+    // The reason `forward` is hidden is that it's been broken with Vite
+    // and it's not clear how to fix it.
     .option('forward', {
       alias: 'fwd',
       description:

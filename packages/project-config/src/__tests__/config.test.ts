@@ -46,6 +46,9 @@ describe('getConfig', () => {
         "experimental": {
           "cli": {
             "autoInstall": true,
+            "dev": {
+              "defaultSides": [],
+            },
             "plugins": [
               {
                 "package": "@cedarjs/cli-storybook-vite",
@@ -69,6 +72,7 @@ describe('getConfig', () => {
           "rsc": {
             "enabled": false,
           },
+          "sides": {},
           "streamingSsr": {
             "enabled": false,
           },
