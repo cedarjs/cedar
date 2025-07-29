@@ -16,9 +16,9 @@ From package.json
 
 ```
   "bin": {
-    "rw-api-server-watch": "./dist/watch.js",
-    "rw-log-formatter": "./dist/logFormatter/bin.js",
-    "rw-server": "./dist/index.js"
+    "cedarjs-api-server-watch": "./dist/watch.js",
+    "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
+    "cedarjs-server": "./dist/bin.js",
   },
 ```
 
@@ -26,7 +26,7 @@ From package.json
 > of a CedarJS CLI command will throw due to Yargs object "collision". Needs to
 > be re-architected in the future.
 
-### `rw-server`
+### `cedarjs-server`
 
 Indended for dev and prototyping (i.e. pre-production).
 
@@ -43,7 +43,7 @@ errors, static asset, etc. for production contexts.
   - socket (optional)
   - apiHost (default redwood.toml web.apiUrl)
 
-### `rw-server api`
+### `cedarjs-server api`
 
 For production use.
 
@@ -53,9 +53,10 @@ For production use.
   - socket (optional)
   - apiRootPath (default '/')
 
-### `rw-server web`
+### `cedarjs-server web`
 
-Not optimized for production use at scale (see comments above for `rw-server`).
+Not optimized for production use at scale (see comments above for
+`cedarjs-server`).
 Recommended to use CDN or Nginx as performant alternatives.
 
 - Runs web on redwood.toml web.port (default 8910)

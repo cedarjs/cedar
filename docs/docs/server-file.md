@@ -32,7 +32,7 @@ async function main() {
 main()
 ```
 
-Without the server file, to start the api side, you'd use binaries provided by `@cedarjs/api-server` such as `yarn rw-server api` (you may also see this as `./node_modules/.bin/rw-server api`).
+Without the server file, to start the api side, you'd use binaries provided by `@cedarjs/api-server` such as `yarn cedarjs-server api` (you may also see this as `./node_modules/.bin/cedarjs-server api`).
 
 With the server file, there's no indirection. Just use `node`:
 
@@ -57,7 +57,7 @@ That means you will swap the `CMD` instruction in the api server stage:
 ```diff
   ENV NODE_ENV=production
 
-- CMD [ "node_modules/.bin/rw-server", "api" ]
+- CMD [ "node_modules/.bin/cedarjs-server", "api" ]
 + CMD [ "api/dist/server.js" ]
 ```
 

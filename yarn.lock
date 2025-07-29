@@ -2021,6 +2021,9 @@ __metadata:
     "@cedarjs/graphql-server":
       optional: true
   bin:
+    cedarjs-api-server-watch: ./dist/watch.js
+    cedarjs-log-formatter: ./dist/logFormatter/bin.js
+    cedarjs-server: ./dist/bin.js
     rw-api-server-watch: ./dist/cjs/watch.js
     rw-log-formatter: ./dist/cjs/logFormatter/bin.js
     rw-server: ./dist/cjs/bin.js
@@ -2878,7 +2881,10 @@ __metadata:
     tsx: "npm:4.20.3"
     typescript: "npm:5.6.2"
   bin:
+    cdr: ./dist/bins/cedarjs.js
     cedarjs: ./dist/bins/cedarjs.js
+    cedarjs-api-server-watch: ./dist/bins/cedarjs-api-server-watch.js
+    cedarjs-serve-api: ./dist/bins/cedarjs-serve-api.js
     cj: ./dist/bins/cedarjs.js
     cross-env: ./dist/bins/cross-env.js
     eslint: ./dist/bins/eslint.js

@@ -8,4 +8,4 @@ const requireFromApiServer = createRequire(
 
 const bins = requireFromApiServer('./package.json')['bin']
 
-requireFromApiServer(bins['cedarjs-server'])
+requireFromApiServer(bins['cedarjs-serve-api'])

@@ -88,7 +88,7 @@ function getApiServerCommands(projectPath: string) {
   const apiServerPath = findBinPath(
     projectPath,
     '@cedarjs/api-server',
-    'rw-server',
+    'cedarjs-server',
   )
 
   return [

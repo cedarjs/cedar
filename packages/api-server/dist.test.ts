@@ -14,6 +14,9 @@ describe('dist', () => {
   it('ships three bins', () => {
     expect(packageConfig.bin).toMatchInlineSnapshot(`
       {
+        "cedarjs-api-server-watch": "./dist/watch.js",
+        "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
+        "cedarjs-server": "./dist/bin.js",
         "rw-api-server-watch": "./dist/cjs/watch.js",
         "rw-log-formatter": "./dist/cjs/logFormatter/bin.js",
         "rw-server": "./dist/cjs/bin.js",

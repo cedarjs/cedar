@@ -54,7 +54,7 @@ function getBinPaths() {
 
   return {
     rw: findBinPath(cliPackagePath, 'rw'),
-    rwServer: findBinPath(apiServerPackagePath, 'rw-server'),
+    rwServer: findBinPath(apiServerPackagePath, 'cedajs-server'),
     rwWebServer: findBinPath(webServerPackagePath, 'rw-web-server'),
   }
 }
@@ -64,7 +64,7 @@ const binPaths = getBinPaths()
 // @cedarjs/cli (yarn rw)
 export const rw = binPaths.rw
 
-// @cedarjs/api-server (yarn rw-server)
+// @cedarjs/api-server (yarn cedarjs-server)
 export const rwServer = binPaths.rwServer
 
 // @cedarjs/web-server (yarn rw-web-server)
