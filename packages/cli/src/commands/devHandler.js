@@ -158,7 +158,7 @@ export const handler = async ({
 
   const redwoodConfigPath = getConfigPath()
 
-  const streamingSsrEnabled = getConfig().experimental.streamingSsr?.enabled
+  const streamingSsrEnabled = getConfig().experimental?.streamingSsr?.enabled
 
   // @TODO (Streaming) Lot of temporary feature flags for started dev server.
   // Written this way to make it easier to read

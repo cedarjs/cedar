@@ -15,7 +15,17 @@ vi.mock('fs-extra', async () => {
   return {
     default: {
       ...actualFs,
-      readFileSync: () => 'File content',
+      readFileSync: (filePath) => {
+        if (filePath.endsWith('.json')) {
+          if (filePath === '/mocked/esm-project/package.json') {
+            return '{ "type": "module" }'
+          }
+
+          return '{}'
+        }
+
+        return 'File content'
+      },
       existsSync: () => true,
     },
   }
@@ -28,28 +38,11 @@ vi.mock('@cedarjs/internal/dist/dev', () => {
 })
 
 vi.mock('@cedarjs/project-config', async () => {
-  const actualProjectConfig = await vi.importActual('@cedarjs/project-config')
-
   return {
     getConfig: vi.fn(),
-    getConfigPath: () => '/mocked/project/redwood.toml',
-    resolveFile: actualProjectConfig.resolveFile,
-    getPaths: () => {
-      return {
-        api: {
-          base: '/mocked/project/api',
-          src: '/mocked/project/api/src',
-          dist: '/mocked/project/api/dist',
-        },
-        web: {
-          base: '/mocked/project/web',
-          dist: '/mocked/project/web/dist',
-        },
-        generated: {
-          base: '/mocked/project/.redwood',
-        },
-      }
-    },
+    getConfigPath: vi.fn(() => '/mocked/project/redwood.toml'),
+    resolveFile: () => {},
+    getPaths: () => {},
   }
 })
 
@@ -68,18 +61,42 @@ vi.mock('../../lib/ports', () => {
   }
 })
 
+vi.mock('../../lib/index.js', () => ({
+  getPaths: vi.fn(defaultPaths),
+}))
+
 import concurrently from 'concurrently'
 import { find } from 'lodash'
 import { vi, describe, afterEach, it, expect } from 'vitest'
 
-import { getConfig } from '@cedarjs/project-config'
+import { getConfig, getConfigPath } from '@cedarjs/project-config'
 
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
+import { getPaths } from '../../lib/index.js'
 import { handler } from '../dev.js'
+
+function defaultPaths() {
+  return {
+    base: '/mocked/project',
+    api: {
+      base: '/mocked/project/api',
+      src: '/mocked/project/api/src',
+      dist: '/mocked/project/api/dist',
+    },
+    web: {
+      base: '/mocked/project/web',
+      dist: '/mocked/project/web/dist',
+    },
+    generated: {
+      base: '/mocked/project/.redwood',
+    },
+  }
+}
 
 describe('yarn rw dev', () => {
   afterEach(() => {
     vi.clearAllMocks()
+    getPaths.mockReturnValue(defaultPaths())
   })
 
   it('Should run api and web dev servers, and generator watcher by default', async () => {
@@ -121,7 +138,7 @@ describe('yarn rw dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
     expect(apiCommand.env.NODE_ENV).toEqual('development')
     expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -168,7 +185,63 @@ describe('yarn rw dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+    )
+    expect(apiCommand.env.NODE_ENV).toEqual('development')
+    expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')
+
+    expect(generateCommand.command).toEqual('yarn rw-gen-watch')
+  })
+
+  it('Should use esm server-watch bin for esm projects', async () => {
+    getConfig.mockReturnValue({
+      web: {
+        port: 8912,
+      },
+      api: {
+        port: 8911,
+        debugPort: 18911,
+      },
+    })
+    getConfigPath.mockReturnValue('/mocked/esm-project/redwood.toml')
+    getPaths.mockReturnValue({
+      base: '/mocked/esm-project',
+      api: {
+        base: '/mocked/esm-project/api',
+        src: '/mocked/esm-project/api/src',
+        dist: '/mocked/esm-project/api/dist',
+      },
+      web: {
+        base: '/mocked/esm-project/web',
+        dist: '/mocked/esm-project/web/dist',
+      },
+      generated: {
+        base: '/mocked/esm-project/.redwood',
+      },
+    })
+
+    await handler({})
+
+    expect(generatePrismaClient).toHaveBeenCalledTimes(1)
+    const concurrentlyArgs = concurrently.mock.lastCall[0]
+
+    const webCommand = find(concurrentlyArgs, { name: 'web' })
+    const apiCommand = find(concurrentlyArgs, { name: 'api' })
+    const generateCommand = find(concurrentlyArgs, { name: 'gen' })
+
+    // Uses absolute path, so not doing a snapshot
+    expect(webCommand.command).toContain(
+      'yarn cross-env NODE_ENV=development rw-vite-dev',
+    )
+
+    expect(
+      apiCommand.command
+        .replace(/\s+/g, ' ')
+        // Remove the --max-old-space-size flag, as it's not consistent across
+        // test environments (vite sets this in their vite-ecosystem-ci tests)
+        .replace(/--max-old-space-size=\d+\s/, ''),
+    ).toEqual(
+      'yarn nodemon --quiet --watch "/mocked/esm-project/redwood.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
     expect(apiCommand.env.NODE_ENV).toEqual('development')
     expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -202,7 +275,7 @@ describe('yarn rw dev', () => {
     const apiCommand = find(concurrentlyArgs, { name: 'api' })
 
     expect(apiCommand.command.replace(/\s+/g, ' ')).toContain(
-      'yarn cedarjs-api-server-watch --port 8911 --debug-port 90909090',
+      'yarn rw-api-server-watch --port 8911 --debug-port 90909090',
     )
   })
 
