@@ -38,21 +38,16 @@ await generateTypesEsm()
 
 function dirnamePlugin(): Plugin {
   return {
-    name: 'dirname',
+    name: '__dirname injector',
     setup(build) {
       build.onLoad(
         { filter: /[\\/]src[\\/].*\.ts/ },
         async ({ path: filePath }) => {
-          console.log('dirnamePlugin filePath', filePath)
           const originalContents = await fs.promises.readFile(filePath, 'utf8')
           const contents = originalContents.replaceAll(
             'import.meta.dirname',
             '__dirname',
           )
-
-          if (contents !== originalContents) {
-            console.log('dirnamePlugin contents', contents)
-          }
 
           return {
             contents,
@@ -116,12 +111,6 @@ await buildBinEsm({
 await buildBinCjs({
   buildOptions: {
     entryPoints: ['./src/watch.ts'],
-    banner: {
-      js:
-        '#!/usr/bin/env node\n\n' +
-        'console.log("top __dirname", __dirname);\n\n' +
-        'var globalDirname = __dirname;\n',
-    },
   },
 })
 

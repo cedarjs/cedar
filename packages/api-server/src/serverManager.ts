@@ -1,30 +1,3 @@
-console.log('Module system check:')
-console.log('typeof require:', typeof require)
-console.log('typeof __dirname:', typeof __dirname)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-console.log('__dirname value:', __dirname) // Add this line
-console.log('typeof __filename:', typeof __filename)
-console.log('typeof module:', typeof module)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-console.log('typeof import.meta', typeof import.meta)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-console.log('import.meta', import.meta)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-console.log('typeof import.meta.dirname', typeof import.meta.dirname)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-console.log('import.meta.dirname', import.meta.dirname)
-console.log(
-  'import.meta.dirname === __dirname',
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  import.meta.dirname === __dirname,
-)
-
 import type { ChildProcess } from 'child_process'
 import { fork } from 'child_process'
 import fs from 'fs'
@@ -38,20 +11,6 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
 import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
-
-// Just debugging
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-console.log('globalDirname', globalDirname)
-
-// An esbuild plugin will take care of import.meta.dirname
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-const dirnameTop = import.meta.dirname
-console.log('serverManager.ts dirnameTop', dirnameTop)
-console.log('serverManager.ts __dirname', __dirname)
-const binPathTop = path.join(dirnameTop, 'bin.js')
-console.log('serverManager.ts binPathTop', binPathTop)
 
 const argv = yargs(hideBin(process.argv))
   .option('debugPort', {
@@ -122,14 +81,9 @@ export class ServerManager {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const dirname = import.meta.dirname
-      console.log('serverManager.ts dirname', dirname)
       const binPath = path.join(dirname, 'bin.js')
-      console.log('serverManager.ts binPath', binPath)
-      this.httpServerProcess = fork(
-        binPath,
-        ['api', '--port', port.toString()],
-        forkOpts,
-      )
+      const args = ['api', '--port', port.toString()]
+      this.httpServerProcess = fork(binPath, args, forkOpts)
     }
   }
 
