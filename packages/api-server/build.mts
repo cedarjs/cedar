@@ -40,19 +40,26 @@ function dirnamePlugin(): Plugin {
   return {
     name: 'dirname',
     setup(build) {
-      build.onLoad({ filter: /.*/ }, async ({ path: filePath }) => {
-        console.log('dirnamePlugin filePath', filePath)
-        const originalContents = await fs.promises.readFile(filePath, 'utf8')
-        const contents = originalContents.replaceAll(
-          'import.meta.dirname',
-          '__dirname',
-        )
+      build.onLoad(
+        { filter: /[\\/]src[\\/].*\.ts/ },
+        async ({ path: filePath }) => {
+          console.log('dirnamePlugin filePath', filePath)
+          const originalContents = await fs.promises.readFile(filePath, 'utf8')
+          const contents = originalContents.replaceAll(
+            'import.meta.dirname',
+            '__dirname',
+          )
 
-        return {
-          contents,
-          loader: path.extname(filePath) === '.ts' ? 'ts' : 'js',
-        }
-      })
+          if (contents !== originalContents) {
+            console.log('dirnamePlugin contents', contents)
+          }
+
+          return {
+            contents,
+            loader: path.extname(filePath) === '.ts' ? 'ts' : 'js',
+          }
+        },
+      )
     },
   }
 }
