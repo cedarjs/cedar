@@ -102,11 +102,6 @@ function defaultConfig() {
       port: 8911,
       debugPort: 18911,
     },
-    experimental: {
-      streamingSsr: {
-        enabled: false,
-      },
-    },
   }
 }
 
