@@ -39,7 +39,7 @@ vi.mock('@cedarjs/internal/dist/dev', () => {
 
 vi.mock('@cedarjs/project-config', async () => {
   return {
-    getConfig: vi.fn(),
+    getConfig: vi.fn(defaultConfig),
     getConfigPath: vi.fn(() => '/mocked/project/redwood.toml'),
     resolveFile: () => {},
     getPaths: () => {},
@@ -93,28 +93,31 @@ function defaultPaths() {
   }
 }
 
+function defaultConfig() {
+  return {
+    web: {
+      port: 8910,
+    },
+    api: {
+      port: 8911,
+      debugPort: 18911,
+    },
+    experimental: {
+      streamingSsr: {
+        enabled: false,
+      },
+    },
+  }
+}
+
 describe('yarn rw dev', () => {
   afterEach(() => {
     vi.clearAllMocks()
     getPaths.mockReturnValue(defaultPaths())
+    getConfig.mockReturnValue(defaultConfig())
   })
 
   it('Should run api and web dev servers, and generator watcher by default', async () => {
-    getConfig.mockReturnValue({
-      web: {
-        port: 8910,
-      },
-      api: {
-        port: 8911,
-        debugPort: 18911,
-      },
-      experimental: {
-        streamingSsr: {
-          enabled: false,
-        },
-      },
-    })
-
     await handler({
       side: ['api', 'web'],
     })
@@ -148,16 +151,12 @@ describe('yarn rw dev', () => {
 
   it('Should run api and FE dev server, when streaming experimental flag enabled', async () => {
     getConfig.mockReturnValue({
-      web: {
-        port: 8910,
-      },
-      api: {
-        port: 8911,
-        debugPort: 18911,
-      },
-      experimental: {
-        streamingSsr: {
-          enabled: true, // <-- enable SSR/Streaming
+      ...defaultConfig(),
+      ...{
+        experimental: {
+          streamingSsr: {
+            enabled: true,
+          },
         },
       },
     })
@@ -194,15 +193,6 @@ describe('yarn rw dev', () => {
   })
 
   it('Should use esm server-watch bin for esm projects', async () => {
-    getConfig.mockReturnValue({
-      web: {
-        port: 8912,
-      },
-      api: {
-        port: 8911,
-        debugPort: 18911,
-      },
-    })
     getConfigPath.mockReturnValue('/mocked/esm-project/redwood.toml')
     getPaths.mockReturnValue({
       base: '/mocked/esm-project',
@@ -250,21 +240,6 @@ describe('yarn rw dev', () => {
   })
 
   it('Debug port passed in command line overrides TOML', async () => {
-    getConfig.mockReturnValue({
-      web: {
-        port: 8910,
-      },
-      api: {
-        port: 8911,
-        debugPort: 505050,
-      },
-      experimental: {
-        streamingSsr: {
-          enabled: false,
-        },
-      },
-    })
-
     await handler({
       side: ['api'],
       apiDebugPort: 90909090,
@@ -281,16 +256,11 @@ describe('yarn rw dev', () => {
 
   it('Can disable debugger by setting toml to false', async () => {
     getConfig.mockReturnValue({
-      web: {
-        port: 8910,
-      },
-      api: {
-        port: 8911,
-        debugPort: false,
-      },
-      experimental: {
-        streamingSsr: {
-          enabled: false,
+      ...defaultConfig(),
+      ...{
+        api: {
+          port: 8911,
+          debugPort: false,
         },
       },
     })
