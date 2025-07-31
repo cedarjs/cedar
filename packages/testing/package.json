@@ -28,6 +28,9 @@
     "./dist/cjs/web/findCellMocks": {
       "default": "./dist/cjs/web/findCellMocks.js"
     },
+    "./dist/cjs/web/findCellMocks.js": {
+      "default": "./dist/cjs/web/findCellMocks.js"
+    },
     "./dist/cjs/web/mockRequests": {
       "default": "./dist/cjs/web/mockRequests.js"
     },
