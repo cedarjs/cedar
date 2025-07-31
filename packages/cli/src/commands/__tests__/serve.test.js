@@ -1,8 +1,8 @@
 import { vi, describe, afterEach, it, expect } from 'vitest'
 import yargs from 'yargs/yargs'
 
-import * as apiServerCLIConfig from '@cedarjs/api-server/dist/apiCLIConfig.js'
-import * as bothServerCLIConfig from '@cedarjs/api-server/dist/bothCLIConfig.js'
+import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig.js'
+import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig.js'
 
 import { builder } from '../serve.js'
 
