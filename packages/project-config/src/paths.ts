@@ -54,8 +54,8 @@ export interface WebPaths {
   distBrowser: string
   distRsc: string
   distSsr: string
-  distSsrDocument: string | null
-  distSsrEntryServer: string | null
+  distSsrDocument: string
+  distSsrEntryServer: string
   distRouteHooks: string
   distRscEntries: string
   routeManifest: string
@@ -257,11 +257,10 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
       distBrowser: path.join(BASE_DIR, PATH_WEB_DIR_DIST_BROWSER),
       distRsc: path.join(BASE_DIR, PATH_WEB_DIR_DIST_RSC),
       distSsr: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR),
-      distSsrDocument: resolveFile(
-        path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_DOCUMENT),
-      ),
-      distSsrEntryServer: resolveFile(
-        path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_ENTRY_SERVER),
+      distSsrDocument: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_DOCUMENT),
+      distSsrEntryServer: path.join(
+        BASE_DIR,
+        PATH_WEB_DIR_DIST_SSR_ENTRY_SERVER,
       ),
       distRouteHooks: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_ROUTEHOOKS),
       distRscEntries: path.join(BASE_DIR, PATH_WEB_DIR_DIST_RSC_ENTRIES),
@@ -339,12 +338,13 @@ export const getAppRouteHook = (forProd = false) => {
  */
 export function getBuiltServerEntryFile(): string {
   const entryServer = getPaths().web.distSsrEntryServer
+  const resolvedEntryServer = resolveFile(entryServer)
 
-  if (!entryServer) {
+  if (!resolvedEntryServer) {
     throw new Error('Server entry file not found (' + entryServer + ')')
   }
 
-  return entryServer
+  return resolvedEntryServer
 }
 
 /**
@@ -353,12 +353,13 @@ export function getBuiltServerEntryFile(): string {
  */
 export function getBuiltDocumentFile(): string {
   const document = getPaths().web.distSsrDocument
+  const resolvedDocument = resolveFile(document)
 
-  if (!document) {
+  if (!resolvedDocument) {
     throw new Error('Document file not found (' + document + ')')
   }
 
-  return document
+  return resolvedDocument
 }
 
 /**
