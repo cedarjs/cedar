@@ -34,6 +34,9 @@
     "./dist/cjs/web/mockRequests": {
       "default": "./dist/cjs/web/mockRequests.js"
     },
+    "./dist/cjs/web/mockRequests.js": {
+      "default": "./dist/cjs/web/mockRequests.js"
+    },
     "./auth": {
       "import": {
         "types": "./dist/web/mockAuth.d.ts",
