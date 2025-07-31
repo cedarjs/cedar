@@ -50,7 +50,7 @@ vi.mock('fs-extra', async (importOriginal) => {
   }
 })
 
-vi.mock('@cedarjs/api-server/dist/apiCLIConfig', async (importOriginal) => {
+vi.mock('@cedarjs/api-server/apiCliConfig', async (importOriginal) => {
   const originalAPICLIConfig = await importOriginal()
   return {
     description: originalAPICLIConfig.description,
@@ -58,7 +58,7 @@ vi.mock('@cedarjs/api-server/dist/apiCLIConfig', async (importOriginal) => {
     handler: vi.fn(),
   }
 })
-vi.mock('@cedarjs/api-server/dist/bothCLIConfig', async (importOriginal) => {
+vi.mock('@cedarjs/api-server/bothCliConfig', async (importOriginal) => {
   const originalBothCLIConfig = await importOriginal()
   return {
     description: originalBothCLIConfig.description,
