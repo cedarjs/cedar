@@ -83,7 +83,7 @@ export const Success = ({ comments }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/CommentsCell/CommentsCell.tsx"
-import type { CommentsQuery, CommentsQueryVariables } from 'types/graphql'
+import type { CommentsQuery, CommentsQueryVariables } from 'types/graphql.js'
 
 import type {
   CellFailureProps,
@@ -290,7 +290,7 @@ import { Link, routes } from '@cedarjs/router'
 // highlight-next-line
 import CommentsCell from 'src/components/CommentsCell'
 
-import type { Post } from 'types/graphql'
+import type { Post } from 'types/graphql.js'
 
 const truncate = (text: string, length: number) => {
   return text.substring(0, length) + '...'

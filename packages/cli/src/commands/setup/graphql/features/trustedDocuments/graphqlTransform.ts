@@ -7,7 +7,7 @@ export default function transform(file: FileInfo, api: API) {
   const allImports = root.find(j.ImportDeclaration)
 
   const hasStoreImport = allImports.some((i) => {
-    return i.get('source').value.value === 'src/lib/trustedDocumentsStore'
+    return i.get('source').value.value === 'src/lib/trustedDocumentsStore.js'
   })
 
   if (!hasStoreImport) {
@@ -16,7 +16,7 @@ export default function transform(file: FileInfo, api: API) {
       .insertAfter(
         j.importDeclaration(
           [j.importSpecifier(j.identifier('store'))],
-          j.literal('src/lib/trustedDocumentsStore'),
+          j.literal('src/lib/trustedDocumentsStore.js'),
         ),
       )
   }

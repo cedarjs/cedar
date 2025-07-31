@@ -132,7 +132,7 @@ export async function buildAndImport(
           // import { gql } from 'src/graphql/gql'
           useTrustedDocumentsGqlTag && {
             name: 'gql',
-            from: `web/src/graphql/gql`,
+            from: `web/src/graphql/gql.js`,
           },
         ].filter(<T>(v?: T | false): v is T => Boolean(v)),
       }),

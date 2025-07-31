@@ -1,4 +1,4 @@
-import type { Delete${singularPascalName}Mutation, Delete${singularPascalName}MutationVariables, Find${pluralPascalName} } from 'types/graphql'
+import type { Delete${singularPascalName}Mutation, Delete${singularPascalName}MutationVariables, Find${pluralPascalName} } from 'types/graphql.js'
 
 import { Link, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
@@ -6,7 +6,7 @@ import type { TypedDocumentNode } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
 import { QUERY } from '${importComponentNamesCell}'
-import { ${listFormattersImports} } from 'src/lib/formatters'
+import { ${listFormattersImports} } from 'src/lib/formatters.js'
 
 
 const DELETE_${singularConstantName}_MUTATION: TypedDocumentNode<Delete${singularPascalName}Mutation, Delete${singularPascalName}MutationVariables> = gql`

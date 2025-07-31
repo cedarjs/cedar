@@ -6,8 +6,8 @@ import {
   createProduce,
   updateProduce,
   deleteProduce,
-} from './produces'
-import type { StandardScenario } from './produces.scenarios'
+} from './produces.js'
+import type { StandardScenario } from './produces.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.

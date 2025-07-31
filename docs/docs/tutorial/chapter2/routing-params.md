@@ -350,7 +350,10 @@ export const Success = ({ article }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/ArticleCell/ArticleCell.tsx"
-import type { FindArticleQuery, FindArticleQueryVariables } from 'types/graphql'
+import type {
+  FindArticleQuery,
+  FindArticleQueryVariables,
+} from 'types/graphql.js'
 
 import type {
   CellFailureProps,
@@ -632,7 +635,7 @@ export default Article
 import { Link, routes } from '@cedarjs/router'
 
 // highlight-next-line
-import type { Post } from 'types/graphql'
+import type { Post } from 'types/graphql.js'
 
 // highlight-start
 interface Props {
@@ -707,7 +710,7 @@ export const Success = ({ articles }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/ArticlesCell/ArticlesCell.tsx"
-import type { ArticlesQuery, ArticlesQueryVariables } from 'types/graphql'
+import type { ArticlesQuery, ArticlesQueryVariables } from 'types/graphql.js'
 
 import type {
   CellFailureProps,
@@ -795,7 +798,10 @@ export const Success = ({ article }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/ArticleCell/ArticleCell.tsx"
-import type { FindArticleQuery, FindArticleQueryVariables } from 'types/graphql'
+import type {
+  FindArticleQuery,
+  FindArticleQueryVariables,
+} from 'types/graphql.js'
 
 import type {
   CellFailureProps,

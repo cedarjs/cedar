@@ -2,7 +2,7 @@ import type {
   EditContactById,
   UpdateContactInput,
   UpdateContactMutationVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
 import { navigate, routes } from '@cedarjs/router'
 import type {

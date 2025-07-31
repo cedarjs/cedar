@@ -13,7 +13,7 @@ export type StandardScenario = ScenarioData<unknown>
 `;
 
 exports[`Single word default files > creates a single word function file > Test snapshot 1`] = `
-"import { SampleJob } from './SampleJob'
+"import { SampleJob } from './SampleJob.js'
 
 describe('SampleJob', () => {
   it('should not throw any errors', async () => {
@@ -24,7 +24,7 @@ describe('SampleJob', () => {
 `;
 
 exports[`Single word default files > creates a single word function file 1`] = `
-"import { jobs } from 'src/lib/jobs'
+"import { jobs } from 'src/lib/jobs.js'
 
 export const SampleJob = jobs.createJob({
   queue: 'default',

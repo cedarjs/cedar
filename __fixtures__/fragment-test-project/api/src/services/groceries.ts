@@ -1,6 +1,6 @@
-import { Produce } from 'types/graphql'
+import { Produce } from 'types/graphql.js'
 
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
 const isFruit = (grocery: Produce) => {
   return grocery.isSeedless !== null && grocery.ripenessIndicators !== null

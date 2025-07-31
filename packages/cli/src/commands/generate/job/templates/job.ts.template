@@ -1,4 +1,4 @@
-import { jobs } from 'src/lib/jobs'
+import { jobs } from 'src/lib/jobs.js'
 
 export const ${name}Job = jobs.createJob({
   queue: '${queueName}',

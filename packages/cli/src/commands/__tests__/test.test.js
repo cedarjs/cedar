@@ -1,5 +1,5 @@
 globalThis.__dirname = __dirname
-import '../../lib/test'
+import '../../lib/test.js'
 
 vi.mock('execa', () => ({
   default: vi.fn((cmd, params) => ({

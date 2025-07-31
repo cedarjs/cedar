@@ -7,7 +7,7 @@ import {
   updateContact,
   deleteContact,
 } from './contacts'
-import type { StandardScenario } from './contacts.scenarios'
+import type { StandardScenario } from './contacts.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
