@@ -3,8 +3,8 @@ import path from 'path'
 import fs from 'fs-extra'
 import { terminalLink } from 'termi-link'
 
-import * as apiServerCLIConfig from '@cedarjs/api-server/dist/apiCLIConfig.js'
-import * as bothServerCLIConfig from '@cedarjs/api-server/dist/bothCLIConfig.js'
+import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
+import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 

@@ -63,7 +63,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
       execa(`yarn node ${serverFilePath}`, execaConfig)
     } else {
       const { handler } = await import(
-        '@cedarjs/api-server/dist/apiCLIConfigHandler.js'
+        '@cedarjs/api-server/apiCliConfigHandler'
       )
       handler()
     }

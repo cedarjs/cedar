@@ -1,8 +1,8 @@
 import { vi, describe, afterEach, it, expect } from 'vitest'
 import yargs from 'yargs/yargs'
 
-import * as apiServerCLIConfig from '@cedarjs/api-server/dist/apiCLIConfig.js'
-import * as bothServerCLIConfig from '@cedarjs/api-server/dist/bothCLIConfig.js'
+import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
+import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 
 import { builder } from '../serve.js'
 
@@ -50,7 +50,7 @@ vi.mock('fs-extra', async (importOriginal) => {
   }
 })
 
-vi.mock('@cedarjs/api-server/dist/apiCLIConfig', async (importOriginal) => {
+vi.mock('@cedarjs/api-server/apiCliConfig', async (importOriginal) => {
   const originalAPICLIConfig = await importOriginal()
   return {
     description: originalAPICLIConfig.description,
@@ -58,7 +58,7 @@ vi.mock('@cedarjs/api-server/dist/apiCLIConfig', async (importOriginal) => {
     handler: vi.fn(),
   }
 })
-vi.mock('@cedarjs/api-server/dist/bothCLIConfig', async (importOriginal) => {
+vi.mock('@cedarjs/api-server/bothCliConfig', async (importOriginal) => {
   const originalBothCLIConfig = await importOriginal()
   return {
     description: originalBothCLIConfig.description,

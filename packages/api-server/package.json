@@ -9,6 +9,59 @@
   },
   "license": "MIT",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/createServer.d.ts",
+        "default": "./dist/createServer.js"
+      },
+      "require": {
+        "types": "./dist/cjs/createServer.d.ts",
+        "default": "./dist/cjs/createServer.js"
+      }
+    },
+    "./package.json": "./package.json",
+    "./apiCliConfig": {
+      "import": {
+        "types": "./dist/apiCLIConfig.d.ts",
+        "default": "./dist/apiCLIConfig.js"
+      },
+      "require": {
+        "types": "./dist/cjs/apiCLIConfig.d.ts",
+        "default": "./dist/cjs/apiCLIConfig.js"
+      }
+    },
+    "./bothCliConfig": {
+      "import": {
+        "types": "./dist/bothCLIConfig.d.ts",
+        "default": "./dist/bothCLIConfig.js"
+      },
+      "require": {
+        "types": "./dist/cjs/bothCLIConfig.d.ts",
+        "default": "./dist/cjs/bothCLIConfig.js"
+      }
+    },
+    "./apiCliConfigHandler": {
+      "import": {
+        "types": "./dist/apiCLIConfigHandler.d.ts",
+        "default": "./dist/apiCLIConfigHandler.js"
+      },
+      "require": {
+        "types": "./dist/cjs/apiCLIConfigHandler.d.ts",
+        "default": "./dist/cjs/apiCLIConfigHandler.js"
+      }
+    },
+    "./cliHelpers": {
+      "import": {
+        "types": "./dist/cliHelpers.d.ts",
+        "default": "./dist/cliHelpers.js"
+      },
+      "require": {
+        "types": "./dist/cjs/cliHelpers.d.ts",
+        "default": "./dist/cjs/cliHelpers.js"
+      }
+    }
+  },
   "main": "./dist/createServer.js",
   "types": "./dist/createServer.d.ts",
   "bin": {
