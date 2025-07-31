@@ -154,8 +154,6 @@ describe('paths', () => {
         storybookPreviewConfig: null,
         // Vite paths ~ not configured in empty-project
         viteConfig: null,
-        distSsrDocument: null,
-        distSsrEntryServer: null,
         entryClient: null,
         entryServer: null,
       })
@@ -292,8 +290,6 @@ describe('paths', () => {
         logger: null,
       })
       Object.assign(pathTemplate.web, {
-        distSsrDocument: null, // SSR isn't setup for example-todo-main
-        distSsrEntryServer: null, // SSR isn't setup for example-todo-main
         document: null, // this fixture doesn't have a document
         entryClient: null, // doesn't exist in example-todo-main
         entryServer: null, // doesn't exist in example-todo-main
@@ -481,8 +477,6 @@ describe('paths', () => {
       Object.assign(pathTemplate.web, {
         app: null,
         document: null, // this fixture doesnt have a document
-        distSsrDocument: null,
-        distSsrEntryServer: null,
         entryClient: null,
         entryServer: null,
         viteConfig: null, // no vite config in example-todo-main-with-errors
@@ -630,8 +624,6 @@ describe('paths', () => {
         document: null, // this fixture doesn't have a document
         storybookPreviewConfig: null,
         entryServer: null,
-        distSsrDocument: null,
-        distSsrEntryServer: null,
       })
 
       const expectedPaths = getExpectedPaths(FIXTURE_BASEDIR, pathTemplate)
