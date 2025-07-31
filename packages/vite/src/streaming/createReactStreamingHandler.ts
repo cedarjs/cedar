@@ -9,7 +9,13 @@ import type { ViteDevServer } from 'vite'
 import { middlewareDefaultAuthProviderState } from '@cedarjs/auth/dist/AuthProvider/AuthProviderState.js'
 import type { ServerAuthState } from '@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js'
 import type { RouteSpec, RWRouteManifestItem } from '@cedarjs/internal'
-import { getAppRouteHook, getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  getAppRouteHook,
+  getConfig,
+  getPaths,
+  getBuiltServerEntryFile,
+  getBuiltDocumentFile,
+} from '@cedarjs/project-config'
 import { matchPath } from '@cedarjs/router/util'
 import type { TagDescriptor } from '@cedarjs/web'
 import { MiddlewareResponse } from '@cedarjs/web/middleware'
@@ -55,18 +61,12 @@ export const createReactStreamingHandler = async (
   // Dev is the opposite, we load it every time to pick up changes
   if (isProd) {
     if (rscEnabled) {
-      entryServerImport = await import(
-        makeFilePath(rwPaths.web.distSsrEntryServer)
-      )
+      entryServerImport = await import(makeFilePath(getBuiltServerEntryFile()))
     } else {
-      entryServerImport = await import(
-        makeFilePath(rwPaths.web.distSsrEntryServer)
-      )
+      entryServerImport = await import(makeFilePath(getBuiltServerEntryFile()))
     }
 
-    fallbackDocumentImport = await import(
-      makeFilePath(rwPaths.web.distSsrDocument)
-    )
+    fallbackDocumentImport = await import(makeFilePath(getBuiltDocumentFile()))
   }
 
   // @NOTE: we are returning a FetchAPI handler

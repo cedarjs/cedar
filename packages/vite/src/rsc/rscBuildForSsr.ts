@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import { build as viteBuild } from 'vite'
 import { cjsInterop } from 'vite-plugin-cjs-interop'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getBuiltServerEntryFile, getPaths } from '@cedarjs/project-config'
 
 import { onWarn } from '../lib/onWarn.js'
 import { rscRoutesAutoLoader } from '../plugins/vite-plugin-rsc-routes-auto-loader.js'
@@ -147,13 +147,10 @@ export async function rscBuildForSsr({
 
   // TODO (RSC): This is horrible. Please help me find a better way to do this.
   // Really should not be search/replacing in the built files like this.
-  const entryServerMjs = fs.readFileSync(
-    rwPaths.web.distSsrEntryServer,
-    'utf-8',
-  )
+  const entryServerMjs = fs.readFileSync(getBuiltServerEntryFile(), 'utf-8')
 
   fs.writeFileSync(
-    rwPaths.web.distSsrEntryServer,
+    getBuiltServerEntryFile(),
     entryServerMjs.replace(
       /import (require\S+) from "graphql-scalars";/,
       'import * as $1 from "graphql-scalars";',

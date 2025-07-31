@@ -54,8 +54,8 @@ export interface WebPaths {
   distBrowser: string
   distRsc: string
   distSsr: string
-  distSsrDocument: string
-  distSsrEntryServer: string
+  distSsrDocument: string | null
+  distSsrEntryServer: string | null
   distRouteHooks: string
   distRscEntries: string
   routeManifest: string
@@ -133,8 +133,8 @@ const PATH_WEB_DIR_DIST_BROWSER = 'web/dist/browser'
 const PATH_WEB_DIR_DIST_RSC = 'web/dist/rsc'
 const PATH_WEB_DIR_DIST_SSR = 'web/dist/ssr'
 
-const PATH_WEB_DIR_DIST_SSR_ENTRY_SERVER = 'web/dist/ssr/entry.server.mjs'
-const PATH_WEB_DIR_DIST_SSR_DOCUMENT = 'web/dist/ssr/Document.mjs'
+const PATH_WEB_DIR_DIST_SSR_ENTRY_SERVER = 'web/dist/ssr/entry.server'
+const PATH_WEB_DIR_DIST_SSR_DOCUMENT = 'web/dist/ssr/Document'
 const PATH_WEB_DIR_DIST_SSR_ROUTEHOOKS = 'web/dist/ssr/routeHooks'
 const PATH_WEB_DIR_DIST_RSC_ENTRIES = 'web/dist/rsc/entries.mjs'
 const PATH_WEB_DIR_ROUTE_MANIFEST = 'web/dist/ssr/route-manifest.json'
@@ -257,10 +257,11 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
       distBrowser: path.join(BASE_DIR, PATH_WEB_DIR_DIST_BROWSER),
       distRsc: path.join(BASE_DIR, PATH_WEB_DIR_DIST_RSC),
       distSsr: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR),
-      distSsrDocument: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_DOCUMENT),
-      distSsrEntryServer: path.join(
-        BASE_DIR,
-        PATH_WEB_DIR_DIST_SSR_ENTRY_SERVER,
+      distSsrDocument: resolveFile(
+        path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_DOCUMENT),
+      ),
+      distSsrEntryServer: resolveFile(
+        path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_ENTRY_SERVER),
       ),
       distRouteHooks: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_ROUTEHOOKS),
       distRscEntries: path.join(BASE_DIR, PATH_WEB_DIR_DIST_RSC_ENTRIES),
@@ -330,6 +331,34 @@ export const getAppRouteHook = (forProd = false) => {
   }
 
   return resolveFile(path.join(rwPaths.web.src, 'App.routeHooks'))
+}
+
+/**
+ * Gets the built server entry file path.
+ * Throws an error if the file does not exist.
+ */
+export function getBuiltServerEntryFile(): string {
+  const entryServer = getPaths().web.distSsrEntryServer
+
+  if (!entryServer) {
+    throw new Error('Server entry file not found (' + entryServer + ')')
+  }
+
+  return entryServer
+}
+
+/**
+ * Gets the built Document file path.
+ * Throws an error if the file does not exist.
+ */
+export function getBuiltDocumentFile(): string {
+  const document = getPaths().web.distSsrDocument
+
+  if (!document) {
+    throw new Error('Document file not found (' + document + ')')
+  }
+
+  return document
 }
 
 /**
