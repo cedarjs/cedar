@@ -30,6 +30,16 @@
         "default": "./dist/cjs/apiCLIConfig.js"
       }
     },
+    "./bothCliConfig": {
+      "import": {
+        "types": "./dist/bothCLIConfig.d.ts",
+        "default": "./dist/bothCLIConfig.js"
+      },
+      "require": {
+        "types": "./dist/cjs/bothCLIConfig.d.ts",
+        "default": "./dist/cjs/bothCLIConfig.js"
+      }
+    },
     "./apiCliConfigHandler": {
       "import": {
         "types": "./dist/apiCLIConfigHandler.d.ts",
