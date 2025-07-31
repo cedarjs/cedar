@@ -1,4 +1,4 @@
-import type { FindPosts, FindPostsVariables } from 'types/graphql'
+import type { FindPosts, FindPostsVariables } from 'types/graphql.js'
 
 import { Link, routes } from '@cedarjs/router'
 import type {
