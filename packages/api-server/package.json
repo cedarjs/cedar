@@ -20,6 +20,7 @@
         "default": "./dist/cjs/createServer.js"
       }
     },
+    "./package.json": "./package.json",
     "./apiCliConfig": {
       "import": {
         "types": "./dist/apiCLIConfig.d.ts",
