@@ -1,4 +1,7 @@
-import type { FindContactById, FindContactByIdVariables } from 'types/graphql'
+import type {
+  FindContactById,
+  FindContactByIdVariables,
+} from 'types/graphql.js'
 
 import type {
   CellSuccessProps,
