@@ -60,6 +60,14 @@
         "types": "./dist/cjs/cliHelpers.d.ts",
         "default": "./dist/cjs/cliHelpers.js"
       }
+    },
+    "./cjs/apiCliConfigHandler": {
+      "types": "./dist/cjs/apiCLIConfigHandler.d.ts",
+      "default": "./dist/cjs/apiCLIConfigHandler.js"
+    },
+    "./cjs/cliHelpers": {
+      "types": "./dist/cjs/cliHelpers.d.ts",
+      "default": "./dist/cjs/cliHelpers.js"
     }
   },
   "main": "./dist/createServer.js",

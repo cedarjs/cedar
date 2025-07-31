@@ -3,13 +3,13 @@ import path from 'path'
 import concurrently from 'concurrently'
 import execa from 'execa'
 
-import { handler as apiServerHandler } from '@cedarjs/api-server/apiCliConfigHandler'
+import { handler as apiServerHandler } from '@cedarjs/api-server/cjs/apiCliConfigHandler'
 import {
   getAPIHost,
   getAPIPort,
   getWebHost,
   getWebPort,
-} from '@cedarjs/api-server/cliHelpers'
+} from '@cedarjs/api-server/cjs/cliHelpers'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
