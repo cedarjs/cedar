@@ -1,6 +1,3 @@
-import { Link, routes } from '@cedarjs/router'
-import { Metadata } from '@cedarjs/web'
-
 const AboutPage = () => {
   return (
     <p className="font-light">

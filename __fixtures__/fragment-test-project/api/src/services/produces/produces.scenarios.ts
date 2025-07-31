@@ -1,24 +1,25 @@
 import type { Prisma, Produce } from '@prisma/client'
+
 import type { ScenarioData } from '@cedarjs/testing/api'
 
 export const standard = defineScenario<Prisma.ProduceCreateArgs>({
   produce: {
     one: {
       data: {
-        name: 'String6430168',
-        quantity: 7893718,
-        price: 1113110,
+        name: 'String2231134',
+        quantity: 6978607,
+        price: 9949534,
         region: 'String',
-        stall: { create: { name: 'String', stallNumber: 'String1437797' } },
+        stall: { create: { name: 'String', stallNumber: 'String9443378' } },
       },
     },
     two: {
       data: {
-        name: 'String2325729',
-        quantity: 9170370,
-        price: 9020391,
+        name: 'String5325933',
+        quantity: 9629727,
+        price: 360315,
         region: 'String',
-        stall: { create: { name: 'String', stallNumber: 'String8553241' } },
+        stall: { create: { name: 'String', stallNumber: 'String8448512' } },
       },
     },
   },

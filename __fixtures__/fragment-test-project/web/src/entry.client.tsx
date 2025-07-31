@@ -19,7 +19,8 @@ if (!redwoodAppElement) {
 }
 
 if (redwoodAppElement.children?.length > 0) {
-  hydrateRoot(redwoodAppElement,
+  hydrateRoot(
+    redwoodAppElement,
     <App>
       <Routes />
     </App>

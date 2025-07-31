@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { useForm } from 'react-hook-form'
 
 import {
@@ -8,8 +10,7 @@ import {
   FieldError,
   Label,
 } from '@cedarjs/forms'
-import { Link, routes } from '@cedarjs/router'
-import { Metadata } from '@cedarjs/web'
+import { useBlocker } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
 import { toast, Toaster } from '@cedarjs/web/toast'
 
@@ -23,26 +24,50 @@ const CREATE_CONTACT = gql`
 
 const ContactUsPage = () => {
   const formMethods = useForm()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const blocker = useBlocker({
+    when: formMethods.formState.isDirty && !isSubmitting,
+  })
 
   const [create, { loading, error }] = useMutation(CREATE_CONTACT, {
     onCompleted: () => {
       toast.success('Thank you for your submission!')
-      formMethods.reset()
     },
     onError: (error) => {
       toast.error(error.message)
     },
   })
 
-  const onSubmit = (data) => {
-    create({ variables: { input: data } })
-    console.log(data)
+  const onSubmit = async (data) => {
+    setIsSubmitting(true)
+    try {
+      await create({ variables: { input: data } })
+      formMethods.reset(data)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <>
       <Toaster toastOptions={{ className: 'rw-toast', duration: 6000 }} />
-      <Form onSubmit={onSubmit} config={{ mode: 'onBlur' }} error={error}>
+      <Form
+        onSubmit={onSubmit}
+        formMethods={formMethods}
+        config={{ mode: 'onBlur' }}
+        error={error}
+      >
+        {blocker.state === 'BLOCKED' ? (
+          <div>
+            <button type="button" onClick={() => blocker.confirm()}>
+              Confirm
+            </button>
+            <button type="button" onClick={() => blocker.abort()}>
+              Abort
+            </button>
+          </div>
+        ) : null}
+
         <Label
           name="name"
           className="block text-sm uppercase text-gray-700"

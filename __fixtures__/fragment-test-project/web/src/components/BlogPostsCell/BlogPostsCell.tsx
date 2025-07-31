@@ -8,33 +8,35 @@ import type {
 
 import BlogPost from 'src/components/BlogPost'
 
-export const QUERY: TypedDocumentNode<
-  BlogPostsQuery,
-  BlogPostsQueryVariables
-> = gql`
-  query BlogPostsQuery {
-    blogPosts: posts {
-      id
-      title
-      body
-      author {
-        email
-        fullName
+export const QUERY: TypedDocumentNode<BlogPostsQuery, BlogPostsQueryVariables> =
+  gql`
+    query BlogPostsQuery {
+      blogPosts: posts {
+        id
+        title
+        body
+        author {
+          email
+          fullName
+        }
+        createdAt
       }
-      createdAt
     }
-  }
-`
+  `
 
 export const Loading = () => <div>Loading...</div>
 
 export const Empty = () => <div>Empty</div>
 
-export const Failure = ({ error }: CellFailureProps) => (
+export const Failure = ({
+  error,
+}: CellFailureProps<BlogPostsQueryVariables>) => (
   <div style={{ color: 'red' }}>Error: {error?.message}</div>
 )
 
-export const Success = ({ blogPosts }: CellSuccessProps<BlogPostsQuery>) => (
+export const Success = ({
+  blogPosts,
+}: CellSuccessProps<BlogPostsQuery, BlogPostsQueryVariables>) => (
   <div className="divide-grey-700 divide-y">
     {blogPosts.map((post) => (
       <BlogPost key={post.id} blogPost={post} />

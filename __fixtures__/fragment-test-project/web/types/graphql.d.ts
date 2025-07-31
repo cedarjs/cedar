@@ -12,8 +12,10 @@ export type Scalars = {
   Int: number;
   Float: number;
   BigInt: number;
+  Byte: Buffer;
   Date: string;
   DateTime: string;
+  File: File;
   JSON: Prisma.JsonValue;
   JSONObject: Prisma.JsonObject;
   Time: string;
@@ -200,6 +202,8 @@ export type Produce = {
 /** About the Redwood queries. */
 export type Query = {
   __typename?: 'Query';
+  /** Fetches the CedarJS root schema. */
+  cedarjs?: Maybe<Redwood>;
   contact?: Maybe<Contact>;
   contacts: Array<Contact>;
   fruitById?: Maybe<Fruit>;
@@ -261,9 +265,9 @@ export type QueryvegetableByIdArgs = {
 };
 
 /**
- * The RedwoodJS Root Schema
+ * The Cedar Root Schema
  *
- * Defines details about RedwoodJS such as the current user and version information.
+ * Defines details about Cedar such as the current user and version information.
  */
 export type Redwood = {
   __typename?: 'Redwood';
@@ -271,7 +275,7 @@ export type Redwood = {
   currentUser?: Maybe<Scalars['JSON']>;
   /** The version of Prisma. */
   prismaVersion?: Maybe<Scalars['String']>;
-  /** The version of Redwood. */
+  /** The version of CedarJS. */
   version?: Maybe<Scalars['String']>;
 };
 

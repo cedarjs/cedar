@@ -1,4 +1,4 @@
-import type { GetGroceries, GetProduce } from "types/graphql";
+// import { Link, routes } from '@cedarjs/router'
 import { Metadata, useQuery } from '@cedarjs/web';
 
 import FruitInfo from "src/components/FruitInfo";
