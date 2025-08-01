@@ -1,4 +1,4 @@
-import * as Cell from './${name}'
+import * as Cell from './${name}.js'
 import type { CellProps } from '@cedarjs/web'
 import type { ${queryResultType}, ${queryVariablesType} } from 'types/graphql.js'
 

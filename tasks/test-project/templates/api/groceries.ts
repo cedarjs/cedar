@@ -1,4 +1,4 @@
-import { Produce } from 'types/graphql.js'
+import type { Produce } from 'types/graphql.js'
 
 import { db } from 'src/lib/db.js'
 

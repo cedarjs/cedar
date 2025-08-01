@@ -1423,11 +1423,11 @@ describe('comments', () => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="api/src/services/comments/comments.test.ts"
-import { comments, createComment } from './comments'
+import { comments, createComment } from './comments.js'
 // highlight-next-line
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
-import type { StandardScenario } from './comments.scenarios'
+import type { StandardScenario } from './comments.scenarios.js'
 
 describe('comments', () => {
   scenario('returns all comments', async (scenario) => {

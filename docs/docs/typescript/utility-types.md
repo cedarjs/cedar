@@ -158,7 +158,7 @@ export type StandardScenario = ScenarioData<Post, 'post'>
 ```
 
 ```ts title="api/src/services/posts/posts.test.ts"
-import type { StandardScenario } from './posts.scenarios'
+import type { StandardScenario } from './posts.scenarios.js'
 
 scenario('returns a single post', async (scenario: StandardScenario) => {
   const result = await post({ id: scenario.post.one.id })
