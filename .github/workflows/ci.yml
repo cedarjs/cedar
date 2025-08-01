@@ -162,7 +162,7 @@ jobs:
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
 
-          ./tasks/run-e2e "$project_path" \
+          ./tasks/run-e2e.cjs "$project_path" \
             --no-build-framework \
             --no-start
 
