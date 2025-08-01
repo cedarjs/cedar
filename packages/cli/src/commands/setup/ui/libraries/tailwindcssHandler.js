@@ -381,7 +381,7 @@ export const handler = async ({ force, install }) => {
         task: async (_ctx) => {
           const prettierConfigPath = path.join(
             rwPaths.base,
-            'prettier.config.js',
+            'prettier.config.cjs',
           )
           // Add tailwindcss ordering plugin to prettier
           const prettierConfig = fs.readFileSync(prettierConfigPath, 'utf-8')
@@ -419,7 +419,7 @@ export const handler = async ({ force, install }) => {
         task: async (_ctx, task) => {
           const prettierConfigPath = path.join(
             rwPaths.base,
-            'prettier.config.js',
+            'prettier.config.cjs',
           )
           // Add tailwindcss ordering plugin to prettier
           const prettierConfig = fs.readFileSync(prettierConfigPath, 'utf-8')

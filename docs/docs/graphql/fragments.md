@@ -51,10 +51,10 @@ In developer documentation, you can explain the purpose of the fragment, provide
 
 CedarJS makes it easy to use fragments, especially with VS Code and Apollo GraphQL Client.
 
-First, CedarJS instructs the VS Code GraphQL Plugin where to look for fragments by configuring the `documents` attribute of your project's `graphql.config.js`:
+First, CedarJS instructs the VS Code GraphQL Plugin where to look for fragments by configuring the `documents` attribute of your project's `graphql.config.cjs`:
 
 ```js
-// graphql.config.js
+// graphql.config.cjs
 
 const { getPaths } = require('@cedarjs/internal')
 

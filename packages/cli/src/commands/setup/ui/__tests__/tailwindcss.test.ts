@@ -315,7 +315,7 @@ function setupDefaultProjectStructure(
   vol.fromJSON(
     {
       'redwood.toml': '',
-      'prettier.config.js': '',
+      'prettier.config.cjs': '',
       'web/config/': null,
       'web/src/index.css': '',
       '.vscode/settings.json': [

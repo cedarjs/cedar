@@ -201,6 +201,6 @@ Running `yarn rw g types` will generate types for your resolvers on a per-file b
 :::tip Using VSCode?
 
 As a part of type generation, the extension [GraphQL: Language Feature Support](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) configures itself based on the merged schema Redwood generates in `.redwood/schema.graphql`.
-You can configure it further in `graphql.config.js` at the root of your project.
+You can configure it further in `graphql.config.cjs` at the root of your project.
 
 :::
