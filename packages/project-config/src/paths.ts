@@ -122,7 +122,7 @@ const PATH_WEB_DIR_ENTRY_CLIENT = 'web/src/entry.client' // .jsx,.tsx
 const PATH_WEB_DIR_ENTRY_SERVER = 'web/src/entry.server' // .jsx,.tsx
 const PATH_WEB_DIR_GRAPHQL = 'web/src/graphql' // .js,.ts
 
-const PATH_WEB_DIR_CONFIG_POSTCSS = 'web/config/postcss.config.js'
+const PATH_WEB_DIR_CONFIG_POSTCSS = 'web/config/postcss.config.cjs'
 const PATH_WEB_DIR_CONFIG_STORYBOOK_CONFIG = 'web/.storybook/main.js'
 const PATH_WEB_DIR_CONFIG_STORYBOOK_PREVIEW = 'web/.storybook/preview' // .js, .tsx
 const PATH_WEB_DIR_CONFIG_STORYBOOK_MANAGER = 'web/.storybook/manager.js'

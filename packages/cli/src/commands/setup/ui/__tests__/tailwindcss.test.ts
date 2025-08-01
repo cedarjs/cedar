@@ -326,7 +326,7 @@ function setupDefaultProjectStructure(
         '  }',
         '}',
       ].join('\n'),
-      [path.join(__dirname, '../templates/postcss.config.js.template')]: '',
+      [path.join(__dirname, '../templates/postcss.config.cjs.template')]: '',
     },
     APP_PATH,
   )

@@ -183,7 +183,7 @@ export const handler = async ({ force, install }) => {
             const postCSSConfig = fs.readFileSync(
               path.join(
                 import.meta.dirname,
-                '../templates/postcss.config.js.template',
+                '../templates/postcss.config.cjs.template',
               ),
               'utf-8',
             )
@@ -199,7 +199,7 @@ export const handler = async ({ force, install }) => {
         task: async () => {
           const tailwindConfigPath = path.join(
             rwPaths.web.config,
-            'tailwind.config.js',
+            'tailwind.config.cjs',
           )
 
           if (fs.existsSync(tailwindConfigPath)) {
@@ -388,7 +388,7 @@ export const handler = async ({ force, install }) => {
           const tailwindConfigPath = path
             .relative(
               rwPaths.base,
-              path.posix.join(rwPaths.web.config, 'tailwind.config.js'),
+              path.posix.join(rwPaths.web.config, 'tailwind.config.cjs'),
             )
             .replaceAll('\\', '/')
 
