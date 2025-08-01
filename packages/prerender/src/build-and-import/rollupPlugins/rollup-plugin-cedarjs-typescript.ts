@@ -1,4 +1,4 @@
-import { swc } from 'rollup-plugin-swc3'
+import { swc, defineRollupSwcOption } from 'rollup-plugin-swc3'
 
 export function typescriptPlugin(
   filepath: string,
@@ -18,7 +18,11 @@ export function typescriptPlugin(
     typescriptOptions.tsconfig = tsconfig.path
   }
 
-  return swc(typescriptOptions)
+  return swc(
+    defineRollupSwcOption({
+      sourceMaps: true,
+    }),
+  )
 }
 
 function isTsconfigWithPath(
