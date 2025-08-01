@@ -89,8 +89,8 @@ type ConditionallyGuaranteed<T extends object> =
   KeyCount<T> extends 1 ? Guaranteed<T> : T
 
 /**
- * @params TData - Type of data based on your graphql query. This can be
- * imported from 'types/graphql.js'
+ * @param TData - Type of data based on your graphql query. This can be imported
+ * from 'types/graphql.js'
  *
  * @example
  * import type { FindPosts } from 'types/graphql.js'
