@@ -5,7 +5,7 @@
     "outDir": "dist",
     "types": ["node", "jest"]
   },
-  "include": ["src"],
+  "include": ["ambient.d.ts", "src"],
   // Excluding cypress types, because it interferes with expect in tests
   "exclude": ["node_modules/cypress/types/*", "**/__tests__/__fixtures__/*"],
   "references": [{ "path": "../project-config" }]

@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import type { TransformOptions } from '@babel/core'
+import { resolvePath } from 'babel-plugin-module-resolver'
 
 // This import is for types safety. Its just a type, no harm importing from src.
 import type { PluginOptions as RoutesAutoLoaderOptions } from '@cedarjs/babel-config/src/plugins/babel-plugin-redwood-routes-auto-loader'
@@ -66,6 +67,13 @@ export const getWebSideBabelPlugins = (
         root: [rwjsPaths.web.base],
         cwd: 'packagejson',
         loglevel: 'silent', // to silence the unnecessary warnings
+        resolvePath(sourcePath: string, currentFile: string, opts: unknown) {
+          const resolvedPath = resolvePath(sourcePath, currentFile, opts)
+
+          // This is needed to support .js imports of .jsx files in JavaScript
+          // Cedar apps
+          return resolvedPath?.replace(/\.js$/, '')
+        },
       },
       'rwjs-module-resolver',
     ],
