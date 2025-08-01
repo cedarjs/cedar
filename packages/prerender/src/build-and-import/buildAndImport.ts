@@ -6,6 +6,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import { rollup } from 'rollup'
+import { swc } from 'rollup-plugin-swc3'
 import unimportPlugin from 'unimport/unplugin'
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
@@ -22,7 +23,6 @@ import { ignoreHtmlAndCssImportsPlugin } from './rollupPlugins/rollup-plugin-ced
 import { injectFileGlobalsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-inject-file-globals.js'
 import { cedarjsPrerenderMediaImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-prerender-media-imports.js'
 import { cedarjsRoutesAutoLoaderPlugin } from './rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader.js'
-import { typescriptPlugin } from './rollupPlugins/rollup-plugin-cedarjs-typescript.js'
 import { getPkgType, isValidJsFile, makeFilePath } from './utils.js'
 
 /** @see {@link https://github.com/rollup/plugins/issues/1541} */
@@ -114,7 +114,7 @@ export async function buildAndImport(
       cedarjsDirectoryNamedImportPlugin(),
       cedarjsPrerenderMediaImportsPlugin(),
       fix(commonjs)(),
-      typescriptPlugin(options.filepath, tsConfigs.web),
+      swc({ sourceMaps: true }),
       unimportPlugin.rollup({
         imports: [
           // import React from 'react'
