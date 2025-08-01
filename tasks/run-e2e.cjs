@@ -17,7 +17,7 @@ const yargs = require('yargs/yargs')
 //
 // The steps are composable, so that it can work for the GitHub Workflow, and
 // us contributors.
-//
+
 const makeDirectory = () => {
   console.log('mkdir', REDWOOD_PROJECT_DIRECTORY)
   fs.mkdirSync(REDWOOD_PROJECT_DIRECTORY, { recursive: true })
@@ -231,7 +231,7 @@ makeDirectory(REDWOOD_PROJECT_DIRECTORY)
 console.log()
 console.log('-'.repeat(80))
 
-let {
+const {
   buildFramework,
   copyFramework,
   createProject,
@@ -243,9 +243,6 @@ const tasks = [
   buildFramework && buildRedwoodFramework,
   createProject && (() => createRedwoodJSApp({ typescript })),
   copyFramework && runTarsync,
-  // copyFramework && addFrameworkDepsToProject,
-  // copyFramework && runYarnInstall,
-  // copyFramework && copyFrameworkPackages,
   autoStart && runDevServerInBackground,
   autoStart && initGit,
   autoStart && runCypress,

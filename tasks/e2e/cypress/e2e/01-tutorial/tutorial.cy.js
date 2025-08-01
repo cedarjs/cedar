@@ -24,7 +24,7 @@ import {
 
 const BASE_DIR = Cypress.env('RW_PATH')
 
-describe('The Redwood Tutorial - Golden path edition', () => {
+describe('The Cedar Tutorial - Golden path edition', () => {
   // TODO: https://redwoodjs.com/docs/tutorial/chapter3/saving-data
   // TODO: https://redwoodjs.com/docs/tutorial/chapter4/administration
   after(() => {
