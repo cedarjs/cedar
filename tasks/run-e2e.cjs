@@ -10,8 +10,8 @@ const fs = require('fs-extra')
 const { hideBin } = require('yargs/helpers')
 const yargs = require('yargs/yargs')
 
-// This script sets up a blank RedwoodJS app into a directory.
-// It uses the packages from the RedwoodJS framework (../packages).
+// This script sets up a blank CedarJS app into a directory.
+// It uses the packages from the CedarJS framework (../packages).
 // So, if you're making changes to the framework,
 // you can use the e2e tests to verify your changes.
 //
@@ -19,12 +19,12 @@ const yargs = require('yargs/yargs')
 // us contributors.
 
 const makeDirectory = () => {
-  console.log('mkdir', REDWOOD_PROJECT_DIRECTORY)
-  fs.mkdirSync(REDWOOD_PROJECT_DIRECTORY, { recursive: true })
-  return REDWOOD_PROJECT_DIRECTORY
+  console.log('mkdir', CEDARJS_PROJECT_DIRECTORY)
+  fs.mkdirSync(CEDARJS_PROJECT_DIRECTORY, { recursive: true })
+  return CEDARJS_PROJECT_DIRECTORY
 }
 
-const buildRedwoodFramework = () => {
+function buildCedarJsFramework() {
   try {
     const files = fg.sync('packages/**/dist', {
       onlyDirectories: true,
@@ -35,26 +35,26 @@ const buildRedwoodFramework = () => {
         .filter(Boolean)
         .join('&&'),
       {
-        cwd: REDWOODJS_FRAMEWORK_PATH,
+        cwd: CEDARJS_FRAMEWORK_PATH,
         shell: true,
         stdio: 'inherit',
       },
     )
   } catch (e) {
     if (e.signal !== 'SIGINT') {
-      console.error('Error: Could not build Redwood Framework')
+      console.error('Error: Could not build Cedar Framework')
       console.error(e)
     }
     process.exit(1)
   }
 }
 
-const createRedwoodJSApp = ({ typescript }) => {
+function createCedarJsApp({ typescript }) {
   try {
     execa.sync(
       'yarn node dist/create-cedar-app.js',
       [
-        REDWOOD_PROJECT_DIRECTORY,
+        CEDARJS_PROJECT_DIRECTORY,
         '--no-yarn-install',
         `--typescript ${typescript}`,
         '--no-telemetry',
@@ -62,7 +62,7 @@ const createRedwoodJSApp = ({ typescript }) => {
         '-m "first"',
       ].filter(Boolean),
       {
-        cwd: path.join(REDWOODJS_FRAMEWORK_PATH, 'packages/create-cedar-app'),
+        cwd: path.join(CEDARJS_FRAMEWORK_PATH, 'packages/create-cedar-app'),
         env: { REDWOOD_CI: '1' },
         shell: true,
         stdio: 'inherit',
@@ -72,7 +72,7 @@ const createRedwoodJSApp = ({ typescript }) => {
     // Add package resolutions
     //
     // This is needed because the test project uses the current stable version
-    // of Redwood when installing, but then when we use rwfw to link, newer
+    // of CedarJS when installing, but then when we use rwfw to link, newer
     // versions of packages might be installed causing conflicts. Setting
     // resolutions prevents this.
     // Note that this isn't limited to any specific versions. It's always
@@ -80,12 +80,12 @@ const createRedwoodJSApp = ({ typescript }) => {
     // stable and canary.
     // See https://github.com/redwoodjs/redwood/pull/6772 for more info.
 
-    const packageJSONPath = path.join(REDWOOD_PROJECT_DIRECTORY, 'package.json')
+    const packageJSONPath = path.join(CEDARJS_PROJECT_DIRECTORY, 'package.json')
     const packageJSON = fs.readJSONSync(packageJSONPath)
 
     const getVersionFromRwPackage = (dep, pkg) => {
       return fs.readJSONSync(
-        path.join(REDWOODJS_FRAMEWORK_PATH, 'packages', pkg, 'package.json'),
+        path.join(CEDARJS_FRAMEWORK_PATH, 'packages', pkg, 'package.json'),
       ).dependencies[dep]
     }
 
@@ -100,7 +100,7 @@ const createRedwoodJSApp = ({ typescript }) => {
     fs.writeFileSync(packageJSONPath, JSON.stringify(packageJSON, null, 2))
   } catch (e) {
     if (e.signal !== 'SIGINT') {
-      console.error('Error: Could not create Redwood Project')
+      console.error('Error: Could not create CedarJS Project')
       console.error(e)
     }
     process.exit(1)
@@ -110,12 +110,12 @@ const createRedwoodJSApp = ({ typescript }) => {
 const runTarsync = () => {
   try {
     execa.sync('yarn project:tarsync -v', {
-      cwd: REDWOODJS_FRAMEWORK_PATH,
+      cwd: CEDARJS_FRAMEWORK_PATH,
       shell: true,
       stdio: 'inherit',
       env: {
-        RWFW_PATH: REDWOODJS_FRAMEWORK_PATH,
-        RWJS_CWD: REDWOOD_PROJECT_DIRECTORY,
+        RWFW_PATH: CEDARJS_FRAMEWORK_PATH,
+        RWJS_CWD: CEDARJS_PROJECT_DIRECTORY,
       },
     })
   } catch (e) {
@@ -131,9 +131,9 @@ const runTarsync = () => {
 
 const runDevServerInBackground = () => {
   try {
-    console.log('Starting RedwoodJS dev server...')
+    console.log('Starting CedarJS dev server...')
     execa('yarn rw dev --no-generate --fwd="--no-open"', {
-      cwd: REDWOOD_PROJECT_DIRECTORY,
+      cwd: CEDARJS_PROJECT_DIRECTORY,
       shell: true,
       stdio: 'inherit',
       env: {
@@ -143,7 +143,7 @@ const runDevServerInBackground = () => {
     })
   } catch (e) {
     if (e.signal !== 'SIGINT') {
-      console.error('There was an error with the RedwoodJS dev server:')
+      console.error('There was an error with the CedarJS dev server:')
       console.error(e)
     }
     process.exit(1)
@@ -158,12 +158,12 @@ const runCypress = () => {
       '../../node_modules/.bin/cypress',
       [
         'open',
-        `--env RW_PATH=${REDWOOD_PROJECT_DIRECTORY}`,
+        `--env RW_PATH=${CEDARJS_PROJECT_DIRECTORY}`,
         '--e2e',
         '--browser chrome',
       ],
       {
-        cwd: path.join(REDWOODJS_FRAMEWORK_PATH, 'tasks/e2e'),
+        cwd: path.join(CEDARJS_FRAMEWORK_PATH, 'tasks/e2e'),
         shell: true,
         stdio: 'inherit',
       },
@@ -181,12 +181,12 @@ const initGit = () => {
   try {
     console.log('Initializing Git')
     execa.sync('git init --initial-branch main && git add .', {
-      cwd: REDWOOD_PROJECT_DIRECTORY,
+      cwd: CEDARJS_PROJECT_DIRECTORY,
       shell: true,
       stdio: 'inherit',
     })
     execa.sync('git commit -a --message=init', {
-      cwd: REDWOOD_PROJECT_DIRECTORY,
+      cwd: CEDARJS_PROJECT_DIRECTORY,
       shell: true,
       stdio: 'inherit',
     })
@@ -210,16 +210,16 @@ const args = yargs(hideBin(process.argv))
   .option('clean-files', { default: true, type: 'boolean' })
   .scriptName('run-e2e')
   .example('run-e2e')
-  .example('run-e2e /tmp/redwood-app --ts')
+  .example('run-e2e /tmp/cedar-app --ts')
   .help()
   .parse()
 
-const REDWOODJS_FRAMEWORK_PATH = path.resolve(__dirname, '..')
-let REDWOOD_PROJECT_DIRECTORY =
+const CEDARJS_FRAMEWORK_PATH = path.resolve(__dirname, '..')
+let CEDARJS_PROJECT_DIRECTORY =
   args._?.[0] ||
   path.join(
     os.tmpdir(),
-    'redwood-e2e',
+    'cedar-e2e',
     // ":" is problematic with paths
     new Date().toISOString().split(':').join('-'),
   )
@@ -227,7 +227,7 @@ let REDWOOD_PROJECT_DIRECTORY =
 console.log()
 console.log('-'.repeat(80))
 console.log()
-makeDirectory(REDWOOD_PROJECT_DIRECTORY)
+makeDirectory(CEDARJS_PROJECT_DIRECTORY)
 console.log()
 console.log('-'.repeat(80))
 
@@ -240,8 +240,8 @@ const {
   cleanFiles,
 } = args
 const tasks = [
-  buildFramework && buildRedwoodFramework,
-  createProject && (() => createRedwoodJSApp({ typescript })),
+  buildFramework && buildCedarJsFramework,
+  createProject && (() => createCedarJsApp({ typescript })),
   copyFramework && runTarsync,
   autoStart && runDevServerInBackground,
   autoStart && initGit,
@@ -258,11 +258,11 @@ process.on('exit', () => {
   if (cleanFiles && autoStart) {
     console.log('Cleaning up e2e resources...')
     console.log(' - Cleaning up files (may take a few seconds)...')
-    fs.rmSync(REDWOOD_PROJECT_DIRECTORY, { recursive: true, force: true })
+    fs.rmSync(CEDARJS_PROJECT_DIRECTORY, { recursive: true, force: true })
     console.log('Clean up complete')
   } else {
     console.log(
-      `E2E files within "${REDWOOD_PROJECT_DIRECTORY}" have not been automatically cleaned up.`,
+      `E2E files within "${CEDARJS_PROJECT_DIRECTORY}" have not been automatically cleaned up.`,
     )
   }
 })
