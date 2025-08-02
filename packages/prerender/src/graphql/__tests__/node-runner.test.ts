@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import type { ViteDevServer, Plugin } from 'vite'
 import type { ViteNodeRunner } from 'vite-node/client'
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { NodeRunner } from '../node-runner.js'
 
@@ -101,24 +101,24 @@ describe('NodeRunner Integration Tests', () => {
   })
 
   describe('constructor', () => {
-    test('creates a new NodeRunner instance', () => {
+    it('creates a new NodeRunner instance', () => {
       expect(nodeRunner).toBeInstanceOf(NodeRunner)
     })
   })
 
   describe('init', () => {
-    test('initializes successfully', async () => {
+    it('initializes successfully', async () => {
       await expect(nodeRunner.init()).resolves.not.toThrow()
     })
 
-    test('can be called multiple times safely', async () => {
+    it('can be called multiple times safely', async () => {
       await nodeRunner.init()
       await expect(nodeRunner.init()).resolves.not.toThrow()
     })
   })
 
   describe('importFile', () => {
-    test('automatically initializes and imports ESM module', async () => {
+    it('automatically initializes and imports ESM module', async () => {
       const modulePath = path.join(fixturesDir, 'test-modules', 'esm-module.js')
 
       const result = await nodeRunner.importFile(modulePath)
@@ -129,7 +129,7 @@ describe('NodeRunner Integration Tests', () => {
       })
     })
 
-    test('imports CommonJS module', async () => {
+    it('imports CommonJS module', async () => {
       const modulePath = path.join(fixturesDir, 'test-modules', 'cjs-module.js')
 
       const result = await nodeRunner.importFile(modulePath)
@@ -140,7 +140,7 @@ describe('NodeRunner Integration Tests', () => {
       expect(result.handler()).toBe('cjs-handler')
     })
 
-    test('imports TypeScript module', async () => {
+    it('imports TypeScript module', async () => {
       const modulePath = path.join(fixturesDir, 'test-modules', 'ts-module.ts')
 
       const result = await nodeRunner.importFile(modulePath)
@@ -155,7 +155,7 @@ describe('NodeRunner Integration Tests', () => {
       expect(typeof user.id).toBe('string')
     })
 
-    test('handles GraphQL handler import', async () => {
+    it('handles GraphQL handler import', async () => {
       const gqlPath = path.join(
         fixturesDir,
         'cedar-app',
@@ -186,7 +186,7 @@ describe('NodeRunner Integration Tests', () => {
       })
     })
 
-    test('handles trusted documents import', async () => {
+    it('handles trusted documents import', async () => {
       const documentsPath = path.join(
         fixturesDir,
         'cedar-app',
@@ -206,7 +206,7 @@ describe('NodeRunner Integration Tests', () => {
       })
     })
 
-    test('handles import errors', async () => {
+    it('handles import errors', async () => {
       const errorModulePath = path.join(
         fixturesDir,
         'test-modules',
@@ -218,7 +218,7 @@ describe('NodeRunner Integration Tests', () => {
       )
     })
 
-    test('handles non-existent files', async () => {
+    it('handles non-existent files', async () => {
       const nonExistentPath = path.join(
         fixturesDir,
         'test-modules',
@@ -228,7 +228,7 @@ describe('NodeRunner Integration Tests', () => {
       await expect(nodeRunner.importFile(nonExistentPath)).rejects.toThrow()
     })
 
-    test('handles empty modules', async () => {
+    it('handles empty modules', async () => {
       const emptyModulePath = path.join(
         fixturesDir,
         'test-modules',
@@ -241,7 +241,7 @@ describe('NodeRunner Integration Tests', () => {
       expect(result).toBeDefined()
     })
 
-    test('reuses initialized runner for multiple imports', async () => {
+    it('reuses initialized runner for multiple imports', async () => {
       const esmPath = path.join(fixturesDir, 'test-modules', 'esm-module.js')
       const cjsPath = path.join(fixturesDir, 'test-modules', 'cjs-module.js')
 
@@ -254,7 +254,7 @@ describe('NodeRunner Integration Tests', () => {
       expect(cjsResult.cjsExport).toBe('cjs-value')
     })
 
-    test('handles concurrent imports', async () => {
+    it('handles concurrent imports', async () => {
       const modules = [
         path.join(fixturesDir, 'test-modules', 'esm-module.js'),
         path.join(fixturesDir, 'test-modules', 'cjs-module.js'),
@@ -273,16 +273,16 @@ describe('NodeRunner Integration Tests', () => {
   })
 
   describe('close', () => {
-    test('closes successfully after initialization', async () => {
+    it('closes successfully after initialization', async () => {
       await nodeRunner.init()
       await expect(nodeRunner.close()).resolves.not.toThrow()
     })
 
-    test('closes successfully without initialization', async () => {
+    it('closes successfully without initialization', async () => {
       await expect(nodeRunner.close()).resolves.not.toThrow()
     })
 
-    test('can be called multiple times safely', async () => {
+    it('can be called multiple times safely', async () => {
       await nodeRunner.init()
       await nodeRunner.close()
       await expect(nodeRunner.close()).resolves.not.toThrow()
@@ -290,7 +290,7 @@ describe('NodeRunner Integration Tests', () => {
   })
 
   describe('integration workflows', () => {
-    test('simulates GraphQL handler workflow from graphql.ts', async () => {
+    it('simulates GraphQL handler workflow from graphql.ts', async () => {
       // This simulates how getGqlHandler works
       const gqlPath = path.join(
         fixturesDir,
@@ -332,7 +332,7 @@ describe('NodeRunner Integration Tests', () => {
       }
     })
 
-    test('simulates trusted documents workflow from executeQuery', async () => {
+    it('simulates trusted documents workflow from executeQuery', async () => {
       // This simulates how executeQuery handles trusted documents
       const documentsPath = path.join(
         fixturesDir,
@@ -366,7 +366,7 @@ describe('NodeRunner Integration Tests', () => {
       expect(operation.extensions.persistedQuery.sha256Hash).toBe('abc123hash')
     })
 
-    test('handles file path edge cases', async () => {
+    it('handles file path edge cases', async () => {
       // Test with absolute paths
       const absolutePath = path.resolve(
         fixturesDir,
@@ -388,7 +388,7 @@ describe('NodeRunner Integration Tests', () => {
       expect(result2.namedExport).toBe('esm-value')
     })
 
-    test('works with real Vite transformations', async () => {
+    it('works with real Vite transformations', async () => {
       // Since we're not mocking Vite, this tests real transformations
       const tsPath = path.join(fixturesDir, 'test-modules', 'ts-module.ts')
 
@@ -406,7 +406,7 @@ describe('NodeRunner Integration Tests', () => {
     })
 
     describe('plugin functionality verification', () => {
-      test('cedarImportDirPlugin - handles directory glob imports', async () => {
+      it('cedarImportDirPlugin - handles directory glob imports', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -421,7 +421,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(result).toHaveProperty('serviceNames')
       })
 
-      test('autoImportsPlugin - provides gql and context without explicit imports', async () => {
+      it('autoImportsPlugin - provides gql and context without explicit imports', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -445,7 +445,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(autoImportResults.contextValue).toBeDefined()
       })
 
-      test('cedarCellTransform - transforms Cell components', async () => {
+      it('cedarCellTransform - transforms Cell components', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -472,7 +472,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(result.QUERY).toBeDefined()
       })
 
-      test('cedarjsJobPathInjectorPlugin - handles job files without errors', async () => {
+      it('cedarjsJobPathInjectorPlugin - handles job files without errors', async () => {
         // Test that the plugin can process files in the jobs directory
         // The actual path injection happens during transform, so we test basic functionality
         const modulePath = path.join(
@@ -498,7 +498,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(typeof result.simpleJob).toBe('object')
       })
 
-      test('cedarjsDirectoryNamedImportPlugin - resolves directory-based named imports', async () => {
+      it('cedarjsDirectoryNamedImportPlugin - resolves directory-based named imports', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -513,7 +513,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(typeof result.testDirectoryNamedImports).toBe('function')
       })
 
-      test('cedarSwapApolloProvider - plugin loads without errors', async () => {
+      it('cedarSwapApolloProvider - plugin loads without errors', async () => {
         // This test verifies the plugin can be included without issues
         // The actual Apollo provider swapping is tested in the plugin's own tests
         expect(nodeRunner).toBeDefined()
@@ -528,7 +528,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(result).toHaveProperty('namedExport', 'esm-value')
       })
 
-      test('plugin interaction - multiple plugins work together', async () => {
+      it('plugin interaction - multiple plugins work together', async () => {
         // Test a file that uses multiple plugin features
         const modulePath = path.join(
           fixturesDir,
@@ -674,7 +674,7 @@ describe('NodeRunner Integration Tests', () => {
         }
       }
 
-      test('fails without cedarImportDirPlugin when importing directory globs', async () => {
+      it('fails without cedarImportDirPlugin when importing directory globs', async () => {
         const nodeRunnerWithoutPlugin = new NodeRunnerWithoutPlugin(
           'cedarImportDirPlugin',
         )
@@ -695,7 +695,7 @@ describe('NodeRunner Integration Tests', () => {
         }
       })
 
-      test('fails without autoImportsPlugin when using gql without imports', async () => {
+      it('fails without autoImportsPlugin when using gql without imports', async () => {
         const nodeRunnerWithoutPlugin = new NodeRunnerWithoutPlugin(
           'autoImportsPlugin',
         )
@@ -716,7 +716,7 @@ describe('NodeRunner Integration Tests', () => {
         }
       })
 
-      test('fails without cedarjsDirectoryNamedImportPlugin when using directory named imports', async () => {
+      it('fails without cedarjsDirectoryNamedImportPlugin when using directory named imports', async () => {
         const nodeRunnerWithoutPlugin = new NodeRunnerWithoutPlugin(
           'cedarjsDirectoryNamedImportPlugin',
         )
@@ -738,7 +738,7 @@ describe('NodeRunner Integration Tests', () => {
         }
       })
 
-      test('cedarCellTransform provides enhancements for Cell files', async () => {
+      it('cedarCellTransform provides enhancements for Cell files', async () => {
         const nodeRunnerWithoutPlugin = new NodeRunnerWithoutPlugin(
           'cedarCellTransform',
         )
@@ -764,7 +764,7 @@ describe('NodeRunner Integration Tests', () => {
         }
       })
 
-      test('works with all plugins enabled as a control test', async () => {
+      it('works with all plugins enabled as a control test', async () => {
         // This is a control test to ensure our plugin-disabled tests are meaningful
         const modulePath = path.join(
           fixturesDir,
@@ -781,7 +781,7 @@ describe('NodeRunner Integration Tests', () => {
   })
 
   describe('performance and resource management', () => {
-    test('properly cleans up resources', async () => {
+    it('properly cleans up resources', async () => {
       // Create multiple runners to test resource cleanup
       const runners = [new NodeRunner(), new NodeRunner(), new NodeRunner()]
 
@@ -799,7 +799,7 @@ describe('NodeRunner Integration Tests', () => {
       expect(true).toBe(true)
     })
 
-    test('handles rapid init/close cycles', async () => {
+    it('handles rapid init/close cycles', async () => {
       for (let i = 0; i < 3; i++) {
         const runner = new NodeRunner()
         await runner.init()
