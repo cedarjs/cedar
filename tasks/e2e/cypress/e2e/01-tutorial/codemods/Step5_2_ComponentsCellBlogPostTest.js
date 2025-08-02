@@ -2,8 +2,8 @@ export default `
 // web/src/components/BlogPostsCell/BlogPostsCell.test.js
 
 import { render, screen } from '@cedarjs/testing'
-import { Loading, Empty, Failure, Success } from './BlogPostsCell'
-import { standard } from './BlogPostsCell.mock'
+import { Loading, Empty, Failure, Success } from './BlogPostsCell.js'
+import { standard } from './BlogPostsCell.mock.js'
 
 describe('BlogPostsCell', () => {
   it('renders Loading successfully', () => {

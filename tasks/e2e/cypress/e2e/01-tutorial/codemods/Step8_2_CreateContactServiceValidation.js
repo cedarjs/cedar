@@ -4,8 +4,8 @@ export default `
 
 import { UserInputError } from '@cedarjs/graphql-server'
 
-import { db } from 'src/lib/db'
-import { requireAuth } from 'src/lib/auth'
+import { db } from 'src/lib/db.js'
+import { requireAuth } from 'src/lib/auth.js'
 
 const validate = (input) => {
   if (input.email && !input.email.match(/[^@]+@[^.]+\..+/)) {
