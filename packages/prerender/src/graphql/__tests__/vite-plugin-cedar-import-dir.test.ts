@@ -71,6 +71,8 @@ describe('vite plugin cedar import dir', () => {
     expect(result).toBeNull()
   })
 
+  // I'm not sure about this test. It seems to work better without an extension
+  //
   it('should handle ESM mode correctly', async () => {
     const testCase = 'import-dir'
     const codeFile = path.join(fixturesDir, testCase, 'code.js')
