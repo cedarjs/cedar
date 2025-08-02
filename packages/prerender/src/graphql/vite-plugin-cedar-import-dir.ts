@@ -155,7 +155,8 @@ export function cedarImportDirPlugin(
 
               // Create namespace import: import * as importName_filePathVarName from 'filepath'
               const finalImportPath = projectIsEsm
-                ? `./${filePathWithoutExtension}.js`
+                ? // ? `./${filePathWithoutExtension}.js`
+                  `${filePathWithoutExtension}`
                 : filePathWithoutExtension
 
               newBody.push({
