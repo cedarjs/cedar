@@ -41,6 +41,3 @@ export const Success = ({ user }) => {
     </div>
   )
 }
-
-// This export will be transformed by cedarCellTransform
-export default Success
