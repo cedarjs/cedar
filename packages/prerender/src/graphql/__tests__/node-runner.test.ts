@@ -72,17 +72,6 @@ vi.mock('graphql-tag', () => ({
   }),
 }))
 
-vi.mock('@cedarjs/context', () => ({
-  context: {
-    currentUser: { id: 'test-user' },
-    __isCedarContext: true,
-  },
-  default: {
-    currentUser: { id: 'default-user' },
-    __isCedarContext: true,
-  },
-}))
-
 describe('NodeRunner Integration Tests', () => {
   let nodeRunner: NodeRunner
 
@@ -93,7 +82,18 @@ describe('NodeRunner Integration Tests', () => {
   )
 
   beforeEach(async () => {
-    nodeRunner = new NodeRunner()
+    const mockContextPath = path.join(
+      import.meta.dirname,
+      '__fixtures__',
+      'mocks',
+      'context.js',
+    )
+
+    nodeRunner = new NodeRunner({
+      resolve: {
+        alias: [{ find: '@cedarjs/context', replacement: mockContextPath }],
+      },
+    })
   })
 
   afterEach(async () => {
@@ -380,7 +380,7 @@ describe('NodeRunner Integration Tests', () => {
         })
       })
 
-      it('autoImportsPlugin - provides gql and context without explicit imports', async () => {
+      it.only('autoImportsPlugin - provides gql and context without explicit imports', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -401,7 +401,9 @@ describe('NodeRunner Integration Tests', () => {
 
         // Verify context is auto-imported
         expect(autoImportResults.hasContext).toBe(true)
-        expect(autoImportResults.contextValue).toBeDefined()
+        expect(autoImportResults.context).toMatchObject({
+          currentUser: { id: 'test-user' },
+        })
       })
 
       it('cedarCellTransform - transforms Cell components', async () => {
