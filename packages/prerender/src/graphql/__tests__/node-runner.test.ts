@@ -72,6 +72,13 @@ describe('NodeRunner Integration Tests', () => {
   )
 
   beforeEach(async () => {
+    // Set up RWJS_ENV global for Cell transformations
+    globalThis.RWJS_ENV = {
+      RWJS_API_GRAPHQL_URL: 'http://localhost:8911/graphql',
+      RWJS_API_URL: 'http://localhost:8911',
+      __REDWOOD__APP_TITLE: 'Test App',
+    }
+
     const mockContextPath = path.join(
       import.meta.dirname,
       '__fixtures__',
@@ -84,12 +91,19 @@ describe('NodeRunner Integration Tests', () => {
       'mocks',
       'graphql-tag.js',
     )
+    const mockWebPath = path.join(
+      import.meta.dirname,
+      '__fixtures__',
+      'mocks',
+      'web.js',
+    )
 
     nodeRunner = new NodeRunner({
       resolve: {
         alias: [
           { find: '@cedarjs/context', replacement: mockContextPath },
           { find: 'graphql-tag', replacement: mockGraphqlTagPath },
+          { find: '@cedarjs/web', replacement: mockWebPath },
         ],
       },
     })
@@ -355,7 +369,7 @@ describe('NodeRunner Integration Tests', () => {
     })
 
     describe('plugin functionality verification', () => {
-      it('cedarImportDirPlugin - handles directory glob imports', async () => {
+      it('uses cedarImportDirPlugin to handle directory glob imports', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -379,7 +393,7 @@ describe('NodeRunner Integration Tests', () => {
         })
       })
 
-      it('autoImportsPlugin - provides gql and context without explicit imports', async () => {
+      it('uses autoImportsPlugin to provide gql and context without explicit imports', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -408,7 +422,7 @@ describe('NodeRunner Integration Tests', () => {
         })
       })
 
-      it.only('cedarCellTransform - transforms Cell components', async () => {
+      it('uses cedarCellTransform to transform Cell components', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -429,9 +443,26 @@ describe('NodeRunner Integration Tests', () => {
         expect(typeof result.Empty).toBe('function')
         expect(typeof result.Failure).toBe('function')
         expect(typeof result.Success).toBe('function')
+
+        // Verify that the cell has been wrapped with createCell
+        expect(result).toHaveProperty('default')
+        expect(typeof result.default).toBe('function')
+
+        // Verify the createCell wrapper has the expected displayName
+        expect(result.default).toHaveProperty('displayName', 'UserCell')
+
+        // Verify the createCell wrapper contains all the original exports
+        expect(result.default.QUERY).toBe(result.QUERY)
+        expect(result.default.Loading).toBe(result.Loading)
+        expect(result.default.Empty).toBe(result.Empty)
+        expect(result.default.Failure).toBe(result.Failure)
+        expect(result.default.Success).toBe(result.Success)
+
+        // Verify that QUERY contains the expected GraphQL structure
+        expect(result.QUERY).toHaveProperty('__isGqlTemplate', true)
       })
 
-      it('cedarjsJobPathInjectorPlugin - handles job files without errors', async () => {
+      it('uses cedarjsJobPathInjectorPlugin to handle job files without errors', async () => {
         // Test that the plugin can process files in the jobs directory
         // The actual path injection happens during transform, so we test basic functionality
         const modulePath = path.join(
@@ -457,7 +488,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(typeof result.simpleJob).toBe('object')
       })
 
-      it('cedarjsDirectoryNamedImportPlugin - resolves directory-based named imports', async () => {
+      it('uses cedarjsDirectoryNamedImportPlugin to resolve directory-based named imports', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -472,7 +503,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(typeof result.testDirectoryNamedImports).toBe('function')
       })
 
-      it('cedarSwapApolloProvider - plugin loads without errors', async () => {
+      it('uses cedarSwapApolloProvider to load without errors', async () => {
         // This test verifies the plugin can be included without issues
         // The actual Apollo provider swapping is tested in the plugin's own tests
         expect(nodeRunner).toBeDefined()
@@ -487,7 +518,7 @@ describe('NodeRunner Integration Tests', () => {
         expect(result).toHaveProperty('namedExport', 'esm-value')
       })
 
-      it('plugin interaction - multiple plugins work together', async () => {
+      it('uses multiple plugins working together', async () => {
         // Test a file that uses multiple plugin features
         const modulePath = path.join(
           fixturesDir,
