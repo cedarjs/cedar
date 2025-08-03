@@ -1,17 +1,14 @@
-import React from 'react'
-import { ApolloProvider } from '@apollo/client'
-import ApolloProviderFromCedar from '@cedarjs/web/apollo'
+import type { ReactNode } from 'react'
 
-import { client } from 'src/lib/apollo'
-import { Routes } from './Routes.tsx'
+import { RedwoodApolloProvider} from '@cedarjs/web/apollo'
 
-const App = () => {
+interface AppProps {
+  children?: ReactNode
+}
+
+const App = ({ children }: AppProps) => {
   return (
-    <div className="app">
-      <ApolloProviderFromCedar client={client}>
-        <Routes />
-      </ApolloProviderFromCedar>
-    </div>
+    <RedwoodApolloProvider>{children}</RedwoodApolloProvider>
   )
 }
 

@@ -6,8 +6,9 @@ import babelTraverse from '@babel/traverse'
 import type * as t from '@babel/types'
 import type { Plugin } from 'vite'
 
-const traverse = babelTraverse.default
-const generate = babelGenerator.default
+const traverse = babelTraverse.default || babelTraverse
+const generate = babelGenerator.default || babelTraverse
+
 // A cell can export the declarations below.
 const EXPECTED_EXPORTS_FROM_CELL = [
   'beforeQuery',

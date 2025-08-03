@@ -8,7 +8,7 @@ export interface Post {
   createdAt: Date
 }
 
-export const getPostById = async (id: string): Promise<Post> => {
+export const post = async (id: string): Promise<Post> => {
   return {
     id,
     title: 'Sample Post',
@@ -18,15 +18,7 @@ export const getPostById = async (id: string): Promise<Post> => {
   }
 }
 
-export const createPost = async (postData: Omit<Post, 'id' | 'createdAt'>): Promise<Post> => {
-  return {
-    id: Math.random().toString(36),
-    createdAt: new Date(),
-    ...postData
-  }
-}
-
-export const getAllPosts = async (): Promise<Post[]> => {
+export const posts = async (): Promise<Post[]> => {
   return [
     {
       id: '1',
@@ -38,11 +30,19 @@ export const getAllPosts = async (): Promise<Post[]> => {
   ]
 }
 
+export const createPost = async (postData: Omit<Post, 'id' | 'createdAt'>): Promise<Post> => {
+  return {
+    id: Math.random().toString(36),
+    createdAt: new Date(),
+    ...postData
+  }
+}
+
 export const postServiceName = 'postService'
 
 export default {
-  getPostById,
+  post,
+  posts,
   createPost,
-  getAllPosts,
   postServiceName
 }

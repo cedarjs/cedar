@@ -28,12 +28,18 @@ export const testAutoImports = async () => {
     variables: { id: '123' }
   }
 
+  console.log('queryResult', queryResult)
+
   // Test that context is available without explicit import
   const contextValue = context
 
+  console.log('contextValue', contextValue)
+  console.log('contextValue.context', contextValue.context)
+  console.log('contextValue.setContext', contextValue.setContext)
+
   return {
     hasGql: typeof gql === 'function',
-    hasContext: typeof context === 'object' && context !== null,
+    hasContext: typeof context === 'object' && !!context,
     queryDefined: !!query,
     mutationDefined: !!mutation,
     contextValue,

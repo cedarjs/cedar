@@ -4,7 +4,5 @@
 import services from 'src/services/**/*.{js,ts}'
 
 export const importedServices = services
-export const serviceCount = Object.keys(services).length
-export const serviceNames = Object.keys(services)
 
 export default services

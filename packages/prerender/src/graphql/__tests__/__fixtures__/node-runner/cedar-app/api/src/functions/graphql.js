@@ -1,6 +1,4 @@
-export const handler = async (event, context) => {
-  const body = JSON.parse(event.body)
-
+export const handler = async (_event, _context) => {
   return {
     statusCode: 200,
     body: JSON.stringify({
