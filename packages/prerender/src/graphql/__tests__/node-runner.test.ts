@@ -62,16 +62,6 @@ vi.mock('@cedarjs/jobs', () => ({
   },
 }))
 
-vi.mock('graphql-tag', () => ({
-  gql: vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
-    const query = strings.reduce((result, cur, i) => {
-      return result + cur + (values[i] || '')
-    }, '')
-
-    return { query, __isGqlTemplate: true }
-  }),
-}))
-
 describe('NodeRunner Integration Tests', () => {
   let nodeRunner: NodeRunner
 
@@ -88,13 +78,19 @@ describe('NodeRunner Integration Tests', () => {
       'mocks',
       'context.js',
     )
+    const mockGraphqlTagPath = path.join(
+      import.meta.dirname,
+      '__fixtures__',
+      'mocks',
+      'graphql-tag.js',
+    )
 
     nodeRunner = new NodeRunner({
       resolve: {
-        alias: [{ find: '@cedarjs/context', replacement: mockContextPath }],
-      },
-      ssr: {
-        external: ['graphql-tag'],
+        alias: [
+          { find: '@cedarjs/context', replacement: mockContextPath },
+          { find: 'graphql-tag', replacement: mockGraphqlTagPath },
+        ],
       },
     })
   })
@@ -383,7 +379,7 @@ describe('NodeRunner Integration Tests', () => {
         })
       })
 
-      it.only('autoImportsPlugin - provides gql and context without explicit imports', async () => {
+      it('autoImportsPlugin - provides gql and context without explicit imports', async () => {
         const modulePath = path.join(
           fixturesDir,
           'test-modules',
@@ -399,8 +395,11 @@ describe('NodeRunner Integration Tests', () => {
 
         // Verify gql is auto-imported and working
         expect(autoImportResults.hasGql).toBe(true)
-        expect(autoImportResults.queryDefined).toBe(true)
-        expect(autoImportResults.mutationDefined).toBe(true)
+        expect(result.query).toMatchObject({
+          query: expect.any(String),
+          __isGqlTemplate: true,
+        })
+        expect(result.mutation).toBeDefined()
 
         // Verify context is auto-imported
         expect(autoImportResults.hasContext).toBe(true)

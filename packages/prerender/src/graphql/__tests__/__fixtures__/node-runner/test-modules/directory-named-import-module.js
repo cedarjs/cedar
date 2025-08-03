@@ -4,14 +4,16 @@
 // This import should fail without the directory named import plugin
 // because it's trying to import directly from the directory name
 import userService from 'src/services/userService'
-import postService from 'src/services/postService'
+import postService from 'src/services/post'
 
 export const testDirectoryNamedImports = async () => {
   const results = {
     hasUserService: typeof userService !== 'undefined',
     hasPostService: typeof postService !== 'undefined',
     userServiceType: typeof userService,
-    postServiceType: typeof postService
+    postServiceType: typeof postService,
+    userServiceName: '',
+    postServiceName: '',
   }
 
   // Test that we can access functions from the imported services

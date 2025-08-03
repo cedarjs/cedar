@@ -1,7 +1,7 @@
 // Test module for autoImportsPlugin functionality
 // This module uses gql and context which should be auto-imported
 
-const query = gql`
+export const query = gql`
   query GetUser($id: ID!) {
     user(id: $id) {
       id
@@ -11,7 +11,7 @@ const query = gql`
   }
 `
 
-const mutation = gql`
+export const mutation = gql`
   mutation CreateUser($input: CreateUserInput!) {
     createUser(input: $input) {
       id
@@ -22,21 +22,10 @@ const mutation = gql`
 `
 
 export const testAutoImports = async () => {
-  // Test that gql is available without explicit import
-  const queryResult = {
-    query,
-    variables: { id: '123' }
-  }
-
-  console.log('queryResult', queryResult)
-
   return {
     hasGql: typeof gql === 'function',
     hasContext: typeof context === 'object' && !!context,
-    queryDefined: !!query,
-    mutationDefined: !!mutation,
     context,
-    queryResult
   }
 }
 
