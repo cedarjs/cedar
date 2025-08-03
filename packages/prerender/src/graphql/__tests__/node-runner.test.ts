@@ -93,6 +93,9 @@ describe('NodeRunner Integration Tests', () => {
       resolve: {
         alias: [{ find: '@cedarjs/context', replacement: mockContextPath }],
       },
+      ssr: {
+        external: ['graphql-tag'],
+      },
     })
   })
 

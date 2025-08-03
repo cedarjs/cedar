@@ -28,6 +28,8 @@ export const testAutoImports = async () => {
     variables: { id: '123' }
   }
 
+  console.log('queryResult', queryResult)
+
   return {
     hasGql: typeof gql === 'function',
     hasContext: typeof context === 'object' && !!context,
