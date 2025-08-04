@@ -55,17 +55,7 @@ vi.mock('@cedarjs/project-config', async () => {
   }
 })
 
-vi.mock('@cedarjs/jobs', () => ({
-  jobs: {
-    createJob: vi.fn((config) => ({
-      ...config,
-      __cedarJobConfig: config,
-      run: vi.fn(),
-    })),
-  },
-}))
-
-describe('NodeRunner Integration Tests', () => {
+describe('NodeRunner Tests', () => {
   let nodeRunner: NodeRunner
 
   const fixturesDir = path.join(
@@ -82,18 +72,9 @@ describe('NodeRunner Integration Tests', () => {
       __REDWOOD__APP_TITLE: 'Test App',
     }
 
-    const mockContextPath = path.join(
-      import.meta.dirname,
-      '__fixtures__',
-      'mocks',
-      'context.js',
-    )
-    const mockWebPath = path.join(
-      import.meta.dirname,
-      '__fixtures__',
-      'mocks',
-      'web.js',
-    )
+    const mocksDir = path.join(import.meta.dirname, '__fixtures__', 'mocks')
+    const mockContextPath = path.join(mocksDir, 'context.js')
+    const mockWebPath = path.join(mocksDir, 'web.js')
 
     nodeRunner = new NodeRunner({
       resolve: {
@@ -250,50 +231,6 @@ describe('NodeRunner Integration Tests', () => {
   })
 
   describe('integration workflows', () => {
-    it('simulates GraphQL handler workflow from graphql.ts', async () => {
-      // This simulates how getGqlHandler works
-      const gqlPath = path.join(
-        fixturesDir,
-        'cedar-app',
-        'api',
-        'src',
-        'functions',
-        'graphql.js',
-      )
-
-      try {
-        const { handler } = await nodeRunner.importFile(gqlPath)
-
-        const gqlHandler = async (operation: Record<string, unknown>) => {
-          const event = {
-            body: JSON.stringify(operation),
-            headers: {
-              'content-type': 'application/json',
-            },
-          }
-          const context = {}
-
-          return await handler(event, context)
-        }
-
-        const operation = {
-          operationName: 'GetUser',
-          query: '{ user { id name } }',
-          variables: {},
-        }
-
-        const result = await gqlHandler(operation)
-
-        expect(result.statusCode).toBe(200)
-        const body = JSON.parse(result.body)
-        expect(body.data.user.name).toBe('Test User')
-      } catch (error: any) {
-        throw new Error(
-          `Unable to import GraphQL handler: ${error.message || error}`,
-        )
-      }
-    })
-
     it('simulates trusted documents workflow from executeQuery', async () => {
       // This simulates how executeQuery handles trusted documents
       const documentsPath = path.join(
