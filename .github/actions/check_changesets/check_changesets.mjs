@@ -2,7 +2,6 @@ import { getInput } from '@actions/core'
 import { exec, getExecOutput } from '@actions/exec'
 import github from '@actions/github'
 
-/** @type {ProcessEnv} */
 const env = {
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
 }
@@ -30,7 +29,7 @@ async function main() {
 
   /** @type {GitHubEvent} */
   const {
-    pull_request: { title, labels },
+    pull_request: { title },
   } = JSON.parse(event)
 
   // Check if the PR title starts with conventional commit prefixes that should
