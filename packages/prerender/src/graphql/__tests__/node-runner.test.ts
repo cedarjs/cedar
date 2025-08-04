@@ -35,21 +35,22 @@ vi.mock('@cedarjs/project-config', () => ({
     },
   })),
   importStatementPath: vi.fn((path) => path),
-  resolveFile: vi.fn(
-    (
-      filePath,
-      extensions = ['.js', '.tsx', '.ts', '.jsx', '.mjs', '.mts', '.cjs'],
-    ) => {
-      const fs = require('fs')
-      for (const extension of extensions) {
-        const p = `${filePath}${extension}`
-        if (fs.existsSync(p)) {
-          return p
-        }
+  resolveFile: async (
+    filePath: string,
+    extensions = ['.js', '.tsx', '.ts', '.jsx', '.mjs', '.mts', '.cjs'],
+  ) => {
+    const fs = await import('node:fs')
+
+    for (const extension of extensions) {
+      const p = `${filePath}${extension}`
+
+      if (fs.existsSync(p)) {
+        return p
       }
-      return null
-    },
-  ),
+    }
+
+    return null
+  },
 }))
 
 vi.mock('@cedarjs/jobs', () => ({
