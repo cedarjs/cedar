@@ -6,6 +6,8 @@ import babelTraverse from '@babel/traverse'
 import type * as t from '@babel/types'
 import type { Plugin } from 'vite'
 
+// This plugin is used both by prerender (ESM) and vite (CJS in current Cedar
+// apps), that's why we need to do this
 const traverse = babelTraverse.default || babelTraverse
 const generate = babelGenerator.default || babelGenerator
 
