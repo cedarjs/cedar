@@ -17,19 +17,15 @@ import { importStatementPath, getPaths } from '@cedarjs/project-config'
  * ```js
  * import services from 'src/services/**\/*.{js,ts}'
  * console.log(services)
- * // services.a = import('src/services/a.js')
- * // services.b = import('src/services/b.ts')
- * // services.nested_c = import('src/services/nested/c.js')
+ * // services.a = import('src/services/a')
+ * // services.b = import('src/services/b')
+ * // services.nested_c = import('src/services/nested/c')
  * ```
  *
  * @param options Configuration options for the plugin
  * @param options.projectIsEsm Whether the project uses ESM format (adds .js extensions)
  */
-export function cedarImportDirPlugin(
-  options: { projectIsEsm?: boolean } = {},
-): Plugin {
-  const { projectIsEsm = false } = options
-
+export function cedarImportDirPlugin(): Plugin {
   const createSpan = (): swc.Span => ({
     start: 0,
     end: 0,
@@ -149,16 +145,13 @@ export function cedarImportDirPlugin(
             // Process each matched file
             for (const filePath of dirFiles) {
               const { dir: fileDir, name: fileName } = path.parse(filePath)
-              const filePathWithoutExtension = fileDir + '/' + fileName
+              const importPath = fileDir + '/' + fileName
               const filePathVarName = filePathToVarName(filePath)
               const namespaceImportName = `${importName}_${filePathVarName}`
 
-              // Create namespace import: import * as importName_filePathVarName from 'filepath'
-              const finalImportPath = projectIsEsm
-                ? // ? `./${filePathWithoutExtension}.js`
-                  `${filePathWithoutExtension}`
-                : filePathWithoutExtension
-
+              // Create namespace import: import * as importName_filePathVarName from 'importPath'
+              // I'm generating extensionless imports here and let the rest of
+              // the plugin pipeline handle the extension.
               newBody.push({
                 type: 'ImportDeclaration',
                 span: createSpan(),
@@ -169,7 +162,7 @@ export function cedarImportDirPlugin(
                     local: createIdentifier(namespaceImportName, ctxt),
                   },
                 ],
-                source: createStringLiteral(finalImportPath),
+                source: createStringLiteral(importPath),
                 typeOnly: false,
               })
 
