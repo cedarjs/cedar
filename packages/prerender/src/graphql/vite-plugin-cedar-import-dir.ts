@@ -142,11 +142,11 @@ export function cedarImportDirPlugin(): Plugin {
             // Process each matched file
             for (const filePath of dirFiles) {
               const { dir: fileDir, name: fileName } = path.parse(filePath)
-              const generatedImportPath = fileDir + '/' + fileName
+              const fileImportPath = fileDir + '/' + fileName
               const filePathVarName = filePathToVarName(filePath)
               const namespaceImportName = `${importName}_${filePathVarName}`
 
-              // Create namespace import: import * as importName_filePathVarName from 'generatedImportPath'
+              // Create namespace import: import * as importName_filePathVarName from 'fileImportPath'
               // I'm generating extensionless imports here and let the rest of
               // the plugin pipeline handle the extension.
               newBody.push({
@@ -159,7 +159,7 @@ export function cedarImportDirPlugin(): Plugin {
                     local: createIdentifier(namespaceImportName, ctxt),
                   },
                 ],
-                source: createStringLiteral(generatedImportPath),
+                source: createStringLiteral(fileImportPath),
                 typeOnly: false,
               })
 

@@ -4,54 +4,56 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { NodeRunner } from '../node-runner.js'
 
-vi.mock('@cedarjs/project-config', () => ({
-  getPaths: vi.fn(() => {
-    const appFixtureDir = path.join(
-      import.meta.dirname,
-      '__fixtures__',
-      'node-runner',
-      'cedar-app',
-    )
+vi.mock('@cedarjs/project-config', async () => {
+  const fs = await import('node:fs')
 
-    return {
-      api: {
-        base: path.join(appFixtureDir, 'api'),
-        src: path.join(appFixtureDir, 'api', 'src'),
-        functions: path.join(appFixtureDir, 'api', 'src', 'functions'),
-        jobs: path.join(appFixtureDir, 'api', 'src', 'jobs'),
-      },
-      web: {
-        src: path.join(appFixtureDir, 'web', 'src'),
-        graphql: path.join(appFixtureDir, 'web', 'src', 'graphql'),
-      },
-    }
-  }),
-  projectIsEsm: vi.fn(() => true),
-  getConfig: vi.fn(() => ({
-    experimental: {
-      streamingSsr: {
-        enabled: false,
-      },
-    },
-  })),
-  importStatementPath: vi.fn((path) => path),
-  resolveFile: async (
-    filePath: string,
-    extensions = ['.js', '.tsx', '.ts', '.jsx', '.mjs', '.mts', '.cjs'],
-  ) => {
-    const fs = await import('node:fs')
+  return {
+    getPaths: vi.fn(() => {
+      const appFixtureDir = path.join(
+        import.meta.dirname,
+        '__fixtures__',
+        'node-runner',
+        'cedar-app',
+      )
 
-    for (const extension of extensions) {
-      const p = `${filePath}${extension}`
-
-      if (fs.existsSync(p)) {
-        return p
+      return {
+        api: {
+          base: path.join(appFixtureDir, 'api'),
+          src: path.join(appFixtureDir, 'api', 'src'),
+          functions: path.join(appFixtureDir, 'api', 'src', 'functions'),
+          jobs: path.join(appFixtureDir, 'api', 'src', 'jobs'),
+        },
+        web: {
+          src: path.join(appFixtureDir, 'web', 'src'),
+          graphql: path.join(appFixtureDir, 'web', 'src', 'graphql'),
+        },
       }
-    }
+    }),
+    projectIsEsm: vi.fn(() => true),
+    getConfig: vi.fn(() => ({
+      experimental: {
+        streamingSsr: {
+          enabled: false,
+        },
+      },
+    })),
+    importStatementPath: vi.fn((path) => path),
+    resolveFile: (
+      filePath: string,
+      extensions = ['.js', '.tsx', '.ts', '.jsx', '.mjs', '.mts', '.cjs'],
+    ) => {
+      for (const extension of extensions) {
+        const p = `${filePath}${extension}`
 
-    return null
-  },
-}))
+        if (fs.existsSync(p)) {
+          return p
+        }
+      }
+
+      return null
+    },
+  }
+})
 
 vi.mock('@cedarjs/jobs', () => ({
   jobs: {
@@ -86,12 +88,6 @@ describe('NodeRunner Integration Tests', () => {
       'mocks',
       'context.js',
     )
-    const mockGraphqlTagPath = path.join(
-      import.meta.dirname,
-      '__fixtures__',
-      'mocks',
-      'graphql-tag.js',
-    )
     const mockWebPath = path.join(
       import.meta.dirname,
       '__fixtures__',
@@ -103,7 +99,6 @@ describe('NodeRunner Integration Tests', () => {
       resolve: {
         alias: [
           { find: '@cedarjs/context', replacement: mockContextPath },
-          { find: 'graphql-tag', replacement: mockGraphqlTagPath },
           { find: '@cedarjs/web', replacement: mockWebPath },
         ],
       },
@@ -413,8 +408,8 @@ describe('NodeRunner Integration Tests', () => {
         // Verify gql is auto-imported and working
         expect(autoImportResults.hasGql).toBe(true)
         expect(result.query).toMatchObject({
-          query: expect.any(String),
-          __isGqlTemplate: true,
+          kind: 'Document',
+          definitions: expect.any(Array),
         })
         expect(result.mutation).toBeDefined()
 
@@ -462,7 +457,12 @@ describe('NodeRunner Integration Tests', () => {
         expect(result.default.Success).toBe(result.Success)
 
         // Verify that QUERY contains the expected GraphQL structure
-        expect(result.QUERY).toHaveProperty('__isGqlTemplate', true)
+        expect(result.QUERY).toMatchObject({
+          kind: 'Document',
+          definitions: expect.any(Array),
+          loc: expect.any(Object),
+        })
+        expect(result.QUERY.loc.source.body).toContain('query FindUser')
       })
 
       it('uses cedarjsJobPathInjectorPlugin to handle job files without errors', async () => {
