@@ -292,8 +292,10 @@ describe('NodeRunner Integration Tests', () => {
         expect(result.statusCode).toBe(200)
         const body = JSON.parse(result.body)
         expect(body.data.user.name).toBe('Test User')
-      } catch (error) {
-        throw new Error(`Unable to import GraphQL handler: ${error}`)
+      } catch (error: any) {
+        throw new Error(
+          `Unable to import GraphQL handler: ${error.message || error}`,
+        )
       }
     })
 

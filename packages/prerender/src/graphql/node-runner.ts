@@ -56,7 +56,7 @@ async function createViteServer(customConfig: UserConfig = {}) {
 export class NodeRunner {
   private viteServer?: ViteDevServer = undefined
   private runner?: ViteNodeRunner = undefined
-  private customViteConfig: UserConfig
+  private readonly customViteConfig: UserConfig
 
   constructor(customViteConfig: UserConfig = {}) {
     this.customViteConfig = customViteConfig

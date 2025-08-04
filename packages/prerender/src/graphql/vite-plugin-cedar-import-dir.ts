@@ -21,9 +21,6 @@ import { importStatementPath, getPaths } from '@cedarjs/project-config'
  * // services.b = import('src/services/b')
  * // services.nested_c = import('src/services/nested/c')
  * ```
- *
- * @param options Configuration options for the plugin
- * @param options.projectIsEsm Whether the project uses ESM format (adds .js extensions)
  */
 export function cedarImportDirPlugin(): Plugin {
   const createSpan = (): swc.Span => ({
@@ -145,11 +142,11 @@ export function cedarImportDirPlugin(): Plugin {
             // Process each matched file
             for (const filePath of dirFiles) {
               const { dir: fileDir, name: fileName } = path.parse(filePath)
-              const importPath = fileDir + '/' + fileName
+              const generatedImportPath = fileDir + '/' + fileName
               const filePathVarName = filePathToVarName(filePath)
               const namespaceImportName = `${importName}_${filePathVarName}`
 
-              // Create namespace import: import * as importName_filePathVarName from 'importPath'
+              // Create namespace import: import * as importName_filePathVarName from 'generatedImportPath'
               // I'm generating extensionless imports here and let the rest of
               // the plugin pipeline handle the extension.
               newBody.push({
@@ -162,7 +159,7 @@ export function cedarImportDirPlugin(): Plugin {
                     local: createIdentifier(namespaceImportName, ctxt),
                   },
                 ],
-                source: createStringLiteral(importPath),
+                source: createStringLiteral(generatedImportPath),
                 typeOnly: false,
               })
 
