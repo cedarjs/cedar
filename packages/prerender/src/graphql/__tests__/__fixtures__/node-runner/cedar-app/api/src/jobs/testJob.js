@@ -1,7 +1,9 @@
 // Test job file for cedarjsJobPathInjectorPlugin functionality
 // This module uses jobs.createJob which should have path and name injected
 
-export const testJob = {
+import { jobs } from 'src/lib/jobs.js'
+
+export const testJob = jobs.createJob({
   queue: 'default',
   perform: function(data) {
     return {
@@ -9,9 +11,9 @@ export const testJob = {
       data: data
     }
   }
-}
+})
 
-export const anotherTestJob = {
+export const anotherTestJob = jobs.createJob({
   queue: 'high-priority',
   perform: function(params) {
     return {
@@ -20,6 +22,11 @@ export const anotherTestJob = {
       completed: true
     }
   }
-}
+})
 
-export const simpleJob = {}
+export const simpleJob = jobs.createJob({
+  queue: 'low-priority',
+  perform: function(params) {
+    console.log('Simple job executed')
+  }
+})

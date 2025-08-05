@@ -26,8 +26,8 @@ async function createViteServer(customConfig: UserConfig = {}) {
     resolve: {
       alias: [
         {
-          find: /^src\//,
-          replacement: getPaths().api.src + '/',
+          find: /^src\/(.*?)(\.([jt]sx?))?$/,
+          replacement: getPaths().api.src + '/$1',
         },
       ],
     },

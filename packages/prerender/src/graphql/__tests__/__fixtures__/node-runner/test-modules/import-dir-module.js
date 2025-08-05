@@ -8,5 +8,3 @@
 import services from 'src/services/**/*.{js,ts}'
 
 export const importedServices = services
-
-export default services

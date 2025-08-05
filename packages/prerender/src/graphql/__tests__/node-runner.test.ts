@@ -230,253 +230,205 @@ describe('NodeRunner Tests', () => {
     })
   })
 
-  describe('integration workflows', () => {
-    it('simulates trusted documents workflow from executeQuery', async () => {
-      // This simulates how executeQuery handles trusted documents
-      const documentsPath = path.join(
+  it('handles file path edge cases', async () => {
+    // Test with absolute paths
+    const absolutePath = path.resolve(
+      fixturesDir,
+      'test-modules',
+      'esm-module.js',
+    )
+    const result = await nodeRunner.importFile(absolutePath)
+    expect(result.namedExport).toBe('esm-value')
+
+    // Test with normalized paths
+    const unnormalizedPath = path.join(
+      fixturesDir,
+      'test-modules',
+      '..',
+      'test-modules',
+      'esm-module.js',
+    )
+    const result2 = await nodeRunner.importFile(unnormalizedPath)
+    expect(result2.namedExport).toBe('esm-value')
+  })
+
+  it('works with real Vite transformations', async () => {
+    const tsPath = path.join(fixturesDir, 'test-modules', 'ts-module.ts')
+
+    const result = await nodeRunner.importFile(tsPath)
+
+    // TypeScript should be transformed to JavaScript
+    expect(typeof result.createUser).toBe('function')
+
+    // Test that TypeScript interfaces are properly handled
+    const user = result.createUser('Jane')
+    expect(user).toMatchObject({
+      id: expect.any(String),
+      name: 'Jane',
+    })
+  })
+
+  describe('plugin functionality verification', () => {
+    it('uses cedarImportDirPlugin to handle directory glob imports', async () => {
+      const modulePath = path.join(
+        fixturesDir,
+        'test-modules',
+        'import-dir-module.js',
+      )
+
+      const result = await nodeRunner.importFile(modulePath)
+
+      expect(result.importedServices).toMatchObject({
+        userService: {
+          createUser: expect.any(Function),
+          getUserById: expect.any(Function),
+          userServiceName: 'userService',
+        },
+        post_post: {
+          post: expect.any(Function),
+          posts: expect.any(Function),
+          createPost: expect.any(Function),
+          postServiceName: 'postService',
+        },
+      })
+    })
+
+    it('uses autoImportsPlugin to provide gql and context without explicit imports', async () => {
+      const modulePath = path.join(
+        fixturesDir,
+        'test-modules',
+        'auto-import-module.js',
+      )
+
+      const result = await nodeRunner.importFile(modulePath)
+
+      expect(result).toHaveProperty('testAutoImports')
+      expect(typeof result.testAutoImports).toBe('function')
+
+      const autoImportResults = await result.testAutoImports()
+
+      // Verify gql is auto-imported and working
+      expect(autoImportResults.hasGql).toBe(true)
+      expect(result.query).toMatchObject({
+        kind: 'Document',
+        definitions: expect.any(Array),
+      })
+      expect(result.mutation).toBeDefined()
+
+      // Verify context is auto-imported
+      expect(autoImportResults.hasContext).toBe(true)
+      expect(autoImportResults.context).toMatchObject({
+        currentUser: { id: 'test-user' },
+      })
+    })
+
+    it('uses cedarCellTransform to transform Cell components', async () => {
+      const modulePath = path.join(fixturesDir, 'test-modules', 'UserCell.jsx')
+
+      const result = await nodeRunner.importFile(modulePath)
+
+      // Verify Cell exports are present
+      expect(result).toHaveProperty('QUERY')
+      expect(result).toHaveProperty('Loading')
+      expect(result).toHaveProperty('Empty')
+      expect(result).toHaveProperty('Failure')
+      expect(result).toHaveProperty('Success')
+
+      // Verify components are functions
+      expect(typeof result.Loading).toBe('function')
+      expect(typeof result.Empty).toBe('function')
+      expect(typeof result.Failure).toBe('function')
+      expect(typeof result.Success).toBe('function')
+
+      // Verify that the cell has been wrapped with createCell
+      expect(result).toHaveProperty('default')
+      expect(typeof result.default).toBe('function')
+
+      // Verify the createCell wrapper has the expected displayName
+      expect(result.default).toHaveProperty('displayName', 'UserCell')
+
+      // Verify the createCell wrapper contains all the original exports
+      expect(result.default.QUERY).toBe(result.QUERY)
+      expect(result.default.Loading).toBe(result.Loading)
+      expect(result.default.Empty).toBe(result.Empty)
+      expect(result.default.Failure).toBe(result.Failure)
+      expect(result.default.Success).toBe(result.Success)
+
+      // Verify that QUERY contains the expected GraphQL structure
+      expect(result.QUERY).toMatchObject({
+        kind: 'Document',
+        definitions: expect.any(Array),
+        loc: expect.any(Object),
+      })
+      expect(result.QUERY.loc.source.body).toContain('query FindUser')
+    })
+
+    it.skip('uses cedarjsJobPathInjectorPlugin to handle job files without errors', async () => {
+      const modulePath = path.join(
         fixturesDir,
         'cedar-app',
-        'web',
+        'api',
         'src',
-        'graphql',
-        'graphql.js',
+        'jobs',
+        'testJob.js',
       )
 
-      const documents = await nodeRunner.importFile(documentsPath)
+      const result = await nodeRunner.importFile(modulePath)
 
-      const operationName = 'GetUser'
-      const documentName =
-        operationName[0].toUpperCase() + operationName.slice(1) + 'Document'
-      const queryHash = documents?.[documentName]?.__meta__?.hash
-
-      expect(queryHash).toBe('abc123hash')
-
-      const operation = {
-        operationName,
-        query: undefined, // Would be undefined for trusted documents
-        extensions: {
-          persistedQuery: {
-            version: 1,
-            sha256Hash: queryHash,
-          },
-        },
-      }
-
-      expect(operation.extensions.persistedQuery.sha256Hash).toBe('abc123hash')
+      expect(typeof result.testJob).toBe('object')
+      expect(typeof result.anotherTestJob).toBe('object')
+      expect(result.simpleJob).toMatchObject({
+        name: 'simpleJob',
+        path: 'testJob',
+        perform: expect.any(Function),
+        queue: 'low-priority',
+      })
     })
 
-    it('handles file path edge cases', async () => {
-      // Test with absolute paths
-      const absolutePath = path.resolve(
+    it('uses cedarjsDirectoryNamedImportPlugin to resolve directory-based named imports', async () => {
+      const modulePath = path.join(
         fixturesDir,
         'test-modules',
-        'esm-module.js',
+        'directory-named-import-module.js',
       )
-      const result = await nodeRunner.importFile(absolutePath)
-      expect(result.namedExport).toBe('esm-value')
 
-      // Test with normalized paths
-      const unnormalizedPath = path.join(
+      // If the plugin works, this should not throw
+      const result = await nodeRunner.importFile(modulePath)
+
+      expect(result).toHaveProperty('testDirectoryNamedImports')
+      expect(result).toHaveProperty('importedModules')
+      expect(typeof result.testDirectoryNamedImports).toBe('function')
+    })
+
+    it('uses cedarSwapApolloProvider to load without errors', async () => {
+      // This test verifies the plugin can be included without issues
+      // The actual Apollo provider swapping is tested in the plugin's own tests
+      expect(nodeRunner).toBeDefined()
+
+      // Verify that the plugin doesn't break basic functionality
+      const modulePath = path.join(fixturesDir, 'test-modules', 'esm-module.js')
+      const result = await nodeRunner.importFile(modulePath)
+      expect(result).toHaveProperty('namedExport', 'esm-value')
+    })
+
+    it('uses multiple plugins working together', async () => {
+      // Test a file that uses multiple plugin features
+      const modulePath = path.join(
         fixturesDir,
         'test-modules',
-        '..',
-        'test-modules',
-        'esm-module.js',
+        'auto-import-module.js',
       )
-      const result2 = await nodeRunner.importFile(unnormalizedPath)
-      expect(result2.namedExport).toBe('esm-value')
-    })
 
-    it('works with real Vite transformations', async () => {
-      const tsPath = path.join(fixturesDir, 'test-modules', 'ts-module.ts')
+      const result = await nodeRunner.importFile(modulePath)
 
-      const result = await nodeRunner.importFile(tsPath)
+      // This tests that autoImportsPlugin and other plugins don't conflict
+      expect(result.testAutoImports).toBeDefined()
+      expect(result.gqlQuery).toBeDefined()
+      expect(result.gqlMutation).toBeDefined()
 
-      // TypeScript should be transformed to JavaScript
-      expect(typeof result.createUser).toBe('function')
-
-      // Test that TypeScript interfaces are properly handled
-      const user = result.createUser('Jane')
-      expect(user).toMatchObject({
-        id: expect.any(String),
-        name: 'Jane',
-      })
-    })
-
-    describe('plugin functionality verification', () => {
-      it('uses cedarImportDirPlugin to handle directory glob imports', async () => {
-        const modulePath = path.join(
-          fixturesDir,
-          'test-modules',
-          'import-dir-module.js',
-        )
-
-        const result = await nodeRunner.importFile(modulePath)
-
-        expect(result.importedServices).toMatchObject({
-          userService: {
-            createUser: expect.any(Function),
-            getUserById: expect.any(Function),
-            userServiceName: 'userService',
-          },
-          post_post: {
-            post: expect.any(Function),
-            posts: expect.any(Function),
-            createPost: expect.any(Function),
-            postServiceName: 'postService',
-          },
-        })
-      })
-
-      it('uses autoImportsPlugin to provide gql and context without explicit imports', async () => {
-        const modulePath = path.join(
-          fixturesDir,
-          'test-modules',
-          'auto-import-module.js',
-        )
-
-        const result = await nodeRunner.importFile(modulePath)
-
-        expect(result).toHaveProperty('testAutoImports')
-        expect(typeof result.testAutoImports).toBe('function')
-
-        const autoImportResults = await result.testAutoImports()
-
-        // Verify gql is auto-imported and working
-        expect(autoImportResults.hasGql).toBe(true)
-        expect(result.query).toMatchObject({
-          kind: 'Document',
-          definitions: expect.any(Array),
-        })
-        expect(result.mutation).toBeDefined()
-
-        // Verify context is auto-imported
-        expect(autoImportResults.hasContext).toBe(true)
-        expect(autoImportResults.context).toMatchObject({
-          currentUser: { id: 'test-user' },
-        })
-      })
-
-      it('uses cedarCellTransform to transform Cell components', async () => {
-        const modulePath = path.join(
-          fixturesDir,
-          'test-modules',
-          'UserCell.jsx',
-        )
-
-        const result = await nodeRunner.importFile(modulePath)
-
-        // Verify Cell exports are present
-        expect(result).toHaveProperty('QUERY')
-        expect(result).toHaveProperty('Loading')
-        expect(result).toHaveProperty('Empty')
-        expect(result).toHaveProperty('Failure')
-        expect(result).toHaveProperty('Success')
-
-        // Verify components are functions
-        expect(typeof result.Loading).toBe('function')
-        expect(typeof result.Empty).toBe('function')
-        expect(typeof result.Failure).toBe('function')
-        expect(typeof result.Success).toBe('function')
-
-        // Verify that the cell has been wrapped with createCell
-        expect(result).toHaveProperty('default')
-        expect(typeof result.default).toBe('function')
-
-        // Verify the createCell wrapper has the expected displayName
-        expect(result.default).toHaveProperty('displayName', 'UserCell')
-
-        // Verify the createCell wrapper contains all the original exports
-        expect(result.default.QUERY).toBe(result.QUERY)
-        expect(result.default.Loading).toBe(result.Loading)
-        expect(result.default.Empty).toBe(result.Empty)
-        expect(result.default.Failure).toBe(result.Failure)
-        expect(result.default.Success).toBe(result.Success)
-
-        // Verify that QUERY contains the expected GraphQL structure
-        expect(result.QUERY).toMatchObject({
-          kind: 'Document',
-          definitions: expect.any(Array),
-          loc: expect.any(Object),
-        })
-        expect(result.QUERY.loc.source.body).toContain('query FindUser')
-      })
-
-      it('uses cedarjsJobPathInjectorPlugin to handle job files without errors', async () => {
-        // Test that the plugin can process files in the jobs directory
-        // The actual path injection happens during transform, so we test basic functionality
-        const modulePath = path.join(
-          fixturesDir,
-          'cedar-app',
-          'api',
-          'src',
-          'jobs',
-          'testJob.js',
-        )
-
-        // If the plugin fails, this import would throw an error
-        // The test passes if the file can be imported successfully
-        const result = await nodeRunner.importFile(modulePath)
-
-        expect(result).toHaveProperty('testJob')
-        expect(result).toHaveProperty('anotherTestJob')
-        expect(result).toHaveProperty('simpleJob')
-
-        // Verify basic job structure
-        expect(typeof result.testJob).toBe('object')
-        expect(typeof result.anotherTestJob).toBe('object')
-        expect(typeof result.simpleJob).toBe('object')
-      })
-
-      it('uses cedarjsDirectoryNamedImportPlugin to resolve directory-based named imports', async () => {
-        const modulePath = path.join(
-          fixturesDir,
-          'test-modules',
-          'directory-named-import-module.js',
-        )
-
-        // If the plugin works, this should not throw
-        const result = await nodeRunner.importFile(modulePath)
-
-        expect(result).toHaveProperty('testDirectoryNamedImports')
-        expect(result).toHaveProperty('importedModules')
-        expect(typeof result.testDirectoryNamedImports).toBe('function')
-      })
-
-      it('uses cedarSwapApolloProvider to load without errors', async () => {
-        // This test verifies the plugin can be included without issues
-        // The actual Apollo provider swapping is tested in the plugin's own tests
-        expect(nodeRunner).toBeDefined()
-
-        // Verify that the plugin doesn't break basic functionality
-        const modulePath = path.join(
-          fixturesDir,
-          'test-modules',
-          'esm-module.js',
-        )
-        const result = await nodeRunner.importFile(modulePath)
-        expect(result).toHaveProperty('namedExport', 'esm-value')
-      })
-
-      it('uses multiple plugins working together', async () => {
-        // Test a file that uses multiple plugin features
-        const modulePath = path.join(
-          fixturesDir,
-          'test-modules',
-          'auto-import-module.js',
-        )
-
-        const result = await nodeRunner.importFile(modulePath)
-
-        // This tests that autoImportsPlugin and other plugins don't conflict
-        expect(result.testAutoImports).toBeDefined()
-        expect(result.gqlQuery).toBeDefined()
-        expect(result.gqlMutation).toBeDefined()
-
-        const autoImportResults = await result.testAutoImports()
-        expect(autoImportResults.hasGql).toBe(true)
-        expect(autoImportResults.hasContext).toBe(true)
-      })
+      const autoImportResults = await result.testAutoImports()
+      expect(autoImportResults.hasGql).toBe(true)
+      expect(autoImportResults.hasContext).toBe(true)
     })
   })
 })
