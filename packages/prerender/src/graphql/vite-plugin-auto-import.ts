@@ -17,6 +17,11 @@ export function autoImportsPlugin() {
   const cedarPaths = getPaths()
   const useTrustedDocumentsGqlTag = config?.graphql?.trustedDocuments
 
+  const gqlImportPath = importStatementPath(
+    path.join(cedarPaths.web.base, 'src', 'graphql', 'gql'),
+  )
+  console.log('import statement path:', gqlImportPath)
+
   return [
     autoImport({
       // targets to transform
