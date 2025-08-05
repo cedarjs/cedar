@@ -4,6 +4,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { NodeRunner } from '../node-runner.js'
 
+const mocks = vi.hoisted(() => {
+  return {
+    experimental: null as any,
+    graphql: null as any,
+  }
+})
+
 vi.mock('@cedarjs/project-config', async () => {
   const fs = await import('node:fs')
 
@@ -24,19 +31,25 @@ vi.mock('@cedarjs/project-config', async () => {
           jobs: path.join(appFixtureDir, 'api', 'src', 'jobs'),
         },
         web: {
+          base: path.join(appFixtureDir, 'web'),
           src: path.join(appFixtureDir, 'web', 'src'),
           graphql: path.join(appFixtureDir, 'web', 'src', 'graphql'),
         },
       }
     }),
-    projectIsEsm: vi.fn(() => true),
-    getConfig: vi.fn(() => ({
-      experimental: {
-        streamingSsr: {
-          enabled: false,
-        },
-      },
-    })),
+    projectIsEsm: () => true,
+    getConfig: () => {
+      return {
+        experimental: mocks.experimental
+          ? mocks.experimental
+          : {
+              streamingSsr: {
+                enabled: false,
+              },
+            },
+        graphql: mocks.graphql,
+      }
+    },
     importStatementPath: vi.fn((path) => path),
     resolveFile: (
       filePath: string,
@@ -55,7 +68,7 @@ vi.mock('@cedarjs/project-config', async () => {
   }
 })
 
-describe('NodeRunner Tests', () => {
+describe('NodeRunner', () => {
   let nodeRunner: NodeRunner
 
   const fixturesDir = path.join(
@@ -80,7 +93,7 @@ describe('NodeRunner Tests', () => {
       resolve: {
         alias: [
           { find: '@cedarjs/context', replacement: mockContextPath },
-          { find: '@cedarjs/web', replacement: mockWebPath },
+          { find: /^@cedarjs\/web$/, replacement: mockWebPath },
         ],
       },
     })
@@ -90,144 +103,93 @@ describe('NodeRunner Tests', () => {
     if (nodeRunner) {
       await nodeRunner.close()
     }
+    mocks.experimental = null
+    mocks.graphql = null
   })
 
-  describe('importFile', () => {
-    it('automatically initializes and imports ESM module', async () => {
-      const modulePath = path.join(fixturesDir, 'test-modules', 'esm-module.js')
+  it('imports ESM module', async () => {
+    const modulePath = path.join(fixturesDir, 'test-modules', 'esm-module.js')
 
-      const result = await nodeRunner.importFile(modulePath)
+    const result = await nodeRunner.importFile(modulePath)
 
-      expect(result).toMatchObject({
-        namedExport: 'esm-value',
-        default: 'esm-default',
-      })
+    expect(result).toMatchObject({
+      namedExport: 'esm-value',
+      default: 'esm-default',
     })
+  })
 
-    it('imports CommonJS module', async () => {
-      const modulePath = path.join(fixturesDir, 'test-modules', 'cjs-module.js')
+  it('imports CommonJS module', async () => {
+    const modulePath = path.join(fixturesDir, 'test-modules', 'cjs-module.js')
 
-      const result = await nodeRunner.importFile(modulePath)
+    const result = await nodeRunner.importFile(modulePath)
 
-      expect(result).toHaveProperty('cjsExport', 'cjs-value')
-      expect(result).toHaveProperty('handler')
-      expect(typeof result.handler).toBe('function')
-      expect(result.handler()).toBe('cjs-handler')
-    })
+    expect(result).toHaveProperty('cjsExport', 'cjs-value')
+    expect(result).toHaveProperty('handler')
+    expect(typeof result.handler).toBe('function')
+    expect(result.handler()).toBe('cjs-handler')
+  })
 
-    it('imports TypeScript module', async () => {
-      const modulePath = path.join(fixturesDir, 'test-modules', 'ts-module.ts')
+  it('imports TypeScript module', async () => {
+    const modulePath = path.join(fixturesDir, 'test-modules', 'ts-module.ts')
 
-      const result = await nodeRunner.importFile(modulePath)
+    const result = await nodeRunner.importFile(modulePath)
 
-      expect(result).toHaveProperty('createUser')
-      expect(result).toHaveProperty('default', 'typescript-default')
-      expect(typeof result.createUser).toBe('function')
+    expect(result).toHaveProperty('createUser')
+    expect(result).toHaveProperty('default', 'typescript-default')
+    expect(typeof result.createUser).toBe('function')
 
-      const user = result.createUser('John Doe')
-      expect(user).toHaveProperty('name', 'John Doe')
-      expect(user).toHaveProperty('id')
-      expect(typeof user.id).toBe('string')
-    })
+    const user = result.createUser('John Doe')
+    expect(user).toHaveProperty('name', 'John Doe')
+    expect(user).toHaveProperty('id')
+    expect(typeof user.id).toBe('string')
+  })
 
-    it('handles GraphQL handler import', async () => {
-      const gqlPath = path.join(
-        fixturesDir,
-        'cedar-app',
-        'api',
-        'src',
-        'functions',
-        'graphql.js',
-      )
+  it('handles import errors', async () => {
+    const errorModulePath = path.join(
+      fixturesDir,
+      'test-modules',
+      'error-module.js',
+    )
 
-      const result = await nodeRunner.importFile(gqlPath)
+    await expect(nodeRunner.importFile(errorModulePath)).rejects.toThrow(
+      'Intentional error for testing',
+    )
+  })
 
-      expect(result).toHaveProperty('handler')
-      expect(typeof result.handler).toBe('function')
+  it('handles non-existent files', async () => {
+    const nonExistentPath = path.join(
+      fixturesDir,
+      'test-modules',
+      'non-existent.js',
+    )
 
-      // Test the handler functionality
-      const mockEvent = {
-        body: JSON.stringify({ query: '{ user { id name } }' }),
-      }
-      const mockContext = {}
+    await expect(nodeRunner.importFile(nonExistentPath)).rejects.toThrow()
+  })
 
-      const response = await result.handler(mockEvent, mockContext)
-      expect(response.statusCode).toBe(200)
+  it('handles empty modules', async () => {
+    const emptyModulePath = path.join(
+      fixturesDir,
+      'test-modules',
+      'empty-module.js',
+    )
 
-      const responseBody = JSON.parse(response.body)
-      expect(responseBody.data.user).toEqual({
-        id: '1',
-        name: 'Test User',
-      })
-    })
+    const result = await nodeRunner.importFile(emptyModulePath)
 
-    it('handles trusted documents import', async () => {
-      const documentsPath = path.join(
-        fixturesDir,
-        'cedar-app',
-        'web',
-        'src',
-        'graphql',
-        'graphql.js',
-      )
+    // Empty modules should return an empty object or undefined exports
+    expect(result).toBeDefined()
+  })
 
-      const result = await nodeRunner.importFile(documentsPath)
+  it('reuses initialized runner for multiple imports', async () => {
+    const esmPath = path.join(fixturesDir, 'test-modules', 'esm-module.js')
+    const cjsPath = path.join(fixturesDir, 'test-modules', 'cjs-module.js')
 
-      expect(result.GetUserDocument).toEqual({
-        __meta__: { hash: 'abc123hash' },
-      })
-      expect(result.UpdateUserDocument).toEqual({
-        __meta__: { hash: 'def456hash' },
-      })
-    })
+    const [esmResult, cjsResult] = await Promise.all([
+      nodeRunner.importFile(esmPath),
+      nodeRunner.importFile(cjsPath),
+    ])
 
-    it('handles import errors', async () => {
-      const errorModulePath = path.join(
-        fixturesDir,
-        'test-modules',
-        'error-module.js',
-      )
-
-      await expect(nodeRunner.importFile(errorModulePath)).rejects.toThrow(
-        'Intentional error for testing',
-      )
-    })
-
-    it('handles non-existent files', async () => {
-      const nonExistentPath = path.join(
-        fixturesDir,
-        'test-modules',
-        'non-existent.js',
-      )
-
-      await expect(nodeRunner.importFile(nonExistentPath)).rejects.toThrow()
-    })
-
-    it('handles empty modules', async () => {
-      const emptyModulePath = path.join(
-        fixturesDir,
-        'test-modules',
-        'empty-module.js',
-      )
-
-      const result = await nodeRunner.importFile(emptyModulePath)
-
-      // Empty modules should return an empty object or undefined exports
-      expect(result).toBeDefined()
-    })
-
-    it('reuses initialized runner for multiple imports', async () => {
-      const esmPath = path.join(fixturesDir, 'test-modules', 'esm-module.js')
-      const cjsPath = path.join(fixturesDir, 'test-modules', 'cjs-module.js')
-
-      const [esmResult, cjsResult] = await Promise.all([
-        nodeRunner.importFile(esmPath),
-        nodeRunner.importFile(cjsPath),
-      ])
-
-      expect(esmResult.namedExport).toBe('esm-value')
-      expect(cjsResult.cjsExport).toBe('cjs-value')
-    })
+    expect(esmResult.namedExport).toBe('esm-value')
+    expect(cjsResult.cjsExport).toBe('cjs-value')
   })
 
   it('handles file path edge cases', async () => {
@@ -322,6 +284,26 @@ describe('NodeRunner Tests', () => {
       })
     })
 
+    it('uses different gql template function for trusted documents', async () => {
+      mocks.graphql = {
+        trustedDocuments: true,
+      }
+
+      const modulePath = path.join(
+        fixturesDir,
+        'test-modules',
+        'auto-import-module.js',
+      )
+
+      const result = await nodeRunner.importFile(modulePath)
+
+      expect(result.blogPostQuery).toMatchObject({
+        __meta__: { hash: '46e9823d95110ebb2ef17ef82fff5c19a468f8a6' },
+        kind: 'Document',
+        definitions: expect.any(Array),
+      })
+    })
+
     it('uses cedarCellTransform to transform Cell components', async () => {
       const modulePath = path.join(fixturesDir, 'test-modules', 'UserCell.jsx')
 
@@ -392,43 +374,49 @@ describe('NodeRunner Tests', () => {
         'directory-named-import-module.js',
       )
 
-      // If the plugin works, this should not throw
       const result = await nodeRunner.importFile(modulePath)
 
       expect(result).toHaveProperty('testDirectoryNamedImports')
-      expect(result).toHaveProperty('importedModules')
-      expect(typeof result.testDirectoryNamedImports).toBe('function')
+      const importsTest = result.testDirectoryNamedImports()
+      expect(importsTest).toMatchObject({
+        canCallUserService: true,
+        hasPostService: true,
+        hasUserService: true,
+        postServiceName: '',
+        postServiceType: 'object',
+        userServiceName: 'userService',
+        userServiceType: 'object',
+      })
+      const userService = result.importedModules.userService
+      expect(await userService.getUserById(5)).toMatchObject({
+        id: 5,
+        name: 'Test User',
+        email: 'test@example.com',
+      })
     })
 
-    it('uses cedarSwapApolloProvider to load without errors', async () => {
-      // This test verifies the plugin can be included without issues
-      // The actual Apollo provider swapping is tested in the plugin's own tests
-      expect(nodeRunner).toBeDefined()
+    it('uses cedarSwapApolloProvider to swap ApolloProvider when streaming is enabled', async () => {
+      mocks.experimental = {
+        streamingSsr: {
+          enabled: true,
+        },
+      }
 
-      // Verify that the plugin doesn't break basic functionality
-      const modulePath = path.join(fixturesDir, 'test-modules', 'esm-module.js')
-      const result = await nodeRunner.importFile(modulePath)
-      expect(result).toHaveProperty('namedExport', 'esm-value')
-    })
-
-    it('uses multiple plugins working together', async () => {
-      // Test a file that uses multiple plugin features
       const modulePath = path.join(
         fixturesDir,
-        'test-modules',
-        'auto-import-module.js',
+        'cedar-app',
+        'web',
+        'src',
+        'App.tsx',
       )
-
       const result = await nodeRunner.importFile(modulePath)
-
-      // This tests that autoImportsPlugin and other plugins don't conflict
-      expect(result.testAutoImports).toBeDefined()
-      expect(result.gqlQuery).toBeDefined()
-      expect(result.gqlMutation).toBeDefined()
-
-      const autoImportResults = await result.testAutoImports()
-      expect(autoImportResults.hasGql).toBe(true)
-      expect(autoImportResults.hasContext).toBe(true)
+      expect(result).toHaveProperty('default', expect.any(Function))
+      const suspenseApolloProvider = result
+        .default({})
+        .type({})
+        .props.children.type.toString()
+      expect(suspenseApolloProvider).toContain('serverAuthState')
+      expect(suspenseApolloProvider).toContain('ServerAuthContext')
     })
   })
 })

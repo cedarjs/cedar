@@ -21,6 +21,21 @@ export const mutation = gql`
   }
 `
 
+export const blogPostQuery = gql`
+  query FindBlogPostQuery($id: Int!) {
+    blogPost: post(id: $id) {
+      id
+      title
+      body
+      author {
+        email
+        fullName
+      }
+      createdAt
+    }
+  }
+`
+
 export const testAutoImports = async () => {
   return {
     hasGql: typeof gql === 'function',

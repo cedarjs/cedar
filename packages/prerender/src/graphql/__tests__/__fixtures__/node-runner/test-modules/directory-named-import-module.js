@@ -6,7 +6,7 @@
 import userService from 'src/services/userService'
 import postService from 'src/services/post'
 
-export const testDirectoryNamedImports = async () => {
+export const testDirectoryNamedImports = () => {
   const results = {
     hasUserService: typeof userService !== 'undefined',
     hasPostService: typeof postService !== 'undefined',
