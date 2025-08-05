@@ -27,7 +27,10 @@ export function autoImportsPlugin() {
     autoImport({
       // targets to transform
       include: [
-        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /web\/.*\.[tj]sx?$/,
+        // Assume we want the trusted documents gql tag import in all .jsx and
+        // .tsx files
+        /\.[tj]sx$/,
       ],
 
       // global imports to register
@@ -42,11 +45,36 @@ export function autoImportsPlugin() {
             path.join(cedarPaths.web.base, 'src', 'graphql', 'gql'),
           )]: ['gql'],
         },
-        // import { context } from '@cedarjs/context'
+      ].filter(<T>(v?: T | false): v is T => Boolean(v)),
+
+      // Types aren't important since the output is ephemeral
+      dts: false,
+    }),
+    autoImport({
+      // targets to transform
+      include: [/\.[tj]sx?$/],
+
+      // global imports to register
+      imports: [
         {
           '@cedarjs/context': ['context'],
         },
-      ].filter(<T>(v?: T | false): v is T => Boolean(v)),
+      ],
+
+      // Types aren't important since the output is ephemeral
+      dts: false,
+    }),
+    autoImport({
+      // targets to transform
+      include: [/api\/.*\.[tj]sx?$/],
+
+      // global imports to register
+      imports: [
+        // import gql from 'graphql-tag'
+        {
+          'graphql-tag': ['gql'],
+        },
+      ],
 
       // Types aren't important since the output is ephemeral
       dts: false,

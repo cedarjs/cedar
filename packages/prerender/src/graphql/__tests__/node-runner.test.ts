@@ -2,6 +2,8 @@ import path from 'node:path'
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 import { NodeRunner } from '../node-runner.js'
 
 const mocks = vi.hoisted(() => {
@@ -13,8 +15,12 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@cedarjs/project-config', async () => {
   const fs = await import('node:fs')
+  const actual = await vi.importActual<typeof ProjectConfig>(
+    '@cedarjs/project-config',
+  )
 
   return {
+    ...actual,
     getPaths: vi.fn(() => {
       const appFixtureDir = path.join(
         import.meta.dirname,
@@ -50,7 +56,6 @@ vi.mock('@cedarjs/project-config', async () => {
         graphql: mocks.graphql,
       }
     },
-    importStatementPath: vi.fn((path) => path),
     resolveFile: (
       filePath: string,
       extensions = ['.js', '.tsx', '.ts', '.jsx', '.mjs', '.mts', '.cjs'],
@@ -259,6 +264,8 @@ describe('NodeRunner', () => {
       const modulePath = path.join(
         fixturesDir,
         'test-modules',
+        'web',
+        'src',
         'auto-import-module.js',
       )
 
@@ -292,6 +299,8 @@ describe('NodeRunner', () => {
       const modulePath = path.join(
         fixturesDir,
         'test-modules',
+        'web',
+        'src',
         'auto-import-module.js',
       )
 
@@ -305,7 +314,13 @@ describe('NodeRunner', () => {
     })
 
     it('uses cedarCellTransform to transform Cell components', async () => {
-      const modulePath = path.join(fixturesDir, 'test-modules', 'UserCell.jsx')
+      const modulePath = path.join(
+        fixturesDir,
+        'test-modules',
+        'web',
+        'src',
+        'UserCell.jsx',
+      )
 
       const result = await nodeRunner.importFile(modulePath)
 
