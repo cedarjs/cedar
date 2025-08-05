@@ -3,7 +3,11 @@ import path from 'node:path'
 import unimportPlugin from 'unimport/unplugin'
 import autoImport from 'unplugin-auto-import/vite'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getPaths,
+  importStatementPath,
+} from '@cedarjs/project-config'
 
 export function autoImportsPlugin() {
   // Need the project config to know if trusted graphql documents is being used
@@ -28,7 +32,9 @@ export function autoImportsPlugin() {
         },
         // import { gql } from 'src/graphql/gql'
         useTrustedDocumentsGqlTag && {
-          [path.join(cedarPaths.web.base, 'src', 'graphql', 'gql')]: ['gql'],
+          [importStatementPath(
+            path.join(cedarPaths.web.base, 'src', 'graphql', 'gql'),
+          )]: ['gql'],
         },
         // import { context } from '@cedarjs/context'
         {
