@@ -72,7 +72,46 @@ if (os.platform() === 'win32') {
       if (!fs.existsSync(destDir)) {
         fs.mkdirSync(destDir, { recursive: true })
       }
-      fs.copyFileSync(src, dest)
+
+      // Read the source file and fix __dirname paths to point to dist locations
+      let fileContent = fs.readFileSync(src, 'utf-8')
+
+      // Replace __dirname references to point to the correct dist directory
+      const distPath = path.resolve(
+        './dist/cjs/config/jest',
+        path.basename(path.dirname(dest)),
+      )
+
+      // Handle compiled code format with import_node_path.default.join
+      fileContent = fileContent.replace(
+        /import_node_path\.default\.join\(__dirname,\s*["']\.\.\/([^"']+)["']\)/g,
+        (match, relativePath) => {
+          const resolvedPath = path
+            .resolve(path.dirname(distPath), relativePath)
+            .replace(/\\/g, '/')
+          return `import_node_path.default.join("${resolvedPath}")`
+        },
+      )
+      fileContent = fileContent.replace(
+        /import_node_path\.default\.join\(__dirname,\s*["']\.\/([^"']+)["']\)/g,
+        (match, relativePath) => {
+          const resolvedPath = path
+            .resolve(distPath, relativePath)
+            .replace(/\\/g, '/')
+          return `import_node_path.default.join("${resolvedPath}")`
+        },
+      )
+      fileContent = fileContent.replace(
+        /import_node_path\.default\.resolve\(__dirname,\s*["']\.\/([^"']+)["']\)/g,
+        (match, relativePath) => {
+          const resolvedPath = path
+            .resolve(distPath, relativePath)
+            .replace(/\\/g, '/')
+          return `import_node_path.default.resolve("${resolvedPath}")`
+        },
+      )
+
+      fs.writeFileSync(dest, fileContent)
       console.log(`Copied ${src} to ${dest} for Windows compatibility`)
     }
   })
