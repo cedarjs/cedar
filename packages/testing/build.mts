@@ -57,15 +57,15 @@ if (os.platform() === 'win32') {
   const jestPresetPaths = [
     {
       src: './dist/cjs/config/jest/web/jest-preset.js',
-      dest: './config/jest/web/jest-preset.cjs',
+      dest: './config/jest/web/jest-preset.js',
     },
     {
       src: './dist/cjs/config/jest/api/jest-preset.js',
-      dest: './config/jest/api/jest-preset.cjs',
+      dest: './config/jest/api/jest-preset.js',
     },
   ]
 
-  // Copy jest-preset.js files to source config directories as .cjs for Windows compatibility
+  // Copy jest-preset.js files to source config directories for Windows compatibility
   jestPresetPaths.forEach(({ src, dest }) => {
     if (fs.existsSync(src)) {
       const destDir = path.dirname(dest)
@@ -112,6 +112,13 @@ if (os.platform() === 'win32') {
       )
 
       fs.writeFileSync(dest, fileContent)
+
+      // Create package.json to mark the directory as CommonJS
+      const packageJsonPath = path.join(destDir, 'package.json')
+      fs.writeFileSync(
+        packageJsonPath,
+        JSON.stringify({ type: 'commonjs' }, null, 2),
+      )
       console.log(`Copied ${src} to ${dest} for Windows compatibility`)
     }
   })
