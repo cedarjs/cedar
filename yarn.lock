@@ -296,7 +296,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ast-grep/napi@npm:^0.39.3":
+"@ast-grep/napi@npm:0.39.3":
   version: 0.39.3
   resolution: "@ast-grep/napi@npm:0.39.3"
   dependencies:
@@ -3352,6 +3352,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/prerender@workspace:packages/prerender"
   dependencies:
+    "@ast-grep/napi": "npm:0.39.3"
     "@babel/generator": "npm:7.27.5"
     "@babel/parser": "npm:7.27.5"
     "@babel/traverse": "npm:7.27.4"
@@ -3641,7 +3642,7 @@ __metadata:
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@ast-grep/napi": "npm:^0.39.3"
+    "@ast-grep/napi": "npm:0.39.3"
     "@babel/generator": "npm:7.27.5"
     "@babel/parser": "npm:7.27.5"
     "@babel/traverse": "npm:7.27.4"

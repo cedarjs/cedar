@@ -33,18 +33,18 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
 
       const root = ast.root()
 
-      // Find all createJob calls in export declarations
+      // Find all createJob calls with object literal configs
       const createJobCalls = root.findAll({
         rule: {
-          pattern: 'export const $VAR_NAME = $OBJ.createJob($CONFIG)',
+          pattern: 'export const $VAR_NAME = $OBJ.createJob({ $$$PROPS })',
         },
       })
 
       for (const callNode of createJobCalls) {
         const varNameNode = callNode.getMatch('VAR_NAME')
-        const configNode = callNode.getMatch('CONFIG')
+        const propsNodes = callNode.getMultipleMatches('PROPS')
 
-        if (!varNameNode || !configNode) {
+        if (!varNameNode) {
           continue
         }
 
@@ -52,34 +52,53 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
         const importPath = path.relative(paths.api.jobs, id)
         const importPathWithoutExtension = importPath.replace(/\.[^/.]+$/, '')
 
-        // Check if the config is an object expression
-        if (configNode.kind() === 'object') {
-          // Build the properties to insert
-          const pathProperty = `path: ${JSON.stringify(importPathWithoutExtension)}`
-          const nameProperty = `name: ${JSON.stringify(importName)}`
+        // Build the properties to insert
+        const pathProperty = `path: ${JSON.stringify(importPathWithoutExtension)}`
+        const nameProperty = `name: ${JSON.stringify(importName)}`
 
-          // Find existing properties
-          const properties = configNode.findAll({ rule: { kind: 'pair' } })
+        let insertText = ''
+        if (propsNodes.length > 0) {
+          // Insert after the last property - find the actual object literal
+          const objectLiteral = callNode.find({
+            rule: {
+              kind: 'object',
+              inside: {
+                kind: 'arguments',
+              },
+            },
+          })
 
-          let insertText = ''
-          if (properties.length > 0) {
-            // Insert after the last property
+          if (objectLiteral) {
             insertText = `, ${pathProperty}, ${nameProperty}`
-            const lastProperty = properties[properties.length - 1]
-            const range = lastProperty.range()
-            edits.push({
-              startPos: range.end.index,
-              endPos: range.end.index,
-              insertedText: insertText,
-            })
-          } else {
-            // Empty object, insert after the opening brace
-            insertText = `${pathProperty}, ${nameProperty}`
-            const configText = configNode.text()
-            const openBraceIndex = configText.indexOf('{')
+            // Find the position just before the closing brace
+            const objectText = objectLiteral.text()
+            const closeBraceIndex = objectText.lastIndexOf('}')
+            if (closeBraceIndex !== -1) {
+              const range = objectLiteral.range()
+              edits.push({
+                startPos: range.start.index + closeBraceIndex,
+                endPos: range.start.index + closeBraceIndex,
+                insertedText: insertText,
+              })
+            }
+          }
+        } else {
+          // Empty object - find the object literal and insert between braces
+          const objectLiteral = callNode.find({
+            rule: {
+              kind: 'object',
+              inside: {
+                kind: 'arguments',
+              },
+            },
+          })
 
+          if (objectLiteral) {
+            insertText = `${pathProperty}, ${nameProperty}`
+            const objectText = objectLiteral.text()
+            const openBraceIndex = objectText.indexOf('{')
             if (openBraceIndex !== -1) {
-              const range = configNode.range()
+              const range = objectLiteral.range()
               edits.push({
                 startPos: range.start.index + openBraceIndex + 1,
                 endPos: range.start.index + openBraceIndex + 1,
