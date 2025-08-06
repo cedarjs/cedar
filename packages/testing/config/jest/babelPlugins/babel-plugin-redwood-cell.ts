@@ -30,15 +30,12 @@ const EXPECTED_EXPORTS_FROM_CELL = [
   'Success',
   'Failure',
   'Empty',
-] as const
+]
 
 type ExpectedExport = (typeof EXPECTED_EXPORTS_FROM_CELL)[number]
 
 function isExpectedExport(name: string | undefined): name is ExpectedExport {
-  return (
-    name !== undefined &&
-    (EXPECTED_EXPORTS_FROM_CELL as readonly string[]).includes(name)
-  )
+  return name !== undefined && EXPECTED_EXPORTS_FROM_CELL.includes(name)
 }
 
 interface PluginState extends PluginPass {

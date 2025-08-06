@@ -19,7 +19,13 @@
     "./config/jest/api/jest-preset": {
       "default": "./dist/cjs/config/jest/api/jest-preset.js"
     },
+    "./config/jest/api/jest-preset.js": {
+      "default": "./dist/cjs/config/jest/api/jest-preset.js"
+    },
     "./config/jest/web/jest-preset": {
+      "default": "./dist/cjs/config/jest/web/jest-preset.js"
+    },
+    "./config/jest/web/jest-preset.js": {
       "default": "./dist/cjs/config/jest/web/jest-preset.js"
     },
     "./dist/cjs/api/scenario": {
