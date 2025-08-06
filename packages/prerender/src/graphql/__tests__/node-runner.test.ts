@@ -360,7 +360,7 @@ describe('NodeRunner', () => {
       expect(result.QUERY.loc.source.body).toContain('query FindUser')
     })
 
-    it.skip('uses cedarjsJobPathInjectorPlugin to handle job files without errors', async () => {
+    it('uses cedarjsJobPathInjectorPlugin to handle job files without errors', async () => {
       const modulePath = path.join(
         fixturesDir,
         'cedar-app',

@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import * as swc from '@swc/core'
+import { parse, Lang } from '@ast-grep/napi'
 import fg from 'fast-glob'
 import type { Plugin } from 'vite'
 
@@ -23,31 +23,6 @@ import { importStatementPath, getPaths } from '@cedarjs/project-config'
  * ```
  */
 export function cedarImportDirPlugin(): Plugin {
-  const createSpan = (): swc.Span => ({
-    start: 0,
-    end: 0,
-    // ctxt is not actually used, I just have to add it because of broken swc
-    // types, see https://github.com/Menci/vite-plugin-top-level-await/issues/52
-    ctxt: 0,
-  })
-
-  const createIdentifier = (value: string, ctxt: number): swc.Identifier => ({
-    type: 'Identifier',
-    span: createSpan(),
-    // @ts-expect-error - See https://github.com/Menci/vite-plugin-top-level-await/issues/52
-    ctxt,
-    value,
-    optional: false,
-    typeAnnotation: null,
-  })
-
-  const createStringLiteral = (value: string): swc.StringLiteral => ({
-    type: 'StringLiteral',
-    span: createSpan(),
-    value,
-    raw: `'${value}'`,
-  })
-
   return {
     name: 'vite-plugin-cedar-import-dir',
     enforce: 'pre',
@@ -58,153 +33,100 @@ export function cedarImportDirPlugin(): Plugin {
       }
 
       const ext = path.extname(id)
-      const ast = await swc.parse(code, {
-        syntax: ext === '.ts' || ext === '.tsx' ? 'typescript' : 'ecmascript',
-        tsx: ext === '.tsx',
+      const language =
+        ext === '.ts' || ext === '.tsx' ? Lang.TypeScript : Lang.JavaScript
+
+      let ast
+      try {
+        ast = parse(language, code)
+      } catch (error) {
+        console.warn('Failed to parse file:', id)
+        console.warn(error)
+        return null
+      }
+
+      const root = ast.root()
+      let hasTransformations = false
+      const edits = []
+
+      // Find all import statements with glob patterns
+      const globImports = root.findAll({
+        rule: {
+          pattern: 'import $DEFAULT_IMPORT from $SOURCE',
+        },
       })
 
-      let hasTransformations = false
-      const newBody: swc.ModuleItem[] = []
+      for (const importNode of globImports) {
+        const sourceNode = importNode.getMatch('SOURCE')
+        const defaultImportNode = importNode.getMatch('DEFAULT_IMPORT')
 
-      // Extract ctxt from the first item in the AST for consistent context
-      // @ts-expect-error - See https://github.com/Menci/vite-plugin-top-level-await/issues/52
-      const ctxt = ast.body.length > 0 ? ast.body[0].ctxt || 0 : 0
+        if (!sourceNode || !defaultImportNode) {
+          continue
+        }
 
-      for (const item of ast.body) {
-        if (
-          item.type === 'ImportDeclaration' &&
-          item.source.value.includes('/**/')
-        ) {
-          hasTransformations = true
+        const sourceValue = sourceNode.text().slice(1, -1) // Remove quotes
+        if (!sourceValue.includes('/**/')) {
+          continue
+        }
 
-          // Get the import name from the default import specifier
-          const defaultSpecifier = item.specifiers.find(
-            (spec): spec is swc.ImportDefaultSpecifier =>
-              spec.type === 'ImportDefaultSpecifier',
-          )
+        hasTransformations = true
+        const importName = defaultImportNode.text()
 
-          if (!defaultSpecifier) {
-            // If no default specifier, keep original import
-            newBody.push(item)
-            continue
+        const importGlob = importStatementPath(sourceValue)
+        const cwd = importGlob.startsWith('src/')
+          ? getPaths().api.base
+          : path.dirname(id)
+
+        try {
+          const dirFiles = fg
+            .sync(importGlob, { cwd })
+            // Ignore *.test.*, *.scenarios.* and *.d.ts files
+            .filter(
+              (n) =>
+                !n.includes('.test.') &&
+                !n.includes('.scenarios.') &&
+                !n.includes('.d.ts'),
+            )
+
+          const staticGlob = importGlob.split('*')[0]
+          const filePathToVarName = (filePath: string) => {
+            return filePath
+              .replace(staticGlob, '')
+              .replace(/\.(js|ts)$/, '')
+              .replace(/[^a-zA-Z0-9]/g, '_')
           }
 
-          const importName = defaultSpecifier.local.value
-          const importPath = item.source.value
+          // Build the replacement code
+          let replacement = `let ${importName} = {};\n`
 
-          const importGlob = importStatementPath(importPath)
-          const cwd = importGlob.startsWith('src/')
-            ? getPaths().api.base
-            : path.dirname(id)
+          // Generate namespace imports and assignments for each file
+          for (const filePath of dirFiles) {
+            const { dir: fileDir, name: fileName } = path.parse(filePath)
+            const fileImportPath = fileDir + '/' + fileName
+            const filePathVarName = filePathToVarName(filePath)
+            const namespaceImportName = `${importName}_${filePathVarName}`
 
-          try {
-            const dirFiles = fg
-              .sync(importGlob, { cwd })
-              // Ignore *.test.*, *.scenarios.* and *.d.ts files
-              .filter(
-                (n) =>
-                  !n.includes('.test.') &&
-                  !n.includes('.scenarios.') &&
-                  !n.includes('.d.ts'),
-              )
+            // Create namespace import
+            replacement += `import * as ${namespaceImportName} from '${fileImportPath}';\n`
 
-            const staticGlob = importGlob.split('*')[0]
-            const filePathToVarName = (filePath: string) => {
-              return filePath
-                .replace(staticGlob, '')
-                .replace(/\.(js|ts)$/, '')
-                .replace(/[^a-zA-Z0-9]/g, '_')
-            }
-
-            // Create variable declaration: let importName = {}
-            newBody.push({
-              type: 'VariableDeclaration',
-              span: createSpan(),
-              // @ts-expect-error - See https://github.com/Menci/vite-plugin-top-level-await/issues/52
-              ctxt,
-              kind: 'let',
-              declare: false,
-              declarations: [
-                {
-                  type: 'VariableDeclarator',
-                  span: createSpan(),
-                  id: createIdentifier(importName, ctxt),
-                  init: {
-                    type: 'ObjectExpression',
-                    span: createSpan(),
-                    properties: [],
-                  },
-                  definite: false,
-                },
-              ],
-            })
-
-            // Process each matched file
-            for (const filePath of dirFiles) {
-              const { dir: fileDir, name: fileName } = path.parse(filePath)
-              const fileImportPath = fileDir + '/' + fileName
-              const filePathVarName = filePathToVarName(filePath)
-              const namespaceImportName = `${importName}_${filePathVarName}`
-
-              // Create namespace import: import * as importName_filePathVarName from 'fileImportPath'
-              // I'm generating extensionless imports here and let the rest of
-              // the plugin pipeline handle the extension.
-              newBody.push({
-                type: 'ImportDeclaration',
-                span: createSpan(),
-                specifiers: [
-                  {
-                    type: 'ImportNamespaceSpecifier',
-                    span: createSpan(),
-                    local: createIdentifier(namespaceImportName, ctxt),
-                  },
-                ],
-                source: createStringLiteral(fileImportPath),
-                typeOnly: false,
-              })
-
-              // Create assignment: importName.filePathVarName = importName_filePathVarName
-              newBody.push({
-                type: 'ExpressionStatement',
-                span: createSpan(),
-                expression: {
-                  type: 'AssignmentExpression',
-                  span: createSpan(),
-                  operator: '=',
-                  left: {
-                    type: 'MemberExpression',
-                    span: createSpan(),
-                    object: createIdentifier(importName, ctxt),
-                    property: createIdentifier(filePathVarName, ctxt),
-                  },
-                  right: createIdentifier(namespaceImportName, ctxt),
-                },
-              })
-            }
-          } catch (error) {
-            // If there's an error with glob matching, keep the original import
-            console.warn(`Failed to process glob import: ${importPath}`, error)
-            newBody.push(item)
+            // Create assignment
+            replacement += `${importName}.${filePathVarName} = ${namespaceImportName};\n`
           }
-        } else {
-          // Keep non-glob imports as-is
-          newBody.push(item)
+
+          // Create edit to replace the entire import statement
+          edits.push(importNode.replace(replacement.trim()))
+        } catch (error) {
+          // If there's an error with glob matching, keep the original import
+          console.warn(`Failed to process glob import: ${sourceValue}`, error)
         }
       }
 
       // Only return transformed code if we actually made changes
-      if (hasTransformations) {
-        const transformedAst: swc.Module = {
-          ...ast,
-          body: newBody,
-        }
-
-        const output = await swc.print(transformedAst, {
-          minify: false,
-        })
+      if (hasTransformations && edits.length > 0) {
+        const transformedCode = root.commitEdits(edits)
 
         return {
-          code: output.code,
+          code: transformedCode,
           map: null, // For simplicity, not generating source maps
         }
       }
