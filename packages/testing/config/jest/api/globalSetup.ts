@@ -1,18 +1,17 @@
 import { getSchema } from '@prisma/internals'
 
 import { getPaths } from '@cedarjs/project-config'
-
 import {
   getDefaultDb,
   checkAndReplaceDirectUrl,
-} from '../../../api/directUrlHelpers.js'
+} from '@cedarjs/testing/dist/cjs/api/directUrlHelpers'
 
 const rwjsPaths = getPaths()
 
 export default async function () {
   if (process.env.SKIP_DB_PUSH !== '1') {
     // Load dotenvs
-    require('dotenv-defaults/config')
+    await import('dotenv-defaults/config.js')
 
     const defaultDb = getDefaultDb(rwjsPaths.base)
 
@@ -31,7 +30,7 @@ export default async function () {
         ? ['prisma', 'migrate', 'reset', '--force', '--skip-seed']
         : ['prisma', 'db', 'push', '--force-reset', '--accept-data-loss']
 
-    const execa = require('execa')
+    const { default: execa } = await import('execa')
     const env: Record<string, string | undefined> = {
       DATABASE_URL: process.env.DATABASE_URL,
     }

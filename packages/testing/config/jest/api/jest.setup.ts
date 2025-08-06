@@ -6,7 +6,7 @@ import fs from 'node:fs'
 // @NOTE without these imports in the setup file, mockCurrentUser
 // will remain undefined in the user's tests
 // Remember to use specific imports
-import { defineScenario } from '../../../api/scenario.js'
+import { defineScenario } from '@cedarjs/testing/dist/cjs/api/scenario'
 
 // @NOTE we do this because jest.setup.js runs every time in each context
 // while jest-preset runs once. This significantly reduces memory footprint, and testing time
@@ -30,7 +30,29 @@ type ScenarioTestFunction = (scenarioData: ScenarioData) => Promise<any> | any
 
 global.defineScenario = defineScenario
 
-global.mockCurrentUser = (currentUser: Record<string, unknown>) => {
+// Attempt to emulate the request context isolation behavior
+// This is a little more complicated than it would necessarily need to be
+// but we're following the same pattern as in `@cedarjs/context`
+const mockContextStore = new Map<string, any>()
+const mockContext = new Proxy(
+  {},
+  {
+    get: (_target, prop) => {
+      // Handle toJSON() calls, i.e. JSON.stringify(context)
+      if (prop === 'toJSON') {
+        return () => mockContextStore.get('context')
+      }
+      return mockContextStore.get('context')[prop]
+    },
+    set: (_target, prop, value) => {
+      const ctx = mockContextStore.get('context')
+      ctx[prop] = value
+      return true
+    },
+  },
+)
+
+global.mockCurrentUser = (currentUser: Record<string, unknown> | null) => {
   mockContextStore.set('context', { currentUser })
 }
 
@@ -276,28 +298,6 @@ const wasDbUsed = (): boolean => {
     return false
   }
 }
-
-// Attempt to emulate the request context isolation behavior
-// This is a little more complicated than it would necessarily need to be
-// but we're following the same pattern as in `@cedarjs/context`
-const mockContextStore = new Map<string, any>()
-const mockContext = new Proxy(
-  {},
-  {
-    get: (_target, prop) => {
-      // Handle toJSON() calls, i.e. JSON.stringify(context)
-      if (prop === 'toJSON') {
-        return () => mockContextStore.get('context')
-      }
-      return mockContextStore.get('context')[prop]
-    },
-    set: (_target, prop, value) => {
-      const ctx = mockContextStore.get('context')
-      ctx[prop] = value
-      return true
-    },
-  },
-)
 
 jest.mock('@cedarjs/context', () => {
   return {

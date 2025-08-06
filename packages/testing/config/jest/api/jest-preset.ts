@@ -1,4 +1,3 @@
-// @ts-check
 import path from 'node:path'
 
 import type { Config } from 'jest'

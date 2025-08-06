@@ -25,6 +25,9 @@
     "./dist/cjs/api/scenario": {
       "default": "./dist/cjs/api/scenario.js"
     },
+    "./dist/cjs/api/directUrlHelpers": {
+      "default": "./dist/cjs/api/directUrlHelpers.js"
+    },
     "./dist/cjs/web/findCellMocks": {
       "default": "./dist/cjs/web/findCellMocks.js"
     },
