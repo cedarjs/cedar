@@ -40,11 +40,11 @@
     "./jest-preset-api": {
       "default": "./dist/cjs/config/jest/api/jest-preset.js"
     },
-    "./preset-web": {
-      "default": "./config/jest/web/jest-preset.js"
+    "./config/jest/web/jest-preset.cjs": {
+      "default": "./config/jest/web/jest-preset.cjs"
     },
-    "./preset-api": {
-      "default": "./config/jest/api/jest-preset.js"
+    "./config/jest/api/jest-preset.cjs": {
+      "default": "./config/jest/api/jest-preset.cjs"
     },
     "./dist/cjs/api/scenario": {
       "default": "./dist/cjs/api/scenario.js"
