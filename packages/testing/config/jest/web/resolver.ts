@@ -8,7 +8,7 @@
 
 import type { ResolverOptions } from 'jest-resolve'
 
-export default (path: string, options: ResolverOptions): string => {
+function resolver(path: string, options: ResolverOptions) {
   return options.defaultResolver(path, {
     ...options,
     packageFilter: (pkg: any) => {
@@ -21,6 +21,9 @@ export default (path: string, options: ResolverOptions): string => {
     },
   })
 }
+
+// Export using CommonJS compatible `export =` syntax for Jest compatibility
+export = resolver
 
 const OVERRIDE_EXPORTS_LIST = new Set([
   '@firebase/analytics',
