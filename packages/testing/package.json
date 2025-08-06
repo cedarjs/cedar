@@ -11,16 +11,16 @@
   "type": "module",
   "exports": {
     "./config/jest/web": {
-      "default": "./config/jest/web/index.js"
+      "default": "./dist/cjs/config/jest/web/index.js"
     },
     "./config/jest/api": {
-      "default": "./config/jest/api/index.js"
+      "default": "./dist/cjs/config/jest/api/index.js"
     },
     "./config/jest/api/jest-preset": {
-      "default": "./config/jest/api/jest-preset.js"
+      "default": "./dist/cjs/config/jest/api/jest-preset.js"
     },
     "./config/jest/web/jest-preset": {
-      "default": "./config/jest/web/jest-preset.js"
+      "default": "./dist/cjs/config/jest/web/jest-preset.js"
     },
     "./dist/cjs/api/scenario": {
       "default": "./dist/cjs/api/scenario.js"

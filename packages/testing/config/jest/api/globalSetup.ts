@@ -5,7 +5,7 @@ import { getPaths } from '@cedarjs/project-config'
 import {
   getDefaultDb,
   checkAndReplaceDirectUrl,
-} from '../../../src/api/directUrlHelpers.js'
+} from '../../../api/directUrlHelpers.js'
 
 const rwjsPaths = getPaths()
 

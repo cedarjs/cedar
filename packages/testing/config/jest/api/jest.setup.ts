@@ -6,7 +6,7 @@ import fs from 'node:fs'
 // @NOTE without these imports in the setup file, mockCurrentUser
 // will remain undefined in the user's tests
 // Remember to use specific imports
-import { defineScenario } from '../../../src/api/scenario.js'
+import { defineScenario } from '../../../api/scenario.js'
 
 // @NOTE we do this because jest.setup.js runs every time in each context
 // while jest-preset runs once. This significantly reduces memory footprint, and testing time
