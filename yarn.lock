@@ -3591,7 +3591,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/testing@workspace:packages/testing"
   dependencies:
-    "@ast-grep/napi": "npm:0.39.3"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/babel-config": "workspace:*"
     "@cedarjs/context": "workspace:*"
