@@ -9,7 +9,7 @@ import {
 // Ref: packages/testing/config/jest/api/index.js
 const { babelrc: _b, ...defaultBabelConfig } = getApiSideDefaultBabelConfig()
 
-module.exports = {
+export default {
   ...defaultBabelConfig,
   plugins: getApiSideBabelPlugins(),
   presets: getApiSideBabelPresets({

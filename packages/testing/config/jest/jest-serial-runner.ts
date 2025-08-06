@@ -1,7 +1,8 @@
 // Originally from https://github.com/gabrieli/jest-serial-runner/blob/master/index.js
 // with fixed module export
 
-const { default: TestRunner } = require('jest-runner')
+import * as TestRunnerModule from 'jest-runner'
+const TestRunner = (TestRunnerModule as any).default || TestRunnerModule
 
 class SerialRunner extends TestRunner {
   public isSerial: boolean
@@ -12,4 +13,4 @@ class SerialRunner extends TestRunner {
   }
 }
 
-module.exports = SerialRunner
+export default SerialRunner

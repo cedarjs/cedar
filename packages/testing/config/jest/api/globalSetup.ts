@@ -5,13 +5,12 @@ import { getPaths } from '@cedarjs/project-config'
 import {
   getDefaultDb,
   checkAndReplaceDirectUrl,
-} from '../../../dist/api/directUrlHelpers.js'
+} from '../../../src/api/directUrlHelpers.js'
 
 const rwjsPaths = getPaths()
 
-module.exports = async function (): Promise<void> {
+export default async function () {
   if (process.env.SKIP_DB_PUSH !== '1') {
-    const process = require('node:process')
     // Load dotenvs
     require('dotenv-defaults/config')
 
@@ -41,7 +40,7 @@ module.exports = async function (): Promise<void> {
       env[directUrlEnvVar] = process.env[directUrlEnvVar]
     }
 
-    execa.sync(`yarn rw`, command, {
+    execa.sync('yarn rw', command, {
       cwd: rwjsPaths.api.base,
       stdio: 'inherit',
       shell: true,

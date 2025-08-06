@@ -34,4 +34,4 @@ class RedwoodApiJestEnvironment extends TestEnvironment {
   // }
 }
 
-module.exports = RedwoodApiJestEnvironment
+export default RedwoodApiJestEnvironment

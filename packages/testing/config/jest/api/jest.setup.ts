@@ -3,24 +3,16 @@
 
 import fs from 'node:fs'
 
-import type { Prisma } from '@prisma/client'
-
 // @NOTE without these imports in the setup file, mockCurrentUser
 // will remain undefined in the user's tests
 // Remember to use specific imports
-const { defineScenario } = require('@cedarjs/testing/dist/cjs/api/scenario')
+import { defineScenario } from '../../../src/api/scenario.js'
 
 // @NOTE we do this because jest.setup.js runs every time in each context
 // while jest-preset runs once. This significantly reduces memory footprint, and testing time
 // The key is to reduce the amount of imports in this file, because the require.cache is not shared between each test context
 const { apiSrcPath, tearDownCachePath, dbSchemaPath } =
   global.__RWJS__TEST_IMPORTS
-
-interface TestImports {
-  apiSrcPath: string
-  tearDownCachePath: string
-  dbSchemaPath: string
-}
 
 interface ScenarioData {
   [model: string]: {
@@ -34,30 +26,13 @@ type ScenarioDefinition = {
   }
 }
 
-type _ScenarioFunction = ((...args: any[]) => void) & {
-  only: (...args: any[]) => void
-}
-
-type _DescribeScenarioFunction = ((...args: any[]) => void) & {
-  only: (...args: any[]) => void
-}
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __RWJS__TEST_IMPORTS: TestImports
-  // eslint-disable-next-line no-var
-  var testPath: string
-  // eslint-disable-next-line no-var
-  var defineScenario: any
-  // eslint-disable-next-line no-var
-  var scenario: any
-  // eslint-disable-next-line no-var
-  var describeScenario: any
-  // eslint-disable-next-line no-var
-  var mockCurrentUser: (currentUser: any) => void
-}
+type ScenarioTestFunction = (scenarioData: ScenarioData) => Promise<any> | any
 
 global.defineScenario = defineScenario
+
+global.mockCurrentUser = (currentUser: Record<string, unknown>) => {
+  mockContextStore.set('context', { currentUser })
+}
 
 // Error codes thrown by [MySQL, SQLite, Postgres] when foreign key constraint
 // fails on DELETE
@@ -82,8 +57,8 @@ const configureTeardown = async (): Promise<void> => {
   // But avoid importing them, to prevent memory leaks in jest
   const datamodel = await getSchema(dbSchemaPath)
   const schema = await getDMMF({ datamodel })
-  const schemaModels = schema.datamodel.models.map(
-    (m: any) => m.dbName || m.name,
+  const schemaModels: string[] = schema.datamodel.models.map(
+    (m: { dbName?: string; name: string }) => m.dbName || m.name,
   )
 
   // check if pre-defined delete order already exists and if so, use it to start
@@ -126,8 +101,11 @@ const getQuoteStyle = async (): Promise<string> => {
   return quoteStyle
 }
 
-const getProjectDb = (): Prisma.TransactionClient => {
-  const { db } = require(`${apiSrcPath}/lib/db`)
+const getProjectDb = () => {
+  // Use require for dynamic path resolution at runtime
+  const { createRequire } = require('node:module')
+  const requireFn = createRequire(__filename)
+  const { db } = requireFn(`${apiSrcPath}/lib/db`)
   return db
 }
 
@@ -136,11 +114,9 @@ const getProjectDb = (): Prisma.TransactionClient => {
  * This one passes scenario data to the test function
  */
 const buildScenario =
-  (itFunc: any, testPath: string) =>
-  (...args: any[]) => {
-    let scenarioName: string,
-      testName: string,
-      testFunc: (scenarioData: ScenarioData) => Promise<any> | any
+  (itFunc: jest.It, testPath: string) =>
+  (...args: any[]): void => {
+    let scenarioName: string, testName: string, testFunc: ScenarioTestFunction
 
     if (args.length === 3) {
       ;[scenarioName, testName, testFunc] = args
@@ -173,8 +149,8 @@ const buildScenario =
  * Note that you need to use the getScenario() function to get the data.
  */
 const buildDescribeScenario =
-  (describeFunc: any, testPath: string) =>
-  (...args: any[]) => {
+  (describeFunc: jest.Describe, testPath: string) =>
+  (...args: any[]): void => {
     let scenarioName: string,
       describeBlockName: string,
       describeBlock: (getScenario: () => ScenarioData) => void
@@ -220,8 +196,12 @@ const teardown = async (): Promise<void> => {
       await getProjectDb().$executeRawUnsafe(
         `DELETE FROM ${quoteStyle}${modelName}${quoteStyle}`,
       )
-    } catch (e: any) {
-      const match = e.message.match(/Code: `(\d+)`/)
+    } catch (e: unknown) {
+      const message =
+        e && typeof e === 'object' && 'message' in e
+          ? (e.message as string)
+          : ''
+      const match = message.match(/Code: `(\d+)`/)
       if (match && FOREIGN_KEY_ERRORS.includes(parseInt(match[1]))) {
         // Remove the model that failed and add it to the end
         teardownOrder.splice(i, 1)
@@ -264,14 +244,14 @@ const seedScenario = async (
   }
 }
 
-const scenarioFunction: any = buildScenario(global.it, global.testPath)
+const scenarioFunction = buildScenario(global.it, global.testPath) as any
 scenarioFunction.only = buildScenario(global.it.only, global.testPath)
 global.scenario = scenarioFunction
 
-const describeScenarioFunction: any = buildDescribeScenario(
+const describeScenarioFunction = buildDescribeScenario(
   global.describe,
   global.testPath,
-)
+) as any
 describeScenarioFunction.only = buildDescribeScenario(
   global.describe.only,
   global.testPath,
@@ -291,8 +271,10 @@ global.describeScenario = describeScenarioFunction
  */
 const wasDbUsed = (): boolean => {
   try {
-    const libDbPath = require.resolve(`${apiSrcPath}/lib/db`)
-    return Object.keys(require.cache).some((module) => {
+    const { createRequire } = require('node:module')
+    const requireFn = createRequire(__filename)
+    const libDbPath = requireFn.resolve(`${apiSrcPath}/lib/db`)
+    return Object.keys(requireFn.cache).some((module) => {
       return module === libDbPath
     })
   } catch {
@@ -336,10 +318,6 @@ beforeEach(() => {
   mockContextStore.set('context', {})
 })
 
-global.mockCurrentUser = (currentUser: any) => {
-  mockContextStore.set('context', { currentUser })
-}
-
 beforeAll(async () => {
   if (wasDbUsed()) {
     await configureTeardown()
@@ -348,7 +326,8 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (wasDbUsed()) {
-    getProjectDb().$disconnect()
+    const db = getProjectDb()
+    db.$disconnect()
   }
 })
 
@@ -357,6 +336,9 @@ function loadScenarios(
   scenarioName: string,
 ): { scenario: ScenarioDefinition | undefined } {
   const path = require('node:path')
+  const { createRequire } = require('node:module')
+  const requireFn = createRequire(__filename)
+
   const testFileDir = path.parse(testPath)
   // e.g. ['comments', 'test'] or ['signup', 'state', 'machine', 'test']
   const testFileNameParts = testFileDir.name.split('.')
@@ -367,12 +349,18 @@ function loadScenarios(
   let scenario: ScenarioDefinition | undefined
 
   try {
-    allScenarios = require(testFilePath)
-  } catch (e: any) {
+    allScenarios = requireFn(testFilePath)
+  } catch (e: unknown) {
     // ignore error if scenario file not found, otherwise re-throw
-    if (e.code !== 'MODULE_NOT_FOUND') {
-      throw e
+    if (
+      e &&
+      typeof e === 'object' &&
+      'code' in e &&
+      e.code !== 'MODULE_NOT_FOUND'
+    ) {
+      throw new Error(`Failed to load scenario: ${e}`)
     }
+    // If it's MODULE_NOT_FOUND, we ignore it
   }
 
   if (allScenarios) {

@@ -15,8 +15,14 @@ const config: Config = {
   // correct path, for example, coverageDirectory
   rootDir: rwjsPaths.base,
   roots: [path.join(rwjsPaths.api.src)],
-  runner: path.join(__dirname, '../jest-serial-runner.js'),
-  testEnvironment: path.join(__dirname, './RedwoodApiJestEnv.js'),
+  runner: path.join(
+    __dirname,
+    '../../../dist/cjs/config/jest/jest-serial-runner.js',
+  ),
+  testEnvironment: path.join(
+    __dirname,
+    '../../../dist/cjs/config/jest/api/RedwoodApiJestEnv.js',
+  ),
   globals: {
     __RWJS__TEST_IMPORTS: {
       apiSrcPath: rwjsPaths.api.src,
@@ -43,9 +49,14 @@ const config: Config = {
     'jest-watch-typeahead/testname',
   ],
   // This runs once before all tests
-  globalSetup: path.join(__dirname, './globalSetup.js'),
+  globalSetup: path.join(
+    __dirname,
+    '../../../dist/cjs/config/jest/api/globalSetup.js',
+  ),
   // Note this setup runs for each test file!
-  setupFilesAfterEnv: [path.join(__dirname, './jest.setup.js')],
+  setupFilesAfterEnv: [
+    path.join(__dirname, '../../../dist/cjs/config/jest/api/jest.setup.js'),
+  ],
   moduleNameMapper: {
     // @NOTE: Import @cedarjs/testing in api tests, and it automatically remaps to the api side only
     // This is to prevent web stuff leaking into api, and vice versa
@@ -62,11 +73,14 @@ const config: Config = {
       //  here and remove those keys inside "extend"ed config.
       {
         babelrc, // babelrc can not reside inside "extend"ed config, that's why we have it here
-        configFile: path.resolve(__dirname, './apiBabelConfig.js'),
+        configFile: path.resolve(
+          __dirname,
+          '../../../dist/cjs/config/jest/api/apiBabelConfig.js',
+        ),
       },
     ],
   },
   testPathIgnorePatterns: ['.scenarios.[jt]s$'],
 }
 
-module.exports = config
+export default config

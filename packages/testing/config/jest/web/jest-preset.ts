@@ -12,7 +12,10 @@ const config: Config = {
   // use correct path, for example, coverageDirectory
   rootDir: rwjsPaths.base,
   roots: [path.join(rwjsPaths.web.src)],
-  testEnvironment: path.join(__dirname, './RedwoodWebJestEnv.js'),
+  testEnvironment: path.join(
+    __dirname,
+    '../../../dist/cjs/config/jest/web/RedwoodWebJestEnv.js',
+  ),
   displayName: {
     color: 'blueBright',
     name: 'web',
@@ -38,7 +41,9 @@ const config: Config = {
     'jest-watch-typeahead/filename',
     'jest-watch-typeahead/testname',
   ],
-  setupFilesAfterEnv: [path.resolve(__dirname, './jest.setup.js')],
+  setupFilesAfterEnv: [
+    path.resolve(__dirname, '../../../dist/cjs/config/jest/web/jest.setup.js'),
+  ],
   moduleNameMapper: {
     /**
      * Make sure modules that require different versions of these
@@ -83,12 +88,18 @@ const config: Config = {
       // When jest runs tests in parallel, it serializes the config before passing down options to babel
       // that's why these must be serializable. Passing the reference to a config instead.
       {
-        configFile: path.resolve(__dirname, './webBabelConfig.js'),
+        configFile: path.resolve(
+          __dirname,
+          '../../../dist/cjs/config/jest/web/webBabelConfig.js',
+        ),
       },
     ],
   },
-  resolver: path.resolve(__dirname, './resolver.js'),
+  resolver: path.resolve(
+    __dirname,
+    '../../../dist/cjs/config/jest/web/resolver.js',
+  ),
   testPathIgnorePatterns: ['.(stories|mock).[jt]sx?$'],
 }
 
-module.exports = config
+export default config

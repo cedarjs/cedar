@@ -1,2 +1,2 @@
 // This is for backwards compatibility
-module.exports = require('./jest-preset')
+export { default } from './jest-preset.js'

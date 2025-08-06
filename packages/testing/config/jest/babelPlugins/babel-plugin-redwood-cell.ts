@@ -37,7 +37,7 @@ interface PluginState extends PluginPass {
   hasDefaultExport: boolean
 }
 
-module.exports = function ({
+export default function ({
   types,
 }: {
   types: typeof t

@@ -3,25 +3,31 @@
 import '@testing-library/jest-dom'
 import 'whatwg-fetch'
 
-const {
-  findCellMocks,
-} = require('@cedarjs/testing/dist/cjs/web/findCellMocks.js')
-const {
+import { findCellMocks } from '../../../src/web/findCellMocks.js'
+import {
   startMSW,
   setupRequestHandlers,
   closeServer,
   mockGraphQLMutation,
   mockGraphQLQuery,
   mockCurrentUser,
-} = require('@cedarjs/testing/dist/cjs/web/mockRequests.js')
+} from '../../../src/web/mockRequests.js'
 
 declare global {
   // eslint-disable-next-line no-var
-  var mockGraphQLQuery: any
+  var mockGraphQLQuery: (
+    operation: string,
+    data: Record<string, unknown>,
+    variables?: Record<string, unknown>,
+  ) => void
   // eslint-disable-next-line no-var
-  var mockGraphQLMutation: any
+  var mockGraphQLMutation: (
+    operation: string,
+    data: Record<string, unknown>,
+    variables?: Record<string, unknown>,
+  ) => void
   // eslint-disable-next-line no-var
-  var mockCurrentUser: (currentUser: any) => void
+  var mockCurrentUser: (currentUser: Record<string, unknown>) => void
   // eslint-disable-next-line no-var
   var __RWJS_TESTROOT_DIR: string
 }
@@ -38,7 +44,9 @@ beforeAll(async () => {
   for (const m of cellMocks) {
     // Keep in mind, its actually loading MSW mockGraphQLCall functions
     // see packages/internal/src/build/babelPlugins/babel-plugin-redwood-mock-cell-data.ts
-    require(m)
+    const { createRequire } = require('node:module')
+    const requireFn = createRequire(__filename)
+    requireFn(m)
   }
 
   await startMSW('node')

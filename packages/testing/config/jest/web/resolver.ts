@@ -8,7 +8,7 @@
 
 import type { ResolverOptions } from 'jest-resolve'
 
-module.exports = (path: string, options: ResolverOptions): string => {
+export default (path: string, options: ResolverOptions): string => {
   return options.defaultResolver(path, {
     ...options,
     packageFilter: (pkg: any) => {

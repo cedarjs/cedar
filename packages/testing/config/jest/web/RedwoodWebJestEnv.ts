@@ -1,3 +1,5 @@
+import { TextEncoder, TextDecoder } from 'node:util'
+
 import { TestEnvironment } from 'jest-environment-jsdom'
 
 // Due to issue: https://github.com/jsdom/jsdom/issues/2524
@@ -6,9 +8,8 @@ class RedwoodWebJestEnvironment extends TestEnvironment {
   async setup(): Promise<void> {
     await super.setup()
     if (typeof this.global.TextEncoder === 'undefined') {
-      const { TextEncoder, TextDecoder } = require('node:util')
       this.global.TextEncoder = TextEncoder
-      this.global.TextDecoder = TextDecoder
+      this.global.TextDecoder = TextDecoder as any
     }
     if (typeof this.global.crypto.subtle === 'undefined') {
       // @ts-expect-error - To make tests work with auth that use WebCrypto like auth0
@@ -17,4 +18,4 @@ class RedwoodWebJestEnvironment extends TestEnvironment {
   }
 }
 
-module.exports = RedwoodWebJestEnvironment
+export default RedwoodWebJestEnvironment
