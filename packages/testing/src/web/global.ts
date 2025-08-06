@@ -4,8 +4,10 @@ import type {
 } from './mockRequests.js'
 
 declare global {
-  const mockGraphQLQuery: typeof _mockGraphQLQuery
-  const mockGraphQLMutation: typeof _mockGraphQLMutation
+  // eslint-disable-next-line no-var
+  var mockGraphQLQuery: typeof _mockGraphQLQuery
+  // eslint-disable-next-line no-var
+  var mockGraphQLMutation: typeof _mockGraphQLMutation
   // @NOTE: not exposing mockCurrentUser here, because api side also has this functionality
   // We do this in the type generator
 }

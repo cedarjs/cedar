@@ -1,10 +1,11 @@
 import { getSchema } from '@prisma/internals'
 
 import { getPaths } from '@cedarjs/project-config'
+
 import {
   getDefaultDb,
   checkAndReplaceDirectUrl,
-} from '@cedarjs/testing/dist/cjs/api/directUrlHelpers'
+} from '../../../api/directUrlHelpers.js'
 
 const rwjsPaths = getPaths()
 

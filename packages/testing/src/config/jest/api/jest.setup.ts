@@ -1,16 +1,16 @@
 /* eslint-env jest */
-// @ts-check
 
 import fs from 'node:fs'
 
 // @NOTE without these imports in the setup file, mockCurrentUser
 // will remain undefined in the user's tests
-// Remember to use specific imports
-import { defineScenario } from '@cedarjs/testing/dist/cjs/api/scenario'
+import { defineScenario } from '../../../api/scenario.js'
 
-// @NOTE we do this because jest.setup.js runs every time in each context
-// while jest-preset runs once. This significantly reduces memory footprint, and testing time
-// The key is to reduce the amount of imports in this file, because the require.cache is not shared between each test context
+// @NOTE we do this because jest.setup.js runs every time in each context while
+// jest-preset runs once. This significantly reduces memory footprint, and
+// testing time
+// The key is to reduce the amount of imports in this file, because the
+// require.cache is not shared between each test context
 const { apiSrcPath, tearDownCachePath, dbSchemaPath } =
   global.__RWJS__TEST_IMPORTS
 
@@ -73,14 +73,14 @@ const isIdenticalArray = (a: any[], b: any[]): boolean => {
 }
 
 const configureTeardown = async (): Promise<void> => {
-  const { getDMMF, getSchema } = require('@prisma/internals')
+  const { getDMMF, getSchema } = await import('@prisma/internals')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
   const datamodel = await getSchema(dbSchemaPath)
   const schema = await getDMMF({ datamodel })
   const schemaModels: string[] = schema.datamodel.models.map(
-    (m: { dbName?: string; name: string }) => m.dbName || m.name,
+    (m: { dbName: string | null; name: string }) => m.dbName || m.name,
   )
 
   // check if pre-defined delete order already exists and if so, use it to start
@@ -100,7 +100,9 @@ const configureTeardown = async (): Promise<void> => {
 let quoteStyle: string
 // determine what kind of quotes are needed around table names in raw SQL
 const getQuoteStyle = async (): Promise<string> => {
-  const { getConfig: getPrismaConfig, getSchema } = require('@prisma/internals')
+  const { getConfig: getPrismaConfig, getSchema } = await import(
+    '@prisma/internals'
+  )
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
@@ -123,11 +125,9 @@ const getQuoteStyle = async (): Promise<string> => {
   return quoteStyle
 }
 
-const getProjectDb = () => {
-  // Use require for dynamic path resolution at runtime
-  const { createRequire } = require('node:module')
-  const requireFn = createRequire(__filename)
-  const { db } = requireFn(`${apiSrcPath}/lib/db`)
+const getProjectDb = async () => {
+  // Use dynamic import for runtime module resolution
+  const { db } = await import(`${apiSrcPath}/lib/db`)
   return db
 }
 
@@ -149,7 +149,7 @@ function buildScenario(itFunc: jest.It, testPath: string) {
     }
 
     return itFunc(testName, async () => {
-      const { scenario } = loadScenarios(testPath, scenarioName)
+      const { scenario } = await loadScenarios(testPath, scenarioName)
 
       const scenarioData = await seedScenario(scenario)
       try {
@@ -158,7 +158,7 @@ function buildScenario(itFunc: jest.It, testPath: string) {
         return result
       } finally {
         // Make sure to cleanup, even if test fails
-        if (wasDbUsed()) {
+        if (await wasDbUsed()) {
           await teardown()
         }
       }
@@ -190,12 +190,12 @@ function buildDescribeScenario(describeFunc: jest.Describe, testPath: string) {
     return describeFunc(describeBlockName, () => {
       let scenarioData: ScenarioData
       beforeAll(async () => {
-        const { scenario } = loadScenarios(testPath, scenarioName)
+        const { scenario } = await loadScenarios(testPath, scenarioName)
         scenarioData = await seedScenario(scenario)
       })
 
       afterAll(async () => {
-        if (wasDbUsed()) {
+        if (await wasDbUsed()) {
           await teardown()
         }
       })
@@ -219,7 +219,8 @@ const teardown = async (): Promise<void> => {
     }
 
     try {
-      await getProjectDb().$executeRawUnsafe(
+      const db = await getProjectDb()
+      await db.$executeRawUnsafe(
         `DELETE FROM ${quoteStyle}${modelName}${quoteStyle}`,
       )
     } catch (e: unknown) {
@@ -249,16 +250,14 @@ const seedScenario = async (
 ): Promise<ScenarioData> => {
   if (scenario) {
     const scenarios: ScenarioData = {}
+    const db = await getProjectDb()
     for (const [model, namedFixtures] of Object.entries(scenario)) {
       scenarios[model] = {}
       for (const [name, createArgs] of Object.entries(namedFixtures)) {
         if (typeof createArgs === 'function') {
-          scenarios[model][name] = await getProjectDb()[model].create(
-            createArgs(scenarios),
-          )
+          scenarios[model][name] = await db[model].create(createArgs(scenarios))
         } else {
-          scenarios[model][name] =
-            await getProjectDb()[model].create(createArgs)
+          scenarios[model][name] = await db[model].create(createArgs)
         }
       }
     }
@@ -285,14 +284,20 @@ global.describeScenario = buildDescribeScenario(
  * Just disconnecting db in jest-preset is not enough, because
  * the Prisma client is created in a different context.
  */
-const wasDbUsed = (): boolean => {
+const wasDbUsed = async (): Promise<boolean> => {
   try {
-    const { createRequire } = require('node:module')
-    const requireFn = createRequire(__filename)
-    const libDbPath = requireFn.resolve(`${apiSrcPath}/lib/db`)
-    return Object.keys(requireFn.cache).some((module) => {
-      return module === libDbPath
-    })
+    // Check if the db module has been imported by attempting to resolve it
+    const libDbPath = `${apiSrcPath}/lib/db`
+
+    // Try to access the module if it exists in the module cache
+    // Since we can't directly access require.cache with ES modules,
+    // we'll try a different approach by attempting to import and checking for errors
+    try {
+      await import(libDbPath)
+      return true
+    } catch {
+      return false
+    }
   } catch {
     // If db wasn't resolved, no point trying to perform db resets
     return false
@@ -313,25 +318,23 @@ beforeEach(() => {
 })
 
 beforeAll(async () => {
-  if (wasDbUsed()) {
+  if (await wasDbUsed()) {
     await configureTeardown()
   }
 })
 
 afterAll(async () => {
-  if (wasDbUsed()) {
-    const db = getProjectDb()
+  if (await wasDbUsed()) {
+    const db = await getProjectDb()
     db.$disconnect()
   }
 })
 
-function loadScenarios(
+async function loadScenarios(
   testPath: string,
   scenarioName: string,
-): { scenario: ScenarioDefinition | undefined } {
-  const path = require('node:path')
-  const { createRequire } = require('node:module')
-  const requireFn = createRequire(__filename)
+): Promise<{ scenario: ScenarioDefinition | undefined }> {
+  const path = await import('node:path')
 
   const testFileDir = path.parse(testPath)
   // e.g. ['comments', 'test'] or ['signup', 'state', 'machine', 'test']
@@ -343,7 +346,7 @@ function loadScenarios(
   let scenario: ScenarioDefinition | undefined
 
   try {
-    allScenarios = requireFn(testFilePath)
+    allScenarios = await import(testFilePath)
   } catch (e: unknown) {
     // ignore error if scenario file not found, otherwise re-throw
     if (isErrorWithCode(e) && e.code !== 'MODULE_NOT_FOUND') {

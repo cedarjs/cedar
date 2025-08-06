@@ -11,21 +11,21 @@
   "type": "module",
   "exports": {
     "./config/jest/web": {
-      "default": "./dist/cjs/config/jest/web/index.js"
+      "default": "./config/jest/web/index.js"
     },
     "./config/jest/api": {
-      "default": "./dist/cjs/config/jest/api/index.js"
+      "default": "./config/jest/api/index.js"
     },
     "./config/jest/api/jest-preset": {
-      "default": "./dist/cjs/config/jest/api/jest-preset.js"
+      "default": "./config/jest/api/jest-preset.js"
     },
     "./config/jest/web/jest-preset": {
-      "default": "./dist/cjs/config/jest/web/jest-preset.js"
+      "default": "./config/jest/web/jest-preset.js"
     },
-    "./dist/cjs/api/scenario": {
+    "./dist/cjs/api/scenario.js": {
       "default": "./dist/cjs/api/scenario.js"
     },
-    "./dist/cjs/api/directUrlHelpers": {
+    "./dist/cjs/api/directUrlHelpers.js": {
       "default": "./dist/cjs/api/directUrlHelpers.js"
     },
     "./dist/cjs/web/findCellMocks": {

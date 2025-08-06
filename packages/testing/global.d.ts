@@ -3,13 +3,12 @@ import type { Global as jest } from '@jest/types'
 type TestAPI = jest.It
 type SuiteAPI = jest.Describe
 
+import type { DefineScenario } from './src/api/scenario.ts'
 import type {
   mockGraphQLMutation as mockGqlMutation,
   mockGraphQLQuery as mockGqlQuery,
   mockCurrentUser as mockCurrUser,
-} from '@cedarjs/testing/dist/cjs/web/mockRequests'
-
-import type { DefineScenario } from './src/api/scenario.ts'
+} from './src/web/mockRequests.ts'
 
 declare global {
   var scenario: (

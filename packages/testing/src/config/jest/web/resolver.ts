@@ -23,7 +23,8 @@ function resolver(path: string, options: ResolverOptions) {
 }
 
 // Export using CommonJS compatible `export =` syntax for Jest compatibility
-// @ts-expect-error - `export =` is required for Jest compatibility despite ES
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - `export =` is required for Jest compatibility despite ES
 // module target
 export = resolver
 

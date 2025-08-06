@@ -2,7 +2,12 @@
 // with fixed module export
 
 import jestRunner from 'jest-runner'
-const TestRunner = jestRunner.default || jestRunner
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+const TestRunner: (typeof jestRunner)['default'] =
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  jestRunner.default || jestRunner
 
 class SerialRunner extends TestRunner {
   public isSerial: boolean
@@ -14,6 +19,7 @@ class SerialRunner extends TestRunner {
 }
 
 // Export using CommonJS compatible `export =` syntax for Jest compatibility
-// @ts-expect-error - `export =` is required for Jest compatibility despite ES
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore  - `export =` is required for Jest compatibility despite ES
 // module target
 export = SerialRunner
