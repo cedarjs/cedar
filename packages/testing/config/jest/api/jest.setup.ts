@@ -113,9 +113,8 @@ const getProjectDb = () => {
  * Wraps "it" or "test", to seed and teardown the scenario after each test
  * This one passes scenario data to the test function
  */
-const buildScenario =
-  (itFunc: jest.It, testPath: string) =>
-  (...args: any[]): void => {
+function buildScenario(itFunc: jest.It, testPath: string) {
+  const scenarioFunc = (...args: any[]) => {
     let scenarioName: string, testName: string, testFunc: ScenarioTestFunction
 
     if (args.length === 3) {
@@ -144,13 +143,15 @@ const buildScenario =
     })
   }
 
+  return Object.assign(scenarioFunc, { only: scenarioFunc })
+}
+
 /**
  * This creates a describe() block that will seed the scenario ONCE before all tests in the block
  * Note that you need to use the getScenario() function to get the data.
  */
-const buildDescribeScenario =
-  (describeFunc: jest.Describe, testPath: string) =>
-  (...args: any[]): void => {
+function buildDescribeScenario(describeFunc: jest.Describe, testPath: string) {
+  const describeScenarioFunc = (...args: any[]) => {
     let scenarioName: string,
       describeBlockName: string,
       describeBlock: (getScenario: () => ScenarioData) => void
@@ -183,6 +184,9 @@ const buildDescribeScenario =
     })
   }
 
+  return Object.assign(describeScenarioFunc, { only: describeScenarioFunc })
+}
+
 const teardown = async (): Promise<void> => {
   const quoteStyle = await getQuoteStyle()
 
@@ -197,11 +201,9 @@ const teardown = async (): Promise<void> => {
         `DELETE FROM ${quoteStyle}${modelName}${quoteStyle}`,
       )
     } catch (e: unknown) {
-      const message =
-        e && typeof e === 'object' && 'message' in e
-          ? (e.message as string)
-          : ''
+      const message = isErrorWithMessage(e) ? e.message : ''
       const match = message.match(/Code: `(\d+)`/)
+
       if (match && FOREIGN_KEY_ERRORS.includes(parseInt(match[1]))) {
         // Remove the model that failed and add it to the end
         teardownOrder.splice(i, 1)
@@ -244,19 +246,11 @@ const seedScenario = async (
   }
 }
 
-const scenarioFunction = buildScenario(global.it, global.testPath) as any
-scenarioFunction.only = buildScenario(global.it.only, global.testPath)
-global.scenario = scenarioFunction
-
-const describeScenarioFunction = buildDescribeScenario(
+global.scenario = buildScenario(global.it, global.testPath)
+global.describeScenario = buildDescribeScenario(
   global.describe,
   global.testPath,
-) as any
-describeScenarioFunction.only = buildDescribeScenario(
-  global.describe.only,
-  global.testPath,
 )
-global.describeScenario = describeScenarioFunction
 
 /**
  *
@@ -352,12 +346,7 @@ function loadScenarios(
     allScenarios = requireFn(testFilePath)
   } catch (e: unknown) {
     // ignore error if scenario file not found, otherwise re-throw
-    if (
-      e &&
-      typeof e === 'object' &&
-      'code' in e &&
-      e.code !== 'MODULE_NOT_FOUND'
-    ) {
+    if (isErrorWithCode(e) && e.code !== 'MODULE_NOT_FOUND') {
       throw new Error(`Failed to load scenario: ${e}`)
     }
     // If it's MODULE_NOT_FOUND, we ignore it
@@ -373,4 +362,22 @@ function loadScenarios(
     }
   }
   return { scenario }
+}
+
+function isErrorWithCode(error: unknown): error is { code: string } {
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    typeof error.code === 'string'
+  )
+}
+
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof error.message === 'string'
+  )
 }

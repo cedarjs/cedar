@@ -33,6 +33,10 @@ const EXPECTED_EXPORTS_FROM_CELL = [
 ] as const
 
 interface PluginState extends PluginPass {
+  // This array will collect exports from the Cell file during
+  // ExportNamedDeclaration
+  // - collected exports will then be passed to `createCell`
+  // - The array is reset every time we `enter` a new Program
   exportNames: string[]
   hasDefaultExport: boolean
 }
@@ -56,12 +60,14 @@ export default function ({
         }
 
         let name: string | undefined
+
         if (declaration.type === 'VariableDeclaration') {
           const id = declaration.declarations[0].id
           if (id.type === 'Identifier') {
             name = id.name
           }
         }
+
         if (declaration.type === 'FunctionDeclaration') {
           name = declaration?.id?.name
         }
@@ -71,7 +77,7 @@ export default function ({
         }
       },
       Program: {
-        enter(path, state) {
+        enter(_path, state) {
           // Reset variables as they're still in scope from the previous file
           // babel transformed in the same process
           state.exportNames = []

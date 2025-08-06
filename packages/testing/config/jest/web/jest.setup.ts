@@ -41,11 +41,12 @@ global.mockCurrentUser = mockCurrentUser
 const cellMocks = findCellMocks(global.__RWJS_TESTROOT_DIR)
 
 beforeAll(async () => {
+  const { createRequire } = require('node:module')
+  const requireFn = createRequire(__filename)
+
   for (const m of cellMocks) {
     // Keep in mind, its actually loading MSW mockGraphQLCall functions
     // see packages/internal/src/build/babelPlugins/babel-plugin-redwood-mock-cell-data.ts
-    const { createRequire } = require('node:module')
-    const requireFn = createRequire(__filename)
     requireFn(m)
   }
 
