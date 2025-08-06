@@ -32,6 +32,15 @@ const EXPECTED_EXPORTS_FROM_CELL = [
   'Empty',
 ] as const
 
+type ExpectedExport = (typeof EXPECTED_EXPORTS_FROM_CELL)[number]
+
+function isExpectedExport(name: string | undefined): name is ExpectedExport {
+  return (
+    name !== undefined &&
+    (EXPECTED_EXPORTS_FROM_CELL as readonly string[]).includes(name)
+  )
+}
+
 interface PluginState extends PluginPass {
   // This array will collect exports from the Cell file during
   // ExportNamedDeclaration
@@ -72,7 +81,7 @@ export default function ({
           name = declaration?.id?.name
         }
 
-        if (name && EXPECTED_EXPORTS_FROM_CELL.includes(name as any)) {
+        if (isExpectedExport(name)) {
           state.exportNames.push(name)
         }
       },
@@ -123,29 +132,35 @@ export default function ({
             ),
           )
 
+          const objectProperties = [
+            ...state.exportNames.map((name) =>
+              types.objectProperty(
+                types.identifier(name),
+                types.identifier(name),
+                false,
+                true,
+              ),
+            ),
+          ]
+
+          // Add the `displayName` property only if we have a filename
+          if (state.file.opts.filename) {
+            objectProperties.push(
+              types.objectProperty(
+                types.identifier('displayName'),
+                types.stringLiteral(parse(state.file.opts.filename).name),
+                false,
+                true,
+              ),
+            )
+          }
+
           // Insert at the bottom of the file:
           // + export default createCell({ QUERY?, Loading?, Success?, Failure?, Empty?, beforeQuery?, isEmpty, afterQuery?, displayName? })
           path.node.body.push(
             types.exportDefaultDeclaration(
               types.callExpression(types.identifier(createCellHookName), [
-                types.objectExpression([
-                  ...state.exportNames.map((name) =>
-                    types.objectProperty(
-                      types.identifier(name),
-                      types.identifier(name),
-                      false,
-                      true,
-                    ),
-                  ),
-                  // Add the `displayName` property so we can name the Cell
-                  // after the filename.
-                  types.objectProperty(
-                    types.identifier('displayName'),
-                    types.stringLiteral(parse(state.file.opts.filename!).name),
-                    false,
-                    true,
-                  ),
-                ]),
+                types.objectExpression(objectProperties),
               ]),
             ),
           )
