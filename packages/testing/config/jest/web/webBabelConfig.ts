@@ -1,4 +1,4 @@
-const { getWebSideDefaultBabelConfig } = require('@cedarjs/babel-config')
+import { getWebSideDefaultBabelConfig } from '@cedarjs/babel-config'
 
 const redwoodCellsPlugin = require('../babelPlugins/babel-plugin-redwood-cell')
 

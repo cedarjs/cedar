@@ -1,12 +1,13 @@
-const path = require('path')
+import path from 'node:path'
 
-const { getPaths } = require('@cedarjs/project-config')
+import type { Config } from 'jest'
+
+import { getPaths } from '@cedarjs/project-config'
 
 const rwjsPaths = getPaths()
 const NODE_MODULES_PATH = path.join(rwjsPaths.base, 'node_modules')
 
-/** @type {import('jest').Config} */
-module.exports = {
+const config: Config = {
   // To make sure other config option which depends on rootDir always
   // use correct path, for example, coverageDirectory
   rootDir: rwjsPaths.base,
@@ -89,3 +90,5 @@ module.exports = {
   resolver: path.resolve(__dirname, './resolver.js'),
   testPathIgnorePatterns: ['.(stories|mock).[jt]sx?$'],
 }
+
+module.exports = config

@@ -1,8 +1,8 @@
-const {
+import {
   getApiSideDefaultBabelConfig,
   getApiSideBabelPresets,
   getApiSideBabelPlugins,
-} = require('@cedarjs/babel-config')
+} from '@cedarjs/babel-config'
 
 // Since configFile and babelrc is already passed a level up, cleaning up these keys here.
 // babelrc can not reside inside "extend"ed
@@ -11,7 +11,7 @@ const { babelrc: _b, ...defaultBabelConfig } = getApiSideDefaultBabelConfig()
 
 module.exports = {
   ...defaultBabelConfig,
-  plugins: getApiSideBabelPlugins({ forJest: true }),
+  plugins: getApiSideBabelPlugins(),
   presets: getApiSideBabelPresets({
     presetEnv: true, // jest needs code transpiled
   }),

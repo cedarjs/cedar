@@ -1,17 +1,17 @@
-const { getSchema } = require('@prisma/internals')
+import { getSchema } from '@prisma/internals'
 
-const { getPaths } = require('@cedarjs/project-config')
+import { getPaths } from '@cedarjs/project-config'
 
-const {
+import {
   getDefaultDb,
   checkAndReplaceDirectUrl,
-} = require('../../../dist/api/directUrlHelpers')
+} from '../../../dist/api/directUrlHelpers.js'
 
 const rwjsPaths = getPaths()
 
-module.exports = async function () {
+module.exports = async function (): Promise<void> {
   if (process.env.SKIP_DB_PUSH !== '1') {
-    const process = require('process')
+    const process = require('node:process')
     // Load dotenvs
     require('dotenv-defaults/config')
 
@@ -33,14 +33,19 @@ module.exports = async function () {
         : ['prisma', 'db', 'push', '--force-reset', '--accept-data-loss']
 
     const execa = require('execa')
+    const env: Record<string, string | undefined> = {
+      DATABASE_URL: process.env.DATABASE_URL,
+    }
+
+    if (directUrlEnvVar) {
+      env[directUrlEnvVar] = process.env[directUrlEnvVar]
+    }
+
     execa.sync(`yarn rw`, command, {
       cwd: rwjsPaths.api.base,
       stdio: 'inherit',
       shell: true,
-      env: {
-        DATABASE_URL: process.env.DATABASE_URL,
-        [directUrlEnvVar]: process.env[directUrlEnvVar],
-      },
+      env,
     })
   }
 }

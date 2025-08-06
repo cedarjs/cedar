@@ -1,7 +1,7 @@
 /* eslint-env jest */
 
-require('@testing-library/jest-dom')
-require('whatwg-fetch')
+import '@testing-library/jest-dom'
+import 'whatwg-fetch'
 
 const {
   findCellMocks,
@@ -14,6 +14,17 @@ const {
   mockGraphQLQuery,
   mockCurrentUser,
 } = require('@cedarjs/testing/dist/cjs/web/mockRequests.js')
+
+declare global {
+  // eslint-disable-next-line no-var
+  var mockGraphQLQuery: any
+  // eslint-disable-next-line no-var
+  var mockGraphQLMutation: any
+  // eslint-disable-next-line no-var
+  var mockCurrentUser: (currentUser: any) => void
+  // eslint-disable-next-line no-var
+  var __RWJS_TESTROOT_DIR: string
+}
 
 global.mockGraphQLQuery = mockGraphQLQuery
 global.mockGraphQLMutation = mockGraphQLMutation
