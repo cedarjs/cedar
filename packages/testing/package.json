@@ -19,26 +19,8 @@
     "./config/jest/api/jest-preset": {
       "default": "./dist/cjs/config/jest/api/jest-preset.js"
     },
-    "./config/jest/api/jest-preset.js": {
-      "default": "./config/jest/api/jest-preset.js"
-    },
-    "./config/jest/api/jest-preset.json": {
-      "default": "./dist/cjs/config/jest/api/jest-preset.js"
-    },
     "./config/jest/web/jest-preset": {
       "default": "./dist/cjs/config/jest/web/jest-preset.js"
-    },
-    "./config/jest/web/jest-preset.js": {
-      "default": "./config/jest/web/jest-preset.js"
-    },
-    "./config/jest/web/jest-preset.json": {
-      "default": "./dist/cjs/config/jest/web/jest-preset.js"
-    },
-    "./jest-preset-web": {
-      "default": "./dist/cjs/config/jest/web/jest-preset.js"
-    },
-    "./jest-preset-api": {
-      "default": "./dist/cjs/config/jest/api/jest-preset.js"
     },
     "./dist/cjs/api/scenario": {
       "default": "./dist/cjs/api/scenario.js"
