@@ -11,15 +11,9 @@
   "type": "module",
   "exports": {
     "./config/jest/web": {
-      "default": "./dist/cjs/config/jest/web/jest-preset.js"
-    },
-    "./config/jest/web/index": {
       "default": "./dist/cjs/config/jest/web/index.js"
     },
     "./config/jest/api": {
-      "default": "./dist/cjs/config/jest/api/jest-preset.js"
-    },
-    "./config/jest/api/index": {
       "default": "./dist/cjs/config/jest/api/index.js"
     },
     "./config/jest/api/jest-preset": {
@@ -28,11 +22,29 @@
     "./config/jest/api/jest-preset.js": {
       "default": "./dist/cjs/config/jest/api/jest-preset.js"
     },
+    "./config/jest/api/jest-preset.json": {
+      "default": "./dist/cjs/config/jest/api/jest-preset.js"
+    },
     "./config/jest/web/jest-preset": {
       "default": "./dist/cjs/config/jest/web/jest-preset.js"
     },
     "./config/jest/web/jest-preset.js": {
       "default": "./dist/cjs/config/jest/web/jest-preset.js"
+    },
+    "./config/jest/web/jest-preset.json": {
+      "default": "./dist/cjs/config/jest/web/jest-preset.js"
+    },
+    "./jest-preset-web": {
+      "default": "./dist/cjs/config/jest/web/jest-preset.js"
+    },
+    "./jest-preset-api": {
+      "default": "./dist/cjs/config/jest/api/jest-preset.js"
+    },
+    "./preset-web": {
+      "default": "./config/jest/web/jest-preset.js"
+    },
+    "./preset-api": {
+      "default": "./config/jest/api/jest-preset.js"
     },
     "./dist/cjs/api/scenario": {
       "default": "./dist/cjs/api/scenario.js"

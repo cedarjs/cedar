@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import path from 'node:path'
 
 import { build, buildCjs, buildEsm } from '@cedarjs/framework-tools'
 import {
@@ -47,3 +48,30 @@ fs.writeFileSync(
   mockRequestsBuildPath,
   mockRequestsFile.replaceAll('await import', 'require'),
 )
+
+// Windows compatibility workaround for Jest preset resolution
+// Jest on Windows has issues with package exports and looks for physical jest-preset.js files
+// in the directory structure. We need to ensure these files exist at the paths Jest expects.
+
+const jestPresetPaths = [
+  {
+    src: './dist/cjs/config/jest/web/jest-preset.js',
+    dest: './config/jest/web/jest-preset.js',
+  },
+  {
+    src: './dist/cjs/config/jest/api/jest-preset.js',
+    dest: './config/jest/api/jest-preset.js',
+  },
+]
+
+// Copy jest-preset.js files to source config directories for Windows compatibility
+jestPresetPaths.forEach(({ src, dest }) => {
+  if (fs.existsSync(src)) {
+    const destDir = path.dirname(dest)
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true })
+    }
+    fs.copyFileSync(src, dest)
+    console.log(`Copied ${src} to ${dest} for Windows compatibility`)
+  }
+})
