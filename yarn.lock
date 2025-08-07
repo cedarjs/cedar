@@ -110,9 +110,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client-react-streaming@npm:0.12.2":
-  version: 0.12.2
-  resolution: "@apollo/client-react-streaming@npm:0.12.2"
+"@apollo/client-react-streaming@npm:0.12.3":
+  version: 0.12.3
+  resolution: "@apollo/client-react-streaming@npm:0.12.3"
   dependencies:
     "@types/react-dom": "npm:^19.0.0"
     "@wry/equality": "npm:^0.5.6"
@@ -122,13 +122,13 @@ __metadata:
     graphql: ^16 || >=17.0.0-alpha.2
     react: ^19
     react-dom: ^19
-  checksum: 10c0/6c9274962a22346378b87b9b236bfa1edadb970c9f6be628698d9b10c52f50415db9003f615386e7c08cd280b1a6d8896c840770342db74a0080e55f314a0cfb
+  checksum: 10c0/e3b6ee935ae70f16bda933def469987783a170984163e923590fae214034492b43d36c07d6a17eb7b43588618192a77dd954a3cac281c30ecbcb5390eb8bcff2
   languageName: node
   linkType: hard
 
-"@apollo/client@npm:3.13.8, @apollo/client@npm:^3.8.0":
-  version: 3.13.8
-  resolution: "@apollo/client@npm:3.13.8"
+"@apollo/client@npm:3.13.9, @apollo/client@npm:^3.8.0":
+  version: 3.13.9
+  resolution: "@apollo/client@npm:3.13.9"
   dependencies:
     "@graphql-typed-document-node/core": "npm:^3.1.1"
     "@wry/caches": "npm:^1.0.0"
@@ -158,7 +158,7 @@ __metadata:
       optional: true
     subscriptions-transport-ws:
       optional: true
-  checksum: 10c0/0e5032c1ae1dbef72a01f87af06b84bf505d60e71eba7cb9f20f8284778d8ead65fc1b7eacc570eccb8d045577d7194e38401fbfbdf56c197e159ca91ef11755
+  checksum: 10c0/aca33aa1d9971ae0814bd73912c993da83f69d53d9a5e7971e2b8364557821f0447276f507945b80365b1c4a6a541cd3602fa1343dc0d13769bc5a7d81a26461
   languageName: node
   linkType: hard
 
@@ -3706,8 +3706,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/web@workspace:packages/web"
   dependencies:
-    "@apollo/client": "npm:3.13.8"
-    "@apollo/client-react-streaming": "npm:0.12.2"
+    "@apollo/client": "npm:3.13.9"
+    "@apollo/client-react-streaming": "npm:0.12.3"
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/cli": "npm:7.27.2"
     "@babel/core": "npm:^7.26.10"

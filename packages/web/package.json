@@ -143,7 +143,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@apollo/client": "3.13.8",
+    "@apollo/client": "3.13.9",
     "@babel/runtime-corejs3": "7.27.6",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
@@ -160,7 +160,7 @@
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
-    "@apollo/client-react-streaming": "0.12.2",
+    "@apollo/client-react-streaming": "0.12.3",
     "@arethetypeswrong/cli": "0.18.2",
     "@babel/cli": "7.27.2",
     "@babel/core": "^7.26.10",
