@@ -397,9 +397,7 @@ async function runCommand() {
     step: 7,
     title: 'Apply web codemods',
     task: () => {
-      return webTasks(OUTPUT_PROJECT_PATH, {
-        linkWithLatestFwBuild: true,
-      })
+      return webTasks(OUTPUT_PROJECT_PATH)
     },
   })
 

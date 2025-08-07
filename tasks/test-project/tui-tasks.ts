@@ -591,8 +591,7 @@ export async function apiTasks(
 
   // add prerender to some routes
   const addPrerender = async () => {
-    /** @type import('./typing').TuiTaskList */
-    const tuiTaskList = [
+    const tuiTaskList: TuiTaskList = [
       {
         // We need to do this here, and not where we create the other pages, to
         // keep it outside of BlogLayout
