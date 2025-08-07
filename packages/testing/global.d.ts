@@ -3,12 +3,12 @@ import type { Global as jest } from '@jest/types'
 type TestAPI = jest.It
 type SuiteAPI = jest.Describe
 
+import type { DefineScenario } from './src/api/scenario.ts'
 import type {
   mockGraphQLMutation as mockGqlMutation,
   mockGraphQLQuery as mockGqlQuery,
-} from '@cedarjs/testing/src/web/mockRequests.js'
-
-import type { DefineScenario } from './src/api/scenario.ts'
+  mockCurrentUser as mockCurrUser,
+} from './src/web/mockRequests.ts'
 
 declare global {
   var scenario: (
@@ -30,7 +30,7 @@ declare global {
   var testPath: string
   var defineScenario: DefineScenario
 
-  // var mockCurrentUser: (currentUser: Record<string, unknown> | null) => void
+  var mockCurrentUser: typeof mockCurrUser
   var mockGraphQLMutation: typeof mockGqlMutation
   var mockGraphQLQuery: typeof mockGqlQuery
 

@@ -1,18 +1,24 @@
-const { TestEnvironment } = require('jest-environment-node')
+import type {
+  EnvironmentContext,
+  JestEnvironmentConfig,
+} from '@jest/environment'
+import { TestEnvironment } from 'jest-environment-node'
 
 class RedwoodApiJestEnvironment extends TestEnvironment {
-  constructor(config, context) {
+  private testPath: string
+
+  constructor(config: JestEnvironmentConfig, context: EnvironmentContext) {
     super(config, context)
     this.testPath = context.testPath
   }
 
-  async setup() {
+  async setup(): Promise<void> {
     await super.setup()
 
     this.global.testPath = this.testPath
   }
 
-  async teardown() {
+  async teardown(): Promise<void> {
     await super.teardown()
   }
 
@@ -28,4 +34,4 @@ class RedwoodApiJestEnvironment extends TestEnvironment {
   // }
 }
 
-module.exports = RedwoodApiJestEnvironment
+export default RedwoodApiJestEnvironment

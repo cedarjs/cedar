@@ -1,12 +1,12 @@
-const { getWebSideDefaultBabelConfig } = require('@cedarjs/babel-config')
+import { getWebSideDefaultBabelConfig } from '@cedarjs/babel-config'
 
-const redwoodCellsPlugin = require('../babelPlugins/babel-plugin-redwood-cell')
+import redwoodCellsPlugin from '../babelPlugins/babel-plugin-redwood-cell.js'
 
 const defaultWebSideBabelConfig = getWebSideDefaultBabelConfig({
   forJest: true,
 })
 
-module.exports = {
+export default {
   ...defaultWebSideBabelConfig,
   overrides: [
     ...defaultWebSideBabelConfig.overrides,

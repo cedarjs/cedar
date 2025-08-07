@@ -1,23 +1,28 @@
 /* eslint-env jest */
 
-require('@testing-library/jest-dom')
-require('whatwg-fetch')
+import '@testing-library/jest-dom'
+import 'whatwg-fetch'
 
-const {
-  findCellMocks,
-} = require('@cedarjs/testing/dist/cjs/web/findCellMocks.js')
-const {
+import { findCellMocks } from '../../../web/findCellMocks.js'
+import {
   startMSW,
   setupRequestHandlers,
   closeServer,
-  mockGraphQLMutation,
-  mockGraphQLQuery,
-  mockCurrentUser,
-} = require('@cedarjs/testing/dist/cjs/web/mockRequests.js')
+  mockGraphQLMutation as _mockGraphQLMutation,
+  mockGraphQLQuery as _mockGraphQLQuery,
+  mockCurrentUser as _mockCurrentUser,
+} from '../../../web/mockRequests.js'
 
-global.mockGraphQLQuery = mockGraphQLQuery
-global.mockGraphQLMutation = mockGraphQLMutation
-global.mockCurrentUser = mockCurrentUser
+declare global {
+  // eslint-disable-next-line no-var
+  var __RWJS_TESTROOT_DIR: string
+  // eslint-disable-next-line no-var
+  var mockCurrentUser: typeof _mockCurrentUser
+}
+
+global.mockGraphQLQuery = _mockGraphQLQuery
+global.mockGraphQLMutation = _mockGraphQLMutation
+global.mockCurrentUser = _mockCurrentUser
 
 // NOTE: for performance reasons, we're not using rwjs/internal here
 // This way we can make sure only the imports we require are loaded
@@ -27,7 +32,7 @@ beforeAll(async () => {
   for (const m of cellMocks) {
     // Keep in mind, its actually loading MSW mockGraphQLCall functions
     // see packages/internal/src/build/babelPlugins/babel-plugin-redwood-mock-cell-data.ts
-    require(m)
+    await import(m)
   }
 
   await startMSW('node')

@@ -530,7 +530,13 @@ async function runCommand() {
       // remove all .gitignore
       await rimraf(`${OUTPUT_PROJECT_PATH}/.redwood/**/*`, {
         glob: {
-          ignore: `${OUTPUT_PROJECT_PATH}/.redwood/README.md`,
+          ignore: [
+            `${OUTPUT_PROJECT_PATH}/.redwood/README.md`,
+            // This is needed to not have annoying TS errors in the __fixtures__
+            // test project folder
+            // See packages/internal/src/generate/typeDefinitions.ts
+            `${OUTPUT_PROJECT_PATH}/.redwood/types/includes/web-vite-client.d.ts`,
+          ],
         },
       })
       await rimraf(`${OUTPUT_PROJECT_PATH}/api/db/dev.db`)

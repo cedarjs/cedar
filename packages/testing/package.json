@@ -22,8 +22,11 @@
     "./config/jest/web/jest-preset": {
       "default": "./config/jest/web/jest-preset.js"
     },
-    "./dist/cjs/api/scenario": {
+    "./dist/cjs/api/scenario.js": {
       "default": "./dist/cjs/api/scenario.js"
+    },
+    "./dist/cjs/api/directUrlHelpers.js": {
+      "default": "./dist/cjs/api/directUrlHelpers.js"
     },
     "./dist/cjs/web/findCellMocks": {
       "default": "./dist/cjs/web/findCellMocks.js"
@@ -36,6 +39,9 @@
     },
     "./dist/cjs/web/mockRequests.js": {
       "default": "./dist/cjs/web/mockRequests.js"
+    },
+    "./dist/cjs/web/fileMock.js": {
+      "default": "./dist/cjs/web/fileMock.js"
     },
     "./auth": {
       "import": {

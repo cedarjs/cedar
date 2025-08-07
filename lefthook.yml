@@ -25,6 +25,7 @@ pre-commit:
       glob: '*.{js,ts,jsx,tsx,cjs,mjs}'
       exclude:
         - __fixtures__/*
+        - '**/__fixtures__/**'
         - '**/__snapshots__/**'
         - '**/templates/**/*.tsx'
 

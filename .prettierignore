@@ -1,5 +1,6 @@
 # Ignore built code
 **/dist
+packages/testing/config
 
 # Ignore fixture projects
 /__fixtures__

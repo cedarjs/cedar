@@ -493,6 +493,8 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
 
+            import test from './test.png'
+
             const DoublePage = () => {
               return (
                 <>
@@ -510,7 +512,19 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
                       #7757
                     </a>
                   </p>
-                  <p>It needs to be a page that is not wrapped in a Set</p>
+                  <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>
+                  <p>
+                    We also use this page to make sure we don&apos;t regress on{' '}
+                    <a
+                      href="https://github.com/cedarjs/cedar/issues/317"
+                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      #317
+                    </a>
+                  </p>
+                  <img src={test} alt="Test" />
                 </>
               )
             }
@@ -520,6 +534,12 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
           fs.writeFileSync(
             fullPath('web/src/pages/DoublePage/DoublePage'),
             doublePageContent,
+          )
+          fs.copyFileSync(
+            fullPath('web/public/favicon.png'),
+            fullPath('web/src/pages/DoublePage/test.png', {
+              addExtension: false,
+            }),
           )
         },
       },

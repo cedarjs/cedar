@@ -5,10 +5,13 @@
 // TL;DR, we need to resolve uuid to a CommonJS version. So we leverage jest's default resolver,
 // but use `packageFilter` to process parsed `package.json` before resolution. In doing so,
 // we only override how jest resolves uuid.
-module.exports = (path, options) => {
+
+import type { ResolverOptions } from 'jest-resolve'
+
+function resolver(path: string, options: ResolverOptions) {
   return options.defaultResolver(path, {
     ...options,
-    packageFilter: (pkg) => {
+    packageFilter: (pkg: any) => {
       if (OVERRIDE_EXPORTS_LIST.has(pkg.name)) {
         delete pkg['exports']
         delete pkg['module']
@@ -18,6 +21,12 @@ module.exports = (path, options) => {
     },
   })
 }
+
+// Export using CommonJS compatible `export =` syntax for Jest compatibility
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - `export =` is required for Jest compatibility despite ES
+// module target
+export = resolver
 
 const OVERRIDE_EXPORTS_LIST = new Set([
   '@firebase/analytics',

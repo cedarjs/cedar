@@ -1,15 +1,15 @@
-// @ts-check
-const path = require('path')
+import path from 'node:path'
 
-const { getApiSideDefaultBabelConfig } = require('@cedarjs/babel-config')
-const { getPaths } = require('@cedarjs/project-config')
+import type { Config } from 'jest'
+
+import { getApiSideDefaultBabelConfig } from '@cedarjs/babel-config'
+import { getPaths } from '@cedarjs/project-config'
 
 const rwjsPaths = getPaths()
 const NODE_MODULES_PATH = path.join(rwjsPaths.base, 'node_modules')
 const { babelrc } = getApiSideDefaultBabelConfig()
 
-/** @type {import('jest').Config} */
-module.exports = {
+const config: Config = {
   // To make sure other config option which depends on rootDir use
   // correct path, for example, coverageDirectory
   rootDir: rwjsPaths.base,
@@ -67,3 +67,5 @@ module.exports = {
   },
   testPathIgnorePatterns: ['.scenarios.[jt]s$'],
 }
+
+export default config

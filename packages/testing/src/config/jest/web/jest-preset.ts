@@ -1,12 +1,13 @@
-const path = require('path')
+import path from 'node:path'
 
-const { getPaths } = require('@cedarjs/project-config')
+import type { Config } from 'jest'
+
+import { getPaths } from '@cedarjs/project-config'
 
 const rwjsPaths = getPaths()
 const NODE_MODULES_PATH = path.join(rwjsPaths.base, 'node_modules')
 
-/** @type {import('jest').Config} */
-module.exports = {
+const config: Config = {
   // To make sure other config option which depends on rootDir always
   // use correct path, for example, coverageDirectory
   rootDir: rwjsPaths.base,
@@ -72,7 +73,7 @@ module.exports = {
      * Mock out files that aren't particularly useful in tests. See fileMock.js for more info.
      */
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga|css)$':
-      '@cedarjs/testing/dist/web/fileMock.js',
+      '@cedarjs/testing/dist/cjs/web/fileMock.js',
     // Support for importing files with extensions (like you'd do in ESM projects)
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
@@ -89,3 +90,5 @@ module.exports = {
   resolver: path.resolve(__dirname, './resolver.js'),
   testPathIgnorePatterns: ['.(stories|mock).[jt]sx?$'],
 }
+
+export default config
