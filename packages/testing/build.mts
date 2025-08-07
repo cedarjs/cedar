@@ -34,20 +34,6 @@ await insertCommonJsPackageJson({
   buildFileUrl: import.meta.url,
 })
 
-// ./src/web/mockRequests.js contains `... = await import('msw/node'`. When
-// building for CJS esbuild correctly preserves the `await import` statement
-// because it's valid in both CJS and ESM (whereas regular imports are only
-// valid in ESM).
-// The problem is that this file will be consumed by Jest, and jest doesn't
-// support that syntax. They only support `require()`.
-// That's why we have to do manual editing of built files here
-const mockRequestsBuildPath = './dist/cjs/web/mockRequests.js'
-const mockRequestsFile = fs.readFileSync(mockRequestsBuildPath, 'utf-8')
-fs.writeFileSync(
-  mockRequestsBuildPath,
-  mockRequestsFile.replaceAll('await import', 'require'),
-)
-
 fs.rmSync('./config', { recursive: true, force: true })
 fs.mkdirSync('./config')
 fs.cpSync('./dist/cjs/config', './config', { recursive: true })
@@ -74,3 +60,38 @@ function replaceImportsInFile(filePath: string) {
 replaceImportsInFile('./config/jest/api/globalSetup.js')
 replaceImportsInFile('./config/jest/api/jest.setup.js')
 replaceImportsInFile('./config/jest/web/jest.setup.js')
+
+// ./src/web/mockRequests.js contains `... = await import('msw/node'`. When
+// building for CJS esbuild correctly preserves the `await import` statement
+// because it's valid in both CJS and ESM (whereas regular imports are only
+// valid in ESM).
+// The problem is that this file will be consumed by Jest, and jest doesn't
+// support that syntax. They only support `require()`.
+// That's why we have to do manual editing of built files here
+const mockRequestsBuildPath = './dist/cjs/web/mockRequests.js'
+const mockRequestsFile = fs.readFileSync(mockRequestsBuildPath, 'utf-8')
+fs.writeFileSync(
+  mockRequestsBuildPath,
+  mockRequestsFile.replaceAll('await import', 'require'),
+)
+
+// Similar to above, here are more files with `await import` that I need to
+// update to use `require` instead
+const configJestApiGlobalSetupPath = './config/jest/api/globalSetup.js'
+const globalSetupFile = fs.readFileSync(configJestApiGlobalSetupPath, 'utf-8')
+fs.writeFileSync(
+  configJestApiGlobalSetupPath,
+  globalSetupFile.replaceAll('await import', 'require'),
+)
+const configJestApiJestSetupPath = './config/jest/api/jest.setup.js'
+const apiJestSetupFile = fs.readFileSync(configJestApiJestSetupPath, 'utf-8')
+fs.writeFileSync(
+  configJestApiJestSetupPath,
+  apiJestSetupFile.replaceAll('await import', 'require'),
+)
+const configJestWebJestSetupPath = './config/jest/web/jest.setup.js'
+const webJestSetupFile = fs.readFileSync(configJestWebJestSetupPath, 'utf-8')
+fs.writeFileSync(
+  configJestWebJestSetupPath,
+  webJestSetupFile.replaceAll('await import', 'require'),
+)

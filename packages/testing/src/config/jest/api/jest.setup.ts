@@ -1,6 +1,7 @@
 /* eslint-env jest */
 
 import fs from 'node:fs'
+import path from 'node:path'
 
 // @NOTE without these imports in the setup file, mockCurrentUser
 // will remain undefined in the user's tests
@@ -158,7 +159,7 @@ function buildScenario(itFunc: jest.It, testPath: string) {
         return result
       } finally {
         // Make sure to cleanup, even if test fails
-        if (await wasDbUsed()) {
+        if (wasDbUsed()) {
           await teardown()
         }
       }
@@ -195,7 +196,7 @@ function buildDescribeScenario(describeFunc: jest.Describe, testPath: string) {
       })
 
       afterAll(async () => {
-        if (await wasDbUsed()) {
+        if (wasDbUsed()) {
           await teardown()
         }
       })
@@ -274,7 +275,6 @@ global.describeScenario = buildDescribeScenario(
 )
 
 /**
- *
  * All these hooks run in the VM/Context that the test runs in since we're using "setupAfterEnv".
  * There's a new context for each test-suite i.e. each test file
  *
@@ -284,20 +284,12 @@ global.describeScenario = buildDescribeScenario(
  * Just disconnecting db in jest-preset is not enough, because
  * the Prisma client is created in a different context.
  */
-const wasDbUsed = async (): Promise<boolean> => {
+const wasDbUsed = () => {
   try {
-    // Check if the db module has been imported by attempting to resolve it
-    const libDbPath = `${apiSrcPath}/lib/db`
-
-    // Try to access the module if it exists in the module cache
-    // Since we can't directly access require.cache with ES modules,
-    // we'll try a different approach by attempting to import and checking for errors
-    try {
-      await import(libDbPath)
-      return true
-    } catch {
-      return false
-    }
+    const libDbPath = require.resolve(`${apiSrcPath}/lib/db`)
+    return Object.keys(require.cache).some((module) => {
+      return module === libDbPath
+    })
   } catch {
     // If db wasn't resolved, no point trying to perform db resets
     return false
@@ -318,13 +310,13 @@ beforeEach(() => {
 })
 
 beforeAll(async () => {
-  if (await wasDbUsed()) {
+  if (wasDbUsed()) {
     await configureTeardown()
   }
 })
 
 afterAll(async () => {
-  if (await wasDbUsed()) {
+  if (wasDbUsed()) {
     const db = await getProjectDb()
     db.$disconnect()
   }
@@ -334,8 +326,6 @@ async function loadScenarios(
   testPath: string,
   scenarioName: string,
 ): Promise<{ scenario: ScenarioDefinition | undefined }> {
-  const path = await import('node:path')
-
   const testFileDir = path.parse(testPath)
   // e.g. ['comments', 'test'] or ['signup', 'state', 'machine', 'test']
   const testFileNameParts = testFileDir.name.split('.')
