@@ -77,12 +77,6 @@ fs.writeFileSync(
 
 // Similar to above, here are more files with `await import` that I need to
 // update to use `require` instead
-const configJestApiGlobalSetupPath = './config/jest/api/globalSetup.js'
-const globalSetupFile = fs.readFileSync(configJestApiGlobalSetupPath, 'utf-8')
-fs.writeFileSync(
-  configJestApiGlobalSetupPath,
-  globalSetupFile.replaceAll('await import', 'require'),
-)
 const configJestApiJestSetupPath = './config/jest/api/jest.setup.js'
 const apiJestSetupFile = fs.readFileSync(configJestApiJestSetupPath, 'utf-8')
 fs.writeFileSync(
