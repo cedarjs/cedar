@@ -379,6 +379,7 @@ export const generateTypeDefGlobImports = () => {
 export const generateTypeDefGlobalContext = () => {
   return writeTypeDefIncludeFile('api-globalContext.d.ts.template')
 }
+
 /**
  * Typescript does not preserve triple slash directives when outputting js or d.ts files.
  * This is a work around so that *.svg, *.png, etc. imports have types.

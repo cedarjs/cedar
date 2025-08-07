@@ -591,8 +591,7 @@ export async function apiTasks(
 
   // add prerender to some routes
   const addPrerender = async () => {
-    /** @type import('./typing').TuiTaskList */
-    const tuiTaskList = [
+    const tuiTaskList: TuiTaskList = [
       {
         // We need to do this here, and not where we create the other pages, to
         // keep it outside of BlogLayout
@@ -602,6 +601,7 @@ export async function apiTasks(
           await createPage('double')
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
+
 import test from './test.png'
 
 const DoublePage = () => {
@@ -623,7 +623,7 @@ const DoublePage = () => {
       </p>
       <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>
       <p>
-        We also use this page to make sure we don't regress on{' '}
+        We also use this page to make sure we don&apos;t regress on{' '}
         <a
           href="https://github.com/cedarjs/cedar/issues/317"
           className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
@@ -643,6 +643,12 @@ export default DoublePage`
           fs.writeFileSync(
             fullPath('web/src/pages/DoublePage/DoublePage'),
             doublePageContent,
+          )
+          fs.copyFileSync(
+            fullPath('web/public/favicon.png', { addExtension: false }),
+            fullPath('web/src/pages/DoublePage/test.png', {
+              addExtension: false,
+            }),
           )
         },
       },
@@ -683,17 +689,17 @@ export default DoublePage`
 
           const blogPostRouteHooks = `import { db } from '$api/src/lib/db.js'
 
-      export async function routeParameters() {
-        return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
-      }
-      `.replaceAll(/ {6}/g, '')
+            export async function routeParameters() {
+              return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
+            }
+            `.replaceAll(/ {6}/g, '')
           const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
           fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
 
           const waterfallRouteHooks = `export async function routeParameters() {
-        return [{ id: 2 }]
-      }
-      `.replaceAll(/ {6}/g, '')
+              return [{ id: 2 }]
+            }
+            `.replaceAll(/ {6}/g, '')
           const waterfallRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
           fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
         },
