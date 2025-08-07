@@ -493,33 +493,53 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
 
-const DoublePage = () => {
-  return (
-    <>
-      <Metadata title="Double" description="Double page" og />
+            import test from './test.png'
 
-      <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
-      <p>
-        This page exists to make sure we don&apos;t regress on{' '}
-        <a
-          href="https://github.com/redwoodjs/redwood/issues/7757"
-          className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
-          target="_blank"
-          rel="noreferrer"
-        >
-          #7757
-        </a>
-      </p>
-      <p>It needs to be a page that is not wrapped in a Set</p>
-    </>
-  )
-}
+            const DoublePage = () => {
+              return (
+                <>
+                  <Metadata title="Double" description="Double page" og />
 
-export default DoublePage`
+                  <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
+                  <p>
+                    This page exists to make sure we don&apos;t regress on{' '}
+                    <a
+                      href="https://github.com/redwoodjs/redwood/issues/7757"
+                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      #7757
+                    </a>
+                  </p>
+                  <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>
+                  <p>
+                    We also use this page to make sure we don&apos;t regress on{' '}
+                    <a
+                      href="https://github.com/cedarjs/cedar/issues/317"
+                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      #317
+                    </a>
+                  </p>
+                  <img src={test} alt="Test" />
+                </>
+              )
+            }
+
+            export default DoublePage`
 
           fs.writeFileSync(
             fullPath('web/src/pages/DoublePage/DoublePage'),
             doublePageContent,
+          )
+          fs.copyFileSync(
+            fullPath('web/public/favicon.png'),
+            fullPath('web/src/pages/DoublePage/test.png', {
+              addExtension: false,
+            }),
           )
         },
       },
@@ -560,17 +580,15 @@ export default DoublePage`
 
           const blogPostRouteHooks = `import { db } from '$api/src/lib/db.js'
 
-      export async function routeParameters() {
-        return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
-      }
-      `.replaceAll(/ {6}/g, '')
+            export async function routeParameters() {
+              return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
+            }`
           const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
           fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
 
           const waterfallRouteHooks = `export async function routeParameters() {
-        return [{ id: 2 }]
-      }
-      `.replaceAll(/ {6}/g, '')
+              return [{ id: 2 }]
+            }`
           const waterfallRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
           fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
         },
