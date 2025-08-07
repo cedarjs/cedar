@@ -11,7 +11,6 @@ import type { DocumentNode } from 'graphql'
 import type { A, L, O, U } from 'ts-toolbelt'
 
 /**
- *
  * If the Cell has a `beforeQuery` function, then the variables are not required,
  * but instead the arguments of the `beforeQuery` function are required.
  *
@@ -20,7 +19,6 @@ import type { A, L, O, U } from 'ts-toolbelt'
  * Note that a query that doesn't take any variables is defined as {[x: string]: never}
  * The ternary at the end makes sure we don't include it, otherwise it won't allow merging any
  * other custom props from the Success component.
- *
  */
 type CellPropsVariables<Cell, GQLVariables> = Cell extends {
   beforeQuery: (...args: any[]) => any
@@ -31,10 +29,10 @@ type CellPropsVariables<Cell, GQLVariables> = Cell extends {
   : GQLVariables extends Record<string, never>
     ? unknown
     : GQLVariables
+
 /**
  * Cell component props which is the combination of query variables and Success props.
  */
-
 export type CellProps<
   CellSuccess extends keyof JSX.IntrinsicElements | JSXElementConstructor<any>,
   GQLResult,
@@ -91,9 +89,11 @@ type ConditionallyGuaranteed<T extends object> =
   KeyCount<T> extends 1 ? Guaranteed<T> : T
 
 /**
- * @params TData = Type of data based on your graphql query. This can be imported from 'types/graphql'
+ * @param TData - Type of data based on your graphql query. This can be imported
+ * from 'types/graphql.js'
+ *
  * @example
- * import type { FindPosts } from 'types/graphql'
+ * import type { FindPosts } from 'types/graphql.js'
  *
  * const { post }: CellSuccessData<FindPosts> = props
  */
@@ -132,10 +132,10 @@ export type CellSuccessProps<
  * ```
  */
 export type DataObject = { [key: string]: unknown }
+
 /**
  * The main interface.
  */
-
 export interface CreateCellProps<CellProps, CellVariables> {
   /**
    * The GraphQL syntax tree to execute or function to call that returns it.

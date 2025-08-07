@@ -131,7 +131,7 @@ export const QUERY = gql`
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/BlogPostsCell/BlogPostsCell.tsx"
-import type { BlogPostsQuery, BlogPostsQueryVariables } from 'types/graphql'
+import type { BlogPostsQuery, BlogPostsQueryVariables } from 'types/graphql.js'
 
 import type { TypedDocumentNode } from '@cedarjs/web'
 

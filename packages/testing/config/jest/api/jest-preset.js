@@ -49,6 +49,8 @@ module.exports = {
     // @NOTE: Import @cedarjs/testing in api tests, and it automatically remaps to the api side only
     // This is to prevent web stuff leaking into api, and vice versa
     '^@cedarjs/testing$': path.join(NODE_MODULES_PATH, '@cedarjs/testing/api'),
+    // Support for importing files with extensions (like you'd do in ESM projects)
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
     '\\.[jt]sx?$': [

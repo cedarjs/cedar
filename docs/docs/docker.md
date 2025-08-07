@@ -164,7 +164,7 @@ Enabling CI enables [immutable installs](https://v3.yarnpkg.com/configuration/ya
 
 ```Dockerfile
 COPY --chown=node:node redwood.toml .
-COPY --chown=node:node graphql.config.js .
+COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 ```
 
@@ -246,7 +246,7 @@ The cache mount will be populated at this point from the install in the `base` s
 
 ```Dockerfile
 COPY --chown=node:node redwood.toml .
-COPY --chown=node:node graphql.config.js .
+COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
 COPY --chown=node:node --from=api_build /home/node/app/api/dist /home/node/app/api/dist
@@ -344,7 +344,7 @@ RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000 \
     CI=1 yarn workspaces focus web --production
 
 COPY --chown=node:node redwood.toml .
-COPY --chown=node:node graphql.config.js .
+COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
 COPY --chown=node:node --from=web_build /home/node/app/web/dist /home/node/app/web/dist

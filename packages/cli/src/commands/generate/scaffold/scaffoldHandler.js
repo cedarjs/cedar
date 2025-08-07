@@ -134,7 +134,9 @@ const getTemplateStrings = (name, scaffoldPath, nestScaffoldByModel = true) => {
 // already set, returns true. Otherwise just returns `flag`
 export const shouldUseTailwindCSS = (flag) => {
   if (flag === undefined) {
-    return fs.existsSync(path.join(getPaths().web.config, 'tailwind.config.js'))
+    return fs.existsSync(
+      path.join(getPaths().web.config, 'tailwind.config.cjs'),
+    )
   } else {
     return flag
   }

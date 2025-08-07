@@ -2,7 +2,7 @@ ${useClientDirective}import type {
   Create${singularPascalName}Mutation,
   Create${singularPascalName}Input,
   Create${singularPascalName}MutationVariables
-} from 'types/graphql'
+} from 'types/graphql.js'
 
 import { navigate, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'

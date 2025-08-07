@@ -11,7 +11,7 @@ import { getConfig } from '@cedarjs/project-config'
  * import { RedwoodApolloProvider } from "@cedarjs/web/dist/apollo/suspense"
  */
 export function cedarSwapApolloProvider(): Plugin | undefined {
-  const streamingEnabled = getConfig().experimental.streamingSsr.enabled
+  const streamingEnabled = getConfig().experimental?.streamingSsr?.enabled
 
   if (!streamingEnabled) {
     return undefined

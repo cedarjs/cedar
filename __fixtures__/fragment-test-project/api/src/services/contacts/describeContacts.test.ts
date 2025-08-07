@@ -1,7 +1,7 @@
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
-import { contact, contacts, createContact } from './contacts'
-import type { StandardScenario } from './contacts.scenarios'
+import { contact, contacts, createContact } from './contacts.js'
+import type { StandardScenario } from './contacts.scenarios.js'
 
 /**
  * Example test for describe scenario.

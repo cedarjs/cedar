@@ -1,14 +1,10 @@
-import { createServer, version as viteVersion } from 'vite'
-import type { ViteDevServer } from 'vite'
+import { createServer, version as viteVersion, mergeConfig } from 'vite'
+import type { ViteDevServer, UserConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 
-import {
-  getPaths,
-  importStatementPath,
-  projectIsEsm,
-} from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/project-config'
 import {
   cedarCellTransform,
   cedarjsDirectoryNamedImportPlugin,
@@ -19,8 +15,8 @@ import {
 import { autoImportsPlugin } from './vite-plugin-auto-import.js'
 import { cedarImportDirPlugin } from './vite-plugin-cedar-import-dir.js'
 
-async function createViteServer() {
-  const server = await createServer({
+async function createViteServer(customConfig: UserConfig = {}) {
+  const defaultConfig: UserConfig = {
     mode: 'production',
     optimizeDeps: {
       // This is recommended in the vite-node readme
@@ -30,58 +26,24 @@ async function createViteServer() {
     resolve: {
       alias: [
         {
-          find: /^\$api\//,
-          replacement: getPaths().api.base + '/',
-        },
-        {
-          find: /^\$web\//,
-          replacement: getPaths().web.base + '/',
-        },
-        {
-          find: /^api\//,
-          replacement: getPaths().api.base + '/',
-        },
-        {
-          find: /^web\//,
-          replacement: getPaths().web.base + '/',
-        },
-        {
-          find: /^src\//,
-          replacement: 'src/',
-          customResolver: (id, importer, _options) => {
-            const apiImportBase = importStatementPath(getPaths().api.base)
-            const webImportBase = importStatementPath(getPaths().web.base)
-
-            let resolved: { id: string } | null = null
-
-            // When importing a file from the api directory (using api/src/...
-            // in the script), that file in turn might import another file using
-            // just src/... That's a problem for Vite when it's running a file
-            // from scripts/ because it doesn't know what the src/ alias is.
-            // So we have to tell it to use the correct path based on what file
-            // is doing the importing.
-            if (importer?.startsWith(apiImportBase)) {
-              const apiImportSrc = importStatementPath(getPaths().api.src)
-              resolved = { id: id.replace('src', apiImportSrc) }
-            } else if (importer?.startsWith(webImportBase)) {
-              const webImportSrc = importStatementPath(getPaths().web.src)
-              resolved = { id: id.replace('src', webImportSrc) }
-            }
-
-            return resolved
-          },
+          find: /^src\/(.*?)(\.([jt]sx?))?$/,
+          replacement: getPaths().api.src + '/$1',
         },
       ],
     },
     plugins: [
-      cedarImportDirPlugin({ projectIsEsm: projectIsEsm() }),
+      cedarImportDirPlugin(),
       autoImportsPlugin(),
       cedarjsDirectoryNamedImportPlugin(),
       cedarCellTransform(),
       cedarjsJobPathInjectorPlugin(),
       cedarSwapApolloProvider(),
     ],
-  })
+  }
+
+  const mergedConfig = mergeConfig(defaultConfig, customConfig)
+
+  const server = await createServer(mergedConfig)
 
   // For old Vite, this is needed to initialize the plugins.
   if (Number(viteVersion.split('.')[0]) < 6) {
@@ -94,9 +56,14 @@ async function createViteServer() {
 export class NodeRunner {
   private viteServer?: ViteDevServer = undefined
   private runner?: ViteNodeRunner = undefined
+  private readonly customViteConfig: UserConfig
+
+  constructor(customViteConfig: UserConfig = {}) {
+    this.customViteConfig = customViteConfig
+  }
 
   async init() {
-    this.viteServer = await createViteServer()
+    this.viteServer = await createViteServer(this.customViteConfig)
     const nodeServer = new ViteNodeServer(this.viteServer, {
       transformMode: {
         ssr: [/.*/],

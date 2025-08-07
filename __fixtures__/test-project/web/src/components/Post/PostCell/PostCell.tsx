@@ -1,4 +1,4 @@
-import type { FindPostById, FindPostByIdVariables } from 'types/graphql'
+import type { FindPostById, FindPostByIdVariables } from 'types/graphql.js'
 
 import type {
   CellSuccessProps,

@@ -27,7 +27,7 @@ Not only does `CellSuccessProps` type the data returned from the query, but it a
 import type {
   FindBlogPostQuery,
   FindBlogPostQueryVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
 // highlight-next-line
 import type { CellSuccessProps } from '@cedarjs/web'
@@ -55,7 +55,10 @@ This gives you the types of the props in your Cell's `Failure` component.
 It takes `TVariables` as an optional generic parameter, which is useful if you want to print error messages like `"Couldn't load data for ${variables.searchTerm}"`:
 
 ```ts title="web/src/components/BlogPostCell.tsx"
-import type { FindBlogPostQuery, FindBlogPostQueryVariables } from 'types/graphql'
+import type {
+  FindBlogPostQuery,
+  FindBlogPostQueryVariables
+} from 'types/graphql.js'
 
 // highlight-next-line
 import type { CellFailureProps } from '@cedarjs/web'
@@ -76,7 +79,10 @@ export const Failure = ({
 Similar to `CellFailureProps`, but for the props of your Cell's `Loading` component:
 
 ```ts title="web/src/components/BlogPostCell.tsx"
-import type { FindBlogPostQuery, FindBlogPostQueryVariables } from 'types/graphql'
+import type {
+  FindBlogPostQuery,
+  FindBlogPostQueryVariables
+} from 'types/graphql.js'
 
 // highlight-next-line
 import type { CellLoadingProps } from '@cedarjs/web'
@@ -152,7 +158,7 @@ export type StandardScenario = ScenarioData<Post, 'post'>
 ```
 
 ```ts title="api/src/services/posts/posts.test.ts"
-import type { StandardScenario } from './posts.scenarios'
+import type { StandardScenario } from './posts.scenarios.js'
 
 scenario('returns a single post', async (scenario: StandardScenario) => {
   const result = await post({ id: scenario.post.one.id })

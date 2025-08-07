@@ -13,7 +13,7 @@ import BlogLayout from 'src/layouts/BlogLayout'
 import ScaffoldLayout from 'src/layouts/ScaffoldLayout'
 import HomePage from 'src/pages/HomePage'
 
-import { useAuth } from './auth'
+import { useAuth } from './auth.js'
 
 const Routes = () => {
   return (

@@ -2,14 +2,14 @@ import type {
   DeletePostMutation,
   DeletePostMutationVariables,
   FindPostById,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
 import { Link, routes, navigate } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
 import type { TypedDocumentNode } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
-import { timeTag } from 'src/lib/formatters'
+import { timeTag } from 'src/lib/formatters.js'
 
 const DELETE_POST_MUTATION: TypedDocumentNode<
   DeletePostMutation,

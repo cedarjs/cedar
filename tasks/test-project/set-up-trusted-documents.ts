@@ -53,7 +53,7 @@ async function runCommand() {
     'api/src/functions/graphql.ts',
   )
   const graphqlHandlerContent = fs.readFileSync(graphqlHandlerPath, 'utf-8')
-  const storeImport = "import { store } from 'src/lib/trustedDocumentsStore'"
+  const storeImport = "import { store } from 'src/lib/trustedDocumentsStore.js'"
 
   if (!graphqlHandlerContent.includes(storeImport)) {
     console.error(

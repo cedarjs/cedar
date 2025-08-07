@@ -40,8 +40,8 @@ import { writeTemplate } from './templates.js'
 // file.
 
 /**
- * Generate all the types for a RedwoodJS project
- * and return the generated path to files, so they're logged
+ * Generate all the types for a CedarJS project and return the generated path to
+ * files, so they're logged
  */
 export const generateTypeDefs = async () => {
   // Return all the paths so they can be printed

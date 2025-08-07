@@ -1,7 +1,13 @@
 import type { Stall } from '@prisma/client'
 
-import { stalls, stall, createStall, updateStall, deleteStall } from './stalls'
-import type { StandardScenario } from './stalls.scenarios'
+import {
+  stalls,
+  stall,
+  createStall,
+  updateStall,
+  deleteStall,
+} from './stalls.js'
+import type { StandardScenario } from './stalls.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.

@@ -6,8 +6,11 @@ import babelTraverse from '@babel/traverse'
 import type * as t from '@babel/types'
 import type { Plugin } from 'vite'
 
-const traverse = babelTraverse.default
-const generate = babelGenerator.default
+// This plugin is used both by prerender (ESM) and vite (CJS in current Cedar
+// apps), that's why we need to do this
+const traverse = babelTraverse.default || babelTraverse
+const generate = babelGenerator.default || babelGenerator
+
 // A cell can export the declarations below.
 const EXPECTED_EXPORTS_FROM_CELL = [
   'beforeQuery',

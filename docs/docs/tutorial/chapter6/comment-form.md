@@ -224,7 +224,7 @@ export default CommentForm
 import type {
   CreateCommentMutation,
   CreateCommentMutationVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 // highlight-end
 
 import {
@@ -371,7 +371,7 @@ import CommentForm from './CommentForm'
 import type {
   CreateCommentMutation,
   CreateCommentMutationVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 // highlight-end
 
 export const generated = () => {
@@ -480,7 +480,7 @@ import { Link, routes } from '@cedarjs/router'
 import CommentForm from 'src/components/CommentForm'
 import CommentsCell from 'src/components/CommentsCell'
 
-import type { Post } from 'types/graphql'
+import type { Post } from 'types/graphql.js'
 
 const truncate = (text: string, length: number) => {
   return text.substring(0, length) + '...'
@@ -858,7 +858,7 @@ import { useState } from 'react'
 import type {
   CreateCommentMutation,
   CreateCommentMutationVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
 import {
   Form,
@@ -1423,11 +1423,11 @@ describe('comments', () => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="api/src/services/comments/comments.test.ts"
-import { comments, createComment } from './comments'
+import { comments, createComment } from './comments.js'
 // highlight-next-line
-import { db } from 'src/lib/db'
+import { db } from 'src/lib/db.js'
 
-import type { StandardScenario } from './comments.scenarios'
+import type { StandardScenario } from './comments.scenarios.js'
 
 describe('comments', () => {
   scenario('returns all comments', async (scenario) => {

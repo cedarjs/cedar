@@ -49,7 +49,7 @@ export function waitForApiSide() {
             'content-type': 'application/json',
           },
           body: JSON.stringify({
-            query: 'query Q { redwood { version } }',
+            query: 'query Q { cedarjs { version } }',
           }),
           failOnStatusCode: false,
         })
@@ -62,7 +62,7 @@ export function waitForApiSide() {
 
 export const test_first_page = () =>
   it('1. Our First Page', () => {
-    //redwoodjs.com/docs/tutorial/chapter1/first-page
+    // https://cedarjs.com/docs/tutorial/chapter1/first-page
     cy.visit('http://localhost:8910')
     cy.exec(`cd ${BASE_DIR}; yarn redwood generate page home / --force`)
     cy.get('h1').should('contain', 'HomePage')
@@ -70,7 +70,7 @@ export const test_first_page = () =>
 
 export const test_pages = () =>
   it('2. A Second Page and a Link', () => {
-    // https://redwoodjs.com/docs/tutorial/chapter1/second-page
+    // https://cedarjs.com/docs/tutorial/chapter1/second-page
     cy.exec(`cd ${BASE_DIR}; yarn redwood generate page about --force`)
     cy.writeFile(
       path.join(BASE_DIR, 'web/src/pages/HomePage/HomePage.jsx'),

@@ -37,12 +37,7 @@ describe('vite plugin cedar import dir', () => {
 
     const result = await callTransform(vitePlugin, inputCode, mockId)
 
-    if (
-      result &&
-      typeof result === 'object' &&
-      'code' in result &&
-      result.code
-    ) {
+    if (hasCode(result)) {
       // Normalize line endings and whitespace for comparison
       const actualCode = result.code.trim().replace(/\r\n/g, '\n')
       const expectedCode = expectedOutput.trim().replace(/\r\n/g, '\n')
@@ -71,33 +66,23 @@ describe('vite plugin cedar import dir', () => {
     expect(result).toBeNull()
   })
 
-  it('should handle ESM mode correctly', async () => {
+  it('should generate extensionless imports', async () => {
     const testCase = 'import-dir'
     const codeFile = path.join(fixturesDir, testCase, 'code.js')
 
     const inputCode = fs.readFileSync(codeFile, 'utf-8')
 
-    const vitePlugin = cedarImportDirPlugin({ projectIsEsm: true })
+    const vitePlugin = cedarImportDirPlugin()
     const mockId = path.join(fixturesDir, testCase, 'code.js')
 
     const result = await callTransform(vitePlugin, inputCode, mockId)
 
-    if (
-      result &&
-      typeof result === 'object' &&
-      'code' in result &&
-      result.code
-    ) {
-      // Should include .js extensions for ESM when files are found
-      const hasJsExtensions = result.code.includes('.js')
-      const hasImports = result.code.includes('import * as')
-
-      // If imports were generated, they should have .js extensions in ESM mode
-      if (hasImports) {
-        expect(hasJsExtensions).toBe(true)
-      } else {
-        // If no imports were generated, that's also valid (no matching files)
-        expect(result.code).toContain('let services = {}')
+    if (hasCode(result)) {
+      // Should not include extensions for imports
+      for (const line of result.code.split('\n')) {
+        if (line.includes('import * as')) {
+          expect(line).not.toMatch(/\.[tj]s.?$/)
+        }
       }
     }
   })
@@ -130,12 +115,7 @@ describe('vite plugin cedar import dir', () => {
 
     const result = await callTransform(vitePlugin, inputCode, mockId)
 
-    if (
-      result &&
-      typeof result === 'object' &&
-      'code' in result &&
-      result.code
-    ) {
+    if (hasCode(result)) {
       // Should contain both service and utils variable declarations
       expect(result.code).toContain('let services = {}')
       expect(result.code).toContain('let utils = {}')
@@ -150,12 +130,7 @@ describe('vite plugin cedar import dir', () => {
 
     const result = await callTransform(vitePlugin, inputCode, mockId)
 
-    if (
-      result &&
-      typeof result === 'object' &&
-      'code' in result &&
-      result.code
-    ) {
+    if (hasCode(result)) {
       // Variable names should be valid JavaScript identifiers
       // (no special characters except underscores)
       const variableNameRegex = /components\.([a-zA-Z_][a-zA-Z0-9_]*)/g
@@ -170,3 +145,12 @@ describe('vite plugin cedar import dir', () => {
     }
   })
 })
+
+function hasCode(result: unknown): result is { code: string } {
+  return (
+    !!result &&
+    typeof result === 'object' &&
+    'code' in result &&
+    typeof result.code === 'string'
+  )
+}

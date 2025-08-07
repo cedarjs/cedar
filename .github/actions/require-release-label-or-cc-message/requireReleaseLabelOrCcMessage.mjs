@@ -37,7 +37,8 @@ function main() {
     pull_request: { title, labels },
   } = JSON.parse(event)
 
-  // Check if the PR title starts with conventional commit prefixes that should skip label requirement
+  // Check if the PR title starts with conventional commit prefixes that should
+  // skip label requirement
   const conventionalCommitPrefixes = [
     /^chore\([^)]+\):/,
     /^feat\([^)]+\):/,
@@ -51,7 +52,8 @@ function main() {
 
   if (shouldSkipLabelRequirement) {
     console.log(
-      `PR title "${title}" starts with conventional commit prefix. Skipping release label requirement.`,
+      `PR title "${title}" starts with conventional commit prefix. Skipping ` +
+        'release label requirement.',
     )
     return
   }

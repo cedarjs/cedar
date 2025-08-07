@@ -120,7 +120,7 @@ export const transformTSToJS = (file: string) => {
 export const getPrettierConfig = async () => {
   try {
     const { default: prettierConfig } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.js')}`
+      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
     )
     return prettierConfig
   } catch {
@@ -150,7 +150,7 @@ const prettierParser = (filename: string) => {
 
 /**
  * Prettify `code` according to the extension in `filename`.
- * This will also read a user's `prettier.config.js` file if it exists.
+ * This will also read a user's `prettier.config.cjs` file if it exists.
  *
  * @param {string} code
  * @param {string} filename

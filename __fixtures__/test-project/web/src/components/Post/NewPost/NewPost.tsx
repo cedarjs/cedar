@@ -2,7 +2,7 @@ import type {
   CreatePostMutation,
   CreatePostInput,
   CreatePostMutationVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
 import { navigate, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'

@@ -80,7 +80,7 @@ These generated types will use the query's name—in this case, `FindBlogPostQue
 import type {
   FindBlogPostQuery,
   FindBlogPostQueryVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 ```
 
 `FindBlogPostQuery` is the type of the data returned from the query (`{ title: string, body: string }`) and `FindBlogPostQueryVariables` is the type of the query's variables (`{ id: number }`).
@@ -95,7 +95,7 @@ Generated Services include types for query and mutation resolvers:
 
 ```ts title="api/src/services/posts.ts"
 // highlight-next-line
-import type { QueryResolvers, MutationResolvers } from 'types/graphql'
+import type { QueryResolvers, MutationResolvers } from 'types/graphql.js'
 
 import { db } from 'src/lib/db'
 
@@ -201,6 +201,6 @@ Running `yarn rw g types` will generate types for your resolvers on a per-file b
 :::tip Using VSCode?
 
 As a part of type generation, the extension [GraphQL: Language Feature Support](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) configures itself based on the merged schema Redwood generates in `.redwood/schema.graphql`.
-You can configure it further in `graphql.config.js` at the root of your project.
+You can configure it further in `graphql.config.cjs` at the root of your project.
 
 :::

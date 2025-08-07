@@ -89,7 +89,7 @@ vi.mock('./project', () => ({
 
 globalThis.__prettierPath = path.resolve(
   import.meta.dirname,
-  './__tests__/fixtures/prettier.config.js',
+  './__tests__/fixtures/prettier.config.cjs',
 )
 
 vi.spyOn(Math, 'random').mockReturnValue(0.123456789)

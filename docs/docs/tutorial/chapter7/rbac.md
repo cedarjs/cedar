@@ -499,7 +499,7 @@ import type {
   Comment as IComment,
   DeleteCommentMutation,
   DeleteCommentMutationVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
 import type { TypedDocumentNode } from '@cedarjs/web'
 import { useMutation } from '@cedarjs/web'

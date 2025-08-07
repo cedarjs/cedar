@@ -1,4 +1,4 @@
-import { ${name}Job } from './${name}Job'
+import { ${name}Job } from './${name}Job.js'
 
 describe('${name}Job', () => {
   it('should not throw any errors', async () => {

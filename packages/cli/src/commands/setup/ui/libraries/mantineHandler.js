@@ -116,7 +116,7 @@ export async function handler({ force, install, packages }) {
             const postCSSConfig = fse.readFileSync(
               path.join(
                 import.meta.dirname,
-                '../templates/mantine-postcss.config.js.template',
+                '../templates/mantine-postcss.config.cjs.template',
               ),
               'utf-8',
             )

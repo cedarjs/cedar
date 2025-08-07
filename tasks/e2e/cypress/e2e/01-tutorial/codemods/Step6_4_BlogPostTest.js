@@ -3,7 +3,7 @@ export default `
 
 import { render } from '@cedarjs/testing'
 
-import BlogPost from './BlogPost'
+import BlogPost from './BlogPost.js'
 
 const POST = {
   id: 42,

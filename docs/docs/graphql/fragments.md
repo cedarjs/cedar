@@ -51,10 +51,10 @@ In developer documentation, you can explain the purpose of the fragment, provide
 
 CedarJS makes it easy to use fragments, especially with VS Code and Apollo GraphQL Client.
 
-First, CedarJS instructs the VS Code GraphQL Plugin where to look for fragments by configuring the `documents` attribute of your project's `graphql.config.js`:
+First, CedarJS instructs the VS Code GraphQL Plugin where to look for fragments by configuring the `documents` attribute of your project's `graphql.config.cjs`:
 
 ```js
-// graphql.config.js
+// graphql.config.cjs
 
 const { getPaths } = require('@cedarjs/internal')
 
@@ -110,7 +110,7 @@ registerFragment(gql`
 This makes the `BookInfo` available to use in your query:
 
 ```ts
-import type { GetBookDetails } from 'types/graphql'
+import type { GetBookDetails } from 'types/graphql.js'
 
 import { useQuery } from '@cedarjs/web'
 
@@ -216,7 +216,7 @@ This means that once the Apollo Client Cache has loaded the data needed for the 
 Also, anywhere the fragment component is rendered will be updated with the latest data if any of `useQuery` with uses the fragment received new data.
 
 ```ts
-import type { Book } from 'types/graphql'
+import type { Book } from 'types/graphql.js'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 
@@ -312,7 +312,7 @@ By including the `__typename` and the GraphQL Type for the mocked data object, y
 For example, consider the fragment `BookInfo` used by the query `GetBookDetails`.
 
 ```ts
-import type { Book } from 'types/graphql'
+import type { Book } from 'types/graphql.js'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 
@@ -327,7 +327,7 @@ const { useRegisteredFragment } = registerFragment(gql`
 ```
 
 ```ts
-import type { GetBookDetails } from 'types/graphql'
+import type { GetBookDetails } from 'types/graphql.js'
 
 import { useQuery } from '@cedarjs/web'
 

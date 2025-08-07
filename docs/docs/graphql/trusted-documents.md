@@ -155,7 +155,7 @@ To enable trusted documents, configure `trustedDocuments` with the store.
 import { createGraphQLHandler } from '@cedarjs/graphql-server'
 
 // ...
-import { store } from 'src/lib/trustedDocumentsStore'
+import { store } from 'src/lib/trustedDocumentsStore.js'
 
 export const handler = createGraphQLHandler({
   getCurrentUser,

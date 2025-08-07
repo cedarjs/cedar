@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import * as swc from '@swc/core'
+import { parse, Lang } from '@ast-grep/napi'
 import type { Plugin } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -15,15 +15,11 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
       }
 
       const isTypescript = id.endsWith('.ts') || id.endsWith('.tsx')
+      const language = isTypescript ? Lang.TypeScript : Lang.JavaScript
 
       let ast
       try {
-        ast = swc.parseSync(code, {
-          target: 'es2022',
-          syntax: isTypescript ? 'typescript' : 'ecmascript',
-          tsx: id.endsWith('.tsx'),
-          jsx: id.endsWith('.jsx'),
-        })
+        ast = parse(language, code)
       } catch (error) {
         console.warn('Failed to parse file:', id)
         console.warn(error)
@@ -33,141 +29,92 @@ export function cedarjsJobPathInjectorPlugin(): Plugin {
       }
 
       const paths = getPaths()
-      let hasModifications = false
-      const modifications: {
-        start: number
-        end: number
-        replacement: string
-      }[] = []
+      const edits = []
 
-      // Traverse the AST to find createJob calls
-      function traverse(node: any) {
-        if (!node || typeof node !== 'object') {
-          return
+      const root = ast.root()
+
+      // Find all createJob calls with object literal configs
+      const createJobCalls = root.findAll({
+        rule: {
+          pattern: 'export const $VAR_NAME = $OBJ.createJob({ $$$PROPS })',
+        },
+      })
+
+      for (const callNode of createJobCalls) {
+        const varNameNode = callNode.getMatch('VAR_NAME')
+        const propsNodes = callNode.getMultipleMatches('PROPS')
+
+        if (!varNameNode) {
+          continue
         }
 
-        // Look for export declarations
-        if (node.type === 'ExportDeclaration' && node.declaration) {
-          const declaration = node.declaration
+        const importName = varNameNode.text()
+        const importPath = path.relative(paths.api.jobs, id)
+        const importPathWithoutExtension = importPath.replace(/\.[^/.]+$/, '')
 
-          // Check if it's a variable declaration
-          if (declaration.type === 'VariableDeclaration') {
-            const declarator = declaration.declarations[0]
+        // Build the properties to insert
+        const pathProperty = `path: ${JSON.stringify(importPathWithoutExtension)}`
+        const nameProperty = `name: ${JSON.stringify(importName)}`
 
-            if (declarator && declarator.type === 'VariableDeclarator') {
-              const init = declarator.init
+        let insertText = ''
+        if (propsNodes.length > 0) {
+          // Insert after the last property - find the actual object literal
+          const objectLiteral = callNode.find({
+            rule: {
+              kind: 'object',
+              inside: {
+                kind: 'arguments',
+              },
+            },
+          })
 
-              // Check if it's a call expression
-              if (init && init.type === 'CallExpression') {
-                const callee = init.callee
+          if (objectLiteral) {
+            insertText = `, ${pathProperty}, ${nameProperty}`
+            // Find the position just before the closing brace
+            const objectText = objectLiteral.text()
+            const closeBraceIndex = objectText.lastIndexOf('}')
+            if (closeBraceIndex !== -1) {
+              const range = objectLiteral.range()
+              edits.push({
+                startPos: range.start.index + closeBraceIndex,
+                endPos: range.start.index + closeBraceIndex,
+                insertedText: insertText,
+              })
+            }
+          }
+        } else {
+          // Empty object - find the object literal and insert between braces
+          const objectLiteral = callNode.find({
+            rule: {
+              kind: 'object',
+              inside: {
+                kind: 'arguments',
+              },
+            },
+          })
 
-                // Check if it's a member expression calling createJob
-                if (callee && callee.type === 'MemberExpression') {
-                  const property = callee.property
-
-                  if (
-                    property &&
-                    property.type === 'Identifier' &&
-                    property.value === 'createJob'
-                  ) {
-                    // We found a createJob call, let's inject the path and name
-                    const variableId = declarator.id
-
-                    if (variableId && variableId.type === 'Identifier') {
-                      const importName = variableId.value
-                      const importPath = path.relative(paths.api.jobs, id)
-                      const importPathWithoutExtension = importPath.replace(
-                        /\.[^/.]+$/,
-                        '',
-                      )
-
-                      // Get the first argument (should be an object)
-                      const firstArg = init.arguments[0]
-
-                      if (firstArg?.expression?.type === 'ObjectExpression') {
-                        // Find the end of the object properties to insert our new properties
-                        const objectExpr = firstArg.expression
-                        const properties = objectExpr.properties
-                        let insertPosition: number
-
-                        if (properties.length > 0) {
-                          // Insert after the last property
-                          const lastProperty = properties[properties.length - 1]
-                          // SWC properties don't have direct span, calculate from key and value
-                          if (lastProperty.type === 'KeyValueProperty') {
-                            insertPosition = lastProperty.value.span.end
-                          } else {
-                            // Fallback: use the object's end minus 1 (before closing brace)
-                            insertPosition = objectExpr.span.end - 1
-                          }
-                        } else {
-                          // Empty object, insert after the opening brace
-                          insertPosition = objectExpr.span.start + 1
-                        }
-
-                        // Build the properties to insert
-                        const pathProperty = `path: ${JSON.stringify(importPathWithoutExtension)}`
-                        const nameProperty = `name: ${JSON.stringify(importName)}`
-
-                        let insertText = ''
-                        if (properties.length > 0) {
-                          insertText = `, ${pathProperty}, ${nameProperty}`
-                        } else {
-                          insertText = `${pathProperty}, ${nameProperty}`
-                        }
-
-                        modifications.push({
-                          start: insertPosition,
-                          end: insertPosition,
-                          replacement: insertText,
-                        })
-
-                        hasModifications = true
-                      }
-                    }
-                  }
-                }
-              }
+          if (objectLiteral) {
+            insertText = `${pathProperty}, ${nameProperty}`
+            const objectText = objectLiteral.text()
+            const openBraceIndex = objectText.indexOf('{')
+            if (openBraceIndex !== -1) {
+              const range = objectLiteral.range()
+              edits.push({
+                startPos: range.start.index + openBraceIndex + 1,
+                endPos: range.start.index + openBraceIndex + 1,
+                insertedText: insertText,
+              })
             }
           }
         }
-
-        // Recursively traverse child nodes
-        for (const key in node) {
-          if (
-            key === 'parent' ||
-            key === 'leadingComments' ||
-            key === 'trailingComments' ||
-            key === 'span'
-          ) {
-            continue
-          }
-
-          const child = node[key]
-          if (Array.isArray(child)) {
-            child.forEach(traverse)
-          } else if (child && typeof child === 'object') {
-            traverse(child)
-          }
-        }
       }
 
-      traverse(ast)
-
-      if (!hasModifications) {
+      if (edits.length === 0) {
         return null
       }
 
-      // Apply modifications from end to start to avoid offset issues
-      modifications.sort((a, b) => b.start - a.start)
-
-      let modifiedCode = code
-      for (const mod of modifications) {
-        modifiedCode =
-          modifiedCode.slice(0, mod.start) +
-          mod.replacement +
-          modifiedCode.slice(mod.end)
-      }
+      // Apply modifications using ast-grep's commitEdits
+      const modifiedCode = root.commitEdits(edits)
 
       return {
         code: modifiedCode,

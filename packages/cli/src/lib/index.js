@@ -225,12 +225,12 @@ export const getConfig = () => {
 }
 
 /**
- * This returns the config present in `prettier.config.js` of a Redwood project.
+ * This returns the config present in `prettier.config.cjs` of a Redwood project.
  */
 export const getPrettierOptions = async () => {
   try {
     const { default: prettierOptions } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.js')}`
+      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
     )
     return prettierOptions
   } catch (e) {

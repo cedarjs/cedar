@@ -7,7 +7,7 @@ import { getPaths } from '@cedarjs/project-config'
 const getPrettierConfig = async () => {
   try {
     const { default: prettierConfig } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.js')}`
+      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
     )
     return prettierConfig
   } catch {

@@ -1,7 +1,7 @@
 import type {
   FindBlogPostQuery,
   FindBlogPostQueryVariables,
-} from 'types/graphql'
+} from 'types/graphql.js'
 
 import type {
   CellSuccessProps,
