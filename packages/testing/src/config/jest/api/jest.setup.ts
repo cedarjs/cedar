@@ -69,7 +69,7 @@ const deepCopy = <T>(obj: T): T => {
   return JSON.parse(JSON.stringify(obj))
 }
 
-const isIdenticalArray = (a: any[], b: any[]): boolean => {
+const isIdenticalArray = (a: unknown[], b: unknown[]) => {
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
@@ -174,7 +174,11 @@ function buildScenario(itFunc: jest.It, testPath: string) {
  * Note that you need to use the getScenario() function to get the data.
  */
 function buildDescribeScenario(describeFunc: jest.Describe, testPath: string) {
-  const describeScenarioFunc = (...args: any[]) => {
+  const describeScenarioFunc = (
+    ...args:
+      | [string, string, (getScenario: () => any) => any]
+      | [string, (getScenario: () => any) => any]
+  ) => {
     let scenarioName: string,
       describeBlockName: string,
       describeBlock: (getScenario: () => ScenarioData) => void
@@ -254,6 +258,7 @@ const seedScenario = async (
     const db = await getProjectDb()
     for (const [model, namedFixtures] of Object.entries(scenario)) {
       scenarios[model] = {}
+
       for (const [name, createArgs] of Object.entries(namedFixtures)) {
         if (typeof createArgs === 'function') {
           scenarios[model][name] = await db[model].create(createArgs(scenarios))
@@ -262,6 +267,7 @@ const seedScenario = async (
         }
       }
     }
+
     return scenarios
   } else {
     return {}

@@ -9,10 +9,17 @@ import {
 // Ref: packages/testing/config/jest/api/index.js
 const { babelrc: _b, ...defaultBabelConfig } = getApiSideDefaultBabelConfig()
 
-export default {
+type ConfigType = Omit<
+  ReturnType<typeof getApiSideDefaultBabelConfig>,
+  'babelrc'
+>
+
+const config: ConfigType = {
   ...defaultBabelConfig,
   plugins: getApiSideBabelPlugins(),
   presets: getApiSideBabelPresets({
     presetEnv: true, // jest needs code transpiled
   }),
 }
+
+export default config

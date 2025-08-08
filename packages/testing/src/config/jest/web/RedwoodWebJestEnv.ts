@@ -12,7 +12,8 @@ class RedwoodWebJestEnvironment extends TestEnvironment {
       this.global.TextDecoder = TextDecoder as any
     }
     if (typeof this.global.crypto.subtle === 'undefined') {
-      // @ts-expect-error - To make tests work with auth that use WebCrypto like auth0
+      // @ts-expect-error - We're just making sure the object is there to make
+      // tests work with auth that use WebCrypto like auth0
       this.global.crypto.subtle = {}
     }
   }
