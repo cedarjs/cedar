@@ -12,7 +12,7 @@ import {
   cedarSwapApolloProvider,
 } from '@cedarjs/vite'
 
-import { autoImportsPlugin } from './vite-plugin-auto-import.js'
+import { cedarAutoImportsPlugin } from './vite-plugin-cedar-auto-import.js'
 import { cedarImportDirPlugin } from './vite-plugin-cedar-import-dir.js'
 
 async function createViteServer(customConfig: UserConfig = {}) {
@@ -33,7 +33,7 @@ async function createViteServer(customConfig: UserConfig = {}) {
     },
     plugins: [
       cedarImportDirPlugin(),
-      autoImportsPlugin(),
+      cedarAutoImportsPlugin(),
       cedarjsDirectoryNamedImportPlugin(),
       cedarCellTransform(),
       cedarjsJobPathInjectorPlugin(),
