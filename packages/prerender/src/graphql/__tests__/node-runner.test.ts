@@ -296,7 +296,7 @@ describe('NodeRunner', () => {
     })
 
     it('uses different gql template function for trusted documents', async () => {
-      mocks.graphql = {
+      mocks.projectConfig.graphql = {
         trustedDocuments: true,
       }
 
