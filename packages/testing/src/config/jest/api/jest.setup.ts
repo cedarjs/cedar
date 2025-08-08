@@ -3,6 +3,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+type JestIt = typeof global.it
+type JestDescribe = typeof global.describe
+
 // @NOTE without these imports in the setup file, mockCurrentUser
 // will remain undefined in the user's tests
 import { defineScenario } from '../../../api/scenario.js'
@@ -136,7 +139,7 @@ const getProjectDb = async () => {
  * Wraps "it" or "test", to seed and teardown the scenario after each test
  * This one passes scenario data to the test function
  */
-function buildScenario(itFunc: jest.It, testPath: string) {
+function buildScenario(itFunc: JestIt, testPath: string) {
   const scenarioFunc = (...args: any[]) => {
     let scenarioName: string, testName: string, testFunc: ScenarioTestFunction
 
@@ -173,7 +176,7 @@ function buildScenario(itFunc: jest.It, testPath: string) {
  * This creates a describe() block that will seed the scenario ONCE before all tests in the block
  * Note that you need to use the getScenario() function to get the data.
  */
-function buildDescribeScenario(describeFunc: jest.Describe, testPath: string) {
+function buildDescribeScenario(describeFunc: JestDescribe, testPath: string) {
   const describeScenarioFunc = (
     ...args:
       | [string, string, (getScenario: () => any) => any]
