@@ -140,7 +140,15 @@ const getProjectDb = async () => {
  * This one passes scenario data to the test function
  */
 function buildScenario(itFunc: JestIt, testPath: string) {
-  const scenarioFunc = (...args: any[]) => {
+  const scenarioFunc = (
+    ...args:
+      | [
+          scenarioName: string,
+          testName: string,
+          testFunc: (scenarioData: any) => any,
+        ]
+      | [testName: string, testFunc: (scenarioData: any) => any]
+  ) => {
     let scenarioName: string, testName: string, testFunc: ScenarioTestFunction
 
     if (args.length === 3) {

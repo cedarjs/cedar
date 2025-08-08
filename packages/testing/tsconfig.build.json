@@ -1,21 +1,9 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src", "global.d.ts"],
-  "exclude": ["**/__tests__"],
-  "references": [
-    { "path": "../router/tsconfig.build.json" },
-    { "path": "../babel-config" },
-    { "path": "../context/tsconfig.build.json" },
-    { "path": "../project-config" },
-    { "path": "../web/tsconfig.build.json" },
-    { "path": "../auth/tsconfig.build.json" },
-    { "path": "../graphql-server/tsconfig.build.json" }
-  ]
+  "exclude": ["**/__tests__"]
 }

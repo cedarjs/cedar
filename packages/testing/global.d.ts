@@ -1,7 +1,4 @@
 /* eslint-disable no-var */
-import type { Global as jest } from '@jest/types'
-type TestAPI = jest.It
-type SuiteAPI = jest.Describe
 
 import type { DefineScenario } from './src/api/scenario.ts'
 import type {
@@ -10,23 +7,32 @@ import type {
   mockCurrentUser as mockCurrUser,
 } from './src/web/mockRequests.ts'
 
+type It = typeof global.it
+type Describe = typeof global.describe
+type TestFunc = (scenarioData: any) => any
+type DescribeBlock = (getScenario: () => any) => any
+
+interface GlobalScenario {
+  (...args: [string, string, TestFunc] | [string, TestFunc]): ReturnType<It>
+  only?: (
+    ...args: [string, string, TestFunc] | [string, TestFunc]
+  ) => ReturnType<It>
+}
+
+interface DescribeScenario {
+  (
+    ...args: [string, string, DescribeBlock] | [string, DescribeBlock]
+  ): ReturnType<Describe>
+  only?: (
+    ...args: [string, string, DescribeBlock] | [string, DescribeBlock]
+  ) => ReturnType<Describe>
+}
+
 declare global {
-  var scenario: (
-    ...args:
-      | [
-          scenarioName: string,
-          testName: string,
-          testFunc: (scenarioData: any) => any,
-        ]
-      | [testName: string, testFunc: (scenarioData: any) => any]
-  ) => void
-  var describeScenario: (
-    ...args:
-      | [string, string, (getScenario: () => any) => any]
-      | [string, (getScenario: () => any) => any]
-  ) => ReturnType<SuiteAPI>
-  var describe: SuiteAPI
-  var it: TestAPI
+  var scenario: GlobalScenario
+  var describeScenario: DescribeScenario
+  var describe: Describe
+  var it: It
   var testPath: string
   var defineScenario: DefineScenario
 
