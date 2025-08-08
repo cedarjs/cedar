@@ -1,5 +1,7 @@
 import React from 'react'
 
+// @apollo/client ESM support is discussed here
+// https://github.com/apollographql/apollo-feature-requests/issues/287
 import type {
   ApolloClientOptions,
   setLogVerbosity,
@@ -7,17 +9,15 @@ import type {
   InMemoryCacheConfig,
   HttpOptions,
   DocumentNode,
+  HttpLink,
 } from '@apollo/client'
+import { InMemoryCache } from '@apollo/client/cache/cache.cjs'
 import {
-  ApolloProvider,
   ApolloClient,
-  InMemoryCache,
-  split,
-  ApolloLink,
-} from '@apollo/client'
-import { setLogVerbosity as apolloSetLogVerbosity } from '@apollo/client/core/core.cjs'
+  setLogVerbosity as apolloSetLogVerbosity,
+} from '@apollo/client/core/core.cjs'
 import { setContext } from '@apollo/client/link/context/context.cjs'
-import type { HttpLink } from '@apollo/client/link/http/http.cjs'
+import { ApolloLink, split } from '@apollo/client/link/core/core.cjs'
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries/persisted-queries.cjs'
 import {
   useQuery,
@@ -27,6 +27,7 @@ import {
   useReadQuery,
   useSuspenseQuery,
 } from '@apollo/client/react/hooks/hooks.cjs'
+import { ApolloProvider } from '@apollo/client/react/react.cjs'
 import { getMainDefinition } from '@apollo/client/utilities/utilities.cjs'
 import { print } from 'graphql/language/printer.js'
 
