@@ -4,6 +4,7 @@ import { LocationProvider } from '@cedarjs/router'
 import { RedwoodProvider } from '@cedarjs/web'
 import { RedwoodApolloProvider } from '@cedarjs/web/apollo'
 
+import { UserRoutes as VitestUserRoutes } from './globRoutesImporter.js'
 import { useAuth } from './mockAuth.js'
 import { MockParamsProvider } from './MockParamsProvider.js'
 
@@ -35,6 +36,7 @@ export const MockProviders: React.FunctionComponent<{
     <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
       <RedwoodApolloProvider useAuth={useAuth}>
         <UserRoutes />
+        <VitestUserRoutes />
         <LocationProvider>
           <MockParamsProvider>{children}</MockParamsProvider>
         </LocationProvider>

@@ -85,3 +85,21 @@ fs.writeFileSync(
   configJestWebJestSetupPath,
   webJestSetupFile.replaceAll('await import', 'require'),
 )
+
+// ./src/web/globRoutesImporter.ts contains `import.meta.glob`. This is not
+// supported in CJS. And for CJS we don't really use this, but it does get
+// imported and executed, so we need to mock it. esbuild will just make
+// `import.meta` be an empty object, but that's not quite enough for what we
+// need here, so I extend it a bit more.
+const globRoutesImporterBuildPath = './dist/cjs/web/globRoutesImporter.js'
+const globRoutesImporterFile = fs.readFileSync(
+  globRoutesImporterBuildPath,
+  'utf-8',
+)
+fs.writeFileSync(
+  globRoutesImporterBuildPath,
+  globRoutesImporterFile.replaceAll(
+    'const import_meta = {};',
+    'const import_meta = { glob: () => ({ "routes.tsx": () => null }) };',
+  ),
+)
