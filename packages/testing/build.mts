@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import os from 'node:os'
 
 import { build, buildEsm, defaultBuildOptions } from '@cedarjs/framework-tools'
 import {
