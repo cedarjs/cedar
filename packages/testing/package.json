@@ -63,6 +63,10 @@
         "default": "./dist/cjs/api/index.js"
       }
     },
+    "./api/vitest": {
+      "types": "./dist/api/vitest/index.d.ts",
+      "default": "./dist/api/vitest/index.js"
+    },
     "./cache": {
       "import": {
         "types": "./dist/cache/index.d.ts",
@@ -82,6 +86,20 @@
         "types": "./dist/cjs/web/index.d.ts",
         "default": "./dist/cjs/web/index.js"
       }
+    },
+    "./web/MockRouter.js": {
+      "import": {
+        "types": "./dist/web/MockRouter.d.ts",
+        "default": "./dist/web/MockRouter.js"
+      },
+      "require": {
+        "types": "./dist/cjs/web/MockRouter.d.ts",
+        "default": "./dist/cjs/web/MockRouter.js"
+      }
+    },
+    "./web/vitest": {
+      "types": "./dist/web/vitest/index.d.ts",
+      "default": "./dist/web/vitest/index.js"
     }
   },
   "files": [

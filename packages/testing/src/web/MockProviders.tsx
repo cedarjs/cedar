@@ -1,7 +1,3 @@
-/**
- * NOTE: This module should not contain any nodejs functionality,
- * because it's also used by Storybook in the browser.
- */
 import React from 'react'
 
 import { LocationProvider } from '@cedarjs/router'
@@ -30,7 +26,8 @@ try {
   UserRoutes = () => <></>
 }
 
-// TODO(pc): see if there are props we want to allow to be passed into our mock provider (e.g. AuthProviderProps)
+// TODO(pc): see if there are props we want to allow to be passed into our mock
+// provider (e.g. AuthProviderProps)
 export const MockProviders: React.FunctionComponent<{
   children: React.ReactNode
 }> = ({ children }) => {
