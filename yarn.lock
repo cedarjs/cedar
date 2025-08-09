@@ -2986,6 +2986,7 @@ __metadata:
     rw-serve-fe: ./dist/bins/rw-serve-fe.js
     rw-web-server: ./dist/bins/rw-web-server.js
     rwfw: ./dist/bins/rwfw.js
+    vitest: ./dist/bins/vitest.js
   languageName: unknown
   linkType: soft
 

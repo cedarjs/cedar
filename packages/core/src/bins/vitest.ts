@@ -6,4 +6,14 @@ const requireFromVitest = createRequire(require.resolve('vitest/package.json'))
 
 const bin = requireFromVitest('./package.json')['bin']
 
-requireFromVitest(bin['vitest'])
+// Support both
+// {
+//   bin: {
+//     vitest: './dist/cli.mjs'
+//   }
+// }
+// and
+// {
+//   bin: './dist/cli.mjs'
+// }
+requireFromVitest(bin['vitest'] || bin)
