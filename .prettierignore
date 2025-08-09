@@ -20,7 +20,6 @@ packages/testing/config
 
 # Ignore create-cedar-app (we don't want to mismatch between framework and project)
 /packages/create-cedar-app/templates
-/packages/create-cedar-app/esm-templates
 /packages/create-cedar-app/tests/**/*.sh
 
 # Ignore create-cedar-rsc-app (it has it's own config)
