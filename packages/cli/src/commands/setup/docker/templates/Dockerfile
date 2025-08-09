@@ -1,6 +1,6 @@
 # base
 # ----
-FROM node:20-bookworm-slim as base
+FROM node:22-bookworm-slim as base
 
 RUN npm install --global corepack
 
@@ -59,7 +59,7 @@ RUN yarn rw build web --no-prerender
 
 # api serve
 # ---------
-FROM node:20-bookworm-slim as api_serve
+FROM node:22-bookworm-slim as api_serve
 
 RUN npm install --global corepack
 
@@ -103,7 +103,7 @@ CMD [ "node_modules/.bin/cedarjs-server", "api" ]
 
 # web serve
 # ---------
-FROM node:20-bookworm-slim as web_serve
+FROM node:22-bookworm-slim as web_serve
 
 RUN npm install --global corepack
 
