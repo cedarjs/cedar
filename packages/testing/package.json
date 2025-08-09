@@ -63,6 +63,10 @@
         "default": "./dist/cjs/api/index.js"
       }
     },
+    "./api/vitest": {
+      "types": "./dist/api/vitest/index.d.ts",
+      "default": "./dist/api/vitest/index.js"
+    },
     "./cache": {
       "import": {
         "types": "./dist/cache/index.d.ts",
