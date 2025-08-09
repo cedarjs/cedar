@@ -216,7 +216,7 @@ describe('api', () => {
         {
           declarations: [
             {
-              default: 'gql',
+              members: ['gql'],
               path: 'graphql-tag',
             },
             {

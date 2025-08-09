@@ -114,7 +114,7 @@ test.skip('api prebuild transforms gql with `babel-plugin-graphql-tag`', async (
   }
 
   const code = fs.readFileSync(p, 'utf-8')
-  expect(code.includes('import gql from "graphql-tag";')).toEqual(false)
+  expect(code.includes('import { gql } from "graphql-tag";')).toEqual(false)
   expect(code.includes('gql`')).toEqual(false)
 })
 

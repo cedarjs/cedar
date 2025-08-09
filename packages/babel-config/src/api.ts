@@ -115,8 +115,8 @@ export const getApiSideBabelPlugins = ({
       {
         declarations: [
           {
-            // import gql from 'graphql-tag'
-            default: 'gql',
+            // import { gql } from 'graphql-tag'
+            members: ['gql'],
             path: 'graphql-tag',
           },
           {
