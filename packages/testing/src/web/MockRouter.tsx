@@ -1,5 +1,5 @@
 // For Vitest we use a plugin to swap out imports from `@cedarjs/router` to this
-// file. @see ../vitest/cedarJsRoutesImportTransformPlugin.ts
+// file. @see ./vitest/vite-plugin-cedarjs-router-import-transform.ts
 //
 // For Jest we overwrite the default `Router` export using jest-preset. So every
 // import of @cedarjs/router will import this Router instead
