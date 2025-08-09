@@ -13,7 +13,6 @@
     { "path": "../project-config" },
     { "path": "../router/tsconfig.build.json" },
     { "path": "../server-store" },
-    { "path": "../testing/tsconfig.build.json" },
     { "path": "../web/tsconfig.build.json" }
   ]
 }

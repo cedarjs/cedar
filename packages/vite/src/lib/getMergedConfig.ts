@@ -1,8 +1,8 @@
 import path from 'node:path'
 
 import type { InputOption } from 'rollup'
+import type { ConfigEnv, UserConfig } from 'vite'
 import { mergeConfig } from 'vite'
-import type { ConfigEnv, ViteUserConfig } from 'vitest/config'
 
 import type { Config, Paths } from '@cedarjs/project-config'
 import {
@@ -19,7 +19,7 @@ import {
  * build
  */
 export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
-  return (userConfig: ViteUserConfig, env: ConfigEnv): ViteUserConfig => {
+  return (userConfig: UserConfig, env: ConfigEnv): UserConfig => {
     let apiHost = process.env.REDWOOD_API_HOST
     apiHost ??= rwConfig.api.host
     apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '[::]'
@@ -35,7 +35,7 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
       apiPort = rwConfig.api.port
     }
 
-    const defaultRwViteConfig: ViteUserConfig = {
+    const defaultRwViteConfig: UserConfig = {
       root: rwPaths.web.src,
       // @MARK: when we have these aliases, the warnings from the FE server go
       // away BUT, if you have imports like this:
@@ -144,15 +144,6 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
             global: 'globalThis',
           },
         },
-      },
-      ssr: {
-        // `@cedarjs/testing` is not externalized in order to support
-        // `import.meta.glob`, which we use in one of the files in the package
-        noExternal: env.mode === 'test' ? ['@cedarjs/testing'] : [],
-      },
-      test: {
-        globals: false,
-        environment: 'jsdom',
       },
     }
 
