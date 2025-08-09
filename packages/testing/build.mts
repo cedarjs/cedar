@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 
-import { buildCjs, buildEsm } from '@cedarjs/framework-tools'
+import { build, buildEsm, defaultBuildOptions } from '@cedarjs/framework-tools'
 import {
   generateTypesCjs,
   generateTypesEsm,
@@ -10,7 +10,21 @@ import {
 await buildEsm()
 await generateTypesEsm()
 
-await buildCjs()
+await build({
+  buildOptions: {
+    ...defaultBuildOptions,
+    tsconfig: 'tsconfig.cjs.json',
+    outdir: 'dist/cjs',
+    logOverride: {
+      // This feels a bit dangerous, I wish I could do this with a comment
+      // inside the file where I need this for greater control, but I haven't
+      // found a way to do that yet.
+      // This is to silence the CJS warning for `import.meta.glob` and
+      // `import.meta.dirname`
+      'empty-import-meta': 'silent',
+    },
+  },
+})
 await generateTypesCjs()
 await insertCommonJsPackageJson({
   buildFileUrl: import.meta.url,
