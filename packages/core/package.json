@@ -31,7 +31,8 @@
     "rw-serve-api": "./dist/bins/rw-serve-api.js",
     "rw-serve-fe": "./dist/bins/rw-serve-fe.js",
     "rw-web-server": "./dist/bins/rw-web-server.js",
-    "rwfw": "./dist/bins/rwfw.js"
+    "rwfw": "./dist/bins/rwfw.js",
+    "vitest": "./dist/bins/vitest.js"
   },
   "files": [
     "dist"
