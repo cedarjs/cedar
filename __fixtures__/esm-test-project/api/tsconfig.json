@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "target": "ES2023",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "skipLibCheck": false,
+    "rootDirs": ["./src", "../.redwood/types/mirror/api/src"],
+    "paths": {
+      "src/*": ["./src/*", "../.redwood/types/mirror/api/src/*"],
+      "types/*": ["./types/*", "../types/*"],
+      "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]
+    },
+    "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
+    "types": ["jest"],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src",
+    "../.redwood/types/includes/all-*",
+    "../.redwood/types/includes/api-*",
+    "../types"
+  ]
+}

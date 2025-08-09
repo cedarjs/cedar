@@ -267,6 +267,15 @@ jobs:
           yarn rw test api --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
+      - name: Run db import tracking tests
+        shell: bash
+        run: |
+          # Only run this for ESM projects where the vitest config file exists
+          if test -f ./vitest-sort.config.ts; then
+            npx vitest --config ./vitest-sort.config.ts run
+          fi
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/api
+
       - name: 🖥️ Run serve smoke tests
         working-directory: tasks/smoke-tests/serve
         run: npx playwright test
