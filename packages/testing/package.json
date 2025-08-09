@@ -86,6 +86,10 @@
         "types": "./dist/cjs/web/index.d.ts",
         "default": "./dist/cjs/web/index.js"
       }
+    },
+    "./web/vitest": {
+      "types": "./dist/web/vitest/index.d.ts",
+      "default": "./dist/web/vitest/index.js"
     }
   },
   "files": [
