@@ -98,15 +98,15 @@ const globRoutesImporterFile = fs.readFileSync(
   'utf-8',
 )
 
-console.log('globRoutesImporterFile', globRoutesImporterFile)
-if (os.platform() === 'win32') {
-  throw new Error('Windows is not supported')
-}
-
 fs.writeFileSync(
   globRoutesImporterBuildPath,
   globRoutesImporterFile.replaceAll(
     'const import_meta = {};',
     'const import_meta = { glob: () => ({ "routes.tsx": () => null }) };',
   ),
+)
+
+console.log(
+  'globRoutesImporterFile',
+  fs.readFileSync(globRoutesImporterBuildPath, 'utf-8'),
 )
