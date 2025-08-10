@@ -209,6 +209,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    name: 🔄 Smoke tests / ${{ matrix.os }} / node 20 latest
     uses: ./.github/workflows/smoke-tests-test.yml
     with:
       os: ${{ matrix.os }}
@@ -221,7 +222,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    name: 🔄 Smoke tests / ${{ matrix.os }} / node 20 latest
+    name: 🔄 Smoke tests / ${{ matrix.os }} / node 20 latest / smoke-tests
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -234,6 +235,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    name: 🔄 Smoke tests React 18 / ${{ matrix.os }} / node 20 latest
     uses: ./.github/workflows/smoke-tests-react-18-test.yml
     with:
       os: ${{ matrix.os }}
@@ -246,7 +248,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    name: 🔄 Smoke tests React 18 / ${{ matrix.os }} / node 20 latest
+    name: 🔄 Smoke tests React 18 / ${{ matrix.os }} / node 20 latest / smoke-tests
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -666,6 +668,7 @@ jobs:
 
   create-cedar-app:
     needs: check
+    name: 🌲 Create Cedar App
     uses: ./.github/workflows/create-cedar-app-test.yml
 
   create-cedar-app-skip:

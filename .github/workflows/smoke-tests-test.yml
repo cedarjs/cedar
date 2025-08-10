@@ -9,7 +9,6 @@ on:
 
 jobs:
   smoke-tests:
-    name: 🔄 Smoke tests / ${{ inputs.os }} / node 20 latest
     runs-on: ${{ inputs.os }}
 
     env:

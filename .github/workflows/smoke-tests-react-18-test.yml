@@ -9,7 +9,6 @@ on:
 
 jobs:
   smoke-tests-react-18:
-    name: 🔄 Smoke tests React 18 / ${{ inputs.os }} / node 20 latest
     runs-on: ${{ inputs.os }}
 
     env:
