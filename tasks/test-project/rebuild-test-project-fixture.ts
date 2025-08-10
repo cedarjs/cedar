@@ -472,7 +472,7 @@ async function runCommand() {
 
       if (!runFromScripts.stdout.includes('Hello from myNestedScript')) {
         console.error('`yarn rw exec one/two/myNestedScript` output')
-        console.error(runFromRoot.stdout, runFromRoot.stderr)
+        console.error(runFromScripts.stdout, runFromScripts.stderr)
 
         throw new Error('Script not executed successfully')
       }
