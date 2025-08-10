@@ -104,13 +104,3 @@ fs.writeFileSync(
     'const import_meta = { glob: () => ({ "routes.tsx": () => null }) };',
   ),
 )
-
-console.log(
-  'globRoutesImporterFile',
-  fs.readFileSync(globRoutesImporterBuildPath, 'utf-8'),
-)
-console.log()
-console.log(
-  'MockProviders',
-  fs.readFileSync('./dist/cjs/web/MockProviders.js', 'utf-8'),
-)
