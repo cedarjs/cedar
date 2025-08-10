@@ -1,0 +1,36 @@
+name: Background Jobs E2E Test
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  background-jobs-e2e:
+    name: Background jobs E2E test / ${{ inputs.os }}
+    runs-on: ${{ inputs.os }}
+
+    env:
+      REDWOOD_CI: 1
+      REDWOOD_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        with:
+          canary: true
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Run E2E test script
+        run: yarn e2e:background-jobs ${{ steps.set-up-test-project.outputs.test-project-path }}
+        env:
+          REDWOOD_VERBOSE_TELEMETRY: ''

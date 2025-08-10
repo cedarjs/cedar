@@ -1,0 +1,29 @@
+name: 🔭 Telemetry Check
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  telemetry-check:
+    name: 🔭 Telemetry check / ${{ inputs.os }} / node 20 latest
+    runs-on: ${{ inputs.os }}
+
+    env:
+      REDWOOD_REDIRECT_TELEMETRY: 'http://127.0.0.1:48619' # Random port
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 📢 Listen for telemetry (CRWA)
+        run: node ./.github/actions/telemetry_check/check.mjs --mode crwa
+
+      - name: 📢 Listen for telemetry (CLI)
+        run: node ./.github/actions/telemetry_check/check.mjs --mode cli
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false

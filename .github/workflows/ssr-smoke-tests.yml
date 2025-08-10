@@ -1,0 +1,59 @@
+name: 🔁 SSR Smoke Tests
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  ssr-smoke-tests:
+    name: 🔁 SSR Smoke tests / ${{ inputs.os }}
+    runs-on: ${{ inputs.os }}
+
+    env:
+      REDWOOD_CI: 1
+      REDWOOD_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        with:
+          canary: true
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Run SSR codemods on test project
+        run: ./tasks/test-project/convert-to-ssr-fixture ${{ steps.set-up-test-project.outputs.test-project-path }}
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+
+      - name: 🎭 Install playwright dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Run SSR [DEV] smoke tests
+        working-directory: ./tasks/smoke-tests/streaming-ssr-dev
+        run: npx playwright test
+        env:
+          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
+          REDWOOD_DISABLE_TELEMETRY: 1
+
+      - name: Build for production
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        run: yarn rw build --no-prerender --verbose
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+
+      - name: Run SSR [PROD] smoke tests
+        working-directory: ./tasks/smoke-tests/streaming-ssr-prod
+        run: npx playwright test
+        env:
+          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
+          REDWOOD_DISABLE_TELEMETRY: 1

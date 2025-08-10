@@ -1,0 +1,113 @@
+name: 🔄 CLI Smoke Tests
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  cli-smoke-tests:
+    name: 🔄 CLI smoke tests / ${{ inputs.os }} / node 20 latest
+    runs-on: ${{ inputs.os }}
+
+    env:
+      REDWOOD_CI: 1
+      REDWOOD_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Run `rw info`
+        run: yarn rw info | tr -d '\n' | grep "npmPackages:.*@cedarjs/core:"
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run in /scripts `rw info`
+        run: yarn rw info | tr -d '\n' | grep "npmPackages:.*@cedarjs/core:"
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts
+
+      - name: Run `rw lint`
+        run: yarn rw lint ./api/src --fix
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "rw test api"
+        run: yarn rw test api --no-watch
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "rw test web"
+        run: yarn rw test web --no-watch
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "rw check"
+        run: yarn rw check
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "rw storybook"
+        run: yarn rw sb --smoke-test
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "rw exec"
+        run: yarn rw g script testScript && yarn rw exec testScript
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Nested script | Run "rw exec"
+        # Using -f to overwrite script that already exists in the test-project
+        run: yarn rw g script -f i/am/nested && yarn rw exec i/am/nested
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Nested script | Run in /scripts "rw exec"
+        # This is probably stretching the definition of "smoke test" a bit too
+        # much. But we don't have a better place to run a test like this
+        run: yarn rw g script i/am/nested/too && yarn rw exec i/am/nested/too | grep "Executing script with args"
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts/i/am
+
+      - name: Run "prisma generate"
+        run: yarn rw prisma generate
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "rw data-migrate"
+        run: yarn rw data-migrate up
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "data-migrate install"
+        run: yarn rw data-migrate install
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "prisma migrate"
+        run: yarn rw prisma migrate dev --name ci-test
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `rw deploy --help`
+        run: yarn rw setup deploy --help && yarn rw deploy --help
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `rw setup ui --help`
+        run: yarn rw setup --help && yarn rw setup ui --help
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "g page"
+        run: yarn rw g page ciTest
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "g sdl"
+        run: yarn rw g sdl userExample
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run "rw type-check"
+        run: yarn rw type-check
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Throw Error | Run `rw g sdl <model>`
+        run: yarn rw g sdl DoesNotExist
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        continue-on-error: true

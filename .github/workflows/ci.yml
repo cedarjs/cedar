@@ -83,90 +83,13 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    name: 🏗 Build, lint, test / ${{ matrix.os }} / node 20 latest
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Remove the tsc problem matcher if not ubuntu-latest
-        if: matrix.os != 'ubuntu-latest'
-        run: echo "echo "::remove-matcher owner=tsc::""
-
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 🔎 Lint
-        run: yarn lint
-
-      # TODO(jgmw): Re-enable when it doesn't hang
-      # - name: 🥡 Check packaging and attw
-      #   run: yarn check:package
-
-      - name: 🌡 Test Types
-        run: yarn test:types
-
-      - name: Get number of CPU cores
-        if: always()
-        id: cpu-cores
-        uses: SimenB/github-actions-cpu-cores@97ba232459a8e02ff6121db9362b09661c875ab8 # v2
-
-      - name: 🧪 Test
-        run: yarn test-ci --minWorkers=1 --maxWorkers=${{ steps.cpu-cores.outputs.count }}
+    uses: ./.github/workflows/build-lint-test.yml
+    with:
+      os: ${{ matrix.os }}
 
   tutorial-e2e:
     needs: check
-
-    name: 🌲 Tutorial E2E / node 20 latest
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 🌲 Install Cypress
-        run: yarn cypress install
-
-      - name: 🌲 Create a Cedar App
-        id: crwa
-        env:
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-        run: |
-          project_path=$(mktemp -d -t cedar.XXXXXX)
-          echo "project-path=$project_path" >> $GITHUB_OUTPUT
-
-          git config --global user.email "you@example.com"
-          git config --global user.name "Your Name"
-
-          ./tasks/run-e2e.cjs "$project_path" \
-            --no-build-framework \
-            --no-start
-
-      - name: Start the dev server in the background
-        run: |
-          yarn rw dev --no-generate --fwd="--no-open" 2>&1 | tee dev_server.log &
-        working-directory: ${{ steps.crwa.outputs.project-path }}
-
-      - name: 🌲 Run Cypress
-        uses: cypress-io/github-action@b8ba51a856ba5f4c15cf39007636d4ab04f23e3c # v6.10.2
-        env:
-          CYPRESS_RW_PATH: ${{ steps.crwa.outputs.project-path }}
-        with:
-          browser: chrome
-          env: true
-          install: false
-          wait-on: 'http://[::1]:8910'
-          working-directory: ./tasks/e2e
-          spec: |
-            cypress/e2e/01-tutorial/*.cy.js
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
-        with:
-          name: logs
-          path: |
-            ${{ steps.crwa.outputs.project-path }}/dev_server.log
-            ${{ steps.crwa.outputs.project-path }}/e2e.log
+    uses: ./.github/workflows/tutorial-e2e.yml
 
   smoke-tests:
     needs: check
@@ -199,108 +122,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    name: 🔄 CLI smoke tests / ${{ matrix.os }} / node 20 latest
-    runs-on: ${{ matrix.os }}
-
-    env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 🌲 Set up test project
-        id: set-up-test-project
-        uses: ./.github/actions/set-up-test-project
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: Run `rw info`
-        run: yarn rw info | tr -d '\n' | grep "npmPackages:.*@cedarjs/core:"
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run in /scripts `rw info`
-        run: yarn rw info | tr -d '\n' | grep "npmPackages:.*@cedarjs/core:"
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts
-
-      - name: Run `rw lint`
-        run: yarn rw lint ./api/src --fix
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "rw test api"
-        run: yarn rw test api --no-watch
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "rw test web"
-        run: yarn rw test web --no-watch
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "rw check"
-        run: yarn rw check
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "rw storybook"
-        run: yarn rw sb --smoke-test
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "rw exec"
-        run: yarn rw g script testScript && yarn rw exec testScript
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Nested script | Run "rw exec"
-        # Using -f to overwrite script that already exists in the test-project
-        run: yarn rw g script -f i/am/nested && yarn rw exec i/am/nested
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Nested script | Run in /scripts "rw exec"
-        # This is probably stretching the definition of "smoke test" a bit too
-        # much. But we don't have a better place to run a test like this
-        run: yarn rw g script i/am/nested/too && yarn rw exec i/am/nested/too | grep "Executing script with args"
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts/i/am
-
-      - name: Run "prisma generate"
-        run: yarn rw prisma generate
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "rw data-migrate"
-        run: yarn rw data-migrate up
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "data-migrate install"
-        run: yarn rw data-migrate install
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "prisma migrate"
-        run: yarn rw prisma migrate dev --name ci-test
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run `rw deploy --help`
-        run: yarn rw setup deploy --help && yarn rw deploy --help
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run `rw setup ui --help`
-        run: yarn rw setup --help && yarn rw setup ui --help
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "g page"
-        run: yarn rw g page ciTest
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "g sdl"
-        run: yarn rw g sdl userExample
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run "rw type-check"
-        run: yarn rw type-check
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Throw Error | Run `rw g sdl <model>`
-        run: yarn rw g sdl DoesNotExist
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-        continue-on-error: true
+    uses: ./.github/workflows/cli-smoke-tests.yml
+    with:
+      os: ${{ matrix.os }}
 
   telemetry-check:
     needs: check
@@ -309,24 +133,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    name: 🔭 Telemetry check / ${{ matrix.os }} / node 20 latest
-    runs-on: ${{ matrix.os }}
-
-    env:
-      REDWOOD_REDIRECT_TELEMETRY: 'http://127.0.0.1:48619' # Random port
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 📢 Listen for telemetry (CRWA)
-        run: node ./.github/actions/telemetry_check/check.mjs --mode crwa
-
-      - name: 📢 Listen for telemetry (CLI)
-        run: node ./.github/actions/telemetry_check/check.mjs --mode cli
-        env:
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+    uses: ./.github/workflows/telemetry-check.yml
+    with:
+      os: ${{ matrix.os }}
 
   rsc-smoke-tests:
     needs: [check, detect-changes]
@@ -336,77 +145,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    name: 🔄🐘 RSC Smoke tests / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 🌲 Set up RSC project
-        id: set-up-rsc-project
-        uses: ./.github/actions/set-up-rsc-project
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: 🎭 Install playwright dependencies
-        run: npx playwright install --with-deps chromium
-
-      - name: 🐘 Run RSC serve smoke tests
-        working-directory: tasks/smoke-tests/rsc
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-project.outputs.rsc-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      # TODO (RSC): This workflow times out on Windows. It looks as if the dev
-      # server starts up ok, but it doesn't seem like the browser is rendering
-      # what it should be. And now it's also started failing on Ubuntu. So I've
-      # disabled it for now. The error on Ubuntu is:
-      #   Failed to read a RSC payload created by a development version of
-      #   React on the server while using a production version on the client.
-      #   Always use matching versions on the server and the client.
-      - name: 🐘 Run RSC dev smoke tests
-        if: matrix.os == 'false__ubuntu-latest'
-        working-directory: tasks/smoke-tests/rsc-dev
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-project.outputs.rsc-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 🌲 Set up RSA smoke test
-        id: set-up-rsa-project
-        uses: ./.github/actions/set-up-rsa-project
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: 🐘 Run RSA smoke tests
-        working-directory: tasks/smoke-tests/rsa
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsa-project.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 🌲 Set up RSC Kitchen Sink smoke test
-        id: set-up-rsc-kitchen-sink-project
-        uses: ./.github/actions/set-up-rsc-kitchen-sink-project
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: 🐘 Run RSC Kitchen Sink smoke tests
-        working-directory: tasks/smoke-tests/rsc-kitchen-sink
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-kitchen-sink-project.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
+    uses: ./.github/workflows/rsc-smoke-tests.yml
+    with:
+      os: ${{ matrix.os }}
 
   ssr-smoke-tests:
     needs: [check, detect-changes]
@@ -417,54 +158,9 @@ jobs:
         # TODO: add `windows-latest`.
         os: [ubuntu-latest]
 
-    name: 🔁 SSR Smoke tests / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 🌲 Set up test project
-        id: set-up-test-project
-        uses: ./.github/actions/set-up-test-project
-        with:
-          canary: true
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: Run SSR codemods on test project
-        run: ./tasks/test-project/convert-to-ssr-fixture ${{ steps.set-up-test-project.outputs.test-project-path }}
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 🎭 Install playwright dependencies
-        run: npx playwright install --with-deps chromium
-
-      - name: Run SSR [DEV] smoke tests
-        working-directory: ./tasks/smoke-tests/streaming-ssr-dev
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: Build for production
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-        run: yarn rw build --no-prerender --verbose
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: Run SSR [PROD] smoke tests
-        working-directory: ./tasks/smoke-tests/streaming-ssr-prod
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
-          REDWOOD_DISABLE_TELEMETRY: 1
+    uses: ./.github/workflows/ssr-smoke-tests.yml
+    with:
+      os: ${{ matrix.os }}
 
   fragments-smoke-tests:
     needs: check
@@ -473,66 +169,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    name: 📄 Fragments Smoke tests / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 🌲 Set up test project
-        id: set-up-test-project
-        uses: ./.github/actions/set-up-test-project
-        with:
-          canary: true
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: Run Fragments codemods on test project
-        run: npx -y tsx ./tasks/test-project/add-gql-fragments ${{ steps.set-up-test-project.outputs.test-project-path }}
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 🎭 Install playwright dependencies
-        run: npx playwright install --with-deps chromium
-
-      - name: Run Fragments dev smoke tests
-        working-directory: ./tasks/smoke-tests/fragments-dev
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: Build for production
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-        run: yarn rw build
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: Run Fragments serve smoke tests
-        working-directory: ./tasks/smoke-tests/fragments-serve
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: Enable trusted-documents in Fragments test project
-        run: npx -y tsx ./tasks/test-project/set-up-trusted-documents ${{ steps.set-up-test-project.outputs.test-project-path }}
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 📄 Run prerender smoke tests against Fragments test project (with trusted-documents enabled)
-        working-directory: tasks/smoke-tests/prerender
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
+    uses: ./.github/workflows/fragments-smoke-tests.yml
+    with:
+      os: ${{ matrix.os }}
 
   create-cedar-app:
     needs: check
@@ -541,17 +180,7 @@ jobs:
 
   server-tests:
     needs: check
-
-    name: Server tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - run: yarn vitest run
-        working-directory: ./tasks/server-tests
+    uses: ./.github/workflows/server-tests.yml
 
   background-jobs-e2e:
     needs: check
@@ -560,31 +189,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    name: Background jobs E2E test / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 🌲 Set up test project
-        id: set-up-test-project
-        uses: ./.github/actions/set-up-test-project
-        with:
-          canary: true
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: Run E2E test script
-        run: yarn e2e:background-jobs ${{ steps.set-up-test-project.outputs.test-project-path }}
-        env:
-          REDWOOD_VERBOSE_TELEMETRY: ''
+    uses: ./.github/workflows/background-jobs-e2e.yml
+    with:
+      os: ${{ matrix.os }}
 
   ci-status-check:
     needs:

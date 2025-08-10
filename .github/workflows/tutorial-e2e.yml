@@ -1,0 +1,58 @@
+name: 🌲 Tutorial E2E
+
+on:
+  workflow_call:
+
+jobs:
+  tutorial-e2e:
+    name: 🌲 Tutorial E2E / node 20 latest
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Install Cypress
+        run: yarn cypress install
+
+      - name: 🌲 Create a Cedar App
+        id: crwa
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+        run: |
+          project_path=$(mktemp -d -t cedar.XXXXXX)
+          echo "project-path=$project_path" >> $GITHUB_OUTPUT
+
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+
+          ./tasks/run-e2e.cjs "$project_path" \
+            --no-build-framework \
+            --no-start
+
+      - name: Start the dev server in the background
+        run: |
+          yarn rw dev --no-generate --fwd="--no-open" 2>&1 | tee dev_server.log &
+        working-directory: ${{ steps.crwa.outputs.project-path }}
+
+      - name: 🌲 Run Cypress
+        uses: cypress-io/github-action@b8ba51a856ba5f4c15cf39007636d4ab04f23e3c # v6.10.2
+        env:
+          CYPRESS_RW_PATH: ${{ steps.crwa.outputs.project-path }}
+        with:
+          browser: chrome
+          env: true
+          install: false
+          wait-on: 'http://[::1]:8910'
+          working-directory: ./tasks/e2e
+          spec: |
+            cypress/e2e/01-tutorial/*.cy.js
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: logs
+          path: |
+            ${{ steps.crwa.outputs.project-path }}/dev_server.log
+            ${{ steps.crwa.outputs.project-path }}/e2e.log
