@@ -259,7 +259,7 @@ const createProject = () => {
   const subprocess = exec(
     cmd,
     // We create a ts project and convert using ts-to-js at the end if typescript flag is false
-    ['--no-yarn-install', '--typescript', '--overwrite', '--no-git'],
+    ['--no-yarn-install', '--typescript', '--overwrite', '--no-git', '--esm'],
     getExecaOptions(RW_FRAMEWORK_PATH),
   )
 
@@ -267,7 +267,10 @@ const createProject = () => {
 }
 
 const copyProject = async () => {
-  const fixturePath = path.join(RW_FRAMEWORK_PATH, '__fixtures__/test-project')
+  const fixturePath = path.join(
+    RW_FRAMEWORK_PATH,
+    '__fixtures__/esm-test-project',
+  )
 
   // remove existing Fixture
   await rimraf(fixturePath)
@@ -407,7 +410,7 @@ async function runCommand() {
     task: () => {
       return apiTasks(OUTPUT_PROJECT_PATH, {
         linkWithLatestFwBuild: true,
-        esmProject: false,
+        esmProject: true,
       })
     },
   })
@@ -560,7 +563,7 @@ async function runCommand() {
       )
       const templateRootPackageJsonPath = path.join(
         __dirname,
-        '../../packages/create-cedar-app/templates/ts/package.json',
+        '../../packages/create-cedar-app/templates/esm-ts/package.json',
       )
       const newRootPackageJson = JSON.parse(
         fs.readFileSync(templateRootPackageJsonPath, 'utf8'),

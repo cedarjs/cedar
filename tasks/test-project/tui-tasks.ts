@@ -375,9 +375,14 @@ async function addModel(schema: string) {
   fs.writeFileSync(path, `${current.trim()}\n\n${schema}\n`)
 }
 
+interface ApiTasksOptions {
+  linkWithLatestFwBuild: boolean
+  esmProject: boolean
+}
+
 export async function apiTasks(
   outputPath: string,
-  { linkWithLatestFwBuild }: { linkWithLatestFwBuild: boolean },
+  { linkWithLatestFwBuild, esmProject }: ApiTasksOptions,
 ) {
   OUTPUT_PATH = outputPath
 
@@ -893,6 +898,37 @@ export async function apiTasks(
 
         fs.mkdirSync(path.dirname(projectPath), { recursive: true })
         fs.writeFileSync(projectPath, fs.readFileSync(templatePath))
+      },
+    },
+    {
+      title: 'Add vitest db import tracking tests for ESM test project',
+      task: () => {
+        if (!esmProject) {
+          return
+        }
+
+        const templatesDir = path.join(__dirname, 'templates', 'api')
+        const templatePath1 = path.join(templatesDir, '1-db-import.test.ts')
+        const templatePath2 = path.join(templatesDir, '2-db-import.test.ts')
+        const templatePath3 = path.join(templatesDir, '3-db-import.test.ts')
+
+        const testsDir = path.join(OUTPUT_PATH, 'api', 'src', '__tests__')
+        const testFilePath1 = path.join(testsDir, '1-db-import.test.ts')
+        const testFilePath2 = path.join(testsDir, '2-db-import.test.ts')
+        const testFilePath3 = path.join(testsDir, '3-db-import.test.ts')
+
+        fs.mkdirSync(testsDir, { recursive: true })
+        fs.copyFileSync(templatePath1, testFilePath1)
+        fs.copyFileSync(templatePath2, testFilePath2)
+        fs.copyFileSync(templatePath3, testFilePath3)
+
+        // I opted to add an additional vitest config file rather than modifying
+        // the existing one because I wanted to keep one looking exactly the
+        // same as it'll look in user's projects.
+        fs.copyFileSync(
+          path.join(templatesDir, 'vitest-sort.config.ts'),
+          path.join(OUTPUT_PATH, 'api', 'vitest-sort.config.ts'),
+        )
       },
     },
   ]
