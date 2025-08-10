@@ -1,5 +1,8 @@
 /* eslint-env node */
 
+// To run these tests locally, go to ~/cedarjs-fw/packages/create-cedar-app
+// Then run `PROJECT_PATH=./ yarn test:e2e`
+
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
