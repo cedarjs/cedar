@@ -8,7 +8,7 @@ on:
         type: string
 
 jobs:
-  smoke-tests-react-18-test:
+  smoke-tests-react-18:
     runs-on: ${{ inputs.os }}
 
     env:

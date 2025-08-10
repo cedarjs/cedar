@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  create-cedar-app-test:
+  create-cedar-app:
     runs-on: ubuntu-latest
 
     env:
