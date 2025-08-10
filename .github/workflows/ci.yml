@@ -210,92 +210,9 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     name: 🔄 Smoke tests / ${{ matrix.os }} / node 20 latest
-    runs-on: ${{ matrix.os }}
-
-    env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
-
-    steps:
-      - name: Checkout the framework code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-
-      - name: 🌲 Set up test project
-        id: set-up-test-project
-        uses: ./.github/actions/set-up-test-project
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: 🎭 Install playwright dependencies
-        run: npx playwright install --with-deps chromium
-
-      - name: 🧑‍💻 Run dev smoke tests
-        working-directory: ./tasks/smoke-tests/dev
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 🔐 Run auth smoke tests
-        working-directory: ./tasks/smoke-tests/auth
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: Run `rw build --no-prerender`
-        run: |
-          yarn rw build --no-prerender
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run `rw prerender`
-        run: |
-          yarn rw prerender --verbose
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run `rw test web`
-        run: |
-          yarn rw test web --no-watch
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run `rw test api`
-        run: |
-          yarn rw test api --no-watch
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      - name: Run db import tracking tests
-        shell: bash
-        run: |
-          # Only run this for ESM projects where the vitest config file exists
-          if test -f ./vitest-sort.config.ts; then
-            npx vitest --config ./vitest-sort.config.ts run
-          fi
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/api
-
-      - name: 🖥️ Run serve smoke tests
-        working-directory: tasks/smoke-tests/serve
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 📄 Run prerender smoke tests
-        working-directory: tasks/smoke-tests/prerender
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 📕 Run Storybook smoke tests
-        working-directory: tasks/smoke-tests/storybook
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
+    uses: ./.github/workflows/smoke-tests-test.yml
+    with:
+      os: ${{ matrix.os }}
 
   smoke-tests-skip:
     needs: detect-changes
@@ -319,92 +236,9 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     name: 🔄 Smoke tests React 18 / ${{ matrix.os }} / node 20 latest
-    runs-on: ${{ matrix.os }}
-
-    env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
-
-    steps:
-      - name: Checkout the framework code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - name: Set up job
-        uses: ./.github/actions/set-up-job
-        with:
-          build: false
-
-      - name: Downgrade to React 18
-        run: |
-          yarn tsx ./tasks/downgradeToReact18.mts
-
-      # One of our dependencies is on GitHub instead of NPM and without authentication
-      # we'll get rate limited and this step becomes flaky.
-      - name: 🐈 Yarn install
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-        run: yarn install --inline-builds
-
-      - name: 🏗️ Build
-        shell: bash
-        run: yarn build
-
-      - name: 🌲 Set up test project for React 18
-        id: set-up-test-project-react-18
-        uses: ./.github/actions/set-up-test-project
-        env:
-          REDWOOD_DISABLE_TELEMETRY: 1
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-      - name: 🎭 Install playwright dependencies
-        run: npx playwright install --with-deps chromium
-
-      - name: 🧑‍💻 Run dev smoke tests
-        working-directory: ./tasks/smoke-tests/dev
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project-react-18.outputs.test-project-path }}'
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 🔐 Run auth smoke tests
-        working-directory: ./tasks/smoke-tests/auth
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: Run `rw build --no-prerender`
-        run: |
-          yarn rw build --no-prerender
-        working-directory: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
-
-      - name: Run `rw prerender`
-        run: |
-          yarn rw prerender --verbose
-        working-directory: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
-
-      - name: 🖥️ Run serve smoke tests
-        working-directory: tasks/smoke-tests/serve
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 📄 Run prerender smoke tests
-        working-directory: tasks/smoke-tests/prerender
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
-      - name: 📕 Run Storybook smoke tests
-        working-directory: tasks/smoke-tests/storybook
-        run: npx playwright test
-        env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
+    uses: ./.github/workflows/smoke-tests-react-18-test.yml
+    with:
+      os: ${{ matrix.os }}
 
   smoke-tests-react-18-skip:
     needs: detect-changes
