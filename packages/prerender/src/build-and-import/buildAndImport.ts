@@ -9,7 +9,7 @@ import { rollup } from 'rollup'
 import { swc } from 'rollup-plugin-swc3'
 import unimportPlugin from 'unimport/unplugin'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
 
 import {
   getPathsFromTypeScriptConfig,
@@ -72,6 +72,8 @@ export async function buildAndImport(
     fs.mkdirSync(outDir, { recursive: true })
   }
 
+  const isEsm = projectIsEsm()
+
   const build = await rollup({
     input: [options.filepath],
     output: {
@@ -123,12 +125,19 @@ export async function buildAndImport(
             as: 'React',
             from: 'react',
           },
+          // import { gql } from 'graphql-tag'
+          !useTrustedDocumentsGqlTag &&
+            isEsm && {
+              name: 'gql',
+              from: 'graphql-tag',
+            },
           // import gql from 'graphql-tag'
-          !useTrustedDocumentsGqlTag && {
-            name: 'default',
-            as: 'gql',
-            from: 'graphql-tag',
-          },
+          !useTrustedDocumentsGqlTag &&
+            !isEsm && {
+              name: 'default',
+              as: 'gql',
+              from: 'graphql-tag',
+            },
           // import { gql } from 'src/graphql/gql'
           useTrustedDocumentsGqlTag && {
             name: 'gql',
