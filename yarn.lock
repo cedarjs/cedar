@@ -3635,6 +3635,7 @@ __metadata:
     "@cedarjs/internal": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/server-store": "workspace:*"
+    "@cedarjs/testing": "workspace:*"
     "@cedarjs/web": "workspace:*"
     "@hyrious/esbuild-plugin-commonjs": "npm:0.2.6"
     "@swc/core": "npm:1.13.3"
