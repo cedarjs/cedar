@@ -5,6 +5,7 @@ on:
 
 jobs:
   create-cedar-app:
+    name: 🌲 Create Cedar App
     runs-on: ubuntu-latest
 
     env:
