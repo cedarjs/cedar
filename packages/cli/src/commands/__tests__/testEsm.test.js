@@ -1,4 +1,4 @@
-globalThis.__dirname = __dirname
+globalThis.__dirname = import.meta.dirname
 import '../../lib/test.js'
 
 vi.mock('execa', () => ({
@@ -41,7 +41,9 @@ test('Syncs or creates test database when the flag --db-push is set to true', as
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn vitest')
 
-  expect(execa.mock.results[0].value.params).toContain('--project', 'api')
+  expect(execa.mock.results[0].value.params).toEqual(
+    expect.arrayContaining(['--project', 'api']),
+  )
 })
 
 test('Skips test database sync/creation when the flag --db-push is set to false', async () => {
@@ -64,7 +66,7 @@ test('Runs tests for all available sides if no side filter passed', async () => 
   expect(execa.mock.results[0].value.params).toContain('api')
 })
 
-test('Runs tests specified side if even with additional filters', async () => {
+test('Runs tests specified side even with additional filters', async () => {
   await handler({
     filter: ['web', 'bazinga'],
   })
