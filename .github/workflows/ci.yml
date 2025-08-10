@@ -832,7 +832,7 @@ jobs:
     steps:
       - run: echo "Skipped"
 
-  crwa:
+  create-cedar-app:
     needs: check
 
     name: 🌲 Create Cedar App
@@ -905,7 +905,7 @@ jobs:
         env:
           PROJECT_PATH: ${{ env.PROJECT_PATH }}
 
-  crwa-skip:
+  create-cedar-app-skip:
     needs: detect-changes
     if: needs.detect-changes.outputs.code == 'false'
 
