@@ -9,7 +9,6 @@ on:
 
 jobs:
   rsc-smoke-tests:
-    name: 🔄🐘 RSC Smoke tests / ${{ inputs.os }}
     runs-on: ${{ inputs.os }}
 
     env:

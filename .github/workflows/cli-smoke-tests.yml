@@ -9,7 +9,6 @@ on:
 
 jobs:
   cli-smoke-tests:
-    name: 🔄 CLI smoke tests / ${{ inputs.os }} / node 20 latest
     runs-on: ${{ inputs.os }}
 
     env:

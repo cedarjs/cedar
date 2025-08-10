@@ -9,7 +9,6 @@ on:
 
 jobs:
   telemetry-check:
-    name: 🔭 Telemetry check / ${{ inputs.os }} / node 20 latest
     runs-on: ${{ inputs.os }}
 
     env:

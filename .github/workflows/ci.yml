@@ -83,12 +83,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    name: 🏗 Build, lint, test / ${{ matrix.os }} / node 20 latest
     uses: ./.github/workflows/build-lint-test.yml
     with:
       os: ${{ matrix.os }}
 
   tutorial-e2e:
     needs: check
+    name: 🌲 Tutorial E2E / node 20 latest
     uses: ./.github/workflows/tutorial-e2e.yml
 
   smoke-tests:
@@ -122,6 +124,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    name: 🔄 CLI smoke tests / ${{ matrix.os }} / node 20 latest
     uses: ./.github/workflows/cli-smoke-tests.yml
     with:
       os: ${{ matrix.os }}
@@ -133,6 +136,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    name: 🔭 Telemetry check / ${{ matrix.os }} / node 20 latest
     uses: ./.github/workflows/telemetry-check.yml
     with:
       os: ${{ matrix.os }}
@@ -145,6 +149,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    name: 🔄🐘 RSC Smoke tests / ${{ matrix.os }}
     uses: ./.github/workflows/rsc-smoke-tests.yml
     with:
       os: ${{ matrix.os }}
@@ -158,6 +163,7 @@ jobs:
         # TODO: add `windows-latest`.
         os: [ubuntu-latest]
 
+    name: 🔁 SSR Smoke tests / ${{ matrix.os }}
     uses: ./.github/workflows/ssr-smoke-tests.yml
     with:
       os: ${{ matrix.os }}
@@ -169,6 +175,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    name: 📄 Fragments Smoke tests / ${{ matrix.os }}
     uses: ./.github/workflows/fragments-smoke-tests.yml
     with:
       os: ${{ matrix.os }}
@@ -180,6 +187,7 @@ jobs:
 
   server-tests:
     needs: check
+    name: Server tests
     uses: ./.github/workflows/server-tests.yml
 
   background-jobs-e2e:
@@ -189,6 +197,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    name: Background jobs E2E test / ${{ matrix.os }}
     uses: ./.github/workflows/background-jobs-e2e.yml
     with:
       os: ${{ matrix.os }}

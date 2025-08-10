@@ -9,7 +9,6 @@ on:
 
 jobs:
   background-jobs-e2e:
-    name: Background jobs E2E test / ${{ inputs.os }}
     runs-on: ${{ inputs.os }}
 
     env:

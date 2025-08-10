@@ -9,7 +9,6 @@ on:
 
 jobs:
   ssr-smoke-tests:
-    name: 🔁 SSR Smoke tests / ${{ inputs.os }}
     runs-on: ${{ inputs.os }}
 
     env:

@@ -5,7 +5,6 @@ on:
 
 jobs:
   tutorial-e2e:
-    name: 🌲 Tutorial E2E / node 20 latest
     runs-on: ubuntu-latest
 
     steps:

@@ -9,7 +9,6 @@ on:
 
 jobs:
   build-lint-test:
-    name: 🏗 Build, lint, test / ${{ inputs.os }} / node 20 latest
     runs-on: ${{ inputs.os }}
 
     steps:

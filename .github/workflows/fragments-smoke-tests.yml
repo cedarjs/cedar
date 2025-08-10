@@ -9,7 +9,6 @@ on:
 
 jobs:
   fragments-smoke-tests:
-    name: 📄 Fragments Smoke tests / ${{ inputs.os }}
     runs-on: ${{ inputs.os }}
 
     env:
