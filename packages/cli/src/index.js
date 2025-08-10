@@ -8,6 +8,7 @@ import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { loadEnvFiles, recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { projectIsEsm } from '@cedarjs/project-config'
 import { telemetryMiddleware } from '@cedarjs/telemetry'
 
 import * as buildCommand from './commands/build.js'
@@ -29,6 +30,7 @@ import * as serveCommand from './commands/serve.js'
 import * as setupCommand from './commands/setup.js'
 import * as studioCommand from './commands/studio.js'
 import * as testCommand from './commands/test.js'
+import * as testCommandEsm from './commands/testEsm.js'
 import * as tstojsCommand from './commands/ts-to-js.js'
 import * as typeCheckCommand from './commands/type-check.js'
 import * as upgradeCommand from './commands/upgrade.js'
@@ -222,7 +224,7 @@ async function runYargs() {
     .command(serveCommand)
     .command(setupCommand)
     .command(studioCommand)
-    .command(testCommand)
+    .command(projectIsEsm() ? testCommandEsm : testCommand)
     .command(tstojsCommand)
     .command(typeCheckCommand)
     .command(upgradeCommand)
