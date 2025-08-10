@@ -60,16 +60,6 @@ jobs:
       - name: ✅ Check constraints, dependencies, and package.json's
         run: yarn check
 
-  check-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    name: ✅ Check constraints, dependencies, and package.json's
-    runs-on: ubuntu-latest
-
-    steps:
-      - run: echo "Skipped"
-
   formatting-check:
     name: 📝 Check formatting (prettier)
     runs-on: ubuntu-latest
@@ -122,20 +112,6 @@ jobs:
 
       - name: 🧪 Test
         run: yarn test-ci --minWorkers=1 --maxWorkers=${{ steps.cpu-cores.outputs.count }}
-
-  build-lint-test-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    name: 🏗 Build, lint, test / ${{ matrix.os }} / node 20 latest
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - run: echo "Skipped"
 
   tutorial-e2e:
     needs: check
@@ -192,16 +168,6 @@ jobs:
             ${{ steps.crwa.outputs.project-path }}/dev_server.log
             ${{ steps.crwa.outputs.project-path }}/e2e.log
 
-  tutorial-e2e-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    name: 🌲 Tutorial E2E / node 20 latest
-    runs-on: ubuntu-latest
-
-    steps:
-      - run: echo "Skipped"
-
   smoke-tests:
     needs: check
 
@@ -214,20 +180,6 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
-  smoke-tests-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    name: 🔄 Smoke tests / ${{ matrix.os }} / node 20 latest / smoke-tests
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - run: echo "Skipped"
-
   smoke-tests-react-18:
     needs: check
 
@@ -239,20 +191,6 @@ jobs:
     uses: ./.github/workflows/smoke-tests-react-18-test.yml
     with:
       os: ${{ matrix.os }}
-
-  smoke-tests-react-18-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    name: 🔄 Smoke tests React 18 / ${{ matrix.os }} / node 20 latest / smoke-tests
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - run: echo "Skipped"
 
   cli-smoke-tests:
     needs: check
@@ -364,20 +302,6 @@ jobs:
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
         continue-on-error: true
 
-  cli-smoke-tests-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    name: 🔄 CLI smoke tests / ${{ matrix.os }} / node 20 latest
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - run: echo "Skipped"
-
   telemetry-check:
     needs: check
 
@@ -403,20 +327,6 @@ jobs:
         run: node ./.github/actions/telemetry_check/check.mjs --mode cli
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
-
-  telemetry-check-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    name: 🔭 Telemetry check / ${{ matrix.os }} / node 20 latest
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - run: echo "Skipped"
 
   rsc-smoke-tests:
     needs: [check, detect-changes]
@@ -498,20 +408,6 @@ jobs:
           REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-kitchen-sink-project.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
-  rsc-smoke-tests-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.rsc == 'false'
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    name: 🔄🐘 RSC Smoke tests / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - run: echo "Skipped"
-
   ssr-smoke-tests:
     needs: [check, detect-changes]
     if: needs.detect-changes.outputs.ssr == 'true'
@@ -569,21 +465,6 @@ jobs:
         env:
           REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
           REDWOOD_DISABLE_TELEMETRY: 1
-
-  ssr-smoke-tests-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.ssr == 'false'
-
-    strategy:
-      matrix:
-        # TODO: add `windows-latest`.
-        os: [ubuntu-latest]
-
-    name: 🔁 SSR Smoke tests / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - run: echo "Skipped"
 
   fragments-smoke-tests:
     needs: check
@@ -653,33 +534,10 @@ jobs:
           REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
-  fragments-smoke-tests-skip:
-    needs: detect-changes
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    name: 📄 Fragments Smoke tests / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - run: echo "Skipped"
-
   create-cedar-app:
     needs: check
     name: 🌲 Create Cedar App
     uses: ./.github/workflows/create-cedar-app-test.yml
-
-  create-cedar-app-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    name: 🌲 Create Cedar App / create-cedar-app
-    runs-on: ubuntu-latest
-
-    steps:
-      - run: echo "Skipped"
 
   server-tests:
     needs: check
@@ -694,16 +552,6 @@ jobs:
 
       - run: yarn vitest run
         working-directory: ./tasks/server-tests
-
-  server-tests-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
-
-    name: Server tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - run: echo "Skipped"
 
   background-jobs-e2e:
     needs: check
@@ -738,16 +586,33 @@ jobs:
         env:
           REDWOOD_VERBOSE_TELEMETRY: ''
 
-  background-jobs-e2e-skip:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.code == 'false'
+  ci-status-check:
+    needs:
+      - check
+      - build-lint-test
+      - tutorial-e2e
+      - smoke-tests
+      - smoke-tests-react-18
+      - cli-smoke-tests
+      - telemetry-check
+      - rsc-smoke-tests
+      - ssr-smoke-tests
+      - fragments-smoke-tests
+      - create-cedar-app
+      - server-tests
+      - background-jobs-e2e
+    if: always()
 
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    name: Background jobs E2E test / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: ✅ CI Status Check
+    runs-on: ubuntu-latest
 
     steps:
-      - run: echo "Skipped"
+      - name: Evaluate previous job status
+        run: |
+          if [[ ${{ contains(needs.*.result, 'failure') }} == "true" ]]; then
+            echo "❌ One or more required jobs have failed"
+            exit 1
+          else
+            echo "✅ All required jobs have passed or been skipped"
+            exit 0
+          fi
