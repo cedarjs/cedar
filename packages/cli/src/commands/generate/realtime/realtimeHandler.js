@@ -129,7 +129,7 @@ export async function handler({ name, type, force, verbose, silent }) {
             'templates',
             'subscriptions',
             'blank',
-            projectIsEsm() ? 'esm-blank.ts.template' : `blank.ts.template`,
+            `blank.ts.template`,
           )
 
           const exampleFile = path.join(
@@ -144,6 +144,18 @@ export async function handler({ name, type, force, verbose, silent }) {
                 exampleFile,
                 exampleSubscriptionTemplateContent,
               )
+
+          const blankTemplateContent = await generateTemplate(
+            setupScriptContent,
+            templateVariables(name),
+          )
+
+          if (projectIsEsm()) {
+            blankTemplateContent.replace(
+              "import gql from 'graphql-tag'",
+              "import { gql } from 'graphql-tag'",
+            )
+          }
 
           // write all files
           return [
@@ -161,16 +173,9 @@ export async function handler({ name, type, force, verbose, silent }) {
                 overwriteExisting: force,
               },
             ),
-            writeFile(
-              exampleFile,
-              await generateTemplate(
-                setupScriptContent,
-                templateVariables(name),
-              ),
-              {
-                overwriteExisting: force,
-              },
-            ),
+            writeFile(exampleFile, blankTemplateContent, {
+              overwriteExisting: force,
+            }),
           ]
         },
       },
