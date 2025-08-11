@@ -7,6 +7,7 @@ import pluralize, { singular } from 'pluralize'
 import prompts from 'prompts'
 
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
+import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // Move this check out of experimental when server file is moved as well
@@ -128,7 +129,7 @@ export async function handler({ name, type, force, verbose }) {
             'templates',
             'subscriptions',
             'blank',
-            `blank.ts.template`,
+            projectIsEsm() ? 'esm-blank.ts.template' : `blank.ts.template`,
           )
 
           const exampleFile = path.join(

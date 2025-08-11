@@ -5,6 +5,7 @@ import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
+import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
@@ -67,7 +68,9 @@ export async function handler({ force, includeExamples, verbose }) {
               'templates',
               'subscriptions',
               'countdown',
-              `countdown.ts.template`,
+              projectIsEsm()
+                ? 'esm-countdown.ts.template'
+                : `countdown.ts.template`,
             ),
             'utf-8',
           )
@@ -148,7 +151,9 @@ export async function handler({ force, includeExamples, verbose }) {
               'templates',
               'subscriptions',
               'newMessage',
-              `newMessage.ts.template`,
+              projectIsEsm()
+                ? 'esm-newMessage.ts.template'
+                : 'newMessage.ts.template',
             ),
             'utf-8',
           )
