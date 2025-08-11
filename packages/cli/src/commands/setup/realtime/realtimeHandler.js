@@ -68,12 +68,17 @@ export async function handler({ force, includeExamples, verbose }) {
               'templates',
               'subscriptions',
               'countdown',
-              projectIsEsm()
-                ? 'esm-countdown.ts.template'
-                : `countdown.ts.template`,
+              `countdown.ts.template`,
             ),
             'utf-8',
           )
+
+          if (projectIsEsm()) {
+            exampleSubscriptionTemplateContent.replace(
+              "import gql from 'graphql-tag'",
+              "import { gql } from 'graphql-tag'",
+            )
+          }
 
           const exampleFile = path.join(
             redwoodPaths.api.subscriptions,
@@ -151,12 +156,17 @@ export async function handler({ force, includeExamples, verbose }) {
               'templates',
               'subscriptions',
               'newMessage',
-              projectIsEsm()
-                ? 'esm-newMessage.ts.template'
-                : 'newMessage.ts.template',
+              'newMessage.ts.template',
             ),
             'utf-8',
           )
+
+          if (projectIsEsm()) {
+            exampleSubscriptionTemplateContent.replace(
+              "import gql from 'graphql-tag'",
+              "import { gql } from 'graphql-tag'",
+            )
+          }
 
           const exampleFile = path.join(
             redwoodPaths.api.subscriptions,
