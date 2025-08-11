@@ -34,6 +34,8 @@ fs.rmSync('./config', { recursive: true, force: true })
 fs.mkdirSync('./config')
 fs.cpSync('./dist/cjs/config', './config', { recursive: true })
 fs.cpSync('./dist/cjs/package.json', './config/package.json')
+fs.cpSync('./dist/cjs/package.json', './config/jest/api/package.json')
+fs.cpSync('./dist/cjs/package.json', './config/jest/web/package.json')
 
 // Replace relative imports with absolute @cedarjs/testing/dist/cjs imports in built CJS files
 function replaceImportsInFile(filePath: string) {
