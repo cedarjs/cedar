@@ -145,13 +145,13 @@ export async function handler({ name, type, force, verbose, silent }) {
                 exampleSubscriptionTemplateContent,
               )
 
-          const blankTemplateContent = await generateTemplate(
+          let blankTemplateContent = await generateTemplate(
             setupScriptContent,
             templateVariables(name),
           )
 
           if (projectIsEsm()) {
-            blankTemplateContent.replace(
+            blankTemplateContent = blankTemplateContent.replace(
               "import gql from 'graphql-tag'",
               "import { gql } from 'graphql-tag'",
             )

@@ -62,7 +62,7 @@ export async function handler({ force, includeExamples, verbose }) {
         title: 'Adding Countdown example subscription ...',
         enabled: () => includeExamples,
         task: async () => {
-          const exampleSubscriptionTemplateContent = fs.readFileSync(
+          let exampleSubscriptionTemplateContent = fs.readFileSync(
             path.resolve(
               import.meta.dirname,
               'templates',
@@ -74,10 +74,11 @@ export async function handler({ force, includeExamples, verbose }) {
           )
 
           if (projectIsEsm()) {
-            exampleSubscriptionTemplateContent.replace(
-              "import gql from 'graphql-tag'",
-              "import { gql } from 'graphql-tag'",
-            )
+            exampleSubscriptionTemplateContent =
+              exampleSubscriptionTemplateContent.replace(
+                "import gql from 'graphql-tag'",
+                "import { gql } from 'graphql-tag'",
+              )
           }
 
           const exampleFile = path.join(
@@ -150,7 +151,7 @@ export async function handler({ force, includeExamples, verbose }) {
 
           // subscription
 
-          const exampleSubscriptionTemplateContent = fs.readFileSync(
+          let exampleSubscriptionTemplateContent = fs.readFileSync(
             path.resolve(
               import.meta.dirname,
               'templates',
@@ -162,10 +163,11 @@ export async function handler({ force, includeExamples, verbose }) {
           )
 
           if (projectIsEsm()) {
-            exampleSubscriptionTemplateContent.replace(
-              "import gql from 'graphql-tag'",
-              "import { gql } from 'graphql-tag'",
-            )
+            exampleSubscriptionTemplateContent =
+              exampleSubscriptionTemplateContent.replace(
+                "import gql from 'graphql-tag'",
+                "import { gql } from 'graphql-tag'",
+              )
           }
 
           const exampleFile = path.join(
