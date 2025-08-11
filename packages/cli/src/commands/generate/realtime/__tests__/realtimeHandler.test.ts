@@ -36,6 +36,7 @@ vi.mock('fs-extra', async () => {
         return ''
       },
       writeFileSync: (dst: string, content: string) => {
+        // Use `/` on both Windows and Unix
         mocks.writtenFiles[dst.replaceAll(/\\/g, '/')] = content
       },
     },
