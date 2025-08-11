@@ -41,7 +41,7 @@ const templateVariables = (name) => {
   }
 }
 
-export async function handler({ name, type, force, verbose }) {
+export async function handler({ name, type, force, verbose, silent }) {
   const redwoodPaths = getPaths()
   const ts = isTypeScriptProject()
   name = singular(name.toLowerCase())
@@ -242,7 +242,7 @@ export async function handler({ name, type, force, verbose }) {
     ],
     {
       rendererOptions: { collapseSubtasks: false, persistentOutput: true },
-      renderer: verbose ? 'verbose' : 'default',
+      renderer: silent ? 'silent' : verbose ? 'verbose' : 'default',
     },
   )
 
