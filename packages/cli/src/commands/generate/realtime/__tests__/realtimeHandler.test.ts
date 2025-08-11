@@ -5,9 +5,9 @@ import { vi, describe, afterEach, beforeEach, it, expect } from 'vitest'
 // @ts-expect-error - no types for JS files
 import { handler } from '../realtimeHandler.js'
 
-vi.hoisted(async () => {
-  process.env.NO_COLOR = 'true'
-})
+// vi.hoisted(async () => {
+//   process.env.NO_COLOR = 'true'
+// })
 
 const mocks = vi.hoisted(() => ({
   realtimeTs: '',
@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
   writtenFiles: {} as Record<string, string>,
 }))
 
-vi.mock('node:fs', async () => {
+vi.mock('fs-extra', async () => {
   const fs = await vi.importActual<typeof FS>('node:fs')
 
   return {
@@ -88,9 +88,10 @@ describe('realtimeHandler', () => {
     })
 
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
-      // expect.stringMatching(
-      'CedarJS Realtime requires a serverful environment. Please run `yarn cedarjs setup server-file` first.',
-      // ),
+      expect.stringMatching(
+        'CedarJS Realtime requires a serverful environment. Please run `yarn ' +
+          'cedarjs setup server-file` first.',
+      ),
     )
     expect(vi.mocked(process).exit).toHaveBeenCalledWith(1)
   })
