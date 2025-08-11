@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('fs-extra', async () => {
-  const fs = await vi.importActual<typeof FS>('node:fs')
+  const fs = await vi.importActual<typeof FS>('fs-extra')
 
   return {
     default: {
