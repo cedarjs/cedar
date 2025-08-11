@@ -3604,6 +3604,11 @@ __metadata:
     unplugin-auto-import: "npm:19.3.0"
     vitest: "npm:3.2.4"
     whatwg-fetch: "npm:3.6.20"
+  peerDependencies:
+    vitest: 3.2.4
+  peerDependenciesMeta:
+    vitest:
+      optional: true
   languageName: unknown
   linkType: soft
 
