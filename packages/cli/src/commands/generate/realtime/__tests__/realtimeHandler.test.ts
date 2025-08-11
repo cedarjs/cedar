@@ -61,7 +61,7 @@ vi.mock('@cedarjs/project-config', () => ({
 beforeEach(() => {
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
-  vi.spyOn<NodeJS.Process, any>(process, 'exit').mockImplementation(() => {})
+  vi.spyOn(process, 'exit').mockImplementation(() => void 0 as never)
   mocks.realtimeTs = 'export const realtime: RedwoodRealtimeOptions = {}'
   mocks.serverTs = 'export const serverFile: RedwoodServerFileOptions = {}'
 })
