@@ -47,7 +47,8 @@ export const printTaskEpilogue = (command, description, topicId) => {
 export const isServerFileSetup = () => {
   if (!serverFileExists()) {
     throw new Error(
-      'RedwoodJS Realtime requires a serverful environment. Please run `yarn rw setup server-file` first.',
+      'CedarJS Realtime requires a serverful environment. Please run `yarn ' +
+        'cedarjs setup server-file` first.',
     )
   }
 
@@ -63,9 +64,10 @@ export const realtimeExists = () => {
 }
 
 export const isRealtimeSetup = () => {
-  if (!realtimeExists) {
+  if (!realtimeExists()) {
     throw new Error(
-      'Adding realtime events requires that RedwoodJS Realtime be setup. Please run `yarn setup realtime` first.',
+      'Adding realtime events requires that CedarJS Realtime is setup. ' +
+        'Please run `yarn cedarjs setup realtime` first.',
     )
   }
 
