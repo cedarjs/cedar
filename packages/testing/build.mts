@@ -34,6 +34,19 @@ fs.rmSync('./config', { recursive: true, force: true })
 fs.mkdirSync('./config')
 fs.cpSync('./dist/cjs/config', './config', { recursive: true })
 fs.cpSync('./dist/cjs/package.json', './config/package.json')
+// Some background on the two `fs.cpSync` calls below: I've been having problems
+// with jest testing in CI sometimes failing to find the jest preset file. I
+// don't know why. But after deep-diving into the jest source code I realized it
+// was looking for a package.json in the same directory as it first tries to
+// find the preset. It's supposed to traverse up the folder tree if it can't
+// find one, until it does. I'm not sure if this is sometimes failing, or what
+// happens when it finds one much further up the tree. Maybe jest then tries to
+// resolve the preset in *that* directory. Anyway, to make things as easy for it
+// as possible, I updated the testing package build script to put a package.json
+// files in the preset directories for both the api and the web sides. And after
+// that CI passed.
+// But since it's been flakey I don't know if this was the actual fix, or if it
+// just randomly decided to pass.
 fs.cpSync('./dist/cjs/package.json', './config/jest/api/package.json')
 fs.cpSync('./dist/cjs/package.json', './config/jest/web/package.json')
 
