@@ -159,7 +159,11 @@ const requireAuth = createValidatorDirective(schema, validate)
 export default requireAuth
 ```
 
-All Redwood apps come with two built-in validator directives: `@requireAuth` and `@skipAuth`.
+(Note that the `gql` import should be `import { gql } from 'graphql-tag'` in
+apps that use ESM)
+
+All Cedar apps come with two built-in validator directives: `@requireAuth` and
+`@skipAuth`.
 The `@requireAuth` directive takes optional roles.
 You may use these to protect against unwanted GraphQL access to your data.
 Or explicitly allow public access.
