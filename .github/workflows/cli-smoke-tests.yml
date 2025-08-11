@@ -40,7 +40,12 @@ jobs:
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run "rw test api"
-        run: yarn rw test api --no-watch
+        run: |
+          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist
+          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config
+          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config/jest
+          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config/jest/api
+          yarn rw test api --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run "rw test web"
