@@ -5,10 +5,6 @@ import { vi, describe, afterEach, beforeEach, it, expect } from 'vitest'
 // @ts-expect-error - no types for JS files
 import { handler } from '../realtimeHandler.js'
 
-// vi.hoisted(async () => {
-//   process.env.NO_COLOR = 'true'
-// })
-
 const mocks = vi.hoisted(() => ({
   realtimeTs: '',
   serverTs: '',
