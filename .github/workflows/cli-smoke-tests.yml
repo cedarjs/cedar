@@ -57,10 +57,10 @@ jobs:
           ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/config/jest/api
           echo ""
           echo "# cat testing/package.json"
-          cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/package.json
+          cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/package.json && echo ""
           echo ""
           echo "# cat jest/api/package.json"
-          cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/config/jest/api/package.json
+          cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/config/jest/api/package.json && echo ""
           echo ""
           echo ""
           echo "# Starting test"
