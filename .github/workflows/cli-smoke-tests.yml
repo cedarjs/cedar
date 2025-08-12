@@ -44,23 +44,23 @@ jobs:
         # weird looking when this step fails
         run: |
           echo ""
-          echo "# Running ls dist"
-          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist
+          echo "# ls /"
+          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing
           echo ""
-          echo "# Running ls dist/config"
-          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config
+          echo "# ls /config"
+          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/config
           echo ""
-          echo "# Running ls dist/config/jest"
-          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config/jest
+          echo "# ls /config/jest"
+          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/config/jest
           echo ""
-          echo "# Running ls dist/config/jest/api"
-          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config/jest/api
+          echo "# ls /config/jest/api"
+          ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/config/jest/api
           echo ""
-          echo "# Running cat testing/package.json"
+          echo "# cat testing/package.json"
           cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/package.json
           echo ""
-          echo "# Running cat jest/api/package.json"
-          cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config/jest/api/package.json
+          echo "# cat jest/api/package.json"
+          cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/config/jest/api/package.json
           echo ""
           echo ""
           echo "# Starting test"
