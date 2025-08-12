@@ -43,11 +43,18 @@ jobs:
         # Having a bunch of `ls` statements here to see if I can spot anything
         # weird looking when this step fails
         run: |
+          echo "Running ls dist"
           ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist
+          echo "Running ls dist/config"
           ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config
+          echo "Running ls dist/config/jest"
           ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config/jest
+          echo "Running ls dist/config/jest/api"
           ls ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/dist/config/jest/api
+          echo "Running cat package.json"
           cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/package.json
+          echo ""
+          echo ""
           yarn rw test api --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
