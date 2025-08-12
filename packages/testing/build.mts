@@ -50,25 +50,33 @@ fs.cpSync('./dist/cjs/package.json', './config/package.json')
 // just randomly decided to pass.
 fs.writeFileSync(
   './config/jest/api/package.json',
-  JSON.stringify({
-    name: 'cedarjs-jest-api-preset',
-    version: '0.0.1',
-    type: 'commonjs',
-    main: 'index.js',
-    license: 'MIT',
-    types: './index.d.ts',
-  }),
+  JSON.stringify(
+    {
+      name: 'cedarjs-jest-api-preset',
+      version: '0.0.1',
+      type: 'commonjs',
+      main: 'index.js',
+      license: 'MIT',
+      types: './index.d.ts',
+    },
+    null,
+    2,
+  ),
 )
 fs.writeFileSync(
   './config/jest/web/package.json',
-  JSON.stringify({
-    name: 'cedarjs-jest-web-preset',
-    version: '0.0.1',
-    type: 'commonjs',
-    main: 'index.js',
-    license: 'MIT',
-    types: './index.d.ts',
-  }),
+  JSON.stringify(
+    {
+      name: 'cedarjs-jest-web-preset',
+      version: '0.0.1',
+      type: 'commonjs',
+      main: 'index.js',
+      license: 'MIT',
+      types: './index.d.ts',
+    },
+    null,
+    2,
+  ),
 )
 
 // Replace relative imports with absolute @cedarjs/testing/dist/cjs imports in built CJS files
