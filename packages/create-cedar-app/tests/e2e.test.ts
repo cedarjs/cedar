@@ -1,7 +1,9 @@
 /* eslint-env node */
 
 // To run these tests locally, go to ~/cedarjs-fw/packages/create-cedar-app
+// (the parent directory of this file)
 // Then run `PROJECT_PATH=./ yarn test:e2e`
+// Don't forget to build first, as this test uses built files for testing
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -33,6 +35,7 @@ describe('create-cedar-app', () => {
             --overwrite         Create even if target directory isn't empty
                                                             [boolean] [default: false]
             --typescript, --ts  Generate a TypeScript project[boolean] [default: null]
+            --esm               Generate an ESM project      [boolean] [default: null]
             --git-init, --git   Initialize a git repository  [boolean] [default: null]
         -m, --commit-message    Commit message for the initial commit
                                                               [string] [default: null]
