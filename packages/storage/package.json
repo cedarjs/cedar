@@ -63,7 +63,7 @@
     "@prisma/client": "5.20.0",
     "@types/mime-types": "2.1.4",
     "concurrently": "8.2.2",
-    "esbuild": "0.25.8",
+    "esbuild": "0.25.9",
     "publint": "0.3.12",
     "tstyche": "3.0.0",
     "tsx": "4.20.4",

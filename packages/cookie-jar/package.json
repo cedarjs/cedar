@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "cookie": "1.0.2",
-    "esbuild": "0.25.8",
+    "esbuild": "0.25.9",
     "fast-glob": "3.3.3",
     "fs-extra": "11.2.0"
   },
