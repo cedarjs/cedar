@@ -18,7 +18,7 @@ export const configureGraphiQLPlayground = ({
 
   return !disableGraphiQL
     ? {
-        title: 'Redwood GraphQL Playground',
+        title: 'CedarJS GraphQL Playground',
         headers: generateGraphiQLHeader?.(),
         defaultQuery: DEFAULT_QUERY,
         headerEditorEnabled: true,
