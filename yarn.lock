@@ -2778,7 +2778,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/clerk-react": "npm:5.39.0"
+    "@clerk/clerk-react": "npm:5.43.1"
     "@clerk/types": "npm:4.73.0"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
@@ -2788,7 +2788,7 @@ __metadata:
     typescript: "npm:5.6.2"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@clerk/clerk-react": 5.39.0
+    "@clerk/clerk-react": 5.43.1
   languageName: unknown
   linkType: soft
 
@@ -4297,25 +4297,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/clerk-react@npm:5.39.0":
-  version: 5.39.0
-  resolution: "@clerk/clerk-react@npm:5.39.0"
+"@clerk/clerk-react@npm:5.43.1":
+  version: 5.43.1
+  resolution: "@clerk/clerk-react@npm:5.43.1"
   dependencies:
-    "@clerk/shared": "npm:^3.18.0"
-    "@clerk/types": "npm:^4.73.0"
+    "@clerk/shared": "npm:^3.22.0"
+    "@clerk/types": "npm:^4.81.0"
     tslib: "npm:2.8.1"
   peerDependencies:
     react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
     react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
-  checksum: 10c0/4d33541d0852e82e704e2258cf3db14c99967a755d40c063bfcf09043d14656228584839f75197845dee6d20957fef4a15c499533d2c1299bf52b6c36c56ea96
+  checksum: 10c0/d9555575844036a4deadcefaa86de5049201072c70ae76ff04f1cf7c323597e80ee1a2ed3a503126c53ab1a55734f2edeb53a42adb01c4ddb80b7ce701ac480d
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.18.0, @clerk/shared@npm:^3.9.5":
-  version: 3.18.0
-  resolution: "@clerk/shared@npm:3.18.0"
+"@clerk/shared@npm:^3.22.0, @clerk/shared@npm:^3.9.5":
+  version: 3.22.0
+  resolution: "@clerk/shared@npm:3.22.0"
   dependencies:
-    "@clerk/types": "npm:^4.73.0"
+    "@clerk/types": "npm:^4.81.0"
     dequal: "npm:2.0.3"
     glob-to-regexp: "npm:0.4.1"
     js-cookie: "npm:3.0.5"
@@ -4329,16 +4329,25 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: 10c0/5870f4a0d8b5d93d820db5a744089becaec9e38a35f470f87dfc475bce9a7fca3d2c90e18f8fa4e43db5e6e0fb095dfc77b3c3f28ee4fb40b246eba65a2708da
+  checksum: 10c0/d4419e180362f197cc77e6727119d99f854a937753f5fbb969de1b209c5bde7680409b8f76e6444f733bdda6fb8d1ddf4d15e2ce8c521b8ae07ee1d4c38506be
   languageName: node
   linkType: hard
 
-"@clerk/types@npm:4.73.0, @clerk/types@npm:^4.59.3, @clerk/types@npm:^4.73.0":
+"@clerk/types@npm:4.73.0":
   version: 4.73.0
   resolution: "@clerk/types@npm:4.73.0"
   dependencies:
     csstype: "npm:3.1.3"
   checksum: 10c0/4b3fa73820e4e2d35a45eb1838d02fde2b86030cec17fd5b683a8364aa3b953484ea099a4ae29a724c29ba1e113cf6512619fa27354d783c44bc242930d94ee9
+  languageName: node
+  linkType: hard
+
+"@clerk/types@npm:^4.59.3, @clerk/types@npm:^4.81.0":
+  version: 4.81.0
+  resolution: "@clerk/types@npm:4.81.0"
+  dependencies:
+    csstype: "npm:3.1.3"
+  checksum: 10c0/6f83888204d4ffad358c14afc7b24add5bc14014d2e50fd52b71477837fcee84a684fc4e20b557b49114e8fbbab90bf714213a57d9c30674c35834f5d396e258
   languageName: node
   linkType: hard
 
