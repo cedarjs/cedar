@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/netlify-identity-widget": "1.9.6",
+    "@types/netlify-identity-widget": "1.9.7",
     "@types/react": "^18.2.55",
     "concurrently": "8.2.2",
     "publint": "0.3.12",

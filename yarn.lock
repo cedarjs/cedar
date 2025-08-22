@@ -2727,7 +2727,7 @@ __metadata:
     "@azure/msal-browser": "npm:2.39.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/netlify-identity-widget": "npm:1.9.6"
+    "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
@@ -2981,7 +2981,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/netlify-identity-widget": "npm:1.9.6"
+    "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
@@ -12336,10 +12336,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/netlify-identity-widget@npm:1.9.6":
-  version: 1.9.6
-  resolution: "@types/netlify-identity-widget@npm:1.9.6"
-  checksum: 10c0/730b17f9271d27a9640b4494f49d988ad6c99f373c8954c2b57cbac82816f5196977f43d0232d7a4fd77702fe2d666aaac05241aa5381de46158369be9288a84
+"@types/netlify-identity-widget@npm:1.9.7":
+  version: 1.9.7
+  resolution: "@types/netlify-identity-widget@npm:1.9.7"
+  checksum: 10c0/d2cf8c3c05f8fb77640792f6d97532a21f3eaecc75192bcc6f01d47d3f669273ec00a7ce739869edea7074de9a4e50d38657a04a829b1265f5402ceecaa326aa
   languageName: node
   linkType: hard
 
