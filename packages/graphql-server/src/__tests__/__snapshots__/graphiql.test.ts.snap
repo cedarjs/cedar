@@ -9,7 +9,7 @@ exports[`configureGraphiQLPlayground > when in development > should configure th
 }",
   "headerEditorEnabled": true,
   "headers": undefined,
-  "title": "Redwood GraphQL Playground",
+  "title": "CedarJS GraphQL Playground",
 }
 `;
 
@@ -22,7 +22,7 @@ exports[`configureGraphiQLPlayground > when in development > should configure th
 }",
   "headerEditorEnabled": true,
   "headers": undefined,
-  "title": "Redwood GraphQL Playground",
+  "title": "CedarJS GraphQL Playground",
 }
 `;
 
@@ -35,7 +35,7 @@ exports[`configureGraphiQLPlayground > when in development > should configure th
 }",
   "headerEditorEnabled": true,
   "headers": undefined,
-  "title": "Redwood GraphQL Playground",
+  "title": "CedarJS GraphQL Playground",
 }
 `;
 
@@ -48,7 +48,7 @@ exports[`configureGraphiQLPlayground > when in development > should configure th
 }",
   "headerEditorEnabled": true,
   "headers": undefined,
-  "title": "Redwood GraphQL Playground",
+  "title": "CedarJS GraphQL Playground",
 }
 `;
 
@@ -61,7 +61,7 @@ exports[`configureGraphiQLPlayground > when in development > should configure th
 }",
   "headerEditorEnabled": true,
   "headers": undefined,
-  "title": "Redwood GraphQL Playground",
+  "title": "CedarJS GraphQL Playground",
 }
 `;
 
@@ -74,6 +74,6 @@ exports[`configureGraphiQLPlayground > when not in development environment > sho
 }",
   "headerEditorEnabled": true,
   "headers": undefined,
-  "title": "Redwood GraphQL Playground",
+  "title": "CedarJS GraphQL Playground",
 }
 `;
