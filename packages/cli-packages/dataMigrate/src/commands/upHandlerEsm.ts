@@ -2,10 +2,10 @@ import fs from 'fs'
 import path from 'path'
 
 import type { PrismaClient } from '@prisma/client'
+import { bundleRequire } from 'bundle-require'
 import { Listr } from 'listr2'
 
-import { registerApiSideBabelHook } from '@cedarjs/babel-config'
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, resolveFile } from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
@@ -15,7 +15,6 @@ export async function handler({
   distPath,
 }: DataMigrateUpOptions) {
   let db: any
-  let requireHookRegistered = false
 
   if (importDbClientFromDist) {
     if (!fs.existsSync(distPath)) {
@@ -41,10 +40,27 @@ export async function handler({
 
     db = (await import(distLibDbPath)).db
   } else {
-    registerApiSideBabelHook()
-    requireHookRegistered = true
+    const dbPath = resolveFile(path.join(getPaths().api.lib, 'db'))
 
-    db = require(path.join(getPaths().api.lib, 'db')).db
+    if (!dbPath) {
+      console.error(`Can't find your db file in ${getPaths().api.lib}`)
+      process.exitCode = 1
+      return
+    }
+
+    // Needed plugins:
+    // - babel-plugin-module-resolver: 'src' -> './src' etc
+    // - rwjs-babel-directory-named-modules: 'src/services/userExamples' -> './src/services/userExamples/userExamples.ts'
+    // - babel-plugin-auto-import: `import gql from 'graphql-tag`, `import { context } from '@cedarjs/context`
+    // - babel-plugin-graphql-tag: ???
+    // - rwjs-babel-glob-import-dir: Handle imports like src/services/**/*.{js,ts}
+    // - rwjs-babel-otel-wrapping: Wrap code in OpenTelemetry spans
+    const { mod } = await bundleRequire({
+      filepath: dbPath,
+      // TODO: Add plugins
+    })
+
+    db = mod.db
   }
 
   const pendingDataMigrations = await getPendingDataMigrations(db)
@@ -71,10 +87,6 @@ export async function handler({
         }
       },
       async task() {
-        if (!requireHookRegistered) {
-          registerApiSideBabelHook()
-        }
-
         try {
           const { startedAt, finishedAt } = await runDataMigration(
             db,
@@ -187,10 +199,15 @@ function sortDataMigrationsByVersion(
 }
 
 async function runDataMigration(db: PrismaClient, dataMigrationPath: string) {
-  const dataMigration = require(dataMigrationPath)
+  const { mod } = await bundleRequire({
+    filepath: dataMigrationPath,
+    // TODO: Add plugins
+  })
+
+  const dataMigration = mod.default
 
   const startedAt = new Date()
-  await dataMigration.default({ db })
+  await dataMigration({ db })
   const finishedAt = new Date()
 
   return { startedAt, finishedAt }
