@@ -1,5 +1,5 @@
 import { vol } from 'memfs'
-import yargs from 'yargs/yargs'
+import yargs from 'yargs'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -40,14 +40,17 @@ describe('up', () => {
 
     process.env.RWJS_CWD = '/redwood-app'
 
-    const { argv } = upCommand.builder(yargs)
+    const { argv } = upCommand.builder(yargs())
 
     expect(argv).toHaveProperty('import-db-client-from-dist', false)
     expect(argv).toHaveProperty('dist-path', getPaths().api.dist)
   })
 
   it('`handler` proxies to `./upHandler.js`', async () => {
-    await upCommand.handler({})
+    await upCommand.handler({
+      importDbClientFromDist: false,
+      distPath: '',
+    })
     expect(dataMigrateUpHandler).toHaveBeenCalled()
   })
 })
