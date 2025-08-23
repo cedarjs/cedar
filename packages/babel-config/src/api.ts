@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import type { PluginOptions, PluginTarget, TransformOptions } from '@babel/core'
 import { transformAsync } from '@babel/core'
+import { resolvePath } from 'babel-plugin-module-resolver'
 
 import { getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
@@ -101,8 +102,41 @@ export const getApiSideBabelPlugins = ({
         },
         root: [getPaths().api.base],
         cwd: 'packagejson',
-        extensions: ['.js', '.jsx', '.es', '.es6', '.mjs', '.ts', '.tsx'],
         loglevel: 'silent', // to silence the unnecessary warnings
+        resolvePath(sourcePath: string, currentFile: string) {
+          // console.log('sourcePath:', sourcePath)
+          // console.log('currentFile:', currentFile)
+          // Handle TypeScript ESM imports: map .js imports to .ts source files
+          if (sourcePath.startsWith('.') && sourcePath.endsWith('.js')) {
+            console.log('sourcePath:', sourcePath)
+            console.log('currentFile:', currentFile)
+            const currentDir = path.dirname(currentFile)
+            const absoluteJsPath = path.resolve(currentDir, sourcePath)
+            const absoluteTsPath = absoluteJsPath.replace(/\.js$/, '.ts')
+
+            // If the .js file doesn't exist but the .ts file does, use the .ts file
+            if (
+              !fs.existsSync(absoluteJsPath) &&
+              fs.existsSync(absoluteTsPath)
+            ) {
+              return sourcePath.replace(/\.js$/, '')
+            }
+          }
+
+          // Return undefined to let babel-plugin-module-resolver handle normally
+          return resolvePath(sourcePath, currentFile, {
+            alias: {
+              src: './src',
+              // adds the paths from [ts|js]config.json to the module resolver
+              ...getPathsFromTypeScriptConfig(
+                tsConfig.api,
+                getPaths().api.base,
+              ),
+            },
+            root: [getPaths().api.base],
+            cwd: 'packagejson',
+          })
+        },
       },
       'rwjs-api-module-resolver',
     ],
