@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/actions/set-up-job
 
       - name: 🌲 Set up test project
-        id: set-up-test-project
+        id: set-up-test-project-esm
         uses: ./.github/actions/set-up-test-project-esm
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
@@ -36,35 +36,35 @@ jobs:
         working-directory: ./tasks/smoke-tests/dev
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
+          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project-esm.outputs.test-project-path }}'
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 🔐 Run auth smoke tests
         working-directory: ./tasks/smoke-tests/auth
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
+          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Run `rw build --no-prerender`
         run: |
           yarn rw build --no-prerender
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
 
       - name: Run `rw prerender`
         run: |
           yarn rw prerender --verbose
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
 
       - name: Run `rw test web`
         run: |
           yarn rw test web --no-watch
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
 
       - name: Run `rw test api`
         run: |
           yarn rw test api --no-watch
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
 
       - name: Run db import tracking tests
         shell: bash
@@ -73,25 +73,25 @@ jobs:
           if test -f ./vitest-sort.config.ts; then
             npx vitest --config ./vitest-sort.config.ts run
           fi
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/api
+        working-directory: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}/api
 
       - name: 🖥️ Run serve smoke tests
         working-directory: tasks/smoke-tests/serve
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
+          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 📄 Run prerender smoke tests
         working-directory: tasks/smoke-tests/prerender
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
+          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 📕 Run Storybook smoke tests
         working-directory: tasks/smoke-tests/storybook
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
+          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
