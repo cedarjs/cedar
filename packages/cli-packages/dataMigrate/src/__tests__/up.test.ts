@@ -30,6 +30,7 @@ describe('up', () => {
     vol.fromNestedJSON(
       {
         'redwood.toml': '',
+        'package.json': '{}',
         api: {
           dist: {},
         },
