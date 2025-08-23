@@ -101,26 +101,8 @@ export const getApiSideBabelPlugins = ({
         },
         root: [getPaths().api.base],
         cwd: 'packagejson',
+        extensions: ['.js', '.jsx', '.es', '.es6', '.mjs', '.ts', '.tsx'],
         loglevel: 'silent', // to silence the unnecessary warnings
-        resolvePath(sourcePath: string, currentFile: string) {
-          // Handle TypeScript ESM imports: map .js imports to .ts source files
-          if (sourcePath.startsWith('.') && sourcePath.endsWith('.js')) {
-            const currentDir = path.dirname(currentFile)
-            const absoluteJsPath = path.resolve(currentDir, sourcePath)
-            const absoluteTsPath = absoluteJsPath.replace(/\.js$/, '.ts')
-
-            // If the .js file doesn't exist but the .ts file does, use the .ts file
-            if (
-              !fs.existsSync(absoluteJsPath) &&
-              fs.existsSync(absoluteTsPath)
-            ) {
-              return sourcePath.replace(/\.js$/, '.ts')
-            }
-          }
-
-          // Return undefined to let babel-plugin-module-resolver handle normally
-          return undefined
-        },
       },
       'rwjs-api-module-resolver',
     ],
