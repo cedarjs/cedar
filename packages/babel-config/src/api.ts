@@ -86,17 +86,6 @@ export const getApiSideBabelPlugins = ({
 } = {}) => {
   const tsConfig = parseTypeScriptConfigFiles()
 
-  const babelPluginModuleResolverConfig = {
-    alias: {
-      src: './src',
-      // adds the paths from [ts|js]config.json to the module resolver
-      ...getPathsFromTypeScriptConfig(tsConfig.api, getPaths().api.base),
-    },
-    root: [getPaths().api.base],
-    cwd: 'packagejson',
-    loglevel: 'silent', // to silence the unnecessary warnings
-  }
-
   const plugins: (PluginShape | boolean)[] = [
     ...getCommonPlugins(),
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
@@ -106,33 +95,24 @@ export const getApiSideBabelPlugins = ({
     [
       'babel-plugin-module-resolver',
       {
-        ...babelPluginModuleResolverConfig,
+        alias: {
+          src: './src',
+          // adds the paths from [ts|js]config.json to the module resolver
+          ...getPathsFromTypeScriptConfig(tsConfig.api, getPaths().api.base),
+        },
+        root: [getPaths().api.base],
+        cwd: 'packagejson',
+        loglevel: 'silent', // to silence the unnecessary warnings
         resolvePath: projectIsEsm
           ? undefined
-          : function (sourcePath: string, currentFile: string) {
-              if (sourcePath.startsWith('.') && sourcePath.endsWith('.js')) {
-                const currentDir = path.dirname(currentFile)
-                const absoluteJsPath = path.resolve(currentDir, sourcePath)
-                const absoluteTsPath = absoluteJsPath.replace(/\.js$/, '.ts')
+          : function (sourcePath: string, currentFile: string, opts: unknown) {
+              // Look for paths that include a / and ends with .js (to not trip
+              // up on npm modules like chart.js)
+              const importPath = /.*\/.*\.js$/.test(sourcePath)
+                ? sourcePath.replace(/\.js$/, '')
+                : sourcePath
 
-                // If the .js file doesn't exist but the .ts file does, remove
-                // the extension and let babel figure out what file to import.
-                // Have to do this because I was having problems with imports
-                // like `import { logger } from './logger.js'` in data-migrate
-                // scripts in CJS projects
-                if (
-                  !fs.existsSync(absoluteJsPath) &&
-                  fs.existsSync(absoluteTsPath)
-                ) {
-                  return sourcePath.replace(/\.js$/, '')
-                }
-              }
-
-              return resolvePath(
-                sourcePath,
-                currentFile,
-                babelPluginModuleResolverConfig,
-              )
+              return resolvePath(importPath, currentFile, opts)
             },
       },
       'rwjs-api-module-resolver',
