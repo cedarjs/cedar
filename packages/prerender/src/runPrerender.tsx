@@ -25,6 +25,7 @@ import {
   PrerenderGqlError,
 } from './errors.js'
 import { executeQuery, getGqlHandler } from './graphql/graphql.js'
+import type { FileImporter } from './graphql/graphql.js'
 import { NodeRunner } from './graphql/node-runner.js'
 import { getRootHtmlPath, registerShims, writeToDist } from './internal.js'
 
@@ -40,7 +41,7 @@ async function recursivelyRender(
   CellCacheContextProvider: ElementType,
   LocationProvider: ElementType,
   renderPath: string,
-  nodeRunner: NodeRunner,
+  fileImporter: FileImporter,
   gqlHandler: any,
   queryCache: Record<string, QueryInfo>,
 ): Promise<string> {
@@ -58,7 +59,7 @@ async function recursivelyRender(
 
       try {
         const resultString = await executeQuery(
-          nodeRunner,
+          fileImporter,
           gqlHandler,
           value.query,
           value.variables,
@@ -149,7 +150,7 @@ async function recursivelyRender(
       CellCacheContextProvider,
       LocationProvider,
       renderPath,
-      nodeRunner,
+      fileImporter,
       gqlHandler,
       queryCache,
     )
@@ -287,7 +288,7 @@ export const runPrerender = async ({
 
   const nodeRunner = new NodeRunner()
 
-  const gqlHandler = await getGqlHandler(nodeRunner)
+  const gqlHandler = await getGqlHandler(nodeRunner.importFile)
 
   const prerenderDistPath = path.join(getPaths().web.dist, '__prerender')
   fs.mkdirSync(prerenderDistPath, { recursive: true })
@@ -335,7 +336,7 @@ export const runPrerender = async ({
     CellCacheContextProvider,
     LocationProvider,
     renderPath,
-    nodeRunner,
+    nodeRunner.importFile,
     gqlHandler,
     queryCache,
   )
