@@ -20,6 +20,10 @@
         "default": "./dist/cjs/runPrerender.js"
       }
     },
+    "./cjs": {
+      "types": "./dist/cjs/runPrerender.d.ts",
+      "default": "./dist/cjs/runPrerender.js"
+    },
     "./browserUtils": {
       "import": {
         "types": "./dist/browserUtils/index.d.ts",
@@ -39,6 +43,10 @@
         "types": "./dist/cjs/detection/detection.d.ts",
         "default": "./dist/cjs/detection/detection.js"
       }
+    },
+    "./cjs/detection": {
+      "types": "./dist/cjs/detection/detection.d.ts",
+      "default": "./dist/cjs/detection/detection.js"
     }
   },
   "main": "dist/cjs/index.js",

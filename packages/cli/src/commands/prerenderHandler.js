@@ -119,7 +119,7 @@ async function expandRouteParameters(route) {
 export const getTasks = async (dryrun, routerPathFilter = null) => {
   const detector = projectIsEsm()
     ? await import('@cedarjs/prerender/detection')
-    : await import('@cedarjs/prerender/detection')
+    : await import('@cedarjs/prerender/cjs/detection')
 
   const prerenderRoutes = detector
     .detectPrerenderRoutes()
@@ -153,7 +153,7 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
 
   const prerenderer = projectIsEsm()
     ? await import('@cedarjs/prerender')
-    : await import('@cedarjs/prerender')
+    : await import('@cedarjs/prerender/cjs')
 
   const listrTasks = expandedRouteParameters.flatMap((routesToPrerender) => {
     // queryCache will be filled with the queries from all the Cells we
