@@ -1,6 +1,9 @@
 import { extname, join, relative, dirname } from 'path'
 
 import type { PluginObj, types, NodePath } from '@babel/core'
+// We need this for the CJS build
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import type { ManifestChunk as ViteManifestChunk } from 'vite'
 
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'

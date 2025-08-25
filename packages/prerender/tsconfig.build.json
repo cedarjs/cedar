@@ -1,19 +1,9 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
-  "include": ["./src/**/*", "ambient.d.ts"],
-  "references": [
-    { "path": "../babel-config" },
-    { "path": "../project-config" },
-    { "path": "../router/tsconfig.build.json" },
-    { "path": "../structure" },
-    { "path": "../vite/tsconfig.build.json" },
-    { "path": "../web/tsconfig.build.json" },
-    { "path": "../framework-tools" }
-  ]
+  "include": ["src", "ambient.d.ts"],
+  "exclude": ["**/__tests__", "src/runPrerender.tsx", "src/index.ts"]
 }

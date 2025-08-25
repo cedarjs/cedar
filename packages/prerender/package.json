@@ -11,20 +11,38 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/runPrerenderEsm.d.ts",
+        "default": "./dist/runPrerenderEsm.js"
+      },
+      "require": {
+        "types": "./dist/cjs/runPrerender.d.ts",
+        "default": "./dist/cjs/runPrerender.js"
+      }
     },
     "./browserUtils": {
-      "types": "./dist/browserUtils/index.d.ts",
-      "default": "./dist/browserUtils/index.js"
+      "import": {
+        "types": "./dist/browserUtils/index.d.ts",
+        "default": "./dist/browserUtils/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/browserUtils/index.d.ts",
+        "default": "./dist/cjs/browserUtils/index.js"
+      }
     },
     "./detection": {
-      "types": "./dist/detection/detection.d.ts",
-      "default": "./dist/detection/detection.js"
+      "import": {
+        "types": "./dist/detection/detection.d.ts",
+        "default": "./dist/detection/detection.js"
+      },
+      "require": {
+        "types": "./dist/cjs/detection/detection.d.ts",
+        "default": "./dist/cjs/detection/detection.js"
+      }
     }
   },
-  "main": "dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist"
   ],
@@ -32,6 +50,7 @@
     "build": "tsx ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-prerender.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
+    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn rw-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",

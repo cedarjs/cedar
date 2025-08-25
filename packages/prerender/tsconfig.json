@@ -1,14 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "isolatedModules": true,
-    "emitDeclarationOnly": false,
-    "noEmit": true
+    "outDir": "dist"
   },
   "include": ["."],
-  "exclude": ["dist", "node_modules", "**/__tests__/fixtures"],
+  "exclude": ["dist", "node_modules", "**/__fixtures__"],
   "references": [
     { "path": "../babel-config" },
     { "path": "../project-config" },
