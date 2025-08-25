@@ -41,7 +41,11 @@ function getVariableName(p: NodePath<types.ImportDeclaration>) {
   return null
 }
 
-export default function ({ types: t }: { types: typeof types }): PluginObj {
+export function babelPluginRedwoodPrerenderMediaImports({
+  types: t,
+}: {
+  types: typeof types
+}): PluginObj {
   const manifestPath = join(getPaths().web.dist, 'client-build-manifest.json')
   const buildManifest = require(manifestPath)
 

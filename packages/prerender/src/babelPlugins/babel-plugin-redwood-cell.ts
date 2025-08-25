@@ -31,7 +31,11 @@ const EXPECTED_EXPORTS_FROM_CELL = [
   'Empty',
 ]
 
-export default function ({ types: t }: { types: typeof types }): PluginObj {
+export function babelPluginRedwoodCell({
+  types: t,
+}: {
+  types: typeof types
+}): PluginObj {
   // This array will collect exports from the Cell file during
   // ExportNamedDeclaration
   // - collected exports will then be passed to `createCell`

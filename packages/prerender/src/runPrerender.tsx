@@ -21,8 +21,8 @@ import { LocationProvider } from '@cedarjs/router'
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
-import redwoodCellsPlugin from './babelPlugins/babel-plugin-redwood-cell.js'
-import mediaImportsPlugin from './babelPlugins/babel-plugin-redwood-prerender-media-imports.js'
+import { babelPluginRedwoodCell } from './babelPlugins/babel-plugin-redwood-cell.js'
+import { babelPluginRedwoodPrerenderMediaImports } from './babelPlugins/babel-plugin-redwood-prerender-media-imports.js'
 import { detectPrerenderRoutes } from './detection/detection.js'
 import {
   GqlHandlerImportError,
@@ -300,12 +300,12 @@ export const runPrerender = async ({
       {
         plugins: [
           ['ignore-html-and-css-imports'], // webpack/postcss handles CSS imports
-          [mediaImportsPlugin],
+          [babelPluginRedwoodPrerenderMediaImports],
         ],
       },
       {
         test: /.+Cell.(js|tsx|jsx)$/,
-        plugins: [redwoodCellsPlugin],
+        plugins: [babelPluginRedwoodCell],
       },
     ],
     options: {
