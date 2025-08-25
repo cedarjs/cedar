@@ -5,7 +5,7 @@ import { vi, describe, beforeEach, afterAll } from 'vitest'
 
 import type projectConfig from '@cedarjs/project-config'
 
-import plugin from '../babel-plugin-redwood-prerender-media-imports'
+import { babelPluginRedwoodPrerenderMediaImports } from '../babel-plugin-redwood-prerender-media-imports'
 
 let mockDistDir: string
 let mockSrcDir: string
@@ -41,7 +41,7 @@ describe('Vite bundler', () => {
 
   describe('Should replace larger imports based on generated manifest', () => {
     pluginTester({
-      plugin,
+      plugin: babelPluginRedwoodPrerenderMediaImports,
       pluginName: 'babel-plugin-redwood-prerender-media-imports',
       filepath: path.resolve(
         __dirname,
@@ -92,7 +92,7 @@ describe('Vite bundler', () => {
     // These imports aren't in the manifest
     // which simulates that they were handled by the url loader
     pluginTester({
-      plugin,
+      plugin: babelPluginRedwoodPrerenderMediaImports,
       // disable formatter for this test
       formatResult: (r) => r,
       pluginName: 'babel-plugin-redwood-prerender-media-imports',
