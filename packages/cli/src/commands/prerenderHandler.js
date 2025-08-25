@@ -4,9 +4,7 @@ import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { runPrerender, writePrerenderedHtmlFile } from '@cedarjs/prerender'
-import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../lib/colors.js'
@@ -119,7 +117,13 @@ async function expandRouteParameters(route) {
 
 // This is used directly in build.js for nested ListrTasks
 export const getTasks = async (dryrun, routerPathFilter = null) => {
-  const prerenderRoutes = detectPrerenderRoutes().filter((route) => route.path)
+  const detector = projectIsEsm()
+    ? await import('@cedarjs/prerender/detection')
+    : await import('@cedarjs/prerender/detection')
+
+  const prerenderRoutes = detector
+    .detectPrerenderRoutes()
+    .filter((route) => route.path)
   const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
   if (prerenderRoutes.length === 0) {
     console.log('\nSkipping prerender...')
@@ -146,6 +150,10 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
   const expandedRouteParameters = await Promise.all(
     prerenderRoutes.map((route) => expandRouteParameters(route)),
   )
+
+  const prerenderer = projectIsEsm()
+    ? await import('@cedarjs/prerender')
+    : await import('@cedarjs/prerender')
 
   const listrTasks = expandedRouteParameters.flatMap((routesToPrerender) => {
     // queryCache will be filled with the queries from all the Cells we
@@ -189,6 +197,7 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
               }
 
               await prerenderRoute(
+                prerenderer,
                 queryCache,
                 routeToPrerender,
                 dryrun,
@@ -218,6 +227,7 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
         title: `Prerendering ${routeToPrerender.path} -> ${outputHtmlPath}`,
         task: async () => {
           await prerenderRoute(
+            prerenderer,
             queryCache,
             routeToPrerender,
             dryrun,
@@ -293,6 +303,7 @@ const diagnosticCheck = () => {
 }
 
 const prerenderRoute = async (
+  prerenderer,
   queryCache,
   routeToPrerender,
   dryrun,
@@ -306,13 +317,13 @@ const prerenderRoute = async (
   }
 
   try {
-    const prerenderedHtml = await runPrerender({
+    const prerenderedHtml = await prerenderer.runPrerender({
       queryCache,
       renderPath: routeToPrerender.path,
     })
 
     if (!dryrun) {
-      writePrerenderedHtmlFile(outputHtmlPath, prerenderedHtml)
+      prerenderer.writePrerenderedHtmlFile(outputHtmlPath, prerenderedHtml)
     }
   } catch (e) {
     console.log()
