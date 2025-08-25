@@ -288,7 +288,7 @@ export const runPrerender = async ({
 
   const nodeRunner = new NodeRunner()
 
-  const gqlHandler = await getGqlHandler(nodeRunner.importFile)
+  const gqlHandler = await getGqlHandler(nodeRunner.importFile.bind(nodeRunner))
 
   const prerenderDistPath = path.join(getPaths().web.dist, '__prerender')
   fs.mkdirSync(prerenderDistPath, { recursive: true })
@@ -336,7 +336,7 @@ export const runPrerender = async ({
     CellCacheContextProvider,
     LocationProvider,
     renderPath,
-    nodeRunner.importFile,
+    nodeRunner.importFile.bind(nodeRunner),
     gqlHandler,
     queryCache,
   )
