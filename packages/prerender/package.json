@@ -109,6 +109,9 @@
     "react": "19.0.0-rc-f2df5694-20240916",
     "react-dom": "19.0.0-rc-f2df5694-20240916"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "externals": {
     "react": "react",
     "react-dom": "react-dom"
