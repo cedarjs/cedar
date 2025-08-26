@@ -1,7 +1,7 @@
 {
   "name": "@cedarjs/web-server",
   "version": "0.0.5",
-  "description": "Cedar's server for the Web side",
+  "description": "CedarJS's server for the Web side",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",

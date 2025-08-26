@@ -1,7 +1,7 @@
 {
   "name": "@cedarjs/prerender",
   "version": "0.0.5",
-  "description": "RedwoodJS prerender",
+  "description": "CedarJS prerender",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
