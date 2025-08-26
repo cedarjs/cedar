@@ -233,82 +233,82 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-darwin-arm64@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-darwin-arm64@npm:0.39.3"
+"@ast-grep/napi-darwin-arm64@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-darwin-arm64@npm:0.39.4"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-darwin-x64@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-darwin-x64@npm:0.39.3"
+"@ast-grep/napi-darwin-x64@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-darwin-x64@npm:0.39.4"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-arm64-gnu@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-linux-arm64-gnu@npm:0.39.3"
+"@ast-grep/napi-linux-arm64-gnu@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-linux-arm64-gnu@npm:0.39.4"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-arm64-musl@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-linux-arm64-musl@npm:0.39.3"
+"@ast-grep/napi-linux-arm64-musl@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-linux-arm64-musl@npm:0.39.4"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-x64-gnu@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-linux-x64-gnu@npm:0.39.3"
+"@ast-grep/napi-linux-x64-gnu@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-linux-x64-gnu@npm:0.39.4"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-x64-musl@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-linux-x64-musl@npm:0.39.3"
+"@ast-grep/napi-linux-x64-musl@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-linux-x64-musl@npm:0.39.4"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-arm64-msvc@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-win32-arm64-msvc@npm:0.39.3"
+"@ast-grep/napi-win32-arm64-msvc@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-win32-arm64-msvc@npm:0.39.4"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-ia32-msvc@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-win32-ia32-msvc@npm:0.39.3"
+"@ast-grep/napi-win32-ia32-msvc@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-win32-ia32-msvc@npm:0.39.4"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-x64-msvc@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi-win32-x64-msvc@npm:0.39.3"
+"@ast-grep/napi-win32-x64-msvc@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi-win32-x64-msvc@npm:0.39.4"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi@npm:0.39.3":
-  version: 0.39.3
-  resolution: "@ast-grep/napi@npm:0.39.3"
+"@ast-grep/napi@npm:0.39.4":
+  version: 0.39.4
+  resolution: "@ast-grep/napi@npm:0.39.4"
   dependencies:
-    "@ast-grep/napi-darwin-arm64": "npm:0.39.3"
-    "@ast-grep/napi-darwin-x64": "npm:0.39.3"
-    "@ast-grep/napi-linux-arm64-gnu": "npm:0.39.3"
-    "@ast-grep/napi-linux-arm64-musl": "npm:0.39.3"
-    "@ast-grep/napi-linux-x64-gnu": "npm:0.39.3"
-    "@ast-grep/napi-linux-x64-musl": "npm:0.39.3"
-    "@ast-grep/napi-win32-arm64-msvc": "npm:0.39.3"
-    "@ast-grep/napi-win32-ia32-msvc": "npm:0.39.3"
-    "@ast-grep/napi-win32-x64-msvc": "npm:0.39.3"
+    "@ast-grep/napi-darwin-arm64": "npm:0.39.4"
+    "@ast-grep/napi-darwin-x64": "npm:0.39.4"
+    "@ast-grep/napi-linux-arm64-gnu": "npm:0.39.4"
+    "@ast-grep/napi-linux-arm64-musl": "npm:0.39.4"
+    "@ast-grep/napi-linux-x64-gnu": "npm:0.39.4"
+    "@ast-grep/napi-linux-x64-musl": "npm:0.39.4"
+    "@ast-grep/napi-win32-arm64-msvc": "npm:0.39.4"
+    "@ast-grep/napi-win32-ia32-msvc": "npm:0.39.4"
+    "@ast-grep/napi-win32-x64-msvc": "npm:0.39.4"
   dependenciesMeta:
     "@ast-grep/napi-darwin-arm64":
       optional: true
@@ -328,7 +328,7 @@ __metadata:
       optional: true
     "@ast-grep/napi-win32-x64-msvc":
       optional: true
-  checksum: 10c0/f215afb7b99ce177490016ff87f5fd5d73a07b510f5b51599668687d09a28cf6e6f9d1d38febb572ba8a39924a186761c651fd6ca04d78f7e23f5f2d374d5e71
+  checksum: 10c0/4ecd21d45522ceebc9c4d58004a5b1d602cb1814059066b16dcdded8dd5d62e6ea0c33848b2497edac28837707ce1da9fefeb0fbdd134ff329e040b5ec7727a1
   languageName: node
   linkType: hard
 
@@ -3811,7 +3811,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/prerender@workspace:packages/prerender"
   dependencies:
-    "@ast-grep/napi": "npm:0.39.3"
+    "@ast-grep/napi": "npm:0.39.4"
     "@babel/generator": "npm:7.27.5"
     "@babel/parser": "npm:7.27.5"
     "@babel/traverse": "npm:7.27.4"
@@ -4107,7 +4107,7 @@ __metadata:
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@ast-grep/napi": "npm:0.39.3"
+    "@ast-grep/napi": "npm:0.39.4"
     "@babel/generator": "npm:7.27.5"
     "@babel/parser": "npm:7.27.5"
     "@babel/traverse": "npm:7.27.4"
