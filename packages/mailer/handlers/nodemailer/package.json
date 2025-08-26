@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-handler-nodemailer",
-  "version": "0.0.5",
+  "version": "0.10.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",

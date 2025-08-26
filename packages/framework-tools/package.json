@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/framework-tools",
-  "version": "0.0.5",
+  "version": "0.10.0",
   "private": true,
   "repository": {
     "type": "git",

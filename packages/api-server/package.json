@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "0.0.5",
+  "version": "0.10.0",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
