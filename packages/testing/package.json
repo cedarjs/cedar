@@ -104,14 +104,11 @@
   },
   "files": [
     "config",
-    "web",
-    "api",
-    "cache",
     "dist"
   ],
   "scripts": {
     "build": "tsx ./build.mts && yarn build:types",
-    "build:pack": "yarn pack -o cedarjs-testing.tgz",
+    "build:pack": "ls -la && yarn pack -o cedarjs-testing.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext 'js,jsx,ts,tsx' --ignore dist --exec 'yarn build'",
@@ -162,6 +159,9 @@
     "vitest": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

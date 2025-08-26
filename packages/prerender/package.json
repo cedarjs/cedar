@@ -1,7 +1,7 @@
 {
   "name": "@cedarjs/prerender",
   "version": "0.0.5",
-  "description": "RedwoodJS prerender",
+  "description": "CedarJS prerender",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -108,6 +108,9 @@
   "peerDependencies": {
     "react": "19.0.0-rc-f2df5694-20240916",
     "react-dom": "19.0.0-rc-f2df5694-20240916"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "externals": {
     "react": "react",
