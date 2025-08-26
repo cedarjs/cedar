@@ -20,7 +20,7 @@
     "@cedarjs/testing": "0.0.5",
     "prettier-plugin-tailwindcss": "^0.5.12"
   },
-  "packageManager": "yarn@4.9.2",
+  "packageManager": "yarn@4.9.4",
   "engines": {
     "node": "=20.x"
   },
