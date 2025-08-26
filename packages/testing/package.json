@@ -104,9 +104,6 @@
   },
   "files": [
     "config",
-    "web",
-    "api",
-    "cache",
     "dist"
   ],
   "scripts": {

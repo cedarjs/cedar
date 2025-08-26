@@ -148,3 +148,20 @@ fs.writeFileSync(
     'const import_meta = { glob: () => ({ "routes.tsx": () => null }) };',
   ),
 )
+
+// Verify that required directories exist
+function verifyDirectoryExists(dirPath: string, description: string) {
+  if (!fs.existsSync(dirPath)) {
+    console.error(`ERROR: ${description} directory does not exist: ${dirPath}`)
+    process.exit(1)
+  }
+  console.log(`✓ ${description} directory exists: ${dirPath}`)
+}
+
+console.log('\nVerifying build output directories...')
+verifyDirectoryExists('./dist', 'Main dist')
+verifyDirectoryExists('./config', 'Config')
+verifyDirectoryExists('./dist/cjs', 'CJS dist')
+verifyDirectoryExists('./dist/cjs/config', 'CJS config')
+
+console.log('✓ All required directories verified successfully')
