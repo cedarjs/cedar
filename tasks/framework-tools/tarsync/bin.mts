@@ -8,13 +8,7 @@ import { tarsync } from './tarsync.mjs'
 async function main() {
   const { projectPath, watch, verbose } = await getOptions()
 
-  await tarsync(
-    {
-      projectPath,
-      verbose,
-    },
-    'CLI invocation',
-  )
+  await tarsync({ projectPath, verbose }, 'CLI invocation')
 
   if (!watch) {
     return
