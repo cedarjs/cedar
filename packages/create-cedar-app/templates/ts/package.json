@@ -7,9 +7,9 @@
     ]
   },
   "devDependencies": {
-    "@cedarjs/core": "0.0.5",
-    "@cedarjs/project-config": "0.0.5",
-    "@cedarjs/testing": "0.0.5"
+    "@cedarjs/core": "0.10.0",
+    "@cedarjs/project-config": "0.10.0",
+    "@cedarjs/testing": "0.10.0"
   },
   "eslintConfig": {
     "extends": "@cedarjs/eslint-config",
