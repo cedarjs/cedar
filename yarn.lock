@@ -2779,7 +2779,7 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/clerk-react": "npm:5.45.0"
-    "@clerk/types": "npm:4.73.0"
+    "@clerk/types": "npm:4.83.0"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
@@ -4333,16 +4333,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/types@npm:4.73.0":
-  version: 4.73.0
-  resolution: "@clerk/types@npm:4.73.0"
-  dependencies:
-    csstype: "npm:3.1.3"
-  checksum: 10c0/4b3fa73820e4e2d35a45eb1838d02fde2b86030cec17fd5b683a8364aa3b953484ea099a4ae29a724c29ba1e113cf6512619fa27354d783c44bc242930d94ee9
-  languageName: node
-  linkType: hard
-
-"@clerk/types@npm:^4.59.3, @clerk/types@npm:^4.83.0":
+"@clerk/types@npm:4.83.0, @clerk/types@npm:^4.59.3, @clerk/types@npm:^4.83.0":
   version: 4.83.0
   resolution: "@clerk/types@npm:4.83.0"
   dependencies:
