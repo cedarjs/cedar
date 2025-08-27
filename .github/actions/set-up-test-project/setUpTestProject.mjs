@@ -28,13 +28,11 @@ console.log()
  * @returns {Promise<void>}
  */
 async function main() {
-  await setUpTestProject({
-    canary: true,
-  })
+  await setUpTestProject({ canary: true })
 }
 
 /**
- *  *@param {{canary: boolean}} options
+ * @param {{ canary: boolean }} options
  * @returns {Promise<void>}
  */
 async function setUpTestProject({ canary }) {
