@@ -107,7 +107,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "tsx ./build.mts && yarn build:types && ls -la",
     "build:pack": "ls -la && yarn pack -o cedarjs-testing.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
