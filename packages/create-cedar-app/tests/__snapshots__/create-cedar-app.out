@@ -9,6 +9,7 @@
 [?25h[?25l[32m✔[39m Compatibility checks passed
 [?25h[32m✔[39m Creating your CedarJS app in ./cedar-app based on command line argument
 [32m✔[39m Using TypeScript based on command line flag
+[32m✔[39m Setting up an ESM project based on command line flag
 [32m✔[39m Will initialize a git repo based on command line flag
 [32m✔[39m Will not run yarn install based on command line flag
 [?25l[38;2;255;132;94m⠋[39m Creating project files
