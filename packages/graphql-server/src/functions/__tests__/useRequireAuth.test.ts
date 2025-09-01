@@ -59,10 +59,7 @@ export const mockedAuthenticationEvent = ({
   }
 }
 
-const handler = async (
-  _event: APIGatewayEvent,
-  _context?: Context,
-): Promise<any> => {
+const handler = async () => {
   // @MARK
   // Don't use globalContext until beforeAll runs
   const globalContext = (await import('@cedarjs/context')).context
@@ -77,10 +74,7 @@ const handler = async (
   }
 }
 
-const handlerWithAuthChecks = async (
-  _event: APIGatewayEvent,
-  _context: Context,
-): Promise<unknown> => {
+const handlerWithAuthChecks = async () => {
   // TODO: Add requireAuth('role') here
   // or isAuthenticated()
 
@@ -111,10 +105,7 @@ const handlerWithAuthChecks = async (
   }
 }
 
-const handlerWithError = async (
-  _event: APIGatewayEvent,
-  _context: Context,
-): Promise<any> => {
+const handlerWithError = async () => {
   // @MARK
   // Don't use globalContext until beforeAll runs
   const globalContext = (await import('@cedarjs/context')).context
@@ -131,20 +122,20 @@ const handlerWithError = async (
       body: JSON.stringify(currentUser),
     }
   } catch (error) {
+    const errorMsg =
+      error instanceof AuthenticationError ? error.message : 'Unknown error'
+
     return {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: errorMsg }),
     }
   }
 }
 
-const getCurrentUserWithError = async (
-  _decoded: unknown,
-  { token: _token }: { token: string },
-): Promise<RedwoodUser> => {
+const getCurrentUserWithError = async (): Promise<RedwoodUser> => {
   throw Error('Something went wrong getting the user info')
 }
 
@@ -160,11 +151,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context?: Context },
-      ) => {
+      authDecoder: async (token) => {
         return { token }
       },
     })
@@ -194,11 +181,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context?: Context },
-      ) => {
+      authDecoder: async (token) => {
         return jwt.decode(token) as Record<string, any>
       },
     })
@@ -261,11 +244,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        _token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async () => {
         return null
       },
     })
@@ -290,11 +269,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return { token }
       },
     })
@@ -323,11 +298,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return jwt.decode(token) as Record<string, any>
       },
     })
@@ -482,11 +453,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handlerWithAuthChecks,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return jwt.decode(token) as Record<string, any>
       },
     })
@@ -522,11 +489,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handlerWithAuthChecks,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return jwt.decode(token) as Record<string, any>
       },
     })
