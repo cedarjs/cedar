@@ -38,7 +38,7 @@ interface EnhancedGqlError extends GraphQLError {
 // Allow APIs client to attach response/request
 type ErrorWithRequestMeta = Error & {
   mostRecentRequest?: RequestDetails
-  graphQLErrors: EnhancedGqlError[]
+  graphQLErrors?: EnhancedGqlError[]
   mostRecentResponse?: any
 }
 
