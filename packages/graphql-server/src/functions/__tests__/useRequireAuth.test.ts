@@ -61,7 +61,7 @@ export const mockedAuthenticationEvent = ({
 
 const handler = async (
   _event: APIGatewayEvent,
-  _context: Context,
+  _context?: Context,
 ): Promise<any> => {
   // @MARK
   // Don't use globalContext until beforeAll runs
@@ -142,8 +142,8 @@ const handlerWithError = async (
 }
 
 const getCurrentUserWithError = async (
-  _decoded,
-  { token: _token },
+  _decoded: unknown,
+  { token: _token }: { token: string },
 ): Promise<RedwoodUser> => {
   throw Error('Something went wrong getting the user info')
 }
@@ -163,7 +163,7 @@ describe('useRequireAuth', () => {
       authDecoder: async (
         token: string,
         _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
+        _req: { event: APIGatewayEvent; context?: Context },
       ) => {
         return { token }
       },
@@ -197,7 +197,7 @@ describe('useRequireAuth', () => {
       authDecoder: async (
         token: string,
         _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
+        _req: { event: APIGatewayEvent; context?: Context },
       ) => {
         return jwt.decode(token) as Record<string, any>
       },
