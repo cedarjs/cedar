@@ -18,12 +18,6 @@ type RedwoodUser = Record<string, unknown> & { roles?: string[] }
  * @param authInfo
  * @param authInfo.token - The access token itself
  * @param authInfo.type - The auth provider type
- * @param req - An object which contains information from the invoker such as
- * headers and cookies, and the context information about the invocation such as
- * IP Address
- * @param req.event - Standard API Gateway event object that's compatible with
- * AWS Lambda
- * @param req.context - AWS Lambda context object
  *
  * !! BEWARE !! Anything returned from this function will be available to the
  * client--it becomes the content of `currentUser` on the web side (as well as
