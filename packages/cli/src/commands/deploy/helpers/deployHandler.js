@@ -4,7 +4,7 @@ import { getPaths } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
 
-export const deployHandler = async ({ build, prisma, dm: dataMigrate }) => {
+export const deployHandler = ({ build, prisma, dm: dataMigrate }) => {
   const paths = getPaths()
 
   let commandSet = []
@@ -20,7 +20,7 @@ export const deployHandler = async ({ build, prisma, dm: dataMigrate }) => {
 
   const joinedCommands = commandSet.join(' && ')
 
-  console.log(c.note('\nRunning:\n') + `${joinedCommands} in ${paths.base}\n`)
+  console.log(c.note(`\nRunning:\n`) + `${joinedCommands}\n`)
 
   return execa(joinedCommands, {
     shell: true,
