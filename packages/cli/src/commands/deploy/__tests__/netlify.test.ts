@@ -5,32 +5,18 @@ import { vi, it, expect, afterAll } from 'vitest'
 import * as deployNetlify from '../netlify.js'
 
 vi.mock('path')
-vi.mock('execa', () => ({
-  default: vi.fn(),
-}))
+vi.mock('execa', () => ({ default: vi.fn() }))
 vi.mock('fs-extra')
 
-vi.mock('yargs', () => ({
-  argv: [],
-  parse: vi.fn(),
+vi.mock('@cedarjs/project-config', async () => ({
+  getPaths: () => ({
+    base: `${__dirname}/fixtures`,
+  }),
 }))
 
-vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig: object = await importOriginal()
-
-  return {
-    ...originalProjectConfig,
-    getPaths: () => ({
-      base: `${__dirname}/fixtures`,
-    }),
-  }
-})
-
-vi.mock('@cedarjs/cli-helpers', async () => {
-  return {
-    recordTelemetryAttributes: vi.fn(),
-  }
-})
+vi.mock('@cedarjs/cli-helpers', async () => ({
+  recordTelemetryAttributes: vi.fn(),
+}))
 
 vi.spyOn(console, 'log').mockImplementation(() => {})
 
