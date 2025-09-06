@@ -125,24 +125,26 @@ export const handler = async ({ name, force, ...rest }) => {
     // We don't care if this fails because we'll fall back to 'default'
   }
 
+  let jobFiles = {}
   const tasks = new Listr(
     [
       {
         title: 'Generating job files...',
         task: async () => {
-          const jobFiles = await files({ name, queueName, ...rest })
+          jobFiles = await files({ name, queueName, ...rest })
           return writeFilesTask(jobFiles, { overwriteExisting: force })
         },
       },
       {
         title: 'Cleaning up...',
         task: () => {
-          execa.commandSync('yarn', [
+          execa.sync('yarn', [
             'eslint',
             '--fix',
             '--config',
             `${getPaths().base}/node_modules/@cedarjs/eslint-config/shared.js`,
             `${getPaths().api.jobsConfig}`,
+            ...Object.keys(jobFiles),
           ])
         },
       },
