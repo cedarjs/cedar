@@ -53,13 +53,16 @@ it('should export a builder function', async () => {
 })
 
 it('should export a handler function', async () => {
-  await deployNetlify.handler({ prisma: true })
+  await deployNetlify.handler({ build: true, prisma: false, dm: true })
 
-  expect(execa).toHaveBeenCalledWith('yarn rw prisma migrate deploy', {
-    shell: true,
-    stdio: 'inherit',
-    cwd: expect.stringContaining('fixtures'),
-    extendEnv: true,
-    cleanup: true,
-  })
+  expect(execa).toHaveBeenCalledWith(
+    'yarn rw build --verbose && yarn rw data-migrate up',
+    {
+      shell: true,
+      stdio: 'inherit',
+      cwd: expect.stringContaining('fixtures'),
+      extendEnv: true,
+      cleanup: true,
+    },
+  )
 })
