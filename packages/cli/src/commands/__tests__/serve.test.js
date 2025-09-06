@@ -1,12 +1,17 @@
-import { vi, describe, afterEach, it, expect } from 'vitest'
+import { vi, describe, afterEach, beforeEach, it, expect } from 'vitest'
 import yargs from 'yargs/yargs'
 
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
+import * as apiServerCLIConfigHandler from '@cedarjs/api-server/cjs/apiCliConfigHandler'
 
 import { builder } from '../serve.js'
 
 globalThis.__dirname = __dirname
+
+const mocks = vi.hoisted(() => ({
+  isEsm: true,
+}))
 
 // We mock these to skip the check for web/dist and api/dist
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
@@ -31,6 +36,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         api: {},
       }
     },
+    projectIsEsm: () => mocks.isEsm,
   }
 })
 
@@ -58,6 +64,11 @@ vi.mock('@cedarjs/api-server/apiCliConfig', async (importOriginal) => {
     handler: vi.fn(),
   }
 })
+vi.mock('@cedarjs/api-server/cjs/apiCliConfigHandler', async () => {
+  return {
+    handler: vi.fn(),
+  }
+})
 vi.mock('@cedarjs/api-server/bothCliConfig', async (importOriginal) => {
   const originalBothCLIConfig = await importOriginal()
   return {
@@ -74,6 +85,10 @@ vi.mock('execa', () => ({
 }))
 
 describe('yarn rw serve', () => {
+  beforeEach(() => {
+    mocks.isEsm = true
+  })
+
   afterEach(() => {
     vi.clearAllMocks()
   })
@@ -91,6 +106,21 @@ describe('yarn rw serve', () => {
     )
   })
 
+  it('Should proxy serve api with params to api-server handler for CJS projects', async () => {
+    mocks.isEsm = false
+
+    const parser = yargs().command('serve [side]', false, builder)
+
+    await parser.parse('serve api --port 5555 --apiRootPath funkyFunctions')
+
+    expect(apiServerCLIConfigHandler.handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        port: 5555,
+        apiRootPath: expect.stringMatching(/^\/?funkyFunctions\/?$/),
+      }),
+    )
+  })
+
   it('Should proxy serve api with params to api-server handler (alias and slashes in path)', async () => {
     const parser = yargs().command('serve [side]', false, builder)
 
@@ -99,6 +129,23 @@ describe('yarn rw serve', () => {
     )
 
     expect(apiServerCLIConfig.handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        port: 5555,
+        rootPath: expect.stringMatching(/^\/?funkyFunctions\/nested\/$/),
+      }),
+    )
+  })
+
+  it('Should proxy serve api with params to api-server handler (alias and slashes in path) for CJS projects', async () => {
+    mocks.isEsm = false
+
+    const parser = yargs().command('serve [side]', false, builder)
+
+    await parser.parse(
+      'serve api --port 5555 --rootPath funkyFunctions/nested/',
+    )
+
+    expect(apiServerCLIConfigHandler.handler).toHaveBeenCalledWith(
       expect.objectContaining({
         port: 5555,
         rootPath: expect.stringMatching(/^\/?funkyFunctions\/nested\/$/),
