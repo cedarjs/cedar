@@ -6,6 +6,7 @@ import { terminalLink } from 'termi-link'
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 import c from '../lib/colors.js'
@@ -69,7 +70,14 @@ export const builder = async (yargs) => {
           const { apiServerFileHandler } = await import('./serveApiHandler.js')
           await apiServerFileHandler(argv)
         } else {
-          await apiServerCLIConfig.handler(argv)
+          if (!projectIsEsm()) {
+            const { handler } = await import(
+              '@cedarjs/api-server/cjs/apiCliConfigHandler'
+            )
+            await handler(argv)
+          } else {
+            await apiServerCLIConfig.handler(argv)
+          }
         }
       },
     })
@@ -89,6 +97,8 @@ export const builder = async (yargs) => {
         if (streamingEnabled) {
           await webSsrServerHandler(rscEnabled)
         } else {
+          // @cedarjs/web-server is still built as CJS only, so we don't need
+          // the same solution here as we do for the api side
           await webServerCLIConfig.handler(argv)
         }
       },
