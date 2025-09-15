@@ -14,7 +14,10 @@ const __filename = (await import("node:url")).fileURLToPath(import.meta.url);
 const __dirname = (await import("node:path")).dirname(__filename);
 `
 
-// Plugin to redirect cfonts font paths from ../fonts to ./fonts
+// We need this ESBuild plugin because cfonts do a dynamic require for font
+// .json files using (basically) `require('../fonts/${fontName}.json')`
+// When bundling ESBuild doesn't support dynamic requires like that one, so we
+// rewrite the import to use font files that we include in our dist output
 const fontPathRedirectPlugin: Plugin = {
   name: 'font-path-redirect',
   setup(build) {
@@ -23,22 +26,17 @@ const fontPathRedirectPlugin: Plugin = {
       try {
         const source = await fs.promises.readFile(args.path, 'utf8')
 
-        // Look for the font require pattern so we can replace it
-        const fontRequirePattern =
-          /\(\s*`\.\.\/fonts\/\$\{([^}]+)\}\.json`\s*\)/g
-
         let modifiedSource = source
         let hasChanges = false
 
-        if (fontRequirePattern.test(source)) {
-          modifiedSource = modifiedSource.replace(
-            fontRequirePattern,
-            (_match, fontVar) => {
-              hasChanges = true
-              return `(__dirname + \`/fonts/\${${fontVar}}.json\`)`
-            },
-          )
-        }
+        // Look for the relative font require pattern so we can replace it
+        modifiedSource = modifiedSource.replace(
+          /\(\s*`\.\.\/fonts\/\$\{([^}]+)\}\.json`\s*\)/g,
+          (_match, fontVar) => {
+            hasChanges = true
+            return `(__dirname + \`/fonts/\${${fontVar}}.json\`)`
+          },
+        )
 
         if (hasChanges) {
           console.log(`Modified font paths in: ${args.path}`)
