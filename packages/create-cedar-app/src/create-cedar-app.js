@@ -15,6 +15,7 @@ import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import { name, version } from '../package.json'
 
+import { generateLogo } from './generateLogo.js'
 import {
   UID,
   startTelemetry,
@@ -725,17 +726,8 @@ async function createRedwoodApp() {
 
   const parsedFlags = cli.parse()
 
-  tui.drawText(
-    [
-      '',
-      '🌲🌲🌲🌲🌲',
-      '🌲🌲',
-      `🌲🌲  ${RedwoodStyling.header('Welcome to CedarJS!')}`,
-      '🌲🌲',
-      '🌲🌲🌲🌲🌲',
-      '',
-    ].join('\n'),
-  )
+  const logo = generateLogo('CedarJS', { palette: ['#00ff41', '#008f11'] })
+  console.log(logo)
 
   // Extract the args as provided by the user in the command line
   // TODO: Make all flags have the 'flag' suffix

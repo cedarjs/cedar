@@ -6,7 +6,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { describe, test, expect, it } from 'vitest'
+import { describe, test, expect, it, afterEach } from 'vitest'
 import { cd, fs, $ } from 'zx'
 
 if (!process.env.PROJECT_PATH) {
@@ -17,6 +17,10 @@ const projectPath = await fs.realpath(process.env.PROJECT_PATH)
 const SNAPSHOT_DIR = fileURLToPath(new URL('./__snapshots__', import.meta.url))
 
 cd(projectPath)
+
+afterEach(async () => {
+  await fs.rm('./cedar-app', { recursive: true, force: true })
+})
 
 describe('create-cedar-app', () => {
   test('--help', async () => {
@@ -63,18 +67,19 @@ describe('create-cedar-app', () => {
     // generating types, is also flakey since `yarn pack` seems to skip
     // `.yarnrc.yml` which is necessary for configuring a proper install.
     const p = await $`yarn create-cedar-app ./cedar-app --no-yarn-install --yes`
-    const expected = await fs.readFile(
-      path.join(SNAPSHOT_DIR, 'create-cedar-app.out'),
-      'utf8',
-    )
+    const snapshotPath = path.join(SNAPSHOT_DIR, 'create-cedar-app.out')
+    const expected = await fs.readFile(snapshotPath, 'utf8')
+
+    // If you make extensive updates to the output of the create-cedar-app
+    // command, it might be easiest to just generate a new snapshot file.
+    // Uncomment the line below to generate a new snapshot
+    // await fs.writeFile(snapshotPath, p.stdout)
 
     expect(p.exitCode).toEqual(0)
     expect(p.stdout).toBe(expected)
     expect(p.stderr).toMatchInlineSnapshot(
       `"[?25l[?25h[?25l[?25h[?25l[?25h[?25l[?25h[?25l[?25h[?25l[?25h[?25l[?25h"`,
     )
-
-    await fs.rm('./cedar-app', { recursive: true, force: true })
   })
 
   it.fails('fails on unknown options', async () => {
