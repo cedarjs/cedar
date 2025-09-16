@@ -12,10 +12,11 @@ import { isTypeScriptProject } from '../../../lib/project.js'
 
 export const handler = async ({ force, skipExamples }) => {
   const projectIsTypescript = isTypeScriptProject()
-  const redwoodVersion =
-    (await import(path.join(getPaths().base, 'package.json'), {
-      with: { type: 'json ' },
-    }).default.devDependencies['@cedarjs/core']) ?? 'latest'
+  const pkgJsonPath = path.join(getPaths().base, 'package.json')
+  const { default: pkgJson } = await import(pkgJsonPath, {
+    with: { type: 'json' },
+  })
+  const cedarVersion = pkgJson.devDependencies['@cedarjs/core'] ?? 'latest'
 
   const tasks = new Listr(
     [
@@ -87,9 +88,9 @@ export const handler = async ({ force, skipExamples }) => {
       {
         // Add production dependencies
         ...addApiPackages([
-          `@cedarjs/mailer-core@${redwoodVersion}`,
-          `@cedarjs/mailer-handler-nodemailer@${redwoodVersion}`,
-          `@cedarjs/mailer-renderer-react-email@${redwoodVersion}`,
+          `@cedarjs/mailer-core@${cedarVersion}`,
+          `@cedarjs/mailer-handler-nodemailer@${cedarVersion}`,
+          `@cedarjs/mailer-renderer-react-email@${cedarVersion}`,
           `@react-email/components`, // NOTE: Unpinned dependency here
         ]),
         title: 'Adding production dependencies to your api side...',
@@ -98,8 +99,8 @@ export const handler = async ({ force, skipExamples }) => {
         // Add development dependencies
         ...addApiPackages([
           '-D',
-          `@cedarjs/mailer-handler-in-memory@${redwoodVersion}`,
-          `@cedarjs/mailer-handler-studio@${redwoodVersion}`,
+          `@cedarjs/mailer-handler-in-memory@${cedarVersion}`,
+          `@cedarjs/mailer-handler-studio@${cedarVersion}`,
         ]),
         title: 'Adding development dependencies to your api side...',
       },
