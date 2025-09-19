@@ -1,7 +1,8 @@
 #!/usr/bin/env tsx
 
 /**
- * This script handles the multi-phase publishing process for Cedar release candidates:
+ * This script handles the multi-phase publishing process for Cedar release
+ * candidates:
  * 1. Temporarily removes create-cedar-app from workspaces
  * 2. Publishes all packages except create-cedar-app
  * 3. Restores workspaces configuration
@@ -11,8 +12,9 @@
  * 7. Updates JavaScript templates using ts-to-js
  * 8. Publishes the updated create-cedar-app package
  *
- * Usage: tsx .github/scripts/publish-release-candidate.ts
- * Environment variables required: NPM_AUTH_TOKEN, GITHUB_REF_NAME
+ * Usage: tsx .github/scripts/publish-release-candidate.ts [--dry-run]
+ * Environment variables required: NPM_AUTH_TOKEN (not needed for dry-run),
+ * GITHUB_REF_NAME
  */
 
 import { execSync } from 'node:child_process'
@@ -38,17 +40,30 @@ interface WorkspaceInfo {
   location: string
 }
 
+// Check for dry-run mode
+const isDryRun = process.argv.includes('--dry-run')
+
 function log(message: string) {
-  console.log(`🚀 ${message}`)
+  const prefix = isDryRun ? '🧪 [DRY-RUN]' : '🚀'
+  console.log(`${prefix} ${message}`)
 }
 
-function execCommand(command: string, cwd: string = REPO_ROOT): string {
+function execCommand(
+  command: string,
+  cwd: string = REPO_ROOT,
+  input?: string,
+): string {
   log(`Executing: ${command}`)
+
+  // In dry-run mode, we only skip actual publishing - everything else runs for
+  // real
+
   try {
     return execSync(command, {
       cwd,
       encoding: 'utf-8',
-      stdio: ['inherit', 'pipe', 'inherit'],
+      input: input,
+      stdio: [input ? 'pipe' : 'inherit', 'pipe', 'inherit'],
     })
       .toString()
       .trim()
@@ -116,7 +131,8 @@ function updateWorkspaceDependencies(version: string) {
       if (updatedContent !== content) {
         writeFileSync(packageJsonPath, updatedContent)
         log(
-          `Updated workspace dependencies in ${workspace.location}/package.json`,
+          'Updated workspace dependencies in ' +
+            `${workspace.location}/package.json`,
         )
       }
     } catch (error) {
@@ -217,8 +233,8 @@ async function main() {
   let restoreWorkspaces: (() => void) | null = null
 
   try {
-    // Check if NPM_AUTH_TOKEN is set
-    if (!process.env.NPM_AUTH_TOKEN) {
+    // Check if NPM_AUTH_TOKEN is set (not required for dry-run)
+    if (!isDryRun && !process.env.NPM_AUTH_TOKEN) {
       throw new Error('NPM_AUTH_TOKEN environment variable is not set')
     }
 
@@ -231,7 +247,8 @@ async function main() {
 
     // Get the semver from the branch name
     const branchName = process.env.GITHUB_REF_NAME || ''
-    const semver = branchName.split('/').slice(-2, -1)[0] // Extract 'minor' from 'release/minor/v1.1.0'
+    // Extract 'minor' from 'release/minor/v1.1.0'
+    const semver = branchName.split('/').slice(-2, -1)[0]
 
     if (!semver) {
       throw new Error(
@@ -245,7 +262,8 @@ async function main() {
     log('Step 1: Removing create-cedar-app from workspaces')
     restoreWorkspaces = await removeCreateCedarAppFromWorkspaces()
 
-    // Step 2: Publish all packages (create-cedar-app is excluded via workspace config)
+    // Step 2: Publish all packages (create-cedar-app is excluded via workspace
+    // config)
     log('Step 2: Publishing all packages except create-cedar-app')
 
     const publishArgs = [
@@ -266,8 +284,21 @@ async function main() {
       '--yes',
     ]
 
-    const publishOutput = execCommand(`yarn ${publishArgs.join(' ')}`)
-    log('✅ Published packages except create-cedar-app')
+    let publishOutput: string
+
+    if (isDryRun) {
+      // Remove --yes flag and pipe 'n' to answer "no" to publish prompt
+      const dryRunArgs = publishArgs.filter((arg) => arg !== '--yes')
+      publishOutput = execCommand(
+        `yarn ${dryRunArgs.join(' ')}`,
+        REPO_ROOT,
+        'n\n',
+      )
+      log('✅ Dry-run completed - got version info without publishing')
+    } else {
+      publishOutput = execCommand(`yarn ${publishArgs.join(' ')}`)
+      log('✅ Published packages except create-cedar-app')
+    }
 
     // Step 3: Restore workspaces configuration
     log('Step 3: Restoring workspaces configuration')
@@ -388,8 +419,17 @@ async function main() {
       '--yes',
     ]
 
-    execCommand(`yarn ${createCedarAppPublishArgs.join(' ')}`)
-    log('✅ Published create-cedar-app')
+    if (isDryRun) {
+      // Remove --yes flag and pipe 'n' to answer "no" to publish prompt
+      const dryRunArgs = createCedarAppPublishArgs.filter(
+        (arg) => arg !== '--yes',
+      )
+      execCommand(`yarn ${dryRunArgs.join(' ')}`, REPO_ROOT, 'n\n')
+      log('✅ Dry-run completed - would have published create-cedar-app')
+    } else {
+      execCommand(`yarn ${createCedarAppPublishArgs.join(' ')}`)
+      log('✅ Published create-cedar-app')
+    }
 
     log('🎉 Release candidate publishing completed successfully!')
   } catch (error) {
