@@ -125,7 +125,7 @@ function updateWorkspaceDependencies(version: string) {
       // Also update any @cedarjs dependencies to use the new version
       updatedContent = updatedContent.replace(
         /"@cedarjs\/([^"]+)":\s*"[^"]*"/g,
-        `"@cedarjs/$1": "${version}`,
+        `"@cedarjs/$1": "${version}"`,
       )
 
       if (updatedContent !== content) {
