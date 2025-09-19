@@ -101,7 +101,7 @@ yarn node ./dist/create-cedar-app.js /path/to/new/cedar-app
 To try the canary version, run:
 
 ```
-npx create-cedar-app@canary /path/to/project
+npx create-cedar-app@canary /path/to/new/cedar-app
 ```
 
 You can specify any tag or version instead of `@canary`
