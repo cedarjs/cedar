@@ -12,9 +12,9 @@
 </p>
 
 <br>
-<h2 align="center">The App Framework for Startups</h1>
+<h2 align="center">The App Framework for Startups</h2>
 
-<h3 align="center">Ship today with architecture for tomorrow.</h2>
+<h3 align="center">Ship today with architecture for tomorrow.</h3>
 
 CedarJS is an opinionated framework for modern multi-client applications, built on React, GraphQL, and Prisma with full TypeScript support and ready to go with zero config.
 
