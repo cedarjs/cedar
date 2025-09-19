@@ -3231,7 +3231,7 @@ __metadata:
     listr2: "npm:7.0.2"
     lodash: "npm:4.17.21"
     pascalcase: "npm:1.0.0"
-    prettier: "npm:3.5.3"
+    prettier: "npm:3.6.2"
     prettier-plugin-tailwindcss: "npm:0.6.14"
     prompts: "npm:2.4.2"
     semver: "npm:7.6.3"
@@ -3320,7 +3320,7 @@ __metadata:
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
     portfinder: "npm:1.0.37"
-    prettier: "npm:3.5.3"
+    prettier: "npm:3.6.2"
     prisma: "npm:5.20.0"
     prompts: "npm:2.4.2"
     rimraf: "npm:6.0.1"
@@ -3375,7 +3375,7 @@ __metadata:
     graphql: "npm:16.9.0"
     jscodeshift: "npm:17.0.0"
     pascalcase: "npm:1.0.0"
-    prettier: "npm:3.5.3"
+    prettier: "npm:3.6.2"
     publint: "npm:0.3.12"
     tasuku: "npm:2.0.1"
     tempy: "npm:1.0.1"
@@ -3489,7 +3489,7 @@ __metadata:
     eslint-plugin-prettier: "npm:5.2.1"
     eslint-plugin-react: "npm:7.36.1"
     eslint-plugin-react-hooks: "npm:4.6.2"
-    prettier: "npm:3.5.3"
+    prettier: "npm:3.6.2"
     typescript: "npm:5.9.2"
   languageName: unknown
   linkType: soft
@@ -3660,7 +3660,7 @@ __metadata:
     graphql: "npm:16.9.0"
     graphql-tag: "npm:2.12.6"
     kill-port: "npm:1.6.1"
-    prettier: "npm:3.5.3"
+    prettier: "npm:3.6.2"
     publint: "npm:0.3.12"
     rimraf: "npm:6.0.1"
     source-map: "npm:0.7.6"
@@ -26483,12 +26483,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.5.3":
-  version: 3.5.3
-  resolution: "prettier@npm:3.5.3"
+"prettier@npm:3.6.2, prettier@npm:^3.5.3":
+  version: 3.6.2
+  resolution: "prettier@npm:3.6.2"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/3880cb90b9dc0635819ab52ff571518c35bd7f15a6e80a2054c05dbc8a3aa6e74f135519e91197de63705bcb38388ded7e7230e2178432a1468005406238b877
+  checksum: 10c0/488cb2f2b99ec13da1e50074912870217c11edaddedeadc649b1244c749d15ba94e846423d062e2c4c9ae683e2d65f754de28889ba06e697ac4f988d44f45812
   languageName: node
   linkType: hard
 
@@ -26498,15 +26498,6 @@ __metadata:
   bin:
     prettier: bin-prettier.js
   checksum: 10c0/463ea8f9a0946cd5b828d8cf27bd8b567345cf02f56562d5ecde198b91f47a76b7ac9eae0facd247ace70e927143af6135e8cf411986b8cb8478784a4d6d724a
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^3.5.3":
-  version: 3.6.2
-  resolution: "prettier@npm:3.6.2"
-  bin:
-    prettier: bin/prettier.cjs
-  checksum: 10c0/488cb2f2b99ec13da1e50074912870217c11edaddedeadc649b1244c749d15ba94e846423d062e2c4c9ae683e2d65f754de28889ba06e697ac4f988d44f45812
   languageName: node
   linkType: hard
 
@@ -28279,7 +28270,7 @@ __metadata:
     npm-packlist: "npm:8.0.2"
     nx: "npm:20.8.2"
     ora: "npm:8.2.0"
-    prettier: "npm:3.5.3"
+    prettier: "npm:3.6.2"
     prettier-plugin-curly: "npm:0.3.2"
     prettier-plugin-packagejson: "npm:2.5.10"
     prettier-plugin-sh: "npm:0.14.0"
