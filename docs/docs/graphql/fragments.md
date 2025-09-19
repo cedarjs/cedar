@@ -74,15 +74,13 @@ import { fragmentRegistry, registerFragment } from '@cedarjs/web/apollo'
 
 With `fragmentRegistry`, you can interact with the registry directly.
 
-With `registerFragment`, you can register a fragment with the registry and get back:
+With `registerFragment`, you can register a fragment with the registry and get
+back data and functions to work with the registered fragment:
 
 ```ts
-{
-  fragment, typename, getCacheKey, useRegisteredFragment
-}
+const { fragment, typename, getCacheKey, useRegisteredFragment } =
+  registerFragment(/* ... */)
 ```
-
-which can then be used to work with the registered fragment.
 
 ### Setup
 
@@ -125,10 +123,9 @@ const GET_BOOK_DETAILS = gql`
     }
   }
 
-...
+// ...
 
-const { data, loading} = useQuery<GetBookDetails>(GET_BOOK_DETAILS)
-
+const { data, loading } = useQuery<GetBookDetails>(GET_BOOK_DETAILS)
 ```
 
 You can then access the book info from `data` and render:
@@ -137,7 +134,7 @@ You can then access the book info from `data` and render:
 {!loading  && (
   <div key={`book-id-${id}`}>
     <h3>Title: {data.title}</h3>
-    <p>by {data.author} ({data.publicationYear})<>
+    <p>by {data.author} ({data.publicationYear})</p>
   </div>
 )}
 ```
