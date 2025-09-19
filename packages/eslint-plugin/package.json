@@ -29,8 +29,8 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@types/eslint": "8.56.12",
     "@types/estree": "1.0.8",
-    "@typescript-eslint/eslint-plugin": "8.44.0",
     "@typescript-eslint/parser": "8.44.0",
+    "@typescript-eslint/rule-tester": "8.44.0",
     "tsx": "4.20.5",
     "typescript": "5.6.2",
     "vitest": "3.2.4"
