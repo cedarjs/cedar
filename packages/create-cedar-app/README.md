@@ -96,7 +96,7 @@ yarn node ./dist/create-cedar-app.js /path/to/new/cedar-app
 
 ### How to run other published versions for debugging
 
-By default yarn create will pick the latest stable version to run, but you can specify a different version via yarn too!
+`yarn create` will pick the latest stable version to run, so to run a different version the easiest way is to use `npx`.
 
 To try the canary version, run:
 
@@ -104,21 +104,16 @@ To try the canary version, run:
 npx create-cedar-app@canary /path/to/project
 ```
 
-Note that this will still create a project with the latest stable version, but run the canary version of create-cedar-app, and is mainly useful for debugging this package, and not the CedarJS canary release.
-
 You can specify any tag or version instead of `@canary`
 
-### Develop using the new project
+Note that this will still create a project with the latest stable version, but
+run the canary version (or other tag you specifed) of create-cedar-app, and is
+mainly useful for debugging this package, and not the CedarJS canary release.
 
-There are three options for developing with the installed project:
-
-**1. Upgrade the project to use the latest canary release**
+If you want to try the CedarJS packages canary releases, you'll have to follow
+up with an upgrade, like this:
 
 ```bash
 cd /path/to/new/cedar-app
-yarn rw upgrade -t canary
+yarn cedarjs upgrade -t canary
 ```
-
-**2. Use the workflow and tools for local package development**
-
-- [Local Development Instructions](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md)
