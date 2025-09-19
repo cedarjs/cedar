@@ -2502,9 +2502,9 @@ describe('dbAuth', () => {
       const dbAuth = new DbAuthHandler(event, context, options)
       await dbAuth.init()
 
-      expect(async () => {
-        await dbAuth._validateCsrf()
-      }).rejects.toThrow(dbAuthError.CsrfTokenMismatchError)
+      await expect(dbAuth._validateCsrf()).rejects.toThrow(
+        dbAuthError.CsrfTokenMismatchError,
+      )
     })
   })
 
