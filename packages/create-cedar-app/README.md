@@ -107,7 +107,7 @@ npx create-cedar-app@canary /path/to/new/cedar-app
 You can specify any tag or version instead of `@canary`
 
 Note that this will still create a project with the latest stable version, but
-run the canary version (or other tag you specifed) of create-cedar-app, and is
+run the canary version (or other tag you specified) of create-cedar-app, and is
 mainly useful for debugging this package, and not the CedarJS canary release.
 
 If you want to try the CedarJS packages canary releases, you'll have to follow
