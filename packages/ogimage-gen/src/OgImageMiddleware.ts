@@ -197,7 +197,7 @@ export default class OgImageMiddleware {
         mime.lookup(extension) as string,
       )
 
-      mwResponse.body = image
+      mwResponse.body = new Uint8Array(image)
     }
 
     return mwResponse
