@@ -1,4 +1,5 @@
 import http from 'node:http'
+import { WritableStream } from 'node:stream/web'
 import type { ReadableStream } from 'node:stream/web'
 
 import type { Request } from 'express'
