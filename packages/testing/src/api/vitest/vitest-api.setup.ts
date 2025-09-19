@@ -290,7 +290,6 @@ async function loadScenarios(testPath: string, scenarioName: string) {
         throw e
       } else {
         console.error('unexpected error type', e)
-        // eslint-disable-next-line
         throw e
       }
     }
