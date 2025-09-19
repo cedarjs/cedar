@@ -264,8 +264,7 @@ async function main() {
     log('Step 1: Removing create-cedar-app from workspaces')
     restoreWorkspaces = await removeCreateCedarAppFromWorkspaces()
 
-    // Step 2: Publish all packages using canary mode for distance-based RC numbering
-    log('Step 2: Publishing all packages with canary RC numbering')
+    log('Step 2: Publishing RC versions of all packages')
 
     const publishArgs = [
       'lerna',
@@ -300,6 +299,10 @@ async function main() {
       publishOutput = execCommand(`yarn ${publishArgs.join(' ')}`)
       log('✅ Published packages except create-cedar-app')
     }
+
+    console.log('Publish output:')
+    console.log('Publish output:', publishOutput)
+    console.log('Publish output:')
 
     // Step 3: Restore workspaces configuration
     log('Step 3: Restoring workspaces configuration')
