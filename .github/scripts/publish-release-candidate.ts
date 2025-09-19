@@ -245,26 +245,27 @@ async function main() {
       `//registry.npmjs.org/:_authToken=${process.env.NPM_AUTH_TOKEN}\n`,
     )
 
-    // Get the semver from the branch name
+    // Extract semver type from branch name
     const branchName = process.env.GITHUB_REF_NAME || ''
-    // Extract 'minor' from 'release/minor/v1.1.0'
-    const semver = branchName.split('/').slice(-2, -1)[0]
+    // Branch format: release/minor/v0.11.3
+    const branchParts = branchName.split('/')
 
-    if (!semver) {
+    if (branchParts.length !== 3 || branchParts[0] !== 'release') {
       throw new Error(
-        `Could not extract semver from branch name: ${branchName}`,
+        `Invalid branch name format. Expected: release/{semver}/v{version}, got: ${branchName}`,
       )
     }
 
-    log(`Publishing release candidate with semver: ${semver}`)
+    const semver = branchParts[1] // 'minor'
+
+    log(`Publishing release candidate with ${semver} bump`)
 
     // Step 1: Temporarily remove create-cedar-app from workspaces
     log('Step 1: Removing create-cedar-app from workspaces')
     restoreWorkspaces = await removeCreateCedarAppFromWorkspaces()
 
-    // Step 2: Publish all packages (create-cedar-app is excluded via workspace
-    // config)
-    log('Step 2: Publishing all packages except create-cedar-app')
+    // Step 2: Publish all packages using canary mode for distance-based RC numbering
+    log('Step 2: Publishing all packages with canary RC numbering')
 
     const publishArgs = [
       'lerna',
@@ -307,41 +308,32 @@ async function main() {
       restoreWorkspaces = null // Mark as cleaned up
     }
 
-    // Step 4: Extract the published version
+    // Step 4: Extract the published version from lerna output
     log('Step 4: Extracting published version')
 
-    // Look for the pattern used in lerna output: "=> version"
     let publishedVersion: string | null = null
 
-    // First try to find the "=> version" pattern like in canary script
-    const versionMatch = publishOutput.match(/=> ([^\s+]+)/g)
-    if (versionMatch && versionMatch.length > 0) {
-      // Get the last match (most recent version)
-      const lastMatch = versionMatch[versionMatch.length - 1]
-      publishedVersion = lastMatch.replace(/^=> /, '').replace(/\+.*$/, '')
+    // Look for RC version pattern in the canary publish output
+    const rcVersionMatch = publishOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
+    if (rcVersionMatch && rcVersionMatch.length > 0) {
+      publishedVersion = rcVersionMatch[rcVersionMatch.length - 1]
     }
 
-    // Fallback: Look for rc version pattern directly in the output
+    // Fallback: Look for "=> version" pattern like in canary script
     if (!publishedVersion) {
-      const rcVersionMatch = publishOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
-      if (rcVersionMatch && rcVersionMatch.length > 0) {
-        publishedVersion = rcVersionMatch[rcVersionMatch.length - 1]
-      }
-    }
-
-    // Additional fallback: Look for -canary. pattern and convert to rc
-    if (!publishedVersion) {
-      const canaryMatch = publishOutput.match(/(\d+\.\d+\.\d+-\w+\.\d+)/g)
-      if (canaryMatch && canaryMatch.length > 0) {
-        publishedVersion = canaryMatch[canaryMatch.length - 1]
+      const versionMatch = publishOutput.match(/=> ([^\s+]+)/g)
+      if (versionMatch && versionMatch.length > 0) {
+        const lastMatch = versionMatch[versionMatch.length - 1]
+        publishedVersion = lastMatch.replace(/^=> /, '').replace(/\+.*$/, '')
       }
     }
 
     if (!publishedVersion) {
       console.error('Lerna publish output:')
       console.error(publishOutput)
-      throw new Error('Could not extract published version from lerna output')
+      throw new Error('Could not extract RC version from lerna output')
     }
+
     log(`Published version: ${publishedVersion}`)
 
     // Step 5: Update package.json files in templates
