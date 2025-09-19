@@ -2,7 +2,7 @@
   <img src="https://avatars.githubusercontent.com/u/211931789?s=200&v=4" width="200" />
   <h1 align="center">CedarJS</h1>
   <p align="center">
-    <a href="https://discord.gg/8mNkAgby5m">
+    <a href="https://cedarjs.com/discord">
       <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join our Discord server!"
     /></a>
     <a href="https://cedarjs.com">
