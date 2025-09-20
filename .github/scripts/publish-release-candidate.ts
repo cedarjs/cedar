@@ -20,6 +20,7 @@
 import { execSync } from 'node:child_process'
 import { readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { setTimeout } from 'node:timers/promises'
 
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = join(REPO_ROOT, 'packages/create-cedar-app')
@@ -348,6 +349,21 @@ async function main() {
 
     log(`Published version: ${publishedVersion}`)
 
+    // Wait for packages to be available on npm
+    log('Waiting for packages to be available on npm')
+    // I only checked the core package first, but then I had a failure when the
+    // core package was available, but not the cli package. So now I'm checking
+    // a couple of more packages. I hope this is enough. Worst case I'll have to
+    // check all packages.
+    const packagesToWaitFor = ['@cedarjs/core', '@cedarjs/cli', '@cedarjs/web']
+
+    for (const packageName of packagesToWaitFor) {
+      const packageAvailable = await waitForNpm(packageName, publishedVersion)
+      if (!packageAvailable) {
+        throw new Error(`Package ${packageName} not available in time on npm`)
+      }
+    }
+
     // Step 5: Update package.json files in templates
     log('Step 5: Updating package.json files in templates')
 
@@ -451,6 +467,96 @@ async function main() {
 
     process.exit(1)
   }
+}
+
+function isErrorWithMessage(err: unknown): err is { message: string } {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof (err as { message: unknown }).message === 'string'
+  )
+}
+
+async function getLatestVersion(packageName: string) {
+  const headers = {
+    accept:
+      'application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*',
+  }
+
+  const registryUrl = 'https://registry.npmjs.org/'
+  const packageUrl = new URL(
+    encodeURIComponent(packageName).replace(/^%40/, '@'),
+    registryUrl,
+  )
+
+  const response = await fetch(packageUrl, {
+    method: 'GET',
+    headers,
+    keepalive: true,
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(packageName + ' not found')
+    }
+
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
+
+  const data = await response.json()
+  const latestVersion = data['dist-tags'].latest
+
+  if (!latestVersion) {
+    throw new Error(`${packageName} dist-tag latest not found`)
+  }
+
+  const latestVersionData = data.versions[latestVersion]
+
+  if (!latestVersionData) {
+    throw new Error(`No data found for ${packageName} version ${latestVersion}`)
+  }
+
+  return latestVersionData.version
+}
+
+async function waitForNpm(packageName: string, packageVersion: string) {
+  const maxWaitTime = 20_000 // 20 seconds
+  const startTime = Date.now()
+  let packageAvailable = false
+
+  while (!packageAvailable && Date.now() - startTime < maxWaitTime) {
+    const timeDiff = Date.now() - startTime
+    const nextWaitTime = timeDiff > 10_000 ? 5_000 : 2_500
+    try {
+      const availableVersion = await getLatestVersion(packageName)
+      console.log(`Checking npm registry... Found version: ${availableVersion}`)
+
+      if (availableVersion === packageVersion) {
+        packageAvailable = true
+        console.log(
+          `✅ Package ${packageName}@${packageVersion} is now available on npm!`,
+        )
+      } else {
+        console.log(
+          `Waiting for ${packageName}@${packageVersion} to be available...`,
+        )
+
+        // Wait for `nextWaitTime` before checking again
+        await setTimeout(nextWaitTime)
+      }
+    } catch (error) {
+      const errorMessage = isErrorWithMessage(error)
+        ? error.message
+        : 'Unknown error'
+      console.log(`Error checking package availability: ${errorMessage}`)
+
+      // Wait for 1 second before checking again
+      await setTimeout(1000)
+    }
+  }
+
+  return packageAvailable
 }
 
 // Run the script
