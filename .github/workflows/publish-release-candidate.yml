@@ -40,8 +40,7 @@ jobs:
           CURRENT_TAG=$(git describe --abbrev=0)
 
           # `github.ref_name` is something like `release/minor/v1.1.0`.
-          # `basename` gets us `v1.1.0`, then parameter expansion strips the `v`.
-          # See https://stackoverflow.com/questions/6594085/remove-first-character-of-a-string-in-bash.
+          # `basename` gets us `v1.1.0`
           BRANCH_TAG=$(basename ${{ github.ref_name }})
 
           echo
@@ -75,7 +74,7 @@ jobs:
         run: yarn test
 
       - name: 🚢 Publish Release Candidate
-        run: tsx .github/scripts/publish-release-candidate.ts
+        run: yarn tsx .github/scripts/publish-release-candidate.ts
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
