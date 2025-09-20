@@ -200,6 +200,10 @@ function generateYarnLockFile(templateDir: string) {
   rmSync(join(templatePath, 'yarn.lock'), { force: true })
   rmSync(join(templatePath, '.yarn'), { recursive: true, force: true })
 
+  // Create empty yarn.lock file (required for yarn to treat as separate project)
+  writeFileSync(join(templatePath, 'yarn.lock'), '')
+  log(`Created empty yarn.lock for ${templateDir}`)
+
   try {
     execCommand('yarn install', templatePath)
     log(`✅ Generated yarn.lock for ${templateDir}`)
