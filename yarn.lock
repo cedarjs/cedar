@@ -2580,16 +2580,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cedarjs/api-server@npm:0.12.0, @cedarjs/api-server@workspace:packages/api-server":
+"@cedarjs/api-server@npm:0.13.0, @cedarjs/api-server@workspace:packages/api-server":
   version: 0.0.0-use.local
   resolution: "@cedarjs/api-server@workspace:packages/api-server"
   dependencies:
-    "@cedarjs/context": "npm:0.12.0"
-    "@cedarjs/fastify-web": "npm:0.12.0"
-    "@cedarjs/framework-tools": "npm:0.12.0"
-    "@cedarjs/internal": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/web-server": "npm:0.12.0"
+    "@cedarjs/context": "npm:0.13.0"
+    "@cedarjs/fastify-web": "npm:0.13.0"
+    "@cedarjs/framework-tools": "npm:0.13.0"
+    "@cedarjs/internal": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/web-server": "npm:0.13.0"
     "@fastify/multipart": "npm:8.3.1"
     "@fastify/url-data": "npm:5.4.0"
     "@types/aws-lambda": "npm:8.10.152"
@@ -2614,7 +2614,7 @@ __metadata:
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
   peerDependencies:
-    "@cedarjs/graphql-server": 0.12.0
+    "@cedarjs/graphql-server": 0.13.0
   peerDependenciesMeta:
     "@cedarjs/graphql-server":
       optional: true
@@ -2628,7 +2628,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/api@npm:0.12.0, @cedarjs/api@workspace:packages/api":
+"@cedarjs/api@npm:0.13.0, @cedarjs/api@workspace:packages/api":
   version: 0.0.0-use.local
   resolution: "@cedarjs/api@workspace:packages/api"
   dependencies:
@@ -2678,7 +2678,7 @@ __metadata:
   resolution: "@cedarjs/auth-auth0-api@workspace:packages/auth-providers/auth0/api"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
@@ -2696,7 +2696,7 @@ __metadata:
   resolution: "@cedarjs/auth-auth0-setup@workspace:packages/auth-providers/auth0/setup"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
     concurrently: "npm:8.2.2"
@@ -2712,7 +2712,7 @@ __metadata:
   resolution: "@cedarjs/auth-auth0-web@workspace:packages/auth-providers/auth0/web"
   dependencies:
     "@auth0/auth0-spa-js": "npm:2.3.0"
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
@@ -2731,7 +2731,7 @@ __metadata:
   resolution: "@cedarjs/auth-azure-active-directory-api@workspace:packages/auth-providers/azureActiveDirectory/api"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.152"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -2750,7 +2750,7 @@ __metadata:
   resolution: "@cedarjs/auth-azure-active-directory-setup@workspace:packages/auth-providers/azureActiveDirectory/setup"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
     concurrently: "npm:8.2.2"
@@ -2766,7 +2766,7 @@ __metadata:
   resolution: "@cedarjs/auth-azure-active-directory-web@workspace:packages/auth-providers/azureActiveDirectory/web"
   dependencies:
     "@azure/msal-browser": "npm:2.39.0"
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
@@ -2786,7 +2786,7 @@ __metadata:
   resolution: "@cedarjs/auth-clerk-api@workspace:packages/auth-providers/clerk/api"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/clerk-sdk-node": "npm:4.13.21"
     "@types/aws-lambda": "npm:8.10.152"
@@ -2803,7 +2803,7 @@ __metadata:
   resolution: "@cedarjs/auth-clerk-setup@workspace:packages/auth-providers/clerk/setup"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
     concurrently: "npm:8.2.2"
@@ -2817,7 +2817,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-clerk-web@workspace:packages/auth-providers/clerk/web"
   dependencies:
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/clerk-react": "npm:4.32.4"
     "@clerk/types": "npm:3.65.4"
@@ -2838,7 +2838,7 @@ __metadata:
   resolution: "@cedarjs/auth-custom-setup@workspace:packages/auth-providers/custom/setup"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
     concurrently: "npm:8.2.2"
@@ -2849,14 +2849,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/auth-dbauth-api@npm:0.12.0, @cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api":
+"@cedarjs/auth-dbauth-api@npm:0.13.0, @cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api":
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@simplewebauthn/server": "npm:7.4.0"
     "@types/md5": "npm:2.3.5"
     "@types/uuid": "npm:10.0.0"
@@ -2876,11 +2876,11 @@ __metadata:
   resolution: "@cedarjs/auth-dbauth-middleware@workspace:packages/auth-providers/dbAuth/middleware"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
-    "@cedarjs/auth-dbauth-api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
+    "@cedarjs/auth-dbauth-api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/graphql-server": "npm:0.12.0"
-    "@cedarjs/web": "npm:0.12.0"
+    "@cedarjs/graphql-server": "npm:0.13.0"
+    "@cedarjs/web": "npm:0.13.0"
     "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.12"
@@ -2898,7 +2898,7 @@ __metadata:
     "@babel/cli": "npm:7.27.2"
     "@babel/core": "npm:^7.26.10"
     "@babel/runtime-corejs3": "npm:7.27.6"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@prisma/internals": "npm:5.20.0"
     "@simplewebauthn/browser": "npm:7.4.0"
     "@simplewebauthn/typescript-types": "npm:7.4.0"
@@ -2916,7 +2916,7 @@ __metadata:
   resolution: "@cedarjs/auth-dbauth-web@workspace:packages/auth-providers/dbAuth/web"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@simplewebauthn/browser": "npm:7.4.0"
     "@simplewebauthn/typescript-types": "npm:7.4.0"
@@ -2935,7 +2935,7 @@ __metadata:
   resolution: "@cedarjs/auth-firebase-api@workspace:packages/auth-providers/firebase/api"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
@@ -2952,7 +2952,7 @@ __metadata:
   resolution: "@cedarjs/auth-firebase-setup@workspace:packages/auth-providers/firebase/setup"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
     concurrently: "npm:8.2.2"
@@ -2967,7 +2967,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-firebase-web@workspace:packages/auth-providers/firebase/web"
   dependencies:
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
@@ -2987,7 +2987,7 @@ __metadata:
   resolution: "@cedarjs/auth-netlify-api@workspace:packages/auth-providers/netlify/api"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.152"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -3005,7 +3005,7 @@ __metadata:
   resolution: "@cedarjs/auth-netlify-setup@workspace:packages/auth-providers/netlify/setup"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
     concurrently: "npm:8.2.2"
@@ -3020,7 +3020,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-netlify-web@workspace:packages/auth-providers/netlify/web"
   dependencies:
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
@@ -3035,12 +3035,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/auth-supabase-api@npm:0.12.0, @cedarjs/auth-supabase-api@workspace:packages/auth-providers/supabase/api":
+"@cedarjs/auth-supabase-api@npm:0.13.0, @cedarjs/auth-supabase-api@workspace:packages/auth-providers/supabase/api":
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-api@workspace:packages/auth-providers/supabase/api"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.5.1"
     "@types/aws-lambda": "npm:8.10.152"
@@ -3059,12 +3059,12 @@ __metadata:
   resolution: "@cedarjs/auth-supabase-middleware@workspace:packages/auth-providers/supabase/middleware"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
-    "@cedarjs/auth": "npm:0.12.0"
-    "@cedarjs/auth-supabase-api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
+    "@cedarjs/auth": "npm:0.13.0"
+    "@cedarjs/auth-supabase-api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/graphql-server": "npm:0.12.0"
-    "@cedarjs/web": "npm:0.12.0"
+    "@cedarjs/graphql-server": "npm:0.13.0"
+    "@cedarjs/web": "npm:0.13.0"
     "@supabase/ssr": "npm:0.5.1"
     "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
@@ -3081,7 +3081,7 @@ __metadata:
   resolution: "@cedarjs/auth-supabase-setup@workspace:packages/auth-providers/supabase/setup"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
     concurrently: "npm:8.2.2"
@@ -3095,7 +3095,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-web@workspace:packages/auth-providers/supabase/web"
   dependencies:
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.5.1"
     "@supabase/supabase-js": "npm:2.45.4"
@@ -3116,7 +3116,7 @@ __metadata:
   resolution: "@cedarjs/auth-supertokens-api@workspace:packages/auth-providers/supertokens/api"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
@@ -3136,7 +3136,7 @@ __metadata:
   resolution: "@cedarjs/auth-supertokens-setup@workspace:packages/auth-providers/supertokens/setup"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.33"
     concurrently: "npm:8.2.2"
@@ -3152,7 +3152,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supertokens-web@workspace:packages/auth-providers/supertokens/web"
   dependencies:
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
@@ -3167,7 +3167,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/auth@npm:0.12.0, @cedarjs/auth@workspace:packages/auth":
+"@cedarjs/auth@npm:0.13.0, @cedarjs/auth@workspace:packages/auth":
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth@workspace:packages/auth"
   dependencies:
@@ -3187,7 +3187,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/babel-config@npm:0.12.0, @cedarjs/babel-config@workspace:packages/babel-config":
+"@cedarjs/babel-config@npm:0.13.0, @cedarjs/babel-config@workspace:packages/babel-config":
   version: 0.0.0-use.local
   resolution: "@cedarjs/babel-config@workspace:packages/babel-config"
   dependencies:
@@ -3205,7 +3205,7 @@ __metadata:
     "@babel/runtime-corejs3": "npm:7.27.6"
     "@babel/traverse": "npm:7.27.4"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@types/babel-plugin-tester": "npm:9.0.10"
     "@types/babel__core": "npm:7.20.5"
     "@types/babel__register": "npm:7.17.3"
@@ -3227,9 +3227,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/cli-data-migrate@workspace:packages/cli-packages/dataMigrate"
   dependencies:
-    "@cedarjs/babel-config": "npm:0.12.0"
+    "@cedarjs/babel-config": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@prisma/client": "npm:5.20.0"
     "@types/fs-extra": "npm:11.0.4"
     "@types/yargs": "npm:17.0.33"
@@ -3250,14 +3250,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/cli-helpers@npm:0.12.0, @cedarjs/cli-helpers@workspace:packages/cli-helpers":
+"@cedarjs/cli-helpers@npm:0.13.0, @cedarjs/cli-helpers@workspace:packages/cli-helpers":
   version: 0.0.0-use.local
   resolution: "@cedarjs/cli-helpers@workspace:packages/cli-helpers"
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/telemetry": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/telemetry": "npm:0.13.0"
     "@opentelemetry/api": "npm:1.8.0"
     "@types/dotenv-defaults": "npm:^2.0.4"
     "@types/lodash": "npm:4.17.20"
@@ -3289,17 +3289,17 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/cli-storybook-vite@workspace:packages/cli-packages/storybook-vite"
   dependencies:
-    "@cedarjs/cli-helpers": "npm:0.12.0"
-    "@cedarjs/framework-tools": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/telemetry": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
+    "@cedarjs/framework-tools": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/telemetry": "npm:0.13.0"
     "@types/semver": "npm:^7"
     "@types/yargs": "npm:17.0.33"
     ansis: "npm:4.1.0"
     execa: "npm:5.1.1"
     semver: "npm:7.6.3"
     storybook: "npm:7.6.20"
-    storybook-framework-cedarjs: "npm:0.12.0"
+    storybook-framework-cedarjs: "npm:0.13.0"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.20.5"
     typescript: "npm:5.9.2"
@@ -3308,7 +3308,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/cli@npm:0.12.0, @cedarjs/cli@workspace:packages/cli":
+"@cedarjs/cli@npm:0.13.0, @cedarjs/cli@workspace:packages/cli":
   version: 0.0.0-use.local
   resolution: "@cedarjs/cli@workspace:packages/cli"
   dependencies:
@@ -3316,15 +3316,15 @@ __metadata:
     "@babel/core": "npm:^7.26.10"
     "@babel/preset-typescript": "npm:7.27.1"
     "@babel/runtime-corejs3": "npm:7.27.6"
-    "@cedarjs/api-server": "npm:0.12.0"
-    "@cedarjs/cli-helpers": "npm:0.12.0"
-    "@cedarjs/fastify-web": "npm:0.12.0"
-    "@cedarjs/internal": "npm:0.12.0"
-    "@cedarjs/prerender": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/structure": "npm:0.12.0"
-    "@cedarjs/telemetry": "npm:0.12.0"
-    "@cedarjs/web-server": "npm:0.12.0"
+    "@cedarjs/api-server": "npm:0.13.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
+    "@cedarjs/fastify-web": "npm:0.13.0"
+    "@cedarjs/internal": "npm:0.13.0"
+    "@cedarjs/prerender": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/structure": "npm:0.13.0"
+    "@cedarjs/telemetry": "npm:0.13.0"
+    "@cedarjs/web-server": "npm:0.13.0"
     "@listr2/prompt-adapter-enquirer": "npm:2.0.16"
     "@opentelemetry/api": "npm:1.8.0"
     "@opentelemetry/core": "npm:1.22.0"
@@ -3398,7 +3398,7 @@ __metadata:
     "@babel/runtime-corejs3": "npm:7.27.6"
     "@babel/traverse": "npm:7.27.4"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@svgr/core": "npm:8.1.0"
     "@svgr/plugin-jsx": "npm:8.1.0"
     "@types/babel__core": "npm:7.20.5"
@@ -3429,7 +3429,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/context@npm:0.12.0, @cedarjs/context@workspace:packages/context":
+"@cedarjs/context@npm:0.13.0, @cedarjs/context@workspace:packages/context":
   version: 0.0.0-use.local
   resolution: "@cedarjs/context@workspace:packages/context"
   dependencies:
@@ -3442,7 +3442,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/cookie-jar@npm:0.12.0, @cedarjs/cookie-jar@workspace:packages/cookie-jar":
+"@cedarjs/cookie-jar@npm:0.13.0, @cedarjs/cookie-jar@workspace:packages/cookie-jar":
   version: 0.0.0-use.local
   resolution: "@cedarjs/cookie-jar@workspace:packages/cookie-jar"
   dependencies:
@@ -3463,14 +3463,14 @@ __metadata:
   resolution: "@cedarjs/core@workspace:packages/core"
   dependencies:
     "@babel/cli": "npm:7.27.2"
-    "@cedarjs/api-server": "npm:0.12.0"
-    "@cedarjs/cli": "npm:0.12.0"
-    "@cedarjs/eslint-config": "npm:0.12.0"
+    "@cedarjs/api-server": "npm:0.13.0"
+    "@cedarjs/cli": "npm:0.13.0"
+    "@cedarjs/eslint-config": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/internal": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/testing": "npm:0.12.0"
-    "@cedarjs/web-server": "npm:0.12.0"
+    "@cedarjs/internal": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/testing": "npm:0.13.0"
+    "@cedarjs/web-server": "npm:0.13.0"
     "@types/lodash": "npm:4.17.20"
     graphql-tag: "npm:2.12.6"
     lodash: "npm:4.17.21"
@@ -3507,7 +3507,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/eslint-config@npm:0.12.0, @cedarjs/eslint-config@workspace:packages/eslint-config":
+"@cedarjs/eslint-config@npm:0.13.0, @cedarjs/eslint-config@workspace:packages/eslint-config":
   version: 0.0.0-use.local
   resolution: "@cedarjs/eslint-config@workspace:packages/eslint-config"
   dependencies:
@@ -3515,9 +3515,9 @@ __metadata:
     "@babel/core": "npm:^7.26.10"
     "@babel/eslint-parser": "npm:7.27.5"
     "@babel/eslint-plugin": "npm:7.27.1"
-    "@cedarjs/eslint-plugin": "npm:0.12.0"
-    "@cedarjs/internal": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/eslint-plugin": "npm:0.13.0"
+    "@cedarjs/internal": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@typescript-eslint/eslint-plugin": "npm:8.44.0"
     "@typescript-eslint/parser": "npm:8.44.0"
     eslint: "npm:8.57.1"
@@ -3535,7 +3535,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/eslint-plugin@npm:0.12.0, @cedarjs/eslint-plugin@workspace:packages/eslint-plugin":
+"@cedarjs/eslint-plugin@npm:0.13.0, @cedarjs/eslint-plugin@workspace:packages/eslint-plugin":
   version: 0.0.0-use.local
   resolution: "@cedarjs/eslint-plugin@workspace:packages/eslint-plugin"
   dependencies:
@@ -3552,12 +3552,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/fastify-web@npm:0.12.0, @cedarjs/fastify-web@workspace:packages/adapters/fastify/web":
+"@cedarjs/fastify-web@npm:0.13.0, @cedarjs/fastify-web@workspace:packages/adapters/fastify/web":
   version: 0.0.0-use.local
   resolution: "@cedarjs/fastify-web@workspace:packages/adapters/fastify/web"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@fastify/http-proxy": "npm:9.5.0"
     "@fastify/static": "npm:6.12.0"
     "@fastify/url-data": "npm:5.4.0"
@@ -3597,7 +3597,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/framework-tools@npm:0.12.0, @cedarjs/framework-tools@workspace:*, @cedarjs/framework-tools@workspace:packages/framework-tools":
+"@cedarjs/framework-tools@npm:0.13.0, @cedarjs/framework-tools@workspace:*, @cedarjs/framework-tools@workspace:packages/framework-tools":
   version: 0.0.0-use.local
   resolution: "@cedarjs/framework-tools@workspace:packages/framework-tools"
   dependencies:
@@ -3615,18 +3615,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/graphql-server@npm:0.12.0, @cedarjs/graphql-server@workspace:packages/graphql-server":
+"@cedarjs/graphql-server@npm:0.13.0, @cedarjs/graphql-server@workspace:packages/graphql-server":
   version: 0.0.0-use.local
   resolution: "@cedarjs/graphql-server@workspace:packages/graphql-server"
   dependencies:
     "@babel/cli": "npm:7.27.2"
     "@babel/core": "npm:^7.26.10"
     "@babel/runtime-corejs3": "npm:7.27.6"
-    "@cedarjs/api": "npm:0.12.0"
-    "@cedarjs/context": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
+    "@cedarjs/context": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/realtime": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/realtime": "npm:0.13.0"
     "@envelop/core": "npm:5.0.2"
     "@envelop/depth-limit": "npm:4.0.0"
     "@envelop/disable-introspection": "npm:6.0.0"
@@ -3661,7 +3661,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/internal@npm:0.12.0, @cedarjs/internal@workspace:packages/internal":
+"@cedarjs/internal@npm:0.13.0, @cedarjs/internal@workspace:packages/internal":
   version: 0.0.0-use.local
   resolution: "@cedarjs/internal@workspace:packages/internal"
   dependencies:
@@ -3672,11 +3672,11 @@ __metadata:
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
     "@babel/runtime-corejs3": "npm:7.27.6"
     "@babel/traverse": "npm:7.27.4"
-    "@cedarjs/babel-config": "npm:0.12.0"
+    "@cedarjs/babel-config": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/graphql-server": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/router": "npm:0.12.0"
+    "@cedarjs/graphql-server": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/router": "npm:0.13.0"
     "@graphql-codegen/add": "npm:4.0.1"
     "@graphql-codegen/cli": "npm:3.3.1"
     "@graphql-codegen/client-preset": "npm:4.3.3"
@@ -3722,9 +3722,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/jobs@workspace:packages/jobs"
   dependencies:
-    "@cedarjs/cli-helpers": "npm:0.12.0"
+    "@cedarjs/cli-helpers": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@prisma/client": "npm:5.20.0"
     concurrently: "npm:8.2.2"
     cron-parser: "npm:5.3.1"
@@ -3739,11 +3739,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/mailer-core@npm:0.12.0, @cedarjs/mailer-core@workspace:packages/mailer/core":
+"@cedarjs/mailer-core@npm:0.13.0, @cedarjs/mailer-core@workspace:packages/mailer/core":
   version: 0.0.0-use.local
   resolution: "@cedarjs/mailer-core@workspace:packages/mailer/core"
   dependencies:
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     tsx: "npm:4.20.5"
     typescript: "npm:5.9.2"
@@ -3756,18 +3756,18 @@ __metadata:
   resolution: "@cedarjs/mailer-handler-in-memory@workspace:packages/mailer/handlers/in-memory"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/mailer-core": "npm:0.12.0"
+    "@cedarjs/mailer-core": "npm:0.13.0"
     tsx: "npm:4.20.5"
     typescript: "npm:5.9.2"
   languageName: unknown
   linkType: soft
 
-"@cedarjs/mailer-handler-nodemailer@npm:0.12.0, @cedarjs/mailer-handler-nodemailer@workspace:packages/mailer/handlers/nodemailer":
+"@cedarjs/mailer-handler-nodemailer@npm:0.13.0, @cedarjs/mailer-handler-nodemailer@workspace:packages/mailer/handlers/nodemailer":
   version: 0.0.0-use.local
   resolution: "@cedarjs/mailer-handler-nodemailer@workspace:packages/mailer/handlers/nodemailer"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/mailer-core": "npm:0.12.0"
+    "@cedarjs/mailer-core": "npm:0.13.0"
     "@types/nodemailer": "npm:^6"
     nodemailer: "npm:6.9.16"
     tsx: "npm:4.20.5"
@@ -3780,7 +3780,7 @@ __metadata:
   resolution: "@cedarjs/mailer-handler-resend@workspace:packages/mailer/handlers/resend"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/mailer-core": "npm:0.12.0"
+    "@cedarjs/mailer-core": "npm:0.13.0"
     resend: "npm:3.5.0"
     tsx: "npm:4.20.5"
     typescript: "npm:5.9.2"
@@ -3792,8 +3792,8 @@ __metadata:
   resolution: "@cedarjs/mailer-handler-studio@workspace:packages/mailer/handlers/studio"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/mailer-core": "npm:0.12.0"
-    "@cedarjs/mailer-handler-nodemailer": "npm:0.12.0"
+    "@cedarjs/mailer-core": "npm:0.13.0"
+    "@cedarjs/mailer-handler-nodemailer": "npm:0.13.0"
     "@types/nodemailer": "npm:^6"
     tsx: "npm:4.20.5"
     typescript: "npm:5.9.2"
@@ -3805,7 +3805,7 @@ __metadata:
   resolution: "@cedarjs/mailer-renderer-mjml-react@workspace:packages/mailer/renderers/mjml-react"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/mailer-core": "npm:0.12.0"
+    "@cedarjs/mailer-core": "npm:0.13.0"
     "@faire/mjml-react": "npm:3.4.0"
     "@types/mjml": "npm:4"
     mjml: "npm:4.15.3"
@@ -3819,7 +3819,7 @@ __metadata:
   resolution: "@cedarjs/mailer-renderer-react-email@workspace:packages/mailer/renderers/react-email"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/mailer-core": "npm:0.12.0"
+    "@cedarjs/mailer-core": "npm:0.13.0"
     "@react-email/render": "npm:0.0.17"
     tsx: "npm:4.20.5"
     typescript: "npm:5.9.2"
@@ -3831,10 +3831,10 @@ __metadata:
   resolution: "@cedarjs/ogimage-gen@workspace:packages/ogimage-gen"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/internal": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/router": "npm:0.12.0"
-    "@cedarjs/web": "npm:0.12.0"
+    "@cedarjs/internal": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/router": "npm:0.13.0"
+    "@cedarjs/web": "npm:0.13.0"
     "@playwright/test": "npm:1.55.0"
     fast-glob: "npm:3.3.3"
     lodash: "npm:4.17.21"
@@ -3848,7 +3848,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/prerender@npm:0.12.0, @cedarjs/prerender@workspace:packages/prerender":
+"@cedarjs/prerender@npm:0.13.0, @cedarjs/prerender@workspace:packages/prerender":
   version: 0.0.0-use.local
   resolution: "@cedarjs/prerender@workspace:packages/prerender"
   dependencies:
@@ -3856,13 +3856,13 @@ __metadata:
     "@babel/generator": "npm:7.27.5"
     "@babel/parser": "npm:7.27.5"
     "@babel/traverse": "npm:7.27.4"
-    "@cedarjs/babel-config": "npm:0.12.0"
+    "@cedarjs/babel-config": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/router": "npm:0.12.0"
-    "@cedarjs/structure": "npm:0.12.0"
-    "@cedarjs/vite": "npm:0.12.0"
-    "@cedarjs/web": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/router": "npm:0.13.0"
+    "@cedarjs/structure": "npm:0.13.0"
+    "@cedarjs/vite": "npm:0.13.0"
+    "@cedarjs/web": "npm:0.13.0"
     "@rollup/plugin-alias": "npm:5.1.1"
     "@rollup/plugin-commonjs": "npm:28.0.6"
     "@rollup/plugin-node-resolve": "npm:16.0.1"
@@ -3893,7 +3893,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/project-config@npm:0.12.0, @cedarjs/project-config@workspace:packages/project-config":
+"@cedarjs/project-config@npm:0.13.0, @cedarjs/project-config@workspace:packages/project-config":
   version: 0.0.0-use.local
   resolution: "@cedarjs/project-config@workspace:packages/project-config"
   dependencies:
@@ -3912,7 +3912,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/realtime@npm:0.12.0, @cedarjs/realtime@workspace:packages/realtime":
+"@cedarjs/realtime@npm:0.13.0, @cedarjs/realtime@workspace:packages/realtime":
   version: 0.0.0-use.local
   resolution: "@cedarjs/realtime@workspace:packages/realtime"
   dependencies:
@@ -3947,9 +3947,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/record@workspace:packages/record"
   dependencies:
-    "@cedarjs/api": "npm:0.12.0"
+    "@cedarjs/api": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@prisma/client": "npm:5.20.0"
     "@prisma/internals": "npm:5.20.0"
     camelcase: "npm:6.3.0"
@@ -3960,7 +3960,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/router@npm:0.12.0, @cedarjs/router@workspace:packages/router":
+"@cedarjs/router@npm:0.13.0, @cedarjs/router@workspace:packages/router":
   version: 0.0.0-use.local
   resolution: "@cedarjs/router@workspace:packages/router"
   dependencies:
@@ -3968,9 +3968,9 @@ __metadata:
     "@babel/cli": "npm:7.27.2"
     "@babel/core": "npm:^7.26.10"
     "@babel/runtime-corejs3": "npm:7.27.6"
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/server-store": "npm:0.12.0"
+    "@cedarjs/server-store": "npm:0.13.0"
     "@testing-library/jest-dom": "npm:6.5.0"
     "@types/react": "npm:^18.2.55"
     "@types/react-dom": "npm:^18.2.19"
@@ -3989,12 +3989,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/server-store@npm:0.12.0, @cedarjs/server-store@workspace:packages/server-store":
+"@cedarjs/server-store@npm:0.13.0, @cedarjs/server-store@workspace:packages/server-store":
   version: 0.0.0-use.local
   resolution: "@cedarjs/server-store@workspace:packages/server-store"
   dependencies:
-    "@cedarjs/auth": "npm:0.12.0"
-    "@cedarjs/cookie-jar": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
+    "@cedarjs/cookie-jar": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/fs-extra": "npm:11.0.4"
     esbuild: "npm:0.25.9"
@@ -4011,7 +4011,7 @@ __metadata:
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@prisma/client": "npm:5.20.0"
     "@types/mime-types": "npm:2.1.4"
     concurrently: "npm:8.2.2"
@@ -4026,14 +4026,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/structure@npm:0.12.0, @cedarjs/structure@workspace:packages/structure":
+"@cedarjs/structure@npm:0.13.0, @cedarjs/structure@workspace:packages/structure":
   version: 0.0.0-use.local
   resolution: "@cedarjs/structure@workspace:packages/structure"
   dependencies:
     "@babel/cli": "npm:7.27.2"
     "@babel/core": "npm:^7.26.10"
     "@babel/runtime-corejs3": "npm:7.27.6"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     "@prisma/internals": "npm:5.20.0"
     "@types/fs-extra": "npm:11.0.4"
     "@types/line-column": "npm:1.0.2"
@@ -4065,12 +4065,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/telemetry@npm:0.12.0, @cedarjs/telemetry@workspace:packages/telemetry":
+"@cedarjs/telemetry@npm:0.13.0, @cedarjs/telemetry@workspace:packages/telemetry":
   version: 0.0.0-use.local
   resolution: "@cedarjs/telemetry@workspace:packages/telemetry"
   dependencies:
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/structure": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/structure": "npm:0.13.0"
     "@types/envinfo": "npm:7.8.4"
     "@types/uuid": "npm:10.0.0"
     "@types/yargs": "npm:17.0.33"
@@ -4086,18 +4086,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/testing@npm:0.12.0, @cedarjs/testing@workspace:packages/testing":
+"@cedarjs/testing@npm:0.13.0, @cedarjs/testing@workspace:packages/testing":
   version: 0.0.0-use.local
   resolution: "@cedarjs/testing@workspace:packages/testing"
   dependencies:
-    "@cedarjs/auth": "npm:0.12.0"
-    "@cedarjs/babel-config": "npm:0.12.0"
-    "@cedarjs/context": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
+    "@cedarjs/babel-config": "npm:0.13.0"
+    "@cedarjs/context": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/graphql-server": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/router": "npm:0.12.0"
-    "@cedarjs/web": "npm:0.12.0"
+    "@cedarjs/graphql-server": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/router": "npm:0.13.0"
+    "@cedarjs/web": "npm:0.13.0"
     "@testing-library/jest-dom": "npm:6.5.0"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.5.2"
@@ -4128,7 +4128,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/tui@npm:0.12.0, @cedarjs/tui@workspace:packages/tui":
+"@cedarjs/tui@npm:0.13.0, @cedarjs/tui@workspace:packages/tui":
   version: 0.0.0-use.local
   resolution: "@cedarjs/tui@workspace:packages/tui"
   dependencies:
@@ -4142,7 +4142,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/vite@npm:0.12.0, @cedarjs/vite@workspace:packages/vite":
+"@cedarjs/vite@npm:0.13.0, @cedarjs/vite@workspace:packages/vite":
   version: 0.0.0-use.local
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
@@ -4151,14 +4151,14 @@ __metadata:
     "@babel/generator": "npm:7.27.5"
     "@babel/parser": "npm:7.27.5"
     "@babel/traverse": "npm:7.27.4"
-    "@cedarjs/auth": "npm:0.12.0"
-    "@cedarjs/babel-config": "npm:0.12.0"
-    "@cedarjs/cookie-jar": "npm:0.12.0"
-    "@cedarjs/internal": "npm:0.12.0"
-    "@cedarjs/project-config": "npm:0.12.0"
-    "@cedarjs/server-store": "npm:0.12.0"
-    "@cedarjs/testing": "npm:0.12.0"
-    "@cedarjs/web": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
+    "@cedarjs/babel-config": "npm:0.13.0"
+    "@cedarjs/cookie-jar": "npm:0.13.0"
+    "@cedarjs/internal": "npm:0.13.0"
+    "@cedarjs/project-config": "npm:0.13.0"
+    "@cedarjs/server-store": "npm:0.13.0"
+    "@cedarjs/testing": "npm:0.13.0"
+    "@cedarjs/web": "npm:0.13.0"
     "@hyrious/esbuild-plugin-commonjs": "npm:0.2.6"
     "@swc/core": "npm:1.13.5"
     "@types/busboy": "npm:^1"
@@ -4207,13 +4207,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/web-server@npm:0.12.0, @cedarjs/web-server@workspace:packages/web-server":
+"@cedarjs/web-server@npm:0.13.0, @cedarjs/web-server@workspace:packages/web-server":
   version: 0.0.0-use.local
   resolution: "@cedarjs/web-server@workspace:packages/web-server"
   dependencies:
-    "@cedarjs/fastify-web": "npm:0.12.0"
+    "@cedarjs/fastify-web": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/project-config": "npm:0.12.0"
+    "@cedarjs/project-config": "npm:0.13.0"
     ansis: "npm:4.1.0"
     dotenv-defaults: "npm:5.0.2"
     fastify: "npm:4.28.1"
@@ -4226,7 +4226,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/web@npm:0.12.0, @cedarjs/web@workspace:packages/web":
+"@cedarjs/web@npm:0.13.0, @cedarjs/web@workspace:packages/web":
   version: 0.0.0-use.local
   resolution: "@cedarjs/web@workspace:packages/web"
   dependencies:
@@ -4238,10 +4238,10 @@ __metadata:
     "@babel/plugin-transform-runtime": "npm:7.27.4"
     "@babel/runtime": "npm:7.27.6"
     "@babel/runtime-corejs3": "npm:7.27.6"
-    "@cedarjs/auth": "npm:0.12.0"
+    "@cedarjs/auth": "npm:0.13.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/internal": "npm:0.12.0"
-    "@cedarjs/server-store": "npm:0.12.0"
+    "@cedarjs/internal": "npm:0.13.0"
+    "@cedarjs/server-store": "npm:0.13.0"
     "@dr.pogodin/react-helmet": "npm:2.0.4"
     "@rollup/plugin-babel": "npm:6.0.4"
     "@testing-library/jest-dom": "npm:6.5.0"
@@ -16198,8 +16198,8 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
-    "@cedarjs/framework-tools": "npm:0.12.0"
-    "@cedarjs/tui": "npm:0.12.0"
+    "@cedarjs/framework-tools": "npm:0.13.0"
+    "@cedarjs/tui": "npm:0.13.0"
     "@opentelemetry/api": "npm:1.8.0"
     "@opentelemetry/exporter-trace-otlp-http": "npm:0.49.1"
     "@opentelemetry/resources": "npm:1.22.0"
@@ -26716,7 +26716,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.6.2, prettier@npm:^3.5.3":
+"prettier@npm:3.6.2":
   version: 3.6.2
   resolution: "prettier@npm:3.6.2"
   bin:
@@ -29450,11 +29450,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"storybook-framework-cedarjs@npm:0.12.0, storybook-framework-cedarjs@workspace:packages/storybook":
+"storybook-framework-cedarjs@npm:0.13.0, storybook-framework-cedarjs@workspace:packages/storybook":
   version: 0.0.0-use.local
   resolution: "storybook-framework-cedarjs@workspace:packages/storybook"
   dependencies:
-    "@cedarjs/testing": "npm:0.12.0"
+    "@cedarjs/testing": "npm:0.13.0"
     "@joshwooding/vite-plugin-react-docgen-typescript": "npm:0.6.2"
     "@rollup/pluginutils": "npm:5.1.4"
     "@storybook/addon-essentials": "npm:7.6.20"
@@ -29470,8 +29470,8 @@ __metadata:
     vite-plugin-node-polyfills: "npm:0.23.0"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@cedarjs/project-config": 0.12.0
-    "@cedarjs/router": 0.12.0
+    "@cedarjs/project-config": 0.13.0
+    "@cedarjs/router": 0.13.0
     react: 18.3.1
     react-dom: 18.3.1
     storybook: 7.6.20

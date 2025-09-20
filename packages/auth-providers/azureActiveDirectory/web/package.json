@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-azure-active-directory-web",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -49,7 +49,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "0.12.0"
+    "@cedarjs/auth": "0.13.0"
   },
   "devDependencies": {
     "@azure/msal-browser": "2.39.0",

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-dbauth-api",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -57,14 +57,14 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/project-config": "0.12.0",
+    "@cedarjs/project-config": "0.13.0",
     "base64url": "3.0.1",
     "md5": "2.3.0",
     "uuid": "10.0.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@cedarjs/api": "0.12.0",
+    "@cedarjs/api": "0.13.0",
     "@cedarjs/framework-tools": "workspace:*",
     "@simplewebauthn/server": "7.4.0",
     "@types/md5": "2.3.5",

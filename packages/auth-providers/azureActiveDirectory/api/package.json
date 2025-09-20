@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-azure-active-directory-api",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@cedarjs/api": "0.12.0",
+    "@cedarjs/api": "0.13.0",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/aws-lambda": "8.10.152",
     "@types/jsonwebtoken": "9.0.10",

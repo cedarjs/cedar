@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/server-store",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -22,8 +22,8 @@
     "build:types": "tsc --build --verbose"
   },
   "dependencies": {
-    "@cedarjs/auth": "0.12.0",
-    "@cedarjs/cookie-jar": "0.12.0",
+    "@cedarjs/auth": "0.13.0",
+    "@cedarjs/cookie-jar": "0.13.0",
     "esbuild": "0.25.9",
     "fast-glob": "3.3.3",
     "fs-extra": "11.2.0"

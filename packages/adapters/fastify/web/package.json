@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/fastify-web",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -21,7 +21,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/project-config": "0.12.0",
+    "@cedarjs/project-config": "0.13.0",
     "@fastify/http-proxy": "9.5.0",
     "@fastify/static": "6.12.0",
     "@fastify/url-data": "5.4.0",

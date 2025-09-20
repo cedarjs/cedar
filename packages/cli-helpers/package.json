@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli-helpers",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -55,8 +55,8 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@cedarjs/project-config": "0.12.0",
-    "@cedarjs/telemetry": "0.12.0",
+    "@cedarjs/project-config": "0.13.0",
+    "@cedarjs/telemetry": "0.13.0",
     "@opentelemetry/api": "1.8.0",
     "ansis": "4.1.0",
     "dotenv": "16.4.7",

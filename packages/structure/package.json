@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/structure",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "noun: the arrangement of and relations between the parts or elements of something complex",
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@babel/runtime-corejs3": "7.27.6",
-    "@cedarjs/project-config": "0.12.0",
+    "@cedarjs/project-config": "0.13.0",
     "@prisma/internals": "5.20.0",
     "@types/line-column": "1.0.2",
     "camelcase": "6.3.0",
