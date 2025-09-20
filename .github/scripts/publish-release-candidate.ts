@@ -142,6 +142,9 @@ function updateWorkspaceDependencies(version: string) {
 async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
   log('Temporarily removing create-cedar-app from workspaces')
 
+  // Store current commit SHA before making any changes
+  const initialCommitSha = execCommand('git rev-parse HEAD').trim()
+
   const frameworkPackageConfigPath = join(REPO_ROOT, 'package.json')
   const frameworkPackageConfig: PackageJson = JSON.parse(
     readFileSync(frameworkPackageConfigPath, 'utf-8'),
@@ -187,7 +190,7 @@ async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
   // Return cleanup function
   return () => {
     log('Restoring workspaces configuration')
-    execCommand('git reset --hard HEAD~1')
+    execCommand(`git reset --hard ${initialCommitSha}`)
     log('✅ Restored workspaces configuration')
   }
 }
