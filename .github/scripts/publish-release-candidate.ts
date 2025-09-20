@@ -44,7 +44,7 @@ interface WorkspaceInfo {
 const isDryRun = process.argv.includes('--dry-run')
 
 function log(message: string) {
-  const prefix = isDryRun ? '🧪 [DRY-RUN]' : '🚀'
+  const prefix = isDryRun ? '[DRY-RUN]' : '•'
   console.log(`${prefix} ${message}`)
 }
 
@@ -320,12 +320,14 @@ async function main() {
     let publishedVersion: string | null = null
 
     // Look for RC version pattern in the canary publish output
+    // TODO: Make this more strict by looking for
+    // `/@cedarjs\/.*?@(\d+\.\d+\.\d+-rc\.\d+)/g`
     const rcVersionMatch = publishOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
     if (rcVersionMatch && rcVersionMatch.length > 0) {
       publishedVersion = rcVersionMatch[rcVersionMatch.length - 1]
     }
 
-    // Fallback: Look for "=> version" pattern like in canary script
+    // Fallback: Look for "=> version" pattern
     if (!publishedVersion) {
       const versionMatch = publishOutput.match(/=> ([^\s+]+)/g)
       if (versionMatch && versionMatch.length > 0) {
