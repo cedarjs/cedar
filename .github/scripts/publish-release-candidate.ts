@@ -268,27 +268,87 @@ async function main() {
 
     log(`Publishing release candidate with ${semver} bump`)
 
-    // Step 1: Temporarily remove create-cedar-app from workspaces
     log('Step 1: Removing create-cedar-app from workspaces')
     restoreWorkspaces = await removeCreateCedarAppFromWorkspaces()
 
-    log('Step 2: Publishing RC versions of all packages')
+    log('Step 2: Calculating RC version without publishing')
 
-    const publishArgs = [
+    const versionArgs = [
       'lerna',
-      'publish',
+      'version',
       `pre${semver}`,
       '--include-merged-tags',
       '--exact',
       '--canary',
       '--preid',
       'rc',
-      '--dist-tag',
-      'rc',
       '--force-publish',
       '--loglevel',
       'verbose',
-      '--no-git-reset',
+      '--no-git-tag-version',
+      '--no-push',
+      '--yes',
+    ]
+
+    let versionOutput: string
+
+    if (isDryRun) {
+      log(
+        '📝 Dry-run: Running versioning to test workflow (will revert changes)',
+      )
+      versionOutput = execCommand(`yarn ${versionArgs.join(' ')}`)
+      log(
+        '✅ Dry-run: Calculated RC version and updated package.json files (will revert)',
+      )
+    } else {
+      versionOutput = execCommand(`yarn ${versionArgs.join(' ')}`)
+      log('✅ Calculated RC version and updated package.json files')
+    }
+
+    console.log('Version output:')
+    console.log('Version output:', versionOutput)
+    console.log('Version output:')
+
+    log('Step 3: Extracting calculated version')
+
+    let publishedVersion: string | null = null
+
+    // Look for RC version pattern in the version output
+    const rcVersionMatch = versionOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
+    if (rcVersionMatch && rcVersionMatch.length > 0) {
+      publishedVersion = rcVersionMatch[rcVersionMatch.length - 1]
+    }
+
+    // Fallback: Look for "=> version" pattern
+    if (!publishedVersion) {
+      const versionMatch = versionOutput.match(/=> ([^\s+]+)/g)
+      if (versionMatch && versionMatch.length > 0) {
+        const lastMatch = versionMatch[versionMatch.length - 1]
+        publishedVersion = lastMatch.replace(/^=> /, '').replace(/\+.*$/, '')
+      }
+    }
+
+    if (!publishedVersion) {
+      console.error('Lerna version output:')
+      console.error(versionOutput)
+      throw new Error('Could not extract RC version from lerna output')
+    }
+
+    log(`Calculated version: ${publishedVersion}`)
+
+    log('Step 4: Updating workspace dependencies')
+    updateWorkspaceDependencies(publishedVersion)
+
+    log('Step 5: Publishing RC versions of all packages')
+
+    const publishArgs = [
+      'lerna',
+      'publish',
+      'from-package',
+      '--dist-tag',
+      'rc',
+      '--loglevel',
+      'verbose',
       '--yes',
     ]
 
@@ -302,55 +362,20 @@ async function main() {
         REPO_ROOT,
         'n\n',
       )
-      log('✅ Dry-run completed - got version info without publishing')
+      log('✅ Dry-run - tested publish command without actually publishing')
     } else {
       publishOutput = execCommand(`yarn ${publishArgs.join(' ')}`)
       log('✅ Published packages except create-cedar-app')
     }
 
-    console.log('Publish output:')
-    console.log('Publish output:', publishOutput)
-    console.log('Publish output:')
-
-    // Step 3: Restore workspaces configuration
-    log('Step 3: Restoring workspaces configuration')
+    log('Step 6: Restoring workspaces configuration')
     if (restoreWorkspaces) {
       restoreWorkspaces()
       restoreWorkspaces = null // Mark as cleaned up
     }
 
-    // Step 4: Extract the published version from lerna output
-    log('Step 4: Extracting published version')
+    log('Step 7: Waiting for packages to be available on npm')
 
-    let publishedVersion: string | null = null
-
-    // Look for RC version pattern in the canary publish output
-    // TODO: Make this more strict by looking for
-    // `/@cedarjs\/.*?@(\d+\.\d+\.\d+-rc\.\d+)/g`
-    const rcVersionMatch = publishOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
-    if (rcVersionMatch && rcVersionMatch.length > 0) {
-      publishedVersion = rcVersionMatch[rcVersionMatch.length - 1]
-    }
-
-    // Fallback: Look for "=> version" pattern
-    if (!publishedVersion) {
-      const versionMatch = publishOutput.match(/=> ([^\s+]+)/g)
-      if (versionMatch && versionMatch.length > 0) {
-        const lastMatch = versionMatch[versionMatch.length - 1]
-        publishedVersion = lastMatch.replace(/^=> /, '').replace(/\+.*$/, '')
-      }
-    }
-
-    if (!publishedVersion) {
-      console.error('Lerna publish output:')
-      console.error(publishOutput)
-      throw new Error('Could not extract RC version from lerna output')
-    }
-
-    log(`Published version: ${publishedVersion}`)
-
-    // Wait for packages to be available on npm
-    log('Waiting for packages to be available on npm')
     // I only checked the core package first, but then I had a failure when the
     // core package was available, but not the cli package. So now I'm checking
     // a couple of more packages. I hope this is enough. Worst case I'll have to
@@ -364,8 +389,9 @@ async function main() {
       }
     }
 
-    // Step 5: Update package.json files in templates
-    log('Step 5: Updating package.json files in templates')
+    log('✅ Packages are now available on npm')
+
+    log('Step 8: Updating template package.json files')
 
     for (const templateDir of TEMPLATE_DIRS) {
       const templatePath = join(TEMPLATES_DIR, templateDir)
@@ -391,15 +417,9 @@ async function main() {
 
     log('✅ Updated all template package.json files')
 
-    // Step 6: Update workspace dependencies across all packages
-    log('Step 6: Updating workspace dependencies')
-    updateWorkspaceDependencies(publishedVersion)
-
-    // Step 7: Update JavaScript templates using ts-to-js
     updateJavaScriptTemplates()
 
-    // Step 8: Generate yarn.lock files for each template
-    log('Step 8: Generating yarn.lock files for templates')
+    log('Step 9: Generating yarn.lock files for templates')
 
     for (const templateDir of TEMPLATE_DIRS) {
       generateYarnLockFile(templateDir)
@@ -407,15 +427,13 @@ async function main() {
 
     log('✅ Generated all yarn.lock files')
 
-    // Step 9: Commit changes before publishing create-cedar-app
-    log('Step 9: Committing template updates')
+    log('Step 10: Committing template updates')
     execCommand('git add .')
     execCommand(
       'git commit -m "Update create-cedar-app templates to use RC packages"',
     )
 
-    // Step 10: Publish create-cedar-app
-    log('Step 10: Publishing create-cedar-app')
+    log('Step 11: Publishing create-cedar-app')
 
     const createCedarAppPublishArgs = [
       'lerna',
