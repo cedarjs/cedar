@@ -455,6 +455,12 @@ async function main() {
     for (const templateDir of TEMPLATE_DIRS) {
       const templatePath = path.join(TEMPLATES_DIR, templateDir)
 
+      // Update root package.json
+      updatePackageJsonWithVersion(
+        path.join(templatePath, 'package.json'),
+        publishedVersion,
+      )
+
       // Update web/package.json
       updatePackageJsonWithVersion(
         path.join(templatePath, 'web/package.json'),
