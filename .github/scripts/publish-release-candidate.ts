@@ -273,55 +273,53 @@ async function main() {
 
     log('Step 2: Calculating RC version without publishing')
 
-    const versionArgs = [
+    const publishArgs = [
       'lerna',
-      'version',
+      'publish',
       `pre${semver}`,
       '--include-merged-tags',
       '--exact',
       '--canary',
       '--preid',
       'rc',
+      '--dist-tag',
+      'rc',
       '--force-publish',
       '--loglevel',
       'verbose',
-      '--no-git-tag-version',
-      '--no-push',
+      '--no-git-reset',
       '--yes',
     ]
 
-    let versionOutput: string
+    let publishOutput: string
 
-    if (isDryRun) {
-      log(
-        '📝 Dry-run: Running versioning to test workflow (will revert changes)',
-      )
-      versionOutput = execCommand(`yarn ${versionArgs.join(' ')}`)
-      log(
-        '✅ Dry-run: Calculated RC version and updated package.json files (will revert)',
-      )
-    } else {
-      versionOutput = execCommand(`yarn ${versionArgs.join(' ')}`)
-      log('✅ Calculated RC version and updated package.json files')
-    }
+    // Always use dry-run mode for canary publish to only calculate version
+    log('📝 Running canary publish to calculate version (will answer no)')
+    const dryRunArgs = publishArgs.filter((arg) => arg !== '--yes')
+    publishOutput = execCommand(
+      `yarn ${dryRunArgs.join(' ')}`,
+      REPO_ROOT,
+      'n\n',
+    )
+    log('✅ Got version calculation without publishing')
 
-    console.log('Version output:')
-    console.log('Version output:', versionOutput)
-    console.log('Version output:')
+    console.log('Publish output:')
+    console.log('Publish output:', publishOutput)
+    console.log('Publish output:')
 
     log('Step 3: Extracting calculated version')
 
     let publishedVersion: string | null = null
 
-    // Look for RC version pattern in the version output
-    const rcVersionMatch = versionOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
+    // Look for RC version pattern in the canary publish output
+    const rcVersionMatch = publishOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
     if (rcVersionMatch && rcVersionMatch.length > 0) {
       publishedVersion = rcVersionMatch[rcVersionMatch.length - 1]
     }
 
     // Fallback: Look for "=> version" pattern
     if (!publishedVersion) {
-      const versionMatch = versionOutput.match(/=> ([^\s+]+)/g)
+      const versionMatch = publishOutput.match(/=> ([^\s+]+)/g)
       if (versionMatch && versionMatch.length > 0) {
         const lastMatch = versionMatch[versionMatch.length - 1]
         publishedVersion = lastMatch.replace(/^=> /, '').replace(/\+.*$/, '')
@@ -329,19 +327,54 @@ async function main() {
     }
 
     if (!publishedVersion) {
-      console.error('Lerna version output:')
-      console.error(versionOutput)
+      console.error('Lerna publish output:')
+      console.error(publishOutput)
       throw new Error('Could not extract RC version from lerna output')
     }
 
-    log(`Calculated version: ${publishedVersion}`)
+    log(`Published version: ${publishedVersion}`)
 
-    log('Step 4: Updating workspace dependencies')
+    log('Step 4: Manually updating package.json files with calculated version')
+
+    // Since canary publish didn't actually version the files, we need to do it manually
+    // Get all workspace packages and update their versions
+    const workspacesOutput = execCommand('yarn workspaces list --json')
+    const workspaces: WorkspaceInfo[] = workspacesOutput
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => JSON.parse(line))
+      .filter((ws) => ws.location !== '.')
+
+    for (const workspace of workspaces) {
+      const packageJsonPath = join(
+        REPO_ROOT,
+        workspace.location,
+        'package.json',
+      )
+      try {
+        const content = readFileSync(packageJsonPath, 'utf-8')
+        const packageJson = JSON.parse(content)
+
+        // Update the version
+        packageJson.version = publishedVersion
+
+        writeFileSync(
+          packageJsonPath,
+          JSON.stringify(packageJson, null, 2) + '\n',
+        )
+        log(`Updated version in ${workspace.location}/package.json`)
+      } catch (error) {
+        // Skip if package.json doesn't exist or can't be read
+        continue
+      }
+    }
+
+    log('Step 5: Updating workspace dependencies')
     updateWorkspaceDependencies(publishedVersion)
 
-    log('Step 5: Publishing RC versions of all packages')
+    log('Step 6: Publishing RC versions of all packages')
 
-    const publishArgs = [
+    const actualPublishArgs = [
       'lerna',
       'publish',
       'from-package',
@@ -352,35 +385,36 @@ async function main() {
       '--yes',
     ]
 
-    let publishOutput: string
+    let actualPublishOutput: string
 
     if (isDryRun) {
       // Remove --yes flag and pipe 'n' to answer "no" to publish prompt
-      const dryRunArgs = publishArgs.filter((arg) => arg !== '--yes')
-      publishOutput = execCommand(
-        `yarn ${dryRunArgs.join(' ')}`,
+      const dryRunPublishArgs = actualPublishArgs.filter(
+        (arg) => arg !== '--yes',
+      )
+      actualPublishOutput = execCommand(
+        `yarn ${dryRunPublishArgs.join(' ')}`,
         REPO_ROOT,
         'n\n',
       )
       log('✅ Dry-run - tested publish command without actually publishing')
     } else {
-      publishOutput = execCommand(`yarn ${publishArgs.join(' ')}`)
+      actualPublishOutput = execCommand(`yarn ${actualPublishArgs.join(' ')}`)
       log('✅ Published packages except create-cedar-app')
     }
 
-    log('Step 6: Restoring workspaces configuration')
+    log('Step 7: Restoring workspaces configuration')
     if (restoreWorkspaces) {
       restoreWorkspaces()
       restoreWorkspaces = null // Mark as cleaned up
     }
 
-    log('Step 7: Waiting for packages to be available on npm')
+    log('Step 8: Waiting for packages to be available on npm')
 
     // I only checked the core package first, but then I had a failure when the
     // core package was available, but not the cli package. So now I'm checking
-    // a couple of more packages. I hope this is enough. Worst case I'll have to
-    // check all packages.
-    const packagesToWaitFor = ['@cedarjs/core', '@cedarjs/cli', '@cedarjs/web']
+    // a few packages to make sure they're all available.
+    const packagesToWaitFor = ['@cedarjs/core', '@cedarjs/cli', '@cedarjs/api']
 
     for (const packageName of packagesToWaitFor) {
       const packageAvailable = await waitForNpm(packageName, publishedVersion)
@@ -391,16 +425,10 @@ async function main() {
 
     log('✅ Packages are now available on npm')
 
-    log('Step 8: Updating template package.json files')
+    log('Step 9: Updating template package.json files')
 
     for (const templateDir of TEMPLATE_DIRS) {
       const templatePath = join(TEMPLATES_DIR, templateDir)
-
-      // Update root package.json
-      updatePackageJsonWithVersion(
-        join(templatePath, 'package.json'),
-        publishedVersion,
-      )
 
       // Update web/package.json
       updatePackageJsonWithVersion(
@@ -419,7 +447,7 @@ async function main() {
 
     updateJavaScriptTemplates()
 
-    log('Step 9: Generating yarn.lock files for templates')
+    log('Step 10: Generating yarn.lock files for templates')
 
     for (const templateDir of TEMPLATE_DIRS) {
       generateYarnLockFile(templateDir)
@@ -427,13 +455,22 @@ async function main() {
 
     log('✅ Generated all yarn.lock files')
 
-    log('Step 10: Committing template updates')
+    if (isDryRun) {
+      log('📝 Dry-run - skipping git commit and create-cedar-app publish')
+      log('🔄 Reverting changes made during dry-run...')
+      execCommand('git checkout -- .')
+      execCommand('git clean -fd')
+      log('✅ Dry-run completed - all changes reverted')
+      return
+    }
+
+    log('Step 11: Committing template updates')
     execCommand('git add .')
     execCommand(
       'git commit -m "Update create-cedar-app templates to use RC packages"',
     )
 
-    log('Step 11: Publishing create-cedar-app')
+    log('Step 12: Publishing create-cedar-app')
 
     const createCedarAppPublishArgs = [
       'lerna',
