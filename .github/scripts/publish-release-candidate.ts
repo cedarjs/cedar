@@ -372,7 +372,13 @@ async function main() {
     log('Step 5: Updating workspace dependencies')
     updateWorkspaceDependencies(publishedVersion)
 
-    log('Step 6: Publishing RC versions of all packages')
+    log('Step 6: Committing version and dependency updates')
+    execCommand('git add .')
+    execCommand(
+      'git commit -m "Update package versions and workspace dependencies for RC"',
+    )
+
+    log('Step 7: Publishing RC versions of all packages')
 
     const actualPublishArgs = [
       'lerna',
@@ -403,13 +409,13 @@ async function main() {
       log('✅ Published packages except create-cedar-app')
     }
 
-    log('Step 7: Restoring workspaces configuration')
+    log('Step 8: Restoring workspaces configuration')
     if (restoreWorkspaces) {
       restoreWorkspaces()
       restoreWorkspaces = null // Mark as cleaned up
     }
 
-    log('Step 8: Waiting for packages to be available on npm')
+    log('Step 9: Waiting for packages to be available on npm')
 
     // I only checked the core package first, but then I had a failure when the
     // core package was available, but not the cli package. So now I'm checking
@@ -425,7 +431,7 @@ async function main() {
 
     log('✅ Packages are now available on npm')
 
-    log('Step 9: Updating template package.json files')
+    log('Step 10: Updating template package.json files')
 
     for (const templateDir of TEMPLATE_DIRS) {
       const templatePath = join(TEMPLATES_DIR, templateDir)
@@ -447,7 +453,7 @@ async function main() {
 
     updateJavaScriptTemplates()
 
-    log('Step 10: Generating yarn.lock files for templates')
+    log('Step 11: Generating yarn.lock files for templates')
 
     for (const templateDir of TEMPLATE_DIRS) {
       generateYarnLockFile(templateDir)
@@ -464,13 +470,13 @@ async function main() {
       return
     }
 
-    log('Step 11: Committing template updates')
+    log('Step 12: Committing template updates')
     execCommand('git add .')
     execCommand(
       'git commit -m "Update create-cedar-app templates to use RC packages"',
     )
 
-    log('Step 12: Publishing create-cedar-app')
+    log('Step 13: Publishing create-cedar-app')
 
     const createCedarAppPublishArgs = [
       'lerna',
