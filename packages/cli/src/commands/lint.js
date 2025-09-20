@@ -35,10 +35,7 @@ export const builder = (yargs) => {
 }
 
 export const handler = async ({ path, fix, format }) => {
-  recordTelemetryAttributes({
-    command: 'lint',
-    fix,
-  })
+  recordTelemetryAttributes({ command: 'lint', fix, format })
 
   try {
     const pathString = path?.join(' ')
