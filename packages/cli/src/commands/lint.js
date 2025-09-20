@@ -23,7 +23,7 @@ export const builder = (yargs) => {
     })
     .option('format', {
       default: 'stylish',
-      description: 'Use a specific output format - default: stylish',
+      description: 'Use a specific output format',
       type: 'string',
     })
     .epilogue(
