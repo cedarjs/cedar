@@ -201,7 +201,7 @@ async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
 
 function generateYarnLockFile(templateDir: string) {
   const templatePath = path.join(TEMPLATES_DIR, templateDir)
-  log(`Generating yarn.lock for ${templateDir} template`)
+  log(`Generating yarn.lock in ${templatePath}`)
 
   // Remove any existing node_modules and lock files to ensure clean generation
   fs.rmSync(path.join(templatePath, 'node_modules'), {
@@ -211,7 +211,8 @@ function generateYarnLockFile(templateDir: string) {
   fs.rmSync(path.join(templatePath, 'yarn.lock'), { force: true })
   fs.rmSync(path.join(templatePath, '.yarn'), { recursive: true, force: true })
 
-  // Create empty yarn.lock file (required for yarn to treat as separate project)
+  // Create empty yarn.lock file (required for yarn to treat as separate
+  // project)
   fs.writeFileSync(path.join(templatePath, 'yarn.lock'), '')
   log(`Created empty yarn.lock for ${templateDir}`)
 
@@ -436,6 +437,11 @@ async function main() {
     const packagesToWaitFor = ['@cedarjs/core', '@cedarjs/cli', '@cedarjs/api']
 
     for (const packageName of packagesToWaitFor) {
+      if (isDryRun) {
+        log(`Dry-run - skip waitForNpm for ${packageName}`)
+        continue
+      }
+
       const packageAvailable = await waitForNpm(packageName, publishedVersion)
       if (!packageAvailable) {
         throw new Error(`Package ${packageName} not available in time on npm`)
@@ -469,6 +475,11 @@ async function main() {
     log('Step 11: Generating yarn.lock files for templates')
 
     for (const templateDir of TEMPLATE_DIRS) {
+      if (isDryRun) {
+        log(`Dry-run - skip generateYarnLockFile for ${templateDir}`)
+        continue
+      }
+
       generateYarnLockFile(templateDir)
     }
 
