@@ -241,6 +241,11 @@ async function main() {
       `//registry.npmjs.org/:_authToken=${process.env.NPM_AUTH_TOKEN}\n`,
     )
 
+    // Set up git configuration for CI environment
+    log('Setting up git configuration')
+    execCommand('git config user.name "GitHub Actions"')
+    execCommand('git config user.email "actions@github.com"')
+
     // Extract semver type from branch name
     const branchName = process.env.GITHUB_REF_NAME || ''
     // Branch format: release/minor/v0.11.3
@@ -382,8 +387,6 @@ async function main() {
 
     // Step 9: Commit changes before publishing create-cedar-app
     log('Step 9: Committing template updates')
-    execCommand('git config user.name "GitHub Actions"')
-    execCommand('git config user.email "actions@github.com"')
     execCommand('git add .')
     execCommand(
       'git commit -m "Update create-cedar-app templates to use RC packages"',
