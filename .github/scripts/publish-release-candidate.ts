@@ -18,13 +18,13 @@
  */
 
 import { execSync } from 'node:child_process'
-import { readFileSync, writeFileSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import fs from 'node:fs'
+import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
 const REPO_ROOT = process.cwd()
-const CREATE_CEDAR_APP_DIR = join(REPO_ROOT, 'packages/create-cedar-app')
-const TEMPLATES_DIR = join(CREATE_CEDAR_APP_DIR, 'templates')
+const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
+const TEMPLATES_DIR = path.join(CREATE_CEDAR_APP_DIR, 'templates')
 
 // Template directories
 const TEMPLATE_DIRS = ['ts', 'js', 'esm-ts', 'esm-js']
@@ -77,7 +77,7 @@ function execCommand(
 function updatePackageJsonWithVersion(filePath: string, version: string) {
   log(`Updating ${filePath}`)
 
-  const content = readFileSync(filePath, 'utf-8')
+  const content = fs.readFileSync(filePath, 'utf-8')
   const packageJson: PackageJson = JSON.parse(content)
 
   // Update dependencies
@@ -98,7 +98,7 @@ function updatePackageJsonWithVersion(filePath: string, version: string) {
     }
   }
 
-  writeFileSync(filePath, JSON.stringify(packageJson, null, 2) + '\n')
+  fs.writeFileSync(filePath, JSON.stringify(packageJson, null, 2) + '\n')
 }
 
 function updateWorkspaceDependencies(version: string) {
@@ -113,10 +113,14 @@ function updateWorkspaceDependencies(version: string) {
     .filter((ws) => ws.location !== '.')
 
   for (const workspace of workspaces) {
-    const packageJsonPath = join(REPO_ROOT, workspace.location, 'package.json')
+    const packageJsonPath = path.join(
+      REPO_ROOT,
+      workspace.location,
+      'package.json',
+    )
 
     try {
-      const content = readFileSync(packageJsonPath, 'utf-8')
+      const content = fs.readFileSync(packageJsonPath, 'utf-8')
       let updatedContent = content.replace(/workspace:\*/g, version)
 
       // Also update any @cedarjs dependencies to use the new version
@@ -126,7 +130,7 @@ function updateWorkspaceDependencies(version: string) {
       )
 
       if (updatedContent !== content) {
-        writeFileSync(packageJsonPath, updatedContent)
+        fs.writeFileSync(packageJsonPath, updatedContent)
         log(
           'Updated workspace dependencies in ' +
             `${workspace.location}/package.json`,
@@ -145,9 +149,9 @@ async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
   // Store current commit SHA before making any changes
   const initialCommitSha = execCommand('git rev-parse HEAD').trim()
 
-  const frameworkPackageConfigPath = join(REPO_ROOT, 'package.json')
+  const frameworkPackageConfigPath = path.join(REPO_ROOT, 'package.json')
   const frameworkPackageConfig: PackageJson = JSON.parse(
-    readFileSync(frameworkPackageConfigPath, 'utf-8'),
+    fs.readFileSync(frameworkPackageConfigPath, 'utf-8'),
   )
 
   // Get current workspace packages
@@ -176,7 +180,7 @@ async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
   }
 
   // Write updated configuration
-  writeFileSync(
+  fs.writeFileSync(
     frameworkPackageConfigPath,
     JSON.stringify(frameworkPackageConfig, null, 2) + '\n',
   )
@@ -196,16 +200,19 @@ async function removeCreateCedarAppFromWorkspaces(): Promise<() => void> {
 }
 
 function generateYarnLockFile(templateDir: string) {
-  const templatePath = join(TEMPLATES_DIR, templateDir)
+  const templatePath = path.join(TEMPLATES_DIR, templateDir)
   log(`Generating yarn.lock for ${templateDir} template`)
 
   // Remove any existing node_modules and lock files to ensure clean generation
-  rmSync(join(templatePath, 'node_modules'), { recursive: true, force: true })
-  rmSync(join(templatePath, 'yarn.lock'), { force: true })
-  rmSync(join(templatePath, '.yarn'), { recursive: true, force: true })
+  fs.rmSync(path.join(templatePath, 'node_modules'), {
+    recursive: true,
+    force: true,
+  })
+  fs.rmSync(path.join(templatePath, 'yarn.lock'), { force: true })
+  fs.rmSync(path.join(templatePath, '.yarn'), { recursive: true, force: true })
 
   // Create empty yarn.lock file (required for yarn to treat as separate project)
-  writeFileSync(join(templatePath, 'yarn.lock'), '')
+  fs.writeFileSync(path.join(templatePath, 'yarn.lock'), '')
   log(`Created empty yarn.lock for ${templateDir}`)
 
   try {
@@ -217,8 +224,11 @@ function generateYarnLockFile(templateDir: string) {
   }
 
   // Clean up generated files except yarn.lock
-  rmSync(join(templatePath, 'node_modules'), { recursive: true, force: true })
-  rmSync(join(templatePath, '.yarn'), { recursive: true, force: true })
+  fs.rmSync(path.join(templatePath, 'node_modules'), {
+    recursive: true,
+    force: true,
+  })
+  fs.rmSync(path.join(templatePath, '.yarn'), { recursive: true, force: true })
 }
 
 function updateJavaScriptTemplates() {
@@ -244,8 +254,8 @@ async function main() {
 
     // Set up .npmrc for publishing
     log('Setting up npm authentication')
-    writeFileSync(
-      join(REPO_ROOT, '.npmrc'),
+    fs.writeFileSync(
+      path.join(REPO_ROOT, '.npmrc'),
       `//registry.npmjs.org/:_authToken=${process.env.NPM_AUTH_TOKEN}\n`,
     )
 
@@ -349,19 +359,19 @@ async function main() {
       .filter((ws) => ws.location !== '.')
 
     for (const workspace of workspaces) {
-      const packageJsonPath = join(
+      const packageJsonPath = path.join(
         REPO_ROOT,
         workspace.location,
         'package.json',
       )
       try {
-        const content = readFileSync(packageJsonPath, 'utf-8')
+        const content = fs.readFileSync(packageJsonPath, 'utf-8')
         const packageJson = JSON.parse(content)
 
         // Update the version
         packageJson.version = publishedVersion
 
-        writeFileSync(
+        fs.writeFileSync(
           packageJsonPath,
           JSON.stringify(packageJson, null, 2) + '\n',
         )
@@ -437,17 +447,17 @@ async function main() {
     log('Step 10: Updating template package.json files')
 
     for (const templateDir of TEMPLATE_DIRS) {
-      const templatePath = join(TEMPLATES_DIR, templateDir)
+      const templatePath = path.join(TEMPLATES_DIR, templateDir)
 
       // Update web/package.json
       updatePackageJsonWithVersion(
-        join(templatePath, 'web/package.json'),
+        path.join(templatePath, 'web/package.json'),
         publishedVersion,
       )
 
       // Update api/package.json
       updatePackageJsonWithVersion(
-        join(templatePath, 'api/package.json'),
+        path.join(templatePath, 'api/package.json'),
         publishedVersion,
       )
     }
