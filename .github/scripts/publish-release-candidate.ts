@@ -478,7 +478,7 @@ function isErrorWithMessage(err: unknown): err is { message: string } {
   )
 }
 
-async function getLatestVersion(packageName: string) {
+async function isPublished(packageName: string, version: string) {
   const headers = {
     accept:
       'application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*',
@@ -505,22 +505,16 @@ async function getLatestVersion(packageName: string) {
   }
 
   const data = await response.json()
-  const latestVersion = data['dist-tags'].latest
 
-  if (!latestVersion) {
-    throw new Error(`${packageName} dist-tag latest not found`)
+  // Check if the specific version exists in the versions object
+  if (data.versions && data.versions[version]) {
+    return true
   }
 
-  const latestVersionData = data.versions[latestVersion]
-
-  if (!latestVersionData) {
-    throw new Error(`No data found for ${packageName} version ${latestVersion}`)
-  }
-
-  return latestVersionData.version
+  return false
 }
 
-async function waitForNpm(packageName: string, packageVersion: string) {
+async function waitForNpm(packageName: string, version: string) {
   const maxWaitTime = 20_000 // 20 seconds
   const startTime = Date.now()
   let packageAvailable = false
@@ -529,18 +523,14 @@ async function waitForNpm(packageName: string, packageVersion: string) {
     const timeDiff = Date.now() - startTime
     const nextWaitTime = timeDiff > 10_000 ? 5_000 : 2_500
     try {
-      const availableVersion = await getLatestVersion(packageName)
-      console.log(`Checking npm registry... Found version: ${availableVersion}`)
+      const packageIsPublished = await isPublished(packageName, version)
+      log(`Checking npm registry for ${packageName}@${version}...`)
 
-      if (availableVersion === packageVersion) {
+      if (packageIsPublished) {
         packageAvailable = true
-        console.log(
-          `✅ Package ${packageName}@${packageVersion} is now available on npm!`,
-        )
+        log(`Package ${packageName}@${version} is now available on npm!`)
       } else {
-        console.log(
-          `Waiting for ${packageName}@${packageVersion} to be available...`,
-        )
+        log(`Waiting for ${packageName}@${version} to be available...`)
 
         // Wait for `nextWaitTime` before checking again
         await setTimeout(nextWaitTime)
@@ -549,7 +539,7 @@ async function waitForNpm(packageName: string, packageVersion: string) {
       const errorMessage = isErrorWithMessage(error)
         ? error.message
         : 'Unknown error'
-      console.log(`Error checking package availability: ${errorMessage}`)
+      log(`Error checking package availability: ${errorMessage}`)
 
       // Wait for 1 second before checking again
       await setTimeout(1000)
