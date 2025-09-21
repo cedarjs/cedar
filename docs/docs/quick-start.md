@@ -39,9 +39,9 @@ yarn cedarjs dev
 
 Your browser should automatically open to [http://localhost:8910](http://localhost:8910) where you'll see the Welcome Page, which links out to many great resources:
 
-<img data-mode="light" src="https://private-user-images.githubusercontent.com/33535523/492042729-641c1b54-d701-4b23-a904-3bd5c729383e.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTg0NzQ1MzUsIm5iZiI6MTc1ODQ3NDIzNSwicGF0aCI6Ii8zMzUzNTUyMy80OTIwNDI3MjktNjQxYzFiNTQtZDcwMS00YjIzLWE5MDQtM2JkNWM3MjkzODNlLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA5MjElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwOTIxVDE3MDM1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWUxMmMwNTBhNzI4ZWMwODI2MjFkYzg3ZTBhOWZiMjEyMmYwZDZiOGFiMmQ0ZTAzNmZlNGIyMzRlZjNmZTk3ODYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.nbOK8A0MEtGk-V_JVXNB2rCqsJ6HsbVQLpW5dWB4kzs" alt="CedarJS Welcome Page" style={{ marginBottom: 20 }} />
+<img data-mode="light" src="/img/quick-start-light-theme.png" alt="CedarJS Welcome Page" style={{ marginBottom: 20 }} />
 
-<img data-mode="dark" src="https://private-user-images.githubusercontent.com/33535523/492042726-3248f323-5001-47a6-bf7c-54e3bf91c43b.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTg0NzQ1MzUsIm5iZiI6MTc1ODQ3NDIzNSwicGF0aCI6Ii8zMzUzNTUyMy80OTIwNDI3MjYtMzI0OGYzMjMtNTAwMS00N2E2LWJmN2MtNTRlM2JmOTFjNDNiLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA5MjElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwOTIxVDE3MDM1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTY3ZjZlMjAzY2Q4YjRlZjM2MjZmNDdhNzRiNzcwZDJhODdiNGJiMDQ2ZjRjOTczOTQ1ZTc4ODEwNmQ4NDBjYTAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.26JEs_RbOa217tqKnqStjZJJtCUPkqR9D2t699oVEMY" alt="CedarJS Welcome Page" style={{ marginBottom: 20 }} />
+<img data-mode="dark" src="/img/quick-start-dark-theme.png" alt="CedarJS Welcome Page" style={{ marginBottom: 20 }} />
 
 Congratulations on running your first Cedar CLI command!
 From dev to deploy, the CLI is with you the whole way.
