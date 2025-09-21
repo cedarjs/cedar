@@ -9,7 +9,7 @@ description: CedarJS quick start
 - CedarJS requires [Node.js](https://nodejs.org/en/) (=20.19.x) and
   [Yarn](https://yarnpkg.com/) (>=1.22.21)
 - Are you on Windows? For best results, follow our [Windows development
-setup](how-to/windows-development-setup.md) guide
+  setup](how-to/windows-development-setup.md) guide
 
 :::
 
