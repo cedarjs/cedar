@@ -112,6 +112,7 @@ const config: Config = {
       {
         generate: {
           enableMarkdownFiles: true,
+          enableLlmsFullTxt: true,
         },
         include: {
           includeBlog: false,
