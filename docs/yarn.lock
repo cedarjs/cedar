@@ -3080,14 +3080,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@signalwire/docusaurus-plugin-llms-txt@npm:1.0.1":
-  version: 1.0.1
-  resolution: "@signalwire/docusaurus-plugin-llms-txt@npm:1.0.1"
+"@signalwire/docusaurus-plugin-llms-txt@npm:2.0.0-alpha.2":
+  version: 2.0.0-alpha.2
+  resolution: "@signalwire/docusaurus-plugin-llms-txt@npm:2.0.0-alpha.2"
   dependencies:
     fs-extra: "npm:^11.0.0"
     hast-util-select: "npm:^6.0.4"
     hast-util-to-html: "npm:^9.0.5"
     hast-util-to-string: "npm:^3.0.1"
+    p-map: "npm:^7.0.2"
     rehype-parse: "npm:^9"
     rehype-remark: "npm:^10"
     remark-gfm: "npm:^4"
@@ -3097,7 +3098,7 @@ __metadata:
     unist-util-visit: "npm:^5"
   peerDependencies:
     "@docusaurus/core": ^3.0.0
-  checksum: 10c0/96171c7fc88a010d0fd5e0f072794d68a0bf5cdcb697810703a910768da7a2cd1b3323d66200ae69b56a91277021dfcb9041d4a15e964f56346eb6765497efbd
+  checksum: 10c0/8c9fe930b96c0e42815720db216105d7717a587a7afc32782ee2c6ba9d50670cd88e363421617cb10fd36f2b28fd0d5bdf3275ce53fbde201036b2855b455caf
   languageName: node
   linkType: hard
 
@@ -5550,7 +5551,7 @@ __metadata:
     "@docusaurus/types": "npm:3.8.1"
     "@easyops-cn/docusaurus-search-local": "npm:^0.49.2"
     "@mdx-js/react": "npm:3.0.1"
-    "@signalwire/docusaurus-plugin-llms-txt": "npm:1.0.1"
+    "@signalwire/docusaurus-plugin-llms-txt": "npm:2.0.0-alpha.2"
     "@types/react": "npm:^18.2.55"
     clsx: "npm:2.1.1"
     prism-react-renderer: "npm:2.4.1"
@@ -9365,6 +9366,13 @@ __metadata:
   dependencies:
     aggregate-error: "npm:^3.0.0"
   checksum: 10c0/592c05bd6262c466ce269ff172bb8de7c6975afca9b50c975135b974e9bdaafbfe80e61aaaf5be6d1200ba08b30ead04b88cfa7e25ff1e3b93ab28c9f62a2c75
+  languageName: node
+  linkType: hard
+
+"p-map@npm:^7.0.2":
+  version: 7.0.3
+  resolution: "p-map@npm:7.0.3"
+  checksum: 10c0/46091610da2b38ce47bcd1d8b4835a6fa4e832848a6682cf1652bc93915770f4617afc844c10a77d1b3e56d2472bb2d5622353fa3ead01a7f42b04fc8e744a5c
   languageName: node
   linkType: hard
 
