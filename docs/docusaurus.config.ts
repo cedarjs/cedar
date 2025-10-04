@@ -105,6 +105,7 @@ const config: Config = {
         indexBlog: false,
       } satisfies SearchLocalPluginOptions,
     ],
+    '@signalwire/docusaurus-theme-llms-txt',
   ],
   plugins: [
     [
@@ -213,6 +214,9 @@ const config: Config = {
             'grow from side project to startup. CedarJS features an end-to-' +
             'end development workflow that weaves together the best parts of ' +
             'React, GraphQL, Prisma, TypeScript, Vitest, and Storybook.',
+        },
+        ui: {
+          copyPageContent: true,
         },
       } satisfies LlmsTxtPluginOptions,
     ],
