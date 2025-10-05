@@ -103,17 +103,42 @@ export const getApiSideBabelPlugins = ({
         root: [getPaths().api.base],
         cwd: 'packagejson',
         loglevel: 'silent', // to silence the unnecessary warnings
-        resolvePath: projectIsEsm
-          ? undefined
-          : function (sourcePath: string, currentFile: string, opts: unknown) {
-              // Look for paths that include a / and ends with .js (to not trip
-              // up on npm modules like chart.js)
-              const importPath = /.*\/.*\.js$/.test(sourcePath)
-                ? sourcePath.replace(/\.js$/, '')
-                : sourcePath
+        resolvePath: function (
+          sourcePath: string,
+          currentFile: string,
+          opts: unknown,
+        ) {
+          // Look for paths that include a / and ends with .js (to not trip
+          // up on npm modules like chart.js)
+          const importPath = /.*\/.*\.js$/.test(sourcePath)
+            ? sourcePath.replace(/\.js$/, '')
+            : sourcePath
 
-              return resolvePath(importPath, currentFile, opts)
-            },
+          const resolvedPath = resolvePath(importPath, currentFile, opts)
+
+          if (!resolvedPath || !projectIsEsm || resolvedPath.includes('/**/')) {
+            return resolvedPath
+          }
+
+          const currentFileDir = path.dirname(currentFile)
+          const joinedPath = path.join(currentFileDir, resolvedPath)
+
+          if (
+            fs.existsSync(joinedPath + '.js') ||
+            fs.existsSync(joinedPath + '.ts')
+          ) {
+            return resolvedPath + '.js'
+          }
+
+          if (
+            fs.existsSync(joinedPath + '.jsx') ||
+            fs.existsSync(joinedPath + '.tsx')
+          ) {
+            return resolvedPath + '.jsx'
+          }
+
+          return resolvedPath
+        },
       },
       'rwjs-api-module-resolver',
     ],
@@ -142,13 +167,7 @@ export const getApiSideBabelPlugins = ({
     ],
     // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
     ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
-    [
-      pluginRedwoodImportDir,
-      {
-        projectIsEsm,
-      },
-      'rwjs-babel-glob-import-dir',
-    ],
+    [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
     openTelemetry && [
       pluginRedwoodOTelWrapping,
       undefined,
