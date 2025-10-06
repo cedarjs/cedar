@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+
+    "prod": [
+      "!{projectRoot}/**/*.test.{js,jsx,ts,tsx}",
+      "{workspaceRoot}/babel.config.js",
+      "{workspaceRoot}/tsconfig.json",
+      {
+        "runtime": "node -v"
+      },
+      {
+        "runtime": "node -e \"console.log(process.platform)\""
+      }
+    ]
+  },
+
+  "targetDefaults": {
+    "build": {
+      "inputs": ["prod", "^prod"],
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+
+    "test": {
+      "inputs": ["default", "^prod"],
+      "cache": true
+    },
+
+    "build:pack": {
+      "dependsOn": ["build"],
+      "outputs": ["{projectRoot}/*.tgz"],
+      "cache": true,
+      "executor": "@nx/workspace:run-script"
+    }
+  },
+  "nxCloudId": "67f96419000e9059b9b7a441"
+}
