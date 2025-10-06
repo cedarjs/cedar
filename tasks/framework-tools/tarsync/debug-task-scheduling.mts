@@ -79,9 +79,9 @@ class TaskSchedulingDebugger {
       console.log(ansis.cyan(`  🔨 Running build analysis...`))
       await this.captureTaskExecution(async () => {
         if (scenario === 'with-cache') {
-          await $`yarn nx run-many -t build --exclude create-cedar-app --verbose --parallel=4`
+          return await $`yarn nx run-many -t build --exclude create-cedar-app --verbose --parallel=4`
         } else {
-          await $`yarn nx run-many -t build --exclude create-cedar-app --skipNxCache --skipRemoteCache --verbose --parallel=4`
+          return await $`yarn nx run-many -t build --exclude create-cedar-app --skipNxCache --skipRemoteCache --verbose --parallel=4`
         }
       })
 
@@ -89,9 +89,9 @@ class TaskSchedulingDebugger {
       console.log(ansis.cyan(`  📦 Running build:pack analysis...`))
       await this.captureTaskExecution(async () => {
         if (scenario === 'with-cache') {
-          await $`yarn nx run-many -t build:pack --exclude create-cedar-app --verbose --parallel=4`
+          return await $`yarn nx run-many -t build:pack --exclude create-cedar-app --verbose --parallel=4`
         } else {
-          await $`yarn nx run-many -t build:pack --exclude create-cedar-app --skipNxCache --skipRemoteCache --verbose --parallel=4`
+          return await $`yarn nx run-many -t build:pack --exclude create-cedar-app --skipNxCache --skipRemoteCache --verbose --parallel=4`
         }
       })
 
@@ -115,29 +115,79 @@ class TaskSchedulingDebugger {
   }
 
   private async captureTaskExecution(
-    action: () => Promise<void>,
+    nxCommand: () => Promise<{ stdout: string; stderr: string }>,
   ): Promise<void> {
     // Start capturing Nx output
     const captureStart = Date.now()
 
     try {
-      // We'll parse the verbose output to understand task execution
-      await action()
+      // Capture the verbose output to parse task execution
+      const result = await nxCommand()
+      const combinedOutput = result.stdout + '\n' + result.stderr
+      this.executionLog.push(combinedOutput)
+
+      // Parse the actual Nx output
+      this.parseNxOutput(combinedOutput, captureStart)
     } catch (error) {
       // Even if the build fails, we want to analyze what happened
-      this.executionLog.push(`ERROR: ${error}`)
+      const errorOutput = error.stdout + '\n' + error.stderr
+      this.executionLog.push(`ERROR: ${errorOutput}`)
+      this.parseNxOutput(errorOutput, captureStart)
     }
-
-    // Parse execution patterns from the logs
-    this.parseExecutionLogs(captureStart)
   }
 
-  private parseExecutionLogs(captureStart: number): void {
-    // This is a simplified version - in practice, we'd need to hook into
-    // Nx's task execution more directly or parse its verbose output
+  private parseNxOutput(nxOutput: string, captureStart: number): void {
+    const lines = nxOutput.split('\n')
+    const taskPattern =
+      /(?:✔|✓|√|×|✗|Running target|Executing)\s+["']?(\w+[-\w]*):(\w+(?::\w+)?)["']?/
+    const cachePattern = /cache hit|cache miss|restored from cache|cached/i
+    const timingPattern = /(\d+(?:\.\d+)?)\s*(?:ms|s)/
 
-    // For now, we'll simulate task detection based on common patterns
-    const mockTasks = [
+    let currentTaskId: string | null = null
+    let taskStartTime = captureStart
+
+    for (const line of lines) {
+      const taskMatch = line.match(taskPattern)
+
+      if (taskMatch) {
+        const [, project, target] = taskMatch
+        currentTaskId = `${project}:${target}`
+
+        const isCacheHit =
+          cachePattern.test(line) &&
+          (line.includes('cache hit') || line.includes('restored from cache'))
+
+        const timingMatch = line.match(timingPattern)
+        const duration = timingMatch ? parseFloat(timingMatch[1]) : 1000
+
+        const task: TaskExecution = {
+          taskId: currentTaskId,
+          projectName: project,
+          targetName: target,
+          startTime: taskStartTime,
+          endTime: taskStartTime + duration,
+          duration: duration,
+          status:
+            line.includes('✗') || line.includes('×') ? 'failed' : 'completed',
+          cacheHit: isCacheHit,
+          dependencies: this.inferDependencies(currentTaskId),
+          outputs: [`packages/${project}/dist`],
+        }
+
+        this.taskExecutions.set(currentTaskId, task)
+        taskStartTime += 50 // Stagger start times
+      }
+    }
+
+    // If no tasks were parsed from output, fall back to detecting common patterns
+    if (this.taskExecutions.size === 0) {
+      console.log('No tasks detected from Nx output, using fallback detection')
+      this.parseFallbackTasks(captureStart)
+    }
+  }
+
+  private parseFallbackTasks(captureStart: number): void {
+    const commonTasks = [
       'framework-tools:build',
       'project-config:build',
       'auth:build',
@@ -146,21 +196,21 @@ class TaskSchedulingDebugger {
       'testing:build:pack',
     ]
 
-    mockTasks.forEach((taskId, index) => {
+    commonTasks.forEach((taskId, index) => {
       const [project, target] = taskId.split(':')
       const task: TaskExecution = {
         taskId,
         projectName: project,
         targetName: target,
         startTime: captureStart + index * 100,
-        endTime: captureStart + index * 100 + 1000 + Math.random() * 2000,
+        endTime: captureStart + index * 100 + 1000,
+        duration: 1000,
         status: 'completed',
-        cacheHit: Math.random() > 0.5, // Simulated for now
+        cacheHit: false, // Conservative assumption for fallback
         dependencies: this.inferDependencies(taskId),
         outputs: [`packages/${project}/dist`],
       }
 
-      task.duration = (task.endTime || task.startTime) - task.startTime
       this.taskExecutions.set(taskId, task)
     })
   }

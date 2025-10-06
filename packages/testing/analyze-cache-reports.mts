@@ -263,15 +263,23 @@ class CacheReportAnalyzer {
       return false
     }
 
+    const successesWithDuration = successes.filter((s) => s.buildDuration)
     const avgSuccessTime =
-      successes
-        .filter((s) => s.buildDuration)
-        .reduce((sum, s) => sum + (s.buildDuration || 0), 0) / successes.length
+      successesWithDuration.length > 0
+        ? successesWithDuration.reduce(
+            (sum, s) => sum + (s.buildDuration || 0),
+            0,
+          ) / successesWithDuration.length
+        : 0
 
+    const failuresWithDuration = failures.filter((f) => f.buildDuration)
     const avgFailureTime =
-      failures
-        .filter((f) => f.buildDuration)
-        .reduce((sum, f) => sum + (f.buildDuration || 0), 0) / failures.length
+      failuresWithDuration.length > 0
+        ? failuresWithDuration.reduce(
+            (sum, f) => sum + (f.buildDuration || 0),
+            0,
+          ) / failuresWithDuration.length
+        : 0
 
     // Significant timing difference (failures taking much longer might indicate cache issues)
     return (
@@ -300,7 +308,7 @@ class CacheReportAnalyzer {
   }
 
   private generateRecommendations(
-    patterns: any,
+    patterns: AnalysisReport['patterns'],
     successes: CacheSnapshot[],
     failures: CacheSnapshot[],
   ): string[] {

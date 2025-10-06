@@ -104,6 +104,20 @@ class CacheInvestigator {
       console.log(ansis.red(`❌ Scenario ${scenario} failed: ${report.error}`))
     }
 
+    // Calculate total duration from all steps
+    const totalDuration = report.steps.reduce((sum, step) => {
+      const executionState = step.packageStates['execution']
+      if (executionState?.files?.duration?.size) {
+        return sum + executionState.files.duration.size
+      }
+      return sum
+    }, 0)
+
+    report.summary = {
+      totalDuration,
+      keyFindings: [],
+    }
+
     return report
   }
 
@@ -122,7 +136,7 @@ class CacheInvestigator {
       timestamp: new Date().toISOString(),
       workingDir: process.cwd(),
       environment: this.captureEnvironment(),
-      nxState: await this.captureNxState(),
+      nxState: await this.captureNxState(report.scenario),
       packageStates: {},
       snapshot,
     }
@@ -263,9 +277,9 @@ class CacheInvestigator {
     return env
   }
 
-  private async captureNxState() {
+  private async captureNxState(scenario: 'with-cache' | 'without-cache') {
     const state = {
-      cacheEnabled: true,
+      cacheEnabled: scenario === 'with-cache',
       cacheDir: undefined as string | undefined,
       daemonRunning: undefined as boolean | undefined,
     }
@@ -287,8 +301,8 @@ class CacheInvestigator {
 
       // Try to detect if daemon is running (this might fail, that's ok)
       try {
-        const result = await $`yarn nx daemon --help`
-        state.daemonRunning = result.exitCode === 0
+        const result = await $`yarn nx daemon --status`
+        state.daemonRunning = result.stdout.includes('Daemon Server - Running')
       } catch {
         state.daemonRunning = false
       }
