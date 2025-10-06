@@ -1,17 +1,19 @@
 #!/usr/bin/env tsx
 
-import { fileURLToPath } from 'node:url'
 import ansis from 'ansis'
 import { $, fs, glob, path } from 'zx'
 
 interface FileSnapshot {
   timestamp: string
-  files: Record<string, {
-    exists: boolean
-    size?: number
-    mtime?: string
-    checksum?: string
-  }>
+  files: Record<
+    string,
+    {
+      exists: boolean
+      size?: number
+      mtime?: string
+      checksum?: string
+    }
+  >
 }
 
 interface BuildStep {
@@ -37,16 +39,13 @@ interface InvestigationReport {
 
 class CacheInvestigator {
   private packagesToMonitor = ['testing', 'project-config', 'auth', 'api']
-  private criticalPaths = [
-    'dist',
-    'config',
-    'package.json',
-    '*.tgz'
-  ]
+  private criticalPaths = ['dist', 'config', 'package.json', '*.tgz']
 
   async investigate(): Promise<void> {
     console.log(ansis.bold.blue('🔍 Cedar Cache Investigation Suite'))
-    console.log('This will run builds with and without cache to compare behavior\n')
+    console.log(
+      'This will run builds with and without cache to compare behavior\n',
+    )
 
     // Run both scenarios
     const withCacheReport = await this.runScenario('with-cache')
@@ -56,14 +55,16 @@ class CacheInvestigator {
     await this.analyzeReports(withCacheReport, withoutCacheReport)
   }
 
-  private async runScenario(scenario: 'with-cache' | 'without-cache'): Promise<InvestigationReport> {
+  private async runScenario(
+    scenario: 'with-cache' | 'without-cache',
+  ): Promise<InvestigationReport> {
     console.log(ansis.yellow(`\n📋 Running scenario: ${scenario}`))
 
     const report: InvestigationReport = {
       scenario,
       steps: [],
       nxLogs: [],
-      finalState: 'success'
+      finalState: 'success',
     }
 
     try {
@@ -92,7 +93,6 @@ class CacheInvestigator {
       })
 
       report.finalState = 'success'
-
     } catch (error) {
       report.finalState = 'failure'
       report.error = error instanceof Error ? error.message : String(error)
@@ -105,7 +105,7 @@ class CacheInvestigator {
   private async captureStep(
     report: InvestigationReport,
     stepName: string,
-    action: () => Promise<void>
+    action: () => Promise<void>,
   ): Promise<void> {
     console.log(ansis.cyan(`  🔍 Capturing step: ${stepName}`))
 
@@ -115,7 +115,7 @@ class CacheInvestigator {
       workingDir: process.cwd(),
       environment: this.captureEnvironment(),
       nxState: await this.captureNxState(),
-      packageStates: {}
+      packageStates: {},
     }
 
     // Capture BEFORE state
@@ -130,7 +130,7 @@ class CacheInvestigator {
     } catch (error) {
       step.packageStates['error'] = {
         timestamp: new Date().toISOString(),
-        files: { error: { exists: false } }
+        files: { error: { exists: false } },
       }
       throw error
     }
@@ -145,23 +145,25 @@ class CacheInvestigator {
       timestamp: new Date().toISOString(),
       files: {
         duration: { exists: true, size: duration },
-        step: { exists: true, size: stepName.length }
-      }
+        step: { exists: true, size: stepName.length },
+      },
     }
 
     report.steps.push(step)
     console.log(ansis.gray(`    ⏱️  Step completed in ${duration}ms`))
   }
 
-  private async capturePackageState(packageName: string): Promise<FileSnapshot> {
+  private async capturePackageState(
+    packageName: string,
+  ): Promise<FileSnapshot> {
     const snapshot: FileSnapshot = {
       timestamp: new Date().toISOString(),
-      files: {}
+      files: {},
     }
 
     const packagePath = `./packages/${packageName}`
 
-    if (!await fs.pathExists(packagePath)) {
+    if (!(await fs.pathExists(packagePath))) {
       snapshot.files[`${packageName}-directory`] = { exists: false }
       return snapshot
     }
@@ -180,7 +182,7 @@ class CacheInvestigator {
             snapshot.files[relativePath] = {
               exists: true,
               size: stats.size,
-              mtime: stats.mtime.toISOString()
+              mtime: stats.mtime.toISOString(),
             }
           }
         } else {
@@ -194,7 +196,7 @@ class CacheInvestigator {
               snapshot.files[criticalPath] = {
                 exists: true,
                 size: files.length,
-                mtime: stats.mtime.toISOString()
+                mtime: stats.mtime.toISOString(),
               }
 
               // Sample a few files for deeper inspection
@@ -207,7 +209,7 @@ class CacheInvestigator {
                     snapshot.files[`${criticalPath}/${file}`] = {
                       exists: true,
                       size: fileStats.size,
-                      mtime: fileStats.mtime.toISOString()
+                      mtime: fileStats.mtime.toISOString(),
                     }
                   }
                 } catch {
@@ -219,7 +221,7 @@ class CacheInvestigator {
               snapshot.files[criticalPath] = {
                 exists: true,
                 size: stats.size,
-                mtime: stats.mtime.toISOString()
+                mtime: stats.mtime.toISOString(),
               }
             }
           } else {
@@ -229,7 +231,7 @@ class CacheInvestigator {
       } catch (error) {
         snapshot.files[criticalPath] = {
           exists: false,
-          checksum: `error: ${error}`
+          checksum: `error: ${error}`,
         }
       }
     }
@@ -245,7 +247,7 @@ class CacheInvestigator {
       'NX_DAEMON',
       'NX_CLOUD_ACCESS_TOKEN',
       'NX_SKIP_NX_CACHE',
-      'YARN_CACHE_FOLDER'
+      'YARN_CACHE_FOLDER',
     ]
 
     const env: Record<string, string> = {}
@@ -260,7 +262,7 @@ class CacheInvestigator {
     const state = {
       cacheEnabled: true,
       cacheDir: undefined as string | undefined,
-      daemonRunning: undefined as boolean | undefined
+      daemonRunning: undefined as boolean | undefined,
     }
 
     try {
@@ -268,11 +270,11 @@ class CacheInvestigator {
       const possibleCacheDirs = [
         '.nx/cache',
         'node_modules/.nx/cache',
-        process.env.NX_CACHE_DIRECTORY
+        process.env.NX_CACHE_DIRECTORY,
       ].filter(Boolean)
 
       for (const dir of possibleCacheDirs) {
-        if (dir && await fs.pathExists(dir)) {
+        if (dir && (await fs.pathExists(dir))) {
           state.cacheDir = dir
           break
         }
@@ -285,7 +287,6 @@ class CacheInvestigator {
       } catch {
         state.daemonRunning = false
       }
-
     } catch (error) {
       // Nx state capture failed, but that's ok
     }
@@ -293,13 +294,20 @@ class CacheInvestigator {
     return state
   }
 
-  private async analyzeReports(withCache: InvestigationReport, withoutCache: InvestigationReport): Promise<void> {
+  private async analyzeReports(
+    withCache: InvestigationReport,
+    withoutCache: InvestigationReport,
+  ): Promise<void> {
     console.log(ansis.bold.green('\n📊 Analysis Results'))
 
     // Basic outcome comparison
     console.log(ansis.cyan('\n🎯 Build Outcomes:'))
-    console.log(`  With cache:    ${withCache.finalState === 'success' ? ansis.green('✅ SUCCESS') : ansis.red('❌ FAILED')}`)
-    console.log(`  Without cache: ${withoutCache.finalState === 'success' ? ansis.green('✅ SUCCESS') : ansis.red('❌ FAILED')}`)
+    console.log(
+      `  With cache:    ${withCache.finalState === 'success' ? ansis.green('✅ SUCCESS') : ansis.red('❌ FAILED')}`,
+    )
+    console.log(
+      `  Without cache: ${withoutCache.finalState === 'success' ? ansis.green('✅ SUCCESS') : ansis.red('❌ FAILED')}`,
+    )
 
     if (withCache.finalState !== withoutCache.finalState) {
       console.log(ansis.yellow('\n⚠️  DIFFERENT OUTCOMES DETECTED!'))
@@ -324,16 +332,21 @@ class CacheInvestigator {
     await this.generateSummaryReport(withCache, withoutCache)
   }
 
-  private async compareFileStates(withCache: InvestigationReport, withoutCache: InvestigationReport): Promise<void> {
+  private async compareFileStates(
+    withCache: InvestigationReport,
+    withoutCache: InvestigationReport,
+  ): Promise<void> {
     console.log(ansis.cyan('\n📁 File State Comparison:'))
 
     const criticalPackage = 'testing'
 
     for (const stepName of ['build', 'build:pack']) {
-      const cacheStep = withCache.steps.find(s => s.step === stepName)
-      const noCacheStep = withoutCache.steps.find(s => s.step === stepName)
+      const cacheStep = withCache.steps.find((s) => s.step === stepName)
+      const noCacheStep = withoutCache.steps.find((s) => s.step === stepName)
 
-      if (!cacheStep || !noCacheStep) continue
+      if (!cacheStep || !noCacheStep) {
+        continue
+      }
 
       console.log(ansis.yellow(`\n  📋 Step: ${stepName}`))
 
@@ -346,12 +359,16 @@ class CacheInvestigator {
     }
   }
 
-  private compareSnapshots(cache: FileSnapshot, noCache: FileSnapshot, label: string): void {
+  private compareSnapshots(
+    cache: FileSnapshot,
+    noCache: FileSnapshot,
+    label: string,
+  ): void {
     console.log(ansis.gray(`    🔍 Comparing ${label}:`))
 
     const allFiles = new Set([
       ...Object.keys(cache.files),
-      ...Object.keys(noCache.files)
+      ...Object.keys(noCache.files),
     ])
 
     let differences = 0
@@ -368,10 +385,22 @@ class CacheInvestigator {
         differences++
       } else if (cacheFile && noCacheFile) {
         if (cacheFile.exists !== noCacheFile.exists) {
-          console.log(ansis.red(`      ❌ Existence differs for ${fileName}: cache=${cacheFile.exists} vs no-cache=${noCacheFile.exists}`))
+          console.log(
+            ansis.red(
+              `      ❌ Existence differs for ${fileName}: cache=${cacheFile.exists} vs no-cache=${noCacheFile.exists}`,
+            ),
+          )
           differences++
-        } else if (cacheFile.exists && noCacheFile.exists && cacheFile.size !== noCacheFile.size) {
-          console.log(ansis.yellow(`      ⚠️  Size differs for ${fileName}: cache=${cacheFile.size} vs no-cache=${noCacheFile.size}`))
+        } else if (
+          cacheFile.exists &&
+          noCacheFile.exists &&
+          cacheFile.size !== noCacheFile.size
+        ) {
+          console.log(
+            ansis.yellow(
+              `      ⚠️  Size differs for ${fileName}: cache=${cacheFile.size} vs no-cache=${noCacheFile.size}`,
+            ),
+          )
           differences++
         }
       }
@@ -384,37 +413,56 @@ class CacheInvestigator {
     }
   }
 
-  private async compareExecutionBehavior(withCache: InvestigationReport, withoutCache: InvestigationReport): Promise<void> {
+  private async compareExecutionBehavior(
+    withCache: InvestigationReport,
+    withoutCache: InvestigationReport,
+  ): Promise<void> {
     console.log(ansis.cyan('\n⚡ Execution Behavior Comparison:'))
 
-    for (let i = 0; i < Math.max(withCache.steps.length, withoutCache.steps.length); i++) {
+    for (
+      let i = 0;
+      i < Math.max(withCache.steps.length, withoutCache.steps.length);
+      i++
+    ) {
       const cacheStep = withCache.steps[i]
       const noCacheStep = withoutCache.steps[i]
 
       if (cacheStep && noCacheStep) {
         console.log(ansis.yellow(`\n  📋 Step: ${cacheStep.step}`))
 
-        const cacheDuration = cacheStep.packageStates.execution?.files.duration?.size || 0
-        const noCacheDuration = noCacheStep.packageStates.execution?.files.duration?.size || 0
+        const cacheDuration =
+          cacheStep.packageStates.execution?.files.duration?.size || 0
+        const noCacheDuration =
+          noCacheStep.packageStates.execution?.files.duration?.size || 0
 
         console.log(`    ⏱️  Cache duration: ${cacheDuration}ms`)
         console.log(`    ⏱️  No-cache duration: ${noCacheDuration}ms`)
 
         if (Math.abs(cacheDuration - noCacheDuration) > 5000) {
-          console.log(ansis.yellow(`    ⚠️  Significant duration difference: ${Math.abs(cacheDuration - noCacheDuration)}ms`))
+          console.log(
+            ansis.yellow(
+              `    ⚠️  Significant duration difference: ${Math.abs(cacheDuration - noCacheDuration)}ms`,
+            ),
+          )
         }
 
         // Compare environment
-        const envDiffs = this.compareEnvironments(cacheStep.environment, noCacheStep.environment)
+        const envDiffs = this.compareEnvironments(
+          cacheStep.environment,
+          noCacheStep.environment,
+        )
         if (envDiffs.length > 0) {
           console.log(ansis.yellow(`    ⚠️  Environment differences:`))
-          envDiffs.forEach(diff => console.log(ansis.gray(`      ${diff}`)))
+          envDiffs.forEach((diff) => console.log(ansis.gray(`      ${diff}`)))
         }
       }
     }
   }
 
-  private compareEnvironments(env1: Record<string, string>, env2: Record<string, string>): string[] {
+  private compareEnvironments(
+    env1: Record<string, string>,
+    env2: Record<string, string>,
+  ): string[] {
     const differences: string[] = []
     const allKeys = new Set([...Object.keys(env1), ...Object.keys(env2)])
 
@@ -427,14 +475,19 @@ class CacheInvestigator {
     return differences
   }
 
-  private async analyzeCacheBehavior(withCache: InvestigationReport, withoutCache: InvestigationReport): Promise<void> {
+  private async analyzeCacheBehavior(
+    withCache: InvestigationReport,
+    withoutCache: InvestigationReport,
+  ): Promise<void> {
     console.log(ansis.cyan('\n🗄️  Cache-Specific Analysis:'))
 
     const cacheSteps = withCache.steps
     for (const step of cacheSteps) {
       console.log(ansis.yellow(`\n  📋 Cache state during ${step.step}:`))
       console.log(`    Cache enabled: ${step.nxState.cacheEnabled}`)
-      console.log(`    Cache directory: ${step.nxState.cacheDir || 'not found'}`)
+      console.log(
+        `    Cache directory: ${step.nxState.cacheDir || 'not found'}`,
+      )
       console.log(`    Daemon running: ${step.nxState.daemonRunning}`)
 
       if (step.nxState.cacheDir) {
@@ -448,7 +501,10 @@ class CacheInvestigator {
     }
   }
 
-  private async generateSummaryReport(withCache: InvestigationReport, withoutCache: InvestigationReport): Promise<void> {
+  private async generateSummaryReport(
+    withCache: InvestigationReport,
+    withoutCache: InvestigationReport,
+  ): Promise<void> {
     console.log(ansis.bold.cyan('\n📄 Investigation Summary:'))
 
     const report = {
@@ -456,32 +512,48 @@ class CacheInvestigator {
       withCache: {
         outcome: withCache.finalState,
         error: withCache.error,
-        stepCount: withCache.steps.length
+        stepCount: withCache.steps.length,
       },
       withoutCache: {
         outcome: withoutCache.finalState,
         error: withoutCache.error,
-        stepCount: withoutCache.steps.length
+        stepCount: withoutCache.steps.length,
       },
-      keyFindings: [] as string[]
+      keyFindings: [] as string[],
     }
 
     // Identify key findings
     if (withCache.finalState !== withoutCache.finalState) {
-      report.keyFindings.push(`Different outcomes: cache ${withCache.finalState} vs no-cache ${withoutCache.finalState}`)
+      report.keyFindings.push(
+        `Different outcomes: cache ${withCache.finalState} vs no-cache ${withoutCache.finalState}`,
+      )
     }
 
-    if (withCache.finalState === 'failure' && withoutCache.finalState === 'success') {
-      report.keyFindings.push('Cache causes build failures - this confirms the cache is the problem')
+    if (
+      withCache.finalState === 'failure' &&
+      withoutCache.finalState === 'success'
+    ) {
+      report.keyFindings.push(
+        'Cache causes build failures - this confirms the cache is the problem',
+      )
     }
 
-    if (withCache.finalState === 'success' && withoutCache.finalState === 'success') {
-      report.keyFindings.push('Both scenarios succeed - need to investigate file differences')
+    if (
+      withCache.finalState === 'success' &&
+      withoutCache.finalState === 'success'
+    ) {
+      report.keyFindings.push(
+        'Both scenarios succeed - need to investigate file differences',
+      )
     }
 
     // Save detailed report
     const reportPath = './cache-investigation-report.json'
-    await fs.writeJSON(reportPath, { withCache, withoutCache, summary: report }, { spaces: 2 })
+    await fs.writeJSON(
+      reportPath,
+      { withCache, withoutCache, summary: report },
+      { spaces: 2 },
+    )
 
     console.log(ansis.green(`\n✅ Investigation complete!`))
     console.log(ansis.gray(`📄 Detailed report saved to: ${reportPath}`))
@@ -489,20 +561,25 @@ class CacheInvestigator {
     // Print key findings
     if (report.keyFindings.length > 0) {
       console.log(ansis.yellow('\n🔍 Key Findings:'))
-      report.keyFindings.forEach(finding => {
+      report.keyFindings.forEach((finding) => {
         console.log(ansis.yellow(`  • ${finding}`))
       })
     }
 
     // Print recommendations
     console.log(ansis.cyan('\n💡 Next Steps:'))
-    if (withCache.finalState === 'failure' && withoutCache.finalState === 'success') {
+    if (
+      withCache.finalState === 'failure' &&
+      withoutCache.finalState === 'success'
+    ) {
       console.log(ansis.cyan('  1. Focus on cache invalidation issues'))
       console.log(ansis.cyan('  2. Check Nx cache configuration'))
       console.log(ansis.cyan('  3. Investigate CI-specific cache behavior'))
     } else {
       console.log(ansis.cyan('  1. Analyze file state differences in detail'))
-      console.log(ansis.cyan('  2. Check for subtle timing/execution differences'))
+      console.log(
+        ansis.cyan('  2. Check for subtle timing/execution differences'),
+      )
       console.log(ansis.cyan('  3. Look for environment-specific behaviors'))
     }
   }
@@ -514,7 +591,7 @@ async function main() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error(ansis.red('💥 Investigation failed:'), error)
     process.exit(1)
   })

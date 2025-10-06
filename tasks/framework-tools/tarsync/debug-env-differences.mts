@@ -61,7 +61,9 @@ class EnvironmentDebugger {
   private snapshots: Map<string, EnvironmentSnapshot> = new Map()
 
   async analyzeEnvironmentDifferences(): Promise<void> {
-    console.log(ansis.bold.blue('🌍 Environment & Execution Differences Analysis'))
+    console.log(
+      ansis.bold.blue('🌍 Environment & Execution Differences Analysis'),
+    )
     console.log('Comparing environment state during cache vs no-cache builds\n')
 
     // Capture baseline environment
@@ -81,13 +83,17 @@ class EnvironmentDebugger {
     await this.compareEnvironments()
   }
 
-  private async runWithEnvironmentCapture(scenario: 'with-cache' | 'without-cache'): Promise<void> {
+  private async runWithEnvironmentCapture(
+    scenario: 'with-cache' | 'without-cache',
+  ) {
     try {
       // Clean slate
       await $`yarn nx reset`
 
       // Capture pre-build environment
-      const preBuild = await this.captureEnvironmentSnapshot(`${scenario}-pre-build`)
+      const preBuild = await this.captureEnvironmentSnapshot(
+        `${scenario}-pre-build`,
+      )
       this.snapshots.set(`${scenario}-pre-build`, preBuild)
 
       // Run build step
@@ -105,7 +111,9 @@ class EnvironmentDebugger {
       }
 
       // Capture mid-build environment
-      const midBuild = await this.captureEnvironmentSnapshot(`${scenario}-mid-build`)
+      const midBuild = await this.captureEnvironmentSnapshot(
+        `${scenario}-mid-build`,
+      )
       midBuild.timing.buildDuration = Date.now() - buildStart
       this.snapshots.set(`${scenario}-mid-build`, midBuild)
 
@@ -124,24 +132,27 @@ class EnvironmentDebugger {
       }
 
       // Capture post-build environment
-      const postBuild = await this.captureEnvironmentSnapshot(`${scenario}-post-build`)
+      const postBuild = await this.captureEnvironmentSnapshot(
+        `${scenario}-post-build`,
+      )
       postBuild.timing.packDuration = Date.now() - packStart
       postBuild.timing.totalDuration = Date.now() - buildStart
       this.snapshots.set(`${scenario}-post-build`, postBuild)
-
     } catch (error) {
       console.log(ansis.red(`❌ Scenario ${scenario} failed: ${error}`))
     }
   }
 
-  private async captureEnvironmentSnapshot(label: string): Promise<EnvironmentSnapshot> {
+  private async captureEnvironmentSnapshot(
+    label: string,
+  ): Promise<EnvironmentSnapshot> {
     const snapshot: EnvironmentSnapshot = {
       timestamp: new Date().toISOString(),
       platform: await this.capturePlatformInfo(),
       environment: await this.captureEnvironmentInfo(),
       fileSystem: await this.captureFileSystemInfo(),
       process: await this.captureProcessInfo(),
-      timing: await this.captureTimingInfo()
+      timing: await this.captureTimingInfo(),
     }
 
     return snapshot
@@ -164,7 +175,7 @@ class EnvironmentDebugger {
       arch: os.arch(),
       nodeVersion: process.version,
       npmVersion,
-      yarnVersion
+      yarnVersion,
     }
   }
 
@@ -175,7 +186,7 @@ class EnvironmentDebugger {
     const nxVariables: Record<string, string> = {}
     const yarnVariables: Record<string, string> = {}
 
-    Object.keys(process.env).forEach(key => {
+    Object.keys(process.env).forEach((key) => {
       if (key.startsWith(nxVarPrefix)) {
         nxVariables[key] = process.env[key] || 'undefined'
       }
@@ -192,7 +203,7 @@ class EnvironmentDebugger {
       pathVariable: process.env.PATH || '',
       homeDirectory: process.env.HOME || process.env.USERPROFILE || '',
       workingDirectory: process.cwd(),
-      tempDirectory: os.tmpdir()
+      tempDirectory: os.tmpdir(),
     }
   }
 
@@ -201,7 +212,7 @@ class EnvironmentDebugger {
       diskSpace: { free: 0, total: 0 },
       permissions: { canWrite: false, canExecute: false },
       mountInfo: undefined as string | undefined,
-      fsType: undefined as string | undefined
+      fsType: undefined as string | undefined,
     }
 
     try {
@@ -209,7 +220,7 @@ class EnvironmentDebugger {
       const stats = await fs.statfs('.')
       info.diskSpace = {
         free: stats.bavail * stats.bsize,
-        total: stats.blocks * stats.bsize
+        total: stats.blocks * stats.bsize,
       }
     } catch {}
 
@@ -227,11 +238,13 @@ class EnvironmentDebugger {
     try {
       // Try to get mount info (Linux/macOS)
       if (os.platform() !== 'win32') {
-        const mountOutput = await $`mount | grep ${process.cwd()} || echo "not found"`
+        const mountOutput =
+          await $`mount | grep ${process.cwd()} || echo "not found"`
         info.mountInfo = mountOutput.stdout.trim()
 
         // Try to determine filesystem type
-        const dfOutput = await $`df -T . 2>/dev/null || df . 2>/dev/null || echo "unknown"`
+        const dfOutput =
+          await $`df -T . 2>/dev/null || df . 2>/dev/null || echo "unknown"`
         info.fsType = dfOutput.stdout.trim()
       }
     } catch {}
@@ -246,7 +259,7 @@ class EnvironmentDebugger {
       uid: process.getuid ? process.getuid() : undefined,
       gid: process.getgid ? process.getgid() : undefined,
       memoryUsage: process.memoryUsage(),
-      cpuUsage: process.cpuUsage()
+      cpuUsage: process.cpuUsage(),
     }
   }
 
@@ -259,7 +272,7 @@ class EnvironmentDebugger {
 
     return {
       processUptime: process.uptime(),
-      systemUptime
+      systemUptime,
     }
   }
 
@@ -269,10 +282,12 @@ class EnvironmentDebugger {
     const differences: ExecutionDifference[] = []
 
     // Compare baseline vs execution snapshots
-    const withCacheSnapshots = Array.from(this.snapshots.entries())
-      .filter(([key]) => key.startsWith('with-cache'))
-    const withoutCacheSnapshots = Array.from(this.snapshots.entries())
-      .filter(([key]) => key.startsWith('without-cache'))
+    const withCacheSnapshots = Array.from(this.snapshots.entries()).filter(
+      ([key]) => key.startsWith('with-cache'),
+    )
+    const withoutCacheSnapshots = Array.from(this.snapshots.entries()).filter(
+      ([key]) => key.startsWith('without-cache'),
+    )
 
     // Compare corresponding snapshots
     const phases = ['pre-build', 'mid-build', 'post-build']
@@ -283,7 +298,11 @@ class EnvironmentDebugger {
 
       if (withCacheSnapshot && withoutCacheSnapshot) {
         console.log(ansis.cyan(`\n📊 Comparing ${phase} phase:`))
-        const phaseDifferences = this.findDifferences(withCacheSnapshot, withoutCacheSnapshot, phase)
+        const phaseDifferences = this.findDifferences(
+          withCacheSnapshot,
+          withoutCacheSnapshot,
+          phase,
+        )
         differences.push(...phaseDifferences)
 
         this.printPhaseDifferences(phaseDifferences)
@@ -301,72 +320,87 @@ class EnvironmentDebugger {
   private findDifferences(
     withCache: EnvironmentSnapshot,
     withoutCache: EnvironmentSnapshot,
-    phase: string
+    phase: string,
   ): ExecutionDifference[] {
     const differences: ExecutionDifference[] = []
 
     // Memory usage differences
-    const memDiff = withCache.process.memoryUsage.heapUsed - withoutCache.process.memoryUsage.heapUsed
-    if (Math.abs(memDiff) > 50 * 1024 * 1024) { // > 50MB difference
+    const memDiff =
+      withCache.process.memoryUsage.heapUsed -
+      withoutCache.process.memoryUsage.heapUsed
+    if (Math.abs(memDiff) > 50 * 1024 * 1024) {
+      // > 50MB difference
       differences.push({
         category: 'process',
         severity: memDiff > 100 * 1024 * 1024 ? 'high' : 'medium',
         description: `Significant memory usage difference in ${phase}`,
         withCache: withCache.process.memoryUsage.heapUsed,
         withoutCache: withoutCache.process.memoryUsage.heapUsed,
-        impact: 'May indicate different execution paths or memory leaks'
+        impact: 'May indicate different execution paths or memory leaks',
       })
     }
 
     // Disk space differences
-    const diskDiff = withCache.fileSystem.diskSpace.free - withoutCache.fileSystem.diskSpace.free
-    if (Math.abs(diskDiff) > 100 * 1024 * 1024) { // > 100MB difference
+    const diskDiff =
+      withCache.fileSystem.diskSpace.free -
+      withoutCache.fileSystem.diskSpace.free
+    if (Math.abs(diskDiff) > 100 * 1024 * 1024) {
+      // > 100MB difference
       differences.push({
         category: 'filesystem',
         severity: Math.abs(diskDiff) > 1024 * 1024 * 1024 ? 'high' : 'medium', // 1GB
         description: `Disk space usage difference in ${phase}`,
         withCache: withCache.fileSystem.diskSpace.free,
         withoutCache: withoutCache.fileSystem.diskSpace.free,
-        impact: 'May indicate different temporary file creation or cleanup'
+        impact: 'May indicate different temporary file creation or cleanup',
       })
     }
 
     // Process timing differences
-    const uptimeDiff = withCache.timing.processUptime - withoutCache.timing.processUptime
-    if (Math.abs(uptimeDiff) > 5) { // > 5 second difference
+    const uptimeDiff =
+      withCache.timing.processUptime - withoutCache.timing.processUptime
+    if (Math.abs(uptimeDiff) > 5) {
+      // > 5 second difference
       differences.push({
         category: 'timing',
         severity: 'low',
         description: `Process uptime difference in ${phase}`,
         withCache: withCache.timing.processUptime,
         withoutCache: withoutCache.timing.processUptime,
-        impact: 'May indicate different execution duration'
+        impact: 'May indicate different execution duration',
       })
     }
 
     // Environment variable differences
-    const envDiffs = this.compareObjects(withCache.environment.nxVariables, withoutCache.environment.nxVariables)
-    envDiffs.forEach(diff => {
+    const envDiffs = this.compareObjects(
+      withCache.environment.nxVariables,
+      withoutCache.environment.nxVariables,
+    )
+    envDiffs.forEach((diff) => {
       differences.push({
         category: 'environment',
         severity: diff.key.includes('CACHE') ? 'critical' : 'medium',
         description: `Nx environment variable difference: ${diff.key}`,
         withCache: diff.value1,
         withoutCache: diff.value2,
-        impact: 'May affect Nx behavior and caching'
+        impact: 'May affect Nx behavior and caching',
       })
     })
 
     // File system permission differences
-    if (withCache.fileSystem.permissions.canWrite !== withoutCache.fileSystem.permissions.canWrite ||
-        withCache.fileSystem.permissions.canExecute !== withoutCache.fileSystem.permissions.canExecute) {
+    if (
+      withCache.fileSystem.permissions.canWrite !==
+        withoutCache.fileSystem.permissions.canWrite ||
+      withCache.fileSystem.permissions.canExecute !==
+        withoutCache.fileSystem.permissions.canExecute
+    ) {
       differences.push({
         category: 'filesystem',
         severity: 'critical',
         description: `File system permission difference in ${phase}`,
         withCache: withCache.fileSystem.permissions,
         withoutCache: withoutCache.fileSystem.permissions,
-        impact: 'Critical - may prevent file operations'
+        impact: 'Critical - may prevent file operations',
       })
     }
 
@@ -374,7 +408,7 @@ class EnvironmentDebugger {
   }
 
   private compareObjects(obj1: Record<string, any>, obj2: Record<string, any>) {
-    const differences: Array<{key: string, value1: any, value2: any}> = []
+    const differences: Array<{ key: string; value1: any; value2: any }> = []
     const allKeys = new Set([...Object.keys(obj1), ...Object.keys(obj2)])
 
     for (const key of allKeys) {
@@ -392,51 +426,72 @@ class EnvironmentDebugger {
       return
     }
 
-    differences.forEach(diff => {
+    differences.forEach((diff) => {
       const severityColor = {
         low: ansis.gray,
         medium: ansis.yellow,
         high: ansis.red,
-        critical: ansis.bold.red
+        critical: ansis.bold.red,
       }[diff.severity]
 
-      console.log(severityColor(`  ${this.getSeverityIcon(diff.severity)} ${diff.description}`))
-      console.log(ansis.gray(`    With cache: ${JSON.stringify(diff.withCache)}`))
-      console.log(ansis.gray(`    Without cache: ${JSON.stringify(diff.withoutCache)}`))
+      console.log(
+        severityColor(
+          `  ${this.getSeverityIcon(diff.severity)} ${diff.description}`,
+        ),
+      )
+      console.log(
+        ansis.gray(`    With cache: ${JSON.stringify(diff.withCache)}`),
+      )
+      console.log(
+        ansis.gray(`    Without cache: ${JSON.stringify(diff.withoutCache)}`),
+      )
       console.log(ansis.gray(`    Impact: ${diff.impact}`))
     })
   }
 
   private getSeverityIcon(severity: string): string {
     switch (severity) {
-      case 'low': return 'ℹ️'
-      case 'medium': return '⚠️'
-      case 'high': return '🚨'
-      case 'critical': return '💥'
-      default: return '❓'
+      case 'low':
+        return 'ℹ️'
+      case 'medium':
+        return '⚠️'
+      case 'high':
+        return '🚨'
+      case 'critical':
+        return '💥'
+      default:
+        return '❓'
     }
   }
 
   private analyzeOverallDifferences(differences: ExecutionDifference[]): void {
-    const bySeverity = differences.reduce((acc, diff) => {
-      acc[diff.severity] = (acc[diff.severity] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const bySeverity = differences.reduce(
+      (acc, diff) => {
+        acc[diff.severity] = (acc[diff.severity] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>,
+    )
 
-    const byCategory = differences.reduce((acc, diff) => {
-      acc[diff.category] = (acc[diff.category] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const byCategory = differences.reduce(
+      (acc, diff) => {
+        acc[diff.category] = (acc[diff.category] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>,
+    )
 
     console.log(`📊 Found ${differences.length} total differences`)
     console.log(`   Severity breakdown: ${JSON.stringify(bySeverity)}`)
     console.log(`   Category breakdown: ${JSON.stringify(byCategory)}`)
 
     // Critical findings
-    const critical = differences.filter(d => d.severity === 'critical')
+    const critical = differences.filter((d) => d.severity === 'critical')
     if (critical.length > 0) {
-      console.log(ansis.bold.red(`\n💥 ${critical.length} CRITICAL differences found:`))
-      critical.forEach(diff => {
+      console.log(
+        ansis.bold.red(`\n💥 ${critical.length} CRITICAL differences found:`),
+      )
+      critical.forEach((diff) => {
         console.log(ansis.red(`   • ${diff.description}`))
       })
     }
@@ -445,71 +500,111 @@ class EnvironmentDebugger {
     console.log(ansis.cyan('\n💡 Key Insights:'))
 
     if (byCategory.environment > 0) {
-      console.log(ansis.yellow('   • Environment differences detected - may affect Nx behavior'))
+      console.log(
+        ansis.yellow(
+          '   • Environment differences detected - may affect Nx behavior',
+        ),
+      )
     }
 
     if (byCategory.filesystem > 0) {
-      console.log(ansis.yellow('   • File system differences detected - may affect build artifacts'))
+      console.log(
+        ansis.yellow(
+          '   • File system differences detected - may affect build artifacts',
+        ),
+      )
     }
 
     if (byCategory.process > 0) {
-      console.log(ansis.yellow('   • Process differences detected - may indicate different execution paths'))
+      console.log(
+        ansis.yellow(
+          '   • Process differences detected - may indicate different execution paths',
+        ),
+      )
     }
 
     if (differences.length === 0) {
-      console.log(ansis.green('   ✅ Environment is consistent between cache and no-cache scenarios'))
-      console.log(ansis.cyan('   🔍 Focus investigation on Nx internals and file state differences'))
+      console.log(
+        ansis.green(
+          '   ✅ Environment is consistent between cache and no-cache scenarios',
+        ),
+      )
+      console.log(
+        ansis.cyan(
+          '   🔍 Focus investigation on Nx internals and file state differences',
+        ),
+      )
     }
   }
 
-  private async generateEnvironmentReport(differences: ExecutionDifference[]): Promise<void> {
+  private async generateEnvironmentReport(
+    differences: ExecutionDifference[],
+  ): Promise<void> {
     const report = {
       timestamp: new Date().toISOString(),
       summary: {
         totalDifferences: differences.length,
-        bySeverity: differences.reduce((acc, d) => {
-          acc[d.severity] = (acc[d.severity] || 0) + 1
-          return acc
-        }, {} as Record<string, number>),
-        byCategory: differences.reduce((acc, d) => {
-          acc[d.category] = (acc[d.category] || 0) + 1
-          return acc
-        }, {} as Record<string, number>)
+        bySeverity: differences.reduce(
+          (acc, d) => {
+            acc[d.severity] = (acc[d.severity] || 0) + 1
+            return acc
+          },
+          {} as Record<string, number>,
+        ),
+        byCategory: differences.reduce(
+          (acc, d) => {
+            acc[d.category] = (acc[d.category] || 0) + 1
+            return acc
+          },
+          {} as Record<string, number>,
+        ),
       },
       snapshots: Object.fromEntries(this.snapshots),
       differences,
-      recommendations: this.generateRecommendations(differences)
+      recommendations: this.generateRecommendations(differences),
     }
 
     const reportPath = './environment-analysis-report.json'
     await fs.writeJSON(reportPath, report, { spaces: 2 })
 
-    console.log(ansis.green(`\n📄 Detailed environment report saved to: ${reportPath}`))
+    console.log(
+      ansis.green(`\n📄 Detailed environment report saved to: ${reportPath}`),
+    )
   }
 
-  private generateRecommendations(differences: ExecutionDifference[]): string[] {
+  private generateRecommendations(
+    differences: ExecutionDifference[],
+  ): string[] {
     const recommendations: string[] = []
 
-    const critical = differences.filter(d => d.severity === 'critical')
+    const critical = differences.filter((d) => d.severity === 'critical')
     if (critical.length > 0) {
-      recommendations.push('URGENT: Address critical environment differences first')
-      critical.forEach(diff => {
+      recommendations.push(
+        'URGENT: Address critical environment differences first',
+      )
+      critical.forEach((diff) => {
         recommendations.push(`- Fix: ${diff.description}`)
       })
     }
 
-    const envDiffs = differences.filter(d => d.category === 'environment')
+    const envDiffs = differences.filter((d) => d.category === 'environment')
     if (envDiffs.length > 0) {
-      recommendations.push('Review Nx configuration and environment variable handling')
+      recommendations.push(
+        'Review Nx configuration and environment variable handling',
+      )
     }
 
-    const fsDiffs = differences.filter(d => d.category === 'filesystem')
+    const fsDiffs = differences.filter((d) => d.category === 'filesystem')
     if (fsDiffs.length > 0) {
-      recommendations.push('Investigate file system permissions and disk usage patterns')
+      recommendations.push(
+        'Investigate file system permissions and disk usage patterns',
+      )
     }
 
     if (differences.length === 0) {
-      recommendations.push('Environment is consistent - focus on Nx task execution and file state analysis')
+      recommendations.push(
+        'Environment is consistent - focus on Nx task execution and file state analysis',
+      )
     }
 
     return recommendations
@@ -517,12 +612,12 @@ class EnvironmentDebugger {
 }
 
 async function main() {
-  const debugger = new EnvironmentDebugger()
-  await debugger.analyzeEnvironmentDifferences()
+  const envDebugger = new EnvironmentDebugger()
+  await envDebugger.analyzeEnvironmentDifferences()
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error(ansis.red('💥 Environment analysis failed:'), error)
     process.exit(1)
   })

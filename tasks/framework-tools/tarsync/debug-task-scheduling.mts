@@ -43,12 +43,18 @@ class TaskSchedulingDebugger {
     console.log('Comparing how Nx schedules tasks with and without cache\n')
 
     const withCacheAnalysis = await this.runSchedulingAnalysis('with-cache')
-    const withoutCacheAnalysis = await this.runSchedulingAnalysis('without-cache')
+    const withoutCacheAnalysis =
+      await this.runSchedulingAnalysis('without-cache')
 
-    await this.compareSchedulingBehavior(withCacheAnalysis, withoutCacheAnalysis)
+    await this.compareSchedulingBehavior(
+      withCacheAnalysis,
+      withoutCacheAnalysis,
+    )
   }
 
-  private async runSchedulingAnalysis(scenario: 'with-cache' | 'without-cache'): Promise<SchedulingAnalysis> {
+  private async runSchedulingAnalysis(
+    scenario: 'with-cache' | 'without-cache',
+  ): Promise<SchedulingAnalysis> {
     console.log(ansis.yellow(`\n📊 Analyzing task scheduling: ${scenario}`))
 
     this.taskExecutions.clear()
@@ -65,7 +71,7 @@ class TaskSchedulingDebugger {
       parallelTasks: [],
       taskOrder: [],
       cacheBehavior: { hits: 0, misses: 0, hitRate: 0 },
-      timingAnalysis: { totalDuration: 0, criticalPath: [], parallelism: 0 }
+      timingAnalysis: { totalDuration: 0, criticalPath: [], parallelism: 0 },
     }
 
     try {
@@ -96,8 +102,11 @@ class TaskSchedulingDebugger {
       analysis.cacheBehavior = this.analyzeCacheBehavior()
       analysis.timingAnalysis = this.analyzeTimingAndCriticalPath()
 
-      console.log(ansis.green(`  ✅ Analysis complete: ${analysis.totalTasks} tasks analyzed`))
-
+      console.log(
+        ansis.green(
+          `  ✅ Analysis complete: ${analysis.totalTasks} tasks analyzed`,
+        ),
+      )
     } catch (error) {
       console.log(ansis.red(`  ❌ Analysis failed: ${error}`))
     }
@@ -105,7 +114,9 @@ class TaskSchedulingDebugger {
     return analysis
   }
 
-  private async captureTaskExecution(action: () => Promise<void>): Promise<void> {
+  private async captureTaskExecution(
+    action: () => Promise<void>,
+  ): Promise<void> {
     // Start capturing Nx output
     const captureStart = Date.now()
 
@@ -132,7 +143,7 @@ class TaskSchedulingDebugger {
       'auth:build',
       'api:build',
       'testing:build',
-      'testing:build:pack'
+      'testing:build:pack',
     ]
 
     mockTasks.forEach((taskId, index) => {
@@ -141,12 +152,12 @@ class TaskSchedulingDebugger {
         taskId,
         projectName: project,
         targetName: target,
-        startTime: captureStart + (index * 100),
-        endTime: captureStart + (index * 100) + 1000 + Math.random() * 2000,
+        startTime: captureStart + index * 100,
+        endTime: captureStart + index * 100 + 1000 + Math.random() * 2000,
         status: 'completed',
         cacheHit: Math.random() > 0.5, // Simulated for now
         dependencies: this.inferDependencies(taskId),
-        outputs: [`packages/${project}/dist`]
+        outputs: [`packages/${project}/dist`],
       }
 
       task.duration = (task.endTime || task.startTime) - task.startTime
@@ -194,7 +205,10 @@ class TaskSchedulingDebugger {
       } else {
         // Overlapping - parallel execution
         currentSlot.push(task)
-        currentTimeEnd = Math.max(currentTimeEnd, task.endTime || task.startTime)
+        currentTimeEnd = Math.max(
+          currentTimeEnd,
+          task.endTime || task.startTime,
+        )
       }
     }
 
@@ -207,13 +221,13 @@ class TaskSchedulingDebugger {
 
   private analyzeCacheBehavior() {
     const tasks = Array.from(this.taskExecutions.values())
-    const hits = tasks.filter(t => t.cacheHit).length
+    const hits = tasks.filter((t) => t.cacheHit).length
     const total = tasks.length
 
     return {
       hits,
       misses: total - hits,
-      hitRate: total > 0 ? hits / total : 0
+      hitRate: total > 0 ? hits / total : 0,
     }
   }
 
@@ -224,15 +238,18 @@ class TaskSchedulingDebugger {
       return {
         totalDuration: 0,
         criticalPath: [],
-        parallelism: 0
+        parallelism: 0,
       }
     }
 
-    const startTime = Math.min(...tasks.map(t => t.startTime))
-    const endTime = Math.max(...tasks.map(t => t.endTime || t.startTime))
+    const startTime = Math.min(...tasks.map((t) => t.startTime))
+    const endTime = Math.max(...tasks.map((t) => t.endTime || t.startTime))
 
     // Calculate average parallelism
-    const totalTaskTime = tasks.reduce((sum, task) => sum + (task.duration || 0), 0)
+    const totalTaskTime = tasks.reduce(
+      (sum, task) => sum + (task.duration || 0),
+      0,
+    )
     const wallClockTime = endTime - startTime
     const parallelism = wallClockTime > 0 ? totalTaskTime / wallClockTime : 0
 
@@ -242,7 +259,7 @@ class TaskSchedulingDebugger {
     return {
       totalDuration: wallClockTime,
       criticalPath,
-      parallelism
+      parallelism,
     }
   }
 
@@ -265,13 +282,21 @@ class TaskSchedulingDebugger {
       path.unshift(current.taskId)
 
       // Find the dependency that finished latest
-      const deps = current.dependencies.map(dep => this.taskExecutions.get(dep)).filter(Boolean)
-      current = deps.reduce((latest, dep) => {
-        if (!latest || !dep) return dep || latest
-        const depEnd = dep.endTime || dep.startTime
-        const latestEnd = latest.endTime || latest.startTime
-        return depEnd > latestEnd ? dep : latest
-      }, null as TaskExecution | null) || undefined
+      const deps = current.dependencies
+        .map((dep) => this.taskExecutions.get(dep))
+        .filter(Boolean)
+      current =
+        deps.reduce(
+          (latest, dep) => {
+            if (!latest || !dep) {
+              return dep || latest
+            }
+            const depEnd = dep.endTime || dep.startTime
+            const latestEnd = latest.endTime || latest.startTime
+            return depEnd > latestEnd ? dep : latest
+          },
+          null as TaskExecution | null,
+        ) || undefined
     }
 
     return path
@@ -279,44 +304,74 @@ class TaskSchedulingDebugger {
 
   private async compareSchedulingBehavior(
     withCache: SchedulingAnalysis,
-    withoutCache: SchedulingAnalysis
+    withoutCache: SchedulingAnalysis,
   ): Promise<void> {
     console.log(ansis.bold.green('\n📊 Task Scheduling Comparison'))
 
     // Basic metrics comparison
     console.log(ansis.cyan('\n📈 Execution Metrics:'))
-    console.log(`  With cache:    ${withCache.totalTasks} tasks, ${withCache.timingAnalysis.totalDuration}ms total`)
-    console.log(`  Without cache: ${withoutCache.totalTasks} tasks, ${withoutCache.timingAnalysis.totalDuration}ms total`)
+    console.log(
+      `  With cache:    ${withCache.totalTasks} tasks, ${withCache.timingAnalysis.totalDuration}ms total`,
+    )
+    console.log(
+      `  Without cache: ${withoutCache.totalTasks} tasks, ${withoutCache.timingAnalysis.totalDuration}ms total`,
+    )
 
-    const speedup = withoutCache.timingAnalysis.totalDuration / withCache.timingAnalysis.totalDuration
+    const speedup =
+      withoutCache.timingAnalysis.totalDuration /
+      withCache.timingAnalysis.totalDuration
     if (speedup > 1.1) {
-      console.log(ansis.green(`  🚀 Cache provides ${speedup.toFixed(2)}x speedup`))
+      console.log(
+        ansis.green(`  🚀 Cache provides ${speedup.toFixed(2)}x speedup`),
+      )
     } else if (speedup < 0.9) {
-      console.log(ansis.red(`  🐌 Cache is ${(1/speedup).toFixed(2)}x slower`))
+      console.log(
+        ansis.red(`  🐌 Cache is ${(1 / speedup).toFixed(2)}x slower`),
+      )
     } else {
-      console.log(ansis.yellow(`  ⚖️  Similar performance (${speedup.toFixed(2)}x)`))
+      console.log(
+        ansis.yellow(`  ⚖️  Similar performance (${speedup.toFixed(2)}x)`),
+      )
     }
 
     // Parallelism comparison
     console.log(ansis.cyan('\n⚡ Parallelism Analysis:'))
-    console.log(`  With cache:    ${withCache.timingAnalysis.parallelism.toFixed(2)} avg parallel tasks`)
-    console.log(`  Without cache: ${withoutCache.timingAnalysis.parallelism.toFixed(2)} avg parallel tasks`)
+    console.log(
+      `  With cache:    ${withCache.timingAnalysis.parallelism.toFixed(2)} avg parallel tasks`,
+    )
+    console.log(
+      `  Without cache: ${withoutCache.timingAnalysis.parallelism.toFixed(2)} avg parallel tasks`,
+    )
 
-    if (Math.abs(withCache.timingAnalysis.parallelism - withoutCache.timingAnalysis.parallelism) > 0.5) {
-      console.log(ansis.yellow('  ⚠️  Significant parallelism difference detected!'))
+    if (
+      Math.abs(
+        withCache.timingAnalysis.parallelism -
+          withoutCache.timingAnalysis.parallelism,
+      ) > 0.5
+    ) {
+      console.log(
+        ansis.yellow('  ⚠️  Significant parallelism difference detected!'),
+      )
     }
 
     // Cache behavior analysis
     console.log(ansis.cyan('\n🗄️  Cache Behavior:'))
-    console.log(`  With cache:    ${withCache.cacheBehavior.hits}/${withCache.totalTasks} hits (${(withCache.cacheBehavior.hitRate * 100).toFixed(1)}%)`)
-    console.log(`  Without cache: ${withoutCache.cacheBehavior.hits}/${withoutCache.totalTasks} hits (${(withoutCache.cacheBehavior.hitRate * 100).toFixed(1)}%)`)
+    console.log(
+      `  With cache:    ${withCache.cacheBehavior.hits}/${withCache.totalTasks} hits (${(withCache.cacheBehavior.hitRate * 100).toFixed(1)}%)`,
+    )
+    console.log(
+      `  Without cache: ${withoutCache.cacheBehavior.hits}/${withoutCache.totalTasks} hits (${(withoutCache.cacheBehavior.hitRate * 100).toFixed(1)}%)`,
+    )
 
     // Task order comparison
     console.log(ansis.cyan('\n📋 Task Execution Order:'))
-    const orderDifferences = this.compareTaskOrder(withCache.taskOrder, withoutCache.taskOrder)
+    const orderDifferences = this.compareTaskOrder(
+      withCache.taskOrder,
+      withoutCache.taskOrder,
+    )
     if (orderDifferences.length > 0) {
       console.log(ansis.yellow('  ⚠️  Task execution order differs:'))
-      orderDifferences.forEach(diff => {
+      orderDifferences.forEach((diff) => {
         console.log(ansis.gray(`    ${diff}`))
       })
     } else {
@@ -325,11 +380,22 @@ class TaskSchedulingDebugger {
 
     // Critical path comparison
     console.log(ansis.cyan('\n🛤️  Critical Path Analysis:'))
-    console.log(`  With cache:    ${withCache.timingAnalysis.criticalPath.join(' → ')}`)
-    console.log(`  Without cache: ${withoutCache.timingAnalysis.criticalPath.join(' → ')}`)
+    console.log(
+      `  With cache:    ${withCache.timingAnalysis.criticalPath.join(' → ')}`,
+    )
+    console.log(
+      `  Without cache: ${withoutCache.timingAnalysis.criticalPath.join(' → ')}`,
+    )
 
-    if (JSON.stringify(withCache.timingAnalysis.criticalPath) !== JSON.stringify(withoutCache.timingAnalysis.criticalPath)) {
-      console.log(ansis.yellow('  ⚠️  Critical paths differ - this may indicate scheduling changes'))
+    if (
+      JSON.stringify(withCache.timingAnalysis.criticalPath) !==
+      JSON.stringify(withoutCache.timingAnalysis.criticalPath)
+    ) {
+      console.log(
+        ansis.yellow(
+          '  ⚠️  Critical paths differ - this may indicate scheduling changes',
+        ),
+      )
     }
 
     // Parallel execution patterns
@@ -355,36 +421,59 @@ class TaskSchedulingDebugger {
     return differences
   }
 
-  private compareParallelPatterns(withCache: SchedulingAnalysis, withoutCache: SchedulingAnalysis): void {
+  private compareParallelPatterns(
+    withCache: SchedulingAnalysis,
+    withoutCache: SchedulingAnalysis,
+  ): void {
     console.log(ansis.cyan('\n🔀 Parallel Execution Patterns:'))
 
-    console.log(`  With cache:    ${withCache.parallelTasks.length} parallel groups`)
-    console.log(`  Without cache: ${withoutCache.parallelTasks.length} parallel groups`)
+    console.log(
+      `  With cache:    ${withCache.parallelTasks.length} parallel groups`,
+    )
+    console.log(
+      `  Without cache: ${withoutCache.parallelTasks.length} parallel groups`,
+    )
 
     // Compare the structure of parallel execution
-    const maxGroups = Math.max(withCache.parallelTasks.length, withoutCache.parallelTasks.length)
+    const maxGroups = Math.max(
+      withCache.parallelTasks.length,
+      withoutCache.parallelTasks.length,
+    )
 
     for (let i = 0; i < Math.min(3, maxGroups); i++) {
       const cacheGroup = withCache.parallelTasks[i] || []
       const noCacheGroup = withoutCache.parallelTasks[i] || []
 
       console.log(`\n  Group ${i + 1}:`)
-      console.log(`    With cache:    [${cacheGroup.map(t => t.taskId).join(', ')}]`)
-      console.log(`    Without cache: [${noCacheGroup.map(t => t.taskId).join(', ')}]`)
+      console.log(
+        `    With cache:    [${cacheGroup.map((t) => t.taskId).join(', ')}]`,
+      )
+      console.log(
+        `    Without cache: [${noCacheGroup.map((t) => t.taskId).join(', ')}]`,
+      )
 
       if (cacheGroup.length !== noCacheGroup.length) {
-        console.log(ansis.yellow(`    ⚠️  Different parallelism: ${cacheGroup.length} vs ${noCacheGroup.length} tasks`))
+        console.log(
+          ansis.yellow(
+            `    ⚠️  Different parallelism: ${cacheGroup.length} vs ${noCacheGroup.length} tasks`,
+          ),
+        )
       }
     }
   }
 
-  private generateSchedulingInsights(withCache: SchedulingAnalysis, withoutCache: SchedulingAnalysis): void {
+  private generateSchedulingInsights(
+    withCache: SchedulingAnalysis,
+    withoutCache: SchedulingAnalysis,
+  ): void {
     console.log(ansis.bold.cyan('\n💡 Scheduling Insights:'))
 
     const insights: string[] = []
 
     // Performance insights
-    const performanceDiff = withoutCache.timingAnalysis.totalDuration - withCache.timingAnalysis.totalDuration
+    const performanceDiff =
+      withoutCache.timingAnalysis.totalDuration -
+      withCache.timingAnalysis.totalDuration
     if (performanceDiff > 5000) {
       insights.push('Cache provides significant performance improvement')
     } else if (performanceDiff < -1000) {
@@ -392,7 +481,10 @@ class TaskSchedulingDebugger {
     }
 
     // Parallelism insights
-    const parallelismDiff = Math.abs(withCache.timingAnalysis.parallelism - withoutCache.timingAnalysis.parallelism)
+    const parallelismDiff = Math.abs(
+      withCache.timingAnalysis.parallelism -
+        withoutCache.timingAnalysis.parallelism,
+    )
     if (parallelismDiff > 0.5) {
       insights.push('Caching affects task parallelism significantly')
     }
@@ -404,7 +496,9 @@ class TaskSchedulingDebugger {
 
     // Task count insights
     if (withCache.totalTasks !== withoutCache.totalTasks) {
-      insights.push('Different number of tasks executed - cache may be skipping/adding work')
+      insights.push(
+        'Different number of tasks executed - cache may be skipping/adding work',
+      )
     }
 
     // Execution pattern insights
@@ -413,35 +507,51 @@ class TaskSchedulingDebugger {
     }
 
     if (insights.length > 0) {
-      insights.forEach(insight => {
+      insights.forEach((insight) => {
         console.log(ansis.yellow(`  • ${insight}`))
       })
     } else {
-      console.log(ansis.green('  ✅ No significant scheduling differences detected'))
+      console.log(
+        ansis.green('  ✅ No significant scheduling differences detected'),
+      )
     }
 
     // Recommendations
     console.log(ansis.bold.cyan('\n🎯 Recommendations:'))
 
     if (performanceDiff > 5000 && withCache.cacheBehavior.hitRate > 0.7) {
-      console.log(ansis.green('  ✅ Cache is working well - investigate why it fails in CI'))
+      console.log(
+        ansis.green(
+          '  ✅ Cache is working well - investigate why it fails in CI',
+        ),
+      )
     } else if (withCache.cacheBehavior.hitRate < 0.3) {
-      console.log(ansis.yellow('  ⚠️  Investigate cache invalidation - low hit rate'))
+      console.log(
+        ansis.yellow('  ⚠️  Investigate cache invalidation - low hit rate'),
+      )
     } else if (parallelismDiff > 1) {
-      console.log(ansis.yellow('  ⚠️  Cache significantly affects parallelism - may cause race conditions'))
+      console.log(
+        ansis.yellow(
+          '  ⚠️  Cache significantly affects parallelism - may cause race conditions',
+        ),
+      )
     } else {
-      console.log(ansis.cyan('  🔍 Focus on file state differences rather than scheduling'))
+      console.log(
+        ansis.cyan(
+          '  🔍 Focus on file state differences rather than scheduling',
+        ),
+      )
     }
   }
 }
 
 async function main() {
-  const debugger = new TaskSchedulingDebugger()
-  await debugger.analyzeTaskScheduling()
+  const schedulingDebugger = new TaskSchedulingDebugger()
+  await schedulingDebugger.analyzeTaskScheduling()
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error(ansis.red('💥 Task scheduling analysis failed:'), error)
     process.exit(1)
   })

@@ -53,7 +53,7 @@ async function generateSummaryReport() {
 
   const reportFiles = [
     './cache-investigation-report.json',
-    './environment-analysis-report.json'
+    './environment-analysis-report.json',
   ]
 
   let reports = []
@@ -68,26 +68,28 @@ async function generateSummaryReport() {
   }
 
   console.log(ansis.bold.green('\n🎯 INVESTIGATION SUMMARY'))
-  console.log('=' .repeat(50))
+  console.log('='.repeat(50))
 
   console.log(ansis.cyan('\n📊 Analysis Results:'))
 
   // Check for critical findings across all reports
-  let criticalIssues = []
-  let keyFindings = []
+  const criticalIssues: string[] = []
+  const keyFindings: string[] = []
 
   reports.forEach(({ file, content }) => {
     console.log(ansis.yellow(`\n📄 ${file}:`))
 
     if (content.summary?.keyFindings) {
-      content.summary.keyFindings.forEach(finding => {
+      content.summary.keyFindings.forEach((finding) => {
         keyFindings.push(`[${file}] ${finding}`)
       })
     }
 
     if (content.differences) {
-      const critical = content.differences.filter(d => d.severity === 'critical')
-      critical.forEach(c => {
+      const critical = content.differences.filter(
+        (d) => d.severity === 'critical',
+      )
+      critical.forEach((c) => {
         criticalIssues.push(`[${file}] ${c.description}`)
       })
     }
@@ -95,14 +97,14 @@ async function generateSummaryReport() {
 
   if (criticalIssues.length > 0) {
     console.log(ansis.bold.red('\n🚨 CRITICAL ISSUES FOUND:'))
-    criticalIssues.forEach(issue => {
+    criticalIssues.forEach((issue) => {
       console.log(ansis.red(`  • ${issue}`))
     })
   }
 
   if (keyFindings.length > 0) {
     console.log(ansis.yellow('\n🔍 KEY FINDINGS:'))
-    keyFindings.forEach(finding => {
+    keyFindings.forEach((finding) => {
       console.log(ansis.yellow(`  • ${finding}`))
     })
   }
@@ -110,20 +112,42 @@ async function generateSummaryReport() {
   console.log(ansis.bold.cyan('\n💡 INVESTIGATION CONCLUSIONS:'))
 
   if (criticalIssues.length > 0) {
-    console.log(ansis.red('🎯 Focus on critical issues first - these likely explain the cache problems'))
-  } else if (keyFindings.some(f => f.includes('Different outcomes'))) {
-    console.log(ansis.yellow('🎯 Cache vs no-cache produces different results - this confirms cache is the issue'))
-  } else if (keyFindings.some(f => f.includes('file differences'))) {
-    console.log(ansis.cyan('🎯 Files differ between scenarios - investigate Nx cache invalidation'))
+    console.log(
+      ansis.red(
+        '🎯 Focus on critical issues first - these likely explain the cache problems',
+      ),
+    )
+  } else if (keyFindings.some((f) => f.includes('Different outcomes'))) {
+    console.log(
+      ansis.yellow(
+        '🎯 Cache vs no-cache produces different results - this confirms cache is the issue',
+      ),
+    )
+  } else if (keyFindings.some((f) => f.includes('file differences'))) {
+    console.log(
+      ansis.cyan(
+        '🎯 Files differ between scenarios - investigate Nx cache invalidation',
+      ),
+    )
   } else {
-    console.log(ansis.green('🎯 No obvious differences found - may need deeper investigation'))
+    console.log(
+      ansis.green(
+        '🎯 No obvious differences found - may need deeper investigation',
+      ),
+    )
   }
 
   console.log(ansis.cyan('\n📋 RECOMMENDED NEXT STEPS:'))
   console.log(ansis.cyan('  1. Review detailed reports for specific issues'))
-  console.log(ansis.cyan('  2. Focus investigation based on critical/key findings'))
-  console.log(ansis.cyan('  3. Test specific hypotheses with targeted experiments'))
-  console.log(ansis.cyan('  4. Consider running investigation in actual CI environment'))
+  console.log(
+    ansis.cyan('  2. Focus investigation based on critical/key findings'),
+  )
+  console.log(
+    ansis.cyan('  3. Test specific hypotheses with targeted experiments'),
+  )
+  console.log(
+    ansis.cyan('  4. Consider running investigation in actual CI environment'),
+  )
 
   console.log(ansis.bold.green('\n✅ Master investigation completed!'))
 }
@@ -155,7 +179,11 @@ async function main() {
         break
 
       case 'quick':
-        console.log(ansis.yellow('🏃 Running quick investigation (cache + environment only)'))
+        console.log(
+          ansis.yellow(
+            '🏃 Running quick investigation (cache + environment only)',
+          ),
+        )
         await runCacheInvestigation()
         await runEnvironmentAnalysis()
         await generateSummaryReport()
@@ -184,15 +212,34 @@ async function main() {
     }
 
     const duration = Date.now() - startTime
-    console.log(ansis.green(`\n🎉 Investigation completed in ${Math.round(duration / 1000)}s`))
-
+    console.log(
+      ansis.green(
+        `\n🎉 Investigation completed in ${Math.round(duration / 1000)}s`,
+      ),
+    )
   } catch (error) {
     console.error(ansis.red('\n💥 Master investigation failed:'), error)
     console.log(ansis.yellow('\n💡 Try running individual tools with:'))
-    console.log(ansis.gray('  yarn tsx tasks/framework-tools/tarsync/debug-master.mts cache'))
-    console.log(ansis.gray('  yarn tsx tasks/framework-tools/tarsync/debug-master.mts environment'))
-    console.log(ansis.gray('  yarn tsx tasks/framework-tools/tarsync/debug-master.mts scheduling'))
-    console.log(ansis.gray('  yarn tsx tasks/framework-tools/tarsync/debug-master.mts basic'))
+    console.log(
+      ansis.gray(
+        '  yarn tsx tasks/framework-tools/tarsync/debug-master.mts cache',
+      ),
+    )
+    console.log(
+      ansis.gray(
+        '  yarn tsx tasks/framework-tools/tarsync/debug-master.mts environment',
+      ),
+    )
+    console.log(
+      ansis.gray(
+        '  yarn tsx tasks/framework-tools/tarsync/debug-master.mts scheduling',
+      ),
+    )
+    console.log(
+      ansis.gray(
+        '  yarn tsx tasks/framework-tools/tarsync/debug-master.mts basic',
+      ),
+    )
     process.exit(1)
   }
 }
