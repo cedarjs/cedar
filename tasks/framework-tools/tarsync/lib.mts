@@ -98,7 +98,7 @@ export async function getOptions(): Promise<Options> {
 }
 
 export async function buildTarballs() {
-  await $`yarn nx run-many -t build:pack --exclude create-cedar-app --skipNxCache --skipRemoteCache`
+  await $`yarn nx run-many -t build:pack --exclude create-cedar-app`
 }
 
 export async function moveTarballs(projectPath: string) {
