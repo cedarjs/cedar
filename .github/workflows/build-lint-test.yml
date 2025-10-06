@@ -37,3 +37,13 @@ jobs:
 
       - name: 🧪 Test
         run: yarn test-ci --minWorkers=1 --maxWorkers=${{ steps.cpu-cores.outputs.count }}
+
+      - name: 📁 Upload Cache Investigation Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-investigation-reports-${{ inputs.os }}-${{ github.run_id }}
+          path: |
+            packages/testing/.cache-investigation/*.json
+          retention-days: 30
+        continue-on-error: true
