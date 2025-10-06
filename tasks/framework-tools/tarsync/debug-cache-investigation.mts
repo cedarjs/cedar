@@ -202,7 +202,9 @@ class CacheInvestigator {
               // Sample a few files for deeper inspection
               const sampleFiles = files.slice(0, 5)
               for (const file of sampleFiles) {
-                const filePath = path.join(fullPath, file)
+                const fileName =
+                  typeof file === 'string' ? file : file.toString()
+                const filePath = path.join(fullPath, fileName)
                 try {
                   const fileStats = await fs.stat(filePath)
                   if (fileStats.isFile()) {
@@ -240,19 +242,13 @@ class CacheInvestigator {
   }
 
   private captureEnvironment(): Record<string, string> {
-    const relevantEnvVars = [
-      'CI',
-      'NODE_ENV',
-      'NX_CACHE_DIRECTORY',
-      'NX_DAEMON',
-      'NX_CLOUD_ACCESS_TOKEN',
-      'NX_SKIP_NX_CACHE',
-      'YARN_CACHE_FOLDER',
-    ]
-
-    const env: Record<string, string> = {}
-    for (const varName of relevantEnvVars) {
-      env[varName] = process.env[varName] || 'undefined'
+    const env: Record<string, string> = {
+      CI: process.env.CI || 'undefined',
+      NODE_ENV: process.env.NODE_ENV || 'undefined',
+      NX_CACHE_DIRECTORY: process.env.NX_CACHE_DIRECTORY || 'undefined',
+      NX_CLOUD_ACCESS_TOKEN: process.env.NX_CLOUD_ACCESS_TOKEN || 'undefined',
+      NX_SKIP_NX_CACHE: process.env.NX_SKIP_NX_CACHE || 'undefined',
+      YARN_CACHE_FOLDER: process.env.YARN_CACHE_FOLDER || 'undefined',
     }
 
     return env
@@ -287,7 +283,7 @@ class CacheInvestigator {
       } catch {
         state.daemonRunning = false
       }
-    } catch (error) {
+    } catch {
       // Nx state capture failed, but that's ok
     }
 
@@ -477,7 +473,7 @@ class CacheInvestigator {
 
   private async analyzeCacheBehavior(
     withCache: InvestigationReport,
-    withoutCache: InvestigationReport,
+    _withoutCache: InvestigationReport,
   ): Promise<void> {
     console.log(ansis.cyan('\n🗄️  Cache-Specific Analysis:'))
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
 import ansis from 'ansis'
-import { $, fs } from 'zx'
+import { $ } from 'zx'
 
 interface TaskExecution {
   taskId: string
@@ -34,9 +34,9 @@ interface SchedulingAnalysis {
 }
 
 class TaskSchedulingDebugger {
-  private taskExecutions: Map<string, TaskExecution> = new Map()
+  private taskExecutions = new Map<string, TaskExecution>()
   private executionLog: string[] = []
-  private startTime: number = 0
+  private startTime = 0
 
   async analyzeTaskScheduling(): Promise<void> {
     console.log(ansis.bold.blue('⚡ Nx Task Scheduling Analysis'))
@@ -276,7 +276,7 @@ class TaskSchedulingDebugger {
 
     // Trace backwards through dependencies
     const path: string[] = []
-    let current = lastTask
+    let current: TaskExecution | undefined = lastTask
 
     while (current) {
       path.unshift(current.taskId)
@@ -284,7 +284,8 @@ class TaskSchedulingDebugger {
       // Find the dependency that finished latest
       const deps = current.dependencies
         .map((dep) => this.taskExecutions.get(dep))
-        .filter(Boolean)
+        .filter(Boolean) as TaskExecution[]
+
       current =
         deps.reduce(
           (latest, dep) => {

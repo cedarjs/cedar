@@ -14,7 +14,10 @@ async function runCacheInvestigation() {
     await $`yarn tsx ./tasks/framework-tools/tarsync/debug-cache-investigation.mts`
     console.log(ansis.green('✅ Cache investigation completed'))
   } catch (error) {
-    console.log(ansis.red('❌ Cache investigation failed:'), error.message)
+    console.log(
+      ansis.red('❌ Cache investigation failed:'),
+      (error as Error).message,
+    )
   }
 }
 
@@ -24,7 +27,10 @@ async function runTaskSchedulingAnalysis() {
     await $`yarn tsx ./tasks/framework-tools/tarsync/debug-task-scheduling.mts`
     console.log(ansis.green('✅ Task scheduling analysis completed'))
   } catch (error) {
-    console.log(ansis.red('❌ Task scheduling analysis failed:'), error.message)
+    console.log(
+      ansis.red('❌ Task scheduling analysis failed:'),
+      (error as Error).message,
+    )
   }
 }
 
@@ -34,7 +40,10 @@ async function runEnvironmentAnalysis() {
     await $`yarn tsx ./tasks/framework-tools/tarsync/debug-env-differences.mts`
     console.log(ansis.green('✅ Environment analysis completed'))
   } catch (error) {
-    console.log(ansis.red('❌ Environment analysis failed:'), error.message)
+    console.log(
+      ansis.red('❌ Environment analysis failed:'),
+      (error as Error).message,
+    )
   }
 }
 
@@ -44,7 +53,10 @@ async function runBasicComparison() {
     await $`yarn tsx ./tasks/framework-tools/tarsync/debug-build.mts`
     console.log(ansis.green('✅ Basic debug comparison completed'))
   } catch (error) {
-    console.log(ansis.red('❌ Basic debug comparison failed:'), error.message)
+    console.log(
+      ansis.red('❌ Basic debug comparison failed:'),
+      (error as Error).message,
+    )
   }
 }
 
@@ -56,14 +68,16 @@ async function generateSummaryReport() {
     './environment-analysis-report.json',
   ]
 
-  let reports = []
+  const reports: { file: string; content: any }[] = []
 
   for (const file of reportFiles) {
     try {
       const report = await import(file)
       reports.push({ file, content: report.default || report })
     } catch (error) {
-      console.log(ansis.yellow(`⚠️  Could not load ${file}: ${error.message}`))
+      console.log(
+        ansis.yellow(`⚠️  Could not load ${file}: ${(error as Error).message}`),
+      )
     }
   }
 
@@ -80,16 +94,16 @@ async function generateSummaryReport() {
     console.log(ansis.yellow(`\n📄 ${file}:`))
 
     if (content.summary?.keyFindings) {
-      content.summary.keyFindings.forEach((finding) => {
+      content.summary.keyFindings.forEach((finding: any) => {
         keyFindings.push(`[${file}] ${finding}`)
       })
     }
 
     if (content.differences) {
       const critical = content.differences.filter(
-        (d) => d.severity === 'critical',
+        (d: any) => d.severity === 'critical',
       )
-      critical.forEach((c) => {
+      critical.forEach((c: any) => {
         criticalIssues.push(`[${file}] ${c.description}`)
       })
     }

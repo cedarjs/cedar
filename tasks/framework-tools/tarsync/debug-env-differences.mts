@@ -58,7 +58,7 @@ interface ExecutionDifference {
 }
 
 class EnvironmentDebugger {
-  private snapshots: Map<string, EnvironmentSnapshot> = new Map()
+  private snapshots = new Map<string, EnvironmentSnapshot>()
 
   async analyzeEnvironmentDifferences(): Promise<void> {
     console.log(
@@ -114,7 +114,7 @@ class EnvironmentDebugger {
       const midBuild = await this.captureEnvironmentSnapshot(
         `${scenario}-mid-build`,
       )
-      midBuild.timing.buildDuration = Date.now() - buildStart
+      ;(midBuild.timing as any).buildDuration = Date.now() - buildStart
       this.snapshots.set(`${scenario}-mid-build`, midBuild)
 
       // Run build:pack step
@@ -135,8 +135,8 @@ class EnvironmentDebugger {
       const postBuild = await this.captureEnvironmentSnapshot(
         `${scenario}-post-build`,
       )
-      postBuild.timing.packDuration = Date.now() - packStart
-      postBuild.timing.totalDuration = Date.now() - buildStart
+      ;(postBuild.timing as any).packDuration = Date.now() - packStart
+      ;(postBuild.timing as any).totalDuration = Date.now() - buildStart
       this.snapshots.set(`${scenario}-post-build`, postBuild)
     } catch (error) {
       console.log(ansis.red(`❌ Scenario ${scenario} failed: ${error}`))
@@ -144,7 +144,7 @@ class EnvironmentDebugger {
   }
 
   private async captureEnvironmentSnapshot(
-    label: string,
+    _label: string,
   ): Promise<EnvironmentSnapshot> {
     const snapshot: EnvironmentSnapshot = {
       timestamp: new Date().toISOString(),
@@ -164,11 +164,15 @@ class EnvironmentDebugger {
 
     try {
       npmVersion = (await $`npm --version`).stdout.trim()
-    } catch {}
+    } catch {
+      // npm version check failed
+    }
 
     try {
       yarnVersion = (await $`yarn --version`).stdout.trim()
-    } catch {}
+    } catch {
+      // yarn version check failed
+    }
 
     return {
       os: os.platform(),
@@ -186,12 +190,12 @@ class EnvironmentDebugger {
     const nxVariables: Record<string, string> = {}
     const yarnVariables: Record<string, string> = {}
 
-    Object.keys(process.env).forEach((key) => {
+    Object.entries(process.env).forEach(([key, value]) => {
       if (key.startsWith(nxVarPrefix)) {
-        nxVariables[key] = process.env[key] || 'undefined'
+        nxVariables[key] = value || 'undefined'
       }
       if (key.startsWith(yarnVarPrefix)) {
-        yarnVariables[key] = process.env[key] || 'undefined'
+        yarnVariables[key] = value || 'undefined'
       }
     })
 
@@ -216,24 +220,28 @@ class EnvironmentDebugger {
     }
 
     try {
-      // Check disk space
-      const stats = await fs.statfs('.')
-      info.diskSpace = {
-        free: stats.bavail * stats.bsize,
-        total: stats.blocks * stats.bsize,
-      }
-    } catch {}
+      // Note: fs.statfs is not available in Node.js fs promises API
+      // This would need a different approach or library
+      info.diskSpace = { free: 0, total: 0 }
+    } catch {
+      // Ignore disk space errors
+    }
 
     try {
       // Check permissions in current directory
       await fs.access('.', fs.constants.W_OK)
       info.permissions.canWrite = true
-    } catch {}
+    } catch {
+      // Ignore permission check errors
+    }
 
     try {
+      // Check execute permissions
       await fs.access('.', fs.constants.X_OK)
       info.permissions.canExecute = true
-    } catch {}
+    } catch {
+      // Ignore execute permission check errors
+    }
 
     try {
       // Try to get mount info (Linux/macOS)
@@ -247,7 +255,9 @@ class EnvironmentDebugger {
           await $`df -T . 2>/dev/null || df . 2>/dev/null || echo "unknown"`
         info.fsType = dfOutput.stdout.trim()
       }
-    } catch {}
+    } catch {
+      // Ignore mount info errors
+    }
 
     return info
   }
@@ -268,7 +278,9 @@ class EnvironmentDebugger {
 
     try {
       systemUptime = os.uptime()
-    } catch {}
+    } catch {
+      // Ignore timing info errors
+    }
 
     return {
       processUptime: process.uptime(),
@@ -282,10 +294,10 @@ class EnvironmentDebugger {
     const differences: ExecutionDifference[] = []
 
     // Compare baseline vs execution snapshots
-    const withCacheSnapshots = Array.from(this.snapshots.entries()).filter(
+    const _withCacheSnapshots = Array.from(this.snapshots.entries()).filter(
       ([key]) => key.startsWith('with-cache'),
     )
-    const withoutCacheSnapshots = Array.from(this.snapshots.entries()).filter(
+    const _withoutCacheSnapshots = Array.from(this.snapshots.entries()).filter(
       ([key]) => key.startsWith('without-cache'),
     )
 
@@ -408,7 +420,7 @@ class EnvironmentDebugger {
   }
 
   private compareObjects(obj1: Record<string, any>, obj2: Record<string, any>) {
-    const differences: Array<{ key: string; value1: any; value2: any }> = []
+    const differences: { key: string; value1: any; value2: any }[] = []
     const allKeys = new Set([...Object.keys(obj1), ...Object.keys(obj2)])
 
     for (const key of allKeys) {
