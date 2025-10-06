@@ -4065,6 +4065,7 @@ __metadata:
     "@types/babel-core": "npm:6.25.10"
     "@types/jest": "npm:29.5.14"
     "@types/node": "npm:20.19.17"
+    ansis: "npm:4.1.0"
     babel-jest: "npm:^29.7.0"
     concurrently: "npm:8.2.2"
     fast-glob: "npm:3.3.3"
