@@ -27,6 +27,7 @@ interface BuildStep {
     daemonRunning?: boolean
   }
   packageStates: Record<string, FileSnapshot>
+  snapshot: FileSnapshot
 }
 
 interface InvestigationReport {
@@ -35,6 +36,10 @@ interface InvestigationReport {
   nxLogs: string[]
   finalState: 'success' | 'failure'
   error?: string
+  summary?: {
+    totalDuration?: number
+    keyFindings?: string[]
+  }
 }
 
 class CacheInvestigator {
@@ -109,6 +114,9 @@ class CacheInvestigator {
   ): Promise<void> {
     console.log(ansis.cyan(`  🔍 Capturing step: ${stepName}`))
 
+    // Capture snapshot first
+    const snapshot = await this.capturePackageState('testing')
+
     const step: BuildStep = {
       step: stepName,
       timestamp: new Date().toISOString(),
@@ -116,6 +124,7 @@ class CacheInvestigator {
       environment: this.captureEnvironment(),
       nxState: await this.captureNxState(),
       packageStates: {},
+      snapshot,
     }
 
     // Capture BEFORE state
@@ -473,27 +482,156 @@ class CacheInvestigator {
 
   private async analyzeCacheBehavior(
     withCache: InvestigationReport,
-    _withoutCache: InvestigationReport,
+    withoutCache: InvestigationReport,
   ): Promise<void> {
     console.log(ansis.cyan('\n🗄️  Cache-Specific Analysis:'))
 
-    const cacheSteps = withCache.steps
-    for (const step of cacheSteps) {
-      console.log(ansis.yellow(`\n  📋 Cache state during ${step.step}:`))
-      console.log(`    Cache enabled: ${step.nxState.cacheEnabled}`)
-      console.log(
-        `    Cache directory: ${step.nxState.cacheDir || 'not found'}`,
-      )
-      console.log(`    Daemon running: ${step.nxState.daemonRunning}`)
+    // Compare cache behavior between scenarios
+    console.log(ansis.bold.yellow('\n📊 Cache Behavior Comparison:'))
 
-      if (step.nxState.cacheDir) {
-        try {
-          const cacheContents = await fs.readdir(step.nxState.cacheDir)
-          console.log(`    Cache entries: ${cacheContents.length}`)
-        } catch {
-          console.log(`    Cache entries: unable to read`)
+    const cacheSteps = withCache.steps
+    const noCacheSteps = withoutCache.steps
+
+    for (let i = 0; i < Math.max(cacheSteps.length, noCacheSteps.length); i++) {
+      const cacheStep = cacheSteps[i]
+      const noCacheStep = noCacheSteps[i]
+
+      if (cacheStep && noCacheStep) {
+        console.log(ansis.yellow(`\n  📋 Step: ${cacheStep.step}`))
+
+        // Compare cache states
+        const cacheEnabled = cacheStep.nxState.cacheEnabled
+        const noCacheEnabled = noCacheStep.nxState.cacheEnabled
+
+        if (cacheEnabled !== noCacheEnabled) {
+          console.log(ansis.green(`    ✓ Cache setting differs as expected:`))
+          console.log(`      With cache: ${cacheEnabled}`)
+          console.log(`      Without cache: ${noCacheEnabled}`)
+        }
+
+        // Compare cache directories
+        const cacheDir = cacheStep.nxState.cacheDir
+        const noCacheDir = noCacheStep.nxState.cacheDir
+
+        if (cacheDir !== noCacheDir) {
+          console.log(ansis.yellow(`    ⚠️  Cache directory differs:`))
+          console.log(`      With cache: ${cacheDir || 'not found'}`)
+          console.log(`      Without cache: ${noCacheDir || 'not found'}`)
+        }
+
+        // Compare daemon states
+        const cacheDaemon = cacheStep.nxState.daemonRunning
+        const noCacheDaemon = noCacheStep.nxState.daemonRunning
+
+        if (cacheDaemon !== noCacheDaemon) {
+          console.log(ansis.yellow(`    ⚠️  Daemon state differs:`))
+          console.log(`      With cache: ${cacheDaemon}`)
+          console.log(`      Without cache: ${noCacheDaemon}`)
+        }
+
+        // Analyze cache contents if available
+        if (cacheDir) {
+          try {
+            const cacheContents = await fs.readdir(cacheDir)
+            console.log(
+              `    📁 Cache entries with cache: ${cacheContents.length}`,
+            )
+
+            // Sample some cache entries for analysis
+            const sampleEntries = cacheContents.slice(0, 3)
+            for (const entry of sampleEntries) {
+              const entryPath = path.join(cacheDir, entry)
+              try {
+                const stat = await fs.stat(entryPath)
+                console.log(
+                  `      - ${entry}: ${stat.isDirectory() ? 'dir' : 'file'} (${stat.size} bytes)`,
+                )
+              } catch {
+                console.log(`      - ${entry}: unable to stat`)
+              }
+            }
+          } catch {
+            console.log(`    📁 Cache entries with cache: unable to read`)
+          }
+        }
+
+        // Compare file states between scenarios
+        const cacheFiles = Object.keys(cacheStep.snapshot.files)
+        const noCacheFiles = Object.keys(noCacheStep.snapshot.files)
+
+        const missingInCache = noCacheFiles.filter(
+          (f) => !cacheFiles.includes(f),
+        )
+        const extraInCache = cacheFiles.filter((f) => !noCacheFiles.includes(f))
+
+        if (missingInCache.length > 0) {
+          console.log(
+            ansis.red(
+              `    ❌ Files missing in cache scenario: ${missingInCache.length}`,
+            ),
+          )
+          missingInCache.slice(0, 3).forEach((file) => {
+            console.log(`      - ${file}`)
+          })
+        }
+
+        if (extraInCache.length > 0) {
+          console.log(
+            ansis.blue(
+              `    ➕ Extra files in cache scenario: ${extraInCache.length}`,
+            ),
+          )
+          extraInCache.slice(0, 3).forEach((file) => {
+            console.log(`      - ${file}`)
+          })
+        }
+
+        // Compare file contents for common files
+        const commonFiles = cacheFiles.filter((f) => noCacheFiles.includes(f))
+        let differentFiles = 0
+
+        for (const file of commonFiles.slice(0, 5)) {
+          // Check first 5 common files
+          const cacheFile = cacheStep.snapshot.files[file]
+          const noCacheFile = noCacheStep.snapshot.files[file]
+
+          if (cacheFile.exists && noCacheFile.exists) {
+            if (
+              cacheFile.size !== noCacheFile.size ||
+              cacheFile.mtime !== noCacheFile.mtime ||
+              cacheFile.checksum !== noCacheFile.checksum
+            ) {
+              differentFiles++
+            }
+          }
+        }
+
+        if (differentFiles > 0) {
+          console.log(
+            ansis.yellow(
+              `    ⚠️  Files with different content: ${differentFiles}/${Math.min(commonFiles.length, 5)} sampled`,
+            ),
+          )
         }
       }
+    }
+
+    // Summary of cache impact
+    console.log(ansis.bold.cyan('\n📈 Cache Impact Summary:'))
+
+    const withCacheDuration = withCache.summary?.totalDuration || 0
+    const withoutCacheDuration = withoutCache.summary?.totalDuration || 0
+
+    if (withCacheDuration && withoutCacheDuration) {
+      const speedup = (
+        ((withoutCacheDuration - withCacheDuration) / withoutCacheDuration) *
+        100
+      ).toFixed(1)
+      console.log(`  ⏱️  Performance impact: ${speedup}% faster with cache`)
+      console.log(`    With cache: ${(withCacheDuration / 1000).toFixed(2)}s`)
+      console.log(
+        `    Without cache: ${(withoutCacheDuration / 1000).toFixed(2)}s`,
+      )
     }
   }
 

@@ -4,6 +4,7 @@ import ansis from 'ansis'
 import { $, fs, os } from 'zx'
 
 interface EnvironmentSnapshot {
+  label: string
   timestamp: string
   platform: {
     os: string
@@ -80,7 +81,10 @@ class EnvironmentDebugger {
     await this.runWithEnvironmentCapture('without-cache')
 
     // Compare and analyze differences
-    await this.compareEnvironments()
+    const differences = await this.compareEnvironments()
+
+    // Generate and save report
+    await this.generateReport(differences)
   }
 
   private async runWithEnvironmentCapture(
@@ -144,9 +148,11 @@ class EnvironmentDebugger {
   }
 
   private async captureEnvironmentSnapshot(
-    _label: string,
+    label: string,
   ): Promise<EnvironmentSnapshot> {
+    console.log(ansis.gray(`    📸 Capturing environment snapshot: ${label}`))
     const snapshot: EnvironmentSnapshot = {
+      label,
       timestamp: new Date().toISOString(),
       platform: await this.capturePlatformInfo(),
       environment: await this.captureEnvironmentInfo(),
@@ -220,9 +226,65 @@ class EnvironmentDebugger {
     }
 
     try {
-      // Note: fs.statfs is not available in Node.js fs promises API
-      // This would need a different approach or library
-      info.diskSpace = { free: 0, total: 0 }
+      // Cross-platform disk space monitoring
+      const platform = os.platform()
+
+      if (platform === 'win32') {
+        // Windows: use wmic or PowerShell
+        try {
+          const result = await $`wmic logicaldisk get size,freespace,caption`
+          const lines = result.stdout.trim().split('\n')
+          // Parse the current drive info (simplified)
+          const currentDrive = process.cwd().charAt(0).toUpperCase()
+          for (const line of lines) {
+            if (line.includes(currentDrive + ':')) {
+              const parts = line.trim().split(/\s+/)
+              if (parts.length >= 3) {
+                info.diskSpace.free = parseInt(parts[1]) || 0
+                info.diskSpace.total = parseInt(parts[2]) || 0
+              }
+              break
+            }
+          }
+        } catch {
+          // Fallback: try PowerShell
+          try {
+            const psResult =
+              await $`powershell "Get-WmiObject -Class Win32_LogicalDisk | Select-Object Size,FreeSpace,DeviceID | ConvertTo-Json"`
+            const diskInfo = JSON.parse(psResult.stdout)
+            const currentDrive = process.cwd().charAt(0).toUpperCase() + ':'
+            const driveInfo = Array.isArray(diskInfo)
+              ? diskInfo.find((d) => d.DeviceID === currentDrive)
+              : diskInfo.DeviceID === currentDrive
+                ? diskInfo
+                : null
+
+            if (driveInfo) {
+              info.diskSpace.free = parseInt(driveInfo.FreeSpace) || 0
+              info.diskSpace.total = parseInt(driveInfo.Size) || 0
+            }
+          } catch {
+            // Windows disk space check failed
+          }
+        }
+      } else {
+        // Unix-like systems: use df command
+        try {
+          const result = await $`df -k .`
+          const lines = result.stdout.trim().split('\n')
+          if (lines.length >= 2) {
+            const stats = lines[1].split(/\s+/)
+            if (stats.length >= 4) {
+              const totalKB = parseInt(stats[1]) || 0
+              const availKB = parseInt(stats[3]) || 0
+              info.diskSpace.total = totalKB * 1024 // Convert KB to bytes
+              info.diskSpace.free = availKB * 1024
+            }
+          }
+        } catch {
+          // df command failed
+        }
+      }
     } catch {
       // Ignore disk space errors
     }
@@ -288,18 +350,27 @@ class EnvironmentDebugger {
     }
   }
 
-  private async compareEnvironments(): Promise<void> {
+  private async compareEnvironments(): Promise<ExecutionDifference[]> {
     console.log(ansis.bold.green('\n🔍 Environment Comparison Analysis'))
 
     const differences: ExecutionDifference[] = []
 
     // Compare baseline vs execution snapshots
-    const _withCacheSnapshots = Array.from(this.snapshots.entries()).filter(
+    const withCacheSnapshots = Array.from(this.snapshots.entries()).filter(
       ([key]) => key.startsWith('with-cache'),
     )
-    const _withoutCacheSnapshots = Array.from(this.snapshots.entries()).filter(
+    const withoutCacheSnapshots = Array.from(this.snapshots.entries()).filter(
       ([key]) => key.startsWith('without-cache'),
     )
+
+    // Log snapshot summary
+    console.log(ansis.cyan(`\n📊 Captured snapshots:`))
+    withCacheSnapshots.forEach(([_key, snapshot]) => {
+      console.log(`  ✓ ${snapshot.label} (${snapshot.timestamp})`)
+    })
+    withoutCacheSnapshots.forEach(([_key, snapshot]) => {
+      console.log(`  ✓ ${snapshot.label} (${snapshot.timestamp})`)
+    })
 
     // Compare corresponding snapshots
     const phases = ['pre-build', 'mid-build', 'post-build']
@@ -325,8 +396,7 @@ class EnvironmentDebugger {
     console.log(ansis.bold.cyan('\n📈 Overall Environment Analysis:'))
     this.analyzeOverallDifferences(differences)
 
-    // Generate detailed report
-    await this.generateEnvironmentReport(differences)
+    return differences
   }
 
   private findDifferences(
@@ -620,6 +690,57 @@ class EnvironmentDebugger {
     }
 
     return recommendations
+  }
+
+  private async generateReport(
+    differences: ExecutionDifference[],
+  ): Promise<void> {
+    console.log(ansis.cyan('\n📄 Generating environment analysis report...'))
+
+    const report = {
+      timestamp: new Date().toISOString(),
+      summary: {
+        totalDifferences: differences.length,
+        criticalDifferences: differences.filter(
+          (d) => d.severity === 'critical',
+        ).length,
+        highDifferences: differences.filter((d) => d.severity === 'high')
+          .length,
+        mediumDifferences: differences.filter((d) => d.severity === 'medium')
+          .length,
+        lowDifferences: differences.filter((d) => d.severity === 'low').length,
+        categories: {
+          environment: differences.filter((d) => d.category === 'environment')
+            .length,
+          filesystem: differences.filter((d) => d.category === 'filesystem')
+            .length,
+          process: differences.filter((d) => d.category === 'process').length,
+          timing: differences.filter((d) => d.category === 'timing').length,
+          platform: differences.filter((d) => d.category === 'platform').length,
+        },
+        keyFindings: differences
+          .filter((d) => d.severity === 'critical' || d.severity === 'high')
+          .map((d) => d.description)
+          .slice(0, 5), // Top 5 critical findings
+      },
+      differences,
+      snapshots: Object.fromEntries(this.snapshots.entries()),
+      recommendations: this.generateRecommendations(differences),
+    }
+
+    try {
+      await fs.writeFile(
+        './environment-analysis-report.json',
+        JSON.stringify(report, null, 2),
+      )
+      console.log(
+        ansis.green(
+          '✅ Environment analysis report saved to environment-analysis-report.json',
+        ),
+      )
+    } catch (error) {
+      console.log(ansis.red('❌ Failed to save environment report:'), error)
+    }
   }
 }
 
