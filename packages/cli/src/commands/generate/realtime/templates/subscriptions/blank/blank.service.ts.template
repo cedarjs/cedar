@@ -1,6 +1,6 @@
-import type { ${subscriptionInputType} } from 'types/graphql.js'
+import type { ${subscriptionInputType} } from 'types/graphql'
 
-import { logger } from 'src/lib/logger.js'
+import { logger } from 'src/lib/logger'
 import type { Publish${typeName}ChannelType } from 'src/subscriptions/${name}/${name}.service.js'
 
 export const ${subscriptionQueryName} = ({ id }) => [id]

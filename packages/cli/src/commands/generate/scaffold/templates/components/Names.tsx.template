@@ -1,4 +1,4 @@
-import type { Delete${singularPascalName}Mutation, Delete${singularPascalName}MutationVariables, Find${pluralPascalName} } from 'types/graphql.js'
+import type { Delete${singularPascalName}Mutation, Delete${singularPascalName}MutationVariables, Find${pluralPascalName} } from 'types/graphql'
 
 import { Link, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'

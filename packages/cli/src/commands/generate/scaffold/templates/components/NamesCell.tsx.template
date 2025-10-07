@@ -1,4 +1,4 @@
-${useClientDirective}import type { Find${pluralPascalName}, Find${pluralPascalName}Variables } from 'types/graphql.js'
+${useClientDirective}import type { Find${pluralPascalName}, Find${pluralPascalName}Variables } from 'types/graphql'
 
 import { Link, routes } from '@cedarjs/router'
 import type {

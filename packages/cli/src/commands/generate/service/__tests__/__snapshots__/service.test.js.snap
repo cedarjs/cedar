@@ -383,7 +383,7 @@ exports[`in typescript mode > creates a multi word service file 1`] = `
 "import type {
   QueryResolvers,
   UserProfileRelationResolvers,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { db } from 'src/lib/db'
 
@@ -574,7 +574,7 @@ exports[`in typescript mode > creates a single word service file 1`] = `
   QueryResolvers,
   MutationResolvers,
   UserRelationResolvers,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { db } from 'src/lib/db'
 
@@ -623,7 +623,7 @@ exports[`in typescript mode > creates a single word service file with CRUD actio
   QueryResolvers,
   MutationResolvers,
   PostRelationResolvers,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { db } from 'src/lib/db'
 
@@ -665,7 +665,7 @@ export const Post: PostRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a single word service file with a belongsTo relation 1`] = `
-"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql.js'
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
 
 import { db } from 'src/lib/db'
 
@@ -688,7 +688,7 @@ export const User: UserRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a single word service file with a hasMany relation 1`] = `
-"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql.js'
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
 
 import { db } from 'src/lib/db'
 
@@ -711,7 +711,7 @@ export const User: UserRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a single word service file with multiple relations 1`] = `
-"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql.js'
+"import type { QueryResolvers, UserRelationResolvers } from 'types/graphql'
 
 import { db } from 'src/lib/db'
 
