@@ -130,7 +130,10 @@ class TaskSchedulingDebugger {
       this.parseNxOutput(combinedOutput, captureStart)
     } catch (error) {
       // Even if the build fails, we want to analyze what happened
-      const errorOutput = error.stdout + '\n' + error.stderr
+      const errorOutput =
+        (error as { stdout?: string }).stdout +
+        '\n' +
+        (error as { stderr?: string }).stderr
       this.executionLog.push(`ERROR: ${errorOutput}`)
       this.parseNxOutput(errorOutput, captureStart)
     }
