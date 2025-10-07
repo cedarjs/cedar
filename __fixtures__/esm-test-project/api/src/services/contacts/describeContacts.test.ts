@@ -1,4 +1,4 @@
-import { db } from 'src/lib/db.js'
+import { db } from 'src/lib/db'
 
 import { contact, contacts, createContact } from './contacts.js'
 import type { StandardScenario } from './contacts.scenarios.js'
