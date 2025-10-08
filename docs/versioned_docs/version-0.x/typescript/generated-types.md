@@ -80,7 +80,7 @@ These generated types will use the query's name—in this case, `FindBlogPostQue
 import type {
   FindBlogPostQuery,
   FindBlogPostQueryVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 ```
 
 `FindBlogPostQuery` is the type of the data returned from the query (`{ title: string, body: string }`) and `FindBlogPostQueryVariables` is the type of the query's variables (`{ id: number }`).
@@ -95,7 +95,7 @@ Generated Services include types for query and mutation resolvers:
 
 ```ts title="api/src/services/posts.ts"
 // highlight-next-line
-import type { QueryResolvers, MutationResolvers } from 'types/graphql.js'
+import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
 import { db } from 'src/lib/db'
 

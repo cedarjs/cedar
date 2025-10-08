@@ -1,4 +1,4 @@
-import type { MutationResolvers } from 'types/graphql.js'
+import type { MutationResolvers } from 'types/graphql'
 
 import { setContext } from '@cedarjs/context'
 

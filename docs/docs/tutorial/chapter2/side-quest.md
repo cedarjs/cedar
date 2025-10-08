@@ -138,7 +138,7 @@ export const deletePost = ({ id }) => {
 
 ```javascript title="api/src/services/posts/posts.ts"
 import { db } from 'src/lib/db'
-import type { QueryResolvers, MutationResolvers } from 'types/graphql.js'
+import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
 export const posts: QueryResolvers['posts'] = () => {
   return db.post.findMany()

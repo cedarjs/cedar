@@ -27,7 +27,7 @@ Not only does `CellSuccessProps` type the data returned from the query, but it a
 import type {
   FindBlogPostQuery,
   FindBlogPostQueryVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 // highlight-next-line
 import type { CellSuccessProps } from '@cedarjs/web'
@@ -58,7 +58,7 @@ It takes `TVariables` as an optional generic parameter, which is useful if you w
 import type {
   FindBlogPostQuery,
   FindBlogPostQueryVariables
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 // highlight-next-line
 import type { CellFailureProps } from '@cedarjs/web'
@@ -82,7 +82,7 @@ Similar to `CellFailureProps`, but for the props of your Cell's `Loading` compon
 import type {
   FindBlogPostQuery,
   FindBlogPostQueryVariables
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 // highlight-next-line
 import type { CellLoadingProps } from '@cedarjs/web'

@@ -292,7 +292,7 @@ export const deleteContact = ({ id }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```js title="api/src/services/contacts/contacts.ts"
-import type { QueryResolvers, MutationResolvers } from 'types/graphql.js'
+import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
 import { db } from 'src/lib/db'
 
@@ -630,7 +630,7 @@ import {
 import {
   CreateContactMutation,
   CreateContactMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 // highlight-end
 
 const CREATE_CONTACT = gql`
@@ -842,7 +842,7 @@ import {
 import {
   CreateContactMutation,
   CreateContactMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 const CREATE_CONTACT = gql`
   mutation CreateContactMutation($input: CreateContactInput!) {
@@ -1144,7 +1144,7 @@ import {
 import {
   CreateContactMutation,
   CreateContactMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 const CREATE_CONTACT = gql`
   mutation CreateContactMutation($input: CreateContactInput!) {
@@ -1274,7 +1274,7 @@ export const createContact = ({ input }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```ts title="api/src/services/contacts/contacts.ts"
-import type { QueryResolvers, MutationResolvers } from 'types/graphql.js'
+import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
 // highlight-next-line
 import { validate } from '@cedarjs/api'
@@ -1452,7 +1452,7 @@ import {
 import {
   CreateContactMutation,
   CreateContactMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 const CREATE_CONTACT = gql`
   mutation CreateContactMutation($input: CreateContactInput!) {
@@ -1917,7 +1917,7 @@ import {
 import {
   CreateContactMutation,
   CreateContactMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 const CREATE_CONTACT = gql`
   mutation CreateContactMutation($input: CreateContactInput!) {

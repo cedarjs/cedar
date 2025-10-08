@@ -1,4 +1,4 @@
-import type { Produce } from 'types/graphql.js'
+import type { Produce } from 'types/graphql'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 

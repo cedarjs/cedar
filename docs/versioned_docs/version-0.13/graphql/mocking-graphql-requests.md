@@ -102,7 +102,7 @@ You can get stricter types by passing types when mocking the query, mutation and
 import type {
   UserProfileQuery,
   UserProfileQueryVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 mockGraphQLQuery<UserProfileQuery, UserProfileQueryVariables>(
   'UserProfileQuery',

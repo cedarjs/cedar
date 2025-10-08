@@ -108,7 +108,7 @@ registerFragment(gql`
 This makes the `BookInfo` available to use in your query:
 
 ```ts
-import type { GetBookDetails } from 'types/graphql.js'
+import type { GetBookDetails } from 'types/graphql'
 
 import { useQuery } from '@cedarjs/web'
 
@@ -213,7 +213,7 @@ This means that once the Apollo Client Cache has loaded the data needed for the 
 Also, anywhere the fragment component is rendered will be updated with the latest data if any of `useQuery` with uses the fragment received new data.
 
 ```ts
-import type { Book } from 'types/graphql.js'
+import type { Book } from 'types/graphql'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 
@@ -309,7 +309,7 @@ By including the `__typename` and the GraphQL Type for the mocked data object, y
 For example, consider the fragment `BookInfo` used by the query `GetBookDetails`.
 
 ```ts
-import type { Book } from 'types/graphql.js'
+import type { Book } from 'types/graphql'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 
@@ -324,7 +324,7 @@ const { useRegisteredFragment } = registerFragment(gql`
 ```
 
 ```ts
-import type { GetBookDetails } from 'types/graphql.js'
+import type { GetBookDetails } from 'types/graphql'
 
 import { useQuery } from '@cedarjs/web'
 

@@ -2,7 +2,7 @@ import type {
   EditPostById,
   UpdatePostInput,
   UpdatePostMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { navigate, routes } from '@cedarjs/router'
 import type {

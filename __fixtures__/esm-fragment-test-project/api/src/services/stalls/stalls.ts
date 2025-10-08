@@ -2,9 +2,9 @@ import type {
   QueryResolvers,
   MutationResolvers,
   StallRelationResolvers,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
-import { db } from 'src/lib/db.js'
+import { db } from 'src/lib/db'
 
 export const stalls: QueryResolvers['stalls'] = () => {
   return db.stall.findMany()

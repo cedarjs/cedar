@@ -1,4 +1,4 @@
-import type { FindContacts, FindContactsVariables } from 'types/graphql.js'
+import type { FindContacts, FindContactsVariables } from 'types/graphql'
 
 import { Link, routes } from '@cedarjs/router'
 import type {

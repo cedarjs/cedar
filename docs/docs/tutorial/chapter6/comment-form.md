@@ -224,7 +224,7 @@ export default CommentForm
 import type {
   CreateCommentMutation,
   CreateCommentMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 // highlight-end
 
 import {
@@ -371,7 +371,7 @@ import CommentForm from './CommentForm'
 import type {
   CreateCommentMutation,
   CreateCommentMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 // highlight-end
 
 export const generated = () => {
@@ -480,7 +480,7 @@ import { Link, routes } from '@cedarjs/router'
 import CommentForm from 'src/components/CommentForm'
 import CommentsCell from 'src/components/CommentsCell'
 
-import type { Post } from 'types/graphql.js'
+import type { Post } from 'types/graphql'
 
 const truncate = (text: string, length: number) => {
   return text.substring(0, length) + '...'
@@ -858,7 +858,7 @@ import { useState } from 'react'
 import type {
   CreateCommentMutation,
   CreateCommentMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import {
   Form,
@@ -1425,7 +1425,7 @@ describe('comments', () => {
 ```tsx title="api/src/services/comments/comments.test.ts"
 import { comments, createComment } from './comments.js'
 // highlight-next-line
-import { db } from 'src/lib/db.js'
+import { db } from 'src/lib/db'
 
 import type { StandardScenario } from './comments.scenarios.js'
 

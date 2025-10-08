@@ -2,9 +2,9 @@ import type {
   QueryResolvers,
   MutationResolvers,
   ProduceRelationResolvers,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
-import { db } from 'src/lib/db.js'
+import { db } from 'src/lib/db'
 
 export const produces: QueryResolvers['produces'] = () => {
   return db.produce.findMany()

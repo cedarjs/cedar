@@ -1,7 +1,7 @@
 // @ts-nocheck
 /* eslint-disable */
 
-import type { BazingaQuery } from 'types/graphql.js'
+import type { BazingaQuery } from 'types/graphql'
 
 import type { CellSuccessProps, CellFailureProps } from '@cedarjs/web'
 

@@ -42,7 +42,7 @@ export default Article
 ```tsx title="web/src/components/Article/Article.tsx"
 import { Link, routes } from '@cedarjs/router'
 
-import type { Post } from 'types/graphql.js'
+import type { Post } from 'types/graphql'
 
 // highlight-start
 const truncate = (text: string, length: number) => {
@@ -192,7 +192,7 @@ export const Success = ({ articles }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/ArticlesCell/ArticlesCell.tsx"
-import type { ArticlesQuery, ArticlesQueryVariables } from 'types/graphql.js'
+import type { ArticlesQuery, ArticlesQueryVariables } from 'types/graphql'
 
 import type {
   CellFailureProps,
