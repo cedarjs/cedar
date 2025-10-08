@@ -26,6 +26,10 @@ expect "Select your preferred language"
 # ❯ TypeScript
 send "\n"
 
+expect "Select your preferred project type"
+# ❯ ESM
+send "\n"
+
 expect "Do you want to initialize a git repo?"
 # ❯ Yes
 send "\n"
