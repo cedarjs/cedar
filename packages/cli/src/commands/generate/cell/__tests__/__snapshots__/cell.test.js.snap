@@ -771,10 +771,7 @@ describe('UserProfileCell', () => {
 `;
 
 exports[`TypeScript: generates list cells if list flag passed in 1`] = `
-"import type {
-  FindBazingaQuery,
-  FindBazingaQueryVariables,
-} from 'types/graphql'
+"import type { FindBazingaQuery, FindBazingaQueryVariables } from 'types/graphql'
 
 import type {
   CellSuccessProps,
