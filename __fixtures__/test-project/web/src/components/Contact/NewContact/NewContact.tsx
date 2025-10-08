@@ -2,7 +2,7 @@ import type {
   CreateContactMutation,
   CreateContactInput,
   CreateContactMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { navigate, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'

@@ -1,4 +1,4 @@
-import { FindBlogPostQuery } from 'types/graphql.js'
+import { FindBlogPostQuery } from 'types/graphql'
 
 import { Link, routes } from '@cedarjs/router'
 

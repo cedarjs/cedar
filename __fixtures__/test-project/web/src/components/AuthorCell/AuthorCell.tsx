@@ -1,7 +1,4 @@
-import type {
-  FindAuthorQuery,
-  FindAuthorQueryVariables,
-} from 'types/graphql.js'
+import type { FindAuthorQuery, FindAuthorQueryVariables } from 'types/graphql'
 
 import type {
   CellSuccessProps,
