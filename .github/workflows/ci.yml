@@ -229,7 +229,7 @@ jobs:
       - create-cedar-app
       - server-tests
       - background-jobs-e2e
-    if: failure() && contains(github.event.head_commit.message, '[investigate]')
+    if: failure()
 
     name: 🔍 Cache Investigation (on failure)
     runs-on: ubuntu-latest
@@ -274,6 +274,18 @@ jobs:
             environment-analysis-report.json
             task-scheduling-report.json
           retention-days: 30
+
+      - name: 🔧 Debug Investigation Failure
+        if: failure()
+        run: |
+          echo "=== Investigation Debug Info ==="
+          ls -la *-report.json || echo "No reports generated"
+          df -h
+          free -h
+          echo "=== Nx Cache Status ==="
+          ls -la .nx/cache || echo "No cache directory"
+          echo "=== Directory structure ==="
+          ls -la
 
   ci-status-check:
     needs:

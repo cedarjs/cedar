@@ -109,157 +109,23 @@ yarn tsx tasks/framework-tools/tarsync/debug-master.mts scheduling
 
 ## GitHub CI Integration
 
-### Setup for CI Investigation
+### Accessing Investigation Results
 
-**1. Create Investigation Workflow**
+**After a Failed CI Run**:
 
-Add `.github/workflows/cache-investigation.yml`:
-
-```yaml
-name: Cache Investigation
-on:
-  workflow_dispatch:
-    inputs:
-      investigation_type:
-        description: 'Type of investigation to run'
-        required: true
-        default: 'quick'
-        type: choice
-        options:
-          - quick
-          - full
-          - cache-only
-          - env-only
-
-jobs:
-  investigate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Run Cache Investigation
-        run: |
-          echo "🔍 Starting cache investigation: ${{ inputs.investigation_type }}"
-          case "${{ inputs.investigation_type }}" in
-            "quick")
-              yarn tsx tasks/framework-tools/tarsync/debug-master.mts quick
-              ;;
-            "full") 
-              yarn tsx tasks/framework-tools/tarsync/debug-master.mts all
-              ;;
-            "cache-only")
-              yarn tsx tasks/framework-tools/tarsync/debug-cache-investigation.mts
-              ;;
-            "env-only")
-              yarn tsx tasks/framework-tools/tarsync/debug-env-differences.mts
-              ;;
-          esac
-
-      - name: Upload Investigation Reports
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cache-investigation-reports
-          path: |
-            cache-investigation-report.json
-            environment-analysis-report.json
-          retention-days: 30
-
-      - name: Comment Results on Issue
-        if: github.event.issue.number
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            let comment = '## 🔍 Cache Investigation Results\n\n';
-
-            try {
-              if (fs.existsSync('cache-investigation-report.json')) {
-                const report = JSON.parse(fs.readFileSync('cache-investigation-report.json', 'utf8'));
-                comment += `**Cache Analysis**: ${report.summary?.keyFindings?.length || 0} key findings\n`;
-              }
-              if (fs.existsSync('environment-analysis-report.json')) {  
-                const envReport = JSON.parse(fs.readFileSync('environment-analysis-report.json', 'utf8'));
-                comment += `**Environment Analysis**: ${envReport.summary?.criticalDifferences || 0} critical differences\n`;
-              }
-              comment += '\n📁 Full reports available in workflow artifacts.';
-            } catch (e) {
-              comment += '❌ Investigation failed. Check workflow logs for details.';
-            }
-
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
-```
-
-**2. Add to Existing CI Workflow**
-
-Add investigation step to your main CI workflow:
-
-```yaml
-- name: Run Cache Investigation (on failure)
-  if: failure() && contains(github.event.head_commit.message, '[investigate]')
-  run: |
-    echo "🔍 Build failed, running cache investigation..."
-    yarn tsx tasks/framework-tools/tarsync/debug-master.mts quick
-  continue-on-error: true
-
-- name: Upload Debug Reports (on failure)
-  if: failure()
-  uses: actions/upload-artifact@v4
-  with:
-    name: debug-reports-${{ github.run_id }}
-    path: '*-report.json'
-```
-
-### Execution Options
-
-**Option 1: Manual Trigger**
-
-- Go to Actions → Cache Investigation → Run workflow
-- Select investigation type and run
-- Download artifacts when complete
-
-**Option 2: Automatic on Failure**
-
-- Add `[investigate]` to commit message
-- If CI fails, investigation runs automatically
-- Results uploaded as artifacts
-
-**Option 3: Issue-Triggered**
-
-- Comment `/investigate` on an issue
-- Investigation runs and posts results back to issue
-
-### Accessing Results
-
-**From Workflow UI**:
-
-1. Go to Actions → Select workflow run
-2. Download "cache-investigation-reports" artifact
-3. Unzip and examine JSON files
+1. Go to the failed workflow run in GitHub Actions
+2. Look for the "Cache Investigation" job
+3. Download the `debug-reports-{run-id}` artifact
+4. Unzip and examine the JSON files for analysis
 
 **From CLI** (with GitHub CLI):
 
 ```bash
-# List recent workflow runs
-gh run list --workflow="cache-investigation.yml"
+# List recent failed runs
+gh run list --status=failure
 
-# Download artifacts from specific run
-gh run download cache-investigation-reports < run-id > --name
+# Download artifacts from specific failed run
+gh run download <run-id> --name debug-reports-<run-id>
 ```
 
 ### CI-Specific Considerations
@@ -574,26 +440,7 @@ Investigation is successful if it identifies:
 
 **Goal**: Remove `--skipNxCache --skipRemoteCache` flags and restore fast, reliable CI builds.
 
-## Automatic Investigation Workflow
-
-### For Intermittent Issues (Recommended Approach)
-
-Since cache issues are intermittent, the automatic investigation in `@cedarjs/testing` is the best approach:
-
-1. **Let it Run**: The investigation runs automatically on every build - no action needed
-2. **Monitor Patterns**: Check `yarn cache:analyze` regularly to see if patterns emerge
-3. **Focus on Failures**: When failures occur, the data is automatically captured
-4. **Download CI Data**: Get investigation reports from failed CI runs via artifacts
-5. **Compare Patterns**: Use analysis tools to identify what's different between success/failure
-
-### Investigation Lifecycle
-
-**Week 1**: Collect baseline data from automatic investigation
-**Week 2**: Analyze patterns once enough data is collected  
-**Week 3**: Test hypotheses based on pattern analysis
-**Week 4**: Implement fixes and verify with continued monitoring
-
-### Troubleshooting the Investigation System
+## Troubleshooting the Investigation System
 
 **No reports generated**:
 
