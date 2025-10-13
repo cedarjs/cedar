@@ -35,6 +35,15 @@ function verifyDirectoryExists(dirPath: string, description: string) {
   console.log(`✓ ${description} directory exists: ${dirPath}`)
 }
 
+// Verify that required directories exist
+function verifyFileExists(filePath: string, description: string) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`ERROR: ${description} file does not exist: ${filePath}`)
+    process.exit(1)
+  }
+  console.log(`✓ ${description} file exists: ${filePath}`)
+}
+
 // 🔍 Cache Investigation: Capture pre-build state
 const preBuildSnapshot = await capturePreBuild()
 const buildStartTime = Date.now()
@@ -171,6 +180,11 @@ try {
   console.log('\nVerifying build output directories...')
   verifyDirectoryExists('./dist', 'Main dist')
   verifyDirectoryExists('./config', 'Config')
+  verifyDirectoryExists('./config/package.json', 'Config package.json')
+  verifyDirectoryExists(
+    './config/jest/jest-serial-runner.js',
+    'Config jest-serial-runner.js',
+  )
   verifyDirectoryExists('./dist/cjs', 'CJS dist')
   verifyDirectoryExists('./dist/cjs/config', 'CJS config')
 
