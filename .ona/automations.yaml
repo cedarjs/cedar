@@ -1,45 +1,45 @@
 services:
   dev-server:
-    name: RedwoodJS Development Server
-    description: Runs the RedwoodJS development server for both web and api sides
+    name: CedarJS Development Server
+    description: Runs the CedarJS development server for both web and api sides
     commands:
       start: |
         # Ensure corepack is enabled in service environment
         corepack enable
-        cd /workspaces/rw-test-app
-        NODE_ENV=development corepack yarn rw dev
+        cd /workspaces/cdr-test-app
+        NODE_ENV=development corepack yarn cedarjs dev
 
 tasks:
   setup-environment:
-    name: Setup RedwoodJS Environment
-    description: Setup RedwoodJS development environment (runs automatically after devcontainer starts)
+    name: Setup CedarJS Environment
+    description: Setup CedarJS development environment (runs automatically after devcontainer starts)
     triggeredBy:
       - postDevcontainerStart
     command: |
-      export RWFW_PATH="/workspaces/RedwoodGraphQL"
+      export RWFW_PATH="/workspaces/cedar"
       export REDWOOD_DISABLE_TELEMETRY=1
-      echo "Setting up RedwoodJS development environment..."
-      mkdir -p /workspaces/rw-test-app
-      cd /workspaces/RedwoodGraphQL
+      echo "Setting up CedarJS development environment..."
+      mkdir -p /workspaces/cdr-test-app
+      cd /workspaces/cedar
       echo "Cleaning up existing symlinks and cache..."
-      rm -rf node_modules/@redwoodjs
+      rm -rf node_modules/@cedarjs
       rm -rf node_modules/.cache
       rm -f yarn.lock
       corepack yarn cache clean --all 2>/dev/null || true
       echo "Installing framework dependencies..."
       corepack yarn install
       echo "Building test project..."
-      corepack yarn run build:test-project ../rw-test-app --typescript --link --verbose
-      cd /workspaces/rw-test-app
+      corepack yarn run build:test-project ../cdr-test-app --typescript --link --verbose
+      cd /workspaces/cdr-test-app
       sed -i "s/\(open *= *\).*/\1false/" redwood.toml
-      echo -e "\n\n\033[94m ======================================================\n\033[33m ⌛ RedwoodJS development environment is ready!\n Test app \"rw-test-app\" has been generated & linked with framework code.\n\n If you make changes to the framework:\n 1. \033[33mEnsure env vars are set \033[92mexport RWFW_PATH=\"/workspaces/RedwoodGraphQL\"\033[33m\n 2. \033[33mRun \033[92mcorepack yarn rwfw project:sync\033[33m to sync changes\n 3. \033[33mOr use the \033[92mSync Framework Changes\033[33m task from Ona dashboard\n\033[94m ======================================================\n\n"
-      # Open ports for RedwoodJS development servers
+      echo -e "\n\n\033[94m ======================================================\n\033[33m ⌛ CedarJS development environment is ready!\n Test app \"cdr-test-app\" has been generated & linked with framework code.\n\n If you make changes to the framework:\n 1. \033[33mEnsure env vars are set \033[92mexport RWFW_PATH=\"/workspaces/cedar\"\033[33m\n 2. \033[33mRun \033[92mcorepack yarn rwfw project:sync\033[33m to sync changes\n 3. \033[33mOr use the \033[92mSync Framework Changes\033[33m task from Ona dashboard\n\033[94m ======================================================\n\n"
+      # Open ports for CedarJS development servers
       echo "Opening ports for development servers..."
-      gitpod environment port open 8910 --name "RedwoodJS Web Server" --protocol https
-      gitpod environment port open 8911 --name "RedwoodJS API Server" --protocol https
+      gitpod environment port open 8910 --name "CedarJS Web Server" --protocol https
+      gitpod environment port open 8911 --name "CedarJS API Server" --protocol https
       echo "✅ Ports 8910 (Web) and 8911 (API) are now open with HTTPS"
       # Signal completion
-      touch /tmp/redwood-setup-complete
+      touch /tmp/cedar-setup-complete
       echo "✅ Setup task completed successfully"
 
   start-dev-after-setup:
@@ -50,13 +50,13 @@ tasks:
     command: |
       # Wait for setup to complete
       echo "Waiting for setup to complete..."
-      while [ ! -f /tmp/redwood-setup-complete ]; do
+      while [ ! -f /tmp/cedar-setup-complete ]; do
           sleep 2
       done
       echo "Setup completed, starting development server..."
       # Ensure ports are open before starting service
-      gitpod environment port open 8910 --name "RedwoodJS Web Server" --protocol https 2>/dev/null || true
-      gitpod environment port open 8911 --name "RedwoodJS API Server" --protocol https 2>/dev/null || true
+      gitpod environment port open 8910 --name "CedarJS Web Server" --protocol https 2>/dev/null || true
+      gitpod environment port open 8911 --name "CedarJS API Server" --protocol https 2>/dev/null || true
       gitpod automations service start dev-server
       echo "✅ Development server started"
 
@@ -66,14 +66,14 @@ tasks:
     triggeredBy:
       - manual
     command: |
-      export RWFW_PATH="/workspaces/RedwoodGraphQL"
-      cd /workspaces/rw-test-app
+      export RWFW_PATH="/workspaces/cedar"
+      cd /workspaces/cdr-test-app
       corepack yarn rwfw project:sync
       echo "Framework changes synced to test project"
 
   start-dev-server:
     name: Start Development Server
-    description: Start the RedwoodJS development server
+    description: Start the CedarJS development server
     triggeredBy:
       - manual
     command: |
@@ -81,7 +81,7 @@ tasks:
 
   stop-dev-server:
     name: Stop Development Server
-    description: Stop the RedwoodJS development server
+    description: Stop the CedarJS development server
     triggeredBy:
       - manual
     command: |
@@ -89,7 +89,7 @@ tasks:
 
   restart-dev-server:
     name: Restart Development Server
-    description: Restart the RedwoodJS development server
+    description: Restart the CedarJS development server
     triggeredBy:
       - manual
     command: |
@@ -103,9 +103,9 @@ tasks:
     triggeredBy:
       - manual
     command: |
-      echo "Opening RedwoodJS development ports with HTTPS..."
-      gitpod environment port open 8910 --name "RedwoodJS Web Server" --protocol https
-      gitpod environment port open 8911 --name "RedwoodJS API Server" --protocol https
+      echo "Opening CedarJS development ports with HTTPS..."
+      gitpod environment port open 8910 --name "CedarJS Web Server" --protocol https
+      gitpod environment port open 8911 --name "CedarJS API Server" --protocol https
       echo "✅ Ports opened successfully with HTTPS protocol"
       gitpod environment port list
 
@@ -115,7 +115,7 @@ tasks:
     triggeredBy:
       - manual
     command: |
-      echo "Closing RedwoodJS development ports..."
+      echo "Closing CedarJS development ports..."
       gitpod environment port close 8910
       gitpod environment port close 8911
       echo "✅ Ports closed successfully"

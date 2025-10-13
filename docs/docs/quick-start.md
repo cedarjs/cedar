@@ -57,7 +57,7 @@ For all the details, see the [CLI reference](cli-commands.md).
 
 The fastest way to start a new Cedar project is to use Ona's (formerly Gitpod) cloud development environment ([additional documentation for working with Ona](./how-to/using-ona)).
 
-[![Run in Ona](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/cedarjs/starter)
+[![Run in Ona](https://ona.com/run-in-ona.svg)](https://app.ona.com/#https://github.com/cedarjs/starter)
 
 ## Prisma and the database
 
