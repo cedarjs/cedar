@@ -1,18 +1,18 @@
 {
-  "name": "RedwoodGraphQL",
+  "name": "CedarJS",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "workspaceFolder": "/workspaces/RedwoodGraphQL",
+  "workspaceFolder": "/workspaces/cedar",
   "forwardPorts": [8910, 8911],
   "portsAttributes": {
     "8910": {
-      "label": "RedwoodJS Web",
+      "label": "CedarJS Web",
       "onAutoForward": "notify"
     },
     "8911": {
-      "label": "RedwoodJS API",
+      "label": "CedarJS API",
       "onAutoForward": "ignore"
     }
   },
