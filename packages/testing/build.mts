@@ -180,8 +180,8 @@ try {
   console.log('\nVerifying build output directories...')
   verifyDirectoryExists('./dist', 'Main dist')
   verifyDirectoryExists('./config', 'Config')
-  verifyDirectoryExists('./config/package.json', 'Config package.json')
-  verifyDirectoryExists(
+  verifyFileExists('./config/package.json', 'Config package.json')
+  verifyFileExists(
     './config/jest/jest-serial-runner.js',
     'Config jest-serial-runner.js',
   )
