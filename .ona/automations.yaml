@@ -67,7 +67,7 @@ tasks:
       - manual
     command: |
       export RWFW_PATH="/workspaces/cedar"
-      cd /workspaces/rw-test-app
+      cd /workspaces/cdr-test-app
       corepack yarn rwfw project:sync
       echo "Framework changes synced to test project"
 
