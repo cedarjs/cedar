@@ -14,7 +14,6 @@
     "cedarjs": "./dist/bins/cedarjs.js",
     "cedarjs-api-server-watch": "./dist/bins/cedarjs-api-server-watch.js",
     "cedarjs-serve-api": "./dist/bins/cedarjs-serve-api.js",
-    "cj": "./dist/bins/cedarjs.js",
     "cross-env": "./dist/bins/cross-env.js",
     "eslint": "./dist/bins/eslint.js",
     "jest": "./dist/bins/jest.js",
