@@ -2,7 +2,7 @@
 description: Setup and implementation guide for GraphQL Subscriptions and Live Queries in Cedar apps
 ---
 
-# Realtime (Subscriptions and Live Queries)
+# Realtime (GraphQL Subscriptions and Live Queries)
 
 Realtime in Cedar is implemented using GraphQL Subscriptions and Live Queries.
 
