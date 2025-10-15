@@ -13,7 +13,7 @@ to maintain a long-running connection between the client and server.
 
 :::info
 
-This means that your cannot use Realtime when deploying to Netlify or Vercel.
+This means that you cannot use Realtime when deploying to Netlify or Vercel.
 
 See one of Cedar's many [other Deploy providers](./deploy/introduction.md), and
 the [Docker setup](./docker.md) for good measure.
@@ -66,7 +66,7 @@ the list type as the items are available.
 
 :::info
 Preview support for the `@stream` directive was added in Apollo Client
-v4.1.0-alpha.0 is currently **not** available in Cedar (as of 2025-10-15).
+v4.1.0-alpha.0, but is currently **not** available in Cedar (as of 2025-10-15).
 
 https://github.com/apollographql/apollo-feature-requests/issues/3
 :::
