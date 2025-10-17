@@ -247,7 +247,7 @@ type Subscription {
 
 ### Countdown Timer Example
 
-Counts down from a starting values by an interval.
+Counts down from a starting value by an interval.
 
 ```graphql
 subscription CountdownFromInterval {

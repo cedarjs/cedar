@@ -16,30 +16,32 @@ export type NewMessageChannel = {
 export type NewMessageChannelType = PubSub<NewMessageChannel>
 
 /**
- * To test this NewMessage subscription, run the following in one GraphQL Playground to subscribe:
+ * To test this NewMessage subscription, run the following in one GraphQL
+ * Playground to subscribe:
  *
  * subscription ListenForNewMessagesInRoom {
  *   newMessage(roomId: "1") {
- *     body
  *     from
+ *     body
  *   }
  * }
  *
  *
- * And run the following in another GraphQL Playground to publish and send a message to the room:
+ * And run the following in another GraphQL Playground to publish and send a
+ * message to the room:
  *
  * mutation SendMessageToRoom {
  *   sendMessage(input: {roomId: "1", from: "hello", body: "bob"}) {
- *     body
  *     from
+ *     body
  *   }
  * }
  */
 const newMessage = {
   newMessage: {
     subscribe: (
-      _,
-      { roomId },
+      _: unknown,
+      { roomId }: { roomId: string },
       { pubSub }: { pubSub: NewMessageChannelType }
     ) => {
       logger.debug({ roomId }, 'newMessage subscription')
