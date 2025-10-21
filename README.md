@@ -75,8 +75,6 @@ application, here's what you get with Cedar:
 
 ### Who Is Cedar For?
 
-Cedar is ideal for:
-
 **Startups** that need to move fast and iterate quickly. **Solo developers** who
 want to build full-stack apps without managing complex tooling. **Development
 teams** that value standardization and clear conventions. **Companies**
