@@ -170,16 +170,12 @@ what you use so I know what to keep and what to remove!
 
 ## Documentation
 
-0.x releases of CedarJS will be fully compatible with RedwoodJS v8.6, so the
-best documentation for CedarJS is actually still the RedwoodJS documentation,
-which I have a copy of here: https://cedarjs.com/docs.
-I have made a few edits and updates to it, but it's still mostly the same as
-[the original](https://redwoodjs.com/docs).
+0.x releases of CedarJS will be fully compatible with RedwoodJS v8.6.
+
+The documentation for CedarJS is located <https://cedarjs.com/docs>.
 
 The only thing you'll have to adjust are the package names and replace every
 `@redwoodjs` package with a `@cedarjs` package of the same name.
-
-There will be no specific documentation written for CedarJS for now.
 
 ## The CedarJS Team
 
