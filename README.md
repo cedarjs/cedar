@@ -13,18 +13,70 @@
 
 ## About
 
-CedarJS is a fork of the [RedwoodJS](https://redwoodjs.com/) framework with the
-goal of taking it into the modern web development era with a smooth transition
-path for existing RedwoodJS applications.
+CedarJS is an opinionated, full-stack React framework that makes building web
+applications fast and enjoyable. It includes everything you need: React for the
+frontend, GraphQL for the API, Prisma for the database, and built-in support
+for authentication, testing, and deployment.
 
-CedarJS is a reliable, modern, and actively maintained full-stack React
-framework used in production by both large and small companies.
+CedarJS is a fork of the [RedwoodJS](https://redwoodjs.com/) framework,
+actively maintained and used in production by companies of all sizes. With
+active development focused on modern web standards and developer experience,
+Cedar is evolving with new features and improvements that aren't available in
+RedwoodJS.
 
 CedarJS would obviously not be where it is today without the vision and heroic
 efforts of the RedwoodJS founders, maintainers and community.
 
 > cedar has become a powerful symbol of strength and revitalization\
 > _— https://indigenousfoundations.arts.ubc.ca/cedar/_
+
+## Why Cedar?
+
+### For RedwoodJS Users
+
+If you're currently using RedwoodJS, here's why you might want to consider
+Cedar:
+
+- **Active Maintenance**: Cedar is actively maintained by developers who use it
+  in production daily. New features, bug fixes, and security updates are
+  consistently delivered.
+- **New Features**: Cedar includes improvements and features that aren't
+  available in RedwoodJS, with more coming regularly.
+- **Modern Standards**: Moving toward ESM-only packages and modern JavaScript
+  standards to future-proof your applications.
+- **Smooth Migration**: Cedar maintains backward compatibility with RedwoodJS
+  v8.6, making migration straightforward with a clear upgrade path.
+
+### For Everyone Else
+
+Whether you're building a startup MVP, a departmental tool, or a full
+production application, Cedar offers:
+
+- **Zero Boilerplate**: Start with a working app that includes routing,
+  database setup, authentication, and testing—all configured and ready to go.
+- **Fast Setup**: Get from zero to deployed application with a database in
+  minutes, not days.
+- **One Language**: Keep your entire stack in TypeScript/JavaScript. No context
+  switching between languages or separate teams for frontend and backend.
+- **Opinionated but Flexible**: Cedar makes architectural decisions for you,
+  but doesn't lock you in. You have full control over your code and deployment.
+- **Deploy Anywhere**: Host on Vercel, Netlify, AWS, Render, or your own
+  servers. Switch providers easily without major rewrites.
+- **Production Ready**: Used by companies in production with a mature ecosystem
+  and comprehensive documentation.
+
+### Who Is Cedar For?
+
+Cedar is ideal for:
+
+- **Startups** that need to move fast and iterate quickly
+- **Solo developers** who want to build full-stack apps without managing
+  complex tooling
+- **Development teams** that value standardization and clear conventions
+- **Companies** transitioning from RedwoodJS or looking for an actively
+  maintained full-stack framework
+- **Anyone** who wants to focus on building features rather than configuring
+  build tools and infrastructure
 
 ## Migrating from RedwoodJS to CedarJS
 
