@@ -108,11 +108,6 @@ infrastructure
   and `plugins: [cedar()],` instead of the older
   `import redwood from '@redwoodjs/vite';` and `plugins: [redwood()],`
 
-### Unsupported
-
-CedarJS doesn't have the equivalent of Redwood Studio yet. So Studio will not
-work for now. Let me know if that's something you use and need.
-
 ## Roadmap
 
 ### Cleanup
@@ -134,13 +129,13 @@ what you use so I know what to keep and what to remove!
 
 ### Future Proofing
 
-- [ ] Make all packages ESM only where possible and ESM+CJS where needed to
+- [x] Make all packages ESM only where possible and ESM+CJS where needed to
       keep compatibility with existing RW apps. Packages still to convert:
   - [x] `@cedarjs/cli`
-  - [ ] `@cedarjs/fastify-web`
-  - [ ] `@cedarjs/api-server`
-  - [ ] `@cedarjs/api`
-  - [ ] etc. Full list: https://github.com/cedarjs/cedar/issues/19
+  - [x] `@cedarjs/fastify-web`
+  - [x] `@cedarjs/api-server`
+  - [x] `@cedarjs/api`
+  - [x] etc. Full list: https://github.com/cedarjs/cedar/issues/19
 - [ ] Future major version: Make all packages ESM only
 - [ ] Future major version: Make new Cedar apps ESM only
 - [ ] Future major version: Make it possible to switch existing Cedar apps to
@@ -148,7 +143,7 @@ what you use so I know what to keep and what to remove!
 - [ ] Enable strict mode for new Cedar TypeScript apps.
 - [ ] Upgrade to Node 24
 - [x] Setup dependabot/renovate to automatically merge PRs that pass all checks
-- [ ] Move to Vitest for Cedar apps to prepare for ESM support
+- [x] Move to Vitest for Cedar ESM apps
 
 ### Package Updates
 
