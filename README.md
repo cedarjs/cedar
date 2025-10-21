@@ -170,12 +170,17 @@ what you use so I know what to keep and what to remove!
 
 ## Documentation
 
-0.x releases of CedarJS will be fully compatible with RedwoodJS v8.6.
+0.x releases of CedarJS will be fully compatible with RedwoodJS v8.6, so the
+best documentation for CedarJS is actually still the RedwoodJS documentation,
+which I have a copy of here: https://cedarjs.com/docs.
+I have made a few edits and updates to it, but it's still mostly the same as
+the original Redwood docs. Unfortunately they're not available at their old url
+anymore, but their sourcs are still here:
+https://github.com/redwoodjs/graphql/tree/main/docs
 
-The documentation for CedarJS is located <https://cedarjs.com/docs>.
-
-The only thing you'll have to adjust are the package names and replace every
-`@redwoodjs` package with a `@cedarjs` package of the same name.
+The only thing you'll have to adjust when reading, and copying code examples
+from the docs, are the package names and replace every `@redwoodjs` package with
+a `@cedarjs` package of the same name.
 
 ## The CedarJS Team
 
