@@ -18,9 +18,9 @@ applications fast and enjoyable. It includes everything you need: React for the
 frontend, GraphQL for the API, Prisma for the database, and built-in support
 for authentication, testing, and deployment.
 
-CedarJS is a fork of the [RedwoodJS](https://redwoodjs.com/) framework,
-actively maintained and used in production by companies of all sizes. With
-active development focused on modern web standards and developer experience,
+CedarJS is a fork of the [RedwoodJS GraphQL](https://github.com/redwoodjs/graphql)
+framework, actively maintained and used in production by companies of all sizes.
+With active development focused on modern web standards and developer experience,
 Cedar is evolving with new features and improvements that aren't available in
 RedwoodJS.
 
