@@ -195,11 +195,11 @@ export default function Home() {
           <strong>Solo developers</strong> who want to build full-stack apps
           without managing complex tooling. <strong>Development teams</strong>{' '}
           that value standardization and clear conventions.{' '}
-          <strong>Companies</strong>
-          transitioning from RedwoodJS or looking for an actively maintained
-          full-stack framework with a dedicated API layer. Or just about{' '}
-          <strong>anyone</strong> who wants to focus on building features rather
-          than configuring build tools and infrastructure.
+          <strong>Companies</strong> transitioning from RedwoodJS or looking for
+          an actively maintained full-stack framework with a dedicated API
+          layer. Or just about <strong>anyone</strong> who wants to focus on
+          building features rather than configuring build tools and
+          infrastructure.
         </p>
         <div style={{ textAlign: 'center', marginBlock: '30px' }}>
           <p>Please star the project on GitHub!</p>
