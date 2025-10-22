@@ -4,7 +4,9 @@
   "description": "Storybook for CedarJS",
   "keywords": [
     "Storybook",
+    "storybook-addon",
     "Cedar",
+    "CedarJS",
     "React",
     "Vite"
   ],
