@@ -839,7 +839,7 @@ async function createRedwoodApp() {
       '',
       ` ⚡️ ${RedwoodStyling.redwood(
         'Get up and running fast with this Quick Start guide',
-      )}: https://redwoodjs.com/quick-start`,
+      )}: https://cedarjs.com/docs/quick-start`,
       '',
       `${RedwoodStyling.header(`Fire it up!`)} 🚀`,
       '',
