@@ -128,11 +128,11 @@ export default function Home() {
           </li>
           <li>
             Cedar includes improvements and features that aren&apos;t available
-            in RedwoodJS, like
+            in RedwoodJS, like{' '}
             <a href="https://cedarjs.com/docs/background-jobs/#recurring-jobs">
               Recurring Jobs
             </a>{' '}
-            and
+            and{' '}
             <a href="https://github.com/cedarjs/cedar/tree/f824d9dbd87965fa96c9b7a06f62a14dc7f5b0a1/packages/create-cedar-app/templates/esm-ts">
               experimental ESM support
             </a>
