@@ -67,14 +67,14 @@ export async function runScriptFunction({
             if (importer.startsWith(apiImportBase)) {
               const apiImportSrc = importStatementPath(getPaths().api.src)
               let resolvedId = id.replace('src', apiImportSrc)
-              if (importer.endsWith('.ts')) {
+              if (importer.endsWith('.ts') || importer.endsWith('.tsx')) {
                 resolvedId = resolvedId.replace(/\.jsx?$/, '')
               }
               return { id: resolvedId }
             } else if (importer.startsWith(webImportBase)) {
               const webImportSrc = importStatementPath(getPaths().web.src)
               let resolvedId = id.replace('src', webImportSrc)
-              if (importer.endsWith('.ts')) {
+              if (importer.endsWith('.ts') || importer.endsWith('.tsx')) {
                 resolvedId = resolvedId.replace(/\.jsx?$/, '')
               }
               return { id: resolvedId }
