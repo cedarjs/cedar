@@ -41,7 +41,7 @@ const parseArgs = (argv: string[]) => {
   const parsed: Record<string, any> = yargs(commandString)
     .usage(
       'Starts the CedarJS Jobs runner to process background jobs\n\n' +
-        'Usage: cdr jobs <command> [options]',
+        'Usage: rw jobs <command> [options]',
     )
     .command('work', 'Start a worker and process jobs')
     .command('workoff', 'Start a worker and exit after all jobs processed')
@@ -51,19 +51,19 @@ const parseArgs = (argv: string[]) => {
     .command('clear', 'Clear the job queue')
     .demandCommand(1, 'You must specify a mode to start in')
     .example(
-      'cdr jobs work',
+      'rw jobs work',
       'Start the job workers using the job config and work on jobs until ' +
         'manually stopped',
     )
     .example(
-      'cdr jobs start',
+      'rw jobs start',
       'Start the job workers using the job config and detach, running in ' +
         'daemon mode',
     )
     .help()
     .parse(commandString, (_err: any, _argv: any, output: any) => {
       if (output) {
-        const newOutput = output.replaceAll('rw-jobs.js', 'cdr jobs')
+        const newOutput = output.replaceAll('rw-jobs.js', 'rw jobs')
         console.log(newOutput)
       }
     })
@@ -230,11 +230,9 @@ const findWorkerProcesses = async (id?: number): Promise<number[]> => {
           : platform === 'linux'
             ? 'ps -A'
             : ''
-
     if (cmd === '') {
       resolve([])
     }
-
     exec(cmd, function (err, stdout) {
       if (err) {
         reject(err)
