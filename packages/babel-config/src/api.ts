@@ -109,11 +109,12 @@ export const getApiSideBabelPlugins = ({
           opts: unknown,
         ) {
           // To support imports like `import { logger } from './logger.js'` in
-          // data-migrate in TypeScript projects (where the actual source file
-          // is logger.ts) we have to rewrite the extension
+          // data-migrate and prerender in TypeScript projects (where the actual
+          // source file is logger.ts) we have to rewrite the extension
+          const isDataMigrate = process.argv[2] === 'data-migrate'
+          const isPrerender = process.argv[2] === 'prerender'
           const importPath =
-            /.*\/.*\.js$/.test(sourcePath) &&
-            process.argv.includes('data-migrate')
+            /.*\/.*\.js$/.test(sourcePath) && (isDataMigrate || isPrerender)
               ? sourcePath.replace(/\.js$/, '')
               : sourcePath
 

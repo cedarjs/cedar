@@ -16,7 +16,8 @@ it was related.
 
 In `getApiSideBabelPlugins()` (as mentioned in that file above), we remove .js
 file extensions to let babel figure out what file to actually import. We can't
-do that for dynamic imports though, because they always need the file extension.
+do that for dynamic imports though, because they always need the file extension
+when Node is running the file.
 Keeping it around, however, breaks data migrations with an error like this:
 
 ```
@@ -68,6 +69,11 @@ CedarJS currently have a few different places where code transformation happens:
 - exec
 - prerender
 
-Only data-migrate uses babel to execute source files directly. And it only does
-so for CJS projects. As soon as we move to ESM only, this will no longer be
-necessary.
+Only data-migrate and prerender uses babel to execute source files directly. And
+they only do so for CJS projects. As soon as we move to ESM only, all of this
+will be much simpler
+
+prerender executes routeHooks, but it does so using `exec`, and that's not using
+babel's require hook (it's using vite-node). But prerender _also_ dynamically
+imports the user's graphql handler. And this is done with babel (in CJS
+projects). So we need to have the same behavior as for data-migrate.
