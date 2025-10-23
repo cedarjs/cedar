@@ -24,5 +24,5 @@ using vite-node, and vite-node runs the source files, not built files. And so
 the extension should be empty, to let vite-node guess the file extension, or .ts
 to explicitly tell it.
 
-The solution is to update our custom resolver in packages/cli/src/lib/exec.js to
-remove .js imports and let vite figure out the file extension:
+The solution is to update our custom resolver in `packages/cli/src/lib/exec.js`
+to remove `.js` from imports and let Vite figure out the file extension.
