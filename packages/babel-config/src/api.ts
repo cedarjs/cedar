@@ -114,7 +114,7 @@ export const getApiSideBabelPlugins = ({
           const importPath =
             /.*\/.*\.js$/.test(sourcePath) &&
             process.argv.includes('data-migrate')
-              ? sourcePath.replace(/\.js$/, '.ts')
+              ? sourcePath.replace(/\.js$/, '')
               : sourcePath
 
           const resolvedPath = resolvePath(importPath, currentFile, opts)
