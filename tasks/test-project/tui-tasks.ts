@@ -768,6 +768,20 @@ export async function apiTasks(
         )
 
         await generateScaffold('contacts')
+
+        const contactsServicePath = fullPath(
+          'api/src/services/contacts/contacts',
+        )
+        fs.writeFileSync(
+          contactsServicePath,
+          fs
+            .readFileSync(contactsServicePath, 'utf-8')
+            .replace(
+              "import { db } from 'src/lib/db'",
+              '// Testing aliased imports with extensions\n' +
+                "import { db } from 'src/lib/db.js'",
+            ),
+        )
       },
     },
     {
