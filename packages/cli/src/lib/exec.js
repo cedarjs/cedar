@@ -61,8 +61,9 @@ export async function runScriptFunction({
             // from scripts/ because it doesn't know what the src/ alias is.
             // So we have to tell it to use the correct path based on what file
             // is doing the importing.
-            // To support both imports like 'src/lib/db.js' in ts files we need
-            // to have special treatment for the .js extension.
+            // Also, to support both imports like 'src/lib/db.js' and
+            // 'src/lib/db' in ts files we need to have special treatment for
+            // the .js extension.
             if (importer.startsWith(apiImportBase)) {
               const apiImportSrc = importStatementPath(getPaths().api.src)
               let resolvedId = id.replace('src', apiImportSrc)
