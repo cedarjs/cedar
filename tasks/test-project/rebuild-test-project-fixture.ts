@@ -421,7 +421,10 @@ async function runCommand() {
       fs.mkdirSync(nestedPath, { recursive: true })
       fs.writeFileSync(
         path.join(nestedPath, 'myNestedScript.ts'),
-        'export default async () => {\n' +
+        "import { contacts } from 'api/src/services/contacts/contacts'\n" +
+          '\n' +
+          'export default async () => {\n' +
+          '  const _allContacts = await contacts()\n' +
           "  console.log('Hello from myNestedScript.ts')\n" +
           '}\n\n',
       )
