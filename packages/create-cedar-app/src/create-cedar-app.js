@@ -94,18 +94,18 @@ async function executeCompatibilityCheck(templateDir) {
           `  Please use tools like nvm or corepack to change to a compatible version.`,
           `  See: ${terminalLink(
             'How to - Using nvm',
-            'https://redwoodjs.com/docs/how-to/using-nvm',
+            'https://cedarjs.com/docs/how-to/using-nvm',
             {
               fallback: () =>
-                'How to - Using nvm https://redwoodjs.com/docs/how-to/using-nvm',
+                'How to - Using nvm https://cedarjs.com/docs/how-to/using-nvm',
             },
           )}`,
           `  See: ${terminalLink(
             'Tutorial - Prerequisites',
-            'https://redwoodjs.com/docs/tutorial/chapter1/prerequisites',
+            'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
             {
               fallback: () =>
-                'Tutorial - Prerequisites https://redwoodjs.com/docs/tutorial/chapter1/prerequisites',
+                'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
             },
           )}`,
         ].join('\n'),
@@ -128,18 +128,18 @@ async function executeCompatibilityCheck(templateDir) {
         `  Please use tools like nvm or corepack to change to a compatible version.`,
         `  See: ${terminalLink(
           'How to - Use nvm',
-          'https://redwoodjs.com/docs/how-to/using-nvm',
+          'https://cedarjs.com/docs/how-to/using-nvm',
           {
             fallback: () =>
-              'How to - Use nvm https://redwoodjs.com/docs/how-to/using-nvm',
+              'How to - Use nvm https://cedarjs.com/docs/how-to/using-nvm',
           },
         )}`,
         `  See: ${terminalLink(
           'Tutorial - Prerequisites',
-          'https://redwoodjs.com/docs/tutorial/chapter1/prerequisites',
+          'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
           {
             fallback: () =>
-              'Tutorial - Prerequisites https://redwoodjs.com/docs/tutorial/chapter1/prerequisites',
+              'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
           },
         )}`,
       ].join('\n'),
