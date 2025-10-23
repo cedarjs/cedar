@@ -108,11 +108,14 @@ export const getApiSideBabelPlugins = ({
           currentFile: string,
           opts: unknown,
         ) {
-          // Look for paths that include a / and ends with .js (to not trip
-          // up on npm modules like chart.js)
-          const importPath = /.*\/.*\.js$/.test(sourcePath)
-            ? sourcePath.replace(/\.js$/, '')
-            : sourcePath
+          // To support imports like `import { logger } from './logger.js'` in
+          // data-migrate in TypeScript projects (where the actual source file
+          // is logger.ts) we have to rewrite the extension
+          const importPath =
+            /.*\/.*\.js$/.test(sourcePath) &&
+            process.argv.includes('data-migrate')
+              ? sourcePath.replace(/\.js$/, '.ts')
+              : sourcePath
 
           const resolvedPath = resolvePath(importPath, currentFile, opts)
 

@@ -20,8 +20,8 @@ do the actual (re-)building of the api side. It uses esbuild + babel to
 transpile the code.
 
 At this point, when I'm in `packages/internal/src/build/api.ts`, I'm working
-with code that used for both `dev` and `build`. So whatever changes I make here
-will fix them both.
+with code that's used for both `dev` and `build`. So whatever changes I make
+here will fix them both.
 
 To support extensionless imports I need to tell babel how to resolve them.
 
