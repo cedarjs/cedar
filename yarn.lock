@@ -3168,7 +3168,7 @@ __metadata:
     "@types/babel-plugin-tester": "npm:9.0.10"
     "@types/babel__core": "npm:7.20.5"
     "@types/babel__register": "npm:7.17.3"
-    "@types/node": "npm:20.19.17"
+    "@types/node": "npm:22.18.12"
     babel-plugin-auto-import: "npm:1.1.0"
     babel-plugin-graphql-tag: "npm:3.3.0"
     babel-plugin-module-resolver: "npm:5.0.2"
@@ -3997,7 +3997,7 @@ __metadata:
     "@types/fs-extra": "npm:11.0.4"
     "@types/line-column": "npm:1.0.2"
     "@types/lodash": "npm:4.17.20"
-    "@types/node": "npm:20.19.17"
+    "@types/node": "npm:22.18.12"
     "@types/vscode": "npm:1.96.0"
     camelcase: "npm:6.3.0"
     core-js: "npm:3.42.0"
@@ -4063,7 +4063,7 @@ __metadata:
     "@types/aws-lambda": "npm:8.10.152"
     "@types/babel-core": "npm:6.25.10"
     "@types/jest": "npm:29.5.14"
-    "@types/node": "npm:20.19.17"
+    "@types/node": "npm:22.18.12"
     ansis: "npm:4.1.0"
     babel-jest: "npm:^29.7.0"
     concurrently: "npm:8.2.2"
@@ -12354,21 +12354,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=12.12.47, @types/node@npm:>=13.7.0, @types/node@npm:^22.0.1":
-  version: 22.2.0
-  resolution: "@types/node@npm:22.2.0"
-  dependencies:
-    undici-types: "npm:~6.13.0"
-  checksum: 10c0/c17900b34faecfec204f72970bd658d0c217aaf739c1bf7690c969465b6b26b77a8be1cd9ba735aadbd1dd20b5c3e4f406ec33528bf7c6eec90744886c5d5608
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:20.19.17":
-  version: 20.19.17
-  resolution: "@types/node@npm:20.19.17"
+"@types/node@npm:*, @types/node@npm:22.18.12, @types/node@npm:>=12.12.47, @types/node@npm:>=13.7.0, @types/node@npm:^22.0.1":
+  version: 22.18.12
+  resolution: "@types/node@npm:22.18.12"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10c0/ab4c5dd8bdeacb1c04c2724c75023eec0ac9469583b39032f5daaf56768a31ee6fa3a0bfcc597e4a3e74eb49744deeb9d5eb760f30e984e25088f6d895e0811d
+  checksum: 10c0/13a4638f2baba3efba2b8bc369dd6f950dccbfca78f318f9c9f2c7adc11fce14fc119723c38567dada2d57a873c092b7356c024924d5974a08f3c1f93dc706c6
   languageName: node
   linkType: hard
 
@@ -29196,7 +29187,7 @@ __metadata:
     "@storybook/addon-essentials": "npm:7.6.20"
     "@storybook/builder-vite": "npm:7.6.20"
     "@storybook/react": "npm:7.6.20"
-    "@types/node": "npm:20.19.17"
+    "@types/node": "npm:22.18.12"
     magic-string: "npm:0.30.18"
     react-docgen: "npm:7.0.3"
     tsx: "npm:4.20.5"
@@ -30704,13 +30695,6 @@ __metadata:
   version: 5.26.5
   resolution: "undici-types@npm:5.26.5"
   checksum: 10c0/bb673d7876c2d411b6eb6c560e0c571eef4a01c1c19925175d16e3a30c4c428181fb8d7ae802a261f283e4166a0ac435e2f505743aa9e45d893f9a3df017b501
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.13.0":
-  version: 6.13.0
-  resolution: "undici-types@npm:6.13.0"
-  checksum: 10c0/2de55181f569c77a4f08063f8bf2722fcbb6ea312a26a9e927bd1f5ea5cf3a281c5ddf23155061db083e0a25838f54813543ff13b0ac34d230d5c1205ead66c1
   languageName: node
   linkType: hard
 

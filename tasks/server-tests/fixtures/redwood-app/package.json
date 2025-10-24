@@ -22,7 +22,7 @@
   },
   "packageManager": "yarn@4.9.4",
   "engines": {
-    "node": "=20.x"
+    "node": "=22.21.0"
   },
   "prisma": {
     "seed": "yarn rw exec seed"
