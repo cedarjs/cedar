@@ -259,7 +259,13 @@ const createProject = () => {
   const subprocess = exec(
     cmd,
     // We create a ts project and convert using ts-to-js at the end if typescript flag is false
-    ['--no-yarn-install', '--typescript', '--overwrite', '--no-git'],
+    [
+      '--no-yarn-install',
+      '--typescript',
+      '--no-esm',
+      '--overwrite',
+      '--no-git',
+    ],
     getExecaOptions(RW_FRAMEWORK_PATH),
   )
 
