@@ -114,8 +114,9 @@
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "cdr": "./dist/cjs/bins/cedarjs.js",
-    "cedarjs": "./dist/cjs/bins/cedarjs.js",
+    "cdr": "./dist/cjs/bins/cedar.js",
+    "cedar": "./dist/cjs/bins/cedar.js",
+    "cedarjs": "./dist/cjs/bins/cedar.js",
     "cross-env": "./dist/cjs/bins/cross-env.js",
     "msw": "./dist/cjs/bins/msw.js",
     "redwood": "./dist/cjs/bins/redwood.js",
