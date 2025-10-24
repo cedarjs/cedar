@@ -49,7 +49,7 @@
     "@types/babel-plugin-tester": "9.0.10",
     "@types/babel__core": "7.20.5",
     "@types/babel__register": "7.17.3",
-    "@types/node": "20.19.17",
+    "@types/node": "22.18.12",
     "babel-plugin-tester": "11.0.4",
     "tsx": "4.20.5",
     "vitest": "3.2.4"
