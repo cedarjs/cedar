@@ -287,8 +287,8 @@ export const SplashPage = ({
                         You’re seeing this because you don’t have any pages yet.
                       </p>
                       <p className="intro-instructions">
-                        Type <code>yarn redwood generate page my-page</code> in
-                        your CLI to get started!
+                        Type <code>yarn cedar generate page my-page</code> in
+                        your terminal to get started!
                       </p>
                     </div>
                   ) : (
@@ -321,8 +321,8 @@ export const SplashPage = ({
                         You’re seeing this because you don’t have a page at the{' '}
                         <code>/</code> path.
                         <br />
-                        Type <code>yarn redwood generate page home /</code> in
-                        your CLI to create one.
+                        Type <code>yarn cedar generate page home /</code> in
+                        your terminal to create one.
                       </div>
                     </div>
                   )}
