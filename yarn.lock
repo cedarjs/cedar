@@ -2664,8 +2664,9 @@ __metadata:
     redis:
       optional: true
   bin:
-    cdr: ./dist/cjs/bins/redwood.js
-    cedarjs: ./dist/cjs/bins/redwood.js
+    cdr: ./dist/cjs/bins/cedar.js
+    cedar: ./dist/cjs/bins/cedar.js
+    cedarjs: ./dist/cjs/bins/cedar.js
     redwood: ./dist/cjs/bins/redwood.js
     rw: ./dist/cjs/bins/redwood.js
     rwfw: ./dist/cjs/bins/rwfw.js
@@ -3481,8 +3482,9 @@ __metadata:
     tsx: "npm:4.20.5"
     typescript: "npm:5.9.2"
   bin:
-    cdr: ./dist/bins/cedarjs.js
-    cedarjs: ./dist/bins/cedarjs.js
+    cdr: ./dist/bins/cedar.js
+    cedar: ./dist/bins/cedar.js
+    cedarjs: ./dist/bins/cedar.js
     cedarjs-api-server-watch: ./dist/bins/cedarjs-api-server-watch.js
     cedarjs-serve-api: ./dist/bins/cedarjs-serve-api.js
     cross-env: ./dist/bins/cross-env.js
@@ -4272,8 +4274,9 @@ __metadata:
     react: 18.3.1
     react-dom: 18.3.1
   bin:
-    cdr: ./dist/cjs/bins/cedarjs.js
-    cedarjs: ./dist/cjs/bins/cedarjs.js
+    cdr: ./dist/cjs/bins/cedar.js
+    cedar: ./dist/cjs/bins/cedar.js
+    cedarjs: ./dist/cjs/bins/cedar.js
     cross-env: ./dist/cjs/bins/cross-env.js
     msw: ./dist/cjs/bins/msw.js
     redwood: ./dist/cjs/bins/redwood.js
