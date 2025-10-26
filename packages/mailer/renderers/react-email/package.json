@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-renderer-react-email",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -20,7 +20,7 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@cedarjs/mailer-core": "0.14.0",
+    "@cedarjs/mailer-core": "0.15.0",
     "@react-email/render": "0.0.17"
   },
   "devDependencies": {
