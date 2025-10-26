@@ -111,16 +111,15 @@ const config: Config = {
     [
       '@signalwire/docusaurus-plugin-llms-txt',
       {
-        generate: {
-          enableMarkdownFiles: true,
+        logLevel: 1,
+        llmsTxt: {
+          siteDescription:
+            'CedarJS is the full-stack web framework designed to help you ' +
+            'grow from side project to startup. CedarJS features an end-to-' +
+            'end development workflow that weaves together the best parts of ' +
+            'React, GraphQL, Prisma, TypeScript, Vitest, and Storybook.',
           enableLlmsFullTxt: true,
-        },
-        include: {
-          includeBlog: false,
-          includeVersionedDocs: false,
           excludeRoutes: ['/search'],
-        },
-        structure: {
           sections: [
             {
               id: 'introduction',
@@ -208,12 +207,6 @@ const config: Config = {
               routes: [{ route: '/docs/upgrade-guides/**' }],
             },
           ],
-          siteTitle: 'CedarJS',
-          siteDescription:
-            'CedarJS is the full-stack web framework designed to help you ' +
-            'grow from side project to startup. CedarJS features an end-to-' +
-            'end development workflow that weaves together the best parts of ' +
-            'React, GraphQL, Prisma, TypeScript, Vitest, and Storybook.',
         },
         ui: {
           copyPageContent: true,

@@ -3439,9 +3439,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@signalwire/docusaurus-plugin-llms-txt@npm:2.0.0-alpha.2":
-  version: 2.0.0-alpha.2
-  resolution: "@signalwire/docusaurus-plugin-llms-txt@npm:2.0.0-alpha.2"
+"@signalwire/docusaurus-plugin-llms-txt@npm:2.0.0-alpha.5":
+  version: 2.0.0-alpha.5
+  resolution: "@signalwire/docusaurus-plugin-llms-txt@npm:2.0.0-alpha.5"
   dependencies:
     fs-extra: "npm:^11.0.0"
     hast-util-select: "npm:^6.0.4"
@@ -3457,13 +3457,13 @@ __metadata:
     unist-util-visit: "npm:^5"
   peerDependencies:
     "@docusaurus/core": ^3.0.0
-  checksum: 10c0/8c9fe930b96c0e42815720db216105d7717a587a7afc32782ee2c6ba9d50670cd88e363421617cb10fd36f2b28fd0d5bdf3275ce53fbde201036b2855b455caf
+  checksum: 10c0/227a030147eff3b88c3117d61b6e88e4b64a65ee19856c4add76d3ddc25c9d0c0211a2f83cbdda138aa9f60622d552681632a70864b316b812d698af7d9d2378
   languageName: node
   linkType: hard
 
-"@signalwire/docusaurus-theme-llms-txt@npm:1.0.0-alpha.3":
-  version: 1.0.0-alpha.3
-  resolution: "@signalwire/docusaurus-theme-llms-txt@npm:1.0.0-alpha.3"
+"@signalwire/docusaurus-theme-llms-txt@npm:1.0.0-alpha.6":
+  version: 1.0.0-alpha.6
+  resolution: "@signalwire/docusaurus-theme-llms-txt@npm:1.0.0-alpha.6"
   dependencies:
     "@docusaurus/core": "npm:^3.0.0"
     "@docusaurus/theme-common": "npm:^3.0.0"
@@ -3472,7 +3472,7 @@ __metadata:
   peerDependencies:
     react: ^18.0.0
     react-dom: ^18.0.0
-  checksum: 10c0/c9c1a7269534ace05e0a68384b3d581d50d3370c05ec7feca81b9aa856fd16faf9d7c071b3403eb9bfd45efd24332d92016af18e08162475891653eb8486ad88
+  checksum: 10c0/17ee9337d2b65fd4b0c0a2aa615ff5629f16cf4d156978a9ee7648c9103b3465dd7983b343cc380f2cc946ed525f776361f5f8868c75e147734bc380034e530c
   languageName: node
   linkType: hard
 
@@ -6101,8 +6101,8 @@ __metadata:
     "@docusaurus/types": "npm:3.8.1"
     "@easyops-cn/docusaurus-search-local": "npm:^0.49.2"
     "@mdx-js/react": "npm:3.0.1"
-    "@signalwire/docusaurus-plugin-llms-txt": "npm:2.0.0-alpha.2"
-    "@signalwire/docusaurus-theme-llms-txt": "npm:1.0.0-alpha.3"
+    "@signalwire/docusaurus-plugin-llms-txt": "npm:2.0.0-alpha.5"
+    "@signalwire/docusaurus-theme-llms-txt": "npm:1.0.0-alpha.6"
     "@types/react": "npm:^18.2.55"
     clsx: "npm:2.1.1"
     prism-react-renderer: "npm:2.4.1"
