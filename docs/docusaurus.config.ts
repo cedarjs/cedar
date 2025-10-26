@@ -111,7 +111,6 @@ const config: Config = {
     [
       '@signalwire/docusaurus-plugin-llms-txt',
       {
-        logLevel: 1,
         llmsTxt: {
           siteDescription:
             'CedarJS is the full-stack web framework designed to help you ' +
@@ -211,6 +210,7 @@ const config: Config = {
         ui: {
           copyPageContent: true,
         },
+        logLevel: 1,
       } satisfies LlmsTxtPluginOptions,
     ],
   ],
