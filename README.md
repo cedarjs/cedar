@@ -141,7 +141,7 @@ what you use so I know what to keep and what to remove!
 - [ ] Future major version: Make it possible to switch existing Cedar apps to
       ESM
 - [ ] Enable strict mode for new Cedar TypeScript apps.
-- [ ] Upgrade to Node 24
+- [x] Upgrade to Node 24
 - [x] Setup dependabot/renovate to automatically merge PRs that pass all checks
 - [x] Move to Vitest for Cedar ESM apps
 
