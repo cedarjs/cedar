@@ -28,9 +28,8 @@ export const description = 'Generate boilerplate code and type definitions'
 export const builder = (yargs) =>
   yargs
     .command('types', 'Generate supplementary code', {}, () => {
-      recordTelemetryAttributes({
-        command: 'generate types',
-      })
+      recordTelemetryAttributes({ command: 'generate types' })
+
       try {
         execa.sync('yarn rw-gen', { shell: true, stdio: 'inherit' })
       } catch (error) {

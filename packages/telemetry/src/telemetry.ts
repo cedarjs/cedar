@@ -28,16 +28,16 @@ const spawnProcess = (...args: string[]) => {
           detached: process.env.REDWOOD_VERBOSE_TELEMETRY ? false : true,
           windowsHide: true,
         }
-  spawn(
-    execPath,
-    [
-      path.join(__dirname, 'scripts', 'invoke.js'),
-      ...args,
-      '--root',
-      getPaths().base,
-    ],
-    spawnOptions,
-  ).unref()
+  const cmd =
+    execPath +
+    ' ' +
+    path.join(__dirname, 'scripts', 'invoke.js') +
+    ' ' +
+    args.join(' ') +
+    ' --root ' +
+    getPaths().base
+
+  spawn(cmd, spawnOptions).unref()
 }
 
 // wrap a function in this call to get a telemetry hit including how long it took

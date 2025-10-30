@@ -276,7 +276,7 @@ const globalTasks = () =>
         title: 'Lint --fix all the things',
         task: async () => {
           try {
-            await execa('yarn rw lint --fix', [], {
+            await execa('yarn rw lint --fix', {
               shell: true,
               stdio: 'ignore',
               cleanup: true,

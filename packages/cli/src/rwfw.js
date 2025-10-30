@@ -47,7 +47,11 @@ if (!command.length || command.some((cmd) => helpCommands.includes(cmd))) {
 }
 
 try {
-  execa.sync('yarn', [...command], {
+  // This used to look like `execa.sync('yarn', [...command], {`, but then Node
+  // deprecated passing args in that way.
+  // See https://nodejs.org/api/deprecations.html#DEP0190
+  // TODO: The real fix is being able to run without `shell: true`
+  execa.sync('yarn ' + [...command].join(' '), {
     stdio: 'inherit',
     shell: true,
     cwd: absRwFwPath,

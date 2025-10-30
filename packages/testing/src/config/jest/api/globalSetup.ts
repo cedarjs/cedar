@@ -41,7 +41,7 @@ export default async function () {
     env[directUrlEnvVar] = process.env[directUrlEnvVar]
   }
 
-  execa.sync('yarn rw', command, {
+  execa.sync('yarn rw ' + command.join(' '), {
     cwd: rwjsPaths.api.base,
     stdio: 'inherit',
     shell: true,

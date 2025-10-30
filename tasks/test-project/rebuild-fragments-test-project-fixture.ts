@@ -407,7 +407,7 @@ async function runCommand() {
     title: 'Lint --fix all the things',
     task: async () => {
       try {
-        await exec('yarn rw lint --fix', [], {
+        await exec('yarn rw lint --fix', {
           shell: true,
           stdio: 'pipe',
           cleanup: true,

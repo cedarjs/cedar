@@ -329,10 +329,7 @@ async function initializeGit(newAppDir, commitMessage) {
 
   const gitSubprocess = execa(
     `git init && git add . && git commit -m "${commitMessage}"`,
-    {
-      shell: true,
-      cwd: newAppDir,
-    },
+    { shell: true, cwd: newAppDir },
   )
 
   try {
