@@ -41,8 +41,10 @@ export const handler = async ({ path, fix, format }) => {
     const pathString = path?.join(' ')
     const sbPath = getPaths().web.storybook
     const args = [
+      'eslint',
       fix && '--fix',
-      `--format ${format}`,
+      '--format',
+      format,
       !pathString && fs.existsSync(getPaths().web.src) && 'web/src',
       !pathString && fs.existsSync(getPaths().web.config) && 'web/config',
       !pathString && fs.existsSync(sbPath) && 'web/.storybook',
@@ -51,7 +53,7 @@ export const handler = async ({ path, fix, format }) => {
       pathString,
     ].filter(Boolean)
 
-    const result = await execa('yarn', ['eslint', ...args], {
+    const result = await execa('yarn', args, {
       cwd: getPaths().base,
       stdio: 'inherit',
     })
