@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { PresetProperty } from '@storybook/types'
@@ -12,8 +13,14 @@ import { mockRouter } from './plugins/mock-router.js'
 import { reactDocgen } from './plugins/react-docgen.js'
 import type { StorybookConfig } from './types.js'
 
-const getAbsolutePath = (input: string) =>
-  path.dirname(require.resolve(path.join(input, 'package.json')))
+function getAbsolutePath(input: string) {
+  const createdRequire = createRequire(import.meta.url)
+  return path.dirname(
+    createdRequire.resolve(path.join(input, 'package.json'), {
+      paths: [getPaths().base],
+    }),
+  )
+}
 
 export const core: PresetProperty<'core'> = {
   builder: getAbsolutePath('@storybook/builder-vite'),
@@ -23,7 +30,8 @@ export const core: PresetProperty<'core'> = {
 export const previewAnnotations: StorybookConfig['previewAnnotations'] = (
   entry,
 ) => {
-  return [...entry, require.resolve('./preview.js')]
+  const createdRequire = createRequire(import.meta.url)
+  return [...entry, createdRequire.resolve('./preview.js')]
 }
 
 const redwoodProjectPaths = getPaths()
