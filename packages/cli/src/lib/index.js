@@ -1,4 +1,3 @@
-import { execSync } from 'child_process'
 import https from 'https'
 import path from 'path'
 
@@ -532,18 +531,11 @@ export const addPackagesTask = async ({
       ].filter(Boolean),
     ]
   } else {
-    const stdout = execSync('yarn --version')
-
-    const yarnVersion = stdout.toString().trim()
-
     installCommand = [
       'yarn',
-      [
-        yarnVersion.startsWith('1') && '-W',
-        'add',
-        devDependency && '--dev',
-        ...packagesWithSameRWVersion,
-      ].filter(Boolean),
+      ['add', devDependency && '--dev', ...packagesWithSameRWVersion].filter(
+        Boolean,
+      ),
     ]
   }
 

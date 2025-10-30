@@ -40,24 +40,23 @@ export const handler = async ({ path, fix, format }) => {
   try {
     const pathString = path?.join(' ')
     const sbPath = getPaths().web.storybook
-    const result = await execa(
-      'yarn eslint',
-      [
-        fix && '--fix',
-        `--format ${format}`,
-        !pathString && fs.existsSync(getPaths().web.src) && 'web/src',
-        !pathString && fs.existsSync(getPaths().web.config) && 'web/config',
-        !pathString && fs.existsSync(sbPath) && 'web/.storybook',
-        !pathString && fs.existsSync(getPaths().scripts) && 'scripts',
-        !pathString && fs.existsSync(getPaths().api.src) && 'api/src',
-        pathString,
-      ].filter(Boolean),
-      {
-        cwd: getPaths().base,
-        shell: true,
-        stdio: 'inherit',
-      },
-    )
+    const args = [
+      'eslint',
+      fix && '--fix',
+      '--format',
+      format,
+      !pathString && fs.existsSync(getPaths().web.src) && 'web/src',
+      !pathString && fs.existsSync(getPaths().web.config) && 'web/config',
+      !pathString && fs.existsSync(sbPath) && 'web/.storybook',
+      !pathString && fs.existsSync(getPaths().scripts) && 'scripts',
+      !pathString && fs.existsSync(getPaths().api.src) && 'api/src',
+      pathString,
+    ].filter(Boolean)
+
+    const result = await execa('yarn', args, {
+      cwd: getPaths().base,
+      stdio: 'inherit',
+    })
 
     process.exitCode = result.exitCode
   } catch (error) {

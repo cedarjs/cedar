@@ -70,16 +70,12 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
   console.log()
 
   try {
-    execa.sync(
-      `"${path.join(rwjsPaths.base, 'node_modules/.bin/prisma')}"`,
-      args,
-      {
-        shell: true,
-        cwd: rwjsPaths.base,
-        stdio: 'inherit',
-        cleanup: true,
-      },
-    )
+    const prismaBin = path.join(rwjsPaths.base, 'node_modules/.bin/prisma')
+    execa.sync(prismaBin, args, {
+      cwd: rwjsPaths.base,
+      stdio: 'inherit',
+      cleanup: true,
+    })
 
     if (hasHelpOption || commands.length === 0) {
       printWrapInfo()

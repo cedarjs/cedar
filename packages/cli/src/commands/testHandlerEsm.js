@@ -85,9 +85,8 @@ export const handler = async ({
 
     // TODO: Run vitest programmatically. See https://vitest.dev/advanced/api/
     const runCommand = async () => {
-      await execa('yarn vitest', vitestArgs, {
+      await execa('yarn', ['vitest', ...vitestArgs], {
         cwd: rwjsPaths.base,
-        shell: true,
         stdio: 'inherit',
         env: { DATABASE_URL },
       })

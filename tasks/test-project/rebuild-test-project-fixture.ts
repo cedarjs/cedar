@@ -513,8 +513,7 @@ async function runCommand() {
     title: 'Lint --fix all the things',
     task: async () => {
       try {
-        await exec('yarn rw lint --fix', [], {
-          shell: true,
+        await exec('yarn', ['rw', 'lint', '--fix'], {
           stdio: 'pipe',
           cleanup: true,
           cwd: OUTPUT_PROJECT_PATH,

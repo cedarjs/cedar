@@ -19,21 +19,24 @@ async function main() {
 
   const watcher = chokidar.watch(path.join(FRAMEWORK_PATH, 'packages'), {
     ignored: IGNORED,
-    // We don't want chokidar to emit events as it discovers paths, only as they change.
+    // We don't want chokidar to emit events as it discovers paths, only as they
+    // change.
     ignoreInitial: true,
     // Debounce the events.
     awaitWriteFinish: true,
   })
+
   watcher.on('all', async (_event, filePath) => {
     if (!running) {
       triggered = filePath
       return
     }
 
-    // If we're already running we don't trigger on certain files which are likely to be
-    // touched by the build process itself.
+    // If we're already running we don't trigger on certain files which are
+    // likely to be touched by the build process itself.
 
-    // `package.json` files are touched when we switch between esm and cjs builds.
+    // `package.json` files are touched when we switch between esm and cjs
+    // builds.
     if (filePath.endsWith('package.json')) {
       return
     }
@@ -47,13 +50,8 @@ async function main() {
       triggered = ''
       running = true
       try {
-        await tarsync(
-          {
-            projectPath,
-            verbose,
-          },
-          `File change: ${path.relative(FRAMEWORK_PATH, thisTrigger)}`,
-        )
+        const relativePath = path.relative(FRAMEWORK_PATH, thisTrigger)
+        await tarsync({ projectPath, verbose }, `File change: ${relativePath}`)
       } finally {
         running = false
       }
