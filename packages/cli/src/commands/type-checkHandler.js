@@ -6,7 +6,6 @@ import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-import { getCmdMajorVersion } from '../commands/upgrade.js'
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 import { getPaths } from '../lib/index.js'
 
@@ -22,21 +21,14 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
   /**
    * Check types for the project directory : [web, api]
    */
-
   const typeCheck = async () => {
     let conclusiveExitCode = 0
 
-    const yarnVersion = await getCmdMajorVersion('yarn')
-
     const tscForAllSides = sides.map((side) => {
       const projectDir = path.join(getPaths().base, side)
-      // -s flag to suppress error output from yarn. For example yarn doc link on non-zero status.
-      // Since it'll be printed anyways after the whole execution.
       return {
         cwd: projectDir,
-        command: `yarn ${
-          yarnVersion > 1 ? '' : '-s'
-        } tsc --noEmit --skipLibCheck`,
+        command: `yarn tsc --noEmit --skipLibCheck`,
       }
     })
 
@@ -63,6 +55,7 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
       schema: getPaths().api.dbSchema,
     })
   }
+
   if (generate) {
     await new Listr(
       [
