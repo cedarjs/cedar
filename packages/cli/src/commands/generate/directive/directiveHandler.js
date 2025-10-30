@@ -153,15 +153,10 @@ export const handler = async (args) => {
         task: () => {
           // Regenerate again at the end if we rollback changes
           addFunctionToRollback(async () => {
-            await execa('yarn rw-gen', [], {
-              stdio: 'pipe',
-              shell: true,
-            })
+            await execa('yarn', ['rw-gen'], { stdio: 'pipe' })
           }, true)
-          return execa('yarn rw-gen', [], {
-            stdio: 'inherit',
-            shell: true,
-          })
+
+          return execa('yarn', ['rw-gen'], { stdio: 'inherit' })
         },
       },
       {

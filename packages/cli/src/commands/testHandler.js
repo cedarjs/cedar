@@ -151,9 +151,8 @@ export const handler = async ({
     // so we're running it via execa, since `jest.run()` is a bit unstable.
     // https://github.com/facebook/jest/issues/5048
     const runCommand = async () => {
-      await execa('yarn jest', jestArgs, {
+      await execa('yarn', ['jest', ...jestArgs], {
         cwd: rwjsPaths.base,
-        shell: true,
         stdio: 'inherit',
         env: { DATABASE_URL },
       })

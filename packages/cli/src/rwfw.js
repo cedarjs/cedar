@@ -47,9 +47,11 @@ if (!command.length || command.some((cmd) => helpCommands.includes(cmd))) {
 }
 
 try {
+  // This used to look like `execa.sync('yarn', [...command], {`, but then Node
+  // deprecated passing args in that way.
+  // See https://nodejs.org/api/deprecations.html#DEP0190
   execa.sync('yarn', [...command], {
     stdio: 'inherit',
-    shell: true,
     cwd: absRwFwPath,
     env: {
       RWJS_CWD: projectPath,
