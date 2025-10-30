@@ -26,18 +26,32 @@ import {
 
 const ansis = require('ansis')
 
+function recommendedNodeVersion() {
+  const templatePackageJsonPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'packages',
+    'create-cedar-app',
+    'templates',
+    'ts',
+    'package.json',
+  )
+  console.log('templatePackageJsonPath:', templatePackageJsonPath)
+  const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
+
+  return json.engines.node
+}
+
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
 // hangs this script without any information to the user that tries to rebuild
 // the test-project. It's better to fail early so the correct node version can
 // be installed.
-if (
-  semver.lt(process.version, '20.0.0') ||
-  semver.gte(process.version, '21.0.0')
-) {
+if (!semver.satisfies(process.version, recommendedNodeVersion())) {
   console.error('Unsupported Node.js version')
   console.error('  You are using:', process.version)
-  console.error('  Supported version:', 'v20')
+  console.error('  Supported version:', recommendedNodeVersion())
   process.exit(1)
 }
 

@@ -51,7 +51,7 @@ function recommendedNodeVersion() {
 if (!semver.satisfies(process.version, recommendedNodeVersion())) {
   console.error('Unsupported Node.js version')
   console.error('  You are using:', process.version)
-  console.error('  Supported version:', 'v24')
+  console.error('  Supported version:', recommendedNodeVersion())
   process.exit(1)
 }
 
