@@ -77,12 +77,12 @@ test('Should run tsc commands correctly, in order', async () => {
   // Ensure tsc command run correctly for web side
   expect(concurrentlyArgs.commands).toContainEqual({
     cwd: path.join('myBasePath', 'web'),
-    command: 'yarn  tsc --noEmit --skipLibCheck',
+    command: 'yarn tsc --noEmit --skipLibCheck',
   })
   // Ensure tsc command run correctly for web side
   expect(concurrentlyArgs.commands).toContainEqual({
     cwd: path.join('myBasePath', 'api'),
-    command: 'yarn  tsc --noEmit --skipLibCheck',
+    command: 'yarn tsc --noEmit --skipLibCheck',
   })
   // Ensure we have raw sequential output from tsc
   expect(concurrentlyArgs.options).toEqual({ group: true, raw: true })
@@ -102,8 +102,9 @@ test('Should generate prisma client', async () => {
   // Ensure tsc command run correctly for web side
   expect(concurrentlyArgs.commands).toContainEqual({
     cwd: path.join('myBasePath', 'api'),
-    command: 'yarn  tsc --noEmit --skipLibCheck',
+    command: 'yarn tsc --noEmit --skipLibCheck',
   })
+
   expect(runCommandTask.mock.results[0].value[0]).toMatch(
     /.+(\\|\/)prisma(\\|\/)build(\\|\/)index.js.+/,
   )
