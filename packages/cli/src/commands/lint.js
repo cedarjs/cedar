@@ -51,9 +51,8 @@ export const handler = async ({ path, fix, format }) => {
       pathString,
     ].filter(Boolean)
 
-    const result = await execa('yarn eslint ' + args.join(' '), {
+    const result = await execa('yarn', ['eslint', ...args], {
       cwd: getPaths().base,
-      shell: true,
       stdio: 'inherit',
     })
 

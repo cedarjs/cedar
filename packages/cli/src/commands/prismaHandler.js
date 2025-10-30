@@ -71,8 +71,7 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
 
   try {
     const prismaBin = path.join(rwjsPaths.base, 'node_modules/.bin/prisma')
-    execa.sync(`"${prismaBin}" ` + args.join(' '), {
-      shell: true,
+    execa.sync(prismaBin, args, {
       cwd: rwjsPaths.base,
       stdio: 'inherit',
       cleanup: true,
