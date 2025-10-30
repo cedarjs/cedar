@@ -34,7 +34,7 @@
     "lint": "concurrently -c auto npm:lint:fw npm:lint:crwrsca",
     "lint:crwrsca": "yarn --cwd packages/create-cedar-rsc-app run lint",
     "lint:fix": "yarn lint --fix",
-    "lint:fw": "cross-env RWJS_CWD=packages/create-cedar-app/templates/ts eslint --config .eslintrc.js --ignore-pattern Routes.jsx --ignore-pattern create-cedar-rsc-app packages",
+    "lint:fw": "cross-env RWJS_CWD=packages/create-cedar-app/templates/ts eslint --config .eslintrc.js --ignore-pattern Routes.jsx --ignore-pattern create-cedar-rsc-app --ignore-pattern '**/templates/**' --no-eslintrc packages",
     "project:copy": "node ./tasks/framework-tools/frameworkFilesToProject.mjs",
     "project:deps": "node ./tasks/framework-tools/frameworkDepsToProject.mjs",
     "project:sync": "node ./tasks/framework-tools/frameworkSyncToProject.mjs",
