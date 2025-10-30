@@ -43,12 +43,6 @@ vi.mock('../../lib', async (importOriginal) => {
   }
 })
 
-vi.mock('../../commands/upgrade', () => {
-  return {
-    getCmdMajorVersion: () => 3,
-  }
-})
-
 import path from 'path'
 
 import concurrently from 'concurrently'

@@ -235,19 +235,12 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
   await tasks.run()
 }
 async function yarnInstall({ verbose }) {
-  const yarnVersion = await getCmdMajorVersion('yarn')
-
   try {
-    await execa(
-      'yarn install',
-      yarnVersion > 1 ? [] : ['--force', '--non-interactive'],
-      {
-        shell: true,
-        stdio: verbose ? 'inherit' : 'pipe',
-
-        cwd: getPaths().base,
-      },
-    )
+    await execa('yarn install', {
+      shell: true,
+      stdio: verbose ? 'inherit' : 'pipe',
+      cwd: getPaths().base,
+    })
   } catch (e) {
     throw new Error(
       'Could not finish installation. Please run `yarn install` and then `yarn dedupe`, before continuing',
@@ -515,41 +508,13 @@ async function refreshPrismaClient(task, { verbose }) {
   }
 }
 
-export const getCmdMajorVersion = async (command) => {
-  // Get current version
-  const { stdout } = await execa(command, ['--version'], {
-    cwd: getPaths().base,
-  })
-
-  if (!SEMVER_REGEX.test(stdout)) {
-    throw new Error(`Unable to verify ${command} version.`)
-  }
-
-  // Get major version number
-  const version = stdout.match(SEMVER_REGEX)[0]
-  return parseInt(version.split('.')[0])
-}
-
 const dedupeDeps = async (task, { verbose }) => {
   try {
-    const yarnVersion = await getCmdMajorVersion('yarn')
-
-    const baseExecaArgsForDedupe = {
+    await execa('yarn dedupe', {
       shell: true,
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
-    }
-    if (yarnVersion > 1) {
-      await execa('yarn', ['dedupe'], baseExecaArgsForDedupe)
-    } else {
-      // CedarJS projects should not be using yarn 1.x as we specify a version of yarn in the package.json
-      // with "packageManager": "yarn@4.6.0" or similar.
-      // Although we could (and previous did) automatically run `npx yarn-deduplicate` here, that would require
-      // the user to have `npx` installed, which is not guaranteed and we do not wish to enforce that.
-      task.skip(
-        "Yarn 1.x doesn't support dedupe directly. Please upgrade yarn or use npx with `npx yarn-deduplicate` manually.",
-      )
-    }
+    })
   } catch (e) {
     console.log(c.error(e.message))
     throw new Error(
