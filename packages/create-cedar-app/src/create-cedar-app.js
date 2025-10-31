@@ -168,8 +168,8 @@ async function executeCompatibilityCheck(templateDir) {
 }
 
 /**
- *
- * This type has to be updated if the engines field in the create redwood app template package.json is updated.
+ * This type has to be updated if the engines field in the create cedar app
+ * template package.json is updated.
  * @returns [boolean, Record<'node' | 'yarn', any>]
  */
 function checkNodeVersion(templateDir) {
