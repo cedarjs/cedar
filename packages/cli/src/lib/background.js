@@ -43,22 +43,28 @@ export function spawnBackgroundProcess(name, cmd, args) {
   fs.writeSync(stderr, logHeader)
 
   // We must account for some platform specific behaviour
-  const spawnOptions =
-    os.type() === 'Windows_NT'
-      ? {
-          // The following options run the process in the background without a console window, even though they don't look like they would.
-          // See https://github.com/nodejs/node/issues/21825#issuecomment-503766781 for information
-          detached: false,
-          windowsHide: false,
-          shell: true,
-          stdio: ['ignore', stdout, stderr],
-        }
-      : {
-          detached: true,
-          stdio: ['ignore', stdout, stderr],
-        }
+  if (os.type() === 'Windows_NT') {
+    const spawnOptions = {
+      // The following options run the process in the background without a
+      // console window, even though they don't look like they would.
+      // See https://github.com/nodejs/node/issues/21825#issuecomment-503766781
+      // for information.
+      detached: false,
+      windowsHide: false,
+      shell: true,
+      stdio: ['ignore', stdout, stderr],
+    }
 
-  // Spawn and detach the process
-  const child = spawn(cmd, args, spawnOptions)
-  child.unref()
+    // Spawn and detach the process
+    const child = spawn(cmd + ' ' + args.join(' '), spawnOptions)
+    child.unref()
+  } else {
+    const spawnOptions = {
+      detached: true,
+      stdio: ['ignore', stdout, stderr],
+    }
+    // Spawn and detach the process
+    const child = spawn(cmd, args, spawnOptions)
+    child.unref()
+  }
 }
