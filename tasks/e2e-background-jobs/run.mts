@@ -2,6 +2,24 @@ import process from 'node:process'
 
 import { $, cd, path, ProcessOutput, fs } from 'zx'
 
+// Suppress DEP0190 warning on Windows for zx shell usage
+// This warning occurs because zx uses `shell: true` with child processes on Windows
+// which triggers Node.js DEP0190: "Passing args to a child process with shell option true
+// can lead to security vulnerabilities, as the arguments are not escaped, only concatenated."
+// Since zx handles argument escaping internally, this warning is safe to suppress for our use case.
+if (process.platform === 'win32') {
+  process.removeAllListeners('warning')
+  process.on('warning', (warning) => {
+    if (
+      warning.name === 'DeprecationWarning' &&
+      warning.message.includes('DEP0190')
+    ) {
+      return // Ignore DEP0190 warnings
+    }
+    console.warn(warning)
+  })
+}
+
 import {
   JOBS_SCRIPT,
   PRISMA_SCRIPT,
