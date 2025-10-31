@@ -138,10 +138,8 @@ async function runJobsSetup(projectPath: string) {
   }
   console.log('Confirmed: job config file exists')
 
-  const jobsTs = fs.readFileSync(
-    path.join(projectPath, 'api/src/lib/jobs.ts'),
-    'utf8',
-  )
+  const jobsPath = path.join(projectPath, 'api/src/lib/jobs.ts')
+  const jobsTs = fs.readFileSync(jobsPath, 'utf8')
 
   if (!/import \{.*JobManager.*\} from ['"]@cedarjs\/jobs['"]/.test(jobsTs)) {
     console.error(
@@ -162,11 +160,7 @@ async function runJobsSetup(projectPath: string) {
   console.log('Action: Altering the JobManager config to poll more often')
   const updatedJobsTs = jobsTs.replace('sleepDelay: 5', 'sleepDelay: 1')
 
-  fs.writeFileSync(
-    path.join(projectPath, 'api/src/lib/jobs.ts'),
-    updatedJobsTs,
-    'utf8',
-  )
+  fs.writeFileSync(jobsPath, updatedJobsTs, 'utf8')
 
   // Confirm jobs directory
   if (
