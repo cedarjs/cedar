@@ -26,8 +26,8 @@ export function checkNodeVersion(config: Config) {
     console.log('Node version:', version)
   }
 
-  if (!semver.satisfies(version, '=24')) {
-    console.error('❌You must be using Node.js version 24')
+  if (!semver.satisfies(version, '=22')) {
+    console.error('❌You must be using Node.js version 22')
     console.error('Please install or switch to the correct version of Node')
     console.error(
       'We recommend using a Node version manager like `fnm`, `nvm` or `n`',

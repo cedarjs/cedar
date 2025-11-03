@@ -18,7 +18,7 @@
     "root": true
   },
   "engines": {
-    "node": "=24.x"
+    "node": "=22.x"
   },
   "prisma": {
     "seed": "yarn rw exec seed"
