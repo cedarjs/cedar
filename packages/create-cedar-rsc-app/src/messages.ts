@@ -1,7 +1,7 @@
 import ansis from 'ansis'
 
 import type { Config } from './config.js'
-import { getCrwrscaVersion } from './version.js'
+import { getCcrscaVersion } from './version.js'
 
 export function printWelcome() {
   console.log()
@@ -9,8 +9,8 @@ export function printWelcome() {
     ansis
       .hex('#bf4722')
       .bold(
-        '🌲 Welcome to the CedarJS RSC quick-start installer ' +
-          `v${getCrwrscaVersion()} 🌲`,
+        '🌲 Welcome to the Cedar RSC quick-start installer ' +
+          `v${getCcrscaVersion()} 🌲`,
       ),
   )
   console.log()
