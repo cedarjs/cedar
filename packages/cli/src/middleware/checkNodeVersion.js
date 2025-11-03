@@ -16,10 +16,10 @@ export function checkNodeVersion() {
 
   checks.ok = false
   checks.message = [
-    `Your Node.js version is ${c.warning(
-      pVersion,
-    )}, but Redwood requires ${c.important(`>=${LOWER_BOUND}`)}.`,
-    'Upgrade your Node.js version using `nvm` or a similar tool. See https://redwoodjs.com/docs/how-to/using-nvm.',
+    `Your Node.js version is ${c.warning(pVersion)}, but Cedar requires ` +
+      `${c.important(`>=${LOWER_BOUND}`)}.`,
+    'Upgrade your Node.js version using `nvm`, `n`, or a similar tool. See ' +
+      'https://cedarjs.com/docs/how-to/using-nvm.',
   ].join('\n')
 
   return checks

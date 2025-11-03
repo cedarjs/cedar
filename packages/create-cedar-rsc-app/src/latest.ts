@@ -5,12 +5,12 @@ import process from 'node:process'
 
 import type { Config } from './config.js'
 import { ExitCodeError } from './error.js'
-import { getCrxrscaVersion } from './version.js'
+import { getCcrscaVersion } from './version.js'
 
 export function shouldRelaunch(config: Config) {
   if (config.verbose) {
     console.log('shouldRelaunch process.argv', process.argv)
-    console.log('shouldRelaunch crwrsca version', getCrxrscaVersion())
+    console.log('shouldRelaunch ccrsca version', getCcrscaVersion())
   }
 
   if (process.argv.includes('--no-check-latest')) {
