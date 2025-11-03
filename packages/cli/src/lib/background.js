@@ -56,6 +56,14 @@ export function spawnBackgroundProcess(name, cmd, args) {
     }
 
     // Spawn and detach the process
+    //
+    // The best way to use `spawn` is to pass the process args as a separate
+    // argument, but when the spawn options include `shell: true`, like they do
+    // here, that causes Node.js to print a DEP0190 warning. To get around this
+    // we instead concatenate the command and arguments into a single string.
+    // It's safe to do that here since the arguments aren't user-provided.
+    //
+    // https://nodejs.org/api/deprecations.html#DEP0190
     const child = spawn(cmd + ' ' + args.join(' '), spawnOptions)
     child.unref()
   } else {
@@ -63,7 +71,11 @@ export function spawnBackgroundProcess(name, cmd, args) {
       detached: true,
       stdio: ['ignore', stdout, stderr],
     }
+
     // Spawn and detach the process
+    //
+    // For Linux and MacOS we don't need `shell: true`, so here we can use the
+    // `cmd` and `args` arguments separately.
     const child = spawn(cmd, args, spawnOptions)
     child.unref()
   }

@@ -10,7 +10,7 @@ import { getCcrscaVersion } from './version.js'
 export function shouldRelaunch(config: Config) {
   if (config.verbose) {
     console.log('shouldRelaunch process.argv', process.argv)
-    console.log('shouldRelaunch crwrsca version', getCcrscaVersion())
+    console.log('shouldRelaunch ccrsca version', getCcrscaVersion())
   }
 
   if (process.argv.includes('--no-check-latest')) {
