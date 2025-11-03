@@ -26,12 +26,9 @@ export function checkNodeVersion(config: Config) {
     console.log('Node version:', version)
   }
 
-  // https://github.com/redwoodjs/redwood/issues/10492#issuecomment-2076063552
-  // The comment above and the one after explains why we check specifically
-  // for >= 20.10.0
-  if (!semver.satisfies(version, '>=20.10')) {
-    console.error('❌Your Node.js version must be >=20.10.0')
-    console.error('Please install or switch to a newer version of Node')
+  if (!semver.satisfies(version, '=24')) {
+    console.error('❌You must be using Node.js version 24')
+    console.error('Please install or switch to the correct version of Node')
     console.error(
       'We recommend using a Node version manager like `fnm`, `nvm` or `n`',
     )
