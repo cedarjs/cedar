@@ -28,10 +28,10 @@ export const core: PresetProperty<'core'> = {
 }
 
 export const previewAnnotations: StorybookConfig['previewAnnotations'] = (
-  entry,
+  entries = [],
 ) => {
   const createdRequire = createRequire(import.meta.url)
-  return [...entry, createdRequire.resolve('./preview.js')]
+  return [...entries, createdRequire.resolve('./preview.js')]
 }
 
 const redwoodProjectPaths = getPaths()

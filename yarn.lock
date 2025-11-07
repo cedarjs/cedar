@@ -10288,6 +10288,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@storybook/types@npm:8.6.14":
+  version: 8.6.14
+  resolution: "@storybook/types@npm:8.6.14"
+  peerDependencies:
+    storybook: ^8.2.0 || ^8.3.0-0 || ^8.4.0-0 || ^8.5.0-0 || ^8.6.0-0
+  checksum: 10c0/335649337dd962ebf4bfc58746d19b4e08605f03e7262d92d6758ea663ea23096c72731b0361d5538bdf1e541473049629af47ae48c2becd4591a78ed910aa72
+  languageName: node
+  linkType: hard
+
 "@supabase/auth-js@npm:2.65.0":
   version: 2.65.0
   resolution: "@supabase/auth-js@npm:2.65.0"
@@ -27621,6 +27630,7 @@ __metadata:
     "@storybook/addon-essentials": "npm:8.6.14"
     "@storybook/builder-vite": "npm:8.6.14"
     "@storybook/react": "npm:8.6.14"
+    "@storybook/types": "npm:8.6.14"
     "@types/node": "npm:20.19.17"
     magic-string: "npm:0.30.18"
     react-docgen: "npm:7.0.3"
