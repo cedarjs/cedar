@@ -136,7 +136,7 @@ describe('yarn rw dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn node --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
     expect(apiCommand.env.NODE_ENV).toEqual('development')
     expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -179,7 +179,7 @@ describe('yarn rw dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn node --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
     expect(apiCommand.env.NODE_ENV).toEqual('development')
     expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -226,7 +226,7 @@ describe('yarn rw dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/esm-project/redwood.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn node --quiet --watch "/mocked/esm-project/redwood.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
     expect(apiCommand.env.NODE_ENV).toEqual('development')
     expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')

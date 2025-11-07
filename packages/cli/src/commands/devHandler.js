@@ -188,7 +188,7 @@ export const handler = async ({
     api: {
       name: 'api',
       command: [
-        'yarn nodemon',
+        'yarn node',
         '  --quiet',
         `  --watch "${redwoodConfigPath}"`,
         `  --exec "yarn ${serverWatchCommand}`,

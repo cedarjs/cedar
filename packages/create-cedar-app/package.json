@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsx ./scripts/build.ts",
     "build:pack": "node ./scripts/buildPack.js",
-    "build:watch": "nodemon --watch src --ignore dist,template --exec \"yarn build\"",
+    "build:watch": "node --watch src --ignore dist,template --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "set-up-test-project": "node ./scripts/setUpTestProject.js",
     "test": "vitest run templates",

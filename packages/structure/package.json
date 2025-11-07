@@ -18,7 +18,7 @@
     "build:js": "babel src -d dist --extensions \".js,.jsx,.ts,.tsx\"",
     "build:pack": "yarn pack -o cedarjs-structure.tgz",
     "build:types": "tsc --build --verbose",
-    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
+    "build:watch": "node --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "prettier": "prettier --write './src/**/*.{ts,tsx}'",
     "test": "vitest run",

@@ -88,7 +88,7 @@
     "build:pack": "yarn pack -o cedarjs-api-server.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
     "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
-    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
+    "build:watch": "node --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
     "check:attw": "yarn attw -P",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js",

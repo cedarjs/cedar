@@ -125,7 +125,7 @@
     "build:pack": "yarn pack -o cedarjs-internal.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
-    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
+    "build:watch": "node --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn attw -P",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "fix:permissions": "chmod +x dist/generate/generate.js dist/generate/watch.js",

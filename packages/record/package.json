@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsx ./build.mts",
     "build:pack": "yarn pack -o cedarjs-record.tgz",
-    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
+    "build:watch": "node --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:package": "yarn publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",

@@ -18,7 +18,7 @@
     "build:js": "babel src -d dist --extensions \".js,.ts,.snap\" --copy-files --no-copy-ignored",
     "build:pack": "yarn pack -o cedarjs-auth-dbauth-setup.tgz",
     "build:types": "tsc --build --verbose",
-    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
+    "build:watch": "node --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "yarn vitest run src",
     "test:watch": "yarn test --watch"
