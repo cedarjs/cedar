@@ -64,6 +64,7 @@
     "vite-plugin-node-polyfills": "0.23.0"
   },
   "devDependencies": {
+    "@storybook/types": "7.6.20",
     "@types/node": "20.19.17",
     "tsx": "4.20.5",
     "typescript": "5.9.2",

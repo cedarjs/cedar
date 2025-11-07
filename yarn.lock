@@ -29407,6 +29407,7 @@ __metadata:
     "@storybook/addon-essentials": "npm:7.6.20"
     "@storybook/builder-vite": "npm:7.6.20"
     "@storybook/react": "npm:7.6.20"
+    "@storybook/types": "npm:7.6.20"
     "@types/node": "npm:20.19.17"
     magic-string: "npm:0.30.18"
     react-docgen: "npm:7.0.3"
