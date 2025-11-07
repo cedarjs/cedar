@@ -133,11 +133,11 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         title: 'Creating MDX Storybook stories',
         task: () => {
           const redwoodMdxStoryContent = fs.readFileSync(
-            `${path.resolve(__dirname, 'codemods', 'Redwood.stories.mdx')}`,
+            `${path.resolve(__dirname, 'codemods', 'Redwood.mdx')}`,
           )
 
           fs.writeFileSync(
-            fullPath('web/src/Redwood.stories.mdx', { addExtension: false }),
+            fullPath('web/src/Redwood.mdx', { addExtension: false }),
             redwoodMdxStoryContent,
           )
 

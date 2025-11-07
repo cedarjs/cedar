@@ -20,7 +20,7 @@ describe('storybook config file fixtures', () => {
         stories: [
           \`\${importStatementPath(
             cedarProjectPaths.web.src
-          )}/**/*.stories.@(js|jsx|ts|tsx|mdx)\`,
+          )}/**/*.@(mdx|stories.@(js|jsx|ts|tsx))\`,
         ],
 
         addons: ['@storybook/addon-essentials'],
