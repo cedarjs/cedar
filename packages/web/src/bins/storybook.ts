@@ -19,11 +19,8 @@ const storybookPackageJsonFileUrl = pathToFileURL(pkgJsonPath)
 // installed before we try to run it.
 try {
   const requireFromStorybook = createRequire(storybookPackageJsonFileUrl)
-  const bins = requireFromStorybook('./package.json')['bin']
-  const sbEntryPointUrl = new URL(
-    bins['storybook'],
-    storybookPackageJsonFileUrl,
-  )
+  const bin = requireFromStorybook('./package.json')['bin']
+  const sbEntryPointUrl = new URL(bin, storybookPackageJsonFileUrl)
 
   // If this is defined, we're running through yarn and need to change the cwd.
   // See https://yarnpkg.com/advanced/lifecycle-scripts/#environment-variables.
