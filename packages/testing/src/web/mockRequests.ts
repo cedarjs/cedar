@@ -1,5 +1,5 @@
-// MSW is used by Jest (NodeJS)
-import { setupWorker, graphql } from 'msw'
+// MSW is used by Jest (NodeJS) and Storybook
+import * as msw from 'msw'
 import type {
   StartOptions as StartMSWWorkerOptions,
   SharedOptions as SharedMSWOptions,
@@ -12,6 +12,9 @@ import type {
   SetupWorker,
   ResponseComposition,
 } from 'msw'
+
+// Workaround for ESM/CJS issue with Storybook
+const { setupWorker, graphql } = (msw as any).default || msw
 
 // Allow users to call "mockGraphQLQuery" and "mockGraphQLMutation"
 // before the server has started. We store the request handlers in
