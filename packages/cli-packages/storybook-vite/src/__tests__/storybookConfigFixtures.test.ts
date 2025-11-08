@@ -23,7 +23,7 @@ describe('storybook config file fixtures', () => {
           )}/**/*.@(mdx|stories.@(js|jsx|ts|tsx))\`,
         ],
 
-        addons: ['@storybook/addon-essentials'],
+        addons: ['@storybook/addon-docs'],
       }
 
       export default config
