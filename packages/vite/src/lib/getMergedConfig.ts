@@ -84,20 +84,22 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
               }, 2500)
 
               proxy.on('error', (err, _req, res) => {
-                if (
-                  waitingForApiServer &&
-                  err.message.includes('ECONNREFUSED')
-                ) {
-                  err.stack =
-                    '⌛ API Server launching, please refresh your page...'
+                const isWaiting =
+                  waitingForApiServer && err.message.includes('ECONNREFUSED')
+
+                if (!isWaiting) {
+                  console.error(err)
                 }
-                const msg = {
+
+                const waitingMessage =
+                  '⌛ API Server launching, please refresh your page...'
+                const genericMessage =
+                  'The Cedar API server is not available or is currently ' +
+                  'reloading. Please refresh.'
+
+                const responseBody = {
                   errors: [
-                    {
-                      message:
-                        'The RedwoodJS API server is not available or is ' +
-                        'currently reloading. Please refresh.',
-                    },
+                    { message: isWaiting ? waitingMessage : genericMessage },
                   ],
                 }
 
@@ -105,7 +107,7 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
                   'Content-Type': 'application/json',
                   'Cache-Control': 'no-cache',
                 })
-                res.write(JSON.stringify(msg))
+                res.write(JSON.stringify(responseBody))
                 res.end()
               })
             },
