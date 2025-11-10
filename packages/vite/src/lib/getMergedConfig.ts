@@ -94,7 +94,7 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
                 // This heuristic isn't perfect. It's written to handle dbAuth.
                 // But it's very unlikely the user would have code that does
                 // this exact request without it being a auth token request.
-                // We need this special handling because we don't the error
+                // We need this special handling because we don't want the error
                 // message below to be used as the auth token.
                 const isAuthTokenRequest =
                   isWaiting && req.url === '/auth?method=getToken'
