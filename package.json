@@ -53,7 +53,6 @@
     "test:types": "nx run-many -t test:types"
   },
   "resolutions": {
-    "@storybook/react-dom-shim@npm:7.6.20": "https://verdaccio.tobbe.dev/@storybook/react-dom-shim/-/react-dom-shim-8.0.8.tgz",
     "vite": "5.4.19",
     "vscode-languageserver": "6.1.1",
     "vscode-languageserver-protocol": "3.17.5",
