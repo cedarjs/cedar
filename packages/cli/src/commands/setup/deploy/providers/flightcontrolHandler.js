@@ -23,7 +23,7 @@ import {
   mysqlDatabaseService,
 } from '../templates/flightcontrol.js'
 
-const { getSchema, getConfig } = prismaInternals
+const { getSchemaWithPath, getConfig } = prismaInternals
 
 const getFlightcontrolJson = async (database) => {
   if (database === 'none') {
@@ -36,7 +36,7 @@ const getFlightcontrolJson = async (database) => {
     throw new Error("Could not find prisma schema at 'api/db/schema.prisma'")
   }
 
-  const schema = await getSchema(
+  const { schema } = await getSchemaWithPath(
     path.join(getPaths().base, 'api/db/schema.prisma'),
   )
   const config = await getConfig({ datamodel: schema })

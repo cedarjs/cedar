@@ -5,7 +5,7 @@ import { singularize, isPlural } from './rwPluralize.js'
 
 import { getPaths } from './index.js'
 
-const { getConfig, getDMMF, getSchema: getSchemaPrisma } = prismaInternals
+const { getConfig, getDMMF, getSchemaWithPath: getSchemaPrisma } = prismaInternals
 /**
  * Used to memoize results from `getSchema()` so we don't have to go through
  * the work of opening and parsing the file from scratch each time `getSchema()`
@@ -110,23 +110,24 @@ export const getEnum = async (name) => {
 /*
  * Returns the data model defined in `schema.prisma` (models, enums, etc.)
  */
-export const getDataModel = (path = getPaths().api.dbSchema) => {
-  return getSchemaPrisma(path)
+export const getDataModel = async (path = getPaths().api.dbSchema) => {
+  const { schema } = await getSchemaPrisma(path)
+  return schema
 }
 
 /*
  * Returns the DMMF defined by `prisma` resolving the relevant `schema.prisma` path.
  */
-export const getSchemaDefinitions = () => {
-  return getDMMF({ datamodel: getDataModel() })
+export const getSchemaDefinitions = async () => {
+  return getDMMF({ datamodel: await getDataModel() })
 }
 
 /*
  * Returns the config info defined in `schema.prisma` (provider, datasource, etc.)
  */
-export const getSchemaConfig = () =>
+export const getSchemaConfig = async () =>
   getConfig({
-    datamodel: getDataModel(),
+    datamodel: await getDataModel(),
   })
 
 export async function verifyModelName(options) {
