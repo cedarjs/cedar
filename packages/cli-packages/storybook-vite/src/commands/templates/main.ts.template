@@ -4,15 +4,25 @@ import { getPaths, importStatementPath } from '@cedarjs/project-config'
 
 const cedarProjectPaths = getPaths()
 
+const webSrc = cedarProjectPaths.web.src
+const importPath = importStatementPath(cedarProjectPaths.web.src)
+const storiesGlob = `${importPath}/**/*.@(mdx|stories.@(js|jsx|ts|tsx))`
+const importPathStoriesGlob = importStatementPath(
+  webSrc + '/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'
+)
+
+console.log('windows debugging')
+console.log('windows debugging webSrc', webSrc)
+console.log('windows debugging importPath', importPath)
+console.log('windows debugging storiesGlob', storiesGlob)
+console.log('windows debugging importPathStoriesGlob', importPathStoriesGlob)
+console.log('windows debugging')
+
 const config: StorybookConfig = {
   framework: 'storybook-framework-cedarjs',
-
   stories: [
-    `${importStatementPath(
-      cedarProjectPaths.web.src
-    )}/**/*.@(mdx|stories.@(js|jsx|ts|tsx))`,
+    `${importStatementPath(cedarProjectPaths.web.src)}/**/*.@(mdx|stories.@(js|jsx|ts|tsx))`,
   ],
-
   addons: ['@storybook/addon-docs'],
 }
 
