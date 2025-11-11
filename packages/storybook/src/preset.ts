@@ -54,13 +54,14 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
       },
     },
-    optimizeDeps: {
-      // Include MSW explicitly to prevent ESM/CJS interop timing issues.
-      // On slower systems (like Windows CI), Vite's dependency optimization
-      // can take longer. If Storybook loads before MSW is properly optimized,
-      // it causes ESM/CJS loading errors. By explicitly including MSW, we ensure
-      // it's pre-bundled correctly before Storybook starts serving content.
-      include: ['msw'],
+    server: {
+      // Disable pre-transformation of requests to prevent race conditions.
+      // On slower systems (especially Windows CI), Vite's dependency optimization
+      // can take longer than expected. If the dev server starts serving requests
+      // before optimization completes, it causes intermittent ESM/CJS loading errors
+      // and infinite loaders. Disabling pre-transform ensures the server waits for
+      // optimization to complete before processing requests.
+      preTransformRequests: false,
     },
   })
 }
