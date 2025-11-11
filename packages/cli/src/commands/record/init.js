@@ -7,5 +7,5 @@ export const handler = async () => {
 
   const { parseDatamodel } = await import('@cedarjs/record')
 
-  parseDatamodel()
+  await parseDatamodel()
 }
