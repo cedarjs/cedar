@@ -3274,7 +3274,6 @@ __metadata:
     "@types/semver": "npm:^7"
     "@types/yargs": "npm:17.0.33"
     ansis: "npm:4.1.0"
-    empathic: "npm:2.0.0"
     execa: "npm:5.1.1"
     semver: "npm:7.6.3"
     storybook: "npm:9.1.16"
