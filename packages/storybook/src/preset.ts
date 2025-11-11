@@ -54,5 +54,13 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
       },
     },
+    optimizeDeps: {
+      // Include MSW explicitly to prevent ESM/CJS interop timing issues.
+      // On slower systems (like Windows CI), Vite's dependency optimization
+      // can take longer. If Storybook loads before MSW is properly optimized,
+      // it causes ESM/CJS loading errors. By explicitly including MSW, we ensure
+      // it's pre-bundled correctly before Storybook starts serving content.
+      include: ['msw'],
+    },
   })
 }
