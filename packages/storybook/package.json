@@ -58,6 +58,7 @@
     "@storybook/addon-docs": "9.1.16",
     "@storybook/builder-vite": "9.1.16",
     "@storybook/react-vite": "9.1.16",
+    "empathic": "2.0.0",
     "magic-string": "0.30.18",
     "react-docgen": "7.0.3",
     "unplugin-auto-import": "19.3.0",

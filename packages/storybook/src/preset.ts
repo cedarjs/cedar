@@ -54,5 +54,8 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
       },
     },
+    server: {
+      preTransformRequests: false,
+    },
   })
 }

@@ -3274,6 +3274,7 @@ __metadata:
     "@types/semver": "npm:^7"
     "@types/yargs": "npm:17.0.33"
     ansis: "npm:4.1.0"
+    empathic: "npm:2.0.0"
     execa: "npm:5.1.1"
     semver: "npm:7.6.3"
     storybook: "npm:9.1.16"
@@ -15859,6 +15860,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"empathic@npm:2.0.0":
+  version: 2.0.0
+  resolution: "empathic@npm:2.0.0"
+  checksum: 10c0/7d3b14b04a93b35c47bcc950467ec914fd241cd9acc0269b0ea160f13026ec110f520c90fae64720fde72cc1757b57f3f292fb606617b7fccac1f4d008a76506
+  languageName: node
+  linkType: hard
+
 "encodeurl@npm:~1.0.2":
   version: 1.0.2
   resolution: "encodeurl@npm:1.0.2"
@@ -27552,6 +27560,7 @@ __metadata:
     "@storybook/builder-vite": "npm:9.1.16"
     "@storybook/react-vite": "npm:9.1.16"
     "@types/node": "npm:20.19.17"
+    empathic: "npm:2.0.0"
     magic-string: "npm:0.30.18"
     react-docgen: "npm:7.0.3"
     tsx: "npm:4.20.5"
