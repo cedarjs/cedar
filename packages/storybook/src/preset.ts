@@ -55,6 +55,14 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
       },
     },
     server: {
+      // CI was flaky. Sometimes the Storybook tests would pass, sometimes they
+      // wouldn't.
+      // If the dev server starts serving requests before optimization
+      // completes, it causes intermittent ESM/CJS loading errors, which locally
+      // shows up as an infinite loading spinner in the web browser, and an
+      // error in the browser console about missing exports.
+      // Disabling pre-transform ensures the server waits for optimization to
+      // complete before processing requests.
       preTransformRequests: false,
     },
   })
