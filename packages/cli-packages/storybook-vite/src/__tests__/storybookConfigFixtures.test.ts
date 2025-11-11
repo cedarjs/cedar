@@ -21,13 +21,6 @@ describe('storybook config file fixtures', () => {
         webSrc + '/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'
       )
 
-      console.log('windows debugging')
-      console.log('windows debugging webSrc', webSrc)
-      console.log('windows debugging importPath', importPath)
-      console.log('windows debugging storiesGlob', storiesGlob)
-      console.log('windows debugging importPathStoriesGlob', importPathStoriesGlob)
-      console.log('windows debugging')
-
       const config: StorybookConfig = {
         framework: 'storybook-framework-cedarjs',
         stories: [
