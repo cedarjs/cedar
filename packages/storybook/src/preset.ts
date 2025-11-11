@@ -22,12 +22,9 @@ function getAbsolutePath(input: string) {
   )
 }
 
-export const core: PresetProperty<'core'> = async (config, _options) => {
-  return {
-    ...config,
-    builder: getAbsolutePath('@storybook/builder-vite'),
-    renderer: getAbsolutePath('@storybook/react'),
-  }
+export const core: PresetProperty<'core'> = {
+  builder: getAbsolutePath('@storybook/builder-vite'),
+  renderer: getAbsolutePath('@storybook/react'),
 }
 
 export const previewAnnotations: StorybookConfig['previewAnnotations'] = (
