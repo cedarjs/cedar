@@ -34,7 +34,7 @@ export const previewAnnotations: StorybookConfig['previewAnnotations'] = (
   return [...entries, createdRequire.resolve('./preview.js')]
 }
 
-const redwoodProjectPaths = getPaths()
+const cedarProjectPaths = getPaths()
 
 export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   const { plugins = [] } = config
@@ -46,12 +46,12 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   return mergeConfig(config, {
     // This is necessary as it otherwise just points to the `web` directory,
     // but it needs to point to `web/src`
-    root: redwoodProjectPaths.web.src,
+    root: cedarProjectPaths.web.src,
     plugins: [mockRouter(), mockAuth(), autoImports],
     resolve: {
       alias: {
-        '~__REDWOOD__USER_ROUTES_FOR_MOCK': redwoodProjectPaths.web.routes,
-        '~__REDWOOD__USER_WEB_SRC': redwoodProjectPaths.web.src,
+        '~__REDWOOD__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
+        '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
       },
     },
     optimizeDeps: {
