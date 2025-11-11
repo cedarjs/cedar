@@ -4,13 +4,6 @@ import { getPaths, importStatementPath } from '@cedarjs/project-config'
 
 const cedarProjectPaths = getPaths()
 
-const webSrc = cedarProjectPaths.web.src
-const importPath = importStatementPath(cedarProjectPaths.web.src)
-const storiesGlob = `${importPath}/**/*.@(mdx|stories.@(js|jsx|ts|tsx))`
-const importPathStoriesGlob = importStatementPath(
-  webSrc + '/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'
-)
-
 const config: StorybookConfig = {
   framework: 'storybook-framework-cedarjs',
   stories: [
