@@ -1,4 +1,4 @@
-import { getSchema } from '@prisma/internals'
+import { getSchemaWithPath } from '@prisma/internals'
 import 'dotenv-defaults/config.js'
 import execa from 'execa'
 import type { Environment } from 'vitest/environments'
@@ -27,7 +27,7 @@ const CedarApiVitestEnvironment: Environment = {
     // Instead of using the schema, we can use the config file
     // const prismaConfig = await getConfig(rwjsPaths.api.dbSchema)
     // and then check for the prismaConfig.datasources[0].directUrl
-    const prismaSchema = (await getSchema(cedarPaths.api.dbSchema)).toString()
+    const { schema: prismaSchema } = await getSchemaWithPath(cedarPaths.api.dbSchema)
 
     const directUrlEnvVar = checkAndReplaceDirectUrl(prismaSchema, defaultDb)
 

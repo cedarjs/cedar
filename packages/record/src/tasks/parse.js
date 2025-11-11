@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import { getDMMF, getSchema } from '@prisma/internals'
+import { getDMMF, getSchemaWithPath } from '@prisma/internals'
 import * as esbuild from 'esbuild'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -27,8 +27,8 @@ const modelRequires = {}
 let datamodel
 
 // parse datamodel and write out cache
-export const parseDatamodel = () => {
-  const schema = getSchema(getPaths().api.dbSchema)
+export const parseDatamodel = async () => {
+  const { schema } = await getSchemaWithPath(getPaths().api.dbSchema)
 
   getDMMF({ datamodel: schema }).then((schema) => {
     datamodel = schema.datamodel

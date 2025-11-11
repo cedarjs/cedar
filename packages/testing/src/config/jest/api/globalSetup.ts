@@ -1,4 +1,4 @@
-import { getSchema } from '@prisma/internals'
+import { getSchemaWithPath } from '@prisma/internals'
 import 'dotenv-defaults/config'
 import execa from 'execa'
 
@@ -24,7 +24,7 @@ export default async function () {
   // Instead of using the schema, we can use the config file
   // const prismaConfig = await getConfig(rwjsPaths.api.dbSchema)
   // and then check for the prismaConfig.datasources[0].directUrl
-  const prismaSchema = (await getSchema(rwjsPaths.api.dbSchema)).toString()
+  const { schema: prismaSchema } = await getSchemaWithPath(rwjsPaths.api.dbSchema)
 
   const directUrlEnvVar = checkAndReplaceDirectUrl(prismaSchema, defaultDb)
 
