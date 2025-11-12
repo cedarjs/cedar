@@ -27,7 +27,9 @@ const CedarApiVitestEnvironment: Environment = {
     // Instead of using the schema, we can use the config file
     // const prismaConfig = await getConfig(rwjsPaths.api.dbSchema)
     // and then check for the prismaConfig.datasources[0].directUrl
-    const { schema: prismaSchema } = await getSchemaWithPath(cedarPaths.api.dbSchema)
+    const { schema: prismaSchema } = await getSchemaWithPath(
+      cedarPaths.api.dbSchema,
+    )
 
     const directUrlEnvVar = checkAndReplaceDirectUrl(prismaSchema, defaultDb)
 
