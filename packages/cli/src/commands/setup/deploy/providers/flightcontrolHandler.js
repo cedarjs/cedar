@@ -39,8 +39,9 @@ const getFlightcontrolJson = async (database) => {
   const result = await getSchemaWithPath(
     path.join(getPaths().base, 'api/db/schema.prisma'),
   )
-  // Pass the schemas array directly - getConfig accepts it
-  const config = await getConfig({ datamodel: result.schemas })
+  // getConfig expects datamodel as a string, so concatenate all schema files
+  const prismaSchema = result.schemas.map(([, content]) => content).join('\n')
+  const config = await getConfig({ datamodel: prismaSchema })
   const detectedDatabase = config.datasources[0].activeProvider
 
   if (detectedDatabase === database) {

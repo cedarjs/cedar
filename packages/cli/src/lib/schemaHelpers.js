@@ -112,8 +112,8 @@ export const getEnum = async (name) => {
  */
 export const getDataModel = async (path = getPaths().api.dbSchema) => {
   const result = await getSchemaPrisma(path)
-  // Return the schemas array directly - getDMMF and getConfig accept it
-  return result.schemas
+  // getDMMF and getConfig expect datamodel as a string, so concatenate all schema files
+  return result.schemas.map(([, content]) => content).join('\n')
 }
 
 /*
