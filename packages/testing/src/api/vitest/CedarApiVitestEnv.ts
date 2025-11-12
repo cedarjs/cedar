@@ -1,4 +1,4 @@
-import { getSchemaWithPath } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 import 'dotenv-defaults/config.js'
 import execa from 'execa'
 import type { Environment } from 'vitest/environments'
@@ -6,6 +6,8 @@ import type { Environment } from 'vitest/environments'
 import { getPaths } from '@cedarjs/project-config'
 
 import { getDefaultDb, checkAndReplaceDirectUrl } from '../directUrlHelpers.js'
+
+const { getSchemaWithPath } = prismaInternals
 
 const CedarApiVitestEnvironment: Environment = {
   name: 'cedar-api',

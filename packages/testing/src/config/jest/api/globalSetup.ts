@@ -1,4 +1,4 @@
-import { getSchemaWithPath } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 import 'dotenv-defaults/config'
 import execa from 'execa'
 
@@ -8,6 +8,8 @@ import {
   getDefaultDb,
   checkAndReplaceDirectUrl,
 } from '../../../api/directUrlHelpers.js'
+
+const { getSchemaWithPath } = prismaInternals
 
 const rwjsPaths = getPaths()
 
