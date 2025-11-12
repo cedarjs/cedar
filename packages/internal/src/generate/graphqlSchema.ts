@@ -84,9 +84,11 @@ export const generateGraphQLSchema = async () => {
     if (e instanceof Error) {
       const match = e.message.match(/Unknown type: "(\w+)"/)
       const name = match?.[1]
-      const { schema: schemaPrisma } = await getSchemaWithPath(
-        redwoodProjectPaths.api.dbSchema,
-      )
+      const result = await getSchemaWithPath(redwoodProjectPaths.api.dbSchema)
+      // For string operations, concatenate the schemas
+      const schemaPrisma = result.schemas
+        .map(([, content]) => content)
+        .join('\n')
 
       const errorObject = {
         message: `Schema loading failed. ${e.message}`,

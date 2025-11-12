@@ -87,7 +87,9 @@ export class RWProject extends BaseNode {
   @memo() async prismaDMMF(): Promise<DMMF.Document | undefined> {
     try {
       const schemaPath = this.pathHelper.api.dbSchema
-      const { schema: datamodel } = await getSchemaWithPath(schemaPath)
+      const result = await getSchemaWithPath(schemaPath)
+      // Pass the schemas array directly - getDMMF accepts it
+      const datamodel = result.schemas
       // consider case where dmmf doesn't exist (or fails to parse)
       return await getDMMF({ datamodel })
     } catch {

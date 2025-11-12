@@ -34,8 +34,9 @@ const getRenderYamlContent = async (database) => {
     throw new Error("Could not find prisma schema at 'api/db/schema.prisma'")
   }
 
-  const { schema } = await getSchemaWithPath('api/db/schema.prisma')
-  const config = await getConfig({ datamodel: schema })
+  const result = await getSchemaWithPath('api/db/schema.prisma')
+  // Pass the schemas array directly - getConfig accepts it
+  const config = await getConfig({ datamodel: result.schemas })
   const detectedDatabase = config.datasources[0].activeProvider
 
   if (detectedDatabase === database) {

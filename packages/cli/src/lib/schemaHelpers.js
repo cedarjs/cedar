@@ -111,8 +111,9 @@ export const getEnum = async (name) => {
  * Returns the data model defined in `schema.prisma` (models, enums, etc.)
  */
 export const getDataModel = async (path = getPaths().api.dbSchema) => {
-  const { schema } = await getSchemaPrisma(path)
-  return schema
+  const result = await getSchemaPrisma(path)
+  // Return the schemas array directly - getDMMF and getConfig accept it
+  return result.schemas
 }
 
 /*

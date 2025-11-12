@@ -28,9 +28,11 @@ let datamodel
 
 // parse datamodel and write out cache
 export const parseDatamodel = async () => {
-  const { schema } = await getSchemaWithPath(getPaths().api.dbSchema)
+  const result = await getSchemaWithPath(getPaths().api.dbSchema)
+  // Pass the schemas array directly - getDMMF accepts it
+  const datamodel = result.schemas
 
-  getDMMF({ datamodel: schema }).then((schema) => {
+  getDMMF({ datamodel }).then((schema) => {
     datamodel = schema.datamodel
 
     try {
