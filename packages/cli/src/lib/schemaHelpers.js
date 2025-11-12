@@ -125,10 +125,11 @@ export const getSchemaDefinitions = async () => {
 /*
  * Returns the config info defined in `schema.prisma` (provider, datasource, etc.)
  */
-export const getSchemaConfig = async () =>
-  getConfig({
+export const getSchemaConfig = async () => {
+  return getConfig({
     datamodel: await getDataModel(),
   })
+}
 
 export async function verifyModelName(options) {
   const modelName =
