@@ -88,8 +88,8 @@ export class RWProject extends BaseNode {
     try {
       const schemaPath = this.pathHelper.api.dbSchema
       const result = await getSchemaWithPath(schemaPath)
-      // getDMMF expects datamodel as a string, so concatenate all schema files
-      const datamodel = result.schemas.map(([, content]) => content).join('\n')
+      // Pass the schemas array directly - getDMMF accepts it
+      const datamodel = result.schemas
       // consider case where dmmf doesn't exist (or fails to parse)
       return await getDMMF({ datamodel })
     } catch {
