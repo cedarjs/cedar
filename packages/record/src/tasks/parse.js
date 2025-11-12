@@ -24,16 +24,13 @@ const indexLines = [
 
 const modelImports = []
 const modelRequires = {}
-let datamodel
 
 // parse datamodel and write out cache
 export const parseDatamodel = async () => {
   const result = await getSchemaWithPath(getPaths().api.dbSchema)
   // Pass the schemas array directly - getDMMF accepts it
-  const datamodel = result.schemas
-
-  getDMMF({ datamodel }).then((schema) => {
-    datamodel = schema.datamodel
+  getDMMF({ datamodel: result.schemas }).then((schema) => {
+    const datamodel = schema.datamodel
 
     try {
       // Ensure the directory exists
