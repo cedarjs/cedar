@@ -298,7 +298,7 @@ async function getPluginConfig(side: CodegenSide) {
     JSON: 'Prisma.JsonValue',
     JSONObject: 'Prisma.JsonObject',
     Time: side === CodegenSide.WEB ? 'string' : 'Date | string',
-    Byte: 'Buffer',
+    Byte: 'Uint8Array',
   }
 
   const config = getConfig()

@@ -173,12 +173,12 @@ async function configureTeardown() {
     return
   }
 
-  const { getDMMF, getSchema } = await import('@prisma/internals')
+  const { getDMMF, getSchemaWithPath } = await import('@prisma/internals')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const datamodel = await getSchema(cedarPaths.api.dbSchema)
-  const schema = await getDMMF({ datamodel })
+  const result = await getSchemaWithPath(cedarPaths.api.dbSchema)
+  const schema = await getDMMF({ datamodel: result.schemas })
   const schemaModels = schema.datamodel.models.map((m) => {
     return m.dbName || m.name
   })
@@ -327,17 +327,17 @@ const wasDbImported = () => {
 let quoteStyle: string
 // determine what kind of quotes are needed around table names in raw SQL
 async function getQuoteStyle() {
-  const { getConfig: getPrismaConfig, getSchema } = await import(
+  const { getConfig: getPrismaConfig, getSchemaWithPath } = await import(
     '@prisma/internals'
   )
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const datamodel = await getSchema(cedarPaths.api.dbSchema)
+  const result = await getSchemaWithPath(cedarPaths.api.dbSchema)
 
   if (!quoteStyle) {
     const config = await getPrismaConfig({
-      datamodel,
+      datamodel: result.schemas,
     })
 
     switch (config.datasources?.[0]?.provider) {
