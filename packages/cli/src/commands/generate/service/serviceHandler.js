@@ -160,7 +160,7 @@ export const buildStringifiedScenario = async (model) => {
     return value
   })
 
-  // Not all values can be represented as JSON, like function invocations
+  // Not all values can be represented as JSON, like constructor invocations
   return jsonString.replace(
     /"new Uint8Array\(([^)]+)\)"/g,
     'new Uint8Array($1)',

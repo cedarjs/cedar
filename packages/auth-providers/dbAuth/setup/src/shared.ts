@@ -15,7 +15,6 @@ export const functionsPath = getPaths().api.functions.replace(
 
 export const getModelNames = async () => {
   const result = await getSchemaWithPath(getPaths().api.dbSchema)
-  // Pass the schemas array directly - getDMMF accepts it
   const datamodel = result.schemas
   const schema = await getDMMF({ datamodel })
 

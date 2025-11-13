@@ -81,8 +81,8 @@ const configureTeardown = async (): Promise<void> => {
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const result = await getSchemaWithPath(dbSchemaPath)
-  const schema = await getDMMF({ datamodel: result.schemas })
+  const { schemas } = await getSchemaWithPath(dbSchemaPath)
+  const schema = await getDMMF({ datamodel: schemas })
   const schemaModels: string[] = schema.datamodel.models.map(
     (m: { dbName: string | null; name: string }) => m.dbName || m.name,
   )

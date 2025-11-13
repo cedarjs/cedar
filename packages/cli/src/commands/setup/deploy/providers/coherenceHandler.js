@@ -89,9 +89,7 @@ async function getAddCoherenceFilesTask(force) {
  */
 async function getCoherenceConfigFileContent() {
   const result = await getSchemaWithPath(redwoodProjectPaths.api.dbSchema)
-  // Pass the schemas array directly - getConfig accepts it
-  const prismaSchema = result.schemas
-  const prismaConfig = await getConfig({ datamodel: prismaSchema })
+  const prismaConfig = await getConfig({ datamodel: result.schemas })
 
   let db = prismaConfig.datasources[0].activeProvider
 
