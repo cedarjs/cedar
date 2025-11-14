@@ -2062,7 +2062,7 @@ describe('dbAuth', () => {
         data: {
           id: 'CxMJqILwYufSaEQsJX6rKHw_LkMXAGU64PaKU55l6ejZ4FNO5kBLiA',
           userId: user.id,
-          publicKey: Buffer.from([
+          publicKey: new Uint8Array([
             165, 1, 2, 3, 38, 32, 1, 33, 88, 32, 24, 136, 169, 77, 11, 126, 129,
             202, 3, 60, 234, 86, 233, 152, 222, 252, 11, 253, 11, 79, 163, 89,
             189, 145, 216, 240, 102, 92, 146, 75, 249, 207, 34, 88, 32, 187,

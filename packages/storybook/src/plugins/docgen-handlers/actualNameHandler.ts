@@ -1,3 +1,7 @@
+// This file is copied from here:
+// https://github.com/storybookjs/storybook/tree/b13be59361c528d08994405e31e085b705152a67/code/frameworks/react-vite/src/plugins
+// Some minor edits are made to the code, but nothing functional
+
 /**
  * This is heavily based on the react-docgen `displayNameHandler`
  * (https://github.com/reactjs/react-docgen/blob/26c90c0dd105bf83499a83826f2a6ff7a724620d/src/handlers/displayNameHandler.ts)

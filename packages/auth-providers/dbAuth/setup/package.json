@@ -26,7 +26,7 @@
   "dependencies": {
     "@babel/runtime-corejs3": "7.27.6",
     "@cedarjs/cli-helpers": "workspace:*",
-    "@prisma/internals": "5.20.0",
+    "@prisma/internals": "6.19.0",
     "@simplewebauthn/browser": "9.0.1",
     "core-js": "3.42.0",
     "prompts": "2.4.2",

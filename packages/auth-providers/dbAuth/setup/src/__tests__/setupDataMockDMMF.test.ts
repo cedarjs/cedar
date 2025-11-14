@@ -85,8 +85,10 @@ vi.mock('@cedarjs/cli-helpers', () => {
 })
 
 vi.mock('@prisma/internals', () => ({
-  getSchema: () => {
-    return memfs.readFileSync(dbSchemaPath, 'utf-8')
+  getSchemaWithPath: () => {
+    return {
+      schemas: [[dbSchemaPath, memfs.readFileSync(dbSchemaPath, 'utf-8')]],
+    }
   },
   getDMMF: () => {
     const schema: string = memfs.readFileSync(dbSchemaPath, 'utf-8').toString()

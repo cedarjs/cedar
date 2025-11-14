@@ -1,5 +1,7 @@
 // This file, and the files it imports, are all copied from here:
-// https://github.com/storybookjs/storybook/tree/07e803663b71b00d684c7a84cdc2e46400d8b027/code/frameworks/react-vite/src/plugins
+// https://github.com/storybookjs/storybook/tree/b13be59361c528d08994405e31e085b705152a67/code/frameworks/react-vite/src/plugins
+// Some minor edits are made to the code, but nothing functional
+
 import { existsSync } from 'node:fs'
 import { relative, sep } from 'node:path'
 
