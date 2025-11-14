@@ -116,7 +116,7 @@ export interface VerifyOptions {
 
 ## How to Receive and Verify an Incoming Webhook
 
-The `api/webhooks` package exports [verifyEvent and verifySignature](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/index.ts) to apply [verification methods](https://github.com/cedarjs/cedar/tree/main/packages/api/src/auth/verifiers) and verify the event or some portion of the event payload with a signature as defined in its [VerifyOptions](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/common.ts).
+The `@cedarjs/api/webhooks` package exports [verifyEvent and verifySignature](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/index.ts) to apply [verification methods](https://github.com/cedarjs/cedar/tree/main/packages/api/src/auth/verifiers) and verify the event or some portion of the event payload with a signature as defined in its [VerifyOptions](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/common.ts).
 If the signature fails verification, a `WebhookSignError` is raised which can be caught to return a `401` unauthorized.
 
 Typically, for each integration you'll define 1) the events that triggers the webhook or the schedule via cron/conditions to send the webhook, 2) a secret, and 3) the endpoint to send the webhook to (ie, your endpoint).
@@ -128,7 +128,7 @@ When your endpoint receives the request (incoming webhook), it can extract the s
 Note that:
 
 - `verifyEvent` will detect if the event body is base64 encoded, then decode and validate the payload with the signature verifier
-- signatureHeader specified in `VerifyOptions` will be converted to lowercase when fetching the signature from the event headers
+- `signatureHeader` specified in `VerifyOptions` will be converted to lowercase when fetching the signature from the event headers
 
 You can then use the payload data with confidence in your function.
 
@@ -773,7 +773,7 @@ export const handler = async (event: APIGatewayEvent) => {
 
 ## Signing a Payload for an Outgoing Webhook
 
-To sign a payload for an outgoing webhook, the `api/webhooks` package exports [signPayload](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/index.ts), a function that signs a payload using a [verification method](https://github.com/cedarjs/cedar/tree/main/packages/api/src/auth/verifiers), creating your "webhook signature". Once you have the signature, you can add it to your request's http headers with a name of your choosing, and then post the request to the endpoint:
+To sign a payload for an outgoing webhook, the `@cedarjs/api/webhooks` package exports [signPayload](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/index.ts), a function that signs a payload using a [verification method](https://github.com/cedarjs/cedar/tree/main/packages/api/src/auth/verifiers), creating your "webhook signature". Once you have the signature, you can add it to your request's http headers with a name of your choosing, and then post the request to the endpoint:
 
 ```jsx
 import got from 'got'
