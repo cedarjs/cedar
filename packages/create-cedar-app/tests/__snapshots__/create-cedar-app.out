@@ -30,7 +30,7 @@
 
 [38;2;255;132;94m > [32mcd cedar-app[38;2;255;132;94m[39m
 [38;2;255;132;94m > [32myarn install[38;2;255;132;94m[39m
-[38;2;255;132;94m > [32myarn rw dev[38;2;255;132;94m[39m
+[38;2;255;132;94m > [32myarn cedar dev[38;2;255;132;94m[39m
 
 [?25l[32m✔[39m Initialized a git repo with commit message "Initial commit"
 [?25h
