@@ -9,7 +9,7 @@ const config: StorybookConfig = {
   stories: [
     `${importStatementPath(cedarProjectPaths.web.src)}/**/*.@(mdx|stories.@(js|jsx|ts|tsx))`,
   ],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-docs'],
 }
 
 export default config
