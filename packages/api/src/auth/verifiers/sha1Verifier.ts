@@ -17,11 +17,6 @@ function toNormalizedJsonString(payload: Record<string, unknown>) {
   })
 }
 
-/**
- *
- * createSignature
- *
- */
 const createSignature = ({
   payload,
   secret = DEFAULT_WEBHOOK_SECRET,
@@ -43,11 +38,6 @@ const createSignature = ({
   return digest.toString()
 }
 
-/**
- *
- * verifySignature
- *
- */
 export const verifySignature = ({
   payload,
   secret = DEFAULT_WEBHOOK_SECRET,
@@ -90,14 +80,12 @@ export const verifySignature = ({
 }
 
 /**
- *
  * SHA1 HMAC Payload Verifier
  *
  * Based on Vercel's webhook payload verification
  * @see https://vercel.com/docs/api#integrations/webhooks/securing-webhooks
- *
  */
-const sha1Verifier = (_options?: VerifyOptions): Sha1Verifier => {
+export function sha1Verifier(_options?: VerifyOptions): Sha1Verifier {
   return {
     sign: ({ payload, secret }) => {
       return createSignature({ payload, secret })
@@ -108,5 +96,3 @@ const sha1Verifier = (_options?: VerifyOptions): Sha1Verifier => {
     type: 'sha1Verifier',
   }
 }
-
-export default sha1Verifier

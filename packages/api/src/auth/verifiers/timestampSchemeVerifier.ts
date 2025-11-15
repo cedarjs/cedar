@@ -29,7 +29,7 @@ const getHmac = ({ secret }: { secret: string }) => {
   return createHmac('sha256', secret)
 }
 
-/*
+/**
  * The Redwood-Webhook-Signature header included in each signed event contains a timestamp and one or more signatures.
  * The timestamp is prefixed by t=, and each signature is prefixed by a scheme. Schemes start with v, followed by an integer.
  * Currently, the only valid live signature scheme is v1.
@@ -130,17 +130,15 @@ const verifySignature = ({
 }
 
 /**
- *
  * Timestamp & Scheme Verifier
  *
  * Based on Stripe's secure webhook implementation
  *
  * @see https://stripe.com/docs/webhooks/signatures
- *
  */
-const timestampSchemeVerifier = (
+export function timestampSchemeVerifier(
   options?: VerifyOptions,
-): TimestampSchemeVerifier => {
+): TimestampSchemeVerifier {
   return {
     sign: ({ payload, secret }) => {
       return createSignature({

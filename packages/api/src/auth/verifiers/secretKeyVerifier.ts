@@ -6,13 +6,11 @@ export interface SecretKeyVerifier extends WebhookVerifier {
 }
 
 /**
- *
  * Secret Key Verifier
  *
  * Use when the payload is not signed, but rather authorized via a known secret key
- *
  */
-const secretKeyVerifier = (_options?: VerifyOptions): SecretKeyVerifier => {
+export function secretKeyVerifier(_options?: VerifyOptions): SecretKeyVerifier {
   return {
     sign: ({ secret }) => {
       return secret
@@ -29,5 +27,3 @@ const secretKeyVerifier = (_options?: VerifyOptions): SecretKeyVerifier => {
     type: 'secretKeyVerifier',
   }
 }
-
-export default secretKeyVerifier

@@ -3,13 +3,13 @@ import type { VerifyOptions, WebhookVerifier } from './common.js'
 export interface SkipVerifier extends WebhookVerifier {
   type: 'skipVerifier'
 }
+
 /**
  * skipVerifier skips webhook signature verification.
  * Use when there is no signature provided or the webhook is
  * entirely public.
- *
  */
-const skipVerifier = (_options?: VerifyOptions): SkipVerifier => {
+export function skipVerifier(_options?: VerifyOptions): SkipVerifier {
   return {
     sign: () => {
       console.warn(`No signature is created for the skipVerifier verifier`)
@@ -22,5 +22,3 @@ const skipVerifier = (_options?: VerifyOptions): SkipVerifier => {
     type: 'skipVerifier',
   }
 }
-
-export default skipVerifier
