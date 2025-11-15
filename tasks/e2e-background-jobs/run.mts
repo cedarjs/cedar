@@ -2,6 +2,24 @@ import process from 'node:process'
 
 import { $, cd, path, ProcessOutput, fs } from 'zx'
 
+// Suppress DEP0190 warning on Windows for zx shell usage
+// This warning occurs because zx uses `shell: true` with child processes on Windows
+// which triggers Node.js DEP0190: "Passing args to a child process with shell option true
+// can lead to security vulnerabilities, as the arguments are not escaped, only concatenated."
+// Since zx handles argument escaping internally, this warning is safe to suppress for our use case.
+if (process.platform === 'win32') {
+  process.removeAllListeners('warning')
+  process.on('warning', (warning) => {
+    if (
+      warning.name === 'DeprecationWarning' &&
+      warning.message.includes('DEP0190')
+    ) {
+      return // Ignore DEP0190 warnings
+    }
+    console.warn(warning)
+  })
+}
+
 import {
   JOBS_SCRIPT,
   PRISMA_SCRIPT,
@@ -138,10 +156,8 @@ async function runJobsSetup(projectPath: string) {
   }
   console.log('Confirmed: job config file exists')
 
-  const jobsTs = fs.readFileSync(
-    path.join(projectPath, 'api/src/lib/jobs.ts'),
-    'utf8',
-  )
+  const jobsPath = path.join(projectPath, 'api/src/lib/jobs.ts')
+  const jobsTs = fs.readFileSync(jobsPath, 'utf8')
 
   if (!/import \{.*JobManager.*\} from ['"]@cedarjs\/jobs['"]/.test(jobsTs)) {
     console.error(
@@ -162,11 +178,7 @@ async function runJobsSetup(projectPath: string) {
   console.log('Action: Altering the JobManager config to poll more often')
   const updatedJobsTs = jobsTs.replace('sleepDelay: 5', 'sleepDelay: 1')
 
-  fs.writeFileSync(
-    path.join(projectPath, 'api/src/lib/jobs.ts'),
-    updatedJobsTs,
-    'utf8',
-  )
+  fs.writeFileSync(jobsPath, updatedJobsTs, 'utf8')
 
   // Confirm jobs directory
   if (
