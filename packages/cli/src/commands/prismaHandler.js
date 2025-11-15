@@ -18,7 +18,7 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
 
   const rwjsPaths = getPaths()
 
-  // Prisma only supports '--help', but Redwood CLI supports `prisma <command> help`
+  // Prisma only supports '--help', but Cedar's CLI supports `prisma <command> help`
   const helpIndex = commands.indexOf('help')
   if (helpIndex !== -1) {
     options.help = true
@@ -33,16 +33,14 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
         commands[0],
       )
     ) {
-      // if no schema file or directory exists
-      const schemaDir = path.dirname(rwjsPaths.api.dbSchema)
-      if (!fs.existsSync(rwjsPaths.api.dbSchema) && !fs.existsSync(schemaDir)) {
+      if (!fs.existsSync(rwjsPaths.api.prismaConfig)) {
         console.error()
-        console.error(c.error('No Prisma Schema found.'))
-        console.error(`Redwood searched here '${rwjsPaths.api.dbSchema}'`)
+        console.error(c.error('No Prisma config file found.'))
+        console.error(`Cedar searched here '${rwjsPaths.api.prismaConfig}'`)
         console.error()
         process.exit(1)
       }
-      options.schema = `${rwjsPaths.api.dbSchema}`
+      options.config = `${rwjsPaths.api.prismaConfig}`
 
       if (['seed', 'diff'].includes(commands[1])) {
         delete options.schema
@@ -88,10 +86,10 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
 
 const printWrapInfo = () => {
   const message = [
-    c.bold('Redwood CLI wraps Prisma CLI'),
+    c.bold('Cedar CLI wraps Prisma CLI'),
     '',
-    'Use `yarn rw prisma` to automatically pass `--schema` and `--preview-feature` options.',
-    'Use `yarn prisma` to skip Redwood CLI automatic options.',
+    'Use `yarn cedar prisma` to automatically pass `--config` and `--preview-feature` options.',
+    'Use `yarn prisma` to skip Cedar CLI automatic options.',
     '',
     'Find more information in our docs:',
     c.underline('https://cedarjs.com/docs/cli-commands#prisma'),

@@ -35,7 +35,7 @@ describe('getConfig', () => {
           "debugPort": 18911,
           "path": "./api",
           "port": 8911,
-          "schemaPath": "./api/db/schema.prisma",
+          "prismaConfigFile": "./api/prisma.config.js",
           "serverConfig": "./api/server.config.js",
           "target": "node",
           "title": "Redwood App",
