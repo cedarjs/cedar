@@ -1,4 +1,4 @@
-// More info at https://redwoodjs.com/docs/project-configuration-dev-test-build
+// More info at https://cedarjs.com/docs/project-configuration-dev-test-build
 
 const config = {
   rootDir: '../',
