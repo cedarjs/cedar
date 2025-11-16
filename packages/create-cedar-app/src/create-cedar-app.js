@@ -707,7 +707,7 @@ async function createRedwoodApp() {
       default: true,
       type: 'boolean',
       describe:
-        'Enables sending telemetry events for this create command and all Redwood CLI commands https://telemetry.redwoodjs.com',
+        'Enables sending telemetry events for this create command and all Cedar CLI commands https://telemetry.redwoodjs.com',
     })
 
   const _isYarnBerryOrNewer = isYarnBerryOrNewer()
