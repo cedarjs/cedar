@@ -368,7 +368,7 @@ async function handleTargetDirPreference(targetDir) {
       targetDir === '.' ? 'the current directory' : targetDir
 
     tui.drawText(
-      `${RedwoodStyling.green('✔')} Creating your CedarJS app in ` +
+      `${RedwoodStyling.green('✔')} Creating your Cedar app in ` +
         `${targetDirText} based on command line argument`,
     )
 
@@ -657,7 +657,7 @@ async function handleYarnInstallPreference(yarnInstallFlag) {
 }
 
 /**
- * This function creates a new RedwoodJS app.
+ * This function creates a new Cedar app.
  *
  * It performs the following actions:
  *  - TODO - Add a list of what this function does

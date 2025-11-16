@@ -115,5 +115,5 @@ up with an upgrade, like this:
 
 ```bash
 cd /path/to/new/cedar-app
-yarn cedarjs upgrade -t canary
+yarn cedar upgrade -t canary
 ```
