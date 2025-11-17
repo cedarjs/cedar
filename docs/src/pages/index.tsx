@@ -80,6 +80,21 @@ export default function Home() {
             </a>
           </p>
         </section>
+        <form
+          name="newsletter-subscribe"
+          action="/newsletter-thank-you"
+          method="POST"
+          data-netlify="true"
+        >
+          <p>
+            <label>
+              Email <input type="email" name="email" />
+            </label>
+          </p>
+          <p>
+            <button type="submit">Subscribe</button>
+          </p>
+        </form>
         <h1>About</h1>
         <p>
           CedarJS is an opinionated, full-stack React framework that makes
