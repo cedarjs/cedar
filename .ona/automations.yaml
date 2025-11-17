@@ -7,7 +7,7 @@ services:
         # Ensure corepack is enabled in service environment
         corepack enable
         cd /workspaces/cdr-test-app
-        NODE_ENV=development corepack yarn cedarjs dev
+        NODE_ENV=development corepack yarn cedar dev
 
 tasks:
   setup-environment:

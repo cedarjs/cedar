@@ -44,11 +44,11 @@ If you want to complete the tutorial in TypeScript, continue with your own repo,
 git clone https://github.com/cedarjs/cedar-tutorial
 cd cedar-tutorial
 yarn install
-yarn cedarjs prisma migrate dev
-yarn cedarjs g secret
+yarn cedar prisma migrate dev
+yarn cedar g secret
 ```
 
-That'll check out the repo, install all the dependencies, create your local database (SQLite) and fill it with a few blog posts. After that last command (`yarn cedarjs g secret`) you'll need to copy the string that's output and add it to a file `.env` in the root of your project:
+That'll check out the repo, install all the dependencies, create your local database (SQLite) and fill it with a few blog posts. After that last command (`yarn cedar g secret`) you'll need to copy the string that's output and add it to a file `.env` in the root of your project:
 
 ```bash title=".env"
 SESSION_SECRET=JV2kA48ZU4FnLHwqaydy9beJ99qy4VgWXPkvsaw3xE2LGyuSur2dVq2PsPkPfygr
@@ -56,7 +56,7 @@ SESSION_SECRET=JV2kA48ZU4FnLHwqaydy9beJ99qy4VgWXPkvsaw3xE2LGyuSur2dVq2PsPkPfygr
 
 This is the encryption key for the secure cookies used in [dbAuth](/docs/tutorial/chapter4/authentication#session-secret).
 
-Now just run `yarn cedarjs dev` to start your development server. Your browser should open to a fresh new blog app:
+Now just run `yarn cedar dev` to start your development server. Your browser should open to a fresh new blog app:
 
 ![image](https://user-images.githubusercontent.com/300/101423176-54e93780-38ad-11eb-9230-ba8557764eb4.png)
 

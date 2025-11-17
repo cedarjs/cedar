@@ -377,7 +377,7 @@ that sort of thing. We call these recurring jobs.
 CedarJS's job system has native support for these kinds of jobs by specifying a
 `cron` schedule when scheduling a job. The easiest way to schedule a cron job
 locally is probably to have a script do it. So first generate a script:
-`yarn cedarjs generate script ScheduleCronJobs`. Then update the script to look
+`yarn cedar generate script ScheduleCronJobs`. Then update the script to look
 something like this:
 
 ```ts
@@ -392,7 +392,7 @@ export default async () => {
 ```
 
 Now you can just run that script and the job will be scheduled:
-`yarn cedarjs exec ScheduleCronJobs`
+`yarn cedar exec ScheduleCronJobs`
 
 CedarJS uses https://github.com/harrisiirak/cron-parser under the hood for
 parsing the `cron` schedule. So all the syntax supported by `cron-parser` is
