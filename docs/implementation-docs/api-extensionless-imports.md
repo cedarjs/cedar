@@ -9,7 +9,7 @@ First step was setting the correct tsconfig options:
 ```
 
 Next step was to decide if I wanted to fix `dev` or `build` first. I decided to
-go with `dev`. `yarn cedarjs dev` is handled by
+go with `dev`. `yarn cedar dev` is handled by
 `packages/cli/src/commands/devHandler.js`, which in turn calls
 `cedarjs-api-server-watch` for ESM projects. `cedarjs-api-server-watch` is the
 name I've given `packages/api-server/src/watch.ts` when it's built for ESM. (The

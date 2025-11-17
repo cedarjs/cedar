@@ -21,7 +21,7 @@ One of the core principles behind CedarJS was that getting data from the backend
 
 A CedarJS app is actually two apps: a frontend (that's the React part) and a backend, which is your server and talks to a database and other third party systems. Your app is technically a monorepo with two top-level directories: `web` containing the frontend code and `api` containing the backend.
 
-You can start them both with a single command: `yarn cedarjs dev`
+You can start them both with a single command: `yarn cedar dev`
 
 ## The Frontend
 

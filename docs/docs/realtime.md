@@ -110,8 +110,8 @@ Regardless of the implementation chosen, **a stateful server and store are neede
 
 To setup realtime in an existing Cedar project, run the following commands:
 
-- `yarn cedarjs setup server-file`
-- `yarn cedarjs setup realtime`
+- `yarn cedar setup server-file`
+- `yarn cedar setup realtime`
 
 You'll get:
 
