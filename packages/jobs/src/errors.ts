@@ -73,7 +73,7 @@ export class JobsLibNotFoundError extends CedarJSJobsError {
     super(
       `api/src/lib/${JOBS_CONFIG_FILENAME} not found. Run \`yarn rw setup ` +
         'jobs` to create this file and configure background jobs. Already ' +
-        "did that? You'll need to run `yarn rw dev` or `yarn rw build` " +
+        "did that? You'll need to run `yarn cedar dev` or `yarn rw build` " +
         'before you can start the job workers!',
     )
   }

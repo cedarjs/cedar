@@ -35,12 +35,12 @@ Output:
 
 ## Usage
 
-Log formatting is automatically setup in the `yarn rw dev` command.
+Log formatting is automatically setup in the `yarn cedar dev` command.
 
 Pipe logs to the formatter with `rw serve`:
 
 ```bash
-yarn rw dev
+yarn cedar dev dev
 yarn rw serve | yarn rw-log-formatter
 yarn rw serve api | yarn rw-log-formatter
 ```

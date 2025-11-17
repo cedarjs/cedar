@@ -852,7 +852,7 @@ async function createRedwoodApp() {
             ` > ${RedwoodStyling.green(`yarn install`)}`,
           )}`,
         `${RedwoodStyling.redwood(
-          ` > ${RedwoodStyling.green(`yarn rw dev`)}`,
+          ` > ${RedwoodStyling.green(`yarn cedar dev`)}`,
         )}`,
       ].filter(Boolean),
       '',

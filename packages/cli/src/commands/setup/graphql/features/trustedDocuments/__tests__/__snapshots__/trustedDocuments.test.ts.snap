@@ -3,7 +3,7 @@
 exports[`Trusted documents setup > Project toml configuration updates > default toml where graphql fragments are already setup > updates the toml file with graphql and trusted documents enabled and keeps fragments 1`] = `
 "# This file contains the configuration settings for your Redwood app.
 # This file is also what makes your Redwood app a Redwood app.
-# If you remove it and try to run \`yarn rw dev\`, you'll get an error.
+# If you remove it and try to run \`yarn cedar dev\`, you'll get an error.
 #
 # For the full list of options, see the "App Configuration: redwood.toml" doc:
 # https://redwoodjs.com/docs/app-configuration-redwood-toml
@@ -31,7 +31,7 @@ exports[`Trusted documents setup > Project toml configuration updates > default 
 exports[`Trusted documents setup > Project toml configuration updates > default toml where graphql fragments are already setup using no spaces > updates the toml file with graphql and trusted documents enabled and keeps fragments 1`] = `
 "# This file contains the configuration settings for your Redwood app.
 # This file is also what makes your Redwood app a Redwood app.
-# If you remove it and try to run \`yarn rw dev\`, you'll get an error.
+# If you remove it and try to run \`yarn cedar dev\`, you'll get an error.
 #
 # For the full list of options, see the "App Configuration: redwood.toml" doc:
 # https://redwoodjs.com/docs/app-configuration-redwood-toml
@@ -59,7 +59,7 @@ exports[`Trusted documents setup > Project toml configuration updates > default 
 exports[`Trusted documents setup > Project toml configuration updates > default toml where no graphql or trusted documents is setup > updates the toml file with graphql and trusted documents enabled 1`] = `
 "# This file contains the configuration settings for your Redwood app.
 # This file is also what makes your Redwood app a Redwood app.
-# If you remove it and try to run \`yarn rw dev\`, you'll get an error.
+# If you remove it and try to run \`yarn cedar dev\`, you'll get an error.
 #
 # For the full list of options, see the "App Configuration: redwood.toml" doc:
 # https://redwoodjs.com/docs/app-configuration-redwood-toml
@@ -86,7 +86,7 @@ exports[`Trusted documents setup > Project toml configuration updates > default 
 exports[`Trusted documents setup > Project toml configuration updates > toml where graphql section is commented out > adds a new section with \`trustedDocuments = true\` 1`] = `
 "# This file contains the configuration settings for your Redwood app.
 # This file is also what makes your Redwood app a Redwood app.
-# If you remove it and try to run \`yarn rw dev\`, you'll get an error.
+# If you remove it and try to run \`yarn cedar dev\`, you'll get an error.
 #
 # For the full list of options, see the "App Configuration: redwood.toml" doc:
 # https://redwoodjs.com/docs/app-configuration-redwood-toml
