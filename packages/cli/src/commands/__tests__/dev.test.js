@@ -105,7 +105,7 @@ function defaultConfig() {
   }
 }
 
-describe('yarn cedar dev dev', () => {
+describe('yarn cedar dev', () => {
   afterEach(() => {
     vi.clearAllMocks()
     getPaths.mockReturnValue(defaultPaths())

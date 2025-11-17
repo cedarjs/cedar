@@ -40,7 +40,7 @@ Log formatting is automatically setup in the `yarn cedar dev` command.
 Pipe logs to the formatter with `rw serve`:
 
 ```bash
-yarn cedar dev dev
+yarn cedar dev
 yarn rw serve | yarn rw-log-formatter
 yarn rw serve api | yarn rw-log-formatter
 ```
