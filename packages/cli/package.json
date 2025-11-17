@@ -10,7 +10,6 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "cdr": "./dist/index.js",
     "cedarjs": "./dist/index.js",
     "redwood": "./dist/index.js",
     "rw": "./dist/index.js",
