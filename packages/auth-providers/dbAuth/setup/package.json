@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-dbauth-setup",
-  "version": "0.15.0",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@babel/runtime-corejs3": "7.27.6",
-    "@cedarjs/cli-helpers": "0.15.0",
+    "@cedarjs/cli-helpers": "1.0.0",
     "@prisma/internals": "5.20.0",
     "@simplewebauthn/browser": "7.4.0",
     "core-js": "3.42.0",

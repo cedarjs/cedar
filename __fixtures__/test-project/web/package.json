@@ -11,16 +11,16 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/auth-dbauth-web": "0.15.0",
-    "@cedarjs/forms": "0.15.0",
-    "@cedarjs/router": "0.15.0",
-    "@cedarjs/web": "0.15.0",
+    "@cedarjs/auth-dbauth-web": "1.0.0",
+    "@cedarjs/forms": "1.0.0",
+    "@cedarjs/router": "1.0.0",
+    "@cedarjs/web": "1.0.0",
     "humanize-string": "2.1.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "@cedarjs/vite": "0.15.0",
+    "@cedarjs/vite": "1.0.0",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "autoprefixer": "^10.4.22",

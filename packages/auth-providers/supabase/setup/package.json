@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-supabase-setup",
-  "version": "0.15.0",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -37,7 +37,7 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@cedarjs/cli-helpers": "0.15.0"
+    "@cedarjs/cli-helpers": "1.0.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
