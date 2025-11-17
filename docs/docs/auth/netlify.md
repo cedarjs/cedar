@@ -19,7 +19,7 @@ If this's a deal breaker for you, there are [other great auth providers to choos
 But here we'll assume it's not and that your app is already deployed.
 (If it isn't, do that first, then come back. And yes, there's a setup command for that: `yarn rw setup deploy netlify`.)
 
-Once you've deployed your app, go to it's overview, click "Integrations" in the nav at the top, search for Netlify Identity, enable it, and copy the API endpoint in the Identity card.
+Once you've deployed your app, go to its overview, click "Projects" in the nav on the side, click on the name of your project. You should now be at "app.netlify.com/projects/<name-of-your-app>/overview". Look for "Project configuration" on the side menu. Scroll down and find "Identity". Search for Netlify Identity, enable it, and copy the API endpoint in the Identity card.
 (It should look something like `https://my-redwood-app.netlify.app/.netlify/identity`.)
 
 Let's do one more thing while we're here to make signing up later a little easier.
