@@ -82,7 +82,8 @@ export default function ThankYou() {
           </p>
           <div
             style={{
-              backgroundColor: '#f6f8fa',
+              backgroundColor: 'var(--ifm-code-background)',
+              border: '1px solid var(--ifm-color-emphasis-300)',
               padding: '1em',
               borderRadius: '6px',
               fontFamily: 'monospace',
