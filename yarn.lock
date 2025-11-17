@@ -2664,7 +2664,6 @@ __metadata:
     redis:
       optional: true
   bin:
-    cdr: ./dist/cjs/bins/cedar.js
     cedar: ./dist/cjs/bins/cedar.js
     cedarjs: ./dist/cjs/bins/cedar.js
     redwood: ./dist/cjs/bins/redwood.js
@@ -3380,7 +3379,6 @@ __metadata:
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
   bin:
-    cdr: ./dist/index.js
     cedarjs: ./dist/index.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
@@ -3482,7 +3480,6 @@ __metadata:
     tsx: "npm:4.20.5"
     typescript: "npm:5.9.2"
   bin:
-    cdr: ./dist/bins/cedar.js
     cedar: ./dist/bins/cedar.js
     cedarjs: ./dist/bins/cedar.js
     cedarjs-api-server-watch: ./dist/bins/cedarjs-api-server-watch.js
@@ -4274,7 +4271,6 @@ __metadata:
     react: 18.3.1
     react-dom: 18.3.1
   bin:
-    cdr: ./dist/cjs/bins/cedar.js
     cedar: ./dist/cjs/bins/cedar.js
     cedarjs: ./dist/cjs/bins/cedar.js
     cross-env: ./dist/cjs/bins/cross-env.js

@@ -6,7 +6,7 @@ services:
       start: |
         # Ensure corepack is enabled in service environment
         corepack enable
-        cd /workspaces/cdr-test-app
+        cd /workspaces/cedar-test-app
         NODE_ENV=development corepack yarn cedar dev
 
 tasks:
@@ -19,7 +19,7 @@ tasks:
       export RWFW_PATH="/workspaces/cedar"
       export REDWOOD_DISABLE_TELEMETRY=1
       echo "Setting up CedarJS development environment..."
-      mkdir -p /workspaces/cdr-test-app
+      mkdir -p /workspaces/cedar-test-app
       cd /workspaces/cedar
       echo "Cleaning up existing symlinks and cache..."
       rm -rf node_modules/@cedarjs
@@ -29,10 +29,10 @@ tasks:
       echo "Installing framework dependencies..."
       corepack yarn install
       echo "Building test project..."
-      corepack yarn run build:test-project ../cdr-test-app --typescript --link --verbose
-      cd /workspaces/cdr-test-app
+      corepack yarn run build:test-project ../cedar-test-app --typescript --link --verbose
+      cd /workspaces/cedar-test-app
       sed -i "s/\(open *= *\).*/\1false/" redwood.toml
-      echo -e "\n\n\033[94m ======================================================\n\033[33m ⌛ CedarJS development environment is ready!\n Test app \"cdr-test-app\" has been generated & linked with framework code.\n\n If you make changes to the framework:\n 1. \033[33mEnsure env vars are set \033[92mexport RWFW_PATH=\"/workspaces/cedar\"\033[33m\n 2. \033[33mRun \033[92mcorepack yarn rwfw project:sync\033[33m to sync changes\n 3. \033[33mOr use the \033[92mSync Framework Changes\033[33m task from Ona dashboard\n\033[94m ======================================================\n\n"
+      echo -e "\n\n\033[94m ======================================================\n\033[33m ⌛ CedarJS development environment is ready!\n Test app \"cedar-test-app\" has been generated & linked with framework code.\n\n If you make changes to the framework:\n 1. \033[33mEnsure env vars are set \033[92mexport RWFW_PATH=\"/workspaces/cedar\"\033[33m\n 2. \033[33mRun \033[92mcorepack yarn rwfw project:sync\033[33m to sync changes\n 3. \033[33mOr use the \033[92mSync Framework Changes\033[33m task from Ona dashboard\n\033[94m ======================================================\n\n"
       # Open ports for CedarJS development servers
       echo "Opening ports for development servers..."
       gitpod environment port open 8910 --name "CedarJS Web Server" --protocol https
@@ -67,7 +67,7 @@ tasks:
       - manual
     command: |
       export RWFW_PATH="/workspaces/cedar"
-      cd /workspaces/cdr-test-app
+      cd /workspaces/cedar-test-app
       corepack yarn rwfw project:sync
       echo "Framework changes synced to test project"
 
