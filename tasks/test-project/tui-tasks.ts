@@ -179,13 +179,13 @@ export async function webTasks(outputPath: string) {
       {
         title: 'Creating MDX Storybook stories',
         task: () => {
-          const redwoodMdxStoryContent = fs.readFileSync(
-            `${path.resolve(__dirname, 'codemods', 'Redwood.stories.mdx')}`,
+          const cedarMdxStoryContent = fs.readFileSync(
+            `${path.resolve(__dirname, 'codemods', 'CedarJS.mdx')}`,
           )
 
           fs.writeFileSync(
-            fullPath('web/src/Redwood.stories.mdx', { addExtension: false }),
-            redwoodMdxStoryContent,
+            fullPath('web/src/CedarJS.mdx', { addExtension: false }),
+            cedarMdxStoryContent,
           )
 
           return

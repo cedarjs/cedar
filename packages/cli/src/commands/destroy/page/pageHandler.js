@@ -21,7 +21,7 @@ export const tasks = ({ name, path }) =>
         title: 'Destroying page files...',
         task: async () => {
           const p = pathName(path, name)
-          const f = pageFiles({
+          const f = await pageFiles({
             name,
             path: p,
             stories: true,

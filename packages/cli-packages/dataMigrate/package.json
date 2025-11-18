@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/client": "5.20.0",
+    "@prisma/client": "6.19.0",
     "@types/fs-extra": "11.0.4",
     "@types/yargs": "17.0.33",
     "jest": "29.7.0",

@@ -108,7 +108,7 @@ describe('realtimeHandler', () => {
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
       expect.stringMatching(
         'Adding realtime events requires that CedarJS Realtime is setup. ' +
-          'Please run `yarn cedarjs setup realtime` first.',
+          'Please run `yarn cedar setup realtime` first.',
       ),
     )
     expect(vi.mocked(process).exit).toHaveBeenCalledWith(1)
