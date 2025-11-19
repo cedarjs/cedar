@@ -10,7 +10,6 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "cdr": "./dist/bins/cedar.js",
     "cedar": "./dist/bins/cedar.js",
     "cedarjs": "./dist/bins/cedar.js",
     "cedarjs-api-server-watch": "./dist/bins/cedarjs-api-server-watch.js",

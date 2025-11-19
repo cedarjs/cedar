@@ -24,7 +24,7 @@ import {
 //     "name":"SampleJob",
 //     "path":"SampleJob/SampleJob",
 //     "args":[
-//       "/Users/tobbe/tmp/cdr-test-project-e2e-cron/BACKGROUND_JOB_TEST.txt",
+//       "/Users/tobbe/tmp/cedar-test-project-e2e-cron/BACKGROUND_JOB_TEST.txt",
 //       "0049550"
 //     ]
 //   }`,

@@ -98,7 +98,7 @@ export const mapPrismaScalarToPagePropTsType = (scalarType) => {
     Float: 'number',
     Decimal: 'number',
     DateTime: 'string',
-    Bytes: 'Buffer',
+    Bytes: 'Uint8Array',
   }
   return prismaScalarToTsType[scalarType] || 'unknown'
 }

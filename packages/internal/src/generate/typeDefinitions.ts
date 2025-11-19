@@ -399,7 +399,7 @@ export const generateViteClientTypesDirective = () => {
 
 function generateStubStorybookTypes() {
   const stubStorybookTypesFileContent = `\
-declare module '@storybook/react' {
+declare module '@storybook/react-vite' {
   export type Meta<T = any> = any
   export type StoryObj<T = any> = any
 }

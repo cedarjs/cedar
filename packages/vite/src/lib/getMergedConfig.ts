@@ -83,29 +83,44 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
                 waitingForApiServer = false
               }, 2500)
 
-              proxy.on('error', (err, _req, res) => {
-                if (
-                  waitingForApiServer &&
-                  err.message.includes('ECONNREFUSED')
-                ) {
-                  err.stack =
-                    '⌛ API Server launching, please refresh your page...'
+              proxy.on('error', (err, req, res) => {
+                const isWaiting =
+                  waitingForApiServer && err.message.includes('ECONNREFUSED')
+
+                if (!isWaiting) {
+                  console.error(err)
                 }
-                const msg = {
+
+                // This heuristic isn't perfect. It's written to handle dbAuth.
+                // But it's very unlikely the user would have code that does
+                // this exact request without it being a auth token request.
+                // We need this special handling because we don't want the error
+                // message below to be used as the auth token.
+                const isAuthTokenRequest =
+                  isWaiting && req.url === '/auth?method=getToken'
+
+                const waitingMessage =
+                  '⌛ API Server launching, please refresh your page...'
+                const genericMessage =
+                  'The Cedar API server is not available or is currently ' +
+                  'reloading. Please refresh.'
+
+                const responseBody = {
                   errors: [
-                    {
-                      message:
-                        'The RedwoodJS API server is not available or is ' +
-                        'currently reloading. Please refresh.',
-                    },
+                    { message: isWaiting ? waitingMessage : genericMessage },
                   ],
                 }
 
+                // Use 203 to indicate that the response was modified by a proxy
                 res.writeHead(203, {
                   'Content-Type': 'application/json',
                   'Cache-Control': 'no-cache',
                 })
-                res.write(JSON.stringify(msg))
+
+                if (!isAuthTokenRequest) {
+                  res.write(JSON.stringify(responseBody))
+                }
+
                 res.end()
               })
             },

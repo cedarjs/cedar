@@ -175,7 +175,7 @@ export default TsFilesPage
 `;
 
 exports[`TS Files > generates typescript pages 2`] = `
-"import type { Meta, StoryObj } from '@storybook/react'
+"import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import TsFilesPage from './TsFilesPage'
 

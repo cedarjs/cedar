@@ -10,6 +10,8 @@ import c from '../../../lib/colors.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 
+const { getDMMF, getSchemaWithPath } = prismaInternals
+
 const MODEL_SCHEMA = `
 model BackgroundJob {
   id        Int       @id @default(autoincrement())
@@ -29,9 +31,8 @@ model BackgroundJob {
 `
 
 const getModelNames = async () => {
-  const schema = await prismaInternals.getDMMF({
-    datamodelPath: getPaths().api.dbSchema,
-  })
+  const { schemas } = await getSchemaWithPath(getPaths().api.dbSchema)
+  const schema = await getDMMF({ datamodel: schemas })
 
   return schema.datamodel.models.map((model) => model.name)
 }

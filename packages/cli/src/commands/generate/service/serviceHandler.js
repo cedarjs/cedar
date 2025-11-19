@@ -66,7 +66,7 @@ export const scenarioFieldValue = (field) => {
     case 'String':
       return field.isUnique ? `String${randInt}` : 'String'
     case 'Bytes':
-      return `Buffer.from([${randIntArray}])`
+      return `new Uint8Array([${randIntArray}])`
     default: {
       if (field.kind === 'enum' && field.enumValues[0]) {
         return field.enumValues[0].dbName || field.enumValues[0].name
@@ -160,8 +160,11 @@ export const buildStringifiedScenario = async (model) => {
     return value
   })
 
-  // Not all values can be represented as JSON, like function invocations
-  return jsonString.replace(/"Buffer\.from\(([^)]+)\)"/g, 'Buffer.from($1)')
+  // Not all values can be represented as JSON, like constructor invocations
+  return jsonString.replace(
+    /"new Uint8Array\(([^)]+)\)"/g,
+    'new Uint8Array($1)',
+  )
 }
 
 export const fieldTypes = async (model) => {
