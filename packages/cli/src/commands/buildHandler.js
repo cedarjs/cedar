@@ -46,8 +46,10 @@ export const handler = async ({
   const tasks = [
     shouldGeneratePrismaClient && {
       title: 'Generating Prisma Client...',
-      task: () => {
-        const { cmd, args } = generatePrismaCommand(rwjsPaths.api.dbSchema)
+      task: async () => {
+        const { cmd, args } = await generatePrismaCommand(
+          rwjsPaths.api.dbSchema,
+        )
         return execa(cmd, args, {
           stdio: verbose ? 'inherit' : 'pipe',
           shell: true,

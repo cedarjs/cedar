@@ -5,13 +5,13 @@ import path from 'node:path'
 
 import fs from 'fs-extra'
 
-import { getSchemaPathSync } from '@cedarjs/project-config'
+import { getSchemaPath } from '@cedarjs/project-config'
 
 import { runCommandTask, getPaths } from '../lib/index.js'
 
-const skipTask = (schema) => {
+const skipTask = async (schema) => {
   if (!schema) {
-    schema = getSchemaPathSync(getPaths().api.prismaConfig)
+    schema = await getSchemaPath(getPaths().api.prismaConfig)
   }
   if (!fs.existsSync(schema)) {
     console.log(
@@ -22,8 +22,8 @@ const skipTask = (schema) => {
   return false
 }
 
-export const generatePrismaCommand = (schema) => {
-  if (skipTask(schema)) {
+export const generatePrismaCommand = async (schema) => {
+  if (await skipTask(schema)) {
     return {}
   }
 
@@ -51,9 +51,9 @@ export const generatePrismaClient = async ({
   schema,
 }) => {
   if (!schema) {
-    schema = getSchemaPathSync(getPaths().api.prismaConfig)
+    schema = await getSchemaPath(getPaths().api.prismaConfig)
   }
-  if (skipTask(schema)) {
+  if (await skipTask(schema)) {
     return
   }
 
@@ -89,7 +89,7 @@ export const generatePrismaClient = async ({
     [
       {
         title: 'Generating the Prisma client...',
-        ...generatePrismaCommand(schema),
+        ...(await generatePrismaCommand(schema)),
       },
     ],
     {

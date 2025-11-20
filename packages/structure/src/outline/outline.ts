@@ -1,3 +1,5 @@
+import { getSchemaPath } from '@cedarjs/project-config'
+
 import type { FileNode } from '../ide'
 import type { RWProject } from '../model'
 import type { RWPage } from '../model/RWPage'
@@ -8,7 +10,7 @@ import { Command_cli, Command_open } from '../x/vscode'
 
 export function getOutline(project: RWProject): TreeItem2 {
   return {
-    children: () => [
+    children: async () => [
       _router(project),
       _pages(project),
       _components(project),
@@ -16,7 +18,7 @@ export function getOutline(project: RWProject): TreeItem2 {
       _cells(project),
       _services(project),
       _functions(project),
-      _schema(project),
+      await _schema(project),
       {
         label: 'redwood.toml',
         iconPath: 'x-redwood',
@@ -193,7 +195,8 @@ function _functions(project: RWProject): TreeItem2 {
   }
 }
 
-function _schema(project: RWProject): TreeItem2 {
+async function _schema(project: RWProject): Promise<TreeItem2> {
+  const schemaPath = await getSchemaPath(project.pathHelper.api.prismaConfig)
   return {
     label: 'schema.prisma',
     iconPath: 'x-prisma',
@@ -203,7 +206,7 @@ function _schema(project: RWProject): TreeItem2 {
         'https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-schema',
       ),
     },
-    ...resourceUriAndCommandFor(project.pathHelper.api.dbSchema),
+    ...resourceUriAndCommandFor(schemaPath),
     async children() {
       const dmmf = await project.prismaDMMF()
       if (!dmmf) {

@@ -4,7 +4,7 @@ import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { getSchemaPathSync } from '@cedarjs/project-config'
+import { getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../../lib/colors.js'
@@ -64,8 +64,8 @@ const files = [
   },
 ]
 
-const prismaBinaryTargetAdditions = () => {
-  const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
+const prismaBinaryTargetAdditions = async () => {
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
   const content = fs.readFileSync(schemaPath).toString()
 
   if (!content.includes('rhel-openssl-1.0.x')) {
@@ -134,7 +134,7 @@ export const handler = async ({ force }) => {
       }),
       {
         title: 'Adding necessary Prisma binaries...',
-        task: () => prismaBinaryTargetAdditions(),
+        task: async () => await prismaBinaryTargetAdditions(),
       },
       printSetupNotes(notes),
     ],

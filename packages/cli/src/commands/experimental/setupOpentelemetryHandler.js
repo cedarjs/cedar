@@ -9,7 +9,7 @@ import { addApiPackages } from '@cedarjs/cli-helpers'
 import {
   getConfigPath,
   resolveFile,
-  getSchemaPathSync,
+  getSchemaPath,
 } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -143,8 +143,8 @@ export const handler = async ({ force, verbose }) => {
   const prismaTasks = [
     {
       title: 'Setup Prisma OpenTelemetry...',
-      task: (_ctx, task) => {
-        const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
+      task: async (_ctx, task) => {
+        const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
         const schemaContent = fs.readFileSync(schemaPath, {
           encoding: 'utf-8',
           flag: 'r',

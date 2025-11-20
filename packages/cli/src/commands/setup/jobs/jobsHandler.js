@@ -5,7 +5,7 @@ import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
-import { getSchemaPathSync } from '@cedarjs/project-config'
+import { getSchemaPath } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
@@ -32,7 +32,7 @@ model BackgroundJob {
 `
 
 const getModelNames = async () => {
-  const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
   const { schemas } = await getSchemaWithPath(schemaPath)
   const schema = await getDMMF({ datamodel: schemas })
 
@@ -40,8 +40,8 @@ const getModelNames = async () => {
 }
 
 // TODO(jgmw): This won't handle prisma with schema folder preview feature
-const addDatabaseModel = () => {
-  const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
+const addDatabaseModel = async () => {
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
   const schema = fs.readFileSync(schemaPath, 'utf-8')
 
   const schemaWithUser = schema + MODEL_SCHEMA
@@ -62,8 +62,8 @@ const tasks = async ({ force }) => {
     [
       {
         title: 'Creating job database model...',
-        task: () => {
-          addDatabaseModel()
+        task: async () => {
+          await addDatabaseModel()
         },
         skip: () => {
           if (modelExists) {

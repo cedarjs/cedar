@@ -1,6 +1,7 @@
 # Prisma v6 Configuration Migration
 
 **Date:** 2024-11-20  
+**Updated:** 2024-11-21 (Removed sync helper methods)
 **Author:** AI Assistant  
 **Status:** Mostly Complete - See "Incomplete Changes" section below
 
@@ -18,6 +19,11 @@ passing. However, there are a few areas that need attention:
 - Updated all test fixtures with appropriate config files
 - Updated main documentation
 - All tests passing (52/52)
+- **[2024-11-21]** Removed all synchronous helper methods
+  (`loadPrismaConfigSync`, `getSchemaPathSync`, `getMigrationsPathSync`,
+  `getDbDirSync`)
+- **[2024-11-21]** Migrated all code to use async versions of helper methods
+- **[2024-11-21]** Build passing with all async implementations
 
 ### ⚠️ Needs Attention
 
@@ -55,14 +61,13 @@ Prisma v6 introduced a `prisma.config.ts` file that:
 **`cedar/packages/project-config/src/prisma.ts`**
 
 - Helper functions for reading Prisma configuration
-- Provides both async and sync versions of each function:
-  - `loadPrismaConfig()` / `loadPrismaConfigSync()` - Load the Prisma config
-    file
-  - `getSchemaPath()` / `getSchemaPathSync()` - Get the schema path from config
-  - `getMigrationsPath()` / `getMigrationsPathSync()` - Get the migrations path
-    from config
-  - `getDbDir()` / `getDbDirSync()` - Get the database directory
+- **[Updated 2024-11-21]** Provides async-only versions of each function:
+  - `loadPrismaConfig()` - Load the Prisma config file
+  - `getSchemaPath()` - Get the schema path from config
+  - `getMigrationsPath()` - Get the migrations path from config
+  - `getDbDir()` - Get the database directory
 - Includes caching to avoid repeated file system operations
+- All functions are async and use dynamic `import()` for ESM compatibility
 
 **`cedar/packages/project-config/src/types.ts`**
 
@@ -144,45 +149,50 @@ to use the new helper functions:
 
 **Authentication & Setup:**
 
-- `auth-providers/dbAuth/setup/src/shared.ts` - Uses `getSchemaPathSync()` for
-  model operations
-- `cli/src/commands/experimental/setupOpentelemetryHandler.js` - Uses
-  `getSchemaPathSync()` for Prisma tracing setup
-- `cli/src/commands/setup/deploy/providers/serverlessHandler.js` - Uses
-  `getSchemaPathSync()` for binary target configuration
-- `cli/src/commands/setup/jobs/jobsHandler.js` - Uses `getSchemaPathSync()` for
-  job model setup
+- `auth-providers/dbAuth/setup/src/shared.ts` - **[Updated]** Now uses async
+  `getSchemaPath()` for model operations
+- `cli/src/commands/experimental/setupOpentelemetryHandler.js` - **[Updated]**
+  Now uses async `getSchemaPath()` for Prisma tracing setup
+- `cli/src/commands/setup/deploy/providers/serverlessHandler.js` - **[Updated]**
+  Now uses async `getSchemaPath()` for binary target configuration
+- `cli/src/commands/setup/jobs/jobsHandler.js` - **[Updated]** Now uses async
+  `getSchemaPath()` for job model setup
 
 **CLI Commands:**
 
-- `cli/src/commands/type-checkHandler.js` - Uses `getSchemaPathSync()` for
-  Prisma client generation
-- `cli/src/commands/upgrade.js` - Uses `getSchemaPathSync()` for refreshing
-  Prisma client
+- `cli/src/commands/type-checkHandler.js` - **[Updated]** Now uses async
+  `getSchemaPath()` for Prisma client generation
+- `cli/src/commands/upgrade.js` - **[Updated]** Now uses async `getSchemaPath()`
+  for refreshing Prisma client
+- `cli/src/commands/buildHandler.js` - **[Updated]** Now uses async
+  `generatePrismaCommand()`
 
 **Library Functions:**
 
-- `cli/src/lib/generatePrismaClient.js` - Uses `getSchemaPathSync()` as default
-  parameter
-- `cli/src/lib/schemaHelpers.js` - Uses `getSchemaPathSync()` in
-  `getDataModel()` function
+- `cli/src/lib/generatePrismaClient.js` - **[Updated]** Now fully async,
+  including `generatePrismaCommand()` and `skipTask()` functions
+- `cli/src/lib/schemaHelpers.js` - **[Updated]** Now uses async
+  `getSchemaPath()` in `getDataModel()` function
 - `cli/src/lib/test.js` - Updated mock to use `prismaConfig` instead of
-  `db`/`dbSchema`
+  `dbSchema`
 
-**Data Migrations:**
+**Data Migration:**
 
-- `cli-packages/dataMigrate/src/commands/installHandler.ts` - Uses
-  `getSchemaPathSync()` for adding migration model
-- `cli-packages/dataMigrate/src/__tests__/installHandler.test.ts` - Updated
-  memfs mock to include `prisma.config.ts`
-- `cli-packages/dataMigrate/src/__tests__/upHandler.test.ts` - Updated mocked
-  file structure to use new `api/dataMigrations` path
+- `cli-packages/dataMigrate/src/commands/installHandler.ts` - **[Updated]**
+  Now uses async `getSchemaPath()` for adding migration model
+- `cli-packages/dataMigrate/src/__tests__/installHandler.test.ts` -
+  **[Updated]** Now uses async `getSchemaPath()` with mocked implementation
 
 **Other Packages:**
 
-- `record/src/tasks/parse.js` - Uses `getSchemaPathSync()` for datamodel parsing
-- `structure/src/model/RWProject.ts` - Uses `getSchemaPathSync()` for DMMF
-  generation
+- `record/src/tasks/parse.js` - **[Updated]** Now uses async `getSchemaPath()`
+  for datamodel parsing
+- `structure/src/model/RWProject.ts` - Already using async `getSchemaPath()` for
+  DMMF generation
+- `structure/src/model/RWEnvHelper.ts` - **[Updated]** Now uses async
+  `getSchemaPath()` and made `process_env_expressions` async
+- `structure/src/outline/outline.ts` - **[Updated]** Now uses async
+  `getSchemaPath()` in `_schema()` function
 
 #### Tests
 
@@ -241,28 +251,27 @@ api/
 
 ### Helper Functions
 
-The new helper functions provide a consistent way to access Prisma paths:
+**[Updated 2024-11-21]** The helper functions provide a consistent async way to
+access Prisma paths:
 
 ```typescript
-// Synchronous (for use in non-async contexts)
-const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
-const dbDir = getDbDirSync(getPaths().api.prismaConfig)
-const migrationsPath = getMigrationsPathSync(getPaths().api.prismaConfig)
-
-// Async (for use in async contexts)
+// All functions are now async-only
 const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
 const dbDir = await getDbDir(getPaths().api.prismaConfig)
 const migrationsPath = await getMigrationsPath(getPaths().api.prismaConfig)
 ```
 
+Note: The synchronous versions (`getSchemaPathSync`, `getDbDirSync`,
+`getMigrationsPathSync`, `loadPrismaConfigSync`) have been removed. All code has
+been migrated to use async/await.
+
 ### Configuration Loading
 
-The `loadPrismaConfigSync()` function:
+**[Updated 2024-11-21]** The `loadPrismaConfig()` function:
 
 1. Checks if the config file exists
 2. Uses a cache to avoid repeated file reads
-3. Uses Node's `Module.createRequire()` for synchronous loading (compatible with
-   both ESM and CommonJS)
+3. Uses dynamic `import()` for ESM-native loading with `pathToFileURL`
 4. Requires a default export using `defineConfig`:
    - `export default defineConfig({ schema: './schema.prisma' })`
 
@@ -366,7 +375,31 @@ Users will need to:
 - Could add validation for config structure
 - Could add migration tool to help users convert from v5 to v6
 
-## Incomplete Changes and Areas Needing Attention
+## Completed Changes (2024-11-21)
+
+### Sync Methods Removal
+
+**Status: ✅ Complete**
+
+All synchronous helper methods have been removed from
+`cedar/packages/project-config/src/prisma.ts`:
+
+- Removed `loadPrismaConfigSync()`
+- Removed `getSchemaPathSync()`
+- Removed `getMigrationsPathSync()`
+- Removed `getDbDirSync()`
+- Removed unused `Module` import
+
+All code using these sync methods has been updated to use async versions:
+
+- Updated 11 files across auth-providers, CLI, data-migrate, record, and
+  structure packages
+- Made necessary functions async where they were calling sync methods
+- Updated Listr tasks to be async where needed
+- Build passes successfully
+- Project-config tests pass (52/52)
+
+## Incomplete Changes
 
 ### 1. Prisma CLI Handler - `seed` and `diff` Commands
 
