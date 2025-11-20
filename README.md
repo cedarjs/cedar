@@ -198,7 +198,7 @@ a `@cedarjs` package of the same name.
 <table>
   <tr>
     <td align="center" valign="center" width="20%"><a href="https://twodots.net"><img src="https://github.com/user-attachments/assets/a98ae112-9f66-4c0a-a450-fa410725b230" width="100px;" alt="TwoDots"/></a></td>
-    <td align="center" valign="center" width="20%"><a href="https://rhoimpact.com/"><img src="https://github.com/user-attachments/assets/7b17fc11-351e-4865-9f6c-f46eac675897" width="100px;" alt="Rho Impact"/></a></td>
+    <td align="center" valign="center" width="20%"><a href="https://rhoimpact.com/"><img src="https://github.com/user-attachments/assets/e049abe8-9044-4624-810c-608e0d36b78b" width="100px;" alt="Rho Impact"/></a></td>
     <td align="center" valign="center" width="20%"><img src="https://placehold.co/400x400?text=Your\nCompany?" width="100px;" alt=""/></td>
     <td align="center" valign="center" width="20%"><img src="https://placehold.co/400x400?text=Your\nCompany?" width="100px;" alt=""/></td>
     <td align="center" valign="center" width="20%"><img src="https://placehold.co/400x400?text=Your\nCompany?" width="100px;" alt=""/></td>
