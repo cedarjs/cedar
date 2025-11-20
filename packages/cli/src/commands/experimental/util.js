@@ -67,7 +67,7 @@ export const isRealtimeSetup = () => {
   if (!realtimeExists()) {
     throw new Error(
       'Adding realtime events requires that CedarJS Realtime is setup. ' +
-        'Please run `yarn cedarjs setup realtime` first.',
+        'Please run `yarn cedar setup realtime` first.',
     )
   }
 

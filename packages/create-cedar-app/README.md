@@ -28,7 +28,7 @@ CedarJS requires Node.js =20.x.
 yarn create cedar-app my-cedar-app
 cd my-cedar-app
 yarn install
-yarn cedarjs dev
+yarn cedar dev
 ```
 
 <h3>Resources</h3>
@@ -115,5 +115,5 @@ up with an upgrade, like this:
 
 ```bash
 cd /path/to/new/cedar-app
-yarn cedarjs upgrade -t canary
+yarn cedar upgrade -t canary
 ```

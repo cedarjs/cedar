@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Loading, Empty, Failure, Success } from './WaterfallBlogPostCell'
 import { standard } from './WaterfallBlogPostCell.mock'

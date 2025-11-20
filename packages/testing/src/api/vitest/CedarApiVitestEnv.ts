@@ -1,4 +1,4 @@
-import { getSchema } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 import 'dotenv-defaults/config.js'
 import execa from 'execa'
 import type { Environment } from 'vitest/environments'
@@ -6,6 +6,8 @@ import type { Environment } from 'vitest/environments'
 import { getPaths } from '@cedarjs/project-config'
 
 import { getDefaultDb, checkAndReplaceDirectUrl } from '../directUrlHelpers.js'
+
+const { getSchemaWithPath } = prismaInternals
 
 const CedarApiVitestEnvironment: Environment = {
   name: 'cedar-api',
@@ -27,7 +29,9 @@ const CedarApiVitestEnvironment: Environment = {
     // Instead of using the schema, we can use the config file
     // const prismaConfig = await getConfig(rwjsPaths.api.dbSchema)
     // and then check for the prismaConfig.datasources[0].directUrl
-    const prismaSchema = (await getSchema(cedarPaths.api.dbSchema)).toString()
+    const result = await getSchemaWithPath(cedarPaths.api.dbSchema)
+    // For regex matching, we need to concatenate the schemas into a single string
+    const prismaSchema = result.schemas.map(([, content]) => content).join('\n')
 
     const directUrlEnvVar = checkAndReplaceDirectUrl(prismaSchema, defaultDb)
 

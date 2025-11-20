@@ -855,7 +855,7 @@ describe('BazingaCell', () => {
 `;
 
 exports[`TypeScript: generates list cells if list flag passed in 3`] = `
-"import type { Meta, StoryObj } from '@storybook/react'
+"import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Loading, Empty, Failure, Success } from './BazingaCell'
 import { standard } from './BazingaCell.mock'

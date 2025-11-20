@@ -19,7 +19,7 @@ expect "How would you like to proceed?"
 # ❯ Override error and continue install
 send "\n"
 
-expect "Where would you like to create your Redwood app?"
+expect "Where would you like to create your Cedar app?"
 send "$projectDirectory\n"
 
 expect "Select your preferred language"

@@ -31,12 +31,12 @@
   "dependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/client": "5.20.0",
+    "@prisma/client": "6.19.0",
     "camelcase": "6.3.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/internals": "5.20.0",
+    "@prisma/internals": "6.19.0",
     "esbuild": "0.25.9",
     "publint": "0.3.12",
     "tsx": "4.20.5",

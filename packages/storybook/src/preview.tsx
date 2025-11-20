@@ -1,6 +1,9 @@
 import React from 'react'
 
-import type { Addon_DecoratorFunction, Addon_Loader } from '@storybook/types'
+import type {
+  Addon_DecoratorFunction,
+  Addon_Loader,
+} from 'storybook/internal/types'
 
 import { MockingLoader, StorybookProvider } from './mocks/StorybookProvider.js'
 
