@@ -89,7 +89,7 @@ const printWrapInfo = () => {
     c.bold('Cedar CLI wraps Prisma CLI'),
     '',
     'Use `yarn cedar prisma` to automatically pass `--config` and `--preview-feature` options.',
-    'Use `yarn prisma` to skip Cedar CLI automatic options.',
+    "Use `yarn prisma` to skip Cedar's automatic CLI options.",
     '',
     'Find more information in our docs:',
     c.underline('https://cedarjs.com/docs/cli-commands#prisma'),

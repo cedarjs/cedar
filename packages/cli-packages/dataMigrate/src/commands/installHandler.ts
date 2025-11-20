@@ -4,7 +4,7 @@ import execa from 'execa'
 import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getSchemaPathSync } from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 
@@ -25,7 +25,9 @@ export async function handler() {
       {
         title: 'Adding the RW_DataMigration model to schema.prisma...',
         task() {
-          const dbSchemaFilePath = redwoodProjectPaths.api.dbSchema
+          const dbSchemaFilePath = getSchemaPathSync(
+            redwoodProjectPaths.api.prismaConfig,
+          )
           const dbSchemaFileContent = fs.readFileSync(dbSchemaFilePath, 'utf-8')
 
           fs.writeFileSync(

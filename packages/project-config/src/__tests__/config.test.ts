@@ -35,10 +35,10 @@ describe('getConfig', () => {
           "debugPort": 18911,
           "path": "./api",
           "port": 8911,
-          "prismaConfigFile": "./api/prisma.config.js",
+          "prismaConfig": "./api/prisma.config.ts",
           "serverConfig": "./api/server.config.js",
           "target": "node",
-          "title": "Redwood App",
+          "title": "Cedar App",
         },
         "browser": {
           "open": false,
@@ -109,7 +109,7 @@ describe('getConfig', () => {
           "port": 8910,
           "sourceMap": false,
           "target": "browser",
-          "title": "Redwood App",
+          "title": "Cedar App",
         },
       }
     `)

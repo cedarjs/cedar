@@ -5,6 +5,7 @@ import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
+import { getSchemaPathSync } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
@@ -31,7 +32,8 @@ model BackgroundJob {
 `
 
 const getModelNames = async () => {
-  const { schemas } = await getSchemaWithPath(getPaths().api.dbSchema)
+  const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
+  const { schemas } = await getSchemaWithPath(schemaPath)
   const schema = await getDMMF({ datamodel: schemas })
 
   return schema.datamodel.models.map((model) => model.name)
@@ -39,11 +41,12 @@ const getModelNames = async () => {
 
 // TODO(jgmw): This won't handle prisma with schema folder preview feature
 const addDatabaseModel = () => {
-  const schema = fs.readFileSync(getPaths().api.dbSchema, 'utf-8')
+  const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
+  const schema = fs.readFileSync(schemaPath, 'utf-8')
 
   const schemaWithUser = schema + MODEL_SCHEMA
 
-  fs.writeFileSync(getPaths().api.dbSchema, schemaWithUser)
+  fs.writeFileSync(schemaPath, schemaWithUser)
 }
 
 const tasks = async ({ force }) => {

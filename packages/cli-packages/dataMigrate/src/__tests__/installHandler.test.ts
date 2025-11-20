@@ -3,7 +3,7 @@ import fs from 'fs'
 import execa from 'execa'
 import { vol } from 'memfs'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getSchemaPathSync } from '@cedarjs/project-config'
 
 import {
   handler,
@@ -50,9 +50,8 @@ describe('installHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          db: {
-            'schema.prisma': '',
-          },
+          'prisma.config.ts': 'export default { schema: "./schema.prisma" }',
+          'schema.prisma': '',
         },
       },
       redwoodProjectPath,
@@ -65,7 +64,8 @@ describe('installHandler', () => {
     const dataMigrationsPath = getPaths().api.dataMigrations
 
     expect(fs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
-    expect(fs.readFileSync(getPaths().api.dbSchema, 'utf-8')).toMatch(
+    const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
+    expect(fs.readFileSync(schemaPath, 'utf-8')).toMatch(
       RW_DATA_MIGRATION_MODEL,
     )
     expect(execa.command).toHaveBeenCalledWith(createDatabaseMigrationCommand, {

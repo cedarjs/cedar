@@ -5,9 +5,14 @@ import path from 'node:path'
 
 import fs from 'fs-extra'
 
+import { getSchemaPathSync } from '@cedarjs/project-config'
+
 import { runCommandTask, getPaths } from '../lib/index.js'
 
-const skipTask = (schema = getPaths().api.dbSchema) => {
+const skipTask = (schema) => {
+  if (!schema) {
+    schema = getSchemaPathSync(getPaths().api.prismaConfig)
+  }
   if (!fs.existsSync(schema)) {
     console.log(
       `Skipping database and Prisma client generation, no \`schema.prisma\` file found: \`${schema}\``,
@@ -43,8 +48,11 @@ export const generatePrismaClient = async ({
   verbose = true,
   force = true,
   silent = false,
-  schema = getPaths().api.dbSchema,
+  schema,
 }) => {
+  if (!schema) {
+    schema = getSchemaPathSync(getPaths().api.prismaConfig)
+  }
   if (skipTask(schema)) {
     return
   }

@@ -72,7 +72,7 @@ jest.mock(
 )
 
 jest.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075442-wip.ts',
+  '/redwood-app/api/dataMigrations/20230822075442-wip.ts',
   () => {
     return { default: () => {} }
   },
@@ -82,7 +82,7 @@ jest.mock(
 )
 
 jest.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075442-wip.ts',
+  '\\redwood-app\\api\\dataMigrations\\20230822075442-wip.ts',
   () => {
     return { default: () => {} }
   },
@@ -92,7 +92,7 @@ jest.mock(
 )
 
 jest.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075443-wip.ts',
+  '/redwood-app/api/dataMigrations/20230822075443-wip.ts',
   () => {
     return {
       default: () => {
@@ -106,7 +106,7 @@ jest.mock(
 )
 
 jest.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075443-wip.ts',
+  '\\redwood-app\\api\\dataMigrations\\20230822075443-wip.ts',
   () => {
     return {
       default: () => {
@@ -120,7 +120,7 @@ jest.mock(
 )
 
 jest.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075444-wip.ts',
+  '/redwood-app/api/dataMigrations/20230822075444-wip.ts',
   () => {
     return { default: () => {} }
   },
@@ -130,7 +130,7 @@ jest.mock(
 )
 
 jest.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075444-wip.ts',
+  '\\redwood-app\\api\\dataMigrations\\20230822075444-wip.ts',
   () => {
     return { default: () => {} }
   },
@@ -174,13 +174,11 @@ describe('upHandler', () => {
               'db.js': '',
             },
           },
-          db: {
-            // No dataMigrations dir:
-            //
-            // dataMigrations: {
-            //   [ranDataMigration.name]: '',
-            // },
-          },
+          // No dataMigrations dir:
+          //
+          // dataMigrations: {
+          //   [ranDataMigration.name]: '',
+          // },
         },
       },
       redwoodProjectPath,
@@ -208,10 +206,8 @@ describe('upHandler', () => {
               'db.js': '',
             },
           },
-          db: {
-            dataMigrations: {
-              [ranDataMigration.name]: '',
-            },
+          dataMigrations: {
+            [ranDataMigration.name]: '',
           },
         },
       },
@@ -248,12 +244,10 @@ describe('upHandler', () => {
               'db.js': '',
             },
           },
-          db: {
-            dataMigrations: {
-              '20230822075442-wip.ts': '',
-              '20230822075443-wip.ts': '',
-              '20230822075444-wip.ts': '',
-            },
+          dataMigrations: {
+            '20230822075442-wip.ts': '',
+            '20230822075443-wip.ts': '',
+            '20230822075444-wip.ts': '',
           },
         },
       },

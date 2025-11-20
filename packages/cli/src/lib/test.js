@@ -33,13 +33,12 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
       return {
         base: BASE_PATH,
         api: {
-          dataMigrations: path.join(BASE_PATH, './api/prisma/dataMigrations'),
-          db: path.join(globalThis.__dirname, 'fixtures'), // this folder
-          dbSchema: path.join(
+          prismaConfig: path.join(
             globalThis.__dirname,
             'fixtures',
-            'schema.prisma',
+            'prisma.config.ts',
           ), // this folder
+          dataMigrations: path.join(BASE_PATH, './api/dataMigrations'),
           generators: path.join(BASE_PATH, './api/generators'),
           src: path.join(BASE_PATH, './api/src'),
           jobs: path.join(BASE_PATH, './api/src/jobs'),

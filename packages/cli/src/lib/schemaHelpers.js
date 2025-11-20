@@ -1,5 +1,7 @@
 import prismaInternals from '@prisma/internals'
 
+import { getSchemaPathSync } from '@cedarjs/project-config'
+
 import { ensureUniquePlural } from './pluralHelpers.js'
 import { singularize, isPlural } from './rwPluralize.js'
 
@@ -110,7 +112,10 @@ export const getEnum = async (name) => {
 /**
  * Returns the data model defined in `schema.prisma` (models, enums, etc.)
  */
-export const getDataModel = async (path = getPaths().api.dbSchema) => {
+export const getDataModel = async (path) => {
+  if (!path) {
+    path = getSchemaPathSync(getPaths().api.prismaConfig)
+  }
   const result = await getSchemaWithPath(path)
   return result.schemas
 }

@@ -6,7 +6,11 @@ import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
-import { getConfigPath, resolveFile } from '@cedarjs/project-config'
+import {
+  getConfigPath,
+  resolveFile,
+  getSchemaPathSync,
+} from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../lib/colors.js'
@@ -140,7 +144,7 @@ export const handler = async ({ force, verbose }) => {
     {
       title: 'Setup Prisma OpenTelemetry...',
       task: (_ctx, task) => {
-        const schemaPath = path.join(getPaths().api.db, 'schema.prisma') // TODO: schema file is already in getPaths()?
+        const schemaPath = getSchemaPathSync(getPaths().api.prismaConfig)
         const schemaContent = fs.readFileSync(schemaPath, {
           encoding: 'utf-8',
           flag: 'r',
