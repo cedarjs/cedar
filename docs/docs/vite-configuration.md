@@ -42,8 +42,10 @@ yarn workspace web add -D sass sass-loader
 And if you want to use Tailwind CSS, just run the setup command:
 
 ```
-yarn rw setup ui tailwindcss
+yarn cedar setup ui tailwindcss
 ```
+
+> Note: The setup command `yarn cedar setup ui tailwindcss` installs Tailwind CSS v3.x by default. Cedar also works with Tailwind v4.x, but the setup helper does not currently install that version or its configuration.
 
 ## Vite Dev Server
 
