@@ -80,7 +80,7 @@
     "storybook": "8.6.14"
   },
   "engines": {
-    "node": "=20.x"
+    "node": "=24.x"
   },
   "publishConfig": {
     "access": "public"
