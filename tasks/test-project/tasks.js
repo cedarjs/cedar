@@ -839,13 +839,13 @@ async function fragmentsTasks(outputPath, { verbose }) {
       title: 'Adding produce and stall models to prisma',
       task: async () => {
         // Need both here since they have a relation
-        const { produce, stall } = await import('./codemods/models.js')
+        const models = await import('./codemods/models.js')
 
-        addModel(produce)
-        addModel(stall)
+        addModel((models.default || models).produce)
+        addModel((models.default || models).stall)
 
         return exec(
-          'yarn rw prisma migrate dev --name create_produce_stall',
+          'yarn cedar prisma migrate dev --name create_produce_stall',
           [],
           getExecaOptions(outputPath),
         )
@@ -859,7 +859,7 @@ async function fragmentsTasks(outputPath, { verbose }) {
           fullPath('scripts/seed.ts', { addExtension: false }),
         )
 
-        await exec('yarn rw prisma db seed', [], getExecaOptions(outputPath))
+        await exec('yarn cedar prisma db seed', [], getExecaOptions(outputPath))
       },
     },
     {
