@@ -29,6 +29,9 @@ vi.mock('@prisma/internals', async () => ({
         models: [{ name: 'BackgroundJob' }],
       },
     }),
+    getSchemaWithPath: async () => ({
+      schemas: [],
+    }),
   },
 }))
 

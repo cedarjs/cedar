@@ -80,6 +80,73 @@ export default function Home() {
             </a>
           </p>
         </section>
+        <section
+          style={{
+            backgroundColor: 'var(--ifm-code-background)',
+            border: '1px solid var(--ifm-color-emphasis-300)',
+            borderRadius: '8px',
+            padding: '2em',
+            marginTop: '3em',
+            marginBottom: '3em',
+            textAlign: 'center',
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>Stay Updated</h2>
+          <p style={{ fontSize: '1.1em', marginBottom: '1.5em' }}>
+            Subscribe to our newsletter for the latest updates, features, and
+            community news.
+          </p>
+          <form
+            name="newsletter-subscribe"
+            action="/newsletter-thank-you"
+            method="POST"
+            data-netlify="true"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1em',
+            }}
+          >
+            <input
+              type="hidden"
+              name="form-name"
+              value="newsletter-subscribe"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              required
+              style={{
+                padding: '12px 16px',
+                fontSize: '1em',
+                borderRadius: '6px',
+                border: '1px solid var(--ifm-color-emphasis-300)',
+                width: '100%',
+                maxWidth: '400px',
+                backgroundColor: 'var(--ifm-background-color)',
+                color: 'var(--ifm-font-color-base)',
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                padding: '12px 32px',
+                fontSize: '1em',
+                fontWeight: 'bold',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: '#3ECC5F',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease-in-out',
+              }}
+            >
+              Subscribe
+            </button>
+          </form>
+        </section>
         <h1>About</h1>
         <p>
           CedarJS is an opinionated, full-stack React framework that makes

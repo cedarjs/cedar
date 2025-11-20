@@ -5,7 +5,7 @@
  * have something to check against, simulating a logged
  * in user that is allowed to access that service.
  *
- * See https://redwoodjs.com/docs/authentication for more info.
+ * See https://cedarjs.com/docs/authentication for more info.
  */
 export const isAuthenticated = () => {
   return true
@@ -15,7 +15,7 @@ export const hasRole = ({ roles }) => {
   return roles !== undefined
 }
 
-// This is used by the redwood directive
+// This is used by the cedar directive
 // in ./api/src/directives/requireAuth
 
 // Roles are passed in by the requireAuth directive if you have auth setup
@@ -26,7 +26,7 @@ export const requireAuth = ({ roles }) => {
 
 export const getCurrentUser = async () => {
   throw new Error(
-    'Auth is not set up yet. See https://redwoodjs.com/docs/authentication ' +
+    'Auth is not set up yet. See https://cedarjs.com/docs/authentication ' +
       'to get started'
   )
 }

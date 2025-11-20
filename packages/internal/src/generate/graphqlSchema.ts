@@ -19,7 +19,7 @@ import { terminalLink } from 'termi-link'
 import { rootSchema } from '@cedarjs/graphql-server'
 import { getPaths, getConfig, resolveFile } from '@cedarjs/project-config'
 
-const { getSchema } = prismaInternals
+const { getSchemaWithPath } = prismaInternals
 
 export const generateGraphQLSchema = async () => {
   const redwoodProjectPaths = getPaths()
@@ -86,9 +86,11 @@ export const generateGraphQLSchema = async () => {
     if (e instanceof Error) {
       const match = e.message.match(/Unknown type: "(\w+)"/)
       const name = match?.[1]
-      const schemaPrisma = (
-        await getSchema(redwoodProjectPaths.api.dbSchema)
-      ).toString()
+      const result = await getSchemaWithPath(redwoodProjectPaths.api.dbSchema)
+      // For string operations, concatenate the schemas
+      const schemaPrisma = result.schemas
+        .map(([, content]) => content)
+        .join('\n')
 
       const errorObject = {
         message: `Schema loading failed. ${e.message}`,
