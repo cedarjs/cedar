@@ -7,6 +7,7 @@ import * as upCommand from '../commands/up'
 import { handler as dataMigrateUpHandler } from '../commands/upHandler.js'
 
 jest.mock('fs', () => require('memfs').fs)
+jest.mock('node:fs', () => require('memfs').fs)
 jest.mock(
   '../commands/upHandler.js',
   () => ({

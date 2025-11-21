@@ -1,4 +1,4 @@
-import type yargs from 'yargs'
+import type { Argv } from 'yargs'
 
 import * as installCommand from '../commands/install'
 import { handler as dataMigrateInstallHandler } from '../commands/installHandler.js'
@@ -28,7 +28,7 @@ describe('install', () => {
   it('`builder` has an epilogue', () => {
     // The typecasting here is to make TS happy when calling `builder(yargs)`
     // further down. We know that only `epilogue` will be called.
-    const yargs = { epilogue: jest.fn() } as unknown as yargs.Argv
+    const yargs = { epilogue: jest.fn() } as unknown as Argv
 
     installCommand.builder(yargs)
 
