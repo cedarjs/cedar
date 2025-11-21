@@ -13,10 +13,9 @@ import {
 import c from '../lib/colors'
 
 export async function handler() {
-  const redwoodProjectPaths = getPaths()
-  const dataMigrationsPath = await getDataMigrationsPath(
-    redwoodProjectPaths.api.prismaConfig,
-  )
+  const cedarProjectPaths = getPaths()
+  const prismaConfigPath = cedarProjectPaths.api.prismaConfig
+  const dataMigrationsPath = await getDataMigrationsPath(prismaConfigPath)
 
   const tasks = new Listr(
     [
@@ -30,9 +29,7 @@ export async function handler() {
       {
         title: 'Adding the RW_DataMigration model to schema.prisma...',
         async task() {
-          const dbSchemaFilePath = await getSchemaPath(
-            redwoodProjectPaths.api.prismaConfig,
-          )
+          const dbSchemaFilePath = await getSchemaPath(prismaConfigPath)
           const dbSchemaFileContent = fs.readFileSync(dbSchemaFilePath, 'utf-8')
 
           fs.writeFileSync(
@@ -47,7 +44,7 @@ export async function handler() {
         title: 'Creating the database migration...',
         task() {
           return execa.command(createDatabaseMigrationCommand, {
-            cwd: redwoodProjectPaths.base,
+            cwd: cedarProjectPaths.base,
           }).stdout
         },
       },
