@@ -1,3 +1,4 @@
+import { vi, expect, describe, it } from 'vitest'
 import type { Argv } from 'yargs'
 
 import * as installCommand from '../commands/install'
@@ -27,7 +28,7 @@ describe('install', () => {
   it('`builder` has an epilogue', () => {
     // The typecasting here is to make TS happy when calling `builder(yargs)`
     // further down. We know that only `epilogue` will be called.
-    const yargs = { epilogue: jest.fn() } as unknown as Argv
+    const yargs = { epilogue: vi.fn() } as unknown as Argv
 
     installCommand.builder(yargs)
 

@@ -1,8 +1,7 @@
 import { vi, expect, describe, it } from 'vitest'
-import fs from 'fs'
+import { vol, fs as memfs } from 'memfs'
 
 import execa from 'execa'
-import { vol } from 'memfs'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -13,10 +12,16 @@ import {
   notes,
 } from '../commands/installHandler'
 
-jest.mock('fs', () => require('memfs').fs)
-jest.mock('node:fs', () => require('memfs').fs)
+vi.mock('fs', async () => ({ ...memfs, default: memfs }))
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
-jest.mock('execa', () => {
+vi.mock('execa', () => {
+  const mockCommand = vi.fn(() => {
+    return {
+      stdout: 42,
+    }
+  })
+  
   return {
     command: mockCommand,
     default: {
@@ -65,8 +70,8 @@ describe('installHandler', () => {
 
     const dataMigrationsPath = getPaths().api.dataMigrations
 
-    expect(fs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
-    expect(fs.readFileSync(getPaths().api.dbSchema, 'utf-8')).toMatch(
+    expect(memfs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
+    expect(memfs.readFileSync(getPaths().api.dbSchema, 'utf-8')).toMatch(
       RW_DATA_MIGRATION_MODEL,
     )
     expect(execa.command).toHaveBeenCalledWith(createDatabaseMigrationCommand, {

@@ -1,9 +1,12 @@
-import { vol } from 'memfs'
+import { vol, fs as memfs } from 'memfs'
 import { vi, expect, describe, it, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
 
 import { handler, NO_PENDING_MIGRATIONS_MESSAGE } from '../commands/upHandler'
+
+vi.mock('fs', async () => ({ ...memfs, default: memfs }))
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -27,9 +30,6 @@ afterEach(() => {
   consoleErrorMock.mockRestore()
   consoleWarnMock.mockRestore()
 })
-
-jest.mock('fs', () => require('memfs').fs)
-jest.mock('node:fs', () => require('memfs').fs)
 
 const mockDataMigrations: { current: any[] } = { current: [] }
 
