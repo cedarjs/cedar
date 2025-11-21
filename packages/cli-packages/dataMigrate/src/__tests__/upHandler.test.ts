@@ -8,6 +8,52 @@ import { handler, NO_PENDING_MIGRATIONS_MESSAGE } from '../commands/upHandler'
 vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
+// Mock require() calls for migration files by intercepting Module._load
+const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(() => {
+  let Module: any
+  let originalLoad: any
+  let isSetup = false
+  const mocks = new Map<string, any>()
+
+  return {
+    setupRequireMock: async () => {
+      if (isSetup) return
+      
+      // Import using require to get the actual Module object
+      const nodeModule = require('node:module')
+      Module = nodeModule
+      originalLoad = Module._load
+      
+      // Wrap the original _load function
+      const wrappedLoad = function (request: string, parent: any, isMain: boolean) {
+        // Check if any mock matches this request (by exact match or endsWith)
+        for (const [mockPath, mockValue] of mocks.entries()) {
+          if (request === mockPath || request.endsWith(mockPath)) {
+            return mockValue
+          }
+        }
+        return originalLoad.call(this, request, parent, isMain)
+      }
+      
+      // Copy properties from original function
+      Object.setPrototypeOf(wrappedLoad, originalLoad)
+      
+      Module._load = wrappedLoad
+      isSetup = true
+    },
+    restoreRequireMock: () => {
+      if (Module && originalLoad && isSetup) {
+        Module._load = originalLoad
+        isSetup = false
+      }
+      mocks.clear()
+    },
+    mockRequire: (path: string, stub: any) => {
+      mocks.set(path, stub)
+    },
+  }
+})
+
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 const redwoodProjectPath = '/redwood-app'
@@ -210,11 +256,8 @@ describe('upHandler', () => {
     )
   })
 
-  // NOTE: Skipped due to Vitest limitation with CommonJS require() mocking.
-  // vi.mock() doesn't intercept require() calls, only ES6 imports.
-  // The handler uses require() to load migrations in CommonJS mode.
-  // The equivalent test in upHandlerEsm.test.ts passes.
-  it.skip('runs pending migrations', async () => {
+  // NOTE: Testing CommonJS require() mocking using Module._load interception
+  it('runs pending migrations', async () => {
     mockDataMigrations.current = [
       {
         version: '20230822075441',
@@ -246,10 +289,29 @@ describe('upHandler', () => {
       redwoodProjectPath,
     )
 
+    // Setup require mocking for migration files
+    await setupRequireMock()
+    
+    // Mock the three migration files - these paths must match exactly what require() receives
+    mockRequire('/redwood-app/api/db/dataMigrations/20230822075442-wip.ts', {
+      default: () => {},
+    })
+    mockRequire('/redwood-app/api/db/dataMigrations/20230822075443-wip.ts', {
+      default: () => {
+        throw new Error('oops')
+      },
+    })
+    mockRequire('/redwood-app/api/db/dataMigrations/20230822075444-wip.ts', {
+      default: () => {},
+    })
+
     await handler({
       importDbClientFromDist: true,
       distPath: getPaths().api.dist,
     })
+
+    // Restore require mocking
+    restoreRequireMock()
 
     // The handler will error and set the exit code to 1, we must revert that
     // or test suite itself will fail.
