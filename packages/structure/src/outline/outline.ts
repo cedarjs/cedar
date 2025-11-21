@@ -28,10 +28,10 @@ export function getOutline(project: RWProject): TreeItem2 {
         menu: {
           kind: 'withDoc',
           doc: Command_open(
-            'https://redwoodjs.com/docs/app-configuration-redwood-toml',
+            'https://cedarjs.com/docs/app-configuration-redwood-toml',
           ),
         },
-      } as TreeItem2,
+      } satisfies TreeItem2,
       {
         label: 'open graphql playground',
         command: Command_open('http://localhost:8911/graphql'),
@@ -42,7 +42,7 @@ export function getOutline(project: RWProject): TreeItem2 {
             'https://www.apollographql.com/docs/apollo-server/testing/graphql-playground/',
           ),
         },
-      } as TreeItem2,
+      } satisfies TreeItem2,
       {
         label: 'open storybook',
         command: Command_cli('rw storybook --open'),
@@ -50,14 +50,14 @@ export function getOutline(project: RWProject): TreeItem2 {
         menu: {
           kind: 'withDoc',
           doc: Command_open(
-            'https://redwoodjs.com/how-to/mocking-graph-ql-in-storybook',
+            'https://cedarjs.com/docs/how-to/mocking-graphql-in-storybook',
           ),
         },
-      } as TreeItem2,
+      } satisfies TreeItem2,
       _rwcli_command_group(
         {
           cmd: 'generate ...',
-          tooltip: 'start interactive redwood generator',
+          tooltip: 'start interactive Cedar generator',
         },
         {
           cmd: 'dev',
@@ -78,7 +78,7 @@ function _router(project: RWProject): TreeItem2 {
     menu: {
       kind: 'group',
       add: Command_cli('rw generate page ...'),
-      doc: Command_open('https://redwoodjs.com/docs/redwood-router'),
+      doc: Command_open('https://cedarjs.com/docs/router'),
     },
   }
 }
@@ -107,7 +107,7 @@ function _pages(project: RWProject): TreeItem2 {
       kind: 'group',
       add: Command_cli('rw generate page ...'),
       doc: Command_open(
-        'https://redwoodjs.com/docs/tutorial/chapter1/first-page',
+        'https://cedarjs.com/docs/tutorial/chapter1/first-page',
       ),
     },
   }
@@ -149,7 +149,7 @@ function _layouts(project: RWProject): TreeItem2 {
     menu: {
       kind: 'group',
       add: Command_cli('rw generate layout ...'),
-      doc: Command_open('https://redwoodjs.com/docs/tutorial/chapter1/layouts'),
+      doc: Command_open('https://cedarjs.com/docs/tutorial/chapter1/layouts'),
     },
   }
 }
@@ -162,7 +162,7 @@ function _cells(project: RWProject): TreeItem2 {
     menu: {
       kind: 'group',
       add: Command_cli('rw generate cell ...'),
-      doc: Command_open('https://redwoodjs.com/docs/tutorial/chapter2/cells'),
+      doc: Command_open('https://cedarjs.com/docs/tutorial/chapter2/cells'),
     },
   }
 }
@@ -190,13 +190,14 @@ function _functions(project: RWProject): TreeItem2 {
     menu: {
       kind: 'group',
       add: Command_cli('rw generate function ...'),
-      doc: Command_open('https://redwoodjs.com/docs/serverless-functions'),
+      doc: Command_open('https://cedarjs.com/docs/serverless-functions'),
     },
   }
 }
 
 async function _schema(project: RWProject): Promise<TreeItem2> {
   const schemaPath = await getSchemaPath(project.pathHelper.api.prismaConfig)
+
   return {
     label: 'schema.prisma',
     iconPath: 'x-prisma',
@@ -262,7 +263,7 @@ function _rwcli_command_group(...opts: RWOpts[]): TreeItem2 {
   return {
     label: 'rw cli',
     key: 'rw-cli-commands',
-    tooltip: 'Redwood.js CLI commands',
+    tooltip: 'Cedar CLI commands',
     iconPath: 'terminal',
     children: () => opts.map(_rwcli_command),
     menu: {

@@ -13,9 +13,7 @@ const configCache = new Map<string, PrismaConfig>()
  * @param prismaConfigPath - Absolute path to the prisma.config.ts file
  * @returns The Prisma configuration object
  */
-export async function loadPrismaConfig(
-  prismaConfigPath: string,
-): Promise<PrismaConfig> {
+export async function loadPrismaConfig(prismaConfigPath: string) {
   if (!fs.existsSync(prismaConfigPath)) {
     throw new Error(`Prisma config file not found at: ${prismaConfigPath}`)
   }
@@ -26,21 +24,24 @@ export async function loadPrismaConfig(
 
   const configUrl = pathToFileURL(prismaConfigPath).href
 
+  let config: PrismaConfig | undefined
+
   try {
     const module = await import(configUrl)
-    const config = module.default
+    config = module.default
 
     if (!config) {
       throw new Error('Prisma config must have a default export')
     }
 
     configCache.set(prismaConfigPath, config)
-    return config
   } catch (error) {
     throw new Error(
       `Failed to load Prisma config from ${prismaConfigPath}: ${error}`,
     )
   }
+
+  return config
 }
 
 /**
@@ -50,7 +51,7 @@ export async function loadPrismaConfig(
  * @param prismaConfigPath - Absolute path to the prisma.config.ts file
  * @returns Absolute path to the schema file or directory
  */
-export async function getSchemaPath(prismaConfigPath: string): Promise<string> {
+export async function getSchemaPath(prismaConfigPath: string) {
   const config = await loadPrismaConfig(prismaConfigPath)
   const configDir = path.dirname(prismaConfigPath)
 
