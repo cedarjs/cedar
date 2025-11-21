@@ -14,12 +14,17 @@ import {
 } from '../commands/installHandler'
 
 vi.mock('execa', () => {
+  const mockCommand = vi.fn(() => {
+    return {
+      stdout: 42,
+    }
+  })
+  
   return {
-    command: vi.fn(() => {
-      return {
-        stdout: 42,
-      }
-    }),
+    command: mockCommand,
+    default: {
+      command: mockCommand,
+    },
   }
 })
 
@@ -41,9 +46,7 @@ describe('installHandler', () => {
     )
   })
 
-  // NOTE: Skipped due to Vitest filesystem mocking limitations.
-  // The handler runs but doesn't create the expected directory in memfs.
-  it.skip('adds a data migrations directory, model, and migration', async () => {
+  it('adds a data migrations directory, model, and migration', async () => {
     const redwoodProjectPath = '/redwood-app'
     process.env.RWJS_CWD = redwoodProjectPath
 

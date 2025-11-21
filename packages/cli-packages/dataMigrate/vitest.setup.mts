@@ -17,3 +17,26 @@ vi.mock('fs', async () => {
     default: memfs.fs,
   }
 })
+
+// fs-extra adds additional methods like outputFileSync on top of fs
+// We need to implement outputFileSync which creates parent directories automatically
+vi.mock('fs-extra', async () => {
+  const memfs = await vi.importActual<typeof import('memfs')>('memfs')
+  const path = await vi.importActual<typeof import('path')>('path')
+  
+  // outputFileSync creates parent directories if they don't exist
+  const outputFileSync = (file: string, data: any, options?: any) => {
+    const dir = path.dirname(file)
+    memfs.fs.mkdirSync(dir, { recursive: true })
+    memfs.fs.writeFileSync(file, data, options)
+  }
+  
+  return {
+    ...memfs.fs,
+    outputFileSync,
+    default: {
+      ...memfs.fs,
+      outputFileSync,
+    },
+  }
+})
