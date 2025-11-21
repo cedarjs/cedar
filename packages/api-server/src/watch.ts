@@ -72,8 +72,12 @@ async function validateSdls() {
 // NOTE: the file comes through as a unix path, even on windows
 // So we need to convert the rwjsPaths
 
-// Initialize the watcher asynchronously so we can get the db directory
-;(async () => {
+/**
+ * Initialize the file watcher for the API server
+ * Watches for changes in the API source directory and rebuilds/restarts as
+ * needed
+ */
+export async function startWatch() {
   const dbDir = await getDbDir(rwjsPaths.api.prismaConfig)
 
   const IGNORED_API_PATHS = [
@@ -142,4 +146,4 @@ async function validateSdls() {
         await buildManager.run({ rebuild: true })
       }
     })
-})()
+}

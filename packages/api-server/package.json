@@ -68,6 +68,16 @@
     "./cjs/cliHelpers": {
       "types": "./dist/cjs/cliHelpers.d.ts",
       "default": "./dist/cjs/cliHelpers.js"
+    },
+    "./watch": {
+      "import": {
+        "types": "./dist/watch.d.ts",
+        "default": "./dist/watch.js"
+      },
+      "require": {
+        "types": "./dist/cjs/watch.d.ts",
+        "default": "./dist/cjs/watch.js"
+      }
     }
   },
   "main": "./dist/createServer.js",
