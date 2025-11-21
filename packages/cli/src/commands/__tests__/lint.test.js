@@ -1,9 +1,8 @@
-import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createRequire } from 'node:module'
 
-import { vi, describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -59,15 +58,6 @@ describe('lint command - formatter resolution', () => {
 
         // If it has __esModule and default, it's an ESM module that needs wrapping
         if (formatter && formatter.__esModule && formatter.default) {
-          // Create a temporary wrapper file
-          const wrapperPath = path.join(
-            cwd,
-            'node_modules',
-            '.cache',
-            'cedarjs',
-            `formatter-${name.replace(/[^a-zA-Z0-9]/g, '-')}.cjs`,
-          )
-
           // For testing, just return a marker showing this would be a wrapper
           return `[WRAPPER:${name}]`
         }
