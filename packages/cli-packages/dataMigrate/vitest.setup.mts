@@ -25,7 +25,11 @@ vi.mock('fs-extra', async () => {
   const path = await vi.importActual<typeof import('path')>('path')
   
   // outputFileSync creates parent directories if they don't exist
-  const outputFileSync = (file: string, data: any, options?: any) => {
+  const outputFileSync = (
+    file: string,
+    data: string | Buffer,
+    options?: BufferEncoding | { encoding?: BufferEncoding | null; mode?: number | string; flag?: string }
+  ) => {
     const dir = path.dirname(file)
     memfs.fs.mkdirSync(dir, { recursive: true })
     memfs.fs.writeFileSync(file, data, options)
