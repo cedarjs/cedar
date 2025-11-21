@@ -66,6 +66,8 @@ Prisma v6 introduced a `prisma.config.ts` file that:
   - `getSchemaPath()` - Get the schema path from config
   - `getMigrationsPath()` - Get the migrations path from config
   - `getDbDir()` - Get the database directory
+  - `getDataMigrationsPath()` - **[Added 2024-11-21]** Get the data migrations
+    directory (defaults to sibling of Prisma migrations directory)
 - Includes caching to avoid repeated file system operations
 - All functions are async and use dynamic `import()` for ESM compatibility
 
@@ -176,12 +178,22 @@ to use the new helper functions:
 - `cli/src/lib/test.js` - Updated mock to use `prismaConfig` instead of
   `dbSchema`
 
+**Generators:**
+
+- `cli/src/commands/generate/dataMigration/dataMigration.js` - **[Updated]**
+  Now uses async `getDataMigrationsPath()` to determine output location
+
 **Data Migration:**
 
 - `cli-packages/dataMigrate/src/commands/installHandler.ts` - **[Updated]**
-  Now uses async `getSchemaPath()` for adding migration model
+  Now uses async `getSchemaPath()` and `getDataMigrationsPath()`
+- `cli-packages/dataMigrate/src/commands/upHandler.ts` - **[Updated]** Now
+  uses async `getDataMigrationsPath()` to locate data migration files
+- `cli-packages/dataMigrate/src/commands/upHandlerEsm.ts` - **[Updated]** Now
+  uses async `getDataMigrationsPath()` to locate data migration files
 - `cli-packages/dataMigrate/src/__tests__/installHandler.test.ts` -
-  **[Updated]** Now uses async `getSchemaPath()` with mocked implementation
+  **[Updated]** Now uses async `getSchemaPath()` and `getDataMigrationsPath()`
+  with mocked implementations
 
 **Other Packages:**
 
@@ -193,6 +205,23 @@ to use the new helper functions:
   `getSchemaPath()` and made `process_env_expressions` async
 - `structure/src/outline/outline.ts` - **[Updated]** Now uses async
   `getSchemaPath()` in `_schema()` function
+- `internal/src/generate/graphqlSchema.ts` - **[Updated]** Now uses async
+  `getSchemaPath()` for schema loading in error handling
+- `api-server/src/watch.ts` - **[Updated]** Now uses async `getDbDir()` to
+  properly determine the database directory to ignore in file watch (handles
+  configurable schema location)
+- `testing/src/api/vitest/CedarApiVitestEnv.ts` - **[Updated]** Now uses async
+  `getSchemaPath()` for test database setup
+- `testing/src/api/vitest/vitest-api.setup.ts` - **[Updated]** Now uses async
+  `getSchemaPath()` in two locations for teardown and quote style detection
+- `testing/src/config/jest/api/globalSetup.ts` - **[Updated]** Now uses async
+  `getSchemaPath()` for test setup
+- `testing/src/config/jest/api/jest-preset.ts` - **[Updated]** Changed from
+  `dbSchemaPath` to `prismaConfigPath` in test globals
+- `testing/src/config/jest/api/jest.setup.ts` - **[Updated]** Now uses async
+  `getSchemaPath()` from `prismaConfigPath` in teardown and quote style functions
+- `testing/global.d.ts` - **[Updated]** Changed `__RWJS__TEST_IMPORTS.dbSchemaPath`
+  to `prismaConfigPath`
 
 #### Tests
 
@@ -392,12 +421,32 @@ All synchronous helper methods have been removed from
 
 All code using these sync methods has been updated to use async versions:
 
-- Updated 11 files across auth-providers, CLI, data-migrate, record, and
-  structure packages
+- Updated 20 files across auth-providers, CLI, data-migrate, record, structure,
+  internal, api-server, and testing packages
 - Made necessary functions async where they were calling sync methods
 - Updated Listr tasks to be async where needed
-- Build passes successfully
+- Replaced `api.db` references with `getDbDir()` to properly detect database directory
+- Updated test infrastructure to use `prismaConfigPath` instead of `dbSchemaPath`
+- Build passes successfully (71/71 packages)
 - Project-config tests pass (52/52)
+
+### Data Migrations Path Helper
+
+**Status: ✅ Complete**
+
+Added `getDataMigrationsPath()` helper to properly locate Cedar's data
+migrations directory:
+
+- Data migrations now default to being alongside Prisma migrations (not just
+  next to the config file)
+- Updated 4 files to use the new helper:
+  - `cli/src/commands/generate/dataMigration/dataMigration.js`
+  - `cli-packages/dataMigrate/src/commands/installHandler.ts`
+  - `cli-packages/dataMigrate/src/commands/upHandler.ts`
+  - `cli-packages/dataMigrate/src/commands/upHandlerEsm.ts`
+- Updated test mocks to support the new helper
+- `getPaths().api.dataMigrations` kept for backward compatibility but may be
+  inaccurate with non-default schema locations
 
 ## Incomplete Changes
 

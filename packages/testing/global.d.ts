@@ -43,7 +43,7 @@ declare global {
   var __RWJS__TEST_IMPORTS: {
     apiSrcPath: string
     tearDownCachePath: string
-    dbSchemaPath: string
+    prismaConfigPath: string
   }
   var __RWJS_TESTROOT_DIR: string
 }

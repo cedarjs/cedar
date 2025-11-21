@@ -4,7 +4,7 @@ import path from 'path'
 import execa from 'execa'
 import { vol } from 'memfs'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
 
 import {
   handler,
@@ -27,11 +27,17 @@ jest.mock('execa', () => {
 
 jest.mock('@cedarjs/project-config', () => {
   const actual = jest.requireActual('@cedarjs/project-config')
+  const mockPath = require('path')
   return {
     ...actual,
     getSchemaPath: jest.fn(async (prismaConfigPath) => {
       // Simple mock: replace prisma.config.ts with schema.prisma
       return prismaConfigPath.replace('prisma.config.ts', 'schema.prisma')
+    }),
+    getDataMigrationsPath: jest.fn(async (prismaConfigPath) => {
+      // Data migrations go next to the config file in test
+      const configDir = mockPath.dirname(prismaConfigPath)
+      return mockPath.join(configDir, 'dataMigrations')
     }),
   }
 })
@@ -73,7 +79,9 @@ describe('installHandler', () => {
 
     await handler()
 
-    const dataMigrationsPath = getPaths().api.dataMigrations
+    const dataMigrationsPath = await getDataMigrationsPath(
+      getPaths().api.prismaConfig,
+    )
 
     expect(fs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
     const schemaPath = path.join(getPaths().api.base, 'schema.prisma')

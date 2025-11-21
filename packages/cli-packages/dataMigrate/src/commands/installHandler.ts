@@ -4,22 +4,26 @@ import execa from 'execa'
 import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
-import { getPaths, getSchemaPath } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getSchemaPath,
+  getDataMigrationsPath,
+} from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 
 export async function handler() {
   const redwoodProjectPaths = getPaths()
+  const dataMigrationsPath = await getDataMigrationsPath(
+    redwoodProjectPaths.api.prismaConfig,
+  )
 
   const tasks = new Listr(
     [
       {
         title: 'Creating the dataMigrations directory...',
         task() {
-          fs.outputFileSync(
-            path.join(redwoodProjectPaths.api.dataMigrations, '.keep'),
-            '',
-          )
+          fs.outputFileSync(path.join(dataMigrationsPath, '.keep'), '')
         },
       },
       {

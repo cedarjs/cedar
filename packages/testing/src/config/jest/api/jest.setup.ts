@@ -15,7 +15,7 @@ import { defineScenario } from '../../../api/scenario.js'
 // testing time
 // The key is to reduce the amount of imports in this file, because the
 // require.cache is not shared between each test context
-const { apiSrcPath, tearDownCachePath, dbSchemaPath } =
+const { apiSrcPath, tearDownCachePath, prismaConfigPath } =
   global.__RWJS__TEST_IMPORTS
 
 interface ScenarioData {
@@ -78,10 +78,12 @@ const isIdenticalArray = (a: unknown[], b: unknown[]) => {
 
 const configureTeardown = async (): Promise<void> => {
   const { getDMMF, getSchemaWithPath } = await import('@prisma/internals')
+  const { getSchemaPath } = await import('@cedarjs/project-config')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const { schemas } = await getSchemaWithPath(dbSchemaPath)
+  const schemaPath = await getSchemaPath(prismaConfigPath)
+  const { schemas } = await getSchemaWithPath(schemaPath)
   const schema = await getDMMF({ datamodel: schemas })
   const schemaModels: string[] = schema.datamodel.models.map(
     (m: { dbName: string | null; name: string }) => m.dbName || m.name,
@@ -107,10 +109,12 @@ const getQuoteStyle = async (): Promise<string> => {
   const { getConfig: getPrismaConfig, getSchemaWithPath } = await import(
     '@prisma/internals'
   )
+  const { getSchemaPath } = await import('@cedarjs/project-config')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const result = await getSchemaWithPath(dbSchemaPath)
+  const schemaPath = await getSchemaPath(prismaConfigPath)
+  const result = await getSchemaWithPath(schemaPath)
 
   if (!quoteStyle) {
     const config = await getPrismaConfig({
