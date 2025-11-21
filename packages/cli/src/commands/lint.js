@@ -77,17 +77,45 @@ function resolveFormatter(format, cwd) {
           `formatter-${name.replace(/[^a-zA-Z0-9]/g, '-')}.cjs`,
         )
 
+        // Check if wrapper already exists and is up-to-date
+        if (fs.existsSync(wrapperPath)) {
+          try {
+            const existingContent = fs.readFileSync(wrapperPath, 'utf-8')
+            const expectedContent = `// Auto-generated wrapper for ESM formatter
+const formatter = require(${JSON.stringify(formatterPath)});
+module.exports = formatter.default || formatter;
+`
+            if (existingContent === expectedContent) {
+              // Wrapper is up-to-date, use it
+              return wrapperPath
+            }
+          } catch (error) {
+            // If we can't read the file, we'll recreate it
+          }
+        }
+
         // Ensure the directory exists
-        fs.mkdirSync(path.dirname(wrapperPath), { recursive: true })
+        try {
+          fs.mkdirSync(path.dirname(wrapperPath), { recursive: true })
+        } catch (error) {
+          // If we can't create the cache directory, fall back to using the package name
+          // ESLint will try to load it and fail with a helpful error message
+          return name
+        }
 
         // Write the wrapper that unwraps the default export
+        // Note: JSON.stringify ensures formatterPath is safely escaped
         const wrapperContent = `// Auto-generated wrapper for ESM formatter
 const formatter = require(${JSON.stringify(formatterPath)});
 module.exports = formatter.default || formatter;
 `
-        fs.writeFileSync(wrapperPath, wrapperContent)
-
-        return wrapperPath
+        try {
+          fs.writeFileSync(wrapperPath, wrapperContent)
+          return wrapperPath
+        } catch (error) {
+          // If we can't write the wrapper file, fall back to using the package name
+          return name
+        }
       }
 
       // If it's a regular CommonJS formatter, use the package name
