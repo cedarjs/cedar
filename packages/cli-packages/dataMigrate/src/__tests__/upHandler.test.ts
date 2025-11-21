@@ -1,5 +1,14 @@
 import { vol, fs as memfs } from 'memfs'
-import { vi, expect, describe, it, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
+import {
+  vi,
+  expect,
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -10,7 +19,9 @@ vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 // Mock @cedarjs/project-config to return consistent paths based on memfs
 vi.mock('@cedarjs/project-config', async () => {
-  const actual = await vi.importActual<typeof import('@cedarjs/project-config')>('@cedarjs/project-config')
+  const actual = await vi.importActual<
+    typeof import('@cedarjs/project-config')
+  >('@cedarjs/project-config')
   return {
     ...actual,
     getPaths: () => ({
@@ -32,71 +43,85 @@ vi.mock('@cedarjs/project-config', async () => {
 
 // Mock require() calls for migration files by intercepting Module._load
 const requestLog: string[] = []
-const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } = vi.hoisted(() => {
-  let Module: any
-  let originalLoad: any
-  let isSetup = false
-  const mocks = new Map<string, any>()
+const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } =
+  vi.hoisted(() => {
+    let Module: any
+    let originalLoad: any
+    let isSetup = false
+    const mocks = new Map<string, any>()
 
-  return {
-    setupRequireMock: async () => {
-      if (isSetup) return
-      
-      // Import using require to get the actual Module object
-      const nodeModule = require('node:module')
-      Module = nodeModule
-      originalLoad = Module._load
-      
-      // Wrap the original _load function
-      const wrappedLoad = function (request: string, parent: any, isMain: boolean) {
-        // Log all requests that look like migration files
-        if (request.includes('dataMigrations') || request.includes('wip.ts')) {
-          requestLog.push(`REQUEST: ${request}`)
+    return {
+      setupRequireMock: async () => {
+        if (isSetup) {
+          return
         }
-        
-        // Check if any mock matches this request
-        for (const [mockPath, mockValue] of mocks.entries()) {
-          // Try exact match first
-          if (request === mockPath) {
-            requestLog.push(`EXACT MATCH: ${request}`)
-            return mockValue
+
+        // Import using require to get the actual Module object
+        const nodeModule = require('node:module')
+        Module = nodeModule
+        originalLoad = Module._load
+
+        // Wrap the original _load function
+        const wrappedLoad = function (
+          request: string,
+          parent: any,
+          isMain: boolean,
+        ) {
+          // Log all requests that look like migration files
+          if (
+            request.includes('dataMigrations') ||
+            request.includes('wip.ts')
+          ) {
+            requestLog.push(`REQUEST: ${request}`)
           }
-          // Then try endsWith for partial paths
-          if (request.endsWith(mockPath)) {
-            requestLog.push(`ENDS_WITH MATCH: ${request} endsWith ${mockPath}`)
-            return mockValue
+
+          // Check if any mock matches this request
+          for (const [mockPath, mockValue] of mocks.entries()) {
+            // Try exact match first
+            if (request === mockPath) {
+              requestLog.push(`EXACT MATCH: ${request}`)
+              return mockValue
+            }
+            // Then try endsWith for partial paths
+            if (request.endsWith(mockPath)) {
+              requestLog.push(
+                `ENDS_WITH MATCH: ${request} endsWith ${mockPath}`,
+              )
+              return mockValue
+            }
+            // Also try matching just the filename
+            const requestFilename =
+              request.split('/').pop() || request.split('\\').pop()
+            const mockFilename =
+              mockPath.split('/').pop() || mockPath.split('\\').pop()
+            if (requestFilename === mockFilename) {
+              requestLog.push(`FILENAME MATCH: ${request} -> ${mockPath}`)
+              return mockValue
+            }
           }
-          // Also try matching just the filename
-          const requestFilename = request.split('/').pop() || request.split('\\').pop()
-          const mockFilename = mockPath.split('/').pop() || mockPath.split('\\').pop()
-          if (requestFilename === mockFilename) {
-            requestLog.push(`FILENAME MATCH: ${request} -> ${mockPath}`)
-            return mockValue
-          }
+          return originalLoad.call(this, request, parent, isMain)
         }
-        return originalLoad.call(this, request, parent, isMain)
-      }
-      
-      // Copy properties from original function
-      Object.setPrototypeOf(wrappedLoad, originalLoad)
-      
-      Module._load = wrappedLoad
-      isSetup = true
-    },
-    restoreRequireMock: () => {
-      if (Module && originalLoad && isSetup) {
-        Module._load = originalLoad
-        isSetup = false
-      }
-      mocks.clear()
-    },
-    mockRequire: (path: string, stub: any) => {
-      mocks.set(path, stub)
-      requestLog.push(`MOCK ADDED: ${path}`)
-    },
-    getRequestLog: () => requestLog,
-  }
-})
+
+        // Copy properties from original function
+        Object.setPrototypeOf(wrappedLoad, originalLoad)
+
+        Module._load = wrappedLoad
+        isSetup = true
+      },
+      restoreRequireMock: () => {
+        if (Module && originalLoad && isSetup) {
+          Module._load = originalLoad
+          isSetup = false
+        }
+        mocks.clear()
+      },
+      mockRequire: (path: string, stub: any) => {
+        mocks.set(path, stub)
+        requestLog.push(`MOCK ADDED: ${path}`)
+      },
+      getRequestLog: () => requestLog,
+    }
+  })
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -123,93 +148,69 @@ afterEach(() => {
 
 const mockDataMigrations: { current: any[] } = { current: [] }
 
-vi.mock(
-  '/redwood-app/api/dist/lib/db.js',
-  () => {
-    return {
-      db: {
-        rW_DataMigration: {
-          create(dataMigration) {
-            mockDataMigrations.current.push(dataMigration)
-          },
-          findMany() {
-            return mockDataMigrations.current
-          },
+vi.mock('/redwood-app/api/dist/lib/db.js', () => {
+  return {
+    db: {
+      rW_DataMigration: {
+        create(dataMigration) {
+          mockDataMigrations.current.push(dataMigration)
         },
-        $disconnect: () => {},
-      },
-    }
-  },
-)
-
-vi.mock(
-  `\\redwood-app\\api\\dist\\lib\\db.js`,
-  () => {
-    return {
-      db: {
-        rW_DataMigration: {
-          create(dataMigration) {
-            mockDataMigrations.current.push(dataMigration)
-          },
-          findMany() {
-            return mockDataMigrations.current
-          },
+        findMany() {
+          return mockDataMigrations.current
         },
-        $disconnect: () => {},
       },
-    }
-  },
-)
+      $disconnect: () => {},
+    },
+  }
+})
 
-vi.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075442-wip.ts',
-  () => {
-    return { default: () => {} }
-  },
-)
-
-vi.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075442-wip.ts',
-  () => {
-    return { default: () => {} }
-  },
-)
-
-vi.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075443-wip.ts',
-  () => {
-    return {
-      default: () => {
-        throw new Error('oops')
+vi.mock(`\\redwood-app\\api\\dist\\lib\\db.js`, () => {
+  return {
+    db: {
+      rW_DataMigration: {
+        create(dataMigration) {
+          mockDataMigrations.current.push(dataMigration)
+        },
+        findMany() {
+          return mockDataMigrations.current
+        },
       },
-    }
-  },
-)
+      $disconnect: () => {},
+    },
+  }
+})
 
-vi.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075443-wip.ts',
-  () => {
-    return {
-      default: () => {
-        throw new Error('oops')
-      },
-    }
-  },
-)
+vi.mock('/redwood-app/api/db/dataMigrations/20230822075442-wip.ts', () => {
+  return { default: () => {} }
+})
 
-vi.mock(
-  '/redwood-app/api/db/dataMigrations/20230822075444-wip.ts',
-  () => {
-    return { default: () => {} }
-  },
-)
+vi.mock('\\redwood-app\\api\\db\\dataMigrations\\20230822075442-wip.ts', () => {
+  return { default: () => {} }
+})
 
-vi.mock(
-  '\\redwood-app\\api\\db\\dataMigrations\\20230822075444-wip.ts',
-  () => {
-    return { default: () => {} }
-  },
-)
+vi.mock('/redwood-app/api/db/dataMigrations/20230822075443-wip.ts', () => {
+  return {
+    default: () => {
+      throw new Error('oops')
+    },
+  }
+})
+
+vi.mock('\\redwood-app\\api\\db\\dataMigrations\\20230822075443-wip.ts', () => {
+  return {
+    default: () => {
+      throw new Error('oops')
+    },
+  }
+})
+
+vi.mock('/redwood-app/api/db/dataMigrations/20230822075444-wip.ts', () => {
+  return { default: () => {} }
+})
+
+vi.mock('\\redwood-app\\api\\db\\dataMigrations\\20230822075444-wip.ts', () => {
+  return { default: () => {} }
+})
 
 const RWJS_CWD = process.env.RWJS_CWD
 
@@ -324,7 +325,8 @@ describe('upHandler', () => {
           db: {
             dataMigrations: {
               '20230822075442-wip.ts': 'export default () => {}',
-              '20230822075443-wip.ts': 'export default () => { throw new Error("oops") }',
+              '20230822075443-wip.ts':
+                'export default () => { throw new Error("oops") }',
               '20230822075444-wip.ts': 'export default () => {}',
             },
           },
@@ -335,7 +337,7 @@ describe('upHandler', () => {
 
     // Setup require mocking for migration files
     await setupRequireMock()
-    
+
     // Mock the three migration files - use just the filename as the key for better matching
     mockRequire('20230822075442-wip.ts', {
       default: () => {},
@@ -366,7 +368,7 @@ describe('upHandler', () => {
     if (log.length > 0) {
       // Write to stderr to bypass console mocking
       process.stderr.write('\n=== REQUEST LOG ===\n')
-      log.forEach(line => process.stderr.write(line + '\n'))
+      log.forEach((line) => process.stderr.write(line + '\n'))
       process.stderr.write('===================\n')
     }
 

@@ -21,7 +21,7 @@ vi.mock('execa', () => {
       stdout: 42,
     }
   })
-  
+
   return {
     command: mockCommand,
     default: {

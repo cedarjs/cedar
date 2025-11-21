@@ -10,12 +10,9 @@ import { handler as dataMigrateUpHandler } from '../commands/upHandler.js'
 vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
-vi.mock(
-  '../commands/upHandler.js',
-  () => ({
-    handler: vi.fn(),
-  }),
-)
+vi.mock('../commands/upHandler.js', () => ({
+  handler: vi.fn(),
+}))
 
 describe('up', () => {
   it('exports `command`, `description`, `builder`, and `handler`', () => {

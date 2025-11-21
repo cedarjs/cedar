@@ -4,12 +4,9 @@ import type { Argv } from 'yargs'
 import * as installCommand from '../commands/install'
 import { handler as dataMigrateInstallHandler } from '../commands/installHandler.js'
 
-vi.mock(
-  '../commands/installHandler.js',
-  () => ({
-    handler: vi.fn(),
-  }),
-)
+vi.mock('../commands/installHandler.js', () => ({
+  handler: vi.fn(),
+}))
 
 describe('install', () => {
   it('exports `command`, `description`, `builder`, and `handler`', () => {

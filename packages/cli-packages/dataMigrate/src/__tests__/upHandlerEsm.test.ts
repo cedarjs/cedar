@@ -1,4 +1,13 @@
-import { vi, expect, describe, it, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
+import {
+  vi,
+  expect,
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from 'vitest'
 import { vol, fs as memfs } from 'memfs'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -52,43 +61,37 @@ vi.mock('bundle-require', () => {
   }
 })
 
-vi.mock(
-  '/redwood-app/api/dist/lib/db.js',
-  () => {
-    return {
-      db: {
-        rW_DataMigration: {
-          create(dataMigration) {
-            mockDataMigrations.current.push(dataMigration)
-          },
-          findMany() {
-            return mockDataMigrations.current
-          },
+vi.mock('/redwood-app/api/dist/lib/db.js', () => {
+  return {
+    db: {
+      rW_DataMigration: {
+        create(dataMigration) {
+          mockDataMigrations.current.push(dataMigration)
         },
-        $disconnect: () => {},
+        findMany() {
+          return mockDataMigrations.current
+        },
       },
-    }
-  },
-)
+      $disconnect: () => {},
+    },
+  }
+})
 
-vi.mock(
-  `\\redwood-app\\api\\dist\\lib\\db.js`,
-  () => {
-    return {
-      db: {
-        rW_DataMigration: {
-          create(dataMigration) {
-            mockDataMigrations.current.push(dataMigration)
-          },
-          findMany() {
-            return mockDataMigrations.current
-          },
+vi.mock(`\\redwood-app\\api\\dist\\lib\\db.js`, () => {
+  return {
+    db: {
+      rW_DataMigration: {
+        create(dataMigration) {
+          mockDataMigrations.current.push(dataMigration)
         },
-        $disconnect: () => {},
+        findMany() {
+          return mockDataMigrations.current
+        },
       },
-    }
-  },
-)
+      $disconnect: () => {},
+    },
+  }
+})
 
 const RWJS_CWD = process.env.RWJS_CWD
 
