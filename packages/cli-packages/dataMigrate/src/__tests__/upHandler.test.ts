@@ -8,6 +8,28 @@ import { handler, NO_PENDING_MIGRATIONS_MESSAGE } from '../commands/upHandler'
 vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
+// Mock @cedarjs/project-config to return consistent paths based on memfs
+vi.mock('@cedarjs/project-config', async () => {
+  const actual = await vi.importActual<typeof import('@cedarjs/project-config')>('@cedarjs/project-config')
+  return {
+    ...actual,
+    getPaths: () => ({
+      base: '/redwood-app',
+      api: {
+        base: '/redwood-app/api',
+        dataMigrations: '/redwood-app/api/db/dataMigrations',
+        db: '/redwood-app/api/db',
+        dbSchema: '/redwood-app/api/db/schema.prisma',
+        dist: '/redwood-app/api/dist',
+        lib: '/redwood-app/api/dist/lib',
+      },
+      web: {
+        base: '/redwood-app/web',
+      },
+    }),
+  }
+})
+
 // Mock require() calls for migration files by intercepting Module._load
 const requestLog: string[] = []
 const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } = vi.hoisted(() => {
