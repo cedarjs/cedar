@@ -198,6 +198,7 @@ beforeAll(() => {
 afterEach(() => {
   vol.reset()
   mockDataMigrations.current = []
+  restoreRequireMock()
 })
 
 afterAll(() => {
@@ -278,7 +279,6 @@ describe('upHandler', () => {
     )
   })
 
-  // NOTE: Testing CommonJS require() mocking using Module._load interception
   it('runs pending migrations', async () => {
     mockDataMigrations.current = [
       {
@@ -301,9 +301,9 @@ describe('upHandler', () => {
           },
           db: {
             dataMigrations: {
-              '20230822075442-wip.ts': '',
-              '20230822075443-wip.ts': '',
-              '20230822075444-wip.ts': '',
+              '20230822075442-wip.ts': 'export default () => {}',
+              '20230822075443-wip.ts': 'export default () => { throw new Error("oops") }',
+              '20230822075444-wip.ts': 'export default () => {}',
             },
           },
         },
