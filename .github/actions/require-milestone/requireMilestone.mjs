@@ -42,10 +42,7 @@ import fs from 'node:fs'
  */
 function getMilestoneFromConventionalCommit(title) {
   // Breaking changes (indicated by !)
-  if (
-    /^(feat|fix|docs|chore)!(\([^)]+\))?:/.test(title) ||
-    title.includes('BREAKING CHANGE')
-  ) {
+  if (/^(feat|fix|docs|chore)!(\([^)]+\))?:/.test(title)) {
     return 'next-release-major'
   }
 
@@ -55,12 +52,12 @@ function getMilestoneFromConventionalCommit(title) {
   }
 
   // Fix (goes in next patch release)
-  if (/^fix\([^)]+\):/.test(title)) {
+  if (/^(fix|docs)\([^)]+\):/.test(title)) {
     return 'next-release-patch'
   }
 
-  // Chore or docs (framework-side maintenance)
-  if (/^(chore|docs)\([^)]+\):/.test(title)) {
+  // Chore (framework-side maintenance)
+  if (/^chore\([^)]+\):/.test(title)) {
     return 'chore'
   }
 
@@ -163,11 +160,6 @@ async function main() {
 
     await setMilestone(number, suggestedMilestone)
 
-    // Verify it was set (by re-reading would require another API call, so we'll trust it worked)
-    // If it failed, the error was already logged
-    console.log(
-      'Note: If milestone setting failed due to permissions, please set it manually.',
-    )
     return
   }
 
