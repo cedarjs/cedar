@@ -31,7 +31,6 @@
     "bundle-require": "^5.1.0",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
-    "fs-extra": "11.2.0",
     "listr2": "7.0.2",
     "termi-link": "1.1.0",
     "yargs": "17.7.2"
@@ -39,7 +38,6 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/client": "6.19.0",
-    "@types/fs-extra": "11.0.4",
     "@types/yargs": "17.0.33",
     "jest": "29.7.0",
     "memfs": "4.17.2",

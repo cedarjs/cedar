@@ -13,6 +13,7 @@ import {
 } from '../commands/installHandler'
 
 jest.mock('fs', () => require('memfs').fs)
+jest.mock('node:fs', () => require('memfs').fs)
 
 jest.mock('execa', () => {
   return {
