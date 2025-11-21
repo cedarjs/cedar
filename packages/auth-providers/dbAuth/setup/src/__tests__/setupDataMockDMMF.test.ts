@@ -48,6 +48,10 @@ vi.mock('@cedarjs/cli-helpers', () => {
         dbSchema: dbSchemaPath,
         lib: libPath,
         functions: functionsPath,
+        prismaConfig: redwoodProjectPath + '/api/prisma.config.ts',
+      },
+      web: {
+        routes: redwoodProjectPath + '/web/src/Routes.tsx',
       },
     }),
     colors: {
@@ -80,6 +84,24 @@ vi.mock('@cedarjs/cli-helpers', () => {
       if (args.notes) {
         console.log(`\n   ${args.notes.join('\n   ')}\n`)
       }
+    },
+  }
+})
+
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal()
+  return {
+    ...originalProjectConfig,
+    loadPrismaConfig: async () => {
+      return {
+        schema: './db/schema.prisma',
+      }
+    },
+    getSchemaPath: async () => {
+      return dbSchemaPath
+    },
+    processPagesDir: () => {
+      return []
     },
   }
 })
@@ -139,6 +161,8 @@ describe('setupData createUserModelTask', () => {
   it('adds a User model to schema.prisma', async () => {
     vol.fromJSON(
       {
+        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
         'api/db/schema.prisma': `
 datasource db {
   provider = "sqlite"
@@ -167,6 +191,8 @@ generator client {
   it('adds a User model to schema.prisma with existing UserExample model', async () => {
     vol.fromJSON(
       {
+        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
         'api/db/schema.prisma': `
 datasource db {
   provider = "sqlite"
@@ -203,6 +229,8 @@ model UserExample {
   it('Does not add another User model if one already exists', async () => {
     vol.fromJSON(
       {
+        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
         'api/db/schema.prisma': `
 datasource db {
   provider = "sqlite"
@@ -251,6 +279,8 @@ model Post {
 
     vol.fromJSON(
       {
+        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
         [packageJsonPath]: '{ "version": "0.0.0" }',
         'api/src/functions/graphql.ts': `
 import { createGraphQLHandler } from "@cedarjs/graphql-server"
@@ -305,6 +335,8 @@ model UserExample {
 
     vol.fromJSON(
       {
+        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
         [packageJsonPath]: '{ "version": "0.0.0" }',
         'api/src/functions/graphql.ts': `
 import { createGraphQLHandler } from "@cedarjs/graphql-server"
@@ -350,6 +382,8 @@ import { getCurrentUser } from 'src/lib/auth'
 
     vol.fromJSON(
       {
+        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
         [packageJsonPath]: '{ "version": "0.0.0" }',
         'api/src/functions/graphql.ts': `
 import { createGraphQLHandler } from "@cedarjs/graphql-server"

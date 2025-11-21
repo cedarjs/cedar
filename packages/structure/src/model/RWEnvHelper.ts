@@ -111,7 +111,7 @@ export class RWEnvHelper extends BaseNode {
     return [...(await this.process_env_expressions())]
   }
 
-  @lazy() async process_env_expressions() {
+  async process_env_expressions() {
     const { pathHelper } = this.parent
     const api = process_env_findAll(pathHelper.api.base).map(
       (x) => new ProcessDotEnvExpression(this, 'api', x.key, x.node),

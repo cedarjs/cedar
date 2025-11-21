@@ -8,6 +8,21 @@ import { handler, NO_PENDING_MIGRATIONS_MESSAGE } from '../commands/upHandler'
 
 const redwoodProjectPath = '/redwood-app'
 
+jest.mock('@cedarjs/project-config', () => ({
+  getPaths: () => ({
+    api: {
+      dist: '/redwood-app/api/dist',
+      dataMigrations: '/redwood-app/api/dataMigrations',
+    },
+  }),
+  loadPrismaConfig: async () => ({
+    schema: './db/schema.prisma',
+  }),
+  getMigrationsPath: async () => '/redwood-app/api/db/migrations',
+  getDataMigrationsPath: async () => '/redwood-app/api/dataMigrations',
+  projectSideIsEsm: () => false,
+}))
+
 let consoleLogMock: jest.SpyInstance
 let consoleInfoMock: jest.SpyInstance
 let consoleErrorMock: jest.SpyInstance
@@ -169,6 +184,8 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
+          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -201,6 +218,8 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
+          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -238,6 +257,8 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
+          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
+export default defineConfig({ schema: './db/schema.prisma' })`,
           'package.json': '{}',
           dist: {
             lib: {

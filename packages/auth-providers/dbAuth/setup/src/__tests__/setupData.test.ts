@@ -27,6 +27,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
         dbSchema: dbSchemaPath,
         lib: libPath,
         functions: functionsPath,
+        prismaConfig: redwoodProjectPath + '/api/prisma.config.ts',
       },
     }),
     colors: {
