@@ -20,6 +20,13 @@ This directory contains test project fixtures used across the Cedar framework fo
 - **Purpose**: Error handling and validation testing
 - **Usage**: 16 references
 - **Used by**: @cedarjs/structure, @cedarjs/internal, @cedarjs/project-config
+- **Unique Features**:
+  - SDL files with various auth directive errors (missing directives, invalid roles, etc.)
+  - Duplicate routes in Routes.js for testing route conflict detection
+  - Cell with unnamed GraphQL QUERY for testing validation warnings
+  - No vite config (tests path detection when vite is not configured)
+  - JavaScript-based instead of TypeScript
+- **⚠️ Cannot be replaced**: These specific error conditions are not present in `example-todo-main`
 
 ### CI/CD Dependencies
 
@@ -42,12 +49,6 @@ This directory contains test project fixtures used across the Cedar framework fo
 
 ### Specialized Testing
 
-**fragment-test-project** (1.1M)
-- **Purpose**: GraphQL fragment testing
-- **Usage**: 6 references
-- **Rebuild Script**: `tasks/test-project/rebuild-fragments-test-project-fixture.ts`
-- **Used by**: @cedarjs/internal (possibleTypes tests)
-
 **empty-project** (240K)
 - **Purpose**: Minimal project for basic path/config tests
 - **Usage**: 8 references
@@ -57,8 +58,9 @@ This directory contains test project fixtures used across the Cedar framework fo
 
 The following fixtures were removed as they had zero references:
 
-- **esm-fragment-test-project** (1.1M) - Removed in PR #XXX
-- **rsc-caching** (376K) - Removed in PR #XXX
+- **esm-fragment-test-project** (1.1M) - Removed in PR #551 and this PR
+- **fragment-test-project** (1.1M) - Removed in PR #551
+- **rsc-caching** (376K) - Removed in this PR
 
 ## Before Removing a Fixture
 
@@ -86,7 +88,7 @@ Check the following before removing any fixture:
 
 ## Total Size
 
-Current fixtures: ~5.2MB total across 8 projects
+Current fixtures: ~4.2MB total across 7 projects
 
 ## Maintenance
 
