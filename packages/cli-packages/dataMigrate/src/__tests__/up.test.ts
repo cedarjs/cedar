@@ -7,7 +7,9 @@ import { getPaths } from '@cedarjs/project-config'
 import * as upCommand from '../commands/up'
 import { handler as dataMigrateUpHandler } from '../commands/upHandler.js'
 
-vi.mock(
+jest.mock('fs', () => require('memfs').fs)
+jest.mock('node:fs', () => require('memfs').fs)
+jest.mock(
   '../commands/upHandler.js',
   () => ({
     handler: vi.fn(),

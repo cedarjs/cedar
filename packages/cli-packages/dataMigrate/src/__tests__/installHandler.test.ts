@@ -13,13 +13,10 @@ import {
   notes,
 } from '../commands/installHandler'
 
-vi.mock('execa', () => {
-  const mockCommand = vi.fn(() => {
-    return {
-      stdout: 42,
-    }
-  })
-  
+jest.mock('fs', () => require('memfs').fs)
+jest.mock('node:fs', () => require('memfs').fs)
+
+jest.mock('execa', () => {
   return {
     command: mockCommand,
     default: {

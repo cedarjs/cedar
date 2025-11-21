@@ -28,6 +28,9 @@ afterEach(() => {
   consoleWarnMock.mockRestore()
 })
 
+jest.mock('fs', () => require('memfs').fs)
+jest.mock('node:fs', () => require('memfs').fs)
+
 const mockDataMigrations: { current: any[] } = { current: [] }
 
 vi.mock(
