@@ -10,8 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# No top level permissions are required for this workflow
-permissions: {}
+permissions:
+  issues: write
+  pull-requests: write
 
 jobs:
   require-milestone:
@@ -28,3 +29,5 @@ jobs:
 
       - name: ✅ Check milestone
         uses: ./.github/actions/require-milestone
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
