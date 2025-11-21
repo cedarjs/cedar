@@ -1,7 +1,7 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import {
@@ -23,7 +23,8 @@ export async function handler() {
       {
         title: 'Creating the dataMigrations directory...',
         task() {
-          fs.outputFileSync(path.join(dataMigrationsPath, '.keep'), '')
+          fs.mkdirSync(dataMigrationsPath, { recursive: true })
+          fs.writeFileSync(path.join(dataMigrationsPath, '.keep'), '')
         },
       },
       {

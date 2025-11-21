@@ -1,6 +1,19 @@
 name: Require milestone
-description: Ensures that a PR has a valid milestone
+description: Ensures that a PR has a valid milestone or automatically sets one based on conventional commit format
+
+inputs:
+  github-token:
+    description: 'GitHub token for setting milestones'
+    required: false
+    default: ''
 
 runs:
-  using: node20
-  main: requireMilestone.mjs
+  using: composite
+  steps:
+    - name: Run milestone check
+      shell: bash
+      run: node ${{ github.action_path }}/requireMilestone.mjs
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_EVENT_PATH: ${{ github.event_path }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
