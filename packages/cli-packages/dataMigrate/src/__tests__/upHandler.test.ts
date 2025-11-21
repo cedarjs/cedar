@@ -9,7 +9,8 @@ vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 // Mock require() calls for migration files by intercepting Module._load
-const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(() => {
+const requestLog: string[] = []
+const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } = vi.hoisted(() => {
   let Module: any
   let originalLoad: any
   let isSetup = false
@@ -26,9 +27,28 @@ const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(() => {
       
       // Wrap the original _load function
       const wrappedLoad = function (request: string, parent: any, isMain: boolean) {
-        // Check if any mock matches this request (by exact match or endsWith)
+        // Log all requests that look like migration files
+        if (request.includes('dataMigrations') || request.includes('wip.ts')) {
+          requestLog.push(`REQUEST: ${request}`)
+        }
+        
+        // Check if any mock matches this request
         for (const [mockPath, mockValue] of mocks.entries()) {
-          if (request === mockPath || request.endsWith(mockPath)) {
+          // Try exact match first
+          if (request === mockPath) {
+            requestLog.push(`EXACT MATCH: ${request}`)
+            return mockValue
+          }
+          // Then try endsWith for partial paths
+          if (request.endsWith(mockPath)) {
+            requestLog.push(`ENDS_WITH MATCH: ${request} endsWith ${mockPath}`)
+            return mockValue
+          }
+          // Also try matching just the filename
+          const requestFilename = request.split('/').pop() || request.split('\\').pop()
+          const mockFilename = mockPath.split('/').pop() || mockPath.split('\\').pop()
+          if (requestFilename === mockFilename) {
+            requestLog.push(`FILENAME MATCH: ${request} -> ${mockPath}`)
             return mockValue
           }
         }
@@ -50,7 +70,9 @@ const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(() => {
     },
     mockRequire: (path: string, stub: any) => {
       mocks.set(path, stub)
+      requestLog.push(`MOCK ADDED: ${path}`)
     },
+    getRequestLog: () => requestLog,
   }
 })
 
@@ -292,16 +314,16 @@ describe('upHandler', () => {
     // Setup require mocking for migration files
     await setupRequireMock()
     
-    // Mock the three migration files - these paths must match exactly what require() receives
-    mockRequire('/redwood-app/api/db/dataMigrations/20230822075442-wip.ts', {
+    // Mock the three migration files - use just the filename as the key for better matching
+    mockRequire('20230822075442-wip.ts', {
       default: () => {},
     })
-    mockRequire('/redwood-app/api/db/dataMigrations/20230822075443-wip.ts', {
+    mockRequire('20230822075443-wip.ts', {
       default: () => {
         throw new Error('oops')
       },
     })
-    mockRequire('/redwood-app/api/db/dataMigrations/20230822075444-wip.ts', {
+    mockRequire('20230822075444-wip.ts', {
       default: () => {},
     })
 
@@ -316,6 +338,15 @@ describe('upHandler', () => {
     // The handler will error and set the exit code to 1, we must revert that
     // or test suite itself will fail.
     process.exitCode = 0
+
+    // Debug: Output the request log to see what paths were requested
+    const log = getRequestLog()
+    if (log.length > 0) {
+      // Write to stderr to bypass console mocking
+      process.stderr.write('\n=== REQUEST LOG ===\n')
+      log.forEach(line => process.stderr.write(line + '\n'))
+      process.stderr.write('===================\n')
+    }
 
     expect(consoleInfoMock.mock.calls[0][0]).toMatch(
       '1 data migration(s) completed successfully.',
