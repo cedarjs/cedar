@@ -1,3 +1,4 @@
+import { vi, expect, describe, it, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 import { vol } from 'memfs'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -11,16 +12,16 @@ import {
 
 const redwoodProjectPath = '/redwood-app'
 
-let consoleLogMock: jest.SpyInstance
-let consoleInfoMock: jest.SpyInstance
-let consoleErrorMock: jest.SpyInstance
-let consoleWarnMock: jest.SpyInstance
+let consoleLogMock: ReturnType<typeof vi.spyOn>
+let consoleInfoMock: ReturnType<typeof vi.spyOn>
+let consoleErrorMock: ReturnType<typeof vi.spyOn>
+let consoleWarnMock: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
-  consoleLogMock = jest.spyOn(console, 'log').mockImplementation()
-  consoleInfoMock = jest.spyOn(console, 'info').mockImplementation()
-  consoleErrorMock = jest.spyOn(console, 'error').mockImplementation()
-  consoleWarnMock = jest.spyOn(console, 'warn').mockImplementation()
+  consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => {})
+  consoleInfoMock = vi.spyOn(console, 'info').mockImplementation(() => {})
+  consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {})
+  consoleWarnMock = vi.spyOn(console, 'warn').mockImplementation(() => {})
 })
 
 afterEach(() => {
@@ -30,11 +31,9 @@ afterEach(() => {
   consoleWarnMock.mockRestore()
 })
 
-jest.mock('fs', () => require('memfs').fs)
-
 const mockDataMigrations: { current: any[] } = { current: [] }
 
-jest.mock('bundle-require', () => {
+vi.mock('bundle-require', () => {
   return {
     bundleRequire: ({ filepath }: { filepath: string }) => {
       return {
@@ -50,7 +49,7 @@ jest.mock('bundle-require', () => {
   }
 })
 
-jest.mock(
+vi.mock(
   '/redwood-app/api/dist/lib/db.js',
   () => {
     return {
@@ -67,10 +66,9 @@ jest.mock(
       },
     }
   },
-  { virtual: true },
 )
 
-jest.mock(
+vi.mock(
   `\\redwood-app\\api\\dist\\lib\\db.js`,
   () => {
     return {
@@ -87,7 +85,6 @@ jest.mock(
       },
     }
   },
-  { virtual: true },
 )
 
 const RWJS_CWD = process.env.RWJS_CWD

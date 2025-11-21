@@ -1,14 +1,14 @@
+import { vi, expect, describe, it } from 'vitest'
 import type yargs from 'yargs'
 
 import * as installCommand from '../commands/install'
 import { handler as dataMigrateInstallHandler } from '../commands/installHandler.js'
 
-jest.mock(
+vi.mock(
   '../commands/installHandler.js',
   () => ({
-    handler: jest.fn(),
+    handler: vi.fn(),
   }),
-  { virtual: true },
 )
 
 describe('install', () => {
@@ -28,7 +28,7 @@ describe('install', () => {
   it('`builder` has an epilogue', () => {
     // The typecasting here is to make TS happy when calling `builder(yargs)`
     // further down. We know that only `epilogue` will be called.
-    const yargs = { epilogue: jest.fn() } as unknown as yargs.Argv
+    const yargs = { epilogue: vi.fn() } as unknown as yargs.Argv
 
     installCommand.builder(yargs)
 

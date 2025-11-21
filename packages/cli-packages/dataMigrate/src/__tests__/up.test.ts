@@ -1,3 +1,4 @@
+import { vi, expect, describe, it } from 'vitest'
 import { vol } from 'memfs'
 import yargs from 'yargs'
 
@@ -6,13 +7,11 @@ import { getPaths } from '@cedarjs/project-config'
 import * as upCommand from '../commands/up'
 import { handler as dataMigrateUpHandler } from '../commands/upHandler.js'
 
-jest.mock('fs', () => require('memfs').fs)
-jest.mock(
+vi.mock(
   '../commands/upHandler.js',
   () => ({
-    handler: jest.fn(),
+    handler: vi.fn(),
   }),
-  { virtual: true },
 )
 
 describe('up', () => {
