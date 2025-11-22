@@ -773,7 +773,7 @@ async function createRedwoodApp() {
   if (nodeCheck) {
     await executeCompatibilityCheck(path.join(templatesDir, 'ts'))
   } else {
-    tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped node install step`)
+    tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped node version check`)
   }
   trace.getActiveSpan()?.setAttribute('node-check', nodeCheck)
 
