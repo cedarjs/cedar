@@ -674,6 +674,11 @@ async function createRedwoodApp() {
       type: 'boolean',
       describe: 'Skip prompts and use defaults',
     })
+    .option('node-check', {
+      default: true,
+      type: 'boolean',
+      describe: 'Check if the installed version of Node is supported',
+    })
     .option('overwrite', {
       default: false,
       type: 'boolean',
@@ -763,8 +768,14 @@ async function createRedwoodApp() {
 
   const templatesDir = fileURLToPath(new URL('../templates', import.meta.url))
 
-  // Engine check
-  await executeCompatibilityCheck(path.join(templatesDir, 'ts'))
+  // Node version check
+  const nodeCheck = parsedFlags['node-check']
+  if (nodeCheck) {
+    await executeCompatibilityCheck(path.join(templatesDir, 'ts'))
+  } else {
+    tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped node version check`)
+  }
+  trace.getActiveSpan()?.setAttribute('node-check', nodeCheck)
 
   targetDir = await handleTargetDirPreference(targetDir)
 
