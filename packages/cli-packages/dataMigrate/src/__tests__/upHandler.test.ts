@@ -78,6 +78,7 @@ const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(() => {
             return mockValue
           }
         }
+
         return originalLoad.call(this, request, parent, isMain)
       }
 
@@ -184,18 +185,23 @@ vi.mock('\\redwood-app\\api\\db\\dataMigrations\\20230822075444-wip.ts', () => {
 
 const RWJS_CWD = process.env.RWJS_CWD
 
-beforeAll(() => {
+beforeAll(async () => {
   process.env.RWJS_CWD = redwoodProjectPath
+
+  // Setup require mocking for migration files
+  await setupRequireMock()
 })
 
 afterEach(() => {
   vol.reset()
   mockDataMigrations.current = []
-  restoreRequireMock()
 })
 
 afterAll(() => {
   process.env.RWJS_CWD = RWJS_CWD
+
+  // Restore require mocking
+  restoreRequireMock()
 })
 
 const ranDataMigration = {
@@ -303,9 +309,6 @@ describe('upHandler', () => {
       redwoodProjectPath,
     )
 
-    // Setup require mocking for migration files
-    await setupRequireMock()
-
     // Mock the three migration files - use just the filename as the key for better matching
     mockRequire('20230822075442-wip.ts', {
       default: () => {},
@@ -325,9 +328,6 @@ describe('upHandler', () => {
       importDbClientFromDist: true,
       distPath: getPaths().api.dist,
     })
-
-    // Restore require mocking
-    restoreRequireMock()
 
     // The handler will error and set the exit code to 1, we must revert that
     // or test suite itself will fail.
