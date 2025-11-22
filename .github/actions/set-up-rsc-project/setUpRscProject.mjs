@@ -59,9 +59,9 @@ async function setUpRscProject(rscProjectPath, exec, execInProject) {
 
   console.log(`Creating project at ${rscProjectPath}`)
   console.log()
-  await exec('yarn', [
-    'create',
-    'cedar-app',
+  await exec('npx', [
+    '-y',
+    'create-cedar-app@canary',
     '-y',
     '--no-git',
     '--no-node-check',
