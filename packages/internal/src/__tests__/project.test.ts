@@ -1,8 +1,14 @@
-import path from 'path'
-
-import { describe, afterAll, it, expect } from 'vitest'
+import { fs as memfs, vol } from 'memfs'
+import { describe, afterAll, afterEach, it, expect, vi } from 'vitest'
 
 import { getTsConfigs } from '../project.js'
+
+vi.mock('fs', async () => ({ ...memfs, default: memfs }))
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
+
+afterEach(() => {
+  vol.reset()
+})
 
 describe('Retrieves TSConfig settings', () => {
   afterAll(() => {
@@ -10,9 +16,22 @@ describe('Retrieves TSConfig settings', () => {
   })
 
   it('Gets config for a TS Project', () => {
-    const TS_FIXTURE_PATH = getFixtureDir('test-project')
-
-    process.env.RWJS_CWD = TS_FIXTURE_PATH
+    vol.fromNestedJSON(
+      {
+        'api/tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            rootDirs: ['./src', '../.redwood/types/mirror/api/src'],
+          },
+        }),
+        'web/tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            noEmit: true,
+          },
+        }),
+        'redwood.toml': '',
+      },
+      '/',
+    )
 
     const tsConfiguration = getTsConfigs()
 
@@ -28,9 +47,7 @@ describe('Retrieves TSConfig settings', () => {
   })
 
   it('Returns null for JS projects', () => {
-    const JS_FIXTURE_PATH = getFixtureDir('example-todo-main-with-errors')
-
-    process.env.RWJS_CWD = JS_FIXTURE_PATH
+    vol.fromNestedJSON({ 'redwood.toml': '' }, '/')
 
     const tsConfiguration = getTsConfigs()
 
@@ -38,13 +55,3 @@ describe('Retrieves TSConfig settings', () => {
     expect(tsConfiguration.api).toBe(null)
   })
 })
-
-function getFixtureDir(
-  name:
-    | 'example-todo-main-with-errors'
-    | 'example-todo-main'
-    | 'empty-project'
-    | 'test-project',
-) {
-  return path.resolve(__dirname, `../../../../__fixtures__/${name}`)
-}
