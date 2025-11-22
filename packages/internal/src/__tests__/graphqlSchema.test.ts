@@ -43,7 +43,7 @@ test('Generates GraphQL schema', async () => {
 test('Includes live query directive if serverful and realtime ', async () => {
   const fixturePath = path.resolve(
     __dirname,
-    './fixtures/graphqlCodeGen/realtime',
+    './__fixtures__/graphqlCodeGen/realtime',
   )
   process.env.RWJS_CWD = fixturePath
 
@@ -62,7 +62,7 @@ test('Includes live query directive if serverful and realtime ', async () => {
 test('Returns error message when schema loading fails', async () => {
   const fixturePath = path.resolve(
     __dirname,
-    './fixtures/graphqlCodeGen/bookshelf',
+    './__fixtures__/graphqlCodeGen/bookshelf',
   )
   process.env.RWJS_CWD = fixturePath
 
