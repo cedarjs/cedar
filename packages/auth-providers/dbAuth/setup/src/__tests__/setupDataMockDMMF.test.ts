@@ -1,6 +1,7 @@
 import type fs from 'node:fs'
 import path from 'node:path'
 
+import dedent from 'dedent'
 import { fs as memfs, vol } from 'memfs'
 import prompts from 'prompts'
 import {
@@ -139,17 +140,15 @@ describe('setupData createUserModelTask', () => {
   it('adds a User model to schema.prisma', async () => {
     vol.fromJSON(
       {
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+        'api/db/schema.prisma': `datasource db {
+            provider = "sqlite"
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
-`,
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
+        `,
       },
       redwoodProjectPath,
     )
@@ -161,31 +160,31 @@ generator client {
     })
 
     const schema = memfs.readFileSync(dbSchemaPath, 'utf-8')
-    expect(schema).toMatch(/^model User {$/m)
+    expect(schema).toMatch(/^model User {$.*hashedPassword\s+String/ms)
   })
 
   it('adds a User model to schema.prisma with existing UserExample model', async () => {
     vol.fromJSON(
       {
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+        'api/db/schema.prisma': dedent`
+          datasource db {
+            provider = "sqlite"
+            url      = env("DATABASE_URL")
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
 
-// Define your own data models here and run 'yarn redwood prisma migrate dev'
-// to create migrations for them and apply to your dev DB.
-model UserExample {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
-`,
+          // Define your own data models here and run 'yarn redwood prisma migrate dev'
+          // to create migrations for them and apply to your dev DB.
+          model UserExample {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+          }
+        `,
       },
       redwoodProjectPath,
     )
@@ -203,32 +202,32 @@ model UserExample {
   it('Does not add another User model if one already exists', async () => {
     vol.fromJSON(
       {
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+        'api/db/schema.prisma': dedent`
+          datasource db {
+            provider = "sqlite"
+            url      = env("DATABASE_URL")
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
+          model User {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+          }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  body      String
-  authorId  Int
-  author    User     @relation(fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
-}
-`,
+          model Post {
+            id        Int      @id @default(autoincrement())
+            title     String
+            body      String
+            authorId  Int
+            author    User     @relation(fields: [authorId], references: [id])
+            createdAt DateTime @default(now())
+          }
+        `,
       },
       redwoodProjectPath,
     )
@@ -252,30 +251,30 @@ model Post {
     vol.fromJSON(
       {
         [packageJsonPath]: '{ "version": "0.0.0" }',
-        'api/src/functions/graphql.ts': `
-import { createGraphQLHandler } from "@cedarjs/graphql-server"
+        'api/src/functions/graphql.ts': dedent`
+          import { createGraphQLHandler } from "@cedarjs/graphql-server"
 
-import { getCurrentUser } from 'src/lib/auth'
-`,
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+          import { getCurrentUser } from 'src/lib/auth'
+        `,
+        'api/db/schema.prisma': dedent`
+          datasource db {
+            provider = "sqlite"
+            url      = env("DATABASE_URL")
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
 
-// Define your own data models here and run 'yarn redwood prisma migrate dev'
-// to create migrations for them and apply to your dev DB.
-model UserExample {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
-`,
+          // Define your own data models here and run 'yarn redwood prisma migrate dev'
+          // to create migrations for them and apply to your dev DB.
+          model UserExample {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+          }
+        `,
       },
       redwoodProjectPath,
     )
@@ -307,10 +306,10 @@ model UserExample {
       {
         [packageJsonPath]: '{ "version": "0.0.0" }',
         'api/src/functions/graphql.ts': `
-import { createGraphQLHandler } from "@cedarjs/graphql-server"
+          import { createGraphQLHandler } from "@cedarjs/graphql-server"
 
-import { getCurrentUser } from 'src/lib/auth'
-`,
+          import { getCurrentUser } from 'src/lib/auth'
+        `,
         'api/db/schema.prisma': actualFs.readFileSync(
           path.resolve(
             __dirname +
@@ -351,28 +350,28 @@ import { getCurrentUser } from 'src/lib/auth'
     vol.fromJSON(
       {
         [packageJsonPath]: '{ "version": "0.0.0" }',
-        'api/src/functions/graphql.ts': `
-import { createGraphQLHandler } from "@cedarjs/graphql-server"
+        'api/src/functions/graphql.ts': dedent`
+          import { createGraphQLHandler } from "@cedarjs/graphql-server"
 
-import { getCurrentUser } from 'src/lib/auth'
-`,
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+          import { getCurrentUser } from 'src/lib/auth'
+        `,
+        'api/db/schema.prisma': dedent`
+          datasource db {
+            provider = "sqlite"
+            url      = env("DATABASE_URL")
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
 
-model ExampleModel {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
-`,
+          model ExampleModel {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+          }
+        `,
       },
       redwoodProjectPath,
     )
