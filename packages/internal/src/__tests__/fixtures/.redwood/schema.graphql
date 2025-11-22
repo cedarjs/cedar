@@ -1,31 +1,40 @@
 scalar BigInt
 
+scalar Byte
+
 scalar Date
 
 scalar DateTime
+
+scalar File
 
 scalar JSON
 
 scalar JSONObject
 
-type Mutation {
-  createTodo(body: String!): Todo
-}
-
+"""About the Redwood queries."""
 type Query {
+  """Fetches the CedarJS root schema."""
+  cedarjs: Redwood
+
+  """Fetches the Redwood root schema."""
   redwood: Redwood
 }
 
+"""
+The Cedar Root Schema
+
+Defines details about Cedar such as the current user and version information.
+"""
 type Redwood {
+  """The current user."""
   currentUser: JSON
+
+  """The version of Prisma."""
   prismaVersion: String
+
+  """The version of CedarJS."""
   version: String
 }
 
 scalar Time
-
-type Todo {
-  body: String!
-  id: Int!
-  status: String!
-}

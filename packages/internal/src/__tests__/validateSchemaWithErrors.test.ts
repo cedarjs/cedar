@@ -6,7 +6,7 @@ import {
   DIRECTIVE_INVALID_ROLE_TYPES_ERROR_MESSAGE,
   DIRECTIVE_REQUIRED_ERROR_MESSAGE,
   loadAndValidateSdls,
-} from '../validateSchema'
+} from '../validateSchema.js'
 
 const FIXTURE_ERROR_PATH = path.resolve(
   __dirname,
@@ -17,6 +17,7 @@ describe('SDL is missing directives', () => {
   beforeAll(() => {
     process.env.RWJS_CWD = FIXTURE_ERROR_PATH
   })
+
   afterAll(() => {
     delete process.env.RWJS_CWD
   })
