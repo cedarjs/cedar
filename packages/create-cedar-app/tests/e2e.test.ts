@@ -34,6 +34,8 @@ describe('create-cedar-app', () => {
             --help              Show help                                    [boolean]
             --version           Show version number                          [boolean]
         -y, --yes               Skip prompts and use defaults[boolean] [default: null]
+            --node-check        Check if the installed version of Node is supported
+                                                             [boolean] [default: true]
             --overwrite         Create even if target directory isn't empty
                                                             [boolean] [default: false]
             --typescript, --ts  Generate a TypeScript project[boolean] [default: null]
