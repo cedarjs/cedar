@@ -37,6 +37,7 @@
     "@babel/core": "^7.26.10",
     "@simplewebauthn/typescript-types": "7.4.0",
     "@types/yargs": "17.0.33",
+    "ts-dedent": "2.2.0",
     "typescript": "5.9.2",
     "vitest": "3.2.4"
   },
