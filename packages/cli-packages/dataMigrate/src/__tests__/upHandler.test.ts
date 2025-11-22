@@ -75,20 +75,7 @@ const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(
         ) {
           // Check if any mock matches this request
           for (const [mockPath, mockValue] of mocks.entries()) {
-            // Try exact match first
-            if (request === mockPath) {
-              return mockValue
-            }
-            // Then try endsWith for partial paths
             if (request.endsWith(mockPath)) {
-              return mockValue
-            }
-            // Also try matching just the filename
-            const requestFilename =
-              request.split('/').pop() || request.split('\\').pop()
-            const mockFilename =
-              mockPath.split('/').pop() || mockPath.split('\\').pop()
-            if (requestFilename === mockFilename) {
               return mockValue
             }
           }
