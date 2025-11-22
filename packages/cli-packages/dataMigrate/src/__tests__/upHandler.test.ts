@@ -49,9 +49,8 @@ vi.mock('@cedarjs/project-config', async () => {
 })
 
 // Mock require() calls for migration files by intercepting Module._load
-const requestLog: string[] = []
-const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } =
-  vi.hoisted(() => {
+const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(
+  () => {
     let Module: any
     let originalLoad: any
     let isSetup = false
@@ -74,26 +73,14 @@ const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } =
           parent: any,
           isMain: boolean,
         ) {
-          // Log all requests that look like migration files
-          if (
-            request.includes('dataMigrations') ||
-            request.includes('wip.ts')
-          ) {
-            requestLog.push(`REQUEST: ${request}`)
-          }
-
           // Check if any mock matches this request
           for (const [mockPath, mockValue] of mocks.entries()) {
             // Try exact match first
             if (request === mockPath) {
-              requestLog.push(`EXACT MATCH: ${request}`)
               return mockValue
             }
             // Then try endsWith for partial paths
             if (request.endsWith(mockPath)) {
-              requestLog.push(
-                `ENDS_WITH MATCH: ${request} endsWith ${mockPath}`,
-              )
               return mockValue
             }
             // Also try matching just the filename
@@ -102,7 +89,6 @@ const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } =
             const mockFilename =
               mockPath.split('/').pop() || mockPath.split('\\').pop()
             if (requestFilename === mockFilename) {
-              requestLog.push(`FILENAME MATCH: ${request} -> ${mockPath}`)
               return mockValue
             }
           }
@@ -124,11 +110,10 @@ const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } =
       },
       mockRequire: (path: string, stub: any) => {
         mocks.set(path, stub)
-        requestLog.push(`MOCK ADDED: ${path}`)
       },
-      getRequestLog: () => requestLog,
     }
-  })
+  },
+)
 
 const redwoodProjectPath = '/redwood-app'
 
@@ -367,15 +352,6 @@ describe('upHandler', () => {
     // The handler will error and set the exit code to 1, we must revert that
     // or test suite itself will fail.
     process.exitCode = 0
-
-    // Debug: Output the request log to see what paths were requested
-    const log = getRequestLog()
-    if (log.length > 0) {
-      // Write to stderr to bypass console mocking
-      process.stderr.write('\n=== REQUEST LOG ===\n')
-      log.forEach((line) => process.stderr.write(line + '\n'))
-      process.stderr.write('===================\n')
-    }
 
     expect(consoleInfoMock.mock.calls[0][0]).toMatch(
       '1 data migration(s) completed successfully.',
