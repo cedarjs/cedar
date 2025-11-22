@@ -68,7 +68,7 @@ async function setUpRscProject(rscProjectPath, exec, execInProject) {
     rscProjectPath,
   ])
   await execInProject('yarn install')
-  await execInProject('yarn cedar upgrade -t canary')
+  await execInProject('yarn cedar upgrade --yes --tag canary')
 
   console.log(`Setting up Streaming/SSR in ${rscProjectPath}`)
   const cmdSetupStreamingSSR = `node ${rwBinPath} experimental setup-streaming-ssr -f`
