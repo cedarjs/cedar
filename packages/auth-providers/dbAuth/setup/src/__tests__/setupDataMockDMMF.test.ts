@@ -306,10 +306,10 @@ describe('setupData createUserModelTask', () => {
       {
         [packageJsonPath]: '{ "version": "0.0.0" }',
         'api/src/functions/graphql.ts': `
-import { createGraphQLHandler } from "@cedarjs/graphql-server"
+          import { createGraphQLHandler } from "@cedarjs/graphql-server"
 
-import { getCurrentUser } from 'src/lib/auth'
-`,
+          import { getCurrentUser } from 'src/lib/auth'
+        `,
         'api/db/schema.prisma': actualFs.readFileSync(
           path.resolve(
             __dirname +
