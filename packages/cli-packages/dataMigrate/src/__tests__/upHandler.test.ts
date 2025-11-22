@@ -18,6 +18,12 @@ import { handler, NO_PENDING_MIGRATIONS_MESSAGE } from '../commands/upHandler'
 vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
+vi.mock('@cedarjs/babel-config', async () => {
+  return {
+    registerApiSideBabelHook: () => {},
+  }
+})
+
 vi.mock('@cedarjs/project-config', async () => {
   const actual = await vi.importActual<typeof ProjectConfig>(
     '@cedarjs/project-config',
@@ -151,7 +157,7 @@ vi.mock('/redwood-app/api/dist/lib/db.js', () => {
   return {
     db: {
       rW_DataMigration: {
-        create(dataMigration) {
+        create(dataMigration: any) {
           mockDataMigrations.current.push(dataMigration)
         },
         findMany() {
@@ -167,7 +173,7 @@ vi.mock(`\\redwood-app\\api\\dist\\lib\\db.js`, () => {
   return {
     db: {
       rW_DataMigration: {
-        create(dataMigration) {
+        create(dataMigration: any) {
           mockDataMigrations.current.push(dataMigration)
         },
         findMany() {
@@ -339,11 +345,13 @@ describe('upHandler', () => {
     mockRequire('20230822075442-wip.ts', {
       default: () => {},
     })
+
     mockRequire('20230822075443-wip.ts', {
       default: () => {
         throw new Error('oops')
       },
     })
+
     mockRequire('20230822075444-wip.ts', {
       default: () => {},
     })
