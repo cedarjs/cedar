@@ -160,7 +160,6 @@ describe('setupData createUserModelTask', () => {
     })
 
     const schema = memfs.readFileSync(dbSchemaPath, 'utf-8')
-    console.log('schema', schema)
     expect(schema).toMatch(/^model User {$.*hashedPassword\s+String/ms)
   })
 
