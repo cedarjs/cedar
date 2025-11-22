@@ -33,7 +33,6 @@ const DEFAULT_PATHS = {
   api: {
     base: ['api'],
     prismaConfig: ['api', 'prisma.config.ts'],
-    dataMigrations: ['api', 'dataMigrations'],
     functions: ['api', 'src', 'functions'],
     graphql: ['api', 'src', 'graphql'],
     lib: ['api', 'src', 'lib'],
