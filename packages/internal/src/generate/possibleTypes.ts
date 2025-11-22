@@ -40,7 +40,7 @@ type PossibleTypesResult = {
  * ```
  *
  * @see https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces
- **/
+ */
 export const generatePossibleTypes = async (): Promise<PossibleTypesResult> => {
   const config = getConfig()
 

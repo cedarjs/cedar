@@ -204,6 +204,8 @@ async function runCodegenGraphQL(
 }
 
 export function getLoadDocumentsOptions(filename: string) {
+  console.log('ignore path', [path.join(process.cwd(), filename)])
+
   const loadTypedefsConfig: LoadTypedefsOptions<{ cwd: string }> = {
     cwd: getPaths().base,
     ignore: [path.join(process.cwd(), filename)],
