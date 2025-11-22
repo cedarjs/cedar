@@ -3,6 +3,8 @@ import { vi, beforeAll, afterAll, describe, it, expect } from 'vitest'
 import { createUserModelTask } from '../setupData'
 
 const RWJS_CWD = process.env.RWJS_CWD
+const DATABASE_URL = process.env.DATABASE_URL
+
 const { redwoodProjectPath, prismaConfigPath, libPath, functionsPath } =
   vi.hoisted(() => {
     const redwoodProjectPath = '../../../../__fixtures__/test-project'
@@ -47,6 +49,7 @@ beforeAll(() => {
 
 afterAll(() => {
   process.env.RWJS_CWD = RWJS_CWD
+  process.env.DATABASE_URL = DATABASE_URL
 })
 
 describe('setupData createUserModelTask (test-project)', () => {
