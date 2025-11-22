@@ -49,78 +49,71 @@ vi.mock('@cedarjs/project-config', async () => {
 })
 
 // Mock require() calls for migration files by intercepting Module._load
-const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(
-  () => {
-    let Module: any
-    let originalLoad: any
-    let isSetup = false
-    const mocks = new Map<string, any>()
+const { setupRequireMock, restoreRequireMock, mockRequire } = vi.hoisted(() => {
+  let Module: any
+  let originalLoad: any
+  let isSetup = false
+  const mocks = new Map<string, any>()
 
-    return {
-      setupRequireMock: async () => {
-        if (isSetup) {
-          return
-        }
+  return {
+    setupRequireMock: async () => {
+      if (isSetup) {
+        return
+      }
 
-        // Import using require to get the actual Module object
-        const nodeModule = require('node:module')
-        Module = nodeModule
-        originalLoad = Module._load
+      // Import using require to get the actual Module object
+      const nodeModule = require('node:module')
+      Module = nodeModule
+      originalLoad = Module._load
 
-        // Wrap the original _load function
-        const wrappedLoad = function (
-          request: string,
-          parent: any,
-          isMain: boolean,
-        ) {
-          // Check if any mock matches this request
-          for (const [mockPath, mockValue] of mocks.entries()) {
-            if (request.endsWith(mockPath)) {
-              return mockValue
-            }
+      // Wrap the original _load function
+      const wrappedLoad = function (
+        request: string,
+        parent: any,
+        isMain: boolean,
+      ) {
+        // Check if any mock matches this request
+        for (const [mockPath, mockValue] of mocks.entries()) {
+          if (request.endsWith(mockPath)) {
+            return mockValue
           }
-          return originalLoad.call(this, request, parent, isMain)
         }
+        return originalLoad.call(this, request, parent, isMain)
+      }
 
-        // Copy properties from original function
-        Object.setPrototypeOf(wrappedLoad, originalLoad)
+      // Copy properties from original function
+      Object.setPrototypeOf(wrappedLoad, originalLoad)
 
-        Module._load = wrappedLoad
-        isSetup = true
-      },
-      restoreRequireMock: () => {
-        if (Module && originalLoad && isSetup) {
-          Module._load = originalLoad
-          isSetup = false
-        }
-        mocks.clear()
-      },
-      mockRequire: (path: string, stub: any) => {
-        mocks.set(path, stub)
-      },
-    }
-  },
-)
+      Module._load = wrappedLoad
+      isSetup = true
+    },
+    restoreRequireMock: () => {
+      if (Module && originalLoad && isSetup) {
+        Module._load = originalLoad
+        isSetup = false
+      }
+      mocks.clear()
+    },
+    mockRequire: (path: string, stub: any) => {
+      mocks.set(path, stub)
+    },
+  }
+})
 
 const redwoodProjectPath = '/redwood-app'
 
-let consoleLogMock: ReturnType<typeof vi.spyOn>
-let consoleInfoMock: ReturnType<typeof vi.spyOn>
-let consoleErrorMock: ReturnType<typeof vi.spyOn>
-let consoleWarnMock: ReturnType<typeof vi.spyOn>
-
 beforeEach(() => {
-  consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => {})
-  consoleInfoMock = vi.spyOn(console, 'info').mockImplementation(() => {})
-  consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {})
-  consoleWarnMock = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+  vi.spyOn(console, 'info').mockImplementation(() => {})
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
 })
 
 afterEach(() => {
-  consoleLogMock.mockRestore()
-  consoleInfoMock.mockRestore()
-  consoleErrorMock.mockRestore()
-  consoleWarnMock.mockRestore()
+  vi.mocked(console).log.mockRestore()
+  vi.mocked(console).info.mockRestore()
+  vi.mocked(console).error.mockRestore()
+  vi.mocked(console).warn.mockRestore()
 })
 
 const mockDataMigrations: { current: any[] } = { current: [] }
@@ -240,7 +233,7 @@ describe('upHandler', () => {
       distPath: getPaths().api.dist,
     })
 
-    expect(consoleInfoMock.mock.calls[0][0]).toMatch(
+    expect(vi.mocked(console).info.mock.calls[0][0]).toMatch(
       NO_PENDING_MIGRATIONS_MESSAGE,
     )
   })
@@ -272,7 +265,7 @@ describe('upHandler', () => {
       distPath: getPaths().api.dist,
     })
 
-    expect(consoleInfoMock.mock.calls[0][0]).toMatch(
+    expect(vi.mocked(console).info.mock.calls[0][0]).toMatch(
       NO_PENDING_MIGRATIONS_MESSAGE,
     )
   })
@@ -340,13 +333,13 @@ describe('upHandler', () => {
     // or test suite itself will fail.
     process.exitCode = 0
 
-    expect(consoleInfoMock.mock.calls[0][0]).toMatch(
+    expect(vi.mocked(console).info.mock.calls[0][0]).toMatch(
       '1 data migration(s) completed successfully.',
     )
-    expect(consoleErrorMock.mock.calls[1][0]).toMatch(
+    expect(vi.mocked(console).error.mock.calls[1][0]).toMatch(
       '1 data migration(s) exited with errors.',
     )
-    expect(consoleWarnMock.mock.calls[0][0]).toMatch(
+    expect(vi.mocked(console).warn.mock.calls[0][0]).toMatch(
       '1 data migration(s) skipped due to previous error',
     )
   })
