@@ -173,7 +173,7 @@ describe("Doesn't swallow legit errors", () => {
   test('invalidQueryType', async () => {
     const fixturePath = path.resolve(
       __dirname,
-      './fixtures/graphqlCodeGen/invalidQueryType',
+      './__fixtures__/graphqlCodeGen/invalidQueryType',
     )
     process.env.RWJS_CWD = fixturePath
 
@@ -188,7 +188,7 @@ describe("Doesn't swallow legit errors", () => {
   test('missingType', async () => {
     const fixturePath = path.resolve(
       __dirname,
-      './fixtures/graphqlCodeGen/missingType',
+      './__fixtures__/graphqlCodeGen/missingType',
     )
     process.env.RWJS_CWD = fixturePath
 
@@ -201,7 +201,7 @@ describe("Doesn't swallow legit errors", () => {
   test('nonExistingField', async () => {
     const fixturePath = path.resolve(
       __dirname,
-      './fixtures/graphqlCodeGen/nonExistingField',
+      './__fixtures__/graphqlCodeGen/nonExistingField',
     )
     process.env.RWJS_CWD = fixturePath
 
