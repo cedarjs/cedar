@@ -16,7 +16,10 @@ afterEach(() => {
 describe('Generate gql possible types web from the GraphQL Schema', () => {
   describe('when toml has graphql possible types turned off', () => {
     test('when there are *no* union types', async () => {
-      const FIXTURE_PATH = path.resolve(__dirname, './__fixtures__')
+      const FIXTURE_PATH = path.resolve(
+        __dirname,
+        './__fixtures__/test-project',
+      )
 
       process.env.RWJS_CWD = FIXTURE_PATH
 
