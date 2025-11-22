@@ -1,4 +1,14 @@
-import { vol } from 'memfs'
+import { vol, fs as memfs } from 'memfs'
+import {
+  vi,
+  expect,
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -7,20 +17,23 @@ import {
   NO_PENDING_MIGRATIONS_MESSAGE,
 } from '../commands/upHandlerEsm'
 
+vi.mock('fs', async () => ({ ...memfs, default: memfs }))
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
+
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 const redwoodProjectPath = '/redwood-app'
 
-let consoleLogMock: jest.SpyInstance
-let consoleInfoMock: jest.SpyInstance
-let consoleErrorMock: jest.SpyInstance
-let consoleWarnMock: jest.SpyInstance
+let consoleLogMock: ReturnType<typeof vi.spyOn>
+let consoleInfoMock: ReturnType<typeof vi.spyOn>
+let consoleErrorMock: ReturnType<typeof vi.spyOn>
+let consoleWarnMock: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
-  consoleLogMock = jest.spyOn(console, 'log').mockImplementation()
-  consoleInfoMock = jest.spyOn(console, 'info').mockImplementation()
-  consoleErrorMock = jest.spyOn(console, 'error').mockImplementation()
-  consoleWarnMock = jest.spyOn(console, 'warn').mockImplementation()
+  consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => {})
+  consoleInfoMock = vi.spyOn(console, 'info').mockImplementation(() => {})
+  consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {})
+  consoleWarnMock = vi.spyOn(console, 'warn').mockImplementation(() => {})
 })
 
 afterEach(() => {
@@ -30,12 +43,9 @@ afterEach(() => {
   consoleWarnMock.mockRestore()
 })
 
-jest.mock('fs', () => require('memfs').fs)
-jest.mock('node:fs', () => require('memfs').fs)
-
 const mockDataMigrations: { current: any[] } = { current: [] }
 
-jest.mock('bundle-require', () => {
+vi.mock('bundle-require', () => {
   return {
     bundleRequire: ({ filepath }: { filepath: string }) => {
       return {
@@ -51,45 +61,37 @@ jest.mock('bundle-require', () => {
   }
 })
 
-jest.mock(
-  '/redwood-app/api/dist/lib/db.js',
-  () => {
-    return {
-      db: {
-        rW_DataMigration: {
-          create(dataMigration) {
-            mockDataMigrations.current.push(dataMigration)
-          },
-          findMany() {
-            return mockDataMigrations.current
-          },
+vi.mock('/redwood-app/api/dist/lib/db.js', () => {
+  return {
+    db: {
+      rW_DataMigration: {
+        create(dataMigration) {
+          mockDataMigrations.current.push(dataMigration)
         },
-        $disconnect: () => {},
+        findMany() {
+          return mockDataMigrations.current
+        },
       },
-    }
-  },
-  { virtual: true },
-)
+      $disconnect: () => {},
+    },
+  }
+})
 
-jest.mock(
-  `\\redwood-app\\api\\dist\\lib\\db.js`,
-  () => {
-    return {
-      db: {
-        rW_DataMigration: {
-          create(dataMigration) {
-            mockDataMigrations.current.push(dataMigration)
-          },
-          findMany() {
-            return mockDataMigrations.current
-          },
+vi.mock(`\\redwood-app\\api\\dist\\lib\\db.js`, () => {
+  return {
+    db: {
+      rW_DataMigration: {
+        create(dataMigration) {
+          mockDataMigrations.current.push(dataMigration)
         },
-        $disconnect: () => {},
+        findMany() {
+          return mockDataMigrations.current
+        },
       },
-    }
-  },
-  { virtual: true },
-)
+      $disconnect: () => {},
+    },
+  }
+})
 
 const RWJS_CWD = process.env.RWJS_CWD
 
