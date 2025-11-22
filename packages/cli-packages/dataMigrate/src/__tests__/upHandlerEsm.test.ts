@@ -15,7 +15,6 @@ jest.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({
     api: {
       dist: '/redwood-app/api/dist',
-      dataMigrations: '/redwood-app/api/dataMigrations',
     },
   }),
   loadPrismaConfig: async () => ({

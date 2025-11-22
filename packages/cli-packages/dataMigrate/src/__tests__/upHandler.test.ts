@@ -11,15 +11,18 @@ const redwoodProjectPath = '/redwood-app'
 jest.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({
     api: {
+      base: '/redwood-app/api',
       dist: '/redwood-app/api/dist',
-      dataMigrations: '/redwood-app/api/dataMigrations',
+    },
+    web: {
+      base: '/redwood-app/web',
     },
   }),
   loadPrismaConfig: async () => ({
     schema: './db/schema.prisma',
   }),
-  getMigrationsPath: async () => '/redwood-app/api/db/migrations',
-  getDataMigrationsPath: async () => '/redwood-app/api/dataMigrations',
+  getMigrationsPath: () => '/redwood-app/api/db/migrations',
+  getDataMigrationsPath: () => '/redwood-app/api/db/dataMigrations',
   projectSideIsEsm: () => false,
 }))
 
@@ -88,7 +91,7 @@ jest.mock(
 )
 
 jest.mock(
-  '/redwood-app/api/dataMigrations/20230822075442-wip.ts',
+  '/redwood-app/api/db/dataMigrations/20230822075442-wip.ts',
   () => {
     return { default: () => {} }
   },
@@ -98,7 +101,7 @@ jest.mock(
 )
 
 jest.mock(
-  '\\redwood-app\\api\\dataMigrations\\20230822075442-wip.ts',
+  '\\redwood-app\\api\\db\\dataMigrations\\20230822075442-wip.ts',
   () => {
     return { default: () => {} }
   },
@@ -108,7 +111,7 @@ jest.mock(
 )
 
 jest.mock(
-  '/redwood-app/api/dataMigrations/20230822075443-wip.ts',
+  '/redwood-app/api/db/dataMigrations/20230822075443-wip.ts',
   () => {
     return {
       default: () => {
@@ -122,7 +125,7 @@ jest.mock(
 )
 
 jest.mock(
-  '\\redwood-app\\api\\dataMigrations\\20230822075443-wip.ts',
+  '\\redwood-app\\api\\db\\dataMigrations\\20230822075443-wip.ts',
   () => {
     return {
       default: () => {
@@ -136,7 +139,7 @@ jest.mock(
 )
 
 jest.mock(
-  '/redwood-app/api/dataMigrations/20230822075444-wip.ts',
+  '/redwood-app/api/db/dataMigrations/20230822075444-wip.ts',
   () => {
     return { default: () => {} }
   },
@@ -146,7 +149,7 @@ jest.mock(
 )
 
 jest.mock(
-  '\\redwood-app\\api\\dataMigrations\\20230822075444-wip.ts',
+  '\\redwood-app\\api\\db\\dataMigrations\\20230822075444-wip.ts',
   () => {
     return { default: () => {} }
   },
@@ -186,7 +189,7 @@ describe('upHandler', () => {
         'redwood.toml': '',
         api: {
           'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
+            export default defineConfig({ schema: 'db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -220,7 +223,7 @@ export default defineConfig({ schema: './db/schema.prisma' })`,
         'redwood.toml': '',
         api: {
           'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
+            export default defineConfig({ schema: './db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -259,17 +262,19 @@ export default defineConfig({ schema: './db/schema.prisma' })`,
         'redwood.toml': '',
         api: {
           'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
+            export default defineConfig({ schema: './db/schema.prisma' })`,
           'package.json': '{}',
           dist: {
             lib: {
               'db.js': '',
             },
           },
-          dataMigrations: {
-            '20230822075442-wip.ts': '',
-            '20230822075443-wip.ts': '',
-            '20230822075444-wip.ts': '',
+          db: {
+            dataMigrations: {
+              '20230822075442-wip.ts': '',
+              '20230822075443-wip.ts': '',
+              '20230822075444-wip.ts': '',
+            },
           },
         },
       },
