@@ -3,18 +3,17 @@ import { vi, beforeAll, afterAll, describe, it, expect } from 'vitest'
 import { createUserModelTask } from '../setupData'
 
 const RWJS_CWD = process.env.RWJS_CWD
-const { redwoodProjectPath, dbSchemaPath, libPath, functionsPath } = vi.hoisted(
-  () => {
+const { redwoodProjectPath, prismaConfigPath, libPath, functionsPath } =
+  vi.hoisted(() => {
     const redwoodProjectPath = '../../../../__fixtures__/test-project'
 
     return {
       redwoodProjectPath,
-      dbSchemaPath: redwoodProjectPath + '/api/db/schema.prisma',
+      prismaConfigPath: redwoodProjectPath + '/api/prisma.config.ts',
       libPath: redwoodProjectPath + '/api/src/lib',
       functionsPath: redwoodProjectPath + '/api/src/functions',
     }
-  },
-)
+  })
 
 vi.mock('@cedarjs/cli-helpers', () => {
   return {
@@ -24,10 +23,9 @@ vi.mock('@cedarjs/cli-helpers', () => {
     getPaths: () => ({
       base: redwoodProjectPath,
       api: {
-        dbSchema: dbSchemaPath,
         lib: libPath,
         functions: functionsPath,
-        prismaConfig: redwoodProjectPath + '/api/prisma.config.ts',
+        prismaConfig: prismaConfigPath,
       },
     }),
     colors: {
@@ -44,6 +42,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
 
 beforeAll(() => {
   process.env.RWJS_CWD = redwoodProjectPath
+  process.env.DATABASE_URL = 'file:./dev.db'
 })
 
 afterAll(() => {

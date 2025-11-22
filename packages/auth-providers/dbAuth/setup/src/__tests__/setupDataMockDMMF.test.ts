@@ -1,6 +1,7 @@
 import type fs from 'node:fs'
 import path from 'node:path'
 
+import dedent from 'dedent'
 import { fs as memfs, vol } from 'memfs'
 import prompts from 'prompts'
 import {
@@ -16,6 +17,7 @@ import {
 
 import type { AuthHandlerArgs } from '@cedarjs/cli-helpers'
 import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers/src/auth/authTasks'
+import type ProjectConfig from '@cedarjs/project-config'
 
 vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
@@ -24,18 +26,23 @@ import { createUserModelTask } from '../setupData'
 import { handler } from '../setupHandler'
 
 const RWJS_CWD = process.env.RWJS_CWD
-const { redwoodProjectPath, dbSchemaPath, libPath, functionsPath } = vi.hoisted(
-  () => {
-    const redwoodProjectPath = '/redwood-app'
+const {
+  redwoodProjectPath,
+  prismaConfigPath,
+  dbSchemaPath,
+  libPath,
+  functionsPath,
+} = vi.hoisted(() => {
+  const redwoodProjectPath = '/redwood-app'
 
-    return {
-      redwoodProjectPath,
-      dbSchemaPath: redwoodProjectPath + '/api/db/schema.prisma',
-      libPath: redwoodProjectPath + '/api/src/lib',
-      functionsPath: redwoodProjectPath + '/api/src/functions',
-    }
-  },
-)
+  return {
+    redwoodProjectPath,
+    dbSchemaPath: redwoodProjectPath + '/api/db/schema.prisma',
+    prismaConfigPath: redwoodProjectPath + '/api/prisma.config.ts',
+    libPath: redwoodProjectPath + '/api/src/lib',
+    functionsPath: redwoodProjectPath + '/api/src/functions',
+  }
+})
 
 vi.mock('@cedarjs/cli-helpers', () => {
   return {
@@ -45,10 +52,9 @@ vi.mock('@cedarjs/cli-helpers', () => {
     getPaths: () => ({
       base: redwoodProjectPath,
       api: {
-        dbSchema: dbSchemaPath,
         lib: libPath,
         functions: functionsPath,
-        prismaConfig: redwoodProjectPath + '/api/prisma.config.ts',
+        prismaConfig: prismaConfigPath,
       },
       web: {
         routes: redwoodProjectPath + '/web/src/Routes.tsx',
@@ -89,12 +95,13 @@ vi.mock('@cedarjs/cli-helpers', () => {
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+
   return {
     ...originalProjectConfig,
     loadPrismaConfig: async () => {
       return {
-        schema: './db/schema.prisma',
+        schema: 'db/schema.prisma',
       }
     },
     getSchemaPath: async () => {
@@ -161,18 +168,15 @@ describe('setupData createUserModelTask', () => {
   it('adds a User model to schema.prisma', async () => {
     vol.fromJSON(
       {
-        'api/prisma.config.ts':
-          "import { defineConfig } from 'prisma/config'\n" +
-          "export default defineConfig({ schema: 'db/schema.prisma' })",
-        'api/db/schema.prisma':
-          'datasource db {\n' +
-          '  provider = "sqlite"\n' +
-          '}\n' +
-          '\n' +
-          'generator client {\n' +
-          '  provider      = "prisma-client-js"\n' +
-          '  binaryTargets = "native"\n' +
-          '}',
+        'api/db/schema.prisma': `datasource db {
+            provider = "sqlite"
+          }
+
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
+        `,
       },
       redwoodProjectPath,
     )
@@ -184,33 +188,32 @@ describe('setupData createUserModelTask', () => {
     })
 
     const schema = memfs.readFileSync(dbSchemaPath, 'utf-8')
-    expect(schema).toMatch(/^model User {$/m)
+    console.log('schema', schema)
+    expect(schema).toMatch(/^model User {$.*hashedPassword\s+String/ms)
   })
 
   it('adds a User model to schema.prisma with existing UserExample model', async () => {
     vol.fromJSON(
       {
-        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+        'api/db/schema.prisma': dedent`
+          datasource db {
+            provider = "sqlite"
+            url      = env("DATABASE_URL")
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
 
-// Define your own data models here and run 'yarn redwood prisma migrate dev'
-// to create migrations for them and apply to your dev DB.
-model UserExample {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
-`,
+          // Define your own data models here and run 'yarn redwood prisma migrate dev'
+          // to create migrations for them and apply to your dev DB.
+          model UserExample {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+          }
+        `,
       },
       redwoodProjectPath,
     )
@@ -228,34 +231,32 @@ model UserExample {
   it('Does not add another User model if one already exists', async () => {
     vol.fromJSON(
       {
-        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+        'api/db/schema.prisma': dedent`
+          datasource db {
+            provider = "sqlite"
+            url      = env("DATABASE_URL")
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
+          model User {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+          }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  body      String
-  authorId  Int
-  author    User     @relation(fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
-}
-`,
+          model Post {
+            id        Int      @id @default(autoincrement())
+            title     String
+            body      String
+            authorId  Int
+            author    User     @relation(fields: [authorId], references: [id])
+            createdAt DateTime @default(now())
+          }
+        `,
       },
       redwoodProjectPath,
     )
@@ -278,33 +279,31 @@ model Post {
 
     vol.fromJSON(
       {
-        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
         [packageJsonPath]: '{ "version": "0.0.0" }',
-        'api/src/functions/graphql.ts': `
-import { createGraphQLHandler } from "@cedarjs/graphql-server"
+        'api/src/functions/graphql.ts': dedent`
+          import { createGraphQLHandler } from "@cedarjs/graphql-server"
 
-import { getCurrentUser } from 'src/lib/auth'
-`,
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+          import { getCurrentUser } from 'src/lib/auth'
+        `,
+        'api/db/schema.prisma': dedent`
+          datasource db {
+            provider = "sqlite"
+            url      = env("DATABASE_URL")
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
 
-// Define your own data models here and run 'yarn redwood prisma migrate dev'
-// to create migrations for them and apply to your dev DB.
-model UserExample {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
-`,
+          // Define your own data models here and run 'yarn redwood prisma migrate dev'
+          // to create migrations for them and apply to your dev DB.
+          model UserExample {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+          }
+        `,
       },
       redwoodProjectPath,
     )
@@ -334,14 +333,12 @@ model UserExample {
 
     vol.fromJSON(
       {
-        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
         [packageJsonPath]: '{ "version": "0.0.0" }',
         'api/src/functions/graphql.ts': `
-import { createGraphQLHandler } from "@cedarjs/graphql-server"
+          import { createGraphQLHandler } from "@cedarjs/graphql-server"
 
-import { getCurrentUser } from 'src/lib/auth'
-`,
+          import { getCurrentUser } from 'src/lib/auth'
+        `,
         'api/db/schema.prisma': actualFs.readFileSync(
           path.resolve(
             __dirname +
@@ -381,31 +378,29 @@ import { getCurrentUser } from 'src/lib/auth'
 
     vol.fromJSON(
       {
-        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
         [packageJsonPath]: '{ "version": "0.0.0" }',
-        'api/src/functions/graphql.ts': `
-import { createGraphQLHandler } from "@cedarjs/graphql-server"
+        'api/src/functions/graphql.ts': dedent`
+          import { createGraphQLHandler } from "@cedarjs/graphql-server"
 
-import { getCurrentUser } from 'src/lib/auth'
-`,
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+          import { getCurrentUser } from 'src/lib/auth'
+        `,
+        'api/db/schema.prisma': dedent`
+          datasource db {
+            provider = "sqlite"
+            url      = env("DATABASE_URL")
+          }
 
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
+          generator client {
+            provider      = "prisma-client-js"
+            binaryTargets = "native"
+          }
 
-model ExampleModel {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
-`,
+          model ExampleModel {
+            id    Int     @id @default(autoincrement())
+            email String  @unique
+            name  String?
+          }
+        `,
       },
       redwoodProjectPath,
     )

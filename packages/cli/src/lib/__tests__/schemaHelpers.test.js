@@ -10,7 +10,6 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         base: BASE_PATH,
         api: {
           db: BASE_PATH, // this folder
-          dbSchema: path.join(BASE_PATH, 'schema.prisma'),
           prismaConfig: path.join(BASE_PATH, 'prisma.config.ts'),
         },
       }
