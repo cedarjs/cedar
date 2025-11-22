@@ -1,5 +1,5 @@
-import { vi, expect, describe, it } from 'vitest'
 import { vol, fs as memfs } from 'memfs'
+import { vi, expect, describe, it } from 'vitest'
 import yargs from 'yargs'
 
 import { getPaths } from '@cedarjs/project-config'

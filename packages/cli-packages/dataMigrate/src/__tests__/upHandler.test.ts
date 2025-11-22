@@ -11,17 +11,18 @@ import {
 } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
+import type ProjectConfig from '@cedarjs/project-config'
 
 import { handler, NO_PENDING_MIGRATIONS_MESSAGE } from '../commands/upHandler'
 
 vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
-// Mock @cedarjs/project-config to return consistent paths based on memfs
 vi.mock('@cedarjs/project-config', async () => {
-  const actual = await vi.importActual<
-    typeof import('@cedarjs/project-config')
-  >('@cedarjs/project-config')
+  const actual = await vi.importActual<typeof ProjectConfig>(
+    '@cedarjs/project-config',
+  )
+
   return {
     ...actual,
     getPaths: () => ({
@@ -122,8 +123,6 @@ const { setupRequireMock, restoreRequireMock, mockRequire, getRequestLog } =
       getRequestLog: () => requestLog,
     }
   })
-
-// ─── Mocks ───────────────────────────────────────────────────────────────────
 
 const redwoodProjectPath = '/redwood-app'
 
@@ -234,8 +233,6 @@ const ranDataMigration = {
   startedAt: '2023-08-22T07:55:16.292Z',
   finishedAt: '2023-08-22T07:55:16.292Z',
 }
-
-// ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('upHandler', () => {
   it("noops if there's no data migrations directory", async () => {

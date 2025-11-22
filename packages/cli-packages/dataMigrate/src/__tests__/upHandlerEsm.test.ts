@@ -1,3 +1,4 @@
+import { vol, fs as memfs } from 'memfs'
 import {
   vi,
   expect,
@@ -8,7 +9,6 @@ import {
   beforeAll,
   afterAll,
 } from 'vitest'
-import { vol, fs as memfs } from 'memfs'
 
 import { getPaths } from '@cedarjs/project-config'
 

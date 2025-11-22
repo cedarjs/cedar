@@ -1,7 +1,6 @@
-import { vi, expect, describe, it } from 'vitest'
-import { vol, fs as memfs } from 'memfs'
-
 import execa from 'execa'
+import { vol, fs as memfs } from 'memfs'
+import { vi, expect, describe, it } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
 
