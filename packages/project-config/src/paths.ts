@@ -26,7 +26,6 @@ export interface NodeTargetPaths {
   jobsConfig: string | null
   distJobsConfig: string | null
   logger: string | null
-  dataMigrations: string
 }
 
 export interface WebPaths {
@@ -207,7 +206,6 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     api: {
       base: path.join(BASE_DIR, 'api'),
       prismaConfig,
-      dataMigrations: path.join(path.dirname(prismaConfig), 'dataMigrations'),
       functions: path.join(BASE_DIR, PATH_API_DIR_FUNCTIONS),
       graphql: path.join(BASE_DIR, PATH_API_DIR_GRAPHQL),
       lib: path.join(BASE_DIR, PATH_API_DIR_LIB),

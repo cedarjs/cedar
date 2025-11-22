@@ -138,9 +138,7 @@ export async function handler({
   }
 }
 
-/**
- * Return the list of migrations that haven't run against the database yet
- */
+/** Return the list of migrations that haven't run against the database yet */
 async function getPendingDataMigrations(db: PrismaClient) {
   const dataMigrationsPath = await getDataMigrationsPath(
     getPaths().api.prismaConfig,

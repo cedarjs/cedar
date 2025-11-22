@@ -21,8 +21,8 @@ jest.mock('@cedarjs/project-config', () => ({
   loadPrismaConfig: async () => ({
     schema: './db/schema.prisma',
   }),
-  getMigrationsPath: async () => '/redwood-app/api/db/migrations',
-  getDataMigrationsPath: async () => '/redwood-app/api/dataMigrations',
+  getMigrationsPath: () => '/redwood-app/api/db/migrations',
+  getDataMigrationsPath: () => '/redwood-app/api/db/dataMigrations',
   projectSideIsEsm: () => true,
 }))
 
@@ -137,7 +137,7 @@ describe('upHandler', () => {
         'redwood.toml': '',
         api: {
           'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
+            export default defineConfig({ schema: './db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -173,7 +173,7 @@ export default defineConfig({ schema: './db/schema.prisma' })`,
         'redwood.toml': '',
         api: {
           'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
+            export default defineConfig({ schema: './db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -213,8 +213,18 @@ export default defineConfig({ schema: './db/schema.prisma' })`,
       {
         'redwood.toml': '',
         api: {
-          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
+          'prisma.config.ts': `
+            import { defineConfig } from 'prisma/config'
+            export default defineConfig({
+              schema: 'db/schema.prisma'
+              migrations: {
+                path: 'db/migrations',
+              },
+              datasource: {
+                url: env('DATABASE_URL'),
+              },
+            })
+          `,
           'package.json': '{}',
           dist: {
             lib: {
