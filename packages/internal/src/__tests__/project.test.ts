@@ -1,5 +1,5 @@
 import { fs as memfs, vol } from 'memfs'
-import { describe, afterAll, afterEach, it, expect, vi } from 'vitest'
+import { describe, afterEach, it, expect, vi } from 'vitest'
 
 import { getTsConfigs } from '../project.js'
 
@@ -11,10 +11,6 @@ afterEach(() => {
 })
 
 describe('Retrieves TSConfig settings', () => {
-  afterAll(() => {
-    delete process.env.RWJS_CWD
-  })
-
   it('Gets config for a TS Project', () => {
     vol.fromNestedJSON(
       {
