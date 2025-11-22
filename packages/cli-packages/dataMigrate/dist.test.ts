@@ -2,11 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { expect, describe, it, vi } from 'vitest'
-
-// Unmock fs for this test since we need to read actual dist files
-vi.unmock('fs')
-vi.unmock('node:fs')
+import { expect, describe, it } from 'vitest'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
