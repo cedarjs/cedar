@@ -8,10 +8,10 @@ import {
   hasDefaultExport,
   getCellGqlQuery,
   fileToAst,
-} from '../ast'
+} from '../ast.js'
 
 vi.mock('@cedarjs/project-config', () => {
-  const baseFixturePath = path.join(__dirname, 'fixtures')
+  const baseFixturePath = path.join(__dirname, '__fixtures__', 'test-project')
   return {
     getPaths: () => ({
       base: baseFixturePath,
@@ -28,7 +28,7 @@ vi.mock('@cedarjs/project-config', () => {
 })
 
 const getFixturePath = (relativeFilePath: string) => {
-  return path.join(__dirname, `fixtures/${relativeFilePath}`)
+  return path.join(__dirname, '__fixtures__', 'test-project', relativeFilePath)
 }
 
 test('extracts named exports', () => {
