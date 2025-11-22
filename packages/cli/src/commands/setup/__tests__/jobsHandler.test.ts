@@ -53,7 +53,6 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         base: BASE_PATH,
         api: {
           base: path.join(BASE_PATH, 'api'),
-          dbSchema: path.join(BASE_PATH, 'api', 'db', 'schema.prisma'),
           lib: path.join(BASE_PATH, 'api', 'src', 'lib'),
           jobs: path.join(BASE_PATH, 'api', 'src', 'jobs'),
           prismaConfig: path.join(BASE_PATH, 'api', 'prisma.config.ts'),
@@ -63,6 +62,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         },
       }
     },
+    getSchemaPath: () => '',
   }
 })
 
@@ -86,8 +86,8 @@ beforeEach(() => {
     {
       'package.json': '{}',
       'api/tsconfig.json': '',
-      'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
+      // 'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
+      // export default defineConfig({ schema: './db/schema.prisma' })`,
       'api/db/schema.prisma': '',
       'api/src/lib': null,
       // api/src/jobs already exists – this should not cause an error

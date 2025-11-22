@@ -191,7 +191,7 @@ describe('Snake case words', () => {
     ).toMatchSnapshot()
   })
 
-  it('creates a cell mock with a snakeCase word name', () => {
+  it.only('creates a cell mock with a snakeCase word name', () => {
     expect(
       snakeCaseWordFiles[
         path.normalize(

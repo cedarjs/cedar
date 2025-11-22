@@ -161,19 +161,18 @@ describe('setupData createUserModelTask', () => {
   it('adds a User model to schema.prisma', async () => {
     vol.fromJSON(
       {
-        'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
-export default defineConfig({ schema: './db/schema.prisma' })`,
-        'api/db/schema.prisma': `
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
-}
-`,
+        'api/prisma.config.ts':
+          "import { defineConfig } from 'prisma/config'\n" +
+          "export default defineConfig({ schema: 'db/schema.prisma' })",
+        'api/db/schema.prisma':
+          'datasource db {\n' +
+          '  provider = "sqlite"\n' +
+          '}\n' +
+          '\n' +
+          'generator client {\n' +
+          '  provider      = "prisma-client-js"\n' +
+          '  binaryTargets = "native"\n' +
+          '}',
       },
       redwoodProjectPath,
     )

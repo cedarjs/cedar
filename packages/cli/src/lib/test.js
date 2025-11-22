@@ -24,8 +24,10 @@ vi.mock('@cedarjs/internal/dist/generate/generate', () => {
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const path = await import('path')
+  // const path = await import('path')
+
   const originalProjectConfig = await importOriginal()
+
   return {
     ...originalProjectConfig,
     getPaths: () => {
@@ -34,10 +36,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         base: BASE_PATH,
         api: {
           prismaConfig: path.join(
+            // Current test folder
             globalThis.__dirname,
             'fixtures',
             'prisma.config.ts',
-          ), // this folder
+          ),
           dataMigrations: path.join(BASE_PATH, './api/dataMigrations'),
           generators: path.join(BASE_PATH, './api/generators'),
           src: path.join(BASE_PATH, './api/src'),

@@ -12,7 +12,16 @@ vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
 vi.mock('execa')
 
 beforeAll(() => {
-  vol.fromJSON({ 'redwood.toml': '' }, '/')
+  vol.fromJSON(
+    {
+      // This only has to be available for `fs.existsSync` to pass. The actual
+      // file contents are read using `await import`
+      // See packages/project-config/src/prisma.ts
+      [path.join(globalThis.__dirname, 'fixtures', 'prisma.config.ts')]: '',
+      'redwood.toml': '',
+    },
+    '/',
+  )
 })
 
 describe('admin/pages/post', () => {

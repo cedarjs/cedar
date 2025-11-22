@@ -5,8 +5,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getPaths: () => {
       return {
         api: {
-          dbSchema:
-            '/Users/bazinga/My Projects/rwprj/rwprj/api/db/schema.prisma',
+          prismaConfig:
+            '/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js',
         },
         base: '/Users/bazinga/My Projects/rwprj/rwprj',
       }
@@ -65,7 +65,7 @@ test('the prisma command handles spaces', async () => {
     'dev',
     '-n',
     '"add bazingas"',
-    '--schema',
-    '"/Users/bazinga/My Projects/rwprj/rwprj/api/db/schema.prisma"',
+    '--config',
+    '"/Users/bazinga/My Projects/rwprj/rwprj/api/prisma.config.js"',
   ])
 })

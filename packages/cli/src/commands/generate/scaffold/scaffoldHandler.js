@@ -153,14 +153,17 @@ export const files = async ({
   nestScaffoldByModel,
 }) => {
   const model = await getSchema(name)
+
   if (typeof nestScaffoldByModel === 'undefined') {
     nestScaffoldByModel = getConfig().generate.nestScaffoldByModel
   }
+
   const templateStrings = getTemplateStrings(
     name,
     scaffoldPath,
     nestScaffoldByModel,
   )
+
   const pascalScaffoldPath =
     scaffoldPath === ''
       ? scaffoldPath

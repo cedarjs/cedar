@@ -112,11 +112,10 @@ export const getEnum = async (name) => {
 /**
  * Returns the data model defined in `schema.prisma` (models, enums, etc.)
  */
-export const getDataModel = async (path) => {
-  if (!path) {
-    path = await getSchemaPath(getPaths().api.prismaConfig)
-  }
-  const result = await getSchemaWithPath(path)
+export const getDataModel = async () => {
+  const prismaConfigPath = getPaths().api.prismaConfig
+  const schemaPath = await getSchemaPath(prismaConfigPath)
+  const result = await getSchemaWithPath(schemaPath)
   return result.schemas
 }
 

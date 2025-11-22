@@ -18,7 +18,17 @@ describe('relational form field', () => {
   let form
 
   beforeAll(async () => {
-    vol.fromJSON({ 'redwood.toml': '' }, '/')
+    vol.fromJSON(
+      {
+        // This only has to be available for `fs.existsSync` to pass. The actual
+        // file contents are read using `await import`
+        // See packages/project-config/src/prisma.ts
+        [path.join(globalThis.__dirname, 'fixtures', 'prisma.config.ts')]: '',
+        'redwood.toml': '',
+      },
+      '/',
+    )
+
     const files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
       model: 'Tag',

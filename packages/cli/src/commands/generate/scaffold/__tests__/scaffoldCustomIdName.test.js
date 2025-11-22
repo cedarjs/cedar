@@ -1,7 +1,7 @@
 globalThis.__dirname = __dirname
 import path from 'path'
 
-import { vol } from 'memfs'
+import { vol, fs as memfs } from 'memfs'
 import { vi, describe, beforeAll, test, expect } from 'vitest'
 
 // Load mocks
@@ -11,14 +11,23 @@ import { getDefaultArgs } from '../../../../lib/index.js'
 import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('fs', async () => ({ default: memfs }))
 vi.mock('execa')
 
 describe('support custom @id name', () => {
   let files
 
   beforeAll(async () => {
-    vol.fromJSON({ 'redwood.toml': '' }, '/')
+    vol.fromJSON(
+      {
+        // This only has to be available for `fs.existsSync` to pass. The actual
+        // file contents are read using `await import`
+        // See packages/project-config/src/prisma.ts
+        [path.join(globalThis.__dirname, 'fixtures', 'prisma.config.ts')]: '',
+        'redwood.toml': '',
+      },
+      '/',
+    )
 
     files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
