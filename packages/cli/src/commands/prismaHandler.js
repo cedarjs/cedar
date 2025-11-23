@@ -28,24 +28,15 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
   // Automatically inject options for some commands.
   const hasHelpOption = options.help || options.h
   if (!hasHelpOption) {
-    if (
-      ['generate', 'introspect', 'db', 'migrate', 'studio', 'format'].includes(
-        commands[0],
-      )
-    ) {
-      if (!fs.existsSync(rwjsPaths.api.prismaConfig)) {
-        console.error()
-        console.error(c.error('No Prisma config file found.'))
-        console.error(`Cedar searched here '${rwjsPaths.api.prismaConfig}'`)
-        console.error()
-        process.exit(1)
-      }
-      options.config = `${rwjsPaths.api.prismaConfig}`
-
-      if (['seed', 'diff'].includes(commands[1])) {
-        delete options.schema
-      }
+    if (!fs.existsSync(rwjsPaths.api.prismaConfig)) {
+      console.error()
+      console.error(c.error('No Prisma config file found.'))
+      console.error(`Cedar searched here '${rwjsPaths.api.prismaConfig}'`)
+      console.error()
+      process.exit(1)
     }
+
+    options.config = `${rwjsPaths.api.prismaConfig}`
   }
 
   // Convert command and options into a string that's run via execa
