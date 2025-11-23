@@ -29,7 +29,11 @@ export const generateGraphQLSchema = async () => {
     [print(rootSchema.schema)]: {},
     'graphql/**/*.sdl.{js,ts}': {},
     'directives/**/*.{js,ts}': {},
+    '!directives/**/*.test.{js,ts}': {},
+    '!directives/**/*.spec.{js,ts}': {},
     'subscriptions/**/*.{js,ts}': {},
+    '!subscriptions/**/*.test.{js,ts}': {},
+    '!subscriptions/**/*.spec.{js,ts}': {},
   }
 
   for (const [name, schema] of Object.entries(rootSchema.scalarSchemas)) {
