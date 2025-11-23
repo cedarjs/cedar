@@ -11,6 +11,7 @@ import {
 } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
+import type ProjectConfig from '@cedarjs/project-config'
 
 import {
   handler,
@@ -19,6 +20,31 @@ import {
 
 vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
+
+vi.mock('@cedarjs/project-config', async () => {
+  const actual = await vi.importActual<typeof ProjectConfig>(
+    '@cedarjs/project-config',
+  )
+
+  return {
+    ...actual,
+    getPaths: () => ({
+      base: '/redwood-app',
+      api: {
+        base: '/redwood-app/api',
+        dataMigrations: '/redwood-app/api/db/dataMigrations',
+        db: '/redwood-app/api/db',
+        prismaConfig: '/redwood-app/api/prisma.config.ts',
+        dist: '/redwood-app/api/dist',
+        lib: '/redwood-app/api/dist/lib',
+      },
+      web: {
+        base: '/redwood-app/web',
+      },
+    }),
+    getDataMigrationsPath: async () => '/redwood-app/api/db/dataMigrations',
+  }
+})
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -123,8 +149,6 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-            export default defineConfig({ schema: './db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -159,8 +183,6 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-            export default defineConfig({ schema: './db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -200,19 +222,6 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          'prisma.config.ts': `
-            import { defineConfig } from 'prisma/config'
-            export default defineConfig({
-              schema: 'db/schema.prisma'
-              migrations: {
-                path: 'db/migrations',
-              },
-              datasource: {
-                url: env('DATABASE_URL'),
-              },
-            })
-          `,
-          'package.json': '{}',
           dist: {
             lib: {
               'db.js': '',

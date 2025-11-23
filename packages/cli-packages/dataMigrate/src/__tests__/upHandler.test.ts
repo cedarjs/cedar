@@ -37,7 +37,7 @@ vi.mock('@cedarjs/project-config', async () => {
         base: '/redwood-app/api',
         dataMigrations: '/redwood-app/api/db/dataMigrations',
         db: '/redwood-app/api/db',
-        dbSchema: '/redwood-app/api/db/schema.prisma',
+        prismaConfig: '/redwood-app/api/prisma.config.ts',
         dist: '/redwood-app/api/dist',
         lib: '/redwood-app/api/dist/lib',
       },
@@ -45,6 +45,7 @@ vi.mock('@cedarjs/project-config', async () => {
         base: '/redwood-app/web',
       },
     }),
+    getDataMigrationsPath: async () => '/redwood-app/api/db/dataMigrations',
   }
 })
 
@@ -217,8 +218,6 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-            export default defineConfig({ schema: 'db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -251,8 +250,6 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-            export default defineConfig({ schema: './db/schema.prisma' })`,
           dist: {
             lib: {
               'db.js': '',
@@ -290,9 +287,6 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          'prisma.config.ts': `import { defineConfig } from 'prisma/config'
-            export default defineConfig({ schema: './db/schema.prisma' })`,
-          'package.json': '{}',
           dist: {
             lib: {
               'db.js': '',

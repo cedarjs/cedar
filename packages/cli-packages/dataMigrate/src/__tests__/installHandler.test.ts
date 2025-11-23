@@ -2,7 +2,12 @@ import execa from 'execa'
 import { vol, fs as memfs } from 'memfs'
 import { vi, expect, describe, it } from 'vitest'
 
-import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getDataMigrationsPath,
+  getSchemaPath,
+} from '@cedarjs/project-config'
+import type ProjectConfig from '@cedarjs/project-config'
 
 import {
   handler,
@@ -29,16 +34,17 @@ vi.mock('execa', () => {
   }
 })
 
-jest.mock('@cedarjs/project-config', () => {
-  const actual = jest.requireActual('@cedarjs/project-config')
-  const mockPath = require('path')
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+  const mockPath = await import('path')
+
   return {
-    ...actual,
-    getSchemaPath: jest.fn(async (prismaConfigPath) => {
+    ...originalProjectConfig,
+    getSchemaPath: vi.fn(async (prismaConfigPath) => {
       // Simple mock: replace prisma.config.ts with schema.prisma
       return prismaConfigPath.replace('prisma.config.ts', 'schema.prisma')
     }),
-    getDataMigrationsPath: jest.fn(async (prismaConfigPath) => {
+    getDataMigrationsPath: vi.fn(async (prismaConfigPath) => {
       // Data migrations go next to the config file in test
       const configDir = mockPath.dirname(prismaConfigPath)
       return mockPath.join(configDir, 'dataMigrations')
@@ -83,12 +89,12 @@ describe('installHandler', () => {
 
     await handler()
 
-    const dataMigrationsPath = await getDataMigrationsPath(
-      getPaths().api.prismaConfig,
-    )
+    const prismaConfigPath = getPaths().api.prismaConfig
+    const dataMigrationsPath = await getDataMigrationsPath(prismaConfigPath)
+    const schemaPath = await getSchemaPath(prismaConfigPath)
 
     expect(memfs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
-    expect(memfs.readFileSync(getPaths().api.dbSchema, 'utf-8')).toMatch(
+    expect(memfs.readFileSync(schemaPath, 'utf-8')).toMatch(
       RW_DATA_MIGRATION_MODEL,
     )
     expect(execa.command).toHaveBeenCalledWith(createDatabaseMigrationCommand, {
