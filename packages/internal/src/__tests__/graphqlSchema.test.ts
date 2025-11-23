@@ -3,7 +3,7 @@ import path from 'path'
 
 import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
-import { vi, beforeAll, afterAll, afterEach, test, expect } from 'vitest'
+import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
 import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
 
@@ -12,15 +12,12 @@ const FIXTURE_PATH = path.resolve(
   '../../../../__fixtures__/example-todo-main',
 )
 
-beforeAll(() => {
+beforeEach(() => {
   process.env.RWJS_CWD = FIXTURE_PATH
 })
 
-afterAll(() => {
-  delete process.env.RWJS_CWD
-})
-
 afterEach(() => {
+  delete process.env.RWJS_CWD
   vi.restoreAllMocks()
 })
 
@@ -43,7 +40,7 @@ test('Generates GraphQL schema', async () => {
 test('Includes live query directive if serverful and realtime ', async () => {
   const fixturePath = path.resolve(
     __dirname,
-    './fixtures/graphqlCodeGen/realtime',
+    './__fixtures__/graphqlCodeGen/realtime',
   )
   process.env.RWJS_CWD = fixturePath
 
@@ -62,7 +59,7 @@ test('Includes live query directive if serverful and realtime ', async () => {
 test('Returns error message when schema loading fails', async () => {
   const fixturePath = path.resolve(
     __dirname,
-    './fixtures/graphqlCodeGen/bookshelf',
+    './__fixtures__/graphqlCodeGen/bookshelf',
   )
   process.env.RWJS_CWD = fixturePath
 
@@ -98,4 +95,31 @@ test('Returns error message when schema loading fails', async () => {
   } finally {
     delete process.env.RWJS_CWD
   }
+})
+
+test('Generates complete schema with directives and subscriptions while excluding test files', async () => {
+  const fixturePath = path.resolve(
+    __dirname,
+    './__fixtures__/graphqlCodeGen/testFilesExclusion',
+  )
+  process.env.RWJS_CWD = fixturePath
+
+  const expectedPath = path.join(fixturePath, '.redwood', 'schema.graphql')
+
+  let generatedSchema = ''
+  let writeFileSyncSchemaPath = ''
+
+  vi.spyOn(fs, 'writeFileSync').mockImplementation(
+    (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
+      writeFileSyncSchemaPath = file.toString()
+      generatedSchema = data.toString()
+    },
+  )
+
+  const { schemaPath, errors } = await generateGraphQLSchema()
+
+  expect(errors).toEqual([])
+  expect(schemaPath).toMatch(expectedPath)
+  expect(writeFileSyncSchemaPath).toMatch(expectedPath)
+  expect(generatedSchema).toMatchSnapshot()
 })

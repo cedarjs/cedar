@@ -18,7 +18,7 @@ describe('Generate gql possible types web from the GraphQL Schema', () => {
     test('when there are *no* union types', async () => {
       const FIXTURE_PATH = path.resolve(
         __dirname,
-        '../../../../__fixtures__/test-project',
+        './__fixtures__/test-project',
       )
 
       process.env.RWJS_CWD = FIXTURE_PATH
@@ -44,7 +44,7 @@ describe('Generate gql possible types web from the GraphQL Schema', () => {
     test('when there are union types ', async () => {
       const FIXTURE_PATH = path.resolve(
         __dirname,
-        './fixtures/fragment-test-project',
+        './__fixtures__/fragment-test-project',
       )
 
       process.env.RWJS_CWD = FIXTURE_PATH

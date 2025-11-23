@@ -1,8 +1,6 @@
-import fs from 'fs'
-import path from 'path'
-
 import execa from 'execa'
-import { vol } from 'memfs'
+import { vol, fs as memfs } from 'memfs'
+import { vi, expect, describe, it } from 'vitest'
 
 import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
 
@@ -13,16 +11,21 @@ import {
   notes,
 } from '../commands/installHandler'
 
-jest.mock('fs', () => require('memfs').fs)
-jest.mock('node:fs', () => require('memfs').fs)
+vi.mock('fs', async () => ({ ...memfs, default: memfs }))
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
-jest.mock('execa', () => {
+vi.mock('execa', () => {
+  const mockCommand = vi.fn(() => {
+    return {
+      stdout: 42,
+    }
+  })
+
   return {
-    command: jest.fn(() => {
-      return {
-        stdout: 42,
-      }
-    }),
+    command: mockCommand,
+    default: {
+      command: mockCommand,
+    },
   }
 })
 
@@ -76,7 +79,7 @@ describe('installHandler', () => {
       redwoodProjectPath,
     )
 
-    console.log = jest.fn()
+    console.log = vi.fn()
 
     await handler()
 
@@ -84,9 +87,8 @@ describe('installHandler', () => {
       getPaths().api.prismaConfig,
     )
 
-    expect(fs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
-    const schemaPath = path.join(getPaths().api.base, 'schema.prisma')
-    expect(fs.readFileSync(schemaPath, 'utf-8')).toMatch(
+    expect(memfs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
+    expect(memfs.readFileSync(getPaths().api.dbSchema, 'utf-8')).toMatch(
       RW_DATA_MIGRATION_MODEL,
     )
     expect(execa.command).toHaveBeenCalledWith(createDatabaseMigrationCommand, {
