@@ -45,5 +45,3 @@ fs.writeFileSync('dist/package.json', JSON.stringify({ type: 'module' }))
 const indexBuildPath = './dist/cjs/index.js'
 const indexFile = fs.readFileSync(indexBuildPath, 'utf-8')
 fs.writeFileSync(indexBuildPath, indexFile.replace('await import', 'require'))
-
-fs.writeFileSync(indexBuildPath, indexFile)
