@@ -26,6 +26,7 @@ export default async function () {
   // Instead of using the schema, we can use the config file
   // const prismaConfig = await getConfig(rwjsPaths.api.dbSchema)
   // and then check for the prismaConfig.datasources[0].directUrl
+  // TODO: Fix comment above now that we've changed to `getSchemaPath()`
   const schemaPath = await getSchemaPath(rwjsPaths.api.prismaConfig)
   const result = await getSchemaWithPath(schemaPath)
   // For regex matching, we need to concatenate the schemas into a single string
