@@ -47,17 +47,17 @@ function getMilestoneFromConventionalCommit(title) {
   }
 
   // Feature (goes in next minor release)
-  if (/^feat(\([^)]+\)):/.test(title)) {
+  if (/^feat\([^)]+\):/.test(title)) {
     return 'next-release'
   }
 
   // Fix (goes in next patch release)
-  if (/^(fix|docs)(\([^)]+\)):/.test(title)) {
+  if (/^(fix|docs)\([^)]+\):/.test(title)) {
     return 'next-release-patch'
   }
 
   // Chore (framework-side maintenance)
-  if (/^chore(\([^)]+\)):/.test(title)) {
+  if (/^chore\([^)]+\):/.test(title)) {
     return 'chore'
   }
 
