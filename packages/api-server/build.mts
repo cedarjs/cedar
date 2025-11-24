@@ -111,27 +111,6 @@ await buildBinCjs({
   },
 })
 
-// Make the watch bin runnable as a script
-const builtCjsWatchPath = path.join(import.meta.dirname, 'dist/cjs/watch.js')
-const builtCjsWatch = fs.readFileSync(builtCjsWatchPath, 'utf8')
-fs.writeFileSync(
-  builtCjsWatchPath,
-  builtCjsWatch.replace(
-    /^startWatch\(\);$/m,
-    'if (require.main === module) {\n  startWatch();\n}',
-  ),
-)
-
-const builtEsmWatchPath = path.join(import.meta.dirname, 'dist/watch.js')
-const builtEsmWatch = fs.readFileSync(builtEsmWatchPath, 'utf8')
-fs.writeFileSync(
-  builtEsmWatchPath,
-  builtEsmWatch.replace(
-    /^startWatch\(\);$/m,
-    'if (import.meta.url === `file://${process.argv[1]}`) {\n  startWatch();\n}',
-  ),
-)
-
 async function buildBinEsm({ buildOptions }: { buildOptions: ESBuildOptions }) {
   await buildBin({
     buildOptions: {
