@@ -146,6 +146,7 @@ describe('paths', () => {
       Object.assign(pathTemplate.api, {
         distJobsConfig: null,
         jobsConfig: null,
+        prismaConfig: ['api', 'prisma.config.ts'],
       })
       Object.assign(pathTemplate.web, {
         document: null, // this fixture doesnt have a document
@@ -286,6 +287,7 @@ describe('paths', () => {
         jobsConfig: null,
         distJobsConfig: null,
         logger: null,
+        prismaConfig: ['api', 'prisma.config.js'],
       })
       Object.assign(pathTemplate.web, {
         document: null, // this fixture doesn't have a document
@@ -471,6 +473,7 @@ describe('paths', () => {
         jobsConfig: null,
         distJobsConfig: null,
         logger: null,
+        prismaConfig: ['api', 'prisma.config.js'],
       })
       Object.assign(pathTemplate.web, {
         app: null,
