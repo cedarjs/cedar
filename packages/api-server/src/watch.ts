@@ -149,3 +149,8 @@ export function startWatch() {
     }
   })
 }
+
+// During build we will wrap this in checks to only execute this function if
+// the file is run as a script using `require.main === module` or the ESM
+// equivalent `import.meta.url === `file://${process.argv[1]}``
+startWatch()
