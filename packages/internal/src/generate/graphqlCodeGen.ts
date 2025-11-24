@@ -206,8 +206,6 @@ async function runCodegenGraphQL(
 export function getLoadDocumentsOptions(filename: string) {
   const loadTypedefsConfig: LoadTypedefsOptions<{ cwd: string }> = {
     cwd: getPaths().base,
-    // TODO: Move this change to a separate PR
-    // DO NOT MERGE THIS
     ignore: [filename],
     loaders: [new CodeFileLoader()],
     sort: true,

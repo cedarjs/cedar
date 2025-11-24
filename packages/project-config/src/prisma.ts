@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import type { PrismaConfig } from './types.js'
+import type { PrismaConfig } from 'prisma'
 
 // Cache for loaded configs to avoid repeated file system operations
 const configCache = new Map<string, PrismaConfig>()
