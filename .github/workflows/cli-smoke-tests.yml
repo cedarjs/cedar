@@ -27,21 +27,19 @@ jobs:
           REDWOOD_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
-      - name: Run `rw info`
-        run: yarn rw info | tr -d '\n' | grep "npmPackages:.*@cedarjs/core:"
+      - name: Run `cedar info`
+        run: yarn cedar info
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run in /scripts `rw info`
         run: yarn rw info | tr -d '\n' | grep "npmPackages:.*@cedarjs/core:"
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts
 
-      - name: Run `rw lint`
-        run: yarn rw lint ./api/src --fix
+      - name: Run `cedar lint`
+        run: yarn cedar lint ./api/src --fix
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
-      - name: Run "rw test api"
-        # Having a bunch of `ls` statements here to see if I can spot anything
-        # weird looking when this step fails
+      - name: Run `cedar test api`
         run: |
           echo ""
           echo "# ls /"
@@ -62,13 +60,16 @@ jobs:
           echo "# cat /config/jest/api/package.json"
           cat ${{ steps.set-up-test-project.outputs.test-project-path }}/node_modules/@cedarjs/testing/config/jest/api/package.json && echo ""
           echo ""
+          echo "# node -v"
+          node -v
+          echo ""
           echo ""
           echo "# Starting test"
-          yarn rw test api --no-watch
+          yarn cedar test api --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
-      - name: Run "rw test web"
-        run: yarn rw test web --no-watch
+      - name: Run `cedar test web`
+        run: yarn cedar test web --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run "rw check"
