@@ -55,7 +55,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           base: path.join(BASE_PATH, 'api'),
           lib: path.join(BASE_PATH, 'api', 'src', 'lib'),
           jobs: path.join(BASE_PATH, 'api', 'src', 'jobs'),
-          prismaConfig: path.join(BASE_PATH, 'api', 'prisma.config.ts'),
+          prismaConfig: path.join(BASE_PATH, 'api', 'prisma.config.cjs'),
         },
         web: {
           base: path.join(BASE_PATH, 'web'),

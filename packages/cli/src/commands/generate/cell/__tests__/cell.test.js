@@ -3,10 +3,7 @@ import path from 'path'
 
 import { vi, describe, it, expect, test, beforeAll } from 'vitest'
 
-// Load mocks
-import '../../../../lib/test'
-import * as cellHandler from '../cellHandler.js'
-
+// Mock modules MUST come before any other imports for proper hoisting
 vi.mock('@cedarjs/structure', () => {
   return {
     getProject: () => ({
@@ -14,6 +11,10 @@ vi.mock('@cedarjs/structure', () => {
     }),
   }
 })
+
+// Load mocks and modules after vi.mock() calls
+import '../../../../lib/test'
+import * as cellHandler from '../cellHandler.js'
 
 describe('Single word files', () => {
   let singleWordFiles

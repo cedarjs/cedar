@@ -97,7 +97,7 @@ describe('handler', () => {
           prisma: false,
           dm: false,
         }),
-      ).rejects.toThrow('Command (yarn rw build web --verbose) failed')
+      ).rejects.toThrow('Command (yarn cedar build web --verbose) failed')
     })
   })
 })
