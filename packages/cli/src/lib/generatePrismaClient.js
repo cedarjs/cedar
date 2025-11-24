@@ -5,22 +5,20 @@ import path from 'node:path'
 
 import fs from 'fs-extra'
 
-import { getSchemaPath } from '@cedarjs/project-config'
-
 import { runCommandTask, getPaths } from '../lib/index.js'
 
-export const generatePrismaCommand = async (schema) => {
+export const generatePrismaCommand = async () => {
   const createdRequire = createRequire(import.meta.url)
   // I wanted to use `import.meta.resolve` here, but it's not supported by
   // vitest yet
   // https://github.com/vitest-dev/vitest/issues/6953
   // The path will be something like
-  // /Users/tobbe/tmp/rx-test-project/node_modules/prisma/build/index.js
+  // /Users/tobbe/tmp/cedar-test-project/node_modules/prisma/build/index.js
   const prismaIndexPath = createdRequire.resolve('prisma/build/index.js')
 
   return {
     cmd: `node "${prismaIndexPath}"`,
-    args: ['generate', schema && `--schema="${schema}"`],
+    args: ['generate', `--config="${getPaths().api.prismaConfig}"`],
   }
 }
 
@@ -33,8 +31,6 @@ export const generatePrismaClient = async ({
   force = true,
   silent = false,
 }) => {
-  const schema = await getSchemaPath(getPaths().api.prismaConfig)
-
   // Unless --force is used we do not generate the Prisma client if it exists.
   if (!force) {
     const prismaClientPath = path.join(
@@ -68,7 +64,7 @@ export const generatePrismaClient = async ({
     [
       {
         title: 'Generating the Prisma client...',
-        ...(await generatePrismaCommand(schema)),
+        ...(await generatePrismaCommand()),
       },
     ],
     {

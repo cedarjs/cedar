@@ -14,10 +14,10 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
     dataMigrate,
   })
 
-  const rwjsPaths = getPaths()
+  const cedarPaths = getPaths()
 
   const execaConfig = {
-    cwd: rwjsPaths.base,
+    cwd: cedarPaths.base,
     shell: true,
     stdio: 'inherit',
   }
@@ -26,7 +26,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
     if (prisma) {
       console.log('Running database migrations...')
       execa.commandSync(
-        `node_modules/.bin/prisma migrate deploy --schema "${rwjsPaths.api.dbSchema}"`,
+        `node_modules/.bin/prisma migrate deploy --config "${cedarPaths.api.prismaConfig}"`,
         execaConfig,
       )
     }
@@ -34,7 +34,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
     if (dataMigrate) {
       console.log('Running data migrations...')
       const packageJson = fs.readJsonSync(
-        path.join(rwjsPaths.base, 'package.json'),
+        path.join(cedarPaths.base, 'package.json'),
       )
       const hasDataMigratePackage =
         !!packageJson.devDependencies['@cedarjs/cli-data-migrate']
@@ -52,11 +52,11 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
           ].join('\n'),
         )
       } else {
-        execa.commandSync('yarn rw dataMigrate up', execaConfig)
+        execa.commandSync('yarn cedar dataMigrate up', execaConfig)
       }
     }
 
-    const serverFilePath = path.join(rwjsPaths.api.dist, 'server.js')
+    const serverFilePath = path.join(cedarPaths.api.dist, 'server.js')
     const hasServerFile = fs.pathExistsSync(serverFilePath)
 
     if (hasServerFile) {
@@ -71,7 +71,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
 
   async function runWebCommands() {
     execa.commandSync('yarn install', execaConfig)
-    execa.commandSync('yarn rw build web --verbose', execaConfig)
+    execa.commandSync('yarn cedar build web --verbose', execaConfig)
   }
 
   if (side === 'api') {

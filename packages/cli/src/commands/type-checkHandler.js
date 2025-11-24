@@ -5,7 +5,6 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { getSchemaPath } from '@cedarjs/project-config'
 
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 import { getPaths } from '../lib/index.js'
@@ -53,7 +52,6 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
   if (generate && prisma) {
     await generatePrismaClient({
       verbose: verbose,
-      schema: await getSchemaPath(getPaths().api.prismaConfig),
     })
   }
 

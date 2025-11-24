@@ -8,7 +8,7 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { getConfig, getSchemaPath } from '@cedarjs/project-config'
+import { getConfig } from '@cedarjs/project-config'
 
 import c from '../lib/colors.js'
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
@@ -497,7 +497,6 @@ async function refreshPrismaClient(task, { verbose }) {
     await generatePrismaClient({
       verbose,
       force: false,
-      schema: await getSchemaPath(getPaths().api.prismaConfig),
     })
   } catch (e) {
     task.skip('Refreshing the Prisma client caused an Error.')
