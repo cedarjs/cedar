@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import fs from 'node:fs'
 
 import { build, defaultBuildOptions } from '@cedarjs/framework-tools'
 
@@ -26,11 +26,11 @@ await build({
 
 // Place a package.json file with `type: commonjs` in the dist/cjs folder so
 // that all .js files are treated as CommonJS files.
-writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }))
+fs.writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }))
 
 // Place a package.json file with `type: module` in the dist folder so that
 // all .js files are treated as ES Module files.
-writeFileSync('dist/package.json', JSON.stringify({ type: 'module' }))
+fs.writeFileSync('dist/package.json', JSON.stringify({ type: 'module' }))
 
 // ./src/prisma.ts contains `... = await import(configUrl)`. When building for
 // CJS esbuild correctly preserves the `await import` statement because it's
