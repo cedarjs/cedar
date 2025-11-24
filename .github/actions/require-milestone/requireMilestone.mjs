@@ -42,22 +42,22 @@ import fs from 'node:fs'
  */
 function getMilestoneFromConventionalCommit(title) {
   // Breaking changes (indicated by !)
-  if (/^(feat|fix|docs|chore)!(\([^)]+\))?:/.test(title)) {
+  if (/^(feat|fix|docs|chore)(\([^)]+\))!:/.test(title)) {
     return 'next-release-major'
   }
 
   // Feature (goes in next minor release)
-  if (/^feat\([^)]+\):/.test(title)) {
+  if (/^feat(\([^)]+\)):/.test(title)) {
     return 'next-release'
   }
 
   // Fix (goes in next patch release)
-  if (/^(fix|docs)\([^)]+\):/.test(title)) {
+  if (/^(fix|docs)(\([^)]+\)):/.test(title)) {
     return 'next-release-patch'
   }
 
   // Chore (framework-side maintenance)
-  if (/^chore\([^)]+\):/.test(title)) {
+  if (/^chore(\([^)]+\)):/.test(title)) {
     return 'chore'
   }
 
@@ -180,7 +180,7 @@ async function main() {
       '- fix(scope): for bug fixes → automatically sets "next-release-patch"',
       '- docs(scope): for documentation changes → automatically sets "next-release-patch"',
       '- chore(scope): for maintenance tasks → automatically sets "chore"',
-      '- feat!(scope): or fix!(scope): for breaking changes → automatically sets "next-release-major"',
+      '- feat(scope)!: or fix(scope)!: for breaking changes → automatically sets "next-release-major"',
       '',
       'Where "scope" should describe the area of the codebase being changed.',
       '',
