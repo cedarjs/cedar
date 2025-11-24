@@ -106,7 +106,7 @@ Don't make secrets available to your web side. Everything in `includeEnvironment
 ## [api]
 
 | Key            | Description                              | Default                                                         |
-| :--------------| :--------------------------------------- | :-------------------------------------------------------------- |
+| :------------- | :--------------------------------------- | :-------------------------------------------------------------- |
 | `port`         | Port for the api server to listen at     | `8911`                                                          |
 | `host`         | Hostname for the api server to listen at | Defaults to `'0.0.0.0'` in production and `'::'` in development |
 | `prismaConfig` | Path to the Prisma configuration file    | Defaults to `./api/prisma.config.cjs`                           |
