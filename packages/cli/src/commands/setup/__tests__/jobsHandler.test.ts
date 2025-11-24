@@ -86,8 +86,6 @@ beforeEach(() => {
     {
       'package.json': '{}',
       'api/tsconfig.json': '',
-      // 'api/prisma.config.ts': `import { defineConfig } from 'prisma/config'
-      // export default defineConfig({ schema: './db/schema.prisma' })`,
       'api/db/schema.prisma': '',
       'api/src/lib': null,
       // api/src/jobs already exists – this should not cause an error
