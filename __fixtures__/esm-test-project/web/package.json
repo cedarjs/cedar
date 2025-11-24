@@ -24,9 +24,9 @@
     "@cedarjs/vite": "1.0.0",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "^10.4.22",
     "postcss": "^8.5.6",
-    "postcss-loader": "^8.1.1",
+    "postcss-loader": "^8.2.0",
     "tailwindcss": "^3.4.17"
   }
 }
