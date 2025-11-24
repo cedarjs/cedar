@@ -9,24 +9,7 @@ import { getSchemaPath } from '@cedarjs/project-config'
 
 import { runCommandTask, getPaths } from '../lib/index.js'
 
-const skipTask = async (schema) => {
-  if (!schema) {
-    schema = await getSchemaPath(getPaths().api.prismaConfig)
-  }
-  if (!fs.existsSync(schema)) {
-    console.log(
-      `Skipping database and Prisma client generation, no \`schema.prisma\` file found: \`${schema}\``,
-    )
-    return true
-  }
-  return false
-}
-
 export const generatePrismaCommand = async (schema) => {
-  if (await skipTask(schema)) {
-    return {}
-  }
-
   const createdRequire = createRequire(import.meta.url)
   // I wanted to use `import.meta.resolve` here, but it's not supported by
   // vitest yet
@@ -42,22 +25,17 @@ export const generatePrismaCommand = async (schema) => {
 }
 
 /**
- * Conditionally generate the prisma client, skip if it already exists.
+ * Conditionally generate the prisma client, skip if it already exists (unless
+ * forced).
  */
 export const generatePrismaClient = async ({
   verbose = true,
   force = true,
   silent = false,
-  schema,
 }) => {
-  if (!schema) {
-    schema = await getSchemaPath(getPaths().api.prismaConfig)
-  }
-  if (await skipTask(schema)) {
-    return
-  }
+  const schema = await getSchemaPath(getPaths().api.prismaConfig)
 
-  // Do not generate the Prisma client if it exists.
+  // Unless --force is used we do not generate the Prisma client if it exists.
   if (!force) {
     const prismaClientPath = path.join(
       getPaths().base,
@@ -76,6 +54,7 @@ export const generatePrismaClient = async ({
     // good enough for now.
     // If we want to go back to `await import(...)` we could try appending
     // `?cache_busting=${Date.now()}` to the URL.
+    // TODO: Revisit this when we've switched to Prisma's new TS engine
     if (
       !prismaClientFile.includes('@prisma/client did not initialize yet.') &&
       prismaClientFile.includes('exports.Prisma.')
