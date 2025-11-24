@@ -94,15 +94,15 @@ jobs:
         run: yarn cedar setup --help && yarn cedar setup ui --help
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
+      # Keeping this as `yarn rw` to make sure I don't break using `rw` until I
+      # intend to
       - name: Run `rw g page`
-        # Keeping this as `yarn rw` to make sure I don't break using `rw` until
-        # I intend to
         run: yarn rw g page ciTest
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
+      # Keeping this as `yarn redwood` to make sure I don't break using
+      # `redwood` until I intend to
       - name: Run `redwood g sdl`
-        # Keeping this as `yarn redwood` to make sure I don't break using
-        # `redwood` until I intend to
         run: yarn redwood g sdl userExample
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
