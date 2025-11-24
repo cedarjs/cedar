@@ -8,9 +8,9 @@ import type { PrismaConfig } from './types.js'
 const configCache = new Map<string, PrismaConfig>()
 
 /**
- * Reads and returns the Prisma configuration from prisma.config.ts
+ * Reads and returns the Prisma configuration at the specified path.
  *
- * @param prismaConfigPath - Absolute path to the prisma.config.ts file
+ * @param prismaConfigPath - Absolute path to the Prisma configuration file
  * @returns The Prisma configuration object
  */
 export async function loadPrismaConfig(prismaConfigPath: string) {
@@ -46,9 +46,10 @@ export async function loadPrismaConfig(prismaConfigPath: string) {
 
 /**
  * Gets the schema path from Prisma config.
- * Defaults to 'schema.prisma' in the same directory as the config file if not specified.
+ * Defaults to 'schema.prisma' in the same directory as the config file if not
+ * specified.
  *
- * @param prismaConfigPath - Absolute path to the prisma.config.ts file
+ * @param prismaConfigPath - Absolute path to the Prisma configuration file
  * @returns Absolute path to the schema file or directory
  */
 export async function getSchemaPath(prismaConfigPath: string) {
@@ -69,7 +70,7 @@ export async function getSchemaPath(prismaConfigPath: string) {
  * Gets the migrations path from Prisma config.
  * Defaults to 'migrations' in the same directory as the schema.
  *
- * @param prismaConfigPath - Absolute path to the prisma.config.ts file
+ * @param prismaConfigPath - Absolute path to the Prisma configuration file
  * @returns Absolute path to the migrations directory
  */
 export async function getMigrationsPath(
@@ -98,7 +99,7 @@ export async function getMigrationsPath(
  * If schema is a directory, returns that directory.
  * If schema is a file, returns its parent directory.
  *
- * @param prismaConfigPath - Absolute path to the prisma.config.ts file
+ * @param prismaConfigPath - Absolute path to the Prisma configuration file
  * @returns Absolute path to the database directory
  */
 export async function getDbDir(prismaConfigPath: string): Promise<string> {
@@ -113,10 +114,11 @@ export async function getDbDir(prismaConfigPath: string): Promise<string> {
 
 /**
  * Gets the data migrations directory path.
- * Data migrations are a Cedar feature (not Prisma) that live alongside Prisma migrations.
+ * Data migrations are a Cedar feature (not Prisma) that live alongside Prisma
+ * migrations.
  * Defaults to 'dataMigrations' in the same directory as Prisma migrations.
  *
- * @param prismaConfigPath - Absolute path to the prisma.config.ts file
+ * @param prismaConfigPath - Absolute path to the Prisma configuration file
  * @returns Absolute path to the data migrations directory
  */
 export async function getDataMigrationsPath(

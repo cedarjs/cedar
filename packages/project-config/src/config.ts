@@ -144,7 +144,7 @@ const DEFAULT_CONFIG: Config = {
     port: 8911,
     path: './api',
     target: TargetEnum.NODE,
-    prismaConfig: './api/prisma.config.ts',
+    prismaConfig: './api/prisma.config.cjs',
     serverConfig: './api/server.config.js',
     debugPort: 18911,
   },

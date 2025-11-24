@@ -105,12 +105,12 @@ Don't make secrets available to your web side. Everything in `includeEnvironment
 
 ## [api]
 
-| Key                | Description                              | Default                                                         |
-| :----------------- | :--------------------------------------- | :-------------------------------------------------------------- |
-| `port`             | Port for the api server to listen at     | `8911`                                                          |
-| `host`             | Hostname for the api server to listen at | Defaults to `'0.0.0.0'` in production and `'::'` in development |
-| `prismaConfigPath` | Path to the Prisma configuration file    | Defaults to `./api/prisma.config.ts`                            |
-| `debugPort`        | Port for the debugger to listen at       | `18911`                                                         |
+| Key            | Description                              | Default                                                         |
+| :--------------| :--------------------------------------- | :-------------------------------------------------------------- |
+| `port`         | Port for the api server to listen at     | `8911`                                                          |
+| `host`         | Hostname for the api server to listen at | Defaults to `'0.0.0.0'` in production and `'::'` in development |
+| `prismaConfig` | Path to the Prisma configuration file    | Defaults to `./api/prisma.config.cjs`                           |
+| `debugPort`    | Port for the debugger to listen at       | `18911`                                                         |
 
 Additional server configuration can be done using [Server File](docker.md#using-the-server-file)
 

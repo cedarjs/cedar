@@ -32,7 +32,7 @@ const DEFAULT_PATHS = {
   scripts: ['scripts'],
   api: {
     base: ['api'],
-    prismaConfig: ['api', 'prisma.config.ts'],
+    prismaConfig: ['api', 'prisma.config.cjs'],
     functions: ['api', 'src', 'functions'],
     graphql: ['api', 'src', 'graphql'],
     lib: ['api', 'src', 'lib'],

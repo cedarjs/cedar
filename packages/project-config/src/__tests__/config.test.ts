@@ -35,7 +35,7 @@ describe('getConfig', () => {
           "debugPort": 18911,
           "path": "./api",
           "port": 8911,
-          "prismaConfig": "./api/prisma.config.ts",
+          "prismaConfig": "./api/prisma.config.cjs",
           "serverConfig": "./api/server.config.js",
           "target": "node",
           "title": "Cedar App",

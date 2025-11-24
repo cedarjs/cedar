@@ -37,7 +37,7 @@ vi.mock('@cedarjs/project-config', async () => {
         base: '/redwood-app/api',
         dataMigrations: '/redwood-app/api/db/dataMigrations',
         db: '/redwood-app/api/db',
-        prismaConfig: '/redwood-app/api/prisma.config.ts',
+        prismaConfig: '/redwood-app/api/prisma.config.cjs',
         dist: '/redwood-app/api/dist',
         lib: '/redwood-app/api/dist/lib',
       },

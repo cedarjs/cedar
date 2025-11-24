@@ -1639,7 +1639,8 @@ While having a great seed might not be all that important at the start, as soon 
 
 **How does seeding actually work?**
 
-If you look at your Prisma config file at `prisma.config.cjs`, you'll notice a `seed` definition:
+If you look at your Prisma config file at `prisma.config.cjs`, you'll notice a
+`seed` definition:
 
 ```js
 {
