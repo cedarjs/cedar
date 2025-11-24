@@ -11,7 +11,7 @@ const { redwoodProjectPath, prismaConfigPath, libPath, functionsPath } =
 
     return {
       redwoodProjectPath,
-      prismaConfigPath: redwoodProjectPath + '/api/prisma.config.ts',
+      prismaConfigPath: redwoodProjectPath + '/api/prisma.config.cjs',
       libPath: redwoodProjectPath + '/api/src/lib',
       functionsPath: redwoodProjectPath + '/api/src/functions',
     }
