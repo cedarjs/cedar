@@ -19,12 +19,12 @@ import type { BuildAndRestartOptions } from './buildManager.js'
 import { BuildManager } from './buildManager.js'
 import { serverManager } from './serverManager.js'
 
-const rwjsPaths = getPaths()
+const cedarPaths = getPaths()
 
 if (!process.env.REDWOOD_ENV_FILES_LOADED) {
   config({
-    path: path.join(rwjsPaths.base, '.env'),
-    defaults: path.join(rwjsPaths.base, '.env.defaults'),
+    path: path.join(cedarPaths.base, '.env'),
+    defaults: path.join(cedarPaths.base, '.env.defaults'),
     multiline: true,
   })
 
@@ -69,81 +69,78 @@ async function validateSdls() {
   }
 }
 
-// NOTE: the file comes through as a unix path, even on windows
-// So we need to convert the rwjsPaths
-
 /**
  * Initialize the file watcher for the API server
  * Watches for changes in the API source directory and rebuilds/restarts as
  * needed
  */
 export async function startWatch() {
-  const dbDir = await getDbDir(rwjsPaths.api.prismaConfig)
+  const dbDir = await getDbDir(cedarPaths.api.prismaConfig)
 
+  // NOTE: the file comes through as a unix path, even on windows
+  // So we need to convert the rwjsPaths
   const IGNORED_API_PATHS = [
-    'api/dist', // use this, because using rwjsPaths.api.dist seems to not ignore on first build
-    rwjsPaths.api.types,
-    dbDir, // Ignore the database directory (contains schema, migrations, SQLite files)
+    // use this, because using cedarPaths.api.dist seems to not ignore on first
+    // build
+    'api/dist',
+    cedarPaths.api.types,
+    dbDir,
   ].map((path) => ensurePosixPath(path))
 
-  chokidar
-    .watch([rwjsPaths.api.src], {
-      persistent: true,
-      ignoreInitial: true,
-      ignored: (file: string) => {
-        const x =
-          file.includes('node_modules') ||
-          IGNORED_API_PATHS.some((ignoredPath) => file.includes(ignoredPath)) ||
-          [
-            '.DS_Store',
-            '.db',
-            '.sqlite',
-            '-journal',
-            '.test.js',
-            '.test.ts',
-            '.scenarios.js',
-            '.scenarios.ts',
-          ].some((ext) => file.endsWith(ext))
-        return x
-      },
-    })
-    .on('ready', async () => {
-      // First time
-      await buildManager.run({ clean: true, rebuild: false })
-      await validateSdls()
-    })
-    .on('all', async (eventName, filePath) => {
-      // On sufficiently large projects (500+ files, or >= 2000 ms build times) on older machines,
-      // esbuild writing to the api directory makes chokidar emit an `addDir` event.
-      // This starts an infinite loop where the api starts building itself as soon as it's finished.
-      // This could probably be fixed with some sort of build caching
-      if (eventName === 'addDir' && filePath === rwjsPaths.api.base) {
-        return
-      }
+  const watcher = chokidar.watch([cedarPaths.api.src], {
+    persistent: true,
+    ignoreInitial: true,
+    ignored: (file: string) => {
+      const x =
+        file.includes('node_modules') ||
+        IGNORED_API_PATHS.some((ignoredPath) => file.includes(ignoredPath)) ||
+        [
+          '.DS_Store',
+          '.db',
+          '.sqlite',
+          '-journal',
+          '.test.js',
+          '.test.ts',
+          '.scenarios.ts',
+          '.scenarios.js',
+          '.d.ts',
+          '.log',
+        ].some((ext) => file.endsWith(ext))
+      return x
+    },
+  })
 
-      if (eventName) {
-        if (filePath.includes('.sdl')) {
-          // We validate here, so that developers will see the error
-          // As they're running the dev server
-          const isValid = await validateSdls()
+  watcher.on('ready', async () => {
+    // First time
+    await buildManager.run({ clean: true, rebuild: false })
+    await validateSdls()
+  })
 
-          // Exit early if not valid
-          if (!isValid) {
-            return
-          }
-        }
-      }
+  watcher.on('all', async (eventName, filePath) => {
+    // On sufficiently large projects (500+ files, or >= 2000 ms build times) on older machines,
+    // esbuild writing to the api directory makes chokidar emit an `addDir` event.
+    // This starts an infinite loop where the api starts building itself as soon as it's finished.
+    // This could probably be fixed with some sort of build caching
+    if (eventName === 'addDir' && filePath === cedarPaths.api.base) {
+      return
+    }
 
-      console.log(
-        ansis.dim(`[${eventName}] ${filePath.replace(rwjsPaths.api.base, '')}`),
-      )
+    console.log(
+      ansis.dim(`[${eventName}] ${filePath.replace(cedarPaths.api.base, '')}`),
+    )
 
-      buildManager.cancelScheduledBuild()
-      if (eventName === 'add' || eventName === 'unlink') {
-        await buildManager.run({ rebuild: false })
-      } else {
-        // If files have just changed, then rebuild
-        await buildManager.run({ rebuild: true })
-      }
-    })
+    buildManager.cancelScheduledBuild()
+
+    if (eventName === 'add' || eventName === 'unlink') {
+      await buildManager.run({ rebuild: false })
+    } else {
+      // If files have just changed, then rebuild
+      await buildManager.run({ rebuild: true })
+    }
+  })
 }
+
+// For ESM we'll wrap this in a check to only execute this function if
+// the file is run as a script using
+// `import.meta.url === `file://${process.argv[1]}``
+startWatch()
