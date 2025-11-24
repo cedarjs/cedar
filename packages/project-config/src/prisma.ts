@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 import type { PrismaConfig } from 'prisma'
 
@@ -22,13 +21,12 @@ export async function loadPrismaConfig(prismaConfigPath: string) {
     return configCache.get(prismaConfigPath)!
   }
 
-  const configUrl = pathToFileURL(prismaConfigPath).href
-
   let config: PrismaConfig | undefined
 
   try {
-    const module = await import(configUrl)
-    config = module.default
+    const mod = await import(prismaConfigPath)
+    // We need `module.default || module` for ESM + CJS support
+    config = mod.default || mod
 
     if (!config) {
       throw new Error('Prisma config must have a default export')

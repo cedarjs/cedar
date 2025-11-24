@@ -32,9 +32,10 @@ fs.writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }))
 // all .js files are treated as ES Module files.
 fs.writeFileSync('dist/package.json', JSON.stringify({ type: 'module' }))
 
-// ./src/prisma.ts contains `... = await import(configUrl)`. When building for
-// CJS esbuild correctly preserves the `await import` statement because it's
-// valid in both CJS and ESM (whereas regular `import`s are only valid in ESM).
+// ./src/prisma.ts contains `... = await import(prismaConfigPath)`. When
+// building for CJS esbuild correctly preserves the `await import` statement
+// because it's valid in both CJS and ESM (whereas regular `import`s are only
+// valid in ESM).
 // The problem is that this file will be consumed by Jest, and jest doesn't
 // support that syntax. They only support `require()`.
 // That's why we have to do manual editing of built files here.
@@ -43,7 +44,6 @@ fs.writeFileSync('dist/package.json', JSON.stringify({ type: 'module' }))
 // TODO: Remove this once we go ESM-only
 const indexBuildPath = './dist/cjs/index.js'
 const indexFile = fs.readFileSync(indexBuildPath, 'utf-8')
-fs.writeFileSync(
-  indexBuildPath,
-  indexFile.replaceAll('await import', 'require'),
-)
+fs.writeFileSync(indexBuildPath, indexFile.replace('await import', 'require'))
+
+fs.writeFileSync(indexBuildPath, indexFile)

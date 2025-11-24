@@ -110,6 +110,11 @@ New Cedar projects include `prisma.config.cjs` by default.
 
 - Config files are cached to avoid repeated file system operations
 - Data migrations path defaults to `db/dataMigrations` (Cedar feature)
+- **CommonJS Build**: The CJS build converts `await import()` to `require()` for
+  Jest compatibility
+  - Supports both ESM default exports (`module.default`) and CommonJS exports
+    (direct `module` object)
+  - Uses `module.default || module` fallback to handle both export styles
 
 ## Benefits
 
@@ -172,3 +177,20 @@ Diving into the built cjs code for `@cedarjs/project-config` I noticed an `await
 // The problem is that this file will be consumed by Jest, and jest doesn't
 // support that syntax. They only support `require()`.
 ```
+
+So I'll have to do something similar for this instance of `await import()` in
+`packages/project-config/build.ts`.
+
+---
+
+## Bug Fix: CommonJS Config Loading (2025-11-25)
+
+**Issue:** The CJS build had a bug where CommonJS config files (`module.exports`) would fail to load.
+
+**Root Cause:** The build script's post-processing converted `await import()` to `require()`, but expected ESM-style default exports (`module.default`). CommonJS files export directly on the module object.
+
+**Solution:** Updated build script to support both export styles: `module.default || module`
+
+**Changes:**
+
+- `packages/project-config/src/prisma.ts` - Removed `pathToFileURL` import, use file path directly, and do `mod.default || mod` to support both ESM and CJS exports.
