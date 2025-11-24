@@ -125,6 +125,19 @@ export async function startWatch() {
       return
     }
 
+    if (eventName) {
+      if (filePath.includes('.sdl')) {
+        // We validate here, so that developers will see the error
+        // As they're running the dev server
+        const isValid = await validateSdls()
+
+        // Exit early if not valid
+        if (!isValid) {
+          return
+        }
+      }
+    }
+
     console.log(
       ansis.dim(`[${eventName}] ${filePath.replace(cedarPaths.api.base, '')}`),
     )
