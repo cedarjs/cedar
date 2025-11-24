@@ -19,12 +19,12 @@ import type { BuildAndRestartOptions } from './buildManager.js'
 import { BuildManager } from './buildManager.js'
 import { serverManager } from './serverManager.js'
 
-const rwjsPaths = getPaths()
+const cedarPaths = getPaths()
 
 if (!process.env.REDWOOD_ENV_FILES_LOADED) {
   config({
-    path: path.join(rwjsPaths.base, '.env'),
-    defaults: path.join(rwjsPaths.base, '.env.defaults'),
+    path: path.join(cedarPaths.base, '.env'),
+    defaults: path.join(cedarPaths.base, '.env.defaults'),
     multiline: true,
   })
 
@@ -74,8 +74,8 @@ async function validateSdls() {
 
 const IGNORED_API_PATHS = [
   'api/dist', // use this, because using rwjsPaths.api.dist seems to not ignore on first build
-  rwjsPaths.api.types,
-  rwjsPaths.api.db,
+  cedarPaths.api.types,
+  cedarPaths.api.db,
 ].map((path) => ensurePosixPath(path))
 
 /**
@@ -84,7 +84,7 @@ const IGNORED_API_PATHS = [
  * needed
  */
 export function startWatch() {
-  const watcher = chokidar.watch([rwjsPaths.api.src], {
+  const watcher = chokidar.watch([cedarPaths.api.src], {
     persistent: true,
     ignoreInitial: true,
     ignored: (file: string) => {
@@ -118,7 +118,7 @@ export function startWatch() {
     // esbuild writing to the api directory makes chokidar emit an `addDir` event.
     // This starts an infinite loop where the api starts building itself as soon as it's finished.
     // This could probably be fixed with some sort of build caching
-    if (eventName === 'addDir' && filePath === rwjsPaths.api.base) {
+    if (eventName === 'addDir' && filePath === cedarPaths.api.base) {
       return
     }
 
@@ -136,7 +136,7 @@ export function startWatch() {
     }
 
     console.log(
-      ansis.dim(`[${eventName}] ${filePath.replace(rwjsPaths.api.base, '')}`),
+      ansis.dim(`[${eventName}] ${filePath.replace(cedarPaths.api.base, '')}`),
     )
 
     buildManager.cancelScheduledBuild()
