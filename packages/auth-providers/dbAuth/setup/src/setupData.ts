@@ -11,7 +11,8 @@ const secret = crypto.randomBytes(32).toString('base64')
 export const extraTask = addEnvVarTask(
   'SESSION_SECRET',
   secret,
-  'Used to encrypt/decrypt session cookies. Change this value and re-deploy to log out all users of your app at once.',
+  'Used to encrypt/decrypt session cookies. Change this value and re-deploy ' +
+    'to log out all users of your app at once.',
 )
 
 export const createUserModelTask = {
