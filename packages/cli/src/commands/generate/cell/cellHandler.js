@@ -186,8 +186,8 @@ export const handler = createHandler({
           } else {
             task.skip(
               'Skipping type generation: no SDL defined for ' +
-                `"${queryFieldName}". To generate types, run 'yarn rw g sdl ` +
-                `${queryFieldName}'.`,
+                `"${queryFieldName}". To generate types, run ` +
+                `'yarn cedar generate sdl ${queryFieldName}'.`,
             )
           }
         },
