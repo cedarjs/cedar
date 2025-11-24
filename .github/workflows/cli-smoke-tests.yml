@@ -61,7 +61,7 @@ jobs:
 
       - name: Nested script | Run `cedar exec`
         # Using -f to overwrite script that already exists in the test-project
-        run: yarn cedar g script -f i/am/nested && yarn rw exec i/am/nested
+        run: yarn cedar g script -f i/am/nested && yarn cedar exec i/am/nested
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Nested script | Run `cedar exec` in /scripts
