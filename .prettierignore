@@ -31,3 +31,6 @@ packages/testing/config
 **/__tests__/fixtures
 **/__tests__/__fixtures__
 **/__tests__/prisma-client
+
+/.nx/cache
+/.nx/workspace-data
