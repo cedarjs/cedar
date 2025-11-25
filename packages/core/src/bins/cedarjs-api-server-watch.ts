@@ -2,4 +2,4 @@
 
 import { startWatch } from '@cedarjs/api-server/watch'
 
-startWatch()
+await startWatch()
