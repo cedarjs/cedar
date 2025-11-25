@@ -6,6 +6,10 @@ import { existsSync } from 'node:fs'
 import { relative, sep } from 'node:path'
 
 import { createFilter } from '@rollup/pluginutils'
+// @storybook/core-common is deprecated in future versions of Storybook, and
+// should be replaced with storybook/internal/common when upgrading to
+// Storybook v8
+import { getProjectRoot } from '@storybook/core-common'
 import * as find from 'empathic/find'
 import MagicString from 'magic-string'
 import type { Documentation } from 'react-docgen'
@@ -16,7 +20,6 @@ import {
   makeFsImporter,
   parse,
 } from 'react-docgen'
-import { getProjectRoot } from 'storybook/internal/common'
 import * as TsconfigPaths from 'tsconfig-paths'
 import type { PluginOption } from 'vite'
 
