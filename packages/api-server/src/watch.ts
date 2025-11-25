@@ -77,36 +77,38 @@ async function validateSdls() {
 export async function startWatch() {
   const dbDir = await getDbDir(cedarPaths.api.prismaConfig)
 
-  // NOTE: the file comes through as a unix path, even on windows
-  // So we need to convert the rwjsPaths
-  const IGNORED_API_PATHS = [
+  // NOTE: the file with a detected change comes through as a unix path, even on
+  // windows. So we need to convert the cedarPaths
+  const ignoredApiPaths = [
     // use this, because using cedarPaths.api.dist seems to not ignore on first
     // build
     'api/dist',
     cedarPaths.api.types,
     dbDir,
   ].map((path) => ensurePosixPath(path))
+  const ignoredExtensions = [
+    '.DS_Store',
+    '.db',
+    '.sqlite',
+    '-journal',
+    '.test.js',
+    '.test.ts',
+    '.scenarios.ts',
+    '.scenarios.js',
+    '.d.ts',
+    '.log',
+  ]
 
   const watcher = chokidar.watch([cedarPaths.api.src], {
     persistent: true,
     ignoreInitial: true,
     ignored: (file: string) => {
-      const x =
+      const shouldIgnore =
         file.includes('node_modules') ||
-        IGNORED_API_PATHS.some((ignoredPath) => file.includes(ignoredPath)) ||
-        [
-          '.DS_Store',
-          '.db',
-          '.sqlite',
-          '-journal',
-          '.test.js',
-          '.test.ts',
-          '.scenarios.ts',
-          '.scenarios.js',
-          '.d.ts',
-          '.log',
-        ].some((ext) => file.endsWith(ext))
-      return x
+        ignoredApiPaths.some((ignoredPath) => file.includes(ignoredPath)) ||
+        ignoredExtensions.some((ext) => file.endsWith(ext))
+
+      return shouldIgnore
     },
   })
 
