@@ -35,7 +35,7 @@ export const handler = async ({
   const useFragments = rwjsConfig.graphql?.fragments
   const useTrustedDocuments = rwjsConfig.graphql?.trustedDocuments
 
-  const prismaSchemaExists = fs.existsSync(rwjsPaths.api.dbSchema)
+  const prismaSchemaExists = fs.existsSync(rwjsPaths.api.prismaConfig)
   const prerenderRoutes =
     prerender && side.includes('web') ? detectPrerenderRoutes() : []
   const shouldGeneratePrismaClient =
@@ -46,8 +46,9 @@ export const handler = async ({
   const tasks = [
     shouldGeneratePrismaClient && {
       title: 'Generating Prisma Client...',
-      task: () => {
-        const { cmd, args } = generatePrismaCommand(rwjsPaths.api.dbSchema)
+      task: async () => {
+        const { cmd, args } = await generatePrismaCommand()
+
         return execa(cmd, args, {
           stdio: verbose ? 'inherit' : 'pipe',
           shell: true,

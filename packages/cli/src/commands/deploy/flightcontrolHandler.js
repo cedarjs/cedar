@@ -30,7 +30,7 @@ export const handler = async ({ side, serve, prisma, dm: dataMigrate }) => {
       if (prisma) {
         console.log('Running database migrations...')
         execa.commandSync(
-          `node_modules/.bin/prisma migrate deploy --schema "${rwjsPaths.api.dbSchema}"`,
+          `node_modules/.bin/prisma migrate deploy --config "${rwjsPaths.api.prismaConfig}"`,
           execaConfig,
         )
       }

@@ -47,7 +47,7 @@
     "build:types-cjs": "tsc --build --verbose tsconfig.types-cjs.json",
     "check:attw": "tsx attw.ts",
     "check:package": "concurrently npm:check:attw yarn publint",
-    "setup:test": "npx prisma db push --accept-data-loss --schema ./src/__tests__/unit-test-schema.prisma",
+    "setup:test": "npx prisma db push --accept-data-loss --config ./src/__tests__/prisma.config.ts",
     "test": "vitest run",
     "test:types": "yarn setup:test && tstyche",
     "test:watch": "vitest watch"

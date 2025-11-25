@@ -17,9 +17,6 @@
   "engines": {
     "node": "=24.x"
   },
-  "prisma": {
-    "seed": "yarn rw exec seed"
-  },
   "packageManager": "yarn@4.6.0",
   "resolutions": {
     "@apollo/client-react-streaming/superjson": "^1.12.2",

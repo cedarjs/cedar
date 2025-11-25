@@ -4,31 +4,32 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { getPaths } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getSchemaPath,
+  getDataMigrationsPath,
+} from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 
 export async function handler() {
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
+  const prismaConfigPath = cedarProjectPaths.api.prismaConfig
+  const dataMigrationsPath = await getDataMigrationsPath(prismaConfigPath)
 
   const tasks = new Listr(
     [
       {
         title: 'Creating the dataMigrations directory...',
         task() {
-          fs.mkdirSync(redwoodProjectPaths.api.dataMigrations, {
-            recursive: true,
-          })
-          fs.writeFileSync(
-            path.join(redwoodProjectPaths.api.dataMigrations, '.keep'),
-            '',
-          )
+          fs.mkdirSync(dataMigrationsPath, { recursive: true })
+          fs.writeFileSync(path.join(dataMigrationsPath, '.keep'), '')
         },
       },
       {
         title: 'Adding the RW_DataMigration model to schema.prisma...',
-        task() {
-          const dbSchemaFilePath = redwoodProjectPaths.api.dbSchema
+        async task() {
+          const dbSchemaFilePath = await getSchemaPath(prismaConfigPath)
           const dbSchemaFileContent = fs.readFileSync(dbSchemaFilePath, 'utf-8')
 
           fs.writeFileSync(
@@ -43,7 +44,7 @@ export async function handler() {
         title: 'Creating the database migration...',
         task() {
           return execa.command(createDatabaseMigrationCommand, {
-            cwd: redwoodProjectPaths.base,
+            cwd: cedarProjectPaths.base,
           }).stdout
         },
       },

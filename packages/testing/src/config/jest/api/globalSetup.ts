@@ -2,7 +2,7 @@ import prismaInternals from '@prisma/internals'
 import 'dotenv-defaults/config'
 import execa from 'execa'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getSchemaPath } from '@cedarjs/project-config'
 
 import {
   getDefaultDb,
@@ -26,7 +26,9 @@ export default async function () {
   // Instead of using the schema, we can use the config file
   // const prismaConfig = await getConfig(rwjsPaths.api.dbSchema)
   // and then check for the prismaConfig.datasources[0].directUrl
-  const result = await getSchemaWithPath(rwjsPaths.api.dbSchema)
+  // TODO: Fix comment above now that we've changed to `getSchemaPath()`
+  const schemaPath = await getSchemaPath(rwjsPaths.api.prismaConfig)
+  const result = await getSchemaWithPath(schemaPath)
   // For regex matching, we need to concatenate the schemas into a single string
   const prismaSchema = result.schemas.map(([, content]) => content).join('\n')
 

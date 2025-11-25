@@ -459,7 +459,6 @@ async function refreshPrismaClient(task, { verbose }) {
     await generatePrismaClient({
       verbose,
       force: false,
-      schema: getPaths().api.dbSchema,
     })
   } catch (e) {
     task.skip('Refreshing the Prisma client caused an Error.')

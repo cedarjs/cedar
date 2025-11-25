@@ -17,6 +17,7 @@ import {
 
 import type { AuthHandlerArgs } from '@cedarjs/cli-helpers'
 import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers/src/auth/authTasks'
+import type ProjectConfig from '@cedarjs/project-config'
 
 vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
@@ -25,18 +26,23 @@ import { createUserModelTask } from '../setupData'
 import { handler } from '../setupHandler'
 
 const RWJS_CWD = process.env.RWJS_CWD
-const { redwoodProjectPath, dbSchemaPath, libPath, functionsPath } = vi.hoisted(
-  () => {
-    const redwoodProjectPath = '/redwood-app'
+const {
+  redwoodProjectPath,
+  prismaConfigPath,
+  dbSchemaPath,
+  libPath,
+  functionsPath,
+} = vi.hoisted(() => {
+  const redwoodProjectPath = '/redwood-app'
 
-    return {
-      redwoodProjectPath,
-      dbSchemaPath: redwoodProjectPath + '/api/db/schema.prisma',
-      libPath: redwoodProjectPath + '/api/src/lib',
-      functionsPath: redwoodProjectPath + '/api/src/functions',
-    }
-  },
-)
+  return {
+    redwoodProjectPath,
+    dbSchemaPath: redwoodProjectPath + '/api/db/schema.prisma',
+    prismaConfigPath: redwoodProjectPath + '/api/prisma.config.ts',
+    libPath: redwoodProjectPath + '/api/src/lib',
+    functionsPath: redwoodProjectPath + '/api/src/functions',
+  }
+})
 
 vi.mock('@cedarjs/cli-helpers', () => {
   return {
@@ -46,9 +52,12 @@ vi.mock('@cedarjs/cli-helpers', () => {
     getPaths: () => ({
       base: redwoodProjectPath,
       api: {
-        dbSchema: dbSchemaPath,
         lib: libPath,
         functions: functionsPath,
+        prismaConfig: prismaConfigPath,
+      },
+      web: {
+        routes: redwoodProjectPath + '/web/src/Routes.tsx',
       },
     }),
     colors: {
@@ -81,6 +90,25 @@ vi.mock('@cedarjs/cli-helpers', () => {
       if (args.notes) {
         console.log(`\n   ${args.notes.join('\n   ')}\n`)
       }
+    },
+  }
+})
+
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+
+  return {
+    ...originalProjectConfig,
+    loadPrismaConfig: async () => {
+      return {
+        schema: 'db/schema.prisma',
+      }
+    },
+    getSchemaPath: async () => {
+      return dbSchemaPath
+    },
+    processPagesDir: () => {
+      return []
     },
   }
 })

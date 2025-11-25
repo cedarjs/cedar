@@ -5,7 +5,11 @@ import type { PrismaClient } from '@prisma/client'
 import { bundleRequire } from 'bundle-require'
 import { Listr } from 'listr2'
 
-import { getPaths, resolveFile } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getDataMigrationsPath,
+  resolveFile,
+} from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
@@ -134,11 +138,11 @@ export async function handler({
   }
 }
 
-/**
- * Return the list of migrations that haven't run against the database yet
- */
+/** Return the list of migrations that haven't run against the database yet */
 async function getPendingDataMigrations(db: PrismaClient) {
-  const dataMigrationsPath = getPaths().api.dataMigrations
+  const dataMigrationsPath = await getDataMigrationsPath(
+    getPaths().api.prismaConfig,
+  )
 
   if (!fs.existsSync(dataMigrationsPath)) {
     return []

@@ -32,9 +32,7 @@ const DEFAULT_PATHS = {
   scripts: ['scripts'],
   api: {
     base: ['api'],
-    dataMigrations: ['api', 'db', 'dataMigrations'],
-    db: ['api', 'db'],
-    dbSchema: ['api', 'db', 'schema.prisma'],
+    prismaConfig: ['api', 'prisma.config.cjs'],
     functions: ['api', 'src', 'functions'],
     graphql: ['api', 'src', 'graphql'],
     lib: ['api', 'src', 'lib'],
@@ -148,6 +146,7 @@ describe('paths', () => {
       Object.assign(pathTemplate.api, {
         distJobsConfig: null,
         jobsConfig: null,
+        prismaConfig: ['api', 'prisma.config.ts'],
       })
       Object.assign(pathTemplate.web, {
         document: null, // this fixture doesnt have a document
@@ -288,6 +287,7 @@ describe('paths', () => {
         jobsConfig: null,
         distJobsConfig: null,
         logger: null,
+        prismaConfig: ['api', 'prisma.config.js'],
       })
       Object.assign(pathTemplate.web, {
         document: null, // this fixture doesn't have a document
@@ -473,6 +473,7 @@ describe('paths', () => {
         jobsConfig: null,
         distJobsConfig: null,
         logger: null,
+        prismaConfig: ['api', 'prisma.config.js'],
       })
       Object.assign(pathTemplate.web, {
         app: null,

@@ -65,6 +65,7 @@ describe('Generate gql possible types web from the GraphQL Schema', () => {
       expect(possibleTypesFiles[0]).toMatch(
         path.join(getPaths().web.graphql, 'possibleTypes.ts'),
       )
+      expect(fs.writeFileSync).toHaveBeenCalledOnce()
     })
   })
 })

@@ -37,7 +37,7 @@ vi.mock('@cedarjs/project-config', async () => {
         base: '/redwood-app/api',
         dataMigrations: '/redwood-app/api/db/dataMigrations',
         db: '/redwood-app/api/db',
-        dbSchema: '/redwood-app/api/db/schema.prisma',
+        prismaConfig: '/redwood-app/api/prisma.config.cjs',
         dist: '/redwood-app/api/dist',
         lib: '/redwood-app/api/dist/lib',
       },
@@ -45,6 +45,7 @@ vi.mock('@cedarjs/project-config', async () => {
         base: '/redwood-app/web',
       },
     }),
+    getDataMigrationsPath: async () => '/redwood-app/api/db/dataMigrations',
   }
 })
 
@@ -222,13 +223,11 @@ describe('upHandler', () => {
               'db.js': '',
             },
           },
-          db: {
-            // No dataMigrations dir:
-            //
-            // dataMigrations: {
-            //   [ranDataMigration.name]: '',
-            // },
-          },
+          // No dataMigrations dir:
+          //
+          // dataMigrations: {
+          //   [ranDataMigration.name]: '',
+          // },
         },
       },
       redwoodProjectPath,
@@ -256,10 +255,8 @@ describe('upHandler', () => {
               'db.js': '',
             },
           },
-          db: {
-            dataMigrations: {
-              [ranDataMigration.name]: '',
-            },
+          dataMigrations: {
+            [ranDataMigration.name]: '',
           },
         },
       },
@@ -290,7 +287,6 @@ describe('upHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          'package.json': '{}',
           dist: {
             lib: {
               'db.js': '',

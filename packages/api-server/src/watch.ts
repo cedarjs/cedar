@@ -13,7 +13,7 @@ import {
   rebuildApi,
 } from '@cedarjs/internal/dist/build/api'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
-import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
+import { ensurePosixPath, getPaths, getDbDir } from '@cedarjs/project-config'
 
 import type { BuildAndRestartOptions } from './buildManager.js'
 import { BuildManager } from './buildManager.js'
@@ -75,6 +75,8 @@ async function validateSdls() {
  * needed
  */
 export async function startWatch() {
+  const dbDir = await getDbDir(cedarPaths.api.prismaConfig)
+
   // NOTE: the file with a detected change comes through as a unix path, even on
   // windows. So we need to convert the cedarPaths
   const ignoredApiPaths = [
@@ -82,7 +84,7 @@ export async function startWatch() {
     // build
     'api/dist',
     cedarPaths.api.types,
-    cedarPaths.api.db,
+    dbDir,
   ].map((path) => ensurePosixPath(path))
   const ignoredExtensions = [
     '.DS_Store',

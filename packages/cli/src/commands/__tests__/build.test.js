@@ -6,7 +6,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
       return {
         api: {
           dist: '/mocked/project/api/dist',
-          dbSchema: '/mocked/project/api/db/schema.prisma',
+          prismaConfig: '/mocked/project/api/prisma.config.js',
         },
         web: {
           dist: '/mocked/project/web/dist',
@@ -25,14 +25,16 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 
 vi.mock('fs-extra', async () => {
   const actualFs = await vi.importActual('fs-extra')
+
   return {
     default: {
       ...actualFs,
-      // Mock the existence of the Prisma schema file
+      // Mock the existence of the Prisma config file
       existsSync: (path) => {
-        if (path === '/mocked/project/api/db/schema.prisma') {
+        if (path === '/mocked/project/api/prisma.config.js') {
           return true
         }
+
         return actualFs.existsSync(path)
       },
     },

@@ -1539,36 +1539,36 @@ yarn redwood lint
 
 ## prisma
 
-Run Prisma CLI within the context of a Redwood project.
+Run Prisma CLI within the context of a Cedar project.
 
 ```
-yarn redwood prisma
+yarn cedar prisma
 ```
 
-Redwood's `prisma` command is a lightweight wrapper around the Prisma CLI. It's the primary way you interact with your database.
+Cedar's `prisma` command is a lightweight wrapper around the Prisma CLI. It's the primary way you interact with your database.
 
 > **What do you mean it's a lightweight wrapper?**
 >
 > By lightweight wrapper, we mean that we're handling some flags under the hood for you.
-> You can use the Prisma CLI directly (`yarn prisma`), but letting Redwood act as a proxy (`yarn redwood prisma`) saves you a lot of keystrokes.
-> For example, Redwood adds the `--schema=api/db/schema.prisma` flags automatically.
+> You can use the Prisma CLI directly (`yarn prisma`), but letting Cedar act as a proxy (`yarn cedar prisma`) saves you a lot of keystrokes.
+> For example, Cedar adds the `--config=api/prisma.config.cjs` flag automatically.
 >
-> If you want to know exactly what `yarn redwood prisma <command>` runs, which flags it's passing, etc., it's right at the top:
+> If you want to know exactly what `yarn cedar prisma <command>` runs, which flags it's passing, etc., it's right at the top:
 >
 > ```sh{3}
-> $ yarn redwood prisma migrate dev
+> $ yarn cedar prisma migrate dev
 > yarn run v1.22.10
-> $ ~/redwood-app/node_modules/.bin/redwood prisma migrate dev
+> $ ~/cedar-app/node_modules/.bin/cedar prisma migrate dev
 > Running prisma cli:
-> yarn prisma migrate dev --schema "~/redwood-app/api/db/schema.prisma"
+> yarn prisma migrate dev --config "~/cedar-app/api/prisma.config.cjs"
 > ...
 > ```
 
-Since `yarn redwood prisma` is just an entry point into all the database commands that the Prisma CLI has to offer, we won't try to provide an exhaustive reference of everything you can do with it here. Instead what we'll do is focus on some of the most common commands; those that you'll be running on a regular basis, and how they fit into Redwood's workflows.
+Since `yarn cedar prisma` is just an entry point into all the database commands that the Prisma CLI has to offer, we won't try to provide an exhaustive reference of everything you can do with it here. Instead what we'll do is focus on some of the most common commands; those that you'll be running on a regular basis, and how they fit into Redwood's workflows.
 
 For the complete list of commands, see the [Prisma CLI Reference](https://www.prisma.io/docs/reference/api-reference/command-reference). It's the authority.
 
-Along with the CLI reference, bookmark Prisma's [Migration Flows](https://www.prisma.io/docs/concepts/components/prisma-migrate/prisma-migrate-flows) doc&mdash;it'll prove to be an invaluable resource for understanding `yarn redwood prisma migrate`.
+Along with the CLI reference, bookmark Prisma's [Migration Flows](https://www.prisma.io/docs/concepts/components/prisma-migrate/prisma-migrate-flows) doc&mdash;it'll prove to be an invaluable resource for understanding `yarn cedar prisma migrate`.
 
 | Command             | Description                                                  |
 | :------------------ | :----------------------------------------------------------- |
@@ -1581,7 +1581,7 @@ Along with the CLI reference, bookmark Prisma's [Migration Flows](https://www.pr
 Manage your database schema and lifecycle during development.
 
 ```
-yarn redwood prisma db <command>
+yarn cedar prisma db <command>
 ```
 
 The `prisma db` namespace contains commands that operate directly against the database.
@@ -1593,7 +1593,7 @@ Pull the schema from an existing database, updating the Prisma schema.
 > 👉 Quick link to the [Prisma CLI Reference](https://www.prisma.io/docs/reference/api-reference/command-reference#db-pull).
 
 ```
-yarn redwood prisma db pull
+yarn cedar prisma db pull
 ```
 
 This command, formerly `introspect`, connects to your database and adds Prisma models to your Prisma schema that reflect the current database schema.
@@ -1607,12 +1607,12 @@ Push the state from your Prisma schema to your database.
 > 👉 Quick link to the [Prisma CLI Reference](https://www.prisma.io/docs/reference/api-reference/command-reference#db-push).
 
 ```
-yarn redwood prisma db push
+yarn cedar prisma db push
 ```
 
 This is your go-to command for prototyping changes to your Prisma schema (`schema.prisma`).
-Prior to to `yarn redwood prisma db push`, there wasn't a great way to try out changes to your Prisma schema without creating a migration.
-This command fills the void by "pushing" your `schema.prisma` file to your database without creating a migration. You don't even have to run `yarn redwood prisma generate` afterward&mdash;it's all taken care of for you, making it ideal for iterative development.
+Prior to to `yarn cedar prisma db push`, there wasn't a great way to try out changes to your Prisma schema without creating a migration.
+This command fills the void by "pushing" your `schema.prisma` file to your database without creating a migration. You don't even have to run `yarn cedar prisma generate` afterward&mdash;it's all taken care of for you, making it ideal for iterative development.
 
 #### prisma db seed
 
@@ -1621,34 +1621,39 @@ Seed your database.
 > 👉 Quick link to the [Prisma CLI Reference](https://www.prisma.io/docs/reference/api-reference/command-reference#db-seed-preview).
 
 ```
-yarn redwood prisma db seed
+yarn cedar prisma db seed
 ```
 
-This command seeds your database by running your project's `seed.js|ts` file which you can find in your `scripts` directory.
+This command seeds your database by running your project's `seed.{js,ts}` file which you can find in your `scripts` directory.
 
 Prisma's got a great [seeding guide](https://www.prisma.io/docs/guides/prisma-guides/seed-database) that covers both the concepts and the nuts and bolts.
 
 > **Important:** Prisma Migrate also triggers seeding in the following scenarios:
 >
-> - you manually run the `yarn redwood prisma migrate reset` command
-> - the database is reset interactively in the context of using `yarn redwood prisma migrate dev`—for example, as a result of migration history conflicts or database schema drift
+> - you manually run the `yarn cedar prisma migrate reset` command
+> - the database is reset interactively in the context of using `yarn cedar prisma migrate dev`—for example, as a result of migration history conflicts or database schema drift
 >
-> If you want to use `yarn redwood prisma migrate dev` or `yarn redwood prisma migrate reset` without seeding, you can pass the `--skip-seed` flag.
+> If you want to use `yarn cedar prisma migrate dev` or `yarn cedar prisma migrate reset` without seeding, you can pass the `--skip-seed` flag.
 
 While having a great seed might not be all that important at the start, as soon as you start collaborating with others, it becomes vital.
 
 **How does seeding actually work?**
 
-If you look at your project's `package.json` file, you'll notice a `prisma` section:
+If you look at your Prisma config file at `prisma.config.cjs`, you'll notice a
+`seed` definition:
 
-```json
-  "prisma": {
-    "seed": "yarn rw exec seed"
+```js
+{
+  // ...
+  "migrations": {
+    "seed": "yarn cedar exec seed"
+    // ...
   },
+}
 ```
 
-Prisma runs any command found in the `seed` setting when seeding via `yarn rw prisma db seed` or `yarn rw prisma migrate reset`.
-Here we're using the Redwood [`exec` cli command](#exec) that runs a script.
+Prisma runs any command found in the `seed` setting when seeding via `yarn cedar prisma db seed` or `yarn cedar prisma migrate reset`.
+Here we're using the Cedar [`exec` cli command](#exec) that runs a script.
 
 If you wanted to seed your database using a different method (like `psql` and an `.sql` script), you can do so by changing the "seed" script command.
 
@@ -1658,7 +1663,7 @@ In addition, you can [code along with Ryan Chenkie](https://www.youtube.com/watc
 
 **Log Formatting**
 
-If you use the Redwood Logger as part of your seed script, you can pipe the command to the LogFormatter to output prettified logs.
+If you use the Cedar Logger as part of your seed script, you can pipe the command to the LogFormatter to output prettified logs.
 
 For example, if your `scripts.seed.js` imports the `logger`:
 

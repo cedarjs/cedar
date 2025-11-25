@@ -8,7 +8,7 @@ import { vol } from 'memfs'
 import { vi, describe, beforeAll, test, expect } from 'vitest'
 
 import { getDefaultArgs } from '../../../../lib/index.js'
-import { getYargsDefaults as getDefaults } from '../../yargsCommandHelpers.js'
+import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
@@ -21,8 +21,11 @@ describe('editable columns', () => {
   beforeAll(async () => {
     vol.fromJSON({ 'redwood.toml': '' }, '/')
 
+    const yargsDefaults = getYargsDefaults()
+    const defaultCliArgs = getDefaultArgs(yargsDefaults)
+
     files = await scaffoldHandler.files({
-      ...getDefaultArgs(getDefaults()),
+      ...defaultCliArgs,
       model: 'ExcludeDefault',
       tests: true,
       nestScaffoldByModel: true,

@@ -5,7 +5,7 @@ import type { PrismaClient } from '@prisma/client'
 import { Listr } from 'listr2'
 
 import { registerApiSideBabelHook } from '@cedarjs/babel-config'
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
@@ -126,7 +126,9 @@ export async function handler({
  * Return the list of migrations that haven't run against the database yet
  */
 async function getPendingDataMigrations(db: PrismaClient) {
-  const dataMigrationsPath = getPaths().api.dataMigrations
+  const dataMigrationsPath = await getDataMigrationsPath(
+    getPaths().api.prismaConfig,
+  )
 
   if (!fs.existsSync(dataMigrationsPath)) {
     return []

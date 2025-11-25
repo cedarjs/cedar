@@ -33,7 +33,7 @@ vi.mock('../../lib', async (importOriginal) => {
     getPaths: () => ({
       base: './myBasePath',
       api: {
-        dbSchema: '../../__fixtures__/example-todo-main/api/prisma',
+        prismaConfig: '../../__fixtures__/test-project/api/prisma.config.ts',
       },
       web: {},
     }),

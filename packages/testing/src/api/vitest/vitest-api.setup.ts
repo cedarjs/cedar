@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { afterAll, beforeEach, it, describe, vi, beforeAll } from 'vitest'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getSchemaPath } from '@cedarjs/project-config'
 import { defineScenario } from '@cedarjs/testing/api'
 import type { DefineScenario } from '@cedarjs/testing/api'
 
@@ -177,7 +177,8 @@ async function configureTeardown() {
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const result = await getSchemaWithPath(cedarPaths.api.dbSchema)
+  const schemaPath = await getSchemaPath(cedarPaths.api.prismaConfig)
+  const result = await getSchemaWithPath(schemaPath)
   const schema = await getDMMF({ datamodel: result.schemas })
   const schemaModels = schema.datamodel.models.map((m) => {
     return m.dbName || m.name
@@ -333,7 +334,8 @@ async function getQuoteStyle() {
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const result = await getSchemaWithPath(cedarPaths.api.dbSchema)
+  const schemaPath = await getSchemaPath(cedarPaths.api.prismaConfig)
+  const result = await getSchemaWithPath(schemaPath)
 
   if (!quoteStyle) {
     const config = await getPrismaConfig({

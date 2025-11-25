@@ -2,7 +2,7 @@ export const command = 'prisma [commands..]'
 export const description = 'Run Prisma CLI with experimental features'
 
 /**
- * This is a lightweight wrapper around Prisma's CLI with some Redwood CLI modifications.
+ * This is a lightweight wrapper around Prisma's CLI with some Cedar CLI modifications.
  */
 export const builder = (yargs) => {
   // Disable yargs parsing of commands and options because it's forwarded

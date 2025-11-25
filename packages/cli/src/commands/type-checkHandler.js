@@ -52,7 +52,6 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
   if (generate && prisma) {
     await generatePrismaClient({
       verbose: verbose,
-      schema: getPaths().api.dbSchema,
     })
   }
 

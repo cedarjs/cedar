@@ -23,7 +23,7 @@ const config: Config = {
         rwjsPaths.generated.base,
         'scenarioTeardown.json',
       ),
-      dbSchemaPath: rwjsPaths.api.dbSchema,
+      prismaConfigPath: rwjsPaths.api.prismaConfig,
     },
   },
   sandboxInjectedGlobals: ['__RWJS__TEST_IMPORTS'],

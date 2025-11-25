@@ -6,6 +6,7 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { getDataMigrationsPath } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
 import { getPaths, writeFilesTask } from '../../../lib/index.js'
@@ -33,13 +34,16 @@ const TEMPLATE_PATHS = {
   ),
 }
 
-export const files = ({ name, typescript }) => {
+export const files = async ({ name, typescript }) => {
   const now = new Date().toISOString()
   const timestamp = now.split('.')[0].replace(/\D/g, '')
   const basename = `${timestamp}-${paramCase(name)}`
   const extension = typescript ? 'ts' : 'js'
   const outputFilename = basename + '.' + extension
-  const outputPath = path.join(getPaths().api.dataMigrations, outputFilename)
+  const dataMigrationsPath = await getDataMigrationsPath(
+    getPaths().api.prismaConfig,
+  )
+  const outputPath = path.join(dataMigrationsPath, outputFilename)
 
   return {
     [outputPath]: fs.readFileSync(TEMPLATE_PATHS[extension]).toString(),
@@ -86,8 +90,8 @@ export const handler = async (args) => {
     [
       {
         title: 'Generating data migration file...',
-        task: () => {
-          return writeFilesTask(files(args))
+        task: async () => {
+          return writeFilesTask(await files(args))
         },
       },
       {
