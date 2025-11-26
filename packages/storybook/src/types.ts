@@ -6,7 +6,7 @@ import type {
 import type {
   StorybookConfig as StorybookConfigBase,
   TypescriptOptions as TypescriptOptionsBase,
-} from 'storybook/internal/types'
+} from '@storybook/types'
 
 type FrameworkName = 'storybook-framework-cedarjs'
 type BuilderName = '@storybook/builder-vite'
