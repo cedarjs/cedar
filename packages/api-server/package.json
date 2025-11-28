@@ -69,6 +69,10 @@
       "types": "./dist/cjs/cliHelpers.d.ts",
       "default": "./dist/cjs/cliHelpers.js"
     },
+    "./cjs/bothCliConfigHandler": {
+      "types": "./dist/cjs/bothCLIConfigHandler.d.ts",
+      "default": "./dist/cjs/bothCLIConfigHandler.js"
+    },
     "./watch": {
       "import": {
         "types": "./dist/watch.d.ts",

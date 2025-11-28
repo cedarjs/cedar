@@ -75,5 +75,3 @@ export const createFastifyInstance = async (
 
   return fastify
 }
-
-export default createFastifyInstance

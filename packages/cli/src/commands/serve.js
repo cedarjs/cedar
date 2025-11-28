@@ -48,7 +48,14 @@ export const builder = async (yargs) => {
           )
           await bothSsrRscServerHandler(argv, rscEnabled)
         } else {
-          await bothServerCLIConfig.handler(argv)
+          if (!projectIsEsm()) {
+            const { handler } = await import(
+              '@cedarjs/api-server/cjs/bothCliConfigHandler'
+            )
+            await handler(argv)
+          } else {
+            await bothServerCLIConfig.handler(argv)
+          }
         }
       },
     })
