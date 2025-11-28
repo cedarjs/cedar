@@ -16,27 +16,28 @@ where it is without [all its contributors](https://github.com/cedarjs/cedar/grap
 
 ## Getting the Most out of CedarJS
 
-To get the most out of Redwood, do two things:
+To get the most out of CedarJS, do two things:
 
 - [Start the tutorial](tutorial/foreword.md)
-- [Join the community on Discord](https://discord.gg/8mNkAgby5m)
+- [Join the community on Discord](https://cedarjs.com/discord)
 
-The tutorial is the best way to start your CedarJS adventure.
-It's readable, feature-ful, and fun.
-You'll go all the way from `git clone` to Netlify deploy!
-And by the end, you should feel comfortable enough to start that side project.
+The tutorial is the best way to start your CedarJS adventure. It's readable,
+feature-ful, and fun. You'll go all the way from `git clone` to deploying a
+full-stack app! And by the end, you should feel comfortable enough to start that
+side project.
 
-After you've read the tutorial and started your side project, come say hi and tell us all about it by joining the community.
-CedarJS wouldn't be where it is without the people who use and contribute to it.
-We warmly welcome you!
+After you've read the tutorial and started your side project, come say hi and
+tell us all about it by joining the community. CedarJS wouldn't be where it is
+without the people who use and contribute to it. We warmly welcome you!
 
 ## How these Docs are Organized
 
-As you can probably tell from the sidebar, CedarJS's docs are organized into three sections:
+As you can probably tell from the sidebar, CedarJS's docs are organized into
+sections, like:
 
 - [Tutorial](tutorial/foreword.md)
-- [Reference](index)
-- [How To](how-to/index)
+- [Reference](reference)
+- [How To](how-to)
 
 The order isn't arbitrary.
 This is more or less the learning journey we have in mind for you.

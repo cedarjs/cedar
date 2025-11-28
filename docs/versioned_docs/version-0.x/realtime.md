@@ -1,22 +1,28 @@
-# Realtime
+---
+description: Setup and implementation guide for GraphQL Subscriptions and Live Queries in Cedar apps
+---
 
-One of the most often-asked questions of Redwood before and after the launch of V1 was, “When will Redwood support a realtime solution?”
+# Realtime (GraphQL Subscriptions and Live Queries)
 
-The answer is: **now**.
+Realtime in Cedar is implemented using GraphQL Subscriptions and Live Queries.
 
 ## What is Realtime?
 
-Redwood's initial realtime solution leverages GraphQL and relies on a serverful deployment to maintain a long-running connection between the client and server.
+Cedar's realtime solution leverages GraphQL and relies on a serverful deployment
+to maintain a long-running connection between the client and server.
 
 :::info
 
-This means that your cannot use Realtime when deploying to Netlify or Vercel.
+This means that you cannot use Realtime when deploying to Netlify or Vercel.
 
-See one of Redwood's many [other Deploy providers](./deploy/introduction.md), and the [Docker setup](./docker.md) for good measure.
+See one of Cedar's many [other Deploy providers](./deploy/introduction.md), and
+the [Docker setup](./docker.md) for good measure.
 
 :::
 
-Redwood's GraphQL server uses the [GraphQL over Server-Sent Events](https://github.com/enisdenjo/graphql-sse/blob/master/PROTOCOL.md#distinct-connections-mode) spec's "distinct connections mode" for subscriptions.
+Cedar's GraphQL server uses the
+[GraphQL over Server-Sent Events](https://github.com/enisdenjo/graphql-sse/blob/master/PROTOCOL.md#distinct-connections-mode)
+spec's "distinct connections mode" for subscriptions.
 
 Advantages of SSE over WebSockets include:
 
@@ -27,33 +33,48 @@ Advantages of SSE over WebSockets include:
 
 ### Subscriptions and Live Queries
 
-In GraphQL, there are two options for real-time updates: **live queries** and **subscriptions**.
+In GraphQL, there are two options for real-time updates: **live queries** and
+**subscriptions**.
 
-Subscriptions are part of the GraphQL specification, whereas live queries are not.
+Subscriptions are part of the GraphQL specification, whereas live queries are
+not.
 
-There are times where subscriptions are well-suited for a realtime problem and in some cases live queries may be a better fit. Later we’ll explore the pros and cons of each approach and how best to decide which to use and when.
+There are times where subscriptions are well-suited for a realtime problem and
+in some cases live queries may be a better fit. Later we’ll explore the pros and
+cons of each approach and how best to decide which to use and when.
 
 ### Defer and Stream
 
-[Defer and stream](https://the-guild.dev/graphql/yoga-server/docs/features/defer-stream) are directives that allow you to improve latency for clients by sending the most important data as soon as it's ready.
+[Defer and stream](https://the-guild.dev/graphql/yoga-server/docs/features/defer-stream)
+are directives that allow you to improve latency for clients by sending the most
+important data as soon as it's ready.
 
-As applications grow, the GraphQL operation documents can get bigger. The server will only send the response back once all the data requested in the query is ready. But not all requested data is of equal importance, and the client may not need all of the data at once.
+As applications grow, the GraphQL operation documents can get bigger. The server
+will only send the response back once all the data requested in the query is
+ready. But not all requested data is of equal importance, and the client may not
+need all of the data at once.
 
 #### Using Defer
 
-The `@defer` directive allows you to postpone the delivery of one or more (slow) fields grouped in an inlined or spread fragment.
+The `@defer` directive allows you to postpone the delivery of one or more (slow)
+fields grouped in an inlined or spread fragment.
 
 #### Using Stream
 
-The `@stream` directive allows you to stream the individual items of a field of the list type as the items are available.
+The `@stream` directive allows you to stream the individual items of a field of
+the list type as the items are available.
 
 :::info
-The `@stream` directive is currently **not** supported by Apollo GraphQL client.
+Preview support for the `@stream` directive was added in Apollo Client
+v4.1.0-alpha.0, but is currently **not** available in Cedar (as of 2025-10-15).
+
+https://github.com/apollographql/apollo-feature-requests/issues/3
 :::
 
 ## Features
 
-Realtime handles the hard parts of a GraphQL realtime implementation by automatically:
+Realtime handles the hard parts of a GraphQL realtime implementation by
+automatically:
 
 - allowing GraphQL Subscription operations to be handled
 - merging in your subscriptions types and mapping their handler functions (subscribe and resolve) to your GraphQL schema letting you keep your subscription logic organized and apart from services (your subscription may use a service to respond to an event)
@@ -71,7 +92,7 @@ It provides a first-class developer experience for real-time updates with GraphQ
 
 and have the latest data reflected in your app.
 
-Lastly, the Redwood CLI has commands to generate a boilerplate implementation and sample code needed to create your custom subscriptions and Live Queries.
+Lastly, the CedarJS CLI has commands to generate a boilerplate implementation and sample code needed to create your custom subscriptions and Live Queries.
 
 Regardless of the implementation chosen, **a stateful server and store are needed** to track changes, invalidation, and who wants to be informed about changes.
 
@@ -85,12 +106,12 @@ Regardless of the implementation chosen, **a stateful server and store are neede
 - Messaging
 - OpenAI streaming responses
 
-## Redwood Realtime Setup
+## Cedar Realtime Setup
 
-To setup realtime in an existing Redwood project, run the following commands:
+To setup realtime in an existing Cedar project, run the following commands:
 
-- `yarn rw setup server-file`
-- `yarn rw setup realtime`
+- `yarn cedarjs setup server-file`
+- `yarn cedarjs setup realtime`
 
 You'll get:
 
@@ -120,7 +141,8 @@ Just add the realtime configuration to your GraphQL handler in `api/src/function
 
 ### Realtime Configuration
 
-By default, Redwood's realtime configures an in-memory store for the Pub Sub client used with subscriptions and live query invalidation.
+By default, Cedar's realtime setup command configures an in-memory store for the
+Pub Sub client used with subscriptions and live query invalidation.
 
 Realtime supports in-memory and Redis stores:
 
@@ -144,7 +166,7 @@ import subscriptions from 'src/subscriptions/**/*.{js,ts}'
 /**
  * Configure CedarJS Realtime
  *
- * See https://redwoodjs.com/docs/realtime
+ * See https://cedarjs.com/docs/realtime
  *
  * Realtime supports Live Queries and Subscriptions over GraphQL SSE.
  *
@@ -152,11 +174,11 @@ import subscriptions from 'src/subscriptions/**/*.{js,ts}'
  *
  * Subscriptions are GraphQL queries that are run when a client subscribes to a channel.
  *
- * Redwood Realtime
+ * CedarJS Realtime
  *  - uses a publish/subscribe model to broadcast data to clients.
  *  - uses a store to persist Live Query and Subscription data.
  *
- * Redwood Realtime supports in-memory and Redis stores:
+ * CedarJS Realtime supports in-memory and Redis stores:
  * - In-memory stores are useful for development and testing.
  * - Redis stores are useful for production.
  */
@@ -225,7 +247,7 @@ type Subscription {
 
 ### Countdown Timer Example
 
-Counts down from a starting values by an interval.
+Counts down from a starting value by an interval.
 
 ```graphql
 subscription CountdownFromInterval {

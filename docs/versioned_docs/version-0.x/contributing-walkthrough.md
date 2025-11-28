@@ -40,7 +40,7 @@ The best (and most fun) way to learn Redwood and the underlying tools and techno
 **Docs and How To**
 
 - Start with the [Introduction](https://github.com/cedarjs/cedar/blob/main/README.md) Doc
-- And browse through [How To's](how-to/index)
+- And browse through [How To's](how-to)
 
 ### GitHub (and Git)
 

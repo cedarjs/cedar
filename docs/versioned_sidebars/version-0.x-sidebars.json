@@ -78,7 +78,7 @@
       "link": {
         "type": "generated-index",
         "title": "Reference",
-        "slug": "/index"
+        "slug": "/reference"
       },
       "items": [
         "a11y",
@@ -282,7 +282,7 @@
           "link": {
             "type": "generated-index",
             "title": "TypeScript",
-            "slug": "typescript/index"
+            "slug": "typescript"
           },
           "items": [
             {
@@ -317,7 +317,7 @@
       "link": {
         "type": "generated-index",
         "title": "How To",
-        "slug": "/how-to/index"
+        "slug": "/how-to"
       },
       "items": [
         {

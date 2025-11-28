@@ -1,34 +1,33 @@
 # What is CedarJS?
 
-_What follows is a high-level description of Redwood and how it works. If you want to get right to the meat and potatoes of building something, skip ahead to [Chapter 1](../chapter1/prerequisites.md)._
+_What follows is a high-level description of CedarJS and how it works. If you want to get right to the meat and potatoes of building something, skip ahead to [Chapter 1](../chapter1/prerequisites.md)._
 
 CedarJS is a React framework with lots of pre-installed packages and configuration that makes it easy to build full-stack web applications.
 
-Now that the elevator pitch is out of the way, what does that actually _mean_? At its core, Redwood is React plus a bunch of stuff that makes your life as a developer easier. Some of that stuff includes:
+Now that the elevator pitch is out of the way, what does that actually _mean_? At its core, CedarJS is React plus a bunch of stuff that makes your life as a developer easier. Some of that stuff includes:
 
 - GraphQL
 - Prisma
-- Jest
+- Vitest
 - Storybook
-- vite
-- Babel
+- Vite
 - Typescript
 
 What do we mean when we say a "full-stack web application?" We're talking about your classic web app: a UI that's visible in the browser (the frontend), backed by a server and database (the backend). Until React Server Components came along (more on those later) React had no idea a server and/or database existed: it was up to you to somehow get data into your app. Maybe this was done with a `fetch()` or in a build step which would pre-bake some of the data needed right into your components. However the data got there, it wasn't an ideal solution.
 
-One of the core principles behind Redwood was that getting data from the backend should be as simple as possible, going so far as to create conventions around it so that retrieving data for display in a component was as easy as adding a couple of lines of code directly into the component itself. Oh and while we're at it, Redwood will automatically show a loading message while waiting for the data, a different state if there's an error, and even a separate message if the data returned from the server is empty (the classic "blank slate").
+One of the core principles behind CedarJS was that getting data from the backend should be as simple as possible, going so far as to create conventions around it so that retrieving data for display in a component was as easy as adding a couple of lines of code directly into the component itself. Oh and while we're at it, CedarJS will automatically show a loading message while waiting for the data, a different state if there's an error, and even a separate message if the data returned from the server is empty (the classic "blank slate").
 
-## How a Redwood App Works
+## How a CedarJS App Works
 
-A Redwood app is actually two apps: a frontend (that's the React part) and a backend, which is your server and talks to a database and other third party systems. Your app is technically a monorepo with two top-level directories: `web` containing the frontend code and `api` containing the backend.
+A CedarJS app is actually two apps: a frontend (that's the React part) and a backend, which is your server and talks to a database and other third party systems. Your app is technically a monorepo with two top-level directories: `web` containing the frontend code and `api` containing the backend.
 
-You can start them both with a single command: `yarn redwood dev`
+You can start them both with a single command: `yarn cedarjs dev`
 
 ## The Frontend
 
 ### The Router
 
-When you open your web app in a browser, React does its thing initializing your app and monitoring the history for changes so that new content can be shown. Redwood features a custom, declarative Router that lets you specify URLs and the requisite pages (just a React component) will be shown. A simple routes file may look something like:
+When you open your web app in a browser, React does its thing initializing your app and monitoring the history for changes so that new content can be shown. CedarJS features a custom, declarative Router that lets you specify URLs and the requisite pages (just a React component) will be shown. A simple routes file may look something like:
 
 ```jsx
 import { Route, Router, Set, PrivateSet } from '@cedarjs/router'
@@ -299,7 +298,7 @@ Redwood adds data mocking for Storybook so that you can display components that 
 
 Storybook is strictly a frontend codebase concern.
 
-## vite, Babel and Typescript
+## Vite, Babel and Typescript
 
 Notice at no point above did we say "and then we need to write configuration for this package..." Redwood has done all of that for you and will continue to do that with every release of a new version. We're sure you won't miss spending hours or days trying to add and configure a package in your application. You can eject from our default configs, and add custom code if needed, but most apps will never need to do this: everything Just Works.
 
