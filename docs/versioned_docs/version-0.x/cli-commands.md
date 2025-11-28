@@ -449,7 +449,7 @@ Some generators require that their argument be a model in your `schema.prisma`. 
 
 ### TypeScript generators
 
-If your project is configured for TypeScript (see the [TypeScript docs](typescript/index)), the generators will automatically detect and generate `.ts`/`.tsx` files for you
+If your project is configured for TypeScript (see the [TypeScript docs](typescript)), the generators will automatically detect and generate `.ts`/`.tsx` files for you
 
 **Undoing a Generator with a Destroyer**
 
@@ -2095,7 +2095,7 @@ If you have not setup the CedarJS server file, it will be setup:
 
 ### setup tsconfig
 
-Add a `tsconfig.json` to both the web and api sides so you can start using [TypeScript](typescript/index).
+Add a `tsconfig.json` to both the web and api sides so you can start using [TypeScript](typescript).
 
 ```
 yarn redwood setup tsconfig

@@ -375,25 +375,24 @@ reports every night at midnight, check for abandoned carts every 15 minutes,
 that sort of thing. We call these recurring jobs.
 
 CedarJS's job system has native support for these kinds of jobs by specifying a
-`cron` schedule when scheduling a job:
+`cron` schedule when scheduling a job. The easiest way to schedule a cron job
+locally is probably to have a script do it. So first generate a script:
+`yarn cedarjs generate script ScheduleCronJobs`. Then update the script to look
+something like this:
 
-```js
-import { jobs } from 'src/lib/jobs'
+```ts
+import { NightlyReportJob } from 'api/src/jobs/NightlyReportJob/NightlyReportJob'
+import { later } from 'api/src/lib/jobs'
 
-export const NightlyReportJob = jobs.createJob({
-  queue: 'default',
-  perform: async () => {
-    await DailyUsageReport.run()
-  },
-})
+export default async () => {
+  console.log('Scheduling Nightly Report Job')
 
-const scheduler = manager.createScheduler({ adapter: 'prisma' })
-
-// Run every day at midnight
-// highlight-start
-await scheduler(NightlyReportJob, [], { cron: '0 0 * * *' })
-// highlight-end
+  await later(NightlyReportJob, { cron: '0 0 * * *' })
+}
 ```
+
+Now you can just run that script and the job will be scheduled:
+`yarn cedarjs exec ScheduleCronJobs`
 
 CedarJS uses https://github.com/harrisiirak/cron-parser under the hood for
 parsing the `cron` schedule. So all the syntax supported by `cron-parser` is
@@ -403,10 +402,10 @@ like `@hourly`, `@daily`, `@weekends`, etc. So the cron schedule from the
 example above could also have been written as `cron: '0 0 0 * * *'` and
 `cron: '@daily'`.
 
-When you create recurring jobs you can not specify any options when you later
-schedule the job (like `wait` or `waitUntil`). Those options don't make sense
-for recurring jobs because they are scheduled automatically according to the
-given schedule.
+When you schedule recurring jobs you can only specify the `cron` option. Other
+options, like `wait` or `waitUntil`, are not supported. These options don't make
+sense for recurring jobs because they are scheduled automatically according to
+the given schedule.
 
 ## Configuration
 
