@@ -20,7 +20,11 @@ const config: Config = {
   url: 'https://cedarjs.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+  },
   favicon: '/img/favicon.ico',
   organizationName: 'cedarjs', // Usually your GitHub org/user name.
   // ?
