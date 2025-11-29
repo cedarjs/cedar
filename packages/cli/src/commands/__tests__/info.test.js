@@ -29,7 +29,7 @@ afterEach(() => {
   vi.mocked(console).log.mockRestore()
 })
 
-describe('yarn rw info', () => {
+describe('yarn cedar info', () => {
   describe('redwood.toml', () => {
     it('is included in the output', async () => {
       mockRedwoodToml.fileContents = 'title = "Hello World"'

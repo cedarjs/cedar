@@ -302,7 +302,7 @@ async function parseArgs() {
         ),
         '',
         ansis.green(`  cd ${testProjectPath}`),
-        ansis.green(`  yarn rw build`),
+        ansis.green(`  yarn cedar build`),
         '',
       ].join('\n'),
     )

@@ -34,5 +34,5 @@ export function printDone(config: Config) {
   )
   console.log()
   console.log(ansis.hex('#cef792')('> cd ' + config.installationDir))
-  console.log(ansis.hex('#cef792')('> yarn rw build -v && yarn rw serve'))
+  console.log(ansis.hex('#cef792')('> yarn cedar build -v && yarn cedar serve'))
 }

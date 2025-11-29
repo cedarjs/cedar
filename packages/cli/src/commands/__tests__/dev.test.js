@@ -56,7 +56,7 @@ vi.mock('../../lib/ports', () => {
   return {
     // We're not actually going to use the port, so it's fine to just say it's
     // free. It prevents the tests from failing if the ports are already in use
-    // (probably by some external `yarn rw dev` process)
+    // (probably by some external `yarn cedar dev` process)
     getFreePort: (port) => port,
   }
 })
@@ -105,7 +105,7 @@ function defaultConfig() {
   }
 }
 
-describe('yarn rw dev', () => {
+describe('yarn cedar dev', () => {
   afterEach(() => {
     vi.clearAllMocks()
     getPaths.mockReturnValue(defaultPaths())

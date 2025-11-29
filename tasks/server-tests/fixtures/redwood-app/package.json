@@ -24,6 +24,6 @@
     "node": "=24.x"
   },
   "prisma": {
-    "seed": "yarn rw exec seed"
+    "seed": "yarn cedar exec seed"
   }
 }

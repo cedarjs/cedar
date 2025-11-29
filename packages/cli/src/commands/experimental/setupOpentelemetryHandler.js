@@ -188,7 +188,7 @@ export const handler = async ({ force, verbose }) => {
     {
       title: 'Regenerate the Prisma client...',
       task: (_ctx, _task) => {
-        return execa(`yarn rw prisma generate`, {
+        return execa(`yarn cedar prisma generate`, {
           stdio: 'inherit',
           shell: true,
           cwd: getPaths().web.base,

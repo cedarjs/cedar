@@ -92,7 +92,7 @@ export const notes = [
   'deploy to. If you ever need to log everyone out of your app at once',
   'change this secret to a new value and deploy. To create a new secret, run:',
   '',
-  '  yarn rw generate secret',
+  '  yarn cedar generate secret',
   '',
 ]
 
@@ -113,12 +113,12 @@ export const notesCreatedUserModel = [
   'deploy to. If you ever need to log everyone out of your app at once',
   'change this secret to a new value and deploy. To create a new secret, run:',
   '',
-  '  yarn rw generate secret',
+  '  yarn cedar generate secret',
   '',
   "A new User model was added to your schema. Don't forget to migrate your db",
   'before you try using dbAuth:',
   '',
-  '  yarn rw prisma migrate dev',
+  '  yarn cedar prisma migrate dev',
   '',
 ]
 
@@ -127,5 +127,5 @@ export const noteGenerate = [
   "Need simple Login, Signup and Forgot Password pages? We've got a generator",
   'for those as well:',
   '',
-  '  yarn rw generate dbAuth',
+  '  yarn cedar generate dbAuth',
 ]

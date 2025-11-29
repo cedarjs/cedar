@@ -84,7 +84,7 @@ export async function webTasks(outputPath: string) {
     // Passing 'web' here to test executing 'yarn redwood' in the /web directory
     // to make sure it works as expected. We do the same for the /api directory
     // further down in this file.
-    const createPage = createBuilder('yarn redwood g page', 'web')
+    const createPage = createBuilder('yarn cedar g page', 'web')
 
     const tuiTaskList: TuiTaskList = [
       {
@@ -213,7 +213,7 @@ export async function webTasks(outputPath: string) {
   }
 
   const createLayout = async () => {
-    const createLayout = createBuilder('yarn redwood g layout')
+    const createLayout = createBuilder('yarn cedar g layout')
 
     await createLayout('blog')
 
@@ -224,7 +224,7 @@ export async function webTasks(outputPath: string) {
   }
 
   const createComponents = async () => {
-    const createComponent = createBuilder('yarn redwood g component')
+    const createComponent = createBuilder('yarn cedar g component')
 
     await createComponent('blogPost')
 
@@ -259,7 +259,7 @@ export async function webTasks(outputPath: string) {
   }
 
   const createCells = async () => {
-    const createCell = createBuilder('yarn redwood g cell')
+    const createCell = createBuilder('yarn cedar g cell')
 
     await createCell('blogPosts')
 
@@ -353,7 +353,7 @@ export async function webTasks(outputPath: string) {
     {
       title: 'Adding Tailwind',
       task: async () => {
-        await exec('yarn rw setup ui tailwindcss', ['--force'], execaOptions)
+        await exec('yarn cedar setup ui tailwindcss', ['--force'], execaOptions)
       },
     },
   ] //,
@@ -466,7 +466,7 @@ export async function apiTasks(
     await exec('yarn install', [], execaOptions)
 
     await exec(
-      'yarn rw setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
+      'yarn cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
       [],
       execaOptions,
     )
@@ -499,7 +499,7 @@ export async function apiTasks(
     }
 
     await exec(
-      'yarn rw g dbAuth --no-webauthn --username-label=username --password-label=password',
+      'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
       [],
       execaOptions,
     )
@@ -602,7 +602,7 @@ export async function apiTasks(
         // keep it outside of BlogLayout
         title: 'Creating double rendering test page',
         task: async () => {
-          const createPage = createBuilder('yarn redwood g page')
+          const createPage = createBuilder('yarn cedar g page')
           await createPage('double')
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
@@ -712,7 +712,7 @@ export async function apiTasks(
     return tuiTaskList
   }
 
-  const generateScaffold = createBuilder('yarn rw g scaffold')
+  const generateScaffold = createBuilder('yarn cedar g scaffold')
 
   const tuiTaskList: TuiTaskList = [
     {
@@ -725,7 +725,7 @@ export async function apiTasks(
         addModel(user)
 
         return exec(
-          `yarn rw prisma migrate dev --name create_post_user`,
+          `yarn cedar prisma migrate dev --name create_post_user`,
           [],
           execaOptions,
         )
@@ -762,7 +762,7 @@ export async function apiTasks(
         addModel(contact)
 
         await exec(
-          `yarn rw prisma migrate dev --name create_contact`,
+          `yarn cedar prisma migrate dev --name create_contact`,
           [],
           execaOptions,
         )
@@ -825,7 +825,7 @@ export async function apiTasks(
     {
       title: 'Add users service',
       task: async () => {
-        const generateSdl = createBuilder('yarn redwood g sdl --no-crud', 'api')
+        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
 
         await generateSdl('user')
 
@@ -855,7 +855,7 @@ export async function apiTasks(
 
         fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
 
-        return createBuilder('yarn redwood g types')()
+        return createBuilder('yarn cedar g types')()
       },
     },
     {
@@ -984,7 +984,7 @@ export async function fragmentsTasks(outputPath: string) {
         addModel(stall)
 
         return exec(
-          'yarn rw prisma migrate dev --name create_produce_stall',
+          'yarn cedar prisma migrate dev --name create_produce_stall',
           [],
           getExecaOptions(outputPath),
         )
@@ -998,13 +998,13 @@ export async function fragmentsTasks(outputPath: string) {
           fullPath('scripts/seed.ts', { addExtension: false }),
         )
 
-        await exec('yarn rw prisma db seed', [], getExecaOptions(outputPath))
+        await exec('yarn cedar prisma db seed', [], getExecaOptions(outputPath))
       },
     },
     {
       title: 'Generate SDLs for produce and stall',
       task: async () => {
-        const generateSdl = createBuilder('yarn redwood g sdl')
+        const generateSdl = createBuilder('yarn cedar g sdl')
 
         await generateSdl('stall')
         await generateSdl('produce')
@@ -1059,7 +1059,7 @@ export async function fragmentsTasks(outputPath: string) {
     {
       title: 'Creating Groceries page',
       task: async () => {
-        const createPage = createBuilder('yarn redwood g page')
+        const createPage = createBuilder('yarn cedar g page')
         await createPage('groceries')
 
         await applyCodemod(

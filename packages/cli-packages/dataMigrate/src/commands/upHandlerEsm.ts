@@ -24,7 +24,7 @@ export async function handler({
     if (!fs.existsSync(distPath)) {
       console.warn(
         `Can't find api dist at ${distPath}. You may need to build first: ` +
-          'yarn rw build api',
+          'yarn cedar build api',
       )
       process.exitCode = 1
       return

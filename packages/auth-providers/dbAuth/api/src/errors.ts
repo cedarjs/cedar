@@ -1,7 +1,7 @@
 export class NoSessionSecretError extends Error {
   constructor() {
     super(
-      'dbAuth requires a SESSION_SECRET environment variable that is used to encrypt session cookies. Use `yarn rw g secret` to create one, then add to your `.env` file. DO NOT check this variable in your version control system!!',
+      'dbAuth requires a SESSION_SECRET environment variable that is used to encrypt session cookies. Use `yarn cedar g secret` to create one, then add to your `.env` file. DO NOT check this variable in your version control system!!',
     )
     this.name = 'NoSessionSecretError'
   }

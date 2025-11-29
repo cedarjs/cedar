@@ -52,7 +52,7 @@ async function setUpTestProject({ canary }) {
 
   if (canary) {
     console.log(`Upgrading project to canary`)
-    await execInProject('yarn rw upgrade -t canary', {
+    await execInProject('yarn cedar upgrade -t canary', {
       input: Buffer.from('Y'),
     })
     console.log()
@@ -68,7 +68,7 @@ const execInProject = createExecWithEnvInCwd(TEST_PROJECT_PATH)
  */
 async function sharedTasks() {
   console.log('Generating dbAuth secret')
-  const { stdout } = await execInProject('yarn rw g secret --raw', {
+  const { stdout } = await execInProject('yarn cedar g secret --raw', {
     silent: true,
   })
   fs.appendFileSync(
@@ -78,7 +78,7 @@ async function sharedTasks() {
   console.log()
 
   console.log('Running prisma migrate reset')
-  await execInProject('yarn rw prisma migrate reset --force')
+  await execInProject('yarn cedar prisma migrate reset --force')
 }
 
 main()

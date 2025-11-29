@@ -56,7 +56,7 @@ afterEach(() => {
   vi.mocked(console).log.mockRestore()
 })
 
-describe('yarn rw exec', () => {
+describe('yarn cedar exec', () => {
   it('passes args on to the script', async () => {
     vol.fromJSON({
       'redwood.toml': '# redwood.toml',
@@ -64,7 +64,7 @@ describe('yarn rw exec', () => {
     })
 
     // Running:
-    // `yarn rw exec normalScript positional1 --no-prisma positional2 --arg1=foo --arg2 bar`
+    // `yarn cedar exec normalScript positional1 --no-prisma positional2 --arg1=foo --arg2 bar`
     const args = {
       _: ['exec', 'positional1', 'positional2'],
       prisma: false,
@@ -92,7 +92,7 @@ describe('yarn rw exec', () => {
   })
 })
 
-describe('yarn rw exec --list', () => {
+describe('yarn cedar exec --list', () => {
   it('includes nested scripts', async () => {
     await handler({ list: true })
     const scriptPath = path

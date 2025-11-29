@@ -65,14 +65,14 @@ jobs:
           REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
-      - name: Run `rw build --no-prerender`
+      - name: Run `cedar build --no-prerender`
         run: |
-          yarn rw build --no-prerender
+          yarn cedar build --no-prerender
         working-directory: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
 
-      - name: Run `rw prerender`
+      - name: Run `cedar prerender`
         run: |
-          yarn rw prerender --verbose
+          yarn cedar prerender --verbose
         working-directory: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
 
       - name: 🖥️ Run serve smoke tests

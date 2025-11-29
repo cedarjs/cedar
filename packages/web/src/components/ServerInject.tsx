@@ -52,7 +52,9 @@ export const ServerInjectedHtml = ({
 
   return serverInsertedHtml.map((html, i) => {
     return (
-      <Fragment key={`rw-server-inserted-${fragmentId}-${i}`}>{html}</Fragment>
+      <Fragment key={`cedar-server-inserted-${fragmentId}-${i}`}>
+        {html}
+      </Fragment>
     )
   })
 }

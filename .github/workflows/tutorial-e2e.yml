@@ -32,7 +32,7 @@ jobs:
 
       - name: Start the dev server in the background
         run: |
-          yarn rw dev --no-generate --fwd="--no-open" 2>&1 | tee dev_server.log &
+          yarn cedar dev --no-generate --fwd="--no-open" 2>&1 | tee dev_server.log &
         working-directory: ${{ steps.crwa.outputs.project-path }}
 
       - name: 🌲 Run Cypress

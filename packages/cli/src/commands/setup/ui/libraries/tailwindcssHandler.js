@@ -28,7 +28,7 @@ const tailwindImportsAndNotes = [
   '/**',
   ' * START --- SETUP TAILWINDCSS EDIT',
   ' *',
-  ' * `yarn rw setup ui tailwindcss` placed these directives here',
+  ' * `yarn cedar setup ui tailwindcss` placed these directives here',
   " * to inject Tailwind's styles into your CSS.",
   ' * For more information, see: https://tailwindcss.com/docs/installation',
   ' */',

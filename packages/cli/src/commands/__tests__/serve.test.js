@@ -84,7 +84,7 @@ vi.mock('execa', () => ({
   })),
 }))
 
-describe('yarn rw serve', () => {
+describe('yarn cedar serve', () => {
   beforeEach(() => {
     mocks.isEsm = true
   })

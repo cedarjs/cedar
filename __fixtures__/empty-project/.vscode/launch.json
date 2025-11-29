@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "command": "yarn redwood dev",
+      "command": "yarn cedar dev",
       "name": "launch development",
       "request": "launch",
       "type": "node-terminal"

@@ -205,7 +205,7 @@ describe('setupData createUserModelTask', () => {
             binaryTargets = "native"
           }
 
-          // Define your own data models here and run 'yarn redwood prisma migrate dev'
+          // Define your own data models here and run 'yarn cedar prisma migrate dev'
           // to create migrations for them and apply to your dev DB.
           model UserExample {
             id    Int     @id @default(autoincrement())
@@ -295,7 +295,7 @@ describe('setupData createUserModelTask', () => {
             binaryTargets = "native"
           }
 
-          // Define your own data models here and run 'yarn redwood prisma migrate dev'
+          // Define your own data models here and run 'yarn cedar prisma migrate dev'
           // to create migrations for them and apply to your dev DB.
           model UserExample {
             id    Int     @id @default(autoincrement())

@@ -2,7 +2,7 @@
   "version": "0.3.0",
   "configurations": [
     {
-      "command": "yarn redwood dev --apiDebugPort 18911",
+      "command": "yarn cedar dev --apiDebugPort 18911",
       "name": "Run Dev Server",
       "request": "launch",
       "type": "node-terminal"
@@ -21,13 +21,13 @@
       "restart": true
     },
     {
-      "command": "yarn redwood test api",
+      "command": "yarn cedar test api",
       "name": "Test api",
       "request": "launch",
       "type": "node-terminal"
     },
     {
-      "command": "yarn redwood test web",
+      "command": "yarn cedar test web",
       "name": "Test web",
       "request": "launch",
       "type": "node-terminal"

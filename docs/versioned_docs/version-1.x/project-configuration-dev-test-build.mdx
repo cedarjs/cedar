@@ -113,7 +113,7 @@ You can customize the types that Redwood generates from your project too! This i
 
 ### Dev Server
 
-The `yarn rw dev` command is configured by default to open a browser and a debugger on the port `18911` and your redwood app ships with several default configurations to debug with VSCode.
+The `yarn cedar dev` command is configured by default to open a browser and a debugger on the port `18911` and your redwood app ships with several default configurations to debug with VSCode.
 
 #### Customizing the configuration
 
@@ -133,12 +133,12 @@ Add/change the `debugPort` or `open` under your api settings
   open = true # change me!
 ```
 
-**b) Pass a flag to `rw dev` command**
+**b) Pass a flag to `cedar dev` command**
 
 You can also pass a flag when you launch your dev servers, for example:
 
 ```bash
-yarn rw dev --debugPort 75028
+yarn cedar dev --debugPort 75028
 ```
 
 The flag passed in the CLI will always take precedence over your setting in the `redwood.toml`

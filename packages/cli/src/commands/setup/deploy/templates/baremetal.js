@@ -69,11 +69,11 @@ freeSpaceRequired = 2048
 export const MAINTENANCE = `<!--
 Put up this maintenance page on your deployed service with:
 
-  yarn rw baremetal deploy --maintenance up
+  yarn cedar baremetal deploy --maintenance up
 
 And take it back down with:
 
-  yarn rw baremetal deploy --maintenance down
+  yarn cedar baremetal deploy --maintenance down
 -->
 
 <!DOCTYPE html>

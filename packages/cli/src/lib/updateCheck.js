@@ -183,7 +183,7 @@ function getUpdateMessage() {
 
   let updateCount = 0
   let message =
-    ' New updates to Cedar are available via `yarn rw upgrade#REPLACEME#` '
+    ' New updates to Cedar are available via `yarn cedar upgrade#REPLACEME#` '
   data.remoteVersions.forEach((version, tag) => {
     if (semver.gt(version, data.localVersion)) {
       updateCount += 1

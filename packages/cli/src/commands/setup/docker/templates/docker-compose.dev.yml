@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
       target: base
-    command: yarn rw dev
+    command: yarn cedar dev
     volumes:
       - .:/home/node/app
       - node_modules:/home/node/app/node_modules
@@ -36,7 +36,7 @@ services:
   #
   # ```
   # docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash
-  # root@...:/home/node/app# yarn rw prisma migrate dev
+  # root@...:/home/node/app# yarn cedar prisma migrate dev
   # ```
   console:
     user: root

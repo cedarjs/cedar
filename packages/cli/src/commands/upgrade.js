@@ -250,7 +250,7 @@ async function yarnInstall({ verbose }) {
 
 /**
  * Removes the CLI plugin cache. This prevents the CLI from using outdated versions of the plugin,
- * when the plugins share the same alias. e.g. `rw sb` used to point to `@cedarjs/cli-storybook` but now points to `@cedarjs/cli-storybook-vite`
+ * when the plugins share the same alias. e.g. `cedar sb` used to point to `@cedarjs/cli-storybook` but now points to `@cedarjs/cli-storybook-vite`
  */
 async function removeCliCache(ctx, { dryRun, verbose }) {
   const cliCacheDir = path.join(
@@ -501,7 +501,7 @@ async function refreshPrismaClient(task, { verbose }) {
   } catch (e) {
     task.skip('Refreshing the Prisma client caused an Error.')
     console.log(
-      'You may need to update your prisma client manually: $ yarn rw prisma generate',
+      'You may need to update your prisma client manually: $ yarn cedar prisma generate',
     )
     console.log(c.error(e.message))
   }

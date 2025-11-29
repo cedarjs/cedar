@@ -37,7 +37,7 @@ export const throwMissingConfig = (name) => {
 export const verifyConfig = (config, yargs) => {
   if (!yargs.environment) {
     throw new Error(
-      'Must specify an environment to deploy to, ex: `yarn rw deploy baremetal production`',
+      'Must specify an environment to deploy to, ex: `yarn cedar deploy baremetal production`',
     )
   }
 
@@ -623,7 +623,7 @@ export const handler = async (yargs) => {
   if (!fs.existsSync(tomlPath) || !fs.existsSync(ecosystemPath)) {
     console.error(
       c.error('\nError: Baremetal deploy has not been properly setup.\n') +
-        'Please run `yarn rw setup deploy baremetal` before deploying',
+        'Please run `yarn cedar setup deploy baremetal` before deploying',
     )
     process.exit(1)
   }
