@@ -1,8 +1,8 @@
 # Disable API/Database
 
-Did you know you could deploy your Redwood app without an API layer or database? Maybe you have a simple static site that doesn't need any external data, or you only need to digest a simple JSON data structure that changes infrequently. So infrequently that changing the data can mean just editing a plain text file and deploying your site again.
+Did you know you could deploy your Cedar app without an API layer or database? Maybe you have a simple static site that doesn't need any external data, or you only need to digest a simple JSON data structure that changes infrequently. So infrequently that changing the data can mean just editing a plain text file and deploying your site again.
 
-Let's take a look at these scenarios and how you can get them working with Redwood.
+Let's take a look at these scenarios and how you can get them working with Cedar.
 
 ## Assumptions
 
@@ -414,4 +414,4 @@ All that's left is to deploy it to the world!
 
 ## Wrapping Up
 
-Although we think Redwood will make app developers' lives easier when they need to talk to a database or third party API, it can be used with static sites and even hybrid sites like this when you want to digest and display data, but from a static file at your own URL.
+Although we think Cedar will make app developers' lives easier when they need to talk to a database or third party API, it can be used with static sites and even hybrid sites like this when you want to digest and display data, but from a static file at your own URL.

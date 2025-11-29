@@ -66,14 +66,14 @@ type Bar {
 
 There are many ways to write directives using GraphQL tools and libraries. Believe us, it can get complicated fast.
 
-But, don't fret: Redwood provides an easy and ergonomic way to generate and write your own directives so that you can focus on the implementation logic and not the GraphQL plumbing.
+But, don't fret: Cedar provides an easy and ergonomic way to generate and write your own directives so that you can focus on the implementation logic and not the GraphQL plumbing.
 
-## What is a Redwood Directive?
+## What is a Cedar Directive?
 
 Redwood directives are purposeful.
 They come in two flavors: **Validators** and **Transformers**.
 
-Whatever flavor of directive you want, all Redwood directives must have the following properties:
+Whatever flavor of directive you want, all Cedar directives must have the following properties:
 
 - be in the `api/src/directives/{directiveName}` directory where `directiveName` is the directive directory
 - must have a file named `{directiveName}.{js,ts}` (e.g. `maskedEmail.ts`)
@@ -81,9 +81,9 @@ Whatever flavor of directive you want, all Redwood directives must have the foll
 
 ### Understanding the Directive Flow
 
-Since it helps to know a little about the GraphQL phases—specifically the Execution phase—and how Redwood Directives fit in the data-fetching and authentication flow, let's have a quick look at some diagrams.
+Since it helps to know a little about the GraphQL phases—specifically the Execution phase—and how Cedar Directives fit in the data-fetching and authentication flow, let's have a quick look at some diagrams.
 
-First, we see the built-in `@requireAuth` Validator directive that can allow or deny access to a Service (a.k.a. a resolver) based on Redwood authentication.
+First, we see the built-in `@requireAuth` Validator directive that can allow or deny access to a Service (a.k.a. a resolver) based on Cedar authentication.
 In this example, the `post(id: Int!)` query is protected using the `@requireAuth` directive.
 
 If the request's context has a `currentUser` and the app's `auth.{js|ts}` determines it `isAuthenticated()`, then the execution phase proceeds to get resolved (for example, the `post({ id })` Service is executed and queries the database using Prisma) and returns the data in the resulting response when execution is done.
@@ -217,7 +217,7 @@ type UserExample {
 }
 ```
 
-### Where can I use a Redwood Directive?
+### Where can I use a Cedar Directive?
 
 A directive can only appear in certain locations in a GraphQL schema or operation. These locations are listed in the directive's definition.
 
@@ -247,7 +247,7 @@ type Query {
 > }
 > ```
 
-## When Should I Use a Redwood Directive?
+## When Should I Use a Cedar Directive?
 
 As noted in the [GraphQL spec](https://graphql.org/learn/queries/#directives):
 
@@ -370,7 +370,7 @@ Then, you can chain the `@dateFormat` Transformer, to just return the date porti
   }
 ```
 
-> **Note**: These directives could be alternatively be implemented as "operation directives" so the client can use them on a query instead of the schema-level. These such directives are a potential future Redwood directive feature.
+> **Note**: These directives could be alternatively be implemented as "operation directives" so the client can use them on a query instead of the schema-level. These such directives are a potential future Cedar directive feature.
 
 ## GraphQL Handler Setup
 
@@ -379,7 +379,7 @@ Simply add them to the `directives` directory and the `createGraphQLHandler` doe
 
 You simply add them to the `directives` directory and the `createGraphQLHandler` will do all the work.
 
-> **Note**: Redwood has a generator that will do all the heavy lifting setup for you!
+> **Note**: Cedar has a generator that will do all the heavy lifting setup for you!
 
 ```tsx title="api/src/functions/graphql.ts"
 import { createGraphQLHandler } from '@cedarjs/graphql-server'
@@ -410,8 +410,8 @@ By default, your GraphQL endpoint is open to the world.
 That means anyone can request any query and invoke any Mutation.
 Whatever types and fields are defined in your SDL is data that anyone can access.
 
-But Redwood encourages being secure by default by defaulting all queries and mutations to have the `@requireAuth` directive when generating SDL or a service.
-When your app builds and your server starts up, Redwood checks that **all** queries and mutations have `@requireAuth`, `@skipAuth` or a custom directive applied.
+But Cedar encourages being secure by default by defaulting all queries and mutations to have the `@requireAuth` directive when generating SDL or a service.
+When your app builds and your server starts up, Cedar checks that **all** queries and mutations have `@requireAuth`, `@skipAuth` or a custom directive applied.
 
 If not, then your build will fail:
 
@@ -483,7 +483,7 @@ If, however, you want your query or mutation to be public, then simply use `@ski
 ## Custom Directives
 
 Want to write your own directive? You can of course!
-Just generate one using the Redwood CLI; it takes care of the boilerplate and even gives you a handy test!
+Just generate one using the Cedar CLI; it takes care of the boilerplate and even gives you a handy test!
 
 ### Generators
 

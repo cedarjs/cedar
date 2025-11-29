@@ -29,13 +29,13 @@ The following recording is from a Contributing Workshop, following through the e
   allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; modestbranding; showinfo=0; fullscreen"
 ></iframe>
 
-## Prologue: Getting Started with Redwood and GitHub (and git)
+## Prologue: Getting Started with Cedar and GitHub (and git)
 
 These are the foundations for contributing, which you should be familiar with before starting the walkthrough.
 
-[**The Redwood Tutorial**](tutorial/foreword.md)
+[**The Cedar Tutorial**](tutorial/foreword.md)
 
-The best (and most fun) way to learn Redwood and the underlying tools and technologies.
+The best (and most fun) way to learn Cedar and the underlying tools and technologies.
 
 **Docs and How To**
 
@@ -54,15 +54,15 @@ Diving into Git and the GitHub workflow can feel intimidating if you haven’t e
 
 ### Definitions
 
-#### Redwood “Project”
+#### Cedar “Project”
 
-We refer to the codebase of a Redwood application as a Project. This is what you install when you run `yarn create cedar-app <path-to-directory>`. It’s the thing you are building with Cedar.
+We refer to the codebase of a Cedar application as a Project. This is what you install when you run `yarn create cedar-app <path-to-directory>`. It’s the thing you are building with Cedar.
 
 Lastly, you’ll find the template used to create a new project (when you run create redwood-app) here in GitHub: [cedarjs/cedar/packages/create-cedar-app/template/](https://github.com/cedarjs/cedar/tree/main/packages/create-cedar-app/template)
 
 We refer to this as the **CRWA Template or Project Template**.
 
-#### Redwood “Framework”
+#### Cedar “Framework”
 
 The Framework is the codebase containing all the packages (and other code) that is published on NPMjs.com as `@cedarjs/<package-name>`. The Framework repository on GitHub is here: [https://github.com/cedarjs/cedar](https://github.com/cedarjs/cedar)
 
@@ -83,7 +83,7 @@ There’s nothing wrong with Terminal (on Mac) and plain zsh or bash. (If you’
 😉.
 
 **[Windows] Git for Windows with Git Bash or WSL(2)**
-Unfortunately, there are a lot of “gotchas” when it comes to working with Javascript-based frameworks on Windows. We do our best to point out (and resolve) issues, but our priority focus is on developing a Redwood app vs contributing to the Framework. (If you’re interested, there’s a lengthy Forum conversation about this with many suggestions.)
+Unfortunately, there are a lot of “gotchas” when it comes to working with Javascript-based frameworks on Windows. We do our best to point out (and resolve) issues, but our priority focus is on developing a Cedar app vs contributing to the Framework. (If you’re interested, there’s a lengthy Forum conversation about this with many suggestions.)
 
 All that said, we highly recommend using one of the following setups to maximize your workflow:
 
@@ -101,21 +101,21 @@ But when you’re ready, learn how to use it in the section at the end [“GitPo
 
 ### Local Development Setup
 
-#### Step 1: Redwood Framework
+#### Step 1: Cedar Framework
 
 1. **Fork the [Redwood Framework](https://github.com/cedarjs/cedar)** into a personal repo
 2. Using GitHub Desktop, **open the Framework Codebase** in a VS Code workspace
 3. Commands to “**start fresh**” when working on the Framework
    - `yarn install`: This installs the package dependencies in /node_modules using Yarn package manager. This command is the same as just typing `yarn`. Also, if you ever switch branches and want to make sure the install dependencies are correct, you can run `yarn install --force` (shorthand `yarn -f`).
-   - `git clean -fxd`: _You’ll only need to do this if you’ve already been developing and want to “start over” and reset your codebase_. This command will permanently delete everything that is .gitignored, e.g. /node_modules and /dist directories with package builds. When switching between branches, this command makes sure nothing is carried over that you don’t want. (Warning: it will delete .env files in a Redwood Project. To avoid this, you can use `git clean -fxd -e .env`.)
+   - `git clean -fxd`: _You’ll only need to do this if you’ve already been developing and want to “start over” and reset your codebase_. This command will permanently delete everything that is .gitignored, e.g. /node_modules and /dist directories with package builds. When switching between branches, this command makes sure nothing is carried over that you don’t want. (Warning: it will delete .env files in a Cedar Project. To avoid this, you can use `git clean -fxd -e .env`.)
 4. **Create a new branch** from the `main` branch
    First make sure you’ve pulled all changes from the remote origin (GitHub repo) into your local branch. (If you just cloned from your fork, you should be up to date.) Then create a new branch. The nomenclature used by David Price is `<davids_initials>-description-with-hyphens`, e.g. `dsp-add-eslint-config-redwood-toml`. It's simple to use VS Code or GitHub Desktop to manage branches. You can also do this via the CLI git checkout command.
 
 #### Step 2: Test Project
 
-There are several options for creating a local Redwood Project to use during development. Anytime you are developing against a test project, there are some specific gotchas to keep in mind:
+There are several options for creating a local Cedar Project to use during development. Anytime you are developing against a test project, there are some specific gotchas to keep in mind:
 
-- New projects always use the latest stable version of the Redwood packages, which will not be up to date with the latest Framework code in the `main` branch.
+- New projects always use the latest stable version of the Cedar packages, which will not be up to date with the latest Framework code in the `main` branch.
 - To use the packages corresponding with the latest code in the Framework `main` branch, you can use the canary version published to NPM. All you need to do to install the canary versions is run `yarn rw upgrade --tag canary` in your Project
 - Using a cloned project or repo? Just know there are likely breaking changes in `main` that haven’t been applied. You can examine merged PRs with the “breaking” label for more info.
 - Just because you are using canary doesn’t mean you are using your local Framework branch code! Make sure you run `yarn rwfw project:sync`. And anytime you switch branches or get out of sync, you might need to start over beginning with the `git clean -fxd` command
@@ -134,17 +134,17 @@ With those details out of the way, now is the time to choose an option below tha
 yarn babel-node packages/create-cedar-app/src/create-cedar-app.js <path/to/project>
 ```
 
-3. **Clone the Cedar Tutorial App repo:** This is the codebase to use when starting the Redwood Tutorial Part 2. It is updated to the latest version and has the Blog features. This is often something we use for local development. Note: be sure to upgrade to canary and look out for breaking changes coming with the next release.
+3. **Clone the Cedar Tutorial App repo:** This is the codebase to use when starting the Cedar Tutorial Part 2. It is updated to the latest version and has the Blog features. This is often something we use for local development. Note: be sure to upgrade to canary and look out for breaking changes coming with the next release.
 
-4. **Install a fresh project**: `yarn create cedar-app <path/to/project>` If you just need a fresh installation 1) using the latest version template codebase and 2) without any features, then just install a new Redwood project. Note: this can have the same issues regarding the need to upgrade to canary and addressing breaking changes (see Notes from items 2 and 3 above).
+4. **Install a fresh project**: `yarn create cedar-app <path/to/project>` If you just need a fresh installation 1) using the latest version template codebase and 2) without any features, then just install a new Cedar project. Note: this can have the same issues regarding the need to upgrade to canary and addressing breaking changes (see Notes from items 2 and 3 above).
 
 > Note: All the options above currently set the language to JavaScript. If you would like to work with TypeScript, you can add the option `--typescript` to either of the commands that run the create-cedar-app installation.
 
 #### Step 3: Link the local Framework with the local test Project
 
-Once you work on the Framework code, you’ll most often want to run the code in a Redwood app for testing. However, the Redwood Project you created for testing is currently using the latest version (or canary) packages of Redwood published on NPMjs.com, e.g. [@cedarjs/core](https://www.npmjs.com/package/@cedarjs/core)
+Once you work on the Framework code, you’ll most often want to run the code in a Cedar app for testing. However, the Cedar Project you created for testing is currently using the latest version (or canary) packages of Cedar published on NPMjs.com, e.g. [@cedarjs/core](https://www.npmjs.com/package/@cedarjs/core)
 
-So we’ll use the Redwood Framework (rwfw) command to connect our local Framework and test Projects, which allows the Project to run on the code for Packages we are currently developing.
+So we’ll use the Cedar Framework (rwfw) command to connect our local Framework and test Projects, which allows the Project to run on the code for Packages we are currently developing.
 
 Run this command from the CLI in your test Project:
 
@@ -159,7 +159,7 @@ cd redwood-project
 RWFW_PATH=~/redwood yarn rwfw project:sync
 ```
 
-RWFW*PATH is the path to your local copy of the Redwood Framework. \_Once provided to rwfw, it'll remember it and you shouldn't have to provide it again unless you move it.*
+RWFW*PATH is the path to your local copy of the Cedar Framework. \_Once provided to rwfw, it'll remember it and you shouldn't have to provide it again unless you move it.*
 
 > **Heads up for Windows Devs**
 > Depending on your dev setup, Windows might balk at you setting the env var RWFW_PATH at the beginning of the command like this. If so, try prepending with `cross-env`, e.g. `yarn cross-env RWFW_PATH=~/redwood yarn rwfw` ... Or you can add the env var and value directly to your shell before running the command.
@@ -198,17 +198,17 @@ All of these checks are included in Redwood’s GitHub PR Continuous Integration
 
 #### Step 5: Open a PR 🚀
 
-You’ve made it to the fun part! It’s time to use the code you’re working on to create a new PR into the Redwood Framework `main` branch.
+You’ve made it to the fun part! It’s time to use the code you’re working on to create a new PR into the Cedar Framework `main` branch.
 
 We use GitHub Desktop to walk through the process of:
 
 - Committing my changes to my development branch
-- Publishing (pushing) my branch and changes to my GitHub repo fork of the Redwood Framework
-- Opening a PR requesting to merge my forked-repo branch into the Redwood Framework `main` branch
+- Publishing (pushing) my branch and changes to my GitHub repo fork of the Cedar Framework
+- Opening a PR requesting to merge my forked-repo branch into the Cedar Framework `main` branch
 
 > While we use GitHub Desktop as an example, the basic process outlined above is the same whether using the command line or other clients.
 
-1. **Commit Files:** Using GitHub Desktop, browse to your local Redwood Framework repository and select the current branch you're working on. On the left-hand side, you'll see the files that have been modified, added, or removed. Check the boxes for the files you want to include in the PR. Below the file list, you'll see two text boxes and a "Commit to &lt;your-branch-name&gt;" button. Write a short commit message in the first box. If you want to add a longer description then you can do so in the second box. Click the "Commit to ..." button to commit the changes to the branch. The files are now committed under that commit message.
+1. **Commit Files:** Using GitHub Desktop, browse to your local Cedar Framework repository and select the current branch you're working on. On the left-hand side, you'll see the files that have been modified, added, or removed. Check the boxes for the files you want to include in the PR. Below the file list, you'll see two text boxes and a "Commit to &lt;your-branch-name&gt;" button. Write a short commit message in the first box. If you want to add a longer description then you can do so in the second box. Click the "Commit to ..." button to commit the changes to the branch. The files are now committed under that commit message.
 
 2. **Push Files:** After committing, you should see an option appear with the count of local commits and a button to "Push origin." If you're ready to push those changes to the remote branch, click that button. Otherwise, you can keep working and add more commits using the process in step 1.
 
@@ -231,7 +231,7 @@ Refer to the [What makes for a good Pull Request?](contributing-overview.md#what
 
 ### Gitpod: Browser-based Development
 
-[Gitpod](http://gitpod.io) has recently been integrated with Redwood to JustWork™ with any branch or PR. When a virtual Gitpod workspace is initialized, it automatically:
+[Gitpod](http://gitpod.io) has recently been integrated with Cedar to JustWork™ with any branch or PR. When a virtual Gitpod workspace is initialized, it automatically:
 
 1. Checks-out the code from your branch or PR
 2. Run Yarn installation
@@ -251,7 +251,7 @@ David briefly walks-through an automatically prebuilt Gitpod workspace here:
 Make sure you watch until the end where David shows how to set up your integration with GitHub and VS Code sync. 🤩
 
 **Start a Gitpod Workspace**
-There are two ways to get started with Gitpod + Redwood.
+There are two ways to get started with Gitpod + Cedar.
 
 _Option 1: Open a PR_
 Every PR will trigger a Gitpod prebuild using the PR branch. Just look for Gitpod in the list of checks at the bottom of the PR — click the “Details” link and away you’ll go!

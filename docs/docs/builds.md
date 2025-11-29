@@ -14,7 +14,7 @@ description: What happens when you build your app
 
 ## API
 
-The api side of Redwood is transpiled by Babel into the `./api/dist` folder.
+The api side of Cedar is transpiled by Babel into the `./api/dist` folder.
 
 ### Steps on Netlify
 
@@ -35,4 +35,4 @@ Each lambda function in `./api/dist/functions` is parsed by zip-it-and-ship-it r
 
 ## Web
 
-The web side of Redwood is built by Vite into the `./web/dist` folder.
+The web side of Cedar is built by Vite into the `./web/dist` folder.

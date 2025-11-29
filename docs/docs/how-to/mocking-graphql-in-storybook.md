@@ -52,7 +52,7 @@ export const standard = {
 }
 ```
 
-> Behind the scenes: Redwood uses the value associated to `standard` as the second argument to `mockGraphQLQuery`.
+> Behind the scenes: Cedar uses the value associated to `standard` as the second argument to `mockGraphQLQuery`.
 
 ### GraphQL request variables
 

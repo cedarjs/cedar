@@ -42,7 +42,7 @@ This is often the most tedious part of setting up Docker. Have ideas of how it c
 
 :::
 
-The first time you do this, you'll have to use the `console` stage to go in and migrate the database—just like you would with a Redwood app on your machine:
+The first time you do this, you'll have to use the `console` stage to go in and migrate the database—just like you would with a Cedar app on your machine:
 
 ```
 docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash
@@ -73,7 +73,7 @@ It's used as the base image for the build stages and the `console` stage.
 FROM node:20-bookworm-slim as base
 ```
 
-We use a Node.js 20 image as the base image because that's the version Redwood targets.
+We use a Node.js 20 image as the base image because that's the version Cedar targets.
 "bookworm" is the codename for the current stable distribution of Debian (version 12).
 Lastly, the "slim" variant of the `node:20-bookworm` image only includes what Node.js needs which reduces the image's size while making it more secure.
 
@@ -282,7 +282,7 @@ If you are using a [Server File](#using-the-server-file) then you must change th
 Not updating the command will not completely configure the GraphQL Server and not setup [Redwood Realtime](./realtime.md), if you are using that.
 :::
 
-Note that the Redwood CLI isn't available anymore because it is a dev dependency.
+Note that the Cedar CLI isn't available anymore because it is a dev dependency.
 To access the server bin, we have to find its path in `node_modules`.
 Though this is somewhat discouraged in modern yarn, since we're using the `node-modules` node linker, it's in `node_modules/.bin`.
 
@@ -387,7 +387,7 @@ COPY --chown=node:node web web
 COPY --chown=node:node scripts scripts
 ````
 
-The console stage completes the base stage by copying in the rest of your Redwood app.
+The console stage completes the base stage by copying in the rest of your Cedar app.
 But then it pretty much leaves you to your own devices.
 The intended way to use it is to create an ephemeral container by starting a shell like `/bin/bash` in the image built by targeting this stage:
 

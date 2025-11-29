@@ -117,7 +117,7 @@ We recommend you use Redwood's way of doing things as much as possible since it'
 ## Deep dive: the `ClerkStatusUpdater` component
 
 With Clerk, there's a bit more going on in the `web/src/auth.tsx` file than other auth providers.
-This is because Clerk is a bit unlike the other auth providers Redwood integrates with in that it puts an instance of its client SDK on the browser's `window` object.
-That means Redwood has to wait for it to be ready.
-With other providers, Redwood instantiates their client SDK in `web/src/auth.ts{x}`, then passes it to `createAuth`.
-With Clerk, instead Redwood uses Clerk components and hooks, like `ClerkLoaded` and `useUser`, to update Redwood's auth context with the client when it's ready.
+This is because Clerk is a bit unlike the other auth providers Cedar integrates with in that it puts an instance of its client SDK on the browser's `window` object.
+That means Cedar has to wait for it to be ready.
+With other providers, Cedar instantiates their client SDK in `web/src/auth.ts{x}`, then passes it to `createAuth`.
+With Clerk, instead Cedar uses Clerk components and hooks, like `ClerkLoaded` and `useUser`, to update Redwood's auth context with the client when it's ready.

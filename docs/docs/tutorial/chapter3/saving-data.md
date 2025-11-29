@@ -60,7 +60,7 @@ Just like the `scaffold` command, this will create a few new files under the `ap
 1. `api/src/graphql/contacts.sdl.{js,ts}`: defines the GraphQL schema in GraphQL's schema definition language
 2. `api/src/services/contacts/contacts.{js,ts}`: contains your app's business logic (also creates associated test files)
 
-If you remember our discussion in [how Redwood works with data](../chapter2/side-quest.md) you'll recall that queries and mutations in an SDL file are automatically mapped to resolvers defined in a service, so when you generate an SDL file you'll get a service file as well, since one requires the other.
+If you remember our discussion in [how Cedar works with data](../chapter2/side-quest.md) you'll recall that queries and mutations in an SDL file are automatically mapped to resolvers defined in a service, so when you generate an SDL file you'll get a service file as well, since one requires the other.
 
 Open up `api/src/graphql/contacts.sdl.{js,ts}` and you'll see the same Query and Mutation types defined for Contact that were created for the Post scaffold. `Contact`, `CreateContactInput` and `UpdateContactInput` types, as well as a `Query` type with `contacts` and `contact`, and a `Mutation` type with `createContact`, `updateContact` and `deleteContact`.
 
@@ -145,7 +145,7 @@ export const schema = gql`
 
 The `@requireAuth` string you see after the `Query` and `Mutation` types is a [schema directive](https://www.graphql-tools.com/docs/schema-directives) which says that in order to access this GraphQL query the user is required to be authenticated. We haven't added authentication yet, so this won't have any effect—anyone will be able to query it, logged in or not, because until you add authentication the function behind `@requireAuth` always returns `true`.
 
-What's `CreateContactInput` and `UpdateContactInput`? Redwood follows the GraphQL recommendation of using [Input Types](https://graphql.org/graphql-js/mutations-and-input-types/) in mutations rather than listing out each and every field that can be set. Any fields required in `schema.prisma` are also required in `CreateContactInput` (you can't create a valid record without them) but nothing is explicitly required in `UpdateContactInput`. This is because you could want to update only a single field, or two fields, or all fields. The alternative would be to create separate Input types for every permutation of fields you would want to update. We felt that only having one update input type was a good compromise for optimal developer experience.
+What's `CreateContactInput` and `UpdateContactInput`? Cedar follows the GraphQL recommendation of using [Input Types](https://graphql.org/graphql-js/mutations-and-input-types/) in mutations rather than listing out each and every field that can be set. Any fields required in `schema.prisma` are also required in `CreateContactInput` (you can't create a valid record without them) but nothing is explicitly required in `UpdateContactInput`. This is because you could want to update only a single field, or two fields, or all fields. The alternative would be to create separate Input types for every permutation of fields you would want to update. We felt that only having one update input type was a good compromise for optimal developer experience.
 
 :::info
 
@@ -161,7 +161,7 @@ GraphQL's SDL syntax requires an extra `!` when a field _is_ required. Remember:
 
 :::
 
-As described in [Side Quest: How Redwood Deals with Data](../chapter2/side-quest.md), there are no explicit resolvers defined in the SDL file. Redwood follows a simple naming convention: each field listed in the `Query` and `Mutation` types in the `sdl` file (`api/src/graphql/contacts.sdl.{js,ts}`) maps to a function with the same name in the `services` file (`api/src/services/contacts/contacts.{js,ts}`).
+As described in [Side Quest: How Cedar Deals with Data](../chapter2/side-quest.md), there are no explicit resolvers defined in the SDL file. Cedar follows a simple naming convention: each field listed in the `Query` and `Mutation` types in the `sdl` file (`api/src/graphql/contacts.sdl.{js,ts}`) maps to a function with the same name in the `services` file (`api/src/services/contacts/contacts.{js,ts}`).
 
 :::tip
 
@@ -173,7 +173,7 @@ You'd only get a single `contacts` type to return them all.
 
 :::
 
-We'll only need `createContact` for our contact page. It accepts a single variable, `input`, that is an object that conforms to what we expect for a `CreateContactInput`, namely `{ name, email, message }`. This mutation should be able to be accessed by anyone, so we'll need to change `@requireAuth` to `@skipAuth`. This one says that authentication is _not_ required and will allow anyone to anonymously send us a message. Note that having at least one schema directive is required for each `Query` and `Mutation` or you'll get an error: Redwood embraces the idea of "secure by default" meaning that we try and keep your application safe, even if you do nothing special to prevent access. In this case it's much safer to throw an error than to accidentally expose all of your users' data to the internet!
+We'll only need `createContact` for our contact page. It accepts a single variable, `input`, that is an object that conforms to what we expect for a `CreateContactInput`, namely `{ name, email, message }`. This mutation should be able to be accessed by anyone, so we'll need to change `@requireAuth` to `@skipAuth`. This one says that authentication is _not_ required and will allow anyone to anonymously send us a message. Note that having at least one schema directive is required for each `Query` and `Mutation` or you'll get an error: Cedar embraces the idea of "secure by default" meaning that we try and keep your application safe, even if you do nothing special to prevent access. In this case it's much safer to throw an error than to accidentally expose all of your users' data to the internet!
 
 :::info
 
@@ -527,7 +527,7 @@ export default ContactPage
 
 We reference the `createContact` mutation we defined in the Contacts SDL passing it an `input` object which will contain the actual name, email and message values.
 
-Next we'll call the `useMutation` hook provided by Redwood which will allow us to execute the mutation when we're ready (don't forget to `import` it):
+Next we'll call the `useMutation` hook provided by Cedar which will allow us to execute the mutation when we're ready (don't forget to `import` it):
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -716,9 +716,9 @@ export default ContactPage
 
 :::tip Reminder about generated types
 
-Just a quick reminder that Redwood will automatically generate types for your GraphQL queries and mutations if you have the dev server running (or if you run `yarn rw generate types`).
+Just a quick reminder that Cedar will automatically generate types for your GraphQL queries and mutations if you have the dev server running (or if you run `yarn rw generate types`).
 
-Once you define the `CreateContactMutation` (the GraphQL one), Redwood will generate the `CreateContactMutation` and `CreateContactMutationVariables` types from it for you.
+Once you define the `CreateContactMutation` (the GraphQL one), Cedar will generate the `CreateContactMutation` and `CreateContactMutationVariables` types from it for you.
 
 Take a look at our [Generated Types](typescript/generated-types.md) docs for a deeper dive!
 
@@ -1029,7 +1029,7 @@ You'll see that the "Save" button become disabled for a second or two while wait
 
 #### Notification on Save
 
-Next, let's show a notification to let the user know their submission was successful. Redwood includes [react-hot-toast](https://react-hot-toast.com/) to quickly show a popup notification on a page.
+Next, let's show a notification to let the user know their submission was successful. Cedar includes [react-hot-toast](https://react-hot-toast.com/) to quickly show a popup notification on a page.
 
 `useMutation` accepts an options object as a second argument. One of the options is a callback function, `onCompleted`, that will be invoked when the mutation successfully completes. We'll use that callback to invoke a `toast()` function which will add a message to be displayed in a **&lt;Toaster&gt;** component.
 
@@ -1246,11 +1246,11 @@ Why don't we need server-side validation for the existence of name, email and me
 
 However, if you start using one service from within another, there would be no validation! GraphQL is only involved if an "outside" party is making a request (like a browser). If you really want to make sure that a field is present or formatted correctly, you'll need to add validation inside the Service itself. Then, no matter who is calling that service function (GraphQL or another Service) your data is guaranteed to be checked.
 
-We do have an additional layer of validation for free: because name, email and message were set as required in our `schema.prisma` file, the database itself will prevent any `null`s from being recorded. It's usually recommended to not rely solely on the database for input validation: what format your data should be in is a concern of your business logic, and in a Redwood app the business logic lives in the Services!
+We do have an additional layer of validation for free: because name, email and message were set as required in our `schema.prisma` file, the database itself will prevent any `null`s from being recorded. It's usually recommended to not rely solely on the database for input validation: what format your data should be in is a concern of your business logic, and in a Cedar app the business logic lives in the Services!
 
 :::
 
-We talked about business logic belonging in our services files and this is a perfect example. And since validating inputs is such a common requirement, Redwood once again makes our lives easier with [Service Validations](../../services.md#service-validations).
+We talked about business logic belonging in our services files and this is a perfect example. And since validating inputs is such a common requirement, Cedar once again makes our lives easier with [Service Validations](../../services.md#service-validations).
 
 We'll make a call to a new `validate` function to our `contacts` service, which will do the work of making sure that the `email` field is actually formatted like an email address:
 
@@ -2015,7 +2015,7 @@ That's it! [React Hook Form](https://react-hook-form.com/) provides a bunch of [
 
 :::info
 
-You may have noticed that the onBlur form config stopped working once you started calling `useForm()` yourself. That's because Redwood calls `useForm()` behind the scenes and automatically passes it the `config` prop that you gave to `<Form>`. Redwood is no longer calling `useForm()` for you so if you need some options passed you need to do it manually:
+You may have noticed that the onBlur form config stopped working once you started calling `useForm()` yourself. That's because Cedar calls `useForm()` behind the scenes and automatically passes it the `config` prop that you gave to `<Form>`. Cedar is no longer calling `useForm()` for you so if you need some options passed you need to do it manually:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">

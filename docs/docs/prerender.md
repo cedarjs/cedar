@@ -11,7 +11,7 @@ We thought a lot about what the developer experience should be for route-based p
 :::info How's Prerendering different from SSR/SSG/SWR/ISSG/...?
 As Danny said in his [Prerender demo](https://www.youtube.com/watch?v=iorKyMlASZc&t=2844s) at our Community Meetup, the thing all of these have in common is that they render your markup in a Node.js context to produce HTML. The difference is when (build or runtime) and how often.
 
-Redwood currently supports prerendering at _build_ time. So before you deploy your web side, Redwood will render your pages into HTML, and once the JavaScript has been loaded on the browser, the page becomes dynamic.
+Redwood currently supports prerendering at _build_ time. So before you deploy your web side, Cedar will render your pages into HTML, and once the JavaScript has been loaded on the browser, the page becomes dynamic.
 :::
 
 <!-- [This comment](https://community.redwoodjs.com/t/prerender-proposal/849/12) on our Community forum. -->
@@ -53,7 +53,7 @@ This will prerender your NotFoundPage to `404.html` in your dist folder. Note th
 
 ## Private Routes
 
-For Private Routes, Redwood prerenders your Private Routes' `whileLoadingAuth` prop:
+For Private Routes, Cedar prerenders your Private Routes' `whileLoadingAuth` prop:
 
 ```jsx
 <PrivateSet>
@@ -99,11 +99,11 @@ Let's say you have a route like this
 <Route path="/blog-post/{id}" page={BlogPostPage} name="blogPost" prerender />
 ```
 
-To be able to prerender this route you need to let Redwood know what `id`s to use. Why? Because when we are prerendering your pages - at build time - we don't know the full URL i.e. `site.com/blog-post/1` vs `site.com/blog-post/3`. It's up to you to decide whether you want to prerender _all_ of the ids, or if there are too many to do that, if you want to only prerender the most popular or most likely ones.
+To be able to prerender this route you need to let Cedar know what `id`s to use. Why? Because when we are prerendering your pages - at build time - we don't know the full URL i.e. `site.com/blog-post/1` vs `site.com/blog-post/3`. It's up to you to decide whether you want to prerender _all_ of the ids, or if there are too many to do that, if you want to only prerender the most popular or most likely ones.
 
 You do this by creating a `BlogPostPage.routeHooks.js` file next to the page file itself (so next to `BlogPostPage.js` in this case). It should export a function called `routeParameters` that returns an array of objects that specify the route parameters that should be used for prerendering.
 
-So for example, for the route `/blogPost/{Id:Int}` - you would return `[ {id: 55}, {id: 77} ]` which would tell Redwood to prerender `/blogPost/55` and `/blogPost/77`
+So for example, for the route `/blogPost/{Id:Int}` - you would return `[ {id: 55}, {id: 77} ]` which would tell Cedar to prerender `/blogPost/55` and `/blogPost/77`
 
 A single Page component can be used for different routes too! Metadata about the current route will be passed as an argument to `routeParameters` so you can return different route parameters depending on what route it is, if you need to. An example will hopefully make all this clearer.
 
@@ -149,7 +149,7 @@ Take note of the special syntax for the import, with a dollar-sign in front of a
 
 ## Prerender Utils
 
-Sometimes you need more fine-grained control over whether something gets prerendered. This may be because the component or library you're using needs access to browser APIs like `window` or `localStorage`. Redwood has three utils to help you handle these situations:
+Sometimes you need more fine-grained control over whether something gets prerendered. This may be because the component or library you're using needs access to browser APIs like `window` or `localStorage`. Cedar has three utils to help you handle these situations:
 
 - `<BrowserOnly>`
 - `useIsBrowser`
@@ -239,7 +239,7 @@ function Header() {
 But re-exporting the SVG as a component requires a small change:
 
 ```jsx
-// ❌ due to how Redwood handles SVGs, this syntax isn't supported.
+// ❌ due to how Cedar handles SVGs, this syntax isn't supported.
 import Logo from './Logo.svg'
 export default Logo
 ```
@@ -257,7 +257,7 @@ export default LogoComponent
 
 ## Cell prerendering
 
-As of v3.x, Redwood supports prerendering your Cells with the data you were querying. There's no special config to do here, but a couple of things to note:
+As of v3.x, Cedar supports prerendering your Cells with the data you were querying. There's no special config to do here, but a couple of things to note:
 
 #### 1. Prerendering always happens as an unauthenticated user
 

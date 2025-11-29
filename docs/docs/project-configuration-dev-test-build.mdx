@@ -9,7 +9,7 @@ import ReactPlayer from './ReactPlayer'
 
 ## Babel
 
-Out of the box Redwood configures [Babel](https://babeljs.io/) so that you can write modern JavaScript and TypeScript without needing to worry about transpilation at all.
+Out of the box Cedar configures [Babel](https://babeljs.io/) so that you can write modern JavaScript and TypeScript without needing to worry about transpilation at all.
 GraphQL tags, JSX, SVG imports—all of it's handled for you.
 
 For those well-versed in Babel config, you can find Redwood's in [@cedarjs/internal](https://github.com/cedarjs/cedar/tree/main/packages/internal/src/build/babel).
@@ -84,7 +84,7 @@ The web side's configuration sits in `./web/jest.config.js`
 const config = {
   rootDir: '../',
   preset: '@cedarjs/testing/config/jest/web',
-  // ☝️ load the built-in Redwood Jest configuration
+  // ☝️ load the built-in Cedar Jest configuration
 }
 
 module.exports = config
@@ -107,7 +107,7 @@ You can find all the details in the [source](https://github.com/cedarjs/cedar/bl
 
 ## GraphQL Codegen
 
-You can customize the types that Redwood generates from your project too! This is documented in a bit more detail in the [Generated Types](typescript/generated-types#customising-codegen-config) doc.
+You can customize the types that Cedar generates from your project too! This is documented in a bit more detail in the [Generated Types](typescript/generated-types#customising-codegen-config) doc.
 
 ## Debug configurations
 
@@ -165,11 +165,11 @@ It allows you to start all debugging configurations at once, facilitating simult
 
 > **ℹ️ Tip: Can't see the debug configurations?** In VSCode
 >
-> You can grab the latest launch.json from the Redwood template [here](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/templates/ts/.vscode/launch.json). Copy the contents into your project's `.vscode/launch.json`
+> You can grab the latest launch.json from the Cedar template [here](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/templates/ts/.vscode/launch.json). Copy the contents into your project's `.vscode/launch.json`
 
 ## Ignoring the `.yarn` folder
 
-The `.yarn` folder contains the most recent Yarn executable that Redwood supports
+The `.yarn` folder contains the most recent Yarn executable that Cedar supports
 which is the [recommended way](https://github.com/yarnpkg/yarn/issues/7741)
 to ensure things run smoothly for everyone. From VSCode's perspective, this of course
 is just another folder containing code, so it will
@@ -181,7 +181,7 @@ is just another folder containing code, so it will
 … which, depending on your personal preference, is something you may not need or want.
 
 Fortunately, all these aspects are configurable via VSCode's `settings.json`. You have the
-choice of making these changes to your local Redwood project's configuration
+choice of making these changes to your local Cedar project's configuration
 found in `.vscode/settings.json` or globally (so they apply to other projects as
 well). For global changes, hit <kbd>F1</kbd> or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>
 (that's <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> if you're on Mac)
@@ -250,5 +250,5 @@ on your editor.
 
 In JavaScript and TypeScript files trailing whitespace has no significance,
 but for html, markdown and mjml it does. That's why the behavior is different
-for those files. If you don't like the default behavior Redwood has configured
+for those files. If you don't like the default behavior Cedar has configured
 for you, you're free to change the settings in those two files.

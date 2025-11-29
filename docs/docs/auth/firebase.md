@@ -37,7 +37,7 @@ Lastly, include `FIREBASE_API_KEY` and `FIREBASE_AUTH_DOMAIN` in the list of env
   includeEnvironmentVariables = ["FIREBASE_API_KEY", "FIREBASE_AUTH_DOMAIN"]
 ```
 
-We've hooked up our Firebase app to our Redwood app, but if you try it now, it won't work.
+We've hooked up our Firebase app to our Cedar app, but if you try it now, it won't work.
 That's because we haven't actually enabled auth in our Firebase app yet.
 
 Back to the dashboard one more time: in the nav on the left, click "Build", "Authentication", and "Get started".

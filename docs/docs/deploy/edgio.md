@@ -2,7 +2,7 @@
 
 > ⚠️ **Deprecated**
 >
-> As of Redwood v7, we are deprecating this deploy setup as an "officially" supported provider. This means:
+> As of Cedar v7, we are deprecating this deploy setup as an "officially" supported provider. This means:
 >
 > - For projects already using this deploy provider, there will be NO change at this time
 > - Both the associated `setup` and `deploy` commands will remain in the framework as is; when setup is run, there will be a “deprecation” message

@@ -4,11 +4,11 @@ sidebar_label: Custom
 
 # Custom Authentication
 
-If Redwood doesn't officially integrate with the auth provider you want to use, you're not out of luck just yet: Redwood has an API you can use to integrate your auth provider of choice.
+If Cedar doesn't officially integrate with the auth provider you want to use, you're not out of luck just yet: Cedar has an API you can use to integrate your auth provider of choice.
 
 :::tip Were you using Nhost, magic.link, GoTrue, Okta or Wallet Connect (ethereum)?
 
-If you're here because you're using one of the providers Redwood used to support (Nhost, magic.link, GoTrue, Okta or Wallet Connect (Ethereum)), we've moved the code for them out into their own separate repos:
+If you're here because you're using one of the providers Cedar used to support (Nhost, magic.link, GoTrue, Okta or Wallet Connect (Ethereum)), we've moved the code for them out into their own separate repos:
 
 - [Nhost](https://github.com/redwoodjs/auth-nhost)
 - [magic.link](https://github.com/redwoodjs/auth-magiclink)
@@ -111,7 +111,7 @@ const client = new NhostClient({
 
 Ok, that's it for the client.
 At this point, you could update some of the TS interfaces, but we'll leave that to you and press on with the integration.
-Now we have to create the `useAuth` hook using the client we just made so that the rest of Redwood, like the router, works.
+Now we have to create the `useAuth` hook using the client we just made so that the rest of Cedar, like the router, works.
 Scroll down a little more to the `createAuthImplementation` function:
 
 ```ts title="web/src/auth.ts"

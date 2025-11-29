@@ -1,16 +1,16 @@
 # Supabase Auth
 
-Let's call this how to a port of the [Redwood GoTrue Auth how to](gotrue-auth.md) to [Supabase](https://supabase.io/).
+Let's call this how to a port of the [Cedar GoTrue Auth how to](gotrue-auth.md) to [Supabase](https://supabase.io/).
 I won't get original style points because I copy-pasted (and updated, for good measure) the original.
 Why? Because Supabase auth is based on [Netlify GoTrue](https://github.com/netlify/gotrue), an API service for handling user registration and authentication. The Supabase folks build on solid open-source foundations.
 
-Once I connected these dots, the Redwood GoTrue Auth how to became a handy resource as I climbed the auth learning curve (and I started from sea level). Hopefully this Supabase-specific edition will help you climb your own too.
+Once I connected these dots, the Cedar GoTrue Auth how to became a handy resource as I climbed the auth learning curve (and I started from sea level). Hopefully this Supabase-specific edition will help you climb your own too.
 
 ## Time to Cook
 
 In this recipe, we'll:
 
-- Configure a Redwood app with Supabase auth
+- Configure a Cedar app with Supabase auth
 - Create a Sign Up form, a Sign In form, and a Sign Out button
 - Add auth links that display the correct buttons based on our auth state
 
@@ -20,37 +20,37 @@ But first, some housekeeping...
 
 Before getting started, there are a few steps you should complete:
 
-- [Create a Redwood app](../tutorial/chapter1/installation.md)
+- [Create a Cedar app](../tutorial/chapter1/installation.md)
 - [Create a Supabase account](https://www.supabase.io/)
 - [Go through the Supabase React Quick Start](https://supabase.io/docs/guides/with-react)
-- [Go through the Supabase Redwood Quick Start](https://supabase.io/docs/guides/with-redwoodjs)
-- Fire up a dev server: `yarn redwood dev`
+- [Go through the Supabase Cedar Quick Start](https://supabase.io/docs/guides/with-redwoodjs)
+- Fire up a dev server: `yarn cedar dev`
 
 ### About the Supabase Quick Starts
 
-Why the React Quick Start before the Redwood? I found it helpful to first interact directly with the [Supabase Client](https://github.com/supabase/supabase-js). Eventually, you'll use the [Redwood Auth wrapper](../authentication.md#supabase), which provides a level of abstraction and a clean, consistent style. But I needed a couple hours of direct client experimentation to gain comfort in the Redwood one.
+Why the React Quick Start before the Cedar one? I found it helpful to first interact directly with the [Supabase Client](https://github.com/supabase/supabase-js). Eventually, you'll use the [Cedar Auth wrapper](../authentication.md#supabase), which provides a level of abstraction and a clean, consistent style. But I needed a couple hours of direct client experimentation to gain comfort in the Cedar one.
 
-So, just this once, I hereby give you permission to fire-up Create React App as you follow-along the Supabase React Quick Start. I worked through it first. Then I worked through the Supabase Redwood Quick start, observing the slight differences. This helped me understand the details that the Redwood wrapper abstracts for us.
+So, just this once, I hereby give you permission to fire-up Create React App as you follow-along the Supabase React Quick Start. I worked through it first. Then I worked through the Supabase Cedar Quick start, observing the slight differences. This helped me understand the details that the Cedar wrapper abstracts for us.
 
 > **Auth Alphabet Soup**
 >
 > If you're like me—and I'm pretty sure I'm just human—you may find yourself spinning in jumbled auth jargon. Hang in there, you'll get your auth ducks lined up eventually.
 >
-> I'm proud to tell you that I now know that the Redwood Supabase auth client wraps the Supabase GoTrueJS client, which is a fork of Netlify’s GoTrueJS client (which is different from Netlify Identity). And dbAuth is a totally separate auth option. Plus, I'll keep it simple and not use RBAC at the moment.
+> I'm proud to tell you that I now know that the Cedar Supabase auth client wraps the Supabase GoTrueJS client, which is a fork of Netlify’s GoTrueJS client (which is different from Netlify Identity). And dbAuth is a totally separate auth option. Plus, I'll keep it simple and not use RBAC at the moment.
 >
 > Ahhh! It took me a few weeks to figure this out.
 
-## Back to Redwood
+## Back to Cedar
 
-Armed with some knowledge and insight from going through the Supabase Quick Starts, let's head back to the Redwood app created as part of the prerequisites.
+Armed with some knowledge and insight from going through the Supabase Quick Starts, let's head back to the Cedar app created as part of the prerequisites.
 
-Start by installing the required packages and generating boilerplate for Redwood Auth, all with this simple [CLI command](../cli-commands.md#setup-auth):
+Start by installing the required packages and generating boilerplate for Cedar Auth, all with this simple [CLI command](../cli-commands.md#setup-auth):
 
 ```bash
-yarn redwood setup auth supabase
+yarn cedar setup auth supabase
 ```
 
-By specifying `supabase` as the provider, Redwood automatically added the necessary Supabase config to our app. Let's open up `web/src/App.[js/tsx]` and inspect. You should see:
+By specifying `supabase` as the provider, Cedar automatically added the necessary Supabase config to our app. Let's open up `web/src/App.[js/tsx]` and inspect. You should see:
 
 ```jsx {1-2,12,17} title="web/src/App.[js/tsx]"
 import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'
@@ -125,12 +125,12 @@ _Now_ we're done with configuration. Back to our app...
 Let's generate a Sign Up page:
 
 ```bash
-yarn redwood generate page signup
+yarn cedar generate page signup
 ```
 
 This adds a Sign Up [route](../router.md) to our routes file and creates a `SignupPage` component.
 
-In the just-generated `SignupPage` component (`web/src/pages/SignupPage/SignupPage.[js/tsx]`), let's import some [Redwood Form components](../forms.md) and make a very basic form:
+In the just-generated `SignupPage` component (`web/src/pages/SignupPage/SignupPage.[js/tsx]`), let's import some [Cedar Form components](../forms.md) and make a very basic form:
 
 ```jsx title="web/src/pages/SignupPage/SignupPage.[js/tsx]"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'
@@ -151,7 +151,7 @@ const SignupPage = () => {
 export default SignupPage
 ```
 
-Did I mention it was basic? If you want to add some polish, you might find both the [Redwood Form docs](../forms.md) and the [tutorial section on forms](../tutorial/chapter3/forms.md) quite useful. For our purposes, let's just focus on the functionality.
+Did I mention it was basic? If you want to add some polish, you might find both the [Cedar Form docs](../forms.md) and the [tutorial section on forms](../tutorial/chapter3/forms.md) quite useful. For our purposes, let's just focus on the functionality.
 
 Now that we have a form interface, we're going to want to do something when the user submits it. Let's add an `onSubmit` function to our component and pass it as a prop to our Form component:
 
@@ -293,10 +293,10 @@ Now we can handle a successful submission. If we sign up without email confirmat
 First, if you haven't already, [generate](../cli-commands.md#generate-page) a homepage:
 
 ```bash
-yarn redwood generate page home /
+yarn cedar generate page home /
 ```
 
-Let's import `routes` and `navigate` from [Redwood Router](../router.md#navigate) and use them to redirect to the home page upon successful sign up:
+Let's import `routes` and `navigate` from [Cedar Router](../router.md#navigate) and use them to redirect to the home page upon successful sign up:
 
 ```jsx {3,16} title="web/src/pages/SignupPage/SignupPage.js"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'
@@ -342,7 +342,7 @@ Hoorah! We've just added a sign up page and created a sign up form. We created a
 Let's get right to it. Start by [generating](../cli-commands.md#generate-page) a sign in page:
 
 ```bash
-yarn redwood generate page signin
+yarn cedar generate page signin
 ```
 
 Next we'll add a basic form with `email` and `password` fields, some error reporting, and a hollow `onSubmit` function:
@@ -404,7 +404,7 @@ const SigninPage = () => {
 export default SigninPage
 ```
 
-Now we'll add `logIn` to our `onSubmit` function. This time we'll be passing an object to our function as we're using Redwood Auth's `logIn` function directly (as opposed to `client`). This object takes an email and password.
+Now we'll add `logIn` to our `onSubmit` function. This time we'll be passing an object to our function as we're using Cedar Auth's `logIn` function directly (as opposed to `client`). This object takes an email and password.
 
 ```jsx {10-15} title="web/src/pages/SigninPage/SigninPage.js"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'
@@ -481,7 +481,7 @@ export default SigninPage
 
 Well done! We've created a sign in page and form that successfully handles sign in.
 
-> The remainder of the how to is the same as the [Netlify GoTrue Auth](gotrue-auth.md) version. This highlights one of the fun benefits of the Redwood Auth wrappers: code specific to a certain auth implementation scheme can live in a few specific spots, as we walked through above. Then, general Redwood Auth functions can be used elsewhere in the app.
+> The remainder of the how to is the same as the [Netlify GoTrue Auth](gotrue-auth.md) version. This highlights one of the fun benefits of the Cedar Auth wrappers: code specific to a certain auth implementation scheme can live in a few specific spots, as we walked through above. Then, general Cedar Auth functions can be used elsewhere in the app.
 
 ## Sign Out
 
@@ -490,7 +490,7 @@ Sign Out is by far the easiest to implement. All we need to do is call `useAuth`
 Let's start by [generating a component](../cli-commands.md#generate-component) to house our Sign Out Button:
 
 ```bash
-yarn redwood generate component signoutBtn
+yarn cedar generate component signoutBtn
 ```
 
 In the `web/src/components/SignoutBtn/SignoutBtn.js` file we just generated, let's render a button and add a click handler:
@@ -555,7 +555,7 @@ In this section we'll implement some auth-related navigation that conditionally 
 Let's start by [generating a navigation component](../cli-commands.md#generate-component):
 
 ```bash
-yarn redwood generate component navigation
+yarn cedar generate component navigation
 ```
 
 This creates `web/src/components/Navigation/Navigation.js`. In that file, let's import [the `Link` component and the `routes` object](../router.md#link-and-named-route-functions) from `@cedarjs/router`.
@@ -594,7 +594,7 @@ const Navigation = () => {
 export default Navigation
 ```
 
-Because Redwood Auth uses [React's Context API](https://reactjs.org/docs/context.html) to manage and broadcast the auth state, we can be confident that `isAuthenticated` will always be up-to-date, even if it changes from within another component in the tree (so long as it's a child of `<AuthProvider />`). In our case, when `isAuthenticated` changes, React will auto-magically take care of rendering the appropriate components.
+Because Cedar Auth uses [React's Context API](https://reactjs.org/docs/context.html) to manage and broadcast the auth state, we can be confident that `isAuthenticated` will always be up-to-date, even if it changes from within another component in the tree (so long as it's a child of `<AuthProvider />`). In our case, when `isAuthenticated` changes, React will auto-magically take care of rendering the appropriate components.
 
 Now let's import our sign out button and add it, as well as sign in and sign up links, to the appropriate blocks in the conditional:
 
@@ -625,7 +625,7 @@ export default Navigation
 We have a working navigation component, but we still need to render it somewhere. Let's [generate a layout](../cli-commands.md#generate-layout) called GlobalLayout:
 
 ```bash
-yarn redwood generate layout global
+yarn cedar generate layout global
 ```
 
 Then import and render the navigation component in the newly-generated `web/src/layouts/GlobalLayout/GlobalLayout`:
@@ -673,13 +673,13 @@ Now we have navigation that renders the correct links and buttons based on our a
 
 ## Wrapping Up
 
-We've configured Supabase GoTrue Auth with Redwood Auth, created a Sign Up page, a Sign In page, and a Sign Out button, and added auth links to our layout. Nicely done!
+We've configured Supabase GoTrue Auth with Cedar Auth, created a Sign Up page, a Sign In page, and a Sign Out button, and added auth links to our layout. Nicely done!
 
 As you continue refining your app, the following resources may come in handy:
 
-- [Redwood Supabase Auth Installation & Setup](../authentication.md#supabase)
-- [Redwood Auth Playground](https://redwood-playground-auth.netlify.app/supabase)
-- [Redwood Supabase Auth Client Implementation](https://github.com/cedarjs/cedar/blob/main/packages/auth/src/authClients/supabase.ts)
+- [Cedar Supabase Auth Installation & Setup](../authentication.md#supabase)
+- [Cedar Auth Playground](https://redwood-playground-auth.netlify.app/supabase)
+- [Cedar Supabase Auth Client Implementation](https://github.com/cedarjs/cedar/blob/main/packages/auth/src/authClients/supabase.ts)
 - [Supabase GoTrue client implementation](https://github.com/supabase/gotrue-js/blob/d7b334a4283027c65814aa81715ffead262f0bfa/src/GoTrueClient.ts)
 
 Finally, keep the following features in mind (future how to's could go deep into any of these):

@@ -4,7 +4,7 @@ description: A look at automatic type generation in Redwood
 
 # Generated Types
 
-To add to the TypeScript (and JavaScript!) experience, Redwood generates types for you.
+To add to the TypeScript (and JavaScript!) experience, Cedar generates types for you.
 These generated types not only include your GraphQL operations, but also your named routes, Cells, scenarios, and tests.
 
 When you run `yarn rw dev`, the CLI watches files for changes and triggers type generation automatically, but you can trigger it manually too:
@@ -22,7 +22,7 @@ Make sure that they're syntactically valid, and that every query and mutation on
 
 :::
 
-If you're curious, you can find the generated types in the `.redwood/types`, `web/types/graphql.d.ts`, and `api/types/graphql.d.ts` directories. Broadly speaking, Redwood generates the following types:
+If you're curious, you can find the generated types in the `.redwood/types`, `web/types/graphql.d.ts`, and `api/types/graphql.d.ts` directories. Broadly speaking, Cedar generates the following types:
 
 1. ["mirror" types](https://www.typescriptlang.org/docs/handbook/module-resolution.html#virtual-directories-with-rootdirs) for your components, pages, layouts, etc. on the web side, and for your services, lib, etc. on the api side
 2. types based on your queries and mutations on the web side (in `web/types/graphql.d.ts`)
@@ -85,7 +85,7 @@ import type {
 
 `FindBlogPostQuery` is the type of the data returned from the query (`{ title: string, body: string }`) and `FindBlogPostQueryVariables` is the type of the query's variables (`{ id: number }`).
 
-The import statement's specifier, `'types/graphql'`, is a [mapped path](https://www.typescriptlang.org/docs/handbook/module-resolution.html#path-mapping). First, TypeScript will look for the types in `web/types/graphql.d.ts`; if they're not there, it'll check `types/graphql.d.ts`. Redwood only automatically generates the former. For the latter, see [sharing types between sides](./introduction.md#sharing-types-between-sides).
+The import statement's specifier, `'types/graphql'`, is a [mapped path](https://www.typescriptlang.org/docs/handbook/module-resolution.html#path-mapping). First, TypeScript will look for the types in `web/types/graphql.d.ts`; if they're not there, it'll check `types/graphql.d.ts`. Cedar only automatically generates the former. For the latter, see [sharing types between sides](./introduction.md#sharing-types-between-sides).
 
 But don't worry too much. If you use the generators, they template all of this for you!
 
@@ -165,11 +165,11 @@ config:
 
 You can configure graphql-codegen in a number of different ways: `codegen.yml`, `codegen.json`, or `codegen.js`. Even a `codegen` key in your root `package.json` will do. graphql-codegen uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig#cosmiconfig) under the hood—take a look at their docs if you want to know more.
 
-For completeness, [here's the docs](https://www.graphql-code-generator.com/docs/config-reference/config-field) on configuring GraphQL Code Generator. Currently, Redwood only supports the root level `config` option.
+For completeness, [here's the docs](https://www.graphql-code-generator.com/docs/config-reference/config-field) on configuring GraphQL Code Generator. Currently, Cedar only supports the root level `config` option.
 
 ## Experimental SDL Code Generation
 
-There is also an experimental code generator based on [sdl-codegen](https://github.com/sdl-codegen/sdl-codegen) available. sdl-codegen is a fresh implementation of code generation for service files, built with Redwood in mind. It is currently in opt-in and can be enabled by setting the `experimentalSdlCodeGen` flag to `true` in your `redwood.toml` file:
+There is also an experimental code generator based on [sdl-codegen](https://github.com/sdl-codegen/sdl-codegen) available. sdl-codegen is a fresh implementation of code generation for service files, built with Cedar in mind. It is currently in opt-in and can be enabled by setting the `experimentalSdlCodeGen` flag to `true` in your `redwood.toml` file:
 
 ```toml title="redwood.toml"
 [experimental]
@@ -200,7 +200,7 @@ Running `yarn rw g types` will generate types for your resolvers on a per-file b
 
 :::tip Using VSCode?
 
-As a part of type generation, the extension [GraphQL: Language Feature Support](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) configures itself based on the merged schema Redwood generates in `.redwood/schema.graphql`.
+As a part of type generation, the extension [GraphQL: Language Feature Support](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) configures itself based on the merged schema Cedar generates in `.redwood/schema.graphql`.
 You can configure it further in `graphql.config.cjs` at the root of your project.
 
 :::

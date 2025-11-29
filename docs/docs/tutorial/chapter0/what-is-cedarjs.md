@@ -53,33 +53,33 @@ const Routes = () => {
 }
 ```
 
-You can probably get a sense of how all of this works without ever having seen a Redwood route before! Some routes can be marked as `<PrivateSet>` and will not be accessible without being logged in. Others can be wrapped in a "layout" (again, just a React component) to provide common styling shared between pages in your app.
+You can probably get a sense of how all of this works without ever having seen a Cedar route before! Some routes can be marked as `<PrivateSet>` and will not be accessible without being logged in. Others can be wrapped in a "layout" (again, just a React component) to provide common styling shared between pages in your app.
 
 #### Prerender
 
 If you have content on your page that can be purely static (like public facing marketing-focused pages) you can simply add the `prerender` attribute to your route and that page will be completely rendered (no matter how deeply nested the internal components go) into an HTML page. This page loads instantly, but still contains the JS needed to include React. Once React loads, the page is rehydrated and becomes interactive.
 
-You can also prerender pages that contain variables pulled from the URL, like the `/products/{sku}` route above. Redwood will [iterate](../../prerender.md#dynamic-routes--route-hooks) through all available skus and generate a page for each.
+You can also prerender pages that contain variables pulled from the URL, like the `/products/{sku}` route above. Cedar will [iterate](../../prerender.md#dynamic-routes--route-hooks) through all available skus and generate a page for each.
 
 This is Redwood's version of static site generation, aka SSG.
 
 #### Accessibility
 
-Redwood includes a couple of components to [aid screen readers](https://redwoodjs.com/docs/accessibility) in properly navigating your app. The `<RouteAnnouncement>` component tells a screen reader to read something aloud, even though it isn't visible in the browser. And the `<RouteFocus>` tells a reader to skip verbose navigation options at the top of a page and get to the content.
+Redwood includes a couple of components to [aid screen readers](https://cedarjs.com/docs/accessibility) in properly navigating your app. The `<RouteAnnouncement>` component tells a screen reader to read something aloud, even though it isn't visible in the browser. And the `<RouteFocus>` tells a reader to skip verbose navigation options at the top of a page and get to the content.
 
 ### Authentication
 
-The `<PrivateSet>` route limits access to users that are authenticated, but how do they authenticate? Redwood includes integrations to many popular third party authentication hosts (including [Auth0](https://auth0.com/), [Supabase](https://supabase.com/docs/guides/auth) and [Clerk](https://clerk.com/)). You can also [host your own auth](https://redwoodjs.com/docs/auth/dbauth), or write your own [custom authentication](https://redwoodjs.com/docs/auth/custom) option. If going self-hosted, we include login, signup, and reset password pages, as well as the option to include TouchID/FaceID and third party biometric readers!
+The `<PrivateSet>` route limits access to users that are authenticated, but how do they authenticate? Cedar includes integrations to many popular third party authentication hosts (including [Auth0](https://auth0.com/), [Supabase](https://supabase.com/docs/guides/auth) and [Clerk](https://clerk.com/)). You can also [host your own auth](https://cedarjs.com/docs/auth/dbauth), or write your own [custom authentication](https://cedarjs.com/docs/auth/custom) option. If going self-hosted, we include login, signup, and reset password pages, as well as the option to include TouchID/FaceID and third party biometric readers!
 
-Once authenticated, how do you know what a user is allowed to do or not do? Redwood includes helpers for [role-based access control](https://redwoodjs.com/docs/how-to/role-based-access-control-rbac) that integrates on both the front- and backend.
+Once authenticated, how do you know what a user is allowed to do or not do? Cedar includes helpers for [role-based access control](https://cedarjs.com/docs/how-to/role-based-access-control-rbac) that integrates on both the front- and backend.
 
 The homepage is accessible _without_ being logged in, browsing to `/` will load the `HomePage` page (component) which itself is just composed of more React components, nothing special there. But, what if the homepage, say, displayed some testimonials from the database? Ahh, now things are getting interesting. Here's where Redwood's handpicked selection of technologies start to take the spotlight.
 
 ### GraphQL
 
-Redwood uses GraphQL as the glue between the front- and backends: whenever you want data from the server/database, you're going to retrieve it via GraphQL. Now, we could have just given you raw access to some GraphQL library and let you make those calls yourself. We use [Apollo Client](https://www.apollographql.com/apollo-client) on the frontend and Apollo provides hooks like [useQuery()](https://www.apollographql.com/tutorials/lift-off-part1/10-the-usequery-hook) and [useMutation()](https://www.apollographql.com/tutorials/lift-off-part4/08-the-usemutation-hook) to retrieve and set data, respectively. But Redwood has a much deeper integration.
+Redwood uses GraphQL as the glue between the front- and backends: whenever you want data from the server/database, you're going to retrieve it via GraphQL. Now, we could have just given you raw access to some GraphQL library and let you make those calls yourself. We use [Apollo Client](https://www.apollographql.com/apollo-client) on the frontend and Apollo provides hooks like [useQuery()](https://www.apollographql.com/tutorials/lift-off-part1/10-the-usequery-hook) and [useMutation()](https://www.apollographql.com/tutorials/lift-off-part4/08-the-usemutation-hook) to retrieve and set data, respectively. But Cedar has a much deeper integration.
 
-What if you could have a component that was not only responsible for its own display _but even its own data retrieval_? Meaning everything that component needed in order to display itself could all be self-contained. That includes the code to display while the data is loading, or if something goes wrong. These kinds of uber-components are real, and Redwood calls them "cells."
+What if you could have a component that was not only responsible for its own display _but even its own data retrieval_? Meaning everything that component needed in order to display itself could all be self-contained. That includes the code to display while the data is loading, or if something goes wrong. These kinds of uber-components are real, and Cedar calls them "cells."
 
 ### Cells
 
@@ -129,7 +129,7 @@ export const Success = ({ testimonials }) => {
 
 If you ever create additional clients for your server (a mobile app, perhaps) you'll be giving yourself a huge advantage by using GraphQL from the start.
 
-Oh, and prerendering also works with cells! At build time, Redwood will start up the GraphQL server and make requests, just as if a user was accessing the pages, rendering the result to plain HTML, ready to be loaded instantly by the browser.
+Oh, and prerendering also works with cells! At build time, Cedar will start up the GraphQL server and make requests, just as if a user was accessing the pages, rendering the result to plain HTML, ready to be loaded instantly by the browser.
 
 ### Apollo Cache
 
@@ -147,7 +147,7 @@ Now we're into the backend code in the `api` directory.
 
 ### Prisma
 
-[Prisma](https://www.prisma.io/) is the package Redwood uses to talk to your database, and provides automated migrations, type-safety and auto-completion in your IDE. Your Redwood app will contain a file called `schema.prisma` that will reflect your current database schema:
+[Prisma](https://www.prisma.io/) is the package Cedar uses to talk to your database, and provides automated migrations, type-safety and auto-completion in your IDE. Your Cedar app will contain a file called `schema.prisma` that will reflect your current database schema:
 
 ```prisma
 datasource db {
@@ -183,7 +183,7 @@ export const testimonials = () => {
 }
 ```
 
-How does GraphQL know to go here for its `testimonials` resolver? Redwood introduces an "SDL" file, which contains the mapping from GraphQL to the world of services:
+How does GraphQL know to go here for its `testimonials` resolver? Cedar introduces an "SDL" file, which contains the mapping from GraphQL to the world of services:
 
 ```js
 export const schema = gql`
@@ -260,7 +260,7 @@ So `@requireAuth` and `@skipAuth` provide a gate around entire GraphQL queries f
 
 ## Generators
 
-Let's take a look at an often overlooked tool in many frameworks' kit: the command line tools. Redwood has focused extensively on these, and one of the most powerful are the "generators." These are used to create files, setup integrations, execute scripts, start the dev server, and more.
+Let's take a look at an often overlooked tool in many frameworks' kit: the command line tools. Cedar has focused extensively on these, and one of the most powerful are the "generators." These are used to create files, setup integrations, execute scripts, start the dev server, and more.
 
 A huge timesaver is generating layouts, pages and cells. There isn't much boilerplate in Redwood's files, but it's still nice to have them built out for, even going so far as creating tests for the bare functionality (more on tests in a minute).
 
@@ -276,7 +276,7 @@ There's even an interactive console that lets you, for example, execute Prisma q
 
 ## Jest
 
-Being able to develop a full-stack application this easily is great, but how do you verify that it's working as intended? That's where a great test suite comes in. [Jest](https://jestjs.io/) is a test framework that, as they say, focuses on simplicity. We felt that it was a natural fit with Redwood, and so most files you can generate will include the related test file automatically (pre-filled with some tests, even!).
+Being able to develop a full-stack application this easily is great, but how do you verify that it's working as intended? That's where a great test suite comes in. [Jest](https://jestjs.io/) is a test framework that, as they say, focuses on simplicity. We felt that it was a natural fit with Cedar, and so most files you can generate will include the related test file automatically (pre-filled with some tests, even!).
 
 Redwood includes several Jest helpers and matchers, allowing you to mock out GraphQL requests, database data, logged in users, and more.
 
@@ -300,11 +300,11 @@ Storybook is strictly a frontend codebase concern.
 
 ## Vite, Babel and Typescript
 
-Notice at no point above did we say "and then we need to write configuration for this package..." Redwood has done all of that for you and will continue to do that with every release of a new version. We're sure you won't miss spending hours or days trying to add and configure a package in your application. You can eject from our default configs, and add custom code if needed, but most apps will never need to do this: everything Just Works.
+Notice at no point above did we say "and then we need to write configuration for this package..." Cedar has done all of that for you and will continue to do that with every release of a new version. We're sure you won't miss spending hours or days trying to add and configure a package in your application. You can eject from our default configs, and add custom code if needed, but most apps will never need to do this: everything Just Works.
 
 We use vite as our bundler, packaging up the frontend code and automatically code splitting on pages. It also serves the frontend (the `web` directory). The backend (the `api` directory) is compiled by Babel and served with [Fastify](https://fastify.dev/).
 
-The entire framework is ([strictly](https://redwoodjs.com/docs/typescript/strict-mode)) typed so you can autocomplete all the things in your IDE.
+The entire framework is ([strictly](https://cedarjs.com/docs/typescript/strict-mode)) typed so you can autocomplete all the things in your IDE.
 
 ## Deployment
 
@@ -335,12 +335,12 @@ These are just a few highlights from our current [Bighorn Epoch](https://tom.pre
 
 ## Backing
 
-Redwood was created by Tom Preston-Werner, cofounder of GitHub and projects like Semantic Versioning, TOML, Jekyll, and many more. Tom believes that JavaScript applications, specifically full-stack JS applications, are the future of the web, and Redwood has his full support.
+Redwood was created by Tom Preston-Werner, cofounder of GitHub and projects like Semantic Versioning, TOML, Jekyll, and many more. Tom believes that JavaScript applications, specifically full-stack JS applications, are the future of the web, and Cedar has his full support.
 
 ## Updates
 
-Redwood is constantly being updated and sticks strictly to semantic versioning requirements. You can be sure that there won't be any sudden, breaking changes without a major version revision. Redwood is famous for its [copious release notes](https://community.redwoodjs.com/t/redwood-3-0-0-is-now-available/3989) and comprehensive upgrade guides, and if code changes need to be made to your app, we make every effort to include a codemod script that will make the changes for you.
+Redwood is constantly being updated and sticks strictly to semantic versioning requirements. You can be sure that there won't be any sudden, breaking changes without a major version revision. Cedar is famous for its [copious release notes](https://community.redwoodjs.com/t/redwood-3-0-0-is-now-available/3989) and comprehensive upgrade guides, and if code changes need to be made to your app, we make every effort to include a codemod script that will make the changes for you.
 
 ## Community
 
-There's a very active community around Redwood, including a [Discourse forum](https://community.redwoodjs.com/) and [Discord chat](https://discord.gg/redwoodjs), where even members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!
+There's a very active community around Cedar, including a [Discourse forum](https://community.redwoodjs.com/) and [Discord chat](https://cedarjs.com/discord), where even members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!

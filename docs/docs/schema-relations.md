@@ -43,7 +43,7 @@ These relationships can be [implicit](https://www.prisma.io/docs/concepts/compon
 
 ## CRUD Requires an `@id`
 
-CRUD (Create, Retrieve, Update, Delete) actions in Redwood currently require a single, unique field in order to retrieve, update or delete a record. This field must be denoted with Prisma's [`@id`](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#id) attribute, marking it as the tables's primary key. This field is guaranteed to be unique and so can be used to find a specific record.
+CRUD (Create, Retrieve, Update, Delete) actions in Cedar currently require a single, unique field in order to retrieve, update or delete a record. This field must be denoted with Prisma's [`@id`](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#id) attribute, marking it as the tables's primary key. This field is guaranteed to be unique and so can be used to find a specific record.
 
 Prisma's implicit many-to-many relationships create a table _without_ a single field marked with the `@id` attribute. Instead, it uses a similar attribute: [`@@id`](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#id-1) to define a _multi-field ID_. This multi-field ID will become the tables's primary key. The diagram above shows the result of letting Prisma create an implicit relationship.
 
@@ -235,6 +235,6 @@ model Employee {
 
 For the generators, what's important here is that the related models are optional.
 `reportsToId`, `reportsTo`, and `directReports` use Prisma's `?` syntax to indicate that they're optional—not required.
-The Redwood generators may complain or fail if you try to force a requirement here.
+The Cedar generators may complain or fail if you try to force a requirement here.
 
 It's important because if you're at the top—say you're the President—then you don't have a `reportsTo`, and if you're just an Employee, then you don't have anyone that directly reports to you.

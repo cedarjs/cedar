@@ -4,9 +4,9 @@ description: How to use environment variables on the api and web sides
 
 # Environment Variables
 
-You can provide environment variables to each side of your Redwood app in different ways, depending on each Side's target, and whether you're in development or production.
+You can provide environment variables to each side of your Cedar app in different ways, depending on each Side's target, and whether you're in development or production.
 
-> Right now, Redwood apps have two fixed Sides, API and Web, that each have a single target, nodejs and browser respectively.
+> Right now, Cedar apps have two fixed Sides, API and Web, that each have a single target, nodejs and browser respectively.
 
 ## Generally
 
@@ -15,7 +15,7 @@ For a reference on dotenv syntax, see the dotenv README's [Rules](https://github
 
 > Technically, we use [dotenv-defaults](https://github.com/mrsteele/dotenv-defaults), which is how we also supply and load `.env.defaults`.
 
-<!-- also in a Redwood app's base directory. -->
+<!-- also in a Cedar app's base directory. -->
 
 Redwood also configures Vite, so that all references to `process.env` vars on the Web side will be replaced with the variable's actual value at build-time. More on this in [Web](#Web).
 
@@ -25,7 +25,7 @@ Redwood also configures Vite, so that all references to `process.env` vars on th
 
 > **Heads Up:** for Web to access environment variables in production, you _must_ configure one of the options below.
 >
-> Redwood recommends **Option 1: `redwood.toml`** as it is the most robust.
+> Cedar recommends **Option 1: `redwood.toml`** as it is the most robust.
 
 In production, you can get environment variables to the Web Side either by
 
@@ -44,7 +44,7 @@ For Example:
   includeEnvironmentVariables = ['SECRET_API_KEY', 'ANOTHER_ONE']
 ```
 
-By adding environment variables to this array, they'll be available to Web in production via `process.env.SECRET_API_KEY`. This means that if you have an environment variable like `process.env.SECRET_API_KEY` Redwood removes and replaces it with its _actual_ value.
+By adding environment variables to this array, they'll be available to Web in production via `process.env.SECRET_API_KEY`. This means that if you have an environment variable like `process.env.SECRET_API_KEY` Cedar removes and replaces it with its _actual_ value.
 
 Note: if someone inspects your site's source, _they could see your `REDWOOD_ENV_SECRET_API_KEY` in plain text._ This is a limitation of delivering static JS and HTML to the browser.
 
@@ -120,7 +120,7 @@ Some hosting providers distinguish between build and runtime environments for co
 
 ## Keeping Sensitive Information Safe
 
-Since it usually contains sensitive information, you should [never commit your `.env` file](https://github.com/motdotla/dotenv#should-i-commit-my-env-file). Note that you'd actually have to go out of your way to do this as, by default, a Redwood app's `.gitignore` explicitly ignores `.env`:
+Since it usually contains sensitive information, you should [never commit your `.env` file](https://github.com/motdotla/dotenv#should-i-commit-my-env-file). Note that you'd actually have to go out of your way to do this as, by default, a Cedar app's `.gitignore` explicitly ignores `.env`:
 
 ```plaintext {2}
 .DS_Store
@@ -133,7 +133,7 @@ node_modules
 yarn-error.log
 ```
 
-## Where Does Redwood Load My Environment Variables?
+## Where Does Cedar Load My Environment Variables?
 
 For all the variables in your `.env` and `.env.defaults` files to make their way to `process.env`, there has to be a call to `dotenv`'s `config` function somewhere. So where is it?
 

@@ -2,9 +2,9 @@
 description: Utility types exposed by Redwood
 ---
 
-# Redwood Utility Types
+# Cedar Utility Types
 
-Besides generating types for you, Redwood exposes a handful of utility types for Cells, Scenarios, and DbAuth.
+Besides generating types for you, Cedar exposes a handful of utility types for Cells, Scenarios, and DbAuth.
 You'll see these helpers quite often if you use the generators, so let's walk through some of them. By the end of this, you'll likely see a pattern in these types and their use of [Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html).
 
 ## Cells
@@ -97,7 +97,7 @@ export const Loading = (props: CellLoadingProps<FindBlogPostQueryVariables>) => 
 
 ## Scenarios & Testing
 
-Over on the api side, when you generate SDLs and Services, Redwood generates tests and scenarios with all the types required. Let's take a deeper look at scenario types.
+Over on the api side, when you generate SDLs and Services, Cedar generates tests and scenarios with all the types required. Let's take a deeper look at scenario types.
 
 ### `defineScenario`
 
@@ -253,7 +253,7 @@ const validate: ValidatorDirectiveFunc = ({ context, directiveArgs }) => {
 
 This type takes a single generic - the type of your `directiveArgs`.
 
-Let's take a look at the built-in `@requireAuth(roles: ["ADMIN"])` directive, for example - which we ship with your Redwood app by default in `./api/src/directives/requireAuth/requireAuth.ts`
+Let's take a look at the built-in `@requireAuth(roles: ["ADMIN"])` directive, for example - which we ship with your Cedar app by default in `./api/src/directives/requireAuth/requireAuth.ts`
 
 ```ts
 // highlight-next-line
