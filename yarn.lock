@@ -11436,13 +11436,13 @@ __metadata:
   linkType: hard
 
 "@types/apollo-upload-client@npm:^18":
-  version: 18.0.0
-  resolution: "@types/apollo-upload-client@npm:18.0.0"
+  version: 18.0.1
+  resolution: "@types/apollo-upload-client@npm:18.0.1"
   dependencies:
     "@apollo/client": "npm:^3.8.0"
     "@types/extract-files": "npm:*"
     graphql: "npm:14 - 16"
-  checksum: 10c0/e733c3a2abe6286da5557e393c0fcc9946bfdeb9115aabc978d7443f58ada466cb56ba98331d25266664186c6e424aea783eadd4fb7870c3d93f5b3fcafc696a
+  checksum: 10c0/e1c04f7cdab0721dbde1bee17d21738788da4fd3da39013032fa075b17b8d5cc20da2b030a43afc6623f24e659c89259b94f46316a3e060b4bd3540b9484d5ac
   languageName: node
   linkType: hard
 
