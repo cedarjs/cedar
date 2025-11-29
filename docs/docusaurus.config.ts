@@ -234,6 +234,9 @@ const config: Config = {
               path: 'canary',
               banner: 'unreleased',
             },
+            '8.x': {
+              label: 'Redwood 8.x',
+            },
           },
         },
         blog: false,
