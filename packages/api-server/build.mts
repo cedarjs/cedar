@@ -111,6 +111,16 @@ await buildBinCjs({
   },
 })
 
+const builtEsmWatchPath = path.join(import.meta.dirname, 'dist/watch.js')
+const builtEsmWatch = fs.readFileSync(builtEsmWatchPath, 'utf8')
+fs.writeFileSync(
+  builtEsmWatchPath,
+  builtEsmWatch.replace(
+    /^startWatch\(\);$/m,
+    'if (import.meta.url === `file://${process.argv[1]}`) {\n  startWatch();\n}',
+  ),
+)
+
 async function buildBinEsm({ buildOptions }: { buildOptions: ESBuildOptions }) {
   await buildBin({
     buildOptions: {

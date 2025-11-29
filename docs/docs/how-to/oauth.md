@@ -112,7 +112,7 @@ This example uses Tailwind to style the link to match the rest of the default db
 
 You can put this same link on your signup page as well, since using the OAuth flow will be dual-purpose: it will log the user in if a local user already exists, or it will create the user and then log them in.
 
-We're using several of our new ENV vars here, and need to tell Redwood to make them available to the web side during the build process. Add them to the `includeEnvironmentVariables` key in `redwood.toml`:
+We're using several of our new ENV vars here, and need to tell Cedar to make them available to the web side during the build process. Add them to the `includeEnvironmentVariables` key in `redwood.toml`:
 
 ```toml title="/redwood.toml"
 [web]
@@ -155,7 +155,7 @@ This nicely formatted JSON comes from the [JSON Viewer](https://chrome.google.co
 
 ## The `/oauth` Function
 
-We can have Redwood generate a shell of our new function for us:
+We can have Cedar generate a shell of our new function for us:
 
 ```bash
 yarn rw g function oauth
@@ -551,7 +551,7 @@ const findOrCreateUser = async (providerUser) => {
 }
 ```
 
-We create the `user` and the `identity` records inside a transaction so that if something goes wrong, both records fail to create. The error would bubble up to the try/catch inside `callback()`. (The Redwood test project has a required `fullName` field that we fill with the `name` attribute from GitHub.)
+We create the `user` and the `identity` records inside a transaction so that if something goes wrong, both records fail to create. The error would bubble up to the try/catch inside `callback()`. (The Cedar test project has a required `fullName` field that we fill with the `name` attribute from GitHub.)
 
 :::info
 Don't forget the `toString()` calls whenever we read or write the `providerUser.id` since we made the `uid` of type `String`.

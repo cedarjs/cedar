@@ -4,7 +4,7 @@ const config = getConfig()
 
 export const NETLIFY_TOML = `\
 [build]
-  command = "yarn rw deploy netlify"
+  command = "yarn cedar deploy netlify"
   publish = "web/dist"
   functions = "api/dist/functions"
 

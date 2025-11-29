@@ -44,7 +44,7 @@ export default class OgImageMiddleware {
   App: React.FC
   Document: React.FC<{ css: string[]; meta: string[] }>
 
-  // Initialized in invoke() 👇
+  // Initialized in invoke()
   imageProps?: {
     width: number
     height: number
@@ -197,7 +197,7 @@ export default class OgImageMiddleware {
         mime.lookup(extension) as string,
       )
 
-      mwResponse.body = image
+      mwResponse.body = new Uint8Array(image)
     }
 
     return mwResponse

@@ -45,10 +45,11 @@
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "8.2.2",
+    "prisma": "6.19.0",
     "publint": "0.3.12",
     "rimraf": "6.0.1",
     "tsx": "4.20.5",
-    "typescript": "5.6.2",
+    "typescript": "5.9.2",
     "vitest": "3.2.4"
   },
   "publishConfig": {

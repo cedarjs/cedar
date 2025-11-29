@@ -107,12 +107,12 @@
     "@types/ws": "^8",
     "@types/yargs-parser": "21.0.3",
     "concurrently": "8.2.2",
-    "glob": "11.0.3",
+    "glob": "11.1.0",
     "memfs": "4.17.2",
     "publint": "0.3.12",
     "rollup": "4.24.0",
     "tsx": "4.20.5",
-    "typescript": "5.6.2",
+    "typescript": "5.9.2",
     "vitest": "3.2.4"
   },
   "publishConfig": {

@@ -4,11 +4,11 @@ description: Use meta tags to set page info for SEO
 
 # SEO & `<meta>` tags
 
-Search Engine Optimization is a dark art that some folks dedicate their entire lives to. We've add a couple of features to Redwood to make HTML-based SEO fairly simple.
+Search Engine Optimization is a dark art that some folks dedicate their entire lives to. We've add a couple of features to Cedar to make HTML-based SEO fairly simple.
 
 ## Adding a Title
 
-You certainly want to change the title of your Redwood app from the default of "Redwood App." You can start by adding or modifying `title` inside of `/redwood.toml`
+You certainly want to change the title of your Cedar app from the default of "Redwood App." You can start by adding or modifying `title` inside of `/redwood.toml`
 
 ```diff title=redwood.toml
 [web]
@@ -37,18 +37,18 @@ Add `titleTemplate` as a prop for `RedwoodProvider` to have a title template for
 You can use whatever formatting you'd like in here. Some examples:
 
 ```jsx
-"%PageTitle | %AppTitle" => "Home Page | Redwood App"
+"%PageTitle | %AppTitle" => "Home Page | Cedar App"
 
 "%AppTitle · %PageTitle" => "Redwood App · Home Page"
 
-"%PageTitle : %AppTitle" => "Home Page : Redwood App"
+"%PageTitle : %AppTitle" => "Home Page : Cedar App"
 ```
 
 ## Adding to Page `<head>`
 
 So you want to change the title of your page, or add elements to the `<head>` of the page? We've got you!
 
-Let's say you want to change the title of your About page, Redwood provides a built-in `<Head>` component, which you can use like this:
+Let's say you want to change the title of your About page, Cedar provides a built-in `<Head>` component, which you can use like this:
 
 ```diff title=web/src/pages/AboutPage/AboutPage.(tsx|jsx)
 +import { Head } from '@cedarjs/web'
@@ -62,11 +62,11 @@ const AboutPage = () => {
 +     </Head>
 ```
 
-You can include any valid `<head>` tag in here that you like. However, Redwood also provides a utility component [&lt;Metadata&gt;](#setting-meta-tags-and-opengraph-directives-with-metadata).
+You can include any valid `<head>` tag in here that you like. However, Cedar also provides a utility component [&lt;Metadata&gt;](#setting-meta-tags-and-opengraph-directives-with-metadata).
 
 :::caution `<MetaTags>` Deprecation
 
-Prior to Redwood 6.6.0 this component was called `<MetaTags>` and had several special hard-coded props like `ogContentUrl`, which didn't properly map to the OpenGraph spec. We'll still render `<MetaTags>` for the foreseeable future, but it's deprecated and you should migrate to `<Metadata>` if you have an existing app.
+Prior to Cedar 6.6.0 this component was called `<MetaTags>` and had several special hard-coded props like `ogContentUrl`, which didn't properly map to the OpenGraph spec. We'll still render `<MetaTags>` for the foreseeable future, but it's deprecated and you should migrate to `<Metadata>` if you have an existing app.
 
 :::
 
@@ -135,7 +135,7 @@ Setting an `og:image` is how sites like Facebook and Slack can show a preview of
 
 Sites like GitHub go a step farther than a generic image by actually creating an image for a repo on the fly, including details about the repo itself:
 
-![GitHub's og:image for the redwood repo](https://opengraph.githubassets.com/322ce8081bb85a86397a59494eab1c0fbe942b5104461f625e2c973c46ae4179/redwoodjs/redwood)
+![GitHub's og:image for the cedar repo](https://opengraph.githubassets.com/2e1534b74e25b6b66e0b8826bf3f7a3374c16cd99374839e93bd37013800001f/cedarjs/cedar)
 
 If you want to write your own `<meta>` tags, skipping the interpolation that `<Metadata>` does for you, you can pass them as children to `<Metadata>` or just write them into the `<head>` tag as normal.
 
@@ -312,7 +312,7 @@ Bots will pick up our tags if we've prerendered the page, but what if we want to
 
 :::info Prerendering
 
-As of v3.x, Redwood supports prerendering your [Cells](https://redwoodjs.com/docs/cells) with the data you were querying. For more information please refer [to this section](https://redwoodjs.com/docs/prerender#cell-prerendering).
+Cedar supports prerendering your [Cells](https://cedarjs.com/docs/cells) with the data you were querying. For more information please refer [to this section](https://cedarjs.com/docs/prerender#cell-prerendering).
 
 :::
 

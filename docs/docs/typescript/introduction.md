@@ -3,7 +3,7 @@ title: TypeScript in Redwood
 description: Getting started & Core Concepts
 ---
 
-Redwood comes with full TypeScript support, and you don't have to give up any of the conveniences that Redwood offers to enjoy all the benefits of a type-safe codebase.
+Redwood comes with full TypeScript support, and you don't have to give up any of the conveniences that Cedar offers to enjoy all the benefits of a type-safe codebase.
 
 ## Getting Started
 
@@ -36,7 +36,7 @@ Start by renaming your files from `.js` to `.ts`. (Or, if they have a React comp
 
 ### 1. Automatic types
 
-When you're developing in TypeScript, the Redwood CLI is your trusted companion—focus on writing code and it'll generate as many of the types as it can.
+When you're developing in TypeScript, the Cedar CLI is your trusted companion—focus on writing code and it'll generate as many of the types as it can.
 When you run `yarn rw dev`, the CLI watches files for changes so that it can generate types.
 (More on this in the [Generated Types](/typescript/generated-types.md) doc.)
 
@@ -48,9 +48,9 @@ You can always run `yarn rw g types` to make sure you have all the types you nee
 Let's say you generate a Cell using the command `yarn rw g cell Post`. If your project is in TypeScript, the generated files will contain a bunch of utility types (imported from `@cedarjs/web`), as well as types specific to your project (imported from `types/graphql`).
 You don't need to learn all the utility types up front, but they're documented in detail in the [Utility Types](/typescript/utility-types.md) doc when you're ready.
 
-### 3. Redwood won't force you to type everything
+### 3. Cedar won't force you to type everything
 
-The Redwood philosophy is to keep things as simple as possible at first. Redwood generates as much as possible, avoids forcing you to type every little detail, and doesn't have [strict mode](https://www.typescriptlang.org/tsconfig#strict) on by default.
+The Cedar philosophy is to keep things as simple as possible at first. Cedar generates as much as possible, avoids forcing you to type every little detail, and doesn't have [strict mode](https://www.typescriptlang.org/tsconfig#strict) on by default.
 Where needed (e.g. the [`DbAuthHandler`](/typescript/utility-types.md#dbauthhandleroptions)) you can make use of generics to be more specific with your types.
 
 But if you're comfortable with TypeScript and want that extra level of safety, take a look at our [Strict Mode](/typescript/strict-mode.md) doc.
@@ -66,7 +66,7 @@ To share types between sides:
 
 ### Running Type Checks
 
-Behind the scenes, Redwood actually uses Babel to transpile TypeScript.
+Behind the scenes, Cedar actually uses Babel to transpile TypeScript.
 This's why you're able to convert your project from JavaScript to TypeScript incrementally, but it also means that, strictly speaking, dev and build don't care about what the TypeScript compiler has to say.
 
 That's where the `type-check` command comes in:
@@ -149,5 +149,5 @@ module.exports = config
 ```
 
 :::info
-There are 3 `jest.config.js` files within a Redwood project. There's one inside the `web` directory, one inside the `api` directory, and one at the root of the project. Since the alias I created is used within the `web` directory, I added the `moduleNameMapper` to the `jest.config.js` file within the `web` directory.
+There are 3 `jest.config.js` files within a Cedar project. There's one inside the `web` directory, one inside the `api` directory, and one at the root of the project. Since the alias I created is used within the `web` directory, I added the `moduleNameMapper` to the `jest.config.js` file within the `web` directory.
 :::

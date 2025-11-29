@@ -358,7 +358,7 @@ open = true
 it('should add new setting if current is commented out, with settings comments', async () => {
   const toml = `
 [browser]
-  # open a new browser tab when running \`yarn rw dev\`
+  # open a new browser tab when running \`yarn cedar dev\`
   open = true
 [graphql]
   # enable trusted documents aka possible types
@@ -376,7 +376,7 @@ it('should add new setting if current is commented out, with settings comments',
 
   expect(vol.toJSON()[FIXTURE_PATH + '/redwood.toml']).toEqual(`
 [browser]
-  # open a new browser tab when running \`yarn rw dev\`
+  # open a new browser tab when running \`yarn cedar dev\`
   open = true
 [graphql]
   # enable trusted documents aka possible types
@@ -392,7 +392,7 @@ it('should add new setting if current is commented out, with settings comments',
 it('should add new setting if current is commented out, with more settings in section after', async () => {
   const toml = `
 [browser]
-  # open a new browser tab when running \`yarn rw dev\`
+  # open a new browser tab when running \`yarn cedar dev\`
   open = true
 [graphql]
   # enable trusted documents aka possible types
@@ -412,7 +412,7 @@ it('should add new setting if current is commented out, with more settings in se
 
   expect(vol.toJSON()[FIXTURE_PATH + '/redwood.toml']).toEqual(`
 [browser]
-  # open a new browser tab when running \`yarn rw dev\`
+  # open a new browser tab when running \`yarn cedar dev\`
   open = true
 [graphql]
   # enable trusted documents aka possible types
@@ -430,7 +430,7 @@ it('should add new setting if current is commented out, with more settings in se
 it('should update the last commented setting', async () => {
   const toml = `
 [browser]
-  # open a new browser tab when running \`yarn rw dev\`
+  # open a new browser tab when running \`yarn cedar dev\`
   open = true
 [graphql]
   # enable trusted documents aka possible types
@@ -452,7 +452,7 @@ it('should update the last commented setting', async () => {
 
   expect(vol.toJSON()[FIXTURE_PATH + '/redwood.toml']).toEqual(`
 [browser]
-  # open a new browser tab when running \`yarn rw dev\`
+  # open a new browser tab when running \`yarn cedar dev\`
   open = true
 [graphql]
   # enable trusted documents aka possible types

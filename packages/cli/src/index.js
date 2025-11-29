@@ -51,15 +51,15 @@ import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
 // ## Examples
 //
 // ```
-// yarn rw info --cwd /path/to/project
-// RWJS_CWD=/path/to/project yarn rw info
+// yarn cedar info --cwd /path/to/project
+// RWJS_CWD=/path/to/project yarn cedar info
 //
 // # In this case, `--cwd` wins out over `RWJS_CWD`
-// RWJS_CWD=/path/to/project yarn rw info --cwd /path/to/other/project
+// RWJS_CWD=/path/to/project yarn cedar info --cwd /path/to/other/project
 //
 // # Here we traverses upwards for a redwood.toml.
 // cd api
-// yarn rw info
+// yarn cedar info
 // ```
 
 let { cwd, telemetry, help, version } = Parser(hideBin(process.argv), {
@@ -188,7 +188,7 @@ async function runYargs() {
       array: true,
     })
     .example(
-      'yarn rw exec migrateUsers --load-env-files stripe nakama',
+      'yarn cedar exec migrateUsers --load-env-files stripe nakama',
       "Run a script, also loading env vars from '.env.stripe' and '.env.nakama'",
     )
     .option('telemetry', {
@@ -197,7 +197,7 @@ async function runYargs() {
       // hidden: true,
     })
     .example(
-      'yarn rw g page home /',
+      'yarn cedar g page home /',
       "Create a page component named 'Home' at path '/'",
     )
     .demandCommand()

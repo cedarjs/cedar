@@ -20,7 +20,7 @@ export interface NodeTargetConfig {
   port: number
   path: string
   target: TargetEnum.NODE
-  schemaPath: string
+  prismaConfig: string
   serverConfig: string
   debugPort?: number
 }
@@ -129,7 +129,7 @@ export interface CLIPlugin {
 
 const DEFAULT_CONFIG: Config = {
   web: {
-    title: 'Redwood App',
+    title: 'Cedar App',
     port: 8910,
     path: './web',
     target: TargetEnum.BROWSER,
@@ -140,11 +140,11 @@ const DEFAULT_CONFIG: Config = {
     sourceMap: false,
   },
   api: {
-    title: 'Redwood App',
+    title: 'Cedar App',
     port: 8911,
     path: './api',
     target: TargetEnum.NODE,
-    schemaPath: './api/db/schema.prisma',
+    prismaConfig: './api/prisma.config.cjs',
     serverConfig: './api/server.config.js',
     debugPort: 18911,
   },

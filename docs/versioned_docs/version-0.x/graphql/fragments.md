@@ -74,15 +74,13 @@ import { fragmentRegistry, registerFragment } from '@cedarjs/web/apollo'
 
 With `fragmentRegistry`, you can interact with the registry directly.
 
-With `registerFragment`, you can register a fragment with the registry and get back:
+With `registerFragment`, you can register a fragment with the registry and get
+back data and functions to work with the registered fragment:
 
 ```ts
-{
-  fragment, typename, getCacheKey, useRegisteredFragment
-}
+const { fragment, typename, getCacheKey, useRegisteredFragment } =
+  registerFragment(/* ... */)
 ```
-
-which can then be used to work with the registered fragment.
 
 ### Setup
 
@@ -110,7 +108,7 @@ registerFragment(gql`
 This makes the `BookInfo` available to use in your query:
 
 ```ts
-import type { GetBookDetails } from 'types/graphql.js'
+import type { GetBookDetails } from 'types/graphql'
 
 import { useQuery } from '@cedarjs/web'
 
@@ -125,10 +123,9 @@ const GET_BOOK_DETAILS = gql`
     }
   }
 
-...
+// ...
 
-const { data, loading} = useQuery<GetBookDetails>(GET_BOOK_DETAILS)
-
+const { data, loading } = useQuery<GetBookDetails>(GET_BOOK_DETAILS)
 ```
 
 You can then access the book info from `data` and render:
@@ -137,7 +134,7 @@ You can then access the book info from `data` and render:
 {!loading  && (
   <div key={`book-id-${id}`}>
     <h3>Title: {data.title}</h3>
-    <p>by {data.author} ({data.publicationYear})<>
+    <p>by {data.author} ({data.publicationYear})</p>
   </div>
 )}
 ```
@@ -216,7 +213,7 @@ This means that once the Apollo Client Cache has loaded the data needed for the 
 Also, anywhere the fragment component is rendered will be updated with the latest data if any of `useQuery` with uses the fragment received new data.
 
 ```ts
-import type { Book } from 'types/graphql.js'
+import type { Book } from 'types/graphql'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 
@@ -312,7 +309,7 @@ By including the `__typename` and the GraphQL Type for the mocked data object, y
 For example, consider the fragment `BookInfo` used by the query `GetBookDetails`.
 
 ```ts
-import type { Book } from 'types/graphql.js'
+import type { Book } from 'types/graphql'
 
 import { registerFragment } from '@cedarjs/web/apollo'
 
@@ -327,7 +324,7 @@ const { useRegisteredFragment } = registerFragment(gql`
 ```
 
 ```ts
-import type { GetBookDetails } from 'types/graphql.js'
+import type { GetBookDetails } from 'types/graphql'
 
 import { useQuery } from '@cedarjs/web'
 

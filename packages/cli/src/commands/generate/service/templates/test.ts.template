@@ -29,7 +29,7 @@
     })
 
     // Not all values can be represented as JSON, like function invocations
-    return jsonString.replace(/"Buffer\.from\(([^)]+)\)"/g, 'Buffer.from($1)')
+    return jsonString.replace(/"new Uint8Array\(([^)]+)\)"/g, 'new Uint8Array($1)')
   } %>
 <% if (prismaImport) { %>import { Prisma, ${prismaModel} } from '@prisma/client'<% } else { %>import type { ${prismaModel} } from '@prisma/client'<% } %>
 

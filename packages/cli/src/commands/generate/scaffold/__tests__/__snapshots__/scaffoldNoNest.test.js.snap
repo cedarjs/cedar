@@ -1211,7 +1211,7 @@ export default EditPostPage
 `;
 
 exports[`in typescript mode > creates a form component 1`] = `
-"import type { EditPostById, UpdatePostInput } from 'types/graphql.js'
+"import type { EditPostById, UpdatePostInput } from 'types/graphql'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {
@@ -1543,7 +1543,7 @@ exports[`in typescript mode > creates a new component with int foreign keys conv
   CreateUserProfileMutation,
   CreateUserProfileInput,
   CreateUserProfileMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { navigate, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
@@ -1609,7 +1609,7 @@ export default NewPostPage
 `;
 
 exports[`in typescript mode > creates a show cell 1`] = `
-"import type { FindPostById, FindPostByIdVariables } from 'types/graphql.js'
+"import type { FindPostById, FindPostByIdVariables } from 'types/graphql'
 
 import type {
   CellSuccessProps,
@@ -1661,7 +1661,7 @@ exports[`in typescript mode > creates a show component 1`] = `
   DeletePostMutation,
   DeletePostMutationVariables,
   FindPostById,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { Link, routes, navigate } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
@@ -2212,7 +2212,7 @@ exports[`in typescript mode > creates an edit cell 1`] = `
   EditPostById,
   UpdatePostInput,
   UpdatePostMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { navigate, routes } from '@cedarjs/router'
 import type {
@@ -2310,7 +2310,7 @@ exports[`in typescript mode > creates an edit component with int foreign keys co
   EditUserProfileById,
   UpdateUserProfileInput,
   UpdateUserProfileMutationVariables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { navigate, routes } from '@cedarjs/router'
 import type {
@@ -2400,7 +2400,7 @@ export const Success = ({
 `;
 
 exports[`in typescript mode > creates an index cell 1`] = `
-"import type { FindPosts, FindPostsVariables } from 'types/graphql.js'
+"import type { FindPosts, FindPostsVariables } from 'types/graphql'
 
 import { Link, routes } from '@cedarjs/router'
 import type {
@@ -2461,7 +2461,7 @@ exports[`in typescript mode > creates an index component 1`] = `
   DeletePostMutation,
   DeletePostMutationVariables,
   FindPosts,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { Link, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'

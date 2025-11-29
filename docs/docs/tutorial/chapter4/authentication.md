@@ -108,18 +108,18 @@ There are two terms which contain a lot of letters, starting with an "A" and end
 - Authentication
 - Authorization
 
-Here is how Redwood uses these terms:
+Here is how Cedar uses these terms:
 
 - **Authentication** deals with determining whether someone is who they say they are, generally by "logging in" with an email and password, or a third party provider like Auth0.
 - **Authorization** is whether a user (who has usually already been authenticated) is allowed to do something they want to do. This generally involves some combination of roles and permission checking before allowing access to a URL or feature of your site.
 
-This section of the tutorial focuses on **Authentication** only. See [chapter 7 of the tutorial](../chapter7/rbac.md) to learn about Authorization in Redwood.
+This section of the tutorial focuses on **Authentication** only. See [chapter 7 of the tutorial](../chapter7/rbac.md) to learn about Authorization in Cedar.
 
 :::
 
 ## Auth Setup
 
-As you probably have guessed, Redwood has a couple of generators to get you going. One installs the backend components needed for dbAuth, the other creates login, signup and forgot password pages.
+As you probably have guessed, Cedar has a couple of generators to get you going. One installs the backend components needed for dbAuth, the other creates login, signup and forgot password pages.
 
 Run this setup command to get the internals of dbAuth added to our app:
 
@@ -454,7 +454,7 @@ Cross your fingers and reload!
 
 ![image](https://user-images.githubusercontent.com/300/146463959-c59c8721-484f-45de-a663-e6ab3b2591dc.png)
 
-We're back in business! Once you add authentication into your app you'll probably run into several situations like this where you need to go back and forth, re-allowing access to some pages or queries that inadvertently got locked down by default. Remember, Redwood is secure by default—we'd rather you accidentally expose too _little_ of your app than too _much_!
+We're back in business! Once you add authentication into your app you'll probably run into several situations like this where you need to go back and forth, re-allowing access to some pages or queries that inadvertently got locked down by default. Remember, Cedar is secure by default—we'd rather you accidentally expose too _little_ of your app than too _much_!
 
 Now that our pages are behind login, let's actually create a login page so that we can see them again.
 
@@ -898,7 +898,7 @@ You can generate a new value with the `yarn rw g secret` command. It only output
 
 Believe it or not, that's pretty much it for authentication! You can use the combination of `@requireAuth` and `@skipAuth` directives to lock down access to GraphQL query/mutations, and the `<PrivateSet>` component to restrict access to entire pages of your app. If you only want to restrict access to certain components, or certain parts of a component, you can always get `isAuthenticated` from the `useAuth()` hook and then render one thing or another.
 
-Head over to the Redwood docs to read more about [self-hosted](../../auth/dbauth.md) and [third-party authentication](../../authentication.md#official-integrations).
+Head over to the Cedar docs to read more about [self-hosted](../../auth/dbauth.md) and [third-party authentication](../../authentication.md#official-integrations).
 
 ## One More Thing
 

@@ -40,10 +40,10 @@ function main() {
   // Check if the PR title starts with conventional commit prefixes that should
   // skip label requirement
   const conventionalCommitPrefixes = [
-    /^chore\([^)]+\):/,
-    /^feat\([^)]+\):/,
-    /^fix\([^)]+\):/,
-    /^docs\([^)]+\):/,
+    /^chore\([^)]+\)!?:/,
+    /^feat\([^)]+\)!?:/,
+    /^fix\([^)]+\)!?:/,
+    /^docs\([^)]+\)!?:/,
   ]
 
   const shouldSkipLabelRequirement = conventionalCommitPrefixes.some((prefix) =>
@@ -97,6 +97,8 @@ function main() {
         '- feat(scope): for new features',
         '- fix(scope): for bug fixes',
         '- docs(scope): for documentation changes',
+        '',
+        '- Add a ! after the scope for breaking changes, like "feat(scope)!: breaking change"',
         '',
         'Where "scope" should describe the area of the codebase being changed.',
       ].join('\n'),

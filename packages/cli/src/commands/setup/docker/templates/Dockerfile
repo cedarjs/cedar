@@ -41,21 +41,21 @@ FROM base as api_build
 # ARG MY_BUILD_TIME_ENV_VAR
 
 COPY --chown=node:node api api
-RUN yarn rw build api
+RUN yarn cedar build api
 
 # web prerender build
 # -------------------
 FROM api_build as web_build_with_prerender
 
 COPY --chown=node:node web web
-RUN yarn rw build web
+RUN yarn cedar build web
 
 # web build
 # ---------
 FROM base as web_build
 
 COPY --chown=node:node web web
-RUN yarn rw build web --no-prerender
+RUN yarn cedar build web --no-prerender
 
 # api serve
 # ---------

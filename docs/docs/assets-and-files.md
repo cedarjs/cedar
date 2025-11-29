@@ -4,7 +4,7 @@ description: How to include assets—like images—in your app
 
 # Assets and Files
 
-There are two ways to add an asset to your Redwood app:
+There are two ways to add an asset to your Cedar app:
 
 1. co-locate it with the component using it and import it into the component as if it were code
 2. add it to the `web/public` directory and reference it relative to your site's root
@@ -51,7 +51,7 @@ If you're curious how this works, see the Vite docs on [static asset handling](h
 ## Adding to the `web/public` Directory
 
 You can also add assets to the `web/public` directory, effectively adding static files to your app.
-During dev and build, Redwood copies `web/public`'s contents into `web/dist`.
+During dev and build, Cedar copies `web/public`'s contents into `web/dist`.
 
 > Changes to `web/public` don't hot-reload.
 
@@ -68,7 +68,7 @@ web/public/
 └── favicon.png
 ```
 
-When you run `yarn rw dev` and `yarn rw build`, Redwood copies
+When you run `yarn rw dev` and `yarn rw build`, Cedar copies
 `web/public/img/logo.png` to `web/dist/img/logo.png` and `web/public/favicon.png` to `web/dist/favicon.png`:
 
 ```text

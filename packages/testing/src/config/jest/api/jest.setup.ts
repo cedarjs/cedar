@@ -15,7 +15,7 @@ import { defineScenario } from '../../../api/scenario.js'
 // testing time
 // The key is to reduce the amount of imports in this file, because the
 // require.cache is not shared between each test context
-const { apiSrcPath, tearDownCachePath, dbSchemaPath } =
+const { apiSrcPath, tearDownCachePath, prismaConfigPath } =
   global.__RWJS__TEST_IMPORTS
 
 interface ScenarioData {
@@ -77,12 +77,14 @@ const isIdenticalArray = (a: unknown[], b: unknown[]) => {
 }
 
 const configureTeardown = async (): Promise<void> => {
-  const { getDMMF, getSchema } = await import('@prisma/internals')
+  const { getDMMF, getSchemaWithPath } = await import('@prisma/internals')
+  const { getSchemaPath } = await import('@cedarjs/project-config')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const datamodel = await getSchema(dbSchemaPath)
-  const schema = await getDMMF({ datamodel })
+  const schemaPath = await getSchemaPath(prismaConfigPath)
+  const { schemas } = await getSchemaWithPath(schemaPath)
+  const schema = await getDMMF({ datamodel: schemas })
   const schemaModels: string[] = schema.datamodel.models.map(
     (m: { dbName: string | null; name: string }) => m.dbName || m.name,
   )
@@ -104,17 +106,19 @@ const configureTeardown = async (): Promise<void> => {
 let quoteStyle: string
 // determine what kind of quotes are needed around table names in raw SQL
 const getQuoteStyle = async (): Promise<string> => {
-  const { getConfig: getPrismaConfig, getSchema } = await import(
+  const { getConfig: getPrismaConfig, getSchemaWithPath } = await import(
     '@prisma/internals'
   )
+  const { getSchemaPath } = await import('@cedarjs/project-config')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const datamodel = await getSchema(dbSchemaPath)
+  const schemaPath = await getSchemaPath(prismaConfigPath)
+  const result = await getSchemaWithPath(schemaPath)
 
   if (!quoteStyle) {
     const config = await getPrismaConfig({
-      datamodel,
+      datamodel: result.schemas,
     })
 
     switch (config.datasources?.[0]?.provider) {

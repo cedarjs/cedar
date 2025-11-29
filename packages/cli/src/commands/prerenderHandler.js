@@ -139,7 +139,7 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
 
   if (!fs.existsSync(indexHtmlPath)) {
     console.error(
-      'You must run `yarn rw build web` before trying to prerender.',
+      'You must run `yarn cedar build web` before trying to prerender.',
     )
     process.exit(1)
     // TODO: Run this automatically at this point.
@@ -327,7 +327,9 @@ const prerenderRoute = async (
     }
   } catch (e) {
     console.log()
-    console.log(c.warning('You can use `yarn rw prerender --dry-run` to debug'))
+    console.log(
+      c.warning('You can use `yarn cedar prerender --dry-run` to debug'),
+    )
     console.log()
 
     console.log(

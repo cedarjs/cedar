@@ -7,7 +7,7 @@ description: Deploy to serverless or serverful providers
 Redwood is designed for both serverless and traditional infrastructure deployments, offering a unique continuous deployment process in both cases:
 
 1. code is committed to a repository on GitHub, GitLab, or Bitbucket, which triggers the deployment
-2. the Redwood API Side and Web Side are individually prepared via a build process
+2. the Cedar API Side and Web Side are individually prepared via a build process
 3. during the build process, any database related actions are run (e.g. migrations)
 4. the hosting provider deploys the built Web static assets to a CDN and the API code to a serverless backend (e.g. AWS Lambdas)
 
@@ -32,17 +32,17 @@ There are examples of deploying CedarJS on other providers such as Google Cloud 
 
 ## General Deployment Setup
 
-Deploying Redwood requires setup for the following four categories.
+Deploying Cedar requires setup for the following four categories.
 
 ### 1. Host Specific Configuration
 
 Each hosting provider has different requirements for how (and where) the deployment is configured. Sometimes you'll need to add code to your repository, configure settings in a dashboard, or both. You'll need to read the provider specific documentation.
 
-The most important Redwood configuration is to set the `apiUrl` in your `redwood.toml` This sets the API path for your serverless functions specific to your hosting provider.
+The most important Cedar configuration is to set the `apiUrl` in your `redwood.toml` This sets the API path for your serverless functions specific to your hosting provider.
 
 ### 2. Build Command
 
-The build command is used to prepare the Web and API for deployment. Additionally, other actions can be run during build such as database migrations. The Redwood build command must specify one of the supported hosting providers (aka `target`):
+The build command is used to prepare the Web and API for deployment. Additionally, other actions can be run during build such as database migrations. The Cedar build command must specify one of the supported hosting providers (aka `target`):
 
 ```shell
 yarn rw deploy <target>

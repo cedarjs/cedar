@@ -14,7 +14,7 @@ CedarJS wants you to be able build and deploy secure applications and takes the 
 - [Environment variables for secure keys and tokens](environment-variables.md)
 
 > ⚠️ **Security is Your Responsibility**
-> While Redwood offers the tools, practices, and information to keep your application secure, it remains your responsibility to put these in place. Proper password, token, and key protection using disciplined communication, password management systems, and environment management services like [Doppler](https://www.doppler.com) are strongly encouraged.
+> While Cedar offers the tools, practices, and information to keep your application secure, it remains your responsibility to put these in place. Proper password, token, and key protection using disciplined communication, password management systems, and environment management services like [Doppler](https://www.doppler.com) are strongly encouraged.
 
 > **Security Policy and Contact Information**
 > The CedarJS Security Policy is located [in the codebase repository on GitHub](https://github.com/cedarjs/cedar/security/policy).
@@ -41,7 +41,7 @@ For a demonstration, check out the [Auth Playground](https://redwood-playground-
 
 ## GraphQL
 
-GraphQL is a fundamental part of Redwood. For details on how Redwood uses GraphQL and handles important security considerations, please see the [GraphQL Security](graphql.md#security) section and the [Secure Services](services.md#secure-services) section.
+GraphQL is a fundamental part of Cedar. For details on how Cedar uses GraphQL and handles important security considerations, please see the [GraphQL Security](graphql.md#security) section and the [Secure Services](services.md#secure-services) section.
 
 ### Malicious Document Requests
 
@@ -60,7 +60,7 @@ For more information on how to enable introspection in production, please see th
 
 ## Functions
 
-When deployed, a [serverless function](serverless-functions.md) is an open API endpoint. That means anyone can access it and perform any tasks it's asked to do. In many cases, this is completely appropriate and desired behavior. But there are often times you need to restrict access to a function, and Redwood can help you do that using a [variety of methods and approaches](serverless-functions.md#security-considerations).
+When deployed, a [serverless function](serverless-functions.md) is an open API endpoint. That means anyone can access it and perform any tasks it's asked to do. In many cases, this is completely appropriate and desired behavior. But there are often times you need to restrict access to a function, and Cedar can help you do that using a [variety of methods and approaches](serverless-functions.md#security-considerations).
 
 For details on how to keep your functions secure, please see the [Serverless functions & Security considerations](serverless-functions.md#security-considerations) section in the CedarJS documentation.
 

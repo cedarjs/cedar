@@ -13,7 +13,7 @@ description: Serverful deploys on GCP or AWS via Coherence's full-lifecycle envi
 
 ## Coherence Prerequisites
 
-To deploy to Coherence, your Redwood project needs to be hosted on GitHub and you must have an [AWS](https://docs.withcoherence.com/docs/overview/aws-deep-dive) or [GCP](https://docs.withcoherence.com/docs/overview/gcp-deep-dive) account.
+To deploy to Coherence, your Cedar project needs to be hosted on GitHub and you must have an [AWS](https://docs.withcoherence.com/docs/overview/aws-deep-dive) or [GCP](https://docs.withcoherence.com/docs/overview/gcp-deep-dive) account.
 
 ## Coherence Deploy
 
@@ -25,7 +25,7 @@ But if you don't use prerender, carry on!
 
 :::
 
-If you want to deploy your Redwood project on Coherence, run the setup command:
+If you want to deploy your Cedar project on Coherence, run the setup command:
 
 ```
 yarn rw setup deploy coherence
@@ -33,7 +33,7 @@ yarn rw setup deploy coherence
 
 The command will inspect your Prisma config to determine if you're using a supported database (at the moment, only `postgres` or `mysql` are supported on Coherence).
 
-Then follow the [Coherence Redwood deploy docs](https://docs.withcoherence.com/docs/configuration/frameworks#redwood-js) for more information, including if you want to set up:
+Then follow the [Coherence Cedar deploy docs](https://docs.withcoherence.com/docs/configuration/frameworks#redwood-js) for more information, including if you want to set up:
 
 - a redis server
 - database migration/seeding/snapshot loading

@@ -11,14 +11,14 @@ And if you'd prefer to work with the primitives, the `useAuth` hook exposes all 
 Likewise, the api side is locked down by default: all SDLs are generated with the `@requireAuth` directive, ensuring that making things publicly available is something that you opt in to rather than out of.
 You can also require auth anywhere in your Services, and even in your serverful or serverless functions.
 
-Last but not least, Redwood provides it's own self-hosted, full-featured auth provider: [dbAuth](./auth/dbauth.md).
+Last but not least, Cedar provides it's own self-hosted, full-featured auth provider: [dbAuth](./auth/dbauth.md).
 
 In this doc, we'll cover auth at a high level.
 All auth providers share the same interface so the information here will be useful no matter which auth provider you use.
 
 ## Official integrations
 
-Redwood has a simple API to integrate any auth provider you can think of. But to make it easier for you to get started, Redwood provides official integrations for some of the most popular auth providers out of the box:
+Redwood has a simple API to integrate any auth provider you can think of. But to make it easier for you to get started, Cedar provides official integrations for some of the most popular auth providers out of the box:
 
 - [Auth0](./auth/auth0.md)
 - [Azure Active Directory](./auth/azure.md)
@@ -44,7 +44,7 @@ yarn rw setup auth auth0
 
 ## The API at a high-level
 
-We mentioned that Redwood has a simple API you can use to integrate any provider you want.
+We mentioned that Cedar has a simple API you can use to integrate any provider you want.
 Whether you roll your own auth provider or choose one of Redwood's integrations, it's good to be familiar with it, so let's dive into it here.
 
 On the web side, there are two components that can be auth enabled: the `RedwoodApolloProvider` in `web/src/App.tsx` and the `Router` in `web/src/Routes.tsx`.

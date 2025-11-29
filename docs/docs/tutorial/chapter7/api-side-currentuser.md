@@ -126,7 +126,7 @@ yarn rw prisma migrate reset
 
 :::info Database Seeds
 
-If you started the second half the tutorial from the [Redwood Tutorial repo](https://github.com/redwoodjs/redwood-tutorial) you'll get an error after resetting the database—Prisma attempts to seed the database with a user and some posts to get you started, but the posts in that seed do not have the new required `userId` field! Open up `scripts/seed.js` and edit each post to add `userId: 1` to each:
+If you started the second half the tutorial from the [Cedar Tutorial repo](https://github.com/cedarjs/cedar-tutorial) you'll get an error after resetting the database—Prisma attempts to seed the database with a user and some posts to get you started, but the posts in that seed do not have the new required `userId` field! Open up `scripts/seed.js` and edit each post to add `userId: 1` to each:
 
 ```javascript title="scripts/seed.js"
 {
@@ -160,7 +160,7 @@ yarn rw prisma db seed
 
 :::info
 
-If you didn't start your codebase from the [Redwood Tutorial repo](https://github.com/redwoodjs/redwood-tutorial) then you'll now have no users or posts in the database. Go ahead and create a user by going to [http://localhost:8910/signup](http://localhost:8910/signup) but don't create any posts yet! Change the user's role to be "admin", either by using the console introduced in the [previous page](/docs/canary/tutorial/chapter7/rbac#changing-roles-on-a-user) or by [opening Prisma Studio](/docs/canary/tutorial/chapter2/getting-dynamic#prisma-studio) and changing it directly in the database.
+If you didn't start your codebase from the [Cedar Tutorial repo](https://github.com/cedarjs/cedar-tutorial) then you'll now have no users or posts in the database. Go ahead and create a user by going to [http://localhost:8910/signup](http://localhost:8910/signup) but don't create any posts yet! Change the user's role to be "admin", either by using the console introduced in the [previous page](/docs/canary/tutorial/chapter7/rbac#changing-roles-on-a-user) or by [opening Prisma Studio](/docs/canary/tutorial/chapter2/getting-dynamic#prisma-studio) and changing it directly in the database.
 
 :::
 
@@ -312,7 +312,7 @@ post {
 
 This query would now fail because you only have `post.user` available, not `post.user.posts`.
 
-The Redwood team is actively looking into more elegant solutions to the N+1 problem, so stay tuned!
+The Cedar team is actively looking into more elegant solutions to the N+1 problem, so stay tuned!
 
 :::
 
@@ -390,7 +390,7 @@ const Article = ({ article }) => {
 export default Article
 ```
 
-Depending on whether you started from the Redwood Tutorial repo or not, you may not have any posts to actually display. Let's add some! However, before we can do that with our posts admin/scaffold, we'll need to actually associate a user to the post they created. Remember that we don't allow setting the `userId` via GraphQL, which is what the scaffolds use when creating/editing records. But that's okay, we want this to only happen in the service anyway, which is where we're heading now.
+Depending on whether you started from the Cedar Tutorial repo or not, you may not have any posts to actually display. Let's add some! However, before we can do that with our posts admin/scaffold, we'll need to actually associate a user to the post they created. Remember that we don't allow setting the `userId` via GraphQL, which is what the scaffolds use when creating/editing records. But that's okay, we want this to only happen in the service anyway, which is where we're heading now.
 
 ## Accessing `currentUser` on the API side
 
@@ -685,7 +685,7 @@ export const updatePost = async ({ id, input }) => {
 }
 ```
 
-We're using the `adminPost()` service function, rather than making another call to the database (note that we had to async/await it to make sure we have the post before continuing). Composing services like this is something Redwood was designed to encourage: services' functions act as resolvers for GraphQL, but they're also just plain JS functions and can be called wherever you need. And the reasons why you'd want to do this are clearly demonstrated here: `adminPost()` already limits the found record to be only one owned by the logged in user, so that logic is already encapsulated here, and we can be sure that any time an admin wants to do something with a single post, it runs through this code and uses the same logic every time.
+We're using the `adminPost()` service function, rather than making another call to the database (note that we had to async/await it to make sure we have the post before continuing). Composing services like this is something Cedar was designed to encourage: services' functions act as resolvers for GraphQL, but they're also just plain JS functions and can be called wherever you need. And the reasons why you'd want to do this are clearly demonstrated here: `adminPost()` already limits the found record to be only one owned by the logged in user, so that logic is already encapsulated here, and we can be sure that any time an admin wants to do something with a single post, it runs through this code and uses the same logic every time.
 
 This works, but we'll need to do the same thing in `deletePost`. Let's extract that check for the post existence into a function:
 

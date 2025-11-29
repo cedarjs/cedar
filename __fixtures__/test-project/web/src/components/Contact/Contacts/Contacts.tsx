@@ -2,7 +2,7 @@ import type {
   DeleteContactMutation,
   DeleteContactMutationVariables,
   FindContacts,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import { Link, routes } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'

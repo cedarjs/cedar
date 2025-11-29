@@ -116,7 +116,7 @@ export const notes = [
   'deploy to. If you ever need to log everyone out of your app at once',
   'change this secret to a new value and deploy. To create a new secret, run:',
   '',
-  '  yarn rw generate secret',
+  '  yarn cedar generate secret',
   '',
 ]
 
@@ -125,5 +125,5 @@ export const noteGenerate = [
   'Need simple Login, Signup, Forgot Password pages and WebAuthn prompts?',
   "We've got a generator for those as well:",
   '',
-  '  yarn rw generate dbAuth',
+  '  yarn cedar generate dbAuth',
 ]

@@ -5,7 +5,7 @@ description: Declarative data fetching with Cells
 # Cells
 
 Cells are a declarative approach to data fetching and one of Redwood's signature modes of abstraction.
-By providing conventions around data fetching, Redwood can get in between the request and the response to do things like query optimization and more, all without you ever having to change your code.
+By providing conventions around data fetching, Cedar can get in between the request and the response to do things like query optimization and more, all without you ever having to change your code.
 
 While it might seem like there's a lot of magic involved, all a Cell really does is execute a GraphQL query and manage its lifecycle.
 The idea is that, by exporting named constants that declare what you want your UI to look like throughout a query's lifecycle,
@@ -36,7 +36,7 @@ Redwood's Cell generator can do both.
 
 First, it detects if `<name>` is singular or plural.
 For example, to generate a Cell that renders a list of users, run `yarn rw generate cell users`.
-Second, for irregular words whose singular and plural are the same, such as "equipment" or "pokemon", you can pass `--list` to tell Redwood to generate a list Cell explicitly:
+Second, for irregular words whose singular and plural are the same, such as "equipment" or "pokemon", you can pass `--list` to tell Cedar to generate a list Cell explicitly:
 
 ```bash
 yarn rw generate cell equipment --list
@@ -196,7 +196,7 @@ If there's no cached data and the request is in flight, a Cell renders `Loading`
 
 When you're developing locally, you can catch your Cell waiting to hear back for a moment if set your speed in the Inspector's **Network** tab to something like "Slow 3G".
 
-But why bother with Slow 3G when Redwood comes with Storybook? Storybook makes developing components like `Loading` (and `Failure`) a breeze. We don't have to put up with hacky workarounds like Slow 3G or intentionally breaking our app just to develop our components.
+But why bother with Slow 3G when Cedar comes with Storybook? Storybook makes developing components like `Loading` (and `Failure`) a breeze. We don't have to put up with hacky workarounds like Slow 3G or intentionally breaking our app just to develop our components.
 
 ### Empty
 
@@ -242,7 +242,7 @@ export const Failure = ({ error, errorCode }: CellFailureProps) => {
 
 If everything went well, a Cell renders `Success`.
 
-As mentioned, Success gets exclusive access to the `data` prop. But if you try to destructure it from `props`, you'll notice that it doesn't exist. This is because Redwood adds a layer of convenience: Redwood spreads `data` into `Success` so that you can just destructure whatever data you were expecting from your `QUERY` directly.
+As mentioned, Success gets exclusive access to the `data` prop. But if you try to destructure it from `props`, you'll notice that it doesn't exist. This is because Cedar adds a layer of convenience: Cedar spreads `data` into `Success` so that you can just destructure whatever data you were expecting from your `QUERY` directly.
 
 So, if you're querying for `posts` and `authors`, instead of doing:
 
@@ -272,7 +272,7 @@ Looking for info on how TypeScript works with Cells? Check out the [Utility Type
 
 ### When should I use a Cell?
 
-Whenever you want to fetch data. Let Redwood juggle what's displayed when. You just focus on what those things should look like.
+Whenever you want to fetch data. Let Cedar juggle what's displayed when. You just focus on what those things should look like.
 
 While you can use a Cell whenever you want to fetch data, it's important to note that you don't have to. You can do anything you want! For example, for one-off queries, there's always `useApolloClient`. This hook returns the client, which you can use to execute queries, among other things:
 
@@ -295,7 +295,7 @@ We also don't think it's an anti-pattern to do so. Far from it—your cells migh
 
 It's also important to remember that, besides exporting certain things with certain names, there aren't many rules around Cells&mdash;everything you can do in a regular component still goes.
 
-## How Does Redwood Know a Cell is a Cell?
+## How Does Cedar Know a Cell is a Cell?
 
 You just have to end a filename in "Cell" right? Well, while that's basically correct, there is one other thing you should know.
 

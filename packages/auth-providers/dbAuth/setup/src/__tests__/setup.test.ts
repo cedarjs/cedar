@@ -217,7 +217,7 @@ export const handler = createGraphQLHandler({
         })
 
         expect(vi.mocked(console).log.mock.calls[0][0]).not.toContain(
-          'yarn rw generate dbAuth',
+          'yarn cedar generate dbAuth',
         )
       })
 
@@ -239,7 +239,7 @@ export const handler = createGraphQLHandler({
         })
 
         expect(vi.mocked(console).log.mock.calls[0][0]).not.toContain(
-          'yarn rw generate dbAuth',
+          'yarn cedar generate dbAuth',
         )
       })
 
@@ -261,7 +261,7 @@ export const handler = createGraphQLHandler({
         })
 
         expect(vi.mocked(console).log.mock.calls[0][0]).not.toContain(
-          'yarn rw generate dbAuth',
+          'yarn cedar generate dbAuth',
         )
       })
 
@@ -283,7 +283,7 @@ export const handler = createGraphQLHandler({
         })
 
         expect(vi.mocked(console).log.mock.calls[0][0]).not.toContain(
-          'yarn rw generate dbAuth',
+          'yarn cedar generate dbAuth',
         )
       })
 
@@ -311,7 +311,7 @@ export const handler = createGraphQLHandler({
 
         // Included exactly once
         expect(
-          oneMoreThingMessage?.match(/yarn rw generate dbAuth/g),
+          oneMoreThingMessage?.match(/yarn cedar generate dbAuth/g),
         ).toHaveLength(1)
       })
 
@@ -336,9 +336,9 @@ export const handler = createGraphQLHandler({
 
         // Included exactly once
         expect(firstLogMessage.match(/and WebAuthn prompts/g)).toHaveLength(1)
-        expect(firstLogMessage.match(/yarn rw generate dbAuth/g)).toHaveLength(
-          1,
-        )
+        expect(
+          firstLogMessage.match(/yarn cedar generate dbAuth/g),
+        ).toHaveLength(1)
       })
     })
 
@@ -361,7 +361,7 @@ export const handler = createGraphQLHandler({
         })
 
         expect(vi.mocked(console).log.mock.calls[0][0]).not.toContain(
-          'yarn rw prisma migrate dev',
+          'yarn cedar prisma migrate dev',
         )
       })
 
@@ -383,7 +383,7 @@ export const handler = createGraphQLHandler({
         })
 
         expect(vi.mocked(console).log.mock.calls[0][0]).not.toContain(
-          'yarn rw prisma migrate dev',
+          'yarn cedar prisma migrate dev',
         )
       })
 
@@ -405,7 +405,7 @@ export const handler = createGraphQLHandler({
         })
 
         expect(vi.mocked(console).log.mock.calls[0][0]).toContain(
-          'yarn rw prisma migrate dev',
+          'yarn cedar prisma migrate dev',
         )
       })
 
@@ -427,7 +427,7 @@ export const handler = createGraphQLHandler({
         })
 
         expect(vi.mocked(console).log.mock.calls[0][0]).toContain(
-          'yarn rw prisma migrate dev',
+          'yarn cedar prisma migrate dev',
         )
       })
     })

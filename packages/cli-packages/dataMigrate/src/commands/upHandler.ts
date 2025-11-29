@@ -1,11 +1,11 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import type { PrismaClient } from '@prisma/client'
 import { Listr } from 'listr2'
 
 import { registerApiSideBabelHook } from '@cedarjs/babel-config'
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
@@ -21,7 +21,7 @@ export async function handler({
     if (!fs.existsSync(distPath)) {
       console.warn(
         `Can't find api dist at ${distPath}. You may need to build first: ` +
-          'yarn rw build api',
+          'yarn cedar build api',
       )
       process.exitCode = 1
       return
@@ -126,7 +126,9 @@ export async function handler({
  * Return the list of migrations that haven't run against the database yet
  */
 async function getPendingDataMigrations(db: PrismaClient) {
-  const dataMigrationsPath = getPaths().api.dataMigrations
+  const dataMigrationsPath = await getDataMigrationsPath(
+    getPaths().api.prismaConfig,
+  )
 
   if (!fs.existsSync(dataMigrationsPath)) {
     return []

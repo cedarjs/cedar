@@ -45,7 +45,7 @@ export type PublishClientType = CreateRedisEventTargetArgs['publishClient']
 export type SubscribeClientType = CreateRedisEventTargetArgs['subscribeClient']
 
 /**
- * Configure RedwoodJS Realtime
+ * Configure CedarJS Realtime
  *
  * Realtime supports Live Queries and Subscriptions over GraphQL SSE.
  *
@@ -53,14 +53,13 @@ export type SubscribeClientType = CreateRedisEventTargetArgs['subscribeClient']
  *
  * Subscriptions are GraphQL queries that are run when a client subscribes to a channel.
  *
- * Redwood Realtime
+ * CedarJS Realtime
  *  - uses a publish/subscribe model to broadcast data to clients.
  *  - uses a store to persist Live Query and Subscription data.
  *
- * Redwood Realtime supports in-memory and Redis stores:
+ * CedarJS Realtime supports in-memory and Redis stores:
  * - In-memory stores are useful for development and testing.
  * - Redis stores are useful for production.
- *
  */
 export type RedwoodRealtimeOptions = {
   enableDeferStream?: boolean

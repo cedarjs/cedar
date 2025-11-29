@@ -57,7 +57,7 @@ export const handler = async (args) => {
 
   // The command the user is running is something like this:
   //
-  // yarn rw exec scriptName arg1 arg2 --positional1=foo --positional2=bar
+  // yarn cedar exec scriptName arg1 arg2 --positional1=foo --positional2=bar
   //
   // Further up in the command chain we've parsed this with yargs. We asked
   // yargs to parse the command `exec [name]`. So it plucked `scriptName` from

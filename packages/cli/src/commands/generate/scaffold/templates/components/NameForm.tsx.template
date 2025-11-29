@@ -1,4 +1,4 @@
-import type { Edit${singularPascalName}By${pascalIdName}, Update${singularPascalName}Input } from 'types/graphql.js'
+import type { Edit${singularPascalName}By${pascalIdName}, Update${singularPascalName}Input } from 'types/graphql'
 
 import type { RWGqlError } from '@cedarjs/forms'
 import {

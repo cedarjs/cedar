@@ -13,31 +13,45 @@ import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
-} from './frameworkLinking'
-import { webTasks, apiTasks } from './tui-tasks'
-import { isAwaitable, isTuiError } from './typing'
-import type { TuiTaskDef } from './typing'
+} from './frameworkLinking.js'
+import { webTasks, apiTasks } from './tui-tasks.js'
+import { isAwaitable, isTuiError } from './typing.js'
+import type { TuiTaskDef } from './typing.js'
 import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   ExecaError,
   exec,
-} from './util'
+} from './util.js'
 
 const ansis = require('ansis')
+
+function recommendedNodeVersion() {
+  const templatePackageJsonPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'packages',
+    'create-cedar-app',
+    'templates',
+    'ts',
+    'package.json',
+  )
+  console.log('templatePackageJsonPath:', templatePackageJsonPath)
+  const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
+
+  return json.engines.node
+}
 
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
 // hangs this script without any information to the user that tries to rebuild
 // the test-project. It's better to fail early so the correct node version can
 // be installed.
-if (
-  semver.lt(process.version, '20.0.0') ||
-  semver.gte(process.version, '21.0.0')
-) {
+if (!semver.satisfies(process.version, recommendedNodeVersion())) {
   console.error('Unsupported Node.js version')
   console.error('  You are using:', process.version)
-  console.error('  Supported version:', 'v20')
+  console.error('  Supported version:', recommendedNodeVersion())
   process.exit(1)
 }
 
@@ -430,7 +444,7 @@ async function runCommand() {
       )
 
       await exec(
-        'yarn rw g script i/am/nested',
+        'yarn cedar g script i/am/nested',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -438,7 +452,7 @@ async function runCommand() {
       // Verify that the scripts are added and included in the list of
       // available scripts
       const list = await exec(
-        'yarn rw exec',
+        'yarn cedar exec',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -448,33 +462,33 @@ async function runCommand() {
         !list.stdout.includes('i/am/nested') ||
         !list.stdout.includes('one/two/myNestedScript')
       ) {
-        console.error('yarn rw exec output', list.stdout, list.stderr)
+        console.error('yarn cedar exec output', list.stdout, list.stderr)
 
         throw new Error('Scripts not included in list')
       }
 
       // Verify that the scripts can be executed
       const runFromRoot = await exec(
-        'yarn rw exec one/two/myNestedScript',
+        'yarn cedar exec one/two/myNestedScript',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
 
       if (!runFromRoot.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn rw exec one/two/myNestedScript` output')
+        console.error('`yarn cedar exec one/two/myNestedScript` output')
         console.error(runFromRoot.stdout, runFromRoot.stderr)
 
         throw new Error('Script not executed successfully')
       }
 
       const runFromScripts = await exec(
-        'yarn rw exec one/two/myNestedScript',
+        'yarn cedar exec one/two/myNestedScript',
         [],
         getExecaOptions(path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one')),
       )
 
       if (!runFromScripts.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn rw exec one/two/myNestedScript` output')
+        console.error('`yarn cedar exec one/two/myNestedScript` output')
         console.error(runFromScripts.stdout, runFromScripts.stderr)
 
         throw new Error('Script not executed successfully')
@@ -487,7 +501,7 @@ async function runCommand() {
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
-        'yarn rw prisma migrate reset',
+        'yarn cedar prisma migrate reset',
         ['--force'],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -499,8 +513,7 @@ async function runCommand() {
     title: 'Lint --fix all the things',
     task: async () => {
       try {
-        await exec('yarn rw lint --fix', [], {
-          shell: true,
+        await exec('yarn', ['rw', 'lint', '--fix'], {
           stdio: 'pipe',
           cleanup: true,
           cwd: OUTPUT_PROJECT_PATH,

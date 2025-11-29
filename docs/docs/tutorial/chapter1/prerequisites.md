@@ -11,13 +11,13 @@ Redwood is composed of several popular libraries to make full-stack web developm
 - [Prisma](https://prisma.io/)
 - [Jamstack Deployment](https://jamstack.org/)
 
-**Don't panic!** You can work through this tutorial without knowing much of anything about these technologies. You may find yourself getting lost in terminology that we don't stop and take the time to explain, but that's okay: just know that the nitty-gritty details of how those technologies work is out there and there will be plenty of time to learn them. As you learn more about them you'll start to see the lines between what Redwood provides on top of the stock implementations of these projects.
+**Don't panic!** You can work through this tutorial without knowing much of anything about these technologies. You may find yourself getting lost in terminology that we don't stop and take the time to explain, but that's okay: just know that the nitty-gritty details of how those technologies work is out there and there will be plenty of time to learn them. As you learn more about them you'll start to see the lines between what Cedar provides on top of the stock implementations of these projects.
 
-You could definitely learn them all at once, but it will be harder to determine where one ends and another begins, which makes it more difficult to find help once you're past the tutorial and want to dive deeper into one technology or another. Our advice? Make it through the tutorial and then start building something on your own! When you find that what you learned in the tutorial doesn't exactly apply to a feature you're trying to build, Google for where you're stuck ("prisma select only some fields") and you'll be an expert in no time. And don't forget our [Discourse](https://community.redwoodjs.com/) and [Discord](https://discord.com/invite/redwoodjs) where you can get help from the creators of the framework, as well as tons of helpful community members.
+You could definitely learn them all at once, but it will be harder to determine where one ends and another begins, which makes it more difficult to find help once you're past the tutorial and want to dive deeper into one technology or another. Our advice? Make it through the tutorial and then start building something on your own! When you find that what you learned in the tutorial doesn't exactly apply to a feature you're trying to build, Google for where you're stuck ("prisma select only some fields") and you'll be an expert in no time. And don't forget our [Discourse](https://community.redwoodjs.com/) and [Discord](https://cedarjs.com/discord) where you can get help from the creators of the framework, as well as tons of helpful community members.
 
-### Redwood Versions
+### Cedar Versions
 
-You will want to be on at least version 7.0.0 to complete the tutorial. If this is your first time using Redwood then no worries: the latest version will be installed automatically when you create your app skeleton!
+You will want to be on at least version 7.0.0 to complete the tutorial. If this is your first time using Cedar then no worries: the latest version will be installed automatically when you create your app skeleton!
 
 If you have an existing site created with a prior version, you'll need to upgrade and (most likely) apply code modifications. Follow this two step process:
 
@@ -40,7 +40,7 @@ node --version
 yarn --version
 ```
 
-Please do upgrade accordingly. Then proceed to the Redwood installation when you're ready!
+Please do upgrade accordingly. Then proceed to the Cedar installation when you're ready!
 
 :::info Installing Node and Yarn
 
@@ -59,7 +59,7 @@ npm install --global corepack
 yarn -v
 ```
 
-The version of Yarn will probably be `1.22.21`, but don't worry—in your Redwood project, Corepack will know to use a modern version of Yarn because of the `packageManager` field in the root `package.json`.
+The version of Yarn will probably be `1.22.21`, but don't worry—in your Cedar project, Corepack will know to use a modern version of Yarn because of the `packageManager` field in the root `package.json`.
 
 **Windows:** Recommended Development Setup
 

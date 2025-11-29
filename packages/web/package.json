@@ -114,8 +114,8 @@
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "cedarjs": "./dist/cjs/bins/cedarjs.js",
-    "cj": "./dist/cjs/bins/cedarjs.js",
+    "cedar": "./dist/cjs/bins/cedar.js",
+    "cedarjs": "./dist/cjs/bins/cedar.js",
     "cross-env": "./dist/cjs/bins/cross-env.js",
     "msw": "./dist/cjs/bins/msw.js",
     "redwood": "./dist/cjs/bins/redwood.js",
@@ -181,7 +181,7 @@
     "react-dom": "19.0.0-rc-f2df5694-20240916",
     "tstyche": "3.0.0",
     "tsx": "4.20.5",
-    "typescript": "5.6.2",
+    "typescript": "5.9.2",
     "vitest": "3.2.4"
   },
   "peerDependencies": {

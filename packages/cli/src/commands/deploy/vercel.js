@@ -15,9 +15,7 @@ export async function handler(yargs) {
     dataMigrate: yargs.dataMigrate,
   })
 
-  const { handler: importedHandler } = await import(
-    './helpers/deployHandler.js'
-  )
+  const { deployHandler } = await import('./helpers/deployHandler.js')
 
-  return importedHandler(yargs)
+  return deployHandler(yargs)
 }

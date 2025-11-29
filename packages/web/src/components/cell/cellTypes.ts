@@ -90,10 +90,10 @@ type ConditionallyGuaranteed<T extends object> =
 
 /**
  * @param TData - Type of data based on your graphql query. This can be imported
- * from 'types/graphql.js'
+ * from 'types/graphql'
  *
  * @example
- * import type { FindPosts } from 'types/graphql.js'
+ * import type { FindPosts } from 'types/graphql'
  *
  * const { post }: CellSuccessData<FindPosts> = props
  */

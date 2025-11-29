@@ -48,7 +48,14 @@ export const builder = async (yargs) => {
           )
           await bothSsrRscServerHandler(argv, rscEnabled)
         } else {
-          await bothServerCLIConfig.handler(argv)
+          if (!projectIsEsm()) {
+            const { handler } = await import(
+              '@cedarjs/api-server/cjs/bothCliConfigHandler'
+            )
+            await handler(argv)
+          } else {
+            await bothServerCLIConfig.handler(argv)
+          }
         }
       },
     })
@@ -117,7 +124,7 @@ export const builder = async (yargs) => {
       ) {
         console.error(
           c.error(
-            '\n Please run `yarn rw build web` before trying to serve web. \n',
+            '\n Please run `yarn cedar build web` before trying to serve web. \n',
           ),
         )
         process.exit(1)
@@ -137,7 +144,7 @@ export const builder = async (yargs) => {
         if (!fs.existsSync(path.join(getPaths().api.dist))) {
           console.error(
             c.error(
-              '\n Please run `yarn rw build api` before trying to serve api. \n',
+              '\n Please run `yarn cedar build api` before trying to serve api. \n',
             ),
           )
           process.exit(1)
@@ -149,7 +156,7 @@ export const builder = async (yargs) => {
         if (!apiSideExists && !rscEnabled) {
           console.error(
             c.error(
-              '\n Unable to serve the both sides as no `api` folder exists. Please use `yarn rw serve web` instead. \n',
+              '\n Unable to serve the both sides as no `api` folder exists. Please use `yarn cedar serve web` instead. \n',
             ),
           )
           process.exit(1)
@@ -163,7 +170,7 @@ export const builder = async (yargs) => {
         ) {
           console.error(
             c.error(
-              '\n Please run `yarn rw build` before trying to serve your redwood app. \n',
+              '\n Please run `yarn cedar build` before trying to serve your redwood app. \n',
             ),
           )
           process.exit(1)

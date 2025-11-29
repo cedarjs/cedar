@@ -1,5 +1,6 @@
-import type { QueryResolvers, MutationResolvers } from 'types/graphql.js'
+import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
+// Testing aliased imports with extensions
 import { db } from 'src/lib/db.js'
 
 export const contacts: QueryResolvers['contacts'] = () => {

@@ -10,11 +10,10 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "cdr": "./dist/bins/cedarjs.js",
-    "cedarjs": "./dist/bins/cedarjs.js",
+    "cedar": "./dist/bins/cedar.js",
+    "cedarjs": "./dist/bins/cedar.js",
     "cedarjs-api-server-watch": "./dist/bins/cedarjs-api-server-watch.js",
     "cedarjs-serve-api": "./dist/bins/cedarjs-serve-api.js",
-    "cj": "./dist/bins/cedarjs.js",
     "cross-env": "./dist/bins/cross-env.js",
     "eslint": "./dist/bins/eslint.js",
     "jest": "./dist/bins/jest.js",
@@ -57,7 +56,7 @@
     "nodemon": "3.1.10",
     "react-refresh": "0.14.0",
     "rimraf": "6.0.1",
-    "typescript": "5.6.2"
+    "typescript": "5.9.2"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

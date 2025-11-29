@@ -34,7 +34,7 @@ Storybook updates with a new **CommentsCell** under the **Cells** folder, and it
 
 ![image](https://user-images.githubusercontent.com/300/153477642-0d5a15a5-f96f-485a-b8b0-dbc1c4515279.png)
 
-Where did that come from? Check out `CommentsCell.mock.{js,ts}`: there's no Prisma model for a Comment yet, so Redwood took a guess that your model would at least contain an `id` field and just used that for the mock data.
+Where did that come from? Check out `CommentsCell.mock.{js,ts}`: there's no Prisma model for a Comment yet, so Cedar took a guess that your model would at least contain an `id` field and just used that for the mock data.
 
 Let's update the `Success` component to use the `Comment` component created earlier, and add all of the fields we'll need for the **Comment** to render to the `QUERY`:
 
@@ -83,7 +83,7 @@ export const Success = ({ comments }) => {
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/CommentsCell/CommentsCell.tsx"
-import type { CommentsQuery, CommentsQueryVariables } from 'types/graphql.js'
+import type { CommentsQuery, CommentsQueryVariables } from 'types/graphql'
 
 import type {
   CellFailureProps,
@@ -290,7 +290,7 @@ import { Link, routes } from '@cedarjs/router'
 // highlight-next-line
 import CommentsCell from 'src/components/CommentsCell'
 
-import type { Post } from 'types/graphql.js'
+import type { Post } from 'types/graphql'
 
 const truncate = (text: string, length: number) => {
   return text.substring(0, length) + '...'

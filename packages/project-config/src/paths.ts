@@ -8,10 +8,8 @@ import { getConfigPath } from './configPath.js'
 
 export interface NodeTargetPaths {
   base: string
-  dataMigrations: string
   directives: string
-  db: string
-  dbSchema: string
+  prismaConfig: string
   src: string
   functions: string
   graphql: string
@@ -167,9 +165,7 @@ export const resolveFile = (
   return null
 }
 
-/**
- * Path constants that are relevant to a Redwood project.
- */
+/** Path constants that are relevant to a Cedar project */
 const getPathsCache = new Map<string, Paths>()
 export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
   if (getPathsCache.has(BASE_DIR)) {
@@ -177,8 +173,17 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
   }
 
   const routes = resolveFile(path.join(BASE_DIR, PATH_WEB_ROUTES)) as string
-  const { schemaPath } = getConfig(getConfigPath(BASE_DIR)).api
-  const schemaDir = path.dirname(schemaPath)
+  const { prismaConfig: prismaConfigFromConfig } = getConfig(
+    getConfigPath(BASE_DIR),
+  ).api
+  // Remove extension from config path before resolving to find actual file
+  const prismaConfigBase = path.join(
+    BASE_DIR,
+    prismaConfigFromConfig.replace(/\.[^.]+$/, ''),
+  )
+  const prismaConfig =
+    resolveFile(prismaConfigBase) || path.join(BASE_DIR, prismaConfigFromConfig)
+
   const viteConfig = resolveFile(
     path.join(BASE_DIR, PATH_WEB_DIR_CONFIG_VITE),
   ) as string
@@ -200,9 +205,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
 
     api: {
       base: path.join(BASE_DIR, 'api'),
-      dataMigrations: path.join(BASE_DIR, schemaDir, 'dataMigrations'),
-      db: path.join(BASE_DIR, schemaDir),
-      dbSchema: path.join(BASE_DIR, schemaPath),
+      prismaConfig,
       functions: path.join(BASE_DIR, PATH_API_DIR_FUNCTIONS),
       graphql: path.join(BASE_DIR, PATH_API_DIR_GRAPHQL),
       lib: path.join(BASE_DIR, PATH_API_DIR_LIB),
@@ -276,6 +279,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
   fs.mkdirSync(paths.generated.types.mirror, { recursive: true })
 
   getPathsCache.set(BASE_DIR, paths)
+
   return paths
 }
 

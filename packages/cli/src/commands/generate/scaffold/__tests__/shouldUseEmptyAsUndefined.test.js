@@ -19,6 +19,7 @@ describe('relational form field', () => {
 
   beforeAll(async () => {
     vol.fromJSON({ 'redwood.toml': '' }, '/')
+
     const files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
       model: 'Tag',

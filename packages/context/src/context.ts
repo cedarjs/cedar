@@ -8,6 +8,18 @@ function createContextProxy(target: GlobalContext) {
     get: (_target, property: string) => {
       const store = getAsyncStoreInstance().getStore()
       const ctx = store?.get('context') || {}
+
+      // Debug logging to help diagnose context issues
+      if (process.env.DEBUG_CONTEXT === 'true') {
+        console.log('[Context Debug]', {
+          property,
+          hasStore: !!store,
+          hasContext: !!ctx,
+          contextKeys: Object.keys(ctx),
+          currentUser: ctx.currentUser,
+        })
+      }
+
       return ctx[property]
     },
     set: (_target, property: string, newVal) => {
@@ -31,6 +43,16 @@ export let context: GlobalContext = createContextProxy({})
  * such as `context.magicNumber = 1`, or `setContext({ ...context, magicNumber: 1 })`
  */
 export const setContext = (newContext: GlobalContext): GlobalContext => {
+  // Debug logging to help diagnose context issues
+  if (process.env.DEBUG_CONTEXT === 'true') {
+    console.log('[setContext Debug]', {
+      hasNewContext: !!newContext,
+      contextKeys: Object.keys(newContext),
+      currentUser: newContext.currentUser,
+      stackTrace: new Error().stack,
+    })
+  }
+
   // re-init the proxy against the new context object,
   // so things like `console.log(context)` is the actual object,
   // not one initialized earlier.
@@ -38,6 +60,14 @@ export const setContext = (newContext: GlobalContext): GlobalContext => {
 
   // Replace the value of context stored in the current async store
   const store = getAsyncStoreInstance().getStore()
+
+  if (process.env.DEBUG_CONTEXT === 'true') {
+    console.log('[setContext Debug - Store]', {
+      hasStore: !!store,
+      storeHasContext: !!store?.get('context'),
+    })
+  }
+
   store?.set('context', newContext)
 
   return context

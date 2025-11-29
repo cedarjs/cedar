@@ -1,13 +1,13 @@
 # GoTrue Auth
 
-If you've completed the [Authentication section](../tutorial/chapter4/authentication.md) of The Tutorial, you've seen how you can add the [Netlify Identity Widget](https://github.com/netlify/netlify-identity-widget) to your Redwood app in a matter of minutes.
+If you've completed the [Authentication section](../tutorial/chapter4/authentication.md) of The Tutorial, you've seen how you can add the [Netlify Identity Widget](https://github.com/netlify/netlify-identity-widget) to your Cedar app in a matter of minutes.
 But what do you do if you want to use Netlify Identity, but ditch the widget? There are many cases where we want much more control over our authentication interface and functionality, while still maintaining some _ease-of-use_ when it comes to development.
 
 Enter [GoTrue-JS](https://github.com/netlify/gotrue-js), a client library for interfacing with Netlify Identity's GoTrue API.
 
 In this recipe, we'll:
 
-- [configure Redwood Auth with GoTrue-JS](#generate-auth-configuration),
+- [configure Cedar Auth with GoTrue-JS](#generate-auth-configuration),
 - [create a Sign Up form](#sign-up),
 - [create a Sign In form](#sign-in),
 - [create a Sign Out button](#sign-out),
@@ -19,7 +19,7 @@ But first, some housekeeping...
 
 Before getting started, there are a few steps you should have completed:
 
-- [Create a Redwood app](../tutorial/chapter1/installation.md)
+- [Create a Cedar app](../tutorial/chapter1/installation.md)
 - [Create a Netlify account](https://www.netlify.com/)
 - [Deploy your Netlify site](../tutorial/chapter4/deployment.md)
 - [Enable Netlify Identity](#enable-netlify-identity)
@@ -35,13 +35,13 @@ Now you should see an Identity API endpoint, e.g. `https://my-bodacious-app.netl
 
 ## Generate Auth Configuration
 
-Let's start by installing the required packages and generating boilerplate code and files for Redwood Auth, all with this simple [CLI command](../cli-commands.md#setup-auth):
+Let's start by installing the required packages and generating boilerplate code and files for Cedar Auth, all with this simple [CLI command](../cli-commands.md#setup-auth):
 
 ```bash
 yarn redwood setup auth goTrue
 ```
 
-By specifying `goTrue` as the provider, Redwood automatically added the necessary GoTrue-JS config to our App.js. Let's open up `web/src/App.js` and inspect. You should see:
+By specifying `goTrue` as the provider, Cedar automatically added the necessary GoTrue-JS config to our App.js. Let's open up `web/src/App.js` and inspect. You should see:
 
 ```jsx {1-2,11-14,18,22} title="web/src/App.js"
 import { AuthProvider } from '@cedarjs/auth'
@@ -158,7 +158,7 @@ const SignupPage = () => {
 //...
 ```
 
-The _something_ we need to do is—surprise!—sign up. To do this, we'll need a way to communicate with `<AuthProvider />` and the GoTrue-JS client we passed to it. Look no further than the [`useAuth` hook](https://redwoodjs.com/docs/authentication#api), which lets us subscribe to our auth state and its properties. In our case, we'll be glad to now have access to `client` and, thusly, our GoTrue-JS instance and [all of its functions](https://github.com/netlify/gotrue-js/blob/master/README.md#authentication-examples).
+The _something_ we need to do is—surprise!—sign up. To do this, we'll need a way to communicate with `<AuthProvider />` and the GoTrue-JS client we passed to it. Look no further than the [`useAuth` hook](https://cedarjs.com/docs/authentication#api), which lets us subscribe to our auth state and its properties. In our case, we'll be glad to now have access to `client` and, thusly, our GoTrue-JS instance and [all of its functions](https://github.com/netlify/gotrue-js/blob/master/README.md#authentication-examples).
 
 Let's import `useAuth` and destructure `client` from it in our component:
 
@@ -361,7 +361,7 @@ const SigninPage = () => {
 export default SigninPage
 ```
 
-Now we'll add `logIn` to our `onSubmit` function. This time we'll be passing an object to our function as we're using Redwood Auth's logIn function directly (as opposed to `client`). This object takes an email, password, and a remember boolean. We'll also chain on `then` and `catch` to handle the response:
+Now we'll add `logIn` to our `onSubmit` function. This time we'll be passing an object to our function as we're using Cedar Auth's logIn function directly (as opposed to `client`). This object takes an email, password, and a remember boolean. We'll also chain on `then` and `catch` to handle the response:
 
 ```jsx {10-14} title="web/src/pages/SigninPage/SigninPage.js"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'
@@ -550,7 +550,7 @@ const Navigation = () => {
 export default Navigation
 ```
 
-Because Redwood Auth uses [React's Context API](https://reactjs.org/docs/context.html) to manage and broadcast the auth state, we can be confident that `isAuthenticated` will always be up-to-date, even if it changes from within another component in the tree (so long as it's a child of `<AuthProvider />`). In our case, when `isAuthenticated` changes, React will auto-magically take care of rendering the appropriate components.
+Because Cedar Auth uses [React's Context API](https://reactjs.org/docs/context.html) to manage and broadcast the auth state, we can be confident that `isAuthenticated` will always be up-to-date, even if it changes from within another component in the tree (so long as it's a child of `<AuthProvider />`). In our case, when `isAuthenticated` changes, React will auto-magically take care of rendering the appropriate components.
 
 So, now let's import our sign out button and add it, as well as sign in and sign up links, to the appropriate blocks in the conditional:
 
@@ -614,7 +614,7 @@ const HomePage = () => {
   return (
     <GlobalLayout>
       <h1>Home</h1>
-      <p>My Gotrue Redwood Auth</p>
+      <p>My Gotrue Cedar Auth</p>
     </GlobalLayout>
   )
 }
@@ -699,7 +699,7 @@ Now we have navigation that renders the correct links and buttons based on our a
 
 ## Wrapping Up
 
-We've configured GoTrue with Redwood Auth, created a Sign Up page, a Sign In page, a Sign Out button, and added auth links to our layout. Nicely done!
+We've configured GoTrue with Cedar Auth, created a Sign Up page, a Sign In page, a Sign Out button, and added auth links to our layout. Nicely done!
 
 Thanks for tuning in!
 

@@ -2,6 +2,24 @@ import process from 'node:process'
 
 import { $, cd, path, ProcessOutput, fs } from 'zx'
 
+// Suppress DEP0190 warning on Windows for zx shell usage
+// This warning occurs because zx uses `shell: true` with child processes on Windows
+// which triggers Node.js DEP0190: "Passing args to a child process with shell option true
+// can lead to security vulnerabilities, as the arguments are not escaped, only concatenated."
+// Since zx handles argument escaping internally, this warning is safe to suppress for our use case.
+if (process.platform === 'win32') {
+  process.removeAllListeners('warning')
+  process.on('warning', (warning) => {
+    if (
+      warning.name === 'DeprecationWarning' &&
+      warning.message.includes('DEP0190')
+    ) {
+      return // Ignore DEP0190 warnings
+    }
+    console.warn(warning)
+  })
+}
+
 import {
   JOBS_SCRIPT,
   PRISMA_SCRIPT,
@@ -24,7 +42,7 @@ import {
 //     "name":"SampleJob",
 //     "path":"SampleJob/SampleJob",
 //     "args":[
-//       "/Users/tobbe/tmp/cj-test-project-e2e-cron/BACKGROUND_JOB_TEST.txt",
+//       "/Users/tobbe/tmp/cedar-test-project-e2e-cron/BACKGROUND_JOB_TEST.txt",
 //       "0049550"
 //     ]
 //   }`,
@@ -112,13 +130,13 @@ async function main() {
 }
 
 async function runJobsSetup(projectPath: string) {
-  console.log('\n❓ Testing: `yarn rw setup jobs`')
+  console.log('\n❓ Testing: `yarn cedar setup jobs`')
 
   try {
-    await $`yarn rw setup jobs`
+    await $`yarn cedar setup jobs`
   } catch (error) {
     if (error instanceof ProcessOutput) {
-      console.error("💥 Failed to run: 'yarn rw setup jobs'")
+      console.error("💥 Failed to run: 'yarn cedar setup jobs'")
       console.error(error.toString())
       process.exit(1)
     } else {
@@ -138,10 +156,8 @@ async function runJobsSetup(projectPath: string) {
   }
   console.log('Confirmed: job config file exists')
 
-  const jobsTs = fs.readFileSync(
-    path.join(projectPath, 'api/src/lib/jobs.ts'),
-    'utf8',
-  )
+  const jobsPath = path.join(projectPath, 'api/src/lib/jobs.ts')
+  const jobsTs = fs.readFileSync(jobsPath, 'utf8')
 
   if (!/import \{.*JobManager.*\} from ['"]@cedarjs\/jobs['"]/.test(jobsTs)) {
     console.error(
@@ -162,11 +178,7 @@ async function runJobsSetup(projectPath: string) {
   console.log('Action: Altering the JobManager config to poll more often')
   const updatedJobsTs = jobsTs.replace('sleepDelay: 5', 'sleepDelay: 1')
 
-  fs.writeFileSync(
-    path.join(projectPath, 'api/src/lib/jobs.ts'),
-    updatedJobsTs,
-    'utf8',
-  )
+  fs.writeFileSync(jobsPath, updatedJobsTs, 'utf8')
 
   // Confirm jobs directory
   if (
@@ -194,12 +206,12 @@ async function runJobsSetup(projectPath: string) {
 }
 
 async function migrateDatabase(projectPath: string) {
-  console.log('\n❓ Testing: `yarn rw prisma migrate dev`')
+  console.log('\n❓ Testing: `yarn cedar prisma migrate dev`')
   try {
-    await $`yarn rw prisma migrate dev --name e2e-background-jobs`
+    await $`yarn cedar prisma migrate dev --name e2e-background-jobs`
   } catch (error) {
     if (error instanceof ProcessOutput) {
-      console.error("💥 Failed to run: 'yarn rw prisma migrate dev'")
+      console.error("💥 Failed to run: 'yarn cedar prisma migrate dev'")
       console.error(error.toString())
       process.exit(1)
     } else {
@@ -218,7 +230,7 @@ async function migrateDatabase(projectPath: string) {
 async function confirmPrismaModelExists() {
   console.log('\n❓ Testing: the prisma model exists in the database')
 
-  const prismaData = (await $`yarn rw exec prisma --silent`).toString()
+  const prismaData = (await $`yarn cedar exec prisma --silent`).toString()
 
   try {
     const { name } = JSON.parse(prismaData)
@@ -242,12 +254,12 @@ async function generateJob(
   testFileLocation: string,
   testFileData: string,
 ) {
-  console.log('\n❓ Testing: `yarn rw generate job SampleJob`')
+  console.log('\n❓ Testing: `yarn cedar generate job SampleJob`')
   try {
-    await $`yarn rw generate job SampleJob`
+    await $`yarn cedar generate job SampleJob`
   } catch (error) {
     if (error instanceof ProcessOutput) {
-      console.error("💥 Failed to run: 'yarn rw generate job SampleJob'")
+      console.error("💥 Failed to run: 'yarn cedar generate job SampleJob'")
       console.error(error.toString())
       process.exit(1)
     } else {
@@ -282,9 +294,9 @@ async function generateJob(
   const functionPath = path.join(projectPath, 'api/src/functions/run.ts')
   fs.writeFileSync(functionPath, SAMPLE_FUNCTION)
 
-  console.log('Action: Running `yarn rw serve api`')
-  await $`yarn rw build api`
-  const apiServer = $`yarn rw serve api`.nothrow()
+  console.log('Action: Running `yarn cedar serve api`')
+  await $`yarn cedar build api`
+  const apiServer = $`yarn cedar serve api`.nothrow()
 
   // Wait for the api server to start
   await new Promise((resolve) => {
@@ -331,10 +343,10 @@ async function scheduleCronJob(projectPath: string) {
   fs.writeFileSync(scriptPath, SCHEDULE_CRON_JOB_SCRIPT)
 
   console.log('Action: Building the api side')
-  await $`yarn rw build api`
+  await $`yarn cedar build api`
 
   console.log('Action: Running script')
-  await $`yarn rw exec scheduleCronJob`
+  await $`yarn cedar exec scheduleCronJob`
 }
 
 async function confirmJobDidNotRunSynchronously(
@@ -362,7 +374,7 @@ async function confirmJobsWereScheduled(
     '\n❓ Testing: Confirming the jobs were scheduled into the database',
   )
 
-  const rawJobs = (await $`yarn rw exec jobs --silent`).toString()
+  const rawJobs = (await $`yarn cedar exec jobs --silent`).toString()
   let dataJob = undefined
   let cronJob = undefined
 
@@ -419,10 +431,10 @@ async function confirmJobsWereScheduled(
 }
 
 async function jobsWorkoff() {
-  console.log('\n❓ Testing: `yarn rw jobs workoff`')
+  console.log('\n❓ Testing: `yarn cedar jobs workoff`')
 
   try {
-    const { stdout } = await $`yarn rw jobs workoff`
+    const { stdout } = await $`yarn cedar jobs workoff`
 
     if (!stdout.includes('Starting 1 worker')) {
       console.error('💥 Error: Failed to start worker')
@@ -449,7 +461,7 @@ async function jobsWorkoff() {
     console.log('Confirmed: worker finished')
   } catch (error) {
     if (error instanceof ProcessOutput) {
-      console.error('💥 Failed to run: `yarn rw jobs workoff`')
+      console.error('💥 Failed to run: `yarn cedar jobs workoff`')
       console.error(error.toString())
       process.exit(1)
     } else {
@@ -499,7 +511,7 @@ async function confirmJobsRan(
 async function confirmJobWasRemoved(job: Job) {
   console.log('\n❓ Testing: Confirming the job was removed from the database')
 
-  const rawJobsAfter = (await $`yarn rw exec jobs --silent`).toString()
+  const rawJobsAfter = (await $`yarn cedar exec jobs --silent`).toString()
   const jobsAfter: Job[] = JSON.parse(rawJobsAfter)
   const jobAfter = jobsAfter.find((j) => j.id === job.id)
 
@@ -514,7 +526,7 @@ async function confirmJobWasRemoved(job: Job) {
 async function runCronJob(projectPath: string) {
   console.log('\n❓ Testing: Cron Job')
 
-  const rawJobsAfter = (await $`yarn rw exec jobs --silent`).toString()
+  const rawJobsAfter = (await $`yarn cedar exec jobs --silent`).toString()
   const jobsAfter: Job[] = JSON.parse(rawJobsAfter)
   const cronJob = jobsAfter.find((j) => {
     const handler = JSON.parse(j.handler)
@@ -536,7 +548,7 @@ async function runCronJob(projectPath: string) {
   console.log(`           It is now ${now} (delta: ${delta}ms)`)
 
   try {
-    const { stdout, stderr } = await $`yarn rw jobs work`
+    const { stdout, stderr } = await $`yarn cedar jobs work`
       .nothrow()
       .quiet()
       // 3600 was enough of a timeout locally, but I had to increase it for CI
@@ -551,7 +563,7 @@ async function runCronJob(projectPath: string) {
 
     console.log('Confirmed: expected output found')
   } catch (error) {
-    console.error('💥 Failed to run: `yarn rw jobs work`')
+    console.error('💥 Failed to run: `yarn cedar jobs work`')
     if (!!error && typeof error === 'object') {
       console.error(error.toString())
     }

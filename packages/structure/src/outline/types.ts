@@ -88,9 +88,8 @@ export type OutlineItemJSON = Omit<OutlineItem, 'children'> & {
 }
 
 /**
- * this will recursively await all children and return a serializable representation
- * of the complete outline
- * @param item
+ * this will recursively await all children and return a serializable
+ * representation of the complete outline
  */
 export async function outlineToJSON(
   item: OutlineItem,
@@ -98,7 +97,9 @@ export async function outlineToJSON(
   if (!item.children) {
     return { ...item, children: undefined }
   }
-  const cs = item.children ? await item.children() : []
-  const css = await Promise.all(cs.map(outlineToJSON))
-  return { ...item, children: css }
+
+  const children = item.children ? await item.children() : []
+  const childrenOutlines = await Promise.all(children.map(outlineToJSON))
+
+  return { ...item, children: childrenOutlines }
 }

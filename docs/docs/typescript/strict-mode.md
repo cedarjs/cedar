@@ -141,8 +141,8 @@ This will also help Prisma make a more optimized query to the database, since ev
 
 ### Roles checks for CurrentUser in `src/lib/auth`
 
-When you setup auth, Redwood includes some template code for handling roles with the `hasRole` function.
-While Redwood does runtime checks to make sure it doesn't access roles if it doesn't exist, TypeScript in strict mode will highlight errors, depending on whether you are returning `roles`, and whether those roles are `string` or `string[]`
+When you setup auth, Cedar includes some template code for handling roles with the `hasRole` function.
+While Cedar does runtime checks to make sure it doesn't access roles if it doesn't exist, TypeScript in strict mode will highlight errors, depending on whether you are returning `roles`, and whether those roles are `string` or `string[]`
 
 ```typescript
 export const hasRole = (roles: AllowedRoles): boolean => {
@@ -243,7 +243,7 @@ export const hasRole = (roles: AllowedRoles): boolean => {
 Depending on your auth provider—i.e., anything but dbAuth—because it could change based on your account settings (if you include roles or other metadata), we can't know the shape of your decoded token at setup time.
 So you'll have to make sure that the `getCurrentUser` function is typed.
 
-To help you get started, the comments above the `getCurrentUser` function describe its parameters' types. We recommend typing `decoded` without using imported types from Redwood, as this may be a little too generic!
+To help you get started, the comments above the `getCurrentUser` function describe its parameters' types. We recommend typing `decoded` without using imported types from Cedar, as this may be a little too generic!
 
 ```ts title='api/src/lib/auth.ts'
 import type { AuthContextPayload } from '@cedarjs/api'

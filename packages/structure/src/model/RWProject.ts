@@ -1,9 +1,13 @@
 import { join } from 'path'
 
 import type { DMMF } from '@prisma/generator-helper'
-import { getDMMF, getSchema } from '@prisma/internals'
+import { getDMMF, getSchemaWithPath } from '@prisma/internals'
 
-import { getPaths, processPagesDir } from '@cedarjs/project-config'
+import {
+  getPaths,
+  processPagesDir,
+  getSchemaPath,
+} from '@cedarjs/project-config'
 
 import type { Host } from '../hosts'
 import { BaseNode } from '../ide'
@@ -86,7 +90,9 @@ export class RWProject extends BaseNode {
   // TODO: do we move this to a separate node? (ex: RWDatabase)
   @memo() async prismaDMMF(): Promise<DMMF.Document | undefined> {
     try {
-      const datamodel = await getSchema(this.pathHelper.api.dbSchema)
+      const schemaPath = await getSchemaPath(this.pathHelper.api.prismaConfig)
+      const result = await getSchemaWithPath(schemaPath)
+      const datamodel = result.schemas
       // consider case where dmmf doesn't exist (or fails to parse)
       return await getDMMF({ datamodel })
     } catch {

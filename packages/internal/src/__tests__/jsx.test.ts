@@ -6,7 +6,7 @@ import { fileToAst } from '../ast.js'
 import { getJsxElements } from '../jsx.js'
 
 const getFixturePath = (relativeFilePath: string) => {
-  return path.join(__dirname, `fixtures/${relativeFilePath}`)
+  return path.join(__dirname, '__fixtures__', 'test-project', relativeFilePath)
 }
 
 test('simple jsx tree', () => {

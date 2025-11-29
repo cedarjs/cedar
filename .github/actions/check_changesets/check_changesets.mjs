@@ -37,10 +37,10 @@ async function main() {
   // Check if the PR title starts with conventional commit prefixes that should
   // skip label requirement
   const conventionalCommitPrefixes = [
-    /^chore\([^)]+\):/,
-    /^feat\([^)]+\):/,
-    /^fix\([^)]+\):/,
-    /^docs\([^)]+\):/,
+    /^chore\([^)]+\)!?:/,
+    /^feat\([^)]+\)!?:/,
+    /^fix\([^)]+\)!?:/,
+    /^docs\([^)]+\)!?:/,
   ]
 
   const shouldSkipChangesetsRequirement = conventionalCommitPrefixes.some(

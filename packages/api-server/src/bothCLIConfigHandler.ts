@@ -7,7 +7,7 @@ import { redwoodFastifyWeb, coerceRootPath } from '@cedarjs/fastify-web'
 
 import { getWebHost, getWebPort, getAPIHost, getAPIPort } from './cliHelpers.js'
 import { createServer as createApiServer } from './createServer.js'
-import createFastifyInstance from './fastify.js'
+import { createFastifyInstance } from './fastify.js'
 import type { BothParsedOptions } from './types.js'
 
 export async function handler(options: BothParsedOptions) {

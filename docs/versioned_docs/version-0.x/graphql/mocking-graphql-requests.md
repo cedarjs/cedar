@@ -99,10 +99,7 @@ The `__typename: 'Book' as const` ensures that `'Book'` is considered to be a `t
 You can get stricter types by passing types when mocking the query, mutation and its variables:
 
 ```tsx
-import type {
-  UserProfileQuery,
-  UserProfileQueryVariables,
-} from 'types/graphql.js'
+import type { UserProfileQuery, UserProfileQueryVariables } from 'types/graphql'
 
 mockGraphQLQuery<UserProfileQuery, UserProfileQueryVariables>(
   'UserProfileQuery',

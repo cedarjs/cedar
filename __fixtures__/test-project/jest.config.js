@@ -1,6 +1,6 @@
-// This the Redwood root jest config
+// This the Cedar root jest config
 // Each side, e.g. ./web/ and ./api/ has specific config that references this root
-// More info at https://redwoodjs.com/docs/project-configuration-dev-test-build
+// More info at https://cedarjs.com/docs/project-configuration-dev-test-build
 
 module.exports = {
   rootDir: '.',

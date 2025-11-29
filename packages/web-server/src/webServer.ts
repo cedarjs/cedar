@@ -18,7 +18,7 @@ export async function serveWeb(options: ParsedOptions = {}) {
   )
   if (!distIndexExists) {
     throw new Error(
-      'no built files to serve; run `yarn rw build web` before serving the web side',
+      'no built files to serve; run `yarn cedar build web` before serving the web side',
     )
   }
 

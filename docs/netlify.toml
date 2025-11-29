@@ -208,8 +208,13 @@ to = "/docs/how-to/:splat"
 status = 301
 
 [[redirects]]
-from = "/docs/how-to"
-to = "/docs/how-to/index"
+from = "/docs/how-to/index"
+to = "/docs/how-to"
+status = 301
+
+[[redirects]]
+from = "/docs/typescript/index"
+to = "/docs/typescript"
 status = 301
 
 [[redirects]]
@@ -220,104 +225,6 @@ status = 301
 [[redirects]]
 from = "/dbauth"
 to = "/docs/authentication#self-hosted-auth-installation-and-setup"
-status = 301
-
-# v1.0-v1.5 redirects
-
-[[redirects]]
-from = "/docs/1.0/*"
-to = "/docs/1.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/1.1/*"
-to = "/docs/1.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/1.2/*"
-to = "/docs/1.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/1.3/*"
-to = "/docs/1.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/1.4/*"
-to = "/docs/1.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/1.5/*"
-to = "/docs/1.x/:splat"
-status = 301
-
-# v2.0-v2.2 redirects
-
-[[redirects]]
-from = "/docs/2.0/*"
-to = "/docs/2.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/2.1/*"
-to = "/docs/2.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/2.2/*"
-to = "/docs/2.x/:splat"
-status = 301
-
-# v3.0-v3.2 redirects
-
-[[redirects]]
-from = "/docs/3.0/*"
-to = "/docs/3.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/3.1/*"
-to = "/docs/3.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/3.2/*"
-to = "/docs/3.x/:splat"
-status = 301
-
-# v4 redirects
-
-[[redirects]]
-from = "/docs/4.0/*"
-to = "/docs/4.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/4.1/*"
-to = "/docs/4.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/4.2/*"
-to = "/docs/4.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/4.3/*"
-to = "/docs/4.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/4.4/*"
-to = "/docs/4.x/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/4.5/*"
-to = "/docs/4.x/:splat"
 status = 301
 
 # v5 redirects
@@ -345,43 +252,6 @@ status = 301
 [[redirects]]
 from = "/docs/5.4/*"
 to = "/docs/5.x/:splat"
-status = 301
-
-# v6.0-v6.6 redirects
-
-[[redirects]]
-from = "/docs/6.0/*"
-to = "/docs/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/6.1/*"
-to = "/docs/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/6.2/*"
-to = "/docs/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/6.3/*"
-to = "/docs/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/6.4/*"
-to = "/docs/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/6.5/*"
-to = "/docs/:splat"
-status = 301
-
-[[redirects]]
-from = "/docs/6.6/*"
-to = "/docs/:splat"
 status = 301
 
 # Redirects for "Configuring Fastify" after the server file was released in v7

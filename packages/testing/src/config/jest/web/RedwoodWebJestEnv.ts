@@ -8,6 +8,7 @@ class RedwoodWebJestEnvironment extends TestEnvironment {
   async setup() {
     await super.setup()
     if (typeof this.global.TextEncoder === 'undefined') {
+      // @ts-expect-error - TextEncoder from node:utils is close enough
       this.global.TextEncoder = TextEncoder
       // @ts-expect-error - TextDecoder from node:utils is close enough
       this.global.TextDecoder = TextDecoder

@@ -117,26 +117,24 @@ test('Mocks current user, and updates UI while dev server is running', async ({
     await page.reload()
   }
 
-  const usernameRow = await page
+  const usernameRow = page
     .frameLocator('#storybook-preview-iframe')
     .locator('*css=tr >> text=EMAIL')
-  await expect(await usernameRow.innerHTML()).toBe(
+  expect(await usernameRow.innerHTML()).toBe(
     '<td>EMAIL</td><td>ba@zinga.com</td>',
   )
 
-  const isAuthenticatedRow = await page
+  const isAuthenticatedRow = page
     .frameLocator('#storybook-preview-iframe')
     .locator('*css=tr >> text=isAuthenticated')
-  await expect(await isAuthenticatedRow.innerHTML()).toBe(
+  expect(await isAuthenticatedRow.innerHTML()).toBe(
     '<td>isAuthenticated</td><td>true</td>',
   )
 
-  const isAdminRow = await page
+  const isAdminRow = page
     .frameLocator('#storybook-preview-iframe')
     .locator('*css=tr >> text=Is Admin')
-  await expect(await isAdminRow.innerHTML()).toBe(
-    '<td>Is Admin</td><td>true</td>',
-  )
+  expect(await isAdminRow.innerHTML()).toBe('<td>Is Admin</td><td>true</td>')
 })
 
 const MOCK_CURRENT_USER_CONTENT = `\
@@ -156,16 +154,16 @@ export const Primary: Story = {
 test('Loads MDX Stories', async ({ page }: PlaywrightTestArgs) => {
   await page.goto('/')
 
-  // Click Redwood link in left nav
-  await page.locator('id=redwood--docs').click()
+  // Click CedarJS link in left nav
+  await page.locator('id=cedarjs--docs').click()
 
   await expect(page).toHaveURL(
-    `http://localhost:7910/?path=/docs/redwood--docs`,
+    `http://localhost:7910/?path=/docs/cedarjs--docs`,
   )
 
   await expect(
     page.frameLocator('#storybook-preview-iframe').locator('body'),
   ).toContainText(
-    'Redwood is an opinionated, full-stack, JavaScript/TypeScript web application framework designed to keep you moving fast as your app grows from side project to startup.',
+    'Cedar is an opinionated, full-stack, JavaScript/TypeScript web application framework designed to keep you moving fast as your app grows from side project to startup.',
   )
 })

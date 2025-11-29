@@ -11,7 +11,6 @@
   "type": "module",
   "bin": {
     "cedarjs": "./dist/index.js",
-    "cj": "./dist/index.js",
     "redwood": "./dist/index.js",
     "rw": "./dist/index.js",
     "rwfw": "./dist/rwfw.js"
@@ -48,7 +47,7 @@
     "@opentelemetry/resources": "1.22.0",
     "@opentelemetry/sdk-trace-node": "1.22.0",
     "@opentelemetry/semantic-conventions": "1.22.0",
-    "@prisma/internals": "5.20.0",
+    "@prisma/internals": "6.19.0",
     "ansis": "4.1.0",
     "archiver": "7.0.1",
     "boxen": "5.1.2",
@@ -74,8 +73,8 @@
     "pascalcase": "1.0.0",
     "pluralize": "8.0.0",
     "portfinder": "1.0.37",
-    "prettier": "3.5.3",
-    "prisma": "5.20.0",
+    "prettier": "3.6.2",
+    "prisma": "6.19.0",
     "prompts": "2.4.2",
     "rimraf": "6.0.1",
     "semver": "7.6.3",
@@ -96,7 +95,7 @@
     "memfs": "4.17.2",
     "node-ssh": "13.2.1",
     "tsx": "4.20.5",
-    "typescript": "5.6.2",
+    "typescript": "5.9.2",
     "vitest": "3.2.4"
   },
   "publishConfig": {

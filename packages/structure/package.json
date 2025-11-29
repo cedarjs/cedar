@@ -27,7 +27,7 @@
   "dependencies": {
     "@babel/runtime-corejs3": "7.27.6",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/internals": "5.20.0",
+    "@prisma/internals": "6.19.0",
     "@types/line-column": "1.0.2",
     "camelcase": "6.3.0",
     "core-js": "3.42.0",
@@ -55,9 +55,9 @@
     "@babel/core": "^7.26.10",
     "@types/fs-extra": "11.0.4",
     "@types/lodash": "4.17.20",
-    "@types/node": "20.17.10",
+    "@types/node": "20.19.17",
     "@types/vscode": "1.96.0",
-    "typescript": "5.6.2",
+    "typescript": "5.9.2",
     "vitest": "3.2.4"
   },
   "publishConfig": {

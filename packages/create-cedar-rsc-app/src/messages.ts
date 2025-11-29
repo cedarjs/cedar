@@ -1,7 +1,7 @@
 import ansis from 'ansis'
 
 import type { Config } from './config.js'
-import { getCrxrscaVersion } from './version.js'
+import { getCcrscaVersion } from './version.js'
 
 export function printWelcome() {
   console.log()
@@ -10,7 +10,7 @@ export function printWelcome() {
       .hex('#bf4722')
       .bold(
         '🌲 Welcome to the Cedar RSC quick-start installer ' +
-          `v${getCrxrscaVersion()} 🌲`,
+          `v${getCcrscaVersion()} 🌲`,
       ),
   )
   console.log()
@@ -34,5 +34,5 @@ export function printDone(config: Config) {
   )
   console.log()
   console.log(ansis.hex('#cef792')('> cd ' + config.installationDir))
-  console.log(ansis.hex('#cef792')('> yarn rw build -v && yarn rw serve'))
+  console.log(ansis.hex('#cef792')('> yarn cedar build -v && yarn cedar serve'))
 }

@@ -1,13 +1,15 @@
-import { getSchema } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 import 'dotenv-defaults/config'
 import execa from 'execa'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getSchemaPath } from '@cedarjs/project-config'
 
 import {
   getDefaultDb,
   checkAndReplaceDirectUrl,
 } from '../../../api/directUrlHelpers.js'
+
+const { getSchemaWithPath } = prismaInternals
 
 const rwjsPaths = getPaths()
 
@@ -24,7 +26,11 @@ export default async function () {
   // Instead of using the schema, we can use the config file
   // const prismaConfig = await getConfig(rwjsPaths.api.dbSchema)
   // and then check for the prismaConfig.datasources[0].directUrl
-  const prismaSchema = (await getSchema(rwjsPaths.api.dbSchema)).toString()
+  // TODO: Fix comment above now that we've changed to `getSchemaPath()`
+  const schemaPath = await getSchemaPath(rwjsPaths.api.prismaConfig)
+  const result = await getSchemaWithPath(schemaPath)
+  // For regex matching, we need to concatenate the schemas into a single string
+  const prismaSchema = result.schemas.map(([, content]) => content).join('\n')
 
   const directUrlEnvVar = checkAndReplaceDirectUrl(prismaSchema, defaultDb)
 
@@ -41,10 +47,9 @@ export default async function () {
     env[directUrlEnvVar] = process.env[directUrlEnvVar]
   }
 
-  execa.sync('yarn rw', command, {
+  execa.sync('yarn', ['rw', ...command], {
     cwd: rwjsPaths.api.base,
     stdio: 'inherit',
-    shell: true,
     env,
   })
 }

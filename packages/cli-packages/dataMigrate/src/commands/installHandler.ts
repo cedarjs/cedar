@@ -1,31 +1,35 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
-import { getPaths } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getSchemaPath,
+  getDataMigrationsPath,
+} from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 
 export async function handler() {
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
+  const prismaConfigPath = cedarProjectPaths.api.prismaConfig
+  const dataMigrationsPath = await getDataMigrationsPath(prismaConfigPath)
 
   const tasks = new Listr(
     [
       {
         title: 'Creating the dataMigrations directory...',
         task() {
-          fs.outputFileSync(
-            path.join(redwoodProjectPaths.api.dataMigrations, '.keep'),
-            '',
-          )
+          fs.mkdirSync(dataMigrationsPath, { recursive: true })
+          fs.writeFileSync(path.join(dataMigrationsPath, '.keep'), '')
         },
       },
       {
         title: 'Adding the RW_DataMigration model to schema.prisma...',
-        task() {
-          const dbSchemaFilePath = redwoodProjectPaths.api.dbSchema
+        async task() {
+          const dbSchemaFilePath = await getSchemaPath(prismaConfigPath)
           const dbSchemaFileContent = fs.readFileSync(dbSchemaFilePath, 'utf-8')
 
           fs.writeFileSync(
@@ -40,7 +44,7 @@ export async function handler() {
         title: 'Creating the database migration...',
         task() {
           return execa.command(createDatabaseMigrationCommand, {
-            cwd: redwoodProjectPaths.base,
+            cwd: cedarProjectPaths.base,
           }).stdout
         },
       },
@@ -70,12 +74,12 @@ model RW_DataMigration {
 }`
 
 export const createDatabaseMigrationCommand =
-  'yarn rw prisma migrate dev --name create_data_migrations --create-only'
+  'yarn cedar prisma migrate dev --name create_data_migrations --create-only'
 
 export const notes = [
   '',
   c.warning("Don't forget to apply the migration when you're ready:"),
   '',
-  `  ${c.bold('yarn rw prisma migrate dev')}`,
+  `  ${c.bold('yarn cedar prisma migrate dev')}`,
   '',
 ].join('\n')

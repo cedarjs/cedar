@@ -5,6 +5,7 @@ import { trace, SpanStatusCode } from '@opentelemetry/api'
 import checkNodeVersionCb from 'check-node-version'
 import execa from 'execa'
 import fs from 'fs-extra'
+import gradient from 'gradient-string'
 import semver from 'semver'
 import { terminalLink } from 'termi-link'
 import untildify from 'untildify'
@@ -93,18 +94,18 @@ async function executeCompatibilityCheck(templateDir) {
           `  Please use tools like nvm or corepack to change to a compatible version.`,
           `  See: ${terminalLink(
             'How to - Using nvm',
-            'https://redwoodjs.com/docs/how-to/using-nvm',
+            'https://cedarjs.com/docs/how-to/using-nvm',
             {
               fallback: () =>
-                'How to - Using nvm https://redwoodjs.com/docs/how-to/using-nvm',
+                'How to - Using nvm https://cedarjs.com/docs/how-to/using-nvm',
             },
           )}`,
           `  See: ${terminalLink(
             'Tutorial - Prerequisites',
-            'https://redwoodjs.com/docs/tutorial/chapter1/prerequisites',
+            'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
             {
               fallback: () =>
-                'Tutorial - Prerequisites https://redwoodjs.com/docs/tutorial/chapter1/prerequisites',
+                'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
             },
           )}`,
         ].join('\n'),
@@ -127,18 +128,18 @@ async function executeCompatibilityCheck(templateDir) {
         `  Please use tools like nvm or corepack to change to a compatible version.`,
         `  See: ${terminalLink(
           'How to - Use nvm',
-          'https://redwoodjs.com/docs/how-to/using-nvm',
+          'https://cedarjs.com/docs/how-to/using-nvm',
           {
             fallback: () =>
-              'How to - Use nvm https://redwoodjs.com/docs/how-to/using-nvm',
+              'How to - Use nvm https://cedarjs.com/docs/how-to/using-nvm',
           },
         )}`,
         `  See: ${terminalLink(
           'Tutorial - Prerequisites',
-          'https://redwoodjs.com/docs/tutorial/chapter1/prerequisites',
+          'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
           {
             fallback: () =>
-              'Tutorial - Prerequisites https://redwoodjs.com/docs/tutorial/chapter1/prerequisites',
+              'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
           },
         )}`,
       ].join('\n'),
@@ -167,8 +168,8 @@ async function executeCompatibilityCheck(templateDir) {
 }
 
 /**
- *
- * This type has to be updated if the engines field in the create redwood app template package.json is updated.
+ * This type has to be updated if the engines field in the create cedar app
+ * template package.json is updated.
  * @returns [boolean, Record<'node' | 'yarn', any>]
  */
 function checkNodeVersion(templateDir) {
@@ -328,10 +329,7 @@ async function initializeGit(newAppDir, commitMessage) {
 
   const gitSubprocess = execa(
     `git init && git add . && git commit -m "${commitMessage}"`,
-    {
-      shell: true,
-      cwd: newAppDir,
-    },
+    { shell: true, cwd: newAppDir },
   )
 
   try {
@@ -370,7 +368,7 @@ async function handleTargetDirPreference(targetDir) {
       targetDir === '.' ? 'the current directory' : targetDir
 
     tui.drawText(
-      `${RedwoodStyling.green('✔')} Creating your CedarJS app in ` +
+      `${RedwoodStyling.green('✔')} Creating your Cedar app in ` +
         `${targetDirText} based on command line argument`,
     )
 
@@ -659,7 +657,7 @@ async function handleYarnInstallPreference(yarnInstallFlag) {
 }
 
 /**
- * This function creates a new RedwoodJS app.
+ * This function creates a new Cedar app.
  *
  * It performs the following actions:
  *  - TODO - Add a list of what this function does
@@ -675,6 +673,11 @@ async function createRedwoodApp() {
       default: null,
       type: 'boolean',
       describe: 'Skip prompts and use defaults',
+    })
+    .option('node-check', {
+      default: true,
+      type: 'boolean',
+      describe: 'Check if the installed version of Node is supported',
     })
     .option('overwrite', {
       default: false,
@@ -709,7 +712,7 @@ async function createRedwoodApp() {
       default: true,
       type: 'boolean',
       describe:
-        'Enables sending telemetry events for this create command and all Redwood CLI commands https://telemetry.redwoodjs.com',
+        'Enables sending telemetry events for this create command and all Cedar CLI commands https://telemetry.redwoodjs.com',
     })
 
   const _isYarnBerryOrNewer = isYarnBerryOrNewer()
@@ -725,17 +728,22 @@ async function createRedwoodApp() {
 
   const parsedFlags = cli.parse()
 
-  tui.drawText(
-    [
-      '',
-      '🌲🌲🌲🌲🌲',
-      '🌲🌲',
-      `🌲🌲  ${RedwoodStyling.header('Welcome to CedarJS!')}`,
-      '🌲🌲',
-      '🌲🌲🌲🌲🌲',
-      '',
-    ].join('\n'),
-  )
+  // Logo generated by https://www.asciiart.eu/text-to-ascii-art using the "DOS
+  // Rebel" font
+  const logo2 = `
+
+     █████████               █████                           █████  █████████
+    ███░░░░░███             ░░███                           ░░███  ███░░░░░███
+   ███     ░░░   ██████   ███████   ██████   ████████        ░███ ░███    ░░░
+  ░███          ███░░███ ███░░███  ░░░░░███ ░░███░░███       ░███ ░░█████████
+  ░███         ░███████ ░███ ░███   ███████  ░███ ░░░        ░███  ░░░░░░░░███
+  ░░███     ███░███░░░  ░███ ░███  ███░░███  ░███      ███   ░███  ███    ░███
+   ░░█████████ ░░██████ ░░████████░░████████ █████    ░░████████  ░░█████████
+    ░░░░░░░░░   ░░░░░░   ░░░░░░░░  ░░░░░░░░ ░░░░░      ░░░░░░░░    ░░░░░░░░░
+
+`
+
+  console.log(gradient(['#00ff41', '#008f11']).multiline(logo2))
 
   // Extract the args as provided by the user in the command line
   // TODO: Make all flags have the 'flag' suffix
@@ -760,8 +768,14 @@ async function createRedwoodApp() {
 
   const templatesDir = fileURLToPath(new URL('../templates', import.meta.url))
 
-  // Engine check
-  await executeCompatibilityCheck(path.join(templatesDir, 'ts'))
+  // Node version check
+  const nodeCheck = parsedFlags['node-check']
+  if (nodeCheck) {
+    await executeCompatibilityCheck(path.join(templatesDir, 'ts'))
+  } else {
+    tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped node version check`)
+  }
+  trace.getActiveSpan()?.setAttribute('node-check', nodeCheck)
 
   targetDir = await handleTargetDirPreference(targetDir)
 
@@ -833,7 +847,7 @@ async function createRedwoodApp() {
       '',
       ` ⚡️ ${RedwoodStyling.redwood(
         'Get up and running fast with this Quick Start guide',
-      )}: https://redwoodjs.com/quick-start`,
+      )}: https://cedarjs.com/docs/quick-start`,
       '',
       `${RedwoodStyling.header(`Fire it up!`)} 🚀`,
       '',
@@ -849,7 +863,7 @@ async function createRedwoodApp() {
             ` > ${RedwoodStyling.green(`yarn install`)}`,
           )}`,
         `${RedwoodStyling.redwood(
-          ` > ${RedwoodStyling.green(`yarn rw dev`)}`,
+          ` > ${RedwoodStyling.green(`yarn cedar dev`)}`,
         )}`,
       ].filter(Boolean),
       '',

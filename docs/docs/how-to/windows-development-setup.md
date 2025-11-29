@@ -34,7 +34,7 @@ $ nvm use 16.13.1
 
 ### Yarn
 
-Now you have both Node and npm installed! Redwood also uses yarn, which you can now install using npm:
+Now you have both Node and npm installed! Cedar also uses yarn, which you can now install using npm:
 
 ```bash
 npm install -g yarn
@@ -46,7 +46,7 @@ _Example of Node.js, npm, and Yarn installation steps_
 
 ## Congrats!
 
-You now have everything ready to build your Redwood app.
+You now have everything ready to build your Cedar app.
 
 Next, you should start the amazing [**Redwood Tutorial**](tutorial/chapter1/installation.md) to learn how to use the framework.
 
@@ -56,7 +56,7 @@ Or run `yarn create cedar-app myApp` to get started with a new project.
 
 ### Beware case-insensitivity
 
-On Windows Git Bash, `cd myapp` and `cd myApp` will select the same directory because Windows is case-insensitive. But make sure you type the original capitalization to avoid strange errors in your Redwood project.
+On Windows Git Bash, `cd myapp` and `cd myApp` will select the same directory because Windows is case-insensitive. But make sure you type the original capitalization to avoid strange errors in your Cedar project.
 
 ### Microsoft Visual C++ Redistributable
 

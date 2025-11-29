@@ -4,13 +4,13 @@ description: Put all your business logic in one place
 
 # Services
 
-Redwood aims to put all your business logic in one place—Services. These can be used by your GraphQL API or any other place in your backend code. Redwood does all the annoying stuff for you, just write your business logic!
+Redwood aims to put all your business logic in one place—Services. These can be used by your GraphQL API or any other place in your backend code. Cedar does all the annoying stuff for you, just write your business logic!
 
 ## Overview
 
-What do we mean by "business logic?" [One definition](https://www.investopedia.com/terms/b/businesslogic.asp) states: "Business logic is the custom rules or algorithms that handle the exchange of information between a database and user interface." In Redwood, those custom rules and algorithms go in Services. You can't put that logic in the client because it's open to the world and could be manipulated. Imagine having the code to determine a valid withdrawal or deposit to someone's bank balance living in the client, and the server just receives API calls of where to move the money, doing no additional verification of those numbers! Your bank would quickly go insolvent. As you'll hear many times throughout our docs, and your development career—never trust the client.
+What do we mean by "business logic?" [One definition](https://www.investopedia.com/terms/b/businesslogic.asp) states: "Business logic is the custom rules or algorithms that handle the exchange of information between a database and user interface." In Cedar, those custom rules and algorithms go in Services. You can't put that logic in the client because it's open to the world and could be manipulated. Imagine having the code to determine a valid withdrawal or deposit to someone's bank balance living in the client, and the server just receives API calls of where to move the money, doing no additional verification of those numbers! Your bank would quickly go insolvent. As you'll hear many times throughout our docs, and your development career—never trust the client.
 
-But how does the client get access to the output of these Services? By default, that's through GraphQL. GraphQL is an API, accessible to clients, that relies on getting data from "somewhere" before returning it. That somewhere is a function backed by what's known as a [**resolver**](https://graphql.org/learn/execution/) in GraphQL. And in Redwood, those resolvers are your Services!
+But how does the client get access to the output of these Services? By default, that's through GraphQL. GraphQL is an API, accessible to clients, that relies on getting data from "somewhere" before returning it. That somewhere is a function backed by what's known as a [**resolver**](https://graphql.org/learn/execution/) in GraphQL. And in Cedar, those resolvers are your Services!
 
 ```
 ┌───────────┐      ┌───────────┐      ┌───────────┐
@@ -34,7 +34,7 @@ Service functions can also call each other. For example, that theoretical Servic
 └───────────┘      └───────────┘
 ```
 
-Finally, Services can also be called from [serverless functions](serverless-functions.md). Confusingly, these are also called "functions", but are meant to be run in a serverless environment where the code only exists long enough to complete a task and is then shut down. Redwood loves serverless functions. In fact, your GraphQL endpoint is, itself, a serverless function! In Redwood, these go in `api/src/functions`. Serverless functions can make use of Services, rather than duplicating business logic inside of themselves. In our bank transfer example, a third party service could initiate a webhook call to one of our serverless functions saying that Alice just got paid. Our (serverless) function can then call our (Service) function to make the transfer from the third party to Alice.
+Finally, Services can also be called from [serverless functions](serverless-functions.md). Confusingly, these are also called "functions", but are meant to be run in a serverless environment where the code only exists long enough to complete a task and is then shut down. Cedar loves serverless functions. In fact, your GraphQL endpoint is, itself, a serverless function! In Cedar, these go in `api/src/functions`. Serverless functions can make use of Services, rather than duplicating business logic inside of themselves. In our bank transfer example, a third party service could initiate a webhook call to one of our serverless functions saying that Alice just got paid. Our (serverless) function can then call our (Service) function to make the transfer from the third party to Alice.
 
 ```
 ┌───────────────────────┐      ┌───────────┐
@@ -88,7 +88,7 @@ export const createUser = async ({ input }) => {
 
 > **What's the difference between Service Validations and Validator Directives?**
 >
-> [Validator Directives](directives.md#validators) were added to Redwood in v0.37 and provide a way to validate whether data going through GraphQL is allowed based on the user that's currently requesting it (the user that is logged in). These directives control _access_ to data, while Service Validators operate on a different level, outside of GraphQL, and make sure data is formatted properly before, most commonly, putting it into a database.
+> [Validator Directives](directives.md#validators) were added to Cedar in v0.37 and provide a way to validate whether data going through GraphQL is allowed based on the user that's currently requesting it (the user that is logged in). These directives control _access_ to data, while Service Validators operate on a different level, outside of GraphQL, and make sure data is formatted properly before, most commonly, putting it into a database.
 >
 > You could use these in combination to, for example, prevent a client from accessing the email addresses of any users that aren't themselves (Validator Directives) while also verifying that when creating a user, an email address is present, formatted correctly, and unique (Service Validations).
 
@@ -698,7 +698,7 @@ So `validateUniqueness()` first tries to find a record with the given fields, an
 
 > **Why use this when the database can verify uniqueness with a UNIQUE INDEX database constraint?**
 >
-> You may be in a situation where you can't have a unique index (supporting a legacy schema, perhaps), but still want to make sure the data is unique before proceeding. There is also the belief that you shouldn't have to count on the database to validate your data—that's a core concern of your business logic, and your business logic should live in your Services in a Redwood app.
+> You may be in a situation where you can't have a unique index (supporting a legacy schema, perhaps), but still want to make sure the data is unique before proceeding. There is also the belief that you shouldn't have to count on the database to validate your data—that's a core concern of your business logic, and your business logic should live in your Services in a Cedar app.
 >
 > Another issue is that the error raised by Prisma when a record validates a unique index is swallowed by GraphQL and so you can't report it to the user (there are still ways around this, but it involves catching and re-throwing a different error). The error raised by `validateUniqueness()` is already safe-listed and allowed to be sent to the browser.
 
@@ -804,7 +804,7 @@ In our example above you could cache the GraphQL query for the most popular prod
 
 ### Clients
 
-As of this writing, Redwood ships with clients for the two most popular cache backends: [Memcached](https://memcached.org/) and [Redis](https://redis.io/). Service caching wraps each of these in an adapter, which makes it easy to add more clients in the future. If you're interested in adding an adapter for your favorite cache client, [open a issue](https://github.com/cedarjs/cedar/issues) and tell us about it! Instructions for getting started with the code are [below](#creating-your-own-client).
+As of this writing, Cedar ships with clients for the two most popular cache backends: [Memcached](https://memcached.org/) and [Redis](https://redis.io/). Service caching wraps each of these in an adapter, which makes it easy to add more clients in the future. If you're interested in adding an adapter for your favorite cache client, [open a issue](https://github.com/cedarjs/cedar/issues) and tell us about it! Instructions for getting started with the code are [below](#creating-your-own-client).
 
 :::info
 
@@ -1008,7 +1008,7 @@ client = new MemcachedClient(process.env.CACHE_SERVER, {
 })
 ```
 
-passes it to the `MemcachedClient` initializer, which passes it on to the MemJS library underneath so that it (MemJS) can report errors. `memJsFormattedLogger` just wraps the Redwood logger call in another function, which is the format expected by the MemJS library.
+passes it to the `MemcachedClient` initializer, which passes it on to the MemJS library underneath so that it (MemJS) can report errors. `memJsFormattedLogger` just wraps the Cedar logger call in another function, which is the format expected by the MemJS library.
 
 The second usage of the logger argument:
 
@@ -1025,7 +1025,7 @@ is passing it to Redwood's own service cache code, so that it can log cache hits
 
 There are several options you can pass to the `createCache()` call:
 
-- `logger`: an instance of the Redwood logger. Defaults to `null`, but if you want any feedback about what the cache is doing, make sure to set this!
+- `logger`: an instance of the Cedar logger. Defaults to `null`, but if you want any feedback about what the cache is doing, make sure to set this!
 - `timeout`: how long to wait for the cache server to respond during a get/set before giving up and just executing the function containing what you want to cache and returning the result directly. Defaults to `500` milliseconds.
 - `prefix`: a global cache key prefix. Defaults to `null`.
 - `fields`: an object that maps the model field names for the `id` and `updatedAt` fields if your database has another name for them. For example: `fields: { id: 'post_id', updatedAt: 'updated_at' }`. Even if only one of your names is different, you need to provide both properties to this option. Defaults to `{ id: 'id', updatedAt: 'updatedAt' }`
@@ -1164,7 +1164,7 @@ We wouldn't just give you all of these caching APIs and not show you how to test
 
 ### Creating Your Own Client
 
-If Memcached or Redis don't serve your needs, you can create your own client adapter. In the Redwood codebase take a look at `packages/api/src/cache/clients` as a reference for writing your own. The interface is extremely simple:
+If Memcached or Redis don't serve your needs, you can create your own client adapter. In the Cedar codebase take a look at `packages/api/src/cache/clients` as a reference for writing your own. The interface is extremely simple:
 
 - Extend from the `BaseClient` class.
 - A constructor that takes whatever arguments you want, passing them through to the client's initialization code.

@@ -12,7 +12,7 @@ Simply put, webhooks are a common way that third-party services notify your Ceda
 
 The third-party considers these "outgoing Webhooks" and therefore your application receives "incoming Webhooks".
 
-When the api side of your Redwood app receives a webhook, it can parse it, process it, save it to replay later, or any other action needed.
+When the api side of your Cedar app receives a webhook, it can parse it, process it, save it to replay later, or any other action needed.
 
 Webhooks are different from other integration methods in that the third-party pushes new events to your app instead of your app constantly pulling or polling for new data.
 
@@ -52,7 +52,7 @@ Common signature verification methods are:
 - Base64 SHA256 ([Svix](https://docs.svix.com/receiving/verifying-payloads/how-manual) and [Clerk](https://docs.clerk.dev/reference/webhooks#verifying-requests))
 - SHA1 ([Vercel](https://vercel.com/docs/integrations?query=webhook%20sha1#webhooks/securing-webhooks))
 - JWT ([Netlify](https://docs.netlify.com/site-deploys/notifications/#outgoing-webhooks))
-- Timestamp Scheme ([Stripe](https://stripe.com/docs/webhooks/best-practices) / Redwood default)
+- Timestamp Scheme ([Stripe](https://stripe.com/docs/webhooks/best-practices) / Cedar default)
 - Secret Key (Custom, [Orbit](https://docs.orbit.love/docs/webhooks))
 
 CedarJS adds a way to do no verification as well of testing or in the case your third party doesn't sign the payload.
@@ -116,7 +116,7 @@ export interface VerifyOptions {
 
 ## How to Receive and Verify an Incoming Webhook
 
-The `api/webhooks` package exports [verifyEvent and verifySignature](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/index.ts) to apply [verification methods](https://github.com/cedarjs/cedar/tree/main/packages/api/src/auth/verifiers) and verify the event or some portion of the event payload with a signature as defined in its [VerifyOptions](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/common.ts).
+The `@cedarjs/api/webhooks` package exports [verifyEvent and verifySignature](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/index.ts) to apply [verification methods](https://github.com/cedarjs/cedar/tree/main/packages/api/src/auth/verifiers) and verify the event or some portion of the event payload with a signature as defined in its [VerifyOptions](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/common.ts).
 If the signature fails verification, a `WebhookSignError` is raised which can be caught to return a `401` unauthorized.
 
 Typically, for each integration you'll define 1) the events that triggers the webhook or the schedule via cron/conditions to send the webhook, 2) a secret, and 3) the endpoint to send the webhook to (ie, your endpoint).
@@ -128,7 +128,7 @@ When your endpoint receives the request (incoming webhook), it can extract the s
 Note that:
 
 - `verifyEvent` will detect if the event body is base64 encoded, then decode and validate the payload with the signature verifier
-- signatureHeader specified in `VerifyOptions` will be converted to lowercase when fetching the signature from the event headers
+- `signatureHeader` specified in `VerifyOptions` will be converted to lowercase when fetching the signature from the event headers
 
 You can then use the payload data with confidence in your function.
 
@@ -618,7 +618,7 @@ const webhookDetails = (event) => {
  * Important: When deployed, a custom serverless function is an open API endpoint and
  * is your responsibility to secure appropriately.
  *
- * @see {@link https://redwoodjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
+ * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
  * in the CedarJS documentation for more information.
  *
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent
@@ -773,7 +773,7 @@ export const handler = async (event: APIGatewayEvent) => {
 
 ## Signing a Payload for an Outgoing Webhook
 
-To sign a payload for an outgoing webhook, the `api/webhooks` package exports [signPayload](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/index.ts), a function that signs a payload using a [verification method](https://github.com/cedarjs/cedar/tree/main/packages/api/src/auth/verifiers), creating your "webhook signature". Once you have the signature, you can add it to your request's http headers with a name of your choosing, and then post the request to the endpoint:
+To sign a payload for an outgoing webhook, the `@cedarjs/api/webhooks` package exports [signPayload](https://github.com/cedarjs/cedar/blob/main/packages/api/src/webhooks/index.ts), a function that signs a payload using a [verification method](https://github.com/cedarjs/cedar/tree/main/packages/api/src/auth/verifiers), creating your "webhook signature". Once you have the signature, you can add it to your request's http headers with a name of your choosing, and then post the request to the endpoint:
 
 ```jsx
 import got from 'got'

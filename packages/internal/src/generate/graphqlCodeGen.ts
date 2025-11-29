@@ -206,7 +206,7 @@ async function runCodegenGraphQL(
 export function getLoadDocumentsOptions(filename: string) {
   const loadTypedefsConfig: LoadTypedefsOptions<{ cwd: string }> = {
     cwd: getPaths().base,
-    ignore: [path.join(process.cwd(), filename)],
+    ignore: [filename],
     loaders: [new CodeFileLoader()],
     sort: true,
   }
@@ -240,7 +240,7 @@ async function getPrismaClient(hasGenerated = false): Promise<{
     if (hasGenerated) {
       return { ModelName: {} }
     } else {
-      execa.sync('yarn rw prisma generate', { shell: true })
+      execa.sync('yarn', ['rw', 'prisma', 'generate'])
 
       // Import the newly generated Prisma client. To make sure we actually get
       // the newly generated Prisma client we pass `true` for `hasGenerated` so
@@ -298,7 +298,7 @@ async function getPluginConfig(side: CodegenSide) {
     JSON: 'Prisma.JsonValue',
     JSONObject: 'Prisma.JsonObject',
     Time: side === CodegenSide.WEB ? 'string' : 'Date | string',
-    Byte: 'Buffer',
+    Byte: 'Uint8Array',
   }
 
   const config = getConfig()

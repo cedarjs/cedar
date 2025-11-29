@@ -2,7 +2,7 @@ import { gql } from 'graphql-tag'
 
 import { createValidatorDirective } from '@cedarjs/graphql-server'
 
-import { requireAuth as applicationRequireAuth } from 'src/lib/auth.js'
+import { requireAuth as applicationRequireAuth } from 'src/lib/auth'
 
 export const schema = gql`
   """

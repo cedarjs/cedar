@@ -1,5 +1,5 @@
 ---
-description: Redwood makes building forms easier with helper components
+description: Cedar makes building forms easier with helper components
 ---
 
 # Forms
@@ -142,7 +142,7 @@ const ContactPage = () => {
 
 ## `<Form>`
 
-Any form you want Redwood to validate and style in the presence errors should be surrounded by this tag.
+Any form you want Cedar to validate and style in the presence errors should be surrounded by this tag.
 
 | Prop          | Description                                                                                                                                                    |
 | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -289,8 +289,8 @@ The input fields that coerce automatically are:
 | `<DatetimeLocalField>` | `valueAsDate`    |
 
 `valueAsDate` and `valueAsNumber` are built into React Hook Form and are based on the HTML standard.
-But because Redwood uses GraphQL on the backend, it's important that the types submitted by the form be what the GraphQL server expects.
-Instead of forcing users to make heavy-use of `setValueAs` for custom coercion, Redwood extends react hook form's `valueAs` properties with two more for convenience:
+But because Cedar uses GraphQL on the backend, it's important that the types submitted by the form be what the GraphQL server expects.
+Instead of forcing users to make heavy-use of `setValueAs` for custom coercion, Cedar extends react hook form's `valueAs` properties with two more for convenience:
 
 - `valueAsBoolean`
 - `valueAsJSON`
@@ -319,7 +319,7 @@ The treatment of empty field values is governed by the following:
 
 ### emptyAs prop
 
-The `emptyAs` prop allows the user to override the default value for an input field if the field is empty. Provided that a `setValueAs` prop is not specified, Redwood will allow you to override the default empty value returned.
+The `emptyAs` prop allows the user to override the default value for an input field if the field is empty. Provided that a `setValueAs` prop is not specified, Cedar will allow you to override the default empty value returned.
 The possible values for `emptyAs` are:
 
 - `null`
@@ -338,13 +338,13 @@ will return `undefined` if the field is empty.
 
 ### Custom Input Fields
 
-You can create a custom field that integrates with Redwood through the use of Redwood's `useRegister` and `useErrorStyles` hooks. Each of these serving a different purpose depending on what you are trying to build.
+You can create a custom field that integrates with Cedar through the use of Redwood's `useRegister` and `useErrorStyles` hooks. Each of these serving a different purpose depending on what you are trying to build.
 
 `useRegister` registers the field with react-hook-form and is a wrapper for [`register`](https://react-hook-form.com/api/useform/register).
 
 `useErrorStyles` sets up error styling for your custom input field.
 
-Using these two together you can create custom input fields that replicate a Redwood input field while also allowing for custom domain logic.
+Using these two together you can create custom input fields that replicate a Cedar input field while also allowing for custom domain logic.
 
 In the following example we have an all-in-one custom required input field with label, input, and error display.
 
@@ -387,7 +387,7 @@ const RequiredField = ({ label, name, validation }) => {
 ### Controlled Component Fields
 
 If you're working with a fully-featured component library, or have your own production-ready components, you may want to integrate them with Redwood's forms seamlessly.
-You can via Redwood forms' `useErrorStyles` hook and React Hook Form's `Controller` component.
+You can via Cedar forms' `useErrorStyles` hook and React Hook Form's `Controller` component.
 The following example shows how you could go about integrating a component from [`primereact`](https://www.primefaces.org/primereact/) for use in in Redwood's forms like any of the named-input fields listed above:
 
 ```tsx title="web/src/components/ToggleButtonField/ToggleButtonField.tsx"

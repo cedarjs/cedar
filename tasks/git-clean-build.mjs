@@ -49,6 +49,9 @@ try {
   )
   await $({ cwd: createCedarRscAppPath })`yarn install`
 
+  console.log('Running yarn install in docs...')
+  await $({ cwd: path.join(repoRoot, 'docs') })`yarn install`
+
   console.log('Running yarn build...')
   await $`yarn build`
 
@@ -73,7 +76,8 @@ async function promptForUntrackedFiles() {
 
   if (untrackedFiles.length > 0) {
     console.log(
-      `\n⚠️  WARNING: git clean -fdx will delete ${untrackedFiles.length} untracked files/directories:`,
+      `\n⚠️  WARNING: git clean -fdx will delete ${untrackedFiles.length} ` +
+        'untracked files/directories:',
     )
 
     if (untrackedFiles.length <= 5) {

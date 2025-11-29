@@ -1,7 +1,7 @@
 import type {
   ${operationName},
   ${operationName}Variables,
-} from 'types/graphql.js'
+} from 'types/graphql'
 
 import type {
   CellSuccessProps,

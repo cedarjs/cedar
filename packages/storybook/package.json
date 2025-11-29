@@ -4,7 +4,9 @@
   "description": "Storybook for CedarJS",
   "keywords": [
     "Storybook",
+    "storybook-addon",
     "Cedar",
+    "CedarJS",
     "React",
     "Vite"
   ],
@@ -53,18 +55,19 @@
     "@cedarjs/testing": "workspace:*",
     "@joshwooding/vite-plugin-react-docgen-typescript": "0.6.2",
     "@rollup/pluginutils": "5.1.4",
-    "@storybook/addon-essentials": "7.6.20",
-    "@storybook/builder-vite": "7.6.20",
-    "@storybook/react": "7.6.20",
+    "@storybook/addon-essentials": "8.6.14",
+    "@storybook/builder-vite": "8.6.14",
+    "@storybook/react": "8.6.14",
     "magic-string": "0.30.18",
     "react-docgen": "7.0.3",
     "unplugin-auto-import": "19.3.0",
     "vite-plugin-node-polyfills": "0.23.0"
   },
   "devDependencies": {
-    "@types/node": "20.17.10",
+    "@storybook/types": "8.6.14",
+    "@types/node": "20.19.17",
     "tsx": "4.20.5",
-    "typescript": "5.6.2",
+    "typescript": "5.9.2",
     "vite": "5.4.19",
     "vitest": "3.2.4"
   },
@@ -73,10 +76,10 @@
     "@cedarjs/router": "workspace:*",
     "react": "19.0.0-rc-f2df5694-20240916",
     "react-dom": "19.0.0-rc-f2df5694-20240916",
-    "storybook": "7.6.20"
+    "storybook": "8.6.14"
   },
   "engines": {
-    "node": "=20.x"
+    "node": "=24.x"
   },
   "publishConfig": {
     "access": "public"

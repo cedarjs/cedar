@@ -81,7 +81,7 @@ async function createServer() {
 
   if (!rwPaths.web.viteConfig) {
     throw new Error(
-      'Vite config not found. You need to setup your project with Vite using `yarn rw setup vite`',
+      'Vite config not found. You need to setup your project with Vite using `yarn cedar setup vite`',
     )
   }
   // ~~~~ Dev time validations ~~~~

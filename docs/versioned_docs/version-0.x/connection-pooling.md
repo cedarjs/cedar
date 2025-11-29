@@ -4,25 +4,102 @@ description: Scale your serverless functions
 
 # Connection Pooling
 
-> ⚠ **Work in Progress** ⚠️
+> ⚠️ **Work in Progress** ⚠️
 >
-> There's more to document here. In the meantime, you can check our [community forum](https://community.redwoodjs.com/search?q=connection%20pooling) for answers.
+> There's more to document here. In the meantime, you can check the [Redwood community forums](https://community.redwoodjs.com/search?q=connection%20pooling) for answers.
 >
-> Want to contribute? Redwood welcomes contributions and loves helping people become contributors.
+> Want to contribute? CedarJS welcomes contributions and loves helping people become contributors.
 > You can edit this doc [here](https://github.com/cedarjs/cedarjs.com/blob/main/docs/connectionPooling.md).
-> If you have any questions, just ask for help! We're active on the [forums](https://community.redwoodjs.com/c/contributing/9) and on [discord](https://discord.com/channels/679514959968993311/747258086569541703).
+> If you have any questions, just ask for help! We're active on our [discord](https://cedarjs.com/discord).
 
-Production Redwood apps should enable connection pooling in order to properly scale with your Serverless functions.
+Production Cedar apps should enable connection pooling in order to properly scale with your Serverless functions.
 
-## Prisma Data Proxy
+## Why Connection Pooling?
 
-The [Prisma Data Proxy](https://www.prisma.io/docs/data-platform/data-proxy) provides database connection management and pooling for Redwood apps using Prisma. It supports MySQL and Postgres databases in either the U.S. or EU regions.
+Relational databases have a maximum number of concurrent client connections.
 
-To set up a Prisma Data Proxy, sign up for the [Prisma Data Platform](https://www.prisma.io/data-platform) for free. In your onboarding workflow, plug in the connection URL for your database and choose your region. This will generate a connection string for your app. Then follow the instructions in [Prisma's documentation](https://www.prisma.io/docs/concepts/data-platform/data-proxy).
+- Postgres allows 100 by default
+- MySQL allows 151 by default
 
-> Note that the example uses npm. Rather than using npm, you can access the Prisma CLI using `yarn redwood prisma` inside a Redwood app.
+In a traditional server environment, you would need a large amount of traffic (and therefore web servers) to exhaust these connections, since each web server instance typically leverages a single connection.
 
-## Prisma & PgBouncer
+In a Serverless environment, each function connects directly to the database, which can exhaust limits quickly. To prevent connection errors, you should add a connection pooling service in front of your database. Think of it as a load balancer.
+
+## Prisma
+
+### Prisma Postgres
+
+[Prisma Postgres](https://www.prisma.io/docs/postgres/introduction/overview) is a managed PostgreSQL database service that includes:
+
+- **Built-in connection pooling**: No need to configure external pooling services
+- **Global caching**: Query-level caching with TTL and Stale-While-Revalidate strategies
+- **Serverless optimization**: Designed specifically for serverless and edge applications
+- **Easy setup**: Get started in minutes with minimal configuration
+
+Prisma Postgres supports schema migrations and queries via Prisma ORM, and automatically handles connection pooling and caching.
+
+To get started with Prisma Postgres, visit the [Prisma Postgres documentation](https://www.prisma.io/docs/postgres/introduction/overview).
+
+#### Local Prisma Postgres
+
+For local development, you can use [local Prisma Postgres](https://www.prisma.io/docs/postgres/database/local-development) which runs a PostgreSQL-compatible database locally. This eliminates the need to install and manage PostgreSQL locally while maintaining full compatibility with production PostgreSQL databases.
+
+:::note
+
+To use Local Prisma Postgres, you do not need to create an account or install PostgreSQL locally.
+
+:::
+
+First, update your Prisma schema to use PostgreSQL as the provider:
+
+```graphql title="api/db/schema.prisma"
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+```
+
+Start the local Prisma Postgres server:
+
+```bash
+npx prisma dev
+```
+
+The server will start and display connection options. Press `t` to get the TCP connection URL for standard PostgreSQL connections, or press `h` if you're planning to use Prisma Postgres in production (which requires the [Prisma Client extension](https://www.prisma.io/docs/postgres/introduction/overview#using-the-client-extension-for-prisma-accelerate-required)).
+
+If you're using any other provider for PostgreSQL, use the TCP connection URL in your `.env` file:
+
+```env
+DATABASE_URL="postgresql://localhost:54322/main"
+```
+
+Keep the server running while performing migrations and using the database for local development.
+
+#### Temporary Prisma Postgres database
+
+For quick testing or prototyping, [Prisma Postgres](https://www.prisma.io/postgres) offers temporary production-ready databases that also requires no setup or accounts. Use [`npx create-db`](https://www.prisma.io/docs/postgres/introduction/npx-create-db) to create a database that's automatically deleted after 24 hours:
+
+```bash
+npx create-db@latest
+```
+
+This provides both Prisma ORM-optimized and standard PostgreSQL connection strings. You can also claim the database to make it permanent if needed.
+
+### Prisma ORM & Prisma Accelerate
+
+If you're already using another database provider (like Supabase, Heroku, Digital Ocean, or AWS RDS), you can add connection pooling and caching to your existing setup using [Prisma Accelerate](https://www.prisma.io/docs/accelerate).
+
+Prisma Accelerate is a fully managed global connection pool and caching layer that works with your existing database. It provides:
+
+- **Connection pooling**: Efficiently manages database connections across 15+ global regions
+- **Global caching**: Hosted in 300+ locations for fast user experiences
+- **Query-level caching**: Configure caching strategies directly in your Prisma ORM code
+- **Serverless scaling**: Handles traffic spikes without infrastructure concerns
+- **Database compatibility**: Works with publicly accessible databases or those behind IP allowlists
+
+To enable Prisma Accelerate with your existing database, visit the [Prisma Accelerate documentation](https://www.prisma.io/docs/accelerate).
+
+### Prisma & PgBouncer
 
 PgBouncer holds a connection pool to the database and proxies incoming client connections by sitting between Prisma Client and the database. This reduces the number of processes a database has to handle at any given time. PgBouncer passes on a limited number of connections to the database and queues additional connections for delivery when space becomes available.
 

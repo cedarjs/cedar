@@ -7,6 +7,41 @@ import {
   insertCommonJsPackageJson,
 } from '@cedarjs/framework-tools/generateTypes'
 
+// Replace relative imports with absolute @cedarjs/testing/dist/cjs imports in built CJS files
+function replaceImportsInFile(filePath: string) {
+  if (!fs.existsSync(filePath)) {
+    return
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const updatedContent = content
+    .replaceAll('"../../../api', '"@cedarjs/testing/dist/cjs/api')
+    .replaceAll('"../../../web', '"@cedarjs/testing/dist/cjs/web')
+
+  if (content !== updatedContent) {
+    fs.writeFileSync(filePath, updatedContent)
+    console.log(`Updated imports in ${filePath}`)
+  }
+}
+
+// Verify that required directories exist
+function verifyDirectoryExists(dirPath: string, description: string) {
+  if (!fs.existsSync(dirPath)) {
+    console.error(`ERROR: ${description} directory does not exist: ${dirPath}`)
+    process.exit(1)
+  }
+  console.log(`✓ ${description} directory exists: ${dirPath}`)
+}
+
+// Verify that required directories exist
+function verifyFileExists(filePath: string, description: string) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`ERROR: ${description} file does not exist: ${filePath}`)
+    process.exit(1)
+  }
+  console.log(`✓ ${description} file exists: ${filePath}`)
+}
+
 await buildEsm()
 await generateTypesEsm()
 
@@ -79,23 +114,6 @@ fs.writeFileSync(
   ),
 )
 
-// Replace relative imports with absolute @cedarjs/testing/dist/cjs imports in built CJS files
-function replaceImportsInFile(filePath: string) {
-  if (!fs.existsSync(filePath)) {
-    return
-  }
-
-  const content = fs.readFileSync(filePath, 'utf-8')
-  const updatedContent = content
-    .replaceAll('"../../../api', '"@cedarjs/testing/dist/cjs/api')
-    .replaceAll('"../../../web', '"@cedarjs/testing/dist/cjs/web')
-
-  if (content !== updatedContent) {
-    fs.writeFileSync(filePath, updatedContent)
-    console.log(`Updated imports in ${filePath}`)
-  }
-}
-
 // Apply import replacements to the relevant files
 replaceImportsInFile('./config/jest/api/globalSetup.js')
 replaceImportsInFile('./config/jest/api/jest.setup.js')
@@ -149,18 +167,14 @@ fs.writeFileSync(
   ),
 )
 
-// Verify that required directories exist
-function verifyDirectoryExists(dirPath: string, description: string) {
-  if (!fs.existsSync(dirPath)) {
-    console.error(`ERROR: ${description} directory does not exist: ${dirPath}`)
-    process.exit(1)
-  }
-  console.log(`✓ ${description} directory exists: ${dirPath}`)
-}
-
 console.log('\nVerifying build output directories...')
 verifyDirectoryExists('./dist', 'Main dist')
 verifyDirectoryExists('./config', 'Config')
+verifyFileExists('./config/package.json', 'Config package.json')
+verifyFileExists(
+  './config/jest/jest-serial-runner.js',
+  'Config jest-serial-runner.js',
+)
 verifyDirectoryExists('./dist/cjs', 'CJS dist')
 verifyDirectoryExists('./dist/cjs/config', 'CJS config')
 
