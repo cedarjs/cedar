@@ -67,7 +67,7 @@
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@simplewebauthn/server": "9.0.3",
-    "@types/md5": "2.3.5",
+    "@types/md5": "2.3.6",
     "@types/uuid": "10.0.0",
     "concurrently": "8.2.2",
     "publint": "0.3.12",

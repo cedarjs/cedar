@@ -2799,7 +2799,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@simplewebauthn/server": "npm:9.0.3"
-    "@types/md5": "npm:2.3.5"
+    "@types/md5": "npm:2.3.6"
     "@types/uuid": "npm:10.0.0"
     base64url: "npm:3.0.1"
     concurrently: "npm:8.2.2"
@@ -11861,10 +11861,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/md5@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@types/md5@npm:2.3.5"
-  checksum: 10c0/aef9c40ab0ec61f1ae2acb04ee04e55b99eeec64af58176ef36d4feaf6aac335f32caca07eca0e3a1813fc362bf0b8663423250e24b39ebcfdc24c6ca4abe1cf
+"@types/md5@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@types/md5@npm:2.3.6"
+  checksum: 10c0/34cc6b6d01f08263cbb585f7403e78f4cf535dcac1aeb141ccbe179ab8ea2223544c0e4c543bf5a3ab465008f6ce2e1a1ce6138629276e1a0afc6460ec7713d0
   languageName: node
   linkType: hard
 
