@@ -11401,11 +11401,11 @@ __metadata:
   linkType: hard
 
 "@types/archiver@npm:^6":
-  version: 6.0.3
-  resolution: "@types/archiver@npm:6.0.3"
+  version: 6.0.4
+  resolution: "@types/archiver@npm:6.0.4"
   dependencies:
     "@types/readdir-glob": "npm:*"
-  checksum: 10c0/59c6be3d81da240a35f7e4a70348012ee462a74c56fb37c86add2e11562fae46a8e243dcca29a34ed2dc401239b6f3dd9623584570ca5b07c2aa61ee7822f91f
+  checksum: 10c0/ac971a5a72d55064b0a62ccebff643f220c957f109a68486c48b51c566df3a7fdbf5ddce8eb1bbd644c4c6486f882cf90044f5ebb08ce16dfe0b1cbb491f8c2c
   languageName: node
   linkType: hard
 
