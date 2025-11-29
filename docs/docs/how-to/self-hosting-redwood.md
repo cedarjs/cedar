@@ -1,4 +1,4 @@
-# Self-hosting Redwood (Serverful)
+# Self-hosting Cedar (Serverful)
 
 :::warning
 
@@ -6,7 +6,7 @@ This doc has been deprecated in favor of the [Baremetal](../deploy/baremetal.md)
 
 :::
 
-Do you prefer hosting Redwood on your own server, the traditional serverful way, instead of all this serverless magic? Well, you can! In this recipe we configure a Redwood app with PM2 and Nginx on a Linux server.
+Do you prefer hosting Cedar on your own server, the traditional serverful way, instead of all this serverless magic? Well, you can! In this recipe we configure a Cedar app with PM2 and Nginx on a Linux server.
 
 > A code example can be found at https://github.com/njjkgeerts/redwood-pm2, and can be viewed live at http://redwood-pm2.nickgeerts.com.
 
@@ -21,7 +21,7 @@ You should have some basic knowledge of the following tools:
 
 ## Configuration
 
-To self-host, you'll have to do a bit of configuration both to your Redwood app and your Linux server.
+To self-host, you'll have to do a bit of configuration both to your Cedar app and your Linux server.
 
 ### Adding Dependencies
 

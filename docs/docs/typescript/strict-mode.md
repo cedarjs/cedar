@@ -141,8 +141,8 @@ This will also help Prisma make a more optimized query to the database, since ev
 
 ### Roles checks for CurrentUser in `src/lib/auth`
 
-When you setup auth, Redwood includes some template code for handling roles with the `hasRole` function.
-While Redwood does runtime checks to make sure it doesn't access roles if it doesn't exist, TypeScript in strict mode will highlight errors, depending on whether you are returning `roles`, and whether those roles are `string` or `string[]`
+When you setup auth, Cedar includes some template code for handling roles with the `hasRole` function.
+While Cedar does runtime checks to make sure it doesn't access roles if it doesn't exist, TypeScript in strict mode will highlight errors, depending on whether you are returning `roles`, and whether those roles are `string` or `string[]`
 
 ```typescript
 export const hasRole = (roles: AllowedRoles): boolean => {

@@ -749,7 +749,7 @@ const CommentForm = ({ postId }: Props) => {
 
 Now when we create a comment it appears right away! It might be hard to tell because it's at the bottom of the comments list (which is a fine position if you want to read comments in chronological order, oldest to newest). Let's pop up a little notification that the comment was successful to let the user know their contribution was successful in case they don't realize it was added to the end of the page.
 
-We'll make use of good old fashioned React state to keep track of whether a comment has been posted in the form yet or not. If so, let's remove the comment form completely and show a "Thanks for your comment" message. Redwood includes [react-hot-toast](https://react-hot-toast.com/) for showing popup notifications, so let's use that to thank the user for their comment. We'll remove the form with just a couple of CSS classes:
+We'll make use of good old fashioned React state to keep track of whether a comment has been posted in the form yet or not. If so, let's remove the comment form completely and show a "Thanks for your comment" message. Cedar includes [react-hot-toast](https://react-hot-toast.com/) for showing popup notifications, so let's use that to thank the user for their comment. We'll remove the form with just a couple of CSS classes:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -994,7 +994,7 @@ const BlogLayout = ({ children }) => {
             className="text-blue-400 hover:text-blue-100 transition duration-100"
             to={routes.home()}
           >
-            Redwood Blog
+            Cedar Blog
           </Link>
         </h1>
         <nav>
@@ -1073,7 +1073,7 @@ const BlogLayout = ({ children }: BlogLayoutProps) => {
             className="text-blue-400 hover:text-blue-100 transition duration-100"
             to={routes.home()}
           >
-            Redwood Blog
+            Cedar Blog
           </Link>
         </h1>
         <nav>
@@ -1148,11 +1148,11 @@ Let's fix it!
 
 We'll need to make both frontend and backend changes to get only some comments to show. Let's start with the backend and do a little test-driven development to make this change.
 
-#### Introducing the Redwood Console
+#### Introducing the Cedar Console
 
 It would be nice if we could try out sending some arguments to our Prisma calls and be sure that we can request a single post's comments without having to write the whole stack into the app (component/cell, GraphQL, service) just to see if it works.
 
-That's where the Redwood Console comes in! In a new terminal instance, try this:
+That's where the Cedar Console comes in! In a new terminal instance, try this:
 
 ```bash
 yarn rw console
@@ -1263,7 +1263,7 @@ Great! Now that we've tested out the syntax let's use that in the service. You c
 
 :::info Where's the `await`?
 
-Calls to `db` return a Promise, which you would normally need to add an `await` to in order to get the results right away. Having to add `await` every time is pretty annoying though, so the Redwood console does it for you—Redwood `await`s so you don't have to!
+Calls to `db` return a Promise, which you would normally need to add an `await` to in order to get the results right away. Having to add `await` every time is pretty annoying though, so the Cedar console does it for you—Redwood `await`s so you don't have to!
 
 :::
 
@@ -1287,7 +1287,7 @@ One way to think about your codebase is a "top to bottom" view where the top is 
    Database
 ```
 
-There are no hard and fast rules here, but generally the farther down you put your business logic (the code that deals with moving and manipulating data) the easier it will be to build and maintain your application. Redwood encourages you to put your business logic in services since they're "closest" to the data and behind the GraphQL interface.
+There are no hard and fast rules here, but generally the farther down you put your business logic (the code that deals with moving and manipulating data) the easier it will be to build and maintain your application. Cedar encourages you to put your business logic in services since they're "closest" to the data and behind the GraphQL interface.
 
 :::
 
@@ -1682,7 +1682,7 @@ export const QUERY: TypedDocumentNode<CommentsQuery, CommentsQueryVariables> =
 </TabItem>
 </Tabs>
 
-Where does this magical `$postId` come from? Redwood is nice enough to automatically provide it to you since you passed it in as a prop when you called the component!
+Where does this magical `$postId` come from? Cedar is nice enough to automatically provide it to you since you passed it in as a prop when you called the component!
 
 Try going to a couple of different blog posts and you should see only comments associated to the proper posts (including the one we created in the console). You can add a comment to each blog post individually and they'll stick to their proper owners:
 

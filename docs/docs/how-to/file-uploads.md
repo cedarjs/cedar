@@ -1,6 +1,6 @@
 # File Uploads
 
-As you've probably heard, Redwood thinks the future is serverless. This concept introduces some interesting problems you might not have had to worry about in the past. For example, where do files go when you upload them? There's no server! Like many tasks you may have done [yourself](tutorial/chapter4/authentication.md) in the past, this is another job that we can farm out to a third-party service.
+As you've probably heard, Cedar thinks the future is serverless. This concept introduces some interesting problems you might not have had to worry about in the past. For example, where do files go when you upload them? There's no server! Like many tasks you may have done [yourself](tutorial/chapter4/authentication.md) in the past, this is another job that we can farm out to a third-party service.
 
 ## The Service
 
@@ -20,7 +20,7 @@ That's it on the Filestack side; on to the application.
 
 Let's create a very simple DAM (Digital Asset Manager) that lets users upload and catalogue images. They'll be able to click the thumbnail to open a full-size version.
 
-Create a new Redwood app:
+Create a new Cedar app:
 
 ```bash
 yarn create cedar-app uploader

@@ -27,7 +27,7 @@ yarn install
 yarn redwood dev
 ```
 
-A browser should automatically open to [http://localhost:8910](http://localhost:8910) and you will see the Redwood welcome page:
+A browser should automatically open to [http://localhost:8910](http://localhost:8910) and you will see the Cedar welcome page:
 
 ![Redwood Welcome Page](https://user-images.githubusercontent.com/300/145314717-431cdb7a-1c45-4aca-9bbc-74df4f05cc3b.png)
 
@@ -41,7 +41,7 @@ The splash page gives you links to many resources, but don't get distracted: we'
 
 ### First Commit
 
-Now that we have the skeleton of our Redwood app in place, it's a good idea to save the current state of the app as your first commit...just in case.
+Now that we have the skeleton of our Cedar app in place, it's a good idea to save the current state of the app as your first commit...just in case.
 
 ```bash
 git init

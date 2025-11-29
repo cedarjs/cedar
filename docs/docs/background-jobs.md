@@ -276,7 +276,7 @@ later(MillenniumAnnouncementJob, [user.id], {
 })
 ```
 
-If we were to query the `BackgroundJob` table after the job has been scheduled you'd see a new row. We can use the Redwood Console to query the table from the command line:
+If we were to query the `BackgroundJob` table after the job has been scheduled you'd see a new row. We can use the Cedar Console to query the table from the command line:
 
 ```js
 % yarn rw console
@@ -785,7 +785,7 @@ If a worker crashes because of circumstances outside of your control the job wil
 
 ## Creating Your Own Adapter
 
-We'd love the community to contribute adapters for Redwood Jobs! Take a look at the source for `BaseAdapter` for what's absolutely required, and then the source for `PrismaAdapter` to see a concrete implementation.
+We'd love the community to contribute adapters for Cedar Jobs! Take a look at the source for `BaseAdapter` for what's absolutely required, and then the source for `PrismaAdapter` to see a concrete implementation.
 
 The general gist of the required functions:
 

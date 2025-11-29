@@ -4,7 +4,7 @@ description: A comprehensive reference for testing your app
 
 # Testing
 
-Testing. For some it's an essential part of their development workflow. For others it's something they know they _should_ do, but for whatever reason it hasn't struck their fancy yet. For others still it's something they ignore completely, hoping the whole concept will go away. But tests are here to stay, and maybe Redwood can change some opinions about testing being awesome and fun.
+Testing. For some it's an essential part of their development workflow. For others it's something they know they _should_ do, but for whatever reason it hasn't struck their fancy yet. For others still it's something they ignore completely, hoping the whole concept will go away. But tests are here to stay, and maybe Cedar can change some opinions about testing being awesome and fun.
 
 ## Introduction to Testing
 
@@ -59,7 +59,7 @@ Let's get to some terminology:
 - The value you actually get (whatever the output of `add(1, 1)` is) is sometimes called the **actual** or **received value**
 - The file that contains the test is a **test file**
 - Multiple test files, all run together, is known as a **test suite**
-- You'll generally run your test files and suites with another piece of software. In Redwood that's Jest, and it's known as a **test runner**
+- You'll generally run your test files and suites with another piece of software. In Cedar that's Jest, and it's known as a **test runner**
 - The amount of code you have that is exercised by tests is referred to as **coverage** and is usually reported as a percentage. If every single line of code is touched as a result of running your test suite then you have 100% coverage!
 
 This is the basic idea behind all the tests you'll write: when you add code, you'll add another piece of code that uses the first and verifies that the result is what you expect.
@@ -130,7 +130,7 @@ We've covered passing too few arguments, what if we pass too many? We'll leave w
 
 ### Our Test Runner Compared to Jest
 
-Our tests are a little verbose (10 lines of code to test that the right number of arguments were passed). Luckily, the test runner that Redwood uses, Jest, provides a simpler syntax for the same assertions. Here's the complete test file, but using Jest's provided helpers:
+Our tests are a little verbose (10 lines of code to test that the right number of arguments were passed). Luckily, the test runner that Cedar uses, Jest, provides a simpler syntax for the same assertions. Here's the complete test file, but using Jest's provided helpers:
 
 ```jsx
 describe('add()', () => {
@@ -152,9 +152,9 @@ Jest also has a nicer output than our cobbled-together test runner using `consol
 
 ![image](https://user-images.githubusercontent.com/300/105783200-c6974680-5f2a-11eb-98af-d1884ecf2f99.png)
 
-Are you convinced? Let's keep going and see what Redwood brings to the table.
+Are you convinced? Let's keep going and see what Cedar brings to the table.
 
-## Redwood and Testing
+## Cedar and Testing
 
 Redwood relies on several packages to do the heavy lifting, but many are wrapped in Redwood's own functionality which makes them even better suited to their individual jobs:
 
@@ -162,7 +162,7 @@ Redwood relies on several packages to do the heavy lifting, but many are wrapped
 - [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Mock Service Worker](https://mswjs.io/) or **msw** for short.
 
-Redwood Generators get your test suite bootstrapped. Redwood also includes [Storybook](https://storybook.js.org/), which isn't technically a test suite, but can help in other ways.
+Redwood Generators get your test suite bootstrapped. Cedar also includes [Storybook](https://storybook.js.org/), which isn't technically a test suite, but can help in other ways.
 
 Let's explore each one and how they're integrated with Redwood.
 
@@ -176,7 +176,7 @@ Let's explore each one and how they're integrated with Redwood.
 
 ### Mock Service Worker
 
-Among other things, Mock Service Worker (msw) lets you simulate the response from API calls. Where this comes into play with Redwood is how the web-side constantly calls to the api-side using GraphQL: rather than make actual GraphQL calls, which would slow down the test suite and put a bunch of unrelated code under test, Redwood uses MSW to intercept GraphQL calls and return a canned response, which you include in your test.
+Among other things, Mock Service Worker (msw) lets you simulate the response from API calls. Where this comes into play with Cedar is how the web-side constantly calls to the api-side using GraphQL: rather than make actual GraphQL calls, which would slow down the test suite and put a bunch of unrelated code under test, Cedar uses MSW to intercept GraphQL calls and return a canned response, which you include in your test.
 
 ### Storybook
 
@@ -184,7 +184,7 @@ Storybook itself doesn't appear to be related to testing at all—it's for build
 
 Storybook can provide a quick way to inspect all visual aspects of your site without the tried-and-true method of having a QA person log in and exercise every possible function. Unfortunately, checking those UI elements is not something that Storybook can automate for you, and so can't be part of a continuous integration system. But it makes it _possible_ to do so, even if it currently requires a human touch.
 
-### Redwood Generators
+### Cedar Generators
 
 Redwood's generators will include test files for basic functionality automatically with any Components, Pages, Cells, or Services you generate. These will test very basic functionality, but they're a solid foundation and will not automatically break as soon as you start building out custom features.
 
@@ -665,7 +665,7 @@ This test is a little more explicit in that it expects an actual `<button>` elem
 
 #### mockCurrentUser() on the Web-side
 
-How do we test that when a user _is_ logged in, it outputs a message welcoming them, and that the button is _not_ present? Similar to `mockGraphQLQuery()` Redwood also provides a `mockCurrentUser()` which tells Redwood what to return when the `getCurrentUser()` function of `api/src/lib/auth.js` is invoked:
+How do we test that when a user _is_ logged in, it outputs a message welcoming them, and that the button is _not_ present? Similar to `mockGraphQLQuery()` Cedar also provides a `mockCurrentUser()` which tells Cedar what to return when the `getCurrentUser()` function of `api/src/lib/auth.js` is invoked:
 
 ```jsx title="web/src/pages/HomePage/HomePage.test.js"
 import { render, screen, waitFor } from '@cedarjs/testing/web'
@@ -967,7 +967,7 @@ export const standard = () => ({
 
 Each mock will start with a `standard()` function which has special significance (more on that later). The return of this function is the data you want to be returned from the GraphQL `QUERY` defined at the top of your cell.
 
-> Something to note is that the structure of the data returned by your `QUERY` and the structure of the object returned by the mock is in no way required to be identical as far as Redwood is concerned. You could be querying for an `article` but have the mock return an `animal` and the test will happily pass. Redwood just intercepts the GraphQL query and returns the mock data. This is something to keep in mind if you make major changes to your `QUERY`—be sure to make similar changes to your returned mock data or you could get falsely passing tests!
+> Something to note is that the structure of the data returned by your `QUERY` and the structure of the object returned by the mock is in no way required to be identical as far as Cedar is concerned. You could be querying for an `article` but have the mock return an `animal` and the test will happily pass. Cedar just intercepts the GraphQL query and returns the mock data. This is something to keep in mind if you make major changes to your `QUERY`—be sure to make similar changes to your returned mock data or you could get falsely passing tests!
 
 Why not just include this data inline in the test? We're about to reveal the answer in the next section, but before we do just a little more info about working with these `mocks.js` file...
 
@@ -1163,7 +1163,7 @@ export default NameForm
 
 ### Testing the Form
 
-Now, we can extend the `test` file which Redwood generated. We're going to want to:
+Now, we can extend the `test` file which Cedar generated. We're going to want to:
 
 1. Import `waitFor` from the `@cedarjs/testing/web` library.
 2. Add an import to `@testing-library/user-event` for its `default`.
@@ -1283,7 +1283,7 @@ Services will usually contain most of your business logic which is important to 
 
 ### The Test Database
 
-To simplify Service testing, rather than mess with your development database, Redwood creates a test database that it executes queries against. By default this database will be located at the location defined by a `TEST_DATABASE_URL` environment variable and will fall back to `.redwood/test.db` if that var does not exist.
+To simplify Service testing, rather than mess with your development database, Cedar creates a test database that it executes queries against. By default this database will be located at the location defined by a `TEST_DATABASE_URL` environment variable and will fall back to `.redwood/test.db` if that var does not exist.
 
 If you're using Postgres or MySQL locally you'll want to set that env var to your connection string for a test database in those services.
 
@@ -1293,7 +1293,7 @@ Does anyone else find it confusing that the software itself is called a "databas
 
 :::
 
-When you start your test suite you may notice some output from Prisma talking about migrating the database. Redwood will automatically run `yarn rw prisma db push` against your test database to make sure it's up-to-date.
+When you start your test suite you may notice some output from Prisma talking about migrating the database. Cedar will automatically run `yarn rw prisma db push` against your test database to make sure it's up-to-date.
 
 :::warning What if I have custom migration SQL?
 
@@ -1364,7 +1364,7 @@ it('retrieves a single user', async () => {
 
 Notice that the string "David" only appears once (in the seed) and the expectations are comparing against values in `data`, not the raw strings again. This is a best practice and makes it easy to update your test data in one place and have the expectations continue to pass without edits.
 
-Did your spidey sense tingle when you saw that exact same seed duplicated in each test? We probably have other tests that check that a user is editable and deletable, both of which would require the same seed again! Even more tingles! When there's obvious duplication like this you should know by now that Redwood is going to try and remove it.
+Did your spidey sense tingle when you saw that exact same seed duplicated in each test? We probably have other tests that check that a user is editable and deletable, both of which would require the same seed again! Even more tingles! When there's obvious duplication like this you should know by now that Cedar is going to try and remove it.
 
 ### Scenarios
 
@@ -1880,7 +1880,7 @@ Luckily, CedarJS has several api testing utilities to make [testing functions an
 
 ## Testing GraphQL Directives
 
-Please refer to the [Directives documentation](./directives.md) for details on how to write Redwood [Validator](./directives.md#writing-validator-tests) or [Transformer](./directives.md#writing-transformer-tests) Directives tests.
+Please refer to the [Directives documentation](./directives.md) for details on how to write Cedar [Validator](./directives.md#writing-validator-tests) or [Transformer](./directives.md#writing-transformer-tests) Directives tests.
 
 ## Testing Caching
 
@@ -1943,7 +1943,7 @@ describe('products', () => {
 
 ### The `toHaveCached` matcher
 
-We have a custom Jest matcher included in Redwood to make things a little easier. To use it simply add an import to the top of your test file:
+We have a custom Jest matcher included in Cedar to make things a little easier. To use it simply add an import to the top of your test file:
 
 ```ts
 // highlight-next-line

@@ -23,7 +23,7 @@ Before getting started, there are a few steps you should complete:
 - [Create a Cedar app](../tutorial/chapter1/installation.md)
 - [Create a Supabase account](https://www.supabase.io/)
 - [Go through the Supabase React Quick Start](https://supabase.io/docs/guides/with-react)
-- [Go through the Supabase Redwood Quick Start](https://supabase.io/docs/guides/with-redwoodjs)
+- [Go through the Supabase Cedar Quick Start](https://supabase.io/docs/guides/with-redwoodjs)
 - Fire up a dev server: `yarn cedar dev`
 
 ### About the Supabase Quick Starts

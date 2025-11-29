@@ -208,7 +208,7 @@ Now if you browse to [http://localhost:8910/admin/posts](http://localhost:8910/a
 
 ### Changing Roles on a User
 
-Let's use the Redwood console again to quickly update our admin user to actually have the `admin` role:
+Let's use the Cedar console again to quickly update our admin user to actually have the `admin` role:
 
 ```bash
 yarn rw c
@@ -270,7 +270,7 @@ In our case we're not sending emails anywhere, and don't require them to be veri
 
 :::info
 
-If you disabled the new user signup as suggested at the end of the first part of the tutorial then you'll have a slightly harder time creating a new user (the Signup page is still enabled in the example repo for convenience). You could create one with the Redwood console, but you'll need to be clever—remember that we don't store the original password, just the hashed result when combined with a salt. Here's the commands to enter at the console for creating a new user (replace 'password' with your password of choice):
+If you disabled the new user signup as suggested at the end of the first part of the tutorial then you'll have a slightly harder time creating a new user (the Signup page is still enabled in the example repo for convenience). You could create one with the Cedar console, but you'll need to be clever—remember that we don't store the original password, just the hashed result when combined with a salt. Here's the commands to enter at the console for creating a new user (replace 'password' with your password of choice):
 
 ```javascript
 const CryptoJS = require('crypto-js')

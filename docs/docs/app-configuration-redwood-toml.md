@@ -5,11 +5,11 @@ description: Configure your app with redwood.toml
 
 # App Configuration: redwood.toml
 
-One of the premier places you can configure your Redwood app is `redwood.toml`. By default, `redwood.toml` lists the following configuration options:
+One of the premier places you can configure your Cedar app is `redwood.toml`. By default, `redwood.toml` lists the following configuration options:
 
 ```toml title="redwood.toml"
 [web]
-  title = "Redwood App"
+  title = "Cedar App"
   port = 8910
   apiUrl = "/.redwood/functions"
   includeEnvironmentVariables = []
@@ -30,7 +30,7 @@ For certain options, instead of having to configure build tools directly, there'
 
 | Key                           | Description                                                                                                     | Default                                                         |
 | :---------------------------- | :-------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------- |
-| `title`                       | Title of your Redwood app                                                                                       | `'Redwood App'`                                                 |
+| `title`                       | Title of your Cedar app                                                                                         | `'Redwood App'`                                                 |
 | `port`                        | Port for the web server to listen at                                                                            | `8910`                                                          |
 | `apiUrl`                      | URL to your api server. This can be a relative URL in which case it acts like a proxy, or a fully-qualified URL | `'/.redwood/functions'`                                         |
 | `includeEnvironmentVariables` | Environment variables made available to the web side during dev and build                                       | `[]`                                                            |
@@ -42,7 +42,7 @@ For certain options, instead of having to configure build tools directly, there'
 
 ### Customizing the GraphQL Endpoint
 
-By default, Redwood derives the GraphQL endpoint from `apiUrl` such that it's `${apiUrl}/graphql`, (with the default `apiUrl`, `./redwood/functions/graphql`).
+By default, Cedar derives the GraphQL endpoint from `apiUrl` such that it's `${apiUrl}/graphql`, (with the default `apiUrl`, `./redwood/functions/graphql`).
 But sometimes you want to host your api side somewhere else.
 There's two ways you can do this:
 
@@ -183,7 +183,7 @@ Just remember two things:
 
 ## Running in a Container or VM
 
-To run a Redwood app in a container or VM, you'll want to set both the web and api's `host` to `0.0.0.0` to allow network connections to and from the host:
+To run a Cedar app in a container or VM, you'll want to set both the web and api's `host` to `0.0.0.0` to allow network connections to and from the host:
 
 ```toml title="redwood.toml"
 [web]

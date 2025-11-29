@@ -2,7 +2,7 @@
 
 You made it! Get yourself some ice cream or a slice of pie: you definitely deserve it.
 
-Will there be a chapters 8+ of the tutorial? We've spent a lot of time getting our features working but not much time with optimization and polish. [Premature optimization is the root of all evil](http://wiki.c2.com/?PrematureOptimization), but once your site is live and you've got real users on it you'll get a sense of what could be faster, prettier or more efficient. That's when time spent optimizing can pay huge dividends. But, discovering the techniques and best practices for those optimizations...that's a whole different story. The kind of story that Redwood loves to help you write!
+Will there be a chapters 8+ of the tutorial? We've spent a lot of time getting our features working but not much time with optimization and polish. [Premature optimization is the root of all evil](http://wiki.c2.com/?PrematureOptimization), but once your site is live and you've got real users on it you'll get a sense of what could be faster, prettier or more efficient. That's when time spent optimizing can pay huge dividends. But, discovering the techniques and best practices for those optimizations...that's a whole different story. The kind of story that Cedar loves to help you write!
 
 So until next time, a bit of wisdom to help combat that next bout of every developer's nemesis, imposter syndrome:
 

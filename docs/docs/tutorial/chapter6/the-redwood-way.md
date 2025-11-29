@@ -1,4 +1,4 @@
-# Building a Component the Redwood Way
+# Building a Component the Cedar Way
 
 What's our blog missing? Comments. Let's add a simple comment engine so people can leave
 their completely rational, well-reasoned comments on our blog posts. It's the internet,

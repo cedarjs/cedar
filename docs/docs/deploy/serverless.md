@@ -5,7 +5,7 @@ description: Deploy to AWS with Serverless Framework
 # Deploy to AWS with Serverless Framework
 
 > ⚠️ **Deprecated**
-> As of Redwood v5, we are deprecating this deploy setup as an "officially" supported provider. This means:
+> As of Cedar v5, we are deprecating this deploy setup as an "officially" supported provider. This means:
 >
 > - For projects already using this deploy provider, there will be NO change at this time
 > - Both the associated `setup` and `deploy` commands will remain in the framework as is; when setup is run, there will be a “deprecation” message
@@ -93,7 +93,7 @@ To integrate your site into the Serverless Dashboard, there are two ways:
 
 ## Environments Besides Production
 
-By default we assume you want to deploy to a production environment, but Serverless lets you deploy anywhere. They call these destinations "stages", and in Redwood "production" is the default. Check out their [Managing Staging and Environments blog post](https://www.serverless.com/blog/stages-and-environments) for details.
+By default we assume you want to deploy to a production environment, but Serverless lets you deploy anywhere. They call these destinations "stages", and in Cedar "production" is the default. Check out their [Managing Staging and Environments blog post](https://www.serverless.com/blog/stages-and-environments) for details.
 
 Once configured, just add the stage to your deploy command:
 

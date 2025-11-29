@@ -4,11 +4,11 @@ sidebar_label: Custom
 
 # Custom Authentication
 
-If Redwood doesn't officially integrate with the auth provider you want to use, you're not out of luck just yet: Redwood has an API you can use to integrate your auth provider of choice.
+If Cedar doesn't officially integrate with the auth provider you want to use, you're not out of luck just yet: Cedar has an API you can use to integrate your auth provider of choice.
 
 :::tip Were you using Nhost, magic.link, GoTrue, Okta or Wallet Connect (ethereum)?
 
-If you're here because you're using one of the providers Redwood used to support (Nhost, magic.link, GoTrue, Okta or Wallet Connect (Ethereum)), we've moved the code for them out into their own separate repos:
+If you're here because you're using one of the providers Cedar used to support (Nhost, magic.link, GoTrue, Okta or Wallet Connect (Ethereum)), we've moved the code for them out into their own separate repos:
 
 - [Nhost](https://github.com/redwoodjs/auth-nhost)
 - [magic.link](https://github.com/redwoodjs/auth-magiclink)

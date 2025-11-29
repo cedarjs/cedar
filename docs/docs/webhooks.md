@@ -12,7 +12,7 @@ Simply put, webhooks are a common way that third-party services notify your Ceda
 
 The third-party considers these "outgoing Webhooks" and therefore your application receives "incoming Webhooks".
 
-When the api side of your Redwood app receives a webhook, it can parse it, process it, save it to replay later, or any other action needed.
+When the api side of your Cedar app receives a webhook, it can parse it, process it, save it to replay later, or any other action needed.
 
 Webhooks are different from other integration methods in that the third-party pushes new events to your app instead of your app constantly pulling or polling for new data.
 
@@ -52,7 +52,7 @@ Common signature verification methods are:
 - Base64 SHA256 ([Svix](https://docs.svix.com/receiving/verifying-payloads/how-manual) and [Clerk](https://docs.clerk.dev/reference/webhooks#verifying-requests))
 - SHA1 ([Vercel](https://vercel.com/docs/integrations?query=webhook%20sha1#webhooks/securing-webhooks))
 - JWT ([Netlify](https://docs.netlify.com/site-deploys/notifications/#outgoing-webhooks))
-- Timestamp Scheme ([Stripe](https://stripe.com/docs/webhooks/best-practices) / Redwood default)
+- Timestamp Scheme ([Stripe](https://stripe.com/docs/webhooks/best-practices) / Cedar default)
 - Secret Key (Custom, [Orbit](https://docs.orbit.love/docs/webhooks))
 
 CedarJS adds a way to do no verification as well of testing or in the case your third party doesn't sign the payload.

@@ -29,8 +29,8 @@ yarn rw storybook
 
 If this is your first time running Storybook:
 
-- The Redwood CLI will install Storybook, the framework package, and all related dependencies.
-- The Redwood CLI will create the following config files for you:
+- The Cedar CLI will install Storybook, the framework package, and all related dependencies.
+- The Cedar CLI will create the following config files for you:
   - `web/.storybook/main.ts`
     - This is the primary [Storybook configuration file](https://storybook.js.org/docs/7/configure). Note that it references our framework package, [`storybook-framework-cedarjs`](https://www.npmjs.com/package/storybook-framework-cedarjs).
   - `web/.storybook/preview-body.html`

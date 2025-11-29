@@ -312,7 +312,7 @@ post {
 
 This query would now fail because you only have `post.user` available, not `post.user.posts`.
 
-The Redwood team is actively looking into more elegant solutions to the N+1 problem, so stay tuned!
+The Cedar team is actively looking into more elegant solutions to the N+1 problem, so stay tuned!
 
 :::
 
@@ -390,7 +390,7 @@ const Article = ({ article }) => {
 export default Article
 ```
 
-Depending on whether you started from the Redwood Tutorial repo or not, you may not have any posts to actually display. Let's add some! However, before we can do that with our posts admin/scaffold, we'll need to actually associate a user to the post they created. Remember that we don't allow setting the `userId` via GraphQL, which is what the scaffolds use when creating/editing records. But that's okay, we want this to only happen in the service anyway, which is where we're heading now.
+Depending on whether you started from the Cedar Tutorial repo or not, you may not have any posts to actually display. Let's add some! However, before we can do that with our posts admin/scaffold, we'll need to actually associate a user to the post they created. Remember that we don't allow setting the `userId` via GraphQL, which is what the scaffolds use when creating/editing records. But that's okay, we want this to only happen in the service anyway, which is where we're heading now.
 
 ## Accessing `currentUser` on the API side
 
@@ -685,7 +685,7 @@ export const updatePost = async ({ id, input }) => {
 }
 ```
 
-We're using the `adminPost()` service function, rather than making another call to the database (note that we had to async/await it to make sure we have the post before continuing). Composing services like this is something Redwood was designed to encourage: services' functions act as resolvers for GraphQL, but they're also just plain JS functions and can be called wherever you need. And the reasons why you'd want to do this are clearly demonstrated here: `adminPost()` already limits the found record to be only one owned by the logged in user, so that logic is already encapsulated here, and we can be sure that any time an admin wants to do something with a single post, it runs through this code and uses the same logic every time.
+We're using the `adminPost()` service function, rather than making another call to the database (note that we had to async/await it to make sure we have the post before continuing). Composing services like this is something Cedar was designed to encourage: services' functions act as resolvers for GraphQL, but they're also just plain JS functions and can be called wherever you need. And the reasons why you'd want to do this are clearly demonstrated here: `adminPost()` already limits the found record to be only one owned by the logged in user, so that logic is already encapsulated here, and we can be sure that any time an admin wants to do something with a single post, it runs through this code and uses the same logic every time.
 
 This works, but we'll need to do the same thing in `deletePost`. Let's extract that check for the post existence into a function:
 

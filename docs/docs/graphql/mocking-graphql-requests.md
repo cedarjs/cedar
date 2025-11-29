@@ -4,7 +4,7 @@ description: Mock GraphQL requests to test your components
 
 # Mocking GraphQL Requests
 
-Testing and building components without having to rely on the API is a good best practice. Redwood makes this possible via `mockGraphQLQuery` and `mockGraphQLMutation`.
+Testing and building components without having to rely on the API is a good best practice. Cedar makes this possible via `mockGraphQLQuery` and `mockGraphQLMutation`.
 
 The argument signatures of these functions are identical. Internally, they target different operation types based on their suffix.
 
@@ -184,4 +184,4 @@ export const standard = {
 
 > **Behind the scenes**
 >
-> Redwood uses the value associated with `standard` as the second argument to `mockGraphQLQuery`.
+> Cedar uses the value associated with `standard` as the second argument to `mockGraphQLQuery`.

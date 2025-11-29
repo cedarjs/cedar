@@ -209,7 +209,7 @@ Forwarding      http://fb6d701c44b5.ngrok.io -> http://localhost:8911
 Forwarding      https://fb6d701c44b5.ngrok.io -> http://localhost:8911
 ```
 
-Note the two different domains. Copy the `https` domain from the api side because we'll need it in a moment. Even if the Redwood dev server isn't running you can leave these tunnels running, and when the dev server _does_ start, they'll just start on those domains again.
+Note the two different domains. Copy the `https` domain from the api side because we'll need it in a moment. Even if the Cedar dev server isn't running you can leave these tunnels running, and when the dev server _does_ start, they'll just start on those domains again.
 
 ### `redwood.toml` Config
 

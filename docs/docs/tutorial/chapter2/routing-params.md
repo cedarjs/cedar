@@ -94,7 +94,7 @@ But what we really need is to specify _which_ post we want to view on this page.
 </TabItem>
 </Tabs>
 
-Notice the `{id}`. Redwood calls these _route parameters_. They say "whatever value is in this position in the path, let me reference it by the name inside the curly braces". And while we're in the routes file, lets move the route inside the `Set` with the `BlogLayout`.
+Notice the `{id}`. Cedar calls these _route parameters_. They say "whatever value is in this position in the path, let me reference it by the name inside the curly braces". And while we're in the routes file, lets move the route inside the `Set` with the `BlogLayout`.
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -188,7 +188,7 @@ Cool, cool, cool. Now we need to construct a link that has the ID of a post in i
 
 :::info Wait... why am I getting a TypeScript error?
 
-When you have your dev server running, the Redwood CLI will watch your project and generate types. You can regenerate these types manually too, by running `yarn rw g types`.
+When you have your dev server running, the Cedar CLI will watch your project and generate types. You can regenerate these types manually too, by running `yarn rw g types`.
 
 In this case, the path `/article/{id}` doesn't specify the type of `id` - so it defaults to `string` - where as our article id is actually a `number`. We'll tackle this in the next few sections - so you can ignore the red squiggle for now, and power through!
 :::
@@ -398,7 +398,7 @@ export const Success = ({
 </TabItem>
 </Tabs>
 
-Okay, we're getting closer. Still, where will that `$id` come from? Redwood has another trick up its sleeve. Whenever you put a route param in a route, that param is automatically made available to the page that route renders. Which means we can update `ArticlePage` to look like this:
+Okay, we're getting closer. Still, where will that `$id` come from? Cedar has another trick up its sleeve. Whenever you put a route param in a route, that param is automatically made available to the page that route renders. Which means we can update `ArticlePage` to look like this:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -453,7 +453,7 @@ export default ArticlePage
 </TabItem>
 </Tabs>
 
-`id` already exists since we named our route param `{id}`. Thanks Redwood! But how does that `id` end up as the `$id` GraphQL parameter? If you've learned anything about Redwood by now, you should know it's going to take care of that for you. By default, any props you give to a cell will automatically be turned into variables and given to the query. "No way," you're saying. Way.
+`id` already exists since we named our route param `{id}`. Thanks Redwood! But how does that `id` end up as the `$id` GraphQL parameter? If you've learned anything about Cedar by now, you should know it's going to take care of that for you. By default, any props you give to a cell will automatically be turned into variables and given to the query. "No way," you're saying. Way.
 
 We can prove it! Try going to the detail page for a post in the browser and—uh oh. Hmm:
 
@@ -594,7 +594,7 @@ export default Article
 
 :::info
 
-You may notice we don't have any explicit `import` statements for `React` itself. We (the Redwood dev team) got tired of constantly importing it over and over again in every file so we automatically import it for you!
+You may notice we don't have any explicit `import` statements for `React` itself. We (the Cedar dev team) got tired of constantly importing it over and over again in every file so we automatically import it for you!
 
 :::
 
@@ -864,5 +864,5 @@ To recap:
 1. We created a new page to show a single post (the "detail" page).
 2. We added a route to handle the `id` of the post and turn it into a route param, even coercing it into an integer.
 3. We created a cell to fetch and display the post.
-4. Redwood made the world a better place by making that `id` available to us at several key junctions in our code and even turning it into a number automatically.
+4. Cedar made the world a better place by making that `id` available to us at several key junctions in our code and even turning it into a number automatically.
 5. We turned the actual post display into a standard React component and used it in both the homepage and new detail page.

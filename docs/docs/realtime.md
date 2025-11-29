@@ -323,7 +323,7 @@ export const schema = gql`
 `
 ```
 
-The Redwood services for these queries return the `fastField` immediately and the `showField` after some delay.
+The Cedar services for these queries return the `fastField` immediately and the `showField` after some delay.
 
 ```ts
 import { logger } from 'src/lib/logger'

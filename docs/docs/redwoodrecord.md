@@ -100,7 +100,7 @@ yarn rw record init
 
 You'll see that this created `api/src/models/datamodel.js` and `api/src/models/index.js`.
 
-Believe it or not, that's enough to get started! Let's try using the Redwood console to make some quick queries without worrying about starting up any servers:
+Believe it or not, that's enough to get started! Let's try using the Cedar console to make some quick queries without worrying about starting up any servers:
 
 > TODO: Models don't quite work correctly in the console. The require and fetching of records below will work, but actually trying to read any properties returns `undefined`. For now you'll need to test out RedwoodRecord directly in your app.
 
@@ -108,7 +108,7 @@ Believe it or not, that's enough to get started! Let's try using the Redwood con
 yarn rw c
 ```
 
-Now we've got a standard Node REPL but with a bunch of Redwood goodness loaded up for us already. First, let's require our model:
+Now we've got a standard Node REPL but with a bunch of Cedar goodness loaded up for us already. First, let's require our model:
 
 ```jsx
 const { User } = require('./api/src/models')

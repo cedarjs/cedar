@@ -4,11 +4,11 @@ description: Use meta tags to set page info for SEO
 
 # SEO & `<meta>` tags
 
-Search Engine Optimization is a dark art that some folks dedicate their entire lives to. We've add a couple of features to Redwood to make HTML-based SEO fairly simple.
+Search Engine Optimization is a dark art that some folks dedicate their entire lives to. We've add a couple of features to Cedar to make HTML-based SEO fairly simple.
 
 ## Adding a Title
 
-You certainly want to change the title of your Redwood app from the default of "Redwood App." You can start by adding or modifying `title` inside of `/redwood.toml`
+You certainly want to change the title of your Cedar app from the default of "Redwood App." You can start by adding or modifying `title` inside of `/redwood.toml`
 
 ```diff title=redwood.toml
 [web]
@@ -37,18 +37,18 @@ Add `titleTemplate` as a prop for `RedwoodProvider` to have a title template for
 You can use whatever formatting you'd like in here. Some examples:
 
 ```jsx
-"%PageTitle | %AppTitle" => "Home Page | Redwood App"
+"%PageTitle | %AppTitle" => "Home Page | Cedar App"
 
 "%AppTitle · %PageTitle" => "Redwood App · Home Page"
 
-"%PageTitle : %AppTitle" => "Home Page : Redwood App"
+"%PageTitle : %AppTitle" => "Home Page : Cedar App"
 ```
 
 ## Adding to Page `<head>`
 
 So you want to change the title of your page, or add elements to the `<head>` of the page? We've got you!
 
-Let's say you want to change the title of your About page, Redwood provides a built-in `<Head>` component, which you can use like this:
+Let's say you want to change the title of your About page, Cedar provides a built-in `<Head>` component, which you can use like this:
 
 ```diff title=web/src/pages/AboutPage/AboutPage.(tsx|jsx)
 +import { Head } from '@cedarjs/web'
@@ -62,11 +62,11 @@ const AboutPage = () => {
 +     </Head>
 ```
 
-You can include any valid `<head>` tag in here that you like. However, Redwood also provides a utility component [&lt;Metadata&gt;](#setting-meta-tags-and-opengraph-directives-with-metadata).
+You can include any valid `<head>` tag in here that you like. However, Cedar also provides a utility component [&lt;Metadata&gt;](#setting-meta-tags-and-opengraph-directives-with-metadata).
 
 :::caution `<MetaTags>` Deprecation
 
-Prior to Redwood 6.6.0 this component was called `<MetaTags>` and had several special hard-coded props like `ogContentUrl`, which didn't properly map to the OpenGraph spec. We'll still render `<MetaTags>` for the foreseeable future, but it's deprecated and you should migrate to `<Metadata>` if you have an existing app.
+Prior to Cedar 6.6.0 this component was called `<MetaTags>` and had several special hard-coded props like `ogContentUrl`, which didn't properly map to the OpenGraph spec. We'll still render `<MetaTags>` for the foreseeable future, but it's deprecated and you should migrate to `<Metadata>` if you have an existing app.
 
 :::
 

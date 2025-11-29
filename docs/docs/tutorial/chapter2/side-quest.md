@@ -1,4 +1,4 @@
-# Side Quest: How Redwood Works with Data
+# Side Quest: How Cedar Works with Data
 
 Redwood likes GraphQL. We think it's the API of the future. Our GraphQL implementation is built with [Apollo](https://www.apollographql.com/) (on the client) and [GraphQL Yoga & Envelop](https://www.graphql-yoga.com) (on the server). Remember in our file system layout, there was a directory `api/src/functions` and a single file in there, `graphql.{js,ts}`. If you were to deploy your app to a [serverless](https://en.wikipedia.org/wiki/Serverless_computing) stack (which we will do later in the [Deployment](../chapter4/deployment.md) section), that `graphql.{js,ts}` file would be compiled into a serverless function and would become the GraphQL API endpoint. Here's how a typical GraphQL query works its way through your app:
 
@@ -10,7 +10,7 @@ The `*.sdl.{js,ts}` files in `api/src/graphql` define the GraphQL [Object](https
 
 Normally you would write a [resolver map](https://www.graphql-tools.com/docs/resolvers) that contains all your resolvers and explains to your GraphQL server how to map them to your SDL. But putting business logic directly in the resolver map would result in a very big file and horrible reusability, so you'd be well advised to extract all the logic out into a library of functions, import them, and call them from the resolver map, remembering to pass all the arguments through. Ugh, that's a lot of effort and boilerplate, and still doesn't result in very good reusability.
 
-Redwood has a better way! Remember the `api/src/services` directory? Redwood will automatically import and map resolvers from the corresponding **services** file onto your SDL. At the same time, it allows you to write those resolvers in a way that makes them easy to call as regular functions from other resolvers or services. That's a lot of awesomeness to contemplate, so let's show an example.
+Redwood has a better way! Remember the `api/src/services` directory? Cedar will automatically import and map resolvers from the corresponding **services** file onto your SDL. At the same time, it allows you to write those resolvers in a way that makes them easy to call as regular functions from other resolvers or services. That's a lot of awesomeness to contemplate, so let's show an example.
 
 Consider the following SDL JavaScript snippet:
 
@@ -87,7 +87,7 @@ export const schema = gql`
 </TabItem>
 </Tabs>
 
-In this example, Redwood will look in `api/src/services/posts/posts.{js,ts}` for the following five resolvers:
+In this example, Cedar will look in `api/src/services/posts/posts.{js,ts}` for the following five resolvers:
 
 - `posts()`
 - `post({ id })`
@@ -191,4 +191,4 @@ By dividing your app into well-defined services and providing an API for those s
 
 Back to our data flow: Yoga/Envelop has called the resolver which, in our case, retrieved data from the database. Yoga/Envelop digs into the object and returns only the key/values that were asked for in the GraphQL query. It then packages up the response in a GraphQL payload and returns it to the browser.
 
-If you're using a Redwood **cell** then this data will be available to you in your `Success` component ready to be looped through and/or displayed like any other React component.
+If you're using a Cedar **cell** then this data will be available to you in your `Success` component ready to be looped through and/or displayed like any other React component.

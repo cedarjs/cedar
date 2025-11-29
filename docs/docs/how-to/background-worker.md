@@ -9,8 +9,8 @@ In this how to, we'll use Redwood's [exec CLI command](cli-commands.md#exec) to 
 At a high level, Faktory is a language-agnostic, persistent background-job server.
 You can run it [with Docker](https://github.com/contribsys/faktory/wiki/Docker).
 
-We'll have to have a way of communicating with the server from our Redwood app.
-We'll use this [node library](https://github.com/jbielick/faktory_worker_node) to send jobs from our Redwood app to our Faktory server.
+We'll have to have a way of communicating with the server from our Cedar app.
+We'll use this [node library](https://github.com/jbielick/faktory_worker_node) to send jobs from our Cedar app to our Faktory server.
 
 ## Creating the Faktory Worker
 
