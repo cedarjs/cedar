@@ -65,13 +65,13 @@ This is Redwood's version of static site generation, aka SSG.
 
 #### Accessibility
 
-Redwood includes a couple of components to [aid screen readers](https://redwoodjs.com/docs/accessibility) in properly navigating your app. The `<RouteAnnouncement>` component tells a screen reader to read something aloud, even though it isn't visible in the browser. And the `<RouteFocus>` tells a reader to skip verbose navigation options at the top of a page and get to the content.
+Redwood includes a couple of components to [aid screen readers](https://cedarjs.com/docs/accessibility) in properly navigating your app. The `<RouteAnnouncement>` component tells a screen reader to read something aloud, even though it isn't visible in the browser. And the `<RouteFocus>` tells a reader to skip verbose navigation options at the top of a page and get to the content.
 
 ### Authentication
 
-The `<PrivateSet>` route limits access to users that are authenticated, but how do they authenticate? Redwood includes integrations to many popular third party authentication hosts (including [Auth0](https://auth0.com/), [Supabase](https://supabase.com/docs/guides/auth) and [Clerk](https://clerk.com/)). You can also [host your own auth](https://redwoodjs.com/docs/auth/dbauth), or write your own [custom authentication](https://redwoodjs.com/docs/auth/custom) option. If going self-hosted, we include login, signup, and reset password pages, as well as the option to include TouchID/FaceID and third party biometric readers!
+The `<PrivateSet>` route limits access to users that are authenticated, but how do they authenticate? Redwood includes integrations to many popular third party authentication hosts (including [Auth0](https://auth0.com/), [Supabase](https://supabase.com/docs/guides/auth) and [Clerk](https://clerk.com/)). You can also [host your own auth](https://cedarjs.com/docs/auth/dbauth), or write your own [custom authentication](https://cedarjs.com/docs/auth/custom) option. If going self-hosted, we include login, signup, and reset password pages, as well as the option to include TouchID/FaceID and third party biometric readers!
 
-Once authenticated, how do you know what a user is allowed to do or not do? Redwood includes helpers for [role-based access control](https://redwoodjs.com/docs/how-to/role-based-access-control-rbac) that integrates on both the front- and backend.
+Once authenticated, how do you know what a user is allowed to do or not do? Redwood includes helpers for [role-based access control](https://cedarjs.com/docs/how-to/role-based-access-control-rbac) that integrates on both the front- and backend.
 
 The homepage is accessible _without_ being logged in, browsing to `/` will load the `HomePage` page (component) which itself is just composed of more React components, nothing special there. But, what if the homepage, say, displayed some testimonials from the database? Ahh, now things are getting interesting. Here's where Redwood's handpicked selection of technologies start to take the spotlight.
 
@@ -304,7 +304,7 @@ Notice at no point above did we say "and then we need to write configuration for
 
 We use vite as our bundler, packaging up the frontend code and automatically code splitting on pages. It also serves the frontend (the `web` directory). The backend (the `api` directory) is compiled by Babel and served with [Fastify](https://fastify.dev/).
 
-The entire framework is ([strictly](https://redwoodjs.com/docs/typescript/strict-mode)) typed so you can autocomplete all the things in your IDE.
+The entire framework is ([strictly](https://cedarjs.com/docs/typescript/strict-mode)) typed so you can autocomplete all the things in your IDE.
 
 ## Deployment
 
@@ -343,4 +343,4 @@ Redwood is constantly being updated and sticks strictly to semantic versioning r
 
 ## Community
 
-There's a very active community around Redwood, including a [Discourse forum](https://community.redwoodjs.com/) and [Discord chat](https://discord.gg/redwoodjs), where even members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!
+There's a very active community around Redwood, including a [Discourse forum](https://community.redwoodjs.com/) and [Discord chat](https://cedarjs.com/discord), where even members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!

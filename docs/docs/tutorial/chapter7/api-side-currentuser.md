@@ -126,7 +126,7 @@ yarn rw prisma migrate reset
 
 :::info Database Seeds
 
-If you started the second half the tutorial from the [Redwood Tutorial repo](https://github.com/redwoodjs/redwood-tutorial) you'll get an error after resetting the database—Prisma attempts to seed the database with a user and some posts to get you started, but the posts in that seed do not have the new required `userId` field! Open up `scripts/seed.js` and edit each post to add `userId: 1` to each:
+If you started the second half the tutorial from the [Cedar Tutorial repo](https://github.com/cedarjs/cedar-tutorial) you'll get an error after resetting the database—Prisma attempts to seed the database with a user and some posts to get you started, but the posts in that seed do not have the new required `userId` field! Open up `scripts/seed.js` and edit each post to add `userId: 1` to each:
 
 ```javascript title="scripts/seed.js"
 {
@@ -160,7 +160,7 @@ yarn rw prisma db seed
 
 :::info
 
-If you didn't start your codebase from the [Redwood Tutorial repo](https://github.com/redwoodjs/redwood-tutorial) then you'll now have no users or posts in the database. Go ahead and create a user by going to [http://localhost:8910/signup](http://localhost:8910/signup) but don't create any posts yet! Change the user's role to be "admin", either by using the console introduced in the [previous page](/docs/canary/tutorial/chapter7/rbac#changing-roles-on-a-user) or by [opening Prisma Studio](/docs/canary/tutorial/chapter2/getting-dynamic#prisma-studio) and changing it directly in the database.
+If you didn't start your codebase from the [Cedar Tutorial repo](https://github.com/cedarjs/cedar-tutorial) then you'll now have no users or posts in the database. Go ahead and create a user by going to [http://localhost:8910/signup](http://localhost:8910/signup) but don't create any posts yet! Change the user's role to be "admin", either by using the console introduced in the [previous page](/docs/canary/tutorial/chapter7/rbac#changing-roles-on-a-user) or by [opening Prisma Studio](/docs/canary/tutorial/chapter2/getting-dynamic#prisma-studio) and changing it directly in the database.
 
 :::
 

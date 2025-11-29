@@ -158,7 +158,7 @@ const SignupPage = () => {
 //...
 ```
 
-The _something_ we need to do is—surprise!—sign up. To do this, we'll need a way to communicate with `<AuthProvider />` and the GoTrue-JS client we passed to it. Look no further than the [`useAuth` hook](https://redwoodjs.com/docs/authentication#api), which lets us subscribe to our auth state and its properties. In our case, we'll be glad to now have access to `client` and, thusly, our GoTrue-JS instance and [all of its functions](https://github.com/netlify/gotrue-js/blob/master/README.md#authentication-examples).
+The _something_ we need to do is—surprise!—sign up. To do this, we'll need a way to communicate with `<AuthProvider />` and the GoTrue-JS client we passed to it. Look no further than the [`useAuth` hook](https://cedarjs.com/docs/authentication#api), which lets us subscribe to our auth state and its properties. In our case, we'll be glad to now have access to `client` and, thusly, our GoTrue-JS instance and [all of its functions](https://github.com/netlify/gotrue-js/blob/master/README.md#authentication-examples).
 
 Let's import `useAuth` and destructure `client` from it in our component:
 

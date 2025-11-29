@@ -378,7 +378,7 @@ You should see something like:
 
 If so then your API side is up and running! The only thing left to test is that the api side has access to the database. This call would be pretty specific to your app, but assuming you have port 8910 open to the world you could simply open a browser to click around to find a page that makes a database request.
 
-Was the problem with starting your PM2 process? That will be harder to debug here in this doc, but visit us in the [forums](https://community.redwoodjs.com) or [Discord](https://discord.gg/redwoodjs) and we'll try to help!
+Was the problem with starting your PM2 process? That will be harder to debug here in this doc, but visit us in the [forums](https://community.redwoodjs.com) or [Discord](https://cedarjs.com/discord) and we'll try to help!
 
 :::note My pm2 processes are running but your app has errors, how do I see them?
 
@@ -713,7 +713,7 @@ sides = ["api", "web"]
 path = "/var/www/myapp"
 // highlight-next-line
 processNames = ["api"]
-repo = "git@github.com:redwoodjs/myapp.git"
+repo = "git@github.com:cedarjs/myapp.git"
 branch = "main"
 keepReleases = 3
 packageManagerCommand = "yarn"

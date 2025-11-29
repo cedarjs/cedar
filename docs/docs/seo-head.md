@@ -135,7 +135,7 @@ Setting an `og:image` is how sites like Facebook and Slack can show a preview of
 
 Sites like GitHub go a step farther than a generic image by actually creating an image for a repo on the fly, including details about the repo itself:
 
-![GitHub's og:image for the redwood repo](https://opengraph.githubassets.com/322ce8081bb85a86397a59494eab1c0fbe942b5104461f625e2c973c46ae4179/redwoodjs/redwood)
+![GitHub's og:image for the cedar repo](https://opengraph.githubassets.com/2e1534b74e25b6b66e0b8826bf3f7a3374c16cd99374839e93bd37013800001f/cedarjs/cedar)
 
 If you want to write your own `<meta>` tags, skipping the interpolation that `<Metadata>` does for you, you can pass them as children to `<Metadata>` or just write them into the `<head>` tag as normal.
 
@@ -312,7 +312,7 @@ Bots will pick up our tags if we've prerendered the page, but what if we want to
 
 :::info Prerendering
 
-As of v3.x, Redwood supports prerendering your [Cells](https://redwoodjs.com/docs/cells) with the data you were querying. For more information please refer [to this section](https://redwoodjs.com/docs/prerender#cell-prerendering).
+Cedar supports prerendering your [Cells](https://cedarjs.com/docs/cells) with the data you were querying. For more information please refer [to this section](https://cedarjs.com/docs/prerender#cell-prerendering).
 
 :::
 

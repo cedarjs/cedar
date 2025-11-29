@@ -10,7 +10,7 @@ Love Redwood and want to get involved? You’re in the right place and in good c
 
 There are several ways you can contribute to Redwood:
 
-- join the [community Forums](https://community.redwoodjs.com/) and [Discord server](https://discord.com/invite/redwoodjs) — encourage and help others 🙌
+- join the [community Forums](https://community.redwoodjs.com/) and [Discord server](https://cedarjs.com/discord) — encourage and help others 🙌
 - [triage issues on the repo](https://github.com/cedarjs/cedar/issues) and [review PRs](https://github.com/cedarjs/cedar/pulls) 🩺
 - write and edit [docs](#contributing-docs) ✍️
 - and of course, write code! 👩‍💻
@@ -102,18 +102,18 @@ What you want to do not on the roadmap? Well, still go for it! We love spikes an
 
 First off, thank you for your interest in contributing docs! Redwood prides itself on good developer experience, and that includes good documentation.
 
-Before you get started, there's an implicit doc-distinction that we should make explicit: all the docs on redwoodjs.com are for helping people develop apps using Redwood, while all the docs on the Redwood repo are for helping people contribute to Redwood.
+Before you get started, there's an implicit doc-distinction that we should make explicit: all the docs on https://cedarjs.com are for helping people develop apps using Cedar, while all the docs on the Cedar repo are for helping people contribute to Cedar.
 
-Although Developing and Contributing docs are in different places, they most definitely should be linked and referenced as needed. For example, it's appropriate to have a "Contributing" doc on redwoodjs.com that's context-appropriate, but it should link to the Framework's [CONTRIBUTING.md](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md) (the way this doc does).
+Although Developing and Contributing docs are in different places, they most definitely should be linked and referenced as needed. For example, it's appropriate to have a "Contributing" doc on https://cedarjs.com that's context-appropriate, but it should link to the Framework's [CONTRIBUTING.md](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md) (the way this doc does).
 
-### How Redwood Thinks about Docs
+### How Cedar Thinks about Docs
 
 Before we get into the how-to, a little explanation. When thinking about docs, we find [divio's documentation system](https://documentation.divio.com/) really useful. It's not necessary that a doc always have all four of the dimensions listed, but if you find yourself stuck, you can ask yourself questions like "Should I be explaining? Am I explaining too much? Too little?" to reorient yourself while writing.
 
-### Docs for Developing Redwood Apps
+### Docs for Developing Cedar Apps
 
-redwoodjs.com has three kinds of Developing docs: References, How To's, and The Tutorial.
-You can find References and How To's within their respective directories on the redwood/redwood repo: [docs/](https://github.com/cedarjs/cedar/tree/main/docs) and [how-to/](https://github.com/cedarjs/cedar/tree/main/docs/how-to).
+https://cedarjs.com has three kinds of Developing docs: References, How To's, and The Tutorial.
+You can find References and How To's within their respective directories on the cedarjs/cedar repo: [docs/](https://github.com/cedarjs/cedar/tree/main/docs) and [how-to/](https://github.com/cedarjs/cedar/tree/main/docs/how-to).
 
 The Tutorial is a standalone document that serves a specific purpose as an introduction to Redwood, an aspirational roadmap, and an example of developer experience. As such, it's distinct from the categories mentioned, although it's most similar to How To's.
 

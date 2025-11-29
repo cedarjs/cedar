@@ -228,7 +228,7 @@ Finds a single record by certain criteria. Similar to `where()`, but will only r
 
 ```jsx
 await User.findBy({ email: 'rob@cedarjs.com' })
-await User.findBy({ email: { endsWith: { 'redwoodjs.com' } } }, { orderBy: { lastName: 'asc' }, take: 10 })
+await User.findBy({ email: { endsWith: { 'cedarjs.com' } } }, { orderBy: { lastName: 'asc' }, take: 10 })
 ```
 
 If no record matching your query was found, it returns `null`.
@@ -238,7 +238,7 @@ If no record matching your query was found, it returns `null`.
 Alias for `findBy()`. This function can be used in your code to show your intention to only use the first of potentially multiple records that could match with `findBy()`.
 
 ```jsx
-const randomCoreMember = await User.first({ email: { endsWith: { 'redwoodjs.com' } } })
+const randomCoreMember = await User.first({ email: { endsWith: { 'cedarjs.com' } } })
 ```
 
 ### Creating Records

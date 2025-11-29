@@ -10,18 +10,18 @@ So until next time, a bit of wisdom to help combat that next bout of every devel
 
 ## What's Next
 
-Want to add some more features to your app? Check out some of our how to's like [calling to a third party API](../how-to/using-a-third-party-api.md) and [deploying an app without an API at all](../how-to/disable-api-database.md). We've also got lots of [guides](https://redwoodjs.com/docs/index) for more info on Redwood's internals.
+Want to add some more features to your app? Check out some of our how to's like [calling to a third party API](../how-to/using-a-third-party-api.md) and [deploying an app without an API at all](../how-to/disable-api-database.md). We've also got lots of [guides](https://cedarjs.com/docs/index) for more info on Redwood's internals.
 
 ## Roadmap
 
-Check out our [Roadmap](https://redwoodjs.com/roadmap) to see where we're headed and how we're going to get there. If you're interested in helping with anything you see, just let us know over on the [RedwoodJS Forum](https://community.redwoodjs.com/) and we'll be happy to get you set up.
+Check out our [Roadmap](https://github.com/cedarjs/cedar#roadmap) to see where we're headed and how we're going to get there. If you're interested in helping with anything you see, just submit a pull request or open an issue on the [CedarJS GitHub](https://github.com/cedarjs/cedar) and we'll be happy to get you set up. If you need any help we're happy to chat on the [CedarJS Discord](https://cedarjs.com/discord).
 
 ## Help Us!
 
-What do you think of Redwood? Is it the Next Step for JS frameworks? What can it do better? We've got a lot more planned. Want to help us build these upcoming features?
+What do you think of Cedar? Is it the Next Step for JS frameworks? What can it do better? We've got a lot more planned. Want to help us build these upcoming features?
 
 - [Open a PR](https://github.com/cedarjs/cedar/pulls)
-- [Write some docs](https://redwoodjs.com/docs/introduction)
-- [Join the community](https://community.redwoodjs.com)
+- [Write some docs](https://cedarjs.com/docs/introduction)
+- [Join the community](https://cedarjs.com/discord)
 
 Thanks for following along. Now go out and build something amazing!

@@ -618,7 +618,7 @@ const webhookDetails = (event) => {
  * Important: When deployed, a custom serverless function is an open API endpoint and
  * is your responsibility to secure appropriately.
  *
- * @see {@link https://redwoodjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
+ * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
  * in the CedarJS documentation for more information.
  *
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent

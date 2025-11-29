@@ -1297,9 +1297,9 @@ When you start your test suite you may notice some output from Prisma talking ab
 
 :::warning What if I have custom migration SQL?
 
-The `prisma db push` command only restores a snapshot of the current database schema (so that it runs as fast as possible). **It does not actually run migrations in sequence.** This can cause a [problem](https://github.com/redwoodjs/redwood/issues/5818) if you have certain database configuration that _must_ occur as a result of the SQL statements inside the migration files.
+The `prisma db push` command only restores a snapshot of the current database schema (so that it runs as fast as possible). **It does not actually run migrations in sequence.** This can cause a [problem](https://github.com/cedarjs/cedar/issues/5818) if you have certain database configuration that _must_ occur as a result of the SQL statements inside the migration files.
 
-In order to preserve those statements in your test database, you can set an additional ENV var which will use the command `yarn rw prisma migrate reset` instead. This will run each migration in sequence against your test database. The tradeoff is that starting your test suite will take a little longer depending on how many migrations you have:
+In order to preserve those statements in your test database, you can set an additional ENV var which will use the command `yarn cedar prisma migrate reset` instead. This will run each migration in sequence against your test database. The tradeoff is that starting your test suite will take a little longer depending on how many migrations you have:
 
 ```.env title="/.env"
 TEST_DATABASE_STRATEGY=reset
@@ -2102,6 +2102,6 @@ Since these tests send mail to a sandbox inbox, you can be confident that no ema
 
 ## Wrapping Up
 
-So that's the world of testing according to Redwood. Did we miss anything? Can we make it even more awesome? Stop by [the community](https://community.redwoodjs.com) and ask questions, or if you've thought of a way to make this doc even better then [open a PR](https://github.com/redwoodjs/redwoodjs.com/pulls).
+So that's the world of testing according to Redwood. Did we miss anything? Can we make it even more awesome? Stop by [Discord](https://cedarjs.com/discord) and ask questions, or if you've thought of a way to make this doc even better then [open a PR](https://github.com/cedarjs/cedar/pulls).
 
 Now go out and create (and test!) something amazing!
