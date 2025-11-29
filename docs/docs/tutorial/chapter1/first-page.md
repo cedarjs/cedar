@@ -95,7 +95,7 @@ Try changing the route to something like:
 
 The splash screen is available again at [http://localhost:8910/](http://localhost:8910/), giving you a list of all the available URLs in your app.
 
-![Redwood Splash Screen](https://user-images.githubusercontent.com/17789536/160120107-1157af8e-4cbd-4ec8-b3aa-8adb28ea6eaf.png)
+![Cedar Splash Screen](https://user-images.githubusercontent.com/17789536/160120107-1157af8e-4cbd-4ec8-b3aa-8adb28ea6eaf.png)
 
 Go to `/hello` and you should see the homepage again.
 

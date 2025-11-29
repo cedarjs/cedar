@@ -83,14 +83,14 @@ Having the admin at a different path is great, but nothing is stopping someone f
 
 "Credentials" are the pieces of information a user provides to prove they are who they say they are: commonly a username (usually email) and password.
 
-Redwood includes two authentication paths out of the box:
+Cedar includes two authentication paths out of the box:
 
 - Self-hosted, where user credentials are stored in your own database
 - Third-party hosted, where user credentials are stored with the third party
 
 In both cases you end up with an authenticated user that you can access in both the web and api sides of your app.
 
-Redwood includes [integrations](../../authentication.md) for several of the most popular third-party auth providers:
+Cedar includes [integrations](../../authentication.md) for several of the most popular third-party auth providers:
 
 - [Auth0](https://auth0.com/)
 - [Clerk](https://clerk.dev/)
@@ -99,7 +99,7 @@ Redwood includes [integrations](../../authentication.md) for several of the most
 - [Supabase](https://supabase.io/docs/guides/auth)
 - [SuperTokens](https://supertokens.com)
 
-As for our blog, we're going to use self-hosted authentication (named _dbAuth_ in Redwood) since it's the simplest to get started with and doesn't involve any third party signups.
+As for our blog, we're going to use self-hosted authentication (named _dbAuth_ in Cedar) since it's the simplest to get started with and doesn't involve any third party signups.
 
 :::info Authentication vs. Authorization
 
@@ -502,7 +502,7 @@ Awesome! Signing up will automatically log you in (although this behavior [can b
 
 Now that we're logged in, how do we log out? Let's add a link to the `BlogLayout` so that it's present on all pages, and also include an indicator of who you're actually logged in as.
 
-Redwood provides a [hook](../../authentication.md#destructuring-the-useauth-hook) `useAuth` which we can use in our components to determine the state of the user's login-ness, get their user info, and more. In `BlogLayout` we want to destructure the `isAuthenticated`, `currentUser` and `logOut` properties from `useAuth()`:
+Cedar provides a [hook](../../authentication.md#destructuring-the-useauth-hook) `useAuth` which we can use in our components to determine the state of the user's login-ness, get their user info, and more. In `BlogLayout` we want to destructure the `isAuthenticated`, `currentUser` and `logOut` properties from `useAuth()`:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -521,7 +521,7 @@ const BlogLayout = ({ children }) => {
     <>
       <header>
         <h1>
-          <Link to={routes.home()}>Redwood Blog</Link>
+          <Link to={routes.home()}>Cedar Blog</Link>
         </h1>
         <nav>
           <ul>
@@ -566,7 +566,7 @@ const BlogLayout = ({ children }: BlogLayoutProps) => {
     <>
       <header>
         <h1>
-          <Link to={routes.home()}>Redwood Blog</Link>
+          <Link to={routes.home()}>Cedar Blog</Link>
         </h1>
         <nav>
           <ul>
@@ -618,7 +618,7 @@ const BlogLayout = ({ children }) => {
         // highlight-next-line
         <div className="flex-between">
           <h1>
-            <Link to={routes.home()}>Redwood Blog</Link>
+            <Link to={routes.home()}>Cedar Blog</Link>
           </h1>
           // highlight-start
           {isAuthenticated ? (
@@ -676,7 +676,7 @@ const BlogLayout = ({ children }: BlogLayoutProps) => {
         // highlight-next-line
         <div className="flex-between">
           <h1>
-            <Link to={routes.home()}>Redwood Blog</Link>
+            <Link to={routes.home()}>Cedar Blog</Link>
           </h1>
           // highlight-start
           {isAuthenticated ? (

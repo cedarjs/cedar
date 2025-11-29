@@ -453,7 +453,7 @@ export default ArticlePage
 </TabItem>
 </Tabs>
 
-`id` already exists since we named our route param `{id}`. Thanks Redwood! But how does that `id` end up as the `$id` GraphQL parameter? If you've learned anything about Cedar by now, you should know it's going to take care of that for you. By default, any props you give to a cell will automatically be turned into variables and given to the query. "No way," you're saying. Way.
+`id` already exists since we named our route param `{id}`. Thanks Cedar! But how does that `id` end up as the `$id` GraphQL parameter? If you've learned anything about Cedar by now, you should know it's going to take care of that for you. By default, any props you give to a cell will automatically be turned into variables and given to the query. "No way," you're saying. Way.
 
 We can prove it! Try going to the detail page for a post in the browser and—uh oh. Hmm:
 
@@ -543,13 +543,13 @@ export const Success = ({ article, id, rand }: Props) => {
 </TabItem>
 </Tabs>
 
-Thanks again, Redwood!
+Thanks again, Cedar!
 
 :::
 
 ### Displaying a Blog Post
 
-Now let's display the actual post instead of just dumping the query result. We could copy the display from the articles on the homepage, but that's not very reusable! This is the perfect place for a good old fashioned component—define the display once and then reuse the component on the homepage and the article display page. Both `ArticlesCell` and `ArticleCell` will display our new component. Let's Redwood-up a component (I just invented that phrase):
+Now let's display the actual post instead of just dumping the query result. We could copy the display from the articles on the homepage, but that's not very reusable! This is the perfect place for a good old fashioned component—define the display once and then reuse the component on the homepage and the article display page. Both `ArticlesCell` and `ArticleCell` will display our new component. Let's Cedar-up a component (I just invented that phrase):
 
 ```bash
 yarn rw g component Article
@@ -853,7 +853,7 @@ And there we go! We should be able to move back and forth between the homepage a
 
 :::info
 
-If you like what you've been seeing from the router, you can dive deeper into the [Redwood Router](../../router.md) guide.
+If you like what you've been seeing from the router, you can dive deeper into the [Cedar Router](../../router.md) guide.
 
 :::
 

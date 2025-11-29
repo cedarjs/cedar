@@ -1158,7 +1158,7 @@ That's where the Cedar Console comes in! In a new terminal instance, try this:
 yarn rw console
 ```
 
-You'll see a standard Node console but with most of Redwood's internals already imported and ready to go! Most importantly, that includes the database. Try it out:
+You'll see a standard Node console but with most of Cedar's internals already imported and ready to go! Most importantly, that includes the database. Try it out:
 
 ```bash
 > db.comment.findMany()
@@ -1263,7 +1263,7 @@ Great! Now that we've tested out the syntax let's use that in the service. You c
 
 :::info Where's the `await`?
 
-Calls to `db` return a Promise, which you would normally need to add an `await` to in order to get the results right away. Having to add `await` every time is pretty annoying though, so the Cedar console does it for you—Redwood `await`s so you don't have to!
+Calls to `db` return a Promise, which you would normally need to add an `await` to in order to get the results right away. Having to add `await` every time is pretty annoying though, so the Cedar console does it for you—Cedar `await`s so you don't have to!
 
 :::
 
@@ -1280,7 +1280,7 @@ One way to think about your codebase is a "top to bottom" view where the top is 
       |
     React    ─┐
       |       │
-   Graph QL   ├─ Redwood
+   Graph QL   ├─ Cedar
       |       │
    Services  ─┘
       |
@@ -1334,7 +1334,7 @@ export const standard = defineScenario({
         body: 'I like trees',
         post: {
           create: {
-            title: 'Redwood Leaves',
+            title: 'Cedar Leaves',
             body: 'The quick brown fox jumped over the lazy dog.',
           },
         },
@@ -1368,7 +1368,7 @@ export const standard = defineScenario({
         body: 'I like trees',
         post: {
           create: {
-            title: 'Redwood Leaves',
+            title: 'Cedar Leaves',
             body: 'The quick brown fox jumped over the lazy dog.',
           },
         },

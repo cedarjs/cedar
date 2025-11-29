@@ -103,7 +103,7 @@ But when you’re ready, learn how to use it in the section at the end [“GitPo
 
 #### Step 1: Cedar Framework
 
-1. **Fork the [Redwood Framework](https://github.com/cedarjs/cedar)** into a personal repo
+1. **Fork the [Cedar Framework](https://github.com/cedarjs/cedar)** into a personal repo
 2. Using GitHub Desktop, **open the Framework Codebase** in a VS Code workspace
 3. Commands to “**start fresh**” when working on the Framework
    - `yarn install`: This installs the package dependencies in /node_modules using Yarn package manager. This command is the same as just typing `yarn`. Also, if you ever switch branches and want to make sure the install dependencies are correct, you can run `yarn install --force` (shorthand `yarn -f`).
@@ -188,7 +188,7 @@ Within your Framework directory, use the following tools and commands to test yo
 4. **Run through the Cypress E2E integration tests**: `yarn e2e`
 5. **Check Yarn resolutions and package.json format**: `yarn check`
 
-All of these checks are included in Redwood’s GitHub PR Continuous Integration (CI) automation. However, it’s good practice to understand what they do by using them locally. The E2E tests aren’t something we use every time anymore (because it takes a while), but you should learn how to use it because it comes in handy when your code is failing tests on GitHub and you need to diagnose.
+All of these checks are included in Cedar’s GitHub PR Continuous Integration (CI) automation. However, it’s good practice to understand what they do by using them locally. The E2E tests aren’t something we use every time anymore (because it takes a while), but you should learn how to use it because it comes in handy when your code is failing tests on GitHub and you need to diagnose.
 
 > **Heads up for Windows Devs**
 > The Cypress E2E does _not_ work on Windows. Two options are available if needed:

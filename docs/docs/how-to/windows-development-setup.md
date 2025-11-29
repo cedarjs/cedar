@@ -23,7 +23,7 @@ We recommend you install the latest `nvm-setup.zip` of [**nvm-windows**](https:/
 
 ![3-git_run_as_admin.png](https://user-images.githubusercontent.com/18013532/146685300-1762a00a-26cb-4f8b-b480-c6aba4e26b89.png)
 
-Redwood uses the LTS version of Node. To install, run the following commands inside the terminal:
+Cedar uses the LTS version of Node. To install, run the following commands inside the terminal:
 
 ```bash
 $ nvm install lts --latest-npm
@@ -48,7 +48,7 @@ _Example of Node.js, npm, and Yarn installation steps_
 
 You now have everything ready to build your Cedar app.
 
-Next, you should start the amazing [**Redwood Tutorial**](tutorial/chapter1/installation.md) to learn how to use the framework.
+Next, you should start the amazing [**Cedar Tutorial**](tutorial/chapter1/installation.md) to learn how to use the framework.
 
 Or run `yarn create cedar-app myApp` to get started with a new project.
 

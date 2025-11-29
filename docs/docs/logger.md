@@ -292,7 +292,7 @@ Logging with Prisma query statement output.
 
 #### GraphQL Logging
 
-Redwood-specific [GraphQL log data](graphql.md#logging) included by the the `useRedwoodLogger` envelop plug-in is supported:
+Cedar-specific [GraphQL log data](graphql.md#logging) included by the the `useRedwoodLogger` envelop plug-in is supported:
 
 - Request Id
 - User-Agent
@@ -675,7 +675,7 @@ You can pass the [following properties](https://github.com/ovhemert/pino-papertr
 
 ### Prisma Logging
 
-Redwood declares an instance of the PrismaClient
+Cedar declares an instance of the PrismaClient
 
 Prisma is configured to log at the:
 

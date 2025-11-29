@@ -125,7 +125,7 @@ This gives us a very simple form and some validation that the user is entering a
 Now let's talk to the API and get some data for real. We can do that in one of two ways:
 
 1. Have the client (React app running in the browser) talk to the API directly
-2. Have our own server (or serverless function, in the case of Redwood) talk to the API, and have the client talk to _our_ server.
+2. Have our own server (or serverless function, in the case of Cedar) talk to the API, and have the client talk to _our_ server.
 
 We'll build out an example of both types of integration below.
 
@@ -285,7 +285,7 @@ If you weighed the pros and cons presented earlier and found too many cons on th
 1. Provide a way for the client to talk to our server(less function)
 2. A way for our server(less function) to talk to the third party API
 
-Redwood comes with GraphQL integration built in so that seems like a logical way to get our client talking to our serverless function. Let's create a GraphQL SDL (to define the API interface for the client) and a service (to actually implement the logic of talking to the third-party API).
+Cedar comes with GraphQL integration built in so that seems like a logical way to get our client talking to our serverless function. Let's create a GraphQL SDL (to define the API interface for the client) and a service (to actually implement the logic of talking to the third-party API).
 
 > **Doesn't Cedar have a generator for this?**
 >

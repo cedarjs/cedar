@@ -168,7 +168,7 @@ web/
 ```css
 /* in e.g. index.css */
 @font-face {
-  font-family: 'Redwood Neue';
+  font-family: 'Cedar Neue';
   /* 👇 it's a relative path */
   // highlight-next-line
   src: url('/fonts/RedwoodNeue.woff2')

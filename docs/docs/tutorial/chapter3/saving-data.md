@@ -149,7 +149,7 @@ What's `CreateContactInput` and `UpdateContactInput`? Cedar follows the GraphQL 
 
 :::info
 
-Redwood assumes your code won't try to set a value on any field named `id` or `createdAt` so it left those out of the Input types, but if your database allowed either of those to be set manually you can update `CreateContactInput` or `UpdateContactInput` and add them.
+Cedar assumes your code won't try to set a value on any field named `id` or `createdAt` so it left those out of the Input types, but if your database allowed either of those to be set manually you can update `CreateContactInput` or `UpdateContactInput` and add them.
 
 :::
 
@@ -734,7 +734,7 @@ create({
     input: {
       name: 'Rob',
       email: 'rob@cedarjs.com',
-      message: 'I love Redwood!',
+      message: 'I love Cedar!',
     },
   },
 })
@@ -1644,7 +1644,7 @@ Now you can be sure you won't be getting some old jalopy!
 
 Since we're not redirecting after the form submits, we should at least clear out the form fields. This requires we get access to a `reset()` function that's part of [React Hook Form](https://react-hook-form.com/), but we don't have access to it with the basic usage of `<Form>` (like we're currently using).
 
-Redwood includes a hook called `useForm()` (from React Hook Form) which is normally called for us within `<Form>`. In order to reset the form we need to invoke that hook ourselves. But the functionality that `useForm()` provides still needs to be used in `Form`. Here's how we do that.
+Cedar includes a hook called `useForm()` (from React Hook Form) which is normally called for us within `<Form>`. In order to reset the form we need to invoke that hook ourselves. But the functionality that `useForm()` provides still needs to be used in `Form`. Here's how we do that.
 
 First we'll import `useForm`:
 

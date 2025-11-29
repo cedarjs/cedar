@@ -44,7 +44,7 @@ At the end, it says...
 > - MSAL.js 2.0 with auth code flow (recommended)
 > - MSAL.js 1.0 with implicit flow
 
-Redwood uses [MSAL.js 2.0 with auth code flow](https://learn.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-registration#redirect-uri-msaljs-20-with-auth-code-flow), so follow the steps there next.
+Cedar uses [MSAL.js 2.0 with auth code flow](https://learn.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-registration#redirect-uri-msaljs-20-with-auth-code-flow), so follow the steps there next.
 When it asks you for a Redirect URI, enter `http://localhost:8910` and `http://localhost:8910/login`, and copy these into your `.env` file as `AZURE_ACTIVE_DIRECTORY_REDIRECT_URI` and `AZURE_ACTIVE_DIRECTORY_LOGOUT_REDIRECT_URI`:
 
 :::tip Can't add multiple URI's?

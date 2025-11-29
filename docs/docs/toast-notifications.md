@@ -9,7 +9,7 @@ Because they pop up like a piece of toast from a toaster!
 
 ![Example toast animation](https://user-images.githubusercontent.com/300/110032806-71024680-7ced-11eb-8d69-7f462929815e.gif)
 
-Redwood supports these notifications out of the box thanks to the [react-hot-toast](https://react-hot-toast.com/) package.
+Cedar supports these notifications out of the box thanks to the [react-hot-toast](https://react-hot-toast.com/) package.
 We'll refer you to their [docs](https://react-hot-toast.com/docs) since they're very thorough, but here's enough to get you going.
 
 ### Add the `Toaster` Component

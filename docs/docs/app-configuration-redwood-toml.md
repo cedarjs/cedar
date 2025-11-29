@@ -23,14 +23,14 @@ One of the premier places you can configure your Cedar app is `redwood.toml`. By
 
 These are listed by default because they're the ones that you're most likely to configure, but there are plenty more available.
 
-You can think of `redwood.toml` as a frontend for configuring Redwood's build tools.
+You can think of `redwood.toml` as a frontend for configuring Cedar's build tools.
 For certain options, instead of having to configure build tools directly, there's quick access via `redwood.toml`.
 
 ## [web]
 
 | Key                           | Description                                                                                                     | Default                                                         |
 | :---------------------------- | :-------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------- |
-| `title`                       | Title of your Cedar app                                                                                         | `'Redwood App'`                                                 |
+| `title`                       | Title of your Cedar app                                                                                         | `'Cedar App'`                                                   |
 | `port`                        | Port for the web server to listen at                                                                            | `8910`                                                          |
 | `apiUrl`                      | URL to your api server. This can be a relative URL in which case it acts like a proxy, or a fully-qualified URL | `'/.redwood/functions'`                                         |
 | `includeEnvironmentVariables` | Environment variables made available to the web side during dev and build                                       | `[]`                                                            |
@@ -135,7 +135,7 @@ There's actually a lot more you can do here. For more, see Vite's docs on [`prev
   stories = true
 ```
 
-Many of Redwood's generators create Jest tests or Storybook stories.
+Many of Cedar's generators create Jest tests or Storybook stories.
 Understandably, this can be lot of files, and sometimes you don't want all of them, either because you don't plan on using Jest or Storybook, or are just getting started and don't want the overhead.
 These options allows you to disable the generation of test and story files.
 

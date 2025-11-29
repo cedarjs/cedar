@@ -4,7 +4,7 @@ description: If you have to configure Vite, here's how
 
 # Vite Configuration
 
-Redwood uses Vite. One of Redwood's tenets is convention over configuration.
+Cedar uses Vite. One of Cedar's tenets is convention over configuration.
 
 Vite is an awesome build tool, but we don't want it to be something that you have to be familiar with to be productive.
 So it's worth repeating that you don't have to do any of this, because we configure everything you will need out of the box with a Cedar Vite plugin.
@@ -33,7 +33,7 @@ Checkout Vite's docs on [configuration](https://vitejs.dev/config/)
 
 ### Sass and Tailwind CSS
 
-Redwood is already configured to use Sass, if the packages are there:
+Cedar is already configured to use Sass, if the packages are there:
 
 ```
 yarn workspace web add -D sass sass-loader
@@ -49,7 +49,7 @@ yarn cedar setup ui tailwindcss
 
 ## Vite Dev Server
 
-Redwood uses Vite's preview server for local development.
+Cedar uses Vite's preview server for local development.
 When you run `yarn rw dev`, keys in your `redwood.toml`'s `[web]` table—like `port` and `apiUrl`—are used as vite preview server options (in this case, [preview.port](https://vitejs.dev/config/preview-options.html#preview-port) and [preview.proxy](https://vitejs.dev/config/preview-options.html#preview-proxy) respectively).
 
 > You can peek at all the out-of-the-box configuration for your Vite preview server in the [CedarJS Vite plugin](https://github.com/cedarjs/cedar/blob/main/packages/vite/src/index.ts)

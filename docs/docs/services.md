@@ -4,7 +4,7 @@ description: Put all your business logic in one place
 
 # Services
 
-Redwood aims to put all your business logic in one place—Services. These can be used by your GraphQL API or any other place in your backend code. Cedar does all the annoying stuff for you, just write your business logic!
+Cedar aims to put all your business logic in one place—Services. These can be used by your GraphQL API or any other place in your backend code. Cedar does all the annoying stuff for you, just write your business logic!
 
 ## Overview
 
@@ -44,7 +44,7 @@ Finally, Services can also be called from [serverless functions](serverless-func
 
 ## Service Validations
 
-Redwood includes a feature we call Service Validations. These simplify an extremely common task: making sure that incoming data is formatted properly before continuing. These validations are meant to be included at the start of your Service function and will throw an error if conditions are not met:
+Cedar includes a feature we call Service Validations. These simplify an extremely common task: making sure that incoming data is formatted properly before continuing. These validations are meant to be included at the start of your Service function and will throw an error if conditions are not met:
 
 ```jsx
 import {
@@ -94,11 +94,11 @@ export const createUser = async ({ input }) => {
 
 ### Displaying to the User
 
-If you're using [Redwood's scaffolds](cli-commands.md#generate-scaffold) then you'll see requisite error messages when trying to save a form that runs into these validation errors automatically:
+If you're using [Cedar's scaffolds](cli-commands.md#generate-scaffold) then you'll see requisite error messages when trying to save a form that runs into these validation errors automatically:
 
 ![image](https://user-images.githubusercontent.com/300/138919184-89eddd9e-8ee7-4956-b7ed-ba8daaa0f6ea.png)
 
-Otherwise you'll need to use the `error` property that you can [destructure](https://www.apollographql.com/docs/react/data/mutations/#executing-a-mutation) from `useMutation()` and display an element containing the error message (Redwood's [form helpers](/docs/forms) will do some of the heavy lifting for you for displaying the error):
+Otherwise you'll need to use the `error` property that you can [destructure](https://www.apollographql.com/docs/react/data/mutations/#executing-a-mutation) from `useMutation()` and display an element containing the error message (Cedar's [form helpers](/docs/forms) will do some of the heavy lifting for you for displaying the error):
 
 ```jsx {13,21}
 import { Form, FormError, Label, TextField, Submit } from '@cedarjs/forms'
@@ -786,7 +786,7 @@ This makes sure that the user that's logged in and creating the post cannot reus
 
 ## Caching
 
-Redwood provides a simple [LRU cache](https://www.baeldung.com/java-lru-cache) for your services. With an LRU cache you never need to worry about manually expiring or updating cache items. You either read an existing item (if its **key** is found) or create a new cached item if it isn't. This means that over time the cache will get bigger and bigger until it hits a memory or disk usage limit, but you don't care: the cache software is responsible for removing the oldest/least used members to make more room. For many applications, its entire database resultset may fit in cache!
+Cedar provides a simple [LRU cache](https://www.baeldung.com/java-lru-cache) for your services. With an LRU cache you never need to worry about manually expiring or updating cache items. You either read an existing item (if its **key** is found) or create a new cached item if it isn't. This means that over time the cache will get bigger and bigger until it hits a memory or disk usage limit, but you don't care: the cache software is responsible for removing the oldest/least used members to make more room. For many applications, its entire database resultset may fit in cache!
 
 How does a cache work? At its simplest, a cache is just a big chunk of memory or disk that stores key/value pairs. A unique key is used to lookup a value—the value being what you wanted to cache. The trick with a cache is selecting a key that makes the data unique among all the other data being cached, but that it itself (the key) contains enough uniqueness that you can safely discard it when something in the computed value changes, and you want to save a new value instead. More on that in [Choosing a Good Key](#choosing-a-good-key) below.
 
@@ -872,7 +872,7 @@ For this reason we always recommend that you add an `updatedAt` column to all of
 
 :::info
 
-If you're using [Redwood Record](/docs/redwoodrecord) pretty soon you'll be able to cache a record by just passing the instance as the key, and it will automatically create the same key behind the scenes for you:
+If you're using [Cedar Record](/docs/redwoodrecord) pretty soon you'll be able to cache a record by just passing the instance as the key, and it will automatically create the same key behind the scenes for you:
 
 ```js
 cache(product, () => {
@@ -1019,7 +1019,7 @@ export const { cache, cacheFindMany } = createCache(client, {
 })
 ```
 
-is passing it to Redwood's own service cache code, so that it can log cache hits, misses, or errors.
+is passing it to Cedar's own service cache code, so that it can log cache hits, misses, or errors.
 
 #### Options
 

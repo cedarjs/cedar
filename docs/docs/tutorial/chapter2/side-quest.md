@@ -1,8 +1,8 @@
 # Side Quest: How Cedar Works with Data
 
-Redwood likes GraphQL. We think it's the API of the future. Our GraphQL implementation is built with [Apollo](https://www.apollographql.com/) (on the client) and [GraphQL Yoga & Envelop](https://www.graphql-yoga.com) (on the server). Remember in our file system layout, there was a directory `api/src/functions` and a single file in there, `graphql.{js,ts}`. If you were to deploy your app to a [serverless](https://en.wikipedia.org/wiki/Serverless_computing) stack (which we will do later in the [Deployment](../chapter4/deployment.md) section), that `graphql.{js,ts}` file would be compiled into a serverless function and would become the GraphQL API endpoint. Here's how a typical GraphQL query works its way through your app:
+Cedar likes GraphQL. We think it's the API of the future. Our GraphQL implementation is built with [Apollo](https://www.apollographql.com/) (on the client) and [GraphQL Yoga & Envelop](https://www.graphql-yoga.com) (on the server). Remember in our file system layout, there was a directory `api/src/functions` and a single file in there, `graphql.{js,ts}`. If you were to deploy your app to a [serverless](https://en.wikipedia.org/wiki/Serverless_computing) stack (which we will do later in the [Deployment](../chapter4/deployment.md) section), that `graphql.{js,ts}` file would be compiled into a serverless function and would become the GraphQL API endpoint. Here's how a typical GraphQL query works its way through your app:
 
-![Redwood Data Flow](https://user-images.githubusercontent.com/300/75402679-50bdd180-58ba-11ea-92c9-bb5a5f4da659.png)
+![Cedar Data Flow](https://user-images.githubusercontent.com/300/75402679-50bdd180-58ba-11ea-92c9-bb5a5f4da659.png)
 
 The front-end uses [Apollo Client](https://www.apollographql.com/docs/react/) to create a GraphQL payload sent to [GraphQL Yoga](https://www.graphql-yoga.com) and [Envelop](https://www.envelop.dev/docs), which that `graphql.{js,ts}` file acts as the entry-point to.
 
@@ -10,7 +10,7 @@ The `*.sdl.{js,ts}` files in `api/src/graphql` define the GraphQL [Object](https
 
 Normally you would write a [resolver map](https://www.graphql-tools.com/docs/resolvers) that contains all your resolvers and explains to your GraphQL server how to map them to your SDL. But putting business logic directly in the resolver map would result in a very big file and horrible reusability, so you'd be well advised to extract all the logic out into a library of functions, import them, and call them from the resolver map, remembering to pass all the arguments through. Ugh, that's a lot of effort and boilerplate, and still doesn't result in very good reusability.
 
-Redwood has a better way! Remember the `api/src/services` directory? Cedar will automatically import and map resolvers from the corresponding **services** file onto your SDL. At the same time, it allows you to write those resolvers in a way that makes them easy to call as regular functions from other resolvers or services. That's a lot of awesomeness to contemplate, so let's show an example.
+Cedar has a better way! Remember the `api/src/services` directory? Cedar will automatically import and map resolvers from the corresponding **services** file onto your SDL. At the same time, it allows you to write those resolvers in a way that makes them easy to call as regular functions from other resolvers or services. That's a lot of awesomeness to contemplate, so let's show an example.
 
 Consider the following SDL JavaScript snippet:
 

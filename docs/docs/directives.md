@@ -4,11 +4,11 @@ description: Customize GraphQL execution
 
 # Directives
 
-Redwood Directives are a powerful feature, supercharging your GraphQL-backed Services.
+Cedar Directives are a powerful feature, supercharging your GraphQL-backed Services.
 
 You can think of directives like "middleware" that let you run reusable code during GraphQL execution to perform tasks like authentication and formatting.
 
-Redwood uses them to make it a snap to protect your API Services from unauthorized access.
+Cedar uses them to make it a snap to protect your API Services from unauthorized access.
 
 Here we call those types of directives **Validators**.
 
@@ -70,7 +70,7 @@ But, don't fret: Cedar provides an easy and ergonomic way to generate and write 
 
 ## What is a Cedar Directive?
 
-Redwood directives are purposeful.
+Cedar directives are purposeful.
 They come in two flavors: **Validators** and **Transformers**.
 
 Whatever flavor of directive you want, all Cedar directives must have the following properties:
@@ -100,7 +100,7 @@ Finally after execution is done, then the directive can inspect the `resolvedVal
 
 ### Validators
 
-Validators integrate with Redwood's authentication to evaluate whether or not a field, query, or mutation is permitted—that is, if the request context's `currentUser` is authenticated or belongs to one of the permitted roles.
+Validators integrate with Cedar's authentication to evaluate whether or not a field, query, or mutation is permitted—that is, if the request context's `currentUser` is authenticated or belongs to one of the permitted roles.
 
 Validators should throw an Error such as `AuthenticationError` or `ForbiddenError` to deny access and simply return to allow.
 
@@ -253,7 +253,7 @@ As noted in the [GraphQL spec](https://graphql.org/learn/queries/#directives):
 
 > Directives can be useful to get out of situations where you otherwise would need to do string manipulation to add and remove fields in your query. Server implementations may also add experimental features by defining completely new directives.
 
-Here's a helpful guide for deciding when you should use one of Redwood's Validator or Transformer directives:
+Here's a helpful guide for deciding when you should use one of Cedar's Validator or Transformer directives:
 
 |     | Use                                                                                                              | Directive                                                                                                                                                               | Custom?                                                                                                               | Type         |
 | --- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------ |
@@ -374,7 +374,7 @@ Then, you can chain the `@dateFormat` Transformer, to just return the date porti
 
 ## GraphQL Handler Setup
 
-Redwood makes it easy to code, organize, and map your directives into your GraphQL schema.
+Cedar makes it easy to code, organize, and map your directives into your GraphQL schema.
 Simply add them to the `directives` directory and the `createGraphQLHandler` does all the work.
 
 You simply add them to the `directives` directory and the `createGraphQLHandler` will do all the work.

@@ -8,7 +8,7 @@ If you do prefer to set this up manually or are just curious how OAuth and dbAut
 
 ## Prerequisites
 
-This article assumes you have an app set up and are using dbAuth. We're going to make use of the dbAuth system to validate that you're who you say you are. If you just want to try this code out in a sandbox app, you can create a test blog app from scratch by checking out the [Redwood codebase](https://github.com/cedarjs/cedar) itself and then running a couple of commands:
+This article assumes you have an app set up and are using dbAuth. We're going to make use of the dbAuth system to validate that you're who you say you are. If you just want to try this code out in a sandbox app, you can create a test blog app from scratch by checking out the [Cedar codebase](https://github.com/cedarjs/cedar) itself and then running a couple of commands:
 
 ```bash
 yarn install
@@ -116,7 +116,7 @@ We're using several of our new ENV vars here, and need to tell Cedar to make the
 
 ```toml title="/redwood.toml"
 [web]
-  title = "Redwood App"
+  title = "Cedar App"
   port = "${WEB_DEV_PORT:8910}"
   apiUrl = "/.redwood/functions"
   # highlight-next-line
@@ -561,7 +561,7 @@ If everything worked then on clicking **Login with GitHub** we should now see a 
 
 ![User details](https://user-images.githubusercontent.com/300/245922971-caaeb3ed-9231-4edf-aac5-9ea76b488824.png)
 
-You can take a look in the database and verify that the User and Identity were created. Start up the [Prisma Studio](https://www.prisma.io/studio) (which is already included with Redwood):
+You can take a look in the database and verify that the User and Identity were created. Start up the [Prisma Studio](https://www.prisma.io/studio) (which is already included with Cedar):
 
 ```bash
 yarn rw prisma studio

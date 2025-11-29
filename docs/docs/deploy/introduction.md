@@ -4,7 +4,7 @@ description: Deploy to serverless or serverful providers
 
 # Introduction to Deployment
 
-Redwood is designed for both serverless and traditional infrastructure deployments, offering a unique continuous deployment process in both cases:
+Cedar is designed for both serverless and traditional infrastructure deployments, offering a unique continuous deployment process in both cases:
 
 1. code is committed to a repository on GitHub, GitLab, or Bitbucket, which triggers the deployment
 2. the Cedar API Side and Web Side are individually prepared via a build process
@@ -22,7 +22,7 @@ Currently, these are the officially supported deploy targets:
 - [Serverless.com](https://serverless.com)
 - [Vercel.com](https://vercel.com)
 
-Redwood has a CLI generator that adds the code and configuration required by the specified provider (see the [CLI Doc](cli-commands.md#deploy-config) for more information):
+Cedar has a CLI generator that adds the code and configuration required by the specified provider (see the [CLI Doc](cli-commands.md#deploy-config) for more information):
 
 ```shell
 yarn rw setup deploy <provider>
@@ -77,7 +77,7 @@ yarn rw deploy baremetal [--first-run]
 
 ### 3. Prisma and Database
 
-Redwood uses Prisma for managing database access and migrations. The settings in `api/prisma/schema.prisma` must include the correct deployment database, e.g. postgresql, and the database connection string.
+Cedar uses Prisma for managing database access and migrations. The settings in `api/prisma/schema.prisma` must include the correct deployment database, e.g. postgresql, and the database connection string.
 
 To use PostgreSQL in production, include this in your `schema.prisma`:
 
@@ -102,4 +102,4 @@ yarn rw prisma migrate dev # creates and applies a new Prisma DB migration
 
 Any environment variables used locally, e.g. in your `env.defaults` or `.env`, must also be added to your hosting provider settings. (See documentation specific to your provider.)
 
-Additionally, if your application uses env vars on the Web Side, you must configure Redwood's build process to make them available in production. See the [Redwood Environment Variables doc](environment-variables.md) for instructions.
+Additionally, if your application uses env vars on the Web Side, you must configure Cedar's build process to make them available in production. See the [Cedar Environment Variables doc](environment-variables.md) for instructions.

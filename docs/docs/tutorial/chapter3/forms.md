@@ -33,7 +33,7 @@ const BlogLayout = ({ children }) => {
     <>
       <header>
         <h1>
-          <Link to={routes.home()}>Redwood Blog</Link>
+          <Link to={routes.home()}>Cedar Blog</Link>
         </h1>
         <nav>
           <ul>
@@ -74,7 +74,7 @@ const BlogLayout = ({ children }: BlogLayoutProps) => {
     <>
       <header>
         <h1>
-          <Link to={routes.home()}>Redwood Blog</Link>
+          <Link to={routes.home()}>Cedar Blog</Link>
         </h1>
         <nav>
           <ul>
@@ -513,7 +513,7 @@ export default ContactPage
 </TabItem>
 </Tabs>
 
-See the new `<TextAreaField>` component here which generates an HTML `<textarea>` but that contains Redwood's form goodness:
+See the new `<TextAreaField>` component here which generates an HTML `<textarea>` but that contains Cedar's form goodness:
 
 <img src="https://user-images.githubusercontent.com/300/146103219-c8dc958d-ea2b-4bea-8cb8-62dcd0be6783.png" />
 
@@ -613,7 +613,7 @@ Try filling out the form and submitting and you should get a console message wit
 
 ### Validation
 
-"Okay, Cedar tutorial author," you're saying, "what's the big deal? You built up Redwood's form helpers as The Next Big Thing but there are plenty of libraries that will let me skip creating controlled inputs manually. So what?" And you're right! Anyone can fill out a form _correctly_ (although there are plenty of QA folks who would challenge that statement), but what happens when someone leaves something out, or makes a mistake, or tries to haxorz our form? Now who's going to be there to help? Cedar, that's who!
+"Okay, Cedar tutorial author," you're saying, "what's the big deal? You built up Cedar's form helpers as The Next Big Thing but there are plenty of libraries that will let me skip creating controlled inputs manually. So what?" And you're right! Anyone can fill out a form _correctly_ (although there are plenty of QA folks who would challenge that statement), but what happens when someone leaves something out, or makes a mistake, or tries to haxorz our form? Now who's going to be there to help? Cedar, that's who!
 
 All three of these fields should be required in order for someone to send a message to us. Let's enforce that with the standard HTML `required` attribute:
 
@@ -1065,7 +1065,7 @@ export default ContactPage
 
 <img src="https://user-images.githubusercontent.com/300/146104498-8b24ef5c-66e7-48a2-b4ad-0432fff181dd.png" />
 
-Oooo, what if the _label_ could change as well? It can, but we'll need Redwood's custom `<Label>` component for that. Note that the `htmlFor` attribute of `<label>` becomes the `name` prop on `<Label>`, just like with the other Cedar form components. And don't forget the import:
+Oooo, what if the _label_ could change as well? It can, but we'll need Cedar's custom `<Label>` component for that. Note that the `htmlFor` attribute of `<label>` becomes the `name` prop on `<Label>`, just like with the other Cedar form components. And don't forget the import:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -1302,10 +1302,10 @@ Well, what do you think? Was it worth the hype? A couple of new components and y
 
 :::info
 
-Redwood's forms are built on top of [React Hook Form](https://react-hook-form.com/) so there is even more functionality available than we've documented here. Visit the [Form docs](../../forms.md) to learn more about all form functionalities.
+Cedar's forms are built on top of [React Hook Form](https://react-hook-form.com/) so there is even more functionality available than we've documented here. Visit the [Form docs](../../forms.md) to learn more about all form functionalities.
 
 :::
 
-Redwood has one more trick up its sleeve when it comes to forms but we'll save that for when we're actually submitting one to the server.
+Cedar has one more trick up its sleeve when it comes to forms but we'll save that for when we're actually submitting one to the server.
 
 Having a contact form is great, but only if you actually get the contact somehow. Let's create a database table to hold the submitted data and create our first GraphQL mutation.

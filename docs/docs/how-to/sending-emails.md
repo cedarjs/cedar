@@ -52,7 +52,7 @@ yarn rw prisma migrate dev --name email
 
 ### Scaffold
 
-One of Redwood's stand-out features is the scaffolds. We'll be using scaffolds here to quickly get a nice visual list of the users in our database to work with.
+One of Cedar's stand-out features is the scaffolds. We'll be using scaffolds here to quickly get a nice visual list of the users in our database to work with.
 
 ```zsh
 yarn rw g scaffold User

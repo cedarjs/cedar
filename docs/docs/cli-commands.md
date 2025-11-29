@@ -1,5 +1,5 @@
 ---
-description: A comprehensive reference of Redwood's CLI
+description: A comprehensive reference of Cedar's CLI
 ---
 
 # Command Line Interface
@@ -190,7 +190,7 @@ Start development servers for api and web.
 yarn redwood dev [side..]
 ```
 
-`yarn redwood dev api` starts the Cedar dev server and `yarn redwood dev web` starts the Vite dev server with Redwood's config.
+`yarn redwood dev api` starts the Cedar dev server and `yarn redwood dev web` starts the Vite dev server with Cedar's config.
 
 | Argument           | Description                                                                            |
 | :----------------- | :------------------------------------------------------------------------------------- |
@@ -236,7 +236,7 @@ Deploy your redwood project to a hosting provider target.
 
 **Netlify, Vercel, and Render**
 
-For hosting providers that auto deploy from Git, the deploy command runs the set of steps to build, apply production DB changes, and apply data migrations. In this context, it is often referred to as a Build Command. _Note: for Render, which uses traditional infrastructure, the command also starts Redwood's api server._
+For hosting providers that auto deploy from Git, the deploy command runs the set of steps to build, apply production DB changes, and apply data migrations. In this context, it is often referred to as a Build Command. _Note: for Render, which uses traditional infrastructure, the command also starts Cedar's api server._
 
 **AWS**
 
@@ -302,7 +302,7 @@ The [Netlify CLI](https://cli.netlify.com) still works well for [linking your pr
 
 ### deploy render
 
-Build (web) and Start (api) command for Render deploy. (For usage instructions, see the Render [Deploy Redwood](https://render.com/docs/deploy-redwood) doc.)
+Build (web) and Start (api) command for Render deploy. (For usage instructions, see the Render [Deploy Cedar](https://render.com/docs/deploy-redwood) doc.)
 
 ```
 yarn redwood deploy render <side>
@@ -532,7 +532,7 @@ Generate a component.
 yarn redwood generate component <name>
 ```
 
-Redwood loves function components and makes extensive use of React Hooks, which are only enabled in function components.
+Cedar loves function components and makes extensive use of React Hooks, which are only enabled in function components.
 
 | Arguments & Options  | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
@@ -649,7 +649,7 @@ yarn redwood generate directive <name>
 
 #### Usage
 
-See [Redwood Directives](directives.md).
+See [Cedar Directives](directives.md).
 
 **Destroying**
 
@@ -1564,7 +1564,7 @@ Cedar's `prisma` command is a lightweight wrapper around the Prisma CLI. It's th
 > ...
 > ```
 
-Since `yarn cedar prisma` is just an entry point into all the database commands that the Prisma CLI has to offer, we won't try to provide an exhaustive reference of everything you can do with it here. Instead what we'll do is focus on some of the most common commands; those that you'll be running on a regular basis, and how they fit into Redwood's workflows.
+Since `yarn cedar prisma` is just an entry point into all the database commands that the Prisma CLI has to offer, we won't try to provide an exhaustive reference of everything you can do with it here. Instead what we'll do is focus on some of the most common commands; those that you'll be running on a regular basis, and how they fit into Cedar's workflows.
 
 For the complete list of commands, see the [Prisma CLI Reference](https://www.prisma.io/docs/reference/api-reference/command-reference). It's the authority.
 
@@ -1772,7 +1772,7 @@ yarn rw record init
 
 ## redwood-tools (alias rwt)
 
-Redwood's companion CLI development tool. You'll be using this if you're contributing to Cedar. See [Contributing](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#cli-reference-redwood-tools) in the Cedar repo.
+Cedar's companion CLI development tool. You'll be using this if you're contributing to Cedar. See [Contributing](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#cli-reference-redwood-tools) in the Cedar repo.
 
 ## setup
 
@@ -1827,7 +1827,7 @@ yarn redwood setup cache <client>
 
 ### setup generator
 
-Copies a given generator's template files to your local app for customization. The next time you generate that type again, it will use your custom template instead of Redwood's default.
+Copies a given generator's template files to your local app for customization. The next time you generate that type again, it will use your custom template instead of Cedar's default.
 
 ```
 yarn rw setup generator <name>
@@ -1934,7 +1934,7 @@ In order to use [Netlify Dev](https://www.netlify.com/products/dev/) you need to
 
 ### setup jobs
 
-This command adds the necessary packages and files defining the configuration for Redwood's [Background Jobs](background-jobs) processing.
+This command adds the necessary packages and files defining the configuration for Cedar's [Background Jobs](background-jobs) processing.
 
 ```
 yarn redwood setup jobs

@@ -328,7 +328,7 @@ If we are _not_ showing the summary, then we'll show the comments. Take a look a
 
 :::info Shouldn't the `CommentsCell` cause an actual GraphQL request? How does this work?
 
-Redwood has added some functionality around Storybook so that if you're testing a component that itself isn't a Cell (like the `Article` component) but that renders a cell (like `CommentsCell`), then it will mock the GraphQL and use the `standard` mock that goes along with that Cell. Pretty cool, huh?
+Cedar has added some functionality around Storybook so that if you're testing a component that itself isn't a Cell (like the `Article` component) but that renders a cell (like `CommentsCell`), then it will mock the GraphQL and use the `standard` mock that goes along with that Cell. Pretty cool, huh?
 
 :::
 

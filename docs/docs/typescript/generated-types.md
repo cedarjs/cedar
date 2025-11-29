@@ -1,5 +1,5 @@
 ---
-description: A look at automatic type generation in Redwood
+description: A look at automatic type generation in Cedar
 ---
 
 # Generated Types
@@ -73,7 +73,7 @@ export const QUERY = gql`
 `
 ```
 
-Redwood generates types for both the data returned from the query and the query's variables.
+Cedar generates types for both the data returned from the query and the query's variables.
 These generated types will use the query's name—in this case, `FindBlogPostQuery`—so you can import them like this:
 
 ```ts title="web/src/components/BlogPostCell.tsx"
@@ -143,7 +143,7 @@ These types will also be handled automatically. But if you're returning a differ
 
 ## Under the Hood
 
-Redwood uses [GraphQL Code Generator](https://www.graphql-code-generator.com) (aka graphql-codegen) to generate types for your GraphQL operations and SDLs. It's even configured to use the types from your generated Prisma Client, to make sure that your resolvers are strongly typed!
+Cedar uses [GraphQL Code Generator](https://www.graphql-code-generator.com) (aka graphql-codegen) to generate types for your GraphQL operations and SDLs. It's even configured to use the types from your generated Prisma Client, to make sure that your resolvers are strongly typed!
 
 ### Customizing GraphQL Code Generation
 
@@ -151,7 +151,7 @@ While the default settings are configured so that things just work️, you can c
 
 :::info Curious about the defaults?
 
-You can find them [here](https://github.com/cedarjs/cedar/blob/main/packages/internal/src/generate/graphqlCodeGen.ts) in Redwood's source. Look for the `generateTypeDefGraphQLWeb` and `generateTypeDefGraphQLApi` functions.
+You can find them [here](https://github.com/cedarjs/cedar/blob/main/packages/internal/src/generate/graphqlCodeGen.ts) in Cedar's source. Look for the `generateTypeDefGraphQLWeb` and `generateTypeDefGraphQLApi` functions.
 
 :::
 
