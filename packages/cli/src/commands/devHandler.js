@@ -180,7 +180,7 @@ export const handler = async ({
   const isEsm = rootPackageJson.type === 'module'
   const serverWatchCommand = isEsm
     ? `cedarjs-api-server-watch`
-    : `cedar-api-server-watch`
+    : `rw-api-server-watch`
 
   /** @type {Record<string, import('concurrently').CommandObj>} */
   const jobs = {

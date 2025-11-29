@@ -94,7 +94,7 @@ jobs:
         run: yarn cedar setup --help && yarn cedar setup ui --help
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
-      # Keeping this as `yarn rw` to make sure I don't break using `cedar` until I
+      # Keeping this as `yarn rw` to make sure I don't break using `rw` until I
       # intend to
       - name: Run `rw g page`
         run: yarn rw g page ciTest
