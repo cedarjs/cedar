@@ -51,7 +51,7 @@
     "concurrently": "8.2.2",
     "publint": "0.3.12",
     "tsx": "4.20.5",
-    "typescript": "5.9.2",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
   },
   "publishConfig": {

@@ -42,7 +42,7 @@
     "core-js": "3.42.0",
     "fast-glob": "3.3.3",
     "graphql": "16.9.0",
-    "typescript": "5.9.2"
+    "typescript": "5.9.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
