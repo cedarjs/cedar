@@ -2,7 +2,7 @@
  * This file allows you to configure the Fastify Server settings
  * used by the RedwoodJS dev server.
  *
- * It also applies when running RedwoodJS with `yarn rw serve`.
+ * It also applies when running CedarJS with `yarn cedar serve`.
  *
  * For the Fastify server options that you can set, see:
  * https://www.fastify.io/docs/latest/Reference/Server/#factory
@@ -34,9 +34,7 @@ const configureFastify = async (fastify, options) => {
   if (options.side === 'api') {
     fastify.log.trace({ custom: { options } }, 'Configuring api side')
 
-    fastify.get(`/rest/v1/users/get/:userId`, async function (request, reply) {
-      const { userId } = request.params
-
+    fastify.get(`/rest/v1/users/get/:userId`, async function (_request, reply) {
       return reply.send({
         id: 1,
       })

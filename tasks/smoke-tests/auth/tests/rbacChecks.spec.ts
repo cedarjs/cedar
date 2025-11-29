@@ -106,7 +106,7 @@ export default async ({ args }) => {
   )
 
   console.log(`Giving ${adminEmail} ADMIN role....`)
-  await execa(`yarn rw exec makeAdmin --email ${adminEmail}`, {
+  await execa(`yarn cedar exec makeAdmin --email ${adminEmail}`, {
     cwd: process.env.REDWOOD_TEST_PROJECT_PATH,
     stdio: 'inherit',
     shell: true,

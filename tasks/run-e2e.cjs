@@ -132,7 +132,7 @@ const runTarsync = () => {
 const runDevServerInBackground = () => {
   try {
     console.log('Starting CedarJS dev server...')
-    execa('yarn rw dev --no-generate --fwd="--no-open"', {
+    execa('yarn cedar dev --no-generate --fwd="--no-open"', {
       cwd: CEDARJS_PROJECT_DIRECTORY,
       shell: true,
       stdio: 'inherit',

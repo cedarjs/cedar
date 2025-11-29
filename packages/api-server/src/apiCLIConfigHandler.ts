@@ -31,7 +31,7 @@ export async function handler(options: APIParsedOptions = {}) {
   console.log(ansis.dim.italic('Took ' + (Date.now() - timeStart) + ' ms'))
 
   // We have this logic for `apiServerHandler` because this is the only
-  // handler called by the watch bin (which is called by `yarn rw dev`).
+  // handler called by the watch bin (which is called by `yarn cedar dev`).
   let address = fastify.listeningOrigin
   if (process.env.NODE_ENV !== 'production') {
     address = address.replace(/http:\/\/\[::\]/, 'http://localhost')

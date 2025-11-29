@@ -1,5 +1,5 @@
 // Setup for background jobs. Jobs themselves live in api/src/jobs
-// Execute jobs in dev with `yarn rw jobs work`
+// Execute jobs in dev with `yarn cedar jobs work`
 // See https://cedarjs.com/docs/background-jobs
 
 import { PrismaAdapter, JobManager } from '@cedarjs/jobs'

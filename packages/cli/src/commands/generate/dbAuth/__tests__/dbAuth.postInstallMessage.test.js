@@ -54,7 +54,7 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
         /Look in LoginPage, Sign/,
       )
       expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
-        /yarn rw setup auth dbAuth/,
+        /yarn cedar setup auth dbAuth/,
       )
     })
 
@@ -78,7 +78,7 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
         /Look in LoginPage, Sign/,
       )
       expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
-        /yarn rw setup auth dbAuth/,
+        /yarn cedar setup auth dbAuth/,
       )
     })
 
@@ -113,7 +113,7 @@ export { useAuth }
         /Look in LoginPage, Sign/,
       )
       expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
-        /yarn rw setup auth dbAuth/,
+        /yarn cedar setup auth dbAuth/,
       )
     })
 
@@ -165,7 +165,7 @@ export const AuthProvider = ({ children }: Props) => {
         /Look in LoginPage, Sign/,
       )
       expect(vi.mocked(console).log.mock.calls.at(-1)[0]).toMatch(
-        /yarn rw setup auth dbAuth/,
+        /yarn cedar setup auth dbAuth/,
       )
     })
 
@@ -189,7 +189,7 @@ export const AuthProvider = ({ children }: Props) => {
         /Look in LoginPage, Sign/,
       )
       expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
-        /yarn rw setup auth dbAuth/,
+        /yarn cedar setup auth dbAuth/,
       )
     })
 
@@ -213,7 +213,7 @@ export const { AuthProvider, useAuth } = createAuth(dbAuthClient)
         /look for the `REDIRECT`/,
       )
       expect(vi.mocked(console).log.mock.calls.at(-1)[0]).not.toMatch(
-        /yarn rw setup auth dbAuth/,
+        /yarn cedar setup auth dbAuth/,
       )
     })
   })

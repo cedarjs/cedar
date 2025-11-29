@@ -201,7 +201,7 @@ const globalTasks = () =>
         title: 'Converting to Javascript',
         task: () => {
           return execa(
-            'yarn rw ts-to-js',
+            'yarn cedar ts-to-js',
             [],
             getExecaOptions(OUTPUT_PROJECT_PATH),
           )
@@ -212,7 +212,7 @@ const globalTasks = () =>
         title: 'Upgrading to latest canary version',
         task: async () => {
           return execa(
-            'yarn rw upgrade -t canary',
+            'yarn cedar upgrade -t canary',
             [],
             getExecaOptions(OUTPUT_PROJECT_PATH),
           )
@@ -266,7 +266,7 @@ const globalTasks = () =>
         title: 'Running prisma migrate reset',
         task: () => {
           return execa(
-            'yarn rw prisma migrate reset',
+            'yarn cedar prisma migrate reset',
             ['--force'],
             getExecaOptions(OUTPUT_PROJECT_PATH),
           )
@@ -276,7 +276,7 @@ const globalTasks = () =>
         title: 'Lint --fix all the things',
         task: async () => {
           try {
-            await execa('yarn rw lint --fix', {
+            await execa('yarn cedar lint --fix', {
               shell: true,
               stdio: 'ignore',
               cleanup: true,

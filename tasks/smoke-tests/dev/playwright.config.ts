@@ -14,7 +14,7 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'yarn redwood dev --no-generate --fwd="--no-open"',
+    command: 'yarn cedar dev --no-generate --fwd="--no-open"',
     cwd: process.env.REDWOOD_TEST_PROJECT_PATH,
     // We wait for the api server to be ready instead of the web server
     // because web starts much faster with Vite.

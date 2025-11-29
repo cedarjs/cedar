@@ -18,7 +18,7 @@ const POST_RUN_INSTRUCTIONS = `Next steps...\n\n   ${c.warning(
   'After writing your migration, you can run it with:',
 )}
 
-     yarn rw dataMigrate up
+     yarn cedar dataMigrate up
 `
 
 const TEMPLATE_PATHS = {

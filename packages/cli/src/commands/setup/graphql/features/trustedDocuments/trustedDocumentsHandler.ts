@@ -36,7 +36,7 @@ export async function handler({ force }: { force: boolean }) {
       {
         title: 'Generating Trusted Documents store ...',
         task: () => {
-          execa.commandSync('yarn redwood generate types', { stdio: 'ignore' })
+          execa.commandSync('yarn cedar generate types', { stdio: 'ignore' })
         },
       },
       {

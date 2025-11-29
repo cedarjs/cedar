@@ -86,8 +86,8 @@ const getFlightcontrolJson = async (database) => {
     Prisma datasource provider is detected to be ${detectedDatabase}.
 
     Update your schema.prisma provider to be postgresql or mysql, then run
-    yarn rw prisma migrate dev
-    yarn rw setup deploy flightcontrol
+    yarn cedar prisma migrate dev
+    yarn cedar setup deploy flightcontrol
     `)
   }
 }

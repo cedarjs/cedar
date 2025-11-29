@@ -24,7 +24,7 @@ export const transformTSToJS = (filename: string, content: string) => {
 
   const babelFileResult = babel.transform(content, {
     filename,
-    // If you ran `yarn rw generate` in `./web` transformSync would import the `.babelrc.js` file,
+    // If you ran `yarn cedar generate` in `./web` transformSync would import the `.babelrc.js` file,
     // in `./web`? despite us setting `configFile: false`.
     cwd: process.env.NODE_ENV === 'test' ? undefined : getPaths().base,
     configFile: false,

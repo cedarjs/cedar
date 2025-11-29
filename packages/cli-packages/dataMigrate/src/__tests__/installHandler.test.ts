@@ -66,7 +66,7 @@ describe('installHandler', () => {
 
   it("the `createDatabaseMigrationCommand` hasn't unintentionally changed", () => {
     expect(createDatabaseMigrationCommand).toMatchInlineSnapshot(
-      `"yarn rw prisma migrate dev --name create_data_migrations --create-only"`,
+      `"yarn cedar prisma migrate dev --name create_data_migrations --create-only"`,
     )
   })
 

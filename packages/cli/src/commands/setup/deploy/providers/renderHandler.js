@@ -59,11 +59,11 @@ const getRenderYamlContent = async (database) => {
     Prisma datasource provider is detected to be ${detectedDatabase}.
 
     Option 1: Update your schema.prisma provider to be ${database}, then run
-    yarn rw prisma migrate dev
-    yarn rw setup deploy render --database ${database}
+    yarn cedar prisma migrate dev
+    yarn cedar setup deploy render --database ${database}
 
     Option 2: Rerun setup deploy command with current schema.prisma provider:
-    yarn rw setup deploy render --database ${detectedDatabase}`)
+    yarn cedar setup deploy render --database ${detectedDatabase}`)
   }
 }
 

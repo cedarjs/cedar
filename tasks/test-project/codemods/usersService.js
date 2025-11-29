@@ -1,8 +1,8 @@
-const body = `
-  return db.user.findUnique({ where: { id }})
-`
+// const body = `
+//   return db.user.findUnique({ where: { id }})
+// `
 
-// When running `yarn rw g sdl --no-crud user` we get a single service method
+// When running `yarn cedar g sdl --no-crud user` we get a single service method
 // that gets all users `return db.user.findMany()`. We want to rewrite that to
 // a method that returns a single user instead.
 export default (file, api) => {

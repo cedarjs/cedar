@@ -74,12 +74,12 @@ model RW_DataMigration {
 }`
 
 export const createDatabaseMigrationCommand =
-  'yarn rw prisma migrate dev --name create_data_migrations --create-only'
+  'yarn cedar prisma migrate dev --name create_data_migrations --create-only'
 
 export const notes = [
   '',
   c.warning("Don't forget to apply the migration when you're ready:"),
   '',
-  `  ${c.bold('yarn rw prisma migrate dev')}`,
+  `  ${c.bold('yarn cedar prisma migrate dev')}`,
   '',
 ].join('\n')

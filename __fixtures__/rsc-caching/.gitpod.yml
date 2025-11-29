@@ -9,7 +9,7 @@ tasks:
 
       yarn install
 
-    command: yarn rw build -v && yarn rw serve
+    command: yarn cedar build -v && yarn cedar serve
 ports:
   - port: 8910
     name: Cedar web application

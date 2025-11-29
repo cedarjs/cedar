@@ -23,7 +23,7 @@ export async function handler({ force }: { force: boolean }) {
         task: () => {
           if (!getConfig().experimental?.streamingSsr?.enabled) {
             throw new Error(
-              'The Streaming SSR experimental feature must be enabled before you can setup middleware.\n\nRun this command to setup streaming ssr: \n  yarn rw exp setup-streaming-ssr\n',
+              'The Streaming SSR experimental feature must be enabled before you can setup middleware.\n\nRun this command to setup streaming ssr: \n  yarn cedar exp setup-streaming-ssr\n',
             )
           }
         },

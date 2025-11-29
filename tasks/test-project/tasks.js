@@ -38,7 +38,7 @@ const createBuilder = (cmd) => {
   }
 }
 
-const createPage = createBuilder('yarn redwood g page')
+const createPage = createBuilder('yarn cedar g page')
 
 async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   OUTPUT_PATH = outputPath
@@ -159,7 +159,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   }
 
   const createLayout = async () => {
-    const createLayout = createBuilder('yarn redwood g layout')
+    const createLayout = createBuilder('yarn cedar g layout')
 
     await createLayout('blog')
 
@@ -170,7 +170,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   }
 
   const createComponents = async () => {
-    const createComponent = createBuilder('yarn redwood g component')
+    const createComponent = createBuilder('yarn cedar g component')
 
     await createComponent('blogPost')
 
@@ -198,7 +198,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   }
 
   const createCells = async () => {
-    const createCell = createBuilder('yarn redwood g cell')
+    const createCell = createBuilder('yarn cedar g cell')
 
     await createCell('blogPosts')
 
@@ -316,7 +316,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         title: 'Adding Tailwind',
         task: () => {
           return execa(
-            'yarn rw setup ui tailwindcss',
+            'yarn cedar setup ui tailwindcss',
             ['--force', linkWithLatestFwBuild && '--no-install'].filter(
               Boolean,
             ),
@@ -368,7 +368,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     fs.rmSync(dbAuthSetupPath, { recursive: true, force: true })
 
     await execa(
-      'yarn rw setup auth dbAuth --force --no-webauthn',
+      'yarn cedar setup auth dbAuth --force --no-webauthn',
       [],
       getExecaOptions(outputPath),
     )
@@ -386,7 +386,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     }
 
     await execa(
-      'yarn rw g dbAuth --no-webauthn --username-label=username --password-label=password',
+      'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
       [],
     )
 
@@ -488,7 +488,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
         // keep it outside of BlogLayout
         title: 'Creating double rendering test page',
         task: async () => {
-          const createPage = createBuilder('yarn redwood g page')
+          const createPage = createBuilder('yarn cedar g page')
           await createPage('double')
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
@@ -596,7 +596,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     ])
   }
 
-  const generateScaffold = createBuilder('yarn rw g scaffold')
+  const generateScaffold = createBuilder('yarn cedar g scaffold')
 
   return new Listr(
     [
@@ -610,7 +610,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
           addModel(user)
 
           return execa(
-            `yarn rw prisma migrate dev --name create_post_user`,
+            `yarn cedar prisma migrate dev --name create_post_user`,
             [],
             getExecaOptions(outputPath),
           )
@@ -647,7 +647,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
           addModel(contact)
 
           await execa(
-            `yarn rw prisma migrate dev --name create_contact`,
+            `yarn cedar prisma migrate dev --name create_contact`,
             [],
             getExecaOptions(outputPath),
           )
@@ -704,7 +704,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
       {
         title: 'Add users service',
         task: async () => {
-          const generateSdl = createBuilder('yarn redwood g sdl --no-crud')
+          const generateSdl = createBuilder('yarn cedar g sdl --no-crud')
 
           await generateSdl('user')
 
@@ -737,7 +737,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
 
           fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
 
-          return createBuilder('yarn redwood g types')()
+          return createBuilder('yarn cedar g types')()
         },
       },
       {
@@ -804,7 +804,7 @@ async function streamingTasks(outputPath, { verbose }) {
       title: 'Enable streaming-ssr experiment',
       task: async () => {
         const setupExperiment = createBuilder(
-          'yarn rw experimental setup-streaming-ssr',
+          'yarn cedar experimental setup-streaming-ssr',
         )
         await setupExperiment('--force')
       },
@@ -865,7 +865,7 @@ async function fragmentsTasks(outputPath, { verbose }) {
     {
       title: 'Generate SDLs for produce and stall',
       task: async () => {
-        const generateSdl = createBuilder('yarn redwood g sdl')
+        const generateSdl = createBuilder('yarn cedar g sdl')
 
         await generateSdl('stall')
         await generateSdl('produce')

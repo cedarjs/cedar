@@ -9,13 +9,13 @@ export const deployHandler = ({ build, prisma, dm: dataMigrate }) => {
 
   let commandSet = []
   if (build) {
-    commandSet.push('yarn rw build --verbose')
+    commandSet.push('yarn cedar build --verbose')
   }
   if (prisma) {
-    commandSet.push('yarn rw prisma migrate deploy')
+    commandSet.push('yarn cedar prisma migrate deploy')
   }
   if (dataMigrate) {
-    commandSet.push('yarn rw data-migrate up')
+    commandSet.push('yarn cedar data-migrate up')
   }
 
   const joinedCommands = commandSet.join(' && ')

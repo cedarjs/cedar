@@ -85,7 +85,7 @@ stdout = (await execa.command(`${command} --help`)).stdout
 assert.equal(stdout, expectedBinHelp)
 
 // ─── Bin No Pending Data Migrations ──────────────────────────────────────────
-await execa.command('yarn rw prisma generate')
+await execa.command('yarn cedar prisma generate')
 
 console.log('Running bin no pending data migrations test')
 stdout = (await execa.command(command)).stdout
@@ -110,11 +110,11 @@ await parser.parse(['install'])
 // check that install worked...
 
 // ─── Bin ─────────────────────────────────────────────────────────────────────
-await execa.command('yarn rw prisma migrate dev --name test', {
+await execa.command('yarn cedar prisma migrate dev --name test', {
   stdio: 'inherit',
 })
 
-await execa.command('yarn rw g data-migration test', {
+await execa.command('yarn cedar g data-migration test', {
   stdio: 'inherit',
 })
 

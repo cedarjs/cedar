@@ -46,7 +46,7 @@ jobs:
 
       - name: Build for production
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-        run: yarn rw build
+        run: yarn cedar build
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 

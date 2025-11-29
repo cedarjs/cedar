@@ -36,7 +36,7 @@ body:
       label: What's your environment? (If it applies)
       render: shell
       description: |
-        Run `yarn rw info` and paste the output here.
+        Run `yarn cedar info` and paste the output here.
       placeholder: |
         System:
           OS: macOS 12.3.1

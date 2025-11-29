@@ -32,6 +32,6 @@ export const handler = () => {
       targetPaths: [path.join(getPaths().web.src, authFile)],
     })
 
-    setOutput('All done! Run `yarn rw lint --fix` to prettify your code')
+    setOutput('All done! Run `yarn cedar lint --fix` to prettify your code')
   })
 }

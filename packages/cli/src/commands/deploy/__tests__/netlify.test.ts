@@ -56,7 +56,7 @@ it('should export a handler function', async () => {
   await deployNetlify.handler({ build: true, prisma: false, dm: true })
 
   expect(execa).toHaveBeenCalledWith(
-    'yarn rw build --verbose && yarn rw data-migrate up',
+    'yarn cedar build --verbose && yarn cedar data-migrate up',
     {
       shell: true,
       stdio: 'inherit',

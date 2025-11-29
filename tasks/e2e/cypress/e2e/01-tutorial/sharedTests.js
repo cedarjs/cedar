@@ -64,14 +64,14 @@ export const test_first_page = () =>
   it('1. Our First Page', () => {
     // https://cedarjs.com/docs/tutorial/chapter1/first-page
     cy.visit('http://localhost:8910')
-    cy.exec(`cd ${BASE_DIR}; yarn redwood generate page home / --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar generate page home / --force`)
     cy.get('h1').should('contain', 'HomePage')
   })
 
 export const test_pages = () =>
   it('2. A Second Page and a Link', () => {
     // https://cedarjs.com/docs/tutorial/chapter1/second-page
-    cy.exec(`cd ${BASE_DIR}; yarn redwood generate page about --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar generate page about --force`)
     cy.writeFile(
       path.join(BASE_DIR, 'web/src/pages/HomePage/HomePage.jsx'),
       Step2_1_PagesHome,
@@ -88,7 +88,7 @@ export const test_pages = () =>
 
 export const test_layouts = () =>
   it('3. Layouts', () => {
-    cy.exec(`cd ${BASE_DIR}; yarn redwood generate layout blog --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar generate layout blog --force`)
     cy.writeFile(
       path.join(BASE_DIR, 'web/src/layouts/BlogLayout/BlogLayout.jsx'),
       Step3_1_LayoutsBlog,
@@ -119,10 +119,10 @@ export const test_dynamic = () =>
     cy.exec(`rm ${BASE_DIR}/api/db/dev.db`, { failOnNonZeroExit: false })
     // need to also handle case where Prisma Client be out of sync
     cy.exec(
-      `cd ${BASE_DIR}; yarn dlx rimraf ./api/db/migrations && yarn rw prisma migrate reset --skip-seed --force`,
+      `cd ${BASE_DIR}; yarn dlx rimraf ./api/db/migrations && yarn cedar prisma migrate reset --skip-seed --force`,
     )
-    cy.exec(`cd ${BASE_DIR}; yarn rw prisma migrate dev --name setup`)
-    cy.exec(`cd ${BASE_DIR}; yarn rw g scaffold post --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar prisma migrate dev --name setup`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar g scaffold post --force`)
 
     // Wait for API server to be available.
     waitForApiSide()
@@ -180,7 +180,7 @@ export const test_dynamic = () =>
 
 export const test_cells = () =>
   it('5. Cells', () => {
-    cy.exec(`cd ${BASE_DIR}; yarn rw g cell BlogPosts --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar g cell BlogPosts --force`)
     cy.writeFile(
       path.join(BASE_DIR, 'web/src/components/BlogPostsCell/BlogPostsCell.jsx'),
       Step5_1_ComponentsCellBlogPost,
@@ -209,9 +209,9 @@ export const test_cells = () =>
 export const test_routing_params = () =>
   it('6. Routing Params', () => {
     // https://redwoodjs.com/docs/tutorial/chapter2/routing-params
-    cy.exec(`cd ${BASE_DIR}; yarn rw g page BlogPost --force`)
-    cy.exec(`cd ${BASE_DIR}; yarn rw g cell BlogPost --force`)
-    cy.exec(`cd ${BASE_DIR}; yarn rw g component BlogPost --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar g page BlogPost --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar g cell BlogPost --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar g component BlogPost --force`)
 
     cy.writeFile(path.join(BASE_DIR, 'web/src/Routes.jsx'), Step6_1_Routes)
     cy.writeFile(
@@ -274,7 +274,7 @@ export const test_routing_params = () =>
 export const test_forms = () =>
   it("7. Everyone's Favorite Thing to Build: Forms", () => {
     // https://redwoodjs.com/docs/tutorial/everyone-s-favorite-thing-to-build-forms
-    cy.exec(`cd ${BASE_DIR}; yarn rw g page contact --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar g page contact --force`)
     cy.writeFile(
       path.join(BASE_DIR, 'web/src/layouts/BlogLayout/BlogLayout.jsx'),
       Step7_1_BlogLayout,
@@ -309,7 +309,7 @@ export const test_saving_data = () =>
     // navigate back out
 
     // Create a CRUD contacts service
-    cy.exec(`cd ${BASE_DIR}; yarn rw g sdl contact --force --crud`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar g sdl contact --force --crud`)
 
     cy.writeFile(
       path.join(BASE_DIR, 'web/src/pages/ContactPage/ContactPage.jsx'),

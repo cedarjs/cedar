@@ -58,9 +58,9 @@ export const handler = async ({ force, ...args }) => {
     'After modifying your script, you can invoke it like:',
   )}
 
-     yarn rw exec ${args.name}
+     yarn cedar exec ${args.name}
 
-     yarn rw exec ${args.name} --param1 true
+     yarn cedar exec ${args.name} --param1 true
 `
 
   validateName(args.name)

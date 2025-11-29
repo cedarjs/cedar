@@ -93,7 +93,7 @@ function _router_route(route: RWRoute): TreeItem2 {
       kind: 'route',
       openComponent: route.page ? Command_open(route.page.uri) : undefined,
       openRoute: Command_open(route.location),
-      openInBrowser: Command_cli(`rw dev --open='${route.path}'`),
+      openInBrowser: Command_cli(`cedar dev --open='${route.path}'`),
     },
   }
 }

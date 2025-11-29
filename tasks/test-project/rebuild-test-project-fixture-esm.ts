@@ -444,7 +444,7 @@ async function runCommand() {
       )
 
       await exec(
-        'yarn rw g script i/am/nested',
+        'yarn cedar g script i/am/nested',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -452,7 +452,7 @@ async function runCommand() {
       // Verify that the scripts are added and included in the list of
       // available scripts
       const list = await exec(
-        'yarn rw exec',
+        'yarn cedar exec',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -462,33 +462,33 @@ async function runCommand() {
         !list.stdout.includes('i/am/nested') ||
         !list.stdout.includes('one/two/myNestedScript')
       ) {
-        console.error('yarn rw exec output', list.stdout, list.stderr)
+        console.error('yarn cedar exec output', list.stdout, list.stderr)
 
         throw new Error('Scripts not included in list')
       }
 
       // Verify that the scripts can be executed
       const runFromRoot = await exec(
-        'yarn rw exec one/two/myNestedScript',
+        'yarn cedar exec one/two/myNestedScript',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
 
       if (!runFromRoot.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn rw exec one/two/myNestedScript` output')
+        console.error('`yarn cedar exec one/two/myNestedScript` output')
         console.error(runFromRoot.stdout, runFromRoot.stderr)
 
         throw new Error('Script not executed successfully')
       }
 
       const runFromScripts = await exec(
-        'yarn rw exec one/two/myNestedScript',
+        'yarn cedar exec one/two/myNestedScript',
         [],
         getExecaOptions(path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one')),
       )
 
       if (!runFromScripts.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn rw exec one/two/myNestedScript` output')
+        console.error('`yarn cedar exec one/two/myNestedScript` output')
         console.error(runFromScripts.stdout, runFromScripts.stderr)
 
         throw new Error('Script not executed successfully')
@@ -501,7 +501,7 @@ async function runCommand() {
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
-        'yarn rw prisma migrate reset',
+        'yarn cedar prisma migrate reset',
         ['--force'],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )

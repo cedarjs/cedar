@@ -34,7 +34,7 @@ afterEach(() => {
   vi.mocked(console).log.mockRestore()
 })
 
-describe('yarn rw exec --list', () => {
+describe('yarn cedar exec --list', () => {
   it('includes nested scripts', async () => {
     await handler({ list: true })
     const scriptPath = path

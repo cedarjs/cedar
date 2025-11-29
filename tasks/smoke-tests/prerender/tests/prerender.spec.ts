@@ -274,7 +274,7 @@ test('prerender with broken gql query', async () => {
   fs.writeFileSync(cellPath, blogPostsCell.replace('createdAt', 'timestamp'))
 
   try {
-    await execa.command(`yarn rw prerender`, {
+    await execa.command(`yarn cedar prerender`, {
       cwd: redwoodProjectPath,
       shell: true,
     })
@@ -288,7 +288,7 @@ test('prerender with broken gql query', async () => {
   fs.writeFileSync(cellPath, blogPostsCell)
 
   // Make sure to restore any potentially broken/missing prerendered pages
-  await execa.command(`yarn rw prerender`, {
+  await execa.command(`yarn cedar prerender`, {
     cwd: redwoodProjectPath,
     shell: true,
   })

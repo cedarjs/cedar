@@ -7,7 +7,7 @@ generator photonjs {
   provider = "prisma-client-js"
 }
 
-// Define your own models here and run `yarn rw db save` to create
+// Define your own models here and run `yarn cedar db save` to create
 // migrations for them.
 
 model Todo {
