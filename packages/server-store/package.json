@@ -32,7 +32,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@types/fs-extra": "11.0.4",
     "tsx": "4.20.5",
-    "typescript": "5.9.2"
+    "typescript": "5.9.3"
   },
   "publishConfig": {
     "access": "public"
