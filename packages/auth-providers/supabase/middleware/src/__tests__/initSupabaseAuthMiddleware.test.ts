@@ -12,7 +12,7 @@ import type { SupabaseAuthMiddlewareOptions } from '../index.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
-  '../../../../../../__fixtures__/example-todo-main',
+  '../../../../../../__fixtures__/test-project',
 )
 
 vi.mock('jsonwebtoken', () => {
@@ -108,6 +108,7 @@ describe('initSupabaseAuthMiddleware()', () => {
     const serverAuthState = req.serverAuthState.get()
     expect(serverAuthState).toEqual(unauthenticatedServerAuthState)
   })
+
   it('passes through when no auth-provider cookie', async () => {
     const [middleware] = initSupabaseAuthMiddleware(options)
     const request = new Request('http://localhost:8911', {
@@ -295,17 +296,20 @@ describe('initSupabaseAuthMiddleware()', () => {
 
   it('an exception when getting the currentUser clears out serverAuthState and cookies', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
+
     const optionsWithUserMetadata: SupabaseAuthMiddlewareOptions = {
       getCurrentUser: async () => {
-        // this simulates a decoding error or some other issue like tampering with the cookie so the Supabase session is invalid
-        // or an error in the getCurrentUser function
+        // this simulates a decoding error or some other issue like tampering
+        // with the cookie so the Supabase session is invalid, or an error in
+        // the getCurrentUser function
         throw new Error('Error getting current user')
       },
     }
 
     const [middleware] = initSupabaseAuthMiddleware(optionsWithUserMetadata)
 
-    // the default cookie name will always be sb-<project_ref>-auth-token (e.g. sb-example-auth-token )
+    // the default cookie name will always be sb-<project_ref>-auth-token (e.g.
+    // sb-example-auth-token)
     const request = new Request('http://localhost:8911/authenticated-request', {
       method: 'GET',
       headers: new Headers({
@@ -320,8 +324,8 @@ describe('initSupabaseAuthMiddleware()', () => {
     expect(result).toBeDefined()
     expect(req).toBeDefined()
 
-    // when an exception is thrown, such as when tampering with the cookie,
-    //the serverAuthState should be cleared
+    // when an exception is thrown, such as when tampering with the cookie, the
+    // serverAuthState should be cleared
     const serverAuthState = req.serverAuthState.get()
     expect(serverAuthState).toEqual({
       ...unauthenticatedServerAuthState,

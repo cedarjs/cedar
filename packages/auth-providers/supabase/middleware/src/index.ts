@@ -78,7 +78,7 @@ const initSupabaseAuthMiddleware = ({
         roles: getRoles ? getRoles(decoded) : [],
       })
     } catch (e) {
-      console.error(e, 'Error in Supabase Auth Middleware')
+      console.error('Error in Supabase Auth Middleware', e)
       clearAuthState(req, res)
       return res
     }
