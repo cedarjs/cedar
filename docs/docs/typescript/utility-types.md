@@ -1,5 +1,5 @@
 ---
-description: Utility types exposed by Redwood
+description: Utility types exposed by Cedar
 ---
 
 # Cedar Utility Types

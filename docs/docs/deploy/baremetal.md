@@ -6,7 +6,7 @@ description: Have complete control by hosting your own code
 
 Once you've grown beyond the confines and limitations of the cloud deployment providers, it's time to get serious: hosting your own code on big iron. Prepare for performance like you've only dreamed of! Also be prepared for IT and infrastructure responsibilities like you've only had nightmares of.
 
-With Redwood's Baremetal deployment option, the source (like your dev machine) will SSH into one or more remote machines and execute commands in order to update your codebase, run any database migrations and restart services.
+With Cedar's Baremetal deployment option, the source (like your dev machine) will SSH into one or more remote machines and execute commands in order to update your codebase, run any database migrations and restart services.
 
 Deploying from a client (like your own development machine) consists of running a single command:
 
@@ -647,13 +647,13 @@ Now restart your service and it should be available on port 80:
 pm2 restart serve
 ```
 
-This should get your site available on port 80 (for HTTP), but you really want it available on port 443 (for HTTPS). That won't be easy if you continue to use Redwood's internal web server. See the next recipe for a solution.
+This should get your site available on port 80 (for HTTP), but you really want it available on port 443 (for HTTPS). That won't be easy if you continue to use Cedar's internal web server. See the next recipe for a solution.
 
 ### Cedar Serves Api, Nginx Serves Web Side
 
-[nginx](https://www.nginx.com/) is a very robust, dedicated web server that can do a better job of serving our static web-side files than Redwood's own built-in web server (Fastify) which isn't really configured in Cedar for a high traffic, production website.
+[nginx](https://www.nginx.com/) is a very robust, dedicated web server that can do a better job of serving our static web-side files than Cedar's own built-in web server (Fastify) which isn't really configured in Cedar for a high traffic, production website.
 
-If nginx will be serving our web side, what about api-side? Redwood's internal API server will be running, but on the default port of 8911. But browsers are going to want to connect on port 80 (HTTP) or 443 (HTTPS). nginx takes care of this as well: it will [proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) (forward) any requests to a path of your choosing (like the default of `/.redwood/functions`) to port 8911 behind the scenes, then return the response to the browser.
+If nginx will be serving our web side, what about api-side? Cedar's internal API server will be running, but on the default port of 8911. But browsers are going to want to connect on port 80 (HTTP) or 443 (HTTPS). nginx takes care of this as well: it will [proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) (forward) any requests to a path of your choosing (like the default of `/.redwood/functions`) to port 8911 behind the scenes, then return the response to the browser.
 
 This doc isn't going to go through installing and getting nginx running, there are plenty of resources for that available. What we will show is a successful nginx configuration file used by several Cedar apps currently in production.
 

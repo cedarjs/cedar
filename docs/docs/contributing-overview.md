@@ -8,7 +8,7 @@ slug: contributing
 
 Love Cedar and want to get involved? You’re in the right place and in good company! As of this writing, there are more than [250 contributors](https://github.com/cedarjs/cedar/blob/main/README.md#contributors) who have helped make Cedar awesome by contributing code and documentation. This doesn't include all those who participate in the vibrant, helpful, and encouraging Forums and Discord, which are both great places to get started if you have any questions.
 
-There are several ways you can contribute to Redwood:
+There are several ways you can contribute to Cedar:
 
 - join the [community Forums](https://community.redwoodjs.com/) and [Discord server](https://cedarjs.com/discord) — encourage and help others 🙌
 - [triage issues on the repo](https://github.com/cedarjs/cedar/issues) and [review PRs](https://github.com/cedarjs/cedar/pulls) 🩺
@@ -43,7 +43,7 @@ And you thought all this was just about opening a PR 🤣 Yes, it’s a super re
 
 ## What should I work on?
 
-Even if you know the mechanics, it’s hard to get started without a starting place. Our best advice is this — dive into the Cedar Tutorial, read the docs, and build your own experiment with Cedar. Along the way, you’ll find typos, out-of-date (or missing) documentation, code that could work better, or even opportunities for improving and adding features. You’ll be engaging in the Forums and Chat and developing a feel for priorities and needs. This way, you’ll naturally follow your own interests and sooner than later intersect “things you’re interested in” + “ways to help improve Redwood”.
+Even if you know the mechanics, it’s hard to get started without a starting place. Our best advice is this — dive into the Cedar Tutorial, read the docs, and build your own experiment with Cedar. Along the way, you’ll find typos, out-of-date (or missing) documentation, code that could work better, or even opportunities for improving and adding features. You’ll be engaging in the Forums and Chat and developing a feel for priorities and needs. This way, you’ll naturally follow your own interests and sooner than later intersect “things you’re interested in” + “ways to help improve Cedar”.
 
 There are other more direct ways to get started as well, which are outlined below.
 
@@ -51,7 +51,7 @@ There are other more direct ways to get started as well, which are outlined belo
 
 The Cedar Core Team is working publicly — progress is updated daily on the [Release Project Board](https://github.com/orgs/redwoodjs/projects/11).
 
-Eventually, all this leads you back to Redwood’s GitHub Issues page. Here you’ll find open items that need help, which are organized by labels. There are four labels helpful for contributing:
+Eventually, all this leads you back to Cedar’s GitHub Issues page. Here you’ll find open items that need help, which are organized by labels. There are four labels helpful for contributing:
 
 1. [Good First Issue](https://github.com/cedarjs/cedar/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22): these items are more likely to be an accessible entry point to the Framework. It’s less about skill level and more about focused scope.
 2. [Help Wanted](https://github.com/cedarjs/cedar/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22): these items especially need contribution help from the community.
@@ -67,7 +67,7 @@ Lastly, it can often be helpful to start with brief discussion in the community 
 
 ## Contributing Code
 
-Redwood's composed of many packages that are designed to work together. Some of these packages are designed to be used outside Cedar too!
+Cedar's composed of many packages that are designed to work together. Some of these packages are designed to be used outside Cedar too!
 
 Before you start contributing, you'll want to set up your local development environment. The Cedar repo's top-level [contributing guide](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#local-development) walks you through this. Make sure to give it an initial read.
 
@@ -82,11 +82,11 @@ What you want to do not on the roadmap? Well, still go for it! We love spikes an
 | [`@cedarjs/api-server`](https://github.com/cedarjs/cedar/blob/main/packages/api-server/README.md)             | Run a Cedar app using Fastify server (alternative to serverless API)                                                                                                                                         |
 | [`@cedarjs/api`](https://github.com/cedarjs/cedar/blob/main/packages/api/README.md)                           | Infrastructure components for your applications UI including logging, webhooks, authentication decoders and parsers, as well as tools to test custom serverless functions and webhooks                       |
 | [`@cedarjs/auth`](https://github.com/cedarjs/cedar/blob/main/packages/auth/README.md#contributing)            | A lightweight wrapper around popular SPA authentication libraries                                                                                                                                            |
-| [`@cedarjs/cli`](https://github.com/cedarjs/cedar/blob/main/packages/cli/README.md)                           | All the commands for Redwood's built-in CLI                                                                                                                                                                  |
+| [`@cedarjs/cli`](https://github.com/cedarjs/cedar/blob/main/packages/cli/README.md)                           | All the commands for Cedar's built-in CLI                                                                                                                                                                    |
 | [`@cedarjs/codemods`](https://github.com/cedarjs/cedar/blob/main/packages/codemods/README.md)                 | Codemods that automate upgrading a Cedar project                                                                                                                                                             |
 | [`@cedarjs/core`](https://github.com/cedarjs/cedar/blob/main/packages/core/README.md)                         | Defines babel plugins and config files                                                                                                                                                                       |
 | [`@cedarjs/create-cedar-app`](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/README.md) | Enables `yarn create cedar-app`&mdash;downloads the latest release of Cedar and extracts it into the supplied directory                                                                                      |
-| [`@cedarjs/eslint-config`](https://github.com/cedarjs/cedar/blob/main/packages/eslint-config/README.md)       | Defines Redwood's eslint config                                                                                                                                                                              |
+| [`@cedarjs/eslint-config`](https://github.com/cedarjs/cedar/blob/main/packages/eslint-config/README.md)       | Defines Cedar's eslint config                                                                                                                                                                                |
 | [`@cedarjs/forms`](https://github.com/cedarjs/cedar/blob/main/packages/forms/README.md)                       | Provides Form helpers                                                                                                                                                                                        |
 | [`@cedarjs/graphql-server`](https://github.com/cedarjs/cedar/blob/main/packages/graphql-server/README.md)     | Exposes functions to build the GraphQL API, provides services with `context`, and a set of envelop plugins to supercharge your GraphQL API with logging, authentication, error handling, directives and more |
 | [`@cedarjs/internal`](https://github.com/cedarjs/cedar/blob/main/packages/internal/README.md)                 | Provides tooling to parse Cedar configs and get a project's paths                                                                                                                                            |
@@ -96,7 +96,7 @@ What you want to do not on the roadmap? Well, still go for it! We love spikes an
 | [`@cedarjs/structure`](https://github.com/cedarjs/cedar/blob/main/packages/structure/README.md)               | Provides a way to build, validate and inspect an object graph that represents a complete Cedar project                                                                                                       |
 | [`@cedarjs/telemetry`](https://github.com/cedarjs/cedar/blob/main/packages/telemetry/README.md)               | Provides functionality for anonymous data collection                                                                                                                                                         |
 | [`@cedarjs/testing`](https://github.com/cedarjs/cedar/blob/main/packages/testing/README.md)                   | Provides helpful defaults when testing a Cedar project's web side                                                                                                                                            |
-| [`@cedarjs/web`](https://github.com/cedarjs/cedar/blob/main/packages/web/README.md)                           | Configures a Redwood's app web side: wraps the Apollo Client in `RedwoodApolloProvider`; defines the Cell HOC                                                                                                |
+| [`@cedarjs/web`](https://github.com/cedarjs/cedar/blob/main/packages/web/README.md)                           | Configures a Cedar's app web side: wraps the Apollo Client in `RedwoodApolloProvider`; defines the Cell HOC                                                                                                  |
 
 ## Contributing Docs
 
@@ -133,7 +133,7 @@ How To's are tutorial-style content focused on a specific problem-solution. They
 
 If you write it, will they read it? We think they will&mdash;if they can find it.
 
-After you've finished writing, step back for a moment and consider the word(s) or phrase(s) people will use to find what you just wrote. For example, let's say you were writing a doc about configuring a Cedar app. If you didn't know much about configuring a Cedar app, a heading (in the nav bar to the left) like "redwood.toml" wouldn't make much sense, even though it _is_ the main configuration file. You'd probably look for "Redwood Config" or "Settings", or type "how to change Cedar App settings" in the "Search the docs" bar up top, or in Google.
+After you've finished writing, step back for a moment and consider the word(s) or phrase(s) people will use to find what you just wrote. For example, let's say you were writing a doc about configuring a Cedar app. If you didn't know much about configuring a Cedar app, a heading (in the nav bar to the left) like "redwood.toml" wouldn't make much sense, even though it _is_ the main configuration file. You'd probably look for "Cedar Config" or "Settings", or type "how to change Cedar App settings" in the "Search the docs" bar up top, or in Google.
 
 That is to say, the most useful headings aren't always the most literal ones. Indexing is more than just underlining the "important" words in a text&mdash;it's identifying and locating the concepts and topics that are the most relevant to our readers, the users of our documentation.
 

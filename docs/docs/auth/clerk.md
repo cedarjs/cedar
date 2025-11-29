@@ -109,10 +109,10 @@ export const getCurrentUser = async (
 
 ## Avoiding feature duplication
 
-Redwood's Clerk integration is based on [Clerk's React SDK](https://clerk.dev/docs/reference/clerk-react/installation).
+Cedar's Clerk integration is based on [Clerk's React SDK](https://clerk.dev/docs/reference/clerk-react/installation).
 This means that there's some duplication between the features in the SDK and the ones in `@cedarjs/auth-clerk-web`.
-For example, the SDK ha a `SignedOut` component that redirects a user away from a private page—very much like wrapping a route with Redwood's `Private` component.
-We recommend you use Redwood's way of doing things as much as possible since it's much more likely to get along with the rest of the framework.
+For example, the SDK ha a `SignedOut` component that redirects a user away from a private page—very much like wrapping a route with Cedar's `Private` component.
+We recommend you use Cedar's way of doing things as much as possible since it's much more likely to get along with the rest of the framework.
 
 ## Deep dive: the `ClerkStatusUpdater` component
 
@@ -120,4 +120,4 @@ With Clerk, there's a bit more going on in the `web/src/auth.tsx` file than othe
 This is because Clerk is a bit unlike the other auth providers Cedar integrates with in that it puts an instance of its client SDK on the browser's `window` object.
 That means Cedar has to wait for it to be ready.
 With other providers, Cedar instantiates their client SDK in `web/src/auth.ts{x}`, then passes it to `createAuth`.
-With Clerk, instead Cedar uses Clerk components and hooks, like `ClerkLoaded` and `useUser`, to update Redwood's auth context with the client when it's ready.
+With Clerk, instead Cedar uses Clerk components and hooks, like `ClerkLoaded` and `useUser`, to update Cedar's auth context with the client when it's ready.

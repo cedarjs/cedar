@@ -18,7 +18,7 @@ Each job is completely self-contained and has everything it needs to perform its
 
 ### Overview
 
-There are three components to the Background Job system in Redwood:
+There are three components to the Background Job system in Cedar:
 
 1. Scheduling
 2. Storage

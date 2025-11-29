@@ -242,7 +242,7 @@ jobs:
       - run: yarn rw test web --no-watch
 ```
 
-Now push your changes to the `main` branch on GitHub; the "Redwood CI" action we just made will run like this:
+Now push your changes to the `main` branch on GitHub; the "Cedar CI" action we just made will run like this:
 
 <img width="1140" alt="ci-results-1" src="https://user-images.GitHubusercontent.com/14810250/202825732-c7d77929-58ff-4ad5-9072-48e4403471c9.png" />
 

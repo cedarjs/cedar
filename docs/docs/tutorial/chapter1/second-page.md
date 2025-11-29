@@ -34,7 +34,7 @@ const HomePage = () => {
 
       // highlight-start
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -66,7 +66,7 @@ const HomePage = () => {
 
       // highlight-start
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -90,7 +90,7 @@ export default HomePage
 Let's point out a few things here:
 
 - Cedar loves [Function Components](https://www.robinwieruch.de/react-function-component). We'll make extensive use of [React Hooks](https://react.dev/reference/react) as we go and these are only enabled in function components. Now that Cedar is on React 18, we discourage using class components since they won't be able to take advantage of React's concurrent rendering features.
-- Redwood's `<Link>` tag, in its most basic usage, takes a single `to` attribute. That `to` attribute calls a [_named route function_](../../router.md#link-and-named-route-functions) to generate the correct URL. The function has the same name as the `name` attribute on the `<Route>`:
+- Cedar's `<Link>` tag, in its most basic usage, takes a single `to` attribute. That `to` attribute calls a [_named route function_](../../router.md#link-and-named-route-functions) to generate the correct URL. The function has the same name as the `name` attribute on the `<Route>`:
 
   `<Route path="/about" page={AboutPage} name="about" />`
 
@@ -114,7 +114,7 @@ const AboutPage = () => {
 
       // highlight-start
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -125,7 +125,7 @@ const AboutPage = () => {
       </header>
       <main>
         <p>
-          This site was created to demonstrate my mastery of Redwood: Look on my
+          This site was created to demonstrate my mastery of Cedar: Look on my
           works, ye mighty, and despair!
         </p>
         <Link to={routes.home()}>Return home</Link>
@@ -152,7 +152,7 @@ const AboutPage = () => {
 
       // highlight-start
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -163,7 +163,7 @@ const AboutPage = () => {
       </header>
       <main>
         <p>
-          This site was created to demonstrate my mastery of Redwood: Look on my
+          This site was created to demonstrate my mastery of Cedar: Look on my
           works, ye mighty, and despair!
         </p>
         <Link to={routes.home()}>Return home</Link>

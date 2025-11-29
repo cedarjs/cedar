@@ -10,14 +10,14 @@ You can provide environment variables to each side of your Cedar app in differen
 
 ## Generally
 
-Redwood apps use [dotenv](https://github.com/motdotla/dotenv) to load vars from your `.env` file into `process.env`.
+Cedar apps use [dotenv](https://github.com/motdotla/dotenv) to load vars from your `.env` file into `process.env`.
 For a reference on dotenv syntax, see the dotenv README's [Rules](https://github.com/motdotla/dotenv#rules) section.
 
 > Technically, we use [dotenv-defaults](https://github.com/mrsteele/dotenv-defaults), which is how we also supply and load `.env.defaults`.
 
 <!-- also in a Cedar app's base directory. -->
 
-Redwood also configures Vite, so that all references to `process.env` vars on the Web side will be replaced with the variable's actual value at build-time. More on this in [Web](#Web).
+Cedar also configures Vite, so that all references to `process.env` vars on the Web side will be replaced with the variable's actual value at build-time. More on this in [Web](#Web).
 
 ## Web
 
@@ -56,7 +56,7 @@ Like the option above, these are also removed and replaced with the _actual valu
 
 ### Accessing API URLs
 
-Redwood automatically makes your API URL configurations from the web section of your `redwood.toml` available globally.
+Cedar automatically makes your API URL configurations from the web section of your `redwood.toml` available globally.
 They're accessible via the `window` or `global` objects.
 For example, `global.RWJS_API_GRAPHQL_URL` gives you the URL for your graphql endpoint.
 
@@ -75,7 +75,7 @@ See the [redwood.toml reference](app-configuration-redwood-toml.md#api-paths) fo
 REDWOOD_ENV_EDITOR=vscode
 ```
 
-Redwood comes with a `FatalErrorPage` that displays helpful information—like the stack trace and the request—when something breaks.
+Cedar comes with a `FatalErrorPage` that displays helpful information—like the stack trace and the request—when something breaks.
 
 > `FatalErrorPage` isn't bundled when deploying to production
 

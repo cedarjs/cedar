@@ -4,7 +4,7 @@
 
 Apollo Client stores the results of your GraphQL queries in a local, normalized, in-memory cache.
 
-Redwood provides a custom hook called `useCache` that makes it more convenience to access and use the cache object.
+Cedar provides a custom hook called `useCache` that makes it more convenience to access and use the cache object.
 
 Please refer to Apollo's documentation for complete information about [Caching in Apollo Client](https://www.apollographql.com/docs/react/caching/overview).
 
@@ -186,7 +186,7 @@ const PersistCacheExample = async () => {
 
 [Response caching](https://the-guild.dev/graphql/yoga-server/docs/features/response-caching) is a technique for reducing server load by caching GraphQL query operation results. For incoming GraphQL Query operations with the same variable values, the same response is returned from a cache instead of executed again.
 
-Redwood's GraphQL Server offers response caching via the `useResponseCache` [GraphQL Yoga plugin](https://github.com/dotansimha/graphql-yoga/tree/main/packages/plugins/response-cache).
+Cedar's GraphQL Server offers response caching via the `useResponseCache` [GraphQL Yoga plugin](https://github.com/dotansimha/graphql-yoga/tree/main/packages/plugins/response-cache).
 
 ### Setup
 

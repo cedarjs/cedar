@@ -336,7 +336,7 @@ Hmmm...
 
 :::
 
-We need to be able to create a comment as well. We'll use the same convention that's used in Redwood's generated scaffolds: the create endpoint will accept a single parameter `input` which is an object with the individual model fields:
+We need to be able to create a comment as well. We'll use the same convention that's used in Cedar's generated scaffolds: the create endpoint will accept a single parameter `input` which is an object with the individual model fields:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -640,7 +640,7 @@ When you receive the `scenario` argument in your test, the `data` key gets unwra
 
 :::info Why does every field just contain the string "String"?
 
-When generating the service (and the test and scenarios) all we (Redwood) knows about your data is the types for each field as defined in `schema.prisma`, namely `String`, `Integer` or `DateTime`. So we add the simplest data possible that fulfills the type requirement by Prisma to get the data into the database. You should definitely replace this data with something that looks more like the real data your app will be expecting. In fact...
+When generating the service (and the test and scenarios) all we (Cedar) knows about your data is the types for each field as defined in `schema.prisma`, namely `String`, `Integer` or `DateTime`. So we add the simplest data possible that fulfills the type requirement by Prisma to get the data into the database. You should definitely replace this data with something that looks more like the real data your app will be expecting. In fact...
 
 :::
 
@@ -659,7 +659,7 @@ export const standard = defineScenario({
         body: 'I like trees',
         post: {
           create: {
-            title: 'Redwood Leaves',
+            title: 'Cedar Leaves',
             body: 'The quick brown fox jumped over the lazy dog.',
           },
         },
@@ -697,7 +697,7 @@ export const standard = defineScenario<Prisma.CommentCreateArgs>({
         body: 'I like trees',
         post: {
           create: {
-            title: 'Redwood Leaves',
+            title: 'Cedar Leaves',
             body: 'The quick brown fox jumped over the lazy dog.',
           },
         },

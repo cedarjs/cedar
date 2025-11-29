@@ -52,7 +52,7 @@ The proper one will be included in the CORS header depending on where the respon
 
 ## Authentication Config
 
-The following config only applies if you're using [dbAuth](authentication.md#self-hosted-auth-installation-and-setup), which is Redwood's own cookie-based auth system.
+The following config only applies if you're using [dbAuth](authentication.md#self-hosted-auth-installation-and-setup), which is Cedar's own cookie-based auth system.
 
 You'll need to configure several things:
 
@@ -222,7 +222,7 @@ Normally the dev server only binds to `127.0.0.1` (home sweet home) which means 
 
 ```toml {4}
 [web]
-  title = "Redwood App"
+  title = "Cedar App"
   port = 8910
   host = '0.0.0.0'
   apiUrl = '/.redwood/functions'
@@ -237,7 +237,7 @@ We'll also need to tell the web side where the api side lives. Update the `apiUr
 
 ```toml {5}
 [web]
-  title = "Redwood App"
+  title = "Cedar App"
   port = 8910
   host = '0.0.0.0'
   apiUrl = 'https://fb6d701c44b5.ngrok.io'

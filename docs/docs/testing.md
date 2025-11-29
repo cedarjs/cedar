@@ -156,19 +156,19 @@ Are you convinced? Let's keep going and see what Cedar brings to the table.
 
 ## Cedar and Testing
 
-Redwood relies on several packages to do the heavy lifting, but many are wrapped in Redwood's own functionality which makes them even better suited to their individual jobs:
+Cedar relies on several packages to do the heavy lifting, but many are wrapped in Cedar's own functionality which makes them even better suited to their individual jobs:
 
 - [Jest](https://jestjs.io/)
 - [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Mock Service Worker](https://mswjs.io/) or **msw** for short.
 
-Redwood Generators get your test suite bootstrapped. Cedar also includes [Storybook](https://storybook.js.org/), which isn't technically a test suite, but can help in other ways.
+Cedar Generators get your test suite bootstrapped. Cedar also includes [Storybook](https://storybook.js.org/), which isn't technically a test suite, but can help in other ways.
 
 Let's explore each one and how they're integrated with Cedar.
 
 ### Jest
 
-[Jest](https://jestjs.io/) is Redwood's test runner. By default, starting Jest via `yarn rw test` will start a watch process that monitors your files for changes and re-runs the test(s) that are affected by that changed file (either the test itself, or the subject under test).
+[Jest](https://jestjs.io/) is Cedar's test runner. By default, starting Jest via `yarn rw test` will start a watch process that monitors your files for changes and re-runs the test(s) that are affected by that changed file (either the test itself, or the subject under test).
 
 ### React Testing Library
 
@@ -186,7 +186,7 @@ Storybook can provide a quick way to inspect all visual aspects of your site wit
 
 ### Cedar Generators
 
-Redwood's generators will include test files for basic functionality automatically with any Components, Pages, Cells, or Services you generate. These will test very basic functionality, but they're a solid foundation and will not automatically break as soon as you start building out custom features.
+Cedar's generators will include test files for basic functionality automatically with any Components, Pages, Cells, or Services you generate. These will test very basic functionality, but they're a solid foundation and will not automatically break as soon as you start building out custom features.
 
 ## Test Commands
 
@@ -231,7 +231,7 @@ which will only run test specs matching "Comment" in the API side
 
 ## Testing Components
 
-Let's start with the things you're probably most familiar with if you've done any React work (with or without Redwood): components. The simplest test for a component would be matching against the exact HTML that's rendered by React (this doesn't actually work so don't bother trying):
+Let's start with the things you're probably most familiar with if you've done any React work (with or without Cedar): components. The simplest test for a component would be matching against the exact HTML that's rendered by React (this doesn't actually work so don't bother trying):
 
 ```jsx title="web/src/components/Article/Article.js"
 const Article = ({ article }) => {
@@ -256,7 +256,7 @@ This test (if it worked) would prove that you are indeed rendering an article. B
 :::info Why do we keep saying this test won't work?
 Because as far as we can tell there's no easy way to simply render to a string. `render` actually returns an object that has several functions for testing different parts of the output. Those are what we'll look into in the next section.
 
-Note that Redwood's `render` function is based on React Testing Library's. The only difference is that Redwood's wraps everything with mock providers for the various providers in Cedar, such as auth, the GraphQL client, the router, etc.
+Note that Cedar's `render` function is based on React Testing Library's. The only difference is that Cedar's wraps everything with mock providers for the various providers in Cedar, such as auth, the GraphQL client, the router, etc.
 
 If you were to use React Testing Library's `render` function, you'd need to provide your own wrapper function. In this case you probably want to compose the mock providers from `@cedarjs/testing/web`:
 
@@ -442,7 +442,7 @@ it('renders a link with a name', () => {
 
 #### Jest Expect: Type Considerations
 
-Redwood uses [prisma](https://www.prisma.io/) as an ORM for connecting to different databases like PostgreSQL, MySQL, and many more. The database models are defined in the `schema.prisma` file. Prisma schema supports [`model` field scaler types](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-field-scalar-types) which is used to define the data types for the models properties.
+Cedar uses [prisma](https://www.prisma.io/) as an ORM for connecting to different databases like PostgreSQL, MySQL, and many more. The database models are defined in the `schema.prisma` file. Prisma schema supports [`model` field scaler types](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-field-scalar-types) which is used to define the data types for the models properties.
 
 Due to this, there are some exceptions that can occur while testing your API and UI components.
 
@@ -538,7 +538,7 @@ export default Article
 
 #### mockGraphQLQuery()
 
-Redwood provides the test function `mockGraphQLQuery()` for providing the result of a given named GraphQL. In this case our query is named `getArticle` and we can mock that in our test as follows:
+Cedar provides the test function `mockGraphQLQuery()` for providing the result of a given named GraphQL. In this case our query is named `getArticle` and we can mock that in our test as follows:
 
 ```jsx {6-14,18} title="web/src/components/Article/Article.test.js"
 import { render, screen } from '@cedarjs/testing/web'
@@ -783,7 +783,7 @@ Custom hooks are a great way to encapsulate non-presentational code.
 To test custom hooks, we'll use the `renderHook` function from `@cedarjs/testing/web`.
 
 :::info
-Note that Redwood's `renderHook` function is based on React Testing Library's. The only difference is that Redwood's wraps everything with mock providers for the various providers in Cedar, such as auth, the GraphQL client, the router, etc.
+Note that Cedar's `renderHook` function is based on React Testing Library's. The only difference is that Cedar's wraps everything with mock providers for the various providers in Cedar, such as auth, the GraphQL client, the router, etc.
 
 If you were to use React Testing Library's `renderHook` function, you'd need to provide your own wrapper function. In this case you probably want to compose the mock providers from `@cedarjs/testing/web`:
 
@@ -1368,7 +1368,7 @@ Did your spidey sense tingle when you saw that exact same seed duplicated in eac
 
 ### Scenarios
 
-Redwood created the concept of "scenarios" to cover this common case. A scenario is a set of seed data that you can count on existing at the start of your test and removed again at the end. This means that each test lives in isolation, starts with the exact same database state as every other one, and any changes you make are only around for the length of that one test, they won't cause side-effects in any other.
+Cedar created the concept of "scenarios" to cover this common case. A scenario is a set of seed data that you can count on existing at the start of your test and removed again at the end. This means that each test lives in isolation, starts with the exact same database state as every other one, and any changes you make are only around for the length of that one test, they won't cause side-effects in any other.
 
 When you use any of the generators that create a service (scaffold, sdl or service) you'll get a `scenarios.js` file alongside the service and test files:
 
@@ -1884,7 +1884,7 @@ Please refer to the [Directives documentation](./directives.md) for details on h
 
 ## Testing Caching
 
-If you're using Redwood's [caching](services#caching), we provide a handful of utilities and patterns to help you test this too!
+If you're using Cedar's [caching](services#caching), we provide a handful of utilities and patterns to help you test this too!
 
 Let's say you have a service where you cache the result of products, and individual products:
 

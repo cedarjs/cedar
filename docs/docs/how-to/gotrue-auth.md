@@ -111,7 +111,7 @@ yarn redwood generate page Signup
 
 This adds a Signup [route](../router.md#router-and-route) to our routes file and creates a SignupPage component.
 
-In the just-generated SignupPage component (`web/src/pages/SignupPage/SignupPage.js`), let's import some [Redwood Form components](../forms.md) and add a very basic form to our render component:
+In the just-generated SignupPage component (`web/src/pages/SignupPage/SignupPage.js`), let's import some [Cedar Form components](../forms.md) and add a very basic form to our render component:
 
 ```jsx title="web/src/pages/SignupPage/SignupPage.js"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'
@@ -132,7 +132,7 @@ const SignupPage = () => {
 export default SignupPage
 ```
 
-Did I mention it was basic? If you want to add some polish, you might find both the [Redwood Form docs](https://5efa4336f1e71f00081df803--redwoodjs.netlify.app/docs/form) and the [tutorial section on forms](https://5efa4336f1e71f00081df803--redwoodjs.netlify.app/tutorial/everyone-s-favorite-thing-to-build-forms) quite useful. For our purposes, let's just focus on the functionality.
+Did I mention it was basic? If you want to add some polish, you might find both the [Cedar Form docs](https://5efa4336f1e71f00081df803--redwoodjs.netlify.app/docs/form) and the [tutorial section on forms](https://5efa4336f1e71f00081df803--redwoodjs.netlify.app/tutorial/everyone-s-favorite-thing-to-build-forms) quite useful. For our purposes, let's just focus on the functionality.
 
 Now that we have a form interface, we're going to want to do something when the user submits it. Let's add an `onSubmit` function to our component and pass it as a prop to our Form component:
 
@@ -263,7 +263,7 @@ Start by [generating](../cli-commands.md#generate-page) a sign in page:
 yarn redwood generate page Signin
 ```
 
-Back in our `SignupPage`, let's import `routes` and `navigate` from [Redwood Router](../router.md#navigate) and use them to redirect on successful sign up:
+Back in our `SignupPage`, let's import `routes` and `navigate` from [Cedar Router](../router.md#navigate) and use them to redirect on successful sign up:
 
 ```jsx {3,13} title="web/src/pages/SignupPage/SignupPage.js"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'

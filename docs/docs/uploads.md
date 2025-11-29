@@ -19,7 +19,7 @@ There are two parts to this:
 
 We can roughly breakdown the flow as follows
 
-![Redwood Uploads Flow Diagram](/img/uploads/uploads-flow.png)
+![Cedar Uploads Flow Diagram](/img/uploads/uploads-flow.png)
 
 ## Uploading Files
 

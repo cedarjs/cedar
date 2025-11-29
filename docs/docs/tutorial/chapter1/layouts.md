@@ -34,7 +34,7 @@ const BlogLayout = ({ children }) => {
     // highlight-start
     <>
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -68,7 +68,7 @@ const BlogLayout = ({ children }: BlogLayoutProps) => {
     // highlight-start
     <>
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -102,7 +102,7 @@ const AboutPage = () => {
       <Metadata title="About" description="About page" />
 
       <p>
-        This site was created to demonstrate my mastery of Redwood: Look on my
+        This site was created to demonstrate my mastery of Cedar: Look on my
         works, ye mighty, and despair!
       </p>
       <Link to={routes.home()}>Return home</Link>
@@ -126,7 +126,7 @@ const AboutPage = () => {
       <Metadata title="About" description="About page" />
 
       <p>
-        This site was created to demonstrate my mastery of Redwood: Look on my
+        This site was created to demonstrate my mastery of Cedar: Look on my
         works, ye mighty, and despair!
       </p>
       <Link to={routes.home()}>Return home</Link>
@@ -240,7 +240,7 @@ export default Routes
 
 :::info The `src` alias
 
-Notice that the import statement uses `src/layouts/BlogLayout` and not `../src/layouts/BlogLayout` or `./src/layouts/BlogLayout`. Being able to use just `src` is a convenience feature provided by Redwood: `src` is an alias to the `src` path in the current workspace. So if you're working in `web` then `src` points to `web/src` and in `api` it points to `api/src`.
+Notice that the import statement uses `src/layouts/BlogLayout` and not `../src/layouts/BlogLayout` or `./src/layouts/BlogLayout`. Being able to use just `src` is a convenience feature provided by Cedar: `src` is an alias to the `src` path in the current workspace. So if you're working in `web` then `src` points to `web/src` and in `api` it points to `api/src`.
 
 :::
 
@@ -248,7 +248,7 @@ Back to the browser (you may need to manually refresh) and you should see...noth
 
 :::info Why are things named the way they are?
 
-You may have noticed some duplication in Redwood's file names. Pages live in a directory called `/pages` and also contain `Page` in their name. Same with Layouts. What's the deal?
+You may have noticed some duplication in Cedar's file names. Pages live in a directory called `/pages` and also contain `Page` in their name. Same with Layouts. What's the deal?
 
 When you have dozens of files open in your editor it's easy to get lost, especially when you have several files with names that are similar or even the same (they happen to be in different directories). Imagine a dozen files named `index.{js,ts}` and then trying to find the one you're looking for in your open tabs! We've found that the extra duplication in the names of files is worth the productivity benefit when scanning for a specific open file.
 
@@ -274,7 +274,7 @@ const BlogLayout = ({ children }) => {
       <header>
         // highlight-start
         <h1>
-          <Link to={routes.home()}>Redwood Blog</Link>
+          <Link to={routes.home()}>Cedar Blog</Link>
         </h1>
         // highlight-end
         <nav>
@@ -314,7 +314,7 @@ const BlogLayout = ({ children }: BlogLayoutProps) => {
       <header>
         // highlight-start
         <h1>
-          <Link to={routes.home()}>Redwood Blog</Link>
+          <Link to={routes.home()}>Cedar Blog</Link>
         </h1>
         // highlight-end
         <nav>
@@ -355,7 +355,7 @@ const AboutPage = () => {
       <Metadata title="About" description="About page" />
 
       <p>
-        This site was created to demonstrate my mastery of Redwood: Look on my
+        This site was created to demonstrate my mastery of Cedar: Look on my
         works, ye mighty, and despair!
       </p>
     </>
@@ -377,7 +377,7 @@ const AboutPage = () => {
       <Metadata title="About" description="About page" />
 
       <p>
-        This site was created to demonstrate my mastery of Redwood: Look on my
+        This site was created to demonstrate my mastery of Cedar: Look on my
         works, ye mighty, and despair!
       </p>
     </>

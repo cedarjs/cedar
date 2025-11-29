@@ -1,5 +1,5 @@
 ---
-description: Redwood's Dockerfile
+description: Cedar's Dockerfile
 ---
 
 # Docker
@@ -59,10 +59,10 @@ If you are using a [Server File](server-file.md) then you should [change the com
 
 ## Dockerfile
 
-The documentation here goes through and explains every line of Redwood's Dockerfile.
+The documentation here goes through and explains every line of Cedar's Dockerfile.
 If you'd like to see the whole Dockerfile for reference, you can find it [here](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/commands/setup/docker/templates/Dockerfile) or by setting it up in your project: `yarn rw setup docker`.
 
-Redwood takes advantage of [Docker's multi-stage build support](https://docs.docker.com/build/building/multi-stage/) to keep the final production images lean.
+Cedar takes advantage of [Docker's multi-stage build support](https://docs.docker.com/build/building/multi-stage/) to keep the final production images lean.
 
 ### The `base` stage
 
@@ -169,7 +169,7 @@ COPY --chown=node:node .env.defaults .env.defaults
 ```
 
 We'll need these config files for the build and production stages.
-The `redwood.toml` file is Redwood's de-facto config file.
+The `redwood.toml` file is Cedar's de-facto config file.
 Both the build and serve stages read it to enable and configure functionality.
 
 :::warning `.env.defaults` is ok to include but `.env` is not
@@ -279,7 +279,7 @@ CMD [ "node_modules/.bin/cedarjs-server", "api" ]
 :::important
 If you are using a [Server File](#using-the-server-file) then you must change the command that runs the `api_serve` service to `./api/dist/server.js` as shown above.
 
-Not updating the command will not completely configure the GraphQL Server and not setup [Redwood Realtime](./realtime.md), if you are using that.
+Not updating the command will not completely configure the GraphQL Server and not setup [Cedar Realtime](./realtime.md), if you are using that.
 :::
 
 Note that the Cedar CLI isn't available anymore because it is a dev dependency.
@@ -300,7 +300,7 @@ RUN yarn rw build web --no-prerender
 After the work we did in the base stage, building the web side amounts to copying in the web directory and running `yarn rw build web`.
 
 This stage is a bit of a simplification.
-It foregoes Redwood's prerendering (SSG) capability.
+It foregoes Cedar's prerendering (SSG) capability.
 Prerendering is a little trickier; see [the `web_prerender_build` stage](#the-web_prerender_build-stage).
 
 If you've included environment variables in your `redwood.toml`'s `web.includeEnvironmentVariables` field, you'll want to specify them as ARGs here.

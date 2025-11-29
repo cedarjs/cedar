@@ -203,7 +203,7 @@ To protect private routes for access by multiple roles:
 A route is permitted when authenticated and user has **any** of the provided roles such as `"admin"` or `["admin", "editor", "publisher"]`.
 :::
 
-Redwood uses the `useAuth` hook under the hood to determine if the user is authenticated. Read more about authentication in Cedar [here](tutorial/chapter4/authentication.md).
+Cedar uses the `useAuth` hook under the hood to determine if the user is authenticated. Read more about authentication in Cedar [here](tutorial/chapter4/authentication.md).
 
 ## Link and named route functions
 
@@ -612,7 +612,7 @@ const SomePage = () => {
 }
 ```
 
-The browser keeps track of the browsing history in a stack. By default when you navigate to a new page a new item is pushed to the history stack. But sometimes you want to replace the top item on the stack instead of appending to the stack. This is how you do that in Redwood: `navigate(routes.home(), { replace: true })`. As you can see you need to pass an options object as the second parameter to `navigate` with the option `replace` set to `true`.
+The browser keeps track of the browsing history in a stack. By default when you navigate to a new page a new item is pushed to the history stack. But sometimes you want to replace the top item on the stack instead of appending to the stack. This is how you do that in Cedar: `navigate(routes.home(), { replace: true })`. As you can see you need to pass an options object as the second parameter to `navigate` with the option `replace` set to `true`.
 
 By default `navigate` will scroll to the top after navigating to a new route (except for hash param changes), we can prevent this behavior by setting the `scroll` option to false:
 `navigate(routes.home(), { scroll: false })`
@@ -693,7 +693,7 @@ If you'd like to override the default lazy-loading behavior and include certain 
 import HomePage from 'src/pages/HomePage'
 ```
 
-Redwood will detect your explicit import and refrain from splitting that page into a separate bundle. Be careful with this feature, as you can easily bloat the size of your main bundle to the point where your initial page load time becomes unacceptable.
+Cedar will detect your explicit import and refrain from splitting that page into a separate bundle. Be careful with this feature, as you can easily bloat the size of your main bundle to the point where your initial page load time becomes unacceptable.
 
 ## Page loaders & PageLoadingContext
 

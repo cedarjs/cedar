@@ -4,17 +4,17 @@ description: Declarative data fetching with Cells
 
 # Cells
 
-Cells are a declarative approach to data fetching and one of Redwood's signature modes of abstraction.
+Cells are a declarative approach to data fetching and one of Cedar's signature modes of abstraction.
 By providing conventions around data fetching, Cedar can get in between the request and the response to do things like query optimization and more, all without you ever having to change your code.
 
 While it might seem like there's a lot of magic involved, all a Cell really does is execute a GraphQL query and manage its lifecycle.
 The idea is that, by exporting named constants that declare what you want your UI to look like throughout a query's lifecycle,
-Redwood can assemble these into a component template at build-time using a Babel plugin.
+Cedar can assemble these into a component template at build-time using a Babel plugin.
 All without you having to write a single line of imperative code!
 
 ## Generating a Cell
 
-You can generate a Cell with Redwood's Cell generator:
+You can generate a Cell with Cedar's Cell generator:
 
 ```bash
 yarn rw generate cell <name>
@@ -32,7 +32,7 @@ This creates a directory named `<name>Cell` in `web/src/components` with four fi
 ### Single Item Cell vs List Cell
 
 Sometimes you want a Cell that renders a single item and other times you want a Cell that renders a list.
-Redwood's Cell generator can do both.
+Cedar's Cell generator can do both.
 
 First, it detects if `<name>` is singular or plural.
 For example, to generate a Cell that renders a list of users, run `yarn rw generate cell users`.
@@ -254,7 +254,7 @@ export const Success = ({ data }) => {
 }
 ```
 
-Redwood lets you do:
+Cedar lets you do:
 
 ```jsx
 export const Success = ({ posts, authors }) => {
@@ -299,7 +299,7 @@ It's also important to remember that, besides exporting certain things with cert
 
 You just have to end a filename in "Cell" right? Well, while that's basically correct, there is one other thing you should know.
 
-Redwood looks for all files ending in "Cell" (so if you want your component to be a Cell, its filename does have to end in "Cell"), but if the file 1) doesn't export a const named `QUERY` and 2) has a default export, then it'll be skipped.
+Cedar looks for all files ending in "Cell" (so if you want your component to be a Cell, its filename does have to end in "Cell"), but if the file 1) doesn't export a const named `QUERY` and 2) has a default export, then it'll be skipped.
 
 When would you want to do this? If you just want a file to end in "Cell" for some reason. Otherwise, don't worry about it!
 

@@ -1,9 +1,9 @@
 ---
-title: TypeScript in Redwood
+title: TypeScript in Cedar
 description: Getting started & Core Concepts
 ---
 
-Redwood comes with full TypeScript support, and you don't have to give up any of the conveniences that Cedar offers to enjoy all the benefits of a type-safe codebase.
+Cedar comes with full TypeScript support, and you don't have to give up any of the conveniences that Cedar offers to enjoy all the benefits of a type-safe codebase.
 
 ## Getting Started
 
@@ -81,7 +81,7 @@ This runs `tsc` on your project and ensures that all the necessary generated typ
 
 Alias paths are a mechanism that allows you to define custom shortcuts or aliases for import statements in your code. Instead of using relative or absolute paths to import modules or files, you can use these aliases to make your imports cleaner and more concise.
 
-Redwood comes with a great starting point by aliasing the `src` directory, but you can take this further by configuring your `tsconfig.json` file, your import paths could go from:
+Cedar comes with a great starting point by aliasing the `src` directory, but you can take this further by configuring your `tsconfig.json` file, your import paths could go from:
 
 ```ts
 // this really long path

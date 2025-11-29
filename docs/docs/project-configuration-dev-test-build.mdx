@@ -12,7 +12,7 @@ import ReactPlayer from './ReactPlayer'
 Out of the box Cedar configures [Babel](https://babeljs.io/) so that you can write modern JavaScript and TypeScript without needing to worry about transpilation at all.
 GraphQL tags, JSX, SVG imports—all of it's handled for you.
 
-For those well-versed in Babel config, you can find Redwood's in [@cedarjs/internal](https://github.com/cedarjs/cedar/tree/main/packages/internal/src/build/babel).
+For those well-versed in Babel config, you can find Cedar's in [@cedarjs/internal](https://github.com/cedarjs/cedar/tree/main/packages/internal/src/build/babel).
 
 ### Configuring Babel
 
@@ -56,11 +56,11 @@ module.exports = {
 ```
 
 That's it!
-Now your custom web-side Babel config will be merged with Redwood's.
+Now your custom web-side Babel config will be merged with Cedar's.
 
 ## Jest
 
-Redwood uses [Jest](https://jestjs.io/) for testing.
+Cedar uses [Jest](https://jestjs.io/) for testing.
 Let's take a peek at how it's all configured.
 
 At the root of your project is `jest.config.js`.
@@ -90,7 +90,7 @@ const config = {
 module.exports = config
 ```
 
-> You can always see Redwood's latest configuration templates in the [create-cedar-app package](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/templates/ts/web/jest.config.js).
+> You can always see Cedar's latest configuration templates in the [create-cedar-app package](https://github.com/cedarjs/cedar/blob/main/packages/create-cedar-app/templates/ts/web/jest.config.js).
 
 The preset includes all the setup required to test everything that's going on in web: rendering React components and transforming JSX, automatically mocking Cells, transpiling with Babel, mocking the Router and the GraphQL client—the list goes on!
 You can find all the details in the [source](https://github.com/cedarjs/cedar/blob/main/packages/testing/config/jest/web/jest-preset.js).

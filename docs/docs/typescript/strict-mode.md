@@ -5,7 +5,7 @@ description: TS Strict mode tips and tricks
 # TypeScript Strict Mode
 
 Looks like you're ready to level up your TypeScript game!
-Redwood supports [strict mode](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#strictness), but doesn't enable it by default.
+Cedar supports [strict mode](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#strictness), but doesn't enable it by default.
 While strict mode gives you a lot more safety, it makes your code a bit more verbose and requires you to make small manual changes if you use the generators.
 
 ## Enabling strict mode
@@ -25,7 +25,7 @@ Enable strict mode by setting `strict` to true in `web/tsconfig.json` and `api/t
 }
 ```
 
-Redwood's type generator behaves a bit differently in strict mode, so now that you've opted in, make sure to generate types:
+Cedar's type generator behaves a bit differently in strict mode, so now that you've opted in, make sure to generate types:
 
 ```
 yarn rw g types

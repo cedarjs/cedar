@@ -265,7 +265,7 @@ If neither the test nor development mode conditions are met, the Mailer will sta
 
 ### Studio
 
-Redwood Studio is tightly integrated with the mailer. The goal is to provide you with not just the ability to send mail but also the development tools to make your experience easier and more enjoyable.
+Cedar Studio is tightly integrated with the mailer. The goal is to provide you with not just the ability to send mail but also the development tools to make your experience easier and more enjoyable.
 
 #### Template Previews
 

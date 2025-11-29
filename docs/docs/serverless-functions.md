@@ -14,11 +14,11 @@ Originally, Cedar apps were intended to be deployed as serverless functions to A
 
 :::
 
-Redwood looks for serverless functions in `api/src/functions`. Each function is mapped to a URI based on its filename. For example, you can find `api/src/functions/graphql.js` at `http://localhost:8911/graphql`.
+Cedar looks for serverless functions in `api/src/functions`. Each function is mapped to a URI based on its filename. For example, you can find `api/src/functions/graphql.js` at `http://localhost:8911/graphql`.
 
 ## Creating Serverless Functions
 
-Creating serverless functions is easy with Redwood's function generator:
+Creating serverless functions is easy with Cedar's function generator:
 
 ```bash
 yarn rw g function <name>

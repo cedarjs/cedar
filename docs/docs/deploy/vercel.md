@@ -21,7 +21,7 @@ _If you choose this quick deploy experience, the following steps do not apply._
 
 If you already have a Cedar project, proceed to the next step.
 
-Otherwise, we recommend experiencing the full Cedar DX via the [Redwood Tutorial](tutorial/foreword.md). Simply return to these instructions when you reach the "Deployment" section.
+Otherwise, we recommend experiencing the full Cedar DX via the [Cedar Tutorial](tutorial/foreword.md). Simply return to these instructions when you reach the "Deployment" section.
 
 ## Cedar Deploy Configuration
 

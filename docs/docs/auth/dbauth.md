@@ -4,10 +4,10 @@ sidebar_label: Self-hosted (dbAuth)
 
 # Self-hosted Authentication (dbAuth)
 
-Redwood's own **dbAuth** provides several benefits:
+Cedar's own **dbAuth** provides several benefits:
 
 - Use your own database for storing user credentials
-- Use your own login, signup and forgot password pages (or use Redwood's pre-built ones)
+- Use your own login, signup and forgot password pages (or use Cedar's pre-built ones)
 - Customize login session length
 - No external dependencies
 - No user data ever leaves your servers

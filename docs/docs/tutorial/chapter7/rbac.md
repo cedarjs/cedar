@@ -291,7 +291,7 @@ Now if you log out as the admin and log in as the moderator you should _not_ hav
 
 Locking down a whole page is easy enough via the Router, but what about individual functionality within a page or component?
 
-Redwood provides a `hasRole()` function you can get from the `useAuth()` hook (you may recall us using that to get `currentUser` and display their email address in Part 1) which returns `true` or `false` depending on whether the logged in user has the given role. Let's try it out by adding a `Delete` button when a moderator is viewing a blog post's comments:
+Cedar provides a `hasRole()` function you can get from the `useAuth()` hook (you may recall us using that to get `currentUser` and display their email address in Part 1) which returns `true` or `false` depending on whether the logged in user has the given role. Let's try it out by adding a `Delete` button when a moderator is viewing a blog post's comments:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">

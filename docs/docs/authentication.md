@@ -4,7 +4,7 @@ description: Set up an authentication provider
 
 # Authentication
 
-Redwood has integrated auth end to end, from the web side to the api side.
+Cedar has integrated auth end to end, from the web side to the api side.
 On the web side, the router can protect pages via the `PrivateSet` component, and even restrict access at the role-level.
 And if you'd prefer to work with the primitives, the `useAuth` hook exposes all the pieces to build the experience you want.
 
@@ -18,7 +18,7 @@ All auth providers share the same interface so the information here will be usef
 
 ## Official integrations
 
-Redwood has a simple API to integrate any auth provider you can think of. But to make it easier for you to get started, Cedar provides official integrations for some of the most popular auth providers out of the box:
+Cedar has a simple API to integrate any auth provider you can think of. But to make it easier for you to get started, Cedar provides official integrations for some of the most popular auth providers out of the box:
 
 - [Auth0](./auth/auth0.md)
 - [Azure Active Directory](./auth/azure.md)
@@ -31,7 +31,7 @@ Redwood has a simple API to integrate any auth provider you can think of. But to
 :::tip how to tell if an integration is official
 
 To tell if an integration is official, look for the `@cedarjs` scope.
-For example, Redwood's Auth0 integration comprises two npm packages: `@cedarjs/auth-auth0-web` and `@cedarjs/auth-auth0-api`.
+For example, Cedar's Auth0 integration comprises two npm packages: `@cedarjs/auth-auth0-web` and `@cedarjs/auth-auth0-api`.
 
 :::
 
@@ -45,7 +45,7 @@ yarn rw setup auth auth0
 ## The API at a high-level
 
 We mentioned that Cedar has a simple API you can use to integrate any provider you want.
-Whether you roll your own auth provider or choose one of Redwood's integrations, it's good to be familiar with it, so let's dive into it here.
+Whether you roll your own auth provider or choose one of Cedar's integrations, it's good to be familiar with it, so let's dive into it here.
 
 On the web side, there are two components that can be auth enabled: the `RedwoodApolloProvider` in `web/src/App.tsx` and the `Router` in `web/src/Routes.tsx`.
 Both take a `useAuth` prop. If provided, they'll use this hook to get information about the app's auth state. The `RedwoodApolloProvider` uses it to get a token to include in every GraphQL request, and the `Router` uses it to determine if a user has access to private or role-restricted routes.
@@ -185,7 +185,7 @@ export const handler = createGraphQLHandler({
 })
 ```
 
-If you're using one of Redwood's official integrations, `authDecoder` comes from the corresponding integration package (in auth0's case, `@cedarjs/auth-auth0-api`):
+If you're using one of Cedar's official integrations, `authDecoder` comes from the corresponding integration package (in auth0's case, `@cedarjs/auth-auth0-api`):
 
 ```ts
 import { authDecoder } from '@cedarjs/auth-auth0-api'

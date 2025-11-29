@@ -100,7 +100,7 @@ nvm use <version number>
 ```
 
 :::info
-Remember: [Redwood has specific Node.js version requirements.](../tutorial/chapter1/prerequisites.md#nodejs-and-yarn-versions)
+Remember: [Cedar has specific Node.js version requirements.](../tutorial/chapter1/prerequisites.md#nodejs-and-yarn-versions)
 :::
 
 ### To see all the versions of Node.js that you have installed

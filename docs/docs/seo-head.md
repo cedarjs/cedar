@@ -8,11 +8,11 @@ Search Engine Optimization is a dark art that some folks dedicate their entire l
 
 ## Adding a Title
 
-You certainly want to change the title of your Cedar app from the default of "Redwood App." You can start by adding or modifying `title` inside of `/redwood.toml`
+You certainly want to change the title of your Cedar app from the default of "Cedar App." You can start by adding or modifying `title` inside of `/redwood.toml`
 
 ```diff title=redwood.toml
 [web]
-- title = "Redwood App"
+- title = "Cedar App"
 + title = "My Cool App"
   port = 8910
   apiUrl = "/.redwood/functions"
@@ -39,7 +39,7 @@ You can use whatever formatting you'd like in here. Some examples:
 ```jsx
 "%PageTitle | %AppTitle" => "Home Page | Cedar App"
 
-"%AppTitle · %PageTitle" => "Redwood App · Home Page"
+"%AppTitle · %PageTitle" => "Cedar App · Home Page"
 
 "%PageTitle : %AppTitle" => "Home Page : Cedar App"
 ```
@@ -72,13 +72,13 @@ Prior to Cedar 6.6.0 this component was called `<MetaTags>` and had several spec
 
 ### What About Nested Tags?
 
-Redwood uses [@dr.pogodin/react-helmet](https://github.com/birdofpreyru/react-helmet) underneath, which will use the tags furthest down your component tree.
+Cedar uses [@dr.pogodin/react-helmet](https://github.com/birdofpreyru/react-helmet) underneath, which will use the tags furthest down your component tree.
 
 For example, if you set title in your Layout, and a title in your Page, it'll render the one in Page - this way you can override the tags you wish, while sharing the tags defined in Layout.
 
 :::info Bots & `<meta>` Tags
 
-For these headers to appear to bots and scrapers e.g. for twitter to show your title, you have to make sure your page is prerendered. If your content is static you can use Redwood's built-in [Prerender](prerender.md). For dynamic tags, check the [Dynamic head tags](#dynamic-tags)
+For these headers to appear to bots and scrapers e.g. for twitter to show your title, you have to make sure your page is prerendered. If your content is static you can use Cedar's built-in [Prerender](prerender.md). For dynamic tags, check the [Dynamic head tags](#dynamic-tags)
 
 :::
 
@@ -86,7 +86,7 @@ For these headers to appear to bots and scrapers e.g. for twitter to show your t
 
 Often we want to set more than just the title and description of the page – most commonly [OpenGraph](https://ogp.me/) headers.
 
-Redwood provides a convenience component `<Metadata>` to help you create most of these `<meta>` tags for you with a more concise syntax. But, you can also pass children and define any custom content that you want.
+Cedar provides a convenience component `<Metadata>` to help you create most of these `<meta>` tags for you with a more concise syntax. But, you can also pass children and define any custom content that you want.
 
 Here's an example setting some common meta, including a page title, description, `og:image` and an `http-equiv`:
 
