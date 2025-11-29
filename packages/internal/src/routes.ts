@@ -8,8 +8,8 @@ import ansis from 'ansis'
 
 import { getPaths, getRouteHookForPage } from '@cedarjs/project-config'
 import { getRouteRegexAndParams } from '@cedarjs/router/dist/util'
-import { getProject } from '@cedarjs/structure/dist/index.js'
-import type { RWRoute } from '@cedarjs/structure/dist/model/RWRoute.js'
+import { getProject } from '@cedarjs/structure'
+import type { RWRoute } from '@cedarjs/structure'
 
 export interface RouteInformation {
   name?: string
