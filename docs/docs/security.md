@@ -41,7 +41,7 @@ For a demonstration, check out the [Auth Playground](https://redwood-playground-
 
 ## GraphQL
 
-GraphQL is a fundamental part of Redwood. For details on how Cedar uses GraphQL and handles important security considerations, please see the [GraphQL Security](graphql.md#security) section and the [Secure Services](services.md#secure-services) section.
+GraphQL is a fundamental part of Cedar. For details on how Cedar uses GraphQL and handles important security considerations, please see the [GraphQL Security](graphql.md#security) section and the [Secure Services](services.md#secure-services) section.
 
 ### Malicious Document Requests
 

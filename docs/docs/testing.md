@@ -8,7 +8,7 @@ Testing. For some it's an essential part of their development workflow. For othe
 
 ## Introduction to Testing
 
-If you're already familiar with the ins and outs of testing and just want to know how to do it in Redwood, feel free to [skip ahead](#redwood-and-testing). Or, keep reading for a refresher. In the following section, we'll build a simple test runner from scratch to help clarify the concepts of testing in our minds.
+If you're already familiar with the ins and outs of testing and just want to know how to do it in Cedar, feel free to [skip ahead](#redwood-and-testing). Or, keep reading for a refresher. In the following section, we'll build a simple test runner from scratch to help clarify the concepts of testing in our minds.
 
 ## Building a Test Runner
 
@@ -164,7 +164,7 @@ Redwood relies on several packages to do the heavy lifting, but many are wrapped
 
 Redwood Generators get your test suite bootstrapped. Cedar also includes [Storybook](https://storybook.js.org/), which isn't technically a test suite, but can help in other ways.
 
-Let's explore each one and how they're integrated with Redwood.
+Let's explore each one and how they're integrated with Cedar.
 
 ### Jest
 
@@ -256,7 +256,7 @@ This test (if it worked) would prove that you are indeed rendering an article. B
 :::info Why do we keep saying this test won't work?
 Because as far as we can tell there's no easy way to simply render to a string. `render` actually returns an object that has several functions for testing different parts of the output. Those are what we'll look into in the next section.
 
-Note that Redwood's `render` function is based on React Testing Library's. The only difference is that Redwood's wraps everything with mock providers for the various providers in Redwood, such as auth, the GraphQL client, the router, etc.
+Note that Redwood's `render` function is based on React Testing Library's. The only difference is that Redwood's wraps everything with mock providers for the various providers in Cedar, such as auth, the GraphQL client, the router, etc.
 
 If you were to use React Testing Library's `render` function, you'd need to provide your own wrapper function. In this case you probably want to compose the mock providers from `@cedarjs/testing/web`:
 
@@ -783,7 +783,7 @@ Custom hooks are a great way to encapsulate non-presentational code.
 To test custom hooks, we'll use the `renderHook` function from `@cedarjs/testing/web`.
 
 :::info
-Note that Redwood's `renderHook` function is based on React Testing Library's. The only difference is that Redwood's wraps everything with mock providers for the various providers in Redwood, such as auth, the GraphQL client, the router, etc.
+Note that Redwood's `renderHook` function is based on React Testing Library's. The only difference is that Redwood's wraps everything with mock providers for the various providers in Cedar, such as auth, the GraphQL client, the router, etc.
 
 If you were to use React Testing Library's `renderHook` function, you'd need to provide your own wrapper function. In this case you probably want to compose the mock providers from `@cedarjs/testing/web`:
 
@@ -2102,6 +2102,6 @@ Since these tests send mail to a sandbox inbox, you can be confident that no ema
 
 ## Wrapping Up
 
-So that's the world of testing according to Redwood. Did we miss anything? Can we make it even more awesome? Stop by [Discord](https://cedarjs.com/discord) and ask questions, or if you've thought of a way to make this doc even better then [open a PR](https://github.com/cedarjs/cedar/pulls).
+So that's the world of testing according to Cedar. Did we miss anything? Can we make it even more awesome? Stop by [Discord](https://cedarjs.com/discord) and ask questions, or if you've thought of a way to make this doc even better then [open a PR](https://github.com/cedarjs/cedar/pulls).
 
 Now go out and create (and test!) something amazing!

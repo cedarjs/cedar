@@ -276,7 +276,7 @@ There's even an interactive console that lets you, for example, execute Prisma q
 
 ## Jest
 
-Being able to develop a full-stack application this easily is great, but how do you verify that it's working as intended? That's where a great test suite comes in. [Jest](https://jestjs.io/) is a test framework that, as they say, focuses on simplicity. We felt that it was a natural fit with Redwood, and so most files you can generate will include the related test file automatically (pre-filled with some tests, even!).
+Being able to develop a full-stack application this easily is great, but how do you verify that it's working as intended? That's where a great test suite comes in. [Jest](https://jestjs.io/) is a test framework that, as they say, focuses on simplicity. We felt that it was a natural fit with Cedar, and so most files you can generate will include the related test file automatically (pre-filled with some tests, even!).
 
 Redwood includes several Jest helpers and matchers, allowing you to mock out GraphQL requests, database data, logged in users, and more.
 
@@ -343,4 +343,4 @@ Redwood is constantly being updated and sticks strictly to semantic versioning r
 
 ## Community
 
-There's a very active community around Redwood, including a [Discourse forum](https://community.redwoodjs.com/) and [Discord chat](https://cedarjs.com/discord), where even members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!
+There's a very active community around Cedar, including a [Discourse forum](https://community.redwoodjs.com/) and [Discord chat](https://cedarjs.com/discord), where even members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!

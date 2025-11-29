@@ -111,7 +111,7 @@ const client = new NhostClient({
 
 Ok, that's it for the client.
 At this point, you could update some of the TS interfaces, but we'll leave that to you and press on with the integration.
-Now we have to create the `useAuth` hook using the client we just made so that the rest of Redwood, like the router, works.
+Now we have to create the `useAuth` hook using the client we just made so that the rest of Cedar, like the router, works.
 Scroll down a little more to the `createAuthImplementation` function:
 
 ```ts title="web/src/auth.ts"

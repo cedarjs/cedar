@@ -113,7 +113,7 @@ Here is how Cedar uses these terms:
 - **Authentication** deals with determining whether someone is who they say they are, generally by "logging in" with an email and password, or a third party provider like Auth0.
 - **Authorization** is whether a user (who has usually already been authenticated) is allowed to do something they want to do. This generally involves some combination of roles and permission checking before allowing access to a URL or feature of your site.
 
-This section of the tutorial focuses on **Authentication** only. See [chapter 7 of the tutorial](../chapter7/rbac.md) to learn about Authorization in Redwood.
+This section of the tutorial focuses on **Authentication** only. See [chapter 7 of the tutorial](../chapter7/rbac.md) to learn about Authorization in Cedar.
 
 :::
 

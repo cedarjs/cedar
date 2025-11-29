@@ -243,7 +243,7 @@ export const hasRole = (roles: AllowedRoles): boolean => {
 Depending on your auth provider—i.e., anything but dbAuth—because it could change based on your account settings (if you include roles or other metadata), we can't know the shape of your decoded token at setup time.
 So you'll have to make sure that the `getCurrentUser` function is typed.
 
-To help you get started, the comments above the `getCurrentUser` function describe its parameters' types. We recommend typing `decoded` without using imported types from Redwood, as this may be a little too generic!
+To help you get started, the comments above the `getCurrentUser` function describe its parameters' types. We recommend typing `decoded` without using imported types from Cedar, as this may be a little too generic!
 
 ```ts title='api/src/lib/auth.ts'
 import type { AuthContextPayload } from '@cedarjs/api'

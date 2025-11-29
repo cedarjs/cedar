@@ -9,7 +9,7 @@ There are two main features we need to build:
 1. Comment form and creation
 2. Comment retrieval and display
 
-Which order we build them in is up to us. To ease into things, let's start with the fetching and displaying comments first and then we'll move on to more complex work of adding a form and service to create a new comment. Of course, this is Redwood, so even forms and services aren't _that_ complex!
+Which order we build them in is up to us. To ease into things, let's start with the fetching and displaying comments first and then we'll move on to more complex work of adding a form and service to create a new comment. Of course, this is Cedar, so even forms and services aren't _that_ complex!
 
 ### Storybook
 

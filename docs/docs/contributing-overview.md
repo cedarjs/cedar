@@ -29,7 +29,7 @@ There are several ways you can contribute to Redwood:
 
 ## The Characteristics of a Contributor
 
-More than committing code, contributing is about human collaboration and relationship. Our community mantra is **“By helping each other be successful with Redwood, we make the Cedar project successful.”** We have a specific vision for the effect this project and community will have on you — it should give you superpowers to build+create, progress in skills, and help advance your career.
+More than committing code, contributing is about human collaboration and relationship. Our community mantra is **“By helping each other be successful with Cedar, we make the Cedar project successful.”** We have a specific vision for the effect this project and community will have on you — it should give you superpowers to build+create, progress in skills, and help advance your career.
 
 So who do you need to become to achieve this? Specifically, what characteristics, skills, and capabilities will you need to cultivate through practice? Here are our suggestions:
 
@@ -43,7 +43,7 @@ And you thought all this was just about opening a PR 🤣 Yes, it’s a super re
 
 ## What should I work on?
 
-Even if you know the mechanics, it’s hard to get started without a starting place. Our best advice is this — dive into the Cedar Tutorial, read the docs, and build your own experiment with Redwood. Along the way, you’ll find typos, out-of-date (or missing) documentation, code that could work better, or even opportunities for improving and adding features. You’ll be engaging in the Forums and Chat and developing a feel for priorities and needs. This way, you’ll naturally follow your own interests and sooner than later intersect “things you’re interested in” + “ways to help improve Redwood”.
+Even if you know the mechanics, it’s hard to get started without a starting place. Our best advice is this — dive into the Cedar Tutorial, read the docs, and build your own experiment with Cedar. Along the way, you’ll find typos, out-of-date (or missing) documentation, code that could work better, or even opportunities for improving and adding features. You’ll be engaging in the Forums and Chat and developing a feel for priorities and needs. This way, you’ll naturally follow your own interests and sooner than later intersect “things you’re interested in” + “ways to help improve Redwood”.
 
 There are other more direct ways to get started as well, which are outlined below.
 
@@ -115,7 +115,7 @@ Before we get into the how-to, a little explanation. When thinking about docs, w
 https://cedarjs.com has three kinds of Developing docs: References, How To's, and The Tutorial.
 You can find References and How To's within their respective directories on the cedarjs/cedar repo: [docs/](https://github.com/cedarjs/cedar/tree/main/docs) and [how-to/](https://github.com/cedarjs/cedar/tree/main/docs/how-to).
 
-The Tutorial is a standalone document that serves a specific purpose as an introduction to Redwood, an aspirational roadmap, and an example of developer experience. As such, it's distinct from the categories mentioned, although it's most similar to How To's.
+The Tutorial is a standalone document that serves a specific purpose as an introduction to Cedar, an aspirational roadmap, and an example of developer experience. As such, it's distinct from the categories mentioned, although it's most similar to How To's.
 
 #### References
 

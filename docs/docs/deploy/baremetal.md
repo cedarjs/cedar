@@ -696,7 +696,7 @@ server {
 }
 ```
 
-Now when you start Redwood, you're only going to start the api server:
+Now when you start Cedar, you're only going to start the api server:
 
 ```
 yarn rw serve api

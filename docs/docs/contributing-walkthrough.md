@@ -251,7 +251,7 @@ David briefly walks-through an automatically prebuilt Gitpod workspace here:
 Make sure you watch until the end where David shows how to set up your integration with GitHub and VS Code sync. 🤩
 
 **Start a Gitpod Workspace**
-There are two ways to get started with Gitpod + Redwood.
+There are two ways to get started with Gitpod + Cedar.
 
 _Option 1: Open a PR_
 Every PR will trigger a Gitpod prebuild using the PR branch. Just look for Gitpod in the list of checks at the bottom of the PR — click the “Details” link and away you’ll go!

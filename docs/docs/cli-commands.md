@@ -463,7 +463,7 @@ Generate a cell component.
 yarn redwood generate cell <name>
 ```
 
-Cells are signature to Redwood. We think they provide a simpler and more declarative approach to data fetching.
+Cells are signature to Cedar. We think they provide a simpler and more declarative approach to data fetching.
 
 | Arguments & Options  | Description                                                                                                                                                      |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1772,7 +1772,7 @@ yarn rw record init
 
 ## redwood-tools (alias rwt)
 
-Redwood's companion CLI development tool. You'll be using this if you're contributing to Redwood. See [Contributing](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#cli-reference-redwood-tools) in the Cedar repo.
+Redwood's companion CLI development tool. You'll be using this if you're contributing to Cedar. See [Contributing](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#cli-reference-redwood-tools) in the Cedar repo.
 
 ## setup
 

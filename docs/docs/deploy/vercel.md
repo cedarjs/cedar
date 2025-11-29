@@ -128,7 +128,7 @@ export const handler = async (event: APIGatewayEvent, _context: Context) => {
 ```
 
 :::tip important
-Since Cedar has it's own handling of the api directory, the Vercel flavored api directory is disabled. Therefore you don't use the "functions" config in `vercel.json` with Redwood.
+Since Cedar has it's own handling of the api directory, the Vercel flavored api directory is disabled. Therefore you don't use the "functions" config in `vercel.json` with Cedar.
 
 Also, be sure to use Node version 20.x or greater or set the `runtime` in the function config:
 
