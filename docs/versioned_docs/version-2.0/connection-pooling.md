@@ -6,7 +6,7 @@ description: Scale your serverless functions
 
 > ⚠️ **Work in Progress** ⚠️
 >
-> There's more to document here. In the meantime, you can check the [Redwood community forums](https://community.redwoodjs.com/search?q=connection%20pooling) for answers.
+> There's more to document here. In the meantime, you can check the [Cedar community forums](https://community.redwoodjs.com/search?q=connection%20pooling) for answers.
 >
 > Want to contribute? CedarJS welcomes contributions and loves helping people become contributors.
 > You can edit this doc [here](https://github.com/cedarjs/cedarjs.com/blob/main/docs/connectionPooling.md).

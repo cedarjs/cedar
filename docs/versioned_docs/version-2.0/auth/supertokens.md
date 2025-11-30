@@ -14,7 +14,7 @@ This installs all the packages, writes all the files, and makes all the code mod
 
 :::info
 
-You may have noticed that in `api/src/functions/auth.ts` there's an import from `'supertokens-node/framework/awsLambda'`. This is fine, even if your app isn't running in a serverless environment like AWS Lambda. In "serverful" environments, Redwood automatically handles the translation between Fastify's request and reply objects and functions' AWS Lambda signature.
+You may have noticed that in `api/src/functions/auth.ts` there's an import from `'supertokens-node/framework/awsLambda'`. This is fine, even if your app isn't running in a serverless environment like AWS Lambda. In "serverful" environments, Cedar automatically handles the translation between Fastify's request and reply objects and functions' AWS Lambda signature.
 
 :::
 
@@ -112,7 +112,7 @@ Clicking sign up should navigate you to `/auth` where SuperToken's default login
 
 <img width="463" height="696" alt="SuperTokens default UI" src="https://user-images.githubusercontent.com/30793/215893664-d367eb3d-566e-4541-a01a-5772d95cc9c7.png" />
 
-After you sign up, you should be redirected back to your Redwood app, and you should see `{"isAuthenticated":true}` on the page.
+After you sign up, you should be redirected back to your Cedar app, and you should see `{"isAuthenticated":true}` on the page.
 
 ## Troubleshooting
 

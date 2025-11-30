@@ -1,6 +1,6 @@
 # Setting up dbAuth to be passwordless
 
-Security is really important. Sometimes you don't want to integrate with a third-party authentication services. Whatever the reason, Redwood has you covered with Redwood's dbAuth to authenticate users. This is a great option.
+Security is really important. Sometimes you don't want to integrate with a third-party authentication services. Whatever the reason, Cedar has you covered with Cedar's dbAuth to authenticate users. This is a great option.
 
 One thing though is now you're collecting the user's login and password. If you'd like to not collect that, an alternative is to generate a token in place of the password. The only data needed for passwordless is the user's email address.
 
@@ -105,7 +105,7 @@ export const generateLoginToken = async ({ email }) => {
 
 ### 3. Add generateToken to the SDL and secure loginToken
 
-In addition to the new function, we need to add it to the sdl file. While we're here let's also ensure we do not expose the loginToken. This file may be users.sdl.js or users.sdl.ts depending on if you set up Redwood to use JavaScript or TypeScript.
+In addition to the new function, we need to add it to the sdl file. While we're here let's also ensure we do not expose the loginToken. This file may be users.sdl.js or users.sdl.ts depending on if you set up Cedar to use JavaScript or TypeScript.
 
 ```javascript title="/api/src/graphql/users.sdl.js"
 export const schema = gql`

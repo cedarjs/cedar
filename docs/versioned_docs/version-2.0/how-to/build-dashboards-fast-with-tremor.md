@@ -35,7 +35,7 @@ If you do not want a TypeScript project, omit the `--ts` flag.
 
 > **Important:** CedarJS prefers yarn over npm because a project is monorepo with api and web workspaces. You will install tremor and other web packages using yarn workspaces.
 
-Use the Redwood setup command to install `TailwindCSS`, its peer dependencies, and create the `tailwind.config.cjs` file.
+Use the Cedar setup command to install `TailwindCSS`, its peer dependencies, and create the `tailwind.config.cjs` file.
 
 ```bash
 yarn rw setup ui tailwindcss

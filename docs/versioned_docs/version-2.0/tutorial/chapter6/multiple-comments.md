@@ -34,7 +34,7 @@ Storybook updates with a new **CommentsCell** under the **Cells** folder, and it
 
 ![image](https://user-images.githubusercontent.com/300/153477642-0d5a15a5-f96f-485a-b8b0-dbc1c4515279.png)
 
-Where did that come from? Check out `CommentsCell.mock.{js,ts}`: there's no Prisma model for a Comment yet, so Redwood took a guess that your model would at least contain an `id` field and just used that for the mock data.
+Where did that come from? Check out `CommentsCell.mock.{js,ts}`: there's no Prisma model for a Comment yet, so Cedar took a guess that your model would at least contain an `id` field and just used that for the mock data.
 
 Let's update the `Success` component to use the `Comment` component created earlier, and add all of the fields we'll need for the **Comment** to render to the `QUERY`:
 
@@ -328,7 +328,7 @@ If we are _not_ showing the summary, then we'll show the comments. Take a look a
 
 :::info Shouldn't the `CommentsCell` cause an actual GraphQL request? How does this work?
 
-Redwood has added some functionality around Storybook so that if you're testing a component that itself isn't a Cell (like the `Article` component) but that renders a cell (like `CommentsCell`), then it will mock the GraphQL and use the `standard` mock that goes along with that Cell. Pretty cool, huh?
+Cedar has added some functionality around Storybook so that if you're testing a component that itself isn't a Cell (like the `Article` component) but that renders a cell (like `CommentsCell`), then it will mock the GraphQL and use the `standard` mock that goes along with that Cell. Pretty cool, huh?
 
 :::
 

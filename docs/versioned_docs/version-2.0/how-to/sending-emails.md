@@ -52,7 +52,7 @@ yarn rw prisma migrate dev --name email
 
 ### Scaffold
 
-One of Redwood's stand-out features is the scaffolds. We'll be using scaffolds here to quickly get a nice visual list of the users in our database to work with.
+One of Cedar's stand-out features is the scaffolds. We'll be using scaffolds here to quickly get a nice visual list of the users in our database to work with.
 
 ```zsh
 yarn rw g scaffold User
@@ -64,13 +64,13 @@ Let's do it for Audit as well
 yarn rw g scaffold Audit
 ```
 
-Now let's run the Redwood dev server to see what we've created so far.
+Now let's run the Cedar dev server to see what we've created so far.
 
 ```zsh
 yarn rw dev
 ```
 
-Your web browser should open up and show the default Redwood app home page with a list of links to all your pages. Click on the `/users` link and then go ahead and create a few users. Since we're going to send emails to these users, use emails you can actually check. So you can make sure it works. A service I like to use for generating random users with real email addresses is https://www.fakenamegenerator.com. Just click the link on that page to activate the email address and you'll be able to send emails from your app, and see them arrive.
+Your web browser should open up and show the default Cedar app home page with a list of links to all your pages. Click on the `/users` link and then go ahead and create a few users. Since we're going to send emails to these users, use emails you can actually check. So you can make sure it works. A service I like to use for generating random users with real email addresses is https://www.fakenamegenerator.com. Just click the link on that page to activate the email address and you'll be able to send emails from your app, and see them arrive.
 
 So if you create three users you should see something like this
 
@@ -355,7 +355,7 @@ You can now test your app's new email sending capabilities by clicking on the em
 
 ## Using one service from another service
 
-The final thing to add is the auditing. When the users service sends an email we want to call the audits service to add a new audit log entry. Redwood makes this really easy. All you have to do is import the service and you can use all the functions it exports!
+The final thing to add is the auditing. When the users service sends an email we want to call the audits service to add a new audit log entry. Cedar makes this really easy. All you have to do is import the service and you can use all the functions it exports!
 
 One thing I wanted to note here is that this might bypass security measures you have in place. When you call a service from the web side of your project you use GraphQL and the service is then protected by the `@requireAuth` directive. If you have a service that's open for everyone (i.e. that uses `@skipAuth`) and that service imports and uses another service it will be allowed to call any function in there, no matter what directives they use on the graphql side of things. In our case the `emailUser` mutation is using `@requireAuth`, so we're not affected by this.
 
@@ -386,4 +386,4 @@ That's it! We just import the audits service and call the exported `createAudit`
 
 To view the audit logs you can use the scaffolded pages we created earlier. Just navigate to http://localhost:8910/audits and you should see them there.
 
-Thanks for reading this! If you liked it, or have any questions, don't hesitate to reach out on [our forums](https://community.redwoodjs.com) or in our [Discord chat](https://discord.com/invite/redwoodjs).
+Thanks for reading this! If you liked it, or have any questions, don't hesitate to reach out on [our forums](https://community.redwoodjs.com) or in our [Discord chat](https://cedarjs.com/discord).

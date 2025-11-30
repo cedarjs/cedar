@@ -1,6 +1,6 @@
 # Our First Page
 
-Let's give our users something to look at besides the (awesome) Redwood welcome page (thanks [@alicelovescake](https://github.com/alicelovescake)!). We'll use the `redwood` command line tool to create a page for us:
+Let's give our users something to look at besides the (awesome) Cedar welcome page (thanks [@alicelovescake](https://github.com/alicelovescake)!). We'll use the `redwood` command line tool to create a page for us:
 
 ```bash
 yarn redwood generate page home /
@@ -8,14 +8,14 @@ yarn redwood generate page home /
 
 The command above does four things:
 
-- Creates `web/src/pages/HomePage/HomePage.{jsx,tsx}`. Redwood takes the name you specified as the first argument after `page` and [PascalCases](https://techterms.com/definition/pascalcase) it, then appends "Page" to construct your new page component. So "home" becomes "HomePage".
+- Creates `web/src/pages/HomePage/HomePage.{jsx,tsx}`. Cedar takes the name you specified as the first argument after `page` and [PascalCases](https://techterms.com/definition/pascalcase) it, then appends "Page" to construct your new page component. So "home" becomes "HomePage".
 - Creates a test file to go along with this new page component at `web/src/pages/HomePage/HomePage.test.{jsx,tsx}` with a single, passing test. You _do_ write tests for your components, _don't you??_
 - Creates a Storybook file for this component at `web/src/pages/HomePage/HomePage.stories.{jsx,tsx}`. Storybook is a wonderful tool for efficiently developing and organizing UI components. (If you want to take a peek ahead, we learn about Storybook in [chapter 5 of the tutorial](../chapter5/storybook.md)).
 - Adds a `<Route>` in `web/src/Routes.{jsx,tsx}` that maps the path `/` to the new _HomePage_ page.
 
 :::info Automatic import of pages in the Routes file
 
-If you look in Routes you'll notice that we're referencing a component, `HomePage`, that isn't imported anywhere. Redwood automatically imports all pages in the Routes file since we're going to need to reference them all anyway. It saves a potentially huge `import` declaration from cluttering up the routes file.
+If you look in Routes you'll notice that we're referencing a component, `HomePage`, that isn't imported anywhere. Cedar automatically imports all pages in the Routes file since we're going to need to reference them all anyway. It saves a potentially huge `import` declaration from cluttering up the routes file.
 
 :::
 
@@ -70,9 +70,9 @@ export default Routes
 </TabItem>
 </Tabs>
 
-As long as you have a route with path `/`, you'll never see the initial Redwood splash screen again.
+As long as you have a route with path `/`, you'll never see the initial Cedar splash screen again.
 
-When no route can be found that matches the requested URL, Redwood will render the `NotFoundPage`.
+When no route can be found that matches the requested URL, Cedar will render the `NotFoundPage`.
 
 Try changing the route to something like:
 
@@ -95,7 +95,7 @@ Try changing the route to something like:
 
 The splash screen is available again at [http://localhost:8910/](http://localhost:8910/), giving you a list of all the available URLs in your app.
 
-![Redwood Splash Screen](https://user-images.githubusercontent.com/17789536/160120107-1157af8e-4cbd-4ec8-b3aa-8adb28ea6eaf.png)
+![Cedar Splash Screen](https://user-images.githubusercontent.com/17789536/160120107-1157af8e-4cbd-4ec8-b3aa-8adb28ea6eaf.png)
 
 Go to `/hello` and you should see the homepage again.
 

@@ -5,7 +5,7 @@ description: Deploy to AWS with Serverless Framework
 # Deploy to AWS with Serverless Framework
 
 > ⚠️ **Deprecated**
-> As of Redwood v5, we are deprecating this deploy setup as an "officially" supported provider. This means:
+> As of Cedar v5, we are deprecating this deploy setup as an "officially" supported provider. This means:
 >
 > - For projects already using this deploy provider, there will be NO change at this time
 > - Both the associated `setup` and `deploy` commands will remain in the framework as is; when setup is run, there will be a “deprecation” message
@@ -82,7 +82,7 @@ There are even more places you can get environment variables from, check out Ser
 ## Serverless Dashboard
 
 > **Note:**
-> Serverless Dashboard CI/CD does not support projects structured like Redwood, although they're working on it. For CD, you'll need to use something like GitHub Actions.
+> Serverless Dashboard CI/CD does not support projects structured like Cedar, although they're working on it. For CD, you'll need to use something like GitHub Actions.
 >
 > It can still be worthwhile to integrate your project with Serverless Dashboard — you'll have features like deploy logs and monitoring, analytics, secret management, and AWS account integration. You can also [authenticate into your Serverless account within a CI context](https://www.serverless.com/framework/docs/guides/cicd/running-in-your-own-cicd). Just remember that if you do use the Dashboard to manage secrets, you'll need to use the `${param:VAR_NAME}` syntax.
 
@@ -93,7 +93,7 @@ To integrate your site into the Serverless Dashboard, there are two ways:
 
 ## Environments Besides Production
 
-By default we assume you want to deploy to a production environment, but Serverless lets you deploy anywhere. They call these destinations "stages", and in Redwood "production" is the default. Check out their [Managing Staging and Environments blog post](https://www.serverless.com/blog/stages-and-environments) for details.
+By default we assume you want to deploy to a production environment, but Serverless lets you deploy anywhere. They call these destinations "stages", and in Cedar "production" is the default. Check out their [Managing Staging and Environments blog post](https://www.serverless.com/blog/stages-and-environments) for details.
 
 Once configured, just add the stage to your deploy command:
 

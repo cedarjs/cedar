@@ -1,17 +1,17 @@
 ---
-description: A comprehensive reference of Redwood's CLI
+description: A comprehensive reference of Cedar's CLI
 ---
 
 # Command Line Interface
 
-The following is a comprehensive reference of the Redwood CLI. You can get a glimpse of all the commands by scrolling the aside to the right.
+The following is a comprehensive reference of the Cedar CLI. You can get a glimpse of all the commands by scrolling the aside to the right.
 
-The Redwood CLI has two entry-point commands:
+The Cedar CLI has two entry-point commands:
 
 1. **redwood** (alias `rw`), which is for developing an application, and
 2. **redwood-tools** (alias `rwt`), which is for contributing to the framework.
 
-This document covers the `redwood` command . For `redwood-tools`, see [Contributing](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#cli-reference-redwood-tools) in the Redwood repo.
+This document covers the `redwood` command . For `redwood-tools`, see [Contributing](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#cli-reference-redwood-tools) in the Cedar repo.
 
 **A Quick Note on Syntax**
 
@@ -39,7 +39,7 @@ The `..` operator indicates that the argument accepts an array of values. See [V
 
 ## create redwood-app
 
-Create a Redwood project using the yarn create command:
+Create a Cedar project using the yarn create command:
 
 ```
 yarn create cedar-app <project directory> [option]
@@ -109,7 +109,7 @@ Files are output to each side's `dist` directory:
 
 ## check (alias diagnostics)
 
-Get structural diagnostics for a Redwood project (experimental).
+Get structural diagnostics for a Cedar project (experimental).
 
 ```
 yarn redwood check
@@ -129,7 +129,7 @@ web/src/Routes.js:17:19: error (INVALID_ROUTE_PATH_SYNTAX): Error: Route path co
 
 ## console (alias c)
 
-Launch an interactive Redwood shell (experimental):
+Launch an interactive Cedar shell (experimental):
 
 - This has not yet been tested on Windows.
 - The Prisma Client must be generated _prior_ to running this command, e.g. `yarn redwood prisma generate`. This is a known issue.
@@ -138,7 +138,7 @@ Launch an interactive Redwood shell (experimental):
 yarn redwood console
 ```
 
-Right now, you can only use the Redwood console to interact with your database (always with `await`):
+Right now, you can only use the Cedar console to interact with your database (always with `await`):
 
 #### Example
 
@@ -190,7 +190,7 @@ Start development servers for api and web.
 yarn redwood dev [side..]
 ```
 
-`yarn redwood dev api` starts the Redwood dev server and `yarn redwood dev web` starts the Vite dev server with Redwood's config.
+`yarn redwood dev api` starts the Cedar dev server and `yarn redwood dev web` starts the Vite dev server with Cedar's config.
 
 | Argument           | Description                                                                            |
 | :----------------- | :------------------------------------------------------------------------------------- |
@@ -236,7 +236,7 @@ Deploy your redwood project to a hosting provider target.
 
 **Netlify, Vercel, and Render**
 
-For hosting providers that auto deploy from Git, the deploy command runs the set of steps to build, apply production DB changes, and apply data migrations. In this context, it is often referred to as a Build Command. _Note: for Render, which uses traditional infrastructure, the command also starts Redwood's api server._
+For hosting providers that auto deploy from Git, the deploy command runs the set of steps to build, apply production DB changes, and apply data migrations. In this context, it is often referred to as a Build Command. _Note: for Render, which uses traditional infrastructure, the command also starts Cedar's api server._
 
 **AWS**
 
@@ -302,7 +302,7 @@ The [Netlify CLI](https://cli.netlify.com) still works well for [linking your pr
 
 ### deploy render
 
-Build (web) and Start (api) command for Render deploy. (For usage instructions, see the Render [Deploy Redwood](https://render.com/docs/deploy-redwood) doc.)
+Build (web) and Start (api) command for Render deploy. (For usage instructions, see the Render [Deploy Cedar](https://render.com/docs/deploy-redwood) doc.)
 
 ```
 yarn redwood deploy render <side>
@@ -409,7 +409,7 @@ Some caveats:
 - these features may be deprecated or removed (anytime)
 - your feedback is wanted and necessary!
 
-For more information, including details about specific features, see this Redwood Forum category:
+For more information, including details about specific features, see this Cedar Forum category:
 [Experimental Features](https://community.redwoodjs.com/c/experimental-features/25)
 
 **Available Experimental Features**
@@ -463,7 +463,7 @@ Generate a cell component.
 yarn redwood generate cell <name>
 ```
 
-Cells are signature to Redwood. We think they provide a simpler and more declarative approach to data fetching.
+Cells are signature to Cedar. We think they provide a simpler and more declarative approach to data fetching.
 
 | Arguments & Options  | Description                                                                                                                                                      |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -532,7 +532,7 @@ Generate a component.
 yarn redwood generate component <name>
 ```
 
-Redwood loves function components and makes extensive use of React Hooks, which are only enabled in function components.
+Cedar loves function components and makes extensive use of React Hooks, which are only enabled in function components.
 
 | Arguments & Options  | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
@@ -649,7 +649,7 @@ yarn redwood generate directive <name>
 
 #### Usage
 
-See [Redwood Directives](directives.md).
+See [Cedar Directives](directives.md).
 
 **Destroying**
 
@@ -1240,7 +1240,7 @@ The sdl will inspect your `schema.prisma` and will do its best with relations. S
 
 **Regenerating the SDL**
 
-Often, as you iterate on your data model, you may add, remove, or rename fields. You still want Redwood to update the generated SDL and service files for those updates because it saves time not having to make those changes manually.
+Often, as you iterate on your data model, you may add, remove, or rename fields. You still want Cedar to update the generated SDL and service files for those updates because it saves time not having to make those changes manually.
 
 But, since the `generate` command prevents you from overwriting files accidentally, you use the `--force` option -- but a `force` will reset any test and scenarios you may have written which you don't want to lose.
 
@@ -1410,7 +1410,7 @@ Generate a service component.
 yarn redwood generate service <name>
 ```
 
-Services are where Redwood puts its business logic. They can be used by your GraphQL API or any other place in your backend code. See [How Redwood Works with Data](tutorial/chapter2/side-quest.md).
+Services are where Cedar puts its business logic. They can be used by your GraphQL API or any other place in your backend code. See [How Cedar Works with Data](tutorial/chapter2/side-quest.md).
 
 | Arguments & Options  | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
@@ -1564,7 +1564,7 @@ Cedar's `prisma` command is a lightweight wrapper around the Prisma CLI. It's th
 > ...
 > ```
 
-Since `yarn cedar prisma` is just an entry point into all the database commands that the Prisma CLI has to offer, we won't try to provide an exhaustive reference of everything you can do with it here. Instead what we'll do is focus on some of the most common commands; those that you'll be running on a regular basis, and how they fit into Redwood's workflows.
+Since `yarn cedar prisma` is just an entry point into all the database commands that the Prisma CLI has to offer, we won't try to provide an exhaustive reference of everything you can do with it here. Instead what we'll do is focus on some of the most common commands; those that you'll be running on a regular basis, and how they fit into Cedar's workflows.
 
 For the complete list of commands, see the [Prisma CLI Reference](https://www.prisma.io/docs/reference/api-reference/command-reference). It's the authority.
 
@@ -1772,7 +1772,7 @@ yarn rw record init
 
 ## redwood-tools (alias rwt)
 
-Redwood's companion CLI development tool. You'll be using this if you're contributing to Redwood. See [Contributing](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#cli-reference-redwood-tools) in the Redwood repo.
+Cedar's companion CLI development tool. You'll be using this if you're contributing to Cedar. See [Contributing](https://github.com/cedarjs/cedar/blob/main/CONTRIBUTING.md#cli-reference-redwood-tools) in the Cedar repo.
 
 ## setup
 
@@ -1782,18 +1782,18 @@ Initialize configuration and integrate third-party libraries effortlessly.
 yarn redwood setup <category>
 ```
 
-| Commands           | Description                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------ |
-| `auth`             | Set up auth configuration for a provider                                                   |
-| `cache`            | Set up cache configuration for memcached or redis                                          |
-| `custom-web-index` | Set up an `index.js` file, so you can customize how Redwood web is mounted in your browser |
-| `deploy`           | Set up a deployment configuration for a provider                                           |
-| `generator`        | Copy default Redwood generator templates locally for customization                         |
-| `i18n`             | Set up i18n                                                                                |
-| `jobs`             | Set up background job creation and processing                                              |
-| `package`          | Peform setup actions by running a third-party npm package                                  |
-| `tsconfig`         | Add relevant tsconfig so you can start using TypeScript                                    |
-| `ui`               | Set up a UI design or style library                                                        |
+| Commands           | Description                                                                              |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `auth`             | Set up auth configuration for a provider                                                 |
+| `cache`            | Set up cache configuration for memcached or redis                                        |
+| `custom-web-index` | Set up an `index.js` file, so you can customize how Cedar web is mounted in your browser |
+| `deploy`           | Set up a deployment configuration for a provider                                         |
+| `generator`        | Copy default Cedar generator templates locally for customization                         |
+| `i18n`             | Set up i18n                                                                              |
+| `jobs`             | Set up background job creation and processing                                            |
+| `package`          | Peform setup actions by running a third-party npm package                                |
+| `tsconfig`         | Add relevant tsconfig so you can start using TypeScript                                  |
+| `ui`               | Set up a UI design or style library                                                      |
 
 ### setup auth
 
@@ -1827,7 +1827,7 @@ yarn redwood setup cache <client>
 
 ### setup generator
 
-Copies a given generator's template files to your local app for customization. The next time you generate that type again, it will use your custom template instead of Redwood's default.
+Copies a given generator's template files to your local app for customization. The next time you generate that type again, it will use your custom template instead of Cedar's default.
 
 ```
 yarn rw setup generator <name>
@@ -1846,7 +1846,7 @@ If you wanted to customize the page generator template, run the command:
 yarn rw setup generator page
 ```
 
-And then check `web/generators/page` for the page, storybook and test template files. You don't need to keep all of these templates—you could customize just `page.tsx.template` and delete the others and they would still be generated, but using the default Redwood templates.
+And then check `web/generators/page` for the page, storybook and test template files. You don't need to keep all of these templates—you could customize just `page.tsx.template` and delete the others and they would still be generated, but using the default Cedar templates.
 
 The only exception to this rule is the scaffold templates. You'll get four directories, `assets`, `components`, `layouts` and `pages`. If you want to customize any one of the templates in those directories, you will need to keep all the other files inside of that same directory, even if you make no changes besides the one you care about. (This is due to the way the scaffold looks up its template files.) For example, if you wanted to customize only the index page of the scaffold (the one that lists all available records in the database) you would edit `web/generators/scaffold/pages/NamesPage.tsx.template` and keep the other pages in that directory. You _could_ delete the other three directories (`assets`, `components`, `layouts`) if you don't need to customize them.
 
@@ -1934,7 +1934,7 @@ In order to use [Netlify Dev](https://www.netlify.com/products/dev/) you need to
 
 ### setup jobs
 
-This command adds the necessary packages and files defining the configuration for Redwood's [Background Jobs](background-jobs) processing.
+This command adds the necessary packages and files defining the configuration for Cedar's [Background Jobs](background-jobs) processing.
 
 ```
 yarn redwood setup jobs
@@ -1961,7 +1961,7 @@ yarn redwood setup mailer
 
 This command takes a published npm package that you specify, performs some compatibility checks, and then executes its bin script. This allows you to use third-party packages that can provide you with an easy-to-use setup command for the particular functionality they provide.
 
-This command behaves similarly to `yarn dlx` but will attempt to confirm compatibility between the package you are attempting to run and the current version of Redwood you are running. You can bypass this check by passing the `--force` flag if you feel you understand any potential compatibility issues.
+This command behaves similarly to `yarn dlx` but will attempt to confirm compatibility between the package you are attempting to run and the current version of Cedar you are running. You can bypass this check by passing the `--force` flag if you feel you understand any potential compatibility issues.
 
 ```
 yarn redwood setup package <npm-package>
@@ -2019,7 +2019,7 @@ Run `yarn rw setup graphql fragments`
 
 ```bash
 ~/redwood-app$ yarn rw setup graphql fragments
-✔ Update Redwood Project Configuration to enable GraphQL Fragments
+✔ Update Cedar Project Configuration to enable GraphQL Fragments
 ✔ Generate possibleTypes.ts
 ✔ Import possibleTypes in App.tsx
 ✔ Add possibleTypes to the GraphQL cache config
@@ -2041,7 +2041,7 @@ Run `yarn rw setup graphql trusted-documents`
 
 ```bash
 ~/redwood-app$ yarn rw setup graphql trusted-documents
-✔ Update Redwood Project Configuration to enable GraphQL Trusted Documents ...
+✔ Update Cedar Project Configuration to enable GraphQL Trusted Documents ...
 ✔ Generating Trusted Documents store ...
 ✔ Configuring the GraphQL Handler to use a Trusted Documents store ...
 ```
@@ -2215,7 +2215,7 @@ This command uses `apiUrl` in your `redwood.toml`. Use this command if you want 
 | `--apiRootPath`     | The root path where your api functions are served                 |
 
 For the full list of Server Configuration settings, see [this documentation](app-configuration-redwood-toml.md#api).
-If you want to format your log output, you can pipe the command to the Redwood LogFormatter:
+If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
 
 ```
 yarn rw serve api | yarn rw-log-formatter
@@ -2241,7 +2241,7 @@ This command serves the contents in `web/dist`. Use this command if you're debug
 | `--socket`          | The socket the server should run. This takes precedence over port                     |
 | `--apiHost`         | Forwards requests from the `apiUrl` (defined in `redwood.toml`) to the specified host |
 
-If you want to format your log output, you can pipe the command to the Redwood LogFormatter:
+If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
 
 ```
 yarn rw serve web | yarn rw-log-formatter

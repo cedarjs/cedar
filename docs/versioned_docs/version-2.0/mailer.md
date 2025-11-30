@@ -265,7 +265,7 @@ If neither the test nor development mode conditions are met, the Mailer will sta
 
 ### Studio
 
-Redwood Studio is tightly integrated with the mailer. The goal is to provide you with not just the ability to send mail but also the development tools to make your experience easier and more enjoyable.
+Cedar Studio is tightly integrated with the mailer. The goal is to provide you with not just the ability to send mail but also the development tools to make your experience easier and more enjoyable.
 
 #### Template Previews
 
@@ -281,7 +281,7 @@ When running in development mode, using the default `@cedarjs/mailer-handler-stu
 
 ## Need a Renderer or Handler?
 
-If the Mailer does not currenly provide a [handler](notion://www.notion.so/redwoodjs/133467eb46b744fd8ae60df2d493d7d0#handlers) or [renderer](notion://www.notion.so/redwoodjs/133467eb46b744fd8ae60df2d493d7d0#renderers) for the service or technology you wish to use, this doesn't prevent you from using the Mailer. Instead, you can create your own handler or renderer which you can then open source to the wider CedarJS community.
+If the Mailer does not currenly provide a [handler](#handlers) or [renderer](#renderers) for the service or technology you wish to use, this doesn't prevent you from using the Mailer. Instead, you can create your own handler or renderer which you can then open source to the wider CedarJS community.
 
 To do this, read over the existing implementations for handlers [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers) and renderers [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/renderers). You can also find the interfaces that a handler or mailer must satisfy [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/core) in the `@cedarjs/mailer-core` package.
 

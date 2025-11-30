@@ -1,6 +1,6 @@
 # Using a Third Party API
 
-The time will come when you'll need data from a source you don't own. This how to will present the scenario of accessing a third party's API from a Redwood app. We'll show an example of accessing an API from both the client side and the server side.
+The time will come when you'll need data from a source you don't own. This how to will present the scenario of accessing a third party's API from a Cedar app. We'll show an example of accessing an API from both the client side and the server side.
 
 We're going to build a simple weather app that will display the current weather in the user's zip code (we'll assume only zip codes in the United States of America to keep the example code as simple as possible). To do this we'll get the current weather from the [OpenWeather API](https://openweathermap.org/) and display it on the only page of our app, the homepage. The final app could look something like this (if you apply a little more styling on top of the basic version we'll build):
 
@@ -76,7 +76,7 @@ If it's still not ready let's start working on the app and hopefully it will be 
 
 ## Create the App
 
-We'll start our app the way we start all Redwood apps:
+We'll start our app the way we start all Cedar apps:
 
 ```bash
 yarn create cedar-app weatherstation
@@ -125,7 +125,7 @@ This gives us a very simple form and some validation that the user is entering a
 Now let's talk to the API and get some data for real. We can do that in one of two ways:
 
 1. Have the client (React app running in the browser) talk to the API directly
-2. Have our own server (or serverless function, in the case of Redwood) talk to the API, and have the client talk to _our_ server.
+2. Have our own server (or serverless function, in the case of Cedar) talk to the API, and have the client talk to _our_ server.
 
 We'll build out an example of both types of integration below.
 
@@ -285,11 +285,11 @@ If you weighed the pros and cons presented earlier and found too many cons on th
 1. Provide a way for the client to talk to our server(less function)
 2. A way for our server(less function) to talk to the third party API
 
-Redwood comes with GraphQL integration built in so that seems like a logical way to get our client talking to our serverless function. Let's create a GraphQL SDL (to define the API interface for the client) and a service (to actually implement the logic of talking to the third-party API).
+Cedar comes with GraphQL integration built in so that seems like a logical way to get our client talking to our serverless function. Let's create a GraphQL SDL (to define the API interface for the client) and a service (to actually implement the logic of talking to the third-party API).
 
-> **Doesn't Redwood have a generator for this?**
+> **Doesn't Cedar have a generator for this?**
 >
-> Redwood does have an SDL generator, but it assumes you have a model defined in `api/db/schema.prisma` and so creates the SDL you need to access that data structure. If you're creating a custom one you're on your own!
+> Cedar does have an SDL generator, but it assumes you have a model defined in `api/db/schema.prisma` and so creates the SDL you need to access that data structure. If you're creating a custom one you're on your own!
 
 ### The GraphQL API
 
@@ -317,7 +317,7 @@ This data structure returns just the data we care about, and we can even pre-for
 
 That's it for our client-to-server API interface! Now let's define the GraphQL resolver that will actually get the data from OpenWeather. We'll take it one step at a time and first make sure we can access our new GraphQL endpoint. We'll define the `getWeather` function to just return some dummy data in the format we require.
 
-In Redwood GraphQL Query types are automatically mapped to functions exported from a service with the same name, so we'll create a `weather.js` service and name the function `getWeather`:
+In Cedar, GraphQL Query types are automatically mapped to functions exported from a service with the same name, so we'll create a `weather.js` service and name the function `getWeather`:
 
 ```javascript title="api/src/services/weather/weather.js"
 export const getWeather = ({ zip }) => {
@@ -331,7 +331,7 @@ export const getWeather = ({ zip }) => {
 }
 ```
 
-How can we test this out? Redwood ships with a GraphQL playground that you can use to access your API! Open a browser tab to http://localhost:8911/graphql
+How can we test this out? Cedar ships with a GraphQL playground that you can use to access your API! Open a browser tab to http://localhost:8911/graphql
 
 ![image](https://user-images.githubusercontent.com/300/79391348-3dc49680-7f26-11ea-8d94-8567ae287fa6.png)
 
@@ -372,7 +372,7 @@ If you click "Play" in the GraphQL playground we should see the real data from t
 
 ### Displaying the weather
 
-All that's left now is to display it in the client! Since we're getting data from our GraphQL API we can use a Redwood Cell to simplify all the work that goes around writing API access, displaying a loading state, etc. We can use a generator to get the shell of our Cell:
+All that's left now is to display it in the client! Since we're getting data from our GraphQL API we can use a Cedar Cell to simplify all the work that goes around writing API access, displaying a loading state, etc. We can use a generator to get the shell of our Cell:
 
 ```bash
 yarn rw generate cell weather
@@ -547,6 +547,6 @@ Much better!
 
 ## Conclusion
 
-We hope this has given you enough confidence to go out and capture data from some of the amazing APIs of the Information Superhighway and get it (them?) into your Redwood app!
+We hope this has given you enough confidence to go out and capture data from some of the amazing APIs of the Information Superhighway and get it (them?) into your Cedar app!
 
 Picking up any new framework from scratch is a daunting task and even those of us that wrote this one made more than a few trips to Google! If you think we can improve on this recipe, or any other, open an [issue](https://github.com/cedarjs/cedar.run/issues) or a [pull request](https://github.com/cedarjs/cedar.run/pulls).

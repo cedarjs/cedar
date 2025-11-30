@@ -4,7 +4,7 @@ CedarJS can be setup to enforce [persisted operations](https://the-guild.dev/gra
 
 Use trusted documents if your GraphQL API is only for your own app (which is the case for most GraphQL APIs) for a massively decreased attack-surface, increased performance, and decreased bandwidth usage.
 
-At app build time, Redwood will extract the GraphQL documents (queries, etc) and make them available to the server. At run time, you must then send "document id" or "hash" instead of the whole document as the server will only accept requests with a known document id.
+At app build time, Cedar will extract the GraphQL documents (queries, etc) and make them available to the server. At run time, you must then send "document id" or "hash" instead of the whole document as the server will only accept requests with a known document id.
 
 This prevents malicious attackers from executing arbitrary GraphQL thus helping with unwanted resolver traversal or information leaking.
 

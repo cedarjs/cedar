@@ -66,7 +66,7 @@ We could set the headers for `serverTime` to allow requests from any origin... b
 const serverTime = await fetch(globalThis.RWJS_API_URL + '/serverTime')
 ```
 
-> Note: If you want to use [Redwood Authentication](https://docs.redwoodjs.com/docs/serverless-functions/#serverless-functions-with-redwood-user-authentication) on your custom function, your fetch needs to send credentials in a cookie via `fetch(globalThis.RWJS_API_URL + '/serverTime', { credentials: 'include' })`. If you are using dbAuth you might need to add the [Domain](https://docs.redwoodjs.com/docs/auth/dbauth/#cookie-domain) property to your cookie configuration.
+> Note: If you want to use [Cedar Authentication](https://cedarjs.com/docs/serverless-functions/#serverless-functions-with-redwood-user-authentication) on your custom function, your fetch needs to send credentials in a cookie via `fetch(globalThis.RWJS_API_URL + '/serverTime', { credentials: 'include' })`. If you are using dbAuth you might need to add the [Domain](https://cedarjs.com/docs/auth/dbauth/#cookie-domain) property to your cookie configuration.
 
 ## Getting the Time
 
@@ -190,7 +190,7 @@ $ curl http://localhost:8911/serverTime
 
 ### Super Bonus: Callback Hell
 
-Redwood uses the async/await version of Function handlers, but you can also use the callback version. In that case your Function would look something like:
+Cedar uses the async/await version of Function handlers, but you can also use the callback version. In that case your Function would look something like:
 
 ```javascript {1,3,6,10} title="api/src/functions/serverTime.js"
 export const handler = (event, context, callback) => {

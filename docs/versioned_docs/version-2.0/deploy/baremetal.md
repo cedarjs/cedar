@@ -6,7 +6,7 @@ description: Have complete control by hosting your own code
 
 Once you've grown beyond the confines and limitations of the cloud deployment providers, it's time to get serious: hosting your own code on big iron. Prepare for performance like you've only dreamed of! Also be prepared for IT and infrastructure responsibilities like you've only had nightmares of.
 
-With Redwood's Baremetal deployment option, the source (like your dev machine) will SSH into one or more remote machines and execute commands in order to update your codebase, run any database migrations and restart services.
+With Cedar's Baremetal deployment option, the source (like your dev machine) will SSH into one or more remote machines and execute commands in order to update your codebase, run any database migrations and restart services.
 
 Deploying from a client (like your own development machine) consists of running a single command:
 
@@ -378,7 +378,7 @@ You should see something like:
 
 If so then your API side is up and running! The only thing left to test is that the api side has access to the database. This call would be pretty specific to your app, but assuming you have port 8910 open to the world you could simply open a browser to click around to find a page that makes a database request.
 
-Was the problem with starting your PM2 process? That will be harder to debug here in this doc, but visit us in the [forums](https://community.redwoodjs.com) or [Discord](https://discord.gg/redwoodjs) and we'll try to help!
+Was the problem with starting your PM2 process? That will be harder to debug here in this doc, but visit us in the [forums](https://community.redwoodjs.com) or [Discord](https://cedarjs.com/discord) and we'll try to help!
 
 :::note My pm2 processes are running but your app has errors, how do I see them?
 
@@ -614,11 +614,11 @@ And even a web-based UI with paid upgrades if you need to give normies access to
 
 The default configuration, which requires the least amount of manual configuration, is to serve both the web and api sides, with the web side being bound to port 8910. This isn't really feasible for a general web app which should be available on port 80 (for HTTP) and/or port 443 (for HTTPS). Here are some custom configs to help.
 
-### Redwood Serves Web and Api Sides, Bind to Port 80
+### Cedar Serves Web and Api Sides, Bind to Port 80
 
-This is almost as easy as the default configuration, you just need to tell Redwood to bind to port 80. However, most \*nix distributions will not allow a process to bind to ports lower than 1024 without root/sudo permissions. There is a command you can run to allow access to a specific binary (`node` in this case) to bind to one of those ports anyway.
+This is almost as easy as the default configuration, you just need to tell Cedar to bind to port 80. However, most \*nix distributions will not allow a process to bind to ports lower than 1024 without root/sudo permissions. There is a command you can run to allow access to a specific binary (`node` in this case) to bind to one of those ports anyway.
 
-#### Tell Redwood to Bind to Port 80
+#### Tell Cedar to Bind to Port 80
 
 Update the `[web]` port:
 
@@ -647,15 +647,15 @@ Now restart your service and it should be available on port 80:
 pm2 restart serve
 ```
 
-This should get your site available on port 80 (for HTTP), but you really want it available on port 443 (for HTTPS). That won't be easy if you continue to use Redwood's internal web server. See the next recipe for a solution.
+This should get your site available on port 80 (for HTTP), but you really want it available on port 443 (for HTTPS). That won't be easy if you continue to use Cedar's internal web server. See the next recipe for a solution.
 
-### Redwood Serves Api, Nginx Serves Web Side
+### Cedar Serves Api, Nginx Serves Web Side
 
-[nginx](https://www.nginx.com/) is a very robust, dedicated web server that can do a better job of serving our static web-side files than Redwood's own built-in web server (Fastify) which isn't really configured in Redwood for a high traffic, production website.
+[nginx](https://www.nginx.com/) is a very robust, dedicated web server that can do a better job of serving our static web-side files than Cedar's own built-in web server (Fastify) which isn't really configured in Cedar for a high traffic, production website.
 
-If nginx will be serving our web side, what about api-side? Redwood's internal API server will be running, but on the default port of 8911. But browsers are going to want to connect on port 80 (HTTP) or 443 (HTTPS). nginx takes care of this as well: it will [proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) (forward) any requests to a path of your choosing (like the default of `/.redwood/functions`) to port 8911 behind the scenes, then return the response to the browser.
+If nginx will be serving our web side, what about api-side? Cedar's internal API server will be running, but on the default port of 8911. But browsers are going to want to connect on port 80 (HTTP) or 443 (HTTPS). nginx takes care of this as well: it will [proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) (forward) any requests to a path of your choosing (like the default of `/.redwood/functions`) to port 8911 behind the scenes, then return the response to the browser.
 
-This doc isn't going to go through installing and getting nginx running, there are plenty of resources for that available. What we will show is a successful nginx configuration file used by several Redwood apps currently in production.
+This doc isn't going to go through installing and getting nginx running, there are plenty of resources for that available. What we will show is a successful nginx configuration file used by several Cedar apps currently in production.
 
 ```text title="nginx.conf"
 upstream redwood_server {
@@ -696,7 +696,7 @@ server {
 }
 ```
 
-Now when you start Redwood, you're only going to start the api server:
+Now when you start Cedar, you're only going to start the api server:
 
 ```
 yarn rw serve api
@@ -713,7 +713,7 @@ sides = ["api", "web"]
 path = "/var/www/myapp"
 // highlight-next-line
 processNames = ["api"]
-repo = "git@github.com:redwoodjs/myapp.git"
+repo = "git@github.com:cedarjs/myapp.git"
 branch = "main"
 keepReleases = 3
 packageManagerCommand = "yarn"
@@ -741,7 +741,7 @@ This is the bare minimum to get your site served over HTTP, insecurely. After ve
 
 #### Custom API Path
 
-If you don't love the path of `/.redwood/functions` for your API calls, this is easy to change. You'll need to tell Redwood to use a different path in development, and then let nginx know about that same path so that it resolves the same in production.
+If you don't love the path of `/.redwood/functions` for your API calls, this is easy to change. You'll need to tell Cedar to use a different path in development, and then let nginx know about that same path so that it resolves the same in production.
 
 For example, to simplify the path to just `/api` you'll need to make a change to `redwood.toml` and your new nginx config file:
 

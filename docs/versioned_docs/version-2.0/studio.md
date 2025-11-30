@@ -8,11 +8,11 @@ CedarJS Studio is a package used during development to gain runtime insights int
 
 ## Motivation
 
-Redwood provides tools that lets developers "get to work on what makes your application special, instead of wasting cycles choosing and re-choosing various technologies and configurations."[1](https://github.com/cedarjs/cedar/blob/main/README.md).
+Cedar provides tools that lets developers "get to work on what makes your application special, instead of wasting cycles choosing and re-choosing various technologies and configurations."[1](https://github.com/cedarjs/cedar/blob/main/README.md).
 
 Much happens while your app processes a request: Invoke a function; handle a GraphQL request; resolve the request with a service; build and execute a SQL statement; connect to the database; handle the query response; further resolve the response so it contains all the data needed; return the result ... and more.
 
-While [logging](https://redwoodjs.com/docs/logger) can show you some of these steps, there is no easy way to see how they relate to each other, compare, or break down individual timings. Observability needed to debug, iterate, try out, and refactor your code is lacking.
+While [logging](https://cedarjs.com/docs/logger) can show you some of these steps, there is no easy way to see how they relate to each other, compare, or break down individual timings. Observability needed to debug, iterate, try out, and refactor your code is lacking.
 
 We hope Studio helps solve this problem with an observability tool that combines:
 
@@ -32,7 +32,7 @@ With Studio, it is easier to:
 
 - impersonate the user authentication headers in GraphiQL
 
-Redwood Studio is a command line tool which offers a web UI aimed at providing insights into your application via OpenTelemetry ingestion and other development conveniences like auth-impersonation within GraphiQL.
+Cedar Studio is a command line tool which offers a web UI aimed at providing insights into your application via OpenTelemetry ingestion and other development conveniences like auth-impersonation within GraphiQL.
 
 ### Demo
 
@@ -106,7 +106,7 @@ Requires a `SUPABASE_JWT_SECRET` environment variable for JWT signing.
 ### Settings
 
 All settings for Studio are located in `redwood.toml`, which you can find at
-the root of your Redwood project.
+the root of your Cedar project.
 
 - `[studio.graphiql.authImpersonation].*` – Used to gain access to GraphQL
   endpoints that require authentication. See section above on auth
@@ -124,7 +124,7 @@ wish to delete it to erase any existing telemetry data.
 
 ## Availability
 
-Along the release of Redwood v7, Studio has been rewritten and is available as
+Along the release of Cedar v7, Studio has been rewritten and is available as
 a stable version. Just run `yarn rw studio` to start it! Prior to RW v7 Studio
 was available as an experimental feature. If you're still not using the stable
 version of RW v7, see this forum topic for information on the old experimental

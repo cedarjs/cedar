@@ -2,7 +2,7 @@
 
 This tutorial will show you one way to implement pagination in an app built using CedarJS. It builds on top of [the tutorial](../tutorial/foreword.md) and I'll assume you have a folder with the code from the tutorial that you can continue working on. (If you don't, you can clone this repo: https://github.com/thedavidprice/redwood-tutorial-test)
 
-![redwoodjs-pagination](https://user-images.githubusercontent.com/30793/94778130-ec6d6e00-03c4-11eb-9fd0-97cbcdf68ec2.png)
+![cedarjs-pagination](https://user-images.githubusercontent.com/30793/94778130-ec6d6e00-03c4-11eb-9fd0-97cbcdf68ec2.png)
 
 The screenshot above shows what we're building. See the pagination at the bottom? The styling is up to you to fix.
 
@@ -210,7 +210,7 @@ const HomePage = ({ page = 1 }) => {
 </TabItem>
 </Tabs>
 
-So now if someone navigates to https://awesomeredmixblog.com?page=2 (and the blog was actually hosted on awesomeredmixblog.com), then `HomePage` would have its `page` prop set to `"2"`, and we then pass that value along to `BlogPostsCell`. If no `?page=` query parameter is provided `page` will default to `1`
+So now if someone navigates to https://awesomecedarjsblog.com?page=2 (and the blog was actually hosted on awesomecedarjsblog.com), then `HomePage` would have its `page` prop set to `"2"`, and we then pass that value along to `BlogPostsCell`. If no `?page=` query parameter is provided `page` will default to `1`
 
 Going back to `BlogPostsCell` there is one me thing to add before the query parameter work.
 
@@ -372,4 +372,4 @@ And there you have it! You have now added pagination to your Cedar blog. One tec
 
 Most of the code in this tutorial was copy/pasted from the ["Hammer Blog" RedwoodJS example](https://github.com/redwoodjs/example-blog)
 
-If you want to learn more about [pagination with Prisma](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/pagination) and [pagination with Apollo](https://www.apollographql.com/docs/react/data/pagination/) they both have excellent docs on the topic.
+If you want to learn more about [pagination with Prisma](https://www.prisma.io/docs/orm/prisma-client/queries/pagination) and [pagination with Apollo](https://www.apollographql.com/docs/react/pagination/overview) they both have excellent docs on the topic.

@@ -20,7 +20,7 @@ To see the version of yarn that you have installed, run the following command:
 yarn --version
 ```
 
-**Redwood requires Yarn (>=1.22.21)**
+**Cedar requires Yarn (>=1.22.21)**
 
 You can upgrade your global yarn version by running the following command:
 
@@ -50,7 +50,7 @@ npm install --global corepack
 
 You'll need to run `yarn install` in the root of your project directory to install all the necessary packages and dependencies for your project.
 
-Redwood separates the backend (`api`) and frontend (`web`) concerns into their own paths in the codebase. ([Yarn refers to these as "workspaces"](https://yarnpkg.com/features/workspaces). In Redwood, we refer to them as "sides.") When you add packages going forward you'll need to specify which workspace they should go in.
+Cedar separates the backend (`api`) and frontend (`web`) concerns into their own paths in the codebase. ([Yarn refers to these as "workspaces"](https://yarnpkg.com/features/workspaces). In Cedar, we refer to them as "sides.") When you add packages going forward you'll need to specify which workspace they should go in.
 
 For example to install a package on the `web` or **frontend** side, you would run the following command:
 

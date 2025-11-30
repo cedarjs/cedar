@@ -6,11 +6,11 @@ Let's create an "About" page for our blog so everyone knows about the geniuses b
 yarn redwood generate page about
 ```
 
-Notice that we didn't specify a route path this time. If you leave it off the `redwood generate page` command, Redwood will create a `Route` and give it a path that is the same as the page name you specified, prepended with a slash. In this case it will be `/about`.
+Notice that we didn't specify a route path this time. If you leave it off the `redwood generate page` command, Cedar will create a `Route` and give it a path that is the same as the page name you specified, prepended with a slash. In this case it will be `/about`.
 
 :::info Code-splitting each page
 
-As you add more pages to your app, you may start to worry that more and more code has to be downloaded by the client on any initial page load. Fear not! Redwood will automatically code-split on each Page, which means that initial page loads can be blazingly fast, and you can create as many Pages as you want without having to worry about impacting overall bundle size. If, however, you do want specific Pages to be included in the main bundle, you can [override the default behavior](../../router.md#not-code-splitting).
+As you add more pages to your app, you may start to worry that more and more code has to be downloaded by the client on any initial page load. Fear not! Cedar will automatically code-split on each Page, which means that initial page loads can be blazingly fast, and you can create as many Pages as you want without having to worry about impacting overall bundle size. If, however, you do want specific Pages to be included in the main bundle, you can [override the default behavior](../../router.md#not-code-splitting).
 
 :::
 
@@ -34,7 +34,7 @@ const HomePage = () => {
 
       // highlight-start
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -66,7 +66,7 @@ const HomePage = () => {
 
       // highlight-start
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -89,8 +89,8 @@ export default HomePage
 
 Let's point out a few things here:
 
-- Redwood loves [Function Components](https://www.robinwieruch.de/react-function-component). We'll make extensive use of [React Hooks](https://react.dev/reference/react) as we go and these are only enabled in function components. Now that Redwood is on React 18, we discourage using class components since they won't be able to take advantage of React's concurrent rendering features.
-- Redwood's `<Link>` tag, in its most basic usage, takes a single `to` attribute. That `to` attribute calls a [_named route function_](../../router.md#link-and-named-route-functions) to generate the correct URL. The function has the same name as the `name` attribute on the `<Route>`:
+- Cedar loves [Function Components](https://www.robinwieruch.de/react-function-component). We'll make extensive use of [React Hooks](https://react.dev/reference/react) as we go and these are only enabled in function components. Now that Cedar is on React 18, we discourage using class components since they won't be able to take advantage of React's concurrent rendering features.
+- Cedar's `<Link>` tag, in its most basic usage, takes a single `to` attribute. That `to` attribute calls a [_named route function_](../../router.md#link-and-named-route-functions) to generate the correct URL. The function has the same name as the `name` attribute on the `<Route>`:
 
   `<Route path="/about" page={AboutPage} name="about" />`
 
@@ -114,7 +114,7 @@ const AboutPage = () => {
 
       // highlight-start
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -125,7 +125,7 @@ const AboutPage = () => {
       </header>
       <main>
         <p>
-          This site was created to demonstrate my mastery of Redwood: Look on my
+          This site was created to demonstrate my mastery of Cedar: Look on my
           works, ye mighty, and despair!
         </p>
         <Link to={routes.home()}>Return home</Link>
@@ -152,7 +152,7 @@ const AboutPage = () => {
 
       // highlight-start
       <header>
-        <h1>Redwood Blog</h1>
+        <h1>Cedar Blog</h1>
         <nav>
           <ul>
             <li>
@@ -163,7 +163,7 @@ const AboutPage = () => {
       </header>
       <main>
         <p>
-          This site was created to demonstrate my mastery of Redwood: Look on my
+          This site was created to demonstrate my mastery of Cedar: Look on my
           works, ye mighty, and despair!
         </p>
         <Link to={routes.home()}>Return home</Link>
@@ -183,4 +183,4 @@ Great! Try that out in the browser and verify that you can get back and forth.
 
 ![image](https://user-images.githubusercontent.com/300/145899850-2906c2e3-4ec1-4f8a-9c95-e43b0f7da73f.png)
 
-As a world-class developer you probably saw that copy-and-pasted `<header>` and gasped in disgust. We feel you. That's why Redwood has a little something called _Layouts_.
+As a world-class developer you probably saw that copy-and-pasted `<header>` and gasped in disgust. We feel you. That's why Cedar has a little something called _Layouts_.

@@ -1,10 +1,10 @@
 ---
-description: About the built-in router for Redwood apps
+description: About the built-in router for Cedar apps
 ---
 
 # Router
 
-This is the built-in router for Redwood apps. It takes inspiration from Ruby on Rails, React Router, and Reach Router, but is very opinionated in its own way.
+This is the built-in router for Cedar apps. It takes inspiration from Ruby on Rails, React Router, and Reach Router, but is very opinionated in its own way.
 
 The router is designed to list all routes in a single file, with limited nesting. We prefer this design, as it makes it very easy to track which routes map to which pages.
 
@@ -173,7 +173,7 @@ Here's an example of how you'd use a `PrivateSet`:
 </Router>
 ```
 
-For more fine-grained control, you can specify `roles` (which takes a string for a single role or an array of roles), and the router will check to see that the current user is authorized before giving them access to the Route. If they're not, they will be redirected to the page specified in the `unauthenticated` prop, such as a "forbidden" page. Read more about Role-based Access Control in Redwood [here](how-to/role-based-access-control.md).
+For more fine-grained control, you can specify `roles` (which takes a string for a single role or an array of roles), and the router will check to see that the current user is authorized before giving them access to the Route. If they're not, they will be redirected to the page specified in the `unauthenticated` prop, such as a "forbidden" page. Read more about Role-based Access Control in Cedar [here](how-to/role-based-access-control.md).
 
 To protect private routes for access by a single role:
 
@@ -203,7 +203,7 @@ To protect private routes for access by multiple roles:
 A route is permitted when authenticated and user has **any** of the provided roles such as `"admin"` or `["admin", "editor", "publisher"]`.
 :::
 
-Redwood uses the `useAuth` hook under the hood to determine if the user is authenticated. Read more about authentication in Redwood [here](tutorial/chapter4/authentication.md).
+Cedar uses the `useAuth` hook under the hood to determine if the user is authenticated. Read more about authentication in Cedar [here](tutorial/chapter4/authentication.md).
 
 ## Link and named route functions
 
@@ -424,7 +424,7 @@ We call built-in parameter types _core parameter types_. All core parameter type
 - `Boolean` - Matches and converts Boolean (true or false only)
 
 > Note on TypeScript support
-> Redwood will automatically generate types for your named routes, but you do have to run `yarn redwood dev` or `yarn redwood build` at least once for your `Routes.{js,ts}` to be parsed
+> Cedar will automatically generate types for your named routes, but you do have to run `yarn redwood dev` or `yarn redwood build` at least once for your `Routes.{js,ts}` to be parsed
 
 ### Glob Type
 
@@ -612,7 +612,7 @@ const SomePage = () => {
 }
 ```
 
-The browser keeps track of the browsing history in a stack. By default when you navigate to a new page a new item is pushed to the history stack. But sometimes you want to replace the top item on the stack instead of appending to the stack. This is how you do that in Redwood: `navigate(routes.home(), { replace: true })`. As you can see you need to pass an options object as the second parameter to `navigate` with the option `replace` set to `true`.
+The browser keeps track of the browsing history in a stack. By default when you navigate to a new page a new item is pushed to the history stack. But sometimes you want to replace the top item on the stack instead of appending to the stack. This is how you do that in Cedar: `navigate(routes.home(), { replace: true })`. As you can see you need to pass an options object as the second parameter to `navigate` with the option `replace` set to `true`.
 
 By default `navigate` will scroll to the top after navigating to a new route (except for hash param changes), we can prevent this behavior by setting the `scroll` option to false:
 `navigate(routes.home(), { scroll: false })`
@@ -693,7 +693,7 @@ If you'd like to override the default lazy-loading behavior and include certain 
 import HomePage from 'src/pages/HomePage'
 ```
 
-Redwood will detect your explicit import and refrain from splitting that page into a separate bundle. Be careful with this feature, as you can easily bloat the size of your main bundle to the point where your initial page load time becomes unacceptable.
+Cedar will detect your explicit import and refrain from splitting that page into a separate bundle. Be careful with this feature, as you can easily bloat the size of your main bundle to the point where your initial page load time becomes unacceptable.
 
 ## Page loaders & PageLoadingContext
 
@@ -745,7 +745,7 @@ When the lazy-loaded page is loading, `PageLoadingContext.Consumer` will pass `{
 
 ### Loader while auth details are being retrieved
 
-Let's say you have a dashboard area on your Redwood app, which can only be accessed after logging in. When Redwood Router renders your private page, it will first fetch the user's details, and only render the page if it determines the user is indeed logged in.
+Let's say you have a dashboard area on your Cedar app, which can only be accessed after logging in. When Cedar Router renders your private page, it will first fetch the user's details, and only render the page if it determines the user is indeed logged in.
 
 In order to display a loader while auth details are being retrieved you can add the `whileLoadingAuth` prop to your `PrivateSet` component:
 
@@ -767,7 +767,7 @@ In order to display a loader while auth details are being retrieved you can add 
 
 ## `FatalErrorPage`
 
-Every Redwood project ships with a default `FatalErrorPage` located in `web/src/pages/FatalErrorPage`.
+Every Cedar project ships with a default `FatalErrorPage` located in `web/src/pages/FatalErrorPage`.
 This page gets rendered when an error makes its way all the way to the top of your app without being handled by a catch block or a React error boundary.
 
 Note that this page behaves differently in development than in production.
@@ -854,7 +854,7 @@ As it's part of the CedarJS framework, you can't _change_ the dev fatal error pa
 
 ## `NotFoundPage`
 
-Every Redwood project ships with a default `NotFoundPage` located in `web/src/pages/NotFoundPage`.
+Every Cedar project ships with a default `NotFoundPage` located in `web/src/pages/NotFoundPage`.
 
 But just because it's called `NotFoundPage` doesn't mean the router knows that. The only way the router knows which page is the `NotFoundPage` is via the `notfound` prop, which tells the router what to render when no routes match:
 
@@ -953,4 +953,4 @@ export default () => (
 )
 ```
 
-This means that the `NotFoundPage` can use Redwood features like Cells or auth to construct navigation options or detailed header and footer content to help your users find their way back to the main application.
+This means that the `NotFoundPage` can use Cedar features like Cells or auth to construct navigation options or detailed header and footer content to help your users find their way back to the main application.

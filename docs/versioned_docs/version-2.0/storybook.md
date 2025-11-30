@@ -29,8 +29,8 @@ yarn rw storybook
 
 If this is your first time running Storybook:
 
-- The Redwood CLI will install Storybook, the framework package, and all related dependencies.
-- The Redwood CLI will create the following config files for you:
+- The Cedar CLI will install Storybook, the framework package, and all related dependencies.
+- The Cedar CLI will create the following config files for you:
   - `web/.storybook/main.ts`
     - This is the primary [Storybook configuration file](https://storybook.js.org/docs/7/configure). Note that it references our framework package, [`storybook-framework-cedarjs`](https://www.npmjs.com/package/storybook-framework-cedarjs).
   - `web/.storybook/preview-body.html`
@@ -48,6 +48,6 @@ An older version of our Storybook integration relied on Webpack. If you're just 
 
 If you've been using Storybook for a while, you might need to take some manual steps in upgrading to the new version.
 
-If you don't have any custom [Storybook configuration](https://redwoodjs.com/docs/7.x/storybook/#configuring-storybook), you should be good to go - no changes needed. The Out of Box experience should be the same, and please [let us know](https://github.com/cedarjs/cedar/issues/new?assignees=&labels=bug%2Fneeds-info&projects=&template=bug-report.yml&title=%5BBug%5D%3A+) if you run into any issues.
+If you don't have any custom [Storybook configuration](https://cedarjs.com/docs/storybook/#configuring-storybook), you should be good to go - no changes needed. The Out of Box experience should be the same, and please [let us know](https://github.com/cedarjs/cedar/issues/new?assignees=&labels=bug%2Fneeds-info&projects=&template=bug-report.yml&title=%5BBug%5D%3A+) if you run into any issues.
 
 If you do have custom Storybook configuration, then you'll need to manually migrate it over to the new files. For example, if you've got any global decorators, you can now just follow the official Storybook docs on that: https://storybook.js.org/docs/7/writing-stories/decorators#global-decorators

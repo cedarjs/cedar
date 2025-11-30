@@ -224,7 +224,7 @@ When the query is: `auctions: [Auction!]! @requireAuth`:
 
 ## Subscriptions
 
-Redwood has a first-class developer experience for GraphQL subscriptions.
+Cedar has a first-class developer experience for GraphQL subscriptions.
 
 #### Subscribe to Events
 
@@ -259,7 +259,7 @@ This example showcases how a subscription yields its own response.
 
 ## Live Queries
 
-Redwood has made it super easy to add live queries to your GraphQL server! You can push new data to your clients automatically once the data selected by a GraphQL operation becomes stale by annotating your query operation with the `@live` directive.
+Cedar has made it super easy to add live queries to your GraphQL server! You can push new data to your clients automatically once the data selected by a GraphQL operation becomes stale by annotating your query operation with the `@live` directive.
 
 The invalidation mechanism is based on GraphQL ID fields and schema coordinates. Once a query operation has been invalidated, the query is re-executed, and the result is pushed to the client.
 
@@ -323,7 +323,7 @@ export const schema = gql`
 `
 ```
 
-The Redwood services for these queries return the `fastField` immediately and the `showField` after some delay.
+The Cedar services for these queries return the `fastField` immediately and the `showField` after some delay.
 
 ```ts
 import { logger } from 'src/lib/logger'
