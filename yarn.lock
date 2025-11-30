@@ -11980,12 +11980,12 @@ __metadata:
   linkType: hard
 
 "@types/nodemailer@npm:^6":
-  version: 6.4.19
-  resolution: "@types/nodemailer@npm:6.4.19"
+  version: 6.4.21
+  resolution: "@types/nodemailer@npm:6.4.21"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.731.1"
     "@types/node": "npm:*"
-  checksum: 10c0/e4d42f6e2a87523de3f6dfe6a856647dbd6d2305c2c787bdefaeb74a89c08598b7c04e23ba8d64c7972afa3823e51a1d37671bc0361bdb844f1f2906dc6e66db
+  checksum: 10c0/3a0f4e497161ebd8069aed795093fcd022950004741d7b0f88ec5ef99d2fe4c717d5b47f46a7cda872998c6b7cb897606940faefa397f17c27cd948eff792364
   languageName: node
   linkType: hard
 
