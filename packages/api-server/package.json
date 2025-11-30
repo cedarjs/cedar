@@ -137,7 +137,7 @@
     "@types/dotenv-defaults": "^2.0.4",
     "@types/qs": "6.9.16",
     "@types/split2": "4.2.3",
-    "@types/yargs": "17.0.33",
+    "@types/yargs": "17.0.35",
     "memfs": "4.17.2",
     "pino-abstract-transport": "1.2.0",
     "tsx": "4.20.5",
