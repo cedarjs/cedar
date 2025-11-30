@@ -3471,9 +3471,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@signalwire/docusaurus-theme-llms-txt@npm:1.0.0-alpha.6":
-  version: 1.0.0-alpha.6
-  resolution: "@signalwire/docusaurus-theme-llms-txt@npm:1.0.0-alpha.6"
+"@signalwire/docusaurus-theme-llms-txt@npm:1.0.0-alpha.9":
+  version: 1.0.0-alpha.9
+  resolution: "@signalwire/docusaurus-theme-llms-txt@npm:1.0.0-alpha.9"
   dependencies:
     "@docusaurus/core": "npm:^3.0.0"
     "@docusaurus/theme-common": "npm:^3.0.0"
@@ -3482,7 +3482,7 @@ __metadata:
   peerDependencies:
     react: ^18.0.0
     react-dom: ^18.0.0
-  checksum: 10c0/17ee9337d2b65fd4b0c0a2aa615ff5629f16cf4d156978a9ee7648c9103b3465dd7983b343cc380f2cc946ed525f776361f5f8868c75e147734bc380034e530c
+  checksum: 10c0/7a64fffff57c260af915458c76ed951dd81ee988c91fd33531670d36c9d98ef29b2f1ec9edf3a22ce66ab0bab9a54b430ee95df6a4fb2be72ffa87d7b426983c
   languageName: node
   linkType: hard
 
@@ -6263,7 +6263,7 @@ __metadata:
     "@easyops-cn/docusaurus-search-local": "npm:^0.49.2"
     "@mdx-js/react": "npm:3.0.1"
     "@signalwire/docusaurus-plugin-llms-txt": "npm:2.0.0-alpha.5"
-    "@signalwire/docusaurus-theme-llms-txt": "npm:1.0.0-alpha.6"
+    "@signalwire/docusaurus-theme-llms-txt": "npm:1.0.0-alpha.9"
     "@types/react": "npm:^18.2.55"
     clsx: "npm:2.1.1"
     prism-react-renderer: "npm:2.4.1"
