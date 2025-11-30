@@ -38,7 +38,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/client": "6.19.0",
-    "@types/yargs": "17.0.33",
+    "@types/yargs": "17.0.35",
     "memfs": "4.17.2",
     "tsx": "4.20.5",
     "typescript": "5.9.3",

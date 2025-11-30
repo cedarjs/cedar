@@ -44,7 +44,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/yargs": "17.0.33",
+    "@types/yargs": "17.0.35",
     "concurrently": "8.2.2",
     "memfs": "4.17.2",
     "publint": "0.3.12",
