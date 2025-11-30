@@ -39,7 +39,7 @@
     "@prisma/internals": "6.19.0",
     "esbuild": "0.25.9",
     "publint": "0.3.15",
-    "tsx": "4.20.5",
+    "tsx": "4.20.6",
     "vitest": "3.2.4"
   },
   "publishConfig": {

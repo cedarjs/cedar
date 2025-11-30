@@ -133,7 +133,7 @@
     "rimraf": "6.0.1",
     "tree-kill": "1.2.2",
     "tstyche": "3.0.0",
-    "tsx": "4.20.5",
+    "tsx": "4.20.6",
     "typescript": "5.9.3",
     "vitest": "3.2.4",
     "yargs": "17.7.2",

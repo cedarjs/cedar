@@ -51,7 +51,7 @@
     "@types/babel__register": "7.17.3",
     "@types/node": "20.19.17",
     "babel-plugin-tester": "11.0.4",
-    "tsx": "4.20.5",
+    "tsx": "4.20.6",
     "vitest": "3.2.4"
   },
   "publishConfig": {
