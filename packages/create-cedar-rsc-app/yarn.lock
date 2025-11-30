@@ -2616,14 +2616,14 @@ __metadata:
   linkType: hard
 
 "jsonc-eslint-parser@npm:^2.0.4, jsonc-eslint-parser@npm:^2.4.0":
-  version: 2.4.0
-  resolution: "jsonc-eslint-parser@npm:2.4.0"
+  version: 2.4.1
+  resolution: "jsonc-eslint-parser@npm:2.4.1"
   dependencies:
     acorn: "npm:^8.5.0"
     eslint-visitor-keys: "npm:^3.0.0"
     espree: "npm:^9.0.0"
     semver: "npm:^7.3.5"
-  checksum: 10c0/1bef9f4f12122824e1d13ef651b7a8d16cbf6995bfd08fabb81df34ff0cf57f5c1c822dd5ee7aece0575fb1351538c8c5ce86f9b94d8f41bcd3bbe2773b62db3
+  checksum: 10c0/735bd33435fee002bf7f07d23ba969b994971ab3b333a0e2641b79cd413819fe36540ba6ed29da9ebc69062625e8bfb167ff4415321f9640fdd9d0cf92dfa999
   languageName: node
   linkType: hard
 
