@@ -38,7 +38,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@types/semver": "^7",
     "@types/yargs": "17.0.35",
-    "tsx": "4.20.5",
+    "tsx": "4.20.6",
     "typescript": "5.9.3"
   },
   "publishConfig": {
