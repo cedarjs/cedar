@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:4.0.5":
-  version: 4.0.5
-  resolution: "@actions/cache@npm:4.0.5"
+"@actions/cache@npm:4.1.0":
+  version: 4.1.0
+  resolution: "@actions/cache@npm:4.1.0"
   dependencies:
     "@actions/core": "npm:^1.11.1"
     "@actions/exec": "npm:^1.0.1"
@@ -26,7 +26,7 @@ __metadata:
     "@azure/storage-blob": "npm:^12.13.0"
     "@protobuf-ts/runtime-rpc": "npm:^2.11.1"
     semver: "npm:^6.3.1"
-  checksum: 10c0/98e6528e61a8d9b11fac55686af06b36bcfa4f30f731908f68f08ed8a3ec0f253937998c79baf3a8922d430d972b69d690cbe32c8a536d99acaee4140e2337f2
+  checksum: 10c0/2e4716bd929bac9e79b11b2165c4b3799a8fe2b9a89277e76c60d1321392734dbcfa3c250a1443b07da377040af8f38a97b2cf76049d81a0f5c8a5806f0f3c43
   languageName: node
   linkType: hard
 
@@ -3417,7 +3417,7 @@ __metadata:
     "@types/lodash": "npm:4.17.21"
     graphql-tag: "npm:2.12.6"
     lodash: "npm:4.17.21"
-    nodemon: "npm:3.1.10"
+    nodemon: "npm:3.1.11"
     publint: "npm:0.3.15"
     react-refresh: "npm:0.14.0"
     rimraf: "npm:6.0.1"
@@ -3525,7 +3525,7 @@ __metadata:
     "@types/react-dom": "npm:^18.2.19"
     concurrently: "npm:8.2.2"
     graphql: "npm:16.9.0"
-    nodemon: "npm:3.1.10"
+    nodemon: "npm:3.1.11"
     pascalcase: "npm:1.0.0"
     publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
@@ -3874,7 +3874,7 @@ __metadata:
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
     graphql: "npm:16.9.0"
     ioredis: "npm:5.6.1"
-    nodemon: "npm:3.1.10"
+    nodemon: "npm:3.1.11"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -4202,7 +4202,7 @@ __metadata:
     graphql: "npm:16.9.0"
     graphql-sse: "npm:2.5.4"
     graphql-tag: "npm:2.12.6"
-    nodemon: "npm:3.1.10"
+    nodemon: "npm:3.1.11"
     publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
     react-dom: "npm:19.0.0-rc-f2df5694-20240916"
@@ -24462,9 +24462,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemon@npm:3.1.10":
-  version: 3.1.10
-  resolution: "nodemon@npm:3.1.10"
+"nodemon@npm:3.1.11":
+  version: 3.1.11
+  resolution: "nodemon@npm:3.1.11"
   dependencies:
     chokidar: "npm:^3.5.2"
     debug: "npm:^4"
@@ -24478,7 +24478,7 @@ __metadata:
     undefsafe: "npm:^2.0.5"
   bin:
     nodemon: bin/nodemon.js
-  checksum: 10c0/95b64d647f2c22e85e375b250517b0a4b32c2d2392ad898444e331f70d6b1ab43b17f53a8a1d68d5879ab8401fc6cd6e26f0d2a8736240984f6b5a8435b407c0
+  checksum: 10c0/f3c17897146f680eaf93f5e1f53b1fd4acbd61e4f7526ec6cbcc993d1c14cee8c722c41b30aa8b101447f672d38e6d7b17c97e77540df191d724826bb16ce474
   languageName: node
   linkType: hard
 
@@ -27888,7 +27888,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@actions/cache": "npm:4.0.5"
+    "@actions/cache": "npm:4.1.0"
     "@actions/core": "npm:1.11.1"
     "@actions/exec": "npm:1.1.1"
     "@actions/glob": "npm:0.5.0"
@@ -27950,7 +27950,7 @@ __metadata:
     make-dir-cli: "npm:4.0.0"
     msw: "npm:1.3.5"
     ncp: "npm:2.0.0"
-    nodemon: "npm:3.1.10"
+    nodemon: "npm:3.1.11"
     npm-packlist: "npm:8.0.2"
     nx: "npm:22.1.3"
     ora: "npm:8.2.0"
