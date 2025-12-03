@@ -46,8 +46,9 @@ Cedar:
   [experimental ESM support](https://github.com/cedarjs/cedar/tree/f824d9dbd87965fa96c9b7a06f62a14dc7f5b0a1/packages/create-cedar-app/templates/esm-ts).
 - Moving toward ESM-only packages and modern JavaScript standards to
   future-proof your applications.
-- Cedar maintains backward compatibility with RedwoodJS
-  v8.6, making migration straightforward with a clear upgrade path.
+- Cedar v1.x maintains backward compatibility with RedwoodJS v8.x, making
+  [migration](https://cedarjs.com/docs/upgrade-guides/redwood-to-cedar)
+  straightforward with a clear upgrade path.
 
 ### For Everyone Else
 
@@ -82,31 +83,6 @@ transitioning from RedwoodJS or looking for an actively maintained full-stack
 framework with a dedicated API layer. Or just about **anyone** who wants to
 focus on building features rather than configuring build tools and
 infrastructure
-
-## Migrating from RedwoodJS to CedarJS
-
-1. Search and replace all instances of `"@redwoodjs/(.*)": "\d+\.\d+\.\d+"`
-   with `"@cedarjs/$1": "0.1.1"` (or whatever the latest version of Cedar is
-   when you run this) in all three `package.json` files.
-2. Run `yarn install` to update your lock file.
-3. Make a git commit with all changes as a checkpoint to make it easier to see
-   what changes in the following steps
-4. Search and replace all instances of `@redwoodjs` in all files with
-   `@cedarjs`.
-5. Also find all mentions of `storybook-framework-redwoodjs-vite` and replace
-   with `storybook-framework-cedarjs`
-6. Pay attention to `yarn.lock`. If anything changed in there you probably have
-   to do some manual editing. (Contact me if you need help.)
-7. Delete all files and folders inside `.redwood/` except `README.md`
-8. Run `yarn install` and `yarn rw build`. Make sure everything works as
-   expected.
-9. Make a new git commit (or amend the previous one you did)
-
-### Optional steps
-
-- Update `web/vite.config.ts` to have `import { cedar } from '@cedarjs/vite';`
-  and `plugins: [cedar()],` instead of the older
-  `import redwood from '@redwoodjs/vite';` and `plugins: [redwood()],`
 
 ## Roadmap
 

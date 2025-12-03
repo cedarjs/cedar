@@ -22,7 +22,7 @@ jobs:
     if: github.repository == 'cedarjs/cedar'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         # Required because lerna uses tags to determine the version.
         with:
           fetch-depth: 0
@@ -31,7 +31,7 @@ jobs:
         run: npm install --global corepack
 
       - name: ⬢ Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
         with:
           node-version: 24
 
@@ -58,7 +58,7 @@ jobs:
     needs: check-git-tags
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           # `fetch-depth`—number of commits to fetch. `0` fetches all history for all branches and tags.
           #  This is required because lerna uses tags to determine the version.

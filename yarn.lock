@@ -3300,7 +3300,7 @@ __metadata:
     node-ssh: "npm:13.2.1"
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
-    portfinder: "npm:1.0.37"
+    portfinder: "npm:1.0.38"
     prettier: "npm:3.6.2"
     prisma: "npm:6.19.0"
     prompts: "npm:2.4.2"
@@ -3357,7 +3357,7 @@ __metadata:
     pascalcase: "npm:1.0.0"
     prettier: "npm:3.6.2"
     publint: "npm:0.3.15"
-    tasuku: "npm:2.0.1"
+    tasuku: "npm:2.0.4"
     tempy: "npm:1.0.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -12268,13 +12268,6 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/e917cf11c78e9ca7d037d0e6e0d6d5d99443d9d7201f8f1a556f02a2bc57ae457487e9bfec89dfa848d16979b35de6e5b34840d4d0bb9e5f33849d077ac15154
-  languageName: node
-  linkType: hard
-
-"@types/yoga-layout@npm:1.9.2":
-  version: 1.9.2
-  resolution: "@types/yoga-layout@npm:1.9.2"
-  checksum: 10c0/9f2a8618afe3e2e18e76eeaa4ec7d09a85f01f071231f8ff21388d851f940dd7ae5867a5f9aef29eafe44c47453a328d3c718fff1451ab62266450b415e43150
   languageName: node
   linkType: hard
 
@@ -22866,12 +22859,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magic-string@npm:0.30.18, magic-string@npm:^0.30.17, magic-string@npm:^0.30.3, magic-string@npm:^0.30.5":
-  version: 0.30.18
-  resolution: "magic-string@npm:0.30.18"
+"magic-string@npm:0.30.21, magic-string@npm:^0.30.17, magic-string@npm:^0.30.3, magic-string@npm:^0.30.5":
+  version: 0.30.21
+  resolution: "magic-string@npm:0.30.21"
   dependencies:
     "@jridgewell/sourcemap-codec": "npm:^1.5.5"
-  checksum: 10c0/80fba01e13ce1f5c474a0498a5aa462fa158eb56567310747089a0033e432d83a2021ee2c109ac116010cd9dcf90a5231d89fbe3858165f73c00a50a74dbefcd
+  checksum: 10c0/299378e38f9a270069fc62358522ddfb44e94244baa0d6a8980ab2a9b2490a1d03b236b447eee309e17eb3bddfa482c61259d47960eb018a904f0ded52780c4a
   languageName: node
   linkType: hard
 
@@ -26104,13 +26097,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"portfinder@npm:1.0.37":
-  version: 1.0.37
-  resolution: "portfinder@npm:1.0.37"
+"portfinder@npm:1.0.38":
+  version: 1.0.38
+  resolution: "portfinder@npm:1.0.38"
   dependencies:
     async: "npm:^3.2.6"
     debug: "npm:^4.3.6"
-  checksum: 10c0/eabd2764ced7bb0e6da7a1382bb77f9531309f7782fb6169021d05eecff0c0a17958bcf87573047a164dd0bb23f294d5d74b08ffe58c47005c28ed92eea9a6a7
+  checksum: 10c0/59b2f2aa0b620c90ce0d477241e62c277f38bfd4fb6074106c23560248dd5e5c2c629dd048ef721f32b19df4213d09b77234880e4f0ab04abf1ab70b6d8048fa
   languageName: node
   linkType: hard
 
@@ -28965,7 +28958,7 @@ __metadata:
     "@storybook/react": "npm:8.6.14"
     "@storybook/types": "npm:8.6.14"
     "@types/node": "npm:24.10.1"
-    magic-string: "npm:0.30.18"
+    magic-string: "npm:0.30.21"
     react-docgen: "npm:7.0.3"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -29519,12 +29512,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tasuku@npm:2.0.1":
-  version: 2.0.1
-  resolution: "tasuku@npm:2.0.1"
-  dependencies:
-    yoga-layout-prebuilt: "npm:1.10.0"
-  checksum: 10c0/0c28c9c9b836826d2858b92d69a2d5125c89cacd1f856159dad567fdbdc85b21e6fc2876dfce65dc698b47791bc8c553687eaab922355b9c331875786b86e7fc
+"tasuku@npm:2.0.4":
+  version: 2.0.4
+  resolution: "tasuku@npm:2.0.4"
+  checksum: 10c0/e3b64ce286d7a01e94e334086033fab84cbcc07d202d3d345b88902caa0df5bd30c7dc4392d789bf6f6eb9f256595581b3d609042ef41df69c0d47a23d1c7082
   languageName: node
   linkType: hard
 
@@ -31938,15 +31929,6 @@ __metadata:
   version: 2.1.3
   resolution: "yoctocolors-cjs@npm:2.1.3"
   checksum: 10c0/584168ef98eb5d913473a4858dce128803c4a6cd87c0f09e954fa01126a59a33ab9e513b633ad9ab953786ed16efdd8c8700097a51635aafaeed3fef7712fa79
-  languageName: node
-  linkType: hard
-
-"yoga-layout-prebuilt@npm:1.10.0":
-  version: 1.10.0
-  resolution: "yoga-layout-prebuilt@npm:1.10.0"
-  dependencies:
-    "@types/yoga-layout": "npm:1.9.2"
-  checksum: 10c0/e83b6b7078faf4d0472461b53e92bf9cae655de3d896aee5f79b5ba5a960e507bbf8e671b261db13137bf18711686969f19fd1d9c4669beb1d70754b83c5879d
   languageName: node
   linkType: hard
 
