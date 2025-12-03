@@ -322,10 +322,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@auth0/auth0-spa-js@npm:2.3.0":
-  version: 2.3.0
-  resolution: "@auth0/auth0-spa-js@npm:2.3.0"
-  checksum: 10c0/c7ac73e6bcec0e5b319b0a34756df7e0a00cf25628d5ebf625dc44aeda36abbabb30cdfbe217fbcc2161b8f133fbf93d5ec8f3cd41ccbda5a0713ca693d2194b
+"@auth0/auth0-spa-js@npm:2.10.0":
+  version: 2.10.0
+  resolution: "@auth0/auth0-spa-js@npm:2.10.0"
+  dependencies:
+    browser-tabs-lock: "npm:^1.2.15"
+    dpop: "npm:^2.1.1"
+    es-cookie: "npm:~1.3.2"
+  checksum: 10c0/855447aed5627fb1296ed44e52687daa81f56ff0e30491395de8386dc65a55b9027591d2bac46a35b3c6a341a2da9ee1a892be47994e2f105a231cfb59fc469d
   languageName: node
   linkType: hard
 
@@ -2688,7 +2692,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-web@workspace:packages/auth-providers/auth0/web"
   dependencies:
-    "@auth0/auth0-spa-js": "npm:2.3.0"
+    "@auth0/auth0-spa-js": "npm:2.10.0"
     "@cedarjs/auth": "npm:2.0.3"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
@@ -2699,7 +2703,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@auth0/auth0-spa-js": 2.3.0
+    "@auth0/auth0-spa-js": 2.10.0
   languageName: unknown
   linkType: soft
 
@@ -14324,6 +14328,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"browser-tabs-lock@npm:^1.2.15":
+  version: 1.3.0
+  resolution: "browser-tabs-lock@npm:1.3.0"
+  dependencies:
+    lodash: "npm:>=4.17.21"
+  checksum: 10c0/b1f9cbd221725cf3228daf42360ea6a97f69b29e0475ef734bc5a6bd5c27b61f99db716c49808988a1c735d828207dcaa3a8802e605d0195538fbf9e25d1753b
+  languageName: node
+  linkType: hard
+
 "browserify-aes@npm:^1.0.4, browserify-aes@npm:^1.2.0":
   version: 1.2.0
   resolution: "browserify-aes@npm:1.2.0"
@@ -16858,6 +16871,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dpop@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "dpop@npm:2.1.1"
+  checksum: 10c0/e46dfd62325dd63372a17492c1867f79cdaf235645d32b87c3be8a09d4c7b03b8b44efec26688ba19e8279c77497a08deb302a9a4704b432795efd1163519611
+  languageName: node
+  linkType: hard
+
 "dset@npm:^3.1.1, dset@npm:^3.1.2":
   version: 3.1.4
   resolution: "dset@npm:3.1.4"
@@ -17211,6 +17231,13 @@ __metadata:
   version: 1.0.0
   resolution: "es-array-method-boxes-properly@npm:1.0.0"
   checksum: 10c0/4b7617d3fbd460d6f051f684ceca6cf7e88e6724671d9480388d3ecdd72119ddaa46ca31f2c69c5426a82e4b3091c1e81867c71dcdc453565cd90005ff2c382d
+  languageName: node
+  linkType: hard
+
+"es-cookie@npm:~1.3.2":
+  version: 1.3.2
+  resolution: "es-cookie@npm:1.3.2"
+  checksum: 10c0/26eb6e06b25b5569d8763fcb23b5335a5098e354b0a9a7bc5122e8c8705003307187a165ddaeda5cff08fa4cc8e1675dbddd5709279fb27cfa8875514dc3eccb
   languageName: node
   linkType: hard
 
@@ -23009,7 +23036,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:4.17.21, lodash@npm:^4.17.15, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:~4.17.0":
+"lodash@npm:4.17.21, lodash@npm:>=4.17.21, lodash@npm:^4.17.15, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:~4.17.0":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
