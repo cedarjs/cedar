@@ -9,7 +9,8 @@
   - [Contributing](#contributing)
   - [Usage (Flat Config - Recommended)](#usage-flat-config---recommended)
   - [Overriding Default Configuration (Flat Config)](#overriding-default-configuration-flat-config)
-  - [Legacy Configuration (Deprecated)](#legacy-configuration-deprecated)
+  - [Migration Guide (Optional)](#migration-guide-optional)
+  - [Legacy Configuration (Still Supported)](#legacy-configuration-still-supported)
 
 ## Purpose and Vision
 
@@ -99,14 +100,55 @@ export default [
 ]
 ```
 
-## Legacy Configuration (Deprecated)
+## Migration Guide (Optional)
 
-> **Note:** The legacy `.eslintrc.js` format is deprecated. Please migrate to flat config.
+**The legacy `.eslintrc.js` format still works** - you don't have to migrate. However, if you want to use the new flat config format, follow these steps:
 
-For projects still using the legacy format, you can use the old CommonJS export:
+1. **Create a new flat config file** in your project root:
+
+   ```javascript
+   // eslint.config.mjs (for CommonJS projects)
+   // or eslint.config.js (for ESM projects with "type": "module")
+   import cedarConfig from '@cedarjs/eslint-config'
+
+   export default await cedarConfig()
+   ```
+
+2. **Remove old config**:
+   - Delete `.eslintrc.js` if it exists
+   - Remove `eslintConfig` field from `package.json` if it exists
+
+3. **Update your package.json scripts** (if needed):
+
+   ```json
+   {
+     "scripts": {
+       "lint": "eslint .",
+       "lint:fix": "eslint . --fix"
+     }
+   }
+   ```
+
+4. **Migrate custom rules**: If you had custom rules in your old config, add them to your new flat config:
+   ```javascript
+   export default [
+     ...(await cedarConfig()),
+     {
+       rules: {
+         // Your custom rules here
+       },
+     },
+   ]
+   ```
+
+That's it! Your linting should work the same as before.
+
+## Legacy Configuration (Still Supported)
+
+The legacy `.eslintrc.js` format is still fully supported. You can continue using it:
 
 ```javascript
-// cedar-app/.eslintrc.js (DEPRECATED)
+// cedar-app/.eslintrc.js
 module.exports = {
   extends: ['@cedarjs/eslint-config'],
   root: true,
@@ -127,4 +169,4 @@ Or in `package.json`:
 }
 ```
 
-**Migration Guide:** See [ESLint Flat Config Migration](../../ESLINT_FLAT_CONFIG_MIGRATION.md) for migration instructions.
+**Note:** While both formats are supported, we recommend migrating to flat config when convenient. See the [Migration Guide](#migration-guide-optional) above.
