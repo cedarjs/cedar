@@ -7,11 +7,13 @@
   - [Package Leads](#package-leads)
   - [Roadmap](#roadmap)
   - [Contributing](#contributing)
-  - [Overriding Default Configuration](#overriding-default-configuration)
+  - [Usage (Flat Config - Recommended)](#usage-flat-config---recommended)
+  - [Overriding Default Configuration (Flat Config)](#overriding-default-configuration-flat-config)
+  - [Legacy Configuration (Deprecated)](#legacy-configuration-deprecated)
 
 ## Purpose and Vision
 
-This package contains a shareable set of ESLint rules and configuration that can be re-used on all RedwoodJS projects. The framework [`eslint-config`](https://github.com/redwoodjs/redwood/tree/main/packages/eslint-config) package is used both for framework configuration and RedwoodJS app (created with the [CRWA](https://github.com/redwoodjs/redwood/tree/main/packages/create-cedar-app) package) configuration.
+This package contains a shareable set of ESLint rules and configuration that can be re-used on all CedarJS projects. The framework [`eslint-config`](https://github.com/cedarjs/cedar/tree/main/packages/eslint-config) package is used both for framework configuration and CedarJS app (created with the [create-cedar-app](https://github.com/cedarjs/cedar/tree/main/packages/create-cedar-app) package) configuration.
 
 Our configuration uses recommended rule presets, including those from [ESLint](https://eslint.org/docs/rules/), [React](https://www.npmjs.com/package/eslint-plugin-react#list-of-supported-rules), the [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html), and [Jest](https://github.com/testing-library/eslint-plugin-jest-dom#supported-rules). We also override the presets with some stylistic preferences. Some of them are:
 
@@ -34,25 +36,79 @@ Peter Pistorius (@peterp), David Price (@thedavidprice), Dominic Saadi (@jtoar),
 
 This package doesn't depend on other Redwood Framework packages. To contribute, you should be familiar with the ESLint package. Keep in mind that any rules added should not conflict with code formatting tools (e.g. [Prettier](https://prettier.io/docs/en/integrating-with-linters.html)).
 
-## Overriding Default Configuration
+## Usage (Flat Config - Recommended)
 
-In a Redwood App, you can override default config in your root `package.json` file by adding the rules after the include for this package:
+CedarJS uses ESLint's flat config format by default. Create an `eslint.config.js` file in your project root:
 
 ```javascript
-// redwood-app/package.json
-"eslintConfig": {
-  "extends": "@redwoodjs/eslint-config",
-  "root": true,
-  "jsx-a11y/no-onchange": "off",
-},
+// cedar-app/eslint.config.js
+import cedarConfig from '@cedarjs/eslint-config'
+
+export default await cedarConfig()
 ```
 
-If you need script in your configuration, you can remove the `eslintConfig` block from your root `package.json` file and add an `.eslintrc.js` file:
+Note: The config is async because it needs to load your Cedar project configuration.
+
+## Overriding Default Configuration (Flat Config)
+
+To override rules in your CedarJS app, add additional config objects after the Cedar config:
 
 ```javascript
-// redwood-app/.eslintrc.js
+// cedar-app/eslint.config.js
+import cedarConfig from '@cedarjs/eslint-config'
+
+export default [
+  ...(await cedarConfig()),
+  {
+    rules: {
+      'jsx-a11y/no-onchange': 'off',
+      'no-console': 'warn',
+    },
+  },
+]
+```
+
+You can also add file-specific overrides:
+
+```javascript
+// cedar-app/eslint.config.js
+import cedarConfig from '@cedarjs/eslint-config'
+
+export default [
+  ...(await cedarConfig()),
+  {
+    files: ['web/src/**/*.tsx'],
+    rules: {
+      'react/prop-types': 'off',
+    },
+  },
+]
+```
+
+To ignore specific files or directories:
+
+```javascript
+// cedar-app/eslint.config.js
+import cedarConfig from '@cedarjs/eslint-config'
+
+export default [
+  {
+    ignores: ['scripts/**', 'generated/**'],
+  },
+  ...(await cedarConfig()),
+]
+```
+
+## Legacy Configuration (Deprecated)
+
+> **Note:** The legacy `.eslintrc.js` format is deprecated. Please migrate to flat config.
+
+For projects still using the legacy format, you can use the old CommonJS export:
+
+```javascript
+// cedar-app/.eslintrc.js (DEPRECATED)
 module.exports = {
-  extends: ['@redwoodjs/eslint-config'],
+  extends: ['@cedarjs/eslint-config'],
   root: true,
   rules: {
     'jsx-a11y/no-onchange': 'off',
@@ -60,15 +116,15 @@ module.exports = {
 }
 ```
 
-By default, ESLint will recurse through all project directories looking for configuration files and directives, and override those specified in multiple places according to a prioritization formula. The `root` directive tells ESLint to stop searching for configuration lower in the tree at the file this directive is encountered.
+Or in `package.json`:
 
-In a different Redwood Framework package or in a Redwood App, you can provide configuration that applies only to that package or side by omitting the `root` directive. For example, to apply a directive only to the client code of an app:
-
-```javascript
-// e.g. redwood/packages/auth or redwood-app/web/package.json
-"eslintConfig": {
-  "jsx-a11y/no-onchange": "off",
-},
+```json
+{
+  "eslintConfig": {
+    "extends": "@cedarjs/eslint-config",
+    "root": true
+  }
+}
 ```
 
-In this case, ESLint will still load the configuration from the `@redwoodjs/eslint-config` package as the default value of `root` is `false`.
+**Migration Guide:** See [ESLint Flat Config Migration](../../ESLINT_FLAT_CONFIG_MIGRATION.md) for migration instructions.
