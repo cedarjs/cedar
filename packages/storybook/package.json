@@ -58,7 +58,7 @@
     "@storybook/addon-essentials": "8.6.14",
     "@storybook/builder-vite": "8.6.14",
     "@storybook/react": "8.6.14",
-    "magic-string": "0.30.18",
+    "magic-string": "0.30.21",
     "react-docgen": "7.0.3",
     "unplugin-auto-import": "19.3.0",
     "vite-plugin-node-polyfills": "0.23.0"
