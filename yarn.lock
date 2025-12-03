@@ -22891,16 +22891,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magic-string@npm:0.30.18":
-  version: 0.30.18
-  resolution: "magic-string@npm:0.30.18"
-  dependencies:
-    "@jridgewell/sourcemap-codec": "npm:^1.5.5"
-  checksum: 10c0/80fba01e13ce1f5c474a0498a5aa462fa158eb56567310747089a0033e432d83a2021ee2c109ac116010cd9dcf90a5231d89fbe3858165f73c00a50a74dbefcd
-  languageName: node
-  linkType: hard
-
-"magic-string@npm:^0.30.17, magic-string@npm:^0.30.3, magic-string@npm:^0.30.5":
+"magic-string@npm:0.30.21, magic-string@npm:^0.30.17, magic-string@npm:^0.30.3, magic-string@npm:^0.30.5":
   version: 0.30.21
   resolution: "magic-string@npm:0.30.21"
   dependencies:
@@ -28993,7 +28984,7 @@ __metadata:
     "@storybook/types": "npm:8.6.14"
     "@types/node": "npm:24.10.1"
     empathic: "npm:2.0.0"
-    magic-string: "npm:0.30.18"
+    magic-string: "npm:0.30.21"
     react-docgen: "npm:7.0.3"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
