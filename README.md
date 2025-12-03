@@ -46,8 +46,9 @@ Cedar:
   [experimental ESM support](https://github.com/cedarjs/cedar/tree/f824d9dbd87965fa96c9b7a06f62a14dc7f5b0a1/packages/create-cedar-app/templates/esm-ts).
 - Moving toward ESM-only packages and modern JavaScript standards to
   future-proof your applications.
-- Cedar maintains backward compatibility with RedwoodJS
-  v8.6, making migration straightforward with a clear upgrade path.
+- Cedar v1.x maintains backward compatibility with RedwoodJS v8.x, making
+  [migration](https://cedarjs.com/docs/upgrade-guides/redwood-to-cedar)
+  straightforward with a clear upgrade path.
 
 ### For Everyone Else
 
