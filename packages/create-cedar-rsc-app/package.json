@@ -25,7 +25,7 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "24.10.1",
     "ansis": "4.1.0",
     "ci-info": "4.0.0",
     "enquirer": "2.4.1",
