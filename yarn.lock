@@ -3300,7 +3300,7 @@ __metadata:
     node-ssh: "npm:13.2.1"
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
-    portfinder: "npm:1.0.37"
+    portfinder: "npm:1.0.38"
     prettier: "npm:3.6.2"
     prisma: "npm:6.19.0"
     prompts: "npm:2.4.2"
@@ -26104,13 +26104,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"portfinder@npm:1.0.37":
-  version: 1.0.37
-  resolution: "portfinder@npm:1.0.37"
+"portfinder@npm:1.0.38":
+  version: 1.0.38
+  resolution: "portfinder@npm:1.0.38"
   dependencies:
     async: "npm:^3.2.6"
     debug: "npm:^4.3.6"
-  checksum: 10c0/eabd2764ced7bb0e6da7a1382bb77f9531309f7782fb6169021d05eecff0c0a17958bcf87573047a164dd0bb23f294d5d74b08ffe58c47005c28ed92eea9a6a7
+  checksum: 10c0/59b2f2aa0b620c90ce0d477241e62c277f38bfd4fb6074106c23560248dd5e5c2c629dd048ef721f32b19df4213d09b77234880e4f0ab04abf1ab70b6d8048fa
   languageName: node
   linkType: hard
 
