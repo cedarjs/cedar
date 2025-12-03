@@ -1,9 +1,10 @@
 ---
-title: Migrating from RedwoodJS to CedarJS
 description: How to switch from RedwoodJS/RedwoodGraphQL to CedarJS
 ---
 
-# Required Steps
+# Migrating from RedwoodJS to CedarJS
+
+## Required Steps
 
 1. Search and replace all instances of `"@redwoodjs/(.*)": "\d+\.\d+\.\d+"`
    with `"@cedarjs/$1": "1.1.1"` in all three `package.json` files.
@@ -22,7 +23,7 @@ description: How to switch from RedwoodJS/RedwoodGraphQL to CedarJS
    expected.
 9. Make a new git commit (or amend the previous one you did)
 
-# Optional, but Hightly Recommended, Steps
+## Optional, but Hightly Recommended, Steps
 
 - Update `web/vite.config.ts` to have `import { cedar } from '@cedarjs/vite'`
   and `plugins: [cedar()],` instead of the older
