@@ -45,7 +45,7 @@
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/api": "2.0.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/aws-lambda": "8.10.152",
+    "@types/aws-lambda": "8.10.159",
     "@types/jsonwebtoken": "9.0.10",
     "concurrently": "8.2.2",
     "publint": "0.3.15",

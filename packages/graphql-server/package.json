@@ -66,7 +66,7 @@
     "@cedarjs/project-config": "2.0.2",
     "@cedarjs/realtime": "2.0.2",
     "@envelop/types": "5.2.1",
-    "@types/aws-lambda": "8.10.152",
+    "@types/aws-lambda": "8.10.159",
     "@types/jsonwebtoken": "9.0.10",
     "@types/lodash": "4.17.21",
     "@types/uuid": "10.0.0",
