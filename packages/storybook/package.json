@@ -66,7 +66,7 @@
   "devDependencies": {
     "@storybook/types": "8.6.14",
     "@types/node": "20.19.17",
-    "tsx": "4.20.5",
+    "tsx": "4.20.6",
     "typescript": "5.9.3",
     "vite": "5.4.19",
     "vitest": "3.2.4"

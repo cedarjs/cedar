@@ -66,7 +66,7 @@ module.exports = {
 
 Second, CedarJS automatically creates the [fragmentRegistry](https://www.apollographql.com/docs/react/data/fragments/#registering-named-fragments-using-createfragmentregistry) needed for Apollo to know about the fragments in your project without needing to interpolate their declarations.
 
-Redwood exports ways to interact with fragments in the `@cedarjs/web/apollo` package.
+Cedar exports ways to interact with fragments in the `@cedarjs/web/apollo` package.
 
 ```
 import { fragmentRegistry, registerFragment } from '@cedarjs/web/apollo'

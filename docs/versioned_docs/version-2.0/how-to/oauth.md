@@ -8,7 +8,7 @@ If you do prefer to set this up manually or are just curious how OAuth and dbAut
 
 ## Prerequisites
 
-This article assumes you have an app set up and are using dbAuth. We're going to make use of the dbAuth system to validate that you're who you say you are. If you just want to try this code out in a sandbox app, you can create a test blog app from scratch by checking out the [Redwood codebase](https://github.com/cedarjs/cedar) itself and then running a couple of commands:
+This article assumes you have an app set up and are using dbAuth. We're going to make use of the dbAuth system to validate that you're who you say you are. If you just want to try this code out in a sandbox app, you can create a test blog app from scratch by checking out the [Cedar codebase](https://github.com/cedarjs/cedar) itself and then running a couple of commands:
 
 ```bash
 yarn install
@@ -112,11 +112,11 @@ This example uses Tailwind to style the link to match the rest of the default db
 
 You can put this same link on your signup page as well, since using the OAuth flow will be dual-purpose: it will log the user in if a local user already exists, or it will create the user and then log them in.
 
-We're using several of our new ENV vars here, and need to tell Redwood to make them available to the web side during the build process. Add them to the `includeEnvironmentVariables` key in `redwood.toml`:
+We're using several of our new ENV vars here, and need to tell Cedar to make them available to the web side during the build process. Add them to the `includeEnvironmentVariables` key in `redwood.toml`:
 
 ```toml title="/redwood.toml"
 [web]
-  title = "Redwood App"
+  title = "Cedar App"
   port = "${WEB_DEV_PORT:8910}"
   apiUrl = "/.redwood/functions"
   # highlight-next-line
@@ -155,7 +155,7 @@ This nicely formatted JSON comes from the [JSON Viewer](https://chrome.google.co
 
 ## The `/oauth` Function
 
-We can have Redwood generate a shell of our new function for us:
+We can have Cedar generate a shell of our new function for us:
 
 ```bash
 yarn rw g function oauth
@@ -551,7 +551,7 @@ const findOrCreateUser = async (providerUser) => {
 }
 ```
 
-We create the `user` and the `identity` records inside a transaction so that if something goes wrong, both records fail to create. The error would bubble up to the try/catch inside `callback()`. (The Redwood test project has a required `fullName` field that we fill with the `name` attribute from GitHub.)
+We create the `user` and the `identity` records inside a transaction so that if something goes wrong, both records fail to create. The error would bubble up to the try/catch inside `callback()`. (The Cedar test project has a required `fullName` field that we fill with the `name` attribute from GitHub.)
 
 :::info
 Don't forget the `toString()` calls whenever we read or write the `providerUser.id` since we made the `uid` of type `String`.
@@ -561,7 +561,7 @@ If everything worked then on clicking **Login with GitHub** we should now see a 
 
 ![User details](https://user-images.githubusercontent.com/300/245922971-caaeb3ed-9231-4edf-aac5-9ea76b488824.png)
 
-You can take a look in the database and verify that the User and Identity were created. Start up the [Prisma Studio](https://www.prisma.io/studio) (which is already included with Redwood):
+You can take a look in the database and verify that the User and Identity were created. Start up the [Prisma Studio](https://www.prisma.io/studio) (which is already included with Cedar):
 
 ```bash
 yarn rw prisma studio

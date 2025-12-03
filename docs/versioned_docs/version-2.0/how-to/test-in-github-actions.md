@@ -1,6 +1,6 @@
-# Testing Redwood in GitHub actions
+# Testing Cedar in GitHub actions
 
-A good testing strategy is important for any project. Redwood offers a few different types of tests that you can write to make your app more robust—to ship with confidence. In this guide we'll focus on how to run your Redwood tests in GitHub Actions, so you can test your app on every push or pull request.
+A good testing strategy is important for any project. Cedar offers a few different types of tests that you can write to make your app more robust—to ship with confidence. In this guide we'll focus on how to run your Cedar tests in GitHub Actions, so you can test your app on every push or pull request.
 
 We'll set up a tiny project with a few tests and a Postgres database that'll be created and used in every test run on GitHub. If you need to set up tests for an existing project, or if you want to write better tests, check out the (amazing) [Testing](../testing) docs.
 
@@ -28,9 +28,9 @@ All right, let's get to the code. In this how to, we'll focus on how to run your
 
 If you already have a project, you can skip to [4. Set up GitHub Actions](#4-set-up-GitHub-actions).
 
-### 1. Create a Redwood app
+### 1. Create a Cedar app
 
-Start by creating a Redwood app and `cd`ing into it:
+Start by creating a Cedar app and `cd`ing into it:
 
 ```sh
 yarn create cedar-app rw-testing-gh-actions
@@ -62,12 +62,12 @@ Watch Usage: Press w to show more.
 
 ### 2. Modify the Prisma schema
 
-For the purpose of this how to, we'll use the `UserExample` model that comes with the Redwood app.
+For the purpose of this how to, we'll use the `UserExample` model that comes with the Cedar app.
 We'll also change the database to Postgres since that's what we'll be using in our GitHub Actions.
 
 :::note Make sure you have a Postgres instance ready to use
 
-Here's a handy guide for how to [set it up locally](../local-postgres-setup). We'll need the connection string so our Redwood app knows where to store the data
+Here's a handy guide for how to [set it up locally](../local-postgres-setup). We'll need the connection string so our Cedar app knows where to store the data
 
 :::
 
@@ -186,7 +186,7 @@ This action only runs when the `main` branch is updated, but you can configure i
 :::
 
 ```yml title=".github/workflows/ci.yml"
-name: Redwood CI
+name: Cedar CI
 
 on:
   push:
@@ -242,7 +242,7 @@ jobs:
       - run: yarn rw test web --no-watch
 ```
 
-Now push your changes to the `main` branch on GitHub; the "Redwood CI" action we just made will run like this:
+Now push your changes to the `main` branch on GitHub; the "Cedar CI" action we just made will run like this:
 
 <img width="1140" alt="ci-results-1" src="https://user-images.GitHubusercontent.com/14810250/202825732-c7d77929-58ff-4ad5-9072-48e4403471c9.png" />
 
@@ -250,8 +250,8 @@ Now push your changes to the `main` branch on GitHub; the "Redwood CI" action we
 2. Initialize the containers and create the postgres instance
 3. Checkout the code
 4. Set up Node.js
-5. Install the Redwood app's dependencies
-6. Build the Redwood app
+5. Install the Cedar app's dependencies
+6. Build the Cedar app
 7. Run the api tests
 8. Run the web tests
 9. Clean up the environment
@@ -264,7 +264,7 @@ We want tests to run on every pull request so we can make sure that our code is 
 Update the `ci.yml` file by removing the `push` event. The first lines should look like this:
 
 ```yml title=".github/workflows/ci.yml"
-name: Redwood CI for Pull Requests
+name: Cedar CI for Pull Requests
 
 on:
   pull_request:
@@ -286,7 +286,7 @@ Now for the CD—we want to use another action to deploy the database changes to
 Create a new file in the `.github/workflows` directory called `cd.yml` and add the following:
 
 ```yml title=".github/workflows/cd.yml"
-name: Redwood CD for database deployment
+name: Cedar CD for database deployment
 
 on:
   push:

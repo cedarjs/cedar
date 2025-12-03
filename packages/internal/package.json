@@ -180,8 +180,8 @@
     "@types/fs-extra": "11.0.4",
     "concurrently": "8.2.2",
     "graphql-tag": "2.12.6",
-    "publint": "0.3.12",
-    "tsx": "4.20.5",
+    "publint": "0.3.15",
+    "tsx": "4.20.6",
     "vitest": "3.2.4"
   },
   "publishConfig": {

@@ -10,7 +10,7 @@ We'd love to hear any feedback you might have on our [community forum](https://c
 
 :::
 
-Getting started with file uploads can open up a world of possibilities for your application. Whether you're enhancing user profiles with custom avatars, allowing document sharing, or enabling image galleries - Redwood has an integrated way of uploading files and storing them.
+Getting started with file uploads can open up a world of possibilities for your application. Whether you're enhancing user profiles with custom avatars, allowing document sharing, or enabling image galleries - Cedar has an integrated way of uploading files and storing them.
 
 There are two parts to this:
 
@@ -19,13 +19,13 @@ There are two parts to this:
 
 We can roughly breakdown the flow as follows
 
-![Redwood Uploads Flow Diagram](/img/uploads/uploads-flow.png)
+![Cedar Uploads Flow Diagram](/img/uploads/uploads-flow.png)
 
 ## Uploading Files
 
 ### 1. Setting up the File scalar
 
-Before we start sending files via GraphQL we need to tell Redwood how to handle them. Redwood and GraphQL Yoga are pre-configured to handle the `File` scalar.
+Before we start sending files via GraphQL we need to tell Cedar how to handle them. Cedar and GraphQL Yoga are pre-configured to handle the `File` scalar.
 
 In your mutations, use the `File` scalar for the fields where you are submitting an upload
 
@@ -152,14 +152,14 @@ export const updateProfile = async ({ id, input }) => {
 
 You'll see that you are receiving an instance of [File](https://developer.mozilla.org/en-US/docs/Web/API/File).
 
-That's part 1 done - you can receive uploaded files. In the next steps, we'll talk about some tooling and a Prisma client extension that Redwood gives you, to help you persist and manage your uploads.
+That's part 1 done - you can receive uploaded files. In the next steps, we'll talk about some tooling and a Prisma client extension that Cedar gives you, to help you persist and manage your uploads.
 
 <details>
 <summary>**What's happening behind the scenes?**</summary>
 
 Once you send the request, and open up your Network Inspect Panel, you'll notice that the graphql request looks slightly different - it has a different Content-Type (instead of the regular `application/json`).
 
-That's because when you send a [File](https://developer.mozilla.org/en-US/docs/Web/API/File) - the Redwood Apollo client will switch the request to a multipart form request, using [GraphQL Multipart Request Spec](https://github.com/jaydenseric/graphql-multipart-request-spec). This is the case whether you send a `File`, `FileList` or `Blob` (which is a less specialized File).
+That's because when you send a [File](https://developer.mozilla.org/en-US/docs/Web/API/File) - the Cedar Apollo client will switch the request to a multipart form request, using [GraphQL Multipart Request Spec](https://github.com/jaydenseric/graphql-multipart-request-spec). This is the case whether you send a `File`, `FileList` or `Blob` (which is a less specialized File).
 
 On the backend, GraphQL Yoga is pre-configured to handle multipart form requests, _as long as_ you specify the `File` scalar in your SDL.
 
@@ -167,7 +167,7 @@ On the backend, GraphQL Yoga is pre-configured to handle multipart form requests
 
 ## Storage
 
-Great, now you can receive Files from GraphQL - but how do you go about saving them to disk, while also tracking them in your database? Well, Redwood has the answers for you! Keep going to find out how!
+Great, now you can receive Files from GraphQL - but how do you go about saving them to disk, while also tracking them in your database? Well, Cedar has the answers for you! Keep going to find out how!
 
 ### 1. Configuring the Prisma schema
 
@@ -186,7 +186,7 @@ This is because Prisma doesn't have a native File type. Instead, we store the fi
 
 ### 2. Configuring the Upload savers and Uploads extension
 
-To make it easier (and more consistent) dealing with file uploads, Redwood gives you a standardized way of saving your uploads (i.e. write to storage) by using what we call "savers," along with our custom Uploads extension that will handle deletion and updates automatically for you.
+To make it easier (and more consistent) dealing with file uploads, Cedar gives you a standardized way of saving your uploads (i.e. write to storage) by using what we call "savers," along with our custom Uploads extension that will handle deletion and updates automatically for you.
 
 :::note
 
@@ -748,7 +748,7 @@ We build in two storage adapters:
 
 ## Configuring the server further
 
-Sometimes, you may need more control over how the Redwood API server behaves. This could include customizing the body limit for requests, redirects, or implementing additional logic - that's exactly what the [Server File](server-file.md) is for!
+Sometimes, you may need more control over how the Cedar API server behaves. This could include customizing the body limit for requests, redirects, or implementing additional logic - that's exactly what the [Server File](server-file.md) is for!
 
 ### Making a folder public
 
@@ -801,7 +801,7 @@ const publicUrl = `${global.RWJS_API_URL}/${profile.avatar.replace(
 
 ### Customizing the body limit for requests
 
-The default body size limit for the Redwood API server is 100MB (per request). Depending on the sizes of files you're uploading, especially in the case of multiple files, you may receive errors like this:
+The default body size limit for the Cedar API server is 100MB (per request). Depending on the sizes of files you're uploading, especially in the case of multiple files, you may receive errors like this:
 
 ```json
 {

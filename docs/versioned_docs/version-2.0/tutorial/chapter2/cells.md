@@ -4,7 +4,7 @@ The features we listed at the end of the last page (loading state, error messagi
 
 In addition to these states, cells are also responsible for their own data fetching. This means that rather than fetching data in some parent component and then passing props down to the child components that need them, a cell is completely self-contained and fetches and displays its own data! Let's add one to our blog to get a feel for how they work.
 
-When you create a cell you export several specially named constants and then Redwood takes it from there. A typical cell may look something like:
+When you create a cell you export several specially named constants and then Cedar takes it from there. A typical cell may look something like:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -85,7 +85,7 @@ export const Success = ({
 </TabItem>
 </Tabs>
 
-When React renders this component, Redwood will perform the `QUERY` and display the `Loading` component until a response is received.
+When React renders this component, Cedar will perform the `QUERY` and display the `Loading` component until a response is received.
 
 Once the query returns, it will display one of three states:
 
@@ -97,13 +97,13 @@ There are also some lifecycle helpers like `beforeQuery` (for manipulating any p
 
 The minimum you need for a cell are the `QUERY` and `Success` exports. If you don't export an `Empty` component, empty results will be sent to your `Success` component. If you don't provide a `Failure` component, you'll get error output sent to the console.
 
-A guideline for when to use cells is if your component needs some data from the database or other service that may be delayed in responding. Let Redwood worry about juggling what is displayed when and you can focus on the happy path of the final, rendered component populated with data.
+A guideline for when to use cells is if your component needs some data from the database or other service that may be delayed in responding. Let Cedar worry about juggling what is displayed when and you can focus on the happy path of the final, rendered component populated with data.
 
 <ShowForTs>
 
 :::tip Wait... what are those types?
 
-Redwood comes with some built-in utility types. You can see two of them in the example above: `CellSuccessProps` and `CellFailureProps`. Read more about them [here](typescript/utility-types.md).
+Cedar comes with some built-in utility types. You can see two of them in the example above: `CellSuccessProps` and `CellFailureProps`. Read more about them [here](typescript/utility-types.md).
 
 Also notice the `FindPosts` type imported from `types/graphql`. This and other types are generated for you automatically—when you have the dev server running—based on the GraphQL query in your Cell. More about generated types [here](typescript/generated-types.md).
 
@@ -117,11 +117,11 @@ Usually in a blog the homepage will display a list of recent posts. This list is
 
 :::info Wait, don't we already have a home page?
 
-We do, but you will generally want to use a _cell_ when you need data from the database. A best practice for Redwood is to create a Page for each unique URL your app has, but that you fetch and display data in Cells. So the existing HomePage will render this new cell as a child.
+We do, but you will generally want to use a _cell_ when you need data from the database. A best practice for Cedar is to create a Page for each unique URL your app has, but that you fetch and display data in Cells. So the existing HomePage will render this new cell as a child.
 
 :::
 
-As you'll see repeatedly going forward, Redwood has a generator for this feature! Let's call this the "Articles" cell, since "Posts" was already used by our scaffold generator, and although the names won't clash (the scaffold files were created in the `Post` directory), it will be easier to keep them straight in our heads if the names are fairly different from each other. We're going to be showing multiple things, so we'll use the plural version "Articles," rather than "Article":
+As you'll see repeatedly going forward, Cedar has a generator for this feature! Let's call this the "Articles" cell, since "Posts" was already used by our scaffold generator, and although the names won't clash (the scaffold files were created in the `Post` directory), it will be easier to keep them straight in our heads if the names are fairly different from each other. We're going to be showing multiple things, so we'll use the plural version "Articles," rather than "Article":
 
 ```bash
 yarn rw g cell Articles
@@ -209,7 +209,7 @@ export const Success = ({
 
 :::info Indicating Multiplicity to the Cell Generator
 
-When generating a cell you can use any case you'd like and Redwood will do the right thing when it comes to naming. These will all create the same filename (`web/src/components/BlogArticlesCell/BlogArticlesCell.{jsx,tsx}`):
+When generating a cell you can use any case you'd like and Cedar will do the right thing when it comes to naming. These will all create the same filename (`web/src/components/BlogArticlesCell/BlogArticlesCell.{jsx,tsx}`):
 
 ```bash
 yarn rw g cell blog_articles
@@ -258,7 +258,7 @@ export const QUERY: TypedDocumentNode<ArticlesQuery, ArticlesQueryVariables> =
 </TabItem>
 </Tabs>
 
-However, this is not a valid query name for our existing Posts SDL (`api/src/graphql/posts.sdl.{js,ts}`) and Service (`api/src/services/posts/posts.{js,ts}`). (To see where these files come from, go back to the [Creating a Post Editor section](getting-dynamic.md#creating-a-post-editor) in the _Getting Dynamic_ part.) Redwood names the query elements after the cell itself for convenience (more often than not you'll be creating a cell for a specific model), but in this case our cell name doesn't match our model name so we'll need to make some manual tweaks.
+However, this is not a valid query name for our existing Posts SDL (`api/src/graphql/posts.sdl.{js,ts}`) and Service (`api/src/services/posts/posts.{js,ts}`). (To see where these files come from, go back to the [Creating a Post Editor section](getting-dynamic.md#creating-a-post-editor) in the _Getting Dynamic_ part.) Cedar names the query elements after the cell itself for convenience (more often than not you'll be creating a cell for a specific model), but in this case our cell name doesn't match our model name so we'll need to make some manual tweaks.
 
 We'll have to rename them to `posts` in both the query name and in the prop name in `Success`:
 
@@ -703,8 +703,8 @@ To recap, what did we actually do to get this far?
 6. Create a cell to load the data and take care of loading/empty/failure/success states
 7. Add the cell to the page
 
-The last few steps will become a standard lifecycle of new features as you build a Redwood app.
+The last few steps will become a standard lifecycle of new features as you build a Cedar app.
 
 So far, other than a little HTML, we haven't had to do much by hand. And we especially didn't have to write a bunch of plumbing just to move data from one place to another. It makes web development a little more enjoyable, don't you think?
 
-We're going to add some more features to our app, but first let's take a detour to learn about how Redwood accesses our database and what these SDL and services files are for.
+We're going to add some more features to our app, but first let's take a detour to learn about how Cedar accesses our database and what these SDL and services files are for.

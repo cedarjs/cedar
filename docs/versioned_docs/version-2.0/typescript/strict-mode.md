@@ -5,7 +5,7 @@ description: TS Strict mode tips and tricks
 # TypeScript Strict Mode
 
 Looks like you're ready to level up your TypeScript game!
-Redwood supports [strict mode](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#strictness), but doesn't enable it by default.
+Cedar supports [strict mode](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#strictness), but doesn't enable it by default.
 While strict mode gives you a lot more safety, it makes your code a bit more verbose and requires you to make small manual changes if you use the generators.
 
 ## Enabling strict mode
@@ -25,7 +25,7 @@ Enable strict mode by setting `strict` to true in `web/tsconfig.json` and `api/t
 }
 ```
 
-Redwood's type generator behaves a bit differently in strict mode, so now that you've opted in, make sure to generate types:
+Cedar's type generator behaves a bit differently in strict mode, so now that you've opted in, make sure to generate types:
 
 ```
 yarn rw g types
@@ -141,8 +141,8 @@ This will also help Prisma make a more optimized query to the database, since ev
 
 ### Roles checks for CurrentUser in `src/lib/auth`
 
-When you setup auth, Redwood includes some template code for handling roles with the `hasRole` function.
-While Redwood does runtime checks to make sure it doesn't access roles if it doesn't exist, TypeScript in strict mode will highlight errors, depending on whether you are returning `roles`, and whether those roles are `string` or `string[]`
+When you setup auth, Cedar includes some template code for handling roles with the `hasRole` function.
+While Cedar does runtime checks to make sure it doesn't access roles if it doesn't exist, TypeScript in strict mode will highlight errors, depending on whether you are returning `roles`, and whether those roles are `string` or `string[]`
 
 ```typescript
 export const hasRole = (roles: AllowedRoles): boolean => {
@@ -243,7 +243,7 @@ export const hasRole = (roles: AllowedRoles): boolean => {
 Depending on your auth provider—i.e., anything but dbAuth—because it could change based on your account settings (if you include roles or other metadata), we can't know the shape of your decoded token at setup time.
 So you'll have to make sure that the `getCurrentUser` function is typed.
 
-To help you get started, the comments above the `getCurrentUser` function describe its parameters' types. We recommend typing `decoded` without using imported types from Redwood, as this may be a little too generic!
+To help you get started, the comments above the `getCurrentUser` function describe its parameters' types. We recommend typing `decoded` without using imported types from Cedar, as this may be a little too generic!
 
 ```ts title='api/src/lib/auth.ts'
 import type { AuthContextPayload } from '@cedarjs/api'

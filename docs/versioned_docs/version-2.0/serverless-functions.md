@@ -10,15 +10,15 @@ description: Create, develop, and run serverless functions
 
 You can think of serverless functions as API Endpoints, and in the future we'll update the terminology used.
 
-Originally, Redwood apps were intended to be deployed as serverless functions to AWS Lambda. Whenever a Redwood app is deployed to a "serverful" environment such as Fly or Render, a Fastify server is started and your Redwood app's functions in `api/src/functions` are automatically registered onto the server. Request adapters are also automatically configured to handle the translation between Fastify's request and reply objects to the functions' AWS Lambda signature.
+Originally, Cedar apps were intended to be deployed as serverless functions to AWS Lambda. Whenever a Cedar app is deployed to a "serverful" environment such as Fly or Render, a Fastify server is started and your Cedar app's functions in `api/src/functions` are automatically registered onto the server. Request adapters are also automatically configured to handle the translation between Fastify's request and reply objects to the functions' AWS Lambda signature.
 
 :::
 
-Redwood looks for serverless functions in `api/src/functions`. Each function is mapped to a URI based on its filename. For example, you can find `api/src/functions/graphql.js` at `http://localhost:8911/graphql`.
+Cedar looks for serverless functions in `api/src/functions`. Each function is mapped to a URI based on its filename. For example, you can find `api/src/functions/graphql.js` at `http://localhost:8911/graphql`.
 
 ## Creating Serverless Functions
 
-Creating serverless functions is easy with Redwood's function generator:
+Creating serverless functions is easy with Cedar's function generator:
 
 ```bash
 yarn rw g function <name>
@@ -91,7 +91,7 @@ When you run `yarn rw dev` - it'll watch for changes and make your functions ava
 - `localhost:8911/{functionName}` and
 - `localhost:8910/.redwood/functions/{functionName}` (used by the web side).
 
-Note that the `.redwood/functions` path is determined by your setting in your [redwood.toml](app-configuration-redwood-toml.md#web) - and is used both in development and in the deployed Redwood app
+Note that the `.redwood/functions` path is determined by your setting in your [redwood.toml](app-configuration-redwood-toml.md#web) - and is used both in development and in the deployed Cedar app
 
 ## Testing
 
@@ -749,7 +749,7 @@ And, in some other cases, you may even want to limit how often the function is c
 
 If your function receives an incoming Webhook from a third party, see [Webhooks](webhooks.md) in the CedarJS documentation to verify and trust its payload.
 
-### Serverless Functions with Redwood User Authentication
+### Serverless Functions with Cedar User Authentication
 
 Serverless functions can use the same user-authentication strategy used by GraphQL Directives to [secure your services](graphql.md#secure-services) via the `useRequireAuth` wrapper.
 
@@ -759,7 +759,7 @@ If you need to protect an endpoint via authentication that isn't user-based, you
 
 :::
 
-#### How to Secure a Function with Redwood Auth
+#### How to Secure a Function with Cedar Auth
 
 The `useRequireAuth` wrapper configures your handler's `context` so that you can use any of the `requireAuth`-related authentication helpers in your serverless function:
 

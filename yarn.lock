@@ -2550,7 +2550,7 @@ __metadata:
     pretty-ms: "npm:7.0.1"
     qs: "npm:6.13.0"
     split2: "npm:4.2.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -2588,12 +2588,12 @@ __metadata:
     memjs: "npm:1.3.2"
     pascalcase: "npm:1.0.0"
     pino: "npm:9.7.0"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     redis: "npm:4.7.1"
     split2: "npm:4.2.0"
     title-case: "npm:3.0.3"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2625,8 +2625,8 @@ __metadata:
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.2"
     jwks-rsa: "npm:3.1.0"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2641,8 +2641,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2657,9 +2657,9 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2679,8 +2679,8 @@ __metadata:
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.2"
     jwks-rsa: "npm:3.1.0"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2695,8 +2695,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2712,9 +2712,9 @@ __metadata:
     "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2732,8 +2732,8 @@ __metadata:
     "@clerk/backend": "npm:1.34.0"
     "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2748,8 +2748,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -2764,9 +2764,9 @@ __metadata:
     "@clerk/types": "npm:4.83.0"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2783,8 +2783,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2804,8 +2804,8 @@ __metadata:
     base64url: "npm:3.0.1"
     concurrently: "npm:8.2.2"
     md5: "npm:2.3.0"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     uuid: "npm:10.0.0"
     vitest: "npm:3.2.4"
@@ -2824,9 +2824,9 @@ __metadata:
     "@cedarjs/web": "workspace:*"
     "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2864,9 +2864,9 @@ __metadata:
     "@simplewebauthn/types": "npm:9.0.1"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2882,8 +2882,8 @@ __metadata:
     "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
     firebase-admin: "npm:12.6.0"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2898,8 +2898,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2914,9 +2914,9 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     firebase: "npm:10.14.1"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2935,8 +2935,8 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2951,8 +2951,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2967,9 +2967,9 @@ __metadata:
     "@types/netlify-identity-widget": "npm:1.9.7"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2989,8 +2989,8 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3010,9 +3010,9 @@ __metadata:
     "@supabase/ssr": "npm:0.5.1"
     "@types/aws-lambda": "npm:8.10.152"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3027,8 +3027,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3043,9 +3043,9 @@ __metadata:
     "@supabase/supabase-js": "npm:2.86.0"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3064,8 +3064,8 @@ __metadata:
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.2"
     jwks-rsa: "npm:3.1.0"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3083,8 +3083,8 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
     memfs: "npm:4.17.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3098,10 +3098,10 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
     supertokens-auth-react: "npm:0.39.1"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3120,9 +3120,9 @@ __metadata:
     concurrently: "npm:8.2.2"
     core-js: "npm:3.42.0"
     msw: "npm:1.3.5"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3159,7 +3159,7 @@ __metadata:
     core-js: "npm:3.42.0"
     fast-glob: "npm:3.3.3"
     graphql: "npm:16.9.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3181,7 +3181,7 @@ __metadata:
     listr2: "npm:7.0.2"
     memfs: "npm:4.17.2"
     termi-link: "npm:1.1.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -3218,7 +3218,7 @@ __metadata:
     semver: "npm:7.6.3"
     smol-toml: "npm:1.3.4"
     termi-link: "npm:1.1.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs-parser: "npm:21.1.1"
@@ -3241,7 +3241,7 @@ __metadata:
     storybook: "npm:8.6.14"
     storybook-framework-cedarjs: "workspace:*"
     termi-link: "npm:1.1.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -3311,7 +3311,7 @@ __metadata:
     systeminformation: "npm:5.23.8"
     termi-link: "npm:1.1.0"
     title-case: "npm:3.0.3"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     unionfs: "npm:4.5.4"
     uuid: "npm:10.0.0"
@@ -3356,10 +3356,10 @@ __metadata:
     jscodeshift: "npm:17.0.0"
     pascalcase: "npm:1.0.0"
     prettier: "npm:3.6.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     tasuku: "npm:2.0.1"
     tempy: "npm:1.0.1"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -3375,8 +3375,8 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/framework-tools": "workspace:*"
     concurrently: "npm:8.2.2"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3391,7 +3391,7 @@ __metadata:
     esbuild: "npm:0.25.9"
     fast-glob: "npm:3.3.3"
     fs-extra: "npm:11.2.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3414,10 +3414,10 @@ __metadata:
     graphql-tag: "npm:2.12.6"
     lodash: "npm:4.17.21"
     nodemon: "npm:3.1.10"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react-refresh: "npm:0.14.0"
     rimraf: "npm:6.0.1"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   bin:
     cedar: ./dist/bins/cedar.js
@@ -3484,7 +3484,7 @@ __metadata:
     "@typescript-eslint/rule-tester": "npm:8.44.0"
     "@typescript-eslint/utils": "npm:8.44.0"
     eslint: "npm:8.57.1"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3501,7 +3501,7 @@ __metadata:
     "@fastify/url-data": "npm:6.0.3"
     fast-glob: "npm:3.3.3"
     fastify: "npm:5.4.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3523,11 +3523,11 @@ __metadata:
     graphql: "npm:16.9.0"
     nodemon: "npm:3.1.10"
     pascalcase: "npm:1.0.0"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
     react-dom: "npm:19.0.0-rc-f2df5694-20240916"
     react-hook-form: "npm:7.54.2"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3544,7 +3544,7 @@ __metadata:
     esbuild: "npm:0.25.9"
     fast-glob: "npm:3.3.3"
     fs-extra: "npm:11.2.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.9.3"
     zx: "npm:8.8.5"
@@ -3591,8 +3591,8 @@ __metadata:
     graphql-yoga: "npm:5.7.0"
     jsonwebtoken: "npm:9.0.2"
     lodash: "npm:4.17.21"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     uuid: "npm:10.0.0"
     vitest: "npm:3.2.4"
@@ -3640,14 +3640,14 @@ __metadata:
     graphql-tag: "npm:2.12.6"
     kill-port: "npm:1.6.1"
     prettier: "npm:3.6.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     rimraf: "npm:6.0.1"
     source-map: "npm:0.7.6"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.23.8"
     termi-link: "npm:1.1.0"
     ts-node: "npm:10.9.2"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   bin:
@@ -3666,8 +3666,8 @@ __metadata:
     "@prisma/client": "npm:6.19.0"
     concurrently: "npm:8.2.2"
     cron-parser: "npm:5.3.1"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3683,7 +3683,7 @@ __metadata:
   dependencies:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3695,7 +3695,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3707,8 +3707,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
     "@types/nodemailer": "npm:^6"
-    nodemailer: "npm:6.9.16"
-    tsx: "npm:4.20.5"
+    nodemailer: "npm:7.0.11"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3720,7 +3720,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
     resend: "npm:4.6.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3733,7 +3733,7 @@ __metadata:
     "@cedarjs/mailer-core": "workspace:*"
     "@cedarjs/mailer-handler-nodemailer": "workspace:*"
     "@types/nodemailer": "npm:^6"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3747,7 +3747,7 @@ __metadata:
     "@faire/mjml-react": "npm:3.4.0"
     "@types/mjml": "npm:4"
     mjml: "npm:4.15.3"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3759,7 +3759,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
     "@react-email/render": "npm:0.0.17"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3779,7 +3779,7 @@ __metadata:
     react: "npm:19.0.0-rc-f2df5694-20240916"
     react-dom: "npm:19.0.0-rc-f2df5694-20240916"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vite: "npm:5.4.19"
     vitest: "npm:3.2.4"
@@ -3802,9 +3802,9 @@ __metadata:
     "@cedarjs/vite": "workspace:*"
     "@cedarjs/web": "workspace:*"
     "@rollup/plugin-alias": "npm:5.1.1"
-    "@rollup/plugin-commonjs": "npm:28.0.6"
-    "@rollup/plugin-node-resolve": "npm:16.0.1"
-    "@rollup/plugin-replace": "npm:6.0.2"
+    "@rollup/plugin-commonjs": "npm:28.0.9"
+    "@rollup/plugin-node-resolve": "npm:16.0.3"
+    "@rollup/plugin-replace": "npm:6.0.3"
     "@swc/core": "npm:1.13.5"
     "@types/mime-types": "npm:2.1.4"
     "@types/react": "npm:^18.2.55"
@@ -3815,10 +3815,10 @@ __metadata:
     concurrently: "npm:8.2.2"
     graphql: "npm:16.9.0"
     mime-types: "npm:2.1.35"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     rollup: "npm:4.24.0"
     rollup-plugin-swc3: "npm:0.12.1"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     unimport: "npm:5.0.1"
     unplugin-auto-import: "npm:19.3.0"
@@ -3841,11 +3841,11 @@ __metadata:
     deepmerge: "npm:4.3.1"
     fast-glob: "npm:3.3.3"
     prisma: "npm:6.19.0"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     rimraf: "npm:6.0.1"
     smol-toml: "npm:1.3.4"
     string-env-interpolation: "npm:1.0.1"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3871,7 +3871,7 @@ __metadata:
     graphql: "npm:16.9.0"
     ioredis: "npm:5.6.1"
     nodemon: "npm:3.1.10"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3893,8 +3893,8 @@ __metadata:
     "@prisma/internals": "npm:6.19.0"
     camelcase: "npm:6.3.0"
     esbuild: "npm:0.25.9"
-    publint: "npm:0.3.12"
-    tsx: "npm:4.20.5"
+    publint: "npm:0.3.15"
+    tsx: "npm:4.20.6"
     vitest: "npm:3.2.4"
   languageName: unknown
   linkType: soft
@@ -3915,12 +3915,12 @@ __metadata:
     "@types/react-dom": "npm:^18.2.19"
     concurrently: "npm:8.2.2"
     core-js: "npm:3.42.0"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
     react-dom: "npm:19.0.0-rc-f2df5694-20240916"
     react-server-dom-webpack: "npm:19.0.0-rc-f2df5694-20240916"
     tstyche: "npm:3.0.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3940,7 +3940,7 @@ __metadata:
     esbuild: "npm:0.25.9"
     fast-glob: "npm:3.3.3"
     fs-extra: "npm:11.2.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3957,9 +3957,9 @@ __metadata:
     concurrently: "npm:8.2.2"
     esbuild: "npm:0.25.9"
     mime-types: "npm:2.1.35"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     tstyche: "npm:3.0.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     ulid: "npm:2.3.0"
     vitest: "npm:3.2.4"
@@ -4018,7 +4018,7 @@ __metadata:
     ci-info: "npm:4.0.0"
     envinfo: "npm:7.14.0"
     systeminformation: "npm:5.23.8"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     uuid: "npm:10.0.0"
     vitest: "npm:3.2.4"
@@ -4054,9 +4054,9 @@ __metadata:
     jest-watch-typeahead: "npm:2.2.2"
     jsdom: "npm:24.1.3"
     msw: "npm:1.3.5"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     unplugin-auto-import: "npm:19.3.0"
     vitest: "npm:3.2.4"
@@ -4078,7 +4078,7 @@ __metadata:
     boxen: "npm:5.1.2"
     enquirer: "npm:2.4.1"
     stdout-update: "npm:1.6.8"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -4126,12 +4126,12 @@ __metadata:
     http-proxy-middleware: "npm:3.0.5"
     isbot: "npm:5.1.30"
     memfs: "npm:4.17.2"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
     react-server-dom-webpack: "npm:19.0.0-rc-f2df5694-20240916"
     rimraf: "npm:6.0.1"
     rollup: "npm:4.24.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vite: "npm:5.4.19"
     vite-plugin-cjs-interop: "npm:2.2.0"
@@ -4159,7 +4159,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     fastify: "npm:5.4.0"
     fs-extra: "npm:11.2.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     yargs: "npm:17.7.2"
   bin:
@@ -4199,14 +4199,14 @@ __metadata:
     graphql-sse: "npm:2.5.4"
     graphql-tag: "npm:2.12.6"
     nodemon: "npm:3.1.10"
-    publint: "npm:0.3.12"
+    publint: "npm:0.3.15"
     react: "npm:19.0.0-rc-f2df5694-20240916"
     react-dom: "npm:19.0.0-rc-f2df5694-20240916"
     react-hot-toast: "npm:2.4.1"
     stacktracey: "npm:2.1.8"
     ts-toolbelt: "npm:9.6.0"
     tstyche: "npm:3.0.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -7703,9 +7703,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lerna/create@npm:9.0.1":
-  version: 9.0.1
-  resolution: "@lerna/create@npm:9.0.1"
+"@lerna/create@npm:9.0.3":
+  version: 9.0.3
+  resolution: "@lerna/create@npm:9.0.3"
   dependencies:
     "@npmcli/arborist": "npm:9.1.6"
     "@npmcli/package-json": "npm:7.0.2"
@@ -7735,7 +7735,7 @@ __metadata:
     inquirer: "npm:12.9.6"
     is-ci: "npm:3.0.1"
     is-stream: "npm:2.0.0"
-    js-yaml: "npm:4.1.0"
+    js-yaml: "npm:4.1.1"
     libnpmpublish: "npm:11.1.2"
     load-json-file: "npm:6.2.0"
     make-dir: "npm:4.0.0"
@@ -7774,7 +7774,7 @@ __metadata:
     write-pkg: "npm:4.0.0"
     yargs: "npm:17.7.2"
     yargs-parser: "npm:21.1.1"
-  checksum: 10c0/3d93ef4af0f6f66140bcc26461777c3ce2427571640999a081a1bd632c7007d2d22b64e748609119a9483504390aae23bccdee7a7365f3ee7a5c084254fd5fd9
+  checksum: 10c0/9f980208a96d37b05083d6d8851c0bb3759d9cd646520381b416dbcec232c1ade02ec3a2deacfaf9fed80ac5bbefd0c4608064e16132cf14744d7f02253c42ab
   languageName: node
   linkType: hard
 
@@ -9520,9 +9520,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-commonjs@npm:28.0.6":
-  version: 28.0.6
-  resolution: "@rollup/plugin-commonjs@npm:28.0.6"
+"@rollup/plugin-commonjs@npm:28.0.9":
+  version: 28.0.9
+  resolution: "@rollup/plugin-commonjs@npm:28.0.9"
   dependencies:
     "@rollup/pluginutils": "npm:^5.0.1"
     commondir: "npm:^1.0.1"
@@ -9536,7 +9536,7 @@ __metadata:
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: 10c0/67fa297384c2494c8f85df102c030e7f8ed8f600cfccdd1143266112ee4037d37faa1bda44a571dab35b48297342024551e995ad2f8a4d86da0aa1f33ec61868
+  checksum: 10c0/b7af70614a53c549a1ba1e9647879b644bcf44ec78850f04018b929f4ee414274f867fa438308409a06ef8a3a179ed24c25e4f8ef77eb341dfddd2b0cb88c389
   languageName: node
   linkType: hard
 
@@ -9556,9 +9556,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-node-resolve@npm:16.0.1":
-  version: 16.0.1
-  resolution: "@rollup/plugin-node-resolve@npm:16.0.1"
+"@rollup/plugin-node-resolve@npm:16.0.3":
+  version: 16.0.3
+  resolution: "@rollup/plugin-node-resolve@npm:16.0.3"
   dependencies:
     "@rollup/pluginutils": "npm:^5.0.1"
     "@types/resolve": "npm:1.20.2"
@@ -9570,13 +9570,13 @@ __metadata:
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: 10c0/54d33282321492fafec29b49c66dd1efd90c72a24f9d1569dcb57a72ab8de8a782810f39fdb917b96ec6a598c18f3416588b419bf7af331793a010de1fe28c60
+  checksum: 10c0/5bafff8e51cd28b5b3b8f415c30a893f5bfdb1a54469e00b3dc6530f26051620f3dfa172f40544361948b46cc3070cb34fd44ade66d38c0677d74c846fbc58dc
   languageName: node
   linkType: hard
 
-"@rollup/plugin-replace@npm:6.0.2":
-  version: 6.0.2
-  resolution: "@rollup/plugin-replace@npm:6.0.2"
+"@rollup/plugin-replace@npm:6.0.3":
+  version: 6.0.3
+  resolution: "@rollup/plugin-replace@npm:6.0.3"
   dependencies:
     "@rollup/pluginutils": "npm:^5.0.1"
     magic-string: "npm:^0.30.3"
@@ -9585,7 +9585,7 @@ __metadata:
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: 10c0/71c0dea46f560c8dff59853446d43fa0e8258139a74d2af09fce5790d0540ff3d874c8fd9962cb049577d25327262bfc97485ef90b2a0a21bf28a9d3bd8c6d44
+  checksum: 10c0/93217c52fe86b03363bc534b5f07963ac4fd6b91f19f6070a66809b0c65a036b3b234624a65a8bfcc01a8dc0e42838feae03c021b0d1e5e91753c503c4d70cd6
   languageName: node
   linkType: hard
 
@@ -11980,12 +11980,12 @@ __metadata:
   linkType: hard
 
 "@types/nodemailer@npm:^6":
-  version: 6.4.19
-  resolution: "@types/nodemailer@npm:6.4.19"
+  version: 6.4.21
+  resolution: "@types/nodemailer@npm:6.4.21"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.731.1"
     "@types/node": "npm:*"
-  checksum: 10c0/e4d42f6e2a87523de3f6dfe6a856647dbd6d2305c2c787bdefaeb74a89c08598b7c04e23ba8d64c7972afa3823e51a1d37671bc0361bdb844f1f2906dc6e66db
+  checksum: 10c0/3a0f4e497161ebd8069aed795093fcd022950004741d7b0f88ec5ef99d2fe4c717d5b47f46a7cda872998c6b7cb897606940faefa397f17c27cd948eff792364
   languageName: node
   linkType: hard
 
@@ -15551,7 +15551,7 @@ __metadata:
     semver: "npm:7.6.3"
     systeminformation: "npm:5.23.8"
     termi-link: "npm:1.1.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     untildify: "npm:4.0.0"
     uuid: "npm:10.0.0"
     vitest: "npm:3.2.4"
@@ -21574,14 +21574,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:4.1.0, js-yaml@npm:^4.0.0, js-yaml@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "js-yaml@npm:4.1.0"
+"js-yaml@npm:4.1.1, js-yaml@npm:^4.0.0, js-yaml@npm:^4.1.0":
+  version: 4.1.1
+  resolution: "js-yaml@npm:4.1.1"
   dependencies:
     argparse: "npm:^2.0.1"
   bin:
     js-yaml: bin/js-yaml.js
-  checksum: 10c0/184a24b4eaacfce40ad9074c64fd42ac83cf74d8c8cd137718d456ced75051229e5061b8633c3366b8aada17945a7a356b337828c19da92b51ae62126575018f
+  checksum: 10c0/561c7d7088c40a9bb53cc75becbfb1df6ae49b34b5e6e5a81744b14ae8667ec564ad2527709d1a6e7d5e5fa6d483aa0f373a50ad98d42fde368ec4a190d4fae7
   languageName: node
   linkType: hard
 
@@ -22230,11 +22230,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lerna@npm:9.0.1":
-  version: 9.0.1
-  resolution: "lerna@npm:9.0.1"
+"lerna@npm:9.0.3":
+  version: 9.0.3
+  resolution: "lerna@npm:9.0.3"
   dependencies:
-    "@lerna/create": "npm:9.0.1"
+    "@lerna/create": "npm:9.0.3"
     "@npmcli/arborist": "npm:9.1.6"
     "@npmcli/package-json": "npm:7.0.2"
     "@npmcli/run-script": "npm:10.0.2"
@@ -22268,7 +22268,7 @@ __metadata:
     is-ci: "npm:3.0.1"
     is-stream: "npm:2.0.0"
     jest-diff: "npm:>=30.0.0 < 31"
-    js-yaml: "npm:4.1.0"
+    js-yaml: "npm:4.1.1"
     libnpmaccess: "npm:10.0.3"
     libnpmpublish: "npm:11.1.2"
     load-json-file: "npm:6.2.0"
@@ -22313,7 +22313,7 @@ __metadata:
     yargs-parser: "npm:21.1.1"
   bin:
     lerna: dist/cli.js
-  checksum: 10c0/9100a8dda18e9a04a085ff393aba26d347be90332daf7037c9ccdd480b628e6787efebe7ffc15afa753f1e75fdf1769a7925911f07b16f394dac89422c031872
+  checksum: 10c0/197c0b0bf7819c438265e8c09c2f965811faed7125c22bf1643b17e19c0257d6acbf5eef0532b2f90f0b4ef39ddcdfaa891426adea88980e4c9db2e8858a1d2f
   languageName: node
   linkType: hard
 
@@ -24435,10 +24435,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:6.9.16":
-  version: 6.9.16
-  resolution: "nodemailer@npm:6.9.16"
-  checksum: 10c0/9fd73ab4ab5b81544c3c9820afbe386369aba442f997b2f58d171222a898a7aed580fc100bfe6eebc194f18ba6e169d67ee40ca64d32d69022d89e575cef97a4
+"nodemailer@npm:7.0.11":
+  version: 7.0.11
+  resolution: "nodemailer@npm:7.0.11"
+  checksum: 10c0/208f108fdb4c5dd0e3a2f013578d53dad505cf1b9c7a084f6d22fc9d6f3912daafb4a23793ca568ff848afc35f15f4eb24382d3f6f9fb8ede4a8410d4ca63618
   languageName: node
   linkType: hard
 
@@ -25420,10 +25420,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-manager-detector@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "package-manager-detector@npm:1.1.0"
-  checksum: 10c0/b5ba0bdaae4d70bb6e1a1af047522fdcd811e65e60927c2e7cc3736324a00b30d66ac304bab1d7cd925b11142d90fcc4215a7efde430a5616cea698e0b2dfada
+"package-manager-detector@npm:^1.3.0":
+  version: 1.6.0
+  resolution: "package-manager-detector@npm:1.6.0"
+  checksum: 10c0/6419d0b840be64fd45bcdcb7a19f09b81b65456d5e7f7a3daac305a4c90643052122f6ac0308afe548ffee75e36148532a2002ea9d292754f1e385aa2e1ea03b
   languageName: node
   linkType: hard
 
@@ -26636,17 +26636,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"publint@npm:0.3.12":
-  version: 0.3.12
-  resolution: "publint@npm:0.3.12"
+"publint@npm:0.3.15":
+  version: 0.3.15
+  resolution: "publint@npm:0.3.15"
   dependencies:
     "@publint/pack": "npm:^0.1.2"
-    package-manager-detector: "npm:^1.1.0"
+    package-manager-detector: "npm:^1.3.0"
     picocolors: "npm:^1.1.1"
     sade: "npm:^1.8.1"
   bin:
     publint: src/cli.js
-  checksum: 10c0/facd7d06236ef0ed5555ecbc671b46734847b3dde35611fbd143a175fc940d4f82d147f469bd806243e646c55c9dd06cd4a6de10d08404f6ff2b5942df70dd43
+  checksum: 10c0/2f54a88201c068a4713b431c85c71d4adb4f3e026b97b7682706ebf73d2a52306911f230672819cfe73be8f0ff6185f52f20ed10a65326b58dbf7abff8ad7a45
   languageName: node
   linkType: hard
 
@@ -27925,7 +27925,7 @@ __metadata:
     jest: "npm:29.7.0"
     jscodeshift: "npm:17.0.0"
     lefthook: "npm:^1.11.14"
-    lerna: "npm:9.0.1"
+    lerna: "npm:9.0.3"
     listr2: "npm:7.0.2"
     make-dir-cli: "npm:4.0.0"
     msw: "npm:1.3.5"
@@ -27942,7 +27942,7 @@ __metadata:
     rimraf: "npm:6.0.1"
     tree-kill: "npm:1.2.2"
     tstyche: "npm:3.0.0"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -28967,7 +28967,7 @@ __metadata:
     "@types/node": "npm:20.19.17"
     magic-string: "npm:0.30.18"
     react-docgen: "npm:7.0.3"
-    tsx: "npm:4.20.5"
+    tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     unplugin-auto-import: "npm:19.3.0"
     vite: "npm:5.4.19"
@@ -30126,9 +30126,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:4.20.5":
-  version: 4.20.5
-  resolution: "tsx@npm:4.20.5"
+"tsx@npm:4.20.6":
+  version: 4.20.6
+  resolution: "tsx@npm:4.20.6"
   dependencies:
     esbuild: "npm:~0.25.0"
     fsevents: "npm:~2.3.3"
@@ -30138,7 +30138,7 @@ __metadata:
       optional: true
   bin:
     tsx: dist/cli.mjs
-  checksum: 10c0/70f9bf746be69281312a369c712902dbf9bcbdd9db9184a4859eb4859c36ef0c5a6d79b935c1ec429158ee73fd6584089400ae8790345dae34c5b0222bdb94f3
+  checksum: 10c0/07757a9bf62c271e0a00869b2008c5f2d6e648766536e4faf27d9d8027b7cde1ac8e4871f4bb570c99388bcee0018e6869dad98c07df809b8052f9c549cd216f
   languageName: node
   linkType: hard
 

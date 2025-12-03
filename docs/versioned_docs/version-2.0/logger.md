@@ -7,7 +7,7 @@ description: Use the Logger to observe your application
 
 CedarJS provides an opinionated logger with sensible, practical defaults that grants you visibility into the applications while you're developing and after you have deployed.
 
-Logging in the serverless ecosystem is not trivial and neither is its configuration. Redwood aims to make this easier.
+Logging in the serverless ecosystem is not trivial and neither is its configuration. Cedar aims to make this easier.
 
 When choosing a Node.js logger to add to the framework, CedarJS required that it:
 
@@ -21,7 +21,7 @@ When choosing a Node.js logger to add to the framework, CedarJS required that it
 - Have a solid Developer experience (DX) to get logging out-of-the-gate quickly
 - Use a compact configuration to set how to log (its `options`) and where to log -- file, stdout, or remote transport stream -- (its `destination`)
 
-With those criteria in mind, Redwood includes [pino](https://github.com/pinojs/pino) with its rich [features](https://github.com/pinojs/pino/blob/master/docs/api.md), [ecosystem](https://github.com/pinojs/pino/blob/master/docs/ecosystem.md) and [community](https://github.com/pinojs/pino/blob/master/docs/ecosystem.md#community).
+With those criteria in mind, Cedar includes [pino](https://github.com/pinojs/pino) with its rich [features](https://github.com/pinojs/pino/blob/master/docs/api.md), [ecosystem](https://github.com/pinojs/pino/blob/master/docs/ecosystem.md) and [community](https://github.com/pinojs/pino/blob/master/docs/ecosystem.md#community).
 
 Plus ... pino means 🌲 pine tree! How perfect is that for CedarJS?
 
@@ -292,7 +292,7 @@ Logging with Prisma query statement output.
 
 #### GraphQL Logging
 
-Redwood-specific [GraphQL log data](graphql.md#logging) included by the the `useRedwoodLogger` envelop plug-in is supported:
+Cedar-specific [GraphQL log data](graphql.md#logging) included by the the `useRedwoodLogger` envelop plug-in is supported:
 
 - Request Id
 - User-Agent
@@ -675,7 +675,7 @@ You can pass the [following properties](https://github.com/ovhemert/pino-papertr
 
 ### Prisma Logging
 
-Redwood declares an instance of the PrismaClient
+Cedar declares an instance of the PrismaClient
 
 Prisma is configured to log at the:
 
@@ -785,7 +785,7 @@ export const userExample = async ({ id }, { info }) => {
 }
 ```
 
-The Redwood logger uses a child logger to inject the Prisma Client version into every Prisma log statement:
+The Cedar logger uses a child logger to inject the Prisma Client version into every Prisma log statement:
 
 ```jsx
 logger.child({

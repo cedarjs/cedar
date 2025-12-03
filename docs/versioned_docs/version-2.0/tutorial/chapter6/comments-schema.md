@@ -1,6 +1,6 @@
 # Adding Comments to the Schema
 
-Let's take a moment to appreciate how amazing this is—we built, designed and tested a completely new component for our app, which displays data from an API call (which would pull that data from a database) without actually having to build any of that backend functionality! Redwood let us provide fake data to Storybook and Jest so we could get our component working.
+Let's take a moment to appreciate how amazing this is—we built, designed and tested a completely new component for our app, which displays data from an API call (which would pull that data from a database) without actually having to build any of that backend functionality! Cedar let us provide fake data to Storybook and Jest so we could get our component working.
 
 Unfortunately, even with all of this flexibility there's still no such thing as a free lunch. Eventually we're going to have to actually do that backend work. Now's the time.
 
@@ -107,7 +107,7 @@ When prompted, give this one a name something like "create comment".
 
 :::tip
 
-You'll need to restart the test suite runner at this point if it's still running. You can do a Ctrl-C or just press `q`. Redwood creates a second, test database for you to run your tests against (it is at `.redwood/test.db` by default). The database migrations are run against that test database whenever the test suite is _started_, not while it's running, so you'll need to restart it to test against the new database structure.
+You'll need to restart the test suite runner at this point if it's still running. You can do a Ctrl-C or just press `q`. Cedar creates a second, test database for you to run your tests against (it is at `.redwood/test.db` by default). The database migrations are run against that test database whenever the test suite is _started_, not while it's running, so you'll need to restart it to test against the new database structure.
 
 :::
 
@@ -336,7 +336,7 @@ Hmmm...
 
 :::
 
-We need to be able to create a comment as well. We'll use the same convention that's used in Redwood's generated scaffolds: the create endpoint will accept a single parameter `input` which is an object with the individual model fields:
+We need to be able to create a comment as well. We'll use the same convention that's used in Cedar's generated scaffolds: the create endpoint will accept a single parameter `input` which is an object with the individual model fields:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -551,7 +551,7 @@ describe('comments', () => {
 </TabItem>
 </Tabs>
 
-What is this `scenario()` function? That's made available by Redwood that mostly acts like Jest's built-in `it()` and `test()` functions, but with one important difference: it pre-seeds a test database with data that is then passed to you in the `scenario` argument. You can count on this data existing in the database and being reset between tests in case you make changes to it. You can create the data structure for any and all models defined in `schema.prisma`, not just comments (the file happens to be named that because it's the ones that will load when running `comments.test.js`).
+What is this `scenario()` function? That's made available by Cedar that mostly acts like Jest's built-in `it()` and `test()` functions, but with one important difference: it pre-seeds a test database with data that is then passed to you in the `scenario` argument. You can count on this data existing in the database and being reset between tests in case you make changes to it. You can create the data structure for any and all models defined in `schema.prisma`, not just comments (the file happens to be named that because it's the ones that will load when running `comments.test.js`).
 
 :::info In the section on mocks you said relying on data in the database for testing was dumb?
 
@@ -624,7 +624,7 @@ This calls a `defineScenario()` function which checks that your data structure m
 
 :::info The "standard" scenario
 
-The exported scenario here is named "standard." Remember when we worked on component tests and mocks, there was a special mock named `standard` which Redwood would use by default if you didn't specify a name? The same rule applies here! When we add a test for `createComment()` we'll see an example of using a different scenario with a unique name.
+The exported scenario here is named "standard." Remember when we worked on component tests and mocks, there was a special mock named `standard` which Cedar would use by default if you didn't specify a name? The same rule applies here! When we add a test for `createComment()` we'll see an example of using a different scenario with a unique name.
 
 :::
 
@@ -640,7 +640,7 @@ When you receive the `scenario` argument in your test, the `data` key gets unwra
 
 :::info Why does every field just contain the string "String"?
 
-When generating the service (and the test and scenarios) all we (Redwood) knows about your data is the types for each field as defined in `schema.prisma`, namely `String`, `Integer` or `DateTime`. So we add the simplest data possible that fulfills the type requirement by Prisma to get the data into the database. You should definitely replace this data with something that looks more like the real data your app will be expecting. In fact...
+When generating the service (and the test and scenarios) all we (Cedar) knows about your data is the types for each field as defined in `schema.prisma`, namely `String`, `Integer` or `DateTime`. So we add the simplest data possible that fulfills the type requirement by Prisma to get the data into the database. You should definitely replace this data with something that looks more like the real data your app will be expecting. In fact...
 
 :::
 
@@ -659,7 +659,7 @@ export const standard = defineScenario({
         body: 'I like trees',
         post: {
           create: {
-            title: 'Redwood Leaves',
+            title: 'Cedar Leaves',
             body: 'The quick brown fox jumped over the lazy dog.',
           },
         },
@@ -697,7 +697,7 @@ export const standard = defineScenario<Prisma.CommentCreateArgs>({
         body: 'I like trees',
         post: {
           create: {
-            title: 'Redwood Leaves',
+            title: 'Cedar Leaves',
             body: 'The quick brown fox jumped over the lazy dog.',
           },
         },

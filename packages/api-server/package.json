@@ -140,7 +140,7 @@
     "@types/yargs": "17.0.35",
     "memfs": "4.17.2",
     "pino-abstract-transport": "1.2.0",
-    "tsx": "4.20.5",
+    "tsx": "4.20.6",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
   },

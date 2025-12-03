@@ -1,13 +1,13 @@
 ---
-description: Redwood makes building forms easier with helper components
+description: Cedar makes building forms easier with helper components
 ---
 
 # Forms
 
-Redwood provides several helpers to make building forms easier.
-All of Redwood's helpers are simple wrappers around [React Hook Form](https://react-hook-form.com/) (RHF) that make it even easier to use in most cases.
+Cedar provides several helpers to make building forms easier.
+All of Cedar's helpers are simple wrappers around [React Hook Form](https://react-hook-form.com/) (RHF) that make it even easier to use in most cases.
 
-If Redwood's helpers aren't flexible enough for you, you can use React Hook Form directly. `@cedarjs/forms` exports everything it does:
+If Cedar's helpers aren't flexible enough for you, you can use React Hook Form directly. `@cedarjs/forms` exports everything it does:
 
 ```jsx
 import {
@@ -68,18 +68,18 @@ The full list is:
 All components ending in `Field` (i.e. all input fields, along with `<SelectField>` and `<TextAreaField>`) accept validation and error-styling props.
 By validation and error-styling props, we mean three props specifically:
 
-- `validation`, which accepts all of React Hook Form's [`register` options](https://react-hook-form.com/api/useform/register), plus the Redwood-exclusive coercion helpers `valueAsBoolean`, `valueAsJSON`
+- `validation`, which accepts all of React Hook Form's [`register` options](https://react-hook-form.com/api/useform/register), plus the Cedar-exclusive coercion helpers `valueAsBoolean`, `valueAsJSON`
 - `errorClassName` and `errorStyle`, which are the classes and styles to apply if there's an error
 
 Besides `name`, all other props passed to these components are forwarded to the tag they render.
 Here's a table for reference:
 
-| Prop             | Description                                                                                                                                                                                                     |
-| :--------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`           | The name of the field. React Hook Form uses it a key to hook it up with everything else                                                                                                                         |
-| `validation`     | All your validation logic. Accepts all of React Hook Form's [`register` options](https://react-hook-form.com/api/useform/register), plus the Redwood-exclusive coercion helpers `valueAsBoolean`, `valueAsJSON` |
-| `errorClassName` | The class name to apply if there's an error                                                                                                                                                                     |
-| `errorStyle`     | The style to apply if there's an error                                                                                                                                                                          |
+| Prop             | Description                                                                                                                                                                                                   |
+| :--------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`           | The name of the field. React Hook Form uses it a key to hook it up with everything else                                                                                                                       |
+| `validation`     | All your validation logic. Accepts all of React Hook Form's [`register` options](https://react-hook-form.com/api/useform/register), plus the Cedar-exclusive coercion helpers `valueAsBoolean`, `valueAsJSON` |
+| `errorClassName` | The class name to apply if there's an error                                                                                                                                                                   |
+| `errorStyle`     | The style to apply if there's an error                                                                                                                                                                        |
 
 ### Example
 
@@ -142,7 +142,7 @@ const ContactPage = () => {
 
 ## `<Form>`
 
-Any form you want Redwood to validate and style in the presence errors should be surrounded by this tag.
+Any form you want Cedar to validate and style in the presence errors should be surrounded by this tag.
 
 | Prop          | Description                                                                                                                                                    |
 | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -154,21 +154,21 @@ All other props are forwarded to the `<form>` tag that it renders.
 
 ### `<Form>` Explained
 
-`<Form>` encapsulates React Hook Form's `useForm` hook and `<FormProvider>` context, along with Redwood's `ServerError` context.
+`<Form>` encapsulates React Hook Form's `useForm` hook and `<FormProvider>` context, along with Cedar's `ServerError` context.
 It's hard to talk about this component without getting into the nitty-gritty of React Hook Forms.
 
 `useForm` is React Hook Form's major hook.
 It returns a bunch of functions, one of which is `register`, which you use to quite literally "register" fields into React Hook Form so it can validate them.
 (This has to do with [controlled vs. uncontrolled components](https://reactjs.org/docs/uncontrolled-components.html). React Hook Form takes the latter approach.)
 
-All of Redwood's form helpers need the `register` function to do what they do. But they don't get it straight from `<Form>` because they could be nested arbitrarily deep. That's where `<FormProvider>` comes in: by passing the functions returned from `useForm` to `<FormProvider>`, Redwood's helpers can just use `useFormContext` to get what they need.
+All of Cedar's form helpers need the `register` function to do what they do. But they don't get it straight from `<Form>` because they could be nested arbitrarily deep. That's where `<FormProvider>` comes in: by passing the functions returned from `useForm` to `<FormProvider>`, Cedar's helpers can just use `useFormContext` to get what they need.
 
 ### Using `formMethods`
 
 There are some functions that `useForm` returns that it'd be nice to have access to.
 For example, `useForm` returns a function `reset`, which resets the form's fields.
 To access it, you have to call `useForm` yourself.
-But you still need to pass `useForm`'s return to the `<FormProvider>` so that Redwood's helpers can register themselves:
+But you still need to pass `useForm`'s return to the `<FormProvider>` so that Cedar's helpers can register themselves:
 
 ```jsx
 import { useForm } from 'react-hook-form'
@@ -289,15 +289,15 @@ The input fields that coerce automatically are:
 | `<DatetimeLocalField>` | `valueAsDate`    |
 
 `valueAsDate` and `valueAsNumber` are built into React Hook Form and are based on the HTML standard.
-But because Redwood uses GraphQL on the backend, it's important that the types submitted by the form be what the GraphQL server expects.
-Instead of forcing users to make heavy-use of `setValueAs` for custom coercion, Redwood extends react hook form's `valueAs` properties with two more for convenience:
+But because Cedar uses GraphQL on the backend, it's important that the types submitted by the form be what the GraphQL server expects.
+Instead of forcing users to make heavy-use of `setValueAs` for custom coercion, Cedar extends react hook form's `valueAs` properties with two more for convenience:
 
 - `valueAsBoolean`
 - `valueAsJSON`
 
 ### Default treatment of empty input values
 
-Redwood provides a flexible treatment of empty input field value. Appropriate treatment of empty fields can make working with fields for database relations easier.
+Cedar provides a flexible treatment of empty input field value. Appropriate treatment of empty fields can make working with fields for database relations easier.
 
 The treatment of empty field values is governed by the following:
 
@@ -319,7 +319,7 @@ The treatment of empty field values is governed by the following:
 
 ### emptyAs prop
 
-The `emptyAs` prop allows the user to override the default value for an input field if the field is empty. Provided that a `setValueAs` prop is not specified, Redwood will allow you to override the default empty value returned.
+The `emptyAs` prop allows the user to override the default value for an input field if the field is empty. Provided that a `setValueAs` prop is not specified, Cedar will allow you to override the default empty value returned.
 The possible values for `emptyAs` are:
 
 - `null`
@@ -338,13 +338,13 @@ will return `undefined` if the field is empty.
 
 ### Custom Input Fields
 
-You can create a custom field that integrates with Redwood through the use of Redwood's `useRegister` and `useErrorStyles` hooks. Each of these serving a different purpose depending on what you are trying to build.
+You can create a custom field that integrates with Cedar through the use of Cedar's `useRegister` and `useErrorStyles` hooks. Each of these serving a different purpose depending on what you are trying to build.
 
 `useRegister` registers the field with react-hook-form and is a wrapper for [`register`](https://react-hook-form.com/api/useform/register).
 
 `useErrorStyles` sets up error styling for your custom input field.
 
-Using these two together you can create custom input fields that replicate a Redwood input field while also allowing for custom domain logic.
+Using these two together you can create custom input fields that replicate a Cedar input field while also allowing for custom domain logic.
 
 In the following example we have an all-in-one custom required input field with label, input, and error display.
 
@@ -386,9 +386,9 @@ const RequiredField = ({ label, name, validation }) => {
 
 ### Controlled Component Fields
 
-If you're working with a fully-featured component library, or have your own production-ready components, you may want to integrate them with Redwood's forms seamlessly.
-You can via Redwood forms' `useErrorStyles` hook and React Hook Form's `Controller` component.
-The following example shows how you could go about integrating a component from [`primereact`](https://www.primefaces.org/primereact/) for use in in Redwood's forms like any of the named-input fields listed above:
+If you're working with a fully-featured component library, or have your own production-ready components, you may want to integrate them with Cedar's forms seamlessly.
+You can via Cedar forms' `useErrorStyles` hook and React Hook Form's `Controller` component.
+The following example shows how you could go about integrating a component from [`primereact`](https://www.primefaces.org/primereact/) for use in in Cedar's forms like any of the named-input fields listed above:
 
 ```tsx title="web/src/components/ToggleButtonField/ToggleButtonField.tsx"
 import { ToggleButton } from 'primereact/togglebutton'

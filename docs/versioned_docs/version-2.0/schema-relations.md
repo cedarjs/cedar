@@ -2,7 +2,7 @@
 description: How Prisma relations work with scaffolds
 ---
 
-# Prisma Relations and Redwood's Generators
+# Prisma Relations and Cedar's Generators
 
 ## Many-to-many Relationships
 
@@ -39,11 +39,11 @@ model Tag {
 }
 ```
 
-These relationships can be [implicit](https://www.prisma.io/docs/concepts/components/prisma-schema/relations/many-to-many-relations#implicit-many-to-many-relations) (as this diagram shows) or [explicit](https://www.prisma.io/docs/concepts/components/prisma-schema/relations/many-to-many-relations#explicit-many-to-many-relations) (explained below). Redwood's SDL generator (which is also used by the scaffold generator) only supports an **explicit** many-to-many relationship when generating with the `--crud` flag. What's up with that?
+These relationships can be [implicit](https://www.prisma.io/docs/concepts/components/prisma-schema/relations/many-to-many-relations#implicit-many-to-many-relations) (as this diagram shows) or [explicit](https://www.prisma.io/docs/concepts/components/prisma-schema/relations/many-to-many-relations#explicit-many-to-many-relations) (explained below). Cedar's SDL generator (which is also used by the scaffold generator) only supports an **explicit** many-to-many relationship when generating with the `--crud` flag. What's up with that?
 
 ## CRUD Requires an `@id`
 
-CRUD (Create, Retrieve, Update, Delete) actions in Redwood currently require a single, unique field in order to retrieve, update or delete a record. This field must be denoted with Prisma's [`@id`](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#id) attribute, marking it as the tables's primary key. This field is guaranteed to be unique and so can be used to find a specific record.
+CRUD (Create, Retrieve, Update, Delete) actions in Cedar currently require a single, unique field in order to retrieve, update or delete a record. This field must be denoted with Prisma's [`@id`](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#id) attribute, marking it as the tables's primary key. This field is guaranteed to be unique and so can be used to find a specific record.
 
 Prisma's implicit many-to-many relationships create a table _without_ a single field marked with the `@id` attribute. Instead, it uses a similar attribute: [`@@id`](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#id-1) to define a _multi-field ID_. This multi-field ID will become the tables's primary key. The diagram above shows the result of letting Prisma create an implicit relationship.
 
@@ -100,7 +100,7 @@ Almost identical! But now there's an `id` and the SDL/scaffold generators will w
 ## Troubleshooting Generators
 
 Are you getting errors when generating SDLs or scaffolds for your Prisma models?
-There's a known limitation in Redwood's GraphQL type generation that happens when generating SDL for, or scaffolding out, a Prisma model that has relations before the SDL for the related model exists.
+There's a known limitation in Cedar's GraphQL type generation that happens when generating SDL for, or scaffolding out, a Prisma model that has relations before the SDL for the related model exists.
 
 This may sound a little abstract, so let's look at an example. Let's say that you're modeling bookshelves. Your prisma schema has two data models, `Book` and `Shelf`. This is a one to many relationship: a shelf has many books, but a book can only be on one shelf:
 
@@ -148,7 +148,7 @@ Failed to load schema
 # ...
 
 type Query {
-  redwood: Redwood
+  redwood: Cedar
 },graphql/**/*.sdl.{js,ts},directives/**/*.{js,ts}:
 
         Unknown type: "Shelf".
@@ -235,6 +235,6 @@ model Employee {
 
 For the generators, what's important here is that the related models are optional.
 `reportsToId`, `reportsTo`, and `directReports` use Prisma's `?` syntax to indicate that they're optional—not required.
-The Redwood generators may complain or fail if you try to force a requirement here.
+The Cedar generators may complain or fail if you try to force a requirement here.
 
 It's important because if you're at the top—say you're the President—then you don't have a `reportsTo`, and if you're just an Employee, then you don't have anyone that directly reports to you.

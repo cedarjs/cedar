@@ -17,13 +17,13 @@ If you simply want to experience the Vercel deployment process without a databas
 
 _If you choose this quick deploy experience, the following steps do not apply._
 
-## Redwood Project Setup
+## Cedar Project Setup
 
-If you already have a Redwood project, proceed to the next step.
+If you already have a Cedar project, proceed to the next step.
 
-Otherwise, we recommend experiencing the full Redwood DX via the [Redwood Tutorial](tutorial/foreword.md). Simply return to these instructions when you reach the "Deployment" section.
+Otherwise, we recommend experiencing the full Cedar DX via the [Cedar Tutorial](tutorial/foreword.md). Simply return to these instructions when you reach the "Deployment" section.
 
-## Redwood Deploy Configuration
+## Cedar Deploy Configuration
 
 Complete the following two steps. Then save, commit, and push your changes.
 
@@ -64,7 +64,7 @@ You'll then need to provide permissions for Vercel to access the repo on your ho
 
 ### Import and Deploy your Project
 
-Vercel will recognize your repo as a Redwood project and take care of most configuration heavy lifting. You should see the following options and, most importantly, the "Framework Preset" showing CedarJS.
+Vercel will recognize your repo as a Cedar project and take care of most configuration heavy lifting. You should see the following options and, most importantly, the "Framework Preset" showing CedarJS.
 
 <img src="https://user-images.githubusercontent.com/2951/90486275-9337cc80-e0ed-11ea-9af3-fd9613c1256b.png" />
 
@@ -72,7 +72,7 @@ Leave the **Build and Output Settings** at the default settings (unless you know
 
 In the "Environment Variables" dropdown, add `DATABASE_URL` and your app's database connection string as the value. (Or skip if not applicable.)
 
-> When configuring a database, you'll want to append `?connection_limit=1` to the URI. This is [recommended by Prisma](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/deployment#recommended-connection-limit) when working with relational databases in a Serverless context. For production apps, you should setup [connection pooling](https://redwoodjs.com/docs/connection-pooling).
+> When configuring a database, you'll want to append `?connection_limit=1` to the URI. This is [recommended by Prisma](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/deployment#recommended-connection-limit) when working with relational databases in a Serverless context. For production apps, you should setup [connection pooling](https://cedarjs.com/docs/connection-pooling).
 
 For example, a postgres connection string should look like `postgres://<user>:<pass>@<url>/<db>?connection_limit=1`
 
@@ -84,7 +84,7 @@ Go ahead, click that "Visit" button. You’ve earned it 🎉
 
 ## Vercel Dashboard Settings
 
-From the Vercel Dashboard you can access the full settings and information for your Redwood App. The default settings seem to work just fine for most Redwood projects. Do take a look around, but be sure check out the [docs as well](https://vercel.com/docs).
+From the Vercel Dashboard you can access the full settings and information for your Cedar App. The default settings seem to work just fine for most Cedar projects. Do take a look around, but be sure check out the [docs as well](https://vercel.com/docs).
 
 From now on, each time you push code to your git repo, Vercel will automatically trigger a deploy of the new code. You can also manually redeploy if you select "Deployments", then the specific deployment from the list, and finally the "Redeploy" option from the vertical dots menu next to "Visit".
 
@@ -128,7 +128,7 @@ export const handler = async (event: APIGatewayEvent, _context: Context) => {
 ```
 
 :::tip important
-Since Redwood has it's own handling of the api directory, the Vercel flavored api directory is disabled. Therefore you don't use the "functions" config in `vercel.json` with Redwood.
+Since Cedar has it's own handling of the api directory, the Vercel flavored api directory is disabled. Therefore you don't use the "functions" config in `vercel.json` with Cedar.
 
 Also, be sure to use Node version 20.x or greater or set the `runtime` in the function config:
 
