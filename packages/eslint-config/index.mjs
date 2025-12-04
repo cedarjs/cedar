@@ -4,6 +4,7 @@
 
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 import reactCompilerPlugin from 'eslint-plugin-react-compiler'
+import globals from 'globals'
 
 import {
   getCommonPlugins,
@@ -107,23 +108,9 @@ export default async function createConfig() {
     files: ['api/src/**'],
     languageOptions: {
       globals: {
+        ...globals.node,
         gql: 'readonly',
         context: 'readonly',
-        // Node.js globals
-        module: 'readonly',
-        require: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        process: 'readonly',
-        Buffer: 'readonly',
-        console: 'readonly',
-        global: 'readonly',
-        setImmediate: 'readonly',
-        clearImmediate: 'readonly',
-        setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
       },
       sourceType: 'module',
     },
@@ -145,14 +132,8 @@ export default async function createConfig() {
     files: ['api/db/seed.js', 'scripts/**'],
     languageOptions: {
       globals: {
-        Promise: 'readonly',
-        module: 'readonly',
-        require: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        process: 'readonly',
-        Buffer: 'readonly',
-        console: 'readonly',
+        ...globals.node,
+        ...globals.commonjs,
       },
       sourceType: 'commonjs',
     },
@@ -163,30 +144,13 @@ export default async function createConfig() {
     files: ['web/src/**'],
     languageOptions: {
       globals: {
+        ...globals.browser,
         React: 'readonly',
         gql: 'readonly',
         process: 'readonly',
         require: 'readonly',
-        // Browser globals
-        window: 'off', // Developers should use `global` instead of window
-        document: 'readonly',
-        navigator: 'readonly',
-        console: 'readonly',
-        setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
-        setImmediate: 'readonly',
-        clearImmediate: 'readonly',
-        fetch: 'readonly',
-        FormData: 'readonly',
-        Headers: 'readonly',
-        Request: 'readonly',
-        Response: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
-        AbortController: 'readonly',
-        AbortSignal: 'readonly',
+        // Developers should use `global` instead of window
+        window: 'off',
       },
       sourceType: 'module',
     },

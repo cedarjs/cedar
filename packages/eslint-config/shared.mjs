@@ -22,6 +22,7 @@ import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 import prettierPlugin from 'eslint-plugin-prettier'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
+import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 import cedarjsPlugin from '@cedarjs/eslint-plugin'
@@ -178,6 +179,10 @@ export default [
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parser: tseslint.parser,
+      globals: {
+        ...globals.browser,
+        JSX: 'readonly',
+      },
     },
     plugins: {
       '@typescript-eslint': tseslint.plugin,
@@ -203,18 +208,23 @@ export default [
   },
   // Test files
   {
-    files: ['**/*.test.*', '**/__mocks__/**'],
+    files: [
+      '**/*.test.*',
+      '**/__mocks__/**',
+      '**/*.scenarios.*',
+      '**/*.stories.*',
+      '**/*.mock.*',
+    ],
     languageOptions: {
       globals: {
-        jest: 'readonly',
-        expect: 'readonly',
-        describe: 'readonly',
-        it: 'readonly',
-        test: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        beforeAll: 'readonly',
-        afterAll: 'readonly',
+        ...globals.jest,
+        // Cedar test globals
+        mockCurrentUser: 'readonly',
+        defineScenario: 'readonly',
+        scenario: 'readonly',
+        describeScenario: 'readonly',
+        mockGraphQLQuery: 'readonly',
+        mockGraphQLMutation: 'readonly',
       },
     },
   },
@@ -236,13 +246,8 @@ export default [
         ecmaVersion: 'latest',
       },
       globals: {
-        module: 'readonly',
-        require: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        process: 'readonly',
-        Buffer: 'readonly',
-        console: 'readonly',
+        ...globals.node,
+        ...globals.commonjs,
       },
       sourceType: 'commonjs',
     },
