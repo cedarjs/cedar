@@ -35,8 +35,8 @@
     "lint:crwrsca": "yarn --cwd packages/create-cedar-rsc-app run lint",
     "lint:crwrsca:fix": "yarn --cwd packages/create-cedar-rsc-app run lint --fix",
     "lint:fix": "concurrently -c auto npm:lint:fw:fix npm:lint:templates:fix npm:lint:crwrsca:fix",
-    "lint:fw": "eslint --config .eslintrc.js --ignore-pattern Routes.jsx --ignore-pattern create-cedar-rsc-app --ignore-pattern packages/create-cedar-app/templates --no-eslintrc packages",
-    "lint:fw:fix": "eslint --config .eslintrc.js --ignore-pattern Routes.jsx --ignore-pattern create-cedar-rsc-app --ignore-pattern packages/create-cedar-app/templates --no-eslintrc packages --fix",
+    "lint:fw": "eslint --config eslint.config.mjs --ignore-pattern Routes.jsx --ignore-pattern create-cedar-rsc-app --ignore-pattern packages/create-cedar-app/templates packages",
+    "lint:fw:fix": "eslint --config eslint.config.mjs --ignore-pattern Routes.jsx --ignore-pattern create-cedar-rsc-app --ignore-pattern packages/create-cedar-app/templates packages --fix",
     "lint:templates": "concurrently -c auto \"cd packages/create-cedar-app/templates/ts && npx eslint .\" \"cd packages/create-cedar-app/templates/js && npx eslint .\" \"cd packages/create-cedar-app/templates/esm-ts && npx eslint .\" \"cd packages/create-cedar-app/templates/esm-js && npx eslint .\"",
     "lint:templates:fix": "concurrently -c auto \"cd packages/create-cedar-app/templates/ts && npx eslint . --fix\" \"cd packages/create-cedar-app/templates/js && npx eslint . --fix\" \"cd packages/create-cedar-app/templates/esm-ts && npx eslint . --fix\" \"cd packages/create-cedar-app/templates/esm-js && npx eslint . --fix\"",
     "project:copy": "node ./tasks/framework-tools/frameworkFilesToProject.mjs",
@@ -47,9 +47,9 @@
     "rebuild-test-project-fixture-esm": "tsx ./tasks/test-project/rebuild-test-project-fixture-esm.ts",
     "smoke-tests": "node ./tasks/smoke-tests/smoke-tests.mjs",
     "test": "nx run-many -t test -- --minWorkers=1 --maxWorkers=4",
+    "test-ci": "nx run-many -t test",
     "test:k6": "tsx ./tasks/k6-test/run-k6-tests.mts",
-    "test:types": "nx run-many -t test:types",
-    "test-ci": "nx run-many -t test"
+    "test:types": "nx run-many -t test:types"
   },
   "resolutions": {
     "prettier-plugin-packagejson/sort-package-json": "3.6.0",
@@ -139,6 +139,7 @@
     "tstyche": "3.5.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
+    "typescript-eslint": "8.44.0",
     "vitest": "3.2.4",
     "yargs": "17.7.2",
     "zx": "8.8.5"

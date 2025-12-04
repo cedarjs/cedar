@@ -7,6 +7,16 @@
     "directory": "packages/eslint-config"
   },
   "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./shared": {
+      "import": "./shared.mjs",
+      "require": "./shared.js"
+    }
+  },
   "main": "index.js",
   "scripts": {
     "build": "echo 'Nothing to build..'",
@@ -16,9 +26,11 @@
     "@babel/core": "^7.26.10",
     "@babel/eslint-parser": "7.27.5",
     "@babel/eslint-plugin": "7.27.1",
+    "@cedarjs/babel-config": "2.0.3",
     "@cedarjs/eslint-plugin": "2.0.3",
     "@cedarjs/internal": "2.0.3",
     "@cedarjs/project-config": "2.0.3",
+    "@eslint/js": "8.57.1",
     "@typescript-eslint/eslint-plugin": "8.44.0",
     "@typescript-eslint/parser": "8.44.0",
     "eslint": "8.57.1",
@@ -30,8 +42,10 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-prettier": "5.2.1",
     "eslint-plugin-react": "7.36.1",
+    "eslint-plugin-react-compiler": "19.1.0-rc.1",
     "eslint-plugin-react-hooks": "4.6.2",
-    "prettier": "3.6.2"
+    "prettier": "3.6.2",
+    "typescript-eslint": "8.44.0"
   },
   "devDependencies": {
     "@babel/cli": "7.27.2",
