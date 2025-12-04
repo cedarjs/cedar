@@ -55,6 +55,8 @@ jobs:
       - name: ⬢ Set up Node.js
         uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
         with:
+          # Use Node 20 here for testing behavior for node versions below the
+          # minimum supported version
           node-version: 20
 
       - name: Prompt tests
@@ -66,6 +68,8 @@ jobs:
       - name: ⬢ Set up Node.js
         uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
         with:
+          # Use Node 25 here for testing behavior for node versions above the
+          # maximum supported version
           node-version: 25
 
       - name: Prompt tests
