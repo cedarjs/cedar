@@ -17,7 +17,7 @@
     "@cedarjs/core": "0.0.5",
     "@cedarjs/project-config": "0.0.5",
     "@cedarjs/testing": "0.0.5",
-    "prettier-plugin-tailwindcss": "^0.5.12"
+    "prettier-plugin-tailwindcss": "^0.7.0"
   },
   "packageManager": "yarn@4.9.4",
   "engines": {
