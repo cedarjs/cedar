@@ -120,6 +120,7 @@ export interface Config {
       lintOnly: boolean
     }
   }
+  eslintLegacyConfigWarning: boolean
 }
 
 export interface CLIPlugin {
@@ -206,6 +207,7 @@ const DEFAULT_CONFIG: Config = {
       lintOnly: false,
     },
   },
+  eslintLegacyConfigWarning: true,
 }
 
 /**
