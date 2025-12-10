@@ -2707,7 +2707,7 @@ __metadata:
     "@auth0/auth0-spa-js": "npm:2.10.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
     react: "npm:19.2.1"
@@ -2762,7 +2762,7 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/netlify-identity-widget": "npm:1.9.7"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
     react: "npm:19.2.1"
@@ -2814,7 +2814,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/clerk-react": "npm:5.57.1"
     "@clerk/types": "npm:4.101.4"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
     react: "npm:19.2.1"
@@ -2914,7 +2914,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@simplewebauthn/browser": "npm:9.0.1"
     "@simplewebauthn/types": "npm:9.0.1"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
     react: "npm:19.2.1"
@@ -2963,7 +2963,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     firebase: "npm:10.14.1"
     publint: "npm:0.3.15"
@@ -3017,7 +3017,7 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/netlify-identity-widget": "npm:1.9.7"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
     react: "npm:19.2.1"
@@ -3093,7 +3093,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.5.1"
     "@supabase/supabase-js": "npm:2.86.2"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
     react: "npm:19.2.1"
@@ -3148,7 +3148,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
     react: "npm:19.2.1"
@@ -3573,8 +3573,8 @@ __metadata:
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.5.2"
     "@types/pascalcase": "npm:1.0.3"
-    "@types/react": "npm:^18.2.55"
-    "@types/react-dom": "npm:^18.2.19"
+    "@types/react": "npm:^19.2.7"
+    "@types/react-dom": "npm:^19.2.3"
     concurrently: "npm:8.2.2"
     graphql: "npm:16.9.0"
     nodemon: "npm:3.1.11"
@@ -3863,7 +3863,7 @@ __metadata:
     "@rollup/plugin-replace": "npm:6.0.3"
     "@swc/core": "npm:1.13.5"
     "@types/mime-types": "npm:2.1.4"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     "@whatwg-node/fetch": "npm:0.9.21"
     babel-plugin-ignore-html-and-css-imports: "npm:0.1.0"
     babel-plugin-tester: "npm:11.0.4"
@@ -3967,8 +3967,8 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/server-store": "workspace:*"
     "@testing-library/jest-dom": "npm:6.5.0"
-    "@types/react": "npm:^18.2.55"
-    "@types/react-dom": "npm:^18.2.19"
+    "@types/react": "npm:^19.2.7"
+    "@types/react-dom": "npm:^19.2.3"
     concurrently: "npm:8.2.2"
     core-js: "npm:3.42.0"
     publint: "npm:0.3.15"
@@ -4161,7 +4161,7 @@ __metadata:
     "@types/busboy": "npm:^1"
     "@types/express": "npm:4"
     "@types/fs-extra": "npm:11.0.4"
-    "@types/react": "npm:^18.2.55"
+    "@types/react": "npm:^19.2.7"
     "@types/ws": "npm:^8"
     "@types/yargs-parser": "npm:21.0.3"
     "@vitejs/plugin-react": "npm:4.3.4"
@@ -4244,8 +4244,8 @@ __metadata:
     "@testing-library/jest-dom": "npm:6.5.0"
     "@testing-library/react": "npm:14.3.1"
     "@types/apollo-upload-client": "npm:^18"
-    "@types/react": "npm:^18.2.55"
-    "@types/react-dom": "npm:^18.2.19"
+    "@types/react": "npm:^19.2.7"
+    "@types/react-dom": "npm:^19.2.3"
     "@whatwg-node/fetch": "npm:0.9.21"
     apollo-upload-client: "npm:18.0.1"
     concurrently: "npm:8.2.2"
@@ -12128,13 +12128,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/prop-types@npm:*":
-  version: 15.7.5
-  resolution: "@types/prop-types@npm:15.7.5"
-  checksum: 10c0/648aae41423821c61c83823ae36116c8d0f68258f8b609bdbc257752dcd616438d6343d554262aa9a7edaee5a19aca2e028a74fa2d0f40fffaf2816bc7056857
-  languageName: node
-  linkType: hard
-
 "@types/qs@npm:*, @types/qs@npm:6.9.16":
   version: 6.9.16
   resolution: "@types/qs@npm:6.9.16"
@@ -12149,7 +12142,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^18.0.0, @types/react-dom@npm:^18.2.19":
+"@types/react-dom@npm:^18.0.0":
   version: 18.2.19
   resolution: "@types/react-dom@npm:18.2.19"
   dependencies:
@@ -12158,23 +12151,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^19.0.0":
-  version: 19.1.5
-  resolution: "@types/react-dom@npm:19.1.5"
+"@types/react-dom@npm:^19.0.0, @types/react-dom@npm:^19.2.3":
+  version: 19.2.3
+  resolution: "@types/react-dom@npm:19.2.3"
   peerDependencies:
-    "@types/react": ^19.0.0
-  checksum: 10c0/2a29e77cf6bb6e9f57bcfa54509c216cad2e16e244f0bd56369966ec88c072b9c91f6011d14f9e18fbfe2b801b18b86f616de75e5c8aef0be73c1f74abb33b49
+    "@types/react": ^19.2.0
+  checksum: 10c0/b486ebe0f4e2fb35e2e108df1d8fc0927ca5d6002d5771e8a739de11239fe62d0e207c50886185253c99eb9dedfeeb956ea7429e5ba17f6693c7acb4c02f8cd1
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:^18.2.55":
-  version: 18.2.55
-  resolution: "@types/react@npm:18.2.55"
+"@types/react@npm:*, @types/react@npm:^19.2.7":
+  version: 19.2.7
+  resolution: "@types/react@npm:19.2.7"
   dependencies:
-    "@types/prop-types": "npm:*"
-    "@types/scheduler": "npm:*"
-    csstype: "npm:^3.0.2"
-  checksum: 10c0/6b1c73beafbbc582dc54ffd92b3779f6d850e8f6b5ce5d04b31e9498a3d77bfc416bb08f0d8d63ab4f4649ccd6639996472416871c01c74a528b16a55faeaf38
+    csstype: "npm:^3.2.2"
+  checksum: 10c0/a7b75f1f9fcb34badd6f84098be5e35a0aeca614bc91f93d2698664c0b2ba5ad128422bd470ada598238cebe4f9e604a752aead7dc6f5a92261d0c7f9b27cfd1
   languageName: node
   linkType: hard
 
@@ -12210,13 +12201,6 @@ __metadata:
   version: 1.20.6
   resolution: "@types/resolve@npm:1.20.6"
   checksum: 10c0/a9b0549d816ff2c353077365d865a33655a141d066d0f5a3ba6fd4b28bc2f4188a510079f7c1f715b3e7af505a27374adce2a5140a3ece2a059aab3d6e1a4244
-  languageName: node
-  linkType: hard
-
-"@types/scheduler@npm:*":
-  version: 0.16.3
-  resolution: "@types/scheduler@npm:0.16.3"
-  checksum: 10c0/c249d4b96fa05165ac22c214f94a045ee0af8beedefdbc54b769febd0044cab3a874e55419841a0dcc76439e379a63e257f3253c87168e3261e7bc783d623302
   languageName: node
   linkType: hard
 
@@ -15906,10 +15890,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csstype@npm:3.1.3, csstype@npm:^3.0.2":
+"csstype@npm:3.1.3":
   version: 3.1.3
   resolution: "csstype@npm:3.1.3"
   checksum: 10c0/80c089d6f7e0c5b2bd83cf0539ab41474198579584fa10d86d0cafe0642202343cbc119e076a0b1aece191989477081415d66c9fefbf3c957fc2fc4b7009f248
+  languageName: node
+  linkType: hard
+
+"csstype@npm:^3.2.2":
+  version: 3.2.3
+  resolution: "csstype@npm:3.2.3"
+  checksum: 10c0/cd29c51e70fa822f1cecd8641a1445bed7063697469d35633b516e60fe8c1bde04b08f6c5b6022136bb669b64c63d4173af54864510fbb4ee23281801841a3ce
   languageName: node
   linkType: hard
 

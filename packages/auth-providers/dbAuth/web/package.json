@@ -47,7 +47,7 @@
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
     "@simplewebauthn/types": "9.0.1",
-    "@types/react": "^18.2.55",
+    "@types/react": "^19.2.7",
     "concurrently": "8.2.2",
     "publint": "0.3.15",
     "react": "19.2.1",
