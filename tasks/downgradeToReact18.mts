@@ -72,14 +72,6 @@ async function downgradeReactVersion(packageJsonArray: PackageJson[]) {
   }
 }
 
-async function removeReactIsResolution(packageJsonArray: PackageJson[]) {
-  for (const packageJson of packageJsonArray) {
-    if (packageJson.resolutions?.['react-is']) {
-      delete packageJson.resolutions['react-is']
-    }
-  }
-}
-
 async function writePackageJsonFiles(
   packageJsonMap: Record<string, PackageJson>,
 ) {
@@ -102,6 +94,5 @@ const packageJsonMap = await parsePackageJsonFiles(packageJsonFilePaths)
 const packageJsonArray = Object.values(packageJsonMap)
 
 await downgradeReactVersion(packageJsonArray)
-await removeReactIsResolution(packageJsonArray)
 
 await writePackageJsonFiles(packageJsonMap)

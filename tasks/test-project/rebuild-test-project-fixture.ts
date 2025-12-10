@@ -585,7 +585,7 @@ async function runCommand() {
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, 'package.json'),
-        JSON.stringify(newRootPackageJson, null, 2),
+        JSON.stringify(newRootPackageJson, null, 2) + '\n',
       )
 
       // removes existing Fixture and replaces with newly built project,

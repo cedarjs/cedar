@@ -15,8 +15,5 @@
   "engines": {
     "node": "=24.x"
   },
-  "packageManager": "yarn@4.9.4",
-  "resolutions": {
-    "react-is": "19.0.1"
-  }
+  "packageManager": "yarn@4.9.4"
 }

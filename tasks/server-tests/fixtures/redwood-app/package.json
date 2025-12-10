@@ -10,9 +10,6 @@
     "extends": "@cedarjs/eslint-config",
     "root": true
   },
-  "resolutions": {
-    "react-is": "19.0.1"
-  },
   "devDependencies": {
     "@cedarjs/core": "0.0.5",
     "@cedarjs/project-config": "0.0.5",
