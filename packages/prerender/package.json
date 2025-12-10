@@ -106,8 +106,8 @@
     "vitest": "3.2.4"
   },
   "peerDependencies": {
-    "react": "19.0.1",
-    "react-dom": "19.0.1"
+    "react": "19.2.1",
+    "react-dom": "19.2.1"
   },
   "publishConfig": {
     "access": "public"
