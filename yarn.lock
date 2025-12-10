@@ -7644,11 +7644,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@joshwooding/vite-plugin-react-docgen-typescript@npm:0.6.2":
-  version: 0.6.2
-  resolution: "@joshwooding/vite-plugin-react-docgen-typescript@npm:0.6.2"
+"@joshwooding/vite-plugin-react-docgen-typescript@npm:0.6.3":
+  version: 0.6.3
+  resolution: "@joshwooding/vite-plugin-react-docgen-typescript@npm:0.6.3"
   dependencies:
-    glob: "npm:^10.0.0"
+    glob: "npm:^11.1.0"
     react-docgen-typescript: "npm:^2.2.2"
   peerDependencies:
     typescript: ">= 4.3.x"
@@ -7656,7 +7656,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/5f77a533a14b81d2edbe2f1492bb477dbe77a0736192e82ce5f7fc9ed8e8b0f10b663872ef2f5b286d26bfd10d5b269519feb00bc7f5a0afdc6af85759e37da4
+  checksum: 10c0/e68d2884235b8290673c17a13bc303a088feba6ce0a275ab0778b50e90b967f5dffdcf71ed3197e9cdf07607594a9cb2a86e3ea6e4eb8962b50d61078107bac3
   languageName: node
   linkType: hard
 
@@ -19244,7 +19244,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:11.1.0, glob@npm:^11.0.0, glob@npm:^11.0.3":
+"glob@npm:11.1.0, glob@npm:^11.0.0, glob@npm:^11.0.3, glob@npm:^11.1.0":
   version: 11.1.0
   resolution: "glob@npm:11.1.0"
   dependencies:
@@ -29078,7 +29078,7 @@ __metadata:
   resolution: "storybook-framework-cedarjs@workspace:packages/storybook"
   dependencies:
     "@cedarjs/testing": "workspace:*"
-    "@joshwooding/vite-plugin-react-docgen-typescript": "npm:0.6.2"
+    "@joshwooding/vite-plugin-react-docgen-typescript": "npm:0.6.3"
     "@rollup/pluginutils": "npm:5.1.4"
     "@storybook/addon-essentials": "npm:8.6.14"
     "@storybook/builder-vite": "npm:8.6.14"
