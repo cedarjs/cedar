@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -140,7 +141,7 @@ export async function renderRoutesSsr(pathname: string) {
         // Server actions are in the RSC bundle, not the SSR client bundle
         // So we use the filePath directly instead of resolving through
         // clientEntries
-        const id = filePath
+        const id = pathToFileURL(filePath).href
         console.log('serverModuleMap::Proxy id', id)
         return { id, chunks: [id], name, async: true }
       },
