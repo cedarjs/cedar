@@ -23,7 +23,7 @@
   },
   "packageManager": "yarn@4.9.4",
   "resolutions": {
-    "react-is": "19.0.1",
+    "react-is": "19.2.1",
     "vite": "5.4.19"
   }
 }
