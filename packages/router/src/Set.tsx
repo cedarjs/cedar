@@ -75,12 +75,20 @@ export function PrivateSet<WrapperProps>(props: PrivateSetProps<WrapperProps>) {
 
 export const isSetNode = (
   node: ReactNode,
-): node is ReactElement<SetProps<any>> => {
+): node is ReactElement<SetProps<unknown>> => {
+  if (!React.isValidElement(node)) {
+    return false
+  }
+
+  // https://github.com/facebook/react/issues/31824
+  const element: ReactElement<any> = node
+
   return (
-    React.isValidElement(node) &&
-    (node.type === Set || node.type === PrivateSet || node.type === Private) &&
+    (element.type === Set ||
+      element.type === PrivateSet ||
+      element.type === Private) &&
     // Don't even bother including Sets without children. They're useless.
-    node.props.children
+    !!element.props.children
   )
 }
 

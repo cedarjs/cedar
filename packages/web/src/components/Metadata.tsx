@@ -19,7 +19,7 @@ const propToMetaTag = (
   parentKey: string,
   parentValue: ParentValue,
   options: { attr: 'name' | 'property' },
-): JSX.Element | JSX.Element[] => {
+): React.JSX.Element | React.JSX.Element[] => {
   if (Array.isArray(parentValue)) {
     // array of attributes
     return parentValue.flatMap((value) => {
@@ -57,7 +57,7 @@ export const Metadata = (props: Record<string, any>) => {
     Head = PortalHead
   }
 
-  const tags: JSX.Element[] = Object.entries(metaProps)
+  const tags: React.JSX.Element[] = Object.entries(metaProps)
     .filter(
       ([key, value]) =>
         !EXCLUDE_PROPS.includes(key) &&

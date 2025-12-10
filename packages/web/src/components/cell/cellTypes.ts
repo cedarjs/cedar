@@ -34,7 +34,9 @@ type CellPropsVariables<Cell, GQLVariables> = Cell extends {
  * Cell component props which is the combination of query variables and Success props.
  */
 export type CellProps<
-  CellSuccess extends keyof JSX.IntrinsicElements | JSXElementConstructor<any>,
+  CellSuccess extends
+    | keyof React.JSX.IntrinsicElements
+    | JSXElementConstructor<any>,
   GQLResult,
   CellType,
   GQLVariables,
