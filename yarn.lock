@@ -19269,6 +19269,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"globals@npm:15.15.0":
+  version: 15.15.0
+  resolution: "globals@npm:15.15.0"
+  checksum: 10c0/f9ae80996392ca71316495a39bec88ac43ae3525a438b5626cd9d5ce9d5500d0a98a266409605f8cd7241c7acf57c354a48111ea02a767ba4f374b806d6861fe
+  languageName: node
+  linkType: hard
+
 "globals@npm:^11.1.0":
   version: 11.12.0
   resolution: "globals@npm:11.12.0"
@@ -27962,6 +27969,7 @@ __metadata:
     execa: "npm:5.1.1"
     fast-glob: "npm:3.3.3"
     fs-extra: "npm:11.2.0"
+    globals: "npm:15.15.0"
     human-id: "npm:^4.1.1"
     jest: "npm:29.7.0"
     jscodeshift: "npm:17.0.0"
