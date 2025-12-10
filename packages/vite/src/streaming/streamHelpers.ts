@@ -250,7 +250,7 @@ export async function reactRenderToStreamResponse(
     // Having the Document (and bootstrap scripts) here allows client to recover from errors in the shell
     // To test this, throw an error in the App on the server only
     const fallbackShell = await renderToReadableStream(
-      FallbackDocument({
+      await FallbackDocument({
         children: null,
         css: cssLinks,
         meta: metaTags,
