@@ -1,3 +1,5 @@
+import type React from 'react'
+
 export interface Spec {
   name: string
   prerenderLoader: (name?: string) => { default: React.ComponentType<unknown> }
@@ -49,4 +51,4 @@ export function normalizePage(
 export type PageType =
   | Spec
   | React.ComponentType<any>
-  | ((props: any) => JSX.Element)
+  | ((props: any) => React.JSX.Element)

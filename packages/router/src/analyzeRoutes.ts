@@ -9,6 +9,7 @@ import {
   isValidRoute,
 } from './route-validators.js'
 import { isPrivateNode, isPrivateSetNode, isSetNode } from './Set.js'
+import type { WrapperType } from './Set.js'
 import {
   matchPath,
   replaceParams,
@@ -190,7 +191,7 @@ export function analyzeRoutes(
           ...otherPropsFromCurrentSet
         } = node.props
 
-        let wrapperComponentsArray = []
+        let wrapperComponentsArray: WrapperType<unknown>[] = []
         if (wrapFromCurrentSet) {
           wrapperComponentsArray = Array.isArray(wrapFromCurrentSet)
             ? wrapFromCurrentSet

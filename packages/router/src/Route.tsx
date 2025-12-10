@@ -36,9 +36,9 @@ export type InternalRouteProps = Partial<
  * it is actually never rendered. All the page loading logic happens in active-route-loader
  * and all the validation happens within utility functions called from the Router
  */
-export function Route(props: RouteProps): JSX.Element
-export function Route(props: RedirectRouteProps): JSX.Element
-export function Route(props: NotFoundRouteProps): JSX.Element
+export function Route(props: RouteProps): React.JSX.Element
+export function Route(props: RedirectRouteProps): React.JSX.Element
+export function Route(props: NotFoundRouteProps): React.JSX.Element
 export function Route(
   _props: RouteProps | RedirectRouteProps | NotFoundRouteProps,
 ) {
