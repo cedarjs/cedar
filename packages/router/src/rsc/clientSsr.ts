@@ -137,9 +137,10 @@ export async function renderRoutesSsr(pathname: string) {
       get(_target, encodedId: string) {
         console.log('serverModuleMap Proxy get encodedId', encodedId)
         const [filePath, name] = encodedId.split('#')
-        const id = globalThis.__rwjs__vite_ssr_runtime
-          ? filePath
-          : resolveClientEntryForProd(filePath, clientEntries)
+        // Server actions are in the RSC bundle, not the SSR client bundle
+        // So we use the filePath directly instead of resolving through
+        // clientEntries
+        const id = filePath
         console.log('serverModuleMap::Proxy id', id)
         return { id, chunks: [id], name, async: true }
       },
