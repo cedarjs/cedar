@@ -15,8 +15,8 @@
     "@cedarjs/forms": "9.0.0-canary.620",
     "@cedarjs/router": "9.0.0-canary.620",
     "@cedarjs/web": "9.0.0-canary.620",
-    "react": "19.0.1",
-    "react-dom": "19.0.1"
+    "react": "19.2.1",
+    "react-dom": "19.2.1"
   },
   "devDependencies": {
     "@cedarjs/vite": "9.0.0-canary.620",
