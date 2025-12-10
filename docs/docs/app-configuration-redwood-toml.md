@@ -194,3 +194,19 @@ To run a Cedar app in a container or VM, you'll want to set both the web and api
 
 You can also configure these values via `REDWOOD_WEB_HOST` and `REDWOOD_API_HOST`.
 And if you set `NODE_ENV` to production, these will be the defaults anyway.
+
+## ESLint Configuration
+
+| Key                         | Description                                                                   | Default |
+| :-------------------------- | :---------------------------------------------------------------------------- | :------ |
+| `eslintLegacyConfigWarning` | Show deprecation warnings when legacy ESLint configuration files are detected | `true`  |
+
+The `eslintLegacyConfigWarning` option controls whether Cedar shows deprecation warnings when it detects legacy ESLint configuration files (like `.eslintrc.js`, `.eslintrc.json`, or `eslint` in `package.json`).
+
+To disable these warnings, set it to `false`:
+
+```toml title="redwood.toml"
+eslintLegacyConfigWarning = false
+```
+
+This can be useful if you need to temporarily maintain legacy ESLint configurations while transitioning to the new flat config format.
