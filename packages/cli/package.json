@@ -92,7 +92,7 @@
     "@babel/cli": "7.27.2",
     "@babel/core": "^7.26.10",
     "@types/archiver": "^6",
-    "memfs": "4.17.2",
+    "memfs": "4.51.1",
     "node-ssh": "13.2.1",
     "tsx": "4.20.6",
     "typescript": "5.9.3",

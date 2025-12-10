@@ -2596,7 +2596,7 @@ __metadata:
     fast-json-parse: "npm:1.0.3"
     fastify: "npm:5.4.0"
     fastify-raw-body: "npm:5.0.0"
-    memfs: "npm:4.17.2"
+    memfs: "npm:4.51.1"
     pino-abstract-transport: "npm:1.2.0"
     pretty-bytes: "npm:5.6.0"
     pretty-ms: "npm:7.0.1"
@@ -2636,7 +2636,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     cookie: "npm:1.0.2"
     humanize-string: "npm:2.1.0"
-    jsonwebtoken: "npm:9.0.2"
+    jsonwebtoken: "npm:9.0.3"
     memjs: "npm:1.3.2"
     pascalcase: "npm:1.0.0"
     pino: "npm:9.7.0"
@@ -2675,7 +2675,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
-    jsonwebtoken: "npm:9.0.2"
+    jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.1.0"
     publint: "npm:0.3.15"
     tsx: "npm:4.20.6"
@@ -2710,7 +2710,7 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -2729,7 +2729,7 @@ __metadata:
     "@types/aws-lambda": "npm:8.10.159"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
-    jsonwebtoken: "npm:9.0.2"
+    jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.1.0"
     publint: "npm:0.3.15"
     tsx: "npm:4.20.6"
@@ -2765,7 +2765,7 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -2817,7 +2817,7 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -2917,7 +2917,7 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -2967,7 +2967,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     firebase: "npm:10.14.1"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -2986,7 +2986,7 @@ __metadata:
     "@types/aws-lambda": "npm:8.10.159"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
-    jsonwebtoken: "npm:9.0.2"
+    jsonwebtoken: "npm:9.0.3"
     publint: "npm:0.3.15"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -3020,7 +3020,7 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3040,7 +3040,7 @@ __metadata:
     "@types/aws-lambda": "npm:8.10.159"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
-    jsonwebtoken: "npm:9.0.2"
+    jsonwebtoken: "npm:9.0.3"
     publint: "npm:0.3.15"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -3092,16 +3092,16 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.5.1"
-    "@supabase/supabase-js": "npm:2.86.0"
+    "@supabase/supabase-js": "npm:2.86.2"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@supabase/supabase-js": 2.86.0
+    "@supabase/supabase-js": 2.86.2
   languageName: unknown
   linkType: soft
 
@@ -3114,7 +3114,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
-    jsonwebtoken: "npm:9.0.2"
+    jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.1.0"
     publint: "npm:0.3.15"
     tsx: "npm:4.20.6"
@@ -3134,7 +3134,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
-    memfs: "npm:4.17.2"
+    memfs: "npm:4.51.1"
     publint: "npm:0.3.15"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -3151,7 +3151,7 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     supertokens-auth-react: "npm:0.39.1"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -3173,7 +3173,7 @@ __metadata:
     core-js: "npm:3.42.0"
     msw: "npm:1.3.5"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
     tsx: "npm:4.20.6"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.9.3"
@@ -3231,7 +3231,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
     listr2: "npm:7.0.2"
-    memfs: "npm:4.17.2"
+    memfs: "npm:4.51.1"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -3348,7 +3348,7 @@ __metadata:
     latest-version: "npm:9.0.0"
     listr2: "npm:7.0.2"
     lodash: "npm:4.17.21"
-    memfs: "npm:4.17.2"
+    memfs: "npm:4.51.1"
     node-ssh: "npm:13.2.1"
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
@@ -3580,14 +3580,14 @@ __metadata:
     nodemon: "npm:3.1.11"
     pascalcase: "npm:1.0.0"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-dom: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
+    react-dom: "npm:19.0.1"
     react-hook-form: "npm:7.54.2"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
+    react: 19.0.1
   languageName: unknown
   linkType: soft
 
@@ -3645,7 +3645,7 @@ __metadata:
     graphql-scalars: "npm:1.23.0"
     graphql-tag: "npm:2.12.6"
     graphql-yoga: "npm:5.7.0"
-    jsonwebtoken: "npm:9.0.2"
+    jsonwebtoken: "npm:9.0.3"
     lodash: "npm:4.17.21"
     publint: "npm:0.3.15"
     tsx: "npm:4.20.6"
@@ -3832,8 +3832,8 @@ __metadata:
     "@playwright/test": "npm:1.57.0"
     fast-glob: "npm:3.3.3"
     lodash: "npm:4.17.21"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-dom: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
+    react-dom: "npm:19.0.1"
     ts-toolbelt: "npm:9.6.0"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -3882,8 +3882,8 @@ __metadata:
     vite-node: "npm:3.2.4"
     vitest: "npm:3.2.4"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: 19.0.1
+    react-dom: 19.0.1
   languageName: unknown
   linkType: soft
 
@@ -3972,16 +3972,16 @@ __metadata:
     concurrently: "npm:8.2.2"
     core-js: "npm:3.42.0"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-dom: "npm:19.0.0-rc-f2df5694-20240916"
-    react-server-dom-webpack: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
+    react-dom: "npm:19.0.1"
+    react-server-dom-webpack: "npm:19.0.1"
     tstyche: "npm:3.0.0"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: 19.0.1
+    react-dom: 19.0.1
   languageName: unknown
   linkType: soft
 
@@ -4181,10 +4181,10 @@ __metadata:
     glob: "npm:11.1.0"
     http-proxy-middleware: "npm:3.0.5"
     isbot: "npm:5.1.32"
-    memfs: "npm:4.17.2"
+    memfs: "npm:4.51.1"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-server-dom-webpack: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
+    react-server-dom-webpack: "npm:19.0.1"
     rimraf: "npm:6.0.1"
     rollup: "npm:4.24.0"
     tsx: "npm:4.20.6"
@@ -4256,8 +4256,8 @@ __metadata:
     graphql-tag: "npm:2.12.6"
     nodemon: "npm:3.1.11"
     publint: "npm:0.3.15"
-    react: "npm:19.0.0-rc-f2df5694-20240916"
-    react-dom: "npm:19.0.0-rc-f2df5694-20240916"
+    react: "npm:19.0.1"
+    react-dom: "npm:19.0.1"
     react-hot-toast: "npm:2.4.1"
     stacktracey: "npm:2.1.8"
     ts-toolbelt: "npm:9.6.0"
@@ -4266,8 +4266,8 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: 19.0.1
+    react-dom: 19.0.1
   bin:
     cedar: ./dist/cjs/bins/cedar.js
     cedarjs: ./dist/cjs/bins/cedar.js
@@ -7721,7 +7721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/base64@npm:^1.1.1":
+"@jsonjoy.com/base64@npm:^1.1.2":
   version: 1.1.2
   resolution: "@jsonjoy.com/base64@npm:1.1.2"
   peerDependencies:
@@ -7730,26 +7730,63 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/json-pack@npm:^1.0.3":
-  version: 1.0.4
-  resolution: "@jsonjoy.com/json-pack@npm:1.0.4"
-  dependencies:
-    "@jsonjoy.com/base64": "npm:^1.1.1"
-    "@jsonjoy.com/util": "npm:^1.1.2"
-    hyperdyperid: "npm:^1.2.0"
-    thingies: "npm:^1.20.0"
+"@jsonjoy.com/buffers@npm:^1.0.0, @jsonjoy.com/buffers@npm:^1.2.0":
+  version: 1.2.1
+  resolution: "@jsonjoy.com/buffers@npm:1.2.1"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/c06e57c33d3c18ab31af163e04f77cb759f68386c41375d1e1bd6c28beb1a3cc82217cc3b26f4c94b7385ed28a61e59b01498cf4cec562fd9e464b17eab0cf16
+  checksum: 10c0/5edaf761b78b730ae0598824adb37473fef5b40a8fc100625159700eb36e00057c5129c7ad15fc0e3178e8de58a044da65728e8d7b05fd3eed58e9b9a0d02b5a
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/util@npm:^1.1.2, @jsonjoy.com/util@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@jsonjoy.com/util@npm:1.3.0"
+"@jsonjoy.com/codegen@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@jsonjoy.com/codegen@npm:1.0.0"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/892bbe2073bb20bf392dd4dfed77881c6f7ae6a0cc5802e537fe3cbeeadde7738de5369f2d4529156efc5e98d9d43b15c85906ddb79140e322f1b26eaaf854df
+  checksum: 10c0/54686352248440ad1484ce7db0270a5a72424fb9651b090e5f1c8e2cd8e55e6c7a3f67dfe4ed90c689cf01ed949e794764a8069f5f52510eaf0a2d0c41d324cd
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/json-pack@npm:^1.11.0":
+  version: 1.21.0
+  resolution: "@jsonjoy.com/json-pack@npm:1.21.0"
+  dependencies:
+    "@jsonjoy.com/base64": "npm:^1.1.2"
+    "@jsonjoy.com/buffers": "npm:^1.2.0"
+    "@jsonjoy.com/codegen": "npm:^1.0.0"
+    "@jsonjoy.com/json-pointer": "npm:^1.0.2"
+    "@jsonjoy.com/util": "npm:^1.9.0"
+    hyperdyperid: "npm:^1.2.0"
+    thingies: "npm:^2.5.0"
+    tree-dump: "npm:^1.1.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/0183eccccf2ab912389a6784ae81c1a7da48cf178902efe093fb60c457359c7c75da2803f869e0a1489f1342dfa4f8ab9b27b65adc9f44fd9646823773b71e9d
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/json-pointer@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@jsonjoy.com/json-pointer@npm:1.0.2"
+  dependencies:
+    "@jsonjoy.com/codegen": "npm:^1.0.0"
+    "@jsonjoy.com/util": "npm:^1.9.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/8d959c0fdd77d937d2a829270de51533bb9e3b887b3f6f02943884dc33dd79225071218c93f4bafdee6a3412fd5153264997953a86de444d85c1fff67915af54
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/util@npm:^1.9.0":
+  version: 1.9.0
+  resolution: "@jsonjoy.com/util@npm:1.9.0"
+  dependencies:
+    "@jsonjoy.com/buffers": "npm:^1.0.0"
+    "@jsonjoy.com/codegen": "npm:^1.0.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/a720a6accaae71fa9e7fa06e93e382702aa5760ef2bdc3bc45c19dc2228a01cc735d36cb970c654bc5e88f1328d55d1f0d5eceef0b76bcc327a2ce863e7b0021
   languageName: node
   linkType: hard
 
@@ -10949,42 +10986,42 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/auth-js@npm:2.86.0":
-  version: 2.86.0
-  resolution: "@supabase/auth-js@npm:2.86.0"
+"@supabase/auth-js@npm:2.86.2":
+  version: 2.86.2
+  resolution: "@supabase/auth-js@npm:2.86.2"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/a70fd3156535bd9d7d57da9cfbdad305f01c3d17c0442559af50f57b2409c734825db8749986982b69f8107864592551442518c73da909a7e03c8d9ca4bef45d
+  checksum: 10c0/b8f4ed09e7b99e64cfcb10217e661a1dc1868668f831efded6666018848cdf1ec0075a1148ff413cc91530c119a496305339f7da898848782ea37bd8df09f955
   languageName: node
   linkType: hard
 
-"@supabase/functions-js@npm:2.86.0":
-  version: 2.86.0
-  resolution: "@supabase/functions-js@npm:2.86.0"
+"@supabase/functions-js@npm:2.86.2":
+  version: 2.86.2
+  resolution: "@supabase/functions-js@npm:2.86.2"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/24cc3271cf1c2b315b4eb5e79a9d9e478da74c6a2f8dc01a097d211f7d5ac596c003e8ee5f8c74041c94f455eb6c3e2aaf6809892f8d8b04ab3ab7bafc5a186d
+  checksum: 10c0/792b7a604f38bd81286c59dfe4a884a41079e14ec3088d8ba45566d0ab883e0e0004b7c08fda3eee4ec5b688fa9dff45c309d687eeb2e229a13308c8a389c96d
   languageName: node
   linkType: hard
 
-"@supabase/postgrest-js@npm:2.86.0":
-  version: 2.86.0
-  resolution: "@supabase/postgrest-js@npm:2.86.0"
+"@supabase/postgrest-js@npm:2.86.2":
+  version: 2.86.2
+  resolution: "@supabase/postgrest-js@npm:2.86.2"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/066ee3dc8e24c8658c93c3b89346542bd4c58e4e14df21ef21d4b5597f01a710f8088c3705fb30791314028de5ca55db6cfee339c707e6b585085c4e9e35742a
+  checksum: 10c0/a33a1644a1db881fad11285088598bf97b6dd308f9bdd2636dbd3b476372f2d9fa72c2414ce12edf79d0bc662f57acdefdf3d8e7076657a667688c5255ea2706
   languageName: node
   linkType: hard
 
-"@supabase/realtime-js@npm:2.86.0":
-  version: 2.86.0
-  resolution: "@supabase/realtime-js@npm:2.86.0"
+"@supabase/realtime-js@npm:2.86.2":
+  version: 2.86.2
+  resolution: "@supabase/realtime-js@npm:2.86.2"
   dependencies:
     "@types/phoenix": "npm:^1.6.6"
     "@types/ws": "npm:^8.18.1"
     tslib: "npm:2.8.1"
     ws: "npm:^8.18.2"
-  checksum: 10c0/5c18c79422436900540243f06bf64e15523ae2eaaf7111b7ee243d803b00f4d85e148cb03b686f03519bb97505b716fbb3aebf70e0adf187b464a6193cf477ce
+  checksum: 10c0/e99b9f4fb4b90c56c51032964a42b331f29fd32be272eb572b15f4dafa9fc4c7370c5d59b6bc1e95dcacbc66f04a2a6c513436422771ee59738089b6aaec4955
   languageName: node
   linkType: hard
 
@@ -10999,26 +11036,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/storage-js@npm:2.86.0":
-  version: 2.86.0
-  resolution: "@supabase/storage-js@npm:2.86.0"
+"@supabase/storage-js@npm:2.86.2":
+  version: 2.86.2
+  resolution: "@supabase/storage-js@npm:2.86.2"
   dependencies:
     iceberg-js: "npm:^0.8.0"
     tslib: "npm:2.8.1"
-  checksum: 10c0/e8fe6b838d3ff64daa144f4e393f5f02caf8c10d5c0657832656cc2d3f864fb46ae6a44665ed932ba231f768b8a5e6d14f66ed354070676f64ee1430c43f4210
+  checksum: 10c0/ed61f77504cd7c75ff4dd9998c699fafc67dadff607235232ce338627dacd20c23016a3de8ed6f867005724eed69de87483ef31908c2224da87ebfe6b9f45b88
   languageName: node
   linkType: hard
 
-"@supabase/supabase-js@npm:2.86.0":
-  version: 2.86.0
-  resolution: "@supabase/supabase-js@npm:2.86.0"
+"@supabase/supabase-js@npm:2.86.2":
+  version: 2.86.2
+  resolution: "@supabase/supabase-js@npm:2.86.2"
   dependencies:
-    "@supabase/auth-js": "npm:2.86.0"
-    "@supabase/functions-js": "npm:2.86.0"
-    "@supabase/postgrest-js": "npm:2.86.0"
-    "@supabase/realtime-js": "npm:2.86.0"
-    "@supabase/storage-js": "npm:2.86.0"
-  checksum: 10c0/dbb58383f3d03d9b13e594674989fdd17931236f68e1d4036b34be49876e0f3f2cf41087e8d88ab578ca0291411d9b7e520179b4ed3be6e056ee02bf0aac3554
+    "@supabase/auth-js": "npm:2.86.2"
+    "@supabase/functions-js": "npm:2.86.2"
+    "@supabase/postgrest-js": "npm:2.86.2"
+    "@supabase/realtime-js": "npm:2.86.2"
+    "@supabase/storage-js": "npm:2.86.2"
+  checksum: 10c0/16e33f7462786fe471ee6ff09014ea5a88722ad1908a25b194d454dcbcbce12a76d02cc3e0bc2c314c9c51d865b5d7e88cbd41d91814ae47d78c127471c6a762
   languageName: node
   linkType: hard
 
@@ -14232,7 +14269,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"buffer-equal-constant-time@npm:1.0.1":
+"buffer-equal-constant-time@npm:^1.0.1":
   version: 1.0.1
   resolution: "buffer-equal-constant-time@npm:1.0.1"
   checksum: 10c0/fb2294e64d23c573d0dd1f1e7a466c3e978fe94a4e0f8183937912ca374619773bef8e2aceb854129d2efecbbc515bbd0cc78d2734a3e3031edb0888531bbc8e
@@ -19191,6 +19228,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"glob-to-regex.js@npm:^1.0.1":
+  version: 1.2.0
+  resolution: "glob-to-regex.js@npm:1.2.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/011c81ae2a4d7ac5fd617038209fd9639d54c76211cc88fe8dd85d1a0850bc683a63cf5b1eae370141fca7dd2c834dfb9684dfdd8bf7472f2c1e4ef6ab6e34f9
+  languageName: node
+  linkType: hard
+
 "glob-to-regexp@npm:0.4.1":
   version: 0.4.1
   resolution: "glob-to-regexp@npm:0.4.1"
@@ -22022,11 +22068,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:9.0.2, jsonwebtoken@npm:^9.0.0":
-  version: 9.0.2
-  resolution: "jsonwebtoken@npm:9.0.2"
+"jsonwebtoken@npm:9.0.3, jsonwebtoken@npm:^9.0.0":
+  version: 9.0.3
+  resolution: "jsonwebtoken@npm:9.0.3"
   dependencies:
-    jws: "npm:^3.2.2"
+    jws: "npm:^4.0.1"
     lodash.includes: "npm:^4.3.0"
     lodash.isboolean: "npm:^3.0.3"
     lodash.isinteger: "npm:^4.0.4"
@@ -22036,7 +22082,7 @@ __metadata:
     lodash.once: "npm:^4.0.0"
     ms: "npm:^2.1.1"
     semver: "npm:^7.5.4"
-  checksum: 10c0/d287a29814895e866db2e5a0209ce730cbc158441a0e5a70d5e940eb0d28ab7498c6bf45029cc8b479639bca94056e9a7f254e2cdb92a2f5750c7f358657a131
+  checksum: 10c0/6ca7f1e54886ea3bde7146a5a22b53847c46e25453c7f7307a69818b9a6ad48c390b2e59d5690fcfd03c529b01960060cc4bb0c686991d6edae2285dfd30f4ba
   languageName: node
   linkType: hard
 
@@ -22093,25 +22139,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jwa@npm:^1.4.1":
-  version: 1.4.1
-  resolution: "jwa@npm:1.4.1"
+"jwa@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "jwa@npm:2.0.1"
   dependencies:
-    buffer-equal-constant-time: "npm:1.0.1"
+    buffer-equal-constant-time: "npm:^1.0.1"
     ecdsa-sig-formatter: "npm:1.0.11"
     safe-buffer: "npm:^5.0.1"
-  checksum: 10c0/5c533540bf38702e73cf14765805a94027c66a0aa8b16bc3e89d8d905e61a4ce2791e87e21be97d1293a5ee9d4f3e5e47737e671768265ca4f25706db551d5e9
-  languageName: node
-  linkType: hard
-
-"jwa@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "jwa@npm:2.0.0"
-  dependencies:
-    buffer-equal-constant-time: "npm:1.0.1"
-    ecdsa-sig-formatter: "npm:1.0.11"
-    safe-buffer: "npm:^5.0.1"
-  checksum: 10c0/6baab823b93c038ba1d2a9e531984dcadbc04e9eb98d171f4901b7a40d2be15961a359335de1671d78cb6d987f07cbe5d350d8143255977a889160c4d90fcc3c
+  checksum: 10c0/ab3ebc6598e10dc11419d4ed675c9ca714a387481466b10e8a6f3f65d8d9c9237e2826f2505280a739cf4cbcf511cb288eeec22b5c9c63286fc5a2e4f97e78cf
   languageName: node
   linkType: hard
 
@@ -22129,23 +22164,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jws@npm:^3.2.2":
-  version: 3.2.2
-  resolution: "jws@npm:3.2.2"
+"jws@npm:^4.0.0, jws@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "jws@npm:4.0.1"
   dependencies:
-    jwa: "npm:^1.4.1"
+    jwa: "npm:^2.0.1"
     safe-buffer: "npm:^5.0.1"
-  checksum: 10c0/e770704533d92df358adad7d1261fdecad4d7b66fa153ba80d047e03ca0f1f73007ce5ed3fbc04d2eba09ba6e7e6e645f351e08e5ab51614df1b0aa4f384dfff
-  languageName: node
-  linkType: hard
-
-"jws@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "jws@npm:4.0.0"
-  dependencies:
-    jwa: "npm:^2.0.0"
-    safe-buffer: "npm:^5.0.1"
-  checksum: 10c0/f1ca77ea5451e8dc5ee219cb7053b8a4f1254a79cb22417a2e1043c1eb8a569ae118c68f24d72a589e8a3dd1824697f47d6bd4fb4bebb93a3bdf53545e721661
+  checksum: 10c0/6be1ed93023aef570ccc5ea8d162b065840f3ef12f0d1bb3114cade844de7a357d5dc558201d9a65101e70885a6fa56b17462f520e6b0d426195510618a154d0
   languageName: node
   linkType: hard
 
@@ -22247,90 +22272,90 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lefthook-darwin-arm64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-darwin-arm64@npm:1.12.3"
+"lefthook-darwin-arm64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-darwin-arm64@npm:1.13.6"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-darwin-x64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-darwin-x64@npm:1.12.3"
+"lefthook-darwin-x64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-darwin-x64@npm:1.13.6"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-freebsd-arm64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-freebsd-arm64@npm:1.12.3"
+"lefthook-freebsd-arm64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-freebsd-arm64@npm:1.13.6"
   conditions: os=freebsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-freebsd-x64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-freebsd-x64@npm:1.12.3"
+"lefthook-freebsd-x64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-freebsd-x64@npm:1.13.6"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-linux-arm64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-linux-arm64@npm:1.12.3"
+"lefthook-linux-arm64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-linux-arm64@npm:1.13.6"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-linux-x64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-linux-x64@npm:1.12.3"
+"lefthook-linux-x64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-linux-x64@npm:1.13.6"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-openbsd-arm64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-openbsd-arm64@npm:1.12.3"
+"lefthook-openbsd-arm64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-openbsd-arm64@npm:1.13.6"
   conditions: os=openbsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-openbsd-x64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-openbsd-x64@npm:1.12.3"
+"lefthook-openbsd-x64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-openbsd-x64@npm:1.13.6"
   conditions: os=openbsd & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-windows-arm64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-windows-arm64@npm:1.12.3"
+"lefthook-windows-arm64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-windows-arm64@npm:1.13.6"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-windows-x64@npm:1.12.3":
-  version: 1.12.3
-  resolution: "lefthook-windows-x64@npm:1.12.3"
+"lefthook-windows-x64@npm:1.13.6":
+  version: 1.13.6
+  resolution: "lefthook-windows-x64@npm:1.13.6"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
 "lefthook@npm:^1.11.14":
-  version: 1.12.3
-  resolution: "lefthook@npm:1.12.3"
+  version: 1.13.6
+  resolution: "lefthook@npm:1.13.6"
   dependencies:
-    lefthook-darwin-arm64: "npm:1.12.3"
-    lefthook-darwin-x64: "npm:1.12.3"
-    lefthook-freebsd-arm64: "npm:1.12.3"
-    lefthook-freebsd-x64: "npm:1.12.3"
-    lefthook-linux-arm64: "npm:1.12.3"
-    lefthook-linux-x64: "npm:1.12.3"
-    lefthook-openbsd-arm64: "npm:1.12.3"
-    lefthook-openbsd-x64: "npm:1.12.3"
-    lefthook-windows-arm64: "npm:1.12.3"
-    lefthook-windows-x64: "npm:1.12.3"
+    lefthook-darwin-arm64: "npm:1.13.6"
+    lefthook-darwin-x64: "npm:1.13.6"
+    lefthook-freebsd-arm64: "npm:1.13.6"
+    lefthook-freebsd-x64: "npm:1.13.6"
+    lefthook-linux-arm64: "npm:1.13.6"
+    lefthook-linux-x64: "npm:1.13.6"
+    lefthook-openbsd-arm64: "npm:1.13.6"
+    lefthook-openbsd-x64: "npm:1.13.6"
+    lefthook-windows-arm64: "npm:1.13.6"
+    lefthook-windows-x64: "npm:1.13.6"
   dependenciesMeta:
     lefthook-darwin-arm64:
       optional: true
@@ -22354,7 +22379,7 @@ __metadata:
       optional: true
   bin:
     lefthook: bin/index.js
-  checksum: 10c0/3819d8146491cfb9c42573c7f1bf3660fcb9216c60dcc4d21093aea793227ba3d67b49651c48377af260f217cc0d6e6c951d5f23f2e18ce0848105bb835b95bc
+  checksum: 10c0/c1919d60708be7e12e705f3a583755b959931ef09c9d8e2e453fb96889a9aa74f803196ceb375b3ce775abe5f4948ec86859b736357d6dc0be312f455a82f0aa
   languageName: node
   linkType: hard
 
@@ -23261,27 +23286,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"memfs@npm:4.17.2":
-  version: 4.17.2
-  resolution: "memfs@npm:4.17.2"
+"memfs@npm:4.51.1, memfs@npm:^4.17.0":
+  version: 4.51.1
+  resolution: "memfs@npm:4.51.1"
   dependencies:
-    "@jsonjoy.com/json-pack": "npm:^1.0.3"
-    "@jsonjoy.com/util": "npm:^1.3.0"
-    tree-dump: "npm:^1.0.1"
+    "@jsonjoy.com/json-pack": "npm:^1.11.0"
+    "@jsonjoy.com/util": "npm:^1.9.0"
+    glob-to-regex.js: "npm:^1.0.1"
+    thingies: "npm:^2.5.0"
+    tree-dump: "npm:^1.0.3"
     tslib: "npm:^2.0.0"
-  checksum: 10c0/9cce5886a10e590887cd63271ba6198f037e537a8ee84048cfe27f851adfc9b7fd3e5b49ac5d31fe8d9c753ffa57ac4d1f8eb4a27a3927047945bd420a4cc38a
-  languageName: node
-  linkType: hard
-
-"memfs@npm:^4.17.0":
-  version: 4.36.0
-  resolution: "memfs@npm:4.36.0"
-  dependencies:
-    "@jsonjoy.com/json-pack": "npm:^1.0.3"
-    "@jsonjoy.com/util": "npm:^1.3.0"
-    tree-dump: "npm:^1.0.1"
-    tslib: "npm:^2.0.0"
-  checksum: 10c0/1ba2b507dde155568612737eadc0070c7709a05e7c7d720bf53866c3a68ef265ee5f4e27328c9566c6be4498563ee9afd081d8542be8ec885abd182d2df92e75
+  checksum: 10c0/b039121dd2c6a93b2b3835042a1780d70347d25d3f983998a91e38a07e9ea1838ace3a5b0b7b8437efef6c64eea668f62efb25aeeed72a595055f6c449ada402
   languageName: node
   linkType: hard
 
@@ -27000,14 +27015,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:19.0.0-rc-f2df5694-20240916":
-  version: 19.0.0-rc-f2df5694-20240916
-  resolution: "react-dom@npm:19.0.0-rc-f2df5694-20240916"
+"react-dom@npm:19.0.1":
+  version: 19.0.1
+  resolution: "react-dom@npm:19.0.1"
   dependencies:
-    scheduler: "npm:0.25.0-rc-f2df5694-20240916"
+    scheduler: "npm:^0.25.0"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-  checksum: 10c0/43577e8aa0a69095bce3821c370d0f73be2d87fe7f01de48ef91166373221daa13898e093ea9e0e3c31a3967579d768c69045197b139c1182c2f15e680c49e20
+    react: ^19.0.1
+  checksum: 10c0/e9286a106bd33976c533db6f9df56e8d9dd56ae49abb16c0720d26968a1f5ec6f17ed7f38150fa054b68c25bcbde00be8f3a9efa193554a8bfacb47f73ca603b
   languageName: node
   linkType: hard
 
@@ -27110,25 +27125,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-server-dom-webpack@npm:19.0.0-rc-f2df5694-20240916":
-  version: 19.0.0-rc-f2df5694-20240916
-  resolution: "react-server-dom-webpack@npm:19.0.0-rc-f2df5694-20240916"
+"react-server-dom-webpack@npm:19.0.1":
+  version: 19.0.1
+  resolution: "react-server-dom-webpack@npm:19.0.1"
   dependencies:
     acorn-loose: "npm:^8.3.0"
     neo-async: "npm:^2.6.1"
     webpack-sources: "npm:^3.2.0"
   peerDependencies:
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: ^19.0.1
+    react-dom: ^19.0.1
     webpack: ^5.59.0
-  checksum: 10c0/ff1890ceca1306df12073fdac579077c35cd411d1a21c6f43bf60065e0121fdfe860f1befccb9e367ba73a37c99add0233780af07528dde77c43d35e641faaf7
+  checksum: 10c0/19833a18466e24f36857bdc85da64b32e5140e866215fbd4f59f915470446a2cb064ef4f594952ac480c13d8c4b54d1385e9b19de726c88c5580bbcde707b26a
   languageName: node
   linkType: hard
 
-"react@npm:19.0.0-rc-f2df5694-20240916":
-  version: 19.0.0-rc-f2df5694-20240916
-  resolution: "react@npm:19.0.0-rc-f2df5694-20240916"
-  checksum: 10c0/15ea40edcea5f14b702e971f7aefbb87f8644be2e0480d563b4e21ee8d6dcc5332d608941c5c69889c035d9d80601fbd6ab303be4ed9f716e6c7ace441ea527a
+"react@npm:19.0.1":
+  version: 19.0.1
+  resolution: "react@npm:19.0.1"
+  checksum: 10c0/bc2e2e86ea4e67235f1adb329363bf1c998b3fed0842116614cbef6ae162d0a70227eda4cfed6d28cb95b2ad8b507a0894ed9af26f7f6cd635797585be2fb16c
   languageName: node
   linkType: hard
 
@@ -28245,10 +28260,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"scheduler@npm:0.25.0-rc-f2df5694-20240916":
-  version: 0.25.0-rc-f2df5694-20240916
-  resolution: "scheduler@npm:0.25.0-rc-f2df5694-20240916"
-  checksum: 10c0/f8a59d85497ccb97a4e1408fcfd2c48a179608c531bd6a10ca1e41d3830c3f5557a02b2aab63e302c42052f70f8ca089ce38a8496efe44edf17f604e098fb531
+"scheduler@npm:^0.25.0":
+  version: 0.25.0
+  resolution: "scheduler@npm:0.25.0"
+  checksum: 10c0/a4bb1da406b613ce72c1299db43759526058fdcc413999c3c3e0db8956df7633acf395cb20eb2303b6a65d658d66b6585d344460abaee8080b4aa931f10eaafe
   languageName: node
   linkType: hard
 
@@ -29106,8 +29121,8 @@ __metadata:
   peerDependencies:
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
-    react: 19.0.0-rc-f2df5694-20240916
-    react-dom: 19.0.0-rc-f2df5694-20240916
+    react: 19.0.1
+    react-dom: 19.0.1
     storybook: 8.6.14
   languageName: unknown
   linkType: soft
@@ -29763,12 +29778,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"thingies@npm:^1.20.0":
-  version: 1.21.0
-  resolution: "thingies@npm:1.21.0"
+"thingies@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "thingies@npm:2.5.0"
   peerDependencies:
     tslib: ^2
-  checksum: 10c0/7570ee855aecb73185a672ecf3eb1c287a6512bf5476449388433b2d4debcf78100bc8bfd439b0edd38d2bc3bfb8341de5ce85b8557dec66d0f27b962c9a8bc1
+  checksum: 10c0/52194642c129615b6af15648621be9a2784ad25526e3facca6c28aa1a36ea32245ef146ebc3fbaf64a3605b8301a5335da505d0c314f851ff293b184e0de7fb9
   languageName: node
   linkType: hard
 
@@ -30041,12 +30056,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tree-dump@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "tree-dump@npm:1.0.1"
+"tree-dump@npm:^1.0.3, tree-dump@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "tree-dump@npm:1.1.0"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/1d87a85f694089a489aa4dab21d25896ea5ab1c21e142928fc89507ab3c74a3ac21bca8d26dc102a9c16349d479be85b629233c17548178185720e4efd469126
+  checksum: 10c0/079f0f0163b68ee2eedc65cab1de6fb121487eba9ae135c106a8bc5e4ab7906ae0b57d86016e4a7da8c0ee906da1eae8c6a1490cd6e2a5e5ccbca321e1f959ca
   languageName: node
   linkType: hard
 

@@ -4,7 +4,7 @@ import jsdoc from 'eslint-plugin-jsdoc'
 import jsonc from 'eslint-plugin-jsonc'
 import markdown from 'eslint-plugin-markdown'
 import n from 'eslint-plugin-n'
-import packageJson from 'eslint-plugin-package-json/configs/recommended'
+import packageJson from 'eslint-plugin-package-json'
 import perfectionist from 'eslint-plugin-perfectionist'
 import * as regexp from 'eslint-plugin-regexp'
 import yml from 'eslint-plugin-yml'
@@ -28,9 +28,9 @@ export default tseslint.config(
   jsdoc.configs['flat/recommended-typescript-error'],
   n.configs['flat/recommended'],
   {
-    ...packageJson,
+    ...packageJson.configs.recommended,
     rules: {
-      ...packageJson.rules,
+      ...packageJson.configs.recommended.rules,
       // https://github.com/JoshuaKGoldberg/eslint-plugin-package-json/issues/252
       'package-json/valid-repository-directory': 'off',
     },
