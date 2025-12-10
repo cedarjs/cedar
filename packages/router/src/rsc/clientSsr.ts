@@ -90,7 +90,7 @@ export async function renderRoutesSsr(pathname: string) {
     {
       get(_target, encodedId: string) {
         console.log('Proxy get encodedId', encodedId)
-        const [filePath, name] = encodedId.split('#') as [string, string]
+        const [filePath, name] = encodedId.split('#')
         // filePath /Users/tobbe/tmp/test-project-rsc-kitchen-sink/web/dist/rsc/assets/rsc-AboutCounter.tsx-1.mjs
         // name AboutCounter
 
