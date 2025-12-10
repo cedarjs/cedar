@@ -174,7 +174,11 @@ export async function renderRoutesSsr(pathname: string) {
   // Here we use `createFromReadableStream`, which is equivalent to
   // `createFromFetch` as used in the browser
   const data = createFromReadableStream(streamForRendering, {
-    ssrManifest: { moduleMap, moduleLoading: null },
+    serverConsumerManifest: {
+      moduleMap,
+      serverModuleMap: {},
+      moduleLoading: null,
+    },
   })
 
   // TODO (RSC): Since this is SSR, do we need caching?
