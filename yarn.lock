@@ -2813,7 +2813,7 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/clerk-react": "npm:5.57.1"
-    "@clerk/types": "npm:4.101.4"
+    "@clerk/types": "npm:4.101.6"
     "@types/react": "npm:^19.2.7"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.15"
@@ -3925,7 +3925,7 @@ __metadata:
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
     graphql: "npm:16.9.0"
-    ioredis: "npm:5.6.1"
+    ioredis: "npm:5.8.2"
     nodemon: "npm:3.1.11"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
@@ -4347,9 +4347,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.37.0, @clerk/shared@npm:^3.9.5":
-  version: 3.37.0
-  resolution: "@clerk/shared@npm:3.37.0"
+"@clerk/shared@npm:^3.37.0, @clerk/shared@npm:^3.39.0, @clerk/shared@npm:^3.9.5":
+  version: 3.39.0
+  resolution: "@clerk/shared@npm:3.39.0"
   dependencies:
     csstype: "npm:3.1.3"
     dequal: "npm:2.0.3"
@@ -4365,16 +4365,16 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: 10c0/78efb6bcff43c704067c6470e8f7dc5fb39ef8be7ccae2e9d9ab539ebf3caf2a661667000121c5215a0121ec107d0782aa0c8925a144d29986d1a4f40bec922a
+  checksum: 10c0/227bf1a55df5e422f2fa35a7c05c932a4ff10c056e0eade25dfff8135f12b7a0a43c25df60941dafc0a7cb19d2023a4b2813ef45234db4532e74a38d82704634
   languageName: node
   linkType: hard
 
-"@clerk/types@npm:4.101.4, @clerk/types@npm:^4.59.3":
-  version: 4.101.4
-  resolution: "@clerk/types@npm:4.101.4"
+"@clerk/types@npm:4.101.6, @clerk/types@npm:^4.59.3":
+  version: 4.101.6
+  resolution: "@clerk/types@npm:4.101.6"
   dependencies:
-    "@clerk/shared": "npm:^3.37.0"
-  checksum: 10c0/a2653273bd6424c33bf905ed3a03ce11a26fd4dd7e8e568b10e665c9e3535608edfd2a180b385466c6f42f9dbb8ca2d0edd9390ac721481ee6d0e8c44c58641e
+    "@clerk/shared": "npm:^3.39.0"
+  checksum: 10c0/50258e5384a85346fae1acdcd18bd5fadf0ccf8c6b2a7cd2945f88df070636ae9ff91c133e64450e390cd871481aec117ddfd66ee30fb597d9cd1f8fbac95ced
   languageName: node
   linkType: hard
 
@@ -7318,10 +7318,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ioredis/commands@npm:^1.1.1":
-  version: 1.2.0
-  resolution: "@ioredis/commands@npm:1.2.0"
-  checksum: 10c0/a5d3c29dd84d8a28b7c67a441ac1715cbd7337a7b88649c0f17c345d89aa218578d2b360760017c48149ef8a70f44b051af9ac0921a0622c2b479614c4f65b36
+"@ioredis/commands@npm:1.4.0":
+  version: 1.4.0
+  resolution: "@ioredis/commands@npm:1.4.0"
+  checksum: 10c0/99afe21fba794f84a2b84cceabcc370a7622e7b8b97a6589456c07c9fa62a15d54c5546f6f7214fb9a2458b1fa87579d5c531aaf48e06cc9be156d5923892c8d
   languageName: node
   linkType: hard
 
@@ -20388,11 +20388,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ioredis@npm:5.6.1":
-  version: 5.6.1
-  resolution: "ioredis@npm:5.6.1"
+"ioredis@npm:5.8.2":
+  version: 5.8.2
+  resolution: "ioredis@npm:5.8.2"
   dependencies:
-    "@ioredis/commands": "npm:^1.1.1"
+    "@ioredis/commands": "npm:1.4.0"
     cluster-key-slot: "npm:^1.1.0"
     debug: "npm:^4.3.4"
     denque: "npm:^2.1.0"
@@ -20401,7 +20401,7 @@ __metadata:
     redis-errors: "npm:^1.2.0"
     redis-parser: "npm:^3.0.0"
     standard-as-callback: "npm:^2.1.0"
-  checksum: 10c0/26ae49cf448e807e454a9bdea5a9dfdcf669e2fdbf2df341900a0fb693c5662fea7e39db3227ce8972d1bda0ba7da9b7410e5163b12d8878a579548d847220ac
+  checksum: 10c0/305e385f811d49908899e32c2de69616cd059f909afd9e0a53e54f596b1a5835ee3449bfc6a3c49afbc5a2fd27990059e316cc78f449c94024957bd34c826d88
   languageName: node
   linkType: hard
 
