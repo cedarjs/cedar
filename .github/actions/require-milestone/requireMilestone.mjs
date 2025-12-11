@@ -1,17 +1,6 @@
 // @ts-check
 
 /**
- * @typedef {Object} ProcessEnv
- * @property {string} GITHUB_EVENT_PATH - `GITHUB_EVENT_PATH` is set in the
- *   GitHub Actions runner.
- *   It's the path to the file on the runner that contains the full event
- *   webhook payload.
- *   @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
- * @property {string} GITHUB_TOKEN - GitHub token for API requests.
- * @property {string} GITHUB_REPOSITORY - The owner and repository name.
- */
-
-/**
  * @typedef {Object} PullRequest
  * @property {string} title - The title of the pull request.
  * @property {number} number - The pull request number.
@@ -26,10 +15,18 @@
  * @property {{ login: string }} sender - The user who triggered the event.
  */
 
-/** @type {ProcessEnv} */
+/** Environment variables needed for the script. */
 const env = {
+  /**
+   * `GITHUB_EVENT_PATH` - This is set by the GitHub Actions runner.
+   * It's the path to the file on the runner that contains the full event
+   * webhook payload.
+   * @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
+   */
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
+  /** `GITHUB_TOKEN` - GitHub token for API requests */
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+  /** `GITHUB_REPOSITORY` - The owner and repository name */
   GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
 }
 

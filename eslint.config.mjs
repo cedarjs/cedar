@@ -394,6 +394,7 @@ export default [
       'packages/cli-packages/**/*.mjs',
       'packages/codemods/tasks/**',
       'packages/ogimage-gen/cjsWrappers/**',
+      '.github/**',
     ],
     languageOptions: {
       globals: {
