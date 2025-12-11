@@ -21,7 +21,7 @@ export const description = 'Upgrade all @cedarjs packages via interactive CLI'
 export const builder = (yargs) => {
   yargs
     .example(
-      'rw upgrade -t 0.20.1-canary.5',
+      'cedar upgrade -t 0.20.1-canary.5',
       'Specify a version. URL for Version History:\nhttps://www.npmjs.com/package/@cedarjs/core',
     )
     .option('dry-run', {
@@ -50,7 +50,8 @@ export const builder = (yargs) => {
     })
     .option('yes', {
       alias: 'y',
-      describe: 'Skip prompts and use defaults',
+      describe:
+        'Skip prompts and use defaults. Defaults to `true` if a tag is specified.',
       default: false,
       type: 'boolean',
     })
@@ -110,6 +111,14 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
         task: async (ctx, task) => {
           if (yes) {
             task.skip('Skipping confirmation prompt because of --yes flag.')
+            return
+          }
+
+          if (tag) {
+            task.skip(
+              'Skipping confirmation prompt because a specific tag is ' +
+                'specified.',
+            )
             return
           }
 
