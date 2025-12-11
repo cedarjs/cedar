@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import ansis from 'ansis'
-import { execa } from 'execa'
+import execa from 'execa'
 import { Listr } from 'listr2'
 import { rimraf } from 'rimraf'
 import { hideBin } from 'yargs/helpers'
