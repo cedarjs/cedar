@@ -54,7 +54,7 @@ export const builder = (yargs) => {
     })
     .option('yes', {
       alias: 'y',
-      describe: 'Skip prompts and use defaults.',
+      describe: 'Skip prompts and use defaults',
       default: false,
       type: 'boolean',
     })
