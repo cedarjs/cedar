@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/client": "6.19.0",
+    "@prisma/client": "6.19.1",
     "concurrently": "8.2.2",
     "publint": "0.3.16",
     "tsx": "4.20.6",
