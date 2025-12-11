@@ -1,19 +1,20 @@
 #!/usr/bin/env node
-/* eslint-env node, es6*/
-//@ts-check
-const fs = require('fs')
-const path = require('path')
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const ansis = require('ansis')
-const execa = require('execa')
-const fse = require('fs-extra')
-const Listr = require('listr2').Listr
-const { rimraf } = require('rimraf')
-const { hideBin } = require('yargs/helpers')
-const yargs = require('yargs/yargs')
+import ansis from 'ansis'
+import { execa } from 'execa'
+import { Listr } from 'listr2'
+import { rimraf } from 'rimraf'
+import { hideBin } from 'yargs/helpers'
+import yargs from 'yargs/yargs'
 
-const { webTasks, apiTasks, streamingTasks } = require('./tasks')
-const { getExecaOptions, confirmNoFixtureNoLink } = require('./util')
+import { apiTasks, streamingTasks, webTasks } from './tasks.js'
+import { confirmNoFixtureNoLink, getExecaOptions } from './util.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const args = yargs(hideBin(process.argv))
   .usage('Usage: $0 <project directory> [option]')
@@ -81,7 +82,7 @@ if (args._.length > 1) {
   process.exit(1)
 }
 
-const OUTPUT_PROJECT_PATH = path.resolve(String(args._))
+const OUTPUT_PROJECT_PATH = path.resolve(String(args._[0]))
 const CEDAR_FRAMEWORK_PATH = path.join(__dirname, '../../')
 
 // Project Directory path check: must not be a subdirectory or Yarn will error
@@ -113,7 +114,7 @@ const createProject = async () => {
     await rimraf(OUTPUT_PROJECT_PATH)
   }
 
-  let cmd = `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ${OUTPUT_PROJECT_PATH}`
+  const cmd = `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ${OUTPUT_PROJECT_PATH}`
 
   // We create a ts project and convert using ts-to-js at the end if typescript flag is false
   return execa(
@@ -134,9 +135,10 @@ const copyProject = async () => {
   )
 
   // copying existing Fixture to new Project
-  await fse.copy(FIXTURE_TESTPROJ_PATH, OUTPUT_PROJECT_PATH)
+  fs.cpSync(FIXTURE_TESTPROJ_PATH, OUTPUT_PROJECT_PATH, { recursive: true })
+
   // Make sure no lockfiles are accidentally copied
-  fse.remove(path.join(OUTPUT_PROJECT_PATH, 'yarn.lock'))
+  fs.rmSync(path.join(OUTPUT_PROJECT_PATH, 'yarn.lock'), { force: true })
 }
 
 const globalTasks = () =>
@@ -286,9 +288,8 @@ const globalTasks = () =>
     ],
     {
       exitOnError: true,
-      // @ts-expect-error Allowed
-      renderer: verbose && 'verbose',
-      renderOptions: { collapseSubtasks: false },
+      renderer: verbose ? 'verbose' : 'default',
+      rendererOptions: { collapseSubtasks: false },
     },
   )
 
@@ -296,15 +297,17 @@ async function runCommand() {
   // confirm usage for case raw build without Link
   if (!copyFromFixture && !link) {
     // if prompt returns 'no', exit
-    ;(await confirmNoFixtureNoLink(copyFromFixture, link)) || process.exit(1)
+    if (!(await confirmNoFixtureNoLink(copyFromFixture, link))) {
+      process.exit(1)
+    }
   }
 
-  await globalTasks()
-    .run()
-    .catch((err) => {
-      console.error(err)
-      process.exit(1)
-    })
+  try {
+    await globalTasks().run()
+  } catch (err) {
+    console.error(err)
+    process.exit(1)
+  }
 }
 
 runCommand()

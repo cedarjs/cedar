@@ -15,7 +15,7 @@
     "build": "nx run-many -t build",
     "build:clean": "node ./tasks/clean.mjs",
     "build:pack": "nx run-many -t build:pack",
-    "build:test-project": "node ./tasks/test-project/test-project",
+    "build:test-project": "node ./tasks/test-project/test-project.mts",
     "build:watch": "lerna run build:watch --parallel; tsc --build",
     "changesets": "tsx ./tasks/changesets/changesets.mts",
     "check": "cross-env yarn constraints && yarn dedupe --check",
