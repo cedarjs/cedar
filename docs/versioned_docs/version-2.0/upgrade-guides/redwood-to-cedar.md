@@ -4,6 +4,11 @@ description: How to switch from RedwoodJS/RedwoodGraphQL to CedarJS
 
 # Migrating from RedwoodJS to CedarJS
 
+The latest version of Cedar that's fully compatible with RedwoodJS is CedarJS
+v1.x. Newer versions of Cedar, like v2, have breaking changes compared to RW.
+Please migrate to Cedar v1 first, and make sure that's working, before migrating
+to v2 or newer.
+
 ## Required Steps
 
 1. Search and replace all instances of `"@redwoodjs/(.*)": "\d+\.\d+\.\d+"`
