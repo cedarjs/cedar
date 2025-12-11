@@ -138,9 +138,11 @@ async function main() {
   /** @type {GitHubEvent} */
   const { pull_request: pullRequest } = JSON.parse(event)
 
-  // Fetch the current PR state from the API to get the latest title and milestone
-  // This is important because when re-running a workflow, the event payload
-  // contains stale data from when the workflow was originally triggered
+  // Fetch the current PR state from the API to get the latest title and
+  // milestone. Reading the PR details from the event payload will give stale
+  // data if for example the PR title has been updated.
+  // The event payload contains data from when the workflow was originally
+  // triggered
   const [owner, repo] = env.GITHUB_REPOSITORY.split('/')
 
   if (!env.GITHUB_TOKEN) {
