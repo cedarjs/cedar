@@ -1,7 +1,7 @@
 {
   "name": "@cedarjs/testing",
   "version": "2.0.2",
-  "description": "Tools, wrappers and configuration for testing a CedarJS project.",
+  "description": "Tools, wrappers and configuration for testing a Cedar project.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
