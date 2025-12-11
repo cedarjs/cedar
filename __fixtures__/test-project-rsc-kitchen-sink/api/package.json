@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@cedarjs/api": "9.0.0-canary.620",
-    "@cedarjs/graphql-server": "9.0.0-canary.620"
+    "@cedarjs/api": "1.0.0-canary.12868",
+    "@cedarjs/graphql-server": "1.0.0-canary.12868"
   }
 }
