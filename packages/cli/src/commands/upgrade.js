@@ -32,7 +32,11 @@ export const builder = (yargs) => {
     .option('tag', {
       alias: 't',
       description:
-        '[choices: "latest", "rc", "next", "canary", "experimental", or a specific-version (see example below)] WARNING: "canary", "rc" and "experimental" are unstable releases! And "canary" releases include breaking changes often requiring codemods if upgrading a project.',
+        '[choices: "latest", "rc", "next", "canary", "experimental", or a ' +
+        'specific-version (see example below)] WARNING: "canary", "rc" and ' +
+        '"experimental" are unstable releases! And "canary" releases include ' +
+        'breaking changes often requiring changes to your codebase when ' +
+        'upgrading a project.',
       requiresArg: true,
       type: 'string',
       coerce: validateTag,
@@ -50,8 +54,7 @@ export const builder = (yargs) => {
     })
     .option('yes', {
       alias: 'y',
-      describe:
-        'Skip prompts and use defaults. Defaults to `true` if a tag is specified.',
+      describe: 'Skip prompts and use defaults.',
       default: false,
       type: 'boolean',
     })
