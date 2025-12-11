@@ -1,17 +1,6 @@
 // @ts-check
 
 /**
- * @typedef {Object} ProcessEnv
- * @property {string} GITHUB_EVENT_PATH - `GITHUB_EVENT_PATH` is set in the
- *   GitHub Actions runner.
- *   It's the path to the file on the runner that contains the full event
- *   webhook payload.
- *   @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
- * @property {string} GITHUB_TOKEN - GitHub token for API requests.
- * @property {string} GITHUB_REPOSITORY - The owner and repository name.
- */
-
-/**
  * @typedef {Object} PullRequest
  * @property {string} title - The title of the pull request.
  * @property {number} number - The pull request number.
@@ -26,10 +15,18 @@
  * @property {{ login: string }} sender - The user who triggered the event.
  */
 
-/** @type {ProcessEnv} */
+/** Environment variables needed for the script. */
 const env = {
+  /**
+   * `GITHUB_EVENT_PATH` - This is set by the GitHub Actions runner.
+   * It's the path to the file on the runner that contains the full event
+   * webhook payload.
+   * @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
+   */
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
+  /** `GITHUB_TOKEN` - GitHub token for API requests */
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+  /** `GITHUB_REPOSITORY` - The owner and repository name */
   GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
 }
 
@@ -139,9 +136,38 @@ async function main() {
   const event = fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf-8')
 
   /** @type {GitHubEvent} */
-  const {
-    pull_request: { title, number, milestone },
-  } = JSON.parse(event)
+  const { pull_request: pullRequest } = JSON.parse(event)
+
+  // Fetch the current PR state from the API to get the latest title and milestone
+  // This is important because when re-running a workflow, the event payload
+  // contains stale data from when the workflow was originally triggered
+  const [owner, repo] = env.GITHUB_REPOSITORY.split('/')
+
+  if (!env.GITHUB_TOKEN) {
+    console.error('GITHUB_TOKEN is not set. Cannot fetch PR details.')
+    process.exitCode = 1
+    return
+  }
+
+  const prResponse = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/pulls/${pullRequest.number}`,
+    {
+      headers: {
+        Authorization: `token ${env.GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    },
+  )
+
+  if (!prResponse.ok) {
+    console.error(
+      `Failed to fetch PR details: ${prResponse.status} ${prResponse.statusText}`,
+    )
+    process.exitCode = 1
+    return
+  }
+
+  const { title, milestone } = await prResponse.json()
 
   // If milestone already exists, we're good
   if (milestone) {
@@ -158,7 +184,7 @@ async function main() {
         `Automatically setting milestone to "${suggestedMilestone}"...`,
     )
 
-    await setMilestone(number, suggestedMilestone)
+    await setMilestone(pullRequest.number, suggestedMilestone)
 
     return
   }
