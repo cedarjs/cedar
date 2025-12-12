@@ -2847,8 +2847,8 @@ __metadata:
   linkType: hard
 
 "knip@npm:^5.26.0":
-  version: 5.71.0
-  resolution: "knip@npm:5.71.0"
+  version: 5.73.3
+  resolution: "knip@npm:5.73.3"
   dependencies:
     "@nodelib/fs.walk": "npm:^1.2.3"
     fast-glob: "npm:^3.3.3"
@@ -2856,7 +2856,7 @@ __metadata:
     jiti: "npm:^2.6.0"
     js-yaml: "npm:^4.1.1"
     minimist: "npm:^1.2.8"
-    oxc-resolver: "npm:^11.13.2"
+    oxc-resolver: "npm:^11.15.0"
     picocolors: "npm:^1.1.1"
     picomatch: "npm:^4.0.1"
     smol-toml: "npm:^1.5.2"
@@ -2868,7 +2868,7 @@ __metadata:
   bin:
     knip: bin/knip.js
     knip-bun: bin/knip-bun.js
-  checksum: 10c0/954a899343afe2bc495da205dceeecf0ff665f26ceb44424e465e4246ce7ee72c204e679bc375b9095443999d383b838e37dd2a9868d8884e4096be3dca66a7e
+  checksum: 10c0/d015e35fef32072ab8196a50690dce45a8cc9833eb5d7d2602b8077b8635096ef739145b7142952fc564127614cbcc92283f25afd1b36d3873bb57a981cad3d9
   languageName: node
   linkType: hard
 
@@ -3225,7 +3225,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oxc-resolver@npm:^11.13.2":
+"oxc-resolver@npm:^11.15.0":
   version: 11.15.0
   resolution: "oxc-resolver@npm:11.15.0"
   dependencies:
