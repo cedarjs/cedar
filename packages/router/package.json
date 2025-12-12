@@ -100,7 +100,7 @@
     "core-js": "3.42.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "react-server-dom-webpack": "19.2.2"
+    "react-server-dom-webpack": "19.2.3"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
