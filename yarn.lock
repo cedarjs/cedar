@@ -2812,7 +2812,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "npm:2.0.3"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/clerk-react": "npm:5.57.1"
+    "@clerk/clerk-react": "npm:5.58.1"
     "@clerk/types": "npm:4.101.6"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
@@ -2822,7 +2822,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@clerk/clerk-react": 5.57.1
+    "@clerk/clerk-react": 5.58.1
   languageName: unknown
   linkType: soft
 
@@ -4333,20 +4333,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/clerk-react@npm:5.57.1":
-  version: 5.57.1
-  resolution: "@clerk/clerk-react@npm:5.57.1"
+"@clerk/clerk-react@npm:5.58.1":
+  version: 5.58.1
+  resolution: "@clerk/clerk-react@npm:5.58.1"
   dependencies:
-    "@clerk/shared": "npm:^3.37.0"
+    "@clerk/shared": "npm:^3.39.0"
     tslib: "npm:2.8.1"
   peerDependencies:
     react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
     react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
-  checksum: 10c0/5e676902f7726cdbd8af05e161ba8064dc165b00a23bba2b8fcd22b8de2ec9dc5a04bff8e0be719b6f0bc1e5177e1a038e51c943980e21093f7f1163101b6a25
+  checksum: 10c0/572f27e0812cd00a70a7a8d6035fa825d929ac5e89d68bdf9034382f6fc9cbcb08a667ca82344e2780f914f56a83f92e18ce837fe441d460d27b015288a4ba9d
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.37.0, @clerk/shared@npm:^3.39.0, @clerk/shared@npm:^3.9.5":
+"@clerk/shared@npm:^3.39.0, @clerk/shared@npm:^3.9.5":
   version: 3.39.0
   resolution: "@clerk/shared@npm:3.39.0"
   dependencies:
