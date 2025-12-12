@@ -57,7 +57,7 @@
     "concurrently": "8.2.2",
     "firebase": "10.14.1",
     "publint": "0.3.16",
-    "react": "19.2.1",
+    "react": "19.2.3",
     "tsx": "4.20.6",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
