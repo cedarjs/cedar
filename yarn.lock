@@ -4163,7 +4163,7 @@ __metadata:
     memfs: "npm:4.51.1"
     publint: "npm:0.3.16"
     react: "npm:18.3.1"
-    react-server-dom-webpack: "npm:19.2.1"
+    react-server-dom-webpack: "npm:19.2.2"
     rimraf: "npm:6.0.1"
     rollup: "npm:4.24.0"
     tsx: "npm:4.20.6"
@@ -27038,18 +27038,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-server-dom-webpack@npm:19.2.1":
-  version: 19.2.1
-  resolution: "react-server-dom-webpack@npm:19.2.1"
+"react-server-dom-webpack@npm:19.2.2":
+  version: 19.2.2
+  resolution: "react-server-dom-webpack@npm:19.2.2"
   dependencies:
     acorn-loose: "npm:^8.3.0"
     neo-async: "npm:^2.6.1"
     webpack-sources: "npm:^3.2.0"
   peerDependencies:
-    react: ^19.2.1
-    react-dom: ^19.2.1
+    react: ^19.2.2
+    react-dom: ^19.2.2
     webpack: ^5.59.0
-  checksum: 10c0/71adb91488ff0e8cb9290bd0d88521dc185f4adc1754ef89b4816e155f73acc420d18a5700a64517c42d5894d0c51e7380c410df4fd61b48e5aa1c6359e1e911
+  checksum: 10c0/1308d2a18c4ec7ab9c2189f5d9c5e89b0e2961a55544378aa4b1ddf4ef9cd1ecd0b1b0bc9c4052c4b0c934b4d2baf00fb700caf3e0404974621a063271e55553
   languageName: node
   linkType: hard
 
