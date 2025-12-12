@@ -16,6 +16,6 @@
   },
   "packageManager": "yarn@4.9.4",
   "resolutions": {
-    "react-is": "19.2.1"
+    "react-is": "19.2.3"
   }
 }
