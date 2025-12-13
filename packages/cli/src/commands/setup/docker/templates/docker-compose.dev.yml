@@ -21,7 +21,7 @@ services:
       - REDWOOD_API_HOST=0.0.0.0
 
   db:
-    image: postgres:16-bookworm
+    image: postgres:18-bookworm
     environment:
       POSTGRES_USER: redwood
       POSTGRES_PASSWORD: redwood
