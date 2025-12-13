@@ -3975,7 +3975,7 @@ __metadata:
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
     react-server-dom-webpack: "npm:19.2.3"
-    tstyche: "npm:3.0.0"
+    tstyche: "npm:3.5.0"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -4014,7 +4014,7 @@ __metadata:
     esbuild: "npm:0.25.9"
     mime-types: "npm:2.1.35"
     publint: "npm:0.3.16"
-    tstyche: "npm:3.0.0"
+    tstyche: "npm:3.5.0"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     ulid: "npm:2.3.0"
@@ -4261,7 +4261,7 @@ __metadata:
     react-hot-toast: "npm:2.4.1"
     stacktracey: "npm:2.1.8"
     ts-toolbelt: "npm:9.6.0"
-    tstyche: "npm:3.0.0"
+    tstyche: "npm:3.5.0"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -28076,7 +28076,7 @@ __metadata:
     prompts: "npm:2.4.2"
     rimraf: "npm:6.0.1"
     tree-kill: "npm:1.2.2"
-    tstyche: "npm:3.0.0"
+    tstyche: "npm:3.5.0"
     tsx: "npm:4.20.6"
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.44.0"
@@ -30240,9 +30240,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tstyche@npm:3.0.0":
-  version: 3.0.0
-  resolution: "tstyche@npm:3.0.0"
+"tstyche@npm:3.5.0":
+  version: 3.5.0
+  resolution: "tstyche@npm:3.5.0"
   peerDependencies:
     typescript: 4.x || 5.x
   peerDependenciesMeta:
@@ -30250,7 +30250,7 @@ __metadata:
       optional: true
   bin:
     tstyche: ./build/bin.js
-  checksum: 10c0/dede68ed73dd1a3bab7cc68cc227e32120882c1995c50439fcb250ddf66ce0b79da4b7957999b57ffbc1e6da49814c2334c3b4fed54d07d5cc81c561a62eb2a1
+  checksum: 10c0/11c39a7ae70337b4e739ec0a2c77e06591a2eeb81049134c135b0dd2ffce3b5b6088334b30640b52e0af0c5b9f56f757d4a2c29937c4d4a1925f0c57ca98ce3e
   languageName: node
   linkType: hard
 
