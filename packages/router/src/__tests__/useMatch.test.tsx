@@ -12,6 +12,26 @@ function createDummyLocation(pathname: string, search = '') {
   return new URL(pathname + search, 'http://localhost/')
 }
 
+const mockLocation = createDummyLocation('/dummy-location')
+
+type CallbackType = () => ReturnType<typeof useMatch>
+function renderHook(cb: CallbackType) {
+  return tlrRenderHook(cb, {
+    wrapper: ({ children }) => (
+      <LocationProvider location={mockLocation}>{children}</LocationProvider>
+    ),
+  })
+}
+
+function setLocation(pathname: string, search = '') {
+  mockLocation.pathname = pathname
+  mockLocation.search = search
+}
+
+afterEach(() => {
+  setLocation('/dummy-location')
+})
+
 describe('useMatch', () => {
   const MyLink = ({
     to,
@@ -86,28 +106,6 @@ describe('useMatch', () => {
   })
 
   describe('routeParams', () => {
-    const mockLocation = createDummyLocation('/dummy-location')
-
-    type CallbackType = () => ReturnType<typeof useMatch>
-    function renderHook(cb: CallbackType) {
-      return tlrRenderHook(cb, {
-        wrapper: ({ children }) => (
-          <LocationProvider location={mockLocation}>
-            {children}
-          </LocationProvider>
-        ),
-      })
-    }
-
-    function setLocation(pathname: string, search = '') {
-      mockLocation.pathname = pathname
-      mockLocation.search = search
-    }
-
-    afterEach(() => {
-      setLocation('/dummy-location')
-    })
-
     it('matches a path with literal route param', () => {
       setLocation('/test-path/foobar')
 
@@ -235,28 +233,6 @@ describe('useMatch', () => {
   })
 
   describe('routeParams + searchParams', () => {
-    const mockLocation = createDummyLocation('/dummy-location')
-
-    type CallbackType = () => ReturnType<typeof useMatch>
-    function renderHook(cb: CallbackType) {
-      return tlrRenderHook(cb, {
-        wrapper: ({ children }) => (
-          <LocationProvider location={mockLocation}>
-            {children}
-          </LocationProvider>
-        ),
-      })
-    }
-
-    function setLocation(pathname: string, search = '') {
-      mockLocation.pathname = pathname
-      mockLocation.search = search
-    }
-
-    afterEach(() => {
-      setLocation('/dummy-location')
-    })
-
     it('matches a path with literal route param', () => {
       setLocation('/test-path/foobar', '?s1=one&s2=two')
 
