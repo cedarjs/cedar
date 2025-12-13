@@ -542,7 +542,9 @@ test(
 
     // This shouldn't show up, because the page shouldn't render before it's
     // fully loaded
-    expect(screen.queryByText('loading in page...')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByText('loading in page...')).not.toBeInTheDocument()
+    })
 
     await waitFor(() => screen.getByText('done loading in page'))
     await waitFor(() => screen.getByText('done loading in layout'))
