@@ -15,9 +15,11 @@ const createHistory = () => {
 
   const history = {
     listen: (listener: Listener) => {
-      const listenerId = 'RW_HISTORY_LISTENER_ID_' + Date.now()
+      const rndId = Math.random().toString(36).substring(2, 15)
+      const listenerId = 'CEDAR_HISTORY_LISTENER_ID_' + rndId
       listeners[listenerId] = listener
       globalThis.addEventListener('popstate', listener)
+
       return listenerId
     },
     navigate: (
@@ -74,15 +76,14 @@ const createHistory = () => {
         globalThis.removeEventListener('popstate', listener)
         delete listeners[listenerId]
       } else {
-        console.warn(
-          'History Listener with ID: ' + listenerId + ' does not exist.',
-        )
+        console.warn(`History Listener with ID: ${listenerId} does not exist.`)
       }
     },
     block: (id: string, callback: BlockerCallback) => {
       const existingBlockerIndex = blockers.findIndex(
         (blocker) => blocker.id === id,
       )
+
       if (existingBlockerIndex !== -1) {
         blockers[existingBlockerIndex] = { id, callback }
       } else {
@@ -94,6 +95,7 @@ const createHistory = () => {
     },
     unblock: (id: string) => {
       const index = blockers.findIndex((blocker) => blocker.id === id)
+
       if (index !== -1) {
         blockers.splice(index, 1)
         if (blockers.length === 0) {
