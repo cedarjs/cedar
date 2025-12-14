@@ -62,7 +62,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@types/lodash": "4.17.21",
     "publint": "0.3.16",
-    "tsx": "4.20.6"
+    "tsx": "4.21.0"
   },
   "publishConfig": {
     "access": "public"
