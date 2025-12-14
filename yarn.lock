@@ -1055,7 +1055,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/generator@npm:^7.14.0, @babel/generator@npm:^7.18.13, @babel/generator@npm:^7.25.7, @babel/generator@npm:^7.27.3, @babel/generator@npm:^7.28.5, @babel/generator@npm:^7.7.2":
+"@babel/generator@npm:^7.14.0, @babel/generator@npm:^7.18.13, @babel/generator@npm:^7.27.3, @babel/generator@npm:^7.28.5, @babel/generator@npm:^7.7.2":
   version: 7.28.5
   resolution: "@babel/generator@npm:7.28.5"
   dependencies:
@@ -1298,7 +1298,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:^7.1.0, @babel/parser@npm:^7.1.6, @babel/parser@npm:^7.14.0, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.16.8, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.24.4, @babel/parser@npm:^7.24.7, @babel/parser@npm:^7.25.8, @babel/parser@npm:^7.27.2, @babel/parser@npm:^7.27.4, @babel/parser@npm:^7.27.5, @babel/parser@npm:^7.28.5, @babel/parser@npm:^7.3.2":
+"@babel/parser@npm:^7.1.0, @babel/parser@npm:^7.1.6, @babel/parser@npm:^7.14.0, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.16.8, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.24.4, @babel/parser@npm:^7.24.7, @babel/parser@npm:^7.27.2, @babel/parser@npm:^7.27.4, @babel/parser@npm:^7.27.5, @babel/parser@npm:^7.28.5, @babel/parser@npm:^7.3.2":
   version: 7.28.5
   resolution: "@babel/parser@npm:7.28.5"
   dependencies:
@@ -2533,7 +2533,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/traverse@npm:^7.1.6, @babel/traverse@npm:^7.14.0, @babel/traverse@npm:^7.16.8, @babel/traverse@npm:^7.18.9, @babel/traverse@npm:^7.25.7, @babel/traverse@npm:^7.27.1, @babel/traverse@npm:^7.28.3, @babel/traverse@npm:^7.28.5":
+"@babel/traverse@npm:^7.1.6, @babel/traverse@npm:^7.14.0, @babel/traverse@npm:^7.16.8, @babel/traverse@npm:^7.18.9, @babel/traverse@npm:^7.27.1, @babel/traverse@npm:^7.28.3, @babel/traverse@npm:^7.28.5":
   version: 7.28.5
   resolution: "@babel/traverse@npm:7.28.5"
   dependencies:
@@ -26589,16 +26589,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-curly@npm:0.3.2":
-  version: 0.3.2
-  resolution: "prettier-plugin-curly@npm:0.3.2"
-  dependencies:
-    "@babel/generator": "npm:^7.25.7"
-    "@babel/parser": "npm:^7.25.8"
-    "@babel/traverse": "npm:^7.25.7"
+"prettier-plugin-curly@npm:0.4.1":
+  version: 0.4.1
+  resolution: "prettier-plugin-curly@npm:0.4.1"
   peerDependencies:
-    prettier: ^2 || ^3
-  checksum: 10c0/4f81eca62d71bd616bdd832b240743a86c8720ddef0422bb958c677a48dec956c59124bdf8f079280160e862961d060b3e7506140ba59f70d571b8270e074121
+    prettier: ^3
+  checksum: 10c0/9fed1ddbf8cb1cfb2b15196e63031d91ceba7ac4dceff08ae53c23e1c6b2efc69865fd1038e2b5cd017a220c12efb21ba69eaaae6edadd7d507e078d99c363b2
   languageName: node
   linkType: hard
 
@@ -28335,7 +28331,7 @@ __metadata:
     nx: "npm:22.2.3"
     ora: "npm:8.2.0"
     prettier: "npm:3.6.2"
-    prettier-plugin-curly: "npm:0.3.2"
+    prettier-plugin-curly: "npm:0.4.1"
     prettier-plugin-packagejson: "npm:2.5.20"
     prettier-plugin-sh: "npm:0.14.0"
     prompts: "npm:2.4.2"
