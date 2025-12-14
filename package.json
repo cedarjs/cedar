@@ -47,11 +47,12 @@
     "rebuild-test-project-fixture-esm": "tsx ./tasks/test-project/rebuild-test-project-fixture-esm.ts",
     "smoke-tests": "node ./tasks/smoke-tests/smoke-tests.mjs",
     "test": "nx run-many -t test -- --minWorkers=1 --maxWorkers=4",
-    "test-ci": "nx run-many -t test",
     "test:k6": "tsx ./tasks/k6-test/run-k6-tests.mts",
-    "test:types": "nx run-many -t test:types"
+    "test:types": "nx run-many -t test:types",
+    "test-ci": "nx run-many -t test"
   },
   "resolutions": {
+    "prettier-plugin-packagejson/sort-package-json": "3.6.0",
     "vite": "5.4.19",
     "vscode-languageserver": "6.1.1",
     "vscode-languageserver-protocol": "3.17.5",
@@ -130,7 +131,7 @@
     "ora": "8.2.0",
     "prettier": "3.6.2",
     "prettier-plugin-curly": "0.3.2",
-    "prettier-plugin-packagejson": "2.5.10",
+    "prettier-plugin-packagejson": "2.5.20",
     "prettier-plugin-sh": "0.14.0",
     "prompts": "2.4.2",
     "rimraf": "6.0.1",
