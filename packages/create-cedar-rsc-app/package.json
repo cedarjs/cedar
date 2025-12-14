@@ -21,6 +21,10 @@
     "dev": "tsx src/index.ts",
     "lint": "eslint . --max-warnings 0"
   },
+  "resolutions": {
+    "// TODO: Remove this when there's a new version of prettier-plugin-packagejson released": null,
+    "prettier-plugin-packagejson/sort-package-json": "3.6.0"
+  },
   "dependencies": {
     "ansis": "4.1.0",
     "ci-info": "4.0.0",
@@ -65,9 +69,6 @@
     "typescript": "5.9.3",
     "typescript-eslint": "^8.0.0",
     "zx": "8.8.5"
-  },
-  "resolutions": {
-    "prettier-plugin-packagejson/sort-package-json": "3.6.0"
   },
   "engines": {
     "node": ">=20"
