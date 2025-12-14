@@ -181,7 +181,7 @@
     "concurrently": "8.2.2",
     "graphql-tag": "2.12.6",
     "publint": "0.3.16",
-    "tsx": "4.20.6",
+    "tsx": "4.21.0",
     "vitest": "3.2.4"
   },
   "publishConfig": {

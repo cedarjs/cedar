@@ -57,7 +57,7 @@
     "fs-extra": "11.2.0",
     "publint": "0.3.16",
     "tempy": "1.0.1",
-    "tsx": "4.20.6",
+    "tsx": "4.21.0",
     "vitest": "3.2.4"
   },
   "publishConfig": {
