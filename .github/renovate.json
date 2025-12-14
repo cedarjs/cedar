@@ -50,7 +50,6 @@
         "glob",
         "mheap/github-action-required-labels action",
         "nx",
-        "sort-package-json",
         "zx"
       ]
     }

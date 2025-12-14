@@ -13,8 +13,8 @@
     "dist"
   ],
   "scripts": {
+    "// build:js": "Including .snap in extensions because of https://github.com/babel/babel/issues/11394",
     "build": "yarn build:js && yarn build:types",
-    "build //": "Including .snap in extensions because of https://github.com/babel/babel/issues/11394",
     "build:js": "babel src -d dist --extensions \".js,.ts,.snap\" --copy-files --no-copy-ignored",
     "build:pack": "yarn pack -o cedarjs-auth-dbauth-setup.tgz",
     "build:types": "tsc --build --verbose",

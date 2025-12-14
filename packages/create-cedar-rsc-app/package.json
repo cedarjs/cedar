@@ -57,7 +57,7 @@
     "knip": "^5.26.0",
     "prettier": "3.6.2",
     "prettier-plugin-curly": "^0.3.0",
-    "prettier-plugin-packagejson": "2.5.10",
+    "prettier-plugin-packagejson": "2.5.20",
     "prettier-plugin-sh": "^0.14.0",
     "publint": "0.3.16",
     "rimraf": "^6.0.1",
@@ -65,6 +65,9 @@
     "typescript": "5.9.3",
     "typescript-eslint": "^8.0.0",
     "zx": "8.8.5"
+  },
+  "resolutions": {
+    "prettier-plugin-packagejson/sort-package-json": "3.6.0"
   },
   "engines": {
     "node": ">=20"
