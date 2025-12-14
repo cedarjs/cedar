@@ -52,7 +52,6 @@
     "test-ci": "nx run-many -t test"
   },
   "resolutions": {
-    "// TODO: Remove this when there's a new version of prettier-plugin-packagejson released": null,
     "prettier-plugin-packagejson/sort-package-json": "3.6.0",
     "vite": "5.4.19",
     "vscode-languageserver": "6.1.1",

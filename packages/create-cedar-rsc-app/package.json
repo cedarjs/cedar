@@ -22,7 +22,6 @@
     "lint": "eslint . --max-warnings 0"
   },
   "resolutions": {
-    "// TODO: Remove this when there's a new version of prettier-plugin-packagejson released": null,
     "prettier-plugin-packagejson/sort-package-json": "3.6.0"
   },
   "dependencies": {
