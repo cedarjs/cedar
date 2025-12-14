@@ -75,7 +75,7 @@
     "concurrently": "8.2.2",
     "jsonwebtoken": "9.0.3",
     "publint": "0.3.16",
-    "tsx": "4.20.6",
+    "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
   },

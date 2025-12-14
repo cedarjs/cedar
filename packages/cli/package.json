@@ -94,7 +94,7 @@
     "@types/archiver": "^6",
     "memfs": "4.51.1",
     "node-ssh": "13.2.1",
-    "tsx": "4.20.6",
+    "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
   },

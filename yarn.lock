@@ -2602,7 +2602,7 @@ __metadata:
     pretty-ms: "npm:7.0.1"
     qs: "npm:6.13.0"
     split2: "npm:4.2.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -2645,7 +2645,7 @@ __metadata:
     split2: "npm:4.2.0"
     title-case: "npm:3.0.3"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2678,7 +2678,7 @@ __metadata:
     jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.1.0"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2694,7 +2694,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2711,7 +2711,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2732,7 +2732,7 @@ __metadata:
     jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.1.0"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2748,7 +2748,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2766,7 +2766,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2785,7 +2785,7 @@ __metadata:
     "@types/aws-lambda": "npm:8.10.159"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2801,7 +2801,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -2818,7 +2818,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2836,7 +2836,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2857,7 +2857,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     md5: "npm:2.3.0"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     uuid: "npm:10.0.0"
     vitest: "npm:3.2.4"
@@ -2878,7 +2878,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2918,7 +2918,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2935,7 +2935,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     firebase-admin: "npm:12.6.0"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2951,7 +2951,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2968,7 +2968,7 @@ __metadata:
     firebase: "npm:10.14.1"
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -2988,7 +2988,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.3"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3004,7 +3004,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3021,7 +3021,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3042,7 +3042,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.3"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3064,7 +3064,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3080,7 +3080,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3097,7 +3097,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3117,7 +3117,7 @@ __metadata:
     jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.1.0"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3136,7 +3136,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     memfs: "npm:4.51.1"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3153,7 +3153,7 @@ __metadata:
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
     supertokens-auth-react: "npm:0.51.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3174,7 +3174,7 @@ __metadata:
     msw: "npm:1.3.5"
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3211,7 +3211,7 @@ __metadata:
     core-js: "npm:3.42.0"
     fast-glob: "npm:3.3.3"
     graphql: "npm:16.9.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3233,7 +3233,7 @@ __metadata:
     listr2: "npm:7.0.2"
     memfs: "npm:4.51.1"
     termi-link: "npm:1.1.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -3270,7 +3270,7 @@ __metadata:
     semver: "npm:7.6.3"
     smol-toml: "npm:1.3.4"
     termi-link: "npm:1.1.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs-parser: "npm:21.1.1"
@@ -3293,7 +3293,7 @@ __metadata:
     storybook: "npm:8.6.14"
     storybook-framework-cedarjs: "workspace:*"
     termi-link: "npm:1.1.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -3363,7 +3363,7 @@ __metadata:
     systeminformation: "npm:5.23.8"
     termi-link: "npm:1.1.0"
     title-case: "npm:3.0.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     unionfs: "npm:4.5.4"
     uuid: "npm:10.0.0"
@@ -3411,7 +3411,7 @@ __metadata:
     publint: "npm:0.3.16"
     tasuku: "npm:2.0.4"
     tempy: "npm:1.0.1"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
@@ -3428,7 +3428,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3443,7 +3443,7 @@ __metadata:
     esbuild: "npm:0.25.9"
     fast-glob: "npm:3.3.3"
     fs-extra: "npm:11.2.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3469,7 +3469,7 @@ __metadata:
     publint: "npm:0.3.16"
     react-refresh: "npm:0.14.0"
     rimraf: "npm:6.0.1"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   bin:
     cedar: ./dist/bins/cedar.js
@@ -3540,7 +3540,7 @@ __metadata:
     "@typescript-eslint/rule-tester": "npm:8.44.0"
     "@typescript-eslint/utils": "npm:8.44.0"
     eslint: "npm:8.57.1"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3557,7 +3557,7 @@ __metadata:
     "@fastify/url-data": "npm:6.0.3"
     fast-glob: "npm:3.3.3"
     fastify: "npm:5.4.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3583,7 +3583,7 @@ __metadata:
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
     react-hook-form: "npm:7.54.2"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3600,7 +3600,7 @@ __metadata:
     esbuild: "npm:0.25.9"
     fast-glob: "npm:3.3.3"
     fs-extra: "npm:11.2.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.9.3"
     zx: "npm:8.8.5"
@@ -3648,7 +3648,7 @@ __metadata:
     jsonwebtoken: "npm:9.0.3"
     lodash: "npm:4.17.21"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     uuid: "npm:10.0.0"
     vitest: "npm:3.2.4"
@@ -3703,7 +3703,7 @@ __metadata:
     systeminformation: "npm:5.23.8"
     termi-link: "npm:1.1.0"
     ts-node: "npm:10.9.2"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   bin:
@@ -3723,7 +3723,7 @@ __metadata:
     concurrently: "npm:8.2.2"
     cron-parser: "npm:5.3.1"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     type-fest: "npm:4.26.1"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3739,7 +3739,7 @@ __metadata:
   dependencies:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3751,7 +3751,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3764,7 +3764,7 @@ __metadata:
     "@cedarjs/mailer-core": "workspace:*"
     "@types/nodemailer": "npm:^6"
     nodemailer: "npm:7.0.11"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3776,7 +3776,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
     resend: "npm:4.6.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3789,7 +3789,7 @@ __metadata:
     "@cedarjs/mailer-core": "workspace:*"
     "@cedarjs/mailer-handler-nodemailer": "workspace:*"
     "@types/nodemailer": "npm:^6"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3803,7 +3803,7 @@ __metadata:
     "@faire/mjml-react": "npm:3.4.0"
     "@types/mjml": "npm:4"
     mjml: "npm:4.15.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3815,7 +3815,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
     "@react-email/render": "npm:0.0.17"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3835,7 +3835,7 @@ __metadata:
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vite: "npm:5.4.19"
     vitest: "npm:3.2.4"
@@ -3874,7 +3874,7 @@ __metadata:
     publint: "npm:0.3.16"
     rollup: "npm:4.24.0"
     rollup-plugin-swc3: "npm:0.12.1"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     unimport: "npm:5.0.1"
     unplugin-auto-import: "npm:19.3.0"
@@ -3901,7 +3901,7 @@ __metadata:
     rimraf: "npm:6.0.1"
     smol-toml: "npm:1.3.4"
     string-env-interpolation: "npm:1.0.1"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -3927,7 +3927,7 @@ __metadata:
     graphql: "npm:16.9.0"
     ioredis: "npm:5.8.2"
     nodemon: "npm:3.1.11"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3950,7 +3950,7 @@ __metadata:
     camelcase: "npm:6.3.0"
     esbuild: "npm:0.25.9"
     publint: "npm:0.3.16"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     vitest: "npm:3.2.4"
   languageName: unknown
   linkType: soft
@@ -3976,7 +3976,7 @@ __metadata:
     react-dom: "npm:19.2.3"
     react-server-dom-webpack: "npm:19.2.3"
     tstyche: "npm:3.5.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3996,7 +3996,7 @@ __metadata:
     esbuild: "npm:0.25.9"
     fast-glob: "npm:3.3.3"
     fs-extra: "npm:11.2.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -4015,7 +4015,7 @@ __metadata:
     mime-types: "npm:2.1.35"
     publint: "npm:0.3.16"
     tstyche: "npm:3.5.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     ulid: "npm:2.3.0"
     vitest: "npm:3.2.4"
@@ -4074,7 +4074,7 @@ __metadata:
     ci-info: "npm:4.0.0"
     envinfo: "npm:7.14.0"
     systeminformation: "npm:5.23.8"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     uuid: "npm:10.0.0"
     vitest: "npm:3.2.4"
@@ -4112,7 +4112,7 @@ __metadata:
     msw: "npm:1.3.5"
     publint: "npm:0.3.16"
     ts-toolbelt: "npm:9.6.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     unplugin-auto-import: "npm:19.3.0"
     vitest: "npm:3.2.4"
@@ -4134,7 +4134,7 @@ __metadata:
     boxen: "npm:5.1.2"
     enquirer: "npm:2.4.1"
     stdout-update: "npm:1.6.8"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -4187,7 +4187,7 @@ __metadata:
     react-server-dom-webpack: "npm:19.2.3"
     rimraf: "npm:6.0.1"
     rollup: "npm:4.24.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vite: "npm:5.4.19"
     vite-plugin-cjs-interop: "npm:2.2.0"
@@ -4215,7 +4215,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     fastify: "npm:5.4.0"
     fs-extra: "npm:11.2.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     yargs: "npm:17.7.2"
   bin:
@@ -4262,7 +4262,7 @@ __metadata:
     stacktracey: "npm:2.1.8"
     ts-toolbelt: "npm:9.6.0"
     tstyche: "npm:3.5.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -4605,6 +4605,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/aix-ppc64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/aix-ppc64@npm:0.27.1"
+  conditions: os=aix & cpu=ppc64
+  languageName: node
+  linkType: hard
+
 "@esbuild/android-arm64@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/android-arm64@npm:0.21.5"
@@ -4622,6 +4629,13 @@ __metadata:
 "@esbuild/android-arm64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/android-arm64@npm:0.25.9"
+  conditions: os=android & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@esbuild/android-arm64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/android-arm64@npm:0.27.1"
   conditions: os=android & cpu=arm64
   languageName: node
   linkType: hard
@@ -4647,6 +4661,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/android-arm@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/android-arm@npm:0.27.1"
+  conditions: os=android & cpu=arm
+  languageName: node
+  linkType: hard
+
 "@esbuild/android-x64@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/android-x64@npm:0.21.5"
@@ -4664,6 +4685,13 @@ __metadata:
 "@esbuild/android-x64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/android-x64@npm:0.25.9"
+  conditions: os=android & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@esbuild/android-x64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/android-x64@npm:0.27.1"
   conditions: os=android & cpu=x64
   languageName: node
   linkType: hard
@@ -4689,6 +4717,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/darwin-arm64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/darwin-arm64@npm:0.27.1"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
 "@esbuild/darwin-x64@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/darwin-x64@npm:0.21.5"
@@ -4706,6 +4741,13 @@ __metadata:
 "@esbuild/darwin-x64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/darwin-x64@npm:0.25.9"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@esbuild/darwin-x64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/darwin-x64@npm:0.27.1"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -4731,6 +4773,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/freebsd-arm64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/freebsd-arm64@npm:0.27.1"
+  conditions: os=freebsd & cpu=arm64
+  languageName: node
+  linkType: hard
+
 "@esbuild/freebsd-x64@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/freebsd-x64@npm:0.21.5"
@@ -4748,6 +4797,13 @@ __metadata:
 "@esbuild/freebsd-x64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/freebsd-x64@npm:0.25.9"
+  conditions: os=freebsd & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@esbuild/freebsd-x64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/freebsd-x64@npm:0.27.1"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
@@ -4773,6 +4829,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/linux-arm64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-arm64@npm:0.27.1"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
 "@esbuild/linux-arm@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/linux-arm@npm:0.21.5"
@@ -4790,6 +4853,13 @@ __metadata:
 "@esbuild/linux-arm@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/linux-arm@npm:0.25.9"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@esbuild/linux-arm@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-arm@npm:0.27.1"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
@@ -4815,6 +4885,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/linux-ia32@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-ia32@npm:0.27.1"
+  conditions: os=linux & cpu=ia32
+  languageName: node
+  linkType: hard
+
 "@esbuild/linux-loong64@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/linux-loong64@npm:0.21.5"
@@ -4832,6 +4909,13 @@ __metadata:
 "@esbuild/linux-loong64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/linux-loong64@npm:0.25.9"
+  conditions: os=linux & cpu=loong64
+  languageName: node
+  linkType: hard
+
+"@esbuild/linux-loong64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-loong64@npm:0.27.1"
   conditions: os=linux & cpu=loong64
   languageName: node
   linkType: hard
@@ -4857,6 +4941,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/linux-mips64el@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-mips64el@npm:0.27.1"
+  conditions: os=linux & cpu=mips64el
+  languageName: node
+  linkType: hard
+
 "@esbuild/linux-ppc64@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/linux-ppc64@npm:0.21.5"
@@ -4874,6 +4965,13 @@ __metadata:
 "@esbuild/linux-ppc64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/linux-ppc64@npm:0.25.9"
+  conditions: os=linux & cpu=ppc64
+  languageName: node
+  linkType: hard
+
+"@esbuild/linux-ppc64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-ppc64@npm:0.27.1"
   conditions: os=linux & cpu=ppc64
   languageName: node
   linkType: hard
@@ -4899,6 +4997,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/linux-riscv64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-riscv64@npm:0.27.1"
+  conditions: os=linux & cpu=riscv64
+  languageName: node
+  linkType: hard
+
 "@esbuild/linux-s390x@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/linux-s390x@npm:0.21.5"
@@ -4916,6 +5021,13 @@ __metadata:
 "@esbuild/linux-s390x@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/linux-s390x@npm:0.25.9"
+  conditions: os=linux & cpu=s390x
+  languageName: node
+  linkType: hard
+
+"@esbuild/linux-s390x@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-s390x@npm:0.27.1"
   conditions: os=linux & cpu=s390x
   languageName: node
   linkType: hard
@@ -4941,6 +5053,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/linux-x64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/linux-x64@npm:0.27.1"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@esbuild/netbsd-arm64@npm:0.25.12":
   version: 0.25.12
   resolution: "@esbuild/netbsd-arm64@npm:0.25.12"
@@ -4951,6 +5070,13 @@ __metadata:
 "@esbuild/netbsd-arm64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/netbsd-arm64@npm:0.25.9"
+  conditions: os=netbsd & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@esbuild/netbsd-arm64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/netbsd-arm64@npm:0.27.1"
   conditions: os=netbsd & cpu=arm64
   languageName: node
   linkType: hard
@@ -4976,6 +5102,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/netbsd-x64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/netbsd-x64@npm:0.27.1"
+  conditions: os=netbsd & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@esbuild/openbsd-arm64@npm:0.25.12":
   version: 0.25.12
   resolution: "@esbuild/openbsd-arm64@npm:0.25.12"
@@ -4986,6 +5119,13 @@ __metadata:
 "@esbuild/openbsd-arm64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/openbsd-arm64@npm:0.25.9"
+  conditions: os=openbsd & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@esbuild/openbsd-arm64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/openbsd-arm64@npm:0.27.1"
   conditions: os=openbsd & cpu=arm64
   languageName: node
   linkType: hard
@@ -5011,6 +5151,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/openbsd-x64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/openbsd-x64@npm:0.27.1"
+  conditions: os=openbsd & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@esbuild/openharmony-arm64@npm:0.25.12":
   version: 0.25.12
   resolution: "@esbuild/openharmony-arm64@npm:0.25.12"
@@ -5021,6 +5168,13 @@ __metadata:
 "@esbuild/openharmony-arm64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/openharmony-arm64@npm:0.25.9"
+  conditions: os=openharmony & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@esbuild/openharmony-arm64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/openharmony-arm64@npm:0.27.1"
   conditions: os=openharmony & cpu=arm64
   languageName: node
   linkType: hard
@@ -5046,6 +5200,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/sunos-x64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/sunos-x64@npm:0.27.1"
+  conditions: os=sunos & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@esbuild/win32-arm64@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/win32-arm64@npm:0.21.5"
@@ -5063,6 +5224,13 @@ __metadata:
 "@esbuild/win32-arm64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/win32-arm64@npm:0.25.9"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@esbuild/win32-arm64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/win32-arm64@npm:0.27.1"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
@@ -5088,6 +5256,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/win32-ia32@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/win32-ia32@npm:0.27.1"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
 "@esbuild/win32-x64@npm:0.21.5":
   version: 0.21.5
   resolution: "@esbuild/win32-x64@npm:0.21.5"
@@ -5105,6 +5280,13 @@ __metadata:
 "@esbuild/win32-x64@npm:0.25.9":
   version: 0.25.9
   resolution: "@esbuild/win32-x64@npm:0.25.9"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@esbuild/win32-x64@npm:0.27.1":
+  version: 0.27.1
+  resolution: "@esbuild/win32-x64@npm:0.27.1"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -15670,7 +15852,7 @@ __metadata:
     semver: "npm:7.6.3"
     systeminformation: "npm:5.23.8"
     termi-link: "npm:1.1.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     untildify: "npm:4.0.0"
     uuid: "npm:10.0.0"
     vitest: "npm:3.2.4"
@@ -17282,7 +17464,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.18.0 || ^0.19.0 || ^0.20.0 || ^0.21.0 || ^0.22.0 || ^0.23.0 || ^0.24.0 || ^0.25.0, esbuild@npm:~0.25.0":
+"esbuild@npm:^0.18.0 || ^0.19.0 || ^0.20.0 || ^0.21.0 || ^0.22.0 || ^0.23.0 || ^0.24.0 || ^0.25.0":
   version: 0.25.12
   resolution: "esbuild@npm:0.25.12"
   dependencies:
@@ -17448,6 +17630,95 @@ __metadata:
   bin:
     esbuild: bin/esbuild
   checksum: 10c0/fa08508adf683c3f399e8a014a6382a6b65542213431e26206c0720e536b31c09b50798747c2a105a4bbba1d9767b8d3615a74c2f7bf1ddf6d836cd11eb672de
+  languageName: node
+  linkType: hard
+
+"esbuild@npm:~0.27.0":
+  version: 0.27.1
+  resolution: "esbuild@npm:0.27.1"
+  dependencies:
+    "@esbuild/aix-ppc64": "npm:0.27.1"
+    "@esbuild/android-arm": "npm:0.27.1"
+    "@esbuild/android-arm64": "npm:0.27.1"
+    "@esbuild/android-x64": "npm:0.27.1"
+    "@esbuild/darwin-arm64": "npm:0.27.1"
+    "@esbuild/darwin-x64": "npm:0.27.1"
+    "@esbuild/freebsd-arm64": "npm:0.27.1"
+    "@esbuild/freebsd-x64": "npm:0.27.1"
+    "@esbuild/linux-arm": "npm:0.27.1"
+    "@esbuild/linux-arm64": "npm:0.27.1"
+    "@esbuild/linux-ia32": "npm:0.27.1"
+    "@esbuild/linux-loong64": "npm:0.27.1"
+    "@esbuild/linux-mips64el": "npm:0.27.1"
+    "@esbuild/linux-ppc64": "npm:0.27.1"
+    "@esbuild/linux-riscv64": "npm:0.27.1"
+    "@esbuild/linux-s390x": "npm:0.27.1"
+    "@esbuild/linux-x64": "npm:0.27.1"
+    "@esbuild/netbsd-arm64": "npm:0.27.1"
+    "@esbuild/netbsd-x64": "npm:0.27.1"
+    "@esbuild/openbsd-arm64": "npm:0.27.1"
+    "@esbuild/openbsd-x64": "npm:0.27.1"
+    "@esbuild/openharmony-arm64": "npm:0.27.1"
+    "@esbuild/sunos-x64": "npm:0.27.1"
+    "@esbuild/win32-arm64": "npm:0.27.1"
+    "@esbuild/win32-ia32": "npm:0.27.1"
+    "@esbuild/win32-x64": "npm:0.27.1"
+  dependenciesMeta:
+    "@esbuild/aix-ppc64":
+      optional: true
+    "@esbuild/android-arm":
+      optional: true
+    "@esbuild/android-arm64":
+      optional: true
+    "@esbuild/android-x64":
+      optional: true
+    "@esbuild/darwin-arm64":
+      optional: true
+    "@esbuild/darwin-x64":
+      optional: true
+    "@esbuild/freebsd-arm64":
+      optional: true
+    "@esbuild/freebsd-x64":
+      optional: true
+    "@esbuild/linux-arm":
+      optional: true
+    "@esbuild/linux-arm64":
+      optional: true
+    "@esbuild/linux-ia32":
+      optional: true
+    "@esbuild/linux-loong64":
+      optional: true
+    "@esbuild/linux-mips64el":
+      optional: true
+    "@esbuild/linux-ppc64":
+      optional: true
+    "@esbuild/linux-riscv64":
+      optional: true
+    "@esbuild/linux-s390x":
+      optional: true
+    "@esbuild/linux-x64":
+      optional: true
+    "@esbuild/netbsd-arm64":
+      optional: true
+    "@esbuild/netbsd-x64":
+      optional: true
+    "@esbuild/openbsd-arm64":
+      optional: true
+    "@esbuild/openbsd-x64":
+      optional: true
+    "@esbuild/openharmony-arm64":
+      optional: true
+    "@esbuild/sunos-x64":
+      optional: true
+    "@esbuild/win32-arm64":
+      optional: true
+    "@esbuild/win32-ia32":
+      optional: true
+    "@esbuild/win32-x64":
+      optional: true
+  bin:
+    esbuild: bin/esbuild
+  checksum: 10c0/8bfcf13a499a9e7b7da4b68273e12b453c7d7a5e39c944c2e5a4c64a0594d6df1391fc168a5353c22bc94eeae38dd9897199ddbbc4973525b0aae18186e996bd
   languageName: node
   linkType: hard
 
@@ -28077,7 +28348,7 @@ __metadata:
     rimraf: "npm:6.0.1"
     tree-kill: "npm:1.2.2"
     tstyche: "npm:3.5.0"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.44.0"
     vitest: "npm:3.2.4"
@@ -29096,7 +29367,7 @@ __metadata:
     "@types/node": "npm:24.10.1"
     magic-string: "npm:0.30.21"
     react-docgen: "npm:7.0.3"
-    tsx: "npm:4.20.6"
+    tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     unplugin-auto-import: "npm:19.3.0"
     vite: "npm:5.4.19"
@@ -30254,11 +30525,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:4.20.6":
-  version: 4.20.6
-  resolution: "tsx@npm:4.20.6"
+"tsx@npm:4.21.0":
+  version: 4.21.0
+  resolution: "tsx@npm:4.21.0"
   dependencies:
-    esbuild: "npm:~0.25.0"
+    esbuild: "npm:~0.27.0"
     fsevents: "npm:~2.3.3"
     get-tsconfig: "npm:^4.7.5"
   dependenciesMeta:
@@ -30266,7 +30537,7 @@ __metadata:
       optional: true
   bin:
     tsx: dist/cli.mjs
-  checksum: 10c0/07757a9bf62c271e0a00869b2008c5f2d6e648766536e4faf27d9d8027b7cde1ac8e4871f4bb570c99388bcee0018e6869dad98c07df809b8052f9c549cd216f
+  checksum: 10c0/f5072923cd8459a1f9a26df87823a2ab5754641739d69df2a20b415f61814322b751fa6be85db7c6ec73cf68ba8fac2fd1cfc76bdb0aa86ded984d84d5d2126b
   languageName: node
   linkType: hard
 
