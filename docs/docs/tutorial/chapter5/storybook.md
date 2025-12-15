@@ -52,7 +52,7 @@ export const generated = () => {
               helvetica vaporware cronut, shaman butcher
               YOLO poke fixie hoodie gentrify woke
               heirloom.`,
-        createdAt: '2020-01-01T12:34:45Z'
+        createdAt: '2020-01-01T12:34:45Z',
       }}
     />
   )

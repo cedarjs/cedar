@@ -68,13 +68,13 @@ export const Failure = ({ error }) => (
 
 export const Success = ({ comments }) => {
   return (
-  // highlight-start
+    // highlight-start
     <>
       {comments.map((comment) => (
         <Comment key={comment.id} comment={comment} />
       ))}
     </>
-  // highlight-end
+    // highlight-end
   )
 }
 ```
@@ -214,7 +214,7 @@ export const Success = ({ comments }) => {
       {comments.map((comment) => (
         <Comment comment={comment} key={comment.id} />
       ))}
-    // highlight-next-line
+      // highlight-next-line
     </div>
   )
 }
@@ -537,7 +537,6 @@ describe('CommentsCell', () => {
     // highlight-end
   })
 })
-
 ```
 
 </TabItem>

@@ -220,10 +220,10 @@ const SignupPage = () => {
     try {
       const response = await client.auth.signUp({
         email: data.email,
-        password: data.password
+        password: data.password,
       })
       console.log('response: ', response)
-    } catch(error) {
+    } catch (error) {
       console.log('error:  ', error)
     }
   }
@@ -259,11 +259,11 @@ const SignupPage = () => {
     try {
       const response = await client.auth.signUp({
         email: data.email,
-        password: data.password
+        password: data.password,
       })
       console.log('response: ', response)
       response?.error?.message && setError(response.error.message)
-    } catch(error) {
+    } catch (error) {
       setError(error.message)
     }
   }
@@ -312,10 +312,12 @@ const SignupPage = () => {
     try {
       const response = await client.auth.signUp({
         email: data.email,
-        password: data.password
+        password: data.password,
       })
-      response?.error?.message ? setError(response.error.message) : navigate(routes.home())
-    } catch(error) {
+      response?.error?.message
+        ? setError(response.error.message)
+        : navigate(routes.home())
+    } catch (error) {
       setError(error.message)
     }
   }
@@ -417,9 +419,12 @@ const SigninPage = () => {
   const onSubmit = async (data) => {
     setError(null)
     try {
-      const response = await logIn({ email: data.email, password: data.password })
+      const response = await logIn({
+        email: data.email,
+        password: data.password,
+      })
       // do something
-    } catch(error) {
+    } catch (error) {
       setError(error.message)
     }
   }
@@ -456,9 +461,14 @@ const SigninPage = () => {
   const onSubmit = async (data) => {
     setError(null)
     try {
-      const response = await logIn({ email: data.email, password: data.password })
-      response?.error?.message ? setError(response.error.message) : navigate(routes.home())
-    } catch(error) {
+      const response = await logIn({
+        email: data.email,
+        password: data.password,
+      })
+      response?.error?.message
+        ? setError(response.error.message)
+        : navigate(routes.home())
+    } catch (error) {
       setError(error.message)
     }
   }

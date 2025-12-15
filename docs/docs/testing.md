@@ -295,7 +295,7 @@ render(
 To mock `useParams` in your component tests, wrap the component with `ParamsProvider`:
 
 ```jsx
-import { ParamsProvider } from '@cedarjs/router';
+import { ParamsProvider } from '@cedarjs/router'
 
 render(
   <ParamsProvider allParams={{ param1: 'val1', param2: 'val2' }}>
@@ -552,7 +552,7 @@ describe('Article', () => {
           id: variables.id,
           title: 'Foobar',
           body: 'Lorem ipsum...',
-        }
+        },
       }
     })
 
@@ -613,7 +613,9 @@ it('renders an error message', async () => {
 
   render(<Article id={1} />)
 
-  expect(await screen.findByText('Sorry, there was an error')).toBeInTheDocument()
+  expect(
+    await screen.findByText('Sorry, there was an error')
+  ).toBeInTheDocument()
 })
 ```
 
@@ -636,11 +638,9 @@ const HomePage = () => {
   return (
     <>
       <header>
-        { isAuthenticated && <h1>Welcome back {currentUser.name}</h1> }
+        {isAuthenticated && <h1>Welcome back {currentUser.name}</h1>}
       </header>
-      <main>
-        { !isAuthenticated && <button onClick={logIn}>Login</button> }
-      </main>
+      <main>{!isAuthenticated && <button onClick={logIn}>Login</button>}</main>
     </>
   )
 }
@@ -797,7 +797,7 @@ renderHook(() => myCustomHook(), {
     <MockProviders>
       <MyCustomProvider>{children}</MyCustomProvider>
     </MockProviders>
-  )
+  ),
 })
 ```
 
@@ -1009,7 +1009,6 @@ describe('ArticleCell', () => {
     }).not.toThrow()
   })
 
-
   it('Success renders successfully without a body', async () => {
     expect(() => {
       render(<Success article={missingBody.article} />)
@@ -1074,13 +1073,13 @@ import ArticleCell from 'src/components/ArticleCell'
 
 describe('ProductPage', () => {
   it('renders in stock products', () => {
-    render(<ProductPage status='instock' />)
+    render(<ProductPage status="instock" />)
 
     expect(screen.getByText('In Stock')).toBeInTheDocument()
   })
 
   it('renders out of stock products', async () => {
-    render(<ProductPage status='outofstock' />)
+    render(<ProductPage status="outofstock" />)
 
     expect(screen.getByText('Out of Stock')).toBeInTheDocument()
   })

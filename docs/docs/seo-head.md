@@ -99,7 +99,10 @@ const AboutPage = () => {
       <Metadata
         title="About page"
         description="About the awesome team"
-        og={{ image: "https://example.com/images/og.png", url: "https://example.com/start" }}
+        og={{
+          image: 'https://example.com/images/og.png',
+          url: 'https://example.com/start',
+        }}
         robots="nofollow"
       >
         <meta httpEquiv="content-type" content="text/html; charset=UTF-8" />
@@ -297,11 +300,11 @@ This should allow you to create a fairly full-featured set of `<meta>` tags with
   title="My Website"
   description="An amazing website created with CedarJS"
   robots="noindex,nofollow"
-  og={{ image: "https://example.com/images/og-image.png" }}
+  og={{ image: 'https://example.com/images/og-image.png' }}
   twitter={{
     card: 'summary',
     site: '@mysite',
-    creator: '@cedarjs'
+    creator: '@cedarjs',
   }}
 />
 ```

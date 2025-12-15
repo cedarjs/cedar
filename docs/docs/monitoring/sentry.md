@@ -128,7 +128,6 @@ const SentryLayout = ({ children }) => {
 }
 
 export default SentryLayout
-
 ```
 
 </TabItem>
