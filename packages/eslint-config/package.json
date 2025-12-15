@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/eslint-config",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -16,9 +16,9 @@
     "@babel/core": "^7.26.10",
     "@babel/eslint-parser": "7.27.5",
     "@babel/eslint-plugin": "7.27.1",
-    "@cedarjs/eslint-plugin": "2.0.2",
-    "@cedarjs/internal": "2.0.2",
-    "@cedarjs/project-config": "2.0.2",
+    "@cedarjs/eslint-plugin": "2.0.3",
+    "@cedarjs/internal": "2.0.3",
+    "@cedarjs/project-config": "2.0.3",
     "@typescript-eslint/eslint-plugin": "8.44.0",
     "@typescript-eslint/parser": "8.44.0",
     "eslint": "8.57.1",

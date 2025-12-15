@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-supertokens-web",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -49,7 +49,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "2.0.2"
+    "@cedarjs/auth": "2.0.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

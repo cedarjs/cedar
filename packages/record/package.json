@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/record",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -29,8 +29,8 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/api": "2.0.2",
-    "@cedarjs/project-config": "2.0.2",
+    "@cedarjs/api": "2.0.3",
+    "@cedarjs/project-config": "2.0.3",
     "@prisma/client": "6.19.1",
     "camelcase": "6.3.0"
   },
