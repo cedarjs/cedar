@@ -98,7 +98,7 @@ export const generated = () => {
       comment={{
         name: 'Rob Cameron',
         body: 'This is the first comment!',
-        createdAt: '2020-01-01T12:34:56Z'
+        createdAt: '2020-01-01T12:34:56Z',
       }}
     />
   )

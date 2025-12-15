@@ -80,8 +80,8 @@ export const withReallyLongName = () => {
     return {
       userProfile: {
         id: 99,
-        name: 'Hubert Blaine Wolfeschlegelsteinhausenbergerdorff Sr.'
-      }
+        name: 'Hubert Blaine Wolfeschlegelsteinhausenbergerdorff Sr.',
+      },
     }
   })
   return <Header />

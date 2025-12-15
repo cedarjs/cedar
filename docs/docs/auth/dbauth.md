@@ -688,7 +688,7 @@ const App = () => (
     <RedwoodProvider titleTemplate="%PageTitle | %AppTitle">
       // highlight-start
       <AuthProvider type="dbAuth" client={WebAuthnClient}>
-      // highlight-end
+        // highlight-end
         <RedwoodApolloProvider>
           <Routes />
         </RedwoodApolloProvider>

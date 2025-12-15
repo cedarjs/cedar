@@ -103,7 +103,7 @@ const HomePage = () => {
   }
 
   return (
-    <Form onSubmit={onSubmit} style={{fontSize: '2rem'}}>
+    <Form onSubmit={onSubmit} style={{ fontSize: '2rem' }}>
       <TextField
         name="zip"
         placeholder="Zip code"
