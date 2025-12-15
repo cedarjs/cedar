@@ -80,7 +80,7 @@
     "@babel/preset-typescript": "7.28.5",
     "@babel/runtime-corejs3": "7.28.4",
     "@faker-js/faker": "8.4.1",
-    "@npmcli/arborist": "7.5.4",
+    "@npmcli/arborist": "9.1.9",
     "@playwright/test": "1.57.0",
     "@testing-library/jest-dom": "6.5.0",
     "@testing-library/react": "14.3.1",
