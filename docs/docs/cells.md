@@ -366,9 +366,7 @@ const Loading = () => <div>Loading...</div>
 
 const Empty = () => <div>No posts yet!</div>
 
-const Failure = ({ error }) => (
-  <div>Error loading posts: {error.message}</div>
-)
+const Failure = ({ error }) => <div>Error loading posts: {error.message}</div>
 
 const Success = ({ posts }) => {
   return posts.map((post) => (

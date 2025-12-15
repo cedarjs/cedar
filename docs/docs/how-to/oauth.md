@@ -96,12 +96,14 @@ GITHUB_OAUTH_REDIRECT_URI="http://localhost:8910/.redwood/functions/oauth/callba
 This part is pretty easy, we're just going to add a link/button to go directly to GitHub to begin the OAuth process:
 
 ```jsx title="/web/src/pages/LoginPage/LoginPage.jsx"
-<a href={`https://github.com/login/oauth/authorize?client_id=${
+<a
+  href={`https://github.com/login/oauth/authorize?client_id=${
     process.env.GITHUB_OAUTH_CLIENT_ID
   }&redirect_uri=${
     process.env.GITHUB_OAUTH_REDIRECT_URI
   }&scope=${process.env.GITHUB_OAUTH_SCOPES.split(' ').join('+')}`}
-  className="mx-auto block w-48 rounded bg-gray-800 px-4 py-2 text-center text-xs font-semibold uppercase tracking-wide text-white">
+  className="mx-auto block w-48 rounded bg-gray-800 px-4 py-2 text-center text-xs font-semibold uppercase tracking-wide text-white"
+>
   Login with GitHub
 </a>
 ```
