@@ -295,8 +295,8 @@ describe('run', async () => {
     })
 
     worker.run()
-    // just enough delay to run through the loop twice
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    // enough delay to run through the loop twice, but not three times
+    await new Promise((resolve) => setTimeout(resolve, 15))
     worker.forever = false
     expect(adapter.find).toHaveBeenCalledTimes(2)
   })
