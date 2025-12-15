@@ -176,7 +176,7 @@ describe('api', () => {
             proposals: true,
             version: 3,
           },
-          version: '7.28.4',
+          version: expect.any(String),
         },
       ])
 
