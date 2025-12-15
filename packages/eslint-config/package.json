@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/eslint-parser": "7.27.5",
+    "@babel/eslint-parser": "7.28.5",
     "@babel/eslint-plugin": "7.27.1",
     "@cedarjs/babel-config": "2.0.3",
     "@cedarjs/eslint-plugin": "2.0.3",
@@ -48,7 +48,7 @@
     "typescript-eslint": "8.44.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.27.2",
+    "@babel/cli": "7.28.3",
     "typescript": "5.9.3"
   },
   "publishConfig": {
