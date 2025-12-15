@@ -298,7 +298,7 @@ yarn cedar generate page home /
 
 Let's import `routes` and `navigate` from [Cedar Router](../router.md#navigate) and use them to redirect to the home page upon successful sign up:
 
-```jsx {3,16} title="web/src/pages/SignupPage/SignupPage.js"
+```jsx {3,18} title="web/src/pages/SignupPage/SignupPage.js"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'
 import { useAuth } from 'src/auth'
 import { routes, navigate } from '@cedarjs/router'
@@ -408,7 +408,7 @@ export default SigninPage
 
 Now we'll add `logIn` to our `onSubmit` function. This time we'll be passing an object to our function as we're using Cedar Auth's `logIn` function directly (as opposed to `client`). This object takes an email and password.
 
-```jsx {10-15} title="web/src/pages/SigninPage/SigninPage.js"
+```jsx {10-18} title="web/src/pages/SigninPage/SigninPage.js"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'
 import { useAuth } from 'src/auth'
 
@@ -449,7 +449,7 @@ Let's redirect our user back to the home page upon a successful login.
 
 In our `SigninPage`, import `navigate` and `routes` from [`@cedarjs/router`](../router.md) and add them after awaiting `logIn`:
 
-```jsx {10-16} title="web/src/pages/SigninPage/SigninPage.js"
+```jsx {10-21} title="web/src/pages/SigninPage/SigninPage.js"
 import { Form, TextField, PasswordField, Submit } from '@cedarjs/forms'
 import { useAuth } from 'src/auth'
 import { navigate, routes } from '@cedarjs/router'

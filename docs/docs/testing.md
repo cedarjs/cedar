@@ -589,7 +589,7 @@ mockGraphQLQuery('getArticle', (variables, { ctx }) => {
 
 You could then test that you show a proper error message in your component:
 
-```jsx {2,6-8,18-20,24} title="web/src/components/Article/Article.js"
+```jsx {2,6-8,18-20,24-26} title="web/src/components/Article/Article.js"
 const Article = ({ id }) => {
   const { data, error } = useQuery(GET_ARTICLE, {
     variables: { id },
