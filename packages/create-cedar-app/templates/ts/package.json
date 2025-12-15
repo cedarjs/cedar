@@ -7,9 +7,9 @@
     ]
   },
   "devDependencies": {
-    "@cedarjs/core": "2.0.3",
-    "@cedarjs/project-config": "2.0.3",
-    "@cedarjs/testing": "2.0.3"
+    "@cedarjs/core": "2.1.0",
+    "@cedarjs/project-config": "2.1.0",
+    "@cedarjs/testing": "2.1.0"
   },
   "engines": {
     "node": "=24.x"
