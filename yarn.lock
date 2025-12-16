@@ -3776,7 +3776,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
-    "@faire/mjml-react": "npm:3.4.0"
+    "@faire/mjml-react": "npm:3.5.3"
     "@types/mjml": "npm:4"
     mjml: "npm:4.15.3"
     tsx: "npm:4.21.0"
@@ -5440,16 +5440,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faire/mjml-react@npm:3.4.0":
-  version: 3.4.0
-  resolution: "@faire/mjml-react@npm:3.4.0"
+"@faire/mjml-react@npm:3.5.3":
+  version: 3.5.3
+  resolution: "@faire/mjml-react@npm:3.5.3"
   dependencies:
     lodash.kebabcase: "npm:^4.1.1"
   peerDependencies:
     mjml: ^4.13.0
-    react: ^16.0.0 || ^17.0.0 || ^18.0.0
-    react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
-  checksum: 10c0/4207cae8fb2fb3406e93d806df6536579b9d92b42f19349ba65a4283772e66d0189d5d3c3b2ec0881be1d6c3df88f9c8a2ebb56b5cb33973d6167212df576589
+    react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/42bbe4190de9de0ea148bb455ffa404a078c4938cf76aec936a156d6683e20cc223db235a6093af0b1bd8b55ec90ca5495112e7dabfe03e84919a547d7dc3e6b
   languageName: node
   linkType: hard
 
