@@ -3385,7 +3385,7 @@ __metadata:
     pascalcase: "npm:1.0.0"
     prettier: "npm:3.6.2"
     publint: "npm:0.3.16"
-    tasuku: "npm:2.0.4"
+    tasuku: "npm:2.0.5"
     tempy: "npm:1.0.1"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -29493,10 +29493,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tasuku@npm:2.0.4":
-  version: 2.0.4
-  resolution: "tasuku@npm:2.0.4"
-  checksum: 10c0/e3b64ce286d7a01e94e334086033fab84cbcc07d202d3d345b88902caa0df5bd30c7dc4392d789bf6f6eb9f256595581b3d609042ef41df69c0d47a23d1c7082
+"tasuku@npm:2.0.5":
+  version: 2.0.5
+  resolution: "tasuku@npm:2.0.5"
+  checksum: 10c0/b21768e561c9c28eabaef49e27535f95b52362da0946b7fb12a70dd4de84be763826996b778e5e3d5f983cd89e181be189aa8f4fd588945da5125afc96144f34
   languageName: node
   linkType: hard
 
