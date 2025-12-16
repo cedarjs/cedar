@@ -2558,7 +2558,7 @@ __metadata:
     "@cedarjs/internal": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
-    "@fastify/multipart": "npm:9.0.3"
+    "@fastify/multipart": "npm:9.3.0"
     "@fastify/url-data": "npm:6.0.3"
     "@types/aws-lambda": "npm:8.10.159"
     "@types/dotenv-defaults": "npm:^2.0.4"
@@ -5499,6 +5499,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fastify/deepmerge@npm:^3.0.0":
+  version: 3.1.0
+  resolution: "@fastify/deepmerge@npm:3.1.0"
+  checksum: 10c0/57eda9079e9ed6d137f966e8b0d08f219cbca6e79706a1be76fe10ba2b8fd87c33846f1c653299b09a2e8260ffba8c8fc708f9b40b54243648d6821061999c9b
+  languageName: node
+  linkType: hard
+
 "@fastify/error@npm:^4.0.0":
   version: 4.0.0
   resolution: "@fastify/error@npm:4.0.0"
@@ -5543,16 +5550,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/multipart@npm:9.0.3":
-  version: 9.0.3
-  resolution: "@fastify/multipart@npm:9.0.3"
+"@fastify/multipart@npm:9.3.0":
+  version: 9.3.0
+  resolution: "@fastify/multipart@npm:9.3.0"
   dependencies:
     "@fastify/busboy": "npm:^3.0.0"
-    "@fastify/deepmerge": "npm:^2.0.0"
+    "@fastify/deepmerge": "npm:^3.0.0"
     "@fastify/error": "npm:^4.0.0"
     fastify-plugin: "npm:^5.0.0"
-    secure-json-parse: "npm:^3.0.0"
-  checksum: 10c0/589571e71954e28b6445dcaeef3f4e978931f9a697cf259ef45327ee646f85db2195cd38fe4bf758aab3e0d61ceb30429b1389fd9e176f55a3c83b4186ebb20d
+    secure-json-parse: "npm:^4.0.0"
+  checksum: 10c0/b0810132d16be460cd519671c2273817919a6021cc11ec3da842052e26e3e83c544698c0baa280a6ae543782888df6725698680d99c5a85562191bd7582ca4e1
   languageName: node
   linkType: hard
 
@@ -28126,13 +28133,6 @@ __metadata:
   version: 2.7.0
   resolution: "secure-json-parse@npm:2.7.0"
   checksum: 10c0/f57eb6a44a38a3eeaf3548228585d769d788f59007454214fab9ed7f01fbf2e0f1929111da6db28cf0bcc1a2e89db5219a59e83eeaec3a54e413a0197ce879e4
-  languageName: node
-  linkType: hard
-
-"secure-json-parse@npm:^3.0.0":
-  version: 3.0.2
-  resolution: "secure-json-parse@npm:3.0.2"
-  checksum: 10c0/4c9c005e7fdd8528df35fcdec41dc4e8e15820ce52de19f8102da808f9400a9ed8c0a28971e3efe24b001ee1e60296af553f12bbaab81a152f702dd00af2092d
   languageName: node
   linkType: hard
 
