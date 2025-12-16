@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
-    "@faire/mjml-react": "3.4.0",
+    "@faire/mjml-react": "3.5.3",
     "mjml": "4.15.3"
   },
   "devDependencies": {
