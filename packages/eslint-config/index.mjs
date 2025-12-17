@@ -11,6 +11,7 @@ import {
   getApiSideDefaultBabelConfig,
   getWebSideDefaultBabelConfig,
 } from '@cedarjs/babel-config'
+import cedarjsPlugin from '@cedarjs/eslint-plugin'
 import { getConfig, isTypeScriptProject } from '@cedarjs/project-config'
 
 import sharedConfigs from './shared.mjs'
@@ -120,7 +121,7 @@ export default async function createConfig() {
   configs.push({
     files: ['api/src/services/**/*.ts'],
     plugins: {
-      '@cedarjs': sharedConfigs[1].plugins['@cedarjs'],
+      '@cedarjs': cedarjsPlugin,
     },
     rules: {
       '@cedarjs/service-type-annotations': 'off',
@@ -145,12 +146,11 @@ export default async function createConfig() {
     languageOptions: {
       globals: {
         ...globals.browser,
+        ...globals.node,
         React: 'readonly',
         gql: 'readonly',
         process: 'readonly',
         require: 'readonly',
-        // Developers should use `global` instead of window
-        window: 'off',
       },
       sourceType: 'module',
     },
@@ -159,11 +159,11 @@ export default async function createConfig() {
   // Test, stories, scenarios, and mock files
   configs.push({
     files: [
-      '*.test.*',
+      '**/*.test.*',
       '**/__mocks__/**',
-      '*.scenarios.*',
-      '*.stories.*',
-      '*.mock.*',
+      '**/*.scenarios.*',
+      '**/*.stories.*',
+      '**/*.mock.*',
     ],
     languageOptions: {
       globals: {

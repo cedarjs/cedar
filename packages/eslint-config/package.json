@@ -9,18 +9,38 @@
   "license": "MIT",
   "exports": {
     ".": {
-      "import": "./index.mjs",
-      "require": "./index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./index.js"
+      }
     },
     "./shared": {
-      "import": "./shared.mjs",
-      "require": "./shared.js"
+      "import": {
+        "types": "./dist/shared.d.mts",
+        "default": "./shared.mjs"
+      },
+      "require": {
+        "types": "./dist/shared.d.ts",
+        "default": "./shared.js"
+      }
     }
   },
-  "main": "index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "index.js",
+    "index.mjs",
+    "shared.js",
+    "shared.mjs",
+    "dist"
+  ],
   "scripts": {
-    "build": "echo 'Nothing to build..'",
-    "build:pack": "yarn pack -o cedarjs-eslint-config.tgz"
+    "build": "yarn build:types",
+    "build:pack": "yarn pack -o cedarjs-eslint-config.tgz",
+    "build:types": "tsc --build --verbose"
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
@@ -38,7 +58,7 @@
     "eslint-import-resolver-babel-module": "5.3.2",
     "eslint-plugin-babel": "5.3.1",
     "eslint-plugin-import": "2.30.0",
-    "eslint-plugin-jest-dom": "4.0.3",
+    "eslint-plugin-jest-dom": "5.5.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-prettier": "5.2.1",
     "eslint-plugin-react": "7.36.1",
