@@ -56,8 +56,8 @@
     "@joshwooding/vite-plugin-react-docgen-typescript": "0.6.3",
     "@rollup/pluginutils": "5.1.4",
     "@storybook/addon-essentials": "8.6.14",
-    "@storybook/builder-vite": "8.6.14",
-    "@storybook/react": "8.6.14",
+    "@storybook/builder-vite": "8.6.15",
+    "@storybook/react": "8.6.15",
     "magic-string": "0.30.21",
     "react-docgen": "7.0.3",
     "unplugin-auto-import": "19.3.0",
@@ -76,7 +76,7 @@
     "@cedarjs/router": "workspace:*",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "storybook": "8.6.14"
+    "storybook": "8.6.15"
   },
   "engines": {
     "node": "=24.x"
