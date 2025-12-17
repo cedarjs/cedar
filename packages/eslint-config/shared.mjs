@@ -32,7 +32,9 @@ export default [
 
   // React recommended config, with jsx-runtime for React 17+
   reactPlugin.configs.flat.recommended,
-  reactPlugin.configs.flat['jsx-runtime'],
+  // This could be enabled, because we're using React >=17, but the
+  // old config didn't have this
+  // reactPlugin.configs.flat['jsx-runtime'],
 
   // Prettier plugin recommended config (runs Prettier as an ESLint rule)
   // TODO: In a future major version, switch to eslint-config-prettier and run Prettier separately
