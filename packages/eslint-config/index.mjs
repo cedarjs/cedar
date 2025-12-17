@@ -11,6 +11,7 @@ import {
   getApiSideDefaultBabelConfig,
   getWebSideDefaultBabelConfig,
 } from '@cedarjs/babel-config'
+import cedarjsPlugin from '@cedarjs/eslint-plugin'
 import { getConfig, isTypeScriptProject } from '@cedarjs/project-config'
 
 import sharedConfigs from './shared.mjs'
@@ -120,7 +121,7 @@ export default async function createConfig() {
   configs.push({
     files: ['api/src/services/**/*.ts'],
     plugins: {
-      '@cedarjs': sharedConfigs[1].plugins['@cedarjs'],
+      '@cedarjs': cedarjsPlugin,
     },
     rules: {
       '@cedarjs/service-type-annotations': 'off',

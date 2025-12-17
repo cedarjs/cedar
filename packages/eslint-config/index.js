@@ -124,11 +124,11 @@ module.exports = {
     // Test, stories, scenarios, and mock files
     {
       files: [
-        '**/*.test.*',
+        '*.test.*',
         '**/__mocks__/**',
-        '**/*.scenarios.*',
-        '**/*.stories.*',
-        '**/*.mock.*',
+        '*.scenarios.*',
+        '*.stories.*',
+        '*.mock.*',
       ],
       globals: {
         mockGraphQLQuery: 'readonly',
