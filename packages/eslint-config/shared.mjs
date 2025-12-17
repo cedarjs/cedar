@@ -31,16 +31,29 @@ export default [
   // Base recommended config
   js.configs.recommended,
 
+  // TypeScript recommended configs (includes eslint-recommended overrides)
+  ...tseslint.configs.recommended,
+
+  // React recommended config
+  reactPlugin.configs.flat.recommended,
+
+  // Jest DOM recommended config
+  jestDomPlugin.configs.flat.recommended,
+
+  // Prettier plugin recommended config (runs Prettier as an ESLint rule)
+  // TODO: In a future major version, switch to eslint-config-prettier and run Prettier separately
+  // for better performance. This is a breaking change because it changes the workflow from
+  // "eslint --fix" doing formatting to requiring "prettier --write" as a separate step.
+  // See: https://prettier.io/docs/en/integrating-with-linters.html
+  prettierPlugin.configs.recommended,
+
   // Base configuration
   {
     plugins: {
       '@babel': babelPlugin,
-      prettier: prettierPlugin,
       import: importPlugin,
       'jsx-a11y': jsxA11yPlugin,
-      react: reactPlugin,
       'react-hooks': reactHooksPlugin,
-      'jest-dom': jestDomPlugin,
       '@cedarjs': cedarjsPlugin,
     },
     languageOptions: {
@@ -66,13 +79,7 @@ export default [
       'import/internal-regex': '^src/',
     },
     rules: {
-      // React recommended rules
-      ...reactPlugin.configs.recommended.rules,
-      // Jest DOM recommended rules
-      ...jestDomPlugin.configs.recommended.rules,
-
       '@cedarjs/process-env-computed': 'error',
-      'prettier/prettier': 'warn',
       'no-console': 'off',
       'prefer-object-spread': 'warn',
       'prefer-spread': 'warn',
@@ -174,22 +181,19 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
     },
   },
-  // TypeScript-specific configuration
+  // TypeScript-specific overrides
+  // Note: tseslint.configs.recommended is already spread at the top of this
+  // config and includes parser, plugins, and eslint-recommended overrides (like
+  // disabling no-undef)
   {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
-      parser: tseslint.parser,
       globals: {
         ...globals.browser,
         JSX: 'readonly',
       },
     },
-    plugins: {
-      '@typescript-eslint': tseslint.plugin,
-    },
     rules: {
-      ...tseslint.configs.recommended.rules,
-
       // TODO: look into enabling these eventually
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/prefer-function-type': 'off',
