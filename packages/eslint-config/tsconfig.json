@@ -8,7 +8,7 @@
     "allowJs": true,
     "checkJs": false,
     "skipLibCheck": true,
-    "types": ["node"],
+    "types": ["node"]
   },
-  "files": ["index.mjs", "index.js", "shared.mjs", "shared.js"],
+  "files": ["index.mjs", "index.js", "shared.mjs", "shared.js"]
 }

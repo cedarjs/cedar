@@ -1,5 +1,4 @@
-// This ESLint configuration is shared between the Cedar framework,
-// and Cedar projects.
+// This ESLint configuration is used by Cedar projects through ./index.mjs
 //
 // Our ESLint configuration is a mixture between ESLint's recommended
 // rules [^1], React's recommended rules [^2], and a bit of our own stylistic
