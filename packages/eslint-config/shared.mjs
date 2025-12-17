@@ -1,5 +1,5 @@
-// This ESLint configuration is shared between the Redwood framework,
-// and Redwood projects.
+// This ESLint configuration is shared between the Cedar framework,
+// and Cedar projects.
 //
 // Our ESLint configuration is a mixture between ESLint's recommended
 // rules [^1], React's recommended rules [^2], and a bit of our own stylistic
@@ -19,7 +19,7 @@ import js from '@eslint/js'
 import importPlugin from 'eslint-plugin-import'
 import jestDomPlugin from 'eslint-plugin-jest-dom'
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
-import prettierPlugin from 'eslint-plugin-prettier'
+import prettierRecommended from 'eslint-plugin-prettier/recommended'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
 import globals from 'globals'
@@ -31,21 +31,16 @@ export default [
   // Base recommended config
   js.configs.recommended,
 
-  // TypeScript recommended configs (includes eslint-recommended overrides)
-  ...tseslint.configs.recommended,
-
-  // React recommended config
+  // React recommended config, with jsx-runtime for React 17+
   reactPlugin.configs.flat.recommended,
-
-  // Jest DOM recommended config
-  jestDomPlugin.configs.flat.recommended,
+  reactPlugin.configs.flat['jsx-runtime'],
 
   // Prettier plugin recommended config (runs Prettier as an ESLint rule)
   // TODO: In a future major version, switch to eslint-config-prettier and run Prettier separately
   // for better performance. This is a breaking change because it changes the workflow from
   // "eslint --fix" doing formatting to requiring "prettier --write" as a separate step.
   // See: https://prettier.io/docs/en/integrating-with-linters.html
-  prettierPlugin.configs.recommended,
+  prettierRecommended,
 
   // Base configuration
   {
@@ -59,6 +54,7 @@ export default [
     languageOptions: {
       parser: babelParser,
       parserOptions: {
+        requireConfigFile: false,
         ecmaVersion: 'latest',
         sourceType: 'module',
         ecmaFeatures: {
@@ -182,18 +178,22 @@ export default [
     },
   },
   // TypeScript-specific overrides
-  // Note: tseslint.configs.recommended is already spread at the top of this
-  // config and includes parser, plugins, and eslint-recommended overrides (like
-  // disabling no-undef)
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    // Sets the plugin for '@typescript-eslint' etc
+    ...tseslint.configs.base,
     languageOptions: {
+      ...tseslint.configs.base.languageOptions,
       globals: {
+        // This is probably too lenient. api/ side TS files shouldn't have
+        // browser globals available
         ...globals.browser,
         JSX: 'readonly',
       },
     },
     rules: {
+      ...tseslint.configs.eslintRecommended.rules,
+      ...tseslint.configs.recommended.rules,
       // TODO: look into enabling these eventually
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/prefer-function-type': 'off',
@@ -219,6 +219,8 @@ export default [
       '**/*.stories.*',
       '**/*.mock.*',
     ],
+    // Jest DOM recommended config
+    ...jestDomPlugin.configs['flat/recommended'],
     languageOptions: {
       globals: {
         ...globals.jest,

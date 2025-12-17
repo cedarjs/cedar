@@ -10,6 +10,5 @@
     "skipLibCheck": true,
     "types": ["node"],
   },
-  "include": ["index.mjs", "index.js", "shared.mjs", "shared.js"],
-  "exclude": ["node_modules", "dist"],
+  "files": ["index.mjs", "index.js", "shared.mjs", "shared.js"],
 }
