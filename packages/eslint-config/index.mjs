@@ -145,12 +145,11 @@ export default async function createConfig() {
     languageOptions: {
       globals: {
         ...globals.browser,
+        ...globals.node,
         React: 'readonly',
         gql: 'readonly',
         process: 'readonly',
         require: 'readonly',
-        // Developers should use `global` instead of window
-        window: 'off',
       },
       sourceType: 'module',
     },
@@ -159,11 +158,11 @@ export default async function createConfig() {
   // Test, stories, scenarios, and mock files
   configs.push({
     files: [
-      '*.test.*',
+      '**/*.test.*',
       '**/__mocks__/**',
-      '*.scenarios.*',
-      '*.stories.*',
-      '*.mock.*',
+      '**/*.scenarios.*',
+      '**/*.stories.*',
+      '**/*.mock.*',
     ],
     languageOptions: {
       globals: {
