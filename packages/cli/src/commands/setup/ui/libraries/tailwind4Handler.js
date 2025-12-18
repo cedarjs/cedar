@@ -330,6 +330,12 @@ export const handler = async ({ force, install }) => {
             path.join(rwPaths.web.src, 'scaffold.css'),
             tailwindScaffoldTemplate,
           )
+          console.log()
+          console.log(
+            c.info(
+              "IMPORTANT: Due to how Tailwind4's new compiler works, you must now import 'scaffold.css' in your 'index.css' instead of importing it separately in App.tsx.",
+            ),
+          )
         },
       },
       {
