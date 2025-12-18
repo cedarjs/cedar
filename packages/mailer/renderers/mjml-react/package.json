@@ -21,13 +21,13 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
-    "@faire/mjml-react": "3.4.0",
+    "@faire/mjml-react": "3.5.3",
     "mjml": "4.15.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/mjml": "4",
-    "tsx": "4.20.6",
+    "tsx": "4.21.0",
     "typescript": "5.9.3"
   },
   "publishConfig": {

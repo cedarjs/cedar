@@ -26,7 +26,7 @@
     "@whatwg-node/fetch": "0.9.21",
     "ci-info": "4.0.0",
     "envinfo": "7.14.0",
-    "systeminformation": "5.23.8",
+    "systeminformation": "5.27.14",
     "uuid": "10.0.0",
     "yargs": "17.7.2"
   },
@@ -34,7 +34,7 @@
     "@types/envinfo": "7.8.4",
     "@types/uuid": "10.0.0",
     "@types/yargs": "17.0.35",
-    "tsx": "4.20.6",
+    "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
   },

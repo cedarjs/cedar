@@ -394,6 +394,7 @@ async function confirmJobsWereScheduled(
       typeof dataJob.cron === 'undefined' ||
       typeof (dataJob as any).shouldBeUndefined !== 'undefined'
     ) {
+      console.log('dataJob', dataJob)
       console.error('💥 Data job does not have the expected properties')
       process.exit(1)
     }
@@ -403,6 +404,7 @@ async function confirmJobsWereScheduled(
       !cronJob?.cron ||
       typeof (cronJob as any).shouldBeUndefined !== 'undefined'
     ) {
+      console.log('cronJob', cronJob)
       console.error('💥 Cron job does not have the expected properties')
       process.exit(1)
     }
@@ -435,6 +437,23 @@ async function jobsWorkoff() {
 
   try {
     const { stdout } = await $`yarn cedar jobs workoff`
+
+    // Sometimes this e2e test fails in CI, and I'm not sure why. When I run it
+    // locally there's always just one cron job report file written, but in CI
+    // there's sometimes two.
+    // I want to know if maybe the cron job runs first, then the data job, and
+    // then the cron job again. That's why I have this debug logging here.
+    console.log()
+    console.log()
+    console.log('--- workoff output start')
+    console.log()
+    console.log()
+    console.log(stdout)
+    console.log()
+    console.log()
+    console.log('--- workoff output end')
+    console.log()
+    console.log()
 
     if (!stdout.includes('Starting 1 worker')) {
       console.error('💥 Error: Failed to start worker')
@@ -502,6 +521,21 @@ async function confirmJobsRan(
   const nbrOfReports = reportFiles.length
 
   if (nbrOfReports !== 1) {
+    fs.readdirSync(projectPath).forEach((file) => {
+      console.log()
+      console.log('--- Cron job report files:')
+      console.log()
+      if (/^report-.*\.txt$/.test(file)) {
+        // Sometimes this e2e test fails in CI, and I'm not sure why. When I run
+        // it locally there's always just one cron job report file written, but
+        // in CI there's sometimes two.
+        // I want to know the timestamps in the report file names to see when
+        // they're created (if they're both created at the same time)
+        console.log(' - ' + file)
+      }
+      console.log()
+    })
+
     console.error('💥 Expected 1 cron job report, but found', nbrOfReports)
     process.exit(1)
   }

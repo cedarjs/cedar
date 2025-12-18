@@ -1,7 +1,9 @@
 name: ⚙️ CI
 
 on:
-  pull_request:
+  # Run on all pull requests
+  pull_request: {}
+  # Run on pushes to the 'next' branch and to release branches
   push:
     branches: ['next', 'release/**']
 
@@ -144,6 +146,11 @@ jobs:
   telemetry-check:
     needs: check
 
+    # When releasing a new version of Cedar this check would try to install
+    # @cedar/* package versions that aren't published yet, so it would always
+    # fail. That's why we skip it on release branches.
+    if: github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/')
+
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -194,6 +201,11 @@ jobs:
 
   create-cedar-app:
     needs: check
+
+    # When releasing a new version of Cedar this check would try to install
+    # @cedar/* package versions that aren't published yet, so it would always
+    # fail. That's why we skip it on release branches.
+    if: github.event_name == 'pull_request' || !startsWith(github.ref, 'refs/heads/release/')
     name: 🌲 Create Cedar App
     uses: ./.github/workflows/create-cedar-app-test.yml
 

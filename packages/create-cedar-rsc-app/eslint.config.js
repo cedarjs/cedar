@@ -27,14 +27,7 @@ export default tseslint.config(
   comments.recommended,
   jsdoc.configs['flat/recommended-typescript-error'],
   n.configs['flat/recommended'],
-  {
-    ...packageJson.configs.recommended,
-    rules: {
-      ...packageJson.configs.recommended.rules,
-      // https://github.com/JoshuaKGoldberg/eslint-plugin-package-json/issues/252
-      'package-json/valid-repository-directory': 'off',
-    },
-  },
+  packageJson.configs.recommended,
   perfectionist.configs['recommended-natural'],
   {
     // Apply the same rules as we use for import/order in .eslintrc.js

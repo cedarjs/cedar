@@ -21,6 +21,9 @@
     "dev": "tsx src/index.ts",
     "lint": "eslint . --max-warnings 0"
   },
+  "resolutions": {
+    "prettier-plugin-packagejson/sort-package-json": "3.6.0"
+  },
   "dependencies": {
     "ansis": "4.1.0",
     "ci-info": "4.0.0",
@@ -57,11 +60,11 @@
     "knip": "^5.26.0",
     "prettier": "3.6.2",
     "prettier-plugin-curly": "^0.3.0",
-    "prettier-plugin-packagejson": "2.5.10",
-    "prettier-plugin-sh": "^0.14.0",
-    "publint": "0.3.15",
+    "prettier-plugin-packagejson": "2.5.20",
+    "prettier-plugin-sh": "^0.18.0",
+    "publint": "0.3.16",
     "rimraf": "^6.0.1",
-    "tsx": "4.20.6",
+    "tsx": "4.21.0",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.0.0",
     "zx": "8.8.5"

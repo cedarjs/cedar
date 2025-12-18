@@ -46,14 +46,14 @@
     "@cedarjs/web": "workspace:*",
     "fast-glob": "3.3.3",
     "lodash": "4.17.21",
-    "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@playwright/test": "1.57.0",
     "ts-toolbelt": "9.6.0",
-    "tsx": "4.20.6",
+    "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vite": "5.4.19",
     "vitest": "3.2.4"
