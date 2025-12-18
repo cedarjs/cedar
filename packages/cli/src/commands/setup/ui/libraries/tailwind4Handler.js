@@ -335,7 +335,7 @@ export const handler = async ({ force, install }) => {
       {
         title: 'Adding recommended VS Code extensions to project settings...',
         skip: () => !usingVSCode() && "Looks like you're not using VS Code",
-        task: () => {
+        task: (_ctx, task) => {
           const VS_CODE_EXTENSIONS_PATH = path.join(
             rwPaths.base,
             '.vscode/extensions.json',
@@ -349,20 +349,47 @@ export const handler = async ({ force, install }) => {
               'utf-8',
             )
 
-            originalExtensionsJson = JSON.parse(originalExtensionsFile)
+            try {
+              originalExtensionsJson = JSON.parse(
+                originalExtensionsFile || '{}',
+              )
+            } catch (err) {
+              // If the existing file is invalid JSON, surface a helpful message
+              // and skip modifying it so we don't overwrite user content.
+              task.skip(
+                'Existing .vscode/extensions.json contains invalid JSON',
+              )
+              return
+            }
           }
 
+          const existingRecs = Array.isArray(
+            originalExtensionsJson.recommendations,
+          )
+            ? originalExtensionsJson.recommendations
+            : []
+
+          // Only add recommendations that are not already present
+          const toAdd = recommendedVSCodeExtensions.filter(
+            (ext) => !existingRecs.includes(ext),
+          )
+
+          if (toAdd.length === 0) {
+            return task.skip('Recommended extensions already present')
+          }
+
+          const merged = [...existingRecs, ...toAdd]
           const newExtensionsJson = {
             ...originalExtensionsJson,
-            recommendations: [
-              ...originalExtensionsJson.recommendations,
-              ...recommendedVSCodeExtensions,
-            ],
+            recommendations: merged,
           }
 
+          fs.mkdirSync(path.dirname(VS_CODE_EXTENSIONS_PATH), {
+            recursive: true,
+          })
           fs.writeFileSync(
             VS_CODE_EXTENSIONS_PATH,
-            JSON.stringify(newExtensionsJson, null, 2),
+            JSON.stringify(newExtensionsJson, null, 2) + '\n',
           )
         },
       },
