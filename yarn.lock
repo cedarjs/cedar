@@ -3012,7 +3012,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@supabase/ssr": "npm:0.5.1"
+    "@supabase/ssr": "npm:0.8.0"
     "@types/aws-lambda": "npm:8.10.159"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
@@ -3035,7 +3035,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/web": "workspace:*"
-    "@supabase/ssr": "npm:0.5.1"
+    "@supabase/ssr": "npm:0.8.0"
     "@types/aws-lambda": "npm:8.10.159"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
@@ -3067,7 +3067,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@supabase/ssr": "npm:0.5.1"
+    "@supabase/ssr": "npm:0.8.0"
     "@supabase/supabase-js": "npm:2.87.3"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
@@ -11068,14 +11068,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/ssr@npm:0.5.1":
-  version: 0.5.1
-  resolution: "@supabase/ssr@npm:0.5.1"
+"@supabase/ssr@npm:0.8.0":
+  version: 0.8.0
+  resolution: "@supabase/ssr@npm:0.8.0"
   dependencies:
-    cookie: "npm:^0.6.0"
+    cookie: "npm:^1.0.2"
   peerDependencies:
-    "@supabase/supabase-js": ^2.43.4
-  checksum: 10c0/f0aaca9e013ff8c0e1ed2729245cd7cae89e380fdc08ff63175ebd0bac185800575377e10348590997297cb4fa436989851013df25461d6b468bb3325d238b87
+    "@supabase/supabase-js": ^2.76.1
+  checksum: 10c0/2fe7b867877d19ad61400af3d6c72b8905034f917374e2b35675084fe1bf4cc3ddc660d6ac9c9be7fb6894885602710daa10f6a8a01c43d134e386c5e14728d9
   languageName: node
   linkType: hard
 
@@ -15510,7 +15510,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cookie@npm:1.0.2, cookie@npm:^1.0.1":
+"cookie@npm:1.0.2":
   version: 1.0.2
   resolution: "cookie@npm:1.0.2"
   checksum: 10c0/fd25fe79e8fbcfcaf6aa61cd081c55d144eeeba755206c058682257cb38c4bd6795c6620de3f064c740695bb65b7949ebb1db7a95e4636efb8357a335ad3f54b
@@ -15524,10 +15524,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cookie@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "cookie@npm:0.6.0"
-  checksum: 10c0/f2318b31af7a31b4ddb4a678d024514df5e705f9be5909a192d7f116cfb6d45cbacf96a473fa733faa95050e7cff26e7832bb3ef94751592f1387b71c8956686
+"cookie@npm:^1.0.1, cookie@npm:^1.0.2":
+  version: 1.1.1
+  resolution: "cookie@npm:1.1.1"
+  checksum: 10c0/79c4ddc0fcad9c4f045f826f42edf54bcc921a29586a4558b0898277fa89fb47be95bc384c2253f493af7b29500c830da28341274527328f18eba9f58afa112c
   languageName: node
   linkType: hard
 
