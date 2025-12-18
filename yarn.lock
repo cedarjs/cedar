@@ -28938,6 +28938,7 @@ __metadata:
     "@storybook/react": "npm:8.6.15"
     "@storybook/types": "npm:8.6.14"
     "@types/node": "npm:24.10.1"
+    empathic: "npm:2.0.0"
     magic-string: "npm:0.30.21"
     react-docgen: "npm:7.0.3"
     tsx: "npm:4.21.0"
