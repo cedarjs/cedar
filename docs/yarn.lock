@@ -2703,9 +2703,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@easyops-cn/docusaurus-search-local@npm:^0.49.2":
-  version: 0.49.2
-  resolution: "@easyops-cn/docusaurus-search-local@npm:0.49.2"
+"@easyops-cn/docusaurus-search-local@npm:^0.52.0":
+  version: 0.52.2
+  resolution: "@easyops-cn/docusaurus-search-local@npm:0.52.2"
   dependencies:
     "@docusaurus/plugin-content-docs": "npm:^2 || ^3"
     "@docusaurus/theme-translations": "npm:^2 || ^3"
@@ -2728,7 +2728,7 @@ __metadata:
     "@docusaurus/theme-common": ^2 || ^3
     react: ^16.14.0 || ^17 || ^18 || ^19
     react-dom: ^16.14.0 || 17 || ^18 || ^19
-  checksum: 10c0/c396d3e96e8f192c7487343f62ec78d1e4d71070c5afac4bcbcebfa801cf8ce089999dcc6bd09a6df2b57fd10472030386200867021f0788058365e759b041f8
+  checksum: 10c0/e5c809a71e4730a37b5b1e3ebb051110ba45a93e1ad53524b500ddae3b335b10cf17e5371a478321876dff9313f8ff6818a5cc5ae1c95e8e2544b17fa6ea5df9
   languageName: node
   linkType: hard
 
@@ -2964,15 +2964,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mdx-js/react@npm:3.0.1, @mdx-js/react@npm:^3.0.0":
-  version: 3.0.1
-  resolution: "@mdx-js/react@npm:3.0.1"
+"@mdx-js/react@npm:3.1.1, @mdx-js/react@npm:^3.0.0":
+  version: 3.1.1
+  resolution: "@mdx-js/react@npm:3.1.1"
   dependencies:
     "@types/mdx": "npm:^2.0.0"
   peerDependencies:
     "@types/react": ">=16"
     react: ">=16"
-  checksum: 10c0/d210d926ef488d39ad65f04d821936b668eadcdde3b6421e94ec4200ca7ad17f17d24c5cbc543882586af9f08b10e2eea715c728ce6277487945e05c5199f532
+  checksum: 10c0/34ca98bc2a0f969894ea144dc5c8a5294690505458cd24965cd9be854d779c193ad9192bf9143c4c18438fafd1902e100d99067e045c69319288562d497558c6
   languageName: node
   linkType: hard
 
@@ -6260,8 +6260,8 @@ __metadata:
     "@docusaurus/theme-common": "npm:3.9.2"
     "@docusaurus/tsconfig": "npm:3.9.2"
     "@docusaurus/types": "npm:3.9.2"
-    "@easyops-cn/docusaurus-search-local": "npm:^0.49.2"
-    "@mdx-js/react": "npm:3.0.1"
+    "@easyops-cn/docusaurus-search-local": "npm:^0.52.0"
+    "@mdx-js/react": "npm:3.1.1"
     "@signalwire/docusaurus-plugin-llms-txt": "npm:2.0.0-alpha.7"
     "@signalwire/docusaurus-theme-llms-txt": "npm:1.0.0-alpha.9"
     "@types/react": "npm:^18.2.55"

@@ -1,6 +1,6 @@
-// This is the ESLint configuration used by Redwood projects.
+// This is the ESLint configuration used by Cedar projects.
 // Shared eslint config (projects and framework) is located in ./shared.js
-// Framework main config is in monorepo root ./.eslintrc.js
+// Framework main config is in monorepo root ./eslint.config.js
 
 const {
   getCommonPlugins,
