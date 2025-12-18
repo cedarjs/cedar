@@ -3240,7 +3240,7 @@ __metadata:
     listr2: "npm:7.0.2"
     lodash: "npm:4.17.21"
     pascalcase: "npm:1.0.0"
-    prettier: "npm:3.6.2"
+    prettier: "npm:3.7.4"
     prettier-plugin-tailwindcss: "npm:0.7.2"
     prompts: "npm:2.4.2"
     semver: "npm:7.6.3"
@@ -3329,7 +3329,7 @@ __metadata:
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
     portfinder: "npm:1.0.38"
-    prettier: "npm:3.6.2"
+    prettier: "npm:3.7.4"
     prisma: "npm:6.19.1"
     prompts: "npm:2.4.2"
     rimraf: "npm:6.0.1"
@@ -3383,7 +3383,7 @@ __metadata:
     graphql: "npm:16.9.0"
     jscodeshift: "npm:17.0.0"
     pascalcase: "npm:1.0.0"
-    prettier: "npm:3.6.2"
+    prettier: "npm:3.7.4"
     publint: "npm:0.3.16"
     tasuku: "npm:2.0.5"
     tempy: "npm:1.0.1"
@@ -3499,7 +3499,7 @@ __metadata:
     eslint-plugin-react: "npm:7.36.1"
     eslint-plugin-react-compiler: "npm:19.1.0-rc.1"
     eslint-plugin-react-hooks: "npm:4.6.2"
-    prettier: "npm:3.6.2"
+    prettier: "npm:3.7.4"
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.44.0"
   languageName: unknown
@@ -3671,7 +3671,7 @@ __metadata:
     graphql: "npm:16.9.0"
     graphql-tag: "npm:2.12.6"
     kill-port: "npm:1.6.1"
-    prettier: "npm:3.6.2"
+    prettier: "npm:3.7.4"
     publint: "npm:0.3.16"
     rimraf: "npm:6.0.1"
     source-map: "npm:0.7.6"
@@ -26327,12 +26327,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.6.2, prettier@npm:^3.5.3":
-  version: 3.6.2
-  resolution: "prettier@npm:3.6.2"
+"prettier@npm:3.7.4, prettier@npm:^3.5.3":
+  version: 3.7.4
+  resolution: "prettier@npm:3.7.4"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/488cb2f2b99ec13da1e50074912870217c11edaddedeadc649b1244c749d15ba94e846423d062e2c4c9ae683e2d65f754de28889ba06e697ac4f988d44f45812
+  checksum: 10c0/9675d2cd08eacb1faf1d1a2dbfe24bfab6a912b059fc9defdb380a408893d88213e794a40a2700bd29b140eb3172e0b07c852853f6e22f16f3374659a1a13389
   languageName: node
   linkType: hard
 
@@ -27950,7 +27950,7 @@ __metadata:
     npm-packlist: "npm:8.0.2"
     nx: "npm:22.3.0"
     ora: "npm:8.2.0"
-    prettier: "npm:3.6.2"
+    prettier: "npm:3.7.4"
     prettier-plugin-curly: "npm:0.3.2"
     prettier-plugin-packagejson: "npm:2.5.20"
     prettier-plugin-sh: "npm:0.18.0"
