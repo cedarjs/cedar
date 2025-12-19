@@ -2788,7 +2788,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "npm:2.1.1"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/clerk-react": "npm:5.59.0"
+    "@clerk/clerk-react": "npm:5.59.1"
     "@clerk/types": "npm:4.101.7"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
@@ -2798,7 +2798,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@clerk/clerk-react": 5.59.0
+    "@clerk/clerk-react": 5.59.1
   languageName: unknown
   linkType: soft
 
@@ -4309,22 +4309,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/clerk-react@npm:5.59.0":
-  version: 5.59.0
-  resolution: "@clerk/clerk-react@npm:5.59.0"
+"@clerk/clerk-react@npm:5.59.1":
+  version: 5.59.1
+  resolution: "@clerk/clerk-react@npm:5.59.1"
   dependencies:
-    "@clerk/shared": "npm:^3.40.0"
+    "@clerk/shared": "npm:^3.41.0"
     tslib: "npm:2.8.1"
   peerDependencies:
     react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
     react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
-  checksum: 10c0/58630c650867d53951979426a6558e94808a32bb5dce7c5e1af065d2bfc58be01bc9b5de7c2876c15307502d4ca671bc562c936c654282770ba290ebce15d59b
+  checksum: 10c0/50876b3cfd6987b71b335d2cab92ab088090200718e79a9d54b6b18a9458fb467fc76db4b6be06e60e9b87c19bf28df0057f168b8d8335568f545430a12eee7b
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.40.0, @clerk/shared@npm:^3.9.5":
-  version: 3.40.0
-  resolution: "@clerk/shared@npm:3.40.0"
+"@clerk/shared@npm:^3.40.0, @clerk/shared@npm:^3.41.0, @clerk/shared@npm:^3.9.5":
+  version: 3.41.0
+  resolution: "@clerk/shared@npm:3.41.0"
   dependencies:
     csstype: "npm:3.1.3"
     dequal: "npm:2.0.3"
@@ -4340,7 +4340,7 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: 10c0/8cb513d16470ee2d69585e5125d5ae5e00dd65dc88444d0eb4bade8ab8889949a69ad52d98510491b73e088986af468bb349e050198cbca0aaec45ca3e6acc2e
+  checksum: 10c0/5673002b8ade1afba751082eadbb8dd3fd1465bc1ea8500fa750e287dfa8898b96598949840d9bacb400449a5127af5a0d1ff0cb6f871b006c1bd7c5d21b1224
   languageName: node
   linkType: hard
 
