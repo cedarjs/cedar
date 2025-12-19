@@ -16,7 +16,7 @@ runs:
       shell: bash
 
     - name: ♻️ Cache yarn's cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ${{ steps.get-yarn-cache-directory.outputs.CACHE_DIRECTORY }}
         key: yarn-cache-${{ runner.os }}-${{ github.run_id }}
@@ -24,7 +24,7 @@ runs:
           yarn-cache-${{ runner.os }}-
 
     - name: ♻️ Cache yarn's install state
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: .yarn/install-state.gz
         key: yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
@@ -32,7 +32,7 @@ runs:
           yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-
 
     - name: ♻️ Cache node_modules
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: node_modules
         key: yarn-node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
