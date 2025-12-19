@@ -1,11 +1,9 @@
 {
   "private": true,
-  "workspaces": {
-    "packages": [
-      "api",
-      "web"
-    ]
-  },
+  "workspaces": [
+    "api",
+    "web"
+  ],
   "eslintConfig": {
     "extends": "@cedarjs/eslint-config",
     "root": true

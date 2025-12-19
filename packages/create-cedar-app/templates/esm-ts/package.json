@@ -1,12 +1,10 @@
 {
   "private": true,
   "type": "module",
-  "workspaces": {
-    "packages": [
-      "api",
-      "web"
-    ]
-  },
+  "workspaces": [
+    "api",
+    "web"
+  ],
   "devDependencies": {
     "@cedarjs/core": "2.1.1",
     "@cedarjs/project-config": "2.1.1",

@@ -2399,14 +2399,13 @@ npx create-docusaurus@latest docs classic
 Add `docs` to your `workspaces` in the project's `package.json`:
 
 ```
-  "workspaces": {
-    "packages": [
-      "docs",
-      "api",
-      "web",
-      "packages/*"
-    ]
-  },
+  "workspaces": [
+    "docs",
+    "api",
+    "web",
+    "packages/*"
+  ],
+
 ```
 
 2. Ensure a `docs` directory exists at the root of your project
