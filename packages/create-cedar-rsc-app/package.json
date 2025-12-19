@@ -39,7 +39,7 @@
     "@eslint/js": "^9.7.0",
     "@types/eslint-plugin-markdown": "^2.0.2",
     "@types/fs-extra": "^11",
-    "@types/node": "24.10.1",
+    "@types/node": "24.10.4",
     "@types/semver": "7.5.8",
     "@types/which": "3.0.4",
     "@types/yauzl-promise": "4.0.1",
