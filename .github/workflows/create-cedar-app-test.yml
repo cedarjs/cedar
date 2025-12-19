@@ -57,7 +57,7 @@ jobs:
         with:
           # Use Node 20 here for testing behavior for node versions below the
           # minimum supported version
-          node-version: 20
+          node-version: 24
 
       - name: Prompt tests
         run: ./tests/e2e_prompts_node_less.sh
