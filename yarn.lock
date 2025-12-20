@@ -2862,7 +2862,7 @@ __metadata:
     "@cedarjs/auth": "npm:2.1.1"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/clerk-react": "npm:5.59.2"
-    "@clerk/types": "npm:4.101.8"
+    "@clerk/types": "npm:4.101.9"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:8.2.2"
     publint: "npm:0.3.16"
@@ -4395,7 +4395,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.41.0, @clerk/shared@npm:^3.41.1, @clerk/shared@npm:^3.9.5":
+"@clerk/shared@npm:^3.41.1, @clerk/shared@npm:^3.9.5":
   version: 3.41.1
   resolution: "@clerk/shared@npm:3.41.1"
   dependencies:
@@ -4417,16 +4417,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/types@npm:4.101.8":
-  version: 4.101.8
-  resolution: "@clerk/types@npm:4.101.8"
-  dependencies:
-    "@clerk/shared": "npm:^3.41.0"
-  checksum: 10c0/184a4fdbe9bbaa43d0bb163d643488b673084569ccb9b2eb2cca8be2b625c35dc774e9f31eae790038e889408c1768388036b8caa3929c8e5a54c174d3cb3c10
-  languageName: node
-  linkType: hard
-
-"@clerk/types@npm:^4.59.3":
+"@clerk/types@npm:4.101.9, @clerk/types@npm:^4.59.3":
   version: 4.101.9
   resolution: "@clerk/types@npm:4.101.9"
   dependencies:
