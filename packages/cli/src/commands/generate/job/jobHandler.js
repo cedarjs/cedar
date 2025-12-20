@@ -1,4 +1,3 @@
-import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import * as changeCase from 'change-case'
@@ -39,17 +38,12 @@ export const files = async ({
 
   const jobFiles = await templateForComponentFile({
     name: jobName,
-    componentName: jobName,
+    suffix: 'Job',
     extension,
     apiPathSection: 'jobs',
     generator: 'job',
     templatePath: 'job.ts.template',
     templateVars: { name: jobName, queueName, ...rest },
-    outputPath: path.join(
-      getPaths().api.jobs,
-      `${jobName}Job`,
-      `${jobName}Job${extension}`,
-    ),
   })
 
   outputFiles.push(jobFiles)
@@ -57,32 +51,22 @@ export const files = async ({
   if (generateTests) {
     const testFile = await templateForComponentFile({
       name: jobName,
-      componentName: jobName,
-      extension,
+      suffix: 'Job',
+      extension: `.test${extension}`,
       apiPathSection: 'jobs',
       generator: 'job',
       templatePath: 'test.ts.template',
       templateVars: { ...rest },
-      outputPath: path.join(
-        getPaths().api.jobs,
-        `${jobName}Job`,
-        `${jobName}Job.test${extension}`,
-      ),
     })
 
     const scenarioFile = await templateForComponentFile({
       name: jobName,
-      componentName: jobName,
-      extension,
+      suffix: 'Job',
+      extension: `.scenarios${extension}`,
       apiPathSection: 'jobs',
       generator: 'job',
       templatePath: 'scenarios.ts.template',
       templateVars: { ...rest },
-      outputPath: path.join(
-        getPaths().api.jobs,
-        `${jobName}Job`,
-        `${jobName}Job.scenarios${extension}`,
-      ),
     })
 
     outputFiles.push(testFile)

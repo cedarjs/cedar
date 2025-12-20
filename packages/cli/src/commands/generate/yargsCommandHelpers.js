@@ -48,7 +48,39 @@ export function createDescription(componentName) {
   return `Generate a ${componentName} component`
 }
 
-export function createBuilder({ componentName, optionsObj, positionalsObj }) {
+/**
+ * Creates a yargs builder function for generator commands.
+ * The builder configures all the options and positionals for a generator
+ * command.
+ *
+ * @param {object} config - Configuration object
+ * @param {string} config.componentName - Name of the component being generated
+ * (e.g. 'page', 'cell', 'component')
+ * @param {Record<string, import('yargs').Options> | (() => Record<string, import('yargs').Options>)} [config.optionsObj] -
+ * Options to add to the command. Can be an object or a function that returns an
+ * object. Defaults to getYargsDefaults()
+ * @param {Record<string, import('yargs').PositionalOptions>} [config.positionalsObj] -
+ * Positional arguments to add to the command beyond the default 'name'
+ * positional
+ * @param {boolean} [config.addStories] - Whether to add the --stories option.
+ * Defaults to true for backward compatibility
+ * @returns {(yargs: import('yargs').Argv) => void} A yargs builder function
+ * that configures the command
+ *
+ * @example
+ * const builder = createBuilder({
+ *   componentName: 'page',
+ *   optionsObj: getYargsDefaults(),
+ *   positionalsObj: {},
+ *   addStories: true
+ * })
+ */
+export function createBuilder({
+  componentName,
+  optionsObj,
+  positionalsObj,
+  addStories,
+}) {
   return (yargs) => {
     yargs
       .positional('name', {
@@ -65,10 +97,6 @@ export function createBuilder({ componentName, optionsObj, positionalsObj }) {
         description: 'Generate test files',
         type: 'boolean',
       })
-      .option('stories', {
-        description: 'Generate storybook files',
-        type: 'boolean',
-      })
       .option('verbose', {
         description: 'Print all logs',
         type: 'boolean',
@@ -79,6 +107,15 @@ export function createBuilder({ componentName, optionsObj, positionalsObj }) {
         type: 'boolean',
         default: true,
       })
+
+    // Doing the typeof check to have it add storybook files by default, so that
+    // this function stays backward compatible
+    if (addStories || typeof addStories === 'undefined') {
+      yargs.option('stories', {
+        description: 'Generate storybook files',
+        type: 'boolean',
+      })
+    }
 
     // Add in passed in positionals
     Object.entries(positionalsObj || {}).forEach(([option, config]) => {

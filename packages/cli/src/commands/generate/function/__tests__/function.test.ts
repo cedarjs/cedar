@@ -35,6 +35,7 @@ describe('Single word default files', async () => {
   })
 
   it('creates a single word function file', () => {
+    console.log('singleWordDefaultFiles', singleWordDefaultFiles)
     expect(
       singleWordDefaultFiles[
         path.normalize('/path/to/project/api/src/functions/foo/foo.js')

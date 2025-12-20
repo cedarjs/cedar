@@ -168,19 +168,15 @@ test('templateForComponentFile can create a path in /web', async () => {
 
 test('templateForComponentFile can create a path in /api', async () => {
   const output = await templateForComponentFile({
-    name: 'Home',
-    suffix: 'Page',
-    apiPathSection: 'services',
-    generator: 'page',
-    templatePath: 'page.tsx.template',
-    templateVars: {
-      ...pageHandler.paramVariants(helpers.pathName(undefined, 'Home')),
-      rscEnabled: false,
-    },
+    name: 'foo',
+    apiPathSection: 'functions',
+    generator: 'function',
+    templatePath: 'function.ts.template',
+    templateVars: { name: 'foo', typescript: false },
   })
 
   expect(output[0]).toEqual(
-    path.normalize('/path/to/project/api/src/services/HomePage/HomePage.js'),
+    path.normalize('/path/to/project/api/src/functions/foo/foo.js'),
   )
 })
 
@@ -228,7 +224,7 @@ test('templateForComponentFile can override output path', async () => {
     generator: 'function',
     templatePath: 'function.ts.template',
     templateVars: { name: 'func', typescript: false },
-    outputPath: path.normalize('/path/to/project/api/src/functions/func.ts'),
+    outputPath: 'func.ts',
   })
 
   expect(output[0]).toEqual(

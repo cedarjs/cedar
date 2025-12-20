@@ -1,5 +1,3 @@
-import path from 'path'
-
 import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
@@ -8,11 +6,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
-import {
-  getPaths,
-  transformTSToJS,
-  writeFilesTask,
-} from '../../../lib/index.js'
+import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
 import { templateForComponentFile } from '../yargsHandlerHelpers.js'
@@ -37,11 +31,6 @@ export const files = async ({
     generator: 'function',
     templatePath: 'function.ts.template',
     templateVars: { ...rest, typescript: generateTypescript },
-    outputPath: path.join(
-      getPaths().api.functions,
-      functionName,
-      `${functionName}${extension}`,
-    ),
   })
 
   outputFiles.push(functionFiles)
@@ -50,31 +39,21 @@ export const files = async ({
     const testFile = await templateForComponentFile({
       name: functionName,
       componentName: functionName,
-      extension,
+      extension: `.test${extension}`,
       apiPathSection: 'functions',
       generator: 'function',
       templatePath: 'test.ts.template',
       templateVars: { ...rest },
-      outputPath: path.join(
-        getPaths().api.functions,
-        functionName,
-        `${functionName}.test${extension}`,
-      ),
     })
 
     const scenarioFile = await templateForComponentFile({
       name: functionName,
       componentName: functionName,
-      extension,
+      extension: `.scenarios${extension}`,
       apiPathSection: 'functions',
       generator: 'function',
       templatePath: 'scenarios.ts.template',
       templateVars: { ...rest },
-      outputPath: path.join(
-        getPaths().api.functions,
-        functionName,
-        `${functionName}.scenarios${extension}`,
-      ),
     })
 
     outputFiles.push(testFile)
