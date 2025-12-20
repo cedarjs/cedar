@@ -293,6 +293,7 @@ describe('validate format', () => {
 
   it('throws if no pattern given', () => {
     try {
+      // @ts-expect-error - JS scenario
       validate('foobar', 'text', { format: { pattern: null } })
     } catch (e) {
       expect(e.message).toEqual('No pattern for format validation')
@@ -1024,6 +1025,7 @@ describe('validate custom', () => {
     try {
       validate(undefined, {
         custom: {
+          message: '',
           with: () => {
             throw new Error('Gimmie an email')
           },
@@ -1038,6 +1040,7 @@ describe('validate custom', () => {
     try {
       validate(undefined, {
         custom: {
+          message: '',
           with: () => {
             // eslint-disable-next-line @typescript-eslint/only-throw-error
             throw 'Gimmie an email'
@@ -1068,9 +1071,8 @@ describe('validate', () => {
 
   it('will not throw a bad error if custom message is not present', () => {
     try {
-      validate(null, {
-        presence: true,
-      })
+      // @ts-expect-error - JS scenario
+      validate(null, { presence: true })
     } catch (e) {
       expect(e.message).toEqual(' must be present')
     }

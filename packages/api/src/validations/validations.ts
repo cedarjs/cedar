@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client'
 
 import * as ValidationErrors from './errors.js'
 
-function pascalCase(str: string): string {
+function pascalCase(str: string) {
   return str.replace(/(?:^|[-_])(\w)/g, (_, c) => c.toUpperCase())
 }
 

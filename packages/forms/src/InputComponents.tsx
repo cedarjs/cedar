@@ -117,7 +117,7 @@ const InputComponents: Record<
   React.ForwardRefExoticComponent<Omit<InputFieldProps, 'type'>>
 > = {}
 
-function pascalCase(str: string): string {
+function pascalCase(str: string) {
   return str.replace(/(?:^|[-_])(\w)/g, (_, c) => c.toUpperCase())
 }
 

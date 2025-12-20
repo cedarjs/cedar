@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@prisma/client'
-import { camelCase } from 'change-case'
+import camelCase from 'camelcase'
 
 import { DEFAULT_MAX_RUNTIME, DEFAULT_MODEL_NAME } from '../../consts.js'
 import type { BaseJob } from '../../types.js'
