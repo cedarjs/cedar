@@ -90,53 +90,6 @@ export interface PagesDependency {
   importStatement: string
 }
 
-// TODO: Remove these.
-const PATH_API_DIR_FUNCTIONS = 'api/src/functions'
-const PATH_RW_SCRIPTS = 'scripts'
-const PATH_API_DIR_GRAPHQL = 'api/src/graphql'
-const PATH_API_DIR_CONFIG = 'api/src/config'
-const PATH_API_DIR_MODELS = 'api/src/models'
-const PATH_API_DIR_JOBS = 'api/src/jobs'
-const PATH_API_DIR_LIB = 'api/src/lib'
-const PATH_API_DIR_GENERATORS = 'api/generators'
-const PATH_API_DIR_SERVICES = 'api/src/services'
-const PATH_API_DIR_DIRECTIVES = 'api/src/directives'
-const PATH_API_DIR_SUBSCRIPTIONS = 'api/src/subscriptions'
-const PATH_API_DIR_SRC = 'api/src'
-const PATH_API_DIR_DIST = 'api/dist'
-const PATH_WEB_ROUTES = 'web/src/Routes' // .jsx|.tsx
-const PATH_WEB_DIR_LAYOUTS = 'web/src/layouts/'
-const PATH_WEB_DIR_PAGES = 'web/src/pages/'
-const PATH_WEB_DIR_COMPONENTS = 'web/src/components'
-const PATH_WEB_DIR_STORYBOOK_CONFIG = 'web/.storybook'
-const PATH_WEB_DIR_SRC = 'web/src'
-const PATH_WEB_DIR_SRC_APP = 'web/src/App'
-const PATH_WEB_DIR_SRC_DOCUMENT = 'web/src/Document'
-const PATH_WEB_INDEX_HTML = 'web/src/index.html'
-const PATH_WEB_DIR_GENERATORS = 'web/generators'
-const PATH_WEB_DIR_CONFIG = 'web/config'
-const PATH_WEB_DIR_CONFIG_VITE = 'web/vite.config' // .js,.ts
-const PATH_WEB_DIR_ENTRY_CLIENT = 'web/src/entry.client' // .jsx,.tsx
-const PATH_WEB_DIR_ENTRY_SERVER = 'web/src/entry.server' // .jsx,.tsx
-const PATH_WEB_DIR_GRAPHQL = 'web/src/graphql' // .js,.ts
-
-const PATH_WEB_DIR_CONFIG_POSTCSS = 'web/config/postcss.config.cjs'
-const PATH_WEB_DIR_CONFIG_STORYBOOK_CONFIG = 'web/.storybook/main.js'
-const PATH_WEB_DIR_CONFIG_STORYBOOK_PREVIEW = 'web/.storybook/preview' // .js, .tsx
-const PATH_WEB_DIR_CONFIG_STORYBOOK_MANAGER = 'web/.storybook/manager.js'
-const PATH_WEB_DIR_DIST = 'web/dist'
-
-// Used by Streaming & RSC builds to output to their individual folders
-const PATH_WEB_DIR_DIST_BROWSER = 'web/dist/browser'
-const PATH_WEB_DIR_DIST_RSC = 'web/dist/rsc'
-const PATH_WEB_DIR_DIST_SSR = 'web/dist/ssr'
-
-const PATH_WEB_DIR_DIST_SSR_ENTRY_SERVER = 'web/dist/ssr/entry.server'
-const PATH_WEB_DIR_DIST_SSR_DOCUMENT = 'web/dist/ssr/Document'
-const PATH_WEB_DIR_DIST_SSR_ROUTEHOOKS = 'web/dist/ssr/routeHooks'
-const PATH_WEB_DIR_DIST_RSC_ENTRIES = 'web/dist/rsc/entries.mjs'
-const PATH_WEB_DIR_ROUTE_MANIFEST = 'web/dist/ssr/route-manifest.json'
-
 /**
  * The Redwood config file is used as an anchor for the base directory of a project.
  */
@@ -172,7 +125,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     return getPathsCache.get(BASE_DIR) as Paths
   }
 
-  const routes = resolveFile(path.join(BASE_DIR, PATH_WEB_ROUTES)) as string
+  const routes = resolveFile(path.join(BASE_DIR, 'web/src/Routes')) as string
   const { prismaConfig: prismaConfigFromConfig } = getConfig(
     getConfigPath(BASE_DIR),
   ).api
@@ -185,7 +138,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     resolveFile(prismaConfigBase) || path.join(BASE_DIR, prismaConfigFromConfig)
 
   const viteConfig = resolveFile(
-    path.join(BASE_DIR, PATH_WEB_DIR_CONFIG_VITE),
+    path.join(BASE_DIR, 'web/vite.config'),
   ) as string
 
   const paths = {
@@ -201,77 +154,66 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
       prebuild: path.join(BASE_DIR, '.redwood/prebuild'),
     },
 
-    scripts: path.join(BASE_DIR, PATH_RW_SCRIPTS),
+    scripts: path.join(BASE_DIR, 'scripts'),
 
     api: {
       base: path.join(BASE_DIR, 'api'),
       prismaConfig,
-      functions: path.join(BASE_DIR, PATH_API_DIR_FUNCTIONS),
-      graphql: path.join(BASE_DIR, PATH_API_DIR_GRAPHQL),
-      lib: path.join(BASE_DIR, PATH_API_DIR_LIB),
-      generators: path.join(BASE_DIR, PATH_API_DIR_GENERATORS),
-      config: path.join(BASE_DIR, PATH_API_DIR_CONFIG),
-      services: path.join(BASE_DIR, PATH_API_DIR_SERVICES),
-      directives: path.join(BASE_DIR, PATH_API_DIR_DIRECTIVES),
-      subscriptions: path.join(BASE_DIR, PATH_API_DIR_SUBSCRIPTIONS),
-      src: path.join(BASE_DIR, PATH_API_DIR_SRC),
-      dist: path.join(BASE_DIR, PATH_API_DIR_DIST),
+      functions: path.join(BASE_DIR, 'api/src/functions'),
+      graphql: path.join(BASE_DIR, 'api/src/graphql'),
+      lib: path.join(BASE_DIR, 'api/src/lib'),
+      generators: path.join(BASE_DIR, 'api/generators'),
+      config: path.join(BASE_DIR, 'api/src/config'),
+      services: path.join(BASE_DIR, 'api/src/services'),
+      directives: path.join(BASE_DIR, 'api/src/directives'),
+      subscriptions: path.join(BASE_DIR, 'api/src/subscriptions'),
+      src: path.join(BASE_DIR, 'api/src'),
+      dist: path.join(BASE_DIR, 'api/dist'),
       types: path.join(BASE_DIR, 'api/types'),
-      models: path.join(BASE_DIR, PATH_API_DIR_MODELS),
-      mail: path.join(BASE_DIR, PATH_API_DIR_SRC, 'mail'),
-      jobs: path.join(path.join(BASE_DIR, PATH_API_DIR_JOBS)),
-      distJobs: path.join(path.join(BASE_DIR, PATH_API_DIR_DIST, 'jobs')),
-      jobsConfig: resolveFile(path.join(BASE_DIR, PATH_API_DIR_LIB, 'jobs')),
+      models: path.join(BASE_DIR, 'api/src/models'),
+      mail: path.join(BASE_DIR, 'api/src', 'mail'),
+      jobs: path.join(BASE_DIR, 'api/src/jobs'),
+      distJobs: path.join(BASE_DIR, 'api/dist/jobs'),
+      jobsConfig: resolveFile(path.join(BASE_DIR, 'api/src/lib', 'jobs')),
       distJobsConfig: resolveFile(
-        path.join(BASE_DIR, PATH_API_DIR_DIST, 'lib', 'jobs'),
+        path.join(BASE_DIR, 'api/dist', 'lib', 'jobs'),
       ),
-      logger: resolveFile(path.join(BASE_DIR, PATH_API_DIR_LIB, 'logger')),
+      logger: resolveFile(path.join(BASE_DIR, 'api/src/lib', 'logger')),
     },
 
     web: {
       routes,
       base: path.join(BASE_DIR, 'web'),
-      pages: path.join(BASE_DIR, PATH_WEB_DIR_PAGES),
-      components: path.join(BASE_DIR, PATH_WEB_DIR_COMPONENTS),
-      layouts: path.join(BASE_DIR, PATH_WEB_DIR_LAYOUTS),
-      src: path.join(BASE_DIR, PATH_WEB_DIR_SRC),
-      storybook: path.join(BASE_DIR, PATH_WEB_DIR_STORYBOOK_CONFIG),
-      generators: path.join(BASE_DIR, PATH_WEB_DIR_GENERATORS),
-      app: resolveFile(path.join(BASE_DIR, PATH_WEB_DIR_SRC_APP)) as string,
-      document: resolveFile(
-        path.join(BASE_DIR, PATH_WEB_DIR_SRC_DOCUMENT),
-      ) as string,
-      html: path.join(BASE_DIR, PATH_WEB_INDEX_HTML),
-      config: path.join(BASE_DIR, PATH_WEB_DIR_CONFIG),
+      pages: path.join(BASE_DIR, 'web/src/pages/'),
+      components: path.join(BASE_DIR, 'web/src/components'),
+      layouts: path.join(BASE_DIR, 'web/src/layouts/'),
+      src: path.join(BASE_DIR, 'web/src'),
+      storybook: path.join(BASE_DIR, 'web/.storybook'),
+      generators: path.join(BASE_DIR, 'web/generators'),
+      app: resolveFile(path.join(BASE_DIR, 'web/src/App')) as string,
+      document: resolveFile(path.join(BASE_DIR, 'web/src/Document')) as string,
+      html: path.join(BASE_DIR, 'web/src/index.html'),
+      config: path.join(BASE_DIR, 'web/config'),
       viteConfig,
-      postcss: path.join(BASE_DIR, PATH_WEB_DIR_CONFIG_POSTCSS),
-      storybookConfig: path.join(
-        BASE_DIR,
-        PATH_WEB_DIR_CONFIG_STORYBOOK_CONFIG,
-      ),
+      postcss: path.join(BASE_DIR, 'web/config/postcss.config.cjs'),
+      storybookConfig: path.join(BASE_DIR, 'web/.storybook/main.js'),
       storybookPreviewConfig: resolveFile(
-        path.join(BASE_DIR, PATH_WEB_DIR_CONFIG_STORYBOOK_PREVIEW),
+        path.join(BASE_DIR, 'web/.storybook/preview'),
       ),
-      storybookManagerConfig: path.join(
-        BASE_DIR,
-        PATH_WEB_DIR_CONFIG_STORYBOOK_MANAGER,
-      ),
-      dist: path.join(BASE_DIR, PATH_WEB_DIR_DIST),
-      distBrowser: path.join(BASE_DIR, PATH_WEB_DIR_DIST_BROWSER),
-      distRsc: path.join(BASE_DIR, PATH_WEB_DIR_DIST_RSC),
-      distSsr: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR),
-      distSsrDocument: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_DOCUMENT),
-      distSsrEntryServer: path.join(
-        BASE_DIR,
-        PATH_WEB_DIR_DIST_SSR_ENTRY_SERVER,
-      ),
-      distRouteHooks: path.join(BASE_DIR, PATH_WEB_DIR_DIST_SSR_ROUTEHOOKS),
-      distRscEntries: path.join(BASE_DIR, PATH_WEB_DIR_DIST_RSC_ENTRIES),
-      routeManifest: path.join(BASE_DIR, PATH_WEB_DIR_ROUTE_MANIFEST),
+      storybookManagerConfig: path.join(BASE_DIR, 'web/.storybook/manager.js'),
+      dist: path.join(BASE_DIR, 'web/dist'),
+      distBrowser: path.join(BASE_DIR, 'web/dist/browser'),
+      distRsc: path.join(BASE_DIR, 'web/dist/rsc'),
+      distSsr: path.join(BASE_DIR, 'web/dist/ssr'),
+      distSsrDocument: path.join(BASE_DIR, 'web/dist/ssr/Document'),
+      distSsrEntryServer: path.join(BASE_DIR, 'web/dist/ssr/entry.server'),
+      distRouteHooks: path.join(BASE_DIR, 'web/dist/ssr/routeHooks'),
+      distRscEntries: path.join(BASE_DIR, 'web/dist/rsc/entries.mjs'),
+      routeManifest: path.join(BASE_DIR, 'web/dist/ssr/route-manifest.json'),
       types: path.join(BASE_DIR, 'web/types'),
-      entryClient: resolveFile(path.join(BASE_DIR, PATH_WEB_DIR_ENTRY_CLIENT)), // new vite/stream entry point for client
-      entryServer: resolveFile(path.join(BASE_DIR, PATH_WEB_DIR_ENTRY_SERVER)),
-      graphql: path.join(BASE_DIR, PATH_WEB_DIR_GRAPHQL),
+      entryClient: resolveFile(path.join(BASE_DIR, 'web/src/entry.client')), // new vite/stream entry point for client
+      entryServer: resolveFile(path.join(BASE_DIR, 'web/src/entry.server')),
+      graphql: path.join(BASE_DIR, 'web/src/graphql'),
     },
   }
 
