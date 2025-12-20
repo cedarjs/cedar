@@ -46,9 +46,7 @@ export const files = async ({ name, typescript = false, type, tests }) => {
   const files = [directiveFile]
 
   if (tests) {
-    const testOutputFilename = `${camelCase(name)}.test.${
-      typescript ? 'ts' : 'js'
-    }`
+    const testOutputFilename = `${camelName}.test.${typescript ? 'ts' : 'js'}`
 
     const testFile = await templateForComponentFile({
       name,
