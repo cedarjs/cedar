@@ -26,7 +26,6 @@
       "groupName": "ESM and @cedarjs packages",
       "enabled": false,
       "matchPackageNames": [
-        "ansis",
         "boxen",
         "camelcase",
         "execa",
