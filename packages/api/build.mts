@@ -26,6 +26,7 @@ await build({
     },
   },
 })
+
 await build({
   entryPointOptions: {
     // NOTE: building the bins as CJS only so they can still use

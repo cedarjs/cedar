@@ -1,6 +1,6 @@
 import path from 'path'
 
-import camelcase from 'camelcase'
+import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
@@ -25,7 +25,7 @@ export const files = async ({
 }) => {
   const extension = generateTypescript ? '.ts' : '.js'
 
-  const functionName = camelcase(name)
+  const functionName = camelCase(name)
 
   const outputFiles = []
 

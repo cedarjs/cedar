@@ -1,9 +1,12 @@
 // Handles validating values in services
 
 import { PrismaClient } from '@prisma/client'
-import pascalcase from 'pascalcase'
 
 import * as ValidationErrors from './errors.js'
+
+function pascalCase(str: string): string {
+  return str.replace(/(?:^|[-_])(\w)/g, (_, c) => c.toUpperCase())
+}
 
 type WithOptionalMessage<T = Record<string, unknown>> = T & {
   /**
@@ -539,7 +542,7 @@ const validationError = (
   options: any,
   substitutions = {},
 ) => {
-  const errorClassName = `${pascalcase(
+  const errorClassName = `${pascalCase(
     type,
   )}ValidationError` as keyof typeof ValidationErrors
   const ErrorClass = ValidationErrors[errorClassName]

@@ -30,7 +30,6 @@
         "camelcase",
         "execa",
         "humanize-string",
-        "pascalcase",
         "pretty-bytes",
         "pretty-ms",
         "stdout-update",

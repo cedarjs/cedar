@@ -1,8 +1,7 @@
 import { execSync } from 'child_process'
 
-import camelcase from 'camelcase'
+import { camelCase, pascalCase } from 'change-case'
 import { Listr } from 'listr2'
-import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
@@ -153,7 +152,7 @@ export const files = async ({ name, tests, stories, typescript, ...rest }) => {
 
 export const routes = ({ name, path }) => {
   return [
-    `<Route path="${path}" page={${pascalcase(name)}Page} name="${camelcase(
+    `<Route path="${path}" page={${pascalCase(name)}Page} name="${camelCase(
       name,
     )}" />`,
   ]

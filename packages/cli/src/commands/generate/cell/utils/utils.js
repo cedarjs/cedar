@@ -1,4 +1,4 @@
-import pascalcase from 'pascalcase'
+import { pascalCase } from 'change-case'
 
 import { listQueryTypeFieldsInProject } from '@cedarjs/internal/dist/gql'
 
@@ -16,15 +16,15 @@ export const uniqueOperationName = async (
   name,
   { index = 1, list = false },
 ) => {
-  let operationName = pascalcase(
+  let operationName = pascalCase(
     index <= 1 ? `find_${name}_query` : `find_${name}_query_${index}`,
   )
 
   if (list) {
     operationName =
       index <= 1
-        ? `${pascalcase(name)}Query`
-        : `${pascalcase(name)}Query_${index}`
+        ? `${pascalCase(name)}Query`
+        : `${pascalCase(name)}Query_${index}`
   }
 
   const cellOperationNames = await getCellOperationNames()

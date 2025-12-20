@@ -1,5 +1,5 @@
+import { pascalCase } from 'change-case'
 import { Listr } from 'listr2'
-import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
@@ -22,7 +22,7 @@ import {
 const removeRoutesWithSet = async ({ model, path, nestScaffoldByModel }) => {
   const routes = await scaffoldRoutes({ model, path, nestScaffoldByModel })
   const routeNames = routes.map(extractRouteName)
-  const pluralPascalName = pascalcase(pluralize(model))
+  const pluralPascalName = pascalCase(pluralize(model))
   const layoutName = `${pluralPascalName}Layout`
   return removeRoutesFromRouterTask(routeNames, layoutName)
 }
@@ -48,11 +48,11 @@ const removeSetImport = () => {
 }
 
 const removeLayoutImport = ({ model: name, path: scaffoldPath = '' }) => {
-  const pluralPascalName = pascalcase(pluralize(name))
+  const pluralPascalName = pascalCase(pluralize(name))
   const pascalScaffoldPath =
     scaffoldPath === ''
       ? scaffoldPath
-      : scaffoldPath.split('/').map(pascalcase).join('/') + '/'
+      : scaffoldPath.split('/').map(pascalCase).join('/') + '/'
   const layoutName = `${pluralPascalName}Layout`
   const importLayout = `import ${pluralPascalName}Layout from 'src/layouts/${pascalScaffoldPath}${layoutName}'`
   const routesPath = getPaths().web.routes

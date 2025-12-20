@@ -1,6 +1,6 @@
 import path from 'path'
 
-import camelcase from 'camelcase'
+import { camelCase } from 'change-case'
 import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
@@ -30,7 +30,7 @@ export const files = async ({ name, typescript = false, type, tests }) => {
     throw new Error('You must specify a directive type')
   }
 
-  const camelName = camelcase(name)
+  const camelName = camelCase(name)
 
   const outputFilename = `${camelName}.${typescript ? 'ts' : 'js'}`
 
@@ -46,7 +46,7 @@ export const files = async ({ name, typescript = false, type, tests }) => {
   const files = [directiveFile]
 
   if (tests) {
-    const testOutputFilename = `${camelcase(name)}.test.${
+    const testOutputFilename = `${camelCase(name)}.test.${
       typescript ? 'ts' : 'js'
     }`
 

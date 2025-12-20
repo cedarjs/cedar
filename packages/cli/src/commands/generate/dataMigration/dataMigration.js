@@ -1,6 +1,6 @@
 import path from 'path'
 
-import { paramCase } from 'change-case'
+import { kebabCase } from 'change-case'
 import fs from 'fs-extra'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
@@ -37,7 +37,7 @@ const TEMPLATE_PATHS = {
 export const files = async ({ name, typescript }) => {
   const now = new Date().toISOString()
   const timestamp = now.split('.')[0].replace(/\D/g, '')
-  const basename = `${timestamp}-${paramCase(name)}`
+  const basename = `${timestamp}-${kebabCase(name)}`
   const extension = typescript ? 'ts' : 'js'
   const outputFilename = basename + '.' + extension
   const dataMigrationsPath = await getDataMigrationsPath(

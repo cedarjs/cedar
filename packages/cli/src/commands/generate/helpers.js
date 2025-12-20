@@ -6,8 +6,7 @@
 // CWD, plus importing this file statically also makes the CLI startup time
 // much slower
 
-import { paramCase } from 'change-case'
-import pascalcase from 'pascalcase'
+import { kebabCase, pascalCase } from 'change-case'
 
 import { pluralize, isPlural, isSingular } from '../../lib/rwPluralize.js'
 
@@ -20,11 +19,11 @@ export const pathName = (path, name) => {
   let routePath = path
 
   if (path && path.startsWith('{') && path.endsWith('}')) {
-    routePath = `/${paramCase(name)}/${path}`
+    routePath = `/${kebabCase(name)}/${path}`
   }
 
   if (!routePath) {
-    routePath = `/${paramCase(name)}`
+    routePath = `/${kebabCase(name)}`
   }
 
   return routePath
@@ -33,7 +32,7 @@ export const pathName = (path, name) => {
 /** @type {(name: string, generatorName: string) => string } **/
 export function removeGeneratorName(name, generatorName) {
   // page -> Page
-  const pascalComponentName = pascalcase(generatorName)
+  const pascalComponentName = pascalCase(generatorName)
 
   // Replace 'Page' at the end of `name` with ''
   const coercedName = name.replace(new RegExp(pascalComponentName + '$'), '')
@@ -71,7 +70,7 @@ export const intForeignKeysForModel = (model) => {
 export const forcePluralizeWord = (word) => {
   // If word is both plural and singular (like equipment), then append "List"
   if (isPlural(word) && isSingular(word)) {
-    return pascalcase(`${word}_list`)
+    return pascalCase(`${word}_list`)
   }
 
   return pluralize(word)

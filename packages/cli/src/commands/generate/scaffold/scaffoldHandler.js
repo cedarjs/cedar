@@ -1,12 +1,10 @@
 import path from 'path'
 
-import camelcase from 'camelcase'
-import { paramCase } from 'change-case'
+import { kebabCase, camelCase, pascalCase } from 'change-case'
 import execa from 'execa'
 import fs from 'fs-extra'
 import humanize from 'humanize-string'
 import { Listr } from 'listr2'
-import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
@@ -75,15 +73,15 @@ const getImportComponentNames = (
   scaffoldPath,
   nestScaffoldByModel = true,
 ) => {
-  const pluralName = pascalcase(pluralize(name))
-  const singularName = pascalcase(singularize(name))
+  const pluralName = pascalCase(pluralize(name))
+  const singularName = pascalCase(singularize(name))
   let componentPath
   if (scaffoldPath === '') {
     componentPath = nestScaffoldByModel
       ? `src/components/${singularName}`
       : `src/components`
   } else {
-    const sP = scaffoldPath.split('/').map(pascalcase).join('/')
+    const sP = scaffoldPath.split('/').map(pascalCase).join('/')
     componentPath = nestScaffoldByModel
       ? `src/components/${sP}/${singularName}`
       : `src/components/${sP}`
@@ -104,7 +102,7 @@ const getImportComponentNames = (
 // Includes imports from getImportComponentNames()
 const getTemplateStrings = (name, scaffoldPath, nestScaffoldByModel = true) => {
   const nameVars = nameVariants(name)
-  const camelScaffoldPath = camelcase(pascalcase(scaffoldPath))
+  const camelScaffoldPath = camelCase(pascalCase(scaffoldPath))
 
   return {
     pluralRouteName:
@@ -167,7 +165,7 @@ export const files = async ({
   const pascalScaffoldPath =
     scaffoldPath === ''
       ? scaffoldPath
-      : scaffoldPath.split('/').map(pascalcase).join('/') + '/'
+      : scaffoldPath.split('/').map(pascalCase).join('/') + '/'
 
   return {
     ...(await componentFiles(
@@ -503,8 +501,8 @@ const pageFiles = async (
   nestScaffoldByModel = true,
   templateStrings,
 ) => {
-  const pluralName = pascalcase(pluralize(name))
-  const singularName = pascalcase(singularize(name))
+  const pluralName = pascalCase(pluralize(name))
+  const singularName = pascalCase(singularize(name))
   const model = await getSchema(singularName)
   const idType = getIdType(model)
   const idTsType = mapPrismaScalarToPagePropTsType(idType)
@@ -568,12 +566,12 @@ const componentFiles = async (
   nestScaffoldByModel = true,
   templateStrings,
 ) => {
-  const pluralName = pascalcase(pluralize(name))
-  const singularName = pascalcase(singularize(name))
+  const pluralName = pascalCase(pluralize(name))
+  const singularName = pascalCase(singularize(name))
   const model = await getSchema(singularName)
   const idType = getIdType(model)
   const idName = getIdName(model)
-  const pascalIdName = pascalcase(idName)
+  const pascalIdName = pascalCase(idName)
   const intForeignKeys = intForeignKeysForModel(model)
   let fileList = {}
 
@@ -652,8 +650,8 @@ export const routes = async ({
   const paramScaffoldPath =
     scaffoldPath === ''
       ? scaffoldPath
-      : scaffoldPath.split('/').map(paramCase).join('/') + '/'
-  const pascalScaffoldPath = pascalcase(scaffoldPath)
+      : scaffoldPath.split('/').map(kebabCase).join('/') + '/'
+  const pascalScaffoldPath = pascalCase(scaffoldPath)
 
   const pageRoot =
     pascalScaffoldPath +

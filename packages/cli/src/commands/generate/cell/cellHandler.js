@@ -1,4 +1,4 @@
-import pascalcase from 'pascalcase'
+import { pascalCase } from 'change-case'
 
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 
@@ -40,7 +40,7 @@ export const files = async ({ name, typescript, ...argv }) => {
   // needed for the singular cell GQL query find by id case
   try {
     // todo should pull from graphql schema rather than prisma!
-    model = await getSchema(pascalcase(singularize(cellName)))
+    model = await getSchema(pascalCase(singularize(cellName)))
     idName = getIdName(model)
     idType = getIdType(model)
     typeName = model.name

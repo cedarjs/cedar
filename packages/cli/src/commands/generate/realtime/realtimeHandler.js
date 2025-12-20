@@ -1,8 +1,7 @@
 import path from 'path'
 
-import camelcase from 'camelcase'
+import { camelCase, pascalCase } from 'change-case'
 import { Listr } from 'listr2'
-import pascalcase from 'pascalcase'
 import pluralize, { singular } from 'pluralize'
 import prompts from 'prompts'
 
@@ -28,17 +27,17 @@ const templateVariables = (name) => {
     name,
     collectionName: pluralize(name),
     pluralName: pluralize(name),
-    pluralPascalName: pascalcase(pluralize(name)),
-    camelName: camelcase(name),
-    functionName: camelcase(name),
-    liveQueryName: `recent${pascalcase(pluralize(name))}`,
-    subscriptionQueryName: `recent${pascalcase(pluralize(name))}`,
-    subscriptionName: `listenTo${pascalcase(name)}Channel`,
-    modelName: pascalcase(name),
-    typeName: pascalcase(name),
-    channelName: `${pascalcase(name)}Channel`,
-    subscriptionInputType: `Publish${pascalcase(name)}Input`,
-    subscriptionServiceResolver: `publishTo${pascalcase(name)}Channel`,
+    pluralPascalName: pascalCase(pluralize(name)),
+    camelName: camelCase(name),
+    functionName: camelCase(name),
+    liveQueryName: `recent${pascalCase(pluralize(name))}`,
+    subscriptionQueryName: `recent${pascalCase(pluralize(name))}`,
+    subscriptionName: `listenTo${pascalCase(name)}Channel`,
+    modelName: pascalCase(name),
+    typeName: pascalCase(name),
+    channelName: `${pascalCase(name)}Channel`,
+    subscriptionInputType: `Publish${pascalCase(name)}Input`,
+    subscriptionServiceResolver: `publishTo${pascalCase(name)}Channel`,
   }
 }
 

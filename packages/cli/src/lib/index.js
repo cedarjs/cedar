@@ -3,14 +3,11 @@ import path from 'path'
 
 import * as babel from '@babel/core'
 import boxen from 'boxen'
-import camelcase from 'camelcase'
-import { paramCase } from 'change-case'
-import decamelize from 'decamelize'
+import { camelCase, kebabCase, snakeCase, pascalCase } from 'change-case'
 import execa from 'execa'
 import fs from 'fs-extra'
 import { Listr } from 'listr2'
 import lodash from 'lodash'
-import pascalcase from 'pascalcase'
 import { format } from 'prettier'
 
 import {
@@ -43,19 +40,19 @@ const { memoize, template } = lodash
  * pluralConstantName: FOO_BARS
 */
 export const nameVariants = (name) => {
-  const normalizedName = pascalcase(paramCase(singularize(name)))
+  const normalizedName = pascalCase(kebabCase(singularize(name)))
 
   return {
-    pascalName: pascalcase(paramCase(name)),
-    camelName: camelcase(name),
+    pascalName: pascalCase(kebabCase(name)),
+    camelName: camelCase(name),
     singularPascalName: normalizedName,
     pluralPascalName: pluralize(normalizedName),
-    singularCamelName: camelcase(normalizedName),
-    pluralCamelName: camelcase(pluralize(normalizedName)),
-    singularParamName: paramCase(normalizedName),
-    pluralParamName: paramCase(pluralize(normalizedName)),
-    singularConstantName: decamelize(normalizedName).toUpperCase(),
-    pluralConstantName: decamelize(pluralize(normalizedName)).toUpperCase(),
+    singularCamelName: camelCase(normalizedName),
+    pluralCamelName: camelCase(pluralize(normalizedName)),
+    singularParamName: kebabCase(normalizedName),
+    pluralParamName: kebabCase(pluralize(normalizedName)),
+    singularConstantName: snakeCase(normalizedName).toUpperCase(),
+    pluralConstantName: snakeCase(pluralize(normalizedName)).toUpperCase(),
   }
 }
 

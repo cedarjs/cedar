@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import pascalcase from 'pascalcase'
+import { pascalCase } from 'change-case'
 
 import { transformTSToJS } from '../lib/index.js'
 import { getPaths } from '../lib/paths.js'
@@ -144,7 +144,7 @@ export function generateUniqueFileNames(
 
         const newFileName =
           provider +
-          pascalcase(nameParts[0]) +
+          pascalCase(nameParts[0]) +
           count +
           '.' +
           nameParts.slice(1).join('.')

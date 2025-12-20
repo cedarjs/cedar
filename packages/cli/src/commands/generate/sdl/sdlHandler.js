@@ -2,7 +2,7 @@ import path from 'path'
 
 import ansis from 'ansis'
 import boxen from 'boxen'
-import camelcase from 'camelcase'
+import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -256,7 +256,7 @@ export const files = async ({
   const extension = typescript ? 'ts' : 'js'
   let outputPath = path.join(
     getPaths().api.graphql,
-    `${camelcase(pluralize(name))}.sdl.${extension}`,
+    `${camelCase(pluralize(name))}.sdl.${extension}`,
   )
 
   if (typescript) {

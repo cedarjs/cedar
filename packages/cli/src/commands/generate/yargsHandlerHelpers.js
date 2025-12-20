@@ -9,8 +9,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { pascalCase } from 'change-case'
 import { Listr } from 'listr2'
-import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'
@@ -80,7 +80,7 @@ export const templateForComponentFile = async ({
   const basePath = webPathSection
     ? getPaths().web[webPathSection]
     : getPaths().api[apiPathSection]
-  const outputComponentName = componentName || pascalcase(name) + suffix
+  const outputComponentName = componentName || pascalCase(name) + suffix
   const componentOutputPath =
     outputPath ||
     path.join(basePath, outputComponentName, outputComponentName + extension)

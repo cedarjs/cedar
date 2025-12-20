@@ -1,4 +1,4 @@
-import camelcase from 'camelcase'
+import { camelCase } from 'change-case'
 
 import { transformTSToJS } from '../../../lib/index.js'
 import { pluralize, singularize } from '../../../lib/rwPluralize.js'
@@ -112,7 +112,7 @@ export const fieldsToScenario = async (
 
 // creates the scenario data based on the data definitions in schema.prisma
 export const buildScenario = async (model) => {
-  const scenarioModelName = camelcase(model)
+  const scenarioModelName = camelCase(model)
   const standardScenario = {
     [scenarioModelName]: {},
   }
@@ -193,7 +193,7 @@ export const fieldTypes = async (model) => {
 // outputs fields necessary to create an object in the test file
 export const fieldsToInput = async (model) => {
   const { scalarFields, foreignKeys } = await parseSchema(model)
-  const modelName = camelcase(singularize(model))
+  const modelName = camelCase(singularize(model))
   let inputObj = {}
 
   scalarFields.forEach((field) => {
@@ -214,7 +214,7 @@ export const fieldsToInput = async (model) => {
 // outputs fields necessary to update an object in the test file
 export const fieldsToUpdate = async (model) => {
   const { scalarFields, relations, foreignKeys } = await parseSchema(model)
-  const modelName = camelcase(singularize(model))
+  const modelName = camelCase(singularize(model))
   let field, newValue, fieldName
 
   // find an editable scalar field, ideally one that isn't a foreign key
@@ -302,7 +302,7 @@ export const files = async ({
   typescript,
   ...rest
 }) => {
-  const componentName = camelcase(pluralize(name))
+  const componentName = camelCase(pluralize(name))
   const model = name
   const idName = await getIdName(model)
   const extension = 'ts'

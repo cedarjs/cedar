@@ -1,4 +1,4 @@
-import camelcase from 'camelcase'
+import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -33,7 +33,7 @@ export const tasks = ({ name, path }) =>
       },
       {
         title: 'Cleaning up routes file...',
-        task: async () => removeRoutesFromRouterTask([camelcase(name)]),
+        task: async () => removeRoutesFromRouterTask([camelCase(name)]),
       },
     ],
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },

@@ -3,7 +3,6 @@ import path from 'path'
 
 import { transform as svgrTransform } from '@svgr/core'
 import type { API, FileInfo, StringLiteral } from 'jscodeshift'
-import pascalcase from 'pascalcase'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -148,6 +147,7 @@ export default async function transform(file: FileInfo, api: API) {
   })
 
   if (svgsToConvert.length > 0) {
+    const changeCase = await import('change-case')
     // if there are any svgs used as components, or render props, convert the svg to a react component
     await Promise.all(
       svgsToConvert.map(async (svg) => {
@@ -156,7 +156,10 @@ export default async function transform(file: FileInfo, api: API) {
           path.extname(svg.filePath),
         )
 
-        const componentName = pascalcase(svgFileNameWithoutExtension)
+        // @ts-expect-error - ESM/CJS thing
+        const componentName = (changeCase.default || changeCase).pascalCase(
+          svgFileNameWithoutExtension,
+        )
 
         const newFileName = `${componentName}SVG`
 

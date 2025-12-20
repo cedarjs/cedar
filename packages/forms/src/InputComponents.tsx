@@ -1,8 +1,6 @@
 import type { ForwardedRef } from 'react'
 import React, { forwardRef } from 'react'
 
-import pascalcase from 'pascalcase'
-
 import type { FieldProps } from './FieldProps'
 import { useErrorStyles } from './useErrorStyles'
 import { useRegister } from './useRegister'
@@ -119,6 +117,10 @@ const InputComponents: Record<
   React.ForwardRefExoticComponent<Omit<InputFieldProps, 'type'>>
 > = {}
 
+function pascalCase(str: string): string {
+  return str.replace(/(?:^|[-_])(\w)/g, (_, c) => c.toUpperCase())
+}
+
 /**
  * Create a component for each type in `INPUT_TYPES`.
  *
@@ -129,7 +131,7 @@ const InputComponents: Record<
  * Export those and we're good to go!
  */
 INPUT_TYPES.forEach((type) => {
-  InputComponents[`${pascalcase(type)}Field`] = forwardRef<
+  InputComponents[`${pascalCase(type)}Field`] = forwardRef<
     HTMLInputElement,
     Omit<InputFieldProps, 'type'>
   >((props, ref) => <InputField ref={ref} type={type} {...props} />)
