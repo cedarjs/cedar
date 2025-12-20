@@ -1,0 +1,7 @@
+# Shared Package '${name}'
+
+Use code in this package by importing it into your project:
+
+```javascript
+import { ${name} } from '${packageName}';
+```
