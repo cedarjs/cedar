@@ -54,7 +54,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@clerk/clerk-react": "5.59.2",
-    "@clerk/types": "4.101.8",
+    "@clerk/types": "4.101.9",
     "@types/react": "^18.2.55",
     "concurrently": "8.2.2",
     "publint": "0.3.16",
