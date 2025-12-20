@@ -1,11 +1,13 @@
 import fs from 'fs'
 import path from 'path'
 
-import { pascalCase } from 'change-case'
-
 import { transformTSToJS } from '../lib/index.js'
 import { getPaths } from '../lib/paths.js'
 import { isTypeScriptProject } from '../lib/project.js'
+
+function pascalCase(str: string) {
+  return str.replace(/(?:^|[-_])(\w)/g, (_, c) => c.toUpperCase())
+}
 
 interface FilesArgs {
   basedir: string

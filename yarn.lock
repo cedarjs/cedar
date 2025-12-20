@@ -3304,7 +3304,6 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     "@types/yargs-parser": "npm:21.0.3"
     ansis: "npm:4.1.0"
-    change-case: "npm:5.4.4"
     dotenv: "npm:16.4.7"
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
