@@ -9,7 +9,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import camelcase from 'camelcase'
+import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
@@ -110,7 +110,7 @@ export const templateForComponentFile = async ({
   outputPath,
 }) => {
   const side = webPathSection ? 'web' : 'api'
-  const caseFn = side === 'web' ? pascalcase : camelcase
+  const caseFn = side === 'web' ? pascalcase : camelCase
   const componentOutputName = componentName || caseFn(name) + suffix
   const componentOutputPath =
     outputPath ||
