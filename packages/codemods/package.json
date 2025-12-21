@@ -33,7 +33,7 @@
     "@cedarjs/project-config": "2.1.1",
     "@svgr/core": "8.1.0",
     "@svgr/plugin-jsx": "8.1.0",
-    "@vscode/ripgrep": "1.15.14",
+    "@vscode/ripgrep": "1.17.0",
     "@whatwg-node/fetch": "0.9.21",
     "cheerio": "1.0.0",
     "core-js": "3.42.0",
