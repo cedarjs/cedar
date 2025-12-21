@@ -1,5 +1,3 @@
-import path from 'path'
-
 import ansis from 'ansis'
 import boxen from 'boxen'
 import camelcase from 'camelcase'
@@ -11,12 +9,7 @@ import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
-import {
-  generateTemplate,
-  transformTSToJS,
-  getPaths,
-  writeFilesTask,
-} from '../../../lib/index.js'
+import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
 import {
   prepareForRollback,
   addFunctionToRollback,
@@ -29,7 +22,7 @@ import {
 } from '../../../lib/schemaHelpers.js'
 import { relationsForModel } from '../helpers.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
-import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
+import { templateForFile } from '../yargsHandlerHelpers.js'
 
 const DEFAULT_IGNORE_FIELDS_FOR_INPUT = ['createdAt', 'updatedAt']
 
@@ -219,49 +212,22 @@ export const files = async ({
   tests,
   typescript,
 }) => {
-  const {
-    modelName,
-    modelDescription,
-    query,
-    createInput,
-    updateInput,
-    idInput,
-    idType,
-    idName,
-    relations,
-    enums,
-  } = await sdlFromSchemaModel(name, crud, docs)
+  const extension = typescript ? 'ts' : 'js'
+  const sdlData = await sdlFromSchemaModel(name, crud, docs)
 
-  const templatePath = customOrDefaultTemplatePath({
+  const [outputPath, content] = await templateForFile({
+    name,
     side: 'api',
+    sidePathSection: 'graphql',
     generator: 'sdl',
     templatePath: 'sdl.ts.template',
+    templateVars: { docs, name, crud, ...sdlData },
+    outputPath: `${camelcase(pluralize(name))}.sdl.${extension}`,
   })
 
-  let template = await generateTemplate(templatePath, {
-    docs,
-    modelName,
-    modelDescription,
-    name,
-    crud,
-    query,
-    createInput,
-    updateInput,
-    idInput,
-    idType,
-    idName,
-    enums,
-  })
-
-  const extension = typescript ? 'ts' : 'js'
-  let outputPath = path.join(
-    getPaths().api.graphql,
-    `${camelcase(pluralize(name))}.sdl.${extension}`,
-  )
-
-  if (typescript) {
-    template = await transformTSToJS(outputPath, template)
-  }
+  const template = typescript
+    ? content
+    : await transformTSToJS(outputPath, content)
 
   return {
     [outputPath]: template,
@@ -269,7 +235,7 @@ export const files = async ({
       name,
       crud,
       tests,
-      relations,
+      relations: sdlData.relations,
       typescript,
     })),
   }
