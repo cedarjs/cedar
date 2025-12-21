@@ -10,6 +10,7 @@ import { generate as generateTypes } from '@cedarjs/internal/dist/generate/gener
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+import { pluralize } from '../../../lib/cedarPluralize.js'
 import c from '../../../lib/colors.js'
 import {
   generateTemplate,
@@ -21,7 +22,6 @@ import {
   prepareForRollback,
   addFunctionToRollback,
 } from '../../../lib/rollback.js'
-import { pluralize } from '../../../lib/rwPluralize.js'
 import {
   getSchema,
   getEnum,

@@ -3375,6 +3375,7 @@ __metadata:
     "@opentelemetry/semantic-conventions": "npm:1.22.0"
     "@prisma/internals": "npm:6.19.1"
     "@types/archiver": "npm:^6"
+    "@types/pluralize": "npm:0.0.33"
     ansis: "npm:4.1.0"
     archiver: "npm:7.0.1"
     boxen: "npm:5.1.2"
@@ -12173,6 +12174,13 @@ __metadata:
   version: 1.6.6
   resolution: "@types/phoenix@npm:1.6.6"
   checksum: 10c0/4dfcb3fd36341ed5500de030291af14163c599857e00d2d4ff065d4c4600317d5d20aa170913fb9609747a09436e3add44db7d0c709bdf80f36cddcc67a42021
+  languageName: node
+  linkType: hard
+
+"@types/pluralize@npm:0.0.33":
+  version: 0.0.33
+  resolution: "@types/pluralize@npm:0.0.33"
+  checksum: 10c0/24899caf85b79dd291a6b6e9b9f3b67b452b18d578d0ac0d531a705bf5ee0361d9386ea1f8532c64de9e22c6e9606c5497787bb5e31bd299c487980436c59785
   languageName: node
   linkType: hard
 

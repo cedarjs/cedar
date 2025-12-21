@@ -92,6 +92,7 @@
     "@babel/cli": "7.28.3",
     "@babel/core": "^7.26.10",
     "@types/archiver": "^6",
+    "@types/pluralize": "0.0.33",
     "memfs": "4.51.1",
     "node-ssh": "13.2.1",
     "tsx": "4.21.0",

@@ -1,28 +1,33 @@
 import plurals from 'pluralize'
 
-const mappings = {
+const mappings: {
+  toSingular: Record<string, string>
+  toPlural: Record<string, string>
+} = {
   toSingular: {},
   toPlural: {},
 }
 
 /**
  * Find Bar in FooBazBar
- *
- * @type {(str: string) => string }
  */
-function lastWord(str) {
+function lastWord(str: string) {
   const capitals = str.match(/[A-Z]/g)
-  const lastIndex = str.lastIndexOf(capitals?.slice(-1)[0])
+
+  if (!capitals) {
+    return str
+  }
+
+  const lastCapital = capitals[capitals.length - 1]
+  const lastIndex = str.lastIndexOf(lastCapital)
 
   return lastIndex >= 0 ? str.slice(lastIndex) : str
 }
 
 /**
  * Returns the plural form of the given word
- *
- * @type {(word: string) => string }
  */
-export function pluralize(word) {
+export function pluralize(word: string) {
   if (mappings.toPlural[word]) {
     return mappings.toPlural[word]
   }
@@ -42,10 +47,8 @@ export function pluralize(word) {
 
 /**
  * Returns the singular form of the given word
- *
- * @type {(word: string) => string }
  */
-export function singularize(word) {
+export function singularize(word: string) {
   if (mappings.toSingular[word]) {
     return mappings.toSingular[word]
   }
@@ -60,13 +63,17 @@ export function singularize(word) {
   return base + plurals.singular(plural)
 }
 
-/** @type {(word: string) => boolean } */
-export function isPlural(word) {
+/**
+ * Returns true if the given word is plural
+ */
+export function isPlural(word: string) {
   return plurals.isPlural(lastWord(word))
 }
 
-/** @type {(word: string) => boolean } */
-export function isSingular(word) {
+/**
+ * Returns true if the given word is singular
+ */
+export function isSingular(word: string) {
   return plurals.isSingular(lastWord(word))
 }
 
@@ -95,18 +102,16 @@ export function isSingular(word) {
  * Furthermore we need to handle changing the mappings (this is only done in
  * tests). So if the method is called again, with input 'pokemon', 'pokemons'
  * all the old mappings first have to be removed, before adding the new ones
- *
- * @param {string} singular
- * @param {string} plural
- *
- * @returns {undefined}
  */
-export function addSingularPlural(singular, plural) {
+export function addSingularPlural(singular: string, plural: string) {
   const existingPlural = Object.keys(mappings.toSingular).find(
     (key) => mappings.toSingular[key] === singular,
   )
-  delete mappings.toSingular[existingPlural]
-  delete mappings.toPlural[existingPlural]
+
+  if (existingPlural) {
+    delete mappings.toSingular[existingPlural]
+    delete mappings.toPlural[existingPlural]
+  }
 
   mappings.toPlural[singular] = plural
   mappings.toPlural[plural] = plural

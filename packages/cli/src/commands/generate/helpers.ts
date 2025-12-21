@@ -6,17 +6,18 @@
 // CWD, plus importing this file statically also makes the CLI startup time
 // much slower
 
+import type { DMMF } from '@prisma/generator-helper'
 import { paramCase } from 'change-case'
 import pascalcase from 'pascalcase'
 
-import { pluralize, isPlural, isSingular } from '../../lib/rwPluralize.js'
+import { pluralize, isPlural, isSingular } from '../../lib/cedarPluralize.js'
 
 /**
  * Creates a route path, either returning the existing path if passed, or
  * creating one based on the name. If the passed path is just a route parameter
  * a new path based on the name is created, with the parameter appended to it
  */
-export const pathName = (path, name) => {
+export const pathName = (path: string | undefined, name: string) => {
   let routePath = path
 
   if (path && path.startsWith('{') && path.endsWith('}')) {
@@ -30,8 +31,7 @@ export const pathName = (path, name) => {
   return routePath
 }
 
-/** @type {(name: string, generatorName: string) => string } **/
-export function removeGeneratorName(name, generatorName) {
+export function removeGeneratorName(name: string, generatorName: string) {
   // page -> Page
   const pascalComponentName = pascalcase(generatorName)
 
@@ -41,7 +41,7 @@ export function removeGeneratorName(name, generatorName) {
   return coercedName
 }
 
-export const validateName = (name) => {
+export const validateName = (name: string) => {
   if (name.match(/^\W/)) {
     throw new Error(
       'The <name> argument must start with a letter, number or underscore.',
@@ -50,7 +50,7 @@ export const validateName = (name) => {
 }
 
 // Returns all relations to other models
-export const relationsForModel = (model) => {
+export const relationsForModel = (model: DMMF.Model) => {
   return model.fields
     .filter((f) => f.relationName)
     .map((field) => {
@@ -59,7 +59,7 @@ export const relationsForModel = (model) => {
 }
 
 // Returns only relations that are of datatype Int
-export const intForeignKeysForModel = (model) => {
+export const intForeignKeysForModel = (model: DMMF.Model) => {
   return model.fields
     .filter((f) => f.name.match(/Id$/) && f.type === 'Int')
     .map((f) => f.name)
@@ -68,7 +68,7 @@ export const intForeignKeysForModel = (model) => {
 /**
  * Adds "List" to the end of words we can't pluralize
  */
-export const forcePluralizeWord = (word) => {
+export const forcePluralizeWord = (word: string) => {
   // If word is both plural and singular (like equipment), then append "List"
   if (isPlural(word) && isSingular(word)) {
     return pascalcase(`${word}_list`)
@@ -77,20 +77,21 @@ export const forcePluralizeWord = (word) => {
   return pluralize(word)
 }
 
-/** @type {(paramType: 'Int' | 'Float' | 'Boolean' | 'String') => string } **/
-export const mapRouteParamTypeToTsType = (paramType) => {
-  const routeParamToTsType = {
+export const mapRouteParamTypeToTsType = (
+  paramType: 'Int' | 'Float' | 'Boolean' | 'String',
+) => {
+  const routeParamToTsType: Record<string, string> = {
     Int: 'number',
     Float: 'number',
     Boolean: 'boolean',
     String: 'string',
   }
+
   return routeParamToTsType[paramType] || 'unknown'
 }
 
-/** @type {(scalarType: 'String' | 'Boolean' | 'Int' | 'BigInt' | 'Float' | 'Decimal' | 'DateTime' | 'Bytes' ) => string } **/
-export const mapPrismaScalarToPagePropTsType = (scalarType) => {
-  const prismaScalarToTsType = {
+export const mapPrismaScalarToPagePropTsType = (scalarType: string) => {
+  const prismaScalarToTsType: Record<string, string> = {
     String: 'string',
     Boolean: 'boolean',
     Int: 'number',
@@ -100,5 +101,6 @@ export const mapPrismaScalarToPagePropTsType = (scalarType) => {
     DateTime: 'string',
     Bytes: 'Uint8Array',
   }
+
   return prismaScalarToTsType[scalarType] || 'unknown'
 }

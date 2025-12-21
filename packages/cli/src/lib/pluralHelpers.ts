@@ -1,26 +1,35 @@
 import prompts from 'prompts'
 
-import { isSingular, isPlural, addSingularPlural } from './rwPluralize.js'
+import { isSingular, isPlural, addSingularPlural } from './cedarPluralize.js'
 
-export const isWordPluralizable = (word) => {
+export const isWordPluralizable = (word: string) => {
   return isPlural(word) !== isSingular(word)
 }
 
-export const validatePlural = (plural, singular) => {
+export const validatePlural = (plural: string, singular: string) => {
   const trimmedPlural = plural.trim()
   if (trimmedPlural === singular) {
     return 'Plural can not be same as singular.'
   }
+
   if (trimmedPlural.match(/[\n\r\s]+/)) {
     return 'Only one word please!'
   }
+
   // Control Char u0017 is returned if default input is cleared in the prompt
   // using option+backspace
   // eslint-disable-next-line no-control-regex
   if (trimmedPlural.match(/^[\n\r\s\u0017]*$/)) {
     return 'Plural can not be empty.'
   }
+
   return true
+}
+
+interface EnsureUniquePluralOptions {
+  model: string
+  isDestroyer?: boolean
+  forcePrompt?: boolean
 }
 
 // Ask user for plural version, if singular & plural are same for a word. For
@@ -29,7 +38,7 @@ export const ensureUniquePlural = async ({
   model,
   isDestroyer = false,
   forcePrompt = false,
-}) => {
+}: EnsureUniquePluralOptions) => {
   if (!forcePrompt && isWordPluralizable(model)) {
     return
   }
@@ -45,14 +54,14 @@ export const ensureUniquePlural = async ({
   const promptMessage = isDestroyer ? destroyMessage : generateMessage
 
   // News => Newses; Equipment => Equipments
-  const initialPlural = model.slice(-1) === 's' ? `${model}es` : `${model}s`
+  const initialPlural = model.at(-1) === 's' ? `${model}es` : `${model}s`
 
-  const promptResult = await prompts({
+  const promptResult: { plural: string | undefined } = await prompts({
     type: 'text',
     name: 'plural',
     message: promptMessage,
     initial: initialPlural,
-    validate: (pluralInput) => validatePlural(pluralInput, model),
+    validate: (pluralInput: string) => validatePlural(pluralInput, model),
   })
 
   // Quick-fix is to remove that control char u0017, which is prepended if
