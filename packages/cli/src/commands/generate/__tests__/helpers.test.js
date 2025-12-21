@@ -180,24 +180,6 @@ test('templateForComponentFile can create a path in /api', async () => {
   )
 })
 
-test('templateForComponentFile can override generated component name', async () => {
-  const output = await templateForComponentFile({
-    name: 'Home',
-    componentName: 'Hobbiton',
-    webPathSection: 'pages',
-    generator: 'page',
-    templatePath: 'page.tsx.template',
-    templateVars: {
-      ...pageHandler.paramVariants(helpers.pathName(undefined, 'Home')),
-      rscEnabled: false,
-    },
-  })
-
-  expect(output[0]).toEqual(
-    path.normalize('/path/to/project/web/src/pages/Hobbiton/Hobbiton.js'),
-  )
-})
-
 test('templateForComponentFile can override file extension', async () => {
   const output = await templateForComponentFile({
     name: 'Home',
