@@ -20,7 +20,8 @@ import {
   findUp,
 } from '@cedarjs/project-config'
 
-import { pluralize, singularize } from './cedarPluralize.js'
+// Using .ts here for Vitest to find the file
+import { pluralize, singularize } from './cedarPluralize.ts'
 import c from './colors.js'
 import { addFileToRollback } from './rollback.js'
 
