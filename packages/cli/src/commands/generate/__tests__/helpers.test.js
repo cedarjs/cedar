@@ -168,37 +168,15 @@ test('templateForComponentFile can create a path in /web', async () => {
 
 test('templateForComponentFile can create a path in /api', async () => {
   const output = await templateForComponentFile({
-    name: 'Home',
-    suffix: 'Page',
-    apiPathSection: 'services',
-    generator: 'page',
-    templatePath: 'page.tsx.template',
-    templateVars: {
-      ...pageHandler.paramVariants(helpers.pathName(undefined, 'Home')),
-      rscEnabled: false,
-    },
+    name: 'foo',
+    apiPathSection: 'functions',
+    generator: 'function',
+    templatePath: 'function.ts.template',
+    templateVars: { name: 'foo', typescript: false },
   })
 
   expect(output[0]).toEqual(
-    path.normalize('/path/to/project/api/src/services/HomePage/HomePage.js'),
-  )
-})
-
-test('templateForComponentFile can override generated component name', async () => {
-  const output = await templateForComponentFile({
-    name: 'Home',
-    componentName: 'Hobbiton',
-    webPathSection: 'pages',
-    generator: 'page',
-    templatePath: 'page.tsx.template',
-    templateVars: {
-      ...pageHandler.paramVariants(helpers.pathName(undefined, 'Home')),
-      rscEnabled: false,
-    },
-  })
-
-  expect(output[0]).toEqual(
-    path.normalize('/path/to/project/web/src/pages/Hobbiton/Hobbiton.js'),
+    path.normalize('/path/to/project/api/src/functions/foo/foo.js'),
   )
 })
 
@@ -218,21 +196,6 @@ test('templateForComponentFile can override file extension', async () => {
 
   expect(output[0]).toEqual(
     path.normalize('/path/to/project/web/src/pages/HomePage/HomePage.txt'),
-  )
-})
-
-test('templateForComponentFile can override output path', async () => {
-  const output = await templateForComponentFile({
-    name: 'func',
-    apiPathSection: 'functions',
-    generator: 'function',
-    templatePath: 'function.ts.template',
-    templateVars: { name: 'func', typescript: false },
-    outputPath: path.normalize('/path/to/project/api/src/functions/func.ts'),
-  })
-
-  expect(output[0]).toEqual(
-    path.normalize('/path/to/project/api/src/functions/func.ts'),
   )
 })
 

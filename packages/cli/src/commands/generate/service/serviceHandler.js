@@ -1,13 +1,12 @@
+import path from 'node:path'
+
 import camelcase from 'camelcase'
 
 import { transformTSToJS } from '../../../lib/index.js'
 import { pluralize, singularize } from '../../../lib/rwPluralize.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import { relationsForModel } from '../helpers.js'
-import {
-  createHandler,
-  templateForComponentFile,
-} from '../yargsHandlerHelpers.js'
+import { createHandler, templateForFile } from '../yargsHandlerHelpers.js'
 
 const DEFAULT_SCENARIO_NAMES = ['one', 'two']
 
@@ -305,27 +304,26 @@ export const files = async ({
   const componentName = camelcase(pluralize(name))
   const model = name
   const idName = await getIdName(model)
-  const extension = 'ts'
 
   const modelRelations = relations || relationsForModel(await getSchema(model))
 
-  const serviceFile = await templateForComponentFile({
+  const serviceFile = await templateForFile({
     name,
-    componentName: componentName,
-    extension: `.${extension}`,
-    apiPathSection: 'services',
+    side: 'api',
+    sidePathSection: 'services',
     generator: 'service',
-    templatePath: `service.${extension}.template`,
+    outputPath: path.join(componentName, componentName + '.ts'),
+    templatePath: 'service.ts.template',
     templateVars: { relations: modelRelations, idName, ...rest },
   })
 
-  const testFile = await templateForComponentFile({
+  const testFile = await templateForFile({
     name,
-    componentName: componentName,
-    extension: `.test.${extension}`,
-    apiPathSection: 'services',
+    side: 'api',
+    sidePathSection: 'services',
     generator: 'service',
-    templatePath: `test.${extension}.template`,
+    outputPath: path.join(componentName, componentName + '.test.ts'),
+    templatePath: 'test.ts.template',
     templateVars: {
       relations: relations || [],
       create: await fieldsToInput(model),
@@ -340,13 +338,13 @@ export const files = async ({
     },
   })
 
-  const scenariosFile = await templateForComponentFile({
+  const scenariosFile = await templateForFile({
     name,
-    componentName: componentName,
-    extension: `.scenarios.${extension}`,
-    apiPathSection: 'services',
+    side: 'api',
+    sidePathSection: 'services',
     generator: 'service',
-    templatePath: `scenarios.${extension}.template`,
+    outputPath: path.join(componentName, componentName + '.scenarios.ts'),
+    templatePath: 'scenarios.ts.template',
     templateVars: {
       scenario: await buildScenario(model),
       stringifiedScenario: await buildStringifiedScenario(model),
