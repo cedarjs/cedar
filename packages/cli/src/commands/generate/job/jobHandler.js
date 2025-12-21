@@ -36,13 +36,22 @@ export const files = async ({
 
   const jobName = normalizeName(name)
 
+  // TODO: Fix the three TODOs below, and update tests to reflect the fact that
+  // jobs are camelCase instead of PascalCase, which I prefer
+
+  // TODO: Remove this, and instead pass 'Job' as `suffix` below
+  const componentName = `${jobName}Job`
+
   const jobFiles = await templateForComponentFile({
     name: jobName,
-    suffix: 'Job',
+    // TODO: suffix: 'Job',
+    componentName,
     extension,
     apiPathSection: 'jobs',
     generator: 'job',
     templatePath: 'job.ts.template',
+    // TODO: Remove `name` here, it's already passed to the template by the
+    // helper function we're using
     templateVars: { name: jobName, queueName, ...rest },
   })
 
@@ -51,7 +60,7 @@ export const files = async ({
   if (generateTests) {
     const testFile = await templateForComponentFile({
       name: jobName,
-      suffix: 'Job',
+      componentName,
       extension: `.test${extension}`,
       apiPathSection: 'jobs',
       generator: 'job',
@@ -61,7 +70,7 @@ export const files = async ({
 
     const scenarioFile = await templateForComponentFile({
       name: jobName,
-      suffix: 'Job',
+      componentName,
       extension: `.scenarios${extension}`,
       apiPathSection: 'jobs',
       generator: 'job',

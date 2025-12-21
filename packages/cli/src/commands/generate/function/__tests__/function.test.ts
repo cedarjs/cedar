@@ -35,7 +35,6 @@ describe('Single word default files', async () => {
   })
 
   it('creates a single word function file', () => {
-    console.log('singleWordDefaultFiles', singleWordDefaultFiles)
     expect(
       singleWordDefaultFiles[
         path.normalize('/path/to/project/api/src/functions/foo/foo.js')
@@ -59,10 +58,9 @@ describe('Single word default files', async () => {
 })
 
 test('Keeps Function in name', () => {
-  // @ts-expect-error Not sure how to pass generic to yargs here
   const { name } = yargs()
     .command('function <name>', false, functionGenerator.builder)
-    .parse('function BazingaFunction')
+    .parseSync('function BazingaFunction')
 
   expect(name).toEqual('BazingaFunction')
 })

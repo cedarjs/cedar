@@ -1,4 +1,3 @@
-import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
@@ -19,13 +18,10 @@ export const files = async ({
 }) => {
   const extension = generateTypescript ? '.ts' : '.js'
 
-  const functionName = camelcase(name)
-
   const outputFiles = []
 
   const functionFiles = await templateForComponentFile({
-    name: functionName,
-    componentName: functionName,
+    name,
     extension,
     apiPathSection: 'functions',
     generator: 'function',
@@ -37,8 +33,7 @@ export const files = async ({
 
   if (generateTests) {
     const testFile = await templateForComponentFile({
-      name: functionName,
-      componentName: functionName,
+      name,
       extension: `.test${extension}`,
       apiPathSection: 'functions',
       generator: 'function',
@@ -47,8 +42,7 @@ export const files = async ({
     })
 
     const scenarioFile = await templateForComponentFile({
-      name: functionName,
-      componentName: functionName,
+      name,
       extension: `.scenarios${extension}`,
       apiPathSection: 'functions',
       generator: 'function',

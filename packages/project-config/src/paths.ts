@@ -155,7 +155,6 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     },
 
     scripts: path.join(BASE_DIR, 'scripts'),
-    packages: path.join(BASE_DIR, 'packages'),
 
     api: {
       base: path.join(BASE_DIR, 'api'),

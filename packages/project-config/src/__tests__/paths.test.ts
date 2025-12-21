@@ -29,7 +29,6 @@ const DEFAULT_PATHS = {
     },
     prebuild: ['.redwood', 'prebuild'],
   },
-  packages: ['packages'],
   scripts: ['scripts'],
   api: {
     base: ['api'],

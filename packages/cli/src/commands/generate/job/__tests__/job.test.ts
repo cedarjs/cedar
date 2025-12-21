@@ -21,15 +21,15 @@ describe('Single word default files', async () => {
 
   it('creates a single word job file', () => {
     expect(
-      files[path.normalize(jobsPath + '/sampleJob/sampleJob.ts')],
+      files[path.normalize(jobsPath + '/SampleJob/SampleJob.ts')],
     ).toMatchSnapshot()
 
     expect(
-      files[path.normalize(jobsPath + '/sampleJob/sampleJob.test.ts')],
+      files[path.normalize(jobsPath + '/SampleJob/SampleJob.test.ts')],
     ).toMatchSnapshot('Test snapshot')
 
     expect(
-      files[path.normalize(jobsPath + '/sampleJob/sampleJob.scenarios.ts')],
+      files[path.normalize(jobsPath + '/SampleJob/SampleJob.scenarios.ts')],
     ).toMatchSnapshot('Scenario snapshot')
   })
 })
@@ -44,7 +44,7 @@ describe('multi-word files', () => {
     })
 
     expect(
-      files[path.normalize(jobsPath + '/sendMailJob/sendMailJob.ts')],
+      files[path.normalize(jobsPath + '/SendMailJob/SendMailJob.ts')],
     ).toMatchSnapshot()
   })
 })
@@ -63,9 +63,9 @@ describe('generation of js files', async () => {
 
     expect(fileNames).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('sampleJob.js'),
-        expect.stringContaining('sampleJob.test.js'),
-        expect.stringContaining('sampleJob.scenarios.js'),
+        expect.stringContaining('SampleJob.js'),
+        expect.stringContaining('SampleJob.test.js'),
+        expect.stringContaining('SampleJob.scenarios.js'),
       ]),
     )
   })
