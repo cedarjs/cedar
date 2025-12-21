@@ -217,21 +217,6 @@ test('templateForComponentFile can override file extension', async () => {
   )
 })
 
-test('templateForComponentFile can override output path', async () => {
-  const output = await templateForComponentFile({
-    name: 'func',
-    apiPathSection: 'functions',
-    generator: 'function',
-    templatePath: 'function.ts.template',
-    templateVars: { name: 'func', typescript: false },
-    outputPath: 'func.ts',
-  })
-
-  expect(output[0]).toEqual(
-    path.normalize('/path/to/project/api/src/functions/func.ts'),
-  )
-})
-
 test('templateForComponentFile creates a template', async () => {
   const output = await templateForComponentFile({
     name: 'FooBar',

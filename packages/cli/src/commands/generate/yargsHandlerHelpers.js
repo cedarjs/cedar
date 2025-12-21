@@ -99,7 +99,6 @@ export const templateForComponentFile = async ({
   name,
   /** Not used when componentName is provided */
   suffix = '',
-  /** Not used when outputPath is provided */
   extension = '.js',
   webPathSection,
   apiPathSection,
@@ -107,14 +106,14 @@ export const templateForComponentFile = async ({
   templatePath,
   templateVars,
   componentName,
-  outputPath,
 }) => {
   const side = webPathSection ? 'web' : 'api'
   const caseFn = side === 'web' ? pascalcase : camelCase
-  const componentOutputName = componentName || caseFn(name) + suffix
-  const componentOutputPath =
-    outputPath ||
-    path.join(componentOutputName, componentOutputName + extension)
+  const outputComponentName = componentName || caseFn(name) + suffix
+  const outputPath = path.join(
+    outputComponentName,
+    outputComponentName + extension,
+  )
 
   return templateForFile({
     name,
@@ -125,7 +124,7 @@ export const templateForComponentFile = async ({
     generator,
     templatePath,
     templateVars,
-    outputPath: componentOutputPath,
+    outputPath,
   })
 }
 
