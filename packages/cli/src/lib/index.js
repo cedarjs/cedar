@@ -20,9 +20,9 @@ import {
   findUp,
 } from '@cedarjs/project-config'
 
+import { pluralize, singularize } from './cedarPluralize.js'
 import c from './colors.js'
 import { addFileToRollback } from './rollback.js'
-import { pluralize, singularize } from './rwPluralize.js'
 
 export { findUp }
 

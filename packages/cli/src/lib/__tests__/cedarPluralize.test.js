@@ -6,7 +6,7 @@ import {
   isPlural,
   isSingular,
   addSingularPlural,
-} from '../rwPluralize.js'
+} from '../cedarPluralize.js'
 
 test('pluralize', () => {
   expect(pluralize('books')).toEqual('books')

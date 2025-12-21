@@ -12,6 +12,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 
+import { pluralize, singularize } from '../../../lib/cedarPluralize.js'
 import c from '../../../lib/colors.js'
 import {
   generateTemplate,
@@ -29,7 +30,6 @@ import {
   prepareForRollback,
   addFunctionToRollback,
 } from '../../../lib/rollback.js'
-import { pluralize, singularize } from '../../../lib/rwPluralize.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import {
   relationsForModel,
