@@ -2,8 +2,8 @@ import path from 'node:path'
 
 import camelcase from 'camelcase'
 
+import { pluralize, singularize } from '../../../lib/cedarPluralize.js'
 import { transformTSToJS } from '../../../lib/index.js'
-import { pluralize, singularize } from '../../../lib/rwPluralize.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import { relationsForModel } from '../helpers.js'
 import { createHandler, templateForFile } from '../yargsHandlerHelpers.js'

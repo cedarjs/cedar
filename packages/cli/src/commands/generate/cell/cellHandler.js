@@ -2,10 +2,10 @@ import pascalcase from 'pascalcase'
 
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 
+import { isPlural, singularize } from '../../../lib/cedarPluralize.js'
 import { nameVariants, transformTSToJS } from '../../../lib/index.js'
 import { isWordPluralizable } from '../../../lib/pluralHelpers.js'
 import { addFunctionToRollback } from '../../../lib/rollback.js'
-import { isPlural, singularize } from '../../../lib/rwPluralize.js'
 import { getSchema } from '../../../lib/schemaHelpers.js'
 import { forcePluralizeWord, removeGeneratorName } from '../helpers.js'
 import {
