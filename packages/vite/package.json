@@ -73,7 +73,7 @@
     "@cedarjs/testing": "2.1.1",
     "@cedarjs/web": "2.1.1",
     "@swc/core": "1.15.7",
-    "@vitejs/plugin-react": "4.3.4",
+    "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.9.21",
     "@whatwg-node/server": "0.9.65",
     "acorn-loose": "8.4.0",
