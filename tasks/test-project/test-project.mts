@@ -11,11 +11,7 @@ import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { apiTasks, streamingTasks, webTasks } from './tasks.js'
-import {
-  confirmNoFixtureNoLink,
-  getExecaOptions,
-  getCfwBin,
-} from './util.js'
+import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -266,7 +262,7 @@ const globalTasks = () =>
                 RW_PATH: path.join(__dirname, '../../'),
               },
             })
-          } catch (e) {
+          } catch {
             // nothing to see here
           }
         },
