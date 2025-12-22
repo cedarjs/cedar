@@ -15,7 +15,7 @@ permissions: {}
 jobs:
   check-test-project-fixture:
     if: github.repository == 'cedarjs/cedar'
-    name: 📦❓ Check test project fixture
+    name: Check test project fixture
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
