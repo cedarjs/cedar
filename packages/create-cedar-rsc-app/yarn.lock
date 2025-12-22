@@ -1479,7 +1479,7 @@ __metadata:
     eslint-plugin-regexp: "npm:^2.6.0"
     eslint-plugin-yml: "npm:^1.14.0"
     fast-glob: "npm:3.3.3"
-    fs-extra: "npm:11.2.0"
+    fs-extra: "npm:11.3.3"
     jsonc-eslint-parser: "npm:^2.4.0"
     knip: "npm:^5.26.0"
     node-fetch: "npm:3.3.2"
@@ -2288,14 +2288,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-extra@npm:11.2.0":
-  version: 11.2.0
-  resolution: "fs-extra@npm:11.2.0"
+"fs-extra@npm:11.3.3":
+  version: 11.3.3
+  resolution: "fs-extra@npm:11.3.3"
   dependencies:
     graceful-fs: "npm:^4.2.0"
     jsonfile: "npm:^6.0.1"
     universalify: "npm:^2.0.0"
-  checksum: 10c0/d77a9a9efe60532d2e790e938c81a02c1b24904ef7a3efb3990b835514465ba720e99a6ea56fd5e2db53b4695319b644d76d5a0e9988a2beef80aa7b1da63398
+  checksum: 10c0/984924ff4104e3e9f351b658a864bf3b354b2c90429f57aec0acd12d92c4e6b762cbacacdffb4e745b280adce882e1f980c485d9f02c453f769ab4e7fc646ce3
   languageName: node
   linkType: hard
 

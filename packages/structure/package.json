@@ -35,7 +35,7 @@
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",
     "fast-glob": "3.3.3",
-    "fs-extra": "11.2.0",
+    "fs-extra": "11.3.3",
     "graphql": "16.12.0",
     "lazy-get-decorator": "2.2.1",
     "line-column": "1.0.2",

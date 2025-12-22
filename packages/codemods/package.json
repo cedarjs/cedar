@@ -54,7 +54,7 @@
     "@types/fs-extra": "11.0.4",
     "@types/jscodeshift": "0.12.0",
     "@types/yargs": "17.0.35",
-    "fs-extra": "11.2.0",
+    "fs-extra": "11.3.3",
     "publint": "0.3.16",
     "tempy": "1.0.1",
     "tsx": "4.21.0",
