@@ -4,11 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
-# Cancel in-progress runs of this workflow.
-# See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# We often cancel concurrent jobs, but this job is so fast it wouldn't really
+# save any resources. It just complicates things (GitHub's runners would
+# sometimes get confused, and get stuck waiting on an instance of this job that
+# was canceled).
 
 # No top level permissions are required for this workflow
 permissions: {}
