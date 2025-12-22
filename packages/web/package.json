@@ -148,7 +148,7 @@
     "@cedarjs/auth": "2.1.1",
     "@cedarjs/server-store": "2.1.1",
     "@dr.pogodin/react-helmet": "2.0.4",
-    "@whatwg-node/fetch": "0.9.21",
+    "@whatwg-node/fetch": "0.10.13",
     "apollo-upload-client": "18.0.1",
     "cookie": "1.1.1",
     "core-js": "3.42.0",
