@@ -123,7 +123,7 @@
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
     "fast-json-parse": "1.0.3",
-    "fastify": "5.4.0",
+    "fastify": "5.6.2",
     "fastify-raw-body": "5.0.0",
     "pretty-bytes": "5.6.0",
     "pretty-ms": "7.0.1",
