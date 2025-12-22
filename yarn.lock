@@ -3382,7 +3382,7 @@ __metadata:
     change-case: "npm:4.1.2"
     ci-info: "npm:4.3.1"
     concurrently: "npm:8.2.2"
-    configstore: "npm:7.0.0"
+    configstore: "npm:7.1.0"
     core-js: "npm:3.42.0"
     cross-env: "npm:7.0.3"
     decamelize: "npm:6.0.1"
@@ -15407,15 +15407,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"configstore@npm:7.0.0":
-  version: 7.0.0
-  resolution: "configstore@npm:7.0.0"
+"configstore@npm:7.1.0":
+  version: 7.1.0
+  resolution: "configstore@npm:7.1.0"
   dependencies:
     atomically: "npm:^2.0.3"
     dot-prop: "npm:^9.0.0"
     graceful-fs: "npm:^4.2.11"
     xdg-basedir: "npm:^5.1.0"
-  checksum: 10c0/46639ddcebe94e58ab903d1bcfaddf297585469ee11fb2900975531cf6e59f495fa1324bf594d6bf13c5daf02e1110e9f0634caecc11203c52283ff26e2a4d8b
+  checksum: 10c0/98f74ee84eb7fea8361f588d2f0f8fbec2dd680a628bb1e50668cfd3001ea2584565d31de1d57f18ab498d339778701f9bc1e77a997107e8ff10abd8afb267a6
   languageName: node
   linkType: hard
 
