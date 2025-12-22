@@ -48,7 +48,7 @@
     "@opentelemetry/sdk-trace-node": "1.22.0",
     "@opentelemetry/semantic-conventions": "1.22.0",
     "@prisma/internals": "6.19.1",
-    "ansis": "4.1.0",
+    "ansis": "4.2.0",
     "archiver": "7.0.1",
     "boxen": "5.1.2",
     "camelcase": "6.3.0",

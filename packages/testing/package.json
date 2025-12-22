@@ -133,7 +133,7 @@
     "@types/babel-core": "6.25.10",
     "@types/jest": "29.5.14",
     "@types/node": "24.10.4",
-    "ansis": "4.1.0",
+    "ansis": "4.2.0",
     "babel-jest": "^29.7.0",
     "fast-glob": "3.3.3",
     "jest": "29.7.0",

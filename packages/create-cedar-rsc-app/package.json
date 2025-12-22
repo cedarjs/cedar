@@ -25,7 +25,7 @@
     "prettier-plugin-packagejson/sort-package-json": "3.6.0"
   },
   "dependencies": {
-    "ansis": "4.1.0",
+    "ansis": "4.2.0",
     "ci-info": "4.0.0",
     "enquirer": "2.4.1",
     "node-fetch": "3.3.2",
