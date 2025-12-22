@@ -13,10 +13,7 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
 export const CEDAR_FRAMEWORK_PATH = path.resolve(__dirname, '../../../')
 
-export const REDWOOD_PACKAGES_PATH = path.join(
-  CEDAR_FRAMEWORK_PATH,
-  'packages',
-)
+export const CEDAR_PACKAGES_PATH = path.join(CEDAR_FRAMEWORK_PATH, 'packages')
 
 const IGNORE_PACKAGES = ['@cedarjs/codemods', 'create-cedar-app']
 

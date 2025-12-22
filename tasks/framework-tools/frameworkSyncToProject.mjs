@@ -16,7 +16,7 @@ import {
   getPackageName,
   resolvePackageJsonPathFromFilePath,
   CEDAR_FRAMEWORK_PATH,
-  REDWOOD_PACKAGES_PATH,
+  CEDAR_PACKAGES_PATH,
 } from './lib/framework.mjs'
 import {
   addDependenciesToPackageJson,
@@ -212,7 +212,7 @@ async function main() {
   logStatus('Waiting for changes')
   console.log(separator)
 
-  const watcher = chokidar.watch(REDWOOD_PACKAGES_PATH, {
+  const watcher = chokidar.watch(CEDAR_PACKAGES_PATH, {
     ignored,
     // We don't want chokidar to emit events as it discovers paths, only as they change.
     ignoreInitial: true,
