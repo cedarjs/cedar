@@ -25,7 +25,7 @@
     "@cedarjs/structure": "2.1.1",
     "@whatwg-node/fetch": "0.10.13",
     "ci-info": "4.3.1",
-    "envinfo": "7.14.0",
+    "envinfo": "7.21.0",
     "systeminformation": "5.27.14",
     "uuid": "10.0.0",
     "yargs": "17.7.2"

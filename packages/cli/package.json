@@ -61,7 +61,7 @@
     "decamelize": "6.0.1",
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",
-    "envinfo": "7.14.0",
+    "envinfo": "7.21.0",
     "execa": "5.1.1",
     "fast-glob": "3.3.3",
     "fs-extra": "11.2.0",
