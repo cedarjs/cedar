@@ -34,7 +34,7 @@
     "@arethetypeswrong/cli": "0.18.2",
     "esbuild": "0.27.2",
     "fast-glob": "3.3.3",
-    "fs-extra": "11.2.0",
+    "fs-extra": "11.3.3",
     "zx": "8.8.5"
   },
   "devDependencies": {
