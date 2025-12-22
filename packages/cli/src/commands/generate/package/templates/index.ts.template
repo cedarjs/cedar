@@ -1,3 +1,3 @@
-export function ${name}() {
+export function ${camelName}() {
   return 0
 }

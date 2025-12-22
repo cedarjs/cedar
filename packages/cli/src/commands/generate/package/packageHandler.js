@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { paramCase } from 'change-case'
+import { paramCase, camelCase } from 'change-case'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
@@ -14,10 +14,7 @@ import {
   writeFilesTask,
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
-import {
-  templateForComponentFile,
-  templateForFile,
-} from '../yargsHandlerHelpers.js'
+import { templateForFile } from '../yargsHandlerHelpers.js'
 
 export const files = async ({
   name: nameArg,
@@ -31,86 +28,55 @@ export const files = async ({
 
   const base = path.basename(getPaths().base)
 
-  console.log('name', nameArg)
-  console.log('base', base)
-
   const [orgName, name] =
     nameArg[0] === '@' ? nameArg.split('/', 2) : ['@' + base, nameArg]
 
-  console.log('orgName', orgName)
-  console.log('pkgName', name)
-
   const folderName = paramCase(name)
   const packageName = orgName + '/' + folderName
-
-  console.log('folderName', folderName)
-  console.log('packageName', packageName)
-  console.log('packagesPath', getPaths().packages)
+  const fileName = camelCase(name)
 
   const packageFiles = await templateForFile({
-    name: packageName,
-    componentName: packageName,
-    extension,
-    apiPathSection: 'packages',
+    name,
+    side: 'packages',
     generator: 'package',
     templatePath: 'index.ts.template',
-    templateVars: { name, packageName, ...rest },
-    outputPath: path.join(
-      getPaths().packages,
-      orgName,
-      `${packageName}`,
-      `${packageName}{extension}`,
-    ),
+    templateVars: rest,
+    outputPath: path.join(folderName, 'src', `index${extension}`),
   })
 
   outputFiles.push(packageFiles)
 
-  const readmeFile = await templateForComponentFile({
-    name: packageName,
-    componentName: packageName,
-    extension,
-    apiPathSection: 'packages',
+  const readmeFile = await templateForFile({
+    name,
+    side: 'packages',
     generator: 'package',
     templatePath: 'README.md.template',
-    templateVars: { name, packageName, ...rest },
-    outputPath: path.join(
-      getPaths().packages,
-      orgName,
-      `${packageName}`,
-      `${packageName}{extension}`,
-    ),
+    templateVars: { packageName, ...rest },
+    outputPath: path.join(folderName, 'README.md'),
   })
 
   outputFiles.push(readmeFile)
 
   if (generateTests) {
-    const testFile = await templateForComponentFile({
-      name: packageName,
-      componentName: packageName,
-      extension,
-      apiPathSection: 'jobs',
-      generator: 'job',
+    const testFile = await templateForFile({
+      name,
+      side: 'packages',
+      generator: 'package',
       templatePath: 'test.ts.template',
-      templateVars: { ...rest },
-      outputPath: path.join(
-        getPaths().api.jobs,
-        `${packageName}Job`,
-        `${packageName}Job.test${extension}`,
-      ),
+      templateVars: rest,
+      outputPath: path.join(folderName, 'src', `${fileName}.test${extension}`),
     })
 
-    const scenarioFile = await templateForComponentFile({
-      name: packageName,
-      componentName: packageName,
-      extension,
-      apiPathSection: 'jobs',
-      generator: 'job',
+    const scenarioFile = await templateForFile({
+      name,
+      side: 'packages',
+      generator: 'package',
       templatePath: 'scenarios.ts.template',
-      templateVars: { ...rest },
+      templateVars: rest,
       outputPath: path.join(
-        getPaths().api.jobs,
-        `${packageName}Job`,
-        `${packageName}Job.scenarios${extension}`,
+        folderName,
+        'src',
+        `${fileName}.scenarios${extension}`,
       ),
     })
 
@@ -121,9 +87,10 @@ export const files = async ({
   return outputFiles.reduce(async (accP, [outputPath, content]) => {
     const acc = await accP
 
-    const template = typescript
-      ? content
-      : await transformTSToJS(outputPath, content)
+    const template =
+      typescript || outputPath.endsWith('.md') || outputPath.endsWith('.json')
+        ? content
+        : await transformTSToJS(outputPath, content)
 
     return {
       [outputPath]: template,
@@ -140,8 +107,6 @@ export const handler = async ({ name, force, ...rest }) => {
     force,
     rollback: rest.rollback,
   })
-
-  console.log('name', name)
 
   if (name.replaceAll('/', '').length < name.length - 1) {
     throw new Error(

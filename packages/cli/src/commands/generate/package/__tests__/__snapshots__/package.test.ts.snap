@@ -1,44 +1,148 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Single word default files > creates a single word function file > Scenario snapshot 1`] = `
+exports[`packageHandler > files > multi-word package names > creates a multi-word package 1`] = `
+"# Shared Package '@my-org/form-validators'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version, and then importing it into
+your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-org/form-validators": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { formValidators } from '@my-org/form-validators';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multi-word package 2`] = `
+"export function formValidators() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multi-word package 3`] = `
+"import { formValidators } from './index.js'
+
+describe('formValidators', () => {
+  it('should not throw any errors', async () => {
+    expect(formValidators()).not.toThrow()
+  })
+})
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multi-word package 4`] = `
 "import type { ScenarioData } from '@cedarjs/testing/api'
 
 export const standard = defineScenario({
   // Define the "fixture" to write into your test database here
-  // See guide: https://redwoodjs.com/docs/testing#scenarios
+  // See guide: https://cedarjs.com/docs/testing#scenarios
 })
 
 export type StandardScenario = ScenarioData<unknown>
 "
 `;
 
-exports[`Single word default files > creates a single word function file > Test snapshot 1`] = `
-"import { SampleJob } from './SampleJob.js'
+exports[`packageHandler > files > multi-word package names > creates a multiWord package 1`] = `
+"# Shared Package '@my-org/form-validators'
 
-describe('SampleJob', () => {
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version, and then importing it into
+your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-org/form-validators": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { formValidators } from '@my-org/form-validators';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multiWord package 2`] = `
+"export function formValidators() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multiWord package 3`] = `
+"import { formValidators } from './index.js'
+
+describe('formValidators', () => {
   it('should not throw any errors', async () => {
-    await expect(SampleJob.perform()).resolves.not.toThrow()
+    expect(formValidators()).not.toThrow()
   })
 })
 "
 `;
 
-exports[`Single word default files > creates a single word function file 1`] = `
-"import { jobs } from 'src/lib/jobs.js'
+exports[`packageHandler > files > multi-word package names > creates a multiWord package 4`] = `
+"import type { ScenarioData } from '@cedarjs/testing/api'
 
-export const SampleJob = jobs.createJob({
-  queue: 'default',
-  perform: async () => {
-    jobs.logger.info('SampleJob is performing...')
-  },
+export const standard = defineScenario({
+  // Define the "fixture" to write into your test database here
+  // See guide: https://cedarjs.com/docs/testing#scenarios
+})
+
+export type StandardScenario = ScenarioData<unknown>
+"
+`;
+
+exports[`packageHandler > files > single word package names > creates a single word package 1`] = `
+"# Shared Package '@my-org/foo'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version, and then importing it into
+your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-org/foo": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { foo } from '@my-org/foo';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > single word package names > creates a single word package 2`] = `
+"export function foo() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > single word package names > creates a single word package 3`] = `
+"import { foo } from './index.js'
+
+describe('foo', () => {
+  it('should not throw any errors', async () => {
+    expect(foo()).not.toThrow()
+  })
 })
 "
 `;
 
-exports[`multi-word files > creates a multi word function file 1`] = `undefined`;
+exports[`packageHandler > files > single word package names > creates a single word package 4`] = `
+"import type { ScenarioData } from '@cedarjs/testing/api'
 
-exports[`packageHandler > files > Single word default files > creates a single word function file > Scenario snapshot 1`] = `undefined`;
+export const standard = defineScenario({
+  // Define the "fixture" to write into your test database here
+  // See guide: https://cedarjs.com/docs/testing#scenarios
+})
 
-exports[`packageHandler > files > Single word default files > creates a single word function file > Test snapshot 1`] = `undefined`;
-
-exports[`packageHandler > files > Single word default files > creates a single word function file 1`] = `undefined`;
+export type StandardScenario = ScenarioData<unknown>
+"
+`;

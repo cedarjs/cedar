@@ -1,4 +1,5 @@
 globalThis.__dirname = __dirname
+
 // Load shared mocks
 import '../../../../lib/test'
 
@@ -27,27 +28,38 @@ describe('packageHandler', () => {
   })
 
   describe('files', () => {
-    const packagesPath = '/path/to/project/api/src/packages'
+    const packagesPath = '/path/to/project/packages'
 
     describe('single word package names', async () => {
-      const files = await packageHandler.files({ name: '@my-org/foo' })
+      const files = await packageHandler.files({
+        name: '@my-org/foo',
+        typescript: true,
+      })
 
       it('creates a single word package', () => {
-        expect(
-          files[path.normalize(packagesPath + '/foo/src/index.ts')],
-        ).toMatchSnapshot('Package index')
+        const fileNames = Object.keys(files)
+        expect(fileNames.length).toEqual(4)
 
-        expect(
-          files[path.normalize(packagesPath + '/foo/src/README.md')],
-        ).toMatchSnapshot('README snapshot')
+        expect(fileNames).toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('README.md'),
+            expect.stringContaining('index.ts'),
+            expect.stringContaining('foo.test.ts'),
+            expect.stringContaining('foo.scenarios.ts'),
+          ]),
+        )
 
-        expect(
-          files[path.normalize(packagesPath + '/foo/src/foo.test.ts')],
-        ).toMatchSnapshot('Test snapshot')
+        const readmePath = path.normalize(packagesPath + '/foo/README.md')
+        const indexPath = path.normalize(packagesPath + '/foo/src/index.ts')
+        const testPath = path.normalize(packagesPath + '/foo/src/foo.test.ts')
+        const scenariosPath = path.normalize(
+          packagesPath + '/foo/src/foo.scenarios.ts',
+        )
 
-        expect(
-          files[path.normalize(packagesPath + '/foo/src/foo.scenarios.ts')],
-        ).toMatchSnapshot('Scenario snapshot')
+        expect(files[readmePath]).toMatchSnapshot()
+        expect(files[indexPath]).toMatchSnapshot()
+        expect(files[testPath]).toMatchSnapshot()
+        expect(files[scenariosPath]).toMatchSnapshot()
       })
     })
 
@@ -60,28 +72,37 @@ describe('packageHandler', () => {
       it('creates a multi-word package', async () => {
         const files = await packageHandler.files({
           name: '@my-org/form-validators',
+          typescript: true,
         })
 
+        const readmePath = path.normalize(
+          packagesPath + '/form-validators/README.md',
+        )
         const indexPath = path.normalize(
           packagesPath + '/form-validators/src/index.ts',
         )
         const testPath = path.normalize(
           packagesPath + '/form-validators/src/formValidators.test.ts',
         )
-        const scenarioPath = path.normalize(
+        const scenariosPath = path.normalize(
           packagesPath + '/form-validators/src/formValidators.scenarios.ts',
         )
 
-        expect(files[indexPath]).toMatchSnapshot('Package index')
-        expect(files[testPath]).toMatchSnapshot('Test snapshot')
-        expect(files[scenarioPath]).toMatchSnapshot('Scenario snapshot')
+        expect(files[readmePath]).toMatchSnapshot()
+        expect(files[indexPath]).toMatchSnapshot()
+        expect(files[testPath]).toMatchSnapshot()
+        expect(files[scenariosPath]).toMatchSnapshot()
       })
 
       it('creates a multiWord package', async () => {
         const files = await packageHandler.files({
           name: '@my-org/formValidators',
+          typescript: true,
         })
 
+        const readmePath = path.normalize(
+          packagesPath + '/form-validators/README.md',
+        )
         const indexPath = path.normalize(
           packagesPath + '/form-validators/src/index.ts',
         )
@@ -92,24 +113,23 @@ describe('packageHandler', () => {
           packagesPath + '/form-validators/src/formValidators.scenarios.ts',
         )
 
-        expect(files[indexPath]).toMatchSnapshot('Package index')
-        expect(files[testPath]).toMatchSnapshot('Test snapshot')
-        expect(files[scenarioPath]).toMatchSnapshot('Scenario snapshot')
+        expect(files[readmePath]).toMatchSnapshot()
+        expect(files[indexPath]).toMatchSnapshot()
+        expect(files[testPath]).toMatchSnapshot()
+        expect(files[scenarioPath]).toMatchSnapshot()
       })
     })
 
     describe('generation of js files', async () => {
-      const jsFiles = await packageHandler.files({
-        name: 'Sample',
-        typescript: false,
-      })
+      const jsFiles = await packageHandler.files({ name: 'Sample' })
 
       it('returns tests, scenario and main package file for JS', () => {
         const fileNames = Object.keys(jsFiles)
-        expect(fileNames.length).toEqual(3)
+        expect(fileNames.length).toEqual(4)
 
         expect(fileNames).toEqual(
           expect.arrayContaining([
+            expect.stringContaining('README.md'),
             expect.stringContaining('index.js'),
             expect.stringContaining('sample.test.js'),
             expect.stringContaining('sample.scenarios.js'),

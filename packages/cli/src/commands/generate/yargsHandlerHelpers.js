@@ -47,6 +47,10 @@ export const customOrDefaultTemplatePath = ({
     templatePath,
   )
 
+  if (!getPaths()[side].generators) {
+    return defaultPath
+  }
+
   // Where a custom template *might* exist, e.g.
   // /path/to/app/web/generators/page/page.tsx.template
   const customPath = path.join(
@@ -73,20 +77,25 @@ export const templateForFile = async ({
   templatePath,
   templateVars,
 }) => {
-  const basePath = getPaths()[side][sidePathSection]
+  const basePath = sidePathSection
+    ? getPaths()[side][sidePathSection]
+    : getPaths()[side]
+  console.log('yargsHanlderHelpers basePath', basePath)
   const fullOutputPath = path.join(basePath, outputPath)
   const fullTemplatePath = customOrDefaultTemplatePath({
     generator,
     templatePath,
     side,
   })
-  const content = await generateTemplate(fullTemplatePath, {
+  const mergedTemplateVars = {
     name,
     outputPath: ensurePosixPath(
       `./${path.relative(getPaths().base, fullOutputPath)}`,
     ),
     ...templateVars,
-  })
+  }
+  console.log('mergedTemplateVars', mergedTemplateVars)
+  const content = await generateTemplate(fullTemplatePath, mergedTemplateVars)
 
   return [fullOutputPath, content]
 }

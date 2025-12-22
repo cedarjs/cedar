@@ -1,7 +1,7 @@
-import { ${name} } from './${name}.js'
+import { ${camelName} } from './index.js'
 
-describe('${name}', () => {
+describe('${camelName}', () => {
   it('should not throw any errors', async () => {
-    expect(${name}()).not.toThrow()
+    expect(${camelName}()).not.toThrow()
   })
 })
