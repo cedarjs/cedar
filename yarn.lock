@@ -2706,7 +2706,12 @@ __metadata:
     redis:
       optional: true
   bin:
+    cedar: ./dist/cjs/bins/cedar.js
+    cedarjs: ./dist/cjs/bins/cedar.js
     cfw: ./dist/cjs/bins/cfw.js
+    redwood: ./dist/cjs/bins/redwood.js
+    rw: ./dist/cjs/bins/redwood.js
+    tsc: ./dist/cjs/bins/tsc.js
   languageName: unknown
   linkType: soft
 
