@@ -5,7 +5,7 @@
  * have something to check against, simulating a logged
  * in user that is allowed to access that service.
  *
- * See https://redwoodjs.com/docs/authentication for more info.
+ * See https://cedarjs.com/docs/authentication for more info.
  */
 export const isAuthenticated = () => {
   return true
@@ -26,7 +26,7 @@ export const requireAuth = ({ roles }) => {
 
 export const getCurrentUser = async () => {
   throw new Error(
-    'Auth is not set up yet. See https://redwoodjs.com/docs/authentication ' +
+    'Auth is not set up yet. See https://cedarjs.com/docs/authentication ' +
       'to get started'
   )
 }

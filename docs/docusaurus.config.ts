@@ -251,7 +251,7 @@ const config: Config = {
   //   {
   //     src: 'https://plausible.io/js/script.outbound-links.tagged-events.js',
   //     defer: true,
-  //     'data-domain': 'docs.redwoodjs.com',
+  //     'data-domain': 'cedarjs.com',
   //   },
   // ],
   stylesheets: [

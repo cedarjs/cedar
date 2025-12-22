@@ -12,7 +12,7 @@ look at one of the existing auth providers in
 templates in `../templates`.
 
 If you need help setting up a custom auth provider there's more info in the
-[auth docs](https://redwoodjs.com/docs/authentication).
+[auth docs](https://cedarjs.com/docs/authentication).
 
 ### Contributing to the base auth implementation
 

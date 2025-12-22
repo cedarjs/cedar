@@ -133,7 +133,7 @@ export const generateGraphQLSchema = async () => {
           ansis.yellow(
             `  See the ${terminalLink(
               'Troubleshooting Generators',
-              'https://redwoodjs.com/docs/schema-relations#troubleshooting-generators',
+              'https://cedarjs.com/docs/schema-relations#troubleshooting-generators',
             )} section in our docs for more help.`,
           ),
         ].join('\n')

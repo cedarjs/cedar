@@ -30,7 +30,7 @@ const validate = ({ context, directiveArgs }) => {
 
   // You can also modify your directive to take arguments
   // and use the directiveArgs object provided to this function to get values
-  // See documentation here: https://redwoodjs.com/docs/directives
+  // See documentation here: https://cedarjs.com/docs/directives
   logger.debug(directiveArgs, 'directiveArgs in requireAdmin directive')
 
   throw new Error('Implementation missing for requireAdmin')
@@ -98,7 +98,7 @@ const transform: TransformerDirectiveFunc = ({ context, resolvedValue }) => {
 
   // You can also modify your directive to take arguments
   // and use the directiveArgs object provided to this function to get values
-  // See documentation here: https://redwoodjs.com/docs/directives
+  // See documentation here: https://cedarjs.com/docs/directives
 
   return resolvedValue.replace('foo', 'bar')
 }

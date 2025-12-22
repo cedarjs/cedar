@@ -15,7 +15,7 @@ export default (Base) =>
     // Denotes validations that need to run for the given fields. Must be in the
     // form of { field: options } where `field` is the name of the field and
     // `options` are the validation options. See Service Validations docs for
-    // usage examples: https://redwoodjs.com/docs/services.html#service-validations
+    // usage examples: https://cedarjs.com/docs/services.html#service-validations
     //
     //   static validates = {
     //     emailAddress: { email: true },

@@ -41,7 +41,7 @@ describe('verifyServerConfig', () => {
         repo: 'git://github.com',
       }),
     ).toThrow(
-      '"host" config option not set. See https://redwoodjs.com/docs/deployment/baremetal#deploytoml',
+      '"host" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
   })
 
@@ -52,7 +52,7 @@ describe('verifyServerConfig', () => {
         repo: 'git://github.com',
       }),
     ).toThrow(
-      '"path" config option not set. See https://redwoodjs.com/docs/deployment/baremetal#deploytoml',
+      '"path" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
   })
 
@@ -63,7 +63,7 @@ describe('verifyServerConfig', () => {
         path: '/var/www/app',
       }),
     ).toThrow(
-      '"repo" config option not set. See https://redwoodjs.com/docs/deployment/baremetal#deploytoml',
+      '"repo" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml',
     )
   })
 

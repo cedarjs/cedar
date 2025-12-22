@@ -1,6 +1,6 @@
 # CedarJS Docs
 
-Deployment URL: https://redwoodjs.com/docs
+Deployment URL: https://cedarjs.com/docs
 
 ## Getting started
 

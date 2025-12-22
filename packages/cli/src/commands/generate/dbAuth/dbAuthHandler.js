@@ -312,7 +312,7 @@ const tasks = ({
               name: 'answer',
               message:
                 'Enable WebAuthn support (TouchID/FaceID) on LoginPage? See ' +
-                'https://redwoodjs.com/docs/auth/dbAuth#webAuthn',
+                'https://cedarjs.com/docs/auth/dbAuth#webAuthn',
               default: false,
             },
             { enquirer: ctx.enquirer },

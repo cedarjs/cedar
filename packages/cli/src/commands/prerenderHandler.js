@@ -398,13 +398,13 @@ export const handler = async ({ path: routerPath, dryRun, verbose }) => {
       )
       console.log(
         c.info(
-          '- Avoid using `window` in the initial render path through your React components without checks. \n  See https://redwoodjs.com/docs/prerender#prerender-utils',
+          '- Avoid using `window` in the initial render path through your React components without checks. \n  See https://cedarjs.com/docs/prerender#prerender-utils',
         ),
       )
 
       console.log(
         c.info(
-          '- Avoid prerendering Cells with authenticated queries, by conditionally rendering them.\n  See https://redwoodjs.com/docs/prerender#common-warnings--errors',
+          '- Avoid prerendering Cells with authenticated queries, by conditionally rendering them.\n  See https://cedarjs.com/docs/prerender#common-warnings--errors',
         ),
       )
     }
