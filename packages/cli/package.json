@@ -53,7 +53,7 @@
     "boxen": "5.1.2",
     "camelcase": "6.3.0",
     "change-case": "4.1.2",
-    "ci-info": "4.0.0",
+    "ci-info": "4.3.1",
     "concurrently": "8.2.2",
     "configstore": "7.0.0",
     "core-js": "3.42.0",

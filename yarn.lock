@@ -3380,7 +3380,7 @@ __metadata:
     boxen: "npm:5.1.2"
     camelcase: "npm:6.3.0"
     change-case: "npm:4.1.2"
-    ci-info: "npm:4.0.0"
+    ci-info: "npm:4.3.1"
     concurrently: "npm:8.2.2"
     configstore: "npm:7.0.0"
     core-js: "npm:3.42.0"
@@ -4119,7 +4119,7 @@ __metadata:
     "@types/uuid": "npm:10.0.0"
     "@types/yargs": "npm:17.0.35"
     "@whatwg-node/fetch": "npm:0.10.13"
-    ci-info: "npm:4.0.0"
+    ci-info: "npm:4.3.1"
     envinfo: "npm:7.14.0"
     systeminformation: "npm:5.27.14"
     tsx: "npm:4.21.0"
@@ -14953,10 +14953,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ci-info@npm:4.0.0":
-  version: 4.0.0
-  resolution: "ci-info@npm:4.0.0"
-  checksum: 10c0/ecc003e5b60580bd081d83dd61d398ddb8607537f916313e40af4667f9c92a1243bd8e8a591a5aa78e418afec245dbe8e90a0e26e39ca0825129a99b978dd3f9
+"ci-info@npm:4.3.1, ci-info@npm:^4.0.0":
+  version: 4.3.1
+  resolution: "ci-info@npm:4.3.1"
+  checksum: 10c0/7dd82000f514d76ddfe7775e4cb0d66e5c638f5fa0e2a3be29557e898da0d32ac04f231217d414d07fb968b1fbc6d980ee17ddde0d2c516f23da9cfff608f6c1
   languageName: node
   linkType: hard
 
@@ -14964,13 +14964,6 @@ __metadata:
   version: 3.9.0
   resolution: "ci-info@npm:3.9.0"
   checksum: 10c0/6f0109e36e111684291d46123d491bc4e7b7a1934c3a20dea28cba89f1d4a03acd892f5f6a81ed3855c38647e285a150e3c9ba062e38943bef57fee6c1554c3a
-  languageName: node
-  linkType: hard
-
-"ci-info@npm:^4.0.0":
-  version: 4.3.1
-  resolution: "ci-info@npm:4.3.1"
-  checksum: 10c0/7dd82000f514d76ddfe7775e4cb0d66e5c638f5fa0e2a3be29557e898da0d32ac04f231217d414d07fb968b1fbc6d980ee17ddde0d2c516f23da9cfff608f6c1
   languageName: node
   linkType: hard
 
@@ -15768,7 +15761,7 @@ __metadata:
     "@types/klaw-sync": "npm:6.0.5"
     ansis: "npm:4.2.0"
     check-node-version: "npm:4.2.1"
-    ci-info: "npm:4.0.0"
+    ci-info: "npm:4.3.1"
     envinfo: "npm:7.14.0"
     execa: "npm:5.1.1"
     fs-extra: "npm:11.2.0"
