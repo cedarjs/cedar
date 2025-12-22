@@ -2725,7 +2725,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.3"
-    jwks-rsa: "npm:3.1.0"
+    jwks-rsa: "npm:3.2.0"
     publint: "npm:0.3.16"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -2779,7 +2779,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.3"
-    jwks-rsa: "npm:3.1.0"
+    jwks-rsa: "npm:3.2.0"
     publint: "npm:0.3.16"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3164,7 +3164,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:8.2.2"
     jsonwebtoken: "npm:9.0.3"
-    jwks-rsa: "npm:3.1.0"
+    jwks-rsa: "npm:3.2.0"
     publint: "npm:0.3.16"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -11731,7 +11731,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express@npm:4, @types/express@npm:^4.17.17, @types/express@npm:^4.17.20":
+"@types/express@npm:4, @types/express@npm:^4.17.20":
   version: 4.17.25
   resolution: "@types/express@npm:4.17.25"
   dependencies:
@@ -11885,7 +11885,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jsonwebtoken@npm:9.0.10, @types/jsonwebtoken@npm:^9.0.2, @types/jsonwebtoken@npm:^9.0.4":
+"@types/jsonwebtoken@npm:9.0.10, @types/jsonwebtoken@npm:^9.0.4":
   version: 9.0.10
   resolution: "@types/jsonwebtoken@npm:9.0.10"
   dependencies:
@@ -21719,7 +21719,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jose@npm:^4.11.4, jose@npm:^4.14.6, jose@npm:^4.15.4":
+"jose@npm:^4.11.4, jose@npm:^4.15.4":
   version: 4.15.9
   resolution: "jose@npm:4.15.9"
   checksum: 10c0/4ed4ddf4a029db04bd167f2215f65d7245e4dc5f36d7ac3c0126aab38d66309a9e692f52df88975d99429e357e5fd8bab340ff20baab544d17684dd1d940a0f4
@@ -22166,21 +22166,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jwks-rsa@npm:3.1.0":
-  version: 3.1.0
-  resolution: "jwks-rsa@npm:3.1.0"
-  dependencies:
-    "@types/express": "npm:^4.17.17"
-    "@types/jsonwebtoken": "npm:^9.0.2"
-    debug: "npm:^4.3.4"
-    jose: "npm:^4.14.6"
-    limiter: "npm:^1.1.5"
-    lru-memoizer: "npm:^2.2.0"
-  checksum: 10c0/60d686ba42ebfcedffd867aa68044d3d505bc21f6574afda17c6cc8bcabcf88a9a2b651965a25c53280902a532767cd002694c98f68287d31a60b492cba35822
-  languageName: node
-  linkType: hard
-
-"jwks-rsa@npm:^3.1.0":
+"jwks-rsa@npm:3.2.0, jwks-rsa@npm:^3.1.0":
   version: 3.2.0
   resolution: "jwks-rsa@npm:3.2.0"
   dependencies:
