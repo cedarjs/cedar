@@ -34,7 +34,7 @@ const files = [
 const notes = [
   'You are almost ready to go BAREMETAL!',
   '',
-  'See https://redwoodjs.com/docs/deploy/baremetal for the remaining',
+  'See https://cedarjs.com/docs/deploy/baremetal for the remaining',
   'config and setup required before you can perform your first deploy.',
 ]
 

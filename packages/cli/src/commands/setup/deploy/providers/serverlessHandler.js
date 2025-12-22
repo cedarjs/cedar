@@ -25,12 +25,12 @@ const notes = [
   c.error('DEPRECATED option not officially supported'),
   '',
   'For more information:',
-  'https://redwoodjs.com/docs/deploy/serverless',
+  'https://cedarjs.com/docs/deploy/serverless',
   '',
   '',
   c.success("You're almost ready to deploy using the Serverless framework!"),
   '',
-  '• See https://redwoodjs.com/docs/deploy#serverless-deploy for more info. If you ',
+  '• See https://cedarjs.com/docs/deploy#serverless-deploy for more info. If you ',
   '  want to give it a shot, open your `.env` file and add your AWS credentials,',
   '  then run: ',
   '',
@@ -88,7 +88,7 @@ const updateRedwoodTomlTask = () => {
 
       const newContent = content.replace(
         /apiUrl.*?\n/m,
-        'apiUrl = "${API_URL:/api}"       # Set API_URL in production to the Serverless deploy endpoint of your api service, see https://redwoodjs.com/docs/deploy/serverless-deploy\n',
+        'apiUrl = "${API_URL:/api}"       # Set API_URL in production to the Serverless deploy endpoint of your api service, see https://cedarjs.com/docs/deploy/serverless-deploy\n',
       )
       fs.writeFileSync(configPath, newContent)
     },

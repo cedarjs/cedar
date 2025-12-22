@@ -114,7 +114,7 @@ export const test_layouts = () =>
 
 export const test_dynamic = () =>
   it('4. Getting Dynamic', () => {
-    // https://redwoodjs.com/docs/tutorial/chapter2/getting-dynamic
+    // https://cedarjs.com/docs/tutorial/chapter2/getting-dynamic
     cy.writeFile(path.join(BASE_DIR, 'api/db/schema.prisma'), Step4_1_DbSchema)
     cy.exec(`rm ${BASE_DIR}/api/db/dev.db`, { failOnNonZeroExit: false })
     // need to also handle case where Prisma Client be out of sync
@@ -208,7 +208,7 @@ export const test_cells = () =>
 
 export const test_routing_params = () =>
   it('6. Routing Params', () => {
-    // https://redwoodjs.com/docs/tutorial/chapter2/routing-params
+    // https://cedarjs.com/docs/tutorial/chapter2/routing-params
     cy.exec(`cd ${BASE_DIR}; yarn cedar g page BlogPost --force`)
     cy.exec(`cd ${BASE_DIR}; yarn cedar g cell BlogPost --force`)
     cy.exec(`cd ${BASE_DIR}; yarn cedar g component BlogPost --force`)
@@ -273,7 +273,7 @@ export const test_routing_params = () =>
 
 export const test_forms = () =>
   it("7. Everyone's Favorite Thing to Build: Forms", () => {
-    // https://redwoodjs.com/docs/tutorial/everyone-s-favorite-thing-to-build-forms
+    // https://cedarjs.com/docs/tutorial/everyone-s-favorite-thing-to-build-forms
     cy.exec(`cd ${BASE_DIR}; yarn cedar g page contact --force`)
     cy.writeFile(
       path.join(BASE_DIR, 'web/src/layouts/BlogLayout/BlogLayout.jsx'),

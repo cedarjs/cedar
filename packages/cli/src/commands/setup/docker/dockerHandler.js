@@ -274,7 +274,7 @@ export async function handler({ force }) {
         "Lastly, ensure you have Docker. If you don't, see https://docs.docker.com/desktop/",
         '',
         "There's a lot in the Dockerfile and there's a reason for every line.",
-        'Be sure to check out the docs: https://redwoodjs.com/docs/docker',
+        'Be sure to check out the docs: https://cedarjs.com/docs/docker',
       ].join('\n'),
     )
   } catch (e) {

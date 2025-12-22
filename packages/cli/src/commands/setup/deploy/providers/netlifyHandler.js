@@ -19,7 +19,7 @@ const files = [
 
 const notes = [
   'You are ready to deploy to Netlify!',
-  'See: https://redwoodjs.com/docs/deploy/netlify',
+  'See: https://cedarjs.com/docs/deploy/netlify',
 ]
 
 export const handler = async ({ force }) => {

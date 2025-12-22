@@ -30,7 +30,7 @@ const pathJoin = path.posix.join
 
 export const throwMissingConfig = (name) => {
   throw new Error(
-    `"${name}" config option not set. See https://redwoodjs.com/docs/deployment/baremetal#deploytoml`,
+    `"${name}" config option not set. See https://cedarjs.com/docs/deployment/baremetal#deploytoml`,
   )
 }
 

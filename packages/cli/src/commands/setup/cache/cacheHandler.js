@@ -60,7 +60,7 @@ export const handler = async ({ client, force }) => {
       task: (_ctx, task) => {
         task.title = `One more thing...\n
           ${c.tip('Check out the Service Cache docs for config and usage:')}
-          ${c.link('https://redwoodjs.com/docs/services#caching')}
+          ${c.link('https://cedarjs.com/docs/services#caching')}
         `
       },
     },

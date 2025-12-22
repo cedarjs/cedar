@@ -5,7 +5,7 @@ export const description =
   '[DEPRECATED]\n' +
   'Setup Serverless Framework AWS deploy\n' +
   'For more information:\n' +
-  'https://redwoodjs.com/docs/deploy/serverless'
+  'https://cedarjs.com/docs/deploy/serverless'
 
 export const aliases = ['aws-serverless']
 export const handler = createHandler('serverless')

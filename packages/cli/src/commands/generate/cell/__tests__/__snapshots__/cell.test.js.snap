@@ -148,8 +148,8 @@ import { standard } from './CustomIdFieldsCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('CustomIdFieldsCell', () => {
   it('renders Loading successfully', () => {
@@ -265,8 +265,8 @@ import { standard } from './CustomIdFieldCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('CustomIdFieldCell', () => {
   it('renders Loading successfully', () => {
@@ -382,8 +382,8 @@ import { standard } from './UserProfileCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('UserProfileCell', () => {
   it('renders Loading successfully', () => {
@@ -499,8 +499,8 @@ import { standard } from './UserProfileCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('UserProfileCell', () => {
   it('renders Loading successfully', () => {
@@ -616,8 +616,8 @@ import { standard } from './UserCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('UserCell', () => {
   it('renders Loading successfully', () => {
@@ -733,8 +733,8 @@ import { standard } from './UserProfileCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('UserProfileCell', () => {
   it('renders Loading successfully', () => {
@@ -817,8 +817,8 @@ import { standard } from './BazingaCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('BazingaCell', () => {
   it('renders Loading successfully', () => {
@@ -1024,8 +1024,8 @@ import { standard } from './UserProfileCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('UserProfileCell', () => {
   it('renders Loading successfully', () => {
@@ -1093,8 +1093,8 @@ import { standard } from './AddressCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('AddressCell', () => {
   it('renders Loading successfully', () => {
@@ -1216,8 +1216,8 @@ import { standard } from './AddressesCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('AddressesCell', () => {
   it('renders Loading successfully', () => {
@@ -1349,8 +1349,8 @@ import { standard } from './MembersCell.mock'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float and DateTime types.
 //           Please refer to the RedwoodJS Testing Docs:
-//        https://redwoodjs.com/docs/testing#testing-cells
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//        https://cedarjs.com/docs/testing#testing-cells
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('MembersCell', () => {
   it('renders Loading successfully', () => {

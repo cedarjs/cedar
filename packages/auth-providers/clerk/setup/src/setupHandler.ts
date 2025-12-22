@@ -37,7 +37,7 @@ export const handler = async ({ force: forceArg }: Args) => {
       ']',
       '```',
       '',
-      'Also see https://redwoodjs.com/docs/auth/clerk for a full walkthrough.',
+      'Also see https://cedarjs.com/docs/auth/clerk for a full walkthrough.',
     ],
   })
 }
