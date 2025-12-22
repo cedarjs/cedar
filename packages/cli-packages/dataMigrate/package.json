@@ -27,7 +27,7 @@
   "dependencies": {
     "@cedarjs/babel-config": "2.1.1",
     "@cedarjs/project-config": "2.1.1",
-    "ansis": "4.1.0",
+    "ansis": "4.2.0",
     "bundle-require": "^5.1.0",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",

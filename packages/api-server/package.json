@@ -118,7 +118,7 @@
     "@cedarjs/web-server": "2.1.1",
     "@fastify/multipart": "9.3.0",
     "@fastify/url-data": "6.0.3",
-    "ansis": "4.1.0",
+    "ansis": "4.2.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",

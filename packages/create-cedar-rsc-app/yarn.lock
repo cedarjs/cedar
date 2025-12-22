@@ -1420,10 +1420,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ansis@npm:4.1.0":
-  version: 4.1.0
-  resolution: "ansis@npm:4.1.0"
-  checksum: 10c0/df62d017a7791babdaf45b93f930d2cfd6d1dab5568b610735c11434c9a5ef8f513740e7cfd80bcbc3530fc8bd892b88f8476f26621efc251230e53cbd1a2c24
+"ansis@npm:4.2.0":
+  version: 4.2.0
+  resolution: "ansis@npm:4.2.0"
+  checksum: 10c0/cd6a7a681ecd36e72e0d79c1e34f1f3bcb1b15bcbb6f0f8969b4228062d3bfebbef468e09771b00d93b2294370b34f707599d4a113542a876de26823b795b5d2
   languageName: node
   linkType: hard
 
@@ -1646,7 +1646,7 @@ __metadata:
     "@types/semver": "npm:7.5.8"
     "@types/which": "npm:3.0.4"
     "@types/yauzl-promise": "npm:4.0.1"
-    ansis: "npm:4.1.0"
+    ansis: "npm:4.2.0"
     ci-info: "npm:4.0.0"
     concurrently: "npm:^8.2.2"
     enquirer: "npm:2.4.1"
