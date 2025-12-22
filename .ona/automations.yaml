@@ -16,7 +16,7 @@ tasks:
     triggeredBy:
       - postDevcontainerStart
     command: |
-      export RWFW_PATH="/workspaces/cedar"
+      export CFW_PATH="/workspaces/cedar"
       export REDWOOD_DISABLE_TELEMETRY=1
       echo "Setting up CedarJS development environment..."
       mkdir -p /workspaces/cedar-test-app
@@ -32,7 +32,7 @@ tasks:
       corepack yarn run build:test-project ../cedar-test-app --typescript --link --verbose
       cd /workspaces/cedar-test-app
       sed -i "s/\(open *= *\).*/\1false/" redwood.toml
-      echo -e "\n\n\033[94m ======================================================\n\033[33m ⌛ CedarJS development environment is ready!\n Test app \"cedar-test-app\" has been generated & linked with framework code.\n\n If you make changes to the framework:\n 1. \033[33mEnsure env vars are set \033[92mexport RWFW_PATH=\"/workspaces/cedar\"\033[33m\n 2. \033[33mRun \033[92mcorepack yarn rwfw project:sync\033[33m to sync changes\n 3. \033[33mOr use the \033[92mSync Framework Changes\033[33m task from Ona dashboard\n\033[94m ======================================================\n\n"
+      echo -e "\n\n\033[94m ======================================================\n\033[33m ⌛ CedarJS development environment is ready!\n Test app \"cedar-test-app\" has been generated & linked with framework code.\n\n If you make changes to the framework:\n 1. \033[33mEnsure env vars are set \033[92mexport CFW_PATH=\"/workspaces/cedar\"\033[33m\n 2. \033[33mRun \033[92mcorepack yarn cfw project:sync\033[33m to sync changes\n 3. \033[33mOr use the \033[92mSync Framework Changes\033[33m task from Ona dashboard\n\033[94m ======================================================\n\n"
       # Open ports for CedarJS development servers
       echo "Opening ports for development servers..."
       gitpod environment port open 8910 --name "CedarJS Web Server" --protocol https
@@ -66,9 +66,9 @@ tasks:
     triggeredBy:
       - manual
     command: |
-      export RWFW_PATH="/workspaces/cedar"
+      export CFW_PATH="/workspaces/cedar"
       cd /workspaces/cedar-test-app
-      corepack yarn rwfw project:sync
+      corepack yarn cfw project:sync
       echo "Framework changes synced to test project"
 
   start-dev-server:

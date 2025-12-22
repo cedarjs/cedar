@@ -2708,9 +2708,9 @@ __metadata:
   bin:
     cedar: ./dist/cjs/bins/cedar.js
     cedarjs: ./dist/cjs/bins/cedar.js
+    cfw: ./dist/cjs/bins/cfw.js
     redwood: ./dist/cjs/bins/redwood.js
     rw: ./dist/cjs/bins/redwood.js
-    rwfw: ./dist/cjs/bins/rwfw.js
     tsc: ./dist/cjs/bins/tsc.js
   languageName: unknown
   linkType: soft
@@ -3421,9 +3421,9 @@ __metadata:
     yargs: "npm:17.7.2"
   bin:
     cedarjs: ./dist/index.js
+    cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-    rwfw: ./dist/rwfw.js
   languageName: unknown
   linkType: soft
 
@@ -3525,6 +3525,7 @@ __metadata:
     cedarjs: ./dist/bins/cedar.js
     cedarjs-api-server-watch: ./dist/bins/cedarjs-api-server-watch.js
     cedarjs-serve-api: ./dist/bins/cedarjs-serve-api.js
+    cfw: ./dist/bins/cfw.js
     cross-env: ./dist/bins/cross-env.js
     eslint: ./dist/bins/eslint.js
     jest: ./dist/bins/jest.js
@@ -3541,7 +3542,6 @@ __metadata:
     rw-serve-api: ./dist/bins/rw-serve-api.js
     rw-serve-fe: ./dist/bins/rw-serve-fe.js
     rw-web-server: ./dist/bins/rw-web-server.js
-    rwfw: ./dist/bins/rwfw.js
     vitest: ./dist/bins/vitest.js
   languageName: unknown
   linkType: soft
@@ -4319,11 +4319,11 @@ __metadata:
   bin:
     cedar: ./dist/cjs/bins/cedar.js
     cedarjs: ./dist/cjs/bins/cedar.js
+    cfw: ./dist/cjs/bins/cfw.js
     cross-env: ./dist/cjs/bins/cross-env.js
     msw: ./dist/cjs/bins/msw.js
     redwood: ./dist/cjs/bins/redwood.js
     rw: ./dist/cjs/bins/redwood.js
-    rwfw: ./dist/cjs/bins/rwfw.js
     storybook: ./dist/cjs/bins/storybook.js
     tsc: ./dist/cjs/bins/tsc.js
   languageName: unknown

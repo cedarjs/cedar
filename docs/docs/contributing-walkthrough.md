@@ -58,7 +58,7 @@ Diving into Git and the GitHub workflow can feel intimidating if you haven’t e
 
 We refer to the codebase of a Cedar application as a Project. This is what you install when you run `yarn create cedar-app <path-to-directory>`. It’s the thing you are building with Cedar.
 
-Lastly, you’ll find the template used to create a new project (when you run create redwood-app) here in GitHub: [cedarjs/cedar/packages/create-cedar-app/template/](https://github.com/cedarjs/cedar/tree/main/packages/create-cedar-app/template)
+Lastly, you’ll find the template used to create a new project (when you run create cedar-app) here in GitHub: [cedarjs/cedar/packages/create-cedar-app/template/](https://github.com/cedarjs/cedar/tree/main/packages/create-cedar-app/template)
 
 We refer to this as the **CRWA Template or Project Template**.
 
@@ -118,7 +118,7 @@ There are several options for creating a local Cedar Project to use during devel
 - New projects always use the latest stable version of the Cedar packages, which will not be up to date with the latest Framework code in the `main` branch.
 - To use the packages corresponding with the latest code in the Framework `main` branch, you can use the canary version published to NPM. All you need to do to install the canary versions is run `yarn rw upgrade --tag canary` in your Project
 - Using a cloned project or repo? Just know there are likely breaking changes in `main` that haven’t been applied. You can examine merged PRs with the “breaking” label for more info.
-- Just because you are using canary doesn’t mean you are using your local Framework branch code! Make sure you run `yarn rwfw project:sync`. And anytime you switch branches or get out of sync, you might need to start over beginning with the `git clean -fxd` command
+- Just because you are using canary doesn’t mean you are using your local Framework branch code! Make sure you run `yarn cfw project:sync`. And anytime you switch branches or get out of sync, you might need to start over beginning with the `git clean -fxd` command
 
 With those details out of the way, now is the time to choose an option below that meets your needs based on functionality and codebase version.
 
@@ -128,7 +128,7 @@ With those details out of the way, now is the time to choose an option below tha
 
 **Other Options to create a project**
 
-2. **Install a fresh project using the local Framework template code:** Sometimes you need to create a project that uses the Template codebase in your local branch of the Framework, e.g. your changes include modifications to the CRWA Template and need to be tested. Running the command above is exactly the same as `yarn create redwood- app …`, only it runs the command from your local Framework package using the local Template codebase. Note: this is the same command used at the start of the `yarn build:test-project` command.
+2. **Install a fresh project using the local Framework template code:** Sometimes you need to create a project that uses the Template codebase in your local branch of the Framework, e.g. your changes include modifications to the CRWA Template and need to be tested. Running the command above is exactly the same as `yarn create cedar-app …`, only it runs the command from your local Framework package using the local Template codebase. Note: this is the same command used at the start of the `yarn build:test-project` command.
 
 ```
 yarn babel-node packages/create-cedar-app/src/create-cedar-app.js <path/to/project>
@@ -144,25 +144,25 @@ yarn babel-node packages/create-cedar-app/src/create-cedar-app.js <path/to/proje
 
 Once you work on the Framework code, you’ll most often want to run the code in a Cedar app for testing. However, the Cedar Project you created for testing is currently using the latest version (or canary) packages of Cedar published on NPMjs.com, e.g. [@cedarjs/core](https://www.npmjs.com/package/@cedarjs/core)
 
-So we’ll use the Cedar Framework (rwfw) command to connect our local Framework and test Projects, which allows the Project to run on the code for Packages we are currently developing.
+So we’ll use the Cedar Framework (cfw) command to connect our local Framework and test Projects, which allows the Project to run on the code for Packages we are currently developing.
 
 Run this command from the CLI in your test Project:
 
 ```
-RWFW_PATH=<framework directory> yarn rwfw project:sync
+CFW_PATH=<framework directory> yarn cfw project:sync
 ```
 
 For Example:
 
 ```
-cd redwood-project
-RWFW_PATH=~/redwood yarn rwfw project:sync
+cd cedar-project
+CFW_PATH=~/cedar yarn cfw project:sync
 ```
 
-RWFW*PATH is the path to your local copy of the Cedar Framework. \_Once provided to rwfw, it'll remember it and you shouldn't have to provide it again unless you move it.*
+`CFW_PATH` is the path to your local copy of the Cedar Framework. _Once provided to cfw, it'll remember it and you shouldn't have to provide it again unless you move it._
 
 > **Heads up for Windows Devs**
-> Depending on your dev setup, Windows might balk at you setting the env var RWFW_PATH at the beginning of the command like this. If so, try prepending with `cross-env`, e.g. `yarn cross-env RWFW_PATH=~/redwood yarn rwfw` ... Or you can add the env var and value directly to your shell before running the command.
+> Depending on your dev setup, Windows might balk at you setting the env var CFW_PATH at the beginning of the command like this. If so, try prepending with `cross-env`, e.g. `yarn cross-env CFW_PATH=~/cedar yarn cfw` ... Or you can add the env var and value directly to your shell before running the command.
 
 As project:sync starts up, it'll start logging to the console. In order, it:
 
@@ -231,6 +231,12 @@ Refer to the [What makes for a good Pull Request?](contributing-overview.md#what
 
 ### Gitpod: Browser-based Development
 
+> ⚠️
+> ⚠️ These Gitpod instructions are old, and not officially supported.
+> ⚠️ Gitpod is now known as Ona (https://ona.com)
+> ⚠️ If you do get Gitpod/Ona working, please update this section.
+> ⚠️
+
 [Gitpod](http://gitpod.io) has recently been integrated with Cedar to JustWork™ with any branch or PR. When a virtual Gitpod workspace is initialized, it automatically:
 
 1. Checks-out the code from your branch or PR
@@ -270,6 +276,6 @@ For example, this link will start a workspace using the CedarJS main branch:
 
 - https://gitpod.io/#https://github.com/cedarjs/cedar
 
-And this link will start a workspace for a PR #3434:
+And this link will start a workspace for a PR #767:
 
-- https://gitpod.io/#https://github.com/redwoodjs/redwood/pull/3434
+- https://gitpod.io/#https://github.com/cedarjs/cedar/pull/767

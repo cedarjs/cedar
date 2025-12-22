@@ -121,7 +121,7 @@ export function isModuleInstalled(module) {
   const createdRequire = createRequire(import.meta.url)
 
   // Check any of the places require would look for this module.
-  // This enables testing with `yarn rwfw project:copy`.
+  // This enables testing with `yarn cfw project:copy`.
   //
   // We can't use require.resolve here because it caches the exception
   // Making it impossible to require when we actually do install it...

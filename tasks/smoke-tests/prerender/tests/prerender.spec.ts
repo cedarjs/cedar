@@ -256,7 +256,7 @@ test('prerender with broken gql query', async () => {
   // Running the prerender command twice takes much longer than typical tests should
   test.slow()
 
-  const redwoodProjectPath = process.env.REDWOOD_TEST_PROJECT_PATH || ''
+  const redwoodProjectPath = process.env.CEDAR_TEST_PROJECT_PATH || ''
 
   const cellBasePath = path.join(
     redwoodProjectPath,

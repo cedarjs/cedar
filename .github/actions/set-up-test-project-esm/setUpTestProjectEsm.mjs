@@ -4,13 +4,12 @@
 import path from 'node:path'
 
 import core from '@actions/core'
-
 import fs from 'fs-extra'
 
 import {
   createExecWithEnvInCwd,
   execInFramework,
-  REDWOOD_FRAMEWORK_PATH,
+  CEDAR_FRAMEWORK_PATH,
 } from '../actionsLib.mjs'
 
 const TEST_PROJECT_PATH = path.join(
@@ -42,7 +41,7 @@ async function main() {
  */
 async function setUpTestProject({ canary }) {
   const TEST_PROJECT_FIXTURE_PATH = path.join(
-    REDWOOD_FRAMEWORK_PATH,
+    CEDAR_FRAMEWORK_PATH,
     '__fixtures__',
     'esm-test-project',
   )
