@@ -47,7 +47,7 @@
     "concurrently": "8.2.2",
     "prisma": "6.19.1",
     "publint": "0.3.16",
-    "rimraf": "6.0.1",
+    "rimraf": "6.1.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
