@@ -133,7 +133,7 @@ export async function setUpRscTestProject(
 ) {
   core.setOutput('test-project-path', testProjectPath)
 
-  console.log('cfwPath', CEDAR_FRAMEWORK_PATH)
+  console.log('Cedar Framework Path', CEDAR_FRAMEWORK_PATH)
   console.log('testProjectPath', testProjectPath)
 
   const fixturePath = path.join(

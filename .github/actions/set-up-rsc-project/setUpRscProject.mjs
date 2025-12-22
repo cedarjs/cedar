@@ -39,7 +39,7 @@ import { CEDAR_FRAMEWORK_PATH } from '../actionsLib.mjs'
 export async function main(rscProjectPath, core, exec, execInProject) {
   core.setOutput('rsc-project-path', rscProjectPath)
 
-  console.log('Cedar Framework Path:', CEDAR_FRAMEWORK_PATH)
+  console.log('Cedar Framework Path', CEDAR_FRAMEWORK_PATH)
   console.log('rscProjectPath', rscProjectPath)
 
   await setUpRscProject(rscProjectPath, exec, execInProject)
