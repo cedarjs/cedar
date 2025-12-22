@@ -12,7 +12,7 @@ import { hashFiles } from '@actions/glob'
  * @typedef {import('@actions/exec').ExecOptions} ExecOptions
  */
 
-export const REDWOOD_FRAMEWORK_PATH = fileURLToPath(
+export const CEDAR_FRAMEWORK_PATH = fileURLToPath(
   new URL('../../', import.meta.url),
 )
 
@@ -43,7 +43,7 @@ export function createExecWithEnvInCwd(cwd) {
   }
 }
 
-export const execInFramework = createExecWithEnvInCwd(REDWOOD_FRAMEWORK_PATH)
+export const execInFramework = createExecWithEnvInCwd(CEDAR_FRAMEWORK_PATH)
 
 /**
  * @param {string} redwoodProjectCwd
@@ -133,22 +133,19 @@ export async function setUpRscTestProject(
 ) {
   core.setOutput('test-project-path', testProjectPath)
 
-  console.log('rwPath', REDWOOD_FRAMEWORK_PATH)
+  console.log('cfwPath', CEDAR_FRAMEWORK_PATH)
   console.log('testProjectPath', testProjectPath)
 
   const fixturePath = path.join(
-    REDWOOD_FRAMEWORK_PATH,
+    CEDAR_FRAMEWORK_PATH,
     '__fixtures__',
     fixtureName,
   )
-  const rwBinPath = path.join(
-    REDWOOD_FRAMEWORK_PATH,
+  const cedarBinPath = path.join(
+    CEDAR_FRAMEWORK_PATH,
     'packages/cli/dist/index.js',
   )
-  const cfwBinPath = path.join(
-    REDWOOD_FRAMEWORK_PATH,
-    'packages/cli/dist/cfw.js',
-  )
+  const cfwBinPath = path.join(CEDAR_FRAMEWORK_PATH, 'packages/cli/dist/cfw.js')
 
   console.log(`Creating project at ${testProjectPath}`)
   console.log()
@@ -156,11 +153,11 @@ export async function setUpRscTestProject(
 
   console.log('Syncing framework')
   await execInProject(`node ${cfwBinPath} project:tarsync --verbose`, {
-    env: { CFW_PATH: REDWOOD_FRAMEWORK_PATH },
+    env: { CFW_PATH: CEDAR_FRAMEWORK_PATH },
   })
   console.log()
 
   console.log(`Building project in ${testProjectPath}`)
-  await execInProject(`node ${rwBinPath} build -v`)
+  await execInProject(`node ${cedarBinPath} build -v`)
   console.log()
 }

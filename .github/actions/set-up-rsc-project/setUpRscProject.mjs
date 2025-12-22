@@ -3,7 +3,7 @@
 
 import path from 'node:path'
 
-import { REDWOOD_FRAMEWORK_PATH } from '../actionsLib.mjs'
+import { CEDAR_FRAMEWORK_PATH } from '../actionsLib.mjs'
 
 /**
  * @typedef {import('@actions/exec').ExecOptions} ExecOptions
@@ -39,7 +39,7 @@ import { REDWOOD_FRAMEWORK_PATH } from '../actionsLib.mjs'
 export async function main(rscProjectPath, core, exec, execInProject) {
   core.setOutput('rsc-project-path', rscProjectPath)
 
-  console.log('rwPath', REDWOOD_FRAMEWORK_PATH)
+  console.log('cfwPath', CEDAR_FRAMEWORK_PATH)
   console.log('rscProjectPath', rscProjectPath)
 
   await setUpRscProject(rscProjectPath, exec, execInProject)
@@ -52,8 +52,8 @@ export async function main(rscProjectPath, core, exec, execInProject) {
  * @returns {Promise<void>}
  */
 async function setUpRscProject(rscProjectPath, exec, execInProject) {
-  const rwBinPath = path.join(
-    REDWOOD_FRAMEWORK_PATH,
+  const cedarBinPath = path.join(
+    CEDAR_FRAMEWORK_PATH,
     'packages/cli/dist/index.js',
   )
 
@@ -71,21 +71,21 @@ async function setUpRscProject(rscProjectPath, exec, execInProject) {
   await execInProject('yarn cedar upgrade --yes --tag canary')
 
   console.log(`Setting up Streaming/SSR in ${rscProjectPath}`)
-  const cmdSetupStreamingSSR = `node ${rwBinPath} experimental setup-streaming-ssr -f`
+  const cmdSetupStreamingSSR = `node ${cedarBinPath} experimental setup-streaming-ssr -f`
   await execInProject(cmdSetupStreamingSSR)
   console.log()
 
   console.log(`Setting up RSC in ${rscProjectPath}`)
-  await execInProject(`node ${rwBinPath} experimental setup-rsc`)
+  await execInProject(`node ${cedarBinPath} experimental setup-rsc`)
   console.log()
 
   console.log('Syncing framework')
   await execInProject('yarn cfw project:tarsync --verbose', {
-    env: { CFW_PATH: REDWOOD_FRAMEWORK_PATH },
+    env: { CFW_PATH: CEDAR_FRAMEWORK_PATH },
   })
   console.log()
 
   console.log(`Building project in ${rscProjectPath}`)
-  await execInProject(`node ${rwBinPath} build -v`)
+  await execInProject(`node ${cedarBinPath} build -v`)
   console.log()
 }
