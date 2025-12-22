@@ -20,10 +20,7 @@ import {
   findUp,
 } from '@cedarjs/project-config'
 
-// Have to go extensionless here for Vitest to find the file. This is fixed in
-// newer versions of Vite and Vitest.
-// https://github.com/vitest-dev/vitest/issues/5999
-import { pluralize, singularize } from './cedarPluralize'
+import { pluralize, singularize } from './cedarPluralize.js'
 import c from './colors.js'
 import { addFileToRollback } from './rollback.js'
 
