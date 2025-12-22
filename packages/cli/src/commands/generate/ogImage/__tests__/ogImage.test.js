@@ -23,11 +23,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         base: '/path/to/project/web',
         pages: '/path/to/project/web/src/pages',
       },
-      generators: {
-        api: '/path/to/project/generators/api',
-        web: '/path/to/project/generators/web',
-        scripts: '/path/to/project/generators/scripts',
-      },
+      generators: '/path/to/project/generators',
       base: '/path/to/project',
     }),
   }

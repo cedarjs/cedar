@@ -30,11 +30,7 @@ const DEFAULT_PATHS = {
     prebuild: ['.redwood', 'prebuild'],
   },
   scripts: ['scripts'],
-  generators: {
-    api: ['generators', 'api'],
-    web: ['generators', 'web'],
-    scripts: ['generators', 'scripts'],
-  },
+  generators: ['generators'],
   api: {
     base: ['api'],
     prismaConfig: ['api', 'prisma.config.cjs'],

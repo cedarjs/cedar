@@ -73,11 +73,7 @@ export interface Paths {
   web: WebPaths
   api: NodeTargetPaths
   scripts: string
-  generators: {
-    api: string
-    web: string
-    scripts: string
-  }
+  generators: string
 }
 
 export interface PagesDependency {
@@ -158,11 +154,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     },
 
     scripts: path.join(BASE_DIR, 'scripts'),
-    generators: {
-      api: path.join(BASE_DIR, 'generators', 'api'),
-      web: path.join(BASE_DIR, 'generators', 'web'),
-      scripts: path.join(BASE_DIR, 'generators', 'scripts'),
-    },
+    generators: path.join(BASE_DIR, 'generators'),
 
     api: {
       base: path.join(BASE_DIR, 'api'),

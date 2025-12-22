@@ -82,11 +82,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           routes: path.join(BASE_PATH, 'web/src/Routes.js'),
           pages: path.join(BASE_PATH, '/web/src/pages'),
         },
-        generators: {
-          api: path.join(BASE_PATH, './api/generators'),
-          web: path.join(BASE_PATH, './web/generators'),
-          scripts: path.join(BASE_PATH, './scripts/generators'),
-        },
+        generators: path.join(BASE_PATH, 'generators'),
       }
     },
     getConfig: () => ({}),

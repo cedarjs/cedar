@@ -19,7 +19,7 @@ const copyGenerator = (name, { force }) => {
     name,
     'templates',
   )
-  const to = path.join(getPaths().generators[side], name)
+  const to = path.join(getPaths().generators, side, name)
 
   // copy entire template directory contents to appropriate side in app
   fse.copySync(from, to, { overwrite: force, errorOnExist: true })

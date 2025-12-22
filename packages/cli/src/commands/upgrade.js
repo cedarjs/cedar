@@ -551,11 +551,16 @@ async function moveGenerators({ dryRun, verbose }) {
 
   if (fs.existsSync(apiGeneratorsOld)) {
     if (verbose) {
-      console.log(`Moving ${apiGeneratorsOld} to ${getPaths().generators.api}`)
+      console.log(
+        `Moving ${apiGeneratorsOld} to ${path.join(
+          getPaths().generators,
+          'api',
+        )}`,
+      )
     }
     if (!dryRun) {
       fs.ensureDirSync(generatorsDir)
-      fs.moveSync(apiGeneratorsOld, getPaths().generators.api, {
+      fs.moveSync(apiGeneratorsOld, path.join(getPaths().generators, 'api'), {
         overwrite: true,
       })
     }
@@ -563,11 +568,16 @@ async function moveGenerators({ dryRun, verbose }) {
 
   if (fs.existsSync(webGeneratorsOld)) {
     if (verbose) {
-      console.log(`Moving ${webGeneratorsOld} to ${getPaths().generators.web}`)
+      console.log(
+        `Moving ${webGeneratorsOld} to ${path.join(
+          getPaths().generators,
+          'web',
+        )}`,
+      )
     }
     if (!dryRun) {
       fs.ensureDirSync(generatorsDir)
-      fs.moveSync(webGeneratorsOld, getPaths().generators.web, {
+      fs.moveSync(webGeneratorsOld, path.join(getPaths().generators, 'web'), {
         overwrite: true,
       })
     }

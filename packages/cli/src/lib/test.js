@@ -58,11 +58,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           app: path.join(BASE_PATH, '/web/src/App.js'),
         },
         scripts: path.join(BASE_PATH, 'scripts'),
-        generators: {
-          api: path.join(BASE_PATH, './api/generators'),
-          web: path.join(BASE_PATH, './web/generators'),
-          scripts: path.join(BASE_PATH, './scripts/generators'),
-        },
+        generators: path.join(BASE_PATH, 'generators'),
         generated: {
           base: path.join(BASE_PATH, '.redwood'),
           schema: path.join(BASE_PATH, '.redwood/schema.graphql'),
