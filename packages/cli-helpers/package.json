@@ -59,7 +59,7 @@
     "@cedarjs/telemetry": "2.1.1",
     "@opentelemetry/api": "1.8.0",
     "ansis": "4.2.0",
-    "dotenv": "16.4.7",
+    "dotenv": "16.6.1",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
     "listr2": "7.0.2",
