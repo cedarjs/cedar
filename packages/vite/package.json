@@ -83,7 +83,7 @@
     "core-js": "3.42.0",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
-    "express": "4.21.2",
+    "express": "4.22.1",
     "find-my-way": "8.2.2",
     "fs-extra": "11.2.0",
     "http-proxy-middleware": "3.0.5",
@@ -92,7 +92,7 @@
     "react-server-dom-webpack": "19.2.3",
     "rimraf": "6.0.1",
     "vite": "5.4.19",
-    "vite-plugin-cjs-interop": "2.2.0",
+    "vite-plugin-cjs-interop": "2.3.0",
     "vite-plugin-node-polyfills": "0.23.0",
     "ws": "8.18.3",
     "yargs-parser": "21.1.1"
