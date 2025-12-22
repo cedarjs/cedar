@@ -182,6 +182,11 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
         skip: () => dryRun,
       },
       {
+        title: 'Moving generators to new top-level directory',
+        task: () => moveGenerators({ dryRun, verbose }),
+        skip: () => dryRun,
+      },
+      {
         title: 'De-duplicating dependencies',
         skip: () => dryRun || !dedupe,
         task: (_ctx, task) => dedupeDeps(task, { verbose }),
@@ -533,4 +538,38 @@ const dedupeDeps = async (task, { verbose }) => {
     )
   }
   await yarnInstall({ verbose })
+}
+
+/**
+ * Moves existing generators from side-specific directories to the new top-level directory.
+ */
+async function moveGenerators({ dryRun, verbose }) {
+  const apiGeneratorsOld = path.join(getPaths().base, 'api', 'generators')
+  const webGeneratorsOld = path.join(getPaths().base, 'web', 'generators')
+
+  const generatorsDir = path.join(getPaths().base, 'generators')
+
+  if (fs.existsSync(apiGeneratorsOld)) {
+    if (verbose) {
+      console.log(`Moving ${apiGeneratorsOld} to ${getPaths().generators.api}`)
+    }
+    if (!dryRun) {
+      fs.ensureDirSync(generatorsDir)
+      fs.moveSync(apiGeneratorsOld, getPaths().generators.api, {
+        overwrite: true,
+      })
+    }
+  }
+
+  if (fs.existsSync(webGeneratorsOld)) {
+    if (verbose) {
+      console.log(`Moving ${webGeneratorsOld} to ${getPaths().generators.web}`)
+    }
+    if (!dryRun) {
+      fs.ensureDirSync(generatorsDir)
+      fs.moveSync(webGeneratorsOld, getPaths().generators.web, {
+        overwrite: true,
+      })
+    }
+  }
 }
