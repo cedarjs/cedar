@@ -59,7 +59,7 @@
     {
       "groupName": "Noisy packages",
       "description": "Limit updates for noisy packages to twice per month",
-      "matchPackageNames": ["nx", "@clerk/clerk-react", "@clerk/types"],
+      "matchPackageNames": ["nx", "@clerk/clerk-react", "@clerk/types", "knip"],
       "schedule": ["* * 1,15 * *"]
     }
   ]
