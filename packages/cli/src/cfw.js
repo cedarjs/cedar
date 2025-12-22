@@ -11,6 +11,7 @@ import { getConfigPath } from '@cedarjs/project-config'
 
 const config = new Configstore('@cedarjs/cli')
 
+// TODO: Remove RW related fallbacks here
 const CFW_PATH =
   process.env.CFW_PATH ||
   process.env.RWFW_PATH ||
@@ -39,10 +40,7 @@ config.set('CFW_PATH', absCfwPath)
 const projectPath = path.dirname(
   getConfigPath(process.env.RWJS_CWD ?? process.cwd()),
 )
-console.log(
-  'Cedar Framework Tools Path:',
-  terminalLink(absCfwPath, absCfwPath),
-)
+console.log('Cedar Framework Tools Path:', terminalLink(absCfwPath, absCfwPath))
 
 let command = process.argv.slice(2)
 const helpCommands = ['help', '--help']

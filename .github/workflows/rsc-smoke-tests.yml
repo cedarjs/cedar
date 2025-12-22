@@ -34,7 +34,7 @@ jobs:
         working-directory: tasks/smoke-tests/rsc
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-project.outputs.rsc-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-project.outputs.rsc-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       # TODO (RSC): This workflow times out on Windows. It looks as if the dev
@@ -49,7 +49,7 @@ jobs:
         working-directory: tasks/smoke-tests/rsc-dev
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-project.outputs.rsc-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-project.outputs.rsc-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 🌲 Set up RSA smoke test
@@ -63,7 +63,7 @@ jobs:
         working-directory: tasks/smoke-tests/rsa
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsa-project.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsa-project.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 🌲 Set up RSC Kitchen Sink smoke test
@@ -77,5 +77,5 @@ jobs:
         working-directory: tasks/smoke-tests/rsc-kitchen-sink
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-kitchen-sink-project.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-kitchen-sink-project.outputs.test-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1

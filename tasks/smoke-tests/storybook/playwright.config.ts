@@ -13,7 +13,7 @@ export default defineConfig({
   // Run your local dev server before starting the tests
   webServer: {
     command: 'yarn cedar storybook --ci --no-open',
-    cwd: process.env.REDWOOD_TEST_PROJECT_PATH,
+    cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     url: 'http://localhost:7910',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',

@@ -11,10 +11,10 @@ First, you'll need a test project to run smoke tests against:
 yarn build:test-project --link <test project path>
 ```
 
-Then, set the `REDWOOD_TEST_PROJECT_PATH` env var to the path of your test project:
+Then, set the `CEDAR_TEST_PROJECT_PATH` env var to the path of your test project:
 
 ```
-REDWOOD_TEST_PROJECT_PATH=<test project path>
+CEDAR_TEST_PROJECT_PATH=<test project path>
 ```
 
 Redwood has a mini CLI for running the smoke tests:
@@ -44,7 +44,7 @@ cd ./tasks/smoke-tests/dev
 npx playwright test
 ```
 
-Just remember to set `REDWOOD_TEST_PROJECT_PATH` and have `yarn cfw project:sync` running in your test project if you want to test against framework changes.
+Just remember to set `CEDAR_TEST_PROJECT_PATH` and have `yarn cfw project:sync` running in your test project if you want to test against framework changes.
 
 ### Gotchas
 

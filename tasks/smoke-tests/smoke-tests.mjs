@@ -13,8 +13,8 @@
 // If you're editing this script, make sure to test the following:
 
 // - [ ] outputs a help message and exits if `--help` or `-h` is passed (`yarn smoke-tests -h`), even if errors would surface later
-// - [ ] errors if the `REDWOOD_TEST_PROJECT_PATH` env var isn't set (`unset REDWOOD_TEST_PROJECT_PATH`)
-// - [ ] errors if the test project at `REDWOOD_TEST_PROJECT_PATH` doesn't exist
+// - [ ] errors if the `CEDAR_TEST_PROJECT_PATH` env var isn't set (`unset CEDAR_TEST_PROJECT_PATH`)
+// - [ ] errors if the test project at `CEDAR_TEST_PROJECT_PATH` doesn't exist
 // - [ ] warns if `yarn cfw project:sync` isn't running
 // - [ ] errors if passed invalid positional args (`yarn smoke-tests bazinga`) and shows the help message
 // - [ ] errors if passed invalid flags (`yarn smoke-tests --bazinga`) and shows the help message
@@ -84,12 +84,11 @@ async function parseArgs() {
   const options = {
     testProjectPath: {
       description: `Path to the test project. Defaults to the ${ansis.magenta(
-        'REDWOOD_TEST_PROJECT_PATH',
+        'CEDAR_TEST_PROJECT_PATH',
       )} env var`,
       short: 'p',
       type: /** @type {const} */ ('string'),
-      default:
-        process.env.REDWOOD_TEST_PROJECT_PATH ?? process.env.PROJECT_PATH,
+      default: process.env.CEDAR_TEST_PROJECT_PATH ?? process.env.PROJECT_PATH,
     },
 
     playwrightOptions: {
@@ -158,7 +157,7 @@ async function parseArgs() {
           'yarn build:test-project --link <path>',
         )}.`,
         `Then set the ${ansis.magenta(
-          'REDWOOD_TEST_PROJECT_PATH',
+          'CEDAR_TEST_PROJECT_PATH',
         )} env var to the path of your test project.`,
         '',
       ].join('\n'),
@@ -185,7 +184,7 @@ async function parseArgs() {
           'yarn build:test-project --link <path>',
         )}.`,
         `Then set the ${ansis.magenta(
-          'REDWOOD_TEST_PROJECT_PATH',
+          'CEDAR_TEST_PROJECT_PATH',
         )} env var to the path of your test project.`,
         '',
       ].join('\n'),
@@ -347,20 +346,20 @@ function getHelp(options) {
       'yarn build:test-project --link <path>',
     )}.)`,
     `Then set the ${ansis.magenta(
-      'REDWOOD_TEST_PROJECT_PATH',
+      'CEDAR_TEST_PROJECT_PATH',
     )} env var to the path of your test project.`,
     '',
     ansis.dim('  # Let this script prompt you for which smoke test to run'),
-    ansis.cyan('  REDWOOD_TEST_PROJECT_PATH=<path> yarn smoke-tests '),
+    ansis.cyan('  CEDAR_TEST_PROJECT_PATH=<path> yarn smoke-tests '),
     '',
     ansis.dim('  # Run the dev smoke test'),
-    ansis.cyan('  REDWOOD_TEST_PROJECT_PATH=<path> yarn smoke-tests dev'),
+    ansis.cyan('  CEDAR_TEST_PROJECT_PATH=<path> yarn smoke-tests dev'),
     '',
     ansis.dim(
       '  # Pass flags to `npx playwright test` (see `npx playwright test --help`)',
     ),
     ansis.cyan(
-      '  REDWOOD_TEST_PROJECT_PATH=<path> yarn smoke-tests --playwrightOptions="--debug"',
+      '  CEDAR_TEST_PROJECT_PATH=<path> yarn smoke-tests --playwrightOptions="--debug"',
     ),
     '',
     ansis.bold('## Options'),
