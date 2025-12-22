@@ -3,7 +3,8 @@ globalThis.__dirname = __dirname
 // Load shared mocks
 import '../../../../lib/test'
 
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import { describe, it, expect } from 'vitest'
 
@@ -38,11 +39,13 @@ describe('packageHandler', () => {
 
       it('creates a single word package', () => {
         const fileNames = Object.keys(files)
-        expect(fileNames.length).toEqual(4)
+        expect(fileNames.length).toEqual(6)
 
         expect(fileNames).toEqual(
           expect.arrayContaining([
             expect.stringContaining('README.md'),
+            expect.stringContaining('package.json'),
+            expect.stringContaining('tsconfig.json'),
             expect.stringContaining('index.ts'),
             expect.stringContaining('foo.test.ts'),
             expect.stringContaining('foo.scenarios.ts'),
@@ -125,11 +128,14 @@ describe('packageHandler', () => {
 
       it('returns tests, scenario and main package file for JS', () => {
         const fileNames = Object.keys(jsFiles)
-        expect(fileNames.length).toEqual(4)
+        expect(fileNames.length).toEqual(6)
 
         expect(fileNames).toEqual(
           expect.arrayContaining([
             expect.stringContaining('README.md'),
+            expect.stringContaining('package.json'),
+            // TODO: Make the script output jsconfig.json
+            expect.stringContaining('tsconfig.json'),
             expect.stringContaining('index.js'),
             expect.stringContaining('sample.test.js'),
             expect.stringContaining('sample.scenarios.js'),
@@ -137,5 +143,26 @@ describe('packageHandler', () => {
         )
       })
     })
+  })
+
+  it('has the correct version of TypeScript in the generated package', () => {
+    const cedarPackageJsonPath = path.normalize(
+      path.join(__dirname, ...Array(7).fill('..'), 'package.json'),
+    )
+    const packageJson = JSON.parse(
+      fs.readFileSync(cedarPackageJsonPath, 'utf8'),
+    )
+
+    const packageJsonTemplatePath = path.join(
+      __dirname,
+      '..',
+      'templates',
+      'package.json.template',
+    )
+    const packageJsonTemplate = fs.readFileSync(packageJsonTemplatePath, 'utf8')
+
+    expect(packageJsonTemplate).toContain(
+      `"typescript": "${packageJson.devDependencies.typescript}"`,
+    )
   })
 })

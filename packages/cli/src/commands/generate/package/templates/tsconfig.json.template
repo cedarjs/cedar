@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+  },
+  "include": ["src"],
+}

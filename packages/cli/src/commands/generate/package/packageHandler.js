@@ -35,7 +35,7 @@ export const files = async ({
   const packageName = orgName + '/' + folderName
   const fileName = camelCase(name)
 
-  const packageFiles = await templateForFile({
+  const indexFile = await templateForFile({
     name,
     side: 'packages',
     generator: 'package',
@@ -43,8 +43,6 @@ export const files = async ({
     templateVars: rest,
     outputPath: path.join(folderName, 'src', `index${extension}`),
   })
-
-  outputFiles.push(packageFiles)
 
   const readmeFile = await templateForFile({
     name,
@@ -55,7 +53,28 @@ export const files = async ({
     outputPath: path.join(folderName, 'README.md'),
   })
 
+  const packageJsonFile = await templateForFile({
+    name,
+    side: 'packages',
+    generator: 'package',
+    templatePath: 'package.json.template',
+    templateVars: { packageName, ...rest },
+    outputPath: path.join(folderName, 'package.json'),
+  })
+
+  const tsconfigFile = await templateForFile({
+    name,
+    side: 'packages',
+    generator: 'package',
+    templatePath: 'tsconfig.json.template',
+    templateVars: { packageName, ...rest },
+    outputPath: path.join(folderName, 'tsconfig.json'),
+  })
+
+  outputFiles.push(indexFile)
   outputFiles.push(readmeFile)
+  outputFiles.push(packageJsonFile)
+  outputFiles.push(tsconfigFile)
 
   if (generateTests) {
     const testFile = await templateForFile({
