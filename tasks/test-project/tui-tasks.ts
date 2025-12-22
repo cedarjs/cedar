@@ -490,12 +490,12 @@ export async function apiTasks(
     updatePkgJsonScripts({
       projectPath: outputPath,
       scripts: {
-        postinstall: 'yarn rwfw project:copy',
+        postinstall: 'yarn cfw project:copy',
       },
     })
 
     if (linkWithLatestFwBuild) {
-      await exec('yarn rwfw project:copy', [], execaOptions)
+      await exec('yarn cfw project:copy', [], execaOptions)
     }
 
     await exec(
@@ -742,7 +742,7 @@ export async function apiTasks(
           fullPath('api/src/services/posts/posts.scenarios'),
         )
 
-        await exec(`yarn rwfw project:copy`, [], execaOptions)
+        await exec(`yarn cfw project:copy`, [], execaOptions)
       },
     },
     {

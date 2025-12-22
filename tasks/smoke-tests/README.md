@@ -44,7 +44,7 @@ cd ./tasks/smoke-tests/dev
 npx playwright test
 ```
 
-Just remember to set `REDWOOD_TEST_PROJECT_PATH` and have `yarn rwfw project:sync` running in your test project if you want to test against framework changes.
+Just remember to set `REDWOOD_TEST_PROJECT_PATH` and have `yarn cfw project:sync` running in your test project if you want to test against framework changes.
 
 ### Gotchas
 
@@ -54,7 +54,7 @@ There's a few gotchas to be aware of:
 
   This means you may need to reset the test project's database (`yarn rw prisma migrate reset --force`) between runs or remove files that were written or undo file changes. (For this reason, you may find it helpful to initialize a git repo in the test project before running smoke tests.)
 
-- `yarn rwfw project:sync` needs to be running in the test project to test framework changes
+- `yarn cfw project:sync` needs to be running in the test project to test framework changes
 
   If you created the test project with `--link`, it should already be running. If not, just run it in the test project.
 

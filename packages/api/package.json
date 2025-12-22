@@ -64,12 +64,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "cedar": "./dist/cjs/bins/cedar.js",
-    "cedarjs": "./dist/cjs/bins/cedar.js",
-    "redwood": "./dist/cjs/bins/redwood.js",
-    "rw": "./dist/cjs/bins/redwood.js",
-    "rwfw": "./dist/cjs/bins/rwfw.js",
-    "tsc": "./dist/cjs/bins/tsc.js"
+    "cfw": "./dist/cjs/bins/cfw.js"
   },
   "files": [
     "dist/",

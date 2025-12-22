@@ -11,9 +11,9 @@
   "type": "module",
   "bin": {
     "cedarjs": "./dist/index.js",
+    "cfw": "./dist/cfw.js",
     "redwood": "./dist/index.js",
-    "rw": "./dist/index.js",
-    "rwfw": "./dist/rwfw.js"
+    "rw": "./dist/index.js"
   },
   "files": [
     "dist"
@@ -23,7 +23,7 @@
     "build:pack": "yarn pack -o cedarjs-cli.tgz",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
     "dev": "RWJS_CWD=../../__fixtures__/example-todo-main node dist/index.js",
-    "fix:permissions": "chmod +x dist/index.js dist/rwfw.js",
+    "fix:permissions": "chmod +x dist/index.js dist/cfw.js",
     "prepublishOnly": "yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"

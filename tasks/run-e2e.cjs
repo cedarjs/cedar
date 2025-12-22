@@ -72,7 +72,7 @@ function createCedarJsApp({ typescript }) {
     // Add package resolutions
     //
     // This is needed because the test project uses the current stable version
-    // of CedarJS when installing, but then when we use rwfw to link, newer
+    // of CedarJS when installing, but then when we use cfw to link, newer
     // versions of packages might be installed causing conflicts. Setting
     // resolutions prevents this.
     // Note that this isn't limited to any specific versions. It's always
@@ -114,7 +114,7 @@ const runTarsync = () => {
       shell: true,
       stdio: 'inherit',
       env: {
-        RWFW_PATH: CEDARJS_FRAMEWORK_PATH,
+        CFW_PATH: CEDARJS_FRAMEWORK_PATH,
         RWJS_CWD: CEDARJS_PROJECT_DIRECTORY,
       },
     })

@@ -167,7 +167,7 @@ const globalTasks = () =>
         title: 'Tarsync the framework to the project',
         task: () => {
           return execa(
-            'yarn rwfw project:tarsync',
+            'yarn cfw project:tarsync',
             [],
             getExecaOptions(OUTPUT_PROJECT_PATH),
           )

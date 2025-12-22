@@ -82,7 +82,7 @@ Run `yarn run build:test-project ../cedar-project` from the root of your local c
 
 Unless you've already got a project with a lot of functionality, it'd take quite some effort to add all of this yourself. Moreover, testing your changes in a project that has a lot of functionality will increase your confidence in the changes you're making.
 
-But how do you actually test your changes in the Cedar Framework in your Cedar Project? With another command, this time in the root of your Cedar Project: `yarn rwfw`.
+But how do you actually test your changes in the Cedar Framework in your Cedar Project? With another command, this time in the root of your Cedar Project: `yarn cfw`.
 
 **Test Project CLI Options:**
 
@@ -107,22 +107,22 @@ But how do you actually test your changes in the Cedar Framework in your Cedar P
 
 ### Testing the Framework in Your Project
 
-As you make changes to the Cedar Framework, you'll want to see your changes reflected "live" in a Cedar Project. Since we're always looking for ways to make contributing to Cedar easier, there are a few workflows we've come up with. The one you'll want to use is `yarn rwfw`.
+As you make changes to the Cedar Framework, you'll want to see your changes reflected "live" in a Cedar Project. Since we're always looking for ways to make contributing to Cedar easier, there are a few workflows we've come up with. The one you'll want to use is `yarn cfw`.
 
-> `rwfw` is short for Cedar Framework.
+> `cfw` is short for Cedar Framework.
 
-The command requires an env var `RWFW_PATH`. Unless you add the env var and value to your shell, the command structure will be `RWFW_PATH=<framework directory> yarn rwfw [option]`.
+The command requires an env var `CFW_PATH`. Unless you add the env var and value to your shell, the command structure will be `CFW_PATH=<framework directory> yarn cfw [option]`.
 
-> Note: On Windows, use `yarn cross-env RWFW_PATH=<framework directory> rwfw [option]`
+> Note: On Windows, use `yarn cross-env CFW_PATH=<framework directory> cfw [option]`
 
 Navigate to your Cedar Project and run the following, replacing `~/cedar` to match your local path:
 
 ```terminal
 cd cedar-project
-RWFW_PATH=~/cedar yarn rwfw project:sync
+CFW_PATH=~/cedar yarn cfw project:sync
 ```
 
-Where `~/cedar` is the path to your local copy of the Cedar Framework. Once provided to `rwfw`, it'll remember it and you shouldn't have to provide it again unless you move it.
+Where `~/cedar` is the path to your local copy of the Cedar Framework. Once provided to `cfw`, it'll remember it and you shouldn't have to provide it again unless you move it.
 
 As `project:sync` starts up, it'll start logging to the console. In order, it:
 
@@ -136,13 +136,13 @@ Step two is the only explicit change you'll see to your project. You'll see that
 
 ![image](https://user-images.githubusercontent.com/32992335/130699570-6ceb91a6-58aa-4cbf-a080-9cee6f26aaf2.png)
 
-This is all the packages in the Cedar Framework. It's a lot! But don't worry, this'll be cleaned up when you exit the `yarn rwfw project:sync` command.
+This is all the packages in the Cedar Framework. It's a lot! But don't worry, this'll be cleaned up when you exit the `yarn cfw project:sync` command.
 
 Congratulations, you're all setup! Any changes you make in the Cedar Framework should be reflected in your Cedar Project.
 
 ### Testing the CLI in Your Project
 
-While you can test the CLI using `yarn rwfw`, there's an easier way.
+While you can test the CLI using `yarn cfw`, there's an easier way.
 
 If you've made build or design time changes to Cedar—that is, if you've modified one of the following packages:
 
@@ -183,7 +183,7 @@ This generates a functional test project and links it with the Cedar Framework c
 
 > Note: if you make changes to the framework, you will need to sync your changes to the test project. You can either:
 >
-> - Run `yarn rwfw project:sync` in the terminal, or
+> - Run `yarn cfw project:sync` in the terminal, or
 > - Use the **"Sync Framework Changes"** task directly from the Ona dashboard
 
 [![Open in Ona](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/cedarjs/cedar)

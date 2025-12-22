@@ -42,7 +42,7 @@ To test framework changes against a real Cedar project:
 
 1.  **Sync Method (Recommended):**
     - Navigate to your target Cedar project.
-    - Run: `RWFW_PATH=/path/to/cedar-gemini yarn rwfw project:sync`
+    - Run: `CFW_PATH=/path/to/cedar-gemini yarn cfw project:sync`
     - This builds the framework, copies dependencies, and watches for changes.
 
 2.  **CLI Dev Method:**

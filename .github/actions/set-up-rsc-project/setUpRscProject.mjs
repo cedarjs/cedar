@@ -80,8 +80,8 @@ async function setUpRscProject(rscProjectPath, exec, execInProject) {
   console.log()
 
   console.log('Syncing framework')
-  await execInProject('yarn rwfw project:tarsync --verbose', {
-    env: { RWFW_PATH: REDWOOD_FRAMEWORK_PATH },
+  await execInProject('yarn cfw project:tarsync --verbose', {
+    env: { CFW_PATH: REDWOOD_FRAMEWORK_PATH },
   })
   console.log()
 

@@ -5,7 +5,7 @@
 // There are a few footguns to running a smoke tests locally. (And if you have to run a smoke tests locally, it's already painful enough.)
 //
 // - you don't have a test project, or you're running against a different test project than you expect
-// - `yarn rwfw project:sync` isn't running
+// - `yarn cfw project:sync` isn't running
 //
 // This script checks for them.
 
@@ -15,7 +15,7 @@
 // - [ ] outputs a help message and exits if `--help` or `-h` is passed (`yarn smoke-tests -h`), even if errors would surface later
 // - [ ] errors if the `REDWOOD_TEST_PROJECT_PATH` env var isn't set (`unset REDWOOD_TEST_PROJECT_PATH`)
 // - [ ] errors if the test project at `REDWOOD_TEST_PROJECT_PATH` doesn't exist
-// - [ ] warns if `yarn rwfw project:sync` isn't running
+// - [ ] warns if `yarn cfw project:sync` isn't running
 // - [ ] errors if passed invalid positional args (`yarn smoke-tests bazinga`) and shows the help message
 // - [ ] errors if passed invalid flags (`yarn smoke-tests --bazinga`) and shows the help message
 // - [ ] prompts for which smoke tests to run if passed no positional args (`yarn smoke-tests`)
@@ -228,14 +228,14 @@ async function parseArgs() {
     )
   }
 
-  // Check if `yarn rwfw project:sync` is running.
+  // Check if `yarn cfw project:sync` is running.
   const { stdout } = await execa.command('ps aux')
   const isProjectSyncRunning = stdout.includes('frameworkSyncToProject.mjs')
 
   if (!isProjectSyncRunning) {
     console.warn(
       ansis.yellow(
-        'Warning: If you want to test against the framework, you must have `yarn rwfw project:sync` running in your test project.',
+        'Warning: If you want to test against the framework, you must have `yarn cfw project:sync` running in your test project.',
       ),
     )
   }

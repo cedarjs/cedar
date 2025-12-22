@@ -9,7 +9,7 @@ const cliPackageJsonFileUrl = pathToFileURL(
 
 const requireFromCli = createRequire(cliPackageJsonFileUrl)
 const bins = requireFromCli('./package.json')['bin']
-const cliEntryPointUrl = new URL(bins['rwfw'], cliPackageJsonFileUrl)
+const cliEntryPointUrl = new URL(bins['cfw'], cliPackageJsonFileUrl)
 
 // If this is defined, we're running through yarn and need to change the cwd.
 // See https://yarnpkg.com/advanced/lifecycle-scripts/#environment-variables.

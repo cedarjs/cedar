@@ -145,9 +145,9 @@ export async function setUpRscTestProject(
     REDWOOD_FRAMEWORK_PATH,
     'packages/cli/dist/index.js',
   )
-  const rwfwBinPath = path.join(
+  const cfwBinPath = path.join(
     REDWOOD_FRAMEWORK_PATH,
-    'packages/cli/dist/rwfw.js',
+    'packages/cli/dist/cfw.js',
   )
 
   console.log(`Creating project at ${testProjectPath}`)
@@ -155,8 +155,8 @@ export async function setUpRscTestProject(
   fs.cpSync(fixturePath, testProjectPath, { recursive: true })
 
   console.log('Syncing framework')
-  await execInProject(`node ${rwfwBinPath} project:tarsync --verbose`, {
-    env: { RWFW_PATH: REDWOOD_FRAMEWORK_PATH },
+  await execInProject(`node ${cfwBinPath} project:tarsync --verbose`, {
+    env: { CFW_PATH: REDWOOD_FRAMEWORK_PATH },
   })
   console.log()
 

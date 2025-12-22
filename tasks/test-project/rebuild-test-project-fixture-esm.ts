@@ -352,7 +352,7 @@ async function runCommand() {
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
       return exec(
-        'yarn rwfw project:tarsync',
+        'yarn cfw project:tarsync',
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
@@ -399,12 +399,12 @@ async function runCommand() {
   // Note that we undo this at the end
   await tuiTask({
     step: 6,
-    title: '[link] Add rwfw project:copy postinstall',
+    title: '[link] Add cfw project:copy postinstall',
     task: () => {
       return updatePkgJsonScripts({
         projectPath: OUTPUT_PROJECT_PATH,
         scripts: {
-          postinstall: 'yarn rwfw project:copy',
+          postinstall: 'yarn cfw project:copy',
         },
       })
     },
@@ -567,7 +567,7 @@ async function runCommand() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
-      // Copy over package.json from template, so we remove the extra dev dependencies, and rwfw postinstall script
+      // Copy over package.json from template, so we remove the extra dev dependencies, and cfw postinstall script
       // that we added in "Adding framework dependencies to project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
