@@ -5,7 +5,7 @@
  * have something to check against, simulating a logged
  * in user that is allowed to access that service.
  *
- * See https://redwoodjs.com/docs/authentication for more info.
+ * See https://cedarjs.com/docs/authentication for more info.
  */
 export const isAuthenticated = () => {
   return true

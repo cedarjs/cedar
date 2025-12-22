@@ -12,8 +12,8 @@ import type { StandardScenario } from './contacts.scenarios.js'
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('contacts', () => {
   scenario('returns all contacts', async (scenario: StandardScenario) => {

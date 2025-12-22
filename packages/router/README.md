@@ -22,7 +22,7 @@ Features include:
 - Prerendered routes
 - Sets of routes
 - Navigation and History
-- [Accessibility](https://redwoodjs.com/docs/accessibility)
+- [Accessibility](https://cedarjs.com/docs/accessibility)
 - and more...
 
 ## Contributing

@@ -214,7 +214,7 @@ function directToCustomAuthCommand(provider) {
 
       const customAuthLink = terminalLink(
         'Custom Auth',
-        'https://redwoodjs.com/docs/auth/custom',
+        'https://cedarjs.com/docs/auth/custom',
       )
 
       console.log(

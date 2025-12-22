@@ -22,7 +22,7 @@ export async function handler({ force: forceArg }: Args) {
     ],
     notes: [
       "You'll need to enable Identity on your Netlify site and configure the API endpoint locally.",
-      'See https://redwoodjs.com/docs/auth/netlify for a full walkthrough.',
+      'See https://cedarjs.com/docs/auth/netlify for a full walkthrough.',
     ],
   })
 }

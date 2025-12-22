@@ -95,12 +95,12 @@ export const handler = async ({ force }) => {
           if (transformResult.error) {
             if (transformResult.error === 'RW_CODEMOD_ERR_OLD_FORMAT') {
               throw new Error(
-                'It looks like your src/lib/db file is using the old format. Please update it as per the v8 upgrade guide: https://redwoodjs.com/upgrade/v8#database-file-structure-change. And run again. \n\nYou can also manually modify your api/src/lib/db to include the prisma extension: https://docs.redwoodjs.com/docs/uploads/#attaching-the-prisma-extension',
+                'It looks like your src/lib/db file is using the old format. Please update it as per the v8 upgrade guide: https://cedarjs.com/docs/upgrade-guides/v8#database-file-structure-change. And run again. \n\nYou can also manually modify your api/src/lib/db to include the prisma extension: https://cedarjs.com/docs/uploads/#attaching-the-prisma-extension',
               )
             }
 
             throw new Error(
-              'Could not add the prisma extension. \n Please modify your api/src/lib/db to include the prisma extension: https://docs.redwoodjs.com/docs/uploads/#attaching-the-prisma-extension',
+              'Could not add the prisma extension. \n Please modify your api/src/lib/db to include the prisma extension: https://cedarjs.com/docs/uploads/#attaching-the-prisma-extension',
             )
           }
         },
@@ -146,7 +146,7 @@ export const handler = async ({ force }) => {
 
 
           Check out the docs for more info:
-          ${c.link('https://docs.redwoodjs.com/docs/uploads')}
+          ${c.link('https://cedarjs.com/docs/uploads')}
 
         `
         },

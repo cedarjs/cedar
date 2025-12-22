@@ -6,13 +6,13 @@ Love Cedar and want to get involved? You're in the right place! A perfect place 
 >
 > There are several contributing docs and references, each covering specific topics:
 >
-> 1. 🧭 [Overview and Orientation](https://redwoodjs.com/docs/contributing)
+> 1. 🧭 [Overview and Orientation](https://cedarjs.com/docs/contributing)
 > 2. 📓 **Reference: Contributing to the Framework Packages** (👈 you are here)
-> 3. 🪜 [Step-by-step Walkthrough](https://redwoodjs.com/docs/contributing-walkthrough) (including Video Recording)
+> 3. 🪜 [Step-by-step Walkthrough](https://cedarjs.com/docs/contributing-walkthrough) (including Video Recording)
 > 4. 📈 [Current Project Boards](https://github.com/orgs/redwoodjs/projects)
 > 5. 🤔 What should I work on?
 >    - ["Help Wanted" v1 Triage Board](https://redwoodjs.com/good-first-issue)
->    - [Discovery Process and Open Issues](https://redwoodjs.com/docs/contributing#what-should-i-work-on)
+>    - [Discovery Process and Open Issues](https://cedarjs.com/docs/contributing#what-should-i-work-on)
 
 ## Table of Contents
 

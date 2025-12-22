@@ -192,7 +192,7 @@ export const handler = async (yargs) => {
           'To do this run `yarn serverless` on each of the sides, and connect your account',
           '',
           'Find more information in our docs:',
-          c.underline('https://redwoodjs.com/docs/deploy#serverless'),
+          c.underline('https://cedarjs.com/docs/deploy#serverless'),
         ]
 
         console.log(

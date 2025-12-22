@@ -39,7 +39,7 @@ export const handler = async ({ force: forceArg }: Args) => {
       ']',
       '```',
       '',
-      'Also see https://redwoodjs.com/docs/auth/supabase for a full walkthrough.',
+      'Also see https://cedarjs.com/docs/auth/supabase for a full walkthrough.',
     ],
   })
 }

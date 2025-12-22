@@ -34,7 +34,7 @@ const missingIdConsoleMessage = () => {
   const line3 = "you'll need to update your schema definition to include"
   const line4 = 'an `@id` column. Read more here: '
   const line5 = ansis.underline.blue(
-    'https://redwoodjs.com/docs/schema-relations',
+    'https://cedarjs.com/docs/schema-relations',
   )
 
   console.error(

@@ -51,7 +51,7 @@ export const builder = (yargs) => {
     .epilogue(
       `Also see the ${terminalLink(
         'CedarJS dbAuth Reference',
-        'https://redwoodjs.com/docs/auth/dbauth',
+        'https://cedarjs.com/docs/auth/dbauth',
       )}`,
     )
 

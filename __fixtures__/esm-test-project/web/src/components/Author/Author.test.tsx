@@ -8,7 +8,7 @@ const author = {
 }
 
 //   Improve this test with help from the Redwood Testing Doc:
-//    https://redwoodjs.com/docs/testing#testing-components
+//    https://cedarjs.com/docs/testing#testing-components
 
 describe('Author', () => {
   it('renders successfully', () => {
