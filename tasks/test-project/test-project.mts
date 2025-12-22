@@ -11,7 +11,7 @@ import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { apiTasks, streamingTasks, webTasks } from './tasks.js'
-import { confirmNoFixtureNoLink, getExecaOptions } from './util.js'
+import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -167,7 +167,7 @@ const globalTasks = () =>
         title: 'Tarsync the framework to the project',
         task: () => {
           return execa(
-            'yarn rwfw project:tarsync',
+            `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
             [],
             getExecaOptions(OUTPUT_PROJECT_PATH),
           )
@@ -262,7 +262,7 @@ const globalTasks = () =>
                 RW_PATH: path.join(__dirname, '../../'),
               },
             })
-          } catch (e) {
+          } catch {
             // nothing to see here
           }
         },

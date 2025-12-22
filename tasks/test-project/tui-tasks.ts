@@ -10,6 +10,7 @@ import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   exec,
+  getCfwBin,
 } from './util.js'
 
 function getExecaOptions(cwd: string): ExecaOptions {
@@ -490,12 +491,12 @@ export async function apiTasks(
     updatePkgJsonScripts({
       projectPath: outputPath,
       scripts: {
-        postinstall: 'yarn rwfw project:copy',
+        postinstall: `yarn ${getCfwBin(outputPath)} project:copy`,
       },
     })
 
     if (linkWithLatestFwBuild) {
-      await exec('yarn rwfw project:copy', [], execaOptions)
+      await exec(`yarn ${getCfwBin(outputPath)} project:copy`, [], execaOptions)
     }
 
     await exec(
@@ -742,7 +743,11 @@ export async function apiTasks(
           fullPath('api/src/services/posts/posts.scenarios'),
         )
 
-        await exec(`yarn rwfw project:copy`, [], execaOptions)
+        await exec(
+          `yarn ${getCfwBin(OUTPUT_PATH)} project:copy`,
+          [],
+          execaOptions,
+        )
       },
     },
     {

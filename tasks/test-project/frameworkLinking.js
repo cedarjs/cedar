@@ -7,7 +7,7 @@ const addFrameworkDepsToProject = (frameworkPath, projectPath, stdio) => {
     shell: true,
     stdio: stdio ? stdio : 'inherit',
     env: {
-      RWFW_PATH: frameworkPath,
+      CFW_PATH: frameworkPath,
       RWJS_CWD: projectPath,
     },
   })
@@ -19,7 +19,7 @@ const copyFrameworkPackages = (frameworkPath, projectPath, stdio) => {
     shell: true,
     stdio: stdio ? stdio : 'inherit',
     env: {
-      RWFW_PATH: frameworkPath,
+      CFW_PATH: frameworkPath,
       RWJS_CWD: projectPath,
     },
   })
