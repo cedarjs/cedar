@@ -1,6 +1,7 @@
 /* eslint-env node */
 // @ts-check
 
+import fs from 'node:fs'
 import path from 'node:path'
 
 import { CEDAR_FRAMEWORK_PATH } from '../actionsLib.mjs'
@@ -80,8 +81,18 @@ async function setUpRscProject(rscProjectPath, exec, execInProject) {
   console.log()
 
   console.log('Syncing framework')
-  await execInProject('yarn cfw project:tarsync --verbose', {
-    env: { CFW_PATH: CEDAR_FRAMEWORK_PATH },
+  // TODO: hard code this to just be `yarn cfw proje...` as soon as cfw is part
+  // of a stable Cedar release
+  const cfwBin = fs.existsSync(
+    path.join(rscProjectPath, 'node_modules/.bin/cfw'),
+  )
+    ? 'cfw'
+    : 'rwfw'
+  await execInProject(`yarn ${cfwBin} project:tarsync --verbose`, {
+    env: {
+      CFW_PATH: CEDAR_FRAMEWORK_PATH,
+      RWFW_PATH: CEDAR_FRAMEWORK_PATH,
+    },
   })
   console.log()
 

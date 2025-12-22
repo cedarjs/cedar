@@ -10,6 +10,7 @@ const {
   applyCodemod,
   updatePkgJsonScripts,
   exec,
+  getCfwBin,
 } = require('./util')
 
 // This variable gets used in other functions
@@ -308,7 +309,11 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         title: '[link] Copy local framework files again',
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
-          execa('yarn cfw project:copy', [], getExecaOptions(outputPath)),
+          execa(
+            `yarn ${getCfwBin(outputPath)} project:copy`,
+            [],
+            getExecaOptions(outputPath),
+          ),
         enabled: () => linkWithLatestFwBuild,
       },
       // =========
@@ -377,12 +382,16 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     updatePkgJsonScripts({
       projectPath: outputPath,
       scripts: {
-        postinstall: 'yarn cfw project:copy',
+        postinstall: `yarn ${getCfwBin(outputPath)} project:copy`,
       },
     })
 
     if (linkWithLatestFwBuild) {
-      await execa('yarn cfw project:copy', [], getExecaOptions(outputPath))
+      await execa(
+        `yarn ${getCfwBin(outputPath)} project:copy`,
+        [],
+        getExecaOptions(outputPath),
+      )
     }
 
     await execa(
@@ -627,7 +636,11 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
             fullPath('api/src/services/posts/posts.scenarios'),
           )
 
-          await execa(`yarn cfw project:copy`, [], getExecaOptions(outputPath))
+          await execa(
+            `yarn ${getCfwBin(outputPath)} project:copy`,
+            [],
+            getExecaOptions(outputPath),
+          )
         },
       },
       {

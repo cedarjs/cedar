@@ -22,6 +22,7 @@ import {
   updatePkgJsonScripts,
   ExecaError,
   exec,
+  getCfwBin,
 } from './util'
 
 const ansis = require('ansis')
@@ -349,7 +350,7 @@ async function runCommand() {
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
       return exec(
-        'yarn cfw project:tarsync',
+        `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
@@ -401,7 +402,7 @@ async function runCommand() {
       return updatePkgJsonScripts({
         projectPath: OUTPUT_PROJECT_PATH,
         scripts: {
-          postinstall: 'yarn cfw project:copy',
+          postinstall: `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:copy`,
         },
       })
     },
