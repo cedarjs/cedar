@@ -60,14 +60,13 @@ includeEnvironmentVariables = []
 [api]
 port = 8911
 
-[experimental]
 [experimental.cli]
 autoInstall = false
-[experimental]
-[experimental.cli]
+
 [[experimental.cli.plugins]]
 package = "@example/test-package-when-autoInstall-false"
 enabled = true
+
 "
 `;
 
@@ -81,17 +80,16 @@ includeEnvironmentVariables = []
 [api]
 port = 8911
 
-[experimental]
 [experimental.cli]
 autoInstall = true
 
 [[experimental.cli.plugins]]
 package = "@existing-example/some-package-when-cli-has-some-packages-configured"
-[experimental]
-[experimental.cli]
+
 [[experimental.cli.plugins]]
 package = "@example/test-package-name"
 enabled = true
+
 "
 `;
 
@@ -104,13 +102,14 @@ includeEnvironmentVariables = []
 
 [api]
 port = 8911
-[experimental]
+
 [experimental.cli]
 autoInstall = true
 
 [[experimental.cli.plugins]]
 package = "@example/test-package-when-cli-not-configured"
 enabled = true
+
 "
 `;
 
@@ -124,14 +123,13 @@ includeEnvironmentVariables = []
 [api]
 port = 8911
 
-[experimental]
 [experimental.cli]
 autoInstall = true
-[experimental]
-[experimental.cli]
+
 [[experimental.cli.plugins]]
 package = "@example/test-package-when-no-plugins-configured"
 enabled = true
+
 "
 `;
 
@@ -145,11 +143,11 @@ includeEnvironmentVariables = []
 [api]
 port = 8911
 
-[experimental]
 [experimental.cli]
 autoInstall = true
 
 [[experimental.cli.plugins]]
 package = "@existing-example/some-package-name-already-exists"
+
 "
 `;
