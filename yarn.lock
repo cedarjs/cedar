@@ -3824,7 +3824,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "npm:2.1.1"
-    resend: "npm:4.6.0"
+    resend: "npm:4.8.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   languageName: unknown
@@ -27486,12 +27486,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resend@npm:4.6.0":
-  version: 4.6.0
-  resolution: "resend@npm:4.6.0"
+"resend@npm:4.8.0":
+  version: 4.8.0
+  resolution: "resend@npm:4.8.0"
   dependencies:
     "@react-email/render": "npm:1.1.2"
-  checksum: 10c0/ffd82d406fff0ebf7b66078df8bb5348a8aa01f0dadb8b3700184a2c4104e193cb8ed63902e0034d0492d3bbb318a67504d6cb826ef60fe67c753ffa9f800799
+  checksum: 10c0/8836b529abe3188592c2df120f18c40b6378707cec86bcd28000e912b51dc9304080d8876fa4e4a52d328aa0390a5ca5362de53331e9317bce9bd29bff6c2b41
   languageName: node
   linkType: hard
 
