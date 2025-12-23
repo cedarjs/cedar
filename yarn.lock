@@ -4065,7 +4065,7 @@ __metadata:
     tstyche: "npm:3.5.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
-    ulid: "npm:2.3.0"
+    ulid: "npm:2.4.0"
     vitest: "npm:3.2.4"
   languageName: unknown
   linkType: soft
@@ -30425,12 +30425,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ulid@npm:2.3.0":
-  version: 2.3.0
-  resolution: "ulid@npm:2.3.0"
+"ulid@npm:2.4.0":
+  version: 2.4.0
+  resolution: "ulid@npm:2.4.0"
   bin:
-    ulid: ./bin/cli.js
-  checksum: 10c0/070d237502781085e59cf3d8ece752ff96cd3a0990cf1c1be57273f4550597daeb72e9a7db8e5a320de31102509bb3321d280b54bfc44e98025e4628a9629773
+    ulid: bin/cli.js
+  checksum: 10c0/96f7597a2f09dadd380707a0755753d85717059deae54a9e28b6cbc34c02ef211dd1d1dcbfa8bd557d12309f174b87f3ba5f45d6b67573d1a2da202b5a0c9319
   languageName: node
   linkType: hard
 
