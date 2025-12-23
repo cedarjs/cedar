@@ -42,7 +42,7 @@ describe('custom template', () => {
 
           return {
             base: BASE_PATH,
-            generators: path.join(BASE_PATH, 'generators'),
+            generatorTemplates: path.join(BASE_PATH, 'generatorTemplates'),
             scripts: path.join(BASE_PATH, 'scripts'),
           }
         },
@@ -51,14 +51,14 @@ describe('custom template', () => {
 
     const scriptTemplatePath = path.join(
       PROJECT_PATH,
-      'generators',
+      'generatorTemplates',
       'scripts',
       'script',
       'script.ts.template',
     )
     const tsconfigTemplatePath = path.join(
       PROJECT_PATH,
-      'generators',
+      'generatorTemplates',
       'scripts',
       'script',
       'tsconfig.json.template',

@@ -73,7 +73,7 @@ export interface Paths {
   web: WebPaths
   api: NodeTargetPaths
   scripts: string
-  generators: string
+  generatorTemplates: string
 }
 
 export interface PagesDependency {
@@ -154,7 +154,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     },
 
     scripts: path.join(BASE_DIR, 'scripts'),
-    generators: path.join(BASE_DIR, 'generators'),
+    generatorTemplates: path.join(BASE_DIR, 'generatorTemplates'),
 
     api: {
       base: path.join(BASE_DIR, 'api'),

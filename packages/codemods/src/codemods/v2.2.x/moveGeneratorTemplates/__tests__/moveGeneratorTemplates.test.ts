@@ -4,7 +4,7 @@ import { matchFolderTransform } from '../../../../testUtils/matchFolderTransform
 import moveGeneratorTemplates from '../moveGeneratorTemplates'
 
 describe('moveGeneratorTemplates', () => {
-  it('Changes the structure of a redwood project', async () => {
+  it('Moves web/ and api/ generator templates to the new top-level /generatorTemplates directory', async () => {
     await matchFolderTransform(moveGeneratorTemplates, 'default')
   })
 })

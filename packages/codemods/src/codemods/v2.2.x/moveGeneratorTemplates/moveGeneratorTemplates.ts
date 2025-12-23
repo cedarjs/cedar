@@ -7,7 +7,7 @@ async function moveGeneratorTemplates() {
   const apiGeneratorsOld = path.join(getPaths().base, 'api', 'generators')
   const webGeneratorsOld = path.join(getPaths().base, 'web', 'generators')
 
-  const generatorsDir = path.join(getPaths().base, 'generators')
+  const generatorsDir = path.join(getPaths().base, 'generatorTemplates')
 
   const move = (oldPath: string, newPath: string) => {
     if (fs.existsSync(oldPath)) {

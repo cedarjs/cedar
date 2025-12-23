@@ -23,12 +23,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         base: '/path/to/project/web',
         pages: '/path/to/project/web/src/pages',
       },
-      generators: '/path/to/project/generators',
+      generatorTemplates: '/path/to/project/generatorTemplates',
       base: '/path/to/project',
     }),
   }
 })
-
 let original_RWJS_CWD
 
 describe('ogImage generator', () => {
