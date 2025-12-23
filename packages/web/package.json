@@ -155,7 +155,7 @@
     "graphql": "16.12.0",
     "graphql-sse": "2.6.0",
     "graphql-tag": "2.12.6",
-    "react-hot-toast": "2.4.1",
+    "react-hot-toast": "2.6.0",
     "stacktracey": "2.1.8",
     "ts-toolbelt": "9.6.0"
   },
