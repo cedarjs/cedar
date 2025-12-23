@@ -2,30 +2,24 @@
 
 - [Codemods](#codemods)
   - [Purpose and Vision](#purpose-and-vision)
-  - [Package Leads](#package-leads)
   - [Contributing](#contributing)
 
 ## Purpose and Vision
 
-This package contains codemods that automate upgrading a Redwood project.
-
-## Package Leads
-
-- Daniel Choudhury (@dac09)
-- Dominic Saadi (@jtoar)
+This package contains codemods that automate upgrading a Cedar project.
 
 ## Usage
 
 Listing available codemods:
 
 ```shell
-npx @redwoodjs/codemods list v0.38.x
+npx @cedarjs/codemods list v0.38.x
 ```
 
 Applying a single one:
 
 ```shell
-npx @redwoodjs/codemods add-directives
+npx @cedarjs/codemods add-directives
 ```
 
 ---
