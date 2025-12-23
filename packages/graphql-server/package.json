@@ -51,7 +51,7 @@
     "@graphql-tools/utils": "10.5.4",
     "@graphql-yoga/plugin-persisted-operations": "3.17.1",
     "@opentelemetry/api": "1.8.0",
-    "core-js": "3.42.0",
+    "core-js": "3.47.0",
     "graphql": "16.12.0",
     "graphql-scalars": "1.25.0",
     "graphql-tag": "2.12.6",
