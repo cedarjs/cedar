@@ -3414,7 +3414,7 @@ __metadata:
     title-case: "npm:3.0.3"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
-    unionfs: "npm:4.5.4"
+    unionfs: "npm:4.6.0"
     uuid: "npm:10.0.0"
     vite-node: "npm:3.2.4"
     vitest: "npm:3.2.4"
@@ -30579,12 +30579,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unionfs@npm:4.5.4":
-  version: 4.5.4
-  resolution: "unionfs@npm:4.5.4"
+"unionfs@npm:4.6.0":
+  version: 4.6.0
+  resolution: "unionfs@npm:4.6.0"
   dependencies:
     fs-monkey: "npm:^1.0.0"
-  checksum: 10c0/f1d832aff214c372a79f1938e1e0b0302ecaea30dc9487963c0539b8aad8f6305071e1da3e4662d3f0b5fd115205f71b975c8ab92f45154c61bc51a17c6261f7
+  checksum: 10c0/f20377df8eaff887d4f6b3f125841ed8aac0dbb1da4ca05cf7c8a7231e8a18fd7d3932b3f3ad3d14f811b248d60b3720539a6c3bfe373355a69b35435e1f728f
   languageName: node
   linkType: hard
 
