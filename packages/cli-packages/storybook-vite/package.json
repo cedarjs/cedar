@@ -27,7 +27,7 @@
     "@cedarjs/telemetry": "2.1.1",
     "ansis": "4.2.0",
     "execa": "5.1.1",
-    "semver": "7.6.3",
+    "semver": "7.7.3",
     "storybook": "8.6.15",
     "storybook-framework-cedarjs": "2.1.1",
     "termi-link": "1.1.0",
