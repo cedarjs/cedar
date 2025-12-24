@@ -3317,7 +3317,7 @@ __metadata:
     prettier-plugin-tailwindcss: "npm:0.7.2"
     prompts: "npm:2.4.2"
     semver: "npm:7.7.3"
-    smol-toml: "npm:1.5.2"
+    smol-toml: "npm:1.6.0"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3407,7 +3407,7 @@ __metadata:
     prompts: "npm:2.4.2"
     rimraf: "npm:6.1.2"
     semver: "npm:7.7.3"
-    smol-toml: "npm:1.5.2"
+    smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.27.17"
     termi-link: "npm:1.1.0"
@@ -3947,7 +3947,7 @@ __metadata:
     prisma: "npm:6.19.1"
     publint: "npm:0.3.16"
     rimraf: "npm:6.1.2"
-    smol-toml: "npm:1.5.2"
+    smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -4097,7 +4097,7 @@ __metadata:
     lodash-decorators: "npm:6.0.1"
     lru-cache: "npm:11.2.4"
     proxyquire: "npm:2.1.3"
-    smol-toml: "npm:1.5.2"
+    smol-toml: "npm:1.6.0"
     ts-morph: "npm:23.0.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -28524,10 +28524,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"smol-toml@npm:1.5.2":
-  version: 1.5.2
-  resolution: "smol-toml@npm:1.5.2"
-  checksum: 10c0/ccfe5dda80c1d0c45869140b1e695a13a81ba7c57c1ca083146fe2f475d6f57031c12410f95d53a5acb3a1504e8e8e12cab36871909e8c8ce0c7011ccd22a2ac
+"smol-toml@npm:1.6.0":
+  version: 1.6.0
+  resolution: "smol-toml@npm:1.6.0"
+  checksum: 10c0/baf33bb6cd914d481329e31998a12829cd126541458ba400791212c80f1245d5b27dac04a56a52c02b287d2a494f1628c05fc19643286b258b2e0bb9fe67747c
   languageName: node
   linkType: hard
 
