@@ -3692,7 +3692,7 @@ __metadata:
     graphql: "npm:16.12.0"
     graphql-scalars: "npm:1.25.0"
     graphql-tag: "npm:2.12.6"
-    graphql-yoga: "npm:5.9.0"
+    graphql-yoga: "npm:5.12.0"
     jsonwebtoken: "npm:9.0.3"
     lodash: "npm:4.17.21"
     publint: "npm:0.3.16"
@@ -4525,7 +4525,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/core@npm:5.4.0, @envelop/core@npm:^5.0.0, @envelop/core@npm:^5.0.1":
+"@envelop/core@npm:5.4.0, @envelop/core@npm:^5.0.0, @envelop/core@npm:^5.0.2":
   version: 5.4.0
   resolution: "@envelop/core@npm:5.4.0"
   dependencies:
@@ -6640,18 +6640,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/executor@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@graphql-tools/executor@npm:1.3.0"
+"@graphql-tools/executor@npm:^1.4.0":
+  version: 1.5.0
+  resolution: "@graphql-tools/executor@npm:1.5.0"
   dependencies:
-    "@graphql-tools/utils": "npm:^10.2.3"
-    "@graphql-typed-document-node/core": "npm:3.2.0"
+    "@graphql-tools/utils": "npm:^10.11.0"
+    "@graphql-typed-document-node/core": "npm:^3.2.0"
     "@repeaterjs/repeater": "npm:^3.0.4"
+    "@whatwg-node/disposablestack": "npm:^0.0.6"
+    "@whatwg-node/promise-helpers": "npm:^1.0.0"
     tslib: "npm:^2.4.0"
-    value-or-promise: "npm:^1.0.12"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/0e4ec4bcd7ba3f4d0053ae59117fa0367ee9444839f2c0568058494abfa1b4196e53aa738c88cb68a02f30d0a73827578f7f5cb7125a874063a4f1331cd98d62
+  checksum: 10c0/942941d6111da414e863daaf36a921654df2608dac2d074ae9b1bdea950ef1b6182376a04a5267c83961ccffea0f50361ce556d93cdd043844e78a7ba247f909
   languageName: node
   linkType: hard
 
@@ -6860,7 +6861,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/schema@npm:10.0.30, @graphql-tools/schema@npm:^10.0.4":
+"@graphql-tools/schema@npm:10.0.30, @graphql-tools/schema@npm:^10.0.11":
   version: 10.0.30
   resolution: "@graphql-tools/schema@npm:10.0.30"
   dependencies:
@@ -6910,7 +6911,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/utils@npm:10.11.0, @graphql-tools/utils@npm:^10.0.0, @graphql-tools/utils@npm:^10.11.0, @graphql-tools/utils@npm:^10.2.3, @graphql-tools/utils@npm:^10.3.2":
+"@graphql-tools/utils@npm:10.11.0, @graphql-tools/utils@npm:^10.0.0, @graphql-tools/utils@npm:^10.11.0, @graphql-tools/utils@npm:^10.6.2":
   version: 10.11.0
   resolution: "@graphql-tools/utils@npm:10.11.0"
   dependencies:
@@ -6971,12 +6972,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/logger@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@graphql-yoga/logger@npm:2.0.0"
+"@graphql-yoga/logger@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@graphql-yoga/logger@npm:2.0.1"
   dependencies:
-    tslib: "npm:^2.5.2"
-  checksum: 10c0/1489588485c9974aba66c0e5002a1251085771b0703ac1aaa2a3df93b895fc57f7cf6203680ff453b304d4ba438ea6a4cc9999d13a4bf6fd5128f3f088ff927b
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/4469576de1b542256ca0da8b3c6c3bba3380bf784b43e4407203ef9037b1955151f1361913f5301aca31203f2e6f63f6bd0fe6da020c325ceac0e56f18574abe
   languageName: node
   linkType: hard
 
@@ -7029,7 +7030,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/subscription@npm:5.0.5, @graphql-yoga/subscription@npm:^5.0.1":
+"@graphql-yoga/subscription@npm:5.0.5, @graphql-yoga/subscription@npm:^5.0.3":
   version: 5.0.5
   resolution: "@graphql-yoga/subscription@npm:5.0.5"
   dependencies:
@@ -7853,13 +7854,6 @@ __metadata:
   peerDependencies:
     tslib: 2
   checksum: 10c0/a720a6accaae71fa9e7fa06e93e382702aa5760ef2bdc3bc45c19dc2228a01cc735d36cb970c654bc5e88f1328d55d1f0d5eceef0b76bcc327a2ce863e7b0021
-  languageName: node
-  linkType: hard
-
-"@kamilkisiela/fast-url-parser@npm:^1.1.4":
-  version: 1.1.4
-  resolution: "@kamilkisiela/fast-url-parser@npm:1.1.4"
-  checksum: 10c0/2c85202cb4924720ac812c8bc06967fd5df4db759a68aa3acc2962b8cf9e2b3bc131de863f00473c0b0602df13891b35140f667a87eea04c9b897b6c1ae89c4a
   languageName: node
   linkType: hard
 
@@ -12627,7 +12621,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:0.10.13, @whatwg-node/fetch@npm:^0.10.13, @whatwg-node/fetch@npm:^0.10.5":
+"@whatwg-node/fetch@npm:0.10.13, @whatwg-node/fetch@npm:^0.10.1, @whatwg-node/fetch@npm:^0.10.13, @whatwg-node/fetch@npm:^0.10.5":
   version: 0.10.13
   resolution: "@whatwg-node/fetch@npm:0.10.13"
   dependencies:
@@ -12650,16 +12644,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:^0.9.22":
-  version: 0.9.23
-  resolution: "@whatwg-node/fetch@npm:0.9.23"
-  dependencies:
-    "@whatwg-node/node-fetch": "npm:^0.6.0"
-    urlpattern-polyfill: "npm:^10.0.0"
-  checksum: 10c0/f025ea59f026e2f1be34a33d6eba5fcfa69a3f2df6046198893cd7bc361f28bea10c0a79daa14e78034714940d0968c3c5f439d463f159c7703e94502bd0a279
-  languageName: node
-  linkType: hard
-
 "@whatwg-node/node-fetch@npm:^0.3.6":
   version: 0.3.6
   resolution: "@whatwg-node/node-fetch@npm:0.3.6"
@@ -12670,18 +12654,6 @@ __metadata:
     fast-url-parser: "npm:^1.1.3"
     tslib: "npm:^2.3.1"
   checksum: 10c0/49e4fd5e682d1fa1229b2c13c06074c6a633eddbe61be162fd213ddb85d6d27d51554b3cced5f6b7f3be1722a64cca7f5ffe0722d08b3285fe2f289d8d5a045d
-  languageName: node
-  linkType: hard
-
-"@whatwg-node/node-fetch@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "@whatwg-node/node-fetch@npm:0.6.0"
-  dependencies:
-    "@kamilkisiela/fast-url-parser": "npm:^1.1.4"
-    busboy: "npm:^1.6.0"
-    fast-querystring: "npm:^1.1.1"
-    tslib: "npm:^2.6.3"
-  checksum: 10c0/3ec3405e581abd811823f7c5f7dcb2e4c291d01a7a714c34b6b368eefff8b72f92b4d749322433d754b76725c814b03714cc6e929083021568e1ebd8240a04a8
   languageName: node
   linkType: hard
 
@@ -12719,7 +12691,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.9.50":
+"@whatwg-node/server@npm:^0.9.64":
   version: 0.9.71
   resolution: "@whatwg-node/server@npm:0.9.71"
   dependencies:
@@ -16677,7 +16649,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dset@npm:^3.1.1, dset@npm:^3.1.2":
+"dset@npm:^3.1.2, dset@npm:^3.1.4":
   version: 3.1.4
   resolution: "dset@npm:3.1.4"
   checksum: 10c0/b67bbd28dd8a539e90c15ffb61100eb64ef995c5270a124d4f99bbb53f4d82f55a051b731ba81f3215dd9dce2b4c8d69927dc20b3be1c5fc88bab159467aa438
@@ -19523,24 +19495,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:5.9.0":
-  version: 5.9.0
-  resolution: "graphql-yoga@npm:5.9.0"
+"graphql-yoga@npm:5.12.0":
+  version: 5.12.0
+  resolution: "graphql-yoga@npm:5.12.0"
   dependencies:
-    "@envelop/core": "npm:^5.0.1"
-    "@graphql-tools/executor": "npm:^1.3.0"
-    "@graphql-tools/schema": "npm:^10.0.4"
-    "@graphql-tools/utils": "npm:^10.3.2"
-    "@graphql-yoga/logger": "npm:^2.0.0"
-    "@graphql-yoga/subscription": "npm:^5.0.1"
-    "@whatwg-node/fetch": "npm:^0.9.22"
-    "@whatwg-node/server": "npm:^0.9.50"
-    dset: "npm:^3.1.1"
+    "@envelop/core": "npm:^5.0.2"
+    "@graphql-tools/executor": "npm:^1.4.0"
+    "@graphql-tools/schema": "npm:^10.0.11"
+    "@graphql-tools/utils": "npm:^10.6.2"
+    "@graphql-yoga/logger": "npm:^2.0.1"
+    "@graphql-yoga/subscription": "npm:^5.0.3"
+    "@whatwg-node/fetch": "npm:^0.10.1"
+    "@whatwg-node/server": "npm:^0.9.64"
+    dset: "npm:^3.1.4"
     lru-cache: "npm:^10.0.0"
-    tslib: "npm:^2.5.2"
+    tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-  checksum: 10c0/bd8f56b43239cad82eac66d3501bd8fa2b1a96c27c91516833b6acaf00b440841541ad36acbc694e3ebda96b7d2dc348af7ff0fa5fc3f5cf0853858b3950c33a
+  checksum: 10c0/e6fd4e79e17428e7e28904761bcf5d0730d1197623631f2550914ba15254be89af633b8040636503302a4170d29ff3b9c75c674a02425be2131b26731d3578ab
   languageName: node
   linkType: hard
 
@@ -30053,7 +30025,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.8.1, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.0, tslib@npm:^2.3.1, tslib@npm:^2.4.0, tslib@npm:^2.5.0, tslib@npm:^2.5.2, tslib@npm:^2.6.2, tslib@npm:^2.6.3, tslib@npm:^2.8.1":
+"tslib@npm:2.8.1, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.0, tslib@npm:^2.3.1, tslib@npm:^2.4.0, tslib@npm:^2.5.0, tslib@npm:^2.6.2, tslib@npm:^2.6.3, tslib@npm:^2.8.1":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
