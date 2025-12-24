@@ -544,7 +544,7 @@ async function refreshPrismaClient(task, { verbose }) {
   }
 }
 
-const dedupeDeps = async (task, { verbose }) => {
+const dedupeDeps = async (_task, { verbose }) => {
   try {
     await execa('yarn dedupe', {
       shell: true,
@@ -626,13 +626,16 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
 
   // Find all existing scripts (one per level) using the manifest
   for (const level of checkLevels) {
+    // Check both <version>.ts and <version>/index.ts
     for (const candidate of level.candidates) {
       if (manifest.includes(candidate)) {
         scriptsToRun.push({
           url: `${baseUrl}${candidate}`,
           name: candidate,
         })
-        break // Found a script for this level, move to next level
+
+        // Found a script for this level, move to next level
+        break
       }
     }
   }
@@ -641,6 +644,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     if (verbose) {
       console.log(`No upgrade scripts found for ${version}`)
     }
+
     return
   }
 
@@ -653,9 +657,11 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     let scriptContent
     try {
       const res = await fetch(script.url)
+
       if (res.status !== 200) {
         throw new Error(`Failed to download script: ${res.statusText}`)
       }
+
       scriptContent = await res.text()
     } catch (e) {
       if (verbose) {
@@ -665,7 +671,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     }
 
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cedar-upgrade-'))
-    const scriptPath = path.join(tempDir, 'check.ts')
+    const scriptPath = path.join(tempDir, 'script.ts')
     await fs.writeFile(scriptPath, scriptContent)
 
     const deps = extractDependencies(scriptContent)

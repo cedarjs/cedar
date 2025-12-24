@@ -1,3 +1,4 @@
+import type execa from 'execa'
 import fs from 'fs-extra'
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
@@ -60,7 +61,7 @@ describe('runPreUpgradeScripts', () => {
     vi.mocked(fetch).mockResolvedValue({
       status: 200,
       json: async () => [],
-    })
+    } as Response)
 
     await runPreUpgradeScripts(mockCtx, mockTask, {
       verbose: false,
@@ -79,7 +80,11 @@ describe('runPreUpgradeScripts', () => {
 
     vi.mocked(fetch).mockResolvedValueOnce({
       status: 404,
-    })
+      ok: false,
+      statusText: 'Not Found',
+      // a proper Response object has a lot of properties and methods. For a
+      // test it's not worth it to mock all of them.
+    } as Response)
 
     await runPreUpgradeScripts(mockCtx, mockTask, {
       verbose: true,
@@ -125,35 +130,51 @@ describe('runPreUpgradeScripts', () => {
       console.log('Running upgrade check')
     `
 
-    vi.mocked(fetch).mockImplementation(async (url: string) => {
-      if (url.endsWith('/manifest.json')) {
+    vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+      if (url.toString().endsWith('/manifest.json')) {
         return {
           status: 200,
           json: async () => ['3.4.1.ts'],
-        }
-      } else if (url.endsWith('/3.4.1.ts')) {
+          // a proper Response object has a lot of properties and methods. For a
+          // test it's not worth it to mock all of them.
+        } as Response
+      } else if (url.toString().endsWith('/3.4.1.ts')) {
         // Mock script download
         return {
           status: 200,
           text: async () => scriptContent,
-        }
+          // a proper Response object has a lot of properties and methods. For a
+          // test it's not worth it to mock all of them.
+        } as Response
       }
 
       throw new Error(`Unexpected url: ${url}`)
     })
 
-    vi.mocked(execa.default).mockImplementation(async (command, args) => {
-      if (command === 'yarn' && args.includes('add')) {
-        return { stdout: '', stderr: '' }
+    vi.mocked(execa.default).mockImplementation(((
+      command: string,
+      argsOrOptions: string[] | unknown,
+      _maybeOptions: unknown,
+    ) => {
+      // Handle overloaded signature where second param could be options
+      const actualArgs = Array.isArray(argsOrOptions) ? argsOrOptions : []
+
+      if (command === 'yarn' && actualArgs?.includes('add')) {
+        return {
+          stdout: '',
+          stderr: '',
+        } as unknown as execa.ExecaChildProcess
       } else if (command === 'node') {
         return {
           stdout: 'Upgrade check passed',
           stderr: '',
-        }
+        } as unknown as execa.ExecaChildProcess
       }
 
-      throw new Error(`Unexpected command: ${command} ${args.join(' ')}`)
-    })
+      throw new Error(`Unexpected command: ${command} ${actualArgs?.join(' ')}`)
+      // TypeScript is struggling with the type for the function overload and
+      // for a test it's not worth it to mock this properly.
+    }) as any)
 
     await runPreUpgradeScripts(mockCtx, mockTask, {
       verbose: false,
@@ -190,7 +211,7 @@ describe('runPreUpgradeScripts', () => {
     // Verify script was executed
     expect(execa.default).toHaveBeenCalledWith(
       'node',
-      ['check.ts', '--verbose', false, '--force', false],
+      ['script.ts', '--verbose', false, '--force', false],
       {
         cwd: '/tmp/cedar-upgrade-abc123',
       },
