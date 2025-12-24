@@ -118,13 +118,14 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
   })
 
   let preUpgradeMessage = ''
+  let preUpgradeError = ''
 
   // structuring as nested tasks to avoid bug with task.title causing duplicates
   const tasks = new Listr(
     [
       {
         title: 'Confirm upgrade',
-        task: async (ctx, task) => {
+        task: async (_ctx, task) => {
           if (yes) {
             task.skip('Skipping confirmation prompt because of --yes flag.')
             return
@@ -172,42 +173,52 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
           if (ctx.preUpgradeMessage) {
             preUpgradeMessage = ctx.preUpgradeMessage
           }
+
+          if (ctx.preUpgradeError) {
+            preUpgradeError = ctx.preUpgradeError
+          }
         },
         enabled: (ctx) => !!ctx.versionToUpgradeTo,
       },
       {
         title: 'Updating your CedarJS version',
         task: (ctx) => updateCedarJSDepsForAllSides(ctx, { dryRun, verbose }),
-        enabled: (ctx) => !!ctx.versionToUpgradeTo,
+        enabled: (ctx) => !!ctx.versionToUpgradeTo && !ctx.preUpgradeError,
       },
       {
         title: 'Updating other packages in your package.json(s)',
         task: (ctx) =>
           updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }),
-        enabled: (ctx) => ctx.versionToUpgradeTo?.includes('canary'),
+        enabled: (ctx) =>
+          ctx.versionToUpgradeTo?.includes('canary') && !ctx.preUpgradeError,
       },
       {
         title: 'Downloading yarn patches',
         task: (ctx) => downloadYarnPatches(ctx, { dryRun, verbose }),
-        enabled: (ctx) => ctx.versionToUpgradeTo?.includes('canary'),
+        enabled: (ctx) =>
+          ctx.versionToUpgradeTo?.includes('canary') && !ctx.preUpgradeError,
       },
       {
         title: 'Removing CLI cache',
         task: (ctx) => removeCliCache(ctx, { dryRun, verbose }),
+        enabled: (ctx) => !ctx.preUpgradeError,
       },
       {
         title: 'Running yarn install',
         task: (ctx) => yarnInstall(ctx, { dryRun, verbose }),
+        enabled: (ctx) => !ctx.preUpgradeError,
         skip: () => dryRun,
       },
       {
         title: 'Refreshing the Prisma client',
         task: (_ctx, task) => refreshPrismaClient(task, { verbose }),
+        enabled: (ctx) => !ctx.preUpgradeError,
         skip: () => dryRun,
       },
       {
         title: 'De-duplicating dependencies',
         skip: () => dryRun || !dedupe,
+        enabled: (ctx) => !ctx.preUpgradeError,
         task: (_ctx, task) => dedupeDeps(task, { verbose }),
       },
       {
@@ -270,6 +281,14 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
   )
 
   await tasks.run()
+
+  if (preUpgradeError) {
+    console.error('')
+    console.error(`   ❌ ${c.error('Pre-upgrade Error:')}\n`)
+    console.error('  ' + preUpgradeError.replace(/\n/g, '\n   '))
+
+    process.exit(1)
+  }
 
   if (preUpgradeMessage) {
     console.log('')
@@ -673,6 +692,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
   }
 
   ctx.preUpgradeMessage = ''
+  ctx.preUpgradeError = ''
 
   // Run them sequentially
   for (const script of scriptsToRun) {
@@ -714,6 +734,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     }
 
     task.output = `Running pre-upgrade script: ${script.name}...`
+    let shouldCleanup = true
     try {
       const { stdout } = await execa(
         'node',
@@ -729,17 +750,26 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
         ctx.preUpgradeMessage += `\n${stdout}`
       }
     } catch (e) {
-      const errorMessage =
-        `Pre-upgrade check ${script.name} failed:\n` +
-        `${e.stdout}\n${e.stderr}`
+      const errorOutput = e.stdout || e.stderr || e.message || ''
+      const errorMessage = `Pre-upgrade check ${script.name} failed:\n${errorOutput}`
 
-      if (force) {
-        console.warn(errorMessage)
-      } else {
-        throw new Error(errorMessage)
+      if (ctx.preUpgradeError) {
+        ctx.preUpgradeError += '\n\n'
+      }
+
+      ctx.preUpgradeError += errorMessage
+
+      if (!force) {
+        await fs.remove(tempDir)
+        shouldCleanup = false
+
+        // Return to skip remaining pre-upgrade scripts
+        return
       }
     } finally {
-      await fs.remove(tempDir)
+      if (shouldCleanup) {
+        await fs.remove(tempDir)
+      }
     }
   }
 }
