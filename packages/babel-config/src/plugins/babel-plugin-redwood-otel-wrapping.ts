@@ -64,9 +64,9 @@ function wrapExportNamedDeclaration(
 ) {
   const declaration = path.node.declaration
   const declarationIsSupported =
-    declaration != null &&
-    declaration.type === 'VariableDeclaration' &&
+    declaration?.type === 'VariableDeclaration' &&
     declaration.declarations[0].init?.type === 'ArrowFunctionExpression'
+
   if (!declarationIsSupported) {
     return
   }
