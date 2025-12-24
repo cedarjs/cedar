@@ -1,10 +1,13 @@
-import path from 'path'
+import { builtinModules } from 'node:module'
+import os from 'node:os'
+import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import execa from 'execa'
 import fs from 'fs-extra'
 import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
+import semver from 'semver'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -22,7 +25,8 @@ export const builder = (yargs) => {
   yargs
     .example(
       'cedar upgrade -t 0.20.1-canary.5',
-      'Specify a version. URL for Version History:\nhttps://www.npmjs.com/package/@cedarjs/core',
+      'Specify a version. URL for Version History:\n' +
+        'https://www.npmjs.com/package/@cedarjs/core',
     )
     .option('dry-run', {
       alias: 'd',
@@ -152,6 +156,11 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
         task: async (ctx) => setLatestVersionToContext(ctx, tag),
       },
       {
+        title: 'Running pre-upgrade scripts',
+        task: (ctx, task) => runPreUpgradeScripts(ctx, task, { verbose }),
+        enabled: (ctx) => !!ctx.versionToUpgradeTo,
+      },
+      {
         title: 'Updating your CedarJS version',
         task: (ctx) => updateCedarJSDepsForAllSides(ctx, { dryRun, verbose }),
         enabled: (ctx) => !!ctx.versionToUpgradeTo,
@@ -213,6 +222,14 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
                 `   ❖ ${discordLink}\n`,
             )
           }
+
+          if (ctx.preUpgradeMessage) {
+            messageSections.push(
+              `\n   📣 ${c.info('Pre-upgrade Message:')}\n`,
+              `   ${ctx.preUpgradeMessage.replace(/\n/g, '\n   ')}\n`,
+            )
+          }
+
           // @MARK
           // This should be temporary and eventually superseded by a more generic notification system
           if (tag) {
@@ -533,4 +550,195 @@ const dedupeDeps = async (task, { verbose }) => {
     )
   }
   await yarnInstall({ verbose })
+}
+
+// exported for testing
+export async function runPreUpgradeScripts(ctx, task, { verbose }) {
+  if (!ctx.versionToUpgradeTo) {
+    return
+  }
+
+  const version = ctx.versionToUpgradeTo
+  const parsed = semver.parse(version)
+  const baseUrl = `https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/`
+  const manifestUrl = `${baseUrl}manifest.json`
+
+  let manifest = []
+  try {
+    const res = await fetch(manifestUrl)
+
+    if (res.status === 200) {
+      manifest = await res.json()
+    } else {
+      if (verbose) {
+        console.log('No upgrade script manifest found.')
+      }
+    }
+  } catch (e) {
+    if (verbose) {
+      console.log('Failed to fetch upgrade script manifest', e)
+    }
+  }
+
+  if (!Array.isArray(manifest) || manifest.length === 0) {
+    return
+  }
+
+  const checkLevels = []
+  if (parsed) {
+    // 1. Exact match: 3.4.1
+    checkLevels.push({
+      id: 'exact',
+      candidates: [`${version}.ts`, `${version}/index.ts`],
+    })
+
+    // 2. Patch wildcard: 3.4.x
+    checkLevels.push({
+      id: 'patch',
+      candidates: [
+        `${parsed.major}.${parsed.minor}.x.ts`,
+        `${parsed.major}.${parsed.minor}.x/index.ts`,
+      ],
+    })
+
+    // 3. Minor wildcard: 3.x
+    checkLevels.push({
+      id: 'minor',
+      candidates: [`${parsed.major}.x.ts`, `${parsed.major}.x/index.ts`],
+    })
+  } else {
+    // Fallback for non-semver tags
+    checkLevels.push({
+      id: 'tag',
+      candidates: [`${version}.ts`, `${version}/index.ts`],
+    })
+  }
+
+  const scriptsToRun = []
+
+  // Find all existing scripts (one per level) using the manifest
+  for (const level of checkLevels) {
+    for (const candidate of level.candidates) {
+      if (manifest.includes(candidate)) {
+        scriptsToRun.push({
+          url: `${baseUrl}${candidate}`,
+          name: candidate,
+        })
+        break // Found a script for this level, move to next level
+      }
+    }
+  }
+
+  if (scriptsToRun.length === 0) {
+    if (verbose) {
+      console.log(`No upgrade scripts found for ${version}`)
+    }
+    return
+  }
+
+  ctx.preUpgradeMessage = ''
+
+  // Run them sequentially
+  for (const script of scriptsToRun) {
+    task.output = `Found upgrade check script: ${script.name}. Downloading...`
+
+    let scriptContent
+    try {
+      const res = await fetch(script.url)
+      if (res.status !== 200) {
+        throw new Error(`Failed to download script: ${res.statusText}`)
+      }
+      scriptContent = await res.text()
+    } catch (e) {
+      if (verbose) {
+        console.error(e)
+      }
+      throw new Error(`Failed to download upgrade script from ${script.url}`)
+    }
+
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cedar-upgrade-'))
+    const scriptPath = path.join(tempDir, 'check.ts')
+    await fs.writeFile(scriptPath, scriptContent)
+
+    const deps = extractDependencies(scriptContent)
+
+    if (deps.length > 0) {
+      const depList = deps.join(', ')
+      task.output = `Installing dependencies for ${script.name}: ${depList}...`
+
+      await fs.writeJson(path.join(tempDir, 'package.json'), {
+        name: 'upgrade-check',
+        version: '0.0.0',
+        dependencies: {},
+      })
+
+      await execa('yarn', ['add', ...deps], { cwd: tempDir })
+    }
+
+    task.output = `Running upgrade check: ${script.name}...`
+    try {
+      const { stdout } = await execa('node', ['check.ts'], { cwd: tempDir })
+      if (stdout) {
+        if (ctx.preUpgradeMessage) {
+          ctx.preUpgradeMessage += '\n\n'
+        }
+
+        ctx.preUpgradeMessage += `--- Output from ${script.name} ---\n${stdout}`
+      }
+    } catch (e) {
+      throw new Error(
+        `Upgrade check ${script.name} failed:\n${e.stdout}\n${e.stderr}`,
+      )
+    } finally {
+      await fs.remove(tempDir)
+    }
+  }
+}
+
+const extractDependencies = (content) => {
+  const deps = new Map()
+
+  // 1. Explicit dependencies via comments
+  // Example: // @dependency: lodash@^4.0.0
+  const commentRegex = /\/\/\s*@dependency:\s*(\S+)/g
+  let match
+  while ((match = commentRegex.exec(content)) !== null) {
+    const spec = match[1]
+    // Extract name from specifier (e.g., 'foo@1.0.0' -> 'foo', '@scope/pkg@2' -> '@scope/pkg')
+    const nameMatch = spec.match(/^(@?[^@\s]+)(?:@.+)?$/)
+    if (nameMatch) {
+      deps.set(nameMatch[1], spec)
+    }
+  }
+
+  // 2. Implicit dependencies via imports
+  const importRegex = /(?:import|from)\s*\(?['"]([^'"]+)['"]\)?/g
+
+  while ((match = importRegex.exec(content)) !== null) {
+    let name = match[1]
+
+    if (
+      name.startsWith('.') ||
+      name.startsWith('/') ||
+      name.startsWith('node:') ||
+      builtinModules.includes(name)
+    ) {
+      continue
+    }
+
+    const parts = name.split('/')
+
+    if (name.startsWith('@') && parts.length >= 2) {
+      name = parts.slice(0, 2).join('/')
+    } else if (parts.length >= 1) {
+      name = parts[0]
+    }
+
+    // Explicit comments take precedence
+    if (!deps.has(name)) {
+      deps.set(name, name)
+    }
+  }
+
+  return Array.from(deps.values())
 }
