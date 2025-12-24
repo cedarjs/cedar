@@ -40,9 +40,9 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@testing-library/dom": "9.3.4",
-    "@testing-library/jest-dom": "6.5.0",
+    "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "14.3.1",
-    "@testing-library/user-event": "14.5.2",
+    "@testing-library/user-event": "14.6.1",
     "@types/pascalcase": "1.0.3",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
