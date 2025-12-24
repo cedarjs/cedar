@@ -48,7 +48,7 @@ describe('runPreUpgradeScripts', () => {
     const ctx = {}
     const task = { output: '' }
 
-    await runPreUpgradeScripts(ctx, task, { verbose: false })
+    await runPreUpgradeScripts(ctx, task, { verbose: false, force: false })
 
     expect(fetch).not.toHaveBeenCalled()
     expect(ctx).toEqual({})
@@ -62,7 +62,10 @@ describe('runPreUpgradeScripts', () => {
       json: async () => [],
     })
 
-    await runPreUpgradeScripts(mockCtx, mockTask, { verbose: false })
+    await runPreUpgradeScripts(mockCtx, mockTask, {
+      verbose: false,
+      force: false,
+    })
 
     expect(fetch).toHaveBeenCalledWith(
       'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/manifest.json',
@@ -78,7 +81,10 @@ describe('runPreUpgradeScripts', () => {
       status: 404,
     })
 
-    await runPreUpgradeScripts(mockCtx, mockTask, { verbose: true })
+    await runPreUpgradeScripts(mockCtx, mockTask, {
+      verbose: true,
+      force: false,
+    })
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
       'No upgrade script manifest found.',
@@ -149,7 +155,10 @@ describe('runPreUpgradeScripts', () => {
       throw new Error(`Unexpected command: ${command} ${args.join(' ')}`)
     })
 
-    await runPreUpgradeScripts(mockCtx, mockTask, { verbose: false })
+    await runPreUpgradeScripts(mockCtx, mockTask, {
+      verbose: false,
+      force: false,
+    })
 
     // Verify fetch was called to read the manifest
     expect(fetch).toHaveBeenCalledWith(
@@ -179,9 +188,13 @@ describe('runPreUpgradeScripts', () => {
     )
 
     // Verify script was executed
-    expect(execa.default).toHaveBeenCalledWith('node', ['check.ts'], {
-      cwd: '/tmp/cedar-upgrade-abc123',
-    })
+    expect(execa.default).toHaveBeenCalledWith(
+      'node',
+      ['check.ts', '--verbose', false, '--force', false],
+      {
+        cwd: '/tmp/cedar-upgrade-abc123',
+      },
+    )
 
     // Verify output was captured
     expect(mockCtx.preUpgradeMessage).toContain('--- Output from 3.4.1.ts ---')

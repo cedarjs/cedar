@@ -62,6 +62,12 @@ export const builder = (yargs) => {
       default: false,
       type: 'boolean',
     })
+    .option('force', {
+      alias: 'f',
+      describe: 'Force upgrade even if pre-upgrade checks fail',
+      default: false,
+      type: 'boolean',
+    })
     .epilogue(
       `Also see the ${terminalLink(
         'CedarJS CLI Reference for the upgrade command',
@@ -100,7 +106,7 @@ export const validateTag = (tag) => {
   return tag
 }
 
-export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
+export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
   recordTelemetryAttributes({
     command: 'upgrade',
     dryRun,
@@ -108,6 +114,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
     verbose,
     dedupe,
     yes,
+    force,
   })
 
   // structuring as nested tasks to avoid bug with task.title causing duplicates
@@ -157,7 +164,8 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
       },
       {
         title: 'Running pre-upgrade scripts',
-        task: (ctx, task) => runPreUpgradeScripts(ctx, task, { verbose }),
+        task: (ctx, task) =>
+          runPreUpgradeScripts(ctx, task, { verbose, force }),
         enabled: (ctx) => !!ctx.versionToUpgradeTo,
       },
       {
@@ -553,7 +561,7 @@ const dedupeDeps = async (task, { verbose }) => {
 }
 
 // exported for testing
-export async function runPreUpgradeScripts(ctx, task, { verbose }) {
+export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
   if (!ctx.versionToUpgradeTo) {
     return
   }
@@ -677,7 +685,12 @@ export async function runPreUpgradeScripts(ctx, task, { verbose }) {
 
     task.output = `Running upgrade check: ${script.name}...`
     try {
-      const { stdout } = await execa('node', ['check.ts'], { cwd: tempDir })
+      const { stdout } = await execa(
+        'node',
+        ['check.ts', '--verbose', verbose, '--force', force],
+        { cwd: tempDir },
+      )
+
       if (stdout) {
         if (ctx.preUpgradeMessage) {
           ctx.preUpgradeMessage += '\n\n'
@@ -686,9 +699,13 @@ export async function runPreUpgradeScripts(ctx, task, { verbose }) {
         ctx.preUpgradeMessage += `--- Output from ${script.name} ---\n${stdout}`
       }
     } catch (e) {
-      throw new Error(
-        `Upgrade check ${script.name} failed:\n${e.stdout}\n${e.stderr}`,
-      )
+      const errorMessage = `Upgrade check ${script.name} failed:\n${e.stdout}\n${e.stderr}`
+
+      if (force) {
+        console.warn(errorMessage)
+      } else {
+        throw new Error(errorMessage)
+      }
     } finally {
       await fs.remove(tempDir)
     }
