@@ -42,7 +42,7 @@ For each matching script found, the CLI:
 - Must be valid TypeScript (Node 24 compatible).
 - Can import npm packages (they will be installed automatically).
 - Should output information to `stdout`.
-- Should exit with code 0 if successful, or non-zero if the upgrade shoule be
+- Should exit with code 0 if successful, or non-zero if the upgrade should be
   aborted.
 
 ## Dependencies
