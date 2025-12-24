@@ -117,6 +117,8 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
     force,
   })
 
+  let preUpgradeMessage = ''
+
   // structuring as nested tasks to avoid bug with task.title causing duplicates
   const tasks = new Listr(
     [
@@ -164,8 +166,13 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
       },
       {
         title: 'Running pre-upgrade scripts',
-        task: (ctx, task) =>
-          runPreUpgradeScripts(ctx, task, { verbose, force }),
+        task: async (ctx, task) => {
+          await runPreUpgradeScripts(ctx, task, { verbose, force })
+
+          if (ctx.preUpgradeMessage) {
+            preUpgradeMessage = ctx.preUpgradeMessage
+          }
+        },
         enabled: (ctx) => !!ctx.versionToUpgradeTo,
       },
       {
@@ -231,13 +238,6 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
             )
           }
 
-          if (ctx.preUpgradeMessage) {
-            messageSections.push(
-              `\n   📣 ${c.info('Pre-upgrade Message:')}\n`,
-              `   ${ctx.preUpgradeMessage.replace(/\n/g, '\n   ')}\n`,
-            )
-          }
-
           // @MARK
           // This should be temporary and eventually superseded by a more generic notification system
           if (tag) {
@@ -270,6 +270,12 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
   )
 
   await tasks.run()
+
+  if (preUpgradeMessage) {
+    console.log('')
+    console.log(`   📣 ${c.info('Pre-upgrade Message:')}\n`)
+    console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n   '))
+  }
 }
 async function yarnInstall({ verbose }) {
   try {
@@ -323,34 +329,46 @@ async function setLatestVersionToContext(ctx, tag) {
 }
 
 /**
- * Iterates over CedarJS dependencies in package.json files and updates the version.
+ * Iterates over CedarJS dependencies in package.json files and updates the
+ * version.
  */
-function updatePackageJsonVersion(pkgPath, version, { dryRun, verbose }) {
+function updatePackageJsonVersion(pkgPath, version, task, { dryRun, verbose }) {
   const pkg = JSON.parse(
     fs.readFileSync(path.join(pkgPath, 'package.json'), 'utf-8'),
   )
+
+  const messages = []
 
   if (pkg.dependencies) {
     for (const depName of Object.keys(pkg.dependencies).filter(
       (x) => x.startsWith('@cedarjs/') && x !== '@cedarjs/studio',
     )) {
       if (verbose || dryRun) {
-        console.log(` - ${depName}: ${pkg.dependencies[depName]} => ${version}`)
+        messages.push(
+          ` - ${depName}: ${pkg.dependencies[depName]} => ${version}`,
+        )
       }
+
       pkg.dependencies[depName] = `${version}`
     }
   }
+
   if (pkg.devDependencies) {
     for (const depName of Object.keys(pkg.devDependencies).filter(
       (x) => x.startsWith('@cedarjs/') && x !== '@cedarjs/studio',
     )) {
       if (verbose || dryRun) {
-        console.log(
+        messages.push(
           ` - ${depName}: ${pkg.devDependencies[depName]} => ${version}`,
         )
       }
+
       pkg.devDependencies[depName] = `${version}`
     }
+  }
+
+  if (messages.length > 0) {
+    task.title = task.title + '\n' + messages.join('\n')
   }
 
   if (!dryRun) {
@@ -377,8 +395,13 @@ function updateCedarJSDepsForAllSides(ctx, options) {
       const pkgJsonPath = path.join(basePath, 'package.json')
       return {
         title: `Updating ${pkgJsonPath}`,
-        task: () =>
-          updatePackageJsonVersion(basePath, ctx.versionToUpgradeTo, options),
+        task: (_ctx, task) =>
+          updatePackageJsonVersion(
+            basePath,
+            ctx.versionToUpgradeTo,
+            task,
+            options,
+          ),
         skip: () => !fs.existsSync(pkgJsonPath),
       }
     }),
@@ -568,7 +591,8 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
 
   const version = ctx.versionToUpgradeTo
   const parsed = semver.parse(version)
-  const baseUrl = `https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/`
+  const baseUrl =
+    'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/'
   const manifestUrl = `${baseUrl}manifest.json`
 
   let manifest = []
@@ -681,7 +705,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       task.output = `Installing dependencies for ${script.name}: ${depList}...`
 
       await fs.writeJson(path.join(tempDir, 'package.json'), {
-        name: 'upgrade-check',
+        name: 'pre-upgrade-script',
         version: '0.0.0',
         dependencies: {},
       })
@@ -689,11 +713,11 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       await execa('yarn', ['add', ...deps], { cwd: tempDir })
     }
 
-    task.output = `Running upgrade check: ${script.name}...`
+    task.output = `Running pre-upgrade script: ${script.name}...`
     try {
       const { stdout } = await execa(
         'node',
-        ['check.ts', '--verbose', verbose, '--force', force],
+        ['script.ts', '--verbose', verbose, '--force', force],
         { cwd: tempDir },
       )
 
@@ -702,10 +726,12 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
           ctx.preUpgradeMessage += '\n\n'
         }
 
-        ctx.preUpgradeMessage += `--- Output from ${script.name} ---\n${stdout}`
+        ctx.preUpgradeMessage += `\n${stdout}`
       }
     } catch (e) {
-      const errorMessage = `Upgrade check ${script.name} failed:\n${e.stdout}\n${e.stderr}`
+      const errorMessage =
+        `Pre-upgrade check ${script.name} failed:\n` +
+        `${e.stdout}\n${e.stderr}`
 
       if (force) {
         console.warn(errorMessage)
