@@ -1,6 +1,6 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
-import fs from 'fs-extra'
 import semver from 'semver'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -86,8 +86,8 @@ export function assertRedwoodVersion(minVersions) {
 }
 
 function getProjectRedwoodVersion() {
-  const { devDependencies } = fs.readJSONSync(
-    path.join(getPaths().base, 'package.json'),
+  const { devDependencies } = JSON.parse(
+    fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
   )
 
   return devDependencies['@cedarjs/core']

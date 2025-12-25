@@ -1,8 +1,7 @@
 import { spawn } from 'child_process'
+import fs from 'node:fs'
 import os from 'os'
 import path from 'path'
-
-import fs from 'fs-extra'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -16,7 +15,7 @@ import { getPaths } from '@cedarjs/project-config'
  */
 export function spawnBackgroundProcess(name, cmd, args) {
   const logDirectory = path.join(getPaths().generated.base, 'logs')
-  fs.ensureDirSync(logDirectory)
+  fs.mkdirSync(logDirectory, { recursive: true })
 
   const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase()
 

@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 import semver from 'semver'
 
@@ -37,8 +37,11 @@ export const handler = async ({ force, verbose }) => {
           }
 
           // Check that the project is using at least react version 19, as required by the compiler
-          const webPkgJson = fs.readJSONSync(
-            path.join(rwPaths.web.base, 'package.json'),
+          const webPkgJson = JSON.parse(
+            fs.readFileSync(
+              path.join(rwPaths.web.base, 'package.json'),
+              'utf8',
+            ),
           )
           const reactVersion = webPkgJson['dependencies']['react']
           const coercedReactVersion = semver.coerce(reactVersion)

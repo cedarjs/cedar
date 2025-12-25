@@ -1,6 +1,5 @@
+import fs from 'node:fs'
 import path from 'path'
-
-import fs from 'fs-extra'
 
 import { getPaths } from './index.js'
 

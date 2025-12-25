@@ -1,8 +1,8 @@
 globalThis.__dirname = __dirname
 
+import fs from 'node:fs'
 import path from 'path'
 
-import fs from 'fs-extra'
 import { vol } from 'memfs'
 import { vi, test, describe, beforeEach, afterEach, expect } from 'vitest'
 
@@ -15,7 +15,6 @@ import { customOrDefaultTemplatePath } from '../../../generate/yargsHandlerHelpe
 import { tasks } from '../scaffoldHandler.js'
 
 vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
-vi.mock('fs-extra')
 vi.mock('execa')
 
 vi.mock('../../../../lib', async (importOriginal) => {
@@ -51,7 +50,7 @@ const templateDirectories = templateDirectoryNames.map((name) => {
   })
 })
 const scaffoldTemplates = {}
-const actualFs = await vi.importActual('fs-extra')
+const actualFs = await vi.importActual('node:fs')
 templateDirectories.forEach(async (directory) => {
   const files = actualFs.readdirSync(directory)
   files.forEach((file) => {

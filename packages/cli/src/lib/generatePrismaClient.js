@@ -1,9 +1,8 @@
 // helper used in Dev and Build commands
 
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
-
-import fs from 'fs-extra'
 
 import { runCommandTask, getPaths } from '../lib/index.js'
 

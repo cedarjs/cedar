@@ -17,7 +17,7 @@ import { getConfig, getPaths } from '@cedarjs/project-config'
 import * as pluginLib from '../lib/plugin.js'
 import { loadPlugins } from '../plugin.js'
 
-vi.mock('fs-extra')
+vi.mock('node:fs')
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal()
   return {

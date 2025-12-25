@@ -1,9 +1,9 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import ci from 'ci-info'
 import envinfo from 'envinfo'
-import fs from 'fs-extra'
 import system from 'systeminformation'
 import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 

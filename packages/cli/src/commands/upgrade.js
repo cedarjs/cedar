@@ -1,10 +1,10 @@
+import fs from 'node:fs'
 import { builtinModules } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import execa from 'execa'
-import fs from 'fs-extra'
 import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
 import semver from 'semver'
@@ -328,7 +328,7 @@ async function removeCliCache(ctx, { dryRun, verbose }) {
   }
 
   if (!dryRun) {
-    fs.removeSync(cliCacheDir)
+    fs.rmSync(cliCacheDir, { recursive: true, force: true })
   }
 }
 
@@ -564,7 +564,7 @@ async function downloadYarnPatches(ctx, { dryRun, verbose }) {
           }
 
           if (!dryRun) {
-            await fs.writeFile(patchPath, patchMeta.content, 'base64')
+            await fs.promises.writeFile(patchPath, patchMeta.content, 'base64')
           }
         },
       }
@@ -698,7 +698,9 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
   for (const scriptName of scriptsToRun) {
     task.output = `Found upgrade check script: ${scriptName}. Downloading...`
 
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cedar-upgrade-'))
+    const tempDir = await fs.promises.mkdtemp(
+      path.join(os.tmpdir(), 'cedar-upgrade-'),
+    )
     const scriptPath = path.join(tempDir, 'script.ts')
 
     // Check if this is a directory-based script (e.g., 3.4.1/index.ts)
@@ -738,11 +740,11 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
 
             const fileContent = await fileRes.text()
             const filePath = path.join(tempDir, file.name)
-            await fs.writeFile(filePath, fileContent)
+            await fs.promises.writeFile(filePath, fileContent)
 
             // Rename index.ts to script.ts for execution
             if (file.name === 'index.ts') {
-              await fs.rename(filePath, scriptPath)
+              await fs.promises.rename(filePath, scriptPath)
             }
           }
         }
@@ -765,7 +767,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
         }
 
         const scriptContent = await res.text()
-        await fs.writeFile(scriptPath, scriptContent)
+        await fs.promises.writeFile(scriptPath, scriptContent)
       } catch (e) {
         if (verbose) {
           console.error(e)
@@ -775,18 +777,21 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     }
 
     // Read script content for dependency extraction
-    const scriptContent = await fs.readFile(scriptPath, 'utf8')
+    const scriptContent = await fs.promises.readFile(scriptPath, 'utf8')
     const deps = extractDependencies(scriptContent)
 
     if (deps.length > 0) {
       const depList = deps.join(', ')
       task.output = `Installing dependencies for ${scriptName}: ${depList}...`
 
-      await fs.writeJson(path.join(tempDir, 'package.json'), {
-        name: 'pre-upgrade-script',
-        version: '0.0.0',
-        dependencies: {},
-      })
+      await fs.promises.writeFile(
+        path.join(tempDir, 'package.json'),
+        JSON.stringify({
+          name: 'pre-upgrade-script',
+          version: '0.0.0',
+          dependencies: {},
+        }),
+      )
 
       await execa('yarn', ['add', ...deps], { cwd: tempDir })
     }
@@ -818,7 +823,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       ctx.preUpgradeError += errorMessage
 
       if (!force) {
-        await fs.remove(tempDir)
+        await fs.promises.rmdir(tempDir, { recursive: true })
         shouldCleanup = false
 
         // Return to skip remaining pre-upgrade scripts
@@ -826,7 +831,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       }
     } finally {
       if (shouldCleanup) {
-        await fs.remove(tempDir)
+        await fs.promises.rmdir(tempDir, { recursive: true })
       }
     }
   }

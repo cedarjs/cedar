@@ -1,6 +1,6 @@
 global.__dirname = __dirname
 
-vi.mock('fs-extra')
+vi.mock('node:fs')
 vi.mock('latest-version')
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
@@ -19,7 +19,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-import fs from 'fs-extra'
+import fs from 'node:fs'
+
 import latestVersion from 'latest-version'
 import { vol } from 'memfs'
 import {

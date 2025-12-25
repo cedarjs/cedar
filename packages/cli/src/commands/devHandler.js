@@ -1,8 +1,8 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import { argv } from 'node:process'
 
 import concurrently from 'concurrently'
-import fs from 'fs-extra'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { shutdownPort } from '@cedarjs/internal/dist/dev'

@@ -15,7 +15,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
     }),
   }
 })
-vi.mock('fs-extra')
+vi.mock('node:fs')
 vi.mock('execa', () => ({
   default: vi.fn((cmd, params) => ({
     cmd,

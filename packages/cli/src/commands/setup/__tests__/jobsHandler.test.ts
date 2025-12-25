@@ -1,4 +1,4 @@
-vi.mock('fs-extra')
+vi.mock('node:fs')
 
 import '../../../lib/mockTelemetry'
 

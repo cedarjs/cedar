@@ -6,7 +6,7 @@ import * as deployNetlify from '../netlify.js'
 
 vi.mock('path')
 vi.mock('execa', () => ({ default: vi.fn() }))
-vi.mock('fs-extra')
+vi.mock('node:fs')
 
 vi.mock('@cedarjs/project-config', async () => ({
   getPaths: () => ({

@@ -1,8 +1,8 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 
 import { getPaths } from './index.js'
 
@@ -105,8 +105,8 @@ export async function installRedwoodModule(module) {
  * @param {string} module
  */
 export function isModuleInstalled(module) {
-  const { dependencies, devDependencies } = fs.readJSONSync(
-    path.join(getPaths().base, 'package.json'),
+  const { dependencies, devDependencies } = JSON.parse(
+    fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
   )
 
   const deps = {

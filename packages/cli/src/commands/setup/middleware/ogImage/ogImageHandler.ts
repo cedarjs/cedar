@@ -1,6 +1,6 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 import { format } from 'prettier'
 
@@ -11,7 +11,9 @@ import { runTransform } from '../../../../lib/runTransform.js'
 
 export async function handler({ force }: { force: boolean }) {
   const rwPaths = getPaths()
-  const rootPkgJson = fs.readJSONSync(path.join(rwPaths.base, 'package.json'))
+  const rootPkgJson = JSON.parse(
+    fs.readFileSync(path.join(rwPaths.base, 'package.json'), 'utf8'),
+  )
   const currentProjectVersion = rootPkgJson.devDependencies['@cedarjs/core']
 
   const notes: string[] = ['']

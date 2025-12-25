@@ -1,6 +1,5 @@
+import fs from 'node:fs'
 import path from 'path'
-
-import fs from 'fs-extra'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -35,7 +34,7 @@ export class CustomFileExporter {
       'telemetry',
       this.#storageFileName,
     )
-    fs.ensureDirSync(path.dirname(this.#storageFilePath))
+    fs.mkdirSync(path.dirname(this.#storageFilePath), { recursive: true })
 
     // Create the file and open a JSON array
     fs.writeFileSync(this.#storageFilePath, '[')

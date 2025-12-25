@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { addWebPackages } from '@cedarjs/cli-helpers'
@@ -192,11 +192,11 @@ export const handler = async ({ force, verbose }) => {
           // with CommonJS.
           // TODO: Remove this when Redwood switches to ESM
           const pkgJsonPath = path.join(rwPaths.base, 'package.json')
-          const pkgJson = fs.readJsonSync(pkgJsonPath)
+          const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
           const resolutions = pkgJson.resolutions || {}
           resolutions['@apollo/client-react-streaming/superjson'] = '^1.12.2'
           pkgJson.resolutions = resolutions
-          fs.writeJsonSync(pkgJsonPath, pkgJson, { spaces: 2 })
+          fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
         },
       },
       addWebPackages(['@apollo/client-react-streaming@0.10.0']),
