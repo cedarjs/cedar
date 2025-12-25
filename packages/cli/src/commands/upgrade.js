@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import execa from 'execa'
@@ -22,7 +22,8 @@ export const builder = (yargs) => {
   yargs
     .example(
       'cedar upgrade -t 0.20.1-canary.5',
-      'Specify a version. URL for Version History:\nhttps://www.npmjs.com/package/@cedarjs/core',
+      'Specify a version. URL for Version History:\n' +
+        'https://www.npmjs.com/package/@cedarjs/core',
     )
     .option('dry-run', {
       alias: 'd',
@@ -111,7 +112,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
     [
       {
         title: 'Confirm upgrade',
-        task: async (ctx, task) => {
+        task: async (_ctx, task) => {
           if (yes) {
             task.skip('Skipping confirmation prompt because of --yes flag.')
             return
@@ -212,6 +213,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
                 `   ❖ ${discordLink}\n`,
             )
           }
+
           // @MARK
           // This should be temporary and eventually superseded by a more generic notification system
           if (tag) {
@@ -245,6 +247,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
 
   await tasks.run()
 }
+
 async function yarnInstall({ verbose }) {
   try {
     await execa('yarn install', {
@@ -297,34 +300,46 @@ async function setLatestVersionToContext(ctx, tag) {
 }
 
 /**
- * Iterates over CedarJS dependencies in package.json files and updates the version.
+ * Iterates over CedarJS dependencies in package.json files and updates the
+ * version.
  */
-function updatePackageJsonVersion(pkgPath, version, { dryRun, verbose }) {
+function updatePackageJsonVersion(pkgPath, version, task, { dryRun, verbose }) {
   const pkg = JSON.parse(
     fs.readFileSync(path.join(pkgPath, 'package.json'), 'utf-8'),
   )
+
+  const messages = []
 
   if (pkg.dependencies) {
     for (const depName of Object.keys(pkg.dependencies).filter(
       (x) => x.startsWith('@cedarjs/') && x !== '@cedarjs/studio',
     )) {
       if (verbose || dryRun) {
-        console.log(` - ${depName}: ${pkg.dependencies[depName]} => ${version}`)
+        messages.push(
+          ` - ${depName}: ${pkg.dependencies[depName]} => ${version}`,
+        )
       }
+
       pkg.dependencies[depName] = `${version}`
     }
   }
+
   if (pkg.devDependencies) {
     for (const depName of Object.keys(pkg.devDependencies).filter(
       (x) => x.startsWith('@cedarjs/') && x !== '@cedarjs/studio',
     )) {
       if (verbose || dryRun) {
-        console.log(
+        messages.push(
           ` - ${depName}: ${pkg.devDependencies[depName]} => ${version}`,
         )
       }
+
       pkg.devDependencies[depName] = `${version}`
     }
+  }
+
+  if (messages.length > 0) {
+    task.title = task.title + '\n' + messages.join('\n')
   }
 
   if (!dryRun) {
@@ -351,8 +366,13 @@ function updateCedarJSDepsForAllSides(ctx, options) {
       const pkgJsonPath = path.join(basePath, 'package.json')
       return {
         title: `Updating ${pkgJsonPath}`,
-        task: () =>
-          updatePackageJsonVersion(basePath, ctx.versionToUpgradeTo, options),
+        task: (_ctx, task) =>
+          updatePackageJsonVersion(
+            basePath,
+            ctx.versionToUpgradeTo,
+            task,
+            options,
+          ),
         skip: () => !fs.existsSync(pkgJsonPath),
       }
     }),
@@ -518,7 +538,7 @@ async function refreshPrismaClient(task, { verbose }) {
   }
 }
 
-const dedupeDeps = async (task, { verbose }) => {
+const dedupeDeps = async (_task, { verbose }) => {
   try {
     await execa('yarn dedupe', {
       shell: true,
