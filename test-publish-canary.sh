@@ -13,13 +13,14 @@ echo "📋 Current git status:"
 git status --short
 echo ""
 
-# Simulate what CI does
+# Simulate what CI does - CI doesn't have Nx cache so we skip it too
 echo "🧹 Running linter..."
 yarn lint
 echo ""
 
-echo "🧪 Running tests..."
-yarn test
+echo "🧪 Running tests (without cache, like CI)..."
+echo "Note: Using --skip-nx-cache to replicate CI environment"
+NX_SKIP_NX_CACHE=true yarn test
 echo ""
 
 # Check for uncommitted changes after tests
@@ -51,12 +52,18 @@ args=(
   --no-git-reset
 )
 
+echo "Note: If this fails with EUNCOMMIT, it means tests generated files that differ from git."
+echo ""
+
 echo 'n' | yarn lerna publish "${args[@]}" 2>&1 | tee publish_output || {
   echo ""
   echo "❌ Lerna publish failed!"
   echo ""
   echo "Git status at failure:"
   git status --short
+  echo ""
+  echo "Git diff for modified files:"
+  git diff --stat
   exit 1
 }
 
