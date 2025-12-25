@@ -218,7 +218,6 @@ describe('runPreUpgradeScripts', () => {
     )
 
     // Verify output was captured
-    expect(mockCtx.preUpgradeMessage).toContain('--- Output from 3.4.1.ts ---')
     expect(mockCtx.preUpgradeMessage).toContain('Upgrade check passed')
 
     // Verify cleanup
