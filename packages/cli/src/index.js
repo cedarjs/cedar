@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
+import fs from 'node:fs'
 import path from 'path'
 
 import { trace, SpanStatusCode } from '@opentelemetry/api'
-import fs from 'fs-extra'
 import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 

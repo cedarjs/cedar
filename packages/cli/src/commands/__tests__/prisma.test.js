@@ -26,11 +26,11 @@ vi.mock('execa', () => ({
   },
 }))
 
-vi.mock('fs-extra', async (importOriginal) => {
-  const originalFsExtra = await importOriginal()
+vi.mock('node:fs', async (importOriginal) => {
+  const originalFs = await importOriginal()
   return {
     default: {
-      ...originalFsExtra,
+      ...originalFs,
       existsSync: () => true,
     },
   }

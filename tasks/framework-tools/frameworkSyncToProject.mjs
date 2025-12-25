@@ -3,11 +3,11 @@
 // @ts-check
 
 import { execSync } from 'node:child_process'
+import fs from 'node:fs'
 import path from 'node:path'
 
 import c from 'ansi-colors'
 import chokidar from 'chokidar'
-import fs from 'fs-extra'
 import { rimraf } from 'rimraf'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'

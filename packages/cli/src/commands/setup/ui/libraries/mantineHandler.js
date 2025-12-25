@@ -1,7 +1,7 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import execa from 'execa'
-import fse from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -47,8 +47,8 @@ export async function handler({ force, install, packages }) {
     packages,
   })
 
-  const rwPaths = getPaths()
-  const configFilePath = path.join(rwPaths.web.config, 'mantine.config.js')
+  const cedarPaths = getPaths()
+  const configFilePath = path.join(cedarPaths.web.config, 'mantine.config.js')
 
   const installPackages = (
     packages.includes(ALL_KEYWORD) ? ALL_MANTINE_PACKAGES : packages
@@ -84,9 +84,9 @@ export async function handler({ force, install, packages }) {
       },
       {
         title: 'Setting up Mantine...',
-        skip: () => fileIncludes(rwPaths.web.app, 'MantineProvider'),
+        skip: () => fileIncludes(cedarPaths.web.app, 'MantineProvider'),
         task: () =>
-          extendJSXFile(rwPaths.web.app, {
+          extendJSXFile(cedarPaths.web.app, {
             insertComponent: {
               name: 'MantineProvider',
               props: { theme: 'theme' },
@@ -106,14 +106,14 @@ export async function handler({ force, install, packages }) {
            * Check if PostCSS config already exists.
            * If it exists, throw an error.
            */
-          const postCSSConfigPath = rwPaths.web.postcss
+          const postCSSConfigPath = cedarPaths.web.postcss
 
-          if (!force && fse.existsSync(postCSSConfigPath)) {
+          if (!force && fs.existsSync(postCSSConfigPath)) {
             throw new Error(
               'PostCSS config already exists.\nUse --force to override existing config.',
             )
           } else {
-            const postCSSConfig = fse.readFileSync(
+            const postCSSConfig = fs.readFileSync(
               path.join(
                 import.meta.dirname,
                 '../templates/mantine-postcss.config.cjs.template',
@@ -121,7 +121,8 @@ export async function handler({ force, install, packages }) {
               'utf-8',
             )
 
-            return fse.outputFileSync(postCSSConfigPath, postCSSConfig)
+            fs.mkdirSync(path.dirname(postCSSConfigPath), { recursive: true })
+            return fs.writeFileSync(postCSSConfigPath, postCSSConfig)
           }
         },
       },
@@ -136,7 +137,7 @@ export async function handler({ force, install, packages }) {
       {
         title: 'Configure Storybook...',
         skip: () =>
-          fileIncludes(rwPaths.web.storybookPreviewConfig, 'withMantine'),
+          fileIncludes(cedarPaths.web.storybookPreviewConfig, 'withMantine'),
         task: async () =>
           await extendStorybookConfiguration(
             path.join(

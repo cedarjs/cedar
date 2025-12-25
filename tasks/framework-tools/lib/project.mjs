@@ -1,9 +1,9 @@
 /* eslint-env node */
 
+import fs from 'node:fs'
 import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 import ora from 'ora'
 import { rimraf } from 'rimraf'
 import { terminalLink } from 'termi-link'
@@ -24,7 +24,7 @@ export function fixProjectBinaries(projectPath) {
 
   // Read the existing package.json scripts
   const packageJsonPath = path.join(projectPath, 'package.json')
-  const packageJson = fs.readJSONSync(packageJsonPath)
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
   const scripts = packageJson.scripts ?? {}
 
   for (let [binName, binPath] of Object.entries(bins)) {
@@ -79,7 +79,7 @@ export function fixProjectBinaries(projectPath) {
 
   // Write the updated project.json which includes the full list of scripts.
   packageJson.scripts = scripts
-  fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 })
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
 }
 
 /**
@@ -105,14 +105,14 @@ export function addDependenciesToPackageJson(
     `Adding ${numberOfDependencies} framework dependencies to ${packageJsonLink}...`,
   ).start()
 
-  const packageJson = fs.readJSONSync(packageJsonPath)
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
   packageJson.dependencies = {
     ...packageJson.dependencies,
     ...dependencies,
   }
 
-  fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 })
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
 
   spinner.succeed(
     `Added ${numberOfDependencies} framework dependencies to ${packageJsonLink}`,

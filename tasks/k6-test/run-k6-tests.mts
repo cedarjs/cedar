@@ -9,7 +9,7 @@ import ansis from 'ansis'
 import type { ExecaChildProcess } from 'execa'
 import execa from 'execa'
 import fg from 'fast-glob'
-import fs from 'fs-extra'
+import fs from 'node:fs'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 

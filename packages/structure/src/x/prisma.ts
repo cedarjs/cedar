@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'fs-extra'
+import { existsSync, readFileSync } from 'node:fs'
+
 import type { Location } from 'vscode-languageserver'
 import { Range } from 'vscode-languageserver'
 

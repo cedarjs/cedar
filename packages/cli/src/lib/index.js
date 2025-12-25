@@ -494,10 +494,10 @@ export const removeRoutesFromRouterTask = (routes, layout) => {
 
 /**
  *
- * Use this util to install dependencies on a user's Redwood app
+ * Use this util to install dependencies on a user's Cedar app
  *
  * @example await addPackagesTask({
- * packages: ['fs-extra', 'somePackage@2.1.0'],
+ * packages: ['tailwindcss', 'somePackage@2.1.0'],
  * side: 'api', // <-- leave empty for project root
  * devDependency: true
  * })

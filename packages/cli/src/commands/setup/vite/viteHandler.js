@@ -1,6 +1,6 @@
+import fs from 'node:fs'
 import path from 'path'
 
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { addWebPackages } from '@cedarjs/cli-helpers'

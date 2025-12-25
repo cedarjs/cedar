@@ -1,9 +1,9 @@
 // import { terminalLink } from 'termi-link'
+import fs from 'node:fs'
 import { EOL } from 'os'
 import path from 'path'
 
 import prismaInternals from '@prisma/internals'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'

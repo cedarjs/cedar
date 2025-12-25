@@ -3,7 +3,6 @@ import fs from 'node:fs'
 import url from 'node:url'
 
 import ansis from 'ansis'
-import fse from 'fs-extra'
 // lodash is commonjs
 import template from 'lodash/template.js'
 import prompts from 'prompts'
@@ -78,9 +77,10 @@ async function generateCodemod(version, name, kind) {
   const src = new URL(`templates/${kind}/`, import.meta.url)
 
   // __testfixtures__
-  fse.copySync(
+  fs.cpSync(
     url.fileURLToPath(new URL('__testfixtures__', src)),
     url.fileURLToPath(testFixturesDest),
+    { recursive: true, force: true },
   )
 
   // __tests__

@@ -1,6 +1,6 @@
+import fs from 'node:fs'
 import path from 'path'
 
-import fs from 'fs-extra'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'

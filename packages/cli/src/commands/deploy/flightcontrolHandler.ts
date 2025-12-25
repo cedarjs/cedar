@@ -1,7 +1,7 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths } from '@cedarjs/project-config'
@@ -65,7 +65,7 @@ export const handler = async ({
     }
 
     const serverFilePath = path.join(cedarPaths.api.dist, 'server.js')
-    const hasServerFile = fs.pathExistsSync(serverFilePath)
+    const hasServerFile = fs.existsSync(serverFilePath)
 
     if (hasServerFile) {
       execa(`yarn node ${serverFilePath}`, execaConfig)

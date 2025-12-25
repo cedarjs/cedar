@@ -1,9 +1,9 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { camelCase } from 'camel-case'
 import execa from 'execa'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 import { titleCase } from 'title-case'
 

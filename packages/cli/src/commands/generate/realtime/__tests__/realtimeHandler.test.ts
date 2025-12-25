@@ -12,8 +12,8 @@ const mocks = vi.hoisted(() => ({
   writtenFiles: {} as Record<string, string>,
 }))
 
-vi.mock('fs-extra', async () => {
-  const fs = await vi.importActual<typeof FS>('fs-extra')
+vi.mock('node:fs', async () => {
+  const fs = await vi.importActual<typeof FS>('node:fs')
 
   return {
     default: {

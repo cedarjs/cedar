@@ -2,11 +2,11 @@
 // @ts-check
 
 import { execSync } from 'node:child_process'
+import fs from 'node:fs'
 import path from 'node:path'
 import url from 'node:url'
 
 import Arborist from '@npmcli/arborist'
-import fs from 'fs-extra'
 import packlist from 'npm-packlist'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
@@ -67,7 +67,7 @@ export function getFrameworkDependencies(
   const dependencies = {}
 
   for (const packageJsonPath of packageJsonPaths) {
-    const packageJson = fs.readJSONSync(packageJsonPath)
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
     for (const [name, version] of Object.entries(
       packageJson?.dependencies ?? {},
@@ -108,7 +108,7 @@ export async function getFrameworkPackagesFiles(
   const frameworkPackageFiles = {}
 
   for (const packageJsonPath of packageJsonPaths) {
-    const packageJson = fs.readJSONSync(packageJsonPath)
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
     const arborist = new Arborist({ path: path.dirname(packageJsonPath) })
     const tree = await arborist.loadActual()
     frameworkPackageFiles[packageJson.name] = await packlist(tree)
@@ -126,7 +126,7 @@ export function getFrameworkPackagesBins(
   let bins = {}
 
   for (const packageJsonPath of packageJsonPaths) {
-    const packageJson = fs.readJSONSync(packageJsonPath)
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
     if (!packageJson.bin) {
       continue
@@ -167,7 +167,7 @@ export function resolvePackageJsonPathFromFilePath(filePath) {
  * @returns {string} The package name if it has one
  */
 export function getPackageName(packageJsonPath) {
-  return fs.readJSONSync(packageJsonPath).name
+  return JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')).name
 }
 
 /**

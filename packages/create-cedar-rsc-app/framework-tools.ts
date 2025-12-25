@@ -3,7 +3,7 @@ import path from 'node:path'
 import type { BuildOptions as ESBuildOptions } from 'esbuild'
 import * as esbuild from 'esbuild'
 import fg from 'fast-glob'
-import fs from 'fs-extra'
+import fs from 'node:fs'
 
 export const defaultBuildOptions: ESBuildOptions = {
   outdir: 'dist',

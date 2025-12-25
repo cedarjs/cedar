@@ -3,7 +3,7 @@ import path from 'node:path'
 import ansis from 'ansis'
 import execa from 'execa'
 import fg from 'fast-glob'
-import fs from 'fs-extra'
+import fs from 'node:fs'
 import { rimrafSync } from 'rimraf'
 
 export function buildRedwoodFramework({

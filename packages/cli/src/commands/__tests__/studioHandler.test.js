@@ -1,6 +1,5 @@
 // Have to use `var` here to avoid "Temporal Dead Zone" issues
-
-var mockedRedwoodVersion = '0.0.0'
+var mockedCedarVersion = '0.0.0'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal()
@@ -10,13 +9,13 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('fs-extra', () => ({
+vi.mock('node:fs', () => ({
   default: {
-    readJSONSync: () => ({
-      devDependencies: {
-        '@cedarjs/core': mockedRedwoodVersion,
-      },
-    }),
+    readFileSync: () => `{
+      "devDependencies": {
+        "@cedarjs/core": "${mockedCedarVersion}"
+      }
+    }`,
   },
 }))
 
@@ -43,112 +42,112 @@ describe('studioHandler', () => {
     const minVersions = ['7.0.0-canary.874', '7.x', '8.0.0-0']
 
     it('exits on RW v6', () => {
-      mockedRedwoodVersion = '6.6.2'
+      mockedCedarVersion = '6.6.2'
 
       expect(() => assertRedwoodVersion(minVersions)).toThrow()
       expect(exitSpy).toHaveBeenCalledWith(1)
     })
 
     it('exits on RW v7.0.0-canary.785', () => {
-      mockedRedwoodVersion = '7.0.0-canary.785'
+      mockedCedarVersion = '7.0.0-canary.785'
 
       expect(() => assertRedwoodVersion(minVersions)).toThrow()
       expect(exitSpy).toHaveBeenCalledWith(1)
     })
 
     it('exits on RW v7.0.0-canary.785+fcb9d66b5', () => {
-      mockedRedwoodVersion = '7.0.0-canary.785+fcb9d66b5'
+      mockedCedarVersion = '7.0.0-canary.785+fcb9d66b5'
 
       expect(() => assertRedwoodVersion(minVersions)).toThrow()
       expect(exitSpy).toHaveBeenCalledWith(1)
     })
 
     it('exits on RW v0.0.0-experimental.999', () => {
-      mockedRedwoodVersion = '0.0.0-experimental.999'
+      mockedCedarVersion = '0.0.0-experimental.999'
 
       expect(() => assertRedwoodVersion(minVersions)).toThrow()
       expect(exitSpy).toHaveBeenCalledWith(1)
     })
 
     it('exits on RW v7.0.0-alpha.999', () => {
-      mockedRedwoodVersion = '7.0.0-alpha.999'
+      mockedCedarVersion = '7.0.0-alpha.999'
 
       expect(() => assertRedwoodVersion(minVersions)).toThrow()
       expect(exitSpy).toHaveBeenCalledWith(1)
     })
 
     it('exits on RW v7.0.0-rc.999', () => {
-      mockedRedwoodVersion = '7.0.0-rc.999'
+      mockedCedarVersion = '7.0.0-rc.999'
 
       expect(() => assertRedwoodVersion(minVersions)).toThrow()
       expect(exitSpy).toHaveBeenCalledWith(1)
     })
 
     it('allows RW v7.0.0-canary.874', () => {
-      mockedRedwoodVersion = '7.0.0-canary.874'
+      mockedCedarVersion = '7.0.0-canary.874'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v7.0.0-canary.874+fcb9d66b5', () => {
-      mockedRedwoodVersion = '7.0.0-canary.874+fcb9d66b5'
+      mockedCedarVersion = '7.0.0-canary.874+fcb9d66b5'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v7.0.0', () => {
-      mockedRedwoodVersion = '7.0.0'
+      mockedCedarVersion = '7.0.0'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v8.0.0', () => {
-      mockedRedwoodVersion = '8.0.0'
+      mockedCedarVersion = '8.0.0'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v7.0.1', () => {
-      mockedRedwoodVersion = '7.0.1'
+      mockedCedarVersion = '7.0.1'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v8.0.0-canary.1', () => {
-      mockedRedwoodVersion = '8.0.0-canary.1'
+      mockedCedarVersion = '8.0.0-canary.1'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v8.0.0-rc.1', () => {
-      mockedRedwoodVersion = '8.0.0-rc.1'
+      mockedCedarVersion = '8.0.0-rc.1'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v8.0.0', () => {
-      mockedRedwoodVersion = '8.0.0'
+      mockedCedarVersion = '8.0.0'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v8.0.1', () => {
-      mockedRedwoodVersion = '8.0.1'
+      mockedCedarVersion = '8.0.1'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()
     })
 
     it('allows RW v9.1.0', () => {
-      mockedRedwoodVersion = '9.1.0'
+      mockedCedarVersion = '9.1.0'
 
       expect(() => assertRedwoodVersion(minVersions)).not.toThrow()
       expect(exitSpy).not.toHaveBeenCalled()

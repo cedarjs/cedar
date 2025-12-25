@@ -1,4 +1,4 @@
-import fs from 'fs-extra'
+import fs from 'node:fs'
 
 import {
   build,
@@ -9,7 +9,7 @@ import {
 // This package uses the name of the bin as `scriptName` for Yargs to keep things in sync.
 // There should only be one bin entry for this to work.
 // Otherwise we have to rethink the code.
-const { bin } = await fs.readJSON('./package.json')
+const { bin } = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
 const bins = Object.keys(bin).length
 
 if (bins !== 1) {

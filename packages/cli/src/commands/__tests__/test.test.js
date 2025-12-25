@@ -22,11 +22,11 @@ vi.mock('@cedarjs/structure', () => {
 })
 
 // Before rw tests run, api/ and web/ `jest.config.js` is confirmed via existsSync()
-vi.mock('fs-extra', async (importOriginal) => {
-  const originalFsExtra = await importOriginal()
+vi.mock('node:fs', async (importOriginal) => {
+  const originalFs = await importOriginal()
   return {
     default: {
-      ...originalFsExtra,
+      ...originalFs,
       existsSync: () => true,
     },
   }

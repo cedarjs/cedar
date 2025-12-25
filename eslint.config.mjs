@@ -377,6 +377,7 @@ export default [
   // NodeJS Context
   {
     files: [
+      '.github/**',
       'packages/api/src/**',
       'packages/api-server/src/**',
       'packages/cli/src/**',
@@ -394,7 +395,7 @@ export default [
       'packages/cli-packages/**/*.mjs',
       'packages/codemods/tasks/**',
       'packages/ogimage-gen/cjsWrappers/**',
-      '.github/**',
+      'tasks/**',
     ],
     languageOptions: {
       globals: {

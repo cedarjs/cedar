@@ -3,7 +3,7 @@ globalThis.__dirname = __dirname
 globalThis.mockFs = false
 let mockFiles = {}
 
-vi.mock('fs', async (importOriginal) => {
+vi.mock('node:fs', async (importOriginal) => {
   const originalFs = await importOriginal()
 
   return {
@@ -14,57 +14,42 @@ vi.mock('fs', async (importOriginal) => {
           return true
         }
 
-        return originalFs.existsSync.apply(null, args)
+        if (!globalThis.mockFs) {
+          return originalFs.existsSync.apply(null, args)
+        }
+
+        return false
+      },
+      mkdirSync: (...args) => {
+        if (!globalThis.mockFs) {
+          return originalFs.mkdirSync.apply(null, args)
+        }
+      },
+      writeFileSync: (target, contents) => {
+        if (!globalThis.mockFs) {
+          return originalFs.writeFileSync.call(null, target, contents)
+        }
       },
       readFileSync: (path) => {
         if (mockFiles[path]) {
           return mockFiles[path]
         }
 
-        return originalFs.readFileSync
-      },
-    },
-  }
-})
-
-vi.mock('fs-extra', async (importOriginal) => {
-  const originalFsExtra = await importOriginal()
-
-  return {
-    default: {
-      ...originalFsExtra,
-      existsSync: (...args) => {
         if (!globalThis.mockFs) {
-          return originalFsExtra.existsSync.apply(null, args)
-        }
-        return false
-      },
-      mkdirSync: (...args) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.mkdirSync.apply(null, args)
-        }
-      },
-      writeFileSync: (target, contents) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.writeFileSync.call(null, target, contents)
-        }
-      },
-      readFileSync: (path) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.readFileSync.call(null, path)
+          return originalFs.readFileSync.call(null, path)
         }
 
         const mockedContent = mockFiles[path]
 
-        return mockedContent || originalFsExtra.readFileSync.call(null, path)
+        return mockedContent || originalFs.readFileSync.call(null, path)
       },
     },
   }
 })
 
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
-import fs from 'fs-extra'
 import { vi, describe, it, test, expect, beforeEach, afterEach } from 'vitest'
 
 import '../../../../lib/mockTelemetry'

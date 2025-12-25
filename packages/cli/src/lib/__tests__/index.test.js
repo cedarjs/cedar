@@ -16,9 +16,9 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
+import fs from 'node:fs'
 import path from 'path'
 
-import fs from 'fs-extra'
 import { vi, test, expect, describe } from 'vitest'
 
 import * as index from '../index.js'

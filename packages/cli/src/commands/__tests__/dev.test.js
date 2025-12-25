@@ -10,8 +10,8 @@ vi.mock('concurrently', () => ({
 }))
 
 // dev checks for existence of api/src and web/src folders
-vi.mock('fs-extra', async () => {
-  const actualFs = await vi.importActual('fs-extra')
+vi.mock('node:fs', async () => {
+  const actualFs = await vi.importActual('node:fs')
   return {
     default: {
       ...actualFs,

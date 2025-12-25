@@ -1,6 +1,7 @@
+import fs from 'node:fs'
+
 import type { BuildContext, BuildOptions, PluginBuild } from 'esbuild'
 import { build, context } from 'esbuild'
-import fs from 'fs-extra'
 
 import {
   getApiSideBabelPlugins,
@@ -33,7 +34,7 @@ export const rebuildApi = async () => {
 
 export const cleanApiBuild = async () => {
   const rwjsPaths = getPaths()
-  return fs.remove(rwjsPaths.api.dist)
+  return fs.promises.rm(rwjsPaths.api.dist, { recursive: true, force: true })
 }
 
 const runRwBabelTransformsPlugin = {

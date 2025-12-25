@@ -1,8 +1,8 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import archiver from 'archiver'
-import fse from 'fs-extra'
 
 import { findApiDistFunctions } from '@cedarjs/internal/dist/files'
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
@@ -13,7 +13,7 @@ const ZIPBALL_DIR = './api/dist/zipball'
 
 export function zipDirectory(source, out) {
   const archive = archiver('zip', { zlib: { level: 5 } })
-  const stream = fse.createWriteStream(out)
+  const stream = fs.createWriteStream(out)
 
   return new Promise((resolve, reject) => {
     archive
@@ -46,9 +46,10 @@ export async function packageSingleFunction(functionFile) {
   const copyPromises = []
   for (const singleDependencyPath of functionDependencyFileList) {
     copyPromises.push(
-      fse.copy(
+      fs.promises.cp(
         './' + singleDependencyPath,
         `${ZIPBALL_DIR}/${functionName}/${singleDependencyPath}`,
+        { recursive: true, force: true },
       ),
     )
   }
@@ -57,7 +58,10 @@ export async function packageSingleFunction(functionFile) {
 
   // This generates an "entry" file, that just proxies the actual
   // function that is nested in api/dist/
-  const functionEntryPromise = fse.outputFile(entryFilePath, content)
+  const dir = path.dirname(entryFilePath)
+  const functionEntryPromise = fs.promises
+    .mkdir(dir, { recursive: true })
+    .then(() => fs.promises.writeFile(entryFilePath, content))
   copyPromises.push(functionEntryPromise)
 
   await Promise.all(copyPromises)
@@ -65,7 +69,10 @@ export async function packageSingleFunction(functionFile) {
     `${ZIPBALL_DIR}/${functionName}`,
     `${ZIPBALL_DIR}/${functionName}.zip`,
   )
-  await fse.remove(`${ZIPBALL_DIR}/${functionName}`)
+  await fs.promises.rm(`${ZIPBALL_DIR}/${functionName}`, {
+    recursive: true,
+    force: true,
+  })
   return
 }
 

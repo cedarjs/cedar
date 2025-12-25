@@ -1,8 +1,8 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import ansis from 'ansis'
 import Fastify from 'fastify'
-import fs from 'fs-extra'
 
 import { redwoodFastifyWeb } from '@cedarjs/fastify-web'
 import { getConfig, getPaths } from '@cedarjs/project-config'
@@ -13,7 +13,7 @@ export async function serveWeb(options: ParsedOptions = {}) {
   const start = Date.now()
   console.log(ansis.dim.italic('Starting Web Server...'))
 
-  const distIndexExists = await fs.pathExists(
+  const distIndexExists = fs.existsSync(
     path.join(getPaths().web.dist, 'index.html'),
   )
   if (!distIndexExists) {

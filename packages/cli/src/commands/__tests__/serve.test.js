@@ -40,11 +40,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('fs-extra', async (importOriginal) => {
-  const originalFsExtra = await importOriginal()
+vi.mock('node:fs', async (importOriginal) => {
+  const originalFs = await importOriginal()
   return {
     default: {
-      ...originalFsExtra,
+      ...originalFs,
       existsSync: (p) => {
         // Don't detect the server file, can't use path.sep here so the replaceAll is used
         if (p.replaceAll('\\', '/') === '/mocked/project/api/src/server.ts') {

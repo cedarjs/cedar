@@ -1,7 +1,7 @@
-import { join } from 'path'
+import fs from 'node:fs'
+import { join } from 'node:path'
 
 import * as dotenv from 'dotenv-defaults'
-import { existsSync, readFileSync } from 'fs-extra'
 import { pickBy } from 'lodash'
 import type * as tsm from 'ts-morph'
 import type { Location } from 'vscode-languageserver'
@@ -87,10 +87,10 @@ export class RWEnvHelper extends BaseNode {
 
   private _dotenv(f: string) {
     const file = join(this.parent.projectRoot, f)
-    if (!existsSync(file)) {
+    if (!fs.existsSync(file)) {
       return undefined
     }
-    return dotenv.parse(readFileSync(file, 'utf-8'))
+    return dotenv.parse(fs.readFileSync(file, 'utf-8'))
   }
 
   @lazy() get env_available_to_api() {
@@ -198,7 +198,7 @@ class ProcessDotEnvExpression extends BaseNode {
       return undefined
     }
     const file = join(this.parent.parent.projectRoot, x)
-    const content = readFileSync(file).toString()
+    const content = fs.readFileSync(file).toString()
     const lines = content.split('\n')
     const index = lines.findIndex((l) => l.startsWith(this.key + '='))
     return {

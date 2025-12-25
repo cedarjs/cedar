@@ -3,7 +3,7 @@ globalThis.__dirname = __dirname
 globalThis.mockFs = false
 const mockFiles = {}
 
-vi.mock('fs-extra', async (importOriginal) => {
+vi.mock('node:fs', async (importOriginal) => {
   const originalFsExtra = await importOriginal()
   return {
     default: {
@@ -41,9 +41,9 @@ vi.mock('fs-extra', async (importOriginal) => {
   }
 })
 
+import fs from 'node:fs'
 import path from 'path'
 
-import fs from 'fs-extra'
 import prompts from 'prompts'
 import { vi, afterEach, test, expect, describe } from 'vitest'
 

@@ -1,5 +1,5 @@
 globalThis.__dirname = __dirname
-import path from 'path'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -11,16 +11,6 @@ import '../../../../lib/test'
 import { getDefaultArgs } from '../../../../lib/index.js'
 import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
-
-vi.mock('fs-extra', async (importOriginal) => {
-  ufs.use(await importOriginal()).use(memfs)
-  return { ...ufs, default: { ...ufs } }
-})
-
-vi.mock('fs', async (importOriginal) => {
-  ufs.use(await importOriginal()).use(memfs)
-  return { ...ufs, default: { ...ufs } }
-})
 
 vi.mock('node:fs', async (importOriginal) => {
   ufs.use(await importOriginal()).use(memfs)

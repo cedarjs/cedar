@@ -1,7 +1,7 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import boxen from 'boxen'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 import * as toml from 'smol-toml'
 import { env as envInterpolation } from 'string-env-interpolation'

@@ -1,10 +1,10 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import * as esbuild from 'esbuild'
 import type { BuildOptions as ESBuildOptions } from 'esbuild'
 import fg from 'fast-glob'
-import fs from 'fs-extra'
 
 export const defaultBuildOptions: ESBuildOptions = {
   outdir: 'dist',
@@ -74,9 +74,10 @@ export async function build({
   })
 
   if (result.metafile) {
-    await fs.writeJSON(path.join(cwd, metafileName), result.metafile, {
-      spaces: 2,
-    })
+    await fs.promises.writeFile(
+      path.join(cwd, metafileName),
+      JSON.stringify(result.metafile, null, 2),
+    )
   } else {
     console.warn("No metafile found in esbuild's result.")
     console.warn(
@@ -158,8 +159,10 @@ export async function copyAssets({
     const distPathname = pathname.replace(srcDirPath, distDirPath)
 
     try {
-      await fs.mkdirp(path.dirname(distPathname))
-      await fs.copyFile(pathname, distPathname)
+      await fs.promises.cp(pathname, distPathname, {
+        recursive: true,
+        force: true,
+      })
       console.log(
         `Copied asset into dist: ${cjs ? 'cjs/' : ''}` +
           path.relative(distDirPath, distPathname),
