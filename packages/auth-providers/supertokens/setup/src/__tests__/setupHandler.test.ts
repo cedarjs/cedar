@@ -22,9 +22,9 @@ vi.mock('@cedarjs/cli-helpers', () => {
   }
 })
 
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
-import fs from 'fs'
+import fs from 'node:fs'
 
 import { vol } from 'memfs'
 import { vi, describe, it, expect } from 'vitest'

@@ -15,7 +15,6 @@ import type ProjectConfig from '@cedarjs/project-config'
 
 import { handler, NO_PENDING_MIGRATIONS_MESSAGE } from '../commands/upHandler'
 
-vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 vi.mock('@cedarjs/babel-config', async () => {

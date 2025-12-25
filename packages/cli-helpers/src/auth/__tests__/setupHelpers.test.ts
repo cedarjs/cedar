@@ -46,7 +46,7 @@ vi.mock('prompts', () => ({
   default: vi.fn(() => ({ answer: true })),
 }))
 
-import fs from 'fs'
+import fs from 'node:fs'
 import path from 'path'
 
 import { Listr } from 'listr2'

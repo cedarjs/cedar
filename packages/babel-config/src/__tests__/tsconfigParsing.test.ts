@@ -8,7 +8,7 @@ import {
   parseTypeScriptConfigFiles,
 } from '../common'
 
-vi.mock('fs', async () => ({ ...memfs, default: { ...memfs } }))
+vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 
 const redwoodProjectPath = '/redwood-app'
 process.env.RWJS_CWD = redwoodProjectPath

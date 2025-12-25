@@ -8,7 +8,7 @@ import '../../../../lib/test'
 
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 vi.mock('execa')
 
 beforeAll(() => {

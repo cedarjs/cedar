@@ -1,4 +1,3 @@
-vi.mock('fs')
 vi.mock('node:fs', async () => {
   const memfs = await import('memfs')
   return {

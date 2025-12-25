@@ -42,7 +42,7 @@ afterAll(() => {
 })
 
 // Mock server.config.js to test instantiating fastify with user config.
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
 afterEach(() => {
   vol.reset()

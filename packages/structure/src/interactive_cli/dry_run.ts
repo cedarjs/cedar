@@ -72,7 +72,7 @@ function buildJS(
 ) {
   let js = `
   const proxyquire = require("proxyquire")
-  const fs = require('fs')
+  const fs = require('node:fs')
   const path = require('path')
   const files = {}
   const fileOverrides = { FILE: "OVERRIDES" }

@@ -18,7 +18,6 @@ import {
   NO_PENDING_MIGRATIONS_MESSAGE,
 } from '../commands/upHandlerEsm'
 
-vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 vi.mock('@cedarjs/project-config', async () => {

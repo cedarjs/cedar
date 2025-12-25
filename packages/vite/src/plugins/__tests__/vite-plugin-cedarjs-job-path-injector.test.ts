@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 
 import { cedarjsJobPathInjectorPlugin } from '../vite-plugin-cedarjs-job-path-injector.js'
 
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
 const RWJS_CWD = process.env.RWJS_CWD
 const TEST_RWJS_CWD = '/Users/tobbe/test-app/'

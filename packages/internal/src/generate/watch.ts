@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import fs from 'fs'
+import fs from 'node:fs'
 import path from 'path'
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

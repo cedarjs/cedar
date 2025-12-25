@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import path from 'path'
 
 import { beforeAll, afterAll, test, expect } from 'vitest'

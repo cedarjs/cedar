@@ -17,7 +17,7 @@ import type * as ProjectConfig from '@cedarjs/project-config'
 
 import { rscRoutesAutoLoader } from '../vite-plugin-rsc-routes-auto-loader.js'
 
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
 const TEST_RWJS_CWD = '/Users/mojombo/rw-app/'
 const RWJS_CWD = process.env.RWJS_CWD

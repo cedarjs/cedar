@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 
 import merge from 'deepmerge'
 import * as toml from 'smol-toml'

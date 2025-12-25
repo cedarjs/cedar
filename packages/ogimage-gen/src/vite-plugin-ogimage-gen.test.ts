@@ -7,7 +7,6 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 import vitePluginOgGen from './vite-plugin-ogimage-gen'
 
 // Memfs mocks the redwood project-config stuff
-vi.mock('fs', () => ({ ...memfs, default: { ...memfs } }))
 vi.mock('node:fs', () => ({ ...memfs, default: { ...memfs } }))
 
 /**

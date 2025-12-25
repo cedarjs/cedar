@@ -8,7 +8,6 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 
 import * as ogImageHandler from '../ogImageHandler.js'
 
-vi.mock('fs', () => ({ ...memfs, default: { ...memfs } }))
 vi.mock('node:fs', () => ({ ...memfs, default: { ...memfs } }))
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const actual = await importOriginal()

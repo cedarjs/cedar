@@ -14,7 +14,7 @@ import { getYargsDefaults as getDefaults } from '../../../generate/yargsCommandH
 import { customOrDefaultTemplatePath } from '../../../generate/yargsHandlerHelpers.js'
 import { tasks } from '../scaffoldHandler.js'
 
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 vi.mock('execa')
 
 vi.mock('../../../../lib', async (importOriginal) => {

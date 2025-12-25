@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-env node, es6*/
 
-const fs = require('fs')
+const fs = require('node:fs')
 const os = require('os')
 const path = require('path')
 
