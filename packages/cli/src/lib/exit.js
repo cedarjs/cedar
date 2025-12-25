@@ -32,6 +32,8 @@ export function exitWithError(
   // the error in telemetry if needed and if the user chooses to share it
   const errorReferenceCode = uuidv4()
 
+  // Scrollbars sometimes cause wrapping issues, so we shorten the line length
+  // to prevent wrapping issues
   const line = ansis.red('-'.repeat(process.stderr.columns - 4))
 
   // Generate and print a nice message to the user
