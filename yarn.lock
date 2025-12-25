@@ -3412,6 +3412,7 @@ __metadata:
     systeminformation: "npm:5.27.17"
     termi-link: "npm:1.1.0"
     title-case: "npm:3.0.3"
+    ts-dedent: "npm:2.2.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     unionfs: "npm:4.6.0"
