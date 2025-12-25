@@ -287,7 +287,9 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
     console.error(`   ❌ ${c.error('Pre-upgrade Error:')}\n`)
     console.error('  ' + preUpgradeError.replace(/\n/g, '\n   '))
 
-    process.exit(1)
+    if (!force) {
+      process.exit(1)
+    }
   }
 
   if (preUpgradeMessage) {
@@ -296,6 +298,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
     console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n   '))
   }
 }
+
 async function yarnInstall({ verbose }) {
   try {
     await execa('yarn install', {
@@ -672,10 +675,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     // Check both <version>.ts and <version>/index.ts
     for (const candidate of level.candidates) {
       if (manifest.includes(candidate)) {
-        scriptsToRun.push({
-          url: `${baseUrl}${candidate}`,
-          name: candidate,
-        })
+        scriptsToRun.push(candidate)
 
         // Found a script for this level, move to next level
         break
@@ -695,34 +695,92 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
   ctx.preUpgradeError = ''
 
   // Run them sequentially
-  for (const script of scriptsToRun) {
-    task.output = `Found upgrade check script: ${script.name}. Downloading...`
-
-    let scriptContent
-    try {
-      const res = await fetch(script.url)
-
-      if (res.status !== 200) {
-        throw new Error(`Failed to download script: ${res.statusText}`)
-      }
-
-      scriptContent = await res.text()
-    } catch (e) {
-      if (verbose) {
-        console.error(e)
-      }
-      throw new Error(`Failed to download upgrade script from ${script.url}`)
-    }
+  for (const scriptName of scriptsToRun) {
+    task.output = `Found upgrade check script: ${scriptName}. Downloading...`
 
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cedar-upgrade-'))
     const scriptPath = path.join(tempDir, 'script.ts')
-    await fs.writeFile(scriptPath, scriptContent)
 
+    // Check if this is a directory-based script (e.g., 3.4.1/index.ts)
+    const isDirectoryScript = scriptName.includes('/')
+
+    if (isDirectoryScript) {
+      // Extract directory name (e.g., "3.4.1" from "3.4.1/index.ts")
+      const dirName = scriptName.split('/')[0]
+      const githubApiUrl = `https://api.github.com/repos/cedarjs/cedar/contents/upgrade-scripts/${dirName}`
+
+      try {
+        // Fetch directory contents from GitHub API
+        const dirRes = await fetch(githubApiUrl, {
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+          },
+        })
+
+        if (dirRes.status !== 200) {
+          throw new Error(
+            `Failed to fetch directory contents: ${dirRes.statusText}`,
+          )
+        }
+
+        const files = await dirRes.json()
+
+        // Download all files in the directory
+        for (const file of files) {
+          if (file.type === 'file') {
+            task.output = `Downloading ${file.name}...`
+
+            const fileRes = await fetch(file.download_url)
+
+            if (fileRes.status !== 200) {
+              throw new Error(`Failed to download ${file.name}`)
+            }
+
+            const fileContent = await fileRes.text()
+            const filePath = path.join(tempDir, file.name)
+            await fs.writeFile(filePath, fileContent)
+
+            // Rename index.ts to script.ts for execution
+            if (file.name === 'index.ts') {
+              await fs.rename(filePath, scriptPath)
+            }
+          }
+        }
+      } catch (e) {
+        if (verbose) {
+          console.error(e)
+        }
+        throw new Error(
+          `Failed to download upgrade script directory from ${githubApiUrl}`,
+        )
+      }
+    } else {
+      // Single file script - download directly
+      const scriptUrl = `${baseUrl}${scriptName}`
+      try {
+        const res = await fetch(scriptUrl)
+
+        if (res.status !== 200) {
+          throw new Error(`Failed to download script: ${res.statusText}`)
+        }
+
+        const scriptContent = await res.text()
+        await fs.writeFile(scriptPath, scriptContent)
+      } catch (e) {
+        if (verbose) {
+          console.error(e)
+        }
+        throw new Error(`Failed to download upgrade script from ${scriptUrl}`)
+      }
+    }
+
+    // Read script content for dependency extraction
+    const scriptContent = await fs.readFile(scriptPath, 'utf8')
     const deps = extractDependencies(scriptContent)
 
     if (deps.length > 0) {
       const depList = deps.join(', ')
-      task.output = `Installing dependencies for ${script.name}: ${depList}...`
+      task.output = `Installing dependencies for ${scriptName}: ${depList}...`
 
       await fs.writeJson(path.join(tempDir, 'package.json'), {
         name: 'pre-upgrade-script',
@@ -733,7 +791,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       await execa('yarn', ['add', ...deps], { cwd: tempDir })
     }
 
-    task.output = `Running pre-upgrade script: ${script.name}...`
+    task.output = `Running pre-upgrade script: ${scriptName}...`
     let shouldCleanup = true
     try {
       const { stdout } = await execa(
@@ -751,7 +809,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       }
     } catch (e) {
       const errorOutput = e.stdout || e.stderr || e.message || ''
-      const errorMessage = `Pre-upgrade check ${script.name} failed:\n${errorOutput}`
+      const errorMessage = `Pre-upgrade check ${scriptName} failed:\n${errorOutput}`
 
       if (ctx.preUpgradeError) {
         ctx.preUpgradeError += '\n\n'

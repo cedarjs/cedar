@@ -15,6 +15,8 @@ vi.mock('fs-extra', () => ({
     writeFile: vi.fn(),
     writeJson: vi.fn(),
     remove: vi.fn(),
+    readFile: vi.fn(),
+    rename: vi.fn(),
   },
 }))
 
@@ -129,6 +131,9 @@ describe('runPreUpgradeScripts', () => {
       // script as part of the test.
       console.log('Running upgrade check')
     `
+
+    // Mock readFile to return the script content
+    vi.mocked(fs.readFile).mockResolvedValue(scriptContent)
 
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
       if (url.toString().endsWith('/manifest.json')) {
