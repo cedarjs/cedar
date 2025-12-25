@@ -4,19 +4,25 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
-# Cancel in-progress runs of this workflow.
-# See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions: {}
 
 jobs:
   check-test-project-fixture:
-    if: github.repository == 'cedarjs/cedar'
+    # The only labeled or unlabeled event that should trigger this workflow is
+    # when the fixture-ok label is added or removed.
+    if: >-
+      github.repository == 'cedarjs/cedar' &&
+      (
+        (github.event.action != 'labeled' && github.event.action != 'unlabeled') ||
+        github.event.label.name == 'fixture-ok'
+      )
     name: Check test project fixture
     runs-on: ubuntu-latest
+    # Cancel in-progress runs of this workflow.
+    # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
