@@ -8,10 +8,10 @@ permissions: {}
 
 jobs:
   check-test-project-fixture:
+    # The only labeled or unlabeled event that should trigger this workflow is
+    # when the fixture-ok label is added or removed.
     if: >-
       github.repository == 'cedarjs/cedar' &&
-      # The only labeled or unlabeled event that should trigger this workflow is
-      # when the fixture-ok label is added or removed.
       (
         (github.event.action != 'labeled' && github.event.action != 'unlabeled') ||
         github.event.label.name == 'fixture-ok'
