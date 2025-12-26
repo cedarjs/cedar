@@ -25,16 +25,16 @@ This project is a framework monorepo. You typically develop _on_ the framework o
 
 ### Core Commands
 
-| Command            | Description                              |
-| :----------------- | :--------------------------------------- |
-| `yarn install`     | Install dependencies (uses Yarn v4).     |
-| `yarn build`       | Build all packages using Nx.             |
-| `yarn build:clean` | Clean build artifacts.                   |
-| `yarn test`        | Run unit tests for all packages.         |
-| `yarn lint`        | Run ESLint checks.                       |
-| `yarn lint:fix`    | Fix ESLint errors automatically.         |
-| `yarn format`      | Format code with Prettier.               |
-| `yarn e2e`         | Run end-to-end tests (requires Cypress). |
+| Command            | Description                                                                            |
+| :----------------- | :------------------------------------------------------------------------------------- |
+| `yarn install`     | Install dependencies (uses Yarn v4).                                                   |
+| `yarn build`       | Build all packages using Nx.                                                           |
+| `yarn build:clean` | Clean build artifacts.                                                                 |
+| `yarn test`        | Run unit tests for all packages. Use `CI=1` to ensure non-interactive mode.            |
+| `yarn lint`        | Run ESLint checks.                                                                     |
+| `yarn lint:fix`    | Fix ESLint errors automatically.                                                       |
+| `yarn format`      | Format code with Prettier.                                                             |
+| `yarn e2e`         | Run end-to-end tests (requires Cypress). Use `CI=1` for headless/non-interactive mode. |
 
 ### Running Commands on Specific Packages
 
@@ -74,7 +74,7 @@ To test framework changes against a real Cedar project:
   - **TypeScript:** Never use `@ts-ignore`. Always prefer `@ts-expect-error` with a clear explanation for why it's needed.
   - **Constraints:** Yarn constraints ensure consistent dependency versions across the monorepo.
 - **Testing:**
-  - Unit tests: Jest/Vitest.
+  - Unit tests: Jest/Vitest. When running `vitest` directly, use `--run` to disable watch mode.
   - E2E: Cypress and Playwright.
 - **Dependencies:**
   - Avoid introducing new dependencies unless necessary.

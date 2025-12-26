@@ -9,13 +9,7 @@ export const command = 'generator <name>'
 export const description =
   'Copies generator templates locally for customization'
 
-const EXCLUDE_GENERATORS = [
-  'dataMigration',
-  'dbAuth',
-  'generator',
-  'script',
-  'secret',
-]
+const EXCLUDE_GENERATORS = ['dataMigration', 'dbAuth', 'generator', 'secret']
 
 // This could be built using createYargsForComponentGeneration;
 // however, functions wouldn't have a `stories` option. createYargs...
