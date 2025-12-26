@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -145,8 +145,8 @@
   "dependencies": {
     "@apollo/client": "3.13.9",
     "@babel/runtime-corejs3": "7.28.4",
-    "@cedarjs/auth": "2.1.1",
-    "@cedarjs/server-store": "2.1.1",
+    "@cedarjs/auth": "2.2.0",
+    "@cedarjs/server-store": "2.2.0",
     "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.10.13",
     "apollo-upload-client": "18.0.1",
@@ -167,7 +167,7 @@
     "@babel/plugin-transform-runtime": "7.28.5",
     "@babel/runtime": "7.28.4",
     "@cedarjs/framework-tools": "workspace:*",
-    "@cedarjs/internal": "2.1.1",
+    "@cedarjs/internal": "2.2.0",
     "@rollup/plugin-babel": "6.1.0",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "14.3.1",
