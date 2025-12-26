@@ -1,10 +1,13 @@
-import path from 'path'
+import { builtinModules } from 'node:module'
+import os from 'node:os'
+import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import execa from 'execa'
 import fs from 'fs-extra'
 import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
+import semver from 'semver'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -21,8 +24,9 @@ export const description = 'Upgrade all @cedarjs packages via interactive CLI'
 export const builder = (yargs) => {
   yargs
     .example(
-      'rw upgrade -t 0.20.1-canary.5',
-      'Specify a version. URL for Version History:\nhttps://www.npmjs.com/package/@cedarjs/core',
+      'cedar upgrade -t 0.20.1-canary.5',
+      'Specify a version. URL for Version History:\n' +
+        'https://www.npmjs.com/package/@cedarjs/core',
     )
     .option('dry-run', {
       alias: 'd',
@@ -32,7 +36,11 @@ export const builder = (yargs) => {
     .option('tag', {
       alias: 't',
       description:
-        '[choices: "latest", "rc", "next", "canary", "experimental", or a specific-version (see example below)] WARNING: "canary", "rc" and "experimental" are unstable releases! And "canary" releases include breaking changes often requiring codemods if upgrading a project.',
+        '[choices: "latest", "rc", "next", "canary", "experimental", or a ' +
+        'specific-version (see example below)] WARNING: "canary", "rc" and ' +
+        '"experimental" are unstable releases! And "canary" releases include ' +
+        'breaking changes often requiring changes to your codebase when ' +
+        'upgrading a project.',
       requiresArg: true,
       type: 'string',
       coerce: validateTag,
@@ -54,10 +62,16 @@ export const builder = (yargs) => {
       default: false,
       type: 'boolean',
     })
+    .option('force', {
+      alias: 'f',
+      describe: 'Force upgrade even if pre-upgrade checks fail',
+      default: false,
+      type: 'boolean',
+    })
     .epilogue(
       `Also see the ${terminalLink(
-        'Cedar CLI Reference for the upgrade command',
-        'https://redwoodjs.com/docs/cli-commands#upgrade',
+        'CedarJS CLI Reference for the upgrade command',
+        'https://cedarjs.com/docs/cli-commands#upgrade',
       )}.\nAnd the ${terminalLink(
         'GitHub releases page',
         'https://github.com/cedarjs/cedar/releases',
@@ -73,12 +87,12 @@ const isValidSemver = (string) => {
   return SEMVER_REGEX.test(string)
 }
 
-const isValidCedarTag = (tag) => {
+const isValidCedarJSTag = (tag) => {
   return ['rc', 'canary', 'latest', 'next', 'experimental'].includes(tag)
 }
 
 export const validateTag = (tag) => {
-  const isTagValid = isValidSemver(tag) || isValidCedarTag(tag)
+  const isTagValid = isValidSemver(tag) || isValidCedarJSTag(tag)
 
   if (!isTagValid) {
     // Stop execution
@@ -92,7 +106,7 @@ export const validateTag = (tag) => {
   return tag
 }
 
-export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
+export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
   recordTelemetryAttributes({
     command: 'upgrade',
     dryRun,
@@ -100,16 +114,28 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
     verbose,
     dedupe,
     yes,
+    force,
   })
+
+  let preUpgradeMessage = ''
+  let preUpgradeError = ''
 
   // structuring as nested tasks to avoid bug with task.title causing duplicates
   const tasks = new Listr(
     [
       {
         title: 'Confirm upgrade',
-        task: async (ctx, task) => {
+        task: async (_ctx, task) => {
           if (yes) {
             task.skip('Skipping confirmation prompt because of --yes flag.')
+            return
+          }
+
+          if (tag) {
+            task.skip(
+              'Skipping confirmation prompt because a specific tag is ' +
+                'specified.',
+            )
             return
           }
 
@@ -117,7 +143,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
           const proceed = await prompt.run({
             type: 'Confirm',
             message:
-              'This will upgrade your Cedar project to the latest version. Do you want to proceed?',
+              'This will upgrade your CedarJS project to the latest version. Do you want to proceed?',
             initial: 'Y',
             default: '(Yes/no)',
             format: function (value) {
@@ -140,38 +166,59 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
         task: async (ctx) => setLatestVersionToContext(ctx, tag),
       },
       {
-        title: 'Updating your Cedar version',
-        task: (ctx) => updateCedarDepsForAllSides(ctx, { dryRun, verbose }),
+        title: 'Running pre-upgrade scripts',
+        task: async (ctx, task) => {
+          await runPreUpgradeScripts(ctx, task, { verbose, force })
+
+          if (ctx.preUpgradeMessage) {
+            preUpgradeMessage = ctx.preUpgradeMessage
+          }
+
+          if (ctx.preUpgradeError) {
+            preUpgradeError = ctx.preUpgradeError
+          }
+        },
         enabled: (ctx) => !!ctx.versionToUpgradeTo,
+      },
+      {
+        title: 'Updating your CedarJS version',
+        task: (ctx) => updateCedarJSDepsForAllSides(ctx, { dryRun, verbose }),
+        enabled: (ctx) => !!ctx.versionToUpgradeTo && !ctx.preUpgradeError,
       },
       {
         title: 'Updating other packages in your package.json(s)',
         task: (ctx) =>
           updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }),
-        enabled: (ctx) => ctx.versionToUpgradeTo?.includes('canary'),
+        enabled: (ctx) =>
+          ctx.versionToUpgradeTo?.includes('canary') && !ctx.preUpgradeError,
       },
       {
         title: 'Downloading yarn patches',
         task: (ctx) => downloadYarnPatches(ctx, { dryRun, verbose }),
-        enabled: (ctx) => ctx.versionToUpgradeTo?.includes('canary'),
+        enabled: (ctx) =>
+          ctx.versionToUpgradeTo?.includes('canary') && !ctx.preUpgradeError,
       },
       {
         title: 'Removing CLI cache',
         task: (ctx) => removeCliCache(ctx, { dryRun, verbose }),
+        enabled: (ctx) => !ctx.preUpgradeError,
       },
       {
         title: 'Running yarn install',
         task: (ctx) => yarnInstall(ctx, { dryRun, verbose }),
+        enabled: (ctx) => !ctx.preUpgradeError,
         skip: () => dryRun,
       },
       {
         title: 'Refreshing the Prisma client',
         task: (_ctx, task) => refreshPrismaClient(task, { verbose }),
+        enabled: (ctx) => !ctx.preUpgradeError,
         skip: () => dryRun,
       },
       {
         title: 'De-duplicating dependencies',
         skip: () => dryRun || !dedupe,
+        enabled: (ctx) => !ctx.preUpgradeError,
         task: (_ctx, task) => dedupeDeps(task, { verbose }),
       },
       {
@@ -180,21 +227,28 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
           const version = ctx.versionToUpgradeTo
           const messageSections = [
             `One more thing...\n\n   ${c.warning(
-              `🎉 Your project has been upgraded to Cedar ${version}!`,
+              `🎉 Your project has been upgraded to CedarJS ${version}!`,
             )} \n\n`,
           ]
           // Show links when switching to 'latest' or 'rc', undefined is essentially an alias of 'latest'
           if ([undefined, 'latest', 'rc'].includes(tag)) {
+            const ghReleasesLink = terminalLink(
+              `GitHub Release notes`,
+              `https://github.com/cedarjs/cedar/releases`, // intentionally not linking to specific version
+            )
+            const discordLink = terminalLink(
+              `Discord`,
+              `https://cedarjs.com/discord`,
+            )
+
             messageSections.push(
-              `   Please review the release notes for any manual steps: \n   ❖ ${terminalLink(
-                `Redwood community discussion`,
-                `https://community.redwoodjs.com/c/announcements/releases-and-upgrade-guides/`,
-              )}\n   ❖ ${terminalLink(
-                `GitHub Release notes`,
-                `https://github.com/cedarjs/cedar/releases`, // intentionally not linking to specific version
-              )} \n\n`,
+              '   Please review the release notes for any manual steps:\n' +
+                `   ❖ ${ghReleasesLink}\n` +
+                '   Join our Discord community if you have any questions or need support:\n' +
+                `   ❖ ${discordLink}\n`,
             )
           }
+
           // @MARK
           // This should be temporary and eventually superseded by a more generic notification system
           if (tag) {
@@ -202,7 +256,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
             // Reminder to update the `notifications.versionUpdates` TOML option
             if (
               !getConfig().notifications.versionUpdates.includes(tag) &&
-              isValidCedarTag(tag)
+              isValidCedarJSTag(tag)
             ) {
               additionalMessages.push(
                 `   ❖ You may want to update your redwood.toml config so that \`notifications.versionUpdates\` includes "${tag}"\n`,
@@ -227,21 +281,31 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes }) => {
   )
 
   await tasks.run()
+
+  if (preUpgradeError) {
+    console.error('')
+    console.error(`   ❌ ${c.error('Pre-upgrade Error:')}\n`)
+    console.error('  ' + preUpgradeError.replace(/\n/g, '\n   '))
+
+    if (!force) {
+      process.exit(1)
+    }
+  }
+
+  if (preUpgradeMessage) {
+    console.log('')
+    console.log(`   📣 ${c.info('Pre-upgrade Message:')}\n`)
+    console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n   '))
+  }
 }
+
 async function yarnInstall({ verbose }) {
-  const yarnVersion = await getCmdMajorVersion('yarn')
-
   try {
-    await execa(
-      'yarn install',
-      yarnVersion > 1 ? [] : ['--force', '--non-interactive'],
-      {
-        shell: true,
-        stdio: verbose ? 'inherit' : 'pipe',
-
-        cwd: getPaths().base,
-      },
-    )
+    await execa('yarn install', {
+      shell: true,
+      stdio: verbose ? 'inherit' : 'pipe',
+      cwd: getPaths().base,
+    })
   } catch (e) {
     throw new Error(
       'Could not finish installation. Please run `yarn install` and then `yarn dedupe`, before continuing',
@@ -251,7 +315,7 @@ async function yarnInstall({ verbose }) {
 
 /**
  * Removes the CLI plugin cache. This prevents the CLI from using outdated versions of the plugin,
- * when the plugins share the same alias. e.g. `rw sb` used to point to `@cedarjs/cli-storybook` but now points to `@cedarjs/cli-storybook-vite`
+ * when the plugins share the same alias. e.g. `cedar sb` used to point to `@cedarjs/cli-storybook` but now points to `@cedarjs/cli-storybook-vite`
  */
 async function removeCliCache(ctx, { dryRun, verbose }) {
   const cliCacheDir = path.join(
@@ -287,34 +351,46 @@ async function setLatestVersionToContext(ctx, tag) {
 }
 
 /**
- * Iterates over Cedar dependencies in package.json files and updates the version.
+ * Iterates over CedarJS dependencies in package.json files and updates the
+ * version.
  */
-function updatePackageJsonVersion(pkgPath, version, { dryRun, verbose }) {
+function updatePackageJsonVersion(pkgPath, version, task, { dryRun, verbose }) {
   const pkg = JSON.parse(
     fs.readFileSync(path.join(pkgPath, 'package.json'), 'utf-8'),
   )
+
+  const messages = []
 
   if (pkg.dependencies) {
     for (const depName of Object.keys(pkg.dependencies).filter(
       (x) => x.startsWith('@cedarjs/') && x !== '@cedarjs/studio',
     )) {
       if (verbose || dryRun) {
-        console.log(` - ${depName}: ${pkg.dependencies[depName]} => ${version}`)
+        messages.push(
+          ` - ${depName}: ${pkg.dependencies[depName]} => ${version}`,
+        )
       }
+
       pkg.dependencies[depName] = `${version}`
     }
   }
+
   if (pkg.devDependencies) {
     for (const depName of Object.keys(pkg.devDependencies).filter(
       (x) => x.startsWith('@cedarjs/') && x !== '@cedarjs/studio',
     )) {
       if (verbose || dryRun) {
-        console.log(
+        messages.push(
           ` - ${depName}: ${pkg.devDependencies[depName]} => ${version}`,
         )
       }
+
       pkg.devDependencies[depName] = `${version}`
     }
+  }
+
+  if (messages.length > 0) {
+    task.title = task.title + '\n' + messages.join('\n')
   }
 
   if (!dryRun) {
@@ -325,7 +401,7 @@ function updatePackageJsonVersion(pkgPath, version, { dryRun, verbose }) {
   }
 }
 
-function updateCedarDepsForAllSides(ctx, options) {
+function updateCedarJSDepsForAllSides(ctx, options) {
   if (!ctx.versionToUpgradeTo) {
     throw new Error('Failed to upgrade')
   }
@@ -341,8 +417,13 @@ function updateCedarDepsForAllSides(ctx, options) {
       const pkgJsonPath = path.join(basePath, 'package.json')
       return {
         title: `Updating ${pkgJsonPath}`,
-        task: () =>
-          updatePackageJsonVersion(basePath, ctx.versionToUpgradeTo, options),
+        task: (_ctx, task) =>
+          updatePackageJsonVersion(
+            basePath,
+            ctx.versionToUpgradeTo,
+            task,
+            options,
+          ),
         skip: () => !fs.existsSync(pkgJsonPath),
       }
     }),
@@ -385,7 +466,7 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
 
           Object.entries(templatePackageJson.dependencies || {}).forEach(
             ([depName, depVersion]) => {
-              // Cedar packages are handled in another task
+              // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
                   console.log(
@@ -400,7 +481,7 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
 
           Object.entries(templatePackageJson.devDependencies || {}).forEach(
             ([depName, depVersion]) => {
-              // Cedar packages are handled in another task
+              // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
                   console.log(
@@ -492,57 +573,29 @@ async function downloadYarnPatches(ctx, { dryRun, verbose }) {
 }
 
 async function refreshPrismaClient(task, { verbose }) {
-  /** Relates to prisma/client issue, @see: https://github.com/redwoodjs/redwood/issues/1083 */
+  // Relates to prisma/client issue
+  // See: https://github.com/redwoodjs/redwood/issues/1083
   try {
     await generatePrismaClient({
       verbose,
       force: false,
-      schema: getPaths().api.dbSchema,
     })
   } catch (e) {
     task.skip('Refreshing the Prisma client caused an Error.')
     console.log(
-      'You may need to update your prisma client manually: $ yarn rw prisma generate',
+      'You may need to update your prisma client manually: $ yarn cedar prisma generate',
     )
     console.log(c.error(e.message))
   }
 }
 
-export const getCmdMajorVersion = async (command) => {
-  // Get current version
-  const { stdout } = await execa(command, ['--version'], {
-    cwd: getPaths().base,
-  })
-
-  if (!SEMVER_REGEX.test(stdout)) {
-    throw new Error(`Unable to verify ${command} version.`)
-  }
-
-  // Get major version number
-  const version = stdout.match(SEMVER_REGEX)[0]
-  return parseInt(version.split('.')[0])
-}
-
-const dedupeDeps = async (task, { verbose }) => {
+const dedupeDeps = async (_task, { verbose }) => {
   try {
-    const yarnVersion = await getCmdMajorVersion('yarn')
-
-    const baseExecaArgsForDedupe = {
+    await execa('yarn dedupe', {
       shell: true,
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
-    }
-    if (yarnVersion > 1) {
-      await execa('yarn', ['dedupe'], baseExecaArgsForDedupe)
-    } else {
-      // Cedar projects should not be using yarn 1.x as we specify a version of yarn in the package.json
-      // with "packageManager": "yarn@4.6.0" or similar.
-      // Although we could (and previous did) automatically run `npx yarn-deduplicate` here, that would require
-      // the user to have `npx` installed, which is not guaranteed and we do not wish to enforce that.
-      task.skip(
-        "Yarn 1.x doesn't support dedupe directly. Please upgrade yarn or use npx with `npx yarn-deduplicate` manually.",
-      )
-    }
+    })
   } catch (e) {
     console.log(c.error(e.message))
     throw new Error(
@@ -550,4 +603,279 @@ const dedupeDeps = async (task, { verbose }) => {
     )
   }
   await yarnInstall({ verbose })
+}
+
+// exported for testing
+export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
+  if (!ctx.versionToUpgradeTo) {
+    return
+  }
+
+  const version = ctx.versionToUpgradeTo
+  const parsed = semver.parse(version)
+  const baseUrl =
+    'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/'
+  const manifestUrl = `${baseUrl}manifest.json`
+
+  let manifest = []
+  try {
+    const res = await fetch(manifestUrl)
+
+    if (res.status === 200) {
+      manifest = await res.json()
+    } else {
+      if (verbose) {
+        console.log('No upgrade script manifest found.')
+      }
+    }
+  } catch (e) {
+    if (verbose) {
+      console.log('Failed to fetch upgrade script manifest', e)
+    }
+  }
+
+  if (!Array.isArray(manifest) || manifest.length === 0) {
+    return
+  }
+
+  const checkLevels = []
+  if (parsed) {
+    // 1. Exact match: 3.4.1
+    checkLevels.push({
+      id: 'exact',
+      candidates: [`${version}.ts`, `${version}/index.ts`],
+    })
+
+    // 2. Patch wildcard: 3.4.x
+    checkLevels.push({
+      id: 'patch',
+      candidates: [
+        `${parsed.major}.${parsed.minor}.x.ts`,
+        `${parsed.major}.${parsed.minor}.x/index.ts`,
+      ],
+    })
+
+    // 3. Minor wildcard: 3.x
+    checkLevels.push({
+      id: 'minor',
+      candidates: [`${parsed.major}.x.ts`, `${parsed.major}.x/index.ts`],
+    })
+  } else {
+    // Fallback for non-semver tags
+    checkLevels.push({
+      id: 'tag',
+      candidates: [`${version}.ts`, `${version}/index.ts`],
+    })
+  }
+
+  const scriptsToRun = []
+
+  // Find all existing scripts (one per level) using the manifest
+  for (const level of checkLevels) {
+    // Check both <version>.ts and <version>/index.ts
+    for (const candidate of level.candidates) {
+      if (manifest.includes(candidate)) {
+        scriptsToRun.push(candidate)
+
+        // Found a script for this level, move to next level
+        break
+      }
+    }
+  }
+
+  if (scriptsToRun.length === 0) {
+    if (verbose) {
+      console.log(`No upgrade scripts found for ${version}`)
+    }
+
+    return
+  }
+
+  ctx.preUpgradeMessage = ''
+  ctx.preUpgradeError = ''
+
+  // Run them sequentially
+  for (const scriptName of scriptsToRun) {
+    task.output = `Found upgrade check script: ${scriptName}. Downloading...`
+
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cedar-upgrade-'))
+    const scriptPath = path.join(tempDir, 'script.ts')
+
+    // Check if this is a directory-based script (e.g., 3.4.1/index.ts)
+    const isDirectoryScript = scriptName.includes('/')
+
+    if (isDirectoryScript) {
+      // Extract directory name (e.g., "3.4.1" from "3.4.1/index.ts")
+      const dirName = scriptName.split('/')[0]
+      const githubApiUrl = `https://api.github.com/repos/cedarjs/cedar/contents/upgrade-scripts/${dirName}`
+
+      try {
+        // Fetch directory contents from GitHub API
+        const dirRes = await fetch(githubApiUrl, {
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+          },
+        })
+
+        if (dirRes.status !== 200) {
+          throw new Error(
+            `Failed to fetch directory contents: ${dirRes.statusText}`,
+          )
+        }
+
+        const files = await dirRes.json()
+
+        // Download all files in the directory
+        for (const file of files) {
+          if (file.type === 'file') {
+            task.output = `Downloading ${file.name}...`
+
+            const fileRes = await fetch(file.download_url)
+
+            if (fileRes.status !== 200) {
+              throw new Error(`Failed to download ${file.name}`)
+            }
+
+            const fileContent = await fileRes.text()
+            const filePath = path.join(tempDir, file.name)
+            await fs.writeFile(filePath, fileContent)
+
+            // Rename index.ts to script.ts for execution
+            if (file.name === 'index.ts') {
+              await fs.rename(filePath, scriptPath)
+            }
+          }
+        }
+      } catch (e) {
+        if (verbose) {
+          console.error(e)
+        }
+        throw new Error(
+          `Failed to download upgrade script directory from ${githubApiUrl}`,
+        )
+      }
+    } else {
+      // Single file script - download directly
+      const scriptUrl = `${baseUrl}${scriptName}`
+      try {
+        const res = await fetch(scriptUrl)
+
+        if (res.status !== 200) {
+          throw new Error(`Failed to download script: ${res.statusText}`)
+        }
+
+        const scriptContent = await res.text()
+        await fs.writeFile(scriptPath, scriptContent)
+      } catch (e) {
+        if (verbose) {
+          console.error(e)
+        }
+        throw new Error(`Failed to download upgrade script from ${scriptUrl}`)
+      }
+    }
+
+    // Read script content for dependency extraction
+    const scriptContent = await fs.readFile(scriptPath, 'utf8')
+    const deps = extractDependencies(scriptContent)
+
+    if (deps.length > 0) {
+      const depList = deps.join(', ')
+      task.output = `Installing dependencies for ${scriptName}: ${depList}...`
+
+      await fs.writeJson(path.join(tempDir, 'package.json'), {
+        name: 'pre-upgrade-script',
+        version: '0.0.0',
+        dependencies: {},
+      })
+
+      await execa('yarn', ['add', ...deps], { cwd: tempDir })
+    }
+
+    task.output = `Running pre-upgrade script: ${scriptName}...`
+    let shouldCleanup = true
+    try {
+      const { stdout } = await execa(
+        'node',
+        ['script.ts', '--verbose', verbose, '--force', force],
+        { cwd: tempDir },
+      )
+
+      if (stdout) {
+        if (ctx.preUpgradeMessage) {
+          ctx.preUpgradeMessage += '\n\n'
+        }
+
+        ctx.preUpgradeMessage += `\n${stdout}`
+      }
+    } catch (e) {
+      const errorOutput = e.stdout || e.stderr || e.message || ''
+      const errorMessage = `Pre-upgrade check ${scriptName} failed:\n${errorOutput}`
+
+      if (ctx.preUpgradeError) {
+        ctx.preUpgradeError += '\n\n'
+      }
+
+      ctx.preUpgradeError += errorMessage
+
+      if (!force) {
+        await fs.remove(tempDir)
+        shouldCleanup = false
+
+        // Return to skip remaining pre-upgrade scripts
+        return
+      }
+    } finally {
+      if (shouldCleanup) {
+        await fs.remove(tempDir)
+      }
+    }
+  }
+}
+
+const extractDependencies = (content) => {
+  const deps = new Map()
+
+  // 1. Explicit dependencies via comments
+  // Example: // @dependency: lodash@^4.0.0
+  const commentRegex = /\/\/\s*@dependency:\s*(\S+)/g
+  let match
+  while ((match = commentRegex.exec(content)) !== null) {
+    const spec = match[1]
+    // Extract name from specifier (e.g., 'foo@1.0.0' -> 'foo', '@scope/pkg@2' -> '@scope/pkg')
+    const nameMatch = spec.match(/^(@?[^@\s]+)(?:@.+)?$/)
+    if (nameMatch) {
+      deps.set(nameMatch[1], spec)
+    }
+  }
+
+  // 2. Implicit dependencies via imports
+  const importRegex = /(?:import|from)\s*\(?['"]([^'"]+)['"]\)?/g
+
+  while ((match = importRegex.exec(content)) !== null) {
+    let name = match[1]
+
+    if (
+      name.startsWith('.') ||
+      name.startsWith('/') ||
+      name.startsWith('node:') ||
+      builtinModules.includes(name)
+    ) {
+      continue
+    }
+
+    const parts = name.split('/')
+
+    if (name.startsWith('@') && parts.length >= 2) {
+      name = parts.slice(0, 2).join('/')
+    } else if (parts.length >= 1) {
+      name = parts[0]
+    }
+
+    // Explicit comments take precedence
+    if (!deps.has(name)) {
+      deps.set(name, name)
+    }
+  }
+
+  return Array.from(deps.values())
 }

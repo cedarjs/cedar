@@ -126,7 +126,7 @@ export async function createRscRequestHandler(
         // https://github.com/cedarjs/cedar/security/code-scanning/211
         // Handle according to TODO below
         res.end(String(err))
-        // TODO (RSC): When we have `yarn rw dev` support we should do this:
+        // TODO (RSC): When we have `yarn cedar dev` support we should do this:
         // if (options.command === 'dev') {
         //   res.end(String(err))
         // } else {

@@ -58,7 +58,7 @@ test('Check that rehydration works for page not wrapped in Set', async ({
   expect(headerCount).toEqual(1)
 
   const bodyText = await page.locator('body').innerText()
-  expect(bodyText.match(/#7757/g)).toHaveLength(1)
+  expect(bodyText.match(/#7757/g)).toHaveLength(2)
 
   const title = await page.locator('title').innerText()
   expect(title).toBe('Double | Cedar App')
@@ -189,20 +189,16 @@ test('Check that meta-tags are rendering the correct dynamic data', async () => 
 
   await pageWithoutJs.goto('/blog-post/1')
 
-  const metaDescription = await pageWithoutJs.locator(
-    'meta[name="description"]',
-  )
+  const metaDescription = pageWithoutJs.locator('meta[name="description"]')
 
-  const ogDescription = await pageWithoutJs.locator(
-    'meta[property="og:description"]',
-  )
+  const ogDescription = pageWithoutJs.locator('meta[property="og:description"]')
   await expect(metaDescription).toHaveAttribute('content', 'Description 1')
   await expect(ogDescription).toHaveAttribute('content', 'Description 1')
 
   const title = await pageWithoutJs.locator('title').innerHTML()
-  await expect(title).toBe('Post 1 | Cedar App')
+  expect(title).toBe('Post 1 | Cedar App')
 
-  const ogTitle = await pageWithoutJs.locator('meta[property="og:title"]')
+  const ogTitle = pageWithoutJs.locator('meta[property="og:title"]')
   await expect(ogTitle).toHaveAttribute('content', 'Post 1')
 })
 
@@ -216,7 +212,7 @@ test('Check that you can navigate from home page to specific blog post', async (
   expect(mainContent).toMatch(/What is the meaning of life\?/)
 
   await pageWithoutJs.goto('/')
-  const aboutMeAnchor = await pageWithoutJs.locator(
+  const aboutMeAnchor = pageWithoutJs.locator(
     'a:has-text("A little more about me")',
   )
 
@@ -260,7 +256,7 @@ test('prerender with broken gql query', async () => {
   // Running the prerender command twice takes much longer than typical tests should
   test.slow()
 
-  const redwoodProjectPath = process.env.REDWOOD_TEST_PROJECT_PATH || ''
+  const redwoodProjectPath = process.env.CEDAR_TEST_PROJECT_PATH || ''
 
   const cellBasePath = path.join(
     redwoodProjectPath,
@@ -278,7 +274,7 @@ test('prerender with broken gql query', async () => {
   fs.writeFileSync(cellPath, blogPostsCell.replace('createdAt', 'timestamp'))
 
   try {
-    await execa.command(`yarn rw prerender`, {
+    await execa.command(`yarn cedar prerender`, {
       cwd: redwoodProjectPath,
       shell: true,
     })
@@ -292,7 +288,7 @@ test('prerender with broken gql query', async () => {
   fs.writeFileSync(cellPath, blogPostsCell)
 
   // Make sure to restore any potentially broken/missing prerendered pages
-  await execa.command(`yarn rw prerender`, {
+  await execa.command(`yarn cedar prerender`, {
     cwd: redwoodProjectPath,
     shell: true,
   })

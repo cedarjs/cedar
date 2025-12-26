@@ -1,16 +1,17 @@
 import eslint from '@eslint/js'
 import comments from '@eslint-community/eslint-plugin-eslint-comments/configs'
+import { defineConfig } from 'eslint/config'
 import jsdoc from 'eslint-plugin-jsdoc'
 import jsonc from 'eslint-plugin-jsonc'
 import markdown from 'eslint-plugin-markdown'
 import n from 'eslint-plugin-n'
-import packageJson from 'eslint-plugin-package-json/configs/recommended'
+import packageJson from 'eslint-plugin-package-json'
 import perfectionist from 'eslint-plugin-perfectionist'
 import * as regexp from 'eslint-plugin-regexp'
 import yml from 'eslint-plugin-yml'
 import tseslint from 'typescript-eslint'
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: ['coverage*', 'dist', 'node_modules', '**/*.snap'],
   },
@@ -27,17 +28,30 @@ export default tseslint.config(
   comments.recommended,
   jsdoc.configs['flat/recommended-typescript-error'],
   n.configs['flat/recommended'],
+  packageJson.configs.recommended,
+  perfectionist.configs['recommended-natural'],
   {
-    ...packageJson,
+    // Apply the same rules as we use for import/order in .eslintrc.js
     rules: {
-      ...packageJson.rules,
-      // https://github.com/JoshuaKGoldberg/eslint-plugin-package-json/issues/252
-      'package-json/valid-repository-directory': 'off',
+      'perfectionist/sort-imports': [
+        'error',
+        {
+          type: 'natural',
+          newlinesBetween: 'always',
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
+          ],
+        },
+      ],
     },
   },
-  perfectionist.configs['recommended-natural'],
   regexp.configs['flat/recommended'],
-  ...tseslint.config({
+  ...defineConfig({
     extends: [
       ...tseslint.configs.strictTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,

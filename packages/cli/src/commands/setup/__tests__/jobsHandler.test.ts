@@ -29,6 +29,9 @@ vi.mock('@prisma/internals', async () => ({
         models: [{ name: 'BackgroundJob' }],
       },
     }),
+    getSchemaWithPath: async () => ({
+      schemas: [],
+    }),
   },
 }))
 
@@ -50,15 +53,16 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         base: BASE_PATH,
         api: {
           base: path.join(BASE_PATH, 'api'),
-          dbSchema: path.join(BASE_PATH, 'api', 'db', 'schema.prisma'),
           lib: path.join(BASE_PATH, 'api', 'src', 'lib'),
           jobs: path.join(BASE_PATH, 'api', 'src', 'jobs'),
+          prismaConfig: path.join(BASE_PATH, 'api', 'prisma.config.cjs'),
         },
         web: {
           base: path.join(BASE_PATH, 'web'),
         },
       }
     },
+    getSchemaPath: () => '',
   }
 })
 

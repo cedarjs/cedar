@@ -34,7 +34,7 @@ describe('buildNumWorkers()', () => {
     expect(result).toEqual([[0, 0]])
   })
 
-  it('turns a single worker config with more than 1 count an array of arrays', () => {
+  it('turns a single worker config with more than 1 count into an array of arrays', () => {
     const config = [
       {
         count: 2,

@@ -5,10 +5,6 @@ import { context } from '@opentelemetry/api'
 import { suppressTracing } from '@opentelemetry/core'
 import { Listr } from 'listr2'
 
-import {
-  getWebSideDefaultBabelConfig,
-  registerApiSideBabelHook,
-} from '@cedarjs/babel-config'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
 
@@ -61,7 +57,7 @@ export const handler = async (args) => {
 
   // The command the user is running is something like this:
   //
-  // yarn rw exec scriptName arg1 arg2 --positional1=foo --positional2=bar
+  // yarn cedar exec scriptName arg1 arg2 --positional1=foo --positional2=bar
   //
   // Further up in the command chain we've parsed this with yargs. We asked
   // yargs to parse the command `exec [name]`. So it plucked `scriptName` from
@@ -86,65 +82,6 @@ export const handler = async (args) => {
   delete scriptArgs.l
   delete scriptArgs.s
   delete scriptArgs.silent
-
-  const {
-    overrides: _overrides,
-    plugins: webPlugins,
-    ...otherWebConfig
-  } = getWebSideDefaultBabelConfig()
-
-  // Import babel config for running script
-  registerApiSideBabelHook({
-    plugins: [
-      [
-        'babel-plugin-module-resolver',
-        {
-          alias: {
-            $api: getPaths().api.base,
-            $web: getPaths().web.base,
-            api: getPaths().api.base,
-            web: getPaths().web.base,
-          },
-          loglevel: 'silent', // to silence the unnecessary warnings
-        },
-        'exec-$side-module-resolver',
-      ],
-    ],
-    overrides: [
-      {
-        test: ['./api/'],
-        plugins: [
-          [
-            'babel-plugin-module-resolver',
-            {
-              alias: {
-                src: getPaths().api.src,
-              },
-              loglevel: 'silent',
-            },
-            'exec-api-src-module-resolver',
-          ],
-        ],
-      },
-      {
-        test: ['./web/'],
-        plugins: [
-          ...webPlugins,
-          [
-            'babel-plugin-module-resolver',
-            {
-              alias: {
-                src: getPaths().web.src,
-              },
-              loglevel: 'silent',
-            },
-            'exec-web-src-module-resolver',
-          ],
-        ],
-        ...otherWebConfig,
-      },
-    ],
-  })
 
   const scriptPath = resolveScriptPath(name)
 

@@ -6,13 +6,13 @@ import type { GlobalContext } from '@cedarjs/context'
 import { context as globalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
-import type { GetCurrentUser } from '../types'
+import type { GetCurrentUser } from '../types.js'
 
 interface Args {
   authDecoder?: Decoder | Decoder[]
   handlerFn: (
     event: APIGatewayEvent,
-    context: LambdaContext,
+    context?: LambdaContext,
     ...others: any
   ) => any
   getCurrentUser?: GetCurrentUser
@@ -23,7 +23,7 @@ export type UseRequireAuth = (
   args: Args,
 ) => (
   event: APIGatewayEvent,
-  context: LambdaContext,
+  context?: LambdaContext,
   ...rest: any
 ) => Promise<ReturnType<Args['handlerFn']>>
 
@@ -34,7 +34,7 @@ export const useRequireAuth: UseRequireAuth = ({
 }) => {
   return async (
     event: APIGatewayEvent,
-    context: LambdaContext,
+    context?: LambdaContext,
     ...rest: any
   ) => {
     const authEnrichedFunction = async () => {

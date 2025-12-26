@@ -16,8 +16,8 @@ export const flightcontrolConfig = {
           buildType: 'nixpacks',
           cpu: 0.5,
           memory: 1,
-          buildCommand: 'yarn rw deploy flightcontrol api',
-          startCommand: 'yarn rw deploy flightcontrol api --serve',
+          buildCommand: 'yarn cedar deploy flightcontrol api',
+          startCommand: 'yarn cedar deploy flightcontrol api --serve',
           port: 8911,
           healthCheckPath: '/graphql/health',
           ci: {
@@ -35,7 +35,7 @@ export const flightcontrolConfig = {
           type: 'static',
           buildType: 'nixpacks',
           singlePageApp: true,
-          buildCommand: 'yarn rw deploy flightcontrol web',
+          buildCommand: 'yarn cedar deploy flightcontrol web',
           outputDirectory: 'web/dist',
           ci: {
             type: 'ec2',

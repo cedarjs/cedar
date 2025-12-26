@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, vi, describe, expect, it } from 'vitest'
 
-import { configureGraphiQLPlayground } from '../graphiql'
+import { configureGraphiQLPlayground } from '../graphiql.js'
 
 describe('configureGraphiQLPlayground', () => {
   describe('when not in development environment', () => {

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-dbauth-setup",
-  "version": "0.0.5",
+  "version": "2.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -13,8 +13,8 @@
     "dist"
   ],
   "scripts": {
+    "// build:js": "Including .snap in extensions because of https://github.com/babel/babel/issues/11394",
     "build": "yarn build:js && yarn build:types",
-    "build //": "Including .snap in extensions because of https://github.com/babel/babel/issues/11394",
     "build:js": "babel src -d dist --extensions \".js,.ts,.snap\" --copy-files --no-copy-ignored",
     "build:pack": "yarn pack -o cedarjs-auth-dbauth-setup.tgz",
     "build:types": "tsc --build --verbose",
@@ -24,21 +24,25 @@
     "test:watch": "yarn test --watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.27.6",
+    "@babel/runtime-corejs3": "7.28.4",
     "@cedarjs/cli-helpers": "workspace:*",
-    "@prisma/internals": "5.20.0",
+    "@prisma/internals": "6.19.1",
     "@simplewebauthn/browser": "9.0.1",
-    "core-js": "3.42.0",
+    "core-js": "3.47.0",
     "prompts": "2.4.2",
-    "terminal-link": "2.1.1"
+    "termi-link": "1.1.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.27.2",
+    "@babel/cli": "7.28.3",
     "@babel/core": "^7.26.10",
     "@simplewebauthn/types": "9.0.1",
-    "@types/yargs": "17.0.33",
-    "typescript": "5.6.2",
+    "@types/yargs": "17.0.35",
+    "ts-dedent": "2.2.0",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

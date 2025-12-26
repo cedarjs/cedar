@@ -1,9 +1,9 @@
 import path from 'path'
 
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { beforeAll, afterAll, describe, test, expect } from 'vitest'
 
-import { validateSchema } from '../validateSchema'
+import { validateSchema } from '../validateSchema.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,

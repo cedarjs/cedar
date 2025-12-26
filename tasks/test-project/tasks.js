@@ -10,6 +10,7 @@ const {
   applyCodemod,
   updatePkgJsonScripts,
   exec,
+  getCfwBin,
 } = require('./util')
 
 // This variable gets used in other functions
@@ -38,7 +39,7 @@ const createBuilder = (cmd) => {
   }
 }
 
-const createPage = createBuilder('yarn redwood g page')
+const createPage = createBuilder('yarn cedar g page')
 
 async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   OUTPUT_PATH = outputPath
@@ -132,13 +133,13 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
       {
         title: 'Creating MDX Storybook stories',
         task: () => {
-          const redwoodMdxStoryContent = fs.readFileSync(
-            `${path.resolve(__dirname, 'codemods', 'Redwood.stories.mdx')}`,
+          const cedarMdxStoryContent = fs.readFileSync(
+            `${path.resolve(__dirname, 'codemods', 'CedarJS.mdx')}`,
           )
 
           fs.writeFileSync(
-            fullPath('web/src/Redwood.stories.mdx', { addExtension: false }),
-            redwoodMdxStoryContent,
+            fullPath('web/src/CedarJS.mdx', { addExtension: false }),
+            cedarMdxStoryContent,
           )
 
           return
@@ -159,7 +160,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   }
 
   const createLayout = async () => {
-    const createLayout = createBuilder('yarn redwood g layout')
+    const createLayout = createBuilder('yarn cedar g layout')
 
     await createLayout('blog')
 
@@ -170,7 +171,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   }
 
   const createComponents = async () => {
-    const createComponent = createBuilder('yarn redwood g component')
+    const createComponent = createBuilder('yarn cedar g component')
 
     await createComponent('blogPost')
 
@@ -198,7 +199,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   }
 
   const createCells = async () => {
-    const createCell = createBuilder('yarn redwood g cell')
+    const createCell = createBuilder('yarn cedar g cell')
 
     await createCell('blogPosts')
 
@@ -292,10 +293,10 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
       },
 
       // ====== NOTE: rufus needs this workaround for tailwind =======
-      // Setup tailwind in a linked project, due to rwfw we install deps manually
+      // Setup tailwind in a linked project, due to cfw we install deps manually
       {
         title: 'Install tailwind dependencies',
-        // @NOTE: use rwfw, because calling the copy function doesn't seem to work here
+        // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
           execa(
             'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.5.12',
@@ -306,9 +307,13 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
       },
       {
         title: '[link] Copy local framework files again',
-        // @NOTE: use rwfw, because calling the copy function doesn't seem to work here
+        // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
-          execa('yarn rwfw project:copy', [], getExecaOptions(outputPath)),
+          execa(
+            `yarn ${getCfwBin(outputPath)} project:copy`,
+            [],
+            getExecaOptions(outputPath),
+          ),
         enabled: () => linkWithLatestFwBuild,
       },
       // =========
@@ -316,7 +321,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         title: 'Adding Tailwind',
         task: () => {
           return execa(
-            'yarn rw setup ui tailwindcss',
+            'yarn cedar setup ui tailwindcss',
             ['--force', linkWithLatestFwBuild && '--no-install'].filter(
               Boolean,
             ),
@@ -359,7 +364,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
       'auth-dbauth-setup',
     )
 
-    // At an earlier step we run `yarn rwfw project:copy` which gives us
+    // At an earlier step we run `yarn cfw project:copy` which gives us
     // auth-dbauth-setup@3.2.0 currently. We need that version to be a canary
     // version for auth-dbauth-api and auth-dbauth-web package installations
     // to work. So we remove the current version and add a canary version
@@ -368,7 +373,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     fs.rmSync(dbAuthSetupPath, { recursive: true, force: true })
 
     await execa(
-      'yarn rw setup auth dbAuth --force --no-webauthn',
+      'yarn cedar setup auth dbAuth --force --no-webauthn',
       [],
       getExecaOptions(outputPath),
     )
@@ -377,16 +382,20 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     updatePkgJsonScripts({
       projectPath: outputPath,
       scripts: {
-        postinstall: 'yarn rwfw project:copy',
+        postinstall: `yarn ${getCfwBin(outputPath)} project:copy`,
       },
     })
 
     if (linkWithLatestFwBuild) {
-      await execa('yarn rwfw project:copy', [], getExecaOptions(outputPath))
+      await execa(
+        `yarn ${getCfwBin(outputPath)} project:copy`,
+        [],
+        getExecaOptions(outputPath),
+      )
     }
 
     await execa(
-      'yarn rw g dbAuth --no-webauthn --username-label=username --password-label=password',
+      'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
       [],
     )
 
@@ -488,38 +497,58 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
         // keep it outside of BlogLayout
         title: 'Creating double rendering test page',
         task: async () => {
-          const createPage = createBuilder('yarn redwood g page')
+          const createPage = createBuilder('yarn cedar g page')
           await createPage('double')
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
 
-const DoublePage = () => {
-  return (
-    <>
-      <Metadata title="Double" description="Double page" og />
+            import test from './test.png'
 
-      <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
-      <p>
-        This page exists to make sure we don&apos;t regress on{' '}
-        <a
-          href="https://github.com/redwoodjs/redwood/issues/7757"
-          className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
-          target="_blank"
-          rel="noreferrer"
-        >
-          #7757
-        </a>
-      </p>
-      <p>It needs to be a page that is not wrapped in a Set</p>
-    </>
-  )
-}
+            const DoublePage = () => {
+              return (
+                <>
+                  <Metadata title="Double" description="Double page" og />
 
-export default DoublePage`
+                  <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
+                  <p>
+                    This page exists to make sure we don&apos;t regress on{' '}
+                    <a
+                      href="https://github.com/redwoodjs/redwood/issues/7757"
+                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      #7757
+                    </a>
+                  </p>
+                  <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>
+                  <p>
+                    We also use this page to make sure we don&apos;t regress on{' '}
+                    <a
+                      href="https://github.com/cedarjs/cedar/issues/317"
+                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      #317
+                    </a>
+                  </p>
+                  <img src={test} alt="Test" />
+                </>
+              )
+            }
+
+            export default DoublePage`
 
           fs.writeFileSync(
             fullPath('web/src/pages/DoublePage/DoublePage'),
             doublePageContent,
+          )
+          fs.copyFileSync(
+            fullPath('web/public/favicon.png'),
+            fullPath('web/src/pages/DoublePage/test.png', {
+              addExtension: false,
+            }),
           )
         },
       },
@@ -558,19 +587,17 @@ export default DoublePage`
           )
           fs.writeFileSync(pathRoutes, resultsRoutesNewContact)
 
-          const blogPostRouteHooks = `import { db } from '$api/src/lib/db'
+          const blogPostRouteHooks = `import { db } from '$api/src/lib/db.js'
 
-      export async function routeParameters() {
-        return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
-      }
-      `.replaceAll(/ {6}/g, '')
+            export async function routeParameters() {
+              return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
+            }`
           const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
           fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
 
           const waterfallRouteHooks = `export async function routeParameters() {
-        return [{ id: 2 }]
-      }
-      `.replaceAll(/ {6}/g, '')
+              return [{ id: 2 }]
+            }`
           const waterfallRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
           fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
         },
@@ -578,7 +605,7 @@ export default DoublePage`
     ])
   }
 
-  const generateScaffold = createBuilder('yarn rw g scaffold')
+  const generateScaffold = createBuilder('yarn cedar g scaffold')
 
   return new Listr(
     [
@@ -592,7 +619,7 @@ export default DoublePage`
           addModel(user)
 
           return execa(
-            `yarn rw prisma migrate dev --name create_post_user`,
+            `yarn cedar prisma migrate dev --name create_post_user`,
             [],
             getExecaOptions(outputPath),
           )
@@ -609,7 +636,11 @@ export default DoublePage`
             fullPath('api/src/services/posts/posts.scenarios'),
           )
 
-          await execa(`yarn rwfw project:copy`, [], getExecaOptions(outputPath))
+          await execa(
+            `yarn ${getCfwBin(outputPath)} project:copy`,
+            [],
+            getExecaOptions(outputPath),
+          )
         },
       },
       {
@@ -629,7 +660,7 @@ export default DoublePage`
           addModel(contact)
 
           await execa(
-            `yarn rw prisma migrate dev --name create_contact`,
+            `yarn cedar prisma migrate dev --name create_contact`,
             [],
             getExecaOptions(outputPath),
           )
@@ -686,7 +717,7 @@ export default DoublePage`
       {
         title: 'Add users service',
         task: async () => {
-          const generateSdl = createBuilder('yarn redwood g sdl --no-crud')
+          const generateSdl = createBuilder('yarn cedar g sdl --no-crud')
 
           await generateSdl('user')
 
@@ -706,8 +737,8 @@ export default DoublePage`
             fullPath('api/src/services/users/users.scenarios'),
           )
 
-          const test = `import { user } from './users'
-            import type { StandardScenario } from './users.scenarios'
+          const test = `import { user } from './users.js'
+            import type { StandardScenario } from './users.scenarios.js'
 
             describe('users', () => {
               scenario('returns a single user', async (scenario: StandardScenario) => {
@@ -719,7 +750,7 @@ export default DoublePage`
 
           fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
 
-          return createBuilder('yarn redwood g types')()
+          return createBuilder('yarn cedar g types')()
         },
       },
       {
@@ -786,7 +817,7 @@ async function streamingTasks(outputPath, { verbose }) {
       title: 'Enable streaming-ssr experiment',
       task: async () => {
         const setupExperiment = createBuilder(
-          'yarn rw experimental setup-streaming-ssr',
+          'yarn cedar experimental setup-streaming-ssr',
         )
         await setupExperiment('--force')
       },
@@ -821,13 +852,13 @@ async function fragmentsTasks(outputPath, { verbose }) {
       title: 'Adding produce and stall models to prisma',
       task: async () => {
         // Need both here since they have a relation
-        const { produce, stall } = await import('./codemods/models.js')
+        const models = await import('./codemods/models.js')
 
-        addModel(produce)
-        addModel(stall)
+        addModel((models.default || models).produce)
+        addModel((models.default || models).stall)
 
         return exec(
-          'yarn rw prisma migrate dev --name create_produce_stall',
+          'yarn cedar prisma migrate dev --name create_produce_stall',
           [],
           getExecaOptions(outputPath),
         )
@@ -841,13 +872,13 @@ async function fragmentsTasks(outputPath, { verbose }) {
           fullPath('scripts/seed.ts', { addExtension: false }),
         )
 
-        await exec('yarn rw prisma db seed', [], getExecaOptions(outputPath))
+        await exec('yarn cedar prisma db seed', [], getExecaOptions(outputPath))
       },
     },
     {
       title: 'Generate SDLs for produce and stall',
       task: async () => {
-        const generateSdl = createBuilder('yarn redwood g sdl')
+        const generateSdl = createBuilder('yarn cedar g sdl')
 
         await generateSdl('stall')
         await generateSdl('produce')

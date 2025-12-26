@@ -8,7 +8,7 @@ import { format } from 'prettier'
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
-import { getLoadDocumentsOptions } from './graphqlCodeGen'
+import { getLoadDocumentsOptions } from './graphqlCodeGen.js'
 
 type PossibleTypesResult = {
   possibleTypesFiles: string[]
@@ -40,7 +40,7 @@ type PossibleTypesResult = {
  * ```
  *
  * @see https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces
- **/
+ */
 export const generatePossibleTypes = async (): Promise<PossibleTypesResult> => {
   const config = getConfig()
 

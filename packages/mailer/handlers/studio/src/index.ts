@@ -35,7 +35,7 @@ export class StudioMailHandler extends AbstractMailHandler {
       )
     } catch (e) {
       console.error(
-        '\nSent an email to the void! You can view this email during development with Redwood Studio: `yarn rw studio`',
+        '\nSent an email to the void! You can view this email during development with Redwood Studio: `yarn cedar studio`',
       )
       console.error('  ' + (e as Error).message + '\n')
     }

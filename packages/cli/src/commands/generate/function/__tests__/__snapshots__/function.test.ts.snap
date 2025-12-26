@@ -3,7 +3,7 @@
 exports[`Single word default files > creates a single word function file > Scenario snapshot 1`] = `
 "export const standard = defineScenario({
   // Define the "fixture" to write into your test database here
-  // See guide: https://redwoodjs.com/docs/testing#scenarios
+  // See guide: https://cedarjs.com/docs/testing#scenarios
 })
 "
 `;
@@ -14,7 +14,7 @@ exports[`Single word default files > creates a single word function file > Test 
 import { handler } from './foo'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//    https://redwoodjs.com/docs/testing#testing-functions
+//    https://cedarjs.com/docs/testing#testing-functions
 
 describe('foo function', () => {
   it('Should respond with 200', async () => {
@@ -32,7 +32,7 @@ describe('foo function', () => {
   })
 
   // You can also use scenarios to test your api functions
-  // See guide here: https://redwoodjs.com/docs/testing#scenarios
+  // See guide here: https://cedarjs.com/docs/testing#scenarios
   //
   // scenario('Scenario test', async () => {
   //
@@ -51,7 +51,7 @@ exports[`Single word default files > creates a single word function file 1`] = `
  * Important: When deployed, a custom serverless function is an open API endpoint and
  * is your responsibility to secure appropriately.
  *
- * @see {@link https://redwoodjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
+ * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
  * in the RedwoodJS documentation for more information.
  *
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent
@@ -86,7 +86,7 @@ exports[`creates a .js file if --javascript=true 1`] = `
  * Important: When deployed, a custom serverless function is an open API endpoint and
  * is your responsibility to secure appropriately.
  *
- * @see {@link https://redwoodjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
+ * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
  * in the RedwoodJS documentation for more information.
  *
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent
@@ -123,7 +123,7 @@ import { logger } from 'src/lib/logger'
  * Important: When deployed, a custom serverless function is an open API endpoint and
  * is your responsibility to secure appropriately.
  *
- * @see {@link https://redwoodjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
+ * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
  * in the RedwoodJS documentation for more information.
  *
  * @param { APIGatewayEvent } event - an object which contains information from the invoker.
@@ -156,7 +156,7 @@ exports[`creates a multi word function file 1`] = `
  * Important: When deployed, a custom serverless function is an open API endpoint and
  * is your responsibility to secure appropriately.
  *
- * @see {@link https://redwoodjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
+ * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
  * in the RedwoodJS documentation for more information.
  *
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent

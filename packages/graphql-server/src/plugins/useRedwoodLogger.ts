@@ -10,8 +10,8 @@ import { v4 as uuidv4 } from 'uuid'
 
 import type { Logger, LevelWithSilent } from '@cedarjs/api/logger'
 
-import { AuthenticationError, ForbiddenError } from '../errors'
-import type { RedwoodGraphQLContext } from '../types'
+import { AuthenticationError, ForbiddenError } from '../errors.js'
+import type { RedwoodGraphQLContext } from '../types.js'
 
 /**
  * Options for request and response information to include in the log statements

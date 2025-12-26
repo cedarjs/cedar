@@ -32,9 +32,7 @@ const DEFAULT_PATHS = {
   scripts: ['scripts'],
   api: {
     base: ['api'],
-    dataMigrations: ['api', 'db', 'dataMigrations'],
-    db: ['api', 'db'],
-    dbSchema: ['api', 'db', 'schema.prisma'],
+    prismaConfig: ['api', 'prisma.config.cjs'],
     functions: ['api', 'src', 'functions'],
     graphql: ['api', 'src', 'graphql'],
     lib: ['api', 'src', 'lib'],
@@ -68,7 +66,7 @@ const DEFAULT_PATHS = {
     html: ['web', 'src', 'index.html'],
     config: ['web', 'config'],
     viteConfig: ['web', 'vite.config.ts'],
-    postcss: ['web', 'config', 'postcss.config.js'],
+    postcss: ['web', 'config', 'postcss.config.cjs'],
     storybookConfig: ['web', '.storybook', 'main.js'],
     storybookPreviewConfig: ['web', '.storybook', 'preview.js'],
     storybookManagerConfig: ['web', '.storybook', 'manager.js'],
@@ -76,8 +74,8 @@ const DEFAULT_PATHS = {
     distBrowser: ['web', 'dist', 'browser'],
     distRsc: ['web', 'dist', 'rsc'],
     distSsr: ['web', 'dist', 'ssr'],
-    distSsrDocument: ['web', 'dist', 'ssr', 'Document.mjs'],
-    distSsrEntryServer: ['web', 'dist', 'ssr', 'entry.server.mjs'],
+    distSsrDocument: ['web', 'dist', 'ssr', 'Document'],
+    distSsrEntryServer: ['web', 'dist', 'ssr', 'entry.server'],
     distRouteHooks: ['web', 'dist', 'ssr', 'routeHooks'],
     distRscEntries: ['web', 'dist', 'rsc', 'entries.mjs'],
     routeManifest: ['web', 'dist', 'ssr', 'route-manifest.json'],
@@ -148,6 +146,7 @@ describe('paths', () => {
       Object.assign(pathTemplate.api, {
         distJobsConfig: null,
         jobsConfig: null,
+        prismaConfig: ['api', 'prisma.config.ts'],
       })
       Object.assign(pathTemplate.web, {
         document: null, // this fixture doesnt have a document
@@ -288,6 +287,7 @@ describe('paths', () => {
         jobsConfig: null,
         distJobsConfig: null,
         logger: null,
+        prismaConfig: ['api', 'prisma.config.js'],
       })
       Object.assign(pathTemplate.web, {
         document: null, // this fixture doesn't have a document
@@ -473,6 +473,7 @@ describe('paths', () => {
         jobsConfig: null,
         distJobsConfig: null,
         logger: null,
+        prismaConfig: ['api', 'prisma.config.js'],
       })
       Object.assign(pathTemplate.web, {
         app: null,

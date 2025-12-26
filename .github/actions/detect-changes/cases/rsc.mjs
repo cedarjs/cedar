@@ -20,6 +20,8 @@ export function rscChanged(changedFiles) {
       ) ||
       changedFile.startsWith('.github/actions/set-up-rsc-project/') ||
       changedFile.startsWith('packages/internal/') ||
+      changedFile.startsWith('packages/api-server/') ||
+      changedFile.startsWith('packages/context/') ||
       changedFile.startsWith('packages/project-config/') ||
       changedFile.startsWith('packages/web/') ||
       changedFile.startsWith('packages/vite/') ||

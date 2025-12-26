@@ -161,7 +161,7 @@ interface ValidationRecipe {
   /**
    * Requires that a field NOT be present, meaning it must be `null` or `undefined`.
    *
-   * Opposite of the [`presence`](https://redwoodjs.com/docs/services.html#presence) validator.
+   * Opposite of the [`presence`](https://cedarjs.com/docs/services.html#presence) validator.
    */
   absence?: boolean | AbsenceValidatorOptions
   /**
@@ -187,7 +187,7 @@ interface ValidationRecipe {
   /**
    * Requires that the given value not equal to any in a list of given values.
    *
-   * Opposite of the [inclusion](https://redwoodjs.com/docs/services.html#inclusion) validation.
+   * Opposite of the [inclusion](https://cedarjs.com/docs/services.html#inclusion) validation.
    */
   exclusion?: unknown[] | ExclusionValidatorOptions
   /**
@@ -197,7 +197,7 @@ interface ValidationRecipe {
   /**
    * Requires that the given value is equal to one in a list of given values.
    *
-   * Opposite of the [exclusion](https://redwoodjs.com/docs/services.html#exclusion) validation.
+   * Opposite of the [exclusion](https://cedarjs.com/docs/services.html#exclusion) validation.
    */
   inclusion?: unknown[] | InclusionValidatorOptions
   /**
@@ -211,7 +211,7 @@ interface ValidationRecipe {
   /**
    * Requires that a field be present, meaning it must not be null or undefined.
    *
-   * Opposite of the [absence](https://redwoodjs.com/docs/services.html#absence) validator.
+   * Opposite of the [absence](https://cedarjs.com/docs/services.html#absence) validator.
    */
   presence?: boolean | PresenceValidatorOptions
 

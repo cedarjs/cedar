@@ -4,14 +4,14 @@ import { db } from 'api/src/lib/db'
 export default async () => {
   try {
     //
-    // Manually seed via `yarn rw prisma db seed`
-    // Seeds automatically with `yarn rw prisma migrate dev` and `yarn rw prisma migrate reset`
+    // Manually seed via `yarn cedar prisma db seed`
+    // Seeds automatically with `yarn cedar prisma migrate dev` and `yarn cedar prisma migrate reset`
     //
     // Update "const data = []" to match your data model and seeding needs
     //
     const data: Prisma.UserExampleCreateArgs['data'][] = [
       // To try this example data with the UserExample model in schema.prisma,
-      // uncomment the lines below and run 'yarn rw prisma migrate dev'
+      // uncomment the lines below and run 'yarn cedar prisma migrate dev'
       //
       { name: 'alice', email: 'alice@example.com' },
       { name: 'mark', email: 'mark@example.com' },

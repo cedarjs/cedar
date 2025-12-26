@@ -1,7 +1,10 @@
 import fs from 'fs'
 import path from 'path'
 
-import chalk from 'chalk'
+// See https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 import { config } from 'dotenv-defaults'
 import fg from 'fast-glob'
 import fastify from 'fastify'
@@ -10,13 +13,13 @@ import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
-import { resolveOptions } from './createServerHelpers'
+import { resolveOptions } from './createServerHelpers.js'
 import type {
   CreateServerOptions,
   Server,
   StartOptions,
-} from './createServerHelpers'
-import { redwoodFastifyAPI } from './plugins/api'
+} from './createServerHelpers.js'
+import { redwoodFastifyAPI } from './plugins/api.js'
 
 // Load .env files if they haven't already been loaded. This makes importing this file effectful:
 //
@@ -67,6 +70,7 @@ export async function createServer(options: CreateServerOptions = {}) {
   const {
     apiRootPath,
     fastifyServerOptions,
+    discoverFunctionsGlob,
     configureApiServer,
     apiPort,
     apiHost,
@@ -80,7 +84,7 @@ export async function createServer(options: CreateServerOptions = {}) {
 
   if (fs.existsSync(serverConfigPath)) {
     console.warn(
-      chalk.yellow(
+      ansis.yellow(
         [
           '',
           `Ignoring \`config\` and \`configureServer\` in api/server.config.js.`,
@@ -119,6 +123,7 @@ export async function createServer(options: CreateServerOptions = {}) {
       fastGlobOptions: {
         ignore: ['**/dist/functions/graphql.js'],
       },
+      discoverFunctionsGlob,
       configureServer: configureApiServer,
     },
   })
@@ -153,7 +158,7 @@ export async function createServer(options: CreateServerOptions = {}) {
 
   server.addHook('onListen', (done) => {
     console.log(
-      `Server listening at ${chalk.magenta(
+      `Server listening at ${ansis.magenta(
         `${server.listeningOrigin}${apiRootPath}`,
       )}`,
     )

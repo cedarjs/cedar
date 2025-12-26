@@ -1,15 +1,18 @@
-import chalk from 'chalk'
+// See https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 
 import { redwoodFastifyWeb, coerceRootPath } from '@cedarjs/fastify-web'
 
-import { getWebHost, getWebPort, getAPIHost, getAPIPort } from './cliHelpers'
-import { createServer as createApiServer } from './createServer'
-import createFastifyInstance from './fastify'
-import type { BothParsedOptions } from './types'
+import { getWebHost, getWebPort, getAPIHost, getAPIPort } from './cliHelpers.js'
+import { createServer as createApiServer } from './createServer.js'
+import { createFastifyInstance } from './fastify.js'
+import type { BothParsedOptions } from './types.js'
 
 export async function handler(options: BothParsedOptions) {
   const timeStart = Date.now()
-  console.log(chalk.dim.italic('Starting API and Web Servers...'))
+  console.log(ansis.dim.italic('Starting API and Web Servers...'))
 
   options.webHost ??= getWebHost()
   options.webPort ??= getWebPort()
@@ -61,13 +64,13 @@ export async function handler(options: BothParsedOptions) {
   )
   apiFastify.log.trace(`Registered plugins\n${apiFastify.printPlugins()}`)
 
-  console.log(chalk.dim.italic('Took ' + (Date.now() - timeStart) + ' ms'))
+  console.log(ansis.dim.italic('Took ' + (Date.now() - timeStart) + ' ms'))
 
-  const webServer = chalk.green(webFastify.listeningOrigin)
-  const apiServer = chalk.magenta(
+  const webServer = ansis.green(webFastify.listeningOrigin)
+  const apiServer = ansis.magenta(
     `${apiFastify.listeningOrigin}${options.apiRootPath}`,
   )
-  const graphqlEndpoint = chalk.magenta(`${apiServer}graphql`)
+  const graphqlEndpoint = ansis.magenta(`${apiServer}graphql`)
 
   console.log(`Web server listening at ${webServer}`)
   console.log(`API server listening at ${apiServer}`)

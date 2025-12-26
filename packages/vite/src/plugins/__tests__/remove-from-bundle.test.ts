@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { excludeOnMatch } from '../vite-plugin-remove-from-bundle.js'
+import { excludeOnMatch } from '../vite-plugin-cedar-remove-from-bundle.js'
 
 describe('excludeModule', () => {
   it('should return true if idToExclude matches id', () => {

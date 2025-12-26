@@ -97,7 +97,7 @@ export const builder = (yargs) => {
   yargs.epilogue(
     `Also see the ${terminalLink(
       'Redwood Baremetal Deploy Reference',
-      'https://redwoodjs.com/docs/cli-commands#deploy',
+      'https://cedarjs.com/docs/cli-commands#deploy',
     )}\n`,
   )
 }

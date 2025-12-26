@@ -49,7 +49,7 @@ describe('The CLI sets `cwd` correctly', () => {
   })
 
   describe('RWJS_CWD', () => {
-    it('lets the user set the cwd via the `--cwd` option', () => {
+    it('lets the user set the cwd via the RWJS_CWD environment variable', () => {
       const { status, stdout, stderr } = rw(['--version'], {
         env: {
           ...process.env,

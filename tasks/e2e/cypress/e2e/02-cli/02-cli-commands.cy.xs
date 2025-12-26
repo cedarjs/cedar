@@ -15,15 +15,15 @@ describe('Check Redwood cli commands against tutorial', () => {
   })
   it('Should run api tests successfully', () => {
     // Reset contacts service to initial state to pass tests
-    cy.exec(`cd ${BASE_DIR}; yarn rw g sdl contact --force`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar g sdl contact --force`)
 
-    cy.exec(`cd ${BASE_DIR}; yarn rw test api --no-watch`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar test api --no-watch`)
       .its('code')
       .should('eq', 0)
   })
 
   it('Should run web tests successfully', () => {
-    cy.exec(`cd ${BASE_DIR}; yarn rw test web --no-watch --forceExit`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar test web --no-watch --forceExit`)
       .its('code')
       .should('eq', 0)
   })
@@ -31,14 +31,14 @@ describe('Check Redwood cli commands against tutorial', () => {
   it('Should run build successfully (no prerender)', () => {
     // Check if webpack build on web, and babel build on api
     // work correctly
-    cy.exec(`cd ${BASE_DIR}; yarn rw build --no-prerender --verbose`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar build --no-prerender --verbose`)
       .its('code')
       .should('eq', 0)
   })
 
   it('Should prerender about and homepage', () => {
     // Check if prerender is working
-    cy.exec(`cd ${BASE_DIR}; yarn rw prerender`).its('code').should('eq', 0)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar prerender`).its('code').should('eq', 0)
 
     const WEB_DIST = `${BASE_DIR}/web/dist`
 

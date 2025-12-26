@@ -4,7 +4,7 @@ import {
   getCurrentUserFromMiddleware,
 } from '@cedarjs/auth'
 
-import type { WebAuthnClientType } from './webAuthn'
+import type { WebAuthnClientType } from './webAuthn.js'
 
 export interface LoginAttributes {
   username: string

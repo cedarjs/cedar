@@ -1,41 +1,78 @@
 {
   "name": "@cedarjs/eslint-config",
-  "version": "0.0.5",
+  "version": "2.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/eslint-config"
   },
   "license": "MIT",
-  "main": "index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./index.js"
+      }
+    },
+    "./shared": {
+      "import": {
+        "types": "./dist/shared.d.mts",
+        "default": "./shared.mjs"
+      },
+      "require": {
+        "types": "./dist/shared.d.ts",
+        "default": "./shared.js"
+      }
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "index.js",
+    "index.mjs",
+    "shared.js",
+    "shared.mjs",
+    "dist"
+  ],
   "scripts": {
-    "build": "echo 'Nothing to build..'",
-    "build:pack": "yarn pack -o cedarjs-eslint-config.tgz"
+    "build": "yarn build:types",
+    "build:pack": "yarn pack -o cedarjs-eslint-config.tgz",
+    "build:types": "tsc --build --verbose"
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/eslint-parser": "7.27.5",
+    "@babel/eslint-parser": "7.28.5",
     "@babel/eslint-plugin": "7.27.1",
+    "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/eslint-plugin": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@typescript-eslint/eslint-plugin": "8.19.1",
-    "@typescript-eslint/parser": "8.19.1",
+    "@eslint/js": "8.57.1",
+    "@typescript-eslint/eslint-plugin": "8.50.1",
+    "@typescript-eslint/parser": "8.50.1",
     "eslint": "8.57.1",
-    "eslint-config-prettier": "9.1.0",
+    "eslint-config-prettier": "9.1.2",
     "eslint-import-resolver-babel-module": "5.3.2",
     "eslint-plugin-babel": "5.3.1",
-    "eslint-plugin-import": "2.30.0",
-    "eslint-plugin-jest-dom": "4.0.3",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-jest-dom": "5.5.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
-    "eslint-plugin-prettier": "5.2.1",
-    "eslint-plugin-react": "7.36.1",
+    "eslint-plugin-prettier": "5.5.4",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-hooks": "4.6.2",
-    "prettier": "3.5.3"
+    "prettier": "3.6.2",
+    "typescript-eslint": "8.50.1"
   },
   "devDependencies": {
-    "@babel/cli": "7.27.2",
-    "typescript": "5.6.2"
+    "@babel/cli": "7.28.3",
+    "typescript": "5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

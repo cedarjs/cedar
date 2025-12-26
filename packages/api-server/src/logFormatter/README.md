@@ -1,10 +1,14 @@
 # LogFormatter
 
-LogFormatter is a utility that formats RedwoodJS Logger output in development.
+LogFormatter is a utility that formats CedarJS Logger output in development.
 
-It is based on [pino-colada](https://github.com/lrlna/pino-colada/blob/master/README.md): a cute [ndjson](http://ndjson.org) formatter for [pino](https://github.com/pinojs/pino).
+It is based on
+[pino-colada](https://github.com/lrlna/pino-colada/blob/master/README.md): a
+cute [ndjson](http://ndjson.org) formatter for
+[pino](https://github.com/pinojs/pino).
 
-Redwood-specific GraphQL log data included by the the `useRedwoodLogger` envelop plug-in is supported:
+Cedar-specific GraphQL log data included by the the `useRedwoodLogger` envelop
+plug-in is supported:
 
 - Request Id
 - User-Agent
@@ -19,13 +23,13 @@ Pipe logs to the formatter:
 Example:
 
 ```bash
-echo "{\"level\": 30, \"message\": \"Hello RedwoodJS\"}" | yarn rw-log-formatter
+echo "{\"level\": 30, \"message\": \"Hello CedarJS\"}" | yarn rw-log-formatter
 ```
 
 Output:
 
 ```terminal
-11:00:28 🌲 Hello RedwoodJS
+11:00:28 🌲 Hello CedarJS
 ✨  Done in 0.14s.
 ```
 
@@ -41,4 +45,6 @@ yarn rw serve | yarn rw-log-formatter
 yarn rw serve api | yarn rw-log-formatter
 ```
 
-Note: Since `rw serve` sets the Node environment to `production` you will not see log non-warn/error output unless you configure your logging level to `debug` or below.
+Note: Since `rw serve` sets the Node environment to `production` you will not
+see log non-warn/error output unless you configure your logging level to
+`debug` or below.

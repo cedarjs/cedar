@@ -1,0 +1,79 @@
+name: 🌲 Create Cedar App Test
+
+on:
+  workflow_call:
+
+jobs:
+  create-cedar-app:
+    runs-on: ubuntu-latest
+
+    env:
+      REDWOOD_CI: 1
+      REDWOOD_DISABLE_TELEMETRY: 1
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: Set up test project
+        run: |
+          yarn build:pack
+          PROJECT_PATH=$(yarn set-up-test-project)
+          echo "PROJECT_PATH=$PROJECT_PATH" >> $GITHUB_ENV
+        working-directory: ./packages/create-cedar-app
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Set up git
+        run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+
+      - name: e2e test
+        run: yarn test:e2e
+        working-directory: ./packages/create-cedar-app
+        env:
+          PROJECT_PATH: ${{ env.PROJECT_PATH }}
+
+      - name: Install expect
+        run: |
+          sudo apt-get update
+          sudo apt-get install expect
+
+      - name: Prompt tests
+        run: |
+          ./tests/e2e_prompts.sh
+          ./tests/e2e_prompts_git.sh
+          ./tests/e2e_prompts_m.sh
+          ./tests/e2e_prompts_ts.sh
+          ./tests/e2e_prompts_overwrite.sh
+        working-directory: ./packages/create-cedar-app
+        env:
+          PROJECT_PATH: ${{ env.PROJECT_PATH }}
+
+      - name: ⬢ Set up Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+        with:
+          # Use Node 20 here for testing behavior for node versions below the
+          # minimum supported version
+          node-version: 20
+
+      - name: Prompt tests
+        run: ./tests/e2e_prompts_node_less.sh
+        working-directory: ./packages/create-cedar-app
+        env:
+          PROJECT_PATH: ${{ env.PROJECT_PATH }}
+
+      - name: ⬢ Set up Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+        with:
+          # Use Node 25 here for testing behavior for node versions above the
+          # maximum supported version
+          node-version: 25
+
+      - name: Prompt tests
+        run: ./tests/e2e_prompts_node_greater.sh
+        working-directory: ./packages/create-cedar-app
+        env:
+          PROJECT_PATH: ${{ env.PROJECT_PATH }}

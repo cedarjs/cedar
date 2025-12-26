@@ -1,10 +1,10 @@
 import fs from 'fs'
 import path from 'path'
 
-import { getDMMF, getSchema } from '@prisma/internals'
+import { getDMMF, getSchemaWithPath } from '@prisma/internals'
 import * as esbuild from 'esbuild'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getSchemaPath } from '@cedarjs/project-config'
 
 const DATAMODEL_PATH = path.join(getPaths().api.models, 'datamodel.js')
 const MODELS_PATH = path.join(getPaths().api.src, 'models')
@@ -24,14 +24,13 @@ const indexLines = [
 
 const modelImports = []
 const modelRequires = {}
-let datamodel
 
 // parse datamodel and write out cache
-export const parseDatamodel = () => {
-  const schema = getSchema(getPaths().api.dbSchema)
-
-  getDMMF({ datamodel: schema }).then((schema) => {
-    datamodel = schema.datamodel
+export const parseDatamodel = async () => {
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const { schemas } = await getSchemaWithPath(schemaPath)
+  getDMMF({ datamodel: schemas }).then((schema) => {
+    const datamodel = schema.datamodel
 
     try {
       // Ensure the directory exists

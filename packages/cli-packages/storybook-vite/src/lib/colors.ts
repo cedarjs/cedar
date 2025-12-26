@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import ansis from 'ansis'
 
 /**
  * To keep a consistent color/style palette between cli packages, such as
@@ -12,10 +12,10 @@ import chalk from 'chalk'
  * - packages/create-cedar-app/src/create-cedar-app.js
  */
 export default {
-  error: chalk.bold.red,
-  warning: chalk.keyword('orange'),
-  green: chalk.green,
-  info: chalk.grey,
-  bold: chalk.bold,
-  underline: chalk.underline,
+  error: ansis.bold.red,
+  warning: ansis.hex('#ffa500'),
+  green: ansis.green,
+  info: ansis.gray,
+  bold: ansis.bold,
+  underline: ansis.underline,
 }

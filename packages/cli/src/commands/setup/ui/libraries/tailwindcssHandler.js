@@ -28,7 +28,7 @@ const tailwindImportsAndNotes = [
   '/**',
   ' * START --- SETUP TAILWINDCSS EDIT',
   ' *',
-  ' * `yarn rw setup ui tailwindcss` placed these directives here',
+  ' * `yarn cedar setup ui tailwindcss` placed these directives here',
   " * to inject Tailwind's styles into your CSS.",
   ' * For more information, see: https://tailwindcss.com/docs/installation',
   ' */',
@@ -116,20 +116,9 @@ export const handler = async ({ force, install }) => {
               {
                 title: `Install ${projectPackages.join(', ')}`,
                 task: async () => {
-                  const yarnVersion = await execa('yarn', ['--version'])
-                  const isYarnV1 = yarnVersion.stdout.trim().startsWith('1')
-                  await execa(
-                    'yarn',
-                    [
-                      'add',
-                      '-D',
-                      ...(isYarnV1 ? ['-W'] : []),
-                      ...projectPackages,
-                    ],
-                    {
-                      cwd: rwPaths.base,
-                    },
-                  )
+                  await execa('yarn', ['add', '-D', ...projectPackages], {
+                    cwd: rwPaths.base,
+                  })
                 },
               },
             ],
@@ -183,7 +172,7 @@ export const handler = async ({ force, install }) => {
             const postCSSConfig = fs.readFileSync(
               path.join(
                 import.meta.dirname,
-                '../templates/postcss.config.js.template',
+                '../templates/postcss.config.cjs.template',
               ),
               'utf-8',
             )
@@ -199,7 +188,7 @@ export const handler = async ({ force, install }) => {
         task: async () => {
           const tailwindConfigPath = path.join(
             rwPaths.web.config,
-            'tailwind.config.js',
+            'tailwind.config.cjs',
           )
 
           if (fs.existsSync(tailwindConfigPath)) {
@@ -221,10 +210,16 @@ export const handler = async ({ force, install }) => {
           const tailwindConfig = fs.readFileSync(tailwindConfigPath, 'utf-8')
           const newTailwindConfig =
             'const { join } = require("node:path");\n\n' +
-            tailwindConfig.replace(
-              'content: []',
-              "content: [join(__dirname, '../src/**/*.{js,jsx,ts,tsx}')]",
-            )
+            tailwindConfig
+              .replace(
+                'content: []',
+                "content: [join(__dirname, '../src/**/*.{js,jsx,ts,tsx}')]",
+              )
+              // `tailwindcss init` will generate ESM syntax when it detects
+              // `"type": "module"` in package.json, even though the config
+              // file is .cjs. So we change it back to CJS syntax after it's
+              // been generated.
+              .replace('export default {', 'module.exports = {')
           fs.writeFileSync(tailwindConfigPath, newTailwindConfig)
         },
       },
@@ -381,14 +376,14 @@ export const handler = async ({ force, install }) => {
         task: async (_ctx) => {
           const prettierConfigPath = path.join(
             rwPaths.base,
-            'prettier.config.js',
+            'prettier.config.cjs',
           )
           // Add tailwindcss ordering plugin to prettier
           const prettierConfig = fs.readFileSync(prettierConfigPath, 'utf-8')
           const tailwindConfigPath = path
             .relative(
               rwPaths.base,
-              path.posix.join(rwPaths.web.config, 'tailwind.config.js'),
+              path.posix.join(rwPaths.web.config, 'tailwind.config.cjs'),
             )
             .replaceAll('\\', '/')
 
@@ -419,7 +414,7 @@ export const handler = async ({ force, install }) => {
         task: async (_ctx, task) => {
           const prettierConfigPath = path.join(
             rwPaths.base,
-            'prettier.config.js',
+            'prettier.config.cjs',
           )
           // Add tailwindcss ordering plugin to prettier
           const prettierConfig = fs.readFileSync(prettierConfigPath, 'utf-8')

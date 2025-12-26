@@ -1,14 +1,13 @@
 import type { ViteDevServer } from 'vite'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createMiddlewareRouter } from './register'
+import { createMiddlewareRouter } from './register.js'
 
 vi.mock('@cedarjs/project-config', () => {
   const mockWin32Paths = {
     web: {
       base: 'C:\\proj\\web',
       dist: 'C:\\proj\\web\\dist',
-      distSsrEntryServer: 'C:\\proj\\web\\dist\\ssr\\entry-server.mjs',
       entryServer: 'C:\\proj\\web\\entry-server.tsx',
     },
   }
@@ -16,7 +15,6 @@ vi.mock('@cedarjs/project-config', () => {
     web: {
       base: '/proj/web',
       dist: '/proj/web/dist',
-      distSsrEntryServer: '/proj/web/dist/ssr/entry-server.mjs',
       entryServer: '/proj/web/entry-server.tsx',
     },
   }
@@ -26,6 +24,11 @@ vi.mock('@cedarjs/project-config', () => {
       return process.platform === 'win32' ? mockWin32Paths : mockUnixPaths
     },
     getConfig: () => ({}),
+    getBuiltServerEntryFile: () => {
+      return process.platform === 'win32'
+        ? 'C:\\proj\\web\\dist\\ssr\\entry-server.mjs'
+        : '/proj/web/dist/ssr/entry-server.mjs'
+    },
   }
 })
 

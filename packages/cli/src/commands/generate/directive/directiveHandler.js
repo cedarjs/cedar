@@ -1,5 +1,3 @@
-import path from 'path'
-
 import camelcase from 'camelcase'
 import execa from 'execa'
 import { Listr } from 'listr2'
@@ -9,11 +7,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getConfig } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
-import {
-  getPaths,
-  writeFilesTask,
-  transformTSToJS,
-} from '../../../lib/index.js'
+import { writeFilesTask, transformTSToJS } from '../../../lib/index.js'
 import {
   prepareForRollback,
   addFunctionToRollback,
@@ -31,35 +25,26 @@ export const files = async ({ name, typescript = false, type, tests }) => {
   }
 
   const camelName = camelcase(name)
-
-  const outputFilename = `${camelName}.${typescript ? 'ts' : 'js'}`
+  const extension = typescript ? '.ts' : '.js'
 
   const directiveFile = await templateForComponentFile({
     name,
-    extension: typescript ? '.ts' : '.js',
+    extension,
     generator: 'directive',
+    apiPathSection: 'directives',
     templatePath: `${type}.directive.ts.template`,
-    outputPath: path.join(getPaths().api.directives, camelName, outputFilename),
     templateVars: { camelName },
   })
 
   const files = [directiveFile]
 
   if (tests) {
-    const testOutputFilename = `${camelcase(name)}.test.${
-      typescript ? 'ts' : 'js'
-    }`
-
     const testFile = await templateForComponentFile({
       name,
-      extension: typescript ? '.test.ts' : '.test.js',
+      extension: `.test${extension}`,
       generator: 'directive',
+      apiPathSection: 'directives',
       templatePath: `${type}.directive.test.ts.template`,
-      outputPath: path.join(
-        getPaths().api.directives,
-        camelName,
-        testOutputFilename,
-      ),
       templateVars: { camelName },
     })
     files.push(testFile)
@@ -153,15 +138,10 @@ export const handler = async (args) => {
         task: () => {
           // Regenerate again at the end if we rollback changes
           addFunctionToRollback(async () => {
-            await execa('yarn rw-gen', [], {
-              stdio: 'pipe',
-              shell: true,
-            })
+            await execa('yarn', ['rw-gen'], { stdio: 'pipe' })
           }, true)
-          return execa('yarn rw-gen', [], {
-            stdio: 'inherit',
-            shell: true,
-          })
+
+          return execa('yarn', ['rw-gen'], { stdio: 'inherit' })
         },
       },
       {

@@ -3,9 +3,9 @@ import path from 'node:path'
 import { rollup } from 'rollup'
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
 
-import type ProjectConfig from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
-import { cedarjsPrerenderMediaImportsPlugin } from '../rollup-plugin-cedarjs-prerender-media-imports'
+import { cedarjsPrerenderMediaImportsPlugin } from '../rollup-plugin-cedarjs-prerender-media-imports.js'
 
 let mockDistDir: string
 let mockSrcDir: string

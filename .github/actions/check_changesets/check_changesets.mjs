@@ -1,6 +1,12 @@
+import fs from 'node:fs'
+
 import { getInput } from '@actions/core'
 import { exec, getExecOutput } from '@actions/exec'
 import github from '@actions/github'
+
+const env = {
+  GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
+}
 
 async function main() {
   // If the PR has the "changesets-ok" label, just pass.
@@ -10,6 +16,42 @@ async function main() {
   )
   if (hasChangesetsOkLabel) {
     console.log('Skipping check because of the "changesets-ok" label')
+    return
+  }
+
+  // Skip check if the PR is created by renovate
+  const { user } = github.context.payload.pull_request
+  const renovateUsernames = ['renovate[bot]', 'renovate-bot', 'renovate']
+  if (user && renovateUsernames.includes(user.login)) {
+    console.log('Skipping check because the PR is created by', user.login)
+    return
+  }
+
+  const event = fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf-8')
+
+  /** @type {GitHubEvent} */
+  const {
+    pull_request: { title },
+  } = JSON.parse(event)
+
+  // Check if the PR title starts with conventional commit prefixes that should
+  // skip label requirement
+  const conventionalCommitPrefixes = [
+    /^chore\([^)]+\)!?:/,
+    /^feat\([^)]+\)!?:/,
+    /^fix\([^)]+\)!?:/,
+    /^docs\([^)]+\)!?:/,
+  ]
+
+  const shouldSkipChangesetsRequirement = conventionalCommitPrefixes.some(
+    (prefix) => prefix.test(title),
+  )
+
+  if (shouldSkipChangesetsRequirement) {
+    console.log(
+      `PR title "${title}" starts with conventional commit prefix. Skipping ` +
+        'changesets requirement.',
+    )
     return
   }
 

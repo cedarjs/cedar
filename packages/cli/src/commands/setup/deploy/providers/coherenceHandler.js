@@ -16,7 +16,7 @@ import { printSetupNotes } from '../../../../lib/index.js'
 import { serverFileExists } from '../../../../lib/project.js'
 import { addFilesTask } from '../helpers/index.js'
 
-const { getSchema, getConfig } = prismaInternals
+const { getSchemaWithPath, getConfig } = prismaInternals
 const redwoodProjectPaths = getPaths()
 
 const EXTENSION = isTypeScriptProject ? 'ts' : 'js'
@@ -88,8 +88,8 @@ async function getAddCoherenceFilesTask(force) {
  * ```
  */
 async function getCoherenceConfigFileContent() {
-  const prismaSchema = await getSchema(redwoodProjectPaths.api.dbSchema)
-  const prismaConfig = await getConfig({ datamodel: prismaSchema })
+  const result = await getSchemaWithPath(redwoodProjectPaths.api.dbSchema)
+  const prismaConfig = await getConfig({ datamodel: result.schemas })
 
   let db = prismaConfig.datasources[0].activeProvider
 

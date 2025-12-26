@@ -15,23 +15,26 @@ runs:
       run: echo "CACHE_DIRECTORY=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
       shell: bash
 
-    - name: ♻️ Restore yarn's cache
-      uses: actions/cache@v4
+    - name: ♻️ Cache yarn's cache
+      uses: actions/cache@v5
       with:
         path: ${{ steps.get-yarn-cache-directory.outputs.CACHE_DIRECTORY }}
-        key: yarn-cache-${{ runner.os }}
-        save-always: true
+        key: yarn-cache-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          yarn-cache-${{ runner.os }}-
 
-    - name: ♻️ Restore yarn's install state
-      uses: actions/cache@v4
+    - name: ♻️ Cache yarn's install state
+      uses: actions/cache@v5
       with:
         path: .yarn/install-state.gz
-        key: yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}
-        save-always: true
+        key: yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
+        restore-keys: |
+          yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-
 
-    - name: ♻️ Restore node_modules
-      uses: actions/cache@v4
+    - name: ♻️ Cache node_modules
+      uses: actions/cache@v5
       with:
         path: node_modules
-        key: yarn-node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}
-        save-always: true
+        key: yarn-node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
+        restore-keys: |
+          yarn-node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-

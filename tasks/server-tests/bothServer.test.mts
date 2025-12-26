@@ -41,8 +41,7 @@ describe('rw serve', () => {
             --rootPath, --root-path               are served   [string] [default: "/"]
         -h, --help                                Show help                  [boolean]
 
-      Also see the Redwood CLI Reference
-      (https://redwoodjs.com/docs/cli-commands#serve)
+      Also see the CedarJS CLI Reference (https://cedarjs.com/docs/cli-commands#serve)
       "
     `)
   })
@@ -89,8 +88,7 @@ describe('rw serve', () => {
               --rootPath, --root-path               are served   [string] [default: "/"]
           -h, --help                                Show help                  [boolean]
 
-        Also see the Redwood CLI Reference
-        (https://redwoodjs.com/docs/cli-commands#serve)
+        Also see the CedarJS CLI Reference (https://cedarjs.com/docs/cli-commands#serve)
 
         Unknown arguments: foo, bar, baz
         "

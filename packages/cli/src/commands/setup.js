@@ -48,7 +48,7 @@ export const builder = (yargs) =>
     .middleware(detectRxVersion)
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#setup',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#setup',
       )}`,
     )

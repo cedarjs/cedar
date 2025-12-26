@@ -38,7 +38,7 @@ interface EnhancedGqlError extends GraphQLError {
 // Allow APIs client to attach response/request
 type ErrorWithRequestMeta = Error & {
   mostRecentRequest?: RequestDetails
-  graphQLErrors: EnhancedGqlError[]
+  graphQLErrors?: EnhancedGqlError[]
   mostRecentResponse?: any
 }
 
@@ -150,7 +150,7 @@ function StackEntry({
 
   const rootClasses = [
     'stack-entry',
-    !fileReference.includes('node_modules') && 'rwfw',
+    !fileReference.includes('node_modules') && 'cfw',
     i === 0 && ' first',
     lines.length && 'clickable',
   ].filter(Boolean)
@@ -406,7 +406,7 @@ main.error-page nav svg:hover {
   margin-left: 2.5em;
 }
 
-.panic-overlay .stack-entry.rwfw {
+.panic-overlay .stack-entry.cfw {
   font-weight: bold;
 }
 

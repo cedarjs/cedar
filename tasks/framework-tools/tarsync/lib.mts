@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { parseArgs as nodeUtilParseArgs } from 'node:util'
 
-import { $, cd, chalk, fs, glob, path, within } from 'zx'
+import ansis from 'ansis'
+import { $, cd, fs, glob, path, within } from 'zx'
 
 export const TARBALL_DEST_DIRNAME = 'tarballs'
 
@@ -81,11 +82,11 @@ export async function getOptions(): Promise<Options> {
         '',
         '  1. the first positional argument',
         '',
-        chalk.gray('  yarn project:tarsync /path/to/redwood/project'),
+        ansis.gray('  yarn project:tarsync /path/to/redwood/project'),
         '',
         '  2. the `RWJS_CWD` env var',
         '',
-        chalk.gray('  RWJS_CWD=/path/to/redwood/project yarn project:tarsync'),
+        ansis.gray('  RWJS_CWD=/path/to/redwood/project yarn project:tarsync'),
       ].join('\n'),
     )
   }

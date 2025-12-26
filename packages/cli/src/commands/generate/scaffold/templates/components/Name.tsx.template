@@ -5,7 +5,7 @@ import { useMutation } from '@cedarjs/web'
 import type { TypedDocumentNode } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
-import { ${formattersImports} } from 'src/lib/formatters'
+import { ${formattersImports} } from 'src/lib/formatters.js'
 
 const DELETE_${singularConstantName}_MUTATION: TypedDocumentNode<Delete${singularPascalName}Mutation, Delete${singularPascalName}MutationVariables> = gql`
   mutation Delete${singularPascalName}Mutation($${idName}: ${idType}!) {

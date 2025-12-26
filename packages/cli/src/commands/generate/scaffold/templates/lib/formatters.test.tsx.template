@@ -7,7 +7,7 @@ import {
   timeTag,
   jsonDisplay,
   checkboxInputTag,
-} from './formatters'
+} from './formatters.js'
 
 describe('formatEnum', () => {
   it('handles nullish values', () => {

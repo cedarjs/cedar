@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "eslintConfig": {
+    "extends": "@cedarjs/eslint-config",
+    "root": true
+  },
+  "resolutions": {
+    "react-is": "19.2.3"
+  },
+  "devDependencies": {
+    "@cedarjs/core": "0.0.5",
+    "@cedarjs/project-config": "0.0.5",
+    "@cedarjs/testing": "0.0.5",
+    "prettier-plugin-tailwindcss": "^0.7.0"
+  },
+  "packageManager": "yarn@4.12.0",
+  "engines": {
+    "node": "=24.x"
+  },
+  "prisma": {
+    "seed": "yarn cedar exec seed"
+  }
+}

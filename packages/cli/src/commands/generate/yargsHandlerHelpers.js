@@ -9,6 +9,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
@@ -30,14 +31,15 @@ import {
 
 /**
  * Returns the full path to a custom generator template, if found in the app.
- * Otherwise the default Redwood template.
+ * Otherwise the default Cedar template.
  */
 export const customOrDefaultTemplatePath = ({
   side,
   generator,
   templatePath,
 }) => {
-  // default template for this generator: ./page/templates/page.tsx.template
+  // Default template for this generator, e.g.
+  // ./page/templates/page.tsx.template
   const defaultPath = path.join(
     import.meta.dirname,
     generator,
@@ -45,7 +47,8 @@ export const customOrDefaultTemplatePath = ({
     templatePath,
   )
 
-  // where a custom template *might* exist: /path/to/app/web/generators/page/page.tsx.template
+  // Where a custom template *might* exist, e.g.
+  // /path/to/app/web/generators/page/page.tsx.template
   const customPath = path.join(
     getPaths()[side].generators,
     generator,
@@ -59,12 +62,39 @@ export const customOrDefaultTemplatePath = ({
   }
 }
 
+// TODO: Create a function that calls templateForFile for all the files in a
+// template directory instead of manually passing in each file.
+export const templateForFile = async ({
+  name,
+  side,
+  sidePathSection,
+  generator,
+  outputPath,
+  templatePath,
+  templateVars,
+}) => {
+  const basePath = getPaths()[side][sidePathSection]
+  const fullOutputPath = path.join(basePath, outputPath)
+  const fullTemplatePath = customOrDefaultTemplatePath({
+    generator,
+    templatePath,
+    side,
+  })
+  const content = await generateTemplate(fullTemplatePath, {
+    name,
+    outputPath: ensurePosixPath(
+      `./${path.relative(getPaths().base, fullOutputPath)}`,
+    ),
+    ...templateVars,
+  })
+
+  return [fullOutputPath, content]
+}
+
 /**
- * Reduces boilerplate for generating an output path and content to write to disk
- * for a component.
+ * Reduces boilerplate for generating an output path and content to write to
+ * disk for a component.
  */
-// TODO: Make this read all the files in a template directory instead of
-// manually passing in each file.
 export const templateForComponentFile = async ({
   name,
   suffix = '',
@@ -74,29 +104,23 @@ export const templateForComponentFile = async ({
   generator,
   templatePath,
   templateVars,
-  componentName,
-  outputPath,
 }) => {
-  const basePath = webPathSection
-    ? getPaths().web[webPathSection]
-    : getPaths().api[apiPathSection]
-  const outputComponentName = componentName || pascalcase(name) + suffix
-  const componentOutputPath =
-    outputPath ||
-    path.join(basePath, outputComponentName, outputComponentName + extension)
-  const fullTemplatePath = customOrDefaultTemplatePath({
-    generator,
-    templatePath,
-    side: webPathSection ? 'web' : 'api',
-  })
-  const content = await generateTemplate(fullTemplatePath, {
+  const side = webPathSection ? 'web' : 'api'
+  const caseFn = side === 'web' ? pascalcase : camelCase
+  const componentName = caseFn(name) + suffix
+  const outputPath = path.join(componentName, componentName + extension)
+
+  return templateForFile({
     name,
-    outputPath: ensurePosixPath(
-      `./${path.relative(getPaths().base, componentOutputPath)}`,
-    ),
-    ...templateVars,
+    suffix,
+    extension,
+    side,
+    sidePathSection: webPathSection || apiPathSection,
+    generator,
+    outputPath,
+    templatePath,
+    templateVars,
   })
-  return [componentOutputPath, content]
 }
 
 export const validateName = (name) => {

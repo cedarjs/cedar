@@ -1,10 +1,11 @@
+import fs from 'node:fs'
 import { extname, join, relative, dirname } from 'node:path'
 
 import type { Plugin } from 'rollup'
 
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
-import { convertToDataUrl } from './utils'
+import { convertToDataUrl } from './utils.js'
 
 // This list of extensions matches config for file-loader
 const defaultExtensions = [
@@ -66,8 +67,7 @@ export function cedarjsPrerenderMediaImportsPlugin(
           getPaths().web.dist,
           'client-build-manifest.json',
         )
-        delete require.cache[require.resolve(manifestPath)]
-        buildManifest = require(manifestPath)
+        buildManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
       } catch {
         // Manifest not found, all imports will fallback to data URLs
         buildManifest = {}

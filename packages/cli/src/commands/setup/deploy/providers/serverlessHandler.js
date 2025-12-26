@@ -4,6 +4,7 @@ import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../../lib/colors.js'
@@ -24,18 +25,18 @@ const notes = [
   c.error('DEPRECATED option not officially supported'),
   '',
   'For more information:',
-  'https://redwoodjs.com/docs/deploy/serverless',
+  'https://cedarjs.com/docs/deploy/serverless',
   '',
   '',
   c.success("You're almost ready to deploy using the Serverless framework!"),
   '',
-  '• See https://redwoodjs.com/docs/deploy#serverless-deploy for more info. If you ',
+  '• See https://cedarjs.com/docs/deploy#serverless-deploy for more info. If you ',
   '  want to give it a shot, open your `.env` file and add your AWS credentials,',
   '  then run: ',
   '',
-  '    yarn rw deploy serverless --first-run',
+  '    yarn cedar deploy serverless --first-run',
   '',
-  '  For subsequent deploys you can just run `yarn rw deploy serverless`.',
+  '  For subsequent deploys you can just run `yarn cedar deploy serverless`.',
   '',
   '• If you want to use the Serverless Dashboard to manage your app, plug in',
   '  the values for `org` and `app` in `web/serverless.yml` and `api/serverless.yml`',
@@ -63,8 +64,9 @@ const files = [
   },
 ]
 
-const prismaBinaryTargetAdditions = () => {
-  const content = fs.readFileSync(getPaths().api.dbSchema).toString()
+const prismaBinaryTargetAdditions = async () => {
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const content = fs.readFileSync(schemaPath).toString()
 
   if (!content.includes('rhel-openssl-1.0.x')) {
     const result = content.replace(
@@ -72,7 +74,7 @@ const prismaBinaryTargetAdditions = () => {
       `binaryTargets = ["native", "rhel-openssl-1.0.x"]\n`,
     )
 
-    fs.writeFileSync(getPaths().api.dbSchema, result)
+    fs.writeFileSync(schemaPath, result)
   }
 }
 
@@ -86,7 +88,7 @@ const updateRedwoodTomlTask = () => {
 
       const newContent = content.replace(
         /apiUrl.*?\n/m,
-        'apiUrl = "${API_URL:/api}"       # Set API_URL in production to the Serverless deploy endpoint of your api service, see https://redwoodjs.com/docs/deploy/serverless-deploy\n',
+        'apiUrl = "${API_URL:/api}"       # Set API_URL in production to the Serverless deploy endpoint of your api service, see https://cedarjs.com/docs/deploy/serverless-deploy\n',
       )
       fs.writeFileSync(configPath, newContent)
     },
@@ -132,7 +134,7 @@ export const handler = async ({ force }) => {
       }),
       {
         title: 'Adding necessary Prisma binaries...',
-        task: () => prismaBinaryTargetAdditions(),
+        task: async () => await prismaBinaryTargetAdditions(),
       },
       printSetupNotes(notes),
     ],

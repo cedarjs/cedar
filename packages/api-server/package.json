@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "0.0.5",
+  "version": "2.0.2",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
@@ -8,21 +8,103 @@
     "directory": "packages/api-server"
   },
   "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/createServer.d.ts",
+        "default": "./dist/createServer.js"
+      },
+      "require": {
+        "types": "./dist/cjs/createServer.d.ts",
+        "default": "./dist/cjs/createServer.js"
+      }
+    },
+    "./package.json": "./package.json",
+    "./apiCliConfig": {
+      "import": {
+        "types": "./dist/apiCLIConfig.d.ts",
+        "default": "./dist/apiCLIConfig.js"
+      },
+      "require": {
+        "types": "./dist/cjs/apiCLIConfig.d.ts",
+        "default": "./dist/cjs/apiCLIConfig.js"
+      }
+    },
+    "./bothCliConfig": {
+      "import": {
+        "types": "./dist/bothCLIConfig.d.ts",
+        "default": "./dist/bothCLIConfig.js"
+      },
+      "require": {
+        "types": "./dist/cjs/bothCLIConfig.d.ts",
+        "default": "./dist/cjs/bothCLIConfig.js"
+      }
+    },
+    "./apiCliConfigHandler": {
+      "import": {
+        "types": "./dist/apiCLIConfigHandler.d.ts",
+        "default": "./dist/apiCLIConfigHandler.js"
+      },
+      "require": {
+        "types": "./dist/cjs/apiCLIConfigHandler.d.ts",
+        "default": "./dist/cjs/apiCLIConfigHandler.js"
+      }
+    },
+    "./cliHelpers": {
+      "import": {
+        "types": "./dist/cliHelpers.d.ts",
+        "default": "./dist/cliHelpers.js"
+      },
+      "require": {
+        "types": "./dist/cjs/cliHelpers.d.ts",
+        "default": "./dist/cjs/cliHelpers.js"
+      }
+    },
+    "./cjs/apiCliConfigHandler": {
+      "types": "./dist/cjs/apiCLIConfigHandler.d.ts",
+      "default": "./dist/cjs/apiCLIConfigHandler.js"
+    },
+    "./cjs/cliHelpers": {
+      "types": "./dist/cjs/cliHelpers.d.ts",
+      "default": "./dist/cjs/cliHelpers.js"
+    },
+    "./cjs/bothCliConfigHandler": {
+      "types": "./dist/cjs/bothCLIConfigHandler.d.ts",
+      "default": "./dist/cjs/bothCLIConfigHandler.js"
+    },
+    "./watch": {
+      "import": {
+        "types": "./dist/watch.d.ts",
+        "default": "./dist/watch.js"
+      },
+      "require": {
+        "types": "./dist/cjs/watch.d.ts",
+        "default": "./dist/cjs/watch.js"
+      }
+    }
+  },
   "main": "./dist/createServer.js",
   "types": "./dist/createServer.d.ts",
   "bin": {
-    "rw-api-server-watch": "./dist/watch.js",
-    "rw-log-formatter": "./dist/logFormatter/bin.js",
-    "rw-server": "./dist/bin.js"
+    "cedarjs-api-server-watch": "./dist/watch.js",
+    "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
+    "cedarjs-server": "./dist/bin.js",
+    "rw-api-server-watch": "./dist/cjs/watch.js",
+    "rw-log-formatter": "./dist/cjs/logFormatter/bin.js",
+    "rw-server": "./dist/cjs/bin.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "tsx ./build.mts",
     "build:pack": "yarn pack -o cedarjs-api-server.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
+    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
+    "check:attw": "yarn attw -P",
+    "check:package": "concurrently npm:check:attw yarn:publint",
     "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
@@ -34,33 +116,32 @@
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
-    "@fastify/multipart": "9.0.3",
+    "@fastify/multipart": "9.3.0",
     "@fastify/url-data": "6.0.3",
-    "chalk": "4.1.2",
+    "ansis": "4.2.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
     "fast-json-parse": "1.0.3",
-    "fastify": "5.4.0",
+    "fastify": "5.6.2",
     "fastify-raw-body": "5.0.0",
-    "lodash": "4.17.21",
     "pretty-bytes": "5.6.0",
     "pretty-ms": "7.0.1",
-    "qs": "6.13.0",
+    "qs": "6.14.0",
     "split2": "4.2.0",
     "yargs": "17.7.2"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/aws-lambda": "8.10.145",
-    "@types/lodash": "4.17.15",
-    "@types/qs": "6.9.16",
+    "@types/aws-lambda": "8.10.159",
+    "@types/dotenv-defaults": "^2.0.4",
+    "@types/qs": "6.14.0",
     "@types/split2": "4.2.3",
-    "@types/yargs": "17.0.33",
-    "memfs": "4.17.2",
+    "@types/yargs": "17.0.35",
+    "memfs": "4.51.1",
     "pino-abstract-transport": "1.2.0",
-    "tsx": "4.19.4",
-    "typescript": "5.6.2",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
   },
   "peerDependencies": {
@@ -70,6 +151,9 @@
     "@cedarjs/graphql-server": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

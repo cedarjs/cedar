@@ -2,7 +2,7 @@ import type { Handler } from 'aws-lambda'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { vi, describe, beforeEach, test, expect, afterEach } from 'vitest'
 
-import { requestHandler } from '../../requestHandlers/awsLambdaFastify'
+import { requestHandler } from '../../requestHandlers/awsLambdaFastify.js'
 
 describe('Tests AWS Lambda to Fastify request transformation and handling', () => {
   beforeEach(() => {

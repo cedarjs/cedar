@@ -4,12 +4,12 @@ import { beforeEach, vi, describe, expect, it } from 'vitest'
 
 import type Api from '@cedarjs/api'
 
-import { testSchema, testQuery } from '../__fixtures__/common'
+import { testSchema, testQuery } from '../__fixtures__/common.js'
 import {
   createSpiedPlugin,
   createTestkit,
-} from '../__fixtures__/envelop-testing'
-import { useRedwoodAuthContext } from '../useRedwoodAuthContext'
+} from '../__fixtures__/envelop-testing.js'
+import { useRedwoodAuthContext } from '../useRedwoodAuthContext.js'
 
 const authDecoder = async (token: string) => ({ token })
 

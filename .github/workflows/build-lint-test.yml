@@ -1,0 +1,39 @@
+name: 🏗 Build, Lint, Test
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  build-lint-test:
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - name: Remove the tsc problem matcher if not ubuntu-latest
+        if: inputs.os != 'ubuntu-latest'
+        run: echo "echo "::remove-matcher owner=tsc::""
+
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🔎 Lint
+        run: yarn lint
+
+      # TODO(jgmw): Re-enable when it doesn't hang
+      # - name: 🥡 Check packaging and attw
+      #   run: yarn check:package
+
+      - name: 🌡 Test Types
+        run: yarn test:types
+
+      - name: Get number of CPU cores
+        if: always()
+        id: cpu-cores
+        uses: SimenB/github-actions-cpu-cores@97ba232459a8e02ff6121db9362b09661c875ab8 # v2
+
+      - name: 🧪 Test
+        run: yarn test-ci --minWorkers=1 --maxWorkers=${{ steps.cpu-cores.outputs.count }}

@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import type { PluginOptions, PluginTarget, TransformOptions } from '@babel/core'
 import { transformAsync } from '@babel/core'
+import { resolvePath } from 'babel-plugin-module-resolver'
 
 import { getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
@@ -102,6 +103,46 @@ export const getApiSideBabelPlugins = ({
         root: [getPaths().api.base],
         cwd: 'packagejson',
         loglevel: 'silent', // to silence the unnecessary warnings
+        resolvePath: function (
+          sourcePath: string,
+          currentFile: string,
+          opts: unknown,
+        ) {
+          // To support imports like `import { logger } from './logger.js'` in
+          // data-migrate and prerender in TypeScript projects (where the actual
+          // source file is logger.ts) we have to rewrite the extension
+          const isDataMigrate = process.argv[2] === 'data-migrate'
+          const isPrerender = process.argv[2] === 'prerender'
+          const importPath =
+            /.*\/.*\.js$/.test(sourcePath) && (isDataMigrate || isPrerender)
+              ? sourcePath.replace(/\.js$/, '')
+              : sourcePath
+
+          const resolvedPath = resolvePath(importPath, currentFile, opts)
+
+          if (!resolvedPath || !projectIsEsm || resolvedPath.includes('/**/')) {
+            return resolvedPath
+          }
+
+          const currentFileDir = path.dirname(currentFile)
+          const joinedPath = path.join(currentFileDir, resolvedPath)
+
+          if (
+            fs.existsSync(joinedPath + '.js') ||
+            fs.existsSync(joinedPath + '.ts')
+          ) {
+            return resolvedPath + '.js'
+          }
+
+          if (
+            fs.existsSync(joinedPath + '.jsx') ||
+            fs.existsSync(joinedPath + '.tsx')
+          ) {
+            return resolvedPath + '.jsx'
+          }
+
+          return resolvedPath
+        },
       },
       'rwjs-api-module-resolver',
     ],
@@ -130,13 +171,7 @@ export const getApiSideBabelPlugins = ({
     ],
     // FIXME: `graphql-tag` is not working: https://github.com/redwoodjs/redwood/pull/3193
     ['babel-plugin-graphql-tag', undefined, 'rwjs-babel-graphql-tag'],
-    [
-      pluginRedwoodImportDir,
-      {
-        projectIsEsm,
-      },
-      'rwjs-babel-glob-import-dir',
-    ],
+    [pluginRedwoodImportDir, {}, 'rwjs-babel-glob-import-dir'],
     openTelemetry && [
       pluginRedwoodOTelWrapping,
       undefined,

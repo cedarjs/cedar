@@ -11,11 +11,6 @@ export interface JwtVerifier extends WebhookVerifier {
   type: 'jwtVerifier'
 }
 
-/**
- *
- * createSignature
- *
- */
 const createSignature = ({
   payload,
   secret = DEFAULT_WEBHOOK_SECRET,
@@ -36,11 +31,6 @@ const createSignature = ({
   }
 }
 
-/**
- *
- * verifySignature
- *
- */
 export const verifySignature = ({
   payload,
   secret = DEFAULT_WEBHOOK_SECRET,
@@ -73,14 +63,12 @@ export const verifySignature = ({
 }
 
 /**
- *
  * JWT Payload Verifier
  *
  * Based on Netlify's webhook payload verification
  * @see: https://docs.netlify.com/site-deploys/notifications/#payload-signature
- *
  */
-export const jwtVerifier = (options?: VerifyOptions): JwtVerifier => {
+export function jwtVerifier(options?: VerifyOptions): JwtVerifier {
   return {
     sign: ({ payload, secret }) => {
       return createSignature({ payload, secret, options })
@@ -91,5 +79,3 @@ export const jwtVerifier = (options?: VerifyOptions): JwtVerifier => {
     type: 'jwtVerifier',
   }
 }
-
-export default jwtVerifier

@@ -88,7 +88,7 @@ interface MockedSignedWebhookParams
 
 /**
  * @description Use this function to mock a signed webhook
- * @see https://redwoodjs.com/docs/webhooks#webhooks
+ * @see https://cedarjs.com/docs/webhooks#webhooks
  **/
 export const mockSignedWebhook = ({
   payload = null,

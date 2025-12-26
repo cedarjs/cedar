@@ -24,8 +24,8 @@ vi.mock('@cedarjs/internal/dist/generate/generate', () => {
 })
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const path = await import('path')
   const originalProjectConfig = await importOriginal()
+
   return {
     ...originalProjectConfig,
     getPaths: () => {
@@ -33,13 +33,13 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
       return {
         base: BASE_PATH,
         api: {
-          dataMigrations: path.join(BASE_PATH, './api/prisma/dataMigrations'),
-          db: path.join(globalThis.__dirname, 'fixtures'), // this folder
-          dbSchema: path.join(
+          prismaConfig: path.join(
+            // Current test folder
             globalThis.__dirname,
             'fixtures',
-            'schema.prisma',
-          ), // this folder
+            'prisma.config.cjs',
+          ),
+          dataMigrations: path.join(BASE_PATH, './api/dataMigrations'),
           generators: path.join(BASE_PATH, './api/generators'),
           src: path.join(BASE_PATH, './api/src'),
           jobs: path.join(BASE_PATH, './api/src/jobs'),
@@ -70,6 +70,12 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         },
       }
     },
+    getSchemaPath: () => {
+      return path.join(globalThis.__dirname, 'fixtures', 'schema.prisma')
+    },
+    getDataMigrationsPath: () => {
+      return path.join(globalThis.__dirname, 'fixtures', 'migrations')
+    },
   }
 })
 
@@ -89,7 +95,7 @@ vi.mock('./project', () => ({
 
 globalThis.__prettierPath = path.resolve(
   import.meta.dirname,
-  './__tests__/fixtures/prettier.config.js',
+  './__tests__/fixtures/prettier.config.cjs',
 )
 
 vi.spyOn(Math, 'random').mockReturnValue(0.123456789)

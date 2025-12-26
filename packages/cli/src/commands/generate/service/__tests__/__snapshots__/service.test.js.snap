@@ -22,13 +22,13 @@ export const UserProfile = {
 `;
 
 exports[`in javascript mode > creates a multi word service test file 1`] = `
-"import { userProfiles } from './userProfiles'
+"import { userProfiles } from './userProfiles.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('userProfiles', () => {
   scenario('returns all userProfiles', async (scenario) => {
@@ -47,13 +47,13 @@ exports[`in javascript mode > creates a multi word service test file with crud a
   createTransaction,
   updateTransaction,
   deleteTransaction,
-} from './transactions'
+} from './transactions.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('transactions', () => {
   scenario('returns all transactions', async (scenario) => {
@@ -107,13 +107,13 @@ exports[`in javascript mode > creates a multi word service test file with multip
   createScalarType,
   updateScalarType,
   deleteScalarType,
-} from './scalarTypes'
+} from './scalarTypes.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('scalarTypes', () => {
   scenario('returns all scalarTypes', async (scenario) => {
@@ -330,13 +330,13 @@ exports[`in javascript mode > creates a single word service scenario file 1`] = 
 `;
 
 exports[`in javascript mode > creates a single word service test file 1`] = `
-"import { users, user, createUser, updateUser, deleteUser } from './users'
+"import { users, user, createUser, updateUser, deleteUser } from './users.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('users', () => {
   scenario('returns all users', async (scenario) => {
@@ -408,14 +408,14 @@ export const UserProfile: UserProfileRelationResolvers = {
 exports[`in typescript mode > creates a multi word service test file 1`] = `
 "import type { UserProfile } from '@prisma/client'
 
-import { userProfiles } from './userProfiles'
-import type { StandardScenario } from './userProfiles.scenarios'
+import { userProfiles } from './userProfiles.js'
+import type { StandardScenario } from './userProfiles.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('userProfiles', () => {
   scenario('returns all userProfiles', async (scenario: StandardScenario) => {
@@ -436,14 +436,14 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
-} from './transactions'
-import type { StandardScenario } from './transactions.scenarios'
+} from './transactions.js'
+import type { StandardScenario } from './transactions.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('transactions', () => {
   scenario('returns all transactions', async (scenario: StandardScenario) => {
@@ -502,14 +502,14 @@ import {
   createScalarType,
   updateScalarType,
   deleteScalarType,
-} from './scalarTypes'
-import type { StandardScenario } from './scalarTypes.scenarios'
+} from './scalarTypes.js'
+import type { StandardScenario } from './scalarTypes.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('scalarTypes', () => {
   scenario('returns all scalarTypes', async (scenario: StandardScenario) => {
@@ -755,14 +755,14 @@ export type StandardScenario = ScenarioData<User, 'user'>
 exports[`in typescript mode > creates a single word service test file 1`] = `
 "import type { User } from '@prisma/client'
 
-import { users, user, createUser, updateUser, deleteUser } from './users'
-import type { StandardScenario } from './users.scenarios'
+import { users, user, createUser, updateUser, deleteUser } from './users.js'
+import type { StandardScenario } from './users.scenarios.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('users', () => {
   scenario('returns all users', async (scenario: StandardScenario) => {

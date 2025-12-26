@@ -14,13 +14,13 @@ import {
 import {
   description as apiDescription,
   builder as apiBuilder,
-} from './apiCLIConfig'
+} from './apiCLIConfig.js'
 import { handler as apiHandler } from './apiCLIConfigHandler.js'
 import {
   description as bothDescription,
   builder as bothBuilder,
-} from './bothCLIConfig'
-import { handler as bothHandler } from './bothCLIConfigHandler'
+} from './bothCLIConfig.js'
+import { handler as bothHandler } from './bothCLIConfigHandler.js'
 
 if (!process.env.REDWOOD_ENV_FILES_LOADED) {
   config({

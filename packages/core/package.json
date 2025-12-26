@@ -1,7 +1,7 @@
 {
   "name": "@cedarjs/core",
-  "version": "0.0.5",
-  "description": "Foundational packages and config required to build RedwoodJS.",
+  "version": "2.0.2",
+  "description": "Foundational packages and config required to build CedarJS",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -10,6 +10,11 @@
   "license": "MIT",
   "type": "module",
   "bin": {
+    "cedar": "./dist/bins/cedar.js",
+    "cedarjs": "./dist/bins/cedar.js",
+    "cedarjs-api-server-watch": "./dist/bins/cedarjs-api-server-watch.js",
+    "cedarjs-serve-api": "./dist/bins/cedarjs-serve-api.js",
+    "cfw": "./dist/bins/cfw.js",
     "cross-env": "./dist/bins/cross-env.js",
     "eslint": "./dist/bins/eslint.js",
     "jest": "./dist/bins/jest.js",
@@ -26,7 +31,7 @@
     "rw-serve-api": "./dist/bins/rw-serve-api.js",
     "rw-serve-fe": "./dist/bins/rw-serve-fe.js",
     "rw-web-server": "./dist/bins/rw-web-server.js",
-    "rwfw": "./dist/bins/rwfw.js"
+    "vitest": "./dist/bins/vitest.js"
   },
   "files": [
     "dist"
@@ -38,7 +43,7 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@babel/cli": "7.27.2",
+    "@babel/cli": "7.28.3",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli": "workspace:*",
     "@cedarjs/eslint-config": "workspace:*",
@@ -48,16 +53,18 @@
     "@cedarjs/web-server": "workspace:*",
     "graphql-tag": "2.12.6",
     "lodash": "4.17.21",
-    "nodemon": "3.1.10",
-    "react-refresh": "0.14.0",
-    "rimraf": "6.0.1",
-    "typescript": "5.6.2"
+    "nodemon": "3.1.11",
+    "rimraf": "6.1.2",
+    "typescript": "5.9.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/lodash": "4.17.15",
-    "publint": "0.3.12",
-    "tsx": "4.19.4"
+    "@types/lodash": "4.17.21",
+    "publint": "0.3.16",
+    "tsx": "4.21.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

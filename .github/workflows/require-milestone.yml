@@ -10,8 +10,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# No top level permissions are required for this workflow
-permissions: {}
+permissions:
+  pull-requests: write
 
 jobs:
   require-milestone:
@@ -19,12 +19,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: ⬢ Set up Node.js
-        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
         with:
-          node-version: 20
+          node-version: 24
 
       - name: ✅ Check milestone
         uses: ./.github/actions/require-milestone
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

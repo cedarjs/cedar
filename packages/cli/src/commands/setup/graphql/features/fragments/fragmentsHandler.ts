@@ -45,7 +45,7 @@ export async function handler({ force }: Args) {
       {
         title: 'Generate possibleTypes.ts',
         task: () => {
-          execa.commandSync('yarn redwood generate types', { stdio: 'ignore' })
+          execa.commandSync('yarn cedar generate types', { stdio: 'ignore' })
         },
       },
       {

@@ -1,6 +1,6 @@
 import path from 'path'
 
-import pino from 'pino'
+import { pino } from 'pino'
 import build from 'pino-abstract-transport'
 import {
   vi,
@@ -19,7 +19,7 @@ import type { createServer as tCreateServer } from '../createServer.js'
 import {
   resolveOptions,
   getDefaultCreateServerOptions,
-} from '../createServerHelpers'
+} from '../createServerHelpers.js'
 
 // Set up RWJS_CWD.
 let original_RWJS_CWD: string | undefined
@@ -243,6 +243,7 @@ describe('resolveOptions', () => {
         logger: defaults.logger,
         bodyLimit: defaults.fastifyServerOptions.bodyLimit,
       },
+      discoverFunctionsGlob: defaults.discoverFunctionsGlob,
       apiHost: defaults.apiHost,
       apiPort: defaults.apiPort,
     })

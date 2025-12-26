@@ -29,7 +29,7 @@ afterEach(() => {
   vi.mocked(console).log.mockRestore()
 })
 
-describe('yarn rw info', () => {
+describe('yarn cedar info', () => {
   describe('redwood.toml', () => {
     it('is included in the output', async () => {
       mockRedwoodToml.fileContents = 'title = "Hello World"'
@@ -96,7 +96,7 @@ describe('yarn rw info', () => {
       mockRedwoodToml.fileContents = `
 [web]
   title = "Hello World" # Used for the <title> tag
-  apiUrl = "/.redwood/functions" # You can customize graphql and dbauth urls individually too: see https://redwoodjs.com/docs/app-configuration-redwood-toml#api-paths
+  apiUrl = "/.redwood/functions" # You can customize graphql and dbauth urls individually too: see https://cedarjs.com/docs/app-configuration-redwood-toml#api-paths
 `
 
       await handler()
@@ -108,7 +108,7 @@ describe('yarn rw info', () => {
           '      title = "Hello World" # Used for the <title> tag',
           // This next line is a bit more tricky because it has a # to make it
           // a comment, but then also a # in the URL.
-          '      apiUrl = "/.redwood/functions" # You can customize graphql and dbauth urls individually too: see https://redwoodjs.com/docs/app-configuration-redwood-toml#api-paths',
+          '      apiUrl = "/.redwood/functions" # You can customize graphql and dbauth urls individually too: see https://cedarjs.com/docs/app-configuration-redwood-toml#api-paths',
         ].join('\n'),
       )
     })

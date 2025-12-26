@@ -1,11 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { basename, resolve } from 'path'
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 
 import { DefaultHost } from '../../hosts'
 import { URL_file } from '../../x/URL'
 import { RWProject } from '../RWProject'
+
+let originalEnv: NodeJS.ProcessEnv
+
+beforeAll(async () => {
+  originalEnv = process.env
+  process.env.DATABASE_URL = 'file:./dev.db'
+})
+
+afterAll(() => {
+  process.env = originalEnv
+})
 
 describe('Redwood Project Model', () => {
   it('can process example-todo-main', async () => {
@@ -25,13 +36,16 @@ describe('Redwood Project Model', () => {
         'BarPage',
       ]),
     )
+
     for (const page of project.pages) {
       page.basenameNoExt
       page.route?.id
     }
-    expect(
-      project.sdls.map((s) => s.name).sort((a, b) => (a < b ? -1 : 1)),
-    ).toEqual(['currentUser', 'todos'])
+
+    const sortedSdls = project.sdls
+      .map((s) => s.name)
+      .sort((a, b) => (a < b ? -1 : 1))
+    expect(sortedSdls).toEqual(['currentUser', 'todos'])
 
     for (const c of project.components) {
       c.basenameNoExt
@@ -41,8 +55,12 @@ describe('Redwood Project Model', () => {
     project.functions.length
     project.services.length
     project.sdls.length
+
+    // This will end up loading the Prisma config file, which will error out if
+    // the DATABASE_URL environment variable is not set.
     const ds = await project.collectDiagnostics()
     ds.length
+
     const uri = URL_file(projectRoot, 'api/src/graphql/todos.sdl.js')
     const node = await project.findNode(uri)
     expect(node).toBeDefined()

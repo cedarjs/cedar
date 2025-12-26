@@ -26,7 +26,7 @@ export const DEPLOY = `# This file contains config for a baremetal deployment
 # * passphrase - used if your private key has a passphrase
 # * agentForward - set to \`true\` to forward the client machine's ssh credentials
 #
-# See https://redwoodjs.com/docs/deploy/baremetal for more info
+# See https://cedarjs.com/docs/deploy/baremetal for more info
 
 [[production.servers]]
 host = "server.com"
@@ -69,11 +69,11 @@ freeSpaceRequired = 2048
 export const MAINTENANCE = `<!--
 Put up this maintenance page on your deployed service with:
 
-  yarn rw baremetal deploy --maintenance up
+  yarn cedar baremetal deploy --maintenance up
 
 And take it back down with:
 
-  yarn rw baremetal deploy --maintenance down
+  yarn cedar baremetal deploy --maintenance down
 -->
 
 <!DOCTYPE html>

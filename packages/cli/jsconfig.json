@@ -8,7 +8,7 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../internal" },
+    { "path": "../internal/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../structure" },
     { "path": "../prerender" },

@@ -2,10 +2,10 @@
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
-import { generateClientPreset } from './clientPreset'
-import { generateGraphQLSchema } from './graphqlSchema'
-import { generatePossibleTypes } from './possibleTypes'
-import { generateTypeDefs } from './typeDefinitions'
+import { generateClientPreset } from './clientPreset.js'
+import { generateGraphQLSchema } from './graphqlSchema.js'
+import { generatePossibleTypes } from './possibleTypes.js'
+import { generateTypeDefs } from './typeDefinitions.js'
 
 export const generate = async () => {
   const config = getConfig()
@@ -77,6 +77,10 @@ export const run = async () => {
   }
 }
 
-if (require.main === module) {
+// Check if this file is being run directly
+if (
+  process.env.NODE_ENV !== 'test' &&
+  process.argv[1]?.endsWith('generate.js')
+) {
   run()
 }

@@ -424,6 +424,9 @@ describe('webhooks', () => {
         const svix_id = event.headers['svix-id']
         const svix_timestamp = event.headers['svix-timestamp']
 
+        expectToBeDefined(svix_id)
+        expectToBeDefined(svix_timestamp)
+
         const payload = `${svix_id}.${svix_timestamp}.${event.body}`
         const secret = 'whsec_MY_VOICE_IS_MY_PASSPORT_VERIFY_ME'.slice(6)
 
@@ -446,6 +449,8 @@ describe('webhooks', () => {
                     return signature
                   }
                 }
+
+                throw new Error('Could not transform signature')
               },
               eventTimestamp: parseInt(svix_timestamp, 10) * 1000,
               // One minute from the event's timestamp is within the default
@@ -459,3 +464,7 @@ describe('webhooks', () => {
     })
   })
 })
+
+export function expectToBeDefined<T>(value: T | undefined): asserts value is T {
+  expect(value).toBeDefined()
+}

@@ -1,6 +1,9 @@
 /* eslint-env node */
 // @ts-check
 
+const fs = require('node:fs')
+const path = require('node:path')
+
 /**
  * @typedef {import('@yarnpkg/types').Yarn.Constraints.Context} Context
  * @typedef {import('@yarnpkg/types').Yarn.Constraints.Workspace} Workspace
@@ -42,8 +45,8 @@ function enforceConsistentDependenciesAcrossTheProject({ Yarn }) {
 }
 
 /**
- * This rule will enforce that a workspace MUST depend on the same version of a
- * dependency as the one used by the other workspaces.
+ * This rule will enforce that workspace dependencies use `workspace:*` as the
+ * dependency range instead of a specific version (like 0.7.1)
  *
  * @param {Context} context
  */
@@ -58,8 +61,8 @@ function enforceWorkspaceDependenciesWhenPossible({ Yarn }) {
 }
 
 /**
- * This rule will enforce that a dependency doesn't appear in both `dependencies`
- * and `devDependencies`.
+ * This rule will enforce that a dependency doesn't appear in both
+ * `dependencies` and `devDependencies`.
  *
  * @param {Context} context
  */
@@ -162,8 +165,12 @@ function enforceFieldsWithValuesOnAllWorkspaces({ Yarn }, fields) {
 
 module.exports = defineConfig({
   constraints: async (ctx) => {
+    const branch = await gitBranch()
+
     enforceConsistentDependenciesAcrossTheProject(ctx)
-    enforceWorkspaceDependenciesWhenPossible(ctx)
+    if (branch !== 'next' && !branch?.startsWith('release/')) {
+      enforceWorkspaceDependenciesWhenPossible(ctx)
+    }
     enforceNotProdAndDevDependencies(ctx)
     enforceBabelDependencies(ctx)
     enforceFieldsOnAllWorkspaces(ctx, [
@@ -179,3 +186,39 @@ module.exports = defineConfig({
     })
   },
 })
+
+function gitBranch() {
+  function parseBranch(buf) {
+    const match = /ref: refs\/heads\/([^\n]+)/.exec(buf.toString())
+    return match ? match[1] : null
+  }
+
+  function findGitHead(startDir = process.cwd()) {
+    let currentDir = path.resolve(startDir)
+    let foundGitHeadPath
+
+    while (!foundGitHeadPath) {
+      const gitHeadPath = path.join(currentDir, '.git', 'HEAD')
+
+      if (fs.existsSync(gitHeadPath)) {
+        foundGitHeadPath = gitHeadPath
+      } else {
+        const parentDir = path.dirname(currentDir)
+
+        if (parentDir === currentDir) {
+          throw new Error('.git/HEAD does not exist')
+        }
+
+        currentDir = parentDir
+      }
+    }
+
+    return foundGitHeadPath
+  }
+
+  const promise = fs.promises
+    .readFile(findGitHead())
+    .then((buf) => parseBranch(buf))
+
+  return promise
+}

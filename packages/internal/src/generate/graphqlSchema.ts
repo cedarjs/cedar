@@ -6,15 +6,25 @@ import * as schemaAstPlugin from '@graphql-codegen/schema-ast'
 import { CodeFileLoader } from '@graphql-tools/code-file-loader'
 import type { LoadSchemaOptions } from '@graphql-tools/load'
 import { loadSchema } from '@graphql-tools/load'
-import { getSchema } from '@prisma/internals'
-import chalk from 'chalk'
+import prismaInternals from '@prisma/internals'
+// Here's an explanation of why we do ts-ignore:
+// https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 import type { DocumentNode } from 'graphql'
 import { print } from 'graphql'
 import { terminalLink } from 'termi-link'
 
 import { rootSchema } from '@cedarjs/graphql-server'
-import type { ScalarSchemaKeys } from '@cedarjs/graphql-server/src/rootSchema'
-import { getPaths, getConfig, resolveFile } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getConfig,
+  resolveFile,
+  getSchemaPath,
+} from '@cedarjs/project-config'
+
+const { getSchemaWithPath } = prismaInternals
 
 export const generateGraphQLSchema = async () => {
   const redwoodProjectPaths = getPaths()
@@ -24,19 +34,29 @@ export const generateGraphQLSchema = async () => {
     [print(rootSchema.schema)]: {},
     'graphql/**/*.sdl.{js,ts}': {},
     'directives/**/*.{js,ts}': {},
+    '!directives/**/*.test.{js,ts}': {},
+    '!directives/**/*.spec.{js,ts}': {},
     'subscriptions/**/*.{js,ts}': {},
+    '!subscriptions/**/*.test.{js,ts}': {},
+    '!subscriptions/**/*.spec.{js,ts}': {},
   }
 
   for (const [name, schema] of Object.entries(rootSchema.scalarSchemas)) {
-    if (redwoodProjectConfig.graphql.includeScalars[name as ScalarSchemaKeys]) {
+    if (
+      redwoodProjectConfig.graphql.includeScalars[
+        name as rootSchema.ScalarSchemaKeys
+      ]
+    ) {
       schemaPointerMap[print(schema)] = {}
     }
   }
 
-  // If we're serverful and the user is using realtime, we need to include the live directive for realtime support.
-  // Note the `ERR_  prefix in`ERR_MODULE_NOT_FOUND`. Since we're using `await import`,
-  // if the package (here, `@cedarjs/realtime`) can't be found, it throws this error, with the prefix.
-  // Whereas `require('@cedarjs/realtime')` would throw `MODULE_NOT_FOUND`.
+  // If we're serverful and the user is using realtime, we need to include the
+  // live directive for realtime support.
+  // Note the `ERR_  prefix in `ERR_MODULE_NOT_FOUND`. Since we're using
+  // `await import`, if the package (here, `@cedarjs/realtime`) can't be found,
+  // it throws this error, with the prefix. Whereas
+  // `require('@cedarjs/realtime')` would throw `MODULE_NOT_FOUND`.
   if (resolveFile(`${getPaths().api.src}/server`)) {
     try {
       const { liveDirectiveTypeDefs } = await import('@cedarjs/realtime')
@@ -75,9 +95,14 @@ export const generateGraphQLSchema = async () => {
     if (e instanceof Error) {
       const match = e.message.match(/Unknown type: "(\w+)"/)
       const name = match?.[1]
-      const schemaPrisma = (
-        await getSchema(redwoodProjectPaths.api.dbSchema)
-      ).toString()
+      const schemaPath = await getSchemaPath(
+        redwoodProjectPaths.api.prismaConfig,
+      )
+      const result = await getSchemaWithPath(schemaPath)
+      // For string operations, concatenate the schemas
+      const schemaPrisma = result.schemas
+        .map(([, content]) => content)
+        .join('\n')
 
       const errorObject = {
         message: `Schema loading failed. ${e.message}`,
@@ -93,22 +118,22 @@ export const generateGraphQLSchema = async () => {
         errorObject.message = [
           errorObject.message,
           '',
-          `  ${chalk.bgYellow(` ${chalk.black.bold('Heads up')} `)}`,
+          `  ${ansis.bgYellow(` ${ansis.black.bold('Heads up')} `)}`,
           '',
-          chalk.yellow(
+          ansis.yellow(
             `  It looks like you have a ${name} model in your Prisma schema.`,
           ),
-          chalk.yellow(
+          ansis.yellow(
             `  If it's part of a relation, you may have to generate SDL or scaffolding for ${name} too.`,
           ),
-          chalk.yellow(
+          ansis.yellow(
             `  So, if you haven't done that yet, ignore this error message and run the SDL or scaffold generator for ${name} now.`,
           ),
           '',
-          chalk.yellow(
+          ansis.yellow(
             `  See the ${terminalLink(
               'Troubleshooting Generators',
-              'https://redwoodjs.com/docs/schema-relations#troubleshooting-generators',
+              'https://cedarjs.com/docs/schema-relations#troubleshooting-generators',
             )} section in our docs for more help.`,
           ),
         ].join('\n')

@@ -1,16 +1,8 @@
 #!/usr/bin/env node
 
 import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
 
-const require = createRequire(import.meta.url)
-const pkgJsonPath = require.resolve('@cedarjs/api-server/package.json')
-const apiServerPackageJsonFileUrl = pathToFileURL(pkgJsonPath)
-const requireFromApiServer = createRequire(apiServerPackageJsonFileUrl)
-const bins = requireFromApiServer('./package.json')['bin']
-const apiServerEntryPointUrl = new URL(
-  bins['rw-api-server-watch'],
-  apiServerPackageJsonFileUrl,
-)
+const createdRequire = createRequire(import.meta.url)
+const { startWatch } = createdRequire('@cedarjs/api-server/watch')
 
-import(apiServerEntryPointUrl.toString())
+await startWatch()

@@ -9,6 +9,8 @@ import { describe, it, expect } from 'vitest'
 // @ts-expect-error - job is a JavaScript file
 import * as jobHandler from '../jobHandler.js'
 
+const jobsPath = '/path/to/project/api/src/jobs'
+
 describe('Single word default files', async () => {
   const files = await jobHandler.files({
     name: 'Sample',
@@ -17,34 +19,24 @@ describe('Single word default files', async () => {
     typescript: true,
   })
 
-  it('creates a single word function file', () => {
+  it('creates a single word job file', () => {
     expect(
-      files[
-        path.normalize('/path/to/project/api/src/jobs/SampleJob/SampleJob.ts')
-      ],
+      files[path.normalize(jobsPath + '/SampleJob/SampleJob.ts')],
     ).toMatchSnapshot()
 
     expect(
-      files[
-        path.normalize(
-          '/path/to/project/api/src/jobs/SampleJob/SampleJob.test.ts',
-        )
-      ],
+      files[path.normalize(jobsPath + '/SampleJob/SampleJob.test.ts')],
     ).toMatchSnapshot('Test snapshot')
 
     expect(
-      files[
-        path.normalize(
-          '/path/to/project/api/src/jobs/SampleJob/SampleJob.scenarios.ts',
-        )
-      ],
+      files[path.normalize(jobsPath + '/SampleJob/SampleJob.scenarios.ts')],
     ).toMatchSnapshot('Scenario snapshot')
   })
 })
 
 describe('multi-word files', () => {
-  it('creates a multi word function file', async () => {
-    const multiWordDefaultFiles = await jobHandler.files({
+  it('creates a multi word job file', async () => {
+    const files = await jobHandler.files({
       name: 'send-mail',
       queueName: 'default',
       tests: false,
@@ -52,11 +44,7 @@ describe('multi-word files', () => {
     })
 
     expect(
-      multiWordDefaultFiles[
-        path.normalize(
-          '/path/to/project/api/src/functions/SendMailJob/SendMailJob.js',
-        )
-      ],
+      files[path.normalize(jobsPath + '/SendMailJob/SendMailJob.ts')],
     ).toMatchSnapshot()
   })
 })

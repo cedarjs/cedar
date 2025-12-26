@@ -4,11 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
-# Cancel in-progress runs of this workflow.
-# See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# We often cancel concurrent jobs, but this job is so fast it wouldn't really
+# save any resources. It just complicates things (GitHub's runners would
+# sometimes get confused, and get stuck waiting on an instance of this job that
+# was canceled).
 
 # No top level permissions are required for this workflow
 permissions: {}
@@ -21,8 +20,12 @@ jobs:
       issues: read
       pull-requests: read
     steps:
-      - uses: mheap/github-action-required-labels@388fd6af37b34cdfe5a23b37060e763217e58b03 # v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: ⬢ Set up Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
         with:
-          mode: exactly
-          count: 1
-          labels: 'release:docs, release:chore, release:experimental-breaking, release:fix, release:feature, release:breaking, release:dependency'
+          node-version: 24
+
+      - name: ✅ Check release label requirement
+        uses: ./.github/actions/require-release-label-or-cc-message

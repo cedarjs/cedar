@@ -2,45 +2,53 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import React from 'react'
+import type { ElementType } from 'react'
 
-// @ts-expect-error CJS vs ESM
-import { ApolloClient, InMemoryCache } from '@apollo/client'
+// Building CJS types complains about this being turned into a require call
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import * as apolloClient from '@apollo/client'
 import type { CheerioAPI } from 'cheerio'
 import { load as loadHtml } from 'cheerio'
 import ReactDOMServer from 'react-dom/server'
 
 import {
-  getPaths,
-  ensurePosixPath,
-  importStatementPath,
-} from '@cedarjs/project-config'
+  registerApiSideBabelHook,
+  registerWebSideBabelHook,
+} from '@cedarjs/babel-config'
+import { getPaths, ensurePosixPath } from '@cedarjs/project-config'
 import { LocationProvider } from '@cedarjs/router'
 import { matchPath } from '@cedarjs/router/dist/util'
 import type { QueryInfo } from '@cedarjs/web'
 
-import { buildAndImport } from './build-and-import/buildAndImport'
-import { detectPrerenderRoutes } from './detection'
+import { babelPluginRedwoodCell } from './babelPlugins/babel-plugin-redwood-cell.js'
+import { babelPluginRedwoodPrerenderMediaImports } from './babelPlugins/babel-plugin-redwood-prerender-media-imports.js'
+import { detectPrerenderRoutes } from './detection/detection.js'
 import {
   GqlHandlerImportError,
   JSONParseError,
   PrerenderGqlError,
-} from './errors'
-import { executeQuery, getGqlHandler } from './graphql/graphql'
-import { getRootHtmlPath, registerShims, writeToDist } from './internal'
+} from './errors.js'
+import { executeQuery, getGqlHandler } from './graphql/graphql.js'
+import type { FileImporter } from './graphql/graphql.js'
+import { getRootHtmlPath, registerShims, writeToDist } from './internal.js'
+
+// @ts-expect-error - ESM/CJS issue
+const { ApolloClient, InMemoryCache } = apolloClient.default || apolloClient
 
 // Create an apollo client that we can use to prepopulate the cache and restore it client-side
 const prerenderApolloClient = new ApolloClient({ cache: new InMemoryCache() })
 
 async function recursivelyRender(
-  App: React.ElementType,
-  Routes: React.ElementType,
-  CellCacheContextProvider: React.ElementType,
+  App: ElementType,
+  Routes: ElementType,
   renderPath: string,
+  fileImporter: FileImporter,
   gqlHandler: any,
   queryCache: Record<string, QueryInfo>,
 ): Promise<string> {
   // Load this async, to prevent rwjs/web being loaded before shims
-  const { getOperationName } = await import('@cedarjs/web')
+  const { CellCacheContextProvider, getOperationName } = require('@cedarjs/web')
 
   let shouldShowGraphqlHandlerNotFoundWarn = false
   // Execute all gql queries we haven't already fetched
@@ -53,6 +61,7 @@ async function recursivelyRender(
 
       try {
         const resultString = await executeQuery(
+          fileImporter,
           gqlHandler,
           value.query,
           value.variables,
@@ -140,8 +149,8 @@ async function recursivelyRender(
     return recursivelyRender(
       App,
       Routes,
-      CellCacheContextProvider,
       renderPath,
+      fileImporter,
       gqlHandler,
       queryCache,
     )
@@ -237,32 +246,6 @@ function insertChunkLoadingScript(
   })
 }
 
-interface Args {
-  appPath: string
-  routesPath: string
-  outDir: string
-}
-
-async function createCombinedEntry({ appPath, routesPath, outDir }: Args) {
-  const combinedContent = `
-    import App from "${importStatementPath(appPath.replace('.tsx', ''))}";
-    import Routes from "${importStatementPath(routesPath.replace('.tsx', ''))}";
-    import { CellCacheContextProvider } from '@cedarjs/web'
-
-    export { App, Routes, CellCacheContextProvider };
-  `
-
-  const tempFilePath = path.join(outDir, '__prerender-temp-entry.tsx')
-  await fs.promises.writeFile(tempFilePath, combinedContent, 'utf8')
-  return tempFilePath
-}
-
-const renderCache: {
-  App?: React.FunctionComponent
-  Routes?: React.FunctionComponent
-  CellCacheContextProvider?: React.FunctionComponent
-} = {}
-
 interface PrerenderParams {
   queryCache: Record<string, QueryInfo>
   renderPath: string // The path (url) to render e.g. /about, /dashboard/me, /blog-post/3
@@ -274,57 +257,79 @@ export const runPrerender = async ({
 }: PrerenderParams): Promise<string | void> => {
   registerShims(renderPath)
 
-  const gqlHandler = await getGqlHandler()
+  // registerApiSideBabelHook already includes the default api side babel
+  // config. So what we define here is additions to the default config
+  registerApiSideBabelHook({
+    plugins: [
+      [
+        'babel-plugin-module-resolver',
+        {
+          alias: {
+            api: getPaths().api.base,
+            web: getPaths().web.base,
+          },
+          loglevel: 'silent', // to silence the unnecessary warnings
+        },
+      ],
+    ],
+    overrides: [
+      {
+        test: ['./api/'],
+        plugins: [
+          [
+            'babel-plugin-module-resolver',
+            {
+              alias: {
+                src: getPaths().api.src,
+              },
+              loglevel: 'silent',
+            },
+            'exec-api-src-module-resolver',
+          ],
+        ],
+      },
+    ],
+  })
 
-  const prerenderDistPath = path.join(getPaths().web.dist, '__prerender')
-  fs.mkdirSync(prerenderDistPath, { recursive: true })
+  const gqlHandler = await getGqlHandler(require)
 
-  if (!renderCache.App) {
-    const entryPath = await createCombinedEntry({
-      appPath: getPaths().web.app,
-      routesPath: getPaths().web.routes,
-      outDir: prerenderDistPath,
-    })
+  // Prerender specific configuration
+  // extends projects web/babelConfig
+  registerWebSideBabelHook({
+    overrides: [
+      {
+        plugins: [
+          ['ignore-html-and-css-imports'], // webpack/postcss handles CSS imports
+          [babelPluginRedwoodPrerenderMediaImports],
+        ],
+      },
+      {
+        test: /.+Cell.(js|tsx|jsx)$/,
+        plugins: [babelPluginRedwoodCell],
+      },
+    ],
+    options: {
+      forPrerender: true,
+    },
+  })
 
-    const required = await buildAndImport({
-      cwd: getPaths().web.base,
-      filepath: entryPath,
-      preserveTemporaryFile: true,
-    })
-
-    renderCache.App = required.App
-    renderCache.Routes = required.Routes
-    renderCache.CellCacheContextProvider = required.CellCacheContextProvider
-  }
-
-  const { App, Routes, CellCacheContextProvider } = renderCache
-
-  if (!App) {
-    throw new Error('App not found')
-  }
-
-  if (!Routes) {
-    throw new Error('Routes not found')
-  }
-
-  if (!CellCacheContextProvider) {
-    throw new Error('CellCacheContextProvider not found')
-  }
+  const indexContent = fs.readFileSync(getRootHtmlPath()).toString()
+  const { default: App } = require(getPaths().web.app)
+  const { default: Routes } = require(getPaths().web.routes)
 
   const componentAsHtml = await recursivelyRender(
     App,
     Routes,
-    CellCacheContextProvider,
     renderPath,
+    require,
     gqlHandler,
     queryCache,
   )
 
   const { helmet } = globalThis.__REDWOOD__HELMET_CONTEXT
 
-  // Loop over ther queryCache and write the queries to the apollo client cache
-  // This will normalize the data and make it available to the app when it
-  // hydrates
+  // Loop over ther queryCache and write the queries to the apollo client cache this will normalize the data
+  // and make it available to the app when it hydrates
   Object.keys(queryCache).forEach((queryKey) => {
     const { query, variables, data } = queryCache[queryKey]
     prerenderApolloClient.writeQuery({
@@ -334,7 +339,6 @@ export const runPrerender = async ({
     })
   })
 
-  const indexContent = fs.readFileSync(getRootHtmlPath()).toString()
   const indexHtmlTree = loadHtml(indexContent)
 
   if (helmet) {

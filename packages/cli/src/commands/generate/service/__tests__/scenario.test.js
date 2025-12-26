@@ -20,6 +20,7 @@ describe('the scenario generator', () => {
         isId: false,
         isReadOnly: false,
         type: 'String',
+        nativeType: null,
         hasDefaultValue: false,
         isGenerated: false,
         isUpdatedAt: false,
@@ -36,6 +37,7 @@ describe('the scenario generator', () => {
         kind: 'scalar',
         name: 'userId',
         type: 'Int',
+        nativeType: null,
       },
     ])
   })
@@ -53,6 +55,7 @@ describe('the scenario generator', () => {
         isId: false,
         isReadOnly: true,
         type: 'Int',
+        nativeType: null,
         hasDefaultValue: false,
         isGenerated: false,
         isUpdatedAt: false,
@@ -66,6 +69,7 @@ describe('the scenario generator', () => {
         isId: false,
         isReadOnly: false,
         type: 'BigInt',
+        nativeType: null,
         hasDefaultValue: false,
         isGenerated: false,
         isUpdatedAt: false,

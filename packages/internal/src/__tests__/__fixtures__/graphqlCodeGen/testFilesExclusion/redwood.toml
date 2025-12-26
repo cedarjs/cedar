@@ -1,0 +1,14 @@
+[web]
+  title = "Test Files Exclusion"
+  port = 8910
+  apiUrl = "/.redwood/functions"
+  includeEnvironmentVariables = []
+
+[api]
+  port = 8911
+
+[browser]
+  open = false
+
+[notifications]
+  versionUpdates = []

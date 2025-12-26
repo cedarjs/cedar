@@ -1,11 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { getDMMF, getSchema } from '@prisma/internals'
+import { getDMMF, getSchemaWithPath } from '@prisma/internals'
 import execa from 'execa'
 
 import { getPaths } from '@cedarjs/cli-helpers'
-import { processPagesDir } from '@cedarjs/project-config'
+import { processPagesDir, getSchemaPath } from '@cedarjs/project-config'
 
 export const libPath = getPaths().api.lib.replace(getPaths().base, '')
 export const functionsPath = getPaths().api.functions.replace(
@@ -14,7 +14,9 @@ export const functionsPath = getPaths().api.functions.replace(
 )
 
 export const getModelNames = async () => {
-  const datamodel = await getSchema(getPaths().api.dbSchema)
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const result = await getSchemaWithPath(schemaPath)
+  const datamodel = result.schemas
   const schema = await getDMMF({ datamodel })
 
   return schema.datamodel.models.map((model) => model.name)
@@ -38,12 +40,13 @@ export const hasModel = async (name: string) => {
 }
 
 export async function addModels(models: string) {
-  const isDirectory = fs.statSync(getPaths().api.dbSchema).isDirectory()
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const isDirectory = fs.statSync(schemaPath).isDirectory()
 
   if (isDirectory) {
-    fs.writeFileSync(path.join(getPaths().api.dbSchema, 'user.prisma'), models)
+    fs.writeFileSync(path.join(schemaPath, 'user.prisma'), models)
   } else {
-    fs.appendFileSync(getPaths().api.dbSchema, models)
+    fs.appendFileSync(schemaPath, models)
   }
 }
 

@@ -2,12 +2,12 @@ import { useEngine } from '@envelop/core'
 import * as GraphQLJS from 'graphql'
 import { beforeEach, vi, describe, expect, it } from 'vitest'
 
-import { testSchema, testQuery } from '../__fixtures__/common'
+import { testSchema, testQuery } from '../__fixtures__/common.js'
 import {
   createSpiedPlugin,
   createTestkit,
-} from '../__fixtures__/envelop-testing'
-import { useRedwoodPopulateContext } from '../useRedwoodPopulateContext'
+} from '../__fixtures__/envelop-testing.js'
+import { useRedwoodPopulateContext } from '../useRedwoodPopulateContext.js'
 
 describe('Populates context', () => {
   const spiedPlugin = createSpiedPlugin()

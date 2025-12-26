@@ -40,7 +40,8 @@ const parseArgs = (argv: string[]) => {
 
   const parsed: Record<string, any> = yargs(commandString)
     .usage(
-      'Starts the RedwoodJob runner to process background jobs\n\nUsage: rw jobs <command> [options]',
+      'Starts the CedarJS Jobs runner to process background jobs\n\n' +
+        'Usage: rw jobs <command> [options]',
     )
     .command('work', 'Start a worker and process jobs')
     .command('workoff', 'Start a worker and exit after all jobs processed')
@@ -51,11 +52,13 @@ const parseArgs = (argv: string[]) => {
     .demandCommand(1, 'You must specify a mode to start in')
     .example(
       'rw jobs work',
-      'Start the job workers using the job config and work on jobs until manually stopped',
+      'Start the job workers using the job config and work on jobs until ' +
+        'manually stopped',
     )
     .example(
       'rw jobs start',
-      'Start the job workers using the job config and detach, running in daemon mode',
+      'Start the job workers using the job config and detach, running in ' +
+        'daemon mode',
     )
     .help()
     .parse(commandString, (_err: any, _argv: any, output: any) => {
@@ -196,7 +199,8 @@ const signalSetup = ({
   process.on('SIGINT', () => {
     sigtermCount++
     let message =
-      'SIGINT received: shutting down workers gracefully (press Ctrl-C again to exit immediately)...'
+      'SIGINT received: shutting down workers gracefully (press Ctrl-C again ' +
+      'to exit immediately)...'
 
     if (sigtermCount > 1) {
       message = 'SIGINT received again, exiting immediately...'
@@ -275,7 +279,7 @@ const main = async () => {
   const numWorkers = buildNumWorkers(workerConfig)
   const logger = jobsConfig.logger ?? DEFAULT_LOGGER
 
-  logger.warn(`Starting RedwoodJob Runner at ${new Date().toISOString()}...`)
+  logger.warn(`Starting CedarJS Jobs Runner at ${new Date().toISOString()}...`)
 
   switch (command) {
     case 'start':

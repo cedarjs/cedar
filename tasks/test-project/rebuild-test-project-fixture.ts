@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import chalk from 'chalk'
 import fse from 'fs-extra'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
@@ -23,20 +22,37 @@ import {
   updatePkgJsonScripts,
   ExecaError,
   exec,
+  getCfwBin,
 } from './util'
+
+const ansis = require('ansis')
+
+function recommendedNodeVersion() {
+  const templatePackageJsonPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'packages',
+    'create-cedar-app',
+    'templates',
+    'ts',
+    'package.json',
+  )
+  console.log('templatePackageJsonPath:', templatePackageJsonPath)
+  const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
+
+  return json.engines.node
+}
 
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
 // hangs this script without any information to the user that tries to rebuild
 // the test-project. It's better to fail early so the correct node version can
 // be installed.
-if (
-  semver.lt(process.version, '20.0.0') ||
-  semver.gte(process.version, '21.0.0')
-) {
+if (!semver.satisfies(process.version, recommendedNodeVersion())) {
   console.error('Unsupported Node.js version')
   console.error('  You are using:', process.version)
-  console.error('  Supported version:', 'v20')
+  console.error('  Supported version:', recommendedNodeVersion())
   process.exit(1)
 }
 
@@ -232,7 +248,7 @@ function skipFn(startStep: string, currentStep: string) {
 
 if (resume) {
   console.error(
-    chalk.red.bold(
+    ansis.red.bold(
       '\n`resume` option is not supported yet. ' +
         'Please use `resumePath` instead.\n',
     ),
@@ -243,7 +259,7 @@ if (resume) {
 
 if (resumePath && !fs.existsSync(path.join(resumePath, 'redwood.toml'))) {
   console.error(
-    chalk.red.bold(
+    ansis.red.bold(
       `
       No redwood.toml file found at the given path: ${resumePath}
       `,
@@ -334,7 +350,7 @@ async function runCommand() {
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
       return exec(
-        'yarn rwfw project:tarsync',
+        `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
@@ -381,12 +397,12 @@ async function runCommand() {
   // Note that we undo this at the end
   await tuiTask({
     step: 6,
-    title: '[link] Add rwfw project:copy postinstall',
+    title: '[link] Add cfw project:copy postinstall',
     task: () => {
       return updatePkgJsonScripts({
         projectPath: OUTPUT_PROJECT_PATH,
         scripts: {
-          postinstall: 'yarn rwfw project:copy',
+          postinstall: `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:copy`,
         },
       })
     },
@@ -396,9 +412,7 @@ async function runCommand() {
     step: 7,
     title: 'Apply web codemods',
     task: () => {
-      return webTasks(OUTPUT_PROJECT_PATH, {
-        linkWithLatestFwBuild: true,
-      })
+      return webTasks(OUTPUT_PROJECT_PATH)
     },
   })
 
@@ -408,6 +422,7 @@ async function runCommand() {
     task: () => {
       return apiTasks(OUTPUT_PROJECT_PATH, {
         linkWithLatestFwBuild: true,
+        esmProject: false,
       })
     },
   })
@@ -421,13 +436,16 @@ async function runCommand() {
       fs.mkdirSync(nestedPath, { recursive: true })
       fs.writeFileSync(
         path.join(nestedPath, 'myNestedScript.ts'),
-        'export default async () => {\n' +
+        "import { contacts } from 'api/src/services/contacts/contacts'\n" +
+          '\n' +
+          'export default async () => {\n' +
+          '  const _allContacts = await contacts()\n' +
           "  console.log('Hello from myNestedScript.ts')\n" +
           '}\n\n',
       )
 
       await exec(
-        'yarn rw g script i/am/nested',
+        'yarn cedar g script i/am/nested',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -435,7 +453,7 @@ async function runCommand() {
       // Verify that the scripts are added and included in the list of
       // available scripts
       const list = await exec(
-        'yarn rw exec',
+        'yarn cedar exec',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -445,34 +463,34 @@ async function runCommand() {
         !list.stdout.includes('i/am/nested') ||
         !list.stdout.includes('one/two/myNestedScript')
       ) {
-        console.error('yarn rw exec output', list.stdout, list.stderr)
+        console.error('yarn cedar exec output', list.stdout, list.stderr)
 
         throw new Error('Scripts not included in list')
       }
 
       // Verify that the scripts can be executed
       const runFromRoot = await exec(
-        'yarn rw exec one/two/myNestedScript',
+        'yarn cedar exec one/two/myNestedScript',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
 
       if (!runFromRoot.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn rw exec one/two/myNestedScript` output')
+        console.error('`yarn cedar exec one/two/myNestedScript` output')
         console.error(runFromRoot.stdout, runFromRoot.stderr)
 
         throw new Error('Script not executed successfully')
       }
 
       const runFromScripts = await exec(
-        'yarn rw exec one/two/myNestedScript',
+        'yarn cedar exec one/two/myNestedScript',
         [],
         getExecaOptions(path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one')),
       )
 
       if (!runFromScripts.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn rw exec one/two/myNestedScript` output')
-        console.error(runFromRoot.stdout, runFromRoot.stderr)
+        console.error('`yarn cedar exec one/two/myNestedScript` output')
+        console.error(runFromScripts.stdout, runFromScripts.stderr)
 
         throw new Error('Script not executed successfully')
       }
@@ -484,7 +502,7 @@ async function runCommand() {
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
-        'yarn rw prisma migrate reset',
+        'yarn cedar prisma migrate reset',
         ['--force'],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -496,8 +514,7 @@ async function runCommand() {
     title: 'Lint --fix all the things',
     task: async () => {
       try {
-        await exec('yarn rw lint --fix', [], {
-          shell: true,
+        await exec('yarn', ['rw', 'lint', '--fix'], {
           stdio: 'pipe',
           cleanup: true,
           cwd: OUTPUT_PROJECT_PATH,
@@ -531,7 +548,13 @@ async function runCommand() {
       // remove all .gitignore
       await rimraf(`${OUTPUT_PROJECT_PATH}/.redwood/**/*`, {
         glob: {
-          ignore: `${OUTPUT_PROJECT_PATH}/.redwood/README.md`,
+          ignore: [
+            `${OUTPUT_PROJECT_PATH}/.redwood/README.md`,
+            // This is needed to not have annoying TS errors in the __fixtures__
+            // test project folder
+            // See packages/internal/src/generate/typeDefinitions.ts
+            `${OUTPUT_PROJECT_PATH}/.redwood/types/includes/web-vite-client.d.ts`,
+          ],
         },
       })
       await rimraf(`${OUTPUT_PROJECT_PATH}/api/db/dev.db`)
@@ -545,7 +568,7 @@ async function runCommand() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
-      // Copy over package.json from template, so we remove the extra dev dependencies, and rwfw postinstall script
+      // Copy over package.json from template, so we remove the extra dev dependencies, and cfw postinstall script
       // that we added in "Adding framework dependencies to project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
@@ -563,7 +586,7 @@ async function runCommand() {
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, 'package.json'),
-        JSON.stringify(newRootPackageJson, null, 2),
+        JSON.stringify(newRootPackageJson, null, 2) + '\n',
       )
 
       // removes existing Fixture and replaces with newly built project,

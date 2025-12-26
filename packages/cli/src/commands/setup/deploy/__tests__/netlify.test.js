@@ -54,8 +54,8 @@ beforeEach(() => {
     [REDWOOD_TOML_PATH]: `[web]
   title = "Redwood App"
   port = 8910
-  apiUrl = "/.redwood/functions" # you can customize graphql and dbAuth urls individually too: see https://redwoodjs.com/docs/app-configuration-redwood-toml#api-paths
-  includeEnvironmentVariables = [] # any ENV vars that should be available to the web side, see https://redwoodjs.com/docs/environment-variables#web
+  apiUrl = "/.redwood/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-redwood-toml#api-paths
+  includeEnvironmentVariables = [] # any ENV vars that should be available to the web side, see https://cedarjs.com/docs/environment-variables#web
 [api]
   port = 8911
 [browser]

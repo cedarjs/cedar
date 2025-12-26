@@ -5,7 +5,7 @@ import { format } from 'prettier'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import type { GeneratedFile } from './types'
+import type { GeneratedFile } from './types.js'
 
 // Copy the persisted-documents.json to api side as a trustedDocumentsStore
 export const trustedDocumentsStore = async (generatedFiles: any) => {

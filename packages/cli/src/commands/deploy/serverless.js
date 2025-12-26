@@ -41,8 +41,8 @@ export const builder = (yargs) => {
 
   yargs.epilogue(
     `Also see the ${terminalLink(
-      'Redwood CLI Reference',
-      'https://redwoodjs.com/docs/cli-commands#deploy',
+      'CedarJS CLI Reference',
+      'https://cedarjs.com/docs/cli-commands#deploy',
     )}\n`,
   )
 }

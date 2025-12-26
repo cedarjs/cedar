@@ -3,7 +3,7 @@ import type { GraphQLError, ValidationContext } from 'graphql'
 
 import type { Logger } from '@cedarjs/api/logger'
 
-import type { ArmorConfig } from '../types'
+import type { ArmorConfig } from '../types.js'
 
 const armorConfigDefaultOptions: ArmorConfig = {
   logContext: false,

@@ -31,7 +31,7 @@ export async function handler({ force: forceArg }: Args) {
       'but feel free to switch to something that better fits your needs. See https://supertokens.com/docs/guides.',
       '',
       "To get things working, you'll need to add quite a few env vars to your .env file.",
-      'See https://redwoodjs.com/docs/auth/supertokens for a full walkthrough.',
+      'See https://cedarjs.com/docs/auth/supertokens for a full walkthrough.',
     ],
   })
 }

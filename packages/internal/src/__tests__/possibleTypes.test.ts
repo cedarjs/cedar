@@ -5,8 +5,8 @@ import { afterEach, describe, test, expect, vi } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { generateGraphQLSchema } from '../generate/graphqlSchema'
-import { generatePossibleTypes } from '../generate/possibleTypes'
+import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
+import { generatePossibleTypes } from '../generate/possibleTypes.js'
 
 afterEach(() => {
   delete process.env.RWJS_CWD
@@ -18,7 +18,7 @@ describe('Generate gql possible types web from the GraphQL Schema', () => {
     test('when there are *no* union types', async () => {
       const FIXTURE_PATH = path.resolve(
         __dirname,
-        '../../../../__fixtures__/example-todo-main',
+        './__fixtures__/test-project',
       )
 
       process.env.RWJS_CWD = FIXTURE_PATH
@@ -44,7 +44,7 @@ describe('Generate gql possible types web from the GraphQL Schema', () => {
     test('when there are union types ', async () => {
       const FIXTURE_PATH = path.resolve(
         __dirname,
-        '../../../../__fixtures__/fragment-test-project',
+        './__fixtures__/fragment-test-project',
       )
 
       process.env.RWJS_CWD = FIXTURE_PATH
@@ -65,6 +65,7 @@ describe('Generate gql possible types web from the GraphQL Schema', () => {
       expect(possibleTypesFiles[0]).toMatch(
         path.join(getPaths().web.graphql, 'possibleTypes.ts'),
       )
+      expect(fs.writeFileSync).toHaveBeenCalledOnce()
     })
   })
 })

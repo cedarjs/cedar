@@ -1,4 +1,17 @@
-import { beforeAll } from 'vitest'
+import { beforeAll, vi } from 'vitest'
+
+vi.mock('prisma/config', () => {
+  return {
+    defineConfig: (config: unknown) => config,
+    env: (envVar: string) => {
+      if (envVar === 'DATABASE_URL') {
+        return 'file:./dev.db'
+      }
+
+      return ''
+    },
+  }
+})
 
 // Disable telemetry within framework tests
 beforeAll(() => {

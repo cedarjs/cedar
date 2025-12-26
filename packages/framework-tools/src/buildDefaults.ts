@@ -132,16 +132,18 @@ interface CopyAssetsOptions {
   buildFileUrl: string
   patterns: string[]
   ignore?: string[]
+  cjs?: boolean
 }
 
 export async function copyAssets({
   buildFileUrl,
   patterns,
   ignore,
+  cjs,
 }: CopyAssetsOptions) {
   const rootDirPath = path.dirname(fileURLToPath(buildFileUrl))
   const srcDirPath = path.join(rootDirPath, 'src')
-  const distDirPath = path.join(rootDirPath, 'dist')
+  const distDirPath = path.join(rootDirPath, 'dist', cjs ? 'cjs' : '')
 
   let pathnames = await fg(patterns, {
     absolute: true,
@@ -159,7 +161,8 @@ export async function copyAssets({
       await fs.mkdirp(path.dirname(distPathname))
       await fs.copyFile(pathname, distPathname)
       console.log(
-        `Copied asset into dist: ${path.relative(distDirPath, distPathname)}`,
+        `Copied asset into dist: ${cjs ? 'cjs/' : ''}` +
+          path.relative(distDirPath, distPathname),
       )
     } catch (error) {
       console.error(

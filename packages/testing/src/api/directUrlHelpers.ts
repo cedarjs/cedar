@@ -17,16 +17,20 @@ export function checkAndReplaceDirectUrl(
   }
 
   // If it is, set its env var to the test equivalent.
-  const directUrlEnvMatch = directUrl[0].match(BETWEEN_PARENTHESES_REGEXP) //[2]
+  const directUrlEnvMatch = directUrl[0].match(BETWEEN_PARENTHESES_REGEXP)
 
-  // This is mostly to please TS. But it's good to be safe because in this case we want to be 100% correct.
+  // This is mostly to please TS. But it's good to be safe because in this case
+  // we want to be 100% correct.
   if (!directUrlEnvMatch) {
     throw new Error(
-      'Error parsing `directUrl` from schema.prisma. Proceeding with this env var could be dangerous. Please check your schema.prisma file; if everything looks ok, file an issue.',
+      'Error parsing `directUrl` from schema.prisma. Proceeding with this ' +
+        'env var could be dangerous. Please check your schema.prisma file; ' +
+        'if everything looks ok, file an issue.',
     )
   }
 
-  // `directUrlEnvMatch` look something like `["(DIRECT_URL)", "", "DIRECT_URL"]`. We want the third element.
+  // `directUrlEnvMatch` look something like
+  // `["(DIRECT_URL)", "", "DIRECT_URL"]`. We want the third element.
   const directUrlEnv = directUrlEnvMatch[2]
 
   process.env[directUrlEnv] =

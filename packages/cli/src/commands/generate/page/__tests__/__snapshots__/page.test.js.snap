@@ -69,7 +69,7 @@ exports[`Single world files > creates a page test 1`] = `
 import HomePage from './HomePage'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('HomePage', () => {
   it('renders successfully', () => {
@@ -197,7 +197,7 @@ exports[`TS Files > generates typescript pages 3`] = `
 import TsFilesPage from './TsFilesPage'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('TsFilesPage', () => {
   it('renders successfully', () => {
@@ -232,7 +232,7 @@ exports[`handler > file generation 2`] = `
 import HomePage from './HomePage'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('HomePage', () => {
   it('renders successfully', () => {
@@ -316,7 +316,7 @@ exports[`handler > file generation with route params 2`] = `
 import PostPage from './PostPage'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('PostPage', () => {
   it('renders successfully', () => {
@@ -424,7 +424,7 @@ exports[`multiWorldFiles > creates a test for a component with multiple words fo
 import ContactUsPage from './ContactUsPage'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('ContactUsPage', () => {
   it('renders successfully', () => {
@@ -470,7 +470,7 @@ exports[`paramFiles > creates a test for page component with params 1`] = `
 import PostPage from './PostPage'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('PostPage', () => {
   it('renders successfully', () => {

@@ -79,11 +79,14 @@ export class Worker {
   lastCheckTime: Date
 
   constructor(options: WorkerOptions) {
-    // Note: if we did a simple spread like { ...DEFAULT_OPTIONS, ...options } then any undefined values in `options`
-    // would override the defaults. We want to keep the defaults if the value is `undefined` so we have to do this
+    // Note: if we did a simple spread like { ...DEFAULT_OPTIONS, ...options }
+    // then any undefined values in `options` would override the defaults. We
+    // want to keep the defaults if the value is `undefined` so we have to do
+    // this
     const nonUndefinedOptions = Object.fromEntries(
       Object.entries(options ?? {}).filter(([_, value]) => value !== undefined),
     )
+
     this.options = {
       ...DEFAULT_OPTIONS,
       ...nonUndefinedOptions,
@@ -175,7 +178,8 @@ export class Worker {
       this.lastCheckTime = new Date()
 
       this.logger.debug(
-        `[${this.processName}] Checking for jobs in ${this.queueNames} queues...`,
+        `[${this.processName}] Checking for jobs in ${this.queueNames} ` +
+          'queues...',
       )
 
       const job = await this.adapter.find({
@@ -205,6 +209,7 @@ export class Worker {
       if (!job && this.forever) {
         const millsSinceLastCheck =
           new Date().getTime() - this.lastCheckTime.getTime()
+
         if (millsSinceLastCheck < this.sleepDelay) {
           await this.#wait(this.sleepDelay - millsSinceLastCheck)
         }

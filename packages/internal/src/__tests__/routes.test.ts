@@ -2,7 +2,7 @@ import path from 'path'
 
 import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 
-import { getDuplicateRoutes, warningForDuplicateRoutes } from '../routes'
+import { getDuplicateRoutes, warningForDuplicateRoutes } from '../routes.js'
 
 const FIXTURE_PATH_EMPTY_PROJECT = path.resolve(
   __dirname,

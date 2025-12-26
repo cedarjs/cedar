@@ -42,7 +42,19 @@ vi.mock('./getRoutesList', () => ({
 
 const setContentMock = vi.fn()
 const goToMock = vi.fn()
-const screenshotMock = vi.fn().mockResolvedValue('FAKE_IMAGE_CONTENT')
+// Playwright's page.schreenshot returns Promise<Buffer>
+// The type definition of Buffer looks like this:
+// interface Buffer<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> extends Uint8Array<TArrayBuffer> {
+//   // ...
+// }
+//
+// .mockResolvedValue returns a resolved promise, which takes care of the
+// `Promise` part of the return value. And as you can see from the Buffer
+// type definition, it extends Uint8Array. That means it's correct to mock the
+// return value of the screenshot function to be a Uint8Array.
+const screenshotMock = vi
+  .fn()
+  .mockResolvedValue(new Uint8Array(Buffer.from('FAKE_IMAGE_CONTENT')))
 
 const newPageMock = vi.fn().mockResolvedValue({
   goto: goToMock,
@@ -66,6 +78,9 @@ describe('OgImageMiddleware', () => {
   let original_RWJS_CWD: string | undefined
 
   beforeEach(() => {
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
     const options = {
       App: ({ children }) =>
         React.createElement('div', { id: 'app' }, children),
@@ -88,6 +103,8 @@ describe('OgImageMiddleware', () => {
   })
 
   afterEach(() => {
+    vi.mocked(console).log.mockRestore()
+    vi.mocked(console).error.mockRestore()
     vi.clearAllMocks()
     process.env.RWJS_CWD = original_RWJS_CWD
   })
@@ -251,7 +268,9 @@ describe('OgImageMiddleware', () => {
       '<div id="document"><div id="app">Mocked component render</div></div>',
     )
 
-    expect(mwResponse.body).toBe('FAKE_IMAGE_CONTENT')
+    expect(mwResponse.body).toEqual(
+      new Uint8Array(Buffer.from('FAKE_IMAGE_CONTENT')),
+    )
     expect(mwResponse.headers.get('Content-Type')).toBe('image/png')
   })
 
@@ -278,7 +297,9 @@ describe('OgImageMiddleware', () => {
       '<div id="document"><div id="app">Mocked component render</div></div>',
     )
 
-    expect(mwResponse.body).toBe('FAKE_IMAGE_CONTENT')
+    expect(mwResponse.body).toEqual(
+      new Uint8Array(Buffer.from('FAKE_IMAGE_CONTENT')),
+    )
     expect(mwResponse.headers.get('Content-Type')).toBe('image/jpeg')
   })
 
@@ -339,7 +360,9 @@ describe('OgImageMiddleware', () => {
       '<div id="document"><div id="app">Mocked component render</div></div>',
     )
 
-    expect(mwResponse.body).toBe('FAKE_IMAGE_CONTENT')
+    expect(mwResponse.body).toEqual(
+      new Uint8Array(Buffer.from('FAKE_IMAGE_CONTENT')),
+    )
     expect(mwResponse.headers.get('Content-Type')).toBe('image/png')
   })
 })

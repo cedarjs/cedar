@@ -12,16 +12,7 @@ const actualFs = await vi.importActual('fs-extra')
 import Enquirer from 'enquirer'
 import fs from 'fs-extra'
 import { vol } from 'memfs'
-import {
-  vi,
-  describe,
-  it,
-  expect,
-  afterEach,
-  beforeEach,
-  afterAll,
-  beforeAll,
-} from 'vitest'
+import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
 
 import { getPaths } from '../../../../lib/index.js'
 import * as dbAuth from '../dbAuthHandler.js'
@@ -71,18 +62,15 @@ mockFiles[getPaths().web.app] = actualFs
   )
   .toString()
 
-beforeAll(() => {
-  vi.spyOn(console, 'log').mockImplementation(() => {})
-})
-
-afterAll(() => {
-  vi.mocked(console).log.mockRestore?.()
-})
-
 describe('dbAuth', () => {
   beforeEach(() => {
+    vi.spyOn(console, 'log').mockImplementation(() => {})
     vol.reset()
     vol.fromJSON(mockFiles)
+  })
+
+  afterEach(() => {
+    vi.mocked(console).log.mockRestore?.()
   })
 
   it('creates a login page', async () => {

@@ -19,6 +19,7 @@ describe('in javascript (default) mode', () => {
 
   beforeAll(async () => {
     vol.fromJSON({ 'redwood.toml': '' }, '/')
+
     files = await scaffoldHandler.files({
       ...getDefaultArgs(getYargsDefaults()),
       model: 'Post',

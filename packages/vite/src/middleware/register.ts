@@ -2,7 +2,7 @@ import fmw from 'find-my-way'
 import type Router from 'find-my-way'
 import type { ViteDevServer } from 'vite'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getBuiltServerEntryFile } from '@cedarjs/project-config'
 import { MiddlewareResponse } from '@cedarjs/web/middleware'
 import type {
   Middleware,
@@ -103,11 +103,9 @@ export const addMiddlewareHandlers = (mwRegList: MiddlewareReg = []) => {
 export const createMiddlewareRouter = async (
   vite?: ViteDevServer,
 ): Promise<Router.Instance<any>> => {
-  const rwPaths = getPaths()
-
   const entryServerImport: EntryServer = vite
     ? await ssrLoadEntryServer(vite)
-    : await import(makeFilePath(rwPaths.web.distSsrEntryServer))
+    : await import(makeFilePath(getBuiltServerEntryFile()))
 
   const { registerMiddleware } = entryServerImport
 

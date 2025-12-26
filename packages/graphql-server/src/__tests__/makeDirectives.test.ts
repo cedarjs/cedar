@@ -1,12 +1,12 @@
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { describe, expect, it } from 'vitest'
 
-import type { DirectiveParams } from '..'
 import {
   makeDirectivesForPlugin,
   createTransformerDirective,
   createValidatorDirective,
-} from '../directives/makeDirectives'
+} from '../directives/makeDirectives.js'
+import type { DirectiveParams } from '../index.js'
 
 const fooSchema = gql`
   directive @foo on FIELD_DEFINITION
@@ -47,7 +47,7 @@ it('Should map directives globs to defined structure correctly', async () => {
   expect(fooDirective.schema.kind).toBe('Document')
 
   expect(bazingaDirective.name).toBe('bazinga')
-  expect(bazingaDirective.onResolvedValue).rejects.toThrowError(
+  await expect(bazingaDirective.onResolvedValue).rejects.toThrowError(
     'Only soft kittens allowed',
   )
   expect(bazingaDirective.schema.kind).toBe('Document')

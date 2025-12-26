@@ -51,3 +51,32 @@ export default async () => {
 }
 
 `
+
+export const SAMPLE_CRON_JOB = `
+import fs from 'node:fs/promises'
+import path from 'node:path'
+
+import { jobs } from 'src/lib/jobs'
+
+export const SampleCronJob = jobs.createJob({
+  queue: 'default',
+  perform: async () => {
+    const timestamp = new Date().toISOString().replace(/:/g, '_')
+    const fileName = \`report-\${timestamp}.txt\`
+    const fullPath = path.join(__dirname, '..', '..', '..', '..', fileName)
+    jobs.logger.info('SampleCronJob: Writing report to ' + fullPath)
+    await fs.writeFile(fullPath, 'Sample report')
+  },
+})
+
+`
+
+export const SCHEDULE_CRON_JOB_SCRIPT = `
+import { SampleCronJob } from 'api/src/jobs/SampleCronJob/SampleCronJob'
+import { later } from 'api/src/lib/jobs'
+
+export default async () => {
+  await later(SampleCronJob, [], { cron: '* * * * * *' })
+}
+
+`

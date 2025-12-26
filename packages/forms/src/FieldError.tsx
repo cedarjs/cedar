@@ -40,7 +40,7 @@ const DEFAULT_MESSAGES = {
  * <FieldError name="name" className="error" />
  * ```
  *
- * @see {@link https://redwoodjs.com/docs/tutorial/chapter3/forms#fielderror}
+ * @see {@link https://cedarjs.com/docs/tutorial/chapter3/forms#fielderror}
  *
  * @privateRemarks
  *

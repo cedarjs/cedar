@@ -24,7 +24,7 @@ export async function buildForStreamingServer({
           '@cedarjs/forms',
           '@cedarjs/prerender/*',
           '@cedarjs/auth-*-api',
-          '@cedarjs/auth-*-web',
+          '@cedarjs/auth-!(dbauth)-web',
         ],
       }),
     ],

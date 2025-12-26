@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { PresetProperty } from '@storybook/types'
@@ -12,8 +13,14 @@ import { mockRouter } from './plugins/mock-router.js'
 import { reactDocgen } from './plugins/react-docgen.js'
 import type { StorybookConfig } from './types.js'
 
-const getAbsolutePath = (input: string) =>
-  path.dirname(require.resolve(path.join(input, 'package.json')))
+function getAbsolutePath(input: string) {
+  const createdRequire = createRequire(import.meta.url)
+  return path.dirname(
+    createdRequire.resolve(path.join(input, 'package.json'), {
+      paths: [getPaths().base],
+    }),
+  )
+}
 
 export const core: PresetProperty<'core'> = {
   builder: getAbsolutePath('@storybook/builder-vite'),
@@ -21,12 +28,13 @@ export const core: PresetProperty<'core'> = {
 }
 
 export const previewAnnotations: StorybookConfig['previewAnnotations'] = (
-  entry,
+  entries = [],
 ) => {
-  return [...entry, require.resolve('./preview.js')]
+  const createdRequire = createRequire(import.meta.url)
+  return [...entries, createdRequire.resolve('./preview.js')]
 }
 
-const redwoodProjectPaths = getPaths()
+const cedarProjectPaths = getPaths()
 
 export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   const { plugins = [] } = config
@@ -38,12 +46,12 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   return mergeConfig(config, {
     // This is necessary as it otherwise just points to the `web` directory,
     // but it needs to point to `web/src`
-    root: redwoodProjectPaths.web.src,
+    root: cedarProjectPaths.web.src,
     plugins: [mockRouter(), mockAuth(), autoImports],
     resolve: {
       alias: {
-        '~__REDWOOD__USER_ROUTES_FOR_MOCK': redwoodProjectPaths.web.routes,
-        '~__REDWOOD__USER_WEB_SRC': redwoodProjectPaths.web.src,
+        '~__REDWOOD__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
+        '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
       },
     },
     optimizeDeps: {

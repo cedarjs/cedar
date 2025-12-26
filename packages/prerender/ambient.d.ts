@@ -1,5 +1,5 @@
 /* eslint-disable no-var */
-import type { HelmetServerState } from 'react-helmet-async'
+import type { HelmetServerState } from '@dr.pogodin/react-helmet'
 
 declare global {
   var RWJS_ENV: {

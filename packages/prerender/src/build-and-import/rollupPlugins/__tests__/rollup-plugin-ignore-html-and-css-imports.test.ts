@@ -1,6 +1,6 @@
 import type { ResolveIdResult, TransformPluginContext } from 'rollup'
 
-import { ignoreHtmlAndCssImportsPlugin } from '../rollup-plugin-cedarjs-ignore-html-and-css-imports'
+import { ignoreHtmlAndCssImportsPlugin } from '../rollup-plugin-cedarjs-ignore-html-and-css-imports.js'
 
 describe('ignoreHtmlAndCssImportsPlugin', () => {
   describe('resolveId', () => {

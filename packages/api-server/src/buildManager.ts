@@ -1,4 +1,4 @@
-import { debounce } from 'lodash'
+import { debounce } from './utils.js'
 
 export type BuildAndRestartOptions = {
   rebuild?: boolean

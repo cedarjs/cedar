@@ -1,12 +1,12 @@
-// Defines the basic shape of a logger that RedwoodJob will invoke to print
-// debug messages. RedwoodJob will fallback to use `console` if no
-// logger is passed in to RedwoodJob or any adapter. Luckily both Redwood's
+// Defines the basic shape of a logger that CedarJS's Jobs will invoke to print
+// debug messages. CedarJS's Jobs will fallback to use `console` if no logger is
+// passed in to CedarJS or any adapter.
 
 import type { IntRange } from 'type-fest'
 
 import type { BaseAdapter } from './adapters/BaseAdapter/BaseAdapter.js'
 
-/** Redwood's logger and the standard console logger conform to this shape. */
+/** CedarJS's logger and the standard console logger conform to this shape. */
 export interface BasicLogger {
   debug: (message?: any, ...optionalParams: any[]) => void
   info: (message?: any, ...optionalParams: any[]) => void
@@ -15,8 +15,8 @@ export interface BasicLogger {
 }
 
 /**
- *This is the minimum interface that a "job" must conform to in order to be
- * scheduled and executed by Redwood's job engine.
+ * This is the minimum interface that a "job" must conform to in order to be
+ * scheduled and executed by CedarJS's job engine.
  */
 export interface BaseJob {
   id: string | number
@@ -24,6 +24,7 @@ export interface BaseJob {
   path: string
   args: unknown[]
   attempts: number
+  cron?: string | undefined | null
 }
 export type PossibleBaseJob = BaseJob | undefined
 
@@ -143,8 +144,8 @@ export interface JobManagerConfig<
 
 export interface CreateSchedulerConfig<TAdapters extends Adapters> {
   /**
-   * The name of the adapter to use for this scheduler. This must be one of the keys
-   * in the `adapters` object when you created the `JobManager`.
+   * The name of the adapter to use for this scheduler. This must be one of the
+   * keys in the `adapters` object when you created the `JobManager`.
    */
   adapter: keyof TAdapters
 
@@ -201,28 +202,46 @@ export type Job<
 export type ScheduleJobOptions =
   | {
       /**
-       * The number of seconds to wait before scheduling this job. This is mutually
-       * exclusive with `waitUntil`.
+       * The number of seconds to wait before scheduling this job. This is
+       * mutually exclusive with `waitUntil` and `cron`.
        */
       wait: number
       waitUntil?: never
+      cron?: never
     }
   | {
       wait?: never
       /**
-       * The date and time to schedule this job for. This is mutually exclusive with
-       * `wait`.
+       * The date and time to schedule this job for. This is mutually exclusive
+       * with `wait` and `cron`.
        */
       waitUntil: Date
+      cron?: never
+    }
+  | {
+      wait?: never
+      waitUntil?: never
+      /**
+       * The cron schedule for this job. This is mutually exclusive with `wait`
+       * and `waitUntil`.
+       *
+       * The supported format is described in the [cron-parser
+       * documentation](https://github.com/harrisiirak/cron-parser#cron-format).
+       * @see {@link https://github.com/harrisiirak/cron-parser#cron-format}
+       */
+      cron: string
     }
 
 type PriorityValue = IntRange<1, 101>
 
-// If the job has no arguments:
-//  - you may pass an empty array for the arguments and then optionally pass the scheduler options
-//  - you may optionally pass the scheduler options
-// If the job has arguments:
-//  - you must pass the arguments and then optionally pass the scheduler options
+/**
+ * If the job has no arguments:
+ *  - you may pass an empty array for the arguments and then optionally pass the
+ *    scheduler options
+ *  - you may optionally pass the scheduler options
+ * If the job has arguments:
+ *  - you must pass the arguments and then optionally pass the scheduler options
+ */
 export type CreateSchedulerArgs<TJob extends Job<QueueNames>> =
   Parameters<TJob['perform']> extends []
     ? [ScheduleJobOptions?] | [[], ScheduleJobOptions?]

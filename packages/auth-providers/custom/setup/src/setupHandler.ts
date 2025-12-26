@@ -21,7 +21,7 @@ export async function handler({ force: forceArg }: Args) {
       'Done! But you have a little more work to do.',
       "You'll have to write the actual implementation yourself.",
       `Take a look in ${authFilename}, and for a full walkthrough`,
-      'see https://redwoodjs.com/docs/auth/custom.',
+      'see https://cedarjs.com/docs/auth/custom.',
     ],
   })
 }

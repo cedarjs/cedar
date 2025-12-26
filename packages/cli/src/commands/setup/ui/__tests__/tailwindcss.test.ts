@@ -315,7 +315,7 @@ function setupDefaultProjectStructure(
   vol.fromJSON(
     {
       'redwood.toml': '',
-      'prettier.config.js': '',
+      'prettier.config.cjs': '',
       'web/config/': null,
       'web/src/index.css': '',
       '.vscode/settings.json': [
@@ -326,7 +326,7 @@ function setupDefaultProjectStructure(
         '  }',
         '}',
       ].join('\n'),
-      [path.join(__dirname, '../templates/postcss.config.js.template')]: '',
+      [path.join(__dirname, '../templates/postcss.config.cjs.template')]: '',
     },
     APP_PATH,
   )

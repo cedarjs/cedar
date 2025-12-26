@@ -1,0 +1,160 @@
+scalar BigInt
+
+scalar Byte
+
+input CreateProduceInput {
+  isPickled: Boolean
+  isSeedless: Boolean
+  name: String!
+  nutrients: String
+  price: Int!
+  quantity: Int!
+  region: String!
+  ripenessIndicators: String
+  stallId: String!
+  vegetableFamily: String
+}
+
+input CreateStallInput {
+  name: String!
+  stallNumber: String!
+}
+
+scalar Date
+
+scalar DateTime
+
+scalar File
+
+type Fruit implements Grocery {
+  id: ID!
+
+  """Seedless is only for fruits"""
+  isSeedless: Boolean
+  name: String!
+  nutrients: String
+  price: Int!
+  quantity: Int!
+  region: String!
+
+  """Ripeness is only for fruits"""
+  ripenessIndicators: String
+  stall: Stall!
+}
+
+union Groceries = Fruit | Vegetable
+
+interface Grocery {
+  id: ID!
+  name: String!
+  nutrients: String
+  price: Int!
+  quantity: Int!
+  region: String!
+  stall: Stall!
+}
+
+scalar JSON
+
+scalar JSONObject
+
+type Mutation {
+  createProduce(input: CreateProduceInput!): Produce!
+  createStall(input: CreateStallInput!): Stall!
+  deleteProduce(id: String!): Produce!
+  deleteStall(id: String!): Stall!
+  updateProduce(id: String!, input: UpdateProduceInput!): Produce!
+  updateStall(id: String!, input: UpdateStallInput!): Stall!
+}
+
+type Produce {
+  id: String!
+  isPickled: Boolean
+  isSeedless: Boolean
+  name: String!
+  nutrients: String
+  price: Int!
+  quantity: Int!
+  region: String!
+  ripenessIndicators: String
+  stall: Stall!
+  stallId: String!
+  vegetableFamily: String
+}
+
+"""About the Redwood queries."""
+type Query {
+  """Fetches the CedarJS root schema."""
+  cedarjs: Redwood
+  fruitById(id: ID!): Fruit
+  fruits: [Fruit!]!
+  groceries: [Groceries!]!
+  produce(id: String!): Produce
+  produces: [Produce!]!
+
+  """Fetches the Redwood root schema."""
+  redwood: Redwood
+  stall(id: String!): Stall
+  stalls: [Stall!]!
+  vegetableById(id: ID!): Vegetable
+  vegetables: [Vegetable!]!
+}
+
+"""
+The Cedar Root Schema
+
+Defines details about Cedar such as the current user and version information.
+"""
+type Redwood {
+  """The current user."""
+  currentUser: JSON
+
+  """The version of Prisma."""
+  prismaVersion: String
+
+  """The version of CedarJS."""
+  version: String
+}
+
+type Stall {
+  id: String!
+  name: String!
+  produce: [Produce]!
+  stallNumber: String!
+}
+
+scalar Time
+
+input UpdateProduceInput {
+  isPickled: Boolean
+  isSeedless: Boolean
+  name: String
+  nutrients: String
+  price: Int
+  quantity: Int
+  region: String
+  ripenessIndicators: String
+  stallId: String
+  vegetableFamily: String
+}
+
+input UpdateStallInput {
+  name: String
+  stallNumber: String
+}
+
+type Vegetable implements Grocery {
+  id: ID!
+
+  """Pickled is only for vegetables"""
+  isPickled: Boolean
+  name: String!
+  nutrients: String
+  price: Int!
+  quantity: Int!
+  region: String!
+  stall: Stall!
+
+  """Veggie Family is only for vegetables"""
+  vegetableFamily: String
+}

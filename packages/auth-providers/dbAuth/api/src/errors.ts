@@ -1,7 +1,7 @@
 export class NoSessionSecretError extends Error {
   constructor() {
     super(
-      'dbAuth requires a SESSION_SECRET environment variable that is used to encrypt session cookies. Use `yarn rw g secret` to create one, then add to your `.env` file. DO NOT check this variable in your version control system!!',
+      'dbAuth requires a SESSION_SECRET environment variable that is used to encrypt session cookies. Use `yarn cedar g secret` to create one, then add to your `.env` file. DO NOT check this variable in your version control system!!',
     )
     this.name = 'NoSessionSecretError'
   }
@@ -45,7 +45,7 @@ export class NoResetPasswordHandlerError extends Error {
 export class NoWebAuthnConfigError extends Error {
   constructor() {
     super(
-      'To use Webauthn you need both `webauthn` and `credentialModelAccessor` config options, see https://redwoodjs.com/docs/auth/dbAuth#webauthn',
+      'To use Webauthn you need both `webauthn` and `credentialModelAccessor` config options, see https://cedarjs.com/docs/auth/dbAuth#webauthn',
     )
     this.name = 'NoWebAuthnConfigError'
   }
@@ -54,7 +54,7 @@ export class NoWebAuthnConfigError extends Error {
 export class MissingWebAuthnConfigError extends Error {
   constructor() {
     super(
-      'You are missing one or more WebAuthn config options, see https://redwoodjs.com/docs/auth/dbAuth#webauthn',
+      'You are missing one or more WebAuthn config options, see https://cedarjs.com/docs/auth/dbAuth#webauthn',
     )
     this.name = 'MissingWebAuthnConfigError'
   }

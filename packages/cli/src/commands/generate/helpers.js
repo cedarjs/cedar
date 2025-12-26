@@ -9,7 +9,7 @@
 import { paramCase } from 'change-case'
 import pascalcase from 'pascalcase'
 
-import { pluralize, isPlural, isSingular } from '../../lib/rwPluralize.js'
+import { pluralize, isPlural, isSingular } from '../../lib/cedarPluralize.js'
 
 /**
  * Creates a route path, either returning the existing path if passed, or
@@ -98,7 +98,7 @@ export const mapPrismaScalarToPagePropTsType = (scalarType) => {
     Float: 'number',
     Decimal: 'number',
     DateTime: 'string',
-    Bytes: 'Buffer',
+    Bytes: 'Uint8Array',
   }
   return prismaScalarToTsType[scalarType] || 'unknown'
 }

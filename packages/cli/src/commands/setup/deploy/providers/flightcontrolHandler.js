@@ -23,7 +23,7 @@ import {
   mysqlDatabaseService,
 } from '../templates/flightcontrol.js'
 
-const { getSchema, getConfig } = prismaInternals
+const { getSchemaWithPath, getConfig } = prismaInternals
 
 const getFlightcontrolJson = async (database) => {
   if (database === 'none') {
@@ -36,10 +36,10 @@ const getFlightcontrolJson = async (database) => {
     throw new Error("Could not find prisma schema at 'api/db/schema.prisma'")
   }
 
-  const schema = await getSchema(
+  const result = await getSchemaWithPath(
     path.join(getPaths().base, 'api/db/schema.prisma'),
   )
-  const config = await getConfig({ datamodel: schema })
+  const config = await getConfig({ datamodel: result.schemas })
   const detectedDatabase = config.datasources[0].activeProvider
 
   if (detectedDatabase === database) {
@@ -86,8 +86,8 @@ const getFlightcontrolJson = async (database) => {
     Prisma datasource provider is detected to be ${detectedDatabase}.
 
     Update your schema.prisma provider to be postgresql or mysql, then run
-    yarn rw prisma migrate dev
-    yarn rw setup deploy flightcontrol
+    yarn cedar prisma migrate dev
+    yarn cedar setup deploy flightcontrol
     `)
   }
 }

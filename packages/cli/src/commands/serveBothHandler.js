@@ -3,13 +3,13 @@ import path from 'path'
 import concurrently from 'concurrently'
 import execa from 'execa'
 
-import { handler as apiServerHandler } from '@cedarjs/api-server/dist/apiCLIConfigHandler.js'
+import { handler as apiServerHandler } from '@cedarjs/api-server/cjs/apiCliConfigHandler'
 import {
   getAPIHost,
   getAPIPort,
   getWebHost,
   getWebPort,
-} from '@cedarjs/api-server/dist/cliHelpers.js'
+} from '@cedarjs/api-server/cjs/cliHelpers'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -25,7 +25,6 @@ export const bothServerFileHandler = async (argv) => {
     await execa('yarn', ['rw-serve-fe'], {
       cwd: getPaths().web.base,
       stdio: 'inherit',
-      shell: true,
     })
   } else {
     argv.apiPort ??= getAPIPort()
@@ -91,7 +90,6 @@ export const bothSsrRscServerHandler = async (argv, rscEnabled) => {
   const fePromise = execa('yarn', ['rw-serve-fe'], {
     cwd: getPaths().web.base,
     stdio: 'inherit',
-    shell: true,
     env: rscEnabled
       ? {
           // TODO (RSC): Is this how we want to do it? If so, we need to find a way

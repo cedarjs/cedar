@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/storage",
-  "version": "0.0.5",
+  "version": "2.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -47,7 +47,7 @@
     "build:types-cjs": "tsc --build --verbose tsconfig.types-cjs.json",
     "check:attw": "tsx attw.ts",
     "check:package": "concurrently npm:check:attw yarn publint",
-    "setup:test": "npx prisma db push --accept-data-loss --schema ./src/__tests__/unit-test-schema.prisma",
+    "setup:test": "npx prisma db push --accept-data-loss --config ./src/__tests__/prisma.config.ts",
     "test": "vitest run",
     "test:types": "yarn setup:test && tstyche",
     "test:watch": "vitest watch"
@@ -55,20 +55,23 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "mime-types": "2.1.35",
-    "ulid": "2.3.0"
+    "ulid": "2.4.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.1",
+    "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/client": "5.20.0",
+    "@prisma/client": "6.19.1",
     "@types/mime-types": "2.1.4",
     "concurrently": "8.2.2",
-    "esbuild": "0.25.0",
-    "publint": "0.3.12",
-    "tstyche": "3.0.0",
-    "tsx": "4.19.4",
-    "typescript": "5.6.2",
+    "esbuild": "0.27.2",
+    "publint": "0.3.16",
+    "tstyche": "3.5.0",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

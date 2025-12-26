@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client'
 
 import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
 
-import { logger } from './logger'
+import { logger } from './logger.js'
 
 const prismaClient = new PrismaClient({
   log: emitLogLevels(['info', 'warn', 'error']),

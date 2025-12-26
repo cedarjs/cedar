@@ -9,6 +9,7 @@ pre-push:
     - ref: next
     - ref: release/*
   jobs:
+    - run: NX_TUI=false yarn build
     - run: yarn lint
     - run: yarn prettier --check --log-level=silent .
     - run: yarn check
@@ -20,12 +21,23 @@ pre-commit:
     - ref: release/*
   jobs:
     - name: lint staged files
-      run: yarn eslint {staged_files}
-      glob: '*.{js,ts,jsx,tsx}'
+      run: yarn cross-env RWJS_CWD=packages/create-cedar-app/templates/ts yarn eslint {staged_files}
+      glob: '*.{js,ts,jsx,tsx,cjs,mjs}'
       exclude:
         - __fixtures__/*
+        - '**/__fixtures__/**'
+        - '**/__snapshots__/**'
+        - '**/templates/**/*.tsx'
 
-    - run: yarn prettier --log-level=silent --check {staged_files}
+    - name: format staged files
+      run: yarn prettier --check --log-level=silent {staged_files}
+      glob:
+        - '*.{js,mjs,cjs,ts,mts,jsx,tsx,json,yml,md,mdx,css,sh}'
+        - Dockerfile|.gitignore|.gitattributes
+      exclude:
+        - __fixtures__/*
+        - '**/__snapshots__/**'
+        - '**/templates/**/*.tsx'
 #
 #     - name: rubocop
 #       glob: "*.rb"

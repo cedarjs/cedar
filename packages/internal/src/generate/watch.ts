@@ -3,27 +3,29 @@
 import fs from 'fs'
 import path from 'path'
 
-import chalk from 'chalk'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 import chokidar from 'chokidar'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { cliLogger } from '../cliLogger'
+import { cliLogger } from '../cliLogger.js'
 import {
   isCellFile,
   isPageFile,
   isDirectoryNamedModuleFile,
   isGraphQLSchemaFile,
-} from '../files'
-import { warningForDuplicateRoutes } from '../routes'
+} from '../files.js'
+import { warningForDuplicateRoutes } from '../routes.js'
 
-import { generateClientPreset } from './clientPreset'
-import { generate } from './generate'
+import { generateClientPreset } from './clientPreset.js'
+import { generate } from './generate.js'
 import {
   generateTypeDefGraphQLApi,
   generateTypeDefGraphQLWeb,
-} from './graphqlCodeGen'
-import { generateGraphQLSchema } from './graphqlSchema'
+} from './graphqlCodeGen.js'
+import { generateGraphQLSchema } from './graphqlSchema.js'
 import {
   generateMirrorCell,
   generateMirrorDirectoryNamedModule,
@@ -31,7 +33,7 @@ import {
   generateTypeDefRouterPages,
   mirrorPathForDirectoryNamedModules,
   mirrorPathForCell,
-} from './typeDefinitions'
+} from './typeDefinitions.js'
 
 const rwjsPaths = getPaths()
 
@@ -83,7 +85,7 @@ watcher
   })
   .on('all', async (eventName, p) => {
     cliLogger.trace(
-      `File system change: ${chalk.magenta(eventName)} ${chalk.dim(p)}`,
+      `File system change: ${ansis.magenta(eventName)} ${ansis.dim(p)}`,
     )
     if (!['add', 'change', 'unlink'].includes(eventName)) {
       return
@@ -97,8 +99,8 @@ watcher
       cliLogger.debug(
         action[eventTigger],
         type + ':',
-        chalk.dim(p),
-        chalk.dim.italic(Date.now() - start + ' ms'),
+        ansis.dim(p),
+        ansis.dim.italic(Date.now() - start + ' ms'),
       )
 
     if (absPath.includes('Cell') && isCellFile(absPath)) {

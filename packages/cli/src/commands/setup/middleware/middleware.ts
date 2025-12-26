@@ -10,8 +10,8 @@ export function builder(yargs: Argv) {
     .command(ogImageCommand)
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands',
       )}`,
     )
 }

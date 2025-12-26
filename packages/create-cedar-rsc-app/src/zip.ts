@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { pipeline } from 'stream/promises'
+
 import yauzl from 'yauzl-promise'
 
 import type { Config } from './config.js'

@@ -1,19 +1,19 @@
 // TODO: This file should be deduplicated across the framework
 // when we take the time to make architectural changes.
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 
 export default {
-  error: chalk.bold.red,
-  warning: chalk.hex('#ffa500'),
-  highlight: chalk.hex('#ffa500'),
-  success: chalk.green,
-  info: chalk.grey,
-  bold: chalk.bold,
-  underline: chalk.underline,
-  note: chalk.blue,
-  tip: chalk.green,
-  important: chalk.magenta,
-  caution: chalk.red,
-  link: chalk.hex('#e8e8e8'),
+  error: ansis.bold.red,
+  warning: ansis.hex('#ffa500'),
+  highlight: ansis.hex('#ffa500'),
+  success: ansis.green,
+  info: ansis.gray,
+  bold: ansis.bold,
+  underline: ansis.underline,
+  note: ansis.blue,
+  tip: ansis.green,
+  important: ansis.magenta,
+  caution: ansis.red,
+  link: ansis.hex('#e8e8e8'),
 }

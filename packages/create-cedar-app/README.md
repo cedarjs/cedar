@@ -1,22 +1,20 @@
-[![CedarJS](https://avatars.githubusercontent.com/u/211931789?s=200&v=4)](https://cedarjs.com)
-
-<!-- prettier-ignore-start -->
 <p align="center">
-  <a aria-label="Start the Tutorial" href="https://redwoodjs.com/docs/tutorial">
-    <img alt="" src="https://img.shields.io/badge/Start%20the%20Tutorial-%23BF4722?style=for-the-badge&labelColor=000000&logoWidth=20&logo=RedwoodJS">
-  </a>
-  <a aria-label="Join the Forums" href="https://community.redwoodjs.com">
-    <img alt="" src="https://img.shields.io/badge/Join%20the%20Forums-%23FFF9AE?style=for-the-badge&labelColor=000000&logoWidth=20&logo=Discourse">
-  </a>
-  <a aria-label="Join the Chat" href="https://discord.gg/redwoodjs">
-    <img alt="" src="https://img.shields.io/badge/Join%20the%20Chat-%237289DA?style=for-the-badge&labelColor=000000&logoWidth=20&logo=Discord&logoColor=white">
-  </a>
+  <img src="https://avatars.githubusercontent.com/u/211931789?s=200&v=4" width="200" />
+  <h1 align="center">CedarJS</h1>
+  <p align="center">
+    <a href="https://cedarjs.com/discord">
+      <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join our Discord server!"
+    /></a>
+    <a href="https://cedarjs.com">
+      <img src="https://img.shields.io/badge/Documentation-3ECC5F?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentation" />
+    </a>
+  </p>
 </p>
-<!-- prettier-ignore-end -->
-<br>
-<h1 align="center">The App Framework for Startups</h1>
 
-<h2 align="center">Ship today with architecture for tomorrow.</h2>
+<br>
+<h2 align="center">The App Framework for Startups</h2>
+
+<h3 align="center">Ship today with architecture for tomorrow.</h3>
 
 CedarJS is an opinionated framework for modern multi-client applications, built on React, GraphQL, and Prisma with full TypeScript support and ready to go with zero config.
 
@@ -30,19 +28,19 @@ CedarJS requires Node.js =20.x.
 yarn create cedar-app my-cedar-app
 cd my-cedar-app
 yarn install
-yarn redwood dev
+yarn cedar dev
 ```
 
 <h3>Resources</h3>
 
-- The [Redwood Tutorial](https://redwoodjs.com/docs/tutorial): the best way to learn Redwood
-- The [Redwood CLI](https://redwoodjs.com/docs/cli-commands): code generators, DB helpers, setup commands, and more
-- [Documentation](https://redwoodjs.com/docs) and [How To's](https://redwoodjs.com/how-to/custom-function)
-- Join the Community [Forums](https://community.redwoodjs.com) and [Chat](https://discord.gg/redwoodjs)
+- The [CedarJS Tutorial](https://cedarjs.com/docs/tutorial): the best way to learn CedarJS
+- The [Cedar CLI](https://cedarjs.com/docs/cli-commands): code generators, DB helpers, setup commands, and more
+- [Documentation](https://cedarjs.com/docs) and [How To's](https://cedarjs.com/how-to/custom-function)
+- Join our [Discord Chat](https://cedarjs.com/discord)
 
 <h2>Contributing to create-cedar-app</h2>
 
-_Contributors are Welcome! Get started [here](https://redwoodjs.com/docs/contributing). And don't hesitate to ask for help on the forums and chat_.
+_Contributors are Welcome! Get started [here](https://cedarjs.com/docs/contributing). And don't hesitate to ask for help on the chat_.
 
 **Table of Contents**
 
@@ -98,29 +96,24 @@ yarn node ./dist/create-cedar-app.js /path/to/new/cedar-app
 
 ### How to run other published versions for debugging
 
-By default yarn create will pick the latest stable version to run, but you can specify a different version via yarn too!
+`yarn create` will pick the latest stable version to run, so to run a different version the easiest way is to use `npx`.
 
 To try the canary version, run:
 
 ```
-npx create-cedar-app@canary /path/to/project
+npx create-cedar-app@canary /path/to/new/cedar-app
 ```
-
-Note that this will still create a project with the latest stable version, but run the canary version of create-cedar-app, and is mainly useful for debugging this package, and not the CedarJS canary release.
 
 You can specify any tag or version instead of `@canary`
 
-### Develop using the new project
+Note that this will still create a project with the latest stable version, but
+run the canary version (or other tag you specified) of create-cedar-app, and is
+mainly useful for debugging this package, and not the CedarJS canary release.
 
-There are three options for developing with the installed project:
-
-**1. Upgrade the project to use the latest canary release**
+If you want to try the CedarJS packages canary releases, you'll have to follow
+up with an upgrade, like this:
 
 ```bash
 cd /path/to/new/cedar-app
-yarn rw upgrade -t canary
+yarn cedar upgrade -t canary
 ```
-
-**2. Use the workflow and tools for local package development**
-
-- [Local Development Instructions](https://github.com/redwoodjs/redwood/blob/main/CONTRIBUTING.md)

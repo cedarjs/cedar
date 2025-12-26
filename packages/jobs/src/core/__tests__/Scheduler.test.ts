@@ -162,6 +162,70 @@ describe('buildPayload()', () => {
     expect(payload.runAt).toEqual(options.waitUntil)
   })
 
+  it('takes into account a `cron` schedule', () => {
+    const scheduler = new Scheduler({
+      adapter: mockAdapter,
+      logger: mockLogger,
+    })
+    const job = {
+      id: 1,
+      name: 'JobName',
+      path: 'JobPath/JobPath',
+      queue: 'default',
+      priority: 25 as const,
+
+      perform: vi.fn(),
+    }
+    const options = { cron: '0 0 * * *' }
+    const payload = scheduler.buildPayload({ job, args: [], options })
+
+    expect(payload.cron).toEqual(options.cron)
+  })
+
+  it('throws an error if cron is used with wait option', () => {
+    const scheduler = new Scheduler({
+      adapter: mockAdapter,
+      logger: mockLogger,
+    })
+    const job = {
+      id: 1,
+      name: 'JobName',
+      path: 'JobPath/JobPath',
+      queue: 'default',
+      priority: 25 as const,
+
+      perform: vi.fn(),
+    }
+    const options = { cron: '0 0 * * *', wait: 10 }
+
+    // @ts-expect-error testing error case with mutually exclusive options
+    expect(() => scheduler.buildPayload({ job, args: [], options })).toThrow(
+      'Cannot schedule a cron job with wait or waitUntil options',
+    )
+  })
+
+  it('throws an error if cron is used with waitUntil option', () => {
+    const scheduler = new Scheduler({
+      adapter: mockAdapter,
+      logger: mockLogger,
+    })
+    const job = {
+      id: 1,
+      name: 'JobName',
+      path: 'JobPath/JobPath',
+      queue: 'default',
+      priority: 25 as const,
+
+      perform: vi.fn(),
+    }
+    const options = { cron: '0 0 * * *', waitUntil: new Date(2030, 0, 1) }
+
+    // @ts-expect-error testing error case with mutually exclusive options
+    expect(() => scheduler.buildPayload({ job, args: [], options })).toThrow(
+      'Cannot schedule a cron job with wait or waitUntil options',
+    )
+  })
+
   it('throws an error if no queue set', async () => {
     const scheduler = new Scheduler({
       adapter: mockAdapter,

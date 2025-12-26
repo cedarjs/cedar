@@ -21,6 +21,6 @@ export const handler = () => {
       }),
     })
 
-    setOutput('All done! Run `yarn rw lint --fix` to prettify your code')
+    setOutput('All done! Run `yarn cedar lint --fix` to prettify your code')
   })
 }

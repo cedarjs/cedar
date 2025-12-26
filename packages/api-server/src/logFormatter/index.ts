@@ -26,7 +26,7 @@ import {
   formatTracing,
   formatUserAgent,
   formatUrl,
-} from './formatters'
+} from './formatters.js'
 
 export const LogFormatter = () => {
   const parse = (inputData: string | Record<string, unknown>) => {

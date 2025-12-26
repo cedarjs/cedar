@@ -5,17 +5,18 @@ import fastifyRawBody from 'fastify-raw-body'
 
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers'
+import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 
-import type { Server } from '../createServerHelpers'
-import { loadFastifyConfig } from '../fastify'
+import type { Server } from '../createServerHelpers.js'
+import { loadFastifyConfig } from '../fastify.js'
 
-import { lambdaRequestHandler, loadFunctionsFromDist } from './lambdaLoader'
+import { lambdaRequestHandler, loadFunctionsFromDist } from './lambdaLoader.js'
 
 export interface RedwoodFastifyAPIOptions {
   redwood: {
     apiRootPath?: string
     fastGlobOptions?: FastGlobOptions
+    discoverFunctionsGlob?: string | string[]
     loadUserConfig?: boolean
     configureServer?: (server: Server) => void | Promise<void>
   }
@@ -65,5 +66,6 @@ export async function redwoodFastifyAPI(
   fastify.all(`${redwoodOptions.apiRootPath}:routeName/*`, lambdaRequestHandler)
   await loadFunctionsFromDist({
     fastGlobOptions: redwoodOptions.fastGlobOptions,
+    discoverFunctionsGlob: redwoodOptions.discoverFunctionsGlob,
   })
 }

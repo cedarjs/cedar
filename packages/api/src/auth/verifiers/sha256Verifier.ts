@@ -17,11 +17,6 @@ function toNormalizedJsonString(payload: Record<string, unknown>) {
   })
 }
 
-/**
- *
- * createSignature
- *
- */
 const createSignature = ({
   payload,
   secret = DEFAULT_WEBHOOK_SECRET,
@@ -43,11 +38,6 @@ const createSignature = ({
   return digest.toString()
 }
 
-/**
- *
- * verifySignature
- *
- */
 export const verifySignature = ({
   payload,
   secret = DEFAULT_WEBHOOK_SECRET,
@@ -90,14 +80,12 @@ export const verifySignature = ({
 }
 
 /**
- *
  * SHA256 HMAC Payload Verifier
  *
  * Based on GitHub's webhook payload verification
  * @see https://docs.github.com/en/developers/webhooks-and-events/securing-your-webhooks
- *
  */
-const sha256Verifier = (_options?: VerifyOptions): Sha256Verifier => {
+export function sha256Verifier(_options?: VerifyOptions): Sha256Verifier {
   return {
     sign: ({ payload, secret }) => {
       return createSignature({ payload, secret })
@@ -108,5 +96,3 @@ const sha256Verifier = (_options?: VerifyOptions): Sha256Verifier => {
     type: 'sha256Verifier',
   }
 }
-
-export default sha256Verifier

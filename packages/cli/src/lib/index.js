@@ -1,4 +1,3 @@
-import { execSync } from 'child_process'
 import https from 'https'
 import path from 'path'
 
@@ -21,9 +20,9 @@ import {
   findUp,
 } from '@cedarjs/project-config'
 
+import { pluralize, singularize } from './cedarPluralize.js'
 import c from './colors.js'
 import { addFileToRollback } from './rollback.js'
-import { pluralize, singularize } from './rwPluralize.js'
 
 export { findUp }
 
@@ -225,12 +224,12 @@ export const getConfig = () => {
 }
 
 /**
- * This returns the config present in `prettier.config.js` of a Redwood project.
+ * This returns the config present in `prettier.config.cjs` of a Redwood project.
  */
 export const getPrettierOptions = async () => {
   try {
     const { default: prettierOptions } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.js')}`
+      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
     )
     return prettierOptions
   } catch (e) {
@@ -265,7 +264,7 @@ export const getPrettierOptions = async () => {
 export const transformTSToJS = async (filename, content) => {
   const { code } = babel.transform(content, {
     filename,
-    // If you ran `yarn rw generate` in `./web` transformSync would import the `.babelrc.js` file,
+    // If you ran `yarn cedar generate` in `./web` transformSync would import the `.babelrc.js` file,
     // in `./web`? despite us setting `configFile: false`.
     cwd: process.env.NODE_ENV === 'test' ? undefined : getPaths().base,
     configFile: false,
@@ -532,18 +531,11 @@ export const addPackagesTask = async ({
       ].filter(Boolean),
     ]
   } else {
-    const stdout = execSync('yarn --version')
-
-    const yarnVersion = stdout.toString().trim()
-
     installCommand = [
       'yarn',
-      [
-        yarnVersion.startsWith('1') && '-W',
-        'add',
-        devDependency && '--dev',
-        ...packagesWithSameRWVersion,
-      ].filter(Boolean),
+      ['add', devDependency && '--dev', ...packagesWithSameRWVersion].filter(
+        Boolean,
+      ),
     ]
   }
 

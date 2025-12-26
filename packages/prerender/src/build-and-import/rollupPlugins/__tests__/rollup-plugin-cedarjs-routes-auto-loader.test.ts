@@ -5,11 +5,12 @@ import type { TransformPluginContext } from 'rollup'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { cedarjsRoutesAutoLoaderPlugin } from '../rollup-plugin-cedarjs-routes-auto-loader'
+import { cedarjsRoutesAutoLoaderPlugin } from '../rollup-plugin-cedarjs-routes-auto-loader.js'
+import { dedent } from '../utils.js'
 
-const transform = (filename: string, forPrerender = false) => {
+const transform = (filename: string) => {
   const code = fs.readFileSync(filename, 'utf-8')
-  const plugin = cedarjsRoutesAutoLoaderPlugin({ forPrerender })
+  const plugin = cedarjsRoutesAutoLoaderPlugin()
   const pluginTransform = plugin.transform
 
   if (typeof pluginTransform !== 'function') {
@@ -60,7 +61,7 @@ describe('mulitiple files ending in Page.{js,jsx,ts,tsx}', () => {
 describe('page auto loader correctly imports pages', () => {
   const FIXTURE_PATH = path.resolve(
     __dirname,
-    '../../../../../../__fixtures__/example-todo-main/',
+    '../../../../../../__fixtures__/test-project/',
   )
 
   let result: { code?: string } | null
@@ -75,21 +76,32 @@ describe('page auto loader correctly imports pages', () => {
   })
 
   test('Pages get both a LazyComponent and a prerenderLoader', () => {
-    expect(result?.code).toContain(`const HomePage = {
-  name: "HomePage",
-  prerenderLoader: (name) => ({
-    default: globalThis.__REDWOOD__PRERENDER_PAGES[name]
-  }),
-  LazyComponent: lazy(() => import("./pages/HomePage/HomePage"))
-}`)
+    expect(result?.code).toContain(
+      dedent(6)`const AboutPage = {
+        name: "AboutPage",
+        prerenderLoader: (name) => ({ default: __cedarjs_prerender__AboutPage }),
+        LazyComponent: lazy(() => import("./pages/AboutPage/AboutPage"))
+      }`,
+    )
+  })
+
+  // See packages/router/src/page.ts for what a Spec is
+  test('Nested pages get the correct Spec', () => {
+    expect(result?.code).toContain(
+      dedent(6)`const ContactNewContactPage = {
+        name: "ContactNewContactPage",
+        prerenderLoader: (name) => ({ default: __cedarjs_prerender__ContactNewContactPage }),
+        LazyComponent: lazy(() => import("./pages/Contact/NewContactPage/NewContactPage"))
+      }`,
+    )
   })
 
   test('Already imported pages are left alone.', () => {
-    expect(result?.code).toContain(`import FooPage from 'src/pages/FooPage'`)
+    expect(result?.code).toContain(`import HomePage from 'src/pages/HomePage'`)
   })
 
   test('Already imported pages are not lazy loaded', () => {
-    expect(result?.code).not.toContain('const FooPage')
+    expect(result?.code).not.toContain('const HomePage')
   })
 
   test('RSC specific code should not be added', () => {

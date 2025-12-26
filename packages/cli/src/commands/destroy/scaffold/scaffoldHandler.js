@@ -3,6 +3,7 @@ import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
+import { pluralize } from '../../../lib/cedarPluralize.js'
 import c from '../../../lib/colors.js'
 import {
   deleteFilesTask,
@@ -11,7 +12,6 @@ import {
   removeRoutesFromRouterTask,
   writeFile,
 } from '../../../lib/index.js'
-import { pluralize } from '../../../lib/rwPluralize.js'
 import { verifyModelName } from '../../../lib/schemaHelpers.js'
 import {
   files,

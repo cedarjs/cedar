@@ -39,7 +39,7 @@ vi.mock('@cedarjs/structure', () => {
   }
 })
 
-import { getDuplicateRoutes, warningForDuplicateRoutes } from '../routes'
+import { getDuplicateRoutes, warningForDuplicateRoutes } from '../routes.js'
 
 describe('notfound and redirect routes', () => {
   it('Detects no duplicate routes', () => {

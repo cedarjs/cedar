@@ -81,7 +81,7 @@ async function createServer() {
 
   if (!rwPaths.web.viteConfig) {
     throw new Error(
-      'Vite config not found. You need to setup your project with Vite using `yarn rw setup vite`',
+      'Vite config not found. You need to setup your project with Vite using `yarn cedar setup vite`',
     )
   }
   // ~~~~ Dev time validations ~~~~
@@ -166,7 +166,10 @@ async function createServer() {
           '@cedarjs/forms',
           '@cedarjs/prerender/*',
           '@cedarjs/auth-*-api',
-          '@cedarjs/auth-*-web',
+          // Add more to the pattern below as they're converted to dual ESM/CJS
+          // modules
+          // '@cedarjs/auth-!(dbauth|auth0|clerk)-web',
+          '@cedarjs/auth-!(dbauth)-web',
         ],
       }),
       rscEnabled && rscRoutesAutoLoader(),

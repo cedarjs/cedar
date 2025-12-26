@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import url from 'node:url'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import type { ExecaChildProcess } from 'execa'
 import execa from 'execa'
 import fg from 'fast-glob'
@@ -26,6 +26,35 @@ import {
 // useful consts
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
+// Utility function to find bin path from package.json
+function findBinPath(
+  projectPath: string,
+  packageName: string,
+  binName: string,
+) {
+  try {
+    const packageJsonPath = path.join(
+      projectPath,
+      'node_modules',
+      packageName,
+      'package.json',
+    )
+    const packageJson = fs.readJsonSync(packageJsonPath)
+
+    if (packageJson.bin?.[binName]) {
+      return path.resolve(
+        path.dirname(packageJsonPath),
+        packageJson.bin[binName],
+      )
+    }
+
+    throw new Error(`Bin '${binName}' not found in ${packageName} package.json`)
+  } catch (error) {
+    console.error(`Error finding bin path for ${packageName}:`, error)
+    throw error
+  }
+}
+
 // Parse input
 const args = yargs(hideBin(process.argv))
   .positional('project-directory', {
@@ -40,8 +69,8 @@ const args = yargs(hideBin(process.argv))
   .help()
   .parseSync()
 
-const REDWOODJS_FRAMEWORK_PATH = path.join(__dirname, '..', '..')
-const REDWOOD_PROJECT_DIRECTORY =
+const CEDAR_FRAMEWORK_PATH = path.join(__dirname, '..', '..')
+const CEDAR_PROJECT_DIRECTORY =
   args._?.[0]?.toString() ??
   path.join(
     os.tmpdir(),
@@ -52,22 +81,33 @@ const REDWOOD_PROJECT_DIRECTORY =
 
 const SETUPS_DIR = path.join(__dirname, 'setups')
 const TESTS_DIR = path.join(__dirname, 'tests')
-const API_SERVER_COMMANDS = [
-  {
-    cmd: `node ${path.resolve(REDWOOD_PROJECT_DIRECTORY, 'node_modules/@cedarjs/cli/dist/index.js')} serve api`,
-    host: 'http://localhost:8911',
-  },
-  {
-    cmd: `node ${path.resolve(REDWOOD_PROJECT_DIRECTORY, 'node_modules/@cedarjs/api-server/dist/bin.js')} api`,
-    host: 'http://localhost:8911',
-  },
-]
+
+// Function to get API server commands with dynamic bin paths
+function getApiServerCommands(projectPath: string) {
+  const cliPath = findBinPath(projectPath, '@cedarjs/cli', 'rw')
+  const apiServerPath = findBinPath(
+    projectPath,
+    '@cedarjs/api-server',
+    'cedarjs-server',
+  )
+
+  return [
+    {
+      cmd: `node ${cliPath} serve api`,
+      host: 'http://localhost:8911',
+    },
+    {
+      cmd: `node ${apiServerPath} api`,
+      host: 'http://localhost:8911',
+    },
+  ]
+}
 let cleanUpExecuted = false
 
 let serverSubprocess: ExecaChildProcess | undefined
 const startServer = async (command: string, gracePeriod?: number) => {
   serverSubprocess = execa.command(command, {
-    cwd: REDWOOD_PROJECT_DIRECTORY,
+    cwd: CEDAR_PROJECT_DIRECTORY,
     stdio: args.verbose ? 'inherit' : 'ignore',
   })
   await new Promise((r) => setTimeout(r, gracePeriod ?? 4000))
@@ -79,36 +119,32 @@ const stopServer = async () => {
   serverSubprocess.cancel()
   try {
     await serverSubprocess
-  } catch (_error) {
+  } catch {
     // ignore
   }
 }
 
 async function main() {
-  const divider = chalk.blue('~'.repeat(process.stdout.columns))
+  const divider = ansis.blue('~'.repeat(process.stdout.columns))
 
   console.log(`${divider}\nK6 tests\n${divider}`)
   console.log('Benchmark tests will be run in the following directory:')
-  console.log(`${REDWOOD_PROJECT_DIRECTORY}`)
+  console.log(`${CEDAR_PROJECT_DIRECTORY}`)
 
-  fs.mkdirSync(REDWOOD_PROJECT_DIRECTORY, { recursive: true })
+  fs.mkdirSync(CEDAR_PROJECT_DIRECTORY, { recursive: true })
 
   // Register clean up
   if (args.cleanUp) {
     console.log('\nThe directory will be deleted after the tests are run')
     process.on('SIGINT', () => {
       if (!cleanUpExecuted) {
-        cleanUp({
-          projectPath: REDWOOD_PROJECT_DIRECTORY,
-        })
+        cleanUp({ projectPath: CEDAR_PROJECT_DIRECTORY })
         cleanUpExecuted = true
       }
     })
     process.on('exit', () => {
       if (!cleanUpExecuted) {
-        cleanUp({
-          projectPath: REDWOOD_PROJECT_DIRECTORY,
-        })
+        cleanUp({ projectPath: CEDAR_PROJECT_DIRECTORY })
         cleanUpExecuted = true
       }
     })
@@ -137,45 +173,45 @@ async function main() {
 
   console.log('- building the framework')
   buildRedwoodFramework({
-    frameworkPath: REDWOODJS_FRAMEWORK_PATH,
+    frameworkPath: CEDAR_FRAMEWORK_PATH,
     verbose: args.verbose,
   })
   console.log('- creating a new project')
   createRedwoodJSApp({
-    frameworkPath: REDWOODJS_FRAMEWORK_PATH,
-    projectPath: REDWOOD_PROJECT_DIRECTORY,
+    frameworkPath: CEDAR_FRAMEWORK_PATH,
+    projectPath: CEDAR_PROJECT_DIRECTORY,
     typescript: true,
     verbose: args.verbose,
   })
   console.log('- syncing the framework dependencies')
   addFrameworkDepsToProject({
-    frameworkPath: REDWOODJS_FRAMEWORK_PATH,
-    projectPath: REDWOOD_PROJECT_DIRECTORY,
+    frameworkPath: CEDAR_FRAMEWORK_PATH,
+    projectPath: CEDAR_PROJECT_DIRECTORY,
     verbose: args.verbose,
   })
   console.log('- installing dependencies')
   runYarnInstall({
-    projectPath: REDWOOD_PROJECT_DIRECTORY,
+    projectPath: CEDAR_PROJECT_DIRECTORY,
     verbose: args.verbose,
   })
   console.log('- copying framework packages')
   copyFrameworkPackages({
-    frameworkPath: REDWOODJS_FRAMEWORK_PATH,
-    projectPath: REDWOOD_PROJECT_DIRECTORY,
+    frameworkPath: CEDAR_FRAMEWORK_PATH,
+    projectPath: CEDAR_PROJECT_DIRECTORY,
     verbose: args.verbose,
   })
   console.log('- initializing git')
   initGit({
-    projectPath: REDWOOD_PROJECT_DIRECTORY,
+    projectPath: CEDAR_PROJECT_DIRECTORY,
     verbose: args.verbose,
   })
 
   // Results collection
-  const results = {}
+  const results: Record<string, Record<string, any>> = {}
 
   console.log('The following setups will be run:')
-  for (let i = 0; i < setups.length; i++) {
-    console.log(`- ${setups[i]}`)
+  for (const setup of setups) {
+    console.log('-', setup)
   }
 
   for (const setup of setups) {
@@ -197,41 +233,44 @@ async function main() {
     // Clean up the project state
     console.log(`Cleaning up the project state...`)
     await execa('git', ['reset', '--hard'], {
-      cwd: REDWOOD_PROJECT_DIRECTORY,
+      cwd: CEDAR_PROJECT_DIRECTORY,
       stdio: args.verbose ? 'inherit' : 'ignore',
     })
     await execa('git', ['clean', '-fd'], {
-      cwd: REDWOOD_PROJECT_DIRECTORY,
+      cwd: CEDAR_PROJECT_DIRECTORY,
       stdio: args.verbose ? 'inherit' : 'ignore',
     })
 
     // Run the setup
     console.log(`Running setup: ${setup}`)
     await setupModule.setup({
-      projectPath: REDWOOD_PROJECT_DIRECTORY,
+      projectPath: CEDAR_PROJECT_DIRECTORY,
     })
 
     // Build the app
     console.log('Building the project...')
     await execa('yarn', ['rw', 'build'], {
-      cwd: REDWOOD_PROJECT_DIRECTORY,
+      cwd: CEDAR_PROJECT_DIRECTORY,
       stdio: args.verbose ? 'inherit' : 'ignore',
     })
+
+    // Get API server commands with dynamic paths
+    const apiServerCommands = getApiServerCommands(CEDAR_PROJECT_DIRECTORY)
 
     // Run the tests
     for (let i = 0; i < runForTests.length; i++) {
       // Run for different server commands
-      for (let j = 0; j < API_SERVER_COMMANDS.length; j++) {
+      for (let j = 0; j < apiServerCommands.length; j++) {
         console.log(`\n${divider}`)
         console.log(
-          `Running test ${i * API_SERVER_COMMANDS.length + j + 1}/${runForTests.length * API_SERVER_COMMANDS.length}: ${runForTests[i]}`,
+          `Running test ${i * apiServerCommands.length + j + 1}/${runForTests.length * apiServerCommands.length}: ${runForTests[i]}`,
         )
-        console.log(chalk.dim(API_SERVER_COMMANDS[j].cmd))
+        console.log(ansis.dim(apiServerCommands[j].cmd))
         console.log(`${divider}`)
 
         // Start the server
         await startServer(
-          API_SERVER_COMMANDS[j].cmd,
+          apiServerCommands[j].cmd,
           setupModule.startupGracePeriod,
         )
 
@@ -244,31 +283,27 @@ async function main() {
               'run',
               path.join(TESTS_DIR, `${runForTests[i]}.js`),
               '--env',
-              `TEST_HOST=${API_SERVER_COMMANDS[j].host}`,
+              `TEST_HOST=${apiServerCommands[j].host}`,
             ],
             {
-              cwd: REDWOOD_PROJECT_DIRECTORY,
+              cwd: CEDAR_PROJECT_DIRECTORY,
               stdio: 'inherit',
             },
           )
           passed = true
-        } catch (_error) {
+        } catch {
           // ignore
         }
 
         results[setup] ??= {}
         results[setup][runForTests[i]] ??= {}
-        results[setup][runForTests[i]][API_SERVER_COMMANDS[j].cmd] =
-          fs.readJSONSync(
-            path.join(REDWOOD_PROJECT_DIRECTORY, 'summary.json'),
-            {
-              throws: false,
-              flag: 'r',
-              encoding: 'utf-8',
-            },
-          ) ?? {}
-        results[setup][runForTests[i]][API_SERVER_COMMANDS[j].cmd].passed =
-          passed
+        results[setup][runForTests[i]][apiServerCommands[j].cmd] =
+          fs.readJSONSync(path.join(CEDAR_PROJECT_DIRECTORY, 'summary.json'), {
+            throws: false,
+            flag: 'r',
+            encoding: 'utf-8',
+          }) ?? {}
+        results[setup][runForTests[i]][apiServerCommands[j].cmd].passed = passed
 
         // Stop the server
         await stopServer()
@@ -279,11 +314,11 @@ async function main() {
   // Print results
   console.log(`\n${divider}\nResults:\n${divider}`)
   for (const setup in results) {
-    console.log(chalk.bgBlue(`\nSetup: ${setup}`))
+    console.log(ansis.bgBlue(`\nSetup: ${setup}`))
     for (const test in results[setup]) {
       for (const serverCommand in results[setup][test]) {
         const passed = results[setup][test][serverCommand].passed
-        const bgColor = passed ? chalk.bgGreen : chalk.bgRed
+        const bgColor = passed ? ansis.bgGreen : ansis.bgRed
         const bgPrefix = bgColor(' ')
         console.log(passed ? bgColor(' PASS ') : bgColor(' FAIL '))
         console.log(`${bgPrefix} Test: ${test} [${serverCommand}]`)

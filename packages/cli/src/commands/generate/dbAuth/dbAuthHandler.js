@@ -44,7 +44,7 @@ function getPostInstallMessage(isDbAuthSetup) {
     !isDbAuthSetup &&
       "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
         '   app setup by running:\n\n' +
-        '     yarn rw setup auth dbAuth\n',
+        '     yarn cedar setup auth dbAuth\n',
     '   Happy authenticating!',
   ]
     .filter(Boolean)
@@ -68,7 +68,7 @@ function getPostInstallWebauthnMessage(isDbAuthSetup) {
     !isDbAuthSetup &&
       "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
         '   app setup by running:\n\n' +
-        '     yarn rw setup auth dbAuth\n',
+        '     yarn cedar setup auth dbAuth\n',
     '   Happy authenticating!',
   ]
     .filter(Boolean)
@@ -312,7 +312,7 @@ const tasks = ({
               name: 'answer',
               message:
                 'Enable WebAuthn support (TouchID/FaceID) on LoginPage? See ' +
-                'https://redwoodjs.com/docs/auth/dbAuth#webAuthn',
+                'https://cedarjs.com/docs/auth/dbAuth#webAuthn',
               default: false,
             },
             { enquirer: ctx.enquirer },
@@ -358,7 +358,7 @@ const tasks = ({
       {
         title: 'Generate types...',
         task: () => {
-          execa.commandSync('yarn rw g types')
+          execa.commandSync('yarn cedar g types')
         },
       },
       {

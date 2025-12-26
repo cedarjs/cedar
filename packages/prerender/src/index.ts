@@ -1,1 +1,1 @@
-export * from './runPrerender'
+export * from './runPrerender.js'

@@ -3,9 +3,10 @@ import path from 'path'
 import fs from 'fs-extra'
 import { terminalLink } from 'termi-link'
 
-import * as apiServerCLIConfig from '@cedarjs/api-server/dist/apiCLIConfig.js'
-import * as bothServerCLIConfig from '@cedarjs/api-server/dist/bothCLIConfig.js'
+import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
+import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 import c from '../lib/colors.js'
@@ -47,7 +48,14 @@ export const builder = async (yargs) => {
           )
           await bothSsrRscServerHandler(argv, rscEnabled)
         } else {
-          await bothServerCLIConfig.handler(argv)
+          if (!projectIsEsm()) {
+            const { handler } = await import(
+              '@cedarjs/api-server/cjs/bothCliConfigHandler'
+            )
+            await handler(argv)
+          } else {
+            await bothServerCLIConfig.handler(argv)
+          }
         }
       },
     })
@@ -69,7 +77,14 @@ export const builder = async (yargs) => {
           const { apiServerFileHandler } = await import('./serveApiHandler.js')
           await apiServerFileHandler(argv)
         } else {
-          await apiServerCLIConfig.handler(argv)
+          if (!projectIsEsm()) {
+            const { handler } = await import(
+              '@cedarjs/api-server/cjs/apiCliConfigHandler'
+            )
+            await handler(argv)
+          } else {
+            await apiServerCLIConfig.handler(argv)
+          }
         }
       },
     })
@@ -89,6 +104,8 @@ export const builder = async (yargs) => {
         if (streamingEnabled) {
           await webSsrServerHandler(rscEnabled)
         } else {
+          // @cedarjs/web-server is still built as CJS only, so we don't need
+          // the same solution here as we do for the api side
           await webServerCLIConfig.handler(argv)
         }
       },
@@ -107,7 +124,7 @@ export const builder = async (yargs) => {
       ) {
         console.error(
           c.error(
-            '\n Please run `yarn rw build web` before trying to serve web. \n',
+            '\n Please run `yarn cedar build web` before trying to serve web. \n',
           ),
         )
         process.exit(1)
@@ -127,7 +144,7 @@ export const builder = async (yargs) => {
         if (!fs.existsSync(path.join(getPaths().api.dist))) {
           console.error(
             c.error(
-              '\n Please run `yarn rw build api` before trying to serve api. \n',
+              '\n Please run `yarn cedar build api` before trying to serve api. \n',
             ),
           )
           process.exit(1)
@@ -139,7 +156,7 @@ export const builder = async (yargs) => {
         if (!apiSideExists && !rscEnabled) {
           console.error(
             c.error(
-              '\n Unable to serve the both sides as no `api` folder exists. Please use `yarn rw serve web` instead. \n',
+              '\n Unable to serve the both sides as no `api` folder exists. Please use `yarn cedar serve web` instead. \n',
             ),
           )
           process.exit(1)
@@ -153,7 +170,7 @@ export const builder = async (yargs) => {
         ) {
           console.error(
             c.error(
-              '\n Please run `yarn rw build` before trying to serve your redwood app. \n',
+              '\n Please run `yarn cedar build` before trying to serve your redwood app. \n',
             ),
           )
           process.exit(1)
@@ -167,8 +184,8 @@ export const builder = async (yargs) => {
     })
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#serve',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#serve',
       )}`,
     )
 }

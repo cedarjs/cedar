@@ -1,8 +1,6 @@
-import path from 'path'
-
+import ansis from 'ansis'
 import boxen from 'boxen'
 import camelcase from 'camelcase'
-import chalk from 'chalk'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -10,18 +8,13 @@ import { generate as generateTypes } from '@cedarjs/internal/dist/generate/gener
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+import { pluralize } from '../../../lib/cedarPluralize.js'
 import c from '../../../lib/colors.js'
-import {
-  generateTemplate,
-  transformTSToJS,
-  getPaths,
-  writeFilesTask,
-} from '../../../lib/index.js'
+import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
 import {
   prepareForRollback,
   addFunctionToRollback,
 } from '../../../lib/rollback.js'
-import { pluralize } from '../../../lib/rwPluralize.js'
 import {
   getSchema,
   getEnum,
@@ -29,19 +22,19 @@ import {
 } from '../../../lib/schemaHelpers.js'
 import { relationsForModel } from '../helpers.js'
 import { files as serviceFiles } from '../service/serviceHandler.js'
-import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
+import { templateForFile } from '../yargsHandlerHelpers.js'
 
 const DEFAULT_IGNORE_FIELDS_FOR_INPUT = ['createdAt', 'updatedAt']
 
 const missingIdConsoleMessage = () => {
   const line1 =
-    chalk.bold.yellow('WARNING') +
+    ansis.bold.yellow('WARNING') +
     ': Cannot generate CRUD SDL without an `@id` database column.'
   const line2 = 'If you are trying to generate for a many-to-many join table '
   const line3 = "you'll need to update your schema definition to include"
   const line4 = 'an `@id` column. Read more here: '
-  const line5 = chalk.underline.blue(
-    'https://redwoodjs.com/docs/schema-relations',
+  const line5 = ansis.underline.blue(
+    'https://cedarjs.com/docs/schema-relations',
   )
 
   console.error(
@@ -219,49 +212,22 @@ export const files = async ({
   tests,
   typescript,
 }) => {
-  const {
-    modelName,
-    modelDescription,
-    query,
-    createInput,
-    updateInput,
-    idInput,
-    idType,
-    idName,
-    relations,
-    enums,
-  } = await sdlFromSchemaModel(name, crud, docs)
+  const extension = typescript ? 'ts' : 'js'
+  const sdlData = await sdlFromSchemaModel(name, crud, docs)
 
-  const templatePath = customOrDefaultTemplatePath({
+  const [outputPath, content] = await templateForFile({
+    name,
     side: 'api',
+    sidePathSection: 'graphql',
     generator: 'sdl',
     templatePath: 'sdl.ts.template',
+    templateVars: { docs, name, crud, ...sdlData },
+    outputPath: `${camelcase(pluralize(name))}.sdl.${extension}`,
   })
 
-  let template = await generateTemplate(templatePath, {
-    docs,
-    modelName,
-    modelDescription,
-    name,
-    crud,
-    query,
-    createInput,
-    updateInput,
-    idInput,
-    idType,
-    idName,
-    enums,
-  })
-
-  const extension = typescript ? 'ts' : 'js'
-  let outputPath = path.join(
-    getPaths().api.graphql,
-    `${camelcase(pluralize(name))}.sdl.${extension}`,
-  )
-
-  if (typescript) {
-    template = await transformTSToJS(outputPath, template)
-  }
+  const template = typescript
+    ? content
+    : await transformTSToJS(outputPath, content)
 
   return {
     [outputPath]: template,
@@ -269,7 +235,7 @@ export const files = async ({
       name,
       crud,
       tests,
-      relations,
+      relations: sdlData.relations,
       typescript,
     })),
   }

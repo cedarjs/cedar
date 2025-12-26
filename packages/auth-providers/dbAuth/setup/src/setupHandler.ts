@@ -112,7 +112,7 @@ async function shouldIncludeWebAuthn(webauthn: boolean | null) {
     const webAuthnResponse = await prompts({
       type: 'confirm',
       name: 'answer',
-      message: `Enable WebAuthn support (TouchID/FaceID)? See https://redwoodjs.com/docs/auth/dbAuth#webAuthn`,
+      message: `Enable WebAuthn support (TouchID/FaceID)? See https://cedarjs.com/docs/auth/dbAuth#webAuthn`,
       initial: false,
     })
 

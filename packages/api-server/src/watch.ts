@@ -1,8 +1,11 @@
 import path from 'path'
 
-import chalk from 'chalk'
+// See https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 import chokidar from 'chokidar'
-import dotenv from 'dotenv'
+import { config } from 'dotenv-defaults'
 
 import {
   buildApi,
@@ -10,19 +13,18 @@ import {
   rebuildApi,
 } from '@cedarjs/internal/dist/build/api'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
-import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
+import { ensurePosixPath, getPaths, getDbDir } from '@cedarjs/project-config'
 
-import type { BuildAndRestartOptions } from './buildManager'
-import { BuildManager } from './buildManager'
-import { serverManager } from './serverManager'
+import type { BuildAndRestartOptions } from './buildManager.js'
+import { BuildManager } from './buildManager.js'
+import { serverManager } from './serverManager.js'
 
-const rwjsPaths = getPaths()
+const cedarPaths = getPaths()
 
 if (!process.env.REDWOOD_ENV_FILES_LOADED) {
-  dotenv.config({
-    path: path.join(rwjsPaths.base, '.env'),
-    // @ts-expect-error The types for dotenv-defaults are using an outdated version of dotenv
-    defaults: path.join(rwjsPaths.base, '.env.defaults'),
+  config({
+    path: path.join(cedarPaths.base, '.env'),
+    defaults: path.join(cedarPaths.base, '.env.defaults'),
     multiline: true,
   })
 
@@ -31,7 +33,7 @@ if (!process.env.REDWOOD_ENV_FILES_LOADED) {
 
 async function buildAndServe(options: BuildAndRestartOptions) {
   const buildTs = Date.now()
-  console.log(chalk.dim.italic('Building...'))
+  console.log(ansis.dim.italic('Building...'))
 
   if (options.clean) {
     await cleanApiBuild()
@@ -45,7 +47,7 @@ async function buildAndServe(options: BuildAndRestartOptions) {
 
   await serverManager.restartApiServer()
 
-  console.log(chalk.dim.italic('Took ' + (Date.now() - buildTs) + ' ms'))
+  console.log(ansis.dim.italic('Took ' + (Date.now() - buildTs) + ' ms'))
 }
 
 const buildManager = new BuildManager(buildAndServe)
@@ -57,59 +59,71 @@ async function validateSdls() {
   } catch (e: any) {
     serverManager.killApiServer()
     console.error(
-      chalk.redBright(`[GQL Server Error] - Schema validation failed`),
+      ansis.redBright(`[GQL Server Error] - Schema validation failed`),
     )
-    console.error(chalk.red(e?.message))
-    console.error(chalk.redBright('-'.repeat(40)))
+    console.error(ansis.red(e?.message))
+    console.error(ansis.redBright('-'.repeat(40)))
 
     buildManager.cancelScheduledBuild()
     return false
   }
 }
 
-// NOTE: the file comes through as a unix path, even on windows
-// So we need to convert the rwjsPaths
+/**
+ * Initialize the file watcher for the API server
+ * Watches for changes in the API source directory and rebuilds/restarts as
+ * needed
+ */
+export async function startWatch() {
+  const dbDir = await getDbDir(cedarPaths.api.prismaConfig)
 
-const IGNORED_API_PATHS = [
-  'api/dist', // use this, because using rwjsPaths.api.dist seems to not ignore on first build
-  rwjsPaths.api.types,
-  rwjsPaths.api.db,
-].map((path) => ensurePosixPath(path))
+  // NOTE: the file with a detected change comes through as a unix path, even on
+  // windows. So we need to convert the cedarPaths
+  const ignoredApiPaths = [
+    // use this, because using cedarPaths.api.dist seems to not ignore on first
+    // build
+    'api/dist',
+    cedarPaths.api.types,
+    dbDir,
+  ].map((path) => ensurePosixPath(path))
+  const ignoredExtensions = [
+    '.DS_Store',
+    '.db',
+    '.sqlite',
+    '-journal',
+    '.test.js',
+    '.test.ts',
+    '.scenarios.ts',
+    '.scenarios.js',
+    '.d.ts',
+    '.log',
+  ]
 
-chokidar
-  .watch([rwjsPaths.api.src], {
+  const watcher = chokidar.watch([cedarPaths.api.src], {
     persistent: true,
     ignoreInitial: true,
     ignored: (file: string) => {
-      const x =
+      const shouldIgnore =
         file.includes('node_modules') ||
-        IGNORED_API_PATHS.some((ignoredPath) => file.includes(ignoredPath)) ||
-        [
-          '.DS_Store',
-          '.db',
-          '.sqlite',
-          '-journal',
-          '.test.js',
-          '.test.ts',
-          '.scenarios.ts',
-          '.scenarios.js',
-          '.d.ts',
-          '.log',
-        ].some((ext) => file.endsWith(ext))
-      return x
+        ignoredApiPaths.some((ignoredPath) => file.includes(ignoredPath)) ||
+        ignoredExtensions.some((ext) => file.endsWith(ext))
+
+      return shouldIgnore
     },
   })
-  .on('ready', async () => {
+
+  watcher.on('ready', async () => {
     // First time
     await buildManager.run({ clean: true, rebuild: false })
     await validateSdls()
   })
-  .on('all', async (eventName, filePath) => {
+
+  watcher.on('all', async (eventName, filePath) => {
     // On sufficiently large projects (500+ files, or >= 2000 ms build times) on older machines,
     // esbuild writing to the api directory makes chokidar emit an `addDir` event.
     // This starts an infinite loop where the api starts building itself as soon as it's finished.
     // This could probably be fixed with some sort of build caching
-    if (eventName === 'addDir' && filePath === rwjsPaths.api.base) {
+    if (eventName === 'addDir' && filePath === cedarPaths.api.base) {
       return
     }
 
@@ -127,10 +141,11 @@ chokidar
     }
 
     console.log(
-      chalk.dim(`[${eventName}] ${filePath.replace(rwjsPaths.api.base, '')}`),
+      ansis.dim(`[${eventName}] ${filePath.replace(cedarPaths.api.base, '')}`),
     )
 
     buildManager.cancelScheduledBuild()
+
     if (eventName === 'add' || eventName === 'unlink') {
       await buildManager.run({ rebuild: false })
     } else {
@@ -138,3 +153,9 @@ chokidar
       await buildManager.run({ rebuild: true })
     }
   })
+}
+
+// For ESM we'll wrap this in a check to only execute this function if
+// the file is run as a script using
+// `import.meta.url === `file://${process.argv[1]}``
+startWatch()

@@ -42,7 +42,7 @@ exports[`Multi word default files > creates a multi word layout test 1`] = `
 import SinglePageLayout from './SinglePageLayout'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('SinglePageLayout', () => {
   it('renders successfully', () => {
@@ -95,7 +95,7 @@ exports[`Single Word default files > creates a single word layout test 1`] = `
 import AppLayout from './AppLayout'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('AppLayout', () => {
   it('renders successfully', () => {

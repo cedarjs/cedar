@@ -1,19 +1,18 @@
-import { vol } from 'memfs'
-import yargs from 'yargs/yargs'
+import { vol, fs as memfs } from 'memfs'
+import { vi, expect, describe, it } from 'vitest'
+import yargs from 'yargs'
 
 import { getPaths } from '@cedarjs/project-config'
 
 import * as upCommand from '../commands/up'
 import { handler as dataMigrateUpHandler } from '../commands/upHandler.js'
 
-jest.mock('fs', () => require('memfs').fs)
-jest.mock(
-  '../commands/upHandler.js',
-  () => ({
-    handler: jest.fn(),
-  }),
-  { virtual: true },
-)
+vi.mock('fs', async () => ({ ...memfs, default: memfs }))
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
+
+vi.mock('../commands/upHandler.js', () => ({
+  handler: vi.fn(),
+}))
 
 describe('up', () => {
   it('exports `command`, `description`, `builder`, and `handler`', () => {
@@ -30,6 +29,7 @@ describe('up', () => {
     vol.fromNestedJSON(
       {
         'redwood.toml': '',
+        'package.json': '{}',
         api: {
           dist: {},
         },
@@ -39,14 +39,17 @@ describe('up', () => {
 
     process.env.RWJS_CWD = '/redwood-app'
 
-    const { argv } = upCommand.builder(yargs)
+    const { argv } = upCommand.builder(yargs())
 
     expect(argv).toHaveProperty('import-db-client-from-dist', false)
     expect(argv).toHaveProperty('dist-path', getPaths().api.dist)
   })
 
   it('`handler` proxies to `./upHandler.js`', async () => {
-    await upCommand.handler({})
+    await upCommand.handler({
+      importDbClientFromDist: false,
+      distPath: '',
+    })
     expect(dataMigrateUpHandler).toHaveBeenCalled()
   })
 })

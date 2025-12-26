@@ -8,7 +8,7 @@
 ## Purpose and Vision
 
 Build-time prerender for pages that don't have dynamic content. See:  
-https://redwoodjs.com/docs/prerender
+https://cedarjs.com/docs/prerender
 
 ## Package Leads
 

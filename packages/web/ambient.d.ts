@@ -1,6 +1,6 @@
 /* eslint-disable no-var */
 import type { NormalizedCacheObject } from '@apollo/client'
-import type { HelmetServerState } from 'react-helmet-async'
+import type { HelmetServerState } from '@dr.pogodin/react-helmet'
 
 declare global {
   var __REDWOOD__PRERENDERING: boolean

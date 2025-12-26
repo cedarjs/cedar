@@ -10,16 +10,16 @@ import {
   fileToAst,
   getDefaultExportLocation,
   getNamedExports,
-} from '../ast'
-import { findCells, findDirectoryNamedModules } from '../files'
-import { parseGqlQueryToAst } from '../gql'
-import { getJsxElements } from '../jsx'
+} from '../ast.js'
+import { findCells, findDirectoryNamedModules } from '../files.js'
+import { parseGqlQueryToAst } from '../gql.js'
+import { getJsxElements } from '../jsx.js'
 
 import {
   generateTypeDefGraphQLApi,
   generateTypeDefGraphQLWeb,
-} from './graphqlCodeGen'
-import { writeTemplate } from './templates'
+} from './graphqlCodeGen.js'
+import { writeTemplate } from './templates.js'
 
 // TODO:
 // Common return format for CLI output:
@@ -40,8 +40,8 @@ import { writeTemplate } from './templates'
 // file.
 
 /**
- * Generate all the types for a RedwoodJS project
- * and return the generated path to files, so they're logged
+ * Generate all the types for a CedarJS project and return the generated path to
+ * files, so they're logged
  */
 export const generateTypeDefs = async () => {
   // Return all the paths so they can be printed
@@ -379,6 +379,7 @@ export const generateTypeDefGlobImports = () => {
 export const generateTypeDefGlobalContext = () => {
   return writeTypeDefIncludeFile('api-globalContext.d.ts.template')
 }
+
 /**
  * Typescript does not preserve triple slash directives when outputting js or d.ts files.
  * This is a work around so that *.svg, *.png, etc. imports have types.

@@ -1,16 +1,16 @@
 export * from '@cedarjs/project-config'
 
-export * from './ts2js'
-export * from './dev'
-export * from './routes'
+export * from './ts2js.js'
+export * from './dev.js'
+export * from './routes.js'
 
-export * from './files'
-export { generate } from './generate/generate'
-export { buildApi } from './build/api'
+export * from './files.js'
+export { generate } from './generate/generate.js'
+export { buildApi } from './build/api.js'
 
-export * from './validateSchema'
+export * from './validateSchema.js'
 
 // Babel helpers
 export * from '@cedarjs/babel-config'
 
-export { listQueryTypeFieldsInProject } from './gql'
+export { listQueryTypeFieldsInProject } from './gql.js'

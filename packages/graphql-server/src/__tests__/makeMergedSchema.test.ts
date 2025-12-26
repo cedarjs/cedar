@@ -1,19 +1,19 @@
 import type { GraphQLResolveInfo } from 'graphql'
 import { parse, graphql, GraphQLError } from 'graphql'
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { vi, describe, expect, it } from 'vitest'
 
 import {
   makeDirectivesForPlugin,
   createTransformerDirective,
   createValidatorDirective,
-} from '../directives/makeDirectives'
-import { makeMergedSchema } from '../makeMergedSchema'
+} from '../directives/makeDirectives.js'
+import { makeMergedSchema } from '../makeMergedSchema.js'
 import type {
   GraphQLTypeWithFields,
   ServicesGlobImports,
   SdlGlobImports,
-} from '../types'
+} from '../types.js'
 
 vi.mock('@cedarjs/project-config', () => {
   return {

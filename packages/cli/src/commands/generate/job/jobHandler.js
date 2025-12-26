@@ -16,7 +16,7 @@ import {
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
-import { templateForComponentFile } from '../yargsHandlerHelpers.js'
+import { templateForFile } from '../yargsHandlerHelpers.js'
 
 // Try to make the name end up looking like: `WelcomeNotice` even if the user
 // called it `welcome-notice` or `welcomeNoticeJob` or something like that
@@ -27,62 +27,55 @@ const normalizeName = (name) => {
 export const files = async ({
   name,
   queueName,
-  typescript: generateTypescript,
+  typescript,
   tests: generateTests = true,
   ...rest
 }) => {
-  const extension = generateTypescript ? '.ts' : '.js'
+  // TODO: Fix the two TODOs below, and update tests to reflect the fact that
+  // jobs are camelCase instead of PascalCase, which I prefer
 
-  const outputFiles = []
-
+  // TODO: Make this use camelCase
   const jobName = normalizeName(name)
+  const componentName = `${jobName}Job`
+  const extension = typescript ? '.ts' : '.js'
 
-  const jobFiles = await templateForComponentFile({
+  const jobFiles = await templateForFile({
     name: jobName,
-    componentName: jobName,
-    extension,
-    apiPathSection: 'jobs',
+    side: 'api',
+    sidePathSection: 'jobs',
     generator: 'job',
+    outputPath: path.join(componentName, componentName + extension),
     templatePath: 'job.ts.template',
+    // TODO: Remove `name` here. It's already passed to the template by the
+    // helper function we're using
     templateVars: { name: jobName, queueName, ...rest },
-    outputPath: path.join(
-      getPaths().api.jobs,
-      `${jobName}Job`,
-      `${jobName}Job${extension}`,
-    ),
   })
 
+  const outputFiles = []
   outputFiles.push(jobFiles)
 
   if (generateTests) {
-    const testFile = await templateForComponentFile({
+    const testFile = await templateForFile({
       name: jobName,
-      componentName: jobName,
-      extension,
-      apiPathSection: 'jobs',
+      side: 'api',
+      sidePathSection: 'jobs',
       generator: 'job',
+      outputPath: path.join(componentName, componentName + `.test${extension}`),
       templatePath: 'test.ts.template',
       templateVars: { ...rest },
-      outputPath: path.join(
-        getPaths().api.jobs,
-        `${jobName}Job`,
-        `${jobName}Job.test${extension}`,
-      ),
     })
 
-    const scenarioFile = await templateForComponentFile({
+    const scenarioFile = await templateForFile({
       name: jobName,
-      componentName: jobName,
-      extension,
-      apiPathSection: 'jobs',
+      side: 'api',
+      sidePathSection: 'jobs',
       generator: 'job',
+      outputPath: path.join(
+        componentName,
+        componentName + `.scenarios${extension}`,
+      ),
       templatePath: 'scenarios.ts.template',
       templateVars: { ...rest },
-      outputPath: path.join(
-        getPaths().api.jobs,
-        `${jobName}Job`,
-        `${jobName}Job.scenarios${extension}`,
-      ),
     })
 
     outputFiles.push(testFile)
@@ -92,7 +85,7 @@ export const files = async ({
   return outputFiles.reduce(async (accP, [outputPath, content]) => {
     const acc = await accP
 
-    const template = generateTypescript
+    const template = typescript
       ? content
       : await transformTSToJS(outputPath, content)
 
@@ -125,24 +118,26 @@ export const handler = async ({ name, force, ...rest }) => {
     // We don't care if this fails because we'll fall back to 'default'
   }
 
+  let jobFiles = {}
   const tasks = new Listr(
     [
       {
         title: 'Generating job files...',
         task: async () => {
-          const jobFiles = await files({ name, queueName, ...rest })
+          jobFiles = await files({ name, queueName, ...rest })
           return writeFilesTask(jobFiles, { overwriteExisting: force })
         },
       },
       {
         title: 'Cleaning up...',
         task: () => {
-          execa.commandSync('yarn', [
+          execa.sync('yarn', [
             'eslint',
             '--fix',
             '--config',
             `${getPaths().base}/node_modules/@cedarjs/eslint-config/shared.js`,
             `${getPaths().api.jobsConfig}`,
+            ...Object.keys(jobFiles),
           ])
         },
       },

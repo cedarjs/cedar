@@ -234,6 +234,7 @@ describe('test params escaping', () => {
 
   const TestRouter = () => (
     <Router>
+      <Route path="/" page={HomePage} name="home" />
       <Route path="/redirect2/{value}" redirect="/param-test/{value}" />
       <Route path="/param-test/{value}" page={ParamPage} name="params" />
       <Route notfound page={NotFoundPage} />
@@ -337,6 +338,7 @@ describe('query params should not override path params', () => {
 
   const TestRouter = () => (
     <Router>
+      <Route path="/" page={HomePage} name="home" />
       <Route
         path="/user/{id:Int}/contact/{contactId:Int}"
         page={ParamPage}
@@ -1128,8 +1130,8 @@ test('params should be updated if navigated to different route with same page', 
     </Router>
   )
 
-  const screen = render(<TestRouter />)
   act(() => navigate('/user'))
+  const screen = render(<TestRouter />)
   // Wait for page load
   await waitFor(() => screen.getByText('param no-id'))
   act(() => navigate('/user/99'))
@@ -1152,8 +1154,8 @@ test('should handle ref and key as search params', async () => {
     </Router>
   )
 
-  const screen = render(<TestRouter />)
   act(() => navigate('/params?ref=1&key=2'))
+  const screen = render(<TestRouter />)
 
   await waitFor(() => {
     expect(screen.queryByText(`{"ref":"1","key":"2"}`)).toBeInTheDocument()

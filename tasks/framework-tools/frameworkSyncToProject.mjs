@@ -15,8 +15,8 @@ import yargs from 'yargs/yargs'
 import {
   getPackageName,
   resolvePackageJsonPathFromFilePath,
-  REDWOOD_FRAMEWORK_PATH,
-  REDWOOD_PACKAGES_PATH,
+  CEDAR_FRAMEWORK_PATH,
+  CEDAR_PACKAGES_PATH,
 } from './lib/framework.mjs'
 import {
   addDependenciesToPackageJson,
@@ -104,7 +104,7 @@ async function main() {
     logStatus('Cleaning the Redwood framework...')
     execSync('yarn build:clean', {
       stdio: options.verbose ? 'inherit' : 'pipe',
-      cwd: REDWOOD_FRAMEWORK_PATH,
+      cwd: CEDAR_FRAMEWORK_PATH,
     })
   }
 
@@ -113,7 +113,7 @@ async function main() {
       logStatus('Building the Redwood framework...')
       execSync('yarn build', {
         stdio: options.verbose ? 'inherit' : 'pipe',
-        cwd: REDWOOD_FRAMEWORK_PATH,
+        cwd: CEDAR_FRAMEWORK_PATH,
       })
       console.log()
     } catch (e) {
@@ -212,7 +212,7 @@ async function main() {
   logStatus('Waiting for changes')
   console.log(separator)
 
-  const watcher = chokidar.watch(REDWOOD_PACKAGES_PATH, {
+  const watcher = chokidar.watch(CEDAR_PACKAGES_PATH, {
     ignored,
     // We don't want chokidar to emit events as it discovers paths, only as they change.
     ignoreInitial: true,
@@ -255,7 +255,7 @@ async function main() {
         [
           `${c.red('Warning:')} You modified a package.json file.`,
           `If you've modified the ${c.underline('dependencies')}`,
-          `then you must run ${c.underline('yarn rwfw project:sync')} again.`,
+          `then you must run ${c.underline('yarn cfw project:sync')} again.`,
         ].join(' '),
       )
     }
@@ -305,14 +305,14 @@ async function main() {
  * @param {string} m
  */
 function logStatus(m) {
-  console.log(c.bgYellow(c.black('rwfw ')), c.yellow(m))
+  console.log(c.bgYellow(c.black('cfw ')), c.yellow(m))
 }
 
 /**
  * @param {string} m
  */
 function logError(m) {
-  console.error(c.bgRed(c.black('rwfw ')), c.red(m))
+  console.error(c.bgRed(c.black('cfw ')), c.red(m))
 }
 
 function createCleanUp({

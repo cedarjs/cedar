@@ -1,6 +1,6 @@
 import { getDirectiveName } from '@cedarjs/testing/api'
 
-import skipAuth from './skipAuth'
+import skipAuth from './skipAuth.js'
 
 describe('skipAuth directive', () => {
   it('declares the directive sdl as schema, with the correct name', () => {

@@ -7,7 +7,9 @@ import { getConfig, getPaths } from '@cedarjs/project-config'
 // @MARK: have to do this, otherwise rwjs/web is loaded before shims
 import { getOperationName } from '@cedarjs/web/dist/graphql.js'
 
-import { GqlHandlerImportError } from '../errors'
+import { GqlHandlerImportError } from '../errors.js'
+
+export type FileImporter = (path: string) => Promise<any>
 
 interface GqlOperation {
   operationName: string
@@ -21,11 +23,11 @@ interface GqlOperation {
  * And execute the query against it
  *
  * Note that this function does NOT throw errors, even when
- * there is a GraphQL error. Instead, it returns the result with the graphql error.
- *
- * @returns {Promise<QueryResult>}
+ * there is a GraphQL error. Instead, it returns the result with the graphql
+ * error.
  */
 export async function executeQuery(
+  fileImporter: FileImporter,
   gqlHandler: (args: any) => Promise<any>,
   query: DocumentNode,
   variables?: Record<string, unknown>,
@@ -45,7 +47,8 @@ export async function executeQuery(
   // generated on the web side)
   if (config.graphql.trustedDocuments) {
     const documentsPath = path.join(getPaths().web.graphql, 'graphql')
-    const documents: Record<string, any> | undefined = require(documentsPath)
+    const documents: Record<string, any> | undefined =
+      await fileImporter(documentsPath)
     const documentName =
       operationName[0].toUpperCase() + operationName.slice(1) + 'Document'
     const queryHash = documents?.[documentName]?.__meta__?.hash
@@ -70,11 +73,11 @@ export async function executeQuery(
  *
  * Throws GqlHandlerImportError, so that we can warn the user (but not blow up)
  */
-export async function getGqlHandler() {
+export async function getGqlHandler(fileImporter: FileImporter) {
   const gqlPath = path.join(getPaths().api.functions, 'graphql')
 
   try {
-    const { handler } = require(gqlPath)
+    const { handler } = await fileImporter(gqlPath)
 
     return async (operation: Record<string, unknown>) => {
       return await handler(buildApiEvent(operation), buildContext())

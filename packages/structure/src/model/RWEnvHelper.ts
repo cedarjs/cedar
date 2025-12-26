@@ -7,6 +7,8 @@ import type * as tsm from 'ts-morph'
 import type { Location } from 'vscode-languageserver'
 import { DiagnosticSeverity, Range } from 'vscode-languageserver'
 
+import { getSchemaPath } from '@cedarjs/project-config'
+
 import type { CodeLensX, Definition, HoverX, Reference } from '../ide'
 import { BaseNode } from '../ide'
 import { lazy } from '../x/decorators'
@@ -105,12 +107,11 @@ export class RWEnvHelper extends BaseNode {
     )
   }
 
-  children() {
-    return [...this.process_env_expressions]
+  async children() {
+    return [...(await this.process_env_expressions())]
   }
 
-  @lazy() get process_env_expressions() {
-    // TODO: make this async (this is globbing around quite a bit)
+  async process_env_expressions() {
     const { pathHelper } = this.parent
     const api = process_env_findAll(pathHelper.api.base).map(
       (x) => new ProcessDotEnvExpression(this, 'api', x.key, x.node),
@@ -118,9 +119,8 @@ export class RWEnvHelper extends BaseNode {
     const web = process_env_findAll(pathHelper.web.base).map(
       (x) => new ProcessDotEnvExpression(this, 'web', x.key, x.node),
     )
-    const prisma = Array.from(
-      prisma_parseEnvExpressionsInFile(pathHelper.api.dbSchema),
-    )
+    const schemaPath = await getSchemaPath(pathHelper.api.prismaConfig)
+    const prisma = Array.from(prisma_parseEnvExpressionsInFile(schemaPath))
     const pp = prisma.map(
       (x) => new ProcessDotEnvExpression(this, 'prisma', x.key, x.location),
     )

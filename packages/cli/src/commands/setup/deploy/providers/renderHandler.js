@@ -21,7 +21,7 @@ import {
   SQLITE_YAML,
 } from '../templates/render.js'
 
-const { getSchema, getConfig } = prismaInternals
+const { getSchemaWithPath, getConfig } = prismaInternals
 
 const getRenderYamlContent = async (database) => {
   if (database === 'none') {
@@ -34,8 +34,8 @@ const getRenderYamlContent = async (database) => {
     throw new Error("Could not find prisma schema at 'api/db/schema.prisma'")
   }
 
-  const schema = await getSchema('api/db/schema.prisma')
-  const config = await getConfig({ datamodel: schema })
+  const { schemas } = await getSchemaWithPath('api/db/schema.prisma')
+  const config = await getConfig({ datamodel: schemas })
   const detectedDatabase = config.datasources[0].activeProvider
 
   if (detectedDatabase === database) {
@@ -59,11 +59,11 @@ const getRenderYamlContent = async (database) => {
     Prisma datasource provider is detected to be ${detectedDatabase}.
 
     Option 1: Update your schema.prisma provider to be ${database}, then run
-    yarn rw prisma migrate dev
-    yarn rw setup deploy render --database ${database}
+    yarn cedar prisma migrate dev
+    yarn cedar setup deploy render --database ${database}
 
     Option 2: Rerun setup deploy command with current schema.prisma provider:
-    yarn rw setup deploy render --database ${detectedDatabase}`)
+    yarn cedar setup deploy render --database ${detectedDatabase}`)
   }
 }
 

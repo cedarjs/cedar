@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs'
 
-import type { APIParsedOptions } from './types'
+import type { APIParsedOptions } from './types.js'
 
 export const description = 'Start a server for serving the api side'
 
@@ -13,7 +13,8 @@ export function builder(yargs: Argv<APIParsedOptions>) {
     },
     host: {
       description:
-        "The host to listen at. Note that you most likely want this to be '0.0.0.0' in production",
+        'The host to listen at. Note that you most likely want this to be ' +
+        "'0.0.0.0' in production",
       type: 'string',
     },
     apiRootPath: {

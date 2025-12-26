@@ -11,6 +11,8 @@ import {
   processPagesDir,
 } from '@cedarjs/project-config'
 
+import { dedent } from './utils.js'
+
 export interface PluginOptions {
   forPrerender?: boolean
 }
@@ -36,27 +38,7 @@ function withRelativeImports(page: PagesDependency) {
   }
 }
 
-function prerenderLoaderImpl(forPrerender: boolean, relativeImport: string) {
-  if (forPrerender) {
-    return `require('./${relativeImport.split('/').at(-1)}-__PRERENDER_CHUNK_ID.js')`
-    // return `import('${relativeImport}')`
-    // return `require('${relativeImport}')`
-  }
-
-  // This code will be output when building the web side (i.e. not when
-  // prerendering)
-  // active-route-loader will use this code for auto-imported pages, for the
-  // first load of a prerendered page
-  // Manually imported pages will be bundled in the main bundle and will be
-  // loaded by the code in `normalizePage` in util.ts
-  return `({
-    default: globalThis.__REDWOOD__PRERENDER_PAGES[name]
-  })`
-}
-
-export function cedarjsRoutesAutoLoaderPlugin({
-  forPrerender = false,
-}: PluginOptions = {}): Plugin {
+export function cedarjsRoutesAutoLoaderPlugin(): Plugin {
   // @NOTE: This var gets mutated inside the transform function
   let pages = processPagesDir().map(withRelativeImports)
 
@@ -81,7 +63,7 @@ export function cedarjsRoutesAutoLoaderPlugin({
     )
   }
 
-  const filter = createFilter(['**/Routes.{tsx,jsx,js,ts}'])
+  const filter = createFilter(['**/src/Routes.{tsx,jsx,js}'])
 
   return {
     name: 'cedarjs-routes-auto-loader',
@@ -178,20 +160,24 @@ export function cedarjsRoutesAutoLoaderPlugin({
       // Generate declarations for each page
       for (const { importName, relativeImport } of currentPages) {
         // Skip any explicitly imported pages
-        if (importName === 'FooPage' || excludedPages.has(importName)) {
+        if (excludedPages.has(importName)) {
           continue
         }
 
-        const declaration = `const ${importName} = {
-  name: "${importName}",
-  prerenderLoader: (name) => ${prerenderLoaderImpl(forPrerender, relativeImport)},
-  LazyComponent: lazy(() => import("${relativeImport}"))
-}`
+        imports.push(
+          `import __cedarjs_prerender__${importName} from '${relativeImport}';`,
+        )
+        const declaration = dedent(8)`const ${importName} = {
+          name: "${importName}",
+          prerenderLoader: (name) => ({ default: __cedarjs_prerender__${importName} }),
+          LazyComponent: lazy(() => import("${relativeImport}"))
+        }`
         declarations.push(declaration)
       }
 
       // Prepend the imports and declarations to the code
-      const autoLoaderCode = [...imports, ...declarations].join('\n\n')
+      const autoLoaderCode =
+        imports.join('\n') + '\n\n' + declarations.join('\n\n')
       const finalCode = `${autoLoaderCode}\n\n${code}`
 
       return {

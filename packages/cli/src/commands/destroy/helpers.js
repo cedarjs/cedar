@@ -13,8 +13,12 @@ export const createYargsForComponentDestroy = ({ componentName }) => {
 
 export function createHandler(componentName) {
   return async (argv) => {
-    const importedHandler = await import(`./${componentName}Handler.js`)
+    const importedHandler = await import(
+      `./${componentName}/${componentName}Handler.js`
+    )
 
-    return importedHandler(argv)
+    const fn =
+      importedHandler.default ?? importedHandler.handler ?? importedHandler
+    return typeof fn === 'function' ? fn(argv) : fn
   }
 }

@@ -1,26 +1,23 @@
 import fs from 'fs'
 import path from 'path'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
-import { vi, beforeAll, afterAll, afterEach, test, expect } from 'vitest'
+import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
-import { generateGraphQLSchema } from '../generate/graphqlSchema'
+import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
   '../../../../__fixtures__/example-todo-main',
 )
 
-beforeAll(() => {
+beforeEach(() => {
   process.env.RWJS_CWD = FIXTURE_PATH
 })
 
-afterAll(() => {
-  delete process.env.RWJS_CWD
-})
-
 afterEach(() => {
+  delete process.env.RWJS_CWD
   vi.restoreAllMocks()
 })
 
@@ -43,7 +40,7 @@ test('Generates GraphQL schema', async () => {
 test('Includes live query directive if serverful and realtime ', async () => {
   const fixturePath = path.resolve(
     __dirname,
-    './fixtures/graphqlCodeGen/realtime',
+    './__fixtures__/graphqlCodeGen/realtime',
   )
   process.env.RWJS_CWD = fixturePath
 
@@ -62,7 +59,7 @@ test('Includes live query directive if serverful and realtime ', async () => {
 test('Returns error message when schema loading fails', async () => {
   const fixturePath = path.resolve(
     __dirname,
-    './fixtures/graphqlCodeGen/bookshelf',
+    './__fixtures__/graphqlCodeGen/bookshelf',
   )
   process.env.RWJS_CWD = fixturePath
 
@@ -75,22 +72,22 @@ test('Returns error message when schema loading fails', async () => {
       [
         'Schema loading failed. Unknown type: "Shelf".',
         '',
-        `  ${chalk.bgYellow(` ${chalk.black.bold('Heads up')} `)}`,
+        `  ${ansis.bgYellow(` ${ansis.black.bold('Heads up')} `)}`,
         '',
-        chalk.yellow(
+        ansis.yellow(
           `  It looks like you have a Shelf model in your Prisma schema.`,
         ),
-        chalk.yellow(
+        ansis.yellow(
           `  If it's part of a relation, you may have to generate SDL or scaffolding for Shelf too.`,
         ),
-        chalk.yellow(
+        ansis.yellow(
           `  So, if you haven't done that yet, ignore this error message and run the SDL or scaffold generator for Shelf now.`,
         ),
         '',
-        chalk.yellow(
+        ansis.yellow(
           `  See the ${terminalLink(
             'Troubleshooting Generators',
-            'https://redwoodjs.com/docs/schema-relations#troubleshooting-generators',
+            'https://cedarjs.com/docs/schema-relations#troubleshooting-generators',
           )} section in our docs for more help.`,
         ),
       ].join('\n'),
@@ -98,4 +95,31 @@ test('Returns error message when schema loading fails', async () => {
   } finally {
     delete process.env.RWJS_CWD
   }
+})
+
+test('Generates complete schema with directives and subscriptions while excluding test files', async () => {
+  const fixturePath = path.resolve(
+    __dirname,
+    './__fixtures__/graphqlCodeGen/testFilesExclusion',
+  )
+  process.env.RWJS_CWD = fixturePath
+
+  const expectedPath = path.join(fixturePath, '.redwood', 'schema.graphql')
+
+  let generatedSchema = ''
+  let writeFileSyncSchemaPath = ''
+
+  vi.spyOn(fs, 'writeFileSync').mockImplementation(
+    (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
+      writeFileSyncSchemaPath = file.toString()
+      generatedSchema = data.toString()
+    },
+  )
+
+  const { schemaPath, errors } = await generateGraphQLSchema()
+
+  expect(errors).toEqual([])
+  expect(schemaPath).toMatch(expectedPath)
+  expect(writeFileSyncSchemaPath).toMatch(expectedPath)
+  expect(generatedSchema).toMatchSnapshot()
 })

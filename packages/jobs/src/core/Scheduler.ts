@@ -61,18 +61,26 @@ export class Scheduler<TAdapter extends BaseAdapter> {
     const priority = job.priority ?? DEFAULT_PRIORITY
     const wait = options?.wait ?? DEFAULT_WAIT
     const waitUntil = options?.waitUntil ?? DEFAULT_WAIT_UNTIL
+    const cron = options?.cron
 
     if (!queue) {
       throw new QueueNotDefinedError()
+    }
+
+    if (cron && (wait || waitUntil)) {
+      throw new Error(
+        'Cannot schedule a cron job with wait or waitUntil options',
+      )
     }
 
     return {
       name: job.name,
       path: job.path,
       args: args ?? [],
+      cron,
       runAt: this.computeRunAt({ wait, waitUntil }),
-      queue: queue,
-      priority: priority,
+      queue,
+      priority,
     }
   }
 
@@ -91,14 +99,14 @@ export class Scheduler<TAdapter extends BaseAdapter> {
       options,
     })
 
-    this.logger.info(payload, `[RedwoodJob] Scheduling ${job.name}`)
+    this.logger.info(payload, `[CedarJS Jobs] Scheduling ${job.name}`)
 
     try {
       await this.adapter.schedule(payload)
       return true
     } catch (e) {
       throw new SchedulingError(
-        `[RedwoodJob] Exception when scheduling ${payload.name}`,
+        `[CedarJS Jobs] Exception when scheduling ${payload.name}`,
         e as Error,
       )
     }

@@ -13,13 +13,13 @@ import type { AuthContextPayload, Decoder } from '@cedarjs/api'
 import type { CorsConfig } from '@cedarjs/api'
 import type { RedwoodRealtimeOptions } from '@cedarjs/realtime'
 
-import type { DirectiveGlobImports } from './directives/makeDirectives'
+import type { DirectiveGlobImports } from './directives/makeDirectives.js'
 import type {
   useRedwoodDirectiveReturn,
   DirectivePluginOptions,
-} from './plugins/useRedwoodDirective'
-import type { LoggerConfig } from './plugins/useRedwoodLogger'
-import type { RedwoodTrustedDocumentOptions } from './plugins/useRedwoodTrustedDocuments'
+} from './plugins/useRedwoodDirective.js'
+import type { LoggerConfig } from './plugins/useRedwoodLogger.js'
+import type { RedwoodTrustedDocumentOptions } from './plugins/useRedwoodTrustedDocuments.js'
 
 export type Resolver = (...args: unknown[]) => unknown
 export type Services = {

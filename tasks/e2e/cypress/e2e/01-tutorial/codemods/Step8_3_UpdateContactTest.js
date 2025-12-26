@@ -7,7 +7,7 @@ import {
   createContact,
   updateContact,
   deleteContact,
-} from './contacts'
+} from './contacts.js'
 
 describe('contacts', () => {
   scenario('returns all contacts', async (scenario) => {

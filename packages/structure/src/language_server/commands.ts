@@ -102,7 +102,7 @@ export class CommandsManager {
       vscodeWindowMethods.createTerminal2({
         name: 'Redwood',
         cwd,
-        cmd: 'yarn redwood ' + cmd.processed,
+        cmd: 'yarn cedar ' + cmd.processed,
       })
     }
   }

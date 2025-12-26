@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
+  },
+  "include": ["ambient.d.ts", "src"],
+  "exclude": ["**/__mocks__", "**/__fixtures__", "**/__tests__"]
+}

@@ -10,6 +10,7 @@ import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   exec,
+  getCfwBin,
 } from './util.js'
 
 function getExecaOptions(cwd: string): ExecaOptions {
@@ -75,10 +76,7 @@ function createBuilder(cmd: string, dir = '') {
   }
 }
 
-export async function webTasks(
-  outputPath: string,
-  { linkWithLatestFwBuild }: { linkWithLatestFwBuild: boolean },
-) {
+export async function webTasks(outputPath: string) {
   OUTPUT_PATH = outputPath
 
   const execaOptions = getExecaOptions(outputPath)
@@ -87,7 +85,7 @@ export async function webTasks(
     // Passing 'web' here to test executing 'yarn redwood' in the /web directory
     // to make sure it works as expected. We do the same for the /api directory
     // further down in this file.
-    const createPage = createBuilder('yarn redwood g page', 'web')
+    const createPage = createBuilder('yarn cedar g page', 'web')
 
     const tuiTaskList: TuiTaskList = [
       {
@@ -182,13 +180,13 @@ export async function webTasks(
       {
         title: 'Creating MDX Storybook stories',
         task: () => {
-          const redwoodMdxStoryContent = fs.readFileSync(
-            `${path.resolve(__dirname, 'codemods', 'Redwood.stories.mdx')}`,
+          const cedarMdxStoryContent = fs.readFileSync(
+            `${path.resolve(__dirname, 'codemods', 'CedarJS.mdx')}`,
           )
 
           fs.writeFileSync(
-            fullPath('web/src/Redwood.stories.mdx', { addExtension: false }),
-            redwoodMdxStoryContent,
+            fullPath('web/src/CedarJS.mdx', { addExtension: false }),
+            cedarMdxStoryContent,
           )
 
           return
@@ -216,7 +214,7 @@ export async function webTasks(
   }
 
   const createLayout = async () => {
-    const createLayout = createBuilder('yarn redwood g layout')
+    const createLayout = createBuilder('yarn cedar g layout')
 
     await createLayout('blog')
 
@@ -227,7 +225,7 @@ export async function webTasks(
   }
 
   const createComponents = async () => {
-    const createComponent = createBuilder('yarn redwood g component')
+    const createComponent = createBuilder('yarn cedar g component')
 
     await createComponent('blogPost')
 
@@ -262,7 +260,7 @@ export async function webTasks(
   }
 
   const createCells = async () => {
-    const createCell = createBuilder('yarn redwood g cell')
+    const createCell = createBuilder('yarn cedar g cell')
 
     await createCell('blogPosts')
 
@@ -356,7 +354,7 @@ export async function webTasks(
     {
       title: 'Adding Tailwind',
       task: async () => {
-        await exec('yarn rw setup ui tailwindcss', ['--force'], execaOptions)
+        await exec('yarn cedar setup ui tailwindcss', ['--force'], execaOptions)
       },
     },
   ] //,
@@ -378,9 +376,14 @@ async function addModel(schema: string) {
   fs.writeFileSync(path, `${current.trim()}\n\n${schema}\n`)
 }
 
+interface ApiTasksOptions {
+  linkWithLatestFwBuild: boolean
+  esmProject: boolean
+}
+
 export async function apiTasks(
   outputPath: string,
-  { linkWithLatestFwBuild }: { linkWithLatestFwBuild: boolean },
+  { linkWithLatestFwBuild, esmProject }: ApiTasksOptions,
 ) {
   OUTPUT_PATH = outputPath
 
@@ -464,7 +467,7 @@ export async function apiTasks(
     await exec('yarn install', [], execaOptions)
 
     await exec(
-      'yarn rw setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
+      'yarn cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
       [],
       execaOptions,
     )
@@ -488,16 +491,16 @@ export async function apiTasks(
     updatePkgJsonScripts({
       projectPath: outputPath,
       scripts: {
-        postinstall: 'yarn rwfw project:copy',
+        postinstall: `yarn ${getCfwBin(outputPath)} project:copy`,
       },
     })
 
     if (linkWithLatestFwBuild) {
-      await exec('yarn rwfw project:copy', [], execaOptions)
+      await exec(`yarn ${getCfwBin(outputPath)} project:copy`, [], execaOptions)
     }
 
     await exec(
-      'yarn rw g dbAuth --no-webauthn --username-label=username --password-label=password',
+      'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
       [],
       execaOptions,
     )
@@ -594,45 +597,64 @@ export async function apiTasks(
 
   // add prerender to some routes
   const addPrerender = async () => {
-    /** @type import('./typing').TuiTaskList */
-    const tuiTaskList = [
+    const tuiTaskList: TuiTaskList = [
       {
         // We need to do this here, and not where we create the other pages, to
         // keep it outside of BlogLayout
         title: 'Creating double rendering test page',
         task: async () => {
-          const createPage = createBuilder('yarn redwood g page')
+          const createPage = createBuilder('yarn cedar g page')
           await createPage('double')
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
 
-const DoublePage = () => {
-  return (
-    <>
-      <Metadata title="Double" description="Double page" og />
+            import test from './test.png'
 
-      <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
-      <p>
-        This page exists to make sure we don&apos;t regress on{' '}
-        <a
-          href="https://github.com/redwoodjs/redwood/issues/7757"
-          className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
-          target="_blank"
-          rel="noreferrer"
-        >
-          #7757
-        </a>
-      </p>
-      <p>It needs to be a page that is not wrapped in a Set</p>
-    </>
-  )
-}
+            const DoublePage = () => {
+              return (
+                <>
+                  <Metadata title="Double" description="Double page" og />
 
-export default DoublePage`
+                  <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
+                  <p>
+                    This page exists to make sure we don&apos;t regress on{' '}
+                    <a
+                      href="https://github.com/redwoodjs/redwood/issues/7757"
+                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      #7757
+                    </a>
+                  </p>
+                  <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>
+                  <p>
+                    We also use this page to make sure we don&apos;t regress on{' '}
+                    <a
+                      href="https://github.com/cedarjs/cedar/issues/317"
+                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      #317
+                    </a>
+                  </p>
+                  <img src={test} alt="Test" />
+                </>
+              )
+            }
+
+            export default DoublePage`
 
           fs.writeFileSync(
             fullPath('web/src/pages/DoublePage/DoublePage'),
             doublePageContent,
+          )
+          fs.copyFileSync(
+            fullPath('web/public/favicon.png', { addExtension: false }),
+            fullPath('web/src/pages/DoublePage/test.png', {
+              addExtension: false,
+            }),
           )
         },
       },
@@ -671,19 +693,17 @@ export default DoublePage`
           )
           fs.writeFileSync(pathRoutes, resultsRoutesNewContact)
 
-          const blogPostRouteHooks = `import { db } from '$api/src/lib/db'
+          const blogPostRouteHooks = `import { db } from '$api/src/lib/db.js'
 
-      export async function routeParameters() {
-        return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
-      }
-      `.replaceAll(/ {6}/g, '')
+            export async function routeParameters() {
+              return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
+            }`
           const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
           fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
 
           const waterfallRouteHooks = `export async function routeParameters() {
-        return [{ id: 2 }]
-      }
-      `.replaceAll(/ {6}/g, '')
+              return [{ id: 2 }]
+            }`
           const waterfallRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
           fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
         },
@@ -693,7 +713,7 @@ export default DoublePage`
     return tuiTaskList
   }
 
-  const generateScaffold = createBuilder('yarn rw g scaffold')
+  const generateScaffold = createBuilder('yarn cedar g scaffold')
 
   const tuiTaskList: TuiTaskList = [
     {
@@ -706,7 +726,7 @@ export default DoublePage`
         addModel(user)
 
         return exec(
-          `yarn rw prisma migrate dev --name create_post_user`,
+          `yarn cedar prisma migrate dev --name create_post_user`,
           [],
           execaOptions,
         )
@@ -723,7 +743,11 @@ export default DoublePage`
           fullPath('api/src/services/posts/posts.scenarios'),
         )
 
-        await exec(`yarn rwfw project:copy`, [], execaOptions)
+        await exec(
+          `yarn ${getCfwBin(OUTPUT_PATH)} project:copy`,
+          [],
+          execaOptions,
+        )
       },
     },
     {
@@ -743,12 +767,26 @@ export default DoublePage`
         addModel(contact)
 
         await exec(
-          `yarn rw prisma migrate dev --name create_contact`,
+          `yarn cedar prisma migrate dev --name create_contact`,
           [],
           execaOptions,
         )
 
         await generateScaffold('contacts')
+
+        const contactsServicePath = fullPath(
+          'api/src/services/contacts/contacts',
+        )
+        fs.writeFileSync(
+          contactsServicePath,
+          fs
+            .readFileSync(contactsServicePath, 'utf-8')
+            .replace(
+              "import { db } from 'src/lib/db'",
+              '// Testing aliased imports with extensions\n' +
+                "import { db } from 'src/lib/db.js'",
+            ),
+        )
       },
     },
     {
@@ -792,7 +830,7 @@ export default DoublePage`
     {
       title: 'Add users service',
       task: async () => {
-        const generateSdl = createBuilder('yarn redwood g sdl --no-crud', 'api')
+        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
 
         await generateSdl('user')
 
@@ -809,8 +847,8 @@ export default DoublePage`
           fullPath('api/src/services/users/users.scenarios'),
         )
 
-        const test = `import { user } from './users'
-            import type { StandardScenario } from './users.scenarios'
+        const test = `import { user } from './users.js'
+            import type { StandardScenario } from './users.scenarios.js'
 
             describe('users', () => {
               scenario('returns a single user', async (scenario: StandardScenario) => {
@@ -822,7 +860,7 @@ export default DoublePage`
 
         fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
 
-        return createBuilder('yarn redwood g types')()
+        return createBuilder('yarn cedar g types')()
       },
     },
     {
@@ -881,6 +919,37 @@ export default DoublePage`
         fs.writeFileSync(projectPath, fs.readFileSync(templatePath))
       },
     },
+    {
+      title: 'Add vitest db import tracking tests for ESM test project',
+      task: () => {
+        if (!esmProject) {
+          return
+        }
+
+        const templatesDir = path.join(__dirname, 'templates', 'api')
+        const templatePath1 = path.join(templatesDir, '1-db-import.test.ts')
+        const templatePath2 = path.join(templatesDir, '2-db-import.test.ts')
+        const templatePath3 = path.join(templatesDir, '3-db-import.test.ts')
+
+        const testsDir = path.join(OUTPUT_PATH, 'api', 'src', '__tests__')
+        const testFilePath1 = path.join(testsDir, '1-db-import.test.ts')
+        const testFilePath2 = path.join(testsDir, '2-db-import.test.ts')
+        const testFilePath3 = path.join(testsDir, '3-db-import.test.ts')
+
+        fs.mkdirSync(testsDir, { recursive: true })
+        fs.copyFileSync(templatePath1, testFilePath1)
+        fs.copyFileSync(templatePath2, testFilePath2)
+        fs.copyFileSync(templatePath3, testFilePath3)
+
+        // I opted to add an additional vitest config file rather than modifying
+        // the existing one because I wanted to keep one looking exactly the
+        // same as it'll look in user's projects.
+        fs.copyFileSync(
+          path.join(templatesDir, 'vitest-sort.config.ts'),
+          path.join(OUTPUT_PATH, 'api', 'vitest-sort.config.ts'),
+        )
+      },
+    },
   ]
   // ],
   // TODO: Figure out what to do with this. It's from Listr, but TUI doesn't
@@ -920,7 +989,7 @@ export async function fragmentsTasks(outputPath: string) {
         addModel(stall)
 
         return exec(
-          'yarn rw prisma migrate dev --name create_produce_stall',
+          'yarn cedar prisma migrate dev --name create_produce_stall',
           [],
           getExecaOptions(outputPath),
         )
@@ -934,13 +1003,13 @@ export async function fragmentsTasks(outputPath: string) {
           fullPath('scripts/seed.ts', { addExtension: false }),
         )
 
-        await exec('yarn rw prisma db seed', [], getExecaOptions(outputPath))
+        await exec('yarn cedar prisma db seed', [], getExecaOptions(outputPath))
       },
     },
     {
       title: 'Generate SDLs for produce and stall',
       task: async () => {
-        const generateSdl = createBuilder('yarn redwood g sdl')
+        const generateSdl = createBuilder('yarn cedar g sdl')
 
         await generateSdl('stall')
         await generateSdl('produce')
@@ -995,7 +1064,7 @@ export async function fragmentsTasks(outputPath: string) {
     {
       title: 'Creating Groceries page',
       task: async () => {
-        const createPage = createBuilder('yarn redwood g page')
+        const createPage = createBuilder('yarn cedar g page')
         await createPage('groceries')
 
         await applyCodemod(

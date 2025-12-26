@@ -423,7 +423,7 @@ import { useMutation } from '@cedarjs/web'
 
 import { toast } from '@cedarjs/web/toast'
 
-import { checkboxInputTag, jsonDisplay, timeTag } from 'src/lib/formatters'
+import { checkboxInputTag, jsonDisplay, timeTag } from 'src/lib/formatters.js'
 
 const DELETE_POST_MUTATION = gql\`
   mutation DeletePostMutation($id: Int!) {
@@ -1089,7 +1089,7 @@ import {
   jsonTruncate,
   timeTag,
   truncate,
-} from 'src/lib/formatters'
+} from 'src/lib/formatters.js'
 
 const DELETE_POST_MUTATION = gql\`
   mutation DeletePostMutation($id: Int!) {
@@ -1668,7 +1668,7 @@ import { useMutation } from '@cedarjs/web'
 import type { TypedDocumentNode } from '@cedarjs/web'
 import { toast } from '@cedarjs/web/toast'
 
-import { checkboxInputTag, jsonDisplay, timeTag } from 'src/lib/formatters'
+import { checkboxInputTag, jsonDisplay, timeTag } from 'src/lib/formatters.js'
 
 const DELETE_POST_MUTATION: TypedDocumentNode<
   DeletePostMutation,
@@ -2474,7 +2474,7 @@ import {
   jsonTruncate,
   timeTag,
   truncate,
-} from 'src/lib/formatters'
+} from 'src/lib/formatters.js'
 
 const DELETE_POST_MUTATION: TypedDocumentNode<
   DeletePostMutation,

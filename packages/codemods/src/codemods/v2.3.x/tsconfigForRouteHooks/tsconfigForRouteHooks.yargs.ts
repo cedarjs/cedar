@@ -10,6 +10,6 @@ export const handler = () => {
   // @ts-expect-error ignore, old codemod
   task('Tsconfig For Route Hooks', async ({ setOutput }: task.TaskInnerApi) => {
     addApiAliasToTsConfig()
-    setOutput('All done! Run `yarn rw lint --fix` to prettify your code')
+    setOutput('All done! Run `yarn cedar lint --fix` to prettify your code')
   })
 }

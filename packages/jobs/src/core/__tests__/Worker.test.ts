@@ -1,3 +1,5 @@
+import type timers from 'node:timers'
+
 import { beforeEach, describe, expect, vi, it } from 'vitest'
 
 import { DEFAULT_LOGGER } from '../../consts.js'
@@ -10,6 +12,34 @@ import { mockLogger, MockAdapter } from './mocks.js'
 // don't execute any code inside Executor, just spy on whether functions are
 // called
 vi.mock('../Executor')
+
+// Mock node:timers to forward to global timers so fake timers work
+// Hopefully this won't be needed when we upgrade to Vitest v4
+vi.mock('node:timers', async () => {
+  const actual = await vi.importActual<typeof timers>('node:timers')
+
+  return {
+    ...actual,
+    setTimeout: (callback: TimerHandler, ms?: number, ...args: any[]) =>
+      // The "Implied eval" warnings are about the fact that `setTimeout` can
+      // technically accept strings (which would be eval'd), but that's a
+      // limitation of the `TimerHandler` type and not something we need to fix
+      // in our mock - we're just forwarding the arguments correctly.
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      globalThis.setTimeout(callback, ms, ...args),
+    clearTimeout: (id: number | NodeJS.Timeout | undefined) =>
+      globalThis.clearTimeout(id),
+    setInterval: (callback: TimerHandler, ms?: number, ...args: any[]) =>
+      // The "Implied eval" warnings are about the fact that `setTimeout` can
+      // technically accept strings (which would be eval'd), but that's a
+      // limitation of the `TimerHandler` type and not something we need to fix
+      // in our mock - we're just forwarding the arguments correctly.
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      globalThis.setInterval(callback, ms, ...args),
+    clearInterval: (id: number | NodeJS.Timeout | undefined) =>
+      globalThis.clearInterval(id),
+  }
+})
 
 describe('constructor', () => {
   it('saves options', () => {
@@ -284,21 +314,39 @@ describe('run', async () => {
   })
 
   it('will try to find jobs in a loop until `forever` is set to `false`', async () => {
+    // Use fake timers so we can test with a 60-second sleep delay but the test
+    // completes in milliseconds instead of waiting 60+ seconds of real time
+    vi.useFakeTimers()
+
     const adapter = new MockAdapter()
     const worker = new Worker({
       adapter,
       logger: mockLogger,
       processName: 'mockProcessName',
       queues: ['*'],
-      sleepDelay: 0.01,
+      sleepDelay: 60,
       forever: true,
     })
 
-    worker.run()
-    // just enough delay to run through the loop twice
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    const runPromise = worker.run()
+
+    // First loop iteration happens immediately
+    await vi.waitFor(() => expect(adapter.find).toHaveBeenCalledTimes(1))
+
+    // Advance fake time by 60 seconds to trigger second iteration
+    await vi.advanceTimersByTimeAsync(60000)
+    await vi.waitFor(() => expect(adapter.find).toHaveBeenCalledTimes(2))
+
+    // Stop the worker before third iteration
     worker.forever = false
+    await vi.advanceTimersByTimeAsync(60000)
+
+    await runPromise
+
+    // Should still be 2, not 3
     expect(adapter.find).toHaveBeenCalledTimes(2)
+
+    vi.useRealTimers()
   })
 
   it('does nothing if no job found and forever=false', async () => {

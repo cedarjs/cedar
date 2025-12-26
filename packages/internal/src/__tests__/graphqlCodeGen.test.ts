@@ -14,8 +14,8 @@ import {
 import {
   generateTypeDefGraphQLApi,
   generateTypeDefGraphQLWeb,
-} from '../generate/graphqlCodeGen'
-import { generateGraphQLSchema } from '../generate/graphqlSchema'
+} from '../generate/graphqlCodeGen.js'
+import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
@@ -92,7 +92,7 @@ test('Generate gql typedefs api', async () => {
   // Check that JSON types are imported from prisma
   expect(data).toContain('JSON: Prisma.JsonValue;')
   expect(data).toContain('JSONObject: Prisma.JsonObject;')
-  expect(data).toContain('Byte: Buffer;')
+  expect(data).toContain('Byte: Uint8Array;')
 
   // Check that prisma model imports are added to the top of the file
   expect(data).toContain(
@@ -173,7 +173,7 @@ describe("Doesn't swallow legit errors", () => {
   test('invalidQueryType', async () => {
     const fixturePath = path.resolve(
       __dirname,
-      './fixtures/graphqlCodeGen/invalidQueryType',
+      './__fixtures__/graphqlCodeGen/invalidQueryType',
     )
     process.env.RWJS_CWD = fixturePath
 
@@ -188,7 +188,7 @@ describe("Doesn't swallow legit errors", () => {
   test('missingType', async () => {
     const fixturePath = path.resolve(
       __dirname,
-      './fixtures/graphqlCodeGen/missingType',
+      './__fixtures__/graphqlCodeGen/missingType',
     )
     process.env.RWJS_CWD = fixturePath
 
@@ -201,7 +201,7 @@ describe("Doesn't swallow legit errors", () => {
   test('nonExistingField', async () => {
     const fixturePath = path.resolve(
       __dirname,
-      './fixtures/graphqlCodeGen/nonExistingField',
+      './__fixtures__/graphqlCodeGen/nonExistingField',
     )
     process.env.RWJS_CWD = fixturePath
 

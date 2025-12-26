@@ -1,10 +1,10 @@
 import path from 'path'
 
-import fg from 'fast-glob'
+import fg, { type Options as FastGlobOptions } from 'fast-glob'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { getNamedExports, hasDefaultExport, fileToAst } from './ast'
+import { getNamedExports, hasDefaultExport, fileToAst } from './ast.js'
 
 export const findCells = (cwd: string = getPaths().web.src) => {
   const modules = fg.sync('**/*Cell.{js,jsx,ts,tsx}', {
@@ -99,11 +99,26 @@ export const findApiServerFunctions = (
   return files.filter((f) => isApiFunction(f, cwd))
 }
 
-export const findApiDistFunctions = (cwd: string = getPaths().api.base) => {
-  return fg.sync('dist/functions/**/*.{ts,js}', {
+// There is a copy of this function in
+// packages/api-server/src/plugins/lambdaLoader.ts
+// This is done to avoid @cedarjs/api-server depending on @cedarjs/internal
+export const findApiDistFunctions = (params: {
+  cwd: string
+  options?: FastGlobOptions
+  discoverFunctionsGlob?: string | string[]
+}) => {
+  const {
+    cwd = getPaths().api.base,
+    options = {},
+    discoverFunctionsGlob = 'dist/functions/**/*.{ts,js}',
+  } = params
+  return fg.sync(discoverFunctionsGlob, {
     cwd,
-    deep: 2, // We don't support deeply nested api functions, to maximise compatibility with deployment providers
+    // We don't support deeply nested api functions, to maximise compatibility
+    // with deployment providers
+    deep: 2,
     absolute: true,
+    ...options,
   })
 }
 

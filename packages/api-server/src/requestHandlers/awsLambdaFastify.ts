@@ -6,7 +6,7 @@ import type {
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import qs from 'qs'
 
-import { mergeMultiValueHeaders, parseBody } from './utils'
+import { mergeMultiValueHeaders, parseBody } from './utils.js'
 
 export const lambdaEventForFastifyRequest = (
   request: FastifyRequest,

@@ -18,12 +18,9 @@ export async function tarsync(
   const verboseOutput = verbose || !isTTY
   $.verbose = verboseOutput
 
-  const outputManager = new OutputManager({
-    disabled: verboseOutput,
-  })
-  outputManager.start({
-    triggeredBy,
-  })
+  const outputManager = new OutputManager({ disabled: verboseOutput })
+
+  outputManager.start({ triggeredBy })
 
   cd(FRAMEWORK_PATH)
 

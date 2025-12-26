@@ -1,7 +1,7 @@
 import path from 'path'
 
+import ansis from 'ansis'
 import boxen from 'boxen'
-import chalk from 'chalk'
 import fs from 'fs-extra'
 import latestVersion from 'latest-version'
 import semver from 'semver'
@@ -183,13 +183,13 @@ function getUpdateMessage() {
 
   let updateCount = 0
   let message =
-    ' New updates to Cedar are available via `yarn rw upgrade#REPLACEME#` '
+    ' New updates to Cedar are available via `yarn cedar upgrade#REPLACEME#` '
   data.remoteVersions.forEach((version, tag) => {
     if (semver.gt(version, data.localVersion)) {
       updateCount += 1
 
       if (tag === localTag) {
-        message += `\n\n ❖  ${chalk.underline(chalk.bold(tag))}:\n     v${
+        message += `\n\n ❖  ${ansis.underline.bold(tag)}:\n     v${
           data.localVersion
         } -> v${version} `
       } else {

@@ -1,0 +1,121 @@
+name: 🔄 CLI Smoke Tests
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  cli-smoke-tests:
+    runs-on: ${{ inputs.os }}
+
+    env:
+      REDWOOD_CI: 1
+      REDWOOD_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: Run `cedar info`
+        run: yarn cedar info
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar info` in /scripts
+        run: yarn cedar info
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts
+
+      - name: Run `cedar lint`
+        run: yarn cedar lint ./api/src --fix
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar test api`
+        run: yarn cedar test api --no-watch
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar test web`
+        run: yarn cedar test web --no-watch
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar check`
+        run: yarn cedar check
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar storybook`
+        run: yarn cedar sb --smoke-test
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar exec`
+        run: yarn cedar g script testScript && yarn cedar exec testScript
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Nested script | Run `cedar exec`
+        # Using -f to overwrite script that already exists in the test-project
+        run: yarn cedar g script -f i/am/nested && yarn cedar exec i/am/nested
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Nested script | Run `cedar exec` in /scripts
+        # This is probably stretching the definition of "smoke test" a bit too
+        # much. But we don't have a better place to run a test like this
+        run: yarn cedar g script i/am/nested/too && yarn cedar exec i/am/nested/too | grep "Executing script with args"
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts/i/am
+
+      - name: Run `cedar prisma generate`
+        run: yarn cedar prisma generate
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar data-migrate`
+        run: yarn cedar data-migrate up
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar data-migrate install`
+        run: yarn cedar data-migrate install
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar prisma migrate`
+        run: yarn cedar prisma migrate dev --name ci-test
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar deploy --help`
+        run: yarn cedar setup deploy --help && yarn cedar deploy --help
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar setup ui --help`
+        run: yarn cedar setup --help && yarn cedar setup ui --help
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      # Keeping this as `yarn rw` to make sure I don't break using `rw` until I
+      # intend to
+      - name: Run `rw g page`
+        run: yarn rw g page ciTest
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      # Keeping this as `yarn redwood` to make sure I don't break using
+      # `redwood` until I intend to
+      - name: Run `redwood g sdl`
+        run: yarn redwood g sdl userExample
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run `cedar type-check`
+        run: yarn cedar type-check
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Throw Error | Run `cedar g sdl <model>`
+        run: yarn cedar g sdl DoesNotExist
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        continue-on-error: true
+
+      - name: Run `cedar setup mailer`
+        # `cat` will exit with an error code if the file doesn't exist
+        run: yarn cedar setup mailer && cat api/src/lib/mailer.ts
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}

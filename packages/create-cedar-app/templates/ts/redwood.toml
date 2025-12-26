@@ -1,9 +1,9 @@
-# This file contains the configuration settings for your Redwood app.
-# This file is also what makes your Redwood app a Redwood app.
-# If you remove it and try to run `yarn rw dev`, you'll get an error.
+# This file contains the configuration settings for your Cedar app.
+# This file is also what makes your Cedar app a Cedar app.
+# If you remove it and try to run `yarn cedar dev`, you'll get an error.
 #
 # For the full list of options, see the "App Configuration: redwood.toml" doc:
-# https://redwoodjs.com/docs/app-configuration-redwood-toml
+# https://cedarjs.com/docs/app-configuration-redwood-toml
 
 [web]
   title = "Cedar App"
@@ -11,7 +11,7 @@
   apiUrl = "/.redwood/functions"
   includeEnvironmentVariables = [
     # Add any ENV vars that should be available to the web side to this array
-    # See https://redwoodjs.com/docs/environment-variables#web
+    # See https://cedarjs.com/docs/environment-variables#web
   ]
 [api]
   port = 8911

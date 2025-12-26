@@ -19,19 +19,22 @@ setupEnv()
 const parseArgs = (argv: string[]) => {
   return yargs(hideBin(argv))
     .usage(
-      'Starts a single RedwoodJob worker to process background jobs\n\nUsage: $0 [options]',
+      'Starts a single CedarJS Jobs worker to process background jobs\n\n' +
+        'Usage: $0 [options]',
     )
     .option('index', {
       type: 'number',
       required: true,
       description:
-        'The index of the `workers` array from the exported `jobs` config to use to configure this worker',
+        'The index of the `workers` array from the exported `jobs` config to ' +
+        'use to configure this worker',
     })
     .option('id', {
       type: 'number',
       required: true,
       description:
-        'The worker count id to identify this worker. ie: if you had `count: 2` in your worker config, you would have two workers with ids 0 and 1',
+        'The worker count id to identify this worker. ie: if you had `count: ' +
+        '2` in your worker config, you would have two workers with ids 0 and 1',
     })
     .option('workoff', {
       type: 'boolean',
@@ -62,7 +65,8 @@ const setupSignals = ({ worker }: { worker: Worker }) => {
   // it not to pick up a new job when done with the current one
   process.on('SIGINT', () => {
     worker.logger.warn(
-      `[${process.title}] SIGINT received at ${new Date().toISOString()}, finishing work...`,
+      `[${process.title}] SIGINT received at ${new Date().toISOString()}, ` +
+        'finishing work...',
     )
     worker.forever = false
   })
@@ -72,7 +76,8 @@ const setupSignals = ({ worker }: { worker: Worker }) => {
   // in
   process.on('SIGTERM', () => {
     worker.logger.warn(
-      `[${process.title}] SIGTERM received at ${new Date().toISOString()}, exiting now!`,
+      `[${process.title}] SIGTERM received at ${new Date().toISOString()}, ` +
+        'exiting now!',
     )
     process.exit(0)
   })

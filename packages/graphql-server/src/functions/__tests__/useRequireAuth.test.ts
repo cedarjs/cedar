@@ -2,10 +2,10 @@ import type { APIGatewayEvent, Context } from 'aws-lambda'
 import jwt from 'jsonwebtoken'
 import { describe, expect, it } from 'vitest'
 
-import { AuthenticationError } from '../../errors'
-import type { UseRequireAuth } from '../useRequireAuth'
+import { AuthenticationError } from '../../errors.js'
+import type { UseRequireAuth } from '../useRequireAuth.js'
 
-import { getCurrentUser } from './fixtures/auth'
+import { getCurrentUser } from './fixtures/auth.js'
 
 type RedwoodUser = Record<string, unknown> & { roles?: string[] }
 
@@ -59,10 +59,7 @@ export const mockedAuthenticationEvent = ({
   }
 }
 
-const handler = async (
-  _event: APIGatewayEvent,
-  _context: Context,
-): Promise<any> => {
+const handler = async () => {
   // @MARK
   // Don't use globalContext until beforeAll runs
   const globalContext = (await import('@cedarjs/context')).context
@@ -77,15 +74,12 @@ const handler = async (
   }
 }
 
-const handlerWithAuthChecks = async (
-  _event: APIGatewayEvent,
-  _context: Context,
-): Promise<unknown> => {
+const handlerWithAuthChecks = async () => {
   // TODO: Add requireAuth('role') here
   // or isAuthenticated()
 
   const { hasRole, isAuthenticated, requireAuth } = await import(
-    './fixtures/auth'
+    './fixtures/auth.js'
   )
 
   const body = {
@@ -111,10 +105,7 @@ const handlerWithAuthChecks = async (
   }
 }
 
-const handlerWithError = async (
-  _event: APIGatewayEvent,
-  _context: Context,
-): Promise<any> => {
+const handlerWithError = async () => {
   // @MARK
   // Don't use globalContext until beforeAll runs
   const globalContext = (await import('@cedarjs/context')).context
@@ -131,20 +122,20 @@ const handlerWithError = async (
       body: JSON.stringify(currentUser),
     }
   } catch (error) {
+    const errorMsg =
+      error instanceof AuthenticationError ? error.message : 'Unknown error'
+
     return {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: errorMsg }),
     }
   }
 }
 
-const getCurrentUserWithError = async (
-  _decoded,
-  { token: _token },
-): Promise<RedwoodUser> => {
+const getCurrentUserWithError = async (): Promise<RedwoodUser> => {
   throw Error('Something went wrong getting the user info')
 }
 
@@ -154,17 +145,13 @@ describe('useRequireAuth', () => {
     // Because we use context inside useRequireAuth, we only want to import this function
     // once we disable context isolation for our test
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return { token }
       },
     })
@@ -188,17 +175,13 @@ describe('useRequireAuth', () => {
     // Because we use context inside useRequireAuth, we only want to import this function
     // once we disable context isolation for our test
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return jwt.decode(token) as Record<string, any>
       },
     })
@@ -230,7 +213,7 @@ describe('useRequireAuth', () => {
 
   it('is 200 status if an error occurs when getting current user info', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const handlerEnrichedWithAuthentication = useRequireAuth({
@@ -255,17 +238,13 @@ describe('useRequireAuth', () => {
 
   it('is 200 status if no auth headers present', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        _token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async () => {
         return null
       },
     })
@@ -284,17 +263,13 @@ describe('useRequireAuth', () => {
 
   it('is 200 status with token if the auth provider is unsupported', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return { token }
       },
     })
@@ -317,17 +292,13 @@ describe('useRequireAuth', () => {
 
   it('returns 200 if decoding JWT succeeds for netlify', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handler,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return jwt.decode(token) as Record<string, any>
       },
     })
@@ -359,7 +330,7 @@ describe('useRequireAuth', () => {
 
   it('is 200 status if decoding JWT fails for netlify', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const handlerEnrichedWithAuthentication = useRequireAuth({
@@ -385,7 +356,7 @@ describe('useRequireAuth', () => {
 
   it('is 200 status if decoding JWT fails for supabase', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const handlerEnrichedWithAuthentication = useRequireAuth({
@@ -411,7 +382,7 @@ describe('useRequireAuth', () => {
 
   it('is 500 Server Error status if handler errors', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const customHeaders = {
@@ -437,7 +408,7 @@ describe('useRequireAuth', () => {
 
   it('enables the use of auth functions inside the handler to check that isAuthenticated blocks unauthenticated users', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     const netlifyJWTHeaders = {
@@ -463,7 +434,7 @@ describe('useRequireAuth', () => {
 
   it("enables the use of auth functions inside the handler to check that requireAuth throws if the user doesn't have the required role", async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     // Note: The Bearer token JWT contains:
@@ -482,11 +453,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handlerWithAuthChecks,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return jwt.decode(token) as Record<string, any>
       },
     })
@@ -501,7 +468,7 @@ describe('useRequireAuth', () => {
 
   it('enables the use of auth functions inside the handler to check editor role', async () => {
     const { useRequireAuth }: { useRequireAuth: UseRequireAuth } = await import(
-      '../useRequireAuth'
+      '../useRequireAuth.js'
     )
 
     // The authorization JWT is valid and has roles in app metadata
@@ -522,11 +489,7 @@ describe('useRequireAuth', () => {
     const handlerEnrichedWithAuthentication = useRequireAuth({
       handlerFn: handlerWithAuthChecks,
       getCurrentUser,
-      authDecoder: async (
-        token: string,
-        _type: string,
-        _req: { event: APIGatewayEvent; context: Context },
-      ) => {
+      authDecoder: async (token) => {
         return jwt.decode(token) as Record<string, any>
       },
     })

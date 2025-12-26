@@ -3,14 +3,14 @@ import { vi, beforeAll, beforeEach, describe, it, expect } from 'vitest'
 
 import type { CustomProviderHooks, CurrentUser } from '@cedarjs/auth'
 
-import type { DbAuthClientArgs } from '../dbAuth'
-import { createDbAuthClient, createAuth } from '../dbAuth'
+import type { DbAuthClientArgs } from '../dbAuth.js'
+import { createDbAuthClient, createAuth } from '../dbAuth.js'
 
 globalThis.RWJS_API_URL = '/.redwood/functions'
 globalThis.RWJS_API_GRAPHQL_URL = '/.redwood/functions/graphql'
 
 vi.mock('@whatwg-node/fetch', () => {
-  return
+  return ''
 })
 
 interface User {

@@ -5,37 +5,44 @@ import alias from '@rollup/plugin-alias'
 import commonjs from '@rollup/plugin-commonjs'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
-import { loadTsConfig } from 'load-tsconfig'
 import { rollup } from 'rollup'
+import { swc } from 'rollup-plugin-swc3'
 import unimportPlugin from 'unimport/unplugin'
 
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
 
 import {
   getPathsFromTypeScriptConfig,
   parseTypeScriptConfigFiles,
-} from '../internal'
+} from '../internal.js'
 
-import { cellTransformPlugin } from './rollupPlugins/rollup-plugin-cedarjs-cell'
-import { cedarjsDirectoryNamedImportPlugin } from './rollupPlugins/rollup-plugin-cedarjs-directory-named-imports'
-import { externalPlugin } from './rollupPlugins/rollup-plugin-cedarjs-external'
-import { ignoreHtmlAndCssImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-ignore-html-and-css-imports'
-import { injectFileGlobalsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-inject-file-globals'
-import { cedarjsPrerenderMediaImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-prerender-media-imports'
-import { cedarjsRoutesAutoLoaderPlugin } from './rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader'
-import { typescriptPlugin } from './rollupPlugins/rollup-plugin-cedarjs-typescript'
-import type { Options } from './types'
-import {
-  guessFormat,
-  isValidJsFile,
-  makeFilePath,
-  setPrerenderChunkIds,
-} from './utils'
+import { cellTransformPlugin } from './rollupPlugins/rollup-plugin-cedarjs-cell.js'
+import { cedarjsDirectoryNamedImportPlugin } from './rollupPlugins/rollup-plugin-cedarjs-directory-named-imports.js'
+import { externalPlugin } from './rollupPlugins/rollup-plugin-cedarjs-external.js'
+import { ignoreHtmlAndCssImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-ignore-html-and-css-imports.js'
+import { injectFileGlobalsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-inject-file-globals.js'
+import { cedarjsPrerenderMediaImportsPlugin } from './rollupPlugins/rollup-plugin-cedarjs-prerender-media-imports.js'
+import { cedarjsRoutesAutoLoaderPlugin } from './rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader.js'
+import { getPkgType, isValidJsFile, makeFilePath } from './utils.js'
+
+/** @see {@link https://github.com/rollup/plugins/issues/1541} */
+const fix = <T>(f: { default: T }): T => f as unknown as T
 
 const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   return Object.keys(paths || {}).map((key) => {
     return new RegExp(`^${key.replace(/\*/g, '.*')}$`)
   })
+}
+
+interface Options {
+  /** The filepath to bundle and require */
+  filepath: string
+
+  /**
+   * Preserve compiled temporary file for debugging
+   * Default to `process.env.BUNDLE_REQUIRE_PRESERVE`
+   */
+  preserveTemporaryFile?: boolean
 }
 
 export async function buildAndImport(
@@ -45,16 +52,10 @@ export async function buildAndImport(
     throw new Error(`${options.filepath} is not a valid JS file`)
   }
 
-  const cwd = options.cwd || process.cwd()
-  const tsconfig =
-    options.tsconfig === false
-      ? undefined
-      : typeof options.tsconfig === 'string' || !options.tsconfig
-        ? loadTsConfig(cwd, options.tsconfig)
-        : { data: options.tsconfig, path: undefined }
+  const tsConfigs = parseTypeScriptConfigFiles()
 
   const resolvePaths = tsconfigPathsToRegExp(
-    tsconfig?.data.compilerOptions?.paths || {},
+    tsConfigs.web?.compilerOptions?.paths || {},
   )
 
   // Need the project config to know if trusted graphql documents is being used
@@ -64,13 +65,14 @@ export async function buildAndImport(
 
   const useTrustedDocumentsGqlTag = config.graphql.trustedDocuments
 
-  const tsConfigs = parseTypeScriptConfigFiles()
   const webBase = getPaths().web.base
   const outDir = path.join(getPaths().web.dist, '__prerender')
 
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true })
   }
+
+  const isEsm = projectIsEsm()
 
   const build = await rollup({
     input: [options.filepath],
@@ -82,21 +84,20 @@ export async function buildAndImport(
     external: ['react', 'react-dom'],
     plugins: [
       externalPlugin({
-        external: options.external,
-        notExternal: [...(options.notExternal || []), ...resolvePaths],
+        notExternal: resolvePaths,
         filepath: options.filepath,
-        externalNodeModules: options.externalNodeModules,
       }),
       nodeResolve({
         preferBuiltins: true,
         exportConditions: ['node'],
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'],
       }),
+      // @ts-expect-error - Ignore type errors for now
       replace({
         preventAssignment: true,
         'process.env.NODE_ENV': '"production"',
       }),
-      alias({
+      fix(alias)({
         entries: [
           {
             find: 'src',
@@ -111,11 +112,11 @@ export async function buildAndImport(
       }),
       ignoreHtmlAndCssImportsPlugin(),
       cellTransformPlugin(),
-      cedarjsRoutesAutoLoaderPlugin({ forPrerender: true }),
+      cedarjsRoutesAutoLoaderPlugin(),
       cedarjsDirectoryNamedImportPlugin(),
       cedarjsPrerenderMediaImportsPlugin(),
-      commonjs(),
-      typescriptPlugin(options.filepath, tsconfig),
+      fix(commonjs)(),
+      swc({ sourceMaps: true }),
       unimportPlugin.rollup({
         imports: [
           // import React from 'react'
@@ -124,16 +125,23 @@ export async function buildAndImport(
             as: 'React',
             from: 'react',
           },
+          // import { gql } from 'graphql-tag'
+          !useTrustedDocumentsGqlTag &&
+            isEsm && {
+              name: 'gql',
+              from: 'graphql-tag',
+            },
           // import gql from 'graphql-tag'
-          !useTrustedDocumentsGqlTag && {
-            name: 'default',
-            as: 'gql',
-            from: 'graphql-tag',
-          },
+          !useTrustedDocumentsGqlTag &&
+            !isEsm && {
+              name: 'default',
+              as: 'gql',
+              from: 'graphql-tag',
+            },
           // import { gql } from 'src/graphql/gql'
           useTrustedDocumentsGqlTag && {
             name: 'gql',
-            from: `web/src/graphql/gql`,
+            from: `src/graphql/gql.js`,
           },
         ].filter(<T>(v?: T | false): v is T => Boolean(v)),
       }),
@@ -142,11 +150,9 @@ export async function buildAndImport(
   })
 
   try {
-    const format = options.format ?? guessFormat(options.filepath)
-
     const { output } = await build.generate({
       dir: outDir,
-      format: format === 'esm' ? 'es' : 'cjs',
+      format: getPkgType() === 'module' ? 'es' : 'cjs',
       exports: 'auto',
       sourcemap: 'inline',
     })
@@ -156,10 +162,9 @@ export async function buildAndImport(
         throw new Error('[bundle-require] Expected chunk output')
       }
 
-      const code = setPrerenderChunkIds(chunk.code, chunk.dynamicImports)
       const chunkPath = path.join(outDir, chunk.fileName)
 
-      await fs.promises.writeFile(chunkPath, code, 'utf8')
+      await fs.promises.writeFile(chunkPath, chunk.code, 'utf8')
     }
 
     const importPath = makeFilePath(path.join(outDir, output[0].fileName))

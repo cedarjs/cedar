@@ -15,8 +15,8 @@ export class MiddlewareShortCircuit extends Error {
 
 /**
  * This is actually a Response builder class
- * After setting all the required properties, we can call `build` to get a Web
- * API Response object
+ * After setting all the required properties, we can call `toResponse` to get a
+ * Web API Response object
  */
 export class MiddlewareResponse {
   cookies = new CookieJar()

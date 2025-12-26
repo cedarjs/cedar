@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-firebase-web",
-  "version": "0.0.5",
+  "version": "2.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -56,14 +56,17 @@
     "@types/react": "^18.2.55",
     "concurrently": "8.2.2",
     "firebase": "10.14.1",
-    "publint": "0.3.12",
-    "react": "19.0.0-rc-f2df5694-20240916",
-    "tsx": "4.19.4",
-    "typescript": "5.6.2",
+    "publint": "0.3.16",
+    "react": "19.2.3",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
   },
   "peerDependencies": {
     "firebase": "10.14.1"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

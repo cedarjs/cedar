@@ -27,8 +27,6 @@ vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
   }
 })
 
-vi.spyOn(console, 'log').mockImplementation(() => {})
-
 afterAll(() => {
   vi.restoreAllMocks()
 })
@@ -66,6 +64,7 @@ describe('builder', () => {
 describe('handler', () => {
   beforeEach(async () => {
     vi.resetAllMocks()
+    vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const execa = await import('execa')
     const cmdMock = execa.command as unknown as Mock
@@ -87,8 +86,11 @@ describe('handler', () => {
 
     it('should have non-zero exit code when build fails', async () => {
       const execa = await import('execa')
-      const cmdMock = execa.command as unknown as Mock
-      cmdMock.mockImplementation(() => Promise.resolve({ failed: true }))
+      const cmdMock = execa.command
+      vi.mocked(cmdMock).mockImplementation(() =>
+        // @ts-expect-error - only partially mocked
+        Promise.resolve({ failed: true }),
+      )
 
       await expect(
         handler({
@@ -97,7 +99,7 @@ describe('handler', () => {
           prisma: false,
           dm: false,
         }),
-      ).rejects.toThrow('Command (yarn rw build web --verbose) failed')
+      ).rejects.toThrow('Command (yarn cedar build web --verbose) failed')
     })
   })
 })

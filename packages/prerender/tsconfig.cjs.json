@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "outDir": "dist/cjs",
+    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
+  },
+  "exclude": [
+    "**/__tests__",
+    "src/runPrerenderEsm.tsx",
+    "src/build-and-import",
+    "src/graphql/node-runner.ts",
+    "src/graphql/vite*"
+  ]
+}

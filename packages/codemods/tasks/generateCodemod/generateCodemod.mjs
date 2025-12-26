@@ -2,7 +2,7 @@
 import fs from 'node:fs'
 import url from 'node:url'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import fse from 'fs-extra'
 // lodash is commonjs
 import template from 'lodash/template.js'
@@ -57,9 +57,9 @@ await generateCodemod(version, name, kind)
  */
 async function generateCodemod(version, name, kind) {
   console.log(
-    `Generating ${chalk.green(kind)} codemod ${chalk.green(
+    `Generating ${ansis.green(kind)} codemod ${ansis.green(
       name,
-    )} for ${chalk.green(version)}...`,
+    )} for ${ansis.green(version)}...`,
   )
 
   // Make the destination.

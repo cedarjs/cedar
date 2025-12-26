@@ -20,7 +20,7 @@ export const schema = gql`
 const countdown = {
   countdown: {
     subscribe: (
-      _,
+      _: unknown,
       {
         from = 100,
         interval = 10,

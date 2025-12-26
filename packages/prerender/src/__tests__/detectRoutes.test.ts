@@ -2,7 +2,7 @@ import { vi, describe, it, expect } from 'vitest'
 
 import type { RWRoute } from '@cedarjs/structure/dist/model/RWRoute'
 
-import { detectPrerenderRoutes } from '../detection'
+import { detectPrerenderRoutes } from '../detection/detection.js'
 
 vi.mock('@cedarjs/project-config', () => {
   return {

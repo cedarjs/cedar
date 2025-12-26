@@ -58,5 +58,5 @@ const vercelConfig = {
 
 const notes = [
   'You are ready to deploy to Vercel!',
-  'See: https://redwoodjs.com/docs/deploy#vercel-deploy',
+  'See: https://cedarjs.com/docs/deploy#vercel-deploy',
 ]

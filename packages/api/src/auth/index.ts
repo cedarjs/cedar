@@ -110,7 +110,7 @@ export const getAuthenticationContext = async ({
 }: {
   authDecoder?: Decoder | Decoder[]
   event: APIGatewayProxyEvent | Request
-  context: LambdaContext
+  context?: LambdaContext
 }): Promise<undefined | AuthContextPayload> => {
   const cookieHeader = parseAuthorizationCookie(event)
   const typeFromHeader = getAuthProviderHeader(event)

@@ -54,13 +54,13 @@ exports[`handler > can be called with PascalCase model name 2`] = `
 
 exports[`handler > can be called with PascalCase model name 3`] = `
 {
-  "fileContent": "import { users, user, createUser, updateUser, deleteUser } from './users'
+  "fileContent": "import { users, user, createUser, updateUser, deleteUser } from './users.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('users', () => {
   scenario('returns all users', async (scenario) => {
@@ -202,13 +202,13 @@ exports[`handler > can be called with PascalCase model name 7`] = `
   createCustomData,
   updateCustomData,
   deleteCustomData,
-} from './customDatums'
+} from './customDatums.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('customDatums', () => {
   scenario('returns all customDatums', async (scenario) => {
@@ -348,13 +348,13 @@ exports[`handler > can be called with camelCase model name 2`] = `
 
 exports[`handler > can be called with camelCase model name 3`] = `
 {
-  "fileContent": "import { users, user, createUser, updateUser, deleteUser } from './users'
+  "fileContent": "import { users, user, createUser, updateUser, deleteUser } from './users.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('users', () => {
   scenario('returns all users', async (scenario) => {
@@ -496,13 +496,13 @@ exports[`handler > can be called with camelCase model name 7`] = `
   createCustomData,
   updateCustomData,
   deleteCustomData,
-} from './customDatums'
+} from './customDatums.js'
 
 // Generated boilerplate tests do not account for all circumstances
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
-//       https://redwoodjs.com/docs/testing#testing-services
-// https://redwoodjs.com/docs/testing#jest-expect-type-considerations
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('customDatums', () => {
   scenario('returns all customDatums', async (scenario) => {

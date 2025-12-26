@@ -7,7 +7,7 @@ import {
 import { RedwoodError } from '@cedarjs/api'
 import type { Logger } from '@cedarjs/api/logger'
 
-import type { RedwoodGraphQLContext } from '../types'
+import type { RedwoodGraphQLContext } from '../types.js'
 
 /**
  * Converts RedwoodErrors to GraphQLErrors
@@ -35,17 +35,14 @@ export const useRedwoodError = (
             payload,
             ({ result, setResult }) => {
               const errors = result.errors?.map((error) => {
-                if (
-                  error.originalError &&
-                  error.originalError instanceof RedwoodError
-                ) {
+                if (error.originalError instanceof RedwoodError) {
                   logger.debug(
                     { custom: { name: error.originalError.name } },
                     'Converting RedwoodError to GraphQLError',
                   )
+
                   return createGraphQLError(error.message, {
                     extensions: error.extensions,
-                    originalError: error,
                   })
                 } else {
                   return error

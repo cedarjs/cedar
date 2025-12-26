@@ -16,18 +16,19 @@ import type {
   GraphQLUnionType,
   GraphQLObjectType,
 } from 'graphql'
-import { merge, omitBy } from 'lodash'
+import lodash from 'lodash'
+const { merge, omitBy } = lodash
 
-import type { RedwoodDirective } from './plugins/useRedwoodDirective'
-import * as rootGqlSchema from './rootSchema'
-import type { RedwoodSubscription } from './subscriptions/makeSubscriptions'
+import type { RedwoodDirective } from './plugins/useRedwoodDirective.js'
+import * as rootGqlSchema from './rootSchema.js'
+import type { RedwoodSubscription } from './subscriptions/makeSubscriptions.js'
 import type {
   Services,
   ServicesGlobImports,
   GraphQLTypeWithFields,
   SdlGlobImports,
   RedwoodScalarConfig,
-} from './types'
+} from './types.js'
 
 const wrapWithOpenTelemetry = async (
   func: any,
@@ -108,7 +109,7 @@ const mapFieldsToService = ({
         ) => {
           const captureResolvers =
             // @ts-expect-error context is unknown
-            context && context['OPEN_TELEMETRY_GRAPHQL'] !== undefined
+            context?.['OPEN_TELEMETRY_GRAPHQL'] !== undefined
 
           if (captureResolvers) {
             return wrapWithOpenTelemetry(
@@ -120,6 +121,7 @@ const mapFieldsToService = ({
               name,
             )
           }
+
           return services[name](args, { root, context, info })
         },
       }

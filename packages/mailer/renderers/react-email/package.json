@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-renderer-react-email",
-  "version": "0.0.5",
+  "version": "2.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -25,8 +25,11 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "tsx": "4.19.4",
-    "typescript": "5.6.2"
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

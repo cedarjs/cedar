@@ -1,66 +1,86 @@
 {
   "name": "@cedarjs/graphql-server",
-  "version": "0.0.5",
+  "version": "2.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/graphql-server"
   },
   "license": "MIT",
-  "main": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsx ./build.mts && yarn build:types",
+    "build": "tsx ./build.mts",
     "build:pack": "yarn pack -o cedarjs-graphql-server.tgz",
-    "build:types": "tsc --build --verbose ./tsconfig.json",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
+    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
+    "check:attw": "yarn rw-fwtools-attw",
+    "check:package": "concurrently npm:check:attw yarn:publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "yarn vitest run src/",
     "test:watch": "yarn test --watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.27.6",
+    "@babel/runtime-corejs3": "7.28.4",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
-    "@envelop/core": "5.0.2",
+    "@envelop/core": "5.4.0",
     "@envelop/depth-limit": "4.0.0",
     "@envelop/disable-introspection": "6.0.0",
     "@envelop/filter-operation-type": "6.0.0",
     "@envelop/on-resolve": "4.1.1",
     "@escape.tech/graphql-armor": "3.0.1",
-    "@graphql-tools/merge": "9.0.7",
-    "@graphql-tools/schema": "10.0.6",
-    "@graphql-tools/utils": "10.5.4",
-    "@graphql-yoga/plugin-persisted-operations": "3.7.0",
+    "@graphql-tools/merge": "9.1.6",
+    "@graphql-tools/schema": "10.0.30",
+    "@graphql-tools/utils": "10.11.0",
+    "@graphql-yoga/plugin-persisted-operations": "3.18.0",
     "@opentelemetry/api": "1.8.0",
-    "core-js": "3.42.0",
-    "graphql": "16.9.0",
-    "graphql-scalars": "1.23.0",
+    "core-js": "3.47.0",
+    "graphql": "16.12.0",
+    "graphql-scalars": "1.25.0",
     "graphql-tag": "2.12.6",
-    "graphql-yoga": "5.7.0",
+    "graphql-yoga": "5.18.0",
     "lodash": "4.17.21",
     "uuid": "10.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.27.2",
+    "@babel/cli": "7.28.3",
     "@babel/core": "^7.26.10",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/realtime": "workspace:*",
-    "@envelop/types": "5.0.0",
-    "@types/aws-lambda": "8.10.145",
-    "@types/jsonwebtoken": "9.0.8",
-    "@types/lodash": "4.17.15",
+    "@envelop/types": "5.2.1",
+    "@types/aws-lambda": "8.10.159",
+    "@types/jsonwebtoken": "9.0.10",
+    "@types/lodash": "4.17.21",
     "@types/uuid": "10.0.0",
-    "@whatwg-node/fetch": "0.9.21",
+    "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/promise-helpers": "^1.3.0",
-    "jsonwebtoken": "9.0.2",
-    "tsx": "4.19.4",
-    "typescript": "5.6.2",
+    "concurrently": "8.2.2",
+    "jsonwebtoken": "9.0.3",
+    "publint": "0.3.16",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

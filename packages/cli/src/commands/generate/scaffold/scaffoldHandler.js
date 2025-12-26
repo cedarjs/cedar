@@ -12,6 +12,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 
+import { pluralize, singularize } from '../../../lib/cedarPluralize.js'
 import c from '../../../lib/colors.js'
 import {
   generateTemplate,
@@ -29,7 +30,6 @@ import {
   prepareForRollback,
   addFunctionToRollback,
 } from '../../../lib/rollback.js'
-import { pluralize, singularize } from '../../../lib/rwPluralize.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import {
   relationsForModel,
@@ -134,7 +134,9 @@ const getTemplateStrings = (name, scaffoldPath, nestScaffoldByModel = true) => {
 // already set, returns true. Otherwise just returns `flag`
 export const shouldUseTailwindCSS = (flag) => {
   if (flag === undefined) {
-    return fs.existsSync(path.join(getPaths().web.config, 'tailwind.config.js'))
+    return fs.existsSync(
+      path.join(getPaths().web.config, 'tailwind.config.cjs'),
+    )
   } else {
     return flag
   }
@@ -151,14 +153,17 @@ export const files = async ({
   nestScaffoldByModel,
 }) => {
   const model = await getSchema(name)
+
   if (typeof nestScaffoldByModel === 'undefined') {
     nestScaffoldByModel = getConfig().generate.nestScaffoldByModel
   }
+
   const templateStrings = getTemplateStrings(
     name,
     scaffoldPath,
     nestScaffoldByModel,
   )
+
   const pascalScaffoldPath =
     scaffoldPath === ''
       ? scaffoldPath

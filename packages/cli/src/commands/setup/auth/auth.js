@@ -20,8 +20,8 @@ export async function builder(yargs) {
     .demandCommand()
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#setup-auth',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#setup-auth',
       )}`,
     )
     // Command "redirects" for auth providers we used to support
@@ -214,7 +214,7 @@ function directToCustomAuthCommand(provider) {
 
       const customAuthLink = terminalLink(
         'Custom Auth',
-        'https://redwoodjs.com/docs/auth/custom',
+        'https://cedarjs.com/docs/auth/custom',
       )
 
       console.log(

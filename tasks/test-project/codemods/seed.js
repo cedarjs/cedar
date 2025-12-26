@@ -69,8 +69,8 @@ export default (file, api) => {
 
   // Uncomment the db import line
   newSource = newSource.replace(
-    "// import { db } from 'api/src/lib/db'",
-    "import { db } from 'api/src/lib/db'",
+    "// import { db } from 'api/src/lib/db.js'",
+    "import { db } from 'api/src/lib/db.js'",
   )
 
   return newSource

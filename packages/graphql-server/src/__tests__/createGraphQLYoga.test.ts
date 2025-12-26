@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createLogger } from '@cedarjs/api/logger'
 
-import { createGraphQLYoga } from '../createGraphQLYoga'
+import { createGraphQLYoga } from '../createGraphQLYoga.js'
 
 describe('createGraphQLYoga smoke-test', () => {
   it('Should only require required parameters', () => {

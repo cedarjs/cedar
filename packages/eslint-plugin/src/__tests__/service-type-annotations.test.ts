@@ -11,7 +11,6 @@ const ruleTester = new RuleTester({
         allowDefaultProject: ['*.ts*'],
         defaultProject: 'tsconfig.json',
       },
-      tsconfigRootDir: '/',
     },
   },
 })

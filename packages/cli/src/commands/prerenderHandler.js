@@ -4,13 +4,12 @@ import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { runPrerender, writePrerenderedHtmlFile } from '@cedarjs/prerender'
-import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
-import { getConfig, getPaths } from '@cedarjs/project-config'
+import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../lib/colors.js'
-import { configureBabel, runScriptFunction } from '../lib/exec.js'
+import { runScriptFunction } from '../lib/exec.js'
+import { configureBabel } from '../lib/execBabel.js'
 
 class PathParamError extends Error {}
 
@@ -118,7 +117,13 @@ async function expandRouteParameters(route) {
 
 // This is used directly in build.js for nested ListrTasks
 export const getTasks = async (dryrun, routerPathFilter = null) => {
-  const prerenderRoutes = detectPrerenderRoutes().filter((route) => route.path)
+  const detector = projectIsEsm()
+    ? await import('@cedarjs/prerender/detection')
+    : await import('@cedarjs/prerender/cjs/detection')
+
+  const prerenderRoutes = detector
+    .detectPrerenderRoutes()
+    .filter((route) => route.path)
   const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
   if (prerenderRoutes.length === 0) {
     console.log('\nSkipping prerender...')
@@ -134,7 +139,7 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
 
   if (!fs.existsSync(indexHtmlPath)) {
     console.error(
-      'You must run `yarn rw build web` before trying to prerender.',
+      'You must run `yarn cedar build web` before trying to prerender.',
     )
     process.exit(1)
     // TODO: Run this automatically at this point.
@@ -145,6 +150,10 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
   const expandedRouteParameters = await Promise.all(
     prerenderRoutes.map((route) => expandRouteParameters(route)),
   )
+
+  const prerenderer = projectIsEsm()
+    ? await import('@cedarjs/prerender')
+    : await import('@cedarjs/prerender/cjs')
 
   const listrTasks = expandedRouteParameters.flatMap((routesToPrerender) => {
     // queryCache will be filled with the queries from all the Cells we
@@ -188,6 +197,7 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
               }
 
               await prerenderRoute(
+                prerenderer,
                 queryCache,
                 routeToPrerender,
                 dryrun,
@@ -217,6 +227,7 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
         title: `Prerendering ${routeToPrerender.path} -> ${outputHtmlPath}`,
         task: async () => {
           await prerenderRoute(
+            prerenderer,
             queryCache,
             routeToPrerender,
             dryrun,
@@ -292,6 +303,7 @@ const diagnosticCheck = () => {
 }
 
 const prerenderRoute = async (
+  prerenderer,
   queryCache,
   routeToPrerender,
   dryrun,
@@ -305,17 +317,19 @@ const prerenderRoute = async (
   }
 
   try {
-    const prerenderedHtml = await runPrerender({
+    const prerenderedHtml = await prerenderer.runPrerender({
       queryCache,
       renderPath: routeToPrerender.path,
     })
 
     if (!dryrun) {
-      writePrerenderedHtmlFile(outputHtmlPath, prerenderedHtml)
+      prerenderer.writePrerenderedHtmlFile(outputHtmlPath, prerenderedHtml)
     }
   } catch (e) {
     console.log()
-    console.log(c.warning('You can use `yarn rw prerender --dry-run` to debug'))
+    console.log(
+      c.warning('You can use `yarn cedar prerender --dry-run` to debug'),
+    )
     console.log()
 
     console.log(
@@ -384,13 +398,13 @@ export const handler = async ({ path: routerPath, dryRun, verbose }) => {
       )
       console.log(
         c.info(
-          '- Avoid using `window` in the initial render path through your React components without checks. \n  See https://redwoodjs.com/docs/prerender#prerender-utils',
+          '- Avoid using `window` in the initial render path through your React components without checks. \n  See https://cedarjs.com/docs/prerender#prerender-utils',
         ),
       )
 
       console.log(
         c.info(
-          '- Avoid prerendering Cells with authenticated queries, by conditionally rendering them.\n  See https://redwoodjs.com/docs/prerender#common-warnings--errors',
+          '- Avoid prerendering Cells with authenticated queries, by conditionally rendering them.\n  See https://cedarjs.com/docs/prerender#common-warnings--errors',
         ),
       )
     }

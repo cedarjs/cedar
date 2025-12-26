@@ -4,8 +4,8 @@ import { vi, beforeEach, afterEach, describe, test, expect } from 'vitest'
 
 import type ProjectConfig from '@cedarjs/project-config'
 
-import { generateClientPreset } from '../generate/clientPreset'
-import { generateGraphQLSchema } from '../generate/graphqlSchema'
+import { generateClientPreset } from '../generate/clientPreset.js'
+import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
 
 const { mockedGetConfig } = vi.hoisted(() => {
   return {

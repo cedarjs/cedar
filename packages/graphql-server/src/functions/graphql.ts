@@ -7,8 +7,8 @@ import type {
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
-import { createGraphQLYoga } from '../createGraphQLYoga'
-import type { GraphQLHandlerOptions } from '../types'
+import { createGraphQLYoga } from '../createGraphQLYoga.js'
+import type { GraphQLHandlerOptions } from '../types.js'
 
 /**
  * Creates an Enveloped GraphQL Server, configured with default Redwood plugins

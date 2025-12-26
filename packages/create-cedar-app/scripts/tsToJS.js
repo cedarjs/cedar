@@ -42,7 +42,7 @@ const filePaths = await glob(['{api,web,scripts}/**/*.{ts,tsx}'], {
 console.group('Transforming files in the JS template')
 
 const { default: prettierConfig } = await import(
-  new URL('../templates/ts/prettier.config.js', import.meta.url)
+  new URL('../templates/ts/prettier.config.cjs', import.meta.url)
 )
 
 for (const filePath of filePaths) {

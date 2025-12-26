@@ -22,7 +22,7 @@ export async function loadPlugins(yargs) {
     : process.argv.slice(2).join(' ')
   const commandFirstWord = commandString.split(' ')[0]
 
-  // Check for possible early exit for `yarn rw --version`
+  // Check for possible early exit for `yarn cedar --version`
   if (commandFirstWord === '--version' && namespaceInUse === '@cedarjs') {
     // We don't need to load any plugins in this case
     return yargs
@@ -107,7 +107,7 @@ export async function loadPlugins(yargs) {
         }
       } else {
         // We only need to show that the namespace exists, users can then run
-        // `yarn rw @namespace` to see the commands available in that namespace
+        // `yarn cedar @namespace` to see the commands available in that namespace
         yargs.command({
           command: `${namespace} <command>`,
           describe: `Commands from ${namespace}`,

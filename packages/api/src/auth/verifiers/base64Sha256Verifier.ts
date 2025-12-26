@@ -78,9 +78,9 @@ export const verifySignature = ({
  * @see https://docs.svix.com/receiving/verifying-payloads/how-manual
  * @see https://github.com/svix/svix-webhooks/blob/main/javascript/src/index.ts
  */
-const base64Sha256Verifier = (
+export function base64Sha256Verifier(
   _options?: VerifyOptions,
-): Base64Sha256Verifier => {
+): Base64Sha256Verifier {
   return {
     sign: ({ payload, secret }) => {
       return createSignature({ payload, secret })
@@ -91,5 +91,3 @@ const base64Sha256Verifier = (
     type: 'base64Sha256Verifier',
   }
 }
-
-export default base64Sha256Verifier

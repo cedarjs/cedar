@@ -1,25 +1,29 @@
-import './global.api-auto-imports'
+import './global.api-auto-imports.js'
 
-export * from './global.api-auto-imports'
+export * from './global.api-auto-imports.js'
 
-export * from './errors'
-export * from './functions/graphql'
-export * from './functions/useRequireAuth'
-export * from './makeMergedSchema'
-export * from './createGraphQLYoga'
-export * from './types'
+export * from './errors.js'
+export * from './functions/graphql.js'
+export * from './functions/useRequireAuth.js'
+export * from './makeMergedSchema.js'
+export * from './createGraphQLYoga.js'
+export * from './types.js'
 
 export {
   createValidatorDirective,
   createTransformerDirective,
   getDirectiveName,
   makeDirectivesForPlugin,
-} from './directives/makeDirectives'
+} from './directives/makeDirectives.js'
 
 export {
   hasDirective,
-  DirectiveParams,
   DirectiveType,
+  useRedwoodDirective,
+} from './plugins/useRedwoodDirective.js'
+
+export type {
+  DirectiveParams,
   RedwoodDirective,
   ValidatorDirective,
   ValidatorDirectiveFunc,
@@ -27,10 +31,9 @@ export {
   TransformerDirectiveFunc,
   ValidateArgs,
   TransformArgs,
-  useRedwoodDirective,
-} from './plugins/useRedwoodDirective'
+} from './plugins/useRedwoodDirective.js'
 
-export * as rootSchema from './rootSchema'
+export * as rootSchema from './rootSchema.js'
 
 // Note: We re-export here for convenience and backwards compatibility
 export { context, setContext } from '@cedarjs/context'

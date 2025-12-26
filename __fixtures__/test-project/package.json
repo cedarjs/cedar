@@ -1,30 +1,20 @@
 {
   "private": true,
-  "workspaces": {
-    "packages": [
-      "api",
-      "web"
-    ]
-  },
+  "workspaces": [
+    "api",
+    "web"
+  ],
   "devDependencies": {
-    "@cedarjs/core": "0.0.5",
-    "@cedarjs/project-config": "0.0.5",
-    "@cedarjs/testing": "0.0.5",
+    "@cedarjs/core": "2.0.2",
+    "@cedarjs/project-config": "2.0.2",
+    "@cedarjs/testing": "2.0.2",
     "prettier-plugin-tailwindcss": "^0.5.12"
   },
-  "eslintConfig": {
-    "extends": "@cedarjs/eslint-config",
-    "root": true
-  },
   "engines": {
-    "node": "=20.x"
+    "node": "=24.x"
   },
-  "prisma": {
-    "seed": "yarn rw exec seed"
-  },
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.12.0",
   "resolutions": {
-    "@storybook/react-dom-shim@npm:7.6.20": "https://verdaccio.tobbe.dev/@storybook/react-dom-shim/-/react-dom-shim-8.0.8.tgz",
-    "react-is": "19.0.0-rc-f2df5694-20240916"
+    "react-is": "19.2.3"
   }
 }

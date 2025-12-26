@@ -26,10 +26,10 @@ export const handler = async ({
     dataMigrate,
     serve,
   })
-  const rwjsPaths = getPaths()
+  const cedarPaths = getPaths()
 
   const execaConfig: execa.Options = {
-    cwd: rwjsPaths.base,
+    cwd: cedarPaths.base,
     shell: true,
     stdio: 'inherit',
   }
@@ -47,31 +47,31 @@ export const handler = async ({
   async function runApiCommands() {
     if (!serve) {
       console.log('Building api...')
-      await runExecaCommand('yarn rw build api --verbose')
+      await runExecaCommand('yarn cedar build api --verbose')
 
       if (prisma) {
         console.log('Running database migrations...')
         await runExecaCommand(
-          `node_modules/.bin/prisma migrate deploy --schema "${rwjsPaths.api.dbSchema}"`,
+          `node_modules/.bin/prisma migrate deploy --config "${cedarPaths.api.prismaConfig}"`,
         )
       }
 
       if (dataMigrate) {
         console.log('Running data migrations...')
-        await runExecaCommand('yarn rw dataMigrate up')
+        await runExecaCommand('yarn cedar dataMigrate up')
       }
 
       return
     }
 
-    const serverFilePath = path.join(rwjsPaths.api.dist, 'server.js')
+    const serverFilePath = path.join(cedarPaths.api.dist, 'server.js')
     const hasServerFile = fs.pathExistsSync(serverFilePath)
 
     if (hasServerFile) {
       execa(`yarn node ${serverFilePath}`, execaConfig)
     } else {
       const { handler } = await import(
-        '@cedarjs/api-server/dist/apiCLIConfigHandler.js'
+        '@cedarjs/api-server/apiCliConfigHandler'
       )
       handler()
     }
@@ -79,7 +79,7 @@ export const handler = async ({
 
   async function runWebCommands() {
     console.log('Building web...')
-    await runExecaCommand('yarn rw build web --verbose')
+    await runExecaCommand('yarn cedar build web --verbose')
   }
 
   if (side === 'api') {

@@ -1,6 +1,6 @@
 /* eslint-disable no-var */
 /// <reference types="react/experimental" />
-import type { HelmetServerState } from 'react-helmet-async'
+import type { HelmetServerState } from '@dr.pogodin/react-helmet'
 import type { ViteRuntime } from 'vite/runtime'
 
 declare global {

@@ -35,14 +35,15 @@ describe('getConfig', () => {
           "debugPort": 18911,
           "path": "./api",
           "port": 8911,
-          "schemaPath": "./api/db/schema.prisma",
+          "prismaConfig": "./api/prisma.config.cjs",
           "serverConfig": "./api/server.config.js",
           "target": "node",
-          "title": "Redwood App",
+          "title": "Cedar App",
         },
         "browser": {
           "open": false,
         },
+        "eslintLegacyConfigWarning": true,
         "experimental": {
           "cli": {
             "autoInstall": true,
@@ -109,7 +110,7 @@ describe('getConfig', () => {
           "port": 8910,
           "sourceMap": false,
           "target": "browser",
-          "title": "Redwood App",
+          "title": "Cedar App",
         },
       }
     `)

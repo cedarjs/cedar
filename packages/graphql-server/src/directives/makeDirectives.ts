@@ -6,8 +6,8 @@ import type {
   TransformerDirectiveFunc,
   ValidatorDirective,
   ValidatorDirectiveFunc,
-} from '../plugins/useRedwoodDirective'
-import { DirectiveType } from '../plugins/useRedwoodDirective'
+} from '../plugins/useRedwoodDirective.js'
+import { DirectiveType } from '../plugins/useRedwoodDirective.js'
 
 /*
 We want directivesGlobs type to be an object with this shape:

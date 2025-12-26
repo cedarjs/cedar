@@ -3,7 +3,10 @@ import { fork } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
-import chalk from 'chalk'
+// See https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
@@ -74,11 +77,13 @@ export class ServerManager {
         forkOpts,
       )
     } else {
-      this.httpServerProcess = fork(
-        path.join(__dirname, 'bin.js'),
-        ['api', '--port', port.toString()],
-        forkOpts,
-      )
+      // An esbuild plugin will take care of import.meta.dirname
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const dirname = import.meta.dirname
+      const binPath = path.join(dirname, 'bin.js')
+      const args = ['api', '--port', port.toString()]
+      this.httpServerProcess = fork(binPath, args, forkOpts)
     }
   }
 
@@ -95,7 +100,7 @@ export class ServerManager {
     // Try to gracefully close the server
     // If it doesn't close within 2 seconds, forcefully close it
     await new Promise<void>((resolve) => {
-      console.log(chalk.yellow('Shutting down API server.'))
+      console.log(ansis.yellow('Shutting down API server.'))
 
       const cleanup = () => {
         this.httpServerProcess?.removeAllListeners('exit')
@@ -103,14 +108,14 @@ export class ServerManager {
       }
 
       this.httpServerProcess?.on('exit', () => {
-        console.log(chalk.yellow('API server exited.'))
+        console.log(ansis.yellow('API server exited.'))
         cleanup()
         resolve()
       })
 
       const forceKillTimeout = setTimeout(() => {
         console.log(
-          chalk.yellow(
+          ansis.yellow(
             'API server did not exit within 2 seconds, forcefully closing it.',
           ),
         )

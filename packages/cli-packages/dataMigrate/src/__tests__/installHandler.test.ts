@@ -1,9 +1,13 @@
-import fs from 'fs'
-
 import execa from 'execa'
-import { vol } from 'memfs'
+import { vol, fs as memfs } from 'memfs'
+import { vi, expect, describe, it } from 'vitest'
 
-import { getPaths } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getDataMigrationsPath,
+  getSchemaPath,
+} from '@cedarjs/project-config'
+import type ProjectConfig from '@cedarjs/project-config'
 
 import {
   handler,
@@ -12,14 +16,38 @@ import {
   notes,
 } from '../commands/installHandler'
 
-jest.mock('fs', () => require('memfs').fs)
+vi.mock('fs', async () => ({ ...memfs, default: memfs }))
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
-jest.mock('execa', () => {
+vi.mock('execa', () => {
+  const mockCommand = vi.fn(() => {
+    return {
+      stdout: 42,
+    }
+  })
+
   return {
-    command: jest.fn(() => {
-      return {
-        stdout: 42,
-      }
+    command: mockCommand,
+    default: {
+      command: mockCommand,
+    },
+  }
+})
+
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+  const mockPath = await import('path')
+
+  return {
+    ...originalProjectConfig,
+    getSchemaPath: vi.fn(async (prismaConfigPath) => {
+      // Simple mock: replace prisma.config.ts with schema.prisma
+      return prismaConfigPath.replace('prisma.config.ts', 'schema.prisma')
+    }),
+    getDataMigrationsPath: vi.fn(async (prismaConfigPath) => {
+      // Data migrations go next to the config file in test
+      const configDir = mockPath.dirname(prismaConfigPath)
+      return mockPath.join(configDir, 'dataMigrations')
     }),
   }
 })
@@ -38,7 +66,7 @@ describe('installHandler', () => {
 
   it("the `createDatabaseMigrationCommand` hasn't unintentionally changed", () => {
     expect(createDatabaseMigrationCommand).toMatchInlineSnapshot(
-      `"yarn rw prisma migrate dev --name create_data_migrations --create-only"`,
+      `"yarn cedar prisma migrate dev --name create_data_migrations --create-only"`,
     )
   })
 
@@ -50,22 +78,23 @@ describe('installHandler', () => {
       {
         'redwood.toml': '',
         api: {
-          db: {
-            'schema.prisma': '',
-          },
+          'prisma.config.ts': 'export default { schema: "./schema.prisma" }',
+          'schema.prisma': '',
         },
       },
       redwoodProjectPath,
     )
 
-    console.log = jest.fn()
+    console.log = vi.fn()
 
     await handler()
 
-    const dataMigrationsPath = getPaths().api.dataMigrations
+    const prismaConfigPath = getPaths().api.prismaConfig
+    const dataMigrationsPath = await getDataMigrationsPath(prismaConfigPath)
+    const schemaPath = await getSchemaPath(prismaConfigPath)
 
-    expect(fs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
-    expect(fs.readFileSync(getPaths().api.dbSchema, 'utf-8')).toMatch(
+    expect(memfs.readdirSync(dataMigrationsPath)).toEqual(['.keep'])
+    expect(memfs.readFileSync(schemaPath, 'utf-8')).toMatch(
       RW_DATA_MIGRATION_MODEL,
     )
     expect(execa.command).toHaveBeenCalledWith(createDatabaseMigrationCommand, {

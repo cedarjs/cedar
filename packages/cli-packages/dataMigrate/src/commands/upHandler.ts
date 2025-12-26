@@ -1,11 +1,11 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import type { PrismaClient } from '@prisma/client'
-import { bundleRequire } from 'bundle-require'
 import { Listr } from 'listr2'
 
-import { getPaths, resolveFile } from '@cedarjs/project-config'
+import { registerApiSideBabelHook } from '@cedarjs/babel-config'
+import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
 
 import c from '../lib/colors'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
@@ -15,12 +15,13 @@ export async function handler({
   distPath,
 }: DataMigrateUpOptions) {
   let db: any
+  let requireHookRegistered = false
 
   if (importDbClientFromDist) {
     if (!fs.existsSync(distPath)) {
       console.warn(
         `Can't find api dist at ${distPath}. You may need to build first: ` +
-          'yarn rw build api',
+          'yarn cedar build api',
       )
       process.exitCode = 1
       return
@@ -40,27 +41,10 @@ export async function handler({
 
     db = (await import(distLibDbPath)).db
   } else {
-    const dbPath = resolveFile(path.join(getPaths().api.lib, 'db'))
+    registerApiSideBabelHook()
+    requireHookRegistered = true
 
-    if (!dbPath) {
-      console.error(`Can't find your db file in ${getPaths().api.lib}`)
-      process.exitCode = 1
-      return
-    }
-
-    // Needed plugins:
-    // - babel-plugin-module-resolver: 'src' -> './src' etc
-    // - rwjs-babel-directory-named-modules: 'src/services/userExamples' -> './src/services/userExamples/userExamples.ts'
-    // - babel-plugin-auto-import: `import gql from 'graphql-tag`, `import { context } from '@cedarjs/context`
-    // - babel-plugin-graphql-tag: ???
-    // - rwjs-babel-glob-import-dir: Handle imports like src/services/**/*.{js,ts}
-    // - rwjs-babel-otel-wrapping: Wrap code in OpenTelemetry spans
-    const { mod } = await bundleRequire({
-      filepath: dbPath,
-      // TODO: Add plugins
-    })
-
-    db = mod.db
+    db = require(path.join(getPaths().api.lib, 'db')).db
   }
 
   const pendingDataMigrations = await getPendingDataMigrations(db)
@@ -87,6 +71,10 @@ export async function handler({
         }
       },
       async task() {
+        if (!requireHookRegistered) {
+          registerApiSideBabelHook()
+        }
+
         try {
           const { startedAt, finishedAt } = await runDataMigration(
             db,
@@ -138,7 +126,9 @@ export async function handler({
  * Return the list of migrations that haven't run against the database yet
  */
 async function getPendingDataMigrations(db: PrismaClient) {
-  const dataMigrationsPath = getPaths().api.dataMigrations
+  const dataMigrationsPath = await getDataMigrationsPath(
+    getPaths().api.prismaConfig,
+  )
 
   if (!fs.existsSync(dataMigrationsPath)) {
     return []
@@ -199,15 +189,10 @@ function sortDataMigrationsByVersion(
 }
 
 async function runDataMigration(db: PrismaClient, dataMigrationPath: string) {
-  const { mod } = await bundleRequire({
-    filepath: dataMigrationPath,
-    // TODO: Add plugins
-  })
-
-  const dataMigration = mod.default
+  const dataMigration = require(dataMigrationPath)
 
   const startedAt = new Date()
-  await dataMigration({ db })
+  await dataMigration.default({ db })
   const finishedAt = new Date()
 
   return { startedAt, finishedAt }

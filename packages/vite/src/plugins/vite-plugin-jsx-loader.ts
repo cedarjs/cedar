@@ -2,11 +2,9 @@ import type { PluginOption } from 'vite'
 import { transformWithEsbuild } from 'vite'
 
 /**
- *
  * This is a vite plugin to load and transform JS files as JSX.
- *
  */
-export function handleJsAsJsx(): PluginOption {
+export function cedarTransformJsAsJsx(): PluginOption {
   return {
     name: 'transform-js-files-as-jsx',
     async transform(code: string, id: string) {

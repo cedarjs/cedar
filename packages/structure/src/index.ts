@@ -1,6 +1,6 @@
 export { DiagnosticSeverity } from 'vscode-languageserver-types'
 export { DefaultHost, Host } from './hosts'
-export { RWProject } from './model'
+export { RWProject, RWRoute } from './model'
 export { URL_file } from './x/URL'
 import { DefaultHost } from './hosts'
 import { RWProject } from './model'

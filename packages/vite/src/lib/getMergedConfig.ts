@@ -1,13 +1,15 @@
 import path from 'node:path'
 
 import type { InputOption } from 'rollup'
-import type { ConfigEnv, UserConfig } from 'vite'
 import { mergeConfig } from 'vite'
+import type { ConfigEnv, ViteUserConfig } from 'vitest/config'
 
 import type { Config, Paths } from '@cedarjs/project-config'
-import { getConfig, getPaths } from '@cedarjs/project-config'
-
-import { getEnvVarDefinitions } from './envVarDefinitions.js'
+import {
+  getConfig,
+  getEnvVarDefinitions,
+  getPaths,
+} from '@cedarjs/project-config'
 
 /**
  * This function will merge in the default Redwood Vite config passed into the
@@ -17,7 +19,7 @@ import { getEnvVarDefinitions } from './envVarDefinitions.js'
  * build
  */
 export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
-  return (userConfig: UserConfig, env: ConfigEnv): UserConfig => {
+  return (userConfig: ViteUserConfig, env: ConfigEnv): ViteUserConfig => {
     let apiHost = process.env.REDWOOD_API_HOST
     apiHost ??= rwConfig.api.host
     apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '[::]'
@@ -33,7 +35,7 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
       apiPort = rwConfig.api.port
     }
 
-    const defaultRwViteConfig: UserConfig = {
+    const defaultRwViteConfig: ViteUserConfig = {
       root: rwPaths.web.src,
       // @MARK: when we have these aliases, the warnings from the FE server go
       // away BUT, if you have imports like this:
@@ -81,29 +83,44 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
                 waitingForApiServer = false
               }, 2500)
 
-              proxy.on('error', (err, _req, res) => {
-                if (
-                  waitingForApiServer &&
-                  err.message.includes('ECONNREFUSED')
-                ) {
-                  err.stack =
-                    '⌛ API Server launching, please refresh your page...'
+              proxy.on('error', (err, req, res) => {
+                const isWaiting =
+                  waitingForApiServer && err.message.includes('ECONNREFUSED')
+
+                if (!isWaiting) {
+                  console.error(err)
                 }
-                const msg = {
+
+                // This heuristic isn't perfect. It's written to handle dbAuth.
+                // But it's very unlikely the user would have code that does
+                // this exact request without it being a auth token request.
+                // We need this special handling because we don't want the error
+                // message below to be used as the auth token.
+                const isAuthTokenRequest =
+                  isWaiting && req.url === '/auth?method=getToken'
+
+                const waitingMessage =
+                  '⌛ API Server launching, please refresh your page...'
+                const genericMessage =
+                  'The Cedar API server is not available or is currently ' +
+                  'reloading. Please refresh.'
+
+                const responseBody = {
                   errors: [
-                    {
-                      message:
-                        'The RedwoodJS API server is not available or is ' +
-                        'currently reloading. Please refresh.',
-                    },
+                    { message: isWaiting ? waitingMessage : genericMessage },
                   ],
                 }
 
+                // Use 203 to indicate that the response was modified by a proxy
                 res.writeHead(203, {
                   'Content-Type': 'application/json',
                   'Cache-Control': 'no-cache',
                 })
-                res.write(JSON.stringify(msg))
+
+                if (!isAuthTokenRequest) {
+                  res.write(JSON.stringify(responseBody))
+                }
+
                 res.end()
               })
             },
@@ -142,6 +159,15 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
             global: 'globalThis',
           },
         },
+      },
+      ssr: {
+        // `@cedarjs/testing` is not externalized in order to support
+        // `import.meta.glob`, which we use in one of the files in the package
+        noExternal: env.mode === 'test' ? ['@cedarjs/testing'] : [],
+      },
+      test: {
+        globals: false,
+        environment: 'jsdom',
       },
     }
 

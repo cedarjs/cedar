@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
 import type { PlaywrightTestArgs, Page } from '@playwright/test'
 import execa from 'execa'
 
-import { loginAsTestUser, signUpTestUser } from '../../shared/common'
+import { loginAsTestUser, signUpTestUser } from '../../shared/common.js'
 
 // This is a special test that does the following
 // Signup a user (admin@bazinga.com), because salt/secrets won't match, we need to do this
@@ -65,7 +65,7 @@ test('RBAC: Should not be able to delete contact as non-admin user', async ({
 
   await page.locator('text=Delete').first().click()
 
-  await expect(
+  expect(
     page
       .locator('.rw-scaffold')
       .locator("text=You don't have permission to do that"),
@@ -77,7 +77,7 @@ test('RBAC: Should not be able to delete contact as non-admin user', async ({
     page.locator('.rw-scaffold').locator('text=Contact deleted'),
   ).toBeHidden()
 
-  await expect(
+  expect(
     await page.locator('text=charlie@chimichanga.com').count(),
   ).toBeGreaterThan(0)
 })
@@ -85,11 +85,11 @@ test('RBAC: Should not be able to delete contact as non-admin user', async ({
 test('RBAC: Admin user should be able to delete contacts', async ({ page }) => {
   fs.writeFileSync(
     path.join(
-      process.env.REDWOOD_TEST_PROJECT_PATH as string,
+      process.env.CEDAR_TEST_PROJECT_PATH as string,
       'scripts/makeAdmin.ts',
     ),
     `\
-import { db } from 'api/src/lib/db'
+import { db } from 'api/src/lib/db.js'
 
 export default async ({ args }) => {
   await db.user.update({
@@ -106,8 +106,8 @@ export default async ({ args }) => {
   )
 
   console.log(`Giving ${adminEmail} ADMIN role....`)
-  await execa(`yarn rw exec makeAdmin --email ${adminEmail}`, {
-    cwd: process.env.REDWOOD_TEST_PROJECT_PATH,
+  await execa(`yarn cedar exec makeAdmin --email ${adminEmail}`, {
+    cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     stdio: 'inherit',
     shell: true,
   })
@@ -137,7 +137,7 @@ export default async ({ args }) => {
     page.locator('.rw-scaffold').locator('text=Contact deleted'),
   ).toBeVisible()
 
-  await expect(await page.locator('text=charlie@chimichanga.com').count()).toBe(
+  expect(await page.locator('text=charlie@chimichanga.com').count()).toBe(
     contactCountBefore - 1,
   )
 })

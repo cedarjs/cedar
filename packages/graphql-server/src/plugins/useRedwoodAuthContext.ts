@@ -3,7 +3,7 @@ import type { Plugin } from 'graphql-yoga'
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
 import { getAuthenticationContext } from '@cedarjs/api'
 
-import type { RedwoodGraphQLContext, GraphQLHandlerOptions } from '../types'
+import type { RedwoodGraphQLContext, GraphQLHandlerOptions } from '../types.js'
 
 /**
  * Envelop plugin for injecting the current user into the GraphQL Context,

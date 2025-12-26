@@ -268,13 +268,13 @@ export async function handler({ force }) {
         'Then, connect to the container and migrate your database:',
         '',
         '  docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash',
-        '  root@...:/home/node/app# yarn rw prisma migrate dev',
+        '  root@...:/home/node/app# yarn cedar prisma migrate dev',
         '',
         "We assume you're using Postgres. If you're not, you'll need to make other changes to switch over.",
         "Lastly, ensure you have Docker. If you don't, see https://docs.docker.com/desktop/",
         '',
         "There's a lot in the Dockerfile and there's a reason for every line.",
-        'Be sure to check out the docs: https://redwoodjs.com/docs/docker',
+        'Be sure to check out the docs: https://cedarjs.com/docs/docker',
       ].join('\n'),
     )
   } catch (e) {

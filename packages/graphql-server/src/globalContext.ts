@@ -1,4 +1,4 @@
-import { getAsyncStoreInstance } from './globalContextStore'
+import { getAsyncStoreInstance } from './globalContextStore.js'
 
 /**
  * @deprecated This type will be available only from the `@cedarjs/context` package in a future release.

@@ -6,13 +6,13 @@ Love Cedar and want to get involved? You're in the right place! A perfect place 
 >
 > There are several contributing docs and references, each covering specific topics:
 >
-> 1. 🧭 [Overview and Orientation](https://redwoodjs.com/docs/contributing)
+> 1. 🧭 [Overview and Orientation](https://cedarjs.com/docs/contributing)
 > 2. 📓 **Reference: Contributing to the Framework Packages** (👈 you are here)
-> 3. 🪜 [Step-by-step Walkthrough](https://redwoodjs.com/docs/contributing-walkthrough) (including Video Recording)
+> 3. 🪜 [Step-by-step Walkthrough](https://cedarjs.com/docs/contributing-walkthrough) (including Video Recording)
 > 4. 📈 [Current Project Boards](https://github.com/orgs/redwoodjs/projects)
 > 5. 🤔 What should I work on?
 >    - ["Help Wanted" v1 Triage Board](https://redwoodjs.com/good-first-issue)
->    - [Discovery Process and Open Issues](https://redwoodjs.com/docs/contributing#what-should-i-work-on)
+>    - [Discovery Process and Open Issues](https://cedarjs.com/docs/contributing#what-should-i-work-on)
 
 ## Table of Contents
 
@@ -82,7 +82,7 @@ Run `yarn run build:test-project ../cedar-project` from the root of your local c
 
 Unless you've already got a project with a lot of functionality, it'd take quite some effort to add all of this yourself. Moreover, testing your changes in a project that has a lot of functionality will increase your confidence in the changes you're making.
 
-But how do you actually test your changes in the Cedar Framework in your Cedar Project? With another command, this time in the root of your Cedar Project: `yarn rwfw`.
+But how do you actually test your changes in the Cedar Framework in your Cedar Project? With another command, this time in the root of your Cedar Project: `yarn cfw`.
 
 **Test Project CLI Options:**
 
@@ -107,22 +107,22 @@ But how do you actually test your changes in the Cedar Framework in your Cedar P
 
 ### Testing the Framework in Your Project
 
-As you make changes to the Cedar Framework, you'll want to see your changes reflected "live" in a Cedar Project. Since we're always looking for ways to make contributing to Cedar easier, there are a few workflows we've come up with. The one you'll want to use is `yarn rwfw`.
+As you make changes to the Cedar Framework, you'll want to see your changes reflected "live" in a Cedar Project. Since we're always looking for ways to make contributing to Cedar easier, there are a few workflows we've come up with. The one you'll want to use is `yarn cfw`.
 
-> `rwfw` is short for Cedar Framework.
+> `cfw` is short for Cedar Framework.
 
-The command requires an env var `RWFW_PATH`. Unless you add the env var and value to your shell, the command structure will be `RWFW_PATH=<framework directory> yarn rwfw [option]`.
+The command requires an env var `CFW_PATH`. Unless you add the env var and value to your shell, the command structure will be `CFW_PATH=<framework directory> yarn cfw [option]`.
 
-> Note: On Windows, use `yarn cross-env RWFW_PATH=<framework directory> rwfw [option]`
+> Note: On Windows, use `yarn cross-env CFW_PATH=<framework directory> cfw [option]`
 
 Navigate to your Cedar Project and run the following, replacing `~/cedar` to match your local path:
 
 ```terminal
 cd cedar-project
-RWFW_PATH=~/cedar yarn rwfw project:sync
+CFW_PATH=~/cedar yarn cfw project:sync
 ```
 
-Where `~/cedar` is the path to your local copy of the Cedar Framework. Once provided to `rwfw`, it'll remember it and you shouldn't have to provide it again unless you move it.
+Where `~/cedar` is the path to your local copy of the Cedar Framework. Once provided to `cfw`, it'll remember it and you shouldn't have to provide it again unless you move it.
 
 As `project:sync` starts up, it'll start logging to the console. In order, it:
 
@@ -136,13 +136,13 @@ Step two is the only explicit change you'll see to your project. You'll see that
 
 ![image](https://user-images.githubusercontent.com/32992335/130699570-6ceb91a6-58aa-4cbf-a080-9cee6f26aaf2.png)
 
-This is all the packages in the Cedar Framework. It's a lot! But don't worry, this'll be cleaned up when you exit the `yarn rwfw project:sync` command.
+This is all the packages in the Cedar Framework. It's a lot! But don't worry, this'll be cleaned up when you exit the `yarn cfw project:sync` command.
 
 Congratulations, you're all setup! Any changes you make in the Cedar Framework should be reflected in your Cedar Project.
 
 ### Testing the CLI in Your Project
 
-While you can test the CLI using `yarn rwfw`, there's an easier way.
+While you can test the CLI using `yarn cfw`, there's an easier way.
 
 If you've made build or design time changes to Cedar—that is, if you've modified one of the following packages:
 
@@ -181,9 +181,12 @@ You can use the button below to start a developer environment in the cloud and a
 
 This generates a functional test project and links it with the Cedar Framework code in `main`, giving you an easy playground to try out your fixes and contributions.
 
-> Note: if you make changes to the framework, you will need to run `yarn rwfw project:sync` in the terminal, so that your changes are watched and reflected in the test project
+> Note: if you make changes to the framework, you will need to sync your changes to the test project. You can either:
+>
+> - Run `yarn cfw project:sync` in the terminal, or
+> - Use the **"Sync Framework Changes"** task directly from the Ona dashboard
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/cedarjs/cedar)
+[![Open in Ona](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/cedarjs/cedar)
 
 ## Local QA and Integration Tests
 
@@ -305,17 +308,17 @@ If needed, there's more information in [this PR #3154 comment](https://github.co
 
 # Creating a Reproduction to Include with Issues
 
-Are you about to open an issue? Including a reproduction, either as a series of steps, as a public GitHub repo, or as a Gitpod snapshot, will definitely let us help you faster!
+Are you about to open an issue? Including a reproduction, either as a series of steps, as a public GitHub repo, or as an Ona snapshot, will definitely let us help you faster!
 
-## Option 1: Create a Gitpod Snapshot
+## Option 1: Create an Ona Snapshot
 
-This is a great option when the issue you're reporting is cross-platform. I.e., it isn't a Windows-specific issue. Here's a video walkthrough on how to create a snapshot of the [Redwood-Gitpod starter repo](https://github.com/redwoodjs/starter):
+This is a great option when the issue you're reporting is cross-platform. I.e., it isn't a Windows-specific issue. You can create a snapshot of the [Redwood starter repo](https://github.com/redwoodjs/starter) using Ona's cloud development environment.
 
 https://user-images.githubusercontent.com/1521877/176033049-d3c57b92-3ee6-4c60-918b-fdbcfa83fd0f.mp4
 
 ## Option 2: Fork the Starter Repo
 
-You can always fork the [Redwood-Gitpod starter repo](https://github.com/redwoodjs/starter) which is a brand new project with the latest stable version of Redwood.
+You can always fork the [Redwood starter repo](https://github.com/redwoodjs/starter) which is a brand new project with the latest stable version of Redwood.
 Once you make your changes in your fork, include the link to your repo in your issue. This'll make it much easier for us to understand what's going on.
 
 # Release Publishing

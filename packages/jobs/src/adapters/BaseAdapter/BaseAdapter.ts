@@ -6,6 +6,7 @@ export interface SchedulePayload {
   name: string
   path: string
   args: unknown[]
+  cron?: string | undefined
   runAt: Date
   queue: string
   priority: number
@@ -23,11 +24,13 @@ export interface BaseAdapterOptions {
 
 export interface SuccessOptions<TJob extends BaseJob = BaseJob> {
   job: TJob
+  runAt: Date | undefined
   deleteJob?: boolean
 }
 
 export interface ErrorOptions<TJob extends BaseJob = BaseJob> {
   job: TJob
+  runAt: Date
   error: Error
 }
 
@@ -74,7 +77,9 @@ export abstract class BaseAdapter<
   abstract success(options: SuccessOptions): void | Promise<void>
 
   /**
-   * Called when an attempt to run a job produced an error
+   * Called when an attempt to run a job produced an error.
+   * This should update the stored job with the new `options.runAt` so that it
+   * will be retried
    */
   abstract error(options: ErrorOptions): void | Promise<void>
 

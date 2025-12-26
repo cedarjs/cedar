@@ -6,9 +6,9 @@ import type {
   FastifyInstance,
 } from 'fastify'
 
-import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers'
+import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 
-import { getAPIHost, getAPIPort } from './cliHelpers'
+import { getAPIHost, getAPIPort } from './cliHelpers.js'
 
 export type StartOptions = Omit<FastifyListenOptions, 'port' | 'host'>
 
@@ -31,6 +31,12 @@ export interface CreateServerOptions {
    * Omitting logger here because we move it up.
    */
   fastifyServerOptions?: Omit<FastifyServerOptions, 'logger'>
+
+  /**
+   * Override the glob used to discover functions.
+   * Defaults to: "dist/functions/**\/*.{ts,js}"
+   */
+  discoverFunctionsGlob?: string | string[]
 
   /** Customise the API server fastify plugin before it is registered */
   configureApiServer?: (server: Server) => void | Promise<void>
@@ -65,6 +71,7 @@ export const getDefaultCreateServerOptions: () => DefaultCreateServerOptions =
       requestTimeout: 15_000,
       bodyLimit: 1024 * 1024 * 100, // 100MB
     },
+    discoverFunctionsGlob: 'dist/functions/**/*.{ts,js}',
     configureApiServer: () => {},
     parseArgs: true,
     apiHost: getAPIHost(),
@@ -102,6 +109,8 @@ export function resolveOptions(
       requestTimeout: defaults.fastifyServerOptions.requestTimeout,
       bodyLimit: defaults.fastifyServerOptions.bodyLimit,
     },
+    discoverFunctionsGlob:
+      options.discoverFunctionsGlob ?? defaults.discoverFunctionsGlob,
     configureApiServer:
       options.configureApiServer ?? defaults.configureApiServer,
     apiHost: options.apiHost ?? defaults.apiHost,

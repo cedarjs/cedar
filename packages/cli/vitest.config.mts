@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, configDefaults } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -7,7 +7,38 @@ export default defineConfig({
       hooks: 'list',
     },
     logHeapUsage: true,
-    workspace: './vitest.workspaces.ts',
+    exclude: [
+      ...configDefaults.exclude,
+      '**/__tests__/fixtures/**/*',
+      '__fixtures__',
+      '__testfixtures__',
+      '__tests__/utils/*',
+      '.d.ts',
+      'dist',
+    ],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'root',
+          include: ['**/*.test.[jt]s?(x)'],
+          exclude: ['**/__codemod_tests__'],
+          alias: {
+            '^src/(.*)': '<rootDir>/src/$1',
+          },
+          setupFiles: ['./vitest.setup.mts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'setup codemods',
+          include: ['**/commands/setup/**/__codemod_tests__/*.ts'],
+          setupFiles: ['./vitest.codemods.setup.ts'],
+          pool: 'forks',
+        },
+      },
+    ],
     env: {
       FORCE_COLOR: 'true',
     },

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import chalk from 'chalk'
+import ansis from 'ansis'
 import execa from 'execa'
 import yargs from 'yargs/yargs'
 
@@ -33,8 +33,8 @@ Options:
   -d, --dist-path                           Path to the api dist directory
          [string] [default: "/Users/dom/projects/redwood/test-project/api/dist"]
 
-Also see the Redwood CLI Reference
-(https://redwoodjs.com/docs/cli-commands#datamigrate-up)`
+Also see the CedarJS CLI Reference
+(https://cedarjs.com/docs/cli-commands#datamigrate-up)`
 
 const expectedBinNoPendingDataMigrations = `\
 
@@ -50,25 +50,25 @@ Options:
   --help     Show help                                                 [boolean]
   --version  Show version number                                       [boolean]
 
-Also see the Redwood CLI Reference
-(https://redwoodjs.com/docs/cli-commands#datamigrate-install)`
+Also see the CedarJS CLI Reference
+(https://cedarjs.com/docs/cli-commands#datamigrate-install)`
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 const testProjectPath =
-  process.env.REDWOOD_TEST_PROJECT_PATH ?? process.env.PROJECT_PATH
+  process.env.CEDAR_TEST_PROJECT_PATH ?? process.env.PROJECT_PATH
 
 // Handle there being no test project to run against.
 if (testProjectPath === undefined) {
   console.error(
     [
-      chalk.red('Error: No test project to run against.'),
+      ansis.red('Error: No test project to run against.'),
       "If you haven't generated a test project, do so first via...",
       '',
       '  yarn build:test-project --link <your test project path>',
       '',
-      `Then set the ${chalk.magenta(
-        'REDWOOD_TEST_PROJECT_PATH',
+      `Then set the ${ansis.magenta(
+        'CEDAR_TEST_PROJECT_PATH',
       )} env var to the path of your test project and run this script again.`,
     ].join('\n'),
   )
@@ -85,7 +85,7 @@ stdout = (await execa.command(`${command} --help`)).stdout
 assert.equal(stdout, expectedBinHelp)
 
 // ─── Bin No Pending Data Migrations ──────────────────────────────────────────
-await execa.command('yarn rw prisma generate')
+await execa.command('yarn cedar prisma generate')
 
 console.log('Running bin no pending data migrations test')
 stdout = (await execa.command(command)).stdout
@@ -110,11 +110,11 @@ await parser.parse(['install'])
 // check that install worked...
 
 // ─── Bin ─────────────────────────────────────────────────────────────────────
-await execa.command('yarn rw prisma migrate dev --name test', {
+await execa.command('yarn cedar prisma migrate dev --name test', {
   stdio: 'inherit',
 })
 
-await execa.command('yarn rw g data-migration test', {
+await execa.command('yarn cedar g data-migration test', {
   stdio: 'inherit',
 })
 

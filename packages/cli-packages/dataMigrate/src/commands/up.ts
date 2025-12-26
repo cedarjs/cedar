@@ -1,7 +1,7 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, projectIsEsm } from '@cedarjs/project-config'
 
 import type { DataMigrateUpOptions } from '../types'
 
@@ -25,13 +25,18 @@ export function builder(yargs: Argv): Argv {
     })
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#datamigrate-up',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#datamigrate-up',
       )}`,
     )
 }
 
 export async function handler(options: DataMigrateUpOptions): Promise<void> {
-  const { handler: dataMigrateUpHandler } = await import('./upHandler.js')
-  await dataMigrateUpHandler(options)
+  if (projectIsEsm()) {
+    const { handler: dataMigrateUpHandler } = await import('./upHandlerEsm.js')
+    await dataMigrateUpHandler(options)
+  } else {
+    const { handler: dataMigrateUpHandler } = await import('./upHandler.js')
+    await dataMigrateUpHandler(options)
+  }
 }

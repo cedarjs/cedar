@@ -5,11 +5,11 @@ import { OperationTypeNode } from 'graphql'
 import type { Plugin } from 'graphql-yoga'
 import { useReadinessCheck, createYoga } from 'graphql-yoga'
 
-import { mapRwCorsOptionsToYoga } from './cors'
-import { makeDirectivesForPlugin } from './directives/makeDirectives'
-import { configureGraphiQLPlayground } from './graphiql'
-import { configureGraphQLIntrospection } from './introspection'
-import { makeMergedSchema } from './makeMergedSchema'
+import { mapRwCorsOptionsToYoga } from './cors.js'
+import { makeDirectivesForPlugin } from './directives/makeDirectives.js'
+import { configureGraphiQLPlayground } from './graphiql.js'
+import { configureGraphQLIntrospection } from './introspection.js'
+import { makeMergedSchema } from './makeMergedSchema.js'
 import {
   useArmor,
   useRedwoodAuthContext,
@@ -20,14 +20,14 @@ import {
   useRedwoodLogger,
   useRedwoodPopulateContext,
   useRedwoodTrustedDocuments,
-} from './plugins'
+} from './plugins/index.js'
 import type {
   useRedwoodDirectiveReturn,
   DirectivePluginOptions,
-} from './plugins/useRedwoodDirective'
-import { makeSubscriptions } from './subscriptions/makeSubscriptions'
-import type { RedwoodSubscription } from './subscriptions/makeSubscriptions'
-import type { GraphQLYogaOptions } from './types'
+} from './plugins/useRedwoodDirective.js'
+import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
+import type { RedwoodSubscription } from './subscriptions/makeSubscriptions.js'
+import type { GraphQLYogaOptions } from './types.js'
 
 export const createGraphQLYoga = ({
   healthCheckId = 'yoga',

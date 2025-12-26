@@ -33,8 +33,8 @@ export const builder = (yargs: Argv) => {
     })
     .epilogue(
       `For more commands, options, and examples, see ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#deploy',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#deploy',
       )}`,
     )
 

@@ -48,8 +48,6 @@ export const registerShims = (routerPath: string) => {
   // This is to avoid using cross-fetch when configuring apollo-client
   // which would cause the client bundle size to increase
   if (!globalThis.fetch) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore-next-line
     globalThis.fetch = fetch
   }
 }

@@ -1,15 +1,12 @@
-import type yargs from 'yargs'
+import { vi, expect, describe, it } from 'vitest'
+import type { Argv } from 'yargs'
 
 import * as installCommand from '../commands/install'
 import { handler as dataMigrateInstallHandler } from '../commands/installHandler.js'
 
-jest.mock(
-  '../commands/installHandler.js',
-  () => ({
-    handler: jest.fn(),
-  }),
-  { virtual: true },
-)
+vi.mock('../commands/installHandler.js', () => ({
+  handler: vi.fn(),
+}))
 
 describe('install', () => {
   it('exports `command`, `description`, `builder`, and `handler`', () => {
@@ -28,7 +25,7 @@ describe('install', () => {
   it('`builder` has an epilogue', () => {
     // The typecasting here is to make TS happy when calling `builder(yargs)`
     // further down. We know that only `epilogue` will be called.
-    const yargs = { epilogue: jest.fn() } as unknown as yargs.Argv
+    const yargs = { epilogue: vi.fn() } as unknown as Argv
 
     installCommand.builder(yargs)
 
@@ -38,11 +35,11 @@ describe('install', () => {
     // to avoid having to match control characters that might not even always
     // be there
     expect(yargs.epilogue).toHaveBeenCalledWith(
-      expect.stringMatching(/Also see the .*Redwood CLI Reference.*/),
+      expect.stringMatching(/Also see the .*CedarJS CLI Reference.*/),
     )
     expect(yargs.epilogue).toHaveBeenCalledWith(
       expect.stringMatching(
-        /https:\/\/redwoodjs\.com\/docs\/cli-commands#datamigrate-install/,
+        /https:\/\/cedarjs\.com\/docs\/cli-commands#datamigrate-install/,
       ),
     )
   })

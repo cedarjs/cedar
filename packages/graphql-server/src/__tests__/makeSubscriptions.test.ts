@@ -1,7 +1,7 @@
-import gql from 'graphql-tag'
+import { gql } from 'graphql-tag'
 import { describe, expect, it } from 'vitest'
 
-import { makeSubscriptions } from '../subscriptions/makeSubscriptions'
+import { makeSubscriptions } from '../subscriptions/makeSubscriptions.js'
 const countdownSchema = gql`
   type Subscription {
     countdown(from: Int!, interval: Int!): Int!

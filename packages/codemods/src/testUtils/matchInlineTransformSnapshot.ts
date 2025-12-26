@@ -1,7 +1,7 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 
-import tempy from 'tempy'
 import { expect } from 'vitest'
 
 import runTransform from '../lib/runTransform'
@@ -14,7 +14,14 @@ export const matchInlineTransformSnapshot = async (
   expectedCode: string,
   parser: 'ts' | 'tsx' | 'babel' = 'tsx',
 ) => {
-  const tempFilePath = tempy.file()
+  const tempDir = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
+  )
+  const tempFilePath = path.join(
+    tempDir,
+    'tmpfile' + Math.random().toString().replace('.', ''),
+  )
+  fs.closeSync(fs.openSync(tempFilePath, 'w'))
 
   // Looks up the path of the caller
   const testPath = expect.getState().testPath
@@ -46,4 +53,9 @@ export const matchInlineTransformSnapshot = async (
   expect(await formatCode(transformedContent)).toEqual(
     await formatCode(expectedCode),
   )
+
+  // Not awaiting - it'll be cleaned up eventually. Also, I was getting errors
+  // like these on Windows, so I'm just catching and ignoring them.
+  // Error: EBUSY: resource busy or locked, rmdir 'C:\Users\RUNNER~1\AppData\Local\Temp\cedar-test-UhbKQX'
+  fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {})
 }

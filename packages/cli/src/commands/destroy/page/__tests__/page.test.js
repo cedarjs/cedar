@@ -82,8 +82,8 @@ test('destroys page files', async () => {
   const t = tasks({ name: 'About' })
   t.options.renderer = 'silent'
 
-  return t.tasks[0].run().then(() => {
-    const generatedFiles = Object.keys(files({ name: 'About' }))
+  return t.tasks[0].run().then(async () => {
+    const generatedFiles = Object.keys(await files({ name: 'About' }))
     expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
     generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
   })
@@ -107,8 +107,8 @@ test('destroys page files with stories and tests', async () => {
   const t = tasks(fileOptions)
   t.options.renderer = 'silent'
 
-  return t.tasks[0].run().then(() => {
-    const generatedFiles = Object.keys(files(fileOptions))
+  return t.tasks[0].run().then(async () => {
+    const generatedFiles = Object.keys(await files(fileOptions))
     expect(generatedFiles.length).toEqual(unlinkSpy.mock.calls.length)
     generatedFiles.forEach((f) => expect(unlinkSpy).toHaveBeenCalledWith(f))
   })

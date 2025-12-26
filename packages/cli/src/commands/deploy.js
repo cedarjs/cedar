@@ -1,5 +1,3 @@
-export const command = 'deploy <target>'
-export const description = 'Deploy your Redwood project'
 import { terminalLink } from 'termi-link'
 
 import * as deployBaremetal from './deploy/baremetal.js'
@@ -9,6 +7,8 @@ import * as deployRender from './deploy/render.js'
 import * as deployServerless from './deploy/serverless.js'
 import * as deployVercel from './deploy/vercel.js'
 
+export const command = 'deploy <target>'
+export const description = 'Deploy your Redwood project'
 export const builder = (yargs) =>
   yargs
     .command(deployBaremetal)
@@ -20,7 +20,7 @@ export const builder = (yargs) =>
     .demandCommand()
     .epilogue(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#deploy',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#deploy',
       )}\n`,
     )

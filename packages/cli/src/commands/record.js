@@ -10,7 +10,7 @@ export const builder = (yargs) =>
     .epilogue(
       `Also see the ${terminalLink(
         'RedwoodRecord Docs',
-        'https://redwoodjs.com/docs/redwoodrecord',
+        'https://cedarjs.com/docs/redwoodrecord',
       )}\n`,
     )
 

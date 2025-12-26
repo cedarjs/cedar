@@ -3,9 +3,17 @@
   "configMigration": true,
   "extends": ["config:recommended"],
   "postUpdateOptions": ["yarnDedupeHighest"],
-  "prConcurrentLimit": 3,
+  "prConcurrentLimit": 8,
   "rebaseWhen": "conflicted",
   "packageRules": [
+    {
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
     {
       "matchUpdateTypes": ["patch"],
       "automerge": true,
@@ -23,7 +31,6 @@
       "enabled": false,
       "matchPackageNames": [
         "boxen",
-        "chalk",
         "camelcase",
         "execa",
         "humanize-string",
@@ -31,8 +38,6 @@
         "pretty-bytes",
         "pretty-ms",
         "stdout-update",
-        "tempy",
-        "termi-link",
         "title-case",
         "untildify",
         "/^@cedarjs//"
@@ -47,9 +52,14 @@
         "glob",
         "mheap/github-action-required-labels action",
         "nx",
-        "sort-package-json",
         "zx"
       ]
+    },
+    {
+      "groupName": "Noisy packages",
+      "description": "Limit updates for noisy packages to twice per month",
+      "matchPackageNames": ["nx", "@clerk/clerk-react", "@clerk/types", "knip"],
+      "schedule": ["* * 1,15 * *"]
     }
   ]
 }

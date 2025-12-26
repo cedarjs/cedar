@@ -1,6 +1,6 @@
 // Import other mocking function globals
 import '@cedarjs/testing'
-import { InferredCurrentUser } from './all-currentUser'
+import { InferredCurrentUser } from './all-currentUser.js'
 
 declare global {
   const mockCurrentUser: (currentUser: InferredCurrentUser) => void

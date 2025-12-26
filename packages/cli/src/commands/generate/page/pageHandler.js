@@ -188,7 +188,7 @@ export const handler = async ({
   })
 
   if (process.platform === 'win32') {
-    // running `yarn rw g page home /` on Windows using GitBash
+    // running `yarn cedar g page home /` on Windows using GitBash
     // POSIX-to-Windows path conversion will kick in.
     // See https://github.com/git-for-windows/build-extra/blob/d715c9e/ReleaseNotes.md
     // As a workaround we try to detect when this has happened, and reverse
@@ -202,9 +202,9 @@ export const handler = async ({
         .toString()
         .trim()
 
-      // `yarn rw g page home /` =>
+      // `yarn cedar g page home /` =>
       //   page === 'C:/Program Files/Git'
-      // `yarn rw g page about /about` =>
+      // `yarn cedar g page about /about` =>
       //   page === 'C:/Program Files/Git/about'
       // Sometimes there is a / after 'Git' to match, sometimes there isn't
       path = path.replace(new RegExp(`^${slashPath}?`), '/')

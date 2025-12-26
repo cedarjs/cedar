@@ -3,7 +3,8 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 export const command = 'mailer'
 
 export const description =
-  'Setup the redwood mailer. This will install the required packages and add the required initial configuration to your redwood app.'
+  'Setup the Cedar mailer. This will install the required packages and add ' +
+  'the required initial configuration to your Cedar app.'
 
 export const builder = (yargs) => {
   yargs

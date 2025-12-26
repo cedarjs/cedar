@@ -3,8 +3,10 @@ import path from 'node:path'
 import { fs as memfs, vol } from 'memfs'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
+// @ts-expect-error - No types for .js files
 import { runScriptFunction } from '../../lib/exec.js'
 import '../../lib/mockTelemetry'
+// @ts-expect-error - No types for .js files
 import { handler } from '../execHandler.js'
 
 vi.mock('@cedarjs/babel-config', () => ({
@@ -19,15 +21,15 @@ vi.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({
     api: { base: '', src: '' },
     web: { base: '', src: '' },
-    scripts: path.join('redwood-app', 'scripts'),
+    scripts: path.join('cedar-app', 'scripts'),
   }),
-  getConfig: () => ({}),
+  getConfig: () => ({ experimental: { streamingSsr: { enabled: false } } }),
   resolveFile: (path: string) => path,
 }))
 
 vi.mock('@cedarjs/internal/dist/files', () => ({
   findScripts: () => {
-    const scriptsPath = path.join('redwood-app', 'scripts')
+    const scriptsPath = path.join('cedar-app', 'scripts')
 
     return [
       path.join(scriptsPath, 'one', 'two', 'myNestedScript.ts'),
@@ -54,15 +56,15 @@ afterEach(() => {
   vi.mocked(console).log.mockRestore()
 })
 
-describe('yarn rw exec', () => {
+describe('yarn cedar exec', () => {
   it('passes args on to the script', async () => {
     vol.fromJSON({
       'redwood.toml': '# redwood.toml',
-      [path.join('redwood-app', 'scripts', 'normalScript.ts')]: '// script',
+      [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
     })
 
     // Running:
-    // `yarn rw exec normalScript positional1 --no-prisma positional2 --arg1=foo --arg2 bar`
+    // `yarn cedar exec normalScript positional1 --no-prisma positional2 --arg1=foo --arg2 bar`
     const args = {
       _: ['exec', 'positional1', 'positional2'],
       prisma: false,
@@ -85,12 +87,12 @@ describe('yarn rw exec', () => {
         },
       },
       functionName: 'default',
-      path: path.join('redwood-app', 'scripts', 'normalScript.ts'),
+      path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
     })
   })
 })
 
-describe('yarn rw exec --list', () => {
+describe('yarn cedar exec --list', () => {
   it('includes nested scripts', async () => {
     await handler({ list: true })
     const scriptPath = path

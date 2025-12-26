@@ -41,7 +41,7 @@ export async function handler({ force: forceArg }: Args) {
       ']',
       '```',
       '',
-      'Also see https://redwoodjs.com/docs/auth/firebase for a full walkthrough.',
+      'Also see https://cedarjs.com/docs/auth/firebase for a full walkthrough.',
     ],
   })
 }

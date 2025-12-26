@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -116,7 +117,7 @@ export async function renderRoutesSsr(pathname: string) {
     {
       get(_target, encodedId: string) {
         console.log('Proxy get encodedId', encodedId)
-        const [filePath, name] = encodedId.split('#') as [string, string]
+        const [filePath, name] = encodedId.split('#')
         // filePath /Users/tobbe/tmp/test-project-rsc-kitchen-sink/web/dist/rsc/assets/rsc-AboutCounter.tsx-1.mjs
         // name AboutCounter
 
@@ -126,6 +127,22 @@ export async function renderRoutesSsr(pathname: string) {
 
         console.log('clientSsr.ts::Proxy id', id)
         // id /Users/tobbe/tmp/test-project-rsc-kitchen-sink/web/dist/browser/assets/rsc-AboutCounter.tsx-1-4kTKU8GC.mjs
+        return { id, chunks: [id], name, async: true }
+      },
+    },
+  )
+
+  const serverModuleMap = new Proxy(
+    {},
+    {
+      get(_target, encodedId: string) {
+        console.log('serverModuleMap Proxy get encodedId', encodedId)
+        const [filePath, name] = encodedId.split('#')
+        // Server actions are in the RSC bundle, not the SSR client bundle
+        // So we use the filePath directly instead of resolving through
+        // clientEntries
+        const id = pathToFileURL(filePath).href
+        console.log('serverModuleMap::Proxy id', id)
         return { id, chunks: [id], name, async: true }
       },
     },
@@ -174,7 +191,11 @@ export async function renderRoutesSsr(pathname: string) {
   // Here we use `createFromReadableStream`, which is equivalent to
   // `createFromFetch` as used in the browser
   const data = createFromReadableStream(streamForRendering, {
-    ssrManifest: { moduleMap, moduleLoading: null },
+    serverConsumerManifest: {
+      moduleMap,
+      serverModuleMap,
+      moduleLoading: null,
+    },
   })
 
   // TODO (RSC): Since this is SSR, do we need caching?

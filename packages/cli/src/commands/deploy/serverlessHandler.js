@@ -1,7 +1,7 @@
 import path from 'path'
 
+import ansis from 'ansis'
 import boxen from 'boxen'
-import chalk from 'chalk'
 import { config } from 'dotenv-defaults'
 import execa from 'execa'
 import fs from 'fs-extra'
@@ -35,7 +35,7 @@ export const buildCommands = ({ sides }) => {
       enabled: () => sides.includes('api'),
       task: async () => {
         // Dynamically import this function
-        // because its dependencies are only installed when `rw setup deploy serverless` is run
+        // because its dependencies are only installed when `cedar setup deploy serverless` is run
         const { nftPack } = await import('./packing/nft.js')
 
         await nftPack()
@@ -110,7 +110,7 @@ export const handler = async (yargs) => {
     await tasks.run()
 
     if (yargs.firstRun) {
-      const SETUP_MARKER = chalk.bgBlue(chalk.black('First Setup '))
+      const SETUP_MARKER = ansis.bgBlue.black('First Setup ')
       console.log()
 
       console.log(SETUP_MARKER, c.success('Starting first setup wizard...'))
@@ -192,7 +192,7 @@ export const handler = async (yargs) => {
           'To do this run `yarn serverless` on each of the sides, and connect your account',
           '',
           'Find more information in our docs:',
-          c.underline('https://redwoodjs.com/docs/deploy#serverless'),
+          c.underline('https://cedarjs.com/docs/deploy#serverless'),
         ]
 
         console.log(

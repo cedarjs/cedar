@@ -7,49 +7,31 @@ import fs from 'fs-extra'
 
 import { runCommandTask, getPaths } from '../lib/index.js'
 
-const skipTask = (schema = getPaths().api.dbSchema) => {
-  if (!fs.existsSync(schema)) {
-    console.log(
-      `Skipping database and Prisma client generation, no \`schema.prisma\` file found: \`${schema}\``,
-    )
-    return true
-  }
-  return false
-}
-
-export const generatePrismaCommand = (schema) => {
-  if (skipTask(schema)) {
-    return {}
-  }
-
+export const generatePrismaCommand = async () => {
   const createdRequire = createRequire(import.meta.url)
   // I wanted to use `import.meta.resolve` here, but it's not supported by
   // vitest yet
   // https://github.com/vitest-dev/vitest/issues/6953
   // The path will be something like
-  // /Users/tobbe/tmp/rx-test-project/node_modules/prisma/build/index.js
+  // /Users/tobbe/tmp/cedar-test-project/node_modules/prisma/build/index.js
   const prismaIndexPath = createdRequire.resolve('prisma/build/index.js')
 
   return {
     cmd: `node "${prismaIndexPath}"`,
-    args: ['generate', schema && `--schema="${schema}"`],
+    args: ['generate', `--config="${getPaths().api.prismaConfig}"`],
   }
 }
 
 /**
- * Conditionally generate the prisma client, skip if it already exists.
+ * Conditionally generate the prisma client, skip if it already exists (unless
+ * forced).
  */
 export const generatePrismaClient = async ({
   verbose = true,
   force = true,
   silent = false,
-  schema = getPaths().api.dbSchema,
 }) => {
-  if (skipTask(schema)) {
-    return
-  }
-
-  // Do not generate the Prisma client if it exists.
+  // Unless --force is used we do not generate the Prisma client if it exists.
   if (!force) {
     const prismaClientPath = path.join(
       getPaths().base,
@@ -68,6 +50,7 @@ export const generatePrismaClient = async ({
     // good enough for now.
     // If we want to go back to `await import(...)` we could try appending
     // `?cache_busting=${Date.now()}` to the URL.
+    // TODO: Revisit this when we've switched to Prisma's new TS engine
     if (
       !prismaClientFile.includes('@prisma/client did not initialize yet.') &&
       prismaClientFile.includes('exports.Prisma.')
@@ -81,7 +64,7 @@ export const generatePrismaClient = async ({
     [
       {
         title: 'Generating the Prisma client...',
-        ...generatePrismaCommand(schema),
+        ...(await generatePrismaCommand()),
       },
     ],
     {

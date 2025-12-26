@@ -15,7 +15,7 @@ const startDevServer = async () => {
 
   // Tries to maintain the same options as vite's dev cli
   // See here: https://github.com/vitejs/vite/blob/main/packages/vite/src/node/cli.ts#L103
-  // e.g. yarn rw dev web --fwd="--force"
+  // e.g. yarn cedar dev web --fwd="--force"
   const {
     force: forceOptimize,
     forwardedServerArgs,

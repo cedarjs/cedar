@@ -1,6 +1,6 @@
 # base
 # ----
-FROM node:20-bookworm-slim as base
+FROM node:24-bookworm-slim as base
 
 RUN npm install --global corepack
 
@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000 \
   CI=1 yarn install
 
 COPY --chown=node:node redwood.toml .
-COPY --chown=node:node graphql.config.js .
+COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
 # api build
@@ -41,25 +41,25 @@ FROM base as api_build
 # ARG MY_BUILD_TIME_ENV_VAR
 
 COPY --chown=node:node api api
-RUN yarn rw build api
+RUN yarn cedar build api
 
 # web prerender build
 # -------------------
 FROM api_build as web_build_with_prerender
 
 COPY --chown=node:node web web
-RUN yarn rw build web
+RUN yarn cedar build web
 
 # web build
 # ---------
 FROM base as web_build
 
 COPY --chown=node:node web web
-RUN yarn rw build web --no-prerender
+RUN yarn cedar build web --no-prerender
 
 # api serve
 # ---------
-FROM node:20-bookworm-slim as api_serve
+FROM node:24-bookworm-slim as api_serve
 
 RUN npm install --global corepack
 
@@ -83,7 +83,7 @@ RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000 \
   CI=1 yarn workspaces focus api --production
 
 COPY --chown=node:node redwood.toml .
-COPY --chown=node:node graphql.config.js .
+COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
 COPY --chown=node:node --from=api_build /home/node/app/api/dist /home/node/app/api/dist
@@ -99,11 +99,11 @@ ENV NODE_ENV=production
 # This is important if you intend to configure GraphQL to use Realtime.
 #
 # CMD [ "./api/dist/server.js" ]
-CMD [ "node_modules/.bin/rw-server", "api" ]
+CMD [ "node_modules/.bin/cedarjs-server", "api" ]
 
 # web serve
 # ---------
-FROM node:20-bookworm-slim as web_serve
+FROM node:24-bookworm-slim as web_serve
 
 RUN npm install --global corepack
 
@@ -123,7 +123,7 @@ RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000 \
   CI=1 yarn workspaces focus web --production
 
 COPY --chown=node:node redwood.toml .
-COPY --chown=node:node graphql.config.js .
+COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
 COPY --chown=node:node --from=web_build /home/node/app/web/dist /home/node/app/web/dist

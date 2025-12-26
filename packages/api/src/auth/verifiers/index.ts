@@ -13,10 +13,12 @@ export const createVerifier = (
   type: SupportedVerifierTypes,
   options?: VerifyOptions,
 ): WebhookVerifier => {
+  const verifierFactory = verifierLookup[type]
+
   if (options) {
-    return verifierLookup[type](options)
+    return verifierFactory(options)
   } else {
-    return verifierLookup[type]()
+    return verifierFactory()
   }
 }
 

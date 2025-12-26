@@ -1,30 +1,56 @@
 {
   "name": "@cedarjs/prerender",
-  "version": "0.0.5",
-  "description": "RedwoodJS prerender",
+  "version": "2.0.2",
+  "description": "CedarJS prerender",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
     "directory": "packages/prerender"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/runPrerenderEsm.d.ts",
+        "default": "./dist/runPrerenderEsm.js"
+      },
+      "require": {
+        "types": "./dist/cjs/runPrerender.d.ts",
+        "default": "./dist/cjs/runPrerender.js"
+      }
+    },
+    "./cjs": {
+      "types": "./dist/cjs/runPrerender.d.ts",
+      "default": "./dist/cjs/runPrerender.js"
     },
     "./browserUtils": {
-      "types": "./dist/browserUtils/index.d.ts",
-      "default": "./dist/browserUtils/index.js"
+      "import": {
+        "types": "./dist/browserUtils/index.d.ts",
+        "default": "./dist/browserUtils/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/browserUtils/index.d.ts",
+        "default": "./dist/cjs/browserUtils/index.js"
+      }
     },
     "./detection": {
-      "types": "./dist/detection/index.d.ts",
-      "default": "./dist/detection/index.js"
+      "import": {
+        "types": "./dist/detection/detection.d.ts",
+        "default": "./dist/detection/detection.js"
+      },
+      "require": {
+        "types": "./dist/cjs/detection/detection.d.ts",
+        "default": "./dist/cjs/detection/detection.js"
+      }
+    },
+    "./cjs/detection": {
+      "types": "./dist/cjs/detection/detection.d.ts",
+      "default": "./dist/cjs/detection/detection.js"
     }
   },
-  "main": "dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist"
   ],
@@ -32,6 +58,7 @@
     "build": "tsx ./build.mts && yarn build:types",
     "build:pack": "yarn pack -o cedarjs-prerender.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
+    "build:types-cjs": "tsc --build --verbose ./tsconfig.cjs.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn rw-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
@@ -40,39 +67,50 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@ast-grep/napi": "0.40.3",
+    "@babel/generator": "7.28.5",
+    "@babel/parser": "7.28.5",
+    "@babel/traverse": "7.28.5",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/structure": "workspace:*",
+    "@cedarjs/vite": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "@rollup/plugin-alias": "5.1.1",
-    "@rollup/plugin-commonjs": "28.0.5",
-    "@rollup/plugin-node-resolve": "16.0.1",
-    "@rollup/plugin-replace": "6.0.2",
-    "@swc/core": "1.12.1",
-    "@whatwg-node/fetch": "0.9.21",
+    "@rollup/plugin-commonjs": "28.0.9",
+    "@rollup/plugin-node-resolve": "16.0.3",
+    "@rollup/plugin-replace": "6.0.3",
+    "@swc/core": "1.15.7",
+    "@whatwg-node/fetch": "0.10.13",
     "babel-plugin-ignore-html-and-css-imports": "0.1.0",
-    "cheerio": "1.0.0",
-    "graphql": "16.9.0",
-    "load-tsconfig": "0.2.5",
+    "cheerio": "1.1.2",
+    "graphql": "16.12.0",
     "mime-types": "2.1.35",
-    "rollup": "4.24.0",
+    "rollup": "4.54.0",
     "rollup-plugin-swc3": "0.12.1",
-    "unimport": "5.0.1"
+    "unimport": "5.6.0",
+    "unplugin-auto-import": "19.3.0",
+    "vite": "5.4.19",
+    "vite-node": "3.2.4"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/mime-types": "2.1.4",
+    "@types/react": "^18.2.55",
     "babel-plugin-tester": "11.0.4",
     "concurrently": "8.2.2",
-    "publint": "0.3.12",
-    "tsx": "4.19.4",
-    "typescript": "5.6.2",
+    "publint": "0.3.16",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
   },
   "peerDependencies": {
-    "react": "19.0.0-rc-f2df5694-20240916",
-    "react-dom": "19.0.0-rc-f2df5694-20240916"
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "externals": {
     "react": "react",

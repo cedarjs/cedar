@@ -1,10 +1,10 @@
-import * as Cell from './${name}'
+import * as Cell from './${name}.js'
 import type { CellProps } from '@cedarjs/web'
 import type { ${queryResultType}, ${queryVariablesType} } from 'types/graphql'
 
 type SuccessType = typeof Cell.Success
 
-export * from './${name}'
+export * from './${name}.js'
 
 type CellInputs = CellProps<SuccessType, ${queryResultType}, typeof Cell, ${queryVariablesType}>
 

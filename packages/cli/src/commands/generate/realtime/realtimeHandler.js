@@ -7,6 +7,7 @@ import pluralize, { singular } from 'pluralize'
 import prompts from 'prompts'
 
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
+import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // Move this check out of experimental when server file is moved as well
@@ -41,7 +42,7 @@ const templateVariables = (name) => {
   }
 }
 
-export async function handler({ name, type, force, verbose }) {
+export async function handler({ name, type, force, verbose, silent }) {
   const redwoodPaths = getPaths()
   const ts = isTypeScriptProject()
   name = singular(name.toLowerCase())
@@ -144,6 +145,18 @@ export async function handler({ name, type, force, verbose }) {
                 exampleSubscriptionTemplateContent,
               )
 
+          let blankTemplateContent = await generateTemplate(
+            setupScriptContent,
+            templateVariables(name),
+          )
+
+          if (projectIsEsm()) {
+            blankTemplateContent = blankTemplateContent.replace(
+              "import gql from 'graphql-tag'",
+              "import { gql } from 'graphql-tag'",
+            )
+          }
+
           // write all files
           return [
             writeFile(
@@ -160,16 +173,9 @@ export async function handler({ name, type, force, verbose }) {
                 overwriteExisting: force,
               },
             ),
-            writeFile(
-              exampleFile,
-              await generateTemplate(
-                setupScriptContent,
-                templateVariables(name),
-              ),
-              {
-                overwriteExisting: force,
-              },
-            ),
+            writeFile(exampleFile, blankTemplateContent, {
+              overwriteExisting: force,
+            }),
           ]
         },
       },
@@ -242,7 +248,7 @@ export async function handler({ name, type, force, verbose }) {
     ],
     {
       rendererOptions: { collapseSubtasks: false, persistentOutput: true },
-      renderer: verbose ? 'verbose' : 'default',
+      renderer: silent ? 'silent' : verbose ? 'verbose' : 'default',
     },
   )
 

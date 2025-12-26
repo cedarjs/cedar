@@ -1,7 +1,10 @@
 import path from 'path'
 
+// See https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 import type { Handler } from 'aws-lambda'
-import chalk from 'chalk'
 import fg from 'fast-glob'
 import type { Options as FastGlobOptions } from 'fast-glob'
 import type {
@@ -9,11 +12,11 @@ import type {
   FastifyRequest,
   RequestGenericInterface,
 } from 'fastify'
-import { escape } from 'lodash'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { requestHandler } from '../requestHandlers/awsLambdaFastify'
+import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
+import { escape } from '../utils.js'
 
 export type Lambdas = Record<string, Handler>
 export const LAMBDA_FUNCTIONS: Lambdas = {}
@@ -22,13 +25,37 @@ export const LAMBDA_FUNCTIONS: Lambdas = {}
 
 export const setLambdaFunctions = async (foundFunctions: string[]) => {
   const tsImport = Date.now()
-  console.log(chalk.dim.italic('Importing Server Functions... '))
+  console.log(ansis.dim.italic('Importing Server Functions... '))
 
   const imports = foundFunctions.map(async (fnPath) => {
     const ts = Date.now()
     const routeName = path.basename(fnPath).replace('.js', '')
 
-    const { handler } = await import(`file://${fnPath}`)
+    const fnImport = await import(`file://${fnPath}`)
+    const handler: Handler = (() => {
+      if ('handler' in fnImport) {
+        // ESModule export of handler - when using
+        // `export const handler = ...` - most common case
+        return fnImport.handler
+      }
+
+      if ('default' in fnImport) {
+        if ('handler' in fnImport.default) {
+          // CommonJS export of handler - when using
+          // `module.exports.handler = ...` or `export default { handler: ... }`
+          // This is less common, but required for bundling tools that export a
+          // default object, like esbuild and rollup
+          return fnImport.default.handler
+        }
+
+        // Default export is not expected, so skip it
+      }
+
+      // If no handler is found, return undefined - we do not want to throw an
+      // error
+      return undefined
+    })()
+
     LAMBDA_FUNCTIONS[routeName] = handler
     if (!handler) {
       console.warn(
@@ -40,30 +67,32 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     }
     // TODO: Use terminal link.
     console.log(
-      chalk.magenta('/' + routeName),
-      chalk.dim.italic(Date.now() - ts + ' ms'),
+      ansis.magenta('/' + routeName),
+      ansis.dim.italic(Date.now() - ts + ' ms'),
     )
   })
 
   await Promise.all(imports)
 
   console.log(
-    chalk.dim.italic('...Done importing in ' + (Date.now() - tsImport) + ' ms'),
+    ansis.dim.italic('...Done importing in ' + (Date.now() - tsImport) + ' ms'),
   )
 }
 
 type LoadFunctionsFromDistOptions = {
   fastGlobOptions?: FastGlobOptions
+  discoverFunctionsGlob?: string | string[]
 }
 
 // TODO: Use v8 caching to load these crazy fast.
 export const loadFunctionsFromDist = async (
   options: LoadFunctionsFromDistOptions = {},
 ) => {
-  const serverFunctions = findApiDistFunctions(
-    getPaths().api.base,
-    options?.fastGlobOptions,
-  )
+  const serverFunctions = findApiDistFunctions({
+    cwd: getPaths().api.base,
+    options: options?.fastGlobOptions,
+    discoverFunctionsGlob: options?.discoverFunctionsGlob,
+  })
 
   // Place `GraphQL` serverless function at the start.
   const i = serverFunctions.findIndex((x) => path.basename(x) === 'graphql.js')
@@ -74,15 +103,25 @@ export const loadFunctionsFromDist = async (
   await setLambdaFunctions(serverFunctions)
 }
 
-// NOTE: Copied from @cedarjs/internal/dist/files to avoid depending on @cedarjs/internal.
+// NOTE: Copied from @cedarjs/internal/dist/files to avoid depending on
+// @cedarjs/internal.
 // import { findApiDistFunctions } from '@cedarjs/internal/dist/files'
-function findApiDistFunctions(
-  cwd: string = getPaths().api.base,
-  options: FastGlobOptions = {},
-) {
-  return fg.sync('dist/functions/**/*.{ts,js}', {
+const findApiDistFunctions = (params: {
+  cwd: string
+  options?: FastGlobOptions
+  discoverFunctionsGlob?: string | string[]
+}) => {
+  const {
+    cwd = getPaths().api.base,
+    options = {},
+    discoverFunctionsGlob = 'dist/functions/**/*.{ts,js}',
+  } = params
+
+  return fg.sync(discoverFunctionsGlob, {
     cwd,
-    deep: 2, // We don't support deeply nested api functions, to maximise compatibility with deployment providers
+    // We don't support deeply nested api functions, to maximise compatibility
+    // with deployment providers
+    deep: 2,
     absolute: true,
     ...options,
   })

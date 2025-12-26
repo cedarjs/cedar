@@ -24,7 +24,7 @@ export const transformTSToJS = (filename: string, content: string) => {
 
   const babelFileResult = babel.transform(content, {
     filename,
-    // If you ran `yarn rw generate` in `./web` transformSync would import the `.babelrc.js` file,
+    // If you ran `yarn cedar generate` in `./web` transformSync would import the `.babelrc.js` file,
     // in `./web`? despite us setting `configFile: false`.
     cwd: process.env.NODE_ENV === 'test' ? undefined : getPaths().base,
     configFile: false,
@@ -50,12 +50,12 @@ export const transformTSToJS = (filename: string, content: string) => {
 }
 
 /**
- * This returns the config present in `prettier.config.js` of a Redwood project.
+ * This returns the config present in `prettier.config.cjs` of a Redwood project.
  */
 export const getPrettierOptions = async () => {
   try {
     const { default: options } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.js')}`
+      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
     )
 
     if (options.tailwindConfig?.startsWith('.')) {
@@ -82,7 +82,10 @@ export const prettify = async (
   const parser = {
     '.css': 'css',
     '.js': 'babel',
+    '.cjs': 'babel',
+    '.mjs': 'babel',
     '.ts': 'babel-ts',
+    '.mts': 'babel-ts',
     '.tsx': 'babel-ts',
   }[path.extname(templateFilename.replace('.template', ''))]
 

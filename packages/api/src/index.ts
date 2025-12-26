@@ -1,5 +1,4 @@
 import { createRequire } from 'node:module'
-import path from 'node:path'
 
 export * from './auth/index.js'
 export * from './errors.js'
@@ -10,32 +9,28 @@ export * from './transforms.js'
 export * from './cors.js'
 export * from './event.js'
 
+// Use native `require` for CJS builds, and create a require function with the
+// base dir set to the dir of this file for ESM builds
 const customRequire =
-  // Look out for a stubbed require function
+  // Look out for a stubbed require function (@rollup will stub it)
   // @ts-expect-error - Using `0, ` to work around bundler magic
   typeof require === 'function' && !(0, require).toString().includes('@rollup')
     ? require
-    : // The argument to `createRequire` should be a file and node will strip
-      // the last segment (the file name) to get to a base path. By appending a
-      // fake "foo" file we get the base path we want.
-      // If I knew this was only going to be run as an ESM I'd use
-      // `import.meta.url`, but for dual bundling I can't do that (without a
-      // bunch of warnings at build time at least)
-      createRequire(path.join(process.env.RWJS_CWD || process.cwd(), 'foo'))
+    : createRequire(import.meta.url)
 
-const rxApiPath = customRequire.resolve('@cedarjs/api')
-const rxApiRequire = createRequire(rxApiPath)
+const cedarApiPath = customRequire.resolve('@cedarjs/api')
+const cedarApiRequire = createRequire(cedarApiPath)
 
-let packageJson = rxApiRequire('./package.json')
+let packageJson = cedarApiRequire('./package.json')
 
 // Because of how we build the package we might have to walk up the directory
 // tree a few times to find the correct package.json file
 if (packageJson?.name !== '@cedarjs/api') {
-  packageJson = rxApiRequire('../package.json')
+  packageJson = cedarApiRequire('../package.json')
 }
 
 if (packageJson?.name !== '@cedarjs/api') {
-  packageJson = rxApiRequire('../../package.json')
+  packageJson = cedarApiRequire('../../package.json')
 }
 
 export const prismaVersion = packageJson?.dependencies['@prisma/client']

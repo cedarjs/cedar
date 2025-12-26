@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Detects if there are SSR changes
  *
@@ -16,7 +18,8 @@ export function ssrChanged(changedFiles) {
       changedFile.startsWith('packages/router/') ||
       changedFile.startsWith('packages/web-server/') ||
       changedFile.startsWith('packages/vite/') ||
-      changedFile.startsWith('packages/cookie-jar/')
+      changedFile.startsWith('packages/cookie-jar/') ||
+      changedFile.startsWith('packages/auth-providers/dbAuth')
     ) {
       console.log('SSR change detected:', changedFile)
       return true

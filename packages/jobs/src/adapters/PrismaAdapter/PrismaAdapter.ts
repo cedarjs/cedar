@@ -19,6 +19,7 @@ export interface PrismaJob extends BaseJob {
   id: number
   handler: string
   runAt: Date
+  cron: string | null | undefined
   lockedAt: Date
   lockedBy: string
   lastError: string | null
@@ -51,7 +52,9 @@ interface FailureData {
 /**
  * Implements a job adapter using Prisma ORM.
  *
- * Assumes a table exists with the following schema (the table name can be customized):
+ * Assumes a table exists with the following schema (the table name can be
+ * customized):
+ *
  * ```prisma
  * model BackgroundJob {
  *   id        Int       \@id \@default(autoincrement())
@@ -60,6 +63,7 @@ interface FailureData {
  *   queue     String
  *   priority  Int
  *   runAt     DateTime
+ *   cron      String?
  *   lockedAt  DateTime?
  *   lockedBy  String?
  *   lastError String?
@@ -118,7 +122,8 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
     //   or was already locked by this exact process and never cleaned up
     // - doesn't have a failedAt, meaning we will stop retrying
     // Translates to:
-    // `((runAt <= ? AND (lockedAt IS NULL OR lockedAt < ?)) OR lockedBy = ?) AND failedAt IS NULL`
+    //   ((runAt <= ? AND (lockedAt IS NULL OR lockedAt < ?)) OR lockedBy = ?)
+    //   AND failedAt IS NULL
     const where = {
       AND: [
         {
@@ -198,8 +203,8 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
   // Prisma queries are lazily evaluated and only sent to the db when they are
   // awaited, so do the await here to ensure they actually run (if the user
   // doesn't await the Promise then the queries will never be executed!)
-  override async success({ job, deleteJob }: SuccessOptions<PrismaJob>) {
-    this.logger.debug(`[RedwoodJob] Job ${job.id} success`)
+  override async success({ job, runAt, deleteJob }: SuccessOptions<PrismaJob>) {
+    this.logger.debug(`[CedarJS Jobs] Job ${job.id} success`)
 
     if (deleteJob) {
       await this.accessor.delete({ where: { id: job.id } })
@@ -210,22 +215,22 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
           lockedAt: null,
           lockedBy: null,
           lastError: null,
-          runAt: null,
+          runAt: runAt || null,
         },
       })
     }
   }
 
-  override async error({ job, error }: ErrorOptions<PrismaJob>) {
-    this.logger.debug(`[RedwoodJob] Job ${job.id} failure`)
+  // There was an error processing the job. Record the failure data and the new
+  // runAt time.
+  override async error({ job, runAt, error }: ErrorOptions<PrismaJob>) {
+    this.logger.debug(`[CedarJS Jobs] Job ${job.id} failure`)
 
     const data: FailureData = {
       lockedAt: null,
       lockedBy: null,
       lastError: `${error.message}\n\n${error.stack}`,
-      runAt: new Date(
-        new Date().getTime() + this.backoffMilliseconds(job.attempts),
-      ),
+      runAt,
     }
 
     await this.accessor.update({
@@ -252,6 +257,7 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
     path,
     args,
     runAt,
+    cron,
     queue,
     priority,
   }: SchedulePayload) {
@@ -259,6 +265,7 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
       data: {
         handler: JSON.stringify({ name, path, args }),
         runAt,
+        cron,
         queue,
         priority,
       },
@@ -267,9 +274,5 @@ export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
 
   override async clear() {
     await this.accessor.deleteMany()
-  }
-
-  backoffMilliseconds(attempts: number) {
-    return 1000 * attempts ** 4
   }
 }

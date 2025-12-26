@@ -1,4 +1,4 @@
-import { Produce } from 'types/graphql'
+import type { Produce } from 'types/graphql'
 
 import { db } from 'src/lib/db'
 

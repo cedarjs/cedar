@@ -1,8 +1,10 @@
-blank_issues_enabled: false
+# yaml-language-server: $schema=https://www.schemastore.org/github-issue-config.json
+
+blank_issues_enabled: true
 contact_links:
   - name: ❓ Have a question or need help?
-    url: https://community.redwoodjs.com/new-topic?category=get-help-and-help-others
+    url: https://cedarjs.com/discord
     about: >
-      Have a question about the way Redwood works?
+      Have a question about the way CedarJS works?
       Or not sure if you're doing something right?
-      Ask us over on the forums
+      Join our Discord to ask questions and get help from the community.

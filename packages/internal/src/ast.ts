@@ -4,12 +4,21 @@ import path from 'path'
 import { types } from '@babel/core'
 import type { ParserPlugin } from '@babel/parser'
 import { parse as babelParse } from '@babel/parser'
-import traverse from '@babel/traverse'
-import chalk from 'chalk'
+import babelTraverse from '@babel/traverse'
+// Here's an explanation of why we do ts-ignore:
+// https://github.com/webdiscus/ansis#troubleshooting
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ansis from 'ansis'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { isFileInsideFolder } from './files'
+import { isFileInsideFolder } from './files.js'
+
+// See https://github.com/babel/babel/discussions/13093
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+const traverse = babelTraverse.default || babelTraverse
 
 export const fileToAst = (filePath: string): types.Node => {
   const code = fs.readFileSync(filePath, 'utf-8')
@@ -32,7 +41,7 @@ export const fileToAst = (filePath: string): types.Node => {
       plugins,
     })
   } catch (e: any) {
-    console.error(chalk.red(`Error parsing: ${filePath}`))
+    console.error(ansis.red(`Error parsing: ${filePath}`))
     console.error(e)
     throw new Error(e?.message) // we throw, so typescript doesn't complain about returning
   }
@@ -52,7 +61,7 @@ interface NamedExports {
 export const getNamedExports = (ast: types.Node): NamedExports[] => {
   const namedExports: NamedExports[] = []
   traverse(ast, {
-    ExportNamedDeclaration(path) {
+    ExportNamedDeclaration(path: any) {
       // Re-exports from other modules
       // Eg: export { a, b } from './module'
       const specifiers = path.node?.specifiers
@@ -117,7 +126,7 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
 export const getGqlQueries = (ast: types.Node) => {
   const gqlQueries: string[] = []
   traverse(ast, {
-    TaggedTemplateExpression(path) {
+    TaggedTemplateExpression(path: any) {
       const gqlTag = path.node.tag
       if (gqlTag.type === 'Identifier' && gqlTag.name === 'gql') {
         gqlQueries.push(path.node.quasi.quasis[0].value.raw)
@@ -131,18 +140,20 @@ export const getGqlQueries = (ast: types.Node) => {
 export const getCellGqlQuery = (ast: types.Node) => {
   let cellQuery: string | undefined = undefined
   traverse(ast, {
-    ExportNamedDeclaration({ node }) {
+    ExportNamedDeclaration({ node }: any) {
       if (
         node.exportKind === 'value' &&
         types.isVariableDeclaration(node.declaration)
       ) {
-        const exportedQueryNode = node.declaration.declarations.find((d) => {
-          return (
-            types.isIdentifier(d.id) &&
-            d.id.name === 'QUERY' &&
-            types.isTaggedTemplateExpression(d.init)
-          )
-        })
+        const exportedQueryNode = node.declaration.declarations.find(
+          (d: any) => {
+            return (
+              types.isIdentifier(d.id) &&
+              d.id.name === 'QUERY' &&
+              types.isTaggedTemplateExpression(d.init)
+            )
+          },
+        )
 
         if (exportedQueryNode) {
           const templateExpression =
@@ -175,7 +186,7 @@ export const getDefaultExportLocation = (
   // Get the default export
   let defaultExport: types.ExportDefaultDeclaration | undefined
   traverse(ast, {
-    ExportDefaultDeclaration(path) {
+    ExportDefaultDeclaration(path: any) {
       defaultExport = path.node
     },
   })

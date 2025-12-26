@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 
-export function getCrxrscaVersion() {
+export function getCcrscaVersion() {
   const packageJson = JSON.parse(
     fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'),
   )
@@ -10,5 +10,5 @@ export function getCrxrscaVersion() {
 }
 
 export function printVersion() {
-  console.log(`create-cedar-rsc-app v${getCrxrscaVersion()}`)
+  console.log(`create-cedar-rsc-app v${getCcrscaVersion()}`)
 }

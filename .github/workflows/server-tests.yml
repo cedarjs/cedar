@@ -1,0 +1,16 @@
+name: Server Tests
+
+on:
+  workflow_call:
+
+jobs:
+  server-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - run: yarn vitest run
+        working-directory: ./tasks/server-tests

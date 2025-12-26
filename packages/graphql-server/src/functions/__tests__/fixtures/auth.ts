@@ -1,8 +1,5 @@
-import { parseJWT } from '@cedarjs/api'
+import { Decoded, parseJWT } from '@cedarjs/api'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
-import type { APIGatewayEvent } from 'aws-lambda'
-
-interface Context extends Record<string, any> {}
 
 import { context } from '@cedarjs/context'
 
@@ -18,9 +15,9 @@ type RedwoodUser = Record<string, unknown> & { roles?: string[] }
  * if the user is authenticated or has role-based access
  *
  * @param decoded - The decoded access token containing user info and JWT claims like `sub`. Note could be null.
- * @param { token, SupportedAuthTypes type } - The access token itself as well as the auth provider type
- * @param { APIGatewayEvent event, Context context } - An object which contains information from the invoker
- * such as headers and cookies, and the context information about the invocation such as IP Address
+ * @param authInfo
+ * @param authInfo.token - The access token itself
+ * @param authInfo.type - The auth provider type
  *
  * !! BEWARE !! Anything returned from this function will be available to the
  * client--it becomes the content of `currentUser` on the web side (as well as
@@ -33,11 +30,8 @@ type RedwoodUser = Record<string, unknown> & { roles?: string[] }
  * @returns RedwoodUser
  */
 export const getCurrentUser = async (
-  decoded,
-  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
-  { token, type },
-  /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
-  req?: { event: APIGatewayEvent, context: Context }
+  decoded: Decoded,
+  { token: _token, type: _type }: { token: string; type: string },
 ): Promise<RedwoodUser | null> => {
   if (!decoded) {
     return null

@@ -9,7 +9,7 @@ import { logger } from 'src/lib/logger'
  * Important: When deployed, a custom serverless function is an open API endpoint and
  * is your responsibility to secure appropriately.
  *
- * @see {@link https://redwoodjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
+ * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
  * in the RedwoodJS documentation for more information.
  *<% if (!typescript) { %>
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent
@@ -19,7 +19,7 @@ import { logger } from 'src/lib/logger'
  * function, and execution environment.
  */
 export const handler = async (event: APIGatewayEvent, _context: Context) => {
-  logger.info(`<%= '$' %>{event.httpMethod} <%= '$' %>{event.path}: <%= name %> function`)
+  logger.info(`<%= '$' %>{event.httpMethod} <%= '$' %>{event.path}: <%= camelName %> function`)
 
   return {
     statusCode: 200,
@@ -27,7 +27,7 @@ export const handler = async (event: APIGatewayEvent, _context: Context) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      data: '${name} function',
+      data: '${camelName} function',
     }),
   }
 }

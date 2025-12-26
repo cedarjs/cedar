@@ -58,8 +58,8 @@ describe('storybook', () => {
     // be there
     expect(yargs.epilogue).toHaveBeenCalledWith(
       `Also see the ${terminalLink(
-        'Redwood CLI Reference',
-        'https://redwoodjs.com/docs/cli-commands#storybook',
+        'CedarJS CLI Reference',
+        'https://cedarjs.com/docs/cli-commands#storybook',
       )}`,
     )
   })
