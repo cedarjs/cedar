@@ -226,7 +226,12 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     }
     process.chdir(originalCwd)
 
-    // Not awaiting - it'll be cleaned up eventually
-    fs.promises.rm(tempDir, { recursive: true, force: true })
+    try {
+      // Not awaiting - it'll be cleaned up eventually
+      fs.promises.rm(tempDir, { recursive: true, force: true })
+    } catch {
+      // I was getting errors like these on Windows
+      // Error: EBUSY: resource busy or locked, rmdir 'C:\Users\RUNNER~1\AppData\Local\Temp\cedar-test-UhbKQX'
+    }
   }
 }
