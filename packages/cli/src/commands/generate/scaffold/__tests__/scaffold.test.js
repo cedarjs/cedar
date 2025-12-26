@@ -880,13 +880,13 @@ describe('custom templates', () => {
     vol.fromJSON(
       {
         'redwood.toml': '',
-        'generatorTemplates/scaffold/pages/EditNamePage.tsx.template':
+        'generatorTemplates/web/scaffold/pages/EditNamePage.tsx.template':
           'export default function CustomEditPage() { return null }',
-        'generatorTemplates/scaffold/pages/NewNamePage.tsx.template':
+        'generatorTemplates/web/scaffold/pages/NewNamePage.tsx.template':
           'export default function CustomNewPage() { return null }',
-        'generatorTemplates/scaffold/pages/NamePage.tsx.template':
+        'generatorTemplates/web/scaffold/pages/NamePage.tsx.template':
           'export default function CustomPage() { return null }',
-        'generatorTemplates/scaffold/pages/NamesPage.tsx.template':
+        'generatorTemplates/web/scaffold/pages/NamesPage.tsx.template':
           'export default function CustomPluralPage() { return null }',
       },
       process.env.RWJS_CWD,
