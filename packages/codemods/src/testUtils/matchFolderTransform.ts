@@ -1,7 +1,7 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import fg from 'fast-glob'
-import fse from 'fs-extra'
 import { expect } from 'vitest'
 
 import runTransform from '../lib/runTransform'
@@ -55,8 +55,9 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
   const fixtureOutputDir = path.join(fixtureFolder, 'output')
 
   // Step 1: Copy files recursively from fixture folder to temp
-  fse.copySync(fixtureInputDir, tempDir, {
-    overwrite: true,
+  fs.cpSync(fixtureInputDir, tempDir, {
+    force: true,
+    recursive: true,
   })
 
   const GLOB_CONFIG = {
@@ -122,4 +123,9 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
   })
 
   delete process.env.RWJS_CWD
+
+  // Not awaiting - it'll be cleaned up eventually. Also, I was getting errors
+  // like these on Windows, so I'm just catching and ignoring them.
+  // Error: EBUSY: resource busy or locked, rmdir 'C:\Users\RUNNER~1\AppData\Local\Temp\cedar-test-UhbKQX'
+  fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {})
 }
