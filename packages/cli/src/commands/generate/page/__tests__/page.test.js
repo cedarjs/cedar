@@ -32,7 +32,7 @@ vi.mock('node:fs', async (importOriginal) => {
 import { ensurePosixPath } from '@cedarjs/project-config'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const path = require('path')
+  const path = await import('node:path')
   const originalProjectConfig = await importOriginal()
   return {
     getPaths: () => {

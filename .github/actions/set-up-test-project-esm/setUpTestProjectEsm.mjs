@@ -48,7 +48,9 @@ async function setUpTestProject({ canary }) {
 
   console.log(`Creating project at ${TEST_PROJECT_PATH}`)
   console.log()
-  await fs.promises.copyFile(TEST_PROJECT_FIXTURE_PATH, TEST_PROJECT_PATH)
+  await fs.promises.cp(TEST_PROJECT_FIXTURE_PATH, TEST_PROJECT_PATH, {
+    recursive: true,
+  })
 
   await execInFramework('yarn project:tarsync --verbose', {
     env: { RWJS_CWD: TEST_PROJECT_PATH },
