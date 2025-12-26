@@ -1514,7 +1514,7 @@ __metadata:
     concurrently: "npm:^8.2.2"
     enquirer: "npm:2.4.1"
     esbuild: "npm:0.27.2"
-    eslint: "npm:^9.7.0"
+    eslint: "npm:9.39.2"
     eslint-plugin-jsdoc: "npm:^48.7.0"
     eslint-plugin-jsonc: "npm:^2.16.0"
     eslint-plugin-markdown: "npm:^5.1.0"
@@ -2071,7 +2071,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^9.7.0":
+"eslint@npm:9.39.2":
   version: 9.39.2
   resolution: "eslint@npm:9.39.2"
   dependencies:
