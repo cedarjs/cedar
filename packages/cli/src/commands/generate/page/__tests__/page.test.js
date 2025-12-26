@@ -1,58 +1,33 @@
 globalThis.__dirname = __dirname
 
-globalThis.mockFs = false
-let mockFiles = {}
-
-vi.mock('node:fs', async (importOriginal) => {
-  const originalFs = await importOriginal()
-
-  return {
-    default: {
-      ...originalFs,
-      existsSync: (...args) => {
-        if (mockFiles[args[0]]) {
-          return true
-        }
-
-        if (!globalThis.mockFs) {
-          return originalFs.existsSync.apply(null, args)
-        }
-
-        return false
-      },
-      mkdirSync: (...args) => {
-        if (!globalThis.mockFs) {
-          return originalFs.mkdirSync.apply(null, args)
-        }
-      },
-      writeFileSync: (target, contents) => {
-        if (!globalThis.mockFs) {
-          return originalFs.writeFileSync.call(null, target, contents)
-        }
-      },
-      readFileSync: (path) => {
-        if (mockFiles[path]) {
-          return mockFiles[path]
-        }
-
-        if (!globalThis.mockFs) {
-          return originalFs.readFileSync.call(null, path)
-        }
-
-        const mockedContent = mockFiles[path]
-
-        return mockedContent || originalFs.readFileSync.call(null, path)
-      },
-    },
-  }
-})
-
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { vi, describe, it, test, expect, beforeEach, afterEach } from 'vitest'
+import { vol, fs as memfs } from 'memfs'
+import { ufs } from 'unionfs'
+import {
+  vi,
+  describe,
+  it,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from 'vitest'
 
 import '../../../../lib/mockTelemetry'
+
+vi.mock('node:fs', async (importOriginal) => {
+  const originalFs = await importOriginal()
+  ufs.use(originalFs).use(memfs)
+  return {
+    ...ufs,
+    default: ufs,
+  }
+})
+
+import { ensurePosixPath } from '@cedarjs/project-config'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const path = require('path')
@@ -93,12 +68,19 @@ vi.mock('@cedarjs/internal/dist/generate/generate', () => {
   }
 })
 
-import { ensurePosixPath } from '@cedarjs/project-config'
-
-import { getPaths } from '../../../../lib/index.js'
 import { pathName } from '../../helpers.js'
 import * as page from '../page.js'
 import * as pageHandler from '../pageHandler.js'
+
+beforeAll(() => {
+  vol.fromJSON({ '/path/to/project/redwood.toml': '' }, '/')
+})
+
+afterEach(() => {
+  vi.clearAllMocks()
+  vol.reset()
+  vol.fromJSON({ '/path/to/project/redwood.toml': '' }, '/')
+})
 
 describe('Single world files', async () => {
   const singleWordFiles = await pageHandler.files({
@@ -400,26 +382,31 @@ describe('handler', () => {
   })
 
   test('file generation', async () => {
-    mockFiles = {
-      [getPaths().web.routes]: [
-        "import { Router, Route } from '@cedarjs/router'",
-        '',
-        'const Routes = () => {',
-        '  return (',
-        '    <Router>',
-        '      <Route path="/about" page={AboutPage} name="about" />',
-        '      <Route notfound page={NotFoundPage} />',
-        '    </Router>',
-        '  )',
-        '}',
-        '',
-        'export default Routes',
-      ].join('\n'),
-    }
+    const routesPath = path.join('/path/to/project/web/src/Routes.js')
+    const routesContent = [
+      "import { Router, Route } from '@cedarjs/router'",
+      '',
+      'const Routes = () => {',
+      '  return (',
+      '    <Router>',
+      '      <Route path="/about" page={AboutPage} name="about" />',
+      '      <Route notfound page={NotFoundPage} />',
+      '    </Router>',
+      '  )',
+      '}',
+      '',
+      'export default Routes',
+    ].join('\n')
+
+    vol.fromJSON(
+      {
+        [routesPath]: routesContent,
+        'redwood.toml': '',
+      },
+      '/',
+    )
 
     const spy = vi.spyOn(fs, 'writeFileSync')
-
-    globalThis.mockFs = true
 
     await page.handler({
       name: 'HomePage', // 'Page' should be trimmed from name
@@ -440,30 +427,35 @@ describe('handler', () => {
       expect(testOutput).toMatchSnapshot()
     })
 
-    globalThis.mockFs = false
     spy.mockRestore()
   })
 
   test('file generation with route params', async () => {
-    mockFiles = {
-      [getPaths().web.routes]: [
-        "import { Router, Route } from '@cedarjs/router'",
-        '',
-        'const Routes = () => {',
-        '  return (',
-        '    <Router>',
-        '      <Route path="/about" page={AboutPage} name="about" />',
-        '      <Route notfound page={NotFoundPage} />',
-        '    </Router>',
-        '  )',
-        '}',
-        '',
-        'export default Routes',
-      ].join('\n'),
-    }
+    const routesPath = path.join('/path/to/project/web/src/Routes.js')
+    const routesContent = [
+      "import { Router, Route } from '@cedarjs/router'",
+      '',
+      'const Routes = () => {',
+      '  return (',
+      '    <Router>',
+      '      <Route path="/about" page={AboutPage} name="about" />',
+      '      <Route notfound page={NotFoundPage} />',
+      '    </Router>',
+      '  )',
+      '}',
+      '',
+      'export default Routes',
+    ].join('\n')
+
+    vol.fromJSON(
+      {
+        [routesPath]: routesContent,
+        'redwood.toml': '',
+      },
+      '/',
+    )
 
     const spy = vi.spyOn(fs, 'writeFileSync')
-    globalThis.mockFs = true
 
     await page.handler({
       name: 'post',
@@ -483,7 +475,6 @@ describe('handler', () => {
       expect(testOutput).toMatchSnapshot()
     })
 
-    globalThis.mockFs = false
     spy.mockRestore()
   })
 })

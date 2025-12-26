@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+
 import { vi, describe, afterEach, beforeEach, it, expect } from 'vitest'
 import yargs from 'yargs/yargs'
 
@@ -40,22 +42,6 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('node:fs', async (importOriginal) => {
-  const originalFs = await importOriginal()
-  return {
-    default: {
-      ...originalFs,
-      existsSync: (p) => {
-        // Don't detect the server file, can't use path.sep here so the replaceAll is used
-        if (p.replaceAll('\\', '/') === '/mocked/project/api/src/server.ts') {
-          return false
-        }
-        return true
-      },
-    },
-  }
-})
-
 vi.mock('@cedarjs/api-server/apiCliConfig', async (importOriginal) => {
   const originalAPICLIConfig = await importOriginal()
   return {
@@ -64,6 +50,7 @@ vi.mock('@cedarjs/api-server/apiCliConfig', async (importOriginal) => {
     handler: vi.fn(),
   }
 })
+
 vi.mock('@cedarjs/api-server/cjs/apiCliConfigHandler', async () => {
   return {
     handler: vi.fn(),
@@ -87,6 +74,18 @@ vi.mock('execa', () => ({
 describe('yarn cedar serve', () => {
   beforeEach(() => {
     mocks.isEsm = true
+    vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
+      // Don't detect the server file
+      if (
+        p
+          .toString()
+          .replaceAll('\\', '/')
+          .includes('/mocked/project/api/src/server.')
+      ) {
+        return false
+      }
+      return true
+    })
   })
 
   afterEach(() => {

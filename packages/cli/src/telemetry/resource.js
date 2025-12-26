@@ -23,7 +23,8 @@ export async function getResources() {
   try {
     const telemetryFile = path.join(getPaths().generated.base, 'telemetry.txt')
     if (!fs.existsSync(telemetryFile)) {
-      fs.ensureFileSync(telemetryFile)
+      fs.mkdirSync(path.dirname(telemetryFile), { recursive: true })
+      fs.writeFileSync(telemetryFile, '')
     }
     if (fs.statSync(telemetryFile).mtimeMs < Date.now() - 86400000) {
       // 86400000 is 24 hours in milliseconds, we rotate the UID every 24 hours

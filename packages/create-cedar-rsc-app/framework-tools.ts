@@ -1,9 +1,9 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { BuildOptions as ESBuildOptions } from 'esbuild'
 import * as esbuild from 'esbuild'
 import fg from 'fast-glob'
-import fs from 'node:fs'
 
 export const defaultBuildOptions: ESBuildOptions = {
   outdir: 'dist',
@@ -72,9 +72,8 @@ export async function build({
   })
 
   if (result.metafile) {
-    await fs.writeJSON(path.join(cwd, metafileName), result.metafile, {
-      spaces: 2,
-    })
+    const metafile = JSON.stringify(result.metafile, null, 2)
+    await fs.promises.writeFile(path.join(cwd, metafileName), metafile)
   } else {
     console.warn("No metafile found in esbuild's result.")
     console.warn(

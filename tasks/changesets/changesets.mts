@@ -1,5 +1,6 @@
+import path from 'node:path'
 import ansis from 'ansis'
-import { fs } from 'zx'
+import fs from 'node:fs'
 
 import {
   getChangesetFilePath,
@@ -19,7 +20,8 @@ async function main() {
 
   const changesetFilePath = getChangesetFilePath(prNumber)
   const placeholder = await getPlaceholder(prNumber)
-  await fs.outputFile(changesetFilePath, placeholder)
+  fs.mkdirSync(path.dirname(changesetFilePath), { recursive: true })
+  await fs.promises.writeFile(changesetFilePath, placeholder)
   console.log(
     [
       `📝 Created a changeset at ${ansis.magenta(changesetFilePath)}`,

@@ -1,54 +1,24 @@
 globalThis.__dirname = __dirname
 
-globalThis.mockFs = false
-const mockFiles = {}
-
-vi.mock('node:fs', async (importOriginal) => {
-  const originalFsExtra = await importOriginal()
-  return {
-    default: {
-      ...originalFsExtra,
-      existsSync: (...args) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.existsSync.apply(null, args)
-        }
-        return false
-      },
-      mkdirSync: (...args) => {
-        if (globalThis.mockFs) {
-          return
-        }
-
-        return originalFsExtra.mkdirSync.apply(null, args)
-      },
-      writeFileSync: (target, contents) => {
-        if (globalThis.mockFs) {
-          return
-        }
-
-        return originalFsExtra.writeFileSync.call(null, target, contents)
-      },
-      readFileSync: (path) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.readFileSync.call(null, path)
-        }
-
-        const mockedContent = mockFiles[path]
-
-        return mockedContent || originalFsExtra.readFileSync.call(null, path)
-      },
-    },
-  }
-})
-
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
+import { vol, fs as memfs } from 'memfs'
 import prompts from 'prompts'
-import { vi, afterEach, test, expect, describe } from 'vitest'
+import { ufs } from 'unionfs'
+import { vi, describe, test, expect, beforeAll, afterEach } from 'vitest'
 
 // Load mocks
 import '../../../../lib/test'
+
+vi.mock('node:fs', async (importOriginal) => {
+  const originalFs = await importOriginal()
+  ufs.use(originalFs).use(memfs)
+  return {
+    ...ufs,
+    default: ufs,
+  }
+})
 
 import { ensurePosixPath } from '@cedarjs/project-config'
 
@@ -58,6 +28,11 @@ import * as sdlHandler from '../sdlHandler.js'
 
 afterEach(() => {
   vi.clearAllMocks()
+  vol.reset()
+})
+
+beforeAll(() => {
+  vol.fromJSON({ 'redwood.toml': '' }, '/')
 })
 
 const extensionForBaseArgs = (baseArgs) =>
@@ -368,8 +343,6 @@ describe('handler', () => {
     test(`can be called with ${letterCase} model name`, async () => {
       const spy = vi.spyOn(fs, 'writeFileSync')
 
-      globalThis.mockFs = true
-
       await sdl.handler({
         model,
         crud: true,
@@ -391,7 +364,6 @@ describe('handler', () => {
         expect(testOutput).toMatchSnapshot()
       })
 
-      globalThis.mockFs = false
       spy.mockRestore()
     })
   }
@@ -399,8 +371,8 @@ describe('handler', () => {
   canBeCalledWithGivenModelName('camelCase', 'user')
   canBeCalledWithGivenModelName('PascalCase', 'User')
 
-  prompts.inject('CustomDatums')
+  prompts.inject(['CustomDatums'])
   canBeCalledWithGivenModelName('camelCase', 'customData')
-  prompts.inject('CustomDatums')
+  prompts.inject(['CustomDatums'])
   canBeCalledWithGivenModelName('PascalCase', 'CustomData')
 })

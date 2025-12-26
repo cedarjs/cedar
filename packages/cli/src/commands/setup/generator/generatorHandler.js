@@ -1,4 +1,4 @@
-import fse from 'node:fs'
+import fs from 'node:fs'
 import path from 'path'
 
 import { Listr } from 'listr2'
@@ -22,7 +22,7 @@ const copyGenerator = (name, { force }) => {
   const to = path.join(getPaths()[side].generators, name)
 
   // copy entire template directory contents to appropriate side in app
-  fse.copySync(from, to, { overwrite: force, errorOnExist: true })
+  fs.cpSync(from, to, { recursive: true, force: force })
 
   return to
 }

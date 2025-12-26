@@ -8,8 +8,10 @@ vi.mock('execa', () => ({
   })),
 }))
 
+import fs from 'node:fs'
+
 import execa from 'execa'
-import { vi, afterEach, test, expect } from 'vitest'
+import { vi, afterEach, test, expect, beforeEach } from 'vitest'
 
 import { handler } from '../test.js'
 
@@ -21,15 +23,8 @@ vi.mock('@cedarjs/structure', () => {
   }
 })
 
-// Before rw tests run, api/ and web/ `jest.config.js` is confirmed via existsSync()
-vi.mock('node:fs', async (importOriginal) => {
-  const originalFs = await importOriginal()
-  return {
-    default: {
-      ...originalFs,
-      existsSync: () => true,
-    },
-  }
+beforeEach(() => {
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 })
 
 afterEach(() => {

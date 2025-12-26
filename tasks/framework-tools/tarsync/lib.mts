@@ -1,8 +1,9 @@
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { parseArgs as nodeUtilParseArgs } from 'node:util'
 
 import ansis from 'ansis'
-import { $, cd, fs, glob, path, within } from 'zx'
+import { $, cd, glob, path, within } from 'zx'
 
 export const TARBALL_DEST_DIRNAME = 'tarballs'
 
@@ -92,7 +93,7 @@ export async function getOptions(): Promise<Options> {
   }
 
   // This makes `projectPath` an absolute path and throws if it doesn't exist.
-  options.projectPath = await fs.realpath(options.projectPath)
+  options.projectPath = await fs.promises.realpath(options.projectPath)
 
   return options
 }
@@ -103,15 +104,16 @@ export async function buildTarballs() {
 
 export async function moveTarballs(projectPath: string) {
   const tarballDest = path.join(projectPath, TARBALL_DEST_DIRNAME)
-  await fs.ensureDir(tarballDest)
+  await fs.promises.mkdir(tarballDest, { recursive: true })
 
   const tarballs = await glob(['./packages/**/*.tgz'])
 
   await Promise.all(
     tarballs.map((tarball) =>
-      fs.move(tarball, path.join(tarballDest, path.basename(tarball)), {
-        overwrite: true,
-      }),
+      fs.promises.rename(
+        tarball,
+        path.join(tarballDest, path.basename(tarball)),
+      ),
     ),
   )
 }
@@ -134,27 +136,33 @@ export async function updateResolutions(projectPath: string) {
     }, {})
 
   const projectPackageJsonPath = path.join(projectPath, 'package.json')
-  const projectPackageJson = await fs.readJSON(projectPackageJsonPath)
+  const projectPackageJson = JSON.parse(
+    await fs.promises.readFile(projectPackageJsonPath, 'utf-8'),
+  )
 
-  await fs.writeJSON(
+  await fs.promises.writeFile(
     projectPackageJsonPath,
-    {
-      ...projectPackageJson,
-      resolutions: {
-        ...projectPackageJson.resolutions,
-        ...resolutions,
-        ...(await getReactResolutions()),
+    JSON.stringify(
+      {
+        ...projectPackageJson,
+        resolutions: {
+          ...projectPackageJson.resolutions,
+          ...resolutions,
+          ...(await getReactResolutions()),
+        },
       },
-    },
-    {
-      spaces: 2,
-    },
+      null,
+      2,
+    ),
   )
 }
 
 export async function getReactResolutions() {
-  const packageConfig = await fs.readJson(
-    path.join(FRAMEWORK_PATH, 'packages/web/package.json'),
+  const packageConfig = JSON.parse(
+    await fs.promises.readFile(
+      path.join(FRAMEWORK_PATH, 'packages/web/package.json'),
+      'utf-8',
+    ),
   )
 
   const react = packageConfig.peerDependencies.react

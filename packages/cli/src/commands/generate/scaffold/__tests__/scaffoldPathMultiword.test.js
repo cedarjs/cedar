@@ -1,14 +1,18 @@
 globalThis.__dirname = __dirname
-import path from 'path'
+import path from 'node:path'
 
-import { vol } from 'memfs'
+import { vol, fs as memfs } from 'memfs'
+import { ufs } from 'unionfs'
 import { vi, describe, beforeAll, test, expect } from 'vitest'
 
 import '../../../../lib/test'
 
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
-vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async (importOriginal) => {
+  ufs.use(await importOriginal()).use(memfs)
+  return { ...ufs, default: { ...ufs } }
+})
 vi.mock('execa')
 
 beforeAll(() => {
