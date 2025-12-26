@@ -14,7 +14,9 @@ export const matchInlineTransformSnapshot = async (
   expectedCode: string,
   parser: 'ts' | 'tsx' | 'babel' = 'tsx',
 ) => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-test-'))
+  const tempDir = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
+  )
   const tempFilePath = path.join(
     tempDir,
     'tmpfile' + Math.random().toString().replace('.', ''),

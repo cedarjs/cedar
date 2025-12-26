@@ -122,7 +122,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
   } = {},
 ) => {
   const tempDir = path.join(
-    os.tmpdir(),
+    fs.realpathSync(os.tmpdir()),
     `cedar-test-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
   )
 

@@ -13,7 +13,10 @@ export const formatCode = async (code: string) => {
 }
 
 export const createProjectMock = () => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-test-'))
+  const tempDir = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
+  )
+
   // add fake redwood.toml
   fs.closeSync(fs.openSync(path.join(tempDir, 'redwood.toml'), 'w'))
 
