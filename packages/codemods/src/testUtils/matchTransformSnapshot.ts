@@ -1,7 +1,7 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 
-import tempy from 'tempy'
 import { expect } from 'vitest'
 
 import runTransform from '../lib/runTransform'
@@ -21,7 +21,12 @@ export const matchTransformSnapshot: MatchTransformSnapshotFunction = async (
   fixtureName,
   parser,
 ) => {
-  const tempFilePath = tempy.file()
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-test-'))
+  const tempFilePath = path.join(
+    tempDir,
+    'tmpfile' + Math.random().toString().replace('.', ''),
+  )
+  fs.closeSync(fs.openSync(tempFilePath, 'w'))
 
   // Looks up the path of the caller
   const testPath = expect.getState().testPath
