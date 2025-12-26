@@ -54,7 +54,6 @@
     "@types/jscodeshift": "0.12.0",
     "@types/yargs": "17.0.35",
     "publint": "0.3.16",
-    "tempy": "1.0.1",
     "tsx": "4.21.0",
     "vitest": "3.2.4"
   },

@@ -38,7 +38,6 @@
         "pretty-bytes",
         "pretty-ms",
         "stdout-update",
-        "tempy",
         "title-case",
         "untildify",
         "/^@cedarjs//"

@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { Listr } from 'listr2'
 
@@ -13,17 +14,17 @@ import { isTypeScriptProject } from '../../../lib/project.js'
 export const handler = async ({ force, skipExamples }) => {
   const projectIsTypescript = isTypeScriptProject()
   const pkgJsonPath = path.join(getPaths().base, 'package.json')
-  const { default: pkgJson } = await import(pkgJsonPath, {
+  const { default: pkgJson } = await import(pathToFileURL(pkgJsonPath), {
     with: { type: 'json' },
   })
   const cedarVersion = pkgJson.devDependencies['@cedarjs/core'] ?? 'latest'
 
+  const extension = projectIsTypescript ? 'ts' : 'js'
+
   const tasks = new Listr(
     [
       {
-        title: `Adding api/src/lib/mailer.${
-          projectIsTypescript ? 'ts' : 'js'
-        }...`,
+        title: `Adding api/src/lib/mailer.${extension}...`,
         task: async () => {
           const templatePath = path.resolve(
             import.meta.dirname,
@@ -37,7 +38,7 @@ export const handler = async ({ force, skipExamples }) => {
 
           const mailerPath = path.join(
             getPaths().api.lib,
-            `mailer.${projectIsTypescript ? 'ts' : 'js'}`,
+            `mailer.${extension}`,
           )
           const mailerContent = projectIsTypescript
             ? templateContent

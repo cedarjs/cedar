@@ -403,7 +403,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/js@npm:9.39.2, @eslint/js@npm:^9.7.0":
+"@eslint/js@npm:9.39.2":
   version: 9.39.2
   resolution: "@eslint/js@npm:9.39.2"
   checksum: 10c0/00f51c52b04ac79faebfaa65a9652b2093b9c924e945479f1f3945473f78aee83cbc76c8d70bbffbf06f7024626575b16d97b66eab16182e1d0d39daff2f26f5
@@ -1483,7 +1483,7 @@ __metadata:
   resolution: "create-cedar-rsc-app@workspace:."
   dependencies:
     "@eslint-community/eslint-plugin-eslint-comments": "npm:^4.3.0"
-    "@eslint/js": "npm:^9.7.0"
+    "@eslint/js": "npm:9.39.2"
     "@types/eslint-plugin-markdown": "npm:^2.0.2"
     "@types/node": "npm:24.10.4"
     "@types/semver": "npm:7.7.1"
@@ -1494,7 +1494,7 @@ __metadata:
     concurrently: "npm:^8.2.2"
     enquirer: "npm:2.4.1"
     esbuild: "npm:0.27.2"
-    eslint: "npm:^9.7.0"
+    eslint: "npm:9.39.2"
     eslint-plugin-jsdoc: "npm:^48.7.0"
     eslint-plugin-jsonc: "npm:^2.16.0"
     eslint-plugin-markdown: "npm:^5.1.0"
@@ -2050,7 +2050,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^9.7.0":
+"eslint@npm:9.39.2":
   version: 9.39.2
   resolution: "eslint@npm:9.39.2"
   dependencies:
