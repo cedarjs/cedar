@@ -1,24 +1,29 @@
 globalThis.__dirname = __dirname
 
-import fs from 'node:fs'
 import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import prompts from 'prompts'
-import { ufs } from 'unionfs'
 import { vi, describe, test, expect, beforeAll, afterEach } from 'vitest'
 
 // Load mocks
 import '../../../../lib/test'
 
 vi.mock('node:fs', async (importOriginal) => {
+  const ufs = await import('unionfs')
   const originalFs = await importOriginal()
+
   ufs.use(originalFs).use(memfs)
+
   return {
     ...ufs,
     default: ufs,
   }
 })
+
+// Have to import fs after memfs is mocked
+// eslint-disable-next-line import/order
+import fs from 'node:fs'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
 

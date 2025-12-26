@@ -1,10 +1,6 @@
-globalThis.__dirname = __dirname
-
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { vol, fs as memfs } from 'memfs'
-import { ufs } from 'unionfs'
 import {
   vi,
   describe,
@@ -17,6 +13,12 @@ import {
 } from 'vitest'
 
 import '../../../../lib/mockTelemetry'
+
+const { memfs, ufs, vol } = await vi.hoisted(async () => {
+  const { vol, fs: memfs } = await import('memfs')
+  const { ufs } = await import('unionfs')
+  return { memfs, ufs, vol }
+})
 
 vi.mock('node:fs', async (importOriginal) => {
   const originalFs = await importOriginal()
