@@ -1,5 +1,6 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
-import { tmpdir } from 'node:os'
+import os from 'node:os'
 import path from 'node:path'
 
 import fg from 'fast-glob'
@@ -120,9 +121,8 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     useJsCodeshift = false,
   } = {},
 ) => {
-  // Use OS temp directory with unique suffix for better performance
   const tempDir = path.join(
-    tmpdir(),
+    os.tmpdir(),
     `cedar-test-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
   )
 
@@ -226,9 +226,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     }
     process.chdir(originalCwd)
 
-    // Clean up temp directory asynchronously (don't wait for it)
-    fse.remove(tempDir).catch(() => {
-      // Ignore cleanup errors
-    })
+    // Not awaiting - it'll be cleaned up eventually
+    fs.promises.rm(tempDir, { recursive: true, force: true })
   }
 }

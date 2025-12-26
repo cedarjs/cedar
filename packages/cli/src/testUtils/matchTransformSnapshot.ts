@@ -89,4 +89,6 @@ export const matchTransformSnapshot: MatchTransformSnapshotFunction = async (
   expect(await formatCode(transformedContent)).toEqual(
     await formatCode(expectedOutput),
   )
+
+  fs.promises.rm(tempDir, { recursive: true, force: true })
 }

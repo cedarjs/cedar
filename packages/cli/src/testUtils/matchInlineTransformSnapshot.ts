@@ -20,7 +20,7 @@ export const matchInlineTransformSnapshot = async (
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-test-'))
   const tempFilePath = path.join(
     tempDir,
-    'tmpfile' + Math.random().toString().replace('.', ''),
+    `tmpfile-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
   )
   fs.closeSync(fs.openSync(tempFilePath, 'w'))
 
@@ -54,4 +54,7 @@ export const matchInlineTransformSnapshot = async (
   expect(await formatCode(transformedContent)).toEqual(
     await formatCode(expectedCode),
   )
+
+  // Not awaiting - it'll be cleaned up eventually
+  fs.promises.rm(tempDir, { recursive: true, force: true })
 }

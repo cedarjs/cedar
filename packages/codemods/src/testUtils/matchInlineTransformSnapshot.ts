@@ -52,5 +52,6 @@ export const matchInlineTransformSnapshot = async (
     await formatCode(expectedCode),
   )
 
+  // Not awaiting - it'll be cleaned up eventually
   fs.promises.rm(tempDir, { recursive: true, force: true })
 }
