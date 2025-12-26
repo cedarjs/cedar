@@ -1,6 +1,6 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -14,17 +14,7 @@ import {
 } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
-
-const TEMPLATE_PATH = path.resolve(
-  import.meta.dirname,
-  'templates',
-  'script.ts.template',
-)
-const TSCONFIG_TEMPLATE = path.resolve(
-  import.meta.dirname,
-  'templates',
-  'tsconfig.json.template',
-)
+import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
 
 export const files = async ({ name, typescript = false }) => {
   const outputFilename = `${name}.${typescript ? 'ts' : 'js'}`
@@ -32,7 +22,19 @@ export const files = async ({ name, typescript = false }) => {
 
   const scriptTsConfigPath = path.join(getPaths().scripts, 'tsconfig.json')
 
-  const template = fs.readFileSync(TEMPLATE_PATH, 'utf-8')
+  const templatePath = customOrDefaultTemplatePath({
+    side: 'scripts',
+    generator: 'script',
+    templatePath: 'script.ts.template',
+  })
+
+  const template = fs.readFileSync(templatePath, 'utf-8')
+
+  const tsconfigTemplatePath = customOrDefaultTemplatePath({
+    side: 'scripts',
+    generator: 'script',
+    templatePath: 'tsconfig.json.template',
+  })
 
   return {
     [outputPath]: typescript
@@ -42,7 +44,7 @@ export const files = async ({ name, typescript = false }) => {
     // Add tsconfig for type and cmd+click support if project is TS
     ...(typescript &&
       !fs.existsSync(scriptTsConfigPath) && {
-        [scriptTsConfigPath]: fs.readFileSync(TSCONFIG_TEMPLATE, 'utf-8'),
+        [scriptTsConfigPath]: fs.readFileSync(tsconfigTemplatePath, 'utf-8'),
       }),
   }
 }
