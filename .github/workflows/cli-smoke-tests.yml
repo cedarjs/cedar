@@ -114,3 +114,8 @@ jobs:
         run: yarn cedar g sdl DoesNotExist
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
         continue-on-error: true
+
+      - name: Run `cedar setup mailer`
+        # `cat` will exit with an error code if the file doesn't exist
+        run: yarn cedar setup mailer && cat api/src/lib/mailer.ts
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}

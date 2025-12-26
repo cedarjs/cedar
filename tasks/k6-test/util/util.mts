@@ -108,7 +108,7 @@ export function addFrameworkDepsToProject({
       shell: true,
       stdio: verbose ? 'inherit' : 'ignore',
       env: {
-        RWFW_PATH: frameworkPath,
+        CFW_PATH: frameworkPath,
         RWJS_CWD: projectPath,
       },
     })
@@ -138,7 +138,7 @@ export function copyFrameworkPackages({
       shell: true,
       stdio: verbose ? 'inherit' : 'ignore',
       env: {
-        RWFW_PATH: frameworkPath,
+        CFW_PATH: frameworkPath,
         RWJS_CWD: projectPath,
       },
     })

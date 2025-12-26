@@ -47,7 +47,7 @@ it('Should map directives globs to defined structure correctly', async () => {
   expect(fooDirective.schema.kind).toBe('Document')
 
   expect(bazingaDirective.name).toBe('bazinga')
-  expect(bazingaDirective.onResolvedValue).rejects.toThrowError(
+  await expect(bazingaDirective.onResolvedValue).rejects.toThrowError(
     'Only soft kittens allowed',
   )
   expect(bazingaDirective.schema.kind).toBe('Document')

@@ -10,6 +10,7 @@ const {
   applyCodemod,
   updatePkgJsonScripts,
   exec,
+  getCfwBin,
 } = require('./util')
 
 // This variable gets used in other functions
@@ -292,10 +293,10 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
       },
 
       // ====== NOTE: rufus needs this workaround for tailwind =======
-      // Setup tailwind in a linked project, due to rwfw we install deps manually
+      // Setup tailwind in a linked project, due to cfw we install deps manually
       {
         title: 'Install tailwind dependencies',
-        // @NOTE: use rwfw, because calling the copy function doesn't seem to work here
+        // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
           execa(
             'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.5.12',
@@ -306,9 +307,13 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
       },
       {
         title: '[link] Copy local framework files again',
-        // @NOTE: use rwfw, because calling the copy function doesn't seem to work here
+        // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
-          execa('yarn rwfw project:copy', [], getExecaOptions(outputPath)),
+          execa(
+            `yarn ${getCfwBin(outputPath)} project:copy`,
+            [],
+            getExecaOptions(outputPath),
+          ),
         enabled: () => linkWithLatestFwBuild,
       },
       // =========
@@ -359,7 +364,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
       'auth-dbauth-setup',
     )
 
-    // At an earlier step we run `yarn rwfw project:copy` which gives us
+    // At an earlier step we run `yarn cfw project:copy` which gives us
     // auth-dbauth-setup@3.2.0 currently. We need that version to be a canary
     // version for auth-dbauth-api and auth-dbauth-web package installations
     // to work. So we remove the current version and add a canary version
@@ -377,12 +382,16 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     updatePkgJsonScripts({
       projectPath: outputPath,
       scripts: {
-        postinstall: 'yarn rwfw project:copy',
+        postinstall: `yarn ${getCfwBin(outputPath)} project:copy`,
       },
     })
 
     if (linkWithLatestFwBuild) {
-      await execa('yarn rwfw project:copy', [], getExecaOptions(outputPath))
+      await execa(
+        `yarn ${getCfwBin(outputPath)} project:copy`,
+        [],
+        getExecaOptions(outputPath),
+      )
     }
 
     await execa(
@@ -627,7 +636,11 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
             fullPath('api/src/services/posts/posts.scenarios'),
           )
 
-          await execa(`yarn rwfw project:copy`, [], getExecaOptions(outputPath))
+          await execa(
+            `yarn ${getCfwBin(outputPath)} project:copy`,
+            [],
+            getExecaOptions(outputPath),
+          )
         },
       },
       {

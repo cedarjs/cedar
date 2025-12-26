@@ -11,34 +11,36 @@ import { getConfigPath } from '@cedarjs/project-config'
 
 const config = new Configstore('@cedarjs/cli')
 
-const RWFW_PATH =
-  process.env.RWFW_PATH || process.env.RW_PATH || config.get('RWFW_PATH')
+// TODO: Remove RW related fallbacks here
+const CFW_PATH =
+  process.env.CFW_PATH ||
+  process.env.RWFW_PATH ||
+  process.env.RW_PATH ||
+  config.get('CFW_PATH') ||
+  config.get('RWFW_PATH')
 
-if (!RWFW_PATH) {
-  console.error('Error: You must specify the path to Redwood Framework')
-  console.error('Usage: `RWFW_PATH=~/gh/cedarjs/cedar yarn rwfw <command>')
+if (!CFW_PATH) {
+  console.error('Error: You must specify the path to Cedar Framework')
+  console.error('Usage: `CFW_PATH=~/gh/cedarjs/cedar yarn cfw <command>')
   process.exit(1)
 }
 
-if (!fs.existsSync(RWFW_PATH)) {
+if (!fs.existsSync(CFW_PATH)) {
   console.error(
-    `Error: The specified path to Redwood Framework (${RWFW_PATH}) does not exist.`,
+    `Error: The specified path to Cedar Framework (${CFW_PATH}) does not exist.`,
   )
-  console.error('Usage: `RWFW_PATH=~/gh/cedarjs/cedar yarn rwfw <command>')
+  console.error('Usage: `CFW_PATH=~/gh/cedarjs/cedar yarn cfw <command>')
   process.exit(1)
 }
 
-const absRwFwPath = path.resolve(process.cwd(), RWFW_PATH)
-config.set('RWFW_PATH', absRwFwPath)
+const absCfwPath = path.resolve(process.cwd(), CFW_PATH)
+config.set('CFW_PATH', absCfwPath)
 
-// Execute the commands in the Redwood Framework Tools package.
+// Execute the commands in the Cedar Framework Tools package.
 const projectPath = path.dirname(
   getConfigPath(process.env.RWJS_CWD ?? process.cwd()),
 )
-console.log(
-  'Redwood Framework Tools Path:',
-  terminalLink(absRwFwPath, absRwFwPath),
-)
+console.log('Cedar Framework Tools Path:', terminalLink(absCfwPath, absCfwPath))
 
 let command = process.argv.slice(2)
 const helpCommands = ['help', '--help']
@@ -52,7 +54,7 @@ try {
   // See https://nodejs.org/api/deprecations.html#DEP0190
   execa.sync('yarn', [...command], {
     stdio: 'inherit',
-    cwd: absRwFwPath,
+    cwd: absCfwPath,
     env: {
       RWJS_CWD: projectPath,
     },

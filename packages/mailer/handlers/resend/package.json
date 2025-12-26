@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
-    "resend": "4.6.0"
+    "resend": "4.8.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

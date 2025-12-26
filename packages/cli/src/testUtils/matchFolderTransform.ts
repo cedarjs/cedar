@@ -1,5 +1,6 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
-import { tmpdir } from 'node:os'
+import os from 'node:os'
 import path from 'node:path'
 
 import fg from 'fast-glob'
@@ -120,12 +121,12 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     useJsCodeshift = false,
   } = {},
 ) => {
-  // Use OS temp directory with unique suffix for better performance
   const tempDir = path.join(
-    tmpdir(),
+    fs.realpathSync(os.tmpdir()),
     `cedar-test-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
   )
 
+  // Override paths used in getPaths() utility func
   const originalRwjsCwd = process.env.RWJS_CWD
   const originalCwd = process.cwd()
   process.env.RWJS_CWD = tempDir
@@ -145,6 +146,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     const fixtureInputDir = path.join(fixtureFolder, 'input')
     const fixtureOutputDir = path.join(fixtureFolder, 'output')
 
+    // Step 1: Copy files recursively from fixture folder to temp
     await fse.ensureDir(tempDir)
     await copyFiles(fixtureInputDir, tempDir, targetPathsGlob)
 
@@ -155,7 +157,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
       onlyFiles: true,
     }
 
-    // Run transform
+    // Step 2: Run transform against temp dir
     if (useJsCodeshift) {
       if (typeof transformFunctionOrName !== 'string') {
         throw new Error(
@@ -201,9 +203,10 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
       }),
     ])
 
-    // Compare paths
+    // Step 3: Check output paths
     expect(transformedPaths.sort()).toEqual(expectedPaths.sort())
 
+    // Step 4: Check contents of each file
     const contentComparisons = transformedPaths.map(async (transformedFile) => {
       const actualPath = path.join(tempDir, transformedFile)
       const expectedPath = path.join(fixtureOutputDir, transformedFile)
@@ -226,9 +229,9 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     }
     process.chdir(originalCwd)
 
-    // Clean up temp directory asynchronously (don't wait for it)
-    fse.remove(tempDir).catch(() => {
-      // Ignore cleanup errors
-    })
+    // Not awaiting - it'll be cleaned up eventually. Also, I was getting errors
+    // like these on Windows, so I'm just catching and ignoring them.
+    // Error: EBUSY: resource busy or locked, rmdir 'C:\Users\RUNNER~1\AppData\Local\Temp\cedar-test-UhbKQX'
+    fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {})
   }
 }

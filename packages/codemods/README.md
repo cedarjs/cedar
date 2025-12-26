@@ -26,7 +26,7 @@ npx @cedarjs/codemods add-directives
 
 ## Contributing
 
-> **Note** that this is a CLI—that is, it's meant to be executed with `npx`. This means the normal contribution flow (using `rwfw`) doesn't apply.
+> **Note** that this is a CLI—that is, it's meant to be executed with `npx`. This means the normal contribution flow (using `cfw`) doesn't apply.
 
 You should be familiar with [jscodeshift](https://github.com/facebook/jscodeshift).
 Its API isn't documented too well so we'll try to explain some of it here.

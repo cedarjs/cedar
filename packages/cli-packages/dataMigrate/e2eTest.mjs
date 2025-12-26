@@ -56,7 +56,7 @@ Also see the CedarJS CLI Reference
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 const testProjectPath =
-  process.env.REDWOOD_TEST_PROJECT_PATH ?? process.env.PROJECT_PATH
+  process.env.CEDAR_TEST_PROJECT_PATH ?? process.env.PROJECT_PATH
 
 // Handle there being no test project to run against.
 if (testProjectPath === undefined) {
@@ -68,7 +68,7 @@ if (testProjectPath === undefined) {
       '  yarn build:test-project --link <your test project path>',
       '',
       `Then set the ${ansis.magenta(
-        'REDWOOD_TEST_PROJECT_PATH',
+        'CEDAR_TEST_PROJECT_PATH',
       )} env var to the path of your test project and run this script again.`,
     ].join('\n'),
   )

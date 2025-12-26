@@ -36,13 +36,24 @@ This project is a framework monorepo. You typically develop _on_ the framework o
 | `yarn format`      | Format code with Prettier.                                                             |
 | `yarn e2e`         | Run end-to-end tests (requires Cypress). Use `CI=1` for headless/non-interactive mode. |
 
+### Running Commands on Specific Packages
+
+To run commands on individual packages in the monorepo, use `yarn workspace`:
+
+```bash
+yarn workspace @cedarjs/internal test
+yarn workspace @cedarjs/cli build
+```
+
+This is useful for faster iteration when working on a specific package.
+
 ### Development Workflow
 
 To test framework changes against a real Cedar project:
 
 1.  **Sync Method (Recommended):**
     - Navigate to your target Cedar project.
-    - Run: `RWFW_PATH=/path/to/cedar-gemini yarn rwfw project:sync`
+    - Run: `CFW_PATH=/path/to/cedar-gemini yarn cfw project:sync`
     - This builds the framework, copies dependencies, and watches for changes.
 
 2.  **CLI Dev Method:**
