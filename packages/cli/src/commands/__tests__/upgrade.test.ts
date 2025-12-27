@@ -24,6 +24,7 @@ vi.mock('node:fs', () => ({
     writeFileSync: vi.fn(),
     existsSync: vi.fn(),
     mkdirSync: vi.fn(),
+    realpathSync: (path: string) => path,
   },
 }))
 
