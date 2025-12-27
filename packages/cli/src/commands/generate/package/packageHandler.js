@@ -29,7 +29,9 @@ export const files = async ({
   const base = path.basename(getPaths().base)
 
   const [orgName, name] =
-    nameArg[0] === '@' ? nameArg.split('/', 2) : ['@' + base, nameArg]
+    nameArg[0] === '@'
+      ? nameArg.split('/', 2)
+      : ['@' + paramCase(base), nameArg]
 
   const folderName = paramCase(name)
   const packageName = orgName + '/' + folderName
@@ -129,7 +131,8 @@ export const handler = async ({ name, force, ...rest }) => {
 
   if (name.replaceAll('/', '').length < name.length - 1) {
     throw new Error(
-      `Invalid package name "${name}". Package names can have at most one slash.`,
+      `Invalid package name "${name}". ` +
+        'Package names can have at most one slash.',
     )
   }
 

@@ -10,6 +10,7 @@ const SIDE_MAP = {
   web: ['cell', 'component', 'layout', 'page', 'scaffold'],
   api: ['function', 'sdl', 'service'],
   scripts: ['script'],
+  packages: ['package'],
 }
 
 const copyGenerator = (name, { force }) => {

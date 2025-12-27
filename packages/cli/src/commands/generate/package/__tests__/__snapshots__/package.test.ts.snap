@@ -1,20 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`packageHandler > files > multi-word package names > creates a multi-word package 1`] = `
-"# Shared Package '@my-org/form-validators'
+"# Shared Package '@my-camel-case-app/form-validators'
 
 Use code in this package by adding it to the dependencies on the side you want
-to use it, with the special \`workspace:*\` version, and then importing it into
-your code:
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
 
 \`\`\`json
   "dependencies": {
-    "@my-org/form-validators": "workspace:*"
+    "@my-camel-case-app/form-validators": "workspace:*"
   }
 \`\`\`
 
 \`\`\`javascript
-import { formValidators } from '@my-org/form-validators';
+import { formValidators } from '@my-camel-case-app/form-validators';
 \`\`\`
 "
 `;
@@ -50,20 +50,20 @@ export type StandardScenario = ScenarioData<unknown>
 `;
 
 exports[`packageHandler > files > multi-word package names > creates a multiWord package 1`] = `
-"# Shared Package '@my-org/form-validators'
+"# Shared Package '@my-camel-case-app/form-validators'
 
 Use code in this package by adding it to the dependencies on the side you want
-to use it, with the special \`workspace:*\` version, and then importing it into
-your code:
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
 
 \`\`\`json
   "dependencies": {
-    "@my-org/form-validators": "workspace:*"
+    "@my-camel-case-app/form-validators": "workspace:*"
   }
 \`\`\`
 
 \`\`\`javascript
-import { formValidators } from '@my-org/form-validators';
+import { formValidators } from '@my-camel-case-app/form-validators';
 \`\`\`
 "
 `;
@@ -98,12 +98,122 @@ export type StandardScenario = ScenarioData<unknown>
 "
 `;
 
-exports[`packageHandler > files > single word package names > creates a single word package 1`] = `
+exports[`packageHandler > files > single word package name > infers package scope from project path > README.md 1`] = `
+"# Shared Package '@my-cedar-app/foo'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-cedar-app/foo": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { foo } from '@my-cedar-app/foo';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > foo.scenarios.ts 1`] = `
+"import type { ScenarioData } from '@cedarjs/testing/api'
+
+export const standard = defineScenario({
+  // Define the "fixture" to write into your test database here
+  // See guide: https://cedarjs.com/docs/testing#scenarios
+})
+
+export type StandardScenario = ScenarioData<unknown>
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > foo.test.ts 1`] = `
+"import { foo } from './index.js'
+
+describe('foo', () => {
+  it('should not throw any errors', async () => {
+    expect(foo()).not.toThrow()
+  })
+})
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > index.ts 1`] = `
+"export function foo() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > package.json 1`] = `
+"{
+  "name": "@my-cedar-app/foo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "composite": true,
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+  },
+  "include": ["src"],
+}
+"
+`;
+
+exports[`packageHandler > files > single word package name > uses the provided package scope name > index 1`] = `
+"export function foo() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > single word package name > uses the provided package scope name > packageJson 1`] = `
+"{
+  "name": "@my-org/foo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}
+"
+`;
+
+exports[`packageHandler > files > single word package name > uses the provided package scope name > readme 1`] = `
 "# Shared Package '@my-org/foo'
 
 Use code in this package by adding it to the dependencies on the side you want
-to use it, with the special \`workspace:*\` version, and then importing it into
-your code:
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
 
 \`\`\`json
   "dependencies": {
@@ -117,14 +227,19 @@ import { foo } from '@my-org/foo';
 "
 `;
 
-exports[`packageHandler > files > single word package names > creates a single word package 2`] = `
-"export function foo() {
-  return 0
-}
+exports[`packageHandler > files > single word package name > uses the provided package scope name > scenarios 1`] = `
+"import type { ScenarioData } from '@cedarjs/testing/api'
+
+export const standard = defineScenario({
+  // Define the "fixture" to write into your test database here
+  // See guide: https://cedarjs.com/docs/testing#scenarios
+})
+
+export type StandardScenario = ScenarioData<unknown>
 "
 `;
 
-exports[`packageHandler > files > single word package names > creates a single word package 3`] = `
+exports[`packageHandler > files > single word package name > uses the provided package scope name > test 1`] = `
 "import { foo } from './index.js'
 
 describe('foo', () => {
@@ -135,14 +250,20 @@ describe('foo', () => {
 "
 `;
 
-exports[`packageHandler > files > single word package names > creates a single word package 4`] = `
-"import type { ScenarioData } from '@cedarjs/testing/api'
-
-export const standard = defineScenario({
-  // Define the "fixture" to write into your test database here
-  // See guide: https://cedarjs.com/docs/testing#scenarios
-})
-
-export type StandardScenario = ScenarioData<unknown>
+exports[`packageHandler > files > single word package name > uses the provided package scope name > tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "composite": true,
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+  },
+  "include": ["src"],
+}
 "
 `;
