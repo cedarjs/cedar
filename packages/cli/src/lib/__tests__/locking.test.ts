@@ -1,6 +1,7 @@
 global.__dirname = __dirname
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal<any>()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
     ...originalProjectConfig,
     getPaths: () => {
@@ -12,6 +13,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     },
   }
 })
+
 vi.mock('node:fs')
 
 import fs from 'node:fs'
@@ -20,12 +22,15 @@ import path from 'path'
 import { vol } from 'memfs'
 import { vi, it, expect, beforeEach } from 'vitest'
 
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 import { setLock, unsetLock, isLockSet, clearLocks } from '../locking.js'
 
 beforeEach(() => {
   // Start with no files
   vol.reset()
-  // @ts-expect-error - Fix types
+
+  // @ts-expect-error - This is assignable in tests
   fs.statSync = vi.fn(() => {
     return {
       birthtimeMs: Date.now(),
@@ -79,8 +84,8 @@ it('Detect if lock is set when it is already unset', () => {
 
 it('Detects a stale lock', () => {
   // Fake that the lock is older than 1 hour
-  // @ts-expect-error - Fix types
-  fs.statSync.mockImplementation(() => {
+  // @ts-expect-error - Partial mock for what's needed in our test
+  vi.mocked(fs).statSync.mockImplementation(() => {
     return {
       birthtimeMs: Date.now() - 3600001,
     }

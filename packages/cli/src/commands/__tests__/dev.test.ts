@@ -1,3 +1,5 @@
+import type FS from 'fs'
+
 import '../../lib/mockTelemetry'
 
 vi.mock('concurrently', () => ({
@@ -11,7 +13,7 @@ vi.mock('concurrently', () => ({
 
 // dev checks for existence of api/src and web/src folders
 vi.mock('node:fs', async (importOriginal) => {
-  const actualFs = await importOriginal<any>()
+  const actualFs = await importOriginal<typeof FS>()
 
   return {
     default: {
