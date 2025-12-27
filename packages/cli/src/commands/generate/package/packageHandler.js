@@ -17,8 +17,27 @@ import {
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { templateForFile } from '../yargsHandlerHelpers.js'
 
+// Exported for testing
+export function nameVariants(nameArg) {
+  const base = path.basename(getPaths().base)
+
+  const [orgName, name] = nameArg.startsWith('@')
+    ? nameArg.slice(1).split('/', 2)
+    : [paramCase(base), nameArg]
+
+  const folderName = paramCase(name)
+  const packageName = '@' + paramCase(orgName) + '/' + folderName
+  const fileName = camelCase(name)
+
+  return { name, folderName, packageName, fileName }
+}
+
+// Exported for testing
 export const files = async ({
-  name: nameArg,
+  name,
+  folderName,
+  packageName,
+  fileName,
   typescript,
   tests: generateTests = true,
   ...rest
@@ -26,18 +45,6 @@ export const files = async ({
   const extension = typescript ? '.ts' : '.js'
 
   const outputFiles = []
-
-  // TODO: Extract this out into its own task that is run first, and that stores
-  // the name on the Listr context so that it can be used in both the
-  // workspaces task and the files task that calls this function
-  const base = path.basename(getPaths().base)
-  const [orgName, name] =
-    nameArg[0] === '@'
-      ? nameArg.split('/', 2)
-      : ['@' + paramCase(base), nameArg]
-  const folderName = paramCase(name)
-  const packageName = orgName + '/' + folderName
-  const fileName = camelCase(name)
 
   const indexFile = await templateForFile({
     name,
@@ -140,8 +147,14 @@ export const handler = async ({ name, force, ...rest }) => {
   const tasks = new Listr(
     [
       {
+        title: 'Parsing package name...',
+        task: (ctx) => {
+          ctx.nameVariants = nameVariants(name)
+        },
+      },
+      {
         title: 'Updating workspace config...',
-        task: async (_ctx, task) => {
+        task: async (ctx, task) => {
           const rootPackageJsonPath = path.join(getPaths().base, 'package.json')
           const packageJson = JSON.parse(
             await fs.promises.readFile(rootPackageJsonPath, 'utf8'),
@@ -153,19 +166,24 @@ export const handler = async ({ name, force, ...rest }) => {
             )
           }
 
-          const hasAsterixPackagesWorkspace =
+          const packagePath = `packages/${ctx.nameVariants.folderName}`
+          const hasWildcardPackagesWorkspace =
             packageJson.workspaces.includes('packages/*')
-          // TODO: Skip this task if "packages/<name>" already exists
-          // const hasNamedPackagesWorkspace = packageJson.workspaces.find(
-          //   (workspace) => workspace.startsWith('packages/'),
-          // )
+          const hasNamedPackagesWorkspace =
+            packageJson.workspaces.includes(packagePath)
+          const hasOtherNamedPackages = packageJson.workspaces.some(
+            (workspace) =>
+              workspace.startsWith('packages/') && workspace !== packagePath,
+          )
 
-          if (hasAsterixPackagesWorkspace) {
+          if (hasWildcardPackagesWorkspace || hasNamedPackagesWorkspace) {
             task.skip('Workspaces already configured')
           } else {
-            // TODO: Push "packages/<name>" if other "packages/pkgName" exists
-            // instead of the generic "packages/*"
-            packageJson.workspaces.push('packages/*')
+            if (hasOtherNamedPackages) {
+              packageJson.workspaces.push(packagePath)
+            } else {
+              packageJson.workspaces.push('packages/*')
+            }
 
             await fs.promises.writeFile(
               rootPackageJsonPath,
@@ -176,8 +194,11 @@ export const handler = async ({ name, force, ...rest }) => {
       },
       {
         title: 'Generating package files...',
-        task: async () => {
-          packageFiles = await files({ name, ...rest })
+        task: async (ctx) => {
+          packageFiles = await files({
+            ...ctx.nameVariants,
+            ...rest,
+          })
           return writeFilesTask(packageFiles, { overwriteExisting: force })
         },
       },

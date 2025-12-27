@@ -81,15 +81,43 @@ describe('packageHandler', () => {
     })
   })
 
+  describe('nameVariants', () => {
+    it('uses the provided scope name', () => {
+      expect(packageHandler.nameVariants('@myOrg/formValidators-pkg')).toEqual({
+        name: 'formValidators-pkg',
+        folderName: 'form-validators-pkg',
+        packageName: '@my-org/form-validators-pkg',
+        fileName: 'formValidatorsPkg',
+      })
+    })
+
+    it('constructs a scope name if none is provided', () => {
+      expect(packageHandler.nameVariants('foo')).toEqual({
+        name: 'foo',
+        folderName: 'foo',
+        packageName: '@project/foo',
+        fileName: 'foo',
+      })
+    })
+
+    it('handles camelCase when constructing a scope name', () => {
+      mockBase.path = '/path/to/cedarInc'
+      expect(packageHandler.nameVariants('MyFoo')).toEqual({
+        name: 'MyFoo',
+        folderName: 'my-foo',
+        packageName: '@cedar-inc/my-foo',
+        fileName: 'myFoo',
+      })
+    })
+  })
+
   describe('files', () => {
     describe('single word package name', () => {
       it('infers package scope from project path', async () => {
-        console.log('executing first test')
         mockBase.path = '/path/to/my-cedar-app'
 
-        console.log('calling first method that should call out to getPaths()')
         const files = await packageHandler.files({
-          name: 'foo',
+          ...packageHandler.nameVariants('foo'),
           typescript: true,
         })
 
@@ -145,7 +173,7 @@ describe('packageHandler', () => {
         mockBase.path = '/path/to/my-camelCaseApp'
 
         const files = await packageHandler.files({
-          name: 'foo',
+          ...packageHandler.nameVariants('foo'),
           typescript: true,
         })
 
@@ -162,7 +190,7 @@ describe('packageHandler', () => {
 
       it('uses the provided package scope name', async () => {
         const files = await packageHandler.files({
-          name: '@my-org/foo',
+          ...packageHandler.nameVariants('@my-org/foo'),
           typescript: true,
         })
 
@@ -186,7 +214,7 @@ describe('packageHandler', () => {
     describe('multi-word package names', () => {
       it('creates a multi-word package', async () => {
         const files = await packageHandler.files({
-          name: 'form-validators',
+          ...packageHandler.nameVariants('form-validators'),
           typescript: true,
         })
 
@@ -215,7 +243,7 @@ describe('packageHandler', () => {
         mockBase.path = '/path/to/myCamelCaseApp'
 
         const files = await packageHandler.files({
-          name: 'formValidators',
+          ...packageHandler.nameVariants('formValidators'),
           typescript: true,
         })
 
@@ -239,10 +267,52 @@ describe('packageHandler', () => {
         expect(files[testPath]).toMatchSnapshot()
         expect(files[scenarioPath]).toMatchSnapshot()
       })
+
+      it('uses the provided scope for multiWord-package name', async () => {
+        const files = await packageHandler.files({
+          ...packageHandler.nameVariants('@myOrg/formValidators-pkg'),
+          typescript: true,
+        })
+
+        const readmePath = path.normalize(
+          mockBase.path + '/packages/form-validators-pkg/README.md',
+        )
+        const packageJsonPath = path.normalize(
+          mockBase.path + '/packages/form-validators-pkg/package.json',
+        )
+        const indexPath = path.normalize(
+          mockBase.path + '/packages/form-validators-pkg/src/index.ts',
+        )
+        const testPath = path.normalize(
+          mockBase.path +
+            '/packages/form-validators-pkg/src/formValidatorsPkg.test.ts',
+        )
+        const scenarioPath = path.normalize(
+          mockBase.path +
+            '/packages/form-validators-pkg/src/formValidatorsPkg.scenarios.ts',
+        )
+
+        // Both making sure the file is valid json (parsing would fail otherwise)
+        // and that the package name is correct
+        const packageJson = JSON.parse(files[packageJsonPath])
+
+        expect(packageJson.name).toEqual('@my-org/form-validators-pkg')
+        expect(files[indexPath]).toMatch(
+          'export function formValidatorsPkg() {',
+        )
+
+        expect(files[readmePath]).toMatchSnapshot('readme')
+        expect(files[packageJsonPath]).toMatchSnapshot('packageJson')
+        expect(files[indexPath]).toMatchSnapshot('index')
+        expect(files[testPath]).toMatchSnapshot('test')
+        expect(files[scenarioPath]).toMatchSnapshot('scenario')
+      })
     })
 
     it('returns tests, scenario and main package file for JS', async () => {
-      const jsFiles = await packageHandler.files({ name: 'Sample' })
+      const jsFiles = await packageHandler.files({
+        ...packageHandler.nameVariants('Sample'),
+      })
       const fileNames = Object.keys(jsFiles)
       expect(fileNames.length).toEqual(6)
 

@@ -98,6 +98,73 @@ export type StandardScenario = ScenarioData<unknown>
 "
 `;
 
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > index 1`] = `
+"export function formValidatorsPkg() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > packageJson 1`] = `
+"{
+  "name": "@my-org/form-validators-pkg",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > readme 1`] = `
+"# Shared Package '@my-org/form-validators-pkg'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-org/form-validators-pkg": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { formValidatorsPkg } from '@my-org/form-validators-pkg';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > scenario 1`] = `
+"import type { ScenarioData } from '@cedarjs/testing/api'
+
+export const standard = defineScenario({
+  // Define the "fixture" to write into your test database here
+  // See guide: https://cedarjs.com/docs/testing#scenarios
+})
+
+export type StandardScenario = ScenarioData<unknown>
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > test 1`] = `
+"import { formValidatorsPkg } from './index.js'
+
+describe('formValidatorsPkg', () => {
+  it('should not throw any errors', async () => {
+    expect(formValidatorsPkg()).not.toThrow()
+  })
+})
+"
+`;
+
 exports[`packageHandler > files > single word package name > infers package scope from project path > README.md 1`] = `
 "# Shared Package '@my-cedar-app/foo'
 
@@ -166,91 +233,6 @@ exports[`packageHandler > files > single word package name > infers package scop
 `;
 
 exports[`packageHandler > files > single word package name > infers package scope from project path > tsconfig.json 1`] = `
-"{
-  "compilerOptions": {
-    "composite": true,
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
-    "baseUrl": ".",
-    "rootDir": "src",
-    "outDir": "dist",
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-  },
-  "include": ["src"],
-}
-"
-`;
-
-exports[`packageHandler > files > single word package name > uses the provided package scope name > index 1`] = `
-"export function foo() {
-  return 0
-}
-"
-`;
-
-exports[`packageHandler > files > single word package name > uses the provided package scope name > packageJson 1`] = `
-"{
-  "name": "@my-org/foo",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch"
-  },
-  "devDependencies": {
-    "typescript": "5.9.3"
-  }
-}
-"
-`;
-
-exports[`packageHandler > files > single word package name > uses the provided package scope name > readme 1`] = `
-"# Shared Package '@my-org/foo'
-
-Use code in this package by adding it to the dependencies on the side you want
-to use it, with the special \`workspace:*\` version. After that you can import it
-into your code:
-
-\`\`\`json
-  "dependencies": {
-    "@my-org/foo": "workspace:*"
-  }
-\`\`\`
-
-\`\`\`javascript
-import { foo } from '@my-org/foo';
-\`\`\`
-"
-`;
-
-exports[`packageHandler > files > single word package name > uses the provided package scope name > scenarios 1`] = `
-"import type { ScenarioData } from '@cedarjs/testing/api'
-
-export const standard = defineScenario({
-  // Define the "fixture" to write into your test database here
-  // See guide: https://cedarjs.com/docs/testing#scenarios
-})
-
-export type StandardScenario = ScenarioData<unknown>
-"
-`;
-
-exports[`packageHandler > files > single word package name > uses the provided package scope name > test 1`] = `
-"import { foo } from './index.js'
-
-describe('foo', () => {
-  it('should not throw any errors', async () => {
-    expect(foo()).not.toThrow()
-  })
-})
-"
-`;
-
-exports[`packageHandler > files > single word package name > uses the provided package scope name > tsconfig.json 1`] = `
 "{
   "compilerOptions": {
     "composite": true,
