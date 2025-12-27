@@ -899,8 +899,9 @@ By default, CedarJS functions return strings or JSON. If you need to return bina
 Here's an example of how to return a binary file from the filesystem:
 
 ```typescript title="api/src/functions/myCustomFunction.ts"
+import fs from 'node:fs'
+
 import type { APIGatewayEvent, Context } from 'aws-lambda'
-import fs from 'fs'
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {
   const file = await fs.promises.readFile('/path/to/image.png')
