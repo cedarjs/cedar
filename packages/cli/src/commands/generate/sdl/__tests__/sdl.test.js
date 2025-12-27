@@ -4,21 +4,19 @@ import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import prompts from 'prompts'
+import { ufs } from 'unionfs'
 import { vi, describe, test, expect, beforeAll, afterEach } from 'vitest'
 
 // Load mocks
 import '../../../../lib/test'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const ufs = await import('unionfs')
-  const originalFs = await importOriginal()
+  const { wrapFsForUnionfs } = await import(
+    '../../../../__tests__/ufsFsProxy.js'
+  )
+  ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
 
-  ufs.use(originalFs).use(memfs)
-
-  return {
-    ...ufs,
-    default: ufs,
-  }
+  return { ...ufs, default: ufs }
 })
 
 // Have to import fs after memfs is mocked
@@ -376,8 +374,8 @@ describe('handler', () => {
   canBeCalledWithGivenModelName('camelCase', 'user')
   canBeCalledWithGivenModelName('PascalCase', 'User')
 
-  prompts.inject(['CustomDatums'])
+  prompts.inject('CustomDatums')
   canBeCalledWithGivenModelName('camelCase', 'customData')
-  prompts.inject(['CustomDatums'])
+  prompts.inject('CustomDatums')
   canBeCalledWithGivenModelName('PascalCase', 'CustomData')
 })

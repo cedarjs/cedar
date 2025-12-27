@@ -698,7 +698,8 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     task.output = `Found upgrade check script: ${scriptName}. Downloading...`
 
     const tempDir = await fs.promises.mkdtemp(
-      path.join(os.tmpdir(), 'cedar-upgrade-'),
+      // realpath: https://github.com/e18e/ecosystem-issues/issues/168
+      path.join(fs.realpathSync(os.tmpdir()), 'cedar-upgrade-'),
     )
     const scriptPath = path.join(tempDir, 'script.ts')
 
