@@ -28,7 +28,7 @@ const copyGenerator = (name, { force }) => {
   const to = path.join(getPaths().generatorTemplates, side, name)
 
   // copy entire template directory contents to appropriate side in app
-  fs.cpSync(from, to, { recursive: true, force: force })
+  fs.cpSync(from, to, { recursive: true, force })
 
   return to
 }

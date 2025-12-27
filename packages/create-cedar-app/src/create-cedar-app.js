@@ -202,7 +202,12 @@ async function createProjectFiles(appDir, { templateDir, overwrite }) {
   fs.mkdirSync(path.dirname(newAppDir), { recursive: true })
 
   // Copy the template files to the new app directory
-  fs.cpSync(templateDir, newAppDir, { recursive: true, force: overwrite })
+  // Have to use fs.promises.cp here because of a bug in yarn
+  // See https://github.com/yarnpkg/berry/issues/6488
+  await fs.promises.cp(templateDir, newAppDir, {
+    recursive: true,
+    force: overwrite,
+  })
 
   // .gitignore is renamed here to force file inclusion during publishing
   fs.renameSync(
