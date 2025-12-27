@@ -33,6 +33,15 @@ export function setLock(identifier: string) {
   )
 }
 
+function isErrorWithCode(error: unknown, code: string) {
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === code
+  )
+}
+
 /**
  * Removes a lock with the specified identifier
  * @param identifier ID of the lock
@@ -40,11 +49,13 @@ export function setLock(identifier: string) {
 export function unsetLock(identifier: string) {
   try {
     fs.rmSync(path.join(getPaths().generated.base, 'locks', identifier))
-  } catch (error: any) {
+  } catch (error) {
     // If the lock doesn't exist it's okay to not throw an error
-    if (error.code !== 'ENOENT') {
-      throw error
+    if (isErrorWithCode(error, 'ENOENT')) {
+      return
     }
+
+    throw error
   }
 }
 

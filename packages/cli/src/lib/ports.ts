@@ -7,7 +7,7 @@ import portfinder from 'portfinder'
  * @return A free port equal or higher than requestedPort but not within excludePorts. If no port can be found then returns -1
  */
 export async function getFreePort(
-  requestedPort: number,
+  requestedPort: number | undefined,
   excludePorts: number[] = [],
 ): Promise<number> {
   try {

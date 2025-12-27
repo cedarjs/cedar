@@ -48,7 +48,9 @@ export const handler = async ({
 
   // Starting values of ports from config (redwood.toml)
   const apiPreferredPort = parseInt(String(getConfig().api.port))
-  let webPreferredPort = parseInt(String(getConfig().web.port))
+  let webPreferredPort: number | undefined = parseInt(
+    String(getConfig().web.port),
+  )
 
   // Assume we can have the ports we want
   let apiAvailablePort = apiPreferredPort
@@ -76,8 +78,8 @@ export const handler = async ({
       ...forward.matchAll(/\-\-port(\=|\s)(?<port>[^\s]*)/g),
     ]
     if (forwardedPortMatches.length) {
-      // @ts-expect-error - Groups might be undefined
-      webPreferredPort = parseInt(forwardedPortMatches.pop().groups.port)
+      const port = forwardedPortMatches.pop()?.groups?.port
+      webPreferredPort = port ? parseInt(port, 10) : undefined
     }
     webAvailablePort = await getFreePort(webPreferredPort, [
       apiPreferredPort,
