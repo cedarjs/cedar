@@ -47,10 +47,6 @@ export const customOrDefaultTemplatePath = ({
     templatePath,
   )
 
-  if (!getPaths()[side].generators) {
-    return defaultPath
-  }
-
   // Where a custom template *might* exist, e.g.
   // /path/to/app/generatorTemplates/web/page/page.tsx.template
   const customPath = path.join(
