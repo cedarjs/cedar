@@ -81,7 +81,6 @@ export const templateForFile = async ({
   const basePath = sidePathSection
     ? getPaths()[side][sidePathSection]
     : getPaths()[side]
-  console.log('yargsHanlderHelpers basePath', basePath)
   const fullOutputPath = path.join(basePath, outputPath)
   const fullTemplatePath = customOrDefaultTemplatePath({
     generator,
@@ -95,7 +94,6 @@ export const templateForFile = async ({
     ),
     ...templateVars,
   }
-  console.log('mergedTemplateVars', mergedTemplateVars)
   const content = await generateTemplate(fullTemplatePath, mergedTemplateVars)
 
   return [fullOutputPath, content]
