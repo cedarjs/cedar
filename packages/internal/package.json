@@ -176,7 +176,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "concurrently": "8.2.2",
+    "concurrently": "9.2.1",
     "graphql-tag": "2.12.6",
     "publint": "0.3.16",
     "tsx": "4.21.0",
