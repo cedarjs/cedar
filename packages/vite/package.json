@@ -104,7 +104,7 @@
     "@types/react": "^18.2.55",
     "@types/ws": "^8",
     "@types/yargs-parser": "21.0.3",
-    "concurrently": "8.2.2",
+    "concurrently": "9.2.1",
     "glob": "11.1.0",
     "memfs": "4.51.1",
     "publint": "0.3.16",

@@ -56,7 +56,7 @@
     "@supabase/ssr": "0.8.0",
     "@supabase/supabase-js": "2.87.3",
     "@types/react": "^18.2.55",
-    "concurrently": "8.2.2",
+    "concurrently": "9.2.1",
     "publint": "0.3.16",
     "react": "18.3.1",
     "tsx": "4.21.0",

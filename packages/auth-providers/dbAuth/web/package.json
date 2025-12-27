@@ -48,7 +48,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@simplewebauthn/types": "9.0.1",
     "@types/react": "^18.2.55",
-    "concurrently": "8.2.2",
+    "concurrently": "9.2.1",
     "publint": "0.3.16",
     "react": "18.3.1",
     "tsx": "4.21.0",

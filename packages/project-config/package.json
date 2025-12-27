@@ -44,7 +44,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "concurrently": "8.2.2",
+    "concurrently": "9.2.1",
     "prisma": "6.19.1",
     "publint": "0.3.16",
     "rimraf": "6.1.2",

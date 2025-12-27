@@ -42,7 +42,7 @@
     "@types/semver": "7.7.1",
     "@types/which": "3.0.4",
     "@types/yauzl-promise": "4.0.1",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.0.0",
     "esbuild": "0.27.2",
     "eslint": "9.39.2",
     "eslint-plugin-jsdoc": "^48.7.0",
