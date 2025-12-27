@@ -22,7 +22,7 @@ export interface NodeTargetConfig {
   target: TargetEnum.NODE
   prismaConfig: string
   serverConfig: string
-  debugPort?: number
+  debugPort?: number | boolean
 }
 
 interface BrowserTargetConfig {
@@ -128,7 +128,7 @@ export interface CLIPlugin {
   enabled?: boolean
 }
 
-const DEFAULT_CONFIG: Config = {
+export const DEFAULT_CONFIG: Config = {
   web: {
     title: 'Cedar App',
     port: 8910,
