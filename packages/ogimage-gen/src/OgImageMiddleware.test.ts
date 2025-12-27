@@ -12,7 +12,6 @@ import { MiddlewareResponse } from '@cedarjs/web/middleware'
 import OgImageMiddleware from './OgImageMiddleware'
 
 // Memfs mocks the redwood project-config stuff
-vi.mock('fs', () => ({ ...memfs, default: { ...memfs } }))
 vi.mock('node:fs', () => ({ ...memfs, default: { ...memfs } }))
 
 // Mock getRoutesList function

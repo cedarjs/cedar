@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest'
 
 import { rscTransformUseServerPlugin } from '../vite-plugin-rsc-transform-server.js'
 
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
 const RWJS_CWD = process.env.RWJS_CWD
 

@@ -8,9 +8,9 @@
 //   expect('some output').toEqual(loadComponentFixture('component', 'filename.js'))
 // })
 
+import fs from 'node:fs'
 import path from 'path'
 
-import fs from 'fs-extra'
 import { vi } from 'vitest'
 
 import './mockTelemetry.js'
@@ -40,7 +40,6 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
             'prisma.config.cjs',
           ),
           dataMigrations: path.join(BASE_PATH, './api/dataMigrations'),
-          generators: path.join(BASE_PATH, './api/generators'),
           src: path.join(BASE_PATH, './api/src'),
           jobs: path.join(BASE_PATH, './api/src/jobs'),
           services: path.join(BASE_PATH, './api/src/services'),
@@ -52,7 +51,6 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           base: path.join(BASE_PATH, './web'),
           config: path.join(BASE_PATH, './web/config'),
           src: path.join(BASE_PATH, './web/src'),
-          generators: path.join(BASE_PATH, './web/generators'),
           routes: path.join(BASE_PATH, 'web/src/Routes.js'),
           components: path.join(BASE_PATH, '/web/src/components'),
           layouts: path.join(BASE_PATH, '/web/src/layouts'),
@@ -61,6 +59,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         },
         scripts: path.join(BASE_PATH, 'scripts'),
         packages: path.join(BASE_PATH, 'packages'),
+        generatorTemplates: path.join(BASE_PATH, 'generatorTemplates'),
         generated: {
           base: path.join(BASE_PATH, '.redwood'),
           schema: path.join(BASE_PATH, '.redwood/schema.graphql'),

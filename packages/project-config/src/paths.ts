@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import path from 'path'
 
 import fg from 'fast-glob'
@@ -14,7 +14,6 @@ export interface NodeTargetPaths {
   functions: string
   graphql: string
   lib: string
-  generators: string
   services: string
   config: string
   dist: string
@@ -34,7 +33,6 @@ export interface WebPaths {
   storybook: string
   app: string
   document: string
-  generators: string
   html: string
   routes: string
   pages: string
@@ -75,6 +73,7 @@ export interface Paths {
   web: WebPaths
   api: NodeTargetPaths
   scripts: string
+  generatorTemplates: string
 }
 
 export interface PagesDependency {
@@ -156,6 +155,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
 
     scripts: path.join(BASE_DIR, 'scripts'),
     packages: path.join(BASE_DIR, 'packages'),
+    generatorTemplates: path.join(BASE_DIR, 'generatorTemplates'),
 
     api: {
       base: path.join(BASE_DIR, 'api'),
@@ -163,7 +163,6 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
       functions: path.join(BASE_DIR, 'api/src/functions'),
       graphql: path.join(BASE_DIR, 'api/src/graphql'),
       lib: path.join(BASE_DIR, 'api/src/lib'),
-      generators: path.join(BASE_DIR, 'api/generators'),
       config: path.join(BASE_DIR, 'api/src/config'),
       services: path.join(BASE_DIR, 'api/src/services'),
       directives: path.join(BASE_DIR, 'api/src/directives'),
@@ -190,7 +189,6 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
       layouts: path.join(BASE_DIR, 'web/src/layouts/'),
       src: path.join(BASE_DIR, 'web/src'),
       storybook: path.join(BASE_DIR, 'web/.storybook'),
-      generators: path.join(BASE_DIR, 'web/generators'),
       app: resolveFile(path.join(BASE_DIR, 'web/src/App')) as string,
       document: resolveFile(path.join(BASE_DIR, 'web/src/Document')) as string,
       html: path.join(BASE_DIR, 'web/src/index.html'),

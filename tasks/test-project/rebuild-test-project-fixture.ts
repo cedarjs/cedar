@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import fse from 'fs-extra'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
 import { hideBin } from 'yargs/helpers'
@@ -22,6 +21,7 @@ import {
   updatePkgJsonScripts,
   ExecaError,
   exec,
+  getCfwBin,
 } from './util'
 
 const ansis = require('ansis')
@@ -286,7 +286,7 @@ const copyProject = async () => {
   // remove existing Fixture
   await rimraf(fixturePath)
   // copy from tempDir to Fixture dir
-  await fse.copy(OUTPUT_PROJECT_PATH, fixturePath)
+  await fs.promises.cp(OUTPUT_PROJECT_PATH, fixturePath, { recursive: true })
   // cleanup after ourselves
   await rimraf(OUTPUT_PROJECT_PATH)
 }
@@ -349,7 +349,7 @@ async function runCommand() {
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
       return exec(
-        'yarn rwfw project:tarsync',
+        `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
@@ -396,12 +396,12 @@ async function runCommand() {
   // Note that we undo this at the end
   await tuiTask({
     step: 6,
-    title: '[link] Add rwfw project:copy postinstall',
+    title: '[link] Add cfw project:copy postinstall',
     task: () => {
       return updatePkgJsonScripts({
         projectPath: OUTPUT_PROJECT_PATH,
         scripts: {
-          postinstall: 'yarn rwfw project:copy',
+          postinstall: `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:copy`,
         },
       })
     },
@@ -567,7 +567,7 @@ async function runCommand() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
-      // Copy over package.json from template, so we remove the extra dev dependencies, and rwfw postinstall script
+      // Copy over package.json from template, so we remove the extra dev dependencies, and cfw postinstall script
       // that we added in "Adding framework dependencies to project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS

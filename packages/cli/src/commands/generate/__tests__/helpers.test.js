@@ -39,7 +39,9 @@ test('customOrDefaultTemplatePath returns the app path if a custom template exis
   })
 
   expect(output).toEqual(
-    path.normalize('/path/to/project/web/generators/page/page.tsx.template'),
+    path.normalize(
+      '/path/to/project/generatorTemplates/web/page/page.tsx.template',
+    ),
   )
 })
 
@@ -55,7 +57,7 @@ test('customOrDefaultTemplatePath returns the app path with proper side, generat
 
   expect(output).toEqual(
     path.normalize(
-      '/path/to/project/api/generators/cell/component.tsx.template',
+      '/path/to/project/generatorTemplates/api/cell/component.tsx.template',
     ),
   )
 })

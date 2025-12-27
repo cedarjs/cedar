@@ -1,5 +1,6 @@
 globalThis.__dirname = __dirname
-import fs from 'fs-extra'
+import fs from 'node:fs'
+
 import { vol } from 'memfs'
 import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest'
 
@@ -10,7 +11,7 @@ import { builder } from '../../../generate/service/service.js'
 import { files } from '../../../generate/service/serviceHandler.js'
 import { tasks } from '../serviceHandler.js'
 
-vi.mock('fs-extra')
+vi.mock('node:fs')
 
 vi.mock('../../../../lib', async (importOriginal) => {
   const originalLib = await importOriginal()

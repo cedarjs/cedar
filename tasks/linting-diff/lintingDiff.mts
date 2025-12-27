@@ -53,7 +53,7 @@ async function main() {
 
   // Tarsync the framework to the project to apply any changes
   console.log('Tarsyncing the framework to the project...')
-  await spinner('yarn rwfw project:tarsync', () => $`yarn rwfw project:tarsync`)
+  await spinner('yarn cfw project:tarsync', () => $`yarn cfw project:tarsync`)
 
   // Get the configs for the files again
   console.log('Analyzing updated configs...')

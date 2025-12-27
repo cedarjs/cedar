@@ -4,7 +4,7 @@
 import path from 'node:path'
 import url from 'node:url'
 
-import fs from 'fs-extra'
+import fs from 'node:fs'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 

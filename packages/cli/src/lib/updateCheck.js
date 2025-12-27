@@ -1,8 +1,8 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import ansis from 'ansis'
 import boxen from 'boxen'
-import fs from 'fs-extra'
 import latestVersion from 'latest-version'
 import semver from 'semver'
 

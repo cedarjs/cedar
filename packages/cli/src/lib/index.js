@@ -1,4 +1,5 @@
 import https from 'https'
+import fs from 'node:fs'
 import path from 'path'
 
 import * as babel from '@babel/core'
@@ -7,7 +8,6 @@ import camelcase from 'camelcase'
 import { paramCase } from 'change-case'
 import decamelize from 'decamelize'
 import execa from 'execa'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 import lodash from 'lodash'
 import pascalcase from 'pascalcase'
@@ -493,10 +493,10 @@ export const removeRoutesFromRouterTask = (routes, layout) => {
 
 /**
  *
- * Use this util to install dependencies on a user's Redwood app
+ * Use this util to install dependencies on a user's Cedar app
  *
  * @example await addPackagesTask({
- * packages: ['fs-extra', 'somePackage@2.1.0'],
+ * packages: ['tailwindcss', 'somePackage@2.1.0'],
  * side: 'api', // <-- leave empty for project root
  * devDependency: true
  * })

@@ -1,16 +1,17 @@
 global.__dirname = __dirname
 
-vi.mock('fs-extra')
+vi.mock('node:fs')
 vi.mock('execa')
 
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 // Load mocks
 import '../../../../lib/test'
 
-const actualFs = await vi.importActual('fs-extra')
+const actualFs = await vi.importActual('node:fs')
+
 import Enquirer from 'enquirer'
-import fs from 'fs-extra'
 import { vol } from 'memfs'
 import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest'
 

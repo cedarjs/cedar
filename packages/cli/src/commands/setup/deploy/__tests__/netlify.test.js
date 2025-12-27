@@ -1,8 +1,8 @@
-vi.mock('fs-extra')
+vi.mock('node:fs')
 
+import fs from 'node:fs'
 import path from 'path'
 
-import fs from 'fs-extra'
 import { vol } from 'memfs'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 

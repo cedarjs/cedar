@@ -60,9 +60,9 @@
     "@storybook/react": "8.6.15",
     "empathic": "2.0.0",
     "magic-string": "0.30.21",
-    "react-docgen": "7.0.3",
+    "react-docgen": "7.1.1",
     "unplugin-auto-import": "19.3.0",
-    "vite-plugin-node-polyfills": "0.23.0"
+    "vite-plugin-node-polyfills": "0.24.0"
   },
   "devDependencies": {
     "@storybook/types": "8.6.14",

@@ -1,5 +1,5 @@
 globalThis.__dirname = __dirname
-import path from 'path'
+import path from 'node:path'
 
 import { vol, fs as memfs } from 'memfs'
 import { ufs } from 'unionfs'
@@ -11,16 +11,6 @@ import '../../../../lib/test'
 import { getDefaultArgs } from '../../../../lib/index.js'
 import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
-
-vi.mock('fs-extra', async (importOriginal) => {
-  ufs.use(await importOriginal()).use(memfs)
-  return { ...ufs, default: { ...ufs } }
-})
-
-vi.mock('fs', async (importOriginal) => {
-  ufs.use(await importOriginal()).use(memfs)
-  return { ...ufs, default: { ...ufs } }
-})
 
 vi.mock('node:fs', async (importOriginal) => {
   ufs.use(await importOriginal()).use(memfs)
@@ -880,13 +870,13 @@ describe('custom templates', () => {
     vol.fromJSON(
       {
         'redwood.toml': '',
-        'web/generators/scaffold/pages/EditNamePage.tsx.template':
+        'generatorTemplates/web/scaffold/pages/EditNamePage.tsx.template':
           'export default function CustomEditPage() { return null }',
-        'web/generators/scaffold/pages/NewNamePage.tsx.template':
+        'generatorTemplates/web/scaffold/pages/NewNamePage.tsx.template':
           'export default function CustomNewPage() { return null }',
-        'web/generators/scaffold/pages/NamePage.tsx.template':
+        'generatorTemplates/web/scaffold/pages/NamePage.tsx.template':
           'export default function CustomPage() { return null }',
-        'web/generators/scaffold/pages/NamesPage.tsx.template':
+        'generatorTemplates/web/scaffold/pages/NamesPage.tsx.template':
           'export default function CustomPluralPage() { return null }',
       },
       process.env.RWJS_CWD,

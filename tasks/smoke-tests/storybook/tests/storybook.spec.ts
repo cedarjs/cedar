@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import * as fs from 'node:fs'
 import * as path from 'path'
 
 import { test, expect } from '@playwright/test'
@@ -83,7 +83,7 @@ test('Mocks current user, and updates UI while dev server is running', async ({
   page,
 }: PlaywrightTestArgs) => {
   const profileStoryPath = path.join(
-    process.env.REDWOOD_TEST_PROJECT_PATH as string,
+    process.env.CEDAR_TEST_PROJECT_PATH as string,
     'web/src/pages/ProfilePage/ProfilePage.stories.tsx',
   )
 

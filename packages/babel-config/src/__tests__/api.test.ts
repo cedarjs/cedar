@@ -11,7 +11,7 @@ import {
   TARGETS_NODE,
 } from '../api'
 
-vi.mock('fs', async () => ({ ...memfs, default: { ...memfs } }))
+vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 
 const redwoodProjectPath = '/redwood-app'
 process.env.RWJS_CWD = redwoodProjectPath
@@ -59,7 +59,7 @@ describe('api', () => {
             {
               "corejs": {
                 "proposals": true,
-                "version": "3.42",
+                "version": "3.47",
               },
               "exclude": [
                 "@babel/plugin-transform-class-properties",

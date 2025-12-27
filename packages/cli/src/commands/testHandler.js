@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { ensurePosixPath } from '@cedarjs/project-config'

@@ -1,6 +1,6 @@
 /* eslint-env node, es6*/
 
-const fs = require('fs')
+const fs = require('node:fs')
 const path = require('path')
 const stream = require('stream')
 
@@ -30,6 +30,8 @@ const getExecaOptions = (cwd) => ({
   cwd,
   env: {
     RW_PATH: path.join(__dirname, '../../'),
+    CFW_PATH: path.join(__dirname, '../../'),
+    RWFW_PATH: path.join(__dirname, '../../'),
   },
 })
 
@@ -106,6 +108,14 @@ async function exec(...args) {
     })
 }
 
+// TODO: Remove this as soon as cfw is part of a stable Cedar release, and then
+// instead just use `cfw` directly everywhere
+function getCfwBin(projectPath) {
+  return fs.existsSync(path.join(projectPath, 'node_modules/.bin/cfw'))
+    ? 'cfw'
+    : 'rwfw'
+}
+
 module.exports = {
   getExecaOptions,
   applyCodemod,
@@ -114,4 +124,5 @@ module.exports = {
   nullStream,
   ExecaError,
   exec,
+  getCfwBin,
 }

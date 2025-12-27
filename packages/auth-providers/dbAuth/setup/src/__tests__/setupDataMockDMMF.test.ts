@@ -19,7 +19,6 @@ import type { AuthHandlerArgs } from '@cedarjs/cli-helpers'
 import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers/src/auth/authTasks'
 import type ProjectConfig from '@cedarjs/project-config'
 
-vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 import { createUserModelTask } from '../setupData'
@@ -328,7 +327,7 @@ describe('setupData createUserModelTask', () => {
 
   it('automatically adds a User model given the rwjs template schema.prisma', async () => {
     const packageJsonPath = path.resolve(__dirname, '../../package.json')
-    const actualFs = await vi.importActual<typeof fs>('fs')
+    const actualFs = await vi.importActual<typeof fs>('node:fs')
 
     vol.fromJSON(
       {

@@ -24,13 +24,11 @@
   },
   "dependencies": {
     "cookie": "1.1.1",
-    "esbuild": "0.25.9",
-    "fast-glob": "3.3.3",
-    "fs-extra": "11.2.0"
+    "esbuild": "0.27.2",
+    "fast-glob": "3.3.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/fs-extra": "11.0.4",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

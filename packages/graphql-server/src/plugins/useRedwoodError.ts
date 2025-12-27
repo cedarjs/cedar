@@ -35,17 +35,14 @@ export const useRedwoodError = (
             payload,
             ({ result, setResult }) => {
               const errors = result.errors?.map((error) => {
-                if (
-                  error.originalError &&
-                  error.originalError instanceof RedwoodError
-                ) {
+                if (error.originalError instanceof RedwoodError) {
                   logger.debug(
                     { custom: { name: error.originalError.name } },
                     'Converting RedwoodError to GraphQLError',
                   )
+
                   return createGraphQLError(error.message, {
                     extensions: error.extensions,
-                    originalError: error,
                   })
                 } else {
                   return error

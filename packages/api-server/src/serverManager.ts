@@ -1,6 +1,6 @@
 import type { ChildProcess } from 'child_process'
 import { fork } from 'child_process'
-import fs from 'fs'
+import fs from 'node:fs'
 import path from 'path'
 
 // See https://github.com/webdiscus/ansis#troubleshooting

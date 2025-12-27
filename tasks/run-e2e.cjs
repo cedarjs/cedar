@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /* eslint-env node, es6*/
 
+const fs = require('node:fs')
 const os = require('os')
 const path = require('path')
 
 const execa = require('execa')
 const fg = require('fast-glob')
-const fs = require('fs-extra')
 const { hideBin } = require('yargs/helpers')
 const yargs = require('yargs/yargs')
 
@@ -72,7 +72,7 @@ function createCedarJsApp({ typescript }) {
     // Add package resolutions
     //
     // This is needed because the test project uses the current stable version
-    // of CedarJS when installing, but then when we use rwfw to link, newer
+    // of CedarJS when installing, but then when we use cfw to link, newer
     // versions of packages might be installed causing conflicts. Setting
     // resolutions prevents this.
     // Note that this isn't limited to any specific versions. It's always
@@ -81,11 +81,14 @@ function createCedarJsApp({ typescript }) {
     // See https://github.com/redwoodjs/redwood/pull/6772 for more info.
 
     const packageJSONPath = path.join(CEDARJS_PROJECT_DIRECTORY, 'package.json')
-    const packageJSON = fs.readJSONSync(packageJSONPath)
+    const packageJSON = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'))
 
     const getVersionFromRwPackage = (dep, pkg) => {
-      return fs.readJSONSync(
-        path.join(CEDARJS_FRAMEWORK_PATH, 'packages', pkg, 'package.json'),
+      return JSON.parse(
+        fs.readFileSync(
+          path.join(CEDARJS_FRAMEWORK_PATH, 'packages', pkg, 'package.json'),
+          'utf8',
+        ),
       ).dependencies[dep]
     }
 
@@ -114,7 +117,7 @@ const runTarsync = () => {
       shell: true,
       stdio: 'inherit',
       env: {
-        RWFW_PATH: CEDARJS_FRAMEWORK_PATH,
+        CFW_PATH: CEDARJS_FRAMEWORK_PATH,
         RWJS_CWD: CEDARJS_PROJECT_DIRECTORY,
       },
     })

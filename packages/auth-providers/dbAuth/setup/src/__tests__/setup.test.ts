@@ -16,7 +16,6 @@ import {
 
 import { type AuthHandlerArgs } from '@cedarjs/cli-helpers'
 
-vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 import { createAuthDecoderFunction, handler } from '../setupHandler'

@@ -45,7 +45,6 @@ vi.mock('../../lib/exec', () => ({
   runScriptFunction: vi.fn(),
 }))
 
-vi.mock('fs', () => ({ ...memfs, default: { ...memfs } }))
 vi.mock('node:fs', () => ({ ...memfs, default: { ...memfs } }))
 
 beforeEach(() => {

@@ -1,4 +1,3 @@
-vi.mock('fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
 vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
 vi.mock('execa')
 // The jscodeshift parts are tested by another test
@@ -29,7 +28,7 @@ beforeAll(async () => {
   original_RWJS_CWD = process.env.RWJS_CWD
   process.env.RWJS_CWD = APP_PATH
 
-  const actualFs = await vi.importActual<typeof fs>('fs')
+  const actualFs = await vi.importActual<typeof fs>('node:fs')
   const tomlFixturesPath = path.join(__dirname, '__fixtures__', 'toml')
 
   tomlFixtures.default = actualFs.readFileSync(

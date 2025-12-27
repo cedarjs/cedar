@@ -22,7 +22,7 @@ Want great developer experience and easy scaling? How about an integrated front-
 
 <h2>Quick Start</h2>
 
-CedarJS requires Node.js =20.x.
+CedarJS requires Node.js =24.x.
 
 ```bash
 yarn create cedar-app my-cedar-app

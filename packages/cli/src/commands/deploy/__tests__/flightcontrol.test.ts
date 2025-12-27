@@ -7,7 +7,7 @@ import { handler } from '../flightcontrolHandler.js'
 
 vi.mock('path')
 vi.mock('execa')
-vi.mock('fs-extra')
+vi.mock('node:fs')
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig: object = await importOriginal()
 

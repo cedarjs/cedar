@@ -25,16 +25,27 @@ This project is a framework monorepo. You typically develop _on_ the framework o
 
 ### Core Commands
 
-| Command            | Description                              |
-| :----------------- | :--------------------------------------- |
-| `yarn install`     | Install dependencies (uses Yarn v4).     |
-| `yarn build`       | Build all packages using Nx.             |
-| `yarn build:clean` | Clean build artifacts.                   |
-| `yarn test`        | Run unit tests for all packages.         |
-| `yarn lint`        | Run ESLint checks.                       |
-| `yarn lint:fix`    | Fix ESLint errors automatically.         |
-| `yarn format`      | Format code with Prettier.               |
-| `yarn e2e`         | Run end-to-end tests (requires Cypress). |
+| Command            | Description                                                                            |
+| :----------------- | :------------------------------------------------------------------------------------- |
+| `yarn install`     | Install dependencies (uses Yarn v4).                                                   |
+| `yarn build`       | Build all packages using Nx.                                                           |
+| `yarn build:clean` | Clean build artifacts.                                                                 |
+| `yarn test`        | Run unit tests for all packages. Use `CI=1` to ensure non-interactive mode.            |
+| `yarn lint`        | Run ESLint checks.                                                                     |
+| `yarn lint:fix`    | Fix ESLint errors automatically.                                                       |
+| `yarn format`      | Format code with Prettier.                                                             |
+| `yarn e2e`         | Run end-to-end tests (requires Cypress). Use `CI=1` for headless/non-interactive mode. |
+
+### Running Commands on Specific Packages
+
+To run commands on individual packages in the monorepo, use `yarn workspace`:
+
+```bash
+yarn workspace @cedarjs/internal test
+yarn workspace @cedarjs/cli build
+```
+
+This is useful for faster iteration when working on a specific package.
 
 ### Development Workflow
 
@@ -42,7 +53,7 @@ To test framework changes against a real Cedar project:
 
 1.  **Sync Method (Recommended):**
     - Navigate to your target Cedar project.
-    - Run: `RWFW_PATH=/path/to/cedar-gemini yarn rwfw project:sync`
+    - Run: `CFW_PATH=/path/to/cedar-gemini yarn cfw project:sync`
     - This builds the framework, copies dependencies, and watches for changes.
 
 2.  **CLI Dev Method:**
@@ -62,7 +73,7 @@ To test framework changes against a real Cedar project:
   - **Formatting:** Prettier.
   - **Constraints:** Yarn constraints ensure consistent dependency versions across the monorepo.
 - **Testing:**
-  - Unit tests: Jest/Vitest.
+  - Unit tests: Jest/Vitest. When running `vitest` directly, use `--run` to disable watch mode.
   - E2E: Cypress and Playwright.
 - **Dependencies:**
   - Avoid introducing new dependencies unless necessary.

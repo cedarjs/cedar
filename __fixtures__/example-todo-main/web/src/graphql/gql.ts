@@ -11,8 +11,15 @@ import { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/
  * 3. It does not support dead code elimination, so it will add unused operations.
  *
  * Therefore it is highly recommended to use the babel or swc plugin for production.
+ * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
-const documents = {
+type Documents = {
+  "\n  mutation AddTodo_CreateTodo($body: String!) {\n    createTodo(body: $body) {\n      id\n      __typename\n      body\n      status\n    }\n  }\n": typeof types.AddTodo_CreateTodoDocument;
+  "\n  query NumTodosCell_GetCount {\n    todosCount\n  }\n": typeof types.NumTodosCell_GetCountDocument;
+  "\n  query TodoListCell_GetTodos {\n    todos {\n      id\n      body\n      status\n    }\n  }\n": typeof types.TodoListCell_GetTodosDocument;
+  "\n  mutation TodoListCell_CheckTodo($id: Int!, $status: String!) {\n    updateTodoStatus(id: $id, status: $status) {\n      id\n      __typename\n      status\n    }\n  }\n": typeof types.TodoListCell_CheckTodoDocument;
+};
+const documents: Documents = {
   "\n  mutation AddTodo_CreateTodo($body: String!) {\n    createTodo(body: $body) {\n      id\n      __typename\n      body\n      status\n    }\n  }\n":
     types.AddTodo_CreateTodoDocument,
   "\n  query NumTodosCell_GetCount {\n    todosCount\n  }\n":

@@ -1,6 +1,6 @@
+import fs from 'node:fs'
 import path from 'path'
 
-import fse from 'fs-extra'
 import { Listr } from 'listr2'
 
 import c from '../../../lib/colors.js'
@@ -9,20 +9,26 @@ import { getPaths } from '../../../lib/index.js'
 const SIDE_MAP = {
   web: ['cell', 'component', 'layout', 'page', 'scaffold'],
   api: ['function', 'sdl', 'service'],
+  scripts: ['script'],
 }
 
 const copyGenerator = (name, { force }) => {
-  const side = SIDE_MAP['web'].includes(name) ? 'web' : 'api'
+  const side = Object.keys(SIDE_MAP).find((key) => SIDE_MAP[key].includes(name))
+
+  if (!side) {
+    throw new Error(`Invalid generator name: ${name}`)
+  }
+
   const from = path.join(
     import.meta.dirname,
     '../../generate',
     name,
     'templates',
   )
-  const to = path.join(getPaths()[side].generators, name)
+  const to = path.join(getPaths().generatorTemplates, side, name)
 
   // copy entire template directory contents to appropriate side in app
-  fse.copySync(from, to, { overwrite: force, errorOnExist: true })
+  fs.cpSync(from, to, { recursive: true, force })
 
   return to
 }

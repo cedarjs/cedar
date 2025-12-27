@@ -41,7 +41,7 @@ jobs:
         working-directory: ./tasks/smoke-tests/streaming-ssr-dev
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
+          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Build for production
@@ -54,5 +54,5 @@ jobs:
         working-directory: ./tasks/smoke-tests/streaming-ssr-prod
         run: npx playwright test
         env:
-          REDWOOD_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
+          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
           REDWOOD_DISABLE_TELEMETRY: 1

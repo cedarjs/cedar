@@ -7,16 +7,12 @@ import {
   recordTelemetryError,
 } from '@cedarjs/cli-helpers'
 
+const discordLink = terminalLink('Discord', 'https://cedarjs.com/discord')
+const githubLink = terminalLink('GitHub', 'https://github.com/cedarjs/cedar')
 const DEFAULT_ERROR_EPILOGUE = [
   'Need help?',
-  ` - Not sure about something or need advice? Reach out on our ${terminalLink(
-    'Forum',
-    'https://community.redwoodjs.com/',
-  )}`,
-  ` - Think you've found a bug? Open an issue on our ${terminalLink(
-    'GitHub',
-    'https://github.com/cedarjs/cedar',
-  )}`,
+  ` - Not sure about something or need advice? Reach out on our ${discordLink}`,
+  ` - Think you've found a bug? Open an issue on our ${githubLink}`,
 ].join('\n')
 
 export function exitWithError(
@@ -36,7 +32,9 @@ export function exitWithError(
   // the error in telemetry if needed and if the user chooses to share it
   const errorReferenceCode = uuidv4()
 
-  const line = ansis.red('-'.repeat(process.stderr.columns))
+  // Scrollbars sometimes cause wrapping issues, so we shorten the line length
+  // to prevent wrapping issues
+  const line = ansis.red('-'.repeat(process.stderr.columns - 4))
 
   // Generate and print a nice message to the user
   const content = !includeEpilogue

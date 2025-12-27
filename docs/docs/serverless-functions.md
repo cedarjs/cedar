@@ -900,7 +900,7 @@ Here's an example of how to return a binary file from the filesystem:
 
 ```typescript title="api/src/functions/myCustomFunction.ts"
 import type { APIGatewayEvent, Context } from 'aws-lambda'
-import fs from 'fs'
+import fs from 'node:fs'
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {
   const file = await fs.promises.readFile('/path/to/image.png')
