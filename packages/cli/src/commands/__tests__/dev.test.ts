@@ -10,12 +10,13 @@ vi.mock('concurrently', () => ({
 }))
 
 // dev checks for existence of api/src and web/src folders
-vi.mock('node:fs', async () => {
-  const actualFs = await vi.importActual('node:fs')
+vi.mock('node:fs', async (importOriginal) => {
+  const actualFs = await importOriginal<any>()
+
   return {
     default: {
       ...actualFs,
-      readFileSync: (filePath) => {
+      readFileSync: (filePath: string) => {
         if (filePath.endsWith('.json')) {
           if (filePath.includes('esm-project')) {
             return '{ "type": "module" }'
@@ -37,12 +38,12 @@ vi.mock('@cedarjs/internal/dist/dev', () => {
   }
 })
 
-vi.mock('@cedarjs/project-config', async () => {
+vi.mock('@cedarjs/project-config', async (importActual) => {
+  const actualProjectConfig = await importActual<typeof ProjectConfig>()
+
   return {
-    getConfig: vi.fn(defaultConfig),
+    getConfig: vi.fn(() => actualProjectConfig.DEFAULT_CONFIG),
     getConfigPath: vi.fn(() => '/mocked/project/redwood.toml'),
-    resolveFile: () => {},
-    getPaths: () => {},
   }
 })
 
@@ -57,7 +58,7 @@ vi.mock('../../lib/ports', () => {
     // We're not actually going to use the port, so it's fine to just say it's
     // free. It prevents the tests from failing if the ports are already in use
     // (probably by some external `yarn cedar dev` process)
-    getFreePort: (port) => port,
+    getFreePort: (port: number) => port,
   }
 })
 
@@ -70,8 +71,11 @@ import { find } from 'lodash'
 import { vi, describe, afterEach, it, expect } from 'vitest'
 
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
+// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
 import { handler } from '../dev.js'
 
@@ -93,39 +97,71 @@ function defaultPaths() {
   }
 }
 
-function defaultConfig() {
+async function defaultConfig() {
+  const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
+    '@cedarjs/project-config',
+  )
+
+  return actualProjectConfig.DEFAULT_CONFIG
+}
+
+function findApiCommands() {
+  const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
+
+  const apiCommand = find(concurrentlyArgs, { name: 'api' })
+
+  if (!apiCommand) {
+    throw new Error('Missing command')
+  }
+
+  if (typeof apiCommand === 'string') {
+    throw new Error('Unexpected command')
+  }
+
+  return apiCommand
+}
+
+function findCommands() {
+  const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
+
+  const webCommand = find(concurrentlyArgs, { name: 'web' })
+  const apiCommand = find(concurrentlyArgs, { name: 'api' })
+  const generateCommand = find(concurrentlyArgs, { name: 'gen' })
+
+  if (!webCommand || !apiCommand || !generateCommand) {
+    throw new Error('Missing command')
+  }
+
+  if (
+    typeof webCommand === 'string' ||
+    typeof apiCommand === 'string' ||
+    typeof generateCommand === 'string'
+  ) {
+    throw new Error('Unexpected command')
+  }
+
   return {
-    web: {
-      port: 8910,
-    },
-    api: {
-      port: 8911,
-      debugPort: 18911,
-    },
+    webCommand,
+    apiCommand,
+    generateCommand,
   }
 }
 
 describe('yarn cedar dev', () => {
-  afterEach(() => {
+  afterEach(async () => {
     vi.clearAllMocks()
-    getPaths.mockReturnValue(defaultPaths())
-    getConfig.mockReturnValue(defaultConfig())
+    vi.mocked(getPaths).mockReturnValue(defaultPaths())
+    vi.mocked(getConfig).mockReturnValue(await defaultConfig())
   })
 
   it('Should run api and web dev servers, and generator watcher by default', async () => {
-    await handler({
-      side: ['api', 'web'],
-    })
+    await handler({ side: ['api', 'web'] })
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
-    const concurrentlyArgs = concurrently.mock.lastCall[0]
-
-    const webCommand = find(concurrentlyArgs, { name: 'web' })
-    const apiCommand = find(concurrentlyArgs, { name: 'api' })
-    const generateCommand = find(concurrentlyArgs, { name: 'gen' })
+    const { webCommand, apiCommand, generateCommand } = findCommands()
 
     // Uses absolute path, so not doing a snapshot
-    expect(webCommand.command).toContain(
+    expect(webCommand?.command).toContain(
       'yarn cross-env NODE_ENV=development rw-vite-dev',
     )
 
@@ -138,17 +174,20 @@ describe('yarn cedar dev', () => {
     ).toEqual(
       'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
-    expect(apiCommand.env.NODE_ENV).toEqual('development')
-    expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')
+    expect(apiCommand.env?.NODE_ENV).toEqual('development')
+    expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
     expect(generateCommand.command).toEqual('yarn rw-gen-watch')
   })
 
   it('Should run api and FE dev server, when streaming experimental flag enabled', async () => {
-    getConfig.mockReturnValue({
-      ...defaultConfig(),
+    const config = await defaultConfig()
+
+    vi.mocked(getConfig).mockReturnValue({
+      ...config,
       ...{
         experimental: {
+          ...config.experimental,
           streamingSsr: {
             enabled: true,
           },
@@ -156,16 +195,10 @@ describe('yarn cedar dev', () => {
       },
     })
 
-    await handler({
-      side: ['api', 'web'],
-    })
+    await handler({ side: ['api', 'web'] })
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
-    const concurrentlyArgs = concurrently.mock.lastCall[0]
-
-    const webCommand = find(concurrentlyArgs, { name: 'web' })
-    const apiCommand = find(concurrentlyArgs, { name: 'api' })
-    const generateCommand = find(concurrentlyArgs, { name: 'gen' })
+    const { webCommand, apiCommand, generateCommand } = findCommands()
 
     // Uses absolute path, so not doing a snapshot
     expect(webCommand.command).toContain(
@@ -181,15 +214,15 @@ describe('yarn cedar dev', () => {
     ).toEqual(
       'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
-    expect(apiCommand.env.NODE_ENV).toEqual('development')
-    expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')
+    expect(apiCommand.env?.NODE_ENV).toEqual('development')
+    expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
     expect(generateCommand.command).toEqual('yarn rw-gen-watch')
   })
 
   it('Should use esm server-watch bin for esm projects', async () => {
-    getConfigPath.mockReturnValue('/mocked/esm-project/redwood.toml')
-    getPaths.mockReturnValue({
+    vi.mocked(getConfigPath).mockReturnValue('/mocked/esm-project/redwood.toml')
+    vi.mocked(getPaths).mockReturnValue({
       base: '/mocked/esm-project',
       api: {
         base: '/mocked/esm-project/api',
@@ -208,11 +241,7 @@ describe('yarn cedar dev', () => {
     await handler({})
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
-    const concurrentlyArgs = concurrently.mock.lastCall[0]
-
-    const webCommand = find(concurrentlyArgs, { name: 'web' })
-    const apiCommand = find(concurrentlyArgs, { name: 'api' })
-    const generateCommand = find(concurrentlyArgs, { name: 'gen' })
+    const { webCommand, apiCommand, generateCommand } = findCommands()
 
     // Uses absolute path, so not doing a snapshot
     expect(webCommand.command).toContain(
@@ -228,45 +257,39 @@ describe('yarn cedar dev', () => {
     ).toEqual(
       'yarn nodemon --quiet --watch "/mocked/esm-project/redwood.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
-    expect(apiCommand.env.NODE_ENV).toEqual('development')
-    expect(apiCommand.env.NODE_OPTIONS).toContain('--enable-source-maps')
+    expect(apiCommand.env?.NODE_ENV).toEqual('development')
+    expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
     expect(generateCommand.command).toEqual('yarn rw-gen-watch')
   })
 
   it('Debug port passed in command line overrides TOML', async () => {
-    await handler({
-      side: ['api'],
-      apiDebugPort: 90909090,
-    })
+    await handler({ side: ['api'], apiDebugPort: 90909090 })
 
-    const concurrentlyArgs = concurrently.mock.lastCall[0]
+    const apiCommand = findApiCommands()
 
-    const apiCommand = find(concurrentlyArgs, { name: 'api' })
-
-    expect(apiCommand.command.replace(/\s+/g, ' ')).toContain(
+    expect(apiCommand?.command.replace(/\s+/g, ' ')).toContain(
       'yarn rw-api-server-watch --port 8911 --debug-port 90909090',
     )
   })
 
   it('Can disable debugger by setting toml to false', async () => {
-    getConfig.mockReturnValue({
-      ...defaultConfig(),
+    const config = await defaultConfig()
+
+    vi.mocked(getConfig).mockReturnValue({
+      ...config,
       ...{
         api: {
+          ...config.api,
           port: 8911,
           debugPort: false,
         },
       },
     })
 
-    await handler({
-      side: ['api'],
-    })
+    await handler({ side: ['api'] })
 
-    const concurrentlyArgs = concurrently.mock.lastCall[0]
-
-    const apiCommand = find(concurrentlyArgs, { name: 'api' })
+    const apiCommand = findApiCommands()
 
     expect(apiCommand.command).not.toContain('--debug-port')
   })

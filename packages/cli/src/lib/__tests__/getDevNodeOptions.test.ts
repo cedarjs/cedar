@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-import { getDevNodeOptions } from '../../commands/devHandler.js'
+import { getDevNodeOptions } from '../../commands/devHandler'
 
 describe('getNodeOptions', () => {
   const enableSourceMapsOption = '--enable-source-maps'
-  let oldNodeOptions = ''
+  let oldNodeOptions: string | undefined = ''
 
   beforeEach(() => {
     oldNodeOptions = process.env.NODE_OPTIONS

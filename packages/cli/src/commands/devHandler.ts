@@ -9,21 +9,33 @@ import { shutdownPort } from '@cedarjs/internal/dist/dev'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
+// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 import { getFreePort } from '../lib/ports.js'
+// @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
 
 const defaultApiDebugPort = 18911
+
+interface DevHandlerOptions {
+  side?: string[]
+  forward?: string
+  generate?: boolean
+  apiDebugPort?: number
+}
 
 export const handler = async ({
   side = ['api', 'web'],
   forward = '',
   generate = true,
   apiDebugPort,
-}) => {
+}: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
     side: JSON.stringify(side),
@@ -35,8 +47,8 @@ export const handler = async ({
   const serverFile = serverFileExists()
 
   // Starting values of ports from config (redwood.toml)
-  let apiPreferredPort = parseInt(getConfig().api.port)
-  let webPreferredPort = parseInt(getConfig().web.port)
+  const apiPreferredPort = parseInt(String(getConfig().api.port))
+  let webPreferredPort = parseInt(String(getConfig().web.port))
 
   // Assume we can have the ports we want
   let apiAvailablePort = apiPreferredPort
@@ -64,6 +76,7 @@ export const handler = async ({
       ...forward.matchAll(/\-\-port(\=|\s)(?<port>[^\s]*)/g),
     ]
     if (forwardedPortMatches.length) {
+      // @ts-expect-error - Groups might be undefined
       webPreferredPort = parseInt(forwardedPortMatches.pop().groups.port)
     }
     webAvailablePort = await getFreePort(webPreferredPort, [
@@ -106,11 +119,10 @@ export const handler = async ({
         force: false,
       })
     } catch (e) {
-      errorTelemetry(
-        process.argv,
-        `Error generating prisma client: ${e.message}`,
-      )
-      console.error(c.error(e.message))
+      const message =
+        e instanceof Object && 'message' in e ? e.message : String(e)
+      errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
+      console.error(c.error(message))
     }
 
     // Again, if a server file is configured, we don't know what port it'll end
@@ -119,9 +131,11 @@ export const handler = async ({
       try {
         await shutdownPort(apiAvailablePort)
       } catch (e) {
-        errorTelemetry(process.argv, `Error shutting down "api": ${e.message}`)
+        const message =
+          e instanceof Object && 'message' in e ? e.message : String(e)
+        errorTelemetry(process.argv, `Error shutting down "api": ${message}`)
         console.error(
-          `Error whilst shutting down "api" port: ${c.error(e.message)}`,
+          `Error whilst shutting down "api" port: ${c.error(message)}`,
         )
       }
     }
@@ -131,9 +145,11 @@ export const handler = async ({
     try {
       await shutdownPort(webAvailablePort)
     } catch (e) {
-      errorTelemetry(process.argv, `Error shutting down "web": ${e.message}`)
+      const message =
+        e instanceof Object && 'message' in e ? e.message : String(e)
+      errorTelemetry(process.argv, `Error shutting down "web": ${message}`)
       console.error(
-        `Error whilst shutting down "web" port: ${c.error(e.message)}`,
+        `Error whilst shutting down "web" port: ${c.error(message)}`,
       )
     }
   }
@@ -182,8 +198,7 @@ export const handler = async ({
     ? `cedarjs-api-server-watch`
     : `rw-api-server-watch`
 
-  /** @type {Record<string, import('concurrently').CommandObj>} */
-  const jobs = {
+  const jobs: Record<string, any> = {
     api: {
       name: 'api',
       command: [
@@ -227,15 +242,16 @@ export const handler = async ({
           return jobs[job]
         }
       })
-      .filter((job) => job && job.runWhen()),
+      .filter((job) => job?.runWhen!()),
     {
       prefix: '{name} |',
       timestampFormat: 'HH:mm:ss',
       handleInput: true,
     },
   )
+
   result.catch((e) => {
-    if (typeof e?.message !== 'undefined') {
+    if (e?.message) {
       errorTelemetry(
         process.argv,
         `Error concurrently starting sides: ${e.message}`,
@@ -246,10 +262,9 @@ export const handler = async ({
 }
 
 /**
- * Gets the value of the `NODE_OPTIONS` env var from `process.env`, appending `--enable-source-maps` if it's not already there.
+ * Gets the value of the `NODE_OPTIONS` env var from `process.env`, appending
+ * `--enable-source-maps` if it's not already there.
  * See https://nodejs.org/api/cli.html#node_optionsoptions.
- *
- * @returns {string}
  */
 export function getDevNodeOptions() {
   const { NODE_OPTIONS } = process.env

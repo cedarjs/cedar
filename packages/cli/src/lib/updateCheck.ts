@@ -8,19 +8,19 @@ import semver from 'semver'
 
 import { getConfig } from '@cedarjs/project-config'
 
+// @ts-expect-error - Types not available for JS files
 import { spawnBackgroundProcess } from './background.js'
 import { isLockSet, setLock, unsetLock } from './locking.js'
 
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from './index.js'
 
-/**
- * @typedef {{
- *   localVersion: string,
- *   remoteVersions: Map<string, string>,
- *   checkedAt: number,
- *   shownAt: number,
- * }} UpdateData
- */
+interface UpdateData {
+  localVersion: string
+  remoteVersions: Map<string, string>
+  checkedAt: number
+  shownAt: number
+}
 
 /**
  * @const {number} The number of milliseconds between update checks (24 hours)
@@ -56,7 +56,7 @@ export const EXCLUDED_COMMANDS = ['upgrade', 'ts-to-js']
  * @const {string} Filepath of the file which persists update check data within
  * the .redwood directory
  */
-let persistenceDirectory
+let persistenceDirectory: string | undefined
 
 function getPersistenceDirectory() {
   if (persistenceDirectory) {
@@ -78,7 +78,7 @@ export async function check() {
 
     // Read package.json and extract the @cedarjs/core version
     const packageJson = JSON.parse(
-      fs.readFileSync(path.join(getPaths().base, 'package.json')),
+      fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
     )
     let localVersion = packageJson.devDependencies['@cedarjs/core']
 
@@ -214,20 +214,23 @@ function getUpdateMessage() {
  * Reads update data from a file within .redwood
  * @return {UpdateData} The update data object containing the localVersion, remoteVersion, checkedAt and shownAt properties
  */
-export function readUpdateDataFile() {
+export function readUpdateDataFile(): UpdateData {
   try {
     if (!fs.existsSync(getPersistenceDirectory())) {
       fs.mkdirSync(getPersistenceDirectory(), { recursive: true })
     }
     const persistedData = JSON.parse(
-      fs.readFileSync(path.join(getPersistenceDirectory(), 'data.json')),
+      fs.readFileSync(
+        path.join(getPersistenceDirectory(), 'data.json'),
+        'utf-8',
+      ),
     )
     // Reconstruct the map
     persistedData.remoteVersions = new Map(
       Object.entries(persistedData.remoteVersions),
     )
     return persistedData
-  } catch (error) {
+  } catch (error: any) {
     // Return the default if no existing update file is found
     if (error.code === 'ENOENT') {
       return {
@@ -251,25 +254,29 @@ function updateUpdateDataFile({
   remoteVersions,
   checkedAt,
   shownAt,
-} = {}) {
+}: Partial<UpdateData> = {}) {
   const existingData = readUpdateDataFile()
 
-  const updatedData = {
+  const updatedData: UpdateData = {
     localVersion: localVersion ?? existingData.localVersion,
-    remoteVersions: Object.fromEntries(
-      remoteVersions ?? existingData.remoteVersions,
-    ),
+    remoteVersions: remoteVersions ?? existingData.remoteVersions,
     checkedAt: checkedAt ?? existingData.checkedAt,
     shownAt: shownAt ?? existingData.shownAt,
   }
 
+  // Need to convert the map to an object for JSON stringify
+  const dataToWrite = {
+    ...updatedData,
+    remoteVersions: Object.fromEntries(updatedData.remoteVersions),
+  }
+
   fs.writeFileSync(
     path.join(getPersistenceDirectory(), 'data.json'),
-    JSON.stringify(updatedData, null, 2),
+    JSON.stringify(dataToWrite, null, 2),
   )
 }
 
-function extractTagFromVersion(version) {
+function extractTagFromVersion(version: string) {
   const tagIndex = version.indexOf('-')
   if (tagIndex === -1) {
     return ''
@@ -280,10 +287,10 @@ function extractTagFromVersion(version) {
 
 /**
  * Yargs middleware which will automatically check and show update messages.
- * @param {string[]} argv arguments
+ * @param argv arguments
  */
-export function updateCheckMiddleware(argv) {
-  if (EXCLUDED_COMMANDS.includes(argv._[0])) {
+export function updateCheckMiddleware(argv: { _: (string | number)[] }) {
+  if (EXCLUDED_COMMANDS.includes(argv._[0] as string)) {
     return
   }
 

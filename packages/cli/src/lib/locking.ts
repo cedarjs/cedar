@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from './index.js'
 
 /**
@@ -16,10 +17,10 @@ function ensureLockDirectoryExists() {
 
 /**
  * Creates a lock with the specified identifier
- * @param {string} identifier ID of the lock
+ * @param identifier ID of the lock
  * @throws Will throw an error if the lock is already set
  */
-export function setLock(identifier) {
+export function setLock(identifier: string) {
   ensureLockDirectoryExists()
 
   if (isLockSet(identifier)) {
@@ -34,12 +35,12 @@ export function setLock(identifier) {
 
 /**
  * Removes a lock with the specified identifier
- * @param {string} identifier ID of the lock
+ * @param identifier ID of the lock
  */
-export function unsetLock(identifier) {
+export function unsetLock(identifier: string) {
   try {
     fs.rmSync(path.join(getPaths().generated.base, 'locks', identifier))
-  } catch (error) {
+  } catch (error: any) {
     // If the lock doesn't exist it's okay to not throw an error
     if (error.code !== 'ENOENT') {
       throw error
@@ -49,10 +50,10 @@ export function unsetLock(identifier) {
 
 /**
  * Determines if a lock with the specified identifier is currently set
- * @param {string} identifier ID of the lock
- * @returns {boolean} `true` if the lock is set, otherwise `false`
+ * @param identifier ID of the lock
+ * @returns `true` if the lock is set, otherwise `false`
  */
-export function isLockSet(identifier) {
+export function isLockSet(identifier: string): boolean {
   const lockfilePath = path.join(getPaths().generated.base, 'locks', identifier)
 
   // Check if the lock file exists
@@ -75,9 +76,9 @@ export function isLockSet(identifier) {
 
 /**
  * Unsets a list of locks, when no identifiers are specified all existing locks are unset
- * @param {string[]} identifiers List of lock identifiers
+ * @param identifiers List of lock identifiers
  */
-export function clearLocks(identifiers = []) {
+export function clearLocks(identifiers: string[] = []) {
   ensureLockDirectoryExists()
 
   if (identifiers.length > 0) {
