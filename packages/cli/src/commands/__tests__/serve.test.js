@@ -74,17 +74,11 @@ vi.mock('execa', () => ({
 describe('yarn cedar serve', () => {
   beforeEach(() => {
     mocks.isEsm = true
-    vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
+    vi.spyOn(fs, 'existsSync').mockImplementation((pathToCheck) => {
+      const normalizedPath = pathToCheck.toString().replaceAll('\\', '/')
+
       // Don't detect the server file
-      if (
-        p
-          .toString()
-          .replaceAll('\\', '/')
-          .includes('/mocked/project/api/src/server.')
-      ) {
-        return false
-      }
-      return true
+      return !normalizedPath.includes('/mocked/project/api/src/server.')
     })
   })
 
