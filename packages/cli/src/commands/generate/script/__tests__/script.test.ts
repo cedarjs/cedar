@@ -5,7 +5,6 @@ import '../../../../lib/test'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import fse from 'fs-extra'
 import { vi, test, expect, describe, beforeAll, afterAll } from 'vitest'
 import yargs from 'yargs'
 
@@ -98,7 +97,6 @@ describe('custom template', () => {
 
       return true
     })
-    vi.spyOn(fse, 'existsSync').mockReturnValue(true)
   })
 
   afterAll(() => {
