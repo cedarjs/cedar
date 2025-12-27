@@ -172,7 +172,7 @@ describe('runPreUpgradeScripts', () => {
       // Handle overloaded signature where second param could be options
       const actualArgs = Array.isArray(argsOrOptions) ? argsOrOptions : []
 
-      if (command === 'yarn' && actualArgs?.includes('add')) {
+      if (command === 'npm' && actualArgs?.includes('install')) {
         return {
           stdout: '',
           stderr: '',
@@ -204,13 +204,13 @@ describe('runPreUpgradeScripts', () => {
       'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/3.4.1.ts',
     )
 
-    // Verify yarn add was called with correct dependencies
+    // Verify npm install was called with correct dependencies
     // Should include: lodash@^4.17.0, @cedarjs/internal, @cedarjs/structure, axios
     // Should NOT include: node:fs (built-in module)
     expect(execa.default).toHaveBeenCalledWith(
-      'yarn',
+      'npm',
       [
-        'add',
+        'install',
         'yargs',
         'lodash@^4.17.0',
         '@cedarjs/internal@1.0.0',
@@ -224,7 +224,7 @@ describe('runPreUpgradeScripts', () => {
     // Verify script was executed
     expect(execa.default).toHaveBeenCalledWith(
       'node',
-      ['script.ts', '--verbose', false, '--force', false],
+      ['script.mts', '--verbose', false, '--force', false],
       {
         cwd: '/tmp/cedar-upgrade-abc123',
       },
