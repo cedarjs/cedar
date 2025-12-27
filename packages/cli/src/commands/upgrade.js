@@ -704,7 +704,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       // realpath: https://github.com/e18e/ecosystem-issues/issues/168
       path.join(fs.realpathSync(os.tmpdir()), 'cedar-upgrade-'),
     )
-    const scriptPath = path.join(tempDir, 'script.ts')
+    const scriptPath = path.join(tempDir, 'script.mts')
 
     // Check if this is a directory-based script (e.g., 3.4.1/index.ts)
     const isDirectoryScript = scriptName.includes('/')
@@ -745,7 +745,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
             const filePath = path.join(tempDir, file.name)
             await fs.promises.writeFile(filePath, fileContent)
 
-            // Rename index.ts to script.ts for execution
+            // Rename index.ts to script.mts for execution
             if (file.name === 'index.ts') {
               await fs.promises.rename(filePath, scriptPath)
             }
@@ -796,7 +796,10 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
         }),
       )
 
-      await execa('yarn', ['add', ...deps], { cwd: tempDir })
+      // Use npm because it's the one package manager we can know everyone has
+      // installed. And we don't have to worry about versions either as it
+      // tracks with the node version.
+      await execa('npm', ['install', ...deps], { cwd: tempDir })
     }
 
     task.output = `Running pre-upgrade script: ${scriptName}...`
@@ -804,7 +807,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     try {
       const { stdout } = await execa(
         'node',
-        ['script.ts', '--verbose', verbose, '--force', force],
+        ['script.mts', '--verbose', verbose, '--force', force],
         { cwd: tempDir },
       )
 
