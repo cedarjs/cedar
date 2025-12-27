@@ -213,7 +213,7 @@
 <!-- node_modules/fs&#45;extra -->
 <g id="node12" class="node">
 <title>node_modules/fs&#45;extra</title>
-<g id="a_node12"><a xlink:href="node_modules/fs-extra" xlink:title="fs&#45;extra">
+<g id="a_node12"><a xlink:href="node_modules/node:fs" xlink:title="fs&#45;extra">
 <polygon fill="#c40b0a" fill-opacity="0.101961" stroke="black" points="1768.5,-1919.26 1716.47,-1919.26 1714.5,-1917.28 1714.5,-1901.51 1766.53,-1901.51 1768.5,-1903.48 1768.5,-1919.26"/>
 <polyline fill="none" stroke="black" points="1766.53,-1917.28 1714.5,-1917.28"/>
 <polyline fill="none" stroke="black" points="1766.53,-1917.28 1766.53,-1901.51"/>

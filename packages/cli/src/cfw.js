@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import Configstore from 'configstore'
 import execa from 'execa'
-import fs from 'fs-extra'
 import { terminalLink } from 'termi-link'
 
 import { getConfigPath } from '@cedarjs/project-config'

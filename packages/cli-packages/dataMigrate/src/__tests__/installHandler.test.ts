@@ -16,7 +16,6 @@ import {
   notes,
 } from '../commands/installHandler'
 
-vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 vi.mock('execa', () => {

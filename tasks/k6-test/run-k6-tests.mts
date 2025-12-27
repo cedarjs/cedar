@@ -9,7 +9,7 @@ import ansis from 'ansis'
 import type { ExecaChildProcess } from 'execa'
 import execa from 'execa'
 import fg from 'fast-glob'
-import fs from 'fs-extra'
+import fs from 'node:fs'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
@@ -39,7 +39,7 @@ function findBinPath(
       packageName,
       'package.json',
     )
-    const packageJson = fs.readJsonSync(packageJsonPath)
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
     if (packageJson.bin?.[binName]) {
       return path.resolve(
@@ -297,12 +297,16 @@ async function main() {
 
         results[setup] ??= {}
         results[setup][runForTests[i]] ??= {}
-        results[setup][runForTests[i]][apiServerCommands[j].cmd] =
-          fs.readJSONSync(path.join(CEDAR_PROJECT_DIRECTORY, 'summary.json'), {
-            throws: false,
-            flag: 'r',
-            encoding: 'utf-8',
-          }) ?? {}
+        try {
+          results[setup][runForTests[i]][apiServerCommands[j].cmd] = JSON.parse(
+            fs.readFileSync(
+              path.join(CEDAR_PROJECT_DIRECTORY, 'summary.json'),
+              'utf-8',
+            ),
+          )
+        } catch {
+          results[setup][runForTests[i]][apiServerCommands[j].cmd] = {}
+        }
         results[setup][runForTests[i]][apiServerCommands[j].cmd].passed = passed
 
         // Stop the server

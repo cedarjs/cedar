@@ -1,8 +1,8 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { writeFile } from '@cedarjs/cli-helpers'
@@ -73,15 +73,21 @@ export async function handler({ force }) {
         title: 'Adding @cedarjs/api-server and @cedarjs/web-server...',
         task: async (_ctx, task) => {
           const apiServerPackageName = '@cedarjs/api-server'
-          const { dependencies: apiDependencies } = fs.readJSONSync(
-            path.join(getPaths().api.base, 'package.json'),
+          const { dependencies: apiDependencies } = JSON.parse(
+            fs.readFileSync(
+              path.join(getPaths().api.base, 'package.json'),
+              'utf-8',
+            ),
           )
           const hasApiServerPackage =
             Object.keys(apiDependencies).includes(apiServerPackageName)
 
           const webServerPackageName = '@cedarjs/web-server'
-          const { dependencies: webDependencies } = fs.readJSONSync(
-            path.join(getPaths().web.base, 'package.json'),
+          const { dependencies: webDependencies } = JSON.parse(
+            fs.readFileSync(
+              path.join(getPaths().web.base, 'package.json'),
+              'utf-8',
+            ),
           )
           const hasWebServerPackage =
             Object.keys(webDependencies).includes(webServerPackageName)
@@ -289,7 +295,7 @@ export async function getVersionOfRedwoodPackageToInstall(module) {
   const packageJsonPath = createdRequire.resolve('@cedarjs/cli/package.json', {
     paths: [getPaths().base],
   })
-  let { version } = fs.readJSONSync(packageJsonPath)
+  let { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
   const packumentP = await fetch(`https://registry.npmjs.org/${module}`)
   const packument = await packumentP.json()

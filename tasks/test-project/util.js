@@ -1,6 +1,6 @@
 /* eslint-env node, es6*/
 
-const fs = require('fs')
+const fs = require('node:fs')
 const path = require('path')
 const stream = require('stream')
 

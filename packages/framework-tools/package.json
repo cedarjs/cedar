@@ -34,11 +34,9 @@
     "@arethetypeswrong/cli": "0.18.2",
     "esbuild": "0.27.2",
     "fast-glob": "3.3.3",
-    "fs-extra": "11.3.3",
     "zx": "8.8.5"
   },
   "devDependencies": {
-    "@types/fs-extra": "11.0.4",
     "tsx": "4.21.0",
     "type-fest": "4.41.0",
     "typescript": "5.9.3"

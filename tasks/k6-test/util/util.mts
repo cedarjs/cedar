@@ -3,7 +3,7 @@ import path from 'node:path'
 import ansis from 'ansis'
 import execa from 'execa'
 import fg from 'fast-glob'
-import fs from 'fs-extra'
+import fs from 'node:fs'
 import { rimrafSync } from 'rimraf'
 
 export function buildRedwoodFramework({
@@ -68,11 +68,14 @@ export function createRedwoodJSApp({
 
     // Add prisma resolutions
     const packageJSONPath = path.join(projectPath, 'package.json')
-    const packageJSON = fs.readJSONSync(packageJSONPath)
+    const packageJSON = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'))
 
     const getVersionFrmRwPkg = (dep, pkg) => {
-      return fs.readJSONSync(
-        path.join(frameworkPath, 'packages', pkg, 'package.json'),
+      return JSON.parse(
+        fs.readFileSync(
+          path.join(frameworkPath, 'packages', pkg, 'package.json'),
+          'utf8',
+        ),
       ).dependencies[dep]
     }
 

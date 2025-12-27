@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths } from '@cedarjs/project-config'
@@ -33,8 +33,8 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
 
     if (dataMigrate) {
       console.log('Running data migrations...')
-      const packageJson = fs.readJsonSync(
-        path.join(cedarPaths.base, 'package.json'),
+      const packageJson = JSON.parse(
+        fs.readFileSync(path.join(cedarPaths.base, 'package.json'), 'utf-8'),
       )
       const hasDataMigratePackage =
         !!packageJson.devDependencies['@cedarjs/cli-data-migrate']
@@ -57,7 +57,7 @@ export const handler = async ({ side, prisma, dataMigrate }) => {
     }
 
     const serverFilePath = path.join(cedarPaths.api.dist, 'server.js')
-    const hasServerFile = fs.pathExistsSync(serverFilePath)
+    const hasServerFile = fs.existsSync(serverFilePath)
 
     if (hasServerFile) {
       execa(`yarn node ${serverFilePath}`, execaConfig)

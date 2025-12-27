@@ -1,10 +1,10 @@
 /* eslint-env node */
 // @ts-check
 
+import fs from 'node:fs'
 import path from 'node:path'
 
 import core from '@actions/core'
-import fs from 'fs-extra'
 
 import {
   createExecWithEnvInCwd,
@@ -48,7 +48,9 @@ async function setUpTestProject({ canary }) {
 
   console.log(`Creating project at ${TEST_PROJECT_PATH}`)
   console.log()
-  await fs.copy(TEST_PROJECT_FIXTURE_PATH, TEST_PROJECT_PATH)
+  await fs.promises.cp(TEST_PROJECT_FIXTURE_PATH, TEST_PROJECT_PATH, {
+    recursive: true,
+  })
 
   await execInFramework('yarn project:tarsync --verbose', {
     env: { RWJS_CWD: TEST_PROJECT_PATH },

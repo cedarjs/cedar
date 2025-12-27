@@ -4,7 +4,6 @@ import os from 'node:os'
 import path from 'node:path'
 
 import fg from 'fast-glob'
-import fse from 'fs-extra'
 import { expect } from 'vitest'
 
 import runTransform from '../testLib/runTransform.js'
@@ -69,10 +68,10 @@ async function copyFiles(
     const targetPath = path.join(targetDir, file)
 
     // Ensure directory exists
-    fse.ensureDirSync(path.dirname(targetPath))
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true })
 
     // Copy file
-    return fse.copy(sourcePath, targetPath, { overwrite: true })
+    return fs.promises.copyFile(sourcePath, targetPath)
   })
 
   // Wait for all copies to complete
@@ -86,8 +85,8 @@ async function compareFileContents(
   removeWhitespace = false,
   testPath: string,
 ): Promise<void> {
-  let actualContent = await fse.readFile(actualPath, 'utf-8')
-  let expectedContent = await fse.readFile(expectedPath, 'utf-8')
+  let actualContent = await fs.promises.readFile(actualPath, 'utf-8')
+  let expectedContent = await fs.promises.readFile(expectedPath, 'utf-8')
 
   if (removeWhitespace) {
     actualContent = actualContent.replace(/\s/g, '')
@@ -147,7 +146,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     const fixtureOutputDir = path.join(fixtureFolder, 'output')
 
     // Step 1: Copy files recursively from fixture folder to temp
-    await fse.ensureDir(tempDir)
+    await fs.promises.mkdir(tempDir, { recursive: true })
     await copyFiles(fixtureInputDir, tempDir, targetPathsGlob)
 
     const GLOB_CONFIG = {

@@ -1,9 +1,9 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import ci from 'ci-info'
 import envinfo from 'envinfo'
-import fs from 'fs-extra'
 import system from 'systeminformation'
 import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 
@@ -23,7 +23,8 @@ export async function getResources() {
   try {
     const telemetryFile = path.join(getPaths().generated.base, 'telemetry.txt')
     if (!fs.existsSync(telemetryFile)) {
-      fs.ensureFileSync(telemetryFile)
+      fs.mkdirSync(path.dirname(telemetryFile), { recursive: true })
+      fs.writeFileSync(telemetryFile, '')
     }
     if (fs.statSync(telemetryFile).mtimeMs < Date.now() - 86400000) {
       // 86400000 is 24 hours in milliseconds, we rotate the UID every 24 hours

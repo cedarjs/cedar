@@ -1,6 +1,6 @@
-import { join } from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
-import { outputFileSync } from 'fs-extra'
 import proxyquire from 'proxyquire'
 
 import { spawnCancellable } from '../x/child_process'
@@ -39,8 +39,8 @@ export async function redwood_gen_dry_run(
   }
   // eslint-disable-next-line
   const x = [proxyquire].length // we need to make sure this module is required. it will be used in a script we will generate dynamically
-  const tempDir = tmpdir ?? join(cwd, '.tmp')
-  const jsfile = join(tempDir, 'rwcli.js')
+  const tempDir = tmpdir ?? path.join(cwd, '.tmp')
+  const jsfile = path.join(tempDir, 'rwcli.js')
   const requireStatement = 'proxyquire'
   // if (extensionPath) {
   //   requireStatement = relative(
@@ -48,7 +48,8 @@ export async function redwood_gen_dry_run(
   //     extensionPath + "/node_modules/proxyquire"
   //   );
   // }
-  outputFileSync(jsfile, buildJS(fileOverrides, requireStatement))
+  fs.mkdirSync(tempDir, { recursive: true })
+  fs.writeFileSync(jsfile, buildJS(fileOverrides, requireStatement))
   const cmdargs = 'node ' + jsfile + ' ' + cmd.processed
   const [cmd2, ...args] = cmdargs.split(' ')
   // TODO: use execa?
@@ -71,7 +72,7 @@ function buildJS(
 ) {
   let js = `
   const proxyquire = require("proxyquire")
-  const fs = require('fs')
+  const fs = require('node:fs')
   const path = require('path')
   const files = {}
   const fileOverrides = { FILE: "OVERRIDES" }

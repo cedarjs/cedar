@@ -2,9 +2,8 @@
 /* eslint-env node */
 
 const child = require('child_process')
-const path = require('path')
-
-const fs = require('fs-extra')
+const fs = require('node:fs')
+const path = require('node:path')
 
 async function run() {
   const version = process.argv[2].replace(/v/, '')
@@ -72,7 +71,9 @@ async function run() {
  * @param {string} version
  */
 function updateRWJSPkgsVersion(pkgPath, version) {
-  const pkg = fs.readJSONSync(path.join(pkgPath, 'package.json'), 'utf-8')
+  const pkg = JSON.parse(
+    fs.readFileSync(path.join(pkgPath, 'package.json'), 'utf-8'),
+  )
 
   for (const dep of Object.keys(pkg.dependencies ?? {}).filter(isRWJSPkg)) {
     console.log(` - ${dep}: ${pkg.dependencies[dep]} => ${version}`)
@@ -84,7 +85,11 @@ function updateRWJSPkgsVersion(pkgPath, version) {
     pkg.devDependencies[dep] = `${version}`
   }
 
-  fs.writeJSONSync(path.join(pkgPath, 'package.json'), pkg, { spaces: 2 })
+  fs.writeFileSync(
+    path.join(pkgPath, 'package.json'),
+    JSON.stringify(pkg, null, 2),
+    'utf-8',
+  )
 }
 
 const isRWJSPkg = (pkg) => pkg.startsWith('@cedarjs/')

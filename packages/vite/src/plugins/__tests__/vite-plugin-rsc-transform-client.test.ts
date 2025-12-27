@@ -14,7 +14,7 @@ import {
 
 import { rscTransformUseClientPlugin } from '../vite-plugin-rsc-transform-client.js'
 
-vi.mock('fs', async () => ({ default: (await import('memfs')).fs }))
+vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
 const RWJS_CWD = process.env.RWJS_CWD
 const TEST_RWJS_CWD = '/Users/tobbe/rw-app/'

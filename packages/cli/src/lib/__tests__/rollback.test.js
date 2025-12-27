@@ -1,8 +1,8 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
-vi.mock('fs-extra')
+vi.mock('node:fs')
 
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 import { vol } from 'memfs'
 import { vi, it, expect, beforeEach } from 'vitest'

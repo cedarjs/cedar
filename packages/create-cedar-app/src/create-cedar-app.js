@@ -1,10 +1,10 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { trace, SpanStatusCode } from '@opentelemetry/api'
 import checkNodeVersionCb from 'check-node-version'
 import execa from 'execa'
-import fs from 'fs-extra'
 import gradient from 'gradient-string'
 import semver from 'semver'
 import { terminalLink } from 'termi-link'
@@ -174,7 +174,9 @@ async function executeCompatibilityCheck(templateDir) {
  */
 function checkNodeVersion(templateDir) {
   return new Promise((resolve) => {
-    const { engines } = fs.readJSONSync(path.join(templateDir, 'package.json'))
+    const { engines } = JSON.parse(
+      fs.readFileSync(path.join(templateDir, 'package.json'), 'utf-8'),
+    )
 
     checkNodeVersionCb(engines, (_error, result) => {
       return resolve([result.isSatisfied, result.versions])
@@ -197,10 +199,15 @@ async function createProjectFiles(appDir, { templateDir, overwrite }) {
   newAppDir = await doesDirectoryAlreadyExist(newAppDir, { overwrite })
 
   // Ensure the new app directory exists
-  fs.ensureDirSync(path.dirname(newAppDir))
+  fs.mkdirSync(path.dirname(newAppDir), { recursive: true })
 
   // Copy the template files to the new app directory
-  fs.copySync(templateDir, newAppDir, { overwrite })
+  // Have to use fs.promises.cp here because of a bug in yarn
+  // See https://github.com/yarnpkg/berry/issues/6488
+  await fs.promises.cp(templateDir, newAppDir, {
+    recursive: true,
+    force: overwrite,
+  })
 
   // .gitignore is renamed here to force file inclusion during publishing
   fs.renameSync(
@@ -209,7 +216,7 @@ async function createProjectFiles(appDir, { templateDir, overwrite }) {
   )
 
   // Write the uid
-  fs.ensureDirSync(path.join(newAppDir, '.redwood'))
+  fs.mkdirSync(path.join(newAppDir, '.redwood'), { recursive: true })
   fs.writeFileSync(path.join(newAppDir, '.redwood', 'telemetry.txt'), UID)
 
   tuiContent.update({
@@ -530,7 +537,7 @@ async function doesDirectoryAlreadyExist(
           `Overwrite files in '${styledAppDir}' and continue install`
         ) {
           // blow away the existing directory and create a new one
-          await fs.remove(newAppDir)
+          await fs.promises.rm(newAppDir, { recursive: true, force: true })
         } // specify a different directory
         else if (
           response.projectDirectoryAlreadyExists ===

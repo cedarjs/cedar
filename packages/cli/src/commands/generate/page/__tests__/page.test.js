@@ -1,76 +1,38 @@
-globalThis.__dirname = __dirname
+import fs from 'node:fs'
+import path from 'node:path'
 
-globalThis.mockFs = false
-let mockFiles = {}
-
-vi.mock('fs', async (importOriginal) => {
-  const originalFs = await importOriginal()
-
-  return {
-    default: {
-      ...originalFs,
-      existsSync: (...args) => {
-        if (mockFiles[args[0]]) {
-          return true
-        }
-
-        return originalFs.existsSync.apply(null, args)
-      },
-      readFileSync: (path) => {
-        if (mockFiles[path]) {
-          return mockFiles[path]
-        }
-
-        return originalFs.readFileSync
-      },
-    },
-  }
-})
-
-vi.mock('fs-extra', async (importOriginal) => {
-  const originalFsExtra = await importOriginal()
-
-  return {
-    default: {
-      ...originalFsExtra,
-      existsSync: (...args) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.existsSync.apply(null, args)
-        }
-        return false
-      },
-      mkdirSync: (...args) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.mkdirSync.apply(null, args)
-        }
-      },
-      writeFileSync: (target, contents) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.writeFileSync.call(null, target, contents)
-        }
-      },
-      readFileSync: (path) => {
-        if (!globalThis.mockFs) {
-          return originalFsExtra.readFileSync.call(null, path)
-        }
-
-        const mockedContent = mockFiles[path]
-
-        return mockedContent || originalFsExtra.readFileSync.call(null, path)
-      },
-    },
-  }
-})
-
-import path from 'path'
-
-import fs from 'fs-extra'
-import { vi, describe, it, test, expect, beforeEach, afterEach } from 'vitest'
+import {
+  vi,
+  describe,
+  it,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from 'vitest'
 
 import '../../../../lib/mockTelemetry'
 
+const { memfs, ufs, vol } = await vi.hoisted(async () => {
+  const { vol, fs: memfs } = await import('memfs')
+  const { ufs } = await import('unionfs')
+  return { memfs, ufs, vol }
+})
+
+vi.mock('node:fs', async (importOriginal) => {
+  const originalFs = await importOriginal()
+  ufs.use(originalFs).use(memfs)
+  return {
+    ...ufs,
+    default: ufs,
+  }
+})
+
+import { ensurePosixPath } from '@cedarjs/project-config'
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const path = require('path')
+  const path = await import('node:path')
   const originalProjectConfig = await importOriginal()
   return {
     getPaths: () => {
@@ -108,12 +70,19 @@ vi.mock('@cedarjs/internal/dist/generate/generate', () => {
   }
 })
 
-import { ensurePosixPath } from '@cedarjs/project-config'
-
-import { getPaths } from '../../../../lib/index.js'
 import { pathName } from '../../helpers.js'
 import * as page from '../page.js'
 import * as pageHandler from '../pageHandler.js'
+
+beforeAll(() => {
+  vol.fromJSON({ '/path/to/project/redwood.toml': '' }, '/')
+})
+
+afterEach(() => {
+  vi.clearAllMocks()
+  vol.reset()
+  vol.fromJSON({ '/path/to/project/redwood.toml': '' }, '/')
+})
 
 describe('Single world files', async () => {
   const singleWordFiles = await pageHandler.files({
@@ -415,26 +384,31 @@ describe('handler', () => {
   })
 
   test('file generation', async () => {
-    mockFiles = {
-      [getPaths().web.routes]: [
-        "import { Router, Route } from '@cedarjs/router'",
-        '',
-        'const Routes = () => {',
-        '  return (',
-        '    <Router>',
-        '      <Route path="/about" page={AboutPage} name="about" />',
-        '      <Route notfound page={NotFoundPage} />',
-        '    </Router>',
-        '  )',
-        '}',
-        '',
-        'export default Routes',
-      ].join('\n'),
-    }
+    const routesPath = path.join('/path/to/project/web/src/Routes.js')
+    const routesContent = [
+      "import { Router, Route } from '@cedarjs/router'",
+      '',
+      'const Routes = () => {',
+      '  return (',
+      '    <Router>',
+      '      <Route path="/about" page={AboutPage} name="about" />',
+      '      <Route notfound page={NotFoundPage} />',
+      '    </Router>',
+      '  )',
+      '}',
+      '',
+      'export default Routes',
+    ].join('\n')
+
+    vol.fromJSON(
+      {
+        [routesPath]: routesContent,
+        'redwood.toml': '',
+      },
+      '/',
+    )
 
     const spy = vi.spyOn(fs, 'writeFileSync')
-
-    globalThis.mockFs = true
 
     await page.handler({
       name: 'HomePage', // 'Page' should be trimmed from name
@@ -455,30 +429,35 @@ describe('handler', () => {
       expect(testOutput).toMatchSnapshot()
     })
 
-    globalThis.mockFs = false
     spy.mockRestore()
   })
 
   test('file generation with route params', async () => {
-    mockFiles = {
-      [getPaths().web.routes]: [
-        "import { Router, Route } from '@cedarjs/router'",
-        '',
-        'const Routes = () => {',
-        '  return (',
-        '    <Router>',
-        '      <Route path="/about" page={AboutPage} name="about" />',
-        '      <Route notfound page={NotFoundPage} />',
-        '    </Router>',
-        '  )',
-        '}',
-        '',
-        'export default Routes',
-      ].join('\n'),
-    }
+    const routesPath = path.join('/path/to/project/web/src/Routes.js')
+    const routesContent = [
+      "import { Router, Route } from '@cedarjs/router'",
+      '',
+      'const Routes = () => {',
+      '  return (',
+      '    <Router>',
+      '      <Route path="/about" page={AboutPage} name="about" />',
+      '      <Route notfound page={NotFoundPage} />',
+      '    </Router>',
+      '  )',
+      '}',
+      '',
+      'export default Routes',
+    ].join('\n')
+
+    vol.fromJSON(
+      {
+        [routesPath]: routesContent,
+        'redwood.toml': '',
+      },
+      '/',
+    )
 
     const spy = vi.spyOn(fs, 'writeFileSync')
-    globalThis.mockFs = true
 
     await page.handler({
       name: 'post',
@@ -498,7 +477,6 @@ describe('handler', () => {
       expect(testOutput).toMatchSnapshot()
     })
 
-    globalThis.mockFs = false
     spy.mockRestore()
   })
 })

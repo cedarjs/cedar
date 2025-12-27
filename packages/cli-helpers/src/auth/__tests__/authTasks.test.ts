@@ -26,8 +26,6 @@ vi.mock('../../lib/project', async () => {
   }
 })
 
-// This will load packages/cli-helpers/__mocks__/fs.js
-vi.mock('fs')
 vi.mock('node:fs', async () => {
   const memfs = await import('memfs')
   return {
@@ -54,7 +52,7 @@ const mockedPathGenerator = (app: string, routes: string) => {
   }
 }
 
-import fs from 'fs'
+import fs from 'node:fs'
 import path from 'path'
 
 import { vol } from 'memfs'

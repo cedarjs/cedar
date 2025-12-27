@@ -30,7 +30,6 @@
     "ansis": "4.2.0",
     "dotenv-defaults": "5.0.2",
     "fastify": "5.6.2",
-    "fs-extra": "11.3.3",
     "yargs": "17.7.2"
   },
   "devDependencies": {

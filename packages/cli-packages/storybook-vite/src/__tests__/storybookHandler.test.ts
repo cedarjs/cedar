@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 
 import { vi, describe, it, expect } from 'vitest'
 import type { Mock } from 'vitest'
@@ -7,7 +7,7 @@ import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
 import { handler } from '../commands/storybookHandler'
 
-vi.mock('fs')
+vi.mock('node:fs')
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const actual: any = await importOriginal()

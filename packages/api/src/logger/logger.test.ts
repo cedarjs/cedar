@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import os from 'os'
 import { join } from 'path'
 
