@@ -4,7 +4,8 @@ vi.mock('node:fs')
 vi.mock('latest-version')
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+
   return {
     ...originalProjectConfig,
     getPaths: () => {
@@ -35,6 +36,7 @@ import {
 } from 'vitest'
 
 import { getConfig } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import { setLock } from '../locking.js'
 import * as updateCheck from '../updateCheck.js'
@@ -42,16 +44,26 @@ import * as updateCheck from '../updateCheck.js'
 const TESTING_CURRENT_DATETIME = 1640995200000
 
 describe('Update is not available (1.0.0 -> 1.0.0)', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
+    const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
+      '@cedarjs/project-config',
+    )
+
+    const config = actualProjectConfig.DEFAULT_CONFIG
+
     // Use fake datetime
     vi.useFakeTimers()
     vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...config,
       notifications: {
+        ...config.notifications,
         versionUpdates: ['latest'],
       },
     })
+
     // Prevent the appearance of stale locks
+    // @ts-expect-error - This is assignable in tests
     fs.statSync = vi.fn(() => {
       return {
         birthtimeMs: Date.now(),
@@ -59,9 +71,9 @@ describe('Update is not available (1.0.0 -> 1.0.0)', () => {
     })
 
     // Prevent console output during tests
-    console.log = vi.fn()
-    console.time = vi.fn()
-    console.timeEnd = vi.fn()
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'time').mockImplementation(() => {})
+    vi.spyOn(console, 'timeEnd').mockImplementation(() => {})
   })
 
   afterAll(() => {
@@ -70,7 +82,7 @@ describe('Update is not available (1.0.0 -> 1.0.0)', () => {
 
   beforeEach(() => {
     // Set the fake remote version
-    latestVersion.mockImplementation(() => {
+    vi.mocked(latestVersion).mockImplementation(async () => {
       return '1.0.0'
     })
 
@@ -92,8 +104,8 @@ describe('Update is not available (1.0.0 -> 1.0.0)', () => {
   it('Produces the correct updateData.json file', async () => {
     await updateCheck.check()
     const data = updateCheck.readUpdateDataFile()
-    data.remoteVersions = Object.fromEntries(data.remoteVersions)
-    expect(data).toStrictEqual({
+    const remoteVersionsObj = Object.fromEntries(data.remoteVersions)
+    expect({ ...data, remoteVersions: remoteVersionsObj }).toStrictEqual({
       localVersion: '1.0.0',
       remoteVersions: { latest: '1.0.0' },
       checkedAt: TESTING_CURRENT_DATETIME,
@@ -130,12 +142,15 @@ describe('Update is available (1.0.0 -> 2.0.0)', () => {
     // Use fake datetime
     vi.useFakeTimers()
     vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-    getConfig.mockReturnValue({
+    // @ts-expect-error - Partial mock return
+    vi.mocked(getConfig).mockReturnValue({
       notifications: {
         versionUpdates: ['latest'],
       },
     })
+
     // Prevent the appearance of stale locks
+    // @ts-expect-error - This is assignable in tests
     fs.statSync = vi.fn(() => {
       return {
         birthtimeMs: Date.now(),
@@ -149,7 +164,7 @@ describe('Update is available (1.0.0 -> 2.0.0)', () => {
 
   beforeEach(() => {
     // Set the fake remote version
-    latestVersion.mockImplementation(() => {
+    vi.mocked(latestVersion).mockImplementation(async () => {
       return '2.0.0'
     })
 
@@ -171,8 +186,8 @@ describe('Update is available (1.0.0 -> 2.0.0)', () => {
   it('Produces the correct updateData.json file', async () => {
     await updateCheck.check()
     const data = updateCheck.readUpdateDataFile()
-    data.remoteVersions = Object.fromEntries(data.remoteVersions)
-    expect(data).toStrictEqual({
+    const remoteVersionsObj = Object.fromEntries(data.remoteVersions)
+    expect({ ...data, remoteVersions: remoteVersionsObj }).toStrictEqual({
       localVersion: '1.0.0',
       remoteVersions: { latest: '2.0.0' },
       checkedAt: TESTING_CURRENT_DATETIME,
@@ -205,16 +220,26 @@ describe('Update is available (1.0.0 -> 2.0.0)', () => {
 })
 
 describe('Update is available with rc tag (1.0.0-rc.1 -> 1.0.1-rc.58)', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
+    const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
+      '@cedarjs/project-config',
+    )
+
+    const config = actualProjectConfig.DEFAULT_CONFIG
+
     // Use fake datetime
     vi.useFakeTimers()
     vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
-    getConfig.mockReturnValue({
+    vi.mocked(getConfig).mockReturnValue({
+      ...config,
       notifications: {
+        ...config.notifications,
         versionUpdates: ['latest', 'rc'],
       },
     })
+
     // Prevent the appearance of stale locks
+    // @ts-expect-error - This is assignable in tests
     fs.statSync = vi.fn(() => {
       return {
         birthtimeMs: Date.now(),
@@ -228,8 +253,8 @@ describe('Update is available with rc tag (1.0.0-rc.1 -> 1.0.1-rc.58)', () => {
 
   beforeEach(() => {
     // Set the fake remote version
-    latestVersion.mockImplementation((_, { version }) => {
-      return version === 'rc' ? '1.0.1-rc.58' : '1.0.0'
+    vi.mocked(latestVersion).mockImplementation(async (_, options) => {
+      return options?.version === 'rc' ? '1.0.1-rc.58' : '1.0.0'
     })
 
     vol.fromJSON({
@@ -250,8 +275,8 @@ describe('Update is available with rc tag (1.0.0-rc.1 -> 1.0.1-rc.58)', () => {
   it('Produces the correct updateData.json file', async () => {
     await updateCheck.check()
     const data = updateCheck.readUpdateDataFile()
-    data.remoteVersions = Object.fromEntries(data.remoteVersions)
-    expect(data).toStrictEqual({
+    const remoteVersionsObj = Object.fromEntries(data.remoteVersions)
+    expect({ ...data, remoteVersions: remoteVersionsObj }).toStrictEqual({
       localVersion: '1.0.0-rc.1',
       remoteVersions: { latest: '1.0.0', rc: '1.0.1-rc.58' },
       checkedAt: TESTING_CURRENT_DATETIME,

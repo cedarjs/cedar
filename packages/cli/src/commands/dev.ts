@@ -1,12 +1,15 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'dev [side..]'
 export const description = 'Start development servers for api, and web'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   // The reason `forward` is hidden is that it's been broken with Vite
   // and it's not clear how to fix it.
 
@@ -15,7 +18,8 @@ export const builder = (yargs) => {
       choices: ['api', 'web'],
       default: ['api', 'web'],
       description: 'Which dev server(s) to start',
-      type: 'array',
+      type: 'string',
+      array: true,
     })
     .option('forward', {
       alias: 'fwd',
@@ -51,7 +55,7 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: any) => {
   const { handler } = await import('./devHandler.js')
   return handler(options)
 }
