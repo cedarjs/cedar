@@ -1,6 +1,7 @@
-import path from 'node:path'
-import ansis from 'ansis'
 import fs from 'node:fs'
+import path from 'node:path'
+
+import ansis from 'ansis'
 
 import {
   getChangesetFilePath,
@@ -33,7 +34,10 @@ async function main() {
 try {
   await main()
 } catch (error) {
-  console.error(`${error.message}\n`)
+  if (error && typeof error === 'object' && 'message' in error) {
+    console.error(`${error.message}\n`)
+  }
+
   showHelp()
   process.exitCode = 1
 }
