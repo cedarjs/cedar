@@ -639,7 +639,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
   }
 
   const checkLevels = []
-  if (parsed) {
+  if (parsed && !parsed.prerelease.length) {
     // 1. Exact match: 3.4.1
     checkLevels.push({
       id: 'exact',
@@ -660,11 +660,14 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       id: 'minor',
       candidates: [`${parsed.major}.x.ts`, `${parsed.major}.x/index.ts`],
     })
-  } else {
-    // Fallback for non-semver tags
+  } else if (parsed && parsed.prerelease.length > 0) {
+    // `parsed.prerelease[0]` is the prerelease tag, e.g. 'canary'
     checkLevels.push({
       id: 'tag',
-      candidates: [`${version}.ts`, `${version}/index.ts`],
+      candidates: [
+        `${parsed.prerelease[0]}.ts`,
+        `${parsed.prerelease[0]}/index.ts`,
+      ],
     })
   }
 
