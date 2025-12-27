@@ -3,6 +3,7 @@ import path from 'node:path'
 import { argv } from 'node:process'
 
 import concurrently from 'concurrently'
+import type { Command } from 'concurrently'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { shutdownPort } from '@cedarjs/internal/dist/dev'
@@ -200,7 +201,14 @@ export const handler = async ({
     ? `cedarjs-api-server-watch`
     : `rw-api-server-watch`
 
-  const jobs: Record<string, any> = {
+  const jobs: Record<
+    string,
+    Partial<Command> & {
+      name: string
+      command: string
+      runWhen: () => boolean
+    }
+  > = {
     api: {
       name: 'api',
       command: [
@@ -236,15 +244,23 @@ export const handler = async ({
     },
   }
 
+  const mappedJobs = Object.keys(jobs).map((job) => {
+    // Include the jobs for the sides indicated on the command line, plus the
+    // gen job
+    if (side.includes(job) || job === 'gen') {
+      return jobs[job]
+    }
+
+    return {
+      name: '',
+      command: '',
+      runWhen: () => false,
+    }
+  })
+
   // TODO: Convert jobs to an array and supply cwd command.
   const { result } = concurrently(
-    Object.keys(jobs)
-      .map((job) => {
-        if (side.includes(job) || job === 'gen') {
-          return jobs[job]
-        }
-      })
-      .filter((job) => job?.runWhen!()),
+    mappedJobs.filter((job) => job.runWhen()),
     {
       prefix: '{name} |',
       timestampFormat: 'HH:mm:ss',

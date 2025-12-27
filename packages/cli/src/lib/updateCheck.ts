@@ -210,6 +210,12 @@ function getUpdateMessage() {
   })
 }
 
+function isErrorWithCode(error: unknown, code: string) {
+  return (
+    !!error && error instanceof Object && 'code' in error && error.code === code
+  )
+}
+
 /**
  * Reads update data from a file within .redwood
  * @return {UpdateData} The update data object containing the localVersion, remoteVersion, checkedAt and shownAt properties
@@ -230,9 +236,9 @@ export function readUpdateDataFile(): UpdateData {
       Object.entries(persistedData.remoteVersions),
     )
     return persistedData
-  } catch (error: any) {
+  } catch (error) {
     // Return the default if no existing update file is found
-    if (error.code === 'ENOENT') {
+    if (isErrorWithCode(error, 'ENOENT')) {
       return {
         localVersion: '0.0.0',
         remoteVersions: new Map(),
