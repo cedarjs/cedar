@@ -224,7 +224,7 @@ describe('runPreUpgradeScripts', () => {
     // Verify script was executed
     expect(execa.default).toHaveBeenCalledWith(
       'node',
-      ['script.ts', '--verbose', false, '--force', false],
+      ['script.mts', '--verbose', false, '--force', false],
       {
         cwd: '/tmp/cedar-upgrade-abc123',
       },
