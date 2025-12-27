@@ -51,10 +51,8 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/babel__core": "7.20.5",
-    "@types/fs-extra": "11.0.4",
     "@types/jscodeshift": "0.12.0",
     "@types/yargs": "17.0.35",
-    "fs-extra": "11.3.3",
     "publint": "0.3.16",
     "tsx": "4.21.0",
     "vitest": "3.2.4"

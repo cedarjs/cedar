@@ -1,10 +1,11 @@
 /* eslint-env node */
 
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { transformFileSync } from '@babel/core'
 import { format } from 'prettier'
-import { fs, glob, path } from 'zx'
+import { glob, path } from 'zx'
 
 const TS_TEMPLATE_PATH = fileURLToPath(
   new URL('../templates/ts', import.meta.url),
@@ -13,7 +14,10 @@ const TS_TEMPLATE_PATH = fileURLToPath(
 // Remove `node_modules`, `.yarn/install-state.gz`.
 console.log('Removing `node_modules` in the TS template')
 const tsTemplateNodeModulesPath = path.join(TS_TEMPLATE_PATH, 'node_modules')
-await fs.rm(tsTemplateNodeModulesPath, { recursive: true, force: true })
+await fs.promises.rm(tsTemplateNodeModulesPath, {
+  recursive: true,
+  force: true,
+})
 
 console.log("Removing yarn's `install-state.gz` in the TS template")
 const tsTemplateYarnInstallStatePath = path.join(
@@ -21,7 +25,7 @@ const tsTemplateYarnInstallStatePath = path.join(
   '.yarn',
   'install-state.gz',
 )
-await fs.rm(tsTemplateYarnInstallStatePath, { force: true })
+await fs.promises.rm(tsTemplateYarnInstallStatePath, { force: true })
 
 // Clean and copy the TS template to the JS template.
 const JS_TEMPLATE_PATH = fileURLToPath(
@@ -29,9 +33,9 @@ const JS_TEMPLATE_PATH = fileURLToPath(
 )
 
 console.log('Removing the JS template')
-await fs.rm(JS_TEMPLATE_PATH, { recursive: true, force: true })
+await fs.promises.rm(JS_TEMPLATE_PATH, { recursive: true, force: true })
 console.log('Copying the TS template to the JS template')
-await fs.copy(TS_TEMPLATE_PATH, JS_TEMPLATE_PATH)
+await fs.promises.cp(TS_TEMPLATE_PATH, JS_TEMPLATE_PATH, { recursive: true })
 
 // Find files and transform.
 const filePaths = await glob(['{api,web,scripts}/**/*.{ts,tsx}'], {
@@ -72,13 +76,13 @@ for (const filePath of filePaths) {
     parser: 'babel',
   })
 
-  await fs.writeFile(
+  await fs.promises.writeFile(
     filePath.replace('.tsx', '.jsx').replace('.ts', '.js'),
     formattedCode,
     'utf-8',
   )
 
-  await fs.rm(filePath)
+  await fs.promises.rm(filePath)
 }
 
 console.groupEnd()
@@ -100,14 +104,19 @@ for (const tsConfigFilePath of tsConfigFilePaths) {
     'jsconfig.json',
   )
 
-  await fs.rename(tsConfigFilePath, jsConfigFilePath)
+  await fs.promises.rename(tsConfigFilePath, jsConfigFilePath)
 
-  const jsConfig = await fs.readJSON(jsConfigFilePath)
+  const jsConfig = JSON.parse(
+    await fs.promises.readFile(jsConfigFilePath, 'utf-8'),
+  )
 
   // This property has no meaning in JS projects.
   delete jsConfig.compilerOptions.allowJs
 
-  await fs.writeJSON(jsConfigFilePath, jsConfig, { spaces: 2 })
+  await fs.promises.writeFile(
+    jsConfigFilePath,
+    JSON.stringify(jsConfig, null, 2),
+  )
 }
 
 console.groupEnd()

@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import fse from 'fs-extra'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
 import { hideBin } from 'yargs/helpers'
@@ -287,7 +286,7 @@ const copyProject = async () => {
   // remove existing Fixture
   await rimraf(fixturePath)
   // copy from tempDir to Fixture dir
-  await fse.copy(OUTPUT_PROJECT_PATH, fixturePath)
+  await fs.promises.cp(OUTPUT_PROJECT_PATH, fixturePath, { recursive: true })
   // cleanup after ourselves
   await rimraf(OUTPUT_PROJECT_PATH)
 }

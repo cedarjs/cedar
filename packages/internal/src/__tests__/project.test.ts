@@ -3,7 +3,6 @@ import { describe, afterEach, it, expect, vi } from 'vitest'
 
 import { getTsConfigs } from '../project.js'
 
-vi.mock('fs', async () => ({ ...memfs, default: memfs }))
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 afterEach(() => {

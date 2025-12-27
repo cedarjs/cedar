@@ -35,7 +35,6 @@
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",
     "fast-glob": "3.3.3",
-    "fs-extra": "11.3.3",
     "graphql": "16.12.0",
     "lazy-get-decorator": "2.2.1",
     "line-column": "1.0.2",
@@ -53,7 +52,6 @@
   "devDependencies": {
     "@babel/cli": "7.28.3",
     "@babel/core": "^7.26.10",
-    "@types/fs-extra": "11.0.4",
     "@types/lodash": "4.17.21",
     "@types/node": "24.10.4",
     "@types/vscode": "1.107.0",

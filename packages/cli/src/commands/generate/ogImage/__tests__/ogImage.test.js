@@ -2,14 +2,17 @@
 globalThis.__dirname = __dirname
 
 import { vol, fs as memfs } from 'memfs'
+import { ufs } from 'unionfs'
 import { afterEach, beforeEach, describe, test, expect, vi } from 'vitest'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
 
 import * as ogImageHandler from '../ogImageHandler.js'
 
-vi.mock('fs', () => ({ ...memfs, default: { ...memfs } }))
-vi.mock('node:fs', () => ({ ...memfs, default: { ...memfs } }))
+vi.mock('node:fs', async (importOriginal) => {
+  ufs.use(await importOriginal()).use(memfs)
+  return { ...ufs, default: { ...ufs } }
+})
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const actual = await importOriginal()
 

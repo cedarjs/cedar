@@ -1,8 +1,8 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { Resource } from '@opentelemetry/resources'
-import fs from 'fs-extra'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -19,7 +19,7 @@ async function main() {
 
   // Get all telemetry files
   const telemetryDir = path.join(getPaths().generated.base, 'telemetry')
-  fs.ensureDirSync(telemetryDir)
+  fs.mkdirSync(telemetryDir, { recursive: true })
   const telemetryFiles = fs.readdirSync(
     path.join(getPaths().generated.base, 'telemetry'),
   )
@@ -49,7 +49,7 @@ async function main() {
     // Read the saved spans
     let spans = []
     try {
-      spans = fs.readJSONSync(path.join(telemetryDir, file))
+      spans = JSON.parse(fs.readFileSync(path.join(telemetryDir, file), 'utf8'))
     } catch (error) {
       console.error(`Error reading telemetry file '${file}'`)
       console.error(error)
@@ -96,7 +96,10 @@ async function main() {
      * and we also denote that the spans have been sent by adding a '_' prefix to
      * the file name.
      */
-    fs.writeJSONSync(path.join(telemetryDir, `_${file}`), spans, { spaces: 2 })
+    fs.writeFileSync(
+      path.join(telemetryDir, `_${file}`),
+      JSON.stringify(spans, null, 2),
+    )
     fs.unlinkSync(path.join(telemetryDir, file))
     telemetryFiles[index] = `_${file}`
   }

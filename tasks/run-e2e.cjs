@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /* eslint-env node, es6*/
 
+const fs = require('node:fs')
 const os = require('os')
 const path = require('path')
 
 const execa = require('execa')
 const fg = require('fast-glob')
-const fs = require('fs-extra')
 const { hideBin } = require('yargs/helpers')
 const yargs = require('yargs/yargs')
 
@@ -81,11 +81,14 @@ function createCedarJsApp({ typescript }) {
     // See https://github.com/redwoodjs/redwood/pull/6772 for more info.
 
     const packageJSONPath = path.join(CEDARJS_PROJECT_DIRECTORY, 'package.json')
-    const packageJSON = fs.readJSONSync(packageJSONPath)
+    const packageJSON = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'))
 
     const getVersionFromRwPackage = (dep, pkg) => {
-      return fs.readJSONSync(
-        path.join(CEDARJS_FRAMEWORK_PATH, 'packages', pkg, 'package.json'),
+      return JSON.parse(
+        fs.readFileSync(
+          path.join(CEDARJS_FRAMEWORK_PATH, 'packages', pkg, 'package.json'),
+          'utf8',
+        ),
       ).dependencies[dep]
     }
 

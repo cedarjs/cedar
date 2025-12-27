@@ -26,15 +26,7 @@ vi.mock('execa', () => ({
   },
 }))
 
-vi.mock('fs-extra', async (importOriginal) => {
-  const originalFsExtra = await importOriginal()
-  return {
-    default: {
-      ...originalFsExtra,
-      existsSync: () => true,
-    },
-  }
-})
+import fs from 'node:fs'
 
 import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
@@ -44,6 +36,7 @@ import { handler } from '../prisma.js'
 beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})
   vi.spyOn(console, 'log').mockImplementation(() => {})
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 })
 
 afterEach(() => {

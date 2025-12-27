@@ -12,11 +12,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     },
   }
 })
-vi.mock('fs-extra')
+vi.mock('node:fs')
 
+import fs from 'node:fs'
 import path from 'path'
 
-import fs from 'fs-extra'
 import { vol } from 'memfs'
 import { vi, it, expect, beforeEach } from 'vitest'
 

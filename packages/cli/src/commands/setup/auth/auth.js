@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 import { terminalLink } from 'termi-link'
 
 import {
@@ -249,7 +249,7 @@ async function getAuthSetupHandler(module) {
   }
 
   const packageJsonPath = customRequire.resolve('@cedarjs/cli/package.json')
-  let { version } = fs.readJSONSync(packageJsonPath)
+  let { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
   if (!isInstalled(module)) {
     // If the version includes a plus, like '4.0.0-rc.428+dd79f1726'
@@ -303,8 +303,8 @@ async function getAuthSetupHandler(module) {
  * @param {string} module
  */
 function isInstalled(module) {
-  const { dependencies, devDependencies } = fs.readJSONSync(
-    path.join(getPaths().base, 'package.json'),
+  const { dependencies, devDependencies } = JSON.parse(
+    fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf8'),
   )
 
   const deps = {

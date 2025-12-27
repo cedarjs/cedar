@@ -1,6 +1,6 @@
+import fse from 'node:fs'
 import path from 'path'
 
-import fse from 'fs-extra'
 import prettier from 'prettier'
 
 import { merge } from './merge/index.js'

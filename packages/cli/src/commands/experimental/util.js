@@ -1,7 +1,7 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import ansis from 'ansis'
-import fs from 'fs-extra'
 import { terminalLink } from 'termi-link'
 
 import { getPaths } from '../../lib/index.js'

@@ -23,8 +23,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('fs-extra', async () => {
-  const actualFs = await vi.importActual('fs-extra')
+vi.mock('node:fs', async () => {
+  const actualFs = await vi.importActual('node:fs')
 
   return {
     default: {

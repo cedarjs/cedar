@@ -1,8 +1,8 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import ansis from 'ansis'
 import enquirer from 'enquirer'
-import fs from 'fs-extra'
 
 import { getCompatibilityData } from '@cedarjs/cli-helpers'
 

@@ -3,6 +3,7 @@ import path from 'node:path'
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 import '../../lib/mockTelemetry.js'
+// @ts-expect-error - No types for .js files
 import { handler } from '../execHandler.js'
 
 vi.mock('@cedarjs/project-config', () => ({

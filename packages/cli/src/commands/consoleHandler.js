@@ -1,8 +1,7 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import repl from 'node:repl'
-
-import fs from 'fs-extra'
 
 import { registerApiSideBabelHook } from '@cedarjs/babel-config'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'

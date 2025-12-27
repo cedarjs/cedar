@@ -1,5 +1,6 @@
+import fs from 'node:fs'
+
 import type execa from 'execa'
-import fs from 'fs-extra'
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
@@ -9,14 +10,20 @@ import { runPreUpgradeScripts } from '../upgrade.js'
 // Mock fetch globally
 global.fetch = vi.fn()
 
-vi.mock('fs-extra', () => ({
+vi.mock('node:fs', () => ({
   default: {
-    mkdtemp: () => '/tmp/cedar-upgrade-abc123',
-    writeFile: vi.fn(),
-    writeJson: vi.fn(),
-    remove: vi.fn(),
-    readFile: vi.fn(),
-    rename: vi.fn(),
+    promises: {
+      mkdtemp: vi.fn(() => '/tmp/cedar-upgrade-abc123'),
+      writeFile: vi.fn(),
+      readFile: vi.fn(),
+      rename: vi.fn(),
+      rmdir: vi.fn(),
+    },
+    rmSync: vi.fn(),
+    readFileSync: vi.fn(),
+    writeFileSync: vi.fn(),
+    existsSync: vi.fn(),
+    mkdirSync: vi.fn(),
   },
 }))
 
@@ -133,7 +140,7 @@ describe('runPreUpgradeScripts', () => {
     `
 
     // Mock readFile to return the script content
-    vi.mocked(fs.readFile).mockResolvedValue(scriptContent)
+    vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent as any)
 
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
       if (url.toString().endsWith('/manifest.json')) {
@@ -226,6 +233,11 @@ describe('runPreUpgradeScripts', () => {
     expect(mockCtx.preUpgradeMessage).toContain('Upgrade check passed')
 
     // Verify cleanup
-    expect(fs.remove).toHaveBeenCalledWith('/tmp/cedar-upgrade-abc123')
+    expect(fs.promises.rmdir).toHaveBeenCalledWith(
+      '/tmp/cedar-upgrade-abc123',
+      {
+        recursive: true,
+      },
+    )
   })
 })

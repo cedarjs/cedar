@@ -1,7 +1,7 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths } from '@cedarjs/project-config'
@@ -26,10 +26,10 @@ export const handler = async ({
     dataMigrate,
     serve,
   })
-  const rwjsPaths = getPaths()
+  const cedarPaths = getPaths()
 
   const execaConfig: execa.Options = {
-    cwd: rwjsPaths.base,
+    cwd: cedarPaths.base,
     shell: true,
     stdio: 'inherit',
   }
@@ -52,7 +52,7 @@ export const handler = async ({
       if (prisma) {
         console.log('Running database migrations...')
         await runExecaCommand(
-          `node_modules/.bin/prisma migrate deploy --config "${rwjsPaths.api.prismaConfig}"`,
+          `node_modules/.bin/prisma migrate deploy --config "${cedarPaths.api.prismaConfig}"`,
         )
       }
 
@@ -64,8 +64,8 @@ export const handler = async ({
       return
     }
 
-    const serverFilePath = path.join(rwjsPaths.api.dist, 'server.js')
-    const hasServerFile = fs.pathExistsSync(serverFilePath)
+    const serverFilePath = path.join(cedarPaths.api.dist, 'server.js')
+    const hasServerFile = fs.existsSync(serverFilePath)
 
     if (hasServerFile) {
       execa(`yarn node ${serverFilePath}`, execaConfig)

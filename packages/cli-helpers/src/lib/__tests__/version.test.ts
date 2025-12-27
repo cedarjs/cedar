@@ -7,9 +7,9 @@ vi.mock('@cedarjs/project-config', () => {
     },
   }
 })
-vi.mock('fs')
+vi.mock('node:fs')
 
-import fs from 'fs'
+import fs from 'node:fs'
 
 import { vi, describe, test, expect, beforeEach } from 'vitest'
 

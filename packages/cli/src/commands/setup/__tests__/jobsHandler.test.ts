@@ -1,4 +1,4 @@
-vi.mock('fs-extra')
+vi.mock('node:fs')
 
 import '../../../lib/mockTelemetry'
 
@@ -19,7 +19,7 @@ import { Listr2Mock } from '../../../__tests__/Listr2Mock.js'
 // @ts-expect-error - This is a JS file
 import * as jobsHandler from '../jobs/jobsHandler.js'
 
-vi.mock('fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
+vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
 vi.mock('node:fs', async () => ({ ...memfsFs, default: { ...memfsFs } }))
 
 vi.mock('@prisma/internals', async () => ({

@@ -1,7 +1,7 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import execa from 'execa'
-import fs from 'fs-extra'
 import { Listr } from 'listr2'
 
 import { getPaths, writeFilesTask } from '../../../../lib/index.js'

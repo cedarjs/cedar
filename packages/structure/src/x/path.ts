@@ -1,4 +1,4 @@
-import { existsSync } from 'fs'
+import { existsSync } from 'node:fs'
 import { basename, normalize, sep } from 'path'
 
 export function directoryNameResolver(dirName: string): string | undefined {
