@@ -328,7 +328,7 @@ export const handler = async ({
 
   if (preUpgradeMessage) {
     console.log('')
-    console.log(`   📣 ${c.info('Pre-upgrade Message:')}`)
+    console.log(`  📣 ${c.info('Pre-upgrade Message:')}`)
     console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n  '))
   }
 }
@@ -512,7 +512,7 @@ async function updatePackageVersionsFromTemplate(
 
       return {
         title: `Updating ${pkgJsonPath}`,
-        task: async () => {
+        task: async (_ctx, task) => {
           const res = await fetch(url)
           const text = await res.text()
           const templatePackageJson = JSON.parse(text)
@@ -520,12 +520,14 @@ async function updatePackageVersionsFromTemplate(
           const localPackageJsonText = fs.readFileSync(pkgJsonPath, 'utf-8')
           const localPackageJson = JSON.parse(localPackageJsonText)
 
+          const messages = []
+
           Object.entries(templatePackageJson.dependencies || {}).forEach(
             ([depName, depVersion]: [string, unknown]) => {
               // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
-                  console.log(
+                  messages.push(
                     ` - ${depName}: ${localPackageJson.dependencies[depName]} => ${depVersion}`,
                   )
                 }
@@ -540,7 +542,7 @@ async function updatePackageVersionsFromTemplate(
               // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
-                  console.log(
+                  messages.push(
                     ` - ${depName}: ${localPackageJson.devDependencies[depName]} => ${depVersion}`,
                   )
                 }
@@ -549,6 +551,10 @@ async function updatePackageVersionsFromTemplate(
               }
             },
           )
+
+          if (messages.length > 0) {
+            task.title = task.title + '\n' + messages.join('\n')
+          }
 
           if (!dryRun) {
             fs.writeFileSync(
