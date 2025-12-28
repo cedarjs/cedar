@@ -70,7 +70,7 @@
     {
       "description": "We deliberately test on a lower version of Node.js in this file",
       "matchPackageNames": ["node"],
-      "matchPaths": [".github/workflows/create-cedar-app-test.yml"],
+      "matchFileNames": [".github/workflows/create-cedar-app-test.yml"],
       "enabled": false
     }
   ]
