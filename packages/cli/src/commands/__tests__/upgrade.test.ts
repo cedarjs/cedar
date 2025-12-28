@@ -17,7 +17,7 @@ vi.mock('node:fs', () => ({
       writeFile: vi.fn(),
       readFile: vi.fn(),
       rename: vi.fn(),
-      rmdir: vi.fn(),
+      rm: vi.fn(),
     },
     rmSync: vi.fn(),
     readFileSync: vi.fn(),
@@ -186,7 +186,8 @@ describe('runPreUpgradeScripts', () => {
 
       throw new Error(`Unexpected command: ${command} ${actualArgs?.join(' ')}`)
       // TypeScript is struggling with the type for the function overload and
-      // for a test it's not worth it to mock this properly.
+      // for a test it's not worth it to mock this properly. That's why we use
+      // `as any` here.
     }) as any)
 
     await runPreUpgradeScripts(mockCtx, mockTask, {
@@ -234,11 +235,8 @@ describe('runPreUpgradeScripts', () => {
     expect(mockCtx.preUpgradeMessage).toContain('Upgrade check passed')
 
     // Verify cleanup
-    expect(fs.promises.rmdir).toHaveBeenCalledWith(
-      '/tmp/cedar-upgrade-abc123',
-      {
-        recursive: true,
-      },
-    )
+    expect(fs.promises.rm).toHaveBeenCalledWith('/tmp/cedar-upgrade-abc123', {
+      recursive: true,
+    })
   })
 })

@@ -284,8 +284,8 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
 
   if (preUpgradeError) {
     console.error('')
-    console.error(`   ❌ ${c.error('Pre-upgrade Error:')}\n`)
-    console.error('  ' + preUpgradeError.replace(/\n/g, '\n   '))
+    console.error(`  🚨 ${c.error('Pre-upgrade Error:')}`)
+    console.error('  ' + preUpgradeError.replace(/\n/g, '\n  '))
 
     if (!force) {
       process.exit(1)
@@ -294,8 +294,8 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
 
   if (preUpgradeMessage) {
     console.log('')
-    console.log(`   📣 ${c.info('Pre-upgrade Message:')}\n`)
-    console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n   '))
+    console.log(`   📣 ${c.info('Pre-upgrade Message:')}`)
+    console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n  '))
   }
 }
 
@@ -814,23 +814,30 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
 
       if (stdout) {
         if (ctx.preUpgradeMessage) {
-          ctx.preUpgradeMessage += '\n\n'
+          ctx.preUpgradeMessage += '\n'
         }
 
         ctx.preUpgradeMessage += `\n${stdout}`
       }
     } catch (e) {
       const errorOutput = e.stdout || e.stderr || e.message || ''
-      const errorMessage = `Pre-upgrade check ${scriptName} failed:\n${errorOutput}`
+      const verboseErrorMessage = verbose
+        ? `Pre-upgrade check ${scriptName} failed with exit code ${e.exitCode}:\n` +
+          `${e.stderr ? e.stderr + '\n' : ''}`
+        : ''
 
       if (ctx.preUpgradeError) {
-        ctx.preUpgradeError += '\n\n'
+        ctx.preUpgradeError += '\n'
       }
 
-      ctx.preUpgradeError += errorMessage
+      if (verbose) {
+        ctx.preUpgradeError += `\n${verboseErrorMessage}`
+      }
+
+      ctx.preUpgradeError += `\n${errorOutput}`
 
       if (!force) {
-        await fs.promises.rmdir(tempDir, { recursive: true })
+        await fs.promises.rm(tempDir, { recursive: true })
         shouldCleanup = false
 
         // Return to skip remaining pre-upgrade scripts
@@ -838,7 +845,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       }
     } finally {
       if (shouldCleanup) {
-        await fs.promises.rmdir(tempDir, { recursive: true })
+        await fs.promises.rm(tempDir, { recursive: true })
       }
     }
   }
