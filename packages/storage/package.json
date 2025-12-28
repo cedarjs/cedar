@@ -65,7 +65,7 @@
     "concurrently": "9.2.1",
     "esbuild": "0.27.2",
     "publint": "0.3.16",
-    "tstyche": "3.5.0",
+    "tstyche": "5.0.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

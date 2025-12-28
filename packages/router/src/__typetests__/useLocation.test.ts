@@ -6,12 +6,12 @@ test('useLocation types', () => {
   const location = useLocation()
 
   // Useful with SSR!
-  expect(location.origin).type.toBeString()
-  expect(location.host).type.toBeString()
-  expect(location.protocol).type.toBeString()
+  expect(location.origin).type.toBe<string>()
+  expect(location.host).type.toBe<string>()
+  expect(location.protocol).type.toBe<string>()
 
   // The original definition of useLocation, that returned a "partial" location
-  expect(location.pathname).type.toBeString()
-  expect(location.search).type.toBeString()
-  expect(location.hash).type.toBeString()
+  expect(location.pathname).type.toBe<string>()
+  expect(location.search).type.toBe<string>()
+  expect(location.hash).type.toBe<string>()
 })
