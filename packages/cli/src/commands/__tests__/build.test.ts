@@ -68,7 +68,9 @@ afterEach(() => {
 test('the build tasks are in the correct sequence', async () => {
   await handler({})
   // @ts-expect-error - Listr is mocked
-  expect(vi.mocked(Listr).mock.calls[0][0].map((x: { title: string }) => x.title)).toMatchInlineSnapshot(`
+  expect(
+    vi.mocked(Listr).mock.calls[0][0].map((x: { title: string }) => x.title),
+  ).toMatchInlineSnapshot(`
     [
       "Generating Prisma Client...",
       "Verifying graphql schema...",
@@ -87,7 +89,9 @@ test('Should run prerender for web', async () => {
 
   await handler({ side: ['web'], prerender: true })
   // @ts-expect-error - Listr is mocked
-  expect(vi.mocked(Listr).mock.calls[0][0].map((x: { title: string }) => x.title)).toMatchInlineSnapshot(`
+  expect(
+    vi.mocked(Listr).mock.calls[0][0].map((x: { title: string }) => x.title),
+  ).toMatchInlineSnapshot(`
     [
       "Building Web...",
     ]

@@ -57,7 +57,9 @@ export const handler = async ({
         // Non-null exit codes
         const exitCodes = err
           .map((e: unknown) =>
-            e instanceof Object && 'exitCode' in e && typeof e.exitCode === 'number'
+            e instanceof Object &&
+            'exitCode' in e &&
+            typeof e.exitCode === 'number'
               ? e.exitCode
               : undefined,
           )

@@ -24,7 +24,8 @@ export const handler = async ({
   $0: _0 = '',
   commands = [],
   ...options
-}: PrismaOptions) => {  recordTelemetryAttributes({
+}: PrismaOptions) => {
+  recordTelemetryAttributes({
     command: 'prisma',
   })
 
@@ -56,13 +57,14 @@ export const handler = async ({
   for (const [name, value] of Object.entries(options)) {
     // Allow both long and short form commands, e.g. --name and -n
     args.push(name.length > 1 ? `--${name}` : `-${name}`)
-          if (typeof value === 'string') {
-            if (value.split(' ').length > 1) {
-              args.push(`"${value}"`)
-            } else {
-              args.push(value)
-            }
-          } else if (typeof value === 'number') {      args.push(value)
+    if (typeof value === 'string') {
+      if (value.split(' ').length > 1) {
+        args.push(`"${value}"`)
+      } else {
+        args.push(value)
+      }
+    } else if (typeof value === 'number') {
+      args.push(value)
     }
   }
 

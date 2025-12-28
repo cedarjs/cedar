@@ -139,7 +139,9 @@ describe('runPreUpgradeScripts', () => {
     `
 
     // Mock readFile to return the script content
-    vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent as any /* simplified for test mock */)
+    vi.mocked(fs.promises.readFile).mockResolvedValue(
+      scriptContent as any /* simplified for test mock */,
+    )
 
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
       if (url.toString().endsWith('/manifest.json')) {

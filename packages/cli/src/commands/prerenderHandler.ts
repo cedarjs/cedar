@@ -82,18 +82,22 @@ async function expandRouteParameters(route: Route): Promise<Route[]> {
     })
 
     if (routeParameters) {
-      return (routeParameters as Record<string, unknown>[]).map((pathParamValues) => {
-        let newPath = route.path
+      return (routeParameters as Record<string, unknown>[]).map(
+        (pathParamValues) => {
+          let newPath = route.path
 
-        Object.entries(pathParamValues).forEach(([_paramName, paramValue]) => {
-          newPath = newPath.replace(
-            new RegExp(`{\${_paramName}:?[^}]*}`),
-            String(paramValue),
+          Object.entries(pathParamValues).forEach(
+            ([_paramName, paramValue]) => {
+              newPath = newPath.replace(
+                new RegExp(`{\${_paramName}:?[^}]*}`),
+                String(paramValue),
+              )
+            },
           )
-        })
 
-        return { ...route, path: newPath }
-      })
+          return { ...route, path: newPath }
+        },
+      )
     }
   } catch (e: unknown) {
     const stack = e instanceof Error ? e.stack : String(e)
@@ -105,12 +109,19 @@ async function expandRouteParameters(route: Route): Promise<Route[]> {
 }
 
 // This is used directly in build.js for nested ListrTasks
-export const getTasks = async (dryrun: boolean, routerPathFilter: string | null = null) => {
-  const detector = (projectIsEsm()
-    ? await import('@cedarjs/prerender/detection')
-    : await import('@cedarjs/prerender/cjs/detection')) as Record<string, unknown>
+export const getTasks = async (
+  dryrun: boolean,
+  routerPathFilter: string | null = null,
+) => {
+  const detector = (
+    projectIsEsm()
+      ? await import('@cedarjs/prerender/detection')
+      : await import('@cedarjs/prerender/cjs/detection')
+  ) as Record<string, unknown>
 
-  const prerenderRoutes = (detector as any /* @cedarjs/prerender is not perfectly typed here */)
+  const prerenderRoutes = (
+    detector as any
+  ) /* @cedarjs/prerender is not perfectly typed here */
     .detectPrerenderRoutes()
     .filter((route: Route) => route.path) as Route[]
 
@@ -163,7 +174,10 @@ export const getTasks = async (dryrun: boolean, routerPathFilter: string | null 
       return [
         {
           title: title(0),
-          task: async (_: unknown, task: any /* ListrTaskWrapper is hard to type here */) => {
+          task: async (
+            _: unknown,
+            task: any /* ListrTaskWrapper is hard to type here */,
+          ) => {
             for (let i = 0; i < routesToPrerender.length; i++) {
               const routeToPrerender = routesToPrerender[i]
 
@@ -192,25 +206,27 @@ export const getTasks = async (dryrun: boolean, routerPathFilter: string | null 
       ]
     }
 
-    return routesToPrerender.map((routeToPrerender) => {
-      if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
-        return []
-      }
+    return routesToPrerender
+      .map((routeToPrerender) => {
+        if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
+          return []
+        }
 
-      const outputHtmlPath = mapRouterPathToHtml(routeToPrerender.path)
-      return {
-        title: `Prerendering ${routeToPrerender.path} -> ${outputHtmlPath}`,
-        task: async () => {
-          await prerenderRoute(
-            prerenderer,
-            queryCache,
-            routeToPrerender,
-            dryrun,
-            outputHtmlPath,
-          )
-        },
-      }
-    }).flat()
+        const outputHtmlPath = mapRouterPathToHtml(routeToPrerender.path)
+        return {
+          title: `Prerendering ${routeToPrerender.path} -> ${outputHtmlPath}`,
+          task: async () => {
+            await prerenderRoute(
+              prerenderer,
+              queryCache,
+              routeToPrerender,
+              dryrun,
+              outputHtmlPath,
+            )
+          },
+        }
+      })
+      .flat()
   })
 
   return listrTasks
@@ -326,7 +342,11 @@ interface HandlerOptions {
   verbose?: boolean
 }
 
-export const handler = async ({ path: routerPath, dryRun = false, verbose = false }: HandlerOptions) => {
+export const handler = async ({
+  path: routerPath,
+  dryRun = false,
+  verbose = false,
+}: HandlerOptions) => {
   if (getConfig().experimental?.streamingSsr?.enabled) {
     console.log(
       c.warning(
@@ -371,7 +391,7 @@ export const handler = async ({ path: routerPath, dryRun = false, verbose = fals
     } else {
       console.log(
         c.info(
-          '- This could mean that a library you\'re using does not support SSR.',
+          "- This could mean that a library you're using does not support SSR.",
         ),
       )
       console.log(

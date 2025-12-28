@@ -180,7 +180,10 @@ export const handler = async ({
             initial: 'Y',
             // @ts-expect-error - default is not in PromptOptions but Enquirer supports it
             default: '(Yes/no)',
-            format: function (this: any /* Enquirer state is not easily typed here */, value: unknown) {
+            format: function (
+              this: any /* Enquirer state is not easily typed here */,
+              value: unknown,
+            ) {
               if (this.state.submitted) {
                 return this.isTrue(value) ? 'no' : 'yes'
               }
@@ -377,7 +380,10 @@ async function removeCliCache(
   }
 }
 
-async function setLatestVersionToContext(ctx: Record<string, unknown>, tag?: string) {
+async function setLatestVersionToContext(
+  ctx: Record<string, unknown>,
+  tag?: string,
+) {
   try {
     const foundVersion = await latestVersion(
       '@cedarjs/core',
@@ -658,7 +664,10 @@ async function refreshPrismaClient(
   }
 }
 
-const dedupeDeps = async (_task: unknown, { verbose }: { verbose?: boolean }) => {
+const dedupeDeps = async (
+  _task: unknown,
+  { verbose }: { verbose?: boolean },
+) => {
   try {
     await execa('yarn dedupe', {
       shell: true,

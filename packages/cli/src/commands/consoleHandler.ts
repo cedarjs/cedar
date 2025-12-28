@@ -41,7 +41,12 @@ const loadConsoleHistory = async (r: repl.REPLServer) => {
     history
       .split('\n')
       .reverse()
-      .map((line) => (r as any /* history is not in Node REPL types but exists in implementation */).history.push(line))
+      .map((line) =>
+        (
+          r as any
+        ) /* history is not in Node REPL types but exists in implementation */.history
+          .push(line),
+      )
   } catch {
     // We can ignore this -- it just means the user doesn't have any history yet
   }

@@ -59,4 +59,3 @@ export const handler = async (options: TestOptions) => {
   const { handler } = await import('./testHandler.js')
   return handler(options)
 }
-

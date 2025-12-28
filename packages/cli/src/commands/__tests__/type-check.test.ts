@@ -35,7 +35,10 @@ vi.mock('../../lib', async (importOriginal) => {
   return {
     ...originalLib,
     runCommandTask: vi.fn((commands) => {
-      return commands.map(({ cmd, args }: { cmd: string; args?: string[] }) => `${cmd} ${args?.join(' ')}`)
+      return commands.map(
+        ({ cmd, args }: { cmd: string; args?: string[] }) =>
+          `${cmd} ${args?.join(' ')}`,
+      )
     }),
     getPaths: () => ({
       base: './myBasePath',
@@ -113,4 +116,3 @@ test('Should generate prisma client', async () => {
     /.+(\\|\/)prisma(\\|\/)build(\\|\/)index.js.+/,
   )
 })
-

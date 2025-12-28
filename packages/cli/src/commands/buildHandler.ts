@@ -142,7 +142,9 @@ export const handler = async ({
         }
       },
     },
-  ].filter((x): x is Exclude<typeof x, false | undefined | '' | 0 | null> => !!x)
+  ].filter(
+    (x): x is Exclude<typeof x, false | undefined | '' | 0 | null> => !!x,
+  )
 
   const triggerPrerender = async () => {
     console.log('Starting prerendering...')
