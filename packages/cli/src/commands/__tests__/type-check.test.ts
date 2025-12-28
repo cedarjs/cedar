@@ -3,9 +3,8 @@ import path from 'node:path'
 import concurrently from 'concurrently'
 import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
-import type * as Lib from '../../lib'
 
-import '../../lib/mockTelemetry'
+import '../../lib/mockTelemetry.js'
 
 vi.mock('execa', () => ({
   default: vi.fn((cmd, params, options) => {
@@ -53,6 +52,8 @@ vi.mock('../../lib', async (importOriginal) => {
   }
 })
 
+// @ts-expect-error - No types for .js files
+import type * as Lib from '../../lib/index.js'
 // @ts-expect-error - No types for .js files
 import { runCommandTask } from '../../lib/index.js'
 import { handler } from '../type-check.js'

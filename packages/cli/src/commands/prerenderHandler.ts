@@ -370,7 +370,6 @@ export const handler = async ({
       console.log(c.info('::: Dry run, not writing changes :::'))
     }
 
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     await new Listr(listrTasks, {
       renderer: verbose ? 'verbose' : 'default',
       rendererOptions: { collapseSubtasks: false },
@@ -378,7 +377,7 @@ export const handler = async ({
     }).run()
   } catch (e) {
     console.log()
-    await diagnosticCheck()
+    diagnosticCheck()
 
     console.log(c.warning('Tips:'))
 
