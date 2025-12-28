@@ -59,20 +59,20 @@ test('UploadsConfig accepts all available models with their fields', () => {
   expect<UploadsConfig>().type.toHaveProperty('bookCover')
   expect<UploadsConfig>().type.toHaveProperty('noUploadFields')
 
-  expect<UploadsConfig['dumbo']>().type.toBeAssignableWith<{
+  expect<UploadsConfig['dumbo']>().type.toBeAssignableFrom<{
     fields: ['firstUpload'] // one of the fields, but not all of them
   }>()
 
-  expect<UploadsConfig['dumbo']>().type.toBeAssignableWith<{
+  expect<UploadsConfig['dumbo']>().type.toBeAssignableFrom<{
     fields: ['firstUpload', 'secondUpload'] // one of the fields, but not all of them
   }>()
 
-  expect<UploadsConfig['bookCover']>().type.toBeAssignableWith<{
+  expect<UploadsConfig['bookCover']>().type.toBeAssignableFrom<{
     fields: 'photo'
   }>()
 
   // If you give it something else, it won't accept it
-  expect<UploadsConfig['bookCover']>().type.not.toBeAssignableWith<{
+  expect<UploadsConfig['bookCover']>().type.not.toBeAssignableFrom<{
     fields: ['bazinga']
   }>()
 })
