@@ -40,7 +40,8 @@
         "stdout-update",
         "title-case",
         "untildify",
-        "/^@cedarjs//"
+        "/^@cedarjs//",
+        "uuid"
       ]
     },
     {
@@ -60,6 +61,17 @@
       "description": "Limit updates for noisy packages to twice per month",
       "matchPackageNames": ["nx", "@clerk/clerk-react", "@clerk/types", "knip"],
       "schedule": ["* * 1,15 * *"]
+    },
+    {
+      "description": "kill-port is slow in v2.0.x, see https://github.com/redwoodjs/graphql/pull/5646. I can check in again if a v2.1.x or higher is ever released",
+      "matchPackageNames": ["kill-port"],
+      "allowedVersions": ">=0 <2.0.0 || >=2.1.0"
+    },
+    {
+      "description": "We deliberately test on a lower version of Node.js in this file",
+      "matchPackageNames": ["node"],
+      "matchPaths": [".github/workflows/create-cedar-app-test.yml"],
+      "enabled": false
     }
   ]
 }
