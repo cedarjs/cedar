@@ -68,7 +68,7 @@ describe('CellProps mapper type', () => {
         ExampleQueryVariables
       >
 
-      expect<CellInputs>().type.toBeAssignableWith({
+      expect<CellInputs>().type.toBeAssignableFrom({
         customProp: 55,
         category: 'Dinner',
         saved: true,
@@ -83,7 +83,7 @@ describe('CellProps mapper type', () => {
         EmptyVariables
       >
 
-      expect<CellWithoutVariablesInputs>().type.toBeAssignableWith({
+      expect<CellWithoutVariablesInputs>().type.toBeAssignableFrom({
         customProp: 55,
       })
     })
@@ -112,7 +112,7 @@ describe('CellProps mapper type', () => {
       >
 
       // Note that the gql variables are no longer required here
-      expect<CellWithBeforeQueryInputs>().type.toBeAssignableWith({
+      expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({
         word: 'abracadabra',
         customProp: 99,
       })
@@ -136,7 +136,7 @@ describe('CellProps mapper type', () => {
         EmptyVariables
       >
 
-      expect<CellWithBeforeQueryInputs>().type.toBeAssignableWith({
+      expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({
         fetchPolicy: 'cache-only',
         customProp: 55,
       })
@@ -166,7 +166,7 @@ describe('CellProps mapper type', () => {
       >
 
       // Note that the gql variables are no longer required here
-      expect<CellWithBeforeQueryInputs>().type.toBeAssignableWith({
+      expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({
         customProp: 99,
       })
     })
@@ -189,7 +189,7 @@ describe('CellProps mapper type', () => {
         EmptyVariables
       >
 
-      expect<CellWithBeforeQueryInputs>().type.toBeAssignableWith({
+      expect<CellWithBeforeQueryInputs>().type.toBeAssignableFrom({
         customProp: 55,
       })
     })

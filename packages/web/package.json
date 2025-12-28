@@ -179,7 +179,7 @@
     "publint": "0.3.16",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "tstyche": "3.5.0",
+    "tstyche": "5.0.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
