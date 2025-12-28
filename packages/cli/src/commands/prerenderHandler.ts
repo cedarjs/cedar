@@ -99,7 +99,7 @@ async function expandRouteParameters(route: Route): Promise<Route[]> {
         },
       )
     }
-  } catch (e: unknown) {
+  } catch (e) {
     const stack = e instanceof Error ? e.stack : String(e)
     console.error(c.error(stack))
     return [route]
@@ -113,15 +113,11 @@ export const getTasks = async (
   dryrun: boolean,
   routerPathFilter: string | null = null,
 ) => {
-  const detector = (
-    projectIsEsm()
-      ? await import('@cedarjs/prerender/detection')
-      : await import('@cedarjs/prerender/cjs/detection')
-  ) as Record<string, unknown>
+  const detector = projectIsEsm()
+    ? await import('@cedarjs/prerender/detection')
+    : await import('@cedarjs/prerender/cjs/detection')
 
-  const prerenderRoutes = (
-    detector as any
-  ) /* @cedarjs/prerender is not perfectly typed here */
+  const prerenderRoutes = detector
     .detectPrerenderRoutes()
     .filter((route: Route) => route.path) as Route[]
 
