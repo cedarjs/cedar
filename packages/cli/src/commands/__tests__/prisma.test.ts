@@ -1,5 +1,12 @@
+import fs from 'node:fs'
+
+import execa from 'execa'
+import { vi, beforeEach, afterEach, test, expect } from 'vitest'
+
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
     ...originalProjectConfig,
     getPaths: () => {
@@ -26,11 +33,6 @@ vi.mock('execa', () => ({
   },
 }))
 
-import fs from 'node:fs'
-
-import execa from 'execa'
-import { vi, beforeEach, afterEach, test, expect } from 'vitest'
-
 import { handler } from '../prisma.js'
 
 beforeEach(() => {
@@ -40,8 +42,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  console.info.mockRestore()
-  console.log.mockRestore()
+  vi.mocked(console).info.mockRestore()
+  vi.mocked(console).log.mockRestore()
 })
 
 test('the prisma command handles spaces', async () => {
@@ -53,7 +55,7 @@ test('the prisma command handles spaces', async () => {
     n: 'add bazingas',
   })
 
-  expect(execa.sync.mock.calls[0][1]).toEqual([
+  expect(vi.mocked(execa.sync).mock.calls[0][1]).toEqual([
     'migrate',
     'dev',
     '-n',

@@ -1,5 +1,12 @@
+import type FS from 'node:fs'
+
+import { Listr } from 'listr2'
+import { vi, afterEach, test, expect } from 'vitest'
+
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
   return {
     ...originalProjectConfig,
     getPaths: () => {
@@ -23,14 +30,14 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-vi.mock('node:fs', async () => {
-  const actualFs = await vi.importActual('node:fs')
+vi.mock('node:fs', async (importOriginal) => {
+  const actualFs = await importOriginal<typeof FS>()
 
   return {
     default: {
       ...actualFs,
       // Mock the existence of the Prisma config file
-      existsSync: (path) => {
+      existsSync: (path: string) => {
         if (path === '/mocked/project/api/prisma.config.js') {
           return true
         }
@@ -41,9 +48,7 @@ vi.mock('node:fs', async () => {
   }
 })
 
-import { Listr } from 'listr2'
-import { vi, afterEach, test, expect } from 'vitest'
-
+// @ts-expect-error - Mocking Listr
 vi.mock('listr2')
 
 // Make sure prerender doesn't get triggered
@@ -62,7 +67,8 @@ afterEach(() => {
 
 test('the build tasks are in the correct sequence', async () => {
   await handler({})
-  expect(Listr.mock.calls[0][0].map((x) => x.title)).toMatchInlineSnapshot(`
+  // @ts-expect-error - Listr is mocked
+  expect(vi.mocked(Listr).mock.calls[0][0].map((x: { title: string }) => x.title)).toMatchInlineSnapshot(`
     [
       "Generating Prisma Client...",
       "Verifying graphql schema...",
@@ -80,7 +86,8 @@ test('Should run prerender for web', async () => {
   const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
   await handler({ side: ['web'], prerender: true })
-  expect(Listr.mock.calls[0][0].map((x) => x.title)).toMatchInlineSnapshot(`
+  // @ts-expect-error - Listr is mocked
+  expect(vi.mocked(Listr).mock.calls[0][0].map((x: { title: string }) => x.title)).toMatchInlineSnapshot(`
     [
       "Building Web...",
     ]

@@ -4,13 +4,14 @@ import fs from 'node:fs'
 
 import envinfo from 'envinfo'
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths } from '@cedarjs/project-config'
 
 export const command = 'info'
 export const description = 'Print your system environment information'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs.epilogue(
     `Also see the ${terminalLink(
       'CedarJS CLI Reference',
@@ -38,7 +39,7 @@ export const handler = async () => {
       redwoodToml
         .split('\n')
         .filter((line) => line.trim().length > 0)
-        .filter((line) => !/^#/.test(line))
+        .filter((line) => !line.startsWith('#'))
         .map((line) => `    ${line}`)
         .join('\n'),
   )

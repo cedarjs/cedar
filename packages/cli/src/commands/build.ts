@@ -1,14 +1,19 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
+// @ts-expect-error - Types not available for JS files
 import { sides } from '../lib/project.js'
+// @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'build [side..]'
 export const description = 'Build for production'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   const choices = sides()
 
   yargs
@@ -16,7 +21,8 @@ export const builder = (yargs) => {
       choices,
       default: choices,
       description: 'Which side(s) to build',
-      type: 'array',
+      type: 'string',
+      array: true,
     })
     .option('verbose', {
       alias: 'v',
@@ -55,7 +61,7 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: Record<string, unknown>) => {
   const { handler } = await import('./buildHandler.js')
   return handler(options)
 }

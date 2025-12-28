@@ -1,10 +1,8 @@
 import fs from 'node:fs'
 
-import type execa from 'execa'
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-// @ts-expect-error - JS file
 import { runPreUpgradeScripts } from '../upgrade.js'
 
 // Mock fetch globally
@@ -39,8 +37,8 @@ vi.mock('node:os', () => ({
 }))
 
 describe('runPreUpgradeScripts', () => {
-  let mockTask: any
-  let mockCtx: any
+  let mockTask: { output: string }
+  let mockCtx: Record<string, unknown>
 
   beforeEach(() => {
     mockTask = {
@@ -141,7 +139,7 @@ describe('runPreUpgradeScripts', () => {
     `
 
     // Mock readFile to return the script content
-    vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent as any)
+    vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent as any /* simplified for test mock */)
 
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
       if (url.toString().endsWith('/manifest.json')) {
@@ -176,12 +174,12 @@ describe('runPreUpgradeScripts', () => {
         return {
           stdout: '',
           stderr: '',
-        } as unknown as execa.ExecaChildProcess
+        } as any /* simplified for test mock */
       } else if (command === 'node') {
         return {
           stdout: 'Upgrade check passed',
           stderr: '',
-        } as unknown as execa.ExecaChildProcess
+        } as any /* simplified for test mock */
       }
 
       throw new Error(`Unexpected command: ${command} ${actualArgs?.join(' ')}`)
@@ -225,7 +223,7 @@ describe('runPreUpgradeScripts', () => {
     // Verify script was executed
     expect(execa.default).toHaveBeenCalledWith(
       'node',
-      ['script.mts', '--verbose', false, '--force', false],
+      ['script.mts', '--verbose', 'false', '--force', 'false'],
       {
         cwd: '/tmp/cedar-upgrade-abc123',
       },

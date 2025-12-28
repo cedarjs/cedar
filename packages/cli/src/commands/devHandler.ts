@@ -121,9 +121,8 @@ export const handler = async ({
         verbose: false,
         force: false,
       })
-    } catch (e) {
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
       errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
       console.error(c.error(message))
     }
@@ -133,9 +132,8 @@ export const handler = async ({
     if (!serverFile) {
       try {
         await shutdownPort(apiAvailablePort)
-      } catch (e) {
-        const message =
-          e instanceof Object && 'message' in e ? e.message : String(e)
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e)
         errorTelemetry(process.argv, `Error shutting down "api": ${message}`)
         console.error(
           `Error whilst shutting down "api" port: ${c.error(message)}`,
@@ -147,9 +145,8 @@ export const handler = async ({
   if (side.includes('web')) {
     try {
       await shutdownPort(webAvailablePort)
-    } catch (e) {
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
       errorTelemetry(process.argv, `Error shutting down "web": ${message}`)
       console.error(
         `Error whilst shutting down "web" port: ${c.error(message)}`,

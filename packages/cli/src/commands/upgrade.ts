@@ -9,19 +9,24 @@ import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
 import semver from 'semver'
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getConfig } from '@cedarjs/project-config'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
+// @ts-expect-error - Types not available for JS files
 import { PLUGIN_CACHE_FILENAME } from '../lib/plugin.js'
 
 export const command = 'upgrade'
 export const description = 'Upgrade all @cedarjs packages via interactive CLI'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .example(
       'cedar upgrade -t 0.20.1-canary.5',
@@ -83,15 +88,15 @@ export const builder = (yargs) => {
 const SEMVER_REGEX =
   /(?<=^v?|\sv?)(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(?:\.(?:0|[1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?(?=$|\s)/i
 
-const isValidSemver = (string) => {
+const isValidSemver = (string: string) => {
   return SEMVER_REGEX.test(string)
 }
 
-const isValidCedarJSTag = (tag) => {
+const isValidCedarJSTag = (tag: string) => {
   return ['rc', 'canary', 'latest', 'next', 'experimental'].includes(tag)
 }
 
-export const validateTag = (tag) => {
+export const validateTag = (tag: string) => {
   const isTagValid = isValidSemver(tag) || isValidCedarJSTag(tag)
 
   if (!isTagValid) {
@@ -106,7 +111,35 @@ export const validateTag = (tag) => {
   return tag
 }
 
-export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
+interface ExecaError extends Error {
+  stdout?: string
+  stderr?: string
+  exitCode?: number
+}
+
+function isExecaError(e: unknown): e is ExecaError {
+  return (
+    e instanceof Error && ('stdout' in e || 'stderr' in e || 'exitCode' in e)
+  )
+}
+
+interface UpgradeOptions {
+  dryRun?: boolean
+  tag?: string
+  verbose?: boolean
+  dedupe?: boolean
+  yes?: boolean
+  force?: boolean
+}
+
+export const handler = async ({
+  dryRun,
+  tag,
+  verbose,
+  dedupe,
+  yes,
+  force,
+}: UpgradeOptions) => {
   recordTelemetryAttributes({
     command: 'upgrade',
     dryRun,
@@ -145,10 +178,11 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
             message:
               'This will upgrade your CedarJS project to the latest version. Do you want to proceed?',
             initial: 'Y',
+            // @ts-expect-error - default is not in PromptOptions but Enquirer supports it
             default: '(Yes/no)',
-            format: function (value) {
+            format: function (this: any /* Enquirer state is not easily typed here */, value: unknown) {
               if (this.state.submitted) {
-                return this.isTrue(value) ? 'yes' : 'no'
+                return this.isTrue(value) ? 'no' : 'yes'
               }
 
               return 'Yes'
@@ -234,7 +268,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
           if ([undefined, 'latest', 'rc'].includes(tag)) {
             const ghReleasesLink = terminalLink(
               `GitHub Release notes`,
-              `https://github.com/cedarjs/cedar/releases`, // intentionally not linking to specific version
+              `https://github.com/cedarjs/cedar/releases`,
             )
             const discordLink = terminalLink(
               `Discord`,
@@ -299,14 +333,22 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
   }
 }
 
-async function yarnInstall({ verbose }) {
+async function yarnInstall({
+  verbose,
+  dryRun,
+}: {
+  verbose?: boolean
+  dryRun?: boolean
+}) {
   try {
+    // Unused dryRun argument for consistency?
+    void dryRun
     await execa('yarn install', {
       shell: true,
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })
-  } catch (e) {
+  } catch {
     throw new Error(
       'Could not finish installation. Please run `yarn install` and then `yarn dedupe`, before continuing',
     )
@@ -317,7 +359,10 @@ async function yarnInstall({ verbose }) {
  * Removes the CLI plugin cache. This prevents the CLI from using outdated versions of the plugin,
  * when the plugins share the same alias. e.g. `cedar sb` used to point to `@cedarjs/cli-storybook` but now points to `@cedarjs/cli-storybook-vite`
  */
-async function removeCliCache(ctx, { dryRun, verbose }) {
+async function removeCliCache(
+  ctx: Record<string, unknown>,
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
+) {
   const cliCacheDir = path.join(
     getPaths().generated.base,
     PLUGIN_CACHE_FILENAME,
@@ -332,7 +377,7 @@ async function removeCliCache(ctx, { dryRun, verbose }) {
   }
 }
 
-async function setLatestVersionToContext(ctx, tag) {
+async function setLatestVersionToContext(ctx: Record<string, unknown>, tag?: string) {
   try {
     const foundVersion = await latestVersion(
       '@cedarjs/core',
@@ -341,7 +386,7 @@ async function setLatestVersionToContext(ctx, tag) {
 
     ctx.versionToUpgradeTo = foundVersion
     return foundVersion
-  } catch (e) {
+  } catch {
     if (tag) {
       throw new Error('Could not find the latest `' + tag + '` version')
     }
@@ -354,12 +399,17 @@ async function setLatestVersionToContext(ctx, tag) {
  * Iterates over CedarJS dependencies in package.json files and updates the
  * version.
  */
-function updatePackageJsonVersion(pkgPath, version, task, { dryRun, verbose }) {
+function updatePackageJsonVersion(
+  pkgPath: string,
+  version: string,
+  task: { title: string },
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
+) {
   const pkg = JSON.parse(
     fs.readFileSync(path.join(pkgPath, 'package.json'), 'utf-8'),
   )
 
-  const messages = []
+  const messages: string[] = []
 
   if (pkg.dependencies) {
     for (const depName of Object.keys(pkg.dependencies).filter(
@@ -401,7 +451,10 @@ function updatePackageJsonVersion(pkgPath, version, task, { dryRun, verbose }) {
   }
 }
 
-function updateCedarJSDepsForAllSides(ctx, options) {
+function updateCedarJSDepsForAllSides(
+  ctx: Record<string, unknown>,
+  options: { dryRun?: boolean; verbose?: boolean },
+) {
   if (!ctx.versionToUpgradeTo) {
     throw new Error('Failed to upgrade')
   }
@@ -430,7 +483,10 @@ function updateCedarJSDepsForAllSides(ctx, options) {
   )
 }
 
-async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
+async function updatePackageVersionsFromTemplate(
+  ctx: Record<string, unknown>,
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
+) {
   if (!ctx.versionToUpgradeTo) {
     throw new Error('Failed to upgrade')
   }
@@ -465,7 +521,7 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
           const localPackageJson = JSON.parse(localPackageJsonText)
 
           Object.entries(templatePackageJson.dependencies || {}).forEach(
-            ([depName, depVersion]) => {
+            ([depName, depVersion]: [string, unknown]) => {
               // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
@@ -480,7 +536,7 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
           )
 
           Object.entries(templatePackageJson.devDependencies || {}).forEach(
-            ([depName, depVersion]) => {
+            ([depName, depVersion]: [string, unknown]) => {
               // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
@@ -507,7 +563,10 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
   )
 }
 
-async function downloadYarnPatches(ctx, { dryRun, verbose }) {
+async function downloadYarnPatches(
+  ctx: Record<string, unknown>,
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
+) {
   if (!ctx.versionToUpgradeTo) {
     throw new Error('Failed to upgrade')
   }
@@ -524,11 +583,11 @@ async function downloadYarnPatches(ctx, { dryRun, verbose }) {
         Authorization: githubToken ? `Bearer ${githubToken}` : undefined,
         ['X-GitHub-Api-Version']: '2022-11-28',
         Accept: 'application/vnd.github+json',
-      },
+      } as HeadersInit,
     },
   )
 
-  const json = await res.json()
+  const json = (await res.json()) as { tree?: { path: string; url: string }[] }
   const patches = json.tree?.filter((patchInfo) =>
     patchInfo.path.startsWith(
       'packages/create-cedar-app/templates/ts/.yarn/patches/',
@@ -551,7 +610,7 @@ async function downloadYarnPatches(ctx, { dryRun, verbose }) {
         title: `Downloading ${patch.path}`,
         task: async () => {
           const res = await fetch(patch.url)
-          const patchMeta = await res.json()
+          const patchMeta = (await res.json()) as { content: string }
           const patchPath = path.join(
             getPaths().base,
             '.yarn',
@@ -572,7 +631,10 @@ async function downloadYarnPatches(ctx, { dryRun, verbose }) {
   )
 }
 
-async function refreshPrismaClient(task, { verbose }) {
+async function refreshPrismaClient(
+  task: { skip: (msg: string) => void },
+  { verbose }: { verbose?: boolean },
+) {
   // Relates to prisma/client issue
   // See: https://github.com/redwoodjs/redwood/issues/1083
   try {
@@ -580,23 +642,24 @@ async function refreshPrismaClient(task, { verbose }) {
       verbose,
       force: false,
     })
-  } catch (e) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
     task.skip('Refreshing the Prisma client caused an Error.')
     console.log(
       'You may need to update your prisma client manually: $ yarn cedar prisma generate',
     )
-    console.log(c.error(e.message))
+    console.log(c.error(message))
   }
 }
 
-const dedupeDeps = async (_task, { verbose }) => {
+const dedupeDeps = async (_task: unknown, { verbose }: { verbose?: boolean }) => {
   try {
     await execa('yarn dedupe', {
       shell: true,
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })
-  } catch (e) {
+  } catch (e: any) {
     console.log(c.error(e.message))
     throw new Error(
       'Could not finish de-duplication. For yarn 1.x, please run `npx yarn-deduplicate`, or for yarn >= 3 run `yarn dedupe` before continuing',
@@ -606,7 +669,11 @@ const dedupeDeps = async (_task, { verbose }) => {
 }
 
 // exported for testing
-export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
+export async function runPreUpgradeScripts(
+  ctx: Record<string, unknown>,
+  task: any, // ListrTaskWrapper is complex to type here without importing many things
+  { verbose, force }: { verbose?: boolean; force?: boolean },
+) {
   if (!ctx.versionToUpgradeTo) {
     return
   }
@@ -617,12 +684,12 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/'
   const manifestUrl = `${baseUrl}manifest.json`
 
-  let manifest = []
+  let manifest: string[] = []
   try {
     const res = await fetch(manifestUrl)
 
     if (res.status === 200) {
-      manifest = await res.json()
+      manifest = (await res.json()) as string[]
     } else {
       if (verbose) {
         console.log('No upgrade script manifest found.')
@@ -638,7 +705,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     return
   }
 
-  const checkLevels = []
+  const checkLevels: { id: string; candidates: string[] }[] = []
   if (parsed && !parsed.prerelease.length) {
     // 1. Exact match: 3.4.1
     checkLevels.push({
@@ -671,7 +738,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     })
   }
 
-  const scriptsToRun = []
+  const scriptsToRun: string[] = []
 
   // Find all existing scripts (one per level) using the manifest
   for (const level of checkLevels) {
@@ -729,7 +796,11 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
           )
         }
 
-        const files = await dirRes.json()
+        const files = (await dirRes.json()) as {
+          type: string
+          name: string
+          download_url: string
+        }[]
 
         // Download all files in the directory
         for (const file of files) {
@@ -808,7 +879,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     try {
       const { stdout } = await execa(
         'node',
-        ['script.mts', '--verbose', verbose, '--force', force],
+        ['script.mts', '--verbose', String(verbose), '--force', String(force)],
         { cwd: tempDir },
       )
 
@@ -819,19 +890,27 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
 
         ctx.preUpgradeMessage += `\n${stdout}`
       }
-    } catch (e) {
-      const errorOutput = e.stdout || e.stderr || e.message || ''
-      const verboseErrorMessage = verbose
-        ? `Pre-upgrade check ${scriptName} failed with exit code ${e.exitCode}:\n` +
-          `${e.stderr ? e.stderr + '\n' : ''}`
-        : ''
+    } catch (e: unknown) {
+      let errorOutput = String(e)
+      let exitCode: number | undefined
+      let stderr: string | undefined
+
+      if (isExecaError(e)) {
+        errorOutput = e.stdout || e.message
+        stderr = e.stderr
+        exitCode = e.exitCode
+      } else if (e instanceof Error) {
+        errorOutput = e.message
+      }
 
       if (ctx.preUpgradeError) {
         ctx.preUpgradeError += '\n'
       }
 
       if (verbose) {
-        ctx.preUpgradeError += `\n${verboseErrorMessage}`
+        ctx.preUpgradeError += `\nPre-upgrade check ${scriptName} failed with exit code ${exitCode}:\n${
+          stderr ? stderr + '\n' : ''
+        }`
       }
 
       ctx.preUpgradeError += `\n${errorOutput}`
@@ -851,7 +930,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
   }
 }
 
-const extractDependencies = (content) => {
+const extractDependencies = (content: string) => {
   const deps = new Map()
 
   // 1. Explicit dependencies via comments
@@ -896,5 +975,5 @@ const extractDependencies = (content) => {
     }
   }
 
-  return Array.from(deps.values())
+  return Array.from(deps.values()) as string[]
 }
