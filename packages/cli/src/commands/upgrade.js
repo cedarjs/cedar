@@ -293,7 +293,7 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
 
   if (preUpgradeMessage) {
     console.log('')
-    console.log(`   📣 ${c.info('Pre-upgrade Message:')}`)
+    console.log(`  📣 ${c.info('Pre-upgrade Message:')}`)
     console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n  '))
   }
 }
@@ -455,7 +455,7 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
 
       return {
         title: `Updating ${pkgJsonPath}`,
-        task: async () => {
+        task: async (_ctx, task) => {
           const res = await fetch(url)
           const text = await res.text()
           const templatePackageJson = JSON.parse(text)
@@ -463,12 +463,14 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
           const localPackageJsonText = fs.readFileSync(pkgJsonPath, 'utf-8')
           const localPackageJson = JSON.parse(localPackageJsonText)
 
+          const messages = []
+
           Object.entries(templatePackageJson.dependencies || {}).forEach(
             ([depName, depVersion]) => {
               // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
-                  console.log(
+                  messages.push(
                     ` - ${depName}: ${localPackageJson.dependencies[depName]} => ${depVersion}`,
                   )
                 }
@@ -483,7 +485,7 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
               // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
-                  console.log(
+                  messages.push(
                     ` - ${depName}: ${localPackageJson.devDependencies[depName]} => ${depVersion}`,
                   )
                 }
@@ -492,6 +494,10 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
               }
             },
           )
+
+          if (messages.length > 0) {
+            task.title = task.title + '\n' + messages.join('\n')
+          }
 
           if (!dryRun) {
             fs.writeFileSync(
