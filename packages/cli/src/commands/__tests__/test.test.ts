@@ -31,8 +31,15 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+const defaultOptions = {
+  filter: [],
+  watch: false,
+  collectCoverage: false,
+  dbPush: false,
+}
+
 test('Runs tests for all available sides if no filter passed', async () => {
-  await handler({} as any /* simplified for test input */)
+  await handler(defaultOptions)
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')
   expect(vi.mocked(execa).mock.results[0].value.params).toContain('jest')
@@ -41,12 +48,7 @@ test('Runs tests for all available sides if no filter passed', async () => {
 })
 
 test('Syncs or creates test database when the flag --db-push is set to true', async () => {
-  await handler(
-    {
-      filter: ['api'],
-      dbPush: true,
-    } as any /* simplified for test input */,
-  )
+  await handler({ ...defaultOptions, filter: ['api'], dbPush: true })
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')
   expect(vi.mocked(execa).mock.results[0].value.params).toContain('jest')
@@ -55,23 +57,17 @@ test('Syncs or creates test database when the flag --db-push is set to true', as
 })
 
 test('Skips test database sync/creation when the flag --db-push is set to false', async () => {
-  await handler(
-    {
-      filter: ['api'],
-      dbPush: false,
-    } as any /* simplified for test input */,
-  )
+  await handler({ ...defaultOptions, filter: ['api'], dbPush: false })
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')
   expect(vi.mocked(execa).mock.results[0].value.params).toContain('jest')
 })
 
 test('Runs tests for all available sides if no side filter passed', async () => {
-  await handler(
-    {
-      filter: ['bazinga'],
-    } as any /* simplified for test input */,
-  )
+  await handler({
+    ...defaultOptions,
+    filter: ['bazinga'],
+  })
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')
   expect(vi.mocked(execa).mock.results[0].value.params).toContain('jest')
@@ -81,11 +77,7 @@ test('Runs tests for all available sides if no side filter passed', async () => 
 })
 
 test('Runs tests specified side if even with additional filters', async () => {
-  await handler(
-    {
-      filter: ['web', 'bazinga'],
-    } as any /* simplified for test input */,
-  )
+  await handler({ ...defaultOptions, filter: ['web', 'bazinga'] })
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).not.toBe('yarn rw')
   expect(vi.mocked(execa).mock.results[0].value.params).not.toContain('api')
@@ -97,22 +89,17 @@ test('Runs tests specified side if even with additional filters', async () => {
 })
 
 test('Does not create db when calling test with just web', async () => {
-  await handler(
-    {
-      filter: ['web'],
-    } as any /* simplified for test input */,
-  )
+  await handler({
+    ...defaultOptions,
+    filter: ['web'],
+  })
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')
   expect(vi.mocked(execa).mock.results[0].value.params).toContain('jest')
 })
 
 test('Passes filter param to jest command if passed', async () => {
-  await handler(
-    {
-      filter: ['web', 'bazinga'],
-    } as any /* simplified for test input */,
-  )
+  await handler({ ...defaultOptions, filter: ['web', 'bazinga'] })
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')
   expect(vi.mocked(execa).mock.results[0].value.params).toContain('jest')
@@ -120,14 +107,13 @@ test('Passes filter param to jest command if passed', async () => {
 })
 
 test('Passes other flags to jest', async () => {
-  await handler(
-    {
-      u: true,
-      debug: true,
-      json: true,
-      collectCoverage: true,
-    } as any /* simplified for test input */,
-  )
+  await handler({
+    ...defaultOptions,
+    u: true,
+    debug: true,
+    json: true,
+    collectCoverage: true,
+  })
 
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')
   expect(vi.mocked(execa).mock.results[0].value.params).toContain('jest')
@@ -140,12 +126,7 @@ test('Passes other flags to jest', async () => {
 })
 
 test('Passes values of other flags to jest', async () => {
-  await handler(
-    {
-      bazinga: false,
-      hello: 'world',
-    } as any /* simplified for test input */,
-  )
+  await handler({ ...defaultOptions, bazinga: false, hello: 'world' })
 
   // Second command because api side runs
   expect(vi.mocked(execa).mock.results[0].value.cmd).toBe('yarn')

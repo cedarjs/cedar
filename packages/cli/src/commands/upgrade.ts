@@ -142,12 +142,12 @@ export const handler = async ({
 }: UpgradeOptions) => {
   recordTelemetryAttributes({
     command: 'upgrade',
-    dryRun,
-    tag,
-    verbose,
-    dedupe,
-    yes,
-    force,
+    dryRun: !!dryRun,
+    tag: tag ?? 'latest',
+    verbose: !!verbose,
+    dedupe: !!dedupe,
+    yes: !!yes,
+    force: !!force,
   })
 
   let preUpgradeMessage = ''
@@ -180,7 +180,9 @@ export const handler = async ({
             initial: 'Y',
             default: '(Yes/no)',
             format: function (
-              this: any /* Enquirer state is not easily typed here */,
+              // Enquirer state is not easily typed here, and 'this' is used
+              // to access it.
+              this: any,
               value: unknown,
             ) {
               if (this.state.submitted) {
@@ -241,7 +243,7 @@ export const handler = async ({
       },
       {
         title: 'Running yarn install',
-        task: (ctx) => yarnInstall(ctx, { dryRun, verbose }),
+        task: () => yarnInstall({ dryRun, verbose }),
         enabled: (ctx) => !ctx.preUpgradeError,
         skip: () => !!dryRun,
       },
@@ -478,7 +480,7 @@ function updateCedarJSDepsForAllSides(
         task: (_ctx, task) =>
           updatePackageJsonVersion(
             basePath,
-            ctx.versionToUpgradeTo,
+            String(ctx.versionToUpgradeTo),
             task,
             options,
           ),
@@ -591,18 +593,19 @@ async function downloadYarnPatches(
     'https://api.github.com/repos/cedarjs/cedar/git/trees/main?recursive=1',
     {
       headers: {
-        Authorization: githubToken ? `Bearer ${githubToken}` : undefined,
+        ...(githubToken && { Authorization: `Bearer ${githubToken}` }),
         ['X-GitHub-Api-Version']: '2022-11-28',
         Accept: 'application/vnd.github+json',
-      } as HeadersInit,
+      },
     },
   )
 
-  const json = (await res.json()) as { tree?: { path: string; url: string }[] }
-  const patches = json.tree?.filter((patchInfo) =>
-    patchInfo.path.startsWith(
-      'packages/create-cedar-app/templates/ts/.yarn/patches/',
-    ),
+  const json = await res.json()
+  const patches: { path: string; url: string }[] = json.tree?.filter(
+    (patchInfo: { path: string }) =>
+      patchInfo.path.startsWith(
+        'packages/create-cedar-app/templates/ts/.yarn/patches/',
+      ),
   )
 
   const patchDir = path.join(getPaths().base, '.yarn', 'patches')
@@ -621,7 +624,7 @@ async function downloadYarnPatches(
         title: `Downloading ${patch.path}`,
         task: async () => {
           const res = await fetch(patch.url)
-          const patchMeta = (await res.json()) as { content: string }
+          const patchMeta = await res.json()
           const patchPath = path.join(
             getPaths().base,
             '.yarn',
@@ -673,26 +676,33 @@ const dedupeDeps = async (
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })
-  } catch (e: any) {
-    console.log(c.error(e.message))
+  } catch (e) {
+    // ExecaError is an instance of Error
+    const message = e instanceof Error ? e.message : String(e)
+    console.log(c.error(message))
     throw new Error(
       'Could not finish de-duplication. For yarn 1.x, please run `npx yarn-deduplicate`, or for yarn >= 3 run `yarn dedupe` before continuing',
     )
   }
+
   await yarnInstall({ verbose })
 }
 
 // exported for testing
 export async function runPreUpgradeScripts(
   ctx: Record<string, unknown>,
-  task: any, // ListrTaskWrapper is complex to type here without importing many things
+  task: { output: unknown },
   { verbose, force }: { verbose?: boolean; force?: boolean },
 ) {
   if (!ctx.versionToUpgradeTo) {
     return
   }
 
-  const version = ctx.versionToUpgradeTo
+  const version =
+    typeof ctx.versionToUpgradeTo === 'string'
+      ? ctx.versionToUpgradeTo
+      : undefined
+
   const parsed = semver.parse(version)
   const baseUrl =
     'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/'
@@ -703,7 +713,7 @@ export async function runPreUpgradeScripts(
     const res = await fetch(manifestUrl)
 
     if (res.status === 200) {
-      manifest = (await res.json()) as string[]
+      manifest = await res.json()
     } else {
       if (verbose) {
         console.log('No upgrade script manifest found.')
@@ -810,11 +820,7 @@ export async function runPreUpgradeScripts(
           )
         }
 
-        const files = (await dirRes.json()) as {
-          type: string
-          name: string
-          download_url: string
-        }[]
+        const files = await dirRes.json()
 
         // Download all files in the directory
         for (const file of files) {
@@ -989,5 +995,5 @@ const extractDependencies = (content: string) => {
     }
   }
 
-  return Array.from(deps.values()) as string[]
+  return Array.from(deps.values())
 }

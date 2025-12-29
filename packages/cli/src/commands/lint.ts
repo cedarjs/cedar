@@ -114,13 +114,20 @@ interface LintOptions {
 }
 
 export const handler = async ({ path: filePath, fix, format }: LintOptions) => {
-  recordTelemetryAttributes({ command: 'lint', fix, format })
+  recordTelemetryAttributes({
+    command: 'lint',
+    fix: !!fix,
+    format: format ?? 'stylish',
+  })
 
-  // Check for legacy ESLint configuration and show deprecation warning
   const config = getConfig()
   const legacyConfigFiles = detectLegacyEslintConfig()
-  // @ts-expect-error - legacy config warning is not in Config types yet
-  if (legacyConfigFiles.length > 0 && config.eslintLegacyConfigWarning) {
+  if (
+    legacyConfigFiles.length > 0 &&
+    config instanceof Object &&
+    'eslintLegacyConfigWarning' in config &&
+    config.eslintLegacyConfigWarning
+  ) {
     showLegacyEslintDeprecationWarning(legacyConfigFiles)
   }
 

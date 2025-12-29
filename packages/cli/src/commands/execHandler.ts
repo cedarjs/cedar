@@ -60,8 +60,8 @@ interface ExecOptions {
 export const handler = async (args: ExecOptions) => {
   recordTelemetryAttributes({
     command: 'exec',
-    prisma: args.prisma,
-    list: args.list,
+    prisma: !!args.prisma,
+    list: !!args.list,
   })
 
   const { name, prisma, list, ...scriptArgs } = args
@@ -114,12 +114,12 @@ export const handler = async (args: ExecOptions) => {
   const scriptTasks = [
     {
       title: 'Generating Prisma client',
-      enabled: () => prisma,
+      enabled: () => !!prisma,
       task: () =>
         generatePrismaClient({
           force: false,
           verbose: !args.silent,
-          silent: args.silent,
+          silent: !!args.silent,
         }),
     },
     {
@@ -131,7 +131,7 @@ export const handler = async (args: ExecOptions) => {
             functionName: 'default',
             args: { args: scriptArgs },
           })
-        } catch (e: unknown) {
+        } catch (e) {
           const message = e instanceof Error ? e.message : String(e)
           console.error(c.error(`Error in script: ${message}`))
           throw e
@@ -141,8 +141,6 @@ export const handler = async (args: ExecOptions) => {
   ]
 
   const tasks = new Listr(scriptTasks, {
-    rendererOptions: { collapseSubtasks: false },
-    // @ts-expect-error - renderer might be incompatible
     renderer: args.silent ? 'silent' : 'verbose',
   })
 

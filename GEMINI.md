@@ -72,6 +72,7 @@ To test framework changes against a real Cedar project:
   - **Linting:** ESLint (`eslint.config.mjs`).
   - **Formatting:** Prettier.
   - **TypeScript:** Never use `@ts-ignore`. Always prefer `@ts-expect-error` with a clear explanation for why it's needed. Avoid `any`. Use `unknown` or specific types whenever possible. If `any` is truly necessary, add a comment explaining why. `any` is more acceptable in test files than in implementation files. Avoid `as unknown as X`.
+  - **Comments:** Add code comments sparingly. Focus on _why_ something is done, especially for complex logic, rather than _what_ is done. Place comments on a separate line immediately above the affected code using `//`. Avoid in-line or end-of-line comments.
   - **Constraints:** Yarn constraints ensure consistent dependency versions across the monorepo.
 - **Testing:**
   - Unit tests: Jest/Vitest. When running `vitest` directly, use `--run` to disable watch mode.

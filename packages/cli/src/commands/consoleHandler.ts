@@ -26,8 +26,14 @@ interface REPLServerWithHistory extends repl.REPLServer {
   lines: string[]
 }
 
+function isREPLServerWithHistory(
+  replServer: repl.REPLServer,
+): replServer is REPLServerWithHistory {
+  return 'history' in replServer && 'lines' in replServer
+}
+
 const persistConsoleHistory = (r: repl.REPLServer) => {
-  const lines = (r as REPLServerWithHistory).lines || []
+  const lines = isREPLServerWithHistory(r) ? r.lines : []
   fs.appendFileSync(
     consoleHistoryFile,
     lines.filter((line: string) => line.trim()).join('\n') + '\n',
@@ -38,15 +44,12 @@ const persistConsoleHistory = (r: repl.REPLServer) => {
 const loadConsoleHistory = async (r: repl.REPLServer) => {
   try {
     const history = await fs.promises.readFile(consoleHistoryFile, 'utf8')
-    history
-      .split('\n')
-      .reverse()
-      .map((line) =>
-        (
-          r as any
-        ) /* history is not in Node REPL types but exists in implementation */.history
-          .push(line),
-      )
+    if (isREPLServerWithHistory(r)) {
+      history
+        .split('\n')
+        .reverse()
+        .map((line) => r.history.push(line))
+    }
   } catch {
     // We can ignore this -- it just means the user doesn't have any history yet
   }
@@ -78,8 +81,8 @@ export const handler = () => {
   // source: https://github.com/nodejs/node/issues/13209#issuecomment-619526317
   const defaultEval = r.eval
   // @ts-expect-error - overriding eval signature
-  r.eval = (cmd, context, filename, callback) => {
-    defaultEval(cmd, context, filename, async (err, result) => {
+  r.eval = function (this: repl.REPLServer, cmd, context, filename, callback) {
+    defaultEval.call(this, cmd, context, filename, async (err, result) => {
       if (err) {
         // propagate errors.
         callback(err, null)

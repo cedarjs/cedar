@@ -36,7 +36,7 @@ export const handler = async ({
     side: JSON.stringify(side),
     verbose,
     prisma,
-    prerender,
+    prerender: !!prerender,
   })
 
   const rwjsPaths = getPaths()

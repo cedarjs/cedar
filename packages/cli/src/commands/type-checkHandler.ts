@@ -95,7 +95,6 @@ export const handler = async ({
         },
       ],
       {
-        // @ts-expect-error - Listr renderer type issue
         renderer: verbose ? 'verbose' : 'default',
         rendererOptions: { collapseSubtasks: false },
       },

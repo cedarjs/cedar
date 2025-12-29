@@ -138,10 +138,7 @@ describe('runPreUpgradeScripts', () => {
       console.log('Running upgrade check')
     `
 
-    // Mock readFile to return the script content
-    vi.mocked(fs.promises.readFile).mockResolvedValue(
-      scriptContent as any /* simplified for test mock */,
-    )
+    vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent)
 
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
       if (url.toString().endsWith('/manifest.json')) {
@@ -164,31 +161,35 @@ describe('runPreUpgradeScripts', () => {
       throw new Error(`Unexpected url: ${url}`)
     })
 
-    vi.mocked(execa.default).mockImplementation(((
-      command: string,
-      argsOrOptions: string[] | unknown,
-      _maybeOptions: unknown,
-    ) => {
-      // Handle overloaded signature where second param could be options
-      const actualArgs = Array.isArray(argsOrOptions) ? argsOrOptions : []
-
-      if (command === 'npm' && actualArgs?.includes('install')) {
-        return {
-          stdout: '',
-          stderr: '',
-        } as any /* simplified for test mock */
-      } else if (command === 'node') {
-        return {
-          stdout: 'Upgrade check passed',
-          stderr: '',
-        } as any /* simplified for test mock */
-      }
-
-      throw new Error(`Unexpected command: ${command} ${actualArgs?.join(' ')}`)
+    vi.mocked(execa.default).mockImplementation(
       // TypeScript is struggling with the type for the function overload and
-      // for a test it's not worth it to mock this properly. That's why we use
-      // `as any` here.
-    }) as any)
+      // for a test it's not worth it to mock this properly.
+      // @ts-expect-error - Only mocking the implementation we're using
+      (
+        command: string,
+        argsOrOptions: string[] | unknown,
+        _maybeOptions: unknown,
+      ) => {
+        // Handle overloaded signature where second param could be options
+        const actualArgs = Array.isArray(argsOrOptions) ? argsOrOptions : []
+
+        if (command === 'npm' && actualArgs?.includes('install')) {
+          return {
+            stdout: '',
+            stderr: '',
+          }
+        } else if (command === 'node') {
+          return {
+            stdout: 'Upgrade check passed',
+            stderr: '',
+          }
+        }
+
+        throw new Error(
+          `Unexpected command: ${command} ${actualArgs?.join(' ')}`,
+        )
+      },
+    )
 
     await runPreUpgradeScripts(mockCtx, mockTask, {
       verbose: false,

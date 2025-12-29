@@ -46,7 +46,7 @@ function getRouteHooksFilePath(routeFilePath: string) {
   return undefined
 }
 
-interface Route {
+interface PrerenderRoute {
   name: string
   path: string
   routePath: string
@@ -54,6 +54,7 @@ interface Route {
   id: string
   isNotFound: boolean
   filePath: string
+  pageIdentifier: string | undefined
 }
 
 /**
@@ -62,7 +63,7 @@ interface Route {
  * routes with the path parameter placeholders (like {id:Int}) replaced by
  * actual values
  */
-async function expandRouteParameters(route: Route): Promise<Route[]> {
+async function expandRouteParameters(route: PrerenderRoute) {
   const routeHooksFilePath = getRouteHooksFilePath(route.filePath)
 
   if (!routeHooksFilePath) {
@@ -117,11 +118,19 @@ export const getTasks = async (
     ? await import('@cedarjs/prerender/detection')
     : await import('@cedarjs/prerender/cjs/detection')
 
-  const prerenderRoutes = detector
-    .detectPrerenderRoutes()
-    .filter((route: Route) => route.path) as Route[]
+  const detectedRoutes: Partial<PrerenderRoute>[] =
+    detector.detectPrerenderRoutes()
 
-  const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
+  const prerenderRoutes = detectedRoutes.filter(
+    (route): route is PrerenderRoute => {
+      return (
+        !!route.path && !!route.name && !!route.routePath && !!route.filePath
+      )
+    },
+  )
+
+  // TODO: Figure out how we want to handle the case where the user has only
+  // marked the NotFound route for prerender
   if (prerenderRoutes.length === 0) {
     console.log('\nSkipping prerender...')
     console.log(
@@ -133,6 +142,9 @@ export const getTasks = async (
     // Don't error out
     return []
   }
+
+  // TODO: This should come before we even bother detecting routes to prerender
+  const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
 
   if (!fs.existsSync(indexHtmlPath)) {
     console.error(
@@ -170,10 +182,7 @@ export const getTasks = async (
       return [
         {
           title: title(0),
-          task: async (
-            _: unknown,
-            task: any /* ListrTaskWrapper is hard to type here */,
-          ) => {
+          task: async (_: unknown, task: { title: string }) => {
             for (let i = 0; i < routesToPrerender.length; i++) {
               const routeToPrerender = routesToPrerender[i]
 
@@ -288,10 +297,11 @@ const diagnosticCheck = () => {
   }
 }
 
+// @cedarjs/prerender is not perfectly typed here
 const prerenderRoute = async (
-  prerenderer: any /* @cedarjs/prerender is not perfectly typed here */,
+  prerenderer: any,
   queryCache: Record<string, unknown>,
-  routeToPrerender: Route,
+  routeToPrerender: PrerenderRoute,
   dryrun: boolean,
   outputHtmlPath: string,
 ) => {

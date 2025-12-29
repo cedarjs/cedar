@@ -56,6 +56,7 @@ interface TestOptions {
 }
 
 export const handler = async (options: TestOptions) => {
+  // @ts-expect-error - testHandler is not typed
   const { handler } = await import('./testHandler.js')
   return handler(options)
 }

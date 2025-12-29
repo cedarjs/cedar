@@ -259,6 +259,9 @@ export const handler = async ({
   const { result } = concurrently(
     mappedJobs.filter((job) => job.runWhen()),
     {
+      // @ts-expect-error - TS is picking up the wrong `ConcurrentlyOptions`
+      // type. It's getting it from `concurrently.d.ts`. The correct one is in
+      // `index.d.ts`. The one in index.d.ts has `prefix`
       prefix: '{name} |',
       timestampFormat: 'HH:mm:ss',
       handleInput: true,
@@ -271,6 +274,7 @@ export const handler = async ({
         process.argv,
         `Error concurrently starting sides: ${e.message}`,
       )
+
       exitWithError(e)
     }
   })
