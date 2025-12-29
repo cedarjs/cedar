@@ -65,6 +65,10 @@ export const customOrDefaultTemplatePath = ({
   if (fs.existsSync(customPath)) {
     return customPath
   } else if (deprecatedCustomPath && fs.existsSync(deprecatedCustomPath)) {
+    console.log(
+      `Having generator templates in ${getPaths()[side].generators} has been ` +
+        `deprecated. Please move them to ${getPaths().generatorTemplates}.`,
+    )
     return deprecatedCustomPath
   } else {
     return defaultPath
