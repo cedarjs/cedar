@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli-storybook-vite",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -22,20 +22,20 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
-    "@cedarjs/cli-helpers": "2.2.0",
-    "@cedarjs/project-config": "2.2.0",
-    "@cedarjs/telemetry": "2.2.0",
+    "@cedarjs/cli-helpers": "2.2.1",
+    "@cedarjs/project-config": "2.2.1",
+    "@cedarjs/telemetry": "2.2.1",
     "ansis": "4.2.0",
     "execa": "5.1.1",
     "semver": "7.7.3",
     "storybook": "8.6.15",
-    "storybook-framework-cedarjs": "2.2.0",
+    "storybook-framework-cedarjs": "2.2.1",
     "termi-link": "1.1.0",
     "vitest": "3.2.4",
     "yargs": "17.7.2"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "2.2.0",
+    "@cedarjs/framework-tools": "2.2.1",
     "@types/semver": "^7",
     "@types/yargs": "17.0.35",
     "tsx": "4.21.0",

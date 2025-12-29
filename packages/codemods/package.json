@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/codemods",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Codemods to ease upgrading a CedarJS Project",
   "repository": {
     "type": "git",
@@ -30,7 +30,7 @@
     "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/runtime-corejs3": "7.28.4",
     "@babel/traverse": "7.28.5",
-    "@cedarjs/project-config": "2.2.0",
+    "@cedarjs/project-config": "2.2.1",
     "@svgr/core": "8.1.0",
     "@svgr/plugin-jsx": "8.1.0",
     "@vscode/ripgrep": "1.17.0",
