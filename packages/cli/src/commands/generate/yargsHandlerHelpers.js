@@ -56,8 +56,16 @@ export const customOrDefaultTemplatePath = ({
     templatePath,
   )
 
+  // Old, deprecated, custom template path, e.g.
+  // /path/to/app/web/generators/page/page.tsx.template
+  const deprecatedCustomPath = getPaths()[side].generators
+    ? path.join(getPaths()[side].generators, generator, templatePath)
+    : undefined
+
   if (fs.existsSync(customPath)) {
     return customPath
+  } else if (deprecatedCustomPath && fs.existsSync(deprecatedCustomPath)) {
+    return deprecatedCustomPath
   } else {
     return defaultPath
   }
