@@ -46,6 +46,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           directives: path.join(BASE_PATH, './api/src/directives'),
           graphql: path.join(BASE_PATH, './api/src/graphql'),
           functions: path.join(BASE_PATH, './api/src/functions'),
+          generators: path.join(BASE_PATH, './api/generators'),
         },
         web: {
           base: path.join(BASE_PATH, './web'),
@@ -56,6 +57,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           layouts: path.join(BASE_PATH, '/web/src/layouts'),
           pages: path.join(BASE_PATH, '/web/src/pages'),
           app: path.join(BASE_PATH, '/web/src/App.js'),
+          generators: path.join(BASE_PATH, './web/generators'),
         },
         scripts: path.join(BASE_PATH, 'scripts'),
         generatorTemplates: path.join(BASE_PATH, 'generatorTemplates'),
