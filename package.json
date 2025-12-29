@@ -9,7 +9,8 @@
     "packages/mailer/core",
     "packages/mailer/handlers/*",
     "packages/mailer/renderers/*",
-    "!packages/create-cedar-rsc-app"
+    "!packages/create-cedar-rsc-app",
+    "upgrade-scripts"
   ],
   "scripts": {
     "build": "nx run-many -t build",
