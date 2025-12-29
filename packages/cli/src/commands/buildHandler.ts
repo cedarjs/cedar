@@ -168,7 +168,6 @@ export const handler = async ({
     })
   }
 
-  // @ts-expect-error - tasks might have incompatible types for Listr
   const jobs = new Listr(tasks, {
     // @ts-expect-error - renderer might be incompatible
     renderer: verbose && 'verbose',

@@ -178,7 +178,6 @@ export const handler = async ({
             message:
               'This will upgrade your CedarJS project to the latest version. Do you want to proceed?',
             initial: 'Y',
-            // @ts-expect-error - default is not in PromptOptions but Enquirer supports it
             default: '(Yes/no)',
             format: function (
               this: any /* Enquirer state is not easily typed here */,
@@ -244,13 +243,13 @@ export const handler = async ({
         title: 'Running yarn install',
         task: (ctx) => yarnInstall(ctx, { dryRun, verbose }),
         enabled: (ctx) => !ctx.preUpgradeError,
-        skip: () => dryRun,
+        skip: () => !!dryRun,
       },
       {
         title: 'Refreshing the Prisma client',
         task: (_ctx, task) => refreshPrismaClient(task, { verbose }),
         enabled: (ctx) => !ctx.preUpgradeError,
-        skip: () => dryRun,
+        skip: () => !!dryRun,
       },
       {
         title: 'De-duplicating dependencies',
@@ -526,7 +525,7 @@ async function updatePackageVersionsFromTemplate(
           const localPackageJsonText = fs.readFileSync(pkgJsonPath, 'utf-8')
           const localPackageJson = JSON.parse(localPackageJsonText)
 
-          const messages = []
+          const messages: string[] = []
 
           Object.entries(templatePackageJson.dependencies || {}).forEach(
             ([depName, depVersion]: [string, unknown]) => {
