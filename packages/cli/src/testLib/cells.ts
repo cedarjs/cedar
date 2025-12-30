@@ -74,7 +74,8 @@ export const isFileInsideFolder = (filePath: string, folderPath: string) => {
 
 export const hasDefaultExport = (ast: types.Node): boolean => {
   let exported = false
-  traverse.default(ast, {
+  // @ts-expect-error - weird types. Clearly this has worked for several years
+  traverse(ast, {
     ExportDefaultDeclaration() {
       exported = true
       return
@@ -85,25 +86,26 @@ export const hasDefaultExport = (ast: types.Node): boolean => {
 
 interface NamedExports {
   name: string
-  type: 'variable' | 'function' | 'class'
+  type: 're-export' | 'variable' | 'function' | 'class'
 }
 
 export const getNamedExports = (ast: types.Node): NamedExports[] => {
   const namedExports: NamedExports[] = []
-  traverse.default(ast, {
+  // @ts-expect-error - weird types. Clearly this has worked for several years
+  traverse(ast, {
     ExportNamedDeclaration(path: NodePath<types.ExportNamedDeclaration>) {
       // Re-exports from other modules
       // Eg: export { a, b } from './module.js'
       const specifiers = path.node?.specifiers
-      if (specifiers && specifiers.length > 0) {
+      if (specifiers.length) {
         for (const s of specifiers) {
-          if (types.isExportSpecifier(s)) {
-            namedExports.push({
-              name: (s.exported as types.Identifier).name,
-              type: 'variable',
-            })
-          }
+          const id = s.exported as types.Identifier
+          namedExports.push({
+            name: id.name,
+            type: 're-export',
+          })
         }
+        return
       }
 
       const declaration = path.node.declaration
@@ -112,13 +114,10 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
       }
 
       if (declaration.type === 'VariableDeclaration') {
-        declaration.declarations.forEach((d: types.VariableDeclarator) => {
-          if (types.isIdentifier(d.id)) {
-            namedExports.push({
-              name: d.id.name,
-              type: 'variable',
-            })
-          }
+        const id = declaration.declarations[0].id as types.Identifier
+        namedExports.push({
+          name: id.name,
+          type: 'variable',
         })
       } else if (declaration.type === 'FunctionDeclaration') {
         namedExports.push({
@@ -166,28 +165,29 @@ export const fileToAst = (filePath: string): types.Node => {
 
 export const getCellGqlQuery = (ast: types.Node) => {
   let cellQuery: string | undefined = undefined
-  traverse.default(ast, {
+  // @ts-expect-error - weird types. Clearly this has worked for several years
+  traverse(ast, {
     ExportNamedDeclaration({ node }: NodePath<types.ExportNamedDeclaration>) {
       if (
         node.exportKind === 'value' &&
         types.isVariableDeclaration(node.declaration)
       ) {
-        const exportedQueryNode = node.declaration.declarations.find(
-          (d: types.VariableDeclarator) => {
-            return (
-              types.isIdentifier(d.id) &&
-              d.id.name === 'QUERY' &&
-              types.isTaggedTemplateExpression(d.init)
-            )
-          },
-        )
+        const exportedQueryNode = node.declaration.declarations.find((d) => {
+          return (
+            types.isIdentifier(d.id) &&
+            d.id.name === 'QUERY' &&
+            types.isTaggedTemplateExpression(d.init)
+          )
+        })
 
         if (exportedQueryNode) {
           const templateExpression =
             exportedQueryNode.init as types.TaggedTemplateExpression
+
           cellQuery = templateExpression.quasi.quasis[0].value.raw
         }
       }
+      return
     },
   })
 
