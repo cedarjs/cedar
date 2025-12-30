@@ -2,8 +2,8 @@
   "name": "check_test_project_fixture",
   "private": true,
   "dependencies": {
-    "@actions/core": "1.11.1",
-    "@actions/exec": "1.1.1"
+    "@actions/core": "2.0.1",
+    "@actions/exec": "2.0.0"
   },
   "packageManager": "yarn@4.12.0"
 }
