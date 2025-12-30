@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-import { runPreUpgradeScripts } from '../upgrade.js'
+import { runPreUpgradeScripts } from '../upgrade/preUpgradeScripts.js'
 
 // Mock fetch globally
 global.fetch = vi.fn()
