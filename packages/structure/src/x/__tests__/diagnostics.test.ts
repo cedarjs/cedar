@@ -5,13 +5,13 @@ import {
   Range,
 } from 'vscode-languageserver-types'
 
-import type { ExtendedDiagnostic } from '../vscode-languageserver-types'
+import type { ExtendedDiagnostic } from '../diagnostics'
 import {
   ExtendedDiagnostic_format,
   Position_compare,
   Position_fromOffset,
   Range_contains,
-} from '../vscode-languageserver-types'
+} from '../diagnostics'
 
 describe('Position_compare', () => {
   it('', () => {

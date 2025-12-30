@@ -1,26 +1,13 @@
-import { basename } from 'path'
-
 import * as tsm from 'ts-morph'
 import type { Location } from 'vscode-languageserver-types'
-import { Range } from 'vscode-languageserver-types'
 
 import { RWError } from '../errors'
-import type { Decoration, Definition, DocumentLinkX, HoverX } from '../ide'
-import { BaseNode } from '../ide'
+import { BaseNode } from '../nodes'
 import { validateRoutePath } from '../util'
 import { lazy } from '../x/decorators'
-import {
-  err,
-  LocationLike_toHashLink,
-  LocationLike_toLocation,
-  Location_fromFilePath,
-  Location_fromNode,
-  Position_translate,
-  Range_fromNode,
-} from '../x/vscode-languageserver-types'
+import { err, LocationLike_toLocation } from '../x/diagnostics'
 
 import type { RWRouter } from './RWRouter'
-import { advanced_path_parser } from './util/advanced_path_parser'
 
 export class RWRoute extends BaseNode {
   constructor(
@@ -147,26 +134,6 @@ export class RWRoute extends BaseNode {
     return this.prerender
   }
 
-  @lazy() get outlineLabel(): string {
-    if (this.isNotFound) {
-      return '404'
-    }
-    return this.path ?? ''
-  }
-
-  @lazy() get outlineDescription(): string | undefined {
-    const fp = this.page?.filePath
-    if (!fp) {
-      return undefined
-    }
-    return basename(fp)
-  }
-
-  @lazy() get outlineLink(): string {
-    return LocationLike_toHashLink(this.location)
-    //return LocationLike_toTerminalLink(this.location)
-  }
-
   /**
    * The associated Redwood Page node, if any
    */
@@ -280,49 +247,6 @@ export class RWRoute extends BaseNode {
       )
     }
   }
-  *ideInfo() {
-    // definition: page identifier --> page
-    if (this.page && this.page_identifier) {
-      yield {
-        kind: 'Definition',
-        location: Location_fromNode(this.page_identifier),
-        target: Location_fromFilePath(this.page.filePath),
-      } as Definition
-    }
-    if (this.path && this.page) {
-      // const location = Location_fromNode(this.jsxNode!)
-      // yield { kind: 'Hover', location, text: 'Open Preview' }
-    }
-
-    yield* this.decorations()
-
-    const { sampleLocalPreviewURL } = this
-    if (sampleLocalPreviewURL) {
-      const range = Range_fromNode(this.jsxNode)
-      yield {
-        kind: 'Hover',
-        location: { uri: this.parent.uri, range },
-        hover: {
-          range,
-          contents: `[Open Preview](${sampleLocalPreviewURL})`,
-        },
-      } as HoverX
-
-      const { path_literal_node } = this
-      if (path_literal_node) {
-        const range = Range_fromNode(this.path_literal_node!)
-        yield {
-          kind: 'DocumentLink',
-          location: { uri: this.parent.uri, range },
-          link: {
-            range,
-            target: sampleLocalPreviewURL,
-            tooltip: sampleLocalPreviewURL,
-          },
-        } as DocumentLinkX
-      }
-    }
-  }
 
   @lazy() private get hasPathCollision() {
     if (!this.path) {
@@ -392,57 +316,5 @@ export class RWRoute extends BaseNode {
       }
     }
     return undefined
-  }
-
-  @lazy() get parsedPath() {
-    if (!this.path) {
-      return undefined
-    }
-    return advanced_path_parser(this.path)
-  }
-
-  private *decorations(): Generator<Decoration> {
-    const pp = this.parsedPath
-    if (!pp) {
-      return
-    }
-    const uri = this.parent.uri
-    const pos = Range_fromNode(this.path_literal_node!).start
-    const xxx = {
-      path_punctuation: pp.punctuationIndexes,
-      path_slash: pp.slashIndexes,
-      path_parameter: pp.paramRanges,
-      path_parameter_type: pp.paramTypeRanges,
-    }
-    for (const style of Object.keys(xxx)) {
-      for (const x of xxx[style]) {
-        yield {
-          kind: 'Decoration',
-          style: style as any,
-          location: loc(x),
-        }
-      }
-    }
-    function loc(x: number | [number, number]) {
-      if (typeof x === 'number') {
-        return loc([x, x + 1])
-      } else {
-        const start = Position_translate(pos, 0, x[0] + 1)
-        const end = Position_translate(pos, 0, x[1] + 1)
-        return { uri, range: Range.create(start, end) }
-      }
-    }
-  }
-
-  // TODO: we should get the URL of the server dynamically
-  @lazy() get sampleLocalPreviewURL(): string | undefined {
-    const { path } = this
-    if (!path) {
-      return undefined
-    }
-    if (path.includes('{')) {
-      return undefined
-    }
-    return `http://localhost:8910${path}`
   }
 }

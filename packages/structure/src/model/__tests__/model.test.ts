@@ -65,11 +65,6 @@ describe('Redwood Project Model', () => {
     const node = await project.findNode(uri)
     expect(node).toBeDefined()
     expect(node?.id).toEqual(uri)
-    if (node) {
-      const info = await node.collectIDEInfo()
-      info.length
-      info
-    }
   })
 
   it('example-todo-main-with-errors', async () => {

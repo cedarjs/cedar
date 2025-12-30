@@ -1,4 +1,4 @@
-import { FileNode } from '../ide'
+import { FileNode } from '../nodes'
 
 import type { RWProject } from './RWProject'
 /**

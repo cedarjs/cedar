@@ -4,8 +4,8 @@ export { RWProject, RWRoute } from './model'
 export { URL_file } from './x/URL'
 import { DefaultHost } from './hosts'
 import { RWProject } from './model'
-import type { GetSeverityLabelFunction } from './x/vscode-languageserver-types'
-import { ExtendedDiagnostic_format } from './x/vscode-languageserver-types'
+import type { GetSeverityLabelFunction } from './x/diagnostics'
+import { ExtendedDiagnostic_format } from './x/diagnostics'
 
 export function getProject(projectRoot: string, host = new DefaultHost()) {
   return new RWProject({

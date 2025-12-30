@@ -1,9 +1,9 @@
 import * as toml from 'smol-toml'
 import { Range } from 'vscode-languageserver-types'
 
-import { FileNode } from '../ide'
+import { FileNode } from '../nodes'
 import { lazy } from '../x/decorators'
-import { err } from '../x/vscode-languageserver-types'
+import { err } from '../x/diagnostics'
 
 import type { RWProject } from './RWProject'
 

@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 
-import type { Location } from 'vscode-languageserver'
-import { Range } from 'vscode-languageserver'
+import type { Location } from 'vscode-languageserver-types'
+import { Range } from 'vscode-languageserver-types'
 
+import { Position_fromOffsetOrFail } from './diagnostics'
 import { URL_file, URL_toFile } from './URL'
-import { Position_fromOffsetOrFail } from './vscode-languageserver-types'
 
 /**
  * find "env()" expressions in a prisma file using regex

@@ -5,10 +5,10 @@ import { parse as parseGraphQL } from 'graphql/language/parser'
 import * as tsm from 'ts-morph'
 
 import { RWError } from '../errors'
-import { FileNode } from '../ide'
+import { FileNode } from '../nodes'
 import { iter } from '../x/Array'
 import { lazy } from '../x/decorators'
-import { err } from '../x/vscode-languageserver-types'
+import { err } from '../x/diagnostics'
 
 import type { RWProject } from './RWProject'
 import { RWSDLField } from './RWSDLField'

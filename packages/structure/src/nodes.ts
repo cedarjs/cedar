@@ -1,82 +1,18 @@
 import { basename } from 'path'
 
 import type * as tsm from 'ts-morph'
-import type { TextDocuments } from 'vscode-languageserver'
-import type { TextDocument } from 'vscode-languageserver-textdocument'
-import type {
-  CodeLens,
-  DocumentLink,
-  Hover,
-  Location,
-} from 'vscode-languageserver-types'
 import { Range } from 'vscode-languageserver-types'
 
 import type { Host } from './hosts'
-import { DefaultHost } from './hosts'
 import type { ArrayLike } from './x/Array'
 import { ArrayLike_normalize } from './x/Array'
 import { lazy, memo } from './x/decorators'
+import type { ExtendedDiagnostic } from './x/diagnostics'
 import { basenameNoExt } from './x/path'
 import { createTSMSourceFile_cached } from './x/ts-morph'
 import { URL_file } from './x/URL'
-import type { ExtendedDiagnostic } from './x/vscode-languageserver-types'
 
 export type NodeID = string
-
-export type IDEInfo =
-  | Definition
-  | Implementation
-  | Reference
-  | CodeLensX
-  | HoverX
-  | Decoration
-  | DocumentLinkX
-
-export interface Definition {
-  kind: 'Definition'
-  location: Location
-  target: Location
-}
-
-export interface Implementation {
-  kind: 'Implementation'
-  location: Location
-  target: Location
-}
-
-export interface Reference {
-  kind: 'Reference'
-  location: Location
-  target: Location
-}
-
-export interface CodeLensX {
-  kind: 'CodeLens'
-  location: Location
-  codeLens: CodeLens
-}
-
-export interface HoverX {
-  kind: 'Hover'
-  location: Location
-  hover: Hover
-}
-
-export interface Decoration {
-  kind: 'Decoration'
-  location: Location
-  style:
-    | 'path_punctuation'
-    | 'path_parameter'
-    | 'path_slash'
-    | 'path_parameter_type'
-}
-
-export interface DocumentLinkX {
-  kind: 'DocumentLink'
-  location: Location
-  link: DocumentLink
-}
 
 export abstract class BaseNode {
   /**
@@ -121,40 +57,6 @@ export abstract class BaseNode {
   }
   @memo() private _diagnostics() {
     return ArrayLike_normalize(this.diagnostics())
-  }
-
-  /**
-   * IDE info for this node.
-   * Override this.
-   */
-  ideInfo(): ArrayLike<IDEInfo> {
-    return []
-  }
-  @memo() private _ideInfo() {
-    return ArrayLike_normalize(this.ideInfo())
-  }
-
-  @memo(JSON.stringify)
-  async collectIDEInfo(uri?: string): Promise<IDEInfo[]> {
-    if (uri && this.bailOutOnCollection(uri)) {
-      return []
-    }
-    try {
-      const d1 = await this._ideInfo()
-      const dd = await Promise.all(
-        (await this._children()).map((c) => c.collectIDEInfo(uri)),
-      )
-      const d2 = dd.flat()
-      let all = [...d1, ...d2]
-      if (uri) {
-        all = all.filter((x) => x.location.uri === uri)
-      }
-      return all
-    } catch (e) {
-      // TODO: this diagnostic is also interesting
-      console.log(e)
-      return []
-    }
   }
 
   /**
@@ -272,33 +174,5 @@ export abstract class FileNode extends BaseNode {
   }
   @lazy() get basename() {
     return basename(this.filePath)
-  }
-}
-
-export class HostWithDocumentsStore implements Host {
-  defaultHost = new DefaultHost()
-  constructor(public documents: TextDocuments<TextDocument>) {}
-  readFileSync(path: string) {
-    const uri = URL_file(path)
-    const doc = this.documents.get(uri)
-    if (doc) {
-      return doc.getText()
-    }
-    return this.defaultHost.readFileSync(path)
-  }
-  existsSync(path: string) {
-    return this.defaultHost.existsSync(path)
-  }
-  readdirSync(path: string) {
-    return this.defaultHost.readdirSync(path)
-  }
-  globSync(pattern: string) {
-    return this.defaultHost.globSync(pattern)
-  }
-  writeFileSync(path: string, contents: string) {
-    return this.defaultHost.writeFileSync(path, contents)
-  }
-  get paths() {
-    return this.defaultHost.paths
   }
 }

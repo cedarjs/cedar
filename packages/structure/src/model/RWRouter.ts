@@ -1,24 +1,13 @@
 import * as tsm from 'ts-morph'
-import type { CodeAction, CodeLens } from 'vscode-languageserver-types'
-import {
-  Command,
-  DiagnosticSeverity,
-  Position,
-  WorkspaceChange,
-} from 'vscode-languageserver-types'
+import { DiagnosticSeverity } from 'vscode-languageserver-types'
 
 import { RWError } from '../errors'
-import type { CodeLensX } from '../ide'
-import { FileNode } from '../ide'
+import { FileNode } from '../nodes'
 import { iter } from '../x/Array'
 import { lazy, memo } from '../x/decorators'
+import type { ExtendedDiagnostic } from '../x/diagnostics'
+import { err, LocationLike_toLocation } from '../x/diagnostics'
 import { URL_file } from '../x/URL'
-import type { ExtendedDiagnostic } from '../x/vscode-languageserver-types'
-import {
-  err,
-  LocationLike_toLocation,
-  Location_fromNode,
-} from '../x/vscode-languageserver-types'
 
 import type { RWProject } from './RWProject'
 import { RWRoute } from './RWRoute'
@@ -114,64 +103,6 @@ export class RWRouter extends FileNode {
     return this.routes.filter((r) => r.isNotFound).length
   }
 
-  *ideInfo() {
-    if (this.jsxNode) {
-      const location = Location_fromNode(this.jsxNode)
-      const codeLens: CodeLens = {
-        range: location.range,
-        command: Command.create(
-          'Create Page...',
-          'redwoodjs.cli',
-          'generate page...',
-          this.parent.projectRoot,
-        ),
-      }
-      yield {
-        kind: 'CodeLens',
-        location,
-        codeLens,
-      } as CodeLensX
-    }
-  }
-
-  @lazy() get quickFix_addNotFoundpage() {
-    if (!this.jsxNode) {
-      return undefined
-    }
-    const change = new WorkspaceChange({ documentChanges: [] })
-    let uri = URL_file(this.parent.defaultNotFoundPageFilePath)
-    const p = this.parent.pages.find((p) => p.basenameNoExt === 'NotFoundPage')
-    if (p) {
-      uri = p.uri
-      // page already exists, we just need to add the <Route/>
-    } else {
-      change.createFile(uri)
-      change
-        .getTextEditChange({ uri, version: null })
-        .insert(
-          Position.create(0, 0),
-          `export default () => <div>Not Found</div>`,
-        )
-    }
-    // add <Route/>
-    const loc = LocationLike_toLocation(this.jsxNode)
-    const lastRoute = this.routes[this.routes.length - 1]
-    const lastRouteLoc = LocationLike_toLocation(lastRoute.jsxNode)
-    const textEditChange = change.getTextEditChange({
-      uri: loc.uri,
-      version: null,
-    })
-    const indent = ' '.repeat(lastRouteLoc.range.start.character)
-    textEditChange.insert(
-      lastRouteLoc.range.end,
-      `\n${indent}<Route notfound page={NotFoundPage}/>\n`,
-    )
-    return {
-      title: 'Create default Not Found Page',
-      edit: change.edit,
-    } as CodeAction
-  }
-
   *diagnostics() {
     if (!this.fileExists) {
       // should we assign this error to the project? to redwood.toml?
@@ -195,7 +126,6 @@ export class RWRouter extends FileNode {
           message: "You must specify a 'notfound' page",
           severity: DiagnosticSeverity.Error,
         },
-        quickFix: async () => this.quickFix_addNotFoundpage,
       } as ExtendedDiagnostic
     } else if (this.numNotFoundPages > 1) {
       const e = err(

@@ -10,7 +10,7 @@ import {
 } from '@cedarjs/project-config'
 
 import type { Host } from '../hosts'
-import { BaseNode } from '../ide'
+import { BaseNode } from '../nodes'
 import { lazy, memo } from '../x/decorators'
 import {
   followsDirNameConvention,
