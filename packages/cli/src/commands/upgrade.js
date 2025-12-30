@@ -284,8 +284,8 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
 
   if (preUpgradeError) {
     console.error('')
-    console.error(`   ❌ ${c.error('Pre-upgrade Error:')}\n`)
-    console.error('  ' + preUpgradeError.replace(/\n/g, '\n   '))
+    console.error(`  🚨 ${c.error('Pre-upgrade Error:')}`)
+    console.error('  ' + preUpgradeError.replace(/\n/g, '\n  '))
 
     if (!force) {
       process.exit(1)
@@ -294,8 +294,8 @@ export const handler = async ({ dryRun, tag, verbose, dedupe, yes, force }) => {
 
   if (preUpgradeMessage) {
     console.log('')
-    console.log(`   📣 ${c.info('Pre-upgrade Message:')}\n`)
-    console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n   '))
+    console.log(`  📣 ${c.info('Pre-upgrade Message:')}`)
+    console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n  '))
   }
 }
 
@@ -456,7 +456,7 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
 
       return {
         title: `Updating ${pkgJsonPath}`,
-        task: async () => {
+        task: async (_ctx, task) => {
           const res = await fetch(url)
           const text = await res.text()
           const templatePackageJson = JSON.parse(text)
@@ -464,12 +464,14 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
           const localPackageJsonText = fs.readFileSync(pkgJsonPath, 'utf-8')
           const localPackageJson = JSON.parse(localPackageJsonText)
 
+          const messages = []
+
           Object.entries(templatePackageJson.dependencies || {}).forEach(
             ([depName, depVersion]) => {
               // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
-                  console.log(
+                  messages.push(
                     ` - ${depName}: ${localPackageJson.dependencies[depName]} => ${depVersion}`,
                   )
                 }
@@ -484,7 +486,7 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
               // CedarJS packages are handled in another task
               if (!depName.startsWith('@cedarjs/')) {
                 if (verbose || dryRun) {
-                  console.log(
+                  messages.push(
                     ` - ${depName}: ${localPackageJson.devDependencies[depName]} => ${depVersion}`,
                   )
                 }
@@ -493,6 +495,10 @@ async function updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }) {
               }
             },
           )
+
+          if (messages.length > 0) {
+            task.title = task.title + '\n' + messages.join('\n')
+          }
 
           if (!dryRun) {
             fs.writeFileSync(
@@ -639,7 +645,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
   }
 
   const checkLevels = []
-  if (parsed) {
+  if (parsed && !parsed.prerelease.length) {
     // 1. Exact match: 3.4.1
     checkLevels.push({
       id: 'exact',
@@ -660,11 +666,14 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       id: 'minor',
       candidates: [`${parsed.major}.x.ts`, `${parsed.major}.x/index.ts`],
     })
-  } else {
-    // Fallback for non-semver tags
+  } else if (parsed && parsed.prerelease.length > 0) {
+    // `parsed.prerelease[0]` is the prerelease tag, e.g. 'canary'
     checkLevels.push({
       id: 'tag',
-      candidates: [`${version}.ts`, `${version}/index.ts`],
+      candidates: [
+        `${parsed.prerelease[0]}.ts`,
+        `${parsed.prerelease[0]}/index.ts`,
+      ],
     })
   }
 
@@ -702,7 +711,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       // realpath: https://github.com/e18e/ecosystem-issues/issues/168
       path.join(fs.realpathSync(os.tmpdir()), 'cedar-upgrade-'),
     )
-    const scriptPath = path.join(tempDir, 'script.ts')
+    const scriptPath = path.join(tempDir, 'script.mts')
 
     // Check if this is a directory-based script (e.g., 3.4.1/index.ts)
     const isDirectoryScript = scriptName.includes('/')
@@ -743,7 +752,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
             const filePath = path.join(tempDir, file.name)
             await fs.promises.writeFile(filePath, fileContent)
 
-            // Rename index.ts to script.ts for execution
+            // Rename index.ts to script.mts for execution
             if (file.name === 'index.ts') {
               await fs.promises.rename(filePath, scriptPath)
             }
@@ -794,7 +803,10 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
         }),
       )
 
-      await execa('yarn', ['add', ...deps], { cwd: tempDir })
+      // Use npm because it's the one package manager we can know everyone has
+      // installed. And we don't have to worry about versions either as it
+      // tracks with the node version.
+      await execa('npm', ['install', ...deps], { cwd: tempDir })
     }
 
     task.output = `Running pre-upgrade script: ${scriptName}...`
@@ -802,29 +814,36 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
     try {
       const { stdout } = await execa(
         'node',
-        ['script.ts', '--verbose', verbose, '--force', force],
+        ['script.mts', '--verbose', verbose, '--force', force],
         { cwd: tempDir },
       )
 
       if (stdout) {
         if (ctx.preUpgradeMessage) {
-          ctx.preUpgradeMessage += '\n\n'
+          ctx.preUpgradeMessage += '\n'
         }
 
         ctx.preUpgradeMessage += `\n${stdout}`
       }
     } catch (e) {
       const errorOutput = e.stdout || e.stderr || e.message || ''
-      const errorMessage = `Pre-upgrade check ${scriptName} failed:\n${errorOutput}`
+      const verboseErrorMessage = verbose
+        ? `Pre-upgrade check ${scriptName} failed with exit code ${e.exitCode}:\n` +
+          `${e.stderr ? e.stderr + '\n' : ''}`
+        : ''
 
       if (ctx.preUpgradeError) {
-        ctx.preUpgradeError += '\n\n'
+        ctx.preUpgradeError += '\n'
       }
 
-      ctx.preUpgradeError += errorMessage
+      if (verbose) {
+        ctx.preUpgradeError += `\n${verboseErrorMessage}`
+      }
+
+      ctx.preUpgradeError += `\n${errorOutput}`
 
       if (!force) {
-        await fs.promises.rmdir(tempDir, { recursive: true })
+        await fs.promises.rm(tempDir, { recursive: true })
         shouldCleanup = false
 
         // Return to skip remaining pre-upgrade scripts
@@ -832,7 +851,7 @@ export async function runPreUpgradeScripts(ctx, task, { verbose, force }) {
       }
     } finally {
       if (shouldCleanup) {
-        await fs.promises.rmdir(tempDir, { recursive: true })
+        await fs.promises.rm(tempDir, { recursive: true })
       }
     }
   }

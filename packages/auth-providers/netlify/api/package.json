@@ -47,7 +47,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@types/aws-lambda": "8.10.159",
     "@types/jsonwebtoken": "9.0.10",
-    "concurrently": "8.2.2",
+    "concurrently": "9.2.1",
     "publint": "0.3.16",
     "tsx": "4.21.0",
     "typescript": "5.9.3",

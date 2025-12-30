@@ -17,7 +17,7 @@ vi.mock('node:fs', () => ({
       writeFile: vi.fn(),
       readFile: vi.fn(),
       rename: vi.fn(),
-      rmdir: vi.fn(),
+      rm: vi.fn(),
     },
     rmSync: vi.fn(),
     readFileSync: vi.fn(),
@@ -172,7 +172,7 @@ describe('runPreUpgradeScripts', () => {
       // Handle overloaded signature where second param could be options
       const actualArgs = Array.isArray(argsOrOptions) ? argsOrOptions : []
 
-      if (command === 'yarn' && actualArgs?.includes('add')) {
+      if (command === 'npm' && actualArgs?.includes('install')) {
         return {
           stdout: '',
           stderr: '',
@@ -186,7 +186,8 @@ describe('runPreUpgradeScripts', () => {
 
       throw new Error(`Unexpected command: ${command} ${actualArgs?.join(' ')}`)
       // TypeScript is struggling with the type for the function overload and
-      // for a test it's not worth it to mock this properly.
+      // for a test it's not worth it to mock this properly. That's why we use
+      // `as any` here.
     }) as any)
 
     await runPreUpgradeScripts(mockCtx, mockTask, {
@@ -204,13 +205,13 @@ describe('runPreUpgradeScripts', () => {
       'https://raw.githubusercontent.com/cedarjs/cedar/main/upgrade-scripts/3.4.1.ts',
     )
 
-    // Verify yarn add was called with correct dependencies
+    // Verify npm install was called with correct dependencies
     // Should include: lodash@^4.17.0, @cedarjs/internal, @cedarjs/structure, axios
     // Should NOT include: node:fs (built-in module)
     expect(execa.default).toHaveBeenCalledWith(
-      'yarn',
+      'npm',
       [
-        'add',
+        'install',
         'yargs',
         'lodash@^4.17.0',
         '@cedarjs/internal@1.0.0',
@@ -224,7 +225,7 @@ describe('runPreUpgradeScripts', () => {
     // Verify script was executed
     expect(execa.default).toHaveBeenCalledWith(
       'node',
-      ['script.ts', '--verbose', false, '--force', false],
+      ['script.mts', '--verbose', false, '--force', false],
       {
         cwd: '/tmp/cedar-upgrade-abc123',
       },
@@ -234,11 +235,8 @@ describe('runPreUpgradeScripts', () => {
     expect(mockCtx.preUpgradeMessage).toContain('Upgrade check passed')
 
     // Verify cleanup
-    expect(fs.promises.rmdir).toHaveBeenCalledWith(
-      '/tmp/cedar-upgrade-abc123',
-      {
-        recursive: true,
-      },
-    )
+    expect(fs.promises.rm).toHaveBeenCalledWith('/tmp/cedar-upgrade-abc123', {
+      recursive: true,
+    })
   })
 })

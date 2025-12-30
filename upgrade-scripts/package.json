@@ -1,0 +1,15 @@
+{
+  "name": "@cedarjs/upgrade-scripts",
+  "version": "0.0.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cedarjs/cedar.git",
+    "directory": "upgrade-scripts"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test manifest.test.ts"
+  }
+}

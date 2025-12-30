@@ -21,7 +21,7 @@ describe('RouteParams<>', () => {
       id: 2,
     }
 
-    expect(simple.id).type.toBeNumber()
+    expect(simple.id).type.toBe<number>()
   })
 
   test('Starts with parameter', () => {
@@ -30,8 +30,8 @@ describe('RouteParams<>', () => {
       driver: 44,
     }
 
-    expect(startParam.driver).type.toBeNumber()
-    expect(startParam.position).type.toBeNumber()
+    expect(startParam.driver).type.toBe<number>()
+    expect(startParam.position).type.toBe<number>()
   })
 
   test('Route string with no types defaults to string', () => {
@@ -42,10 +42,10 @@ describe('RouteParams<>', () => {
       slug: 'hello-world',
     }
 
-    expect(untypedParams.year).type.toBeString()
-    expect(untypedParams.month).type.toBeString()
-    expect(untypedParams.day).type.toBeString()
-    expect(untypedParams.slug).type.toBeString()
+    expect(untypedParams.year).type.toBe<string>()
+    expect(untypedParams.month).type.toBe<string>()
+    expect(untypedParams.day).type.toBe<string>()
+    expect(untypedParams.slug).type.toBe<string>()
   })
 
   test('Custom param types', () => {
@@ -53,7 +53,7 @@ describe('RouteParams<>', () => {
       name: 'hello-world-slug',
     }
 
-    expect(customParams.name).type.toBeString()
+    expect(customParams.name).type.toBe<string>()
   })
 
   test('Parameter inside string', () => {
@@ -61,7 +61,7 @@ describe('RouteParams<>', () => {
       status: true,
     }
 
-    expect(stringConcat.status).type.toBeBoolean()
+    expect(stringConcat.status).type.toBe<boolean>()
   })
 
   test('Multiple Glob route params', () => {
@@ -70,8 +70,8 @@ describe('RouteParams<>', () => {
       toDate: '2021/11/17',
     }
 
-    expect(globRoutes.fromDate).type.toBeString()
-    expect(globRoutes.toDate).type.toBeString()
+    expect(globRoutes.fromDate).type.toBe<string>()
+    expect(globRoutes.toDate).type.toBe<string>()
   })
 
   test('Single Glob route params', () => {
@@ -79,7 +79,7 @@ describe('RouteParams<>', () => {
       fromDate: '2021/11/03',
     }
 
-    expect(globRoutes.fromDate).type.toBeString()
+    expect(globRoutes.fromDate).type.toBe<string>()
   })
 
   test('Starts with Glob route params', () => {
@@ -87,7 +87,7 @@ describe('RouteParams<>', () => {
       description: 'cute',
     }
 
-    expect(globRoutes.description).type.toBeString()
+    expect(globRoutes.description).type.toBe<string>()
   })
 
   test('Glob params in the middle', () => {
@@ -95,7 +95,7 @@ describe('RouteParams<>', () => {
       folders: 'src/lib/auth.js',
     }
 
-    expect(middleGlob.folders).type.toBeString()
+    expect(middleGlob.folders).type.toBe<string>()
   })
 
   test('Mixed typed and untyped params', () => {
@@ -109,11 +109,11 @@ describe('RouteParams<>', () => {
       c: 'stringy-string',
     }
 
-    expect(untypedFirst.b).type.toBeString()
-    expect(untypedFirst.c).type.toBeBoolean()
+    expect(untypedFirst.b).type.toBe<string>()
+    expect(untypedFirst.c).type.toBe<boolean>()
 
-    expect(typedFirst.b).type.toBeNumber()
-    expect(typedFirst.c).type.toBeString()
+    expect(typedFirst.b).type.toBe<number>()
+    expect(typedFirst.c).type.toBe<string>()
   })
 
   test('Params in the middle', () => {
@@ -123,26 +123,26 @@ describe('RouteParams<>', () => {
         id: 10,
       }
 
-    expect(paramsInTheMiddle.authorId).type.toBeString()
-    expect(paramsInTheMiddle.id).type.toBeNumber()
+    expect(paramsInTheMiddle.authorId).type.toBe<string>()
+    expect(paramsInTheMiddle.id).type.toBe<number>()
   })
 })
 
 describe('ParamType<>', () => {
   test('Float', () => {
-    expect<ParamType<'Float'>>().type.toBeAssignableWith(1.02)
+    expect<ParamType<'Float'>>().type.toBeAssignableFrom(1.02)
   })
 
   test('Boolean', () => {
-    expect<ParamType<'Boolean'>>().type.toBeAssignableWith(true)
-    expect<ParamType<'Boolean'>>().type.toBeAssignableWith(false)
+    expect<ParamType<'Boolean'>>().type.toBeAssignableFrom(true)
+    expect<ParamType<'Boolean'>>().type.toBeAssignableFrom(false)
   })
 
   test('Int', () => {
-    expect<ParamType<'Int'>>().type.toBeAssignableWith(51)
+    expect<ParamType<'Int'>>().type.toBeAssignableFrom(51)
   })
 
   test('String', () => {
-    expect<ParamType<'String'>>().type.toBeAssignableWith('bazinga')
+    expect<ParamType<'String'>>().type.toBeAssignableFrom('bazinga')
   })
 })

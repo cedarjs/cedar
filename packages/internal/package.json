@@ -168,7 +168,7 @@
     "rimraf": "6.1.2",
     "source-map": "0.7.6",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.27.17",
+    "systeminformation": "5.28.2",
     "termi-link": "1.1.0",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
@@ -176,7 +176,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "concurrently": "8.2.2",
+    "concurrently": "9.2.1",
     "graphql-tag": "2.12.6",
     "publint": "0.3.16",
     "tsx": "4.21.0",
