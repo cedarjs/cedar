@@ -4,16 +4,21 @@ import path from 'path'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import type * as Prerender from '@cedarjs/prerender'
 import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
+import type { QueryInfo } from '@cedarjs/web'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { runScriptFunction } from '../lib/exec.js'
+// @ts-expect-error - Types not available for JS files
 import { configureBabel } from '../lib/execBabel.js'
 
 class PathParamError extends Error {}
 
-const mapRouterPathToHtml = (routerPath) => {
+const mapRouterPathToHtml = (routerPath: string) => {
   if (routerPath === '/') {
     return 'web/dist/index.html'
   } else {
@@ -21,7 +26,7 @@ const mapRouterPathToHtml = (routerPath) => {
   }
 }
 
-function getRouteHooksFilePath(routeFilePath) {
+function getRouteHooksFilePath(routeFilePath: string) {
   const routeHooksFilePathTs = routeFilePath.replace(
     /\.[jt]sx?$/,
     '.routeHooks.ts',
@@ -41,6 +46,17 @@ function getRouteHooksFilePath(routeFilePath) {
   }
 
   return undefined
+}
+
+interface PrerenderRoute {
+  name: string
+  path: string
+  routePath: string
+  hasParams: boolean
+  id: string
+  isNotFound: boolean
+  filePath: string
+  pageIdentifier: string | undefined
 }
 
 /**
@@ -74,7 +90,7 @@ function getRouteHooksFilePath(routeFilePath) {
  * When returning from this function, `path` in the above example will have
  * been replaced by an actual url, like /blog-post/15
  */
-async function expandRouteParameters(route) {
+async function expandRouteParameters(route: PrerenderRoute) {
   const routeHooksFilePath = getRouteHooksFilePath(route.filePath)
 
   if (!routeHooksFilePath) {
@@ -82,7 +98,7 @@ async function expandRouteParameters(route) {
   }
 
   try {
-    const routeParameters = await runScriptFunction({
+    const routeParameters: Record<string, unknown>[] = await runScriptFunction({
       path: routeHooksFilePath,
       functionName: 'routeParameters',
       args: {
@@ -100,7 +116,7 @@ async function expandRouteParameters(route) {
         Object.entries(pathParamValues).forEach(([paramName, paramValue]) => {
           newPath = newPath.replace(
             new RegExp(`{${paramName}:?[^}]*}`),
-            paramValue,
+            String(paramValue),
           )
         })
 
@@ -108,7 +124,8 @@ async function expandRouteParameters(route) {
       })
     }
   } catch (e) {
-    console.error(c.error(e.stack))
+    const stack = e instanceof Error ? e.stack : String(e)
+    console.error(c.error(stack))
     return [route]
   }
 
@@ -116,15 +133,27 @@ async function expandRouteParameters(route) {
 }
 
 // This is used directly in build.js for nested ListrTasks
-export const getTasks = async (dryrun, routerPathFilter = null) => {
+export const getTasks = async (
+  dryrun: boolean,
+  routerPathFilter: string | null = null,
+) => {
   const detector = projectIsEsm()
     ? await import('@cedarjs/prerender/detection')
     : await import('@cedarjs/prerender/cjs/detection')
 
-  const prerenderRoutes = detector
-    .detectPrerenderRoutes()
-    .filter((route) => route.path)
-  const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
+  const detectedRoutes: Partial<PrerenderRoute>[] =
+    detector.detectPrerenderRoutes()
+
+  const prerenderRoutes = detectedRoutes.filter(
+    (route): route is PrerenderRoute => {
+      return (
+        !!route.path && !!route.name && !!route.routePath && !!route.filePath
+      )
+    },
+  )
+
+  // TODO: Figure out how we want to handle the case where the user has only
+  // marked the NotFound route for prerender
   if (prerenderRoutes.length === 0) {
     console.log('\nSkipping prerender...')
     console.log(
@@ -137,12 +166,14 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
     return []
   }
 
+  // TODO: This should come before we even bother detecting routes to prerender
+  const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
+
   if (!fs.existsSync(indexHtmlPath)) {
     console.error(
       'You must run `yarn cedar build web` before trying to prerender.',
     )
     process.exit(1)
-    // TODO: Run this automatically at this point.
   }
 
   configureBabel()
@@ -177,14 +208,15 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
         1,
         Math.floor(routesToPrerender.length / 100),
       )
-      const title = (i) =>
+      const title = (i: number) =>
         `Prerendering ${routesToPrerender[0].name} (${i.toLocaleString()} of ${routesToPrerender.length.toLocaleString()})`
       return [
         {
           title: title(0),
-          task: async (_, task) => {
-            // Note: This is a sequential loop, not parallelized as there have been previous issues
-            // with parallel prerendering. See:https://github.com/redwoodjs/redwood/pull/7321
+          task: async (_: unknown, task: { title: string }) => {
+            // Note: This is a sequential loop, not parallelized as there have
+            // been previous issues with parallel prerendering.
+            // See: https://github.com/redwoodjs/redwood/pull/7321
             for (let i = 0; i < routesToPrerender.length; i++) {
               const routeToPrerender = routesToPrerender[i]
 
@@ -219,7 +251,12 @@ export const getTasks = async (dryrun, routerPathFilter = null) => {
     return routesToPrerender.map((routeToPrerender) => {
       // Filter out routes that don't match the supplied routePathFilter
       if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
-        return []
+        // TODO: Figure out if it's an error to return [] here
+        // TS is complaining. If it is actually correct, we can use flatMap(),
+        // or append .flat() to the end of the map call that begins above
+        // This code was originally added in
+        // https://github.com/redwoodjs/graphql/pull/10888
+        return [] as unknown as { title: string; task: () => Promise<void> }
       }
 
       const outputHtmlPath = mapRouterPathToHtml(routeToPrerender.path)
@@ -270,7 +307,7 @@ const diagnosticCheck = () => {
   ]
   console.log('Running diagnostic checks')
 
-  if (checks.some((checks) => checks.failure)) {
+  if (checks.some((check) => check.failure)) {
     console.error(c.error('node_modules are being duplicated in `./web` \n'))
     console.log('⚠️  Issues found: ')
     console.log('-'.repeat(50))
@@ -303,14 +340,13 @@ const diagnosticCheck = () => {
 }
 
 const prerenderRoute = async (
-  prerenderer,
-  queryCache,
-  routeToPrerender,
-  dryrun,
-  outputHtmlPath,
+  prerenderer: typeof Prerender,
+  queryCache: Record<string, QueryInfo>,
+  routeToPrerender: PrerenderRoute,
+  dryrun: boolean,
+  outputHtmlPath: string,
 ) => {
-  // Check if route param templates in e.g. /path/{param1} have been replaced
-  if (/\{.*}/.test(routeToPrerender.path)) {
+  if (/\\{.*}/.test(routeToPrerender.path)) {
     throw new PathParamError(
       `Could not retrieve route parameters for ${routeToPrerender.path}`,
     )
@@ -322,10 +358,12 @@ const prerenderRoute = async (
       renderPath: routeToPrerender.path,
     })
 
-    if (!dryrun) {
+    if (!dryrun && typeof prerenderedHtml === 'string') {
       prerenderer.writePrerenderedHtmlFile(outputHtmlPath, prerenderedHtml)
     }
-  } catch (e) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    const stack = e instanceof Error ? e.stack : String(e)
     console.log()
     console.log(
       c.warning('You can use `yarn cedar prerender --dry-run` to debug'),
@@ -333,21 +371,29 @@ const prerenderRoute = async (
     console.log()
 
     console.log(
-      `${c.info('-'.repeat(10))} Error rendering path "${
-        routeToPrerender.path
-      }" ${c.info('-'.repeat(10))}`,
+      `${c.info('-'.repeat(10))} Error rendering path "${routeToPrerender.path}" ${c.info('-'.repeat(10))}`,
     )
 
-    errorTelemetry(process.argv, `Error prerendering: ${e.message}`)
+    errorTelemetry(process.argv, `Error prerendering: ${message}`)
 
-    console.error(c.error(e.stack))
+    console.error(c.error(stack))
     console.log()
 
     throw new Error(`Failed to render "${routeToPrerender.filePath}"`)
   }
 }
 
-export const handler = async ({ path: routerPath, dryRun, verbose }) => {
+interface HandlerOptions {
+  path?: string
+  dryRun?: boolean
+  verbose?: boolean
+}
+
+export const handler = async ({
+  path: routerPath,
+  dryRun = false,
+  verbose = false,
+}: HandlerOptions) => {
   if (getConfig().experimental?.streamingSsr?.enabled) {
     console.log(
       c.warning(
@@ -364,23 +410,21 @@ export const handler = async ({ path: routerPath, dryRun, verbose }) => {
     verbose,
   })
 
-  const listrTasks = await getTasks(dryRun, routerPath)
-
-  const tasks = new Listr(listrTasks, {
-    renderer: verbose ? 'verbose' : 'default',
-    rendererOptions: { collapseSubtasks: false },
-    concurrent: false,
-  })
+  const listrTasks = await getTasks(dryRun, routerPath ?? null)
 
   try {
     if (dryRun) {
       console.log(c.info('::: Dry run, not writing changes :::'))
     }
 
-    await tasks.run()
+    await new Listr(listrTasks, {
+      renderer: verbose ? 'verbose' : 'default',
+      rendererOptions: { collapseSubtasks: false },
+      concurrent: false,
+    }).run()
   } catch (e) {
     console.log()
-    await diagnosticCheck()
+    diagnosticCheck()
 
     console.log(c.warning('Tips:'))
 
@@ -393,7 +437,7 @@ export const handler = async ({ path: routerPath, dryRun, verbose }) => {
     } else {
       console.log(
         c.info(
-          `- This could mean that a library you're using does not support SSR.`,
+          "- This could mean that a library you're using does not support SSR.",
         ),
       )
       console.log(

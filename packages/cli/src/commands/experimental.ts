@@ -1,18 +1,25 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
+// @ts-expect-error - No types for .js files
 import detectRxVersion from '../middleware/detectProjectRxVersion.js'
 
+// @ts-expect-error - No types for .js files
 import * as experimentalInngest from './experimental/setupInngest.js'
+// @ts-expect-error - No types for .js files
 import * as experimentalOpenTelemetry from './experimental/setupOpentelemetry.js'
+// @ts-expect-error - No types for .js files
 import * as experimentalReactCompiler from './experimental/setupReactCompiler.js'
+// @ts-expect-error - No types for .js files
 import * as experimentalRsc from './experimental/setupRsc.js'
+// @ts-expect-error - No types for .js files
 import * as experimentalStreamingSsr from './experimental/setupStreamingSsr.js'
 
 export const command = 'experimental <command>'
 export const aliases = ['exp']
 export const description = 'Run or setup experimental features'
 
-export const builder = (yargs) =>
+export const builder = (yargs: Argv) =>
   yargs
     .command(experimentalInngest)
     .command(experimentalOpenTelemetry)

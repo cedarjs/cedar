@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 import boxen from 'boxen'
 import execa from 'execa'
@@ -7,11 +7,24 @@ import execa from 'execa'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
-// eslint-disable-next-line no-unused-vars
-export const handler = async ({ _, $0, commands = [], ...options }) => {
+interface PrismaOptions {
+  _?: string[]
+  $0?: string
+  commands?: string[]
+  [key: string]: unknown
+}
+
+export const handler = async ({
+  _ = [],
+  $0: _0 = '',
+  commands = [],
+  ...options
+}: PrismaOptions) => {
   recordTelemetryAttributes({
     command: 'prisma',
   })
@@ -40,14 +53,16 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
   }
 
   // Convert command and options into a string that's run via execa
-  const args = commands
+  const args: (string | number)[] = [...commands]
   for (const [name, value] of Object.entries(options)) {
     // Allow both long and short form commands, e.g. --name and -n
     args.push(name.length > 1 ? `--${name}` : `-${name}`)
     if (typeof value === 'string') {
-      // Make sure options that take multiple quoted words
-      // like `-n "create user"` are passed to prisma with quotes.
-      value.split(' ').length > 1 ? args.push(`"${value}"`) : args.push(value)
+      if (value.split(' ').length > 1) {
+        args.push(`"${value}"`)
+      } else {
+        args.push(value)
+      }
     } else if (typeof value === 'number') {
       args.push(value)
     }
@@ -60,7 +75,7 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
 
   try {
     const prismaBin = path.join(rwjsPaths.base, 'node_modules/.bin/prisma')
-    execa.sync(prismaBin, args, {
+    execa.sync(prismaBin, args as string[], {
       cwd: rwjsPaths.base,
       stdio: 'inherit',
       cleanup: true,
@@ -69,9 +84,19 @@ export const handler = async ({ _, $0, commands = [], ...options }) => {
     if (hasHelpOption || commands.length === 0) {
       printWrapInfo()
     }
-  } catch (e) {
-    errorTelemetry(process.argv, `Error generating prisma client: ${e.message}`)
-    process.exit(e?.exitCode || 1)
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e)
+    errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
+
+    if (
+      e instanceof Object &&
+      'exitCode' in e &&
+      typeof e.exitCode === 'number'
+    ) {
+      process.exit(e.exitCode)
+    } else {
+      process.exit(1)
+    }
   }
 }
 

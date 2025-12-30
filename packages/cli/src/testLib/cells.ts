@@ -5,6 +5,7 @@ import { types } from '@babel/core'
 import type { ParserPlugin } from '@babel/parser'
 import { parse as babelParse } from '@babel/parser'
 import traverse from '@babel/traverse'
+import type { NodePath } from '@babel/traverse'
 import fg from 'fast-glob'
 import type {
   DocumentNode,
@@ -73,7 +74,7 @@ export const isFileInsideFolder = (filePath: string, folderPath: string) => {
 
 export const hasDefaultExport = (ast: types.Node): boolean => {
   let exported = false
-  traverse(ast, {
+  traverse.default(ast, {
     ExportDefaultDeclaration() {
       exported = true
       return
@@ -89,8 +90,8 @@ interface NamedExports {
 
 export const getNamedExports = (ast: types.Node): NamedExports[] => {
   const namedExports: NamedExports[] = []
-  traverse(ast, {
-    ExportNamedDeclaration(path) {
+  traverse.default(ast, {
+    ExportNamedDeclaration(path: NodePath<types.ExportNamedDeclaration>) {
       // Re-exports from other modules
       // Eg: export { a, b } from './module.js'
       const specifiers = path.node?.specifiers
@@ -123,7 +124,7 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
         })
       } else if (declaration.type === 'ClassDeclaration') {
         namedExports.push({
-          name: declaration?.id?.name,
+          name: declaration?.id?.name as string,
           type: 'class',
         })
       }
@@ -162,19 +163,21 @@ export const fileToAst = (filePath: string): types.Node => {
 
 export const getCellGqlQuery = (ast: types.Node) => {
   let cellQuery: string | undefined = undefined
-  traverse(ast, {
-    ExportNamedDeclaration({ node }) {
+  traverse.default(ast, {
+    ExportNamedDeclaration({ node }: NodePath<types.ExportNamedDeclaration>) {
       if (
         node.exportKind === 'value' &&
         types.isVariableDeclaration(node.declaration)
       ) {
-        const exportedQueryNode = node.declaration.declarations.find((d) => {
-          return (
-            types.isIdentifier(d.id) &&
-            d.id.name === 'QUERY' &&
-            types.isTaggedTemplateExpression(d.init)
-          )
-        })
+        const exportedQueryNode = node.declaration.declarations.find(
+          (d: types.VariableDeclarator) => {
+            return (
+              types.isIdentifier(d.id) &&
+              d.id.name === 'QUERY' &&
+              types.isTaggedTemplateExpression(d.init)
+            )
+          },
+        )
 
         if (exportedQueryNode) {
           const templateExpression =

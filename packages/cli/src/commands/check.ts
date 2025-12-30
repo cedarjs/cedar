@@ -1,6 +1,8 @@
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
 export const command = 'check'
@@ -18,7 +20,7 @@ export const handler = async () => {
   console.log('DiagnosticServerity', DiagnosticSeverity)
 
   printDiagnostics(getPaths().base, {
-    getSeverityLabel: (severity) => {
+    getSeverityLabel: (severity: unknown) => {
       if (severity === DiagnosticSeverity.Error) {
         return c.error('error')
       }

@@ -8,24 +8,31 @@ import { Listr } from 'listr2'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { runScriptFunction } from '../lib/exec.js'
+// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
 const printAvailableScriptsToConsole = () => {
   // Loop through all scripts and get their relative path
   // Also group scripts with the same name but different extensions
-  const scripts = findScripts(getPaths().scripts).reduce((acc, scriptPath) => {
-    const relativePath = path.relative(getPaths().scripts, scriptPath)
-    const ext = path.parse(relativePath).ext
-    const pathNoExt = relativePath.slice(0, -ext.length)
+  const scripts = findScripts(getPaths().scripts).reduce(
+    (acc: Record<string, string[]>, scriptPath: string) => {
+      const relativePath = path.relative(getPaths().scripts, scriptPath)
+      const ext = path.parse(relativePath).ext
+      const pathNoExt = relativePath.slice(0, -ext.length)
 
-    acc[pathNoExt] ||= []
-    acc[pathNoExt].push(relativePath)
+      acc[pathNoExt] ||= []
+      acc[pathNoExt].push(relativePath)
 
-    return acc
-  }, {})
+      return acc
+    },
+    {},
+  )
 
   console.log('Available scripts:')
   Object.entries(scripts).forEach(([name, paths]) => {
@@ -42,11 +49,19 @@ const printAvailableScriptsToConsole = () => {
   console.log()
 }
 
-export const handler = async (args) => {
+interface ExecOptions {
+  name?: string
+  prisma?: boolean
+  list?: boolean
+  silent?: boolean
+  [key: string]: unknown
+}
+
+export const handler = async (args: ExecOptions) => {
   recordTelemetryAttributes({
     command: 'exec',
-    prisma: args.prisma,
-    list: args.list,
+    prisma: !!args.prisma,
+    list: !!args.list,
   })
 
   const { name, prisma, list, ...scriptArgs } = args
@@ -70,7 +85,9 @@ export const handler = async (args) => {
   // arguments we haven't given a name.
   // `'exec'` is of no interest to the user, as its not meant to be an argument
   // to their script. And so we remove it from the array.
-  scriptArgs._ = scriptArgs._.slice(1)
+  if (Array.isArray(scriptArgs._)) {
+    scriptArgs._ = scriptArgs._.slice(1)
+  }
 
   // 'rw' is not meant for the script's args, so delete that
   delete scriptArgs.$0
@@ -97,12 +114,12 @@ export const handler = async (args) => {
   const scriptTasks = [
     {
       title: 'Generating Prisma client',
-      enabled: () => prisma,
+      enabled: () => !!prisma,
       task: () =>
         generatePrismaClient({
           force: false,
           verbose: !args.silent,
-          silent: args.silent,
+          silent: !!args.silent,
         }),
     },
     {
@@ -115,7 +132,8 @@ export const handler = async (args) => {
             args: { args: scriptArgs },
           })
         } catch (e) {
-          console.error(c.error(`Error in script: ${e.message}`))
+          const message = e instanceof Error ? e.message : String(e)
+          console.error(c.error(`Error in script: ${message}`))
           throw e
         }
       },
@@ -123,7 +141,6 @@ export const handler = async (args) => {
   ]
 
   const tasks = new Listr(scriptTasks, {
-    rendererOptions: { collapseSubtasks: false },
     renderer: args.silent ? 'silent' : 'verbose',
   })
 
@@ -133,7 +150,7 @@ export const handler = async (args) => {
   })
 }
 
-function resolveScriptPath(name) {
+function resolveScriptPath(name: string) {
   const scriptPath = path.join(getPaths().scripts, name)
 
   // If scriptPath already has an extension, and it's a valid path, return it
@@ -144,7 +161,7 @@ function resolveScriptPath(name) {
 
   // These extensions match the ones in internal/src/files.ts::findScripts()
   const extensions = ['.js', '.jsx', '.ts', '.tsx']
-  const matches = []
+  const matches: string[] = []
 
   for (const extension of extensions) {
     const p = scriptPath + extension
@@ -159,7 +176,7 @@ function resolveScriptPath(name) {
   } else if (matches.length > 1) {
     console.error(
       c.error(
-        `\nMultiple scripts found for \`${name}\`. Please specify the ` +
+        `\nMultiple scripts found for \`\${name}\`. Please specify the ` +
           'extension.',
       ),
     )

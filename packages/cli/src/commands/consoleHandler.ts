@@ -6,11 +6,12 @@ import repl from 'node:repl'
 import { registerApiSideBabelHook } from '@cedarjs/babel-config'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
 const paths = getPaths()
 
-const loadPrismaClient = (replContext) => {
+const loadPrismaClient = (replContext: Record<string, unknown>) => {
   const createdRequire = createRequire(import.meta.url)
   const { db } = createdRequire(path.join(paths.api.lib, 'db'))
   // workaround for Prisma issue: https://github.com/prisma/prisma/issues/18292
@@ -19,22 +20,37 @@ const loadPrismaClient = (replContext) => {
 }
 
 const consoleHistoryFile = path.join(paths.generated.base, 'console_history')
-const persistConsoleHistory = (r) => {
+
+interface REPLServerWithHistory extends repl.REPLServer {
+  history: string[]
+  lines: string[]
+}
+
+function isREPLServerWithHistory(
+  replServer: repl.REPLServer,
+): replServer is REPLServerWithHistory {
+  return 'history' in replServer && 'lines' in replServer
+}
+
+const persistConsoleHistory = (r: repl.REPLServer) => {
+  const lines = isREPLServerWithHistory(r) ? r.lines : []
   fs.appendFileSync(
     consoleHistoryFile,
-    r.lines.filter((line) => line.trim()).join('\n') + '\n',
+    lines.filter((line: string) => line.trim()).join('\n') + '\n',
     'utf8',
   )
 }
 
-const loadConsoleHistory = async (r) => {
+const loadConsoleHistory = async (r: repl.REPLServer) => {
   try {
     const history = await fs.promises.readFile(consoleHistoryFile, 'utf8')
-    history
-      .split('\n')
-      .reverse()
-      .map((line) => r.history.push(line))
-  } catch (e) {
+    if (isREPLServerWithHistory(r)) {
+      history
+        .split('\n')
+        .reverse()
+        .map((line) => r.history.push(line))
+    }
+  } catch {
     // We can ignore this -- it just means the user doesn't have any history yet
   }
 }
@@ -64,17 +80,18 @@ export const handler = () => {
   // always await promises.
   // source: https://github.com/nodejs/node/issues/13209#issuecomment-619526317
   const defaultEval = r.eval
-  r.eval = (cmd, context, filename, callback) => {
-    defaultEval(cmd, context, filename, async (err, result) => {
+  // @ts-expect-error - overriding eval signature
+  r.eval = function (this: repl.REPLServer, cmd, context, filename, callback) {
+    defaultEval.call(this, cmd, context, filename, async (err, result) => {
       if (err) {
         // propagate errors.
-        callback(err)
+        callback(err, null)
       } else {
         // await the promise and either return the result or error.
         try {
           callback(null, await Promise.resolve(result))
-        } catch (err) {
-          callback(err)
+        } catch (err: unknown) {
+          callback(err instanceof Error ? err : new Error(String(err)), null)
         }
       }
     })

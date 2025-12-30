@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import concurrently from 'concurrently'
 import execa from 'execa'
@@ -6,10 +6,24 @@ import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
+// @ts-expect-error - No types for .js files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
+// @ts-expect-error - No types for .js files
 import { getPaths } from '../lib/index.js'
 
-export const handler = async ({ sides, verbose, prisma, generate }) => {
+interface TypeCheckOptions {
+  sides: string[]
+  verbose: boolean
+  prisma: boolean
+  generate: boolean
+}
+
+export const handler = async ({
+  sides,
+  verbose,
+  prisma,
+  generate,
+}: TypeCheckOptions) => {
   recordTelemetryAttributes({
     command: 'type-check',
     sides: JSON.stringify(sides),
@@ -38,11 +52,24 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
     })
     try {
       await result
-    } catch (err) {
-      if (err.length) {
+    } catch (err: unknown) {
+      if (Array.isArray(err)) {
         // Non-null exit codes
-        const exitCodes = err.map((e) => e?.exitCode).filter(Boolean)
-        conclusiveExitCode = Math.max(...exitCodes)
+        const exitCodes = err
+          .map((e: unknown) =>
+            e instanceof Object &&
+            'exitCode' in e &&
+            typeof e.exitCode === 'number'
+              ? e.exitCode
+              : undefined,
+          )
+          .filter(
+            (code: number | undefined): code is number =>
+              code !== undefined && code !== null,
+          )
+        if (exitCodes.length > 0) {
+          conclusiveExitCode = Math.max(...exitCodes)
+        }
       }
     }
 
@@ -68,7 +95,7 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
         },
       ],
       {
-        renderer: verbose && 'verbose',
+        renderer: verbose ? 'verbose' : 'default',
         rendererOptions: { collapseSubtasks: false },
       },
     ).run()

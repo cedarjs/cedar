@@ -3,16 +3,16 @@ import path from 'node:path'
 
 import execa from 'execa'
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
-import { getPaths, getConfig } from '../lib/index.js'
+import { getPaths, getConfig } from '@cedarjs/project-config'
 
 /**
  * Checks for legacy ESLint configuration files in the project root
- * @returns {string[]} Array of legacy config file names found
+ * @returns Array of legacy config file names found
  */
-function detectLegacyEslintConfig() {
+function detectLegacyEslintConfig(): string[] {
   const projectRoot = getPaths().base
   const legacyConfigFiles = [
     '.eslintrc.js',
@@ -22,7 +22,7 @@ function detectLegacyEslintConfig() {
     '.eslintrc.yml',
   ]
 
-  const foundLegacyFiles = []
+  const foundLegacyFiles: string[] = []
 
   // Check for .eslintrc.* files
   for (const configFile of legacyConfigFiles) {
@@ -42,7 +42,7 @@ function detectLegacyEslintConfig() {
       if (packageJson.eslint) {
         foundLegacyFiles.push('package.json (eslint field)')
       }
-    } catch (error) {
+    } catch {
       // Ignore JSON parse errors
     }
   }
@@ -52,9 +52,9 @@ function detectLegacyEslintConfig() {
 
 /**
  * Shows a deprecation warning for legacy ESLint configuration
- * @param {string[]} legacyFiles Array of legacy config file names
+ * @param legacyFiles Array of legacy config file names
  */
-function showLegacyEslintDeprecationWarning(legacyFiles) {
+function showLegacyEslintDeprecationWarning(legacyFiles: string[]) {
   console.warn('')
   console.warn('⚠️  DEPRECATION WARNING: Legacy ESLint Configuration Detected')
   console.warn('')
@@ -81,12 +81,13 @@ function showLegacyEslintDeprecationWarning(legacyFiles) {
 
 export const command = 'lint [path..]'
 export const description = 'Lint your files'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('path', {
       description:
         'Specify file(s) or directory(ies) to lint relative to project root',
-      type: 'array',
+      type: 'string',
+      array: true,
     })
     .option('fix', {
       default: false,
@@ -106,18 +107,32 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async ({ path, fix, format }) => {
-  recordTelemetryAttributes({ command: 'lint', fix, format })
+interface LintOptions {
+  path?: string[]
+  fix?: boolean
+  format?: string
+}
 
-  // Check for legacy ESLint configuration and show deprecation warning
+export const handler = async ({ path: filePath, fix, format }: LintOptions) => {
+  recordTelemetryAttributes({
+    command: 'lint',
+    fix: !!fix,
+    format: format ?? 'stylish',
+  })
+
   const config = getConfig()
   const legacyConfigFiles = detectLegacyEslintConfig()
-  if (legacyConfigFiles.length > 0 && config.eslintLegacyConfigWarning) {
+  if (
+    legacyConfigFiles.length > 0 &&
+    config instanceof Object &&
+    'eslintLegacyConfigWarning' in config &&
+    config.eslintLegacyConfigWarning
+  ) {
     showLegacyEslintDeprecationWarning(legacyConfigFiles)
   }
 
   try {
-    const pathString = path?.join(' ')
+    const pathString = filePath?.join(' ')
     const sbPath = getPaths().web.storybook
     const args = [
       'eslint',
@@ -130,7 +145,7 @@ export const handler = async ({ path, fix, format }) => {
       !pathString && fs.existsSync(getPaths().scripts) && 'scripts',
       !pathString && fs.existsSync(getPaths().api.src) && 'api/src',
       pathString,
-    ].filter(Boolean)
+    ].filter((x): x is string => !!x)
 
     const result = await execa('yarn', args, {
       cwd: getPaths().base,
@@ -138,7 +153,15 @@ export const handler = async ({ path, fix, format }) => {
     })
 
     process.exitCode = result.exitCode
-  } catch (error) {
-    process.exitCode = error.exitCode ?? 1
+  } catch (error: unknown) {
+    if (
+      error instanceof Object &&
+      'exitCode' in error &&
+      typeof error.exitCode === 'number'
+    ) {
+      process.exitCode = error.exitCode
+    } else {
+      process.exitCode = 1
+    }
   }
 }

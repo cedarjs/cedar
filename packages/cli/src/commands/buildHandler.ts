@@ -13,21 +13,30 @@ import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { timedTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import { generatePrismaCommand } from '../lib/generatePrismaClient.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
+
+interface BuildOptions {
+  side?: string[]
+  verbose?: boolean
+  prisma?: boolean
+  prerender?: boolean
+}
 
 export const handler = async ({
   side = ['api', 'web'],
   verbose = false,
   prisma = true,
   prerender,
-}) => {
+}: BuildOptions) => {
   recordTelemetryAttributes({
     command: 'build',
     side: JSON.stringify(side),
     verbose,
     prisma,
-    prerender,
+    prerender: !!prerender,
   })
 
   const rwjsPaths = getPaths()
@@ -133,7 +142,9 @@ export const handler = async ({
         }
       },
     },
-  ].filter(Boolean)
+  ].filter(
+    (x): x is Exclude<typeof x, false | undefined | '' | 0 | null> => !!x,
+  )
 
   const triggerPrerender = async () => {
     console.log('Starting prerendering...')
@@ -158,6 +169,7 @@ export const handler = async ({
   }
 
   const jobs = new Listr(tasks, {
+    // @ts-expect-error - renderer might be incompatible
     renderer: verbose && 'verbose',
   })
 
