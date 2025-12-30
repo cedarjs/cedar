@@ -1,10 +1,8 @@
 import fs from 'node:fs'
 
-import type execa from 'execa'
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-// @ts-expect-error - JS file
 import { runPreUpgradeScripts } from '../upgrade.js'
 
 // Mock fetch globally
@@ -39,8 +37,8 @@ vi.mock('node:os', () => ({
 }))
 
 describe('runPreUpgradeScripts', () => {
-  let mockTask: any
-  let mockCtx: any
+  let mockTask: { output: string }
+  let mockCtx: Record<string, unknown>
 
   beforeEach(() => {
     mockTask = {
@@ -140,8 +138,7 @@ describe('runPreUpgradeScripts', () => {
       console.log('Running upgrade check')
     `
 
-    // Mock readFile to return the script content
-    vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent as any)
+    vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent)
 
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
       if (url.toString().endsWith('/manifest.json')) {
@@ -164,31 +161,35 @@ describe('runPreUpgradeScripts', () => {
       throw new Error(`Unexpected url: ${url}`)
     })
 
-    vi.mocked(execa.default).mockImplementation(((
-      command: string,
-      argsOrOptions: string[] | unknown,
-      _maybeOptions: unknown,
-    ) => {
-      // Handle overloaded signature where second param could be options
-      const actualArgs = Array.isArray(argsOrOptions) ? argsOrOptions : []
-
-      if (command === 'npm' && actualArgs?.includes('install')) {
-        return {
-          stdout: '',
-          stderr: '',
-        } as unknown as execa.ExecaChildProcess
-      } else if (command === 'node') {
-        return {
-          stdout: 'Upgrade check passed',
-          stderr: '',
-        } as unknown as execa.ExecaChildProcess
-      }
-
-      throw new Error(`Unexpected command: ${command} ${actualArgs?.join(' ')}`)
+    vi.mocked(execa.default).mockImplementation(
       // TypeScript is struggling with the type for the function overload and
-      // for a test it's not worth it to mock this properly. That's why we use
-      // `as any` here.
-    }) as any)
+      // for a test it's not worth it to mock this properly.
+      // @ts-expect-error - Only mocking the implementation we're using
+      (
+        command: string,
+        argsOrOptions: string[] | unknown,
+        _maybeOptions: unknown,
+      ) => {
+        // Handle overloaded signature where second param could be options
+        const actualArgs = Array.isArray(argsOrOptions) ? argsOrOptions : []
+
+        if (command === 'npm' && actualArgs?.includes('install')) {
+          return {
+            stdout: '',
+            stderr: '',
+          }
+        } else if (command === 'node') {
+          return {
+            stdout: 'Upgrade check passed',
+            stderr: '',
+          }
+        }
+
+        throw new Error(
+          `Unexpected command: ${command} ${actualArgs?.join(' ')}`,
+        )
+      },
+    )
 
     await runPreUpgradeScripts(mockCtx, mockTask, {
       verbose: false,
@@ -225,14 +226,20 @@ describe('runPreUpgradeScripts', () => {
     // Verify script was executed
     expect(execa.default).toHaveBeenCalledWith(
       'node',
-      ['script.mts', '--verbose', false, '--force', false],
+      ['script.mts', '--verbose', 'false', '--force', 'false'],
       {
         cwd: '/tmp/cedar-upgrade-abc123',
       },
     )
 
+    const preUpgradeMessage = mockCtx.preUpgradeMessage
+
+    if (typeof preUpgradeMessage !== 'string') {
+      throw new Error('preUpgradeMessage is not a string')
+    }
+
     // Verify output was captured
-    expect(mockCtx.preUpgradeMessage).toContain('Upgrade check passed')
+    expect(preUpgradeMessage).toContain('Upgrade check passed')
 
     // Verify cleanup
     expect(fs.promises.rm).toHaveBeenCalledWith('/tmp/cedar-upgrade-abc123', {

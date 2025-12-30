@@ -5,6 +5,7 @@ import { types } from '@babel/core'
 import type { ParserPlugin } from '@babel/parser'
 import { parse as babelParse } from '@babel/parser'
 import traverse from '@babel/traverse'
+import type { NodePath } from '@babel/traverse'
 import fg from 'fast-glob'
 import type {
   DocumentNode,
@@ -73,7 +74,7 @@ export const isFileInsideFolder = (filePath: string, folderPath: string) => {
 
 export const hasDefaultExport = (ast: types.Node): boolean => {
   let exported = false
-  traverse(ast, {
+  traverse.default(ast, {
     ExportDefaultDeclaration() {
       exported = true
       return
@@ -84,25 +85,32 @@ export const hasDefaultExport = (ast: types.Node): boolean => {
 
 interface NamedExports {
   name: string
-  type: 're-export' | 'variable' | 'function' | 'class'
+  type: 'variable' | 'function' | 'class'
 }
 
 export const getNamedExports = (ast: types.Node): NamedExports[] => {
   const namedExports: NamedExports[] = []
-  traverse(ast, {
-    ExportNamedDeclaration(path) {
+  traverse.default(ast, {
+    ExportNamedDeclaration(path: NodePath<types.ExportNamedDeclaration>) {
       // Re-exports from other modules
       // Eg: export { a, b } from './module.js'
       const specifiers = path.node?.specifiers
-      if (specifiers.length) {
-        for (const s of specifiers) {
-          const id = s.exported as types.Identifier
-          namedExports.push({
-            name: id.name,
-            type: 're-export',
-          })
-        }
-        return
+      if (specifiers && specifiers.length > 0) {
+        specifiers.forEach(
+          (
+            s:
+              | types.ExportSpecifier
+              | types.ExportDefaultSpecifier
+              | types.ExportNamespaceSpecifier,
+          ) => {
+            if (types.isExportSpecifier(s)) {
+              namedExports.push({
+                name: (s.exported as types.Identifier).name,
+                type: 'variable',
+              })
+            }
+          },
+        )
       }
 
       const declaration = path.node.declaration
@@ -111,10 +119,13 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
       }
 
       if (declaration.type === 'VariableDeclaration') {
-        const id = declaration.declarations[0].id as types.Identifier
-        namedExports.push({
-          name: id.name,
-          type: 'variable',
+        declaration.declarations.forEach((d: types.VariableDeclarator) => {
+          if (types.isIdentifier(d.id)) {
+            namedExports.push({
+              name: d.id.name,
+              type: 'variable',
+            })
+          }
         })
       } else if (declaration.type === 'FunctionDeclaration') {
         namedExports.push({
@@ -123,7 +134,7 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
         })
       } else if (declaration.type === 'ClassDeclaration') {
         namedExports.push({
-          name: declaration?.id?.name,
+          name: declaration?.id?.name as string,
           type: 'class',
         })
       }
@@ -135,55 +146,41 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
 
 export const fileToAst = (filePath: string): types.Node => {
   const code = fs.readFileSync(filePath, 'utf-8')
-
-  // use jsx plugin for web files, because in JS, the .jsx extension is not used
-  const isJsxFile =
-    path.extname(filePath).match(/[jt]sx$/) ||
-    isFileInsideFolder(filePath, getPaths().web.base)
-
-  const plugins = [
-    'typescript',
-    'nullishCoalescingOperator',
-    'objectRestSpread',
-    isJsxFile && 'jsx',
-  ].filter(Boolean) as ParserPlugin[]
-
-  try {
-    return babelParse(code, {
-      sourceType: 'module',
-      plugins,
-    })
-  } catch (e: any) {
-    // console.error(ansis.red(`Error parsing: ${filePath}`))
-    console.error(e)
-    throw new Error(e?.message) // we throw, so typescript doesn't complain about returning
+  const plugins: ParserPlugin[] = ['jsx']
+  if (['.ts', '.tsx'].includes(path.extname(filePath))) {
+    plugins.push('typescript')
   }
+
+  return babelParse(code, {
+    sourceType: 'module',
+    plugins,
+  })
 }
 
 export const getCellGqlQuery = (ast: types.Node) => {
   let cellQuery: string | undefined = undefined
-  traverse(ast, {
-    ExportNamedDeclaration({ node }) {
+  traverse.default(ast, {
+    ExportNamedDeclaration({ node }: NodePath<types.ExportNamedDeclaration>) {
       if (
         node.exportKind === 'value' &&
         types.isVariableDeclaration(node.declaration)
       ) {
-        const exportedQueryNode = node.declaration.declarations.find((d) => {
-          return (
-            types.isIdentifier(d.id) &&
-            d.id.name === 'QUERY' &&
-            types.isTaggedTemplateExpression(d.init)
-          )
-        })
+        const exportedQueryNode = node.declaration.declarations.find(
+          (d: types.VariableDeclarator) => {
+            return (
+              types.isIdentifier(d.id) &&
+              d.id.name === 'QUERY' &&
+              types.isTaggedTemplateExpression(d.init)
+            )
+          },
+        )
 
         if (exportedQueryNode) {
           const templateExpression =
             exportedQueryNode.init as types.TaggedTemplateExpression
-
           cellQuery = templateExpression.quasi.quasis[0].value.raw
         }
       }
-      return
     },
   })
 
