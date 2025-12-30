@@ -104,7 +104,7 @@ export const handler = async (args: ExecOptions) => {
 
   if (!scriptPath) {
     console.error(
-      c.error(`\nNo script called \`\${name}\` in the ./scripts folder.\n`),
+      c.error(`\nNo script called \`${name}\` in the ./scripts folder.\n`),
     )
 
     printAvailableScriptsToConsole()

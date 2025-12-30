@@ -4,8 +4,10 @@ import path from 'path'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import type * as Prerender from '@cedarjs/prerender'
 import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
+import type { QueryInfo } from '@cedarjs/web'
 
 // @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
@@ -62,6 +64,31 @@ interface PrerenderRoute {
  * Reads path parameters from BlogPostPage.routeHooks.js and returns a list of
  * routes with the path parameter placeholders (like {id:Int}) replaced by
  * actual values
+ *
+ * So for values like [{ id: 1 }, { id: 2 }, { id: 3 }] (and, again, a route
+ * path like /blog-post/{id:Int}) it will return three routes with the paths
+ * /blog-post/1
+ * /blog-post/2
+ * /blog-post/3
+ *
+ * The paths will be strings. Parsing those path parameters to the correct
+ * datatype according to the type notation ("Int" in the example above) will
+ * be handled by the normal router functions, just like when rendering in a
+ * client browser
+ *
+ * Example `route` parameter
+ * {
+ *   name: 'blogPost',
+ *   path: '/blog-post/{id:Int}',
+ *   routePath: '/blog-post/{id:Int}',
+ *   hasParams: true,
+ *   id: 'file:///Users/tobbe/tmp/rw-prerender-cell-ts/web/src/Routes.tsx 1959',
+ *   isNotFound: false,
+ *   filePath: '/Users/tobbe/tmp/rw-prerender-cell-ts/web/src/pages/BlogPostPage/BlogPostPage.tsx'
+ * }
+ *
+ * When returning from this function, `path` in the above example will have
+ * been replaced by an actual url, like /blog-post/15
  */
 async function expandRouteParameters(route: PrerenderRoute) {
   const routeHooksFilePath = getRouteHooksFilePath(route.filePath)
@@ -71,7 +98,7 @@ async function expandRouteParameters(route: PrerenderRoute) {
   }
 
   try {
-    const routeParameters = await runScriptFunction({
+    const routeParameters: Record<string, unknown>[] = await runScriptFunction({
       path: routeHooksFilePath,
       functionName: 'routeParameters',
       args: {
@@ -83,22 +110,18 @@ async function expandRouteParameters(route: PrerenderRoute) {
     })
 
     if (routeParameters) {
-      return (routeParameters as Record<string, unknown>[]).map(
-        (pathParamValues) => {
-          let newPath = route.path
+      return routeParameters.map((pathParamValues) => {
+        let newPath = route.path
 
-          Object.entries(pathParamValues).forEach(
-            ([_paramName, paramValue]) => {
-              newPath = newPath.replace(
-                new RegExp(`{\${_paramName}:?[^}]*}`),
-                String(paramValue),
-              )
-            },
+        Object.entries(pathParamValues).forEach(([paramName, paramValue]) => {
+          newPath = newPath.replace(
+            new RegExp(`{${paramName}:?[^}]*}`),
+            String(paramValue),
           )
+        })
 
-          return { ...route, path: newPath }
-        },
-      )
+        return { ...route, path: newPath }
+      })
     }
   } catch (e) {
     const stack = e instanceof Error ? e.stack : String(e)
@@ -167,12 +190,20 @@ export const getTasks = async (
     // queryCache will be filled with the queries from all the Cells we
     // encounter while prerendering, and the result from executing those
     // queries.
+    // We have this cache here because we can potentially reuse result data
+    // between different pages. I.e. if the same query, with the same
+    // variables is encountered twice, we'd only have to execute it once and
+    // then just reuse the cached result the second time.
     const queryCache = {}
 
-    // In principle you could be prerendering a large number of routes
+    // In principle you could be prerendering a large number of routes, and
+    // when this occurs not only can it break but it's also not particularly
+    // useful to enumerate all the routes in the output.
     const shouldFold = routesToPrerender.length > 16
 
     if (shouldFold) {
+      // If we're folding the output, we don't need to return the individual
+      // routes, just a top level message indicating the route and the progress
       const displayIncrement = Math.max(
         1,
         Math.floor(routesToPrerender.length / 100),
@@ -183,9 +214,13 @@ export const getTasks = async (
         {
           title: title(0),
           task: async (_: unknown, task: { title: string }) => {
+            // Note: This is a sequential loop, not parallelized as there have
+            // been previous issues with parallel prerendering.
+            // See: https://github.com/redwoodjs/redwood/pull/7321
             for (let i = 0; i < routesToPrerender.length; i++) {
               const routeToPrerender = routesToPrerender[i]
 
+              // Filter out routes that don't match the supplied routePathFilter
               if (
                 routerPathFilter &&
                 routeToPrerender.path !== routerPathFilter
@@ -211,27 +246,33 @@ export const getTasks = async (
       ]
     }
 
-    return routesToPrerender
-      .map((routeToPrerender) => {
-        if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
-          return []
-        }
+    // If we're not folding the output, we'll return a list of tasks for each
+    // individual case.
+    return routesToPrerender.map((routeToPrerender) => {
+      // Filter out routes that don't match the supplied routePathFilter
+      if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
+        // TODO: Figure out if it's an error to return [] here
+        // TS is complaining. If it is actually correct, we can use flatMap(),
+        // or append .flat() to the end of the map call that begins above
+        // This code was originally added in
+        // https://github.com/redwoodjs/graphql/pull/10888
+        return [] as unknown as { title: string; task: () => Promise<void> }
+      }
 
-        const outputHtmlPath = mapRouterPathToHtml(routeToPrerender.path)
-        return {
-          title: `Prerendering ${routeToPrerender.path} -> ${outputHtmlPath}`,
-          task: async () => {
-            await prerenderRoute(
-              prerenderer,
-              queryCache,
-              routeToPrerender,
-              dryrun,
-              outputHtmlPath,
-            )
-          },
-        }
-      })
-      .flat()
+      const outputHtmlPath = mapRouterPathToHtml(routeToPrerender.path)
+      return {
+        title: `Prerendering ${routeToPrerender.path} -> ${outputHtmlPath}`,
+        task: async () => {
+          await prerenderRoute(
+            prerenderer,
+            queryCache,
+            routeToPrerender,
+            dryrun,
+            outputHtmlPath,
+          )
+        },
+      }
+    })
   })
 
   return listrTasks
@@ -291,16 +332,16 @@ const diagnosticCheck = () => {
 
     console.log()
 
+    // Exit, no need to show other messages
     process.exit(1)
   } else {
     console.log('✔ Diagnostics checks passed \n')
   }
 }
 
-// @cedarjs/prerender is not perfectly typed here
 const prerenderRoute = async (
-  prerenderer: any,
-  queryCache: Record<string, unknown>,
+  prerenderer: typeof Prerender,
+  queryCache: Record<string, QueryInfo>,
   routeToPrerender: PrerenderRoute,
   dryrun: boolean,
   outputHtmlPath: string,
@@ -317,7 +358,7 @@ const prerenderRoute = async (
       renderPath: routeToPrerender.path,
     })
 
-    if (!dryrun) {
+    if (!dryrun && typeof prerenderedHtml === 'string') {
       prerenderer.writePrerenderedHtmlFile(outputHtmlPath, prerenderedHtml)
     }
   } catch (e: unknown) {
