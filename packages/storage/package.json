@@ -55,7 +55,7 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "mime-types": "2.1.35",
-    "ulid": "2.4.0"
+    "ulid": "3.0.2"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
