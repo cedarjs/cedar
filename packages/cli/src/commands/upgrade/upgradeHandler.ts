@@ -100,7 +100,7 @@ export const handler = async ({
       },
       {
         title: 'Checking latest version',
-        task: async (ctx) => setLatestVersionToContext(ctx, tag),
+        task: async (ctx) => setLatestVersionToContext(ctx, tag, verbose),
       },
       {
         title: 'Running pre-upgrade scripts',
@@ -280,9 +280,14 @@ async function removeCliCache({
   }
 }
 
+function isErrorWithCode(error: unknown, code: string) {
+  return error instanceof Object && 'code' in error && error.code === code
+}
+
 async function setLatestVersionToContext(
   ctx: Record<string, unknown>,
   tag?: string,
+  verbose?: boolean,
 ) {
   try {
     const foundVersion = await latestVersion(
@@ -292,7 +297,19 @@ async function setLatestVersionToContext(
 
     ctx.versionToUpgradeTo = foundVersion
     return foundVersion
-  } catch {
+  } catch (error) {
+    if (verbose) {
+      console.error(error)
+    }
+
+    if (isErrorWithCode(error, 'ENOTFOUND')) {
+      console.log(
+        'If you are behind a proxy, please set the relevant proxy ' +
+          'environment variables.\nSee here for more information: ' +
+          'https://nodejs.org/api/http.html#built-in-proxy-support',
+      )
+    }
+
     if (tag) {
       throw new Error('Could not find the latest `' + tag + '` version')
     }
@@ -551,10 +568,7 @@ async function refreshPrismaClient(
   // Relates to prisma/client issue
   // See: https://github.com/redwoodjs/redwood/issues/1083
   try {
-    await generatePrismaClient({
-      verbose,
-      force: false,
-    })
+    await generatePrismaClient({ verbose, force: false })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     task.skip('Refreshing the Prisma client caused an Error.')
