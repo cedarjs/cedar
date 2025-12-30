@@ -594,8 +594,10 @@ const dedupeDeps = async (
     // ExecaError is an instance of Error
     const message = e instanceof Error ? e.message : String(e)
     console.log(c.error(message))
+
     throw new Error(
-      'Could not finish de-duplication. For yarn 1.x, please run `npx yarn-deduplicate`, or for yarn >= 3 run `yarn dedupe` before continuing',
+      'Could not finish de-duplication. Please run `yarn dedupe` before ' +
+        'continuing',
     )
   }
 
