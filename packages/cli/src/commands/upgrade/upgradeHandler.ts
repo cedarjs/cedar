@@ -280,8 +280,12 @@ async function removeCliCache({
   }
 }
 
-function isErrorWithCode(error: unknown, code: string) {
-  return error instanceof Object && 'code' in error && error.code === code
+function isErrorWithNestedCode(error: unknown, code: string): boolean {
+  return (
+    error instanceof Object &&
+    (('code' in error && error.code === code) ||
+      ('cause' in error && isErrorWithNestedCode(error.cause, code)))
+  )
 }
 
 async function setLatestVersionToContext(
@@ -302,12 +306,14 @@ async function setLatestVersionToContext(
       console.error(error)
     }
 
-    if (isErrorWithCode(error, 'ENOTFOUND')) {
+    if (isErrorWithNestedCode(error, 'ENOTFOUND')) {
+      console.log()
       console.log(
         'If you are behind a proxy, please set the relevant proxy ' +
           'environment variables.\nSee here for more information: ' +
           'https://nodejs.org/api/http.html#built-in-proxy-support',
       )
+      console.log()
     }
 
     if (tag) {
