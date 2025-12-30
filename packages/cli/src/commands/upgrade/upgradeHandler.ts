@@ -306,21 +306,17 @@ async function setLatestVersionToContext(
       console.error(error)
     }
 
-    if (isErrorWithNestedCode(error, 'ENOTFOUND')) {
-      console.log()
-      console.log(
-        'If you are behind a proxy, please set the relevant proxy ' +
-          'environment variables.\nSee here for more information: ' +
-          'https://nodejs.org/api/http.html#built-in-proxy-support',
-      )
-      console.log()
-    }
+    const proxyError = isErrorWithNestedCode(error, 'ENOTFOUND')
+      ? '\n\nIf you are behind a proxy, please set the relevant proxy ' +
+        'environment variables.\nSee here for more information: ' +
+        'https://nodejs.org/api/http.html#built-in-proxy-support\n'
+      : ''
 
     if (tag) {
-      throw new Error('Could not find the latest `' + tag + '` version')
+      throw new Error(`Could not find the latest '${tag}' version${proxyError}`)
     }
 
-    throw new Error('Could not find the latest version')
+    throw new Error(`Could not find the latest version${proxyError}`)
   }
 }
 
