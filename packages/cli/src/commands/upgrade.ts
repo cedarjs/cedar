@@ -186,7 +186,7 @@ export const handler = async ({
               value: unknown,
             ) {
               if (this.state.submitted) {
-                return this.isTrue(value) ? 'no' : 'yes'
+                return this.isTrue(value) ? 'yes' : 'no'
               }
 
               return 'Yes'
@@ -208,12 +208,14 @@ export const handler = async ({
         task: async (ctx, task) => {
           await runPreUpgradeScripts(ctx, task, { verbose, force })
 
-          if (ctx.preUpgradeMessage) {
-            preUpgradeMessage = ctx.preUpgradeMessage as string
+          const ctxMsg = ctx.preUpgradeMessage
+          if (ctxMsg && typeof ctxMsg === 'string') {
+            preUpgradeMessage = ctxMsg
           }
 
-          if (ctx.preUpgradeError) {
-            preUpgradeError = ctx.preUpgradeError as string
+          const ctxError = ctx.preUpgradeError
+          if (ctxError && typeof ctxError === 'string') {
+            preUpgradeError = ctxError
           }
         },
         enabled: (ctx) => !!ctx.versionToUpgradeTo,
@@ -228,16 +230,14 @@ export const handler = async ({
         task: (ctx) =>
           updatePackageVersionsFromTemplate(ctx, { dryRun, verbose }),
         enabled: (ctx) =>
-          typeof ctx.versionToUpgradeTo === 'string' &&
-          ctx.versionToUpgradeTo.includes('canary') &&
+          String(ctx.versionToUpgradeTo).includes('canary') &&
           !ctx.preUpgradeError,
       },
       {
         title: 'Downloading yarn patches',
         task: (ctx) => downloadYarnPatches(ctx, { dryRun, verbose }),
         enabled: (ctx) =>
-          typeof ctx.versionToUpgradeTo === 'string' &&
-          ctx.versionToUpgradeTo.includes('canary') &&
+          String(ctx.versionToUpgradeTo).includes('canary') &&
           !ctx.preUpgradeError,
       },
       {
@@ -247,7 +247,7 @@ export const handler = async ({
       },
       {
         title: 'Running yarn install',
-        task: () => yarnInstall({ dryRun, verbose }),
+        task: () => yarnInstall({ verbose }),
         enabled: (ctx) => !ctx.preUpgradeError,
         skip: () => !!dryRun,
       },
@@ -276,6 +276,7 @@ export const handler = async ({
           if ([undefined, 'latest', 'rc'].includes(tag)) {
             const ghReleasesLink = terminalLink(
               `GitHub Release notes`,
+              // intentionally not linking to specific version
               `https://github.com/cedarjs/cedar/releases`,
             )
             const discordLink = terminalLink(
@@ -341,16 +342,8 @@ export const handler = async ({
   }
 }
 
-async function yarnInstall({
-  verbose,
-  dryRun,
-}: {
-  verbose?: boolean
-  dryRun?: boolean
-}) {
+async function yarnInstall({ verbose }: { verbose?: boolean }) {
   try {
-    // Unused dryRun argument for consistency?
-    void dryRun
     await execa('yarn install', {
       shell: true,
       stdio: verbose ? 'inherit' : 'pipe',

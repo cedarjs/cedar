@@ -138,6 +138,7 @@ describe('runPreUpgradeScripts', () => {
       console.log('Running upgrade check')
     `
 
+    // Mock readFile to return the script content
     vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent)
 
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {

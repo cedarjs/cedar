@@ -4,8 +4,8 @@
     "isolatedModules": true,
     "emitDeclarationOnly": false,
     "noEmit": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "module": "Node20",
+    "moduleResolution": "node16",
   },
   "include": ["."],
   "exclude": ["**/__testfixtures__"],
@@ -17,6 +17,6 @@
     { "path": "../project-config" },
     { "path": "../structure" },
     { "path": "../telemetry" },
-    { "path": "../vite/tsconfig.build.json" }
-  ]
+    { "path": "../vite/tsconfig.build.json" },
+  ],
 }

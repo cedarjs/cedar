@@ -96,21 +96,14 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
       // Eg: export { a, b } from './module.js'
       const specifiers = path.node?.specifiers
       if (specifiers && specifiers.length > 0) {
-        specifiers.forEach(
-          (
-            s:
-              | types.ExportSpecifier
-              | types.ExportDefaultSpecifier
-              | types.ExportNamespaceSpecifier,
-          ) => {
-            if (types.isExportSpecifier(s)) {
-              namedExports.push({
-                name: (s.exported as types.Identifier).name,
-                type: 'variable',
-              })
-            }
-          },
-        )
+        for (const s of specifiers) {
+          if (types.isExportSpecifier(s)) {
+            namedExports.push({
+              name: (s.exported as types.Identifier).name,
+              type: 'variable',
+            })
+          }
+        }
       }
 
       const declaration = path.node.declaration
@@ -146,15 +139,29 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
 
 export const fileToAst = (filePath: string): types.Node => {
   const code = fs.readFileSync(filePath, 'utf-8')
-  const plugins: ParserPlugin[] = ['jsx']
-  if (['.ts', '.tsx'].includes(path.extname(filePath))) {
-    plugins.push('typescript')
-  }
 
-  return babelParse(code, {
-    sourceType: 'module',
-    plugins,
-  })
+  // use jsx plugin for web files, because in JS, the .jsx extension is not used
+  const isJsxFile =
+    path.extname(filePath).match(/[jt]sx$/) ||
+    isFileInsideFolder(filePath, getPaths().web.base)
+
+  const plugins = [
+    'typescript',
+    'nullishCoalescingOperator',
+    'objectRestSpread',
+    isJsxFile && 'jsx',
+  ].filter(Boolean) as ParserPlugin[]
+
+  try {
+    return babelParse(code, {
+      sourceType: 'module',
+      plugins,
+    })
+  } catch (e: any) {
+    // console.error(ansis.red(`Error parsing: ${filePath}`))
+    console.error(e)
+    throw new Error(e?.message) // we throw, so typescript doesn't complain about returning
+  }
 }
 
 export const getCellGqlQuery = (ast: types.Node) => {
