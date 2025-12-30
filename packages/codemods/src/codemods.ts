@@ -57,9 +57,9 @@ yargs
   .epilog(
     [
       'Examples:',
-      '  npx @cedarjs/codemods@2.3.0 <codemod>          Run a Cedar codemod',
-      '  npx @cedarjs/codemods@2.3.0 redwood            List Redwood codemods',
-      '  npx @cedarjs/codemods@2.3.0 redwood <codemod>  Run a Redwood codemod',
+      '  npx @cedarjs/codemods@latest <codemod>          Run a Cedar codemod',
+      '  npx @cedarjs/codemods@latest redwood            List Redwood codemods',
+      '  npx @cedarjs/codemods@latest redwood <codemod>  Run a Redwood codemod',
     ].join('\n'),
   )
   .strict().argv
