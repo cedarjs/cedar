@@ -3,7 +3,9 @@
   "compilerOptions": {
     "isolatedModules": true,
     "emitDeclarationOnly": false,
-    "noEmit": true
+    "noEmit": true,
+    "module": "Node20",
+    "moduleResolution": "node16"
   },
   "include": ["."],
   "exclude": ["**/__testfixtures__"],
