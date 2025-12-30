@@ -7,7 +7,7 @@ import { getPaths } from '@cedarjs/project-config'
 import getFilesWithPattern from '../../../../lib/getFilesWithPattern'
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/rename-validate-with'
+export const command = 'rename-validate-with'
 
 export const description =
   '(v4.x.x->v5.x.x) Renames validateWith to validateWithSync'

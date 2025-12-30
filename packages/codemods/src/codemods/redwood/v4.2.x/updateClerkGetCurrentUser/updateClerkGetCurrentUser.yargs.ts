@@ -8,7 +8,7 @@ import { getPaths } from '@cedarjs/project-config'
 import isTSProject from '../../../../lib/isTSProject'
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/update-clerk-get-current-user'
+export const command = 'update-clerk-get-current-user'
 export const description =
   '(v4.1.x->v4.2.x) For Clerk users; updates the getCurrentUser function'
 

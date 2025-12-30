@@ -21,29 +21,45 @@ import * as v6Svgs from './codemods/redwood/v6.x.x/replaceComponentSvgs/replaceC
 import * as v6DevFatalErrorPage from './codemods/redwood/v6.x.x/updateDevFatalErrorPage/updateDevFatalErrorPage.yargs.js'
 import * as v6ThemeConfig from './codemods/redwood/v6.x.x/updateThemeConfig/updateThemeConfig.yargs.js'
 import * as v7Gql from './codemods/redwood/v7.x.x/updateGraphQLConfig/updateGraphqlConfig.yargs.js'
+import * as v2MoveGeneratorTemplates from './codemods/v2.3.x/moveGeneratorTemplates/moveGeneratorTemplates.yargs.js'
+
+console.log('------------------')
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 yargs
-  .scriptName('codemods')
-  .example([['$0 add-directives', 'Run the add-directives codemod']])
-  .command(v2TsconfigForRouteHooks)
-  .command(v2ConfigureFastify)
-  .command(v2UpdateResolverTypes)
-  .command(v4UpdateClerkGetCurrentUser)
-  .command(v4UseArmor)
-  .command(v5CellQueryResult)
-  .command(v5DetectEmptyCells)
-  .command(v5RenameValidateWith)
-  .command(v5UpdateAuth0ToV2)
-  .command(v5UpdateNodeEngineTo18)
-  .command(v5UpgradeToReact18)
-  .command(v6GlobalThis)
-  .command(v6Jsx)
-  .command(v6EntryClient)
-  .command(v6EnvDot)
-  .command(v6Svgs)
-  .command(v6DevFatalErrorPage)
-  .command(v6ThemeConfig)
-  .command(v7Gql)
+  .scriptName('')
+  .command(v2MoveGeneratorTemplates)
+  .command('redwood', 'List or run Redwood codemods', (yargs) => {
+    return yargs
+      .command(v2TsconfigForRouteHooks)
+      .command(v2ConfigureFastify)
+      .command(v2UpdateResolverTypes)
+      .command(v4UpdateClerkGetCurrentUser)
+      .command(v4UseArmor)
+      .command(v5CellQueryResult)
+      .command(v5DetectEmptyCells)
+      .command(v5RenameValidateWith)
+      .command(v5UpdateAuth0ToV2)
+      .command(v5UpdateNodeEngineTo18)
+      .command(v5UpgradeToReact18)
+      .command(v6GlobalThis)
+      .command(v6Jsx)
+      .command(v6EntryClient)
+      .command(v6EnvDot)
+      .command(v6Svgs)
+      .command(v6DevFatalErrorPage)
+      .command(v6ThemeConfig)
+      .command(v7Gql)
+      .demandCommand()
+      .strict()
+  })
   .demandCommand()
+  .epilog(
+    [
+      'Examples:',
+      '  npx @cedarjs/codemods@2.3.0 <codemod>          Run a Cedar codemod',
+      '  npx @cedarjs/codemods@2.3.0 redwood            List Redwood codemods',
+      '  npx @cedarjs/codemods@2.3.0 redwood <codemod>  Run a Redwood codemod',
+    ].join('\n'),
+  )
   .strict().argv

@@ -6,7 +6,7 @@ import {
   checkAndUpdateCustomWebIndex,
 } from './upgradeToReact18'
 
-export const command = 'redwood/upgrade-to-react-18'
+export const command = 'upgrade-to-react-18'
 
 export const description =
   '(v4.x.x->v5.0.0) Upgrades a project to React 18 and checks the react root'

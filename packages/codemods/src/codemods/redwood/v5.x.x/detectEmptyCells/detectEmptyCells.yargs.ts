@@ -2,7 +2,7 @@ import task from 'tasuku'
 
 import { detectEmptyCells } from './detectEmptyCells'
 
-export const command = 'redwood/detect-empty-cells'
+export const command = 'detect-empty-cells'
 
 export const description =
   '(v4.x.x->v5.x.x) Detects Cells susceptible to the new Empty behavior'

@@ -10,7 +10,7 @@ import { getPaths } from '@cedarjs/project-config'
 import prettify from '../../../../lib/prettify'
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/configure-fastify'
+export const command = 'configure-fastify'
 export const description =
   '(v2.x.x->v2.x.x) Updates api side’s server.config.js to configure Fastify'
 

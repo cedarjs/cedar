@@ -5,7 +5,7 @@ import task from 'tasuku'
 import { findCells } from '../../../../lib/cells'
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/cell-query-result'
+export const command = 'cell-query-result'
 export const description =
   '(v4.x.x->v5.x.x) Updates cells to use the `queryResult` property'
 

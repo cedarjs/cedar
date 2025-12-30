@@ -8,7 +8,7 @@ import { getPaths } from '@cedarjs/project-config'
 
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/update-resolver-types'
+export const command = 'update-resolver-types'
 export const description =
   '(v2.x.x->v3.x.x) Wraps types for "relation" resolvers in the bottom of service files'
 

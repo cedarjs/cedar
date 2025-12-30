@@ -6,7 +6,7 @@ import task from 'tasuku'
 
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/convert-js-to-jsx'
+export const command = 'convert-js-to-jsx'
 export const description =
   '(v5.x.x->v6.x.x) Converts web components from .js to .jsx'
 

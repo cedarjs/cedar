@@ -8,7 +8,7 @@ import { getPaths } from '@cedarjs/project-config'
 
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/process-env-dot-notation'
+export const command = 'process-env-dot-notation'
 export const description = '(v6.x.x->v6.x.x) Converts world to bazinga'
 
 export const handler = () => {

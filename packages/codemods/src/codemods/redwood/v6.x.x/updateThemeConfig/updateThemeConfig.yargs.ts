@@ -8,7 +8,7 @@ import { getPaths } from '@cedarjs/project-config'
 
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/update-theme-config'
+export const command = 'update-theme-config'
 export const description =
   '(v5.x.x->v6.x.x) Converts mantine and chakra UI configs to use ESM syntax'
 

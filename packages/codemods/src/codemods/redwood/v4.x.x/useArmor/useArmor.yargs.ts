@@ -7,7 +7,7 @@ import { getPaths } from '@cedarjs/project-config'
 import isTSProject from '../../../../lib/isTSProject'
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/use-armor'
+export const command = 'use-armor'
 export const description =
   '(v4.x.x->v4.x.x) Updates createGraphQLHandler config to use GraphQL Armor config as needed'
 

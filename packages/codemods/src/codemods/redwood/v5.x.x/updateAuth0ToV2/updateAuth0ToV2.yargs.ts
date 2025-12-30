@@ -8,7 +8,7 @@ import { getPaths } from '@cedarjs/project-config'
 import isTSProject from '../../../../lib/isTSProject'
 import runTransform from '../../../../lib/runTransform'
 
-export const command = 'redwood/update-auth0-to-v2'
+export const command = 'update-auth0-to-v2'
 
 export const description =
   '(v4.x.x->v5.x.x) Updates the web-side auth.{ts,js} file to the v2 SDK'

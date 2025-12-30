@@ -2,7 +2,7 @@ import task from 'tasuku'
 
 import addApiAliasToTsConfig from './tsconfigForRouteHooks'
 
-export const command = 'redwood/tsconfig-for-route-hooks'
+export const command = 'tsconfig-for-route-hooks'
 export const description =
   '(v2.3.x->v2.3.x) Allow $api imports in *.routesHooks.ts files'
 
