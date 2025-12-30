@@ -5,6 +5,7 @@ import { types } from '@babel/core'
 import type { ParserPlugin } from '@babel/parser'
 import { parse as babelParse } from '@babel/parser'
 import traverse from '@babel/traverse'
+import type { NodePath } from '@babel/traverse'
 import fg from 'fast-glob'
 import type {
   DocumentNode,
@@ -73,6 +74,7 @@ export const isFileInsideFolder = (filePath: string, folderPath: string) => {
 
 export const hasDefaultExport = (ast: types.Node): boolean => {
   let exported = false
+  // @ts-expect-error - weird types. Clearly this has worked for several years
   traverse(ast, {
     ExportDefaultDeclaration() {
       exported = true
@@ -89,8 +91,9 @@ interface NamedExports {
 
 export const getNamedExports = (ast: types.Node): NamedExports[] => {
   const namedExports: NamedExports[] = []
+  // @ts-expect-error - weird types. Clearly this has worked for several years
   traverse(ast, {
-    ExportNamedDeclaration(path) {
+    ExportNamedDeclaration(path: NodePath<types.ExportNamedDeclaration>) {
       // Re-exports from other modules
       // Eg: export { a, b } from './module.js'
       const specifiers = path.node?.specifiers
@@ -123,7 +126,7 @@ export const getNamedExports = (ast: types.Node): NamedExports[] => {
         })
       } else if (declaration.type === 'ClassDeclaration') {
         namedExports.push({
-          name: declaration?.id?.name,
+          name: declaration?.id?.name as string,
           type: 'class',
         })
       }
@@ -162,8 +165,9 @@ export const fileToAst = (filePath: string): types.Node => {
 
 export const getCellGqlQuery = (ast: types.Node) => {
   let cellQuery: string | undefined = undefined
+  // @ts-expect-error - weird types. Clearly this has worked for several years
   traverse(ast, {
-    ExportNamedDeclaration({ node }) {
+    ExportNamedDeclaration({ node }: NodePath<types.ExportNamedDeclaration>) {
       if (
         node.exportKind === 'value' &&
         types.isVariableDeclaration(node.declaration)
