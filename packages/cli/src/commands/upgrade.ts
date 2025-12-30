@@ -237,7 +237,7 @@ export const handler = async ({
       },
       {
         title: 'Removing CLI cache',
-        task: (ctx) => removeCliCache(ctx, { dryRun, verbose }),
+        task: () => removeCliCache({ dryRun, verbose }),
         enabled: (ctx) => !ctx.preUpgradeError,
       },
       {
@@ -352,13 +352,18 @@ async function yarnInstall({ verbose }: { verbose?: boolean }) {
 }
 
 /**
- * Removes the CLI plugin cache. This prevents the CLI from using outdated versions of the plugin,
- * when the plugins share the same alias. e.g. `cedar sb` used to point to `@cedarjs/cli-storybook` but now points to `@cedarjs/cli-storybook-vite`
+ * Removes the CLI plugin cache. This prevents the CLI from using outdated
+ * versions of the plugin, when the plugins share the same alias. e.g.
+ * `cedar sb` used to point to `@cedarjs/cli-storybook` but now points to
+ * `@cedarjs/cli-storybook-vite`
  */
-async function removeCliCache(
-  ctx: Record<string, unknown>,
-  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
-) {
+async function removeCliCache({
+  dryRun,
+  verbose,
+}: {
+  dryRun?: boolean
+  verbose?: boolean
+}) {
   const cliCacheDir = path.join(
     getPaths().generated.base,
     PLUGIN_CACHE_FILENAME,
