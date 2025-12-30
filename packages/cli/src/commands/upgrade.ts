@@ -203,14 +203,12 @@ export const handler = async ({
         task: async (ctx, task) => {
           await runPreUpgradeScripts(ctx, task, { verbose, force })
 
-          const ctxMsg = ctx.preUpgradeMessage
-          if (ctxMsg && typeof ctxMsg === 'string') {
-            preUpgradeMessage = ctxMsg
+          if (ctx.preUpgradeMessage) {
+            preUpgradeMessage = String(ctx.preUpgradeMessage)
           }
 
-          const ctxError = ctx.preUpgradeError
-          if (ctxError && typeof ctxError === 'string') {
-            preUpgradeError = ctxError
+          if (ctx.preUpgradeError) {
+            preUpgradeError = String(ctx.preUpgradeError)
           }
         },
         enabled: (ctx) => !!ctx.versionToUpgradeTo,
