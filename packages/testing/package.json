@@ -147,7 +147,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
-    "jsdom": "24.1.3",
+    "jsdom": "27.4.0",
     "publint": "0.3.16",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
