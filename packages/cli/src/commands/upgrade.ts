@@ -907,7 +907,7 @@ export async function runPreUpgradeScripts(
 
         ctx.preUpgradeMessage += `\n${stdout}`
       }
-    } catch (e: unknown) {
+    } catch (e) {
       let errorOutput = String(e)
       let exitCode: number | undefined
       let stderr: string | undefined
@@ -925,7 +925,9 @@ export async function runPreUpgradeScripts(
       }
 
       if (verbose) {
-        ctx.preUpgradeError += `\nPre-upgrade check ${scriptName} failed with exit code ${exitCode}:\n${stderr ? stderr + '\n' : ''}`
+        ctx.preUpgradeError +=
+          `\nPre-upgrade check ${scriptName} failed with exit code ` +
+          `${exitCode}:\n${stderr ? stderr + '\n' : ''}`
       }
 
       ctx.preUpgradeError += `\n${errorOutput}`
