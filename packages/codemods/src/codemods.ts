@@ -23,8 +23,6 @@ import * as v6ThemeConfig from './codemods/redwood/v6.x.x/updateThemeConfig/upda
 import * as v7Gql from './codemods/redwood/v7.x.x/updateGraphQLConfig/updateGraphqlConfig.yargs.js'
 import * as v2MoveGeneratorTemplates from './codemods/v2.3.x/moveGeneratorTemplates/moveGeneratorTemplates.yargs.js'
 
-console.log('------------------')
-
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 yargs
   .scriptName('')
