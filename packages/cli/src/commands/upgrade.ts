@@ -5,6 +5,7 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import execa from 'execa'
+import type { ExecaError } from 'execa'
 import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
 import semver from 'semver'
@@ -109,12 +110,6 @@ export const validateTag = (tag: string) => {
   }
 
   return tag
-}
-
-interface ExecaError extends Error {
-  stdout?: string
-  stderr?: string
-  exitCode?: number
 }
 
 function isExecaError(e: unknown): e is ExecaError {
