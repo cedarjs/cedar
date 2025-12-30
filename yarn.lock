@@ -4170,6 +4170,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@cedarjs/upgrade-scripts@workspace:upgrade-scripts":
+  version: 0.0.0-use.local
+  resolution: "@cedarjs/upgrade-scripts@workspace:upgrade-scripts"
+  languageName: unknown
+  linkType: soft
+
 "@cedarjs/vite@npm:2.2.1, @cedarjs/vite@workspace:packages/vite":
   version: 0.0.0-use.local
   resolution: "@cedarjs/vite@workspace:packages/vite"
