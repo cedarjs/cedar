@@ -55,7 +55,7 @@
     "ts-toolbelt": "9.6.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vite": "5.4.19",
+    "vite": "5.4.21",
     "vitest": "3.2.4"
   },
   "publishConfig": {
