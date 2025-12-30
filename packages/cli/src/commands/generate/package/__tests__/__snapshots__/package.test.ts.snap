@@ -37,18 +37,6 @@ describe('formValidators', () => {
 "
 `;
 
-exports[`packageHandler > files > multi-word package names > creates a multi-word package 4`] = `
-"import type { ScenarioData } from '@cedarjs/testing/api'
-
-export const standard = defineScenario({
-  // Define the "fixture" to write into your test database here
-  // See guide: https://cedarjs.com/docs/testing#scenarios
-})
-
-export type StandardScenario = ScenarioData<unknown>
-"
-`;
-
 exports[`packageHandler > files > multi-word package names > creates a multiWord package 1`] = `
 "# Shared Package '@my-camel-case-app/form-validators'
 
@@ -86,18 +74,6 @@ describe('formValidators', () => {
 "
 `;
 
-exports[`packageHandler > files > multi-word package names > creates a multiWord package 4`] = `
-"import type { ScenarioData } from '@cedarjs/testing/api'
-
-export const standard = defineScenario({
-  // Define the "fixture" to write into your test database here
-  // See guide: https://cedarjs.com/docs/testing#scenarios
-})
-
-export type StandardScenario = ScenarioData<unknown>
-"
-`;
-
 exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > index 1`] = `
 "export function formValidatorsPkg() {
   return 0
@@ -117,6 +93,7 @@ exports[`packageHandler > files > multi-word package names > uses the provided s
     "watch": "tsc --watch"
   },
   "devDependencies": {
+    "@cedarjs/testing": "2.2.1",
     "typescript": "5.9.3"
   }
 }
@@ -139,18 +116,6 @@ into your code:
 \`\`\`javascript
 import { formValidatorsPkg } from '@my-org/form-validators-pkg';
 \`\`\`
-"
-`;
-
-exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > scenario 1`] = `
-"import type { ScenarioData } from '@cedarjs/testing/api'
-
-export const standard = defineScenario({
-  // Define the "fixture" to write into your test database here
-  // See guide: https://cedarjs.com/docs/testing#scenarios
-})
-
-export type StandardScenario = ScenarioData<unknown>
 "
 `;
 
@@ -184,18 +149,6 @@ import { foo } from '@my-cedar-app/foo';
 "
 `;
 
-exports[`packageHandler > files > single word package name > infers package scope from project path > foo.scenarios.ts 1`] = `
-"import type { ScenarioData } from '@cedarjs/testing/api'
-
-export const standard = defineScenario({
-  // Define the "fixture" to write into your test database here
-  // See guide: https://cedarjs.com/docs/testing#scenarios
-})
-
-export type StandardScenario = ScenarioData<unknown>
-"
-`;
-
 exports[`packageHandler > files > single word package name > infers package scope from project path > foo.test.ts 1`] = `
 "import { foo } from './index.js'
 
@@ -226,6 +179,7 @@ exports[`packageHandler > files > single word package name > infers package scop
     "watch": "tsc --watch"
   },
   "devDependencies": {
+    "@cedarjs/testing": "2.2.1",
     "typescript": "5.9.3"
   }
 }
@@ -236,8 +190,10 @@ exports[`packageHandler > files > single word package name > infers package scop
 "{
   "compilerOptions": {
     "composite": true,
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
+    "target": "ES2024",
+    "module": "ES2022",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "dist",

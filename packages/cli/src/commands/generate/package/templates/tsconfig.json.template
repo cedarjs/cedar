@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "composite": true,
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
+    "target": "ES2024",
+    "module": "ES2022",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "dist",

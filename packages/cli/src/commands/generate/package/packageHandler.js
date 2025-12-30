@@ -32,6 +32,33 @@ export function nameVariants(nameArg) {
   return { name, folderName, packageName, fileName }
 }
 
+/**
+ * Generates the file structure and content for a new package.
+ *
+ * Creates all necessary files for a package including source files, configuration,
+ * README, and optionally test files. Handles both TypeScript and JavaScript generation.
+ *
+ * @param {Object} options - The file generation options
+ * @param {string} options.name - The package name
+ * @param {string} options.folderName - The folder name for the package (param-case)
+ * @param {string} options.packageName - The full scoped package name (e.g., '@org/package')
+ * @param {string} options.fileName - The camelCase file name
+ * @param {boolean} [options.typescript] - Whether to generate TypeScript files (defaults to JS if not provided)
+ * @param {boolean} [options.tests=true] - Whether to generate test files
+ *
+ * @returns {Promise<Object>} A promise that resolves to an object mapping file paths to their content
+ *
+ * @example
+ * // Generate TypeScript package files with tests
+ * const fileMap = await files({
+ *   name: 'MyPackage',
+ *   folderName: 'my-package',
+ *   packageName: '@myorg/my-package',
+ *   fileName: 'myPackage',
+ *   typescript: true,
+ *   tests: true
+ * })
+ */
 // Exported for testing
 export const files = async ({
   name,
@@ -97,21 +124,7 @@ export const files = async ({
       outputPath: path.join(folderName, 'src', `${fileName}.test${extension}`),
     })
 
-    const scenarioFile = await templateForFile({
-      name,
-      side: 'packages',
-      generator: 'package',
-      templatePath: 'scenarios.ts.template',
-      templateVars: rest,
-      outputPath: path.join(
-        folderName,
-        'src',
-        `${fileName}.scenarios${extension}`,
-      ),
-    })
-
     outputFiles.push(testFile)
-    outputFiles.push(scenarioFile)
   }
 
   return outputFiles.reduce(async (accP, [outputPath, content]) => {
@@ -129,6 +142,38 @@ export const files = async ({
   }, Promise.resolve({}))
 }
 
+/**
+ * Handler for the generate package command.
+ *
+ * Creates a new package in the Cedar monorepo with the specified name and
+ * configuration.
+ * Sets up the package structure including source files, tests, configuration
+ * files, and updates the workspace configuration.
+ *
+ * @param {Object} options - The command options
+ * @param {string} options.name - The package name (can be scoped like
+ * '@org/package' or just 'package')
+ * @param {boolean} [options.force] - Whether to overwrite existing files
+ * @param {boolean} [options.typescript] - Whether to generate TypeScript files
+ * (passed in rest)
+ * @param {boolean} [options.tests] - Whether to generate test files (passed in
+ * rest)
+ * @param {boolean} [options.rollback] - Whether to enable rollback on failure
+ * (passed in rest)
+ *
+ * @returns {Promise<void>}
+ *
+ * @throws {Error} If the package name contains more than one slash
+ * @throws {Error} If the workspace configuration is invalid
+ *
+ * @example
+ * // Generate a basic package
+ * await handler({ name: 'my-package', force: false })
+ *
+ * @example
+ * // Generate a scoped TypeScript package with tests
+ * await handler({ name: '@myorg/my-package', force: false, typescript: true, tests: true })
+ */
 export const handler = async ({ name, force, ...rest }) => {
   recordTelemetryAttributes({
     command: 'generate package',

@@ -9,6 +9,7 @@
     "watch": "tsc --watch"
   },
   "devDependencies": {
+    "@cedarjs/testing": "2.2.1",
     "typescript": "5.9.3"
   }
 }

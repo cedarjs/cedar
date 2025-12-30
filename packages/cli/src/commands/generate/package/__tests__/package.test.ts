@@ -59,9 +59,7 @@ import path from 'node:path'
 
 import { vi, describe, it, expect } from 'vitest'
 
-// @ts-expect-error - Importing a JS file
 import type * as LibIndex from '../../../../lib/index.js'
-// @ts-expect-error - Importing a JS file
 import * as packageHandler from '../packageHandler.js'
 
 describe('packageHandler', () => {
@@ -122,7 +120,7 @@ describe('packageHandler', () => {
         })
 
         const fileNames = Object.keys(files)
-        expect(fileNames.length).toEqual(6)
+        expect(fileNames.length).toEqual(5)
 
         expect(fileNames).toEqual(
           expect.arrayContaining([
@@ -131,7 +129,6 @@ describe('packageHandler', () => {
             expect.stringContaining('tsconfig.json'),
             expect.stringContaining('index.ts'),
             expect.stringContaining('foo.test.ts'),
-            expect.stringContaining('foo.scenarios.ts'),
           ]),
         )
 
@@ -150,9 +147,6 @@ describe('packageHandler', () => {
         const testPath = path.normalize(
           mockBase.path + '/packages/foo/src/foo.test.ts',
         )
-        const scenariosPath = path.normalize(
-          mockBase.path + '/packages/foo/src/foo.scenarios.ts',
-        )
 
         // Both making sure the file is valid json (parsing would fail otherwise)
         // and that the package name is correct
@@ -164,7 +158,6 @@ describe('packageHandler', () => {
         expect(files[tsconfigJsonPath]).toMatchSnapshot('tsconfig.json')
         expect(files[indexPath]).toMatchSnapshot('index.ts')
         expect(files[testPath]).toMatchSnapshot('foo.test.ts')
-        expect(files[scenariosPath]).toMatchSnapshot('foo.scenarios.ts')
       })
 
       it('uses kebab-case for package scope', async () => {
@@ -228,15 +221,10 @@ describe('packageHandler', () => {
           mockBase.path +
             '/packages/form-validators/src/formValidators.test.ts',
         )
-        const scenariosPath = path.normalize(
-          mockBase.path +
-            '/packages/form-validators/src/formValidators.scenarios.ts',
-        )
 
         expect(files[readmePath]).toMatchSnapshot()
         expect(files[indexPath]).toMatchSnapshot()
         expect(files[testPath]).toMatchSnapshot()
-        expect(files[scenariosPath]).toMatchSnapshot()
       })
 
       it('creates a multiWord package', async () => {
@@ -257,15 +245,10 @@ describe('packageHandler', () => {
           mockBase.path +
             '/packages/form-validators/src/formValidators.test.ts',
         )
-        const scenarioPath = path.normalize(
-          mockBase.path +
-            '/packages/form-validators/src/formValidators.scenarios.ts',
-        )
 
         expect(files[readmePath]).toMatchSnapshot()
         expect(files[indexPath]).toMatchSnapshot()
         expect(files[testPath]).toMatchSnapshot()
-        expect(files[scenarioPath]).toMatchSnapshot()
       })
 
       it('uses the provided scope for multiWord-package name', async () => {
@@ -287,10 +270,6 @@ describe('packageHandler', () => {
           mockBase.path +
             '/packages/form-validators-pkg/src/formValidatorsPkg.test.ts',
         )
-        const scenarioPath = path.normalize(
-          mockBase.path +
-            '/packages/form-validators-pkg/src/formValidatorsPkg.scenarios.ts',
-        )
 
         // Both making sure the file is valid json (parsing would fail otherwise)
         // and that the package name is correct
@@ -305,16 +284,15 @@ describe('packageHandler', () => {
         expect(files[packageJsonPath]).toMatchSnapshot('packageJson')
         expect(files[indexPath]).toMatchSnapshot('index')
         expect(files[testPath]).toMatchSnapshot('test')
-        expect(files[scenarioPath]).toMatchSnapshot('scenario')
       })
     })
 
-    it('returns tests, scenario and main package file for JS', async () => {
+    it('returns the corrent files for JS', async () => {
       const jsFiles = await packageHandler.files({
         ...packageHandler.nameVariants('Sample'),
       })
       const fileNames = Object.keys(jsFiles)
-      expect(fileNames.length).toEqual(6)
+      expect(fileNames.length).toEqual(5)
 
       expect(fileNames).toEqual(
         expect.arrayContaining([
@@ -324,7 +302,6 @@ describe('packageHandler', () => {
           expect.stringContaining('tsconfig.json'),
           expect.stringContaining('index.js'),
           expect.stringContaining('sample.test.js'),
-          expect.stringContaining('sample.scenarios.js'),
         ]),
       )
     })
