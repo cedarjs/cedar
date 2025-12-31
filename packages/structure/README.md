@@ -10,7 +10,7 @@
 ## Code
 
 - `/model/*`: The main API and classes (such as RWProject, RWPage, RWService, etc)
-- We use [vscode-languageserver-types](https://www.npmjs.com/package/vscode-languageserver-types) where possible (to represent Document URIs, Positions, Ranges, Diagnostics, etc)
+- `/x/types.ts`: Core types for representing the project graph (Ranges, Positions, Locations, Diagnostics, etc)
 
 # Usage
 
@@ -97,21 +97,6 @@ Anatomy of an id:
 - It has components separated by spaces.
 - The first component is always a file URI (or folder URI).
 - The rest are optional, and only exist when the node is internal to a file.
-
-## Abstracting File System Access
-
-To allow use cases like dealing with unsaved files, some filesystem methods can be overridden via the Host interface.
-
-```ts
-import { Host, getProject } from '@cedarjs/structure'
-const myHost: Host {
-  readFileSync(path:string){
-    // ...
-  }
-  // ...
-}
-const project = getProject('/path/to/project', myHost)
-```
 
 ## Sync VS Async
 

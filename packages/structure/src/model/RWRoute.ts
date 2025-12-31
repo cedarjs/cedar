@@ -1,11 +1,11 @@
 import * as tsm from 'ts-morph'
-import type { Location } from 'vscode-languageserver-types'
 
 import { RWError } from '../errors'
 import { BaseNode } from '../nodes'
 import { validateRoutePath } from '../util'
 import { lazy } from '../x/decorators'
 import { err, LocationLike_toLocation } from '../x/diagnostics'
+import type { Location } from '../x/Location'
 
 import type { RWRouter } from './RWRouter'
 

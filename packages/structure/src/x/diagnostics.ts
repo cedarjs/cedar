@@ -1,16 +1,51 @@
 import lc from 'line-column'
 import { groupBy, mapValues, uniqBy } from 'lodash'
 import * as tsm from 'ts-morph'
-import type { DocumentUri ,
-  Position} from 'vscode-languageserver-types'
-import {
-  Diagnostic,
-  DiagnosticSeverity,
-  Location,
-  Range,
-} from 'vscode-languageserver-types'
 
+import type { Location } from './Location'
+import { Location_is } from './Location'
+import type { Position } from './Position'
+import { Position_compare } from './Position'
+import type { Range } from './Range'
+import { Range_create } from './Range'
 import { URL_file } from './URL'
+
+export type DocumentUri = string
+
+export enum DiagnosticSeverity {
+  Error = 1,
+  Warning = 2,
+  Information = 3,
+  Hint = 4,
+}
+
+export interface Diagnostic {
+  range: Range
+  severity?: DiagnosticSeverity
+  code?: number | string
+  source?: string
+  message: string
+}
+
+export function Diagnostic_is(value: any): value is Diagnostic {
+  const candidate = value as Diagnostic
+  return (
+    candidate &&
+    typeof candidate.message === 'string' &&
+    typeof candidate.range === 'object' &&
+    candidate.range.start !== undefined &&
+    candidate.range.end !== undefined
+  )
+}
+
+/**
+ * The Diagnostic interface does not include the document URI.
+ * This interface adds that, and a few other things.
+ */
+export interface ExtendedDiagnostic {
+  uri: DocumentUri
+  diagnostic: Diagnostic
+}
 
 export function Range_contains(range: Range, pos: Position): boolean {
   if (Position_compare(range.start, pos) === 'greater') {
@@ -40,30 +75,6 @@ export function Range_overlaps(
     return true
   }
   return true
-}
-
-/**
- * p1 is greater|smaller|equal than/to p2
- * @param p1
- * @param p2
- */
-export function Position_compare(
-  p1: Position,
-  p2: Position,
-): 'greater' | 'smaller' | 'equal' {
-  if (p1.line > p2.line) {
-    return 'greater'
-  }
-  if (p2.line > p1.line) {
-    return 'smaller'
-  }
-  if (p1.character > p2.character) {
-    return 'greater'
-  }
-  if (p2.character > p1.character) {
-    return 'smaller'
-  }
-  return 'equal'
 }
 
 /**
@@ -102,7 +113,7 @@ export function Location_fromNode(node: tsm.Node): Location {
 }
 
 export function Location_fromFilePath(filePath: string): Location {
-  return { uri: URL_file(filePath), range: Range.create(0, 0, 0, 0) }
+  return { uri: URL_file(filePath), range: Range_create(0, 0, 0, 0) }
 }
 
 /**
@@ -139,13 +150,13 @@ export type LocationLike = tsm.Node | string | Location | ExtendedDiagnostic
 
 export function LocationLike_toLocation(x: LocationLike): Location {
   if (typeof x === 'string') {
-    return { uri: URL_file(x), range: Range.create(0, 0, 0, 0) }
+    return { uri: URL_file(x), range: Range_create(0, 0, 0, 0) }
   }
   if (typeof x === 'object') {
     if (x instanceof tsm.Node) {
       return Location_fromNode(x)
     }
-    if (Location.is(x)) {
+    if (Location_is(x)) {
       return x
     }
     if (ExtendedDiagnostic_is(x)) {
@@ -189,7 +200,7 @@ export function ExtendedDiagnostic_is(x: any): x is ExtendedDiagnostic {
   if (typeof x.uri !== 'string') {
     return false
   }
-  if (!Diagnostic.is(x.diagnostic)) {
+  if (!Diagnostic_is(x.diagnostic)) {
     return false
   }
   return true
@@ -235,16 +246,6 @@ export function Position_fromOffsetOrFail(
     throw new Error('Position_fromOffsetOrFail')
   }
   return p
-}
-
-/**
- * The Diagnostic interface defined in vscode-languageserver-types
- * does not include the document URI.
- * This interface adds that, and a few other things.
- */
-export interface ExtendedDiagnostic {
-  uri: DocumentUri
-  diagnostic: Diagnostic
 }
 
 /**

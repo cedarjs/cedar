@@ -1,5 +1,4 @@
 import * as tsm from 'ts-morph'
-import { DiagnosticSeverity } from 'vscode-languageserver-types'
 
 import { RWError } from '../errors'
 import { FileNode } from '../nodes'
@@ -7,6 +6,7 @@ import { iter } from '../x/Array'
 import { lazy, memo } from '../x/decorators'
 import type { ExtendedDiagnostic } from '../x/diagnostics'
 import { err, LocationLike_toLocation } from '../x/diagnostics'
+import { DiagnosticSeverity } from '../x/diagnostics'
 import { URL_file } from '../x/URL'
 
 import type { RWProject } from './RWProject'

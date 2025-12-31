@@ -2,14 +2,14 @@ import type {
   FieldDefinitionNode,
   ObjectTypeDefinitionNode,
 } from 'graphql/language/ast'
-import type { Location } from 'vscode-languageserver-types'
-import { DiagnosticSeverity } from 'vscode-languageserver-types'
 
 import { RWError } from '../errors'
 import { BaseNode } from '../nodes'
 import { lazy } from '../x/decorators'
 import type { ExtendedDiagnostic } from '../x/diagnostics'
 import { Position_fromTSMorphOffset } from '../x/diagnostics'
+import { DiagnosticSeverity } from '../x/diagnostics'
+import type { Location } from '../x/Location'
 
 import type { RWSDL } from './RWSDL'
 import type { RWServiceFunction } from './RWServiceFunction'

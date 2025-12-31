@@ -4114,7 +4114,6 @@ __metadata:
     deepmerge: "npm:4.3.1"
     dotenv-defaults: "npm:5.0.2"
     enquirer: "npm:2.4.1"
-    fast-glob: "npm:3.3.3"
     graphql: "npm:16.12.0"
     lazy-get-decorator: "npm:2.2.1"
     line-column: "npm:1.0.2"
@@ -4126,7 +4125,6 @@ __metadata:
     ts-morph: "npm:23.0.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
-    vscode-languageserver-types: "npm:3.17.5"
     yargs-parser: "npm:21.1.1"
   languageName: unknown
   linkType: soft
@@ -30893,13 +30891,6 @@ __metadata:
   version: 1.1.2
   resolution: "vm-browserify@npm:1.1.2"
   checksum: 10c0/0cc1af6e0d880deb58bc974921320c187f9e0a94f25570fca6b1bd64e798ce454ab87dfd797551b1b0cc1849307421aae0193cedf5f06bdb5680476780ee344b
-  languageName: node
-  linkType: hard
-
-"vscode-languageserver-types@npm:3.17.5":
-  version: 3.17.5
-  resolution: "vscode-languageserver-types@npm:3.17.5"
-  checksum: 10c0/1e1260de79a2cc8de3e46f2e0182cdc94a7eddab487db5a3bd4ee716f67728e685852707d72c059721ce500447be9a46764a04f0611e94e4321ffa088eef36f8
   languageName: node
   linkType: hard
 

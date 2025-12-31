@@ -4,8 +4,6 @@ import { join } from 'node:path'
 import * as dotenv from 'dotenv-defaults'
 import { pickBy } from 'lodash'
 import type * as tsm from 'ts-morph'
-import type { Location } from 'vscode-languageserver-types'
-import { DiagnosticSeverity } from 'vscode-languageserver-types'
 
 import { getSchemaPath } from '@cedarjs/project-config'
 
@@ -16,6 +14,8 @@ import {
   LocationLike_toHashLink,
   LocationLike_toLocation,
 } from '../x/diagnostics'
+import { DiagnosticSeverity } from '../x/diagnostics'
+import type { Location } from '../x/Location'
 import { prisma_parseEnvExpressionsInFile } from '../x/prisma'
 
 import type { RWProject } from './RWProject'

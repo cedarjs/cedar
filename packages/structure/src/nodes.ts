@@ -1,14 +1,14 @@
-import { basename } from 'path'
+import { existsSync, readFileSync } from 'node:fs'
+import { basename } from 'node:path'
 
 import type * as tsm from 'ts-morph'
-import { Range } from 'vscode-languageserver-types'
 
-import type { Host } from './hosts'
-import type { ArrayLike } from './x/Array'
 import { ArrayLike_normalize } from './x/Array'
+import type { ArrayLike } from './x/Array'
 import { lazy, memo } from './x/decorators'
 import type { ExtendedDiagnostic } from './x/diagnostics'
 import { basenameNoExt } from './x/path'
+import { Range_create } from './x/Range'
 import { createTSMSourceFile_cached } from './x/ts-morph'
 import { URL_file } from './x/URL'
 
@@ -27,15 +27,6 @@ export abstract class BaseNode {
   abstract get id(): NodeID
   abstract get parent(): BaseNode | undefined
 
-  @lazy()
-  get host(): Host {
-    if (this.parent) {
-      return this.parent.host
-    }
-    throw new Error(
-      "Could not find host implementation on root node (you must override the 'host' getter)",
-    )
-  }
   exists = true
   /**
    * Returns the children of this node.
@@ -86,7 +77,7 @@ export abstract class BaseNode {
       if (!uri) {
         throw e
       }
-      const range = Range.create(0, 0, 0, 0)
+      const range = Range_create(0, 0, 0, 0)
       return [
         {
           uri,
@@ -155,10 +146,10 @@ export abstract class FileNode extends BaseNode {
     return this.uri
   }
   @lazy() get text() {
-    return this.host.readFileSync(this.filePath)
+    return readFileSync(this.filePath, { encoding: 'utf8' }).toString()
   }
   @lazy() get fileExists(): boolean {
-    return this.host.existsSync(this.filePath)
+    return existsSync(this.filePath)
   }
   /**
    * parsed ts-morph source file

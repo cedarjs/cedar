@@ -13,7 +13,6 @@ import type { RWRoute } from '@cedarjs/structure/dist/model/RWRoute'
 
 // circular dependency when trying to import @cedarjs/structure so lets do it
 // the old fashioned way
-const { DefaultHost } = require('@cedarjs/structure/dist/hosts')
 const { RWProject } = require('@cedarjs/structure/dist/model/RWProject')
 
 interface SensitiveArgPositions {
@@ -223,7 +222,6 @@ const buildPayload = async () => {
   if (rootDir) {
     project = new RWProject({
       projectRoot: rootDir,
-      host: new DefaultHost(),
     })
   }
 

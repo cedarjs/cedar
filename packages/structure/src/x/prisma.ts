@@ -1,9 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 
-import type { Location } from 'vscode-languageserver-types'
-import { Range } from 'vscode-languageserver-types'
-
 import { Position_fromOffsetOrFail } from './diagnostics'
+import type { Location } from './Location'
+import { Range_create } from './Range'
 import { URL_file, URL_toFile } from './URL'
 
 /**
@@ -36,7 +35,7 @@ export function* prisma_parseEnvExpressions(src: string) {
     try {
       const start = Position_fromOffsetOrFail(match.index, src)
       const end = Position_fromOffsetOrFail(match.index + match[0].length, src)
-      const range = Range.create(start, end)
+      const range = Range_create(start, end)
       const key = JSON.parse(match[1])
       yield { range, key }
     } catch {

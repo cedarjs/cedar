@@ -1,25 +1,22 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
-import fg from 'fast-glob'
 import * as tsm from 'ts-morph'
 
-import { iter } from '../../x/Array'
+import { globSync } from '../../x/path'
 import { createTSMSourceFile_cached } from '../../x/ts-morph'
 
 export function process_env_findAll(dir: string) {
-  return iter(function* () {
-    // globSync only works with / as the path separator, even on Windows
-    const globPath = path
-      .join(dir, 'src/**/*.{js,ts,jsx,tsx}')
-      .replaceAll('\\', '/')
-    for (const file of fg.sync(globPath)) {
-      yield* process_env_findInFile(file, fs.readFileSync(file).toString())
-    }
-  })
+  const globPath = path.join(dir, 'src/**/*.{js,ts,jsx,tsx}')
+  return globSync(globPath).flatMap((file) =>
+    process_env_findInFile(file, fs.readFileSync(file).toString()),
+  )
 }
 
-export function process_env_findInFile(filePath: string, text: string) {
+export function process_env_findInFile(
+  filePath: string,
+  text: string,
+): { key: string; node: tsm.Node }[] {
   if (!text.includes('process.env')) {
     return []
   }
@@ -30,30 +27,31 @@ export function process_env_findInFile(filePath: string, text: string) {
   }
 }
 
-export function process_env_findInFile2(sf: tsm.SourceFile) {
+export function process_env_findInFile2(
+  sf: tsm.SourceFile,
+): { key: string; node: tsm.Node }[] {
   const penvs = sf
     .getDescendantsOfKind(tsm.SyntaxKind.PropertyAccessExpression)
     .filter(is_process_env)
-  return iter(function* () {
-    for (const penv of penvs) {
-      const node = penv.getParent()
-      if (!node) {
-        continue
-      }
-      if (tsm.Node.isPropertyAccessExpression(node)) {
-        yield { key: node.getName(), node }
-      } else if (tsm.Node.isElementAccessExpression(node)) {
-        const arg = node.getArgumentExpression()
-        if (!arg) {
-          continue
-        }
-        if (!tsm.Node.isStringLiteral(arg)) {
-          continue
-        }
-        yield { key: arg.getLiteralText(), node }
+
+  const results: { key: string; node: tsm.Node }[] = []
+
+  for (const penv of penvs) {
+    const node = penv.getParent()
+    if (!node) {
+      continue
+    }
+    if (tsm.Node.isPropertyAccessExpression(node)) {
+      results.push({ key: node.getName(), node })
+    } else if (tsm.Node.isElementAccessExpression(node)) {
+      const arg = node.getArgumentExpression()
+      if (arg && tsm.Node.isStringLiteral(arg)) {
+        results.push({ key: arg.getLiteralText(), node })
       }
     }
-  })
+  }
+
+  return results
 }
 
 function is_process_env(n: tsm.Node): n is tsm.PropertyAccessExpression {
