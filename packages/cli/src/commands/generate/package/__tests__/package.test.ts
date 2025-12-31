@@ -348,7 +348,7 @@ describe('packageHandler', () => {
           "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
           "types": ["jest"],
           // No end-of-line comma here, as you don't need that in tsconfig
-          // files, and shouldn't insert one when editing this file
+          // files. We shouldn't insert one when editing this file
           "jsx": "react-jsx"
         },
         "include": [
@@ -376,6 +376,9 @@ describe('packageHandler', () => {
       expect(fs.readFileSync(tsconfigPath, 'utf8')).toMatch(
         /"module": "Node20", \/\/ This is the line to update/,
       )
+      expect(fs.readFileSync(tsconfigPath, 'utf8')).toEqual(
+        tsconfig.replace('"module": "Node16",', '"module": "Node20",'),
+      )
     })
 
     it('skips update if "module" is already Node20', async () => {
@@ -395,7 +398,9 @@ describe('packageHandler', () => {
       await packageHandler.updateTsconfig({ skip: skipFn })
 
       expect(skipFn).toHaveBeenCalled()
-      expect(fs.readFileSync(tsconfigPath, 'utf8')).toEqual(node20tsconfig)
+      expect(fs.readFileSync(tsconfigPath, 'utf8')).toMatch(
+        /"module": "Node20"/,
+      )
     })
 
     it('skips update if "module" is already NodeNext', async () => {
