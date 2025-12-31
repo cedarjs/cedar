@@ -91,7 +91,7 @@
   "devDependencies": {
     "@babel/cli": "7.28.3",
     "@babel/core": "^7.26.10",
-    "@types/archiver": "^6",
+    "@types/archiver": "^7.0.0",
     "memfs": "4.51.1",
     "node-ssh": "13.2.1",
     "ts-dedent": "2.2.0",
