@@ -5,6 +5,12 @@ import '../../../../lib/test.js'
 
 const mockBase = vi.hoisted(() => ({ path: '/path/to/project' }))
 
+const { memfs, ufs, vol } = await vi.hoisted(async () => {
+  const { vol, fs: memfs } = await import('memfs')
+  const { ufs } = await import('unionfs')
+  return { memfs, ufs, vol }
+})
+
 vi.mock('../../../../lib/index.js', async (importOriginal) => {
   const originalProjectConfig = await importOriginal<typeof LibIndex>()
 
@@ -14,12 +20,7 @@ vi.mock('../../../../lib/index.js', async (importOriginal) => {
       return {
         base: mockBase.path,
         api: {
-          prismaConfig: path.join(
-            // Current test folder
-            globalThis.__dirname,
-            'fixtures',
-            'prisma.config.cjs',
-          ),
+          base: path.join(mockBase.path, 'api'),
           dataMigrations: path.join(mockBase.path, 'api/dataMigrations'),
           src: path.join(mockBase.path, 'api/src'),
           jobs: path.join(mockBase.path, 'api/src/jobs'),
@@ -57,10 +58,26 @@ vi.mock('../../../../lib/index.js', async (importOriginal) => {
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { vi, describe, it, expect } from 'vitest'
+import { vi, describe, it, expect, afterEach } from 'vitest'
 
 import type * as LibIndex from '../../../../lib/index.js'
 import * as packageHandler from '../packageHandler.js'
+
+vi.mock('node:fs', async (importOriginal) => {
+  const { wrapFsForUnionfs } = await import(
+    '../../../../__tests__/ufsFsProxy.js'
+  )
+  const originalFs = await importOriginal()
+  ufs.use(wrapFsForUnionfs(originalFs)).use(memfs as any)
+  return {
+    ...ufs,
+    default: ufs,
+  }
+})
+
+afterEach(() => {
+  mockBase.path = '/path/to/project'
+})
 
 describe('packageHandler', () => {
   describe('handler', () => {
@@ -206,6 +223,8 @@ describe('packageHandler', () => {
     // packages.
     describe('multi-word package names', () => {
       it('creates a multi-word package', async () => {
+        mockBase.path = '/path/to/myCamelCaseApp'
+
         const files = await packageHandler.files({
           ...packageHandler.nameVariants('form-validators'),
           typescript: true,
@@ -303,6 +322,100 @@ describe('packageHandler', () => {
           expect.stringContaining('index.js'),
           expect.stringContaining('sample.test.js'),
         ]),
+      )
+    })
+  })
+
+  describe('updateTsconfig', () => {
+    const tsconfigPath = path.join(mockBase.path, 'api', 'tsconfig.json')
+
+    const tsconfig = `
+      {
+        "compilerOptions": {
+          "noEmit": true,
+          "allowJs": true,
+          "esModuleInterop": true,
+          "target": "ES2023",
+          "module": "Node16", // This is the line to update
+          "moduleResolution": "Node16",
+          "skipLibCheck": false,
+          "rootDirs": ["./src", "../.redwood/types/mirror/api/src"],
+          "paths": {
+            "src/*": ["./src/*", "../.redwood/types/mirror/api/src/*"],
+            "types/*": ["./types/*", "../types/*"],
+            "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]
+          },
+          "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
+          "types": ["jest"],
+          // No end-of-line comma here, as you don't need that in tsconfig
+          // files, and shouldn't insert one when editing this file
+          "jsx": "react-jsx"
+        },
+        "include": [
+          "src",
+          "../.redwood/types/includes/all-*",
+          "../.redwood/types/includes/api-*",
+          "../types"
+        ]
+      }
+    `
+
+    it('updates from Node16 to Node20', async () => {
+      vol.fromJSON(
+        {
+          [tsconfigPath]: tsconfig,
+          'redwood.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateTsconfig({ skip: () => {} })
+
+      // Comments are valid in tsconfig files, we want to make sure we don't
+      // remove those
+      expect(fs.readFileSync(tsconfigPath, 'utf8')).toMatch(
+        /"module": "Node20", \/\/ This is the line to update/,
+      )
+    })
+
+    it('skips update if "module" is already Node20', async () => {
+      const node20tsconfig = tsconfig.replace(
+        '"module": "Node16",',
+        '"module": "Node20",',
+      )
+      vol.fromJSON(
+        {
+          [tsconfigPath]: node20tsconfig,
+          'redwood.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const skipFn = vi.fn()
+      await packageHandler.updateTsconfig({ skip: skipFn })
+
+      expect(skipFn).toHaveBeenCalled()
+      expect(fs.readFileSync(tsconfigPath, 'utf8')).toEqual(node20tsconfig)
+    })
+
+    it('skips update if "module" is already NodeNext', async () => {
+      vol.fromJSON(
+        {
+          [tsconfigPath]: tsconfig.replace(
+            '"module": "Node16",',
+            '"module": "NodeNext",',
+          ),
+          'redwood.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const skipFn = vi.fn()
+      await packageHandler.updateTsconfig({ skip: skipFn })
+
+      expect(skipFn).toHaveBeenCalled()
+      expect(fs.readFileSync(tsconfigPath, 'utf8')).toMatch(
+        /"module": "NodeNext"/,
       )
     })
   })

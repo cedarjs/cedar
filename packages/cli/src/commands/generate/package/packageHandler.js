@@ -5,6 +5,15 @@ import { paramCase, camelCase } from 'change-case'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
+/**
+ * @typedef {Object} ListrContext
+ * @property {Object} nameVariants - The parsed name variants for the package
+ * @property {string} nameVariants.name - The base name
+ * @property {string} nameVariants.folderName - The param-case folder name
+ * @property {string} nameVariants.packageName - The full scoped package name
+ * @property {string} nameVariants.fileName - The camelCase file name
+ */
+
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -142,6 +151,35 @@ export const files = async ({
   }, Promise.resolve({}))
 }
 
+// Exported for testing
+export async function updateTsconfig(task) {
+  const tsconfigPath = path.join(getPaths().api.base, 'tsconfig.json')
+  const tsconfig = await fs.promises.readFile(tsconfigPath, 'utf8')
+  const tsconfigLines = tsconfig.split('\n')
+
+  const moduleLineIndex = tsconfigLines.findIndex((line) =>
+    /^\s*"module":\s*"/.test(line),
+  )
+  const moduleLine = tsconfigLines[moduleLineIndex]
+
+  if (
+    moduleLine.toLowerCase().includes('node20') ||
+    // While Cedar doesn't officially endorse the usage of NodeNext, it
+    // will still work here, so I won't overwrite it
+    moduleLine.toLowerCase().includes('nodenext')
+  ) {
+    task.skip('tsconfig already up to date')
+    return
+  }
+
+  tsconfigLines[moduleLineIndex] = moduleLine.replace(
+    /":\s*"[\w\d]+"/,
+    '": "Node20"',
+  )
+
+  await fs.promises.writeFile(tsconfigPath, tsconfigLines.join('\n'))
+}
+
 /**
  * Handler for the generate package command.
  *
@@ -190,7 +228,7 @@ export const handler = async ({ name, force, ...rest }) => {
 
   let packageFiles = {}
   const tasks = new Listr(
-    [
+    /** @type {import('listr2').ListrTask<ListrContext>[]} */ ([
       {
         title: 'Parsing package name...',
         task: (ctx) => {
@@ -238,6 +276,12 @@ export const handler = async ({ name, force, ...rest }) => {
         },
       },
       {
+        title: 'Updating api side tsconfig file...',
+        task: async (_ctx, task) => {
+          await updateTsconfig(task)
+        },
+      },
+      {
         title: 'Generating package files...',
         task: async (ctx) => {
           packageFiles = await files({
@@ -259,7 +303,7 @@ export const handler = async ({ name, force, ...rest }) => {
           ])
         },
       },
-    ],
+    ]),
     { rendererOptions: { collapseSubtasks: false }, exitOnError: true },
   )
 

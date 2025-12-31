@@ -2,7 +2,7 @@
   "compilerOptions": {
     "composite": true,
     "target": "ES2024",
-    "module": "ES2022",
+    "module": "Node20",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": ".",
