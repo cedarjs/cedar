@@ -5435,13 +5435,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faker-js/faker@npm:8.4.1":
-  version: 8.4.1
-  resolution: "@faker-js/faker@npm:8.4.1"
-  checksum: 10c0/4f2aecddcfdc2cc8b50b2d15d1e37302a7c7a5bbd184ae910a9d271bc11248533ca74dcdd4a9ccbe20410553e7af0f6a4d334c5b955635e09a32ddf4a64942d4
-  languageName: node
-  linkType: hard
-
 "@fastify/accept-negotiator@npm:^2.0.0":
   version: 2.0.1
   resolution: "@fastify/accept-negotiator@npm:2.0.1"
@@ -27672,7 +27665,6 @@ __metadata:
     "@babel/preset-react": "npm:7.28.5"
     "@babel/preset-typescript": "npm:7.28.5"
     "@babel/runtime-corejs3": "npm:7.28.4"
-    "@faker-js/faker": "npm:8.4.1"
     "@npmcli/arborist": "npm:9.1.9"
     "@playwright/test": "npm:1.57.0"
     "@testing-library/jest-dom": "npm:6.9.1"
