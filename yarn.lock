@@ -5,6 +5,27 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
+"@-xun/debug@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@-xun/debug@npm:2.0.2"
+  dependencies:
+    "@types/debug": "npm:^4.1.12"
+    debug: "npm:^4.4.1"
+    supports-color: "npm:^8.1.1"
+    type-fest: "npm:^4.41.0"
+  checksum: 10c0/aaaad02b641a6daf4a390e98f133a2c131846e08ec03fa333367e0d248b570ab3e8efceb8aaa6f4571d223aa1b9914397b56c45b45a81b5fe901c93586a87fba
+  languageName: node
+  linkType: hard
+
+"@-xun/fs@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@-xun/fs@npm:2.0.0"
+  dependencies:
+    type-fest: "npm:^4.41.0"
+  checksum: 10c0/de7dc82eb172d732a179b58953be3d63d061b3495884a16074761f3bd079b289d40dffab7daca99233a850de7203e36e238b9c7e54b77261e725998c2fe2ce04
+  languageName: node
+  linkType: hard
+
 "@aashutoshrathi/word-wrap@npm:^1.2.3":
   version: 1.2.6
   resolution: "@aashutoshrathi/word-wrap@npm:1.2.6"
@@ -3248,7 +3269,7 @@ __metadata:
     "@babel/traverse": "npm:7.28.5"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "npm:2.2.1"
-    "@types/babel-plugin-tester": "npm:9.0.10"
+    "@types/babel-plugin-tester": "npm:11.0.0"
     "@types/babel__core": "npm:7.20.5"
     "@types/babel__register": "npm:7.17.3"
     "@types/node": "npm:24.10.4"
@@ -11372,13 +11393,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel-plugin-tester@npm:9.0.10":
-  version: 9.0.10
-  resolution: "@types/babel-plugin-tester@npm:9.0.10"
+"@types/babel-plugin-tester@npm:11.0.0":
+  version: 11.0.0
+  resolution: "@types/babel-plugin-tester@npm:11.0.0"
   dependencies:
-    "@types/babel__core": "npm:*"
-    "@types/prettier": "npm:^2.0.0"
-  checksum: 10c0/5f593868f2ec94dfe1eeaefd787936805f17c2964c1c93d9b28f1b389a75d0d2ed3c2f69b3e4bd119284a8273bf4279f249e4b4c9933507a60db01e16338180a
+    babel-plugin-tester: "npm:*"
+  checksum: 10c0/36d43ac48efb110729fc71a0842d5f8796b16301a5d407a506a9a3e6abbffa2f70e66aeef8d6922d27e35bcb9a2b5b083c95bf7490d25373797328ea00523fbf
   languageName: node
   linkType: hard
 
@@ -11518,7 +11538,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/debug@npm:^4.1.7":
+"@types/debug@npm:^4.1.12, @types/debug@npm:^4.1.7":
   version: 4.1.12
   resolution: "@types/debug@npm:4.1.12"
   dependencies:
@@ -11905,13 +11925,6 @@ __metadata:
   version: 1.6.6
   resolution: "@types/phoenix@npm:1.6.6"
   checksum: 10c0/4dfcb3fd36341ed5500de030291af14163c599857e00d2d4ff065d4c4600317d5d20aa170913fb9609747a09436e3add44db7d0c709bdf80f36cddcc67a42021
-  languageName: node
-  linkType: hard
-
-"@types/prettier@npm:^2.0.0":
-  version: 2.7.3
-  resolution: "@types/prettier@npm:2.7.3"
-  checksum: 10c0/0960b5c1115bb25e979009d0b44c42cf3d792accf24085e4bfce15aef5794ea042e04e70c2139a2c3387f781f18c89b5706f000ddb089e9a4a2ccb7536a2c5f0
   languageName: node
   linkType: hard
 
@@ -13600,6 +13613,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"babel-plugin-tester@npm:*":
+  version: 12.0.0
+  resolution: "babel-plugin-tester@npm:12.0.0"
+  dependencies:
+    "@-xun/fs": "npm:^2.0.0"
+    core-js: "npm:^3.43.0"
+    lodash.mergewith: "npm:^4.6.2"
+    prettier: "npm:^3.5.3"
+    pretty-format: "npm:^30.0.0"
+    rejoinder: "npm:^2.0.1"
+    strip-indent~3: "npm:strip-indent@^3.0.0"
+    type-fest: "npm:^4.41.0"
+  peerDependencies:
+    "@babel/core": ">=7.22.0"
+  checksum: 10c0/4210db45920fd39193240371002b1d0bfd4be97fdcdb00fc5c57d3f1e8f2984a7d065a17b23fec2bc39d00805d015a8846ce0bd4e0d0253fed688686531d3b09
+  languageName: node
+  linkType: hard
+
 "babel-plugin-tester@npm:11.0.4":
   version: 11.0.4
   resolution: "babel-plugin-tester@npm:11.0.4"
@@ -14381,7 +14412,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:^5.2.0, chalk@npm:^5.3.0, chalk@npm:^5.6.2":
+"chalk@npm:^5.2.0, chalk@npm:^5.3.0, chalk@npm:^5.6.0, chalk@npm:^5.6.2":
   version: 5.6.2
   resolution: "chalk@npm:5.6.2"
   checksum: 10c0/99a4b0f0e7991796b1e7e3f52dceb9137cae2a9dfc8fc0784a550dc4c558e15ab32ed70b14b21b52beb2679b4892b41a0aa44249bcb996f01e125d58477c6976
@@ -15296,7 +15327,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js@npm:3.47.0, core-js@npm:^3.27.2, core-js@npm:^3.30.2":
+"core-js@npm:3.47.0, core-js@npm:^3.27.2, core-js@npm:^3.30.2, core-js@npm:^3.43.0, core-js@npm:^3.45.1":
   version: 3.47.0
   resolution: "core-js@npm:3.47.0"
   checksum: 10c0/9b1a7088b7c660c7b8f1d4c90bb1816a8d5352ebdcb7bc742e3a0e4eb803316b5aa17bacb8769522342196351a5430178f46914644f2bfdb94ce0ced3c7fd523
@@ -15911,9 +15942,9 @@ __metadata:
   linkType: hard
 
 "decimal.js@npm:^10.4.2, decimal.js@npm:^10.4.3":
-  version: 10.4.3
-  resolution: "decimal.js@npm:10.4.3"
-  checksum: 10c0/6d60206689ff0911f0ce968d40f163304a6c1bc739927758e6efc7921cfa630130388966f16bf6ef6b838cb33679fbe8e7a78a2f3c478afce841fd55ac8fb8ee
+  version: 10.6.0
+  resolution: "decimal.js@npm:10.6.0"
+  checksum: 10c0/07d69fbcc54167a340d2d97de95f546f9ff1f69d2b45a02fd7a5292412df3cd9eb7e23065e532a318f5474a2e1bccf8392fdf0443ef467f97f3bf8cb0477e5aa
   languageName: node
   linkType: hard
 
@@ -17738,6 +17769,13 @@ __metadata:
   dependencies:
     pify: "npm:^2.2.0"
   checksum: 10c0/c3cc5d2d2e3cdb1b7d7b0639ebd5566d113d7ada21cfa07f5226d55ba2a210320116720e07570ed5659ef2ec516bc00c8f0488dac75d112fd324ef25c2100173
+  languageName: node
+  linkType: hard
+
+"exit-hook@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "exit-hook@npm:4.0.0"
+  checksum: 10c0/7fb33eaeb9050aee9479da9c93d42b796fb409c40e1d2b6ea2f40786ae7d7db6dc6a0f6ecc7bc24e479f957b7844bcb880044ded73320334743c64e3ecef48d7
   languageName: node
   linkType: hard
 
@@ -26029,7 +26067,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-format@npm:30.2.0":
+"pretty-format@npm:30.2.0, pretty-format@npm:^30.0.0":
   version: 30.2.0
   resolution: "pretty-format@npm:30.2.0"
   dependencies:
@@ -27059,6 +27097,18 @@ __metadata:
     react:
       optional: true
   checksum: 10c0/3d838bfee84ec06c976f21027936f3b0fdb7660ab8a2d4d3f19c65e0daa78a268aa81352311352b8576b89a074714b36ae6cd5bdadb6e975eca079f2b342de73
+  languageName: node
+  linkType: hard
+
+"rejoinder@npm:^2.0.1":
+  version: 2.1.0
+  resolution: "rejoinder@npm:2.1.0"
+  dependencies:
+    "@-xun/debug": "npm:^2.0.2"
+    chalk: "npm:^5.6.0"
+    core-js: "npm:^3.45.1"
+    exit-hook: "npm:^4.0.0"
+  checksum: 10c0/d65da661f0112edd48b6d876813852a519452fa7c32f175fe18941f8c5d897a0986af67c7fc776be169cfe9712e5d80b8d95236eea6928b16011b265c7ad1afd
   languageName: node
   linkType: hard
 
@@ -28888,7 +28938,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"strip-indent@npm:^3.0.0":
+"strip-indent@npm:^3.0.0, strip-indent~3@npm:strip-indent@^3.0.0":
   version: 3.0.0
   resolution: "strip-indent@npm:3.0.0"
   dependencies:
@@ -29802,7 +29852,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:4.41.0, type-fest@npm:^4.15.0, type-fest@npm:^4.18.2":
+"type-fest@npm:4.41.0, type-fest@npm:^4.15.0, type-fest@npm:^4.18.2, type-fest@npm:^4.41.0":
   version: 4.41.0
   resolution: "type-fest@npm:4.41.0"
   checksum: 10c0/f5ca697797ed5e88d33ac8f1fec21921839871f808dc59345c9cf67345bfb958ce41bd821165dbf3ae591cedec2bf6fe8882098dfdd8dc54320b859711a2c1e4
