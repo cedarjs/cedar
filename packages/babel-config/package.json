@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/babel-plugin-tester": "9.0.10",
+    "@types/babel-plugin-tester": "11.0.0",
     "@types/babel__core": "7.20.5",
     "@types/babel__register": "7.17.3",
     "@types/node": "24.10.4",
