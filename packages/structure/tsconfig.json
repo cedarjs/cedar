@@ -9,9 +9,5 @@
     "noUnusedLocals": false
   },
   "include": ["src"],
-  "references": [
-    {
-      "path": "../project-config"
-    }
-  ]
+  "references": [{ "path": "../project-config" }]
 }
