@@ -29,6 +29,13 @@ declare global {
    */
   var RWJS_EXP_RSC: boolean
 
+  interface Thenable<T> {
+    then<TResult1 = T, TResult2 = never>(
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+    ): PromiseLike<TResult1 | TResult2>
+  }
+
   namespace NodeJS {
     interface Global {
       /**
