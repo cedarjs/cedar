@@ -42,8 +42,6 @@ import { convertExpressHeaders, getFullUrl } from './utils.js'
 loadDotEnv({
   path: path.join(getPaths().base, '.env'),
   defaults: path.join(getPaths().base, '.env.defaults'),
-  // @ts-expect-error - Old typings. @types/dotenv-defaults depends on dotenv
-  // v8. dotenv-defaults uses dotenv v14
   multiline: true,
 })
 // ------------------------------------------------

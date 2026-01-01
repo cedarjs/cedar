@@ -74,7 +74,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/dotenv-defaults": "^2.0.4",
+    "@types/dotenv-defaults": "^5.0.0",
     "@types/lodash": "4.17.21",
     "@types/pascalcase": "1.0.3",
     "@types/semver": "^7",
