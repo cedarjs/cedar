@@ -158,6 +158,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     },
 
     scripts: path.join(BASE_DIR, 'scripts'),
+    packages: path.join(BASE_DIR, 'packages'),
     generatorTemplates: path.join(BASE_DIR, 'generatorTemplates'),
 
     api: {

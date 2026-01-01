@@ -1,0 +1,207 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`packageHandler > files > multi-word package names > creates a multi-word package 1`] = `
+"# Shared Package '@my-camel-case-app/form-validators'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-camel-case-app/form-validators": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { formValidators } from '@my-camel-case-app/form-validators';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multi-word package 2`] = `
+"export function formValidators() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multi-word package 3`] = `
+"import { formValidators } from './index.js'
+
+describe('formValidators', () => {
+  it('should not throw any errors', async () => {
+    expect(formValidators()).not.toThrow()
+  })
+})
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multiWord package 1`] = `
+"# Shared Package '@my-camel-case-app/form-validators'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-camel-case-app/form-validators": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { formValidators } from '@my-camel-case-app/form-validators';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multiWord package 2`] = `
+"export function formValidators() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > creates a multiWord package 3`] = `
+"import { formValidators } from './index.js'
+
+describe('formValidators', () => {
+  it('should not throw any errors', async () => {
+    expect(formValidators()).not.toThrow()
+  })
+})
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > index 1`] = `
+"export function formValidatorsPkg() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > packageJson 1`] = `
+"{
+  "name": "@my-org/form-validators-pkg",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@cedarjs/testing": "2.2.1",
+    "typescript": "5.9.3"
+  }
+}
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > readme 1`] = `
+"# Shared Package '@my-org/form-validators-pkg'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-org/form-validators-pkg": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { formValidatorsPkg } from '@my-org/form-validators-pkg';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > multi-word package names > uses the provided scope for multiWord-package name > test 1`] = `
+"import { formValidatorsPkg } from './index.js'
+
+describe('formValidatorsPkg', () => {
+  it('should not throw any errors', async () => {
+    expect(formValidatorsPkg()).not.toThrow()
+  })
+})
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > README.md 1`] = `
+"# Shared Package '@my-cedar-app/foo'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special \`workspace:*\` version. After that you can import it
+into your code:
+
+\`\`\`json
+  "dependencies": {
+    "@my-cedar-app/foo": "workspace:*"
+  }
+\`\`\`
+
+\`\`\`javascript
+import { foo } from '@my-cedar-app/foo';
+\`\`\`
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > foo.test.ts 1`] = `
+"import { foo } from './index.js'
+
+describe('foo', () => {
+  it('should not throw any errors', async () => {
+    expect(foo()).not.toThrow()
+  })
+})
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > index.ts 1`] = `
+"export function foo() {
+  return 0
+}
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > package.json 1`] = `
+"{
+  "name": "@my-cedar-app/foo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@cedarjs/testing": "2.2.1",
+    "typescript": "5.9.3"
+  }
+}
+"
+`;
+
+exports[`packageHandler > files > single word package name > infers package scope from project path > tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2023",
+    "module": "Node20",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+  },
+  "include": ["src"],
+}
+"
+`;

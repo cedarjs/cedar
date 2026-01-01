@@ -29,6 +29,7 @@ const DEFAULT_PATHS = {
     },
     prebuild: ['.redwood', 'prebuild'],
   },
+  packages: ['packages'],
   scripts: ['scripts'],
   generatorTemplates: ['generatorTemplates'],
   api: {
