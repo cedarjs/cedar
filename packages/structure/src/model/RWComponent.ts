@@ -1,6 +1,6 @@
 import * as tsm from 'ts-morph'
 
-import { FileNode } from '../ide'
+import { FileNode } from '../nodes'
 import { lazy } from '../x/decorators'
 
 import type { RWProject } from './RWProject'

@@ -1,5 +1,10 @@
-import { existsSync } from 'node:fs'
-import { basename, normalize, sep } from 'path'
+import fs from 'node:fs'
+import { basename, normalize, sep } from 'node:path'
+
+export function globSync(pattern: string): string[] {
+  // fs.globSync requires forward slashes as path separators in patterns, even on Windows.
+  return fs.globSync(pattern.replaceAll('\\', '/')).map((p) => p.toString())
+}
 
 export function directoryNameResolver(dirName: string): string | undefined {
   dirName = normalize(dirName)
@@ -10,7 +15,7 @@ export function directoryNameResolver(dirName: string): string | undefined {
   const pathNoExt = parts.join(sep)
   for (const ext of extensions) {
     const path = pathNoExt + ext
-    if (existsSync(path)) {
+    if (fs.existsSync(path)) {
       return path
     }
   }

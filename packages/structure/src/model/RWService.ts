@@ -1,6 +1,6 @@
 import * as tsm from 'ts-morph'
 
-import { FileNode } from '../ide'
+import { FileNode } from '../nodes'
 import { iter } from '../x/Array'
 import { lazy } from '../x/decorators'
 import { basenameNoExt } from '../x/path'

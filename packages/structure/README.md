@@ -2,22 +2,21 @@
 
 # Overview
 
-- The @redwoodjs/structure package lets you build, validate and inspect an object graph that represents a complete Redwood project
-- It is used by the CLI and by VSCode extensions to provide IDE features such as diagnostics, code-fixes, etc.
+- The @cedarjs/structure package lets you build, validate and inspect an object graph that represents a complete Cedar project
+- It is used by the CLI to provide features such as diagnostics.
 - **IMPORTANT:** This is an **internal** and **development-time only** package
-  - You **cannot** "import it" into a normal redwood app
+  - You **cannot** "import it" into a normal cedar app
 
 ## Code
 
 - `/model/*`: The main API and classes (such as RWProject, RWPage, RWService, etc)
-- `/language_server/*`: A [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation that wraps the `model` classes. More info [here](./src/language_server/README.md)
-- We use [vscode-languageserver-types](https://www.npmjs.com/package/vscode-languageserver-types) where possible (to represent Document URIs, Positions, Ranges, Diagnostics, etc)
+- `/x/types.ts`: Core types for representing the project graph (Ranges, Positions, Locations, Diagnostics, etc)
 
 # Usage
 
 ## Diagnostics
 
-The most common use-case is getting the diagnostics of a complete Redwood project:
+The most common use-case is getting the diagnostics of a complete Cedar project:
 
 ```ts
 import { getProject } from '@cedarjs/structure'
@@ -42,7 +41,7 @@ Note: Gathering _all_ diagnostics is expensive. It will trigger the creation of 
 
 You can also traverse the graph to get more detailed information on multiple aspects of your app.
 
-For example, iterating over the routes of a Redwood project:
+For example, iterating over the routes of a Cedar project:
 
 ```ts
 import { getProject } from '@cedarjs/structure'
@@ -70,7 +69,7 @@ async function test() {
 - Each node in the graph has an `id` property.
 - ids are unique and stable
 - They are organized in a hierarchical fashion (so that `child.id.startsWith(parent.id) === true`)
-- Requesting a node using its id will not require the complete project to be processed. Only the subset that is needed (usually only the node's ancestors). This is important to enable efficient IDE-like tooling to interact with the project graph and get diagnostics for quickly changing files.
+- Requesting a node using its id will not require the complete project to be processed. Only the subset that is needed (usually only the node's ancestors). This is important to enable efficient tooling to interact with the project graph and get diagnostics for quickly changing files.
 
 ```ts
 import { getProject } from '@cedarjs/structure'
@@ -99,28 +98,13 @@ Anatomy of an id:
 - The first component is always a file URI (or folder URI).
 - The rest are optional, and only exist when the node is internal to a file.
 
-## Abstracting File System Access
-
-To allow use cases like dealing with unsaved files in IDEs, some filesystem methods can be overridden via the Host interface.
-
-```ts
-import { Host, getProject } from '@cedarjs/structure'
-const myHost: Host {
-  readFileSync(path:string){
-    // ...
-  }
-  // ...
-}
-const project = getProject('/path/to/project', myHost)
-```
-
 ## Sync VS Async
 
 When possible, the project graph is constructed synchronously. There are only a few exceptions. This simplifies the domain logic and validations, which is the main driver behind the project model itself.
 
 ## Parsing Invalid Projects
 
-- It is possible to obtain a graph for an invalid/malformed Redwood project. This is by design since one of the main goals of this package is to provide a foundation for IDEs, which must support projects in invalid states
+- It is possible to obtain a graph for an invalid/malformed Cedar project. This is by design since one of the main goals of this package is to provide a foundation for tooling, which must support projects in invalid states
 - If you want to check for structural validity, gather all diagnostics and look for errors.
 
 ```ts
