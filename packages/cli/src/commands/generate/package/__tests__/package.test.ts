@@ -60,11 +60,14 @@ import path from 'node:path'
 
 import { vi, describe, it, expect, afterEach } from 'vitest'
 
+// @ts-expect-error - No types for JS files
 import type * as LibIndex from '../../../../lib/index.js'
+// @ts-expect-error - No types for JS files
 import * as packageHandler from '../packageHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
   const { wrapFsForUnionfs } = await import(
+    // @ts-expect-error - No types for JS files
     '../../../../__tests__/ufsFsProxy.js'
   )
   const originalFs = await importOriginal()
