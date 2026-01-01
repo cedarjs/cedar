@@ -190,7 +190,7 @@ exports[`packageHandler > files > single word package name > infers package scop
 "{
   "compilerOptions": {
     "composite": true,
-    "target": "ES2024",
+    "target": "ES2023",
     "module": "Node20",
     "esModuleInterop": true,
     "skipLibCheck": true,
