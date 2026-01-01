@@ -13,6 +13,7 @@ import * as generateJob from './generate/job/job.js'
 import * as generateLayout from './generate/layout/layout.js'
 import * as generateModel from './generate/model/model.js'
 import * as generateOgImage from './generate/ogImage/ogImage.js'
+import * as generatePackage from './generate/package/package.js'
 import * as generatePage from './generate/page/page.js'
 import * as generateRealtime from './generate/realtime/realtime.js'
 import * as generateScaffold from './generate/scaffold/scaffold.js'
@@ -48,6 +49,7 @@ export const builder = (yargs) =>
     .command(generateLayout)
     .command(generateModel)
     .command(generateOgImage)
+    .command(generatePackage)
     .command(generatePage)
     .command(generateRealtime)
     .command(generateScaffold)

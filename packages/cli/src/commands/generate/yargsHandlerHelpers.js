@@ -86,20 +86,23 @@ export const templateForFile = async ({
   templatePath,
   templateVars,
 }) => {
-  const basePath = getPaths()[side][sidePathSection]
+  const basePath = sidePathSection
+    ? getPaths()[side][sidePathSection]
+    : getPaths()[side]
   const fullOutputPath = path.join(basePath, outputPath)
   const fullTemplatePath = customOrDefaultTemplatePath({
     generator,
     templatePath,
     side,
   })
-  const content = await generateTemplate(fullTemplatePath, {
+  const mergedTemplateVars = {
     name,
     outputPath: ensurePosixPath(
       `./${path.relative(getPaths().base, fullOutputPath)}`,
     ),
     ...templateVars,
-  })
+  }
+  const content = await generateTemplate(fullTemplatePath, mergedTemplateVars)
 
   return [fullOutputPath, content]
 }

@@ -60,6 +60,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           generators: path.join(BASE_PATH, './web/generators'),
         },
         scripts: path.join(BASE_PATH, 'scripts'),
+        packages: path.join(BASE_PATH, 'packages'),
         generatorTemplates: path.join(BASE_PATH, 'generatorTemplates'),
         generated: {
           base: path.join(BASE_PATH, '.redwood'),

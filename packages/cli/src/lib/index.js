@@ -68,7 +68,6 @@ export const generateTemplate = async (templateFilename, { name, ...rest }) => {
       ...nameVariants(name),
       ...rest,
     })
-
     return prettify(templateFilename, renderedTemplate)
   } catch (error) {
     error.message = `Error applying template at ${templateFilename} for ${name}: ${error.message}`

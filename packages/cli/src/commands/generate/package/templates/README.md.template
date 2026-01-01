@@ -1,0 +1,15 @@
+# Shared Package '${packageName}'
+
+Use code in this package by adding it to the dependencies on the side you want
+to use it, with the special `workspace:*` version. After that you can import it
+into your code:
+
+```json
+  "dependencies": {
+    "${packageName}": "workspace:*"
+  }
+```
+
+```javascript
+import { ${camelName} } from '${packageName}';
+```
