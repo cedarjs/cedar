@@ -43,7 +43,7 @@
     "@types/which": "3.0.4",
     "@types/yauzl-promise": "4.0.1",
     "concurrently": "^9.0.0",
-    "esbuild": "0.21.5",
+    "esbuild": "0.25.0",
     "eslint": "9.39.2",
     "eslint-plugin-jsdoc": "^48.7.0",
     "eslint-plugin-jsonc": "^2.16.0",
