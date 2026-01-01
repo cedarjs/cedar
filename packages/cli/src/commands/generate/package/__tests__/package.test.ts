@@ -62,6 +62,9 @@ import { vi, describe, it, expect, afterEach } from 'vitest'
 
 // @ts-expect-error - No types for JS files
 import type * as LibIndex from '../../../../lib/index.js'
+// TODO: Separate test file for filesTask.js
+// @ts-expect-error - No types for JS files
+import * as filesTask from '../filesTask.js'
 // @ts-expect-error - No types for JS files
 import * as packageHandler from '../packageHandler.js'
 
@@ -85,7 +88,7 @@ afterEach(() => {
 describe('packageHandler', () => {
   describe('handler', () => {
     it('throws on package name with two slashes', async () => {
-      expect(() =>
+      await expect(() =>
         packageHandler.handler({ name: 'package//name' }),
       ).rejects.toThrowError(
         'Invalid package name "package//name". Package names can have at most one slash.',
@@ -134,7 +137,7 @@ describe('packageHandler', () => {
       it('infers package scope from project path', async () => {
         mockBase.path = '/path/to/my-cedar-app'
 
-        const files = await packageHandler.files({
+        const files = await filesTask.files({
           ...packageHandler.nameVariants('foo'),
           typescript: true,
         })
@@ -185,7 +188,7 @@ describe('packageHandler', () => {
         // handled correctly
         mockBase.path = '/path/to/my-camelCaseApp'
 
-        const files = await packageHandler.files({
+        const files = await filesTask.files({
           ...packageHandler.nameVariants('foo'),
           typescript: true,
         })
@@ -202,7 +205,7 @@ describe('packageHandler', () => {
       })
 
       it('uses the provided package scope name', async () => {
-        const files = await packageHandler.files({
+        const files = await filesTask.files({
           ...packageHandler.nameVariants('@my-org/foo'),
           typescript: true,
         })
@@ -228,7 +231,7 @@ describe('packageHandler', () => {
       it('creates a multi-word package', async () => {
         mockBase.path = '/path/to/myCamelCaseApp'
 
-        const files = await packageHandler.files({
+        const files = await filesTask.files({
           ...packageHandler.nameVariants('form-validators'),
           typescript: true,
         })
@@ -252,7 +255,7 @@ describe('packageHandler', () => {
       it('creates a multiWord package', async () => {
         mockBase.path = '/path/to/myCamelCaseApp'
 
-        const files = await packageHandler.files({
+        const files = await filesTask.files({
           ...packageHandler.nameVariants('formValidators'),
           typescript: true,
         })
@@ -274,7 +277,7 @@ describe('packageHandler', () => {
       })
 
       it('uses the provided scope for multiWord-package name', async () => {
-        const files = await packageHandler.files({
+        const files = await filesTask.files({
           ...packageHandler.nameVariants('@myOrg/formValidators-pkg'),
           typescript: true,
         })
@@ -310,7 +313,7 @@ describe('packageHandler', () => {
     })
 
     it('returns the corrent files for JS', async () => {
-      const jsFiles = await packageHandler.files({
+      const jsFiles = await filesTask.files({
         ...packageHandler.nameVariants('Sample'),
       })
       const fileNames = Object.keys(jsFiles)

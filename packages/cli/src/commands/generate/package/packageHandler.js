@@ -5,6 +5,15 @@ import { paramCase, camelCase } from 'change-case'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { errorTelemetry } from '@cedarjs/telemetry'
+
+import c from '../../../lib/colors.js'
+import { getPaths, writeFilesTask } from '../../../lib/index.js'
+import { prepareForRollback } from '../../../lib/rollback.js'
+
+import { files } from './filesTask.js'
+
 /**
  * @typedef {Object} ListrContext
  * @property {Object} nameVariants - The parsed name variants for the package
@@ -13,18 +22,6 @@ import { Listr } from 'listr2'
  * @property {string} nameVariants.packageName - The full scoped package name
  * @property {string} nameVariants.fileName - The camelCase file name
  */
-
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { errorTelemetry } from '@cedarjs/telemetry'
-
-import c from '../../../lib/colors.js'
-import {
-  getPaths,
-  transformTSToJS,
-  writeFilesTask,
-} from '../../../lib/index.js'
-import { prepareForRollback } from '../../../lib/rollback.js'
-import { templateForFile } from '../yargsHandlerHelpers.js'
 
 // Exported for testing
 export function nameVariants(nameArg) {
@@ -39,116 +36,6 @@ export function nameVariants(nameArg) {
   const fileName = camelCase(name)
 
   return { name, folderName, packageName, fileName }
-}
-
-/**
- * Generates the file structure and content for a new package.
- *
- * Creates all necessary files for a package including source files, configuration,
- * README, and optionally test files. Handles both TypeScript and JavaScript generation.
- *
- * @param {Object} options - The file generation options
- * @param {string} options.name - The package name
- * @param {string} options.folderName - The folder name for the package (param-case)
- * @param {string} options.packageName - The full scoped package name (e.g., '@org/package')
- * @param {string} options.fileName - The camelCase file name
- * @param {boolean} [options.typescript] - Whether to generate TypeScript files (defaults to JS if not provided)
- * @param {boolean} [options.tests=true] - Whether to generate test files
- *
- * @returns {Promise<Object>} A promise that resolves to an object mapping file paths to their content
- *
- * @example
- * // Generate TypeScript package files with tests
- * const fileMap = await files({
- *   name: 'MyPackage',
- *   folderName: 'my-package',
- *   packageName: '@myorg/my-package',
- *   fileName: 'myPackage',
- *   typescript: true,
- *   tests: true
- * })
- */
-// Exported for testing
-export const files = async ({
-  name,
-  folderName,
-  packageName,
-  fileName,
-  typescript,
-  tests: generateTests = true,
-  ...rest
-}) => {
-  const extension = typescript ? '.ts' : '.js'
-
-  const outputFiles = []
-
-  const indexFile = await templateForFile({
-    name,
-    side: 'packages',
-    generator: 'package',
-    templatePath: 'index.ts.template',
-    templateVars: rest,
-    outputPath: path.join(folderName, 'src', `index${extension}`),
-  })
-
-  const readmeFile = await templateForFile({
-    name,
-    side: 'packages',
-    generator: 'package',
-    templatePath: 'README.md.template',
-    templateVars: { packageName, ...rest },
-    outputPath: path.join(folderName, 'README.md'),
-  })
-
-  const packageJsonFile = await templateForFile({
-    name,
-    side: 'packages',
-    generator: 'package',
-    templatePath: 'package.json.template',
-    templateVars: { packageName, ...rest },
-    outputPath: path.join(folderName, 'package.json'),
-  })
-
-  const tsconfigFile = await templateForFile({
-    name,
-    side: 'packages',
-    generator: 'package',
-    templatePath: 'tsconfig.json.template',
-    templateVars: { packageName, ...rest },
-    outputPath: path.join(folderName, 'tsconfig.json'),
-  })
-
-  outputFiles.push(indexFile)
-  outputFiles.push(readmeFile)
-  outputFiles.push(packageJsonFile)
-  outputFiles.push(tsconfigFile)
-
-  if (generateTests) {
-    const testFile = await templateForFile({
-      name,
-      side: 'packages',
-      generator: 'package',
-      templatePath: 'test.ts.template',
-      templateVars: rest,
-      outputPath: path.join(folderName, 'src', `${fileName}.test${extension}`),
-    })
-
-    outputFiles.push(testFile)
-  }
-
-  return outputFiles.reduce(async (accP, [outputPath, content]) => {
-    const acc = await accP
-
-    const template =
-      typescript || outputPath.endsWith('.md') || outputPath.endsWith('.json')
-        ? content
-        : await transformTSToJS(outputPath, content)
-
-    return {
-      [outputPath]: template,
-      ...acc,
-    }
-  }, Promise.resolve({}))
 }
 
 // Exported for testing
@@ -178,6 +65,13 @@ export async function updateTsconfig(task) {
   )
 
   await fs.promises.writeFile(tsconfigPath, tsconfigLines.join('\n'))
+}
+
+async function installAndBuild(folderName) {
+  const packagePath = path.join('packages', folderName)
+  await execa('yarn', ['install'], { stdio: 'inherit', cwd: getPaths().base })
+  // TODO: `yarn cedar build <packageName>`
+  await execa('yarn', ['build'], { stdio: 'inherit', cwd: packagePath })
 }
 
 /**
@@ -277,19 +171,18 @@ export const handler = async ({ name, force, ...rest }) => {
       },
       {
         title: 'Updating api side tsconfig file...',
-        task: async (_ctx, task) => {
-          await updateTsconfig(task)
-        },
+        task: (_ctx, task) => updateTsconfig(task),
       },
       {
         title: 'Generating package files...',
         task: async (ctx) => {
-          packageFiles = await files({
-            ...ctx.nameVariants,
-            ...rest,
-          })
+          packageFiles = await files({ ...ctx.nameVariants, ...rest })
           return writeFilesTask(packageFiles, { overwriteExisting: force })
         },
+      },
+      {
+        title: 'Installing and building...',
+        task: (ctx) => installAndBuild(ctx.nameVariants.folderName),
       },
       {
         title: 'Cleaning up...',
