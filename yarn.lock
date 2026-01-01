@@ -4130,13 +4130,11 @@ __metadata:
     "@types/line-column": "npm:1.0.2"
     "@types/lodash": "npm:4.17.21"
     "@types/node": "npm:24.10.4"
-    "@types/vscode": "npm:1.107.0"
     camelcase: "npm:6.3.0"
     core-js: "npm:3.47.0"
     deepmerge: "npm:4.3.1"
     dotenv-defaults: "npm:5.0.2"
     enquirer: "npm:2.4.1"
-    fast-glob: "npm:3.3.3"
     graphql: "npm:16.12.0"
     lazy-get-decorator: "npm:2.2.1"
     line-column: "npm:1.0.2"
@@ -4148,9 +4146,6 @@ __metadata:
     ts-morph: "npm:23.0.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
-    vscode-languageserver: "npm:6.1.1"
-    vscode-languageserver-textdocument: "npm:1.0.12"
-    vscode-languageserver-types: "npm:3.17.5"
     yargs-parser: "npm:21.1.1"
   languageName: unknown
   linkType: soft
@@ -12214,13 +12209,6 @@ __metadata:
   version: 9.0.8
   resolution: "@types/uuid@npm:9.0.8"
   checksum: 10c0/b411b93054cb1d4361919579ef3508a1f12bf15b5fdd97337d3d351bece6c921b52b6daeef89b62340fd73fd60da407878432a1af777f40648cbe53a01723489
-  languageName: node
-  linkType: hard
-
-"@types/vscode@npm:1.107.0":
-  version: 1.107.0
-  resolution: "@types/vscode@npm:1.107.0"
-  checksum: 10c0/91dcefaa646bb586189f80f64e2d63f3d2189ff521ce44872652ffbb80d4420fede685a6dbd1fa274fb5ef54501bff23e66ee5f15df9205b12c5bd6d8429988f
   languageName: node
   linkType: hard
 
@@ -30945,48 +30933,6 @@ __metadata:
   version: 1.1.2
   resolution: "vm-browserify@npm:1.1.2"
   checksum: 10c0/0cc1af6e0d880deb58bc974921320c187f9e0a94f25570fca6b1bd64e798ce454ab87dfd797551b1b0cc1849307421aae0193cedf5f06bdb5680476780ee344b
-  languageName: node
-  linkType: hard
-
-"vscode-jsonrpc@npm:8.2.0":
-  version: 8.2.0
-  resolution: "vscode-jsonrpc@npm:8.2.0"
-  checksum: 10c0/0789c227057a844f5ead55c84679206227a639b9fb76e881185053abc4e9848aa487245966cc2393fcb342c4541241b015a1a2559fddd20ac1e68945c95344e6
-  languageName: node
-  linkType: hard
-
-"vscode-languageserver-protocol@npm:3.17.5":
-  version: 3.17.5
-  resolution: "vscode-languageserver-protocol@npm:3.17.5"
-  dependencies:
-    vscode-jsonrpc: "npm:8.2.0"
-    vscode-languageserver-types: "npm:3.17.5"
-  checksum: 10c0/5f38fd80da9868d706eaa4a025f4aff9c3faad34646bcde1426f915cbd8d7e8b6c3755ce3fef6eebd256ba3145426af1085305f8a76e34276d2e95aaf339a90b
-  languageName: node
-  linkType: hard
-
-"vscode-languageserver-textdocument@npm:1.0.12":
-  version: 1.0.12
-  resolution: "vscode-languageserver-textdocument@npm:1.0.12"
-  checksum: 10c0/534349894b059602c4d97615a1147b6c4c031141c2093e59657f54e38570f5989c21b376836f13b9375419869242e9efb4066643208b21ab1e1dee111a0f00fb
-  languageName: node
-  linkType: hard
-
-"vscode-languageserver-types@npm:3.17.5":
-  version: 3.17.5
-  resolution: "vscode-languageserver-types@npm:3.17.5"
-  checksum: 10c0/1e1260de79a2cc8de3e46f2e0182cdc94a7eddab487db5a3bd4ee716f67728e685852707d72c059721ce500447be9a46764a04f0611e94e4321ffa088eef36f8
-  languageName: node
-  linkType: hard
-
-"vscode-languageserver@npm:6.1.1":
-  version: 6.1.1
-  resolution: "vscode-languageserver@npm:6.1.1"
-  dependencies:
-    vscode-languageserver-protocol: "npm:^3.15.3"
-  bin:
-    installServerIntoExtension: ./bin/installServerIntoExtension
-  checksum: 10c0/90d7a6a3d3428a381d84a563299ebb59cec3f534ec78b76f6444f79da514380088b7bab2f2c428e15f071afa0b75aaf30a97e644f314e00753231870e8ead204
   languageName: node
   linkType: hard
 

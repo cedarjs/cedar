@@ -4,23 +4,19 @@ import { join } from 'node:path'
 import * as dotenv from 'dotenv-defaults'
 import { pickBy } from 'lodash'
 import type * as tsm from 'ts-morph'
-import type { Location } from 'vscode-languageserver'
-import { DiagnosticSeverity, Range } from 'vscode-languageserver'
 
 import { getSchemaPath } from '@cedarjs/project-config'
 
-import type { CodeLensX, Definition, HoverX, Reference } from '../ide'
-import { BaseNode } from '../ide'
+import { BaseNode } from '../nodes'
 import { lazy } from '../x/decorators'
-import { prisma_parseEnvExpressionsInFile } from '../x/prisma'
-import { URL_file } from '../x/URL'
-import { Command_open } from '../x/vscode'
-import type { ExtendedDiagnostic } from '../x/vscode-languageserver-types'
+import type { ExtendedDiagnostic } from '../x/diagnostics'
 import {
-  ExtendedDiagnostic_is,
   LocationLike_toHashLink,
   LocationLike_toLocation,
-} from '../x/vscode-languageserver-types'
+} from '../x/diagnostics'
+import { DiagnosticSeverity } from '../x/diagnostics'
+import type { Location } from '../x/Location'
+import { prisma_parseEnvExpressionsInFile } from '../x/prisma'
 
 import type { RWProject } from './RWProject'
 import { process_env_findAll } from './util/process_env'
@@ -162,116 +158,9 @@ class ProcessDotEnvExpression extends BaseNode {
     return LocationLike_toLocation(this.node)
   }
 
-  *ideInfo() {
-    for (const x of this.render()) {
-      if (!ExtendedDiagnostic_is(x)) {
-        yield x
-      }
-    }
-  }
-
   *diagnostics() {
-    for (const x of this.render()) {
-      if (ExtendedDiagnostic_is(x)) {
-        yield x
-      }
-    }
-  }
-
-  @lazy() get value_definition_file_basename() {
-    const {
-      key,
-      parent: { env, env_defaults },
-    } = this
-    if (env?.[key]) {
-      return '.env'
-    }
-    if (env_defaults?.[key]) {
-      return '.env.defaults'
-    }
-    return undefined
-  }
-
-  @lazy() get value_definition_location(): Location | undefined {
-    const x = this.value_definition_file_basename
-    if (!x) {
-      return undefined
-    }
-    const file = join(this.parent.parent.projectRoot, x)
-    const content = fs.readFileSync(file).toString()
-    const lines = content.split('\n')
-    const index = lines.findIndex((l) => l.startsWith(this.key + '='))
-    return {
-      uri: URL_file(file),
-      range: Range.create(index, 0, index, lines[index].length),
-    }
-  }
-
-  @lazy() get value_as_available() {
-    if (this.side === 'web') {
-      return this.parent.env_available_to_web[this.key]
-    }
-    const v = this.parent.env_available_to_api[this.key]
-    return v
-  }
-
-  private *render() {
     const { key, location, value_as_available } = this
     const { uri, range } = location
-
-    // show reference to value definition
-    if (this.value_definition_location) {
-      yield {
-        kind: 'Reference',
-        location,
-        target: this.value_definition_location,
-      } as Reference
-      yield {
-        kind: 'Definition',
-        location,
-        target: this.value_definition_location,
-      } as Definition
-    }
-    // show hover with the actual value, if present
-    if (typeof value_as_available !== 'undefined') {
-      yield {
-        kind: 'Hover',
-        location,
-        hover: {
-          range: location.range,
-          contents: `${key}=${value_as_available} (${
-            this.value_definition_file_basename ?? ''
-          })`,
-        },
-      } as HoverX
-
-      if (
-        typeof value_as_available !== 'undefined' &&
-        this.value_definition_location
-      ) {
-        const title = `${key}=${value_as_available}`
-        const command = {
-          ...Command_open(this.value_definition_location),
-          title,
-        }
-        const codelens = {
-          kind: 'CodeLens',
-          location,
-          codeLens: {
-            range,
-
-            command,
-          },
-        } as CodeLensX
-        // TODO: we need to add middleware to the LSP client
-        // so the uri (string) is converted to a vscode.Uri
-        // https://github.com/microsoft/vscode-languageserver-node/issues/495
-        // eslint-disable-next-line no-constant-condition
-        if (false) {
-          yield codelens
-        }
-      }
-    }
 
     if (typeof value_as_available === 'undefined') {
       // the value is not available
@@ -293,7 +182,6 @@ Tip: add the following to your redwood.toml:
 ${snippet}
             `,
             severity: DiagnosticSeverity.Warning,
-            // TODO: quickFix
           },
         } as ExtendedDiagnostic
       } else {
@@ -304,10 +192,31 @@ ${snippet}
             range,
             message: `env value ${key} is not available. add it to your .env file`,
             severity: DiagnosticSeverity.Warning,
-            // TODO: add a quickfix?
           },
         } as ExtendedDiagnostic
       }
     }
+  }
+
+  @lazy() get value_definition_file_basename() {
+    const {
+      key,
+      parent: { env, env_defaults },
+    } = this
+    if (env?.[key]) {
+      return '.env'
+    }
+    if (env_defaults?.[key]) {
+      return '.env.defaults'
+    }
+    return undefined
+  }
+
+  @lazy() get value_as_available() {
+    if (this.side === 'web') {
+      return this.parent.env_available_to_web[this.key]
+    }
+    const v = this.parent.env_available_to_api[this.key]
+    return v
   }
 }

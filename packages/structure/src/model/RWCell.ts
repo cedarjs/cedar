@@ -1,9 +1,9 @@
 import { Kind, parse as parseGraphQL } from 'graphql'
 import * as tsm from 'ts-morph'
-import { DiagnosticSeverity } from 'vscode-languageserver-types'
 
 import { lazy } from '../x/decorators'
-import { err, Range_fromNode } from '../x/vscode-languageserver-types'
+import { err, Range_fromNode } from '../x/diagnostics'
+import { DiagnosticSeverity } from '../x/diagnostics'
 
 import { RWComponent } from './RWComponent'
 

@@ -1,16 +1,13 @@
-export { DiagnosticSeverity } from 'vscode-languageserver-types'
-export { DefaultHost, Host } from './hosts'
+export { DiagnosticSeverity } from './x/diagnostics'
 export { RWProject, RWRoute } from './model'
 export { URL_file } from './x/URL'
-import { DefaultHost } from './hosts'
 import { RWProject } from './model'
-import type { GetSeverityLabelFunction } from './x/vscode-languageserver-types'
-import { ExtendedDiagnostic_format } from './x/vscode-languageserver-types'
+import type { GetSeverityLabelFunction } from './x/diagnostics'
+import { ExtendedDiagnostic_format, DiagnosticSeverity } from './x/diagnostics'
 
-export function getProject(projectRoot: string, host = new DefaultHost()) {
+export function getProject(projectRoot: string) {
   return new RWProject({
     projectRoot,
-    host,
   })
 }
 
@@ -26,11 +23,11 @@ export async function printDiagnostics(
     for (const d of await project.collectDiagnostics()) {
       const str = ExtendedDiagnostic_format(d, formatOpts)
       console.log(`\n${str}`)
-      // counts number of warnings (2) and errors (1) encountered
-      if (d.diagnostic.severity === 2) {
+      // counts number of warnings and errors encountered
+      if (d.diagnostic.severity === DiagnosticSeverity.Warning) {
         warnings++
       }
-      if (d.diagnostic.severity === 1) {
+      if (d.diagnostic.severity === DiagnosticSeverity.Error) {
         errors++
       }
     }

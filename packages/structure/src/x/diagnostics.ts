@@ -1,24 +1,51 @@
 import lc from 'line-column'
 import { groupBy, mapValues, uniqBy } from 'lodash'
 import * as tsm from 'ts-morph'
-import type { TextDocuments } from 'vscode-languageserver'
-import type { TextDocument } from 'vscode-languageserver-textdocument'
-import type {
-  CodeAction,
-  CodeActionContext,
-  DocumentUri,
-  WorkspaceEdit,
-} from 'vscode-languageserver-types'
-import {
-  Diagnostic,
-  DiagnosticSeverity,
-  Location,
-  Position,
-  Range,
-  WorkspaceChange,
-} from 'vscode-languageserver-types'
 
+import type { Location } from './Location'
+import { Location_is } from './Location'
+import type { Position } from './Position'
+import { Position_compare } from './Position'
+import type { Range } from './Range'
+import { Range_create } from './Range'
 import { URL_file } from './URL'
+
+export type DocumentUri = string
+
+export enum DiagnosticSeverity {
+  Error = 1,
+  Warning = 2,
+  Information = 3,
+  Hint = 4,
+}
+
+export interface Diagnostic {
+  range: Range
+  severity?: DiagnosticSeverity
+  code?: number | string
+  source?: string
+  message: string
+}
+
+export function Diagnostic_is(value: any): value is Diagnostic {
+  const candidate = value as Diagnostic
+  return (
+    candidate &&
+    typeof candidate.message === 'string' &&
+    typeof candidate.range === 'object' &&
+    candidate.range.start !== undefined &&
+    candidate.range.end !== undefined
+  )
+}
+
+/**
+ * The Diagnostic interface does not include the document URI.
+ * This interface adds that, and a few other things.
+ */
+export interface ExtendedDiagnostic {
+  uri: DocumentUri
+  diagnostic: Diagnostic
+}
 
 export function Range_contains(range: Range, pos: Position): boolean {
   if (Position_compare(range.start, pos) === 'greater') {
@@ -48,30 +75,6 @@ export function Range_overlaps(
     return true
   }
   return true
-}
-
-/**
- * p1 is greater|smaller|equal than/to p2
- * @param p1
- * @param p2
- */
-export function Position_compare(
-  p1: Position,
-  p2: Position,
-): 'greater' | 'smaller' | 'equal' {
-  if (p1.line > p2.line) {
-    return 'greater'
-  }
-  if (p2.line > p1.line) {
-    return 'smaller'
-  }
-  if (p1.character > p2.character) {
-    return 'greater'
-  }
-  if (p2.character > p1.character) {
-    return 'smaller'
-  }
-  return 'equal'
 }
 
 /**
@@ -110,7 +113,7 @@ export function Location_fromNode(node: tsm.Node): Location {
 }
 
 export function Location_fromFilePath(filePath: string): Location {
-  return { uri: URL_file(filePath), range: Range.create(0, 0, 0, 0) }
+  return { uri: URL_file(filePath), range: Range_create(0, 0, 0, 0) }
 }
 
 /**
@@ -147,13 +150,13 @@ export type LocationLike = tsm.Node | string | Location | ExtendedDiagnostic
 
 export function LocationLike_toLocation(x: LocationLike): Location {
   if (typeof x === 'string') {
-    return { uri: URL_file(x), range: Range.create(0, 0, 0, 0) }
+    return { uri: URL_file(x), range: Range_create(0, 0, 0, 0) }
   }
   if (typeof x === 'object') {
     if (x instanceof tsm.Node) {
       return Location_fromNode(x)
     }
-    if (Location.is(x)) {
+    if (Location_is(x)) {
       return x
     }
     if (ExtendedDiagnostic_is(x)) {
@@ -197,7 +200,7 @@ export function ExtendedDiagnostic_is(x: any): x is ExtendedDiagnostic {
   if (typeof x.uri !== 'string') {
     return false
   }
-  if (!Diagnostic.is(x.diagnostic)) {
+  if (!Diagnostic_is(x.diagnostic)) {
     return false
   }
   return true
@@ -212,27 +215,6 @@ export function ExtendedDiagnostic_groupByUri(ds: ExtendedDiagnostic[]): {
     return uniqBy(dd, JSON.stringify) // dedupe
   })
   return dss
-}
-
-export async function ExtendedDiagnostic_findRelevantQuickFixes(
-  xd: ExtendedDiagnostic,
-  context: CodeActionContext,
-): Promise<CodeAction[]> {
-  // check context to see if any of the context.diagnostics are equivalent
-  for (const ctx_d of context.diagnostics) {
-    const node_d = xd.diagnostic
-    if (Diagnostic_compare(ctx_d, node_d)) {
-      if (xd.quickFix) {
-        const a = await xd.quickFix()
-        if (a) {
-          a.kind = 'quickfix'
-          a.diagnostics = [ctx_d]
-          return [a]
-        }
-      }
-    }
-  }
-  return []
 }
 
 export function Position_fromTSMorphOffset(
@@ -267,20 +249,6 @@ export function Position_fromOffsetOrFail(
 }
 
 /**
- * The Diagnostic interface defined in vscode-languageserver-types
- * does not include the document URI.
- * This interface adds that, and a few other things.
- */
-export interface ExtendedDiagnostic {
-  uri: DocumentUri
-  diagnostic: Diagnostic
-  /**
-   * A function that returns a quickfix associated to this diagnostic.
-   */
-  quickFix?: () => Promise<CodeAction | undefined>
-}
-
-/**
  * Helper method to create diagnostics
  * @param node
  * @param message
@@ -299,26 +267,6 @@ export function err(
       severity: DiagnosticSeverity.Error,
       code,
     },
-  }
-}
-
-export function Diagnostic_compare(d1: Diagnostic, d2: Diagnostic): boolean {
-  if (d1.code !== d2.code) {
-    return false
-  }
-  if (d1.message !== d2.message) {
-    return false
-  }
-  if (!Range_equals(d1.range, d2.range)) {
-    return false
-  }
-  return true
-}
-
-export function Range_equals(r1: Range, r2: Range): boolean {
-  return toArr(r1).join(',') === toArr(r2).join(',')
-  function toArr(r: Range) {
-    return [r.start.line, r.start.character, r.end.line, r.end.character]
   }
 }
 
@@ -371,61 +319,4 @@ export function ExtendedDiagnostic_format(
 
   const str = `${file}: ${severityLabel}${errorCode}: ${message}`
   return str
-}
-
-/**
- * a value of "null" means this file needs to be deleted
- */
-export type FileSet = { [fileURI: string]: string | null }
-
-export function FileSet_fromTextDocuments(
-  documents: TextDocuments<TextDocument>,
-) {
-  const files: FileSet = {}
-  for (const uri of documents.keys()) {
-    files[uri] = documents.get(uri)!.getText()
-  }
-  return files
-}
-
-export function WorkspaceEdit_fromFileSet(
-  files: FileSet,
-  getExistingFileText?: (fileURI: string) => string | undefined,
-): WorkspaceEdit {
-  const change = new WorkspaceChange({ documentChanges: [] })
-  for (const uri of Object.keys(files)) {
-    const content = files[uri]
-    if (typeof content !== 'string') {
-      change.deleteFile(uri, { ignoreIfNotExists: true })
-      continue
-    } else {
-      const text = getExistingFileText?.(uri)
-      if (text) {
-        // file exists
-        //change.createFile(uri, { overwrite: true })
-        change
-          .getTextEditChange({ uri, version: null })
-          .replace(Range_full(text), content) // TODO: we could be more granular here
-      } else {
-        change.createFile(uri)
-        change
-          .getTextEditChange({ uri, version: null })
-          .insert(Position.create(0, 0), content)
-      }
-    }
-  }
-  return change.edit
-}
-
-export function Range_full(text: string, cr = '\n'): Range {
-  if (text === '') {
-    return Range.create(0, 0, 0, 0)
-  }
-  const lines = text.split(cr)
-  if (lines.length === 0) {
-    return Range.create(0, 0, 0, 0)
-  }
-  const start = Position.create(0, 0)
-  const end = Position.create(lines.length - 1, lines[lines.length - 1].length)
-  return Range.create(start, end)
 }

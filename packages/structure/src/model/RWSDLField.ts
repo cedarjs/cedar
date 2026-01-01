@@ -2,23 +2,14 @@ import type {
   FieldDefinitionNode,
   ObjectTypeDefinitionNode,
 } from 'graphql/language/ast'
-import type { CodeAction, Location } from 'vscode-languageserver-types'
-import {
-  DiagnosticSeverity,
-  Position,
-  WorkspaceChange,
-} from 'vscode-languageserver-types'
 
 import { RWError } from '../errors'
-import type { Implementation } from '../ide'
-import { BaseNode } from '../ide'
+import { BaseNode } from '../nodes'
 import { lazy } from '../x/decorators'
-import { URL_file } from '../x/URL'
-import type { ExtendedDiagnostic } from '../x/vscode-languageserver-types'
-import {
-  Location_fromNode,
-  Position_fromTSMorphOffset,
-} from '../x/vscode-languageserver-types'
+import type { ExtendedDiagnostic } from '../x/diagnostics'
+import { Position_fromTSMorphOffset } from '../x/diagnostics'
+import { DiagnosticSeverity } from '../x/diagnostics'
+import type { Location } from '../x/Location'
 
 import type { RWSDL } from './RWSDL'
 import type { RWServiceFunction } from './RWServiceFunction'
@@ -55,55 +46,13 @@ export class RWSDLField extends BaseNode {
   @lazy() get argumentNames() {
     return (this.field.arguments ?? []).map((a) => a.name.value)
   }
-  *ideInfo() {
-    if (this.impl) {
-      yield {
-        kind: 'Implementation',
-        location: this.location,
-        target: Location_fromNode(this.impl.node),
-      } as Implementation
-    }
-  }
+
   /**
    * TODO: describe in prose what is going on here.
    * this is an important rule
    */
   @lazy() get impl(): RWServiceFunction | undefined {
     return (this.parent.service?.funcs ?? []).find((f) => f.name === this.name)
-  }
-  // TODO: improve snippet
-  @lazy() private get defaultImplSnippet(): string {
-    const args = this.field.arguments ?? []
-    const params = args.map((a) => a.name.value).join(',')
-    return `
-export const ${this.field.name.value} = ({${params}}) => {
-  // TODO: implement
-}`
-  }
-
-  @lazy() get quickFix_addImplementation(): CodeAction {
-    const { service } = this.parent
-    const change = new WorkspaceChange({ documentChanges: [] })
-    let insertPosition = Position.create(0, 0)
-    let uri = URL_file(this.parent.serviceFilePath)
-    if (service) {
-      // we'll insert into the end of an existing file
-      const lastLine = service.sf.getEndLineNumber()
-      insertPosition = Position.create(lastLine, 0)
-      uri = service.uri
-    } else {
-      // file doesn't exist
-      // create the service file before inserting
-      change.createFile(uri)
-    }
-    // insert
-    change
-      .getTextEditChange({ uri, version: null })
-      .insert(insertPosition, this.defaultImplSnippet)
-    return {
-      title: 'Add implementation',
-      edit: change.edit,
-    } as CodeAction
   }
 
   *diagnostics() {
@@ -117,7 +66,6 @@ export const ${this.field.name.value} = ({${params}}) => {
           severity: DiagnosticSeverity.Error,
           code: RWError.SERVICE_NOT_IMPLEMENTED,
         },
-        quickFix: async () => this.quickFix_addImplementation,
       } as ExtendedDiagnostic
     }
   }

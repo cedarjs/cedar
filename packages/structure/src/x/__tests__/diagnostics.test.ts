@@ -1,17 +1,15 @@
 import { describe, it, expect, test } from 'vitest'
-import {
-  DiagnosticSeverity,
-  Position,
-  Range,
-} from 'vscode-languageserver-types'
 
-import type { ExtendedDiagnostic } from '../vscode-languageserver-types'
+import type { ExtendedDiagnostic } from '../diagnostics'
 import {
   ExtendedDiagnostic_format,
-  Position_compare,
   Position_fromOffset,
   Range_contains,
-} from '../vscode-languageserver-types'
+  DiagnosticSeverity,
+} from '../diagnostics'
+import { Position_create, Position_compare } from '../Position'
+import { Range_create } from '../Range'
+import type { Range } from '../Range'
 
 describe('Position_compare', () => {
   it('', () => {
@@ -28,7 +26,7 @@ describe('Position_compare', () => {
     x(0, 2, 1, 0, 'smaller')
     function x(l1: number, c1: number, l2: number, c2: number, r: string) {
       expect(
-        Position_compare(Position.create(l1, c1), Position.create(l2, c2)),
+        Position_compare(Position_create(l1, c1), Position_create(l2, c2)),
       ).toEqual(r)
     }
   })
@@ -36,14 +34,14 @@ describe('Position_compare', () => {
 
 describe('Range_contains', () => {
   it('', () => {
-    const r = Range.create(0, 1, 0, 3)
+    const r = Range_create(0, 1, 0, 3)
     x(r, 0, 0, false)
     x(r, 0, 1, true)
     x(r, 0, 2, true)
     x(r, 0, 3, true)
     x(r, 0, 4, false)
     function x(r: Range, l: number, c: number, res: boolean) {
-      expect(Range_contains(r, Position.create(l, c))).toEqual(res)
+      expect(Range_contains(r, Position_create(l, c))).toEqual(res)
     }
   })
 })
@@ -53,7 +51,7 @@ describe('ExtendedDiagnostic_format', () => {
     const d: ExtendedDiagnostic = {
       uri: 'file:///path/to/app/b.ts',
       diagnostic: {
-        range: Range.create(1, 2, 1, 6),
+        range: Range_create(1, 2, 1, 6),
         severity: DiagnosticSeverity.Error,
         message: 'this is a message',
       },

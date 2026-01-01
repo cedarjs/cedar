@@ -9,12 +9,7 @@ import system from 'systeminformation'
 import { v4 as uuidv4 } from 'uuid'
 
 import { getRawConfig } from '@cedarjs/project-config'
-import type { RWRoute } from '@cedarjs/structure/dist/model/RWRoute'
-
-// circular dependency when trying to import @cedarjs/structure so lets do it
-// the old fashioned way
-const { DefaultHost } = require('@cedarjs/structure/dist/hosts')
-const { RWProject } = require('@cedarjs/structure/dist/model/RWProject')
+import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
 
 interface SensitiveArgPositions {
   exec: {
@@ -221,23 +216,20 @@ const buildPayload = async () => {
   // if a root directory was specified, use that to look up framework stats
   // with the `structure` package
   if (rootDir) {
-    project = new RWProject({
-      projectRoot: rootDir,
-      host: new DefaultHost(),
-    })
-  }
+    project = new RWProject({ projectRoot: rootDir })
 
-  const routes: RWRoute[] = project.getRouter().routes
-  const prerenderedRoutes = routes.filter((route) => route.hasPrerender)
+    const routes = project.getRouter().routes
+    const prerenderedRoutes = routes.filter((route) => route.hasPrerender)
 
-  // add in app stats
-  payload = {
-    ...payload,
-    complexity:
-      `${routes.length}.${prerenderedRoutes.length}.` +
-      `${project.services.length}.${project.cells.length}.` +
-      `${project.pages.length}`,
-    sides: project.sides.join(','),
+    // add in app stats
+    payload = {
+      ...payload,
+      complexity:
+        `${routes.length}.${prerenderedRoutes.length}.` +
+        `${project.services.length}.${project.cells.length}.` +
+        `${project.pages.length}`,
+      sides: project.sides.join(','),
+    }
   }
 
   return payload

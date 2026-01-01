@@ -1,4 +1,5 @@
-import { join } from 'path'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 
 import type { DMMF } from '@prisma/generator-helper'
 import { getDMMF, getSchemaWithPath } from '@prisma/internals'
@@ -9,13 +10,13 @@ import {
   getSchemaPath,
 } from '@cedarjs/project-config'
 
-import type { Host } from '../hosts'
-import { BaseNode } from '../ide'
+import { BaseNode } from '../nodes'
 import { lazy, memo } from '../x/decorators'
 import {
   followsDirNameConvention,
   isCellFileName,
   isLayoutFileName,
+  globSync,
 } from '../x/path'
 import { URL_file } from '../x/URL'
 
@@ -32,7 +33,6 @@ import { RWTOML } from './RWTOML'
 
 export interface RWProjectOptions {
   projectRoot: string
-  host: Host
 }
 
 const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
@@ -46,10 +46,6 @@ export class RWProject extends BaseNode {
     super()
   }
   parent = undefined
-
-  get host() {
-    return this.opts.host
-  }
 
   get projectRoot() {
     return this.opts.projectRoot
@@ -83,8 +79,8 @@ export class RWProject extends BaseNode {
    */
   @lazy() get isTypeScriptProject(): boolean {
     return (
-      this.host.existsSync(join(this.pathHelper.web.base, 'tsconfig.json')) ||
-      this.host.existsSync(join(this.pathHelper.api.base, 'tsconfig.json'))
+      existsSync(join(this.pathHelper.web.base, 'tsconfig.json')) ||
+      existsSync(join(this.pathHelper.api.base, 'tsconfig.json'))
     )
   }
   // TODO: do we move this to a separate node? (ex: RWDatabase)
@@ -144,22 +140,20 @@ export class RWProject extends BaseNode {
   @lazy() get services() {
     // TODO: what is the official logic?
     // TODO: Support both `/services/todos/todos.js` AND `/services/todos.js`
-    return this.host
-      .globSync(this.pathHelper.api.services + allFilesGlob)
+    return globSync(this.pathHelper.api.services + allFilesGlob)
       .filter(followsDirNameConvention)
       .map((x) => new RWService(x, this))
   }
 
   @lazy() get sdls() {
-    return this.host
-      .globSync(this.pathHelper.api.graphql + '/**/*.sdl.{js,ts}')
-      .map((x) => new RWSDL(x, this))
+    return globSync(this.pathHelper.api.graphql + '/**/*.sdl.{js,ts}').map(
+      (x) => new RWSDL(x, this),
+    )
   }
 
   @lazy() get layouts(): RWLayout[] {
     // TODO: what is the official logic?
-    return this.host
-      .globSync(this.pathHelper.web.layouts + allFilesGlob)
+    return globSync(this.pathHelper.web.layouts + allFilesGlob)
       .filter(followsDirNameConvention)
       .filter(isLayoutFileName)
       .map((x) => new RWLayout(x, this))
@@ -167,15 +161,14 @@ export class RWProject extends BaseNode {
 
   @lazy() get functions(): RWFunction[] {
     // TODO: what is the official logic?
-    return this.host
-      .globSync(this.pathHelper.api.functions + allFilesGlob)
-      .map((x) => new RWFunction(x, this))
+    return globSync(this.pathHelper.api.functions + allFilesGlob).map(
+      (x) => new RWFunction(x, this),
+    )
   }
 
   @lazy() get components(): RWComponent[] {
-    return this.host
-      .globSync(this.pathHelper.web.components + allFilesGlob)
-      .map((file) => {
+    return globSync(this.pathHelper.web.components + allFilesGlob).map(
+      (file) => {
         if (isCellFileName(file)) {
           const possibleCell = new RWCell(file, this)
           return possibleCell.isCell
@@ -183,7 +176,8 @@ export class RWProject extends BaseNode {
             : new RWComponent(file, this)
         }
         return new RWComponent(file, this)
-      })
+      },
+    )
   }
 
   @lazy() get sides() {
@@ -192,7 +186,7 @@ export class RWProject extends BaseNode {
 
   // TODO: Wrap these in a real model.
   @lazy() get mocks() {
-    return this.host.globSync(this.pathHelper.web.base + '/**/*.mock.{js,ts}')
+    return globSync(this.pathHelper.web.base + '/**/*.mock.{js,ts}')
   }
 
   /**
@@ -200,8 +194,7 @@ export class RWProject extends BaseNode {
    * have a default export AND does not export `QUERY`
    **/
   @lazy() get cells(): RWCell[] {
-    return this.host
-      .globSync(this.pathHelper.web.base + '/**/*Cell.{js,jsx,tsx}')
+    return globSync(this.pathHelper.web.base + '/**/*Cell.{js,jsx,tsx}')
       .map((file) => new RWCell(file, this))
       .filter((file) => file.isCell)
   }

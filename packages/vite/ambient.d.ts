@@ -37,6 +37,16 @@ declare global {
     id: string,
   ) => Promise<typeof __rw_module_cache__>
   var __webpack_require__: (id: string) => unknown
+
+  interface Thenable<T> {
+    then<TResult1 = T, TResult2 = never>(
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+    ): PromiseLike<TResult1 | TResult2>
+    status?: 'pending' | 'fulfilled' | 'rejected'
+    value?: T
+    reason?: any
+  }
 }
 
 export {}
