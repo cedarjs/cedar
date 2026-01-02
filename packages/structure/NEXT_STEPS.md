@@ -1,3 +1,6 @@
+> If you look at the Structure package code, is there anything you would recommend doing to improve it? It could be anything. Something to make it more
+> performant, something to make it easier to work with, something to make it more modern. What's the one thing you'd recommend that'd have to biggest impact?
+
 ✦ If I had to recommend one change with the biggest impact on the Structure package, it would be replacing `ts-morph` with a high-performance AST parser like
 [`oxc-parser`](https://github.com/oxc-project/oxc) or [`swc`](https://swc.rs/).
 
