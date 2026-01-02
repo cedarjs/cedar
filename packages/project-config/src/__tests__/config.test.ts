@@ -74,6 +74,9 @@ describe('getConfig', () => {
             "enabled": false,
           },
           "useSDLCodeGenForGraphQLTypes": false,
+          "packagesWorkspace": {
+            "enabled": false,
+          },
         },
         "generate": {
           "nestScaffoldByModel": true,
