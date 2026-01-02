@@ -60,6 +60,9 @@ describe('getConfig', () => {
             "enabled": false,
             "wrapApi": true,
           },
+          "packagesWorkspace": {
+            "enabled": false,
+          },
           "reactCompiler": {
             "enabled": false,
             "lintOnly": false,
@@ -74,9 +77,6 @@ describe('getConfig', () => {
             "enabled": false,
           },
           "useSDLCodeGenForGraphQLTypes": false,
-          "packagesWorkspace": {
-            "enabled": false,
-          },
         },
         "generate": {
           "nestScaffoldByModel": true,
