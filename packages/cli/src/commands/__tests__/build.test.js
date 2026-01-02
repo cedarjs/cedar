@@ -79,7 +79,7 @@ vi.mock('@cedarjs/prerender/detection', () => {
 test('Should run prerender for web', async () => {
   const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-  await handler({ side: ['web'], prerender: true })
+  await handler({ workspace: ['web'], prerender: true })
   expect(Listr.mock.calls[0][0].map((x) => x.title)).toMatchInlineSnapshot(`
     [
       "Building Web...",

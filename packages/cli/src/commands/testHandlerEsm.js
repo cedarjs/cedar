@@ -45,13 +45,13 @@ export const handler = async ({
 
   // Only the side params
   const sides = filterParams.filter((filterString) =>
-    project.sides().includes(filterString),
+    project.workspaces().includes(filterString),
   )
 
   // All the other params, apart from sides
   const vitestFilterArgs = [
     ...filterParams.filter(
-      (filterString) => !project.sides().includes(filterString),
+      (filterString) => !project.workspaces().includes(filterString),
     ),
   ]
 
@@ -68,7 +68,7 @@ export const handler = async ({
 
   // if no sides declared with yargs, default to all sides
   if (!sides.length) {
-    project.sides().forEach((side) => sides.push(side))
+    project.workspaces().forEach((side) => sides.push(side))
   }
 
   sides.forEach((side) => vitestArgs.push('--project', side))

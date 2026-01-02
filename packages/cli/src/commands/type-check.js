@@ -1,6 +1,6 @@
 import { terminalLink } from 'termi-link'
 
-import { sides } from '../lib/project.js'
+import { workspaces } from '../lib/project.js'
 
 export const command = 'type-check [sides..]'
 export const aliases = ['tsc', 'tc']
@@ -9,7 +9,7 @@ export const builder = (yargs) => {
   yargs
     .strict(false) // so that we can forward arguments to tsc
     .positional('sides', {
-      default: sides(),
+      default: workspaces(),
       description: 'Which side(s) to run a typecheck on',
       type: 'array',
     })

@@ -1,7 +1,7 @@
 import { terminalLink } from 'termi-link'
 
 import c from '../lib/colors.js'
-import { sides } from '../lib/project.js'
+import { workspaces } from '../lib/project.js'
 
 export const command = 'test [filter..]'
 export const description = 'Run Vitest tests. Defaults to watch mode'
@@ -15,7 +15,7 @@ export const builder = (yargs) => {
   yargs
     .strict(false) // so that we can forward arguments to vitest
     .positional('filter', {
-      default: sides(),
+      default: workspaces(),
       description:
         'Which side(s) to test, and/or a regular expression to match against ' +
         'your test files to filter by',
