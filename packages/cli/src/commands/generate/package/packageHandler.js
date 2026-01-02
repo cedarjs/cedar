@@ -4,8 +4,10 @@ import path from 'node:path'
 import { paramCase, camelCase } from 'change-case'
 import execa from 'execa'
 import { Listr } from 'listr2'
+import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
@@ -118,6 +120,22 @@ export const handler = async ({ name, force, ...rest }) => {
       `Invalid package name "${name}". ` +
         'Package names can have at most one slash.',
     )
+  }
+
+  if (!getConfig().experimental.packagesWorkspace.enabled) {
+    const releaseNotes = terminalLink(
+      'release notes',
+      'https://github.com/cedarjs/cedar/releases',
+    )
+
+    console.error(
+      'This is an experimental feature. Please enable it in your ' +
+        'redwood.toml file and then run this command again.',
+    )
+    console.error()
+    console.error(`See the ${releaseNotes} for instructions on how to enable.`)
+
+    return
   }
 
   let packageFiles = {}

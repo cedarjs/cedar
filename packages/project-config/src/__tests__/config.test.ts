@@ -60,6 +60,9 @@ describe('getConfig', () => {
             "enabled": false,
             "wrapApi": true,
           },
+          "packagesWorkspace": {
+            "enabled": false,
+          },
           "reactCompiler": {
             "enabled": false,
             "lintOnly": false,
