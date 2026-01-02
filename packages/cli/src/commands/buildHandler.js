@@ -17,14 +17,14 @@ import { generatePrismaCommand } from '../lib/generatePrismaClient.js'
 import { getPaths, getConfig } from '../lib/index.js'
 
 export const handler = async ({
-  side = ['api', 'web'],
+  workspace = ['api', 'web'],
   verbose = false,
   prisma = true,
   prerender,
 }) => {
   recordTelemetryAttributes({
     command: 'build',
-    side: JSON.stringify(side),
+    workspace: JSON.stringify(workspace),
     verbose,
     prisma,
     prerender,
@@ -37,11 +37,18 @@ export const handler = async ({
 
   const prismaSchemaExists = fs.existsSync(rwjsPaths.api.prismaConfig)
   const prerenderRoutes =
-    prerender && side.includes('web') ? detectPrerenderRoutes() : []
+    prerender && workspace.includes('web') ? detectPrerenderRoutes() : []
   const shouldGeneratePrismaClient =
     prisma &&
     prismaSchemaExists &&
-    (side.includes('api') || prerenderRoutes.length > 0)
+    (workspace.includes('api') || prerenderRoutes.length > 0)
+
+  const gqlFeaturesTaskTitle = `Generating types needed for ${[
+    useFragments && 'GraphQL Fragments',
+    useTrustedDocuments && 'Trusted Documents',
+  ]
+    .filter(Boolean)
+    .join(' and ')} support...`
 
   const tasks = [
     shouldGeneratePrismaClient && {
@@ -57,24 +64,17 @@ export const handler = async ({
       },
     },
     // If using GraphQL Fragments or Trusted Documents, then we need to use
-    // codegen to generate the types needed for possible types and the
-    // trusted document store hashes
+    // codegen to generate the types needed for possible types and the trusted
+    // document store hashes
     (useFragments || useTrustedDocuments) && {
-      title: `Generating types needed for ${[
-        useFragments && 'GraphQL Fragments',
-        useTrustedDocuments && 'Trusted Documents',
-      ]
-        .filter(Boolean)
-        .join(' and ')} support...`,
-      task: async () => {
-        await generate()
-      },
+      title: gqlFeaturesTaskTitle,
+      task: generate,
     },
-    side.includes('api') && {
+    workspace.includes('api') && {
       title: 'Verifying graphql schema...',
       task: loadAndValidateSdls,
     },
-    side.includes('api') && {
+    workspace.includes('api') && {
       title: 'Building API...',
       task: async () => {
         await cleanApiBuild()
@@ -88,7 +88,7 @@ export const handler = async ({
         }
       },
     },
-    side.includes('web') && {
+    workspace.includes('web') && {
       title: 'Building Web...',
       task: async () => {
         // Disable the new warning in Vite v5 about the CJS build being deprecated
@@ -96,6 +96,9 @@ export const handler = async ({
         process.env.VITE_CJS_IGNORE_WARNING = 'true'
 
         const createdRequire = createRequire(import.meta.url)
+        const buildBinPath = createdRequire.resolve(
+          '@cedarjs/vite/bins/rw-vite-build.mjs',
+        )
 
         // @NOTE: we're using the vite build command here, instead of the
         // buildWeb function directly because we want the process.cwd to be
@@ -107,9 +110,7 @@ export const handler = async ({
         // We don't have any parallel tasks right now, but someone might add
         // one in the future as a performance optimization.
         await execa(
-          `node ${createdRequire.resolve(
-            '@cedarjs/vite/bins/rw-vite-build.mjs',
-          )} --webDir="${rwjsPaths.web.base}" --verbose=${verbose}`,
+          `node ${buildBinPath} --webDir="${rwjsPaths.web.base}" --verbose=${verbose}`,
           {
             stdio: verbose ? 'inherit' : 'pipe',
             shell: true,
@@ -164,7 +165,7 @@ export const handler = async ({
   await timedTelemetry(process.argv, { type: 'build' }, async () => {
     await jobs.run()
 
-    if (side.includes('web') && prerender && prismaSchemaExists) {
+    if (workspace.includes('web') && prerender && prismaSchemaExists) {
       // This step is outside Listr so that it prints clearer, complete messages
       await triggerPrerender()
     }

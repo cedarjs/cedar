@@ -12,10 +12,10 @@ export const builder = (yargs) => {
   const choices = sides()
 
   yargs
-    .positional('side', {
+    .positional('workspace', {
       choices,
       default: choices,
-      description: 'Which side(s) to build',
+      description: 'What workspace(s) to build',
       type: 'array',
     })
     .option('verbose', {
