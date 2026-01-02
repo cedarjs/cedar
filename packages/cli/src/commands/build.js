@@ -53,7 +53,11 @@ export const builder = (yargs) => {
         return 'Workspace must be an array'
       }
 
-      // Remove all default workspace names
+      // Remove all default workspace names and then check if there are any
+      // remaining workspaces to build. This is an optimization to avoid calling
+      // `workspaces({ includePackages: true }) as that's a somewhat expensive
+      // method call that hits the filesystem and parses files
+
       const filtered = workspacesArg.filter(
         (item) => item !== 'api' && item !== 'web' && item !== 'packages/*',
       )
