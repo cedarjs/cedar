@@ -554,7 +554,6 @@ export const runCommandTask = async (commands, { verbose, silent }) => {
       title,
       task: async () => {
         return execa(cmd, args, {
-          shell: true,
           cwd,
           stdio: verbose && !silent ? 'inherit' : 'pipe',
           extendEnv: true,
