@@ -21,7 +21,8 @@ const webGeneratorTemplatesPath = path.join(getPaths().web.base, 'generators')
 
 if (fs.existsSync(webGeneratorTemplatesPath)) {
   console.log(
-    'Deprecated generator templates detected at ' + webGeneratorTemplatesPath,
+    'Deprecated generator templates path detected at ' +
+      webGeneratorTemplatesPath,
   )
   console.log(
     'Please see https://github.com/cedarjs/cedar/pull/813 for more ' +
@@ -31,7 +32,8 @@ if (fs.existsSync(webGeneratorTemplatesPath)) {
 
 if (fs.existsSync(apiGeneratorTemplatesPath)) {
   console.log(
-    'Deprecated generator templates detected at ' + apiGeneratorTemplatesPath,
+    'Deprecated generator templates path detected at ' +
+      apiGeneratorTemplatesPath,
   )
   console.log(
     'Please see https://github.com/cedarjs/cedar/pull/813 for more ' +
