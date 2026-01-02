@@ -69,6 +69,30 @@ export async function updateTsconfig(task) {
   await fs.promises.writeFile(tsconfigPath, tsconfigLines.join('\n'))
 }
 
+// Exported for testing
+export async function updateGitignore(task) {
+  const gitignorePath = path.join(getPaths().base, '.gitignore')
+  const gitignore = await fs.promises.readFile(gitignorePath, 'utf8')
+  const gitignoreLines = gitignore.split('\n')
+
+  if (gitignoreLines.some((line) => line === 'tsconfig.tsbuildinfo')) {
+    task.skip('tsconfig already up to date')
+    return
+  }
+
+  const yarnErrorLogLineIndex = gitignoreLines.findIndex(
+    (line) => line === 'yarn-error.log',
+  )
+
+  if (yarnErrorLogLineIndex === -1) {
+    gitignoreLines.push('tsconfig.tsbuildinfo')
+  } else {
+    gitignoreLines.splice(yarnErrorLogLineIndex, 0, 'tsconfig.tsbuildinfo')
+  }
+
+  await fs.promises.writeFile(gitignorePath, gitignoreLines.join('\n'))
+}
+
 async function installAndBuild(folderName) {
   const packagePath = path.join('packages', folderName)
   await execa('yarn', ['install'], { stdio: 'inherit', cwd: getPaths().base })
@@ -190,6 +214,10 @@ export const handler = async ({ name, force, ...rest }) => {
       {
         title: 'Updating api side tsconfig file...',
         task: (_ctx, task) => updateTsconfig(task),
+      },
+      {
+        title: 'Updating .gitignore...',
+        task: (_ctx, task) => updateGitignore(task),
       },
       {
         title: 'Generating package files...',
