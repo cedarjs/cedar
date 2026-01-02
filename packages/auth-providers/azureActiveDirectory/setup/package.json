@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-azure-active-directory-setup",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -39,7 +39,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/cli-helpers": "2.2.1"
+    "@cedarjs/cli-helpers": "2.3.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
