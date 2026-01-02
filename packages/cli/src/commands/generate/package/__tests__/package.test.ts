@@ -58,6 +58,7 @@ vi.mock('../../../../lib/index.js', async (importOriginal) => {
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, afterEach } from 'vitest'
 
 // @ts-expect-error - No types for JS files
@@ -427,6 +428,140 @@ describe('packageHandler', () => {
       expect(skipFn).toHaveBeenCalled()
       expect(fs.readFileSync(tsconfigPath, 'utf8')).toMatch(
         /"module": "NodeNext"/,
+      )
+    })
+  })
+
+  describe('updateGitignore', () => {
+    const gitignorePath = path.join(mockBase.path, '.gitignore')
+
+    const gitignore = dedent`
+      .idea
+      .DS_Store
+      .env*
+      !.env.example
+      !.env.defaults
+      .netlify
+      .redwood/*
+      !.redwood/README.md
+      dev.db*
+      dist
+      dist-babel
+      node_modules
+      yarn-error.log
+      web/public/mockServiceWorker.js
+      web/types/graphql.d.ts
+      api/types/graphql.d.ts
+      api/src/lib/generateGraphiQLHeader.*
+      .pnp.*
+      .yarn/*
+      !.yarn/patches
+      !.yarn/plugins
+      !.yarn/releases
+      !.yarn/sdks
+      !.yarn/versions
+    `
+
+    const gitignoreWithTsBuildInfo = dedent`
+      .idea
+      .DS_Store
+      .env*
+      !.env.example
+      !.env.defaults
+      .netlify
+      .redwood/*
+      !.redwood/README.md
+      dev.db*
+      dist
+      dist-babel
+      node_modules
+      tsconfig.tsbuildinfo
+      yarn-error.log
+      web/public/mockServiceWorker.js
+      web/types/graphql.d.ts
+      api/types/graphql.d.ts
+      api/src/lib/generateGraphiQLHeader.*
+      .pnp.*
+      .yarn/*
+      !.yarn/patches
+      !.yarn/plugins
+      !.yarn/releases
+      !.yarn/sdks
+      !.yarn/versions
+    `
+
+    it('inserts tsconfig.tsbuildinfo right before yarn-error.log', async () => {
+      vol.fromJSON(
+        {
+          [gitignorePath]: gitignore,
+          'redwood.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateGitignore({ skip: () => {} })
+
+      expect(fs.readFileSync(gitignorePath, 'utf8')).toEqual(
+        gitignoreWithTsBuildInfo,
+      )
+    })
+
+    it('inserts tsconfig.tsbuildinfo at the end if no yarn-error.log line is found', async () => {
+      vol.fromJSON(
+        {
+          [gitignorePath]: gitignore.replace('yarn-error.log\n', ''),
+          'redwood.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateGitignore({ skip: () => {} })
+
+      expect(fs.readFileSync(gitignorePath, 'utf8')).toEqual(
+        dedent`
+          .idea
+          .DS_Store
+          .env*
+          !.env.example
+          !.env.defaults
+          .netlify
+          .redwood/*
+          !.redwood/README.md
+          dev.db*
+          dist
+          dist-babel
+          node_modules
+          web/public/mockServiceWorker.js
+          web/types/graphql.d.ts
+          api/types/graphql.d.ts
+          api/src/lib/generateGraphiQLHeader.*
+          .pnp.*
+          .yarn/*
+          !.yarn/patches
+          !.yarn/plugins
+          !.yarn/releases
+          !.yarn/sdks
+          !.yarn/versions
+          tsconfig.tsbuildinfo
+        `,
+      )
+    })
+
+    it('skips update if "tsconfig.tsbuildinfo" is already present', async () => {
+      vol.fromJSON(
+        {
+          [gitignorePath]: gitignoreWithTsBuildInfo,
+          'redwood.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const skipFn = vi.fn()
+      await packageHandler.updateGitignore({ skip: skipFn })
+
+      expect(skipFn).toHaveBeenCalled()
+      expect(fs.readFileSync(gitignorePath, 'utf8')).toEqual(
+        gitignoreWithTsBuildInfo,
       )
     })
   })
