@@ -51,6 +51,9 @@ try {
   console.log('Running yarn install in docs...')
   await $({ cwd: path.join(repoRoot, 'docs') })`yarn install`
 
+  // This step triggers Node's DEP0169 warning. But it's not our fault.
+  // See https://github.com/nrwl/nx/issues/33894
+  // TODO: Remove comment above when the issue is fixed
   console.log('Running yarn build...')
   await $`yarn build`
 
