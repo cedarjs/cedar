@@ -119,6 +119,9 @@ export interface Config {
       enabled: boolean
       lintOnly: boolean
     }
+    packagesWorkspace: {
+      enabled: boolean
+    }
   }
   eslintLegacyConfigWarning: boolean
 }
@@ -205,6 +208,9 @@ export const DEFAULT_CONFIG: Config = {
     reactCompiler: {
       enabled: false,
       lintOnly: false,
+    },
+    packagesWorkspace: {
+      enabled: false,
     },
   },
   eslintLegacyConfigWarning: true,
