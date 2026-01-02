@@ -92,7 +92,7 @@ vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
 
 vi.mock('./project', () => ({
   isTypeScriptProject: () => false,
-  sides: () => ['web', 'api'],
+  workspaces: () => ['web', 'api'],
 }))
 
 globalThis.__prettierPath = path.resolve(
