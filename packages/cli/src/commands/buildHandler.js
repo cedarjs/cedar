@@ -20,7 +20,7 @@ export const handler = async ({
   workspace = ['api', 'web'],
   verbose = false,
   prisma = true,
-  prerender,
+  prerender = true,
 }) => {
   recordTelemetryAttributes({
     command: 'build',
@@ -30,12 +30,12 @@ export const handler = async ({
     prerender,
   })
 
-  const rwjsPaths = getPaths()
-  const rwjsConfig = getConfig()
-  const useFragments = rwjsConfig.graphql?.fragments
-  const useTrustedDocuments = rwjsConfig.graphql?.trustedDocuments
+  const cedarPaths = getPaths()
+  const cedarConfig = getConfig()
+  const useFragments = cedarConfig.graphql?.fragments
+  const useTrustedDocuments = cedarConfig.graphql?.trustedDocuments
 
-  const prismaSchemaExists = fs.existsSync(rwjsPaths.api.prismaConfig)
+  const prismaSchemaExists = fs.existsSync(cedarPaths.api.prismaConfig)
   const prerenderRoutes =
     prerender && workspace.includes('web') ? detectPrerenderRoutes() : []
   const shouldGeneratePrismaClient =
@@ -59,7 +59,7 @@ export const handler = async ({
         return execa(cmd, args, {
           stdio: verbose ? 'inherit' : 'pipe',
           shell: true,
-          cwd: rwjsPaths.api.base,
+          cwd: cedarPaths.api.base,
         })
       },
     },
@@ -110,14 +110,14 @@ export const handler = async ({
         // We don't have any parallel tasks right now, but someone might add
         // one in the future as a performance optimization.
         await execa(
-          `node ${buildBinPath} --webDir="${rwjsPaths.web.base}" --verbose=${verbose}`,
+          `node ${buildBinPath} --webDir="${cedarPaths.web.base}" --verbose=${verbose}`,
           {
             stdio: verbose ? 'inherit' : 'pipe',
             shell: true,
             // `cwd` is needed for yarn to find the rw-vite-build binary
             // It won't change process.cwd for anything else here, in this
             // process
-            cwd: rwjsPaths.web.base,
+            cwd: cedarPaths.web.base,
           },
         )
 
@@ -142,7 +142,7 @@ export const handler = async ({
       console.log(
         `You have not marked any routes to "prerender" in your ${terminalLink(
           'Routes',
-          'file://' + rwjsPaths.web.routes,
+          'file://' + cedarPaths.web.routes,
         )}.`,
       )
 
@@ -154,12 +154,12 @@ export const handler = async ({
     await execa('yarn cedar prerender', {
       stdio: 'inherit',
       shell: true,
-      cwd: rwjsPaths.web.base,
+      cwd: cedarPaths.web.base,
     })
   }
 
   const jobs = new Listr(tasks, {
-    renderer: verbose && 'verbose',
+    renderer: verbose ? 'verbose' : undefined,
   })
 
   await timedTelemetry(process.argv, { type: 'build' }, async () => {

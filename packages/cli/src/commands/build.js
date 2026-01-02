@@ -2,14 +2,14 @@ import { terminalLink } from 'termi-link'
 
 import c from '../lib/colors.js'
 import { exitWithError } from '../lib/exit.js'
-import { sides } from '../lib/project.js'
+import { workspaces } from '../lib/project.js'
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
-export const command = 'build [side..]'
+export const command = 'build [workspace..]'
 export const description = 'Build for production'
 
 export const builder = (yargs) => {
-  const choices = sides()
+  const choices = workspaces()
 
   yargs
     .positional('workspace', {

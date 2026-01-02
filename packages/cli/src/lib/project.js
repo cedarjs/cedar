@@ -11,17 +11,20 @@ export const isTypeScriptProject = () => {
   )
 }
 
-export const sides = () => {
+export const workspaces = () => {
   const paths = getPaths()
 
-  let sides = []
+  let workspaces = []
+
   if (fs.existsSync(path.join(paths.web.base, 'package.json'))) {
-    sides = [...sides, 'web']
+    workspaces = [...workspaces, 'web']
   }
+
   if (fs.existsSync(path.join(paths.api.base, 'package.json'))) {
-    sides = [...sides, 'api']
+    workspaces = [...workspaces, 'api']
   }
-  return sides
+
+  return workspaces
 }
 
 export const serverFileExists = () => {
