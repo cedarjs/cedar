@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
+import type { Options as ExecaOptions } from 'execa'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
@@ -14,17 +15,17 @@ import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
-} from './frameworkLinking.js'
-import { webTasks, apiTasks } from './tui-tasks.js'
-import { isAwaitable, isTuiError } from './typing.js'
-import type { TuiTaskDef } from './typing.js'
+} from './frameworkLinking.mjs'
+import { webTasks, apiTasks } from './tui-tasks.mjs'
+import { isAwaitable, isTuiError } from './typing.mjs'
+import type { TuiTaskDef } from './typing.mjs'
 import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   ExecaError,
   exec,
   getCfwBin,
-} from './util.js'
+} from './util.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -113,7 +114,7 @@ if (!startStep) {
 
 const tui = new RedwoodTUI()
 
-function getExecaOptions(cwd: string) {
+function getExecaOptions(cwd: string): ExecaOptions {
   return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
 }
 
@@ -163,7 +164,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
 
   try {
     promise = task()
-  } catch (e) {
+  } catch (e: unknown) {
     // This code handles errors from synchronous tasks
 
     tui.stopReactive(true)
@@ -187,7 +188,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
   }
 
   if (isAwaitable(promise)) {
-    const result = await promise.catch((e) => {
+    const result = await promise.catch((e: any) => {
       // This code handles errors from asynchronous tasks
 
       tui.stopReactive(true)
@@ -204,7 +205,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
         )
       }
 
-      process.exit(e.exitCode)
+      process.exit(e.exitCode ?? 1)
     })
 
     if (Array.isArray(result)) {

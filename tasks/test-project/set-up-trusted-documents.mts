@@ -2,12 +2,13 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
+import type { Options as ExecaOptions } from 'execa'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { exec, getExecaOptions as utilGetExecaOptions } from './util.js'
+import { exec, getExecaOptions as utilGetExecaOptions } from './util.mjs'
 
-function getExecaOptions(cwd: string) {
+function getExecaOptions(cwd: string): ExecaOptions {
   return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
 }
 
@@ -53,7 +54,8 @@ async function runCommand() {
     'api/src/functions/graphql.ts',
   )
   const graphqlHandlerContent = fs.readFileSync(graphqlHandlerPath, 'utf-8')
-  const storeImport = "import { store } from 'src/lib/trustedDocumentsStore.js'"
+  const storeImport =
+    "import { store } from 'src/lib/trustedDocumentsStore.mjs'"
 
   if (!graphqlHandlerContent.includes(storeImport)) {
     console.error(
