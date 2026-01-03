@@ -88,6 +88,7 @@ exports[`packageHandler > files > multi-word package names > uses the provided s
   "private": true,
   "type": "module",
   "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -180,6 +181,7 @@ exports[`packageHandler > files > single word package name > infers package scop
   "private": true,
   "type": "module",
   "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
