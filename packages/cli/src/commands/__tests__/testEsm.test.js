@@ -11,7 +11,7 @@ vi.mock('execa', () => ({
 import execa from 'execa'
 import { vi, afterEach, test, expect } from 'vitest'
 
-import { handler } from '../testEsm.js'
+import { handler } from '../testHandlerEsm.js'
 
 vi.mock('@cedarjs/structure', () => {
   return {

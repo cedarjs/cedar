@@ -50,7 +50,7 @@ import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
 import { runCommandTask } from '../../lib/index.js'
-import { handler } from '../type-check.js'
+import { handler } from '../type-checkHandler.js'
 
 beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})
