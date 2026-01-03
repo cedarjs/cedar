@@ -318,10 +318,10 @@ async function runCommand() {
   await tuiTask({
     step: 1,
     title: '[link] Building Cedar framework',
-    content: 'yarn build:clean && yarn build',
+    content: 'yarn clean && yarn build',
     task: async () => {
       return exec(
-        'yarn build:clean && yarn build',
+        'yarn clean && yarn build',
         [],
         getExecaOptions(RW_FRAMEWORK_PATH),
       )

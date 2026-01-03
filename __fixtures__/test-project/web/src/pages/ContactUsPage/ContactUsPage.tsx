@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { validateEmail } from '@my-org/validators'
 import { useForm } from 'react-hook-form'
 
 import {
@@ -13,8 +14,6 @@ import {
 import { useBlocker } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
 import { toast, Toaster } from '@cedarjs/web/toast'
-
-import { validateEmail } from '@my-org/validators'
 
 const CREATE_CONTACT = gql`
   mutation CreateContactMutation($input: CreateContactInput!) {

@@ -315,10 +315,10 @@ async function runCommand() {
   await tuiTask({
     step: 1,
     title: '[link] Building Cedar framework',
-    content: 'yarn build:clean && yarn build',
+    content: 'yarn clean && yarn build',
     task: async () => {
       return exec(
-        'yarn build:clean && yarn build',
+        'yarn clean && yarn build',
         [],
         getExecaOptions(RW_FRAMEWORK_PATH),
       )
@@ -500,6 +500,13 @@ async function runCommand() {
     step: 10,
     title: 'Add workspace packages',
     task: async () => {
+      const tomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
+      const redwoodToml = fs.readFileSync(tomlPath, 'utf-8')
+      const newRedwoodToml =
+        redwoodToml + '\n[experimental.packagesWorkspace]\n  enabled = true\n'
+
+      fs.writeFileSync(tomlPath, newRedwoodToml)
+
       await exec(
         'yarn cedar g package @my-org/validators',
         [],
@@ -513,14 +520,12 @@ async function runCommand() {
       )
 
       fs.writeFileSync(
-        path.join(packagePath, 'validator.ts'),
-        "import { contacts } from 'api/src/services/contacts/contacts'\n" +
-          '\n' +
-          'export function validateEmail(email: string) {\n' +
+        path.join(packagePath, 'src', 'index.ts'),
+        'export function validateEmail(email: string) {\n' +
           "  return email.includes('@') &&\n" +
           "    email.includes('.') &&\n" +
           "    email.lastIndexOf('.') > email.indexOf('@') + 1\n" +
-          '}\n\n',
+          '}\n',
       )
 
       // Verify that `yarn cedar <cmd>` works inside package directories
