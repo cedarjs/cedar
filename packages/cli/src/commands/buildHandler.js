@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
+import concurrently from 'concurrently'
 import execa from 'execa'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
@@ -11,13 +12,14 @@ import { buildApi, cleanApiBuild } from '@cedarjs/internal/dist/build/api'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
-import { timedTelemetry } from '@cedarjs/telemetry'
+import { timedTelemetry, errorTelemetry } from '@cedarjs/telemetry'
 
+import { exitWithError } from '../lib/exit.js'
 import { generatePrismaCommand } from '../lib/generatePrismaClient.js'
 import { getPaths, getConfig } from '../lib/index.js'
 
 export const handler = async ({
-  workspace = ['api', 'web'],
+  workspace = ['api', 'web', 'packages/*'],
   verbose = false,
   prisma = true,
   prerender = true,
@@ -43,6 +45,14 @@ export const handler = async ({
     prismaSchemaExists &&
     (workspace.includes('api') || prerenderRoutes.length > 0)
 
+  const packageJsonPath = path.join(cedarPaths.base, 'package.json')
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+  const packageJsonWorkspaces = packageJson.workspaces
+  const restWorkspaces =
+    Array.isArray(packageJsonWorkspaces) && packageJsonWorkspaces.length > 2
+      ? workspace.filter((w) => w !== 'api' && w !== 'web')
+      : []
+
   const gqlFeaturesTaskTitle = `Generating types needed for ${[
     useFragments && 'GraphQL Fragments',
     useTrustedDocuments && 'Trusted Documents',
@@ -59,6 +69,61 @@ export const handler = async ({
         return execa(cmd, args, {
           stdio: verbose ? 'inherit' : 'pipe',
           cwd: cedarPaths.api.base,
+        })
+      },
+    },
+    restWorkspaces.length > 0 && {
+      title: 'Building Packages...',
+      task: async () => {
+        // fs.globSync requires forward slashes as path separators in patterns,
+        // even on Windows.
+        const globPattern = path
+          .join(cedarPaths.packages, '*')
+          .replaceAll('\\', '/')
+        const allPackagePaths = await Array.fromAsync(
+          fs.promises.glob(globPattern),
+        )
+
+        // restWorkspaces can be ['packages/*'] or
+        // ['@my-org/pkg-one', '@my-org/pkg-two', 'packages/pkg-three', etc]
+        // We need to map that to filesystem paths
+        const workspacePaths = restWorkspaces.some((w) => w === 'packages/*')
+          ? allPackagePaths
+          : restWorkspaces.map((w) => {
+              const workspacePath = path.join(
+                cedarPaths.packages,
+                w.split('/').at(-1),
+              )
+
+              if (!fs.existsSync(workspacePath)) {
+                throw new Error(`Workspace not found: ${workspacePath}`)
+              }
+
+              return workspacePath
+            })
+
+        const { result } = concurrently(
+          workspacePaths.map((workspacePath) => {
+            return {
+              command: `yarn build`,
+              name: workspacePath.split('/').at(-1),
+              cwd: workspacePath,
+            }
+          }),
+          {
+            prefix: '{name} |',
+            timestampFormat: 'HH:mm:ss',
+          },
+        )
+
+        await result.catch((e) => {
+          if (e?.message) {
+            errorTelemetry(
+              process.argv,
+              `Error concurrently building sides: ${e.message}`,
+            )
+            exitWithError(e)
+          }
         })
       },
     },

@@ -9,13 +9,12 @@ export const command = 'build [workspace..]'
 export const description = 'Build for production'
 
 export const builder = (yargs) => {
-  const choices = workspaces()
-
   yargs
     .positional('workspace', {
-      choices,
-      default: choices,
-      description: 'What workspace(s) to build',
+      default: ['web', 'api', 'packages/*'],
+      description:
+        'What workspace(s) to build. Valid values are: web, api, packages/*, ' +
+        '<package-name>',
       type: 'array',
     })
     .option('verbose', {
@@ -46,6 +45,38 @@ export const builder = (yargs) => {
         message: `${c.error('Error')}: ${check.message}`,
         includeEpilogue: false,
       })
+    })
+    .check((argv) => {
+      const workspacesArg = argv.workspace
+
+      if (!Array.isArray(workspacesArg)) {
+        return 'Workspace must be an array'
+      }
+
+      // Remove all default workspace names and then check if there are any
+      // remaining workspaces to build. This is an optimization to avoid calling
+      // `workspaces({ includePackages: true }) as that's a somewhat expensive
+      // method call that hits the filesystem and parses files
+
+      const filtered = workspacesArg.filter(
+        (item) => item !== 'api' && item !== 'web' && item !== 'packages/*',
+      )
+
+      if (filtered.length === 0) {
+        return true
+      }
+
+      const workspaceNames = workspaces({ includePackages: true })
+
+      if (!workspacesArg.every((item) => workspaceNames.includes(item))) {
+        return (
+          c.error(`Unknown workspace(s) ${workspacesArg.join(' ')}`) +
+          '\n\nValid values are: ' +
+          workspaceNames.join(', ')
+        )
+      }
+
+      return true
     })
     .epilogue(
       `Also see the ${terminalLink(

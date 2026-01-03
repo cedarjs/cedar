@@ -1,9 +1,18 @@
-vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
+// mock Telemetry for CLI commands so they don't try to spawn a process
+vi.mock('@cedarjs/telemetry', () => {
   return {
-    ...originalProjectConfig,
+    errorTelemetry: () => vi.fn(),
+    timedTelemetry: (_argv, _options, callback) => {
+      return callback()
+    },
+  }
+})
+
+vi.mock('@cedarjs/project-config', async () => {
+  return {
     getPaths: () => {
       return {
+        base: '/mocked/project',
         api: {
           dist: '/mocked/project/api/dist',
           prismaConfig: '/mocked/project/api/prisma.config.js',
@@ -20,22 +29,31 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         // the values it currently reads are optional.
       }
     },
+    resolveFile: () => {
+      // Used by packages/cli/src/lib/index.js
+    },
   }
 })
 
 vi.mock('node:fs', async () => {
-  const actualFs = await vi.importActual('node:fs')
-
   return {
     default: {
-      ...actualFs,
-      // Mock the existence of the Prisma config file
       existsSync: (path) => {
         if (path === '/mocked/project/api/prisma.config.js') {
+          // Mock the existence of the Prisma config file
+          return true
+        } else if (path.endsWith('package.json')) {
+          // Mock the existence of all packages/<pkg-name>/package.json files
           return true
         }
-
-        return actualFs.existsSync(path)
+      },
+      readFileSync: () => {
+        // Reading /mocked/project/package.json
+        // It just needs a workspace config section
+        return JSON.stringify({
+          workspaces: ['api', 'web', 'packages/*'],
+        })
+        // }
       },
     },
   }
@@ -54,17 +72,21 @@ vi.mock('execa', () => ({
   })),
 }))
 
-import { handler } from '../build.js'
+import { handler } from '../buildHandler.js'
 
 afterEach(() => {
   vi.clearAllMocks()
 })
 
 test('the build tasks are in the correct sequence', async () => {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+
   await handler({})
+
   expect(Listr.mock.calls[0][0].map((x) => x.title)).toMatchInlineSnapshot(`
     [
       "Generating Prisma Client...",
+      "Building Packages...",
       "Verifying graphql schema...",
       "Building API...",
       "Building Web...",
