@@ -14,13 +14,12 @@ export async function buildPackagesTask(nonApiWebWorkspaces) {
   // fs.globSync requires forward slashes as path separators in patterns,
   // even on Windows.
   const globPattern = path.join(cedarPaths.packages, '*').replaceAll('\\', '/')
-  const allPackagePaths = await Array.fromAsync(fs.promises.glob(globPattern))
 
   // restWorkspaces can be ['packages/*'] or
   // ['@my-org/pkg-one', '@my-org/pkg-two', 'packages/pkg-three', etc]
   // We need to map that to filesystem paths
   const workspacePaths = nonApiWebWorkspaces.some((w) => w === 'packages/*')
-    ? allPackagePaths
+    ? await Array.fromAsync(fs.promises.glob(globPattern))
     : nonApiWebWorkspaces.map((w) => {
         const workspacePath = path.join(
           cedarPaths.packages,

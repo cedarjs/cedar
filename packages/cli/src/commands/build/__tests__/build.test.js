@@ -1,4 +1,3 @@
-// mock Telemetry for CLI commands so they don't try to spawn a process
 vi.mock('@cedarjs/telemetry', () => {
   return {
     errorTelemetry: () => vi.fn(),
@@ -57,6 +56,39 @@ vi.mock('node:fs', () => {
     },
   }
 })
+
+// Aggressively mocking a lot of modules here to speed up test
+// Without these mocks the "collect" phase of the tests took around 2s
+// With these mocks it's down to ~250ms
+
+vi.mock('@cedarjs/internal/dist/build/api', () => ({
+  buildApi: vi.fn(),
+  cleanApiBuild: vi.fn(),
+}))
+
+vi.mock('@cedarjs/internal/dist/generate/generate', () => ({
+  generate: vi.fn(),
+}))
+
+vi.mock('@cedarjs/internal/dist/validateSchema', () => ({
+  loadAndValidateSdls: vi.fn(),
+}))
+
+vi.mock('@cedarjs/cli-helpers', () => ({
+  recordTelemetryAttributes: vi.fn(),
+}))
+
+vi.mock('termi-link', () => ({
+  terminalLink: vi.fn((text, _url) => text),
+}))
+
+vi.mock('../../lib/generatePrismaClient.js', () => ({
+  generatePrismaCommand: vi.fn(() => ({ cmd: 'echo', args: [] })),
+}))
+
+vi.mock('./buildPackagesTask.js', () => ({
+  buildPackagesTask: vi.fn(),
+}))
 
 import { Listr } from 'listr2'
 import { vi, afterEach, test, expect } from 'vitest'
