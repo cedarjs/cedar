@@ -130,15 +130,10 @@ export class ExecaError extends Error {
 
 export async function exec(
   file: string,
-  argsOrOptions?: string[] | ExecaOptions,
-  maybeOptions?: ExecaOptions,
+  args?: string[],
+  options?: ExecaOptions,
 ) {
-  const args = Array.isArray(argsOrOptions) ? argsOrOptions : []
-  const options = Array.isArray(argsOrOptions)
-    ? maybeOptions
-    : (argsOrOptions as ExecaOptions)
-
-  return execa(file, args, options)
+  return execa(file, args ?? [], options)
     .then(({ stdout, stderr, exitCode }) => {
       if (exitCode !== 0) {
         throw new ExecaError({ stdout, stderr, exitCode })
