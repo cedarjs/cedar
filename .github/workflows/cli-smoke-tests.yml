@@ -54,7 +54,7 @@ jobs:
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar test web`
-        run: cat yarn.lock | grep my-org && yarn cedar test web --no-watch
+        run: cat yarn.lock | grep my-org && ls -la packages/validators && ls -la packages/validators/dist && yarn cedar test web --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar check`
