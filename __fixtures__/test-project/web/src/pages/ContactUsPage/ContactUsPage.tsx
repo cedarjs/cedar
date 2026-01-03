@@ -14,6 +14,8 @@ import { useBlocker } from '@cedarjs/router'
 import { useMutation } from '@cedarjs/web'
 import { toast, Toaster } from '@cedarjs/web/toast'
 
+import { validateEmail } from '@my-org/validators'
+
 const CREATE_CONTACT = gql`
   mutation CreateContactMutation($input: CreateContactInput!) {
     createContact(input: $input) {
@@ -94,9 +96,16 @@ const ContactUsPage = () => {
           name="email"
           validation={{
             required: true,
-            pattern: {
-              value: /[^@]+@[^.]+..+/,
-              message: 'Please enter a valid email address',
+            validate: (value) => {
+              if (!value) {
+                return 'Email is required'
+              }
+
+              if (!validateEmail(value)) {
+                return 'Please enter a valid email address'
+              }
+
+              return true
             },
           }}
           className="rounded-sm border px-2 py-1"

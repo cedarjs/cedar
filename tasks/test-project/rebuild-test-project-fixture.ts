@@ -13,7 +13,7 @@ import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
 } from './frameworkLinking'
-import { webTasks, apiTasks } from './tui-tasks'
+import { webTasks, apiTasks } from './tui-tasks.js'
 import { isAwaitable, isTuiError } from './typing'
 import type { TuiTaskDef } from './typing'
 import {
@@ -498,6 +498,70 @@ async function runCommand() {
 
   await tuiTask({
     step: 10,
+    title: 'Add workspace packages',
+    task: async () => {
+      await exec(
+        'yarn cedar g package @my-org/validators',
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
+
+      const packagePath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'packages',
+        'validators',
+      )
+
+      fs.writeFileSync(
+        path.join(packagePath, 'validator.ts'),
+        "import { contacts } from 'api/src/services/contacts/contacts'\n" +
+          '\n' +
+          'export function validateEmail(email: string) {\n' +
+          "  return email.includes('@') &&\n" +
+          "    email.includes('.') &&\n" +
+          "    email.lastIndexOf('.') > email.indexOf('@') + 1\n" +
+          '}\n\n',
+      )
+
+      // Verify that `yarn cedar <cmd>` works inside package directories
+      // Starting with `yarn cedar info`
+      // TODO: Enable code below
+      // const info = await exec(
+      //   'yarn cedar info',
+      //   [],
+      //   getExecaOptions(OUTPUT_PROJECT_PATH),
+      // )
+
+      // if (
+      //   !info.stdout.includes('Binaries:') ||
+      //   !info.stdout.includes('Node:') ||
+      //   !info.stdout.includes('npmPackages:') ||
+      //   !info.stdout.includes('@cedarjs/core')
+      // ) {
+      //   console.error('yarn cedar info output', info.stdout, info.stderr)
+
+      //   throw new Error('Unexpected output from `yarn cedar info`')
+      // }
+
+      // Continue testing `yarn cedar <cmd>` by running `yarn cedar test`
+      // const test = await exec(
+      //   'yarn cedar test @my-org/validators',
+      //   [],
+      //   getExecaOptions(OUTPUT_PROJECT_PATH),
+      // )
+
+      // Validate that only the tests for this package ran
+      // Verify that all tests passed
+      // TODO: Implement functionality according to the comment above
+
+      // The package we've generated (@my-org/validators) is used in the test
+      // project on both the web and the api side and is further tested by our
+      // playwright tests that trigger the files that import the package.
+    },
+  })
+
+  await tuiTask({
+    step: 11,
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
@@ -509,7 +573,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 11,
+    step: 12,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
@@ -540,7 +604,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 13,
     title: 'Replace and Cleanup Fixture',
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
@@ -595,7 +659,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 13,
+    step: 14,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))
