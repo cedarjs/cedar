@@ -1,0 +1,854 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Project Serialization Parity > serializes example-todo-main correctly 1`] = `
+{
+  "cells": [
+    {
+      "name": "TodoListCell",
+      "queryOperationName": "TodoListCell_GetTodos",
+    },
+    {
+      "name": "NumTodosTwoCell",
+      "queryOperationName": "NumTodosCell_GetCount",
+    },
+    {
+      "name": "NumTodosCell",
+      "queryOperationName": "NumTodosCell_GetCount",
+    },
+  ],
+  "layouts": [
+    {
+      "name": "SetLayout",
+    },
+  ],
+  "pages": [
+    {
+      "constName": "BarPage",
+      "path": "/web/src/pages/BarPage/BarPage.tsx",
+    },
+    {
+      "constName": "FatalErrorPage",
+      "path": "/web/src/pages/FatalErrorPage/FatalErrorPage.js",
+    },
+    {
+      "constName": "FooPage",
+      "path": "/web/src/pages/FooPage/FooPage.tsx",
+    },
+    {
+      "constName": "HomePage",
+      "path": "/web/src/pages/HomePage/HomePage.tsx",
+    },
+    {
+      "constName": "NotFoundPage",
+      "path": "/web/src/pages/NotFoundPage/NotFoundPage.js",
+    },
+    {
+      "constName": "PrivatePage",
+      "path": "/web/src/pages/PrivatePage/PrivatePage.tsx",
+    },
+    {
+      "constName": "TypeScriptPage",
+      "path": "/web/src/pages/TypeScriptPage/TypeScriptPage.tsx",
+    },
+    {
+      "constName": "adminEditUserPage",
+      "path": "/web/src/pages/admin/EditUserPage/EditUserPage.jsx",
+    },
+  ],
+  "router": {
+    "routes": [
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "home",
+        "pageIdentifier": "HomePage",
+        "path": "/",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "typescriptPage",
+        "pageIdentifier": "TypeScriptPage",
+        "path": "/typescript",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "someOtherPage",
+        "pageIdentifier": "EditUserPage",
+        "path": "/somewhereElse",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "fooPage",
+        "pageIdentifier": "FooPage",
+        "path": "/foo",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "barPage",
+        "pageIdentifier": "BarPage",
+        "path": "/bar",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": true,
+        "name": "privatePage",
+        "pageIdentifier": "PrivatePage",
+        "path": "/private-page",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": true,
+        "name": "privatePageAdmin",
+        "pageIdentifier": "PrivatePage",
+        "path": "/private-page-admin",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": true,
+        "name": "privatePageAdminSuper",
+        "pageIdentifier": "PrivatePage",
+        "path": "/private-page-admin-super",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": true,
+        "isPrivate": false,
+        "name": undefined,
+        "pageIdentifier": "NotFoundPage",
+        "path": undefined,
+        "prerender": false,
+        "redirect": undefined,
+      },
+    ],
+  },
+  "services": [
+    {
+      "functions": [
+        {
+          "name": "todos",
+          "parameters": [],
+        },
+        {
+          "name": "createTodo",
+          "parameters": [
+            "body",
+          ],
+        },
+        {
+          "name": "numTodos",
+          "parameters": [],
+        },
+        {
+          "name": "updateTodoStatus",
+          "parameters": [
+            "id",
+            "status",
+          ],
+        },
+        {
+          "name": "renameTodo",
+          "parameters": [
+            "id",
+            "body",
+          ],
+        },
+      ],
+      "name": "todos",
+    },
+  ],
+}
+`;
+
+exports[`Project Serialization Parity > serializes local:structure-test-project correctly 1`] = `
+{
+  "cells": [
+    {
+      "name": "UnusualCell",
+      "queryOperationName": "UnusualCell",
+    },
+  ],
+  "layouts": [
+    {
+      "name": "MainLayout",
+    },
+  ],
+  "pages": [
+    {
+      "constName": "HomePage",
+      "path": "/web/src/pages/HomePage/HomePage.tsx",
+    },
+    {
+      "constName": "NestedPage",
+      "path": "/web/src/pages/NestedPage/NestedPage.tsx",
+    },
+    {
+      "constName": "NotFoundPage",
+      "path": "/web/src/pages/NotFoundPage/NotFoundPage.tsx",
+    },
+    {
+      "constName": "TemplatePage",
+      "path": "/web/src/pages/TemplatePage/TemplatePage.tsx",
+    },
+  ],
+  "router": {
+    "routes": [
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "home",
+        "pageIdentifier": "HomePage",
+        "path": "/",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "nested",
+        "pageIdentifier": "NestedPage",
+        "path": "/nested",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "template",
+        "pageIdentifier": "TemplatePage",
+        "path": "/template-path-\${id}",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": true,
+        "isPrivate": false,
+        "name": undefined,
+        "pageIdentifier": "NotFoundPage",
+        "path": undefined,
+        "prerender": false,
+        "redirect": undefined,
+      },
+    ],
+  },
+  "services": [
+    {
+      "functions": [
+        {
+          "name": "posts",
+          "parameters": [],
+        },
+        {
+          "name": "post",
+          "parameters": [
+            "id",
+          ],
+        },
+      ],
+      "name": "posts",
+    },
+  ],
+}
+`;
+
+exports[`Project Serialization Parity > serializes test-project correctly 1`] = `
+{
+  "cells": [
+    {
+      "name": "WaterfallBlogPostCell",
+      "queryOperationName": "FindWaterfallBlogPostQuery",
+    },
+    {
+      "name": "PostsCell",
+      "queryOperationName": "FindPosts",
+    },
+    {
+      "name": "PostCell",
+      "queryOperationName": "FindPostById",
+    },
+    {
+      "name": "EditPostCell",
+      "queryOperationName": "EditPostById",
+    },
+    {
+      "name": "EditContactCell",
+      "queryOperationName": "EditContactById",
+    },
+    {
+      "name": "ContactsCell",
+      "queryOperationName": "FindContacts",
+    },
+    {
+      "name": "ContactCell",
+      "queryOperationName": "FindContactById",
+    },
+    {
+      "name": "BlogPostsCell",
+      "queryOperationName": "BlogPostsQuery",
+    },
+    {
+      "name": "BlogPostCell",
+      "queryOperationName": "FindBlogPostQuery",
+    },
+    {
+      "name": "AuthorCell",
+      "queryOperationName": "FindAuthorQuery",
+    },
+  ],
+  "layouts": [
+    {
+      "name": "ScaffoldLayout",
+    },
+    {
+      "name": "BlogLayout",
+    },
+  ],
+  "pages": [
+    {
+      "constName": "AboutPage",
+      "path": "/web/src/pages/AboutPage/AboutPage.tsx",
+    },
+    {
+      "constName": "BlogPostPage",
+      "path": "/web/src/pages/BlogPostPage/BlogPostPage.tsx",
+    },
+    {
+      "constName": "ContactUsPage",
+      "path": "/web/src/pages/ContactUsPage/ContactUsPage.tsx",
+    },
+    {
+      "constName": "DoublePage",
+      "path": "/web/src/pages/DoublePage/DoublePage.tsx",
+    },
+    {
+      "constName": "FatalErrorPage",
+      "path": "/web/src/pages/FatalErrorPage/FatalErrorPage.tsx",
+    },
+    {
+      "constName": "ForgotPasswordPage",
+      "path": "/web/src/pages/ForgotPasswordPage/ForgotPasswordPage.tsx",
+    },
+    {
+      "constName": "HomePage",
+      "path": "/web/src/pages/HomePage/HomePage.tsx",
+    },
+    {
+      "constName": "LoginPage",
+      "path": "/web/src/pages/LoginPage/LoginPage.tsx",
+    },
+    {
+      "constName": "NotFoundPage",
+      "path": "/web/src/pages/NotFoundPage/NotFoundPage.tsx",
+    },
+    {
+      "constName": "ProfilePage",
+      "path": "/web/src/pages/ProfilePage/ProfilePage.tsx",
+    },
+    {
+      "constName": "ResetPasswordPage",
+      "path": "/web/src/pages/ResetPasswordPage/ResetPasswordPage.tsx",
+    },
+    {
+      "constName": "SignupPage",
+      "path": "/web/src/pages/SignupPage/SignupPage.tsx",
+    },
+    {
+      "constName": "WaterfallPage",
+      "path": "/web/src/pages/WaterfallPage/WaterfallPage.tsx",
+    },
+    {
+      "constName": "ContactContactPage",
+      "path": "/web/src/pages/Contact/ContactPage/ContactPage.tsx",
+    },
+    {
+      "constName": "ContactContactsPage",
+      "path": "/web/src/pages/Contact/ContactsPage/ContactsPage.tsx",
+    },
+    {
+      "constName": "ContactEditContactPage",
+      "path": "/web/src/pages/Contact/EditContactPage/EditContactPage.tsx",
+    },
+    {
+      "constName": "ContactNewContactPage",
+      "path": "/web/src/pages/Contact/NewContactPage/NewContactPage.tsx",
+    },
+    {
+      "constName": "PostEditPostPage",
+      "path": "/web/src/pages/Post/EditPostPage/EditPostPage.tsx",
+    },
+    {
+      "constName": "PostNewPostPage",
+      "path": "/web/src/pages/Post/NewPostPage/NewPostPage.tsx",
+    },
+    {
+      "constName": "PostPostPage",
+      "path": "/web/src/pages/Post/PostPage/PostPage.tsx",
+    },
+    {
+      "constName": "PostPostsPage",
+      "path": "/web/src/pages/Post/PostsPage/PostsPage.tsx",
+    },
+  ],
+  "router": {
+    "routes": [
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "double",
+        "pageIdentifier": "DoublePage",
+        "path": "/double",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "login",
+        "pageIdentifier": "LoginPage",
+        "path": "/login",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "signup",
+        "pageIdentifier": "SignupPage",
+        "path": "/signup",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "forgotPassword",
+        "pageIdentifier": "ForgotPasswordPage",
+        "path": "/forgot-password",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "resetPassword",
+        "pageIdentifier": "ResetPasswordPage",
+        "path": "/reset-password",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "newContact",
+        "pageIdentifier": "ContactNewContactPage",
+        "path": "/contacts/new",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "editContact",
+        "pageIdentifier": "ContactEditContactPage",
+        "path": "/contacts/{id:Int}/edit",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "contact",
+        "pageIdentifier": "ContactContactPage",
+        "path": "/contacts/{id:Int}",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "contacts",
+        "pageIdentifier": "ContactContactsPage",
+        "path": "/contacts",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "newPost",
+        "pageIdentifier": "PostNewPostPage",
+        "path": "/posts/new",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "editPost",
+        "pageIdentifier": "PostEditPostPage",
+        "path": "/posts/{id:Int}/edit",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "post",
+        "pageIdentifier": "PostPostPage",
+        "path": "/posts/{id:Int}",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "posts",
+        "pageIdentifier": "PostPostsPage",
+        "path": "/posts",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "waterfall",
+        "pageIdentifier": "WaterfallPage",
+        "path": "/waterfall/{id:Int}",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": true,
+        "name": "profile",
+        "pageIdentifier": "ProfilePage",
+        "path": "/profile",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "blogPost",
+        "pageIdentifier": "BlogPostPage",
+        "path": "/blog-post/{id:Int}",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "contactUs",
+        "pageIdentifier": "ContactUsPage",
+        "path": "/contact",
+        "prerender": false,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "about",
+        "pageIdentifier": "AboutPage",
+        "path": "/about",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "home",
+        "pageIdentifier": "HomePage",
+        "path": "/",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": true,
+        "isPrivate": false,
+        "name": undefined,
+        "pageIdentifier": "NotFoundPage",
+        "path": undefined,
+        "prerender": true,
+        "redirect": undefined,
+      },
+    ],
+  },
+  "services": [
+    {
+      "functions": [
+        {
+          "name": "user",
+          "parameters": [
+            "id",
+          ],
+        },
+      ],
+      "name": "users",
+    },
+    {
+      "functions": [
+        {
+          "name": "posts",
+          "parameters": [],
+        },
+        {
+          "name": "post",
+          "parameters": [
+            "id",
+          ],
+        },
+        {
+          "name": "createPost",
+          "parameters": [
+            "input",
+          ],
+        },
+        {
+          "name": "updatePost",
+          "parameters": [
+            "id",
+            "input",
+          ],
+        },
+        {
+          "name": "deletePost",
+          "parameters": [
+            "id",
+          ],
+        },
+      ],
+      "name": "posts",
+    },
+    {
+      "functions": [
+        {
+          "name": "contacts",
+          "parameters": [],
+        },
+        {
+          "name": "contact",
+          "parameters": [
+            "id",
+          ],
+        },
+        {
+          "name": "createContact",
+          "parameters": [
+            "input",
+          ],
+        },
+        {
+          "name": "updateContact",
+          "parameters": [
+            "id",
+            "input",
+          ],
+        },
+        {
+          "name": "deleteContact",
+          "parameters": [
+            "id",
+          ],
+        },
+      ],
+      "name": "contacts",
+    },
+  ],
+}
+`;
+
+exports[`Project Serialization Parity > serializes the entire project structure correctly 1`] = `
+{
+  "cells": [
+    {
+      "name": "TodoListCell",
+      "queryOperationName": "TodoListCell_GetTodos",
+    },
+    {
+      "name": "NumTodosTwoCell",
+      "queryOperationName": "NumTodosCell_GetCount",
+    },
+    {
+      "name": "NumTodosCell",
+      "queryOperationName": "NumTodosCell_GetCount",
+    },
+  ],
+  "layouts": [
+    {
+      "name": "SetLayout",
+    },
+  ],
+  "pages": [
+    {
+      "constName": "BarPage",
+      "path": "/web/src/pages/BarPage/BarPage.tsx",
+    },
+    {
+      "constName": "FatalErrorPage",
+      "path": "/web/src/pages/FatalErrorPage/FatalErrorPage.js",
+    },
+    {
+      "constName": "FooPage",
+      "path": "/web/src/pages/FooPage/FooPage.tsx",
+    },
+    {
+      "constName": "HomePage",
+      "path": "/web/src/pages/HomePage/HomePage.tsx",
+    },
+    {
+      "constName": "NotFoundPage",
+      "path": "/web/src/pages/NotFoundPage/NotFoundPage.js",
+    },
+    {
+      "constName": "PrivatePage",
+      "path": "/web/src/pages/PrivatePage/PrivatePage.tsx",
+    },
+    {
+      "constName": "TypeScriptPage",
+      "path": "/web/src/pages/TypeScriptPage/TypeScriptPage.tsx",
+    },
+    {
+      "constName": "adminEditUserPage",
+      "path": "/web/src/pages/admin/EditUserPage/EditUserPage.jsx",
+    },
+  ],
+  "router": {
+    "routes": [
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "home",
+        "pageIdentifier": "HomePage",
+        "path": "/",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "typescriptPage",
+        "pageIdentifier": "TypeScriptPage",
+        "path": "/typescript",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "someOtherPage",
+        "pageIdentifier": "EditUserPage",
+        "path": "/somewhereElse",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "fooPage",
+        "pageIdentifier": "FooPage",
+        "path": "/foo",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": false,
+        "name": "barPage",
+        "pageIdentifier": "BarPage",
+        "path": "/bar",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": true,
+        "name": "privatePage",
+        "pageIdentifier": "PrivatePage",
+        "path": "/private-page",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": true,
+        "name": "privatePageAdmin",
+        "pageIdentifier": "PrivatePage",
+        "path": "/private-page-admin",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": false,
+        "isPrivate": true,
+        "name": "privatePageAdminSuper",
+        "pageIdentifier": "PrivatePage",
+        "path": "/private-page-admin-super",
+        "prerender": true,
+        "redirect": undefined,
+      },
+      {
+        "isNotFound": true,
+        "isPrivate": false,
+        "name": undefined,
+        "pageIdentifier": "NotFoundPage",
+        "path": undefined,
+        "prerender": false,
+        "redirect": undefined,
+      },
+    ],
+  },
+  "services": [
+    {
+      "functions": [
+        {
+          "name": "todos",
+          "parameters": [],
+        },
+        {
+          "name": "createTodo",
+          "parameters": [
+            "body",
+          ],
+        },
+        {
+          "name": "numTodos",
+          "parameters": [],
+        },
+        {
+          "name": "updateTodoStatus",
+          "parameters": [
+            "id",
+            "status",
+          ],
+        },
+        {
+          "name": "renameTodo",
+          "parameters": [
+            "id",
+            "body",
+          ],
+        },
+      ],
+      "name": "todos",
+    },
+  ],
+}
+`;
