@@ -32,7 +32,7 @@ import {
 
 import { Listr2Mock } from '../../../../__tests__/Listr2Mock.js'
 // @ts-expect-error - no types
-import { handler } from '../libraries/tailwindcss.js'
+import { handler } from '../libraries/tailwindcssHandler.js'
 
 // Set up RWJS_CWD
 let original_RWJS_CWD: string | undefined
