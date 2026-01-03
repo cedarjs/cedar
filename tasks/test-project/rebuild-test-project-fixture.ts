@@ -528,11 +528,49 @@ async function runCommand() {
           '}\n',
       )
 
+      fs.writeFileSync(
+        path.join(packagePath, 'src', 'validators.test.ts'),
+        "import { validateEmail } from './index.js'\n" +
+          '\n' +
+          "describe('validators', () => {\n" +
+          "  it('should not throw any errors', async () => {\n" +
+          "    expect(validateEmail('valid@email.com')).not.toThrow()\n" +
+          '  })\n' +
+          '})\n',
+      )
+
+      const webPackageJson = JSON.parse(
+        fs.readFileSync(
+          path.join(OUTPUT_PROJECT_PATH, 'web', 'package.json'),
+          'utf8',
+        ),
+      )
+
+      webPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
+
+      fs.writeFileSync(
+        path.join(OUTPUT_PROJECT_PATH, 'web', 'package.json'),
+        JSON.stringify(webPackageJson, null, 2),
+      )
+
+      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
+
       const build = await exec(
         'yarn cedar build',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
+
+      const distFiles = fs.readdirSync(
+        path.join(OUTPUT_PROJECT_PATH, 'packages', 'validators', 'dist'),
+      )
+
+      if (distFiles.some((file) => file.includes('test'))) {
+        console.error('distFiles', distFiles)
+        throw new Error(
+          'Unexpected test file in validators package dist directory',
+        )
+      }
 
       // TODO: Update this when we refine the build process
       if (!build.stdout.includes('yarn build exited with code 0')) {
@@ -623,6 +661,7 @@ async function runCommand() {
   await tuiTask({
     step: 13,
     title: 'Replace and Cleanup Fixture',
+    skip: Math.random() < 5,
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
       // remove all .gitignore
@@ -648,8 +687,9 @@ async function runCommand() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
-      // Copy over package.json from template, so we remove the extra dev dependencies, and cfw postinstall script
-      // that we added in "Adding framework dependencies to project"
+      // Copy over package.json from template, so we remove the extra dev
+      // dependencies, and cfw postinstall script that we added in "Adding
+      // framework dependencies to project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
       const rootPackageJson = JSON.parse(
