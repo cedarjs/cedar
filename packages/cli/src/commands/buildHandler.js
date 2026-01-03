@@ -58,7 +58,6 @@ export const handler = async ({
 
         return execa(cmd, args, {
           stdio: verbose ? 'inherit' : 'pipe',
-          shell: true,
           cwd: cedarPaths.api.base,
         })
       },
