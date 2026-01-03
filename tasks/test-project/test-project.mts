@@ -11,7 +11,12 @@ import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { apiTasks, streamingTasks, webTasks } from './tasks.mjs'
-import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.mjs'
+import {
+  confirmNoFixtureNoLink,
+  getExecaOptions,
+  getCfwBin,
+  setVerbose,
+} from './util.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -68,6 +73,8 @@ const {
   javascript,
   streamingSsr,
 } = args
+
+setVerbose(verbose)
 
 if (args._.length > 1) {
   console.log(

@@ -10,7 +10,6 @@ import {
   fullPath,
   getCfwBin,
   getExecaOptions,
-  setOutputPath,
   updatePkgJsonScripts,
   exec,
 } from './util.mjs'
@@ -27,16 +26,11 @@ export interface CommonTaskOptions {
 
 export interface HighLevelTask {
   title: string
-  /**
-   * Use this to create subtasks. The return value should be compatible with
-   * ListrTask[]
-   */
+  /** Use this to create subtasks */
   tasksGetter?: (
     options: CommonTaskOptions,
   ) => ListrTask[] | Promise<ListrTask[]>
-  /**
-   * Use this for a single task that doesn't have subtasks
-   */
+  /** Use this for a single task that doesn't have subtasks */
   task?: (options: CommonTaskOptions) => void | Promise<void> | Promise<unknown>
   enabled?: boolean | ((options: CommonTaskOptions) => boolean)
 }

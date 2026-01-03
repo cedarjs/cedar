@@ -10,6 +10,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 let OUTPUT_PATH: string
+let VERBOSE = false
 
 export function setOutputPath(path: string) {
   OUTPUT_PATH = path
@@ -17,6 +18,14 @@ export function setOutputPath(path: string) {
 
 export function getOutputPath() {
   return OUTPUT_PATH
+}
+
+export function setVerbose(verbose: boolean) {
+  VERBOSE = verbose
+}
+
+export function getVerbose() {
+  return VERBOSE
 }
 
 export function fullPath(
@@ -49,7 +58,7 @@ export async function applyCodemod(codemod: string, target: string) {
 
 export const getExecaOptions = (cwd: string): ExecaOptions => ({
   shell: true,
-  stdio: 'inherit',
+  stdio: VERBOSE ? 'inherit' : 'pipe',
   cleanup: true,
   cwd,
   env: {
