@@ -16,8 +16,12 @@ export const generatePrismaCommand = async () => {
   const prismaIndexPath = createdRequire.resolve('prisma/build/index.js')
 
   return {
-    cmd: `node "${prismaIndexPath}"`,
-    args: ['generate', `--config="${getPaths().api.prismaConfig}"`],
+    cmd: 'node',
+    args: [
+      prismaIndexPath,
+      'generate',
+      `--config=${getPaths().api.prismaConfig}`,
+    ],
   }
 }
 
