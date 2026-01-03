@@ -2,7 +2,8 @@
   "private": true,
   "workspaces": [
     "api",
-    "web"
+    "web",
+    "packages/*"
   ],
   "devDependencies": {
     "@cedarjs/core": "2.0.2",
