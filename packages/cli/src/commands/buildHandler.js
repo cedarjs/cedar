@@ -84,7 +84,7 @@ export const handler = async ({
           fs.promises.glob(globPattern),
         )
 
-        // restWorkspaces can be ['workspaces/*'] or
+        // restWorkspaces can be ['packages/*'] or
         // ['@my-org/pkg-one', '@my-org/pkg-two', 'packages/pkg-three', etc]
         // We need to map that to filesystem paths
         const workspacePaths = restWorkspaces.some((w) => w === 'packages/*')

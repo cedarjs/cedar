@@ -8,11 +8,8 @@ vi.mock('@cedarjs/telemetry', () => {
   }
 })
 
-vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const originalProjectConfig = await importOriginal()
-
+vi.mock('@cedarjs/project-config', async () => {
   return {
-    ...originalProjectConfig,
     getPaths: () => {
       return {
         base: '/mocked/project',
@@ -32,15 +29,15 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         // the values it currently reads are optional.
       }
     },
+    resolveFile: () => {
+      // Used by packages/cli/src/lib/index.js
+    },
   }
 })
 
 vi.mock('node:fs', async () => {
-  const actualFs = await vi.importActual('node:fs')
-
   return {
     default: {
-      ...actualFs,
       existsSync: (path) => {
         if (path === '/mocked/project/api/prisma.config.js') {
           // Mock the existence of the Prisma config file
@@ -49,27 +46,14 @@ vi.mock('node:fs', async () => {
           // Mock the existence of all packages/<pkg-name>/package.json files
           return true
         }
-
-        return actualFs.existsSync(path)
       },
-      readFileSync: (path) => {
-        if (path === '/mocked/project/api/package.json') {
-          // Mock the existence of the api package.json file
-          return JSON.stringify({
-            name: '@mocked/project/api',
-            version: '1.0.0',
-            dependencies: {
-              '@mocked/project/web': '1.0.0',
-            },
-          })
-        } else if (path === '/mocked/project/package.json') {
-          // It just needs a workspace config section
-          return JSON.stringify({
-            workspaces: ['api', 'web', 'packages/*'],
-          })
-        }
-
-        return actualFs.readFileSync(path)
+      readFileSync: () => {
+        // Reading /mocked/project/package.json
+        // It just needs a workspace config section
+        return JSON.stringify({
+          workspaces: ['api', 'web', 'packages/*'],
+        })
+        // }
       },
     },
   }
