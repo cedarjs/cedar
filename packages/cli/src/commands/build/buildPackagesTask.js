@@ -35,11 +35,15 @@ export async function buildPackagesTask(nonApiWebWorkspaces) {
 
   const { result } = concurrently(
     workspacePaths.map((workspacePath) => {
-      return {
+      const concurrentlyOptions = {
         command: `yarn build`,
         name: workspacePath.split('/').at(-1),
         cwd: workspacePath,
       }
+
+      console.log('concurrentlyOptions', concurrentlyOptions)
+
+      return concurrentlyOptions
     }),
     {
       prefix: '{name} |',

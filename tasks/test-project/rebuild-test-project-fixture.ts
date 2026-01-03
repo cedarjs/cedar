@@ -528,6 +528,18 @@ async function runCommand() {
           '}\n',
       )
 
+      const build = await exec(
+        'yarn cedar build',
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
+
+      // TODO: Update this when we refine the build process
+      if (!build.stdout.includes('yarn build exited with code 0')) {
+        console.error('yarn cedar build output', build.stdout, build.stderr)
+        throw new Error('Unexpected output from `yarn cedar build`')
+      }
+
       // Verify that `yarn cedar <cmd>` works inside package directories
       // Starting with `yarn cedar info`
       // TODO: Enable code below
