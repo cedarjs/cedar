@@ -70,7 +70,7 @@ export const builder = (yargs) => {
 
       if (!workspacesArg.every((item) => workspaceNames.includes(item))) {
         return (
-          c.error(`Unknown workspace ${workspacesArg.join(' ')}`) +
+          c.error(`Unknown workspace(s) ${workspacesArg.join(' ')}`) +
           '\n\nValid values are: ' +
           workspaceNames.join(', ')
         )

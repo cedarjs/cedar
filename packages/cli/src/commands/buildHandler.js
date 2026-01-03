@@ -85,12 +85,21 @@ export const handler = async ({
         )
 
         // restWorkspaces can be ['workspaces/*'] or
-        // ['@my-org/pkg-one', '@my-org/pkg-two', etc]
+        // ['@my-org/pkg-one', '@my-org/pkg-two', 'packages/pkg-three', etc]
         // We need to map that to filesystem paths
         const workspacePaths = restWorkspaces.some((w) => w === 'packages/*')
           ? allPackagePaths
           : restWorkspaces.map((w) => {
-              return path.join(cedarPaths.packages, w.split('/').at(-1))
+              const workspacePath = path.join(
+                cedarPaths.packages,
+                w.split('/').at(-1),
+              )
+
+              if (!fs.existsSync(workspacePath)) {
+                throw new Error(`Workspace not found: ${workspacePath}`)
+              }
+
+              return workspacePath
             })
 
         const { result } = concurrently(
