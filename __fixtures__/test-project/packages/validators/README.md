@@ -11,5 +11,5 @@ into your code:
 ```
 
 ```javascript
-import { validators } from '@my-org/validators';
+import { validators } from '@my-org/validators'
 ```

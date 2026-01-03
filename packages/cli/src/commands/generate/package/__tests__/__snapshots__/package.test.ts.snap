@@ -202,7 +202,7 @@ exports[`packageHandler > files > single word package name > infers package scop
     "declarationMap": true,
   },
   "include": ["src"],
-  "exclude": ["*.test.ts"],
+  "exclude": ["**/*.test.ts"],
 }
 "
 `;

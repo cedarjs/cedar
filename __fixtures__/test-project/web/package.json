@@ -15,7 +15,7 @@
     "@cedarjs/forms": "2.0.2",
     "@cedarjs/router": "2.0.2",
     "@cedarjs/web": "2.0.2",
-    "@my-org/validators": "2.0.2",
+    "@my-org/validators": "workspace:*",
     "humanize-string": "2.1.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
