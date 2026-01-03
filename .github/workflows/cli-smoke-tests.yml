@@ -40,7 +40,7 @@ jobs:
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar test api`
-        run: yarn cedar test api --no-watch
+        run: cat web/package.json && yarn cedar test api --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar test web`

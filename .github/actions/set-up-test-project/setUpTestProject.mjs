@@ -27,7 +27,7 @@ console.log()
  * @returns {Promise<void>}
  */
 async function main() {
-  await setUpTestProject({ canary: true })
+  await setUpTestProject({ canary })
 }
 
 /**
