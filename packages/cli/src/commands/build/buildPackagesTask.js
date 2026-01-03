@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import concurrently from 'concurrently'
 
+import { importStatementPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { exitWithError } from '../../lib/exit.js'
@@ -30,7 +31,7 @@ export async function buildPackagesTask(nonApiWebWorkspaces) {
           throw new Error(`Workspace not found: ${workspacePath}`)
         }
 
-        return workspacePath
+        return importStatementPath(workspacePath)
       })
 
   const { result } = concurrently(

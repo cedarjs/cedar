@@ -61,7 +61,6 @@ vi.mock('../../lib/exit.js', () => ({
 }))
 
 import fs from 'node:fs'
-import path from 'node:path'
 
 import concurrently from 'concurrently'
 import { vi, afterEach, describe, it, expect } from 'vitest'
@@ -82,17 +81,17 @@ describe('buildPackagesTask', async () => {
         {
           command: 'yarn build',
           name: 'foo',
-          cwd: '/mocked/project/packages/foo'.split('/').join(path.sep),
+          cwd: '/mocked/project/packages/foo',
         },
         {
           command: 'yarn build',
           name: 'bar',
-          cwd: '/mocked/project/packages/bar'.split('/').join(path.sep),
+          cwd: '/mocked/project/packages/bar',
         },
         {
           command: 'yarn build',
           name: 'baz',
-          cwd: '/mocked/project/packages/baz'.split('/').join(path.sep),
+          cwd: '/mocked/project/packages/baz',
         },
       ],
       {
@@ -111,12 +110,12 @@ describe('buildPackagesTask', async () => {
         {
           command: 'yarn build',
           name: 'pkg-one',
-          cwd: '/mocked/project/packages/pkg-one'.split('/').join(path.sep),
+          cwd: '/mocked/project/packages/pkg-one',
         },
         {
           command: 'yarn build',
           name: 'pkg-two',
-          cwd: '/mocked/project/packages/pkg-two'.split('/').join(path.sep),
+          cwd: '/mocked/project/packages/pkg-two',
         },
       ],
       {
