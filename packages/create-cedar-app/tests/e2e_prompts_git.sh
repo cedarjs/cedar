@@ -20,6 +20,10 @@ expect "Select your preferred language"
 # ❯ TypeScript
 send "\n"
 
+expect "Select your preferred project type"
+# ❯ ESM
+send "\n"
+
 expect "Enter a commit message"
 send "first\n"
 

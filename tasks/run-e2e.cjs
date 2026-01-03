@@ -57,6 +57,7 @@ function createCedarJsApp({ typescript }) {
         CEDARJS_PROJECT_DIRECTORY,
         '--no-yarn-install',
         `--typescript ${typescript}`,
+        `--esm`,
         '--no-telemetry',
         '--git',
         '-m "first"',
