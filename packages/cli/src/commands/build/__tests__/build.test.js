@@ -8,7 +8,7 @@ vi.mock('@cedarjs/telemetry', () => {
   }
 })
 
-vi.mock('@cedarjs/project-config', async () => {
+vi.mock('@cedarjs/project-config', () => {
   return {
     getPaths: () => {
       return {
@@ -35,7 +35,7 @@ vi.mock('@cedarjs/project-config', async () => {
   }
 })
 
-vi.mock('node:fs', async () => {
+vi.mock('node:fs', () => {
   return {
     default: {
       existsSync: (path) => {
@@ -53,7 +53,6 @@ vi.mock('node:fs', async () => {
         return JSON.stringify({
           workspaces: ['api', 'web', 'packages/*'],
         })
-        // }
       },
     },
   }
