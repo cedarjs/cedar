@@ -16,7 +16,7 @@ import {
   /**
    * Or anything else React Hook Form exports!
    *
-   * @see {@link https://react-hook-form.com/api}
+   * @see {@link https://react-hook-form.com/docs}
    */
 } from '@cedarjs/forms'
 ```
@@ -74,12 +74,12 @@ By validation and error-styling props, we mean three props specifically:
 Besides `name`, all other props passed to these components are forwarded to the tag they render.
 Here's a table for reference:
 
-| Prop             | Description                                                                                                                                                                                                   |
-| :--------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`           | The name of the field. React Hook Form uses it a key to hook it up with everything else                                                                                                                       |
-| `validation`     | All your validation logic. Accepts all of React Hook Form's [`register` options](https://react-hook-form.com/api/useform/register), plus the Cedar-exclusive coercion helpers `valueAsBoolean`, `valueAsJSON` |
-| `errorClassName` | The class name to apply if there's an error                                                                                                                                                                   |
-| `errorStyle`     | The style to apply if there's an error                                                                                                                                                                        |
+| Prop             | Description                                                                                                                                                                                                    |
+| :--------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`           | The name of the field. React Hook Form uses it a key to hook it up with everything else                                                                                                                        |
+| `validation`     | All your validation logic. Accepts all of React Hook Form's [`register` options](https://react-hook-form.com/docs/useform/register), plus the Cedar-exclusive coercion helpers `valueAsBoolean`, `valueAsJSON` |
+| `errorClassName` | The class name to apply if there's an error                                                                                                                                                                    |
+| `errorStyle`     | The style to apply if there's an error                                                                                                                                                                         |
 
 ### Example
 
@@ -146,7 +146,7 @@ Any form you want Cedar to validate and style in the presence errors should be s
 
 | Prop          | Description                                                                                                                                                    |
 | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config`      | Accepts an object containing options for React Hook Form's [`useForm` hook](https://react-hook-form.com/api/useform)                                           |
+| `config`      | Accepts an object containing options for React Hook Form's [`useForm` hook](https://react-hook-form.com/docs/useform)                                          |
 | `formMethods` | The functions returned from `useForm`. You only need to use this prop if you need to access to one of the functions that `useForm` returns (see example below) |
 | `onSubmit`    | Accepts a function to be called if validation succeeds. Called with an object containing name-value pairs of all the fields in your form                       |
 
@@ -277,7 +277,7 @@ While you can use `<InputField>` and it's `type` prop to make all the different 
 
 ### Default coercion
 
-Certain input fields handle coercion automatically, but you can always override the coercion or, if it's not built-in, set it manually via the `validation` prop's [setValueAs](https://react-hook-form.com/api/useform/register) property.
+Certain input fields handle coercion automatically, but you can always override the coercion or, if it's not built-in, set it manually via the `validation` prop's [setValueAs](https://react-hook-form.com/docs/useform/register) property.
 
 The input fields that coerce automatically are:
 
@@ -340,7 +340,7 @@ will return `undefined` if the field is empty.
 
 You can create a custom field that integrates with Cedar through the use of Cedar's `useRegister` and `useErrorStyles` hooks. Each of these serving a different purpose depending on what you are trying to build.
 
-`useRegister` registers the field with react-hook-form and is a wrapper for [`register`](https://react-hook-form.com/api/useform/register).
+`useRegister` registers the field with react-hook-form and is a wrapper for [`register`](https://react-hook-form.com/docs/useform/register).
 
 `useErrorStyles` sets up error styling for your custom input field.
 

@@ -5,7 +5,7 @@ import type { RegisterOptions } from 'react-hook-form'
  * `react-hook-form` provides the prop `setValueAs` for all-purpose coercion
  * (i.e. anything that isn't `valueAsDate` or `valueAsNumber`, which are standard HTML).
  *
- * @see {@link https://react-hook-form.com/api/useform/register}
+ * @see {@link https://react-hook-form.com/docs/useform/register}
  */
 export type RedwoodRegisterOptions = RegisterOptions & {
   valueAsBoolean?: boolean
