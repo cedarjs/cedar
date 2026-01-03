@@ -31,7 +31,7 @@ import fs from 'node:fs'
 import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
-import { handler } from '../prisma.js'
+import { handler } from '../prismaHandler.js'
 
 beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})

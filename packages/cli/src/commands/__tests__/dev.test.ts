@@ -79,7 +79,7 @@ import type * as ProjectConfig from '@cedarjs/project-config'
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
-import { handler } from '../dev.js'
+import { handler } from '../devHandler.js'
 
 function defaultPaths() {
   return {

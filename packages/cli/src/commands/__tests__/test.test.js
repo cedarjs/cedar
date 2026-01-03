@@ -13,7 +13,7 @@ import fs from 'node:fs'
 import execa from 'execa'
 import { vi, afterEach, test, expect, beforeEach } from 'vitest'
 
-import { handler } from '../test.js'
+import { handler } from '../testHandler.js'
 
 vi.mock('@cedarjs/structure', () => {
   return {
