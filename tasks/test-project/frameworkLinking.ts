@@ -1,7 +1,11 @@
-/* eslint-env node, es6*/
-const execa = require('execa')
+import execa from 'execa'
+import type { StdioOption } from 'execa'
 
-const addFrameworkDepsToProject = (frameworkPath, projectPath, stdio) => {
+export const addFrameworkDepsToProject = (
+  frameworkPath: string,
+  projectPath: string,
+  stdio?: StdioOption,
+) => {
   return execa('yarn project:deps', {
     cwd: frameworkPath,
     shell: true,
@@ -13,7 +17,11 @@ const addFrameworkDepsToProject = (frameworkPath, projectPath, stdio) => {
   })
 }
 
-const copyFrameworkPackages = (frameworkPath, projectPath, stdio) => {
+export const copyFrameworkPackages = (
+  frameworkPath: string,
+  projectPath: string,
+  stdio?: StdioOption,
+) => {
   return execa('yarn project:copy', {
     cwd: frameworkPath,
     shell: true,
@@ -23,9 +31,4 @@ const copyFrameworkPackages = (frameworkPath, projectPath, stdio) => {
       RWJS_CWD: projectPath,
     },
   })
-}
-
-module.exports = {
-  copyFrameworkPackages,
-  addFrameworkDepsToProject,
 }

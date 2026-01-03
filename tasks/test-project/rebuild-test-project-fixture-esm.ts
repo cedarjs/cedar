@@ -1,7 +1,9 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
+import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
 import { hideBin } from 'yargs/helpers'
@@ -24,7 +26,8 @@ import {
   getCfwBin,
 } from './util.js'
 
-const ansis = require('ansis')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 function recommendedNodeVersion() {
   const templatePackageJsonPath = path.join(

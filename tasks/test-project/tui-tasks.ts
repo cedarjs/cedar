@@ -1,93 +1,40 @@
-/* eslint-env node, es2021*/
-
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import type { Options as ExecaOptions } from 'execa'
+import type { ListrTask } from 'listr2'
 
-import type { TuiTaskList } from './typing.js'
 import {
-  getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   exec,
   getCfwBin,
+  setOutputPath,
+  fullPath,
+  createBuilder,
+  applyCodemod,
+  getExecaOptions,
 } from './util.js'
 
-function getExecaOptions(cwd: string): ExecaOptions {
-  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
-}
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-// This variable gets used in other functions
-// and is set when webTasks or apiTasks are called
 let OUTPUT_PATH: string
 
-const RW_FRAMEWORK_PATH = path.join(__dirname, '../../')
-
-function fullPath(name: string, { addExtension } = { addExtension: true }) {
-  if (addExtension) {
-    if (name.startsWith('api')) {
-      name += '.ts'
-    } else if (name.startsWith('web')) {
-      name += '.tsx'
-    }
-  }
-
-  return path.join(OUTPUT_PATH, name)
+interface WebTasksOptions {
+  linkWithLatestFwBuild?: boolean
 }
 
-// TODO: Import from ./util.js when everything is using @rwjs/tui
-async function applyCodemod(codemod: string, target: string) {
-  const args = [
-    '--fail-on-error',
-    '-t',
-    `${path.resolve(__dirname, 'codemods', codemod)} ${target}`,
-    '--parser',
-    'tsx',
-    '--verbose=2',
-  ]
-
-  args.push()
-
-  const subprocess = exec(
-    'yarn jscodeshift',
-    args,
-    getExecaOptions(path.resolve(__dirname)),
-  )
-
-  return subprocess
-}
-
-/**
- * @param cmd The command to run
- */
-function createBuilder(cmd: string, dir = '') {
-  const execaOptions = getExecaOptions(path.join(OUTPUT_PATH, dir))
-
-  return function (positionalArguments?: string | string[]) {
-    const subprocess = exec(
-      cmd,
-      Array.isArray(positionalArguments)
-        ? positionalArguments
-        : [positionalArguments],
-      execaOptions,
-    )
-
-    return subprocess
-  }
-}
-
-export async function webTasks(outputPath: string) {
+export async function webTasks(
+  outputPath: string,
+  _options?: WebTasksOptions,
+): Promise<ListrTask[]> {
   OUTPUT_PATH = outputPath
+  setOutputPath(outputPath)
 
-  const execaOptions = getExecaOptions(outputPath)
-
-  const createPages = async () => {
-    // Passing 'web' here to test executing 'yarn redwood' in the /web directory
-    // to make sure it works as expected. We do the same for the /api directory
-    // further down in this file.
+  const createPages = async (): Promise<ListrTask[]> => {
     const createPage = createBuilder('yarn cedar g page', 'web')
 
-    const tuiTaskList: TuiTaskList = [
+    return [
       {
         title: 'Creating home page',
         task: async () => {
@@ -209,14 +156,12 @@ export async function webTasks(outputPath: string) {
         },
       },
     ]
-
-    return tuiTaskList
   }
 
   const createLayout = async () => {
-    const createLayout = createBuilder('yarn cedar g layout')
+    const createLayoutBuilder = createBuilder('yarn cedar g layout')
 
-    await createLayout('blog')
+    await createLayoutBuilder('blog')
 
     return applyCodemod(
       'blogLayout.js',
@@ -326,10 +271,10 @@ export async function webTasks(outputPath: string) {
     )
   }
 
-  const tuiTaskList: TuiTaskList = [
+  return [
     {
       title: 'Creating pages',
-      task: () => createPages(),
+      task: async (_ctx, task) => task.newListr(await createPages()),
     },
     {
       title: 'Creating layout',
@@ -354,18 +299,14 @@ export async function webTasks(outputPath: string) {
     {
       title: 'Adding Tailwind',
       task: async () => {
-        await exec('yarn cedar setup ui tailwindcss', ['--force'], execaOptions)
+        await exec(
+          'yarn cedar setup ui tailwindcss',
+          ['--force'],
+          getExecaOptions(outputPath),
+        )
       },
     },
-  ] //,
-  // TODO: Figure out what to do with this. It's from Listr, but TUI doesn't
-  //       have anything like it (yet?)
-  // {
-  //   exitOnError: true,
-  //   renderer: verbose && 'verbose',
-  // }
-
-  return tuiTaskList
+  ]
 }
 
 async function addModel(schema: string) {
@@ -377,15 +318,16 @@ async function addModel(schema: string) {
 }
 
 interface ApiTasksOptions {
-  linkWithLatestFwBuild: boolean
-  esmProject: boolean
+  linkWithLatestFwBuild?: boolean
+  esmProject?: boolean
 }
 
 export async function apiTasks(
   outputPath: string,
-  { linkWithLatestFwBuild, esmProject }: ApiTasksOptions,
-) {
+  { linkWithLatestFwBuild = false, esmProject = false }: ApiTasksOptions = {},
+): Promise<ListrTask[]> {
   OUTPUT_PATH = outputPath
+  setOutputPath(outputPath)
 
   const execaOptions = getExecaOptions(outputPath)
 
@@ -403,21 +345,24 @@ export async function apiTasks(
     // tarballs and install them using that by setting yarn resolutions
 
     const setupPkg = path.join(
-      RW_FRAMEWORK_PATH,
+      __dirname,
+      '../../',
       'packages',
       'auth-providers',
       'dbAuth',
       'setup',
     )
     const apiPkg = path.join(
-      RW_FRAMEWORK_PATH,
+      __dirname,
+      '../../',
       'packages',
       'auth-providers',
       'dbAuth',
       'api',
     )
     const webPkg = path.join(
-      RW_FRAMEWORK_PATH,
+      __dirname,
+      '../../',
       'packages',
       'auth-providers',
       'dbAuth',
@@ -596,8 +541,8 @@ export async function apiTasks(
   }
 
   // add prerender to some routes
-  const addPrerender = async () => {
-    const tuiTaskList: TuiTaskList = [
+  const addPrerender = async (): Promise<ListrTask[]> => {
+    return [
       {
         // We need to do this here, and not where we create the other pages, to
         // keep it outside of BlogLayout
@@ -715,7 +660,7 @@ export async function apiTasks(
 
   const generateScaffold = createBuilder('yarn cedar g scaffold')
 
-  const tuiTaskList: TuiTaskList = [
+  const tuiTaskList: ListrTask[] = [
     {
       title: 'Adding post and user model to prisma',
       task: async () => {
@@ -896,7 +841,7 @@ export async function apiTasks(
       // instead of doing some up in the web side tasks, and then the rest
       // here I decided to move all of them here
       title: 'Add Prerender to Routes',
-      task: () => addPrerender(),
+      task: async (_ctx, task) => task.newListr(await addPrerender()),
     },
     {
       title: 'Add context tests',
@@ -966,10 +911,10 @@ export async function apiTasks(
  * Tasks to add GraphQL Fragments support to the test-project, and some queries
  * to test fragments
  */
-export async function fragmentsTasks(outputPath: string) {
-  OUTPUT_PATH = outputPath
+export async function fragmentsTasks(outputPath: string): Promise<ListrTask[]> {
+  setOutputPath(outputPath)
 
-  const tuiTaskList: TuiTaskList = [
+  return [
     {
       title: 'Enable fragments',
       task: async () => {
@@ -1024,12 +969,7 @@ export async function fragmentsTasks(outputPath: string) {
       title: 'Copy components from templates',
       task: () => {
         const templatesPath = path.join(__dirname, 'templates', 'web')
-        const componentsPath = path.join(
-          OUTPUT_PATH,
-          'web',
-          'src',
-          'components',
-        )
+        const componentsPath = path.join(outputPath, 'web', 'src', 'components')
 
         for (const fileName of [
           'Card.tsx',
@@ -1049,8 +989,8 @@ export async function fragmentsTasks(outputPath: string) {
       title: 'Copy sdl and service for groceries from templates',
       task: () => {
         const templatesPath = path.join(__dirname, 'templates', 'api')
-        const graphqlPath = path.join(OUTPUT_PATH, 'api', 'src', 'graphql')
-        const servicesPath = path.join(OUTPUT_PATH, 'api', 'src', 'services')
+        const graphqlPath = path.join(outputPath, 'api', 'src', 'graphql')
+        const servicesPath = path.join(outputPath, 'api', 'src', 'services')
 
         const sdlTemplatePath = path.join(templatesPath, 'groceries.sdl.ts')
         const sdlPath = path.join(graphqlPath, 'groceries.sdl.ts')
@@ -1074,6 +1014,4 @@ export async function fragmentsTasks(outputPath: string) {
       },
     },
   ]
-
-  return tuiTaskList
 }

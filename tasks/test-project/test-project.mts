@@ -198,27 +198,30 @@ const globalTasks = () =>
       },
       {
         title: 'Apply web codemods',
-        task: () =>
-          webTasks(OUTPUT_PROJECT_PATH, {
-            verbose,
-            linkWithLatestFwBuild: link,
-          }),
+        task: async (_ctx, task) =>
+          task.newListr(
+            await webTasks(OUTPUT_PROJECT_PATH, {
+              linkWithLatestFwBuild: link,
+            }),
+          ),
         enabled: () => !copyFromFixture,
       },
       {
         // These are also web tasks... we can move them into the webTasks function
         // when streaming isn't experimental
         title: 'Enabling streaming-ssr experiment and applying codemods....',
-        task: () => streamingTasks(OUTPUT_PROJECT_PATH, { verbose }),
+        task: async (_ctx, task) =>
+          task.newListr(await streamingTasks(OUTPUT_PROJECT_PATH)),
         enabled: () => streamingSsr,
       },
       {
         title: 'Apply api codemods',
-        task: () =>
-          apiTasks(OUTPUT_PROJECT_PATH, {
-            verbose,
-            linkWithLatestFwBuild: link,
-          }),
+        task: async (_ctx, task) =>
+          task.newListr(
+            await apiTasks(OUTPUT_PROJECT_PATH, {
+              linkWithLatestFwBuild: link,
+            }),
+          ),
         enabled: () => !copyFromFixture,
       },
       {

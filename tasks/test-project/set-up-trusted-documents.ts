@@ -5,7 +5,7 @@ import * as path from 'node:path'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { exec, getExecaOptions as utilGetExecaOptions } from './util'
+import { exec, getExecaOptions as utilGetExecaOptions } from './util.js'
 
 function getExecaOptions(cwd: string) {
   return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }

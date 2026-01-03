@@ -1,6 +1,7 @@
 /* eslint-env node, es6*/
 import path from 'node:path'
 
+import { Listr } from 'listr2'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
@@ -16,14 +17,17 @@ const args = yargs(hideBin(process.argv))
  */
 async function runCommand() {
   const OUTPUT_PROJECT_PATH = path.resolve(String(args._))
-  const tasks = await fragmentsTasks(OUTPUT_PROJECT_PATH, {
-    verbose: true,
-  })
+  const tasks = await fragmentsTasks(OUTPUT_PROJECT_PATH)
 
-  tasks.run().catch((err: unknown) => {
-    console.error(err)
-    process.exit(1)
+  new Listr(tasks, {
+    exitOnError: true,
+    renderer: 'default',
   })
+    .run()
+    .catch((err: unknown) => {
+      console.error(err)
+      process.exit(1)
+    })
 }
 
 runCommand()

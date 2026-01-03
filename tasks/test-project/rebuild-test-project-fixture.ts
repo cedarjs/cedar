@@ -1,7 +1,9 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
+import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
 import { hideBin } from 'yargs/helpers'
@@ -12,19 +14,20 @@ import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
-} from './frameworkLinking'
-import { webTasks, apiTasks } from './tui-tasks'
-import { isAwaitable, isTuiError } from './typing'
-import type { TuiTaskDef } from './typing'
+} from './frameworkLinking.js'
+import { webTasks, apiTasks } from './tui-tasks.js'
+import { isAwaitable, isTuiError } from './typing.js'
+import type { TuiTaskDef } from './typing.js'
 import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   ExecaError,
   exec,
   getCfwBin,
-} from './util'
+} from './util.js'
 
-const ansis = require('ansis')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 function recommendedNodeVersion() {
   const templatePackageJsonPath = path.join(
@@ -315,7 +318,7 @@ async function runCommand() {
   await tuiTask({
     step: 1,
     title: '[link] Building Cedar framework',
-    content: 'yarn build:clean && yarn build',
+    content: 'yarn clean && yarn build',
     task: async () => {
       return exec(
         'yarn build:clean && yarn build',
