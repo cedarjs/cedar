@@ -692,6 +692,8 @@ async function runCommand() {
       // framework dependencies to project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
+      // We also want the `packages/*` workspace config that was added when
+      // adding the validators package
       const rootPackageJson = JSON.parse(
         fs.readFileSync(path.join(OUTPUT_PROJECT_PATH, 'package.json'), 'utf8'),
       )
@@ -704,6 +706,7 @@ async function runCommand() {
       )
       newRootPackageJson.devDependencies['prettier-plugin-tailwindcss'] =
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
+      newRootPackageJson.workspaces.push('packages/*')
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, 'package.json'),
         JSON.stringify(newRootPackageJson, null, 2) + '\n',
