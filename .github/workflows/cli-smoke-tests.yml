@@ -41,11 +41,11 @@ jobs:
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar test api`
-        run: cat web/package.json && yarn cedar test api --no-watch
+        run: yarn cedar test api --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar test web`
-        run: yarn cedar test web --no-watch
+        run: cat yarn.lock | grep my-org && yarn cedar test web --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar check`
