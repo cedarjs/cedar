@@ -10,5 +10,5 @@ outputs:
     description: If SSR-related changes have been made
 
 runs:
-  using: node20
+  using: node24
   main: detectChanges.mjs
