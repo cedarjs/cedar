@@ -340,7 +340,7 @@ export async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
     ],
     {
       exitOnError: true,
-            renderer: verbose ? 'verbose' : 'default',
+      renderer: verbose ? 'verbose' : 'default',
     },
   )
 }
@@ -795,7 +795,7 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     ],
     {
       exitOnError: true,
-            renderer: verbose ? 'verbose' : 'default',
+      renderer: verbose ? 'verbose' : 'default',
       rendererOptions: { collapseSubtasks: false },
     },
   )
@@ -834,7 +834,7 @@ export async function streamingTasks(outputPath, { verbose }) {
 
   return new Listr(tasks, {
     exitOnError: true,
-          renderer: verbose ? 'verbose' : 'default',
+    renderer: verbose ? 'verbose' : 'default',
     rendererOptions: { collapseSubtasks: false },
   })
 }
@@ -953,7 +953,7 @@ export async function fragmentsTasks(outputPath, { verbose }) {
 
   return new Listr(tasks, {
     exitOnError: true,
-          renderer: verbose ? 'verbose' : 'default',
+    renderer: verbose ? 'verbose' : 'default',
     rendererOptions: { collapseSubtasks: false },
   })
 }
