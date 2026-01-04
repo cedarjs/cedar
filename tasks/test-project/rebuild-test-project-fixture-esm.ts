@@ -22,7 +22,7 @@ import {
   ExecaError,
   exec,
   getCfwBin,
-} from './util.js'
+} from './util.mts'
 
 const ansis = require('ansis')
 
@@ -111,7 +111,7 @@ if (!startStep) {
 const tui = new RedwoodTUI()
 
 function getExecaOptions(cwd: string) {
-  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
+  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' as const }
 }
 
 function beginStep(step: string) {
@@ -348,11 +348,12 @@ async function runCommand() {
     content: 'yarn install',
     task: async () => {
       // TODO: See if this is needed now with tarsync
-      await exec('yarn install', getExecaOptions(OUTPUT_PROJECT_PATH))
+      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
       return exec(
         `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
+        [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },

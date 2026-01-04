@@ -11,10 +11,10 @@ import {
   updatePkgJsonScripts,
   exec,
   getCfwBin,
-} from './util.js'
+} from './util.mts'
 
 function getExecaOptions(cwd: string): ExecaOptions {
-  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
+  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' as const }
 }
 
 // This variable gets used in other functions
@@ -64,13 +64,12 @@ function createBuilder(cmd: string, dir = '') {
   const execaOptions = getExecaOptions(path.join(OUTPUT_PATH, dir))
 
   return function (positionalArguments?: string | string[]) {
-    const subprocess = exec(
-      cmd,
-      Array.isArray(positionalArguments)
+    const args = positionalArguments
+      ? Array.isArray(positionalArguments)
         ? positionalArguments
-        : [positionalArguments],
-      execaOptions,
-    )
+        : [positionalArguments]
+      : []
+    const subprocess = exec(cmd, args, execaOptions)
 
     return subprocess
   }
@@ -720,7 +719,7 @@ export async function apiTasks(
       title: 'Adding post and user model to prisma',
       task: async () => {
         // Need both here since they have a relation
-        const { post, user } = await import('./codemods/models.js')
+        const { post, user } = await import('./codemods/models.mts')
 
         addModel(post)
         addModel(user)
@@ -762,7 +761,7 @@ export async function apiTasks(
     {
       title: 'Adding contact model to prisma',
       task: async () => {
-        const { contact } = await import('./codemods/models.js')
+        const { contact } = await import('./codemods/models.mts')
 
         addModel(contact)
 
@@ -983,7 +982,7 @@ export async function fragmentsTasks(outputPath: string) {
       title: 'Adding produce and stall models to prisma',
       task: async () => {
         // Need both here since they have a relation
-        const { produce, stall } = await import('./codemods/models.js')
+        const { produce, stall } = await import('./codemods/models.mts')
 
         addModel(produce)
         addModel(stall)
