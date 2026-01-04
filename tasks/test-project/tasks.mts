@@ -38,15 +38,12 @@ function fullPath(
 
 const createBuilder = (cmd: string) => {
   return async function createItem(positionals?: string | string[]) {
-    await execa(
-      cmd,
-      positionals
-        ? Array.isArray(positionals)
-          ? positionals
-          : [positionals]
-        : [],
-      getExecaOptions(OUTPUT_PATH),
-    )
+    const args = positionals
+      ? Array.isArray(positionals)
+        ? positionals
+        : [positionals]
+      : []
+    await execa(cmd, args, getExecaOptions(OUTPUT_PATH))
   }
 }
 
@@ -179,9 +176,9 @@ export async function webTasks(
   }
 
   const createLayout = async () => {
-    const createLayoutBuilder = createBuilder('yarn cedar g layout')
+    const createLayout = createBuilder('yarn cedar g layout')
 
-    await createLayoutBuilder('blog')
+    await createLayout('blog')
 
     return applyCodemod(
       'blogLayout.js',
@@ -317,7 +314,7 @@ export async function webTasks(
         title: 'Install tailwind dependencies',
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
-          exec(
+          execa(
             'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.5.12',
             [],
             getExecaOptions(outputPath),
@@ -328,7 +325,7 @@ export async function webTasks(
         title: '[link] Copy local framework files again',
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
-          exec(
+          execa(
             `yarn ${getCfwBin(outputPath)} project:copy`,
             [],
             getExecaOptions(outputPath),
@@ -339,7 +336,7 @@ export async function webTasks(
       {
         title: 'Adding Tailwind',
         task: () => {
-          return exec(
+          return execa(
             'yarn cedar setup ui tailwindcss',
             ['--force', linkWithLatestFwBuild && '--no-install'].filter(
               Boolean,
@@ -399,7 +396,7 @@ export async function apiTasks(
 
     fs.rmSync(dbAuthSetupPath, { recursive: true, force: true })
 
-    await exec(
+    await execa(
       'yarn cedar setup auth dbAuth --force --no-webauthn',
       [],
       getExecaOptions(outputPath),
@@ -414,119 +411,106 @@ export async function apiTasks(
     })
 
     if (linkWithLatestFwBuild) {
-      await exec(
+      await execa(
         `yarn ${getCfwBin(outputPath)} project:copy`,
         [],
         getExecaOptions(outputPath),
       )
     }
 
-    await exec(
+    await execa(
       'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
       [],
-      getExecaOptions(outputPath),
     )
 
     // update directive in contacts.sdl.ts
     const pathContactsSdl = `${OUTPUT_PATH}/api/src/graphql/contacts.sdl.ts`
-    if (fs.existsSync(pathContactsSdl)) {
-      const contentContactsSdl = fs.readFileSync(pathContactsSdl, 'utf-8')
-      const resultsContactsSdl = contentContactsSdl
-        .replace(
-          'createContact(input: CreateContactInput!): Contact! @requireAuth',
-          'createContact(input: CreateContactInput!): Contact @skipAuth',
-        )
-        .replace(
-          'deleteContact(id: Int!): Contact! @requireAuth',
-          'deleteContact(id: Int!): Contact! @requireAuth(roles:["ADMIN"])', // make deleting contacts admin only
-        )
-      fs.writeFileSync(pathContactsSdl, resultsContactsSdl)
-    }
+    const contentContactsSdl = fs.readFileSync(pathContactsSdl, 'utf-8')
+    const resultsContactsSdl = contentContactsSdl
+      .replace(
+        'createContact(input: CreateContactInput!): Contact! @requireAuth',
+        'createContact(input: CreateContactInput!): Contact @skipAuth',
+      )
+      .replace(
+        'deleteContact(id: Int!): Contact! @requireAuth',
+        'deleteContact(id: Int!): Contact! @requireAuth(roles:["ADMIN"])',
+      ) // make deleting contacts admin only
+    fs.writeFileSync(pathContactsSdl, resultsContactsSdl)
 
     // update directive in posts.sdl.ts
     const pathPostsSdl = `${OUTPUT_PATH}/api/src/graphql/posts.sdl.ts`
-    if (fs.existsSync(pathPostsSdl)) {
-      const contentPostsSdl = fs.readFileSync(pathPostsSdl, 'utf-8')
-      const resultsPostsSdl = contentPostsSdl.replace(
-        /posts: [Post!]! @requireAuth([^}]*)@requireAuth/,
-        'posts: [Post!]! @skipAuth\n      post(id: Int!): Post @skipAuth', // make posts accessible to all
-      )
+    const contentPostsSdl = fs.readFileSync(pathPostsSdl, 'utf-8')
+    const resultsPostsSdl = contentPostsSdl.replace(
+      /posts: \[Post!\]! @requireAuth([^}]*)@requireAuth/,
+      `posts: [Post!]! @skipAuth
+      post(id: Int!): Post @skipAuth`,
+    ) // make posts accessible to all
 
-      fs.writeFileSync(pathPostsSdl, resultsPostsSdl)
-    }
+    fs.writeFileSync(pathPostsSdl, resultsPostsSdl)
 
     // Update src/lib/auth to return roles, so tsc doesn't complain
     const libAuthPath = `${OUTPUT_PATH}/api/src/lib/auth.ts`
-    if (fs.existsSync(libAuthPath)) {
-      const libAuthContent = fs.readFileSync(libAuthPath, 'utf-8')
+    const libAuthContent = fs.readFileSync(libAuthPath, 'utf-8')
 
-      const newLibAuthContent = libAuthContent
-        .replace(
-          'select: { id: true }',
-          'select: { id: true, roles: true, email: true}',
-        )
-        .replace(
-          'const currentUserRoles = context.currentUser?.roles',
-          'const currentUserRoles = context.currentUser?.roles as string | string[]',
-        )
-      fs.writeFileSync(libAuthPath, newLibAuthContent)
-    }
+    const newLibAuthContent = libAuthContent
+      .replace(
+        'select: { id: true }',
+        'select: { id: true, roles: true, email: true}',
+      )
+      .replace(
+        'const currentUserRoles = context.currentUser?.roles',
+        'const currentUserRoles = context.currentUser?.roles as string | string[]',
+      )
+    fs.writeFileSync(libAuthPath, newLibAuthContent)
 
     // update requireAuth test
     const pathRequireAuth = `${OUTPUT_PATH}/api/src/directives/requireAuth/requireAuth.test.ts`
-    if (fs.existsSync(pathRequireAuth)) {
-      const contentRequireAuth = fs.readFileSync(pathRequireAuth).toString()
-      const resultsRequireAuth = contentRequireAuth.replace(
-        /const mockExecution([^}]*){} }\)/,
-        "const mockExecution = mockRedwoodDirective(requireAuth, {\n        context: { currentUser: { id: 1, roles: 'ADMIN', email: 'b@zinga.com' } },\n      })",
-      )
-      fs.writeFileSync(pathRequireAuth, resultsRequireAuth)
-    }
+    const contentRequireAuth = fs.readFileSync(pathRequireAuth).toString()
+    const resultsRequireAuth = contentRequireAuth.replace(
+      /const mockExecution([^}]*){} }\)/,
+      `const mockExecution = mockRedwoodDirective(requireAuth, {
+        context: { currentUser: { id: 1, roles: 'ADMIN', email: 'b@zinga.com' } },
+      })`,
+    )
+    fs.writeFileSync(pathRequireAuth, resultsRequireAuth)
 
     // add fullName input to signup form
     const pathSignupPageTs = `${OUTPUT_PATH}/web/src/pages/SignupPage/SignupPage.tsx`
-    if (fs.existsSync(pathSignupPageTs)) {
-      const contentSignupPageTs = fs.readFileSync(pathSignupPageTs, 'utf-8')
-      const usernameFieldsMatch = contentSignupPageTs.match(
-        /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
+    const contentSignupPageTs = fs.readFileSync(pathSignupPageTs, 'utf-8')
+    const usernameFields = contentSignupPageTs.match(
+      /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
+    )?.[0]
+    const fullNameFields = usernameFields
+      ?.replace(/\s*ref={usernameRef}/, '')
+      .replaceAll('username', 'full-name')
+      .replaceAll('Username', 'Full Name')
+
+    const newContentSignupPageTs = contentSignupPageTs
+      .replace(
+        '<FieldError name="password" className="rw-field-error" />',
+        '<FieldError name="password" className="rw-field-error" />\n' +
+          fullNameFields,
       )
-      if (usernameFieldsMatch) {
-        const usernameFields = usernameFieldsMatch[0]
-        const fullNameFields = usernameFields
-          .replace(/\s*ref={usernameRef}/, '')
-          .replaceAll('username', 'full-name')
-          .replaceAll('Username', 'Full Name')
+      // include full-name in the data we pass to `signUp()`
+      .replace(
+        'password: data.password',
+        "password: data.password, 'full-name': data['full-name']",
+      )
 
-        const newContentSignupPageTs = contentSignupPageTs
-          .replace(
-            '<FieldError name="password" className="rw-field-error" />',
-            '<FieldError name="password" className="rw-field-error" />\n' +
-              fullNameFields,
-          )
-          // include full-name in the data we pass to `signUp()`
-          .replace(
-            'password: data.password',
-            "password: data.password, 'full-name': data['full-name']",
-          )
-
-        fs.writeFileSync(pathSignupPageTs, newContentSignupPageTs)
-      }
-    }
+    fs.writeFileSync(pathSignupPageTs, newContentSignupPageTs)
 
     // set fullName when signing up
     const pathAuthTs = `${OUTPUT_PATH}/api/src/functions/auth.ts`
-    if (fs.existsSync(pathAuthTs)) {
-      const contentAuthTs = fs.readFileSync(pathAuthTs).toString()
-      const resultsAuthTs = contentAuthTs
-        .replace('name: string', "'full-name': string")
-        .replace('userAttributes: _userAttributes', 'userAttributes')
-        .replace(
-          '// name: userAttributes.name',
-          "fullName: userAttributes['full-name']",
-        )
+    const contentAuthTs = fs.readFileSync(pathAuthTs).toString()
+    const resultsAuthTs = contentAuthTs
+      .replace('name: string', "'full-name': string")
+      .replace('userAttributes: _userAttributes', 'userAttributes')
+      .replace(
+        '// name: userAttributes.name',
+        "fullName: userAttributes['full-name']",
+      )
 
-      fs.writeFileSync(pathAuthTs, resultsAuthTs)
-    }
+    fs.writeFileSync(pathAuthTs, resultsAuthTs)
   }
 
   // add prerender to some routes
@@ -537,8 +521,8 @@ export async function apiTasks(
         // keep it outside of BlogLayout
         title: 'Creating double rendering test page',
         task: async () => {
-          const createPageBuilder = createBuilder('yarn cedar g page')
-          await createPageBuilder('double')
+          const createPage = createBuilder('yarn cedar g page')
+          await createPage('double')
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
 
@@ -551,7 +535,7 @@ export async function apiTasks(
 
                   <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
                   <p>
-                    This page exists to make sure we don\'t regress on{' '}
+                    This page exists to make sure we don&apos;t regress on{' '}
                     <a
                       href="https://github.com/redwoodjs/redwood/issues/7757"
                       className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
@@ -563,7 +547,7 @@ export async function apiTasks(
                   </p>
                   <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>
                   <p>
-                    We also use this page to make sure we don\'t regress on{' '}
+                    We also use this page to make sure we don&apos;t regress on{' '}
                     <a
                       href="https://github.com/cedarjs/cedar/issues/317"
                       className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
@@ -596,38 +580,36 @@ export async function apiTasks(
         title: 'Update Routes.tsx',
         task: () => {
           const pathRoutes = `${OUTPUT_PATH}/web/src/Routes.tsx`
-          if (fs.existsSync(pathRoutes)) {
-            const contentRoutes = fs.readFileSync(pathRoutes).toString()
-            const resultsRoutesAbout = contentRoutes.replace(
-              /name="about"/,
-              'name="about" prerender',
-            )
-            const resultsRoutesHome = resultsRoutesAbout.replace(
-              /name="home"/,
-              'name="home" prerender',
-            )
-            const resultsRoutesBlogPost = resultsRoutesHome.replace(
-              /name="blogPost"/,
-              'name="blogPost" prerender',
-            )
-            const resultsRoutesNotFound = resultsRoutesBlogPost.replace(
-              /page={NotFoundPage}/,
-              'page={NotFoundPage} prerender',
-            )
-            const resultsRoutesWaterfall = resultsRoutesNotFound.replace(
-              /page={WaterfallPage}/,
-              'page={WaterfallPage} prerender',
-            )
-            const resultsRoutesDouble = resultsRoutesWaterfall.replace(
-              'name="double"',
-              'name="double" prerender',
-            )
-            const resultsRoutesNewContact = resultsRoutesDouble.replace(
-              'name="newContact"',
-              'name="newContact" prerender',
-            )
-            fs.writeFileSync(pathRoutes, resultsRoutesNewContact)
-          }
+          const contentRoutes = fs.readFileSync(pathRoutes).toString()
+          const resultsRoutesAbout = contentRoutes.replace(
+            /name="about"/,
+            'name="about" prerender',
+          )
+          const resultsRoutesHome = resultsRoutesAbout.replace(
+            /name="home"/,
+            'name="home" prerender',
+          )
+          const resultsRoutesBlogPost = resultsRoutesHome.replace(
+            /name="blogPost"/,
+            'name="blogPost" prerender',
+          )
+          const resultsRoutesNotFound = resultsRoutesBlogPost.replace(
+            /page={NotFoundPage}/,
+            'page={NotFoundPage} prerender',
+          )
+          const resultsRoutesWaterfall = resultsRoutesNotFound.replace(
+            /page={WaterfallPage}/,
+            'page={WaterfallPage} prerender',
+          )
+          const resultsRoutesDouble = resultsRoutesWaterfall.replace(
+            'name="double"',
+            'name="double" prerender',
+          )
+          const resultsRoutesNewContact = resultsRoutesDouble.replace(
+            'name="newContact"',
+            'name="newContact" prerender',
+          )
+          fs.writeFileSync(pathRoutes, resultsRoutesNewContact)
 
           const blogPostRouteHooks = `import { db } from '$api/src/lib/db.js'
 
@@ -637,7 +619,9 @@ export async function apiTasks(
           const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
           fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
 
-          const waterfallRouteHooks = 'export async function routeParameters() { return [{ id: 2 }] }'
+          const waterfallRouteHooks = `export async function routeParameters() {
+              return [{ id: 2 }]
+            }`
           const waterfallRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
           fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
         },
@@ -658,8 +642,8 @@ export async function apiTasks(
           addModel(post)
           addModel(user)
 
-          return exec(
-            'yarn cedar prisma migrate dev --name create_post_user',
+          return execa(
+            `yarn cedar prisma migrate dev --name create_post_user`,
             [],
             getExecaOptions(outputPath),
           )
@@ -676,7 +660,7 @@ export async function apiTasks(
             fullPath('api/src/services/posts/posts.scenarios'),
           )
 
-          await exec(
+          await execa(
             `yarn ${getCfwBin(outputPath)} project:copy`,
             [],
             getExecaOptions(outputPath),
@@ -718,38 +702,36 @@ export async function apiTasks(
             'db',
             'migrations',
           )
-          if (fs.existsSync(migrationsFolderPath)) {
-            // Migration folders are folders which start with 14 digits because they have a yyyymmddhhmmss
-            const migrationFolders = fs
-              .readdirSync(migrationsFolderPath)
-              .filter((name) => {
-                return (
-                  name.match(/\d{14}.+/) &&
-                  fs
-                    .lstatSync(path.join(migrationsFolderPath, name))
-                    .isDirectory()
-                )
-              })
-              .sort()
-            const datetime = new Date('2022-01-01T12:00:00.000Z')
-            migrationFolders.forEach((name) => {
-              const datetimeInCorrectFormat =
-                datetime.getFullYear() +
-                ('0' + (datetime.getMonth() + 1)).slice(-2) +
-                ('0' + datetime.getDate()).slice(-2) +
-                ('0' + datetime.getHours()).slice(-2) +
-                ('0' + datetime.getMinutes()).slice(-2) +
-                ('0' + datetime.getSeconds()).slice(-2)
-              fs.renameSync(
-                path.join(migrationsFolderPath, name),
-                path.join(
-                  migrationsFolderPath,
-                  `${datetimeInCorrectFormat}${name.substring(14)}`,
-                ),
+          // Migration folders are folders which start with 14 digits because they have a yyyymmddhhmmss
+          const migrationFolders = fs
+            .readdirSync(migrationsFolderPath)
+            .filter((name) => {
+              return (
+                name.match(/\d{14}.+/) &&
+                fs
+                  .lstatSync(path.join(migrationsFolderPath, name))
+                  .isDirectory()
               )
-              datetime.setDate(datetime.getDate() + 1)
             })
-          }
+            .sort()
+          const datetime = new Date('2022-01-01T12:00:00.000Z')
+          migrationFolders.forEach((name) => {
+            const datetimeInCorrectFormat =
+              datetime.getFullYear() +
+              ('0' + (datetime.getMonth() + 1)).slice(-2) +
+              ('0' + datetime.getDate()).slice(-2) +
+              ('0' + datetime.getHours()).slice(-2) +
+              ('0' + datetime.getMinutes()).slice(-2) +
+              ('0' + datetime.getSeconds()).slice(-2)
+            fs.renameSync(
+              path.join(migrationsFolderPath, name),
+              path.join(
+                migrationsFolderPath,
+                `${datetimeInCorrectFormat}${name.substring(14)}`,
+              ),
+            )
+            datetime.setDate(datetime.getDate() + 1)
+          })
         },
       },
       {
