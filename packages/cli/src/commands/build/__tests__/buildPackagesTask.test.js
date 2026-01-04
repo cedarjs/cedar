@@ -65,7 +65,7 @@ import fs from 'node:fs'
 import concurrently from 'concurrently'
 import { vi, afterEach, describe, it, expect } from 'vitest'
 
-import { buildPackagesTask } from '../buildPackagesTask'
+import { buildPackagesTask } from '../buildPackagesTask.js'
 
 afterEach(() => {
   vi.clearAllMocks()

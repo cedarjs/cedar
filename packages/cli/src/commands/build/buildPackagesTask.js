@@ -12,11 +12,9 @@ import { getPaths } from '../../lib/index.js'
 export async function buildPackagesTask(nonApiWebWorkspaces) {
   const cedarPaths = getPaths()
 
-  // fs.globSync requires forward slashes as path separators in patterns,
-  // even on Windows.
   const globPattern = path.join(cedarPaths.packages, '*').replaceAll('\\', '/')
 
-  // restWorkspaces can be ['packages/*'] or
+  // nonApiWebWorkspaces can be ['packages/*'] or
   // ['@my-org/pkg-one', '@my-org/pkg-two', 'packages/pkg-three', etc]
   // We need to map that to filesystem paths
   const workspacePaths = nonApiWebWorkspaces.some((w) => w === 'packages/*')
@@ -36,15 +34,11 @@ export async function buildPackagesTask(nonApiWebWorkspaces) {
 
   const { result } = concurrently(
     workspacePaths.map((workspacePath) => {
-      const concurrentlyOptions = {
+      return {
         command: `yarn build`,
         name: workspacePath.split('/').at(-1),
         cwd: workspacePath,
       }
-
-      console.log('concurrentlyOptions', concurrentlyOptions)
-
-      return concurrentlyOptions
     }),
     {
       prefix: '{name} |',
