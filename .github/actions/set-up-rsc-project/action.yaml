@@ -2,7 +2,7 @@ name: Set up RSC test project
 description: Sets up an RSC project for smoke-tests
 
 runs:
-  using: node20
+  using: node24
   main: 'setUpRscProjectGitHub.mjs'
 
 outputs:
