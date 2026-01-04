@@ -10,8 +10,8 @@ import { rimraf } from 'rimraf'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { apiTasks, streamingTasks, webTasks } from './tasks.js'
-import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.js'
+import { apiTasks, streamingTasks, webTasks } from './tasks.mts'
+import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.mts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

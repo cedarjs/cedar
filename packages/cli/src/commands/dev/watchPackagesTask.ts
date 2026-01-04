@@ -6,11 +6,14 @@ import concurrently from 'concurrently'
 import { importStatementPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../../lib/exit.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
 
-export async function watchPackagesTask(packageWorkspaces) {
+export async function watchPackagesTask(packageWorkspaces: string[]) {
   const cedarPaths = getPaths()
   const globPattern = path.join(cedarPaths.packages, '*').replaceAll('\\', '/')
 
@@ -20,10 +23,13 @@ export async function watchPackagesTask(packageWorkspaces) {
   const workspacePaths = packageWorkspaces.some((w) => w === 'packages/*')
     ? await Array.fromAsync(fs.promises.glob(globPattern))
     : packageWorkspaces.map((w) => {
-        const workspacePath = path.join(
-          cedarPaths.packages,
-          w.split('/').at(-1),
-        )
+        const packageFolderName = w.split('/').at(-1)
+
+        if (!packageFolderName) {
+          throw new Error(`Invalid package workspace: ${w}`)
+        }
+
+        const workspacePath = path.join(cedarPaths.packages, packageFolderName)
 
         if (!fs.existsSync(workspacePath)) {
           throw new Error(`Workspace not found: ${workspacePath}`)

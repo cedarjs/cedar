@@ -1,6 +1,6 @@
 import type FS from 'fs'
 
-import '../../lib/mockTelemetry'
+import '../../../lib/mockTelemetry.js'
 
 function defaultPaths() {
   return {
@@ -73,21 +73,17 @@ vi.mock('@cedarjs/project-config', async (importActual) => {
   }
 })
 
-vi.mock('../../lib/generatePrismaClient', () => {
+vi.mock('../../../lib/generatePrismaClient', () => {
   return {
     generatePrismaClient: vi.fn().mockResolvedValue(true),
   }
 })
 
-vi.mock('../build/buildPackagesTask.js', () => ({
-  buildPackagesTask: vi.fn().mockResolvedValue(undefined),
-}))
-
-vi.mock('../dev/watchPackagesTask.js', () => ({
+vi.mock('../watchPackagesTask.js', () => ({
   watchPackagesTask: vi.fn().mockResolvedValue(undefined),
 }))
 
-vi.mock('../../lib/ports', () => {
+vi.mock('../../../lib/ports', () => {
   return {
     // We're not actually going to use the port, so it's fine to just say it's
     // free. It prevents the tests from failing if the ports are already in use
@@ -96,7 +92,7 @@ vi.mock('../../lib/ports', () => {
   }
 })
 
-vi.mock('../../lib/index.js', () => ({
+vi.mock('../../../lib/index.js', () => ({
   getPaths: vi.fn(defaultPaths),
 }))
 
@@ -112,14 +108,12 @@ import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
 
 // @ts-expect-error - Types not available for JS files
-import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
+import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
-import { getPaths } from '../../lib/index.js'
-// @ts-expect-error - Types not available for JS files
-import { buildPackagesTask } from '../build/buildPackagesTask.js'
-// @ts-expect-error - Types not available for JS files
-import { watchPackagesTask } from '../dev/watchPackagesTask.js'
+import { getPaths } from '../../../lib/index.js'
 import { handler } from '../devHandler.js'
+// @ts-expect-error - Types not available for JS files
+import { watchPackagesTask } from '../watchPackagesTask.js'
 
 async function defaultConfig() {
   const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
@@ -176,12 +170,11 @@ describe('yarn cedar dev', () => {
     vi.clearAllMocks()
     vi.mocked(getPaths).mockReturnValue(defaultPaths())
     vi.mocked(getConfig).mockReturnValue(await defaultConfig())
-    vi.mocked(buildPackagesTask).mockResolvedValue(undefined)
     vi.mocked(watchPackagesTask).mockResolvedValue(undefined)
   })
 
   it('Should run api and web dev servers, and generator watcher by default', async () => {
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
     const { webCommand, apiCommand, generateCommand } = findCommands()
@@ -221,7 +214,7 @@ describe('yarn cedar dev', () => {
       },
     })
 
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
     const { webCommand, apiCommand, generateCommand } = findCommands()
@@ -290,7 +283,7 @@ describe('yarn cedar dev', () => {
   })
 
   it('Debug port passed in command line overrides TOML', async () => {
-    await handler({ side: ['api'], apiDebugPort: 90909090 })
+    await handler({ workspace: ['api'], apiDebugPort: 90909090 })
 
     const apiCommand = findApiCommands()
 
@@ -313,14 +306,10 @@ describe('yarn cedar dev', () => {
       },
     })
 
-    await handler({ side: ['api'] })
+    await handler({ workspace: ['api'] })
 
     const apiCommand = findApiCommands()
 
     expect(apiCommand.command).not.toContain('--debug-port')
   })
-
-  // Note: Package watching integration tests removed temporarily
-  // due to module resolution issues with buildPackagesTask/watchPackagesTask
-  // These will be re-added after resolving the import path issues
 })

@@ -11,47 +11,49 @@ import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
+import c from '../../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
-import { exitWithError } from '../lib/exit.js'
+import { exitWithError } from '../../lib/exit.js'
 // @ts-expect-error - Types not available for JS files
-import { generatePrismaClient } from '../lib/generatePrismaClient.js'
+import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
-import { getPaths } from '../lib/index.js'
-import { getFreePort } from '../lib/ports.js'
+import { getPaths } from '../../lib/index.js'
+import { getFreePort } from '../../lib/ports.js'
 // @ts-expect-error - Types not available for JS files
-import { serverFileExists } from '../lib/project.js'
+import { serverFileExists } from '../../lib/project.js'
+
+import { watchPackagesTask } from './watchPackagesTask.js'
 
 const defaultApiDebugPort = 18911
 
 interface DevHandlerOptions {
-  side?: string[]
+  workspace?: string[]
   forward?: string
   generate?: boolean
   apiDebugPort?: number
 }
 
 export const handler = async ({
-  side = ['api', 'web'],
+  workspace = ['api', 'web', 'packages/*'],
   forward = '',
   generate = true,
   apiDebugPort,
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
-    side: JSON.stringify(side),
+    workspace: JSON.stringify(workspace),
     generate,
   })
 
-  const rwjsPaths = getPaths()
+  const cedarPaths = getPaths()
 
   // Extract package workspaces from side array
-  const packageWorkspaces = side.filter(
-    (s) => s !== 'api' && s !== 'web' && s !== 'gen',
+  const packageWorkspaces = workspace.filter(
+    (w) => w !== 'api' && w !== 'web' && w !== 'gen',
   )
 
   // Check if package workspaces exist in root package.json
-  const rootPackageJsonPath = path.join(rwjsPaths.base, 'package.json')
+  const rootPackageJsonPath = path.join(cedarPaths.base, 'package.json')
   const rootPackageJson = JSON.parse(
     fs.readFileSync(rootPackageJsonPath, 'utf8'),
   )
@@ -63,6 +65,7 @@ export const handler = async ({
 
   // Starting values of ports from config (redwood.toml)
   const apiPreferredPort = parseInt(String(getConfig().api.port))
+
   let webPreferredPort: number | undefined = parseInt(
     String(getConfig().web.port),
   )
@@ -76,35 +79,42 @@ export const handler = async ({
   // Check api port, unless there's a serverFile. If there is a serverFile, we
   // don't know what port will end up being used in the end. It's up to the
   // author of the server file to decide and handle that
-  if (side.includes('api') && !serverFile) {
+  if (workspace.includes('api') && !serverFile) {
     apiAvailablePort = await getFreePort(apiPreferredPort)
+
     if (apiAvailablePort === -1) {
       exitWithError(undefined, {
         message: `Could not determine a free port for the api server`,
       })
     }
+
     apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
   }
 
   // Check web port
-  if (side.includes('web')) {
-    // Extract any ports the user forwarded to the dev server and prefer that instead
+  if (workspace.includes('web')) {
+    // Extract any ports the user forwarded to the dev server and prefer that
+    // instead
     const forwardedPortMatches = [
       ...forward.matchAll(/\-\-port(\=|\s)(?<port>[^\s]*)/g),
     ]
+
     if (forwardedPortMatches.length) {
       const port = forwardedPortMatches.pop()?.groups?.port
       webPreferredPort = port ? parseInt(port, 10) : undefined
     }
+
     webAvailablePort = await getFreePort(webPreferredPort, [
       apiPreferredPort,
       apiAvailablePort,
     ])
+
     if (webAvailablePort === -1) {
       exitWithError(undefined, {
         message: `Could not determine a free port for the web server`,
       })
     }
+
     webPortChangeNeeded = webAvailablePort !== webPreferredPort
   }
 
@@ -129,15 +139,14 @@ export const handler = async ({
     exitWithError(undefined, { message })
   }
 
-  if (side.includes('api')) {
+  if (workspace.includes('api')) {
     try {
       await generatePrismaClient({
         verbose: false,
         force: false,
       })
     } catch (e) {
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
+      const message = getErrorMessage(e)
       errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
       console.error(c.error(message))
     }
@@ -148,8 +157,7 @@ export const handler = async ({
       try {
         await shutdownPort(apiAvailablePort)
       } catch (e) {
-        const message =
-          e instanceof Object && 'message' in e ? e.message : String(e)
+        const message = getErrorMessage(e)
         errorTelemetry(process.argv, `Error shutting down "api": ${message}`)
         console.error(
           `Error whilst shutting down "api" port: ${c.error(message)}`,
@@ -158,39 +166,14 @@ export const handler = async ({
     }
   }
 
-  if (side.includes('web')) {
+  if (workspace.includes('web')) {
     try {
       await shutdownPort(webAvailablePort)
     } catch (e) {
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
+      const message = getErrorMessage(e)
       errorTelemetry(process.argv, `Error shutting down "web": ${message}`)
       console.error(
         `Error whilst shutting down "web" port: ${c.error(message)}`,
-      )
-    }
-  }
-
-  // Build packages initially before starting watchers
-  if (hasPackageWorkspaces && fs.existsSync(rwjsPaths.packages)) {
-    const packagesToWatch =
-      packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
-
-    try {
-      console.log('Building packages...')
-      // @ts-expect-error - Types not available for JS files
-      const { buildPackagesTask } = await import(
-        '../build/buildPackagesTask.js'
-      )
-      await buildPackagesTask(packagesToWatch)
-      console.log('Packages built successfully')
-    } catch (e) {
-      // Log but don't fail - watch mode will rebuild
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
-      console.warn(
-        c.warning('Warning: ') +
-          `Could not build packages initially: ${message}`,
       )
     }
   }
@@ -212,8 +195,7 @@ export const handler = async ({
     return ''
   }
 
-  const redwoodConfigPath = getConfigPath()
-
+  const cedarConfigPath = getConfigPath()
   const streamingSsrEnabled = getConfig().experimental?.streamingSsr?.enabled
 
   // @TODO (Streaming) Lot of temporary feature flags for started dev server.
@@ -249,7 +231,7 @@ export const handler = async ({
       command: [
         'yarn nodemon',
         '  --quiet',
-        `  --watch "${redwoodConfigPath}"`,
+        `  --watch "${cedarConfigPath}"`,
         `  --exec "yarn ${serverWatchCommand}`,
         `    --port ${apiAvailablePort}`,
         `    ${getApiDebugFlag()}`,
@@ -262,14 +244,14 @@ export const handler = async ({
         NODE_OPTIONS: getDevNodeOptions(),
       },
       prefixColor: 'cyan',
-      runWhen: () => fs.existsSync(rwjsPaths.api.src),
+      runWhen: () => fs.existsSync(cedarPaths.api.src),
     },
     web: {
       name: 'web',
       command: webCommand,
       prefixColor: 'blue',
-      cwd: rwjsPaths.web.base,
-      runWhen: () => fs.existsSync(rwjsPaths.web.src),
+      cwd: cedarPaths.web.base,
+      runWhen: () => fs.existsSync(cedarPaths.web.src),
     },
     gen: {
       name: 'gen',
@@ -282,19 +264,17 @@ export const handler = async ({
       command: async () => {
         const packagesToWatch =
           packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
-        // @ts-expect-error - Types not available for JS files
-        const { watchPackagesTask } = await import('./dev/watchPackagesTask.js')
         await watchPackagesTask(packagesToWatch)
       },
       prefixColor: 'yellow',
-      runWhen: () => hasPackageWorkspaces && fs.existsSync(rwjsPaths.packages),
+      runWhen: () => hasPackageWorkspaces && fs.existsSync(cedarPaths.packages),
     },
   }
 
   const mappedJobs = Object.keys(jobs).map((job) => {
-    // Include the jobs for the sides indicated on the command line, plus the
-    // gen job and packages job (if packages exist)
-    if (side.includes(job) || job === 'gen' || job === 'packages') {
+    // Include the jobs for the workspaces indicated on the command line, plus
+    // the gen job and packages job (if packages exist)
+    if (workspace.includes(job) || job === 'gen' || job === 'packages') {
       return jobs[job]
     }
 
@@ -319,7 +299,7 @@ export const handler = async ({
     if (e?.message) {
       errorTelemetry(
         process.argv,
-        `Error concurrently starting sides: ${e.message}`,
+        `Error concurrently starting workspaces: ${e.message}`,
       )
       exitWithError(e)
     }
@@ -344,4 +324,10 @@ export function getDevNodeOptions() {
   }
 
   return `${NODE_OPTIONS} ${enableSourceMapsOption}`
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Object && 'message' in error
+    ? error.message
+    : String(error)
 }
