@@ -314,14 +314,14 @@ async function runCommand() {
   })
 
   // TODO: See if this is needed now with tarsync. Maybe just keep the
-  // build:clean part (and/or combine it with the tarsync)
+  // clean part (and/or combine it with the tarsync)
   await tuiTask({
     step: 1,
     title: '[link] Building Cedar framework',
-    content: 'yarn build:clean && yarn build',
+    content: 'yarn clean && yarn build',
     task: async () => {
       return exec(
-        'yarn build:clean && yarn build',
+        'yarn clean && yarn build',
         [],
         getExecaOptions(RW_FRAMEWORK_PATH),
       )
