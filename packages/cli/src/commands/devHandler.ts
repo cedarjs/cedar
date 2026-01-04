@@ -11,8 +11,6 @@ import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
-import { buildPackagesTask } from '../build/buildPackagesTask.js'
-// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
@@ -23,9 +21,6 @@ import { getPaths } from '../lib/index.js'
 import { getFreePort } from '../lib/ports.js'
 // @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
-
-// @ts-expect-error - Types not available for JS files
-import { watchPackagesTask } from './dev/watchPackagesTask.js'
 
 const defaultApiDebugPort = 18911
 
@@ -183,6 +178,10 @@ export const handler = async ({
 
     try {
       console.log('Building packages...')
+      // @ts-expect-error - Types not available for JS files
+      const { buildPackagesTask } = await import(
+        '../build/buildPackagesTask.js'
+      )
       await buildPackagesTask(packagesToWatch)
       console.log('Packages built successfully')
     } catch (e) {
@@ -283,6 +282,8 @@ export const handler = async ({
       command: async () => {
         const packagesToWatch =
           packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
+        // @ts-expect-error - Types not available for JS files
+        const { watchPackagesTask } = await import('./dev/watchPackagesTask.js')
         await watchPackagesTask(packagesToWatch)
       },
       prefixColor: 'yellow',
