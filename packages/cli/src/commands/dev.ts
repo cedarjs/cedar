@@ -6,15 +6,12 @@ import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
-export const command = 'dev [side..]'
+export const command = 'dev [workspace..]'
 export const description = 'Start development servers for api, and web'
 
 export const builder = (yargs: Argv) => {
-  // The reason `forward` is hidden is that it's been broken with Vite
-  // and it's not clear how to fix it.
-
   yargs
-    .positional('side', {
+    .positional('workspace', {
       choices: ['api', 'web'],
       default: ['api', 'web'],
       description: 'Which dev server(s) to start',
@@ -24,8 +21,11 @@ export const builder = (yargs: Argv) => {
     .option('forward', {
       alias: 'fwd',
       description:
-        'String of one or more vite dev server config options, for example: `--fwd="--port=1234 --open=false"`',
+        'String of one or more vite dev server config options, for example: ' +
+        '`--fwd="--port=1234 --open=false"`',
       type: 'string',
+      // The reason `forward` is hidden is that it's been broken with Vite and
+      // it's not clear how to fix it.
       hidden: true,
     })
     .option('generate', {
@@ -36,7 +36,8 @@ export const builder = (yargs: Argv) => {
     .option('apiDebugPort', {
       type: 'number',
       description:
-        'Port on which to expose API server debugger. If you supply the flag with no value it defaults to 18911.',
+        'Port on which to expose API server debugger. If you supply the flag ' +
+        'with no value it defaults to 18911.',
     })
     .middleware(() => {
       const check = checkNodeVersion()
@@ -56,6 +57,6 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: any) => {
-  const { handler } = await import('./devHandler.js')
+  const { handler } = await import('./dev/devHandler.js')
   return handler(options)
 }
