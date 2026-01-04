@@ -1,4 +1,3 @@
-// @ts-nocheck
 const mutation = `
 type Mutation {
   createContact(input: CreateContactInput!): Contact @requireAuth

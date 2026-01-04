@@ -1,4 +1,3 @@
-// @ts-nocheck
 const body = `
 <p className="font-light">
 This site was created to demonstrate my mastery of Redwood: Look on my

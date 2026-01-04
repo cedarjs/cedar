@@ -1,6 +1,3 @@
-// @ts-nocheck
-
-
 const delayedComponents = `
 function DelayedComponent({
   time,

@@ -1,4 +1,3 @@
-// @ts-nocheck
 export default (file, api) => {
   const j = api.jscodeshift
   const root = j(file.source)

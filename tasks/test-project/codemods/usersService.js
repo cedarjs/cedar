@@ -1,4 +1,3 @@
-// @ts-nocheck
 // const body = `
 //   return db.user.findUnique({ where: { id }})
 // `

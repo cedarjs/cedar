@@ -1,4 +1,3 @@
-// @ts-nocheck
 const query = `
   query BlogPostsQuery {
     blogPosts: posts {
