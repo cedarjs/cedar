@@ -1,4 +1,3 @@
-/* eslint-env node, es6*/
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -339,8 +338,8 @@ export async function webTasks(
           return execa(
             'yarn cedar setup ui tailwindcss',
             ['--force', linkWithLatestFwBuild && '--no-install'].filter(
-              Boolean,
-            ) as string[],
+              (i: string | boolean): i is string => Boolean(i),
+            ),
             getExecaOptions(outputPath),
           )
         },
@@ -477,27 +476,29 @@ export async function apiTasks(
     // add fullName input to signup form
     const pathSignupPageTs = `${OUTPUT_PATH}/web/src/pages/SignupPage/SignupPage.tsx`
     const contentSignupPageTs = fs.readFileSync(pathSignupPageTs, 'utf-8')
-    const usernameFields = contentSignupPageTs.match(
+    const usernameFieldsMatches = contentSignupPageTs.match(
       /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
-    )?.[0]
-    const fullNameFields = usernameFields
-      ?.replace(/\s*ref={usernameRef}/, '')
-      .replaceAll('username', 'full-name')
-      .replaceAll('Username', 'Full Name')
+    )
+    if (usernameFieldsMatches) {
+      const fullNameFields = usernameFieldsMatches[0]
+        .replace(/\s*ref=\{usernameRef}/, '')
+        .replaceAll('username', 'full-name')
+        .replaceAll('Username', 'Full Name')
 
-    const newContentSignupPageTs = contentSignupPageTs
-      .replace(
-        '<FieldError name="password" className="rw-field-error" />',
-        '<FieldError name="password" className="rw-field-error" />\n' +
-          fullNameFields,
-      )
-      // include full-name in the data we pass to `signUp()`
-      .replace(
-        'password: data.password',
-        "password: data.password, 'full-name': data['full-name']",
-      )
+      const newContentSignupPageTs = contentSignupPageTs
+        .replace(
+          '<FieldError name="password" className="rw-field-error" />',
+          '<FieldError name="password" className="rw-field-error" />\n' +
+            fullNameFields,
+        )
+        // include full-name in the data we pass to `signUp()`
+        .replace(
+          'password: data.password',
+          "password: data.password, 'full-name': data['full-name']",
+        )
 
-    fs.writeFileSync(pathSignupPageTs, newContentSignupPageTs)
+      fs.writeFileSync(pathSignupPageTs, newContentSignupPageTs)
+    }
 
     // set fullName when signing up
     const pathAuthTs = `${OUTPUT_PATH}/api/src/functions/auth.ts`
@@ -683,7 +684,7 @@ export async function apiTasks(
 
           addModel(contact)
 
-          await exec(
+          await execa(
             'yarn cedar prisma migrate dev --name create_contact',
             [],
             getExecaOptions(outputPath),
@@ -770,7 +771,7 @@ export async function apiTasks(
 
                 expect(result).toEqual(scenario.user.one)
               })
-            })`
+            })`.replaceAll(/ {12}/g, '')
 
           fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
 

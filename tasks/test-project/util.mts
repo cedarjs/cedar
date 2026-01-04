@@ -9,11 +9,11 @@ import prompts from 'prompts'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-let OUTPUT_PATH: string
+let OUTPUT_PATH: string | undefined
 let VERBOSE = false
 
-export function setOutputPath(path: string) {
-  OUTPUT_PATH = path
+export function setOutputPath(outputPath: string) {
+  OUTPUT_PATH = outputPath
 }
 
 export function getOutputPath() {
@@ -32,6 +32,10 @@ export function fullPath(
   name: string,
   { addExtension } = { addExtension: true },
 ) {
+  if (!OUTPUT_PATH) {
+    throw new Error('Output path not set')
+  }
+
   if (addExtension) {
     if (name.startsWith('api')) {
       name += '.ts'
@@ -53,12 +57,14 @@ export async function applyCodemod(codemod: string, target: string) {
     '--verbose=2',
   ]
 
+  args.push()
+
   await exec('yarn jscodeshift', args, getExecaOptions(path.resolve(__dirname)))
 }
 
 export const getExecaOptions = (cwd: string): ExecaOptions => ({
   shell: true,
-  stdio: VERBOSE ? 'inherit' : 'pipe',
+  stdio: 'inherit',
   cleanup: true,
   cwd,
   env: {
@@ -150,7 +156,7 @@ export async function exec(
 
       return { stdout, stderr, exitCode }
     })
-    .catch((error: any) => {
+    .catch((error) => {
       if (error instanceof ExecaError) {
         // Rethrow ExecaError
         throw error
