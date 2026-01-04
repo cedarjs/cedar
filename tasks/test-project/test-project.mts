@@ -11,12 +11,7 @@ import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { apiTasks, streamingTasks, webTasks } from './tasks.mjs'
-import {
-  confirmNoFixtureNoLink,
-  getExecaOptions,
-  getCfwBin,
-  setVerbose,
-} from './util.mjs'
+import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -73,8 +68,6 @@ const {
   javascript,
   streamingSsr,
 } = args
-
-setVerbose(verbose)
 
 if (args._.length > 1) {
   console.log(
@@ -205,30 +198,27 @@ const globalTasks = () =>
       },
       {
         title: 'Apply web codemods',
-        task: async (_ctx, task) =>
-          task.newListr(
-            await webTasks(OUTPUT_PROJECT_PATH, {
-              linkWithLatestFwBuild: link,
-            }),
-          ),
+        task: () =>
+          webTasks(OUTPUT_PROJECT_PATH, {
+            verbose,
+            linkWithLatestFwBuild: link,
+          }),
         enabled: () => !copyFromFixture,
       },
       {
         // These are also web tasks... we can move them into the webTasks function
         // when streaming isn't experimental
         title: 'Enabling streaming-ssr experiment and applying codemods....',
-        task: async (_ctx, task) =>
-          task.newListr(await streamingTasks(OUTPUT_PROJECT_PATH)),
+        task: () => streamingTasks(OUTPUT_PROJECT_PATH, { verbose }),
         enabled: () => streamingSsr,
       },
       {
         title: 'Apply api codemods',
-        task: async (_ctx, task) =>
-          task.newListr(
-            await apiTasks(OUTPUT_PROJECT_PATH, {
-              linkWithLatestFwBuild: link,
-            }),
-          ),
+        task: () =>
+          apiTasks(OUTPUT_PROJECT_PATH, {
+            verbose,
+            linkWithLatestFwBuild: link,
+          }),
         enabled: () => !copyFromFixture,
       },
       {
@@ -314,7 +304,7 @@ async function runCommand() {
 
   try {
     await globalTasks().run()
-  } catch (err: any) {
+  } catch (err) {
     console.error(err)
     process.exit(1)
   }

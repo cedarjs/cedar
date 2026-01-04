@@ -161,9 +161,6 @@ export async function exec(
     })
 }
 
-/**
- * @param cmd The command to run
- */
 export function createBuilder(cmd: string, dir = '') {
   return function (positionalArguments?: string | string[]) {
     const execaOptions = getExecaOptions(path.join(OUTPUT_PATH, dir))

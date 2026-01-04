@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 
 import {
@@ -21,6 +22,7 @@ import {
 
 interface WebTasksOptions {
   linkWithLatestFwBuild?: boolean
+  verbose?: boolean
 }
 
 function mapToListrTask(
@@ -50,32 +52,49 @@ function mapToListrTask(
 
 export async function webTasks(
   outputPath: string,
-  { linkWithLatestFwBuild }: WebTasksOptions,
-): Promise<ListrTask[]> {
+  { linkWithLatestFwBuild, verbose }: WebTasksOptions,
+) {
   setOutputPath(outputPath)
   const options: CommonTaskOptions = { outputPath, linkWithLatestFwBuild }
 
   const tasks = getWebTasks(options)
-  return tasks.map((t) => mapToListrTask(t, options))
+  return new Listr(
+    tasks.map((t) => mapToListrTask(t, options)),
+    {
+      exitOnError: true,
+      renderer: verbose ? 'verbose' : 'default',
+    },
+  )
 }
 
 interface ApiTasksOptions {
   linkWithLatestFwBuild?: boolean
+  verbose?: boolean
 }
 
 export async function apiTasks(
   outputPath: string,
-  { linkWithLatestFwBuild }: ApiTasksOptions,
-): Promise<ListrTask[]> {
+  { linkWithLatestFwBuild, verbose }: ApiTasksOptions,
+) {
   setOutputPath(outputPath)
   const options: CommonTaskOptions = { outputPath, linkWithLatestFwBuild }
 
   const tasks = getApiTasks(options)
-  return tasks.map((t) => mapToListrTask(t, options))
+  return new Listr(
+    tasks.map((t) => mapToListrTask(t, options)),
+    {
+      exitOnError: true,
+      renderer: verbose ? 'verbose' : 'default',
+      rendererOptions: { collapseSubtasks: false },
+    },
+  )
 }
 
-export async function streamingTasks(outputPath: string): Promise<ListrTask[]> {
-  return [
+export async function streamingTasks(
+  outputPath: string,
+  { verbose }: { verbose?: boolean },
+) {
+  const tasks: ListrTask[] = [
     {
       title: 'Creating Delayed suspense delayed page',
       task: async () => {
@@ -95,11 +114,20 @@ export async function streamingTasks(outputPath: string): Promise<ListrTask[]> {
       },
     },
   ]
+
+  return new Listr(tasks, {
+    exitOnError: true,
+    renderer: verbose ? 'verbose' : 'default',
+    rendererOptions: { collapseSubtasks: false },
+  })
 }
 
-export async function fragmentsTasks(outputPath: string): Promise<ListrTask[]> {
+export async function fragmentsTasks(
+  outputPath: string,
+  { verbose }: { verbose?: boolean },
+) {
   const options: CommonTaskOptions = { outputPath }
-  return [
+  const tasks: ListrTask[] = [
     {
       title: 'Enable fragments',
       task: async () => {
@@ -125,4 +153,9 @@ export async function fragmentsTasks(outputPath: string): Promise<ListrTask[]> {
       },
     },
   ]
+
+  return new Listr(tasks, {
+    exitOnError: true,
+    renderer: verbose ? 'verbose' : 'default',
+  })
 }

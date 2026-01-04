@@ -41,6 +41,7 @@ export async function webTasks(
   const options: CommonTaskOptions = {
     outputPath,
     isFixture: true,
+    stdio: 'pipe',
   }
 
   const tasks = getWebTasks(options)
@@ -62,6 +63,7 @@ export async function apiTasks(
     isFixture: true,
     linkWithLatestFwBuild,
     esmProject,
+    stdio: 'pipe',
   }
 
   const tasks = getApiTasks(options)
