@@ -14,7 +14,7 @@ into your code:
 \`\`\`
 
 \`\`\`javascript
-import { formValidators } from '@my-camel-case-app/form-validators';
+import { formValidators } from '@my-camel-case-app/form-validators'
 \`\`\`
 "
 `;
@@ -51,7 +51,7 @@ into your code:
 \`\`\`
 
 \`\`\`javascript
-import { formValidators } from '@my-camel-case-app/form-validators';
+import { formValidators } from '@my-camel-case-app/form-validators'
 \`\`\`
 "
 `;
@@ -88,6 +88,13 @@ exports[`packageHandler > files > multi-word package names > uses the provided s
   "private": true,
   "type": "module",
   "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch"
@@ -114,7 +121,7 @@ into your code:
 \`\`\`
 
 \`\`\`javascript
-import { formValidatorsPkg } from '@my-org/form-validators-pkg';
+import { formValidatorsPkg } from '@my-org/form-validators-pkg'
 \`\`\`
 "
 `;
@@ -144,7 +151,7 @@ into your code:
 \`\`\`
 
 \`\`\`javascript
-import { foo } from '@my-cedar-app/foo';
+import { foo } from '@my-cedar-app/foo'
 \`\`\`
 "
 `;
@@ -174,6 +181,13 @@ exports[`packageHandler > files > single word package name > infers package scop
   "private": true,
   "type": "module",
   "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch"
@@ -202,6 +216,7 @@ exports[`packageHandler > files > single word package name > infers package scop
     "declarationMap": true,
   },
   "include": ["src"],
+  "exclude": ["**/*.test.ts"],
 }
 "
 `;
