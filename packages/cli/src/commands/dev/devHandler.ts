@@ -64,33 +64,40 @@ export const handler = async ({
   // author of the server file to decide and handle that
   if (workspace.includes('api') && !serverFile) {
     apiAvailablePort = await getFreePort(apiPreferredPort)
+
     if (apiAvailablePort === -1) {
       exitWithError(undefined, {
         message: `Could not determine a free port for the api server`,
       })
     }
+
     apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
   }
 
   // Check web port
   if (workspace.includes('web')) {
-    // Extract any ports the user forwarded to the dev server and prefer that instead
+    // Extract any ports the user forwarded to the dev server and prefer that
+    // instead
     const forwardedPortMatches = [
       ...forward.matchAll(/\-\-port(\=|\s)(?<port>[^\s]*)/g),
     ]
+
     if (forwardedPortMatches.length) {
       const port = forwardedPortMatches.pop()?.groups?.port
       webPreferredPort = port ? parseInt(port, 10) : undefined
     }
+
     webAvailablePort = await getFreePort(webPreferredPort, [
       apiPreferredPort,
       apiAvailablePort,
     ])
+
     if (webAvailablePort === -1) {
       exitWithError(undefined, {
         message: `Could not determine a free port for the web server`,
       })
     }
+
     webPortChangeNeeded = webAvailablePort !== webPreferredPort
   }
 
@@ -122,8 +129,7 @@ export const handler = async ({
         force: false,
       })
     } catch (e) {
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
+      const message = getErrorMessage(e)
       errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
       console.error(c.error(message))
     }
@@ -134,8 +140,7 @@ export const handler = async ({
       try {
         await shutdownPort(apiAvailablePort)
       } catch (e) {
-        const message =
-          e instanceof Object && 'message' in e ? e.message : String(e)
+        const message = getErrorMessage(e)
         errorTelemetry(process.argv, `Error shutting down "api": ${message}`)
         console.error(
           `Error whilst shutting down "api" port: ${c.error(message)}`,
@@ -148,8 +153,7 @@ export const handler = async ({
     try {
       await shutdownPort(webAvailablePort)
     } catch (e) {
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
+      const message = getErrorMessage(e)
       errorTelemetry(process.argv, `Error shutting down "web": ${message}`)
       console.error(
         `Error whilst shutting down "web" port: ${c.error(message)}`,
@@ -296,4 +300,10 @@ export function getDevNodeOptions() {
   }
 
   return `${NODE_OPTIONS} ${enableSourceMapsOption}`
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Object && 'message' in error
+    ? error.message
+    : String(error)
 }
