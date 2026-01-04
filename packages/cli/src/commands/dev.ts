@@ -4,10 +4,13 @@ import type { Argv } from 'yargs'
 // @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
+import { workspaces } from '../lib/project.js'
+// @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'dev [side..]'
-export const description = 'Start development servers for api, and web'
+export const description =
+  'Start development servers for api, web, and packages'
 
 export const builder = (yargs: Argv) => {
   // The reason `forward` is hidden is that it's been broken with Vite
@@ -15,9 +18,9 @@ export const builder = (yargs: Argv) => {
 
   yargs
     .positional('side', {
-      choices: ['api', 'web'],
       default: ['api', 'web'],
-      description: 'Which dev server(s) to start',
+      description:
+        'Which dev server(s) to start. Valid values: api, web, packages/*, <package-name>',
       type: 'string',
       array: true,
     })
@@ -46,6 +49,38 @@ export const builder = (yargs: Argv) => {
       }
 
       console.warn(`${c.warning('Warning')}: ${check.message}\n`)
+    })
+    .check((argv) => {
+      const sideArg = argv.side
+
+      if (!Array.isArray(sideArg)) {
+        return 'Side must be an array'
+      }
+
+      // Remove all default side names and then check if there are any
+      // remaining sides to validate. This is an optimization to avoid calling
+      // `workspaces({ includePackages: true })` as that's a somewhat expensive
+      // method call that hits the filesystem and parses files
+
+      const filtered = sideArg.filter(
+        (item) => item !== 'api' && item !== 'web' && item !== 'packages/*',
+      )
+
+      if (filtered.length === 0) {
+        return true
+      }
+
+      const workspaceNames = workspaces({ includePackages: true })
+
+      if (!filtered.every((item) => workspaceNames.includes(item))) {
+        return (
+          c.error(`Unknown workspace(s) ${filtered.join(' ')}`) +
+          '\n\nValid values are: ' +
+          workspaceNames.join(', ')
+        )
+      }
+
+      return true
     })
     .epilogue(
       `Also see the ${terminalLink(

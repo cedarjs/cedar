@@ -11,6 +11,8 @@ import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
+import { buildPackagesTask } from '../build/buildPackagesTask.js'
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
@@ -21,6 +23,9 @@ import { getPaths } from '../lib/index.js'
 import { getFreePort } from '../lib/ports.js'
 // @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
+
+// @ts-expect-error - Types not available for JS files
+import { watchPackagesTask } from './dev/watchPackagesTask.js'
 
 const defaultApiDebugPort = 18911
 
@@ -44,6 +49,20 @@ export const handler = async ({
   })
 
   const rwjsPaths = getPaths()
+
+  // Extract package workspaces from side array
+  const packageWorkspaces = side.filter(
+    (s) => s !== 'api' && s !== 'web' && s !== 'gen',
+  )
+
+  // Check if package workspaces exist in root package.json
+  const rootPackageJsonPath = path.join(rwjsPaths.base, 'package.json')
+  const rootPackageJson = JSON.parse(
+    fs.readFileSync(rootPackageJsonPath, 'utf8'),
+  )
+  const hasPackageWorkspaces =
+    Array.isArray(rootPackageJson.workspaces) &&
+    rootPackageJson.workspaces.length > 2
 
   const serverFile = serverFileExists()
 
@@ -157,6 +176,26 @@ export const handler = async ({
     }
   }
 
+  // Build packages initially before starting watchers
+  if (hasPackageWorkspaces && fs.existsSync(rwjsPaths.packages)) {
+    const packagesToWatch =
+      packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
+
+    try {
+      console.log('Building packages...')
+      await buildPackagesTask(packagesToWatch)
+      console.log('Packages built successfully')
+    } catch (e) {
+      // Log but don't fail - watch mode will rebuild
+      const message =
+        e instanceof Object && 'message' in e ? e.message : String(e)
+      console.warn(
+        c.warning('Warning: ') +
+          `Could not build packages initially: ${message}`,
+      )
+    }
+  }
+
   const getApiDebugFlag = () => {
     // Passed in flag takes precedence
     if (apiDebugPort) {
@@ -193,9 +232,6 @@ export const handler = async ({
     webCommand = `yarn cross-env NODE_ENV=development rw-dev-fe ${forward}`
   }
 
-  const rootPackageJson = JSON.parse(
-    fs.readFileSync(path.join(rwjsPaths.base, 'package.json'), 'utf8'),
-  )
   const isEsm = rootPackageJson.type === 'module'
   const serverWatchCommand = isEsm
     ? `cedarjs-api-server-watch`
@@ -242,12 +278,22 @@ export const handler = async ({
       prefixColor: 'green',
       runWhen: () => generate,
     },
+    packages: {
+      name: 'packages',
+      command: async () => {
+        const packagesToWatch =
+          packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
+        await watchPackagesTask(packagesToWatch)
+      },
+      prefixColor: 'yellow',
+      runWhen: () => hasPackageWorkspaces && fs.existsSync(rwjsPaths.packages),
+    },
   }
 
   const mappedJobs = Object.keys(jobs).map((job) => {
     // Include the jobs for the sides indicated on the command line, plus the
-    // gen job
-    if (side.includes(job) || job === 'gen') {
+    // gen job and packages job (if packages exist)
+    if (side.includes(job) || job === 'gen' || job === 'packages') {
       return jobs[job]
     }
 
