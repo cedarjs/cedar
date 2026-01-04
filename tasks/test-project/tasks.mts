@@ -18,12 +18,13 @@ const __dirname = path.dirname(__filename)
 
 // This variable gets used in other functions
 // and is set when webTasks or apiTasks are called
-let OUTPUT_PATH: string
+let OUTPUT_PATH: string | undefined
 
-function fullPath(
-  name: string,
-  { addExtension } = { addExtension: true },
-): string {
+function fullPath(name: string, { addExtension } = { addExtension: true }) {
+  if (!OUTPUT_PATH) {
+    throw new Error('Output path not set')
+  }
+
   if (addExtension) {
     if (name.startsWith('api')) {
       name += '.ts'
@@ -37,6 +38,10 @@ function fullPath(
 
 const createBuilder = (cmd: string) => {
   return async function createItem(positionals?: string | string[]) {
+    if (!OUTPUT_PATH) {
+      throw new Error('Output path not set')
+    }
+
     const args = positionals
       ? Array.isArray(positionals)
         ? positionals
@@ -697,6 +702,10 @@ export async function apiTasks(
         // This task renames the migration folders so that we don't have to deal with duplicates/conflicts when committing to the repo
         title: 'Adjust dates within migration folder names',
         task: () => {
+          if (!OUTPUT_PATH) {
+            throw new Error('Output path not set')
+          }
+
           const migrationsFolderPath = path.join(
             OUTPUT_PATH,
             'api',
@@ -922,6 +931,10 @@ export async function fragmentsTasks(
     {
       title: 'Copy components from templates',
       task: () => {
+        if (!OUTPUT_PATH) {
+          throw new Error('Output path not set')
+        }
+
         const templatesPath = path.join(__dirname, 'templates', 'web')
         const componentsPath = path.join(
           OUTPUT_PATH,
@@ -947,6 +960,10 @@ export async function fragmentsTasks(
     {
       title: 'Copy sdl and service for groceries from templates',
       task: () => {
+        if (!OUTPUT_PATH) {
+          throw new Error('Output path not set')
+        }
+
         const templatesPath = path.join(__dirname, 'templates', 'api')
         const graphqlPath = path.join(OUTPUT_PATH, 'api', 'src', 'graphql')
         const servicesPath = path.join(OUTPUT_PATH, 'api', 'src', 'services')

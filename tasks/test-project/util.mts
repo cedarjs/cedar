@@ -9,44 +9,6 @@ import prompts from 'prompts'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-let OUTPUT_PATH: string | undefined
-let VERBOSE = false
-
-export function setOutputPath(outputPath: string) {
-  OUTPUT_PATH = outputPath
-}
-
-export function getOutputPath() {
-  return OUTPUT_PATH
-}
-
-export function setVerbose(verbose: boolean) {
-  VERBOSE = verbose
-}
-
-export function getVerbose() {
-  return VERBOSE
-}
-
-export function fullPath(
-  name: string,
-  { addExtension } = { addExtension: true },
-) {
-  if (!OUTPUT_PATH) {
-    throw new Error('Output path not set')
-  }
-
-  if (addExtension) {
-    if (name.startsWith('api')) {
-      name += '.ts'
-    } else if (name.startsWith('web')) {
-      name += '.tsx'
-    }
-  }
-
-  return path.join(OUTPUT_PATH, name)
-}
-
 export async function applyCodemod(codemod: string, target: string) {
   const args = [
     '--fail-on-error',
