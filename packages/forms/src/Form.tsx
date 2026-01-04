@@ -39,7 +39,7 @@ export interface FormProps<TFieldValues extends FieldValues>
    * <Form config={{ mode: 'onBlur' }}>
    * ```
    *
-   * @see {@link https://react-hook-form.com/api/useform}
+   * @see {@link https://react-hook-form.com/docs/useform}
    */
   config?: UseFormProps<TFieldValues>
   onSubmit?: (value: TFieldValues, event?: React.BaseSyntheticEvent) => void

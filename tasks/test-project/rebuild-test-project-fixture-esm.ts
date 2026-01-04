@@ -314,7 +314,7 @@ async function runCommand() {
   })
 
   // TODO: See if this is needed now with tarsync. Maybe just keep the
-  // build:clean part (and/or combine it with the tarsync)
+  // clean part (and/or combine it with the tarsync)
   await tuiTask({
     step: 1,
     title: '[link] Building Cedar framework',

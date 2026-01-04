@@ -1,4 +1,3 @@
-/* eslint-env node */
 // @ts-check
 
 import fs from 'node:fs'
@@ -12,23 +11,16 @@ import {
   CEDAR_FRAMEWORK_PATH,
 } from '../actionsLib.mjs'
 
-const TEST_PROJECT_PATH = path.join(path.dirname(process.cwd()), 'test-project')
+const parentDir = path.dirname(process.cwd())
+const TEST_PROJECT_PATH = path.join(parentDir, 'test-project')
+const execInProject = createExecWithEnvInCwd(TEST_PROJECT_PATH)
 
 core.setOutput('test-project-path', TEST_PROJECT_PATH)
 
 const canary = core.getInput('canary') === 'true'
-console.log({
-  canary,
-})
+console.log({ canary })
 
 console.log()
-
-/**
- * @returns {Promise<void>}
- */
-async function main() {
-  await setUpTestProject({ canary })
-}
 
 /**
  * @param {{ canary: boolean }} options
@@ -43,31 +35,25 @@ async function setUpTestProject({ canary }) {
 
   console.log(`Creating project at ${TEST_PROJECT_PATH}`)
   console.log()
+
   await fs.promises.cp(TEST_PROJECT_FIXTURE_PATH, TEST_PROJECT_PATH, {
     recursive: true,
   })
+
+  if (canary) {
+    console.log(`Upgrading project to canary`)
+
+    await execInProject('yarn cedar upgrade -t canary', {
+      input: Buffer.from('Y'),
+    })
+
+    console.log()
+  }
 
   await execInFramework('yarn project:tarsync --verbose', {
     env: { RWJS_CWD: TEST_PROJECT_PATH },
   })
 
-  if (canary) {
-    console.log(`Upgrading project to canary`)
-    await execInProject('yarn cedar upgrade -t canary', {
-      input: Buffer.from('Y'),
-    })
-    console.log()
-  }
-
-  await sharedTasks()
-}
-
-const execInProject = createExecWithEnvInCwd(TEST_PROJECT_PATH)
-
-/**
- * @returns {Promise<void>}
- */
-async function sharedTasks() {
   console.log('Generating dbAuth secret')
   const { stdout } = await execInProject('yarn cedar g secret --raw', {
     silent: true,
@@ -82,4 +68,4 @@ async function sharedTasks() {
   await execInProject('yarn cedar prisma migrate reset --force')
 }
 
-main()
+setUpTestProject({ canary })
