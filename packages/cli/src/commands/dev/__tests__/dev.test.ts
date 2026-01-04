@@ -112,7 +112,6 @@ import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../../lib/index.js'
 import { handler } from '../devHandler.js'
-// @ts-expect-error - Types not available for JS files
 import { watchPackagesTask } from '../watchPackagesTask.js'
 
 async function defaultConfig() {

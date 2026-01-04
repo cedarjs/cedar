@@ -5,9 +5,7 @@ import { vi, afterEach, describe, it, expect, beforeEach } from 'vitest'
 
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../lib/colors.js'
 import { exitWithError } from '../../../lib/exit.js'
-import { getPaths } from '../../../lib/index.js'
 import { watchPackagesTask } from '../watchPackagesTask.js'
 
 vi.mock('node:fs', () => {

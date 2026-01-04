@@ -1,5 +1,3 @@
-import type FS from 'fs'
-
 import '../../lib/mockTelemetry'
 
 vi.mock('concurrently', () => ({
@@ -17,7 +15,7 @@ vi.mock('node:fs', async (importOriginal) => {
   return {
     default: {
       ...actualFs,
-      readFileSync: vi.fn((filePath: any) => {
+      readFileSync: vi.fn((filePath) => {
         if (!filePath) {
           return 'File content'
         }
@@ -28,7 +26,7 @@ vi.mock('node:fs', async (importOriginal) => {
         }
         return 'File content'
       }),
-      existsSync: vi.fn((path: any) => {
+      existsSync: vi.fn(() => {
         // By default everything exists except specific overrides
         return true
       }),
@@ -94,21 +92,14 @@ vi.mock('../dev/watchPackagesTask.js', () => ({
   watchPackagesTask: vi.fn().mockResolvedValue(undefined),
 }))
 
-import fs from 'node:fs'
+import type FS from 'node:fs'
 
 import concurrently from 'concurrently'
 import { find } from 'lodash'
-import { vi, describe, afterEach, it, expect, beforeEach } from 'vitest'
+import { vi, describe, afterEach, it, expect } from 'vitest'
 
-import { getConfig } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
 
-// @ts-expect-error - Types not available for JS files
-import { buildPackagesTask } from '../build/buildPackagesTask.js'
-// @ts-expect-error - Types not available for JS files
-import { watchPackagesTask } from '../dev/watchPackagesTask.js'
-// @ts-expect-error - Types not available for JS files
-import { getPaths } from '../../lib/index.js'
 import { handler } from '../devHandler.js'
 
 describe('yarn cedar dev - package watching', () => {
@@ -117,7 +108,7 @@ describe('yarn cedar dev - package watching', () => {
   })
 
   it('runs package watchers by default when packages exist', async () => {
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
@@ -133,7 +124,7 @@ describe('yarn cedar dev - package watching', () => {
   // The positive test cases below verify the feature works correctly.
 
   it('runs specific package watchers when requested', async () => {
-    await handler({ side: ['api', 'my-package'] })
+    await handler({ workspace: ['api', 'my-package'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
@@ -143,7 +134,7 @@ describe('yarn cedar dev - package watching', () => {
   it('packages job is registered even if initial build fails', async () => {
     // We can't easily test the actual build failure since it's a dynamic import
     // But we can verify the packages job is still registered
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
@@ -151,7 +142,7 @@ describe('yarn cedar dev - package watching', () => {
   })
 
   it('includes packages job with correct configuration', async () => {
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
@@ -162,7 +153,7 @@ describe('yarn cedar dev - package watching', () => {
   })
 
   it('packages job uses yellow prefix color', async () => {
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
@@ -171,7 +162,7 @@ describe('yarn cedar dev - package watching', () => {
   })
 
   it('packages command is an async function', async () => {
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
@@ -181,7 +172,7 @@ describe('yarn cedar dev - package watching', () => {
   })
 
   it('registers packages job for default sides', async () => {
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
@@ -190,7 +181,7 @@ describe('yarn cedar dev - package watching', () => {
   })
 
   it('registers packages job for specific package sides', async () => {
-    await handler({ side: ['@org/pkg-one', 'pkg-two'] })
+    await handler({ workspace: ['@org/pkg-one', 'pkg-two'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
