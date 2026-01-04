@@ -1,3 +1,4 @@
+// @ts-nocheck
 const createPosts = `
   try {
     const users = [

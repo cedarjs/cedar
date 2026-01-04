@@ -1,3 +1,4 @@
+// @ts-nocheck
 const body = `
 <article>
 {blogPost && (

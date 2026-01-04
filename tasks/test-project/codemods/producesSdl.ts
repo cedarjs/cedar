@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { FileInfo } from 'jscodeshift'
 
 export default (file: FileInfo) => {

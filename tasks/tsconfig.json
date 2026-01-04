@@ -4,5 +4,6 @@
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "allowJs": true
-  }
+  },
+  "exclude": ["test-project/templates"]
 }

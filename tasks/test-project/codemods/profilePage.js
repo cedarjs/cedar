@@ -1,3 +1,4 @@
+// @ts-nocheck
 const profilePageBody = `{ const { currentUser, isAuthenticated, hasRole, loading } = useAuth()
 
 if (loading) {

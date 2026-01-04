@@ -1,3 +1,4 @@
+// @ts-nocheck
 const query = `
   query FindAuthorQuery($id: Int!) {
     author: user(id: $id) {

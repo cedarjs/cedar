@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import { fileURLToPath } from 'node:url'
+
 import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
@@ -24,6 +26,9 @@ import {
   exec,
   getCfwBin,
 } from './util.mjs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 function recommendedNodeVersion() {
   const templatePackageJsonPath = path.join(
@@ -159,7 +164,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
 
   try {
     promise = task()
-  } catch (e) {
+  } catch (e: any) {
     // This code handles errors from synchronous tasks
 
     tui.stopReactive(true)
@@ -521,7 +526,7 @@ async function runCommand() {
             RW_PATH: path.join(__dirname, '../../'),
           },
         })
-      } catch (e) {
+      } catch (e: any) {
         if (
           e instanceof ExecaError &&
           !e.stderr &&

@@ -1,4 +1,5 @@
-// @ts-check
+// @ts-nocheck
+
 
 const delayedComponents = `
 function DelayedComponent({

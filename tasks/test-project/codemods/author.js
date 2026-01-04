@@ -1,3 +1,4 @@
+// @ts-nocheck
 const body = '<span>{author.fullName} ({author.email})</span>'
 
 const propsInterface = `

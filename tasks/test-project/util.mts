@@ -150,7 +150,7 @@ export async function exec(
 
       return { stdout, stderr, exitCode }
     })
-    .catch((error) => {
+    .catch((error: any) => {
       if (error instanceof ExecaError) {
         // Rethrow ExecaError
         throw error

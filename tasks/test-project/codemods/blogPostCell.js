@@ -1,3 +1,4 @@
+// @ts-nocheck
 const query = `
   query FindBlogPostQuery($id: Int!) {
     blogPost: post(id: $id) {

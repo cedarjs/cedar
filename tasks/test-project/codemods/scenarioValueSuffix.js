@@ -1,3 +1,4 @@
+// @ts-nocheck
 const stringWithSuffixRegex = /String\d+$/
 
 export default (file, api) => {

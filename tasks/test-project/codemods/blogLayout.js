@@ -1,3 +1,4 @@
+// @ts-nocheck
 const body = `
 const { logOut, isAuthenticated } = useAuth()
 

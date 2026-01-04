@@ -1,3 +1,4 @@
+// @ts-nocheck
 const foo = `class Bar {}
 
 class Foo {

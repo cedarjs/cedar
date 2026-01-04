@@ -19,9 +19,12 @@ const __dirname = path.dirname(__filename)
 
 // This variable gets used in other functions
 // and is set when webTasks or apiTasks are called
-let OUTPUT_PATH
+let OUTPUT_PATH: string
 
-function fullPath(name, { addExtension } = { addExtension: true }) {
+function fullPath(
+  name: string,
+  { addExtension } = { addExtension: true },
+): string {
   if (addExtension) {
     if (name.startsWith('api')) {
       name += '.ts'
@@ -33,7 +36,7 @@ function fullPath(name, { addExtension } = { addExtension: true }) {
   return path.join(OUTPUT_PATH, name)
 }
 
-const createBuilder = (cmd) => {
+const createBuilder = (cmd: string) => {
   return async function createItem(positionals?: string | string[]) {
     await execa(
       cmd,
@@ -49,7 +52,15 @@ const createBuilder = (cmd) => {
 
 const createPage = createBuilder('yarn cedar g page')
 
-export async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
+interface WebTasksOptions {
+  linkWithLatestFwBuild: boolean
+  verbose: boolean
+}
+
+export async function webTasks(
+  outputPath: string,
+  { linkWithLatestFwBuild, verbose }: WebTasksOptions,
+) {
   OUTPUT_PATH = outputPath
 
   const createPages = async () => {
@@ -104,28 +115,28 @@ export async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
           await createPage('profile /profile')
 
           // Update the profile page test
-          const testFileContent = `import { render, waitFor, screen } from '@cedarjs/testing/web'
-
-          import ProfilePage from './ProfilePage'
-
-          describe('ProfilePage', () => {
-            it('renders successfully', async () => {
-              mockCurrentUser({
-                email: 'danny@bazinga.com',
-                id: 84849020,
-                roles: 'BAZINGA',
-              })
-
-              await waitFor(async () => {
-                expect(() => {
-                  render(<ProfilePage />)
-                }).not.toThrow()
-              })
-
-              expect(await screen.findByText('danny@bazinga.com')).toBeInTheDocument()
-            })
-          })
-          `
+          const testFileContent = [
+            "import { render, waitFor, screen } from '@cedarjs/testing/web'",
+            "import ProfilePage from './ProfilePage'",
+            '',
+            "describe('ProfilePage', () => {",
+            "  it('renders successfully', async () => {",
+            "    mockCurrentUser({",
+            "      email: 'danny@bazinga.com',",
+            "      id: 84849020,",
+            "      roles: 'BAZINGA',",
+            "    })",
+            '',
+            "    await waitFor(async () => {",
+            "      expect(() => {",
+            "        render(<ProfilePage />)",
+            "      }).not.toThrow()",
+            "    })",
+            '',
+            "    expect(await screen.findByText('danny@bazinga.com')).toBeInTheDocument()",
+            "  })",
+            "})",
+          ].join('\n')
 
           fs.writeFileSync(
             fullPath('web/src/pages/ProfilePage/ProfilePage.test'),
@@ -306,7 +317,7 @@ export async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         title: 'Install tailwind dependencies',
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
-          execa(
+          exec(
             'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.5.12',
             [],
             getExecaOptions(outputPath),
@@ -317,7 +328,7 @@ export async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         title: '[link] Copy local framework files again',
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
-          execa(
+          exec(
             `yarn ${getCfwBin(outputPath)} project:copy`,
             [],
             getExecaOptions(outputPath),
@@ -328,11 +339,11 @@ export async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
       {
         title: 'Adding Tailwind',
         task: () => {
-          return execa(
+          return exec(
             'yarn cedar setup ui tailwindcss',
             ['--force', linkWithLatestFwBuild && '--no-install'].filter(
               Boolean,
-            ),
+            ) as string[],
             getExecaOptions(outputPath),
           )
         },
@@ -345,7 +356,7 @@ export async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   )
 }
 
-export async function addModel(schema) {
+export async function addModel(schema: string) {
   const prismaPath = `${OUTPUT_PATH}/api/db/schema.prisma`
 
   const current = fs.readFileSync(prismaPath)
@@ -353,7 +364,15 @@ export async function addModel(schema) {
   fs.writeFileSync(prismaPath, `${current}\n\n${schema}`)
 }
 
-export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
+interface ApiTasksOptions {
+  verbose: boolean
+  linkWithLatestFwBuild: boolean
+}
+
+export async function apiTasks(
+  outputPath: string,
+  { verbose, linkWithLatestFwBuild }: ApiTasksOptions,
+) {
   OUTPUT_PATH = outputPath
 
   const addDbAuth = async () => {
@@ -380,7 +399,7 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
 
     fs.rmSync(dbAuthSetupPath, { recursive: true, force: true })
 
-    await execa(
+    await exec(
       'yarn cedar setup auth dbAuth --force --no-webauthn',
       [],
       getExecaOptions(outputPath),
@@ -395,106 +414,120 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     })
 
     if (linkWithLatestFwBuild) {
-      await execa(
+      await exec(
         `yarn ${getCfwBin(outputPath)} project:copy`,
         [],
         getExecaOptions(outputPath),
       )
     }
 
-    await execa(
+    await exec(
       'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
       [],
+      getExecaOptions(outputPath),
     )
 
     // update directive in contacts.sdl.ts
     const pathContactsSdl = `${OUTPUT_PATH}/api/src/graphql/contacts.sdl.ts`
-    const contentContactsSdl = fs.readFileSync(pathContactsSdl, 'utf-8')
-    const resultsContactsSdl = contentContactsSdl
-      .replace(
-        'createContact(input: CreateContactInput!): Contact! @requireAuth',
-        `createContact(input: CreateContactInput!): Contact @skipAuth`,
-      )
-      .replace(
-        'deleteContact(id: Int!): Contact! @requireAuth',
-        'deleteContact(id: Int!): Contact! @requireAuth(roles:["ADMIN"])',
-      ) // make deleting contacts admin only
-    fs.writeFileSync(pathContactsSdl, resultsContactsSdl)
+    if (fs.existsSync(pathContactsSdl)) {
+      const contentContactsSdl = fs.readFileSync(pathContactsSdl, 'utf-8')
+      const resultsContactsSdl = contentContactsSdl
+                .replace(
+                  'createContact(input: CreateContactInput!): Contact! @requireAuth',
+                  'createContact(input: CreateContactInput!): Contact @skipAuth',
+                )
+                .replace(
+                  'deleteContact(id: Int!): Contact! @requireAuth',
+                  'deleteContact(id: Int!): Contact! @requireAuth(roles:["ADMIN"])',
+                ) // make deleting contacts admin only'
+      fs.writeFileSync(pathContactsSdl, resultsContactsSdl)
+    }
 
     // update directive in posts.sdl.ts
     const pathPostsSdl = `${OUTPUT_PATH}/api/src/graphql/posts.sdl.ts`
-    const contentPostsSdl = fs.readFileSync(pathPostsSdl, 'utf-8')
-    const resultsPostsSdl = contentPostsSdl.replace(
-      /posts: [Post!]! @requireAuth([^}]*)@requireAuth/,
-      `posts: [Post!]! @skipAuth
-      post(id: Int!): Post @skipAuth`,
-    ) // make posts accessible to all
+    if (fs.existsSync(pathPostsSdl)) {
+      const contentPostsSdl = fs.readFileSync(pathPostsSdl, 'utf-8')
+      const resultsPostsSdl = contentPostsSdl.replace(
+        /posts: [Post!]! @requireAuth([^}]*)@requireAuth/,
+        'posts: [Post!]! @skipAuth\n      post(id: Int!): Post @skipAuth', // make posts accessible to all
 
-    fs.writeFileSync(pathPostsSdl, resultsPostsSdl)
+      )
+
+      fs.writeFileSync(pathPostsSdl, resultsPostsSdl)
+    }
 
     // Update src/lib/auth to return roles, so tsc doesn't complain
     const libAuthPath = `${OUTPUT_PATH}/api/src/lib/auth.ts`
-    const libAuthContent = fs.readFileSync(libAuthPath, 'utf-8')
+    if (fs.existsSync(libAuthPath)) {
+      const libAuthContent = fs.readFileSync(libAuthPath, 'utf-8')
 
-    const newLibAuthContent = libAuthContent
-      .replace(
-        'select: { id: true }',
-        'select: { id: true, roles: true, email: true}',
-      )
-      .replace(
-        'const currentUserRoles = context.currentUser?.roles',
-        'const currentUserRoles = context.currentUser?.roles as string | string[]',
-      )
-    fs.writeFileSync(libAuthPath, newLibAuthContent)
+      const newLibAuthContent = libAuthContent
+        .replace(
+          'select: { id: true }',
+          'select: { id: true, roles: true, email: true}',
+        )
+        .replace(
+          'const currentUserRoles = context.currentUser?.roles',
+          'const currentUserRoles = context.currentUser?.roles as string | string[]',
+        )
+      fs.writeFileSync(libAuthPath, newLibAuthContent)
+    }
 
     // update requireAuth test
     const pathRequireAuth = `${OUTPUT_PATH}/api/src/directives/requireAuth/requireAuth.test.ts`
-    const contentRequireAuth = fs.readFileSync(pathRequireAuth).toString()
-    const resultsRequireAuth = contentRequireAuth.replace(
-      /const mockExecution([^}]*){} }\)/,
-      `const mockExecution = mockRedwoodDirective(requireAuth, {
-        context: { currentUser: { id: 1, roles: 'ADMIN', email: 'b@zinga.com' } },
-      })`,
-    )
-    fs.writeFileSync(pathRequireAuth, resultsRequireAuth)
+    if (fs.existsSync(pathRequireAuth)) {
+      const contentRequireAuth = fs.readFileSync(pathRequireAuth).toString()
+      const resultsRequireAuth = contentRequireAuth.replace(
+        /const mockExecution([^}]*){} }\)/,
+        "const mockExecution = mockRedwoodDirective(requireAuth, {\n        context: { currentUser: { id: 1, roles: 'ADMIN', email: 'b@zinga.com' } },\n      })",
+      )
+      fs.writeFileSync(pathRequireAuth, resultsRequireAuth)
+    }
 
     // add fullName input to signup form
     const pathSignupPageTs = `${OUTPUT_PATH}/web/src/pages/SignupPage/SignupPage.tsx`
-    const contentSignupPageTs = fs.readFileSync(pathSignupPageTs, 'utf-8')
-    const usernameFields = contentSignupPageTs.match(
-      /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
-    )[0]
-    const fullNameFields = usernameFields
-      .replace(/\s*ref={usernameRef}/, '')
-      .replaceAll('username', 'full-name')
-      .replaceAll('Username', 'Full Name')
-
-    const newContentSignupPageTs = contentSignupPageTs
-      .replace(
-        '<FieldError name="password" className="rw-field-error" />',
-        '<FieldError name="password" className="rw-field-error" />\n' +
-          fullNameFields,
+    if (fs.existsSync(pathSignupPageTs)) {
+      const contentSignupPageTs = fs.readFileSync(pathSignupPageTs, 'utf-8')
+      const usernameFieldsMatch = contentSignupPageTs.match(
+        /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
       )
-      // include full-name in the data we pass to `signUp()`
-      .replace(
-        'password: data.password',
-        "password: data.password, 'full-name': data['full-name']",
-      )
+      if (usernameFieldsMatch) {
+        const usernameFields = usernameFieldsMatch[0]
+        const fullNameFields = usernameFields
+          .replace(/\s*ref={usernameRef}/, '')
+          .replaceAll('username', 'full-name')
+          .replaceAll('Username', 'Full Name')
 
-    fs.writeFileSync(pathSignupPageTs, newContentSignupPageTs)
+        const newContentSignupPageTs = contentSignupPageTs
+          .replace(
+            '<FieldError name="password" className="rw-field-error" />',
+            '<FieldError name="password" className="rw-field-error" />\n' +
+              fullNameFields,
+          )
+          // include full-name in the data we pass to `signUp()`
+          .replace(
+            'password: data.password',
+            `password: data.password, 'full-name': data['full-name']`,
+          )
+
+        fs.writeFileSync(pathSignupPageTs, newContentSignupPageTs)
+      }
+    }
 
     // set fullName when signing up
     const pathAuthTs = `${OUTPUT_PATH}/api/src/functions/auth.ts`
-    const contentAuthTs = fs.readFileSync(pathAuthTs).toString()
-    const resultsAuthTs = contentAuthTs
-      .replace('name: string', "'full-name': string")
-      .replace('userAttributes: _userAttributes', 'userAttributes')
-      .replace(
-        '// name: userAttributes.name',
-        "fullName: userAttributes['full-name']",
-      )
+    if (fs.existsSync(pathAuthTs)) {
+      const contentAuthTs = fs.readFileSync(pathAuthTs).toString()
+      const resultsAuthTs = contentAuthTs
+        .replace('name: string', "'full-name': string")
+        .replace('userAttributes: _userAttributes', 'userAttributes')
+        .replace(
+          '// name: userAttributes.name',
+          `fullName: userAttributes['full-name']`,
+        )
 
-    fs.writeFileSync(pathAuthTs, resultsAuthTs)
+      fs.writeFileSync(pathAuthTs, resultsAuthTs)
+    }
   }
 
   // add prerender to some routes
@@ -508,45 +541,47 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
           const createPageBuilder = createBuilder('yarn cedar g page')
           await createPageBuilder('double')
 
-          const doublePageContent = `import { Metadata } from '@cedarjs/web'
-
-            import test from './test.png'
-
-            const DoublePage = () => {
-              return (
-                <>
-                  <Metadata title="Double" description="Double page" og />
-
-                  <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
-                  <p>
-                    This page exists to make sure we don&apos;t regress on{' '}
-                    <a
-                      href="https://github.com/redwoodjs/redwood/issues/7757"
-                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      #7757
-                    </a>
-                  </p>
-                  <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>
-                  <p>
-                    We also use this page to make sure we don&apos;t regress on{' '}
-                    <a
-                      href="https://github.com/cedarjs/cedar/issues/317"
-                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      #317
-                    </a>
-                  </p>
-                  <img src={test} alt="Test" />
-                </>
-              )
-            }
-
-            export default DoublePage`
+          const doublePageContent = [
+            "import { Metadata } from '@cedarjs/web'",
+            "",
+            "import test from './test.png'",
+            "",
+            "const DoublePage = () => {",
+            "  return (",
+            "    <>",
+            "      <Metadata title=\"Double\" description=\"Double page\" og />",
+            "",
+            "      <h1 className=\"mb-1 mt-2 text-xl font-semibold\">DoublePage</h1>",
+            "      <p>",
+            "        This page exists to make sure we don't regress on{' '}",
+            "        <a",
+            "          href=\"https://github.com/redwoodjs/redwood/issues/7757\"",
+            "          className=\"text-blue-600 underline visited:text-purple-600 hover:text-blue-800\"",
+            "          target=\"_blank\"",
+            "          rel=\"noreferrer\"",
+            "        >",
+            "          #7757",
+            "        </a>",
+            "      </p>",
+            "      <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>",
+            "      <p>",
+            "        We also use this page to make sure we don't regress on{' '}",
+            "        <a",
+            "          href=\"https://github.com/cedarjs/cedar/issues/317\"",
+            "          className=\"text-blue-600 underline visited:text-purple-600 hover:text-blue-800\"",
+            "          target=\"_blank\"",
+            "          rel=\"noreferrer\"",
+            "        >",
+            "          #317",
+            "        </a>",
+            "      </p>",
+            "      <img src={test} alt=\"Test\" />",
+            "    </>",
+            "  )",
+            "}",
+            "",
+            "export default DoublePage",
+          ].join("\n")
 
           fs.writeFileSync(
             fullPath('web/src/pages/DoublePage/DoublePage'),
@@ -564,48 +599,49 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
         title: 'Update Routes.tsx',
         task: () => {
           const pathRoutes = `${OUTPUT_PATH}/web/src/Routes.tsx`
-          const contentRoutes = fs.readFileSync(pathRoutes).toString()
-          const resultsRoutesAbout = contentRoutes.replace(
-            /name="about"/,
-            `name="about" prerender`,
-          )
-          const resultsRoutesHome = resultsRoutesAbout.replace(
-            /name="home"/,
-            `name="home" prerender`,
-          )
-          const resultsRoutesBlogPost = resultsRoutesHome.replace(
-            /name="blogPost"/,
-            `name="blogPost" prerender`,
-          )
-          const resultsRoutesNotFound = resultsRoutesBlogPost.replace(
-            /page={NotFoundPage}/,
-            `page={NotFoundPage} prerender`,
-          )
-          const resultsRoutesWaterfall = resultsRoutesNotFound.replace(
-            /page={WaterfallPage}/,
-            `page={WaterfallPage} prerender`,
-          )
-          const resultsRoutesDouble = resultsRoutesWaterfall.replace(
-            'name="double"',
-            'name="double" prerender',
-          )
-          const resultsRoutesNewContact = resultsRoutesDouble.replace(
-            'name="newContact"',
-            'name="newContact" prerender',
-          )
-          fs.writeFileSync(pathRoutes, resultsRoutesNewContact)
+          if (fs.existsSync(pathRoutes)) {
+            const contentRoutes = fs.readFileSync(pathRoutes).toString()
+            const resultsRoutesAbout = contentRoutes.replace(
+              /name="about"/,
+              'name="about" prerender',
+            )
+            const resultsRoutesHome = resultsRoutesAbout.replace(
+              /name="home"/,
+              'name="home" prerender',
+            )
+            const resultsRoutesBlogPost = resultsRoutesHome.replace(
+              /name="blogPost"/,
+              'name="blogPost" prerender',
+            )
+            const resultsRoutesNotFound = resultsRoutesBlogPost.replace(
+              /page={NotFoundPage}/,
+              'page={NotFoundPage} prerender',
+            )
+            const resultsRoutesWaterfall = resultsRoutesNotFound.replace(
+              /page={WaterfallPage}/,
+              'page={WaterfallPage} prerender',
+            )
+            const resultsRoutesDouble = resultsRoutesWaterfall.replace(
+              'name="double"',
+              'name="double" prerender',
+            )
+            const resultsRoutesNewContact = resultsRoutesDouble.replace(
+              'name="newContact"',
+              'name="newContact" prerender',
+            )
+            fs.writeFileSync(pathRoutes, resultsRoutesNewContact)
+          }
 
-          const blogPostRouteHooks = `import { db } from '$api/src/lib/db.js'
-
-            export async function routeParameters() {
-              return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
-            }`
-          const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
-          fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
-
-          const waterfallRouteHooks = `export async function routeParameters() {
-              return [{ id: 2 }]
-            }`
+                              const blogPostRouteHooks = [
+                                "import { db } from '$api/src/lib/db.js'",
+                                "",
+                                "export async function routeParameters() {",
+                                "  return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))",
+                                "}",
+                              ].join("\n")
+                              const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
+                              fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
+          const waterfallRouteHooks = 'export async function routeParameters() { return [{ id: 2 }] }'
           const waterfallRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
           fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
         },
@@ -626,8 +662,8 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
           addModel(post)
           addModel(user)
 
-          return execa(
-            `yarn cedar prisma migrate dev --name create_post_user`,
+          return exec(
+            'yarn cedar prisma migrate dev --name create_post_user',
             [],
             getExecaOptions(outputPath),
           )
@@ -644,7 +680,7 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
             fullPath('api/src/services/posts/posts.scenarios'),
           )
 
-          await execa(
+          await exec(
             `yarn ${getCfwBin(outputPath)} project:copy`,
             [],
             getExecaOptions(outputPath),
@@ -667,8 +703,8 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
 
           addModel(contact)
 
-          await execa(
-            `yarn cedar prisma migrate dev --name create_contact`,
+          await exec(
+            'yarn cedar prisma migrate dev --name create_contact',
             [],
             getExecaOptions(outputPath),
           )
@@ -686,36 +722,38 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
             'db',
             'migrations',
           )
-          // Migration folders are folders which start with 14 digits because they have a yyyymmddhhmmss
-          const migrationFolders = fs
-            .readdirSync(migrationsFolderPath)
-            .filter((name) => {
-              return (
-                name.match(/\d{14}.+/) &&
-                fs
-                  .lstatSync(path.join(migrationsFolderPath, name))
-                  .isDirectory()
+          if (fs.existsSync(migrationsFolderPath)) {
+            // Migration folders are folders which start with 14 digits because they have a yyyymmddhhmmss
+            const migrationFolders = fs
+              .readdirSync(migrationsFolderPath)
+              .filter((name) => {
+                return (
+                  name.match(/\d{14}.+/) &&
+                  fs
+                    .lstatSync(path.join(migrationsFolderPath, name))
+                    .isDirectory()
+                )
+              })
+              .sort()
+            const datetime = new Date('2022-01-01T12:00:00.000Z')
+            migrationFolders.forEach((name) => {
+              const datetimeInCorrectFormat =
+                datetime.getFullYear() +
+                ('0' + (datetime.getMonth() + 1)).slice(-2) +
+                ('0' + datetime.getDate()).slice(-2) +
+                ('0' + datetime.getHours()).slice(-2) +
+                ('0' + datetime.getMinutes()).slice(-2) +
+                ('0' + datetime.getSeconds()).slice(-2)
+              fs.renameSync(
+                path.join(migrationsFolderPath, name),
+                path.join(
+                  migrationsFolderPath,
+                  `${datetimeInCorrectFormat}${name.substring(14)}`,
+                ),
               )
+              datetime.setDate(datetime.getDate() + 1)
             })
-            .sort()
-          const datetime = new Date('2022-01-01T12:00:00.000Z')
-          migrationFolders.forEach((name) => {
-            const datetimeInCorrectFormat =
-              datetime.getFullYear() +
-              ('0' + (datetime.getMonth() + 1)).slice(-2) +
-              ('0' + datetime.getDate()).slice(-2) +
-              ('0' + datetime.getHours()).slice(-2) +
-              ('0' + datetime.getMinutes()).slice(-2) +
-              ('0' + datetime.getSeconds()).slice(-2)
-            fs.renameSync(
-              path.join(migrationsFolderPath, name),
-              path.join(
-                migrationsFolderPath,
-                `${datetimeInCorrectFormat}${name.substring(14)}`,
-              ),
-            )
-            datetime.setDate(datetime.getDate() + 1)
-          })
+          }
         },
       },
       {
@@ -745,16 +783,18 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
             fullPath('api/src/services/users/users.scenarios'),
           )
 
-          const test = `import { user } from './users.js'
-            import type { StandardScenario } from './users.scenarios.js'
-
-            describe('users', () => {
-              scenario('returns a single user', async (scenario: StandardScenario) => {
-                const result = await user({ id: scenario.user.one.id })
-
-                expect(result).toEqual(scenario.user.one)
-              })
-            })`.replaceAll(/ {12}/g, '')
+          const test = [
+            "import { user } from './users.js'",
+            "import type { StandardScenario } from './users.scenarios.js'",
+            "",
+            "describe('users', () => {",
+            "  scenario('returns a single user', async (scenario: StandardScenario) => {",
+            "    const result = await user({ id: scenario.user.one.id })",
+            "",
+            "    expect(result).toEqual(scenario.user.one)",
+            "  })",
+            "})",
+          ].join("\n")
 
           fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
 
@@ -806,7 +846,10 @@ export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
  * if we choose to move them later
  * @param {string} outputPath
  */
-export async function streamingTasks(outputPath, { verbose }) {
+export async function streamingTasks(
+  outputPath: string,
+  { verbose }: { verbose: boolean },
+) {
   OUTPUT_PATH = outputPath
 
   const tasks = [
@@ -843,7 +886,10 @@ export async function streamingTasks(outputPath, { verbose }) {
  * Tasks to add GraphQL Fragments support to the test-project, and some queries
  * to test fragments
  */
-export async function fragmentsTasks(outputPath, { verbose }) {
+export async function fragmentsTasks(
+  outputPath: string,
+  { verbose }: { verbose: boolean },
+) {
   OUTPUT_PATH = outputPath
 
   const tasks = [

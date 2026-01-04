@@ -304,7 +304,7 @@ async function runCommand() {
 
   try {
     await globalTasks().run()
-  } catch (err) {
+  } catch (err: any) {
     console.error(err)
     process.exit(1)
   }

@@ -1,3 +1,4 @@
+// @ts-nocheck
 const query = `
   query FindWaterfallBlogPostQuery($id: Int!) {
     waterfallBlogPost: post(id: $id) {

@@ -1,5 +1,7 @@
 /* eslint-env node, es2021*/
 
+import { fileURLToPath } from 'node:url'
+
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -12,6 +14,9 @@ import {
   exec,
   getCfwBin,
 } from './util.mjs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 function getExecaOptions(cwd: string): ExecaOptions {
   return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
@@ -64,13 +69,13 @@ function createBuilder(cmd: string, dir = '') {
   const execaOptions = getExecaOptions(path.join(OUTPUT_PATH, dir))
 
   return function (positionalArguments?: string | string[]) {
-    const subprocess = exec(
-      cmd,
-      Array.isArray(positionalArguments)
-        ? positionalArguments
-        : [positionalArguments],
-      execaOptions,
-    )
+    const args = Array.isArray(positionalArguments)
+      ? positionalArguments
+      : positionalArguments
+        ? [positionalArguments]
+        : []
+
+    const subprocess = exec(cmd, args, execaOptions)
 
     return subprocess
   }

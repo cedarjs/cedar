@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { API, FileInfo } from 'jscodeshift'
 
 const seedFragmentData = `try {

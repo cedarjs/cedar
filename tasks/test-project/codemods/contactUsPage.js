@@ -1,3 +1,4 @@
+// @ts-nocheck
 const body = `
 <Toaster toastOptions={{ className: 'rw-toast', duration: 6000 }} />
 <Form onSubmit={onSubmit} formMethods={formMethods} config={{ mode: 'onBlur' }} error={error}>
