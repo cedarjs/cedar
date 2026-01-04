@@ -26,7 +26,6 @@ jobs:
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
-          YARN_ENABLE_HARDENED_MODE: 0
 
       - name: Run `cedar info`
         run: yarn cedar info
