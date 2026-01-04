@@ -6,9 +6,9 @@
     "web"
   ],
   "devDependencies": {
-    "@cedarjs/core": "2.0.2",
-    "@cedarjs/project-config": "2.0.2",
-    "@cedarjs/testing": "2.0.2",
+    "@cedarjs/core": "2.3.0",
+    "@cedarjs/project-config": "2.3.0",
+    "@cedarjs/testing": "2.3.0",
     "vitest": "3.2.4",
     "prettier-plugin-tailwindcss": "^0.5.12"
   },
