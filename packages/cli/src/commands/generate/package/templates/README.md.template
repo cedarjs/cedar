@@ -11,5 +11,5 @@ into your code:
 ```
 
 ```javascript
-import { ${camelName} } from '${packageName}';
+import { ${camelName} } from '${packageName}'
 ```
