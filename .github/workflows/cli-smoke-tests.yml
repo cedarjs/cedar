@@ -40,15 +40,6 @@ jobs:
         run: yarn cedar lint ./api/src --fix
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
-      # - name: Run `cedar build`
-      #   run: yarn cedar build
-      #   working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-
-      # TODO: Remove this and favor `yarn cedar build` when it's working
-      - name: Run `yarn build`
-        run: yarn build
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/packages/validators
-
       - name: Run `cedar test api`
         run: yarn cedar test api --no-watch
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
