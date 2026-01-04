@@ -1,17 +1,21 @@
 /* eslint-env node, es6*/
-const fs = require('node:fs')
-const path = require('path')
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const execa = require('execa')
-const Listr = require('listr2').Listr
+import execa from 'execa'
+import { Listr } from 'listr2'
 
-const {
+import {
   getExecaOptions,
   applyCodemod,
   updatePkgJsonScripts,
   exec,
   getCfwBin,
-} = require('./util')
+} from './util.mjs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // This variable gets used in other functions
 // and is set when webTasks or apiTasks are called
@@ -30,10 +34,14 @@ function fullPath(name, { addExtension } = { addExtension: true }) {
 }
 
 const createBuilder = (cmd) => {
-  return async function createItem(positionals) {
+  return async function createItem(positionals?: string | string[]) {
     await execa(
       cmd,
-      Array.isArray(positionals) ? positionals : [positionals],
+      positionals
+        ? Array.isArray(positionals)
+          ? positionals
+          : [positionals]
+        : [],
       getExecaOptions(OUTPUT_PATH),
     )
   }
@@ -41,7 +49,7 @@ const createBuilder = (cmd) => {
 
 const createPage = createBuilder('yarn cedar g page')
 
-async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
+export async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   OUTPUT_PATH = outputPath
 
   const createPages = async () => {
@@ -160,9 +168,9 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
   }
 
   const createLayout = async () => {
-    const createLayout = createBuilder('yarn cedar g layout')
+    const createLayoutBuilder = createBuilder('yarn cedar g layout')
 
-    await createLayout('blog')
+    await createLayoutBuilder('blog')
 
     return applyCodemod(
       'blogLayout.js',
@@ -332,20 +340,20 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
     ],
     {
       exitOnError: true,
-      renderer: verbose && 'verbose',
+            renderer: verbose ? 'verbose' : 'default',
     },
   )
 }
 
-async function addModel(schema) {
-  const path = `${OUTPUT_PATH}/api/db/schema.prisma`
+export async function addModel(schema) {
+  const prismaPath = `${OUTPUT_PATH}/api/db/schema.prisma`
 
-  const current = fs.readFileSync(path)
+  const current = fs.readFileSync(prismaPath)
 
-  fs.writeFileSync(path, `${current}\n\n${schema}`)
+  fs.writeFileSync(prismaPath, `${current}\n\n${schema}`)
 }
 
-async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
+export async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
   OUTPUT_PATH = outputPath
 
   const addDbAuth = async () => {
@@ -417,7 +425,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     const pathPostsSdl = `${OUTPUT_PATH}/api/src/graphql/posts.sdl.ts`
     const contentPostsSdl = fs.readFileSync(pathPostsSdl, 'utf-8')
     const resultsPostsSdl = contentPostsSdl.replace(
-      /posts: \[Post!\]! @requireAuth([^}]*)@requireAuth/,
+      /posts: [Post!]! @requireAuth([^}]*)@requireAuth/,
       `posts: [Post!]! @skipAuth
       post(id: Int!): Post @skipAuth`,
     ) // make posts accessible to all
@@ -457,7 +465,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
       /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
     )[0]
     const fullNameFields = usernameFields
-      .replace(/\s*ref=\{usernameRef}/, '')
+      .replace(/\s*ref={usernameRef}/, '')
       .replaceAll('username', 'full-name')
       .replaceAll('Username', 'Full Name')
 
@@ -497,8 +505,8 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
         // keep it outside of BlogLayout
         title: 'Creating double rendering test page',
         task: async () => {
-          const createPage = createBuilder('yarn cedar g page')
-          await createPage('double')
+          const createPageBuilder = createBuilder('yarn cedar g page')
+          await createPageBuilder('double')
 
           const doublePageContent = `import { Metadata } from '@cedarjs/web'
 
@@ -613,7 +621,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
         title: 'Adding post model to prisma',
         task: async () => {
           // Need both here since they have a relation
-          const { post, user } = await import('./codemods/models.js')
+          const { post, user } = await import('./codemods/models.mjs')
 
           addModel(post)
           addModel(user)
@@ -655,7 +663,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
       {
         title: 'Adding contact model to prisma',
         task: async () => {
-          const { contact } = await import('./codemods/models.js')
+          const { contact } = await import('./codemods/models.mjs')
 
           addModel(contact)
 
@@ -787,8 +795,8 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     ],
     {
       exitOnError: true,
-      renderer: verbose && 'verbose',
-      renderOptions: { collapseSubtasks: false },
+            renderer: verbose ? 'verbose' : 'default',
+      rendererOptions: { collapseSubtasks: false },
     },
   )
 }
@@ -798,7 +806,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
  * if we choose to move them later
  * @param {string} outputPath
  */
-async function streamingTasks(outputPath, { verbose }) {
+export async function streamingTasks(outputPath, { verbose }) {
   OUTPUT_PATH = outputPath
 
   const tasks = [
@@ -826,8 +834,8 @@ async function streamingTasks(outputPath, { verbose }) {
 
   return new Listr(tasks, {
     exitOnError: true,
-    renderer: verbose && 'verbose',
-    renderOptions: { collapseSubtasks: false },
+          renderer: verbose ? 'verbose' : 'default',
+    rendererOptions: { collapseSubtasks: false },
   })
 }
 
@@ -835,7 +843,7 @@ async function streamingTasks(outputPath, { verbose }) {
  * Tasks to add GraphQL Fragments support to the test-project, and some queries
  * to test fragments
  */
-async function fragmentsTasks(outputPath, { verbose }) {
+export async function fragmentsTasks(outputPath, { verbose }) {
   OUTPUT_PATH = outputPath
 
   const tasks = [
@@ -852,10 +860,10 @@ async function fragmentsTasks(outputPath, { verbose }) {
       title: 'Adding produce and stall models to prisma',
       task: async () => {
         // Need both here since they have a relation
-        const models = await import('./codemods/models.js')
+        const models = await import('./codemods/models.mjs')
 
-        addModel((models.default || models).produce)
-        addModel((models.default || models).stall)
+        addModel(models.produce)
+        addModel(models.stall)
 
         return exec(
           'yarn cedar prisma migrate dev --name create_produce_stall',
@@ -945,14 +953,7 @@ async function fragmentsTasks(outputPath, { verbose }) {
 
   return new Listr(tasks, {
     exitOnError: true,
-    renderer: verbose && 'verbose',
-    renderOptions: { collapseSubtasks: false },
+          renderer: verbose ? 'verbose' : 'default',
+    rendererOptions: { collapseSubtasks: false },
   })
-}
-
-module.exports = {
-  apiTasks,
-  webTasks,
-  streamingTasks,
-  fragmentsTasks,
 }

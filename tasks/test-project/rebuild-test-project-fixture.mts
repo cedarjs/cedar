@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
 import { hideBin } from 'yargs/helpers'
@@ -12,19 +13,17 @@ import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
-} from './frameworkLinking'
-import { webTasks, apiTasks } from './tui-tasks'
-import { isAwaitable, isTuiError } from './typing'
-import type { TuiTaskDef } from './typing'
+} from './frameworkLinking.mjs'
+import { webTasks, apiTasks } from './tui-tasks.mjs'
+import { isAwaitable, isTuiError } from './typing.mjs'
+import type { TuiTaskDef } from './typing.mjs'
 import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   ExecaError,
   exec,
   getCfwBin,
-} from './util'
-
-const ansis = require('ansis')
+} from './util.mjs'
 
 function recommendedNodeVersion() {
   const templatePackageJsonPath = path.join(
@@ -111,7 +110,7 @@ if (!startStep) {
 const tui = new RedwoodTUI()
 
 function getExecaOptions(cwd: string) {
-  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
+  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' as const }
 }
 
 function beginStep(step: string) {
@@ -184,7 +183,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
   }
 
   if (isAwaitable(promise)) {
-    const result = await promise.catch((e) => {
+    const result = await (promise as Promise<any>).catch((e: any) => {
       // This code handles errors from asynchronous tasks
 
       tui.stopReactive(true)
@@ -345,11 +344,12 @@ async function runCommand() {
     content: 'yarn install',
     task: async () => {
       // TODO: See if this is needed now with tarsync
-      await exec('yarn install', getExecaOptions(OUTPUT_PROJECT_PATH))
+      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
       return exec(
         `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
+        [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
