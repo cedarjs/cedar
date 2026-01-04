@@ -1,6 +1,6 @@
 {
   "name": "create-cedar-rsc-app",
-  "version": "2.0.2",
+  "version": "2.3.0",
   "description": "Quickstart for a Cedar React Server Components App",
   "repository": {
     "type": "git",
