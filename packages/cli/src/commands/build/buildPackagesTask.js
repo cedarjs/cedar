@@ -12,7 +12,7 @@ import { getPaths } from '../../lib/index.js'
 export async function buildPackagesTask(nonApiWebWorkspaces) {
   const cedarPaths = getPaths()
 
-  // fs.globSync requires forward slashes as path separators in patterns,
+  // fs.promises.glob requires forward slashes as path separators in patterns,
   // even on Windows.
   const globPattern = path.join(cedarPaths.packages, '*').replaceAll('\\', '/')
 
