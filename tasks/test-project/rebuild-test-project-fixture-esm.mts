@@ -1,7 +1,9 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
+import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
 import { hideBin } from 'yargs/helpers'
@@ -12,19 +14,21 @@ import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
-} from './frameworkLinking.js'
-import { webTasks, apiTasks } from './tui-tasks.js'
-import { isAwaitable, isTuiError } from './typing.js'
-import type { TuiTaskDef } from './typing.js'
+} from './frameworkLinking.mjs'
+import { webTasks, apiTasks } from './tui-tasks.mjs'
+import { isAwaitable, isTuiError } from './typing.mjs'
+import type { TuiTaskDef } from './typing.mjs'
 import {
-  getExecaOptions as utilGetExecaOptions,
+  getExecaOptions,
   updatePkgJsonScripts,
+  setVerbose,
   ExecaError,
   exec,
   getCfwBin,
-} from './util.js'
+} from './util.mjs'
 
-const ansis = require('ansis')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 function recommendedNodeVersion() {
   const templatePackageJsonPath = path.join(
@@ -80,6 +84,8 @@ const args = yargs(hideBin(process.argv))
 
 const { verbose, resume, resumePath, resumeStep } = args
 
+setVerbose(verbose)
+
 const RW_FRAMEWORK_PATH = path.join(__dirname, '../../')
 const OUTPUT_PROJECT_PATH = resumePath
   ? /* path.resolve(String(resumePath)) */ resumePath
@@ -109,10 +115,6 @@ if (!startStep) {
 }
 
 const tui = new RedwoodTUI()
-
-function getExecaOptions(cwd: string) {
-  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
-}
 
 function beginStep(step: string) {
   fs.mkdirSync(OUTPUT_PROJECT_PATH, { recursive: true })
@@ -160,7 +162,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
 
   try {
     promise = task()
-  } catch (e) {
+  } catch (e: unknown) {
     // This code handles errors from synchronous tasks
 
     tui.stopReactive(true)
@@ -184,7 +186,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
   }
 
   if (isAwaitable(promise)) {
-    const result = await promise.catch((e) => {
+    const result = await promise.catch((e: any) => {
       // This code handles errors from asynchronous tasks
 
       tui.stopReactive(true)
@@ -201,7 +203,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
         )
       }
 
-      process.exit(e.exitCode)
+      process.exit(e.exitCode ?? 1)
     })
 
     if (Array.isArray(result)) {
@@ -337,7 +339,7 @@ async function runCommand() {
       return addFrameworkDepsToProject(
         RW_FRAMEWORK_PATH,
         OUTPUT_PROJECT_PATH,
-        'pipe', // TODO: Remove this when everything is using @rwjs/tui
+        'pipe',
       )
     },
   })
@@ -348,11 +350,13 @@ async function runCommand() {
     content: 'yarn install',
     task: async () => {
       // TODO: See if this is needed now with tarsync
-      await exec('yarn install', getExecaOptions(OUTPUT_PROJECT_PATH))
+      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
+      const CFW_BIN = getCfwBin(OUTPUT_PROJECT_PATH)
       return exec(
-        `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
+        `yarn ${CFW_BIN} project:tarsync`,
+        [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
@@ -401,15 +405,15 @@ async function runCommand() {
     step: 6,
     title: '[link] Add cfw project:copy postinstall',
     task: () => {
+      const CFW_BIN = getCfwBin(OUTPUT_PROJECT_PATH)
       return updatePkgJsonScripts({
         projectPath: OUTPUT_PROJECT_PATH,
         scripts: {
-          postinstall: `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:copy`,
+          postinstall: `yarn ${CFW_BIN} project:copy`,
         },
       })
     },
   })
-
   await tuiTask({
     step: 7,
     title: 'Apply web codemods',

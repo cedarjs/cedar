@@ -4,7 +4,7 @@ import path from 'node:path'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { fragmentsTasks } from './tasks.js'
+import { fragmentsTasks } from './tasks.mjs'
 
 const args = yargs(hideBin(process.argv))
   .usage('Usage: $0 <project directory>')
