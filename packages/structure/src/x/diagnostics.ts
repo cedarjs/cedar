@@ -1,5 +1,7 @@
 import lc from 'line-column'
-import { groupBy, mapValues, uniqBy } from 'lodash'
+import groupBy from 'lodash/groupBy.js'
+import mapValues from 'lodash/mapValues.js'
+import uniqBy from 'lodash/uniqBy.js'
 import * as tsm from 'ts-morph'
 
 import type { Location } from './Location'
