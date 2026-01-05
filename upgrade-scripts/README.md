@@ -55,6 +55,6 @@ To specify a specific version, use a comment directive at the top of the file:
 ```typescript
 // @dependency: lodash@4.17.21
 // @dependency: @cedarjs/project-config@3.0.0
-import _ from 'lodash'
+import memoize from 'lodash/memoize.js'
 import { getConfig } from '@cedarjs/project-config'
 ```
