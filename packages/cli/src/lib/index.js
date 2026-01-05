@@ -9,7 +9,8 @@ import { paramCase } from 'change-case'
 import decamelize from 'decamelize'
 import execa from 'execa'
 import { Listr } from 'listr2'
-import lodash from 'lodash'
+import memoize from 'lodash/memoize.js'
+import template from 'lodash/template.js'
 import pascalcase from 'pascalcase'
 import { format } from 'prettier'
 
@@ -25,8 +26,6 @@ import c from './colors.js'
 import { addFileToRollback } from './rollback.js'
 
 export { findUp }
-
-const { memoize, template } = lodash
 
 /**
  * Returns variants of the passed `name` for usage in templates. If the given
