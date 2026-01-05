@@ -19,11 +19,13 @@ vi.mock('node:fs', async (importOriginal) => {
         if (!filePath) {
           return 'File content'
         }
+
         const pathStr = filePath.toString()
         if (pathStr.endsWith('package.json')) {
           // Root package.json with workspaces by default
           return '{ "workspaces": ["api", "web", "packages/*"] }'
         }
+
         return 'File content'
       }),
       existsSync: vi.fn(() => {
@@ -102,13 +104,23 @@ vi.mock('../watchPackagesTask.js', () => ({
 
 import type FS from 'node:fs'
 
-import concurrently from 'concurrently'
-import { find } from 'lodash'
+import concurrently, { type Command } from 'concurrently'
 import { vi, describe, afterEach, it, expect } from 'vitest'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
 
 import { handler } from '../devHandler.js'
+
+function isPackagesCommand(
+  command: string | Command | undefined | Partial<Command>,
+): command is Command {
+  return (
+    typeof command === 'object' &&
+    command !== null &&
+    'name' in command &&
+    command.name === 'packages'
+  )
+}
 
 describe('yarn cedar dev - package watching', () => {
   afterEach(() => {
@@ -119,11 +131,14 @@ describe('yarn cedar dev - package watching', () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' }) as any
+    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
 
-    expect(packagesCommand).toBeDefined()
-    expect(packagesCommand?.name).toBe('packages')
-    expect(packagesCommand?.prefixColor).toBe('yellow')
+    if (!packagesCommand) {
+      throw new Error('Packages command not found')
+    }
+
+    expect(packagesCommand.name).toBe('packages')
+    expect(packagesCommand.prefixColor).toBe('yellow')
   })
 
   // NOTE: Negative test cases (when packages should NOT run) are difficult to test
@@ -135,7 +150,10 @@ describe('yarn cedar dev - package watching', () => {
     await handler({ workspace: ['api', 'my-package'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
+    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
+    if (!packagesCommand) {
+      throw new Error('Packages command not found')
+    }
     expect(packagesCommand).toBeDefined()
   })
 
@@ -145,7 +163,10 @@ describe('yarn cedar dev - package watching', () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
+    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
+    if (!packagesCommand) {
+      throw new Error('Packages command not found')
+    }
     expect(packagesCommand).toBeDefined()
   })
 
@@ -153,38 +174,51 @@ describe('yarn cedar dev - package watching', () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' }) as any
+    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
 
-    expect(packagesCommand).toBeDefined()
-    expect(packagesCommand?.name).toBe('packages')
-    expect(packagesCommand?.prefixColor).toBe('yellow')
+    if (!packagesCommand) {
+      throw new Error('Packages command not found')
+    }
+
+    expect(packagesCommand.name).toBe('packages')
+    expect(packagesCommand.prefixColor).toBe('yellow')
   })
 
   it('packages job uses yellow prefix color', async () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' }) as any
+    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
 
-    expect(packagesCommand?.prefixColor).toBe('yellow')
+    if (!packagesCommand) {
+      throw new Error('Packages command not found')
+    }
+
+    expect(packagesCommand.prefixColor).toBe('yellow')
   })
 
   it('packages command is a string command', async () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' }) as any
+    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
 
-    expect(packagesCommand).toBeDefined()
-    expect(typeof packagesCommand?.command).toBe('string')
+    if (!packagesCommand) {
+      throw new Error('Packages command not found')
+    }
+
+    expect(typeof packagesCommand.command).toBe('string')
   })
 
   it('registers packages job for default sides', async () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
+    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
 
+    if (!packagesCommand) {
+      throw new Error('Packages command not found')
+    }
     expect(packagesCommand).toBeDefined()
   })
 
@@ -192,8 +226,11 @@ describe('yarn cedar dev - package watching', () => {
     await handler({ workspace: ['@org/pkg-one', 'pkg-two'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
+    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
 
+    if (!packagesCommand) {
+      throw new Error('Packages command not found')
+    }
     expect(packagesCommand).toBeDefined()
   })
 })
