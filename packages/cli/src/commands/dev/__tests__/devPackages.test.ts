@@ -1,4 +1,4 @@
-import '../../lib/mockTelemetry'
+import '../../../lib/mockTelemetry'
 
 vi.mock('concurrently', () => ({
   __esModule: true,
@@ -44,24 +44,25 @@ vi.mock('@cedarjs/project-config', async (importActual) => {
   const actualProjectConfig = await importActual<typeof ProjectConfig>()
 
   return {
+    ...actualProjectConfig,
     getConfig: vi.fn(() => actualProjectConfig.DEFAULT_CONFIG),
     getConfigPath: vi.fn(() => '/mocked/project/redwood.toml'),
   }
 })
 
-vi.mock('../../lib/generatePrismaClient', () => {
+vi.mock('../../../lib/generatePrismaClient', () => {
   return {
     generatePrismaClient: vi.fn().mockResolvedValue(true),
   }
 })
 
-vi.mock('../../lib/ports', () => {
+vi.mock('../../../lib/ports', () => {
   return {
     getFreePort: (port: number) => port,
   }
 })
 
-vi.mock('../../lib/index.js', () => ({
+vi.mock('../../../lib/index.js', () => ({
   getPaths: vi.fn(() => ({
     base: '/mocked/project',
     api: {
@@ -80,7 +81,7 @@ vi.mock('../../lib/index.js', () => ({
   })),
 }))
 
-vi.mock('../../lib/project.js', () => ({
+vi.mock('../../../lib/project.js', () => ({
   serverFileExists: vi.fn(() => false),
 }))
 
@@ -88,8 +89,15 @@ vi.mock('../build/buildPackagesTask.js', () => ({
   buildPackagesTask: vi.fn().mockResolvedValue(undefined),
 }))
 
-vi.mock('../dev/watchPackagesTask.js', () => ({
+vi.mock('../watchPackagesTask.js', () => ({
   watchPackagesTask: vi.fn().mockResolvedValue(undefined),
+  getWatchPackageCommands: vi.fn().mockResolvedValue([
+    {
+      name: 'packages',
+      command: 'yarn watch',
+      prefixColor: 'yellow',
+    },
+  ]),
 }))
 
 import type FS from 'node:fs'
@@ -111,7 +119,7 @@ describe('yarn cedar dev - package watching', () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
+    const packagesCommand = find(concurrentlyArgs, { name: 'packages' }) as any
 
     expect(packagesCommand).toBeDefined()
     expect(packagesCommand?.name).toBe('packages')
@@ -145,7 +153,7 @@ describe('yarn cedar dev - package watching', () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
+    const packagesCommand = find(concurrentlyArgs, { name: 'packages' }) as any
 
     expect(packagesCommand).toBeDefined()
     expect(packagesCommand?.name).toBe('packages')
@@ -156,19 +164,19 @@ describe('yarn cedar dev - package watching', () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
+    const packagesCommand = find(concurrentlyArgs, { name: 'packages' }) as any
 
     expect(packagesCommand?.prefixColor).toBe('yellow')
   })
 
-  it('packages command is an async function', async () => {
+  it('packages command is a string command', async () => {
     await handler({ workspace: ['api', 'web'] })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = find(concurrentlyArgs, { name: 'packages' })
+    const packagesCommand = find(concurrentlyArgs, { name: 'packages' }) as any
 
     expect(packagesCommand).toBeDefined()
-    expect(typeof packagesCommand?.command).toBe('function')
+    expect(typeof packagesCommand?.command).toBe('string')
   })
 
   it('registers packages job for default sides', async () => {

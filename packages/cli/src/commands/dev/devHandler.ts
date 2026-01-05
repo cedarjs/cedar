@@ -22,7 +22,7 @@ import { getFreePort } from '../../lib/ports.js'
 // @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../../lib/project.js'
 
-import { watchPackagesTask } from './watchPackagesTask.js'
+import { getWatchPackageCommands } from './watchPackagesTask.js'
 
 const defaultApiDebugPort = 18911
 
@@ -218,15 +218,14 @@ export const handler = async ({
     ? `cedarjs-api-server-watch`
     : `rw-api-server-watch`
 
-  const jobs: Record<
-    string,
-    Partial<Command> & {
-      name: string
-      command: string
-      runWhen: () => boolean
-    }
-  > = {
-    api: {
+  const jobs: (Partial<Command> & {
+    name: string
+    command: string
+    runWhen?: () => boolean
+  })[] = []
+
+  if (workspace.includes('api')) {
+    jobs.push({
       name: 'api',
       command: [
         'yarn nodemon',
@@ -245,49 +244,37 @@ export const handler = async ({
       },
       prefixColor: 'cyan',
       runWhen: () => fs.existsSync(cedarPaths.api.src),
-    },
-    web: {
+    })
+  }
+
+  if (workspace.includes('web')) {
+    jobs.push({
       name: 'web',
       command: webCommand,
       prefixColor: 'blue',
       cwd: cedarPaths.web.base,
       runWhen: () => fs.existsSync(cedarPaths.web.src),
-    },
-    gen: {
+    })
+  }
+
+  if (generate) {
+    jobs.push({
       name: 'gen',
       command: 'yarn rw-gen-watch',
       prefixColor: 'green',
-      runWhen: () => generate,
-    },
-    packages: {
-      name: 'packages',
-      command: async () => {
-        const packagesToWatch =
-          packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
-        await watchPackagesTask(packagesToWatch)
-      },
-      prefixColor: 'yellow',
-      runWhen: () => hasPackageWorkspaces && fs.existsSync(cedarPaths.packages),
-    },
+    })
   }
 
-  const mappedJobs = Object.keys(jobs).map((job) => {
-    // Include the jobs for the workspaces indicated on the command line, plus
-    // the gen job and packages job (if packages exist)
-    if (workspace.includes(job) || job === 'gen' || job === 'packages') {
-      return jobs[job]
-    }
-
-    return {
-      name: '',
-      command: '',
-      runWhen: () => false,
-    }
-  })
+  if (hasPackageWorkspaces && fs.existsSync(cedarPaths.packages)) {
+    const packagesToWatch =
+      packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
+    const pkgCommands = await getWatchPackageCommands(packagesToWatch)
+    jobs.push(...(pkgCommands as any))
+  }
 
   // TODO: Convert jobs to an array and supply cwd command.
   const { result } = concurrently(
-    mappedJobs.filter((job) => job.runWhen()),
+    jobs.filter((job) => !job.runWhen || job.runWhen()) as Command[],
     {
       prefix: '{name} |',
       timestampFormat: 'HH:mm:ss',

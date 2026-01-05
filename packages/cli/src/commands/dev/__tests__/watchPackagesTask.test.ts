@@ -5,6 +5,7 @@ import { vi, afterEach, describe, it, expect, beforeEach } from 'vitest'
 
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../../../lib/exit.js'
 import { watchPackagesTask } from '../watchPackagesTask.js'
 
@@ -18,6 +19,7 @@ vi.mock('node:fs', () => {
           // Return an async iterable
           return (async function* () {
             yield '/mocked/project/packages/foo'
+            return undefined
           })()
         }),
       },
@@ -26,7 +28,7 @@ vi.mock('node:fs', () => {
 })
 
 vi.mock('concurrently', () => ({
-  default: vi.fn(() => ({ result: Promise.resolve() })),
+  default: vi.fn(() => ({ result: Promise.resolve(), commands: [] })),
 }))
 
 vi.mock('../../../lib/index.js', () => {
@@ -50,13 +52,13 @@ vi.mock('../../../lib/exit.js', () => ({
 
 vi.mock('../../../lib/colors.js', () => ({
   default: {
-    warning: (str) => `Warning: ${str}`,
-    error: (str) => `Error: ${str}`,
+    warning: (str: string) => `Warning: ${str}`,
+    error: (str: string) => `Error: ${str}`,
   },
 }))
 
 vi.mock('@cedarjs/project-config', () => ({
-  importStatementPath: (path) => path,
+  importStatementPath: (path: string) => path,
 }))
 
 afterEach(() => {
@@ -77,36 +79,38 @@ describe('watchPackagesTask', () => {
   })
 
   it('expands packages/* to all packages', async () => {
-    vi.mocked(fs).promises.glob.mockReturnValue(
+    vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {
         yield '/mocked/project/packages/foo'
         yield '/mocked/project/packages/bar'
         yield '/mocked/project/packages/baz'
+        return undefined
       })(),
     )
 
     await watchPackagesTask(['packages/*'])
 
-    expect(vi.mocked(fs).promises.glob).toHaveBeenCalledOnce()
-    expect(vi.mocked(fs).promises.glob).toHaveBeenCalledWith(
-      '/mocked/project/packages/*',
-    )
+    expect(fs.promises.glob).toHaveBeenCalledOnce()
+    expect(fs.promises.glob).toHaveBeenCalledWith('/mocked/project/packages/*')
     expect(vi.mocked(concurrently)).toHaveBeenCalledWith(
       [
         {
           command: 'yarn watch',
           name: 'foo',
           cwd: '/mocked/project/packages/foo',
+          prefixColor: 'yellow',
         },
         {
           command: 'yarn watch',
           name: 'bar',
           cwd: '/mocked/project/packages/bar',
+          prefixColor: 'yellow',
         },
         {
           command: 'yarn watch',
           name: 'baz',
           cwd: '/mocked/project/packages/baz',
+          prefixColor: 'yellow',
         },
       ],
       {
@@ -119,18 +123,20 @@ describe('watchPackagesTask', () => {
   it('watches specific package workspaces', async () => {
     await watchPackagesTask(['@my-org/pkg-one', 'pkg-two'])
 
-    expect(vi.mocked(fs).promises.glob).not.toHaveBeenCalled()
+    expect(fs.promises.glob).not.toHaveBeenCalled()
     expect(vi.mocked(concurrently)).toHaveBeenCalledWith(
       [
         {
           command: 'yarn watch',
           name: 'pkg-one',
           cwd: '/mocked/project/packages/pkg-one',
+          prefixColor: 'yellow',
         },
         {
           command: 'yarn watch',
           name: 'pkg-two',
           cwd: '/mocked/project/packages/pkg-two',
+          prefixColor: 'yellow',
         },
       ],
       {
@@ -141,11 +147,12 @@ describe('watchPackagesTask', () => {
   })
 
   it('filters out packages without watch script', async () => {
-    vi.mocked(fs).promises.glob.mockReturnValue(
+    vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {
         yield '/mocked/project/packages/foo'
         yield '/mocked/project/packages/bar'
         yield '/mocked/project/packages/baz'
+        return undefined
       })(),
     )
 
@@ -171,6 +178,7 @@ describe('watchPackagesTask', () => {
           scripts: { watch: 'tsc --watch' },
         })
       }
+      return '{}'
     })
 
     await watchPackagesTask(['packages/*'])
@@ -182,11 +190,13 @@ describe('watchPackagesTask', () => {
           command: 'yarn watch',
           name: 'foo',
           cwd: '/mocked/project/packages/foo',
+          prefixColor: 'yellow',
         },
         {
           command: 'yarn watch',
           name: 'baz',
           cwd: '/mocked/project/packages/baz',
+          prefixColor: 'yellow',
         },
       ],
       {
@@ -203,9 +213,10 @@ describe('watchPackagesTask', () => {
   })
 
   it('returns null when no watchable packages exist', async () => {
-    vi.mocked(fs).promises.glob.mockReturnValue(
+    vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {
         yield '/mocked/project/packages/foo'
+        return undefined
       })(),
     )
 
@@ -223,9 +234,10 @@ describe('watchPackagesTask', () => {
   })
 
   it('handles empty packages directory', async () => {
-    vi.mocked(fs).promises.glob.mockReturnValue(
+    vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {
-        // Empty - no yields
+        yield* []
+        return undefined
       })(),
     )
 
@@ -236,10 +248,11 @@ describe('watchPackagesTask', () => {
   })
 
   it('handles package.json read errors gracefully', async () => {
-    vi.mocked(fs).promises.glob.mockReturnValue(
+    vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {
         yield '/mocked/project/packages/foo'
         yield '/mocked/project/packages/bar'
+        return undefined
       })(),
     )
 
@@ -257,6 +270,7 @@ describe('watchPackagesTask', () => {
           scripts: { watch: 'tsc --watch' },
         })
       }
+      return '{}'
     })
 
     await watchPackagesTask(['packages/*'])
@@ -268,6 +282,7 @@ describe('watchPackagesTask', () => {
           command: 'yarn watch',
           name: 'foo',
           cwd: '/mocked/project/packages/foo',
+          prefixColor: 'yellow',
         },
       ],
       {
@@ -286,9 +301,10 @@ describe('watchPackagesTask', () => {
   })
 
   it('handles concurrently errors', async () => {
-    vi.mocked(fs).promises.glob.mockReturnValue(
+    vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {
         yield '/mocked/project/packages/foo'
+        return undefined
       })(),
     )
 
@@ -299,9 +315,10 @@ describe('watchPackagesTask', () => {
 
     vi.mocked(concurrently).mockReturnValue({
       result: resultPromise,
+      commands: [],
     })
 
-    const watchPromise = watchPackagesTask(['packages/*'])
+    watchPackagesTask(['packages/*'])
 
     // Wait for the error handling to complete
     await new Promise((resolve) => setTimeout(resolve, 10))
@@ -314,11 +331,12 @@ describe('watchPackagesTask', () => {
   })
 
   it('warns about multiple packages without watch scripts', async () => {
-    vi.mocked(fs).promises.glob.mockReturnValue(
+    vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {
         yield '/mocked/project/packages/foo'
         yield '/mocked/project/packages/bar'
         yield '/mocked/project/packages/baz'
+        return undefined
       })(),
     )
 
@@ -345,9 +363,10 @@ describe('watchPackagesTask', () => {
   })
 
   it('handles packages with no scripts section at all', async () => {
-    vi.mocked(fs).promises.glob.mockReturnValue(
+    vi.mocked(fs.promises.glob).mockReturnValue(
       (async function* () {
         yield '/mocked/project/packages/foo'
+        return undefined
       })(),
     )
 

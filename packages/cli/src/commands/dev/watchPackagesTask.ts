@@ -13,7 +13,16 @@ import { exitWithError } from '../../lib/exit.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
 
-export async function watchPackagesTask(packageWorkspaces: string[]) {
+interface WatchPackageCommand {
+  command: string
+  name: string
+  cwd: string
+  prefixColor?: string
+}
+
+export async function getWatchPackageCommands(
+  packageWorkspaces: string[],
+): Promise<WatchPackageCommand[]> {
   const cedarPaths = getPaths()
   const globPattern = path.join(cedarPaths.packages, '*').replaceAll('\\', '/')
 
@@ -67,23 +76,27 @@ export async function watchPackagesTask(packageWorkspaces: string[]) {
     )
   }
 
+  return watchablePackages.map((workspacePath) => ({
+    command: 'yarn watch',
+    name: workspacePath.split('/').at(-1) || 'package',
+    cwd: workspacePath,
+    prefixColor: 'yellow',
+  }))
+}
+
+export async function watchPackagesTask(packageWorkspaces: string[]) {
+  const commands = await getWatchPackageCommands(packageWorkspaces)
+
   // Return null if no watchable packages found
-  if (watchablePackages.length === 0) {
+  if (commands.length === 0) {
     return null
   }
 
   // Use concurrently to run yarn watch in each package directory
-  const { result } = concurrently(
-    watchablePackages.map((workspacePath) => ({
-      command: 'yarn watch',
-      name: workspacePath.split('/').at(-1),
-      cwd: workspacePath,
-    })),
-    {
-      prefix: '{name} |',
-      timestampFormat: 'HH:mm:ss',
-    },
-  )
+  const { result } = concurrently(commands, {
+    prefix: '{name} |',
+    timestampFormat: 'HH:mm:ss',
+  })
 
   return result.catch((e) => {
     if (e?.message) {
