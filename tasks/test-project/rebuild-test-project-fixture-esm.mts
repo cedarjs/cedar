@@ -13,7 +13,7 @@ import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
-} from './frameworkLinking.js'
+} from './frameworkLinking.mts'
 import { webTasks, apiTasks } from './tui-tasks.mts'
 import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
