@@ -13,7 +13,7 @@ exports[`Single word default files > creates a single word function file > Test 
 
 import { handler } from './foo'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //    https://cedarjs.com/docs/testing#testing-functions
 
 describe('foo function', () => {
