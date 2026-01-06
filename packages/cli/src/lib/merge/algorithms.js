@@ -1,4 +1,4 @@
-import { forOwn } from 'lodash'
+import forOwn from 'lodash/forOwn.js'
 
 export const nodeIs = (type) => (node) => node.type === type
 

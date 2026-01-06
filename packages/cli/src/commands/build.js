@@ -11,7 +11,7 @@ export const description = 'Build for production'
 export const builder = (yargs) => {
   yargs
     .positional('workspace', {
-      default: ['web', 'api', 'packages/*'],
+      default: ['api', 'web', 'packages/*'],
       description:
         'What workspace(s) to build. Valid values are: web, api, packages/*, ' +
         '<package-name>',

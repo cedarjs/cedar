@@ -30,7 +30,7 @@ pre-commit:
         - '**/templates/**/*.tsx'
 
     - name: format staged files
-      run: yarn prettier --check --log-level=silent {staged_files}
+      run: yarn prettier --write --log-level=silent {staged_files}
       glob:
         - '*.{js,mjs,cjs,ts,mts,jsx,tsx,json,yml,md,mdx,css,sh}'
         - Dockerfile|.gitignore|.gitattributes

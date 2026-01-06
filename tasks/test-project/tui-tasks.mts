@@ -1,23 +1,27 @@
-/* eslint-env node, es6*/
-const fs = require('node:fs')
-const path = require('path')
+import fs from 'node:fs'
+import path from 'node:path'
 
-const execa = require('execa')
-const Listr = require('listr2').Listr
+import type { Options as ExecaOptions } from 'execa'
 
-const {
-  getExecaOptions,
-  applyCodemod,
+import type { TuiTaskList } from './typing.mts'
+import {
+  getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   exec,
   getCfwBin,
-} = require('./util')
+} from './util.mts'
+
+function getExecaOptions(cwd: string): ExecaOptions {
+  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' as const }
+}
 
 // This variable gets used in other functions
 // and is set when webTasks or apiTasks are called
-let OUTPUT_PATH
+let OUTPUT_PATH: string
 
-function fullPath(name, { addExtension } = { addExtension: true }) {
+const RW_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
+
+function fullPath(name: string, { addExtension } = { addExtension: true }) {
   if (addExtension) {
     if (name.startsWith('api')) {
       name += '.ts'
@@ -29,29 +33,64 @@ function fullPath(name, { addExtension } = { addExtension: true }) {
   return path.join(OUTPUT_PATH, name)
 }
 
-const createBuilder = (cmd) => {
-  return async function createItem(positionals) {
-    await execa(
-      cmd,
-      Array.isArray(positionals) ? positionals : [positionals],
-      getExecaOptions(OUTPUT_PATH),
-    )
+// TODO: Import from ./util.js when everything is using @rwjs/tui
+async function applyCodemod(codemod: string, target: string) {
+  const args = [
+    '--fail-on-error',
+    '-t',
+    `${path.resolve(import.meta.dirname, 'codemods', codemod)} ${target}`,
+    '--parser',
+    'tsx',
+    '--verbose=2',
+  ]
+
+  args.push()
+
+  const subprocess = exec(
+    'yarn jscodeshift',
+    args,
+    getExecaOptions(path.resolve(import.meta.dirname)),
+  )
+
+  return subprocess
+}
+
+/**
+ * @param cmd The command to run
+ */
+function createBuilder(cmd: string, dir = '') {
+  const execaOptions = getExecaOptions(path.join(OUTPUT_PATH, dir))
+
+  return function (positionalArguments?: string | string[]) {
+    const args = positionalArguments
+      ? Array.isArray(positionalArguments)
+        ? positionalArguments
+        : [positionalArguments]
+      : []
+    const subprocess = exec(cmd, args, execaOptions)
+
+    return subprocess
   }
 }
 
-const createPage = createBuilder('yarn cedar g page')
-
-async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
+export async function webTasks(outputPath: string) {
   OUTPUT_PATH = outputPath
 
+  const execaOptions = getExecaOptions(outputPath)
+
   const createPages = async () => {
-    return new Listr([
+    // Passing 'web' here to test executing 'yarn redwood' in the /web directory
+    // to make sure it works as expected. We do the same for the /api directory
+    // further down in this file.
+    const createPage = createBuilder('yarn cedar g page', 'web')
+
+    const tuiTaskList: TuiTaskList = [
       {
         title: 'Creating home page',
         task: async () => {
           await createPage('home /')
 
-          return applyCodemod(
+          await applyCodemod(
             'homePage.js',
             fullPath('web/src/pages/HomePage/HomePage'),
           )
@@ -62,7 +101,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         task: async () => {
           await createPage('about')
 
-          return applyCodemod(
+          await applyCodemod(
             'aboutPage.js',
             fullPath('web/src/pages/AboutPage/AboutPage'),
           )
@@ -73,7 +112,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         task: async () => {
           await createPage('contactUs /contact')
 
-          return applyCodemod(
+          await applyCodemod(
             'contactUsPage.js',
             fullPath('web/src/pages/ContactUsPage/ContactUsPage'),
           )
@@ -84,9 +123,14 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         task: async () => {
           await createPage('blogPost /blog-post/{id:Int}')
 
-          return applyCodemod(
+          await applyCodemod(
             'blogPostPage.js',
             fullPath('web/src/pages/BlogPostPage/BlogPostPage'),
+          )
+
+          return applyCodemod(
+            'updateBlogPostPageStories.js',
+            fullPath('web/src/pages/BlogPostPage/BlogPostPage.stories'),
           )
         },
       },
@@ -134,7 +178,7 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
         title: 'Creating MDX Storybook stories',
         task: () => {
           const cedarMdxStoryContent = fs.readFileSync(
-            `${path.resolve(__dirname, 'codemods', 'CedarJS.mdx')}`,
+            `${path.resolve(import.meta.dirname, 'codemods', 'CedarJS.mdx')}`,
           )
 
           fs.writeFileSync(
@@ -154,9 +198,16 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
             'waterfallPage.js',
             fullPath('web/src/pages/WaterfallPage/WaterfallPage'),
           )
+
+          await applyCodemod(
+            'updateWaterfallPageStories.js',
+            fullPath('web/src/pages/WaterfallPage/WaterfallPage.stories'),
+          )
         },
       },
-    ])
+    ]
+
+    return tuiTaskList
   }
 
   const createLayout = async () => {
@@ -195,6 +246,13 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
     await applyCodemod(
       'updateAuthorTest.js',
       fullPath('web/src/components/Author/Author.test'),
+    )
+
+    await createComponent('classWithClassField')
+
+    await applyCodemod(
+      'classWithClassField.ts',
+      fullPath('web/src/components/ClassWithClassField/ClassWithClassField'),
     )
   }
 
@@ -265,88 +323,68 @@ async function webTasks(outputPath, { linkWithLatestFwBuild, verbose }) {
     )
   }
 
-  return new Listr(
-    [
-      {
-        title: 'Creating pages',
-        task: () => createPages(),
-      },
-      {
-        title: 'Creating layout',
-        task: () => createLayout(),
-      },
-      {
-        title: 'Creating components',
-        task: () => createComponents(),
-      },
-      {
-        title: 'Creating cells',
-        task: () => createCells(),
-      },
-      {
-        title: 'Updating cell mocks',
-        task: () => updateCellMocks(),
-      },
-      {
-        title: 'Changing routes',
-        task: () => applyCodemod('routes.js', fullPath('web/src/Routes')),
-      },
-
-      // ====== NOTE: rufus needs this workaround for tailwind =======
-      // Setup tailwind in a linked project, due to cfw we install deps manually
-      {
-        title: 'Install tailwind dependencies',
-        // @NOTE: use cfw, because calling the copy function doesn't seem to work here
-        task: () =>
-          execa(
-            'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.5.12',
-            [],
-            getExecaOptions(outputPath),
-          ),
-        enabled: () => linkWithLatestFwBuild,
-      },
-      {
-        title: '[link] Copy local framework files again',
-        // @NOTE: use cfw, because calling the copy function doesn't seem to work here
-        task: () =>
-          execa(
-            `yarn ${getCfwBin(outputPath)} project:copy`,
-            [],
-            getExecaOptions(outputPath),
-          ),
-        enabled: () => linkWithLatestFwBuild,
-      },
-      // =========
-      {
-        title: 'Adding Tailwind',
-        task: () => {
-          return execa(
-            'yarn cedar setup ui tailwindcss',
-            ['--force', linkWithLatestFwBuild && '--no-install'].filter(
-              Boolean,
-            ),
-            getExecaOptions(outputPath),
-          )
-        },
-      },
-    ],
+  const tuiTaskList: TuiTaskList = [
     {
-      exitOnError: true,
-      renderer: verbose && 'verbose',
+      title: 'Creating pages',
+      task: () => createPages(),
     },
-  )
+    {
+      title: 'Creating layout',
+      task: () => createLayout(),
+    },
+    {
+      title: 'Creating components',
+      task: () => createComponents(),
+    },
+    {
+      title: 'Creating cells',
+      task: () => createCells(),
+    },
+    {
+      title: 'Updating cell mocks',
+      task: () => updateCellMocks(),
+    },
+    {
+      title: 'Changing routes',
+      task: () => applyCodemod('routes.js', fullPath('web/src/Routes')),
+    },
+    {
+      title: 'Adding Tailwind',
+      task: async () => {
+        await exec('yarn cedar setup ui tailwindcss', ['--force'], execaOptions)
+      },
+    },
+  ] //,
+  // TODO: Figure out what to do with this. It's from Listr, but TUI doesn't
+  //       have anything like it (yet?)
+  // {
+  //   exitOnError: true,
+  //   renderer: verbose && 'verbose',
+  // }
+
+  return tuiTaskList
 }
 
-async function addModel(schema) {
+async function addModel(schema: string) {
   const path = `${OUTPUT_PATH}/api/db/schema.prisma`
 
-  const current = fs.readFileSync(path)
+  const current = fs.readFileSync(path, 'utf-8')
 
-  fs.writeFileSync(path, `${current}\n\n${schema}`)
+  fs.writeFileSync(path, `${current.trim()}\n\n${schema}\n`)
 }
 
-async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
+interface ApiTasksOptions {
+  linkWithLatestFwBuild: boolean
+  esmProject: boolean
+}
+
+export async function apiTasks(
+  outputPath: string,
+  { linkWithLatestFwBuild, esmProject }: ApiTasksOptions,
+) {
   OUTPUT_PATH = outputPath
+
+  const execaOptions = getExecaOptions(outputPath)
 
   const addDbAuth = async () => {
     // Temporarily disable postinstall script
@@ -357,26 +395,94 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
       },
     })
 
-    const dbAuthSetupPath = path.join(
-      outputPath,
-      'node_modules',
-      '@cedarjs',
-      'auth-dbauth-setup',
+    // We want to use the latest version of the auth-dbauth-{setup,api,web}
+    // packages. But they're not published yet. So let's package them up as
+    // tarballs and install them using that by setting yarn resolutions
+
+    const setupPkg = path.join(
+      RW_FRAMEWORK_PATH,
+      'packages',
+      'auth-providers',
+      'dbAuth',
+      'setup',
+    )
+    const apiPkg = path.join(
+      RW_FRAMEWORK_PATH,
+      'packages',
+      'auth-providers',
+      'dbAuth',
+      'api',
+    )
+    const webPkg = path.join(
+      RW_FRAMEWORK_PATH,
+      'packages',
+      'auth-providers',
+      'dbAuth',
+      'web',
     )
 
-    // At an earlier step we run `yarn cfw project:copy` which gives us
-    // auth-dbauth-setup@3.2.0 currently. We need that version to be a canary
-    // version for auth-dbauth-api and auth-dbauth-web package installations
-    // to work. So we remove the current version and add a canary version
-    // instead.
+    await exec('yarn build:pack', [], getExecaOptions(setupPkg))
+    await exec('yarn build:pack', [], getExecaOptions(apiPkg))
+    await exec('yarn build:pack', [], getExecaOptions(webPkg))
 
-    fs.rmSync(dbAuthSetupPath, { recursive: true, force: true })
+    const setupTgz = path.join(setupPkg, 'cedarjs-auth-dbauth-setup.tgz')
+    const apiTgz = path.join(apiPkg, 'cedarjs-auth-dbauth-api.tgz')
+    const webTgz = path.join(webPkg, 'cedarjs-auth-dbauth-web.tgz')
 
-    await execa(
-      'yarn cedar setup auth dbAuth --force --no-webauthn',
+    const setupTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-setup.tgz')
+    const apiTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-api.tgz')
+    const webTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-web.tgz')
+
+    fs.copyFileSync(setupTgz, setupTgzDest)
+    fs.copyFileSync(apiTgz, apiTgzDest)
+    fs.copyFileSync(webTgz, webTgzDest)
+
+    const projectPackageJsonPath = path.join(outputPath, 'package.json')
+    const projectPackageJson = JSON.parse(
+      fs.readFileSync(projectPackageJsonPath, 'utf-8'),
+    )
+
+    const existingResolutions = projectPackageJson.resolutions
+      ? { ...projectPackageJson.resolutions }
+      : undefined
+
+    projectPackageJson.resolutions ??= {}
+    projectPackageJson.resolutions = {
+      ...projectPackageJson.resolutions,
+      '@cedarjs/auth-dbauth-setup': './cedarjs-auth-dbauth-setup.tgz',
+      '@cedarjs/auth-dbauth-api': './cedarjs-auth-dbauth-api.tgz',
+      '@cedarjs/auth-dbauth-web': './cedarjs-auth-dbauth-web.tgz',
+    }
+
+    fs.writeFileSync(
+      projectPackageJsonPath,
+      JSON.stringify(projectPackageJson, null, 2),
+    )
+
+    // Run `yarn install` to have the resolutions take effect and install the
+    // tarballs we copied over
+    await exec('yarn install', [], execaOptions)
+
+    await exec(
+      'yarn cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
       [],
-      getExecaOptions(outputPath),
+      execaOptions,
     )
+
+    // Restore old resolutions
+    if (existingResolutions) {
+      projectPackageJson.resolutions = existingResolutions
+    }
+
+    fs.writeFileSync(
+      projectPackageJsonPath,
+      JSON.stringify(projectPackageJson, null, 2),
+    )
+
+    // Remove tarballs
+    fs.unlinkSync(setupTgzDest)
+    fs.unlinkSync(apiTgzDest)
+    fs.unlinkSync(webTgzDest)
 
     // Restore postinstall script
     updatePkgJsonScripts({
@@ -387,16 +493,13 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     })
 
     if (linkWithLatestFwBuild) {
-      await execa(
-        `yarn ${getCfwBin(outputPath)} project:copy`,
-        [],
-        getExecaOptions(outputPath),
-      )
+      await exec(`yarn ${getCfwBin(outputPath)} project:copy`, [], execaOptions)
     }
 
-    await execa(
+    await exec(
       'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
       [],
+      execaOptions,
     )
 
     // update directive in contacts.sdl.ts
@@ -408,7 +511,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
         `createContact(input: CreateContactInput!): Contact @skipAuth`,
       )
       .replace(
-        'deleteContact(id: Int!): Contact! @requireAuth',
+        /deleteContact\(id: Int!\): Contact! @requireAuth(?=\s)/,
         'deleteContact(id: Int!): Contact! @requireAuth(roles:["ADMIN"])',
       ) // make deleting contacts admin only
     fs.writeFileSync(pathContactsSdl, resultsContactsSdl)
@@ -455,11 +558,11 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
     const contentSignupPageTs = fs.readFileSync(pathSignupPageTs, 'utf-8')
     const usernameFields = contentSignupPageTs.match(
       /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
-    )[0]
+    )?.[0]
     const fullNameFields = usernameFields
-      .replace(/\s*ref=\{usernameRef}/, '')
-      .replaceAll('username', 'full-name')
-      .replaceAll('Username', 'Full Name')
+      ?.replace(/\s*ref=\{usernameRef}/, '')
+      ?.replaceAll('username', 'full-name')
+      ?.replaceAll('Username', 'Full Name')
 
     const newContentSignupPageTs = contentSignupPageTs
       .replace(
@@ -491,7 +594,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
 
   // add prerender to some routes
   const addPrerender = async () => {
-    return new Listr([
+    const tuiTaskList: TuiTaskList = [
       {
         // We need to do this here, and not where we create the other pages, to
         // keep it outside of BlogLayout
@@ -545,7 +648,7 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
             doublePageContent,
           )
           fs.copyFileSync(
-            fullPath('web/public/favicon.png'),
+            fullPath('web/public/favicon.png', { addExtension: false }),
             fullPath('web/src/pages/DoublePage/test.png', {
               addExtension: false,
             }),
@@ -602,142 +705,146 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
           fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
         },
       },
-    ])
+    ]
+
+    return tuiTaskList
   }
 
   const generateScaffold = createBuilder('yarn cedar g scaffold')
 
-  return new Listr(
-    [
-      {
-        title: 'Adding post model to prisma',
-        task: async () => {
-          // Need both here since they have a relation
-          const { post, user } = await import('./codemods/models.js')
+  const tuiTaskList: TuiTaskList = [
+    {
+      title: 'Adding post and user model to prisma',
+      task: async () => {
+        // Need both here since they have a relation
+        const { post, user } = await import('./codemods/models.mts')
 
-          addModel(post)
-          addModel(user)
+        addModel(post)
+        addModel(user)
 
-          return execa(
-            `yarn cedar prisma migrate dev --name create_post_user`,
-            [],
-            getExecaOptions(outputPath),
-          )
-        },
+        return exec(
+          `yarn cedar prisma migrate dev --name create_post_user`,
+          [],
+          execaOptions,
+        )
       },
-      {
-        title: 'Scaffolding post',
-        task: async () => {
-          await generateScaffold('post')
+    },
+    {
+      title: 'Scaffolding post',
+      task: async () => {
+        await generateScaffold('post')
 
-          // Replace the random numbers in the scenario with consistent values
-          await applyCodemod(
-            'scenarioValueSuffix.js',
-            fullPath('api/src/services/posts/posts.scenarios'),
-          )
+        // Replace the random numbers in the scenario with consistent values
+        await applyCodemod(
+          'scenarioValueSuffix.js',
+          fullPath('api/src/services/posts/posts.scenarios'),
+        )
 
-          await execa(
-            `yarn ${getCfwBin(outputPath)} project:copy`,
-            [],
-            getExecaOptions(outputPath),
-          )
-        },
+        await exec(
+          `yarn ${getCfwBin(OUTPUT_PATH)} project:copy`,
+          [],
+          execaOptions,
+        )
       },
-      {
-        title: 'Adding seed script',
-        task: async () => {
-          await applyCodemod(
-            'seed.js',
-            fullPath('scripts/seed.ts', { addExtension: false }),
-          )
-        },
+    },
+    {
+      title: 'Adding seed script',
+      task: async () => {
+        await applyCodemod(
+          'seed.js',
+          fullPath('scripts/seed.ts', { addExtension: false }),
+        )
       },
-      {
-        title: 'Adding contact model to prisma',
-        task: async () => {
-          const { contact } = await import('./codemods/models.js')
+    },
+    {
+      title: 'Adding contact model to prisma',
+      task: async () => {
+        const { contact } = await import('./codemods/models.mts')
 
-          addModel(contact)
+        addModel(contact)
 
-          await execa(
-            `yarn cedar prisma migrate dev --name create_contact`,
-            [],
-            getExecaOptions(outputPath),
-          )
+        await exec(
+          `yarn cedar prisma migrate dev --name create_contact`,
+          [],
+          execaOptions,
+        )
 
-          await generateScaffold('contacts')
-        },
+        await generateScaffold('contacts')
+
+        const contactsServicePath = fullPath(
+          'api/src/services/contacts/contacts',
+        )
+        fs.writeFileSync(
+          contactsServicePath,
+          fs
+            .readFileSync(contactsServicePath, 'utf-8')
+            .replace(
+              "import { db } from 'src/lib/db'",
+              '// Testing aliased imports with extensions\n' +
+                "import { db } from 'src/lib/db.js'",
+            ),
+        )
       },
-      {
-        // This task renames the migration folders so that we don't have to deal with duplicates/conflicts when committing to the repo
-        title: 'Adjust dates within migration folder names',
-        task: () => {
-          const migrationsFolderPath = path.join(
-            OUTPUT_PATH,
-            'api',
-            'db',
-            'migrations',
-          )
-          // Migration folders are folders which start with 14 digits because they have a yyyymmddhhmmss
-          const migrationFolders = fs
-            .readdirSync(migrationsFolderPath)
-            .filter((name) => {
-              return (
-                name.match(/\d{14}.+/) &&
-                fs
-                  .lstatSync(path.join(migrationsFolderPath, name))
-                  .isDirectory()
-              )
-            })
-            .sort()
-          const datetime = new Date('2022-01-01T12:00:00.000Z')
-          migrationFolders.forEach((name) => {
-            const datetimeInCorrectFormat =
-              datetime.getFullYear() +
-              ('0' + (datetime.getMonth() + 1)).slice(-2) +
-              ('0' + datetime.getDate()).slice(-2) +
-              ('0' + datetime.getHours()).slice(-2) +
-              ('0' + datetime.getMinutes()).slice(-2) +
-              ('0' + datetime.getSeconds()).slice(-2)
-            fs.renameSync(
-              path.join(migrationsFolderPath, name),
-              path.join(
-                migrationsFolderPath,
-                `${datetimeInCorrectFormat}${name.substring(14)}`,
-              ),
+    },
+    {
+      // This task renames the migration folders so that we don't have to deal with duplicates/conflicts when committing to the repo
+      title: 'Adjust dates within migration folder names',
+      task: () => {
+        const migrationsFolderPath = path.join(
+          OUTPUT_PATH,
+          'api',
+          'db',
+          'migrations',
+        )
+        // Migration folders are folders which start with 14 digits because they have a yyyymmddhhmmss
+        const migrationFolders = fs
+          .readdirSync(migrationsFolderPath)
+          .filter((name) => {
+            return (
+              name.match(/\d{14}.+/) &&
+              fs.lstatSync(path.join(migrationsFolderPath, name)).isDirectory()
             )
-            datetime.setDate(datetime.getDate() + 1)
           })
-        },
+          .sort()
+        const datetime = new Date('2022-01-01T12:00:00.000Z')
+        migrationFolders.forEach((name) => {
+          const datetimeInCorrectFormat =
+            datetime.getFullYear() +
+            ('0' + (datetime.getMonth() + 1)).slice(-2) +
+            ('0' + datetime.getDate()).slice(-2) +
+            '120000' // Time hardcoded to 12:00:00 to limit TZ issues
+          fs.renameSync(
+            path.join(migrationsFolderPath, name),
+            path.join(
+              migrationsFolderPath,
+              `${datetimeInCorrectFormat}${name.substring(14)}`,
+            ),
+          )
+          datetime.setDate(datetime.getDate() + 1)
+        })
       },
-      {
-        title: 'Add dbAuth',
-        task: async () => addDbAuth(),
-      },
-      {
-        title: 'Add users service',
-        task: async () => {
-          const generateSdl = createBuilder('yarn cedar g sdl --no-crud')
+    },
+    {
+      title: 'Add users service',
+      task: async () => {
+        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
 
-          await generateSdl('user')
+        await generateSdl('user')
 
-          await applyCodemod(
-            'usersSdl.js',
-            fullPath('api/src/graphql/users.sdl'),
-          )
+        await applyCodemod('usersSdl.js', fullPath('api/src/graphql/users.sdl'))
 
-          await applyCodemod(
-            'usersService.js',
-            fullPath('api/src/services/users/users'),
-          )
+        await applyCodemod(
+          'usersService.js',
+          fullPath('api/src/services/users/users'),
+        )
 
-          // Replace the random numbers in the scenario with consistent values
-          await applyCodemod(
-            'scenarioValueSuffix.js',
-            fullPath('api/src/services/users/users.scenarios'),
-          )
+        // Replace the random numbers in the scenario with consistent values
+        await applyCodemod(
+          'scenarioValueSuffix.js',
+          fullPath('api/src/services/users/users.scenarios'),
+        )
 
-          const test = `import { user } from './users.js'
+        const test = `import { user } from './users.js'
             import type { StandardScenario } from './users.scenarios.js'
 
             describe('users', () => {
@@ -748,97 +855,118 @@ async function apiTasks(outputPath, { verbose, linkWithLatestFwBuild }) {
               })
             })`.replaceAll(/ {12}/g, '')
 
-          fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
+        fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
 
-          return createBuilder('yarn cedar g types')()
-        },
+        return createBuilder('yarn cedar g types')()
       },
-      {
-        title: 'Add describeScenario tests',
-        task: async () => {
-          // Copy contact.scenarios.ts, because scenario tests look for the same filename
-          fs.copyFileSync(
-            fullPath('api/src/services/contacts/contacts.scenarios'),
-            fullPath('api/src/services/contacts/describeContacts.scenarios'),
-          )
-
-          // Create describeContacts.test.ts
-          const describeScenarioFixture = path.join(
-            __dirname,
-            'templates',
-            'api',
-            'contacts.describeScenario.test.ts.template',
-          )
-
-          fs.copyFileSync(
-            describeScenarioFixture,
-            fullPath('api/src/services/contacts/describeContacts.test'),
-          )
-        },
-      },
-      {
-        // This is probably more of a web side task really, but the scaffolded
-        // pages aren't generated until we get here to the api side tasks. So
-        // instead of doing some up in the web side tasks, and then the rest
-        // here I decided to move all of them here
-        title: 'Add Prerender to Routes',
-        task: () => addPrerender(),
-      },
-    ],
-    {
-      exitOnError: true,
-      renderer: verbose && 'verbose',
-      renderOptions: { collapseSubtasks: false },
     },
-  )
-}
-
-/**
- * Separates the streaming-ssr related steps. These are all web tasks,
- * if we choose to move them later
- * @param {string} outputPath
- */
-async function streamingTasks(outputPath, { verbose }) {
-  OUTPUT_PATH = outputPath
-
-  const tasks = [
     {
-      title: 'Creating Delayed suspense delayed page',
-      task: async () => {
-        await createPage('delayed')
+      title: 'Add dbAuth',
+      task: async () => addDbAuth(),
+    },
+    {
+      title: 'Add describeScenario tests',
+      task: () => {
+        // Copy contact.scenarios.ts, because scenario tests look for the same filename
+        fs.copyFileSync(
+          fullPath('api/src/services/contacts/contacts.scenarios'),
+          fullPath('api/src/services/contacts/describeContacts.scenarios'),
+        )
 
-        await applyCodemod(
-          'delayedPage.js',
-          fullPath('web/src/pages/DelayedPage/DelayedPage'),
+        // Create describeContacts.test.ts
+        const describeScenarioFixture = path.join(
+          import.meta.dirname,
+          'templates',
+          'api',
+          'contacts.describeScenario.test.ts.template',
+        )
+
+        fs.copyFileSync(
+          describeScenarioFixture,
+          fullPath('api/src/services/contacts/describeContacts.test'),
         )
       },
     },
     {
-      title: 'Enable streaming-ssr experiment',
-      task: async () => {
-        const setupExperiment = createBuilder(
-          'yarn cedar experimental setup-streaming-ssr',
+      // This is probably more of a web side task really, but the scaffolded
+      // pages aren't generated until we get here to the api side tasks. So
+      // instead of doing some up in the web side tasks, and then the rest
+      // here I decided to move all of them here
+      title: 'Add Prerender to Routes',
+      task: () => addPrerender(),
+    },
+    {
+      title: 'Add context tests',
+      task: () => {
+        const templatePath = path.join(
+          import.meta.dirname,
+          'templates',
+          'api',
+          'context.test.ts.template',
         )
-        await setupExperiment('--force')
+        const projectPath = path.join(
+          OUTPUT_PATH,
+          'api',
+          'src',
+          '__tests__',
+          'context.test.ts',
+        )
+
+        fs.mkdirSync(path.dirname(projectPath), { recursive: true })
+        fs.writeFileSync(projectPath, fs.readFileSync(templatePath))
+      },
+    },
+    {
+      title: 'Add vitest db import tracking tests for ESM test project',
+      task: () => {
+        if (!esmProject) {
+          return
+        }
+
+        const templatesDir = path.join(import.meta.dirname, 'templates', 'api')
+        const templatePath1 = path.join(templatesDir, '1-db-import.test.ts')
+        const templatePath2 = path.join(templatesDir, '2-db-import.test.ts')
+        const templatePath3 = path.join(templatesDir, '3-db-import.test.ts')
+
+        const testsDir = path.join(OUTPUT_PATH, 'api', 'src', '__tests__')
+        const testFilePath1 = path.join(testsDir, '1-db-import.test.ts')
+        const testFilePath2 = path.join(testsDir, '2-db-import.test.ts')
+        const testFilePath3 = path.join(testsDir, '3-db-import.test.ts')
+
+        fs.mkdirSync(testsDir, { recursive: true })
+        fs.copyFileSync(templatePath1, testFilePath1)
+        fs.copyFileSync(templatePath2, testFilePath2)
+        fs.copyFileSync(templatePath3, testFilePath3)
+
+        // I opted to add an additional vitest config file rather than modifying
+        // the existing one because I wanted to keep one looking exactly the
+        // same as it'll look in user's projects.
+        fs.copyFileSync(
+          path.join(templatesDir, 'vitest-sort.config.ts'),
+          path.join(OUTPUT_PATH, 'api', 'vitest-sort.config.ts'),
+        )
       },
     },
   ]
-
-  return new Listr(tasks, {
-    exitOnError: true,
-    renderer: verbose && 'verbose',
-    renderOptions: { collapseSubtasks: false },
-  })
+  // ],
+  // TODO: Figure out what to do with this. It's from Listr, but TUI doesn't
+  //       have anything like it (yet?)
+  // {
+  //   exitOnError: true,
+  //   renderer: verbose && 'verbose',
+  //   renderOptions: { collapseSubtasks: false },
+  // }
+  return tuiTaskList
 }
 
 /**
  * Tasks to add GraphQL Fragments support to the test-project, and some queries
  * to test fragments
  */
-async function fragmentsTasks(outputPath, { verbose }) {
+export async function fragmentsTasks(outputPath: string) {
   OUTPUT_PATH = outputPath
 
-  const tasks = [
+  const tuiTaskList: TuiTaskList = [
     {
       title: 'Enable fragments',
       task: async () => {
@@ -852,10 +980,10 @@ async function fragmentsTasks(outputPath, { verbose }) {
       title: 'Adding produce and stall models to prisma',
       task: async () => {
         // Need both here since they have a relation
-        const models = await import('./codemods/models.js')
+        const { produce, stall } = await import('./codemods/models.mts')
 
-        addModel((models.default || models).produce)
-        addModel((models.default || models).stall)
+        addModel(produce)
+        addModel(stall)
 
         return exec(
           'yarn cedar prisma migrate dev --name create_produce_stall',
@@ -892,7 +1020,7 @@ async function fragmentsTasks(outputPath, { verbose }) {
     {
       title: 'Copy components from templates',
       task: () => {
-        const templatesPath = path.join(__dirname, 'templates', 'web')
+        const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
         const componentsPath = path.join(
           OUTPUT_PATH,
           'web',
@@ -917,7 +1045,7 @@ async function fragmentsTasks(outputPath, { verbose }) {
     {
       title: 'Copy sdl and service for groceries from templates',
       task: () => {
-        const templatesPath = path.join(__dirname, 'templates', 'api')
+        const templatesPath = path.join(import.meta.dirname, 'templates', 'api')
         const graphqlPath = path.join(OUTPUT_PATH, 'api', 'src', 'graphql')
         const servicesPath = path.join(OUTPUT_PATH, 'api', 'src', 'services')
 
@@ -933,6 +1061,7 @@ async function fragmentsTasks(outputPath, { verbose }) {
     {
       title: 'Creating Groceries page',
       task: async () => {
+        const createPage = createBuilder('yarn cedar g page')
         await createPage('groceries')
 
         await applyCodemod(
@@ -943,16 +1072,5 @@ async function fragmentsTasks(outputPath, { verbose }) {
     },
   ]
 
-  return new Listr(tasks, {
-    exitOnError: true,
-    renderer: verbose && 'verbose',
-    renderOptions: { collapseSubtasks: false },
-  })
-}
-
-module.exports = {
-  apiTasks,
-  webTasks,
-  streamingTasks,
-  fragmentsTasks,
+  return tuiTaskList
 }

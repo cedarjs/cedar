@@ -1,13 +1,15 @@
-/* eslint-env node, es6*/
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const fs = require('node:fs')
-const path = require('path')
-const stream = require('stream')
+import execa from 'execa'
+import type { Options as ExecaOptions } from 'execa'
+import prompts from 'prompts'
 
-const execa = require('execa')
-const prompts = require('prompts')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-async function applyCodemod(codemod, target) {
+export async function applyCodemod(codemod: string, target: string) {
   const args = [
     '--fail-on-error',
     '-t',
@@ -22,8 +24,7 @@ async function applyCodemod(codemod, target) {
   await exec('yarn jscodeshift', args, getExecaOptions(path.resolve(__dirname)))
 }
 
-/** @type {(string) => import('execa').Options} */
-const getExecaOptions = (cwd) => ({
+export const getExecaOptions = (cwd: string): ExecaOptions => ({
   shell: true,
   stdio: 'inherit',
   cleanup: true,
@@ -35,7 +36,13 @@ const getExecaOptions = (cwd) => ({
   },
 })
 
-const updatePkgJsonScripts = ({ projectPath, scripts }) => {
+export const updatePkgJsonScripts = ({
+  projectPath,
+  scripts,
+}: {
+  projectPath: string
+  scripts: Record<string, string>
+}) => {
   const projectPackageJsonPath = path.join(projectPath, 'package.json')
   const projectPackageJson = JSON.parse(
     fs.readFileSync(projectPackageJsonPath, 'utf-8'),
@@ -51,7 +58,10 @@ const updatePkgJsonScripts = ({ projectPath, scripts }) => {
 }
 
 // Confirmation prompt when using --no-copyFromFixture --no-link'
-async function confirmNoFixtureNoLink(copyFromFixtureOption, linkOption) {
+export async function confirmNoFixtureNoLink(
+  copyFromFixtureOption: boolean,
+  linkOption: boolean,
+) {
   if (!copyFromFixtureOption && !linkOption) {
     const { checkNoLink } = await prompts(
       {
@@ -74,13 +84,20 @@ async function confirmNoFixtureNoLink(copyFromFixtureOption, linkOption) {
   }
 }
 
-const nullStream = new stream.Writable()
-nullStream._write = (_chunk, _encoding, next) => {
-  next()
-}
+export class ExecaError extends Error {
+  stdout: string
+  stderr: string
+  exitCode: number
 
-class ExecaError extends Error {
-  constructor({ stdout, stderr, exitCode }) {
+  constructor({
+    stdout,
+    stderr,
+    exitCode,
+  }: {
+    stdout: string
+    stderr: string
+    exitCode: number
+  }) {
     super(`execa failed with exit code ${exitCode}`)
     this.stdout = stdout
     this.stderr = stderr
@@ -88,8 +105,12 @@ class ExecaError extends Error {
   }
 }
 
-async function exec(...args) {
-  return execa(...args)
+export async function exec(
+  file: string,
+  args?: string[],
+  options?: ExecaOptions,
+) {
+  return execa(file, args ?? [], options)
     .then(({ stdout, stderr, exitCode }) => {
       if (exitCode !== 0) {
         throw new ExecaError({ stdout, stderr, exitCode })
@@ -102,7 +123,7 @@ async function exec(...args) {
         // Rethrow ExecaError
         throw error
       } else {
-        const { stdout, stderr, exitCode } = error
+        const { stdout = '', stderr = '', exitCode = 1 } = error
         throw new ExecaError({ stdout, stderr, exitCode })
       }
     })
@@ -110,19 +131,8 @@ async function exec(...args) {
 
 // TODO: Remove this as soon as cfw is part of a stable Cedar release, and then
 // instead just use `cfw` directly everywhere
-function getCfwBin(projectPath) {
+export function getCfwBin(projectPath: string) {
   return fs.existsSync(path.join(projectPath, 'node_modules/.bin/cfw'))
     ? 'cfw'
     : 'rwfw'
-}
-
-module.exports = {
-  getExecaOptions,
-  applyCodemod,
-  updatePkgJsonScripts,
-  confirmNoFixtureNoLink,
-  nullStream,
-  ExecaError,
-  exec,
-  getCfwBin,
 }

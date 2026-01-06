@@ -5,10 +5,10 @@ import * as path from 'node:path'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { exec, getExecaOptions as utilGetExecaOptions } from './util'
+import { exec, getExecaOptions as utilGetExecaOptions } from './util.mts'
 
 function getExecaOptions(cwd: string) {
-  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
+  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' as const }
 }
 
 const args = yargs(hideBin(process.argv))

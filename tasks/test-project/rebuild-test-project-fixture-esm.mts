@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
 import { hideBin } from 'yargs/helpers'
@@ -12,23 +13,21 @@ import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
-} from './frameworkLinking'
-import { webTasks, apiTasks } from './tui-tasks.js'
-import { isAwaitable, isTuiError } from './typing'
-import type { TuiTaskDef } from './typing'
+} from './frameworkLinking.js'
+import { webTasks, apiTasks } from './tui-tasks.mts'
+import { isAwaitable, isTuiError } from './typing.mts'
+import type { TuiTaskDef } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
   ExecaError,
   exec,
   getCfwBin,
-} from './util'
-
-const ansis = require('ansis')
+} from './util.mts'
 
 function recommendedNodeVersion() {
   const templatePackageJsonPath = path.join(
-    __dirname,
+    import.meta.dirname,
     '..',
     '..',
     'packages',
@@ -80,7 +79,7 @@ const args = yargs(hideBin(process.argv))
 
 const { verbose, resume, resumePath, resumeStep } = args
 
-const RW_FRAMEWORK_PATH = path.join(__dirname, '../../')
+const RW_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
 const OUTPUT_PROJECT_PATH = resumePath
   ? /* path.resolve(String(resumePath)) */ resumePath
   : path.join(
@@ -111,7 +110,7 @@ if (!startStep) {
 const tui = new RedwoodTUI()
 
 function getExecaOptions(cwd: string) {
-  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' }
+  return { ...utilGetExecaOptions(cwd), stdio: 'pipe' as const }
 }
 
 function beginStep(step: string) {
@@ -273,7 +272,7 @@ const createProject = () => {
   const subprocess = exec(
     cmd,
     // We create a ts project and convert using ts-to-js at the end if typescript flag is false
-    ['--no-yarn-install', '--typescript', '--overwrite', '--no-git'],
+    ['--no-yarn-install', '--typescript', '--overwrite', '--no-git', '--esm'],
     getExecaOptions(RW_FRAMEWORK_PATH),
   )
 
@@ -281,7 +280,10 @@ const createProject = () => {
 }
 
 const copyProject = async () => {
-  const fixturePath = path.join(RW_FRAMEWORK_PATH, '__fixtures__/test-project')
+  const fixturePath = path.join(
+    RW_FRAMEWORK_PATH,
+    '__fixtures__/esm-test-project',
+  )
 
   // remove existing Fixture
   await rimraf(fixturePath)
@@ -345,11 +347,12 @@ async function runCommand() {
     content: 'yarn install',
     task: async () => {
       // TODO: See if this is needed now with tarsync
-      await exec('yarn install', getExecaOptions(OUTPUT_PROJECT_PATH))
+      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
       return exec(
         `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
+        [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
@@ -421,7 +424,7 @@ async function runCommand() {
     task: () => {
       return apiTasks(OUTPUT_PROJECT_PATH, {
         linkWithLatestFwBuild: true,
-        esmProject: false,
+        esmProject: true,
       })
     },
   })
@@ -435,10 +438,7 @@ async function runCommand() {
       fs.mkdirSync(nestedPath, { recursive: true })
       fs.writeFileSync(
         path.join(nestedPath, 'myNestedScript.ts'),
-        "import { contacts } from 'api/src/services/contacts/contacts'\n" +
-          '\n' +
-          'export default async () => {\n' +
-          '  const _allContacts = await contacts()\n' +
+        'export default async () => {\n' +
           "  console.log('Hello from myNestedScript.ts')\n" +
           '}\n\n',
       )
@@ -498,125 +498,6 @@ async function runCommand() {
 
   await tuiTask({
     step: 10,
-    title: 'Add workspace packages',
-    task: async () => {
-      const tomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
-      const redwoodToml = fs.readFileSync(tomlPath, 'utf-8')
-      const newRedwoodToml =
-        redwoodToml + '\n[experimental.packagesWorkspace]\n  enabled = true\n'
-
-      fs.writeFileSync(tomlPath, newRedwoodToml)
-
-      await exec(
-        'yarn cedar g package @my-org/validators',
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
-
-      const packagePath = path.join(
-        OUTPUT_PROJECT_PATH,
-        'packages',
-        'validators',
-      )
-
-      fs.writeFileSync(
-        path.join(packagePath, 'src', 'index.ts'),
-        'export function validateEmail(email: string) {\n' +
-          "  return email.includes('@') &&\n" +
-          "    email.includes('.') &&\n" +
-          "    email.lastIndexOf('.') > email.indexOf('@') + 1\n" +
-          '}\n',
-      )
-
-      fs.writeFileSync(
-        path.join(packagePath, 'src', 'validators.test.ts'),
-        "import { validateEmail } from './index.js'\n" +
-          '\n' +
-          "describe('validators', () => {\n" +
-          "  it('should not throw any errors', async () => {\n" +
-          "    expect(validateEmail('valid@email.com')).not.toThrow()\n" +
-          '  })\n' +
-          '})\n',
-      )
-
-      const webPackageJson = JSON.parse(
-        fs.readFileSync(
-          path.join(OUTPUT_PROJECT_PATH, 'web', 'package.json'),
-          'utf8',
-        ),
-      )
-
-      webPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
-
-      fs.writeFileSync(
-        path.join(OUTPUT_PROJECT_PATH, 'web', 'package.json'),
-        JSON.stringify(webPackageJson, null, 2),
-      )
-
-      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
-
-      const build = await exec(
-        'yarn cedar build',
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
-
-      const distFiles = fs.readdirSync(
-        path.join(OUTPUT_PROJECT_PATH, 'packages', 'validators', 'dist'),
-      )
-
-      if (distFiles.some((file) => file.includes('test'))) {
-        console.error('distFiles', distFiles)
-        throw new Error(
-          'Unexpected test file in validators package dist directory',
-        )
-      }
-
-      // TODO: Update this when we refine the build process
-      if (!build.stdout.includes('yarn build exited with code 0')) {
-        console.error('yarn cedar build output', build.stdout, build.stderr)
-        throw new Error('Unexpected output from `yarn cedar build`')
-      }
-
-      // Verify that `yarn cedar <cmd>` works inside package directories
-      // Starting with `yarn cedar info`
-      // TODO: Enable code below
-      // const info = await exec(
-      //   'yarn cedar info',
-      //   [],
-      //   getExecaOptions(OUTPUT_PROJECT_PATH),
-      // )
-
-      // if (
-      //   !info.stdout.includes('Binaries:') ||
-      //   !info.stdout.includes('Node:') ||
-      //   !info.stdout.includes('npmPackages:') ||
-      //   !info.stdout.includes('@cedarjs/core')
-      // ) {
-      //   console.error('yarn cedar info output', info.stdout, info.stderr)
-
-      //   throw new Error('Unexpected output from `yarn cedar info`')
-      // }
-
-      // Continue testing `yarn cedar <cmd>` by running `yarn cedar test`
-      // const test = await exec(
-      //   'yarn cedar test @my-org/validators',
-      //   [],
-      //   getExecaOptions(OUTPUT_PROJECT_PATH),
-      // )
-
-      // Validate that only the tests for this package ran
-      // Verify that all tests passed
-      // TODO: Implement functionality according to the comment above
-
-      // The package we've generated (@my-org/validators) is used in the test
-      // project on both the web and the api side and is further tested by our
-      // playwright tests that trigger the files that import the package.
-    },
-  })
-
-  await tuiTask({
-    step: 11,
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
@@ -628,7 +509,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 11,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
@@ -637,7 +518,7 @@ async function runCommand() {
           cleanup: true,
           cwd: OUTPUT_PROJECT_PATH,
           env: {
-            RW_PATH: path.join(__dirname, '../../'),
+            RW_PATH: path.join(import.meta.dirname, '../../'),
           },
         })
       } catch (e) {
@@ -659,9 +540,8 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 13,
+    step: 12,
     title: 'Replace and Cleanup Fixture',
-    skip: Math.random() < 5,
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
       // remove all .gitignore
@@ -687,29 +567,25 @@ async function runCommand() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
-      // Copy over package.json from template, so we remove the extra dev
-      // dependencies, and cfw postinstall script that we added in "Adding
-      // framework dependencies to project"
+      // Copy over package.json from template, so we remove the extra dev dependencies, and cfw postinstall script
+      // that we added in "Adding framework dependencies to project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
-      // We also want the `packages/*` workspace config that was added when
-      // adding the validators package
       const rootPackageJson = JSON.parse(
         fs.readFileSync(path.join(OUTPUT_PROJECT_PATH, 'package.json'), 'utf8'),
       )
       const templateRootPackageJsonPath = path.join(
-        __dirname,
-        '../../packages/create-cedar-app/templates/ts/package.json',
+        import.meta.dirname,
+        '../../packages/create-cedar-app/templates/esm-ts/package.json',
       )
       const newRootPackageJson = JSON.parse(
         fs.readFileSync(templateRootPackageJsonPath, 'utf8'),
       )
       newRootPackageJson.devDependencies['prettier-plugin-tailwindcss'] =
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
-      newRootPackageJson.workspaces.push('packages/*')
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, 'package.json'),
-        JSON.stringify(newRootPackageJson, null, 2) + '\n',
+        JSON.stringify(newRootPackageJson, null, 2),
       )
 
       // removes existing Fixture and replaces with newly built project,
@@ -719,7 +595,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 14,
+    step: 13,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))
