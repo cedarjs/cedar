@@ -2,7 +2,7 @@ import { render } from '@cedarjs/testing/web'
 
 import AboutPage from './AboutPage'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('AboutPage', () => {
