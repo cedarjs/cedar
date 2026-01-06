@@ -53,18 +53,18 @@ export const builder = (yargs: Argv) => {
       console.warn(`${c.warning('Warning')}: ${check.message}\n`)
     })
     .check((argv) => {
-      const sideArg = argv.side
+      const workspaceArg = argv.workspace
 
-      if (!Array.isArray(sideArg)) {
-        return 'Side must be an array'
+      if (!Array.isArray(workspaceArg)) {
+        return 'Workspace must be an array'
       }
 
-      // Remove all default side names and then check if there are any
-      // remaining sides to validate. This is an optimization to avoid calling
-      // `workspaces({ includePackages: true })` as that's a somewhat expensive
-      // method call that hits the filesystem and parses files
+      // Remove all default workspace names and then check if there are any
+      // remaining workspaces to validate. This is an optimization to avoid
+      // calling `workspaces({ includePackages: true })` as that's a somewhat
+      // expensive method call that hits the filesystem and parses files
 
-      const filtered = sideArg.filter(
+      const filtered = workspaceArg.filter(
         (item) => item !== 'api' && item !== 'web' && item !== 'packages/*',
       )
 
