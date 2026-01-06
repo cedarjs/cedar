@@ -2,7 +2,7 @@ import fs from 'node:fs'
 
 import { vi, afterEach, describe, it, expect, beforeEach } from 'vitest'
 
-import { getPackageWatchCommands } from '../packgeWatchCommands.js'
+import { getPackageWatchCommands } from '../packageWatchCommands.js'
 
 vi.mock('node:fs', () => {
   return {

@@ -21,8 +21,8 @@ export async function getPackageWatchCommands(
   const globPattern = path.join(cedarPaths.packages, '*').replaceAll('\\', '/')
 
   // Map workspace names to filesystem paths
-  // packageWorkspaces can be ['packages/*'] or
-  // ['@my-org/pkg-one', '@my-org/pkg-two', 'packages/pkg-three', etc]
+  // packageWorkspaces can be ['packages/*'] or something like
+  // ['@my-org/pkg-one', '@my-org/pkg-two', 'pkg-three', 'packages/pkg-four']
   const workspacePaths = packageWorkspaces.some((w) => w === 'packages/*')
     ? await Array.fromAsync(fs.promises.glob(globPattern))
     : packageWorkspaces.map((w) => {
@@ -79,8 +79,8 @@ export async function getPackageWatchCommands(
     }
 
     return {
-      command: 'yarn watch',
       name,
+      command: 'yarn watch',
       cwd: workspacePath,
     }
   })

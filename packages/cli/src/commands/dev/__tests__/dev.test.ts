@@ -93,7 +93,7 @@ import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../../lib/index.js'
 import { handler } from '../devHandler.js'
-import { getPackageWatchCommands } from '../packgeWatchCommands.js'
+import { getPackageWatchCommands } from '../packageWatchCommands.js'
 
 function defaultPaths() {
   return {

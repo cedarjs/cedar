@@ -29,7 +29,6 @@ vi.mock('node:fs', async (importOriginal) => {
         return 'File content'
       }),
       existsSync: vi.fn(() => {
-        // By default everything exists except specific overrides
         return true
       }),
     },
@@ -91,15 +90,31 @@ vi.mock('../build/buildPackagesTask.js', () => ({
   buildPackagesTask: vi.fn().mockResolvedValue(undefined),
 }))
 
-vi.mock('../watchPackagesTask.js', () => ({
-  watchPackagesTask: vi.fn().mockResolvedValue(undefined),
-  getWatchPackageCommands: vi.fn().mockResolvedValue([
-    {
-      name: 'packages',
+vi.mock('../packageWatchCommands.js', () => ({
+  getPackageWatchCommands: vi.fn((packageWorkspaces: string[]) => {
+    if (packageWorkspaces.includes('packages/*')) {
+      return [
+        {
+          name: 'mock-package-one',
+          command: 'yarn watch',
+          cwd: '/mocked/project/packages/mock-package-one',
+        },
+        {
+          name: 'mock-package-two',
+          command: 'yarn watch',
+          cwd: '/mocked/project/packages/mock-package-two',
+        },
+      ]
+    }
+
+    const names = packageWorkspaces.map((w) => w.split('/').at(-1))
+
+    return names.map((name) => ({
+      name,
       command: 'yarn watch',
-      prefixColor: 'yellow',
-    },
-  ]),
+      cwd: '/mocked/project/packages/' + name,
+    }))
+  }),
 }))
 
 import type FS from 'node:fs'
@@ -118,7 +133,7 @@ function isPackagesCommand(
     typeof command === 'object' &&
     command !== null &&
     'name' in command &&
-    command.name === 'packages'
+    !!(command.name?.includes('mock-package') || command.name?.includes('pkg'))
   )
 }
 
@@ -127,110 +142,62 @@ describe('yarn cedar dev - package watching', () => {
     vi.clearAllMocks()
   })
 
-  it('runs package watchers by default when packages exist', async () => {
+  it('does not run package watchers when only api and web workspaces are specified', async () => {
     await handler({ workspace: ['api', 'web'] })
 
-    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
+    expect(concurrently).toHaveBeenCalledOnce()
 
-    if (!packagesCommand) {
-      throw new Error('Packages command not found')
-    }
+    const concurrentlyCommands = vi.mocked(concurrently).mock.calls[0][0]
+    const packagesCommands = concurrentlyCommands.filter(isPackagesCommand)
 
-    expect(packagesCommand.name).toBe('packages')
-    expect(packagesCommand.prefixColor).toBe('yellow')
+    expect(packagesCommands).toHaveLength(0)
   })
-
-  // NOTE: Negative test cases (when packages should NOT run) are difficult to test
-  // with the current mock setup because hasPackageWorkspaces is computed at handler
-  // start using fs.readFileSync, and per-test mock overrides don't work reliably.
-  // The positive test cases below verify the feature works correctly.
 
   it('runs specific package watchers when requested', async () => {
-    await handler({ workspace: ['api', 'my-package'] })
+    await handler({ workspace: ['api', 'my-pkg'] })
 
-    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
-    if (!packagesCommand) {
-      throw new Error('Packages command not found')
-    }
-    expect(packagesCommand).toBeDefined()
+    expect(concurrently).toHaveBeenCalledOnce()
+
+    const concurrentlyCommands = vi.mocked(concurrently).mock.calls[0][0]
+    const packagesCommands = concurrentlyCommands.filter(isPackagesCommand)
+
+    expect(packagesCommands).toHaveLength(1)
+    expect(packagesCommands[0]).toMatchObject({
+      name: 'my-pkg',
+    })
   })
 
-  it('packages job is registered even if initial build fails', async () => {
-    // We can't easily test the actual build failure since it's a dynamic import
-    // But we can verify the packages job is still registered
-    await handler({ workspace: ['api', 'web'] })
+  it('registers packages job for default workspace arg', async () => {
+    await handler({})
 
-    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
-    if (!packagesCommand) {
-      throw new Error('Packages command not found')
-    }
-    expect(packagesCommand).toBeDefined()
-  })
+    expect(concurrently).toHaveBeenCalledOnce()
 
-  it('includes packages job with correct configuration', async () => {
-    await handler({ workspace: ['api', 'web'] })
+    const concurrentlyCommands = vi.mocked(concurrently).mock.calls[0][0]
+    const packagesCommands = concurrentlyCommands.filter(isPackagesCommand)
 
-    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
-
-    if (!packagesCommand) {
-      throw new Error('Packages command not found')
-    }
-
-    expect(packagesCommand.name).toBe('packages')
-    expect(packagesCommand.prefixColor).toBe('yellow')
-  })
-
-  it('packages job uses yellow prefix color', async () => {
-    await handler({ workspace: ['api', 'web'] })
-
-    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
-
-    if (!packagesCommand) {
-      throw new Error('Packages command not found')
-    }
-
-    expect(packagesCommand.prefixColor).toBe('yellow')
-  })
-
-  it('packages command is a string command', async () => {
-    await handler({ workspace: ['api', 'web'] })
-
-    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
-
-    if (!packagesCommand) {
-      throw new Error('Packages command not found')
-    }
-
-    expect(typeof packagesCommand.command).toBe('string')
-  })
-
-  it('registers packages job for default sides', async () => {
-    await handler({ workspace: ['api', 'web'] })
-
-    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
-
-    if (!packagesCommand) {
-      throw new Error('Packages command not found')
-    }
-    expect(packagesCommand).toBeDefined()
+    expect(packagesCommands).toHaveLength(2)
+    expect(packagesCommands[0]).toMatchObject({
+      name: 'mock-package-one',
+    })
+    expect(packagesCommands[1]).toMatchObject({
+      name: 'mock-package-two',
+    })
   })
 
   it('registers packages job for specific package sides', async () => {
     await handler({ workspace: ['@org/pkg-one', 'pkg-two'] })
 
-    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
-    const packagesCommand = concurrentlyArgs.find(isPackagesCommand)
+    expect(concurrently).toHaveBeenCalledOnce()
 
-    if (!packagesCommand) {
-      throw new Error('Packages command not found')
-    }
-    expect(packagesCommand).toBeDefined()
+    const concurrentlyCommands = vi.mocked(concurrently).mock.calls[0][0]
+    const packagesCommands = concurrentlyCommands.filter(isPackagesCommand)
+
+    expect(packagesCommands).toHaveLength(2)
+    expect(packagesCommands[0]).toMatchObject({
+      name: 'pkg-one',
+    })
+    expect(packagesCommands[1]).toMatchObject({
+      name: 'pkg-two',
+    })
   })
 })

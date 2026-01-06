@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { argv } from 'node:process'
 
 import concurrently from 'concurrently'
 import type { Command } from 'concurrently'
@@ -22,9 +21,8 @@ import { getFreePort } from '../../lib/ports.js'
 // @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../../lib/project.js'
 
-import { getPackageWatchCommands } from './packgeWatchCommands.js'
-
-const defaultApiDebugPort = 18911
+import { getApiDebugFlag } from './apiDebugFlag.js'
+import { getPackageWatchCommands } from './packageWatchCommands.js'
 
 interface DevHandlerOptions {
   workspace?: string[]
@@ -46,20 +44,6 @@ export const handler = async ({
   })
 
   const cedarPaths = getPaths()
-
-  // Extract package workspaces from side array
-  const packageWorkspaces = workspace.filter(
-    (w) => w !== 'api' && w !== 'web' && w !== 'gen',
-  )
-
-  // Check if package workspaces exist in root package.json
-  const rootPackageJsonPath = path.join(cedarPaths.base, 'package.json')
-  const rootPackageJson = JSON.parse(
-    fs.readFileSync(rootPackageJsonPath, 'utf8'),
-  )
-  const hasPackageWorkspaces =
-    Array.isArray(rootPackageJson.workspaces) &&
-    rootPackageJson.workspaces.length > 2
 
   const serverFile = serverFileExists()
 
@@ -178,23 +162,6 @@ export const handler = async ({
     }
   }
 
-  const getApiDebugFlag = () => {
-    // Passed in flag takes precedence
-    if (apiDebugPort) {
-      return `--debug-port ${apiDebugPort}`
-    } else if (argv.includes('--apiDebugPort')) {
-      return `--debug-port ${defaultApiDebugPort}`
-    }
-
-    const apiDebugPortInToml = getConfig().api.debugPort
-    if (apiDebugPortInToml) {
-      return `--debug-port ${apiDebugPortInToml}`
-    }
-
-    // Don't pass in debug port flag, unless configured
-    return ''
-  }
-
   const cedarConfigPath = getConfigPath()
   const streamingSsrEnabled = getConfig().experimental?.streamingSsr?.enabled
 
@@ -212,6 +179,11 @@ export const handler = async ({
   if (streamingSsrEnabled) {
     webCommand = `yarn cross-env NODE_ENV=development rw-dev-fe ${forward}`
   }
+
+  const rootPackageJsonPath = path.join(cedarPaths.base, 'package.json')
+  const rootPackageJson = JSON.parse(
+    fs.readFileSync(rootPackageJsonPath, 'utf8'),
+  )
 
   const isEsm = rootPackageJson.type === 'module'
   const serverWatchCommand = isEsm
@@ -233,7 +205,7 @@ export const handler = async ({
         `  --watch "${cedarConfigPath}"`,
         `  --exec "yarn ${serverWatchCommand}`,
         `    --port ${apiAvailablePort}`,
-        `    ${getApiDebugFlag()}`,
+        `    ${getApiDebugFlag(apiDebugPort)}`,
         '    | rw-log-formatter"',
       ]
         .join(' ')
@@ -265,22 +237,36 @@ export const handler = async ({
     })
   }
 
-  if (hasPackageWorkspaces && fs.existsSync(cedarPaths.packages)) {
-    const packagesToWatch =
-      packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
-    const pkgCommands = await getPackageWatchCommands(packagesToWatch)
-    jobs.push(...pkgCommands)
+  // Extract package workspaces from workspace array pass as argument
+  const packageWorkspaces = workspace.filter(
+    (w) => w !== 'api' && w !== 'web' && w !== 'gen',
+  )
+
+  // Check what was passed as arguments first, before hitting the filesystem as
+  // a performance optimization.
+  if (packageWorkspaces.length > 0) {
+    const hasPackageJsonWorkspaces =
+      Array.isArray(rootPackageJson.workspaces) &&
+      rootPackageJson.workspaces.some((workspace: string) =>
+        workspace.startsWith('packages/'),
+      )
+
+    if (hasPackageJsonWorkspaces && fs.existsSync(cedarPaths.packages)) {
+      const pkgCommands = await getPackageWatchCommands(packageWorkspaces)
+      jobs.push(...pkgCommands)
+    }
   }
 
+  // Run jobs that either don't have a runWhen function or have a runWhen
+  // function that returns true
+  const filteredJobs = jobs.filter((job) => !job.runWhen || job.runWhen())
+
   // TODO: Convert jobs to an array and supply cwd command.
-  const { result } = concurrently(
-    jobs.filter((job) => !job.runWhen || job.runWhen()) as Command[],
-    {
-      prefix: '{name} |',
-      timestampFormat: 'HH:mm:ss',
-      handleInput: true,
-    },
-  )
+  const { result } = concurrently(filteredJobs, {
+    prefix: '{name} |',
+    timestampFormat: 'HH:mm:ss',
+    handleInput: true,
+  })
 
   result.catch((e) => {
     if (e?.message) {
