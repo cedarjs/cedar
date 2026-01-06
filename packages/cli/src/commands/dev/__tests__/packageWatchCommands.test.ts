@@ -37,10 +37,6 @@ vi.mock('../../../lib/colors.js', () => ({
   },
 }))
 
-vi.mock('@cedarjs/project-config', () => ({
-  importStatementPath: (path: string) => path,
-}))
-
 afterEach(() => {
   vi.clearAllMocks()
 })
@@ -72,18 +68,18 @@ describe('getWatchPackagesCommands', () => {
 
     expect(commands).toEqual([
       {
-        command: 'yarn watch',
         name: 'foo',
+        command: 'yarn watch',
         cwd: '/mocked/project/packages/foo',
       },
       {
-        command: 'yarn watch',
         name: 'bar',
+        command: 'yarn watch',
         cwd: '/mocked/project/packages/bar',
       },
       {
-        command: 'yarn watch',
         name: 'baz',
+        command: 'yarn watch',
         cwd: '/mocked/project/packages/baz',
       },
     ])
@@ -97,83 +93,79 @@ describe('getWatchPackagesCommands', () => {
 
     expect(commands).toEqual([
       {
-        command: 'yarn watch',
         name: 'pkg-one',
+        command: 'yarn watch',
         cwd: '/mocked/project/packages/pkg-one',
       },
       {
-        command: 'yarn watch',
         name: 'pkg-two',
+        command: 'yarn watch',
         cwd: '/mocked/project/packages/pkg-two',
       },
     ])
   })
 
-  // it('filters out packages without watch script', async () => {
-  //   vi.mocked(fs.promises.glob).mockReturnValue(
-  //     (async function* () {
-  //       yield '/mocked/project/packages/foo'
-  //       yield '/mocked/project/packages/bar'
-  //       yield '/mocked/project/packages/baz'
-  //       return undefined
-  //     })(),
-  //   )
+  it('filters out packages without watch script', async () => {
+    vi.mocked(fs.promises.glob).mockReturnValue(
+      (async function* () {
+        yield '/mocked/project/packages/foo'
+        yield '/mocked/project/packages/bar'
+        yield '/mocked/project/packages/baz'
+        return undefined
+      })(),
+    )
 
-  //   vi.mocked(fs).readFileSync.mockImplementation((filePath) => {
-  //     const pathStr = filePath.toString()
-  //     if (pathStr.includes('foo')) {
-  //       return JSON.stringify({
-  //         name: 'foo',
-  //         scripts: { watch: 'tsc --watch' },
-  //       })
-  //     }
+    vi.mocked(fs).readFileSync.mockImplementation((filePath) => {
+      // pathStr will be something like '/mocked/project/packages/foo/package.json'
+      const pathStr = filePath.toString()
 
-  //     if (pathStr.includes('bar')) {
-  //       return JSON.stringify({
-  //         name: 'bar',
-  //         scripts: { build: 'tsc' }, // No watch script!
-  //       })
-  //     }
+      if (pathStr.includes('foo')) {
+        return JSON.stringify({
+          name: 'foo',
+          scripts: { watch: 'tsc --watch' },
+        })
+      }
 
-  //     if (pathStr.includes('baz')) {
-  //       return JSON.stringify({
-  //         name: 'baz',
-  //         scripts: { watch: 'tsc --watch' },
-  //       })
-  //     }
-  //     return '{}'
-  //   })
+      if (pathStr.includes('bar')) {
+        return JSON.stringify({
+          name: 'bar',
+          scripts: {
+            // No watch script
+            build: 'tsc',
+          },
+        })
+      }
 
-  //   await watchPackagesTask(['packages/*'])
+      if (pathStr.includes('baz')) {
+        return JSON.stringify({
+          name: 'baz',
+          scripts: { watch: 'tsc --watch' },
+        })
+      }
 
-  //   // Should only watch 'foo' and 'baz', not 'bar'
-  //   expect(vi.mocked(concurrently)).toHaveBeenCalledWith(
-  //     [
-  //       {
-  //         command: 'yarn watch',
-  //         name: 'foo',
-  //         cwd: '/mocked/project/packages/foo',
-  //         prefixColor: 'yellow',
-  //       },
-  //       {
-  //         command: 'yarn watch',
-  //         name: 'baz',
-  //         cwd: '/mocked/project/packages/baz',
-  //         prefixColor: 'yellow',
-  //       },
-  //     ],
-  //     {
-  //       prefix: '{name} |',
-  //       timestampFormat: 'HH:mm:ss',
-  //     },
-  //   )
+      return '{}'
+    })
 
-  //   // Should warn about 'bar'
-  //   expect(console.warn).toHaveBeenCalledWith(
-  //     expect.stringContaining('Warning: '),
-  //   )
-  //   expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('bar'))
-  // })
+    const commands = await getPackageWatchCommands(['packages/*'])
+
+    expect(commands).toEqual([
+      {
+        name: 'foo',
+        command: 'yarn watch',
+        cwd: '/mocked/project/packages/foo',
+      },
+      {
+        name: 'baz',
+        command: 'yarn watch',
+        cwd: '/mocked/project/packages/baz',
+      },
+    ])
+
+    // Should warn about 'bar'
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/Warning: .*skipped: .*bar.*/),
+    )
+  })
 
   it('returns an empty array when no watchable packages exist', async () => {
     vi.mocked(fs.promises.glob).mockReturnValue(
@@ -186,10 +178,7 @@ describe('getWatchPackagesCommands', () => {
     vi.mocked(fs).readFileSync.mockReturnValue(
       JSON.stringify({
         name: 'foo',
-        scripts: {
-          // No watch script
-          build: 'tsc',
-        },
+        // No scripts section
       }),
     )
 
@@ -198,79 +187,24 @@ describe('getWatchPackagesCommands', () => {
     expect(result).toEqual([])
   })
 
-  // it('handles empty packages directory', async () => {
-  //   vi.mocked(fs.promises.glob).mockReturnValue(
-  //     (async function* () {
-  //       yield* []
-  //       return undefined
-  //     })(),
-  //   )
+  it('handles empty packages directory', async () => {
+    vi.mocked(fs.promises.glob).mockReturnValue(
+      (async function* () {
+        yield* []
+        return undefined
+      })(),
+    )
 
-  //   const result = await watchPackagesTask(['packages/*'])
+    const result = await getPackageWatchCommands(['packages/*'])
 
-  //   expect(result).toBeNull()
-  //   expect(vi.mocked(concurrently)).not.toHaveBeenCalled()
-  // })
+    expect(result).toEqual([])
+  })
 
-  // it('throws error for non-existent specific workspace', async () => {
-  //   vi.mocked(fs).existsSync.mockReturnValue(false)
+  it('throws error for non-existent specific workspace', async () => {
+    vi.mocked(fs).existsSync.mockReturnValue(false)
 
-  //   await expect(async () => {
-  //     await watchPackagesTask(['non-existent-package'])
-  //   }).rejects.toThrow('Workspace not found')
-  // })
-
-  // it('warns about multiple packages without watch scripts', async () => {
-  //   vi.mocked(fs.promises.glob).mockReturnValue(
-  //     (async function* () {
-  //       yield '/mocked/project/packages/foo'
-  //       yield '/mocked/project/packages/bar'
-  //       yield '/mocked/project/packages/baz'
-  //       return undefined
-  //     })(),
-  //   )
-
-  //   vi.mocked(fs).readFileSync.mockImplementation((filePath) => {
-  //     const pathStr = filePath.toString()
-  //     if (pathStr.includes('foo')) {
-  //       return JSON.stringify({
-  //         name: 'foo',
-  //         scripts: { watch: 'tsc --watch' },
-  //       })
-  //     }
-
-  //     // bar and baz don't have watch scripts
-  //     return JSON.stringify({
-  //       scripts: { build: 'tsc' },
-  //     })
-  //   })
-
-  //   await watchPackagesTask(['packages/*'])
-
-  //   // Should warn about both 'bar' and 'baz'
-  //   expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('bar'))
-  //   expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('baz'))
-  // })
-
-  // it('handles packages with no scripts section at all', async () => {
-  //   vi.mocked(fs.promises.glob).mockReturnValue(
-  //     (async function* () {
-  //       yield '/mocked/project/packages/foo'
-  //       return undefined
-  //     })(),
-  //   )
-
-  //   vi.mocked(fs).readFileSync.mockReturnValue(
-  //     JSON.stringify({
-  //       name: 'foo',
-  //       version: '1.0.0',
-  //       // No scripts section at all
-  //     }),
-  //   )
-
-  //   const result = await watchPackagesTask(['packages/*'])
-
-  //   expect(result).toBeNull()
-  //   expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('foo'))
-  // })
+    await expect(async () => {
+      await getPackageWatchCommands(['non-existent-package'])
+    }).rejects.toThrow('Workspace not found')
+  })
 })
