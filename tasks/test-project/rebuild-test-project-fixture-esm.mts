@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
 import { hideBin } from 'yargs/helpers'
@@ -13,9 +14,9 @@ import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
 } from './frameworkLinking.js'
-import { webTasks, apiTasks } from './tui-tasks.js'
-import { isAwaitable, isTuiError } from './typing.js'
-import type { TuiTaskDef } from './typing.js'
+import { webTasks, apiTasks } from './tui-tasks.mts'
+import { isAwaitable, isTuiError } from './typing.mts'
+import type { TuiTaskDef } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
@@ -24,11 +25,9 @@ import {
   getCfwBin,
 } from './util.mts'
 
-const ansis = require('ansis')
-
 function recommendedNodeVersion() {
   const templatePackageJsonPath = path.join(
-    __dirname,
+    import.meta.dirname,
     '..',
     '..',
     'packages',
@@ -80,7 +79,7 @@ const args = yargs(hideBin(process.argv))
 
 const { verbose, resume, resumePath, resumeStep } = args
 
-const RW_FRAMEWORK_PATH = path.join(__dirname, '../../')
+const RW_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
 const OUTPUT_PROJECT_PATH = resumePath
   ? /* path.resolve(String(resumePath)) */ resumePath
   : path.join(
@@ -519,7 +518,7 @@ async function runCommand() {
           cleanup: true,
           cwd: OUTPUT_PROJECT_PATH,
           env: {
-            RW_PATH: path.join(__dirname, '../../'),
+            RW_PATH: path.join(import.meta.dirname, '../../'),
           },
         })
       } catch (e) {
@@ -576,7 +575,7 @@ async function runCommand() {
         fs.readFileSync(path.join(OUTPUT_PROJECT_PATH, 'package.json'), 'utf8'),
       )
       const templateRootPackageJsonPath = path.join(
-        __dirname,
+        import.meta.dirname,
         '../../packages/create-cedar-app/templates/esm-ts/package.json',
       )
       const newRootPackageJson = JSON.parse(
