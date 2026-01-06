@@ -60,7 +60,7 @@ vi.mock('../../../lib/generatePrismaClient', () => {
   }
 })
 
-vi.mock('../packgeWatchCommands.js', () => ({
+vi.mock('../packageWatchCommands.js', () => ({
   getPackageWatchCommands: vi.fn().mockResolvedValue([]),
 }))
 
