@@ -2,7 +2,7 @@ import { mockHttpEvent, mockContext } from '@cedarjs/testing/api'
 
 import { handler } from './${name}'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //    https://cedarjs.com/docs/testing#testing-functions
 
 describe('${name} function', () => {
