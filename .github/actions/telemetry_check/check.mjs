@@ -35,9 +35,9 @@ try {
   const mode = process.argv[process.argv.indexOf('--mode') + 1]
   let exitCode = 0
   switch (mode) {
-    case 'crwa':
+    case 'ccdra':
       exitCode = await exec(
-        `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ../project-for-telemetry --typescript true --git false --no-yarn-install`,
+        `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ../project-for-telemetry --esm true --typescript true --git false --no-yarn-install`,
       )
       if (exitCode) {
         process.exit(1)

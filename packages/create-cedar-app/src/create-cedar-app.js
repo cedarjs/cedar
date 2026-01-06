@@ -450,23 +450,21 @@ async function handleEsmPreference(esmFlag) {
     return esmFlag
   }
 
-  return false
-  // Disable this for now, while the ESM flag is hidden
   // Prompt user for preference
-  // try {
-  //   const response = await tui.prompt({
-  //     type: 'Select',
-  //     name: 'esm',
-  //     choices: ['CJS', 'ESM'],
-  //     message: 'Select your preferred project type',
-  //     initial: 'CJS',
-  //   })
-  //   return response.esm === 'ESM'
-  // } catch (_error) {
-  //   recordErrorViaTelemetry('User cancelled install at esm prompt')
-  //   await shutdownTelemetry()
-  //   process.exit(1)
-  // }
+  try {
+    const response = await tui.prompt({
+      type: 'Select',
+      name: 'esm',
+      choices: ['CJS', 'ESM'],
+      message: 'Select your preferred project type',
+      initial: 'ESM',
+    })
+    return response.esm === 'ESM'
+  } catch (_error) {
+    recordErrorViaTelemetry('User cancelled install at esm prompt')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
 }
 
 async function handleGitPreference(gitInitFlag) {
@@ -698,7 +696,6 @@ async function createRedwoodApp() {
       describe: 'Generate a TypeScript project',
     })
     .option('esm', {
-      hidden: true,
       default: null,
       type: 'boolean',
       describe: 'Generate an ESM project',
@@ -759,7 +756,7 @@ async function createRedwoodApp() {
     parsedFlags['yarn-install'] ??
     (_isYarnBerryOrNewer ? parsedFlags.yes : null)
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
-  const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
+  const esmFlag = parsedFlags.esm ?? parsedFlags.yes
   const overwrite = parsedFlags.overwrite
   const gitInitFlag = parsedFlags['git-init'] ?? parsedFlags.yes
   const commitMessageFlag =
