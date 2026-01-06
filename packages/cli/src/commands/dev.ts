@@ -4,17 +4,21 @@ import type { Argv } from 'yargs'
 // @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
+import { workspaces } from '../lib/project.js'
+// @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'dev [workspace..]'
-export const description = 'Start development servers for api, and web'
+export const description =
+  'Start development servers for api, web, and packages'
 
 export const builder = (yargs: Argv) => {
   yargs
     .positional('workspace', {
-      choices: ['api', 'web'],
-      default: ['api', 'web'],
-      description: 'Which dev server(s) to start',
+      default: ['api', 'web', 'packages/*'],
+      description:
+        'Which dev server(s) to start. Valid values: api, web, packages/*, ' +
+        '<package-name>',
       type: 'string',
       array: true,
     })
@@ -47,6 +51,38 @@ export const builder = (yargs: Argv) => {
       }
 
       console.warn(`${c.warning('Warning')}: ${check.message}\n`)
+    })
+    .check((argv) => {
+      const workspaceArg = argv.workspace
+
+      if (!Array.isArray(workspaceArg)) {
+        return 'Workspace must be an array'
+      }
+
+      // Remove all default workspace names and then check if there are any
+      // remaining workspaces to validate. This is an optimization to avoid
+      // calling `workspaces({ includePackages: true })` as that's a somewhat
+      // expensive method call that hits the filesystem and parses files
+
+      const filtered = workspaceArg.filter(
+        (item) => item !== 'api' && item !== 'web' && item !== 'packages/*',
+      )
+
+      if (filtered.length === 0) {
+        return true
+      }
+
+      const workspaceNames = workspaces({ includePackages: true })
+
+      if (!filtered.every((item) => workspaceNames.includes(item))) {
+        return (
+          c.error(`Unknown workspace(s) ${filtered.join(' ')}`) +
+          '\n\nValid values are: ' +
+          workspaceNames.join(', ')
+        )
+      }
+
+      return true
     })
     .epilogue(
       `Also see the ${terminalLink(
