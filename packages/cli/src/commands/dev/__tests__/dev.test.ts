@@ -82,7 +82,7 @@ vi.mock('../../lib/project.js', () => ({
 }))
 
 import concurrently from 'concurrently'
-import { find } from 'lodash'
+import find from 'lodash/find.js'
 import { vi, describe, afterEach, it, expect } from 'vitest'
 
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
