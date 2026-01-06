@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import execa from 'execa'
 import { Listr } from 'listr2'
@@ -12,9 +11,6 @@ import {
   exec,
   getCfwBin,
 } from './util.mts'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 // This variable gets used in other functions
 // and is set when webTasks or apiTasks are called
@@ -154,7 +150,7 @@ export async function webTasks(
         title: 'Creating MDX Storybook stories',
         task: () => {
           const cedarMdxStoryContent = fs.readFileSync(
-            `${path.resolve(__dirname, 'codemods', 'CedarJS.mdx')}`,
+            `${path.resolve(import.meta.dirname, 'codemods', 'CedarJS.mdx')}`,
           )
 
           fs.writeFileSync(
@@ -798,7 +794,7 @@ export async function apiTasks(
 
           // Create describeContacts.test.ts
           const describeScenarioFixture = path.join(
-            __dirname,
+            import.meta.dirname,
             'templates',
             'api',
             'contacts.describeScenario.test.ts.template',
@@ -935,7 +931,7 @@ export async function fragmentsTasks(
           throw new Error('Output path not set')
         }
 
-        const templatesPath = path.join(__dirname, 'templates', 'web')
+        const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
         const componentsPath = path.join(
           OUTPUT_PATH,
           'web',
@@ -964,7 +960,7 @@ export async function fragmentsTasks(
           throw new Error('Output path not set')
         }
 
-        const templatesPath = path.join(__dirname, 'templates', 'api')
+        const templatesPath = path.join(import.meta.dirname, 'templates', 'api')
         const graphqlPath = path.join(OUTPUT_PATH, 'api', 'src', 'graphql')
         const servicesPath = path.join(OUTPUT_PATH, 'api', 'src', 'services')
 

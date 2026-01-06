@@ -1,11 +1,9 @@
-/* eslint-env node, es2021*/
-
 import fs from 'node:fs'
 import path from 'node:path'
 
 import type { Options as ExecaOptions } from 'execa'
 
-import type { TuiTaskList } from './typing.js'
+import type { TuiTaskList } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
   updatePkgJsonScripts,
@@ -21,7 +19,7 @@ function getExecaOptions(cwd: string): ExecaOptions {
 // and is set when webTasks or apiTasks are called
 let OUTPUT_PATH: string
 
-const RW_FRAMEWORK_PATH = path.join(__dirname, '../../')
+const RW_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
 
 function fullPath(name: string, { addExtension } = { addExtension: true }) {
   if (addExtension) {
@@ -40,7 +38,7 @@ async function applyCodemod(codemod: string, target: string) {
   const args = [
     '--fail-on-error',
     '-t',
-    `${path.resolve(__dirname, 'codemods', codemod)} ${target}`,
+    `${path.resolve(import.meta.dirname, 'codemods', codemod)} ${target}`,
     '--parser',
     'tsx',
     '--verbose=2',
@@ -51,7 +49,7 @@ async function applyCodemod(codemod: string, target: string) {
   const subprocess = exec(
     'yarn jscodeshift',
     args,
-    getExecaOptions(path.resolve(__dirname)),
+    getExecaOptions(path.resolve(import.meta.dirname)),
   )
 
   return subprocess
@@ -180,7 +178,7 @@ export async function webTasks(outputPath: string) {
         title: 'Creating MDX Storybook stories',
         task: () => {
           const cedarMdxStoryContent = fs.readFileSync(
-            `${path.resolve(__dirname, 'codemods', 'CedarJS.mdx')}`,
+            `${path.resolve(import.meta.dirname, 'codemods', 'CedarJS.mdx')}`,
           )
 
           fs.writeFileSync(
@@ -877,7 +875,7 @@ export async function apiTasks(
 
         // Create describeContacts.test.ts
         const describeScenarioFixture = path.join(
-          __dirname,
+          import.meta.dirname,
           'templates',
           'api',
           'contacts.describeScenario.test.ts.template',
@@ -901,7 +899,7 @@ export async function apiTasks(
       title: 'Add context tests',
       task: () => {
         const templatePath = path.join(
-          __dirname,
+          import.meta.dirname,
           'templates',
           'api',
           'context.test.ts.template',
@@ -925,7 +923,7 @@ export async function apiTasks(
           return
         }
 
-        const templatesDir = path.join(__dirname, 'templates', 'api')
+        const templatesDir = path.join(import.meta.dirname, 'templates', 'api')
         const templatePath1 = path.join(templatesDir, '1-db-import.test.ts')
         const templatePath2 = path.join(templatesDir, '2-db-import.test.ts')
         const templatePath3 = path.join(templatesDir, '3-db-import.test.ts')
@@ -1022,7 +1020,7 @@ export async function fragmentsTasks(outputPath: string) {
     {
       title: 'Copy components from templates',
       task: () => {
-        const templatesPath = path.join(__dirname, 'templates', 'web')
+        const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
         const componentsPath = path.join(
           OUTPUT_PATH,
           'web',
@@ -1047,7 +1045,7 @@ export async function fragmentsTasks(outputPath: string) {
     {
       title: 'Copy sdl and service for groceries from templates',
       task: () => {
-        const templatesPath = path.join(__dirname, 'templates', 'api')
+        const templatesPath = path.join(import.meta.dirname, 'templates', 'api')
         const graphqlPath = path.join(OUTPUT_PATH, 'api', 'src', 'graphql')
         const servicesPath = path.join(OUTPUT_PATH, 'api', 'src', 'services')
 
