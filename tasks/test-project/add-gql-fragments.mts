@@ -1,4 +1,3 @@
-/* eslint-env node, es6*/
 import path from 'node:path'
 
 import { hideBin } from 'yargs/helpers'
