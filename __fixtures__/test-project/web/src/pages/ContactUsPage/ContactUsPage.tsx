@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { validateEmail } from '@my-org/validators'
 import { useForm } from 'react-hook-form'
 
 import {
@@ -94,9 +95,16 @@ const ContactUsPage = () => {
           name="email"
           validation={{
             required: true,
-            pattern: {
-              value: /[^@]+@[^.]+..+/,
-              message: 'Please enter a valid email address',
+            validate: (value) => {
+              if (!value) {
+                return 'Email is required'
+              }
+
+              if (!validateEmail(value)) {
+                return 'Please enter a valid email address'
+              }
+
+              return true
             },
           }}
           className="rounded-sm border px-2 py-1"
