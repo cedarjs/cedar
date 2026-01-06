@@ -2,25 +2,6 @@ import type FS from 'fs'
 
 import '../../../lib/mockTelemetry.js'
 
-function defaultPaths() {
-  return {
-    base: '/mocked/project',
-    api: {
-      base: '/mocked/project/api',
-      src: '/mocked/project/api/src',
-      dist: '/mocked/project/api/dist',
-    },
-    web: {
-      base: '/mocked/project/web',
-      dist: '/mocked/project/web/dist',
-    },
-    packages: '/mocked/project/packages',
-    generated: {
-      base: '/mocked/project/.redwood',
-    },
-  }
-}
-
 vi.mock('concurrently', () => ({
   __esModule: true, // this property makes it work
   default: vi.fn().mockReturnValue({
@@ -39,16 +20,16 @@ vi.mock('node:fs', async (importOriginal) => {
       ...actualFs,
       readFileSync: (filePath: string) => {
         if (filePath.endsWith('.json')) {
+          // For a test, using `any` will have to be good enough
+          const packgeJson: Record<string, any> = {
+            workspaces: ['api', 'web', 'packages/*'],
+          }
+
           if (filePath.includes('esm-project')) {
-            return '{ "type": "module" }'
+            packgeJson.type = 'module'
           }
 
-          if (filePath.endsWith('package.json')) {
-            // Root package.json with workspaces by default
-            return '{ "workspaces": ["api", "web", "packages/*"] }'
-          }
-
-          return '{}'
+          return JSON.stringify(packgeJson)
         }
 
         return 'File content'
@@ -79,8 +60,8 @@ vi.mock('../../../lib/generatePrismaClient', () => {
   }
 })
 
-vi.mock('../watchPackagesTask.js', () => ({
-  watchPackagesTask: vi.fn().mockResolvedValue(undefined),
+vi.mock('../packgeWatchCommands.js', () => ({
+  getPackageWatchCommands: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock('../../../lib/ports', () => {
@@ -112,7 +93,26 @@ import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../../lib/index.js'
 import { handler } from '../devHandler.js'
-import { watchPackagesTask } from '../watchPackagesTask.js'
+import { getPackageWatchCommands } from '../packgeWatchCommands.js'
+
+function defaultPaths() {
+  return {
+    base: '/mocked/project',
+    api: {
+      base: '/mocked/project/api',
+      src: '/mocked/project/api/src',
+      dist: '/mocked/project/api/dist',
+    },
+    web: {
+      base: '/mocked/project/web',
+      dist: '/mocked/project/web/dist',
+    },
+    packages: '/mocked/project/packages',
+    generated: {
+      base: '/mocked/project/.redwood',
+    },
+  }
+}
 
 async function defaultConfig() {
   const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
@@ -169,7 +169,7 @@ describe('yarn cedar dev', () => {
     vi.clearAllMocks()
     vi.mocked(getPaths).mockReturnValue(defaultPaths())
     vi.mocked(getConfig).mockReturnValue(await defaultConfig())
-    vi.mocked(watchPackagesTask).mockResolvedValue(undefined)
+    vi.mocked(getPackageWatchCommands).mockResolvedValue([])
   })
 
   it('Should run api and web dev servers, and generator watcher by default', async () => {

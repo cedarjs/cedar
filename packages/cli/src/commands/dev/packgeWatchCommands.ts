@@ -1,15 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import concurrently from 'concurrently'
-
 import { importStatementPath } from '@cedarjs/project-config'
-import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
 import c from '../../lib/colors.js'
-// @ts-expect-error - Types not available for JS files
-import { exitWithError } from '../../lib/exit.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
 
@@ -17,10 +12,9 @@ interface WatchPackageCommand {
   command: string
   name: string
   cwd: string
-  prefixColor?: string
 }
 
-export async function getWatchPackageCommands(
+export async function getPackageWatchCommands(
   packageWorkspaces: string[],
 ): Promise<WatchPackageCommand[]> {
   const cedarPaths = getPaths()
@@ -48,8 +42,8 @@ export async function getWatchPackageCommands(
       })
 
   // Filter to only packages that have a watch script
-  const watchablePackages = []
-  const packagesWithoutWatch = []
+  const watchablePackages: string[] = []
+  const packagesWithoutWatch: (string | undefined)[] = []
 
   for (const workspacePath of workspacePaths) {
     const packageJsonPath = path.join(workspacePath, 'package.json')
@@ -71,37 +65,23 @@ export async function getWatchPackageCommands(
   // Log warnings for packages without watch scripts
   if (packagesWithoutWatch.length > 0) {
     console.warn(
-      c.warning('Warning: ') +
-        `The following package(s) do not have a "watch" script and will be skipped: ${packagesWithoutWatch.join(', ')}`,
+      `${c.warning('Warning: ')} The following package(s) do not have a ` +
+        '"watch" script and will be skipped: ' +
+        packagesWithoutWatch.join(', '),
     )
   }
 
-  return watchablePackages.map((workspacePath) => ({
-    command: 'yarn watch',
-    name: workspacePath.split('/').at(-1) || 'package',
-    cwd: workspacePath,
-    prefixColor: 'yellow',
-  }))
-}
+  return watchablePackages.map((workspacePath) => {
+    const name = workspacePath.split('/').at(-1)
 
-export async function watchPackagesTask(packageWorkspaces: string[]) {
-  const commands = await getWatchPackageCommands(packageWorkspaces)
+    if (!name) {
+      throw new Error(`Invalid package path: ${workspacePath}`)
+    }
 
-  // Return null if no watchable packages found
-  if (commands.length === 0) {
-    return null
-  }
-
-  // Use concurrently to run yarn watch in each package directory
-  const { result } = concurrently(commands, {
-    prefix: '{name} |',
-    timestampFormat: 'HH:mm:ss',
-  })
-
-  return result.catch((e) => {
-    if (e?.message) {
-      errorTelemetry(process.argv, `Error watching packages: ${e.message}`)
-      exitWithError(e)
+    return {
+      command: 'yarn watch',
+      name,
+      cwd: workspacePath,
     }
   })
 }

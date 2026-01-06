@@ -22,7 +22,7 @@ import { getFreePort } from '../../lib/ports.js'
 // @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../../lib/project.js'
 
-import { getWatchPackageCommands } from './watchPackagesTask.js'
+import { getPackageWatchCommands } from './packgeWatchCommands.js'
 
 const defaultApiDebugPort = 18911
 
@@ -268,8 +268,8 @@ export const handler = async ({
   if (hasPackageWorkspaces && fs.existsSync(cedarPaths.packages)) {
     const packagesToWatch =
       packageWorkspaces.length > 0 ? packageWorkspaces : ['packages/*']
-    const pkgCommands = await getWatchPackageCommands(packagesToWatch)
-    jobs.push(...(pkgCommands as any))
+    const pkgCommands = await getPackageWatchCommands(packagesToWatch)
+    jobs.push(...pkgCommands)
   }
 
   // TODO: Convert jobs to an array and supply cwd command.
