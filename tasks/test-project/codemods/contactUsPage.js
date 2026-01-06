@@ -39,9 +39,16 @@ const body = `
     name="email"
     validation={{
       required: true,
-      pattern: {
-        value: /[^@]+@[^.]+\..+/,
-        message: 'Please enter a valid email address',
+      validate: (value) => {
+        if (!value) {
+          return 'Email is required'
+        }
+
+        if (!validateEmail(value)) {
+          return 'Please enter a valid email address'
+        }
+
+        return true
       },
     }}
     className="border rounded-sm px-2 py-1"
@@ -156,6 +163,15 @@ export default (file, api) => {
         ),
       ],
       j.stringLiteral('@cedarjs/router'),
+    ),
+    j.importDeclaration(
+      [
+        j.importSpecifier(
+          j.identifier('validateEmail'),
+          j.identifier('validateEmail'),
+        ),
+      ],
+      j.stringLiteral('@my-org/validators'),
     ),
   ]
 
