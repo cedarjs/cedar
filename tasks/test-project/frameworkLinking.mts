@@ -5,9 +5,8 @@ export function addFrameworkDepsToProject(
   projectPath: string,
   stdio?: 'pipe' | 'ignore' | 'inherit',
 ) {
-  return execa('yarn project:deps', [], {
+  return execa('yarn', ['project:deps'], {
     cwd: frameworkPath,
-    shell: true,
     stdio: stdio ?? 'inherit',
     env: {
       CFW_PATH: frameworkPath,
@@ -21,9 +20,8 @@ export function copyFrameworkPackages(
   projectPath: string,
   stdio?: 'pipe' | 'ignore' | 'inherit',
 ) {
-  return execa('yarn project:copy', [], {
+  return execa('yarn', ['project:copy'], {
     cwd: frameworkPath,
-    shell: true,
     stdio: stdio ?? 'inherit',
     env: {
       CFW_PATH: frameworkPath,
