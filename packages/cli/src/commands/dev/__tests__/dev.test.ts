@@ -20,11 +20,16 @@ vi.mock('node:fs', async (importOriginal) => {
       ...actualFs,
       readFileSync: (filePath: string) => {
         if (filePath.endsWith('.json')) {
-          if (filePath.includes('esm-project')) {
-            return '{ "type": "module" }'
+          // For a test, using `any` will have to be good enough
+          const packgeJson: Record<string, any> = {
+            workspaces: ['api', 'web', 'packages/*'],
           }
 
-          return '{}'
+          if (filePath.includes('esm-project')) {
+            packgeJson.type = 'module'
+          }
+
+          return JSON.stringify(packgeJson)
         }
 
         return 'File content'
@@ -55,6 +60,10 @@ vi.mock('../../../lib/generatePrismaClient', () => {
   }
 })
 
+vi.mock('../packageWatchCommands.js', () => ({
+  getPackageWatchCommands: vi.fn().mockResolvedValue([]),
+}))
+
 vi.mock('../../../lib/ports', () => {
   return {
     // We're not actually going to use the port, so it's fine to just say it's
@@ -66,6 +75,10 @@ vi.mock('../../../lib/ports', () => {
 
 vi.mock('../../../lib/index.js', () => ({
   getPaths: vi.fn(defaultPaths),
+}))
+
+vi.mock('../../lib/project.js', () => ({
+  serverFileExists: vi.fn(() => false),
 }))
 
 import concurrently from 'concurrently'
@@ -80,6 +93,7 @@ import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../../lib/index.js'
 import { handler } from '../devHandler.js'
+import { getPackageWatchCommands } from '../packageWatchCommands.js'
 
 function defaultPaths() {
   return {
@@ -93,6 +107,7 @@ function defaultPaths() {
       base: '/mocked/project/web',
       dist: '/mocked/project/web/dist',
     },
+    packages: '/mocked/project/packages',
     generated: {
       base: '/mocked/project/.redwood',
     },
@@ -154,6 +169,7 @@ describe('yarn cedar dev', () => {
     vi.clearAllMocks()
     vi.mocked(getPaths).mockReturnValue(defaultPaths())
     vi.mocked(getConfig).mockReturnValue(await defaultConfig())
+    vi.mocked(getPackageWatchCommands).mockResolvedValue([])
   })
 
   it('Should run api and web dev servers, and generator watcher by default', async () => {
