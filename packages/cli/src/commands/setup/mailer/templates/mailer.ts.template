@@ -7,7 +7,8 @@ import { logger } from 'src/lib/logger'
 export const mailer = new Mailer({
   handling: {
     handlers: {
-      // TODO: Update this handler config or switch it out for a different handler completely
+      // TODO: Update this handler config or switch it out for a different
+      // handler completely
       nodemailer: new NodemailerMailHandler({
         transport: {
           host: 'localhost',
