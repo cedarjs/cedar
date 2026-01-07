@@ -21,7 +21,7 @@ export const NETLIFY_TOML = `\
 # \`netlify dev\`.
 #
 # Quick links to the docs:
-# - Netlfy Dev https://docs.netlify.com/api-and-cli-guides/cli-guides/local-development
+# - Netlify Dev https://docs.netlify.com/api-and-cli-guides/cli-guides/local-development
 # - Netlify's CLI https://docs.netlify.com/api-and-cli-guides/cli-guides/get-started-with-cli/
 # - \`netlify link\` https://cli.netlify.com/commands/link/
 [dev]
