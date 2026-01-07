@@ -1,7 +1,7 @@
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 export const command = 'studio'
-export const description = 'Run the Redwood development studio'
+export const description = 'Run the CedarJS development studio'
 
 export function builder(yargs) {
   yargs.option('open', {
