@@ -10,7 +10,7 @@ When designing the Mailer, it was crucial that mail could be:
 - send safely in both development and test environments in a "sandbox" without worrying that emails might accidentally leak.
 - be sent as text and/or html and composed using templates by popular tools like [React Email](https://react.email/docs/introduction) or [MJML](https://mjml.io/), with support for more methods in the future.
 - unit tested to set the proper to, from, cc, subject, body, and more.
-- integrated with CedarJS Studio to help design and preview templates.
+- integrated with [CedarJS Studio](studio) to help design and preview templates.
 
 The CedarJS Mailer does more than "just send an email". It is a complete end-to-end design, development, and testing package for emails.
 
@@ -257,7 +257,7 @@ development: {
 
 :::tip
 
-The Cedar Studio has some helpful features when it comes to using the Mailer during development. It can provide a mail inbox so that you can send mail to your local machine and see the results. It can also provide live previews of your rendered mail templates as a guide to what they will likely look like when sent to your end users.
+[Cedar Studio](studio) has some helpful features when it comes to using the Mailer during development. It can provide a mail inbox so that you can send mail to your local machine and see the results. It can also provide live previews of your rendered mail templates as a guide to what they will likely look like when sent to your end users.
 
 :::
 
@@ -267,7 +267,7 @@ If neither the test nor development mode conditions are met, the Mailer will sta
 
 ### Studio
 
-Cedar Studio is tightly integrated with the mailer. The goal is to provide you with not just the ability to send mail but also the development tools to make your experience easier and more enjoyable.
+[Cedar Studio](studio) is tightly integrated with the mailer. The goal is to provide you with not just the ability to send mail but also the development tools to make your experience easier and more enjoyable.
 
 #### Template Previews
 
