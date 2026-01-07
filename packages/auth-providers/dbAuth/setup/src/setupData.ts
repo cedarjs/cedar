@@ -32,8 +32,8 @@ model User {
   salt                String
   resetToken          String?
   resetTokenExpiresAt DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
 `)
   },
