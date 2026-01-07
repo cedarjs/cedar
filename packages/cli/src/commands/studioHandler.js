@@ -8,7 +8,7 @@ export const handler = async (options) => {
         'The studio package is not installed, installing it for you, this ' +
           'may take a moment...',
       )
-      await installModule('@cedarjs/studio', '1')
+      await installModule('@cedarjs/studio', '2')
       console.log('Studio package installed successfully.')
 
       const installedRealtime = await installModule('@cedarjs/realtime')
