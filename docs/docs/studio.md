@@ -8,7 +8,7 @@ CedarJS Studio is a package used during development to gain runtime insights int
 
 ## Motivation
 
-Cedar provides tools that lets developers "get to work on what makes your application special, instead of wasting cycles choosing and re-choosing various technologies and configurations."[1](https://github.com/cedarjs/cedar/blob/main/README.md).
+Cedar wants to provide tools that lets developers get to work on what makes your application special, instead of wasting cycles choosing and re-choosing various technologies and configurations.
 
 Much happens while your app processes a request: Invoke a function; handle a GraphQL request; resolve the request with a service; build and execute a SQL statement; connect to the database; handle the query response; further resolve the response so it contains all the data needed; return the result ... and more.
 
@@ -45,7 +45,7 @@ Cedar Studio is a command line tool which offers a web UI aimed at providing ins
 There is no setup needed to begin using the studio; simply execute the following command to start the studio at `localhost:4318`:
 
 ```bash
-yarn rw studio
+yarn cedar studio
 ```
 
 The first time you run this command it will likely install the studio package which may take a small amount of time.
@@ -121,12 +121,3 @@ the root of your Cedar project.
 Studio stores the ingested telemetry to `studio/prisma.db` within the
 `.redwood` folder. You should not need to touch this file other than if you
 wish to delete it to erase any existing telemetry data.
-
-## Availability
-
-Along the release of Cedar v7, Studio has been rewritten and is available as
-a stable version. Just run `yarn rw studio` to start it! Prior to RW v7 Studio
-was available as an experimental feature. If you're still not using the stable
-version of RW v7, see this forum topic for information on the old experimental
-version of Studio
-https://community.redwoodjs.com/t/redwood-studio-experimental/4771
