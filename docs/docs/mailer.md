@@ -10,7 +10,7 @@ When designing the Mailer, it was crucial that mail could be:
 - send safely in both development and test environments in a "sandbox" without worrying that emails might accidentally leak.
 - be sent as text and/or html and composed using templates by popular tools like [React Email](https://react.email/docs/introduction) or [MJML](https://mjml.io/), with support for more methods in the future.
 - unit tested to set the proper to, from, cc, subject, body, and more.
-- integrated with CedarJS Studio to help design and preview templates.
+- integrated with [CedarJS Studio](studio) to help design and preview templates.
 
 The CedarJS Mailer does more than "just send an email". It is a complete end-to-end design, development, and testing package for emails.
 
@@ -30,7 +30,7 @@ Mailer currently offers the following renderers:
 - [@cedarjs/mailer-renderer-react-email](https://github.com/cedarjs/cedar/tree/main/packages/mailer/renderers/react-email) based on [React Email](https://react.email/)
 - [@cedarjs/mailer-renderer-mjml-react](https://github.com/cedarjs/cedar/tree/main/packages/mailer/renderers/mjml-react) based on [MJML](https://github.com/Faire/mjml-react)
 
-You can find community-maintained renderers by searching across npm, our forums, and other community spaces.
+You can find community-maintained renderers by searching across npm, our Discord, and other community spaces.
 
 :::important
 
@@ -49,13 +49,13 @@ Mailer currently offers the following handlers:
 - [@cedarjs/mailer-handler-studio](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers/studio), which sends emails to the CedarJS Studio using nodemailer internally.
 - [@cedarjs/mailer-handler-resend](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers/resend), which uses [Resend](https://resend.com/).
 
-You can find community-maintained handlers by searching across npm, our forums, and other community spaces.
+You can find community-maintained handlers by searching across npm, our Discord, and other community spaces.
 
 ### Files & Directories
 
 The core file for the Mailer functions is `api/src/lib/mailer.ts`. This file contains configuration defining which handlers and renderers to use and when. It starts out looking like this:
 
-```ts title=api/src/lib/mailer.ts
+```ts title="api/src/lib/mailer.ts"
 import { Mailer } from '@cedarjs/mailer-core'
 import { NodemailerMailHandler } from '@cedarjs/mailer-handler-nodemailer'
 import { ReactEmailRenderer } from '@cedarjs/mailer-renderer-react-email'
@@ -65,7 +65,8 @@ import { logger } from 'src/lib/logger'
 export const mailer = new Mailer({
   handling: {
     handlers: {
-      // TODO: Update this handler config or switch it out for a different handler completely
+      // TODO: Update this handler config or switch it out for a different
+      // handler completely
       nodemailer: new NodemailerMailHandler({
         transport: {
           host: 'localhost',
@@ -97,7 +98,7 @@ Mailer also expects you to put your mail react components inside the `api/src/ma
 The Mailer is not set up by default when you create a new CedarJS app, but it is easy to do so. Simply run the following CLI command:
 
 ```bash title="CedarJS CLI"
-yarn rw setup mailer
+yarn cedar setup mailer
 ```
 
 This command sets up the necessary files and dependencies. You can find more information on this command at [this](https://cedarjs.com/docs/cli-commands#setup-mailer) specific section of our docs.
@@ -108,13 +109,13 @@ This command sets up the necessary files and dependencies. You can find more inf
 
 The best way to understand using the Mailer is with an example.
 
-In the tutorial, we built out a blog site. Let's say we have added a contact us functionality and the contact us form takes a name, email, and message and stores it in the database.
+In the tutorial, we built out a blog site. Let's say we have added a "Contact Us" functionality and the Contact Us form takes a name, email, and message and stores it in the database.
 
-For this example, suppose we want to also send an email to some internal inbox with this contact us submission.
+For this example, suppose we want to also send an email to some internal inbox with this Contact Us submission.
 
 The service would be updated like so:
 
-```ts title=api/src/services/contacts.ts
+```ts title="api/src/services/contacts.ts"
 import { mailer } from 'src/lib/mailer'
 import { ContactUsEmail } from 'src/mail/Example/Example'
 
@@ -132,7 +133,8 @@ export const createContact: MutationResolvers['createContact'] = async ({
     ContactUsEmail({
       name: input.name,
       email: input.email,
-      // Note the date is hardcoded here for the sake of test snapshot consistency
+      // Note the date is hardcoded here for the sake of test snapshot
+      // consistency
       when: new Date(0).toLocaleString(),
     }),
     {
@@ -158,7 +160,7 @@ In the example above, we specified a `replyTo` because that suited our business 
 
 In that case, we can use the `defaults` property in our `api/src/lib/mailer.ts` config:
 
-```ts title=api/src/lib/mailer.ts
+```ts title="api/src/lib/mailer.ts"
 defaults: {
   replyTo: 'no-reply@example.com',
 },
@@ -174,11 +176,11 @@ This helps improve your experience as you don't have to worry about sending real
 
 When your `NODE_ENV` is set to `test`, then the Mailer will start in test mode. In this mode, all mail will be sent using a test handler rather than the default production one or any specific one set when calling `send` or `sendWithoutRendering`.
 
-By default, when the Mailer is created, it will check if the `@cedarjs/mailer-handler-in-memory` package is available. If it is, this will become the test handler; otherwise, the test handler will be a no-op that does nothing. The `yarn rw setup mailer` command adds this `@cedarjs/mailer-handler-in-memory` package as a `devDependency` automatically for you.
+By default, when the Mailer is created, it will check if the `@cedarjs/mailer-handler-in-memory` package is available. If it is, this will become the test handler; otherwise, the test handler will be a no-op that does nothing. The `yarn cedar setup mailer` command adds this `@cedarjs/mailer-handler-in-memory` package as a `devDependency` automatically for you.
 
 If you want control over this test mode behavior, you can include the following configuration in the `mailer.ts` file:
 
-```ts title=api/src/lib/mailer.ts
+```ts title="api/src/lib/mailer.ts"
 test: {
   when: process.env.NODE_ENV === 'test',
   handler: 'someOtherHandler',
@@ -189,7 +191,7 @@ The `when` property can either be a boolean or a function that returns a boolean
 
 As an example of how this helps with testing, let's work off the example we created above. Let's now test our email functionality in the corresponding test file:
 
-```ts title=api/src/services/contacts/contacts.test.ts
+```ts title="api/src/services/contacts/contacts.test.ts"
 describe('contacts', () => {
   scenario('creates a contact', async () => {
     const result = await createContact({
@@ -246,7 +248,7 @@ Similar to the test mode, the Mailer also has a development mode. This mode is s
 
 You can control the development mode behavior with the following configuration in the `mailer.ts` file:
 
-```ts title=api/src/lib/mailer.ts
+```ts title="api/src/lib/mailer.ts"
 development: {
   when: process.env.NODE_ENV !== 'production',
   handler: 'someOtherHandler',
@@ -255,7 +257,7 @@ development: {
 
 :::tip
 
-The Mailer studio has some helpful features when it comes to using the Mailer during development. It can provide a mail inbox so that you can send mail to your local machine and see the results. It can also provide live previews of your rendered mail templates as a guide to what they will likely look like when sent to your end users.
+[Cedar Studio](studio) has some helpful features when it comes to using the Mailer during development. It can provide a mail inbox so that you can send mail to your local machine and see the results. It can also provide live previews of your rendered mail templates as a guide to what they will likely look like when sent to your end users.
 
 :::
 
@@ -265,7 +267,7 @@ If neither the test nor development mode conditions are met, the Mailer will sta
 
 ### Studio
 
-Cedar Studio is tightly integrated with the mailer. The goal is to provide you with not just the ability to send mail but also the development tools to make your experience easier and more enjoyable.
+[Cedar Studio](studio) is tightly integrated with the mailer. The goal is to provide you with not just the ability to send mail but also the development tools to make your experience easier and more enjoyable.
 
 #### Template Previews
 
@@ -285,4 +287,4 @@ If the Mailer does not currenly provide a [handler](#handlers) or [renderer](#re
 
 To do this, read over the existing implementations for handlers [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers) and renderers [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/renderers). You can also find the interfaces that a handler or mailer must satisfy [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/core) in the `@cedarjs/mailer-core` package.
 
-Be sure to check out the community forum for people working on similar work, to document your own creations, or to get help on anything.
+Be sure to check out the [Discord](https://cedarjs.com/discord) for people working on similar work, to document your own creations, or to get help on anything.
