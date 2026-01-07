@@ -30,7 +30,7 @@ Mailer currently offers the following renderers:
 - [@cedarjs/mailer-renderer-react-email](https://github.com/cedarjs/cedar/tree/main/packages/mailer/renderers/react-email) based on [React Email](https://react.email/)
 - [@cedarjs/mailer-renderer-mjml-react](https://github.com/cedarjs/cedar/tree/main/packages/mailer/renderers/mjml-react) based on [MJML](https://github.com/Faire/mjml-react)
 
-You can find community-maintained renderers by searching across npm, our forums, and other community spaces.
+You can find community-maintained renderers by searching across npm, our Discord, and other community spaces.
 
 :::important
 
@@ -49,7 +49,7 @@ Mailer currently offers the following handlers:
 - [@cedarjs/mailer-handler-studio](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers/studio), which sends emails to the CedarJS Studio using nodemailer internally.
 - [@cedarjs/mailer-handler-resend](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers/resend), which uses [Resend](https://resend.com/).
 
-You can find community-maintained handlers by searching across npm, our forums, and other community spaces.
+You can find community-maintained handlers by searching across npm, our Discord, and other community spaces.
 
 ### Files & Directories
 
@@ -287,4 +287,4 @@ If the Mailer does not currenly provide a [handler](#handlers) or [renderer](#re
 
 To do this, read over the existing implementations for handlers [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/handlers) and renderers [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/renderers). You can also find the interfaces that a handler or mailer must satisfy [here](https://github.com/cedarjs/cedar/tree/main/packages/mailer/core) in the `@cedarjs/mailer-core` package.
 
-Be sure to check out the community forum for people working on similar work, to document your own creations, or to get help on anything.
+Be sure to check out the [Discord](https://cedarjs.com/discord) for people working on similar work, to document your own creations, or to get help on anything.
