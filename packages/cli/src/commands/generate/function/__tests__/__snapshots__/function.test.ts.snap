@@ -13,8 +13,8 @@ exports[`Single word default files > creates a single word function file > Test 
 
 import { handler } from './foo'
 
-//   Improve this test with help from the CedarJS Testing Doc:
-//    https://cedarjs.com/docs/testing#testing-functions
+// Improve this test with help from the CedarJS Testing Doc:
+// https://cedarjs.com/docs/testing#testing-functions
 
 describe('foo function', () => {
   it('Should respond with 200', async () => {
@@ -52,7 +52,7 @@ exports[`Single word default files > creates a single word function file 1`] = `
  * is your responsibility to secure appropriately.
  *
  * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
- * in the RedwoodJS documentation for more information.
+ * in the CedarJS documentation for more information.
  *
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent
  * @typedef { import('aws-lambda').Context } Context
@@ -87,7 +87,7 @@ exports[`creates a .js file if --javascript=true 1`] = `
  * is your responsibility to secure appropriately.
  *
  * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
- * in the RedwoodJS documentation for more information.
+ * in the CedarJS documentation for more information.
  *
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent
  * @typedef { import('aws-lambda').Context } Context
@@ -124,7 +124,7 @@ import { logger } from 'src/lib/logger'
  * is your responsibility to secure appropriately.
  *
  * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
- * in the RedwoodJS documentation for more information.
+ * in the CedarJS documentation for more information.
  *
  * @param { APIGatewayEvent } event - an object which contains information from the invoker.
  * @param { Context } _context - contains information about the invocation,
@@ -157,7 +157,7 @@ exports[`creates a multi word function file 1`] = `
  * is your responsibility to secure appropriately.
  *
  * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
- * in the RedwoodJS documentation for more information.
+ * in the CedarJS documentation for more information.
  *
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent
  * @typedef { import('aws-lambda').Context } Context
