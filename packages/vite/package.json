@@ -60,7 +60,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@ast-grep/napi": "0.40.3",
+    "@ast-grep/napi": "0.40.4",
     "@babel/generator": "7.28.5",
     "@babel/parser": "7.28.5",
     "@babel/traverse": "7.28.5",
