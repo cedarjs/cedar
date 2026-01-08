@@ -2,7 +2,7 @@ name: 'Require Release Label Conditional'
 description: 'Require release labels on PRs unless title starts with conventional commit prefixes'
 
 inputs:
-  github_token:
+  github-token:
     description: 'GitHub token for setting milestones'
     required: false
     default: ''

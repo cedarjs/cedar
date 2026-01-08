@@ -32,28 +32,15 @@ const env = {
    * @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
    */
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
-  /** `GITHUB_TOKEN` - GitHub token for API requests */
-  GITHUB_TOKEN:
-    process.env.INPUT_GITHUB_TOKEN || process.env['INPUT_GITHUB-TOKEN'] || '',
   /** `GITHUB_REPOSITORY` - The owner and repository name */
   GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
 }
 
 import fs from 'node:fs'
 
-async function main() {
-  // Debug: Log available environment variables
-  console.log('Environment variables check:')
-  console.log(
-    'INPUT_GITHUB_TOKEN:',
-    process.env.INPUT_GITHUB_TOKEN ? 'SET' : 'NOT SET',
-  )
-  console.log(
-    'INPUT_GITHUB-TOKEN:',
-    process.env['INPUT_GITHUB-TOKEN'] ? 'SET' : 'NOT SET',
-  )
-  console.log('env.GITHUB_TOKEN:', env.GITHUB_TOKEN ? 'SET' : 'NOT SET')
+import * as core from '@actions/core'
 
+async function main() {
   const event = fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf-8')
 
   /** @type {GitHubEvent} */
@@ -61,7 +48,7 @@ async function main() {
 
   const [owner, repo] = env.GITHUB_REPOSITORY.split('/')
 
-  if (!env.GITHUB_TOKEN) {
+  if (!core.getInput('github-token')) {
     console.error('GITHUB_TOKEN is not set. Cannot fetch PR details.')
     process.exitCode = 1
     return
@@ -75,7 +62,7 @@ async function main() {
     `https://api.github.com/repos/${owner}/${repo}/pulls/${pullRequest.number}`,
     {
       headers: {
-        Authorization: `token ${env.GITHUB_TOKEN}`,
+        Authorization: `token ${core.getInput('github-token')}`,
         Accept: 'application/vnd.github.v3+json',
       },
     },
