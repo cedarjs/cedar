@@ -78,8 +78,6 @@ async function main() {
 
   const { title, labels } = await prResponse.json()
 
-  console.log('pr data from fetch request', { title, labels })
-
   // Check if the PR title starts with conventional commit prefixes that should
   // skip label requirement
   const conventionalCommitPrefixes = [
