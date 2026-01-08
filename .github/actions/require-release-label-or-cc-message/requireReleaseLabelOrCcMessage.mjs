@@ -32,8 +32,13 @@ const env = {
    * @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
    */
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
-  /** `GITHUB_TOKEN` - GitHub token for API requests */
-  GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+  /**
+   * `GITHUB_TOKEN` - GitHub token for API requests
+   * From github-token input, which gets prefixed by `INPUT_` and made available
+   * as an environment variable.
+   * @see https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax#example-specifying-inputs
+   */
+  GITHUB_TOKEN: process.env['INPUT_GITHUB-TOKEN'] || '',
   /** `GITHUB_REPOSITORY` - The owner and repository name */
   GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
 }
@@ -77,8 +82,6 @@ async function main() {
   }
 
   const { title, labels } = await prResponse.json()
-
-  console.log('pr data from fetch request', { title, labels })
 
   // Check if the PR title starts with conventional commit prefixes that should
   // skip label requirement

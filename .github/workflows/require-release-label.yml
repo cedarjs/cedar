@@ -29,3 +29,5 @@ jobs:
 
       - name: ✅ Check release label requirement
         uses: ./.github/actions/require-release-label-or-cc-message
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
