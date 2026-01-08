@@ -32,13 +32,13 @@ const env = {
    * @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
    */
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
+  /** `GITHUB_TOKEN` - GitHub token for API requests (from github-token input) */
+  GITHUB_TOKEN: process.env['INPUT_GITHUB-TOKEN'] || '',
   /** `GITHUB_REPOSITORY` - The owner and repository name */
   GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
 }
 
 import fs from 'node:fs'
-
-import * as core from '@actions/core'
 
 async function main() {
   const event = fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf-8')
@@ -48,7 +48,7 @@ async function main() {
 
   const [owner, repo] = env.GITHUB_REPOSITORY.split('/')
 
-  if (!core.getInput('github-token')) {
+  if (!env.GITHUB_TOKEN) {
     console.error('GITHUB_TOKEN is not set. Cannot fetch PR details.')
     process.exitCode = 1
     return
@@ -62,7 +62,7 @@ async function main() {
     `https://api.github.com/repos/${owner}/${repo}/pulls/${pullRequest.number}`,
     {
       headers: {
-        Authorization: `token ${core.getInput('github-token')}`,
+        Authorization: `token ${env.GITHUB_TOKEN}`,
         Accept: 'application/vnd.github.v3+json',
       },
     },
