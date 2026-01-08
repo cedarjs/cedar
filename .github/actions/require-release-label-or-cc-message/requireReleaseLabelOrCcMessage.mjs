@@ -33,7 +33,7 @@ const env = {
    */
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
   /** `GITHUB_TOKEN` - GitHub token for API requests */
-  GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+  GITHUB_TOKEN: process.env.INPUT_GITHUB_TOKEN || '',
   /** `GITHUB_REPOSITORY` - The owner and repository name */
   GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
 }
