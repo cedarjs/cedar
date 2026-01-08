@@ -26,7 +26,7 @@ export const createUserModelTask = {
 
     addModels(`
 model User {
-  id                  Int       @id @default(autoincrement())
+  id                  String    @id @default(uuid())
   email               String    @unique
   hashedPassword      String
   salt                String
@@ -46,7 +46,7 @@ export const notes = [
   'to store a hashed password and salt:',
   '',
   '  model User {',
-  '    id                  Int @id @default(autoincrement())',
+  '    id                  String  @id @default(uuid())',
   '    email               String  @unique',
   '    hashedPassword      String    // <─┐',
   '    salt                String    // <─┼─ add these lines',
