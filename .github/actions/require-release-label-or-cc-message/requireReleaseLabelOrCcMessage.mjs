@@ -33,7 +33,8 @@ const env = {
    */
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
   /** `GITHUB_TOKEN` - GitHub token for API requests */
-  GITHUB_TOKEN: process.env.INPUT_GITHUB_TOKEN || '',
+  GITHUB_TOKEN:
+    process.env.INPUT_GITHUB_TOKEN || process.env['INPUT_GITHUB-TOKEN'] || '',
   /** `GITHUB_REPOSITORY` - The owner and repository name */
   GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
 }
@@ -41,6 +42,18 @@ const env = {
 import fs from 'node:fs'
 
 async function main() {
+  // Debug: Log available environment variables
+  console.log('Environment variables check:')
+  console.log(
+    'INPUT_GITHUB_TOKEN:',
+    process.env.INPUT_GITHUB_TOKEN ? 'SET' : 'NOT SET',
+  )
+  console.log(
+    'INPUT_GITHUB-TOKEN:',
+    process.env['INPUT_GITHUB-TOKEN'] ? 'SET' : 'NOT SET',
+  )
+  console.log('env.GITHUB_TOKEN:', env.GITHUB_TOKEN ? 'SET' : 'NOT SET')
+
   const event = fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf-8')
 
   /** @type {GitHubEvent} */
