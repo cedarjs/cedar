@@ -12,6 +12,7 @@
 /**
  * @typedef {Object} PullRequest
  * @property {string} title - The title of the pull request.
+ * @property {number} number - The pull request number.
  * @property {Array<{ name: string }>} labels - The labels associated with the
  *   pull request.
  */
@@ -22,20 +23,65 @@
  *   GitHub event payload.
  */
 
-/** @type {ProcessEnv} */
+/** Environment variables needed for the script. */
 const env = {
+  /**
+   * `GITHUB_EVENT_PATH` - This is set by the GitHub Actions runner.
+   * It's the path to the file on the runner that contains the full event
+   * webhook payload.
+   * @see https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
+   */
   GITHUB_EVENT_PATH: process.env.GITHUB_EVENT_PATH || '',
+  /**
+   * `GITHUB_TOKEN` - GitHub token for API requests
+   * From github-token input, which gets prefixed by `INPUT_` and made available
+   * as an environment variable.
+   * @see https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax#example-specifying-inputs
+   */
+  GITHUB_TOKEN: process.env['INPUT_GITHUB-TOKEN'] || '',
+  /** `GITHUB_REPOSITORY` - The owner and repository name */
+  GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY || '',
 }
 
 import fs from 'node:fs'
 
-function main() {
+async function main() {
   const event = fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf-8')
 
   /** @type {GitHubEvent} */
-  const {
-    pull_request: { title, labels },
-  } = JSON.parse(event)
+  const { pull_request: pullRequest } = JSON.parse(event)
+
+  const [owner, repo] = env.GITHUB_REPOSITORY.split('/')
+
+  if (!env.GITHUB_TOKEN) {
+    console.error('GITHUB_TOKEN is not set. Cannot fetch PR details.')
+    process.exitCode = 1
+    return
+  }
+
+  // Fetch the current PR state from the API to get the latest title and
+  // labels. Reading the PR details from the event payload will give stale
+  // data if for example the PR title has been updated. The event payload
+  // contains data from when the workflow was originally triggered
+  const prResponse = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/pulls/${pullRequest.number}`,
+    {
+      headers: {
+        Authorization: `token ${env.GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    },
+  )
+
+  if (!prResponse.ok) {
+    console.error(
+      `Failed to fetch PR details: ${prResponse.status} ${prResponse.statusText}`,
+    )
+    process.exitCode = 1
+    return
+  }
+
+  const { title, labels } = await prResponse.json()
 
   // Check if the PR title starts with conventional commit prefixes that should
   // skip label requirement

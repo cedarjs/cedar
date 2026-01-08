@@ -4023,7 +4023,7 @@ __metadata:
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
     graphql: "npm:16.12.0"
-    ioredis: "npm:5.8.2"
+    ioredis: "npm:5.9.0"
     nodemon: "npm:3.1.11"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -4285,7 +4285,7 @@ __metadata:
     vite-plugin-cjs-interop: "npm:2.3.0"
     vite-plugin-node-polyfills: "npm:0.24.0"
     vitest: "npm:3.2.4"
-    ws: "npm:8.18.3"
+    ws: "npm:8.19.0"
     yargs-parser: "npm:21.1.1"
   bin:
     rw-dev-fe: ./dist/devFeServer.js
@@ -7487,10 +7487,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ioredis/commands@npm:1.4.0":
-  version: 1.4.0
-  resolution: "@ioredis/commands@npm:1.4.0"
-  checksum: 10c0/99afe21fba794f84a2b84cceabcc370a7622e7b8b97a6589456c07c9fa62a15d54c5546f6f7214fb9a2458b1fa87579d5c531aaf48e06cc9be156d5923892c8d
+"@ioredis/commands@npm:1.5.0":
+  version: 1.5.0
+  resolution: "@ioredis/commands@npm:1.5.0"
+  checksum: 10c0/2d192d967a21f0192e17310d27ead02b0bdd504e834c782714abe641190ebfb548ad307fd89fd2d80db97c462afdc69ab4a4383831ab64ce61fe92f130d8b466
   languageName: node
   linkType: hard
 
@@ -20300,11 +20300,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ioredis@npm:5.8.2":
-  version: 5.8.2
-  resolution: "ioredis@npm:5.8.2"
+"ioredis@npm:5.9.0":
+  version: 5.9.0
+  resolution: "ioredis@npm:5.9.0"
   dependencies:
-    "@ioredis/commands": "npm:1.4.0"
+    "@ioredis/commands": "npm:1.5.0"
     cluster-key-slot: "npm:^1.1.0"
     debug: "npm:^4.3.4"
     denque: "npm:^2.1.0"
@@ -20313,7 +20313,7 @@ __metadata:
     redis-errors: "npm:^1.2.0"
     redis-parser: "npm:^3.0.0"
     standard-as-callback: "npm:^2.1.0"
-  checksum: 10c0/305e385f811d49908899e32c2de69616cd059f909afd9e0a53e54f596b1a5835ee3449bfc6a3c49afbc5a2fd27990059e316cc78f449c94024957bd34c826d88
+  checksum: 10c0/f351067b782d3181782018ef911df69298a261f7d57d6f798d87352ee93786205600ec572d94f47c3c78566ecf164c23a3dc51329ade01e8b633e34098e58ce9
   languageName: node
   linkType: hard
 
@@ -31463,9 +31463,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:8.18.3, ws@npm:^8.11.0, ws@npm:^8.12.0, ws@npm:^8.18.2, ws@npm:^8.18.3, ws@npm:^8.2.3":
-  version: 8.18.3
-  resolution: "ws@npm:8.18.3"
+"ws@npm:8.19.0, ws@npm:^8.11.0, ws@npm:^8.12.0, ws@npm:^8.18.2, ws@npm:^8.18.3, ws@npm:^8.2.3":
+  version: 8.19.0
+  resolution: "ws@npm:8.19.0"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ">=5.0.2"
@@ -31474,7 +31474,7 @@ __metadata:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: 10c0/eac918213de265ef7cb3d4ca348b891a51a520d839aa51cdb8ca93d4fa7ff9f6ccb339ccee89e4075324097f0a55157c89fa3f7147bde9d8d7e90335dc087b53
+  checksum: 10c0/4741d9b9bc3f9c791880882414f96e36b8b254e34d4b503279d6400d9a4b87a033834856dbdd94ee4b637944df17ea8afc4bce0ff4a1560d2166be8855da5b04
   languageName: node
   linkType: hard
 

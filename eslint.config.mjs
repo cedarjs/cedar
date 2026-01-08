@@ -447,6 +447,7 @@ export default [
       'packages/project-config/src/envVarDefinitions.ts',
       'packages/testing/**',
       'packages/vite/src/plugins/vite-plugin-cedar-html-env.ts',
+      '.github/**',
     ],
     rules: {
       '@cedarjs/process-env-computed': 'off',
