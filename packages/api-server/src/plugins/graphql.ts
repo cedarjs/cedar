@@ -94,7 +94,7 @@ export async function redwoodFastifyGraphQLServer(
       req: FastifyRequest,
       reply: FastifyReply,
     ) => {
-      const response = await yoga.handleNodeRequest(req, {
+      const response = await yoga.handleNodeRequestAndResponse(req, reply, {
         req,
         reply,
         event: lambdaEventForFastifyRequest(req),
