@@ -93,7 +93,8 @@ export async function redwoodFastifyGraphQLServer(
     const graphQLYogaHandler = async (
       req: FastifyRequest,
       reply: FastifyReply,
-    ) => yoga.handleNodeRequestAndResponse(req, reply, {
+    ) =>
+      yoga.handleNodeRequestAndResponse(req, reply, {
         req,
         reply,
         event: lambdaEventForFastifyRequest(req),
