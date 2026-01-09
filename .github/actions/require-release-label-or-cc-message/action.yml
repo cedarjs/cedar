@@ -9,4 +9,4 @@ inputs:
 
 runs:
   using: 'node24'
-  main: 'requireReleaseLabelOrCcMessage.mjs'
+  main: 'requireReleaseLabelOrCcMessage.mts'
