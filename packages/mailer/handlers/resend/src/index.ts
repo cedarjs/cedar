@@ -39,7 +39,7 @@ export class ResendMailHandler extends AbstractMailHandler {
   constructor({ apiToken }: DeprecatedConstructorOptions)
   constructor({ apiToken, apiKey }: OverloadConstructorOptions) {
     super()
-    this.client = new Resend(apiKey || apiToken)
+    this.client = new Resend(apiKey ?? apiToken)
   }
 
   async send(
