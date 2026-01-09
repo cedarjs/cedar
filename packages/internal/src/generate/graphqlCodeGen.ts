@@ -323,7 +323,7 @@ async function getPluginConfig(side: CodegenSide) {
       // Look at type or source https://shrtm.nu/2BA0 for possible config, not well documented
       resolvers: true,
     },
-    contextType: `@cedarjs/graphql-server/dist/types#RedwoodGraphQLContext`,
+    contextType: `@cedarjs/graphql-server/dist/types#CedarGraphQLContext`,
   }
 
   return pluginConfig
