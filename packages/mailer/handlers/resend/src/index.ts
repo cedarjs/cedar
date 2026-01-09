@@ -18,23 +18,26 @@ export type ResendMailHandlerOptions = {
 }
 
 interface DeprecatedConstructorOptions {
-  apiKey?: never
   /** @deprecated Please use apiKey instead */
   apiToken: string
 }
 
 interface ResendMailHandlerConstructorOptions {
   apiKey: string
-  apiToken?: never
+}
+
+interface OverloadConstructorOptions {
+  apiKey?: string
+  apiToken?: string
 }
 
 export class ResendMailHandler extends AbstractMailHandler {
   private client: Resend
 
-  constructor({
-    apiToken,
-    apiKey,
-  }: ResendMailHandlerConstructorOptions | DeprecatedConstructorOptions) {
+  constructor({ apiKey }: ResendMailHandlerConstructorOptions)
+  /** @deprecated Please use `ResendMailHandler({ apiKey })` instead */
+  constructor({ apiToken }: DeprecatedConstructorOptions)
+  constructor({ apiToken, apiKey }: OverloadConstructorOptions) {
     super()
     this.client = new Resend(apiKey || apiToken)
   }
