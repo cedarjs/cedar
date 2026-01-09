@@ -53,4 +53,4 @@ const resendClient = resendHandler.internal().client
 ## Usage
 
 You should be able to use this newly configured handler like any other previous
-handler and should require no changes to your mailer code.
+handler and it should require no changes to your mailer code.
