@@ -32,7 +32,7 @@ export async function redwoodFastifyGraphQLServer(
   // This is to allow multi-part form data to be parsed - otherwise you get errors
   fastify.register(fastifyMultiPart)
 
-  const method = ['GET', 'POST', 'OPTIONS'] as HTTPMethods[]
+  const method: HTTPMethods[] = ['GET', 'POST', 'OPTIONS']
 
   fastify.addHook('onRequest', (_req, _reply, done) => {
     getAsyncStoreInstance().run(new Map<string, GlobalContext>(), done)
@@ -97,7 +97,6 @@ export async function redwoodFastifyGraphQLServer(
             req,
             reply,
             event: lambdaEventForFastifyRequest(req),
-            requestContext: {},
           }),
       })
     }
