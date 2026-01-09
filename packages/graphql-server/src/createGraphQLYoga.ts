@@ -1,5 +1,6 @@
 import { useDisableIntrospection } from '@envelop/disable-introspection'
 import { useFilterAllowedOperations } from '@envelop/filter-operation-type'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { GraphQLSchema } from 'graphql'
 import { OperationTypeNode } from 'graphql'
 import type { Plugin } from 'graphql-yoga'
@@ -187,7 +188,10 @@ export const createGraphQLYoga = ({
     // so can process any data added to results and extensions
     plugins.push(useRedwoodLogger(loggerConfig))
 
-    const yoga = createYoga({
+    const yoga = createYoga<{
+      req: FastifyRequest
+      reply: FastifyReply
+    }>({
       id: healthCheckId,
       landingPage: isDevEnv,
       schema,
