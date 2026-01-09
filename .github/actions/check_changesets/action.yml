@@ -7,4 +7,5 @@ runs:
 
 inputs:
   labels:
+    description: The PR's labels
     required: true
