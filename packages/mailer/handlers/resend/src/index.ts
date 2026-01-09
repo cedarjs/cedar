@@ -17,12 +17,23 @@ export type ResendMailHandlerOptions = {
   }[]
 }
 
+type ResendMailHandlerConstructorOptions =
+  | {
+      /** @deprecated - Please use apiKey instead */
+      apiToken: string
+      apiKey: never
+    }
+  | {
+      apiToken: never
+      apiKey: string
+    }
+
 export class ResendMailHandler extends AbstractMailHandler {
   private client: Resend
 
-  constructor({ apiToken }: { apiToken: string }) {
+  constructor({ apiToken, apiKey }: ResendMailHandlerConstructorOptions) {
     super()
-    this.client = new Resend(apiToken)
+    this.client = new Resend(apiKey || apiToken)
   }
 
   async send(
