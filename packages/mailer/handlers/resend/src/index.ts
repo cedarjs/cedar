@@ -17,7 +17,7 @@ export type ResendMailHandlerOptions = {
   }[]
 }
 
-interface DeprecatedOptions {
+interface DeprecatedConstructorOptions {
   apiKey?: never
   /** @deprecated Please use apiKey instead */
   apiToken: string
@@ -34,7 +34,7 @@ export class ResendMailHandler extends AbstractMailHandler {
   constructor({
     apiToken,
     apiKey,
-  }: ResendMailHandlerConstructorOptions | DeprecatedOptions) {
+  }: ResendMailHandlerConstructorOptions | DeprecatedConstructorOptions) {
     super()
     this.client = new Resend(apiKey || apiToken)
   }
