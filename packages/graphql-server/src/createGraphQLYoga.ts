@@ -28,7 +28,7 @@ import type {
 } from './plugins/useRedwoodDirective.js'
 import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
 import type { RedwoodSubscription } from './subscriptions/makeSubscriptions.js'
-import type { GraphQLYogaOptions } from './types.js'
+import type { GraphQLYogaOptions, CedarGraphQLContext } from './types.js'
 
 export const createGraphQLYoga = ({
   healthCheckId = 'yoga',
@@ -188,10 +188,12 @@ export const createGraphQLYoga = ({
     // so can process any data added to results and extensions
     plugins.push(useRedwoodLogger(loggerConfig))
 
-    const yoga = createYoga<{
-      req: FastifyRequest
-      reply: FastifyReply
-    }>({
+    const yoga = createYoga<
+      {
+        req: FastifyRequest
+        reply: FastifyReply
+      } & CedarGraphQLContext
+    >({
       id: healthCheckId,
       landingPage: isDevEnv,
       schema,
