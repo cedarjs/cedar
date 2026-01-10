@@ -1,14 +1,19 @@
 export const schema = gql`
   type User {
-    id: Int!
+    id: String!
     email: String!
+    hashedPassword: String!
     fullName: String!
+    salt: String!
+    resetToken: String
+    resetTokenExpiresAt: DateTime
     roles: String
     posts: [Post]!
   }
 
   type Query {
-    user(id: Int!): User @skipAuth
+    users: [User!]! @requireAuth
+    user(id: String!): User @skipAuth
   }
 
   input CreateUserInput {

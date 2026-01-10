@@ -11,14 +11,14 @@ export default async () => {
   try {
     const users = [
       {
-        id: 1,
+        id: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d',
         email: 'user.one@example.com',
         hashedPassword: 'fake_hash',
         fullName: 'User One',
         salt: 'fake_salt',
       },
       {
-        id: 2,
+        id: '5d4e5f9f-3c2b-5e6d-9d8e-0f1a2b3c4d5e',
         email: 'user.two@example.com',
         hashedPassword: 'fake_hash',
         fullName: 'User Two',
@@ -26,31 +26,27 @@ export default async () => {
       },
     ]
 
-    if ((await db.user.count()) === 0) {
-      await Promise.all(users.map((user) => db.user.create({ data: user })))
-    } else {
-      console.log('Users already seeded')
-    }
-  } catch (error) {
-    console.error(error)
-  }
+    await Promise.all(
+      users.map(async (user) => {
+        await db.user.create({ data: user })
+      }),
+    )
 
-  try {
     const posts = [
       {
         title: 'Welcome to the blog!',
         body: "I'm baby single- origin coffee kickstarter lo - fi paleo skateboard.Tumblr hashtag austin whatever DIY plaid knausgaard fanny pack messenger bag blog next level woke.Ethical bitters fixie freegan,helvetica pitchfork 90's tbh chillwave mustache godard subway tile ramps art party. Hammock sustainable twee yr bushwick disrupt unicorn, before they sold out direct trade chicharrones etsy polaroid hoodie. Gentrify offal hoodie fingerstache.",
-        authorId: 1,
+        authorId: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d',
       },
       {
         title: 'A little more about me',
         body: "Raclette shoreditch before they sold out lyft. Ethical bicycle rights meh prism twee. Tote bag ennui vice, slow-carb taiyaki crucifix whatever you probably haven't heard of them jianbing raw denim DIY hot chicken. Chillwave blog succulents freegan synth af ramps poutine wayfarers yr seitan roof party squid. Jianbing flexitarian gentrify hexagon portland single-origin coffee raclette gluten-free. Coloring book cloud bread street art kitsch lumbersexual af distillery ethical ugh thundercats roof party poke chillwave. 90's palo santo green juice subway tile, prism viral butcher selvage etsy pitchfork sriracha tumeric bushwick.",
-        authorId: 1,
+        authorId: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d',
       },
       {
         title: 'What is the meaning of life?',
         body: 'Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo chillwave tote bag. Trust fund kitsch waistcoat vape, cray offal gochujang food truck cloud bread enamel pin forage. Roof party chambray ugh occupy fam stumptown. Dreamcatcher tousled snackwave, typewriter lyft unicorn pabst portland blue bottle locavore squid PBR&B tattooed.',
-        authorId: 2,
+        authorId: '5d4e5f9f-3c2b-5e6d-9d8e-0f1a2b3c4d5e',
       },
     ]
 
