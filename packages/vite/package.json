@@ -75,7 +75,7 @@
     "@swc/core": "1.15.8",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
-    "@whatwg-node/server": "0.10.17",
+    "@whatwg-node/server": "0.10.18",
     "acorn-loose": "8.5.2",
     "buffer": "6.0.3",
     "busboy": "^1.6.0",
