@@ -51,13 +51,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/core@npm:2.0.1, @actions/core@npm:^2.0.0":
-  version: 2.0.1
-  resolution: "@actions/core@npm:2.0.1"
+"@actions/core@npm:2.0.2, @actions/core@npm:^2.0.0":
+  version: 2.0.2
+  resolution: "@actions/core@npm:2.0.2"
   dependencies:
     "@actions/exec": "npm:^2.0.0"
-    "@actions/http-client": "npm:^3.0.0"
-  checksum: 10c0/710ed76ae43759d5e9eee9217f1ca80a7ab2bda0dc8038b777871d5c745df773cb7a091b7c4da91955f6a06f9df91c36696e2f8458768346913fa6f829d0b088
+    "@actions/http-client": "npm:^3.0.1"
+  checksum: 10c0/933b03d4aacafc9337b493e7e689376ed1d9e824b37f6c8e008668c75dda3add6ff28c61f4e498831e37229f140d20a37f457de9f5089eca7455f603ad59a945
   languageName: node
   linkType: hard
 
@@ -109,7 +109,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/http-client@npm:^3.0.0, @actions/http-client@npm:^3.0.1":
+"@actions/http-client@npm:^3.0.1":
   version: 3.0.1
   resolution: "@actions/http-client@npm:3.0.1"
   dependencies:
@@ -27627,7 +27627,7 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     "@actions/cache": "npm:5.0.2"
-    "@actions/core": "npm:2.0.1"
+    "@actions/core": "npm:2.0.2"
     "@actions/exec": "npm:2.0.0"
     "@actions/glob": "npm:0.5.0"
     "@babel/cli": "npm:7.28.3"
