@@ -745,6 +745,11 @@ export async function apiTasks(
           fullPath('api/src/services/posts/posts.scenarios'),
         )
 
+        await applyCodemod(
+          'updatePostsTest.js',
+          fullPath('api/src/services/posts/posts.test'),
+        )
+
         await exec(
           `yarn ${getCfwBin(OUTPUT_PATH)} project:copy`,
           [],
