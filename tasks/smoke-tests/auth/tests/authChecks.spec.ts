@@ -51,7 +51,7 @@ test('useAuth hook, auth redirects checks', async ({ page }) => {
 const post = {
   title: 'Hello world! Soft kittens are the best.',
   body: 'Bazinga, bazinga, bazinga',
-  authorId: '2',
+  authorId: '5d4e5f9f-3c2b-5e6d-9d8e-0f1a2b3c4d5e',
 }
 
 test('requireAuth graphql checks', async ({ page }) => {

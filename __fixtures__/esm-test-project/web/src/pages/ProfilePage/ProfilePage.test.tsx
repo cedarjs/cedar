@@ -6,7 +6,7 @@ describe('ProfilePage', () => {
   it('renders successfully', async () => {
     mockCurrentUser({
       email: 'danny@bazinga.com',
-      id: 84849020,
+      id: '84849020-2b1a-4f5c-8c7d-000084849020',
       roles: 'BAZINGA',
     })
 
