@@ -49,9 +49,7 @@ test('RBAC: Should not be able to delete contact as non-admin user', async ({
   page,
 }) => {
   // Login as non-admin user
-  await loginAsTestUser({
-    page,
-  })
+  await loginAsTestUser({ page })
 
   // Go to http://localhost:8910/contacts
   await page.goto('/contacts')
