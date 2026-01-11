@@ -148,7 +148,7 @@ export async function webTasks(outputPath: string) {
             it('renders successfully', async () => {
               mockCurrentUser({
                 email: 'danny@bazinga.com',
-                id: 84849020,
+                id: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d',
                 roles: 'BAZINGA',
               })
 
@@ -278,6 +278,19 @@ export async function webTasks(outputPath: string) {
     await applyCodemod(
       'authorCell.js',
       fullPath('web/src/components/AuthorCell/AuthorCell'),
+    )
+
+    // Update AuthorCell.test.tsx to use string ID
+    const authorCellTestPath = fullPath(
+      'web/src/components/AuthorCell/AuthorCell.test.tsx',
+    )
+    const authorCellTestContent = fs.readFileSync(authorCellTestPath, 'utf-8')
+    fs.writeFileSync(
+      authorCellTestPath,
+      authorCellTestContent.replaceAll(
+        'id={42}',
+        "id={'4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d'}",
+      ),
     )
 
     await createCell('waterfallBlogPost')
