@@ -3,7 +3,8 @@
   "type": "module",
   "workspaces": [
     "api",
-    "web"
+    "web",
+    "packages/*"
   ],
   "devDependencies": {
     "@cedarjs/core": "2.3.0",
