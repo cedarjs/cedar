@@ -75,13 +75,15 @@ let { cwd, telemetry, help, version } = Parser(hideBin(process.argv), {
   },
 })
 cwd ??= process.env.RWJS_CWD
+cwd = getTomlDir(cwd)
+process.env.RWJS_CWD = cwd
 
 if (process.argv[1]?.endsWith('redwood.js')) {
-  const tomlPath = path.join(getTomlDir(cwd), 'redwood.toml')
+  const tomlPath = path.join(cwd, 'redwood.toml')
   // I'm reading and "parsing" the toml file manually because I didn't want to
   // load another package. Every package loaded increases the startup time.
   const toml = fs.readFileSync(tomlPath, 'utf8')
-  const disableWarning = /rwBinWarning\s*=\s*false/.test(toml)
+  const disableWarning = /^\s*rwBinWarning\s*=\s*false/m.test(toml)
 
   if (!disableWarning) {
     console.warn()
@@ -94,10 +96,6 @@ if (process.argv[1]?.endsWith('redwood.js')) {
     console.warn()
   }
 }
-
-cwd = getTomlDir(cwd)
-
-process.env.RWJS_CWD = cwd
 
 if (process.cwd() !== cwd) {
   process.chdir(cwd)
