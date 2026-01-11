@@ -4,11 +4,6 @@ test('Set a mock user on the context', async () => {
     name: 'Bond, James Bond',
     email: 'totallyNotASpy@example.com',
     roles: 'secret_agent',
-    fullName: 'Bond, James Bond',
-    hashedPassword: 'hash',
-    salt: 'salt',
-    resetToken: null,
-    resetTokenExpiresAt: null,
   }
   mockCurrentUser(user)
   expect(context.currentUser).toStrictEqual(user)

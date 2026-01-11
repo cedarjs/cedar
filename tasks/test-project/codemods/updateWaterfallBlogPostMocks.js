@@ -36,7 +36,11 @@ export default (file, api) => {
       ),
     )
     node.properties.push(
-      j.property('init', j.identifier('authorId'), j.literal(7)),
+      j.property(
+        'init',
+        j.identifier('authorId'),
+        j.literal('5d4e5f9f-3c2b-5e6d-9d8e-0f1a2b3c4d5e'),
+      ),
     )
     node.properties.push(j.property('init', j.identifier('author'), author))
   })
