@@ -3,18 +3,18 @@ import { $ } from 'zx'
 
 import { rw, rwServer } from './vitest.setup.mjs'
 
-describe('rw serve', () => {
+describe('cedar serve', () => {
   it('has help configured', async () => {
     const { stdout } = await $`yarn node ${rw} serve --help`
     expect(stdout).toMatchInlineSnapshot(`
-      "rw serve [side]
+      "cedar serve [side]
 
       Start a server for serving both the api and web sides
 
       Commands:
-        rw serve      Start a server for serving the api and web sides       [default]
-        rw serve api  Start a server for serving the api side
-        rw serve web  Start a server for serving the web side
+        cedar serve      Start a server for serving the api and web sides    [default]
+        cedar serve api  Start a server for serving the api side
+        cedar serve web  Start a server for serving the web side
 
       Options:
             --cwd                                 Working directory to use (where
@@ -54,14 +54,14 @@ describe('rw serve', () => {
       expect(p.exitCode).toEqual(1)
       expect(p.stdout).toEqual('')
       expect(p.stderr).toMatchInlineSnapshot(`
-        "rw serve [side]
+        "cedar serve [side]
 
         Start a server for serving both the api and web sides
 
         Commands:
-          rw serve      Start a server for serving the api and web sides       [default]
-          rw serve api  Start a server for serving the api side
-          rw serve web  Start a server for serving the web side
+          cedar serve      Start a server for serving the api and web sides    [default]
+          cedar serve api  Start a server for serving the api side
+          cedar serve web  Start a server for serving the web side
 
         Options:
               --cwd                                 Working directory to use (where

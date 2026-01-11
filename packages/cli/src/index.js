@@ -157,7 +157,7 @@ async function runYargs() {
   // # Build the CLI yargs instance
   const yarg = yargs(hideBin(process.argv))
     // Config
-    .scriptName('rw')
+    .scriptName('cedar')
     .middleware(
       [
         // We've already handled `cwd` above, but it may still be in `argv`.
