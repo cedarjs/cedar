@@ -48,13 +48,13 @@ export default (file, api) => {
       authorIdProp.type === 'Property' &&
       authorIdProp.value.type === 'Literal'
     ) {
-      authorIdProp.value.value = '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d'
+      authorIdProp.value.value = '005d3e8e-2b1a-4f5c-8c7d-000000000005'
     } else {
       node.properties.push(
         j.property(
           'init',
           j.identifier('authorId'),
-          j.literal('4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d'),
+          j.literal('005d3e8e-2b1a-4f5c-8c7d-000000000005'),
         ),
       )
     }
