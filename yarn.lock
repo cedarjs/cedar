@@ -3480,6 +3480,7 @@ __metadata:
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
   bin:
+    cedar: ./dist/index.js
     cedarjs: ./dist/index.js
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
