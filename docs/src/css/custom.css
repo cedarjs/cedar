@@ -170,6 +170,10 @@ blockquote {
   padding: 0 var(--ifm-pre-padding);
 }
 
+.theme-code-block-highlighted-line .comment {
+  color: #99d !important;
+}
+
 [data-theme='dark'] .docusaurus-highlight-code-line {
   background-color: hsl(0deg 0% 0% / 30%);
 }
