@@ -25,7 +25,7 @@ export const createUserModelTask = {
 
     addModels(`
 model User {
-  id                  Int       @id @default(autoincrement())
+  id                  String    @id @default(uuid())
   email               String    @unique
   hashedPassword      String
   salt                String
@@ -39,7 +39,7 @@ model User {
 
 model UserCredential {
   id         String  @id
-  userId     Int
+  userId     String
   user       User    @relation(fields: [userId], references: [id])
   publicKey  Bytes
   transports String?
@@ -58,7 +58,7 @@ export const notes = [
   'WebAuthn authentication:',
   '',
   '  model User {',
-  '    id                  Int @id @default(autoincrement())',
+  '    id                  String  @id @default(uuid())',
   '    email               String  @unique',
   '    hashedPassword      String',
   '    salt                String',
@@ -70,7 +70,7 @@ export const notes = [
   '',
   '  model UserCredential {',
   '    id         String  @id',
-  '    userId     Int',
+  '    userId     String',
   '    user       User    @relation(fields: [userId], references: [id])',
   '    publicKey  Bytes',
   '    transports String?',

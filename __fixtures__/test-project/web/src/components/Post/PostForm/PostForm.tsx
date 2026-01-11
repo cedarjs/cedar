@@ -7,7 +7,6 @@ import {
   FieldError,
   Label,
   TextField,
-  NumberField,
   Submit,
 } from '@cedarjs/forms'
 
@@ -79,7 +78,7 @@ const PostForm = (props: PostFormProps) => {
           Author id
         </Label>
 
-        <NumberField
+        <TextField
           name="authorId"
           defaultValue={props.post?.authorId}
           className="rw-input"

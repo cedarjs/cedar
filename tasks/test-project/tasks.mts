@@ -120,7 +120,7 @@ export async function webTasks(
             it('renders successfully', async () => {
               mockCurrentUser({
                 email: 'danny@bazinga.com',
-                id: 84849020,
+                id: '84849020-2b1a-4f5c-8c7d-000084849020',
                 roles: 'BAZINGA',
               })
 
@@ -236,6 +236,11 @@ export async function webTasks(
     await applyCodemod(
       'authorCell.js',
       fullPath('web/src/components/AuthorCell/AuthorCell'),
+    )
+
+    await applyCodemod(
+      'updateAuthorCellTest.js',
+      fullPath('web/src/components/AuthorCell/AuthorCell.test'),
     )
 
     await createCell('waterfallBlogPost')
@@ -469,7 +474,7 @@ export async function apiTasks(
     const resultsRequireAuth = contentRequireAuth.replace(
       /const mockExecution([^}]*){} }\)/,
       `const mockExecution = mockRedwoodDirective(requireAuth, {
-        context: { currentUser: { id: 1, roles: 'ADMIN', email: 'b@zinga.com' } },
+        context: { currentUser: { id: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d', roles: 'ADMIN', email: 'b@zinga.com' } },
       })`,
     )
     fs.writeFileSync(pathRequireAuth, resultsRequireAuth)
