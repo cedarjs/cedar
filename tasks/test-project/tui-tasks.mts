@@ -280,6 +280,11 @@ export async function webTasks(outputPath: string) {
       fullPath('web/src/components/AuthorCell/AuthorCell'),
     )
 
+    await applyCodemod(
+      'updateAuthorCellTest.js',
+      fullPath('web/src/components/AuthorCell/AuthorCell.test'),
+    )
+
     await createCell('waterfallBlogPost')
 
     return applyCodemod(
