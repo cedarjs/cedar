@@ -17,6 +17,11 @@ describe('requireAuth directive', () => {
           id: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d',
           roles: 'ADMIN',
           email: 'b@zinga.com',
+          fullName: 'Bazinga',
+          hashedPassword: 'hash',
+          salt: 'salt',
+          resetToken: null,
+          resetTokenExpiresAt: null,
         },
       },
     })
