@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { Logger, LevelWithSilent } from '@cedarjs/api/logger'
 
 import { AuthenticationError, ForbiddenError } from '../errors.js'
-import type { RedwoodGraphQLContext } from '../types.js'
+import type { CedarGraphQLContext } from '../types.js'
 
 /**
  * Options for request and response information to include in the log statements
@@ -194,7 +194,7 @@ const logResult =
  */
 export const useRedwoodLogger = (
   loggerConfig: LoggerConfig,
-): Plugin<RedwoodGraphQLContext> => {
+): Plugin<CedarGraphQLContext> => {
   const logger = loggerConfig.logger
   const level = loggerConfig.options?.level || logger.level || 'warn'
 

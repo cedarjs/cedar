@@ -2,7 +2,7 @@ import type { Plugin } from 'graphql-yoga'
 
 import { setContext } from '@cedarjs/context'
 
-import type { RedwoodGraphQLContext } from '../types.js'
+import type { CedarGraphQLContext } from '../types.js'
 
 /**
  * This Envelop plugin waits until the GraphQL context is done building and sets
@@ -10,7 +10,7 @@ import type { RedwoodGraphQLContext } from '../types.js'
  * `import { context } from '@cedarjs/context'`
  */
 export const useRedwoodGlobalContextSetter =
-  (): Plugin<RedwoodGraphQLContext> => ({
+  (): Plugin<CedarGraphQLContext> => ({
     onContextBuilding() {
       return ({ context }) => {
         setContext(context)

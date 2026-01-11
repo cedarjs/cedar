@@ -1,6 +1,6 @@
 {
   "name": "CedarJS",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:3-24-bullseye",
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },

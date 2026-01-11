@@ -10,7 +10,7 @@ import { logger } from 'src/lib/logger'
  * is your responsibility to secure appropriately.
  *
  * @see {@link https://cedarjs.com/docs/serverless-functions#security-considerations|Serverless Function Considerations}
- * in the RedwoodJS documentation for more information.
+ * in the CedarJS documentation for more information.
  *<% if (!typescript) { %>
  * @typedef { import('aws-lambda').APIGatewayEvent } APIGatewayEvent
  * @typedef { import('aws-lambda').Context } Context<% } %>

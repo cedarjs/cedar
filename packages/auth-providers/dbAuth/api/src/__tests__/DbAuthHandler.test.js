@@ -942,7 +942,7 @@ describe('dbAuth', () => {
         username: user.email,
       })
       options.forgotPassword.handler = (handlerUser, token) => {
-        // tokens should be the raw resetToken NOT the hash
+        // Tokens should be the raw resetToken NOT the hash.
         // resetToken consists of 16 base64 characters
         expect(handlerUser.resetToken).toBeUndefined()
         expect(token).toMatch(/^[A-Za-z0-9/+]{16}$/)

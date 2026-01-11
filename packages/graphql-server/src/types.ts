@@ -70,10 +70,24 @@ export type ArmorConfig = {
   logErrors?: boolean
 } & GraphQLArmorConfig
 
-/** This is an interface so you can extend it inside your application when needed */
+/**
+ * This is an interface so you can extend it inside your application when needed
+ */
+export interface CedarGraphQLContext {
+  event: APIGatewayProxyEvent
+  requestContext?: LambdaContext | undefined
+  currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
+
+  [index: string]: unknown
+}
+
+/**
+ * This is an interface so you can extend it inside your application when needed
+ * @deprecated Please use CedarGraphQLContext
+ */
 export interface RedwoodGraphQLContext {
   event: APIGatewayProxyEvent
-  requestContext: LambdaContext
+  requestContext: LambdaContext | undefined
   currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
 
   [index: string]: unknown

@@ -24,25 +24,22 @@ import { ResendMailHandler } from '@cedarjs/mailer-handler-resend'
 
 // ...
 
-const handlers = {
-  // ...
-  resend: new ResendMailHandler({
-    apiKey: process.env.RESEND_API_KEY,
-  }),
-  // ...
-}
-
-// ...
-
 export const mailer = new Mailer({
-  // ...
-  handlers,
+  handling: {
+    handlers: {
+      // ...
+      resend: new ResendMailHandler({
+        apiKey: process.env.RESEND_API_KEY,
+      }),
+    },
+    // ...
+  },
   // ...
 })
 ```
 
 If you need access to the underlying resend client to perform more specific
-behaviour the SDK exposes you can always access this using the `internal`
+behavior the SDK exposes you can always access this using the `internal`
 function on this resend handler.
 
 ```typescript
