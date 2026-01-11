@@ -26,12 +26,16 @@ export default async () => {
       },
     ]
 
-    await Promise.all(
-      users.map(async (user) => {
-        await db.user.create({ data: user })
-      }),
-    )
+    if ((await db.user.count()) === 0) {
+      await Promise.all(users.map((user) => db.user.create({ data: user })))
+    } else {
+      console.log('Users already seeded')
+    }
+  } catch (error) {
+    console.error(error)
+  }
 
+  try {
     const posts = [
       {
         title: 'Welcome to the blog!',
