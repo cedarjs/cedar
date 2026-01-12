@@ -714,7 +714,7 @@ async function runCommand() {
 
       // removes existing Fixture and replaces with newly built project,
       // then removes new Project temp directory
-      // await copyProject()
+      await copyProject()
     },
   })
 

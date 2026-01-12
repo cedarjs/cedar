@@ -44,7 +44,7 @@ export async function webTasks(
     stdio: 'pipe',
   }
 
-  const tasks = getWebTasks(options)
+  const tasks = getWebTasks()
   return tasks.map((t) => mapToTuiTask(t, options))
 }
 
@@ -66,6 +66,6 @@ export async function apiTasks(
     stdio: 'pipe',
   }
 
-  const tasks = getApiTasks(options)
+  const tasks = getApiTasks()
   return tasks.map((t) => mapToTuiTask(t, options))
 }

@@ -2,8 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import type { Options } from 'execa'
 import type { ListrTask } from 'listr2'
-import type { Options, StdioOption } from 'execa'
 
 import {
   applyCodemod,
@@ -55,11 +55,11 @@ export function createBuilder(cmd: string, dir = '', opts: CommonTaskOptions) {
   }
 }
 
-export const getWebTasks = (options: CommonTaskOptions): HighLevelTask[] => {
+export const getWebTasks = (): HighLevelTask[] => {
   return [
     {
       title: 'Creating pages',
-      tasksGetter: (opts) => getCreatePagesTasks(opts),
+      tasksGetter: () => getCreatePagesTasks(),
     },
     {
       title: 'Creating layout',
@@ -67,7 +67,7 @@ export const getWebTasks = (options: CommonTaskOptions): HighLevelTask[] => {
     },
     {
       title: 'Creating components',
-      tasksGetter: (opts) => getCreateComponentsTasks(opts),
+      tasksGetter: () => getCreateComponentsTasks(),
     },
     {
       title: 'Creating cells',
@@ -121,8 +121,8 @@ export async function addModel(outputPath: string, schema: string) {
   fs.writeFileSync(prismaPath, `${current.trim()}\n\n${schema}\n`)
 }
 
-export const getApiTasks = (options: CommonTaskOptions): HighLevelTask[] => {
-  const addDbAuth = async (opts: CommonTaskOptions) => {
+export const getApiTasks = (): HighLevelTask[] => {
+  const _addDbAuth = async (opts: CommonTaskOptions) => {
     updatePkgJsonScripts({
       projectPath: opts.outputPath,
       scripts: { postinstall: '' },
@@ -474,7 +474,7 @@ export const getApiTasks = (options: CommonTaskOptions): HighLevelTask[] => {
     },
     {
       title: 'Add Prerender to Routes',
-      tasksGetter: (opts) => getPrerenderTasks(opts),
+      tasksGetter: () => getPrerenderTasks(),
     },
     {
       title: 'Add context tests',
@@ -499,7 +499,7 @@ export const getApiTasks = (options: CommonTaskOptions): HighLevelTask[] => {
     },
     {
       title: 'Add describeScenario tests',
-      task: (opts) => {
+      task: () => {
         // Copy contact.scenarios.ts, because scenario tests look for the same filename
         fs.copyFileSync(
           fullPath('api/src/services/contacts/contacts.scenarios'),
@@ -552,9 +552,7 @@ export const getApiTasks = (options: CommonTaskOptions): HighLevelTask[] => {
   ]
 }
 
-export const getCreatePagesTasks = (
-  options: CommonTaskOptions,
-): ListrTask[] => {
+export const getCreatePagesTasks = (): ListrTask[] => {
   const createPage = (opts: CommonTaskOptions) =>
     opts.isFixture
       ? createBuilder('yarn cedar g page', 'web', opts)
@@ -695,9 +693,7 @@ export const getCreateLayoutTasks = (
   ]
 }
 
-export const getCreateComponentsTasks = (
-  options: CommonTaskOptions,
-): ListrTask[] => {
+export const getCreateComponentsTasks = (): ListrTask[] => {
   const tasks: ListrTask[] = [
     {
       title: 'Creating components',
@@ -821,7 +817,7 @@ export const getUpdateCellMocksTasks = (
   ]
 }
 
-export const getPrerenderTasks = (options: CommonTaskOptions): ListrTask[] => {
+export const getPrerenderTasks = (): ListrTask[] => {
   return [
     {
       title: 'Creating double rendering test page',
@@ -858,7 +854,7 @@ export default DoublePage`
     },
     {
       title: 'Update Routes.tsx',
-      task: (opts) => {
+      task: () => {
         const pathRoutes = fullPath('web/src/Routes.tsx', {
           addExtension: false,
         })

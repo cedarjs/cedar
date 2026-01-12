@@ -57,7 +57,7 @@ export async function webTasks(
   setOutputPath(outputPath)
   const options: CommonTaskOptions = { outputPath, linkWithLatestFwBuild }
 
-  const tasks = getWebTasks(options)
+  const tasks = getWebTasks()
   return new Listr(
     tasks.map((t) => mapToListrTask(t, options)),
     {
@@ -79,7 +79,7 @@ export async function apiTasks(
   setOutputPath(outputPath)
   const options: CommonTaskOptions = { outputPath, linkWithLatestFwBuild }
 
-  const tasks = getApiTasks(options)
+  const tasks = getApiTasks()
   return new Listr(
     tasks.map((t) => mapToListrTask(t, options)),
     {
@@ -126,7 +126,6 @@ export async function fragmentsTasks(
   outputPath: string,
   { verbose }: { verbose?: boolean },
 ) {
-  const options: CommonTaskOptions = { outputPath }
   const tasks: ListrTask[] = [
     {
       title: 'Enable fragments',
