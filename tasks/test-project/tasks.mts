@@ -5,47 +5,24 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import {
+  createBuilder,
+  createCells,
+  createComponents,
+  createLayout,
+  fullPath,
+  getOutputPath,
+  getPagesTasks,
+  setOutputPath,
+  updateCellMocks,
+  addModel,
+} from './base-tasks.mts'
+import {
   getExecaOptions,
   applyCodemod,
   updatePkgJsonScripts,
   exec,
   getCfwBin,
 } from './util.mts'
-
-// This variable gets used in other functions
-// and is set when webTasks or apiTasks are called
-let OUTPUT_PATH: string | undefined
-
-function fullPath(name: string, { addExtension } = { addExtension: true }) {
-  if (!OUTPUT_PATH) {
-    throw new Error('Output path not set')
-  }
-
-  if (addExtension) {
-    if (name.startsWith('api')) {
-      name += '.ts'
-    } else if (name.startsWith('web')) {
-      name += '.tsx'
-    }
-  }
-
-  return path.join(OUTPUT_PATH, name)
-}
-
-const createBuilder = (cmd: string) => {
-  return async function createItem(positionals?: string | string[]) {
-    if (!OUTPUT_PATH) {
-      throw new Error('Output path not set')
-    }
-
-    const args = positionals
-      ? Array.isArray(positionals)
-        ? positionals
-        : [positionals]
-      : []
-    await execa(cmd, args, getExecaOptions(OUTPUT_PATH))
-  }
-}
 
 const createPage = createBuilder('yarn cedar g page')
 
@@ -58,239 +35,13 @@ export async function webTasks(
   outputPath: string,
   { linkWithLatestFwBuild, verbose }: WebTasksOptions,
 ) {
-  OUTPUT_PATH = outputPath
-
-  const createPages = async () => {
-    return new Listr([
-      {
-        title: 'Creating home page',
-        task: async () => {
-          await createPage('home /')
-
-          return applyCodemod(
-            'homePage.js',
-            fullPath('web/src/pages/HomePage/HomePage'),
-          )
-        },
-      },
-      {
-        title: 'Creating about page',
-        task: async () => {
-          await createPage('about')
-
-          return applyCodemod(
-            'aboutPage.js',
-            fullPath('web/src/pages/AboutPage/AboutPage'),
-          )
-        },
-      },
-      {
-        title: 'Creating contact page',
-        task: async () => {
-          await createPage('contactUs /contact')
-
-          return applyCodemod(
-            'contactUsPage.js',
-            fullPath('web/src/pages/ContactUsPage/ContactUsPage'),
-          )
-        },
-      },
-      {
-        title: 'Creating blog post page',
-        task: async () => {
-          await createPage('blogPost /blog-post/{id:Int}')
-
-          return applyCodemod(
-            'blogPostPage.js',
-            fullPath('web/src/pages/BlogPostPage/BlogPostPage'),
-          )
-        },
-      },
-      {
-        title: 'Creating profile page',
-        task: async () => {
-          await createPage('profile /profile')
-
-          // Update the profile page test
-          const testFileContent = `import { render, waitFor, screen } from '@cedarjs/testing/web'
-
-          import ProfilePage from './ProfilePage'
-
-          describe('ProfilePage', () => {
-            it('renders successfully', async () => {
-              mockCurrentUser({
-                email: 'danny@bazinga.com',
-                id: '84849020-2b1a-4f5c-8c7d-000084849020',
-                roles: 'BAZINGA',
-              })
-
-              await waitFor(async () => {
-                expect(() => {
-                  render(<ProfilePage />)
-                }).not.toThrow()
-              })
-
-              expect(await screen.findByText('danny@bazinga.com')).toBeInTheDocument()
-            })
-          })
-          `
-
-          fs.writeFileSync(
-            fullPath('web/src/pages/ProfilePage/ProfilePage.test'),
-            testFileContent,
-          )
-
-          return applyCodemod(
-            'profilePage.js',
-            fullPath('web/src/pages/ProfilePage/ProfilePage'),
-          )
-        },
-      },
-      {
-        title: 'Creating MDX Storybook stories',
-        task: () => {
-          const cedarMdxStoryContent = fs.readFileSync(
-            `${path.resolve(import.meta.dirname, 'codemods', 'CedarJS.mdx')}`,
-          )
-
-          fs.writeFileSync(
-            fullPath('web/src/CedarJS.mdx', { addExtension: false }),
-            cedarMdxStoryContent,
-          )
-
-          return
-        },
-      },
-      {
-        title: 'Creating nested cells test page',
-        task: async () => {
-          await createPage('waterfall {id:Int}')
-
-          await applyCodemod(
-            'waterfallPage.js',
-            fullPath('web/src/pages/WaterfallPage/WaterfallPage'),
-          )
-        },
-      },
-    ])
-  }
-
-  const createLayout = async () => {
-    const createLayout = createBuilder('yarn cedar g layout')
-
-    await createLayout('blog')
-
-    return applyCodemod(
-      'blogLayout.js',
-      fullPath('web/src/layouts/BlogLayout/BlogLayout'),
-    )
-  }
-
-  const createComponents = async () => {
-    const createComponent = createBuilder('yarn cedar g component')
-
-    await createComponent('blogPost')
-
-    await applyCodemod(
-      'blogPost.js',
-      fullPath('web/src/components/BlogPost/BlogPost'),
-    )
-
-    await createComponent('author')
-
-    await applyCodemod(
-      'author.js',
-      fullPath('web/src/components/Author/Author'),
-    )
-
-    await applyCodemod(
-      'updateAuthorStories.js',
-      fullPath('web/src/components/Author/Author.stories'),
-    )
-
-    await applyCodemod(
-      'updateAuthorTest.js',
-      fullPath('web/src/components/Author/Author.test'),
-    )
-  }
-
-  const createCells = async () => {
-    const createCell = createBuilder('yarn cedar g cell')
-
-    await createCell('blogPosts')
-
-    await applyCodemod(
-      'blogPostsCell.js',
-      fullPath('web/src/components/BlogPostsCell/BlogPostsCell'),
-    )
-
-    await createCell('blogPost')
-
-    await applyCodemod(
-      'blogPostCell.js',
-      fullPath('web/src/components/BlogPostCell/BlogPostCell'),
-    )
-
-    await createCell('author')
-
-    await applyCodemod(
-      'authorCell.js',
-      fullPath('web/src/components/AuthorCell/AuthorCell'),
-    )
-
-    await applyCodemod(
-      'updateAuthorCellTest.js',
-      fullPath('web/src/components/AuthorCell/AuthorCell.test'),
-    )
-
-    await createCell('waterfallBlogPost')
-
-    return applyCodemod(
-      'waterfallBlogPostCell.js',
-      fullPath(
-        'web/src/components/WaterfallBlogPostCell/WaterfallBlogPostCell',
-      ),
-    )
-  }
-
-  const updateCellMocks = async () => {
-    await applyCodemod(
-      'updateBlogPostMocks.js',
-      fullPath('web/src/components/BlogPostCell/BlogPostCell.mock.ts', {
-        addExtension: false,
-      }),
-    )
-
-    await applyCodemod(
-      'updateBlogPostMocks.js',
-      fullPath('web/src/components/BlogPostsCell/BlogPostsCell.mock.ts', {
-        addExtension: false,
-      }),
-    )
-
-    await applyCodemod(
-      'updateAuthorCellMock.js',
-      fullPath('web/src/components/AuthorCell/AuthorCell.mock.ts', {
-        addExtension: false,
-      }),
-    )
-
-    return applyCodemod(
-      'updateWaterfallBlogPostMocks.js',
-      fullPath(
-        'web/src/components/WaterfallBlogPostCell/WaterfallBlogPostCell.mock.ts',
-        {
-          addExtension: false,
-        },
-      ),
-    )
-  }
+  setOutputPath(outputPath)
 
   return new Listr(
     [
       {
         title: 'Creating pages',
-        task: () => createPages(),
+        task: () => new Listr(getPagesTasks()),
       },
       {
         title: 'Creating layout',
@@ -313,7 +64,7 @@ export async function webTasks(
         task: () => applyCodemod('routes.js', fullPath('web/src/Routes')),
       },
 
-      // ====== NOTE: rufus needs this workaround for tailwind =======
+      // ====== NOTE: cfw needs this workaround for tailwind =======
       // Setup tailwind in a linked project, due to cfw we install deps manually
       {
         title: 'Install tailwind dependencies',
@@ -358,14 +109,6 @@ export async function webTasks(
   )
 }
 
-export async function addModel(schema: string) {
-  const prismaPath = `${OUTPUT_PATH}/api/db/schema.prisma`
-
-  const current = fs.readFileSync(prismaPath)
-
-  fs.writeFileSync(prismaPath, `${current}\n\n${schema}`)
-}
-
 interface ApiTasksOptions {
   verbose: boolean
   linkWithLatestFwBuild: boolean
@@ -375,7 +118,7 @@ export async function apiTasks(
   outputPath: string,
   { verbose, linkWithLatestFwBuild }: ApiTasksOptions,
 ) {
-  OUTPUT_PATH = outputPath
+  setOutputPath(outputPath)
 
   const addDbAuth = async () => {
     // Temporarily disable postinstall script
@@ -429,7 +172,7 @@ export async function apiTasks(
     )
 
     // update directive in contacts.sdl.ts
-    const pathContactsSdl = `${OUTPUT_PATH}/api/src/graphql/contacts.sdl.ts`
+    const pathContactsSdl = `${getOutputPath()}/api/src/graphql/contacts.sdl.ts`
     const contentContactsSdl = fs.readFileSync(pathContactsSdl, 'utf-8')
     const resultsContactsSdl = contentContactsSdl
       .replace(
@@ -443,7 +186,7 @@ export async function apiTasks(
     fs.writeFileSync(pathContactsSdl, resultsContactsSdl)
 
     // update directive in posts.sdl.ts
-    const pathPostsSdl = `${OUTPUT_PATH}/api/src/graphql/posts.sdl.ts`
+    const pathPostsSdl = `${getOutputPath()}/api/src/graphql/posts.sdl.ts`
     const contentPostsSdl = fs.readFileSync(pathPostsSdl, 'utf-8')
     const resultsPostsSdl = contentPostsSdl.replace(
       /posts: \[Post!\]! @requireAuth([^}]*)@requireAuth/,
@@ -454,7 +197,7 @@ export async function apiTasks(
     fs.writeFileSync(pathPostsSdl, resultsPostsSdl)
 
     // Update src/lib/auth to return roles, so tsc doesn't complain
-    const libAuthPath = `${OUTPUT_PATH}/api/src/lib/auth.ts`
+    const libAuthPath = `${getOutputPath()}/api/src/lib/auth.ts`
     const libAuthContent = fs.readFileSync(libAuthPath, 'utf-8')
 
     const newLibAuthContent = libAuthContent
@@ -469,7 +212,7 @@ export async function apiTasks(
     fs.writeFileSync(libAuthPath, newLibAuthContent)
 
     // update requireAuth test
-    const pathRequireAuth = `${OUTPUT_PATH}/api/src/directives/requireAuth/requireAuth.test.ts`
+    const pathRequireAuth = `${getOutputPath()}/api/src/directives/requireAuth/requireAuth.test.ts`
     const contentRequireAuth = fs.readFileSync(pathRequireAuth).toString()
     const resultsRequireAuth = contentRequireAuth.replace(
       /const mockExecution([^}]*){} }\)/,
@@ -480,7 +223,7 @@ export async function apiTasks(
     fs.writeFileSync(pathRequireAuth, resultsRequireAuth)
 
     // add fullName input to signup form
-    const pathSignupPageTs = `${OUTPUT_PATH}/web/src/pages/SignupPage/SignupPage.tsx`
+    const pathSignupPageTs = `${getOutputPath()}/web/src/pages/SignupPage/SignupPage.tsx`
     const contentSignupPageTs = fs.readFileSync(pathSignupPageTs, 'utf-8')
     const usernameFieldsMatches = contentSignupPageTs.match(
       /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
@@ -507,7 +250,7 @@ export async function apiTasks(
     }
 
     // set fullName when signing up
-    const pathAuthTs = `${OUTPUT_PATH}/api/src/functions/auth.ts`
+    const pathAuthTs = `${getOutputPath()}/api/src/functions/auth.ts`
     const contentAuthTs = fs.readFileSync(pathAuthTs).toString()
     const resultsAuthTs = contentAuthTs
       .replace('name: string', "'full-name': string")
@@ -586,7 +329,7 @@ export async function apiTasks(
       {
         title: 'Update Routes.tsx',
         task: () => {
-          const pathRoutes = `${OUTPUT_PATH}/web/src/Routes.tsx`
+          const pathRoutes = `${getOutputPath()}/web/src/Routes.tsx`
           const contentRoutes = fs.readFileSync(pathRoutes).toString()
           const resultsRoutesAbout = contentRoutes.replace(
             /name="about"/,
@@ -623,13 +366,13 @@ export async function apiTasks(
             export async function routeParameters() {
               return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
             }`
-          const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
+          const blogPostRouteHooksPath = `${getOutputPath()}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
           fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
 
           const waterfallRouteHooks = `export async function routeParameters() {
               return [{ id: 2 }]
             }`
-          const waterfallRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
+          const waterfallRouteHooksPath = `${getOutputPath()}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
           fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
         },
       },
@@ -703,12 +446,12 @@ export async function apiTasks(
         // This task renames the migration folders so that we don't have to deal with duplicates/conflicts when committing to the repo
         title: 'Adjust dates within migration folder names',
         task: () => {
-          if (!OUTPUT_PATH) {
+          if (!getOutputPath()) {
             throw new Error('Output path not set')
           }
 
           const migrationsFolderPath = path.join(
-            OUTPUT_PATH,
+            getOutputPath(),
             'api',
             'db',
             'migrations',
@@ -836,7 +579,7 @@ export async function streamingTasks(
   outputPath: string,
   { verbose }: { verbose: boolean },
 ) {
-  OUTPUT_PATH = outputPath
+  setOutputPath(outputPath)
 
   const tasks = [
     {
@@ -876,7 +619,7 @@ export async function fragmentsTasks(
   outputPath: string,
   { verbose }: { verbose: boolean },
 ) {
-  OUTPUT_PATH = outputPath
+  setOutputPath(outputPath)
 
   const tasks = [
     {
@@ -932,13 +675,13 @@ export async function fragmentsTasks(
     {
       title: 'Copy components from templates',
       task: () => {
-        if (!OUTPUT_PATH) {
+        if (!getOutputPath()) {
           throw new Error('Output path not set')
         }
 
         const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
         const componentsPath = path.join(
-          OUTPUT_PATH,
+          getOutputPath(),
           'web',
           'src',
           'components',
@@ -961,13 +704,18 @@ export async function fragmentsTasks(
     {
       title: 'Copy sdl and service for groceries from templates',
       task: () => {
-        if (!OUTPUT_PATH) {
+        if (!getOutputPath()) {
           throw new Error('Output path not set')
         }
 
         const templatesPath = path.join(import.meta.dirname, 'templates', 'api')
-        const graphqlPath = path.join(OUTPUT_PATH, 'api', 'src', 'graphql')
-        const servicesPath = path.join(OUTPUT_PATH, 'api', 'src', 'services')
+        const graphqlPath = path.join(getOutputPath(), 'api', 'src', 'graphql')
+        const servicesPath = path.join(
+          getOutputPath(),
+          'api',
+          'src',
+          'services',
+        )
 
         const sdlTemplatePath = path.join(templatesPath, 'groceries.sdl.ts')
         const sdlPath = path.join(graphqlPath, 'groceries.sdl.ts')
