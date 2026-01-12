@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import { join } from 'node:path'
 
 import * as dotenv from 'dotenv-defaults'
-import { pickBy } from 'lodash'
+import pickBy from 'lodash/pickBy.js'
 import type * as tsm from 'ts-morph'
 
 import { getSchemaPath } from '@cedarjs/project-config'

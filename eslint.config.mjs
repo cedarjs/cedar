@@ -96,7 +96,6 @@ export default [
 
       curly: 'error',
       'unused-imports/no-unused-imports': 'error',
-      '@cedarjs/process-env-computed': 'error',
       'no-console': 'off',
       'no-extra-semi': 'off',
       'prefer-object-spread': 'warn',
@@ -447,6 +446,7 @@ export default [
       'packages/project-config/src/envVarDefinitions.ts',
       'packages/testing/**',
       'packages/vite/src/plugins/vite-plugin-cedar-html-env.ts',
+      '.github/**',
     ],
     rules: {
       '@cedarjs/process-env-computed': 'off',

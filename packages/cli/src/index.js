@@ -34,6 +34,7 @@ import * as testCommandEsm from './commands/testEsm.js'
 import * as tstojsCommand from './commands/ts-to-js.js'
 import * as typeCheckCommand from './commands/type-check.js'
 import * as upgradeCommand from './commands/upgrade/upgrade.js'
+import c from './lib/colors.js'
 import { exitWithError } from './lib/exit.js'
 import { findUp } from './lib/index.js'
 import * as updateCheck from './lib/updateCheck.js'
@@ -74,34 +75,27 @@ let { cwd, telemetry, help, version } = Parser(hideBin(process.argv), {
   },
 })
 cwd ??= process.env.RWJS_CWD
-
-try {
-  if (cwd) {
-    // `cwd` was set by the `--cwd` option or the `RWJS_CWD` env var. In this case,
-    // we don't want to find up for a `redwood.toml` file. The `redwood.toml` should just be in that directory.
-    if (!fs.existsSync(path.join(cwd, 'redwood.toml'))) {
-      throw new Error(`Couldn't find a "redwood.toml" file in ${cwd}`)
-    }
-  } else {
-    // `cwd` wasn't set. Odds are they're in a Redwood project,
-    // but they could be in ./api or ./web, so we have to find up to be sure.
-
-    const redwoodTOMLPath = findUp('redwood.toml')
-
-    if (!redwoodTOMLPath) {
-      throw new Error(
-        `Couldn't find up a "redwood.toml" file from ${process.cwd()}`,
-      )
-    }
-
-    cwd = path.dirname(redwoodTOMLPath)
-  }
-} catch (error) {
-  console.error(error.message)
-  process.exit(1)
-}
-
+cwd = getTomlDir(cwd)
 process.env.RWJS_CWD = cwd
+
+if (process.argv[1]?.endsWith('redwood.js')) {
+  const tomlPath = path.join(cwd, 'redwood.toml')
+  // I'm reading and "parsing" the toml file manually because I didn't want to
+  // load another package. Every package loaded increases the startup time.
+  const toml = fs.readFileSync(tomlPath, 'utf8')
+  const disableWarning = /^\s*rwBinWarning\s*=\s*false/m.test(toml)
+
+  if (!disableWarning) {
+    console.warn()
+    console.warn(
+      c.warning(
+        "'yarn rw' and 'yarn redwood' have been deprecated. Please use 'yarn " +
+          "cedar' instead.",
+      ),
+    )
+    console.warn()
+  }
+}
 
 if (process.cwd() !== cwd) {
   process.chdir(cwd)
@@ -163,7 +157,7 @@ async function runYargs() {
   // # Build the CLI yargs instance
   const yarg = yargs(hideBin(process.argv))
     // Config
-    .scriptName('rw')
+    .scriptName('cedar')
     .middleware(
       [
         // We've already handled `cwd` above, but it may still be in `argv`.
@@ -256,6 +250,41 @@ async function runYargs() {
       }
     }
   })
+}
+
+function getTomlDir(cwd) {
+  let tomlDir = ''
+
+  try {
+    if (cwd) {
+      // `cwd` was set by the `--cwd` option or the `RWJS_CWD` env var. In this
+      // case, we don't want to find up for a `redwood.toml` file. The
+      // `redwood.toml` should just be in that directory.
+      if (!fs.existsSync(path.join(cwd, 'redwood.toml'))) {
+        throw new Error(`Couldn't find a "redwood.toml" file in ${cwd}`)
+      }
+
+      tomlDir = cwd
+    } else {
+      // `cwd` wasn't set. Odds are they're in a Cedar project, but they could
+      // be in ./api or ./web, so we have to find up to be sure.
+
+      const redwoodTomlPath = findUp('redwood.toml')
+
+      if (!redwoodTomlPath) {
+        throw new Error(
+          `Couldn't find up a "redwood.toml" file from ${process.cwd()}`,
+        )
+      }
+
+      tomlDir = path.dirname(redwoodTomlPath)
+    }
+  } catch (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
+
+  return tomlDir
 }
 
 main()

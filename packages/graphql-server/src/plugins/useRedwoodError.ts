@@ -7,7 +7,7 @@ import {
 import { RedwoodError } from '@cedarjs/api'
 import type { Logger } from '@cedarjs/api/logger'
 
-import type { RedwoodGraphQLContext } from '../types.js'
+import type { CedarGraphQLContext } from '../types.js'
 
 /**
  * Converts RedwoodErrors to GraphQLErrors
@@ -26,7 +26,7 @@ import type { RedwoodGraphQLContext } from '../types.js'
  */
 export const useRedwoodError = (
   logger: Logger,
-): Plugin<RedwoodGraphQLContext> => {
+): Plugin<CedarGraphQLContext> => {
   return {
     async onExecute() {
       return {

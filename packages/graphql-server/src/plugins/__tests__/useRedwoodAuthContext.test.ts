@@ -61,7 +61,7 @@ describe('useRedwoodAuthContext', () => {
       testSchema,
     )
 
-    await testkit.execute(testQuery, {}, { requestContext: {} })
+    await testkit.execute(testQuery, {}, {})
 
     expectContextContains({
       currentUser: MOCK_USER,
@@ -92,7 +92,7 @@ describe('useRedwoodAuthContext', () => {
     )
 
     await expect(async () => {
-      await testkit.execute(testQuery, {}, { requestContext: {} })
+      await testkit.execute(testQuery, {}, {})
     }).rejects.toEqual(
       new Error('Exception in getCurrentUser: Could not fetch user from db.'),
     )

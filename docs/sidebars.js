@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 module.exports = {
   main: [
     'introduction',
@@ -175,7 +176,19 @@ module.exports = {
         },
         'local-postgres-setup',
         'logger',
-        'mailer',
+        {
+          type: 'category',
+          label: 'Mailer',
+          link: {
+            type: 'generated-index',
+            title: 'Mailer',
+            slug: 'mailer/index',
+          },
+          items: [
+            { type: 'doc', label: 'Introduction', id: 'mailer' },
+            { type: 'doc', label: 'Resend', id: 'mailer/resend' },
+          ],
+        },
         {
           type: 'category',
           label: 'Monitoring',

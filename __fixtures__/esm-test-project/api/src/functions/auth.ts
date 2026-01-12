@@ -13,10 +13,7 @@ export const handler = async (
   const forgotPasswordOptions: DbAuthHandlerOptions['forgotPassword'] = {
     // handler() is invoked after verifying that a user was found with the given
     // username. This is where you can send the user an email with a link to
-    // reset their password. With the default dbAuth routes and field names, the
-    // URL to reset the password will be:
-    //
-    // https://example.com/reset-password?resetToken=${user.resetToken}
+    // reset their password.
     //
     // Whatever is returned from this function will be returned from
     // the `forgotPassword()` function that is destructured from `useAuth()`.
@@ -29,9 +26,12 @@ export const handler = async (
     // `user` here has been sanitized to only include the fields listed in
     // `allowedUserFields` so it should be safe to return as-is.
     handler: (user, _resetToken) => {
-      // TODO: Send user an email/message with a link to reset their password,
-      // including the `resetToken`. The URL should look something like:
+      // TODO: Send an email/message to the user
+      // The message should include a link to reset their password with the
+      // `resetToken`. The URL should look something like:
       // `http://localhost:8910/reset-password?resetToken=${resetToken}`
+      // When you implement this, change `_resetToken` to `resetToken` in the
+      // function arguments above.
 
       return user
     },

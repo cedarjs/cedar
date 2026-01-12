@@ -2,7 +2,7 @@ export const post = `model Post {
   id        Int      @id @default(autoincrement())
   title     String
   body      String
-  authorId  Int
+  authorId  String
   author    User     @relation(fields: [authorId], references: [id])
   createdAt DateTime @default(now())
 }`
@@ -16,7 +16,7 @@ export const contact = `model Contact {
 }`
 
 export const user = `model User {
-  id                  Int       @id @default(autoincrement())
+  id                  String    @id @default(uuid())
   email               String    @unique
   hashedPassword      String
   fullName            String

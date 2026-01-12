@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli",
-  "version": "2.0.2",
+  "version": "2.3.0",
   "description": "The CedarJS Command Line",
   "repository": {
     "type": "git",
@@ -10,6 +10,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
+    "cedar": "./dist/index.js",
     "cedarjs": "./dist/index.js",
     "cfw": "./dist/cfw.js",
     "redwood": "./dist/index.js",
@@ -80,7 +81,7 @@
     "semver": "7.7.3",
     "smol-toml": "1.6.0",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.28.8",
+    "systeminformation": "5.30.2",
     "termi-link": "1.1.0",
     "title-case": "3.0.3",
     "unionfs": "4.6.0",

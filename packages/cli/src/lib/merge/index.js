@@ -1,7 +1,8 @@
 import { parse, traverse } from '@babel/core'
-import generate from '@babel/generator'
+import { generate } from '@babel/generator'
 import { VISITOR_KEYS } from '@babel/types'
-import { partition, forEachRight } from 'lodash'
+import forEachRight from 'lodash/forEachRight.js'
+import partition from 'lodash/partition.js'
 import prettier from 'prettier'
 
 import { forEachFunctionOn, nodeIs } from './algorithms.js'

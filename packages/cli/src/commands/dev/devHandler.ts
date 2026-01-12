@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { argv } from 'node:process'
 
 import concurrently from 'concurrently'
 import type { Command } from 'concurrently'
@@ -11,44 +10,46 @@ import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
+import c from '../../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
-import { exitWithError } from '../lib/exit.js'
+import { exitWithError } from '../../lib/exit.js'
 // @ts-expect-error - Types not available for JS files
-import { generatePrismaClient } from '../lib/generatePrismaClient.js'
+import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
-import { getPaths } from '../lib/index.js'
-import { getFreePort } from '../lib/ports.js'
+import { getPaths } from '../../lib/index.js'
+import { getFreePort } from '../../lib/ports.js'
 // @ts-expect-error - Types not available for JS files
-import { serverFileExists } from '../lib/project.js'
+import { serverFileExists } from '../../lib/project.js'
 
-const defaultApiDebugPort = 18911
+import { getApiDebugFlag } from './apiDebugFlag.js'
+import { getPackageWatchCommands } from './packageWatchCommands.js'
 
 interface DevHandlerOptions {
-  side?: string[]
+  workspace?: string[]
   forward?: string
   generate?: boolean
   apiDebugPort?: number
 }
 
 export const handler = async ({
-  side = ['api', 'web'],
+  workspace = ['api', 'web', 'packages/*'],
   forward = '',
   generate = true,
   apiDebugPort,
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
-    side: JSON.stringify(side),
+    workspace: JSON.stringify(workspace),
     generate,
   })
 
-  const rwjsPaths = getPaths()
+  const cedarPaths = getPaths()
 
   const serverFile = serverFileExists()
 
   // Starting values of ports from config (redwood.toml)
   const apiPreferredPort = parseInt(String(getConfig().api.port))
+
   let webPreferredPort: number | undefined = parseInt(
     String(getConfig().web.port),
   )
@@ -62,35 +63,42 @@ export const handler = async ({
   // Check api port, unless there's a serverFile. If there is a serverFile, we
   // don't know what port will end up being used in the end. It's up to the
   // author of the server file to decide and handle that
-  if (side.includes('api') && !serverFile) {
+  if (workspace.includes('api') && !serverFile) {
     apiAvailablePort = await getFreePort(apiPreferredPort)
+
     if (apiAvailablePort === -1) {
       exitWithError(undefined, {
         message: `Could not determine a free port for the api server`,
       })
     }
+
     apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
   }
 
   // Check web port
-  if (side.includes('web')) {
-    // Extract any ports the user forwarded to the dev server and prefer that instead
+  if (workspace.includes('web')) {
+    // Extract any ports the user forwarded to the dev server and prefer that
+    // instead
     const forwardedPortMatches = [
       ...forward.matchAll(/\-\-port(\=|\s)(?<port>[^\s]*)/g),
     ]
+
     if (forwardedPortMatches.length) {
       const port = forwardedPortMatches.pop()?.groups?.port
       webPreferredPort = port ? parseInt(port, 10) : undefined
     }
+
     webAvailablePort = await getFreePort(webPreferredPort, [
       apiPreferredPort,
       apiAvailablePort,
     ])
+
     if (webAvailablePort === -1) {
       exitWithError(undefined, {
         message: `Could not determine a free port for the web server`,
       })
     }
+
     webPortChangeNeeded = webAvailablePort !== webPreferredPort
   }
 
@@ -115,15 +123,14 @@ export const handler = async ({
     exitWithError(undefined, { message })
   }
 
-  if (side.includes('api')) {
+  if (workspace.includes('api')) {
     try {
       await generatePrismaClient({
         verbose: false,
         force: false,
       })
     } catch (e) {
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
+      const message = getErrorMessage(e)
       errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
       console.error(c.error(message))
     }
@@ -134,8 +141,7 @@ export const handler = async ({
       try {
         await shutdownPort(apiAvailablePort)
       } catch (e) {
-        const message =
-          e instanceof Object && 'message' in e ? e.message : String(e)
+        const message = getErrorMessage(e)
         errorTelemetry(process.argv, `Error shutting down "api": ${message}`)
         console.error(
           `Error whilst shutting down "api" port: ${c.error(message)}`,
@@ -144,12 +150,11 @@ export const handler = async ({
     }
   }
 
-  if (side.includes('web')) {
+  if (workspace.includes('web')) {
     try {
       await shutdownPort(webAvailablePort)
     } catch (e) {
-      const message =
-        e instanceof Object && 'message' in e ? e.message : String(e)
+      const message = getErrorMessage(e)
       errorTelemetry(process.argv, `Error shutting down "web": ${message}`)
       console.error(
         `Error whilst shutting down "web" port: ${c.error(message)}`,
@@ -157,25 +162,7 @@ export const handler = async ({
     }
   }
 
-  const getApiDebugFlag = () => {
-    // Passed in flag takes precedence
-    if (apiDebugPort) {
-      return `--debug-port ${apiDebugPort}`
-    } else if (argv.includes('--apiDebugPort')) {
-      return `--debug-port ${defaultApiDebugPort}`
-    }
-
-    const apiDebugPortInToml = getConfig().api.debugPort
-    if (apiDebugPortInToml) {
-      return `--debug-port ${apiDebugPortInToml}`
-    }
-
-    // Don't pass in debug port flag, unless configured
-    return ''
-  }
-
-  const redwoodConfigPath = getConfigPath()
-
+  const cedarConfigPath = getConfigPath()
   const streamingSsrEnabled = getConfig().experimental?.streamingSsr?.enabled
 
   // @TODO (Streaming) Lot of temporary feature flags for started dev server.
@@ -193,31 +180,32 @@ export const handler = async ({
     webCommand = `yarn cross-env NODE_ENV=development rw-dev-fe ${forward}`
   }
 
+  const rootPackageJsonPath = path.join(cedarPaths.base, 'package.json')
   const rootPackageJson = JSON.parse(
-    fs.readFileSync(path.join(rwjsPaths.base, 'package.json'), 'utf8'),
+    fs.readFileSync(rootPackageJsonPath, 'utf8'),
   )
+
   const isEsm = rootPackageJson.type === 'module'
   const serverWatchCommand = isEsm
     ? `cedarjs-api-server-watch`
     : `rw-api-server-watch`
 
-  const jobs: Record<
-    string,
-    Partial<Command> & {
-      name: string
-      command: string
-      runWhen: () => boolean
-    }
-  > = {
-    api: {
+  const jobs: (Partial<Command> & {
+    name: string
+    command: string
+    runWhen?: () => boolean
+  })[] = []
+
+  if (workspace.includes('api')) {
+    jobs.push({
       name: 'api',
       command: [
         'yarn nodemon',
         '  --quiet',
-        `  --watch "${redwoodConfigPath}"`,
+        `  --watch "${cedarConfigPath}"`,
         `  --exec "yarn ${serverWatchCommand}`,
         `    --port ${apiAvailablePort}`,
-        `    ${getApiDebugFlag()}`,
+        `    ${getApiDebugFlag(apiDebugPort)}`,
         '    | rw-log-formatter"',
       ]
         .join(' ')
@@ -227,52 +215,64 @@ export const handler = async ({
         NODE_OPTIONS: getDevNodeOptions(),
       },
       prefixColor: 'cyan',
-      runWhen: () => fs.existsSync(rwjsPaths.api.src),
-    },
-    web: {
+      runWhen: () => fs.existsSync(cedarPaths.api.src),
+    })
+  }
+
+  if (workspace.includes('web')) {
+    jobs.push({
       name: 'web',
       command: webCommand,
       prefixColor: 'blue',
-      cwd: rwjsPaths.web.base,
-      runWhen: () => fs.existsSync(rwjsPaths.web.src),
-    },
-    gen: {
+      cwd: cedarPaths.web.base,
+      runWhen: () => fs.existsSync(cedarPaths.web.src),
+    })
+  }
+
+  if (generate) {
+    jobs.push({
       name: 'gen',
       command: 'yarn rw-gen-watch',
       prefixColor: 'green',
-      runWhen: () => generate,
-    },
+    })
   }
 
-  const mappedJobs = Object.keys(jobs).map((job) => {
-    // Include the jobs for the sides indicated on the command line, plus the
-    // gen job
-    if (side.includes(job) || job === 'gen') {
-      return jobs[job]
-    }
+  // Extract package workspaces from workspace array pass as argument
+  const packageWorkspaces = workspace.filter(
+    (w) => w !== 'api' && w !== 'web' && w !== 'gen',
+  )
 
-    return {
-      name: '',
-      command: '',
-      runWhen: () => false,
+  // Check what was passed as arguments first, before hitting the filesystem as
+  // a performance optimization.
+  if (packageWorkspaces.length > 0) {
+    const hasPackageJsonWorkspaces =
+      Array.isArray(rootPackageJson.workspaces) &&
+      rootPackageJson.workspaces.some((workspace: string) =>
+        workspace.startsWith('packages/'),
+      )
+
+    if (hasPackageJsonWorkspaces && fs.existsSync(cedarPaths.packages)) {
+      const pkgCommands = await getPackageWatchCommands(packageWorkspaces)
+      jobs.push(...pkgCommands)
     }
-  })
+  }
+
+  // Run jobs that either don't have a runWhen function or have a runWhen
+  // function that returns true
+  const filteredJobs = jobs.filter((job) => !job.runWhen || job.runWhen())
 
   // TODO: Convert jobs to an array and supply cwd command.
-  const { result } = concurrently(
-    mappedJobs.filter((job) => job.runWhen()),
-    {
-      prefix: '{name} |',
-      timestampFormat: 'HH:mm:ss',
-      handleInput: true,
-    },
-  )
+  const { result } = concurrently(filteredJobs, {
+    prefix: '{name} |',
+    timestampFormat: 'HH:mm:ss',
+    handleInput: true,
+  })
 
   result.catch((e) => {
     if (e?.message) {
       errorTelemetry(
         process.argv,
-        `Error concurrently starting sides: ${e.message}`,
+        `Error concurrently starting workspaces: ${e.message}`,
       )
       exitWithError(e)
     }
@@ -297,4 +297,10 @@ export function getDevNodeOptions() {
   }
 
   return `${NODE_OPTIONS} ${enableSourceMapsOption}`
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Object && 'message' in error
+    ? error.message
+    : String(error)
 }

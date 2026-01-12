@@ -1,38 +1,31 @@
 import execa from 'execa'
-import type { StdioOption, Options as ExecaOptions } from 'execa'
 
-export const addFrameworkDepsToProject = (
+export function addFrameworkDepsToProject(
   frameworkPath: string,
   projectPath: string,
-  stdio?: StdioOption,
-) => {
-  const options: ExecaOptions = {
+  stdio?: 'pipe' | 'ignore' | 'inherit',
+) {
+  return execa('yarn', ['project:deps'], {
     cwd: frameworkPath,
-    shell: true,
-    stdio: (stdio ?? 'inherit') as any,
+    stdio: stdio ?? 'inherit',
     env: {
       CFW_PATH: frameworkPath,
       RWJS_CWD: projectPath,
     },
-  }
-
-  return execa('yarn', ['project:deps'], options)
+  })
 }
 
-export const copyFrameworkPackages = (
+export function copyFrameworkPackages(
   frameworkPath: string,
   projectPath: string,
-  stdio?: StdioOption,
-) => {
-  const options: ExecaOptions = {
+  stdio?: 'pipe' | 'ignore' | 'inherit',
+) {
+  return execa('yarn', ['project:copy'], {
     cwd: frameworkPath,
-    shell: true,
-    stdio: (stdio ?? 'inherit') as any,
+    stdio: stdio ?? 'inherit',
     env: {
       CFW_PATH: frameworkPath,
       RWJS_CWD: projectPath,
     },
-  }
-
-  return execa('yarn', ['project:copy'], options)
+  })
 }

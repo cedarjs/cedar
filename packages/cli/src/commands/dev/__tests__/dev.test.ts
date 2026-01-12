@@ -1,6 +1,6 @@
 import type FS from 'fs'
 
-import '../../lib/mockTelemetry'
+import '../../../lib/mockTelemetry.js'
 
 vi.mock('concurrently', () => ({
   __esModule: true, // this property makes it work
@@ -20,11 +20,16 @@ vi.mock('node:fs', async (importOriginal) => {
       ...actualFs,
       readFileSync: (filePath: string) => {
         if (filePath.endsWith('.json')) {
-          if (filePath.includes('esm-project')) {
-            return '{ "type": "module" }'
+          // For a test, using `any` will have to be good enough
+          const packgeJson: Record<string, any> = {
+            workspaces: ['api', 'web', 'packages/*'],
           }
 
-          return '{}'
+          if (filePath.includes('esm-project')) {
+            packgeJson.type = 'module'
+          }
+
+          return JSON.stringify(packgeJson)
         }
 
         return 'File content'
@@ -49,13 +54,17 @@ vi.mock('@cedarjs/project-config', async (importActual) => {
   }
 })
 
-vi.mock('../../lib/generatePrismaClient', () => {
+vi.mock('../../../lib/generatePrismaClient', () => {
   return {
     generatePrismaClient: vi.fn().mockResolvedValue(true),
   }
 })
 
-vi.mock('../../lib/ports', () => {
+vi.mock('../packageWatchCommands.js', () => ({
+  getPackageWatchCommands: vi.fn().mockResolvedValue([]),
+}))
+
+vi.mock('../../../lib/ports', () => {
   return {
     // We're not actually going to use the port, so it's fine to just say it's
     // free. It prevents the tests from failing if the ports are already in use
@@ -64,22 +73,27 @@ vi.mock('../../lib/ports', () => {
   }
 })
 
-vi.mock('../../lib/index.js', () => ({
+vi.mock('../../../lib/index.js', () => ({
   getPaths: vi.fn(defaultPaths),
 }))
 
+vi.mock('../../lib/project.js', () => ({
+  serverFileExists: vi.fn(() => false),
+}))
+
 import concurrently from 'concurrently'
-import { find } from 'lodash'
+import find from 'lodash/find.js'
 import { vi, describe, afterEach, it, expect } from 'vitest'
 
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
 
 // @ts-expect-error - Types not available for JS files
-import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
+import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
-import { getPaths } from '../../lib/index.js'
+import { getPaths } from '../../../lib/index.js'
 import { handler } from '../devHandler.js'
+import { getPackageWatchCommands } from '../packageWatchCommands.js'
 
 function defaultPaths() {
   return {
@@ -93,6 +107,7 @@ function defaultPaths() {
       base: '/mocked/project/web',
       dist: '/mocked/project/web/dist',
     },
+    packages: '/mocked/project/packages',
     generated: {
       base: '/mocked/project/.redwood',
     },
@@ -154,10 +169,11 @@ describe('yarn cedar dev', () => {
     vi.clearAllMocks()
     vi.mocked(getPaths).mockReturnValue(defaultPaths())
     vi.mocked(getConfig).mockReturnValue(await defaultConfig())
+    vi.mocked(getPackageWatchCommands).mockResolvedValue([])
   })
 
   it('Should run api and web dev servers, and generator watcher by default', async () => {
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
     const { webCommand, apiCommand, generateCommand } = findCommands()
@@ -197,7 +213,7 @@ describe('yarn cedar dev', () => {
       },
     })
 
-    await handler({ side: ['api', 'web'] })
+    await handler({ workspace: ['api', 'web'] })
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
     const { webCommand, apiCommand, generateCommand } = findCommands()
@@ -266,7 +282,7 @@ describe('yarn cedar dev', () => {
   })
 
   it('Debug port passed in command line overrides TOML', async () => {
-    await handler({ side: ['api'], apiDebugPort: 90909090 })
+    await handler({ workspace: ['api'], apiDebugPort: 90909090 })
 
     const apiCommand = findApiCommands()
 
@@ -289,7 +305,7 @@ describe('yarn cedar dev', () => {
       },
     })
 
-    await handler({ side: ['api'] })
+    await handler({ workspace: ['api'] })
 
     const apiCommand = findApiCommands()
 

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/internal",
-  "version": "2.0.2",
+  "version": "2.3.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -168,7 +168,7 @@
     "rimraf": "6.1.2",
     "source-map": "0.7.6",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.28.8",
+    "systeminformation": "5.30.2",
     "termi-link": "1.1.0",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"

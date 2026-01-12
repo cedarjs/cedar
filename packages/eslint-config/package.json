@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/eslint-config",
-  "version": "2.0.2",
+  "version": "2.3.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -51,8 +51,8 @@
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@eslint/js": "8.57.1",
-    "@typescript-eslint/eslint-plugin": "8.50.1",
-    "@typescript-eslint/parser": "8.50.1",
+    "@typescript-eslint/eslint-plugin": "8.52.0",
+    "@typescript-eslint/parser": "8.52.0",
     "eslint": "8.57.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-babel-module": "5.3.2",
@@ -65,7 +65,7 @@
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-hooks": "4.6.2",
     "prettier": "3.6.2",
-    "typescript-eslint": "8.50.1"
+    "typescript-eslint": "8.52.0"
   },
   "devDependencies": {
     "@babel/cli": "7.28.3",
