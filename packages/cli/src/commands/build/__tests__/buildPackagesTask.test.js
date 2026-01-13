@@ -1,8 +1,8 @@
 vi.mock('node:fs', () => {
   return {
     default: {
-      existsSync: (_path) => {
-        return true
+      existsSync: (path) => {
+        return !path.includes('non-existing-package')
       },
       readFileSync: () => {
         // Reading /mocked/project/package.json
@@ -73,7 +73,7 @@ afterEach(() => {
 
 describe('buildPackagesTask', async () => {
   it('expands packages/* to all packages', async () => {
-    await buildPackagesTask(['packages/*'])
+    await buildPackagesTask({}, ['packages/*'])
 
     expect(vi.mocked(fs).promises.glob).toHaveBeenCalledOnce()
     expect(vi.mocked(concurrently)).toHaveBeenCalledWith(
@@ -102,7 +102,7 @@ describe('buildPackagesTask', async () => {
   })
 
   it('builds specific workspaces', async () => {
-    await buildPackagesTask(['@my-org/pkg-one', 'pkg-two'])
+    await buildPackagesTask({}, ['@my-org/pkg-one', 'pkg-two'])
 
     expect(vi.mocked(fs).promises.glob).not.toHaveBeenCalled()
     expect(vi.mocked(concurrently)).toHaveBeenCalledWith(
@@ -123,5 +123,53 @@ describe('buildPackagesTask', async () => {
         timestampFormat: 'HH:mm:ss',
       },
     )
+  })
+
+  it('handles no packages to build for glob', async () => {
+    vi.mocked(fs).promises.glob.mockResolvedValue([])
+
+    const mockTask = { skip: vi.fn() }
+    await buildPackagesTask(mockTask, ['packages/*'])
+
+    expect(vi.mocked(concurrently)).not.toHaveBeenCalled()
+    expect(vi.mocked(mockTask.skip)).toHaveBeenCalledWith(
+      'No packages to build at packages/*',
+    )
+  })
+
+  it('handles no packages to build for specific packages', async () => {
+    const mockTask = { skip: vi.fn() }
+    await buildPackagesTask(mockTask, [
+      'non-existing-package-one',
+      'non-existing-package-two',
+    ])
+
+    expect(vi.mocked(concurrently)).not.toHaveBeenCalled()
+    expect(vi.mocked(mockTask.skip)).toHaveBeenCalledWith(
+      'No packages to build at non-existing-package-one, non-existing-package-two',
+    )
+  })
+
+  it('handles mix of existing and non-existing packages to build', async () => {
+    const mockTask = { skip: vi.fn() }
+    await buildPackagesTask(mockTask, ['pkg-one', 'non-existing-package'])
+
+    expect(vi.mocked(concurrently)).toHaveBeenCalledWith(
+      [
+        {
+          command: 'yarn build',
+          name: 'pkg-one',
+          cwd: '/mocked/project/packages/pkg-one',
+        },
+      ],
+      {
+        prefix: '{name} |',
+        timestampFormat: 'HH:mm:ss',
+      },
+    )
+    // TODO: Maybe we should let the user know about the non-existing package
+    // expect(vi.mocked(mockTask.skip)).toHaveBeenCalledWith(
+    //   'No packages to build at non-existing-package',
+    // )
   })
 })
