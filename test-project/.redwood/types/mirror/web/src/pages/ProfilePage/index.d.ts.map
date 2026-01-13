@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/ProfilePage/ProfilePage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAKA",
+  "file": "index.d.ts"
+}

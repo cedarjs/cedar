@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/WaterfallPage/WaterfallPage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAMA",
+  "file": "index.d.ts"
+}

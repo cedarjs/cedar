@@ -1,0 +1,17 @@
+Starting log:
+ - Time: 2026-01-29T15:10:12.108Z
+ - Name: updateCheck (updatecheck)
+ - Command: yarn
+ - Arguments: node /Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/@cedarjs/cli/dist/lib/updateCheckExecute.js
+
+Detected the current version of Cedar: '3.0.0-canary.13223+9e1d1011b'
+Checking for new versions for npm tag: 'latest'
+Detected the latest versions of Cedar as:
+[
+  [
+    "latest",
+    "2.4.1"
+  ]
+]
+Saving updated version information for future checks...
+Update Check: 196.162ms

@@ -1,0 +1,29 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../web/src/pages/AboutPage/AboutPage.tsx",
+    "../../../web/src/pages/BlogPostPage/BlogPostPage.tsx",
+    "../../../web/src/pages/ContactUsPage/ContactUsPage.tsx",
+    "../../../web/src/pages/DoublePage/DoublePage.tsx",
+    "../../../web/src/pages/FatalErrorPage/FatalErrorPage.tsx",
+    "../../../web/src/pages/ForgotPasswordPage/ForgotPasswordPage.tsx",
+    "../../../web/src/pages/HomePage/HomePage.tsx",
+    "../../../web/src/pages/LoginPage/LoginPage.tsx",
+    "../../../web/src/pages/NotFoundPage/NotFoundPage.tsx",
+    "../../../web/src/pages/ProfilePage/ProfilePage.tsx",
+    "../../../web/src/pages/ResetPasswordPage/ResetPasswordPage.tsx",
+    "../../../web/src/pages/SignupPage/SignupPage.tsx",
+    "../../../web/src/pages/WaterfallPage/WaterfallPage.tsx",
+    "../../../web/src/pages/Contact/ContactPage/ContactPage.tsx",
+    "../../../web/src/pages/Contact/ContactsPage/ContactsPage.tsx",
+    "../../../web/src/pages/Contact/EditContactPage/EditContactPage.tsx",
+    "../../../web/src/pages/Contact/NewContactPage/NewContactPage.tsx",
+    "../../../web/src/pages/Post/EditPostPage/EditPostPage.tsx",
+    "../../../web/src/pages/Post/NewPostPage/NewPostPage.tsx",
+    "../../../web/src/pages/Post/PostPage/PostPage.tsx",
+    "../../../web/src/pages/Post/PostsPage/PostsPage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;AAAA;ACSA;ACgBA;ACrBA;ACQA;ACHA;ACPA;ACcA;AChBA;ACKA;ACIA;ACOA;ACVA;ACAA;ACJA;ACIA;ACJA;ACIA;ACJA;ACIA;ACJA",
+  "file": "web-routesPages.d.ts"
+}

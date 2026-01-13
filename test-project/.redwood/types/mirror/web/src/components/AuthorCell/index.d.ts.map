@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/components/AuthorCell/AuthorCell.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;;;;;;;;;AAgCa",
+  "file": "index.d.ts"
+}

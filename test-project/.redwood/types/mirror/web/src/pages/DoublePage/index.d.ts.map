@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/DoublePage/DoublePage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAIA",
+  "file": "index.d.ts"
+}

@@ -1,0 +1,83 @@
+[{
+  "attributes": {
+    "command": "build",
+    "workspace": "[\"api\",\"web\",\"packages/*\"]",
+    "verbose": false,
+    "prisma": true,
+    "prerender": true,
+    "errorReferenceCode": "684f5e42-2e77-441e-ba67-230e4607334e"
+  },
+  "links": [],
+  "events": [
+    {
+      "name": "exception",
+      "attributes": {
+        "exception.type": "Error",
+        "exception.message": "Command failed with exit code 1: yarn cedar prerender",
+        "exception.stacktrace": "Error: Command failed with exit code 1: yarn cedar prerender\n    at makeError (/Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/execa/lib/error.js:60:11)\n    at handlePromise (/Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/execa/index.js:118:26)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async triggerPrerender (file:///Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/@cedarjs/cli/dist/commands/build/buildHandler.js:124:5)\n    at async file:///Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/@cedarjs/cli/dist/commands/build/buildHandler.js:136:7\n    at async timedTelemetry (/Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/@cedarjs/telemetry/dist/telemetry.js:72:18)\n    at async handler (file:///Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/@cedarjs/cli/dist/commands/build/buildHandler.js:133:3)\n    at async runYargs (file:///Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/@cedarjs/cli/dist/index.js:133:3)\n    at async file:///Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/@cedarjs/cli/dist/index.js:85:7\n    at async main (file:///Users/tobbe/dev/cedarjs/cedar/test-project/node_modules/@cedarjs/cli/dist/index.js:74:3)"
+      },
+      "time": [
+        1769699436,
+        545032875
+      ],
+      "droppedAttributesCount": 0
+    }
+  ],
+  "_droppedAttributesCount": 0,
+  "_droppedEventsCount": 0,
+  "_droppedLinksCount": 0,
+  "status": {
+    "code": 2,
+    "message": "Command failed with exit code 1: yarn cedar prerender"
+  },
+  "endTime": [
+    1769699436,
+    545132625
+  ],
+  "_ended": true,
+  "_duration": [
+    9,
+    846132625
+  ],
+  "name": "cli",
+  "_spanContext": {
+    "traceId": "43dfb442a7e47f875e116374cb4baa65",
+    "spanId": "456f15ff27a342ef",
+    "traceFlags": 1
+  },
+  "kind": 0,
+  "_performanceStartTime": 370.376875,
+  "_performanceOffset": -0.9169921875,
+  "_startTimeProvided": false,
+  "startTime": [
+    1769699426,
+    699000000
+  ],
+  "resource": {
+    "_attributes": {
+      "service.name": "unknown_service:/usr/local/bin/node",
+      "telemetry.sdk.language": "nodejs",
+      "telemetry.sdk.name": "opentelemetry",
+      "telemetry.sdk.version": "1.30.1"
+    },
+    "asyncAttributesPending": false,
+    "_syncAttributes": {
+      "service.name": "unknown_service:/usr/local/bin/node",
+      "telemetry.sdk.language": "nodejs",
+      "telemetry.sdk.name": "opentelemetry",
+      "telemetry.sdk.version": "1.30.1"
+    }
+  },
+  "instrumentationLibrary": {
+    "name": "redwoodjs"
+  },
+  "_spanLimits": {
+    "attributeValueLengthLimit": null,
+    "attributeCountLimit": 128,
+    "linkCountLimit": 128,
+    "eventCountLimit": 128,
+    "attributePerEventCountLimit": 128,
+    "attributePerLinkCountLimit": 128
+  },
+  "_attributeValueLengthLimit": null
+}]

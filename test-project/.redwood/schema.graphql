@@ -1,0 +1,135 @@
+"""
+Use to check whether or not a user is authenticated and is associated
+with an optional set of roles.
+"""
+directive @requireAuth(roles: [String]) on FIELD_DEFINITION
+
+"""Use to skip authentication checks and allow public access."""
+directive @skipAuth on FIELD_DEFINITION
+
+scalar BigInt
+
+scalar Byte
+
+"""
+The Cedar Root Schema
+
+Defines details about Cedar such as the current user and version information.
+"""
+type Cedar {
+  """The current user."""
+  currentUser: JSON
+
+  """The version of Prisma."""
+  prismaVersion: String
+
+  """The version of CedarJS."""
+  version: String
+}
+
+type Contact {
+  createdAt: DateTime!
+  email: String!
+  id: Int!
+  message: String!
+  name: String!
+}
+
+input CreateContactInput {
+  email: String!
+  message: String!
+  name: String!
+}
+
+input CreatePostInput {
+  authorId: String!
+  body: String!
+  title: String!
+}
+
+input CreateUserInput {
+  email: String!
+  fullName: String!
+  roles: String
+}
+
+scalar Date
+
+scalar DateTime
+
+scalar File
+
+scalar JSON
+
+scalar JSONObject
+
+type Mutation {
+  createContact(input: CreateContactInput!): Contact
+  createPost(input: CreatePostInput!): Post!
+  deleteContact(id: Int!): Contact!
+  deletePost(id: Int!): Post!
+  updateContact(id: Int!, input: UpdateContactInput!): Contact!
+  updatePost(id: Int!, input: UpdatePostInput!): Post!
+}
+
+type Post {
+  author: User!
+  authorId: String!
+  body: String!
+  createdAt: DateTime!
+  id: Int!
+  title: String!
+}
+
+"""About the Cedar queries."""
+type Query {
+  """Fetches the Cedar root schema."""
+  cedar: Cedar
+  contact(id: Int!): Contact
+  contacts: [Contact!]!
+  post(id: Int!): Post
+  posts: [Post!]!
+
+  """Fetches the Cedar root schema."""
+  redwood: Redwood @deprecated(reason: "Use 'cedar' instead.")
+  user(id: String!): User
+}
+
+type Redwood {
+  """The current user."""
+  currentUser: JSON @deprecated(reason: "Use the Cedar type instead.")
+
+  """The version of Prisma."""
+  prismaVersion: String @deprecated(reason: "Use the Cedar type instead.")
+
+  """The version of CedarJS."""
+  version: String @deprecated(reason: "Use the Cedar type instead.")
+}
+
+scalar Time
+
+input UpdateContactInput {
+  email: String
+  message: String
+  name: String
+}
+
+input UpdatePostInput {
+  authorId: String
+  body: String
+  title: String
+}
+
+input UpdateUserInput {
+  email: String
+  fullName: String
+  roles: String
+}
+
+type User {
+  email: String!
+  fullName: String!
+  id: String!
+  posts: [Post]!
+  roles: String
+}

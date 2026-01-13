@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../../web/src/components/Post/EditPostCell/EditPostCell.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;;;;;;;;;AAkDa",
+  "file": "index.d.ts"
+}

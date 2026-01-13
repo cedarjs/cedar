@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/AboutPage/AboutPage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAAA",
+  "file": "index.d.ts"
+}

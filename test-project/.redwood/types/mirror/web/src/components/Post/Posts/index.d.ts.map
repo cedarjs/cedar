@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../../web/src/components/Post/Posts/Posts.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAyBA",
+  "file": "index.d.ts"
+}

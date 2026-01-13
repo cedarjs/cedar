@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../web/src/Routes.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;;;;IAoBM;IACA;IACA;IACA;IACA;IAEE;IACA;IACA;IACA;IAGA;IACA;IACA;IACA;IAGA;IAEE;IAEF;IACA;IACA;IACA",
+  "file": "web-routerRoutes.d.ts"
+}
