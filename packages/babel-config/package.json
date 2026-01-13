@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/babel-config",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -35,7 +35,7 @@
     "@babel/register": "7.28.3",
     "@babel/runtime-corejs3": "7.28.4",
     "@babel/traverse": "7.28.5",
-    "@cedarjs/project-config": "2.4.0",
+    "@cedarjs/project-config": "2.4.1",
     "babel-plugin-auto-import": "1.1.0",
     "babel-plugin-graphql-tag": "3.3.0",
     "babel-plugin-module-resolver": "5.0.2",

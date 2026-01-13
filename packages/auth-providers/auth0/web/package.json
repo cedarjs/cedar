@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-auth0-web",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -49,7 +49,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "2.4.0"
+    "@cedarjs/auth": "2.4.1"
   },
   "devDependencies": {
     "@auth0/auth0-spa-js": "2.11.1",
