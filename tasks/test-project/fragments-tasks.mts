@@ -12,7 +12,7 @@ import { getExecaOptions, applyCodemod, exec } from './util.mts'
 
 /**
  * Tasks to add GraphQL Fragments support to the test-project, and some queries
- * to test fragments
+ * to test those fragments
  */
 export function fragmentsTasks(outputPath: string) {
   setOutputPath(outputPath)
