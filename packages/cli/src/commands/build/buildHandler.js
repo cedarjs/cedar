@@ -74,7 +74,7 @@ export const handler = async ({
     },
     nonApiWebWorkspaces.length > 0 && {
       title: 'Building Packages...',
-      task: () => buildPackagesTask(nonApiWebWorkspaces),
+      task: (_ctx, task) => buildPackagesTask(task, nonApiWebWorkspaces),
     },
     // If using GraphQL Fragments or Trusted Documents, then we need to use
     // codegen to generate the types needed for possible types and the trusted

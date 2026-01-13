@@ -9,7 +9,7 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import { exitWithError } from '../../lib/exit.js'
 import { getPaths } from '../../lib/index.js'
 
-export async function buildPackagesTask(nonApiWebWorkspaces) {
+export async function buildPackagesTask(task, nonApiWebWorkspaces) {
   const cedarPaths = getPaths()
 
   const globPattern = path.join(cedarPaths.packages, '*').replaceAll('\\', '/')
@@ -19,18 +19,25 @@ export async function buildPackagesTask(nonApiWebWorkspaces) {
   // We need to map that to filesystem paths
   const workspacePaths = nonApiWebWorkspaces.some((w) => w === 'packages/*')
     ? await Array.fromAsync(fs.promises.glob(globPattern))
-    : nonApiWebWorkspaces.map((w) => {
-        const workspacePath = path.join(
-          cedarPaths.packages,
-          w.split('/').at(-1),
-        )
+    : nonApiWebWorkspaces
+        .map((w) => {
+          const workspacePath = path.join(
+            cedarPaths.packages,
+            w.split('/').at(-1),
+          )
 
-        if (!fs.existsSync(workspacePath)) {
-          throw new Error(`Workspace not found: ${workspacePath}`)
-        }
+          if (!fs.existsSync(workspacePath)) {
+            return ''
+          }
 
-        return importStatementPath(workspacePath)
-      })
+          return importStatementPath(workspacePath)
+        })
+        .filter(Boolean)
+
+  if (!workspacePaths.length) {
+    task.skip('No packages to build at ' + nonApiWebWorkspaces.join(', '))
+    return
+  }
 
   const { result } = concurrently(
     workspacePaths.map((workspacePath) => {
