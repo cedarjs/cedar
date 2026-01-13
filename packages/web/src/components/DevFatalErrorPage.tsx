@@ -42,7 +42,96 @@ type ErrorWithRequestMeta = Error & {
   mostRecentResponse?: any
 }
 
+function formatErrorForClipboard(
+  err: Error,
+  stack: StackTracey,
+  typeName: string,
+  msg: string,
+  errorWithMeta: ErrorWithRequestMeta,
+): string {
+  const lines: string[] = []
+
+  lines.push('='.repeat(80))
+  lines.push('FATAL ERROR REPORT')
+  lines.push('='.repeat(80))
+  lines.push('')
+
+  // Error summary
+  lines.push(`ERROR TYPE: ${typeName}`)
+  lines.push(`ERROR MESSAGE: ${msg}`)
+  lines.push('')
+
+  // Request details if available
+  const mostRecentRequest =
+    errorWithMeta.mostRecentRequest ||
+    errorWithMeta.graphQLErrors?.find((gqlErr) => gqlErr.__RedwoodEnhancedError)
+      ?.__RedwoodEnhancedError
+
+  if (mostRecentRequest) {
+    lines.push('-'.repeat(80))
+    lines.push('REQUEST CONTEXT')
+    lines.push('-'.repeat(80))
+    lines.push(`Operation: ${mostRecentRequest.operationName}`)
+    lines.push(`Kind: ${mostRecentRequest.operationKind}`)
+    lines.push('')
+    lines.push('Variables:')
+    lines.push(JSON.stringify(mostRecentRequest.variables, null, 2))
+    lines.push('')
+    lines.push('Query:')
+    lines.push(mostRecentRequest.query)
+    lines.push('')
+  }
+
+  // Response details if available
+  if (errorWithMeta.mostRecentResponse) {
+    lines.push('-'.repeat(80))
+    lines.push('RESPONSE CONTEXT')
+    lines.push('-'.repeat(80))
+    lines.push(JSON.stringify(errorWithMeta.mostRecentResponse, null, 2))
+    lines.push('')
+  }
+
+  // Stack trace
+  lines.push('-'.repeat(80))
+  lines.push('STACK TRACE')
+  lines.push('-'.repeat(80))
+
+  stack.items.forEach((entry, i) => {
+    const fileShort = entry.fileShort || '[Unknown]'
+    const callee = entry.callee || '[Anonymous]'
+    const line = entry.line || '?'
+    const column = entry.column || '?'
+
+    lines.push(`[${i}] ${fileShort}:${line}:${column} in ${callee}`)
+
+    // Include source code context if available
+    const sourceFile = entry.sourceFile as any
+    if (sourceFile?.lines && sourceFile.lines.length > 0) {
+      const lineIndex = (entry.line || 1) - 1
+      const window = 2
+      let start = Math.max(0, lineIndex - window)
+      let end = Math.min(sourceFile.lines.length, lineIndex + window + 1)
+
+      lines.push('  Source context:')
+      for (let idx = start; idx < end; idx++) {
+        const marker = idx === lineIndex ? '> ' : '  '
+        lines.push(
+          `  ${marker}${(idx + 1).toString().padStart(4)} | ${sourceFile.lines[idx]}`,
+        )
+      }
+      lines.push('')
+    }
+  })
+
+  lines.push('')
+  lines.push('='.repeat(80))
+
+  return lines.join('\n')
+}
+
 export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
+  const [copyFeedback, setCopyFeedback] = useState('')
+
   // Safety fallback
   if (!props.error) {
     return (
@@ -65,6 +154,18 @@ export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
     <a href={toVSCodeURL(stack.items[0])}>{stack.items[0].fileName}</a>
   ) : null
 
+  const handleCopyAll = async () => {
+    const errorText = formatErrorForClipboard(err, stack, typeName, msg, err)
+    try {
+      await navigator.clipboard.writeText(errorText)
+      setCopyFeedback('✓ Copied to clipboard')
+      setTimeout(() => setCopyFeedback(''), 3000)
+    } catch (err) {
+      setCopyFeedback('Failed to copy')
+      setTimeout(() => setCopyFeedback(''), 3000)
+    }
+  }
+
   return (
     <main className="error-page">
       <style
@@ -76,6 +177,16 @@ export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
       <nav>
         <h1>A fatal runtime error occurred when rendering {FileRef}</h1>
         <div>
+          <button
+            onClick={handleCopyAll}
+            className="copy-button"
+            title="Copy all error context to clipboard"
+          >
+            📋 Copy All
+          </button>
+          {copyFeedback && (
+            <span className="copy-feedback">{copyFeedback}</span>
+          )}
           Get help via <Discord /> or <Discourse />
         </div>
       </nav>
@@ -86,13 +197,16 @@ export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
             <span className="error-type">{typeName}</span>
             <span className="error-message">{prettyMessage(msg)}</span>
           </h3>
+        </div>
+        <ResponseRequest error={props.error} />
+        <div className="error">
+          <h3 className="section-title">Stack Trace</h3>
           <div className="error-stack">
             {stack.items.map((entry, i) => (
               <StackEntry key={i} entry={entry} i={i} message={msg} />
             ))}
           </div>
         </div>
-        <ResponseRequest error={props.error} />
       </section>
     </main>
   )
@@ -212,7 +326,10 @@ function StackEntry({
 function toVSCodeURL(entry: StackTracey.Entry) {
   // To account for folks using vscode-insiders etc
   // This is defined by vite from .env
-  const scheme = RWJS_DEBUG_ENV.REDWOOD_ENV_EDITOR || 'vscode'
+  const scheme =
+    (typeof RWJS_DEBUG_ENV !== 'undefined' &&
+      RWJS_DEBUG_ENV.REDWOOD_ENV_EDITOR) ||
+    'vscode'
   return `${scheme}://file/${entry.fileShort}:${entry.line}:${entry.column}`
 }
 
@@ -333,6 +450,29 @@ main.error-page nav div a {
   margin: 0 0.3em;
 }
 
+main.error-page nav .copy-button {
+  background-color: rgb(191, 71, 34);
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-right: 1em;
+  transition: background-color 0.2s;
+  font-family: inherit;
+}
+
+main.error-page nav .copy-button:hover {
+  background-color: rgb(200, 32, 32);
+}
+
+main.error-page nav .copy-feedback {
+  color: rgb(191, 71, 34);
+  font-weight: bold;
+  margin-right: 1em;
+}
+
 main.error-page nav svg {
   width: 24px;
   height: 24px;
@@ -377,6 +517,18 @@ main.error-page nav svg:hover {
   white-space: nowrap;
   text-align: center;
 }
+
+.panic-overlay .section-title {
+  display: flex;
+  align-items: center;
+  padding: 1em 1em;
+  background: rgb(195, 74, 37);
+  color: white;
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 2em 0 1em 0;
+}
+
 .panic-overlay .error-counter {
   color: white;
   opacity: 0.3;
