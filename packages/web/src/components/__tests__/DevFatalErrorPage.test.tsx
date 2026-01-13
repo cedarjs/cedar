@@ -59,9 +59,15 @@ describe('DevFatalErrorPage', () => {
     render(<DevFatalErrorPage error={error} />)
 
     const copyButton = screen.getByRole('button', { name: /Copy All/ })
-    expect(copyButton).toBeInTheDocument()
-    // The button should be clickable
-    expect(copyButton).not.toBeDisabled()
+    await user.click(copyButton)
+
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockWriteText).toHaveBeenCalledWith(
+      expect.stringContaining('FATAL ERROR REPORT'),
+    )
+    expect(mockWriteText).toHaveBeenCalledWith(
+      expect.stringContaining('Test error message'),
+    )
   })
 
   it('shows copy feedback after clicking Copy All', async () => {
@@ -69,11 +75,37 @@ describe('DevFatalErrorPage', () => {
     const error = new Error('Test error')
 
     render(<DevFatalErrorPage error={error} />)
+    const copyButton = screen.getByRole('button', { name: /Copy All/ })
+    await user.click(copyButton)
+
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(await screen.findByText('✓ Copied to clipboard')).toBeInTheDocument()
+  })
+
+  it('includes request context in clipboard when Copy All is clicked', async () => {
+    const user = userEvent.setup()
+    const error: any = new Error('GraphQL error')
+    error.mostRecentRequest = {
+      query: 'query GetUser { user { id } }',
+      operationName: 'GetUser',
+      operationKind: 'query',
+      variables: { id: '123' },
+    }
+
+    render(<DevFatalErrorPage error={error} />)
 
     const copyButton = screen.getByRole('button', { name: /Copy All/ })
     await user.click(copyButton)
 
-    expect(await screen.findByText('✓ Copied to clipboard')).toBeInTheDocument()
+    expect(mockWriteText).toHaveBeenCalledWith(
+      expect.stringContaining('REQUEST CONTEXT'),
+    )
+    expect(mockWriteText).toHaveBeenCalledWith(
+      expect.stringContaining('GetUser'),
+    )
+    expect(mockWriteText).toHaveBeenCalledWith(
+      expect.stringContaining('"id": "123"'),
+    )
   })
 
   it('includes request context in clipboard if available', () => {
