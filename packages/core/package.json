@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/lodash": "4.17.22",
+    "@types/lodash": "4.17.23",
     "publint": "0.3.16",
     "tsx": "4.21.0"
   },
