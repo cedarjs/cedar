@@ -1,3 +1,6 @@
+import execa from 'execa'
+
+import { getPaths } from '../lib/index.js'
 import { isModuleInstalled, installModule } from '../lib/packages.js'
 
 export const handler = async (options) => {
@@ -24,6 +27,11 @@ export const handler = async (options) => {
           "Added @cedarjs/api-server to your project, as it's used by Studio",
         )
       }
+
+      await execa.command(`yarn cedar prisma generate`, {
+        stdio: 'inherit',
+        cwd: getPaths().base,
+      })
     }
 
     // Import studio and start it
