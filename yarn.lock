@@ -2648,7 +2648,7 @@ __metadata:
   dependencies:
     "@cedarjs/context": "npm:2.4.0"
     "@cedarjs/fastify-web": "npm:2.4.0"
-    "@cedarjs/framework-tools": "npm:2.4.0"
+    "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/internal": "npm:2.4.0"
     "@cedarjs/project-config": "npm:2.4.0"
     "@cedarjs/web-server": "npm:2.4.0"
@@ -3321,7 +3321,7 @@ __metadata:
     "@cedarjs/telemetry": "npm:2.4.0"
     "@opentelemetry/api": "npm:1.8.0"
     "@types/dotenv-defaults": "npm:^5.0.0"
-    "@types/lodash": "npm:4.17.21"
+    "@types/lodash": "npm:4.17.22"
     "@types/pascalcase": "npm:1.0.3"
     "@types/semver": "npm:^7"
     "@types/yargs": "npm:17.0.35"
@@ -3351,7 +3351,7 @@ __metadata:
   resolution: "@cedarjs/cli-storybook-vite@workspace:packages/cli-packages/storybook-vite"
   dependencies:
     "@cedarjs/cli-helpers": "npm:2.4.0"
-    "@cedarjs/framework-tools": "npm:2.4.0"
+    "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "npm:2.4.0"
     "@cedarjs/telemetry": "npm:2.4.0"
     "@types/semver": "npm:^7"
@@ -3527,7 +3527,7 @@ __metadata:
     "@cedarjs/project-config": "npm:2.4.0"
     "@cedarjs/testing": "npm:2.4.0"
     "@cedarjs/web-server": "npm:2.4.0"
-    "@types/lodash": "npm:4.17.21"
+    "@types/lodash": "npm:4.17.22"
     graphql-tag: "npm:2.12.6"
     lodash: "npm:4.17.21"
     nodemon: "npm:3.1.11"
@@ -3655,7 +3655,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/framework-tools@npm:2.4.0, @cedarjs/framework-tools@workspace:*, @cedarjs/framework-tools@workspace:packages/framework-tools":
+"@cedarjs/framework-tools@workspace:*, @cedarjs/framework-tools@workspace:packages/framework-tools":
   version: 0.0.0-use.local
   resolution: "@cedarjs/framework-tools@workspace:packages/framework-tools"
   dependencies:
@@ -3697,7 +3697,7 @@ __metadata:
     "@opentelemetry/api": "npm:1.8.0"
     "@types/aws-lambda": "npm:8.10.159"
     "@types/jsonwebtoken": "npm:9.0.10"
-    "@types/lodash": "npm:4.17.21"
+    "@types/lodash": "npm:4.17.22"
     "@whatwg-node/fetch": "npm:0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.0"
     concurrently: "npm:9.2.1"
@@ -4088,7 +4088,7 @@ __metadata:
     "@cedarjs/project-config": "npm:2.4.0"
     "@prisma/internals": "npm:6.19.1"
     "@types/line-column": "npm:1.0.2"
-    "@types/lodash": "npm:4.17.21"
+    "@types/lodash": "npm:4.17.22"
     "@types/node": "npm:24.10.4"
     camelcase: "npm:6.3.0"
     core-js: "npm:3.47.0"
@@ -11827,10 +11827,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:4.17.21":
-  version: 4.17.21
-  resolution: "@types/lodash@npm:4.17.21"
-  checksum: 10c0/73cb006e047d8871e9d63f3a165543bf16c44a5b6fe3f9f6299e37cb8d67a7b1d55ac730959a81f9def510fd07232ff7e30e05413e5d5a12793baad84ebe36c3
+"@types/lodash@npm:4.17.22":
+  version: 4.17.22
+  resolution: "@types/lodash@npm:4.17.22"
+  checksum: 10c0/8cef39191f00eaf5714727b1e0528f2ad89bc017e3850807de1c3c3d82716c48c2fc84d15323a904e25f8070b7e792c2cf731e4403cbb8497d1b16d5ae99b016
   languageName: node
   linkType: hard
 
@@ -15490,7 +15490,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
-    "@cedarjs/framework-tools": "npm:2.4.0"
+    "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/tui": "npm:2.4.0"
     "@opentelemetry/api": "npm:1.8.0"
     "@opentelemetry/exporter-trace-otlp-http": "npm:0.49.1"
