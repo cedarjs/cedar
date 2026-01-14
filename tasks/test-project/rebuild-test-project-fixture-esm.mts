@@ -423,7 +423,7 @@ async function runCommand() {
     title: 'Apply api codemods',
     task: () => {
       return apiTasks(OUTPUT_PROJECT_PATH, {
-        linkWithLatestFwBuild: true,
+        linkWithLatestFwBuild: false,
         esmProject: true,
       })
     },

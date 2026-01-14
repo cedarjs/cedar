@@ -10,7 +10,8 @@ import { rimraf } from 'rimraf'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { apiTasks, streamingTasks, webTasks } from './tasks.mts'
+import { streamingTasks } from './streaming-tasks.mts'
+import { apiTasks, webTasks } from './tasks.mts'
 import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.mts'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -206,10 +207,18 @@ const globalTasks = () =>
         enabled: () => !copyFromFixture,
       },
       {
-        // These are also web tasks... we can move them into the webTasks function
-        // when streaming isn't experimental
+        // These are also web tasks... we can move them into the webTasks
+        // function when streaming isn't experimental
         title: 'Enabling streaming-ssr experiment and applying codemods....',
-        task: () => streamingTasks(OUTPUT_PROJECT_PATH, { verbose }),
+        task: () => {
+          const tasks = streamingTasks(OUTPUT_PROJECT_PATH)
+
+          return new Listr(tasks, {
+            exitOnError: true,
+            renderer: verbose ? 'verbose' : 'default',
+            rendererOptions: { collapseSubtasks: false },
+          })
+        },
         enabled: () => streamingSsr,
       },
       {
