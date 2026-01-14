@@ -107,7 +107,7 @@ export const handler = async ({
     const message = [
       'The currently configured ports for the development server are',
       'unavailable. Suggested changes to your ports, which can be changed in',
-      'your configuration file, are:\n',
+      'cedar.toml (or redwood.toml), are:\n',
       apiPortChangeNeeded && ` - API to use port ${apiAvailablePort} instead`,
       apiPortChangeNeeded && 'of your currently configured',
       apiPortChangeNeeded && `${apiPreferredPort}\n`,

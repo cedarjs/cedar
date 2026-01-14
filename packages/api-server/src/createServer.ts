@@ -166,12 +166,12 @@ export async function createServer(options: CreateServerOptions = {}) {
   })
 
   /**
-   * A wrapper around `fastify.listen` that handles `--apiPort`, `REDWOOD_API_PORT` and [api].port in your configuration file (same for host)
+   * A wrapper around `fastify.listen` that handles `--apiPort`, `REDWOOD_API_PORT` and [api].port in cedar.toml (and redwood.toml) (same for host)
    *
    * The order of precedence is:
    * - `--apiPort`
    * - `REDWOOD_API_PORT`
-   * - [api].port in your configuration file
+   * - [api].port in cedar.toml (and redwood.toml)
    */
   server.start = (options: StartOptions = {}) => {
     return server.listen({

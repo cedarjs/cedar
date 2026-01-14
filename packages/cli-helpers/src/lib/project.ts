@@ -53,12 +53,12 @@ export const getInstalledRedwoodVersion = () => {
  * stringify-ing the toml.
  */
 export const updateTomlConfig = (packageName: string) => {
-  const configPath = getConfigPath()
-  const originalTomlContent = fs.readFileSync(configPath, 'utf-8')
+  const configTomlPath = getConfigPath()
+  const originalTomlContent = fs.readFileSync(configTomlPath, 'utf-8')
 
   let tomlToAppend: Record<string, toml.TomlPrimitive> = {}
 
-  const config = getConfig(configPath)
+  const config = getConfig(configTomlPath)
 
   const cliSection = config.experimental?.cli
 
@@ -102,7 +102,7 @@ export const updateTomlConfig = (packageName: string) => {
       ? toml.stringify(tomlToAppend) + '\n'
       : '')
 
-  return fs.writeFileSync(configPath, newConfig, 'utf-8')
+  return fs.writeFileSync(configTomlPath, newConfig, 'utf-8')
 }
 
 export const updateTomlConfigTask = (packageName: string) => {

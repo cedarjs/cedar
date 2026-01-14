@@ -29,7 +29,7 @@ export const handler = async ({ force: forceArg }: Args) => {
       '```',
       '',
       `You can find their values under "API Keys" on your Clerk app's dashboard.`,
-      'Be sure to include `CLERK_PUBLISHABLE_KEY` in the `includeEnvironmentVariables` array in your configuration file.',
+      'Be sure to include `CLERK_PUBLISHABLE_KEY` in the `includeEnvironmentVariables` array in cedar.toml.',
       '',
       '```toml title="cedar.toml"',
       'includeEnvironmentVariables = [',

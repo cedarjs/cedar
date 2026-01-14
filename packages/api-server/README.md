@@ -36,18 +36,18 @@ run the API and (if needed) Web servers independently, along with tools like
 PM2, Nginx, or Kubernetes, which appropriately handle concurrent requests,
 errors, static asset, etc. for production contexts.
 
-- Runs web on configuration file web.port (default 8910)
-- API listens on web port at path configuration file web.apiUrl
+- Runs web on cedar.toml web.port (default 8910)
+- API listens on web port at path cedar.toml web.apiUrl
 - Command Options:
   - port (default 8910)
   - socket (optional)
-  - apiHost (default configuration file web.apiUrl)
+  - apiHost (default cedar.toml web.apiUrl)
 
 ### `cedarjs-server api`
 
 For production use.
 
-- Runs api on configuration file api.port (default 8911)
+- Runs api on cedar.toml api.port (default 8911)
 - Command Options:
   - port (default 8911)
   - socket (optional)
@@ -59,9 +59,9 @@ Not optimized for production use at scale (see comments above for
 `cedarjs-server`).
 Recommended to use CDN or Nginx as performant alternatives.
 
-- Runs web on configuration file web.port (default 8910)
-- GraphQL endpoint is set to configuration file web.apiUrl/graphql
+- Runs web on cedar.toml web.port (default 8910)
+- GraphQL endpoint is set to cedar.toml web.apiUrl/graphql
 - Command Options:
   - port (default 8910)
   - socket (optional)
-  - apiHost (default configuration file web.apiUrl)
+  - apiHost (default cedar.toml web.apiUrl)

@@ -17,8 +17,8 @@ import { printTaskEpilogue } from './util.js'
 
 export const handler = async ({ force, verbose }) => {
   const rwPaths = getPaths()
-  const configPath = getConfigPath()
-  const configContent = fs.readFileSync(configPath, 'utf-8')
+  const configTomlPath = getConfigPath()
+  const configContent = fs.readFileSync(configTomlPath, 'utf-8')
   const ext = path.extname(rwPaths.web.entryClient || '')
 
   const tasks = new Listr(
@@ -44,11 +44,11 @@ export const handler = async ({ force, verbose }) => {
         },
       },
       {
-        title: 'Adding config to configuration file...',
+        title: 'Adding config to cedar.toml...',
         task: (_ctx, task) => {
           if (!configContent.includes('[experimental.rsc]')) {
             writeFile(
-              configPath,
+              configTomlPath,
               configContent.concat('\n[experimental.rsc]\n  enabled = true\n'),
               {
                 overwriteExisting: true, // configuration file always exists
@@ -56,10 +56,10 @@ export const handler = async ({ force, verbose }) => {
             )
           } else {
             if (force) {
-              task.output = 'Overwriting config in configuration file'
+              task.output = 'Overwriting config in cedar.toml'
 
               writeFile(
-                configPath,
+                configTomlPath,
                 configContent.replace(
                   // Enable if it's currently disabled
                   '\n[experimental.rsc]\n  enabled = false\n',
@@ -71,7 +71,8 @@ export const handler = async ({ force, verbose }) => {
               )
             } else {
               task.skip(
-                'The [experimental.rsc] config block already exists in your configuration file.',
+                'The [experimental.rsc] config block already exists in your ' +
+                  'cedar.toml file.',
               )
             }
           }

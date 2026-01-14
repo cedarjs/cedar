@@ -20,8 +20,9 @@ import { printTaskEpilogue } from './util.js'
 
 export const handler = async ({ force, verbose }) => {
   const rwPaths = getPaths()
-  const configPath = getConfigPath()
-  const configContent = fs.readFileSync(configPath, 'utf-8')
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+  const configContent = fs.readFileSync(configTomlPath, 'utf-8')
 
   const tasks = new Listr(
     [
@@ -53,11 +54,11 @@ export const handler = async ({ force, verbose }) => {
         },
       },
       {
-        title: 'Adding config to configuration file...',
+        title: `Adding config to ${configFileName}...`,
         task: (_ctx, task) => {
           if (!configContent.includes('[experimental.reactCompiler]')) {
             writeFile(
-              configPath,
+              configTomlPath,
               configContent.concat(
                 '\n[experimental.reactCompiler]\n  enabled = true\n  lintOnly = false\n',
               ),
@@ -67,10 +68,10 @@ export const handler = async ({ force, verbose }) => {
             )
           } else {
             if (force) {
-              task.output = 'Overwriting config in configuration file'
+              task.output = `Overwriting config in ${configFileName}`
 
               writeFile(
-                configPath,
+                configTomlPath,
                 configContent.replace(
                   // Enable if it's currently disabled
                   '\n[experimental.reactCompiler]\n  enabled = false\n',
@@ -82,7 +83,8 @@ export const handler = async ({ force, verbose }) => {
               )
             } else {
               task.skip(
-                'The [experimental.reactCompiler] config block already exists in your configuration file.',
+                'The [experimental.reactCompiler] config block already ' +
+                  `exists in ${configFileName}.`,
               )
             }
           }

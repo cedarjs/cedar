@@ -71,17 +71,17 @@ export const handler = async ({ force, verbose }) => {
     {
       title: 'Adding config to configuration file...',
       task: (_ctx, task) => {
-        const configPath = getConfigPath()
-        const configContent = fs.readFileSync(configPath, 'utf-8')
+        const configTomlPath = getConfigPath()
+        const configContent = fs.readFileSync(configTomlPath, 'utf-8')
         if (!configContent.includes('[experimental.opentelemetry]')) {
           // Use string replace to preserve comments and formatting
           writeFile(
-            configPath,
+            configTomlPath,
             configContent.concat(
               `\n[experimental.opentelemetry]\n\tenabled = true\n\twrapApi = true`,
             ),
             {
-              overwriteExisting: true, // configuration file always exists
+              overwriteExisting: true, // cedar.toml or redwood.toml always exists
             },
           )
         } else {

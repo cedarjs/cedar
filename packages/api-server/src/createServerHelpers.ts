@@ -44,10 +44,10 @@ export interface CreateServerOptions {
   /** Whether to parse args or not. Defaults to `true` */
   parseArgs?: boolean
 
-  /** The port to listen on. Defaults to what's configured in your configuration file */
+  /** The port to listen on. Defaults to what's configured in cedar.toml */
   apiPort?: number
 
-  /** The host to bind to. Defaults to what's configured in your configuration file */
+  /** The host to bind to. Defaults to what's configured in cedar.toml */
   apiHost?: string
 }
 

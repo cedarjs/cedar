@@ -39,7 +39,7 @@ export const handler = async ({ force, verbose }) => {
         },
       },
       {
-        title: 'Adding config to configuration file...',
+        title: 'Adding config to cedar.toml...',
         task: (_ctx, task) => {
           if (!configContent.includes('[experimental.streamingSsr]')) {
             writeFile(
@@ -48,12 +48,12 @@ export const handler = async ({ force, verbose }) => {
                 `\n[experimental.streamingSsr]\n  enabled = true\n`,
               ),
               {
-                overwriteExisting: true, // configuration file always exists
+                overwriteExisting: true, // cedar.toml always exists
               },
             )
           } else {
             if (force) {
-              task.output = 'Overwriting config in configuration file'
+              task.output = 'Overwriting config in cedar.toml'
 
               writeFile(
                 configPath,
@@ -63,12 +63,13 @@ export const handler = async ({ force, verbose }) => {
                   `\n[experimental.streamingSsr]\n  enabled = true\n`,
                 ),
                 {
-                  overwriteExisting: true, // configuration file always exists
+                  overwriteExisting: true, // cedar.toml always exists
                 },
               )
             } else {
               task.skip(
-                `The [experimental.streamingSsr] config block already exists in your configuration file.`,
+                'The [experimental.streamingSsr] config block already exists ' +
+                  'in your cedar.toml file.',
               )
             }
           }

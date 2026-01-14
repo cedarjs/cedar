@@ -154,7 +154,7 @@ export const handler = async ({ name, force, ...rest }) => {
 
     console.error(
       'This is an experimental feature. Please enable it in your ' +
-        'configuration file and then run this command again.',
+        'cedar.toml (or redwood.toml) file and then run this command again.',
     )
     console.error()
     console.error(`See the ${releaseNotes} for instructions on how to enable.`)

@@ -1,4 +1,4 @@
-process.env.RWJS_CWD = '/redwood-app'
+process.env.RWJS_CWD = '/cedar-app'
 vi.mock('node:fs', async () => {
   const memfs = await import('memfs')
   return {
@@ -10,7 +10,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const actual = await importOriginal()
   return {
     ...actual,
-    getConfigPath: vi.fn(() => '/redwood-app/cedar.toml'),
+    getConfigPath: vi.fn(() => '/cedar-app/cedar.toml'),
   }
 })
 
@@ -33,7 +33,7 @@ vi.mock('../../../../lib', async (importOriginal) => {
     printSetupNotes,
     getPaths: vi.fn(() => {
       return {
-        base: '/redwood-app',
+        base: '/cedar-app',
       }
     }),
     getConfig: () => ({
@@ -56,13 +56,13 @@ vi.mock('../../../../lib', async (importOriginal) => {
   }
 })
 
-const mockConfigPath = '/redwood-app/cedar.toml'
+const mockConfigPath = '/cedar-app/cedar.toml'
 
 beforeEach(() => {
-  process.env.RWJS_CWD = '/redwood-app'
+  process.env.RWJS_CWD = '/cedar-app'
 
   vi.mocked(getPaths).mockReturnValue({
-    base: '/redwood-app',
+    base: '/cedar-app',
   })
 
   vol.fromJSON({
@@ -70,7 +70,9 @@ beforeEach(() => {
   title = "Cedar App"
   port = 8910
   apiUrl = "/.redwood/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-cedar-toml#api-paths
-  includeEnvironmentVariables = [] # any ENV vars that should be available to the web side, see https://cedarjs.com/docs/environment-variables#web
+  includeEnvironmentVariables = [
+    # any ENV vars that should be available to the web side, see https://cedarjs.com/docs/environment-variables#web
+  ]
 [api]
   port = 8911
 [browser]
@@ -98,7 +100,7 @@ describe('netlify', () => {
     expect(filesystem[netlifyTomlPath]).toMatchSnapshot()
   })
 
-  it('Should update configuration file apiUrl', () => {
+  it('Should update cedar.toml apiUrl', () => {
     updateApiURLTask('/.netlify/functions').task()
 
     expect(fs.readFileSync(mockConfigPath, 'utf8')).toMatch(
