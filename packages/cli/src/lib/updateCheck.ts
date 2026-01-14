@@ -120,7 +120,7 @@ export async function check() {
 
 /**
  * Determines if background checks are enabled. Checks are enabled within the
- * configuration file notifications config.
+ * cedar.toml (or redwood.toml) notifications config.
  */
 export function isEnabled() {
   return getConfig().notifications.versionUpdates.length > 0

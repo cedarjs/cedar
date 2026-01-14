@@ -16,11 +16,12 @@ export const getConfigPath = (
     return cachedPath
   }
 
-  const configPath = findUp(CONFIG_FILE_NAMES, cwd)
+  const configPath = findUp('cedar.toml', cwd) || findUp('redwood.toml', cwd)
 
   if (!configPath) {
     throw new Error(
-      `Could not find a "${CONFIG_FILE_NAMES.join('" or "')}" file, are you sure you're in a Cedar project?`,
+      `Could not find a "${CONFIG_FILE_NAMES.join('" or "')}" file, are you ` +
+        "sure you're in a Cedar project?",
     )
   }
 
