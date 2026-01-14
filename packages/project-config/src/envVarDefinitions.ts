@@ -24,8 +24,8 @@ export function getEnvVarDefinitions() {
     // because we want to use our own logic for loading .env,
     // .env.defaults, etc
     // The two object spreads below will expose all environment
-    // variables listed in your configuration file and all environment variables
-    // that are prefixed with REDWOOD_ENV_ (legacy) or CEDAR_ENV_
+    // variables listed in cedar.toml and all environment variables
+    // that are prefixed with REDWOOD_ENV_
     ...Object.fromEntries(
       rwConfig.web.includeEnvironmentVariables.flatMap((envName) => [
         [`import.meta.env.${envName}`, JSON.stringify(process.env[envName])],
