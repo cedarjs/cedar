@@ -1,9 +1,10 @@
 import path from 'node:path'
 
+import { Listr } from 'listr2'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { streamingTasks } from './tasks.mts'
+import { streamingTasks } from './streaming-tasks.mts'
 
 const args = yargs(hideBin(process.argv))
   .usage('Usage: $0 <project directory> [option]')
@@ -14,11 +15,16 @@ const args = yargs(hideBin(process.argv))
  * It takes a regular test-project, and adds some extra files/config so we can
  * run e2e tests for ssr & streaming on it.
  */
-async function runCommand() {
+function runCommand() {
   const OUTPUT_PROJECT_PATH = path.resolve(String(args._))
-  const tasks = await streamingTasks(OUTPUT_PROJECT_PATH, { verbose: true })
+  const tasks = streamingTasks(OUTPUT_PROJECT_PATH)
 
-  tasks.run().catch((err) => {
+  const listr = new Listr(tasks, {
+    exitOnError: true,
+    renderer: 'verbose',
+  })
+
+  listr.run().catch((err) => {
     console.error(err)
     process.exit(1)
   })

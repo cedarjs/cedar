@@ -21,12 +21,21 @@ export async function applyCodemod(codemod: string, target: string) {
 
   args.push()
 
-  await exec('yarn jscodeshift', args, getExecaOptions(path.resolve(__dirname)))
+  const subprocess = exec(
+    'yarn jscodeshift',
+    args,
+    getExecaOptions(path.resolve(import.meta.dirname)),
+  )
+
+  return subprocess
 }
 
-export const getExecaOptions = (cwd: string): ExecaOptions => ({
+export const getExecaOptions = (
+  cwd: string,
+  stdio: 'inherit' | 'pipe' = 'pipe',
+): ExecaOptions => ({
   shell: true,
-  stdio: 'inherit',
+  stdio,
   cleanup: true,
   cwd,
   env: {
