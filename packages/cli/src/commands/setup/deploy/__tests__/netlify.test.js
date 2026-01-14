@@ -71,7 +71,8 @@ beforeEach(() => {
   port = 8910
   apiUrl = "/.redwood/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-cedar-toml#api-paths
   includeEnvironmentVariables = [
-    # any ENV vars that should be available to the web side, see https://cedarjs.com/docs/environment-variables#web
+    # Add any ENV vars that should be available to the web side to this array
+    # See https://cedarjs.com/docs/environment-variables#web
   ]
 [api]
   port = 8911
