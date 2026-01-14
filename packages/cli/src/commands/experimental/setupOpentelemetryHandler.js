@@ -26,6 +26,9 @@ import { printTaskEpilogue } from './util.js'
 
 export const handler = async ({ force, verbose }) => {
   const ts = isTypeScriptProject()
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+  const configContent = fs.readFileSync(configTomlPath, 'utf-8')
 
   // Used in multiple tasks
   const opentelemetryScriptPath = `${getPaths().api.src}/opentelemetry.${
@@ -69,10 +72,8 @@ export const handler = async ({ force, verbose }) => {
       },
     },
     {
-      title: 'Adding config to configuration file...',
+      title: `Adding config to ${configFileName}...`,
       task: (_ctx, task) => {
-        const configTomlPath = getConfigPath()
-        const configContent = fs.readFileSync(configTomlPath, 'utf-8')
         if (!configContent.includes('[experimental.opentelemetry]')) {
           // Use string replace to preserve comments and formatting
           writeFile(
@@ -86,7 +87,8 @@ export const handler = async ({ force, verbose }) => {
           )
         } else {
           task.skip(
-            `The [experimental.opentelemetry] config block already exists in your configuration file.`,
+            'The [experimental.opentelemetry] config block already exists in ' +
+              `your ${configFileName} file.`,
           )
         }
       },

@@ -11,7 +11,7 @@ vi.mock('@cedarjs/project-config', () => ({
   getConfigPath: () => 'cedar.toml',
 }))
 
-const mockRedwoodToml = {
+const mockCedarToml = {
   fileContents: '',
 }
 
@@ -19,7 +19,7 @@ const mockRedwoodToml = {
 vi.mock('node:fs', async () => ({
   default: {
     readFileSync: () => {
-      return mockRedwoodToml.fileContents
+      return mockCedarToml.fileContents
     },
   },
 }))
@@ -35,7 +35,7 @@ afterEach(() => {
 describe('yarn cedar info', () => {
   describe('cedar.toml', () => {
     it('is included in the output', async () => {
-      mockRedwoodToml.fileContents = 'title = "Hello World"'
+      mockCedarToml.fileContents = 'title = "Hello World"'
 
       await handler()
 
@@ -50,7 +50,7 @@ describe('yarn cedar info', () => {
     })
 
     it('has blank lines removed', async () => {
-      mockRedwoodToml.fileContents = `
+      mockCedarToml.fileContents = `
 [web]
 
   title = "Hello World"
@@ -69,7 +69,7 @@ describe('yarn cedar info', () => {
     })
 
     it('has start-of-line-comment lines removed', async () => {
-      mockRedwoodToml.fileContents = `
+      mockCedarToml.fileContents = `
 # This is a start-of-line-comment that we want to remove.
 # And so is this
 [web]
@@ -96,7 +96,7 @@ describe('yarn cedar info', () => {
     // but couldn't find anything. So we'll have to write our own at some
     // point)
     it('keeps end-of-line comments', async () => {
-      mockRedwoodToml.fileContents = `
+      mockCedarToml.fileContents = `
 [web]
   title = "Hello World" # Used for the <title> tag
   apiUrl = "/.redwood/functions" # You can customize graphql and dbauth urls individually too: see https://cedarjs.com/docs/app-configuration-redwood-toml#api-paths
