@@ -66,7 +66,7 @@ export const handler = async ({ force, verbose }) => {
                   '\n[experimental.rsc]\n  enabled = true\n',
                 ),
                 {
-                  overwriteExisting: true, // configuration file always exists
+                  overwriteExisting: true, // cedar.toml always exists
                 },
               )
             } else {

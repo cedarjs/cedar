@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 import execa from 'execa'
 import { Listr } from 'listr2'
@@ -9,11 +9,13 @@ import { getConfigPath } from '@cedarjs/project-config'
 import { getPaths, writeFilesTask } from '../../../../lib/index.js'
 
 export const updateApiURLTask = (apiUrl) => {
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+
   return {
-    title: 'Updating API URL in configuration file...',
+    title: `Updating API URL in ${configFileName}...`,
     task: () => {
-      const configTomlPath = getConfigPath()
-      const tomlContent = fs.readFileSync(configTomlPath).toString()
+      const tomlContent = fs.readFileSync(configTomlPath, 'utf-8')
       let newToml = tomlContent
 
       if (tomlContent.match(/apiUrl/)) {

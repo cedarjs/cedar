@@ -78,18 +78,20 @@ const prismaBinaryTargetAdditions = async () => {
 }
 
 // updates the api_url to use an environment variable.
-const updateConfigTask = () => {
+const updateConfigTomlTask = () => {
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+
   return {
-    title: 'Updating configuration file apiUrl...',
+    title: `Updating ${configFileName} apiUrl...`,
     task: () => {
-      const configPath = getConfigPath()
-      const content = fs.readFileSync(configPath).toString()
+      const content = fs.readFileSync(configTomlPath).toString()
 
       const newContent = content.replace(
         /apiUrl.*?\n/m,
         'apiUrl = "${API_URL:/api}"       # Set API_URL in production to the Serverless deploy endpoint of your api service, see https://cedarjs.com/docs/deploy/serverless-deploy\n',
       )
-      fs.writeFileSync(configPath, newContent)
+      fs.writeFileSync(configTomlPath, newContent)
     },
   }
 }
@@ -121,7 +123,7 @@ export const handler = async ({ force }) => {
         files,
         force,
       }),
-      updateConfigTask(),
+      updateConfigTomlTask(),
       addToGitIgnoreTask({
         paths: ['.serverless'],
       }),

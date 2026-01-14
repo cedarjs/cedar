@@ -29,7 +29,7 @@ export async function handler({ force }) {
     const tasks = new Listr(
       [
         addCoherenceFilesTask,
-        updateConfigTask(),
+        updateConfigTomlTask(),
         printSetupNotes([
           "You're ready to deploy to Coherence! ✨\n",
           'Go to https://app.withcoherence.com to create your account and setup your cloud or GitHub connections.',
@@ -132,14 +132,16 @@ const SUPPORTED_DATABASES = ['mysql', 'postgresql']
 /**
  * should probably parse toml at this point...
  * if host, set host
- * Updates the ports in your configuration file to use an environment variable.
+ * Updates the ports in cedar.toml to use an environment variable.
  */
-function updateConfigTask() {
+function updateConfigTomlTask() {
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+
   return {
-    title: 'Updating configuration file...',
+    title: `Updating ${configFileName}...`,
     task: () => {
-      const configPath = getConfigPath()
-      let configContent = fs.readFileSync(configPath, 'utf-8')
+      let configContent = fs.readFileSync(configTomlPath, 'utf-8')
       const configObject = toml.parse(configContent)
 
       // Replace or add the host
@@ -192,7 +194,7 @@ function updateConfigTask() {
           ].join(''),
       )
 
-      fs.writeFileSync(configPath, configContent)
+      fs.writeFileSync(configTomlPath, configContent)
     },
   }
 }

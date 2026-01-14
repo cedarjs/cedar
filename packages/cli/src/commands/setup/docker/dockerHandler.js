@@ -42,6 +42,9 @@ export async function handler({ force }) {
   )
   const dockerignoreFilePath = path.join(getPaths().base, '.dockerignore')
 
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+
   const tasks = new Listr(
     [
       {
@@ -229,10 +232,9 @@ export async function handler({ force }) {
         },
       },
       {
-        title: 'Adding config to configuration file...',
+        title: `Adding config to ${configFileName}...`,
         task: () => {
-          const configPath = getConfigPath()
-          let configContent = fs.readFileSync(configPath, 'utf-8')
+          let configContent = fs.readFileSync(configTomlPath, 'utf-8')
 
           const browserOpenRegExp = /open\s*=\s*true/
           if (browserOpenRegExp.test(configContent)) {
@@ -243,7 +245,7 @@ export async function handler({ force }) {
           }
 
           // using string replace here to preserve comments and formatting.
-          writeFile(configPath, configContent, {
+          writeFile(configTomlPath, configContent, {
             existingFiles: 'OVERWRITE',
           })
         },
