@@ -271,7 +271,7 @@ export async function apiTasks(
       // instead of doing some up in the web side tasks, and then the rest
       // here I decided to move all of them here
       title: 'Add Prerender to Routes',
-      task: () => getPrerenderTasks(),
+      task: async () => getPrerenderTasks(),
     },
     {
       title: 'Add context tests',
