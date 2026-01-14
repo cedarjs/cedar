@@ -50,13 +50,16 @@ export const transformTSToJS = (filename: string, content: string) => {
 }
 
 /**
- * This returns the config present in `prettier.config.cjs` of a Redwood project.
+ * This returns the config present in `prettier.config.cjs` or
+ * `prettier.config.mjs` of a Cedar project.
  */
 export const getPrettierOptions = async () => {
   try {
-    const { default: options } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
-    )
+    const cjsPath = path.join(getPaths().base, 'prettier.config.cjs')
+    const mjsPath = path.join(getPaths().base, 'prettier.config.mjs')
+    const prettierConfigPath = fs.existsSync(cjsPath) ? cjsPath : mjsPath
+
+    const { default: options } = await import(`file://${prettierConfigPath}`)
 
     if (options.tailwindConfig?.startsWith('.')) {
       // Make this work with --cwd
