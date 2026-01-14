@@ -7,7 +7,7 @@ import { getConfigPath } from '@cedarjs/project-config'
 describe('getConfigPath', () => {
   it('throws an error when not in a project', () => {
     expect(getConfigPath).toThrowErrorMatchingInlineSnapshot(
-      `[Error: Could not find a "redwood.toml" file, are you sure you're in a Redwood project?]`,
+      `[Error: Could not find a "cedar.toml" or "redwood.toml" file, are you sure you're in a Cedar project?]`,
     )
   })
 

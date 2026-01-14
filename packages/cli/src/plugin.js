@@ -7,7 +7,7 @@ import {
 } from './lib/plugin.js'
 
 /**
- * Attempts to load all CLI plugins as defined in the redwood.toml file
+ * Attempts to load all CLI plugins as defined in your configuration file
  *
  * @param {*} yargs A yargs instance
  * @returns The yargs instance with plugins loaded

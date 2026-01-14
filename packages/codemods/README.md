@@ -65,7 +65,7 @@ Codemods are sometimes really simple, e.g. just normal string replace or updatin
 Here are a few different examples to help you get familiarised:
 
 - [Rename config in Redwood.toml](packages/codemods/src/codemods/v0.38.x/renameApiProxyPath)—
-  Simple string replace on the user's `redwood.toml`. No ASTs, no complications!
+  Simple string replace on the user's `configuration file`. No ASTs, no complications!
 
 - [Add Directives](packages/codemods/src/codemods/v0.37.x/addDirectives)—
   Download files from the RedwoodJS template because we've added new files that are needed in a user's project. No ASTs involved

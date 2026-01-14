@@ -269,7 +269,7 @@ export type GraphQLYogaOptions = {
 
   /**
    * @description Configure which scalars to include in the schema. This should match your
-   * `graphql.includeScalars` configuration in `redwood.toml`.
+   * `graphql.includeScalars` configuration in your configuration file.
    *
    * The default is to include. You must set to `false` to exclude.
    */

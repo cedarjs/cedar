@@ -5,13 +5,16 @@ import path from 'path'
  * Find a file by walking up parent directories.
  */
 export function findUp(
-  file: string,
+  file: string | string[],
   startingDirectory: string = process.cwd(),
 ): string | null {
-  const possibleFilepath = path.join(startingDirectory, file)
+  const files = Array.isArray(file) ? file : [file]
 
-  if (fs.existsSync(possibleFilepath)) {
-    return possibleFilepath
+  for (const f of files) {
+    const possibleFilepath = path.join(startingDirectory, f)
+    if (fs.existsSync(possibleFilepath)) {
+      return possibleFilepath
+    }
   }
 
   const parentDirectory = path.dirname(startingDirectory)

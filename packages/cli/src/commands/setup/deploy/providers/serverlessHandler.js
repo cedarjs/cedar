@@ -4,7 +4,7 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { getSchemaPath } from '@cedarjs/project-config'
+import { getSchemaPath, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../../lib/colors.js'
@@ -78,11 +78,11 @@ const prismaBinaryTargetAdditions = async () => {
 }
 
 // updates the api_url to use an environment variable.
-const updateRedwoodTomlTask = () => {
+const updateConfigTask = () => {
   return {
-    title: 'Updating redwood.toml apiUrl...',
+    title: 'Updating configuration file apiUrl...',
     task: () => {
-      const configPath = path.join(getPaths().base, 'redwood.toml')
+      const configPath = getConfigPath()
       const content = fs.readFileSync(configPath).toString()
 
       const newContent = content.replace(
@@ -121,7 +121,7 @@ export const handler = async ({ force }) => {
         files,
         force,
       }),
-      updateRedwoodTomlTask(),
+      updateConfigTask(),
       addToGitIgnoreTask({
         paths: ['.serverless'],
       }),

@@ -4,32 +4,27 @@ import path from 'path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { getPaths, writeFilesTask } from '../../../../lib/index.js'
+import { getConfigPath } from '@cedarjs/project-config'
 
-const REDWOOD_TOML_PATH = path.join(getPaths().base, 'redwood.toml')
+import { getPaths, writeFilesTask } from '../../../../lib/index.js'
 
 export const updateApiURLTask = (apiUrl) => {
   return {
-    title: 'Updating API URL in redwood.toml...',
+    title: 'Updating API URL in configuration file...',
     task: () => {
-      const redwoodToml = fs.readFileSync(REDWOOD_TOML_PATH).toString()
-      let newRedwoodToml = redwoodToml
+      const configTomlPath = getConfigPath()
+      const tomlContent = fs.readFileSync(configTomlPath).toString()
+      let newToml = tomlContent
 
-      if (redwoodToml.match(/apiUrl/)) {
-        newRedwoodToml = newRedwoodToml.replace(
-          /apiUrl.*/g,
-          `apiUrl = "${apiUrl}"`,
-        )
-      } else if (redwoodToml.match(/\[web\]/)) {
-        newRedwoodToml = newRedwoodToml.replace(
-          /\[web\]/,
-          `[web]\n  apiUrl = "${apiUrl}"`,
-        )
+      if (tomlContent.match(/apiUrl/)) {
+        newToml = newToml.replace(/apiUrl.*/g, `apiUrl = "${apiUrl}"`)
+      } else if (tomlContent.match(/\[web\]/)) {
+        newToml = newToml.replace(/\[web\]/, `[web]\n  apiUrl = "${apiUrl}"`)
       } else {
-        newRedwoodToml += `[web]\n  apiUrl = "${apiUrl}"`
+        newToml += `[web]\n  apiUrl = "${apiUrl}"`
       }
 
-      fs.writeFileSync(REDWOOD_TOML_PATH, newRedwoodToml)
+      fs.writeFileSync(configTomlPath, newToml)
     },
   }
 }

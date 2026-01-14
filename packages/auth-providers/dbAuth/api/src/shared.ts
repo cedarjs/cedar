@@ -30,7 +30,7 @@ const getPort = () => {
   try {
     configPath = getConfigPath()
   } catch {
-    // If this throws, we're in a serverless environment, and the `redwood.toml` file doesn't exist.
+    // If this throws, we're in a serverless environment, and the config file doesn't exist.
     return 8911
   }
 

@@ -46,7 +46,7 @@ export const runTransform = async ({
 }: RunTransform) => {
   try {
     // We have to do this here for the tests, because jscodeshift.run actually spawns
-    // a different process. If we use getPaths() in the transform, it would not find redwood.toml
+    // a different process. If we use getPaths() in the transform, it would not find the configuration file
     if (process.env.NODE_ENV === 'test' && process.env.RWJS_CWD) {
       process.chdir(process.env.RWJS_CWD)
     }

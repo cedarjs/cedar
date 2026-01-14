@@ -229,10 +229,10 @@ export async function handler({ force }) {
         },
       },
       {
-        title: 'Adding config to redwood.toml...',
+        title: 'Adding config to configuration file...',
         task: () => {
-          const redwoodTomlPath = getConfigPath()
-          let configContent = fs.readFileSync(redwoodTomlPath, 'utf-8')
+          const configPath = getConfigPath()
+          let configContent = fs.readFileSync(configPath, 'utf-8')
 
           const browserOpenRegExp = /open\s*=\s*true/
           if (browserOpenRegExp.test(configContent)) {
@@ -243,7 +243,7 @@ export async function handler({ force }) {
           }
 
           // using string replace here to preserve comments and formatting.
-          writeFile(redwoodTomlPath, configContent, {
+          writeFile(configPath, configContent, {
             existingFiles: 'OVERWRITE',
           })
         },

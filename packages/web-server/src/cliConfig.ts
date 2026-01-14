@@ -18,7 +18,7 @@ export function builder(yargs: Argv<ParsedOptions>) {
     },
     apiProxyTarget: {
       description:
-        'Forward requests from the apiUrl (in the redwood.toml) to this target. apiUrl must be a relative URL',
+        'Forward requests from the apiUrl (in your configuration file) to this target. apiUrl must be a relative URL',
       type: 'string',
       alias: 'api-proxy-target',
     },

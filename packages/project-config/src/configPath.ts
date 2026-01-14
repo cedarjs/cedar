@@ -1,11 +1,11 @@
 import { findUp } from './findUp.js'
 
-const CONFIG_FILE_NAME = 'redwood.toml'
+const CONFIG_FILE_NAMES = ['cedar.toml', 'redwood.toml']
 
 const getConfigPathCache = new Map<string, string>()
 
 /**
- * Search the parent directories for the Redwood configuration file.
+ * Search the parent directories for the Cedar configuration file.
  */
 export const getConfigPath = (
   cwd: string = process.env.RWJS_CWD ?? process.cwd(),
@@ -16,11 +16,11 @@ export const getConfigPath = (
     return cachedPath
   }
 
-  const configPath = findUp(CONFIG_FILE_NAME, cwd)
+  const configPath = findUp(CONFIG_FILE_NAMES, cwd)
 
   if (!configPath) {
     throw new Error(
-      `Could not find a "${CONFIG_FILE_NAME}" file, are you sure you're in a Redwood project?`,
+      `Could not find a "${CONFIG_FILE_NAMES.join('" or "')}" file, are you sure you're in a Cedar project?`,
     )
   }
 

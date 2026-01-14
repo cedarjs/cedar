@@ -130,9 +130,9 @@ export function saveCommandCache(pluginCommandCache) {
 }
 
 /**
- * Logs warnings for any plugins that have invalid definitions in the redwood.toml file
+ * Logs warnings for any plugins that have invalid definitions in the configuration file
  *
- * @param {any[]} plugins An array of plugin objects read from the redwood.toml file
+ * @param {any[]} plugins An array of plugin objects read from the configuration file
  */
 export function checkPluginListAndWarn(plugins) {
   // Plugins must define a package
@@ -151,7 +151,7 @@ export function checkPluginListAndWarn(plugins) {
   if (pluginPackages.length !== new Set(pluginPackages).size) {
     console.warn(
       ansis.yellow(
-        '⚠️  Duplicate plugin packages found in redwood.toml, duplicates will be ignored.',
+        '⚠️  Duplicate plugin packages found in your configuration file, duplicates will be ignored.',
       ),
     )
   }

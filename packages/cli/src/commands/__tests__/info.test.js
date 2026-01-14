@@ -6,7 +6,10 @@ import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 import { handler } from '../info.js'
 
 vi.mock('envinfo', () => ({ default: { run: () => '' } }))
-vi.mock('@cedarjs/project-config', () => ({ getPaths: () => ({}) }))
+vi.mock('@cedarjs/project-config', () => ({
+  getPaths: () => ({}),
+  getConfigPath: () => 'cedar.toml',
+}))
 
 const mockRedwoodToml = {
   fileContents: '',
@@ -30,7 +33,7 @@ afterEach(() => {
 })
 
 describe('yarn cedar info', () => {
-  describe('redwood.toml', () => {
+  describe('cedar.toml', () => {
     it('is included in the output', async () => {
       mockRedwoodToml.fileContents = 'title = "Hello World"'
 
@@ -38,9 +41,9 @@ describe('yarn cedar info', () => {
 
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
-          // There should be nothing before 'redwood.toml:' in the output
+          // There should be nothing before 'cedar.toml:' in the output
           // because we mock envinfo
-          '  redwood.toml:',
+          '  cedar.toml:',
           '    title = "Hello World"',
         ].join('\n'),
       )
@@ -58,7 +61,7 @@ describe('yarn cedar info', () => {
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
           // The important part is that there is no blank line after [web]
-          '  redwood.toml:',
+          '  cedar.toml:',
           '    [web]',
           '      title = "Hello World"',
         ].join('\n'),
@@ -80,7 +83,7 @@ describe('yarn cedar info', () => {
 
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
-          '  redwood.toml:',
+          '  cedar.toml:',
           '    [web]',
           '      # Used for the <title> tag (this comment should be kept)',
           '      title = "Hello World"',
@@ -103,7 +106,7 @@ describe('yarn cedar info', () => {
 
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
-          '  redwood.toml:',
+          '  cedar.toml:',
           '    [web]',
           '      title = "Hello World" # Used for the <title> tag',
           // This next line is a bit more tricky because it has a # to make it

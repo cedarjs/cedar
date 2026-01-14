@@ -44,10 +44,10 @@ export interface CreateServerOptions {
   /** Whether to parse args or not. Defaults to `true` */
   parseArgs?: boolean
 
-  /** The port to listen on. Defaults to what's configured in redwood.toml */
+  /** The port to listen on. Defaults to what's configured in your configuration file */
   apiPort?: number
 
-  /** The host to bind to. Defaults to what's configured in redwood.toml */
+  /** The host to bind to. Defaults to what's configured in your configuration file */
   apiHost?: string
 }
 

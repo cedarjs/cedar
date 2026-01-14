@@ -151,7 +151,8 @@ export const handler = async ({ force }: Args) => {
       task: (ctx) => {
         notes.push(
           colors.important(
-            'You will need to add `SENTRY_DSN` to `includeEnvironmentVariables` in redwood.toml.',
+            (task.output =
+              'You will need to add `SENTRY_DSN` to `includeEnvironmentVariables` in your configuration file.'),
           ),
         )
 

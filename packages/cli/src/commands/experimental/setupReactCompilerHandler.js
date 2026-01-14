@@ -20,8 +20,8 @@ import { printTaskEpilogue } from './util.js'
 
 export const handler = async ({ force, verbose }) => {
   const rwPaths = getPaths()
-  const redwoodTomlPath = getConfigPath()
-  const configContent = fs.readFileSync(redwoodTomlPath, 'utf-8')
+  const configPath = getConfigPath()
+  const configContent = fs.readFileSync(configPath, 'utf-8')
 
   const tasks = new Listr(
     [
@@ -53,36 +53,36 @@ export const handler = async ({ force, verbose }) => {
         },
       },
       {
-        title: 'Adding config to redwood.toml...',
+        title: 'Adding config to configuration file...',
         task: (_ctx, task) => {
           if (!configContent.includes('[experimental.reactCompiler]')) {
             writeFile(
-              redwoodTomlPath,
+              configPath,
               configContent.concat(
                 '\n[experimental.reactCompiler]\n  enabled = true\n  lintOnly = false\n',
               ),
               {
-                overwriteExisting: true, // redwood.toml always exists
+                overwriteExisting: true, // configuration file always exists
               },
             )
           } else {
             if (force) {
-              task.output = 'Overwriting config in redwood.toml'
+              task.output = 'Overwriting config in configuration file'
 
               writeFile(
-                redwoodTomlPath,
+                configPath,
                 configContent.replace(
                   // Enable if it's currently disabled
                   '\n[experimental.reactCompiler]\n  enabled = false\n',
                   '\n[experimental.reactCompiler]\n  enabled = true\n',
                 ),
                 {
-                  overwriteExisting: true, // redwood.toml always exists
+                  overwriteExisting: true, // configuration file always exists
                 },
               )
             } else {
               task.skip(
-                'The [experimental.reactCompiler] config block already exists in your `redwood.toml` file.',
+                'The [experimental.reactCompiler] config block already exists in your configuration file.',
               )
             }
           }
