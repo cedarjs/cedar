@@ -58,7 +58,7 @@ import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
 // # In this case, `--cwd` wins out over `RWJS_CWD`
 // RWJS_CWD=/path/to/project yarn cedar info --cwd /path/to/other/project
 //
-// # Here we traverses upwards for a configuration file.
+// # Here we traverses upwards for a cedar.toml (or redwood.toml) file.
 // cd api
 // yarn cedar info
 // ```
