@@ -13,12 +13,14 @@ export function builder(yargs: Argv<ParsedOptions>) {
     },
     host: {
       description:
-        "The host to listen on. Note that you most likely want this to be '0.0.0.0' in production",
+        'The host to listen on. Note that you most likely want this to be ' +
+        "'0.0.0.0' in production",
       type: 'string',
     },
     apiProxyTarget: {
       description:
-        'Forward requests from the apiUrl (in your configuration file) to this target. apiUrl must be a relative URL',
+        'Forward requests from the apiUrl (in cedar.toml or (redwood.toml)) ' +
+        'to this target. apiUrl must be a relative URL',
       type: 'string',
       alias: 'api-proxy-target',
     },
