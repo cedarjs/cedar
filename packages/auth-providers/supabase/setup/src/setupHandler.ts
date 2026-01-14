@@ -30,7 +30,7 @@ export const handler = async ({ force: forceArg }: Args) => {
       '```',
       '',
       "You can find their values on your Supabase app's dashboard.",
-      'Be sure to include them in the `includeEnvironmentVariables` array in your configuration file:',
+      'Be sure to include them in the `includeEnvironmentVariables` array in cedar.toml:',
       '',
       '```toml title="cedar.toml"',
       'includeEnvironmentVariables = [',
