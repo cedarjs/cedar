@@ -1,26 +1,12 @@
 import React from 'react'
 
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { userEvent } from '@testing-library/user-event'
+import { vi, describe, it, expect, afterEach } from 'vitest'
 
 import { DevFatalErrorPage } from '../DevFatalErrorPage.js'
 
 describe('DevFatalErrorPage', () => {
-  let mockWriteText: any
-
-  beforeEach(() => {
-    // Set up clipboard mock before each test
-    mockWriteText = vi.fn().mockResolvedValue(undefined)
-    Object.defineProperty(navigator, 'clipboard', {
-      value: {
-        writeText: mockWriteText,
-      },
-      writable: true,
-      configurable: true,
-    })
-  })
-
   afterEach(() => {
     vi.clearAllMocks()
   })
@@ -54,6 +40,12 @@ describe('DevFatalErrorPage', () => {
 
   it('copies error details to clipboard when Copy All button is clicked', async () => {
     const user = userEvent.setup()
+
+    // userEvent.setup() replaces `window.navigator.clipboard` with a stub, so
+    // we have to set up the spy *after* calling userEvent.setup() – can't do it
+    // in a beforeEach() like we'd normally do
+    vi.spyOn(window.navigator.clipboard, 'writeText')
+
     const error = new Error('Test error message')
 
     render(<DevFatalErrorPage error={error} />)
@@ -61,29 +53,41 @@ describe('DevFatalErrorPage', () => {
     const copyButton = screen.getByRole('button', { name: /Copy All/ })
     await user.click(copyButton)
 
-    expect(mockWriteText).toHaveBeenCalledTimes(1)
-    expect(mockWriteText).toHaveBeenCalledWith(
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledTimes(1)
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
       expect.stringContaining('FATAL ERROR REPORT'),
     )
-    expect(mockWriteText).toHaveBeenCalledWith(
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
       expect.stringContaining('Test error message'),
     )
   })
 
   it('shows copy feedback after clicking Copy All', async () => {
     const user = userEvent.setup()
+
+    // userEvent.setup() replaces `window.navigator.clipboard` with a stub, so
+    // we have to set up the spy *after* calling userEvent.setup() – can't do it
+    // in a beforeEach() like we'd normally do
+    vi.spyOn(window.navigator.clipboard, 'writeText')
+
     const error = new Error('Test error')
 
     render(<DevFatalErrorPage error={error} />)
     const copyButton = screen.getByRole('button', { name: /Copy All/ })
     await user.click(copyButton)
 
-    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledTimes(1)
     expect(await screen.findByText('✓ Copied to clipboard')).toBeInTheDocument()
   })
 
   it('includes request context in clipboard when Copy All is clicked', async () => {
     const user = userEvent.setup()
+
+    // userEvent.setup() replaces `window.navigator.clipboard` with a stub, so
+    // we have to set up the spy *after* calling userEvent.setup() – can't do it
+    // in a beforeEach() like we'd normally do
+    vi.spyOn(window.navigator.clipboard, 'writeText')
+
     const error: any = new Error('GraphQL error')
     error.mostRecentRequest = {
       query: 'query GetUser { user { id } }',
@@ -97,13 +101,14 @@ describe('DevFatalErrorPage', () => {
     const copyButton = screen.getByRole('button', { name: /Copy All/ })
     await user.click(copyButton)
 
-    expect(mockWriteText).toHaveBeenCalledWith(
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledTimes(1)
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
       expect.stringContaining('REQUEST CONTEXT'),
     )
-    expect(mockWriteText).toHaveBeenCalledWith(
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
       expect.stringContaining('GetUser'),
     )
-    expect(mockWriteText).toHaveBeenCalledWith(
+    expect(window.navigator.clipboard.writeText).toHaveBeenCalledWith(
       expect.stringContaining('"id": "123"'),
     )
   })
