@@ -61,9 +61,9 @@
   },
   "dependencies": {
     "@ast-grep/napi": "0.40.5",
-    "@babel/generator": "7.28.5",
-    "@babel/parser": "7.28.5",
-    "@babel/traverse": "7.28.5",
+    "@babel/generator": "7.28.6",
+    "@babel/parser": "7.28.6",
+    "@babel/traverse": "7.28.6",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/cookie-jar": "workspace:*",
