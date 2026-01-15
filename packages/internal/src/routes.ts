@@ -77,7 +77,7 @@ export interface RWRouteManifestItem {
   routeHooks: string | null
   bundle: string | null
   hasParams: boolean
-  relativeFilePath: string
+  relativeFilePath: string | undefined
   redirect: { to: string; permanent: boolean } | null
   isPrivate: boolean
   unauthenticated: string | null
@@ -92,14 +92,13 @@ export interface RouteSpec extends RWRouteManifestItem {
   filePath: string | undefined
   isPrivate: boolean
   unauthenticated: string | null
-  relativeFilePath: string
+  relativeFilePath: string | undefined
 }
 
 export const getProjectRoutes = (): RouteSpec[] => {
   const rwProject = getProject(getPaths().base)
   const routes = rwProject.getRouter().routes
 
-  // @ts-expect-error "Bundle" is not found but is in the Spec type?
   return routes.map((route: any) => {
     const { matchRegexString, routeParams } = route.isNotFound
       ? { matchRegexString: null, routeParams: null }
@@ -116,6 +115,7 @@ export const getProjectRoutes = (): RouteSpec[] => {
         ? path.relative(getPaths().web.src, route.page?.filePath)
         : undefined,
       routeHooks: getRouteHookForPage(route.page?.filePath),
+      bundle: null,
       renderMode: route.renderMode,
       matchRegexString: matchRegexString,
       paramNames: routeParams,

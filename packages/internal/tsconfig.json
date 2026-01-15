@@ -4,7 +4,7 @@
     "isolatedModules": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "outDir": "dist"
+    "outDir": "dist",
   },
   "include": ["."],
   "exclude": ["dist", "node_modules", "**/__mocks__", "**/__fixtures__"],
@@ -12,6 +12,7 @@
     { "path": "../babel-config" },
     { "path": "../graphql-server/tsconfig.build.json" },
     { "path": "../project-config" },
-    { "path": "../router/tsconfig.build.json" }
-  ]
+    { "path": "../router/tsconfig.build.json" },
+    { "path": "../structure" },
+  ],
 }
