@@ -40,7 +40,7 @@ async function check() {
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i]
-        if (/^\s*\w+\.*only\(/.test(line)) {
+        if (/^\s*\w+\.only\(/.test(line)) {
           console.error(`${file}:${i + 1}: ${line.trim()}`)
           exitCode = 1
         }
