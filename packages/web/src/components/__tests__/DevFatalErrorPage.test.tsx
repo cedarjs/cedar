@@ -113,7 +113,7 @@ describe('DevFatalErrorPage', () => {
     )
   })
 
-  it('includes request context in clipboard if available', () => {
+  it('includes request context in document if available', () => {
     const error: any = new Error('GraphQL error')
     error.mostRecentRequest = {
       query: 'query GetUser { user { id } }',
@@ -131,7 +131,7 @@ describe('DevFatalErrorPage', () => {
     expect(requestHeader).toBeInTheDocument()
   })
 
-  it('includes response context in clipboard if available', () => {
+  it('includes response context in document if available', () => {
     const error: any = new Error('GraphQL error')
     error.mostRecentResponse = {
       data: { user: { id: '123', name: 'John' } },
@@ -142,6 +142,8 @@ describe('DevFatalErrorPage', () => {
 
     // The response section should render
     expect(screen.getByText('Response')).toBeInTheDocument()
+    expect(screen.getByText('"id": "123"')).toBeInTheDocument()
+    expect(screen.getByText('"name": "John"')).toBeInTheDocument()
   })
 
   it('renders request/response section when request data exists', () => {
