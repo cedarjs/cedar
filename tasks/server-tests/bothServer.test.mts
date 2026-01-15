@@ -18,7 +18,8 @@ describe('cedar serve', () => {
 
       Options:
             --cwd                                 Working directory to use (where
-                                                  \`redwood.toml\` is located)
+                                                  \`cedar.toml\` or \`redwood.toml\` is
+                                                  located)
             --load-env-files                      Load additional .env files. Values
                                                   defined in files specified later
                                                   override earlier ones.       [array]
@@ -65,7 +66,8 @@ describe('cedar serve', () => {
 
         Options:
               --cwd                                 Working directory to use (where
-                                                    \`redwood.toml\` is located)
+                                                    \`cedar.toml\` or \`redwood.toml\` is
+                                                    located)
               --load-env-files                      Load additional .env files. Values
                                                     defined in files specified later
                                                     override earlier ones.       [array]
