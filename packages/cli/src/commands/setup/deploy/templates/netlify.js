@@ -26,8 +26,8 @@ export const NETLIFY_TOML = `\
 # - \`netlify link\` https://cli.netlify.com/commands/link/
 [dev]
   framework = "redwoodjs"
-  # Make sure \`targetPort\` matches \`web.port\` in the \`redwood.toml\`:
+  # Make sure \`targetPort\` matches \`web.port\` in your cedar.toml file
   targetPort = ${config.web.port}
-  # Point your browser to this port to access your app:
+  # Point your browser to this port to access your app
   port = 8888
 `

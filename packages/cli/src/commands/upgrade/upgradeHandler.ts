@@ -198,7 +198,7 @@ export const handler = async ({
               isValidCedarJSTag(tag)
             ) {
               additionalMessages.push(
-                `   ❖ You may want to update your redwood.toml config so that \`notifications.versionUpdates\` includes "${tag}"\n`,
+                `   ❖ You may want to update your cedar.toml (or redwood.toml) so that \`notifications.versionUpdates\` includes "${tag}"\n`,
               )
             }
             // Append additional messages with a header

@@ -94,7 +94,7 @@ export interface PagesDependency {
 }
 
 /**
- * The Redwood config file is used as an anchor for the base directory of a project.
+ * The Cedar config file is used as an anchor for the base directory of a project.
  */
 export const getBaseDir = (configPath: string = getConfigPath()): string => {
   return path.dirname(configPath)
@@ -348,7 +348,7 @@ export const processPagesDir = (
 
 /**
  * Converts Windows-style paths to Posix-style
- * C:\Users\Bob\dev\Redwood -> /c/Users/Bob/dev/Redwood
+ * C:\Users\Bob\dev\Cedar -> /c/Users/Bob/dev/Cedar
  *
  * The conversion only happens on Windows systems, and only for paths that are
  * not already Posix-style
@@ -373,8 +373,8 @@ export const ensurePosixPath = (path: string) => {
 /**
  * Switches backslash to regular slash on Windows so the path works in
  * import statements
- * C:\Users\Bob\dev\Redwood\UserPage\UserPage ->
- * C:/Users/Bob/dev/Redwood/UserPage/UserPage
+ * C:\Users\Bob\dev\Cedar\UserPage\UserPage ->
+ * C:/Users/Bob/dev/Cedar/UserPage/UserPage
  *
  * @param path Filesystem path
  */
@@ -401,10 +401,11 @@ export function projectRootIsEsm() {
   return packageJsonIsEsm(path.join(getPaths().base, 'package.json'))
 }
 
+// switches the cwd to the project base directory.
 export function projectSideIsEsm(side: 'api' | 'web') {
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
   return packageJsonIsEsm(
-    path.join(redwoodProjectPaths[side].base, 'package.json'),
+    path.join(cedarProjectPaths[side].base, 'package.json'),
   )
 }
 
