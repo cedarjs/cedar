@@ -295,6 +295,7 @@ export default [
       '**/*.config.js',
       '**/*.config.cjs',
       '**/*.config.mjs',
+      'docs/sidebars.js',
       'packages/web/apollo/index.js',
       'packages/web/toast/index.js',
       'packages/auth-providers/dbAuth/web/webAuthn/index.js',

@@ -47,7 +47,7 @@ export const handler = async ({
 
   const serverFile = serverFileExists()
 
-  // Starting values of ports from config (redwood.toml)
+  // Starting values of ports from config (cedar.toml or redwood.toml)
   const apiPreferredPort = parseInt(String(getConfig().api.port))
 
   let webPreferredPort: number | undefined = parseInt(
@@ -107,7 +107,7 @@ export const handler = async ({
     const message = [
       'The currently configured ports for the development server are',
       'unavailable. Suggested changes to your ports, which can be changed in',
-      'redwood.toml, are:\n',
+      'cedar.toml (or redwood.toml), are:\n',
       apiPortChangeNeeded && ` - API to use port ${apiAvailablePort} instead`,
       apiPortChangeNeeded && 'of your currently configured',
       apiPortChangeNeeded && `${apiPreferredPort}\n`,

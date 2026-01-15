@@ -2,8 +2,8 @@
 # This file is also what makes your Cedar app a Cedar app.
 # If you remove it and try to run `yarn cedar dev`, you'll get an error.
 #
-# For the full list of options, see the "App Configuration: redwood.toml" doc:
-# https://cedarjs.com/docs/app-configuration-redwood-toml
+# For the full list of options, see the "App Configuration: cedar.toml" doc:
+# https://cedarjs.com/docs/app-configuration-cedar-toml
 
 [web]
   title = "Cedar App"

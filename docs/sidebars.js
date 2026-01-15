@@ -76,7 +76,7 @@ module.exports = {
       },
       items: [
         'a11y',
-        'app-configuration-redwood-toml',
+        'app-configuration-cedar-toml',
         'assets-and-files',
         {
           type: 'category',
