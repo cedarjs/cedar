@@ -13,6 +13,7 @@ pre-push:
     - run: yarn lint
     - run: yarn prettier --check --log-level=silent .
     - run: yarn check
+    - run: node tasks/check-no-only.mts
 
 pre-commit:
   parallel: true
