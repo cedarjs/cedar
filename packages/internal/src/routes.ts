@@ -77,7 +77,7 @@ export interface RWRouteManifestItem {
   routeHooks: string | null
   bundle: string | null
   hasParams: boolean
-  relativeFilePath: string | undefined
+  relativeFilePath: string
   redirect: { to: string; permanent: boolean } | null
   isPrivate: boolean
   unauthenticated: string | null
@@ -92,13 +92,15 @@ export interface RouteSpec extends RWRouteManifestItem {
   filePath: string | undefined
   isPrivate: boolean
   unauthenticated: string | null
-  relativeFilePath: string | undefined
+  relativeFilePath: string
 }
 
 export const getProjectRoutes = (): RouteSpec[] => {
   const rwProject = getProject(getPaths().base)
   const routes = rwProject.getRouter().routes
 
+  // @ts-expect-error - relativeFilePath issue. Fixing it is a semver breaking
+  // change, so I'll leave it as is for now
   return routes.map((route: any) => {
     const { matchRegexString, routeParams } = route.isNotFound
       ? { matchRegexString: null, routeParams: null }

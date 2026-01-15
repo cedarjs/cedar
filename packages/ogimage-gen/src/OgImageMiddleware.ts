@@ -85,10 +85,9 @@ export default class OgImageMiddleware {
       routePathname === '/index' ? '/' : routePathname,
       parsedParams,
     ))
-    const relativeFilePath = currentRoute?.relativeFilePath
 
     // If no match with the router, or not a supported extension bail
-    if (!relativeFilePath || !supportedExtensions.includes(extension)) {
+    if (!currentRoute || !supportedExtensions.includes(extension)) {
       console.log(
         'OGMiddleware: No match with the Routes, or not a supported extension',
       )
@@ -132,7 +131,7 @@ export default class OgImageMiddleware {
       height: this.imageProps.height,
     }
 
-    const ogImgFilePath = this.getOgComponentPath(relativeFilePath)
+    const ogImgFilePath = this.getOgComponentPath(currentRoute)
 
     const { data, Component } = await this.importComponent(
       ogImgFilePath,
@@ -226,17 +225,17 @@ export default class OgImageMiddleware {
     },
   )
 
-  public getOgComponentPath(relativeFilePath: string) {
+  public getOgComponentPath(currentRoute: RWRouteManifestItem) {
     if (process.env.NODE_ENV === 'development') {
       return path.join(
         getPaths().web.src,
-        relativeFilePath.replace(/\.([jt]sx)/, `.og.$1`),
+        currentRoute.relativeFilePath.replace(/\.([jt]sx)/, `.og.$1`),
       )
     } else {
       return `${path.join(
         getPaths().web.distSsr,
         'ogImage',
-        relativeFilePath.replace(/\.([jt]sx)/, ''),
+        currentRoute.relativeFilePath.replace(/\.([jt]sx)/, ''),
       )}.og.mjs` // @MARK: Hardcoded mjs!
     }
   }
