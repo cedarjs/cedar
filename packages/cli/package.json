@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "The CedarJS Command Line",
   "repository": {
     "type": "git",
@@ -81,7 +81,7 @@
     "semver": "7.7.3",
     "smol-toml": "1.6.0",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.30.2",
+    "systeminformation": "5.30.3",
     "termi-link": "1.1.0",
     "title-case": "3.0.3",
     "unionfs": "4.6.0",

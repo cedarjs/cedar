@@ -310,82 +310,82 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-darwin-arm64@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-darwin-arm64@npm:0.40.4"
+"@ast-grep/napi-darwin-arm64@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-darwin-arm64@npm:0.40.5"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-darwin-x64@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-darwin-x64@npm:0.40.4"
+"@ast-grep/napi-darwin-x64@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-darwin-x64@npm:0.40.5"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-arm64-gnu@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-linux-arm64-gnu@npm:0.40.4"
+"@ast-grep/napi-linux-arm64-gnu@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-linux-arm64-gnu@npm:0.40.5"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-arm64-musl@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-linux-arm64-musl@npm:0.40.4"
+"@ast-grep/napi-linux-arm64-musl@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-linux-arm64-musl@npm:0.40.5"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-x64-gnu@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-linux-x64-gnu@npm:0.40.4"
+"@ast-grep/napi-linux-x64-gnu@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-linux-x64-gnu@npm:0.40.5"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-x64-musl@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-linux-x64-musl@npm:0.40.4"
+"@ast-grep/napi-linux-x64-musl@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-linux-x64-musl@npm:0.40.5"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-arm64-msvc@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-win32-arm64-msvc@npm:0.40.4"
+"@ast-grep/napi-win32-arm64-msvc@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-win32-arm64-msvc@npm:0.40.5"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-ia32-msvc@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-win32-ia32-msvc@npm:0.40.4"
+"@ast-grep/napi-win32-ia32-msvc@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-win32-ia32-msvc@npm:0.40.5"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-x64-msvc@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi-win32-x64-msvc@npm:0.40.4"
+"@ast-grep/napi-win32-x64-msvc@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi-win32-x64-msvc@npm:0.40.5"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi@npm:0.40.4":
-  version: 0.40.4
-  resolution: "@ast-grep/napi@npm:0.40.4"
+"@ast-grep/napi@npm:0.40.5":
+  version: 0.40.5
+  resolution: "@ast-grep/napi@npm:0.40.5"
   dependencies:
-    "@ast-grep/napi-darwin-arm64": "npm:0.40.4"
-    "@ast-grep/napi-darwin-x64": "npm:0.40.4"
-    "@ast-grep/napi-linux-arm64-gnu": "npm:0.40.4"
-    "@ast-grep/napi-linux-arm64-musl": "npm:0.40.4"
-    "@ast-grep/napi-linux-x64-gnu": "npm:0.40.4"
-    "@ast-grep/napi-linux-x64-musl": "npm:0.40.4"
-    "@ast-grep/napi-win32-arm64-msvc": "npm:0.40.4"
-    "@ast-grep/napi-win32-ia32-msvc": "npm:0.40.4"
-    "@ast-grep/napi-win32-x64-msvc": "npm:0.40.4"
+    "@ast-grep/napi-darwin-arm64": "npm:0.40.5"
+    "@ast-grep/napi-darwin-x64": "npm:0.40.5"
+    "@ast-grep/napi-linux-arm64-gnu": "npm:0.40.5"
+    "@ast-grep/napi-linux-arm64-musl": "npm:0.40.5"
+    "@ast-grep/napi-linux-x64-gnu": "npm:0.40.5"
+    "@ast-grep/napi-linux-x64-musl": "npm:0.40.5"
+    "@ast-grep/napi-win32-arm64-msvc": "npm:0.40.5"
+    "@ast-grep/napi-win32-ia32-msvc": "npm:0.40.5"
+    "@ast-grep/napi-win32-x64-msvc": "npm:0.40.5"
   dependenciesMeta:
     "@ast-grep/napi-darwin-arm64":
       optional: true
@@ -405,18 +405,18 @@ __metadata:
       optional: true
     "@ast-grep/napi-win32-x64-msvc":
       optional: true
-  checksum: 10c0/6c485b6878d537d0705c9a24396588d03c563b4a6588cb3c26750c6eb7df8a4810d9be79f60e51816b75cd7a2f9ab36e5d8795174751d2cdebc6b3f0b72a431c
+  checksum: 10c0/43a710fc4907fba2f2ff0570cfc798ecb26589e52b672ddf7761604e9cb5a62752d8ae439984035efeef049df0aeea2c33c450e00eb348797bc1309a69e68b16
   languageName: node
   linkType: hard
 
-"@auth0/auth0-spa-js@npm:2.11.1":
-  version: 2.11.1
-  resolution: "@auth0/auth0-spa-js@npm:2.11.1"
+"@auth0/auth0-spa-js@npm:2.11.2":
+  version: 2.11.2
+  resolution: "@auth0/auth0-spa-js@npm:2.11.2"
   dependencies:
     browser-tabs-lock: "npm:^1.2.15"
     dpop: "npm:^2.1.1"
     es-cookie: "npm:~1.3.2"
-  checksum: 10c0/559defe8a696d2ffdc9fc7e2aa15f4f13348ce6681e9517e93927871132b2ac16e08b09456643843675fe45971c6ce37566d2ebc02ec86f83191add09a425b62
+  checksum: 10c0/4f62b7f13bb3a56943c5c0d5199a0955ed90c77ce8f09fe730747c36f83a7c2edb0dc329e599558d419fdbabac284a512510e333d188b0712e20a28bce62beeb
   languageName: node
   linkType: hard
 
@@ -2814,7 +2814,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-web@workspace:packages/auth-providers/auth0/web"
   dependencies:
-    "@auth0/auth0-spa-js": "npm:2.11.1"
+    "@auth0/auth0-spa-js": "npm:2.11.2"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
@@ -2825,7 +2825,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@auth0/auth0-spa-js": 2.11.1
+    "@auth0/auth0-spa-js": 2.11.2
   languageName: unknown
   linkType: soft
 
@@ -2922,8 +2922,8 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/clerk-react": "npm:5.59.2"
-    "@clerk/types": "npm:4.101.9"
+    "@clerk/clerk-react": "npm:5.59.3"
+    "@clerk/types": "npm:4.101.10"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.16"
@@ -2932,7 +2932,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@clerk/clerk-react": 5.59.2
+    "@clerk/clerk-react": 5.59.3
   languageName: unknown
   linkType: soft
 
@@ -3468,7 +3468,7 @@ __metadata:
     semver: "npm:7.7.3"
     smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.30.2"
+    systeminformation: "npm:5.30.3"
     termi-link: "npm:1.1.0"
     title-case: "npm:3.0.3"
     ts-dedent: "npm:2.2.0"
@@ -3686,7 +3686,7 @@ __metadata:
     publint: "npm:0.3.16"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
-    react-hook-form: "npm:7.70.0"
+    react-hook-form: "npm:7.71.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3799,7 +3799,7 @@ __metadata:
     rimraf: "npm:6.1.2"
     source-map: "npm:0.7.6"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.30.2"
+    systeminformation: "npm:5.30.3"
     termi-link: "npm:1.1.0"
     ts-node: "npm:10.9.2"
     tsx: "npm:4.21.0"
@@ -3945,7 +3945,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/prerender@workspace:packages/prerender"
   dependencies:
-    "@ast-grep/napi": "npm:0.40.4"
+    "@ast-grep/napi": "npm:0.40.5"
     "@babel/generator": "npm:7.28.5"
     "@babel/parser": "npm:7.28.5"
     "@babel/traverse": "npm:7.28.5"
@@ -4162,7 +4162,7 @@ __metadata:
     "@whatwg-node/fetch": "npm:0.10.13"
     ci-info: "npm:4.3.1"
     envinfo: "npm:7.21.0"
-    systeminformation: "npm:5.30.2"
+    systeminformation: "npm:5.30.3"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     uuid: "npm:11.1.0"
@@ -4239,7 +4239,7 @@ __metadata:
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@ast-grep/napi": "npm:0.40.4"
+    "@ast-grep/napi": "npm:0.40.5"
     "@babel/generator": "npm:7.28.5"
     "@babel/parser": "npm:7.28.5"
     "@babel/traverse": "npm:7.28.5"
@@ -4426,22 +4426,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/clerk-react@npm:5.59.2":
-  version: 5.59.2
-  resolution: "@clerk/clerk-react@npm:5.59.2"
+"@clerk/clerk-react@npm:5.59.3":
+  version: 5.59.3
+  resolution: "@clerk/clerk-react@npm:5.59.3"
   dependencies:
-    "@clerk/shared": "npm:^3.41.1"
+    "@clerk/shared": "npm:^3.42.0"
     tslib: "npm:2.8.1"
   peerDependencies:
     react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
     react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-  checksum: 10c0/1612711dba40db8b270b7fa88347baabd53b5c8e835a19738ecbecfea2d2cbc3011a8da119dd7ae5319097b426ad44d8bda0e3b7c854c4b74e0e73c4d8fe73fd
+  checksum: 10c0/070d4350a950d9581dbadc8fe0ec994fc1317eecb5ac6e31479e319bedd74bb1b1211d968538f0985e858fc132f5f53598001aeda24a30c152dabcc667ebe13d
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.41.1, @clerk/shared@npm:^3.9.5":
-  version: 3.41.1
-  resolution: "@clerk/shared@npm:3.41.1"
+"@clerk/shared@npm:^3.42.0, @clerk/shared@npm:^3.9.5":
+  version: 3.42.0
+  resolution: "@clerk/shared@npm:3.42.0"
   dependencies:
     csstype: "npm:3.1.3"
     dequal: "npm:2.0.3"
@@ -4457,16 +4457,16 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: 10c0/d5667f180994a7486941db012b1dcfb374718b609318101ee11213277a78cfde16a64ac2725901a1b67e8a6d56a812a7882017749e6f885f1fe2d0ca174c4f5e
+  checksum: 10c0/25c67e46e8cbba91f789944bb73fba66eada1f37860e07f5dc5825e0b7e51fa317e04a79debe631cf8aaa4e0126eed6f161390a3ef0dcc22fea5cb922fb80e57
   languageName: node
   linkType: hard
 
-"@clerk/types@npm:4.101.9, @clerk/types@npm:^4.59.3":
-  version: 4.101.9
-  resolution: "@clerk/types@npm:4.101.9"
+"@clerk/types@npm:4.101.10, @clerk/types@npm:^4.59.3":
+  version: 4.101.10
+  resolution: "@clerk/types@npm:4.101.10"
   dependencies:
-    "@clerk/shared": "npm:^3.41.1"
-  checksum: 10c0/648924471302805d99424cda43611eef93ffa217c65ee2a65710c8b3c6535fa5c086211bd336c71738306b2bb798e81ef41d0c0119085a2588dda4f38c53da81
+    "@clerk/shared": "npm:^3.42.0"
+  checksum: 10c0/ee001ac758f1377c3f375d81803ce8d85423f28b65d313773a86e88355cbf7b70c6f12897c15f5cb300f9b0264fa7a3c375479077d0167aecd1777789ef3add5
   languageName: node
   linkType: hard
 
@@ -15622,7 +15622,7 @@ __metadata:
     gradient-string: "npm:3.0.0"
     klaw-sync: "npm:7.0.0"
     semver: "npm:7.7.3"
-    systeminformation: "npm:5.30.2"
+    systeminformation: "npm:5.30.3"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
     untildify: "npm:4.0.0"
@@ -26861,12 +26861,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hook-form@npm:7.70.0":
-  version: 7.70.0
-  resolution: "react-hook-form@npm:7.70.0"
+"react-hook-form@npm:7.71.0":
+  version: 7.71.0
+  resolution: "react-hook-form@npm:7.71.0"
   peerDependencies:
     react: ^16.8.0 || ^17 || ^18 || ^19
-  checksum: 10c0/009c9c86b9ddb4f68964a121693fedcf61d656bc30052b217d4c87002ee26d6c5540cabd193abca4eb290775fdcd3c0a06b3b96fd54d9fead0c0d268a1760a5e
+  checksum: 10c0/848a9710d1e0e7ba7ec61229f48ba52bb182761b8ac9604e03cf893dbf357da61f5fc8d761ae3554d508fdd1e4f81a74c847056e3e7c2e812288c753d9f8303b
   languageName: node
   linkType: hard
 
@@ -29332,12 +29332,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"systeminformation@npm:5.30.2":
-  version: 5.30.2
-  resolution: "systeminformation@npm:5.30.2"
+"systeminformation@npm:5.30.3":
+  version: 5.30.3
+  resolution: "systeminformation@npm:5.30.3"
   bin:
     systeminformation: lib/cli.js
-  checksum: 10c0/28972ae54aeb7ca237ab993a9d8a59e93bf997d47bea3bfe4662b8598f33ce79f3721c8cb18e97bd11d855b76919f698a31f3a8658affafae3c0594948c9c826
+  checksum: 10c0/ce72e2092cb96b52fde94e7ed8e308844d6110236606bdd504653dac86b64a8ca5b2a64bd144b832bee1b7bc4dc323bc05308b85d82ff722a3321b0e4d354965
   conditions: (os=darwin | os=linux | os=win32 | os=freebsd | os=openbsd | os=netbsd | os=sunos | os=android)
   languageName: node
   linkType: hard

@@ -3,10 +3,24 @@ import path from 'node:path'
 
 import type { Options as ExecaOptions } from 'execa'
 
+import {
+  createBuilder,
+  createCells,
+  createComponents,
+  createLayout,
+  fullPath,
+  getOutputPath,
+  getPagesTasks,
+  setOutputPath,
+  updateCellMocks,
+  addModel,
+  addDbAuth,
+} from './base-tasks.mts'
+import { getPrerenderTasks } from './prerender-tasks.mts'
 import type { TuiTaskList } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
-  updatePkgJsonScripts,
+  applyCodemod,
   exec,
   getCfwBin,
 } from './util.mts'
@@ -15,323 +29,15 @@ function getExecaOptions(cwd: string): ExecaOptions {
   return { ...utilGetExecaOptions(cwd), stdio: 'pipe' as const }
 }
 
-// This variable gets used in other functions
-// and is set when webTasks or apiTasks are called
-let OUTPUT_PATH: string
-
-const RW_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
-
-function fullPath(name: string, { addExtension } = { addExtension: true }) {
-  if (addExtension) {
-    if (name.startsWith('api')) {
-      name += '.ts'
-    } else if (name.startsWith('web')) {
-      name += '.tsx'
-    }
-  }
-
-  return path.join(OUTPUT_PATH, name)
-}
-
-// TODO: Import from ./util.js when everything is using @rwjs/tui
-async function applyCodemod(codemod: string, target: string) {
-  const args = [
-    '--fail-on-error',
-    '-t',
-    `${path.resolve(import.meta.dirname, 'codemods', codemod)} ${target}`,
-    '--parser',
-    'tsx',
-    '--verbose=2',
-  ]
-
-  args.push()
-
-  const subprocess = exec(
-    'yarn jscodeshift',
-    args,
-    getExecaOptions(path.resolve(import.meta.dirname)),
-  )
-
-  return subprocess
-}
-
-/**
- * @param cmd The command to run
- */
-function createBuilder(cmd: string, dir = '') {
-  const execaOptions = getExecaOptions(path.join(OUTPUT_PATH, dir))
-
-  return function (positionalArguments?: string | string[]) {
-    const args = positionalArguments
-      ? Array.isArray(positionalArguments)
-        ? positionalArguments
-        : [positionalArguments]
-      : []
-    const subprocess = exec(cmd, args, execaOptions)
-
-    return subprocess
-  }
-}
-
 export async function webTasks(outputPath: string) {
-  OUTPUT_PATH = outputPath
+  setOutputPath(outputPath)
 
   const execaOptions = getExecaOptions(outputPath)
-
-  const createPages = async () => {
-    // Passing 'web' here to test executing 'yarn redwood' in the /web directory
-    // to make sure it works as expected. We do the same for the /api directory
-    // further down in this file.
-    const createPage = createBuilder('yarn cedar g page', 'web')
-
-    const tuiTaskList: TuiTaskList = [
-      {
-        title: 'Creating home page',
-        task: async () => {
-          await createPage('home /')
-
-          await applyCodemod(
-            'homePage.js',
-            fullPath('web/src/pages/HomePage/HomePage'),
-          )
-        },
-      },
-      {
-        title: 'Creating about page',
-        task: async () => {
-          await createPage('about')
-
-          await applyCodemod(
-            'aboutPage.js',
-            fullPath('web/src/pages/AboutPage/AboutPage'),
-          )
-        },
-      },
-      {
-        title: 'Creating contact page',
-        task: async () => {
-          await createPage('contactUs /contact')
-
-          await applyCodemod(
-            'contactUsPage.js',
-            fullPath('web/src/pages/ContactUsPage/ContactUsPage'),
-          )
-        },
-      },
-      {
-        title: 'Creating blog post page',
-        task: async () => {
-          await createPage('blogPost /blog-post/{id:Int}')
-
-          await applyCodemod(
-            'blogPostPage.js',
-            fullPath('web/src/pages/BlogPostPage/BlogPostPage'),
-          )
-
-          return applyCodemod(
-            'updateBlogPostPageStories.js',
-            fullPath('web/src/pages/BlogPostPage/BlogPostPage.stories'),
-          )
-        },
-      },
-      {
-        title: 'Creating profile page',
-        task: async () => {
-          await createPage('profile /profile')
-
-          // Update the profile page test
-          const testFileContent = `import { render, waitFor, screen } from '@cedarjs/testing/web'
-
-          import ProfilePage from './ProfilePage'
-
-          describe('ProfilePage', () => {
-            it('renders successfully', async () => {
-              mockCurrentUser({
-                email: 'danny@bazinga.com',
-                id: '84849020-2b1a-4f5c-8c7d-000084849020',
-                roles: 'BAZINGA',
-              })
-
-              await waitFor(async () => {
-                expect(() => {
-                  render(<ProfilePage />)
-                }).not.toThrow()
-              })
-
-              expect(await screen.findByText('danny@bazinga.com')).toBeInTheDocument()
-            })
-          })
-          `
-
-          fs.writeFileSync(
-            fullPath('web/src/pages/ProfilePage/ProfilePage.test'),
-            testFileContent,
-          )
-
-          return applyCodemod(
-            'profilePage.js',
-            fullPath('web/src/pages/ProfilePage/ProfilePage'),
-          )
-        },
-      },
-      {
-        title: 'Creating MDX Storybook stories',
-        task: () => {
-          const cedarMdxStoryContent = fs.readFileSync(
-            `${path.resolve(import.meta.dirname, 'codemods', 'CedarJS.mdx')}`,
-          )
-
-          fs.writeFileSync(
-            fullPath('web/src/CedarJS.mdx', { addExtension: false }),
-            cedarMdxStoryContent,
-          )
-
-          return
-        },
-      },
-      {
-        title: 'Creating nested cells test page',
-        task: async () => {
-          await createPage('waterfall {id:Int}')
-
-          await applyCodemod(
-            'waterfallPage.js',
-            fullPath('web/src/pages/WaterfallPage/WaterfallPage'),
-          )
-
-          await applyCodemod(
-            'updateWaterfallPageStories.js',
-            fullPath('web/src/pages/WaterfallPage/WaterfallPage.stories'),
-          )
-        },
-      },
-    ]
-
-    return tuiTaskList
-  }
-
-  const createLayout = async () => {
-    const createLayout = createBuilder('yarn cedar g layout')
-
-    await createLayout('blog')
-
-    return applyCodemod(
-      'blogLayout.js',
-      fullPath('web/src/layouts/BlogLayout/BlogLayout'),
-    )
-  }
-
-  const createComponents = async () => {
-    const createComponent = createBuilder('yarn cedar g component')
-
-    await createComponent('blogPost')
-
-    await applyCodemod(
-      'blogPost.js',
-      fullPath('web/src/components/BlogPost/BlogPost'),
-    )
-
-    await createComponent('author')
-
-    await applyCodemod(
-      'author.js',
-      fullPath('web/src/components/Author/Author'),
-    )
-
-    await applyCodemod(
-      'updateAuthorStories.js',
-      fullPath('web/src/components/Author/Author.stories'),
-    )
-
-    await applyCodemod(
-      'updateAuthorTest.js',
-      fullPath('web/src/components/Author/Author.test'),
-    )
-
-    await createComponent('classWithClassField')
-
-    await applyCodemod(
-      'classWithClassField.ts',
-      fullPath('web/src/components/ClassWithClassField/ClassWithClassField'),
-    )
-  }
-
-  const createCells = async () => {
-    const createCell = createBuilder('yarn cedar g cell')
-
-    await createCell('blogPosts')
-
-    await applyCodemod(
-      'blogPostsCell.js',
-      fullPath('web/src/components/BlogPostsCell/BlogPostsCell'),
-    )
-
-    await createCell('blogPost')
-
-    await applyCodemod(
-      'blogPostCell.js',
-      fullPath('web/src/components/BlogPostCell/BlogPostCell'),
-    )
-
-    await createCell('author')
-
-    await applyCodemod(
-      'authorCell.js',
-      fullPath('web/src/components/AuthorCell/AuthorCell'),
-    )
-
-    await applyCodemod(
-      'updateAuthorCellTest.js',
-      fullPath('web/src/components/AuthorCell/AuthorCell.test'),
-    )
-
-    await createCell('waterfallBlogPost')
-
-    return applyCodemod(
-      'waterfallBlogPostCell.js',
-      fullPath(
-        'web/src/components/WaterfallBlogPostCell/WaterfallBlogPostCell',
-      ),
-    )
-  }
-
-  const updateCellMocks = async () => {
-    await applyCodemod(
-      'updateBlogPostMocks.js',
-      fullPath('web/src/components/BlogPostCell/BlogPostCell.mock.ts', {
-        addExtension: false,
-      }),
-    )
-
-    await applyCodemod(
-      'updateBlogPostMocks.js',
-      fullPath('web/src/components/BlogPostsCell/BlogPostsCell.mock.ts', {
-        addExtension: false,
-      }),
-    )
-
-    await applyCodemod(
-      'updateAuthorCellMock.js',
-      fullPath('web/src/components/AuthorCell/AuthorCell.mock.ts', {
-        addExtension: false,
-      }),
-    )
-
-    return applyCodemod(
-      'updateWaterfallBlogPostMocks.js',
-      fullPath(
-        'web/src/components/WaterfallBlogPostCell/WaterfallBlogPostCell.mock.ts',
-        {
-          addExtension: false,
-        },
-      ),
-    )
-  }
 
   const tuiTaskList: TuiTaskList = [
     {
       title: 'Creating pages',
-      task: () => createPages(),
+      task: async () => getPagesTasks(),
     },
     {
       title: 'Creating layout',
@@ -370,14 +76,6 @@ export async function webTasks(outputPath: string) {
   return tuiTaskList
 }
 
-async function addModel(schema: string) {
-  const path = `${OUTPUT_PATH}/api/db/schema.prisma`
-
-  const current = fs.readFileSync(path, 'utf-8')
-
-  fs.writeFileSync(path, `${current.trim()}\n\n${schema}\n`)
-}
-
 interface ApiTasksOptions {
   linkWithLatestFwBuild: boolean
   esmProject: boolean
@@ -387,334 +85,9 @@ export async function apiTasks(
   outputPath: string,
   { linkWithLatestFwBuild, esmProject }: ApiTasksOptions,
 ) {
-  OUTPUT_PATH = outputPath
+  setOutputPath(outputPath)
 
   const execaOptions = getExecaOptions(outputPath)
-
-  const addDbAuth = async () => {
-    // Temporarily disable postinstall script
-    updatePkgJsonScripts({
-      projectPath: outputPath,
-      scripts: {
-        postinstall: '',
-      },
-    })
-
-    // We want to use the latest version of the auth-dbauth-{setup,api,web}
-    // packages. But they're not published yet. So let's package them up as
-    // tarballs and install them using that by setting yarn resolutions
-
-    const setupPkg = path.join(
-      RW_FRAMEWORK_PATH,
-      'packages',
-      'auth-providers',
-      'dbAuth',
-      'setup',
-    )
-    const apiPkg = path.join(
-      RW_FRAMEWORK_PATH,
-      'packages',
-      'auth-providers',
-      'dbAuth',
-      'api',
-    )
-    const webPkg = path.join(
-      RW_FRAMEWORK_PATH,
-      'packages',
-      'auth-providers',
-      'dbAuth',
-      'web',
-    )
-
-    await exec('yarn build:pack', [], getExecaOptions(setupPkg))
-    await exec('yarn build:pack', [], getExecaOptions(apiPkg))
-    await exec('yarn build:pack', [], getExecaOptions(webPkg))
-
-    const setupTgz = path.join(setupPkg, 'cedarjs-auth-dbauth-setup.tgz')
-    const apiTgz = path.join(apiPkg, 'cedarjs-auth-dbauth-api.tgz')
-    const webTgz = path.join(webPkg, 'cedarjs-auth-dbauth-web.tgz')
-
-    const setupTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-setup.tgz')
-    const apiTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-api.tgz')
-    const webTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-web.tgz')
-
-    fs.copyFileSync(setupTgz, setupTgzDest)
-    fs.copyFileSync(apiTgz, apiTgzDest)
-    fs.copyFileSync(webTgz, webTgzDest)
-
-    const projectPackageJsonPath = path.join(outputPath, 'package.json')
-    const projectPackageJson = JSON.parse(
-      fs.readFileSync(projectPackageJsonPath, 'utf-8'),
-    )
-
-    const existingResolutions = projectPackageJson.resolutions
-      ? { ...projectPackageJson.resolutions }
-      : undefined
-
-    projectPackageJson.resolutions ??= {}
-    projectPackageJson.resolutions = {
-      ...projectPackageJson.resolutions,
-      '@cedarjs/auth-dbauth-setup': './cedarjs-auth-dbauth-setup.tgz',
-      '@cedarjs/auth-dbauth-api': './cedarjs-auth-dbauth-api.tgz',
-      '@cedarjs/auth-dbauth-web': './cedarjs-auth-dbauth-web.tgz',
-    }
-
-    fs.writeFileSync(
-      projectPackageJsonPath,
-      JSON.stringify(projectPackageJson, null, 2),
-    )
-
-    // Run `yarn install` to have the resolutions take effect and install the
-    // tarballs we copied over
-    await exec('yarn install', [], execaOptions)
-
-    await exec(
-      'yarn cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
-      [],
-      execaOptions,
-    )
-
-    // Restore old resolutions
-    if (existingResolutions) {
-      projectPackageJson.resolutions = existingResolutions
-    }
-
-    fs.writeFileSync(
-      projectPackageJsonPath,
-      JSON.stringify(projectPackageJson, null, 2),
-    )
-
-    // Remove tarballs
-    fs.unlinkSync(setupTgzDest)
-    fs.unlinkSync(apiTgzDest)
-    fs.unlinkSync(webTgzDest)
-
-    // Restore postinstall script
-    updatePkgJsonScripts({
-      projectPath: outputPath,
-      scripts: {
-        postinstall: `yarn ${getCfwBin(outputPath)} project:copy`,
-      },
-    })
-
-    if (linkWithLatestFwBuild) {
-      await exec(`yarn ${getCfwBin(outputPath)} project:copy`, [], execaOptions)
-    }
-
-    await exec(
-      'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
-      [],
-      execaOptions,
-    )
-
-    // update directive in contacts.sdl.ts
-    const pathContactsSdl = `${OUTPUT_PATH}/api/src/graphql/contacts.sdl.ts`
-    const contentContactsSdl = fs.readFileSync(pathContactsSdl, 'utf-8')
-    const resultsContactsSdl = contentContactsSdl
-      .replace(
-        'createContact(input: CreateContactInput!): Contact! @requireAuth',
-        `createContact(input: CreateContactInput!): Contact @skipAuth`,
-      )
-      .replace(
-        /deleteContact\(id: Int!\): Contact! @requireAuth(?=\s)/,
-        'deleteContact(id: Int!): Contact! @requireAuth(roles:["ADMIN"])',
-      ) // make deleting contacts admin only
-    fs.writeFileSync(pathContactsSdl, resultsContactsSdl)
-
-    // update directive in posts.sdl.ts
-    const pathPostsSdl = `${OUTPUT_PATH}/api/src/graphql/posts.sdl.ts`
-    const contentPostsSdl = fs.readFileSync(pathPostsSdl, 'utf-8')
-    const resultsPostsSdl = contentPostsSdl.replace(
-      /posts: \[Post!\]! @requireAuth([^}]*)@requireAuth/,
-      `posts: [Post!]! @skipAuth
-      post(id: Int!): Post @skipAuth`,
-    ) // make posts accessible to all
-
-    fs.writeFileSync(pathPostsSdl, resultsPostsSdl)
-
-    // Update src/lib/auth to return roles, so tsc doesn't complain
-    const libAuthPath = `${OUTPUT_PATH}/api/src/lib/auth.ts`
-    const libAuthContent = fs.readFileSync(libAuthPath, 'utf-8')
-
-    const newLibAuthContent = libAuthContent
-      .replace(
-        'select: { id: true }',
-        'select: { id: true, roles: true, email: true}',
-      )
-      .replace(
-        'const currentUserRoles = context.currentUser?.roles',
-        'const currentUserRoles = context.currentUser?.roles as string | string[]',
-      )
-    fs.writeFileSync(libAuthPath, newLibAuthContent)
-
-    // update requireAuth test
-    const pathRequireAuth = `${OUTPUT_PATH}/api/src/directives/requireAuth/requireAuth.test.ts`
-    const contentRequireAuth = fs.readFileSync(pathRequireAuth).toString()
-    const resultsRequireAuth = contentRequireAuth.replace(
-      /const mockExecution([^}]*){} }\)/,
-      `const mockExecution = mockRedwoodDirective(requireAuth, {
-        context: { currentUser: { id: '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d', roles: 'ADMIN', email: 'b@zinga.com' } },
-      })`,
-    )
-    fs.writeFileSync(pathRequireAuth, resultsRequireAuth)
-
-    // add fullName input to signup form
-    const pathSignupPageTs = `${OUTPUT_PATH}/web/src/pages/SignupPage/SignupPage.tsx`
-    const contentSignupPageTs = fs.readFileSync(pathSignupPageTs, 'utf-8')
-    const usernameFields = contentSignupPageTs.match(
-      /\s*<Label[\s\S]*?name="username"[\s\S]*?"rw-field-error" \/>/,
-    )?.[0]
-    const fullNameFields = usernameFields
-      ?.replace(/\s*ref=\{usernameRef}/, '')
-      ?.replaceAll('username', 'full-name')
-      ?.replaceAll('Username', 'Full Name')
-
-    const newContentSignupPageTs = contentSignupPageTs
-      .replace(
-        '<FieldError name="password" className="rw-field-error" />',
-        '<FieldError name="password" className="rw-field-error" />\n' +
-          fullNameFields,
-      )
-      // include full-name in the data we pass to `signUp()`
-      .replace(
-        'password: data.password',
-        "password: data.password, 'full-name': data['full-name']",
-      )
-
-    fs.writeFileSync(pathSignupPageTs, newContentSignupPageTs)
-
-    // set fullName when signing up
-    const pathAuthTs = `${OUTPUT_PATH}/api/src/functions/auth.ts`
-    const contentAuthTs = fs.readFileSync(pathAuthTs).toString()
-    const resultsAuthTs = contentAuthTs
-      .replace('name: string', "'full-name': string")
-      .replace('userAttributes: _userAttributes', 'userAttributes')
-      .replace(
-        '// name: userAttributes.name',
-        "fullName: userAttributes['full-name']",
-      )
-
-    fs.writeFileSync(pathAuthTs, resultsAuthTs)
-  }
-
-  // add prerender to some routes
-  const addPrerender = async () => {
-    const tuiTaskList: TuiTaskList = [
-      {
-        // We need to do this here, and not where we create the other pages, to
-        // keep it outside of BlogLayout
-        title: 'Creating double rendering test page',
-        task: async () => {
-          const createPage = createBuilder('yarn cedar g page')
-          await createPage('double')
-
-          const doublePageContent = `import { Metadata } from '@cedarjs/web'
-
-            import test from './test.png'
-
-            const DoublePage = () => {
-              return (
-                <>
-                  <Metadata title="Double" description="Double page" og />
-
-                  <h1 className="mb-1 mt-2 text-xl font-semibold">DoublePage</h1>
-                  <p>
-                    This page exists to make sure we don&apos;t regress on{' '}
-                    <a
-                      href="https://github.com/redwoodjs/redwood/issues/7757"
-                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      #7757
-                    </a>
-                  </p>
-                  <p>For RW#7757 it needs to be a page that is not wrapped in a Set</p>
-                  <p>
-                    We also use this page to make sure we don&apos;t regress on{' '}
-                    <a
-                      href="https://github.com/cedarjs/cedar/issues/317"
-                      className="text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      #317
-                    </a>
-                  </p>
-                  <img src={test} alt="Test" />
-                </>
-              )
-            }
-
-            export default DoublePage`
-
-          fs.writeFileSync(
-            fullPath('web/src/pages/DoublePage/DoublePage'),
-            doublePageContent,
-          )
-          fs.copyFileSync(
-            fullPath('web/public/favicon.png', { addExtension: false }),
-            fullPath('web/src/pages/DoublePage/test.png', {
-              addExtension: false,
-            }),
-          )
-        },
-      },
-      {
-        title: 'Update Routes.tsx',
-        task: () => {
-          const pathRoutes = `${OUTPUT_PATH}/web/src/Routes.tsx`
-          const contentRoutes = fs.readFileSync(pathRoutes).toString()
-          const resultsRoutesAbout = contentRoutes.replace(
-            /name="about"/,
-            `name="about" prerender`,
-          )
-          const resultsRoutesHome = resultsRoutesAbout.replace(
-            /name="home"/,
-            `name="home" prerender`,
-          )
-          const resultsRoutesBlogPost = resultsRoutesHome.replace(
-            /name="blogPost"/,
-            `name="blogPost" prerender`,
-          )
-          const resultsRoutesNotFound = resultsRoutesBlogPost.replace(
-            /page={NotFoundPage}/,
-            `page={NotFoundPage} prerender`,
-          )
-          const resultsRoutesWaterfall = resultsRoutesNotFound.replace(
-            /page={WaterfallPage}/,
-            `page={WaterfallPage} prerender`,
-          )
-          const resultsRoutesDouble = resultsRoutesWaterfall.replace(
-            'name="double"',
-            'name="double" prerender',
-          )
-          const resultsRoutesNewContact = resultsRoutesDouble.replace(
-            'name="newContact"',
-            'name="newContact" prerender',
-          )
-          fs.writeFileSync(pathRoutes, resultsRoutesNewContact)
-
-          const blogPostRouteHooks = `import { db } from '$api/src/lib/db.js'
-
-            export async function routeParameters() {
-              return (await db.post.findMany({ take: 7 })).map((post) => ({ id: post.id }))
-            }`
-          const blogPostRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/BlogPostPage/BlogPostPage.routeHooks.ts`
-          fs.writeFileSync(blogPostRouteHooksPath, blogPostRouteHooks)
-
-          const waterfallRouteHooks = `export async function routeParameters() {
-              return [{ id: 2 }]
-            }`
-          const waterfallRouteHooksPath = `${OUTPUT_PATH}/web/src/pages/WaterfallPage/WaterfallPage.routeHooks.ts`
-          fs.writeFileSync(waterfallRouteHooksPath, waterfallRouteHooks)
-        },
-      },
-    ]
-
-    return tuiTaskList
-  }
-
   const generateScaffold = createBuilder('yarn cedar g scaffold')
 
   const tuiTaskList: TuiTaskList = [
@@ -746,7 +119,7 @@ export async function apiTasks(
         )
 
         await exec(
-          `yarn ${getCfwBin(OUTPUT_PATH)} project:copy`,
+          `yarn ${getCfwBin(getOutputPath())} project:copy`,
           [],
           execaOptions,
         )
@@ -796,7 +169,7 @@ export async function apiTasks(
       title: 'Adjust dates within migration folder names',
       task: () => {
         const migrationsFolderPath = path.join(
-          OUTPUT_PATH,
+          getOutputPath(),
           'api',
           'db',
           'migrations',
@@ -867,7 +240,7 @@ export async function apiTasks(
     },
     {
       title: 'Add dbAuth',
-      task: async () => addDbAuth(),
+      task: async () => addDbAuth(outputPath, linkWithLatestFwBuild),
     },
     {
       title: 'Add describeScenario tests',
@@ -898,7 +271,7 @@ export async function apiTasks(
       // instead of doing some up in the web side tasks, and then the rest
       // here I decided to move all of them here
       title: 'Add Prerender to Routes',
-      task: () => addPrerender(),
+      task: async () => getPrerenderTasks(),
     },
     {
       title: 'Add context tests',
@@ -910,7 +283,7 @@ export async function apiTasks(
           'context.test.ts.template',
         )
         const projectPath = path.join(
-          OUTPUT_PATH,
+          getOutputPath(),
           'api',
           'src',
           '__tests__',
@@ -933,7 +306,7 @@ export async function apiTasks(
         const templatePath2 = path.join(templatesDir, '2-db-import.test.ts')
         const templatePath3 = path.join(templatesDir, '3-db-import.test.ts')
 
-        const testsDir = path.join(OUTPUT_PATH, 'api', 'src', '__tests__')
+        const testsDir = path.join(getOutputPath(), 'api', 'src', '__tests__')
         const testFilePath1 = path.join(testsDir, '1-db-import.test.ts')
         const testFilePath2 = path.join(testsDir, '2-db-import.test.ts')
         const testFilePath3 = path.join(testsDir, '3-db-import.test.ts')
@@ -948,7 +321,7 @@ export async function apiTasks(
         // same as it'll look in user's projects.
         fs.copyFileSync(
           path.join(templatesDir, 'vitest-sort.config.ts'),
-          path.join(OUTPUT_PATH, 'api', 'vitest-sort.config.ts'),
+          path.join(getOutputPath(), 'api', 'vitest-sort.config.ts'),
         )
       },
     },
@@ -961,121 +334,5 @@ export async function apiTasks(
   //   renderer: verbose && 'verbose',
   //   renderOptions: { collapseSubtasks: false },
   // }
-  return tuiTaskList
-}
-
-/**
- * Tasks to add GraphQL Fragments support to the test-project, and some queries
- * to test fragments
- */
-export async function fragmentsTasks(outputPath: string) {
-  OUTPUT_PATH = outputPath
-
-  const tuiTaskList: TuiTaskList = [
-    {
-      title: 'Enable fragments',
-      task: async () => {
-        const redwoodTomlPath = path.join(outputPath, 'redwood.toml')
-        const redwoodToml = fs.readFileSync(redwoodTomlPath).toString()
-        const newRedwoodToml = redwoodToml + '\n[graphql]\n  fragments = true\n'
-        fs.writeFileSync(redwoodTomlPath, newRedwoodToml)
-      },
-    },
-    {
-      title: 'Adding produce and stall models to prisma',
-      task: async () => {
-        // Need both here since they have a relation
-        const { produce, stall } = await import('./codemods/models.mts')
-
-        addModel(produce)
-        addModel(stall)
-
-        return exec(
-          'yarn cedar prisma migrate dev --name create_produce_stall',
-          [],
-          getExecaOptions(outputPath),
-        )
-      },
-    },
-    {
-      title: 'Seed fragments data',
-      task: async () => {
-        await applyCodemod(
-          'seedFragments.ts',
-          fullPath('scripts/seed.ts', { addExtension: false }),
-        )
-
-        await exec('yarn cedar prisma db seed', [], getExecaOptions(outputPath))
-      },
-    },
-    {
-      title: 'Generate SDLs for produce and stall',
-      task: async () => {
-        const generateSdl = createBuilder('yarn cedar g sdl')
-
-        await generateSdl('stall')
-        await generateSdl('produce')
-
-        await applyCodemod(
-          'producesSdl.ts',
-          fullPath('api/src/graphql/produces.sdl'),
-        )
-      },
-    },
-    {
-      title: 'Copy components from templates',
-      task: () => {
-        const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
-        const componentsPath = path.join(
-          OUTPUT_PATH,
-          'web',
-          'src',
-          'components',
-        )
-
-        for (const fileName of [
-          'Card.tsx',
-          'FruitInfo.tsx',
-          'ProduceInfo.tsx',
-          'StallInfo.tsx',
-          'VegetableInfo.tsx',
-        ]) {
-          const templatePath = path.join(templatesPath, fileName)
-          const componentPath = path.join(componentsPath, fileName)
-
-          fs.writeFileSync(componentPath, fs.readFileSync(templatePath))
-        }
-      },
-    },
-    {
-      title: 'Copy sdl and service for groceries from templates',
-      task: () => {
-        const templatesPath = path.join(import.meta.dirname, 'templates', 'api')
-        const graphqlPath = path.join(OUTPUT_PATH, 'api', 'src', 'graphql')
-        const servicesPath = path.join(OUTPUT_PATH, 'api', 'src', 'services')
-
-        const sdlTemplatePath = path.join(templatesPath, 'groceries.sdl.ts')
-        const sdlPath = path.join(graphqlPath, 'groceries.sdl.ts')
-        const serviceTemplatePath = path.join(templatesPath, 'groceries.ts')
-        const servicePath = path.join(servicesPath, 'groceries.ts')
-
-        fs.writeFileSync(sdlPath, fs.readFileSync(sdlTemplatePath))
-        fs.writeFileSync(servicePath, fs.readFileSync(serviceTemplatePath))
-      },
-    },
-    {
-      title: 'Creating Groceries page',
-      task: async () => {
-        const createPage = createBuilder('yarn cedar g page')
-        await createPage('groceries')
-
-        await applyCodemod(
-          'groceriesPage.ts',
-          fullPath('web/src/pages/GroceriesPage/GroceriesPage'),
-        )
-      },
-    },
-  ]
-
   return tuiTaskList
 }
