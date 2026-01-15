@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CedarJS Configuration",
+  "description": "Configuration schema for cedar.toml / redwood.toml",
+  "type": "object",
+  "properties": {
+    "web": {
+      "type": "object",
+      "description": "Configuration for the web side (browser target).",
+      "properties": {
+        "title": { "type": "string" },
+        "name": { "type": "string" },
+        "host": { "type": "string" },
+        "port": { "type": "integer" },
+        "path": { "type": "string" },
+        "target": {
+          "type": "string",
+          "const": "browser"
+        },
+        "includeEnvironmentVariables": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "apiUrl": {
+          "type": "string",
+          "description": "URL to your api-server. Can be absolute path or fully qualified URL."
+        },
+        "apiGraphQLUrl": {
+          "type": "string",
+          "description": "Optional: FQDN or absolute path to the GraphQL serverless function. Overrides apiUrl for graphql."
+        },
+        "fastRefresh": { "type": "boolean" },
+        "a11y": { "type": "boolean" },
+        "sourceMap": { "type": "boolean" }
+      },
+      "required": ["port", "path", "target", "apiUrl"]
+    },
+    "api": {
+      "type": "object",
+      "description": "Configuration for the api side (node target).",
+      "properties": {
+        "title": { "type": "string" },
+        "name": { "type": "string" },
+        "host": { "type": "string" },
+        "port": { "type": "integer" },
+        "path": { "type": "string" },
+        "target": {
+          "type": "string",
+          "const": "node"
+        },
+        "prismaConfig": { "type": "string" },
+        "serverConfig": { "type": "string" },
+        "debugPort": {
+          "anyOf": [
+            { "type": "integer" },
+            { "type": "boolean" }
+          ]
+        }
+      },
+      "required": ["port", "path", "target"]
+    },
+    "browser": {
+      "type": "object",
+      "properties": {
+        "open": {
+          "anyOf": [
+            { "type": "boolean" },
+            { "type": "string" }
+          ],
+          "description": "Whether to open the browser on start, or the command/browser to use."
+        }
+      }
+    },
+    "generate": {
+      "type": "object",
+      "properties": {
+        "tests": { "type": "boolean" },
+        "stories": { "type": "boolean" },
+        "nestScaffoldByModel": { "type": "boolean" }
+      }
+    },
+    "graphql": {
+      "type": "object",
+      "properties": {
+        "fragments": { "type": "boolean" },
+        "trustedDocuments": { "type": "boolean" },
+        "includeScalars": {
+          "type": "object",
+          "properties": {
+            "File": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "versionUpdates": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "studio": {
+      "type": "object",
+      "properties": {
+        "basePort": { "type": "integer" },
+        "graphiql": {
+          "type": "object",
+          "properties": {
+            "endpoint": { "type": "string" },
+            "authImpersonation": {
+              "type": "object",
+              "properties": {
+                "authProvider": {
+                  "type": "string",
+                  "enum": ["dbAuth", "netlify", "supabase"]
+                },
+                "jwtSecret": { "type": "string" },
+                "userId": { "type": "string" },
+                "email": { "type": "string" },
+                "roles": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": ["basePort"]
+    },
+    "experimental": {
+      "type": "object",
+      "properties": {
+        "opentelemetry": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "wrapApi": { "type": "boolean" },
+            "apiSdk": { "type": "string" }
+          }
+        },
+        "cli": {
+          "type": "object",
+          "properties": {
+            "autoInstall": { "type": "boolean" },
+            "plugins": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "package": { "type": "string" },
+                  "enabled": { "type": "boolean" }
+                },
+                "required": ["package"]
+              }
+            }
+          }
+        },
+        "useSDLCodeGenForGraphQLTypes": { "type": "boolean" },
+        "streamingSsr": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "rsc": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "realtime": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "reactCompiler": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "lintOnly": { "type": "boolean" }
+          }
+        },
+        "packagesWorkspace": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "eslintLegacyConfigWarning": { "type": "boolean" }
+  }
+}
