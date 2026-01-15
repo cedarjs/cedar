@@ -131,7 +131,7 @@ describe('DevFatalErrorPage', () => {
     expect(requestHeader).toBeInTheDocument()
   })
 
-  it.only('includes response context in document if available', async () => {
+  it('includes response context in document if available', async () => {
     const error: any = new Error('GraphQL error')
     error.mostRecentResponse = {
       data: { user: { id: '123', name: 'John' } },
