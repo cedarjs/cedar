@@ -51,10 +51,7 @@
         "prismaConfig": { "type": "string" },
         "serverConfig": { "type": "string" },
         "debugPort": {
-          "anyOf": [
-            { "type": "integer" },
-            { "type": "boolean" }
-          ]
+          "anyOf": [{ "type": "integer" }, { "type": "boolean" }]
         }
       },
       "required": ["port", "path", "target"]
@@ -63,10 +60,7 @@
       "type": "object",
       "properties": {
         "open": {
-          "anyOf": [
-            { "type": "boolean" },
-            { "type": "string" }
-          ],
+          "anyOf": [{ "type": "boolean" }, { "type": "string" }],
           "description": "Whether to open the browser on start, or the command/browser to use."
         }
       }
