@@ -109,8 +109,8 @@ function formatErrorForClipboard(
     if (sourceFile?.lines && sourceFile.lines.length > 0) {
       const lineIndex = (entry.line || 1) - 1
       const window = 2
-      let start = Math.max(0, lineIndex - window)
-      let end = Math.min(sourceFile.lines.length, lineIndex + window + 1)
+      const start = Math.max(0, lineIndex - window)
+      const end = Math.min(sourceFile.lines.length, lineIndex + window + 1)
 
       lines.push('  Source context:')
       for (let idx = start; idx < end; idx++) {
@@ -165,6 +165,7 @@ export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
 
   const handleCopyAll = async () => {
     const errorText = formatErrorForClipboard(err, stack, typeName, msg, err)
+
     try {
       await navigator.clipboard.writeText(errorText)
       setCopyFeedback('✓ Copied to clipboard')
@@ -172,6 +173,7 @@ export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
     } catch (clipboardError) {
       setCopyFeedback('Failed to copy')
       timeoutRef.current = setTimeout(() => setCopyFeedback(''), 3000)
+      console.error('Failed to copy error to clipboard:', clipboardError)
     }
   }
 
