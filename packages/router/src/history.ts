@@ -5,7 +5,10 @@ export interface NavigateOptions {
 
 export type Listener = (ev?: PopStateEvent, options?: NavigateOptions) => any
 export type BeforeUnloadListener = (ev: BeforeUnloadEvent) => any
-export type BlockerCallback = (tx: { retry: () => void }) => void
+export type BlockerCallback = (tx: {
+  retry: () => void
+  nextLocation: string
+}) => void
 export type Blocker = { id: string; callback: BlockerCallback }
 
 const createHistory = () => {
@@ -51,7 +54,7 @@ const createHistory = () => {
       }
 
       if (blockers.length > 0) {
-        processBlockers(0, performNavigation)
+        processBlockers(0, performNavigation, to)
       } else {
         performNavigation()
       }
@@ -65,7 +68,8 @@ const createHistory = () => {
       }
 
       if (blockers.length > 0) {
-        processBlockers(0, performBack)
+        // FIXME: for navigating back, we don't have the next location info
+        processBlockers(0, performBack, '')
       } else {
         performBack()
       }
@@ -105,10 +109,15 @@ const createHistory = () => {
     },
   }
 
-  const processBlockers = (index: number, navigate: () => void) => {
+  const processBlockers = (
+    index: number,
+    navigate: () => void,
+    nextLocation: string,
+  ) => {
     if (index < blockers.length) {
       blockers[index].callback({
-        retry: () => processBlockers(index + 1, navigate),
+        retry: () => processBlockers(index + 1, navigate, nextLocation),
+        nextLocation,
       })
     } else {
       navigate()
