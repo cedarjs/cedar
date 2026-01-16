@@ -255,7 +255,11 @@ if (resume) {
   process.exit(1)
 }
 
-if (resumePath && !fs.existsSync(path.join(resumePath, 'redwood.toml'))) {
+if (
+  resumePath &&
+  !fs.existsSync(path.join(resumePath, 'cedar.toml')) &&
+  !fs.existsSync(path.join(resumePath, 'redwood.toml'))
+) {
   console.error(
     ansis.red.bold(
       `
@@ -366,21 +370,23 @@ async function runCommand() {
       // But on different ports. If API_DEV_PORT or WEB_DEV_PORT aren't supplied,
       // It just defaults to 8910 and 8911
       // This is helpful in playwright smoke tests to allow us to parallelize
-      const REDWOOD_TOML_PATH = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
-      const redwoodToml = fs.readFileSync(REDWOOD_TOML_PATH).toString()
-      let newRedwoodToml = redwoodToml
+      const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
+      const rwTomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
+      const tomlPath = fs.existsSync(cedarTomlPath) ? cedarTomlPath : rwTomlPath
+      const tomlContent = fs.readFileSync(tomlPath).toString()
+      let newConfigToml = tomlContent
 
-      newRedwoodToml = newRedwoodToml.replace(
+      newConfigToml = newConfigToml.replace(
         /\port = 8910/,
         'port = "${WEB_DEV_PORT:8910}"',
       )
 
-      newRedwoodToml = newRedwoodToml.replace(
+      newConfigToml = newConfigToml.replace(
         /\port = 8911/,
         'port = "${API_DEV_PORT:8911}"',
       )
 
-      fs.writeFileSync(REDWOOD_TOML_PATH, newRedwoodToml)
+      fs.writeFileSync(tomlPath, newConfigToml)
     },
   })
 
@@ -500,7 +506,9 @@ async function runCommand() {
     step: 10,
     title: 'Add workspace packages',
     task: async () => {
-      const tomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
+      const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
+      const rwTomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
+      const tomlPath = fs.existsSync(cedarTomlPath) ? cedarTomlPath : rwTomlPath
       const redwoodToml = fs.readFileSync(tomlPath, 'utf-8')
       const newRedwoodToml =
         redwoodToml + '\n[experimental.packagesWorkspace]\n  enabled = true\n'
