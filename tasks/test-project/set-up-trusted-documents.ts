@@ -27,23 +27,29 @@ async function runCommand() {
     getExecaOptions(OUTPUT_PROJECT_PATH),
   )
 
-  const redwoodTomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
-  const redwoodTomlContent = fs.readFileSync(redwoodTomlPath, 'utf-8')
+  const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
+  const rwTomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
+  const tomlPath = fs.existsSync(cedarTomlPath) ? cedarTomlPath : rwTomlPath
+  const tomlContent = fs.readFileSync(tomlPath).toString()
 
   // NOTE: The checks we do here are very specific. This would never be enough
   // for a user's project. But since we're in full control of the generation of
   // the project here, we can get away with these simpler checks
 
-  if (!redwoodTomlContent.includes('trustedDocuments = true')) {
+  if (!tomlContent.includes('trustedDocuments = true')) {
     console.error(
       'Failed to set up trusted-documents in fragments test-project',
     )
-    console.error('trustedDocuments = true not set in redwood.toml')
+    console.error(
+      'trustedDocuments = true not set in cedar.toml (or redwood.toml)',
+    )
     console.error()
     console.error('Please run this command locally to make sure it works')
     console.error()
-    console.error("For debugging purposes, here's the content of redwood.toml:")
-    console.error(redwoodTomlContent)
+    console.error(
+      "For debugging purposes, here's the content of cedar.toml (or redwood.toml):",
+    )
+    console.error(tomlContent)
     console.error()
     throw new Error('Failed to set up trusted-document')
   }

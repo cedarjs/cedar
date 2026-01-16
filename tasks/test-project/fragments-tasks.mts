@@ -21,10 +21,14 @@ export function fragmentsTasks(outputPath: string) {
     {
       title: 'Enable fragments',
       task: async () => {
-        const redwoodTomlPath = path.join(outputPath, 'redwood.toml')
-        const redwoodToml = fs.readFileSync(redwoodTomlPath).toString()
-        const newRedwoodToml = redwoodToml + '\n[graphql]\n  fragments = true\n'
-        fs.writeFileSync(redwoodTomlPath, newRedwoodToml)
+        const cedarTomlPath = path.join(outputPath, 'cedar.toml')
+        const rwTomlPath = path.join(outputPath, 'redwood.toml')
+        const tomlPath = fs.existsSync(cedarTomlPath)
+          ? cedarTomlPath
+          : rwTomlPath
+        const tomlContent = fs.readFileSync(tomlPath).toString()
+        const newToml = tomlContent + '\n[graphql]\n  fragments = true\n'
+        fs.writeFileSync(tomlPath, newToml)
       },
     },
     {
