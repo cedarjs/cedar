@@ -1,13 +1,14 @@
 ---
 title: App Configuration
-description: Configure your app with redwood.toml
+description: Configure your app with cedar.toml
 ---
 
-# App Configuration: redwood.toml
+# App Configuration: cedar.toml
 
-One of the premier places you can configure your Cedar app is `redwood.toml`. By default, `redwood.toml` lists the following configuration options:
+One of the premier places you can configure your Cedar app is `cedar.toml`. By
+default, `cedar.toml` lists the following configuration options:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   title = "Cedar App"
   port = 8910
@@ -23,8 +24,8 @@ One of the premier places you can configure your Cedar app is `redwood.toml`. By
 
 These are listed by default because they're the ones that you're most likely to configure, but there are plenty more available.
 
-You can think of `redwood.toml` as a frontend for configuring Cedar's build tools.
-For certain options, instead of having to configure build tools directly, there's quick access via `redwood.toml`.
+You can think of `cedar.toml` as a frontend for configuring Cedar's build tools.
+For certain options, instead of having to configure build tools directly, there's quick access via `cedar.toml`.
 
 ## [web]
 
@@ -48,35 +49,37 @@ There's two ways you can do this:
 
 1. Change `apiUrl`:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
-  apiUrl = "https://api.coolredwoodapp.com"
+  apiUrl = "https://api.coolcedarapp.com"
 ```
 
-Now the GraphQL endpoint is at `https://api.coolredwoodapp.com/graphql`.
+Now the GraphQL endpoint is at `https://api.coolcedarapp.com/graphql`.
 
 2. Change `apiGraphQLUrl`:
 
-```diff title="redwood.toml"
+```diff title="cedar.toml"
  [web]
    apiUrl = "/.redwood/functions"
-+  apiGraphQLUrl = "https://api.coolredwoodapp.com/graphql"
++  apiGraphQLUrl = "https://api.coolcedarapp.com/graphql"
 ```
 
 ### Customizing the dbAuth Endpoint
 
 Similarly, if you're using dbAuth, you may decide to host it somewhere else.
-To do this without affecting your other endpoints, you can add `apiDbAuthUrl` to your `redwood.toml`:
+To do this without affecting your other endpoints, you can add `apiDbAuthUrl` to
+your `cedar.toml`:
 
-```diff title="redwood.toml"
+```diff title="cedar.toml"
  [web]
    apiUrl = "/.redwood/functions"
-+  apiDbAuthUrl = "https://api.coolredwoodapp.com/auth"
++  apiDbAuthUrl = "https://api.coolcedarapp.com/auth"
 ```
 
 :::tip
 
-If you host your web and api sides at different domains and don't use a proxy, make sure you have [CORS](./cors.md) configured.
+If you host your web and api sides at different domains and don't use a proxy,
+make sure you have [CORS](./cors.md) configured.
 Otherwise browser security features may block client requests.
 
 :::
@@ -86,7 +89,7 @@ Otherwise browser security features may block client requests.
 `includeEnvironmentVariables` is the set of environment variables that should be available to your web side during dev and build.
 Use it to include env vars like public keys for third-party services you've defined in your `.env` file:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   includeEnvironmentVariables = ["PUBLIC_KEY"]
 ```
@@ -116,7 +119,7 @@ Additional server configuration can be done using [Server File](docker.md#using-
 
 ## [browser]
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [browser]
   open = true
 ```
@@ -129,7 +132,7 @@ There's actually a lot more you can do here. For more, see Vite's docs on [`prev
 
 ## [generate]
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [generate]
   tests = true
   stories = true
@@ -141,7 +144,7 @@ These options allows you to disable the generation of test and story files.
 
 ## [cli]
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [notifications]
   versionUpdates = ["latest"]
 ```
@@ -151,15 +154,15 @@ And if you're on an experimental release line, like canary, there's new versions
 
 If you'd like to get notified (at most, once a day) when there's a new version, set `versionUpdates` to include the version tags you're interested in.
 
-## Using Environment Variables in `redwood.toml`
+## Using Environment Variables in `cedar.toml`
 
-You may find yourself wanting to change keys in `redwood.toml` based on the environment you're deploying to.
+You may find yourself wanting to change keys in `cedar.toml` based on the environment you're deploying to.
 For example, you may want to point to a different `apiUrl` in your staging environment.
 
 You can do so with environment variables.
 Let's look at an example:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   // highlight-start
   title = "App running on ${APP_TITLE}"
@@ -185,7 +188,7 @@ Just remember two things:
 
 To run a Cedar app in a container or VM, you'll want to set both the web and api's `host` to `0.0.0.0` to allow network connections to and from the host:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   host = '0.0.0.0'
 [api]
@@ -205,7 +208,7 @@ The `eslintLegacyConfigWarning` option controls whether Cedar shows deprecation 
 
 To disable these warnings, set it to `false`:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 eslintLegacyConfigWarning = false
 ```
 

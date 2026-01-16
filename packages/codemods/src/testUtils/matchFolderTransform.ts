@@ -63,7 +63,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
   const GLOB_CONFIG = {
     absolute: false,
     dot: true,
-    ignore: ['redwood.toml', '**/*.DS_Store'], // ignore the fake redwood.toml added for getPaths
+    ignore: ['cedar.toml', 'redwood.toml', '**/*.DS_Store'], // ignore the fake config file added for getPaths
   }
 
   // Step 2: Run transform against temp dir

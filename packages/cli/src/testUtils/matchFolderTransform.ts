@@ -49,7 +49,7 @@ async function copyFiles(
   targetDir: string,
   targetGlob = '**/*',
 ): Promise<void> {
-  const IGNORE_PATTERNS = ['redwood.toml', '**/*.DS_Store']
+  const IGNORE_PATTERNS = ['cedar.toml', 'redwood.toml', '**/*.DS_Store']
 
   // Get only files that match the target glob to avoid unnecessary copying
   const filesToCopy = fg.sync(targetGlob, {
@@ -150,7 +150,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     const GLOB_CONFIG = {
       absolute: false,
       dot: true,
-      ignore: ['redwood.toml', '**/*.DS_Store'],
+      ignore: ['cedar.toml', 'redwood.toml', '**/*.DS_Store'],
       onlyFiles: true,
     }
 

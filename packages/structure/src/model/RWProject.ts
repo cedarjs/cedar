@@ -8,6 +8,7 @@ import {
   getPaths,
   processPagesDir,
   getSchemaPath,
+  getConfigPath,
 } from '@cedarjs/project-config'
 
 import { BaseNode } from '../nodes'
@@ -103,7 +104,7 @@ export class RWProject extends BaseNode {
     return dmmf.datamodel.models.map((m) => m.name)
   }
   @lazy() get redwoodTOML(): RWTOML {
-    return new RWTOML(join(this.projectRoot, 'redwood.toml'), this)
+    return new RWTOML(getConfigPath(this.projectRoot), this)
   }
   @lazy() private get processPagesDir() {
     try {

@@ -26,6 +26,9 @@ import { printTaskEpilogue } from './util.js'
 
 export const handler = async ({ force, verbose }) => {
   const ts = isTypeScriptProject()
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+  const configContent = fs.readFileSync(configTomlPath, 'utf-8')
 
   // Used in multiple tasks
   const opentelemetryScriptPath = `${getPaths().api.src}/opentelemetry.${
@@ -69,24 +72,23 @@ export const handler = async ({ force, verbose }) => {
       },
     },
     {
-      title: 'Adding config to redwood.toml...',
+      title: `Adding config to ${configFileName}...`,
       task: (_ctx, task) => {
-        const redwoodTomlPath = getConfigPath()
-        const configContent = fs.readFileSync(redwoodTomlPath, 'utf-8')
         if (!configContent.includes('[experimental.opentelemetry]')) {
           // Use string replace to preserve comments and formatting
           writeFile(
-            redwoodTomlPath,
+            configTomlPath,
             configContent.concat(
               `\n[experimental.opentelemetry]\n\tenabled = true\n\twrapApi = true`,
             ),
             {
-              overwriteExisting: true, // redwood.toml always exists
+              overwriteExisting: true, // cedar.toml or redwood.toml always exists
             },
           )
         } else {
           task.skip(
-            `The [experimental.opentelemetry] config block already exists in your 'redwood.toml' file.`,
+            'The [experimental.opentelemetry] config block already exists in ' +
+              `your ${configFileName} file.`,
           )
         }
       },

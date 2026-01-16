@@ -284,3 +284,8 @@ status = 301
 from = "/docs/8.6/*"
 to = "/docs/8.x/:splat"
 status = 301
+
+[[redirects]]
+from = "/docs/app-configuration-redwood-toml.md"
+to = "/docs/app-configuration-cedar-toml.md"
+status = 301

@@ -67,7 +67,7 @@ The toml values are mapped as follows:
 | `apiUrl`           | `global.RWJS_API_URL`         | URL or absolute path to your api-server  |
 | `apiGraphQLUrl`    | `global.RWJS_API_GRAPHQL_URL` | URL or absolute path to GraphQL function |
 
-See the [redwood.toml reference](app-configuration-redwood-toml.md#api-paths) for more details.
+See the [cedar.toml reference](app-configuration-cedar-toml.md#api-paths) for more details.
 
 ## Development Fatal Error Page
 

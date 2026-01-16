@@ -99,7 +99,8 @@ export const getProjectRoutes = (): RouteSpec[] => {
   const rwProject = getProject(getPaths().base)
   const routes = rwProject.getRouter().routes
 
-  // @ts-expect-error "Bundle" is not found but is in the Spec type?
+  // @ts-expect-error - relativeFilePath issue. Fixing it is a semver breaking
+  // change, so I'll leave it as is for now
   return routes.map((route: any) => {
     const { matchRegexString, routeParams } = route.isNotFound
       ? { matchRegexString: null, routeParams: null }
@@ -116,6 +117,7 @@ export const getProjectRoutes = (): RouteSpec[] => {
         ? path.relative(getPaths().web.src, route.page?.filePath)
         : undefined,
       routeHooks: getRouteHookForPage(route.page?.filePath),
+      bundle: null,
       renderMode: route.renderMode,
       matchRegexString: matchRegexString,
       paramNames: routeParams,

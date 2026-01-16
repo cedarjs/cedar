@@ -17,8 +17,8 @@ export const createProjectMock = () => {
     path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
   )
 
-  // add fake redwood.toml
-  fs.closeSync(fs.openSync(path.join(tempDir, 'redwood.toml'), 'w'))
+  // add fake cedar.toml
+  fs.closeSync(fs.openSync(path.join(tempDir, 'cedar.toml'), 'w'))
 
   return tempDir
 }

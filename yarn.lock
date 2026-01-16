@@ -22214,90 +22214,90 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lefthook-darwin-arm64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-darwin-arm64@npm:2.0.13"
+"lefthook-darwin-arm64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-darwin-arm64@npm:2.0.14"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-darwin-x64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-darwin-x64@npm:2.0.13"
+"lefthook-darwin-x64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-darwin-x64@npm:2.0.14"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-freebsd-arm64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-freebsd-arm64@npm:2.0.13"
+"lefthook-freebsd-arm64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-freebsd-arm64@npm:2.0.14"
   conditions: os=freebsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-freebsd-x64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-freebsd-x64@npm:2.0.13"
+"lefthook-freebsd-x64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-freebsd-x64@npm:2.0.14"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-linux-arm64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-linux-arm64@npm:2.0.13"
+"lefthook-linux-arm64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-linux-arm64@npm:2.0.14"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-linux-x64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-linux-x64@npm:2.0.13"
+"lefthook-linux-x64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-linux-x64@npm:2.0.14"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-openbsd-arm64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-openbsd-arm64@npm:2.0.13"
+"lefthook-openbsd-arm64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-openbsd-arm64@npm:2.0.14"
   conditions: os=openbsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-openbsd-x64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-openbsd-x64@npm:2.0.13"
+"lefthook-openbsd-x64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-openbsd-x64@npm:2.0.14"
   conditions: os=openbsd & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-windows-arm64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-windows-arm64@npm:2.0.13"
+"lefthook-windows-arm64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-windows-arm64@npm:2.0.14"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-windows-x64@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook-windows-x64@npm:2.0.13"
+"lefthook-windows-x64@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook-windows-x64@npm:2.0.14"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook@npm:2.0.13":
-  version: 2.0.13
-  resolution: "lefthook@npm:2.0.13"
+"lefthook@npm:2.0.14":
+  version: 2.0.14
+  resolution: "lefthook@npm:2.0.14"
   dependencies:
-    lefthook-darwin-arm64: "npm:2.0.13"
-    lefthook-darwin-x64: "npm:2.0.13"
-    lefthook-freebsd-arm64: "npm:2.0.13"
-    lefthook-freebsd-x64: "npm:2.0.13"
-    lefthook-linux-arm64: "npm:2.0.13"
-    lefthook-linux-x64: "npm:2.0.13"
-    lefthook-openbsd-arm64: "npm:2.0.13"
-    lefthook-openbsd-x64: "npm:2.0.13"
-    lefthook-windows-arm64: "npm:2.0.13"
-    lefthook-windows-x64: "npm:2.0.13"
+    lefthook-darwin-arm64: "npm:2.0.14"
+    lefthook-darwin-x64: "npm:2.0.14"
+    lefthook-freebsd-arm64: "npm:2.0.14"
+    lefthook-freebsd-x64: "npm:2.0.14"
+    lefthook-linux-arm64: "npm:2.0.14"
+    lefthook-linux-x64: "npm:2.0.14"
+    lefthook-openbsd-arm64: "npm:2.0.14"
+    lefthook-openbsd-x64: "npm:2.0.14"
+    lefthook-windows-arm64: "npm:2.0.14"
+    lefthook-windows-x64: "npm:2.0.14"
   dependenciesMeta:
     lefthook-darwin-arm64:
       optional: true
@@ -22321,7 +22321,7 @@ __metadata:
       optional: true
   bin:
     lefthook: bin/index.js
-  checksum: 10c0/11dc5a952c24325b19803c261331f1e12ea8eaf31c0ab131815955a6e7210323828995c2b9cc73b79c23de960beda27ab71de88afdf00e40f367c6b13cee1ce3
+  checksum: 10c0/f5d94544d23d936aeed4215bd42ae5d6dd9b3d049375f3a638bb43a6db187acb35a40cff6d9b11373fc539fc6e90f991d3c5e222ae01d0d254f055bea8c5db4f
   languageName: node
   linkType: hard
 
@@ -27835,7 +27835,7 @@ __metadata:
     human-id: "npm:^4.1.1"
     jest: "npm:29.7.0"
     jscodeshift: "npm:17.0.0"
-    lefthook: "npm:2.0.13"
+    lefthook: "npm:2.0.14"
     lerna: "npm:9.0.3"
     listr2: "npm:7.0.2"
     make-dir-cli: "npm:4.0.0"
