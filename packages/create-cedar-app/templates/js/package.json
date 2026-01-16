@@ -5,9 +5,9 @@
     "web"
   ],
   "devDependencies": {
-    "@cedarjs/core": "3.0.0-canary.13204",
-    "@cedarjs/project-config": "3.0.0-canary.13204",
-    "@cedarjs/testing": "3.0.0-canary.13204"
+    "@cedarjs/core": "3.0.0-canary.13206",
+    "@cedarjs/project-config": "3.0.0-canary.13206",
+    "@cedarjs/testing": "3.0.0-canary.13206"
   },
   "engines": {
     "node": "=24.x"
