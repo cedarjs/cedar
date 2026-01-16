@@ -75,7 +75,11 @@ function formatErrorForClipboard(
     lines.push(`Kind: ${mostRecentRequest.operationKind}`)
     lines.push('')
     lines.push('Variables:')
-    lines.push(JSON.stringify(mostRecentRequest.variables, null, 2))
+    try {
+      lines.push(JSON.stringify(mostRecentRequest.variables, null, 2))
+    } catch {
+      lines.push('Unable to stringify variables')
+    }
     lines.push('')
     lines.push('Query:')
     lines.push(mostRecentRequest.query)
@@ -87,7 +91,11 @@ function formatErrorForClipboard(
     lines.push('-'.repeat(80))
     lines.push('RESPONSE CONTEXT')
     lines.push('-'.repeat(80))
-    lines.push(JSON.stringify(errorWithMeta.mostRecentResponse, null, 2))
+    try {
+      lines.push(JSON.stringify(errorWithMeta.mostRecentResponse, null, 2))
+    } catch {
+      lines.push('Unable to stringify response')
+    }
     lines.push('')
   }
 
