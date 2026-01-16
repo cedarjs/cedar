@@ -495,7 +495,7 @@ In addition to testing for static things like text and attributes, you can also 
 
 You can read more about these in below documentations:
 
-- [React Testing Library User Events](https://testing-library.com/docs/ecosystem-user-event)
+- [React Testing Library User Events](https://testing-library.com/docs/user-event/intro/)
 - [React Testing Library Jest DOM](https://testing-library.com/docs/ecosystem-jest-dom)
 - [Official Testing Library](https://testing-library.com/docs/).
 
