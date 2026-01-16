@@ -218,7 +218,7 @@ describe('runPreUpgradeScripts', () => {
         'lodash@^4.17.0',
         '@cedarjs/internal@1.0.0',
         'semver',
-        '@cedarjs/structure',
+        '@cedarjs/structure@3.4.1',
         'execa',
       ],
       { cwd: '/tmp/cedar-upgrade-abc123' },
