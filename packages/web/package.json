@@ -144,7 +144,7 @@
   },
   "dependencies": {
     "@apollo/client": "3.13.9",
-    "@babel/runtime-corejs3": "7.28.4",
+    "@babel/runtime-corejs3": "7.28.6",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "@dr.pogodin/react-helmet": "2.0.4",
@@ -162,10 +162,10 @@
   "devDependencies": {
     "@apollo/client-react-streaming": "0.12.3",
     "@arethetypeswrong/cli": "0.18.2",
-    "@babel/cli": "7.28.3",
+    "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@babel/plugin-transform-runtime": "7.28.5",
-    "@babel/runtime": "7.28.4",
+    "@babel/runtime": "7.28.6",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@rollup/plugin-babel": "6.1.0",
