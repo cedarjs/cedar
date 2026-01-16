@@ -48,7 +48,8 @@ For each matching script found, the CLI:
 ## Dependencies
 
 Dependencies are automatically detected from `import` statements. By default,
-the `latest` version is installed.
+the `latest` version is installed, except for Cedar packages which by default
+uses the version of Cedar the user is upgrading to.
 
 To specify a specific version, use a comment directive at the top of the file:
 
