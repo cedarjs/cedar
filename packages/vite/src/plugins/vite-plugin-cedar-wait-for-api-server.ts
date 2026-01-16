@@ -53,11 +53,7 @@ export function cedarWaitForApiServer(): PluginOption {
   }
 }
 
-async function waitForPort(
-  port: number,
-  host: string,
-  timeout = 60000,
-): Promise<void> {
+async function waitForPort(port: number, host: string, timeout = 60000) {
   const start = Date.now()
   while (Date.now() - start < timeout) {
     const isOpen = await checkPort(port, host)
@@ -72,7 +68,7 @@ async function waitForPort(
   throw new Error('Timeout waiting for port')
 }
 
-function checkPort(port: number, host: string): Promise<boolean> {
+function checkPort(port: number, host: string) {
   return new Promise((resolve) => {
     const socket = new net.Socket()
 
