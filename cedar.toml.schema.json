@@ -1,14 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CedarJS Configuration",
-  "description": "Configuration schema for cedar.toml / redwood.toml",
+  "description": "Configuration schema for cedar.toml. See https://cedarjs.com/docs/canary/app-configuration-cedar-toml for full documentation.",
   "type": "object",
   "properties": {
     "web": {
       "type": "object",
       "description": "Configuration for the web side (browser target).",
       "properties": {
-        "title": { "type": "string" },
+        "title": {
+          "type": "string",
+          "description": "The default <title> used for your pages"
+        },
         "name": { "type": "string" },
         "host": { "type": "string" },
         "port": { "type": "integer" },
@@ -33,7 +36,7 @@
         "a11y": { "type": "boolean" },
         "sourceMap": { "type": "boolean" }
       },
-      "required": ["port", "path", "target", "apiUrl"]
+      "required": ["port", "apiUrl"]
     },
     "api": {
       "type": "object",
@@ -54,7 +57,7 @@
           "anyOf": [{ "type": "integer" }, { "type": "boolean" }]
         }
       },
-      "required": ["port", "path", "target"]
+      "required": ["port"]
     },
     "browser": {
       "type": "object",
