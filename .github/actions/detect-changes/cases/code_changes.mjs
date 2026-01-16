@@ -44,7 +44,7 @@ function isNonCodeWorkflowOrAction(filePath) {
     '.github/scripts/publish-release-candidate.ts',
 
     '.github/workflows/require-milestone.yml',
-    '.github/actions/action.yml',
+    '.github/actions/require-milestone/action.yml',
     '.github/actions/requireMilestone.mjs',
 
     '.github/workflows/require-release-label.yml',
