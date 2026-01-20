@@ -495,7 +495,7 @@ In addition to testing for static things like text and attributes, you can also 
 
 You can read more about these in below documentations:
 
-- [React Testing Library User Events](https://testing-library.com/docs/ecosystem-user-event)
+- [React Testing Library User Events](https://testing-library.com/docs/user-event/intro/)
 - [React Testing Library Jest DOM](https://testing-library.com/docs/ecosystem-jest-dom)
 - [Official Testing Library](https://testing-library.com/docs/).
 
@@ -1118,7 +1118,7 @@ export const standard = (variables) => {
 
 > An alternative explanation, written in TypeScript and featuring a Storybook example, [can be found on the RedwoodJS forum](https://community.redwoodjs.com/t/testing-forms-using-testing-library-user-event/2058).
 
-To test our forms, we can make use of of the [`@testing-library/user-event`](https://testing-library.com/docs/ecosystem-user-event/) library which helps us approximate the the events that would actually happen in the browser if a real user were interacting with our forms. For example, calling `userEvent.click(checkbox)` toggles a checkbox as if a user had clicked it.
+To test our forms, we can make use of of the [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro/) library which helps us approximate the the events that would actually happen in the browser if a real user were interacting with our forms. For example, calling `userEvent.click(checkbox)` toggles a checkbox as if a user had clicked it.
 
 ### Installing `@testing-library/user-event`
 
