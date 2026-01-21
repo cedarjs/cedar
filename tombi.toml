@@ -1,2 +1,3 @@
-[schema]
-associations = { "cedar.toml" = "cedar.schema.json", "redwood.toml" = "cedar.schema.json" }
+[[schemas]]
+path = "cedar.toml.schema.json"
+include = ["cedar.toml"]
