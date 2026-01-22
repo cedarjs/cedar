@@ -13,38 +13,64 @@ export function cedarWaitForApiServer(): PluginOption {
     name: 'cedar-wait-for-api-server',
     apply: 'serve',
     configureServer(server: ViteDevServer) {
-      server.middlewares.use(async (req, _res, next) => {
-        const url = req.originalUrl || req.url
-        if (!url) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = req.originalUrl
+
+        const apiUrl = cedarConfig.web.apiUrl
+        // By default the GraphQL API URL is apiUrl + '/graphql'. It is
+        // however possible to configure it to something completely different,
+        // so we have to check it separately
+        const apiGqlUrl = cedarConfig.web.apiGraphQLUrl
+
+        const isApiRequest =
+          url && (url.startsWith(apiUrl) || url === apiGqlUrl)
+
+        if (!isApiRequest) {
           return next()
         }
 
-        const apiUrl = cedarConfig.web.apiUrl
-        const apiGqlUrl = cedarConfig.web.apiGraphQLUrl
+        try {
+          await waitForPort(apiPort, apiHost)
+        } catch {
+          const message =
+            'Vite timed out waiting for the Cedar API server ' +
+            `at ${apiHost}:${apiPort}` +
+            '\n' +
+            'Please manually refresh the page when the server is ready'
 
-        let shouldWait = false
+          // The `console.error` call here makes the error show in the terminal.
+          // The response we send further down makes the error show in the
+          // browser.
+          console.error(message)
 
-        if (url.includes('/graphql')) {
-          shouldWait = true
-        } else if (apiUrl.startsWith('/') && url.startsWith(apiUrl)) {
-          shouldWait = true
-        } else if (
-          apiGqlUrl &&
-          apiGqlUrl.startsWith('/') &&
-          url.startsWith(apiGqlUrl)
-        ) {
-          shouldWait = true
-        }
+          // This heuristic isn't perfect. It's written to handle dbAuth.
+          // But it's very unlikely the user would have code that does
+          // this exact request without it being a auth token request.
+          // We need this special handling because we don't want the error
+          // message below to be used as the auth token.
+          const isAuthTokenRequest = req.url === '/auth?method=getToken'
 
-        if (shouldWait) {
-          try {
-            await waitForPort(apiPort, apiHost)
-          } catch {
-            console.error(
-              '[cedar-wait-for-api-server] Timed out waiting for API server ' +
-                `at ${apiHost}: ${apiPort}`,
-            )
+          const responseBody = {
+            errors: [{ message }],
           }
+
+          // drain any incoming request body so the socket isn't left with
+          // unread bytes
+          req.resume()
+
+          const body = JSON.stringify(responseBody)
+
+          // Use 203 to indicate that the response was modified by a proxy
+          res.writeHead(203, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            ...(!isAuthTokenRequest && {
+              'Content-Length': Buffer.byteLength(body),
+            }),
+            Connection: 'close',
+          })
+
+          return isAuthTokenRequest ? res.end() : res.end(body)
         }
 
         next()
@@ -53,13 +79,23 @@ export function cedarWaitForApiServer(): PluginOption {
   }
 }
 
-async function waitForPort(port: number, host: string, timeout = 60000) {
+const ONE_MINUTE_IN_MS = 60000
+
+async function waitForPort(port: number, host: string) {
   const start = Date.now()
-  while (Date.now() - start < timeout) {
+  let lastLogTime = Date.now()
+  while (Date.now() - start < ONE_MINUTE_IN_MS) {
     const isOpen = await checkPort(port, host)
 
     if (isOpen) {
       return
+    }
+
+    // Only log every 6 seconds, i.e. 10 times per minute
+    const now = Date.now()
+    if (now - lastLogTime >= 6000) {
+      console.log('⏳ Waiting for API server...')
+      lastLogTime = now
     }
 
     await new Promise((resolve) => setTimeout(resolve, 500))
