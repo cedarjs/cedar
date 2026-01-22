@@ -38,9 +38,9 @@ type PluginOptions = {
  * Pre-configured vite plugin, with required config for CedarJS apps.
  */
 export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
-  const rwConfig = getConfig()
+  const cedarConfig = getConfig()
 
-  const rscEnabled = rwConfig.experimental?.rsc?.enabled
+  const rscEnabled = cedarConfig.experimental?.rsc?.enabled
 
   const webSideDefaultBabelConfig = getWebSideDefaultBabelConfig()
 
