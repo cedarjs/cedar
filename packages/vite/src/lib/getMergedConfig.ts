@@ -18,25 +18,25 @@ import {
  * Note that returning plugins in this function will have no effect on the
  * build
  */
-export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
+export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
   return (userConfig: ViteUserConfig, env: ConfigEnv): ViteUserConfig => {
     let apiHost = process.env.REDWOOD_API_HOST
-    apiHost ??= rwConfig.api.host
+    apiHost ??= cedarConfig.api.host
     apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '[::]'
 
-    const streamingSsrEnabled = rwConfig.experimental.streamingSsr?.enabled
+    const streamingSsrEnabled = cedarConfig.experimental.streamingSsr?.enabled
     // @MARK: note that most RSC settings sit in their individual build functions
-    const rscEnabled = rwConfig.experimental.rsc?.enabled
+    const rscEnabled = cedarConfig.experimental.rsc?.enabled
 
     let apiPort
     if (process.env.REDWOOD_API_PORT) {
       apiPort = parseInt(process.env.REDWOOD_API_PORT)
     } else {
-      apiPort = rwConfig.api.port
+      apiPort = cedarConfig.api.port
     }
 
-    const defaultRwViteConfig: ViteUserConfig = {
-      root: rwPaths.web.src,
+    const defaultCedarViteConfig: ViteUserConfig = {
+      root: cedarPaths.web.src,
       // @MARK: when we have these aliases, the warnings from the FE server go
       // away BUT, if you have imports like this:
       // ```
@@ -50,28 +50,28 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
       //   alias: [
       //     {
       //       find: 'src',
-      //       replacement: rwPaths.web.src,
+      //       replacement: cedarPaths.web.src,
       //     },
       //   ],
       // },
       envPrefix: 'REDWOOD_ENV_',
-      publicDir: path.join(rwPaths.web.base, 'public'),
+      publicDir: path.join(cedarPaths.web.base, 'public'),
       define: getEnvVarDefinitions(),
       css: {
         // @NOTE config path is relative to where vite.config.js is if you use
         // a relative path
-        postcss: rwPaths.web.config,
+        postcss: cedarPaths.web.config,
       },
       server: {
-        open: rwConfig.browser.open,
-        port: rwConfig.web.port,
+        open: cedarConfig.browser.open,
+        port: cedarConfig.web.port,
         host: true, // Listen to all hosts
         proxy: {
-          [rwConfig.web.apiUrl]: {
+          [cedarConfig.web.apiUrl]: {
             target: `http://${apiHost}:${apiPort}`,
             changeOrigin: false,
             // Remove the `.redwood/functions` part, but leave the `/graphql`
-            rewrite: (path) => path.replace(rwConfig.web.apiUrl, ''),
+            rewrite: (path) => path.replace(cedarConfig.web.apiUrl, ''),
             configure: (proxy) => {
               // @MARK: this is a hack to prevent showing confusing proxy
               // errors on startup because Vite launches so much faster than
@@ -93,7 +93,7 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
 
                 // This heuristic isn't perfect. It's written to handle dbAuth.
                 // But it's very unlikely the user would have code that does
-                // this exact request without it being a auth token request.
+                // this exact request without it being an auth token request.
                 // We need this special handling because we don't want the error
                 // message below to be used as the auth token.
                 const isAuthTokenRequest =
@@ -133,12 +133,12 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
         // NOTE this gets overridden when build gets called anyway!
         outDir:
           streamingSsrEnabled || rscEnabled
-            ? rwPaths.web.distBrowser
-            : rwPaths.web.dist,
+            ? cedarPaths.web.distBrowser
+            : cedarPaths.web.dist,
         emptyOutDir: true,
         manifest: !env.isSsrBuild ? 'client-build-manifest.json' : undefined,
         // Note that sourcemap can be boolean or 'inline'
-        sourcemap: !env.isSsrBuild && rwConfig.web.sourceMap,
+        sourcemap: !env.isSsrBuild && cedarConfig.web.sourceMap,
         rollupOptions: {
           input: getRollupInput(!!env.isSsrBuild),
         },
@@ -171,7 +171,7 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
       },
     }
 
-    return mergeConfig(defaultRwViteConfig, userConfig)
+    return mergeConfig(defaultCedarViteConfig, userConfig)
   }
 }
 
@@ -189,28 +189,28 @@ export function getMergedConfig(rwConfig: Config, rwPaths: Paths) {
  * @returns Rollup input Options
  */
 function getRollupInput(ssr: boolean): InputOption | undefined {
-  const rwConfig = getConfig()
-  const rwPaths = getPaths()
+  const cedarConfig = getConfig()
+  const cedarPaths = getPaths()
 
-  if (!rwPaths.web.entryClient) {
+  if (!cedarPaths.web.entryClient) {
     throw new Error('entryClient not defined')
   }
 
-  const streamingEnabled = rwConfig.experimental?.streamingSsr?.enabled
-  const rscEnabled = rwConfig.experimental?.rsc?.enabled
+  const streamingEnabled = cedarConfig.experimental?.streamingSsr?.enabled
+  const rscEnabled = cedarConfig.experimental?.rsc?.enabled
 
   // @NOTE once streaming ssr is out of experimental, this will become the
   // default
   if (streamingEnabled) {
     if (ssr) {
-      if (!rwPaths.web.entryServer) {
+      if (!cedarPaths.web.entryServer) {
         throw new Error('entryServer not defined')
       }
 
       if (rscEnabled) {
         return {
-          Document: rwPaths.web.document,
-          'entry.server': rwPaths.web.entryServer,
+          Document: cedarPaths.web.document,
+          'entry.server': cedarPaths.web.entryServer,
         }
       }
 
@@ -220,14 +220,14 @@ function getRollupInput(ssr: boolean): InputOption | undefined {
         // enabled, but not when RSC + SSR are both enabled
         // For RSC we have this configured in rscBuildForServer.ts to get a
         // build with the proper resolution conditions set.
-        'entry.server': rwPaths.web.entryServer,
+        'entry.server': cedarPaths.web.entryServer,
         // We need the document for React's fallback
-        Document: rwPaths.web.document,
+        Document: cedarPaths.web.document,
       }
     }
 
-    return rwPaths.web.entryClient
+    return cedarPaths.web.entryClient
   }
 
-  return rwPaths.web.html
+  return cedarPaths.web.html
 }
