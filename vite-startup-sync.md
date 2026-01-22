@@ -36,180 +36,180 @@ Showing up to 200 items (files + folders). Folders or files indicated with ... c
 ├───tsconfig.json
 ├───yarn.config.cjs
 ├───yarn.lock
-├───__fixtures__/
-│   ├───empty-project/
-│   ├───esm-test-project/
-│   ├───example-todo-main/
-│   ├───example-todo-main-with-errors/
-│   ├───fragment-test-project/
-│   ├───rsc-caching/
-│   ├───test-project/
-│   ├───test-project-rsa/
-│   └───test-project-rsc-kitchen-sink/
+├───**fixtures**/
+│ ├───empty-project/
+│ ├───esm-test-project/
+│ ├───example-todo-main/
+│ ├───example-todo-main-with-errors/
+│ ├───fragment-test-project/
+│ ├───rsc-caching/
+│ ├───test-project/
+│ ├───test-project-rsa/
+│ └───test-project-rsc-kitchen-sink/
 ├───.changesets/
-│   ├───102.md
-│   ├───108.md
-│   ├───109.md
-│   ├───11380.md
-│   ├───11447.md
-│   ├───11458.md
-│   ├───11459.md
-│   ├───11469.md
-│   ├───11531.md
-│   ├───11533.md
-│   ├───11534.md
-│   ├───11540.md
-│   ├───11542.md
-│   ├───11572.md
-│   ├───11578.md
-│   ├───11587.md
-│   ├───11591.md
-│   ├───11593.md
-│   ├───11601.md
-│   ├───11605.md
-│   ├───11638.md
-│   ├───11639.md
-│   ├───11645.md
-│   ├───11651.md
-│   ├───11653.md
-│   ├───11684.md
-│   ├───11691.md
-│   ├───11693.md
-│   ├───11718.md
-│   ├───11724.md
-│   ├───11731.md
-│   ├───11737.md
-│   ├───11744.md
-│   ├───11745.md
-│   ├───11746.md
-│   ├───11748.md
-│   ├───11758.md
-│   ├───11766.md
-│   ├───11771.md
-│   ├───11773.md
-│   ├───11776.md
-│   ├───11862.md
-│   ├───11869.md
-│   ├───11878.md
-│   ├───11879.md
-│   ├───11889.md
-│   ├───11920.md
-│   ├───11931.md
-│   ├───11946.md
-│   ├───11957.md
-│   ├───11966.md
-│   ├───11981.md
-│   ├───11985.md
-│   ├───11988.md
-│   ├───11989.md
-│   ├───138.md
-│   ├───151.md
-│   ├───163.md
-│   ├───166.md
-│   ├───180.md
-│   ├───183.md
-│   ├───189.md
-│   ├───190.md
-│   ├───29.md
-│   ├───31.md
-│   ├───32.md
-│   ├───42.md
-│   ├───475.md
-│   ├───67.md
-│   ├───8.md
-│   └───99.md
+│ ├───102.md
+│ ├───108.md
+│ ├───109.md
+│ ├───11380.md
+│ ├───11447.md
+│ ├───11458.md
+│ ├───11459.md
+│ ├───11469.md
+│ ├───11531.md
+│ ├───11533.md
+│ ├───11534.md
+│ ├───11540.md
+│ ├───11542.md
+│ ├───11572.md
+│ ├───11578.md
+│ ├───11587.md
+│ ├───11591.md
+│ ├───11593.md
+│ ├───11601.md
+│ ├───11605.md
+│ ├───11638.md
+│ ├───11639.md
+│ ├───11645.md
+│ ├───11651.md
+│ ├───11653.md
+│ ├───11684.md
+│ ├───11691.md
+│ ├───11693.md
+│ ├───11718.md
+│ ├───11724.md
+│ ├───11731.md
+│ ├───11737.md
+│ ├───11744.md
+│ ├───11745.md
+│ ├───11746.md
+│ ├───11748.md
+│ ├───11758.md
+│ ├───11766.md
+│ ├───11771.md
+│ ├───11773.md
+│ ├───11776.md
+│ ├───11862.md
+│ ├───11869.md
+│ ├───11878.md
+│ ├───11879.md
+│ ├───11889.md
+│ ├───11920.md
+│ ├───11931.md
+│ ├───11946.md
+│ ├───11957.md
+│ ├───11966.md
+│ ├───11981.md
+│ ├───11985.md
+│ ├───11988.md
+│ ├───11989.md
+│ ├───138.md
+│ ├───151.md
+│ ├───163.md
+│ ├───166.md
+│ ├───180.md
+│ ├───183.md
+│ ├───189.md
+│ ├───190.md
+│ ├───29.md
+│ ├───31.md
+│ ├───32.md
+│ ├───42.md
+│ ├───475.md
+│ ├───67.md
+│ ├───8.md
+│ └───99.md
 ├───.devcontainer/
-│   └───devcontainer.json
+│ └───devcontainer.json
 ├───.git/...
 ├───.github/
-│   ├───renovate.json
-│   ├───actions/
-│   ├───codeql/
-│   ├───ISSUE_TEMPLATE/
-│   ├───scripts/
-│   └───workflows/
+│ ├───renovate.json
+│ ├───actions/
+│ ├───codeql/
+│ ├───ISSUE_TEMPLATE/
+│ ├───scripts/
+│ └───workflows/
 ├───.nx/
-│   ├───cache/...
-│   └───workspace-data/...
+│ ├───cache/...
+│ └───workspace-data/...
 ├───.ona/
-│   └───automations.yaml
+│ └───automations.yaml
 ├───.vscode/
-│   ├───extensions.json
-│   ├───README.md
-│   └───settings.json
+│ ├───extensions.json
+│ ├───README.md
+│ └───settings.json
 ├───.yarn/
 ├───docs/
-│   ├───.gitignore
-│   ├───docusaurus.config.ts
-│   ├───ignore_build.mjs
-│   ├───netlify.toml
-│   ├───package.json
-│   ├───prettier.config.js
-│   ├───README.md
-│   ├───sidebars.js
-│   ├───tsconfig.json
-│   ├───versions.json
-│   ├───yarn.lock
-│   ├───.yarn/
-│   ├───docs/
-│   ├───implementation-docs/
-│   ├───node_modules/...
-│   ├───src/
-│   ├───static/
-│   ├───versioned_docs/
-│   └───versioned_sidebars/
+│ ├───.gitignore
+│ ├───docusaurus.config.ts
+│ ├───ignore_build.mjs
+│ ├───netlify.toml
+│ ├───package.json
+│ ├───prettier.config.js
+│ ├───README.md
+│ ├───sidebars.js
+│ ├───tsconfig.json
+│ ├───versions.json
+│ ├───yarn.lock
+│ ├───.yarn/
+│ ├───docs/
+│ ├───implementation-docs/
+│ ├───node_modules/...
+│ ├───src/
+│ ├───static/
+│ ├───versioned_docs/
+│ └───versioned_sidebars/
 ├───node_modules/...
 ├───packages/
-│   ├───adapters/
-│   ├───api/
-│   ├───api-server/
-│   ├───auth/
-│   ├───auth-providers/
-│   ├───babel-config/
-│   ├───cli/
-│   ├───cli-helpers/
-│   ├───cli-packages/
-│   ├───codemods/
-│   ├───context/
-│   ├───cookie-jar/
-│   ├───core/
-│   ├───create-cedar-app/
-│   ├───create-cedar-rsc-app/
-│   ├───eslint-config/
-│   ├───eslint-plugin/
-│   ├───forms/
-│   ├───framework-tools/
-│   ├───graphql-server/
-│   ├───internal/
-│   ├───jobs/
-│   ├───mailer/
-│   ├───ogimage-gen/
-│   ├───prerender/
-│   ├───project-config/
-│   ├───realtime/
-│   ├───record/
-│   ├───router/
-│   ├───server-store/
-│   ├───storage/
-│   ├───storybook/
-│   ├───structure/
-│   ├───telemetry/
-│   ├───testing/
-│   ├───tui/
-│   ├───vite/
-│   ├───web/
-│   └───web-server/
+│ ├───adapters/
+│ ├───api/
+│ ├───api-server/
+│ ├───auth/
+│ ├───auth-providers/
+│ ├───babel-config/
+│ ├───cli/
+│ ├───cli-helpers/
+│ ├───cli-packages/
+│ ├───codemods/
+│ ├───context/
+│ ├───cookie-jar/
+│ ├───core/
+│ ├───create-cedar-app/
+│ ├───create-cedar-rsc-app/
+│ ├───eslint-config/
+│ ├───eslint-plugin/
+│ ├───forms/
+│ ├───framework-tools/
+│ ├───graphql-server/
+│ ├───internal/
+│ ├───jobs/
+│ ├───mailer/
+│ ├───ogimage-gen/
+│ ├───prerender/
+│ ├───project-config/
+│ ├───realtime/
+│ ├───record/
+│ ├───router/
+│ ├───server-store/
+│ ├───storage/
+│ ├───storybook/
+│ ├───structure/
+│ ├───telemetry/
+│ ├───testing/
+│ ├───tui/
+│ ├───vite/
+│ ├───web/
+│ └───web-server/
 ├───tasks/
-│   ├───check-no-only.mts
-│   ├───clean-build.mts
-│   ├───clean.mjs
-│   ├───downgradeToReact18.mts
-│   ├───generateDependencyGraph.mjs
-│   ├───getPackagesVersionsForTag.mjs
-│   ├───run-e2e.cjs
-│   ├───tsconfig.json
-│   ├───update-package-versions
-│   └───...
+│ ├───check-no-only.mts
+│ ├───clean-build.mts
+│ ├───clean.mjs
+│ ├───downgradeToReact18.mts
+│ ├───generateDependencyGraph.mjs
+│ ├───getPackagesVersionsForTag.mjs
+│ ├───run-e2e.cjs
+│ ├───tsconfig.json
+│ ├───update-package-versions
+│ └───...
 └───upgrade-scripts/
 
 Reminder: Do not return an empty response when a tool call is required.
@@ -220,10 +220,10 @@ My setup is complete. I will provide my first command in the next turn.
 
 ## USER 🧑‍💻
 
-I just had this conversation about fixing a frontend <-> backend sync issue during server startup. We implemented a fix in userland that seems to work. Now I want to implement it in the framework itself so not all our users have to do it on their own. 
+I just had this conversation about fixing a frontend <-> backend sync issue during server startup. We implemented a fix in userland that seems to work. Now I want to implement it in the framework itself so not all our users have to do it on their own.
 
 1. Please validate that the solution we arrived at is the best solution to use as a generic fraemwork level solution
-2. If it is, please add it to the main cedar plugin in @file:///Users/tobbe/dev/cedarjs/cedar-gemini/packages/vite/src/index.ts 
+2. If it is, please add it to the main cedar plugin in @file:///Users/tobbe/dev/cedarjs/cedar-gemini/packages/vite/src/index.ts
 
 Here's the conversation we had: @file:///Users/tobbe/dev/cedarjs/cedar-gemini/DEV_SERVER_STARTUP_SYNC.md
 --- Content from referenced context ---
@@ -234,9 +234,9 @@ import type { PluginOption } from 'vite'
 import { getWebSideDefaultBabelConfig } from '@cedarjs/babel-config'
 import { getConfig } from '@cedarjs/project-config'
 import {
-  autoImportsPlugin,
-  cedarJsRouterImportTransformPlugin,
-  createAuthImportTransformPlugin,
+autoImportsPlugin,
+cedarJsRouterImportTransformPlugin,
+createAuthImportTransformPlugin,
 } from '@cedarjs/testing/web/vitest'
 
 import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
@@ -260,55 +260,57 @@ export { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 export { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 
 type PluginOptions = {
-  mode?: string | undefined
+mode?: string | undefined
 }
 
-/**
- * Pre-configured vite plugin, with required config for CedarJS apps.
- */
-export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
+/\*\*
+
+- Pre-configured vite plugin, with required config for CedarJS apps.
+  \*/
+  export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
   const rwConfig = getConfig()
 
-  const rscEnabled = rwConfig.experimental?.rsc?.enabled
+const rscEnabled = rwConfig.experimental?.rsc?.enabled
 
-  const webSideDefaultBabelConfig = getWebSideDefaultBabelConfig()
+const webSideDefaultBabelConfig = getWebSideDefaultBabelConfig()
 
-  const babelConfig = {
-    ...webSideDefaultBabelConfig,
-    // For RSC we don't want to include the routes auto-loader plugin as we
-    // handle that differently in each specific RSC build stage
-    overrides: rscEnabled
-      ? webSideDefaultBabelConfig.overrides.filter((override) => {
-          return !override.plugins?.some((plugin) => {
-            return (
-              Array.isArray(plugin) &&
-              plugin[2] === 'babel-plugin-redwood-routes-auto-loader'
-            )
-          })
-        })
-      : webSideDefaultBabelConfig.overrides,
-  }
-
-  return [
-    mode === 'test' && cedarJsRouterImportTransformPlugin(),
-    mode === 'test' && createAuthImportTransformPlugin(),
-    mode === 'test' && autoImportsPlugin(),
-    cedarNodePolyfills(),
-    cedarHtmlEnvPlugin(),
-    cedarEntryInjectionPlugin(),
-    cedarMergedConfig(),
-    cedarSwapApolloProvider(),
-    cedarCellTransform(),
-    cedarTransformJsAsJsx(),
-    cedarRemoveFromBundle(),
-    react({ babel: babelConfig }),
-  ]
+const babelConfig = {
+...webSideDefaultBabelConfig,
+// For RSC we don't want to include the routes auto-loader plugin as we
+// handle that differently in each specific RSC build stage
+overrides: rscEnabled
+? webSideDefaultBabelConfig.overrides.filter((override) => {
+return !override.plugins?.some((plugin) => {
+return (
+Array.isArray(plugin) &&
+plugin[2] === 'babel-plugin-redwood-routes-auto-loader'
+)
+})
+})
+: webSideDefaultBabelConfig.overrides,
 }
 
-/** @deprecated Please use the named `cedar` export instead */
+return [
+mode === 'test' && cedarJsRouterImportTransformPlugin(),
+mode === 'test' && createAuthImportTransformPlugin(),
+mode === 'test' && autoImportsPlugin(),
+cedarNodePolyfills(),
+cedarHtmlEnvPlugin(),
+cedarEntryInjectionPlugin(),
+cedarMergedConfig(),
+cedarSwapApolloProvider(),
+cedarCellTransform(),
+cedarTransformJsAsJsx(),
+cedarRemoveFromBundle(),
+react({ babel: babelConfig }),
+]
+}
+
+/\*_ @deprecated Please use the named `cedar` export instead _/
 export default cedar
 
 Content from @file:///Users/tobbe/dev/cedarjs/cedar-gemini/DEV_SERVER_STARTUP_SYNC.md:
+
 ## User
 
 When I run `yarn cedar dev` I see this
@@ -563,7 +565,6 @@ You can now run your development server as usual:
 yarn cedar dev
 ```
 
-
 ---
 
 ## MODEL ✨
@@ -624,17 +625,17 @@ The solution of using a Vite plugin to poll the API server port is a robust and 
 **Changes Implemented:**
 
 1.  **Created Plugin:** `packages/vite/src/plugins/vite-plugin-cedar-wait-for-api-server.ts`
-    *   This plugin reads the project configuration to identify the API port (default 8911) and the host.
-    *   It intercepts requests to the configured API paths (e.g., `/graphql` and `web.apiUrl`).
-    *   It uses a polling mechanism with `net.connect` to wait until the API server port is open before allowing the request to proceed.
-    *   Includes a timeout and logging to aid in debugging if the server fails to start.
+    - This plugin reads the project configuration to identify the API port (default 8911) and the host.
+    - It intercepts requests to the configured API paths (e.g., `/graphql` and `web.apiUrl`).
+    - It uses a polling mechanism with `net.connect` to wait until the API server port is open before allowing the request to proceed.
+    - Includes a timeout and logging to aid in debugging if the server fails to start.
 
 2.  **Integrated Plugin:** `packages/vite/src/index.ts`
-    *   Imported and exported `cedarWaitForApiServer`.
-    *   Added `cedarWaitForApiServer()` to the default `cedar()` Vite plugin configuration, ensuring it is active for all CedarJS projects using Vite.
+    - Imported and exported `cedarWaitForApiServer`.
+    - Added `cedarWaitForApiServer()` to the default `cedar()` Vite plugin configuration, ensuring it is active for all CedarJS projects using Vite.
 
 3.  **Verified:**
-    *   Ran `yarn workspace @cedarjs/vite run build:types` to ensure the new code passes TypeScript compilation. The build was successful.
+    - Ran `yarn workspace @cedarjs/vite run build:types` to ensure the new code passes TypeScript compilation. The build was successful.
 
 This generic framework-level solution replaces the need for user-land workarounds.
 
@@ -652,9 +653,9 @@ In this specific architecture, **polling is indeed the most robust and standard 
 
 1.  **Decoupled Processes**: The API server and the Vite dev server run as separate operating system processes, orchestrated by the CLI's `dev` command (using `concurrently`). They don't share memory or state.
 2.  **Startup Deadlocks**: If we implemented a "push" notification (where the API server tells Vite "I'm ready"), we would create a new problem:
-    *   If the API server starts *before* Vite, it would try to notify a server that doesn't exist yet, failing with `ECONNREFUSED`.
-    *   The API server would then have to implement... **polling** (retrying the notification) until Vite is up.
-    *   We would just be moving the polling logic from the frontend to the backend, which is arguably worse because it clutters the API server code with dev-environment specific logic.
+    - If the API server starts _before_ Vite, it would try to notify a server that doesn't exist yet, failing with `ECONNREFUSED`.
+    - The API server would then have to implement... **polling** (retrying the notification) until Vite is up.
+    - We would just be moving the polling logic from the frontend to the backend, which is arguably worse because it clutters the API server code with dev-environment specific logic.
 3.  **Simplicity & Reliability**: Polling a local TCP port is incredibly cheap (milliseconds) and reliable. It works regardless of which process starts first, if one crashes and restarts, or if the user manually restarts one side.
 
 The solution I've implemented effectively acts as a `wait-on` utility integrated directly into Vite, ensuring the frontend never tries to talk to a dead backend, without coupling the backend to the frontend's existence.
