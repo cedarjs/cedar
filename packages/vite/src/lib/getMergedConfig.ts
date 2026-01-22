@@ -12,7 +12,7 @@ import {
 } from '@cedarjs/project-config'
 
 /**
- * This function will merge in the default Redwood Vite config passed into the
+ * This function will merge in the default Cedar Vite config passed into the
  * build function (or in Vite.config.xxx)
  *
  * Note that returning plugins in this function will have no effect on the
@@ -147,7 +147,7 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
       // because rsc builds want false, client and server build wants true
       optimizeDeps: {
         esbuildOptions: {
-          // @MARK this is because JS projects in Redwood don't have .jsx
+          // @MARK this is because JS projects in Cedar don't have .jsx
           // extensions
           loader: {
             '.js': 'jsx',
