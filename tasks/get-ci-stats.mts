@@ -106,8 +106,9 @@ async function main() {
     }
 
     console.log('')
+    console.log(`Found ${runs.length} runs.`)
     console.log(
-      `Found ${runs.length} runs. Filtering short runs (< 10m) and calculating statistics...`,
+      `Filtering short runs(<10m) and calculating statistics for the last ${count} runs...`,
     )
     console.log('')
 
