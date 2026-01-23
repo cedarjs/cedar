@@ -524,13 +524,13 @@ const useVersion = () => {
               'content-type': 'application/json',
             },
             body: JSON.stringify({
-              query: 'query RedwoodVersion { redwood { version } }',
+              query: 'query CedarVersion { cedar { version } }',
             }),
           },
         )
 
         const versionData = await response.json()
-        setVersion(versionData?.data?.redwood?.version || null)
+        setVersion(versionData?.data?.cedar?.version || null)
       } catch (err) {
         console.error('Unable to get CedarJS version: ', err)
       }
