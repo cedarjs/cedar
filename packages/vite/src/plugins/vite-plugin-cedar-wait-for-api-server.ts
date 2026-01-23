@@ -112,6 +112,10 @@ async function waitForPort(port: number, host: string) {
     const isOpen = await checkPort(port, host)
 
     if (isOpen) {
+      if (lastLogTime - start >= 6000) {
+        console.log('✅ API server is ready')
+      }
+
       return
     }
 
