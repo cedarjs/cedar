@@ -4,6 +4,9 @@ import type { PluginOption, ViteDevServer } from 'vite'
 
 import { getConfig } from '@cedarjs/project-config'
 
+let waitingPromise: Promise<void> | null = null
+let serverHasBeenUp = false
+
 export function cedarWaitForApiServer(): PluginOption {
   const cedarConfig = getConfig()
   const apiPort = cedarConfig.api.port
@@ -16,21 +19,42 @@ export function cedarWaitForApiServer(): PluginOption {
       server.middlewares.use(async (req, res, next) => {
         const url = req.originalUrl
 
-        const apiUrl = cedarConfig.web.apiUrl
+        const apiUrl = cedarConfig.web.apiUrl.replace(/\/$/, '')
         // By default the GraphQL API URL is apiUrl + '/graphql'. It is
         // however possible to configure it to something completely different,
         // so we have to check it separately
         const apiGqlUrl = cedarConfig.web.apiGraphQLUrl
 
         const isApiRequest =
-          url && (url.startsWith(apiUrl) || url === apiGqlUrl)
+          url &&
+          (url.startsWith(apiUrl) ||
+            // Only match on .../graphql not on .../graphql-foo. That's why I
+            // don't use startsWith here
+            url === apiGqlUrl ||
+            // The two checks below are for when we support GraphQL-over-HTTP
+            url.startsWith(apiGqlUrl + '/') ||
+            url.startsWith(apiGqlUrl + '?'))
 
-        if (!isApiRequest) {
+        if (!isApiRequest || serverHasBeenUp) {
           return next()
         }
 
         try {
-          await waitForPort(apiPort, apiHost)
+          // Reuse existing promise if already waiting
+          if (!waitingPromise) {
+            waitingPromise = waitForPort(apiPort, apiHost).finally(() => {
+              // Clear once resolved (success or failure) so future requests
+              // after a timeout can retry
+              waitingPromise = null
+            })
+          }
+
+          await waitingPromise
+
+          // Once we've confirmed that the server is listening for requests we
+          // don't want to wait again. This ensures we fail fast and let Vite's
+          // regular error handling take over if the server crashes mid-session
+          serverHasBeenUp = true
         } catch {
           const message =
             'Vite timed out waiting for the Cedar API server ' +
@@ -48,7 +72,7 @@ export function cedarWaitForApiServer(): PluginOption {
           // this exact request without it being a auth token request.
           // We need this special handling because we don't want the error
           // message below to be used as the auth token.
-          const isAuthTokenRequest = req.url === '/auth?method=getToken'
+          const isAuthTokenRequest = url === apiUrl + '/auth?method=getToken'
 
           const responseBody = {
             errors: [{ message }],
