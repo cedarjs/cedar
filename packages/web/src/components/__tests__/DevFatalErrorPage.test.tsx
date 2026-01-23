@@ -6,6 +6,27 @@ import { vi, describe, it, expect, afterEach } from 'vitest'
 
 import { DevFatalErrorPage } from '../DevFatalErrorPage.js'
 
+vi.mock('stacktracey', () => {
+  return {
+    default: class StackTracey {
+      items = [
+        {
+          fileShort: 'DevFatalErrorPage.test.tsx',
+          file: 'DevFatalErrorPage.test.tsx',
+          fileName: 'DevFatalErrorPage.test.tsx',
+          callee: 'test',
+          line: 1,
+          column: 1,
+          sourceFile: { lines: ['// mocked source'] },
+        },
+      ]
+      withSources() {
+        return this
+      }
+    },
+  }
+})
+
 describe('DevFatalErrorPage', () => {
   afterEach(() => {
     vi.clearAllMocks()
