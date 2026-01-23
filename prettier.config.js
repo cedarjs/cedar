@@ -12,7 +12,9 @@ const config = {
   singleQuote: true,
   plugins: [
     'prettier-plugin-curly',
-    'prettier-plugin-sh',
+    // See here for why this is commented out
+    // https://github.com/cedarjs/cedar/issues/964
+    // 'prettier-plugin-sh',
     'prettier-plugin-packagejson',
   ],
   overrides: [
