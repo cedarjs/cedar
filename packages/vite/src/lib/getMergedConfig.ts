@@ -70,59 +70,9 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
           [cedarConfig.web.apiUrl]: {
             target: `http://${apiHost}:${apiPort}`,
             changeOrigin: false,
-            // Remove the `.redwood/functions` part, but leave the `/graphql`
-            rewrite: (path) => path.replace(cedarConfig.web.apiUrl, ''),
-            configure: (proxy) => {
-              // @MARK: this is a hack to prevent showing confusing proxy
-              // errors on startup because Vite launches so much faster than
-              // the API server.
-              let waitingForApiServer = true
-
-              // Wait for 2.5s, then restore regular proxy error logging
-              setTimeout(() => {
-                waitingForApiServer = false
-              }, 2500)
-
-              proxy.on('error', (err, req, res) => {
-                const isWaiting =
-                  waitingForApiServer && err.message.includes('ECONNREFUSED')
-
-                if (!isWaiting) {
-                  console.error(err)
-                }
-
-                // This heuristic isn't perfect. It's written to handle dbAuth.
-                // But it's very unlikely the user would have code that does
-                // this exact request without it being an auth token request.
-                // We need this special handling because we don't want the error
-                // message below to be used as the auth token.
-                const isAuthTokenRequest =
-                  isWaiting && req.url === '/auth?method=getToken'
-
-                const waitingMessage =
-                  '⌛ API Server launching, please refresh your page...'
-                const genericMessage =
-                  'The Cedar API server is not available or is currently ' +
-                  'reloading. Please refresh.'
-
-                const responseBody = {
-                  errors: [
-                    { message: isWaiting ? waitingMessage : genericMessage },
-                  ],
-                }
-
-                // Use 203 to indicate that the response was modified by a proxy
-                res.writeHead(203, {
-                  'Content-Type': 'application/json',
-                  'Cache-Control': 'no-cache',
-                })
-
-                if (!isAuthTokenRequest) {
-                  res.write(JSON.stringify(responseBody))
-                }
-
-                res.end()
-              })
+            rewrite: (path) => {
+              // Remove the `.redwood/functions` part, but leave the `/graphql`
+              return path.replace(cedarConfig.web.apiUrl, '')
             },
           },
         },
