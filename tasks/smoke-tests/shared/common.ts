@@ -30,7 +30,7 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
   )
 
   const textBlue400 = 'rgb(96, 165, 250)'
-  expect(await page.getByRole('link', { name: 'Cedar Blog' })).toHaveCSS(
+  expect(page.getByRole('link', { name: 'Cedar Blog' })).toHaveCSS(
     'color',
     textBlue400,
   )
@@ -38,8 +38,8 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
   // Check the about page.
   await page.getByRole('link', { name: 'About', exact: true }).click()
   expect(page.url()).toBe('http://localhost:8910/about')
-  await page.getByText(
-    'This site was created to demonstrate my mastery of Redwood: Look on my works, ye',
+  page.getByText(
+    'This site was created to demonstrate my mastery of Cedar: Look on my works, ye',
   )
 
   // Check the contact us page.
