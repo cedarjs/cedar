@@ -243,7 +243,7 @@ test('Check that about is prerendered', async () => {
 
   const aboutPageContent = await pageWithoutJs.locator('main').innerText()
   expect(aboutPageContent).toBe(
-    'This site was created to demonstrate my mastery of Redwood: Look on my works, ye mighty, and despair!',
+    'This site was created to demonstrate my mastery of Cedar: Look on my works, ye mighty, and despair!',
   )
   pageWithoutJs.close()
 })
