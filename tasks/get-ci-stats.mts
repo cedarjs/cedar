@@ -41,8 +41,7 @@ async function fetchWorkflowRuns(
   }
 
   console.log(
-    `Fetching last ${count} successful runs for workflow '${WORKFLOW_FILE}' ` +
-      `on ${branchMsg}...`,
+    `Fetching successful runs for workflow '${WORKFLOW_FILE}' on ${branchMsg}...`,
   )
 
   const response = await fetch(url, {
@@ -84,10 +83,17 @@ async function main() {
     if (!isNaN(parsedCount)) {
       count = parsedCount
     } else {
-      // If first arg is not a number, assume it's a branch?
-      // User asked for "Last X runs", so let's stick to count as first priority.
-      // But for backward compat with my previous version/flexibility, let's allow it.
-      branch = arg1
+      console.error(`Invalid count: ${arg1}`)
+      process.exit(1)
+    }
+
+    if (count > 90) {
+      // We'll overfetch by 10 to ensure we have enough runs after filtering.
+      // GitHub API has a limit of 100 runs per page, so unless we want to add
+      // support for pagination, we'll have to limit the count to 90 (90 + 10 =
+      // 100).
+      console.error(`Count cannot exceed 90`)
+      process.exit(1)
     }
   }
 
@@ -106,13 +112,8 @@ async function main() {
     }
 
     console.log('')
-    console.log(`Found ${runs.length} runs.`)
-    console.log(
-      `Filtering short runs(<10m) and calculating statistics for the last ${count} runs...`,
-    )
+    console.log(`Filtering short runs(<10m) and calculating statistics...`)
     console.log('')
-
-    const MIN_DURATION_MS = 10 * 60 * 1000
 
     const allStats = runs.map((run) => {
       // run_started_at is more accurate for actual execution time than created_at
@@ -123,15 +124,17 @@ async function main() {
       return {
         id: run.id,
         date: new Date(run.created_at).toLocaleDateString(),
-        branch: run.head_branch,
+        branch: run.head_branch || '(unknown)',
         durationMs,
         durationStr: formatDuration(durationMs),
         conclusion: run.conclusion,
       }
     })
 
+    const minDurationMs = 10 * 60 * 1000
+
     const stats = allStats
-      .filter((run) => run.durationMs >= MIN_DURATION_MS)
+      .filter((run) => run.durationMs >= minDurationMs)
       .slice(0, count)
 
     if (stats.length === 0) {
