@@ -526,7 +526,7 @@ const useVersion = () => {
               'content-type': 'application/json',
             },
             body: JSON.stringify({
-              query: 'query RedwoodVersion { redwood { version } }',
+              query: 'query CedarVersion { cedar { version } }',
             }),
           },
         )
@@ -537,7 +537,7 @@ const useVersion = () => {
           console.error('Unable to get Cedar version:', versionData.errors)
         }
 
-        setVersion(versionData?.data?.redwood?.version)
+        setVersion(versionData?.data?.cedar?.version)
       } catch (err) {
         console.error('Unable to get Cedar version: ', err)
       }
