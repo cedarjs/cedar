@@ -88,6 +88,8 @@ export const resolvers: Resolvers = {
   JSON: JSONResolver,
   JSONObject: JSONObjectResolver,
   Query: {
+    // TODO: Remove this in the next major release. Don't forget to also update
+    // `validateSchema.ts`
     redwood: () => ({
       version: cedarVersion,
       prismaVersion: prismaVersion,
