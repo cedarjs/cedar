@@ -23,7 +23,7 @@ export function cedarWaitForApiServer(): PluginOption {
         // By default the GraphQL API URL is apiUrl + '/graphql'. It is
         // however possible to configure it to something completely different,
         // so we have to check it separately
-        const apiGqlUrl = cedarConfig.web.apiGraphQLUrl
+        const apiGqlUrl = cedarConfig.web.apiGraphQLUrl ?? apiUrl + '/graphql'
 
         const isApiRequest =
           url &&
