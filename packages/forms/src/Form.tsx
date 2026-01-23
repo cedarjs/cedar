@@ -6,8 +6,11 @@ import type { FieldValues, UseFormReturn, UseFormProps } from 'react-hook-form'
 
 import { ServerErrorsContext } from './ServerErrorsContext'
 
-export interface FormProps<TFieldValues extends FieldValues>
-  extends Omit<React.ComponentPropsWithRef<'form'>, 'onSubmit'> {
+export interface FormProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TContext = any,
+  TTransformedValues = TFieldValues,
+> extends Omit<React.ComponentPropsWithRef<'form'>, 'onSubmit'> {
   error?: any
   /**
    * The methods returned by `useForm`.
@@ -29,7 +32,7 @@ export interface FormProps<TFieldValues extends FieldValues>
    * )
    * ```
    */
-  formMethods?: UseFormReturn<TFieldValues>
+  formMethods?: UseFormReturn<TFieldValues, TContext, TTransformedValues>
   /**
    * Configures how React Hook Form performs validation, among other things.
    *
@@ -41,14 +44,21 @@ export interface FormProps<TFieldValues extends FieldValues>
    *
    * @see {@link https://react-hook-form.com/docs/useform}
    */
-  config?: UseFormProps<TFieldValues>
-  onSubmit?: (value: TFieldValues, event?: React.BaseSyntheticEvent) => void
+  config?: UseFormProps<TFieldValues, TContext, TTransformedValues>
+  onSubmit?: (
+    value: TTransformedValues,
+    event?: React.BaseSyntheticEvent,
+  ) => void
 }
 
 /**
  * Renders a `<form>` with the required context.
  */
-function FormInner<TFieldValues extends FieldValues>(
+function FormInner<
+  TFieldValues extends FieldValues = FieldValues,
+  TContext = any,
+  TTransformedValues = TFieldValues,
+>(
   {
     config,
     error: errorProps,
@@ -56,10 +66,12 @@ function FormInner<TFieldValues extends FieldValues>(
     onSubmit,
     children,
     ...rest
-  }: FormProps<TFieldValues>,
+  }: FormProps<TFieldValues, TContext, TTransformedValues>,
   ref: ForwardedRef<HTMLFormElement>,
 ) {
-  const hookFormMethods = useForm<TFieldValues>(config)
+  const hookFormMethods = useForm<TFieldValues, TContext, TTransformedValues>(
+    config,
+  )
   const formMethods = propFormMethods || hookFormMethods
 
   return (
@@ -91,6 +103,11 @@ function FormInner<TFieldValues extends FieldValues>(
 // > To be honest, the forwardRef type is quite complex [...] I'd recommend
 // > that you cast the type
 // https://github.com/chakra-ui/chakra-ui/issues/4528#issuecomment-902566185
-export const Form = forwardRef(FormInner) as <TFieldValues extends FieldValues>(
-  props: FormProps<TFieldValues> & React.RefAttributes<HTMLFormElement>,
+export const Form = forwardRef(FormInner) as <
+  TFieldValues extends FieldValues = FieldValues,
+  TContext = any,
+  TTransformedValues = TFieldValues,
+>(
+  props: FormProps<TFieldValues, TContext, TTransformedValues> &
+    React.RefAttributes<HTMLFormElement>,
 ) => React.ReactElement | null
