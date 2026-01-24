@@ -75,7 +75,7 @@ const testProjectAndFixtureName = 'test-project-rsa'
 
 const testProjectPath = path.join(
   os.tmpdir(),
-  'redwood',
+  'cedar',
   testProjectAndFixtureName,
   // ":" is problematic with paths
   new Date().toISOString().split(':').join('-'),

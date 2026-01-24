@@ -35,7 +35,7 @@ vi.mock('../lib/packages', () => {
 
 function getMockYargsInstance() {
   return yargs(hideBin(process.argv))
-    .scriptName('rw')
+    .scriptName('cedar')
     .command({
       command: 'built-in',
       description: 'Some builtin command',

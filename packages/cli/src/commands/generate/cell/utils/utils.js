@@ -46,13 +46,13 @@ export const getIdType = (model) => {
 export const getIdName = (model) => {
   return model.fields.find((field) => field.isId)?.name
 }
+
 /**
- *
  * This function checks the project for the field name supplied,
  * assuming the schema file has been generated in .redwood/schema.graphql
  * @example
  * checkProjectForQueryField('blogPost') => true/false
- * checkProjectForQueryField('redwood') => true
+ * checkProjectForQueryField('cedar') => true
  *
  **/
 export const checkProjectForQueryField = async (queryFieldName) => {

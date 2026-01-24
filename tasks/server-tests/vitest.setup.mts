@@ -53,7 +53,7 @@ function getBinPaths() {
   )
 
   return {
-    rw: findBinPath(cliPackagePath, 'rw'),
+    rw: findBinPath(cliPackagePath, 'cedar'),
     rwServer: findBinPath(apiServerPackagePath, 'cedarjs-server'),
     rwWebServer: findBinPath(webServerPackagePath, 'rw-web-server'),
   }
