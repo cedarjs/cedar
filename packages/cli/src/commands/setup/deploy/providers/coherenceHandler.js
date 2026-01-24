@@ -216,7 +216,7 @@ api:
   prod:
     command: ${apiProdCommand}
   dev:
-    command: ["yarn", "rw", "build", "api", "&&", "yarn", "rw", "dev", "api", "--apiRootPath=/api"]
+    command: ["yarn", "cedar", "build", "api", "&&", "yarn", "cedar", "dev", "api", "--apiRootPath=/api"]
   local_packages: ["node_modules"]
 
   system:
@@ -232,20 +232,20 @@ api:
       ${db === 'postgres' ? 'adapter: postgresql' : ''}
 
   # If you use data migrations, use the following instead:
-  # migration: ["yarn", "rw", "prisma", "migrate", "deploy", "&&", "yarn", "rw", "data-migrate", "up"]
-  migration: ["yarn", "rw", "prisma", "migrate", "deploy"]
+  # migration: ["yarn", "cedar", "prisma", "migrate", "deploy", "&&", "yarn", "cedar", "data-migrate", "up"]
+  migration: ["yarn", "cedar", "prisma", "migrate", "deploy"]
 
 web:
   type: frontend
   assets_path: "web/dist"
   prod:
-    command: ["yarn", "rw", "serve", "web"]
+    command: ["yarn", "cedar", "serve", "web"]
   dev:
-    command: ["yarn", "rw", "dev", "web", "--fwd=\\"--allowed-hosts all\\""]
+    command: ["yarn", "cedar", "dev", "web", "--fwd=\\"--allowed-hosts all\\""]
 
   # Heads up: Redwood's prerender doesn't work with Coherence yet.
   # For current status and updates, see https://github.com/redwoodjs/redwood/issues/8333.
-  build: ["yarn", "rw", "build", "web", "--no-prerender"]
+  build: ["yarn", "cedar", "build", "web", "--no-prerender"]
   local_packages: ["node_modules"]
 
   system:

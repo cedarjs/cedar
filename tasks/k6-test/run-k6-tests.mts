@@ -84,7 +84,7 @@ const TESTS_DIR = path.join(__dirname, 'tests')
 
 // Function to get API server commands with dynamic bin paths
 function getApiServerCommands(projectPath: string) {
-  const cliPath = findBinPath(projectPath, '@cedarjs/cli', 'rw')
+  const cliPath = findBinPath(projectPath, '@cedarjs/cli', 'cedar')
   const apiServerPath = findBinPath(
     projectPath,
     '@cedarjs/api-server',
