@@ -2,7 +2,7 @@
 // debug messages. CedarJS's Jobs will fallback to use `console` if no logger is
 // passed in to CedarJS or any adapter.
 
-import type { IntRange } from 'type-fest'
+import type { IntRange } from 'type-fest' assert { 'resolution-mode': 'import' }
 
 import type { BaseAdapter } from './adapters/BaseAdapter/BaseAdapter.js'
 
