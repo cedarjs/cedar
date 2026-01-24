@@ -88,7 +88,8 @@ export default [
     },
     rules: {
       // React recommended rules
-      ...reactPlugin.configs.recommended.rules,
+      ...reactPlugin.configs.flat.recommended.rules,
+      ...reactPlugin.configs.flat['jsx-runtime'].rules,
       // React hooks recommended rules
       ...reactHooksPlugin.configs.recommended.rules,
       // Jest DOM recommended rules
