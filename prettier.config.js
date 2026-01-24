@@ -6,6 +6,12 @@
  * @type {import("prettier").Config}
  */
 const config = {
+  // The default changed from 'es5' to 'all' in Prettier v3. It'd be better
+  // if this framework config matched the config we use for projects. And
+  // ideally they'd both stay as close as possible to the defaults. But for
+  // now it's too disruptive to change the config for projects, and I don't
+  // want to change *away* from defaults here. So I'm leaving it as 'all'.
+  trailingComma: 'all',
   bracketSpacing: true,
   tabWidth: 2,
   semi: false,
