@@ -4,6 +4,7 @@ packages/testing/config
 
 # Ignore fixture projects
 /__fixtures__
+!/__fixtures__/test-project
 
 # Ignore the certain files in /docs
 /docs/.docusaurus
