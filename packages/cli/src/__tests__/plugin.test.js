@@ -129,7 +129,7 @@ describe('plugin loading', () => {
 
   test('no plugins are loaded for --version at the root level', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '--version']
+    process.argv = ['node', 'cedar', '--version']
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -144,7 +144,7 @@ describe('plugin loading', () => {
 
   test('no plugins are loaded if it is a built-in command', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', pluginLib.PLUGIN_CACHE_BUILTIN[0]]
+    process.argv = ['node', 'cedar', pluginLib.PLUGIN_CACHE_BUILTIN[0]]
 
     getConfig.mockReturnValue({
       experimental: {
@@ -171,7 +171,7 @@ describe('plugin loading', () => {
     `correct loading for root help ('%s')`,
     async (command) => {
       const originalArgv = process.argv
-      process.argv = ['node', 'rw', command]
+      process.argv = ['node', 'cedar', command]
 
       getConfig.mockReturnValue({
         experimental: {
@@ -271,7 +271,7 @@ describe('plugin loading', () => {
     `correct loading for @cedarjs namespace help ('%s')`,
     async (command) => {
       const originalArgv = process.argv
-      process.argv = ['node', 'rw', '@cedarjs', command]
+      process.argv = ['node', 'cedar', '@cedarjs', command]
 
       getConfig.mockReturnValue({
         experimental: {
@@ -371,7 +371,7 @@ describe('plugin loading', () => {
     `correct loading for third party namespace help ('%s')`,
     async (command) => {
       const originalArgv = process.argv
-      process.argv = ['node', 'rw', '@bluewoodjs', command]
+      process.argv = ['node', 'cedar', '@bluewoodjs', command]
 
       getConfig.mockReturnValue({
         experimental: {
@@ -459,7 +459,7 @@ describe('plugin loading', () => {
 
   test('correct loading for unknown namespace (no command)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@greenwoodjs']
+    process.argv = ['node', 'cedar', '@greenwoodjs']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -555,7 +555,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for unknown namespace (with command)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@greenwoodjs', 'anything']
+    process.argv = ['node', 'cedar', '@greenwoodjs', 'anything']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -652,7 +652,7 @@ describe('plugin loading', () => {
 
   test('correct loading for known redwood command (with cache)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', 'someCommand']
+    process.argv = ['node', 'cedar', 'someCommand']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -757,7 +757,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for known redwood command (without cache)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', 'someCommand']
+    process.argv = ['node', 'cedar', 'someCommand']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -885,7 +885,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for unknown redwood command', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', 'unknownCommand']
+    process.argv = ['node', 'cedar', 'unknownCommand']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -1021,7 +1021,7 @@ describe('plugin loading', () => {
 
   test('correct loading for known third party command (with cache)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@bluewoodjs', 'tp']
+    process.argv = ['node', 'cedar', '@bluewoodjs', 'tp']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -1126,7 +1126,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for known third party command (without cache)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@bluewoodjs', 'tpo']
+    process.argv = ['node', 'cedar', '@bluewoodjs', 'tpo']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -1227,7 +1227,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for unknown third party command', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@bluewoodjs', 'unknownCommand']
+    process.argv = ['node', 'cedar', '@bluewoodjs', 'unknownCommand']
 
     getConfig.mockReturnValue({
       experimental: {
