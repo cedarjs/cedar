@@ -249,7 +249,7 @@ async function main() {
 
     // Build the app
     console.log('Building the project...')
-    await execa('yarn', ['rw', 'build'], {
+    await execa('yarn', ['cedar', 'build'], {
       cwd: CEDAR_PROJECT_DIRECTORY,
       stdio: args.verbose ? 'inherit' : 'ignore',
     })

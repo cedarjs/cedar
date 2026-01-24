@@ -28,7 +28,7 @@ export const buildCommands = ({ sides }) => {
   return [
     {
       title: `Building ${sides.join(' & ')}...`,
-      command: ['yarn', ['rw', 'build', ...sides]],
+      command: ['yarn', ['cedar', 'build', ...sides]],
     },
     {
       title: 'Packing Functions...',
