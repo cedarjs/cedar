@@ -47,7 +47,7 @@ afterEach(() => {
 test('the prisma command handles spaces', async () => {
   await handler({
     _: ['prisma'],
-    $0: 'rw',
+    $0: 'cedar',
     commands: ['migrate', 'dev'],
     // options
     n: 'add bazingas',

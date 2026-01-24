@@ -235,7 +235,7 @@ const globalTasks = () =>
         task: async () => {
           const { stdout: dbAuthSecret } = await execa(
             'yarn',
-            ['rw', 'g', 'secret', '--raw'],
+            ['cedar', 'g', 'secret', '--raw'],
             {
               ...getExecaOptions(OUTPUT_PROJECT_PATH),
               stdio: 'pipe',

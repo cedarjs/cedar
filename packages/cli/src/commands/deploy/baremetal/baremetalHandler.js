@@ -378,18 +378,18 @@ export const deployTasks = (yargs, ssh, serverConfig, serverLifecycle) => {
         title: `DB Migrations...`,
         task: async () => {
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
-            'rw',
+            'cedar',
             'prisma',
             'migrate',
             'deploy',
           ])
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
-            'rw',
+            'cedar',
             'prisma',
             'generate',
           ])
           await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
-            'rw',
+            'cedar',
             'dataMigrate',
             'up',
           ])
@@ -408,7 +408,7 @@ export const deployTasks = (yargs, ssh, serverConfig, serverLifecycle) => {
           title: `Building ${side}...`,
           task: async () => {
             await ssh.exec(cmdPath, serverConfig.packageManagerCommand, [
-              'rw',
+              'cedar',
               'build',
               side,
             ])
