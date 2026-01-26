@@ -3261,12 +3261,12 @@ __metadata:
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.17"
     react: "npm:19.2.3"
-    supertokens-auth-react: "npm:0.51.0"
+    supertokens-auth-react: "npm:0.51.1"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    supertokens-auth-react: 0.51.0
+    supertokens-auth-react: 0.51.1
   languageName: unknown
   linkType: soft
 
@@ -26919,19 +26919,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-qr-code@npm:^2.0.12":
-  version: 2.0.12
-  resolution: "react-qr-code@npm:2.0.12"
+"react-qr-code@npm:^2.0.18":
+  version: 2.0.18
+  resolution: "react-qr-code@npm:2.0.18"
   dependencies:
     prop-types: "npm:^15.8.1"
     qr.js: "npm:0.0.0"
   peerDependencies:
-    react: ^16.x || ^17.x || ^18.x
-    react-native-svg: "*"
-  peerDependenciesMeta:
-    react-native-svg:
-      optional: true
-  checksum: 10c0/e02896764b7ff88fb1b8eb1d8ae7201f862a459ebc97732a8a18171c3d47a51a32341906fb673d9304d0d4dc4fd90093b1ebe42f428bb148f299d2929e2399ef
+    react: "*"
+  checksum: 10c0/4e13b795cbb10f1dcf0e39d682bb59851e4c84010ba2be7225b2ad9d5c1ffea52d2d38f884ee26235b7002b8ca99e83b805f55e877663c39d67496764d975cf1
   languageName: node
   linkType: hard
 
@@ -29219,20 +29215,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"supertokens-auth-react@npm:0.51.0":
-  version: 0.51.0
-  resolution: "supertokens-auth-react@npm:0.51.0"
+"supertokens-auth-react@npm:0.51.1":
+  version: 0.51.1
+  resolution: "supertokens-auth-react@npm:0.51.1"
   dependencies:
     "@simplewebauthn/types": "npm:^12.0.0"
     intl-tel-input: "npm:^17.0.19"
     prop-types: "npm:*"
-    react-qr-code: "npm:^2.0.12"
+    react-qr-code: "npm:^2.0.18"
     supertokens-js-override: "npm:^0.0.4"
   peerDependencies:
     react: ">=16.8.0"
     react-dom: ">=16.8.0"
     supertokens-web-js: ^0.16.0
-  checksum: 10c0/143833cc9f153c34b0dad438956c49277804422bdef4c69b824d3f2544d823bdb39cae87ae71c4fe88d50179d4fa5041e0bea158b0f63a8243df1e1203d4b47b
+  checksum: 10c0/d518cbb56040fa4df80ea2083d3b4574a487a060bd19fe4ed253ea2d2b47e1ee9667b80ef6598126b5bb3c0a8ebda05a95a280505eb9dd05049aed5e47732cd7
   languageName: node
   linkType: hard
 
