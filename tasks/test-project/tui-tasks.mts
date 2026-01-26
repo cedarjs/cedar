@@ -5,16 +5,12 @@ import type { Options as ExecaOptions } from 'execa'
 
 import {
   createBuilder,
-  createCells,
-  createComponents,
-  createLayout,
   fullPath,
   getOutputPath,
-  getPagesTasks,
   setOutputPath,
-  updateCellMocks,
   addModel,
   addDbAuth,
+  webTasksList,
 } from './base-tasks.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
 import type { TuiTaskList } from './typing.mts'
@@ -35,30 +31,7 @@ export async function webTasks(outputPath: string) {
   const execaOptions = getExecaOptions(outputPath)
 
   const tuiTaskList: TuiTaskList = [
-    {
-      title: 'Creating pages',
-      task: async () => getPagesTasks(),
-    },
-    {
-      title: 'Creating layout',
-      task: () => createLayout(),
-    },
-    {
-      title: 'Creating components',
-      task: () => createComponents(),
-    },
-    {
-      title: 'Creating cells',
-      task: () => createCells(),
-    },
-    {
-      title: 'Updating cell mocks',
-      task: () => updateCellMocks(),
-    },
-    {
-      title: 'Changing routes',
-      task: () => applyCodemod('routes.js', fullPath('web/src/Routes')),
-    },
+    ...webTasksList(),
     {
       title: 'Adding Tailwind',
       task: async () => {
@@ -165,7 +138,8 @@ export async function apiTasks(
       },
     },
     {
-      // This task renames the migration folders so that we don't have to deal with duplicates/conflicts when committing to the repo
+      // This task renames the migration folders so that we don't have to deal
+      // with duplicates/conflicts when committing to the repo
       title: 'Adjust dates within migration folder names',
       task: () => {
         const migrationsFolderPath = path.join(
@@ -174,7 +148,8 @@ export async function apiTasks(
           'db',
           'migrations',
         )
-        // Migration folders are folders which start with 14 digits because they have a yyyymmddhhmmss
+        // Migration folders are folders which start with 14 digits because they
+        // have a yyyymmddhhmmss
         const migrationFolders = fs
           .readdirSync(migrationsFolderPath)
           .filter((name) => {
@@ -201,6 +176,10 @@ export async function apiTasks(
           datetime.setDate(datetime.getDate() + 1)
         })
       },
+    },
+    {
+      title: 'Add dbAuth',
+      task: async () => addDbAuth(outputPath, linkWithLatestFwBuild),
     },
     {
       title: 'Add users service',
@@ -237,10 +216,6 @@ export async function apiTasks(
 
         return createBuilder('yarn cedar g types')()
       },
-    },
-    {
-      title: 'Add dbAuth',
-      task: async () => addDbAuth(outputPath, linkWithLatestFwBuild),
     },
     {
       title: 'Add describeScenario tests',

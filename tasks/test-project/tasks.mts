@@ -6,15 +6,11 @@ import { Listr } from 'listr2'
 
 import {
   createBuilder,
-  createCells,
-  createComponents,
-  createLayout,
   fullPath,
   getOutputPath,
-  getPagesTasks,
   setOutputPath,
-  updateCellMocks,
   addModel,
+  webTasksList,
 } from './base-tasks.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
 import {
@@ -35,32 +31,22 @@ export async function webTasks(
 ) {
   setOutputPath(outputPath)
 
+  const baseTasks = webTasksList()
+
+  // Some tasks returns an array of tasks, those needs to be wrapped in a Listr
+  // instance
+  const wrappedTasks = baseTasks.map((taskDef) => {
+    return {
+      title: taskDef.title,
+      task: taskDef.isNested
+        ? async () => new Listr(await taskDef.task())
+        : taskDef.task,
+    }
+  })
+
   return new Listr(
     [
-      {
-        title: 'Creating pages',
-        task: () => new Listr(getPagesTasks()),
-      },
-      {
-        title: 'Creating layout',
-        task: () => createLayout(),
-      },
-      {
-        title: 'Creating components',
-        task: () => createComponents(),
-      },
-      {
-        title: 'Creating cells',
-        task: () => createCells(),
-      },
-      {
-        title: 'Updating cell mocks',
-        task: () => updateCellMocks(),
-      },
-      {
-        title: 'Changing routes',
-        task: () => applyCodemod('routes.js', fullPath('web/src/Routes')),
-      },
+      ...wrappedTasks,
 
       // ====== NOTE: cfw needs this workaround for tailwind =======
       // Setup tailwind in a linked project, due to cfw we install deps manually
@@ -110,11 +96,12 @@ export async function webTasks(
 interface ApiTasksOptions {
   verbose: boolean
   linkWithLatestFwBuild: boolean
+  esmProject: boolean
 }
 
 export async function apiTasks(
   outputPath: string,
-  { verbose, linkWithLatestFwBuild }: ApiTasksOptions,
+  { verbose, linkWithLatestFwBuild, esmProject }: ApiTasksOptions,
 ) {
   setOutputPath(outputPath)
 
@@ -266,7 +253,7 @@ export async function apiTasks(
   return new Listr(
     [
       {
-        title: 'Adding post model to prisma',
+        title: 'Adding post and user model to prisma',
         task: async () => {
           // Need both here since they have a relation
           const { post, user } = await import('./codemods/models.mts')
@@ -322,23 +309,35 @@ export async function apiTasks(
           )
 
           await generateScaffold('contacts')
+
+          const contactsServicePath = fullPath(
+            'api/src/services/contacts/contacts',
+          )
+          fs.writeFileSync(
+            contactsServicePath,
+            fs
+              .readFileSync(contactsServicePath, 'utf-8')
+              .replace(
+                "import { db } from 'src/lib/db'",
+                '// Testing aliased imports with extensions\n' +
+                  "import { db } from 'src/lib/db.js'",
+              ),
+          )
         },
       },
       {
-        // This task renames the migration folders so that we don't have to deal with duplicates/conflicts when committing to the repo
+        // This task renames the migration folders so that we don't have to deal
+        // with duplicates/conflicts when committing to the repo
         title: 'Adjust dates within migration folder names',
         task: () => {
-          if (!getOutputPath()) {
-            throw new Error('Output path not set')
-          }
-
           const migrationsFolderPath = path.join(
             getOutputPath(),
             'api',
             'db',
             'migrations',
           )
-          // Migration folders are folders which start with 14 digits because they have a yyyymmddhhmmss
+          // Migration folders are folders which start with 14 digits because
+          // they have a yyyymmddhhmmss
           const migrationFolders = fs
             .readdirSync(migrationsFolderPath)
             .filter((name) => {
@@ -377,7 +376,7 @@ export async function apiTasks(
       {
         title: 'Add users service',
         task: async () => {
-          const generateSdl = createBuilder('yarn cedar g sdl --no-crud')
+          const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
 
           await generateSdl('user')
 
@@ -443,6 +442,62 @@ export async function apiTasks(
         // here I decided to move all of them here
         title: 'Add Prerender to Routes',
         task: () => new Listr(getPrerenderTasks()),
+      },
+      {
+        title: 'Add context tests',
+        task: () => {
+          const templatePath = path.join(
+            import.meta.dirname,
+            'templates',
+            'api',
+            'context.test.ts.template',
+          )
+          const projectPath = path.join(
+            getOutputPath(),
+            'api',
+            'src',
+            '__tests__',
+            'context.test.ts',
+          )
+
+          fs.mkdirSync(path.dirname(projectPath), { recursive: true })
+          fs.writeFileSync(projectPath, fs.readFileSync(templatePath))
+        },
+      },
+      {
+        title: 'Add vitest db import tracking tests for ESM test project',
+        task: () => {
+          if (!esmProject) {
+            return
+          }
+
+          const templatesDir = path.join(
+            import.meta.dirname,
+            'templates',
+            'api',
+          )
+          const templatePath1 = path.join(templatesDir, '1-db-import.test.ts')
+          const templatePath2 = path.join(templatesDir, '2-db-import.test.ts')
+          const templatePath3 = path.join(templatesDir, '3-db-import.test.ts')
+
+          const testsDir = path.join(getOutputPath(), 'api', 'src', '__tests__')
+          const testFilePath1 = path.join(testsDir, '1-db-import.test.ts')
+          const testFilePath2 = path.join(testsDir, '2-db-import.test.ts')
+          const testFilePath3 = path.join(testsDir, '3-db-import.test.ts')
+
+          fs.mkdirSync(testsDir, { recursive: true })
+          fs.copyFileSync(templatePath1, testFilePath1)
+          fs.copyFileSync(templatePath2, testFilePath2)
+          fs.copyFileSync(templatePath3, testFilePath3)
+
+          // I opted to add an additional vitest config file rather than modifying
+          // the existing one because I wanted to keep one looking exactly the
+          // same as it'll look in user's projects.
+          fs.copyFileSync(
+            path.join(templatesDir, 'vitest-sort.config.ts'),
+            path.join(getOutputPath(), 'api', 'vitest-sort.config.ts'),
+          )
+        },
       },
     ],
     {
