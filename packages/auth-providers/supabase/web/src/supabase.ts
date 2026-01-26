@@ -2,25 +2,34 @@ import { DEFAULT_COOKIE_OPTIONS as DEFAULT_SUPABASE_COOKIE_OPTIONS } from '@supa
 import { serialize } from '@supabase/ssr'
 import type {
   SupabaseClient,
-  AuthResponse,
-  OAuthResponse,
-  SSOResponse,
   SignInWithOAuthCredentials,
   SignInWithIdTokenCredentials,
   SignInWithPasswordCredentials,
   SignInWithPasswordlessCredentials,
   SignInWithSSO,
   SignUpWithPasswordCredentials,
-  AuthTokenResponse,
-  AuthOtpResponse,
 } from '@supabase/supabase-js'
-import { AuthError } from '@supabase/supabase-js'
 
 import type { CurrentUser, CustomProviderHooks } from '@cedarjs/auth'
 import {
   createAuthentication,
   getCurrentUserFromMiddleware,
 } from '@cedarjs/auth'
+
+// Derive types from SupabaseClient methods to avoid fragile direct imports
+// that may break when upstream renames or changes exports
+type AuthResponse = Awaited<ReturnType<SupabaseClient['auth']['signUp']>>
+type OAuthResponse = Awaited<
+  ReturnType<SupabaseClient['auth']['signInWithOAuth']>
+>
+type SSOResponse = Awaited<ReturnType<SupabaseClient['auth']['signInWithSSO']>>
+type AuthTokenResponse = Awaited<
+  ReturnType<SupabaseClient['auth']['signInWithPassword']>
+>
+type AuthOtpResponse = Awaited<
+  ReturnType<SupabaseClient['auth']['signInWithOtp']>
+>
+type AuthError = NonNullable<AuthResponse['error']>
 
 export type SignInWithOAuthOptions = SignInWithOAuthCredentials & {
   authMethod: 'oauth'
@@ -193,7 +202,10 @@ function createAuthImplementation({
         default:
           return {
             data: { user: null, session: null },
-            error: new AuthError('Unsupported authentication method'),
+            error: {
+              message: 'Unsupported authentication method',
+              status: 400,
+            } as AuthError,
           }
       }
 
