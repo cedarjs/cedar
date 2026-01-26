@@ -569,6 +569,7 @@ async function runCommand() {
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
 
+      // Verify that we're not including test files in the build output
       const distFiles = fs.readdirSync(
         path.join(OUTPUT_PROJECT_PATH, 'packages', 'validators', 'dist'),
       )
