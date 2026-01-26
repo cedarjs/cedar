@@ -37,7 +37,7 @@
     "test:watch": "yarn test --watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.28.4",
+    "@babel/runtime-corejs3": "7.28.6",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@envelop/core": "5.4.0",
@@ -60,7 +60,7 @@
     "uuid": "11.1.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.28.3",
+    "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
