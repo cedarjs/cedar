@@ -68,7 +68,7 @@ export function createBuilder(cmd: string, dir = '') {
   }
 }
 
-export function getPagesTasks() {
+function getPagesTasks() {
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
   // to make sure it works as expected. We do the same for the /api directory
   // further down in this file.
@@ -196,6 +196,38 @@ export function getPagesTasks() {
       },
     },
   ]
+}
+
+export function webTasksList() {
+  const taskList = [
+    {
+      title: 'Creating pages',
+      task: async () => getPagesTasks(),
+      isNested: true,
+    },
+    {
+      title: 'Creating layout',
+      task: () => createLayout(),
+    },
+    {
+      title: 'Creating components',
+      task: () => createComponents(),
+    },
+    {
+      title: 'Creating cells',
+      task: () => createCells(),
+    },
+    {
+      title: 'Updating cell mocks',
+      task: () => updateCellMocks(),
+    },
+    {
+      title: 'Changing routes',
+      task: () => applyCodemod('routes.js', fullPath('web/src/Routes')),
+    },
+  ]
+
+  return taskList
 }
 
 export async function createLayout() {
