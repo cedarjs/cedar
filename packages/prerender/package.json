@@ -100,7 +100,7 @@
     "@types/react": "^18.2.55",
     "babel-plugin-tester": "11.0.4",
     "concurrently": "9.2.1",
-    "publint": "0.3.16",
+    "publint": "0.3.17",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

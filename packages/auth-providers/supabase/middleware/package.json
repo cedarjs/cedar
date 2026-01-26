@@ -50,7 +50,7 @@
     "@cedarjs/graphql-server": "2.4.1",
     "@types/aws-lambda": "8.10.159",
     "concurrently": "9.2.1",
-    "publint": "0.3.16",
+    "publint": "0.3.17",
     "ts-toolbelt": "9.6.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
