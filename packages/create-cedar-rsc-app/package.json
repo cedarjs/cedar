@@ -58,7 +58,7 @@
     "knip": "^5.26.0",
     "prettier": "3.6.2",
     "prettier-plugin-curly": "^0.3.0",
-    "prettier-plugin-packagejson": "2.5.22",
+    "prettier-plugin-packagejson": "3.0.0",
     "prettier-plugin-sh": "^0.18.0",
     "publint": "0.3.17",
     "rimraf": "^6.0.1",
