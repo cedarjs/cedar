@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { paramCase, camelCase } from 'change-case'
 import execa from 'execa'
 import { Listr } from 'listr2'
@@ -92,6 +93,129 @@ export async function updateGitignore(task) {
 
   await fs.promises.writeFile(gitignorePath, gitignoreLines.join('\n'))
 }
+
+// Exported for testing
+export async function addDependencyToPackageJson(
+  task,
+  packageJsonPath,
+  packageName,
+) {
+  if (!fs.existsSync(packageJsonPath)) {
+    task.skip('package.json not found')
+    return
+  }
+
+  const packageJson = JSON.parse(
+    await fs.promises.readFile(packageJsonPath, 'utf8'),
+  )
+
+  if (!packageJson.dependencies) {
+    packageJson.dependencies = {}
+  }
+
+  if (packageJson.dependencies[packageName]) {
+    task.skip('Dependency already exists')
+    return
+  }
+
+  packageJson.dependencies[packageName] = 'workspace:*'
+
+  await fs.promises.writeFile(
+    packageJsonPath,
+    JSON.stringify(packageJson, null, 2),
+  )
+}
+
+// Exported for testing
+export async function updateWorkspaceTsconfigReferences(
+  task,
+  folderName,
+  targetWorkspaces,
+) {
+  if (!targetWorkspaces || targetWorkspaces === 'none') {
+    task.skip('No workspace selected')
+    return
+  }
+
+  // Update workspace tsconfigs (api/web/scripts)
+  const workspaces = []
+
+  if (targetWorkspaces === 'api' || targetWorkspaces === 'both') {
+    workspaces.push({
+      name: 'api',
+      tsconfigPath: path.join(getPaths().api.base, 'tsconfig.json'),
+      packageDir: path.join(getPaths().base, 'packages', folderName),
+    })
+  }
+
+  if (targetWorkspaces === 'web' || targetWorkspaces === 'both') {
+    workspaces.push({
+      name: 'web',
+      tsconfigPath: path.join(getPaths().web.base, 'tsconfig.json'),
+      packageDir: path.join(getPaths().base, 'packages', folderName),
+    })
+  }
+
+  // Also update the scripts tsconfig (if present) for any selection other than 'none'
+  if (targetWorkspaces !== 'none') {
+    workspaces.push({
+      name: 'scripts',
+      tsconfigPath: path.join(getPaths().scripts, 'tsconfig.json'),
+      packageDir: path.join(getPaths().base, 'packages', folderName),
+    })
+  }
+
+  if (workspaces.length === 0) {
+    task.skip('No workspace selected')
+    return
+  }
+
+  const subtasks = workspaces.map((ws) => {
+    return {
+      title: `Updating ${ws.name} tsconfig references...`,
+      task: async (_ctx, subtask) => {
+        if (!fs.existsSync(ws.tsconfigPath)) {
+          subtask.skip('tsconfig.json not found')
+          return
+        }
+
+        const tsconfig = JSON.parse(
+          await fs.promises.readFile(ws.tsconfigPath, 'utf8'),
+        )
+
+        if (!Array.isArray(tsconfig.references)) {
+          tsconfig.references = []
+        }
+
+        const packageDir =
+          ws.packageDir || path.join(getPaths().base, 'packages', folderName)
+        let referencePath = path.relative(
+          path.dirname(ws.tsconfigPath),
+          packageDir,
+        )
+        referencePath = referencePath.split(path.sep).join('/')
+
+        if (
+          tsconfig.references.some((ref) => ref && ref.path === referencePath)
+        ) {
+          subtask.skip('tsconfig already up to date')
+          return
+        }
+
+        tsconfig.references.push({ path: referencePath })
+
+        await fs.promises.writeFile(
+          ws.tsconfigPath,
+          JSON.stringify(tsconfig, null, 2),
+        )
+      },
+    }
+  })
+
+  return await new Listr(subtasks).run()
+}
+
+export { updateWorkspaceTsconfigReferences as updateRootTsconfigReferences }
 
 async function installAndBuild(folderName) {
   const packagePath = path.join('packages', folderName)
@@ -212,6 +336,24 @@ export const handler = async ({ name, force, ...rest }) => {
         },
       },
       {
+        title: 'Choose package workspace(s)...',
+        task: async (ctx, task) => {
+          const prompt = task.prompt(ListrEnquirerPromptAdapter)
+          const response = await prompt.run({
+            type: 'select',
+            message: 'Which workspace(s) should use this package?',
+            choices: [
+              { message: 'none (I will add it manually later)', value: 'none' },
+              { message: 'api', value: 'api' },
+              { message: 'web', value: 'web' },
+              { message: 'both', value: 'both' },
+            ],
+          })
+
+          ctx.targetWorkspaces = response
+        },
+      },
+      {
         title: 'Updating api side tsconfig file...',
         task: (_ctx, task) => updateTsconfig(task),
       },
@@ -224,6 +366,78 @@ export const handler = async ({ name, force, ...rest }) => {
         task: async (ctx) => {
           packageFiles = await files({ ...ctx.nameVariants, ...rest })
           return writeFilesTask(packageFiles, { overwriteExisting: force })
+        },
+      },
+      {
+        title: 'Adding package to workspace dependencies...',
+        task: async (ctx, task) => {
+          if (!ctx.targetWorkspaces || ctx.targetWorkspaces === 'none') {
+            task.skip('No workspace selected')
+            return
+          }
+
+          const subtasks = []
+
+          if (
+            ctx.targetWorkspaces === 'api' ||
+            ctx.targetWorkspaces === 'both'
+          ) {
+            subtasks.push({
+              title: 'Adding to api package.json...',
+              task: async (_subCtx, subtask) => {
+                const apiPackageJsonPath = path.join(
+                  getPaths().api.base,
+                  'package.json',
+                )
+                return addDependencyToPackageJson(
+                  subtask,
+                  apiPackageJsonPath,
+                  ctx.nameVariants.packageName,
+                )
+              },
+            })
+          }
+
+          if (
+            ctx.targetWorkspaces === 'web' ||
+            ctx.targetWorkspaces === 'both'
+          ) {
+            subtasks.push({
+              title: 'Adding to web package.json...',
+              task: async (_subCtx, subtask) => {
+                const webPackageJsonPath = path.join(
+                  getPaths().web.base,
+                  'package.json',
+                )
+                return addDependencyToPackageJson(
+                  subtask,
+                  webPackageJsonPath,
+                  ctx.nameVariants.packageName,
+                )
+              },
+            })
+          }
+
+          if (subtasks.length === 0) {
+            task.skip('No workspace selected')
+            return
+          }
+
+          return await new Listr(subtasks).run()
+        },
+      },
+      {
+        title: 'Updating tsconfig references...',
+        task: (ctx, task) => {
+          if (!ctx.targetWorkspaces || ctx.targetWorkspaces === 'none') {
+            task.skip('No workspace selected')
+            return
+          }
+          return updateWorkspaceTsconfigReferences(
+            task,
+            ctx.nameVariants.folderName,
+            ctx.targetWorkspaces,
+          )
         },
       },
       {

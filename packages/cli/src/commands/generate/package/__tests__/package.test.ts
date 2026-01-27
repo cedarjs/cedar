@@ -432,6 +432,211 @@ describe('packageHandler', () => {
     })
   })
 
+  describe('addDependencyToPackageJson and updateRootTsconfigReferences', () => {
+    it('adds dependency to package.json', async () => {
+      const apiPackageJsonPath = path.join(mockBase.path, 'api', 'package.json')
+
+      vol.fromJSON(
+        {
+          [apiPackageJsonPath]: JSON.stringify(
+            {
+              name: 'api',
+              version: '0.0.0',
+            },
+            null,
+            2,
+          ),
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.addDependencyToPackageJson(
+        { skip: () => {} },
+        apiPackageJsonPath,
+        '@project/foo',
+      )
+
+      const packageJson = JSON.parse(
+        fs.readFileSync(apiPackageJsonPath, 'utf8'),
+      )
+      expect(packageJson.dependencies['@project/foo']).toEqual('workspace:*')
+    })
+
+    it('skips when dependency already exists', async () => {
+      const apiPackageJsonPath = path.join(mockBase.path, 'api', 'package.json')
+
+      vol.fromJSON(
+        {
+          [apiPackageJsonPath]: JSON.stringify(
+            {
+              name: 'api',
+              version: '0.0.0',
+              dependencies: {
+                '@project/foo': 'workspace:*',
+              },
+            },
+            null,
+            2,
+          ),
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const skipFn = vi.fn()
+      await packageHandler.addDependencyToPackageJson(
+        { skip: skipFn },
+        apiPackageJsonPath,
+        '@project/foo',
+      )
+
+      expect(skipFn).toHaveBeenCalled()
+    })
+
+    it('adds reference to api tsconfig', async () => {
+      const tsconfigPath = path.join(mockBase.path, 'api', 'tsconfig.json')
+      const tsconfig = {
+        references: [{ path: 'packages/existing' }],
+        files: [],
+      }
+
+      vol.fromJSON(
+        {
+          [tsconfigPath]: JSON.stringify(tsconfig, null, 2),
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateRootTsconfigReferences(
+        { skip: () => {} },
+        'newpkg',
+        'api',
+      )
+
+      const updated = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'))
+      const expectedPath = path
+        .relative(
+          path.join(mockBase.path, 'api'),
+          path.join(mockBase.path, 'packages', 'newpkg'),
+        )
+        .split(path.sep)
+        .join('/')
+      expect(updated.references).toEqual(
+        expect.arrayContaining([{ path: expectedPath }]),
+      )
+    })
+
+    it('skips updating tsconfig when reference exists', async () => {
+      const tsconfigPath = path.join(mockBase.path, 'api', 'tsconfig.json')
+      const existingPath = path
+        .relative(
+          path.join(mockBase.path, 'api'),
+          path.join(mockBase.path, 'packages', 'newpkg'),
+        )
+        .split(path.sep)
+        .join('/')
+      const tsconfig = {
+        references: [{ path: existingPath }],
+        files: [],
+      }
+
+      vol.fromJSON(
+        {
+          [tsconfigPath]: JSON.stringify(tsconfig, null, 2),
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const before = fs.readFileSync(tsconfigPath, 'utf8')
+      await packageHandler.updateWorkspaceTsconfigReferences(
+        { skip: () => {} },
+        'newpkg',
+        'api',
+      )
+
+      const after = fs.readFileSync(tsconfigPath, 'utf8')
+      expect(after).toEqual(before)
+    })
+
+    it('adds reference to scripts tsconfig when workspace selected', async () => {
+      const scriptsTsconfigPath = path.join(
+        mockBase.path,
+        'scripts',
+        'tsconfig.json',
+      )
+      const tsconfig = {
+        references: [{ path: 'packages/existing' }],
+        files: [],
+      }
+
+      vol.fromJSON(
+        {
+          [scriptsTsconfigPath]: JSON.stringify(tsconfig, null, 2),
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateWorkspaceTsconfigReferences(
+        { skip: () => {} },
+        'newpkg',
+        'api',
+      )
+
+      const updated = JSON.parse(fs.readFileSync(scriptsTsconfigPath, 'utf8'))
+      const expectedPath = path
+        .relative(
+          path.join(mockBase.path, 'scripts'),
+          path.join(mockBase.path, 'packages', 'newpkg'),
+        )
+        .split(path.sep)
+        .join('/')
+      expect(updated.references).toEqual(
+        expect.arrayContaining([{ path: expectedPath }]),
+      )
+    })
+
+    it('skips updating scripts tsconfig when reference exists', async () => {
+      const scriptsTsconfigPath = path.join(
+        mockBase.path,
+        'scripts',
+        'tsconfig.json',
+      )
+      const existingPath = path
+        .relative(
+          path.join(mockBase.path, 'scripts'),
+          path.join(mockBase.path, 'packages', 'newpkg'),
+        )
+        .split(path.sep)
+        .join('/')
+      const tsconfig = {
+        references: [{ path: existingPath }],
+        files: [],
+      }
+
+      vol.fromJSON(
+        {
+          [scriptsTsconfigPath]: JSON.stringify(tsconfig, null, 2),
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const before = fs.readFileSync(scriptsTsconfigPath, 'utf8')
+      await packageHandler.updateWorkspaceTsconfigReferences(
+        { skip: () => {} },
+        'newpkg',
+        'api',
+      )
+
+      const after = fs.readFileSync(scriptsTsconfigPath, 'utf8')
+      expect(after).toEqual(before)
+    })
+  })
+
   describe('updateGitignore', () => {
     const gitignorePath = path.join(mockBase.path, '.gitignore')
 
