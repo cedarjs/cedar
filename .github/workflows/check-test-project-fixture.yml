@@ -44,6 +44,11 @@ jobs:
       - name: Rebuild test-project fixture
         if: steps.detect-changes.outputs.code == 'true' && !contains(github.event.pull_request.labels.*.name, 'fixture-ok')
         run: |
+          # Temporarily disable errexit so we can capture the pipeline exit code
+          # produced by `yarn ... | tee ...` without the shell aborting the step
+          # before we can inspect the exit status.
+          set +e
+
           # Exit early on errors and ensure we capture the full output for
           # inspection.
           set -o pipefail
@@ -51,6 +56,9 @@ jobs:
           # Run the rebuild and capture both stdout/stderr.
           yarn rebuild-test-project-fixture 2>&1 | tee rebuild-output.log
           rc=${PIPESTATUS[0]}
+
+          # Re-enable errexit so subsequent checks fail fast.
+          set -e
 
           # If the command itself exited non-zero, fail the step.
           if [ ${rc} -ne 0 ]; then
