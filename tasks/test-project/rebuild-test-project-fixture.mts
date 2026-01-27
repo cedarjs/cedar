@@ -10,11 +10,12 @@ import yargs from 'yargs/yargs'
 
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
+import { apiTasksList, setOutputPath } from './base-tasks.mts'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
 } from './frameworkLinking.mts'
-import { webTasks, apiTasks } from './tui-tasks.mts'
+import { webTasks } from './tui-tasks.mts'
 import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
 import {
@@ -424,11 +425,10 @@ async function runCommand() {
   await tuiTask({
     step: 8,
     title: 'Apply api codemods',
-    task: () => {
-      return apiTasks(OUTPUT_PROJECT_PATH, {
-        linkWithLatestFwBuild: false,
-        esmProject: false,
-      })
+    task: async () => {
+      setOutputPath(OUTPUT_PROJECT_PATH)
+
+      return apiTasksList({ dbAuth: 'local' })
     },
   })
 
