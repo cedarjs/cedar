@@ -81,6 +81,8 @@ jobs:
             echo "Rebuild did not print success message"
             exit 1
           fi
+
+          rm rebuild-output.log
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
