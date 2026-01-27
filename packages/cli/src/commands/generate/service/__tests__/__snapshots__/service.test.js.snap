@@ -131,7 +131,7 @@ describe('scalarTypes', () => {
   scenario('creates a scalarType', async () => {
     const result = await createScalarType({
       input: {
-        email: 'String',
+        email: 'foo@bar.com',
         date: '2022-09-30T09:50:00.000Z',
         bigInt: 1234567n,
         integer: 1234567,
@@ -139,7 +139,7 @@ describe('scalarTypes', () => {
       },
     })
 
-    expect(result.email).toEqual('String')
+    expect(result.email).toEqual('foo@bar.com')
     expect(result.date).toEqual(new Date('2022-09-30T09:50:00.000Z'))
     expect(result.bigInt).toEqual(1234567n)
     expect(result.integer).toEqual(1234567)
@@ -152,10 +152,10 @@ describe('scalarTypes', () => {
     })
     const result = await updateScalarType({
       id: original.id,
-      input: { email: 'String2' },
+      input: { email: 'foo@bar.com2' },
     })
 
-    expect(result.email).toEqual('String2')
+    expect(result.email).toEqual('foo@bar.com2')
   })
 
   scenario('deletes a scalarType', async (scenario) => {
@@ -322,8 +322,8 @@ export const User = {
 exports[`in javascript mode > creates a single word service scenario file 1`] = `
 "export const standard = defineScenario({
   user: {
-    one: { data: { email: 'String1234567' } },
-    two: { data: { email: 'String1234567' } },
+    one: { data: { email: 'foo1234567@bar.com' } },
+    two: { data: { email: 'foo1234567@bar.com' } },
   },
 })
 "
@@ -353,20 +353,20 @@ describe('users', () => {
 
   scenario('creates a user', async () => {
     const result = await createUser({
-      input: { email: 'String1234567' },
+      input: { email: 'foo1234567@bar.com' },
     })
 
-    expect(result.email).toEqual('String1234567')
+    expect(result.email).toEqual('foo1234567@bar.com')
   })
 
   scenario('updates a user', async (scenario) => {
     const original = await user({ id: scenario.user.one.id })
     const result = await updateUser({
       id: original.id,
-      input: { email: 'String12345672' },
+      input: { email: 'foo1234567@bar.com2' },
     })
 
-    expect(result.email).toEqual('String12345672')
+    expect(result.email).toEqual('foo1234567@bar.com2')
   })
 
   scenario('deletes a user', async (scenario) => {
@@ -530,7 +530,7 @@ describe('scalarTypes', () => {
   scenario('creates a scalarType', async () => {
     const result = await createScalarType({
       input: {
-        email: 'String',
+        email: 'foo@bar.com',
         date: '2022-09-30T09:50:00.000Z',
         bigInt: 1234567n,
         integer: 1234567,
@@ -538,7 +538,7 @@ describe('scalarTypes', () => {
       },
     })
 
-    expect(result.email).toEqual('String')
+    expect(result.email).toEqual('foo@bar.com')
     expect(result.date).toEqual(new Date('2022-09-30T09:50:00.000Z'))
     expect(result.bigInt).toEqual(1234567n)
     expect(result.integer).toEqual(1234567)
@@ -551,10 +551,10 @@ describe('scalarTypes', () => {
     })) as ScalarType
     const result = await updateScalarType({
       id: original.id,
-      input: { email: 'String2' },
+      input: { email: 'foo@bar.com2' },
     })
 
-    expect(result.email).toEqual('String2')
+    expect(result.email).toEqual('foo@bar.com2')
   })
 
   scenario('deletes a scalarType', async (scenario: StandardScenario) => {
@@ -743,8 +743,8 @@ import type { ScenarioData } from '@cedarjs/testing/api'
 
 export const standard = defineScenario<Prisma.UserCreateArgs>({
   user: {
-    one: { data: { email: 'String1234567' } },
-    two: { data: { email: 'String1234567' } },
+    one: { data: { email: 'foo1234567@bar.com' } },
+    two: { data: { email: 'foo1234567@bar.com' } },
   },
 })
 
@@ -779,20 +779,20 @@ describe('users', () => {
 
   scenario('creates a user', async () => {
     const result = await createUser({
-      input: { email: 'String1234567' },
+      input: { email: 'foo1234567@bar.com' },
     })
 
-    expect(result.email).toEqual('String1234567')
+    expect(result.email).toEqual('foo1234567@bar.com')
   })
 
   scenario('updates a user', async (scenario: StandardScenario) => {
     const original = (await user({ id: scenario.user.one.id })) as User
     const result = await updateUser({
       id: original.id,
-      input: { email: 'String12345672' },
+      input: { email: 'foo1234567@bar.com2' },
     })
 
-    expect(result.email).toEqual('String12345672')
+    expect(result.email).toEqual('foo1234567@bar.com2')
   })
 
   scenario('deletes a user', async (scenario: StandardScenario) => {
