@@ -1,3 +1,4 @@
+import { validateEmail } from '@my-org/validators'
 import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
 // Testing aliased imports with extensions
@@ -16,6 +17,12 @@ export const contact: QueryResolvers['contact'] = ({ id }) => {
 export const createContact: MutationResolvers['createContact'] = ({
   input,
 }) => {
+  if (!validateEmail(input.email)) {
+    throw new Error('Invalid email')
+  } else {
+    console.log('Creating contact with email:', input.email)
+  }
+
   return db.contact.create({
     data: input,
   })
