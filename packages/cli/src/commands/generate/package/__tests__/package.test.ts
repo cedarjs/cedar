@@ -635,6 +635,18 @@ describe('packageHandler', () => {
       const after = fs.readFileSync(scriptsTsconfigPath, 'utf8')
       expect(after).toEqual(before)
     })
+
+    it('parses workspace flag (valid values and case-insensitive)', () => {
+      expect(packageHandler.parseWorkspaceFlag('API')).toEqual('api')
+      expect(packageHandler.parseWorkspaceFlag('both')).toEqual('both')
+      expect(packageHandler.parseWorkspaceFlag(undefined)).toBeUndefined()
+    })
+
+    it('throws for invalid workspace flag values', () => {
+      expect(() => packageHandler.parseWorkspaceFlag('invalid')).toThrowError(
+        /Invalid workspace value/,
+      )
+    })
   })
 
   describe('updateGitignore', () => {

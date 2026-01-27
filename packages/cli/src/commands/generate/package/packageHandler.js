@@ -127,6 +127,23 @@ export async function addDependencyToPackageJson(
 }
 
 // Exported for testing
+export function parseWorkspaceFlag(workspace) {
+  if (workspace === undefined || workspace === null) {
+    return undefined
+  }
+
+  const ws = String(workspace).trim().toLowerCase()
+  const allowed = ['none', 'api', 'web', 'both']
+
+  if (!allowed.includes(ws)) {
+    throw new Error(
+      `Invalid workspace value "${workspace}". Valid options: ${allowed.join(', ')}`,
+    )
+  }
+
+  return ws
+}
+
 export async function updateWorkspaceTsconfigReferences(
   task,
   folderName,
@@ -338,6 +355,21 @@ export const handler = async ({ name, force, ...rest }) => {
       {
         title: 'Choose package workspace(s)...',
         task: async (ctx, task) => {
+          // If the CLI flag `--workspace` was provided, validate and use it:
+          try {
+            const flagValue = parseWorkspaceFlag(rest.workspace)
+            if (flagValue !== undefined) {
+              ctx.targetWorkspaces = flagValue
+              task.skip(
+                `Using workspace provided via --workspace: ${flagValue}`,
+              )
+              return
+            }
+          } catch (e) {
+            // Bubble up validation errors to the user
+            throw new Error(e.message)
+          }
+
           const prompt = task.prompt(ListrEnquirerPromptAdapter)
           const response = await prompt.run({
             type: 'select',
