@@ -43,7 +43,36 @@ jobs:
 
       - name: Rebuild test-project fixture
         if: steps.detect-changes.outputs.code == 'true' && !contains(github.event.pull_request.labels.*.name, 'fixture-ok')
-        run: yarn rebuild-test-project-fixture
+        run: |
+          # Exit early on errors and ensure we capture the full output for
+          # inspection.
+          set -o pipefail
+
+          # Run the rebuild and capture both stdout/stderr.
+          yarn rebuild-test-project-fixture 2>&1 | tee rebuild-output.log
+          rc=${PIPESTATUS[0]}
+
+          # If the command itself exited non-zero, fail the step.
+          if [ ${rc} -ne 0 ]; then
+            echo "yarn rebuild-test-project-fixture exited with code ${rc}"
+            exit ${rc}
+          fi
+
+          # Even if the command exited zero, search the output for failure
+          # indicators. Ideally this shouldn't be needed and the script would
+          # always return != 0 on failure, but I'm not sure it does. So this
+          # is an extra safety measure.
+          if grep -Eq "Failed |Error: Failed|ENOENT: no such file or directory" rebuild-output.log; then
+            echo "Detected failure text in rebuild-test-project-fixture output"
+            exit 1
+          fi
+
+          # Ensure the script printed the expected success message.
+          # Again, this ideally shouldn't be needed.
+          if ! grep -Fq "Success! The test project fixture has been rebuilt" rebuild-output.log; then
+            echo "Rebuild did not print success message"
+            exit 1
+          fi
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
