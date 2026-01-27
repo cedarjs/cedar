@@ -6,6 +6,7 @@
     "@cedarjs/api": "3.0.0-canary.13223+9e1d1011b",
     "@cedarjs/auth-dbauth-api": "3.0.0-canary.13223+9e1d1011b",
     "@cedarjs/graphql-server": "3.0.0-canary.13223+9e1d1011b",
+    "@my-org/validators": "workspace:*",
     "@prisma/client": "6.19.1"
   }
 }
