@@ -548,6 +548,12 @@ async function runCommand() {
           '})\n',
       )
 
+      const apiPackageJson = JSON.parse(
+        fs.readFileSync(
+          path.join(OUTPUT_PROJECT_PATH, 'api', 'package.json'),
+          'utf8',
+        ),
+      )
       const webPackageJson = JSON.parse(
         fs.readFileSync(
           path.join(OUTPUT_PROJECT_PATH, 'web', 'package.json'),
@@ -555,8 +561,13 @@ async function runCommand() {
         ),
       )
 
+      apiPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
       webPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
 
+      fs.writeFileSync(
+        path.join(OUTPUT_PROJECT_PATH, 'api', 'package.json'),
+        JSON.stringify(apiPackageJson, null, 2),
+      )
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, 'web', 'package.json'),
         JSON.stringify(webPackageJson, null, 2),
