@@ -4,8 +4,8 @@ import type { ScenarioData } from '@cedarjs/testing/api'
 
 export const standard = defineScenario<Prisma.ContactCreateArgs>({
   contact: {
-    one: { data: { name: 'String', email: 'String', message: 'String' } },
-    two: { data: { name: 'String', email: 'String', message: 'String' } },
+    one: { data: { name: 'String', email: 'foo@bar.com', message: 'String' } },
+    two: { data: { name: 'String', email: 'foo@bar.com', message: 'String' } },
   },
 })
 

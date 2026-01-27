@@ -435,76 +435,6 @@ async function runCommand() {
 
   await tuiTask({
     step: 9,
-    title: 'Add scripts',
-    task: async () => {
-      const nestedPath = path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one', 'two')
-
-      fs.mkdirSync(nestedPath, { recursive: true })
-      fs.writeFileSync(
-        path.join(nestedPath, 'myNestedScript.ts'),
-        "import { contacts } from 'api/src/services/contacts/contacts'\n" +
-          '\n' +
-          'export default async () => {\n' +
-          '  const _allContacts = await contacts()\n' +
-          "  console.log('Hello from myNestedScript.ts')\n" +
-          '}\n\n',
-      )
-
-      await exec(
-        'yarn cedar g script i/am/nested',
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
-
-      // Verify that the scripts are added and included in the list of
-      // available scripts
-      const list = await exec(
-        'yarn cedar exec',
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
-
-      if (
-        !list.stdout.includes('seed') ||
-        !list.stdout.includes('i/am/nested') ||
-        !list.stdout.includes('one/two/myNestedScript')
-      ) {
-        console.error('yarn cedar exec output', list.stdout, list.stderr)
-
-        throw new Error('Scripts not included in list')
-      }
-
-      // Verify that the scripts can be executed
-      const runFromRoot = await exec(
-        'yarn cedar exec one/two/myNestedScript',
-        [],
-        getExecaOptions(OUTPUT_PROJECT_PATH),
-      )
-
-      if (!runFromRoot.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn cedar exec one/two/myNestedScript` output')
-        console.error(runFromRoot.stdout, runFromRoot.stderr)
-
-        throw new Error('Script not executed successfully')
-      }
-
-      const runFromScripts = await exec(
-        'yarn cedar exec one/two/myNestedScript',
-        [],
-        getExecaOptions(path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one')),
-      )
-
-      if (!runFromScripts.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn cedar exec one/two/myNestedScript` output')
-        console.error(runFromScripts.stdout, runFromScripts.stderr)
-
-        throw new Error('Script not executed successfully')
-      }
-    },
-  })
-
-  await tuiTask({
-    step: 10,
     title: 'Add workspace packages',
     task: async () => {
       const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
@@ -633,6 +563,76 @@ async function runCommand() {
       // The package we've generated (@my-org/validators) is used in the test
       // project on both the web and the api side and is further tested by our
       // playwright tests that trigger the files that import the package.
+    },
+  })
+
+  await tuiTask({
+    step: 10,
+    title: 'Add scripts',
+    task: async () => {
+      const nestedPath = path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one', 'two')
+
+      fs.mkdirSync(nestedPath, { recursive: true })
+      fs.writeFileSync(
+        path.join(nestedPath, 'myNestedScript.ts'),
+        "import { contacts } from 'api/src/services/contacts/contacts'\n" +
+          '\n' +
+          'export default async () => {\n' +
+          '  const _allContacts = await contacts()\n' +
+          "  console.log('Hello from myNestedScript.ts')\n" +
+          '}\n\n',
+      )
+
+      await exec(
+        'yarn cedar g script i/am/nested',
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
+
+      // Verify that the scripts are added and included in the list of
+      // available scripts
+      const list = await exec(
+        'yarn cedar exec',
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
+
+      if (
+        !list.stdout.includes('seed') ||
+        !list.stdout.includes('i/am/nested') ||
+        !list.stdout.includes('one/two/myNestedScript')
+      ) {
+        console.error('yarn cedar exec output', list.stdout, list.stderr)
+
+        throw new Error('Scripts not included in list')
+      }
+
+      // Verify that the scripts can be executed
+      const runFromRoot = await exec(
+        'yarn cedar exec one/two/myNestedScript',
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
+
+      if (!runFromRoot.stdout.includes('Hello from myNestedScript')) {
+        console.error('`yarn cedar exec one/two/myNestedScript` output')
+        console.error(runFromRoot.stdout, runFromRoot.stderr)
+
+        throw new Error('Script not executed successfully')
+      }
+
+      const runFromScripts = await exec(
+        'yarn cedar exec one/two/myNestedScript',
+        [],
+        getExecaOptions(path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one')),
+      )
+
+      if (!runFromScripts.stdout.includes('Hello from myNestedScript')) {
+        console.error('`yarn cedar exec one/two/myNestedScript` output')
+        console.error(runFromScripts.stdout, runFromScripts.stderr)
+
+        throw new Error('Script not executed successfully')
+      }
     },
   })
 
