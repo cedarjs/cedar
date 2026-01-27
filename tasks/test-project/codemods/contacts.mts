@@ -46,7 +46,18 @@ export default (file: FileInfo, api: API) => {
         const ifBody = j.blockStatement([
           j.throwStatement(
             j.newExpression(j.identifier('Error'), [
-              j.stringLiteral('Invalid email'),
+              j.binaryExpression(
+                '+',
+                j.binaryExpression(
+                  '+',
+                  j.stringLiteral('Invalid email >'),
+                  j.memberExpression(
+                    j.identifier('input'),
+                    j.identifier('email'),
+                  ),
+                ),
+                j.stringLiteral('<'),
+              ),
             ]),
           ),
         ])
@@ -56,7 +67,7 @@ export default (file: FileInfo, api: API) => {
             j.callExpression(
               j.memberExpression(j.identifier('console'), j.identifier('log')),
               [
-                j.stringLiteral('Creating contact with email'),
+                j.stringLiteral('Creating contact with email:'),
                 j.memberExpression(
                   j.identifier('input'),
                   j.identifier('email'),

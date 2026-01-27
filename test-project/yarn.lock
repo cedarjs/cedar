@@ -7570,7 +7570,6 @@ __metadata:
     "@cedarjs/auth-dbauth-api": "npm:3.0.0-canary.13223+9e1d1011b"
     "@cedarjs/graphql-server": "npm:3.0.0-canary.13223+9e1d1011b"
     "@my-org/validators": "workspace:*"
-    "@prisma/client": "npm:6.19.1"
   languageName: unknown
   linkType: soft
 

@@ -18,7 +18,7 @@ export const createContact: MutationResolvers['createContact'] = ({
   input,
 }) => {
   if (!validateEmail(input.email)) {
-    throw new Error('Invalid email')
+    throw new Error('Invalid email >' + input.email + '<')
   } else {
     console.log('Creating contact with email:', input.email)
   }
