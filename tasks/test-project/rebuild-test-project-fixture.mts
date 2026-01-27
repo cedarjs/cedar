@@ -179,7 +179,7 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
       )
     }
 
-    const exitCode = isTuiError(e) ? e.exitCode : undefined
+    const exitCode = isTuiError(e) ? e.exitCode : 1
     process.exit(exitCode)
   }
 
@@ -201,7 +201,8 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
         )
       }
 
-      process.exit(e.exitCode)
+      // Ensure we always exit non-zero on errors. Default to 1 if no exitCode.
+      process.exit(e.exitCode ?? 1)
     })
 
     if (Array.isArray(result)) {
