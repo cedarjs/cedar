@@ -358,11 +358,6 @@ export function apiTasksList({
       },
     },
     {
-      title: 'Add dbAuth',
-      task: async () =>
-        addDbAuth(dbAuth === 'local', getOutputPath(), linkWithLatestFwBuild),
-    },
-    {
       title: 'Add users service',
       task: async () => {
         const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
@@ -397,6 +392,11 @@ export function apiTasksList({
 
         return createBuilder('yarn cedar g types')()
       },
+    },
+    {
+      title: 'Add dbAuth',
+      task: async () =>
+        addDbAuth(dbAuth === 'local', getOutputPath(), linkWithLatestFwBuild),
     },
     {
       title: 'Add describeScenario tests',
