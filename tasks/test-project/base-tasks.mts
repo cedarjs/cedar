@@ -315,6 +315,8 @@ export function apiTasksList({
                 "import { db } from 'src/lib/db.js'",
             ),
         )
+
+        return applyCodemod('contacts.mts', contactsServicePath)
       },
     },
     {
