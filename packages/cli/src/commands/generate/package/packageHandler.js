@@ -273,6 +273,7 @@ export function updateWorkspaceTsconfigReferences(
           ws.tsconfigPath,
           tsconfigText,
         )
+
         if (error) {
           throw new Error(
             'Failed to parse tsconfig: ' + JSON.stringify(error, null, 2),
@@ -334,16 +335,14 @@ export function updateWorkspaceTsconfigReferences(
           formattingOptions: { insertSpaces: true, tabSize: 2 },
         })
 
-        if (edits.length === 0) {
-          await fs.promises.writeFile(
-            ws.tsconfigPath,
-            JSON.stringify({ ...tsconfig, references: newReferences }, null, 2),
-            'utf8',
-          )
-        } else {
-          const newText = applyEdits(text, edits)
-          await fs.promises.writeFile(ws.tsconfigPath, newText, 'utf8')
-        }
+        const newText = applyEdits(text, edits)
+        // Improve the formatting of the default case (no pre-existing
+        // references)
+        const formattedText = newText.replace(
+          /"references": \[\s*\{\s*"path":\s*"([^"]+)"\s*\}\s*\]/,
+          '"references": [{ "path": "' + referencePath + '" }]',
+        )
+        await fs.promises.writeFile(ws.tsconfigPath, formattedText, 'utf8')
       },
     }
   })

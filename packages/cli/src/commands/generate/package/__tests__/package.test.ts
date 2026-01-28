@@ -672,6 +672,7 @@ describe('packageHandler', () => {
         .run()
 
       const updated = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'))
+
       const expectedPath = path
         .relative(
           path.join(mockBase.path, 'api'),
@@ -679,6 +680,7 @@ describe('packageHandler', () => {
         )
         .split(path.sep)
         .join('/')
+
       expect(updated.references).toEqual(
         expect.arrayContaining([{ path: expectedPath }]),
       )
@@ -687,7 +689,7 @@ describe('packageHandler', () => {
     it('adds reference to api tsconfig when no references array exists', async () => {
       const tsconfigPath = path.join(mockBase.path, 'api', 'tsconfig.json')
       const tsconfig = {
-        files: [],
+        files: [''],
       }
 
       vol.fromJSON(
@@ -702,7 +704,7 @@ describe('packageHandler', () => {
         .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
         .run()
 
-      const updated = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'))
+      const updatedText = await fs.promises.readFile(tsconfigPath, 'utf8')
       const expectedPath = path
         .relative(
           path.join(mockBase.path, 'api'),
@@ -710,8 +712,8 @@ describe('packageHandler', () => {
         )
         .split(path.sep)
         .join('/')
-      expect(updated.references).toEqual(
-        expect.arrayContaining([{ path: expectedPath }]),
+      expect(updatedText).toContain(
+        '"references": [{ "path": "' + expectedPath + '" }]',
       )
     })
 
