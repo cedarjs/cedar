@@ -53,7 +53,7 @@
     "test-ci": "nx run-many -t test"
   },
   "resolutions": {
-    "prettier-plugin-packagejson/sort-package-json": "3.6.0",
+    "prettier-plugin-packagejson/sort-package-json": "3.6.1",
     "vite": "5.4.21"
   },
   "devDependencies": {
