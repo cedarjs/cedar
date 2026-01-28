@@ -371,7 +371,7 @@ describe('packageHandler', () => {
       vol.fromJSON(
         {
           [tsconfigPath]: tsconfig,
-          'redwood.toml': '',
+          'cedar.toml': '',
         },
         mockBase.path,
       )
@@ -396,7 +396,7 @@ describe('packageHandler', () => {
       vol.fromJSON(
         {
           [tsconfigPath]: node20tsconfig,
-          'redwood.toml': '',
+          'cedar.toml': '',
         },
         mockBase.path,
       )
@@ -417,7 +417,7 @@ describe('packageHandler', () => {
             '"module": "Node16",',
             '"module": "NodeNext",',
           ),
-          'redwood.toml': '',
+          'cedar.toml': '',
         },
         mockBase.path,
       )
@@ -494,7 +494,7 @@ describe('packageHandler', () => {
       vol.fromJSON(
         {
           [gitignorePath]: gitignore,
-          'redwood.toml': '',
+          'cedar.toml': '',
         },
         mockBase.path,
       )
@@ -510,7 +510,7 @@ describe('packageHandler', () => {
       vol.fromJSON(
         {
           [gitignorePath]: gitignore.replace('yarn-error.log\n', ''),
-          'redwood.toml': '',
+          'cedar.toml': '',
         },
         mockBase.path,
       )
@@ -551,7 +551,7 @@ describe('packageHandler', () => {
       vol.fromJSON(
         {
           [gitignorePath]: gitignoreWithTsBuildInfo,
-          'redwood.toml': '',
+          'cedar.toml': '',
         },
         mockBase.path,
       )
