@@ -430,6 +430,162 @@ describe('packageHandler', () => {
         /"module": "NodeNext"/,
       )
     })
+
+    it('skips update if web module is already ES2022', async () => {
+      const webTsconfigPath = path.join(mockBase.path, 'web', 'tsconfig.json')
+      const webTsconfig = `
+        {
+          "compilerOptions": {
+            "target": "ES2022",
+            "module": "ES2022", // This is the line to update
+            "jsx": "preserve"
+          }
+        }
+      `
+
+      vol.fromJSON(
+        {
+          [webTsconfigPath]: webTsconfig,
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const skipFn = vi.fn()
+      await packageHandler.updateTsconfig({ skip: skipFn })
+
+      expect(skipFn).toHaveBeenCalled()
+      expect(fs.readFileSync(webTsconfigPath, 'utf8')).toMatch(
+        /"module": "ES2022", \/\/ This is the line to update/,
+      )
+    })
+
+    it('updates web tsconfig from ES2020 to ESNext', async () => {
+      const webTsconfigPath = path.join(mockBase.path, 'web', 'tsconfig.json')
+      const webTsconfig = `
+        {
+          "compilerOptions": {
+            "target": "ES2020",
+            "module": "ES2020", // This is the line to update
+            "jsx": "preserve"
+          }
+        }
+      `
+
+      vol.fromJSON(
+        {
+          [webTsconfigPath]: webTsconfig,
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateTsconfig({ skip: () => {} })
+
+      expect(fs.readFileSync(webTsconfigPath, 'utf8')).toMatch(
+        /"module": "ESNext", \/\/ This is the line to update/,
+      )
+      expect(fs.readFileSync(webTsconfigPath, 'utf8')).toEqual(
+        webTsconfig.replace('"module": "ES2020",', '"module": "ESNext",'),
+      )
+    })
+
+    it('skips update if web module is already ESNext', async () => {
+      const webTsconfigPath = path.join(mockBase.path, 'web', 'tsconfig.json')
+      const webTsconfig = `
+        {
+          "compilerOptions": {
+            "target": "ES2022",
+            "module": "ESNext",
+            "moduleResolution": "Bundler"
+          },
+          "include": ["src"]
+        }
+      `
+
+      vol.fromJSON(
+        {
+          [webTsconfigPath]: webTsconfig,
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const skipFn = vi.fn()
+      await packageHandler.updateTsconfig({ skip: skipFn })
+
+      expect(skipFn).toHaveBeenCalled()
+      expect(fs.readFileSync(webTsconfigPath, 'utf8')).toMatch(
+        /"module": "ESNext"/,
+      )
+    })
+
+    it('updates scripts from Node16 to Node20', async () => {
+      const scriptsTsconfigPath = path.join(
+        mockBase.path,
+        'scripts',
+        'tsconfig.json',
+      )
+      const scriptsTsconfig = `
+        {
+          "compilerOptions": {
+            "target": "ES2023",
+            "module": "Node16", // This is the line to update
+            "moduleResolution": "Node16"
+          }
+        }
+      `
+
+      vol.fromJSON(
+        {
+          [scriptsTsconfigPath]: scriptsTsconfig,
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateTsconfig({ skip: () => {} })
+
+      expect(fs.readFileSync(scriptsTsconfigPath, 'utf8')).toMatch(
+        /"module": "Node20", \/\/ This is the line to update/,
+      )
+      expect(fs.readFileSync(scriptsTsconfigPath, 'utf8')).toEqual(
+        scriptsTsconfig.replace('"module": "Node16",', '"module": "Node20",'),
+      )
+    })
+
+    it('skips update if scripts module is already NodeNext', async () => {
+      const scriptsTsconfigPath = path.join(
+        mockBase.path,
+        'scripts',
+        'tsconfig.json',
+      )
+      const scriptsTsconfig = `
+        {
+          "compilerOptions": {
+            "target": "ES2023",
+            "module": "NodeNext",
+            "moduleResolution": "Node16"
+          }
+        }
+      `
+
+      vol.fromJSON(
+        {
+          [scriptsTsconfigPath]: scriptsTsconfig,
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      const skipFn = vi.fn()
+      await packageHandler.updateTsconfig({ skip: skipFn })
+
+      expect(skipFn).toHaveBeenCalled()
+      expect(fs.readFileSync(scriptsTsconfigPath, 'utf8')).toMatch(
+        /"module": "NodeNext"/,
+      )
+    })
   })
 
   describe('updateGitignore', () => {
