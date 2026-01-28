@@ -4,8 +4,10 @@ import path from 'node:path'
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { paramCase, camelCase } from 'change-case'
 import execa from 'execa'
+import { modify } from 'jsonc-parser'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
+import ts from 'typescript'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getConfig } from '@cedarjs/project-config'
@@ -16,6 +18,24 @@ import { getPaths, writeFilesTask } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 
 import { files } from './filesTask.js'
+
+/**
+ * Helper to apply edits returned by jsonc-parser.modify.
+ * Applies edits in reverse order so offsets remain valid.
+ */
+function applyEdits(text, edits) {
+  let newText = text
+
+  for (let i = edits.length - 1; i >= 0; i--) {
+    const edit = edits[i]
+    newText =
+      newText.slice(0, edit.offset) +
+      edit.content +
+      newText.slice(edit.offset + edit.length)
+  }
+
+  return newText
+}
 
 /**
  * @typedef {Object} ListrContext
@@ -191,9 +211,45 @@ export async function updateWorkspaceTsconfigReferences(
           return
         }
 
-        const tsconfig = JSON.parse(
-          await fs.promises.readFile(ws.tsconfigPath, 'utf8'),
+        const tsconfigText = await fs.promises.readFile(ws.tsconfigPath, 'utf8')
+        const { config: tsconfig, error } = ts.parseConfigFileTextToJson(
+          ws.tsconfigPath,
+          tsconfigText,
         )
+        if (error) {
+          throw new Error(
+            'Failed to parse tsconfig: ' + JSON.stringify(error, null, 2),
+          )
+        }
+
+        // Parse for additional diagnostics using an fs-backed host so that
+        // extends and other file resolution also use the same fs
+        // implementation.
+        // This makes testing easier with a mock fs implementation.
+        const configParseResult = ts.parseJsonConfigFileContent(
+          tsconfig,
+          {
+            ...ts.sys,
+            readFile: (p) => {
+              try {
+                return fs.readFileSync(p, 'utf8')
+              } catch (e) {
+                return ts.sys.readFile(p)
+              }
+            },
+            fileExists: (p) => {
+              if (typeof fs.existsSync === 'function') {
+                return fs.existsSync(p)
+              }
+              return ts.sys.fileExists(p)
+            },
+          },
+          path.dirname(ws.tsconfigPath),
+        )
+
+        if (configParseResult.errors && configParseResult.errors.length) {
+          console.error('Parse errors:', configParseResult.errors)
+        }
 
         if (!Array.isArray(tsconfig.references)) {
           tsconfig.references = []
@@ -201,30 +257,41 @@ export async function updateWorkspaceTsconfigReferences(
 
         const packageDir =
           ws.packageDir || path.join(getPaths().base, 'packages', folderName)
-        let referencePath = path.relative(
-          path.dirname(ws.tsconfigPath),
-          packageDir,
-        )
-        referencePath = referencePath.split(path.sep).join('/')
+        const referencePath = path
+          .relative(path.dirname(ws.tsconfigPath), packageDir)
+          .split(path.sep)
+          .join('/')
 
-        if (
-          tsconfig.references.some((ref) => ref && ref.path === referencePath)
-        ) {
+        const references = tsconfig.references
+
+        if (references.some((ref) => ref && ref.path === referencePath)) {
           subtask.skip('tsconfig already up to date')
           return
         }
 
-        tsconfig.references.push({ path: referencePath })
+        const newReferences = references.concat([{ path: referencePath }])
 
-        await fs.promises.writeFile(
-          ws.tsconfigPath,
-          JSON.stringify(tsconfig, null, 2),
-        )
+        let text = await fs.promises.readFile(ws.tsconfigPath, 'utf8')
+
+        const edits = modify(text, ['references'], newReferences, {
+          formattingOptions: { insertSpaces: true, tabSize: 2 },
+        })
+
+        if (edits.length === 0) {
+          await fs.promises.writeFile(
+            ws.tsconfigPath,
+            JSON.stringify({ ...tsconfig, references: newReferences }, null, 2),
+            'utf8',
+          )
+        } else {
+          const newText = applyEdits(text, edits)
+          await fs.promises.writeFile(ws.tsconfigPath, newText, 'utf8')
+        }
       },
     }
   })
 
-  return new Listr(subtasks)
+  return new Listr(subtasks).run()
 }
 
 async function installAndBuild(folderName) {

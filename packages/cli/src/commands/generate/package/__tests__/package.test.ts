@@ -432,7 +432,7 @@ describe('packageHandler', () => {
     })
   })
 
-  describe('addDependencyToPackageJson and updateRootTsconfigReferences', () => {
+  describe('addDependencyToPackageJson and updateWorkspaceTsconfigReferences', () => {
     it('adds dependency to package.json', async () => {
       const apiPackageJsonPath = path.join(mockBase.path, 'api', 'package.json')
 
@@ -509,7 +509,40 @@ describe('packageHandler', () => {
         mockBase.path,
       )
 
-      await packageHandler.updateRootTsconfigReferences(
+      await packageHandler.updateWorkspaceTsconfigReferences(
+        { skip: () => {} },
+        'newpkg',
+        'api',
+      )
+
+      const updated = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'))
+      const expectedPath = path
+        .relative(
+          path.join(mockBase.path, 'api'),
+          path.join(mockBase.path, 'packages', 'newpkg'),
+        )
+        .split(path.sep)
+        .join('/')
+      expect(updated.references).toEqual(
+        expect.arrayContaining([{ path: expectedPath }]),
+      )
+    })
+
+    it('adds reference to api tsconfig when no references array exists', async () => {
+      const tsconfigPath = path.join(mockBase.path, 'api', 'tsconfig.json')
+      const tsconfig = {
+        files: [],
+      }
+
+      vol.fromJSON(
+        {
+          [tsconfigPath]: JSON.stringify(tsconfig, null, 2),
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateWorkspaceTsconfigReferences(
         { skip: () => {} },
         'newpkg',
         'api',
@@ -559,6 +592,80 @@ describe('packageHandler', () => {
 
       const after = fs.readFileSync(tsconfigPath, 'utf8')
       expect(after).toEqual(before)
+    })
+
+    it('adds reference to api tsconfig when tsconfig contains comments and trailing commas', async () => {
+      const tsconfigPath = path.join(mockBase.path, 'api', 'tsconfig.json')
+      const tsconfigText = dedent`{
+        // existing comment
+        "references": [
+          { "path": "packages/existing", }, // trailing comma and comment
+        ], // trailing comma
+        "files": [], // trailing comma
+      }`
+
+      vol.fromJSON(
+        {
+          [tsconfigPath]: tsconfigText,
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateWorkspaceTsconfigReferences(
+        { skip: () => {} },
+        'newpkg',
+        'api',
+      )
+
+      const updatedText = fs.readFileSync(tsconfigPath, 'utf8')
+      const expectedPath = path
+        .relative(
+          path.join(mockBase.path, 'api'),
+          path.join(mockBase.path, 'packages', 'newpkg'),
+        )
+        .split(path.sep)
+        .join('/')
+      expect(updatedText).toContain(expectedPath)
+    })
+
+    it('adds reference to scripts tsconfig when tsconfig contains comments and trailing commas', async () => {
+      const scriptsTsconfigPath = path.join(
+        mockBase.path,
+        'scripts',
+        'tsconfig.json',
+      )
+      const tsconfigText = dedent`{
+        // comment
+        "references": [
+          { "path": "packages/existing", },
+        ],
+        "files": [],
+      }`
+
+      vol.fromJSON(
+        {
+          [scriptsTsconfigPath]: tsconfigText,
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateWorkspaceTsconfigReferences(
+        { skip: () => {} },
+        'newpkg',
+        'api',
+      )
+
+      const updatedText = fs.readFileSync(scriptsTsconfigPath, 'utf8')
+      const expectedPath = path
+        .relative(
+          path.join(mockBase.path, 'scripts'),
+          path.join(mockBase.path, 'packages', 'newpkg'),
+        )
+        .split(path.sep)
+        .join('/')
+      expect(updatedText).toContain(expectedPath)
     })
 
     it('adds reference to scripts tsconfig when workspace selected', async () => {
