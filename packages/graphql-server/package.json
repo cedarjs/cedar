@@ -66,7 +66,7 @@
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/realtime": "workspace:*",
     "@envelop/types": "5.2.1",
-    "@types/aws-lambda": "8.10.159",
+    "@types/aws-lambda": "8.10.160",
     "@types/jsonwebtoken": "9.0.10",
     "@types/lodash": "4.17.23",
     "@whatwg-node/fetch": "0.10.13",
