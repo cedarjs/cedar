@@ -447,7 +447,7 @@ async function runCommand() {
       fs.writeFileSync(tomlPath, newRedwoodToml)
 
       await exec(
-        'yarn cedar g package @my-org/validators',
+        'yarn cedar g package @my-org/validators --workspace both',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
