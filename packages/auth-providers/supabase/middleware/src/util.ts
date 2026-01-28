@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import type { CookieOptions } from '@supabase/ssr'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { AUTH_PROVIDER_HEADER } from '@cedarjs/api'
 import { throwSupabaseSettingsError } from '@cedarjs/auth-supabase-api'
@@ -15,7 +14,7 @@ import type {
 export const createSupabaseServerClient = (
   req: MiddlewareRequest,
   res: MiddlewareResponse,
-): { cookieName: string | null; supabase: SupabaseClient } => {
+) => {
   let cookieName = null
 
   if (!process.env.SUPABASE_URL) {

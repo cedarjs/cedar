@@ -1,10 +1,22 @@
-import path from 'path'
+import path from 'node:path'
 
 const distPath = path.join(__dirname, 'dist')
 
 describe('dist', () => {
   it('exports', async () => {
     const { default: mod } = await import(path.join(distPath, 'index.js'))
+
+    // We use this to calculate the diff in minor versions
+    const runtimeMinorVersion = mod.RUNTIME_CORE_JS_VERSION.split('.')[1]
+    // We use this to allow all patch versions
+    const runtimePatchVersion = mod.RUNTIME_CORE_JS_VERSION.split('.')[2]
+
+    const expectedRuntimeMinorVersion = 28
+
+    // Allow a minor version difference of 1
+    expect(
+      Math.abs(expectedRuntimeMinorVersion - runtimeMinorVersion),
+    ).toBeLessThanOrEqual(1)
 
     expect(mod).toMatchInlineSnapshot(`
       {
@@ -13,10 +25,10 @@ describe('dist', () => {
             "proposals": true,
             "version": 3,
           },
-          "version": "7.28.4",
+          "version": "7.${runtimeMinorVersion}.${runtimePatchVersion}",
         },
         "CORE_JS_VERSION": "3.47",
-        "RUNTIME_CORE_JS_VERSION": "7.28.4",
+        "RUNTIME_CORE_JS_VERSION": "7.${runtimeMinorVersion}.${runtimePatchVersion}",
         "TARGETS_NODE": "20.10",
         "getApiSideBabelConfigPath": [Function],
         "getApiSideBabelPlugins": [Function],

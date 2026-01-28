@@ -101,7 +101,7 @@ export const handler = async (
     UserType,
     UserAttributes
   >['signup'] = {
-    // Whatever you want to happen to your data on new user signup. Redwood will
+    // Whatever you want to happen to your data on new user signup. Cedar will
     // check for duplicate usernames before calling this handler. At a minimum
     // you need to save the `username`, `hashedPassword` and `salt` to your
     // user table. `userAttributes` contains any additional object members that
@@ -202,7 +202,7 @@ export const handler = async (
       // *must* re-enter username and password to authenticate (WebAuthn will
       // then be re-enabled for this amount of time).
       expires: 60 * 60 * 24 * 365 * 10,
-      name: 'Redwood Application',
+      name: 'Cedar Application',
       domain:
         process.env.NODE_ENV === 'development' ? 'localhost' : 'server.com',
       origin:

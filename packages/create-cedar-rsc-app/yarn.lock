@@ -1076,10 +1076,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@publint/pack@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "@publint/pack@npm:0.1.2"
-  checksum: 10c0/4647158cd3a27816ecaf139327662d31820d61e89eb970b318fd0f7c30715baaedf27d294d31772f3a6ad71f84c42509b90328aa5b6301b706322eb7c35ddb3f
+"@publint/pack@npm:^0.1.3":
+  version: 0.1.3
+  resolution: "@publint/pack@npm:0.1.3"
+  checksum: 10c0/edb8cd4c4d9abe15b0c966fcf2305601ad9a0e65a6fbb5c32eb6c10059bc6cd76b0754f61e7af229101d15bbd7203e262b6012f1df2053fba5f3adfccbdaee69
   languageName: node
   linkType: hard
 
@@ -1667,9 +1667,9 @@ __metadata:
     node-fetch: "npm:3.3.2"
     prettier: "npm:3.6.2"
     prettier-plugin-curly: "npm:^0.3.0"
-    prettier-plugin-packagejson: "npm:2.5.20"
+    prettier-plugin-packagejson: "npm:3.0.0"
     prettier-plugin-sh: "npm:^0.18.0"
-    publint: "npm:0.3.16"
+    publint: "npm:0.3.17"
     rimraf: "npm:^6.0.1"
     semver: "npm:7.7.3"
     tsx: "npm:4.21.0"
@@ -2156,8 +2156,8 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-n@npm:^17.9.0":
-  version: 17.23.1
-  resolution: "eslint-plugin-n@npm:17.23.1"
+  version: 17.23.2
+  resolution: "eslint-plugin-n@npm:17.23.2"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.5.0"
     enhanced-resolve: "npm:^5.17.1"
@@ -2170,20 +2170,20 @@ __metadata:
     ts-declaration-location: "npm:^1.0.6"
   peerDependencies:
     eslint: ">=8.23.0"
-  checksum: 10c0/35d23fe25d92b8aa3257a8bd003094b4042c0492ddc82e8b20728eb6546d2d5c31a08be215a7996f113de7b24a1a27377136345e95a5e2c96c44d3653be2c988
+  checksum: 10c0/3808dad65628bc2dd74ebb9e7a255398f87ca348b4970307898b422bfe2302764d518f6a70d891b1fc45b08ea99ccf5ea4b3cd2d1f21f872bb60a4cdbfb22b68
   languageName: node
   linkType: hard
 
 "eslint-plugin-package-json@npm:^0.88.0":
-  version: 0.88.1
-  resolution: "eslint-plugin-package-json@npm:0.88.1"
+  version: 0.88.2
+  resolution: "eslint-plugin-package-json@npm:0.88.2"
   dependencies:
     "@altano/repository-tools": "npm:^2.0.1"
     change-case: "npm:^5.4.4"
     detect-indent: "npm:^7.0.2"
     detect-newline: "npm:^4.0.1"
     eslint-fix-utils: "npm:~0.4.0"
-    package-json-validator: "npm:~0.59.1"
+    package-json-validator: "npm:~0.60.0"
     semver: "npm:^7.7.3"
     sort-object-keys: "npm:^2.0.0"
     sort-package-json: "npm:^3.4.0"
@@ -2191,7 +2191,7 @@ __metadata:
   peerDependencies:
     eslint: ">=8.0.0"
     jsonc-eslint-parser: ^2.0.0
-  checksum: 10c0/880c9a304cef368a98ef1a9aee0a3f6769e87ef9bc95bcd6d888c7397c13bead54c0b5ad2d725ecfd288c2f676b1f59327f593b979f52394ab572c88092ade5a
+  checksum: 10c0/411983dbf8c9a30c3c675befdee900f5bcf6be870089a46e706cbec7fcbeabd11046a94581fa7dec27e00d166c3c956463b485de32c208916f953a5f61377e07
   languageName: node
   linkType: hard
 
@@ -3533,9 +3533,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-json-validator@npm:~0.59.1":
-  version: 0.59.1
-  resolution: "package-json-validator@npm:0.59.1"
+"package-json-validator@npm:~0.60.0":
+  version: 0.60.0
+  resolution: "package-json-validator@npm:0.60.0"
   dependencies:
     semver: "npm:^7.7.2"
     validate-npm-package-license: "npm:^3.0.4"
@@ -3543,7 +3543,7 @@ __metadata:
     yargs: "npm:~18.0.0"
   bin:
     pjv: lib/bin/pjv.mjs
-  checksum: 10c0/97fbefa84dc1d4534111f3311711bbf39fda5b96877ea05dd745024d67cf8003bc6ca95345634ce9232aeaa5aea71f23ab8914e10958bb153f3343c0ef21a410
+  checksum: 10c0/f4d8a0867e2b4ee1be7a59362826b919a1350cb6025b2f89ab35339158ae88609e9cf4c9a976aada777b8855223d05ea9639bee514a88d2adbcbbbac26b2361f
   languageName: node
   linkType: hard
 
@@ -3662,18 +3662,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-packagejson@npm:2.5.20":
-  version: 2.5.20
-  resolution: "prettier-plugin-packagejson@npm:2.5.20"
+"prettier-plugin-packagejson@npm:3.0.0":
+  version: 3.0.0
+  resolution: "prettier-plugin-packagejson@npm:3.0.0"
   dependencies:
-    sort-package-json: "npm:3.5.0"
-    synckit: "npm:0.11.11"
+    sort-package-json: "npm:3.6.0"
   peerDependencies:
-    prettier: ">= 1.16.0"
+    prettier: ^3
   peerDependenciesMeta:
     prettier:
       optional: true
-  checksum: 10c0/620fbb1018120f01432f86b88f7fe06b84284e2b7acd30a90ca9aabd524b48b03e0fbb9617918721574c46eac362fcb49f7543b7fa17342b6a82b6c558e6d2c7
+  checksum: 10c0/ddcc6d4b70dc6afb97775187e620fa102f2acd64fe7305651eea250505f0dc77da234e85d9fc1163a4cf0bc008a5e8e1772c00e29d22df735f0828efc7aabe45
   languageName: node
   linkType: hard
 
@@ -3715,17 +3714,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"publint@npm:0.3.16":
-  version: 0.3.16
-  resolution: "publint@npm:0.3.16"
+"publint@npm:0.3.17":
+  version: 0.3.17
+  resolution: "publint@npm:0.3.17"
   dependencies:
-    "@publint/pack": "npm:^0.1.2"
+    "@publint/pack": "npm:^0.1.3"
     package-manager-detector: "npm:^1.6.0"
     picocolors: "npm:^1.1.1"
     sade: "npm:^1.8.1"
   bin:
     publint: src/cli.js
-  checksum: 10c0/8bfc17b40ebc6687ae983974d08a8cc715a2c4db403a57dfb17bd56638a23a9ca1888d76ccf53a42edce709c1c1317bce94d50fe53b8ea6400ab40684aca3d82
+  checksum: 10c0/4615412b03c9b417c80d475b00fbaa7cdcc9685794b057c65edfd386e3d3b9b3701525d69c4fa485ce9f91831bb097f62235ac781309947c8cc2720f970cedcc
   languageName: node
   linkType: hard
 
@@ -4125,7 +4124,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"synckit@npm:0.11.11, synckit@npm:^0.6.2 || ^0.7.3 || ^0.11.5":
+"synckit@npm:^0.6.2 || ^0.7.3 || ^0.11.5":
   version: 0.11.11
   resolution: "synckit@npm:0.11.11"
   dependencies:
