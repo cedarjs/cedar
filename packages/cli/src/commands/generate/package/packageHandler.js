@@ -42,31 +42,77 @@ export function nameVariants(nameArg) {
 
 // Exported for testing
 export async function updateTsconfig(task) {
-  const tsconfigPath = path.join(getPaths().api.base, 'tsconfig.json')
-  const tsconfig = await fs.promises.readFile(tsconfigPath, 'utf8')
-  const tsconfigLines = tsconfig.split('\n')
+  const targets = [
+    {
+      name: 'api',
+      path: path.join(getPaths().api.base, 'tsconfig.json'),
+      expectedModule: 'Node20',
+      acceptable: ['node20', 'nodenext'],
+    },
+    {
+      name: 'web',
+      path: path.join(getPaths().web.base, 'tsconfig.json'),
+      expectedModule: 'ESNext',
+      acceptable: ['esnext', 'es2022'],
+    },
+    {
+      name: 'scripts',
+      path: path.join(getPaths().scripts, 'tsconfig.json'),
+      expectedModule: 'Node20',
+      acceptable: ['node20', 'nodenext'],
+    },
+  ]
 
-  const moduleLineIndex = tsconfigLines.findIndex((line) =>
-    /^\s*"module":\s*"/.test(line),
-  )
-  const moduleLine = tsconfigLines[moduleLineIndex]
+  let updatedAny = false
 
-  if (
-    moduleLine.toLowerCase().includes('node20') ||
-    // While Cedar doesn't officially endorse the usage of NodeNext, it
-    // will still work here, so I won't overwrite it
-    moduleLine.toLowerCase().includes('nodenext')
-  ) {
+  for (const target of targets) {
+    if (!fs.existsSync(target.path)) {
+      continue
+    }
+
+    const tsconfig = await fs.promises.readFile(target.path, 'utf8')
+    const tsconfigLines = tsconfig.split('\n')
+
+    const moduleLineIndex = tsconfigLines.findIndex((line) =>
+      /^\s*"module":\s*"/.test(line),
+    )
+
+    if (moduleLineIndex === -1) {
+      // If there is no "module" line, skip this tsconfig
+      continue
+    }
+
+    const moduleLine = tsconfigLines[moduleLineIndex]
+
+    const lower = moduleLine.toLowerCase()
+
+    // While Cedar doesn't officially endorse NodeNext, it will still work here,
+    // so we won't overwrite it for Node targets.
+    const alreadySet = target.acceptable.some((acc) => {
+      if (lower.includes(acc)) {
+        return true
+      }
+
+      return false
+    })
+
+    if (alreadySet) {
+      continue
+    }
+
+    tsconfigLines[moduleLineIndex] = moduleLine.replace(
+      /":\s*"[\w\d]+"/,
+      `": "${target.expectedModule}"`,
+    )
+
+    await fs.promises.writeFile(target.path, tsconfigLines.join('\n'))
+    updatedAny = true
+  }
+
+  if (!updatedAny) {
     task.skip('tsconfig already up to date')
     return
   }
-
-  tsconfigLines[moduleLineIndex] = moduleLine.replace(
-    /":\s*"[\w\d]+"/,
-    '": "Node20"',
-  )
-
-  await fs.promises.writeFile(tsconfigPath, tsconfigLines.join('\n'))
 }
 
 // Exported for testing
@@ -212,7 +258,7 @@ export const handler = async ({ name, force, ...rest }) => {
         },
       },
       {
-        title: 'Updating api side tsconfig file...',
+        title: 'Updating tsconfig files...',
         task: (_ctx, task) => updateTsconfig(task),
       },
       {
