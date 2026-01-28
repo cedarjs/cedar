@@ -2253,15 +2253,15 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-package-json@npm:^0.88.0":
-  version: 0.88.1
-  resolution: "eslint-plugin-package-json@npm:0.88.1"
+  version: 0.88.2
+  resolution: "eslint-plugin-package-json@npm:0.88.2"
   dependencies:
     "@altano/repository-tools": "npm:^2.0.1"
     change-case: "npm:^5.4.4"
     detect-indent: "npm:^7.0.2"
     detect-newline: "npm:^4.0.1"
     eslint-fix-utils: "npm:~0.4.0"
-    package-json-validator: "npm:~0.59.1"
+    package-json-validator: "npm:~0.60.0"
     semver: "npm:^7.7.3"
     sort-object-keys: "npm:^2.0.0"
     sort-package-json: "npm:^3.4.0"
@@ -2269,7 +2269,7 @@ __metadata:
   peerDependencies:
     eslint: ">=8.0.0"
     jsonc-eslint-parser: ^2.0.0
-  checksum: 10c0/880c9a304cef368a98ef1a9aee0a3f6769e87ef9bc95bcd6d888c7397c13bead54c0b5ad2d725ecfd288c2f676b1f59327f593b979f52394ab572c88092ade5a
+  checksum: 10c0/411983dbf8c9a30c3c675befdee900f5bcf6be870089a46e706cbec7fcbeabd11046a94581fa7dec27e00d166c3c956463b485de32c208916f953a5f61377e07
   languageName: node
   linkType: hard
 
@@ -3604,9 +3604,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-json-validator@npm:~0.59.1":
-  version: 0.59.1
-  resolution: "package-json-validator@npm:0.59.1"
+"package-json-validator@npm:~0.60.0":
+  version: 0.60.0
+  resolution: "package-json-validator@npm:0.60.0"
   dependencies:
     semver: "npm:^7.7.2"
     validate-npm-package-license: "npm:^3.0.4"
@@ -3614,7 +3614,7 @@ __metadata:
     yargs: "npm:~18.0.0"
   bin:
     pjv: lib/bin/pjv.mjs
-  checksum: 10c0/97fbefa84dc1d4534111f3311711bbf39fda5b96877ea05dd745024d67cf8003bc6ca95345634ce9232aeaa5aea71f23ab8914e10958bb153f3343c0ef21a410
+  checksum: 10c0/f4d8a0867e2b4ee1be7a59362826b919a1350cb6025b2f89ab35339158ae88609e9cf4c9a976aada777b8855223d05ea9639bee514a88d2adbcbbbac26b2361f
   languageName: node
   linkType: hard
 
