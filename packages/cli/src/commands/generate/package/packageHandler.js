@@ -76,7 +76,7 @@ export async function updateGitignore(task) {
   const gitignoreLines = gitignore.split('\n')
 
   if (gitignoreLines.some((line) => line === 'tsconfig.tsbuildinfo')) {
-    task.skip('tsconfig already up to date')
+    task.skip('.gitignore already up to date')
     return
   }
 
