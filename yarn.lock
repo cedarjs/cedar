@@ -2786,7 +2786,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
-    jwks-rsa: "npm:3.2.0"
+    jwks-rsa: "npm:3.2.2"
     publint: "npm:0.3.17"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -2840,7 +2840,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
-    jwks-rsa: "npm:3.2.0"
+    jwks-rsa: "npm:3.2.2"
     publint: "npm:0.3.17"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3224,7 +3224,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
-    jwks-rsa: "npm:3.2.0"
+    jwks-rsa: "npm:3.2.2"
     publint: "npm:0.3.17"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -11773,7 +11773,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express@npm:4, @types/express@npm:^4.17.20":
+"@types/express@npm:4":
   version: 4.17.25
   resolution: "@types/express@npm:4.17.25"
   dependencies:
@@ -22107,17 +22107,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jwks-rsa@npm:3.2.0, jwks-rsa@npm:^3.1.0":
-  version: 3.2.0
-  resolution: "jwks-rsa@npm:3.2.0"
+"jwks-rsa@npm:3.2.2, jwks-rsa@npm:^3.1.0":
+  version: 3.2.2
+  resolution: "jwks-rsa@npm:3.2.2"
   dependencies:
-    "@types/express": "npm:^4.17.20"
     "@types/jsonwebtoken": "npm:^9.0.4"
     debug: "npm:^4.3.4"
     jose: "npm:^4.15.4"
     limiter: "npm:^1.1.5"
     lru-memoizer: "npm:^2.2.0"
-  checksum: 10c0/94896264473c8ec0ec21b8f29fd69b760ccb58ff63e6d5328d99694dc49a9be1d6f739fa536c71ca279966874e6c77b405181ed2c567318e0f545d3e941c318e
+  checksum: 10c0/a619ee0c5b342e1c9edcd69086d7beb86e3ef1dcce5b8aeb3ac6d0c0014309c90f00e5e7b0ce8143832628244fec8cdff51ecc38a5c3a95a4fcd810d60e79b1a
   languageName: node
   linkType: hard
 
