@@ -3453,6 +3453,7 @@ __metadata:
     fast-glob: "npm:3.3.3"
     humanize-string: "npm:2.1.0"
     jscodeshift: "npm:17.0.0"
+    jsonc-parser: "npm:3.3.1"
     latest-version: "npm:9.0.0"
     listr2: "npm:7.0.2"
     lodash: "npm:4.17.21"
@@ -21987,6 +21988,13 @@ __metadata:
   version: 3.2.0
   resolution: "jsonc-parser@npm:3.2.0"
   checksum: 10c0/5a12d4d04dad381852476872a29dcee03a57439574e4181d91dca71904fcdcc5e8e4706c0a68a2c61ad9810e1e1c5806b5100d52d3e727b78f5cdc595401045b
+  languageName: node
+  linkType: hard
+
+"jsonc-parser@npm:3.3.1":
+  version: 3.3.1
+  resolution: "jsonc-parser@npm:3.3.1"
+  checksum: 10c0/269c3ae0a0e4f907a914bf334306c384aabb9929bd8c99f909275ebd5c2d3bc70b9bcd119ad794f339dec9f24b6a4ee9cd5a8ab2e6435e730ad4075388fc2ab6
   languageName: node
   linkType: hard
 
