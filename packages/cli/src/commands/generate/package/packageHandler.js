@@ -43,6 +43,7 @@ export function nameVariants(nameArg) {
 
 // Exported for testing
 export async function updateTsconfig(task) {
+  // TODO: Do I also need to check web and scripts tsconfig files?
   const tsconfigPath = path.join(getPaths().api.base, 'tsconfig.json')
   const tsconfig = await fs.promises.readFile(tsconfigPath, 'utf8')
   const tsconfigLines = tsconfig.split('\n')
@@ -77,7 +78,7 @@ export async function updateGitignore(task) {
   const gitignoreLines = gitignore.split('\n')
 
   if (gitignoreLines.some((line) => line === 'tsconfig.tsbuildinfo')) {
-    task.skip('tsconfig already up to date')
+    task.skip('.gitignore already up to date')
     return
   }
 
@@ -157,29 +158,23 @@ export async function updateWorkspaceTsconfigReferences(
   // Update workspace tsconfigs (api/web/scripts)
   const workspaces = []
 
+  const packageDir = path.join(getPaths().base, 'packages', folderName)
+
   if (targetWorkspaces === 'api' || targetWorkspaces === 'both') {
-    workspaces.push({
-      name: 'api',
-      tsconfigPath: path.join(getPaths().api.base, 'tsconfig.json'),
-      packageDir: path.join(getPaths().base, 'packages', folderName),
-    })
+    const tsconfigPath = path.join(getPaths().api.base, 'tsconfig.json')
+    workspaces.push({ name: 'api', tsconfigPath, packageDir })
   }
 
   if (targetWorkspaces === 'web' || targetWorkspaces === 'both') {
-    workspaces.push({
-      name: 'web',
-      tsconfigPath: path.join(getPaths().web.base, 'tsconfig.json'),
-      packageDir: path.join(getPaths().base, 'packages', folderName),
-    })
+    const tsconfigPath = path.join(getPaths().web.base, 'tsconfig.json')
+    workspaces.push({ name: 'web', tsconfigPath, packageDir })
   }
 
-  // Also update the scripts tsconfig (if present) for any selection other than 'none'
+  // Also update the scripts tsconfig (if present) for any selection other than
+  // 'none'
   if (targetWorkspaces !== 'none') {
-    workspaces.push({
-      name: 'scripts',
-      tsconfigPath: path.join(getPaths().scripts, 'tsconfig.json'),
-      packageDir: path.join(getPaths().base, 'packages', folderName),
-    })
+    const tsconfigPath = path.join(getPaths().scripts, 'tsconfig.json')
+    workspaces.push({ name: 'scripts', tsconfigPath, packageDir })
   }
 
   if (workspaces.length === 0) {
@@ -229,10 +224,8 @@ export async function updateWorkspaceTsconfigReferences(
     }
   })
 
-  return await new Listr(subtasks).run()
+  return new Listr(subtasks)
 }
-
-export { updateWorkspaceTsconfigReferences as updateRootTsconfigReferences }
 
 async function installAndBuild(folderName) {
   const packagePath = path.join('packages', folderName)
@@ -421,6 +414,7 @@ export const handler = async ({ name, force, ...rest }) => {
                   getPaths().api.base,
                   'package.json',
                 )
+
                 return addDependencyToPackageJson(
                   subtask,
                   apiPackageJsonPath,
@@ -441,6 +435,7 @@ export const handler = async ({ name, force, ...rest }) => {
                   getPaths().web.base,
                   'package.json',
                 )
+
                 return addDependencyToPackageJson(
                   subtask,
                   webPackageJsonPath,
@@ -455,7 +450,7 @@ export const handler = async ({ name, force, ...rest }) => {
             return
           }
 
-          return await new Listr(subtasks).run()
+          return new Listr(subtasks)
         },
       },
       {
@@ -465,6 +460,7 @@ export const handler = async ({ name, force, ...rest }) => {
             task.skip('No workspace selected')
             return
           }
+
           return updateWorkspaceTsconfigReferences(
             task,
             ctx.nameVariants.folderName,
@@ -494,6 +490,7 @@ export const handler = async ({ name, force, ...rest }) => {
 
   try {
     if (rest.rollback && !force) {
+      // TODO: Also remove tsconfig.tsbuildinfo
       prepareForRollback(tasks)
     }
 

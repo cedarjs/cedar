@@ -12,20 +12,22 @@ import { isTypeScriptProject } from '@cedarjs/cli-helpers'
  * before `cwd` is initialized.
  * @type {() => Record<string, import('yargs').Options>}
  */
-export const getYargsDefaults = () => ({
-  force: {
-    alias: 'f',
-    default: false,
-    description: 'Overwrite existing files',
-    type: 'boolean',
-  },
-  typescript: {
-    alias: 'ts',
-    default: isTypeScriptProject(),
-    description: 'Generate TypeScript files',
-    type: 'boolean',
-  },
-})
+export function getYargsDefaults() {
+  return {
+    force: {
+      alias: 'f',
+      default: false,
+      description: 'Overwrite existing files',
+      type: 'boolean',
+    },
+    typescript: {
+      alias: 'ts',
+      default: isTypeScriptProject(),
+      description: 'Generate TypeScript files',
+      type: 'boolean',
+    },
+  }
+}
 
 const appendPositionalsToCmd = (commandString, positionalsObj) => {
   // Add positionals like `page <name>` + ` [path]` if specified
