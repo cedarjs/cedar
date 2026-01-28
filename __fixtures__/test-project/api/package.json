@@ -5,6 +5,7 @@
   "dependencies": {
     "@cedarjs/api": "3.0.0-canary.13206",
     "@cedarjs/auth-dbauth-api": "2.4.1",
-    "@cedarjs/graphql-server": "3.0.0-canary.13206"
+    "@cedarjs/graphql-server": "3.0.0-canary.13206",
+    "@my-org/validators": "workspace:*"
   }
 }

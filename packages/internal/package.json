@@ -178,7 +178,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
     "graphql-tag": "2.12.6",
-    "publint": "0.3.16",
+    "publint": "0.3.17",
     "tsx": "4.21.0",
     "vitest": "3.2.4"
   },

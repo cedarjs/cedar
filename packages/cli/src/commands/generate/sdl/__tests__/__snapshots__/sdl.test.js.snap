@@ -43,8 +43,8 @@ exports[`handler > can be called with PascalCase model name 2`] = `
 {
   "fileContent": "export const standard = defineScenario({
   user: {
-    one: { data: { email: 'String1234567' } },
-    two: { data: { email: 'String1234567' } },
+    one: { data: { email: 'foo1234567@bar.com' } },
+    two: { data: { email: 'foo1234567@bar.com' } },
   },
 })
 ",
@@ -77,20 +77,20 @@ describe('users', () => {
 
   scenario('creates a user', async () => {
     const result = await createUser({
-      input: { email: 'String1234567' },
+      input: { email: 'foo1234567@bar.com' },
     })
 
-    expect(result.email).toEqual('String1234567')
+    expect(result.email).toEqual('foo1234567@bar.com')
   })
 
   scenario('updates a user', async (scenario) => {
     const original = await user({ id: scenario.user.one.id })
     const result = await updateUser({
       id: original.id,
-      input: { email: 'String12345672' },
+      input: { email: 'foo1234567@bar.com2' },
     })
 
-    expect(result.email).toEqual('String12345672')
+    expect(result.email).toEqual('foo1234567@bar.com2')
   })
 
   scenario('deletes a user', async (scenario) => {
@@ -337,8 +337,8 @@ exports[`handler > can be called with camelCase model name 2`] = `
 {
   "fileContent": "export const standard = defineScenario({
   user: {
-    one: { data: { email: 'String1234567' } },
-    two: { data: { email: 'String1234567' } },
+    one: { data: { email: 'foo1234567@bar.com' } },
+    two: { data: { email: 'foo1234567@bar.com' } },
   },
 })
 ",
@@ -371,20 +371,20 @@ describe('users', () => {
 
   scenario('creates a user', async () => {
     const result = await createUser({
-      input: { email: 'String1234567' },
+      input: { email: 'foo1234567@bar.com' },
     })
 
-    expect(result.email).toEqual('String1234567')
+    expect(result.email).toEqual('foo1234567@bar.com')
   })
 
   scenario('updates a user', async (scenario) => {
     const original = await user({ id: scenario.user.one.id })
     const result = await updateUser({
       id: original.id,
-      input: { email: 'String12345672' },
+      input: { email: 'foo1234567@bar.com2' },
     })
 
-    expect(result.email).toEqual('String12345672')
+    expect(result.email).toEqual('foo1234567@bar.com2')
   })
 
   scenario('deletes a user', async (scenario) => {
