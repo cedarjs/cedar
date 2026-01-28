@@ -25,7 +25,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.28.4",
+    "@babel/runtime-corejs3": "7.28.6",
     "@cedarjs/project-config": "2.4.1",
     "@prisma/internals": "6.19.1",
     "@types/line-column": "1.0.2",
@@ -46,7 +46,7 @@
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
-    "@babel/cli": "7.28.3",
+    "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@types/lodash": "4.17.23",
     "@types/node": "24.10.4",
