@@ -4,7 +4,7 @@ import path from 'node:path'
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { paramCase, camelCase } from 'change-case'
 import execa from 'execa'
-import { modify } from 'jsonc-parser'
+import { modify, applyEdits } from 'jsonc-parser'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 import ts from 'typescript'
@@ -18,24 +18,6 @@ import { getPaths, writeFilesTask } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 
 import { files } from './filesTask.js'
-
-/**
- * Helper to apply edits returned by jsonc-parser.modify.
- * Applies edits in reverse order so offsets remain valid.
- */
-function applyEdits(text, edits) {
-  let newText = text
-
-  for (let i = edits.length - 1; i >= 0; i--) {
-    const edit = edits[i]
-    newText =
-      newText.slice(0, edit.offset) +
-      edit.content +
-      newText.slice(edit.offset + edit.length)
-  }
-
-  return newText
-}
 
 /**
  * @typedef {Object} ListrContext
