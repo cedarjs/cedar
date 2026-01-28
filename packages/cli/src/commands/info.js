@@ -1,12 +1,13 @@
 // inspired by gatsby/packages/gatsby-cli/src/create-cli.js and
 // gridsome/packages/cli/lib/commands/info.js
 import fs from 'node:fs'
+import path from 'node:path'
 
 import envinfo from 'envinfo'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { getPaths } from '@cedarjs/project-config'
+import { getConfigPath } from '@cedarjs/project-config'
 
 export const command = 'info'
 export const description = 'Print your system environment information'
@@ -30,12 +31,13 @@ export const handler = async () => {
     Databases: ['SQLite'],
   })
 
-  const redwoodToml = fs.readFileSync(getPaths().base + '/redwood.toml', 'utf8')
+  const configTomlPath = getConfigPath()
+  const tomlContent = fs.readFileSync(configTomlPath, 'utf8')
 
   console.log(
     output +
-      '  redwood.toml:\n' +
-      redwoodToml
+      `  ${path.basename(configTomlPath)}:\n` +
+      tomlContent
         .split('\n')
         .filter((line) => line.trim().length > 0)
         .filter((line) => !/^#/.test(line))

@@ -10,11 +10,12 @@ import yargs from 'yargs/yargs'
 
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
+import { apiTasksList, setOutputPath } from './base-tasks.mts'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
 } from './frameworkLinking.mts'
-import { webTasks, apiTasks } from './tui-tasks.mts'
+import { webTasks } from './tui-tasks.mts'
 import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
 import {
@@ -255,7 +256,11 @@ if (resume) {
   process.exit(1)
 }
 
-if (resumePath && !fs.existsSync(path.join(resumePath, 'redwood.toml'))) {
+if (
+  resumePath &&
+  !fs.existsSync(path.join(resumePath, 'cedar.toml')) &&
+  !fs.existsSync(path.join(resumePath, 'redwood.toml'))
+) {
   console.error(
     ansis.red.bold(
       `
@@ -366,21 +371,23 @@ async function runCommand() {
       // But on different ports. If API_DEV_PORT or WEB_DEV_PORT aren't supplied,
       // It just defaults to 8910 and 8911
       // This is helpful in playwright smoke tests to allow us to parallelize
-      const REDWOOD_TOML_PATH = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
-      const redwoodToml = fs.readFileSync(REDWOOD_TOML_PATH).toString()
-      let newRedwoodToml = redwoodToml
+      const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
+      const rwTomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
+      const tomlPath = fs.existsSync(cedarTomlPath) ? cedarTomlPath : rwTomlPath
+      const tomlContent = fs.readFileSync(tomlPath).toString()
+      let newConfigToml = tomlContent
 
-      newRedwoodToml = newRedwoodToml.replace(
+      newConfigToml = newConfigToml.replace(
         /\port = 8910/,
         'port = "${WEB_DEV_PORT:8910}"',
       )
 
-      newRedwoodToml = newRedwoodToml.replace(
+      newConfigToml = newConfigToml.replace(
         /\port = 8911/,
         'port = "${API_DEV_PORT:8911}"',
       )
 
-      fs.writeFileSync(REDWOOD_TOML_PATH, newRedwoodToml)
+      fs.writeFileSync(tomlPath, newConfigToml)
     },
   })
 
@@ -421,9 +428,11 @@ async function runCommand() {
   await tuiTask({
     step: 8,
     title: 'Apply api codemods',
-    task: () => {
-      return apiTasks(OUTPUT_PROJECT_PATH, {
-        linkWithLatestFwBuild: true,
+    task: async () => {
+      setOutputPath(OUTPUT_PROJECT_PATH)
+
+      return apiTasksList({
+        dbAuth: 'local',
         esmProject: true,
       })
     },
@@ -498,6 +507,138 @@ async function runCommand() {
 
   await tuiTask({
     step: 10,
+    title: 'Add workspace packages',
+    task: async () => {
+      const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
+      const rwTomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
+      const tomlPath = fs.existsSync(cedarTomlPath) ? cedarTomlPath : rwTomlPath
+      const redwoodToml = fs.readFileSync(tomlPath, 'utf-8')
+      const newRedwoodToml =
+        redwoodToml + '\n[experimental.packagesWorkspace]\n  enabled = true\n'
+
+      fs.writeFileSync(tomlPath, newRedwoodToml)
+
+      await exec(
+        'yarn cedar g package @my-org/validators --workspace both',
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
+
+      const packagePath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'packages',
+        'validators',
+      )
+
+      fs.writeFileSync(
+        path.join(packagePath, 'src', 'index.ts'),
+        'export function validateEmail(email: string) {\n' +
+          "  return email.includes('@') &&\n" +
+          "    email.includes('.') &&\n" +
+          "    email.lastIndexOf('.') > email.indexOf('@') + 1\n" +
+          '}\n',
+      )
+
+      fs.writeFileSync(
+        path.join(packagePath, 'src', 'validators.test.ts'),
+        "import { validateEmail } from './index.js'\n" +
+          '\n' +
+          "describe('validators', () => {\n" +
+          "  it('should not throw any errors', async () => {\n" +
+          "    expect(validateEmail('valid@email.com')).not.toThrow()\n" +
+          '  })\n' +
+          '})\n',
+      )
+
+      const apiPackageJson = JSON.parse(
+        fs.readFileSync(
+          path.join(OUTPUT_PROJECT_PATH, 'api', 'package.json'),
+          'utf8',
+        ),
+      )
+      const webPackageJson = JSON.parse(
+        fs.readFileSync(
+          path.join(OUTPUT_PROJECT_PATH, 'web', 'package.json'),
+          'utf8',
+        ),
+      )
+
+      apiPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
+      webPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
+
+      fs.writeFileSync(
+        path.join(OUTPUT_PROJECT_PATH, 'api', 'package.json'),
+        JSON.stringify(apiPackageJson, null, 2),
+      )
+      fs.writeFileSync(
+        path.join(OUTPUT_PROJECT_PATH, 'web', 'package.json'),
+        JSON.stringify(webPackageJson, null, 2),
+      )
+
+      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
+
+      const build = await exec(
+        'yarn cedar build',
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
+
+      const distFiles = fs.readdirSync(
+        path.join(OUTPUT_PROJECT_PATH, 'packages', 'validators', 'dist'),
+      )
+
+      if (distFiles.some((file) => file.includes('test'))) {
+        console.error('distFiles', distFiles)
+        throw new Error(
+          'Unexpected test file in validators package dist directory',
+        )
+      }
+
+      // TODO: Update this when we refine the build process
+      if (!build.stdout.includes('yarn build exited with code 0')) {
+        console.error('yarn cedar build output', build.stdout, build.stderr)
+        throw new Error('Unexpected output from `yarn cedar build`')
+      }
+
+      // Verify that `yarn cedar <cmd>` works inside package directories
+      // Starting with `yarn cedar info`
+      // TODO: Enable code below
+      // const info = await exec(
+      //   'yarn cedar info',
+      //   [],
+      //   getExecaOptions(OUTPUT_PROJECT_PATH),
+      // )
+
+      // if (
+      //   !info.stdout.includes('Binaries:') ||
+      //   !info.stdout.includes('Node:') ||
+      //   !info.stdout.includes('npmPackages:') ||
+      //   !info.stdout.includes('@cedarjs/core')
+      // ) {
+      //   console.error('yarn cedar info output', info.stdout, info.stderr)
+
+      //   throw new Error('Unexpected output from `yarn cedar info`')
+      // }
+
+      // Continue testing `yarn cedar <cmd>` by running `yarn cedar test`
+      // const test = await exec(
+      //   'yarn cedar test @my-org/validators',
+      //   [],
+      //   getExecaOptions(OUTPUT_PROJECT_PATH),
+      // )
+
+      // Validate that only the tests for this package ran
+      // Verify that all tests passed
+      // TODO: Implement functionality according to the comment above
+
+      // The package we've generated (@my-org/validators) is used in the test
+      // project on both the web and the api side and is further tested by our
+      // playwright tests that trigger the files that import the package.
+    },
+  })
+
+  await tuiTask({
+    step: 11,
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
@@ -509,11 +650,11 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 11,
+    step: 12,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
-        await exec('yarn', ['rw', 'lint', '--fix'], {
+        await exec('yarn', ['cedar', 'lint', '--fix'], {
           stdio: 'pipe',
           cleanup: true,
           cwd: OUTPUT_PROJECT_PATH,
@@ -540,7 +681,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 13,
     title: 'Replace and Cleanup Fixture',
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
@@ -567,10 +708,13 @@ async function runCommand() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
-      // Copy over package.json from template, so we remove the extra dev dependencies, and cfw postinstall script
-      // that we added in "Adding framework dependencies to project"
+      // Copy over package.json from template, so we remove the extra dev
+      // dependencies, and cfw postinstall script that we added in "Adding
+      // framework dependencies to project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
+      // We also want the `packages/*` workspace config that was added when
+      // adding the validators package
       const rootPackageJson = JSON.parse(
         fs.readFileSync(path.join(OUTPUT_PROJECT_PATH, 'package.json'), 'utf8'),
       )
@@ -583,9 +727,10 @@ async function runCommand() {
       )
       newRootPackageJson.devDependencies['prettier-plugin-tailwindcss'] =
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
+      newRootPackageJson.workspaces.push('packages/*')
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, 'package.json'),
-        JSON.stringify(newRootPackageJson, null, 2),
+        JSON.stringify(newRootPackageJson, null, 2) + '\n',
       )
 
       // removes existing Fixture and replaces with newly built project,
@@ -595,7 +740,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 13,
+    step: 14,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))

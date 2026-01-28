@@ -3,7 +3,7 @@ import type { Plugin } from 'graphql-yoga'
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
 import { getAuthenticationContext } from '@cedarjs/api'
 
-import type { RedwoodGraphQLContext, GraphQLHandlerOptions } from '../types.js'
+import type { CedarGraphQLContext, GraphQLHandlerOptions } from '../types.js'
 
 /**
  * Envelop plugin for injecting the current user into the GraphQL Context,
@@ -12,18 +12,16 @@ import type { RedwoodGraphQLContext, GraphQLHandlerOptions } from '../types.js'
 export const useRedwoodAuthContext = (
   getCurrentUser: GraphQLHandlerOptions['getCurrentUser'],
   authDecoder?: Decoder | Decoder[],
-): Plugin<RedwoodGraphQLContext> => {
+): Plugin<CedarGraphQLContext> => {
   return {
     async onContextBuilding({ context, extendContext }) {
-      const { requestContext } = context
-
       let authContext: AuthContextPayload | undefined = undefined
 
       try {
         authContext = await getAuthenticationContext({
           authDecoder,
           event: context.event,
-          context: requestContext,
+          context: context.requestContext,
         })
       } catch (error: any) {
         throw new Error(

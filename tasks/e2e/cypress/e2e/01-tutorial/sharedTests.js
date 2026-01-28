@@ -108,7 +108,7 @@ export const test_layouts = () =>
     cy.contains('About').click()
     cy.get('p').should(
       'contain',
-      'This site was created to demonstrate my mastery of Redwood: Look on my works, ye mighty, and despair!',
+      'This site was created to demonstrate my mastery of Cedar: Look on my works, ye mighty, and despair!',
     )
   })
 

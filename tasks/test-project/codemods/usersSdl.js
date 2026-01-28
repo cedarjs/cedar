@@ -26,7 +26,7 @@ export default (file, api) => {
           }
 
           if (line.trim() === 'users: [User!]! @requireAuth') {
-            return '    user(id: Int!): User @skipAuth'
+            return '    user(id: String!): User @skipAuth'
           }
 
           return line

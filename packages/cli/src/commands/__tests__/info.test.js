@@ -6,9 +6,12 @@ import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 import { handler } from '../info.js'
 
 vi.mock('envinfo', () => ({ default: { run: () => '' } }))
-vi.mock('@cedarjs/project-config', () => ({ getPaths: () => ({}) }))
+vi.mock('@cedarjs/project-config', () => ({
+  getPaths: () => ({}),
+  getConfigPath: () => 'cedar.toml',
+}))
 
-const mockRedwoodToml = {
+const mockCedarToml = {
   fileContents: '',
 }
 
@@ -16,7 +19,7 @@ const mockRedwoodToml = {
 vi.mock('node:fs', async () => ({
   default: {
     readFileSync: () => {
-      return mockRedwoodToml.fileContents
+      return mockCedarToml.fileContents
     },
   },
 }))
@@ -30,24 +33,24 @@ afterEach(() => {
 })
 
 describe('yarn cedar info', () => {
-  describe('redwood.toml', () => {
+  describe('cedar.toml', () => {
     it('is included in the output', async () => {
-      mockRedwoodToml.fileContents = 'title = "Hello World"'
+      mockCedarToml.fileContents = 'title = "Hello World"'
 
       await handler()
 
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
-          // There should be nothing before 'redwood.toml:' in the output
+          // There should be nothing before 'cedar.toml:' in the output
           // because we mock envinfo
-          '  redwood.toml:',
+          '  cedar.toml:',
           '    title = "Hello World"',
         ].join('\n'),
       )
     })
 
     it('has blank lines removed', async () => {
-      mockRedwoodToml.fileContents = `
+      mockCedarToml.fileContents = `
 [web]
 
   title = "Hello World"
@@ -58,7 +61,7 @@ describe('yarn cedar info', () => {
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
           // The important part is that there is no blank line after [web]
-          '  redwood.toml:',
+          '  cedar.toml:',
           '    [web]',
           '      title = "Hello World"',
         ].join('\n'),
@@ -66,7 +69,7 @@ describe('yarn cedar info', () => {
     })
 
     it('has start-of-line-comment lines removed', async () => {
-      mockRedwoodToml.fileContents = `
+      mockCedarToml.fileContents = `
 # This is a start-of-line-comment that we want to remove.
 # And so is this
 [web]
@@ -80,7 +83,7 @@ describe('yarn cedar info', () => {
 
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
-          '  redwood.toml:',
+          '  cedar.toml:',
           '    [web]',
           '      # Used for the <title> tag (this comment should be kept)',
           '      title = "Hello World"',
@@ -93,7 +96,7 @@ describe('yarn cedar info', () => {
     // but couldn't find anything. So we'll have to write our own at some
     // point)
     it('keeps end-of-line comments', async () => {
-      mockRedwoodToml.fileContents = `
+      mockCedarToml.fileContents = `
 [web]
   title = "Hello World" # Used for the <title> tag
   apiUrl = "/.redwood/functions" # You can customize graphql and dbauth urls individually too: see https://cedarjs.com/docs/app-configuration-redwood-toml#api-paths
@@ -103,7 +106,7 @@ describe('yarn cedar info', () => {
 
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
-          '  redwood.toml:',
+          '  cedar.toml:',
           '    [web]',
           '      title = "Hello World" # Used for the <title> tag',
           // This next line is a bit more tricky because it has a # to make it

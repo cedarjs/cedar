@@ -228,7 +228,7 @@ You may need to access your dev application from a different host, like your mob
 
 For the full list of Vite Dev Server settings, see [this documentation](https://vitejs.dev/guide/cli#vite).
 
-For the full list of Server Configuration settings, see [this documentation](app-configuration-redwood-toml.md#api).
+For the full list of Server Configuration settings, see [this documentation](app-configuration-cedar-toml.md#api).
 
 ## deploy
 
@@ -2214,7 +2214,7 @@ This command uses `apiUrl` in your `redwood.toml`. Use this command if you want 
 | `--socket`          | The socket the server should run. This takes precedence over port |
 | `--apiRootPath`     | The root path where your api functions are served                 |
 
-For the full list of Server Configuration settings, see [this documentation](app-configuration-redwood-toml.md#api).
+For the full list of Server Configuration settings, see [this documentation](app-configuration-cedar-toml.md#api).
 If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
 
 ```

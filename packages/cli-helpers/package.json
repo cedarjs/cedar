@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli-helpers",
-  "version": "2.3.0",
+  "version": "2.4.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -75,7 +75,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/dotenv-defaults": "^5.0.0",
-    "@types/lodash": "4.17.21",
+    "@types/lodash": "4.17.23",
     "@types/pascalcase": "1.0.3",
     "@types/semver": "^7",
     "@types/yargs": "17.0.35",

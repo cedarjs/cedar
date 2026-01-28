@@ -9,6 +9,7 @@ import {
   colors as c,
   getPaths,
   isTypeScriptProject,
+  getConfigPath,
 } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -17,7 +18,7 @@ import { serverFileExists } from '../../../../lib/project.js'
 import { addFilesTask } from '../helpers/index.js'
 
 const { getSchemaWithPath, getConfig } = prismaInternals
-const redwoodProjectPaths = getPaths()
+const cedarPaths = getPaths()
 
 const EXTENSION = isTypeScriptProject ? 'ts' : 'js'
 
@@ -28,12 +29,12 @@ export async function handler({ force }) {
     const tasks = new Listr(
       [
         addCoherenceFilesTask,
-        updateRedwoodTOMLTask(),
+        updateConfigTomlTask(),
         printSetupNotes([
           "You're ready to deploy to Coherence! ✨\n",
           'Go to https://app.withcoherence.com to create your account and setup your cloud or GitHub connections.',
           'Check out the deployment docs at https://docs.withcoherence.com for detailed instructions and more information.\n',
-          "Reach out to redwood@withcoherence.com with any questions! We're here to support you.",
+          "Reach out to cedar@withcoherence.com with any questions! We're here to support you.",
         ]),
       ],
       { rendererOptions: { collapse: false } },
@@ -57,13 +58,13 @@ export async function handler({ force }) {
 async function getAddCoherenceFilesTask(force) {
   const files = [
     {
-      path: path.join(redwoodProjectPaths.api.functions, `health.${EXTENSION}`),
+      path: path.join(cedarPaths.api.functions, `health.${EXTENSION}`),
       content: coherenceFiles.healthCheck,
     },
   ]
 
   const coherenceConfigFile = {
-    path: path.join(redwoodProjectPaths.base, 'coherence.yml'),
+    path: path.join(cedarPaths.base, 'coherence.yml'),
   }
 
   coherenceConfigFile.content = await getCoherenceConfigFileContent()
@@ -88,7 +89,7 @@ async function getAddCoherenceFilesTask(force) {
  * ```
  */
 async function getCoherenceConfigFileContent() {
-  const result = await getSchemaWithPath(redwoodProjectPaths.api.dbSchema)
+  const result = await getSchemaWithPath(cedarPaths.api.dbSchema)
   const prismaConfig = await getConfig({ datamodel: result.schemas })
 
   let db = prismaConfig.datasources[0].activeProvider
@@ -108,7 +109,7 @@ async function getCoherenceConfigFileContent() {
     db = 'postgres'
   }
 
-  const apiProdCommand = ['yarn', 'rw', 'build', 'api', '&&']
+  const apiProdCommand = ['yarn', 'cedar', 'build', 'api', '&&']
   if (serverFileExists()) {
     apiProdCommand.push(
       'yarn',
@@ -117,7 +118,7 @@ async function getCoherenceConfigFileContent() {
       '--apiRootPath=/api',
     )
   } else {
-    apiProdCommand.push('yarn', 'rw', 'serve', 'api', '--apiRootPath=/api')
+    apiProdCommand.push('yarn', 'cedar', 'serve', 'api', '--apiRootPath=/api')
   }
 
   return coherenceFiles.yamlTemplate({
@@ -131,40 +132,39 @@ const SUPPORTED_DATABASES = ['mysql', 'postgresql']
 /**
  * should probably parse toml at this point...
  * if host, set host
- * Updates the ports in redwood.toml to use an environment variable.
+ * Updates the ports in cedar.toml to use an environment variable.
  */
-function updateRedwoodTOMLTask() {
+function updateConfigTomlTask() {
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
+
   return {
-    title: 'Updating redwood.toml...',
+    title: `Updating ${configFileName}...`,
     task: () => {
-      const redwoodTOMLPath = path.join(
-        redwoodProjectPaths.base,
-        'redwood.toml',
-      )
-      let redwoodTOMLContent = fs.readFileSync(redwoodTOMLPath, 'utf-8')
-      const redwoodTOMLObject = toml.parse(redwoodTOMLContent)
+      let configContent = fs.readFileSync(configTomlPath, 'utf-8')
+      const configObject = toml.parse(configContent)
 
       // Replace or add the host
       // How to handle matching one vs the other...
-      if (!redwoodTOMLObject.web.host) {
-        const [beforeWeb, afterWeb] = redwoodTOMLContent.split(/\[web\]\s/)
-        redwoodTOMLContent = [
+      if (!configObject.web.host) {
+        const [beforeWeb, afterWeb] = configContent.split(/\[web\]\s/)
+        configContent = [
           beforeWeb,
           '[web]\n  host = "0.0.0.0"\n',
           afterWeb,
         ].join('')
       }
 
-      if (!redwoodTOMLObject.api.host) {
-        const [beforeApi, afterApi] = redwoodTOMLContent.split(/\[api\]\s/)
-        redwoodTOMLContent = [
+      if (!configObject.api.host) {
+        const [beforeApi, afterApi] = configContent.split(/\[api\]\s/)
+        configContent = [
           beforeApi,
           '[api]\n  host = "0.0.0.0"\n',
           afterApi,
         ].join('')
       }
 
-      redwoodTOMLContent = redwoodTOMLContent.replaceAll(
+      configContent = configContent.replaceAll(
         HOST_REGEXP,
         (match, spaceBeforeAssign, spaceAfterAssign) =>
           ['host', spaceBeforeAssign, '=', spaceAfterAssign, '"0.0.0.0"'].join(
@@ -173,7 +173,7 @@ function updateRedwoodTOMLTask() {
       )
 
       // Replace the apiUrl
-      redwoodTOMLContent = redwoodTOMLContent.replace(
+      configContent = configContent.replace(
         API_URL_REGEXP,
         (match, spaceBeforeAssign, spaceAfterAssign) =>
           ['apiUrl', spaceBeforeAssign, '=', spaceAfterAssign, '"/api"'].join(
@@ -182,7 +182,7 @@ function updateRedwoodTOMLTask() {
       )
 
       // Replace the web and api ports.
-      redwoodTOMLContent = redwoodTOMLContent.replaceAll(
+      configContent = configContent.replaceAll(
         PORT_REGEXP,
         (_match, spaceBeforeAssign, spaceAfterAssign, port) =>
           [
@@ -194,7 +194,7 @@ function updateRedwoodTOMLTask() {
           ].join(''),
       )
 
-      fs.writeFileSync(redwoodTOMLPath, redwoodTOMLContent)
+      fs.writeFileSync(configTomlPath, configContent)
     },
   }
 }
@@ -216,7 +216,7 @@ api:
   prod:
     command: ${apiProdCommand}
   dev:
-    command: ["yarn", "rw", "build", "api", "&&", "yarn", "rw", "dev", "api", "--apiRootPath=/api"]
+    command: ["yarn", "cedar", "build", "api", "&&", "yarn", "cedar", "dev", "api", "--apiRootPath=/api"]
   local_packages: ["node_modules"]
 
   system:
@@ -225,27 +225,27 @@ api:
     health_check: "/api/health"
 
   resources:
-    - name: ${path.basename(redwoodProjectPaths.base)}-db
+    - name: ${path.basename(cedarPaths.base)}-db
       engine: ${db}
       version: 13
       type: database
       ${db === 'postgres' ? 'adapter: postgresql' : ''}
 
   # If you use data migrations, use the following instead:
-  # migration: ["yarn", "rw", "prisma", "migrate", "deploy", "&&", "yarn", "rw", "data-migrate", "up"]
-  migration: ["yarn", "rw", "prisma", "migrate", "deploy"]
+  # migration: ["yarn", "cedar", "prisma", "migrate", "deploy", "&&", "yarn", "cedar", "data-migrate", "up"]
+  migration: ["yarn", "cedar", "prisma", "migrate", "deploy"]
 
 web:
   type: frontend
   assets_path: "web/dist"
   prod:
-    command: ["yarn", "rw", "serve", "web"]
+    command: ["yarn", "cedar", "serve", "web"]
   dev:
-    command: ["yarn", "rw", "dev", "web", "--fwd=\\"--allowed-hosts all\\""]
+    command: ["yarn", "cedar", "dev", "web", "--fwd=\\"--allowed-hosts all\\""]
 
   # Heads up: Redwood's prerender doesn't work with Coherence yet.
   # For current status and updates, see https://github.com/redwoodjs/redwood/issues/8333.
-  build: ["yarn", "rw", "build", "web", "--no-prerender"]
+  build: ["yarn", "cedar", "build", "web", "--no-prerender"]
   local_packages: ["node_modules"]
 
   system:

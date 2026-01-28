@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/telemetry",
-  "version": "2.3.0",
+  "version": "2.4.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -26,7 +26,7 @@
     "@whatwg-node/fetch": "0.10.13",
     "ci-info": "4.3.1",
     "envinfo": "7.21.0",
-    "systeminformation": "5.30.0",
+    "systeminformation": "5.30.3",
     "uuid": "11.1.0",
     "yargs": "17.7.2"
   },

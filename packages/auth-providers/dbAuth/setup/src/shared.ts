@@ -81,7 +81,7 @@ export function generateAuthPagesTask(generatingUserModel: boolean) {
     task: async () => {
       const rwjsPaths = getPaths()
 
-      const args = ['rw', 'g', 'dbAuth']
+      const args = ['cedar', 'g', 'dbAuth']
 
       if (generatingUserModel) {
         args.push(

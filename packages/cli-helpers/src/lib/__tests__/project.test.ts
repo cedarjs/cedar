@@ -40,7 +40,7 @@ vi.mock('@cedarjs/project-config', () => {
       }
     },
     getConfigPath: () => {
-      return '.redwood.toml'
+      return 'cedar.toml'
     },
     getConfig: () => {
       return getRedwoodToml()
@@ -130,7 +130,7 @@ describe('updateTomlConfig', () => {
       })
 
       vi.spyOn(fs, 'writeFileSync').mockImplementation((tomlPath, tomlFile) => {
-        expect(tomlPath).toContain('redwood.toml')
+        expect(tomlPath).toContain('cedar.toml')
         return tomlFile
       })
     })

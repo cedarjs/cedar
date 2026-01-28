@@ -11,14 +11,14 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/forms": "2.3.0",
-    "@cedarjs/router": "2.3.0",
-    "@cedarjs/web": "2.3.0",
+    "@cedarjs/forms": "3.0.0-canary.13206",
+    "@cedarjs/router": "3.0.0-canary.13206",
+    "@cedarjs/web": "3.0.0-canary.13206",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@cedarjs/vite": "2.3.0",
+    "@cedarjs/vite": "3.0.0-canary.13206",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19"
   }

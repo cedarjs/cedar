@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli",
-  "version": "2.3.0",
+  "version": "2.4.1",
   "description": "The CedarJS Command Line",
   "repository": {
     "type": "git",
@@ -10,6 +10,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
+    "cedar": "./dist/index.js",
     "cedarjs": "./dist/index.js",
     "cfw": "./dist/cfw.js",
     "redwood": "./dist/index.js",
@@ -31,7 +32,7 @@
   },
   "dependencies": {
     "@babel/preset-typescript": "7.28.5",
-    "@babel/runtime-corejs3": "7.28.4",
+    "@babel/runtime-corejs3": "7.28.6",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/fastify-web": "workspace:*",
@@ -67,6 +68,7 @@
     "fast-glob": "3.3.3",
     "humanize-string": "2.1.0",
     "jscodeshift": "17.0.0",
+    "jsonc-parser": "3.3.1",
     "latest-version": "9.0.0",
     "listr2": "7.0.2",
     "lodash": "4.17.21",
@@ -80,7 +82,7 @@
     "semver": "7.7.3",
     "smol-toml": "1.6.0",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.30.0",
+    "systeminformation": "5.30.3",
     "termi-link": "1.1.0",
     "title-case": "3.0.3",
     "unionfs": "4.6.0",
@@ -89,7 +91,7 @@
     "yargs": "17.7.2"
   },
   "devDependencies": {
-    "@babel/cli": "7.28.3",
+    "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@types/archiver": "^7.0.0",
     "memfs": "4.51.1",

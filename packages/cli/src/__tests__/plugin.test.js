@@ -35,7 +35,7 @@ vi.mock('../lib/packages', () => {
 
 function getMockYargsInstance() {
   return yargs(hideBin(process.argv))
-    .scriptName('rw')
+    .scriptName('cedar')
     .command({
       command: 'built-in',
       description: 'Some builtin command',
@@ -129,7 +129,7 @@ describe('plugin loading', () => {
 
   test('no plugins are loaded for --version at the root level', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '--version']
+    process.argv = ['node', 'cedar', '--version']
 
     const yargsInstance = getMockYargsInstance()
     await loadPlugins(yargsInstance)
@@ -144,7 +144,7 @@ describe('plugin loading', () => {
 
   test('no plugins are loaded if it is a built-in command', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', pluginLib.PLUGIN_CACHE_BUILTIN[0]]
+    process.argv = ['node', 'cedar', pluginLib.PLUGIN_CACHE_BUILTIN[0]]
 
     getConfig.mockReturnValue({
       experimental: {
@@ -171,7 +171,7 @@ describe('plugin loading', () => {
     `correct loading for root help ('%s')`,
     async (command) => {
       const originalArgv = process.argv
-      process.argv = ['node', 'rw', command]
+      process.argv = ['node', 'cedar', command]
 
       getConfig.mockReturnValue({
         experimental: {
@@ -250,16 +250,16 @@ describe('plugin loading', () => {
 
       // Rudimentary check that the help output contains the correct commands
       const helpOutput = await yargsInstance.getHelp()
-      expect(helpOutput).toContain('rw built-in')
+      expect(helpOutput).toContain('cedar built-in')
       expect(helpOutput).toContain('Some builtin command')
       expect(helpOutput).toContain('[aliases: bi, builtIn]')
-      expect(helpOutput).toContain('rw some-command')
+      expect(helpOutput).toContain('cedar some-command')
       expect(helpOutput).toContain('Some example command')
       expect(helpOutput).toContain('[aliases: sc, someCommand]')
-      expect(helpOutput).toContain('rw some-other-command')
+      expect(helpOutput).toContain('cedar some-other-command')
       expect(helpOutput).toContain('Some example other command')
       expect(helpOutput).toContain('[aliases: soc, someOtherCommand]')
-      expect(helpOutput).toContain('rw @bluewoodjs <command>')
+      expect(helpOutput).toContain('cedar @bluewoodjs <command>')
       expect(helpOutput).toContain('Commands from @bluewoodjs')
 
       getConfig.mockRestore()
@@ -271,7 +271,7 @@ describe('plugin loading', () => {
     `correct loading for @cedarjs namespace help ('%s')`,
     async (command) => {
       const originalArgv = process.argv
-      process.argv = ['node', 'rw', '@cedarjs', command]
+      process.argv = ['node', 'cedar', '@cedarjs', command]
 
       getConfig.mockReturnValue({
         experimental: {
@@ -350,16 +350,16 @@ describe('plugin loading', () => {
 
       // Rudimentary check that the help output contains the correct commands
       const helpOutput = await yargsInstance.getHelp()
-      expect(helpOutput).toContain('rw built-in')
+      expect(helpOutput).toContain('cedar built-in')
       expect(helpOutput).toContain('Some builtin command')
       expect(helpOutput).toContain('[aliases: bi, builtIn]')
-      expect(helpOutput).toContain('rw some-command')
+      expect(helpOutput).toContain('cedar some-command')
       expect(helpOutput).toContain('Some example command')
       expect(helpOutput).toContain('[aliases: sc, someCommand]')
-      expect(helpOutput).toContain('rw some-other-command')
+      expect(helpOutput).toContain('cedar some-other-command')
       expect(helpOutput).toContain('Some example other command')
       expect(helpOutput).toContain('[aliases: soc, someOtherCommand]')
-      expect(helpOutput).not.toContain('rw @bluewoodjs <command>')
+      expect(helpOutput).not.toContain('cedar @bluewoodjs <command>')
       expect(helpOutput).not.toContain('Commands from @bluewoodjs')
 
       getConfig.mockRestore()
@@ -371,7 +371,7 @@ describe('plugin loading', () => {
     `correct loading for third party namespace help ('%s')`,
     async (command) => {
       const originalArgv = process.argv
-      process.argv = ['node', 'rw', '@bluewoodjs', command]
+      process.argv = ['node', 'cedar', '@bluewoodjs', command]
 
       getConfig.mockReturnValue({
         experimental: {
@@ -446,9 +446,9 @@ describe('plugin loading', () => {
 
       // Rudimentary check that the help output contains the correct commands
       const helpOutput = await yargsInstance.getHelp()
-      expect(helpOutput).toContain('rw @bluewoodjs <command>')
+      expect(helpOutput).toContain('cedar @bluewoodjs <command>')
       expect(helpOutput).toContain('Commands from @bluewoodjs')
-      expect(helpOutput).toContain('rw @bluewoodjs third-party')
+      expect(helpOutput).toContain('cedar @bluewoodjs third-party')
       expect(helpOutput).toContain('Some third party command')
       expect(helpOutput).toContain('[aliases: tp, thirdParty]')
 
@@ -459,7 +459,7 @@ describe('plugin loading', () => {
 
   test('correct loading for unknown namespace (no command)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@greenwoodjs']
+    process.argv = ['node', 'cedar', '@greenwoodjs']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -538,16 +538,16 @@ describe('plugin loading', () => {
 
     // Rudimentary check that the help output contains the correct commands
     const helpOutput = await yargsInstance.getHelp()
-    expect(helpOutput).toContain('rw built-in')
+    expect(helpOutput).toContain('cedar built-in')
     expect(helpOutput).toContain('Some builtin command')
     expect(helpOutput).toContain('[aliases: bi, builtIn]')
-    expect(helpOutput).toContain('rw some-command')
+    expect(helpOutput).toContain('cedar some-command')
     expect(helpOutput).toContain('Some example command')
     expect(helpOutput).toContain('[aliases: sc, someCommand]')
-    expect(helpOutput).toContain('rw some-other-command')
+    expect(helpOutput).toContain('cedar some-other-command')
     expect(helpOutput).toContain('Some example other command')
     expect(helpOutput).toContain('[aliases: soc, someOtherCommand]')
-    expect(helpOutput).toContain('rw @bluewoodjs <command>')
+    expect(helpOutput).toContain('cedar @bluewoodjs <command>')
     expect(helpOutput).toContain('Commands from @bluewoodjs')
 
     getConfig.mockRestore()
@@ -555,7 +555,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for unknown namespace (with command)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@greenwoodjs', 'anything']
+    process.argv = ['node', 'cedar', '@greenwoodjs', 'anything']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -634,16 +634,16 @@ describe('plugin loading', () => {
 
     // Rudimentary check that the help output contains the correct commands
     const helpOutput = await yargsInstance.getHelp()
-    expect(helpOutput).toContain('rw built-in')
+    expect(helpOutput).toContain('cedar built-in')
     expect(helpOutput).toContain('Some builtin command')
     expect(helpOutput).toContain('[aliases: bi, builtIn]')
-    expect(helpOutput).toContain('rw some-command')
+    expect(helpOutput).toContain('cedar some-command')
     expect(helpOutput).toContain('Some example command')
     expect(helpOutput).toContain('[aliases: sc, someCommand]')
-    expect(helpOutput).toContain('rw some-other-command')
+    expect(helpOutput).toContain('cedar some-other-command')
     expect(helpOutput).toContain('Some example other command')
     expect(helpOutput).toContain('[aliases: soc, someOtherCommand]')
-    expect(helpOutput).toContain('rw @bluewoodjs <command>')
+    expect(helpOutput).toContain('cedar @bluewoodjs <command>')
     expect(helpOutput).toContain('Commands from @bluewoodjs')
 
     getConfig.mockRestore()
@@ -652,7 +652,7 @@ describe('plugin loading', () => {
 
   test('correct loading for known redwood command (with cache)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', 'someCommand']
+    process.argv = ['node', 'cedar', 'someCommand']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -757,7 +757,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for known redwood command (without cache)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', 'someCommand']
+    process.argv = ['node', 'cedar', 'someCommand']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -885,7 +885,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for unknown redwood command', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', 'unknownCommand']
+    process.argv = ['node', 'cedar', 'unknownCommand']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -998,16 +998,16 @@ describe('plugin loading', () => {
 
     // Rudimentary check that the help output contains the correct commands
     const helpOutput = await yargsInstance.getHelp()
-    expect(helpOutput).toContain('rw built-in')
+    expect(helpOutput).toContain('cedar built-in')
     expect(helpOutput).toContain('Some builtin command')
     expect(helpOutput).toContain('[aliases: bi, builtIn]')
-    expect(helpOutput).toContain('rw some-command')
+    expect(helpOutput).toContain('cedar some-command')
     expect(helpOutput).toContain('Some example command')
     expect(helpOutput).toContain('[aliases: sc, someCommand]')
-    expect(helpOutput).toContain('rw some-other-command')
+    expect(helpOutput).toContain('cedar some-other-command')
     expect(helpOutput).toContain('Some example other command')
     expect(helpOutput).toContain('[aliases: soc, someOtherCommand]')
-    expect(helpOutput).toContain('rw @bluewoodjs <command>')
+    expect(helpOutput).toContain('cedar @bluewoodjs <command>')
     expect(helpOutput).toContain('Commands from @bluewoodjs')
 
     // Rudimentary check that the right handler was invoked
@@ -1021,7 +1021,7 @@ describe('plugin loading', () => {
 
   test('correct loading for known third party command (with cache)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@bluewoodjs', 'tp']
+    process.argv = ['node', 'cedar', '@bluewoodjs', 'tp']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -1126,7 +1126,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for known third party command (without cache)', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@bluewoodjs', 'tpo']
+    process.argv = ['node', 'cedar', '@bluewoodjs', 'tpo']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -1227,7 +1227,7 @@ describe('plugin loading', () => {
   })
   test('correct loading for unknown third party command', async () => {
     const originalArgv = process.argv
-    process.argv = ['node', 'rw', '@bluewoodjs', 'unknownCommand']
+    process.argv = ['node', 'cedar', '@bluewoodjs', 'unknownCommand']
 
     getConfig.mockReturnValue({
       experimental: {
@@ -1305,16 +1305,16 @@ describe('plugin loading', () => {
 
     // Rudimentary check that the help output contains the correct commands
     const helpOutput = await yargsInstance.getHelp()
-    expect(helpOutput).not.toContain('rw built-in')
+    expect(helpOutput).not.toContain('cedar built-in')
     expect(helpOutput).not.toContain('Some builtin command')
     expect(helpOutput).not.toContain('[aliases: bi, builtIn]')
-    expect(helpOutput).not.toContain('rw some-command')
+    expect(helpOutput).not.toContain('cedar some-command')
     expect(helpOutput).not.toContain('Some example command')
     expect(helpOutput).not.toContain('[aliases: sc, someCommand]')
-    expect(helpOutput).not.toContain('rw some-other-command')
+    expect(helpOutput).not.toContain('cedar some-other-command')
     expect(helpOutput).not.toContain('Some example other command')
     expect(helpOutput).not.toContain('[aliases: soc, someOtherCommand]')
-    expect(helpOutput).toContain('rw @bluewoodjs <command>')
+    expect(helpOutput).toContain('cedar @bluewoodjs <command>')
     expect(helpOutput).toContain('Commands from @bluewoodjs')
 
     // Rudimentary check that the right handler was invoked

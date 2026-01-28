@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/jobs",
-  "version": "2.3.0",
+  "version": "2.4.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -41,13 +41,13 @@
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "cron-parser": "5.4.0",
-    "type-fest": "4.41.0"
+    "type-fest": "5.4.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/client": "6.19.1",
     "concurrently": "9.2.1",
-    "publint": "0.3.16",
+    "publint": "0.3.17",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

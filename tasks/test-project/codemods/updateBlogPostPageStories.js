@@ -31,7 +31,7 @@ export default (file, api) => {
 
   // export const Primary: Story = {
   //   render: (args) => {
-  //     return <BlogPostPage id={42} {...args} />
+  //     return <BlogPostPage id={'4c3d3e8e-2b1a-4f5c-8c7d-000000000042'} {...args} />
   //   }
   // }
   const primaryWithRender = j.exportNamedDeclaration(
@@ -52,7 +52,11 @@ export default (file, api) => {
                       [
                         j.jsxAttribute(
                           j.jsxIdentifier('id'),
-                          j.jsxExpressionContainer(j.numericLiteral(42)),
+                          j.jsxExpressionContainer(
+                            j.stringLiteral(
+                              '4c3d3e8e-2b1a-4f5c-8c7d-000000000042',
+                            ),
+                          ),
                         ),
                         j.jsxSpreadAttribute(j.identifier('args')),
                       ],

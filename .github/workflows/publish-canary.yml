@@ -14,7 +14,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions: {}
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   publish-canary:
@@ -52,3 +54,14 @@ jobs:
         uses: sergeysova/jq-action@a3f0d4ff59cc1dddf023fc0b325dd75b10deec58 # v2.3.0
         with:
           cmd: 'jq .version packages/core/package.json -r'
+
+      - name: 💬 Comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list --search "${{ github.sha }}" --state merged --json number --jq '.[0].number')
+          if [ "$PR_NUMBER" != "null" ] && [ -n "$PR_NUMBER" ]; then
+            gh pr comment $PR_NUMBER --body "The changes in this PR are now available in ${{ steps.get-version.outputs.value }}"
+          else
+            echo "No PR found for commit ${{ github.sha }}"
+          fi

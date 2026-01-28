@@ -11,7 +11,7 @@ You can provide environment variables to each side of your Cedar app in differen
 ## Generally
 
 Cedar apps use [dotenv](https://github.com/motdotla/dotenv) to load vars from your `.env` file into `process.env`.
-For a reference on dotenv syntax, see the dotenv README's [Rules](https://github.com/motdotla/dotenv#rules) section.
+For a reference on dotenv syntax, see the dotenv README's [Usage](https://github.com/motdotla/dotenv#%EF%B8%8F-usage) section.
 
 > Technically, we use [dotenv-defaults](https://github.com/mrsteele/dotenv-defaults), which is how we also supply and load `.env.defaults`.
 
@@ -67,7 +67,7 @@ The toml values are mapped as follows:
 | `apiUrl`           | `global.RWJS_API_URL`         | URL or absolute path to your api-server  |
 | `apiGraphQLUrl`    | `global.RWJS_API_GRAPHQL_URL` | URL or absolute path to GraphQL function |
 
-See the [redwood.toml reference](app-configuration-redwood-toml.md#api-paths) for more details.
+See the [cedar.toml reference](app-configuration-cedar-toml.md#api-paths) for more details.
 
 ## Development Fatal Error Page
 
@@ -92,7 +92,8 @@ You can access environment variables defined in `.env` and `.env.defaults` as `p
 HELLO_ENV=hello world
 ```
 
-and make a hello Function (`yarn rw generate function hello`) and reference `HELLO_ENV` in the body of our response:
+and make a hello Function (`yarn cedar generate function hello`) and reference
+`HELLO_ENV` in the body of our response:
 
 ```jsx {6} title="./api/src/functions/hello.js"
 export const handler = async (event, context) => {
@@ -135,9 +136,13 @@ yarn-error.log
 
 ## Where Does Cedar Load My Environment Variables?
 
-For all the variables in your `.env` and `.env.defaults` files to make their way to `process.env`, there has to be a call to `dotenv`'s `config` function somewhere. So where is it?
+For all the variables in your `.env` and `.env.defaults` files to make their way
+to `process.env`, there has to be a call to `dotenv`'s `config` function
+somewhere. So where is it?
 
-It's in [the CLI](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/index.js#L6-L12)&mdash;every time you run a `yarn rw` command:
+It's in
+[the CLI](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/index.js#L6-L12)
+&mdash; every time you run a `yarn cedar` command:
 
 ```jsx title="packages/cli/src/index.js"
 import { config } from 'dotenv-defaults'
@@ -149,4 +154,6 @@ config({
 })
 ```
 
-Remember, if `yarn rw dev` is already running, your local app won't reflect any changes you make to your `.env` file until you stop and re-run `yarn rw dev`.
+Remember, if `yarn cedar dev` is already running, your local app won't reflect
+any changes you make to your `.env` file until you stop and re-run
+`yarn cedar dev`.

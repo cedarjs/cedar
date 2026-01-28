@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-dbauth-web",
-  "version": "2.3.0",
+  "version": "2.4.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -49,7 +49,7 @@
     "@simplewebauthn/types": "9.0.1",
     "@types/react": "^18.2.55",
     "concurrently": "9.2.1",
-    "publint": "0.3.16",
+    "publint": "0.3.17",
     "react": "19.2.3",
     "tsx": "4.21.0",
     "typescript": "5.9.3",

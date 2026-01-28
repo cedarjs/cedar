@@ -58,15 +58,15 @@ export const nameVariants = (name) => {
   }
 }
 
-export const generateTemplate = async (templateFilename, { name, ...rest }) => {
+export const generateTemplate = (templateFilename, { name, ...rest }) => {
   try {
     const templateFn = template(readFile(templateFilename).toString())
-
     const renderedTemplate = templateFn({
       name,
       ...nameVariants(name),
       ...rest,
     })
+
     return prettify(templateFilename, renderedTemplate)
   } catch (error) {
     error.message = `Error applying template at ${templateFilename} for ${name}: ${error.message}`
@@ -222,13 +222,19 @@ export const getConfig = () => {
 }
 
 /**
- * This returns the config present in `prettier.config.cjs` of a Redwood project.
+ * This returns the config present in `prettier.config.cjs` or
+ * `prettier.config.mjs` of a Cedar project.
  */
 export const getPrettierOptions = async () => {
   try {
+    const cjsPath = path.join(getPaths().base, 'prettier.config.cjs')
+    const mjsPath = path.join(getPaths().base, 'prettier.config.mjs')
+    const prettierConfigPath = fs.existsSync(cjsPath) ? cjsPath : mjsPath
+
     const { default: prettierOptions } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
+      `file://${prettierConfigPath}`
     )
+
     return prettierOptions
   } catch (e) {
     // If we're in our vitest environment we want to return a consistent set of prettier options

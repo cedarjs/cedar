@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/vite",
-  "version": "2.3.0",
+  "version": "2.4.1",
   "description": "Vite configuration package for CedarJS",
   "repository": {
     "type": "git",
@@ -60,10 +60,10 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@ast-grep/napi": "0.40.4",
-    "@babel/generator": "7.28.5",
-    "@babel/parser": "7.28.5",
-    "@babel/traverse": "7.28.5",
+    "@ast-grep/napi": "0.40.5",
+    "@babel/generator": "7.28.6",
+    "@babel/parser": "7.28.6",
+    "@babel/traverse": "7.28.6",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/cookie-jar": "workspace:*",
@@ -72,10 +72,10 @@
     "@cedarjs/server-store": "workspace:*",
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "@swc/core": "1.15.8",
+    "@swc/core": "1.15.10",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
-    "@whatwg-node/server": "0.10.17",
+    "@whatwg-node/server": "0.10.18",
     "acorn-loose": "8.5.2",
     "buffer": "6.0.3",
     "busboy": "^1.6.0",
@@ -91,7 +91,7 @@
     "react-server-dom-webpack": "19.2.3",
     "rimraf": "6.1.2",
     "vite": "5.4.21",
-    "vite-plugin-cjs-interop": "2.3.0",
+    "vite-plugin-cjs-interop": "2.4.0",
     "vite-plugin-node-polyfills": "0.24.0",
     "ws": "8.19.0",
     "yargs-parser": "21.1.1"
@@ -107,7 +107,7 @@
     "concurrently": "9.2.1",
     "glob": "11.1.0",
     "memfs": "4.51.1",
-    "publint": "0.3.16",
+    "publint": "0.3.17",
     "rollup": "4.55.1",
     "tsx": "4.21.0",
     "typescript": "5.9.3",

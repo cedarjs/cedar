@@ -240,7 +240,7 @@ async function getPrismaClient(hasGenerated = false): Promise<{
     if (hasGenerated) {
       return { ModelName: {} }
     } else {
-      execa.sync('yarn', ['rw', 'prisma', 'generate'])
+      execa.sync('yarn', ['cedar', 'prisma', 'generate'])
 
       // Import the newly generated Prisma client. To make sure we actually get
       // the newly generated Prisma client we pass `true` for `hasGenerated` so
@@ -323,7 +323,7 @@ async function getPluginConfig(side: CodegenSide) {
       // Look at type or source https://shrtm.nu/2BA0 for possible config, not well documented
       resolvers: true,
     },
-    contextType: `@cedarjs/graphql-server/dist/types#RedwoodGraphQLContext`,
+    contextType: `@cedarjs/graphql-server/dist/types#CedarGraphQLContext`,
   }
 
   return pluginConfig

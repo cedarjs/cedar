@@ -197,7 +197,7 @@ export async function runPreUpgradeScripts(
 
     // Read script content for dependency extraction
     const scriptContent = await fs.promises.readFile(scriptPath, 'utf8')
-    const deps = extractDependencies(scriptContent)
+    const deps = extractDependencies(scriptContent, version)
 
     if (deps.length > 0) {
       const depList = deps.join(', ')
@@ -274,7 +274,7 @@ export async function runPreUpgradeScripts(
   }
 }
 
-const extractDependencies = (content: string) => {
+const extractDependencies = (content: string, version?: string) => {
   const deps = new Map()
 
   // 1. Explicit dependencies via comments
@@ -315,7 +315,11 @@ const extractDependencies = (content: string) => {
 
     // Explicit comments take precedence
     if (!deps.has(name)) {
-      deps.set(name, name)
+      if (version && name.startsWith('@cedarjs/')) {
+        deps.set(name, `${name}@${version}`)
+      } else {
+        deps.set(name, name)
+      }
     }
   }
 

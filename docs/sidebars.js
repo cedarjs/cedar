@@ -76,7 +76,7 @@ module.exports = {
       },
       items: [
         'a11y',
-        'app-configuration-redwood-toml',
+        'app-configuration-cedar-toml',
         'assets-and-files',
         {
           type: 'category',
@@ -175,7 +175,19 @@ module.exports = {
         },
         'local-postgres-setup',
         'logger',
-        'mailer',
+        {
+          type: 'category',
+          label: 'Mailer',
+          link: {
+            type: 'generated-index',
+            title: 'Mailer',
+            slug: 'mailer/index',
+          },
+          items: [
+            { type: 'doc', label: 'Introduction', id: 'mailer' },
+            { type: 'doc', label: 'Resend', id: 'mailer/resend' },
+          ],
+        },
         {
           type: 'category',
           label: 'Monitoring',

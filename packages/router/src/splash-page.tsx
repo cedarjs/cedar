@@ -13,9 +13,10 @@ export const SplashPage = ({
   hasGeneratedRoutes,
   allStandardRoutes: routesMap,
 }: SplashPageProps) => {
+  const version = useVersion()
+
   const routes = Object.values(routesMap)
 
-  const version = useVersion()
   return (
     <>
       <main>
@@ -512,7 +513,8 @@ export const SplashPage = ({
 }
 
 const useVersion = () => {
-  const [version, setVersion] = useState(null)
+  const [version, setVersion] = useState<string | undefined>(undefined)
+
   useEffect(() => {
     async function fetchVersion() {
       try {
@@ -524,15 +526,20 @@ const useVersion = () => {
               'content-type': 'application/json',
             },
             body: JSON.stringify({
-              query: 'query RedwoodVersion { redwood { version } }',
+              query: 'query CedarVersion { cedar { version } }',
             }),
           },
         )
 
         const versionData = await response.json()
-        setVersion(versionData?.data?.redwood?.version || null)
+
+        if (versionData.errors) {
+          console.error('Unable to get Cedar version:', versionData.errors)
+        }
+
+        setVersion(versionData?.data?.cedar?.version)
       } catch (err) {
-        console.error('Unable to get CedarJS version: ', err)
+        console.error('Unable to get Cedar version: ', err)
       }
     }
 
@@ -542,5 +549,6 @@ const useVersion = () => {
 
     fetchVersion()
   }, [])
+
   return version
 }
