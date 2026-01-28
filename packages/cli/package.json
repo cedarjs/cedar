@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@babel/preset-typescript": "7.28.5",
-    "@babel/runtime-corejs3": "7.28.4",
+    "@babel/runtime-corejs3": "7.28.6",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/fastify-web": "workspace:*",
@@ -91,7 +91,7 @@
     "yargs": "17.7.2"
   },
   "devDependencies": {
-    "@babel/cli": "7.28.3",
+    "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@types/archiver": "^7.0.0",
     "memfs": "4.51.1",
