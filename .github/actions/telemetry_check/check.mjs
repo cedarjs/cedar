@@ -12,13 +12,16 @@ console.log(
 // Setup fake telemetry server
 const server = http.createServer((req, res) => {
   let data = ''
+
   req.on('data', (chunk) => {
     data += chunk
   })
+
   req.on('end', () => {
     res.writeHead(200)
     res.end()
-    console.log('Telemetry packet received')
+    console.log('Telemetry packet received', data)
+
     process.exit(0)
   })
 })
@@ -35,7 +38,7 @@ try {
   const mode = process.argv[process.argv.indexOf('--mode') + 1]
   let exitCode = 0
   switch (mode) {
-    case 'crwa':
+    case 'cca':
       exitCode = await exec(
         `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ../project-for-telemetry --typescript true --git false --no-yarn-install`,
       )
