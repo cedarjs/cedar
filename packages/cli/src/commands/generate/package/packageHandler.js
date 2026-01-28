@@ -50,6 +50,8 @@ export async function updateTsconfig(task) {
       name: 'api',
       path: path.join(getPaths().api.base, 'tsconfig.json'),
       expectedModule: 'Node20',
+      // While Cedar doesn't officially endorse NodeNext, it will still work
+      // here, so we'll keep it
       acceptable: ['node20', 'nodenext'],
     },
     {
@@ -66,53 +68,81 @@ export async function updateTsconfig(task) {
     },
   ]
 
-  let updatedAny = false
+  let didUpdate = false
 
   for (const target of targets) {
     if (!fs.existsSync(target.path)) {
       continue
     }
 
-    const tsconfig = await fs.promises.readFile(target.path, 'utf8')
-    const tsconfigLines = tsconfig.split('\n')
+    const tsconfigText = await fs.promises.readFile(target.path, 'utf8')
 
-    const moduleLineIndex = tsconfigLines.findIndex((line) =>
-      /^\s*"module":\s*"/.test(line),
+    const { config: tsconfig, error } = ts.parseConfigFileTextToJson(
+      target.path,
+      tsconfigText,
     )
 
-    if (moduleLineIndex === -1) {
-      // If there is no "module" line, skip this tsconfig
+    if (error) {
+      throw new Error(
+        'Failed to parse tsconfig: ' + JSON.stringify(error, null, 2),
+      )
+    }
+
+    // Only update tsconfigs that explicitly set a "module" value. We don't
+    // want to add a new module entry where none existed before.
+    if (
+      !tsconfig?.compilerOptions ||
+      typeof tsconfig.compilerOptions.module === 'undefined'
+    ) {
+      // If there is no "module" entry, skip this tsconfig
       continue
     }
 
-    const moduleLine = tsconfigLines[moduleLineIndex]
+    const currentModule =
+      typeof tsconfig.compilerOptions.module === 'string'
+        ? tsconfig.compilerOptions.module.toLowerCase()
+        : String(tsconfig.compilerOptions.module).toLowerCase()
 
-    const lower = moduleLine.toLowerCase()
-
-    // While Cedar doesn't officially endorse NodeNext, it will still work here,
-    // so we won't overwrite it for Node targets.
     const alreadySet = target.acceptable.some((acc) => {
-      if (lower.includes(acc)) {
-        return true
-      }
-
-      return false
+      return currentModule.includes(acc)
     })
 
     if (alreadySet) {
       continue
     }
 
-    tsconfigLines[moduleLineIndex] = moduleLine.replace(
-      /":\s*"[\w\d]+"/,
-      `": "${target.expectedModule}"`,
+    const edits = modify(
+      tsconfigText,
+      ['compilerOptions', 'module'],
+      target.expectedModule,
+      {
+        formattingOptions: { insertSpaces: true, tabSize: 2 },
+      },
     )
 
-    await fs.promises.writeFile(target.path, tsconfigLines.join('\n'))
-    updatedAny = true
+    if (edits.length === 0) {
+      const newConfig = { ...tsconfig }
+
+      if (!newConfig.compilerOptions) {
+        newConfig.compilerOptions = {}
+      }
+
+      newConfig.compilerOptions.module = target.expectedModule
+
+      await fs.promises.writeFile(
+        target.path,
+        JSON.stringify(newConfig, null, 2),
+        'utf8',
+      )
+    } else {
+      const newText = applyEdits(tsconfigText, edits)
+      await fs.promises.writeFile(target.path, newText, 'utf8')
+    }
+
+    didUpdate = true
   }
 
-  if (!updatedAny) {
+  if (!didUpdate) {
     task.skip('tsconfig already up to date')
     return
   }
