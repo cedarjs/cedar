@@ -432,7 +432,7 @@ describe('packageHandler', () => {
     })
   })
 
-  describe('addDependencyToPackageJson and updateWorkspaceTsconfigReferences', () => {
+  describe('addDependencyToPackageJson', () => {
     it('adds dependency to package.json', async () => {
       const apiPackageJsonPath = path.join(mockBase.path, 'api', 'package.json')
 
@@ -493,7 +493,9 @@ describe('packageHandler', () => {
 
       expect(skipFn).toHaveBeenCalled()
     })
+  })
 
+  describe('updateWorkspaceTsconfigReferences', () => {
     it('adds reference to api tsconfig', async () => {
       const tsconfigPath = path.join(mockBase.path, 'api', 'tsconfig.json')
       const tsconfig = {
@@ -509,11 +511,9 @@ describe('packageHandler', () => {
         mockBase.path,
       )
 
-      await packageHandler.updateWorkspaceTsconfigReferences(
-        { skip: () => {} },
-        'newpkg',
-        'api',
-      )
+      await packageHandler
+        .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
+        .run()
 
       const updated = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'))
       const expectedPath = path
@@ -542,11 +542,9 @@ describe('packageHandler', () => {
         mockBase.path,
       )
 
-      await packageHandler.updateWorkspaceTsconfigReferences(
-        { skip: () => {} },
-        'newpkg',
-        'api',
-      )
+      await packageHandler
+        .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
+        .run()
 
       const updated = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'))
       const expectedPath = path
@@ -584,11 +582,10 @@ describe('packageHandler', () => {
       )
 
       const before = fs.readFileSync(tsconfigPath, 'utf8')
-      await packageHandler.updateWorkspaceTsconfigReferences(
-        { skip: () => {} },
-        'newpkg',
-        'api',
-      )
+
+      await packageHandler
+        .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
+        .run()
 
       const after = fs.readFileSync(tsconfigPath, 'utf8')
       expect(after).toEqual(before)
@@ -612,11 +609,9 @@ describe('packageHandler', () => {
         mockBase.path,
       )
 
-      await packageHandler.updateWorkspaceTsconfigReferences(
-        { skip: () => {} },
-        'newpkg',
-        'api',
-      )
+      await packageHandler
+        .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
+        .run()
 
       const updatedText = fs.readFileSync(tsconfigPath, 'utf8')
       const expectedPath = path
@@ -651,11 +646,9 @@ describe('packageHandler', () => {
         mockBase.path,
       )
 
-      await packageHandler.updateWorkspaceTsconfigReferences(
-        { skip: () => {} },
-        'newpkg',
-        'api',
-      )
+      await packageHandler
+        .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
+        .run()
 
       const updatedText = fs.readFileSync(scriptsTsconfigPath, 'utf8')
       const expectedPath = path
@@ -687,11 +680,9 @@ describe('packageHandler', () => {
         mockBase.path,
       )
 
-      await packageHandler.updateWorkspaceTsconfigReferences(
-        { skip: () => {} },
-        'newpkg',
-        'api',
-      )
+      await packageHandler
+        .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
+        .run()
 
       const updated = JSON.parse(fs.readFileSync(scriptsTsconfigPath, 'utf8'))
       const expectedPath = path
@@ -733,11 +724,10 @@ describe('packageHandler', () => {
       )
 
       const before = fs.readFileSync(scriptsTsconfigPath, 'utf8')
-      await packageHandler.updateWorkspaceTsconfigReferences(
-        { skip: () => {} },
-        'newpkg',
-        'api',
-      )
+
+      await packageHandler
+        .updateWorkspaceTsconfigReferences({ skip: () => {} }, 'newpkg', 'api')
+        .run()
 
       const after = fs.readFileSync(scriptsTsconfigPath, 'utf8')
       expect(after).toEqual(before)

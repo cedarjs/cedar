@@ -165,7 +165,7 @@ export function parseWorkspaceFlag(workspace) {
   return ws
 }
 
-export async function updateWorkspaceTsconfigReferences(
+export function updateWorkspaceTsconfigReferences(
   task,
   folderName,
   targetWorkspaces,
@@ -291,7 +291,7 @@ export async function updateWorkspaceTsconfigReferences(
     }
   })
 
-  return new Listr(subtasks).run()
+  return new Listr(subtasks)
 }
 
 async function installAndBuild(folderName) {
