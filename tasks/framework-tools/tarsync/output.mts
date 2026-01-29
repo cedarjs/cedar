@@ -122,7 +122,7 @@ export class OutputManager {
     )
     lines.push(
       this.getPrefix(Stage.MOVE) +
-        ' Moving tarballs' +
+        ' Copying tarballs' +
         this.getSuffix(Stage.MOVE),
     )
     lines.push(

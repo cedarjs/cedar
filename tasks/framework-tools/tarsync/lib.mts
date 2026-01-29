@@ -102,19 +102,17 @@ export async function buildTarballs() {
   await $`yarn nx run-many -t build:pack --exclude create-cedar-app`
 }
 
-export async function moveTarballs(projectPath: string) {
+export async function copyTarballs(projectPath: string) {
   const tarballDest = path.join(projectPath, TARBALL_DEST_DIRNAME)
   await fs.promises.mkdir(tarballDest, { recursive: true })
 
   const tarballs = await glob(['./packages/**/*.tgz'])
 
   await Promise.all(
-    tarballs.map((tarball) =>
-      fs.promises.rename(
-        tarball,
-        path.join(tarballDest, path.basename(tarball)),
-      ),
-    ),
+    tarballs.map(async (tarball) => {
+      const dest = path.join(tarballDest, path.basename(tarball))
+      await fs.promises.copyFile(tarball, dest)
+    }),
   )
 }
 
