@@ -94,7 +94,7 @@
     "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@types/archiver": "^7.0.0",
-    "memfs": "4.51.1",
+    "memfs": "4.56.10",
     "node-ssh": "13.2.1",
     "ts-dedent": "2.2.0",
     "tsx": "4.21.0",
