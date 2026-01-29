@@ -60,7 +60,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/client": "6.19.1",
+    "@prisma/client": "6.19.2",
     "@types/mime-types": "2.1.4",
     "concurrently": "9.2.1",
     "esbuild": "0.21.5",

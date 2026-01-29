@@ -87,7 +87,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@prisma/client": "6.19.1",
+    "@prisma/client": "6.19.2",
     "@whatwg-node/fetch": "0.10.13",
     "cookie": "1.1.1",
     "humanize-string": "2.1.0",
