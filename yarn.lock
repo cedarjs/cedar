@@ -2666,7 +2666,7 @@ __metadata:
     fast-json-parse: "npm:1.0.3"
     fastify: "npm:5.6.2"
     fastify-raw-body: "npm:5.0.0"
-    memfs: "npm:4.51.1"
+    memfs: "npm:4.56.10"
     pino-abstract-transport: "npm:1.2.0"
     pretty-bytes: "npm:5.6.0"
     pretty-ms: "npm:7.0.1"
@@ -3203,7 +3203,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:9.2.1"
-    memfs: "npm:4.51.1"
+    memfs: "npm:4.56.10"
     publint: "npm:0.3.17"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3300,7 +3300,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
     listr2: "npm:7.0.2"
-    memfs: "npm:4.51.1"
+    memfs: "npm:4.56.10"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3417,7 +3417,7 @@ __metadata:
     latest-version: "npm:9.0.0"
     listr2: "npm:7.0.2"
     lodash: "npm:4.17.21"
-    memfs: "npm:4.51.1"
+    memfs: "npm:4.56.10"
     node-ssh: "npm:13.2.1"
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
@@ -4234,7 +4234,7 @@ __metadata:
     glob: "npm:11.1.0"
     http-proxy-middleware: "npm:3.0.5"
     isbot: "npm:5.1.33"
-    memfs: "npm:4.51.1"
+    memfs: "npm:4.56.10"
     publint: "npm:0.3.17"
     react: "npm:18.3.1"
     react-server-dom-webpack: "npm:19.2.3"
@@ -7800,12 +7800,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jsonjoy.com/base64@npm:17.65.0":
+  version: 17.65.0
+  resolution: "@jsonjoy.com/base64@npm:17.65.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/44d014fa409e31379fbf4e19f95483dd988bbffb69b005840fdf1efe9900bf8abbce395fa37d4249607674fea552ce858cf427912510f6f37b4f2d18b646b488
+  languageName: node
+  linkType: hard
+
 "@jsonjoy.com/base64@npm:^1.1.2":
   version: 1.1.2
   resolution: "@jsonjoy.com/base64@npm:1.1.2"
   peerDependencies:
     tslib: 2
   checksum: 10c0/88717945f66dc89bf58ce75624c99fe6a5c9a0c8614e26d03e406447b28abff80c69fb37dabe5aafef1862cf315071ae66e5c85f6018b437d95f8d13d235e6eb
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/buffers@npm:17.65.0, @jsonjoy.com/buffers@npm:^17.65.0":
+  version: 17.65.0
+  resolution: "@jsonjoy.com/buffers@npm:17.65.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/493ca68067d6ae5ee12623223f63f538f1b2a5ab606288d214763c4a16f5698e42bb1f86a718ea163b747f5fb17490849959ce89af76691e21a8f31627d75746
   languageName: node
   linkType: hard
 
@@ -7818,12 +7836,124 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jsonjoy.com/codegen@npm:17.65.0":
+  version: 17.65.0
+  resolution: "@jsonjoy.com/codegen@npm:17.65.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/c34c4d54bc50330e4c593d58ca02f119c8d15f5d752ab9a33ac95366ef3de81cc66954400a0d890ab8ba91f2513df7b2ddc01c957c3f23f439eee2376c0c99a4
+  languageName: node
+  linkType: hard
+
 "@jsonjoy.com/codegen@npm:^1.0.0":
   version: 1.0.0
   resolution: "@jsonjoy.com/codegen@npm:1.0.0"
   peerDependencies:
     tslib: 2
   checksum: 10c0/54686352248440ad1484ce7db0270a5a72424fb9651b090e5f1c8e2cd8e55e6c7a3f67dfe4ed90c689cf01ed949e794764a8069f5f52510eaf0a2d0c41d324cd
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/fs-core@npm:4.56.10":
+  version: 4.56.10
+  resolution: "@jsonjoy.com/fs-core@npm:4.56.10"
+  dependencies:
+    "@jsonjoy.com/fs-node-builtins": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-utils": "npm:4.56.10"
+    thingies: "npm:^2.5.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/1cd0d83431682c6cab3fd6d2f818204876506c064a135bc84f7fae6b2f5f5a38dc80e636696ca7bef4c9a8e0374d2395e263c1e2f23843c7d53a604bc9a45822
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/fs-fsa@npm:4.56.10":
+  version: 4.56.10
+  resolution: "@jsonjoy.com/fs-fsa@npm:4.56.10"
+  dependencies:
+    "@jsonjoy.com/fs-core": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-utils": "npm:4.56.10"
+    thingies: "npm:^2.5.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/1b24a5087dd90e0f0ed5bef604e0e5f1b23c427e4097ab0958ebcad498ae5074af5fbd7f2029541e384e0eff5aa67147cb3cffb6b33c182ac154e665ccf18859
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/fs-node-builtins@npm:4.56.10":
+  version: 4.56.10
+  resolution: "@jsonjoy.com/fs-node-builtins@npm:4.56.10"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/b29ae6d3afeb81007cc412a5c6f7801a2d37dd67cee6dd7df8da00c1656beaa969c5b2ec862a5b79e8f06040d030dc552a56b3d0b3d0a36a66c1099737388165
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/fs-node-to-fsa@npm:4.56.10":
+  version: 4.56.10
+  resolution: "@jsonjoy.com/fs-node-to-fsa@npm:4.56.10"
+  dependencies:
+    "@jsonjoy.com/fs-fsa": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-utils": "npm:4.56.10"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/2af98b17c3f44247ab1d929afb510d844f691f10936fc5fd0196b28ba682594f7c1a261d9efae1b6c429d78adadd20205f726bde0cf54bbc1d276ffcfb12fec1
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/fs-node-utils@npm:4.56.10":
+  version: 4.56.10
+  resolution: "@jsonjoy.com/fs-node-utils@npm:4.56.10"
+  dependencies:
+    "@jsonjoy.com/fs-node-builtins": "npm:4.56.10"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/54877bef12e7fc968898dc16b1a47294996dd785b72351f3be9dd48287c030eae5525abd153267239e03a098624087811370829f6d2794bdacbf7d587cf1ea77
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/fs-node@npm:4.56.10":
+  version: 4.56.10
+  resolution: "@jsonjoy.com/fs-node@npm:4.56.10"
+  dependencies:
+    "@jsonjoy.com/fs-core": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-utils": "npm:4.56.10"
+    "@jsonjoy.com/fs-print": "npm:4.56.10"
+    "@jsonjoy.com/fs-snapshot": "npm:4.56.10"
+    glob-to-regex.js: "npm:^1.0.0"
+    thingies: "npm:^2.5.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/c5284b03c75dc7aa287737e7e5040b7bb423bba9c7ccf127b230de229cc95d028b803c39e78aef42154aa18d986e48deb223bc80869825a7885269d139d988d6
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/fs-print@npm:4.56.10":
+  version: 4.56.10
+  resolution: "@jsonjoy.com/fs-print@npm:4.56.10"
+  dependencies:
+    "@jsonjoy.com/fs-node-utils": "npm:4.56.10"
+    tree-dump: "npm:^1.1.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/e47e7cb24f3df751724ee6f96810a88d201f0b78f63e7ce649d7692b92dccf76b967e1381070d2d7695f7d4f2c64b4d6b944af561c8c61a606e4047dc1c7c742
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/fs-snapshot@npm:4.56.10":
+  version: 4.56.10
+  resolution: "@jsonjoy.com/fs-snapshot@npm:4.56.10"
+  dependencies:
+    "@jsonjoy.com/buffers": "npm:^17.65.0"
+    "@jsonjoy.com/fs-node-utils": "npm:4.56.10"
+    "@jsonjoy.com/json-pack": "npm:^17.65.0"
+    "@jsonjoy.com/util": "npm:^17.65.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/f9ba46dfc59e5fb7e3c18d4b7044757aa8dbd00fdb8bd416a664e8257317a3b48ac213831b484fb55c7fc1ac0a4f3d86e914a0d99b309cde29022179d8015b28
   languageName: node
   linkType: hard
 
@@ -7845,6 +7975,35 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jsonjoy.com/json-pack@npm:^17.65.0":
+  version: 17.65.0
+  resolution: "@jsonjoy.com/json-pack@npm:17.65.0"
+  dependencies:
+    "@jsonjoy.com/base64": "npm:17.65.0"
+    "@jsonjoy.com/buffers": "npm:17.65.0"
+    "@jsonjoy.com/codegen": "npm:17.65.0"
+    "@jsonjoy.com/json-pointer": "npm:17.65.0"
+    "@jsonjoy.com/util": "npm:17.65.0"
+    hyperdyperid: "npm:^1.2.0"
+    thingies: "npm:^2.5.0"
+    tree-dump: "npm:^1.1.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/e5db5601d98262c4ae4b371fe9afa1ee6c40630488949a18971a807d3d7f180e6b463ad36b1b4ff5212fd2eaf1f07cf611e059a4b846c0d8feae4a64a624f996
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/json-pointer@npm:17.65.0":
+  version: 17.65.0
+  resolution: "@jsonjoy.com/json-pointer@npm:17.65.0"
+  dependencies:
+    "@jsonjoy.com/util": "npm:17.65.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/3f3125204f2462e7b1fdb2d8f0a917713040dc5ab89458a529b524ce399aef6bda7105cbf661ef30e254514a73147d6c6c863bfd89d7fb8f386ac7d5a5605696
+  languageName: node
+  linkType: hard
+
 "@jsonjoy.com/json-pointer@npm:^1.0.2":
   version: 1.0.2
   resolution: "@jsonjoy.com/json-pointer@npm:1.0.2"
@@ -7854,6 +8013,18 @@ __metadata:
   peerDependencies:
     tslib: 2
   checksum: 10c0/8d959c0fdd77d937d2a829270de51533bb9e3b887b3f6f02943884dc33dd79225071218c93f4bafdee6a3412fd5153264997953a86de444d85c1fff67915af54
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/util@npm:17.65.0, @jsonjoy.com/util@npm:^17.65.0":
+  version: 17.65.0
+  resolution: "@jsonjoy.com/util@npm:17.65.0"
+  dependencies:
+    "@jsonjoy.com/buffers": "npm:17.65.0"
+    "@jsonjoy.com/codegen": "npm:17.65.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/c8eb05d060760fae99fd76f7d86ac8a5a6ef645af2325f8146f788c517fff59a8f308637136fdebebf481b45784a15f0093efb1f79425605a9039a523f1c0f3d
   languageName: node
   linkType: hard
 
@@ -19054,7 +19225,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob-to-regex.js@npm:^1.0.1":
+"glob-to-regex.js@npm:^1.0.0, glob-to-regex.js@npm:^1.0.1":
   version: 1.2.0
   resolution: "glob-to-regex.js@npm:1.2.0"
   peerDependencies:
@@ -23077,17 +23248,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"memfs@npm:4.51.1, memfs@npm:^4.17.0":
-  version: 4.51.1
-  resolution: "memfs@npm:4.51.1"
+"memfs@npm:4.56.10, memfs@npm:^4.17.0":
+  version: 4.56.10
+  resolution: "memfs@npm:4.56.10"
   dependencies:
+    "@jsonjoy.com/fs-core": "npm:4.56.10"
+    "@jsonjoy.com/fs-fsa": "npm:4.56.10"
+    "@jsonjoy.com/fs-node": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-to-fsa": "npm:4.56.10"
+    "@jsonjoy.com/fs-node-utils": "npm:4.56.10"
+    "@jsonjoy.com/fs-print": "npm:4.56.10"
+    "@jsonjoy.com/fs-snapshot": "npm:4.56.10"
     "@jsonjoy.com/json-pack": "npm:^1.11.0"
     "@jsonjoy.com/util": "npm:^1.9.0"
     glob-to-regex.js: "npm:^1.0.1"
     thingies: "npm:^2.5.0"
     tree-dump: "npm:^1.0.3"
     tslib: "npm:^2.0.0"
-  checksum: 10c0/b039121dd2c6a93b2b3835042a1780d70347d25d3f983998a91e38a07e9ea1838ace3a5b0b7b8437efef6c64eea668f62efb25aeeed72a595055f6c449ada402
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/2d96118c2fa2e4de695e23370f1d1eb79b230db0d91bb2aa0ad6f8118bb483deaadbdf5d2b2ff3f650f80e49492e72ceacdc4904e59f7a37c796f514f832ed9c
   languageName: node
   linkType: hard
 

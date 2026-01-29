@@ -138,7 +138,7 @@
     "@types/qs": "6.14.0",
     "@types/split2": "4.2.3",
     "@types/yargs": "17.0.35",
-    "memfs": "4.51.1",
+    "memfs": "4.56.10",
     "pino-abstract-transport": "1.2.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
