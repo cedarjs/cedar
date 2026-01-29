@@ -36,7 +36,7 @@ try {
   await promptForUntrackedFiles()
 
   console.log('Running git clean -fdx...')
-  await $`git clean -fdx`
+  await $`git clean -fdx --exclude='/test-project/'`
 
   console.log('Running yarn install...')
   await $`yarn install`
