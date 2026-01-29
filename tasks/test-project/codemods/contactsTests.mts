@@ -20,14 +20,14 @@ export default (file: FileInfo, api: API) => {
     })
     .forEach((path) => {
       const args = path.node.arguments
+      const name = args[0]
+      const fn = args[1]
 
-      if (args?.[0]?.type === 'Literal' && args[0].value === 'contacts') {
-        const fn = args?.[1]
-
+      if (name?.type === 'StringLiteral' && name.value === 'contacts') {
         if (
-          (fn?.type === 'FunctionExpression' ||
-            fn?.type === 'ArrowFunctionExpression') &&
-          fn?.body?.type === 'BlockStatement'
+          (fn.type === 'FunctionExpression' ||
+            fn.type === 'ArrowFunctionExpression') &&
+          fn.body.type === 'BlockStatement'
         ) {
           const mockRestoreCall = j.callExpression(
             j.memberExpression(
@@ -70,17 +70,17 @@ export default (file: FileInfo, api: API) => {
     })
     .forEach((path) => {
       const args = path.node.arguments
+      const name = args[0]
+      const fn = args[1]
 
       if (
-        args?.[0]?.type === 'Literal' &&
-        args[0].value === 'creates a contact'
+        name?.type === 'StringLiteral' &&
+        name.value === 'creates a contact'
       ) {
-        const fn = args?.[1]
-
         if (
           (fn?.type === 'FunctionExpression' ||
             fn?.type === 'ArrowFunctionExpression') &&
-          fn?.body?.type === 'BlockStatement'
+          fn.body.type === 'BlockStatement'
         ) {
           const spyOnCall = j.callExpression(
             j.memberExpression(
@@ -98,5 +98,10 @@ export default (file: FileInfo, api: API) => {
       }
     })
 
-  return root.toSource()
+  let output = root.toSource()
+  const spyOnRegex =
+    /(jest\.spyOn\(\s*console\s*,\s*['"]log['"]\s*\)\.mockImplementation\(\s*\(\)\s*=>\s*\{\s*\}\s*\)\s*;?\r?\n)(?!\r?\n)/g
+  output = output.replace(spyOnRegex, '$1\n')
+
+  return output
 }
