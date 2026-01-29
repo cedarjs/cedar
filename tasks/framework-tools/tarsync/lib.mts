@@ -79,15 +79,15 @@ export async function getOptions(): Promise<Options> {
   if (!options.projectPath) {
     throw new Error(
       [
-        'Error: You have to provide the path to a Redwood project as',
+        'Error: You have to provide the path to a Cedar project as',
         '',
         '  1. the first positional argument',
         '',
-        ansis.gray('  yarn project:tarsync /path/to/redwood/project'),
+        ansis.gray('  yarn project:tarsync /path/to/cedar/project'),
         '',
         '  2. the `RWJS_CWD` env var',
         '',
-        ansis.gray('  RWJS_CWD=/path/to/redwood/project yarn project:tarsync'),
+        ansis.gray('  RWJS_CWD=/path/to/cedar/project yarn project:tarsync'),
       ].join('\n'),
     )
   }
@@ -128,7 +128,7 @@ export async function updateResolutions(projectPath: string) {
     .reduce((resolutions, { name }) => {
       return {
         ...resolutions,
-        // Turn a Redwood package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
+        // Turn a Cedar package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
         [name]: `./${TARBALL_DEST_DIRNAME}/${
           name.replace('@', '').replaceAll('/', '-') + '.tgz'
         }`,
