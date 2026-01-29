@@ -37,7 +37,7 @@
     "test:watch": "yarn test --watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.28.4",
+    "@babel/runtime-corejs3": "7.28.6",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@envelop/core": "5.4.0",
@@ -50,7 +50,7 @@
     "@graphql-tools/schema": "10.0.31",
     "@graphql-tools/utils": "10.11.0",
     "@graphql-yoga/plugin-persisted-operations": "3.18.0",
-    "@opentelemetry/api": "1.8.0",
+    "@opentelemetry/api": "1.9.0",
     "core-js": "3.47.0",
     "graphql": "16.12.0",
     "graphql-scalars": "1.25.0",
@@ -60,13 +60,13 @@
     "uuid": "11.1.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.28.3",
+    "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/realtime": "workspace:*",
     "@envelop/types": "5.2.1",
-    "@types/aws-lambda": "8.10.159",
+    "@types/aws-lambda": "8.10.160",
     "@types/jsonwebtoken": "9.0.10",
     "@types/lodash": "4.17.23",
     "@whatwg-node/fetch": "0.10.13",
