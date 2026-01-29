@@ -4,7 +4,7 @@ import type { Options } from './lib.mjs'
 import {
   buildTarballs,
   FRAMEWORK_PATH,
-  moveTarballs,
+  copyTarballs,
   updateResolutions,
   yarnInstall,
 } from './lib.mjs'
@@ -34,7 +34,7 @@ export async function tarsync(
 
   outputManager.switchStage(Stage.MOVE)
   try {
-    await moveTarballs(projectPath)
+    await copyTarballs(projectPath)
   } catch (error) {
     outputManager.stop(error)
     return
