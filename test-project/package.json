@@ -11,7 +11,7 @@
     "@cedarjs/eslint-config": "3.0.0-canary.13223+9e1d1011b",
     "@cedarjs/project-config": "3.0.0-canary.13223+9e1d1011b",
     "@cedarjs/testing": "3.0.0-canary.13223+9e1d1011b",
-    "prettier-plugin-tailwindcss": "^0.5.12"
+    "prettier-plugin-tailwindcss": "^0.7.0"
   },
   "engines": {
     "node": "=24.x"
