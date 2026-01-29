@@ -172,11 +172,9 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
       )
     } else {
       const message = isTuiError(e) ? e.message : ''
+      const errorTitle = title?.toLowerCase().replace('...', '') || '<no title>'
 
-      tui.displayError(
-        'Failed ' + title.toLowerCase().replace('...', ''),
-        message || '',
-      )
+      tui.displayError('Failed ' + errorTitle, message || '')
     }
 
     const exitCode = isTuiError(e) ? e.exitCode : 1
