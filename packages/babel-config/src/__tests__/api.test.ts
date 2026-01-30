@@ -44,6 +44,29 @@ describe('api', () => {
 
     it('can include `@babel/preset-env`', () => {
       const apiSideBabelPresets = getApiSideBabelPresets({ presetEnv: true })
+
+      if (!Array.isArray(apiSideBabelPresets)) {
+        throw new Error('apiSideBabelPresets is not an array')
+      }
+
+      const secondPlugin = apiSideBabelPresets[1]
+
+      if (!Array.isArray(secondPlugin)) {
+        throw new Error('secondPlugin is not an array')
+      }
+
+      const secondPluginName = secondPlugin[0]
+      const secondPluginOptions = secondPlugin[1]
+
+      const coreJsMinorVersion =
+        secondPluginOptions.corejs.version.split('.')[1]
+      const expectedCoreJsMinorVersion = 48
+
+      expect(secondPluginName).toBe('@babel/preset-env')
+      expect(
+        Math.abs(expectedCoreJsMinorVersion - coreJsMinorVersion),
+      ).toBeLessThanOrEqual(1)
+
       expect(apiSideBabelPresets).toMatchInlineSnapshot(`
         [
           [
@@ -59,7 +82,7 @@ describe('api', () => {
             {
               "corejs": {
                 "proposals": true,
-                "version": "3.47",
+                "version": "3.${coreJsMinorVersion}",
               },
               "exclude": [
                 "@babel/plugin-transform-class-properties",
