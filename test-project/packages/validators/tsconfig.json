@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "composite": true,
-    "target": "ES2023",
-    "module": "Node20",
+    "target": "es2023",
+    "module": "node20",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": ".",

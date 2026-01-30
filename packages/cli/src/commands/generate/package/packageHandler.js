@@ -49,7 +49,7 @@ export async function updateTsconfig(task) {
     {
       name: 'api',
       path: path.join(getPaths().api.base, 'tsconfig.json'),
-      expectedModule: 'Node20',
+      expectedModule: 'node20',
       // While Cedar doesn't officially endorse NodeNext, it will still work
       // here, so we'll keep it
       acceptable: ['node20', 'nodenext'],
@@ -57,13 +57,13 @@ export async function updateTsconfig(task) {
     {
       name: 'web',
       path: path.join(getPaths().web.base, 'tsconfig.json'),
-      expectedModule: 'ESNext',
+      expectedModule: 'esnext',
       acceptable: ['esnext', 'es2022'],
     },
     {
       name: 'scripts',
       path: path.join(getPaths().scripts, 'tsconfig.json'),
-      expectedModule: 'Node20',
+      expectedModule: 'node20',
       acceptable: ['node20', 'nodenext'],
     },
   ]

@@ -4,7 +4,7 @@
     "isolatedModules": true,
     "emitDeclarationOnly": false,
     "noEmit": true,
-    "module": "Node20",
+    "module": "node20",
     "moduleResolution": "node16"
   },
   "include": ["."],
