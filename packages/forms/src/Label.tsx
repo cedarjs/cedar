@@ -4,7 +4,8 @@ import type { FieldProps } from './FieldProps'
 import { useErrorStyles } from './useErrorStyles'
 
 export interface LabelProps
-  extends Pick<FieldProps, 'errorClassName' | 'errorStyle'>,
+  extends
+    Pick<FieldProps, 'errorClassName' | 'errorStyle'>,
     React.ComponentPropsWithoutRef<'label'> {
   name: string
 }

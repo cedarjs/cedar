@@ -38,20 +38,17 @@ export const builder = async (yargs) => {
 
         // Run the server file, if it exists, with web side also
         if (serverFileExists()) {
-          const { bothServerFileHandler } = await import(
-            './serveBothHandler.js'
-          )
+          const { bothServerFileHandler } =
+            await import('./serveBothHandler.js')
           await bothServerFileHandler(argv)
         } else if (rscEnabled || streamingEnabled) {
-          const { bothSsrRscServerHandler } = await import(
-            './serveBothHandler.js'
-          )
+          const { bothSsrRscServerHandler } =
+            await import('./serveBothHandler.js')
           await bothSsrRscServerHandler(argv, rscEnabled)
         } else {
           if (!projectIsEsm()) {
-            const { handler } = await import(
-              '@cedarjs/api-server/cjs/bothCliConfigHandler'
-            )
+            const { handler } =
+              await import('@cedarjs/api-server/cjs/bothCliConfigHandler')
             await handler(argv)
           } else {
             await bothServerCLIConfig.handler(argv)
@@ -78,9 +75,8 @@ export const builder = async (yargs) => {
           await apiServerFileHandler(argv)
         } else {
           if (!projectIsEsm()) {
-            const { handler } = await import(
-              '@cedarjs/api-server/cjs/apiCliConfigHandler'
-            )
+            const { handler } =
+              await import('@cedarjs/api-server/cjs/apiCliConfigHandler')
             await handler(argv)
           } else {
             await apiServerCLIConfig.handler(argv)

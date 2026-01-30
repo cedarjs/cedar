@@ -20,8 +20,10 @@ declare global {
   > extends QueryResult<TData, TVariables> {}
 
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface MutationOperationResult<TData, TVariables>
-    extends MutationTuple<TData, TVariables> {}
+  interface MutationOperationResult<TData, TVariables> extends MutationTuple<
+    TData,
+    TVariables
+  > {}
 
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface SubscriptionOperationResult<
@@ -36,8 +38,10 @@ declare global {
   > extends QueryHookOptions<TData, TVariables> {}
 
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface GraphQLMutationHookOptions<TData, TVariables>
-    extends MutationHookOptions<TData, TVariables> {}
+  interface GraphQLMutationHookOptions<
+    TData,
+    TVariables,
+  > extends MutationHookOptions<TData, TVariables> {}
 
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface GraphQLSubscriptionHookOptions<

@@ -21,9 +21,8 @@ const { memfs, ufs, vol } = await vi.hoisted(async () => {
 })
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } = await import(
-    '../../../../__tests__/ufsFsProxy.js'
-  )
+  const { wrapFsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
   const originalFs = await importOriginal()
   ufs.use(wrapFsForUnionfs(originalFs)).use(memfs)
   return {
