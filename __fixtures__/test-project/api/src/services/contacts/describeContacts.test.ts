@@ -16,6 +16,10 @@ describeScenario<StandardScenario>('contacts', (getScenario) => {
     scenario = getScenario()
   })
 
+  afterEach(() => {
+    jest.mocked(console).log.mockRestore?.()
+  })
+
   it('returns all contacts', async () => {
     const result = await contacts()
 
@@ -29,6 +33,8 @@ describeScenario<StandardScenario>('contacts', (getScenario) => {
   })
 
   it('creates a contact', async () => {
+    jest.mocked(console).log.mockImplementation(() => {})
+
     const result = await createContact({
       input: {
         name: 'Bazinga',
