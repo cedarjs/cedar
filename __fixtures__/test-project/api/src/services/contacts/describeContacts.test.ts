@@ -33,7 +33,7 @@ describeScenario<StandardScenario>('contacts', (getScenario) => {
   })
 
   it('creates a contact', async () => {
-    jest.mocked(console).log.mockImplementation(() => {})
+    jest.spyOn(console, 'log').mockImplementation(() => {})
 
     const result = await createContact({
       input: {
