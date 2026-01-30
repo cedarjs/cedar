@@ -14,7 +14,9 @@
         },
         "name": { "type": "string" },
         "host": { "type": "string" },
-        "port": { "type": "integer" },
+        "port": {
+          "anyOf": [{ "type": "integer" }, { "type": "string" }]
+        },
         "path": { "type": "string" },
         "target": {
           "type": "string",
@@ -45,7 +47,9 @@
         "title": { "type": "string" },
         "name": { "type": "string" },
         "host": { "type": "string" },
-        "port": { "type": "integer" },
+        "port": {
+          "anyOf": [{ "type": "integer" }, { "type": "string" }]
+        },
         "path": { "type": "string" },
         "target": {
           "type": "string",
