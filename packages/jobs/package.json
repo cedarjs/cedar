@@ -41,7 +41,7 @@
     "@cedarjs/cli-helpers": "2.4.1",
     "@cedarjs/project-config": "2.4.1",
     "cron-parser": "5.5.0",
-    "type-fest": "5.4.1"
+    "type-fest": "5.4.2"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
