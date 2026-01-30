@@ -2216,7 +2216,7 @@ __metadata:
     "@cedarjs/internal": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
-    "@fastify/multipart": "npm:9.3.0"
+    "@fastify/multipart": "npm:9.4.0"
     "@fastify/url-data": "npm:6.0.3"
     "@types/aws-lambda": "npm:8.10.160"
     "@types/dotenv-defaults": "npm:^5.0.0"
@@ -5067,16 +5067,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/multipart@npm:9.3.0":
-  version: 9.3.0
-  resolution: "@fastify/multipart@npm:9.3.0"
+"@fastify/multipart@npm:9.4.0":
+  version: 9.4.0
+  resolution: "@fastify/multipart@npm:9.4.0"
   dependencies:
     "@fastify/busboy": "npm:^3.0.0"
     "@fastify/deepmerge": "npm:^3.0.0"
     "@fastify/error": "npm:^4.0.0"
     fastify-plugin: "npm:^5.0.0"
     secure-json-parse: "npm:^4.0.0"
-  checksum: 10c0/b0810132d16be460cd519671c2273817919a6021cc11ec3da842052e26e3e83c544698c0baa280a6ae543782888df6725698680d99c5a85562191bd7582ca4e1
+  checksum: 10c0/4e82b59333dca720ef71b409249291db1955ac6fa7eb6769a83d22e08342fb48fd6e9ca28e553dc2222b58aaebc09392fcf8f680297f2fc259597a7bddd80243
   languageName: node
   linkType: hard
 
