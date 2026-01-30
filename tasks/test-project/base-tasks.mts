@@ -316,6 +316,30 @@ export function apiTasksList({
             ),
         )
 
+        const contactsTestPath = fullPath(
+          'api/src/services/contacts/contacts.test',
+        )
+        const contactsTest = fs.readFileSync(contactsTestPath, 'utf-8')
+
+        // Doing simple string replacing here allows me better control over
+        // blank lines compared to proper codemods with jscodeshift
+        fs.writeFileSync(
+          contactsTestPath,
+          contactsTest
+            .replace(
+              "describe('contacts', () => {",
+              "describe('contacts', () => {\n" +
+                '  afterEach(() => {\n' +
+                '    jest.mocked(console).log.mockRestore?.()\n' +
+                '  })\n',
+            )
+            .replace(
+              "  scenario('creates a contact', async () => {",
+              "  scenario('creates a contact', async () => {\n" +
+                "    jest.spyOn(console, 'log').mockImplementation(() => {})\n",
+            ),
+        )
+
         return applyCodemod('contacts.mts', contactsServicePath)
       },
     },
