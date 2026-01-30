@@ -58,7 +58,7 @@ jobs:
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Enable trusted-documents in Fragments test project
-        run: node ./tasks/test-project/set-up-trusted-documents.ts ${{ steps.set-up-test-project.outputs.test-project-path }}
+        run: node ./tasks/test-project/set-up-trusted-documents.mts ${{ steps.set-up-test-project.outputs.test-project-path }}
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 
