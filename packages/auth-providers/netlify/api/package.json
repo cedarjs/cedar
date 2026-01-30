@@ -45,10 +45,10 @@
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/aws-lambda": "8.10.159",
+    "@types/aws-lambda": "8.10.160",
     "@types/jsonwebtoken": "9.0.10",
     "concurrently": "9.2.1",
-    "publint": "0.3.16",
+    "publint": "0.3.17",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

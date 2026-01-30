@@ -16,6 +16,10 @@ import type { StandardScenario } from './contacts.scenarios.js'
 // https://cedarjs.com/docs/testing#jest-expect-type-considerations
 
 describe('contacts', () => {
+  afterEach(() => {
+    jest.mocked(console).log.mockRestore?.()
+  })
+
   scenario('returns all contacts', async (scenario: StandardScenario) => {
     const result = await contacts()
 
@@ -29,12 +33,14 @@ describe('contacts', () => {
   })
 
   scenario('creates a contact', async () => {
+    jest.spyOn(console, 'log').mockImplementation(() => {})
+
     const result = await createContact({
-      input: { name: 'String', email: 'String', message: 'String' },
+      input: { name: 'String', email: 'foo@bar.com', message: 'String' },
     })
 
     expect(result.name).toEqual('String')
-    expect(result.email).toEqual('String')
+    expect(result.email).toEqual('foo@bar.com')
     expect(result.message).toEqual('String')
   })
 

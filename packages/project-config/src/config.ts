@@ -217,7 +217,7 @@ export const DEFAULT_CONFIG: Config = {
 }
 
 /**
- * These configuration options are modified by the user via the Redwood
+ * These configuration options are modified by the user via the Cedar
  * config file.
  */
 export const getConfig = (configPath = getConfigPath()): Config => {
@@ -231,7 +231,7 @@ export const getConfig = (configPath = getConfigPath()): Config => {
 /**
  * Returns the JSON parse of the config file without any default values.
  *
- * @param configPath Path to the config file, defaults to automatically find the project `redwood.toml` file
+ * @param configPath Path to the config file, defaults to automatically find the project config file (cedar.toml or redwood.toml)
  * @returns A JSON object from the parsed toml values
  */
 export function getRawConfig(configPath = getConfigPath()) {

@@ -109,8 +109,12 @@ export async function shutdownTelemetry() {
     await traceProvider?.shutdown()
     await traceProcessor?.shutdown()
     await traceExporter?.shutdown()
-  } catch {
-    // We silence this error for user experience
+  } catch (error) {
+    // We silence this error for user experience unless verbose telemetry is
+    // enabled
+    if (process.env.REDWOOD_VERBOSE_TELEMETRY) {
+      console.error('Telemetry: shutdown error', error)
+    }
   }
 }
 

@@ -1,4 +1,18 @@
-vi.mock('node:fs')
+process.env.RWJS_CWD = '/cedar-app'
+vi.mock('node:fs', async () => {
+  const memfs = await import('memfs')
+  return {
+    ...memfs.fs,
+    default: memfs.fs,
+  }
+})
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    getConfigPath: vi.fn(() => '/cedar-app/cedar.toml'),
+  }
+})
 
 import fs from 'node:fs'
 import path from 'path'
@@ -17,16 +31,11 @@ vi.mock('../../../../lib', async (importOriginal) => {
 
   return {
     printSetupNotes,
-    getPaths: () => {
+    getPaths: vi.fn(() => {
       return {
-        base: path.resolve(
-          path.join(
-            __dirname,
-            '../../../../../../../__fixtures__/example-todo-main',
-          ),
-        ),
+        base: '/cedar-app',
       }
-    },
+    }),
     getConfig: () => ({
       web: {
         port: 8910,
@@ -47,15 +56,24 @@ vi.mock('../../../../lib', async (importOriginal) => {
   }
 })
 
-const REDWOOD_TOML_PATH = path.join(getPaths().base, 'redwood.toml')
+const mockConfigPath = '/cedar-app/cedar.toml'
 
 beforeEach(() => {
+  process.env.RWJS_CWD = '/cedar-app'
+
+  vi.mocked(getPaths).mockReturnValue({
+    base: '/cedar-app',
+  })
+
   vol.fromJSON({
-    [REDWOOD_TOML_PATH]: `[web]
-  title = "Redwood App"
+    [mockConfigPath]: `[web]
+  title = "Cedar App"
   port = 8910
-  apiUrl = "/.redwood/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-redwood-toml#api-paths
-  includeEnvironmentVariables = [] # any ENV vars that should be available to the web side, see https://cedarjs.com/docs/environment-variables#web
+  apiUrl = "/.redwood/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-cedar-toml#api-paths
+  includeEnvironmentVariables = [
+    # Add any ENV vars that should be available to the web side to this array
+    # See https://cedarjs.com/docs/environment-variables#web
+  ]
 [api]
   port = 8911
 [browser]
@@ -83,10 +101,10 @@ describe('netlify', () => {
     expect(filesystem[netlifyTomlPath]).toMatchSnapshot()
   })
 
-  it('Should update redwood.toml apiUrl', () => {
+  it('Should update cedar.toml apiUrl', () => {
     updateApiURLTask('/.netlify/functions').task()
 
-    expect(fs.readFileSync(REDWOOD_TOML_PATH, 'utf8')).toMatch(
+    expect(fs.readFileSync(mockConfigPath, 'utf8')).toMatch(
       /apiUrl = "\/.netlify\/functions"/,
     )
   })

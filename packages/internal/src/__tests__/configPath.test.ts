@@ -7,7 +7,7 @@ import { getConfigPath } from '@cedarjs/project-config'
 describe('getConfigPath', () => {
   it('throws an error when not in a project', () => {
     expect(getConfigPath).toThrowErrorMatchingInlineSnapshot(
-      `[Error: Could not find a "redwood.toml" file, are you sure you're in a Redwood project?]`,
+      `[Error: Could not find a "cedar.toml" or "redwood.toml" file, are you sure you're in a Cedar project?]`,
     )
   })
 
@@ -28,7 +28,7 @@ describe('getConfigPath', () => {
 
     it('finds the correct config path when at base directory', () => {
       process.env.RWJS_CWD = FIXTURE_BASEDIR
-      expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'redwood.toml'))
+      expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'cedar.toml'))
     })
 
     it('finds the correct config path when inside a project directory', () => {
@@ -39,7 +39,7 @@ describe('getConfigPath', () => {
         'pages',
         'AboutPage',
       )
-      expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'redwood.toml'))
+      expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'cedar.toml'))
     })
   })
 
@@ -65,7 +65,7 @@ describe('getConfigPath', () => {
     it('finds the correct config path when at base directory', () => {
       const spy = vi.spyOn(process, 'cwd')
       spy.mockReturnValue(FIXTURE_BASEDIR)
-      expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'redwood.toml'))
+      expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'cedar.toml'))
     })
 
     it('finds the correct config path when inside a project directory', () => {
@@ -73,7 +73,7 @@ describe('getConfigPath', () => {
       spy.mockReturnValue(
         path.join(FIXTURE_BASEDIR, 'web', 'src', 'pages', 'AboutPage'),
       )
-      expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'redwood.toml'))
+      expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'cedar.toml'))
     })
   })
 })

@@ -2,8 +2,7 @@ import React from 'react'
 
 import { get, useFormContext } from 'react-hook-form'
 
-export interface FieldErrorProps
-  extends React.ComponentPropsWithoutRef<'span'> {
+export interface FieldErrorProps extends React.ComponentPropsWithoutRef<'span'> {
   /**
    * The name of the field the `<FieldError>`'s associated with.
    */

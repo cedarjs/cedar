@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import execa from 'execa'
 
+import { getPrerenderTasks } from './prerender-tasks.mts'
 import {
   getExecaOptions,
   applyCodemod,
@@ -68,7 +69,7 @@ export function createBuilder(cmd: string, dir = '') {
   }
 }
 
-export function getPagesTasks() {
+function getPagesTasks() {
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
   // to make sure it works as expected. We do the same for the /api directory
   // further down in this file.
@@ -198,6 +199,320 @@ export function getPagesTasks() {
   ]
 }
 
+export function webTasksList() {
+  const taskList = [
+    {
+      title: 'Creating pages',
+      task: async () => getPagesTasks(),
+      isNested: true,
+    },
+    {
+      title: 'Creating layout',
+      task: () => createLayout(),
+    },
+    {
+      title: 'Creating components',
+      task: () => createComponents(),
+    },
+    {
+      title: 'Creating cells',
+      task: () => createCells(),
+    },
+    {
+      title: 'Updating cell mocks',
+      task: () => updateCellMocks(),
+    },
+    {
+      title: 'Changing routes',
+      task: () => applyCodemod('routes.js', fullPath('web/src/Routes')),
+    },
+  ]
+
+  return taskList
+}
+
+export function apiTasksList({
+  dbAuth,
+  linkWithLatestFwBuild = false,
+  esmProject = false,
+}: {
+  dbAuth: 'local' | 'canary'
+  linkWithLatestFwBuild?: boolean
+  esmProject?: boolean
+}) {
+  const execaOptions = getExecaOptions(getOutputPath())
+  const generateScaffold = createBuilder('yarn cedar g scaffold')
+
+  const taskList = [
+    {
+      title: 'Adding post and user model to prisma',
+      task: async () => {
+        // Need both here since they have a relation
+        const { post, user } = await import('./codemods/models.mts')
+
+        addModel(post)
+        addModel(user)
+
+        return exec(
+          `yarn cedar prisma migrate dev --name create_post_user`,
+          [],
+          execaOptions,
+        )
+      },
+    },
+    {
+      title: 'Scaffolding post',
+      task: async () => {
+        await generateScaffold('post')
+
+        // Replace the random numbers in the scenario with consistent values
+        await applyCodemod(
+          'scenarioValueSuffix.js',
+          fullPath('api/src/services/posts/posts.scenarios'),
+        )
+
+        await exec(
+          `yarn ${getCfwBin(getOutputPath())} project:copy`,
+          [],
+          execaOptions,
+        )
+      },
+    },
+    {
+      title: 'Adding seed script',
+      task: async () => {
+        await applyCodemod(
+          'seed.js',
+          fullPath('scripts/seed.ts', { addExtension: false }),
+        )
+      },
+    },
+    {
+      title: 'Adding contact model to prisma',
+      task: async () => {
+        const { contact } = await import('./codemods/models.mts')
+
+        addModel(contact)
+
+        await exec(
+          `yarn cedar prisma migrate dev --name create_contact`,
+          [],
+          execaOptions,
+        )
+
+        await generateScaffold('contacts')
+
+        const contactsServicePath = fullPath(
+          'api/src/services/contacts/contacts',
+        )
+        fs.writeFileSync(
+          contactsServicePath,
+          fs
+            .readFileSync(contactsServicePath, 'utf-8')
+            .replace(
+              "import { db } from 'src/lib/db'",
+              '// Testing aliased imports with extensions\n' +
+                "import { db } from 'src/lib/db.js'",
+            ),
+        )
+
+        const contactsTestPath = fullPath(
+          'api/src/services/contacts/contacts.test',
+        )
+        const contactsTest = fs.readFileSync(contactsTestPath, 'utf-8')
+
+        // Doing simple string replacing here allows me better control over
+        // blank lines compared to proper codemods with jscodeshift
+        fs.writeFileSync(
+          contactsTestPath,
+          contactsTest
+            .replace(
+              "describe('contacts', () => {",
+              "describe('contacts', () => {\n" +
+                '  afterEach(() => {\n' +
+                '    jest.mocked(console).log.mockRestore?.()\n' +
+                '  })\n',
+            )
+            .replace(
+              "  scenario('creates a contact', async () => {",
+              "  scenario('creates a contact', async () => {\n" +
+                "    jest.spyOn(console, 'log').mockImplementation(() => {})\n",
+            ),
+        )
+
+        return applyCodemod('contacts.mts', contactsServicePath)
+      },
+    },
+    {
+      // This task renames the migration folders so that we don't have to deal
+      // with duplicates/conflicts when committing to the repo
+      title: 'Adjust dates within migration folder names',
+      task: () => {
+        const migrationsFolderPath = path.join(
+          getOutputPath(),
+          'api',
+          'db',
+          'migrations',
+        )
+        // Migration folders are folders which start with 14 digits because they
+        // have a yyyymmddhhmmss
+        const migrationFolders = fs
+          .readdirSync(migrationsFolderPath)
+          .filter((name) => {
+            return (
+              name.match(/\d{14}.+/) &&
+              fs.lstatSync(path.join(migrationsFolderPath, name)).isDirectory()
+            )
+          })
+          .sort()
+        const datetime = new Date('2022-01-01T12:00:00.000Z')
+        migrationFolders.forEach((name) => {
+          const datetimeInCorrectFormat =
+            datetime.getFullYear() +
+            ('0' + (datetime.getMonth() + 1)).slice(-2) +
+            ('0' + datetime.getDate()).slice(-2) +
+            '120000' // Time hardcoded to 12:00:00 to limit TZ issues
+          fs.renameSync(
+            path.join(migrationsFolderPath, name),
+            path.join(
+              migrationsFolderPath,
+              `${datetimeInCorrectFormat}${name.substring(14)}`,
+            ),
+          )
+          datetime.setDate(datetime.getDate() + 1)
+        })
+      },
+    },
+    {
+      title: 'Add users service',
+      task: async () => {
+        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
+
+        await generateSdl('user')
+
+        await applyCodemod('usersSdl.js', fullPath('api/src/graphql/users.sdl'))
+
+        await applyCodemod(
+          'usersService.js',
+          fullPath('api/src/services/users/users'),
+        )
+
+        // Replace the random numbers in the scenario with consistent values
+        await applyCodemod(
+          'scenarioValueSuffix.js',
+          fullPath('api/src/services/users/users.scenarios'),
+        )
+
+        const test = `import { user } from './users.js'
+            import type { StandardScenario } from './users.scenarios.js'
+
+            describe('users', () => {
+              scenario('returns a single user', async (scenario: StandardScenario) => {
+                const result = await user({ id: scenario.user.one.id })
+
+                expect(result).toEqual(scenario.user.one)
+              })
+            })`.replaceAll(/ {12}/g, '')
+
+        fs.writeFileSync(fullPath('api/src/services/users/users.test'), test)
+
+        return createBuilder('yarn cedar g types')()
+      },
+    },
+    {
+      title: 'Add dbAuth',
+      task: async () =>
+        addDbAuth(dbAuth === 'local', getOutputPath(), linkWithLatestFwBuild),
+    },
+    {
+      title: 'Add describeScenario tests',
+      task: () => {
+        // Copy contact.scenarios.ts, because scenario tests look for the same filename
+        fs.copyFileSync(
+          fullPath('api/src/services/contacts/contacts.scenarios'),
+          fullPath('api/src/services/contacts/describeContacts.scenarios'),
+        )
+
+        // Create describeContacts.test.ts
+        const describeScenarioFixture = path.join(
+          import.meta.dirname,
+          'templates',
+          'api',
+          'contacts.describeScenario.test.ts.template',
+        )
+
+        fs.copyFileSync(
+          describeScenarioFixture,
+          fullPath('api/src/services/contacts/describeContacts.test'),
+        )
+      },
+    },
+    {
+      // This is probably more of a web side task really, but the scaffolded
+      // pages aren't generated until we get here to the api side tasks. So
+      // instead of doing some up in the web side tasks, and then the rest here
+      // I decided to move all of them here
+      title: 'Add Prerender to Routes',
+      task: async () => getPrerenderTasks(),
+      isNested: true,
+    },
+    {
+      title: 'Add context tests',
+      task: () => {
+        const templatePath = path.join(
+          import.meta.dirname,
+          'templates',
+          'api',
+          'context.test.ts.template',
+        )
+        const projectPath = path.join(
+          getOutputPath(),
+          'api',
+          'src',
+          '__tests__',
+          'context.test.ts',
+        )
+
+        fs.mkdirSync(path.dirname(projectPath), { recursive: true })
+        fs.writeFileSync(projectPath, fs.readFileSync(templatePath))
+      },
+    },
+    {
+      title: 'Add vitest db import tracking tests for ESM test project',
+      task: () => {
+        if (!esmProject) {
+          return
+        }
+
+        const templatesDir = path.join(import.meta.dirname, 'templates', 'api')
+        const templatePath1 = path.join(templatesDir, '1-db-import.test.ts')
+        const templatePath2 = path.join(templatesDir, '2-db-import.test.ts')
+        const templatePath3 = path.join(templatesDir, '3-db-import.test.ts')
+
+        const testsDir = path.join(getOutputPath(), 'api', 'src', '__tests__')
+        const testFilePath1 = path.join(testsDir, '1-db-import.test.ts')
+        const testFilePath2 = path.join(testsDir, '2-db-import.test.ts')
+        const testFilePath3 = path.join(testsDir, '3-db-import.test.ts')
+
+        fs.mkdirSync(testsDir, { recursive: true })
+        fs.copyFileSync(templatePath1, testFilePath1)
+        fs.copyFileSync(templatePath2, testFilePath2)
+        fs.copyFileSync(templatePath3, testFilePath3)
+
+        // I opted to add an additional vitest config file rather than modifying
+        // the existing one because I wanted to keep one looking exactly the
+        // same as it'll look in user's projects.
+        fs.copyFileSync(
+          path.join(templatesDir, 'vitest-sort.config.ts'),
+          path.join(getOutputPath(), 'api', 'vitest-sort.config.ts'),
+        )
+      },
+    },
+  ]
+
+  return taskList
+}
+
 export async function createLayout() {
   const createLayout = createBuilder('yarn cedar g layout')
 
@@ -319,10 +634,13 @@ export async function addModel(schema: string) {
   fs.writeFileSync(prismaPath, `${current.trim()}\n\n${schema}\n`)
 }
 
-export async function addDbAuth(
+async function addDbAuth(
+  localDbAuth: boolean,
   outputPath: string,
   linkWithLatestFwBuild: boolean,
 ) {
+  const execaOptions = getExecaOptions(outputPath)
+
   // Temporarily disable postinstall script
   updatePkgJsonScripts({
     projectPath: outputPath,
@@ -331,64 +649,87 @@ export async function addDbAuth(
     },
   })
 
-  // We want to use the latest version of the auth-dbauth-{setup,api,web}
-  // packages. But they're not published yet. So let's package them up as
-  // tarballs and install them using that by setting yarn resolutions
-
-  const cedarFrameworkPath = path.join(import.meta.dirname, '../../')
-  const dbAuthPackagePath = path.join(
-    cedarFrameworkPath,
-    'packages',
-    'auth-providers',
-    'dbAuth',
-  )
-  const setupPkg = path.join(dbAuthPackagePath, 'setup')
-  const apiPkg = path.join(dbAuthPackagePath, 'api')
-  const webPkg = path.join(dbAuthPackagePath, 'web')
-
-  await exec('yarn build:pack', [], getExecaOptions(setupPkg))
-  await exec('yarn build:pack', [], getExecaOptions(apiPkg))
-  await exec('yarn build:pack', [], getExecaOptions(webPkg))
-
-  const setupTgz = path.join(setupPkg, 'cedarjs-auth-dbauth-setup.tgz')
-  const apiTgz = path.join(apiPkg, 'cedarjs-auth-dbauth-api.tgz')
-  const webTgz = path.join(webPkg, 'cedarjs-auth-dbauth-web.tgz')
-
-  const setupTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-setup.tgz')
-  const apiTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-api.tgz')
-  const webTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-web.tgz')
-
-  fs.copyFileSync(setupTgz, setupTgzDest)
-  fs.copyFileSync(apiTgz, apiTgzDest)
-  fs.copyFileSync(webTgz, webTgzDest)
-
-  const projectPackageJsonPath = path.join(outputPath, 'package.json')
-  const projectPackageJson = JSON.parse(
-    fs.readFileSync(projectPackageJsonPath, 'utf-8'),
+  // (This is really only needed for `tasks.mts`)
+  const dbAuthSetupPath = path.join(
+    outputPath,
+    'node_modules',
+    '@cedarjs',
+    'auth-dbauth-setup',
   )
 
-  const existingResolutions = projectPackageJson.resolutions
-    ? { ...projectPackageJson.resolutions }
-    : undefined
+  // At an earlier step we run `yarn cfw project:copy` which gives us
+  // auth-dbauth-setup@3.2.0 currently. We need that version to be a canary
+  // version for auth-dbauth-api and auth-dbauth-web package installations to
+  // work. So we remove the current version and add let `setupDbAuth()` install
+  // the correct version.
+  // (This step is really only needed for `tasks.mts`)
+  fs.rmSync(dbAuthSetupPath, { recursive: true, force: true })
 
-  projectPackageJson.resolutions ??= {}
-  projectPackageJson.resolutions = {
-    ...projectPackageJson.resolutions,
-    '@cedarjs/auth-dbauth-setup': './cedarjs-auth-dbauth-setup.tgz',
-    '@cedarjs/auth-dbauth-api': './cedarjs-auth-dbauth-api.tgz',
-    '@cedarjs/auth-dbauth-web': './cedarjs-auth-dbauth-web.tgz',
+  let existingResolutions
+  let projectPackageJsonPath = ''
+  let projectPackageJson: { resolutions?: Record<string, string> } = {}
+  let setupTgzDest = ''
+  let apiTgzDest = ''
+  let webTgzDest = ''
+
+  if (localDbAuth) {
+    // We want to use the latest version of the auth-dbauth-{setup,api,web}
+    // packages. But they're not published yet. So let's package them up as
+    // tarballs and install them using that by setting yarn resolutions
+
+    const cedarFrameworkPath = path.join(import.meta.dirname, '../../')
+    const dbAuthPackagePath = path.join(
+      cedarFrameworkPath,
+      'packages',
+      'auth-providers',
+      'dbAuth',
+    )
+    const setupPkg = path.join(dbAuthPackagePath, 'setup')
+    const apiPkg = path.join(dbAuthPackagePath, 'api')
+    const webPkg = path.join(dbAuthPackagePath, 'web')
+
+    await exec('yarn build:pack', [], getExecaOptions(setupPkg))
+    await exec('yarn build:pack', [], getExecaOptions(apiPkg))
+    await exec('yarn build:pack', [], getExecaOptions(webPkg))
+
+    const setupTgz = path.join(setupPkg, 'cedarjs-auth-dbauth-setup.tgz')
+    const apiTgz = path.join(apiPkg, 'cedarjs-auth-dbauth-api.tgz')
+    const webTgz = path.join(webPkg, 'cedarjs-auth-dbauth-web.tgz')
+
+    setupTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-setup.tgz')
+    apiTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-api.tgz')
+    webTgzDest = path.join(outputPath, 'cedarjs-auth-dbauth-web.tgz')
+
+    fs.copyFileSync(setupTgz, setupTgzDest)
+    fs.copyFileSync(apiTgz, apiTgzDest)
+    fs.copyFileSync(webTgz, webTgzDest)
+
+    projectPackageJsonPath = path.join(outputPath, 'package.json')
+    projectPackageJson = JSON.parse(
+      fs.readFileSync(projectPackageJsonPath, 'utf-8'),
+    )
+
+    existingResolutions = projectPackageJson.resolutions
+      ? { ...projectPackageJson.resolutions }
+      : undefined
+
+    projectPackageJson.resolutions ??= {}
+    projectPackageJson.resolutions = {
+      ...projectPackageJson.resolutions,
+      '@cedarjs/auth-dbauth-setup': './cedarjs-auth-dbauth-setup.tgz',
+      '@cedarjs/auth-dbauth-api': './cedarjs-auth-dbauth-api.tgz',
+      '@cedarjs/auth-dbauth-web': './cedarjs-auth-dbauth-web.tgz',
+    }
+
+    fs.writeFileSync(
+      projectPackageJsonPath,
+      JSON.stringify(projectPackageJson, null, 2),
+    )
+
+    // Run `yarn install` to have the resolutions take effect and install the
+    // tarballs we copied over
+    await exec('yarn install', [], execaOptions)
   }
-
-  fs.writeFileSync(
-    projectPackageJsonPath,
-    JSON.stringify(projectPackageJson, null, 2),
-  )
-
-  const execaOptions = getExecaOptions(outputPath)
-
-  // Run `yarn install` to have the resolutions take effect and install the
-  // tarballs we copied over
-  await exec('yarn install', [], execaOptions)
 
   await exec(
     'yarn cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
@@ -396,20 +737,22 @@ export async function addDbAuth(
     execaOptions,
   )
 
-  // Restore old resolutions
-  if (existingResolutions) {
-    projectPackageJson.resolutions = existingResolutions
+  if (localDbAuth) {
+    // Restore old resolutions
+    if (existingResolutions) {
+      projectPackageJson.resolutions = existingResolutions
+    }
+
+    fs.writeFileSync(
+      projectPackageJsonPath,
+      JSON.stringify(projectPackageJson, null, 2),
+    )
+
+    // Remove tarballs
+    fs.unlinkSync(setupTgzDest)
+    fs.unlinkSync(apiTgzDest)
+    fs.unlinkSync(webTgzDest)
   }
-
-  fs.writeFileSync(
-    projectPackageJsonPath,
-    JSON.stringify(projectPackageJson, null, 2),
-  )
-
-  // Remove tarballs
-  fs.unlinkSync(setupTgzDest)
-  fs.unlinkSync(apiTgzDest)
-  fs.unlinkSync(webTgzDest)
 
   // Restore postinstall script
   updatePkgJsonScripts({

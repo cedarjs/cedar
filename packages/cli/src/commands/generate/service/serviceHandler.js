@@ -39,7 +39,7 @@ export const parseSchema = async (model) => {
   return { scalarFields, relations, foreignKeys }
 }
 
-export const scenarioFieldValue = (field) => {
+export function scenarioFieldValue(field) {
   const randFloat = Math.random() * 10000000
   const randInt = parseInt(Math.random() * 10000000)
   const randIntArray = [
@@ -63,6 +63,10 @@ export const scenarioFieldValue = (field) => {
     case 'Json':
       return { foo: 'bar' }
     case 'String':
+      if (field.name?.toLowerCase().includes('email')) {
+        return field.isUnique ? `foo${randInt}@bar.com` : 'foo@bar.com'
+      }
+
       return field.isUnique ? `String${randInt}` : 'String'
     case 'Bytes':
       return `new Uint8Array([${randIntArray}])`

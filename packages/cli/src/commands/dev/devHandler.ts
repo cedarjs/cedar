@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { Writable } from 'node:stream'
 
 import concurrently from 'concurrently'
 import type { Command } from 'concurrently'
@@ -47,7 +48,7 @@ export const handler = async ({
 
   const serverFile = serverFileExists()
 
-  // Starting values of ports from config (redwood.toml)
+  // Starting values of ports from config (cedar.toml or redwood.toml)
   const apiPreferredPort = parseInt(String(getConfig().api.port))
 
   let webPreferredPort: number | undefined = parseInt(
@@ -107,7 +108,7 @@ export const handler = async ({
     const message = [
       'The currently configured ports for the development server are',
       'unavailable. Suggested changes to your ports, which can be changed in',
-      'redwood.toml, are:\n',
+      'cedar.toml (or redwood.toml), are:\n',
       apiPortChangeNeeded && ` - API to use port ${apiAvailablePort} instead`,
       apiPortChangeNeeded && 'of your currently configured',
       apiPortChangeNeeded && `${apiPreferredPort}\n`,
@@ -261,11 +262,64 @@ export const handler = async ({
   // function that returns true
   const filteredJobs = jobs.filter((job) => !job.runWhen || job.runWhen())
 
+  // Create a custom output stream that filters empty lines
+  class FilterEmptyLinesStream extends Writable {
+    private buffer = ''
+
+    _write(
+      chunk: Buffer,
+      _encoding: BufferEncoding,
+      callback: (error?: Error | null) => void,
+    ) {
+      this.buffer += chunk.toString()
+
+      // Split on newlines - only process complete lines
+      const lines = this.buffer.split('\n')
+
+      // Keep the last element (incomplete line) in the buffer
+      this.buffer = lines.pop() || ''
+
+      // Filter and output complete lines
+      for (const line of lines) {
+        // Strip ANSI escape codes to check the actual content
+        // eslint-disable-next-line no-control-regex
+        const strippedLine = line.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '')
+
+        // Filter out lines that are just "name | " with optional whitespace
+        const isEmptyPrefixLine = /^[^|]+\|\s*$/.test(strippedLine)
+
+        if (!isEmptyPrefixLine) {
+          process.stdout.write(line + '\n')
+        }
+      }
+
+      callback()
+    }
+
+    _final(callback: (error?: Error | null) => void) {
+      // Flush any remaining buffered content
+      if (this.buffer.length > 0) {
+        // eslint-disable-next-line no-control-regex
+        const strippedLine = this.buffer.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '')
+        const isEmptyPrefixLine = /^[^|]+\|\s*$/.test(strippedLine)
+
+        if (!isEmptyPrefixLine) {
+          process.stdout.write(this.buffer)
+        }
+      }
+
+      callback()
+    }
+  }
+
+  const outputStream = new FilterEmptyLinesStream()
+
   // TODO: Convert jobs to an array and supply cwd command.
   const { result } = concurrently(filteredJobs, {
     prefix: '{name} |',
     timestampFormat: 'HH:mm:ss',
     handleInput: true,
+    outputStream,
   })
 
   result.catch((e) => {

@@ -88,7 +88,8 @@ export default [
     },
     rules: {
       // React recommended rules
-      ...reactPlugin.configs.recommended.rules,
+      ...reactPlugin.configs.flat.recommended.rules,
+      ...reactPlugin.configs.flat['jsx-runtime'].rules,
       // React hooks recommended rules
       ...reactHooksPlugin.configs.recommended.rules,
       // Jest DOM recommended rules
@@ -295,6 +296,7 @@ export default [
       '**/*.config.js',
       '**/*.config.cjs',
       '**/*.config.mjs',
+      'docs/sidebars.js',
       'packages/web/apollo/index.js',
       'packages/web/toast/index.js',
       'packages/auth-providers/dbAuth/web/webAuthn/index.js',

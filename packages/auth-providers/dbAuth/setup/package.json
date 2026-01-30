@@ -24,16 +24,16 @@
     "test:watch": "yarn test --watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.28.4",
+    "@babel/runtime-corejs3": "7.28.6",
     "@cedarjs/cli-helpers": "workspace:*",
-    "@prisma/internals": "6.19.1",
+    "@prisma/internals": "6.19.2",
     "@simplewebauthn/browser": "9.0.1",
-    "core-js": "3.47.0",
+    "core-js": "3.48.0",
     "prompts": "2.4.2",
     "termi-link": "1.1.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.28.3",
+    "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@simplewebauthn/types": "9.0.1",
     "@types/yargs": "17.0.35",

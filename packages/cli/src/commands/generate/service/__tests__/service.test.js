@@ -447,7 +447,7 @@ describe('fieldsToScenario', () => {
       [],
     )
 
-    expect(output.email).toEqual('String')
+    expect(output.email).toEqual('foo@bar.com')
 
     expect(output.date instanceof Date).toBe(true)
     expect(!isNaN(output.date)).toBe(true)

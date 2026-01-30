@@ -14,8 +14,10 @@ import { matchPath, parseSearch, replaceParams, validatePath } from '../util.js'
 
 import { ServerRouteLoader } from './ServerRouteLoader.js'
 
-export interface RouterProps
-  extends Omit<RouterContextProviderProps, 'routes' | 'activeRouteName'> {
+export interface RouterProps extends Omit<
+  RouterContextProviderProps,
+  'routes' | 'activeRouteName'
+> {
   trailingSlashes?: TrailingSlashesTypes
   pageLoadingDelay?: number
   children: ReactNode

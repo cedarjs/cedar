@@ -42,6 +42,21 @@ export type Scalars = {
   Time: Date | string;
 };
 
+/**
+ * The Cedar Root Schema
+ *
+ * Defines details about Cedar such as the current user and version information.
+ */
+export type Cedar = {
+  __typename?: 'Cedar';
+  /** The current user. */
+  currentUser?: Maybe<Scalars['JSON']>;
+  /** The version of Prisma. */
+  prismaVersion?: Maybe<Scalars['String']>;
+  /** The version of CedarJS. */
+  version?: Maybe<Scalars['String']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   createTodo?: Maybe<Todo>;
@@ -66,30 +81,37 @@ export type MutationupdateTodoStatusArgs = {
   status: Scalars['String'];
 };
 
-/** About the Redwood queries. */
+/** About the Cedar queries. */
 export type Query = {
   __typename?: 'Query';
-  /** Fetches the CedarJS root schema. */
-  cedarjs?: Maybe<Redwood>;
+  /** Fetches the Cedar root schema. */
+  cedar?: Maybe<Cedar>;
   currentUser?: Maybe<Scalars['JSON']>;
-  /** Fetches the Redwood root schema. */
+  /**
+   * Fetches the Cedar root schema.
+   * @deprecated Use 'cedar' instead.
+   */
   redwood?: Maybe<Redwood>;
   todos?: Maybe<Array<Maybe<Todo>>>;
   todosCount: Scalars['Int'];
 };
 
-/**
- * The Cedar Root Schema
- *
- * Defines details about Cedar such as the current user and version information.
- */
 export type Redwood = {
   __typename?: 'Redwood';
-  /** The current user. */
+  /**
+   * The current user.
+   * @deprecated Use the Cedar type instead.
+   */
   currentUser?: Maybe<Scalars['JSON']>;
-  /** The version of Prisma. */
+  /**
+   * The version of Prisma.
+   * @deprecated Use the Cedar type instead.
+   */
   prismaVersion?: Maybe<Scalars['String']>;
-  /** The version of CedarJS. */
+  /**
+   * The version of CedarJS.
+   * @deprecated Use the Cedar type instead.
+   */
   version?: Maybe<Scalars['String']>;
 };
 
@@ -165,6 +187,7 @@ export type ResolversTypes = {
   BigInt: ResolverTypeWrapper<Scalars['BigInt']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   Byte: ResolverTypeWrapper<Scalars['Byte']>;
+  Cedar: ResolverTypeWrapper<Cedar>;
   Date: ResolverTypeWrapper<Scalars['Date']>;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
   File: ResolverTypeWrapper<Scalars['File']>;
@@ -184,6 +207,7 @@ export type ResolversParentTypes = {
   BigInt: Scalars['BigInt'];
   Boolean: Scalars['Boolean'];
   Byte: Scalars['Byte'];
+  Cedar: Cedar;
   Date: Scalars['Date'];
   DateTime: Scalars['DateTime'];
   File: Scalars['File'];
@@ -215,6 +239,20 @@ export interface BigIntScalarConfig extends GraphQLScalarTypeConfig<ResolversTyp
 export interface ByteScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Byte'], any> {
   name: 'Byte';
 }
+
+export type CedarResolvers<ContextType = CedarGraphQLContext, ParentType extends ResolversParentTypes['Cedar'] = ResolversParentTypes['Cedar']> = {
+  currentUser: OptArgsResolverFn<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
+  prismaVersion: OptArgsResolverFn<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  version: OptArgsResolverFn<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CedarRelationResolvers<ContextType = CedarGraphQLContext, ParentType extends ResolversParentTypes['Cedar'] = ResolversParentTypes['Cedar']> = {
+  currentUser?: RequiredResolverFn<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
+  prismaVersion?: RequiredResolverFn<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  version?: RequiredResolverFn<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
   name: 'Date';
@@ -249,7 +287,7 @@ export type MutationRelationResolvers<ContextType = CedarGraphQLContext, ParentT
 };
 
 export type QueryResolvers<ContextType = CedarGraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  cedarjs: OptArgsResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
+  cedar: OptArgsResolverFn<Maybe<ResolversTypes['Cedar']>, ParentType, ContextType>;
   currentUser: OptArgsResolverFn<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
   redwood: OptArgsResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   todos: OptArgsResolverFn<Maybe<Array<Maybe<ResolversTypes['Todo']>>>, ParentType, ContextType>;
@@ -257,7 +295,7 @@ export type QueryResolvers<ContextType = CedarGraphQLContext, ParentType extends
 };
 
 export type QueryRelationResolvers<ContextType = CedarGraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  cedarjs?: RequiredResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
+  cedar?: RequiredResolverFn<Maybe<ResolversTypes['Cedar']>, ParentType, ContextType>;
   currentUser?: RequiredResolverFn<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
   redwood?: RequiredResolverFn<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   todos?: RequiredResolverFn<Maybe<Array<Maybe<ResolversTypes['Todo']>>>, ParentType, ContextType>;
@@ -299,6 +337,7 @@ export type TodoRelationResolvers<ContextType = CedarGraphQLContext, ParentType 
 export type Resolvers<ContextType = CedarGraphQLContext> = {
   BigInt: GraphQLScalarType;
   Byte: GraphQLScalarType;
+  Cedar: CedarResolvers<ContextType>;
   Date: GraphQLScalarType;
   DateTime: GraphQLScalarType;
   File: GraphQLScalarType;
@@ -342,6 +381,21 @@ export type Scalars = {
   Time: string;
 };
 
+/**
+ * The Cedar Root Schema
+ *
+ * Defines details about Cedar such as the current user and version information.
+ */
+export type Cedar = {
+  __typename?: 'Cedar';
+  /** The current user. */
+  currentUser?: Maybe<Scalars['JSON']>;
+  /** The version of Prisma. */
+  prismaVersion?: Maybe<Scalars['String']>;
+  /** The version of CedarJS. */
+  version?: Maybe<Scalars['String']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   createTodo?: Maybe<Todo>;
@@ -366,30 +420,37 @@ export type MutationupdateTodoStatusArgs = {
   status: Scalars['String'];
 };
 
-/** About the Redwood queries. */
+/** About the Cedar queries. */
 export type Query = {
   __typename?: 'Query';
-  /** Fetches the CedarJS root schema. */
-  cedarjs?: Maybe<Redwood>;
+  /** Fetches the Cedar root schema. */
+  cedar?: Maybe<Cedar>;
   currentUser?: Maybe<Scalars['JSON']>;
-  /** Fetches the Redwood root schema. */
+  /**
+   * Fetches the Cedar root schema.
+   * @deprecated Use 'cedar' instead.
+   */
   redwood?: Maybe<Redwood>;
   todos?: Maybe<Array<Maybe<Todo>>>;
   todosCount: Scalars['Int'];
 };
 
-/**
- * The Cedar Root Schema
- *
- * Defines details about Cedar such as the current user and version information.
- */
 export type Redwood = {
   __typename?: 'Redwood';
-  /** The current user. */
+  /**
+   * The current user.
+   * @deprecated Use the Cedar type instead.
+   */
   currentUser?: Maybe<Scalars['JSON']>;
-  /** The version of Prisma. */
+  /**
+   * The version of Prisma.
+   * @deprecated Use the Cedar type instead.
+   */
   prismaVersion?: Maybe<Scalars['String']>;
-  /** The version of CedarJS. */
+  /**
+   * The version of CedarJS.
+   * @deprecated Use the Cedar type instead.
+   */
   version?: Maybe<Scalars['String']>;
 };
 

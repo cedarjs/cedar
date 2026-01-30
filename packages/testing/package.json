@@ -129,7 +129,7 @@
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "14.3.1",
     "@testing-library/user-event": "14.6.1",
-    "@types/aws-lambda": "8.10.159",
+    "@types/aws-lambda": "8.10.160",
     "@types/babel-core": "6.25.10",
     "@types/jest": "29.5.14",
     "@types/node": "24.10.4",
@@ -148,7 +148,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
     "jsdom": "27.4.0",
-    "publint": "0.3.16",
+    "publint": "0.3.17",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
