@@ -60,4 +60,11 @@ runs:
     - name: 🏗️ Build
       if: inputs.build == 'true'
       shell: bash
-      run: yarn build
+      run: |
+        set -o pipefail
+        yarn build || {
+          echo "::group::package.json diagnostics"
+          node .github/scripts/diagnose-package-json.mjs || true
+          echo "::endgroup::"
+          exit 1
+        }
