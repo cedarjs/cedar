@@ -28,7 +28,7 @@
     "@cedarjs/cli-helpers": "2.4.1",
     "@prisma/internals": "6.19.2",
     "@simplewebauthn/browser": "9.0.1",
-    "core-js": "3.47.0",
+    "core-js": "3.48.0",
     "prompts": "2.4.2",
     "termi-link": "1.1.0"
   },
