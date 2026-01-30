@@ -10,9 +10,8 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 import * as ogImageHandler from '../ogImageHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } = await import(
-    '../../../../__tests__/ufsFsProxy.js'
-  )
+  const { wrapFsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
   ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
   return { ...ufs, default: { ...ufs } }
 })

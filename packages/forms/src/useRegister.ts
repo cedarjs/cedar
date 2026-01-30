@@ -7,10 +7,8 @@ import { setCoercion } from './coercion'
 import type { FieldProps } from './FieldProps'
 
 export type UseRegisterProps<
-  Element extends
-    | HTMLTextAreaElement
-    | HTMLSelectElement
-    | HTMLInputElement = HTMLInputElement,
+  Element extends HTMLTextAreaElement | HTMLSelectElement | HTMLInputElement =
+    HTMLInputElement,
 > = Pick<
   FieldProps<Element>,
   'name' | 'validation' | 'type' | 'onBlur' | 'onChange'
@@ -30,10 +28,8 @@ export type UseRegisterProps<
  */
 export const useRegister = <
   T,
-  Element extends
-    | HTMLTextAreaElement
-    | HTMLSelectElement
-    | HTMLInputElement = HTMLInputElement,
+  Element extends HTMLTextAreaElement | HTMLSelectElement | HTMLInputElement =
+    HTMLInputElement,
 >(
   props: UseRegisterProps<Element> & { element?: string },
   ref?: React.ForwardedRef<T>,

@@ -43,7 +43,7 @@
     "graphql": "16.12.0",
     "jscodeshift": "17.0.0",
     "pascalcase": "1.0.0",
-    "prettier": "3.6.2",
+    "prettier": "3.8.1",
     "tasuku": "2.0.5",
     "typescript": "5.9.3",
     "yargs": "17.7.2"

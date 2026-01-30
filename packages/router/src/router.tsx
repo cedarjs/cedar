@@ -17,8 +17,10 @@ import { SplashPage } from './splash-page.js'
 import { matchPath, parseSearch, replaceParams, validatePath } from './util.js'
 import type { TrailingSlashesTypes } from './util.js'
 
-export interface RouterProps
-  extends Omit<RouterContextProviderProps, 'routes' | 'activeRouteName'> {
+export interface RouterProps extends Omit<
+  RouterContextProviderProps,
+  'routes' | 'activeRouteName'
+> {
   trailingSlashes?: TrailingSlashesTypes
   pageLoadingDelay?: number
   children: ReactNode

@@ -10,9 +10,8 @@ import '../../../../lib/test'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } = await import(
-    '../../../../__tests__/ufsFsProxy.js'
-  )
+  const { wrapFsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
   ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
   return { ...ufs, default: { ...ufs } }
 })

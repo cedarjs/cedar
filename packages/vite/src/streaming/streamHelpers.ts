@@ -299,6 +299,7 @@ export async function importModule(
     | '__rwjs__server_auth_provider'
     | '__rwjs__server_inject',
 ) {
+<<<<<<< HEAD
   const distSsr = getPaths().web.distSsr
   const rdServerPath = makeFilePath(path.join(distSsr, 'rd-server.mjs'))
   const reactPath = makeFilePath(path.join(distSsr, '__rwjs__react.mjs'))
@@ -309,6 +310,39 @@ export async function importModule(
   const ServerInjectPath = makeFilePath(
     path.join(distSsr, '__rwjs__server_inject.mjs'),
   )
+=======
+  if (isDev) {
+    if (mod === 'rd-server') {
+      const loadedMod = await import('react-dom/server.edge')
+      return loadedMod.default
+    } else if (mod === '__rwjs__react') {
+      const loadedMod = await import('react')
+      return loadedMod.default
+    } else if (mod === '__rwjs__location') {
+      const loadedMod = await import('@cedarjs/router/location')
+      return loadedMod
+    } else if (mod === '__rwjs__server_auth_provider') {
+      const loadedMod =
+        await import('@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js')
+      return loadedMod
+    } else if (mod === '__rwjs__server_inject') {
+      const loadedMod = await import('@cedarjs/web/serverInject')
+      return loadedMod
+    }
+  } else {
+    const distSsr = getPaths().web.distSsr
+    const rdServerPath = makeFilePath(path.join(distSsr, 'rd-server.mjs'))
+    const reactPath = makeFilePath(path.join(distSsr, '__rwjs__react.mjs'))
+    const locationPath = makeFilePath(
+      path.join(distSsr, '__rwjs__location.mjs'),
+    )
+    const serverAuthProviderPath = makeFilePath(
+      path.join(distSsr, '__rwjs__server_auth_provider.mjs'),
+    )
+    const serverInjectPath = makeFilePath(
+      path.join(distSsr, '__rwjs__server_inject.mjs'),
+    )
+>>>>>>> e6d34f1365 (fix(deps): update dependency prettier to v3.8.1 (#1102))
 
   if (mod === 'rd-server') {
     return (await import(rdServerPath)).default
