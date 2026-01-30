@@ -342,9 +342,9 @@ describe('packageHandler', () => {
           "noEmit": true,
           "allowJs": true,
           "esModuleInterop": true,
-          "target": "ES2023",
+          "target": "es2023",
           "module": "Node16", // This is the line to update
-          "moduleResolution": "Node16",
+          "moduleResolution": "node16",
           "skipLibCheck": false,
           "rootDirs": ["./src", "../.redwood/types/mirror/api/src"],
           "paths": {
@@ -367,7 +367,7 @@ describe('packageHandler', () => {
       }
     `
 
-    it('updates from Node16 to Node20', async () => {
+    it('updates from Node16 to node20', async () => {
       vol.fromJSON(
         {
           [tsconfigPath]: tsconfig,
@@ -381,17 +381,37 @@ describe('packageHandler', () => {
       // Comments are valid in tsconfig files, we want to make sure we don't
       // remove those
       expect(fs.readFileSync(tsconfigPath, 'utf8')).toMatch(
-        /"module": "Node20", \/\/ This is the line to update/,
+        /"module": "node20", \/\/ This is the line to update/,
       )
       expect(fs.readFileSync(tsconfigPath, 'utf8')).toEqual(
-        tsconfig.replace('"module": "Node16",', '"module": "Node20",'),
+        tsconfig.replace('"module": "Node16",', '"module": "node20",'),
+      )
+    })
+
+    it('updates from node16 (lowercase) to node20', async () => {
+      const node16tsconfig = tsconfig.replace(
+        '"module": "Node16",',
+        '"module": "node16",',
+      )
+      vol.fromJSON(
+        {
+          [tsconfigPath]: node16tsconfig,
+          'cedar.toml': '',
+        },
+        mockBase.path,
+      )
+
+      await packageHandler.updateTsconfig({ skip: () => {} })
+
+      expect(fs.readFileSync(tsconfigPath, 'utf8')).toEqual(
+        tsconfig.replace('"module": "Node16",', '"module": "node20",'),
       )
     })
 
     it('skips update if "module" is already Node20', async () => {
       const node20tsconfig = tsconfig.replace(
         '"module": "Node16",',
-        '"module": "Node20",',
+        '"module": "node20",',
       )
       vol.fromJSON(
         {
@@ -406,7 +426,7 @@ describe('packageHandler', () => {
 
       expect(skipFn).toHaveBeenCalled()
       expect(fs.readFileSync(tsconfigPath, 'utf8')).toMatch(
-        /"module": "Node20"/,
+        /"module": "node20"/,
       )
     })
 
@@ -483,10 +503,10 @@ describe('packageHandler', () => {
       await packageHandler.updateTsconfig({ skip: () => {} })
 
       expect(fs.readFileSync(webTsconfigPath, 'utf8')).toMatch(
-        /"module": "ESNext", \/\/ This is the line to update/,
+        /"module": "esnext", \/\/ This is the line to update/,
       )
       expect(fs.readFileSync(webTsconfigPath, 'utf8')).toEqual(
-        webTsconfig.replace('"module": "ES2020",', '"module": "ESNext",'),
+        webTsconfig.replace('"module": "ES2020",', '"module": "esnext",'),
       )
     })
 
@@ -529,9 +549,9 @@ describe('packageHandler', () => {
       const scriptsTsconfig = `
         {
           "compilerOptions": {
-            "target": "ES2023",
+            "target": "es2023",
             "module": "Node16", // This is the line to update
-            "moduleResolution": "Node16"
+            "moduleResolution": "node16"
           }
         }
       `
@@ -547,10 +567,10 @@ describe('packageHandler', () => {
       await packageHandler.updateTsconfig({ skip: () => {} })
 
       expect(fs.readFileSync(scriptsTsconfigPath, 'utf8')).toMatch(
-        /"module": "Node20", \/\/ This is the line to update/,
+        /"module": "node20", \/\/ This is the line to update/,
       )
       expect(fs.readFileSync(scriptsTsconfigPath, 'utf8')).toEqual(
-        scriptsTsconfig.replace('"module": "Node16",', '"module": "Node20",'),
+        scriptsTsconfig.replace('"module": "Node16",', '"module": "node20",'),
       )
     })
 
@@ -563,9 +583,9 @@ describe('packageHandler', () => {
       const scriptsTsconfig = `
         {
           "compilerOptions": {
-            "target": "ES2023",
+            "target": "es2023",
             "module": "NodeNext",
-            "moduleResolution": "Node16"
+            "moduleResolution": "node16"
           }
         }
       `
