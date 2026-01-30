@@ -49,6 +49,9 @@ describe('api', () => {
         throw new Error('apiSideBabelPresets is not an array')
       }
 
+      expect(apiSideBabelPresets.length).toBe(2)
+
+      const firstPlugin = apiSideBabelPresets[0]
       const secondPlugin = apiSideBabelPresets[1]
 
       if (!Array.isArray(secondPlugin)) {
@@ -67,33 +70,33 @@ describe('api', () => {
         Math.abs(expectedCoreJsMinorVersion - coreJsMinorVersion),
       ).toBeLessThanOrEqual(1)
 
-      expect(apiSideBabelPresets).toMatchInlineSnapshot(`
+      expect(firstPlugin).toMatchInlineSnapshot(`
         [
-          [
-            "@babel/preset-typescript",
-            {
-              "allExtensions": true,
-              "isTSX": true,
+          "@babel/preset-typescript",
+          {
+            "allExtensions": true,
+            "isTSX": true,
+          },
+          "rwjs-babel-preset-typescript",
+        ]
+      `)
+      expect(secondPlugin).toMatchInlineSnapshot(`
+        [
+          "@babel/preset-env",
+          {
+            "corejs": {
+              "proposals": true,
+              "version": "3.${coreJsMinorVersion}",
             },
-            "rwjs-babel-preset-typescript",
-          ],
-          [
-            "@babel/preset-env",
-            {
-              "corejs": {
-                "proposals": true,
-                "version": "3.${coreJsMinorVersion}",
-              },
-              "exclude": [
-                "@babel/plugin-transform-class-properties",
-                "@babel/plugin-transform-private-methods",
-              ],
-              "targets": {
-                "node": "20.10",
-              },
-              "useBuiltIns": "usage",
+            "exclude": [
+              "@babel/plugin-transform-class-properties",
+              "@babel/plugin-transform-private-methods",
+            ],
+            "targets": {
+              "node": "20.10",
             },
-          ],
+            "useBuiltIns": "usage",
+          },
         ]
       `)
     })
