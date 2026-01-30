@@ -11,11 +11,18 @@ describe('dist', () => {
     // We use this to allow all patch versions
     const runtimePatchVersion = mod.RUNTIME_CORE_JS_VERSION.split('.')[2]
 
+    // We use this to calculate the diff in minor versions
+    const coreJsMinorVersion = mod.CORE_JS_VERSION.split('.')[1]
+
     const expectedRuntimeMinorVersion = 28
+    const expectedCoreJsMinorVersion = 48
 
     // Allow a minor version difference of 1
     expect(
       Math.abs(expectedRuntimeMinorVersion - runtimeMinorVersion),
+    ).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs(expectedCoreJsMinorVersion - coreJsMinorVersion),
     ).toBeLessThanOrEqual(1)
 
     expect(mod).toMatchInlineSnapshot(`
@@ -27,7 +34,7 @@ describe('dist', () => {
           },
           "version": "7.${runtimeMinorVersion}.${runtimePatchVersion}",
         },
-        "CORE_JS_VERSION": "3.47",
+        "CORE_JS_VERSION": "3.${coreJsMinorVersion}",
         "RUNTIME_CORE_JS_VERSION": "7.${runtimeMinorVersion}.${runtimePatchVersion}",
         "TARGETS_NODE": "20.10",
         "getApiSideBabelConfigPath": [Function],

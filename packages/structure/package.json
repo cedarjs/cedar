@@ -30,7 +30,7 @@
     "@prisma/internals": "6.19.2",
     "@types/line-column": "1.0.2",
     "camelcase": "6.3.0",
-    "core-js": "3.47.0",
+    "core-js": "3.48.0",
     "deepmerge": "4.3.1",
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",

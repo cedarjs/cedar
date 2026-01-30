@@ -44,33 +44,59 @@ describe('api', () => {
 
     it('can include `@babel/preset-env`', () => {
       const apiSideBabelPresets = getApiSideBabelPresets({ presetEnv: true })
-      expect(apiSideBabelPresets).toMatchInlineSnapshot(`
+
+      if (!Array.isArray(apiSideBabelPresets)) {
+        throw new Error('apiSideBabelPresets is not an array')
+      }
+
+      expect(apiSideBabelPresets.length).toBe(2)
+
+      const firstPlugin = apiSideBabelPresets[0]
+      const secondPlugin = apiSideBabelPresets[1]
+
+      if (!Array.isArray(secondPlugin)) {
+        throw new Error('secondPlugin is not an array')
+      }
+
+      const secondPluginName = secondPlugin[0]
+      const secondPluginOptions = secondPlugin[1]
+
+      const coreJsMinorVersion =
+        secondPluginOptions.corejs.version.split('.')[1]
+      const expectedCoreJsMinorVersion = 48
+
+      expect(secondPluginName).toBe('@babel/preset-env')
+      expect(
+        Math.abs(expectedCoreJsMinorVersion - coreJsMinorVersion),
+      ).toBeLessThanOrEqual(1)
+
+      expect(firstPlugin).toMatchInlineSnapshot(`
         [
-          [
-            "@babel/preset-typescript",
-            {
-              "allExtensions": true,
-              "isTSX": true,
+          "@babel/preset-typescript",
+          {
+            "allExtensions": true,
+            "isTSX": true,
+          },
+          "rwjs-babel-preset-typescript",
+        ]
+      `)
+      expect(secondPlugin).toMatchInlineSnapshot(`
+        [
+          "@babel/preset-env",
+          {
+            "corejs": {
+              "proposals": true,
+              "version": "3.${coreJsMinorVersion}",
             },
-            "rwjs-babel-preset-typescript",
-          ],
-          [
-            "@babel/preset-env",
-            {
-              "corejs": {
-                "proposals": true,
-                "version": "3.47",
-              },
-              "exclude": [
-                "@babel/plugin-transform-class-properties",
-                "@babel/plugin-transform-private-methods",
-              ],
-              "targets": {
-                "node": "20.10",
-              },
-              "useBuiltIns": "usage",
+            "exclude": [
+              "@babel/plugin-transform-class-properties",
+              "@babel/plugin-transform-private-methods",
+            ],
+            "targets": {
+              "node": "20.10",
             },
-          ],
+            "useBuiltIns": "usage",
+          },
         ]
       `)
     })
