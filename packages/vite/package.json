@@ -80,7 +80,7 @@
     "buffer": "6.0.3",
     "busboy": "^1.6.0",
     "cookie": "1.1.1",
-    "core-js": "3.47.0",
+    "core-js": "3.48.0",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
     "express": "4.22.1",

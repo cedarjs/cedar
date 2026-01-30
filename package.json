@@ -96,7 +96,7 @@
     "babel-plugin-remove-code": "0.0.6",
     "boxen": "5.1.2",
     "concurrently": "9.2.1",
-    "core-js": "3.47.0",
+    "core-js": "3.48.0",
     "cross-env": "7.0.3",
     "cypress": "13.17.0",
     "cypress-fail-fast": "7.1.1",
