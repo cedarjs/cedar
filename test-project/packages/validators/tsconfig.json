@@ -10,8 +10,8 @@
     "outDir": "dist",
     "sourceMap": true,
     "declaration": true,
-    "declarationMap": true,
+    "declarationMap": true
   },
   "include": ["src"],
-  "exclude": ["**/*.test.ts"],
+  "exclude": ["**/*.test.ts"]
 }

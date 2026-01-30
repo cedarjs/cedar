@@ -5,7 +5,7 @@
     "emitDeclarationOnly": false,
     "noEmit": true,
     "module": "node20",
-    "moduleResolution": "node16",
+    "moduleResolution": "node16"
   },
   "include": ["."],
   "exclude": ["**/__testfixtures__"],
@@ -17,6 +17,6 @@
     { "path": "../project-config" },
     { "path": "../structure" },
     { "path": "../telemetry" },
-    { "path": "../vite/tsconfig.build.json" },
-  ],
+    { "path": "../vite/tsconfig.build.json" }
+  ]
 }

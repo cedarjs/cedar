@@ -5,7 +5,7 @@
     "outDir": "dist",
     "module": "Node16",
     "moduleResolution": "node16",
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*"]
 }

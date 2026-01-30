@@ -5,11 +5,11 @@
     "outDir": "dist",
     "moduleResolution": "node16",
     "module": "Node16",
-    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo",
+    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src"],
   "references": [
     { "path": "../cli-helpers/tsconfig.build.json" },
-    { "path": "../project-config" },
-  ],
+    { "path": "../project-config" }
+  ]
 }

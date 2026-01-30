@@ -5,12 +5,12 @@
     "outDir": "dist",
     "module": "Node16",
     "moduleResolution": "node16",
-    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo",
+    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src", "./ambient.d.ts", "./rsdw.modules.d.ts"],
   "references": [
     { "path": "../auth/tsconfig.build.json" },
     { "path": "../framework-tools" },
-    { "path": "../server-store" },
-  ],
+    { "path": "../server-store" }
+  ]
 }

@@ -6,11 +6,11 @@
     "outDir": "dist",
     "module": "Node16",
     "moduleResolution": "node16",
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
   "include": ["src"],
   "references": [
     { "path": "../../../auth/tsconfig.build.json" },
-    { "path": "../../../project-config" },
-  ],
+    { "path": "../../../project-config" }
+  ]
 }

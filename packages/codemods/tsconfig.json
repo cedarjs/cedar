@@ -5,12 +5,12 @@
     "noEmit": true,
     "module": "Node16",
     "moduleResolution": "node16",
-    "rootDir": ".",
+    "rootDir": "."
   },
   "include": ["src", "./testUtils.d.ts"],
   "exclude": ["**/__testfixtures__", "**/__tests__"],
   "references": [
     { "path": "../framework-tools" },
-    { "path": "../project-config" },
-  ],
+    { "path": "../project-config" }
+  ]
 }

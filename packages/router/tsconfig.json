@@ -7,14 +7,14 @@
     "outDir": "dist",
     "typeRoots": [
       "../../node_modules/@types",
-      "../../node_modules/@testing-library",
-    ],
+      "../../node_modules/@testing-library"
+    ]
   },
   "include": ["."],
   "exclude": ["dist", "node_modules", "**/__mocks__", "**/__fixtures__"],
   "references": [
     { "path": "../auth/tsconfig.build.json" },
     { "path": "../framework-tools" },
-    { "path": "../server-store" },
-  ],
+    { "path": "../server-store" }
+  ]
 }

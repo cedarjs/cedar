@@ -6,11 +6,11 @@
     "outDir": "dist",
     "module": "Node16",
     "moduleResolution": "node16",
-    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo",
+    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src/**/*"],
   "references": [
     { "path": "../../../auth/tsconfig.build.json" },
-    { "path": "../../../vite/tsconfig.build.json" },
-  ],
+    { "path": "../../../vite/tsconfig.build.json" }
+  ]
 }

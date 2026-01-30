@@ -3,11 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "module": "Node16",
-    "moduleResolution": "node16",
+    "moduleResolution": "node16"
   },
   "include": ["."],
   "references": [
     { "path": "../../../auth/tsconfig.build.json" },
-    { "path": "../../../framework-tools" },
-  ],
+    { "path": "../../../framework-tools" }
+  ]
 }

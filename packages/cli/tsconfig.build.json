@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "module": "node20",
-    "moduleResolution": "node16",
+    "moduleResolution": "node16"
   },
   "include": ["src", "./testUtils.d.ts"],
   "exclude": ["**/__testfixtures__"],
@@ -15,6 +15,6 @@
     { "path": "../prerender/tsconfig.build.json" },
     { "path": "../project-config" },
     { "path": "../structure" },
-    { "path": "../telemetry" },
-  ],
+    { "path": "../telemetry" }
+  ]
 }
