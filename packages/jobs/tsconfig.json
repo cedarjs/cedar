@@ -1,16 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "moduleResolution": "Node16",
+    "moduleResolution": "node16",
     "module": "Node16",
     "emitDeclarationOnly": false,
-    "noEmit": true
+    "noEmit": true,
   },
   "include": ["."],
   "exclude": ["dist", "node_modules", "**/__mocks__", "**/__tests__/fixtures"],
   "references": [
     { "path": "../cli-helpers" },
     { "path": "../framework-tools" },
-    { "path": "../project-config" }
-  ]
+    { "path": "../project-config" },
+  ],
 }

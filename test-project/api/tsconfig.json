@@ -3,25 +3,25 @@
     "noEmit": true,
     "allowJs": true,
     "esModuleInterop": true,
-    "target": "ES2023",
-    "module": "Node20",
-    "moduleResolution": "Node16",
+    "target": "es2023",
+    "module": "node20",
+    "moduleResolution": "node16",
     "skipLibCheck": false,
     "rootDirs": ["./src", "../.redwood/types/mirror/api/src"],
     "paths": {
       "src/*": ["./src/*", "../.redwood/types/mirror/api/src/*"],
       "types/*": ["./types/*", "../types/*"],
-      "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]
+      "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"],
     },
     "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
     "types": ["jest"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
   },
   "include": [
     "src",
     "../.redwood/types/includes/all-*",
     "../.redwood/types/includes/api-*",
-    "../types"
+    "../types",
   ],
-  "references": [{ "path": "../packages/validators" }]
+  "references": [{ "path": "../packages/validators" }],
 }
