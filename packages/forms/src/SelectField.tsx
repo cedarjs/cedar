@@ -6,7 +6,8 @@ import { useErrorStyles } from './useErrorStyles'
 import { useRegister } from './useRegister'
 
 export interface SelectFieldProps
-  extends Omit<FieldProps<HTMLSelectElement>, 'type'>,
+  extends
+    Omit<FieldProps<HTMLSelectElement>, 'type'>,
     Omit<React.ComponentPropsWithRef<'select'>, 'name'> {}
 
 /** Renders a `<select>` field */

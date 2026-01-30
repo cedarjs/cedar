@@ -690,9 +690,8 @@ export class DbAuthHandler<
     // is the resetToken present?
     if (resetToken == null || String(resetToken).trim() === '') {
       throw new DbAuthError.ResetTokenRequiredError(
-        (
-          this.options.resetPassword as ResetPasswordFlowOptions
-        )?.errors?.resetTokenRequired,
+        (this.options.resetPassword as ResetPasswordFlowOptions)?.errors
+          ?.resetTokenRequired,
       )
     }
 
@@ -717,9 +716,8 @@ export class DbAuthHandler<
       user.hashedPassword === legacyHashedPassword
     ) {
       throw new DbAuthError.ReusedPasswordError(
-        (
-          this.options.resetPassword as ResetPasswordFlowOptions
-        )?.errors?.reusedPassword,
+        (this.options.resetPassword as ResetPasswordFlowOptions)?.errors
+          ?.reusedPassword,
       )
     }
 
@@ -786,9 +784,8 @@ export class DbAuthHandler<
     // is token present at all?
     if (!resetToken || String(resetToken).trim() === '') {
       throw new DbAuthError.ResetTokenRequiredError(
-        (
-          this.options.resetPassword as ResetPasswordFlowOptions
-        )?.errors?.resetTokenRequired,
+        (this.options.resetPassword as ResetPasswordFlowOptions)?.errors
+          ?.resetTokenRequired,
       )
     }
 
@@ -799,9 +796,8 @@ export class DbAuthHandler<
 
   // browser submits WebAuthn credentials
   async webAuthnAuthenticate(): Promise<AuthMethodOutput> {
-    const { verifyAuthenticationResponse } = await import(
-      '@simplewebauthn/server'
-    )
+    const { verifyAuthenticationResponse } =
+      await import('@simplewebauthn/server')
     const webAuthnOptions = this.options.webAuthn
 
     const { rawId } = this.normalizedRequest.jsonBody || {}
@@ -892,9 +888,8 @@ export class DbAuthHandler<
 
   // get options for a WebAuthn authentication
   async webAuthnAuthOptions(): Promise<AuthMethodOutput> {
-    const { generateAuthenticationOptions } = await import(
-      '@simplewebauthn/server'
-    )
+    const { generateAuthenticationOptions } =
+      await import('@simplewebauthn/server')
 
     if (!this.options.webAuthn?.enabled) {
       throw new DbAuthError.WebAuthnError('WebAuthn is not enabled')
@@ -960,9 +955,8 @@ export class DbAuthHandler<
 
   // get options for WebAuthn registration
   async webAuthnRegOptions(): Promise<AuthMethodOutput> {
-    const { generateRegistrationOptions } = await import(
-      '@simplewebauthn/server'
-    )
+    const { generateRegistrationOptions } =
+      await import('@simplewebauthn/server')
 
     if (!this.options?.webAuthn?.enabled) {
       throw new DbAuthError.WebAuthnError('WebAuthn is not enabled')
@@ -1006,9 +1000,8 @@ export class DbAuthHandler<
 
   // browser submits WebAuthn credentials for the first time on a new device
   async webAuthnRegister(): Promise<AuthMethodOutput> {
-    const { verifyRegistrationResponse } = await import(
-      '@simplewebauthn/server'
-    )
+    const { verifyRegistrationResponse } =
+      await import('@simplewebauthn/server')
 
     if (!this.options.webAuthn?.enabled) {
       throw new DbAuthError.WebAuthnError('WebAuthn is not enabled')
@@ -1281,9 +1274,8 @@ export class DbAuthHandler<
     // user not found with the given token
     if (!user) {
       throw new DbAuthError.ResetTokenInvalidError(
-        (
-          this.options.resetPassword as ResetPasswordFlowOptions
-        )?.errors?.resetTokenInvalid,
+        (this.options.resetPassword as ResetPasswordFlowOptions)?.errors
+          ?.resetTokenInvalid,
       )
     }
 
@@ -1291,9 +1283,8 @@ export class DbAuthHandler<
     if (user[this.options.authFields.resetTokenExpiresAt] < tokenExpires) {
       await this._clearResetToken(user)
       throw new DbAuthError.ResetTokenExpiredError(
-        (
-          this.options.resetPassword as ResetPasswordFlowOptions
-        )?.errors?.resetTokenExpired,
+        (this.options.resetPassword as ResetPasswordFlowOptions)?.errors
+          ?.resetTokenExpired,
       )
     }
 
@@ -1330,9 +1321,8 @@ export class DbAuthHandler<
       password.toString().trim() === ''
     ) {
       throw new DbAuthError.UsernameAndPasswordRequiredError(
-        (
-          this.options.login as LoginFlowOptions
-        )?.errors?.usernameOrPasswordMissing,
+        (this.options.login as LoginFlowOptions)?.errors
+          ?.usernameOrPasswordMissing,
       )
     }
 

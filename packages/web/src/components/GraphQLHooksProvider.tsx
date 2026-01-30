@@ -110,11 +110,11 @@ interface GraphQlHooksProviderProps<
   TuseSubscription = DefaultUseSubscriptionType,
   TuseSuspenseQuery = DefaultUseSuspenseType,
 > extends GraphQLHooks<
-    TuseQuery,
-    TuseMutation,
-    TuseSubscription,
-    TuseSuspenseQuery
-  > {
+  TuseQuery,
+  TuseMutation,
+  TuseSubscription,
+  TuseSuspenseQuery
+> {
   children: React.ReactNode
 }
 
