@@ -1,3 +1,6 @@
+#:schema https://raw.githubusercontent.com/cedarjs/cedar/main/packages/project-config/cedar-toml-schema-2.0.json
+#:tombi format.disabled = true
+
 # This file contains the configuration settings for your Cedar app.
 # This file is also what makes your Cedar app a Cedar app.
 # If you remove it and try to run `yarn cedar dev`, you'll get an error.
