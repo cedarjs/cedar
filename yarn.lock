@@ -33,21 +33,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:5.0.3":
-  version: 5.0.3
-  resolution: "@actions/cache@npm:5.0.3"
+"@actions/cache@npm:5.0.5":
+  version: 5.0.5
+  resolution: "@actions/cache@npm:5.0.5"
   dependencies:
     "@actions/core": "npm:^2.0.0"
     "@actions/exec": "npm:^2.0.0"
-    "@actions/glob": "npm:^0.5.0"
-    "@actions/http-client": "npm:^3.0.1"
+    "@actions/glob": "npm:^0.5.1"
+    "@actions/http-client": "npm:^3.0.2"
     "@actions/io": "npm:^2.0.0"
     "@azure/abort-controller": "npm:^1.1.0"
     "@azure/core-rest-pipeline": "npm:^1.22.0"
     "@azure/storage-blob": "npm:^12.29.1"
     "@protobuf-ts/runtime-rpc": "npm:^2.11.1"
     semver: "npm:^6.3.1"
-  checksum: 10c0/69ae5a5d8794114e716b0254564131a66963158f5205dce593efec8f0067a4547cd41537fd0b332053fb1b66496bdc1782c7952104cffcb121b766eeb21e7e29
+  checksum: 10c0/0144eb99d770ae22a84206ad004f939dd2cc5162c7865a6bbe3d80322614ec7543c35a8588c73cf682d4b6db5407846184e95b09ae62d61f858a84880f2925a0
   languageName: node
   linkType: hard
 
@@ -70,7 +70,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/glob@npm:0.5.1, @actions/glob@npm:^0.5.0":
+"@actions/glob@npm:0.5.1, @actions/glob@npm:^0.5.1":
   version: 0.5.1
   resolution: "@actions/glob@npm:0.5.1"
   dependencies:
@@ -80,7 +80,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/http-client@npm:^3.0.1, @actions/http-client@npm:^3.0.2":
+"@actions/http-client@npm:^3.0.2":
   version: 3.0.2
   resolution: "@actions/http-client@npm:3.0.2"
   dependencies:
@@ -26836,7 +26836,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@actions/cache": "npm:5.0.3"
+    "@actions/cache": "npm:5.0.5"
     "@actions/core": "npm:2.0.3"
     "@actions/exec": "npm:2.0.0"
     "@actions/glob": "npm:0.5.1"
