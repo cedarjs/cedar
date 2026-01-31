@@ -81,7 +81,7 @@
     "@rollup/plugin-commonjs": "28.0.9",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-replace": "6.0.3",
-    "@swc/core": "1.15.10",
+    "@swc/core": "1.15.11",
     "@whatwg-node/fetch": "0.10.13",
     "babel-plugin-ignore-html-and-css-imports": "0.1.0",
     "cheerio": "1.2.0",
