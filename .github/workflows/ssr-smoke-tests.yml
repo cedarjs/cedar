@@ -46,7 +46,15 @@ jobs:
 
       - name: Build for production
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-        run: yarn cedar build --no-prerender --verbose
+        shell: bash
+        run: |
+          set -o pipefail
+          yarn cedar build --no-prerender --verbose || {
+            echo "::group::package.json diagnostics"
+            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
+            echo "::endgroup::"
+            exit 1
+          }
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 

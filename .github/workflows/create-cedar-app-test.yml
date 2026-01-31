@@ -18,7 +18,13 @@ jobs:
 
       - name: Set up test project
         run: |
-          yarn build:pack
+          set -o pipefail
+          yarn build:pack || {
+            echo "::group::package.json diagnostics"
+            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
+            echo "::endgroup::"
+            exit 1
+          }
           PROJECT_PATH=$(yarn set-up-test-project)
           echo "PROJECT_PATH=$PROJECT_PATH" >> $GITHUB_ENV
         working-directory: ./packages/create-cedar-app
