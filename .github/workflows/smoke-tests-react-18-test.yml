@@ -39,7 +39,14 @@ jobs:
 
       - name: 🏗️ Build
         shell: bash
-        run: yarn build
+        run: |
+          set -o pipefail
+          yarn build || {
+            echo "::group::package.json diagnostics"
+            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
+            echo "::endgroup::"
+            exit 1
+          }
 
       - name: 🌲 Set up test project for React 18
         id: set-up-test-project-react-18
@@ -66,8 +73,15 @@ jobs:
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Run `cedar build --no-prerender`
+        shell: bash
         run: |
-          yarn cedar build --no-prerender
+          set -o pipefail
+          yarn cedar build --no-prerender || {
+            echo "::group::package.json diagnostics"
+            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
+            echo "::endgroup::"
+            exit 1
+          }
         working-directory: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
 
       - name: Run `cedar prerender`

@@ -47,8 +47,15 @@ jobs:
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Run `cedar build --no-prerender`
+        shell: bash
         run: |
-          yarn cedar build --no-prerender
+          set -o pipefail
+          yarn cedar build --no-prerender || {
+            echo "::group::package.json diagnostics"
+            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
+            echo "::endgroup::"
+            exit 1
+          }
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar prerender`
