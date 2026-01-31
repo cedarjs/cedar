@@ -14,7 +14,11 @@ import {
   rebuildApi,
 } from '@cedarjs/internal/dist/build/api'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
-import { ensurePosixPath, getPaths, getDbDir } from '@cedarjs/project-config'
+import {
+  importStatementPath,
+  getPaths,
+  getDbDir,
+} from '@cedarjs/project-config'
 
 import type { BuildAndRestartOptions } from './buildManager.js'
 import { BuildManager } from './buildManager.js'
@@ -104,7 +108,7 @@ export async function startWatch() {
   ]
 
   const ignoredWatchPaths = [...ignoredApiPaths, ...packageIgnoredPaths].map(
-    (p) => ensurePosixPath(p),
+    (p) => importStatementPath(p),
   )
 
   const ignoredExtensions = [
@@ -123,7 +127,7 @@ export async function startWatch() {
   const watchPaths = [cedarPaths.api.src, ...(await workspacePackages())]
 
   const watcher = chokidar.watch(
-    watchPaths.map((p) => ensurePosixPath(p)),
+    watchPaths.map((p) => importStatementPath(p)),
     {
       persistent: true,
       ignoreInitial: true,

@@ -5,7 +5,7 @@ import path from 'node:path'
 import chokidar from 'chokidar'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { ensurePosixPath } from '@cedarjs/project-config'
+import { importStatementPath } from '@cedarjs/project-config'
 
 import { workspacePackages } from '../workspacePackages.js'
 
@@ -31,7 +31,6 @@ describe('workspacePackages integration with chokidar', () => {
     await fs.promises.writeFile(
       path.join(tmpDir, 'package.json'),
       JSON.stringify(rootPackageJson, null, 2),
-      { encoding: 'utf8' },
     )
 
     // Create a workspace package with a `src` directory that will be watched
@@ -140,7 +139,7 @@ describe('workspacePackages integration with chokidar', () => {
 
     // Mimic how `startWatch()` feeds patterns to chokidar by normalizing paths
     const watchPatterns: string[] = patterns.map((p: string) =>
-      ensurePosixPath(p),
+      importStatementPath(p),
     )
 
     // Ensure we've normalized separators (no backslashes) so the test failure
