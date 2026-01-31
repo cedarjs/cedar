@@ -1,4 +1,5 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 // See https://github.com/webdiscus/ansis#troubleshooting
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -18,6 +19,7 @@ import { ensurePosixPath, getPaths, getDbDir } from '@cedarjs/project-config'
 import type { BuildAndRestartOptions } from './buildManager.js'
 import { BuildManager } from './buildManager.js'
 import { serverManager } from './serverManager.js'
+import { workspacePackages } from './workspacePackages.js'
 
 const cedarPaths = getPaths()
 
@@ -73,19 +75,38 @@ async function validateSdls() {
  * Initialize the file watcher for the API server
  * Watches for changes in the API source directory and rebuilds/restarts as
  * needed
+ *
+ * Also watches package sources so that changes to workspace packages used by
+ * the API trigger a rebuild/restart (HMR for API-side workspace packages).
  */
 export async function startWatch() {
   const dbDir = await getDbDir(cedarPaths.api.prismaConfig)
 
   // NOTE: the file with a detected change comes through as a unix path, even on
   // windows. So we need to convert the cedarPaths
+  const packagesDir = path.join(cedarPaths.base, 'packages')
+  const packageIgnoredPaths: string[] = []
+
+  if (fs.existsSync(packagesDir)) {
+    packageIgnoredPaths.push(
+      path.join(packagesDir, '*/dist'),
+      path.join(packagesDir, '*/dist/**'),
+      path.join(packagesDir, '*/node_modules'),
+    )
+  }
+
   const ignoredApiPaths = [
     // use this, because using cedarPaths.api.dist seems to not ignore on first
     // build
     'api/dist',
     cedarPaths.api.types,
     dbDir,
-  ].map((path) => ensurePosixPath(path))
+  ]
+
+  const ignoredWatchPaths = [...ignoredApiPaths, ...packageIgnoredPaths].map(
+    (p) => ensurePosixPath(p),
+  )
+
   const ignoredExtensions = [
     '.DS_Store',
     '.db',
@@ -99,18 +120,23 @@ export async function startWatch() {
     '.log',
   ]
 
-  const watcher = chokidar.watch([cedarPaths.api.src], {
-    persistent: true,
-    ignoreInitial: true,
-    ignored: (file: string) => {
-      const shouldIgnore =
-        file.includes('node_modules') ||
-        ignoredApiPaths.some((ignoredPath) => file.includes(ignoredPath)) ||
-        ignoredExtensions.some((ext) => file.endsWith(ext))
+  const watchPaths = [cedarPaths.api.src, ...(await workspacePackages())]
 
-      return shouldIgnore
+  const watcher = chokidar.watch(
+    watchPaths.map((p) => ensurePosixPath(p)),
+    {
+      persistent: true,
+      ignoreInitial: true,
+      ignored: (file: string) => {
+        const shouldIgnore =
+          file.includes('node_modules') ||
+          ignoredWatchPaths.some((ignoredPath) => file.includes(ignoredPath)) ||
+          ignoredExtensions.some((ext) => file.endsWith(ext))
+
+        return shouldIgnore
+      },
     },
-  })
+  )
 
   watcher.on('ready', async () => {
     // First time
@@ -140,9 +166,9 @@ export async function startWatch() {
       }
     }
 
-    console.log(
-      ansis.dim(`[${eventName}] ${filePath.replace(cedarPaths.api.base, '')}`),
-    )
+    // Normalize the displayed path so it's relative to the project base.
+    const displayPath = path.relative(cedarPaths.base, filePath)
+    console.log(ansis.dim(`[${eventName}] ${displayPath}`))
 
     buildManager.cancelScheduledBuild()
 
