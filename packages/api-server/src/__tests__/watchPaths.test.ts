@@ -24,7 +24,7 @@ describe('workspacePackages integration with chokidar', () => {
     const rootPackageJson = {
       name: 'workspace-test',
       private: true,
-      workspaces: ['packages/*'],
+      workspaces: ['api', 'packages/*'],
     }
     await fs.promises.writeFile(
       path.join(tmpDir, 'package.json'),
@@ -59,6 +59,15 @@ describe('workspacePackages integration with chokidar', () => {
     await fs.promises.writeFile(
       path.join(apiDir, 'package.json'),
       JSON.stringify(apiPackageJson, null, 2),
+      { encoding: 'utf8' },
+    )
+
+    // Create an `api/src` directory so chokidar will watch an existing path.
+    const apiSrcDir = path.join(apiDir, 'src')
+    await fs.promises.mkdir(apiSrcDir, { recursive: true })
+    await fs.promises.writeFile(
+      path.join(apiSrcDir, 'index.ts'),
+      "export const api = 'api'",
       { encoding: 'utf8' },
     )
 
