@@ -189,11 +189,7 @@ describe('workspacePackages integration with chokidar', () => {
             console.debug('chokidar ready; could not serialize watched dirs', e)
           }
 
-          setTimeout(() => {
-            console.log('Resolving onReady promise')
-            // This might get called twice. For this test that doesn't matter
-            resolve()
-          }, 1000)
+          resolve()
         })
       })
 
