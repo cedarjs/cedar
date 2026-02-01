@@ -87,6 +87,8 @@ export async function startWatch() {
     ignored: await getIgnoreFunction(),
   })
 
+  // This can fire multiple times
+  // https://github.com/paulmillr/chokidar/issues/338
   watcher.on('ready', async () => {
     // First time
     await buildManager.run({ clean: true, rebuild: false })

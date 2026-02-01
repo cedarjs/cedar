@@ -143,11 +143,7 @@ describe('workspacePackages integration with chokidar', () => {
 
     // Diagnostic logging: show raw and normalized patterns so CI logs are
     // actionable if globbing doesn't behave as expected on a runner.
-    console.log('workspace patterns (raw):', JSON.stringify(patterns, null, 2))
-    console.log(
-      'workspace patterns (normalized):',
-      JSON.stringify(patterns, null, 2),
-    )
+    console.log('workspace patterns', JSON.stringify(patterns, null, 2))
 
     // Diagnostic: expand the packages/* glob (like workspacePackages does) and
     // log the matches. This helps surface platform-specific globbing issues,
@@ -192,7 +188,12 @@ describe('workspacePackages integration with chokidar', () => {
           } catch (e) {
             console.debug('chokidar ready; could not serialize watched dirs', e)
           }
-          resolve()
+
+          setTimeout(() => {
+            console.log('Resolving onReady promise')
+            // This might get called twice. For this test that doesn't matter
+            resolve()
+          }, 1000)
         })
       })
 
