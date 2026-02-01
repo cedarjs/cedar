@@ -66,9 +66,9 @@ async function workspacePackagesPaths() {
         const srcDir = path.join(packageDir, 'src')
 
         if (fs.existsSync(srcDir)) {
-          packages.push(path.join(srcDir, '**', '*'))
+          packages.push(srcDir)
         } else {
-          packages.push(path.join(packageDir, '**', '*'))
+          packages.push(packageDir)
         }
       }
     }
