@@ -2945,7 +2945,7 @@ __metadata:
     boxen: "npm:5.1.2"
     camelcase: "npm:6.3.0"
     change-case: "npm:4.1.2"
-    ci-info: "npm:4.3.1"
+    ci-info: "npm:4.4.0"
     concurrently: "npm:9.2.1"
     configstore: "npm:7.1.0"
     core-js: "npm:3.48.0"
@@ -3665,7 +3665,7 @@ __metadata:
     "@types/envinfo": "npm:7.8.4"
     "@types/yargs": "npm:17.0.35"
     "@whatwg-node/fetch": "npm:0.10.13"
-    ci-info: "npm:4.3.1"
+    ci-info: "npm:4.4.0"
     envinfo: "npm:7.21.0"
     systeminformation: "npm:5.30.6"
     tsx: "npm:4.21.0"
@@ -13913,10 +13913,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ci-info@npm:4.3.1, ci-info@npm:^4.0.0":
-  version: 4.3.1
-  resolution: "ci-info@npm:4.3.1"
-  checksum: 10c0/7dd82000f514d76ddfe7775e4cb0d66e5c638f5fa0e2a3be29557e898da0d32ac04f231217d414d07fb968b1fbc6d980ee17ddde0d2c516f23da9cfff608f6c1
+"ci-info@npm:4.4.0, ci-info@npm:^4.0.0":
+  version: 4.4.0
+  resolution: "ci-info@npm:4.4.0"
+  checksum: 10c0/44156201545b8dde01aa8a09ee2fe9fc7a73b1bef9adbd4606c9f61c8caeeb73fb7a575c88b0443f7b4edb5ee45debaa59ed54ba5f99698339393ca01349eb3a
   languageName: node
   linkType: hard
 
@@ -14725,7 +14725,7 @@ __metadata:
     "@types/klaw-sync": "npm:6.0.5"
     ansis: "npm:4.2.0"
     check-node-version: "npm:4.2.1"
-    ci-info: "npm:4.3.1"
+    ci-info: "npm:4.4.0"
     envinfo: "npm:7.21.0"
     execa: "npm:5.1.1"
     gradient-string: "npm:3.0.0"
