@@ -373,13 +373,7 @@ describe('watchPaths', () => {
         }, 500)
 
         const onAll = (eventName: string, filePath: string) => {
-          try {
-            console.debug('chokidar event:', eventName, filePath)
-          } catch (e) {
-            console.debug('chokidar event logging failed', e)
-          }
-
-          const normalized = String(filePath).replace(/\\/g, '/')
+          const normalized = importStatementPath(filePath)
 
           if (normalized.includes('/packages/foo/node_modules/')) {
             clearTimeout(timeout)
@@ -405,22 +399,11 @@ describe('watchPaths', () => {
   it('ignores edits inside packages/foo/src', async () => {
     const patterns = await pathsToWatch()
     const ignoreFn = await getIgnoreFunction()
-    const wrappedIgnoreFn = vi.fn((path) => {
-      const returnValue = ignoreFn(path)
-
-      if (returnValue) {
-        console.log(`Ignoring path: ${path}`)
-      } else {
-        console.log(`Not ignoring path: ${path}`)
-      }
-
-      return returnValue
-    })
 
     const watcher = chokidar.watch(patterns, {
       persistent: true,
       ignoreInitial: true,
-      ignored: wrappedIgnoreFn,
+      ignored: ignoreFn,
     })
 
     watcher.on('error', (error) => {
@@ -443,14 +426,8 @@ describe('watchPaths', () => {
           resolve()
         }, 500)
 
-        const onAll = (eventName: string, filePath: string) => {
-          try {
-            console.debug('chokidar event:', eventName, filePath)
-          } catch (e) {
-            console.debug('chokidar event logging failed', e)
-          }
-
-          const normalized = String(filePath).replace(/\\/g, '/')
+        const onAll = (_eventName: string, filePath: string) => {
+          const normalized = importStatementPath(filePath)
 
           if (normalized.includes('/packages/foo/src/')) {
             clearTimeout(timeout)
