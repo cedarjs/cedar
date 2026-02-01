@@ -5,9 +5,9 @@ import path from 'node:path'
 import chokidar from 'chokidar'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { pathsToWatch } from '../watchPaths.js'
+import { pathsToWatch, getIgnoreFunction } from '../watchPaths.js'
 
-describe('workspacePackages integration with chokidar', () => {
+describe('watchPaths', () => {
   let tmpDir: string
   const originalRwjsCwd = process.env.RWJS_CWD
 
@@ -60,6 +60,17 @@ describe('workspacePackages integration with chokidar', () => {
       path.join(apiDir, 'package.json'),
       JSON.stringify(apiPackageJson, null, 2),
     )
+
+    // Create a minimal Prisma config so `getIgnoreFunction()` can load it
+    // and determine the database directory without throwing.
+    await fs.promises.writeFile(
+      path.join(apiDir, 'prisma.config.cjs'),
+      "module.exports = { schema: 'schema.prisma' }",
+      { encoding: 'utf8' },
+    )
+    await fs.promises.writeFile(path.join(apiDir, 'schema.prisma'), '', {
+      encoding: 'utf8',
+    })
 
     // Create an `api/src` directory so chokidar will watch an existing path.
     const apiSrcDir = path.join(apiDir, 'src')
@@ -255,4 +266,196 @@ describe('workspacePackages integration with chokidar', () => {
       await watcher.close()
     }
   }, 20_000)
+
+  // Helper: wait until chokidar reports it's watching the package directory.
+  // This avoids races where 'ready' fires early.
+  async function waitForWatcherToWatchFoo(
+    watcher: chokidar.FSWatcher,
+    timeoutMs = 5_000,
+  ) {
+    const expected = path.join(tmpDir, 'packages', 'foo').replaceAll('\\', '/')
+    const deadline = Date.now() + timeoutMs
+
+    while (Date.now() <= deadline) {
+      try {
+        const watchedKeys = Object.keys(watcher.getWatched()).map((k) =>
+          k.replace(/\\/g, '/'),
+        )
+        if (
+          watchedKeys.some((k) => {
+            return k.endsWith(expected) || k.endsWith(expected + '/src')
+          })
+        ) {
+          return
+        }
+      } catch {
+        // ignore transient serialization errors
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+
+    throw new Error(
+      `Timed out waiting for watcher to start watching ${expected}`,
+    )
+  }
+
+  it('ignores edits inside packages/foo/node_modules', async () => {
+    const patterns = await pathsToWatch()
+    const ignoreFn = await getIgnoreFunction()
+
+    const watcher = chokidar.watch(patterns, {
+      persistent: true,
+      ignoreInitial: true,
+      ignored: ignoreFn,
+    })
+
+    watcher.on('error', (error) => {
+      console.error('chokidar watcher error:', error)
+    })
+
+    try {
+      // Wait until the watcher is ready
+      await new Promise<void>((resolve) => {
+        watcher.on('ready', () => {
+          try {
+            console.debug(
+              'chokidar ready; watched directories:',
+              JSON.stringify(watcher.getWatched(), null, 2),
+            )
+          } catch (e) {
+            console.debug('chokidar ready; could not serialize watched dirs', e)
+          }
+
+          resolve()
+        })
+      })
+
+      await waitForWatcherToWatchFoo(watcher)
+
+      const nodeFile = path.join(
+        tmpDir,
+        'packages',
+        'foo',
+        'node_modules',
+        'pkg',
+        'index.ts',
+      )
+      await fs.promises.mkdir(path.dirname(nodeFile), { recursive: true })
+      await fs.promises.writeFile(nodeFile, 'export const x = 1', {
+        encoding: 'utf8',
+      })
+
+      const eventPromise = new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          watcher.off('all', onAll)
+          resolve()
+        }, 2_000)
+
+        const onAll = (eventName: string, filePath: string) => {
+          try {
+            console.debug('chokidar event:', eventName, filePath)
+          } catch (e) {
+            console.debug('chokidar event logging failed', e)
+          }
+
+          const normalized = String(filePath).replace(/\\/g, '/')
+
+          if (normalized.includes('/packages/foo/node_modules/')) {
+            clearTimeout(timeout)
+            watcher.off('all', onAll)
+            reject(
+              new Error(
+                'node_modules edit triggered watcher event: ' + normalized,
+              ),
+            )
+          }
+        }
+
+        watcher.on('all', onAll)
+      })
+
+      await fs.promises.appendFile(nodeFile, '\n// update\n', {
+        encoding: 'utf8',
+      })
+      await eventPromise
+    } finally {
+      await watcher.close()
+    }
+  }, 10_000)
+
+  it('ignores edits inside packages/foo/dist', async () => {
+    const patterns = await pathsToWatch()
+    const ignoreFn = await getIgnoreFunction()
+
+    const watcher = chokidar.watch(patterns, {
+      persistent: true,
+      ignoreInitial: true,
+      ignored: ignoreFn,
+    })
+
+    watcher.on('error', (error) => {
+      console.error('chokidar watcher error:', error)
+    })
+
+    try {
+      // Wait until the watcher is ready
+      await new Promise<void>((resolve) => {
+        watcher.on('ready', () => {
+          try {
+            console.debug(
+              'chokidar ready; watched directories:',
+              JSON.stringify(watcher.getWatched(), null, 2),
+            )
+          } catch (e) {
+            console.debug('chokidar ready; could not serialize watched dirs', e)
+          }
+
+          resolve()
+        })
+      })
+
+      await waitForWatcherToWatchFoo(watcher)
+
+      const distFile = path.join(tmpDir, 'packages', 'foo', 'dist', 'index.ts')
+      await fs.promises.mkdir(path.dirname(distFile), { recursive: true })
+      await fs.promises.writeFile(distFile, 'export const y = 1', {
+        encoding: 'utf8',
+      })
+
+      const eventPromise = new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          watcher.off('all', onAll)
+          resolve()
+        }, 2_000)
+
+        const onAll = (eventName: string, filePath: string) => {
+          try {
+            console.debug('chokidar event:', eventName, filePath)
+          } catch (e) {
+            console.debug('chokidar event logging failed', e)
+          }
+
+          const normalized = String(filePath).replace(/\\/g, '/')
+
+          if (normalized.includes('/packages/foo/dist/')) {
+            clearTimeout(timeout)
+            watcher.off('all', onAll)
+            reject(
+              new Error('dist edit triggered watcher event: ' + normalized),
+            )
+          }
+        }
+
+        watcher.on('all', onAll)
+      })
+
+      await fs.promises.appendFile(distFile, '\n// update\n', {
+        encoding: 'utf8',
+      })
+      await eventPromise
+    } finally {
+      await watcher.close()
+    }
+  }, 10_000)
 })
