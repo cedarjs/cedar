@@ -3,7 +3,9 @@ import os from 'node:os'
 import path from 'node:path'
 
 import chokidar from 'chokidar'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { vi, afterAll, beforeAll, describe, expect, it } from 'vitest'
+
+import { importStatementPath } from '@cedarjs/project-config'
 
 import { pathsToWatch, getIgnoreFunction } from '../watchPaths.js'
 
@@ -31,11 +33,16 @@ describe('watchPaths', () => {
       JSON.stringify(rootPackageJson, null, 2),
     )
 
-    // Create a workspace package with a `src` directory that will be watched
+    // Create a workspace package with a `src` and a `dist` directory. Only the
+    // `dist` directory should be watched
     const fooSrcDir = path.join(tmpDir, 'packages', 'foo', 'src')
+    const fooDistDir = path.join(tmpDir, 'packages', 'foo', 'dist')
     await fs.promises.mkdir(fooSrcDir, { recursive: true })
-    const fooIndexPath = path.join(fooSrcDir, 'index.ts')
-    await fs.promises.writeFile(fooIndexPath, 'export const foo = 1')
+    await fs.promises.mkdir(fooDistDir, { recursive: true })
+    const fooIndexSrcPath = path.join(fooSrcDir, 'index.ts')
+    await fs.promises.writeFile(fooIndexSrcPath, 'export const foo = 1')
+    const fooIndexDistPath = path.join(fooDistDir, 'index.js')
+    await fs.promises.writeFile(fooIndexDistPath, 'export const foo = 1')
 
     // Create the `package.json` for the workspace package so
     // workspacePackages() will detect it as a workspace dependency from the
@@ -66,11 +73,8 @@ describe('watchPaths', () => {
     await fs.promises.writeFile(
       path.join(apiDir, 'prisma.config.cjs'),
       "module.exports = { schema: 'schema.prisma' }",
-      { encoding: 'utf8' },
     )
-    await fs.promises.writeFile(path.join(apiDir, 'schema.prisma'), '', {
-      encoding: 'utf8',
-    })
+    await fs.promises.writeFile(path.join(apiDir, 'schema.prisma'), '')
 
     // Create an `api/src` directory so chokidar will watch an existing path.
     const apiSrcDir = path.join(apiDir, 'src')
@@ -100,7 +104,6 @@ describe('watchPaths', () => {
   })
 
   it('returns patterns that works with chokidar', async () => {
-    // Get the patterns workspacePackages provides
     const patterns = await pathsToWatch()
 
     // If no patterns were returned, collect and assert helpful debug info so
@@ -228,7 +231,7 @@ describe('watchPaths', () => {
             // Normalize the reported path so this works across OSes
             const normalized = String(filePath).replace(/\\/g, '/')
 
-            if (normalized.endsWith('/packages/foo/src/index.ts')) {
+            if (normalized.endsWith('/packages/foo/dist/index.js')) {
               clearTimeout(timeout)
               watcher.off('all', onAll)
               resolve({ eventName, filePath })
@@ -240,7 +243,13 @@ describe('watchPaths', () => {
       )
 
       // Trigger a change in the watched file
-      const targetFile = path.join(tmpDir, 'packages', 'foo', 'src', 'index.ts')
+      const targetFile = path.join(
+        tmpDir,
+        'packages',
+        'foo',
+        'dist',
+        'index.js',
+      )
       try {
         const beforeStat = await fs.promises.stat(targetFile)
         console.debug('targetFile mtime before append:', beforeStat.mtimeMs)
@@ -265,40 +274,66 @@ describe('watchPaths', () => {
       // Always close the watcher
       await watcher.close()
     }
-  }, 20_000)
+  }, 10_000)
 
-  // Helper: wait until chokidar reports it's watching the package directory.
-  // This avoids races where 'ready' fires early.
-  async function waitForWatcherToWatchFoo(
-    watcher: chokidar.FSWatcher,
-    timeoutMs = 5_000,
-  ) {
-    const expected = path.join(tmpDir, 'packages', 'foo').replaceAll('\\', '/')
-    const deadline = Date.now() + timeoutMs
+  it('chokidar triggers on new files added', async () => {
+    const patterns = await pathsToWatch()
 
-    while (Date.now() <= deadline) {
-      try {
-        const watchedKeys = Object.keys(watcher.getWatched()).map((k) =>
-          k.replace(/\\/g, '/'),
-        )
-        if (
-          watchedKeys.some((k) => {
-            return k.endsWith(expected) || k.endsWith(expected + '/src')
+    const watcher = chokidar.watch(patterns, {
+      persistent: true,
+      ignoreInitial: true,
+    })
+
+    // Surface watcher errors immediately to test logs
+    watcher.on('error', (error) => {
+      console.error('chokidar watcher error:', error)
+      // Always fail the test if an error occurs
+      expect(true).toBe(false)
+    })
+
+    let onAll = (_eventName: string, _filePath: string) => {}
+
+    try {
+      // Wait until the watcher is ready
+      await new Promise<void>((resolve) => watcher.on('ready', resolve))
+
+      // Prepare a promise that resolves when chokidar reports the change
+      const eventPromise = new Promise<{ eventName: string; filePath: string }>(
+        (resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Timed out waiting for chokidar event'))
+          }, 10_000)
+
+          onAll = vi.fn((eventName: string, filePath: string) => {
+            clearTimeout(timeout)
+            resolve({ eventName, filePath })
           })
-        ) {
-          return
-        }
-      } catch {
-        // ignore transient serialization errors
-      }
 
-      await new Promise((resolve) => setTimeout(resolve, 50))
+          watcher.on('all', onAll)
+        },
+      )
+
+      const distPath = path.join(tmpDir, 'packages', 'foo', 'dist')
+
+      // Trigger a change in dist/
+      await fs.promises.writeFile(
+        path.join(distPath, 'new-file.js'),
+        '\n// update\n',
+      )
+
+      const result = await eventPromise
+
+      expect(result.eventName).toEqual('add')
+      expect(onAll).toHaveBeenCalledOnce()
+      expect(importStatementPath(result.filePath)).toMatch(
+        /packages\/foo\/dist\/new-file\.js$/,
+      )
+    } finally {
+      // Always close the watcher
+      watcher.off('all', onAll)
+      await watcher.close()
     }
-
-    throw new Error(
-      `Timed out waiting for watcher to start watching ${expected}`,
-    )
-  }
+  }, 10_000)
 
   it('ignores edits inside packages/foo/node_modules', async () => {
     const patterns = await pathsToWatch()
@@ -312,28 +347,15 @@ describe('watchPaths', () => {
 
     watcher.on('error', (error) => {
       console.error('chokidar watcher error:', error)
+      // Always fail the test if an error occurs
+      expect(true).toBe(false)
     })
 
     try {
       // Wait until the watcher is ready
-      await new Promise<void>((resolve) => {
-        watcher.on('ready', () => {
-          try {
-            console.debug(
-              'chokidar ready; watched directories:',
-              JSON.stringify(watcher.getWatched(), null, 2),
-            )
-          } catch (e) {
-            console.debug('chokidar ready; could not serialize watched dirs', e)
-          }
+      await new Promise<void>((resolve) => watcher.on('ready', resolve))
 
-          resolve()
-        })
-      })
-
-      await waitForWatcherToWatchFoo(watcher)
-
-      const nodeFile = path.join(
+      const nmFile = path.join(
         tmpDir,
         'packages',
         'foo',
@@ -341,16 +363,14 @@ describe('watchPaths', () => {
         'pkg',
         'index.ts',
       )
-      await fs.promises.mkdir(path.dirname(nodeFile), { recursive: true })
-      await fs.promises.writeFile(nodeFile, 'export const x = 1', {
-        encoding: 'utf8',
-      })
+      await fs.promises.mkdir(path.dirname(nmFile), { recursive: true })
+      await fs.promises.writeFile(nmFile, 'export const x = 1')
 
       const eventPromise = new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           watcher.off('all', onAll)
           resolve()
-        }, 2_000)
+        }, 500)
 
         const onAll = (eventName: string, filePath: string) => {
           try {
@@ -375,59 +395,53 @@ describe('watchPaths', () => {
         watcher.on('all', onAll)
       })
 
-      await fs.promises.appendFile(nodeFile, '\n// update\n', {
-        encoding: 'utf8',
-      })
+      await fs.promises.appendFile(nmFile, '\n// update\n')
       await eventPromise
     } finally {
       await watcher.close()
     }
   }, 10_000)
 
-  it('ignores edits inside packages/foo/dist', async () => {
+  it('ignores edits inside packages/foo/src', async () => {
     const patterns = await pathsToWatch()
     const ignoreFn = await getIgnoreFunction()
+    const wrappedIgnoreFn = vi.fn((path) => {
+      const returnValue = ignoreFn(path)
+
+      if (returnValue) {
+        console.log(`Ignoring path: ${path}`)
+      } else {
+        console.log(`Not ignoring path: ${path}`)
+      }
+
+      return returnValue
+    })
 
     const watcher = chokidar.watch(patterns, {
       persistent: true,
       ignoreInitial: true,
-      ignored: ignoreFn,
+      ignored: wrappedIgnoreFn,
     })
 
     watcher.on('error', (error) => {
       console.error('chokidar watcher error:', error)
+      // Always fail the test if an error occurs
+      expect(true).toBe(false)
     })
 
     try {
       // Wait until the watcher is ready
-      await new Promise<void>((resolve) => {
-        watcher.on('ready', () => {
-          try {
-            console.debug(
-              'chokidar ready; watched directories:',
-              JSON.stringify(watcher.getWatched(), null, 2),
-            )
-          } catch (e) {
-            console.debug('chokidar ready; could not serialize watched dirs', e)
-          }
+      await new Promise<void>((resolve) => watcher.on('ready', resolve))
 
-          resolve()
-        })
-      })
-
-      await waitForWatcherToWatchFoo(watcher)
-
-      const distFile = path.join(tmpDir, 'packages', 'foo', 'dist', 'index.ts')
-      await fs.promises.mkdir(path.dirname(distFile), { recursive: true })
-      await fs.promises.writeFile(distFile, 'export const y = 1', {
-        encoding: 'utf8',
-      })
+      const srcFile = path.join(tmpDir, 'packages', 'foo', 'src', 'index.ts')
+      await fs.promises.mkdir(path.dirname(srcFile), { recursive: true })
+      await fs.promises.writeFile(srcFile, 'export const y = 1')
 
       const eventPromise = new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           watcher.off('all', onAll)
           resolve()
-        }, 2_000)
+        }, 500)
 
         const onAll = (eventName: string, filePath: string) => {
           try {
@@ -438,21 +452,17 @@ describe('watchPaths', () => {
 
           const normalized = String(filePath).replace(/\\/g, '/')
 
-          if (normalized.includes('/packages/foo/dist/')) {
+          if (normalized.includes('/packages/foo/src/')) {
             clearTimeout(timeout)
             watcher.off('all', onAll)
-            reject(
-              new Error('dist edit triggered watcher event: ' + normalized),
-            )
+            reject(new Error('src edit triggered watcher event: ' + normalized))
           }
         }
 
         watcher.on('all', onAll)
       })
 
-      await fs.promises.appendFile(distFile, '\n// update\n', {
-        encoding: 'utf8',
-      })
+      await fs.promises.appendFile(srcFile, '\n// update\n')
       await eventPromise
     } finally {
       await watcher.close()

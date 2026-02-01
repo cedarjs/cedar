@@ -63,13 +63,7 @@ async function workspacePackagesPaths() {
       const pkgJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
       if (workspaceDepNames.has(pkgJson.name)) {
-        const srcDir = path.join(packageDir, 'src')
-
-        if (fs.existsSync(srcDir)) {
-          packages.push(srcDir)
-        } else {
-          packages.push(packageDir)
-        }
+        packages.push(path.join(packageDir, 'dist'))
       }
     }
   } catch {
@@ -87,7 +81,7 @@ function workspacePackagesIgnorePaths() {
   const packageIgnoredPaths: string[] = []
 
   if (fs.existsSync(packagesDir)) {
-    packageIgnoredPaths.push(path.join(packagesDir, '*/dist'))
+    packageIgnoredPaths.push(path.join(packagesDir, '*/src'))
   }
 
   return packageIgnoredPaths
