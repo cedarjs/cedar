@@ -59,7 +59,6 @@ describe('workspacePackages integration with chokidar', () => {
     await fs.promises.writeFile(
       path.join(apiDir, 'package.json'),
       JSON.stringify(apiPackageJson, null, 2),
-      { encoding: 'utf8' },
     )
 
     // Create an `api/src` directory so chokidar will watch an existing path.
@@ -68,7 +67,6 @@ describe('workspacePackages integration with chokidar', () => {
     await fs.promises.writeFile(
       path.join(apiSrcDir, 'index.ts'),
       "export const api = 'api'",
-      { encoding: 'utf8' },
     )
 
     // Tell project-config to treat our temp dir as the project root
@@ -239,9 +237,7 @@ describe('workspacePackages integration with chokidar', () => {
         console.debug('stat before append failed:', e)
       }
 
-      await fs.promises.appendFile(targetFile, '\n// update\n', {
-        encoding: 'utf8',
-      })
+      await fs.promises.appendFile(targetFile, '\n// update\n')
 
       try {
         const afterStat = await fs.promises.stat(targetFile)

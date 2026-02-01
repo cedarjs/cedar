@@ -88,6 +88,7 @@ export async function startWatch() {
   })
 
   // This can fire multiple times
+  // https://github.com/paulmillr/chokidar/issues/286
   // https://github.com/paulmillr/chokidar/issues/338
   watcher.on('ready', async () => {
     // First time
@@ -96,18 +97,19 @@ export async function startWatch() {
   })
 
   watcher.on('all', async (eventName, filePath) => {
-    // On sufficiently large projects (500+ files, or >= 2000 ms build times) on older machines,
-    // esbuild writing to the api directory makes chokidar emit an `addDir` event.
-    // This starts an infinite loop where the api starts building itself as soon as it's finished.
-    // This could probably be fixed with some sort of build caching
+    // On sufficiently large projects (500+ files, or >= 2000 ms build times) on
+    // older machines, esbuild writing to the api directory makes chokidar emit
+    // an `addDir` event. This starts an infinite loop where the api starts
+    // building itself as soon as it's finished. This could probably be fixed
+    // with some sort of build caching
     if (eventName === 'addDir' && filePath === cedarPaths.api.base) {
       return
     }
 
     if (eventName) {
       if (filePath.includes('.sdl')) {
-        // We validate here, so that developers will see the error
-        // As they're running the dev server
+        // We validate here, so that developers will see the error as they're
+        // running the dev server
         const isValid = await validateSdls()
 
         // Exit early if not valid
@@ -132,7 +134,7 @@ export async function startWatch() {
   })
 }
 
-// For ESM we'll wrap this in a check to only execute this function if
-// the file is run as a script using
+// For ESM we'll wrap this in a check to only execute this function if the file
+// is run as a script using
 // `import.meta.url === `file://${process.argv[1]}``
 startWatch()

@@ -87,11 +87,7 @@ function workspacePackagesIgnorePaths() {
   const packageIgnoredPaths: string[] = []
 
   if (fs.existsSync(packagesDir)) {
-    packageIgnoredPaths.push(
-      path.join(packagesDir, '*/dist'),
-      path.join(packagesDir, '*/dist/**'),
-      path.join(packagesDir, '*/node_modules'),
-    )
+    packageIgnoredPaths.push(path.join(packagesDir, '*/dist'))
   }
 
   return packageIgnoredPaths
