@@ -5,9 +5,7 @@ import path from 'node:path'
 import chokidar from 'chokidar'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { importStatementPath } from '@cedarjs/project-config'
-
-import { workspacePackages } from '../workspacePackages.js'
+import { pathsToWatch } from '../watchPaths.js'
 
 describe('workspacePackages integration with chokidar', () => {
   let tmpDir: string
@@ -85,7 +83,7 @@ describe('workspacePackages integration with chokidar', () => {
 
   it('returns patterns that works with chokidar', async () => {
     // Get the patterns workspacePackages provides
-    const patterns = await workspacePackages()
+    const patterns = await pathsToWatch()
 
     // If no patterns were returned, collect and assert helpful debug info so
     // failures on CI (particularly Windows runners) give actionable output.
@@ -137,14 +135,9 @@ describe('workspacePackages integration with chokidar', () => {
       expect(packageDirs.length).toBeGreaterThan(0)
     }
 
-    // Mimic how `startWatch()` feeds patterns to chokidar by normalizing paths
-    const watchPatterns: string[] = patterns.map((p: string) =>
-      importStatementPath(p),
-    )
-
     // Ensure we've normalized separators (no backslashes) so the test failure
     // is explicit if normalization doesn't happen.
-    for (const p of watchPatterns) {
+    for (const p of patterns) {
       expect(p.includes('\\')).toBe(false)
     }
 
@@ -153,7 +146,7 @@ describe('workspacePackages integration with chokidar', () => {
     console.log('workspace patterns (raw):', JSON.stringify(patterns, null, 2))
     console.log(
       'workspace patterns (normalized):',
-      JSON.stringify(watchPatterns, null, 2),
+      JSON.stringify(patterns, null, 2),
     )
 
     // Diagnostic: expand the packages/* glob (like workspacePackages does) and
@@ -177,7 +170,7 @@ describe('workspacePackages integration with chokidar', () => {
       console.log('packages glob error:', e?.message ?? e)
     }
 
-    const watcher = chokidar.watch(watchPatterns, {
+    const watcher = chokidar.watch(patterns, {
       persistent: true,
       ignoreInitial: true,
     })

@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import path from 'node:path'
 
 // See https://github.com/webdiscus/ansis#troubleshooting
@@ -14,16 +13,12 @@ import {
   rebuildApi,
 } from '@cedarjs/internal/dist/build/api'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
-import {
-  importStatementPath,
-  getPaths,
-  getDbDir,
-} from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/project-config'
 
 import type { BuildAndRestartOptions } from './buildManager.js'
 import { BuildManager } from './buildManager.js'
 import { serverManager } from './serverManager.js'
-import { workspacePackages } from './workspacePackages.js'
+import { getIgnoreFunction, pathsToWatch } from './watchPaths.js'
 
 const cedarPaths = getPaths()
 
@@ -84,63 +79,13 @@ async function validateSdls() {
  * the API trigger a rebuild/restart (HMR for API-side workspace packages).
  */
 export async function startWatch() {
-  const dbDir = await getDbDir(cedarPaths.api.prismaConfig)
+  const patterns = await pathsToWatch()
 
-  // NOTE: the file with a detected change comes through as a unix path, even on
-  // windows. So we need to convert the cedarPaths
-  const packagesDir = path.join(cedarPaths.base, 'packages')
-  const packageIgnoredPaths: string[] = []
-
-  if (fs.existsSync(packagesDir)) {
-    packageIgnoredPaths.push(
-      path.join(packagesDir, '*/dist'),
-      path.join(packagesDir, '*/dist/**'),
-      path.join(packagesDir, '*/node_modules'),
-    )
-  }
-
-  const ignoredApiPaths = [
-    // use this, because using cedarPaths.api.dist seems to not ignore on first
-    // build
-    'api/dist',
-    cedarPaths.api.types,
-    dbDir,
-  ]
-
-  const ignoredWatchPaths = [...ignoredApiPaths, ...packageIgnoredPaths].map(
-    (p) => importStatementPath(p),
-  )
-
-  const ignoredExtensions = [
-    '.DS_Store',
-    '.db',
-    '.sqlite',
-    '-journal',
-    '.test.js',
-    '.test.ts',
-    '.scenarios.ts',
-    '.scenarios.js',
-    '.d.ts',
-    '.log',
-  ]
-
-  const watchPaths = [cedarPaths.api.src, ...(await workspacePackages())]
-
-  const watcher = chokidar.watch(
-    watchPaths.map((p) => importStatementPath(p)),
-    {
-      persistent: true,
-      ignoreInitial: true,
-      ignored: (file: string) => {
-        const shouldIgnore =
-          file.includes('node_modules') ||
-          ignoredWatchPaths.some((ignoredPath) => file.includes(ignoredPath)) ||
-          ignoredExtensions.some((ext) => file.endsWith(ext))
-
-        return shouldIgnore
-      },
-    },
-  )
+  const watcher = chokidar.watch(patterns, {
+    persistent: true,
+    ignoreInitial: true,
+    ignored: await getIgnoreFunction(),
+  })
 
   watcher.on('ready', async () => {
     // First time
