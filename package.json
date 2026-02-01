@@ -60,7 +60,7 @@
     "@actions/cache": "5.0.5",
     "@actions/core": "2.0.3",
     "@actions/exec": "2.0.0",
-    "@actions/glob": "0.5.1",
+    "@actions/glob": "0.6.1",
     "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@babel/generator": "7.28.6",
