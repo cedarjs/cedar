@@ -140,7 +140,7 @@ const runDevServerInBackground = () => {
       shell: true,
       stdio: 'inherit',
       env: {
-        RWJS_DELAY_RESTART: '500',
+        CEDAR_DELAY_API_RESTART: '500',
         REDWOOD_CI: '1',
       },
     })
