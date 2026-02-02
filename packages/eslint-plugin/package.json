@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@typescript-eslint/utils": "8.54.0",
-    "eslint": "8.57.1"
+    "eslint": "9.26.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
