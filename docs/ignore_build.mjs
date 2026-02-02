@@ -6,6 +6,9 @@
 import { execSync } from 'node:child_process'
 
 async function main() {
+  // Log the Node.js version for debugging/visibility in build logs.
+  console.log({ nodeVersion: process.version })
+
   const branch = process.env.BRANCH
 
   // Reproduce the default behavior for main.
