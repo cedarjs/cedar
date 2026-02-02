@@ -83,13 +83,13 @@ yarn workspace web add @nhost/nhost-js
 
 Then we'll have to make an account, an application, and get it's `backendUrl`.
 On your application's dashboard, click "Settings" at the bottom of the the nav on the left, then "Environment Variables", and look for "NHOST_BACKEND_URL".
-Copy its value into your project's `.env` file and include it in the list of env vars the web side has access to in your project's `redwood.toml` file:
+Copy its value into your project's `.env` file and include it in the list of env vars the web side has access to in your project's `cedar.toml` file:
 
 ```bash title=".env"
 NHOST_BACKEND_URL="..."
 ```
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   # ...
   includeEnvironmentVariables = ["NHOST_BACKEND_URL"]
@@ -227,7 +227,7 @@ Time for another trip to your Nhost application's dashboard.
 This time you're looking for "NHOST_JWT_SECRET".
 Just like "NHOST_BACKEND_URL", it should be in "Settings", "Environment Variables".
 (This one is a JSON object, with two properties, `type` and `key`. We just need `key`.)
-Add that one to your project's `.env` file (no need to put it in `redwood.toml` though):
+Add that one to your project's `.env` file (no need to put it in `cedar.toml` though):
 
 ```shell title=".env"
 NHOST_JWT_SECRET="..."

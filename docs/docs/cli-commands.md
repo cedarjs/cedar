@@ -1091,7 +1091,7 @@ will output the following files, with the components and pages nested in a `Post
 ```
 
 If it is not desired to nest the components and pages, then redwood provides an option that you can set to disable this for your project.
-Add the following in your `redwood.toml` file to disable the nesting of components and pages.
+Add the following in your `cedar.toml` file to disable the nesting of components and pages.
 
 ```
 [generate]
@@ -1106,7 +1106,7 @@ Notes:
 
 **Namespacing Scaffolds**
 
-You can namespace your scaffolds by providing `<path/model>`. The layout, pages, cells, and components will be nested in newly created dir(s). In addition, the nesting folder, based upon the model name, is still applied after the path for components and pages, unless turned off in the `redwood.toml` as described above. For example, given a model `user`, running `yarn redwood generate scaffold admin/user` will nest the layout, pages, and components in a newly created `Admin` directory created for each of the `layouts`, `pages`, and `components` folders:
+You can namespace your scaffolds by providing `<path/model>`. The layout, pages, cells, and components will be nested in newly created dir(s). In addition, the nesting folder, based upon the model name, is still applied after the path for components and pages, unless turned off in the `cedar.toml` as described above. For example, given a model `user`, running `yarn redwood generate scaffold admin/user` will nest the layout, pages, and components in a newly created `Admin` directory created for each of the `layouts`, `pages`, and `components` folders:
 
 ```plaintext {9-20}
 ~/redwood-app$ yarn redwood generate scaffold admin/user
@@ -1167,9 +1167,9 @@ yarn redwood destroy scaffold <model>
 
 Notes:
 
-1. You can also use `<path/model>` to destroy files that were generated under a scaffold path. For example, `redwood d scaffold admin/post`
+1. You can also use `<path/model>` to destroy files that were generated under a scaffold path. For example, `cedar d scaffold admin/post`
 2. The destroy command will remove empty folders along the path, provided they are lower than the folder level of component, layout, page, etc.
-3. The destroy scaffold command will also follow the `nestScaffoldbyModel` setting in the `redwood.toml` file. For example, if you have an existing scaffold that you wish to destroy, that does not have the pages and components nested by the model name, you can destroy the scaffold by temporarily setting:
+3. The destroy scaffold command will also follow the `nestScaffoldbyModel` setting in the `cedar.toml` file. For example, if you have an existing scaffold that you wish to destroy, that does not have the pages and components nested by the model name, you can destroy the scaffold by temporarily setting:
 
 ```
 [generate]
@@ -1916,7 +1916,7 @@ Netlify Dev can also create a tunnel from your local development server that all
   # to connect your local project to a site already on Netlify
   # then run netlify dev and our app will be accessible on the port specified below
   framework = "redwoodjs"
-  # Set targetPort to the [web] side port as defined in redwood.toml
+  # Set targetPort to the [web] side port as defined in cedar.toml
   targetPort = 8910
   # Point your browser to this port to access your CedarJS app
   port = 8888
@@ -1926,7 +1926,7 @@ In order to use [Netlify Dev](https://www.netlify.com/products/dev/) you need to
 
 - install the latest [netlify-cli](https://docs.netlify.com/cli/get-started/#installation)
 - use [netlify link](https://docs.netlify.com/cli/get-started/#link-and-unlink-sites) to connect to your Netlify site
-- ensure that the `targetPort` matches the [web] side port in `redwood.toml`
+- ensure that the `targetPort` matches the [web] side port in `cedar.toml`
 - run `netlify dev` and your site will be served on the specified `port` (e.g., 8888)
 - if you wish to share your local server with others, you can run `netlify dev --live`
 
@@ -2050,7 +2050,7 @@ If you have not setup the CedarJS server file, it will be setup:
 
 ```bash
 ✔ Adding the experimental server file...
-✔ Adding config to redwood.toml...
+✔ Adding config to cedar.toml...
 ✔ Adding required api packages...
 ```
 
@@ -2094,7 +2094,7 @@ If you have not setup the CedarJS server file, it will be setup:
 
 ```bash
 ✔ Adding the experimental server file...
-✔ Adding config to redwood.toml...
+✔ Adding config to cedar.toml...
 ✔ Adding required api packages...
 ```
 
@@ -2206,7 +2206,7 @@ Runs a server that only serves the api side.
 yarn rw serve api
 ```
 
-This command uses `apiUrl` in your `redwood.toml`. Use this command if you want to run just the api side on a server (e.g. running on Render).
+This command uses `apiUrl` in your `cedar.toml`. Use this command if you want to run just the api side on a server (e.g. running on Render).
 
 | Arguments & Options | Description                                                       |
 | ------------------- | ----------------------------------------------------------------- |
@@ -2239,7 +2239,7 @@ This command serves the contents in `web/dist`. Use this command if you're debug
 | ------------------- | ------------------------------------------------------------------------------------- |
 | `--port`            | What port should the server run on [default: 8911]                                    |
 | `--socket`          | The socket the server should run. This takes precedence over port                     |
-| `--apiHost`         | Forwards requests from the `apiUrl` (defined in `redwood.toml`) to the specified host |
+| `--apiHost`         | Forwards requests from the `apiUrl` (defined in `cedar.toml`) to the specified host |
 
 If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
 
@@ -2285,7 +2285,7 @@ yarn redwood upgrade -t 0.19.3
 The CLI can check for things in the background, like new versions of the framework, while you dev.
 
 Right now it can only check for new versions.
-If you'd like it to do so, set `notifications.versionUpdates` in the `redwood.toml` file to include an array of the tags you're interested in hearing about.
+If you'd like it to do so, set `notifications.versionUpdates` in the `cedar.toml` file to include an array of the tags you're interested in hearing about.
 (The former has priority.)
 
 By default, the CLI won't check for upgrades—you have to opt into it.

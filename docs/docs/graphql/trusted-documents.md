@@ -118,7 +118,7 @@ This means that because queries are pre-generated and the hash ids **must match*
 
 Thus preventing unwanted queries or GraphQL traversal attacks,
 
-- Configure CedarJS to use Trusted Documents via `redwood.toml`
+- Configure CedarJS to use Trusted Documents via `cedar.toml`
 - Configure the GraphQL Server
 
 ## Configure Trusted Documents
@@ -127,14 +127,14 @@ Below are instructions to manually configure Trusted Documents in your CedarJS p
 
 Alternatively, you can use the `yarn redwood setup graphql trusted-documents` [CLI setup command](../cli-commands.md#setup-graphql-trusted-docs).
 
-### Configure redwood.toml
+### Configure cedar.toml
 
 Setting `trustedDocuments` to true will
 
 - populate `web/src/graphql` files with the pre-generated documents
 - inform Apollo GraphQL client to send the document hashes and not the query itself
 
-```toml title=redwood.toml
+```toml title="cedar.toml"
 ...
 [graphql]
   trustedDocuments = true

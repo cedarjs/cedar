@@ -61,9 +61,9 @@ AZURE_ACTIVE_DIRECTORY_REDIRECT_URI="http://localhost:8910"
 AZURE_ACTIVE_DIRECTORY_LOGOUT_REDIRECT_URI="http://localhost:8910/login"
 ```
 
-That's it for .env vars. Don't forget to include them in the `includeEnvironmentVariables` array in `redwood.toml`:
+That's it for .env vars. Don't forget to include them in the `includeEnvironmentVariables` array in `cedar.toml`:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   # ...
   includeEnvironmentVariables = [
@@ -152,7 +152,7 @@ AZURE_ACTIVE_DIRECTORY_JWT_ISSUER=https://rwauthtestb2c.b2clogin.com/775527ef-8a
 AZURE_ACTIVE_DIRECTORY_KNOWN_AUTHORITY=https://rwauthtestb2c.b2clogin.com
 ```
 
-And don't forget to add `AZURE_ACTIVE_DIRECTORY_KNOWN_AUTHORITY` to the `includeEnvironmentVariables` array in `redwood.toml`.
+And don't forget to add `AZURE_ACTIVE_DIRECTORY_KNOWN_AUTHORITY` to the `includeEnvironmentVariables` array in `cedar.toml`.
 (`AZURE_ACTIVE_DIRECTORY_JWT_ISSUER` is only used on the API side. But more importantly, it's sensitive—do _not_ include it in the web side.)
 
 #### Update `activeDirectoryClient` instance

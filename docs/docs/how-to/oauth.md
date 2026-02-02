@@ -114,9 +114,9 @@ This example uses Tailwind to style the link to match the rest of the default db
 
 You can put this same link on your signup page as well, since using the OAuth flow will be dual-purpose: it will log the user in if a local user already exists, or it will create the user and then log them in.
 
-We're using several of our new ENV vars here, and need to tell Cedar to make them available to the web side during the build process. Add them to the `includeEnvironmentVariables` key in `redwood.toml`:
+We're using several of our new ENV vars here, and need to tell Cedar to make them available to the web side during the build process. Add them to the `includeEnvironmentVariables` key in `cedar.toml`:
 
-```toml title="/redwood.toml"
+```toml title="/cedar.toml"
 [web]
   title = "Cedar App"
   port = "${WEB_DEV_PORT:8910}"

@@ -96,7 +96,7 @@ Before your first deploy you'll need to add some configuration.
 
 #### ecosystem.config.js
 
-By default, baremetal assumes you want to run the `yarn rw serve` command, which provides both the web and api sides. The web side will be available on port 8910 unless you update your `redwood.toml` file to make it available on another port. The default generated `ecosystem.config.js` will contain this config only, within a service called "serve":
+By default, baremetal assumes you want to run the `yarn rw serve` command, which provides both the web and api sides. The web side will be available on port 8910 unless you update your `cedar.toml` file to make it available on another port. The default generated `ecosystem.config.js` will contain this config only, within a service called "serve":
 
 ```jsx title="ecosystem.config.js"
 module.exports = {
@@ -180,7 +180,7 @@ The easiest connection method is generally to include your own public key in the
 
 #### Using Environment Variables in `deploy.toml`
 
-Similarly to `redwood.toml`, `deploy.toml` supports interpolation of environment variables. For more details on how to use the environment variable interpolation see [Using Environment Variables in redwood.toml](/docs/app-configuration-redwood-toml#using-environment-variables-in-redwoodtoml)
+Similarly to `cedar.toml`, `deploy.toml` supports interpolation of environment variables. For more details on how to use the environment variable interpolation see [Using Environment Variables in cedar.toml](/docs/app-configuration-cedar-toml#using-environment-variables-in-redwoodtoml)
 
 #### Multiple Servers
 
@@ -622,7 +622,7 @@ This is almost as easy as the default configuration, you just need to tell Cedar
 
 Update the `[web]` port:
 
-```diff title="redwood.toml"
+```diff title="cedar.toml"
 [web]
   title = "My Application"
   apiUrl = "/.netlify/functions"
@@ -743,9 +743,9 @@ This is the bare minimum to get your site served over HTTP, insecurely. After ve
 
 If you don't love the path of `/.redwood/functions` for your API calls, this is easy to change. You'll need to tell Cedar to use a different path in development, and then let nginx know about that same path so that it resolves the same in production.
 
-For example, to simplify the path to just `/api` you'll need to make a change to `redwood.toml` and your new nginx config file:
+For example, to simplify the path to just `/api` you'll need to make a change to `cedar.toml` and your new nginx config file:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   title = "My App"
   port = 8910

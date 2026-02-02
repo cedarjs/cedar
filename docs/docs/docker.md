@@ -18,7 +18,7 @@ The setup commands does several things:
 
 - writes four files: `Dockerfile`, `.dockerignore`, `docker-compose.dev.yml`, and `docker-compose.prod.yml`
 - adds the `@cedarjs/api-server` and `@cedarjs/web-server` packages to the api and web sides respectively
-- edits the `browser.open` setting in the `redwood.toml` (right now, if it's set to `true`, it'll break the dev server when running the `docker-compose.dev.yml`)
+- edits the `browser.open` setting in the `cedar.toml` (right now, if it's set to `true`, it'll break the dev server when running the `docker-compose.dev.yml`)
 
 ## Usage
 
@@ -163,13 +163,13 @@ One more thing to note: without setting `CI=1`, depending on the deploy provider
 Enabling CI enables [immutable installs](https://v3.yarnpkg.com/configuration/yarnrc#enableImmutableInstalls) and [inline builds](https://v3.yarnpkg.com/configuration/yarnrc#enableInlineBuilds), both of which are highly recommended.
 
 ```Dockerfile
-COPY --chown=node:node redwood.toml .
+COPY --chown=node:node cedar.toml .
 COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 ```
 
 We'll need these config files for the build and production stages.
-The `redwood.toml` file is Cedar's de-facto config file.
+The `cedar.toml` file is Cedar's de-facto config file.
 Both the build and serve stages read it to enable and configure functionality.
 
 :::warning `.env.defaults` is ok to include but `.env` is not
@@ -245,7 +245,7 @@ Using the [official workspaces plugin](https://github.com/yarnpkg/berry/tree/mas
 The cache mount will be populated at this point from the install in the `base` stage, so the fetch step should fly by.
 
 ```Dockerfile
-COPY --chown=node:node redwood.toml .
+COPY --chown=node:node cedar.toml .
 COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
@@ -303,7 +303,7 @@ This stage is a bit of a simplification.
 It foregoes Cedar's prerendering (SSG) capability.
 Prerendering is a little trickier; see [the `web_prerender_build` stage](#the-web_prerender_build-stage).
 
-If you've included environment variables in your `redwood.toml`'s `web.includeEnvironmentVariables` field, you'll want to specify them as ARGs here.
+If you've included environment variables in your `cedar.toml`'s `web.includeEnvironmentVariables` field, you'll want to specify them as ARGs here.
 The setup command should've inlined them for you.
 
 ### The `web_prerender_build` stage
@@ -343,7 +343,7 @@ RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000 \
     --mount=type=cache,target=/home/node/.cache,uid=1000 \
     CI=1 yarn workspaces focus web --production
 
-COPY --chown=node:node redwood.toml .
+COPY --chown=node:node cedar.toml .
 COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 

@@ -35,7 +35,7 @@ Run the following CLI Command:
 yarn rw setup deploy vercel
 ```
 
-This updates your `redwood.toml` file, setting `apiUrl = "/api"`:
+This updates your `cedar.toml` file, setting `apiUrl = "/api"`:
 
 ### Step 2. Database Settings
 

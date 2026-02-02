@@ -133,7 +133,7 @@ How To's are tutorial-style content focused on a specific problem-solution. They
 
 If you write it, will they read it? We think they will&mdash;if they can find it.
 
-After you've finished writing, step back for a moment and consider the word(s) or phrase(s) people will use to find what you just wrote. For example, let's say you were writing a doc about configuring a Cedar app. If you didn't know much about configuring a Cedar app, a heading (in the nav bar to the left) like "redwood.toml" wouldn't make much sense, even though it _is_ the main configuration file. You'd probably look for "Cedar Config" or "Settings", or type "how to change Cedar App settings" in the "Search the docs" bar up top, or in Google.
+After you've finished writing, step back for a moment and consider the word(s) or phrase(s) people will use to find what you just wrote. For example, let's say you were writing a doc about configuring a Cedar app. If you didn't know much about configuring a Cedar app, a heading (in the nav bar to the left) like "cedar.toml" wouldn't make much sense, even though it _is_ the main configuration file. You'd probably look for "Cedar Config" or "Settings", or type "how to change Cedar App settings" in the "Search the docs" bar up top, or in Google.
 
 That is to say, the most useful headings aren't always the most literal ones. Indexing is more than just underlining the "important" words in a text&mdash;it's identifying and locating the concepts and topics that are the most relevant to our readers, the users of our documentation.
 

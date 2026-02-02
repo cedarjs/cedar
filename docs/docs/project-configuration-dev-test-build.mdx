@@ -117,11 +117,11 @@ The `yarn cedar dev` command is configured by default to open a browser and a de
 
 #### Customizing the configuration
 
-**a) Using the redwood.toml**
+**a) Using the cedar.toml**
 
 Add/change the `debugPort` or `open` under your api settings
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   # .
 [api]
@@ -141,7 +141,7 @@ You can also pass a flag when you launch your dev servers, for example:
 yarn cedar dev --debugPort 75028
 ```
 
-The flag passed in the CLI will always take precedence over your setting in the `redwood.toml`
+The flag passed in the CLI will always take precedence over your setting in the `cedar.toml`
 
 Just remember to also change the port you are attaching to in your `./vscode/launch.json`
 

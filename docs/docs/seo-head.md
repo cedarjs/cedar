@@ -8,9 +8,9 @@ Search Engine Optimization is a dark art that some folks dedicate their entire l
 
 ## Adding a Title
 
-You certainly want to change the title of your Cedar app from the default of "Cedar App." You can start by adding or modifying `title` inside of `/redwood.toml`
+You certainly want to change the title of your Cedar app from the default of "Cedar App." You can start by adding or modifying `title` inside of `/cedar.toml`
 
-```diff title=redwood.toml
+```diff title="cedar.toml"
 [web]
 - title = "Cedar App"
 + title = "My Cool App"
