@@ -695,7 +695,7 @@ Cedar includes a selection of scalar types by default.
 
 Currently we allow you to control whether or not the `File` scalar is included automatically or not. By default we include the `File` scalar which maps to the standard `File` type. To disable this scalar you should add config to two places:
 
-1. In your `redwood.toml` file like so:
+1. In your `cedar.toml` file like so:
 
    ```toml
    [graphql]

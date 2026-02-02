@@ -25,21 +25,21 @@ Cedar also configures Vite, so that all references to `process.env` vars on the 
 
 > **Heads Up:** for Web to access environment variables in production, you _must_ configure one of the options below.
 >
-> Cedar recommends **Option 1: `redwood.toml`** as it is the most robust.
+> Cedar recommends **Option 1: `cedar.toml`** as it is the most robust.
 
 In production, you can get environment variables to the Web Side either by
 
-1. adding to `redwood.toml` via the `includeEnvironmentVariables` array, or
+1. adding to `cedar.toml` via the `includeEnvironmentVariables` array, or
 2. prefixing with `REDWOOD_ENV_`
 
 Just like for the API Side, you'll also have to set them up with your provider. Some hosting providers distinguish between build and runtime environments for configuring environment variables.
 Environment variables for the web side should in those cases be configured as build-time variables.
 
-#### Option 1: includeEnvironmentVariables in redwood.toml
+#### Option 1: includeEnvironmentVariables in cedar.toml
 
 For Example:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   includeEnvironmentVariables = ['SECRET_API_KEY', 'ANOTHER_ONE']
 ```
@@ -56,16 +56,16 @@ Like the option above, these are also removed and replaced with the _actual valu
 
 ### Accessing API URLs
 
-Cedar automatically makes your API URL configurations from the web section of your `redwood.toml` available globally.
+Cedar automatically makes your API URL configurations from the web section of your `cedar.toml` available globally.
 They're accessible via the `window` or `global` objects.
 For example, `global.RWJS_API_GRAPHQL_URL` gives you the URL for your graphql endpoint.
 
 The toml values are mapped as follows:
 
-| `redwood.toml` key | Available globally as         | Description                              |
-| ------------------ | ----------------------------- | ---------------------------------------- |
-| `apiUrl`           | `global.RWJS_API_URL`         | URL or absolute path to your api-server  |
-| `apiGraphQLUrl`    | `global.RWJS_API_GRAPHQL_URL` | URL or absolute path to GraphQL function |
+| `cedar.toml` key | Available globally as         | Description                              |
+| ---------------- | ----------------------------- | ---------------------------------------- |
+| `apiUrl`         | `global.RWJS_API_URL`         | URL or absolute path to your api-server  |
+| `apiGraphQLUrl`  | `global.RWJS_API_GRAPHQL_URL` | URL or absolute path to GraphQL function |
 
 See the [cedar.toml reference](app-configuration-cedar-toml.md#api-paths) for more details.
 

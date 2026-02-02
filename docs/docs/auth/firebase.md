@@ -31,7 +31,7 @@ FIREBASE_PROJECT_ID="..."
 
 Lastly, include `FIREBASE_API_KEY` and `FIREBASE_AUTH_DOMAIN` in the list of env vars that should be available to the web side (`FIREBASE_PROJECT_ID` is for the api side):
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   # ...
   includeEnvironmentVariables = ["FIREBASE_API_KEY", "FIREBASE_AUTH_DOMAIN"]

@@ -44,9 +44,9 @@ AUTH0_REDIRECT_URI="http://localhost:8910"
 AUTH0_AUDIENCE="..."
 ```
 
-Lastly, include all these env vars in the list of env vars that should be available to the web side in `redwood.toml`:
+Lastly, include all these env vars in the list of env vars that should be available to the web side in `cedar.toml`:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   # ...
   includeEnvironmentVariables = [

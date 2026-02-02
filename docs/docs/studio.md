@@ -58,14 +58,14 @@ If you want studio to pick up telemetry from you app automatically please ensure
 
 #### GraphiQL Auth Impersonation
 
-You need to configure Studio using settings inside `redwood.toml` for auth
+You need to configure Studio using settings inside `cedar.toml` for auth
 impersonation to work. See the sections below for detailed information.
 
 ##### DbAuth
 
 Requires a `SESSION_SECRET` environment variable for cookie encryption.
 
-`redwood.toml` example:
+`cedar.toml` example:
 
 ```toml
 [studio.graphiql.authImpersonation]
@@ -80,7 +80,7 @@ Since Netlify does not expose the JWT secret used to sign the token in
 production, impersonation requires a `jwtSecret` to encode and decode the auth
 token.
 
-`redwood.toml` example:
+`cedar.toml` example:
 
 ```toml
 [studio.graphiql.authImpersonation]
@@ -94,7 +94,7 @@ token.
 
 Requires a `SUPABASE_JWT_SECRET` environment variable for JWT signing.
 
-`redwood.toml` example:
+`cedar.toml` example:
 
 ```toml
 [studio.graphiql.authImpersonation]
@@ -105,7 +105,7 @@ Requires a `SUPABASE_JWT_SECRET` environment variable for JWT signing.
 
 ### Settings
 
-All settings for Studio are located in `redwood.toml`, which you can find at
+All settings for Studio are located in `cedar.toml`, which you can find at
 the root of your Cedar project.
 
 - `[studio.graphiql.authImpersonation].*` – Used to gain access to GraphQL

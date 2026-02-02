@@ -34,9 +34,9 @@ SUPABASE_KEY="..."
 SUPABASE_JWT_SECRET="..."
 ```
 
-Lastly, in `redwood.toml`, include `SUPABASE_URL` and `SUPABASE_KEY` in the list of env vars that should be available to the web side:
+Lastly, in `cedar.toml`, include `SUPABASE_URL` and `SUPABASE_KEY` in the list of env vars that should be available to the web side:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   # ...
   includeEnvironmentVariables = ["SUPABASE_URL", "SUPABASE_KEY"]

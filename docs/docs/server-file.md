@@ -238,9 +238,9 @@ export REDWOOD_API_PORT='8913'
 yarn node api/dist/server.js
 ```
 
-3. `[api].host` and `[api].port` in `redwood.toml`:
+3. `[api].host` and `[api].port` in `cedar.toml`:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [api]
   host = '0.0.0.0'
   port = 8913

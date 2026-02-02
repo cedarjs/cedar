@@ -27,7 +27,7 @@ Right now, if we sign up, we'll have to verify our email address.
 Let's forego that feature for the purposes of this doc: click "Settings and usage", then scroll down to "Emails" and look for "Confirmation template".
 Click "Edit settings", tick the box next to "Allow users to sign up without verifying their email address", and click "Save".
 
-Netlify Identity works a little differently than the other auth providers in that you don't have to copy API keys to your project's `.env` and `redwood.toml` files.
+Netlify Identity works a little differently than the other auth providers in that you don't have to copy API keys to your project's `.env` and `cedar.toml` files.
 Instead, the first time you use it (by, say, calling `signUp` from `useAuth`), it'll ask you for your app's API endpoint.
 So let's go ahead and use it: if this is a brand new project, generate a home page.
 There we'll try to sign up by destructuring `signUp` from the `useAuth` hook (import that from `'src/auth'`). We'll also destructure and display `isAuthenticated` to see if it worked:

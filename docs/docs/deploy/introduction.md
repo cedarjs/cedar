@@ -38,7 +38,7 @@ Deploying Cedar requires setup for the following four categories.
 
 Each hosting provider has different requirements for how (and where) the deployment is configured. Sometimes you'll need to add code to your repository, configure settings in a dashboard, or both. You'll need to read the provider specific documentation.
 
-The most important Cedar configuration is to set the `apiUrl` in your `redwood.toml` This sets the API path for your serverless functions specific to your hosting provider.
+The most important Cedar configuration is to set the `apiUrl` in your `cedar.toml` This sets the API path for your serverless functions specific to your hosting provider.
 
 ### 2. Build Command
 

@@ -24,10 +24,10 @@ That creates a stub you can test out right away. Make sure your dev server is ru
 
 ### Interlude: `apiUrl`
 
-The `.redwood/functions` bit in the link you pointed your browser to is what's called the `apiUrl`. You can configure it in your `redwood.toml`:
+The `.redwood/functions` bit in the link you pointed your browser to is what's called the `apiUrl`. You can configure it in your `cedar.toml`:
 
 ```toml {5}
-# redwood.toml
+# cedar.toml
 
 [web]
   port = 8910

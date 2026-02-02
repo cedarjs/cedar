@@ -169,9 +169,9 @@ For completeness, [here's the docs](https://www.graphql-code-generator.com/docs/
 
 ## Experimental SDL Code Generation
 
-There is also an experimental code generator based on [sdl-codegen](https://github.com/sdl-codegen/sdl-codegen) available. sdl-codegen is a fresh implementation of code generation for service files, built with Cedar in mind. It is currently in opt-in and can be enabled by setting the `experimentalSdlCodeGen` flag to `true` in your `redwood.toml` file:
+There is also an experimental code generator based on [sdl-codegen](https://github.com/sdl-codegen/sdl-codegen) available. sdl-codegen is a fresh implementation of code generation for service files, built with Cedar in mind. It is currently in opt-in and can be enabled by setting the `experimentalSdlCodeGen` flag to `true` in your `cedar.toml` file:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [experimental]
   useSDLCodeGenForGraphQLTypes = true
 ```
