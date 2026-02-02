@@ -45,7 +45,7 @@
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "fast-glob": "3.3.3",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

@@ -52,7 +52,7 @@
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "graphql-tag": "2.12.6",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "nodemon": "3.1.11",
     "rimraf": "6.1.2",
     "typescript": "5.9.3"
