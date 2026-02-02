@@ -2,7 +2,7 @@
 base = "docs"
 publish = "build"
 command = "yarn build"
-# ignore = "node ignore_build.mjs"
+ignore = "node ignore_build.mjs"
 
 [build.environment]
 NODE_OPTIONS = "--max-old-space-size=4096"
