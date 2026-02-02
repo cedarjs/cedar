@@ -157,3 +157,22 @@ config({
 Remember, if `yarn cedar dev` is already running, your local app won't reflect
 any changes you make to your `.env` file until you stop and re-run
 `yarn cedar dev`.
+
+## Pre-defined Environment Variables
+
+Cedar provides a few pre-defined environment variables that you can use in your
+app (this list is a work in progress):
+
+- `RWJS_API_URL`: URL or absolute path to your api-server. This is mapped from
+  `apiUrl` in your `cedar.toml` file.
+- `RWJS_API_GRAPHQL_URL`: The URL of the GraphQL API server. Mapped from
+  `apiGraphQLUrl` in `cedar.toml`.
+- `CEDAR_DELAY_API_RESTART`: Cedar's api server rebuilds all code and
+  auto-restarts as soon as it detects a change in the codebase. Cedar debounces
+  this to avoid excessive rebuilds/restarts when multiple files are changed at
+  once. By default, the debounce delay is 500ms, but you can adjust it with the
+  `CEDAR_DELAY_API_RESTART` environment variable.
+- `RWJS_CWD`: Lets you control the working directory of your app. Mostly used
+  when working on the framework itself, not when building a Cedar app.
+- `CFW_PATH`: Used together with the `cfw` bin. Also mostly used when working on
+  the framework itself, not when building a Cedar app.
