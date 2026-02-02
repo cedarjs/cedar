@@ -3619,7 +3619,7 @@ __metadata:
     publint: "npm:0.3.17"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
-    react-server-dom-webpack: "npm:19.2.3"
+    react-server-dom-webpack: "npm:19.2.4"
     tstyche: "npm:5.0.2"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3823,7 +3823,7 @@ __metadata:
     memfs: "npm:4.56.10"
     publint: "npm:0.3.17"
     react: "npm:19.2.3"
-    react-server-dom-webpack: "npm:19.2.3"
+    react-server-dom-webpack: "npm:19.2.4"
     rimraf: "npm:6.1.2"
     rollup: "npm:4.57.1"
     tsx: "npm:4.21.0"
@@ -26170,18 +26170,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-server-dom-webpack@npm:19.2.3":
-  version: 19.2.3
-  resolution: "react-server-dom-webpack@npm:19.2.3"
+"react-server-dom-webpack@npm:19.2.4":
+  version: 19.2.4
+  resolution: "react-server-dom-webpack@npm:19.2.4"
   dependencies:
     acorn-loose: "npm:^8.3.0"
     neo-async: "npm:^2.6.1"
     webpack-sources: "npm:^3.2.0"
   peerDependencies:
-    react: ^19.2.3
-    react-dom: ^19.2.3
+    react: ^19.2.4
+    react-dom: ^19.2.4
     webpack: ^5.59.0
-  checksum: 10c0/9b3b507fee1e51ff7491aa6eded0d60aff7c16ceebc543beb82e4614b82864dbd3da8b6f3e5ae6474001cf6f5943b134a52be0ebd8f93f849cc2eea8cc57f898
+  checksum: 10c0/5f359bec49d3a0325616287bb8044253097b2d6e1260e8751f72fe0de01ea69de75053cdd4a64b6820ae1c194d504d3c57bc7877932332c25aec1e4107735fb6
   languageName: node
   linkType: hard
 
