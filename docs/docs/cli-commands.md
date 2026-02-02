@@ -2235,10 +2235,10 @@ This command serves the contents in `web/dist`. Use this command if you're debug
 >
 > Probably, but it can be a challenge to setup when you just want something running quickly!
 
-| Arguments & Options | Description                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------- |
-| `--port`            | What port should the server run on [default: 8911]                                    |
-| `--socket`          | The socket the server should run. This takes precedence over port                     |
+| Arguments & Options | Description                                                                         |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `--port`            | What port should the server run on [default: 8911]                                  |
+| `--socket`          | The socket the server should run. This takes precedence over port                   |
 | `--apiHost`         | Forwards requests from the `apiUrl` (defined in `cedar.toml`) to the specified host |
 
 If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
