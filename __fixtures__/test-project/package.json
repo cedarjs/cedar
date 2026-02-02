@@ -6,10 +6,10 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@cedarjs/core": "3.0.0-canary.13206",
-    "@cedarjs/eslint-config": "3.0.0-canary.13206",
-    "@cedarjs/project-config": "3.0.0-canary.13206",
-    "@cedarjs/testing": "3.0.0-canary.13206",
+    "@cedarjs/core": "2.5.0",
+    "@cedarjs/eslint-config": "2.5.0",
+    "@cedarjs/project-config": "2.5.0",
+    "@cedarjs/testing": "2.5.0",
     "prettier-plugin-tailwindcss": "^0.5.12"
   },
   "engines": {
