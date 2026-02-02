@@ -65,9 +65,9 @@ SUPERTOKENS_GOOGLE_CLIENT_ID=1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps
 SUPERTOKENS_GOOGLE_CLIENT_SECRET=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
 ```
 
-## `redwood.toml` setup
+## `cedar.toml` setup
 
-Make sure to modify `redwood.toml` to pass the required environment variables to the web side:
+Make sure to modify `cedar.toml` to pass the required environment variables to the web side:
 
 ```toml
 [web]

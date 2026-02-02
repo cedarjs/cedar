@@ -44,9 +44,9 @@ CLERK_PUBLISHABLE_KEY="..."
 CLERK_SECRET_KEY="..."
 ```
 
-Lastly, in your project's `redwood.toml` file, include `CLERK_PUBLISHABLE_KEY` in the list of env vars that should be available to the web side:
+Lastly, in your project's `cedar.toml` file, include `CLERK_PUBLISHABLE_KEY` in the list of env vars that should be available to the web side:
 
-```toml title="redwood.toml"
+```toml title="cedar.toml"
 [web]
   # ...
   includeEnvironmentVariables = [

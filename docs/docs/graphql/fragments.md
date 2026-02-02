@@ -293,9 +293,9 @@ const graphQLClientConfig = {
 <RedwoodApolloProvider graphQLClientConfig={graphQLClientConfig}>
 ```
 
-To generate the `src/graphql/possibleTypes` file, enable fragments in `redwood.toml`:
+To generate the `src/graphql/possibleTypes` file, enable fragments in `cedar.toml`:
 
-```toml title=redwood.toml
+```toml title="cedar.toml"
 [graphql]
   fragments = true
 ```

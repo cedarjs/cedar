@@ -4,7 +4,7 @@ description: Create, develop, and run serverless functions
 
 # Serverless Functions (API Endpoints)
 
-<!-- `redwood.toml`&mdash;`api/src/functions` by default.  -->
+<!-- `cedar.toml`&mdash;`api/src/functions` by default.  -->
 
 :::info
 

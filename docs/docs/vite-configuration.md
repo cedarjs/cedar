@@ -50,7 +50,7 @@ yarn cedar setup ui tailwindcss
 ## Vite Dev Server
 
 Cedar uses Vite's preview server for local development.
-When you run `yarn rw dev`, keys in your `redwood.toml`'s `[web]` table—like `port` and `apiUrl`—are used as vite preview server options (in this case, [preview.port](https://vitejs.dev/config/preview-options.html#preview-port) and [preview.proxy](https://vitejs.dev/config/preview-options.html#preview-proxy) respectively).
+When you run `yarn rw dev`, keys in your `cedar.toml`'s `[web]` table—like `port` and `apiUrl`—are used as vite preview server options (in this case, [preview.port](https://vitejs.dev/config/preview-options.html#preview-port) and [preview.proxy](https://vitejs.dev/config/preview-options.html#preview-proxy) respectively).
 
 > You can peek at all the out-of-the-box configuration for your Vite preview server in the [CedarJS Vite plugin](https://github.com/cedarjs/cedar/blob/main/packages/vite/src/index.ts)
 
@@ -64,7 +64,7 @@ For example, if you want to force optimise your Vite dependencies again, you can
 yarn rw dev --fwd="--force"
 ```
 
-You can also use `--forward` to override keys in your `redwood.toml`.
+You can also use `--forward` to override keys in your `cedar.toml`.
 For example, the following starts your app on port `1234` and disables automatic browser opening:
 
 ```

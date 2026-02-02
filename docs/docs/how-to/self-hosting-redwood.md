@@ -38,7 +38,7 @@ yarn pm2 init
 mv ecosystem.config.js pm2.config.js
 ```
 
-Last but not least, change the API endpoint in `redwood.toml`:
+Last but not least, change the API endpoint in `cedar.toml`:
 
 ```diff
 - apiUrl = "/.redwood/functions"
