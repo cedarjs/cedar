@@ -15,6 +15,9 @@ class BuildManager {
     this.shouldRebuild = true
     this.shouldClean = false
     this.buildFn = buildFn
+    // TODO: Remove process.env.RWJS_DELAY_RESTART in next major release
+    const delay =
+      process.env.CEDAR_DELAY_API_RESTART || process.env.RWJS_DELAY_RESTART
     this.debouncedBuild = debounce(
       async (options: BuildAndRestartOptions) => {
         // Use flags with higher precedence to determine if we should rebuild or clean
@@ -33,9 +36,7 @@ class BuildManager {
       // filesystem. This usually happens when running Cedar generator commands.
       // Local writes are very fast, but writes in e2e environments are not, so
       // allow the default to be adjusted with an env-var.
-      process.env.CEDAR_DELAY_API_RESTART
-        ? parseInt(process.env.CEDAR_DELAY_API_RESTART, 10)
-        : 500,
+      delay ? parseInt(delay, 10) : 500,
     )
   }
 
