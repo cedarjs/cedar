@@ -101,29 +101,8 @@ export const builder = (yargs) => {
 }
 
 export async function handler(yargs) {
-<<<<<<< HEAD
-  const { handler: importedHandler } = await import(
-    './baremetal/baremetalHandler.js'
-  )
-=======
-  recordTelemetryAttributes({
-    command: 'deploy baremetal',
-    firstRun: yargs.firstRun,
-    df: yargs.df,
-    update: yargs.update,
-    install: yargs.install,
-    migrate: yargs.migrate,
-    build: yargs.build,
-    restart: yargs.restart,
-    cleanup: yargs.cleanup,
-    maintenance: yargs.maintenance,
-    rollback: yargs.rollback,
-    verbose: yargs.verbose,
-  })
-
-  const { handler: baremetalHandler } =
+  const { handler: importedHandler } =
     await import('./baremetal/baremetalHandler.js')
->>>>>>> e6d34f1365 (fix(deps): update dependency prettier to v3.8.1 (#1102))
 
   return importedHandler(yargs)
 }
