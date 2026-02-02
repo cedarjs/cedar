@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-auth0-api",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@cedarjs/api": "2.4.1",
+    "@cedarjs/api": "2.5.0",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/jsonwebtoken": "9.0.10",
     "concurrently": "9.2.1",
