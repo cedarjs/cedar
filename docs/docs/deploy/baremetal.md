@@ -180,7 +180,7 @@ The easiest connection method is generally to include your own public key in the
 
 #### Using Environment Variables in `deploy.toml`
 
-Similarly to `cedar.toml`, `deploy.toml` supports interpolation of environment variables. For more details on how to use the environment variable interpolation see [Using Environment Variables in cedar.toml](/docs/app-configuration-cedar-toml#using-environment-variables-in-cedartoml)
+Similarly to `cedar.toml`, `deploy.toml` supports interpolation of environment variables. For more details on how to use the environment variable interpolation see [Using Environment Variables in cedar.toml](/docs/canary/app-configuration-cedar-toml#using-environment-variables-in-cedartoml)
 
 #### Multiple Servers
 

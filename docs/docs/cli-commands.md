@@ -1090,7 +1090,7 @@ will output the following files, with the components and pages nested in a `Post
   √ Adding scaffold asset imports...
 ```
 
-If it is not desired to nest the components and pages, then redwood provides an option that you can set to disable this for your project.
+If it is not desired to nest the components and pages, then Cedar provides an option that you can set to disable this for your project.
 Add the following in your `cedar.toml` file to disable the nesting of components and pages.
 
 ```
