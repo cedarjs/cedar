@@ -56,7 +56,7 @@
     "graphql-scalars": "1.25.0",
     "graphql-tag": "2.12.6",
     "graphql-yoga": "5.18.0",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "uuid": "11.1.0"
   },
   "devDependencies": {
