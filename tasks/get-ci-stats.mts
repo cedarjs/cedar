@@ -31,34 +31,139 @@ async function fetchWorkflowRuns(
   token: string,
   count: number,
   branch: string | null = null,
+  startDateStr: string | null = null,
+  endDateStr: string | null = null,
+  limit: number | null = null,
 ): Promise<Record<string, any>[]> {
-  let url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW_FILE}/runs?status=success&per_page=${count}`
   let branchMsg = 'all branches'
 
   if (branch) {
-    url += `&branch=${branch}`
     branchMsg = `branch '${branch}'`
   }
 
-  console.log(
-    `Fetching successful runs for workflow '${WORKFLOW_FILE}' on ${branchMsg}...`,
-  )
-
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github.v3+json',
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch runs: ${response.status} ${response.statusText}`,
-    )
+  let dateMsg = ''
+  if (startDateStr && endDateStr) {
+    dateMsg = ` between ${startDateStr} and ${endDateStr}`
+  } else if (startDateStr) {
+    dateMsg = ` since ${startDateStr}`
+  } else if (endDateStr) {
+    dateMsg = ` until ${endDateStr}`
   }
 
-  const data = await response.json()
-  return data.workflow_runs
+  console.log(
+    `Fetching successful runs for workflow '${WORKFLOW_FILE}' on ${branchMsg}${dateMsg}...`,
+  )
+
+  // If no date filtering requested, fall back to a single request (previous behavior)
+  if (!startDateStr && !endDateStr) {
+    const url =
+      `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW_FILE}/runs?status=success&per_page=${count}` +
+      (branch ? `&branch=${branch}` : '')
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch runs: ${response.status} ${response.statusText}`,
+      )
+    }
+
+    const data = await response.json()
+    return data.workflow_runs
+  }
+
+  // Date range provided -> paginate pages (runs are returned newest-first)
+  const perPage = 100
+  let page = 1
+  const collected: Record<string, any>[] = []
+
+  let startMs: number | null = null
+  let endMs: number | null = null
+
+  if (startDateStr) {
+    const parsed = new Date(startDateStr)
+    if (isNaN(parsed.getTime())) {
+      throw new Error(`Invalid start date: ${startDateStr}`)
+    }
+    startMs = parsed.getTime()
+  }
+
+  if (endDateStr) {
+    const parsed = new Date(endDateStr)
+    if (isNaN(parsed.getTime())) {
+      throw new Error(`Invalid end date: ${endDateStr}`)
+    }
+    endMs = parsed.getTime()
+  }
+
+  // Ensure startMs <= endMs if both provided
+  if (startMs !== null && endMs !== null && startMs > endMs) {
+    const tmp = startMs
+    startMs = endMs
+    endMs = tmp
+  }
+
+  let keepGoing = true
+
+  while (keepGoing) {
+    const url =
+      `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW_FILE}/runs?status=success&per_page=${perPage}&page=${page}` +
+      (branch ? `&branch=${branch}` : '')
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch runs: ${response.status} ${response.statusText}`,
+      )
+    }
+
+    const data = await response.json()
+    const runs = data.workflow_runs || []
+
+    if (!runs || runs.length === 0) {
+      break
+    }
+
+    for (const run of runs) {
+      const runStart = new Date(run.run_started_at || run.created_at).getTime()
+
+      // If an end date was provided, skip runs that are newer than the end date
+      if (endMs !== null && runStart > endMs) {
+        continue
+      }
+
+      // If this run is older than the start date, we can stop paginating (results are newest-first)
+      if (startMs !== null && runStart < startMs) {
+        keepGoing = false
+        break
+      }
+
+      // Otherwise, this run is within the requested window
+      collected.push(run)
+
+      if (limit !== null && collected.length >= limit) {
+        keepGoing = false
+        break
+      }
+    }
+
+    if (keepGoing) {
+      page += 1
+    }
+  }
+
+  return collected
 }
 
 async function fetchJobsForRun(
@@ -93,40 +198,134 @@ async function main() {
   const token = getGhToken()
 
   // Arg parsing:
-  // node script.mjs [count] [branch]
+  // node script.mjs [count] [branch] [startDate] [endDate]
   let count = DEFAULT_COUNT
   let branch: string | null = null
+  let startDateStr: string | null = null
+  let endDateStr: string | null = null
+  let countWasProvided = false
 
   const arg1 = process.argv[2]
   const arg2 = process.argv[3]
+  const arg3 = process.argv[4]
+  const arg4 = process.argv[5]
 
-  if (arg1) {
-    const parsedCount = parseInt(arg1, 10)
-    if (!isNaN(parsedCount)) {
-      count = parsedCount
-    } else {
-      console.error(`Invalid count: ${arg1}`)
-      process.exit(1)
+  function isDateString(s: string | undefined): boolean {
+    if (!s) {
+      return false
     }
+    const d = new Date(s)
+    if (isNaN(d.getTime())) {
+      return false
+    }
+    return true
+  }
 
-    if (count > 90) {
-      // We'll overfetch by 10 to ensure we have enough runs after filtering.
-      // GitHub API has a limit of 100 runs per page, so unless we want to add
-      // support for pagination, we'll have to limit the count to 90 (90 + 10 =
-      // 100).
-      console.error(`Count cannot exceed 90`)
-      process.exit(1)
+  // Parse positional args and accept multiple layouts:
+  // - [count] [branch] [startDate endDate]
+  // - [startDate endDate]
+  // - [branch startDate endDate]
+  // - [count startDate endDate]
+  if (arg1) {
+    // Treat a count as only a pure integer string (no dashes or other chars).
+    // This prevents date-like strings like "2026-01-14" from being parsed as counts.
+    if (/^\d+$/.test(arg1)) {
+      const parsedCount = parseInt(arg1, 10)
+      count = parsedCount
+      countWasProvided = true
+
+      // After a numeric count, accept either [count <start> <end>] OR [count <branch> <start> <end>]
+      if (arg2 && isDateString(arg2) && arg3 && isDateString(arg3)) {
+        startDateStr = arg2
+        endDateStr = arg3
+      } else {
+        // Otherwise, treat arg2 as branch and then possibly dates after
+        if (arg2) {
+          branch = arg2
+        }
+        if (arg3 || arg4) {
+          if (!arg3 || !arg4) {
+            console.error(
+              'Both start and end dates must be provided if a date is supplied.',
+            )
+            process.exit(1)
+          }
+          if (!isDateString(arg3) || !isDateString(arg4)) {
+            console.error(`Invalid date(s): ${arg3} ${arg4}`)
+            process.exit(1)
+          }
+          startDateStr = arg3
+          endDateStr = arg4
+        }
+      }
+
+      if (count > 90) {
+        // We'll overfetch by 10 to ensure we have enough runs after filtering.
+        // GitHub API has a limit of 100 runs per page, so unless we want to add
+        // support for pagination, we'll have to limit the count to 90 (90 + 10 =
+        // 100).
+        console.error(`Count cannot exceed 90`)
+        process.exit(1)
+      }
+    } else if (arg2 && isDateString(arg1) && isDateString(arg2)) {
+      // date-only mode: arg1 = start, arg2 = end
+      startDateStr = arg1
+      endDateStr = arg2
+    } else {
+      // treat arg1 as branch
+      branch = arg1
+      // and check for start/end after the branch
+      if (arg2 || arg3) {
+        if (!arg2 || !arg3) {
+          console.error(
+            'Both start and end dates must be provided as positional arguments after the branch.',
+          )
+          process.exit(1)
+        }
+        if (!isDateString(arg2) || !isDateString(arg3)) {
+          console.error(`Invalid date(s): ${arg2} ${arg3}`)
+          process.exit(1)
+        }
+        startDateStr = arg2
+        endDateStr = arg3
+      }
     }
   }
 
-  if (arg2) {
-    branch = arg2
+  // Validate start/end dates if set; require both or none
+  if ((startDateStr && !endDateStr) || (!startDateStr && endDateStr)) {
+    console.error(
+      'Both start and end dates must be provided (e.g. YYYY-MM-DD YYYY-MM-DD).',
+    )
+    process.exit(1)
+  }
+
+  // If both dates provided and reversed, swap them so start <= end
+  if (startDateStr && endDateStr) {
+    const startMs = new Date(startDateStr).getTime()
+    const endMs = new Date(endDateStr).getTime()
+    if (isNaN(startMs) || isNaN(endMs)) {
+      console.error('Invalid date provided.')
+      process.exit(1)
+    }
+    if (startMs > endMs) {
+      const tmp = startDateStr
+      startDateStr = endDateStr
+      endDateStr = tmp
+    }
   }
 
   try {
     // Overfetch by 10 to ensure we have enough runs after filtering
     const fetchCount = count + 10
-    const runs = await fetchWorkflowRuns(token, fetchCount, branch)
+    const runs = await fetchWorkflowRuns(
+      token,
+      fetchCount,
+      branch,
+      startDateStr,
+      endDateStr,
+      countWasProvided ? count : null,
+    )
 
     if (!runs || runs.length === 0) {
       console.log('No successful runs found.')
@@ -156,12 +355,13 @@ async function main() {
     const minDurationMs = 10 * 60 * 1000
     const maxDurationMs = 40 * 60 * 1000
 
-    const stats = allStats
-      .filter(
-        (run) =>
-          run.durationMs >= minDurationMs && run.durationMs <= maxDurationMs,
-      )
-      .slice(0, count)
+    let stats = allStats.filter(
+      (run) =>
+        run.durationMs >= minDurationMs && run.durationMs <= maxDurationMs,
+    )
+    if (countWasProvided) {
+      stats = stats.slice(0, count)
+    }
 
     if (stats.length === 0) {
       console.log(
