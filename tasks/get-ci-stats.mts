@@ -61,6 +61,28 @@ async function fetchWorkflowRuns(
   return data.workflow_runs
 }
 
+async function fetchJobsForRun(
+  token: string,
+  runId: number,
+): Promise<Record<string, any>[]> {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${runId}/jobs?per_page=100`
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch jobs for run ${runId}: ${response.status} ${response.statusText}`,
+    )
+  }
+
+  const data = await response.json()
+  return data.jobs || []
+}
+
 function formatDuration(ms: number) {
   const minutes = Math.floor(ms / 60000)
   const seconds = ((ms % 60000) / 1000).toFixed(0)
@@ -144,32 +166,107 @@ async function main() {
       return
     }
 
+    // Enrich runs with their longest job information
+    console.log('Fetching job details for selected runs...')
+    const statsWithJobs = await Promise.all(
+      stats.map(async (run) => {
+        try {
+          const jobs = await fetchJobsForRun(token, run.id)
+          let longestJobDurationMs = 0
+          let longestJobName = '(unknown)'
+
+          jobs.forEach((job) => {
+            if (!job.started_at || !job.completed_at) {
+              return
+            }
+            const started = new Date(job.started_at).getTime()
+            const completed = new Date(job.completed_at).getTime()
+            if (isNaN(started) || isNaN(completed)) {
+              return
+            }
+            const dur = completed - started
+            if (dur > longestJobDurationMs) {
+              longestJobDurationMs = dur
+              longestJobName = job.name || '(unknown)'
+            }
+          })
+
+          const longestJobStr =
+            longestJobDurationMs > 0
+              ? `${formatDuration(longestJobDurationMs)}`
+              : '(unknown)'
+
+          return {
+            ...run,
+            longestJobDurationMs,
+            longestJobName,
+            longestJobStr,
+          }
+        } catch (error) {
+          console.error(
+            `Warning: Could not fetch jobs for run ${run.id}: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          )
+          return {
+            ...run,
+            longestJobDurationMs: 0,
+            longestJobName: '(unknown)',
+            longestJobStr: '(unknown)',
+          }
+        }
+      }),
+    )
+
     // Print Table
     console.log(
-      `| ${'Date'.padEnd(12)} | ${'Branch'.padEnd(25)} | ${'Duration'.padEnd(10)} | ${'ID'.padEnd(12)} |`,
+      `| ${'Date'.padEnd(12)} | ${'Branch'.padEnd(25)} | ${'Duration'.padEnd(10)} | ${'Max Job Duration'.padEnd(16)} | ${'ID'.padEnd(12)} |`,
     )
     console.log(
-      `|${'-'.repeat(14)}|${'-'.repeat(27)}|${'-'.repeat(12)}|${'-'.repeat(14)}|`,
+      `|${'-'.repeat(14)}|${'-'.repeat(27)}|${'-'.repeat(12)}|${'-'.repeat(18)}|${'-'.repeat(14)}|`,
     )
 
     let totalDurationMs = 0
-    stats.forEach((run) => {
+    let totalLongestJobMs = 0
+    let longestJobCount = 0
+
+    statsWithJobs.forEach((run) => {
       totalDurationMs += run.durationMs
+
+      if (run.longestJobDurationMs && run.longestJobDurationMs > 0) {
+        totalLongestJobMs += run.longestJobDurationMs
+        longestJobCount += 1
+      }
+
       // Truncate branch name if too long
       const branchDisplay =
         run.branch.length > 24
           ? run.branch.substring(0, 21) + '...'
           : run.branch
+
+      // Truncate longest job display if too long
+      const longestDisplay =
+        run.longestJobStr && run.longestJobStr.length > 16
+          ? run.longestJobStr.substring(0, 13) + '...'
+          : run.longestJobStr
+
       console.log(
-        `| ${run.date.padEnd(12)} | ${branchDisplay.padEnd(25)} | ${run.durationStr.padEnd(10)} | ${String(run.id).padEnd(12)} |`,
+        `| ${run.date.padEnd(12)} | ${branchDisplay.padEnd(25)} | ${run.durationStr.padEnd(10)} | ${longestDisplay.padEnd(16)} | ${String(run.id).padEnd(12)} |`,
       )
     })
 
-    const averageDurationMs = totalDurationMs / stats.length
+    const averageDurationMs = totalDurationMs / statsWithJobs.length
+    const averageLongestJobMs =
+      longestJobCount > 0 ? totalLongestJobMs / longestJobCount : 0
 
     console.log('')
     console.log(`📊 Average Duration: ${formatDuration(averageDurationMs)}`)
-    console.log(`(Based on ${stats.length} successful runs)`)
+    console.log(
+      `📊 Average Max Job Duration: ${formatDuration(averageLongestJobMs)}`,
+    )
+    console.log(
+      `(Based on ${statsWithJobs.length} successful runs; ${longestJobCount} runs had job info)`,
+    )
   } catch (error) {
     if (error instanceof Error) {
       console.error('Error:', error.message)
