@@ -25,7 +25,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.28.6",
+    "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/project-config": "2.5.0",
     "@prisma/internals": "6.19.2",
     "@types/line-column": "1.0.2",
