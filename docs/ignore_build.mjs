@@ -7,19 +7,7 @@
 import { execSync } from 'node:child_process'
 
 async function main() {
-<<<<<<< HEAD
-  // Log the Node.js version for debugging/visibility in build logs.
-  console.log({ nodeVersion: process.version })
-
-  const branch = process.env.BRANCH
-
-  // Reproduce the default behavior for main.
-  // See https://docs.netlify.com/configure-builds/ignore-builds/#mimic-default-behavior.
-  // `execSync` throws if the process times out or has a non-zero exit code.
-  if (branch === 'main') {
-=======
   if (process.env.BRANCH === 'main') {
->>>>>>> main
     try {
       // Reproduce the default behavior for main.
       // See https://docs.netlify.com/configure-builds/ignore-builds/#mimic-default-behavior.
