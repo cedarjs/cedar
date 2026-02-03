@@ -379,6 +379,7 @@ export default [
   {
     files: [
       '.github/**',
+      'docs/ignore_build.mjs',
       'packages/api/src/**',
       'packages/api-server/src/**',
       'packages/cli/src/**',
