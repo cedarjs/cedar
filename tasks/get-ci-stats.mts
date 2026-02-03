@@ -134,7 +134,7 @@ async function main() {
     }
 
     console.log('')
-    console.log(`Filtering short runs(<10m) and calculating statistics...`)
+    console.log(`Filtering runs (<10m or >40m) and calculating statistics...`)
     console.log('')
 
     const allStats = runs.map((run) => {
@@ -154,14 +154,18 @@ async function main() {
     })
 
     const minDurationMs = 10 * 60 * 1000
+    const maxDurationMs = 40 * 60 * 1000
 
     const stats = allStats
-      .filter((run) => run.durationMs >= minDurationMs)
+      .filter(
+        (run) =>
+          run.durationMs >= minDurationMs && run.durationMs <= maxDurationMs,
+      )
       .slice(0, count)
 
     if (stats.length === 0) {
       console.log(
-        `No runs over 10 minutes found in the last ${runs.length} entries.`,
+        `No runs between 10 and 40 minutes found in the last ${runs.length} entries.`,
       )
       return
     }
