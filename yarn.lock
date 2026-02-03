@@ -2249,7 +2249,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     fast-glob: "npm:3.3.3"
     fast-json-parse: "npm:1.0.3"
-    fastify: "npm:5.7.2"
+    fastify: "npm:5.7.3"
     fastify-raw-body: "npm:5.0.0"
     memfs: "npm:4.56.10"
     pino-abstract-transport: "npm:1.2.0"
@@ -2829,7 +2829,7 @@ __metadata:
     publint: "npm:0.3.17"
     react: "npm:19.2.3"
     tsx: "npm:4.21.0"
-    type-fest: "npm:5.4.2"
+    type-fest: "npm:5.4.3"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2916,7 +2916,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
     listr2: "npm:7.0.2"
-    lodash: "npm:4.17.21"
+    lodash: "npm:4.17.23"
     pascalcase: "npm:1.0.0"
     prettier: "npm:3.8.1"
     prettier-plugin-tailwindcss: "npm:0.7.2"
@@ -3001,7 +3001,7 @@ __metadata:
     jsonc-parser: "npm:3.3.1"
     latest-version: "npm:9.0.0"
     listr2: "npm:7.0.2"
-    lodash: "npm:4.17.21"
+    lodash: "npm:4.17.23"
     memfs: "npm:4.56.10"
     node-ssh: "npm:13.2.1"
     pascalcase: "npm:1.0.0"
@@ -3014,7 +3014,7 @@ __metadata:
     semver: "npm:7.7.3"
     smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.30.6"
+    systeminformation: "npm:5.30.7"
     termi-link: "npm:1.1.0"
     title-case: "npm:3.0.3"
     ts-dedent: "npm:2.2.0"
@@ -3115,7 +3115,7 @@ __metadata:
     "@cedarjs/web-server": "workspace:*"
     "@types/lodash": "npm:4.17.23"
     graphql-tag: "npm:2.12.6"
-    lodash: "npm:4.17.21"
+    lodash: "npm:4.17.23"
     nodemon: "npm:3.1.11"
     publint: "npm:0.3.17"
     rimraf: "npm:6.1.2"
@@ -3206,7 +3206,7 @@ __metadata:
     "@fastify/static": "npm:8.3.0"
     "@fastify/url-data": "npm:6.0.3"
     fast-glob: "npm:3.3.3"
-    fastify: "npm:5.7.2"
+    fastify: "npm:5.7.3"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3249,7 +3249,7 @@ __metadata:
     esbuild: "npm:0.21.5"
     fast-glob: "npm:3.3.3"
     tsx: "npm:4.21.0"
-    type-fest: "npm:5.4.2"
+    type-fest: "npm:5.4.3"
     typescript: "npm:5.9.3"
     zx: "npm:8.8.5"
   bin:
@@ -3293,7 +3293,7 @@ __metadata:
     graphql-tag: "npm:2.12.6"
     graphql-yoga: "npm:5.18.0"
     jsonwebtoken: "npm:9.0.3"
-    lodash: "npm:4.17.21"
+    lodash: "npm:4.17.23"
     publint: "npm:0.3.17"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3345,7 +3345,7 @@ __metadata:
     rimraf: "npm:6.1.2"
     source-map: "npm:0.7.6"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.30.6"
+    systeminformation: "npm:5.30.7"
     termi-link: "npm:1.1.0"
     ts-node: "npm:10.9.2"
     tsx: "npm:4.21.0"
@@ -3369,7 +3369,7 @@ __metadata:
     cron-parser: "npm:5.5.0"
     publint: "npm:0.3.17"
     tsx: "npm:4.21.0"
-    type-fest: "npm:5.4.2"
+    type-fest: "npm:5.4.3"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   bin:
@@ -3474,9 +3474,9 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
-    "@playwright/test": "npm:1.58.0"
+    "@playwright/test": "npm:1.58.1"
     fast-glob: "npm:3.3.3"
-    lodash: "npm:4.17.21"
+    lodash: "npm:4.17.23"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
     ts-toolbelt: "npm:9.6.0"
@@ -3619,7 +3619,7 @@ __metadata:
     publint: "npm:0.3.17"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
-    react-server-dom-webpack: "npm:19.2.3"
+    react-server-dom-webpack: "npm:19.2.4"
     tstyche: "npm:5.0.2"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3685,7 +3685,7 @@ __metadata:
     graphql: "npm:16.12.0"
     lazy-get-decorator: "npm:2.2.1"
     line-column: "npm:1.0.2"
-    lodash: "npm:4.17.21"
+    lodash: "npm:4.17.23"
     lodash-decorators: "npm:6.0.1"
     lru-cache: "npm:11.2.5"
     proxyquire: "npm:2.1.3"
@@ -3708,7 +3708,7 @@ __metadata:
     "@whatwg-node/fetch": "npm:0.10.13"
     ci-info: "npm:4.4.0"
     envinfo: "npm:7.21.0"
-    systeminformation: "npm:5.30.6"
+    systeminformation: "npm:5.30.7"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     uuid: "npm:11.1.0"
@@ -3823,7 +3823,7 @@ __metadata:
     memfs: "npm:4.56.10"
     publint: "npm:0.3.17"
     react: "npm:19.2.3"
-    react-server-dom-webpack: "npm:19.2.3"
+    react-server-dom-webpack: "npm:19.2.4"
     rimraf: "npm:6.1.2"
     rollup: "npm:4.57.1"
     tsx: "npm:4.21.0"
@@ -3852,7 +3852,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     ansis: "npm:4.2.0"
     dotenv-defaults: "npm:5.0.2"
-    fastify: "npm:5.7.2"
+    fastify: "npm:5.7.3"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     yargs: "npm:17.7.2"
@@ -9072,14 +9072,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:1.58.0":
-  version: 1.58.0
-  resolution: "@playwright/test@npm:1.58.0"
+"@playwright/test@npm:1.58.1":
+  version: 1.58.1
+  resolution: "@playwright/test@npm:1.58.1"
   dependencies:
-    playwright: "npm:1.58.0"
+    playwright: "npm:1.58.1"
   bin:
     playwright: cli.js
-  checksum: 10c0/7bf0c509415e4e55a1bcd2dd2af5f0fa5d33d60f7583c35295134af99c03351f514e7884d7c8354ed85fcd8dcea5ec85c8ba917d49d1834bb1a0b02236920e2d
+  checksum: 10c0/ca32be812c6f86b2247109eaecd2fed452414debee05b4b0d690a3397f6bd08a56e0b2484f74d20fa0e7494508ee1cbdcbc27864acd5093e34c3f94d0e278188
   languageName: node
   linkType: hard
 
@@ -14846,7 +14846,7 @@ __metadata:
     gradient-string: "npm:3.0.0"
     klaw-sync: "npm:7.0.0"
     semver: "npm:7.7.3"
-    systeminformation: "npm:5.30.6"
+    systeminformation: "npm:5.30.7"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
     untildify: "npm:4.0.0"
@@ -17504,9 +17504,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify@npm:5.7.2":
-  version: 5.7.2
-  resolution: "fastify@npm:5.7.2"
+"fastify@npm:5.7.3":
+  version: 5.7.3
+  resolution: "fastify@npm:5.7.3"
   dependencies:
     "@fastify/ajv-compiler": "npm:^4.0.5"
     "@fastify/error": "npm:^4.0.0"
@@ -17523,7 +17523,7 @@ __metadata:
     secure-json-parse: "npm:^4.0.0"
     semver: "npm:^7.6.0"
     toad-cache: "npm:^3.7.0"
-  checksum: 10c0/0faaf6de06a696868c088e47285cc61a3d0caffc52686f6c72b39d924fb5adb5b21caabc2147ee3cd04fbeea5b7af87c83ef285501e405f5d93b2b81d639445e
+  checksum: 10c0/0be6bd6641d6f55d6fbc2c0d678adca3c2761e1f56c0382aa077c96211cd55e6fd00ef1ce368b2a3cece367ce61f33e8712b0dc1741d7c765cb5bd1811b1dabf
   languageName: node
   linkType: hard
 
@@ -21984,10 +21984,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:4.17.21, lodash@npm:>=4.17.21, lodash@npm:^4.17.15, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:~4.17.0":
+"lodash@npm:4.17.21":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
+  languageName: node
+  linkType: hard
+
+"lodash@npm:4.17.23, lodash@npm:>=4.17.21, lodash@npm:^4.17.15, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:~4.17.0":
+  version: 4.17.23
+  resolution: "lodash@npm:4.17.23"
+  checksum: 10c0/1264a90469f5bb95d4739c43eb6277d15b6d9e186df4ac68c3620443160fc669e2f14c11e7d8b2ccf078b81d06147c01a8ccced9aab9f9f63d50dcf8cace6bf6
   languageName: node
   linkType: hard
 
@@ -25311,27 +25318,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.58.0":
-  version: 1.58.0
-  resolution: "playwright-core@npm:1.58.0"
+"playwright-core@npm:1.58.1":
+  version: 1.58.1
+  resolution: "playwright-core@npm:1.58.1"
   bin:
     playwright-core: cli.js
-  checksum: 10c0/72f59ffed79357f3042ba8ebced54d63a1bdb01e4422e1d3238415ac1ee25254d4a1809f77c562045fc25805e71ad3de8e8ac0e3521e48b9c6f108cd5419ec48
+  checksum: 10c0/2c12755579148cbd13811cc1a01e9693432f0e4595c76ebb02d2e1b4ee7286719c6769fdb26cda61f218bc49b7ddd4de5d856abbd034acde4ff3dbeee93e4773
   languageName: node
   linkType: hard
 
-"playwright@npm:1.58.0":
-  version: 1.58.0
-  resolution: "playwright@npm:1.58.0"
+"playwright@npm:1.58.1":
+  version: 1.58.1
+  resolution: "playwright@npm:1.58.1"
   dependencies:
     fsevents: "npm:2.3.2"
-    playwright-core: "npm:1.58.0"
+    playwright-core: "npm:1.58.1"
   dependenciesMeta:
     fsevents:
       optional: true
   bin:
     playwright: cli.js
-  checksum: 10c0/f0565966a485f0bf0748897c19aa403f97c4c83bb936b7dfc6b2f1c056d4befb24810f451e4b8cb760db3733bfef1cf7f00b369664637e48befd6fe9e42f541a
+  checksum: 10c0/29cb2b34ad80f9dc1b27d26d8cf56e0964d7787e0beb18b25fd9d087a09ce56a359779104d2a1717d08789c2f2713928ef59140b2905e6ef00b2cb6df58bb107
   languageName: node
   linkType: hard
 
@@ -26170,18 +26177,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-server-dom-webpack@npm:19.2.3":
-  version: 19.2.3
-  resolution: "react-server-dom-webpack@npm:19.2.3"
+"react-server-dom-webpack@npm:19.2.4":
+  version: 19.2.4
+  resolution: "react-server-dom-webpack@npm:19.2.4"
   dependencies:
     acorn-loose: "npm:^8.3.0"
     neo-async: "npm:^2.6.1"
     webpack-sources: "npm:^3.2.0"
   peerDependencies:
-    react: ^19.2.3
-    react-dom: ^19.2.3
+    react: ^19.2.4
+    react-dom: ^19.2.4
     webpack: ^5.59.0
-  checksum: 10c0/9b3b507fee1e51ff7491aa6eded0d60aff7c16ceebc543beb82e4614b82864dbd3da8b6f3e5ae6474001cf6f5943b134a52be0ebd8f93f849cc2eea8cc57f898
+  checksum: 10c0/5f359bec49d3a0325616287bb8044253097b2d6e1260e8751f72fe0de01ea69de75053cdd4a64b6820ae1c194d504d3c57bc7877932332c25aec1e4107735fb6
   languageName: node
   linkType: hard
 
@@ -27023,7 +27030,7 @@ __metadata:
     "@babel/preset-typescript": "npm:7.28.5"
     "@babel/runtime-corejs3": "npm:7.28.6"
     "@npmcli/arborist": "npm:9.1.10"
-    "@playwright/test": "npm:1.58.0"
+    "@playwright/test": "npm:1.58.1"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.6.1"
@@ -28556,12 +28563,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"systeminformation@npm:5.30.6":
-  version: 5.30.6
-  resolution: "systeminformation@npm:5.30.6"
+"systeminformation@npm:5.30.7":
+  version: 5.30.7
+  resolution: "systeminformation@npm:5.30.7"
   bin:
     systeminformation: lib/cli.js
-  checksum: 10c0/a1a3ef96644fb9c0d291fde6c19be9ac5c29c32fa761a947ed0bf5ad7ea108e9203eeb83b1b02a70c27f276173603aa904c3675696f3a2af20d2b74d17ffeaba
+  checksum: 10c0/62588fabe62ec258d56055e609a075fe1eb1da2f090adc8c53e025ad8947d6eb9d3d2889646973fafba9528e06958decbb1def2b989af0363a952c5aff65fbae
   conditions: (os=darwin | os=linux | os=win32 | os=freebsd | os=openbsd | os=netbsd | os=sunos | os=android)
   languageName: node
   linkType: hard
@@ -29316,12 +29323,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:5.4.2":
-  version: 5.4.2
-  resolution: "type-fest@npm:5.4.2"
+"type-fest@npm:5.4.3":
+  version: 5.4.3
+  resolution: "type-fest@npm:5.4.3"
   dependencies:
     tagged-tag: "npm:^1.0.0"
-  checksum: 10c0/1e3aae1bebce316f2eedc8cbd2df0b89f94c6d27a269da587ad69b70e1d239d02bc94b10c27de4670c60464813b650476209cfbbaabdd1020ff88a85844b00be
+  checksum: 10c0/daea168fbd24db08d0a616254d18b8b454f40be48fbe1c546693c367f65b2040a3507c5b0f8e19397633aa93f552dba38c39f8c730696a3eb07cd6fba8380b09
   languageName: node
   linkType: hard
 

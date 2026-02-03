@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/codemods",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "Codemods to ease upgrading a CedarJS Project",
   "repository": {
     "type": "git",

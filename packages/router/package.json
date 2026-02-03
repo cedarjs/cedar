@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/router",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -100,7 +100,7 @@
     "core-js": "3.48.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-server-dom-webpack": "19.2.3"
+    "react-server-dom-webpack": "19.2.4"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",

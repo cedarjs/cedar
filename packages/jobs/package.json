@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/jobs",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -41,7 +41,7 @@
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "cron-parser": "5.5.0",
-    "type-fest": "5.4.2"
+    "type-fest": "5.4.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

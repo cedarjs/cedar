@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web-server",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "CedarJS's server for the Web side",
   "repository": {
     "type": "git",
@@ -29,7 +29,7 @@
     "@cedarjs/project-config": "workspace:*",
     "ansis": "4.2.0",
     "dotenv-defaults": "5.0.2",
-    "fastify": "5.7.2",
+    "fastify": "5.7.3",
     "yargs": "17.7.2"
   },
   "devDependencies": {

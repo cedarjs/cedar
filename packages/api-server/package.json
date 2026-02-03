@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
@@ -123,7 +123,7 @@
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
     "fast-json-parse": "1.0.3",
-    "fastify": "5.7.2",
+    "fastify": "5.7.3",
     "fastify-raw-body": "5.0.0",
     "pretty-bytes": "5.6.0",
     "pretty-ms": "7.0.1",
