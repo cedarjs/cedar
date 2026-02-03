@@ -4,6 +4,7 @@ const OWNER = 'cedarjs'
 const REPO = 'cedar'
 const WORKFLOW_FILE = 'ci.yml'
 const DEFAULT_COUNT = 20
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 /**
  * Gets the GitHub token from the environment or the `gh` CLI.
@@ -34,6 +35,7 @@ async function fetchWorkflowRuns(
   startDateStr: string | null = null,
   endDateStr: string | null = null,
   limit: number | null = null,
+  verbose = false,
 ): Promise<Record<string, any>[]> {
   let branchMsg = 'all branches'
 
@@ -98,6 +100,9 @@ async function fetchWorkflowRuns(
     if (isNaN(parsed.getTime())) {
       throw new Error(`Invalid end date: ${endDateStr}`)
     }
+    // Parse the raw end date (midnight at the start of that day). We'll convert
+    // it to the exclusive boundary (start of the following day) after any
+    // necessary start/end swapping so we don't change the ordering unintentionally.
     endMs = parsed.getTime()
   }
 
@@ -108,7 +113,19 @@ async function fetchWorkflowRuns(
     endMs = tmp
   }
 
+  // If an end date was provided, make it an exclusive boundary by moving it
+  // to the start of the next day. This ensures the user-provided end date is
+  // treated as inclusive (i.e., all runs on the end date are considered).
+  if (endMs !== null) {
+    endMs += ONE_DAY_MS
+  }
+
   let keepGoing = true
+  // When verbose diagnostics are on we restrict per-run logging to a small
+  // window around the requested date boundaries so the output is concise.
+  // These defaults will be updated per page when verbose is enabled.
+  let windowStart = Number.MIN_SAFE_INTEGER
+  let windowEnd = Number.MAX_SAFE_INTEGER
 
   while (keepGoing) {
     const url =
@@ -131,19 +148,52 @@ async function fetchWorkflowRuns(
     const data = await response.json()
     const runs = data.workflow_runs || []
 
+    if (verbose) {
+      // Update the compact debug window (1 day each side of the inclusive day range)
+      windowStart =
+        startMs !== null ? startMs - ONE_DAY_MS : Number.MIN_SAFE_INTEGER
+      // endMs is the exclusive boundary (start of the next day), so it already
+      // represents end date + 1 day and can be used as-is for the debug window.
+      windowEnd = endMs !== null ? endMs : Number.MAX_SAFE_INTEGER
+
+      const first = runs[0]
+      const last = runs[runs.length - 1]
+      console.log(
+        `[verbose] page ${page}: fetched ${runs.length} runs${
+          first && last
+            ? ` (first: ${first.created_at}, last: ${last.created_at})`
+            : ''
+        }`,
+      )
+      console.log(
+        `[verbose] computed start boundary (inclusive): ${startMs !== null ? new Date(startMs).toISOString() : '(none)'}`,
+      )
+      console.log(
+        `[verbose] computed end boundary (exclusive): ${endMs !== null ? new Date(endMs).toISOString() : '(none)'}`,
+      )
+      console.log(
+        `[verbose] debug window: ${new Date(windowStart).toISOString()} -> ${new Date(windowEnd).toISOString()}`,
+      )
+    }
+
     if (!runs || runs.length === 0) {
       break
     }
 
     for (const run of runs) {
       const runStart = new Date(run.run_started_at || run.created_at).getTime()
+      const runEnd = new Date(
+        run.updated_at || run.run_started_at || run.created_at,
+      ).getTime()
 
-      // If an end date was provided, skip runs that are newer than the end date
-      if (endMs !== null && runStart > endMs) {
+      // If an end date was provided, skip runs that start or finish on or after
+      // the exclusive boundary (start of the next day). This guarantees the
+      // entire run falls within the requested inclusive date range.
+      if (endMs !== null && (runStart >= endMs || runEnd >= endMs)) {
         continue
       }
 
-      // If this run is older than the start date, we can stop paginating (results are newest-first)
+      // If this run started before the start date, we can stop paginating (results are newest-first)
       if (startMs !== null && runStart < startMs) {
         keepGoing = false
         break
@@ -205,10 +255,85 @@ async function main() {
   let endDateStr: string | null = null
   let countWasProvided = false
 
-  const arg1 = process.argv[2]
-  const arg2 = process.argv[3]
-  const arg3 = process.argv[4]
-  const arg4 = process.argv[5]
+  const rawArgs = process.argv.slice(2)
+  const verbose = rawArgs.includes('--verbose') || rawArgs.includes('-v')
+
+  // Support inspecting a single run for debugging:
+  // - `--inspect-run=12345` or `--inspect-run 12345`
+  let inspectRunId: string | null = null
+  for (let i = 0; i < rawArgs.length; i += 1) {
+    const a = rawArgs[i]
+    if (a.startsWith('--inspect-run')) {
+      if (a.includes('=')) {
+        inspectRunId = a.split('=')[1]
+      } else {
+        inspectRunId = rawArgs[i + 1] ?? null
+      }
+      break
+    }
+  }
+
+  const args = rawArgs.filter(
+    (a) =>
+      a !== '--verbose' &&
+      a !== '-v' &&
+      !a.startsWith('--inspect-run') &&
+      a !== inspectRunId,
+  )
+
+  const arg1 = args[0]
+  const arg2 = args[1]
+  const arg3 = args[2]
+  const arg4 = args[3]
+
+  if (verbose) {
+    console.log('🔍 Verbose mode enabled')
+  }
+
+  // If the user asked to inspect a run, fetch that single run and print its timestamps
+  // then exit (useful for quickly checking created_at / run_started_at boundaries).
+  if (inspectRunId) {
+    try {
+      console.log(`Inspecting run ${inspectRunId}...`)
+      const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${inspectRunId}`
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      })
+      if (!response.ok) {
+        console.error(
+          `Failed to fetch run ${inspectRunId}: ${response.status} ${response.statusText}`,
+        )
+        process.exit(1)
+      }
+      const run = await response.json()
+      // Pretty-print the timestamps and a few key fields for quick debugging
+      console.log(
+        JSON.stringify(
+          {
+            id: run.id,
+            head_branch: run.head_branch,
+            created_at: run.created_at,
+            run_started_at: run.run_started_at,
+            updated_at: run.updated_at,
+            conclusion: run.conclusion,
+          },
+          null,
+          2,
+        ),
+      )
+      return
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error('Error fetching run:', err.message)
+      } else {
+        console.error('Unexpected error fetching run:', err)
+      }
+      process.exit(1)
+    }
+  }
 
   function isDateString(s: string | undefined): boolean {
     if (!s) {
@@ -325,6 +450,7 @@ async function main() {
       startDateStr,
       endDateStr,
       countWasProvided ? count : null,
+      verbose,
     )
 
     if (!runs || runs.length === 0) {
