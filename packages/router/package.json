@@ -94,7 +94,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.28.6",
+    "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "core-js": "3.48.0",

@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@babel/preset-typescript": "7.28.5",
-    "@babel/runtime-corejs3": "7.28.6",
+    "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/fastify-web": "workspace:*",

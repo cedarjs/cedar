@@ -37,7 +37,7 @@
     "test:watch": "yarn test --watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.28.6",
+    "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
     "@envelop/core": "5.5.0",
