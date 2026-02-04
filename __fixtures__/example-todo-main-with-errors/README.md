@@ -1,9 +1,9 @@
 # Todo
 
-This is an example Redwood app, implementing a very minimal todo application.
+This is an example Cedar app, implementing a very minimal todo application.
 Features you can see in action here:
 
-- Redwood Cells (see TodoListCell.js).
+- Cedar Cells (see TodoListCell.js).
 - Optimistic GraphQL response with Apollo (see AddTodo.js).
 - SVG loader (see Check.js)
 - StyledComponents usage (and stylistic approach)
@@ -22,16 +22,16 @@ yarn
 Set up the database and generate the database client:
 
 ```terminal
-yarn redwood db up
+yarn cedar db up
 ```
 
 ### Fire it up
 
 ```terminal
-yarn redwood dev
+yarn cedar dev
 ```
 
-Browse to `http://localhost:8910` (or run `yarn redwood open`) to see the web app.
+Browse to `http://localhost:8910` (or run `yarn cedar open`) to see the web app.
 
 Lambda functions run on
 `localhost:8911` but are proxied via `localhost:8910/api/functions/*`.

@@ -3,7 +3,7 @@
 ## About
 
 This package contains code for the global context used on the API side of a
-Redwood application. It's automatically available in services, auth functions
+Cedar application. It's automatically available in services, auth functions
 and custom functions.
 
 ## Serveful environments

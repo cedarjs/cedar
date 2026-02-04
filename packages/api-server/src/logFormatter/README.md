@@ -7,7 +7,7 @@ It is based on
 cute [ndjson](http://ndjson.org) formatter for
 [pino](https://github.com/pinojs/pino).
 
-Cedar-specific GraphQL log data included by the the `useRedwoodLogger` envelop
+Cedar-specific GraphQL log data included by the the `useCedarLogger` envelop
 plug-in is supported:
 
 - Request Id

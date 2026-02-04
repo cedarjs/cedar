@@ -4,7 +4,7 @@ Deployment URL: https://cedarjs.com/docs
 
 ## Getting started
 
-Checkout this repo [(redwoodjs/redwood)](https://github.com/redwoodjs/redwood), `cd` into this directory (`docs`)
+Checkout this repo [(cedarjs/cedar)](https://github.com/cedarjs/cedar), `cd` into this directory (`docs`)
 
 ```
 yarn install
@@ -28,7 +28,7 @@ In [previous section](./first-page) we....
 
 ## Contributing
 
-Fork the repo, make your changes and open a PR on GitHub. That will build and launch a copy of the site that you can get from the `netlify/redwoodjs/deploy-preview` check (click "Details" to open it):
+Fork the repo, make your changes and open a PR on GitHub. That will build and launch a copy of the site that you can get from the `netlify/cedarjs/deploy-preview` check (click "Details" to open it):
 
 ![image](https://user-images.githubusercontent.com/300/76569613-c4421000-6470-11ea-8223-eb98504e6994.png)
 
@@ -40,4 +40,4 @@ To update any images in the doc, first upload your screenshot into a comment tex
 
 ## Contributors
 
-Redwood is amazing thanks to a wonderful [community of contributors](https://github.com/redwoodjs/redwood/blob/main/README.md#contributors).
+Cedar is amazing thanks to a wonderful [community of contributors](https://github.com/cedarjs/cedar/blob/main/README.md#contributors).

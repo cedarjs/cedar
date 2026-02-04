@@ -1,8 +1,8 @@
 # Use Armor
 
-RedwoodJS v4 uses GraphQL Armor to enforce default GraphQL security best practices.
+CedarJS v4 uses GraphQL Armor to enforce default GraphQL security best practices.
 
-Prior to v4, Redwood's GraphQLHandler could configure a Query Depth Limit​ to guarded against cyclical and deeply nested malicious operations.
+Prior to v4, Cedar's GraphQLHandler could configure a Query Depth Limit​ to guarded against cyclical and deeply nested malicious operations.
 
 ```ts
 export const handler = createGraphQLHandler({

@@ -43,7 +43,7 @@ cd packages/codemods
 yarn generate:codemod
 ```
 
-Follow the interactive guide to specify the Redwood framework version for the codemod and type of codemod.
+Follow the interactive guide to specify the Cedar framework version for the codemod and type of codemod.
 
 ### Structure of this package
 
@@ -60,17 +60,17 @@ Each codemod has the following files:
 
 ### Different types of codemods
 
-Codemods are sometimes really simple, e.g. just normal string replace or updating a package.json. But other times we use jscodeshift to change code on a redwood project
+Codemods are sometimes really simple, e.g. just normal string replace or updating a package.json. But other times we use jscodeshift to change code on a cedar project
 
 Here are a few different examples to help you get familiarised:
 
-- [Rename config in Redwood.toml](packages/codemods/src/codemods/redwood/v0.38.x/renameApiProxyPath)—
-  Simple string replace on the user's `redwood.toml`. No ASTs, no complications!
+- [Rename config in Cedar.toml](packages/codemods/src/codemods/cedar/v0.38.x/renameApiProxyPath)—
+  Simple string replace on the user's `cedar.toml`. No ASTs, no complications!
 
-- [Add Directives](packages/codemods/src/codemods/redwood/v0.37.x/addDirectives)—
-  Download files from the RedwoodJS template because we've added new files that are needed in a user's project. No ASTs involved
+- [Add Directives](packages/codemods/src/codemods/cedar/v0.37.x/addDirectives)—
+  Download files from the CedarJS template because we've added new files that are needed in a user's project. No ASTs involved
 
-- [Update GraphQL Function](packages/codemods/src/codemods/redwood/v0.37.x/updateGraphQLFunction)—
+- [Update GraphQL Function](packages/codemods/src/codemods/cedar/v0.37.x/updateGraphQLFunction)—
   A more complex example, which uses `jscodeshift` and ASTs to update code in a user's project
 
 The rest of the docs will focus on the more complex cases (the third example).
@@ -141,7 +141,7 @@ export default function transform(file: FileInfo, api: API) {
   return root.find(j.ImportDeclaration, {
     source: {
       type: 'Literal',
-      value: '@redwoodjs/router',
+      value: '@cedarjs/router',
     },
   })
 }
@@ -166,7 +166,7 @@ But sometimes you'll just have to use one of the more generic methods: `replaceW
 
 Although jscodeshift has a built-in way of doing testing, we have a slightly different way of testing.
 
-There are 3 key test utils you need to be aware of (located in [packages/codemods/testUtils/index.ts](https://github.com/redwoodjs/redwood/blob/main/packages/codemods/testUtils/index.ts)).
+There are 3 key test utils you need to be aware of (located in [packages/codemods/testUtils/index.ts](https://github.com/cedarjs/cedar/blob/main/packages/codemods/testUtils/index.ts)).
 
 1. `matchTransformSnapshot`—this lets you give it a transformName (i.e. the transform you're writing), and a fixtureName. The fixtures should be located in `__testfixtures__`, and have `{fixtureName}.input.{js,ts}` and `{fixtureName}.output.{js,ts}` files.
 
@@ -174,7 +174,7 @@ Note that the fixtureName can be anything you want, and you can have multiple fi
 
 ```js
 describe('Update API Imports', () => {
-  it('Updates @redwoodjs/api imports', async () => {
+  it('Updates @cedarjs/api imports', async () => {
     await matchTransformSnapshot('updateApiImports', 'apiImports')
   })
 })
@@ -213,7 +213,7 @@ The `matchFolderTransform` helper will check
 a) If the files in the output fixture folder are present after transform
 b) If their contents match
 
-## How to run your changes on a test redwood project
+## How to run your changes on a test cedar project
 
 1. Clean all your other packages, and rebuild once:
 
@@ -232,7 +232,7 @@ yarn build
 
 3. Running the updated CLI
 
-The CLI is meant to be run on a redwood project (i.e. it expects you to be cd'd into a redwood project), but you can provide it as an environment variable too!
+The CLI is meant to be run on a cedar project (i.e. it expects you to be cd'd into a cedar project), but you can provide it as an environment variable too!
 
 ```shell
 RWJS_CWD=/path/to/rw-project node "./packages/codemods/dist/codemods.js" {your-codemod-name}
@@ -278,14 +278,14 @@ collection items, and then get the node out of that.
 const j = api.jscodeshift
 const root = j(file.source)
 
-const redwoodApolloProvider = root.findJSXElements('RedwoodApolloProvider')
+const cedarApolloProvider = root.findJSXElements('CedarApolloProvider')
 
 console.log(
-  '<RedwoodApolloProvider>',
-  j(redwoodApolloProvider.get(0).node).toSource(),
+  '<CedarApolloProvider>',
+  j(cedarApolloProvider.get(0).node).toSource(),
 )
 // Will log:
-// <RedwoodApolloProvider useAuth={useAuth}>
+// <CedarApolloProvider useAuth={useAuth}>
 //   <Routes />
-// </RedwoodApolloProvider>
+// </CedarApolloProvider>
 ```

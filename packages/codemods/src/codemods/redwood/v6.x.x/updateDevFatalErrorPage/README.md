@@ -10,15 +10,15 @@ Here's a diff of what this codemod will do
  // thoughtful. =)
 
 -// Ensures that production builds do not include the error page
--let RedwoodDevFatalErrorPage = undefined
+-let CedarDevFatalErrorPage = undefined
 -if (process.env.NODE_ENV === 'development') {
--  RedwoodDevFatalErrorPage =
+-  CedarDevFatalErrorPage =
 -    require('@cedarjs/web/dist/components/DevFatalErrorPage').DevFatalErrorPage
 -}
 +// This import will be automatically removed when building for production
 +import { DevFatalErrorPage } from '@cedarjs/web/dist/components/DevFatalErrorPage'
 
--export default RedwoodDevFatalErrorPage ||
+-export default CedarDevFatalErrorPage ||
 +export default DevFatalErrorPage ||
    (() => (
      <main>

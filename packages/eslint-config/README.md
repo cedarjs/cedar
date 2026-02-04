@@ -26,11 +26,11 @@ Our configuration uses recommended rule presets, including those from [ESLint](h
 
 ## Roadmap
 
-- Lint for case-sensitive imports (issue [#2806](https://github.com/redwoodjs/redwood/issues/2806))
+- Lint for case-sensitive imports (issue [#2806](https://github.com/cedarjs/cedar/issues/2806))
 
 ## Contributing
 
-This package doesn't depend on other Redwood Framework packages. To contribute, you should be familiar with the ESLint package. Keep in mind that any rules added should not conflict with code formatting tools (e.g. [Prettier](https://prettier.io/docs/en/integrating-with-linters.html)).
+This package doesn't depend on other Cedar Framework packages. To contribute, you should be familiar with the ESLint package. Keep in mind that any rules added should not conflict with code formatting tools (e.g. [Prettier](https://prettier.io/docs/en/integrating-with-linters.html)).
 
 ## Usage (Flat Config - Recommended)
 

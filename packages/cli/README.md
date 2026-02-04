@@ -1,4 +1,4 @@
-# RedwoodJS CLI
+# CedarJS CLI
 
   <!-- toc -->
 
@@ -33,26 +33,26 @@
 
 ## Purpose and Vision
 
-Redwood provides a first-class CLI that helps you at every stage of development, from your first commit to your first deploy. And it comes with Redwood, which means no extra software to install!
+Cedar provides a first-class CLI that helps you at every stage of development, from your first commit to your first deploy. And it comes with Cedar, which means no extra software to install!
 
-Redwood uses [yarn workspaces](https://yarnpkg.com/features/workspaces) to separate your app's sides, generators to give you a smooth DX, and [Prisma](https://www.prisma.io/) to manage your database. We have a generator for nearly everything, on both sides of the app, from components to functions.
+Cedar uses [yarn workspaces](https://yarnpkg.com/features/workspaces) to separate your app's sides, generators to give you a smooth DX, and [Prisma](https://www.prisma.io/) to manage your database. We have a generator for nearly everything, on both sides of the app, from components to functions.
 
-Since the CLI is the entry point to Redwood, as Redwood continues to grow&mdash;especially as we add more sides and targets&mdash;so will the CLI.
+Since the CLI is the entry point to Cedar, as Cedar continues to grow&mdash;especially as we add more sides and targets&mdash;so will the CLI.
 
 ## Roadmap
 
 ### Coming Soon
 
-- [Generators refactor (plopjs)](https://github.com/redwoodjs/redwood/issues/653)
+- [Generators refactor (plopjs)](https://github.com/cedarjs/cedar/issues/653)
 
 ### Coming Later
 
-- [Multiple database support](https://github.com/redwoodjs/redwood/issues/507)
-- [Support for dynamic sides and targets](https://github.com/redwoodjs/redwood/pull/355)
+- [Multiple database support](https://github.com/cedarjs/cedar/issues/507)
+- [Support for dynamic sides and targets](https://github.com/cedarjs/cedar/pull/355)
 
 ## Contributing
 
-Redwood's CLI is built with [Yargs](http://yargs.js.org/).
+Cedar's CLI is built with [Yargs](http://yargs.js.org/).
 If you aren't familiar with it, we walk you through what you need to know in the [Adding a Command](#adding-a-command) section. But if you already are, know that we use the [advanced api](https://github.com/yargs/yargs/blob/master/docs/advanced.md). This means that instead of seeing things written as a method chain, with the `command` method doing most of the work, like:
 
 ```javascript
@@ -91,13 +91,13 @@ export const handler = (argv) => {
 
 ### Overview
 
-Contributing to `@redwoodjs/cli` usually means adding a command or modifying an existing one. We've organized this doc around adding a command since if you know how to do this you'll know how to modify one too.
+Contributing to `@cedarjs/cli` usually means adding a command or modifying an existing one. We've organized this doc around adding a command since if you know how to do this you'll know how to modify one too.
 
 #### Quickstart
 
-RedwoodJS CLI is usually run in a project, this is problematic for contributors, because the transpiled files are not in a project, but in the RedwoodJS framework repo. Luckily the path can be modified at run-time via an env-var: `RWJS_CWD=../path/to/project`.
+CedarJS CLI is usually run in a project, this is problematic for contributors, because the transpiled files are not in a project, but in the CedarJS framework repo. Luckily the path can be modified at run-time via an env-var: `RWJS_CWD=../path/to/project`.
 
-We've added a handy yarn alias to test your modified changes to the Redwood CLI against the "example-todo-main" fixture (`__fixtures__/example-todo-main`) you can do the following:
+We've added a handy yarn alias to test your modified changes to the Cedar CLI against the "example-todo-main" fixture (`__fixtures__/example-todo-main`) you can do the following:
 
 ```terminal
 cd packages/cli
@@ -119,19 +119,19 @@ There's a few best practices we follow that you should be aware of:
 - **Use `description` instead of `desc` or `describe`:** While yargs accepts any of these, for consistency, use `description`
 - **descriptions shouldn't end in periods:** Again, just a stylistic choice&mdash;but stick to it!
 - **`builder` should be a function:** This enables the positional api (more on that [later](#builder))
-- **Update the docs and test:** By docs, we mean the content on redwoodjs.com. We know this can be a lot, so don't feel like you have to do it all yourself. We're more than happy to help&mdash;just ask us!
+- **Update the docs and test:** By docs, we mean the content on cedarjs.com. We know this can be a lot, so don't feel like you have to do it all yourself. We're more than happy to help&mdash;just ask us!
 
 If none of these make sense yet, don't worry! You'll see them come up in the next section, where we walk you through adding a command.
 
 ### Adding a Command
 
-You can add a command by creating a file in [./src/commands](https://github.com/redwoodjs/redwood/tree/main/packages/cli/src/commands). Although it's not necessary, for consistency, the file should be named after the command that invokes it. For example, the build command, which is invoked with
+You can add a command by creating a file in [./src/commands](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/commands). Although it's not necessary, for consistency, the file should be named after the command that invokes it. For example, the build command, which is invoked with
 
 ```terminal
 yarn rw build
 ```
 
-lives in [./src/commands/build.js](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/commands/build.js).
+lives in [./src/commands/build.js](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/commands/build.js).
 
 To make a command using the advanced api, yargs requires that you export [four constants](https://github.com/yargs/yargs/blob/master/docs/advanced.md#providing-a-command-module):
 
@@ -290,7 +290,7 @@ If you're adding a command that serves as an entry point to more commands, like 
 1. a file for the command in `./src/commands`, like in [Adding a Command](#adding-a-command), and
 2. a directory to store all the commands it serves as an entry point to.
 
-Although it's not necessary, for consistency, the file and directory should be named after the command that invokes them. Using the generate command as an example, in `./src/commands`, there's the file [generate.js](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/commands/generate.js) and the directory [generate](https://github.com/redwoodjs/redwood/tree/main/packages/cli/src/commands/generate).
+Although it's not necessary, for consistency, the file and directory should be named after the command that invokes them. Using the generate command as an example, in `./src/commands`, there's the file [generate.js](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/commands/generate.js) and the directory [generate](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/commands/generate).
 
 Files for entry-point commands typically aren't too complicated. Here's the contents of `generate.js` in its entirety:
 
@@ -336,17 +336,17 @@ There are files and directories here that aren't yargs related (`README.md`, `he
 
 ### Adding a Generator
 
-> We're about to refactor generators out of @redwoodjs/cli and into their own package, so some of this section will probably change soon.
+> We're about to refactor generators out of @cedarjs/cli and into their own package, so some of this section will probably change soon.
 
-You can add a generator by creating a directory and a file in that directory in [./src/commands/generate](https://github.com/redwoodjs/redwood/tree/main/packages/cli/src/commands/generate).
+You can add a generator by creating a directory and a file in that directory in [./src/commands/generate](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/commands/generate).
 Although it's not necessary, for consistency, the directory and file should be named after the command that invokes them.
 For example, the page generator, which is invoked with
 
 ```
-yarn redwood generate page
+yarn cedar generate page
 ```
 
-lives in [./src/commands/generate/page/page.js](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/commands/generate/page/page.js), where the `page` directory has the following structure:
+lives in [./src/commands/generate/page/page.js](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/commands/generate/page/page.js), where the `page` directory has the following structure:
 
 ```terminal
 src/commands/generate/page
@@ -395,7 +395,7 @@ export const files = ({ name, ...rest }) => {
   })
 ```
 
-For the actual writing of files to disk, generators call on a function from [src/lib/index.js](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/lib/index.js): [writeFilesTask](https://github.com/redwoodjs/redwood/tree/main/packages/cli/src/lib/index.js#L252-L263).
+For the actual writing of files to disk, generators call on a function from [src/lib/index.js](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/lib/index.js): [writeFilesTask](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/lib/index.js#L252-L263).
 
 More complicated generators, like auth, will have a little more logic in their directories:
 
@@ -409,7 +409,7 @@ src/commands/setup/auth
 
 #### createYargsForComponentGeneration
 
-There's another helper you'll see being used fairly often: [createYargsForComponentGeneration](https://github.com/redwoodjs/redwood/tree/main/packages/cli/src/commands/generate/helpers.js#L67-L131).
+There's another helper you'll see being used fairly often: [createYargsForComponentGeneration](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/commands/generate/helpers.js#L67-L131).
 
 This function takes care of some of the boilerplate around yargs commands by creating the four constants&mdash;`command`, `description`, `builder`, and `handler`&mdash;for you.
 
@@ -546,17 +546,17 @@ Destroyers rollback the changes made by generators. They're one-to-one, in that,
 
 Just like generators, destroyers have helpers that minimize the amount of boilerplate you have to write so you can get straight to the custom, creative logic. They're similarly named too: `createYargsForComponentDestroy` is one that, like for generators, you should use if permitting. And you probably will for `builder` at least, since, so far, destroyers don't have any options.
 
-And just like generators, destroyers have tests. Right now, the way we test destroyers is by comparing the files that the generator produces with the files the destroyer attempts to delete. But because we don't actually want to write files to disk, we mock the api required to run the generator's `files` function, which is what you'll see going in the top-level [`__mocks__`](https://github.com/redwoodjs/redwood/blob/main/packages/cli/__mocks__/fs.js) directory. To do this, we use Jest's [manual mocking](https://jestjs.io/docs/en/manual-mocks.html) to mock NodeJS's `fs` module.
+And just like generators, destroyers have tests. Right now, the way we test destroyers is by comparing the files that the generator produces with the files the destroyer attempts to delete. But because we don't actually want to write files to disk, we mock the api required to run the generator's `files` function, which is what you'll see going in the top-level [`__mocks__`](https://github.com/cedarjs/cedar/blob/main/packages/cli/__mocks__/fs.js) directory. To do this, we use Jest's [manual mocking](https://jestjs.io/docs/en/manual-mocks.html) to mock NodeJS's `fs` module.
 
 ### Adding a Provider to the Auth Generator
 
-Adding a provider to the auth generator is as easy as adding a file in [./src/commands/setup/auth/providers](https://github.com/redwoodjs/redwood/tree/main/packages/cli/src/commands/setup/auth/providers) that exports the four constants: `config`, `webPackages`, `apiPackages` and `notes`.
+Adding a provider to the auth generator is as easy as adding a file in [./src/commands/setup/auth/providers](https://github.com/cedarjs/cedar/tree/main/packages/cli/src/commands/setup/auth/providers) that exports the four constants: `config`, `webPackages`, `apiPackages` and `notes`.
 
-> Note that the provider you are about to add has to have already been implemented in `@redwoodjs/auth`. For example, the provider in the example below, Netlify Identity, is implemented [here](https://github.com/redwoodjs/redwood/blob/main/packages/auth/src/authClients/netlify.ts).
+> Note that the provider you are about to add has to have already been implemented in `@cedarjs/auth`. For example, the provider in the example below, Netlify Identity, is implemented [here](https://github.com/cedarjs/cedar/blob/main/packages/auth/src/authClients/netlify.ts).
 >
-> So if you haven't done that yet, start with [this doc](https://github.com/redwoodjs/redwood/blob/main/packages/auth/README.md#contributing), then come back to this section afterwards.
+> So if you haven't done that yet, start with [this doc](https://github.com/cedarjs/cedar/blob/main/packages/auth/README.md#contributing), then come back to this section afterwards.
 
-We'll use the [Netlify Identity](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/commands/setup/auth/providers/netlify.js) provider as an example to discuss these requirements:
+We'll use the [Netlify Identity](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/commands/setup/auth/providers/netlify.js) provider as an example to discuss these requirements:
 
 ```javascript
 // ./src/commands/setup/auth/providers/netlify.js
@@ -585,7 +585,7 @@ export const notes = [
 ]
 ```
 
-`config` is an object that contains everything that needs to be inserted into a Redwood app's `./web/src/index.js` to setup the auth provider and make it available to the router. It has three properties: `imports`, `init`, and `authProvider`.
+`config` is an object that contains everything that needs to be inserted into a Cedar app's `./web/src/index.js` to setup the auth provider and make it available to the router. It has three properties: `imports`, `init`, and `authProvider`.
 
 `imports` is an array of strings that lists any imports that need to be added to the top of `./web/src/index.js`. Any initialization code that needs to go after the `import` statements goes in `init`. And `authProvider` is an object that contains exactly two keys, `client` and `type` that will be passed as props to `<AuthProvider>`.
 
@@ -597,24 +597,24 @@ Lastly, `notes` is an array of strings to output after the generator has finishe
 
 <!-- TODO -->
 <!-- This might need updated soon... -->
-<!-- https://github.com/redwoodjs/redwood/pull/661#issuecomment-644146059 -->
+<!-- https://github.com/cedarjs/cedar/pull/661#issuecomment-644146059 -->
 
 Most of the commands in `dbCommands` are just wrappers around [Prisma commands](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-cli/command-reference),
-the exception being `seed`, which runs a Redwood app's [./api/prisma/seed.js](https://github.com/redwoodjs/create-cedar-app/blob/master/api/prisma/seeds.js).
+the exception being `seed`, which runs a Cedar app's [./api/prisma/seed.js](https://github.com/cedarjs/create-cedar-app/blob/master/api/prisma/seeds.js).
 
-Adding or modifying a command here's no different&mdash;there's still a `command`, `description`, `builder`, and `handler`. But there's a pattern to `handler`: it usually uses [runCommandTask](https://github.com/redwoodjs/redwood/blob/d51ade08118c17459cebcdb496197ea52485364a/packages/cli/src/lib/index.js#L349-L377), a Redwood-defined function.
+Adding or modifying a command here's no different&mdash;there's still a `command`, `description`, `builder`, and `handler`. But there's a pattern to `handler`: it usually uses [runCommandTask](https://github.com/cedarjs/cedar/blob/d51ade08118c17459cebcdb496197ea52485364a/packages/cli/src/lib/index.js#L349-L377), a Cedar-defined function.
 
 This is because most `dbCommands` are really just running prisma commands, so they really just have to output something like `yarn prisma ...`.
 
 #### Generators
 
-If you're converting a generator, read the _Goals_ section of tracking issue [#523](https://github.com/redwoodjs/redwood/issues/523); it details some specs you should comply with.
+If you're converting a generator, read the _Goals_ section of tracking issue [#523](https://github.com/cedarjs/cedar/issues/523); it details some specs you should comply with.
 
 Some of the generators have already been converted; use them as a reference (linking to the PRs here):
 
-- [component](https://github.com/redwoodjs/redwood/pull/632)
-- [sdl](https://github.com/redwoodjs/redwood/pull/515)
-- [services](https://github.com/redwoodjs/redwood/pull/515)
+- [component](https://github.com/cedarjs/cedar/pull/632)
+- [sdl](https://github.com/cedarjs/cedar/pull/515)
+- [services](https://github.com/cedarjs/cedar/pull/515)
 
 For most of the generate commands, the option (in the builder) for generating a typescript file is already there, either in the builder returned from `createYargsForComponentGeneration` or in `getYargsDefaults` (the former actually uses the latter).
 
@@ -623,7 +623,7 @@ For most of the generate commands, the option (in the builder) for generating a 
 Because it's where most of the action is, most of this doc has been about the `src/commands` directory. But what about all those other files?
 
 ```
-redwood/packages/cli
+cedar/packages/cli
 ├── jest.config.js
 ├── __mocks__
 ├── package.json
@@ -637,7 +637,7 @@ redwood/packages/cli
 
 #### index.js
 
-[index.js](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/index.js) is the `rw` in `yarn rw`. It's the entry-point command to all commands, and like other entry-point commands, it's not too complicated.
+[index.js](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/index.js) is the `rw` in `yarn rw`. It's the entry-point command to all commands, and like other entry-point commands, it's not too complicated.
 
 But it's distinct from the others in that it's the only one that has a shebang at the top and `argv` at the bottom:
 
@@ -656,7 +656,7 @@ We also use methods that we want to affect all commands here, like `demandComman
 
 #### lib/colors.js
 
-[colors.js](https://github.com/redwoodjs/redwood/blob/main/packages/cli/src/lib/colors.js) provides a declarative way of coloring output to the console using [ansis](https://github.com/webdiscus/ansis#styles). You'll see it imported like:
+[colors.js](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/lib/colors.js) provides a declarative way of coloring output to the console using [ansis](https://github.com/webdiscus/ansis#styles). You'll see it imported like:
 
 ```javascript
 import c from '../lib/colors'
@@ -693,11 +693,11 @@ export default {
 
 ### I want to alias `yarn rw`
 
-You're not the only one. See the discussion [here](https://github.com/redwoodjs/redwood/issues/328).
+You're not the only one. See the discussion [here](https://github.com/cedarjs/cedar/issues/328).
 
 ### Can I customize the generators?
 
 Not yet, but we're talking about it! See the ongoing discussions in these issues:
 
-- Investigate integrating or replacing generators with Plop [#653](https://github.com/redwoodjs/redwood/issues/653)
-- BYO Components to Scaffold Generator [#473](https://github.com/redwoodjs/redwood/issues/473)
+- Investigate integrating or replacing generators with Plop [#653](https://github.com/cedarjs/cedar/issues/653)
+- BYO Components to Scaffold Generator [#473](https://github.com/cedarjs/cedar/issues/473)

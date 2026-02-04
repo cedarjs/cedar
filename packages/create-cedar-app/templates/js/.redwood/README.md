@@ -1,8 +1,8 @@
-# .redwood
+# .cedar
 
 ## What is this directory?
 
-Cedar uses this `.redwood` directory to store transitory data that aids in the smooth and convenient operation of your Cedar project.
+Cedar uses this `.cedar` directory to store transitory data that aids in the smooth and convenient operation of your Cedar project.
 
 ## Do I need to do anything with this directory?
 
@@ -33,12 +33,12 @@ You don't need to commit any other contents of this directory to your version co
 | updateCheck | Stores a file which contains the results of checking for Cedar updates.                                                                          |
 | studio      | Used to store data for `rw studio`                                                                                                               |
 
-We try to keep this README up to date but you may, from time to time, find other files or directories in this `.redwood` directory that have not yet been documented here. This is likely nothing to worry about but feel free to let us know and we'll update this list.
+We try to keep this README up to date but you may, from time to time, find other files or directories in this `.cedar` directory that have not yet been documented here. This is likely nothing to worry about but feel free to let us know and we'll update this list.
 
 ### Telemetry
 
-CedarJS collects completely anonymous telemetry data about general usage. For transparency, that data is viewable in the respective directories and files. To learn more and manage your project's settings, visit [telemetry.redwoodjs.com](https://telemetry.redwoodjs.com).
+CedarJS collects completely anonymous telemetry data about general usage. For transparency, that data is viewable in the respective directories and files. To learn more and manage your project's settings, visit [telemetry.cedarjs.com](https://telemetry.cedarjs.com).
 
 ### Have any questions?
 
-Feel free to reach out to us in the [RedwoodJS Community](https://community.redwoodjs.com/) forum if you have any questions.
+Feel free to reach out to us in the [CedarJS Community](https://community.cedarjs.com/) forum if you have any questions.
