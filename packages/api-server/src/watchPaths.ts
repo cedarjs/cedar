@@ -104,7 +104,6 @@ export async function getIgnoreFunction() {
   // matches. Plus, chokidar needs unix-style `/` path separators for globs even
   // on Windows, which is exactly what `importStatementPath()` converts paths to
   const ignoredApiPaths = await apiIgnorePaths()
-  const ignoredWatchPaths = ignoredApiPaths.map((p) => importStatementPath(p))
 
   const ignoredExtensions = [
     '.DS_Store',
@@ -118,14 +117,6 @@ export async function getIgnoreFunction() {
     '.d.ts',
     '.log',
   ]
-
-  // A small heuristic to detect simple glob-like patterns. This avoids adding
-  // another dependency just to detect globs.
-  const globLikeRe = /[*?[\]{}]/
-
-  // Precompute literal paths and compiled glob matchers so that the returned
-  // ignore function is as fast as possible when called repeatedly by chokidar.
-  const literalPatterns = ignoredWatchPaths.filter((p) => !globLikeRe.test(p))
 
   return (file: string) => {
     if (file.includes('node_modules')) {
@@ -142,7 +133,7 @@ export async function getIgnoreFunction() {
       return true
     }
 
-    if (literalPatterns.some((ignoredPath) => file.includes(ignoredPath))) {
+    if (ignoredApiPaths.some((ignoredPath) => file.includes(ignoredPath))) {
       return true
     }
 
