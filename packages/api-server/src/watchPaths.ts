@@ -119,6 +119,17 @@ export async function getIgnoreFunction() {
   ]
 
   return (file: string) => {
+    if (file.includes('src')) {
+      console.log('debug')
+      console.log('debug file', file)
+      console.log('debug packages path', cedarPaths.packages)
+      console.log(
+        'debug import packages path',
+        importStatementPath(cedarPaths.packages),
+      )
+      console.log('debug')
+    }
+
     if (file.includes('node_modules')) {
       return true
     }
@@ -129,7 +140,10 @@ export async function getIgnoreFunction() {
 
     // Ignore package source files since the api server is using the built files
     // in the dist directory
-    if (file.includes(cedarPaths.packages) && file.includes('/src/')) {
+    if (
+      file.includes(importStatementPath(cedarPaths.packages)) &&
+      file.includes('/src/')
+    ) {
       return true
     }
 
