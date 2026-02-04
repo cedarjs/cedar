@@ -72,7 +72,7 @@ describe('watchPaths', () => {
     // and determine the database directory without throwing.
     await fs.promises.writeFile(
       path.join(apiDir, 'prisma.config.cjs'),
-      "module.exports = { schema: 'schema.prisma' }",
+      "module.exports = { schema: 'db/schema.prisma' }",
     )
     await fs.promises.writeFile(path.join(apiDir, 'schema.prisma'), '')
 
@@ -100,6 +100,45 @@ describe('watchPaths', () => {
       await fs.promises.rm(tmpDir, { recursive: true, force: true })
     } catch {
       // ignore cleanup errors
+    }
+  })
+
+  it('can be used to set up chokidar with the expected watch paths', async () => {
+    const patterns = await pathsToWatch()
+
+    const fooPkgPath = path.join(tmpDir, 'packages', 'foo')
+    const fooDistFile = path.join(fooPkgPath, 'dist', 'index.js')
+    const nmFile = path.join(fooPkgPath, 'node_modules', 'pkg', 'index.ts')
+    const srcFile = path.join(fooPkgPath, 'src', 'index.ts')
+
+    // Minimal chokidar integration check: ensure expected paths are watched and
+    // paths that should be ignored are not present in the watched map.
+    const watcher = chokidar.watch(patterns, {
+      persistent: true,
+      ignoreInitial: true,
+    })
+
+    watcher.on('error', (error) => {
+      console.error('chokidar watcher error:', error)
+      // Always fail the test if an error occurs
+      expect(true).toBe(false)
+    })
+
+    try {
+      await new Promise((resolve) => watcher.on('ready', resolve))
+
+      const watched = watcher.getWatched()
+
+      // Ensure API src is present in the watched map and package dist is
+      // still watched.
+      expect(isPathWatched(watched, path.join(tmpDir, 'api', 'src'))).toBe(true)
+      expect(isPathWatched(watched, path.dirname(fooDistFile))).toBe(true)
+
+      // Expect packages/foo/src and node_modules to not be watched
+      expect(isPathWatched(watched, path.dirname(srcFile))).toBe(false)
+      expect(isPathWatched(watched, path.dirname(nmFile))).toBe(false)
+    } finally {
+      await watcher.close()
     }
   })
 
@@ -372,7 +411,7 @@ describe('watchPaths', () => {
           resolve()
         }, 500)
 
-        const onAll = (eventName: string, filePath: string) => {
+        const onAll = (_eventName: string, filePath: string) => {
           const normalized = importStatementPath(filePath)
 
           if (normalized.includes('/packages/foo/node_modules/')) {
@@ -445,4 +484,65 @@ describe('watchPaths', () => {
       await watcher.close()
     }
   }, 10_000)
+
+  describe('getIgnoreFunction', () => {
+    it('handles various paths correctly', async () => {
+      const ignoreFn = await getIgnoreFunction()
+
+      const fooPkgPath = path.join(tmpDir, 'packages', 'foo')
+
+      const nmFile = path.join(fooPkgPath, 'node_modules', 'pkg', 'index.ts')
+      await fs.promises.mkdir(path.dirname(nmFile), { recursive: true })
+      await fs.promises.writeFile(nmFile, 'export const x = 1')
+
+      const srcFile = path.join(fooPkgPath, 'src', 'index.ts')
+      await fs.promises.mkdir(path.dirname(srcFile), { recursive: true })
+      await fs.promises.writeFile(srcFile, 'export const y = 1')
+
+      const apiDistFile = path.join(tmpDir, 'api', 'dist', 'main.js')
+      await fs.promises.mkdir(path.dirname(apiDistFile), { recursive: true })
+      await fs.promises.writeFile(apiDistFile, '// api dist')
+
+      const fooDistFile = path.join(fooPkgPath, 'dist', 'index.js')
+      const apiSrcFile = path.join(tmpDir, 'api', 'src', 'index.ts')
+
+      const normalizedNm = importStatementPath(nmFile)
+      const normalizedFooSrc = importStatementPath(srcFile)
+      const normalizedApiDist = importStatementPath(apiDistFile)
+      const normalizedFooDist = importStatementPath(fooDistFile)
+      const normalizedApiSrc = importStatementPath(apiSrcFile)
+
+      expect(ignoreFn(normalizedNm)).toBe(true)
+      expect(ignoreFn(normalizedFooSrc)).toBe(true)
+      expect(ignoreFn(normalizedApiDist)).toBe(true)
+
+      expect(ignoreFn(normalizedFooDist)).toBe(false)
+      expect(ignoreFn(normalizedApiSrc)).toBe(false)
+    })
+  })
 })
+
+function isPathWatched(
+  watchedMap: Record<string, string[]>,
+  targetPath: string,
+) {
+  const normalizedTarget = importStatementPath(targetPath)
+  const dir = importStatementPath(path.dirname(targetPath))
+  const base = path.basename(targetPath)
+
+  for (const [dirKey, entries] of Object.entries(watchedMap)) {
+    const normalizedDirKey = importStatementPath(dirKey)
+
+    if (normalizedDirKey === normalizedTarget) {
+      return true
+    }
+
+    if (normalizedDirKey === dir) {
+      if (entries.includes(base)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
