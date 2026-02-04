@@ -9,7 +9,7 @@ import {
 
 async function workspacePackagesPaths() {
   const cedarPaths = getPaths()
-  const packagesDir = path.join(cedarPaths.base, 'packages')
+  const packagesDir = path.join(cedarPaths.packages)
 
   const packages: string[] = []
 
@@ -74,23 +74,16 @@ async function workspacePackagesPaths() {
   return packages
 }
 
-function workspacePackagesIgnorePaths() {
-  const cedarPaths = getPaths()
-
-  const packagesDir = path.join(cedarPaths.base, 'packages')
-  const packageIgnoredPaths: string[] = []
-
-  if (fs.existsSync(packagesDir)) {
-    packageIgnoredPaths.push(path.join(packagesDir, '*/src'))
-  }
-
-  return packageIgnoredPaths
-}
-
 async function apiIgnorePaths() {
   const cedarPaths = getPaths()
 
   const dbDir = await getDbDir(cedarPaths.api.prismaConfig)
+
+  if (dbDir === cedarPaths.api.base) {
+    throw new Error(
+      'Database directory cannot be the same as the API directory',
+    )
+  }
 
   const ignoredApiPaths = [
     // TODO: Is this still true?
@@ -104,18 +97,13 @@ async function apiIgnorePaths() {
   return ignoredApiPaths
 }
 
-async function ignorePaths() {
+export async function getIgnoreFunction() {
+  const cedarPaths = getPaths()
   // The file with a detected change comes through as a unix path, even on
   // windows. So we need to convert all paths to unix-style paths to ensure
   // matches. Plus, chokidar needs unix-style `/` path separators for globs even
   // on Windows, which is exactly what `importStatementPath()` converts paths to
-  const apiIgnore = await apiIgnorePaths()
-  const packagesIgnore = workspacePackagesIgnorePaths()
-  return [...apiIgnore, ...packagesIgnore].map((p) => importStatementPath(p))
-}
-
-export async function getIgnoreFunction() {
-  const ignoredWatchPaths = await ignorePaths()
+  const ignoredApiPaths = await apiIgnorePaths()
 
   const ignoredExtensions = [
     '.DS_Store',
@@ -131,12 +119,28 @@ export async function getIgnoreFunction() {
   ]
 
   return (file: string) => {
-    const shouldIgnore =
-      file.includes('node_modules') ||
-      ignoredWatchPaths.some((ignoredPath) => file.includes(ignoredPath)) ||
-      ignoredExtensions.some((ext) => file.endsWith(ext))
+    if (file.includes('node_modules')) {
+      return true
+    }
 
-    return shouldIgnore
+    if (ignoredExtensions.some((ext) => file.endsWith(ext))) {
+      return true
+    }
+
+    // Ignore package source files since the api server is using the built files
+    // in the dist directory
+    if (
+      file.includes(importStatementPath(cedarPaths.packages)) &&
+      file.includes('/src/')
+    ) {
+      return true
+    }
+
+    if (ignoredApiPaths.some((ignoredPath) => file.includes(ignoredPath))) {
+      return true
+    }
+
+    return false
   }
 }
 
