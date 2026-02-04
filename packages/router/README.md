@@ -1,20 +1,14 @@
-# Redwood Router
+# Cedar Router
 
-This is the built-in router for Redwood apps. It takes inspiration from Ruby on Rails, React Router, and Reach Router, but is very opinionated in its own way.
+This is the built-in router for Cedar apps. It takes inspiration from Ruby on Rails, React Router, and Reach Router, but is very opinionated in its own way.
 
-Redwood Router (RR) is designed to list all routes in a single file, with limited nesting. We prefer this design, as it makes it very easy to track which routes map to which pages.
-
-## Package Leads
-
-- [@mojombo](https://github.com/mojombo)
-- [@tobbe](https://github.com/tobbe)
-- [@jtoar](https://github.com/jtoar)
+Cedar Router is designed to list all routes in a single file, with limited nesting. We prefer this design, as it makes it very easy to track which routes map to which pages.
 
 ## Docs (and Features)
 
 For the complete documentation, see:
 
-- [RR Doc](https://deploy-preview-848--redwoodjs.netlify.app/docs/redwood-router)
+- [Cedar Router Doc](https://cedarjs.com/docs/router)
 
 Features include:
 
@@ -27,10 +21,10 @@ Features include:
 
 ## Contributing
 
-Want to make RR even better? Contributions are welcome!
+Want to make the router even better? Contributions are welcome!
 
 A great way to get started is looking through these open issues:
 
-- [Current RR GitHub Issues](https://github.com/redwoodjs/redwood/issues?q=is%3Aopen+is%3Aissue+label%3Atopic%2Frouter)
+- [Current Cedar Router GitHub Issues](https://github.com/cedarjs/cedar/issues?q=is%3Aopen+is%3Aissue+label%3Atopic%2Frouter)
 
-If you have questions, you can reach out to the package leads or ask for help in the "Contributors" channels on either [Redwood Discord](https://discord.gg/redwoodjs) or [Redwood Forums](https://community.redwoodjs.com/).
+If you have questions, you can ask for help on [Discord](https://cedarjs.com/discord)

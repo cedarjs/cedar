@@ -3,7 +3,6 @@
   <!-- toc -->
 
 - [Purpose and Vision](#purpose-and-vision)
-- [Package Leads](#package-leads)
 - [Roadmap](#roadmap)
   - [Coming Soon](#coming-soon)
   - [Coming Later](#coming-later)
@@ -39,12 +38,6 @@ Redwood provides a first-class CLI that helps you at every stage of development,
 Redwood uses [yarn workspaces](https://yarnpkg.com/features/workspaces) to separate your app's sides, generators to give you a smooth DX, and [Prisma](https://www.prisma.io/) to manage your database. We have a generator for nearly everything, on both sides of the app, from components to functions.
 
 Since the CLI is the entry point to Redwood, as Redwood continues to grow&mdash;especially as we add more sides and targets&mdash;so will the CLI.
-
-## Package Leads
-
-- [@cannikin](https://github.com/cannikin)
-- [@peterp](https://github.com/peterp)
-- [@thedavidprice](https://github.com/thedavidprice)
 
 ## Roadmap
 

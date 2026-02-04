@@ -4,7 +4,6 @@
 
 - [ESLint Config](#eslint-config)
   - [Purpose and Vision](#purpose-and-vision)
-  - [Package Leads](#package-leads)
   - [Roadmap](#roadmap)
   - [Contributing](#contributing)
   - [Usage (Flat Config - Recommended)](#usage-flat-config---recommended)
@@ -24,10 +23,6 @@ Our configuration uses recommended rule presets, including those from [ESLint](h
 - [Use parentheses](https://eslint.org/docs/rules/arrow-parens) around arrow function parameters
 - [Sort import declarations](https://eslint.org/docs/rules/sort-imports) by name
 - [Wrap block statements](https://eslint.org/docs/rules/curly) in curly braces
-
-## Package Leads
-
-Peter Pistorius (@peterp), David Price (@thedavidprice), Dominic Saadi (@jtoar), Daniel Choudhury (@dac09)
 
 ## Roadmap
 
