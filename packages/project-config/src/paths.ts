@@ -17,6 +17,7 @@ export interface NodeTargetPaths {
   /** @deprecated - Please use the root `generatorTemplates` directory */
   generators: string
   services: string
+  subscriptions: string
   config: string
   dist: string
   types: string
@@ -77,6 +78,7 @@ export interface Paths {
   web: WebPaths
   api: NodeTargetPaths
   scripts: string
+  packages: string
   generatorTemplates: string
 }
 
@@ -94,7 +96,8 @@ export interface PagesDependency {
 }
 
 /**
- * The Cedar config file is used as an anchor for the base directory of a project.
+ * The Cedar config file is used as an anchor for the base directory of a
+ * project.
  */
 export const getBaseDir = (configPath: string = getConfigPath()): string => {
   return path.dirname(configPath)
@@ -123,7 +126,7 @@ export const resolveFile = (
 
 /** Path constants that are relevant to a Cedar project */
 const getPathsCache = new Map<string, Paths>()
-export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
+export function getPaths(BASE_DIR: string = getBaseDir()) {
   if (getPathsCache.has(BASE_DIR)) {
     return getPathsCache.get(BASE_DIR) as Paths
   }
@@ -144,7 +147,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     path.join(BASE_DIR, 'web/vite.config'),
   ) as string
 
-  const paths = {
+  const paths: Paths = {
     base: BASE_DIR,
 
     generated: {
