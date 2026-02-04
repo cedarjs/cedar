@@ -129,7 +129,7 @@ export async function getIgnoreFunction() {
 
     // Ignore package source files since the api server is using the built files
     // in the dist directory
-    if (file.includes(cedarPaths.packages) && file.includes('src')) {
+    if (file.includes(cedarPaths.packages) && file.includes('/src/')) {
       return true
     }
 
