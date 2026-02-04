@@ -119,17 +119,6 @@ export async function getIgnoreFunction() {
   ]
 
   return (file: string) => {
-    if (file.includes('src')) {
-      console.log('debug')
-      console.log('debug file', file)
-      console.log('debug packages path', cedarPaths.packages)
-      console.log(
-        'debug import packages path',
-        importStatementPath(cedarPaths.packages),
-      )
-      console.log('debug')
-    }
-
     if (file.includes('node_modules')) {
       return true
     }
