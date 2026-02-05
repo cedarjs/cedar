@@ -40,4 +40,4 @@ To update any images in the doc, first upload your screenshot into a comment tex
 
 ## Contributors
 
-Cedar is amazing thanks to a wonderful [community of contributors](https://github.com/cedarjs/cedar/blob/main/README.md#contributors).
+Cedar is amazing thanks to a wonderful [community of contributors](https://github.com/cedarjs/cedar/graphs/contributors).
