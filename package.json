@@ -57,7 +57,7 @@
     "vite": "5.4.21"
   },
   "devDependencies": {
-    "@actions/cache": "5.0.5",
+    "@actions/cache": "6.0.0",
     "@actions/core": "2.0.3",
     "@actions/exec": "2.0.0",
     "@actions/glob": "0.6.1",
