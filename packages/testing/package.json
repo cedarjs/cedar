@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/testing",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "Tools, wrappers and configuration for testing a Cedar project.",
   "repository": {
     "type": "git",
@@ -119,13 +119,13 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "2.5.0",
-    "@cedarjs/babel-config": "2.5.0",
-    "@cedarjs/context": "2.5.0",
-    "@cedarjs/graphql-server": "2.5.0",
-    "@cedarjs/project-config": "2.5.0",
-    "@cedarjs/router": "2.5.0",
-    "@cedarjs/web": "2.5.0",
+    "@cedarjs/auth": "2.5.1",
+    "@cedarjs/babel-config": "2.5.1",
+    "@cedarjs/context": "2.5.1",
+    "@cedarjs/graphql-server": "2.5.1",
+    "@cedarjs/project-config": "2.5.1",
+    "@cedarjs/router": "2.5.1",
+    "@cedarjs/web": "2.5.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "14.3.1",
     "@testing-library/user-event": "14.6.1",

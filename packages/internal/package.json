@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/internal",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -140,10 +140,10 @@
     "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/runtime-corejs3": "7.29.0",
     "@babel/traverse": "7.29.0",
-    "@cedarjs/babel-config": "2.5.0",
-    "@cedarjs/graphql-server": "2.5.0",
-    "@cedarjs/project-config": "2.5.0",
-    "@cedarjs/router": "2.5.0",
+    "@cedarjs/babel-config": "2.5.1",
+    "@cedarjs/graphql-server": "2.5.1",
+    "@cedarjs/project-config": "2.5.1",
+    "@cedarjs/router": "2.5.1",
     "@graphql-codegen/add": "4.0.1",
     "@graphql-codegen/cli": "3.3.1",
     "@graphql-codegen/client-preset": "4.8.3",

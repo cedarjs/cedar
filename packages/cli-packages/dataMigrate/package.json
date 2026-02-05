@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli-data-migrate",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -25,8 +25,8 @@
     "test:unit": "vitest run src"
   },
   "dependencies": {
-    "@cedarjs/babel-config": "2.5.0",
-    "@cedarjs/project-config": "2.5.0",
+    "@cedarjs/babel-config": "2.5.1",
+    "@cedarjs/project-config": "2.5.1",
     "ansis": "4.2.0",
     "bundle-require": "^5.1.0",
     "dotenv-defaults": "5.0.2",

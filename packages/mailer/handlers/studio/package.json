@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-handler-studio",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -20,8 +20,8 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@cedarjs/mailer-core": "2.5.0",
-    "@cedarjs/mailer-handler-nodemailer": "2.5.0"
+    "@cedarjs/mailer-core": "2.5.1",
+    "@cedarjs/mailer-handler-nodemailer": "2.5.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web-server",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "CedarJS's server for the Web side",
   "repository": {
     "type": "git",
@@ -25,8 +25,8 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@cedarjs/fastify-web": "2.5.0",
-    "@cedarjs/project-config": "2.5.0",
+    "@cedarjs/fastify-web": "2.5.1",
+    "@cedarjs/project-config": "2.5.1",
     "ansis": "4.2.0",
     "dotenv-defaults": "5.0.2",
     "fastify": "5.7.4",

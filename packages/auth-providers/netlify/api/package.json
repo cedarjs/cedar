@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-netlify-api",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@cedarjs/api": "2.5.0",
+    "@cedarjs/api": "2.5.1",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/aws-lambda": "8.10.160",
     "@types/jsonwebtoken": "9.0.10",

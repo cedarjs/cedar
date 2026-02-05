@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/storage",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -53,7 +53,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/project-config": "2.5.0",
+    "@cedarjs/project-config": "2.5.1",
     "mime-types": "2.1.35",
     "ulid": "3.0.2"
   },
