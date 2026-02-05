@@ -1,10 +1,8 @@
-#!/usr/bin/env tsx
-
 /**
  * This script handles the multi-phase publishing process for Cedar release
  * candidates
  *
- * Usage: yarn tsx .github/scripts/publish-release-candidate.ts [--dry-run]
+ * Usage: yarn tsx .github/scripts/publish-release-candidate.mts [--dry-run]
  * Environment variables required: NPM_AUTH_TOKEN (not needed for dry-run),
  * GITHUB_REF_NAME
  */
@@ -137,7 +135,7 @@ function updateWorkspaceDependencies(version: string) {
             `${workspace.location}/package.json`,
         )
       }
-    } catch (error) {
+    } catch {
       // Skip if package.json doesn't exist or can't be read
       continue
     }
@@ -300,8 +298,6 @@ async function main() {
 
     log('Step 2: Calculating RC version without publishing')
 
-    let publishOutput: string
-
     // Temporarily set workspace to only include @cedarjs/core for version
     // calculation
     log('Setting workspace to only @cedarjs/core for version calculation')
@@ -354,7 +350,11 @@ async function main() {
     // lerna will ask for confirmation before publishing. We pass 'n' as input
     // to answer "no" to that question to abort the publishing process. That's
     // how we make this a dry-run
-    publishOutput = execCommand(`yarn ${versioningArgs}`, REPO_ROOT, 'n\n')
+    const publishOutput = execCommand(
+      `yarn ${versioningArgs}`,
+      REPO_ROOT,
+      'n\n',
+    )
 
     log('Restoring original workspace configuration')
     fs.writeFileSync(versionCalcPackageConfigPath, originalVersionCalcConfig)
@@ -417,7 +417,7 @@ async function main() {
           JSON.stringify(packageJson, null, 2) + '\n',
         )
         log(`Updated version in ${workspace.location}/package.json`)
-      } catch (error) {
+      } catch {
         // Skip if package.json doesn't exist or can't be read
         continue
       }
@@ -677,7 +677,7 @@ async function isPublished(packageName: string, version: string) {
   const data = await response.json()
 
   // Check if the specific version exists in the versions object
-  if (data.versions && data.versions[version]) {
+  if (data?.versions[version]) {
     return true
   }
 
