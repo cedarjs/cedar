@@ -74,7 +74,7 @@ jobs:
         run: yarn test
 
       - name: 🚢 Publish Release Candidate
-        run: yarn tsx .github/scripts/publish-release-candidate.ts
+        run: yarn tsx .github/scripts/publish-release-candidate.mts
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           GITHUB_REF_NAME: ${{ github.ref_name }}

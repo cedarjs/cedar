@@ -41,7 +41,7 @@ function isNonCodeWorkflowOrAction(filePath) {
     '.github/scripts/publish_canary.sh',
 
     '.github/workflows/publish-release-candidate.yml',
-    '.github/scripts/publish-release-candidate.ts',
+    '.github/scripts/publish-release-candidate.mts',
 
     '.github/workflows/require-milestone.yml',
     '.github/actions/require-milestone/action.yml',
