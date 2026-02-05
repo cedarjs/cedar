@@ -10,7 +10,107 @@ if [[ -z "$NPM_AUTH_TOKEN" ]]; then
 fi
 
 # Make sure the token is valid and not expired using `npm whoami`
-npm whoami
+echo "npm user: $(npm whoami)"
+
+# Make sure the token is valid and not expired using the `npm` cli, piping to jq
+# and finding a key with "cedarjs" org scope. Make sure "expiry" is in the
+# future.
+#
+# Example output
+#
+# [
+#   {
+#     "name": "cedarjs",
+#     "description": "",
+#     "key": "***",
+#     "token": "npm_oOk8...",
+#     "expiry": "2026-05-06T17:05:58.951Z",
+#     "cidr": [],
+#     "bypass_2fa": true,
+#     "revoked": null,
+#     "created": "2026-02-05T17:05:58.963Z",
+#     "updated": "2026-02-05T17:05:58.963Z",
+#     "accessed": null,
+#     "permissions": [
+#       {
+#         "name": "package",
+#         "action": "write"
+#       },
+#       {
+#         "name": "org",
+#         "action": "write"
+#       }
+#     ],
+#     "scopes": [
+#       {
+#         "name": null,
+#         "type": "package"
+#       },
+#       {
+#         "name": "cedarjs",
+#         "type": "org"
+#       }
+#     ]
+#   },
+#   {
+#     "name": "some_name",
+#     "description": "Publishing Some Org packages to npm from GitHub CI",
+#     "key": "***",
+#     "token": "npm_amVL...",
+#     "expiry": "2026-02-03T20:06:18.920Z",
+#     "cidr": [],
+#     "bypass_2fa": true,
+#     "revoked": null,
+#     "created": "2025-04-17T05:49:40.258Z",
+#     "updated": "2025-11-05T20:06:18.920Z",
+#     "accessed": "2025-05-18T22:26:57.163Z",
+#     "permissions": [
+#       {
+#         "name": "package",
+#         "action": "write"
+#       }
+#     ],
+#     "scopes": [
+#       {
+#         "name": "create-some-app",
+#         "type": "package"
+#       },
+#       {
+#         "name": "storybook-framework-something",
+#         "type": "package"
+#       },
+#       {
+#         "name": "@orgscope",
+#         "type": "package"
+#       }
+#     ]
+#   }
+# ]
+
+tokens=$(npm token list --json)
+
+if [[ $? -ne 0 ]]; then
+  echo "Error: Failed to list npm tokens. Is NPM_AUTH_TOKEN valid?"
+  exit 1
+fi
+
+current_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+valid_token=$(echo "$tokens" | jq -r --arg now "$current_time" '
+  .[]
+  | select(any(.scopes[]?; .name == "cedarjs" and .type == "org"))
+  | select(.expiry == null or .expiry > $now)
+  | .token
+')
+
+if [[ -z "$valid_token" ]]; then
+  echo "Error: No valid, non-expired NPM token found for 'cedarjs' org scope"
+  echo "Current tokens:"
+  echo "$tokens" | jq .
+  exit 1
+fi
+
+echo "NPM token for 'cedarjs' org scope is valid and not expired"
 
 TAG='canary' && [[ "$GITHUB_REF_NAME" = 'next' ]] && TAG='next'
 echo "Publishing $TAG from $GITHUB_REF_NAME using npm token ${NPM_AUTH_TOKEN:0:5}"
