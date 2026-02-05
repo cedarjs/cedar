@@ -26,7 +26,7 @@ Our configuration uses recommended rule presets, including those from [ESLint](h
 
 ## Roadmap
 
-- Lint for case-sensitive imports (issue [#2806](https://github.com/cedarjs/cedar/issues/2806))
+- Lint for case-sensitive imports (issue [#2806](https://github.com/redwoodjs/redwood/issues/2806))
 
 ## Contributing
 

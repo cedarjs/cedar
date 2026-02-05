@@ -15,17 +15,17 @@ import { hydrateRoot, createRoot } from 'react-dom/client'
 
 import App from './App'
 /**
- * When `#cedar-app` isn't empty then it's very likely that you're using
+ * When `#redwood-app` isn't empty then it's very likely that you're using
  * prerendering. So React attaches event listeners to the existing markup
  * rather than replacing it.
  * https://reactjs.org/docs/react-dom-client.html#hydrateroot
  */
-const cedarAppElement = document.getElementById('cedar-app')
+const redwoodAppElement = document.getElementById('redwood-app')
 
-if (cedarAppElement.children?.length > 0) {
-  hydrateRoot(cedarAppElement, <App />)
+if (redwoodAppElement.children?.length > 0) {
+  hydrateRoot(redwoodAppElement, <App />)
 } else {
-  const root = createRoot(cedarAppElement)
+  const root = createRoot(redwoodAppElement)
   root.render(<App />)
 }
 ```
@@ -37,23 +37,23 @@ import { hydrateRoot, createRoot } from 'react-dom/client'
 
 import App from './App'
 /**
- * When `#cedar-app` isn't empty then it's very likely that you're using
+ * When `#redwood-app` isn't empty then it's very likely that you're using
  * prerendering. So React attaches event listeners to the existing markup
  * rather than replacing it.
  * https://reactjs.org/docs/react-dom-client.html#hydrateroot
  */
-const cedarAppElement = document.getElementById('cedar-app')
+const redwoodAppElement = document.getElementById('redwood-app')
 
-if (!cedarAppElement) {
+if (!redwoodAppElement) {
   throw new Error(
-    "Could not find an element with ID 'cedar-app'. Please ensure it exists in your 'web/src/index.html' file.",
+    "Could not find an element with ID 'redwood-app'. Please ensure it exists in your 'web/src/index.html' file.",
   )
 }
 
-if (cedarAppElement.children?.length > 0) {
-  hydrateRoot(cedarAppElement, <App />)
+if (redwoodAppElement.children?.length > 0) {
+  hydrateRoot(redwoodAppElement, <App />)
 } else {
-  const root = createRoot(cedarAppElement)
+  const root = createRoot(redwoodAppElement)
   root.render(<App />)
 }
 ```

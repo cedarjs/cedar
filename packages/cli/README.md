@@ -43,7 +43,7 @@ Since the CLI is the entry point to Cedar, as Cedar continues to grow&mdash;espe
 
 ### Coming Later
 
-- [Support for dynamic sides and targets](https://github.com/redwoodjs/redwood/pull/355)
+- [Support for dynamic sides and targets](https://github.com/cedarjs/cedar/pull/177)
 
 ## Contributing
 
@@ -620,7 +620,7 @@ This is because most `dbCommands` are really just running prisma commands, so th
 
 #### Generators
 
-If you're converting a generator, read the _Goals_ section of tracking issue [#523](https://github.com/cedarjs/cedar/issues/523); it details some specs you should comply with.
+If you're converting a generator, read the _Goals_ section of tracking issue [#523](https://github.com/redwoodjs/redwood/issues/523); it details some specs you should comply with.
 
 Some of the generators have already been converted; use them as a reference (linking to the PRs here):
 

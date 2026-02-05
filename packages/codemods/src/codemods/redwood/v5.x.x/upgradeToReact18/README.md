@@ -15,7 +15,7 @@ In v5, we changed the default `index.html` file a bit—we removed `prerenderPla
  </head>
 
  <body>
-   <div id="cedar-app">
+   <div id="redwood-app">
 -    <!-- Please keep the line below for prerender support. -->
 -    <%= prerenderPlaceholder %>
    </div>

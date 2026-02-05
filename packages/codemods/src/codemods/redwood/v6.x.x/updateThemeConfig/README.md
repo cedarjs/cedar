@@ -1,5 +1,5 @@
 ```
-npx @cedarjs/codemods@canary update-theme-config
+npx @redwoodjs/codemods@canary update-theme-config
 ```
 
 # Update Theme Config

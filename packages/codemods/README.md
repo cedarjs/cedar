@@ -60,17 +60,17 @@ Each codemod has the following files:
 
 ### Different types of codemods
 
-Codemods are sometimes really simple, e.g. just normal string replace or updating a package.json. But other times we use jscodeshift to change code on a cedar project
+Codemods are sometimes really simple, e.g. just normal string replace or updating a package.json. But other times we use jscodeshift to change code on a Cedar project
 
 Here are a few different examples to help you get familiarised:
 
-- [Rename config in Cedar.toml](packages/codemods/src/codemods/cedar/v0.38.x/renameApiProxyPath)—
-  Simple string replace on the user's `cedar.toml`. No ASTs, no complications!
+- [Rename config in Redwood.toml](packages/codemods/src/codemods/redwood/v0.38.x/renameApiProxyPath)—
+  Simple string replace on the user's `redwood.toml`. No ASTs, no complications!
 
-- [Add Directives](packages/codemods/src/codemods/cedar/v0.37.x/addDirectives)—
-  Download files from the CedarJS template because we've added new files that are needed in a user's project. No ASTs involved
+- [Add Directives](packages/codemods/src/codemods/redwood/v0.37.x/addDirectives)—
+  Download files from the RedwoodJS template because we've added new files that are needed in a user's project. No ASTs involved
 
-- [Update GraphQL Function](packages/codemods/src/codemods/cedar/v0.37.x/updateGraphQLFunction)—
+- [Update GraphQL Function](packages/codemods/src/codemods/redwood/v0.37.x/updateGraphQLFunction)—
   A more complex example, which uses `jscodeshift` and ASTs to update code in a user's project
 
 The rest of the docs will focus on the more complex cases (the third example).
@@ -213,7 +213,7 @@ The `matchFolderTransform` helper will check
 a) If the files in the output fixture folder are present after transform
 b) If their contents match
 
-## How to run your changes on a test cedar project
+## How to run your changes on a test Cedar project
 
 1. Clean all your other packages, and rebuild once:
 
@@ -232,7 +232,7 @@ yarn build
 
 3. Running the updated CLI
 
-The CLI is meant to be run on a cedar project (i.e. it expects you to be cd'd into a cedar project), but you can provide it as an environment variable too!
+The CLI is meant to be run on a Cedar project (i.e. it expects you to be cd'd into a Cedar project), but you can provide it as an environment variable too!
 
 ```shell
 RWJS_CWD=/path/to/rw-project node "./packages/codemods/dist/codemods.js" {your-codemod-name}
@@ -278,14 +278,14 @@ collection items, and then get the node out of that.
 const j = api.jscodeshift
 const root = j(file.source)
 
-const cedarApolloProvider = root.findJSXElements('CedarApolloProvider')
+const redwoodApolloProvider = root.findJSXElements('RedwoodApolloProvider')
 
 console.log(
-  '<CedarApolloProvider>',
-  j(cedarApolloProvider.get(0).node).toSource(),
+  '<RedwoodApolloProvider>',
+  j(redwoodApolloProvider.get(0).node).toSource(),
 )
 // Will log:
-// <CedarApolloProvider useAuth={useAuth}>
+// <RedwoodApolloProvider useAuth={useAuth}>
 //   <Routes />
-// </CedarApolloProvider>
+// </RedwoodApolloProvider>
 ```

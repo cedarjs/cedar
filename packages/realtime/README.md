@@ -33,9 +33,9 @@ Lastly, the Cedar CLI has commands to
 
 Regardless of the implementation chosen, **a stateful server and store are needed** to track changes, invalidation, or who wants to be informed about the change.
 
-### useCedarRealtime
+### useRedwoodRealtime
 
-The `useCedarRealtime` plugin adds support for Cedar Realtime in GraphQL Yoga Server.
+The `useRedwoodRealtime` plugin adds support for Cedar Realtime in GraphQL Yoga Server.
 
 Note: Since a stateful server and store are needed, this plugin cannot be used this CedarJS applications deployed to serverless.
 
