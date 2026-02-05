@@ -30,7 +30,7 @@ SUPABASE_KEY="..."
 SUPABASE_JWT_SECRET="..."
 ```
 
-Lastly, in your configuration file (`cedar.toml` or `redwood.toml`), include `SUPABASE_URL` and `SUPABASE_KEY` in the list of env vars that should be available to the web side:
+Lastly, in your configuration file (`cedar.toml`), include `SUPABASE_URL` and `SUPABASE_KEY` in the list of env vars that should be available to the web side:
 
 ```toml title="cedar.toml"
 [web]
@@ -84,7 +84,7 @@ const HomePage = () => {
 
 You will notice that [Supabase Javascript SDK Auth API](https://supabase.com/docs/reference/javascript/auth-api) reference documentation presents methods to sign in with the various integrations Supabase supports: password, OAuth, IDToken, SSO, etc.
 
-The RedwoodJS implementation of Supabase authentication supports these as well, but within the `logIn` method of the `useAuth` hook.
+The CedarJS implementation of Supabase authentication supports these as well, but within the `logIn` method of the `useAuth` hook.
 
 That means that you will see that Supabase documents sign in with email password as:
 
@@ -95,7 +95,7 @@ const { data, error } = await supabase.auth.signInWithPassword({
 })
 ```
 
-In RedwoodJS, you will always use `logIn` and pass the necessary credential options and also an `authenticationMethod` to declare how you want to authenticate.
+In CedarJS, you will always use `logIn` and pass the necessary credential options and also an `authenticationMethod` to declare how you want to authenticate.
 
 ```ts
 const { logIn } = useAuth()
@@ -276,7 +276,7 @@ Log in a user given a User supplied OTP received via mobile.
 
 - The verification type used should be determined based on the corresponding auth method called before verifyOtp to sign up / sign-in a user.
 
-The RedwoodJS auth provider doesn't expose the `veriftyOtp` method from the Supabase SDK directly.
+The CedarJS auth provider doesn't expose the `veriftyOtp` method from the Supabase SDK directly.
 
 Instead, since you always have access the the Supabase Auth client, you can access any method it exposes.
 
