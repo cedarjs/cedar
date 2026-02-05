@@ -48,7 +48,7 @@ Note: Since a stateful server and store are needed, this plugin cannot be used t
 
 | Version                                                                            | Publish | Install |
 | :--------------------------------------------------------------------------------- | :------ | :------ |
-| [v5.2.1](https://packagephobia.com/result?p=%40cedarjs%2Fproject-config%405.2.1) | 96.6 kB | 809 kB  |
+| [v5.2.1](https://packagephobia.com/result?p=%40redwoodjs%2Fproject-config%405.2.1) | 96.6 kB | 809 kB  |
 
 ## Dependency graphs
 
