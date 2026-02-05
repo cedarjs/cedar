@@ -1,3 +1,3 @@
-# @redwoodjs/testing
+# @cedarjs/testing
 
-This package includes Redwood's Jest config.
+This package includes Cedar's Jest config.

@@ -1,6 +1,6 @@
 # Realtime
 
-The real-time solution for RedwoodJS is initially for GraphQL.
+The real-time solution for CedarJS is initially for GraphQL.
 
 In GraphQL, there are two options for real-time updates: **live queries** and **subscriptions**. Subscriptions are part of the GraphQL specification, whereas live queries are not.
 
@@ -8,7 +8,7 @@ There are times where subscriptions are well-suited for a realtime problem — a
 
 ### Features
 
-RedwoodJS Realtime handles the hard parts of a GraphQL Realtime implementation by automatically:
+CedarJS Realtime handles the hard parts of a GraphQL Realtime implementation by automatically:
 
 - allowing GraphQL Subscription operations to be handled
 - merging in your subscriptions types and mapping their handler functions (subscribe, and resolve) to your GraphQL schema letting you keep your subscription logic organized and apart from services (your subscription my use a service to respond to an event)
@@ -25,7 +25,7 @@ It provides a first-class developer experience for real-time updates with GraphQ
 
 and have the latest data reflected in your app.
 
-Lastly, the Redwood CLI has commands to
+Lastly, the Cedar CLI has commands to
 
 - generate a boilerplate implementation and sample code needed to create your custom
   - subscriptions
@@ -35,14 +35,14 @@ Regardless of the implementation chosen, **a stateful server and store are neede
 
 ### useRedwoodRealtime
 
-The `useRedwoodRealtime` plugin adds support for Redwood Realtime in GraphQL Yoga Server.
+The `useRedwoodRealtime` plugin adds support for Cedar Realtime in GraphQL Yoga Server.
 
-Note: Since a stateful server and store are needed, this plugin cannot be used this RedwoodJS applications deployed to serverless.
+Note: Since a stateful server and store are needed, this plugin cannot be used this CedarJS applications deployed to serverless.
 
 > **Warning**
 >
 > This is a new internal package. There are still changes we want to make, so we're marking it as experimental for now.
-> **Don't depend on this directly in a Redwood project**.
+> **Don't depend on this directly in a Cedar project**.
 
 <!-- ## Package size
 

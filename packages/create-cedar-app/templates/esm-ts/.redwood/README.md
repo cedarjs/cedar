@@ -41,4 +41,4 @@ CedarJS collects completely anonymous telemetry data about general usage. For tr
 
 ### Have any questions?
 
-Feel free to reach out to us in the [RedwoodJS Community](https://community.redwoodjs.com/) forum if you have any questions.
+Feel free to reach out to us on the [CedarJS Discord](https://cedarjs.com/discord) if you have any questions.
