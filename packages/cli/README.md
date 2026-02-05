@@ -41,19 +41,19 @@ Since the CLI is the entry point to Cedar, as Cedar continues to grow&mdash;espe
 
 ## Roadmap
 
-### Coming Soon
-
-- [Generators refactor (plopjs)](https://github.com/cedarjs/cedar/issues/653)
-
 ### Coming Later
 
-- [Multiple database support](https://github.com/cedarjs/cedar/issues/507)
-- [Support for dynamic sides and targets](https://github.com/cedarjs/cedar/pull/355)
+- [Support for dynamic sides and targets](https://github.com/redwoodjs/redwood/pull/355)
 
 ## Contributing
 
 Cedar's CLI is built with [Yargs](http://yargs.js.org/).
-If you aren't familiar with it, we walk you through what you need to know in the [Adding a Command](#adding-a-command) section. But if you already are, know that we use the [advanced api](https://github.com/yargs/yargs/blob/master/docs/advanced.md). This means that instead of seeing things written as a method chain, with the `command` method doing most of the work, like:
+If you aren't familiar with it, we walk you through what you need to know in the
+[Adding a Command](#adding-a-command) section. But if you already are, know
+that we use the
+[advanced api](https://github.com/yargs/yargs/blob/master/docs/advanced.md).
+This means that instead of seeing things written as a method chain, with the
+`command` method doing most of the work, like:
 
 ```javascript
 yargs
@@ -73,7 +73,8 @@ yargs
   .help().argv
 ```
 
-you'll see the arguments to the `command` method spread across exported constants, like:
+you'll see the arguments to the `command` method spread across exported
+constants, like:
 
 ```javascript
 export const command = 'get'
@@ -91,13 +92,20 @@ export const handler = (argv) => {
 
 ### Overview
 
-Contributing to `@cedarjs/cli` usually means adding a command or modifying an existing one. We've organized this doc around adding a command since if you know how to do this you'll know how to modify one too.
+Contributing to `@cedarjs/cli` usually means adding a command or modifying an
+existing one. We've organized this doc around adding a command since if you know
+how to do this you'll know how to modify one too.
 
 #### Quickstart
 
-CedarJS CLI is usually run in a project, this is problematic for contributors, because the transpiled files are not in a project, but in the CedarJS framework repo. Luckily the path can be modified at run-time via an env-var: `RWJS_CWD=../path/to/project`.
+CedarJS CLI is usually run in a project, this is problematic for contributors,
+because the transpiled files are not in a project, but in the CedarJS framework
+repo. Luckily the path can be modified at run-time via an env-var:
+`RWJS_CWD=../path/to/project`.
 
-We've added a handy yarn alias to test your modified changes to the Cedar CLI against the "example-todo-main" fixture (`__fixtures__/example-todo-main`) you can do the following:
+We've added a handy yarn alias to test your modified changes to the Cedar CLI
+against the "example-todo-main" fixture (`__fixtures__/example-todo-main`) you
+can do the following:
 
 ```terminal
 cd packages/cli
@@ -109,8 +117,8 @@ yarn dev <command>
 > latest version.
 
 > **Important:** If your command alters the `example-todo-main` project (adds a
-> package, modifies cedar.toml, etc) be sure not to commit and push those changes
-> as part of your PR.
+> package, modifies cedar.toml, etc) be sure not to commit and push those
+> changes as part of your PR.
 
 ### Best Practices
 
@@ -597,12 +605,16 @@ Lastly, `notes` is an array of strings to output after the generator has finishe
 
 <!-- TODO -->
 <!-- This might need updated soon... -->
-<!-- https://github.com/cedarjs/cedar/pull/661#issuecomment-644146059 -->
+<!-- https://github.com/redwoodjs/redwood/pull/661#issuecomment-644146059 -->
 
 Most of the commands in `dbCommands` are just wrappers around [Prisma commands](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-cli/command-reference),
 the exception being `seed`, which runs a Cedar app's [./api/prisma/seed.js](https://github.com/cedarjs/create-cedar-app/blob/master/api/prisma/seeds.js).
 
-Adding or modifying a command here's no different&mdash;there's still a `command`, `description`, `builder`, and `handler`. But there's a pattern to `handler`: it usually uses [runCommandTask](https://github.com/cedarjs/cedar/blob/d51ade08118c17459cebcdb496197ea52485364a/packages/cli/src/lib/index.js#L349-L377), a Cedar-defined function.
+Adding or modifying a command here's no different&mdash;there's still a
+`command`, `description`, `builder`, and `handler`. But there's a pattern to
+`handler`: it usually uses
+[runCommandTask](https://github.com/cedarjs/cedar/blob/4526399449d57e22fbf839b509d7c30a78557575/packages/cli/src/lib/index.js#L556-L583),
+a Cedar-defined function.
 
 This is because most `dbCommands` are really just running prisma commands, so they really just have to output something like `yarn prisma ...`.
 
@@ -612,9 +624,9 @@ If you're converting a generator, read the _Goals_ section of tracking issue [#5
 
 Some of the generators have already been converted; use them as a reference (linking to the PRs here):
 
-- [component](https://github.com/cedarjs/cedar/pull/632)
-- [sdl](https://github.com/cedarjs/cedar/pull/515)
-- [services](https://github.com/cedarjs/cedar/pull/515)
+- [component](https://github.com/redwoodjs/redwood/pull/632)
+- [sdl](https://github.com/redwoodjs/redwood/pull/515)
+- [services](https://github.com/redwoodjs/redwood/pull/515)
 
 For most of the generate commands, the option (in the builder) for generating a typescript file is already there, either in the builder returned from `createYargsForComponentGeneration` or in `getYargsDefaults` (the former actually uses the latter).
 
@@ -637,7 +649,7 @@ cedar/packages/cli
 
 #### index.js
 
-[index.js](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/index.js) is the `rw` in `yarn rw`. It's the entry-point command to all commands, and like other entry-point commands, it's not too complicated.
+[index.js](https://github.com/cedarjs/cedar/blob/main/packages/cli/src/index.js) is the `cedar` in `yarn cedar`. It's the entry-point command to all commands, and like other entry-point commands, it's not too complicated.
 
 But it's distinct from the others in that it's the only one that has a shebang at the top and `argv` at the bottom:
 
@@ -688,16 +700,3 @@ export default {
   info: ansis.gray,
 }
 ```
-
-## FAQ
-
-### I want to alias `yarn rw`
-
-You're not the only one. See the discussion [here](https://github.com/cedarjs/cedar/issues/328).
-
-### Can I customize the generators?
-
-Not yet, but we're talking about it! See the ongoing discussions in these issues:
-
-- Investigate integrating or replacing generators with Plop [#653](https://github.com/cedarjs/cedar/issues/653)
-- BYO Components to Scaffold Generator [#473](https://github.com/cedarjs/cedar/issues/473)

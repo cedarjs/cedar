@@ -30,7 +30,7 @@ SUPABASE_KEY="..."
 SUPABASE_JWT_SECRET="..."
 ```
 
-Lastly, in your configuration file (`cedar.toml` or `cedar.toml`), include `SUPABASE_URL` and `SUPABASE_KEY` in the list of env vars that should be available to the web side:
+Lastly, in your configuration file (`cedar.toml`), include `SUPABASE_URL` and `SUPABASE_KEY` in the list of env vars that should be available to the web side:
 
 ```toml title="cedar.toml"
 [web]
