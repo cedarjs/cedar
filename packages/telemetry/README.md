@@ -36,7 +36,7 @@ REDWOOD_DISABLE_TELEMETRY=1
 
 ## About
 
-See: https://telemetry.cedarjs.com
+See: https://telemetry.redwoodjs.com
 
 ## Troubleshooting
 
