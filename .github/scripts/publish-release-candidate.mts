@@ -2,7 +2,7 @@
  * This script handles the multi-phase publishing process for Cedar release
  * candidates
  *
- * Usage: yarn tsx .github/scripts/publish-release-candidate.ts [--dry-run]
+ * Usage: yarn tsx .github/scripts/publish-release-candidate.mts [--dry-run]
  * Environment variables required: NPM_AUTH_TOKEN (not needed for dry-run),
  * GITHUB_REF_NAME
  */
