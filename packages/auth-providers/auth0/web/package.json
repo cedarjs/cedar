@@ -52,7 +52,7 @@
     "@cedarjs/auth": "workspace:*"
   },
   "devDependencies": {
-    "@auth0/auth0-spa-js": "2.13.0",
+    "@auth0/auth0-spa-js": "2.13.1",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/react": "^18.2.55",
     "concurrently": "9.2.1",
@@ -63,7 +63,7 @@
     "vitest": "3.2.4"
   },
   "peerDependencies": {
-    "@auth0/auth0-spa-js": "2.13.0"
+    "@auth0/auth0-spa-js": "2.13.1"
   },
   "publishConfig": {
     "access": "public"
