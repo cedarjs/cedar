@@ -43,7 +43,7 @@ cd packages/codemods
 yarn generate:codemod
 ```
 
-Follow the interactive guide to specify the Cedar framework version for the codemod and type of codemod.
+Follow the interactive guide to specify the CedarJS framework version for the codemod and type of codemod.
 
 ### Structure of this package
 

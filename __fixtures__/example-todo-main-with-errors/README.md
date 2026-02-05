@@ -31,7 +31,7 @@ yarn cedar db up
 yarn cedar dev
 ```
 
-Browse to `http://localhost:8910` (or run `yarn cedar open`) to see the web app.
+Browse to `http://localhost:8910` to see the web app.
 
 Lambda functions run on
 `localhost:8911` but are proxied via `localhost:8910/api/functions/*`.
