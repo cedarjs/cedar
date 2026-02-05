@@ -9,6 +9,9 @@ if [[ -z "$NPM_AUTH_TOKEN" ]]; then
   exit 1
 fi
 
+# Make sure the token is valid and not expired using `npm whoami`
+npm whoami
+
 TAG='canary' && [[ "$GITHUB_REF_NAME" = 'next' ]] && TAG='next'
 echo "Publishing $TAG from $GITHUB_REF_NAME using npm token ${NPM_AUTH_TOKEN:0:5}"
 
