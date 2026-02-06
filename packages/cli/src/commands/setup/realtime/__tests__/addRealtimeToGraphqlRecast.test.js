@@ -16,6 +16,7 @@ describe('addRealtimeToGraphqlHandler', () => {
     'function-graphql-function',
     'modified-graphql-function',
     'wrapper-function',
+    'wrapper-function-commented',
   ]
 
   for (const fixture of fixtures) {

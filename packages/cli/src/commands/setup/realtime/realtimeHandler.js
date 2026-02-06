@@ -13,6 +13,8 @@ import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../../lib/project.js'
 import { setupServerFileTasks } from '../server-file/serverFileHandler.js'
 
+import { addRealtimeToGraphqlHandler } from './addRealtimeToGraphq.js'
+
 const { version } = JSON.parse(
   fs.readFileSync(
     path.resolve(import.meta.dirname, '../../../../package.json'),
@@ -60,82 +62,8 @@ export async function handler({ force, includeExamples, verbose }) {
       },
       {
         title: 'Enabling realtime support in the GraphQL handler...',
-        task: async (ctx) => {
-          const graphqlHandlerPath = path.join(
-            redwoodPaths.api.functions,
-            `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
-          )
-
-          if (!fs.existsSync(graphqlHandlerPath)) {
-            ctx.realtimeHandlerSkipped = true
-            return
-          }
-
-          const contentLines = fs
-            .readFileSync(graphqlHandlerPath)
-            .toString()
-            .split('\n')
-
-          const hasRealtimeImport = contentLines.some((line) =>
-            /from ['"]src\/lib\/realtime['"]/.test(line),
-          )
-
-          const handlerIndex = contentLines.findLastIndex((line) =>
-            line.includes('createGraphQLHandler({'),
-          )
-
-          if (handlerIndex === -1) {
-            ctx.realtimeHandlerSkipped = true
-            return
-          }
-
-          const hasRealtimeOption = contentLines.some((line) =>
-            /^\s*realtime\b/.test(line),
-          )
-
-          if (!hasRealtimeImport) {
-            const lastImportIndex = contentLines.findLastIndex((line) =>
-              line.startsWith('import '),
-            )
-
-            if (lastImportIndex !== -1) {
-              const nextLine = contentLines[lastImportIndex + 1]
-              const insertIndex = lastImportIndex + 1
-              contentLines.splice(
-                insertIndex,
-                0,
-                "import { realtime } from 'src/lib/realtime'",
-              )
-
-              if (nextLine !== '') {
-                contentLines.splice(insertIndex + 1, 0, '')
-              }
-            } else {
-              contentLines.unshift(
-                "import { realtime } from 'src/lib/realtime'",
-              )
-            }
-          }
-
-          if (!hasRealtimeOption) {
-            const onExceptionIndex = contentLines.findLastIndex((line) =>
-              line.includes('onException:'),
-            )
-
-            if (onExceptionIndex !== -1) {
-              contentLines.splice(onExceptionIndex, 0, '  realtime,')
-            } else {
-              const handlerEndIndex = contentLines.findLastIndex(
-                (line) => line.trim() === '})',
-              )
-
-              if (handlerEndIndex !== -1) {
-                contentLines.splice(handlerEndIndex, 0, '  realtime,')
-              }
-            }
-          }
-
-          fs.writeFileSync(graphqlHandlerPath, contentLines.join('\n'))
+        task: (ctx, task) => {
+          addRealtimeToGraphqlHandler(ctx, task)
         },
       },
       {

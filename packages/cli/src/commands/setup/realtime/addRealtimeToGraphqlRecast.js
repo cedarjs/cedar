@@ -52,6 +52,7 @@ export function addRealtimeToGraphqlHandler(sourceCode) {
   const declared = new Map()
   const topLevelNames = new Set()
   let lastImportIndex = -1
+  let firstSrcLibImportIndex = -1
   let createHandlerLocalName = null
   let realtimeImportedLocalName = null
   let realtimeImportDeclNode = null
@@ -90,6 +91,17 @@ export function addRealtimeToGraphqlHandler(sourceCode) {
           ) {
             realtimeImportedLocalName = spec.local.name
           }
+        }
+      }
+
+      if (
+        node.source &&
+        node.source.value &&
+        typeof node.source.value === 'string' &&
+        node.source.value.startsWith('src/lib/')
+      ) {
+        if (firstSrcLibImportIndex === -1) {
+          firstSrcLibImportIndex = i
         }
       }
     } else if (node.type === 'VariableDeclaration') {
@@ -163,6 +175,16 @@ export function addRealtimeToGraphqlHandler(sourceCode) {
       b.identifier(realtimeLocalName),
     )
     prop.shorthand = true
+    // Add a unique marker as a trailing block comment on the inserted property.
+    // This allows us to perform a targeted post-print cleanup (only where we
+    // actually inserted the property) and avoids touching occurrences of the
+    // identifier appearing in comments or elsewhere in the file.
+    prop.trailingComments = [
+      {
+        type: 'CommentBlock',
+        value: '__CEDAR_REALTIME_INSERTED__',
+      },
+    ]
     return prop
   }
 
@@ -355,14 +377,74 @@ export function addRealtimeToGraphqlHandler(sourceCode) {
         b.literal('src/lib/realtime'),
       )
 
-      const insertAt = Math.max(0, lastImportIndex + 1)
+      let insertAt = Math.max(0, lastImportIndex + 1)
+      if (firstSrcLibImportIndex !== -1) {
+        // Insert into the src/lib imports in alphabetical order (by source.value)
+        let libInsertAt = firstSrcLibImportIndex
+        for (let j = firstSrcLibImportIndex; j <= lastImportIndex; j += 1) {
+          const candidate = programBody[j]
+          if (!candidate || candidate.type !== 'ImportDeclaration') {
+            break
+          }
+
+          const srcVal =
+            candidate.source &&
+            candidate.source.value &&
+            typeof candidate.source.value === 'string'
+              ? candidate.source.value
+              : null
+
+          if (!srcVal || !srcVal.startsWith('src/lib/')) {
+            break
+          }
+
+          // If the candidate's module path is alphabetically greater than the realtime import,
+          // we should insert before it.
+          if (srcVal.localeCompare('src/lib/realtime') > 0) {
+            libInsertAt = j
+            break
+          }
+
+          // Otherwise, place after this candidate and continue
+          libInsertAt = j + 1
+        }
+        insertAt = Math.max(0, libInsertAt)
+      }
       programBody.splice(insertAt, 0, importDecl)
     }
   }
 
   const output = recast.print(ast).code
-  if (output && output !== sourceCode) {
-    return { code: output, modified: true }
+  let finalOutput = output
+
+  // Remove any empty line between consecutive src/lib imports (so inserted
+  // `src/lib/realtime` is grouped directly with other `src/lib/*` imports).
+  if (changed && typeof finalOutput === 'string' && finalOutput.length > 0) {
+    finalOutput = finalOutput.replace(
+      /(import[^\r\n]*from\s+['"]src\/lib\/[^'"]+[^\r\n]*\r?\n)\r?\n(?=import[^\r\n]*from\s+['"]src\/lib\/)/g,
+      '$1',
+    )
+    // Remove any empty line after a newly-inserted realtime property so object
+    // properties remain grouped without extra blank lines.
+    {
+      // Collapse multiple blank lines immediately after our inserted property
+      // marker (if any) and then remove the marker itself so it does not appear
+      // in the final output. This targets only call sites we modified (because
+      // the marker is only added to inserted properties), avoiding accidental
+      // matches in comments or unrelated code.
+      finalOutput = finalOutput.replace(
+        /\/\*__CEDAR_REALTIME_INSERTED__\*\/\r?\n\r?\n/g,
+        '/*__CEDAR_REALTIME_INSERTED__*/\n',
+      )
+      finalOutput = finalOutput.replace(
+        /\/\*__CEDAR_REALTIME_INSERTED__\*\//g,
+        '',
+      )
+    }
+  }
+
+  if (finalOutput && finalOutput !== sourceCode) {
+    return { code: finalOutput, modified: true }
   }
 
   return { code: sourceCode, modified: false }
