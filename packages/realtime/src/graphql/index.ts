@@ -9,7 +9,7 @@ export {
   liveQueryStore,
   pubSub,
   Repeater,
-} from './plugins/useRedwoodRealtime'
+} from './plugins/useCedarRealtime'
 
 export type {
   LiveQueryStorageMechanism,
@@ -20,4 +20,4 @@ export type {
   CedarRealtimeOptions,
   /** @deprecated - please use CedarRealtimeOptions instead */
   RedwoodRealtimeOptions,
-} from './plugins/useRedwoodRealtime'
+} from './plugins/useCedarRealtime'
