@@ -13,7 +13,7 @@ import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../../lib/project.js'
 import { setupServerFileTasks } from '../server-file/serverFileHandler.js'
 
-import { addRealtimeToGraphqlHandler } from './addRealtimeToGraphq.js'
+import { addRealtimeToGraphqlHandler } from './addRealtimeToGraphql.js'
 
 const { version } = JSON.parse(
   fs.readFileSync(
