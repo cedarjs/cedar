@@ -6,15 +6,12 @@ import {
 import { describe, it, expect } from 'vitest'
 
 import { testQuery, testLiveQuery, testSchema } from '../__fixtures__/common'
-import {
-  useRedwoodRealtime,
-  InMemoryLiveQueryStore,
-} from '../useRedwoodRealtime'
+import { useCedarRealtime, InMemoryLiveQueryStore } from '../useCedarRealtime'
 
-describe('useRedwoodRealtime', () => {
+describe('useCedarRealtime', () => {
   it('should support a @live query directive', async () => {
     const testkit = createTestkit(
-      [useRedwoodRealtime({ liveQueries: { store: 'in-memory' } })],
+      [useCedarRealtime({ liveQueries: { store: 'in-memory' } })],
       testSchema,
     )
 
@@ -38,12 +35,12 @@ describe('useRedwoodRealtime', () => {
   it('should update schema with live directive', () => {
     const spiedPlugin = createSpiedPlugin()
 
-    // the original schema should not have the live directive before the useRedwoodRealtime plugin is applied
+    // the original schema should not have the live directive before the useCedarRealtime plugin is applied
     expect(testSchema.getDirective('live')).toBeUndefined()
 
     createTestkit(
       [
-        useRedwoodRealtime({ liveQueries: { store: 'in-memory' } }),
+        useCedarRealtime({ liveQueries: { store: 'in-memory' } }),
         spiedPlugin.plugin,
       ],
       testSchema,
@@ -64,7 +61,7 @@ describe('useRedwoodRealtime', () => {
 
     const testkit = createTestkit(
       [
-        useRedwoodRealtime({ liveQueries: { store: 'in-memory' } }),
+        useCedarRealtime({ liveQueries: { store: 'in-memory' } }),
         spiedPlugin.plugin,
       ],
       testSchema,
@@ -93,7 +90,7 @@ describe('useRedwoodRealtime', () => {
 
     const testkit = createTestkit(
       [
-        useRedwoodRealtime({
+        useCedarRealtime({
           subscriptions: { store: 'in-memory', subscriptions: [] },
         }),
         spiedPlugin.plugin,

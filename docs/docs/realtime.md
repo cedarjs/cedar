@@ -154,7 +154,7 @@ To enable defer and streaming, set `enableDeferStream` to true.
 Configure a Redis store and defer and stream in:
 
 ```ts title="api/lib/realtime.ts"
-import { RedwoodRealtimeOptions } from '@cedarjs/realtime'
+import { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import subscriptions from 'src/subscriptions/**/*.{js,ts}'
 
@@ -182,7 +182,7 @@ import subscriptions from 'src/subscriptions/**/*.{js,ts}'
  * - In-memory stores are useful for development and testing.
  * - Redis stores are useful for production.
  */
-export const realtime: RedwoodRealtimeOptions = {
+export const realtime: CedarRealtimeOptions = {
   subscriptions: {
     subscriptions,
     store: 'in-memory',
