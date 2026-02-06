@@ -65,7 +65,7 @@ beforeEach(() => {
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(process, 'exit').mockImplementation(() => void 0 as never)
-  mocks.realtimeTs = 'export const realtime: RedwoodRealtimeOptions = {}'
+  mocks.realtimeTs = 'export const realtime: CedarRealtimeOptions = {}'
   mocks.serverTs = 'export const serverFile: RedwoodServerFileOptions = {}'
   mocks.isEsm = false
 })

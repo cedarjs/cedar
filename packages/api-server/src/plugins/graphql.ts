@@ -68,13 +68,13 @@ export async function redwoodFastifyGraphQLServer(
     // that we do not want to add the the GraphQLHandler in the graphql-server
     // graphql function.
     //
-    // These would be plugins that need a server instance such as Redwood Realtime
+    // These would be plugins that need a server instance such as Cedar Realtime
     if (graphqlOptions?.realtime) {
-      const { useRedwoodRealtime } = await import('@cedarjs/realtime')
+      const { useCedarRealtime } = await import('@cedarjs/realtime')
 
       const originalExtraPlugins = graphqlOptions.extraPlugins ?? []
       // @ts-expect-error TODO(jgmw): Fix this type issue introduced after switching to Node16 module resolution
-      originalExtraPlugins.push(useRedwoodRealtime(graphqlOptions.realtime))
+      originalExtraPlugins.push(useCedarRealtime(graphqlOptions.realtime))
       graphqlOptions.extraPlugins = originalExtraPlugins
 
       // uses for SSE single connection mode with the `/graphql/stream` endpoint
