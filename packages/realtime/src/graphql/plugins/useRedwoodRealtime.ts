@@ -49,9 +49,11 @@ export type SubscribeClientType = CreateRedisEventTargetArgs['subscribeClient']
  *
  * Realtime supports Live Queries and Subscriptions over GraphQL SSE.
  *
- * Live Queries are GraphQL queries that are automatically re-run when the data they depend on changes.
+ * Live Queries are GraphQL queries that are automatically re-run when the data
+ * they depend on changes.
  *
- * Subscriptions are GraphQL queries that are run when a client subscribes to a channel.
+ * Subscriptions are GraphQL queries that are run when a client subscribes to a
+ * channel.
  *
  * CedarJS Realtime
  *  - uses a publish/subscribe model to broadcast data to clients.
@@ -61,11 +63,11 @@ export type SubscribeClientType = CreateRedisEventTargetArgs['subscribeClient']
  * - In-memory stores are useful for development and testing.
  * - Redis stores are useful for production.
  */
-export type RedwoodRealtimeOptions = {
+export type CedarRealtimeOptions = {
   enableDeferStream?: boolean
   liveQueries?: {
     /**
-     * @description Redwood Realtime supports in-memory and Redis stores.
+     * @description Cedar Realtime supports in-memory and Redis stores.
      * @default 'in-memory'
      */
     store:
@@ -84,7 +86,7 @@ export type RedwoodRealtimeOptions = {
   }
   subscriptions?: {
     /**
-     * @description Redwood Realtime supports in-memory and Redis stores.
+     * @description Cedar Realtime supports in-memory and Redis stores.
      * @default 'in-memory'
      */
     store:
@@ -102,6 +104,11 @@ export type RedwoodRealtimeOptions = {
     subscriptions: SubscriptionGlobImports
   }
 }
+
+/**
+ * @deprecated Use `CedarRealtimeOptions` instead.
+ */
+export type RedwoodRealtimeOptions = CedarRealtimeOptions
 
 export class RedisLiveQueryStore {
   pub: PublishClientType
@@ -151,7 +158,7 @@ export class RedisLiveQueryStore {
 export let liveQueryStore: LiveQueryStorageMechanism | undefined = undefined
 export let pubSub: ReturnType<typeof createPubSub> | undefined = undefined
 
-export const useRedwoodRealtime = (options: RedwoodRealtimeOptions): Plugin => {
+export const useCedarRealtime = (options: CedarRealtimeOptions): Plugin => {
   let liveQueriesEnabled = false
   let subscriptionsEnabled = false
 
@@ -164,7 +171,7 @@ export const useRedwoodRealtime = (options: RedwoodRealtimeOptions): Plugin => {
   /**
    * This symbol is added to the schema extensions for checking whether the live query was added to the schema only once.
    */
-  const wasLiveQueryAdded = Symbol.for('useRedwoodRealtime.wasLiveQueryAdded')
+  const wasLiveQueryAdded = Symbol.for('useCedarRealtime.wasLiveQueryAdded')
 
   if (options.liveQueries?.store) {
     if (options.liveQueries.store === 'in-memory') {
@@ -235,6 +242,7 @@ export const useRedwoodRealtime = (options: RedwoodRealtimeOptions): Plugin => {
       if (subscriptionsEnabled) {
         addPlugin(useGraphQLSSE() as Plugin<object>)
       }
+
       if (options.enableDeferStream) {
         addPlugin(useDeferStream() as Plugin<object>)
       }
@@ -248,4 +256,11 @@ export const useRedwoodRealtime = (options: RedwoodRealtimeOptions): Plugin => {
       }
     },
   }
+}
+
+/**
+ * @deprecated Use `useCedarRealtime` instead.
+ */
+export const useRedwoodRealtime = (options: CedarRealtimeOptions): Plugin => {
+  return useCedarRealtime(options)
 }
