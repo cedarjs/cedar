@@ -37,7 +37,6 @@ function recommendedNodeVersion() {
     'ts',
     'package.json',
   )
-  console.log('templatePackageJsonPath:', templatePackageJsonPath)
   const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
 
   return json.engines.node
@@ -80,7 +79,7 @@ const args = yargs(hideBin(process.argv))
 
 const { verbose, resume, resumePath, resumeStep } = args
 
-const RW_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
+const CEDAR_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
 const OUTPUT_PROJECT_PATH = resumePath
   ? /* path.resolve(String(resumePath)) */ resumePath
   : path.join(
@@ -278,7 +277,7 @@ const createProject = () => {
     cmd,
     // We create a ts project and convert using ts-to-js at the end if typescript flag is false
     ['--no-yarn-install', '--typescript', '--overwrite', '--no-git', '--esm'],
-    getExecaOptions(RW_FRAMEWORK_PATH),
+    getExecaOptions(CEDAR_FRAMEWORK_PATH),
   )
 
   return subprocess
@@ -286,7 +285,7 @@ const createProject = () => {
 
 const copyProject = async () => {
   const fixturePath = path.join(
-    RW_FRAMEWORK_PATH,
+    CEDAR_FRAMEWORK_PATH,
     '__fixtures__/esm-test-project',
   )
 
@@ -310,26 +309,26 @@ async function runCommand() {
   // the "api" step both have a bunch of sub-tasks. So maybe the step.txt file
   // should contain something like "9.2" to mean the third sub-task of the
   // "api" step? And --resume-step would also accept stuff like "9.2"?
+
+  // TODO: Maybe it's enough to just build create-cedar-app
   await tuiTask({
     step: 0,
-    title: 'Creating project',
-    content: 'Building test-project from scratch...',
-    task: createProject,
-  })
-
-  // TODO: See if this is needed now with tarsync. Maybe just keep the
-  // clean part (and/or combine it with the tarsync)
-  await tuiTask({
-    step: 1,
-    title: '[link] Building Cedar framework',
+    title: 'Building Cedar framework',
     content: 'yarn clean && yarn build',
     task: async () => {
       return exec(
         'yarn clean && yarn build',
         [],
-        getExecaOptions(RW_FRAMEWORK_PATH),
+        getExecaOptions(CEDAR_FRAMEWORK_PATH),
       )
     },
+  })
+
+  await tuiTask({
+    step: 1,
+    title: 'Creating project',
+    content: 'Building test-project from scratch...',
+    task: createProject,
   })
 
   // TODO: See if this is needed now with tarsync
@@ -339,7 +338,7 @@ async function runCommand() {
     content: 'Adding framework dependencies to project...',
     task: () => {
       return addFrameworkDepsToProject(
-        RW_FRAMEWORK_PATH,
+        CEDAR_FRAMEWORK_PATH,
         OUTPUT_PROJECT_PATH,
         'pipe', // TODO: Remove this when everything is using @rwjs/tui
       )
@@ -396,7 +395,7 @@ async function runCommand() {
     title: '[link] Copying framework packages to project',
     task: () => {
       return copyFrameworkPackages(
-        RW_FRAMEWORK_PATH,
+        CEDAR_FRAMEWORK_PATH,
         OUTPUT_PROJECT_PATH,
         'pipe',
       )
