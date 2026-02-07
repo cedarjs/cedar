@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
+import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
@@ -12,6 +13,8 @@ import c from '../../../lib/colors.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../../lib/project.js'
 import { setupServerFileTasks } from '../server-file/serverFileHandler.js'
+
+import { addRealtimeToGraphqlHandler } from './addRealtimeToGraphql.js'
 
 const { version } = JSON.parse(
   fs.readFileSync(
@@ -33,7 +36,7 @@ export async function handler({ force, includeExamples, verbose }) {
     [
       addApiPackages(['ioredis@^5', `@cedarjs/realtime@${version}`]),
       {
-        title: 'Adding the realtime api lib ...',
+        title: 'Adding the realtime api lib...',
         task: async () => {
           const serverFileTemplateContent = fs.readFileSync(
             path.resolve(
@@ -59,7 +62,13 @@ export async function handler({ force, includeExamples, verbose }) {
         },
       },
       {
-        title: 'Adding Countdown example subscription ...',
+        title: 'Enabling realtime support in the GraphQL handler...',
+        task: (ctx, task) => {
+          addRealtimeToGraphqlHandler(ctx, task, force)
+        },
+      },
+      {
+        title: 'Adding Countdown example subscription...',
         enabled: () => includeExamples,
         task: async () => {
           let exampleSubscriptionTemplateContent = fs.readFileSync(
@@ -102,7 +111,7 @@ export async function handler({ force, includeExamples, verbose }) {
         },
       },
       {
-        title: 'Adding NewMessage example subscription ...',
+        title: 'Adding NewMessage example subscription...',
         enabled: () => includeExamples,
         task: async () => {
           // sdl
@@ -198,7 +207,7 @@ export async function handler({ force, includeExamples, verbose }) {
         },
       },
       {
-        title: 'Adding Auctions example live query ...',
+        title: 'Adding Auctions example live query...',
         enabled: () => includeExamples,
         task: async () => {
           // sdl
@@ -258,7 +267,7 @@ export async function handler({ force, includeExamples, verbose }) {
       },
 
       {
-        title: 'Adding Defer example queries ...',
+        title: 'Adding Defer example queries...',
         enabled: () => includeExamples,
         task: async () => {
           // sdl
@@ -318,7 +327,7 @@ export async function handler({ force, includeExamples, verbose }) {
       },
 
       {
-        title: 'Adding Stream example queries ...',
+        title: 'Adding Stream example queries...',
         enabled: () => includeExamples,
         task: async () => {
           // sdl
@@ -377,11 +386,31 @@ export async function handler({ force, includeExamples, verbose }) {
         },
       },
       {
-        title: `Generating types ...`,
+        title: `Generating types...`,
         task: async () => {
           await generateTypes()
           console.log(
-            'Note: You may need to manually restart GraphQL in VSCode to see the new types take effect.\n\n',
+            'Note: You may need to manually restart GraphQL in VSCode to see ' +
+              'the new types take effect.\n\n',
+          )
+        },
+      },
+      {
+        title: 'Cleaning up...',
+        task: () => {
+          const graphqlHandlerPath = path.join(
+            getPaths().api.functions,
+            `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
+          )
+
+          execa.sync(
+            'yarn',
+            ['cedar', 'lint', '--fix', graphqlHandlerPath, realtimeLibFilePath],
+            {
+              cwd: getPaths().base,
+              // Silently ignore errors
+              reject: false,
+            },
           )
         },
       },
@@ -398,6 +427,28 @@ export async function handler({ force, includeExamples, verbose }) {
     }
 
     await tasks.run()
+
+    if (tasks.ctx?.realtimeHandlerSkipped) {
+      const graphqlHandlerPath = path.join(
+        getPaths().api.functions,
+        `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
+      )
+      const relativePath = path.relative(getPaths().base, graphqlHandlerPath)
+
+      console.log()
+      console.log(
+        c.warning(
+          'Note: The setup command skipped adding realtime to your GraphQL ' +
+            `handler. Please review ${relativePath}, and manually add it if ` +
+            'needed.',
+        ),
+      )
+      console.log(
+        'You want to make sure you have an import like `import { realtime } ' +
+          "from '@cedarjs/realtime'`, and that you pass `realtime` to the " +
+          'call to `createGraphQLHandler`.',
+      )
+    }
   } catch (e) {
     errorTelemetry(process.argv, e.message)
     console.error(c.error(e.message))
