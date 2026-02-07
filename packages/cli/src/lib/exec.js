@@ -11,6 +11,8 @@ import {
   cedarjsDirectoryNamedImportPlugin,
   cedarjsJobPathInjectorPlugin,
   cedarSwapApolloProvider,
+  cedarImportDirPlugin,
+  cedarAutoImportsPlugin,
 } from '@cedarjs/vite'
 
 export async function runScriptFunction({
@@ -90,6 +92,8 @@ export async function runScriptFunction({
       cedarCellTransform(),
       cedarjsJobPathInjectorPlugin(),
       cedarSwapApolloProvider(),
+      cedarImportDirPlugin(),
+      cedarAutoImportsPlugin(),
     ],
   })
 

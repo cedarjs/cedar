@@ -249,7 +249,6 @@ async function transformClientModule(
 
   // This will insert the names into the `names` array
   await parseExportNamesIntoNames(code, body, names)
-  console.log('transformClientModule names', names)
 
   // entryRecord will be undefined for dev, because clientEntryFiles will just
   // be an empty object. See rscWorker.ts, where we do rscTransformPlugin({})
