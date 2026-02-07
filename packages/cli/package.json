@@ -31,6 +31,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@babel/parser": "7.29.0",
     "@babel/preset-typescript": "7.28.5",
     "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/api-server": "workspace:*",
@@ -78,6 +79,7 @@
     "prettier": "3.8.1",
     "prisma": "6.19.2",
     "prompts": "2.4.2",
+    "recast": "0.23.11",
     "rimraf": "6.1.2",
     "semver": "7.7.3",
     "smol-toml": "1.6.0",
