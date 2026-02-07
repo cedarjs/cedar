@@ -79,11 +79,11 @@ function showLegacyEslintDeprecationWarning(legacyFiles) {
   console.warn('')
 }
 
-export const command = 'lint [path..]'
+export const command = 'lint [paths..]'
 export const description = 'Lint your files'
 export const builder = (yargs) => {
   yargs
-    .positional('path', {
+    .positional('paths', {
       description:
         'Specify file(s) or directory(ies) to lint relative to project root',
       type: 'array',
@@ -106,7 +106,7 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async ({ path, fix, format }) => {
+export const handler = async ({ paths, fix, format }) => {
   recordTelemetryAttributes({ command: 'lint', fix, format })
 
   // Check for legacy ESLint configuration and show deprecation warning
@@ -117,19 +117,18 @@ export const handler = async ({ path, fix, format }) => {
   }
 
   try {
-    const pathString = path?.join(' ')
     const sbPath = getPaths().web.storybook
     const args = [
       'eslint',
       fix && '--fix',
       '--format',
       format,
-      !pathString && fs.existsSync(getPaths().web.src) && 'web/src',
-      !pathString && fs.existsSync(getPaths().web.config) && 'web/config',
-      !pathString && fs.existsSync(sbPath) && 'web/.storybook',
-      !pathString && fs.existsSync(getPaths().scripts) && 'scripts',
-      !pathString && fs.existsSync(getPaths().api.src) && 'api/src',
-      pathString,
+      !paths && fs.existsSync(getPaths().web.src) && 'web/src',
+      !paths && fs.existsSync(getPaths().web.config) && 'web/config',
+      !paths && fs.existsSync(sbPath) && 'web/.storybook',
+      !paths && fs.existsSync(getPaths().scripts) && 'scripts',
+      !paths && fs.existsSync(getPaths().api.src) && 'api/src',
+      ...paths,
     ].filter(Boolean)
 
     const result = await execa('yarn', args, {
