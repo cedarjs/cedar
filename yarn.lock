@@ -710,16 +710,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/generator@npm:7.29.0, @babel/generator@npm:^7.14.0, @babel/generator@npm:^7.18.13, @babel/generator@npm:^7.25.7, @babel/generator@npm:^7.29.0, @babel/generator@npm:^7.7.2":
-  version: 7.29.0
-  resolution: "@babel/generator@npm:7.29.0"
+"@babel/generator@npm:7.29.1, @babel/generator@npm:^7.14.0, @babel/generator@npm:^7.18.13, @babel/generator@npm:^7.25.7, @babel/generator@npm:^7.29.0, @babel/generator@npm:^7.7.2":
+  version: 7.29.1
+  resolution: "@babel/generator@npm:7.29.1"
   dependencies:
     "@babel/parser": "npm:^7.29.0"
     "@babel/types": "npm:^7.29.0"
     "@jridgewell/gen-mapping": "npm:^0.3.12"
     "@jridgewell/trace-mapping": "npm:^0.3.28"
     jsesc: "npm:^3.0.2"
-  checksum: 10c0/5c3df8f2475bfd5f97ad0211c52171aff630088b148e7b89d056b39d69855179bc9f2d1ee200263c76c2398a49e4fdbb38b9709ebc4f043cc04d9ee09a66668a
+  checksum: 10c0/349086e6876258ef3fb2823030fee0f6c0eb9c3ebe35fc572e16997f8c030d765f636ddc6299edae63e760ea6658f8ee9a2edfa6d6b24c9a80c917916b973551
   languageName: node
   linkType: hard
 
@@ -3483,7 +3483,7 @@ __metadata:
   resolution: "@cedarjs/prerender@workspace:packages/prerender"
   dependencies:
     "@ast-grep/napi": "npm:0.40.5"
-    "@babel/generator": "npm:7.29.0"
+    "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.0"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/babel-config": "workspace:*"
@@ -3777,7 +3777,7 @@ __metadata:
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@ast-grep/napi": "npm:0.40.5"
-    "@babel/generator": "npm:7.29.0"
+    "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.0"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/auth": "workspace:*"
@@ -27019,7 +27019,7 @@ __metadata:
     "@actions/glob": "npm:0.6.1"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
-    "@babel/generator": "npm:7.29.0"
+    "@babel/generator": "npm:7.29.1"
     "@babel/node": "npm:7.29.0"
     "@babel/plugin-proposal-decorators": "npm:7.29.0"
     "@babel/plugin-transform-class-properties": "npm:7.28.6"
