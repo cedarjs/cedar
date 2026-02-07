@@ -22,11 +22,11 @@ export function addRealtimeToGraphqlHandler(ctx, task, force) {
     .split('\n')
 
   const importLineRegex =
-    /^import {.*realtime.*} from ['"]src\/lib\/realtime['"]$/
-  const multilineImportRegex = /^} from ['"]src\/lib\/realtime['"]$/
+    /^import {.*realtime.*} from ['"]src\/lib\/realtime['"];?$/
+  const multilineImportRegex = /^} from ['"]src\/lib\/realtime['"];?$/
 
   const hasRealtimeImport = contentLines.some((line) => {
-    return multilineImportRegex.test(line) || importLineRegex.test(line)
+    return importLineRegex.test(line) || multilineImportRegex.test(line)
   })
 
   if (hasRealtimeImport && !force) {

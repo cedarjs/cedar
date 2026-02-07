@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
+import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
@@ -63,7 +64,7 @@ export async function handler({ force, includeExamples, verbose }) {
       {
         title: 'Enabling realtime support in the GraphQL handler...',
         task: (ctx, task) => {
-          addRealtimeToGraphqlHandler(ctx, task)
+          addRealtimeToGraphqlHandler(ctx, task, force)
         },
       },
       {
@@ -389,8 +390,27 @@ export async function handler({ force, includeExamples, verbose }) {
         task: async () => {
           await generateTypes()
           console.log(
-            'Note: You may need to manually restart GraphQL in VSCode to see the new types take effect.\n\n',
+            'Note: You may need to manually restart GraphQL in VSCode to see ' +
+              'the new types take effect.\n\n',
           )
+        },
+      },
+      {
+        title: 'Cleaning up...',
+        task: () => {
+          const graphqlHandlerPath = path.join(
+            getPaths().api.functions,
+            `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
+          )
+
+          execa.sync('yarn', [
+            'eslint',
+            '--fix',
+            '--config',
+            `${getPaths().base}/node_modules/@cedarjs/eslint-config/index.js`,
+            graphqlHandlerPath,
+            realtimeLibFilePath,
+          ])
         },
       },
     ],
@@ -406,6 +426,28 @@ export async function handler({ force, includeExamples, verbose }) {
     }
 
     await tasks.run()
+
+    if (tasks.ctx?.realtimeHandlerSkipped) {
+      const graphqlHandlerPath = path.join(
+        getPaths().api.functions,
+        `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
+      )
+      const relativePath = path.relative(getPaths().base, graphqlHandlerPath)
+
+      console.log()
+      console.log(
+        c.warning(
+          'Note: The setup command skipped adding realtime to your GraphQL ' +
+            `handler. Please review ${relativePath}, and manually add it if ` +
+            'needed.',
+        ),
+      )
+      console.log(
+        'You want to make sure you have an import like `import { realtime } ' +
+          "from '@cedarjs/realtime'`, and that you pass `realtime` to the " +
+          'call to `createGraphQLHandler`.',
+      )
+    }
   } catch (e) {
     errorTelemetry(process.argv, e.message)
     console.error(c.error(e.message))
