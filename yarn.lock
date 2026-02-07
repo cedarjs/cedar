@@ -24230,9 +24230,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ora@npm:9.1.0":
-  version: 9.1.0
-  resolution: "ora@npm:9.1.0"
+"ora@npm:9.2.0":
+  version: 9.2.0
+  resolution: "ora@npm:9.2.0"
   dependencies:
     chalk: "npm:^5.6.2"
     cli-cursor: "npm:^5.0.0"
@@ -24240,9 +24240,9 @@ __metadata:
     is-interactive: "npm:^2.0.0"
     is-unicode-supported: "npm:^2.1.0"
     log-symbols: "npm:^7.0.1"
-    stdin-discarder: "npm:^0.2.2"
+    stdin-discarder: "npm:^0.3.1"
     string-width: "npm:^8.1.0"
-  checksum: 10c0/8a8f02809d8b7b0e2534a0232eb2d8a01e1fa84a0f346a830ad3d70405a0ae7b947cb5b6a2f6be3007bccc2518d100330a6c505a833862899e37465dda7f82c6
+  checksum: 10c0/2ed9bd7be56967073d0e52f4d22076029a62481d6d1a2e3bf11a7811bb2f033c490f0f998525d662c16104a349059acad214ed21bad20d207b1a71ac783648e1
   languageName: node
   linkType: hard
 
@@ -26955,7 +26955,7 @@ __metadata:
     nodemon: "npm:3.1.11"
     npm-packlist: "npm:10.0.3"
     nx: "npm:22.4.3"
-    ora: "npm:9.1.0"
+    ora: "npm:9.2.0"
     prettier: "npm:3.8.1"
     prettier-plugin-curly: "npm:0.3.2"
     prettier-plugin-packagejson: "npm:3.0.0"
@@ -27934,10 +27934,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stdin-discarder@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "stdin-discarder@npm:0.2.2"
-  checksum: 10c0/c78375e82e956d7a64be6e63c809c7f058f5303efcaf62ea48350af072bacdb99c06cba39209b45a071c1acbd49116af30df1df9abb448df78a6005b72f10537
+"stdin-discarder@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "stdin-discarder@npm:0.3.1"
+  checksum: 10c0/2fda9b230e72f092a933dbc755fadbfd53b721b103acddd06c2642a81793565f1673f249dc54fc0c63b141f222e9d09494cdf4db6ab7998f54e0b0be8526cba5
   languageName: node
   linkType: hard
 
