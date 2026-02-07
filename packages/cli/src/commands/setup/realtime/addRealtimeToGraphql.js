@@ -87,7 +87,7 @@ export function addRealtimeToGraphqlHandler(ctx, task, force) {
   }
 
   // insert `realtime,` right before `sdls,`
-  contentLines.splice(handlerIndex + sdlsIndex - 1, 0, '  realtime,')
+  contentLines.splice(handlerIndex + sdlsIndex, 0, '  realtime,')
 
   fs.writeFileSync(graphqlHandlerPath, contentLines.join('\n'))
 }
