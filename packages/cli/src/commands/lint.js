@@ -118,20 +118,19 @@ export const handler = async ({ paths, fix, format }) => {
 
   try {
     const sbPath = getPaths().web.storybook
-    const args = [
-      'eslint',
-      fix && '--fix',
-      '--format',
-      format,
-      !paths && fs.existsSync(getPaths().web.src) && 'web/src',
-      !paths && fs.existsSync(getPaths().web.config) && 'web/config',
-      !paths && fs.existsSync(sbPath) && 'web/.storybook',
-      !paths && fs.existsSync(getPaths().scripts) && 'scripts',
-      !paths && fs.existsSync(getPaths().api.src) && 'api/src',
-      ...paths,
-    ].filter(Boolean)
+    const args = ['eslint', fix && '--fix', '--format', format, ...paths]
 
-    const result = await execa('yarn', args, {
+    if (paths.length === 0) {
+      args.push(
+        fs.existsSync(getPaths().web.src) && 'web/src',
+        fs.existsSync(getPaths().web.config) && 'web/config',
+        fs.existsSync(sbPath) && 'web/.storybook',
+        fs.existsSync(getPaths().scripts) && 'scripts',
+        fs.existsSync(getPaths().api.src) && 'api/src',
+      )
+    }
+
+    const result = await execa('yarn', args.filter(Boolean), {
       cwd: getPaths().base,
       stdio: 'inherit',
     })
