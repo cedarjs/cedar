@@ -403,14 +403,15 @@ export async function handler({ force, includeExamples, verbose }) {
             `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
 
-          execa.sync('yarn', [
-            'eslint',
-            '--fix',
-            '--config',
-            `${getPaths().base}/node_modules/@cedarjs/eslint-config/index.js`,
-            graphqlHandlerPath,
-            realtimeLibFilePath,
-          ])
+          execa.sync(
+            'yarn',
+            ['cedar', 'lint', '--fix', graphqlHandlerPath, realtimeLibFilePath],
+            {
+              cwd: getPaths().base,
+              // Silently ignore errors
+              reject: false,
+            },
+          )
         },
       },
     ],

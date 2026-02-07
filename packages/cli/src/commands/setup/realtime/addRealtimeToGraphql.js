@@ -75,6 +75,7 @@ export function addRealtimeToGraphqlHandler(ctx, task, force) {
     0,
     "import { realtime } from 'src/lib/realtime'",
   )
+  const handlerIndexAfterSplice = handlerIndex + 1
 
   const sdlsIndex = handlerLines.findLastIndex((line) =>
     /^\s*sdls,$/.test(line),
@@ -87,7 +88,7 @@ export function addRealtimeToGraphqlHandler(ctx, task, force) {
   }
 
   // insert `realtime,` right before `sdls,`
-  contentLines.splice(handlerIndex + sdlsIndex, 0, '  realtime,')
+  contentLines.splice(handlerIndexAfterSplice + sdlsIndex, 0, '  realtime,')
 
   fs.writeFileSync(graphqlHandlerPath, contentLines.join('\n'))
 }
