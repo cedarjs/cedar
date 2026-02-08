@@ -8,7 +8,7 @@ import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { loadEnvFiles, recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { projectIsEsm, getConfigPath } from '@cedarjs/project-config'
+import { findUp, projectIsEsm, getConfigPath } from '@cedarjs/project-config'
 import { telemetryMiddleware } from '@cedarjs/telemetry'
 
 import * as buildCommand from './commands/build.js'
@@ -36,7 +36,6 @@ import * as typeCheckCommand from './commands/type-check.js'
 import * as upgradeCommand from './commands/upgrade/upgrade.js'
 import c from './lib/colors.js'
 import { exitWithError } from './lib/exit.js'
-import { findUp } from './lib/index.js'
 import * as updateCheck from './lib/updateCheck.js'
 import { loadPlugins } from './plugin.js'
 import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
@@ -262,14 +261,19 @@ function getTomlDir(cwd) {
       // `cwd` was set by the `--cwd` option or the `RWJS_CWD` env var. In this
       // case, we don't want to find up for a configuration file. The
       // config file should just be in that directory.
-      const found = configFiles.some((f) => fs.existsSync(path.join(cwd, f)))
+
+      // `cwd` could be a relative path. Making it an absolute path is needed
+      // for when the cli calls itself (which it unfortunately does e.g. when
+      // generating the Prisma client).
+      const absCwd = path.resolve(process.cwd(), cwd)
+      const found = configFiles.some((f) => fs.existsSync(path.join(absCwd, f)))
       if (!found) {
         throw new Error(
-          `Couldn't find a "cedar.toml" or "redwood.toml" file in ${cwd}`,
+          `Couldn't find a "cedar.toml" or "redwood.toml" file in ${absCwd}`,
         )
       }
 
-      tomlDir = cwd
+      tomlDir = absCwd
     } else {
       // `cwd` wasn't set. Odds are they're in a Cedar project, but they could
       // be in ./api or ./web, so we have to find up to be sure.

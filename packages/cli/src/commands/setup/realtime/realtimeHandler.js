@@ -3,6 +3,7 @@ import path from 'path'
 
 import execa from 'execa'
 import { Listr } from 'listr2'
+import prompts from 'prompts'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
@@ -23,7 +24,32 @@ const { version } = JSON.parse(
   ),
 )
 
-export async function handler({ force, includeExamples, verbose }) {
+async function handleExamplesPreference(includeExamples) {
+  let incl = false
+
+  console.log(
+    'handleExamplesPreference includeExamples',
+    typeof includeExamples,
+  )
+  console.log('handleExamplesPreference includeExamples', includeExamples)
+
+  if (typeof includeExamples === 'undefined') {
+    const response = await prompts({
+      type: 'toggle',
+      name: 'includeExamples',
+      message: 'Do you want to generate examples?',
+      initial: true,
+      active: 'Yes',
+      inactive: 'No',
+    })
+
+    incl = response.includeExamples
+  }
+
+  return incl
+}
+
+export async function handler(args) {
   const redwoodPaths = getPaths()
   const ts = isTypeScriptProject()
 
@@ -31,6 +57,10 @@ export async function handler({ force, includeExamples, verbose }) {
     redwoodPaths.api.lib,
     `realtime.${isTypeScriptProject() ? 'ts' : 'js'}`,
   )
+  const force = args.force || false
+  const verbose = args.verbose || false
+
+  const includeExamples = await handleExamplesPreference(args.includeExamples)
 
   const tasks = new Listr(
     [
