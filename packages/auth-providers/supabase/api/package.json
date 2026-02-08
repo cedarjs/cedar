@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-supabase-api",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -39,7 +39,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/api": "1.1.1",
+    "@cedarjs/api": "1.1.2",
     "@supabase/ssr": "0.5.1",
     "jsonwebtoken": "9.0.2"
   },

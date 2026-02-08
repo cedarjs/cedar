@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-handler-in-memory",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -20,7 +20,7 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@cedarjs/mailer-core": "1.1.1"
+    "@cedarjs/mailer-core": "1.1.2"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

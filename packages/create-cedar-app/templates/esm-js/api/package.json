@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@cedarjs/api": "1.1.1",
-    "@cedarjs/graphql-server": "1.1.1"
+    "@cedarjs/api": "1.1.2",
+    "@cedarjs/graphql-server": "1.1.2"
   }
 }
