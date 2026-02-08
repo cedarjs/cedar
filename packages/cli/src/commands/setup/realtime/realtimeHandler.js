@@ -27,12 +27,6 @@ const { version } = JSON.parse(
 async function handleExamplesPreference(includeExamples) {
   let incl = false
 
-  console.log(
-    'handleExamplesPreference includeExamples',
-    typeof includeExamples,
-  )
-  console.log('handleExamplesPreference includeExamples', includeExamples)
-
   if (typeof includeExamples === 'undefined') {
     const response = await prompts({
       type: 'toggle',
