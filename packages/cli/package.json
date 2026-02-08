@@ -81,7 +81,7 @@
     "prompts": "2.4.2",
     "recast": "0.23.11",
     "rimraf": "6.1.2",
-    "semver": "7.7.3",
+    "semver": "7.7.4",
     "smol-toml": "1.6.0",
     "string-env-interpolation": "1.0.1",
     "systeminformation": "5.30.7",
