@@ -170,7 +170,7 @@ export const addEnvVar = (name: string, value: string, comment: string) => {
  * @param cwd Explicitly set the redwood cwd. If not set, we'll try to determine it automatically. You likely
  * only want to set this based on some specific input, like a CLI flag.
  */
-export const setRedwoodCWD = (cwd?: string) => {
+export function setRedwoodCWD(cwd?: string) {
   const configFiles = ['cedar.toml', 'redwood.toml']
   // Get the existing `cwd` from the `RWJS_CWD` env var, if it exists.
   cwd ??= process.env.RWJS_CWD
@@ -179,12 +179,13 @@ export const setRedwoodCWD = (cwd?: string) => {
     // `cwd` was specifically passed in or the `RWJS_CWD` env var was set. In
     // this case, we don't want to find up for a `cedar.toml` or `redwood.toml`
     // file. The config file should just be in that directory.
-    if (
-      !configFiles.some((file) => cwd && fs.existsSync(path.join(cwd, file)))
-    ) {
-      throw new Error(
-        `Couldn't find a "${configFiles.join(' or ')}" file in ${cwd}`,
-      )
+
+    // `cwd` can be a relative path
+    const absCwd = path.resolve(process.cwd(), cwd)
+    const found = configFiles.some((f) => fs.existsSync(path.join(absCwd, f)))
+    if (!found) {
+      const tomls = configFiles.join(' or ')
+      throw new Error(`Couldn't find a "${tomls}" file in ${absCwd}`)
     }
   } else {
     // `cwd` wasn't set. Odds are they're in a Cedar project, but they could be
@@ -199,9 +200,7 @@ export const setRedwoodCWD = (cwd?: string) => {
       )
     }
 
-    if (configTomlPath) {
-      cwd = path.dirname(configTomlPath)
-    }
+    cwd = path.dirname(configTomlPath)
   }
 
   process.env.RWJS_CWD = cwd

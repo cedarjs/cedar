@@ -40,10 +40,12 @@ describe('The CLI sets `cwd` correctly', () => {
         '--version',
       ])
 
+      const fullCwdPath = path.join(process.cwd(), '..', '..', '__fixtures__')
+
       expect(status).toBe(1)
       expect(stdout).toBe('')
       expect(stderr).toMatchInlineSnapshot(
-        `"Couldn't find a "cedar.toml" or "redwood.toml" file in __fixtures__"`,
+        `"Couldn't find a "cedar.toml" or "redwood.toml" file in ${fullCwdPath}"`,
       )
     })
   })
@@ -62,7 +64,7 @@ describe('The CLI sets `cwd` correctly', () => {
       expect(stderr).toBe('')
     })
 
-    it(`throws if set via RWJS_CWD and there's no "redwood.toml"`, () => {
+    it(`throws if set via RWJS_CWD and there's no "cedar.toml"`, () => {
       const { status, stdout, stderr } = cedar(['--version'], {
         env: {
           ...process.env,
@@ -70,16 +72,18 @@ describe('The CLI sets `cwd` correctly', () => {
         },
       })
 
+      const fullCwdPath = path.join(process.cwd(), '..', '..', '__fixtures__')
+
       expect(status).toBe(1)
       expect(stdout).toBe('')
       expect(stderr).toMatchInlineSnapshot(
-        `"Couldn't find a "cedar.toml" or "redwood.toml" file in __fixtures__"`,
+        `"Couldn't find a "cedar.toml" or "redwood.toml" file in ${fullCwdPath}"`,
       )
     })
   })
 
   describe('Prefers --cwd to RWJS_CWD', () => {
-    it('Succeeds when --cwd is a rw project', () => {
+    it('Succeeds when --cwd is a cedar project', () => {
       const { status, stdout, stderr } = cedar(
         ['--cwd', path.join('__fixtures__', 'test-project'), '--version'],
         {
@@ -95,7 +99,7 @@ describe('The CLI sets `cwd` correctly', () => {
       expect(stderr).toBe('')
     })
 
-    it("Fails when --cwd isn't a rw project", () => {
+    it("Fails when --cwd isn't a cedar project", () => {
       const { status, stdout, stderr } = cedar(
         ['--cwd', path.join('__fixtures__'), '--version'],
         {
@@ -106,16 +110,18 @@ describe('The CLI sets `cwd` correctly', () => {
         },
       )
 
+      const fullCwdPath = path.join(process.cwd(), '..', '..', '__fixtures__')
+
       expect(status).toBe(1)
       expect(stdout).toBe('')
       expect(stderr).toMatchInlineSnapshot(
-        `"Couldn't find a "cedar.toml" or "redwood.toml" file in __fixtures__"`,
+        `"Couldn't find a "cedar.toml" or "redwood.toml" file in ${fullCwdPath}"`,
       )
     })
   })
 
   describe('find up', () => {
-    it("finds up for a redwood.toml if --cwd and RWJS_CWD aren't set", () => {
+    it("finds up for a cedar.toml if --cwd and RWJS_CWD aren't set", () => {
       const { status, stdout, stderr } = cedar(['--version'], {
         cwd: path.join(BASE_DIR, '__fixtures__', 'test-project', 'api'),
       })
@@ -125,7 +131,7 @@ describe('The CLI sets `cwd` correctly', () => {
       expect(stderr).toBe('')
     })
 
-    it("fails if it can't find up a redwood.toml", () => {
+    it("fails if it can't find up a cedar.toml", () => {
       const { status, stdout, stderr } = cedar(['--version'], {
         cwd: path.join(BASE_DIR, '__fixtures__'),
       })
