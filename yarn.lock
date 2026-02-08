@@ -24232,9 +24232,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ora@npm:9.2.0":
-  version: 9.2.0
-  resolution: "ora@npm:9.2.0"
+"ora@npm:9.3.0":
+  version: 9.3.0
+  resolution: "ora@npm:9.3.0"
   dependencies:
     chalk: "npm:^5.6.2"
     cli-cursor: "npm:^5.0.0"
@@ -24244,7 +24244,7 @@ __metadata:
     log-symbols: "npm:^7.0.1"
     stdin-discarder: "npm:^0.3.1"
     string-width: "npm:^8.1.0"
-  checksum: 10c0/2ed9bd7be56967073d0e52f4d22076029a62481d6d1a2e3bf11a7811bb2f033c490f0f998525d662c16104a349059acad214ed21bad20d207b1a71ac783648e1
+  checksum: 10c0/1d25c0f43e20389757285f740686958bce78ccb9d03dda190ecc92ae585cbc498fa54cf13933fea2f96cb97a0be82e927cf0fd8c96217459f9c43d915a380531
   languageName: node
   linkType: hard
 
@@ -26957,7 +26957,7 @@ __metadata:
     nodemon: "npm:3.1.11"
     npm-packlist: "npm:10.0.3"
     nx: "npm:22.4.3"
-    ora: "npm:9.2.0"
+    ora: "npm:9.3.0"
     prettier: "npm:3.8.1"
     prettier-plugin-curly: "npm:0.3.2"
     prettier-plugin-packagejson: "npm:3.0.0"
