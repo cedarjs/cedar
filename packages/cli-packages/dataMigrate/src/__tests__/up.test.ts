@@ -36,7 +36,7 @@ describe('up', () => {
       '/redwood-app',
     )
 
-    process.env.RWJS_CWD = '/redwood-app'
+    process.env.CEDAR_CWD = '/redwood-app'
 
     const { argv } = upCommand.builder(yargs())
 

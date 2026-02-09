@@ -124,9 +124,9 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
   )
 
   // Override paths used in getPaths() utility func
-  const originalRwjsCwd = process.env.RWJS_CWD
+  const originalCedarCwd = process.env.CEDAR_CWD || process.env.RWJS_CWD
   const originalCwd = process.cwd()
-  process.env.RWJS_CWD = tempDir
+  process.env.CEDAR_CWD = tempDir
 
   try {
     const testPath = expect.getState().testPath
@@ -219,10 +219,10 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     await Promise.all(contentComparisons)
   } finally {
     // Restore environment
-    if (originalRwjsCwd) {
-      process.env.RWJS_CWD = originalRwjsCwd
+    if (originalCedarCwd) {
+      process.env.CEDAR_CWD = originalCedarCwd
     } else {
-      delete process.env.RWJS_CWD
+      delete process.env.CEDAR_CWD
     }
     process.chdir(originalCwd)
 

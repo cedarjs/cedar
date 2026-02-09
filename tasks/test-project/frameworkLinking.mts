@@ -10,6 +10,8 @@ export function addFrameworkDepsToProject(
     stdio: stdio ?? 'inherit',
     env: {
       CFW_PATH: frameworkPath,
+      CEDAR_CWD: projectPath,
+      // TODO: Remove this as soon as Cedar v2.6.0 is released
       RWJS_CWD: projectPath,
     },
   })
@@ -25,6 +27,8 @@ export function copyFrameworkPackages(
     stdio: stdio ?? 'inherit',
     env: {
       CFW_PATH: frameworkPath,
+      CEDAR_CWD: projectPath,
+      // TODO: Remove this as soon as Cedar v2.6.0 is released
       RWJS_CWD: projectPath,
     },
   })

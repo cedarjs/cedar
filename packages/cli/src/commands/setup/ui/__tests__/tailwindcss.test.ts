@@ -34,13 +34,13 @@ import { Listr2Mock } from '../../../../__tests__/Listr2Mock.js'
 // @ts-expect-error - no types
 import { handler } from '../libraries/tailwindcssHandler.js'
 
-// Set up RWJS_CWD
-let original_RWJS_CWD: string | undefined
+// Set up CEDAR_CWD
+let original_CEDAR_CWD: string | undefined
 const APP_PATH = '/redwood-app'
 
 beforeAll(() => {
-  original_RWJS_CWD = process.env.RWJS_CWD
-  process.env.RWJS_CWD = APP_PATH
+  original_CEDAR_CWD = process.env.CEDAR_CWD
+  process.env.CEDAR_CWD = APP_PATH
 })
 
 beforeEach(() => {
@@ -57,7 +57,7 @@ afterEach(() => {
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = original_RWJS_CWD
+  process.env.CEDAR_CWD = original_CEDAR_CWD
   vi.resetAllMocks()
   vi.resetModules()
 })

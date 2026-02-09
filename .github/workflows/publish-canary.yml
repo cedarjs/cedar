@@ -61,7 +61,10 @@ jobs:
         run: |
           PR_NUMBER=$(gh pr list --search "${{ github.sha }}" --state merged --json number --jq '.[0].number')
           if [ "$PR_NUMBER" != "null" ] && [ -n "$PR_NUMBER" ]; then
-            gh pr comment $PR_NUMBER --body "The changes in this PR are now available in ${{ steps.get-version.outputs.value }}"
+            VERSION="${{ steps.get-version.outputs.value }}"
+            # Strip build metadata/commit hash suffix that starts with '+'
+            VERSION="${VERSION%%+*}"
+            gh pr comment $PR_NUMBER --body "The changes in this PR are now available in $VERSION"
           else
             echo "No PR found for commit ${{ github.sha }}"
           fi

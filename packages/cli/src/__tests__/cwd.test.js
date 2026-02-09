@@ -50,12 +50,12 @@ describe('The CLI sets `cwd` correctly', () => {
     })
   })
 
-  describe('RWJS_CWD', () => {
-    it('lets the user set the cwd via the RWJS_CWD environment variable', () => {
+  describe('CEDAR_CWD', () => {
+    it('lets the user set the cwd via the CEDAR_CWD environment variable', () => {
       const { status, stdout, stderr } = cedar(['--version'], {
         env: {
           ...process.env,
-          RWJS_CWD: path.join('__fixtures__', 'test-project'),
+          CEDAR_CWD: path.join('__fixtures__', 'test-project'),
         },
       })
 
@@ -64,11 +64,11 @@ describe('The CLI sets `cwd` correctly', () => {
       expect(stderr).toBe('')
     })
 
-    it(`throws if set via RWJS_CWD and there's no "cedar.toml"`, () => {
+    it(`throws if set via CEDAR_CWD and there's no "cedar.toml"`, () => {
       const { status, stdout, stderr } = cedar(['--version'], {
         env: {
           ...process.env,
-          RWJS_CWD: '__fixtures__',
+          CEDAR_CWD: '__fixtures__',
         },
       })
 
@@ -82,14 +82,14 @@ describe('The CLI sets `cwd` correctly', () => {
     })
   })
 
-  describe('Prefers --cwd to RWJS_CWD', () => {
+  describe('Prefers --cwd to CEDAR_CWD', () => {
     it('Succeeds when --cwd is a cedar project', () => {
       const { status, stdout, stderr } = cedar(
         ['--cwd', path.join('__fixtures__', 'test-project'), '--version'],
         {
           env: {
             ...process.env,
-            RWJS_CWD: '/ignored/path',
+            CEDAR_CWD: '/ignored/path',
           },
         },
       )
@@ -105,7 +105,7 @@ describe('The CLI sets `cwd` correctly', () => {
         {
           env: {
             ...process.env,
-            RWJS_CWD: path.join('__fixtures__', 'test-project'),
+            CEDAR_CWD: path.join('__fixtures__', 'test-project'),
           },
         },
       )
@@ -121,7 +121,7 @@ describe('The CLI sets `cwd` correctly', () => {
   })
 
   describe('find up', () => {
-    it("finds up for a cedar.toml if --cwd and RWJS_CWD aren't set", () => {
+    it("finds up for a cedar.toml if --cwd and CEDAR_CWD aren't set", () => {
       const { status, stdout, stderr } = cedar(['--version'], {
         cwd: path.join(BASE_DIR, '__fixtures__', 'test-project', 'api'),
       })

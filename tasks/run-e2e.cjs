@@ -118,7 +118,7 @@ const runTarsync = () => {
       stdio: 'inherit',
       env: {
         CFW_PATH: CEDARJS_FRAMEWORK_PATH,
-        RWJS_CWD: CEDARJS_PROJECT_DIRECTORY,
+        CEDAR_CWD: CEDARJS_PROJECT_DIRECTORY,
       },
     })
   } catch (e) {

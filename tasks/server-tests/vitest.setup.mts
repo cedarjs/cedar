@@ -36,7 +36,7 @@ type TestContext = {
 export const testContext: TestContext = {
   // Casting here because `beforeAll` below sets this and this file runs before all tests.
   // Working around it being possibly undefined muddies the code in the tests.
-  // Also can't just call `getConfig()` because RWJS_CWD hasn't been set yet
+  // Also can't just call `getConfig()` because CEDAR_CWD hasn't been set yet
   projectConfig: {} as ReturnType<typeof getConfig>,
 }
 
@@ -70,7 +70,7 @@ export const rwServer = binPaths.rwServer
 // @cedarjs/web-server (yarn rw-web-server)
 export const rwWebServer = binPaths.rwWebServer
 
-let original_RWJS_CWD: string | undefined
+let original_CEDAR_CWD: string | undefined
 
 declare global {
   // eslint-disable-next-line no-var
@@ -78,10 +78,10 @@ declare global {
 }
 
 beforeAll(() => {
-  original_RWJS_CWD = process.env.RWJS_CWD
+  original_CEDAR_CWD = process.env.CEDAR_CWD
   const fixtureUrl = new URL('./fixtures/redwood-app', import.meta.url)
   const FIXTURE_PATH = fileURLToPath(fixtureUrl)
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
   testContext.projectConfig = getConfig()
 
   // When running `yarn vitest run` to run all the test suites, log the bin paths only once.
@@ -89,9 +89,9 @@ beforeAll(() => {
     console.log(
       [
         'These tests use the following commands to run the server:',
-        `• RWJS_CWD=${process.env.RWJS_CWD} yarn node ${rw} serve`,
-        `• RWJS_CWD=${process.env.RWJS_CWD} yarn node ${rwServer}`,
-        `• RWJS_CWD=${process.env.RWJS_CWD} yarn node ${rwWebServer}`,
+        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${rw} serve`,
+        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${rwServer}`,
+        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${rwWebServer}`,
       ].join('\n'),
     )
     globalThis.loggedBinPaths = true
@@ -99,7 +99,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = original_RWJS_CWD
+  process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
 // Clean up the child process after each test

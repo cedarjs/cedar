@@ -11,7 +11,7 @@ import { pathsToWatch, getIgnoreFunction } from '../watchPaths.js'
 
 describe('watchPaths', () => {
   let tmpDir: string
-  const originalRwjsCwd = process.env.RWJS_CWD
+  const originalCedarCwd = process.env.CEDAR_CWD
 
   beforeAll(async () => {
     // Create an isolated temp project directory
@@ -85,15 +85,15 @@ describe('watchPaths', () => {
     )
 
     // Tell project-config to treat our temp dir as the project root
-    process.env.RWJS_CWD = tmpDir
+    process.env.CEDAR_CWD = tmpDir
   })
 
   afterAll(async () => {
     // Restore environment and cleanup
-    if (originalRwjsCwd === undefined) {
-      delete process.env.RWJS_CWD
+    if (originalCedarCwd === undefined) {
+      delete process.env.CEDAR_CWD
     } else {
-      process.env.RWJS_CWD = originalRwjsCwd
+      process.env.CEDAR_CWD = originalCedarCwd
     }
 
     try {

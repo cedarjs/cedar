@@ -9,16 +9,16 @@ import { redwoodFastifyAPI } from '../plugins/api.js'
 console.log = vi.fn()
 console.warn = vi.fn()
 
-// Set up RWJS_CWD.
-let original_RWJS_CWD: string | undefined
+// Set up CEDAR_CWD.
+let original_CEDAR_CWD: string | undefined
 
 beforeAll(() => {
-  original_RWJS_CWD = process.env.RWJS_CWD
-  process.env.RWJS_CWD = path.resolve(__dirname, 'fixtures/graphql/cedar-app')
+  original_CEDAR_CWD = process.env.CEDAR_CWD
+  process.env.CEDAR_CWD = path.resolve(__dirname, 'fixtures/graphql/cedar-app')
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = original_RWJS_CWD
+  process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
 // Set up and teardown the fastify instance for each test.

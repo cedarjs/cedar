@@ -45,17 +45,17 @@ import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
 // The current working directory can be set via:
 //
 // 1. The `--cwd` option
-// 2. The `RWJS_CWD` env-var
+// 2. The `CEDAR_CWD` env-var
 // 3. By traversing directories upwards for the first `cedar.toml` or `redwood.toml`
 //
 // ## Examples
 //
 // ```
 // yarn cedar info --cwd /path/to/project
-// RWJS_CWD=/path/to/project yarn cedar info
+// CEDAR_CWD=/path/to/project yarn cedar info
 //
-// # In this case, `--cwd` wins out over `RWJS_CWD`
-// RWJS_CWD=/path/to/project yarn cedar info --cwd /path/to/other/project
+// # In this case, `--cwd` wins out over `CEDAR_CWD`
+// CEDAR_CWD=/path/to/project yarn cedar info --cwd /path/to/other/project
 //
 // # Here we traverses upwards for a cedar.toml (or redwood.toml) file.
 // cd api
@@ -73,8 +73,10 @@ let { cwd, telemetry, help, version } = Parser(hideBin(process.argv), {
       process.env.REDWOOD_DISABLE_TELEMETRY === '',
   },
 })
+cwd ??= process.env.CEDAR_CWD
 cwd ??= process.env.RWJS_CWD
 cwd = getTomlDir(cwd)
+process.env.CEDAR_CWD = cwd
 process.env.RWJS_CWD = cwd
 
 if (process.argv[1]?.endsWith('redwood.js')) {
@@ -258,19 +260,18 @@ function getTomlDir(cwd) {
 
   try {
     if (cwd) {
-      // `cwd` was set by the `--cwd` option or the `RWJS_CWD` env var. In this
+      // `cwd` was set by the `--cwd` option or the `CEDAR_CWD` env var. In this
       // case, we don't want to find up for a configuration file. The
       // config file should just be in that directory.
 
       // `cwd` could be a relative path. Making it an absolute path is needed
-      // for when the cli calls itself (which it unfortunately does e.g. when
-      // generating the Prisma client).
+      // for when the cli calls itself (which it unfortunately does for example
+      // when generating the Prisma client).
       const absCwd = path.resolve(process.cwd(), cwd)
       const found = configFiles.some((f) => fs.existsSync(path.join(absCwd, f)))
       if (!found) {
-        throw new Error(
-          `Couldn't find a "cedar.toml" or "redwood.toml" file in ${absCwd}`,
-        )
+        const tomls = configFiles.join('" or "')
+        throw new Error(`Couldn't find a "${tomls}" file in ${absCwd}`)
       }
 
       tomlDir = absCwd
