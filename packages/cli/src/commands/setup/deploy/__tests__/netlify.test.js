@@ -1,4 +1,4 @@
-process.env.RWJS_CWD = '/cedar-app'
+process.env.CEDAR_CWD = '/cedar-app'
 vi.mock('node:fs', async () => {
   const memfs = await import('memfs')
   return {
@@ -59,7 +59,7 @@ vi.mock('../../../../lib', async (importOriginal) => {
 const mockConfigPath = '/cedar-app/cedar.toml'
 
 beforeEach(() => {
-  process.env.RWJS_CWD = '/cedar-app'
+  process.env.CEDAR_CWD = '/cedar-app'
 
   vi.mocked(getPaths).mockReturnValue({
     base: '/cedar-app',

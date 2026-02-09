@@ -183,10 +183,10 @@ vi.mock('\\redwood-app\\api\\db\\dataMigrations\\20230822075444-wip.ts', () => {
   return { default: () => {} }
 })
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 beforeAll(async () => {
-  process.env.RWJS_CWD = redwoodProjectPath
+  process.env.CEDAR_CWD = redwoodProjectPath
 
   // Setup require mocking for migration files
   await setupRequireMock()
@@ -198,7 +198,7 @@ afterEach(() => {
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 
   // Restore require mocking
   restoreRequireMock()

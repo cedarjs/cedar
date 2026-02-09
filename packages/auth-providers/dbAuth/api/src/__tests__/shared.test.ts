@@ -46,11 +46,11 @@ function dummyEvent(cookie?: string) {
 }
 
 beforeAll(() => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 })
 
 afterAll(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
 })
 
 describe('getSession()', () => {

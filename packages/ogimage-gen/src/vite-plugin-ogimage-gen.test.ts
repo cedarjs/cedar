@@ -16,11 +16,11 @@ vi.mock('node:fs', () => ({ ...memfs, default: { ...memfs } }))
  */
 
 describe('vitePluginOgGen', () => {
-  let original_RWJS_CWD
+  let original_CEDAR_CWD
 
   beforeAll(() => {
-    original_RWJS_CWD = process.env.RWJS_CWD
-    process.env.RWJS_CWD = '/redwood-app'
+    original_CEDAR_CWD = process.env.CEDAR_CWD
+    process.env.CEDAR_CWD = '/redwood-app'
     // Mock the file system using memfs
     vol.fromJSON(
       {
@@ -34,7 +34,7 @@ describe('vitePluginOgGen', () => {
   })
 
   afterAll(() => {
-    process.env.RWJS_CWD = original_RWJS_CWD
+    process.env.CEDAR_CWD = original_CEDAR_CWD
   })
 
   test('should generate rollup inputs for all OG components', async () => {

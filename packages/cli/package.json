@@ -24,7 +24,7 @@
     "build:pack": "yarn pack -o cedarjs-cli.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
-    "dev": "RWJS_CWD=../../__fixtures__/example-todo-main node dist/index.js",
+    "dev": "CEDAR_CWD=../../__fixtures__/example-todo-main node dist/index.js",
     "fix:permissions": "chmod +x dist/index.js dist/cfw.js",
     "prepublishOnly": "yarn build",
     "test": "vitest run",

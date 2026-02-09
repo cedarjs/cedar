@@ -172,7 +172,7 @@ app (this list is a work in progress):
   this to avoid excessive rebuilds/restarts when multiple files are changed at
   once. By default, the debounce delay is 500ms, but you can adjust it with the
   `CEDAR_DELAY_API_RESTART` environment variable.
-- `RWJS_CWD`: Lets you control the working directory of your app. Mostly used
+- `CEDAR_CWD`: Lets you control the working directory of your app. Mostly used
   when working on the framework itself, not when building a Cedar app.
 - `CFW_PATH`: Used together with the `cfw` bin. Also mostly used when working on
   the framework itself, not when building a Cedar app.

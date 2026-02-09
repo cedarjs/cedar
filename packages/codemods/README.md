@@ -235,7 +235,7 @@ yarn build
 The CLI is meant to be run on a Cedar project (i.e. it expects you to be cd'd into a Cedar project), but you can provide it as an environment variable too!
 
 ```shell
-RWJS_CWD=/path/to/rw-project node "./packages/codemods/dist/codemods.js" {your-codemod-name}
+CEDAR_CWD=/path/to/rw-project node "./packages/codemods/dist/codemods.js" {your-codemod-name}
 # ☝️ this is the path to your rw project (not the framework!)
 ```
 

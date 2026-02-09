@@ -50,7 +50,7 @@ export const execInFramework = createExecWithEnvInCwd(CEDAR_FRAMEWORK_PATH)
  */
 export function projectDeps(redwoodProjectCwd) {
   return execInFramework('yarn project:deps', {
-    env: { RWJS_CWD: redwoodProjectCwd },
+    env: { CEDAR_CWD: redwoodProjectCwd },
   })
 }
 
@@ -59,7 +59,7 @@ export function projectDeps(redwoodProjectCwd) {
  */
 export function projectCopy(redwoodProjectCwd) {
   return execInFramework('yarn project:copy', {
-    env: { RWJS_CWD: redwoodProjectCwd },
+    env: { CEDAR_CWD: redwoodProjectCwd },
   })
 }
 

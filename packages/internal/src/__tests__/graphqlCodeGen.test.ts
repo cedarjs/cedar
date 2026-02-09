@@ -23,11 +23,11 @@ const FIXTURE_PATH = path.resolve(
 )
 
 beforeAll(() => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 })
 
 afterAll(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
 })
 
 afterEach(() => {
@@ -147,7 +147,7 @@ test("Doesn't throw or print any errors with empty project", async () => {
     __dirname,
     '../../../../__fixtures__/empty-project',
   )
-  process.env.RWJS_CWD = fixturePath
+  process.env.CEDAR_CWD = fixturePath
   const oldConsoleError = console.error
   console.error = vi.fn()
 
@@ -165,7 +165,7 @@ test("Doesn't throw or print any errors with empty project", async () => {
     expect(console.error).not.toHaveBeenCalled()
   } finally {
     console.error = oldConsoleError
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   }
 })
 
@@ -175,14 +175,14 @@ describe("Doesn't swallow legit errors", () => {
       __dirname,
       './__fixtures__/graphqlCodeGen/invalidQueryType',
     )
-    process.env.RWJS_CWD = fixturePath
+    process.env.CEDAR_CWD = fixturePath
 
     const { errors } = await generateTypeDefGraphQLWeb()
     expect((errors[0].error as Error).toString()).toMatch(
       /field.*softKitten.*Query/,
     )
 
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   test('missingType', async () => {
@@ -190,12 +190,12 @@ describe("Doesn't swallow legit errors", () => {
       __dirname,
       './__fixtures__/graphqlCodeGen/missingType',
     )
-    process.env.RWJS_CWD = fixturePath
+    process.env.CEDAR_CWD = fixturePath
 
     const { errors } = await generateTypeDefGraphQLWeb()
     expect((errors[0].error as Error).toString()).toMatch(/Unknown type.*Todo/)
 
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   test('nonExistingField', async () => {
@@ -203,11 +203,11 @@ describe("Doesn't swallow legit errors", () => {
       __dirname,
       './__fixtures__/graphqlCodeGen/nonExistingField',
     )
-    process.env.RWJS_CWD = fixturePath
+    process.env.CEDAR_CWD = fixturePath
 
     const { errors } = await generateTypeDefGraphQLWeb()
     expect((errors[0].error as Error).toString()).toMatch(/field.*done.*Todo/)
 
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 })
