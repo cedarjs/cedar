@@ -36,6 +36,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
   const tempDir = createProjectMock()
 
   // Override paths used in getPaths() utility func
+  const originalCedarCwd = process.env.CEDAR_CWD || process.env.RWJS_CWD
   process.env.CEDAR_CWD = tempDir
 
   // Looks up the path of the caller
@@ -122,7 +123,12 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     expect(actualPath).toMatchFileContents(expectedPath, { removeWhitespace })
   })
 
-  delete process.env.CEDAR_CWD
+  // Restore environment
+  if (originalCedarCwd) {
+    process.env.CEDAR_CWD = originalCedarCwd
+  } else {
+    delete process.env.CEDAR_CWD
+  }
 
   // Not awaiting - it'll be cleaned up eventually. Also, I was getting errors
   // like these on Windows, so I'm just catching and ignoring them.

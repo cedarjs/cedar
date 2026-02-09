@@ -78,6 +78,7 @@ cwd ??= process.env.CEDAR_CWD
 cwd ??= process.env.RWJS_CWD
 cwd = getTomlDir(cwd)
 process.env.CEDAR_CWD = cwd
+process.env.RWJS_CWD = cwd
 
 if (process.argv[1]?.endsWith('redwood.js')) {
   const tomlPath = getConfigPath(cwd)
