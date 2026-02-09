@@ -9,11 +9,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 vi.mock('node:fs')
 
 describe('getConfigPath', () => {
-  const originalEnv = process.env.RWJS_CWD
+  const originalEnv = process.env.CEDAR_CWD
 
   beforeEach(() => {
     vi.clearAllMocks()
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
     // We need to clear the cache in configPath.ts, but it's not exported.
     // Since it's a module-level variable, we reset vitest's module cache to
     // force a fresh import of configPath.ts
@@ -21,7 +21,7 @@ describe('getConfigPath', () => {
   })
 
   afterEach(() => {
-    process.env.RWJS_CWD = originalEnv
+    process.env.CEDAR_CWD = originalEnv
   })
 
   it('finds cedar.toml if it exists', async () => {

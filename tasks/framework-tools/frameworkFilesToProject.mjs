@@ -8,7 +8,7 @@ import {
 } from './lib/project.mjs'
 
 async function main() {
-  const redwoodProjectPath = process.argv?.[2] ?? process.env.RWJS_CWD
+  const redwoodProjectPath = process.argv?.[2] ?? process.env.CEDAR_CWD
 
   // Mostly just making TS happy with the second condition.
   if (!redwoodProjectPath || typeof redwoodProjectPath !== 'string') {

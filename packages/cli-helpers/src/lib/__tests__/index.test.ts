@@ -17,17 +17,17 @@ vi.mock('../paths', () => {
   }
 })
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 beforeAll(() => {
-  process.env.RWJS_CWD = path.resolve(
+  process.env.CEDAR_CWD = path.resolve(
     __dirname,
     '../../../../../__fixtures__/test-project',
   )
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 test('prettify formats tsx content', async () => {

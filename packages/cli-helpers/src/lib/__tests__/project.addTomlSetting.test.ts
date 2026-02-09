@@ -11,17 +11,17 @@ import { vi, beforeAll, afterAll, it, expect } from 'vitest'
 
 import { setTomlSetting } from '../project.js'
 
-// Set up RWJS_CWD
-let original_RWJS_CWD: string | undefined
+// Set up CEDAR_CWD
+let original_CEDAR_CWD: string | undefined
 const FIXTURE_PATH = '/redwood-app'
 
 beforeAll(() => {
-  original_RWJS_CWD = process.env.RWJS_CWD
-  process.env.RWJS_CWD = FIXTURE_PATH
+  original_CEDAR_CWD = process.env.CEDAR_CWD
+  process.env.CEDAR_CWD = FIXTURE_PATH
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = original_RWJS_CWD
+  process.env.CEDAR_CWD = original_CEDAR_CWD
   vi.restoreAllMocks()
   vi.resetModules()
 })

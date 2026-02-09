@@ -8,7 +8,7 @@ const getConfigPathCache = new Map<string, string>()
  * Search the parent directories for the Cedar configuration file.
  */
 export const getConfigPath = (
-  cwd: string = process.env.RWJS_CWD ?? process.cwd(),
+  cwd: string = process.env.CEDAR_CWD ?? process.env.RWJS_CWD ?? process.cwd(),
 ): string => {
   const cachedPath = getConfigPathCache.get(cwd)
 

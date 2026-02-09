@@ -19,9 +19,9 @@ import { rscRoutesAutoLoader } from '../vite-plugin-rsc-routes-auto-loader.js'
 
 vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
-const TEST_RWJS_CWD = '/Users/mojombo/rw-app/'
-const RWJS_CWD = process.env.RWJS_CWD
-process.env.RWJS_CWD = TEST_RWJS_CWD
+const TEST_CEDAR_CWD = '/Users/mojombo/rw-app/'
+const CEDAR_CWD = process.env.CEDAR_CWD
+process.env.CEDAR_CWD = TEST_CEDAR_CWD
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
@@ -40,7 +40,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-const id = path.join(TEST_RWJS_CWD, 'web', 'src', 'Routes.tsx')
+const id = path.join(TEST_CEDAR_CWD, 'web', 'src', 'Routes.tsx')
 
 let pluginTransform: ReturnType<typeof getPluginTransform>
 
@@ -61,12 +61,12 @@ function getPluginTransform() {
 
 beforeAll(() => {
   // Add a toml entry for getPaths et al.
-  vol.fromJSON({ 'redwood.toml': '' }, TEST_RWJS_CWD)
+  vol.fromJSON({ 'redwood.toml': '' }, TEST_CEDAR_CWD)
   pluginTransform = getPluginTransform()
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 afterEach(() => {

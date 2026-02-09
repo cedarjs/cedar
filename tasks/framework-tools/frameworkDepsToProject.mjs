@@ -7,7 +7,7 @@ import path from 'node:path'
 import { addDependenciesToPackageJson } from './lib/project.mjs'
 
 function main() {
-  const projectPath = process.argv?.[2] ?? process.env.RWJS_CWD
+  const projectPath = process.argv?.[2] ?? process.env.CEDAR_CWD
 
   if (!projectPath) {
     process.exitCode = 1

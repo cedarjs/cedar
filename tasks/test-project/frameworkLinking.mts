@@ -10,7 +10,7 @@ export function addFrameworkDepsToProject(
     stdio: stdio ?? 'inherit',
     env: {
       CFW_PATH: frameworkPath,
-      RWJS_CWD: projectPath,
+      CEDAR_CWD: projectPath,
     },
   })
 }
@@ -25,7 +25,7 @@ export function copyFrameworkPackages(
     stdio: stdio ?? 'inherit',
     env: {
       CFW_PATH: frameworkPath,
-      RWJS_CWD: projectPath,
+      CEDAR_CWD: projectPath,
     },
   })
 }
