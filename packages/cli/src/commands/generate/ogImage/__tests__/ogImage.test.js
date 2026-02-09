@@ -33,12 +33,12 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     }),
   }
 })
-let original_RWJS_CWD
+let original_CEDAR_CWD
 
 describe('ogImage generator', () => {
   beforeEach(() => {
-    original_RWJS_CWD = process.env.RWJS_CWD
-    process.env.RWJS_CWD = '/path/to/project'
+    original_CEDAR_CWD = process.env.CEDAR_CWD
+    process.env.CEDAR_CWD = '/path/to/project'
     vol.fromJSON(
       {
         'redwood.toml': '',
@@ -54,7 +54,7 @@ describe('ogImage generator', () => {
 
   afterEach(() => {
     vi.clearAllMocks()
-    process.env.RWJS_CWD = original_RWJS_CWD
+    process.env.CEDAR_CWD = original_CEDAR_CWD
   })
 
   describe('files', () => {

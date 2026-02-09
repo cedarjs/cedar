@@ -51,7 +51,7 @@ async function setUpTestProject({ canary }) {
   }
 
   await execInFramework('yarn project:tarsync --verbose', {
-    env: { RWJS_CWD: TEST_PROJECT_PATH },
+    env: { CEDAR_CWD: TEST_PROJECT_PATH },
   })
 
   console.log('Generating dbAuth secret')

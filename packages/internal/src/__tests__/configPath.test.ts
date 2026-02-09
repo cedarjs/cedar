@@ -11,8 +11,8 @@ describe('getConfigPath', () => {
     )
   })
 
-  describe('using RWJS_CWD environment variable', () => {
-    const RWJS_CWD = process.env.RWJS_CWD
+  describe('using CEDAR_CWD environment variable', () => {
+    const CEDAR_CWD = process.env.CEDAR_CWD
     const FIXTURE_BASEDIR = path.join(
       __dirname,
       '..',
@@ -23,16 +23,16 @@ describe('getConfigPath', () => {
       'test-project',
     )
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct config path when at base directory', () => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
       expect(getConfigPath()).toBe(path.join(FIXTURE_BASEDIR, 'cedar.toml'))
     })
 
     it('finds the correct config path when inside a project directory', () => {
-      process.env.RWJS_CWD = path.join(
+      process.env.CEDAR_CWD = path.join(
         FIXTURE_BASEDIR,
         'web',
         'src',
@@ -44,7 +44,7 @@ describe('getConfigPath', () => {
   })
 
   describe('using cwd', () => {
-    const RWJS_CWD = process.env.RWJS_CWD
+    const CEDAR_CWD = process.env.CEDAR_CWD
     const FIXTURE_BASEDIR = path.join(
       __dirname,
       '..',
@@ -55,10 +55,10 @@ describe('getConfigPath', () => {
       'test-project',
     )
     beforeAll(() => {
-      delete process.env.RWJS_CWD
+      delete process.env.CEDAR_CWD
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
       vi.restoreAllMocks()
     })
 

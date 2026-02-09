@@ -2735,7 +2735,7 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.8.0"
-    "@supabase/supabase-js": "npm:2.94.1"
+    "@supabase/supabase-js": "npm:2.95.2"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.17"
@@ -2744,7 +2744,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@supabase/supabase-js": 2.94.1
+    "@supabase/supabase-js": 2.95.2
   languageName: unknown
   linkType: soft
 
@@ -2910,7 +2910,7 @@ __metadata:
     prettier: "npm:3.8.1"
     prettier-plugin-tailwindcss: "npm:0.7.2"
     prompts: "npm:2.4.2"
-    semver: "npm:7.7.3"
+    semver: "npm:7.7.4"
     smol-toml: "npm:1.6.0"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
@@ -2932,7 +2932,7 @@ __metadata:
     "@types/yargs": "npm:17.0.35"
     ansis: "npm:4.2.0"
     execa: "npm:5.1.1"
-    semver: "npm:7.7.3"
+    semver: "npm:7.7.4"
     storybook: "npm:8.6.15"
     storybook-framework-cedarjs: "workspace:*"
     termi-link: "npm:1.1.0"
@@ -3002,7 +3002,7 @@ __metadata:
     prompts: "npm:2.4.2"
     recast: "npm:0.23.11"
     rimraf: "npm:6.1.2"
-    semver: "npm:7.7.3"
+    semver: "npm:7.7.4"
     smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.30.7"
@@ -10239,42 +10239,42 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/auth-js@npm:2.94.1":
-  version: 2.94.1
-  resolution: "@supabase/auth-js@npm:2.94.1"
+"@supabase/auth-js@npm:2.95.2":
+  version: 2.95.2
+  resolution: "@supabase/auth-js@npm:2.95.2"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/bf8f5183dd1e7a72b599e9607f0afa356bed0d5e5d89906107e8498304366a0075e2678fcd4b0f9b0700f91da3969196df91fdfc9a28199da237bff1b32bfff5
+  checksum: 10c0/ca6b3201ea6c14f421eaf7627967c82e15bdaaf1702a151c2d032b6e4063576b72a02b921f3a3d54d6dbbf650e2a933edf8d15061eb2e141fa93239631e9c41b
   languageName: node
   linkType: hard
 
-"@supabase/functions-js@npm:2.94.1":
-  version: 2.94.1
-  resolution: "@supabase/functions-js@npm:2.94.1"
+"@supabase/functions-js@npm:2.95.2":
+  version: 2.95.2
+  resolution: "@supabase/functions-js@npm:2.95.2"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/72f4ae976c149aa13c31c4a2e693769688470fbf070100e1df8711237f12d2c6b478656c1d65921c54622438c5a56f8a9053ced753e39b844317d9f36530c4e4
+  checksum: 10c0/7e8e23b7d55c965043ff8ba121537976132388aaf1c99670481e5a8fe0497000161c41beeb66ce5077e722d1df1fe7342f86b65969688873de5b04ad0f302405
   languageName: node
   linkType: hard
 
-"@supabase/postgrest-js@npm:2.94.1":
-  version: 2.94.1
-  resolution: "@supabase/postgrest-js@npm:2.94.1"
+"@supabase/postgrest-js@npm:2.95.2":
+  version: 2.95.2
+  resolution: "@supabase/postgrest-js@npm:2.95.2"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/c0aa2bc143c529b12ce534d1acc223f66672b1c946214417f770c61e1649943051d141a0f93080d688b4e3b7d68e391ed8a8d36ff7a72b2890db4dcc65722977
+  checksum: 10c0/e3e6551db80fc655b16b017e15aaee880ddd811c0dd2fecf610b81aa19ad0b69bd151bc4e2c74b31a5426dba33fd4529e5aa551f1c4eb819210df86a95cda2e4
   languageName: node
   linkType: hard
 
-"@supabase/realtime-js@npm:2.94.1":
-  version: 2.94.1
-  resolution: "@supabase/realtime-js@npm:2.94.1"
+"@supabase/realtime-js@npm:2.95.2":
+  version: 2.95.2
+  resolution: "@supabase/realtime-js@npm:2.95.2"
   dependencies:
     "@types/phoenix": "npm:^1.6.6"
     "@types/ws": "npm:^8.18.1"
     tslib: "npm:2.8.1"
     ws: "npm:^8.18.2"
-  checksum: 10c0/7e874322e7227c5daf3a57811a5d2935c3183ea91cc6d08500d97fc09d2e690129c6be4a41b49fa4295a97322077a7ba1e85a17cb5b9358b50d61213b537af25
+  checksum: 10c0/6fea88ea8766dad6bf04c15b14bc85ea78754510f946ccd1ddaae4b79885f564c099f54aab185b8d9a84911aaaea5ff2df21d297c4edc23499f166b60b578d74
   languageName: node
   linkType: hard
 
@@ -10289,26 +10289,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/storage-js@npm:2.94.1":
-  version: 2.94.1
-  resolution: "@supabase/storage-js@npm:2.94.1"
+"@supabase/storage-js@npm:2.95.2":
+  version: 2.95.2
+  resolution: "@supabase/storage-js@npm:2.95.2"
   dependencies:
     iceberg-js: "npm:^0.8.1"
     tslib: "npm:2.8.1"
-  checksum: 10c0/cf708e09bc807362b916d3f3ba490182169bdf33b042fb6f9862e169322f660b844feacdd426cceba40466f09c8576ad2132d4290bf39a6b4e85ba8f6238a1fd
+  checksum: 10c0/dfa24bace489dbf4fae012eab8c7a22596de5bbcb38d67a5ccd00c36f16ebcbdd3963afa54746fe408228d5e6a2d8851bae5ac65f7ac38c61b34bd83f2892bb5
   languageName: node
   linkType: hard
 
-"@supabase/supabase-js@npm:2.94.1":
-  version: 2.94.1
-  resolution: "@supabase/supabase-js@npm:2.94.1"
+"@supabase/supabase-js@npm:2.95.2":
+  version: 2.95.2
+  resolution: "@supabase/supabase-js@npm:2.95.2"
   dependencies:
-    "@supabase/auth-js": "npm:2.94.1"
-    "@supabase/functions-js": "npm:2.94.1"
-    "@supabase/postgrest-js": "npm:2.94.1"
-    "@supabase/realtime-js": "npm:2.94.1"
-    "@supabase/storage-js": "npm:2.94.1"
-  checksum: 10c0/61b2959f08a919028455c7a4265449974cac7bc2799ead96f5f6891ab11415f5b36644497e394865e150df68f8d34180995bd02532dfe2de51bb8a77d6646dbf
+    "@supabase/auth-js": "npm:2.95.2"
+    "@supabase/functions-js": "npm:2.95.2"
+    "@supabase/postgrest-js": "npm:2.95.2"
+    "@supabase/realtime-js": "npm:2.95.2"
+    "@supabase/storage-js": "npm:2.95.2"
+  checksum: 10c0/95293ba71833bf786033d6633513ba73f0182741487f1fd19d62c3f65afa3cb9841ba2b4d4287b5cf72fe18a97edebab5fb94dc01683ce22500412f45ed53798
   languageName: node
   linkType: hard
 
@@ -14848,7 +14848,7 @@ __metadata:
     execa: "npm:5.1.1"
     gradient-string: "npm:3.0.0"
     klaw-sync: "npm:7.0.0"
-    semver: "npm:7.7.3"
+    semver: "npm:7.7.4"
     systeminformation: "npm:5.30.7"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
@@ -27313,12 +27313,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.7.3, semver@npm:^7.1.1, semver@npm:^7.3.4, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.2, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.2, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3":
-  version: 7.7.3
-  resolution: "semver@npm:7.7.3"
+"semver@npm:7.7.4, semver@npm:^7.1.1, semver@npm:^7.3.4, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.2, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.2, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3":
+  version: 7.7.4
+  resolution: "semver@npm:7.7.4"
   bin:
     semver: bin/semver.js
-  checksum: 10c0/4afe5c986567db82f44c8c6faef8fe9df2a9b1d98098fc1721f57c696c4c21cebd572f297fc21002f81889492345b8470473bc6f4aff5fb032a6ea59ea2bc45e
+  checksum: 10c0/5215ad0234e2845d4ea5bb9d836d42b03499546ddafb12075566899fc617f68794bb6f146076b6881d755de17d6c6cc73372555879ec7dce2c2feee947866ad2
   languageName: node
   linkType: hard
 

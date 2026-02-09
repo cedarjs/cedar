@@ -24,7 +24,7 @@ vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 import { createUserModelTask } from '../setupData'
 import { handler } from '../setupHandler'
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 const {
   redwoodProjectPath,
   prismaConfigPath,
@@ -147,11 +147,11 @@ vi.mock('prompts', () => {
 })
 
 beforeAll(() => {
-  process.env.RWJS_CWD = redwoodProjectPath
+  process.env.CEDAR_CWD = redwoodProjectPath
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 beforeEach(() => {

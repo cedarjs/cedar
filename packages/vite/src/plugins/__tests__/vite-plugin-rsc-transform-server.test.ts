@@ -13,17 +13,17 @@ import { rscTransformUseServerPlugin } from '../vite-plugin-rsc-transform-server
 
 vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 beforeAll(() => {
-  process.env.RWJS_CWD = '/Users/tobbe/rw-app/'
+  process.env.CEDAR_CWD = '/Users/tobbe/rw-app/'
 
   // Add a toml entry for getPaths et al.
-  vol.fromJSON({ 'redwood.toml': '' }, process.env.RWJS_CWD)
+  vol.fromJSON({ 'redwood.toml': '' }, process.env.CEDAR_CWD)
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 function getPluginTransform(serverEntryFiles: Record<string, string>) {

@@ -163,7 +163,7 @@ export const addEnvVar = (name: string, value: string, comment: string) => {
 }
 
 /**
- * This sets the `RWJS_CWD` env var to the redwood project directory. This is typically required for internal
+ * This sets the `CEDAR_CWD` env var to the redwood project directory. This is typically required for internal
  * redwood packages to work correctly. For example, `@cedarjs/project-config` uses this when reading config
  * or paths.
  *
@@ -172,11 +172,12 @@ export const addEnvVar = (name: string, value: string, comment: string) => {
  */
 export function setRedwoodCWD(cwd?: string) {
   const configFiles = ['cedar.toml', 'redwood.toml']
-  // Get the existing `cwd` from the `RWJS_CWD` env var, if it exists.
+  // Get the existing `cwd` from the `CEDAR_CWD` env var, if it exists.
+  cwd ??= process.env.CEDAR_CWD
   cwd ??= process.env.RWJS_CWD
 
   if (cwd) {
-    // `cwd` was specifically passed in or the `RWJS_CWD` env var was set. In
+    // `cwd` was specifically passed in or the `CEDAR_CWD` env var was set. In
     // this case, we don't want to find up for a `cedar.toml` or `redwood.toml`
     // file. The config file should just be in that directory.
 
@@ -203,6 +204,7 @@ export function setRedwoodCWD(cwd?: string) {
     cwd = path.dirname(configTomlPath)
   }
 
+  process.env.CEDAR_CWD = cwd
   process.env.RWJS_CWD = cwd
 }
 

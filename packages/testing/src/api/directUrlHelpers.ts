@@ -1,7 +1,7 @@
 import path from 'path'
 
-export function getDefaultDb(rwjsCwd: string) {
-  return `file:${path.join(rwjsCwd, '.redwood', 'test.db')}`
+export function getDefaultDb(projectBaseDir: string) {
+  return `file:${path.join(projectBaseDir, '.redwood', 'test.db')}`
 }
 
 export function checkAndReplaceDirectUrl(

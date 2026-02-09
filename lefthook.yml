@@ -22,7 +22,7 @@ pre-commit:
     - ref: release/*
   jobs:
     - name: lint staged files
-      run: yarn cross-env RWJS_CWD=packages/create-cedar-app/templates/ts yarn eslint {staged_files}
+      run: yarn cross-env CEDAR_CWD=packages/create-cedar-app/templates/ts yarn eslint {staged_files}
       glob: '*.{js,ts,jsx,tsx,cjs,mjs}'
       exclude:
         - __fixtures__/*

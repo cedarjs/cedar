@@ -41,11 +41,11 @@ describe('mulitiple files ending in Page.{js,jsx,ts,tsx}', () => {
   )
 
   beforeAll(() => {
-    process.env.RWJS_CWD = FAILURE_FIXTURE_PATH
+    process.env.CEDAR_CWD = FAILURE_FIXTURE_PATH
   })
 
   afterAll(() => {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   test('Fails with appropriate message', () => {
@@ -67,12 +67,12 @@ describe('page auto loader correctly imports pages', () => {
   let result: { code?: string } | null
 
   beforeAll(() => {
-    process.env.RWJS_CWD = FIXTURE_PATH
+    process.env.CEDAR_CWD = FIXTURE_PATH
     result = transform(getPaths().web.routes)
   })
 
   afterAll(() => {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   test('Pages get both a LazyComponent and a prerenderLoader', () => {

@@ -90,10 +90,10 @@ function platformPath(filePath: string) {
   return filePath.split('/').join(path.sep)
 }
 
-const original_RWJS_CWD = process.env.RWJS_CWD
+const original_CEDAR_CWD = process.env.CEDAR_CWD
 
 afterAll(() => {
-  process.env.RWJS_CWD = original_RWJS_CWD
+  process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
 beforeEach(() => {
@@ -104,7 +104,7 @@ beforeEach(() => {
     mockedPathGenerator('App.tsx', 'Routes.tsx'),
   )
 
-  process.env.RWJS_CWD = getPaths().base
+  process.env.CEDAR_CWD = getPaths().base
 
   vol.fromJSON({
     [path.join(getPaths().base, 'redwood.toml')]: '# redwood.toml',
