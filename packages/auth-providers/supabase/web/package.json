@@ -54,7 +54,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@supabase/ssr": "0.8.0",
-    "@supabase/supabase-js": "2.95.1",
+    "@supabase/supabase-js": "2.95.2",
     "@types/react": "^18.2.55",
     "concurrently": "9.2.1",
     "publint": "0.3.17",
@@ -64,7 +64,7 @@
     "vitest": "3.2.4"
   },
   "peerDependencies": {
-    "@supabase/supabase-js": "2.95.1"
+    "@supabase/supabase-js": "2.95.2"
   },
   "publishConfig": {
     "access": "public"
