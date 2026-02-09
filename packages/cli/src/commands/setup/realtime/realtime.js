@@ -8,7 +8,7 @@ export function builder(yargs) {
   yargs
     .option('includeExamples', {
       alias: ['e', 'examples'],
-      default: true,
+      default: undefined,
       description:
         'Include examples of how to implement liveQueries and subscriptions',
       type: 'boolean',
