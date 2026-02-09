@@ -8,10 +8,10 @@ const FIXTURE_PATH = path.resolve(
 import { beforeAll, afterAll, test, expect } from 'vitest'
 
 beforeAll(() => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 })
 afterAll(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
 })
 
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'

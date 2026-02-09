@@ -74,7 +74,7 @@ vi.mock('playwright', () => {
 
 describe('OgImageMiddleware', () => {
   let middleware: OgImageMiddleware
-  let original_RWJS_CWD: string | undefined
+  let original_CEDAR_CWD: string | undefined
 
   beforeEach(() => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -88,8 +88,8 @@ describe('OgImageMiddleware', () => {
     }
     middleware = new OgImageMiddleware(options)
 
-    original_RWJS_CWD = process.env.RWJS_CWD
-    process.env.RWJS_CWD = '/redwood-app'
+    original_CEDAR_CWD = process.env.CEDAR_CWD
+    process.env.CEDAR_CWD = '/redwood-app'
     // Mock the file system using memfs
     vol.fromJSON(
       {
@@ -105,7 +105,7 @@ describe('OgImageMiddleware', () => {
     vi.mocked(console).log.mockRestore()
     vi.mocked(console).error.mockRestore()
     vi.clearAllMocks()
-    process.env.RWJS_CWD = original_RWJS_CWD
+    process.env.CEDAR_CWD = original_CEDAR_CWD
   })
 
   test('invoke should return mwResponse if not a file request', async () => {

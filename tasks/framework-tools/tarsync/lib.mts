@@ -71,7 +71,8 @@ export async function getOptions(): Promise<Options> {
   const [projectPath] = positionals
 
   const options: Options = {
-    projectPath: projectPath ?? process.env.RWJS_CWD ?? '',
+    projectPath:
+      projectPath ?? process.env.CEDAR_CWD ?? process.env.RWJS_CWD ?? '',
     watch: values.watch ?? false,
     verbose: values.verbose ?? false,
   }
@@ -85,9 +86,9 @@ export async function getOptions(): Promise<Options> {
         '',
         ansis.gray('  yarn project:tarsync /path/to/cedar/project'),
         '',
-        '  2. the `RWJS_CWD` env var',
+        '  2. the `CEDAR_CWD` env var',
         '',
-        ansis.gray('  RWJS_CWD=/path/to/cedar/project yarn project:tarsync'),
+        ansis.gray('  CEDAR_CWD=/path/to/cedar/project yarn project:tarsync'),
       ].join('\n'),
     )
   }

@@ -64,7 +64,7 @@ export const getPrettierOptions = async () => {
     if (options.tailwindConfig?.startsWith('.')) {
       // Make this work with --cwd
       options.tailwindConfig = path.join(
-        process.env.RWJS_CWD ?? process.cwd(),
+        process.env.CEDAR_CWD ?? process.env.RWJS_CWD ?? process.cwd(),
         options.tailwindConfig,
       )
     }

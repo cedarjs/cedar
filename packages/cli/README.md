@@ -101,7 +101,7 @@ how to do this you'll know how to modify one too.
 CedarJS CLI is usually run in a project, this is problematic for contributors,
 because the transpiled files are not in a project, but in the CedarJS framework
 repo. Luckily the path can be modified at run-time via an env-var:
-`RWJS_CWD=../path/to/project`.
+`CEDAR_CWD=../path/to/project`.
 
 We've added a handy yarn alias to test your modified changes to the Cedar CLI
 against the "example-todo-main" fixture (`__fixtures__/example-todo-main`) you

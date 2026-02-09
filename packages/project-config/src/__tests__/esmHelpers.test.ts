@@ -4,17 +4,17 @@ import { describe, beforeAll, afterAll, expect, test } from 'vitest'
 
 import { projectIsEsm, projectRootIsEsm, projectSideIsEsm } from '../paths'
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 describe('esm helpers', () => {
   describe('esm fixture', () => {
     const ESM_FIXTURE = path.join(__dirname, 'fixtures', 'esm')
 
     beforeAll(() => {
-      process.env.RWJS_CWD = ESM_FIXTURE
+      process.env.CEDAR_CWD = ESM_FIXTURE
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     test('projectIsEsm', () => {
@@ -39,10 +39,10 @@ describe('esm helpers', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = ESM_API_ONLY_FIXTURE
+      process.env.CEDAR_CWD = ESM_API_ONLY_FIXTURE
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     test('projectIsEsm', () => {
