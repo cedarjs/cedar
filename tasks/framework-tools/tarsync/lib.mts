@@ -71,7 +71,8 @@ export async function getOptions(): Promise<Options> {
   const [projectPath] = positionals
 
   const options: Options = {
-    projectPath: projectPath ?? process.env.CEDAR_CWD ?? '',
+    projectPath:
+      projectPath ?? process.env.CEDAR_CWD ?? process.env.RWJS_CWD ?? '',
     watch: values.watch ?? false,
     verbose: values.verbose ?? false,
   }
