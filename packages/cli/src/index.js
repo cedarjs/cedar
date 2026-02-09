@@ -268,7 +268,7 @@ function getTomlDir(cwd) {
       const absCwd = path.resolve(process.cwd(), cwd)
       const found = configFiles.some((f) => fs.existsSync(path.join(absCwd, f)))
       if (!found) {
-        const tomls = configFiles.join(' or ')
+        const tomls = configFiles.join('" or "')
         throw new Error(`Couldn't find a "${tomls}" file in ${absCwd}`)
       }
 
