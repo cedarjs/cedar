@@ -11,17 +11,17 @@
     ]
   },
   "dependencies": {
-    "@cedarjs/auth-dbauth-web": "2.5.1",
-    "@cedarjs/forms": "2.5.1",
-    "@cedarjs/router": "2.5.1",
-    "@cedarjs/web": "2.5.1",
+    "@cedarjs/auth-dbauth-web": "2.6.0",
+    "@cedarjs/forms": "2.6.0",
+    "@cedarjs/router": "2.6.0",
+    "@cedarjs/web": "2.6.0",
     "@my-org/validators": "workspace:*",
     "humanize-string": "2.1.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@cedarjs/vite": "2.5.1",
+    "@cedarjs/vite": "2.6.0",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "autoprefixer": "^10.4.24",

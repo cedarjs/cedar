@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli-data-migrate",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",

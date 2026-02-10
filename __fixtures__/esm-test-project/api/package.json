@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@cedarjs/api": "2.5.1",
-    "@cedarjs/auth-dbauth-api": "2.5.1",
-    "@cedarjs/graphql-server": "2.5.1"
+    "@cedarjs/api": "2.6.0",
+    "@cedarjs/auth-dbauth-api": "2.6.0",
+    "@cedarjs/graphql-server": "2.6.0"
   }
 }
