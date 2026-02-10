@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-supabase-web",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -49,7 +49,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "2.5.1"
+    "@cedarjs/auth": "2.6.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

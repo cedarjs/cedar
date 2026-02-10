@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
@@ -111,11 +111,11 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/context": "2.5.1",
-    "@cedarjs/fastify-web": "2.5.1",
-    "@cedarjs/internal": "2.5.1",
-    "@cedarjs/project-config": "2.5.1",
-    "@cedarjs/web-server": "2.5.1",
+    "@cedarjs/context": "2.6.0",
+    "@cedarjs/fastify-web": "2.6.0",
+    "@cedarjs/internal": "2.6.0",
+    "@cedarjs/project-config": "2.6.0",
+    "@cedarjs/web-server": "2.6.0",
     "@fastify/multipart": "9.4.0",
     "@fastify/url-data": "6.0.3",
     "ansis": "4.2.0",
@@ -145,7 +145,7 @@
     "vitest": "3.2.4"
   },
   "peerDependencies": {
-    "@cedarjs/graphql-server": "2.5.1"
+    "@cedarjs/graphql-server": "2.6.0"
   },
   "peerDependenciesMeta": {
     "@cedarjs/graphql-server": {

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-supabase-middleware",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -38,16 +38,16 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth-supabase-api": "2.5.1",
-    "@cedarjs/web": "2.5.1",
+    "@cedarjs/auth-supabase-api": "2.6.0",
+    "@cedarjs/web": "2.6.0",
     "@supabase/ssr": "0.8.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@cedarjs/api": "2.5.1",
-    "@cedarjs/auth": "2.5.1",
+    "@cedarjs/api": "2.6.0",
+    "@cedarjs/auth": "2.6.0",
     "@cedarjs/framework-tools": "workspace:*",
-    "@cedarjs/graphql-server": "2.5.1",
+    "@cedarjs/graphql-server": "2.6.0",
     "@types/aws-lambda": "8.10.160",
     "concurrently": "9.2.1",
     "publint": "0.3.17",
