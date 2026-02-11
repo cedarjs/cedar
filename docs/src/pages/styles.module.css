@@ -3,19 +3,79 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 .page {
+  --cedar-bg: radial-gradient(
+    circle at top,
+    #f5f7f2 0%,
+    #e9efe3 45%,
+    #f7f5ee 100%
+  );
+  --cedar-ink: #0b1416;
+  --cedar-ink-soft: #1d2b2a;
+  --cedar-ink-muted: #3d5a3f;
+  --cedar-accent: #4a8c56;
+  --cedar-accent-strong: #7ad9a0;
+  --cedar-surface: rgba(255, 255, 255, 0.82);
+  --cedar-surface-strong: #f3f6ef;
+  --cedar-border: rgba(43, 60, 50, 0.18);
+  --cedar-terminal: var(--ifm-code-background);
+  --cedar-terminal-strong: var(--ifm-code-background);
+  --cedar-terminal-soft: var(--ifm-code-background);
+  --cedar-terminal-text: #1f2b26;
+  --cedar-terminal-muted: #2f3f38;
+  --cedar-panel-label: #1f5f3a;
+  --cedar-shadow: rgba(15, 24, 26, 0.22);
+  --cedar-shadow-strong: rgba(15, 24, 26, 0.28);
+
   position: relative;
-  color: #0b1416;
-  background: radial-gradient(circle at top, #f5f7f2 0%, #e9efe3 45%, #f7f5ee 100%);
+  color: var(--cedar-ink);
+  background: var(--cedar-bg);
   overflow: hidden;
+}
+
+:global([data-theme='dark']) .page {
+  --cedar-bg: radial-gradient(
+    circle at top,
+    #0b1111 0%,
+    #0f1515 45%,
+    #111a18 100%
+  );
+  --cedar-ink: #edf6f1;
+  --cedar-ink-soft: #d6e6dd;
+  --cedar-ink-muted: #a0b9ac;
+  --cedar-accent: #68c58a;
+  --cedar-accent-strong: #9debbf;
+  --cedar-surface: rgba(15, 24, 26, 0.85);
+  --cedar-surface-strong: #101818;
+  --cedar-border: rgba(150, 203, 170, 0.18);
+  --cedar-terminal: var(--ifm-code-background);
+  --cedar-terminal-strong: var(--ifm-code-background);
+  --cedar-terminal-soft: var(--ifm-code-background);
+  --cedar-terminal-text: #d9f3e0;
+  --cedar-terminal-muted: #b7d7c4;
+  --cedar-panel-label: #9debbf;
+  --cedar-shadow: rgba(0, 0, 0, 0.4);
+  --cedar-shadow-strong: rgba(0, 0, 0, 0.55);
 }
 
 .backdrop {
   position: absolute;
   inset: -20% 0 auto;
   height: 520px;
-  background: radial-gradient(circle, rgba(74, 140, 86, 0.2), rgba(74, 140, 86, 0));
+  background: radial-gradient(
+    circle,
+    rgba(74, 140, 86, 0.25),
+    rgba(74, 140, 86, 0)
+  );
   filter: blur(30px);
   z-index: 0;
+}
+
+:global([data-theme='dark']) .backdrop {
+  background: radial-gradient(
+    circle,
+    rgba(104, 197, 138, 0.18),
+    rgba(104, 197, 138, 0)
+  );
 }
 
 .navbar {
@@ -72,7 +132,7 @@
   letter-spacing: 0.2em;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #3d5a3f;
+  color: var(--cedar-ink-muted);
 }
 
 .headline {
@@ -84,7 +144,7 @@
 .subhead {
   font-size: 1.1rem;
   line-height: 1.7;
-  color: #1d2b2a;
+  color: var(--cedar-ink-soft);
   max-width: 520px;
 }
 
@@ -101,8 +161,8 @@
   justify-content: center;
   padding: 12px 20px;
   border-radius: 999px;
-  border: 1px solid #2b3c32;
-  color: #0b1416;
+  border: 1px solid var(--cedar-ink);
+  color: inherit;
   text-decoration: none;
   font-weight: 600;
   width: fit-content;
@@ -112,26 +172,62 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background: #0f181a;
-  color: #e7f5e9;
+  background: var(--cedar-terminal-strong);
+  color: var(--cedar-terminal-text);
   border-radius: 14px;
   padding: 12px 16px;
   font-family: 'IBM Plex Mono', monospace;
-  box-shadow: 0 18px 40px rgba(15, 24, 26, 0.2);
+  box-shadow: 0 18px 40px var(--cedar-shadow-strong);
   flex-wrap: wrap;
 }
 
 .commandPrompt {
-  color: #7ad9a0;
+  color: var(--cedar-accent-strong);
   font-weight: 600;
 }
 
 .commandText {
   font-size: 0.95rem;
+  padding: 0 8px;
+}
+
+.inlineCode {
+  padding: 2px 8px;
+  background: var(--cedar-terminal-soft);
+  border: 1px solid var(--cedar-border);
+  border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--cedar-terminal-text);
+}
+
+.inlineCommand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inlineCopy {
+  background: var(--cedar-accent-strong);
+  color: #0b1416;
+  border: none;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:global([data-theme='dark']) .inlineCopy {
+  color: #0b1111;
+}
+
+.inlineCopy:focus-visible {
+  outline: 2px solid var(--cedar-accent);
+  outline-offset: 2px;
 }
 
 .copyButton {
-  background: #7ad9a0;
+  background: var(--cedar-accent-strong);
   color: #0b1416;
   border: none;
   border-radius: 999px;
@@ -140,9 +236,13 @@
   cursor: pointer;
 }
 
+:global([data-theme='dark']) .copyButton {
+  color: #0b1111;
+}
+
 .commandHint {
   margin-top: 0.75rem;
-  color: #3d5a3f;
+  color: var(--cedar-ink-muted);
   font-size: 0.95rem;
 }
 
@@ -152,12 +252,12 @@
 }
 
 .terminal {
-  background: #0e1415;
+  background: var(--cedar-terminal);
   border-radius: 18px;
   padding: 1.25rem;
-  color: #d9f3e0;
+  color: var(--cedar-terminal-muted);
   font-family: 'IBM Plex Mono', monospace;
-  box-shadow: 0 18px 40px rgba(15, 24, 26, 0.25);
+  box-shadow: 0 18px 40px var(--cedar-shadow-strong);
 }
 
 .terminalHeader {
@@ -171,13 +271,13 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #2b3c32;
+  background: var(--cedar-border);
 }
 
 .terminalHeader strong {
   margin-left: auto;
   font-size: 0.75rem;
-  color: #7ad9a0;
+  color: var(--cedar-accent-strong);
 }
 
 .terminalBody {
@@ -198,10 +298,11 @@
 .heroStats {
   display: grid;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--cedar-surface);
   border-radius: 16px;
   padding: 1.25rem;
   backdrop-filter: blur(10px);
+  border: 1px solid var(--cedar-border);
 }
 
 .heroStats div {
@@ -214,18 +315,19 @@
 }
 
 .heroStats span {
-  color: #3d5a3f;
+  color: var(--cedar-ink-muted);
   font-size: 0.9rem;
 }
 
 .trustBar {
   margin: 3.5rem 0 4rem;
   padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--cedar-surface);
   border-radius: 18px;
   display: grid;
   gap: 1.5rem;
   font-family: 'Space Grotesk', sans-serif;
+  border: 1px solid var(--cedar-border);
 }
 
 .logos {
@@ -240,16 +342,45 @@
   gap: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(43, 60, 50, 0.15);
+  border: 1px solid var(--cedar-border);
   background: rgba(245, 248, 242, 0.9);
   font-weight: 600;
+}
+
+.logoCard a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.logoImage {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.logoOnLight {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.logoRounded {
+  border-radius: 10px;
+  clip-path: inset(1px);
+}
+
+:global([data-theme='dark']) .logoCard {
+  background: rgba(13, 19, 19, 0.9);
 }
 
 .logoCard svg {
   width: 40px;
   height: 40px;
   fill: none;
-  stroke: #4a8c56;
+  stroke: var(--cedar-accent);
   stroke-width: 2.2;
 }
 
@@ -272,44 +403,132 @@
 
 .cliPanel,
 .codePanel {
-  background: #0e1415;
-  color: #dff3e3;
+  background: var(--cedar-terminal);
+  color: var(--cedar-terminal-text);
   border-radius: 18px;
   padding: 1.25rem;
   font-family: 'IBM Plex Mono', monospace;
-  box-shadow: 0 18px 40px rgba(15, 24, 26, 0.22);
+  box-shadow: 0 18px 40px var(--cedar-shadow);
+  min-width: 0;
+  border: 1px solid var(--cedar-border);
 }
 
 .codePanel {
   display: grid;
   gap: 1rem;
-  background: #0f181a;
+  background: var(--cedar-terminal-strong);
 }
 
 .panelLabel {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #7ad9a0;
+  color: var(--cedar-panel-label);
   margin-bottom: 0.5rem;
 }
 
 .codeBlock pre {
   margin: 0;
   padding: 0.75rem;
-  background: #0b1213;
+  background: var(--cedar-terminal-soft);
   border-radius: 12px;
   overflow-x: auto;
+  white-space: pre;
+  word-break: normal;
+  max-width: 100%;
+  border: 1px solid var(--cedar-border);
+  min-width: 0;
 }
 
 .codeBlock code {
+  display: block;
+  max-width: 100%;
   font-size: 0.75rem;
   line-height: 1.5;
+  white-space: pre;
+}
+
+.codeBlock {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tokenKeyword {
+  color: #1f5f3a;
+  font-weight: 600;
+}
+
+.tokenType {
+  color: #2a7a52;
+}
+
+.tokenString {
+  color: #8a4b0f;
+}
+
+.tokenFunction {
+  color: #1f4f8a;
+}
+
+.tokenVariable {
+  color: #2a3f55;
+}
+
+.tokenProperty {
+  color: #215747;
+}
+
+.tokenDirective {
+  color: #6b2f73;
+}
+
+.tokenOperator {
+  color: #7b4a16;
+}
+
+.tokenPunctuation {
+  color: #4a5f57;
+}
+
+:global([data-theme='dark']) .tokenKeyword {
+  color: #9debbf;
+}
+
+:global([data-theme='dark']) .tokenType {
+  color: #7ad9a0;
+}
+
+:global([data-theme='dark']) .tokenString {
+  color: #ffd3a0;
+}
+
+:global([data-theme='dark']) .tokenFunction {
+  color: #8fb7ff;
+}
+
+:global([data-theme='dark']) .tokenVariable {
+  color: #e0f2ff;
+}
+
+:global([data-theme='dark']) .tokenProperty {
+  color: #d7f7e7;
+}
+
+:global([data-theme='dark']) .tokenDirective {
+  color: #f0b0ff;
+}
+
+:global([data-theme='dark']) .tokenOperator {
+  color: #ffe0a8;
+}
+
+:global([data-theme='dark']) .tokenPunctuation {
+  color: #b7d7c4;
 }
 
 .caption {
   font-size: 1rem;
-  color: #2a3a33;
+  color: var(--cedar-ink-soft);
   max-width: 780px;
 }
 
@@ -319,10 +538,16 @@
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
-  background: #e7f1e4;
+  background: rgba(231, 241, 228, 0.95);
   border-radius: 999px;
   padding: 10px 18px;
   font-family: 'IBM Plex Mono', monospace;
+  color: var(--cedar-ink);
+}
+
+:global([data-theme='dark']) .ctaStrip {
+  background: rgba(17, 25, 24, 0.9);
+  color: var(--cedar-ink);
 }
 
 .benefits {
@@ -338,10 +563,10 @@
 }
 
 .benefitGrid article {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--cedar-surface);
   padding: 1.5rem;
   border-radius: 16px;
-  border: 1px solid rgba(43, 60, 50, 0.08);
+  border: 1px solid var(--cedar-border);
 }
 
 .aiSection {
@@ -355,11 +580,12 @@
 .aiCard {
   display: grid;
   gap: 1rem;
-  background: #0f181a;
-  color: #e6f7ea;
+  background: var(--cedar-terminal-strong);
+  color: var(--cedar-terminal-text);
   padding: 1.5rem;
   border-radius: 18px;
   font-family: 'Space Grotesk', sans-serif;
+  box-shadow: 0 18px 40px var(--cedar-shadow);
 }
 
 .aiCard div {
@@ -372,9 +598,9 @@
 }
 
 .footer {
-  border-top: 1px solid rgba(43, 60, 50, 0.15);
+  border-top: 1px solid var(--cedar-border);
   padding: 3rem 6vw 4rem;
-  background: #f3f6ef;
+  background: var(--cedar-surface-strong);
   display: grid;
   gap: 2rem;
 }

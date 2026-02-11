@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react'
 
 import Head from '@docusaurus/Head'
 import Link from '@docusaurus/Link'
+import useBaseUrl from '@docusaurus/useBaseUrl'
 import Layout from '@theme/Layout'
 
 import styles from './styles.module.css'
@@ -9,63 +10,206 @@ import styles from './styles.module.css'
 const createCommand = 'yarn create cedar-app'
 
 const cliLines = [
-  '$ cedar generate service post',
+  '$ yarn cedar generate service post',
   '✔ Created api/src/services/posts/posts.ts',
   '✔ Created api/src/graphql/posts.sdl.ts',
   '✔ Added types to types/graphql.d.ts',
 ]
 
-const serviceCode = `import type {
-  QueryResolvers,
-  MutationResolvers,
-  PostRelationResolvers,
-} from 'types/graphql'
+const serviceCode = (
+  <>
+    <span className={styles.tokenKeyword}>import</span>{' '}
+    <span className={styles.tokenKeyword}>type</span>{' '}
+    <span className={styles.tokenPunctuation}>{'{'}</span>
+    {'\n'} <span className={styles.tokenType}>QueryResolvers</span>,{'\n'}{' '}
+    <span className={styles.tokenType}>MutationResolvers</span>,{'\n'}{' '}
+    <span className={styles.tokenType}>PostRelationResolvers</span>,{'\n'}
+    <span className={styles.tokenPunctuation}>{'}'}</span>{' '}
+    <span className={styles.tokenKeyword}>from</span>{' '}
+    <span className={styles.tokenString}>&apos;types/graphql&apos;</span>
+    {'\n\n'}
+    <span className={styles.tokenKeyword}>import</span>{' '}
+    <span className={styles.tokenPunctuation}>{'{'}</span>{' '}
+    <span className={styles.tokenVariable}>db</span>{' '}
+    <span className={styles.tokenPunctuation}>{'}'}</span>{' '}
+    <span className={styles.tokenKeyword}>from</span>{' '}
+    <span className={styles.tokenString}>&apos;src/lib/db&apos;</span>
+    {'\n\n'}
+    <span className={styles.tokenKeyword}>export</span>{' '}
+    <span className={styles.tokenKeyword}>const</span>{' '}
+    <span className={styles.tokenFunction}>posts</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenType}>QueryResolvers</span>
+    <span className={styles.tokenPunctuation}>[</span>
+    <span className={styles.tokenString}>&apos;posts&apos;</span>
+    <span className={styles.tokenPunctuation}>]</span>{' '}
+    <span className={styles.tokenOperator}>=</span>{' '}
+    <span className={styles.tokenPunctuation}>(</span>
+    <span className={styles.tokenPunctuation}>)</span>{' '}
+    <span className={styles.tokenOperator}>=&gt;</span>{' '}
+    <span className={styles.tokenPunctuation}>{'{'}</span>
+    {'\n'} <span className={styles.tokenKeyword}>return</span>{' '}
+    <span className={styles.tokenVariable}>db</span>
+    <span className={styles.tokenPunctuation}>.</span>
+    <span className={styles.tokenFunction}>post</span>
+    <span className={styles.tokenPunctuation}>.</span>
+    <span className={styles.tokenFunction}>findMany</span>
+    <span className={styles.tokenPunctuation}>(</span>
+    <span className={styles.tokenPunctuation}>)</span>
+    {'\n'}
+    <span className={styles.tokenPunctuation}>{'}'}</span>
+    {'\n\n'}
+    <span className={styles.tokenKeyword}>export</span>{' '}
+    <span className={styles.tokenKeyword}>const</span>{' '}
+    <span className={styles.tokenFunction}>createPost</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenType}>MutationResolvers</span>
+    <span className={styles.tokenPunctuation}>[</span>
+    <span className={styles.tokenString}>&apos;createPost&apos;</span>
+    <span className={styles.tokenPunctuation}>]</span>{' '}
+    <span className={styles.tokenOperator}>=</span>
+    {'\n'} <span className={styles.tokenPunctuation}>(</span>
+    <span className={styles.tokenPunctuation}>{'{'}</span>{' '}
+    <span className={styles.tokenVariable}>input</span>{' '}
+    <span className={styles.tokenPunctuation}>{'}'}</span>
+    <span className={styles.tokenPunctuation}>)</span>{' '}
+    <span className={styles.tokenOperator}>=&gt;</span>{' '}
+    <span className={styles.tokenPunctuation}>{'{'}</span>
+    {'\n'} <span className={styles.tokenKeyword}>return</span>{' '}
+    <span className={styles.tokenVariable}>db</span>
+    <span className={styles.tokenPunctuation}>.</span>
+    <span className={styles.tokenFunction}>post</span>
+    <span className={styles.tokenPunctuation}>.</span>
+    <span className={styles.tokenFunction}>create</span>
+    <span className={styles.tokenPunctuation}>(</span>
+    <span className={styles.tokenPunctuation}>{'{'}</span>
+    {'\n'} <span className={styles.tokenProperty}>data</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenVariable}>input</span>
+    <span className={styles.tokenPunctuation}>,</span>
+    {'\n'} <span className={styles.tokenPunctuation}>{'}'}</span>
+    <span className={styles.tokenPunctuation}>)</span>
+    {'\n'} <span className={styles.tokenPunctuation}>{'}'}</span>
+  </>
+)
 
-import { db } from 'src/lib/db'
+const sdlCode = (
+  <>
+    <span className={styles.tokenKeyword}>export</span>{' '}
+    <span className={styles.tokenKeyword}>const</span>{' '}
+    <span className={styles.tokenVariable}>schema</span>{' '}
+    <span className={styles.tokenOperator}>=</span>{' '}
+    <span className={styles.tokenFunction}>gql</span>
+    <span className={styles.tokenString}>{'`'}</span>
+    {'\n  '}
+    <span className={styles.tokenKeyword}>type</span>{' '}
+    <span className={styles.tokenType}>Post</span>{' '}
+    <span className={styles.tokenPunctuation}>{'{'}</span>
+    {'\n    '}
+    <span className={styles.tokenProperty}>id</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenType}>Int</span>
+    <span className={styles.tokenPunctuation}>!</span>
+    {'\n    '}
+    <span className={styles.tokenProperty}>title</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenType}>String</span>
+    <span className={styles.tokenPunctuation}>!</span>
+    {'\n    '}
+    <span className={styles.tokenProperty}>body</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenType}>String</span>
+    <span className={styles.tokenPunctuation}>!</span>
+    {'\n    '}
+    <span className={styles.tokenProperty}>author</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenType}>User</span>
+    <span className={styles.tokenPunctuation}>!</span>
+    {'\n  '}
+    <span className={styles.tokenPunctuation}>{'}'}</span>
+    {'\n\n  '}
+    <span className={styles.tokenKeyword}>type</span>{' '}
+    <span className={styles.tokenType}>Query</span>{' '}
+    <span className={styles.tokenPunctuation}>{'{'}</span>
+    {'\n    '}
+    <span className={styles.tokenProperty}>posts</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenPunctuation}>[</span>
+    <span className={styles.tokenType}>Post</span>
+    <span className={styles.tokenPunctuation}>!</span>
+    <span className={styles.tokenPunctuation}>]</span>
+    <span className={styles.tokenPunctuation}>!</span>{' '}
+    <span className={styles.tokenDirective}>@skipAuth</span>
+    {'\n  '}
+    <span className={styles.tokenPunctuation}>{'}'}</span>
+    {'\n\n  '}
+    <span className={styles.tokenKeyword}>type</span>{' '}
+    <span className={styles.tokenType}>Mutation</span>{' '}
+    <span className={styles.tokenPunctuation}>{'{'}</span>
+    {'\n    '}
+    <span className={styles.tokenProperty}>createPost</span>
+    <span className={styles.tokenPunctuation}>(</span>
+    <span className={styles.tokenProperty}>input</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenType}>CreatePostInput</span>
+    <span className={styles.tokenPunctuation}>!</span>
+    <span className={styles.tokenPunctuation}>)</span>
+    <span className={styles.tokenPunctuation}>:</span>{' '}
+    <span className={styles.tokenType}>Post</span>
+    <span className={styles.tokenPunctuation}>!</span>
+    {'\n      '}
+    <span className={styles.tokenDirective}>@requireAuth</span>
+    {'\n  '}
+    <span className={styles.tokenPunctuation}>{'}'}</span>
+    {'\n'}
+    <span className={styles.tokenString}>{'`'}</span>
+  </>
+)
 
-export const posts: QueryResolvers['posts'] = () => {
-  return db.post.findMany()
+type LogoCardProps = {
+  label: string
+  href?: string
+  logoSrc?: string
+  className?: string
 }
 
-export const createPost: MutationResolvers['createPost'] = ({ input }) => {
-  return db.post.create({
-    data: input,
-  })
-}
-`
+function LogoCard({ label, href, logoSrc, className }: LogoCardProps) {
+  const content = (
+    <>
+      {logoSrc ? (
+        <img
+          className={`${styles.logoImage} ${className ?? ''}`}
+          src={logoSrc}
+          alt={`${label} logo`}
+        />
+      ) : (
+        <svg viewBox="0 0 120 48" role="img" aria-hidden="true">
+          <rect x="2" y="2" width="116" height="44" rx="12" />
+          <path d="M16 32 L32 16 L48 32" />
+          <circle cx="88" cy="24" r="6" />
+        </svg>
+      )}
+      <span>{label}</span>
+    </>
+  )
 
-const sdlCode = `export const schema = gql\`
-  type Post {
-    id: Int!
-    title: String!
-    body: String!
-    author: User!
-  }
-
-  type Query {
-    posts: [Post!]! @skipAuth
-  }
-
-  type Mutation {
-    createPost(input: CreatePostInput!): Post! @requireAuth
-  }
-\``
-
-function LogoCard({ label }: { label: string }) {
   return (
     <div className={styles.logoCard} aria-label={`${label} logo`}>
-      <svg viewBox="0 0 120 48" role="img" aria-hidden="true">
-        <rect x="2" y="2" width="116" height="44" rx="12" />
-        <path d="M16 32 L32 16 L48 32" />
-        <circle cx="88" cy="24" r="6" />
-      </svg>
-      <span>{label}</span>
+      {href ? (
+        <a href={href} aria-label={label}>
+          {content}
+        </a>
+      ) : (
+        content
+      )}
     </div>
   )
 }
 
 export default function Home() {
   const [copied, setCopied] = useState(false)
+  const aerafarmsLogo = useBaseUrl('/img/sponsors/aera-logo.png')
+  const acmLogo = useBaseUrl('/img/sponsors/acm_se-logo.png')
 
   const codeBlocks = useMemo(
     () => [
@@ -117,19 +261,24 @@ export default function Home() {
         <main className={styles.container}>
           <section className={styles.hero}>
             <div>
-              <p className={styles.eyebrow}>Production-ready full-stack framework</p>
+              <p className={styles.eyebrow}>
+                Production-ready full-stack framework
+              </p>
               <h1 className={styles.headline}>
                 Stop gluing libraries together. Start building your product.
               </h1>
               <p className={styles.subhead}>
-                CedarJS is a stable, opinionated full-stack framework that integrates
-                React, GraphQL, and Prisma into a cohesive system. Don&apos;t waste
-                weeks on boilerplate—use the foundation trusted for
-                production-grade applications.
+                CedarJS is a stable, opinionated full-stack framework that
+                integrates React, GraphQL, and Prisma into a cohesive system.
+                Don&apos;t waste weeks on boilerplate—use the foundation trusted
+                for production-grade applications.
               </p>
               <div className={styles.heroActions}>
-                <Link className={styles.secondaryCta} to="/docs/tutorial/foreword">
-                  Take the Tutorial
+                <Link
+                  className={styles.secondaryCta}
+                  to="/docs/tutorial/foreword"
+                >
+                  Start the Tutorial
                 </Link>
                 <div className={styles.commandCard}>
                   <span className={styles.commandPrompt}>$</span>
@@ -159,7 +308,9 @@ export default function Home() {
                 <div className={styles.terminalBody}>
                   {cliLines.map((line, index) => (
                     <div className={styles.cliLine} key={line}>
-                      <span style={{ animationDelay: `${0.3 + index * 0.25}s` }}>
+                      <span
+                        style={{ animationDelay: `${0.3 + index * 0.25}s` }}
+                      >
                         {line}
                       </span>
                     </div>
@@ -189,10 +340,28 @@ export default function Home() {
               industry leaders.
             </p>
             <div className={styles.logos}>
-              <LogoCard label="Aerafarms" />
-              <LogoCard label="ACM" />
-              <LogoCard label="Sponsor" />
-              <LogoCard label="Sponsor" />
+              <LogoCard
+                label="TwoDots"
+                href="https://twodots.net"
+                logoSrc="https://github.com/user-attachments/assets/a98ae112-9f66-4c0a-a450-fa410725b230"
+                className={styles.logoRounded}
+              />
+              <LogoCard
+                label="Aerafarms"
+                href="https://aerafarms.com"
+                logoSrc={aerafarmsLogo}
+              />
+              <LogoCard
+                label="Rho Impact"
+                href="https://rhoimpact.com/"
+                logoSrc="https://github.com/user-attachments/assets/1eef45f4-e5a4-42a8-b98e-7ee1b711dc4b"
+              />
+              <LogoCard
+                label="ACM"
+                href="https://acm.se"
+                logoSrc={acmLogo}
+                className={`${styles.logoOnLight} ${styles.logoRounded}`}
+              />
             </div>
           </section>
 
@@ -211,7 +380,9 @@ export default function Home() {
                 <div className={styles.terminalBody}>
                   {cliLines.map((line, index) => (
                     <div className={styles.cliLine} key={`${line}-panel`}>
-                      <span style={{ animationDelay: `${0.4 + index * 0.25}s` }}>
+                      <span
+                        style={{ animationDelay: `${0.4 + index * 0.25}s` }}
+                      >
                         {line}
                       </span>
                     </div>
@@ -237,7 +408,17 @@ export default function Home() {
             </p>
             <div className={styles.ctaStrip}>
               <span>Ready to generate your first service?</span>
-              <code>{createCommand}</code>
+              <div className={styles.inlineCommand}>
+                <code className={styles.inlineCode}>{createCommand}</code>
+                <button
+                  className={styles.inlineCopy}
+                  type="button"
+                  onClick={onCopy}
+                  aria-label="Copy create command"
+                >
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
             </div>
           </section>
 
@@ -255,8 +436,9 @@ export default function Home() {
               <article>
                 <h3>Integrated Infrastructure</h3>
                 <p>
-                  Auth, Recurring Jobs, and Mailers are first-class citizens—core
-                  components designed to work together out of the box.
+                  Auth, Recurring Jobs, and Mailers are first-class
+                  citizens—core components designed to work together out of the
+                  box.
                 </p>
               </article>
               <article>
@@ -270,7 +452,17 @@ export default function Home() {
             </div>
             <div className={styles.ctaStrip}>
               <span>Start with the foundation teams trust.</span>
-              <code>{createCommand}</code>
+              <div className={styles.inlineCommand}>
+                <code className={styles.inlineCode}>{createCommand}</code>
+                <button
+                  className={styles.inlineCopy}
+                  type="button"
+                  onClick={onCopy}
+                  aria-label="Copy create command"
+                >
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
             </div>
           </section>
 
@@ -282,11 +474,14 @@ export default function Home() {
                 and a standard CLI, AI agents don&apos;t have to guess your
                 architecture. They can generate feature-complete services,
                 mailers, and jobs that work perfectly the first time. Cedar
-                isn&apos;t just easy for humans to read—it&apos;s optimized for the
-                LLMs you use every day.
+                isn&apos;t just easy for humans to read—it&apos;s optimized for
+                the LLMs you use every day.
               </p>
-              <Link className={styles.secondaryCta} to="/docs/tutorial/foreword">
-                Take the Tutorial
+              <Link
+                className={styles.secondaryCta}
+                to="/docs/tutorial/foreword"
+              >
+                Start the Tutorial
               </Link>
             </div>
             <div className={styles.aiCard}>
@@ -309,13 +504,23 @@ export default function Home() {
         <footer className={styles.footer}>
           <div className={styles.footerCta}>
             <h3>Ship with CedarJS today.</h3>
-            <code>{createCommand}</code>
+            <div className={styles.inlineCommand}>
+              <code className={styles.inlineCode}>{createCommand}</code>
+              <button
+                className={styles.inlineCopy}
+                type="button"
+                onClick={onCopy}
+                aria-label="Copy create command"
+              >
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
           </div>
           <div className={styles.footerGrid}>
             <div>
-              <h4>The Transition</h4>
+              <h4>Migrate to Cedar</h4>
               <a href="https://cedarjs.com/docs/upgrade-guides/redwood-to-cedar/">
-                Moving from RedwoodJS? Read the Migration Guide.
+                From RedwoodJS
               </a>
             </div>
             <div>
@@ -328,7 +533,9 @@ export default function Home() {
               <a href="/docs/reference">API Reference</a>
               <a href="/docs/cli-commands">CLI Docs</a>
               <a href="/docs/security">Security Policy</a>
-              <a href="https://github.com/cedarjs/cedar/blob/main/LICENSE">LICENSE</a>
+              <a href="https://github.com/cedarjs/cedar/blob/main/LICENSE">
+                LICENSE
+              </a>
             </div>
           </div>
         </footer>
