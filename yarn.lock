@@ -7358,11 +7358,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@joshwooding/vite-plugin-react-docgen-typescript@npm:0.6.3":
-  version: 0.6.3
-  resolution: "@joshwooding/vite-plugin-react-docgen-typescript@npm:0.6.3"
+"@joshwooding/vite-plugin-react-docgen-typescript@npm:0.6.4":
+  version: 0.6.4
+  resolution: "@joshwooding/vite-plugin-react-docgen-typescript@npm:0.6.4"
   dependencies:
-    glob: "npm:^11.1.0"
+    glob: "npm:^13.0.1"
     react-docgen-typescript: "npm:^2.2.2"
   peerDependencies:
     typescript: ">= 4.3.x"
@@ -7370,7 +7370,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/e68d2884235b8290673c17a13bc303a088feba6ce0a275ab0778b50e90b967f5dffdcf71ed3197e9cdf07607594a9cb2a86e3ea6e4eb8962b50d61078107bac3
+  checksum: 10c0/73149b2d41d5b8eff7dfe4d037a6903fe4123ae46f3928d88535020539f44159c4ea1b342e6a77d4c14219f2f743fea0ef96e81279cce8b6d247dc4d582e27ed
   languageName: node
   linkType: hard
 
@@ -18405,7 +18405,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:11.1.0, glob@npm:^11.0.0, glob@npm:^11.0.3, glob@npm:^11.1.0":
+"glob@npm:11.1.0, glob@npm:^11.0.0, glob@npm:^11.0.3":
   version: 11.1.0
   resolution: "glob@npm:11.1.0"
   dependencies:
@@ -18437,14 +18437,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^13.0.0":
-  version: 13.0.0
-  resolution: "glob@npm:13.0.0"
+"glob@npm:^13.0.0, glob@npm:^13.0.1":
+  version: 13.0.2
+  resolution: "glob@npm:13.0.2"
   dependencies:
-    minimatch: "npm:^10.1.1"
+    minimatch: "npm:^10.1.2"
     minipass: "npm:^7.1.2"
     path-scurry: "npm:^2.0.0"
-  checksum: 10c0/8e2f5821f3f7c312dd102e23a15b80c79e0837a9872784293ba2e15ec73b3f3749a49a42a31bfcb4e52c84820a474e92331c2eebf18819d20308f5c33876630a
+  checksum: 10c0/3d4b09efa922c4cba9be6d5b9efae14384e7422aeb886eb35fba8a94820b8281474b8d3f16927127fb1a0c8580e18fc00e3fda03c8dc31fa0af3ba918edeeb04
   languageName: node
   linkType: hard
 
@@ -28077,7 +28077,7 @@ __metadata:
   resolution: "storybook-framework-cedarjs@workspace:packages/storybook"
   dependencies:
     "@cedarjs/testing": "workspace:*"
-    "@joshwooding/vite-plugin-react-docgen-typescript": "npm:0.6.3"
+    "@joshwooding/vite-plugin-react-docgen-typescript": "npm:0.6.4"
     "@rollup/pluginutils": "npm:5.3.0"
     "@storybook/addon-essentials": "npm:8.6.14"
     "@storybook/builder-vite": "npm:8.6.15"
