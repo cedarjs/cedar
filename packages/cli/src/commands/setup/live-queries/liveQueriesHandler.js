@@ -10,10 +10,6 @@ import c from '../../../lib/colors.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 
-const REALTIME_PACKAGE_NAME = '@cedarjs/realtime'
-const POSTGRES_CLIENT_PACKAGE = 'pg@^8'
-const LISTENER_IMPORT_PATH = 'src/lib/liveQueriesListener'
-
 const getApiPackageJson = () => {
   const apiPackageJsonPath = path.join(getPaths().api.base, 'package.json')
   return JSON.parse(fs.readFileSync(apiPackageJsonPath, 'utf-8'))
@@ -124,7 +120,7 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
     contentLines.splice(
       lastImportIndex + 1,
       0,
-      `import { startLiveQueryListener } from '${LISTENER_IMPORT_PATH}'`,
+      "import { startLiveQueryListener } from 'src/lib/liveQueriesListener'",
     )
   }
 
@@ -150,10 +146,7 @@ export const handler = async ({ force }) => {
   const projectIsTypescript = isTypeScriptProject()
   const apiPackageJson = getApiPackageJson()
 
-  const hasRealtimeDependency = hasPackage(
-    apiPackageJson,
-    REALTIME_PACKAGE_NAME,
-  )
+  const hasRealtimeDependency = hasPackage(apiPackageJson, '@cedarjs/realtime')
 
   const hasPgDependency = hasPackage(apiPackageJson, 'pg')
 
@@ -188,17 +181,18 @@ export const handler = async ({ force }) => {
   const tasks = new Listr(
     [
       {
-        title: `Checking for ${REALTIME_PACKAGE_NAME} in api workspace...`,
+        title: 'Checking for @cedarjs/realtime in api workspace...',
         task: () => {
           if (!hasRealtimeDependency) {
             throw new Error(
-              `${REALTIME_PACKAGE_NAME} is not installed in your api workspace. Run ${c.highlight('yarn cedar setup realtime')} first.`,
+              '@cedarjs/realtime is not installed in your api workspace. ' +
+                `Please run ${c.highlight('yarn cedar setup realtime')} first.`,
             )
           }
         },
       },
       {
-        ...addApiPackages([POSTGRES_CLIENT_PACKAGE]),
+        ...addApiPackages(['pg@^8.18.0']),
         title: 'Adding pg dependency to your api side...',
         skip: () => {
           if (hasPgDependency) {
