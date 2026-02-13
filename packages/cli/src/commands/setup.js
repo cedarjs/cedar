@@ -10,6 +10,7 @@ import * as setupGenerator from './setup/generator/generator.js'
 import * as setupGraphql from './setup/graphql/graphql.js'
 import * as setupI18n from './setup/i18n/i18n.js'
 import * as setupJobs from './setup/jobs/jobs.js'
+import * as setupLiveQueries from './setup/live-queries/liveQueries.js'
 import * as setupMailer from './setup/mailer/mailer.js'
 import * as setupMiddleware from './setup/middleware/middleware.js'
 import * as setupMonitoring from './setup/monitoring/monitoring.js'
@@ -34,6 +35,7 @@ export const builder = (yargs) =>
     .command(setupGraphql)
     .command(setupI18n)
     .command(setupJobs)
+    .command(setupLiveQueries)
     .command(setupMailer)
     .command(setupMiddleware)
     .command(setupMonitoring)
