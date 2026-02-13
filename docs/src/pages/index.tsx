@@ -21,9 +21,12 @@ const serviceCode = (
     <span className={styles.tokenKeyword}>import</span>{' '}
     <span className={styles.tokenKeyword}>type</span>{' '}
     <span className={styles.tokenPunctuation}>{'{'}</span>
-    {'\n'} <span className={styles.tokenType}>QueryResolvers</span>,{'\n'}{' '}
-    <span className={styles.tokenType}>MutationResolvers</span>,{'\n'}{' '}
-    <span className={styles.tokenType}>PostRelationResolvers</span>,{'\n'}
+    {'\n'}
+    &nbsp;&nbsp;<span className={styles.tokenType}>QueryResolvers</span>,{'\n'}
+    &nbsp;&nbsp;<span className={styles.tokenType}>MutationResolvers</span>,
+    {'\n'}
+    &nbsp;&nbsp;<span className={styles.tokenType}>PostRelationResolvers</span>,
+    {'\n'}
     <span className={styles.tokenPunctuation}>{'}'}</span>{' '}
     <span className={styles.tokenKeyword}>from</span>{' '}
     <span className={styles.tokenString}>&apos;types/graphql&apos;</span>
@@ -48,7 +51,7 @@ const serviceCode = (
     <span className={styles.tokenPunctuation}>)</span>{' '}
     <span className={styles.tokenOperator}>=&gt;</span>{' '}
     <span className={styles.tokenPunctuation}>{'{'}</span>
-    {'\n'} <span className={styles.tokenKeyword}>return</span>{' '}
+    {'\n'}&nbsp;&nbsp;<span className={styles.tokenKeyword}>return</span>{' '}
     <span className={styles.tokenVariable}>db</span>
     <span className={styles.tokenPunctuation}>.</span>
     <span className={styles.tokenFunction}>post</span>
@@ -68,14 +71,18 @@ const serviceCode = (
     <span className={styles.tokenString}>&apos;createPost&apos;</span>
     <span className={styles.tokenPunctuation}>]</span>{' '}
     <span className={styles.tokenOperator}>=</span>
-    {'\n'} <span className={styles.tokenPunctuation}>(</span>
+    {'\n'}
+    &nbsp;&nbsp;<span className={styles.tokenPunctuation}>(</span>
     <span className={styles.tokenPunctuation}>{'{'}</span>{' '}
     <span className={styles.tokenVariable}>input</span>{' '}
     <span className={styles.tokenPunctuation}>{'}'}</span>
     <span className={styles.tokenPunctuation}>)</span>{' '}
     <span className={styles.tokenOperator}>=&gt;</span>{' '}
     <span className={styles.tokenPunctuation}>{'{'}</span>
-    {'\n'} <span className={styles.tokenKeyword}>return</span>{' '}
+    {'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;<span className={styles.tokenKeyword}>
+      return
+    </span>{' '}
     <span className={styles.tokenVariable}>db</span>
     <span className={styles.tokenPunctuation}>.</span>
     <span className={styles.tokenFunction}>post</span>
@@ -83,13 +90,18 @@ const serviceCode = (
     <span className={styles.tokenFunction}>create</span>
     <span className={styles.tokenPunctuation}>(</span>
     <span className={styles.tokenPunctuation}>{'{'}</span>
-    {'\n'} <span className={styles.tokenProperty}>data</span>
+    {'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <span className={styles.tokenProperty}>data</span>
     <span className={styles.tokenPunctuation}>:</span>{' '}
     <span className={styles.tokenVariable}>input</span>
     <span className={styles.tokenPunctuation}>,</span>
-    {'\n'} <span className={styles.tokenPunctuation}>{'}'}</span>
+    {'\n'}
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <span className={styles.tokenPunctuation}>{'}'}</span>
     <span className={styles.tokenPunctuation}>)</span>
-    {'\n'} <span className={styles.tokenPunctuation}>{'}'}</span>
+    {'\n'}
+    &nbsp;&nbsp;<span className={styles.tokenPunctuation}>{'}'}</span>
   </>
 )
 
@@ -389,16 +401,16 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <div className={styles.codePanel}>
-                {codeBlocks.map((block) => (
-                  <div className={styles.codeBlock} key={block.label}>
-                    <div className={styles.panelLabel}>{block.label}</div>
+              {codeBlocks.map((block) => (
+                <div className={styles.codePanel} key={block.label}>
+                  <div className={styles.panelLabel}>{block.label}</div>
+                  <div className={styles.codeBlock}>
                     <pre>
                       <code>{block.code}</code>
                     </pre>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
             <p className={styles.caption}>
               In Cedar, your business logic lives in <strong>Services</strong>.
