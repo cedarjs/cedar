@@ -8,6 +8,7 @@ import services from 'src/services/**/*.{js,ts}'
 import { cookieName, getCurrentUser } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 import { logger } from 'src/lib/logger'
+import { realtime } from 'src/lib/realtime'
 
 const authDecoder = createAuthDecoder(cookieName)
 
@@ -16,6 +17,7 @@ export const handler = createGraphQLHandler({
   getCurrentUser,
   loggerConfig: { logger, options: {} },
   directives,
+  realtime,
   sdls,
   services,
   onException: () => {

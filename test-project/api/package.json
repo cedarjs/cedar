@@ -4,8 +4,11 @@
   "private": true,
   "dependencies": {
     "@cedarjs/api": "3.0.0-canary.13223+9e1d1011b",
+    "@cedarjs/api-server": "2.6.0",
     "@cedarjs/auth-dbauth-api": "3.0.0-canary.13223+9e1d1011b",
     "@cedarjs/graphql-server": "3.0.0-canary.13223+9e1d1011b",
-    "@my-org/validators": "workspace:*"
+    "@cedarjs/realtime": "2.6.0",
+    "@my-org/validators": "workspace:*",
+    "ioredis": "^5"
   }
 }
