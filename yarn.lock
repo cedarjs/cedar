@@ -3260,7 +3260,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/realtime": "workspace:*"
-    "@envelop/core": "npm:5.5.0"
+    "@envelop/core": "npm:5.5.1"
     "@envelop/depth-limit": "npm:4.0.0"
     "@envelop/disable-introspection": "npm:6.0.0"
     "@envelop/filter-operation-type": "npm:6.0.0"
@@ -3548,7 +3548,7 @@ __metadata:
   resolution: "@cedarjs/realtime@workspace:packages/realtime"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@envelop/core": "npm:5.5.0"
+    "@envelop/core": "npm:5.5.1"
     "@envelop/live-query": "npm:7.0.0"
     "@envelop/testing": "npm:7.0.0"
     "@envelop/types": "npm:5.2.1"
@@ -4160,15 +4160,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/core@npm:5.5.0, @envelop/core@npm:^5.0.0, @envelop/core@npm:^5.3.0":
-  version: 5.5.0
-  resolution: "@envelop/core@npm:5.5.0"
+"@envelop/core@npm:5.5.1, @envelop/core@npm:^5.0.0, @envelop/core@npm:^5.3.0":
+  version: 5.5.1
+  resolution: "@envelop/core@npm:5.5.1"
   dependencies:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@envelop/types": "npm:^5.2.1"
     "@whatwg-node/promise-helpers": "npm:^1.2.4"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/7b824effa13d464837a92474514cbd1ea6404f7c5e20b1c4364671a2503eafd33b0d67f8e86fb2841ecb2130a3f3b528a83d501d5bcef2a4e6426056787f31f8
+  checksum: 10c0/380d5a1bc7abf700dc42195c5769f08e18eef7de552ad36299445b416ff3d2c2d5a74bcfae3239b6c390793efc842120dcdbdc0872457a2fdc80b4c37a54312a
   languageName: node
   linkType: hard
 
