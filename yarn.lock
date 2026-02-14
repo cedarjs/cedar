@@ -7675,13 +7675,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lerna/create@npm:9.0.3":
-  version: 9.0.3
-  resolution: "@lerna/create@npm:9.0.3"
+"@lerna/create@npm:9.0.4":
+  version: 9.0.4
+  resolution: "@lerna/create@npm:9.0.4"
   dependencies:
     "@npmcli/arborist": "npm:9.1.6"
     "@npmcli/package-json": "npm:7.0.2"
-    "@npmcli/run-script": "npm:10.0.2"
+    "@npmcli/run-script": "npm:10.0.3"
     "@nx/devkit": "npm:>=21.5.2 < 23.0.0"
     "@octokit/plugin-enterprise-rest": "npm:6.0.1"
     "@octokit/rest": "npm:20.1.2"
@@ -7726,14 +7726,14 @@ __metadata:
     pify: "npm:5.0.0"
     read-cmd-shim: "npm:4.0.0"
     resolve-from: "npm:5.0.0"
-    rimraf: "npm:^4.4.1"
+    rimraf: "npm:^6.1.2"
     semver: "npm:7.7.2"
     set-blocking: "npm:^2.0.0"
     signal-exit: "npm:3.0.7"
     slash: "npm:^3.0.0"
     ssri: "npm:12.0.0"
     string-width: "npm:^4.2.3"
-    tar: "npm:6.2.1"
+    tar: "npm:7.5.7"
     temp-dir: "npm:1.0.0"
     through: "npm:2.3.8"
     tinyglobby: "npm:0.2.12"
@@ -7746,7 +7746,7 @@ __metadata:
     write-pkg: "npm:4.0.0"
     yargs: "npm:17.7.2"
     yargs-parser: "npm:21.1.1"
-  checksum: 10c0/9f980208a96d37b05083d6d8851c0bb3759d9cd646520381b416dbcec232c1ade02ec3a2deacfaf9fed80ac5bbefd0c4608064e16132cf14744d7f02253c42ab
+  checksum: 10c0/2c4b2a68fc2aab4d23ebf15c503d710e1e52ec2d460dd795b499bd467dbfbebc8459bbf68bf7371efed5bed8e95e204673c1c0e3ee27968c9b64095098c09c8d
   languageName: node
   linkType: hard
 
@@ -7925,19 +7925,6 @@ __metadata:
     "@nodelib/fs.scandir": "npm:2.1.5"
     fastq: "npm:^1.6.0"
   checksum: 10c0/db9de047c3bb9b51f9335a7bb46f4fcfb6829fb628318c12115fbaf7d369bfce71c15b103d1fc3b464812d936220ee9bc1c8f762d032c9f6be9acc99249095b1
-  languageName: node
-  linkType: hard
-
-"@npmcli/agent@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "@npmcli/agent@npm:3.0.0"
-  dependencies:
-    agent-base: "npm:^7.1.0"
-    http-proxy-agent: "npm:^7.0.0"
-    https-proxy-agent: "npm:^7.0.1"
-    lru-cache: "npm:^10.0.1"
-    socks-proxy-agent: "npm:^8.0.3"
-  checksum: 10c0/efe37b982f30740ee77696a80c196912c274ecd2cb243bc6ae7053a50c733ce0f6c09fda085145f33ecf453be19654acca74b69e81eaad4c90f00ccffe2f9271
   languageName: node
   linkType: hard
 
@@ -8256,21 +8243,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@npmcli/run-script@npm:10.0.2":
-  version: 10.0.2
-  resolution: "@npmcli/run-script@npm:10.0.2"
-  dependencies:
-    "@npmcli/node-gyp": "npm:^5.0.0"
-    "@npmcli/package-json": "npm:^7.0.0"
-    "@npmcli/promise-spawn": "npm:^9.0.0"
-    node-gyp: "npm:^11.0.0"
-    proc-log: "npm:^6.0.0"
-    which: "npm:^5.0.0"
-  checksum: 10c0/484d787164cdd22bfe609fbd3937fe4ac0e88892ead48d2a592077762a70916a9e6dffc7184721d35fffc31b4dfc557a231f3eb6d83f75f72c78e03c98b9c03a
-  languageName: node
-  linkType: hard
-
-"@npmcli/run-script@npm:^10.0.0":
+"@npmcli/run-script@npm:10.0.3, @npmcli/run-script@npm:^10.0.0":
   version: 10.0.3
   resolution: "@npmcli/run-script@npm:10.0.3"
   dependencies:
@@ -13601,26 +13574,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cacache@npm:^19.0.1":
-  version: 19.0.1
-  resolution: "cacache@npm:19.0.1"
-  dependencies:
-    "@npmcli/fs": "npm:^4.0.0"
-    fs-minipass: "npm:^3.0.0"
-    glob: "npm:^10.2.2"
-    lru-cache: "npm:^10.0.1"
-    minipass: "npm:^7.0.3"
-    minipass-collect: "npm:^2.0.1"
-    minipass-flush: "npm:^1.0.5"
-    minipass-pipeline: "npm:^1.2.4"
-    p-map: "npm:^7.0.2"
-    ssri: "npm:^12.0.0"
-    tar: "npm:^7.4.3"
-    unique-filename: "npm:^4.0.0"
-  checksum: 10c0/01f2134e1bd7d3ab68be851df96c8d63b492b1853b67f2eecb2c37bb682d37cb70bb858a16f2f0554d3c0071be6dfe21456a1ff6fa4b7eed996570d6a25ffe9c
-  languageName: node
-  linkType: hard
-
 "cacache@npm:^20.0.0, cacache@npm:^20.0.1":
   version: 20.0.3
   resolution: "cacache@npm:20.0.3"
@@ -18462,7 +18415,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^9.2.0, glob@npm:^9.3.3":
+"glob@npm:^9.3.3":
   version: 9.3.5
   resolution: "glob@npm:9.3.5"
   dependencies:
@@ -21542,14 +21495,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lerna@npm:9.0.3":
-  version: 9.0.3
-  resolution: "lerna@npm:9.0.3"
+"lerna@npm:9.0.4":
+  version: 9.0.4
+  resolution: "lerna@npm:9.0.4"
   dependencies:
-    "@lerna/create": "npm:9.0.3"
+    "@lerna/create": "npm:9.0.4"
     "@npmcli/arborist": "npm:9.1.6"
     "@npmcli/package-json": "npm:7.0.2"
-    "@npmcli/run-script": "npm:10.0.2"
+    "@npmcli/run-script": "npm:10.0.3"
     "@nx/devkit": "npm:>=21.5.2 < 23.0.0"
     "@octokit/plugin-enterprise-rest": "npm:6.0.1"
     "@octokit/rest": "npm:20.1.2"
@@ -21602,14 +21555,14 @@ __metadata:
     pify: "npm:5.0.0"
     read-cmd-shim: "npm:4.0.0"
     resolve-from: "npm:5.0.0"
-    rimraf: "npm:^4.4.1"
+    rimraf: "npm:^6.1.2"
     semver: "npm:7.7.2"
     set-blocking: "npm:^2.0.0"
     signal-exit: "npm:3.0.7"
     slash: "npm:3.0.0"
     ssri: "npm:12.0.0"
     string-width: "npm:^4.2.3"
-    tar: "npm:6.2.1"
+    tar: "npm:7.5.7"
     temp-dir: "npm:1.0.0"
     through: "npm:2.3.8"
     tinyglobby: "npm:0.2.12"
@@ -21625,7 +21578,7 @@ __metadata:
     yargs-parser: "npm:21.1.1"
   bin:
     lerna: dist/cli.js
-  checksum: 10c0/197c0b0bf7819c438265e8c09c2f965811faed7125c22bf1643b17e19c0257d6acbf5eef0532b2f90f0b4ef39ddcdfaa891426adea88980e4c9db2e8858a1d2f
+  checksum: 10c0/689fa098f0b04acef8323b699298776649ec4a61a834f024d8b042b3d15e0e6c89e280a74a825efd66803df465142ace7dedfd6fe0f429dbed0e52404c00ec73
   languageName: node
   linkType: hard
 
@@ -22280,25 +22233,6 @@ __metadata:
     socks-proxy-agent: "npm:^7.0.0"
     ssri: "npm:^10.0.0"
   checksum: 10c0/c161bde51dbc03382f9fac091734526a64dd6878205db6c338f70d2133df797b5b5166bff3091cf7d4785869d4b21e99a58139c1790c2fb1b5eec00f528f5f0b
-  languageName: node
-  linkType: hard
-
-"make-fetch-happen@npm:^14.0.3":
-  version: 14.0.3
-  resolution: "make-fetch-happen@npm:14.0.3"
-  dependencies:
-    "@npmcli/agent": "npm:^3.0.0"
-    cacache: "npm:^19.0.1"
-    http-cache-semantics: "npm:^4.1.1"
-    minipass: "npm:^7.0.2"
-    minipass-fetch: "npm:^4.0.0"
-    minipass-flush: "npm:^1.0.5"
-    minipass-pipeline: "npm:^1.2.4"
-    negotiator: "npm:^1.0.0"
-    proc-log: "npm:^5.0.0"
-    promise-retry: "npm:^2.0.1"
-    ssri: "npm:^12.0.0"
-  checksum: 10c0/c40efb5e5296e7feb8e37155bde8eb70bc57d731b1f7d90e35a092fde403d7697c56fb49334d92d330d6f1ca29a98142036d6480a12681133a0a1453164cb2f0
   languageName: node
   linkType: hard
 
@@ -23583,26 +23517,6 @@ __metadata:
   version: 1.3.1
   resolution: "node-forge@npm:1.3.1"
   checksum: 10c0/e882819b251a4321f9fc1d67c85d1501d3004b4ee889af822fd07f64de3d1a8e272ff00b689570af0465d65d6bf5074df9c76e900e0aff23e60b847f2a46fbe8
-  languageName: node
-  linkType: hard
-
-"node-gyp@npm:^11.0.0":
-  version: 11.5.0
-  resolution: "node-gyp@npm:11.5.0"
-  dependencies:
-    env-paths: "npm:^2.2.0"
-    exponential-backoff: "npm:^3.1.1"
-    graceful-fs: "npm:^4.2.6"
-    make-fetch-happen: "npm:^14.0.3"
-    nopt: "npm:^8.0.0"
-    proc-log: "npm:^5.0.0"
-    semver: "npm:^7.3.5"
-    tar: "npm:^7.4.3"
-    tinyglobby: "npm:^0.2.12"
-    which: "npm:^5.0.0"
-  bin:
-    node-gyp: bin/node-gyp.js
-  checksum: 10c0/31ff49586991b38287bb15c3d529dd689cfc32f992eed9e6997b9d712d5d21fe818a8b1bbfe3b76a7e33765c20210c5713212f4aa329306a615b87d8a786da3a
   languageName: node
   linkType: hard
 
@@ -26846,7 +26760,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rimraf@npm:6.1.2":
+"rimraf@npm:6.1.2, rimraf@npm:^6.1.2":
   version: 6.1.2
   resolution: "rimraf@npm:6.1.2"
   dependencies:
@@ -26866,17 +26780,6 @@ __metadata:
   bin:
     rimraf: bin.js
   checksum: 10c0/9cb7757acb489bd83757ba1a274ab545eafd75598a9d817e0c3f8b164238dd90eba50d6b848bd4dcc5f3040912e882dc7ba71653e35af660d77b25c381d402e8
-  languageName: node
-  linkType: hard
-
-"rimraf@npm:^4.4.1":
-  version: 4.4.1
-  resolution: "rimraf@npm:4.4.1"
-  dependencies:
-    glob: "npm:^9.2.0"
-  bin:
-    rimraf: dist/cjs/src/bin.js
-  checksum: 10c0/8c5e142d26d8b222be9dc9a1a41ba48e95d8f374e813e66a8533e87c6180174fcb3f573b9b592eca12740ebf8b78526d136acd971d4a790763d6f2232c34fa24
   languageName: node
   linkType: hard
 
@@ -27079,7 +26982,7 @@ __metadata:
     jest: "npm:29.7.0"
     jscodeshift: "npm:17.0.0"
     lefthook: "npm:2.1.0"
-    lerna: "npm:9.0.3"
+    lerna: "npm:9.0.4"
     listr2: "npm:7.0.2"
     make-dir-cli: "npm:4.0.0"
     msw: "npm:1.3.5"
@@ -28623,7 +28526,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:6.2.1, tar@npm:^6.1.11, tar@npm:^6.1.2":
+"tar@npm:7.5.7, tar@npm:^7.4.3, tar@npm:^7.5.2":
+  version: 7.5.7
+  resolution: "tar@npm:7.5.7"
+  dependencies:
+    "@isaacs/fs-minipass": "npm:^4.0.0"
+    chownr: "npm:^3.0.0"
+    minipass: "npm:^7.1.2"
+    minizlib: "npm:^3.1.0"
+    yallist: "npm:^5.0.0"
+  checksum: 10c0/51f261afc437e1112c3e7919478d6176ea83f7f7727864d8c2cce10f0b03a631d1911644a567348c3063c45abdae39718ba97abb073d22aa3538b9a53ae1e31c
+  languageName: node
+  linkType: hard
+
+"tar@npm:^6.1.11, tar@npm:^6.1.2":
   version: 6.2.1
   resolution: "tar@npm:6.2.1"
   dependencies:
@@ -28634,19 +28550,6 @@ __metadata:
     mkdirp: "npm:^1.0.3"
     yallist: "npm:^4.0.0"
   checksum: 10c0/a5eca3eb50bc11552d453488344e6507156b9193efd7635e98e867fab275d527af53d8866e2370cd09dfe74378a18111622ace35af6a608e5223a7d27fe99537
-  languageName: node
-  linkType: hard
-
-"tar@npm:^7.4.3, tar@npm:^7.5.2":
-  version: 7.5.2
-  resolution: "tar@npm:7.5.2"
-  dependencies:
-    "@isaacs/fs-minipass": "npm:^4.0.0"
-    chownr: "npm:^3.0.0"
-    minipass: "npm:^7.1.2"
-    minizlib: "npm:^3.1.0"
-    yallist: "npm:^5.0.0"
-  checksum: 10c0/a7d8b801139b52f93a7e34830db0de54c5aa45487c7cb551f6f3d44a112c67f1cb8ffdae856b05fd4f17b1749911f1c26f1e3a23bbe0279e17fd96077f13f467
   languageName: node
   linkType: hard
 
@@ -29732,15 +29635,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unique-filename@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "unique-filename@npm:4.0.0"
-  dependencies:
-    unique-slug: "npm:^5.0.0"
-  checksum: 10c0/38ae681cceb1408ea0587b6b01e29b00eee3c84baee1e41fd5c16b9ed443b80fba90c40e0ba69627e30855570a34ba8b06702d4a35035d4b5e198bf5a64c9ddc
-  languageName: node
-  linkType: hard
-
 "unique-filename@npm:^5.0.0":
   version: 5.0.0
   resolution: "unique-filename@npm:5.0.0"
@@ -29756,15 +29650,6 @@ __metadata:
   dependencies:
     imurmurhash: "npm:^0.1.4"
   checksum: 10c0/cb811d9d54eb5821b81b18205750be84cb015c20a4a44280794e915f5a0a70223ce39066781a354e872df3572e8155c228f43ff0cce94c7cbf4da2cc7cbdd635
-  languageName: node
-  linkType: hard
-
-"unique-slug@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "unique-slug@npm:5.0.0"
-  dependencies:
-    imurmurhash: "npm:^0.1.4"
-  checksum: 10c0/d324c5a44887bd7e105ce800fcf7533d43f29c48757ac410afd42975de82cc38ea2035c0483f4de82d186691bf3208ef35c644f73aa2b1b20b8e651be5afd293
   languageName: node
   linkType: hard
 
