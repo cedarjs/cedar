@@ -1,11 +1,14 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { workspaces } from '../lib/project.js'
 
 export const command = 'test [filter..]'
 export const description = 'Run Jest tests. Defaults to watch mode'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .strict(false) // so that we can forward arguments to jest
     .positional('filter', {
@@ -42,7 +45,7 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: any) => {
   const { handler } = await import('./testHandler.js')
   return handler(options)
 }

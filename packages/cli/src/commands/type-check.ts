@@ -1,11 +1,13 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
+// @ts-expect-error - Types not available for JS files
 import { workspaces } from '../lib/project.js'
 
 export const command = 'type-check [sides..]'
 export const aliases = ['tsc', 'tc']
 export const description = 'Run a TypeScript compiler check on your project'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .strict(false) // so that we can forward arguments to tsc
     .positional('sides', {
@@ -37,7 +39,7 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: any) => {
   const { handler } = await import('./type-checkHandler.js')
   return handler(options)
 }

@@ -1,8 +1,9 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 export const command = 'exec [name]'
 export const description = 'Run scripts generated with yarn generate script'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs
     .positional('name', {
       description: 'The file name (extension is optional) of the script to run',
@@ -34,7 +35,7 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: any) => {
   const { handler } = await import('./execHandler.js')
   return handler(options)
 }
