@@ -4,6 +4,7 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
+import { getMigrationsPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
@@ -22,12 +23,7 @@ const hasPackage = (packageJson, packageName) => {
   )
 }
 
-const findExistingLiveQueryMigration = () => {
-  const migrationsDirectoryPath = path.join(
-    getPaths().api.base,
-    'db',
-    'migrations',
-  )
+const findExistingLiveQueryMigration = ({ migrationsDirectoryPath }) => {
   if (!fs.existsSync(migrationsDirectoryPath)) {
     return undefined
   }
@@ -44,7 +40,7 @@ const findExistingLiveQueryMigration = () => {
   })
 }
 
-const createMigrationFolderName = () => {
+const generateMigrationFolderName = () => {
   const now = new Date()
 
   const year = String(now.getFullYear())
@@ -145,6 +141,7 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
 export const handler = async ({ force }) => {
   const projectIsTypescript = isTypeScriptProject()
   const apiPackageJson = getApiPackageJson()
+  const migrationsPath = await getMigrationsPath(getPaths().api.prismaConfig)
 
   const hasRealtimeDependency = hasPackage(apiPackageJson, '@cedarjs/realtime')
 
@@ -162,13 +159,13 @@ export const handler = async ({ force }) => {
     'listener.ts.template',
   )
 
-  const existingMigrationPath = findExistingLiveQueryMigration()
+  const existingMigrationPath = findExistingLiveQueryMigration({
+    migrationsDirectoryPath: migrationsPath,
+  })
 
   const migrationDirPath = path.join(
-    getPaths().api.base,
-    'db',
-    'migrations',
-    createMigrationFolderName(),
+    migrationsPath,
+    generateMigrationFolderName(),
   )
 
   const migrationPath = path.join(migrationDirPath, 'migration.sql')
