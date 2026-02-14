@@ -7984,9 +7984,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@npmcli/arborist@npm:9.2.0":
-  version: 9.2.0
-  resolution: "@npmcli/arborist@npm:9.2.0"
+"@npmcli/arborist@npm:9.3.0":
+  version: 9.3.0
+  resolution: "@npmcli/arborist@npm:9.3.0"
   dependencies:
     "@isaacs/string-locale-compare": "npm:^1.1.0"
     "@npmcli/fs": "npm:^5.0.0"
@@ -8023,7 +8023,7 @@ __metadata:
     walk-up-path: "npm:^4.0.0"
   bin:
     arborist: bin/index.js
-  checksum: 10c0/e1b7785bc719710e5769f8db39385e5b20601c8b58a2678ce7518f6eb6ae4f30065e6f29a4021b111d28c05872efa6059262dc7a213744e318599fd11ba0a4f3
+  checksum: 10c0/aada89c203e98c45ceeed54f37bfc6b6c0f3bf48a648243ce9ca1b9d81b53ade22d0628bf249d6f349dee812d56505ef38c2b6c9c90cec99d05d073e3f3b9daf
   languageName: node
   linkType: hard
 
@@ -26944,7 +26944,7 @@ __metadata:
     "@babel/preset-react": "npm:7.28.5"
     "@babel/preset-typescript": "npm:7.28.5"
     "@babel/runtime-corejs3": "npm:7.29.0"
-    "@npmcli/arborist": "npm:9.2.0"
+    "@npmcli/arborist": "npm:9.3.0"
     "@playwright/test": "npm:1.58.2"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
