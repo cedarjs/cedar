@@ -37,7 +37,7 @@ export const builder = async (yargs: Argv) => {
   const streamingEnabled = getConfig().experimental?.streamingSsr?.enabled
 
   yargs
-    // @ts-expect-error - Yargs command builder type in dependencies is narrower than runtime behavior
+    // @ts-expect-error - Yargs TS types aren't very good
     .command({
       command: '$0',
       description: bothServerCLIConfig.description,
