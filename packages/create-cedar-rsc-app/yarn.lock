@@ -3066,8 +3066,8 @@ __metadata:
   linkType: hard
 
 "knip@npm:^5.26.0":
-  version: 5.82.1
-  resolution: "knip@npm:5.82.1"
+  version: 5.83.1
+  resolution: "knip@npm:5.83.1"
   dependencies:
     "@nodelib/fs.walk": "npm:^1.2.3"
     fast-glob: "npm:^3.3.3"
@@ -3087,7 +3087,7 @@ __metadata:
   bin:
     knip: bin/knip.js
     knip-bun: bin/knip-bun.js
-  checksum: 10c0/c3bfe898fe3103bb6a59ee2ba4297f05ea4d2db474571db89ae199ebbd74eafa5061d05b3bc2c75e4ec2322ba7ffee44493c76132d3d8991fae66ba742b9ccb4
+  checksum: 10c0/94efd7f4fc3a1c12baca7f1974cbfc7340836a521ed79e962aba89e8720ea374c8bf90462144512555bb891ca398f9ce496963fdda9f4eae4a91a7edf30b42c3
   languageName: node
   linkType: hard
 
