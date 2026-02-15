@@ -144,8 +144,8 @@ export const handler = async ({ force }) => {
   const migrationsPath = await getMigrationsPath(getPaths().api.prismaConfig)
 
   const hasRealtimeDependency = hasPackage(apiPackageJson, '@cedarjs/realtime')
-
   const hasPgDependency = hasPackage(apiPackageJson, 'pg')
+  const ext = projectIsTypescript ? 'ts' : 'js'
 
   const migrationTemplatePath = path.resolve(
     import.meta.dirname,
@@ -172,7 +172,7 @@ export const handler = async ({ force }) => {
 
   const listenerPath = path.join(
     getPaths().api.lib,
-    `liveQueriesListener.${projectIsTypescript ? 'ts' : 'js'}`,
+    `liveQueriesListener.${ext}`,
   )
 
   const tasks = new Listr(
@@ -211,14 +211,17 @@ export const handler = async ({ force }) => {
         },
         skip: () => {
           if (existingMigrationPath && !force) {
-            return `Existing live query migration found: ${path.relative(getPaths().base, existingMigrationPath)}`
+            const migrationPath = path.relative(
+              getPaths().base,
+              existingMigrationPath,
+            )
+
+            return `Existing live query migration found: ${migrationPath}`
           }
         },
       },
       {
-        title: `Adding api/src/lib/liveQueriesListener.${
-          projectIsTypescript ? 'ts' : 'js'
-        }...`,
+        title: `Adding api/src/lib/liveQueriesListener.${ext}...`,
         task: async () => {
           const listenerTemplate = fs.readFileSync(
             listenerTemplatePath,
@@ -253,7 +256,8 @@ export const handler = async ({ force }) => {
           Apply the migration to activate Postgres notifications:
           ${c.highlight('\n\u00A0\u00A0yarn cedar prisma migrate dev\n')}
 
-          Then run your API and use @live queries with invalidation keys based on your GraphQL types and fields.
+          Then run the API server and use @live queries with invalidation keys
+          based on your GraphQL types and fields.
         `
         },
       },
