@@ -20,7 +20,7 @@ export const builder = (yargs: Argv) => {
     .version(false)
 }
 
-export const handler = async (options: any) => {
+export const handler = async (options: Record<string, unknown>) => {
   const { handler } = await import('./prismaHandler.js')
   return handler(options)
 }

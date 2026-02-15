@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'path'
 
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
@@ -9,17 +10,29 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
+// @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
 
+// @ts-expect-error - Types not available for JS files
 import { webSsrServerHandler } from './serveWebHandler.js'
 
 export const command = 'serve [side]'
 export const description =
   'Start a server for serving both the api and web sides'
+type ServeArgv = Record<string, unknown> & {
+  _: (string | number)[]
+  port?: number
+  host?: string
+  socket?: string
+  apiRootPath?: string
+  apiHost?: string
+}
 
-export const builder = async (yargs) => {
+export const builder = async (yargs: Argv) => {
   const rscEnabled = getConfig().experimental?.rsc?.enabled
   const streamingEnabled = getConfig().experimental?.streamingSsr?.enabled
 
@@ -28,7 +41,7 @@ export const builder = async (yargs) => {
       command: '$0',
       description: bothServerCLIConfig.description,
       builder: bothServerCLIConfig.builder,
-      handler: async (argv) => {
+      handler: async (argv: ServeArgv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
@@ -60,7 +73,7 @@ export const builder = async (yargs) => {
       command: 'api',
       description: apiServerCLIConfig.description,
       builder: apiServerCLIConfig.builder,
-      handler: async (argv) => {
+      handler: async (argv: ServeArgv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
@@ -88,7 +101,7 @@ export const builder = async (yargs) => {
       command: 'web',
       description: webServerCLIConfig.description,
       builder: webServerCLIConfig.builder,
-      handler: async (argv) => {
+      handler: async (argv: ServeArgv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
@@ -106,7 +119,7 @@ export const builder = async (yargs) => {
         }
       },
     })
-    .middleware((argv) => {
+    .middleware((argv: ServeArgv) => {
       recordTelemetryAttributes({
         command: 'serve',
       })

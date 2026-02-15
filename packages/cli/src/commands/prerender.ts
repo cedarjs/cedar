@@ -1,8 +1,10 @@
+import type { Argv } from 'yargs'
+
 export const command = 'prerender'
 export const aliases = ['render']
 export const description = 'Prerender pages of your Redwood app at build time'
 
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   yargs.showHelpOnFail(false)
 
   yargs.option('path', {
@@ -26,7 +28,7 @@ export const builder = (yargs) => {
   })
 }
 
-export const handler = async (options) => {
+export const handler = async (options: Record<string, unknown>) => {
   const { handler } = await import('./prerenderHandler.js')
   return handler(options)
 }

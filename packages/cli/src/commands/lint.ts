@@ -3,9 +3,11 @@ import path from 'node:path'
 
 import execa from 'execa'
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
+// @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
 
 /**
@@ -22,7 +24,7 @@ function detectLegacyEslintConfig() {
     '.eslintrc.yml',
   ]
 
-  const foundLegacyFiles = []
+  const foundLegacyFiles: string[] = []
 
   // Check for .eslintrc.* files
   for (const configFile of legacyConfigFiles) {
@@ -42,7 +44,7 @@ function detectLegacyEslintConfig() {
       if (packageJson.eslint) {
         foundLegacyFiles.push('package.json (eslint field)')
       }
-    } catch (error) {
+    } catch {
       // Ignore JSON parse errors
     }
   }
@@ -54,7 +56,7 @@ function detectLegacyEslintConfig() {
  * Shows a deprecation warning for legacy ESLint configuration
  * @param {string[]} legacyFiles Array of legacy config file names
  */
-function showLegacyEslintDeprecationWarning(legacyFiles) {
+function showLegacyEslintDeprecationWarning(legacyFiles: string[]) {
   console.warn('')
   console.warn('⚠️  DEPRECATION WARNING: Legacy ESLint Configuration Detected')
   console.warn('')
@@ -81,7 +83,12 @@ function showLegacyEslintDeprecationWarning(legacyFiles) {
 
 export const command = 'lint [paths..]'
 export const description = 'Lint your files'
-export const builder = (yargs) => {
+type LintOptions = {
+  paths?: string[]
+  fix?: boolean
+  format?: string
+}
+export const builder = (yargs: Argv) => {
   yargs
     .positional('paths', {
       description:
@@ -106,7 +113,11 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async ({ paths, fix, format }) => {
+export const handler = async ({
+  paths = [],
+  fix = false,
+  format = 'stylish',
+}: LintOptions) => {
   recordTelemetryAttributes({ command: 'lint', fix, format })
 
   // Check for legacy ESLint configuration and show deprecation warning
@@ -136,7 +147,12 @@ export const handler = async ({ paths, fix, format }) => {
     })
 
     process.exitCode = result.exitCode
-  } catch (error) {
-    process.exitCode = error.exitCode ?? 1
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'exitCode' in error) {
+      process.exitCode = (error as { exitCode?: number }).exitCode ?? 1
+      return
+    }
+
+    process.exitCode = 1
   }
 }
