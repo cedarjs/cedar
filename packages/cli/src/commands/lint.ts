@@ -93,7 +93,8 @@ export const builder = (yargs: Argv) => {
     .positional('paths', {
       description:
         'Specify file(s) or directory(ies) to lint relative to project root',
-      type: 'array',
+      type: 'string',
+      array: true,
     })
     .option('fix', {
       default: false,
@@ -141,7 +142,9 @@ export const handler = async ({
       )
     }
 
-    const result = await execa('yarn', args.filter(Boolean), {
+    const filteredArgs = args.filter((arg): arg is string => Boolean(arg))
+
+    const result = await execa('yarn', filteredArgs, {
       cwd: getPaths().base,
       stdio: 'inherit',
     })

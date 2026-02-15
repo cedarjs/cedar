@@ -13,7 +13,8 @@ export const builder = (yargs: Argv) => {
     .positional('sides', {
       default: workspaces(),
       description: 'Which side(s) to run a typecheck on',
-      type: 'array',
+      type: 'string',
+      array: true,
     })
     .option('prisma', {
       type: 'boolean',
@@ -40,6 +41,7 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: Record<string, unknown>) => {
+  // @ts-expect-error - Types not available for JS files
   const { handler } = await import('./type-checkHandler.js')
   return handler(options)
 }

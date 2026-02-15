@@ -21,6 +21,7 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: Record<string, unknown>) => {
+  // @ts-expect-error - Types not available for JS files
   const { handler } = await import('./prismaHandler.js')
   return handler(options)
 }

@@ -2,7 +2,7 @@ import type { AttributeValue, Span } from '@opentelemetry/api'
 import opentelemetry, { SpanStatusCode } from '@opentelemetry/api'
 
 type TelemetryAttributes = {
-  [key: string]: AttributeValue
+  [key: string]: AttributeValue | undefined
 }
 
 /**
@@ -16,11 +16,15 @@ export function recordTelemetryAttributes(
   span?: Span,
 ) {
   const spanToRecord = span ?? opentelemetry.trace.getActiveSpan()
+
   if (spanToRecord === undefined) {
     return
   }
+
   for (const [key, value] of Object.entries(attributes)) {
-    spanToRecord.setAttribute(key, value)
+    if (value) {
+      spanToRecord.setAttribute(key, value)
+    }
   }
 }
 

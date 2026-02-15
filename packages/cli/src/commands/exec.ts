@@ -36,6 +36,7 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: Record<string, unknown>) => {
+  // @ts-expect-error - Types not available for JS files
   const { handler } = await import('./execHandler.js')
   return handler(options)
 }

@@ -151,7 +151,7 @@ export const handler = async ({ force }: Args) => {
     },
     {
       title: 'One more thing...',
-      task: (ctx) => {
+      task: (ctx, task) => {
         notes.push(
           colors.important(
             (task.output =

@@ -15,7 +15,8 @@ export const builder = (yargs: Argv) => {
       default: workspaces(),
       description:
         'Which side(s) to test, and/or a regular expression to match against your test files to filter by',
-      type: 'array',
+      type: 'string',
+      array: true,
     })
     .option('watch', {
       describe:
@@ -46,6 +47,7 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: Record<string, unknown>) => {
+  // @ts-expect-error - Types not available for JS files
   const { handler } = await import('./testHandler.js')
   return handler(options)
 }

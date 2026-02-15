@@ -37,6 +37,7 @@ export const builder = async (yargs: Argv) => {
   const streamingEnabled = getConfig().experimental?.streamingSsr?.enabled
 
   yargs
+    // @ts-expect-error - Yargs command builder type in dependencies is narrower than runtime behavior
     .command({
       command: '$0',
       description: bothServerCLIConfig.description,
@@ -51,13 +52,13 @@ export const builder = async (yargs: Argv) => {
 
         // Run the server file, if it exists, with web side also
         if (serverFileExists()) {
-          const { bothServerFileHandler } =
-            await import('./serveBothHandler.js')
-          await bothServerFileHandler(argv)
+          // @ts-expect-error - Types not available for JS files
+          const serveBothHandlers = await import('./serveBothHandler.js')
+          await serveBothHandlers.bothServerFileHandler(argv)
         } else if (rscEnabled || streamingEnabled) {
-          const { bothSsrRscServerHandler } =
-            await import('./serveBothHandler.js')
-          await bothSsrRscServerHandler(argv, rscEnabled)
+          // @ts-expect-error - Types not available for JS files
+          const serveBothHandlers = await import('./serveBothHandler.js')
+          await serveBothHandlers.bothSsrRscServerHandler(argv, rscEnabled)
         } else {
           if (!projectIsEsm()) {
             const { handler } =
@@ -69,6 +70,7 @@ export const builder = async (yargs: Argv) => {
         }
       },
     })
+    // @ts-expect-error - Yargs TS types aren't very good
     .command({
       command: 'api',
       description: apiServerCLIConfig.description,
@@ -84,6 +86,7 @@ export const builder = async (yargs: Argv) => {
 
         // Run the server file, if it exists, api side only
         if (serverFileExists()) {
+          // @ts-expect-error - Types not available for JS files
           const { apiServerFileHandler } = await import('./serveApiHandler.js')
           await apiServerFileHandler(argv)
         } else {
@@ -97,6 +100,7 @@ export const builder = async (yargs: Argv) => {
         }
       },
     })
+    // @ts-expect-error - Yargs TS types aren't very good
     .command({
       command: 'web',
       description: webServerCLIConfig.description,
@@ -129,7 +133,7 @@ export const builder = async (yargs: Argv) => {
 
       if (
         positionalArgs.includes('web') &&
-        !fs.existsSync(path.join(getPaths().web.dist), 'index.html')
+        !fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
       ) {
         console.error(
           c.error(
@@ -175,7 +179,7 @@ export const builder = async (yargs: Argv) => {
         if (
           (fs.existsSync(path.join(getPaths().api.base)) &&
             !fs.existsSync(path.join(getPaths().api.dist))) ||
-          !fs.existsSync(path.join(getPaths().web.dist), 'index.html')
+          !fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
         ) {
           console.error(
             c.error(
