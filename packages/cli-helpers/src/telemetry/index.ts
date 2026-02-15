@@ -22,7 +22,7 @@ export function recordTelemetryAttributes(
   }
 
   for (const [key, value] of Object.entries(attributes)) {
-    if (value) {
+    if (value !== undefined) {
       spanToRecord.setAttribute(key, value)
     }
   }
