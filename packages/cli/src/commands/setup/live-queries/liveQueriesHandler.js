@@ -156,7 +156,7 @@ export const handler = async ({ force }) => {
   const listenerTemplatePath = path.resolve(
     import.meta.dirname,
     'templates',
-    'listener.ts.template',
+    'liveQueriesListener.ts.template',
   )
 
   const existingMigrationPath = findExistingLiveQueryMigration({

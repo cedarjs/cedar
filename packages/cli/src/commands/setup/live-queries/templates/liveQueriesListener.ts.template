@@ -2,7 +2,7 @@ import { Client } from 'pg'
 
 import { liveQueryStore } from '@cedarjs/realtime'
 
-import { logger } from './logger'
+import { logger } from 'src/lib/logger'
 
 const LIVE_QUERY_CHANNEL = 'table_change'
 const RECONNECT_DELAY_MS = 5000
@@ -11,13 +11,13 @@ let client: Client | undefined
 let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 let started = false
 
-const getKeysToInvalidate = ({
+function getKeysToInvalidate({
   table,
   record,
 }: {
   table: string
   record: unknown
-}) => {
+}) {
   const keys = [`Query.${table}`]
 
   if (
@@ -33,7 +33,7 @@ const getKeysToInvalidate = ({
   return keys
 }
 
-const reconnect = () => {
+function reconnect() {
   if (reconnectTimeout) {
     return
   }
@@ -44,7 +44,7 @@ const reconnect = () => {
   }, RECONNECT_DELAY_MS)
 }
 
-const onNotification = async (payload: string | undefined) => {
+async function onNotification(payload: string | undefined) {
   if (!payload) {
     return
   }
@@ -62,14 +62,17 @@ const onNotification = async (payload: string | undefined) => {
 
     logger.debug(
       { operation: parsed.operation, table: parsed.table, keys },
-      'Invalidated live query keys from Postgres notification',
+      'Invalidated live query keys from Postgres notification'
     )
   } catch (error) {
-    logger.error({ error, payload }, 'Failed to process Postgres notification payload')
+    logger.error(
+      { error, payload },
+      'Failed to process Postgres notification payload'
+    )
   }
 }
 
-const connect = async () => {
+async function connect() {
   try {
     if (client) {
       await client.end()
@@ -84,7 +87,10 @@ const connect = async () => {
     })
 
     client.on('error', (error) => {
-      logger.error({ error }, 'Postgres live query listener encountered an error')
+      logger.error(
+        { error },
+        'Postgres live query listener encountered an error'
+      )
       reconnect()
     })
 
@@ -103,7 +109,7 @@ const connect = async () => {
   }
 }
 
-export const startLiveQueryListener = async () => {
+export async function startLiveQueryListener() {
   if (started) {
     return
   }
