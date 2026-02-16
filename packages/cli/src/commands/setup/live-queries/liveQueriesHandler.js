@@ -4,7 +4,7 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
-import { getMigrationsPath } from '@cedarjs/project-config'
+import { getMigrationsPath, getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
@@ -21,6 +21,63 @@ const hasPackage = (packageJson, packageName) => {
     packageJson.dependencies?.[packageName] ||
     packageJson.devDependencies?.[packageName],
   )
+}
+
+/**
+ * Resolve the Prisma schema path using the project's Prisma config and read the
+ * provider from the schema file. This function is intentionally permissive:
+ * - If it can't resolve the schema or read the file it returns undefined.
+ * - It prefers to allow the setup to continue rather than produce false
+ *   positives by throwing on ambiguous content.
+ *
+ * @returns {Promise<string|undefined>} provider name in lowercase, or undefined
+ */
+const getPrismaProvider = async () => {
+  try {
+    const prismaConfigPath = getPaths().api.prismaConfig
+
+    if (!prismaConfigPath) {
+      return undefined
+    }
+
+    let schemaPath = await getSchemaPath(prismaConfigPath)
+
+    if (!schemaPath) {
+      return undefined
+    }
+
+    // If schemaPath is a directory, look for a schema.prisma file inside it.
+    let stat
+    try {
+      stat = fs.statSync(schemaPath)
+    } catch (e) {
+      stat = undefined
+    }
+
+    if (stat && stat.isDirectory()) {
+      const candidate = path.join(schemaPath, 'schema.prisma')
+      if (fs.existsSync(candidate)) {
+        schemaPath = candidate
+      } else {
+        return undefined
+      }
+    }
+
+    if (!fs.existsSync(schemaPath)) {
+      return undefined
+    }
+
+    const content = fs.readFileSync(schemaPath, 'utf-8')
+    const match = content.match(/^\s*provider\s*=\s*["']([^"']+)["']/im)
+    if (match && match[1]) {
+      return match[1].toLowerCase()
+    }
+
+    return undefined
+  } catch {
+    // Be permissive: return undefined on any unexpected error
+    return undefined
+  }
 }
 
 const findExistingLiveQueryMigration = ({ migrationsDirectoryPath }) => {
@@ -184,6 +241,26 @@ export const handler = async ({ force }) => {
             throw new Error(
               '@cedarjs/realtime is not installed in your api workspace. ' +
                 `Please run ${c.highlight('yarn cedar setup realtime')} first.`,
+            )
+          }
+        },
+      },
+      {
+        title: 'Checking that your database provider is PostgreSQL...',
+        task: async () => {
+          const prismaProvider = await getPrismaProvider()
+
+          const unsupportedProviders = new Set([
+            'sqlite',
+            'mysql',
+            'mongodb',
+            'sqlserver',
+            'cockroachdb',
+          ])
+
+          if (prismaProvider && unsupportedProviders.has(prismaProvider)) {
+            throw new Error(
+              `Only PostgreSQL is supported for now (found provider "${prismaProvider}").`,
             )
           }
         },
