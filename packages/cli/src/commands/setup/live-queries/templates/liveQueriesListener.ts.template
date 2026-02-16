@@ -10,6 +10,7 @@ const RECONNECT_DELAY_MS = 5000
 let client: Client | undefined
 let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 let started = false
+let connectionGeneration = 0
 
 interface GetKeysToInvalidateArgs {
   table: string
@@ -36,13 +37,18 @@ function isRecordWithId(record: unknown): record is { id: unknown } {
   )
 }
 
-function reconnect() {
+function reconnect(generation: number) {
   if (reconnectTimeout) {
     return
   }
 
   reconnectTimeout = setTimeout(async () => {
     reconnectTimeout = undefined
+
+    if (generation !== connectionGeneration) {
+      return
+    }
+
     await connect()
   }, RECONNECT_DELAY_MS)
 }
@@ -77,39 +83,57 @@ async function onNotification(payload: string | undefined) {
 }
 
 async function connect() {
+  connectionGeneration = connectionGeneration + 1
+  const generation = connectionGeneration
+
   try {
-    if (client) {
-      await client.end()
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout)
+      reconnectTimeout = undefined
     }
 
-    client = new Client({
+    if (client) {
+      const previousClient = client
+      client = undefined
+      previousClient.removeAllListeners()
+      await previousClient.end().catch(() => {})
+    }
+
+    const nextClient = new Client({
       connectionString: process.env.DATABASE_URL,
     })
 
-    client.on('notification', async (msg) => {
+    nextClient.on('notification', async (msg) => {
       await onNotification(msg.payload)
     })
 
-    client.on('error', (error) => {
+    nextClient.on('error', (error) => {
       logger.error(
         { error },
         'Postgres live query listener encountered an error'
       )
-      reconnect()
+      reconnect(generation)
     })
 
-    client.on('end', () => {
+    nextClient.on('end', () => {
       logger.warn('Postgres live query listener disconnected')
-      reconnect()
+      reconnect(generation)
     })
 
-    await client.connect()
-    await client.query(`LISTEN ${LIVE_QUERY_CHANNEL}`)
+    await nextClient.connect()
+    await nextClient.query(`LISTEN ${LIVE_QUERY_CHANNEL}`)
 
+    if (generation !== connectionGeneration) {
+      nextClient.removeAllListeners()
+      await nextClient.end().catch(() => {})
+      return
+    }
+
+    client = nextClient
     logger.info('Postgres live query listener connected')
   } catch (error) {
     logger.error({ error }, 'Failed to connect Postgres live query listener')
-    reconnect()
+    reconnect(generation)
   }
 }
 
