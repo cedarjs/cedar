@@ -10,7 +10,7 @@ import BlogPost from 'src/components/BlogPost'
 
 export const QUERY: TypedDocumentNode<BlogPostsQuery, BlogPostsQueryVariables> =
   gql`
-    query BlogPostsQuery @live {
+    query BlogPostsQuery {
       blogPosts: posts {
         id
         title

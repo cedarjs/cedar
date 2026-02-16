@@ -4,15 +4,8 @@
   "private": true,
   "dependencies": {
     "@cedarjs/api": "3.0.0-canary.13223+9e1d1011b",
-    "@cedarjs/api-server": "2.6.0",
     "@cedarjs/auth-dbauth-api": "3.0.0-canary.13223+9e1d1011b",
     "@cedarjs/graphql-server": "3.0.0-canary.13223+9e1d1011b",
-    "@cedarjs/realtime": "2.6.0",
-    "@my-org/validators": "workspace:*",
-    "ioredis": "^5",
-    "pg": "^8.18.0"
-  },
-  "devDependencies": {
-    "@types/pg": "^8"
+    "@my-org/validators": "workspace:*"
   }
 }
