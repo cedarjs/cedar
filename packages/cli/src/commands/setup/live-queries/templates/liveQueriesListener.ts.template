@@ -11,26 +11,29 @@ let client: Client | undefined
 let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 let started = false
 
-function getKeysToInvalidate({
-  table,
-  record,
-}: {
+interface GetKeysToInvalidateArgs {
   table: string
   record: unknown
-}) {
-  const keys = [`Query.${table}`]
+}
 
-  if (
+function getKeysToInvalidate({ table, record }: GetKeysToInvalidateArgs) {
+  const keys = [`Query.${table}`, `Query.${table.toLocaleLowerCase()}`]
+
+  if (isRecordWithId(record)) {
+    keys.push(`${table}:${String(record.id)}`)
+  }
+
+  return keys
+}
+
+function isRecordWithId(record: unknown): record is { id: unknown } {
+  return (
     record &&
     typeof record === 'object' &&
     'id' in record &&
     record.id !== undefined &&
     record.id !== null
-  ) {
-    keys.push(`${table}:${String(record.id)}`)
-  }
-
-  return keys
+  )
 }
 
 function reconnect() {
@@ -44,18 +47,19 @@ function reconnect() {
   }, RECONNECT_DELAY_MS)
 }
 
+interface NotificationPayload {
+  table: string
+  operation: string
+  record: unknown
+}
+
 async function onNotification(payload: string | undefined) {
   if (!payload) {
     return
   }
 
   try {
-    const parsed = JSON.parse(payload) as {
-      table: string
-      operation: string
-      record: unknown
-    }
-
+    const parsed: NotificationPayload = JSON.parse(payload)
     const keys = getKeysToInvalidate(parsed)
 
     await liveQueryStore?.invalidate(keys)
