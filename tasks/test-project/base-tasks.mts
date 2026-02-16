@@ -688,9 +688,11 @@ async function addDbAuth(
     const apiPkg = path.join(dbAuthPackagePath, 'api')
     const webPkg = path.join(dbAuthPackagePath, 'web')
 
-    await exec('yarn build:pack', [], getExecaOptions(setupPkg))
-    await exec('yarn build:pack', [], getExecaOptions(apiPkg))
-    await exec('yarn build:pack', [], getExecaOptions(webPkg))
+    await Promise.all([
+      exec('yarn build:pack', [], getExecaOptions(setupPkg)),
+      exec('yarn build:pack', [], getExecaOptions(apiPkg)),
+      exec('yarn build:pack', [], getExecaOptions(webPkg)),
+    ])
 
     const setupTgz = path.join(setupPkg, 'cedarjs-auth-dbauth-setup.tgz')
     const apiTgz = path.join(apiPkg, 'cedarjs-auth-dbauth-api.tgz')
