@@ -211,7 +211,7 @@ export const useCedarRealtime = (options: CedarRealtimeOptions): Plugin => {
 
       pubSub = createPubSub({ eventTarget })
     } else {
-      throw new Error('Invalid live query store configuration.')
+      throw new Error('Invalid subscriptions store configuration.')
     }
   }
 
