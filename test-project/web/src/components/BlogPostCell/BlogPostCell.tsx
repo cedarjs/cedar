@@ -15,7 +15,7 @@ export const QUERY: TypedDocumentNode<
   FindBlogPostQuery,
   FindBlogPostQueryVariables
 > = gql`
-  query FindBlogPostQuery($id: Int!) {
+  query FindBlogPostQuery($id: ID!) @live {
     blogPost: post(id: $id) {
       id
       title

@@ -1,0 +1,53 @@
+CREATE OR REPLACE FUNCTION cedar_notify_table_change() RETURNS TRIGGER AS $$
+DECLARE
+  record_data json;
+BEGIN
+  IF (TG_OP = 'DELETE') THEN
+    record_data = row_to_json(OLD);
+  ELSE
+    record_data = row_to_json(NEW);
+  END IF;
+
+  PERFORM pg_notify(
+    'table_change',
+    json_build_object(
+      'schema', TG_TABLE_SCHEMA,
+      'table', TG_TABLE_NAME,
+      'operation', TG_OP,
+      'record', record_data
+    )::text
+  );
+
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION cedar_attach_notify_triggers() RETURNS void AS $$
+DECLARE
+  table_record record;
+BEGIN
+  FOR table_record IN
+    SELECT table_schema, table_name
+    FROM information_schema.tables
+    WHERE table_type = 'BASE TABLE'
+      AND table_schema NOT IN ('pg_catalog', 'information_schema')
+      AND table_name <> '_prisma_migrations'
+  LOOP
+    EXECUTE format(
+      'DROP TRIGGER IF EXISTS cedar_notify_change_trigger ON %I.%I',
+      table_record.table_schema,
+      table_record.table_name
+    );
+
+    EXECUTE format(
+      'CREATE TRIGGER cedar_notify_change_trigger
+       AFTER INSERT OR UPDATE OR DELETE ON %I.%I
+       FOR EACH ROW EXECUTE FUNCTION cedar_notify_table_change()',
+      table_record.table_schema,
+      table_record.table_name
+    );
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT cedar_attach_notify_triggers();

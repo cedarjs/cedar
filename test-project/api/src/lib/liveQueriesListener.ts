@@ -1,0 +1,123 @@
+import { Client } from 'pg'
+
+import { liveQueryStore } from '@cedarjs/realtime'
+
+import { logger } from 'src/lib/logger'
+
+const LIVE_QUERY_CHANNEL = 'table_change'
+const RECONNECT_DELAY_MS = 5000
+
+let client: Client | undefined
+let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
+let started = false
+
+interface GetKeysToInvalidateArgs {
+  table: string
+  record: unknown
+}
+
+function getKeysToInvalidate({ table, record }: GetKeysToInvalidateArgs) {
+  const keys = [`Query.${table}`, `Query.${table.toLocaleLowerCase()}`]
+
+  if (isRecordWithId(record)) {
+    keys.push(`${table}:${String(record.id)}`)
+  }
+
+  return keys
+}
+
+function isRecordWithId(record: unknown): record is { id: unknown } {
+  return (
+    record &&
+    typeof record === 'object' &&
+    'id' in record &&
+    record.id !== undefined &&
+    record.id !== null
+  )
+}
+
+function reconnect() {
+  if (reconnectTimeout) {
+    return
+  }
+
+  reconnectTimeout = setTimeout(async () => {
+    reconnectTimeout = undefined
+    await connect()
+  }, RECONNECT_DELAY_MS)
+}
+
+interface NotificationPayload {
+  table: string
+  operation: string
+  record: unknown
+}
+
+async function onNotification(payload: string | undefined) {
+  if (!payload) {
+    return
+  }
+
+  try {
+    const parsed: NotificationPayload = JSON.parse(payload)
+    const keys = getKeysToInvalidate(parsed)
+
+    await liveQueryStore?.invalidate(keys)
+
+    logger.debug(
+      { operation: parsed.operation, table: parsed.table, keys },
+      'Invalidated live query keys from Postgres notification'
+    )
+  } catch (error) {
+    logger.error(
+      { error, payload },
+      'Failed to process Postgres notification payload'
+    )
+  }
+}
+
+async function connect() {
+  try {
+    if (client) {
+      await client.end()
+    }
+
+    client = new Client({
+      connectionString: process.env.DATABASE_URL,
+    })
+
+    client.on('notification', async (msg) => {
+      await onNotification(msg.payload)
+    })
+
+    client.on('error', (error) => {
+      logger.error(
+        { error },
+        'Postgres live query listener encountered an error'
+      )
+      reconnect()
+    })
+
+    client.on('end', () => {
+      logger.warn('Postgres live query listener disconnected')
+      reconnect()
+    })
+
+    await client.connect()
+    await client.query(`LISTEN ${LIVE_QUERY_CHANNEL}`)
+
+    logger.info('Postgres live query listener connected')
+  } catch (error) {
+    logger.error({ error }, 'Failed to connect Postgres live query listener')
+    reconnect()
+  }
+}
+
+export async function startLiveQueryListener() {
+  if (started) {
+    return
+  }
+
+  started = true
+  await connect()
+}

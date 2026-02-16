@@ -10,7 +10,7 @@ import Post from 'src/components/Post/Post'
 
 export const QUERY: TypedDocumentNode<FindPostById, FindPostByIdVariables> =
   gql`
-    query FindPostById($id: Int!) {
+    query FindPostById($id: ID!) {
       post: post(id: $id) {
         id
         title

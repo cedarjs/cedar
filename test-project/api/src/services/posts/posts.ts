@@ -12,7 +12,7 @@ export const posts: QueryResolvers['posts'] = () => {
 
 export const post: QueryResolvers['post'] = ({ id }) => {
   return db.post.findUnique({
-    where: { id },
+    where: { id: parseInt(id, 10) },
   })
 }
 
@@ -25,13 +25,13 @@ export const createPost: MutationResolvers['createPost'] = ({ input }) => {
 export const updatePost: MutationResolvers['updatePost'] = ({ id, input }) => {
   return db.post.update({
     data: input,
-    where: { id },
+    where: { id: parseInt(id, 10) },
   })
 }
 
 export const deletePost: MutationResolvers['deletePost'] = ({ id }) => {
   return db.post.delete({
-    where: { id },
+    where: { id: parseInt(id, 10) },
   })
 }
 

@@ -9,6 +9,10 @@
     "@cedarjs/graphql-server": "3.0.0-canary.13223+9e1d1011b",
     "@cedarjs/realtime": "2.6.0",
     "@my-org/validators": "workspace:*",
-    "ioredis": "^5"
+    "ioredis": "^5",
+    "pg": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8"
   }
 }

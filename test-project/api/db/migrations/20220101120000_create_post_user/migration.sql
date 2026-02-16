@@ -1,18 +1,8 @@
 -- CreateTable
 CREATE TABLE "UserExample" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" SERIAL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "name" TEXT
-);
-
--- CreateTable
-CREATE TABLE "Post" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "title" TEXT NOT NULL,
-    "body" TEXT NOT NULL,
-    "authorId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -23,8 +13,18 @@ CREATE TABLE "User" (
     "fullName" TEXT NOT NULL,
     "salt" TEXT NOT NULL,
     "resetToken" TEXT,
-    "resetTokenExpiresAt" DATETIME,
+    "resetTokenExpiresAt" TIMESTAMP(3),
     "roles" TEXT
+);
+
+-- CreateTable
+CREATE TABLE "Post" (
+    "id" SERIAL PRIMARY KEY,
+    "title" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "authorId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateIndex
