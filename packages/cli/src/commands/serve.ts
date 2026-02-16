@@ -133,7 +133,7 @@ export const builder = async (yargs: Argv) => {
 
       if (
         positionalArgs.includes('web') &&
-        !fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
+        !webSideIsBuilt(streamingEnabled || rscEnabled)
       ) {
         console.error(
           c.error(
@@ -169,21 +169,26 @@ export const builder = async (yargs: Argv) => {
         if (!apiSideExists && !rscEnabled) {
           console.error(
             c.error(
-              '\n Unable to serve the both sides as no `api` folder exists. Please use `yarn cedar serve web` instead. \n',
+              '\nUnable to serve web and api as no `api` folder exists. ' +
+                'Please use `yarn cedar serve web` instead. \n',
             ),
           )
           process.exit(1)
         }
 
         // We need the web side (and api side, if it exists) to have been built
+
+        const apiExistsButIsNotBuilt =
+          apiSideExists && !fs.existsSync(getPaths().api.dist)
+
         if (
-          (fs.existsSync(path.join(getPaths().api.base)) &&
-            !fs.existsSync(path.join(getPaths().api.dist))) ||
-          !fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
+          apiExistsButIsNotBuilt ||
+          !webSideIsBuilt(streamingEnabled || rscEnabled)
         ) {
           console.error(
             c.error(
-              '\n Please run `yarn cedar build` before trying to serve your redwood app. \n',
+              '\nPlease run `yarn cedar build` before trying to serve your ' +
+                'Cedar app.\n',
             ),
           )
           process.exit(1)
@@ -201,4 +206,20 @@ export const builder = async (yargs: Argv) => {
         'https://cedarjs.com/docs/cli-commands#serve',
       )}`,
     )
+}
+
+function webSideIsBuilt(isStreamingOrRSC: boolean) {
+  // For Streaming and RSC apps the traditional SPA flow (index.html →
+  // load JS → render client-side) is replaced by: server receives request →
+  // renders React to HTML stream → sends HTML with hydration hooks →
+  // client hydrates. That's why checking for index.html is wrong for SSR/RSC
+  // apps. Instead we check for the manifest file that both streaming and RSC
+  // uses.
+  if (isStreamingOrRSC) {
+    return fs.existsSync(
+      path.join(getPaths().web.distBrowser, 'client-build-manifest.json'),
+    )
+  } else {
+    return fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
+  }
 }
