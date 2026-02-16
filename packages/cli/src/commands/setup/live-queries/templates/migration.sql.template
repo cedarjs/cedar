@@ -1,11 +1,11 @@
 CREATE OR REPLACE FUNCTION cedar_notify_table_change() RETURNS TRIGGER AS $$
 DECLARE
-  record_data json;
+  record_id text;
 BEGIN
   IF (TG_OP = 'DELETE') THEN
-    record_data = row_to_json(OLD);
+    record_id := OLD.id::text;
   ELSE
-    record_data = row_to_json(NEW);
+    record_id := NEW.id::text;
   END IF;
 
   PERFORM pg_notify(
@@ -14,7 +14,7 @@ BEGIN
       'schema', TG_TABLE_SCHEMA,
       'table', TG_TABLE_NAME,
       'operation', TG_OP,
-      'record', record_data
+      'recordId', record_id
     )::text
   );
 

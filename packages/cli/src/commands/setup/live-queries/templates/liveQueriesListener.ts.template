@@ -14,27 +14,17 @@ let connectionGeneration = 0
 
 interface GetKeysToInvalidateArgs {
   table: string
-  record: unknown
+  recordId: string
 }
 
-function getKeysToInvalidate({ table, record }: GetKeysToInvalidateArgs) {
-  const keys = [`Query.${table}`, `Query.${table.toLocaleLowerCase()}`]
-
-  if (isRecordWithId(record)) {
-    keys.push(`${table}:${String(record.id)}`)
-  }
+function getKeysToInvalidate({ table, recordId }: GetKeysToInvalidateArgs) {
+  const keys = [
+    `Query.${table}`,
+    `Query.${table.toLocaleLowerCase()}`,
+    `${table}:${recordId}`
+  ]
 
   return keys
-}
-
-function isRecordWithId(record: unknown): record is { id: unknown } {
-  return (
-    record &&
-    typeof record === 'object' &&
-    'id' in record &&
-    record.id !== undefined &&
-    record.id !== null
-  )
 }
 
 function reconnect(generation: number) {
