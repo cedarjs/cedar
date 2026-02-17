@@ -282,7 +282,12 @@ export const handler = async ({ force }) => {
             'utf-8',
           )
 
-          writeFile(migrationPath, migrationTemplate, {
+          const targetPath =
+            force && existingMigrationPath
+              ? existingMigrationPath
+              : migrationPath
+
+          writeFile(targetPath, migrationTemplate, {
             overwriteExisting: force,
           })
         },
