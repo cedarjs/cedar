@@ -11,7 +11,6 @@ BEGIN
   PERFORM pg_notify(
     'table_change',
     json_build_object(
-      'schema', TG_TABLE_SCHEMA,
       'table', TG_TABLE_NAME,
       'operation', TG_OP,
       'recordId', record_id
@@ -95,4 +94,5 @@ $$ LANGUAGE plpgsql;
 
 CREATE EVENT TRIGGER cedar_on_create_table
   ON ddl_command_end
-  WHEN TAG IN ('CREATE TABLE', 'CREATE TABLE AS');
+  WHEN TAG IN ('CREATE TABLE', 'CREATE TABLE AS')
+  EXECUTE FUNCTION cedar_event_on_table_create();

@@ -46,7 +46,7 @@ function reconnect(generation: number) {
 interface NotificationPayload {
   table: string
   operation: string
-  record: unknown
+  recordId: string
 }
 
 async function onNotification(payload: string | undefined) {
