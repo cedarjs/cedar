@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'path'
 
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
@@ -9,26 +10,39 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
+// @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
 
+// @ts-expect-error - Types not available for JS files
 import { webSsrServerHandler } from './serveWebHandler.js'
 
 export const command = 'serve [side]'
 export const description =
   'Start a server for serving both the api and web sides'
+type ServeArgv = Record<string, unknown> & {
+  _: (string | number)[]
+  port?: number
+  host?: string
+  socket?: string
+  apiRootPath?: string
+  apiHost?: string
+}
 
-export const builder = async (yargs) => {
+export const builder = async (yargs: Argv) => {
   const rscEnabled = getConfig().experimental?.rsc?.enabled
   const streamingEnabled = getConfig().experimental?.streamingSsr?.enabled
 
   yargs
+    // @ts-expect-error - Yargs TS types aren't very good
     .command({
       command: '$0',
       description: bothServerCLIConfig.description,
       builder: bothServerCLIConfig.builder,
-      handler: async (argv) => {
+      handler: async (argv: ServeArgv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
@@ -38,13 +52,13 @@ export const builder = async (yargs) => {
 
         // Run the server file, if it exists, with web side also
         if (serverFileExists()) {
-          const { bothServerFileHandler } =
-            await import('./serveBothHandler.js')
-          await bothServerFileHandler(argv)
+          // @ts-expect-error - Types not available for JS files
+          const serveBothHandlers = await import('./serveBothHandler.js')
+          await serveBothHandlers.bothServerFileHandler(argv)
         } else if (rscEnabled || streamingEnabled) {
-          const { bothSsrRscServerHandler } =
-            await import('./serveBothHandler.js')
-          await bothSsrRscServerHandler(argv, rscEnabled)
+          // @ts-expect-error - Types not available for JS files
+          const serveBothHandlers = await import('./serveBothHandler.js')
+          await serveBothHandlers.bothSsrRscServerHandler(argv, rscEnabled)
         } else {
           if (!projectIsEsm()) {
             const { handler } =
@@ -56,11 +70,12 @@ export const builder = async (yargs) => {
         }
       },
     })
+    // @ts-expect-error - Yargs TS types aren't very good
     .command({
       command: 'api',
       description: apiServerCLIConfig.description,
       builder: apiServerCLIConfig.builder,
-      handler: async (argv) => {
+      handler: async (argv: ServeArgv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
@@ -71,6 +86,7 @@ export const builder = async (yargs) => {
 
         // Run the server file, if it exists, api side only
         if (serverFileExists()) {
+          // @ts-expect-error - Types not available for JS files
           const { apiServerFileHandler } = await import('./serveApiHandler.js')
           await apiServerFileHandler(argv)
         } else {
@@ -84,11 +100,12 @@ export const builder = async (yargs) => {
         }
       },
     })
+    // @ts-expect-error - Yargs TS types aren't very good
     .command({
       command: 'web',
       description: webServerCLIConfig.description,
       builder: webServerCLIConfig.builder,
-      handler: async (argv) => {
+      handler: async (argv: ServeArgv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
@@ -106,7 +123,7 @@ export const builder = async (yargs) => {
         }
       },
     })
-    .middleware((argv) => {
+    .middleware((argv: ServeArgv) => {
       recordTelemetryAttributes({
         command: 'serve',
       })
@@ -116,7 +133,7 @@ export const builder = async (yargs) => {
 
       if (
         positionalArgs.includes('web') &&
-        !fs.existsSync(path.join(getPaths().web.dist), 'index.html')
+        !webSideIsBuilt(streamingEnabled || rscEnabled)
       ) {
         console.error(
           c.error(
@@ -152,21 +169,26 @@ export const builder = async (yargs) => {
         if (!apiSideExists && !rscEnabled) {
           console.error(
             c.error(
-              '\n Unable to serve the both sides as no `api` folder exists. Please use `yarn cedar serve web` instead. \n',
+              '\nUnable to serve web and api as no `api` folder exists. ' +
+                'Please use `yarn cedar serve web` instead. \n',
             ),
           )
           process.exit(1)
         }
 
         // We need the web side (and api side, if it exists) to have been built
+
+        const apiExistsButIsNotBuilt =
+          apiSideExists && !fs.existsSync(getPaths().api.dist)
+
         if (
-          (fs.existsSync(path.join(getPaths().api.base)) &&
-            !fs.existsSync(path.join(getPaths().api.dist))) ||
-          !fs.existsSync(path.join(getPaths().web.dist), 'index.html')
+          apiExistsButIsNotBuilt ||
+          !webSideIsBuilt(streamingEnabled || rscEnabled)
         ) {
           console.error(
             c.error(
-              '\n Please run `yarn cedar build` before trying to serve your redwood app. \n',
+              '\nPlease run `yarn cedar build` before trying to serve your ' +
+                'Cedar app.\n',
             ),
           )
           process.exit(1)
@@ -184,4 +206,20 @@ export const builder = async (yargs) => {
         'https://cedarjs.com/docs/cli-commands#serve',
       )}`,
     )
+}
+
+function webSideIsBuilt(isStreamingOrRSC: boolean) {
+  // For Streaming and RSC apps the traditional SPA flow (index.html →
+  // load JS → render client-side) is replaced by: server receives request →
+  // renders React to HTML stream → sends HTML with hydration hooks →
+  // client hydrates. That's why checking for index.html is wrong for SSR/RSC
+  // apps. Instead we check for the manifest file that both streaming and RSC
+  // uses.
+  if (isStreamingOrRSC) {
+    return fs.existsSync(
+      path.join(getPaths().web.distBrowser, 'client-build-manifest.json'),
+    )
+  } else {
+    return fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
+  }
 }
