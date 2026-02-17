@@ -1,11 +1,14 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { workspaces } from '../lib/project.js'
 
 export const command = 'test [filter..]'
 export const description = 'Run Vitest tests. Defaults to watch mode'
-export const builder = (yargs) => {
+export const builder = (yargs: Argv) => {
   const cliDocsLink = terminalLink(
     'CedarJS CLI Reference',
     'https://cedarjs.com/docs/cli-commands#test',
@@ -19,7 +22,8 @@ export const builder = (yargs) => {
       description:
         'Which side(s) to test, and/or a regular expression to match against ' +
         'your test files to filter by',
-      type: 'array',
+      type: 'string',
+      array: true,
     })
     .option('db-push', {
       describe:
@@ -34,7 +38,8 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: Record<string, unknown>) => {
+  // @ts-expect-error - Types not available for JS files
   const { handler } = await import('./testHandlerEsm.js')
   return handler(options)
 }

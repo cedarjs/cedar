@@ -3,7 +3,7 @@ import '../../lib/mockTelemetry'
 
 import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
-import { handler } from '../info.js'
+import { handler } from '../info.ts'
 
 vi.mock('envinfo', () => ({ default: { run: () => '' } }))
 vi.mock('@cedarjs/project-config', () => ({
