@@ -1,8 +1,26 @@
-# Plan: Cut `rebuild-test-project-fixture` Execution Time in Half
+# Plan: Cut `rebuild-test-project-fixture` Execution Time in Half (With Output Parity + Command Realism)
 
 **Current total: ~179s → Target: ~90s (need to save ~89s)**
 
-## Current Timing Breakdown
+This revised plan explicitly prioritizes:
+
+- **Output parity**: no changes to final fixture contents or structure (including keeping two separate migrations if that is part of current output).
+- **Command realism**: preserve the script’s role as an integration/e2e exercise of real Cedar user workflows (`yarn cedar ...`, `yarn install`, etc.).
+- **Measurable wins over noise**: runtime variance is currently ~±5s, so we only accept changes that clearly beat measurement noise.
+
+---
+
+## Hard Constraints (Non-Negotiable)
+
+- [x] Do **not** change fixture output shape/content as a speed optimization.
+- [x] Do **not** replace user-facing Cedar CLI workflows with synthetic shortcuts.
+- [x] Keep two migration steps if current output expects two migrations.
+- [x] Prefer optimizations that improve orchestration, concurrency, and process overhead while preserving command semantics.
+- [x] Every claimed win must be validated with repeatable benchmarking.
+
+---
+
+## Baseline Timing Context
 
 | Step | Description                    | Duration   | Notes                                      |
 | ---- | ------------------------------ | ---------- | ------------------------------------------ |
@@ -21,254 +39,159 @@
 | 12   | Lint fix                       | 3.94s      |                                            |
 | 13   | Replace + cleanup              | 4.54s      |                                            |
 
-### Step 7 Sub-steps (Web Codemods — 46.99s)
-
-| Sub-step | Description                                                | Duration |
-| -------- | ---------------------------------------------------------- | -------- |
-| 7.0      | Create pages (nested, 7 sub-tasks)                         | 17.83s   |
-| 7.0.0    | Home page (`yarn cedar g page` + codemod)                  | 5.57s    |
-| 7.0.1    | About page                                                 | 2.26s    |
-| 7.0.2    | Contact page                                               | 2.20s    |
-| 7.0.3    | Blog post page                                             | 2.74s    |
-| 7.0.4    | Profile page                                               | 2.20s    |
-| 7.0.5    | MDX story (file write only)                                | 0.00s    |
-| 7.0.6    | Waterfall page                                             | 2.85s    |
-| 7.1      | Create layout (`yarn cedar g layout` + codemod)            | 1.25s    |
-| 7.2      | Create components (3× `yarn cedar g component` + codemods) | 4.84s    |
-| 7.3      | Create cells (4× `yarn cedar g cell` + codemods)           | 10.87s   |
-| 7.4      | Update cell mocks (4× `applyCodemod`)                      | 2.26s    |
-| 7.5      | Routes codemod                                             | 0.59s    |
-| 7.6      | Tailwind setup (`yarn cedar setup ui tailwindcss`)         | 9.36s    |
-
-### Step 8 Sub-steps (API Codemods — 39.61s)
-
-| Sub-step | Description                                       | Duration   |
-| -------- | ------------------------------------------------- | ---------- |
-| 8.0      | Add models + prisma migrate                       | 2.97s      |
-| 8.1      | Scaffold post                                     | 8.16s      |
-| 8.2      | Seed script (codemod)                             | 0.56s      |
-| 8.3      | Contact model + scaffold                          | 4.07s      |
-| 8.4      | Rename migration folders                          | 0.00s      |
-| 8.5      | Users service (SDL + codemod + types)             | 6.17s      |
-| 8.6      | **dbAuth** (build:pack ×3, install, setup, pages) | **15.53s** |
-| 8.7      | describeScenario tests (file copies)              | 0.00s      |
-| 8.8      | Prerender routes (page + Routes.tsx)              | 2.15s      |
-| 8.9      | Context tests (file copies)                       | 0.00s      |
-| 8.10     | Vitest tests (file copies)                        | 0.00s      |
+Hotspots remain step 7 + 8 + 1 + 3 + 9.
 
 ---
 
-## Key Observations
+## Measurement Plan First (Before More Refactors)
 
-1. **~30 `yarn jscodeshift` subprocess calls** across the script. Each spawns a
-   new Node process with ~0.5–1s overhead = 15–30s of pure process-spawning cost.
-2. **~15 `yarn cedar g` generator calls** (page ×6, component ×3, cell ×4,
-   layout ×1, scaffold ×2+). Each spawns Node, loads the framework, and writes
-   boilerplate that we immediately overwrite with codemods anyway.
-3. **Steps 7 and 8 are fully sequential** despite operating on mostly different
-   parts of the project (web vs api). The conflict points are limited to
-   `Routes.tsx` and type generation.
-4. **Three `yarn install` calls** in total: step 3, step 8.6 (dbAuth), step 9.
+Because run-to-run variance is ~5s, we need a stricter benchmark method.
 
----
+### Benchmark Protocol
 
-## Phase 1: Quick Wins (Est. savings: ~15s)
+- [ ] Run **7 iterations** per variant (baseline and candidate).
+- [ ] Use alternating order to reduce drift bias: `A B A B A B A`.
+- [ ] Capture:
+  - overall duration
+  - per-step durations (especially 7, 8, 9)
+  - median + p90 (not only average)
+- [ ] Keep environment stable:
+  - same Node/Yarn version
+  - same machine state as much as possible
+  - no extra heavy background jobs
+- [ ] Define acceptance gate:
+  - overall median improvement should be **>= 8s**, or
+  - clear repeated step-level improvement where the changed step drops materially beyond noise.
 
-Low-risk, small code changes.
+### Why this is required
 
-- [x] **Parallelize `build:pack` in `addDbAuth` (step 8.6)** — Already done.
-      Three independent `yarn build:pack` calls in separate directories.
-      _Saves ~5–8s from the 15.53s dbAuth step._
-
-- [ ] **Batch prisma migrations (steps 8.0 + 8.3)**
-      Currently two separate `yarn cedar prisma migrate dev` calls: one for
-      post+user models, one for contact model. Add all three models to
-      `schema.prisma` first, then run a single migration.
-      _Saves ~3s (eliminates one prisma client generation cycle)._
-
-- [ ] **Run `updateCellMocks` concurrently with Tailwind setup (steps 7.4 + 7.6)**
-      `updateCellMocks` (2.26s) applies 4 codemods to separate mock files.
-      `routes` codemod (0.59s) modifies Routes.tsx. Neither conflicts with
-      `yarn cedar setup ui tailwindcss` (9.36s) which modifies config files.
-      Restructure `webTasks` so that after cells are created, Tailwind setup starts
-      immediately while cell mocks and the routes codemod run alongside it.
-      _Saves ~3s (the mocks + routes work completes within Tailwind's 9.36s window)._
-
-- [ ] **Move pure file-copy tasks out of the sequential pipeline**
-      Steps 8.7 (describeScenario), 8.9 (context tests), 8.10 (vitest tests) are
-      all pure `fs.copyFileSync` calls taking ~0ms each but still incur the
-      `tuiTask` overhead. Merge them into a single step.
-      _Saves ~1s of task orchestration overhead._
+- [ ] Prevent false positives/negatives from noise.
+- [ ] Avoid churn on micro-optimizations that don’t move real wall-clock time.
 
 ---
 
-## Phase 2: Parallelize Generators Within Steps (Est. savings: ~15–20s)
+## What We Will Not Do (Given New Constraints)
 
-Medium-risk — requires verifying that Cedar generators don't conflict when
-operating on separate directories.
-
-- [ ] **Parallelize cell generation (step 7.3)**
-      `createCells` runs 4 sequential `yarn cedar g cell` calls (blogPosts,
-      blogPost, author, waterfallBlogPost). Each creates files in its own
-      `web/src/components/<Name>Cell/` directory. They don't touch Routes.tsx or
-      shared config. Run all 4 generators concurrently with `Promise.all`, then
-      apply their codemods (also independent files) concurrently.
-      _Saves ~7s (10.87s → ~4s — bounded by the slowest single generator)._
-
-- [ ] **Parallelize component generation (step 7.2)**
-      `createComponents` runs 3 sequential `yarn cedar g component` calls
-      (blogPost, author, classWithClassField). Same pattern — independent
-      directories, no shared files. Run concurrently.
-      _Saves ~3s (4.84s → ~2s)._
-
-- [ ] **Parallelize independent web generators (steps 7.1 + 7.2 + 7.3)**
-      Once individual generator parallelism is proven safe, go further: run
-      `createLayout`, `createComponents`, and `createCells` all concurrently since
-      they create files in completely separate directories.
-      _Saves additional ~5s on top of the per-step parallelism above (layout and
-      components complete within cells' window)._
+- [x] **No migration batching** that changes output from two migrations to one.
+- [x] **No replacing Cedar CLI generator/setup commands** with direct file writes solely for speed.
+- [x] **No “fake” integration path** that departs from what users actually run.
 
 ---
 
-## Phase 3: Parallelize Across Steps 7 and 8 (Est. savings: ~25–30s)
+## Revised Optimization Backlog (Constraint-Safe)
 
-Medium-to-high risk — requires restructuring the task pipeline. This is the
-single biggest opportunity.
+## Phase 1 — Safe, Behavior-Preserving Wins (near-term)
 
-### Why it's not trivial
+- [x] Parallelize dbAuth package `build:pack` calls in step 8.6 (already done).
+- [ ] Keep two migration commands (8.0 and 8.3) unchanged, but optimize around them.
+- [ ] Merge near-zero-cost copy-only subtasks (8.7, 8.9, 8.10) to reduce orchestration overhead.
+- [ ] Start measuring each candidate using the benchmark protocol above before keeping it.
 
-Steps 7 and 8 both touch `Routes.tsx`:
-
-- Page generators (step 7.0) add route entries
-- Scaffold generators (steps 8.1, 8.3) add route entries + web pages
-- dbAuth (step 8.6) generates auth pages + routes
-- Routes codemod (step 7.5) rewrites routes
-- Prerender (step 8.8) adds prerender flags to routes
-
-### Proposed restructuring
-
-Split the current steps 7 and 8 into dependency-aware groups that maximize
-concurrency:
-
-- [ ] **Group A — Non-route generators (run in parallel)**
-      All of these create files in isolated directories and don't touch Routes.tsx:
-  - Web: `createLayout`, `createComponents`, `createCells`, `updateCellMocks`
-  - API: Add all prisma models + run single batched migration (from Phase 1)
-  - Web: Tailwind setup
-    _Duration: ~11s (bounded by cells or Tailwind, whichever is longer)._
-    _Current sequential cost of these same tasks: ~33s._
-
-- [ ] **Group B — Route-touching generators (sequential, but after Group A)**
-      These must run sequentially because they each append to Routes.tsx:
-  - Page generators (home, about, contact, blogPost, profile, waterfall)
-  - Scaffold post
-  - Scaffold contacts
-  - Users service (SDL + types, doesn't touch routes but depends on scaffolds)
-    _Duration: ~26s (this is the unavoidable sequential core — see Phase 4 for
-    how to attack it)._
-
-- [ ] **Group C — Post-scaffold work (partially parallel)**
-  - dbAuth setup (can run as soon as scaffolds are done)
-  - Routes codemod (must run after all route-adding generators)
-  - Prerender routes (must run after routes codemod)
-  - describeScenario, context tests, vitest tests (file copies, run any time)
-    _Duration: ~16s (bounded by dbAuth)._
-
-**Net effect**: Current steps 7+8 take ~87s sequentially. With this grouping:
-~11s + ~26s + ~16s = ~53s. **Saves ~34s.**
+**Estimated cumulative impact**: small-to-moderate (~5–12s including already-landed win).
 
 ---
 
-## Phase 4: Eliminate Subprocess Overhead (Est. savings: ~20–30s)
+## Phase 2 — Concurrency Without Output Drift
 
-High effort, high reward. Attacks the root cause of why individual steps are
-slow.
+Goal: parallelize only independent work that does not alter final output or reduce command coverage.
 
-### 4a. Replace `applyCodemod` jscodeshift subprocesses with in-process transforms
+### Candidate A: Overlap non-conflicting web work
 
-- [ ] **Convert jscodeshift codemods to in-process AST transforms**
-      Each `applyCodemod` call spawns `yarn jscodeshift` as a subprocess (~0.5–1s
-      overhead per call). There are ~30 such calls throughout the script. Options:
-  1. Use `jscodeshift`'s programmatic API (import and call `run()` directly)
-     instead of spawning it as a CLI subprocess.
-  2. For simpler codemods that just replace content, convert them to direct
-     string replacements (several codemods in `addDbAuth` already do this
-     inline).
-     _Saves ~15–25s of cumulative process-spawn overhead._
+- [ ] Evaluate running `updateCellMocks` and related non-route codemods while Tailwind setup runs.
+- [ ] Verify no conflicts on shared files (`Routes.tsx`, lockfiles, config files touched by setup).
+- [ ] Keep all same commands, only adjust scheduling.
 
-### 4b. Replace generator subprocesses with direct file creation
+### Candidate B: Conservative parallelism in web generation paths
 
-- [ ] **Bypass `yarn cedar g page/component/cell/layout` for known outputs**
-      Each generator call spawns a full Node process, loads the Cedar framework,
-      resolves the project, generates boilerplate files, and (for pages) modifies
-      Routes.tsx. We then immediately overwrite the generated files with codemods.
-      Instead:
-  1. Create the expected directory structure and files directly with
-     `fs.mkdirSync` / `fs.writeFileSync`.
-  2. Write the final (post-codemod) content directly, skipping both the
-     generator AND the codemod.
-  3. For pages: append route entries to Routes.tsx directly (or accumulate them
-     and write once).
-  4. Run a single `yarn cedar g types` at the end to regenerate type
-     definitions.
-     _Saves ~20–30s (eliminates ~15 generator subprocess spawns at ~2s each, plus
-     their corresponding codemod subprocess spawns)._
-     _Risk: Generator output format may change between versions. Mitigate by
-     capturing expected output as template files and adding a test that verifies
-     templates match generator output._
+- [ ] Test whether component/cell generation can run concurrently **without** changing output.
+- [ ] Add strict file-diff parity check between baseline and parallel version.
+- [ ] Keep generators as real Cedar commands; only alter orchestration.
+
+**Estimated impact**: moderate (~8–20s if safe parallelism holds).
 
 ---
 
-## Phase 5: Eliminate Redundant Work (Est. savings: ~10–15s)
+## Phase 3 — Reorder Step 7/8 Execution with Dependency Guardrails
 
-- [ ] **Cache framework build (step 0, 6.41s)**
-      Hash the source files under `packages/`. Skip `yarn clean && yarn build` if
-      the hash matches the last build. Store the hash in a `.build-hash` file.
-      _Saves ~6s when sources haven't changed (common during repeated test runs)._
+This is still the largest potential win, but must preserve output and command realism.
 
-- [ ] **Eliminate redundant `yarn install` calls**
-      Currently three `yarn install` invocations:
-  1. Step 3: initial install (23.09s — unavoidable)
-  2. Step 8.6 (inside `addDbAuth`): installs dbAuth tarball resolutions
-  3. Step 9: installs workspace package dependency
+### Principles
 
-  Consolidate: set up dbAuth resolutions and workspace package.json entries
-  BEFORE step 3's install, so a single `yarn install` handles everything.
-  _Saves ~5–8s (eliminates at least one full `yarn install` cycle)._
+- [ ] Treat `Routes.tsx`-touching operations as a serialized lane.
+- [ ] Allow parallelism only for tasks that do not touch shared route/config surfaces.
+- [ ] Preserve the exact same command set and side effects.
 
-- [ ] **Skip `yarn cedar build` in step 9 if only validating structure**
-      Step 9 runs `yarn cedar build` to verify the workspace package builds
-      correctly. If the validation could be done with a lighter check (e.g. just
-      `tsc --noEmit`), it could be faster.
-      _Saves ~3–5s._
+### Proposed workstream split
+
+- [ ] **Serialized lane**: page/scaffold/auth/prerender route-mutating tasks.
+- [ ] **Parallel lane**: independent API/web tasks not touching route graph.
+- [ ] Introduce explicit dependency barriers between lanes.
+
+### Safety checks required
+
+- [ ] Golden output snapshot comparison (full fixture tree diff).
+- [ ] Step-by-step command transcript parity (same commands still exercised).
+- [ ] Multiple benchmark runs to prove stable gain beyond noise.
+
+**Estimated impact**: high (~20–35s), but medium/high implementation risk.
 
 ---
 
-## Summary: Estimated Savings by Phase
+## Phase 4 — Process Overhead Reduction Without Changing Commands
 
-| Phase | Description                                            | Est. Savings | Cumulative |
-| ----- | ------------------------------------------------------ | ------------ | ---------- |
-| 1     | Quick wins (batch migrations, parallel mocks+tailwind) | ~15s         | ~15s       |
-| 2     | Parallel generators within steps                       | ~15–20s      | ~30–35s    |
-| 3     | Parallel across steps 7 & 8                            | ~25–30s      | ~55–65s    |
-| 4     | Eliminate subprocess overhead                          | ~20–30s      | ~75–95s    |
-| 5     | Eliminate redundant work                               | ~10–15s      | ~85–110s   |
+The rebuild script still launches many subprocesses. We can reduce overhead while preserving what’s exercised.
 
-> **Phases 1–3 alone should be sufficient to hit the ~90s target.** Phase 4 and
-> 5 provide additional headroom and are worth pursuing if the parallelization
-> gains are smaller than estimated (e.g. due to I/O contention or generator
-> conflicts).
+### Codemod execution path
 
-## Recommended Execution Order
+- [ ] Investigate lowering per-codemod spawn overhead while keeping codemod behavior identical.
+- [ ] Keep codemods and target files the same; optimize invocation strategy.
+- [ ] Validate exact output parity with fixture diffing.
 
-1. Start with **Phase 1** — these are safe, isolated changes that can be shipped
-   immediately and verified by running the script once.
-2. Move to **Phase 2** — test each generator type (cells, components) for
-   concurrent safety with a trial run before committing.
-3. Tackle **Phase 3** — this is the biggest refactor and the biggest payoff.
-   Implement the group-based restructuring behind a `--parallel` flag initially
-   so the sequential path remains as a fallback.
-4. **Phase 4** is independent of the parallelization work and can be done in
-   parallel by a different person. Start with the simplest codemods
-   (string-replacement-only) and convert them first.
-5. **Phase 5** is opportunistic — pick up items as convenient.
+### Install/build sequencing
+
+- [ ] Review whether repeated installs/build-related work can be sequenced more efficiently **without removing command coverage**.
+- [ ] Any consolidation must still test the intended user-relevant commands.
+
+**Estimated impact**: moderate (~10–20s depending on what is feasible without realism loss).
+
+---
+
+## Output Parity & Realism Validation Checklist (Required for Every Optimization)
+
+For each proposed change:
+
+- [ ] **Fixture parity check**: byte-for-byte (or normalized) diff of generated fixture tree.
+- [ ] **Migration parity check**: migration folder count and names remain expected.
+- [ ] **Command coverage check**: expected Cedar/user commands still run.
+- [ ] **Benchmark check**: pass acceptance gate (>=8s median improvement or strong step-level win).
+- [ ] **Rollback path**: easy revert if either parity or reliability fails.
+
+---
+
+## Revised Prioritized Sequence
+
+1. [ ] Lock in benchmark harness and acceptance criteria.
+2. [ ] Land only low-risk orchestration cleanups with parity checks.
+3. [ ] Attempt conservative concurrency in step 7 sub-operations.
+4. [ ] Attempt guarded 7/8 lane split with strict route-serialization rules.
+5. [ ] Optimize codemod/process overhead while preserving command realism.
+6. [ ] Re-evaluate total and decide if additional high-risk work is necessary.
+
+---
+
+## Practical Success Criteria
+
+We consider the project successful when all are true:
+
+- [ ] Median runtime is close to or below ~90s.
+- [ ] Output fixture remains equivalent to current expected output.
+- [ ] Script still functions as an integration/e2e run of realistic Cedar commands.
+- [ ] Performance gains are reproducible across repeated runs (not noise artifacts).
+
+---
+
+## Notes
+
+- The prior migration-batching idea is now explicitly rejected under current constraints.
+- The plan now favors **orchestration and measurement discipline** over output-shaping shortcuts.
+- If future constraints loosen (e.g., migration-output flexibility), we can reopen those larger structural optimizations.
