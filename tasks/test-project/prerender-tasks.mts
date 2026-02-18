@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 
-import { createBuilder, fullPath, getOutputPath } from './base-tasks.mts'
+import { createBuilder } from './base-tasks.mts'
+import { fullPath, getOutputPath } from './paths.mts'
 
 export function getPrerenderTasks() {
   return [

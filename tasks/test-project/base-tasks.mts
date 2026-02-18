@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import execa from 'execa'
 
+import { fullPath, getOutputPath } from './paths.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
 import {
   getExecaOptions,
@@ -13,51 +14,11 @@ import {
   exec,
 } from './util.mts'
 
-// This variable gets used in other functions
-// and is set when webTasks, apiTasks, streamingTasks or fragmentsTasks are
-// called
-let OUTPUT_PATH: string | undefined
-
-export function setOutputPath(path: string) {
-  OUTPUT_PATH = path
-}
-
-export function getOutputPath() {
-  if (!OUTPUT_PATH) {
-    throw new Error('Output path not set')
-  }
-
-  return OUTPUT_PATH
-}
-
-export function fullPath(
-  name: string,
-  { addExtension } = { addExtension: true },
-) {
-  if (!OUTPUT_PATH) {
-    throw new Error('Output path not set')
-  }
-
-  if (addExtension) {
-    if (name.startsWith('api')) {
-      name += '.ts'
-    } else if (name.startsWith('web')) {
-      name += '.tsx'
-    }
-  }
-
-  return path.join(OUTPUT_PATH, name)
-}
-
 /**
  * @param cmd The command to run
  */
 export function createBuilder(cmd: string, dir = '') {
-  if (!OUTPUT_PATH) {
-    throw new Error('Output path not set')
-  }
-
-  const execaOptions = getExecaOptions(path.join(OUTPUT_PATH, dir))
+  const execaOptions = getExecaOptions(path.join(getOutputPath(), dir))
 
   return async function createItem(positionals?: string | string[]) {
     const args = positionals
