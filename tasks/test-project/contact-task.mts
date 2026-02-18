@@ -13,7 +13,7 @@ import {
 export async function contactTask() {
   const { contact } = await import('./codemods/models.mts')
 
-  addModel(contact)
+  await addModel(contact)
 
   await exec(
     `yarn cedar prisma migrate dev --name create_contact`,
