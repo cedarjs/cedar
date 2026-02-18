@@ -1,8 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
-
+import { contactTask } from './contact-task.mts'
 import { fullPath, getOutputPath } from './paths.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
 import {
@@ -13,23 +12,8 @@ import {
   // TODO: See if we can get rid of this and just use execa directly
   exec,
   addModel,
+  createBuilder,
 } from './util.mts'
-
-/**
- * @param cmd The command to run
- */
-export function createBuilder(cmd: string, dir = '') {
-  const execaOptions = getExecaOptions(path.join(getOutputPath(), dir))
-
-  return async function createItem(positionals?: string | string[]) {
-    const args = positionals
-      ? Array.isArray(positionals)
-        ? positionals
-        : [positionals]
-      : []
-    return execa(cmd, args, execaOptions)
-  }
-}
 
 function getPagesTasks() {
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
@@ -245,59 +229,7 @@ export function apiTasksList({
     },
     {
       title: 'Adding contact model to prisma',
-      task: async () => {
-        const { contact } = await import('./codemods/models.mts')
-
-        addModel(contact)
-
-        await exec(
-          `yarn cedar prisma migrate dev --name create_contact`,
-          [],
-          execaOptions,
-        )
-
-        await generateScaffold('contacts')
-
-        const contactsServicePath = fullPath(
-          'api/src/services/contacts/contacts',
-        )
-        fs.writeFileSync(
-          contactsServicePath,
-          fs
-            .readFileSync(contactsServicePath, 'utf-8')
-            .replace(
-              "import { db } from 'src/lib/db'",
-              '// Testing aliased imports with extensions\n' +
-                "import { db } from 'src/lib/db.js'",
-            ),
-        )
-
-        const contactsTestPath = fullPath(
-          'api/src/services/contacts/contacts.test',
-        )
-        const contactsTest = fs.readFileSync(contactsTestPath, 'utf-8')
-
-        // Doing simple string replacing here allows me better control over
-        // blank lines compared to proper codemods with jscodeshift
-        fs.writeFileSync(
-          contactsTestPath,
-          contactsTest
-            .replace(
-              "describe('contacts', () => {",
-              "describe('contacts', () => {\n" +
-                '  afterEach(() => {\n' +
-                '    jest.mocked(console).log.mockRestore?.()\n' +
-                '  })\n',
-            )
-            .replace(
-              "  scenario('creates a contact', async () => {",
-              "  scenario('creates a contact', async () => {\n" +
-                "    jest.spyOn(console, 'log').mockImplementation(() => {})\n",
-            ),
-        )
-
-        return applyCodemod('contacts.mts', contactsServicePath)
-      },
+      task: contactTask,
     },
     {
       // This task renames the migration folders so that we don't have to deal
@@ -377,8 +309,7 @@ export function apiTasksList({
     },
     {
       title: 'Add dbAuth',
-      task: async () =>
-        addDbAuth(dbAuth === 'local', getOutputPath(), linkWithLatestFwBuild),
+      task: async () => addDbAuth(dbAuth === 'local', linkWithLatestFwBuild),
     },
     {
       title: 'Add describeScenario tests',
@@ -582,11 +513,8 @@ export async function updateCellMocks() {
   )
 }
 
-async function addDbAuth(
-  localDbAuth: boolean,
-  outputPath: string,
-  linkWithLatestFwBuild: boolean,
-) {
+async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
+  const outputPath = getOutputPath()
   const execaOptions = getExecaOptions(outputPath)
 
   // Temporarily disable postinstall script

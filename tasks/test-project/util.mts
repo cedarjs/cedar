@@ -154,3 +154,19 @@ export async function addModel(model: string) {
 
   return fs.promises.writeFile(prismaPath, `${schema.trim()}\n\n${model}\n`)
 }
+
+/**
+ * @param cmd The command to run
+ */
+export function createBuilder(cmd: string, dir = '') {
+  const execaOptions = getExecaOptions(path.join(getOutputPath(), dir))
+
+  return async function createItem(positionals?: string | string[]) {
+    const args = positionals
+      ? Array.isArray(positionals)
+        ? positionals
+        : [positionals]
+      : []
+    return execa(cmd, args, execaOptions)
+  }
+}
