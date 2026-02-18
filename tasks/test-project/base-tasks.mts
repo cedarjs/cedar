@@ -270,18 +270,12 @@ export function apiTasksList({
           'scenarioValueSuffix.js',
           fullPath('api/src/services/posts/posts.scenarios'),
         )
-
-        await exec(
-          `yarn ${getCfwBin(getOutputPath())} project:copy`,
-          [],
-          execaOptions,
-        )
       },
     },
     {
       title: 'Adding seed script',
-      task: async () => {
-        await applyCodemod(
+      task: () => {
+        return applyCodemod(
           'seed.js',
           fullPath('scripts/seed.ts', { addExtension: false }),
         )
