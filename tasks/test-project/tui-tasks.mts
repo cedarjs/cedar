@@ -1,6 +1,7 @@
 import type { Options as ExecaOptions } from 'execa'
 
-import { setOutputPath, webTasksList } from './base-tasks.mts'
+import { webTasksList } from './base-tasks.mts'
+import { setOutputPath } from './paths.mts'
 import type { TuiTaskList } from './typing.mts'
 import { getExecaOptions as utilGetExecaOptions, exec } from './util.mts'
 

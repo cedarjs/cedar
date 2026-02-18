@@ -1,14 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { fullPath, setOutputPath } from './paths.mts'
 import {
-  createBuilder,
-  fullPath,
-  getOutputPath,
-  setOutputPath,
   addModel,
-} from './base-tasks.mts'
-import { getExecaOptions, applyCodemod, exec } from './util.mts'
+  getExecaOptions,
+  applyCodemod,
+  exec,
+  createBuilder,
+} from './util.mts'
 
 /**
  * Tasks to add GraphQL Fragments support to the test-project, and some queries
@@ -37,8 +37,8 @@ export function fragmentsTasks(outputPath: string) {
         // Need both here since they have a relation
         const { produce, stall } = await import('./codemods/models.mts')
 
-        addModel(produce)
-        addModel(stall)
+        await addModel(produce)
+        await addModel(stall)
 
         return exec(
           'yarn cedar prisma migrate dev --name create_produce_stall',
@@ -76,12 +76,7 @@ export function fragmentsTasks(outputPath: string) {
       title: 'Copy components from templates',
       task: () => {
         const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
-        const componentsPath = path.join(
-          getOutputPath(),
-          'web',
-          'src',
-          'components',
-        )
+        const componentsPath = path.join(outputPath, 'web', 'src', 'components')
 
         for (const fileName of [
           'Card.tsx',
@@ -101,13 +96,8 @@ export function fragmentsTasks(outputPath: string) {
       title: 'Copy sdl and service for groceries from templates',
       task: () => {
         const templatesPath = path.join(import.meta.dirname, 'templates', 'api')
-        const graphqlPath = path.join(getOutputPath(), 'api', 'src', 'graphql')
-        const servicesPath = path.join(
-          getOutputPath(),
-          'api',
-          'src',
-          'services',
-        )
+        const graphqlPath = path.join(outputPath, 'api', 'src', 'graphql')
+        const servicesPath = path.join(outputPath, 'api', 'src', 'services')
 
         const sdlTemplatePath = path.join(templatesPath, 'groceries.sdl.ts')
         const sdlPath = path.join(graphqlPath, 'groceries.sdl.ts')

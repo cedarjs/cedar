@@ -10,11 +10,12 @@ import yargs from 'yargs/yargs'
 
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
-import { apiTasksList, setOutputPath } from './base-tasks.mts'
+import { apiTasksList } from './base-tasks.mts'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
 } from './frameworkLinking.mts'
+import { setOutputPath } from './paths.mts'
 import { webTasks } from './tui-tasks.mts'
 import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
@@ -118,6 +119,26 @@ function beginStep(step: string) {
   fs.writeFileSync(path.join(OUTPUT_PROJECT_PATH, 'step.txt'), '' + step)
 }
 
+/**
+ * stepTimings collects timing information for each step/sub-step keyed by
+ * their stepId (e.g. "7", "8.1", etc).
+ *
+ * Each entry will contain:
+ *  - startTime: number (ms)
+ *  - endTime: number (ms)
+ *  - durationMs: number
+ *  - skipped?: boolean
+ */
+const stepTimings: Record<
+  string,
+  {
+    startTime?: number
+    endTime?: number
+    durationMs?: number
+    skipped?: boolean
+  }
+> = {}
+
 async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
   const stepId = (parent ? parent + '.' : '') + step
 
@@ -136,11 +157,20 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
 
   let skip = skipFn(startStep, stepId)
 
+  // record start time for this step
+  const startTime = Date.now()
+  stepTimings[stepId] = { startTime }
+
   if (skip) {
     if (typeof skip === 'boolean' && skip) {
       // if skip is just `true`, then we use the default skip message
       skip = 'Skipping...'
     }
+
+    // mark skipped and set duration to 0
+    stepTimings[stepId].skipped = true
+    stepTimings[stepId].endTime = Date.now()
+    stepTimings[stepId].durationMs = 0
 
     tuiContent.update({
       spinner: {
@@ -162,6 +192,12 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
   } catch (e) {
     // This code handles errors from synchronous tasks
 
+    // capture end time on failure
+    const end = Date.now()
+    stepTimings[stepId].endTime = end
+    const start = stepTimings[stepId].startTime ?? end
+    stepTimings[stepId].durationMs = end - start
+
     tui.stopReactive(true)
 
     if (e instanceof ExecaError) {
@@ -182,6 +218,12 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
 
   if (isAwaitable(promise)) {
     const result = await promise.catch((e) => {
+      // capture end time on async failure
+      const end = Date.now()
+      stepTimings[stepId].endTime = end
+      const start = stepTimings[stepId].startTime ?? end
+      stepTimings[stepId].durationMs = end - start
+
       // This code handles errors from asynchronous tasks
 
       tui.stopReactive(true)
@@ -215,11 +257,20 @@ async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
     }
   }
 
+  // capture end time and compute duration
+  const endTime = Date.now()
+  stepTimings[stepId].endTime = endTime
+  const startTimeVal = stepTimings[stepId].startTime ?? endTime
+  stepTimings[stepId].durationMs = endTime - startTimeVal
+
+  const durationMs = stepTimings[stepId].durationMs ?? 0
+  const durationStr = `${(durationMs / 1000).toFixed(2)}s`
+
   tuiContent.update({
     spinner: {
       enabled: false,
     },
-    header: `${RedwoodStyling.green('✔')} ${stepId}: ${title}`,
+    header: `${RedwoodStyling.green('✔')} ${stepId}: ${title} (${durationStr})`,
     content: '',
   })
 
@@ -301,6 +352,8 @@ async function runCommand() {
   console.log('Rebuilding test project fixture...')
   console.log('Using temporary directory:', OUTPUT_PROJECT_PATH)
   console.log()
+
+  const overallStart = Date.now()
 
   // Maybe we could add all of the tasks to an array and infer the `step` from
   // the array index?
@@ -750,6 +803,71 @@ async function runCommand() {
     },
     enabled: verbose,
   })
+
+  // overall end
+  const overallEnd = Date.now()
+  const overallDurationMs = overallEnd - overallStart
+
+  // compile a summary of timings for steps and sub-steps
+  const timingEntries: {
+    stepId: string
+    durationMs: number
+    skipped?: boolean
+  }[] = []
+
+  Object.keys(stepTimings).forEach((k) => {
+    const entry = stepTimings[k]
+    if (entry && typeof entry.durationMs === 'number') {
+      timingEntries.push({
+        stepId: k,
+        durationMs: entry.durationMs,
+        skipped: entry.skipped,
+      })
+    }
+  })
+
+  // sort by stepId for nicer output
+  timingEntries.sort((a, b) => {
+    const aParts = a.stepId.split('.').map((s) => parseInt(s, 10))
+    const bParts = b.stepId.split('.').map((s) => parseInt(s, 10))
+
+    for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+      const av = aParts[i] ?? 0
+      const bv = bParts[i] ?? 0
+
+      if (av < bv) {
+        return -1
+      }
+
+      if (av > bv) {
+        return 1
+      }
+    }
+
+    return 0
+  })
+
+  const summary = {
+    overall: {
+      durationMs: overallDurationMs,
+      duration: `${(overallDurationMs / 1000).toFixed(2)}s`,
+      startedAt: new Date(overallStart).toISOString(),
+      endedAt: new Date(overallEnd).toISOString(),
+    },
+    steps: timingEntries.map((t) => {
+      return {
+        stepId: t.stepId,
+        durationMs: t.durationMs,
+        duration: `${(t.durationMs / 1000).toFixed(2)}s`,
+        skipped: t.skipped ?? false,
+      }
+    }),
+  }
+
+  console.log()
+  console.log('Execution time summary:')
+  console.log(JSON.stringify(summary, null, 2))
+  console.log()
 }
 
 runCommand()

@@ -6,6 +6,8 @@ import execa from 'execa'
 import type { Options as ExecaOptions } from 'execa'
 import prompts from 'prompts'
 
+import { getOutputPath } from './paths.mts'
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -144,4 +146,27 @@ export function getCfwBin(projectPath: string) {
   return fs.existsSync(path.join(projectPath, 'node_modules/.bin/cfw'))
     ? 'cfw'
     : 'rwfw'
+}
+
+export async function addModel(model: string) {
+  const prismaPath = `${getOutputPath()}/api/db/schema.prisma`
+  const schema = await fs.promises.readFile(prismaPath, 'utf-8')
+
+  return fs.promises.writeFile(prismaPath, `${schema.trim()}\n\n${model}\n`)
+}
+
+/**
+ * @param cmd The command to run
+ */
+export function createBuilder(cmd: string, dir = '') {
+  const execaOptions = getExecaOptions(path.join(getOutputPath(), dir))
+
+  return async function createItem(positionals?: string | string[]) {
+    const args = positionals
+      ? Array.isArray(positionals)
+        ? positionals
+        : [positionals]
+      : []
+    return execa(cmd, args, execaOptions)
+  }
 }
