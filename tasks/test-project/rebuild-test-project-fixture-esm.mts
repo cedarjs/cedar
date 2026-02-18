@@ -10,11 +10,12 @@ import yargs from 'yargs/yargs'
 
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
-import { apiTasksList, setOutputPath } from './base-tasks.mts'
+import { apiTasksList } from './base-tasks.mts'
 import {
   addFrameworkDepsToProject,
   copyFrameworkPackages,
 } from './frameworkLinking.mts'
+import { setOutputPath } from './paths.mts'
 import { webTasks } from './tui-tasks.mts'
 import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
