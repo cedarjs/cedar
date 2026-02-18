@@ -12,6 +12,7 @@ import {
   getCfwBin,
   // TODO: See if we can get rid of this and just use execa directly
   exec,
+  addModel,
 } from './util.mts'
 
 /**
@@ -211,8 +212,8 @@ export function apiTasksList({
         // Need both here since they have a relation
         const { post, user } = await import('./codemods/models.mts')
 
-        addModel(post)
-        addModel(user)
+        await addModel(post)
+        await addModel(user)
 
         return exec(
           `yarn cedar prisma migrate dev --name create_post_user`,
@@ -579,14 +580,6 @@ export async function updateCellMocks() {
       },
     ),
   )
-}
-
-export async function addModel(schema: string) {
-  const prismaPath = `${getOutputPath()}/api/db/schema.prisma`
-
-  const current = fs.readFileSync(prismaPath, 'utf-8')
-
-  fs.writeFileSync(prismaPath, `${current.trim()}\n\n${schema}\n`)
 }
 
 async function addDbAuth(
