@@ -128,7 +128,7 @@
     "prettier-plugin-packagejson": "3.0.0",
     "prettier-plugin-sh": "0.18.0",
     "prompts": "2.4.2",
-    "rimraf": "6.1.2",
+    "rimraf": "6.1.3",
     "tree-kill": "1.2.2",
     "tstyche": "5.0.2",
     "tsx": "4.21.0",
