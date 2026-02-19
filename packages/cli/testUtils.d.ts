@@ -69,7 +69,7 @@ declare global {
 
   namespace NodeJS {
     interface ProcessEnv {
-      REDWOOD_DISABLE_TELEMETRY: number
+      REDWOOD_DISABLE_TELEMETRY: string
     }
   }
 }

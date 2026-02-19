@@ -8,11 +8,11 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
 import c from '../../../lib/colors.js'
-// @ts-expect-error - Types not available for JS files
 import {
   getPaths,
   writeFilesTask,
   transformTSToJS,
+  // @ts-expect-error - Types not available for JS files
 } from '../../../lib/index.js'
 // @ts-expect-error - Types not available for JS files
 import { prepareForRollback } from '../../../lib/rollback.js'
@@ -91,7 +91,7 @@ export const handler = async ({
       },
       {
         title: 'Next steps...',
-        task: (_ctx: any, task: any) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title = POST_RUN_INSTRUCTIONS
         },
       },

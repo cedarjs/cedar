@@ -14,7 +14,9 @@ export const apiServerFileHandler = async (argv: ServeApiArgv) => {
     args.push('--apiPort', String(argv.port))
   }
 
-  await execa('yarn', args.filter(Boolean) as string[], {
+  const filteredArgs = args.filter((arg): arg is string => Boolean(arg))
+
+  await execa('yarn', filteredArgs, {
     cwd: getPaths().api.dist,
     stdio: 'inherit',
   })

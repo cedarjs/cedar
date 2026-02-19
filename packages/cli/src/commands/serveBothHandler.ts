@@ -24,6 +24,20 @@ type ServeBothArgv = {
   webPort?: number
 }
 
+const hasStringMessage = (error: unknown): error is { message: string } => {
+  const message =
+    typeof error === 'object' && error !== null
+      ? Reflect.get(error, 'message')
+      : undefined
+
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof message === 'string'
+  )
+}
+
 export const bothServerFileHandler = async (argv: ServeBothArgv) => {
   if (
     getConfig().experimental?.rsc?.enabled ||
@@ -76,13 +90,7 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
     try {
       await result
     } catch (error: unknown) {
-      const message =
-        typeof error === 'object' &&
-        error !== null &&
-        'message' in error &&
-        typeof (error as { message?: unknown }).message === 'string'
-          ? (error as { message: string }).message
-          : undefined
+      const message = hasStringMessage(error) ? error.message : undefined
 
       if (typeof message !== 'undefined') {
         errorTelemetry(
@@ -111,12 +119,12 @@ export const bothSsrRscServerHandler = async (
     cwd: getPaths().web.base,
     stdio: 'inherit',
     env: rscEnabled
-      ? ({
+      ? {
           ...process.env,
           // TODO (RSC): Is this how we want to do it? If so, we need to find a way
           // to merge this with users' NODE_OPTIONS
           NODE_OPTIONS: '--conditions react-server',
-        } as any)
+        }
       : undefined,
   })
 

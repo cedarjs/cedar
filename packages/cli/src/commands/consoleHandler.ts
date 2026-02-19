@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import repl from 'node:repl'
+import type { REPLEval, REPLServer } from 'node:repl'
 
 import { registerApiSideBabelHook } from '@cedarjs/babel-config'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -10,9 +11,16 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths } from '../lib/index.js'
 
 const paths = getPaths()
+type ReplWithHistory = REPLServer & {
+  lines: string[]
+  history: string[]
+  eval: REPLEval
+}
 
 const loadPrismaClient = (replContext: Record<string, unknown>) => {
   const createdRequire = createRequire(import.meta.url)
+  // This module comes from the user project and is untyped here; we only need
+  // an indexable object to attach Prisma's inspect symbol for REPL display.
   const { db } = createdRequire(path.join(paths.api.lib, 'db')) as {
     db: Record<string | symbol, unknown>
   }
@@ -22,7 +30,7 @@ const loadPrismaClient = (replContext: Record<string, unknown>) => {
 }
 
 const consoleHistoryFile = path.join(paths.generated.base, 'console_history')
-const persistConsoleHistory = (r: any) => {
+const persistConsoleHistory = (r: ReplWithHistory) => {
   fs.appendFileSync(
     consoleHistoryFile,
     r.lines.filter((line: string) => line.trim()).join('\n') + '\n',
@@ -30,7 +38,7 @@ const persistConsoleHistory = (r: any) => {
   )
 }
 
-const loadConsoleHistory = async (r: any) => {
+const loadConsoleHistory = async (r: ReplWithHistory) => {
   try {
     const history = await fs.promises.readFile(consoleHistoryFile, 'utf8')
     history
@@ -62,30 +70,28 @@ export const handler = (_options?: Record<string, unknown>) => {
     ],
   })
 
-  const r = repl.start() as any
+  // REPL typings miss runtime `lines`/`history`, which we use for persisted
+  // command history.
+  const r = repl.start() as unknown as ReplWithHistory
 
   // always await promises.
   // source: https://github.com/nodejs/node/issues/13209#issuecomment-619526317
   const defaultEval = r.eval
-  r.eval = (cmd: string, context: any, filename: string, callback: any) => {
-    defaultEval.call(
-      r,
-      cmd,
-      context,
-      filename,
-      async (err: Error | null, result: unknown) => {
-        if (err) {
-          callback(err)
-        } else {
-          try {
-            callback(null, await Promise.resolve(result))
-          } catch (error) {
-            callback(error as Error)
-          }
+  const asyncEval: REPLEval = (cmd, context, filename, callback) => {
+    defaultEval.call(r, cmd, context, filename, async (err, result) => {
+      if (err) {
+        callback(err, null)
+      } else {
+        try {
+          callback(null, await Promise.resolve(result))
+        } catch (error) {
+          // `catch` variables are `unknown`; REPL expects an `Error | null`.
+          callback(error as Error, null)
         }
-      },
-    )
+      }
+    })
   }
+  r.eval = asyncEval
 
   loadConsoleHistory(r)
   r.addListener('close', () => persistConsoleHistory(r))

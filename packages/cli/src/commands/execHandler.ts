@@ -4,6 +4,7 @@ import path from 'node:path'
 import { context } from '@opentelemetry/api'
 import { suppressTracing } from '@opentelemetry/core'
 import { Listr } from 'listr2'
+import type { ListrTask } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
@@ -27,6 +28,7 @@ type ExecArgs = Record<string, unknown> & {
   l?: boolean
   s?: boolean
 }
+type ExecTask = ListrTask
 
 const printAvailableScriptsToConsole = () => {
   const scripts = findScripts(getPaths().scripts).reduce(
@@ -87,7 +89,7 @@ export const handler = async (args: ExecArgs) => {
     process.exit(1)
   }
 
-  const scriptTasks = [
+  const scriptTasks: ExecTask[] = [
     {
       title: 'Generating Prisma client',
       enabled: () => Boolean(prisma),
@@ -116,7 +118,7 @@ export const handler = async (args: ExecArgs) => {
     },
   ]
 
-  const tasks = new Listr(scriptTasks as any, {
+  const tasks = new Listr(scriptTasks, {
     renderer: args.silent ? 'silent' : 'verbose',
   })
 
