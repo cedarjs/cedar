@@ -31,6 +31,11 @@ export class QueryBuilderError extends Error {
   }
 }
 
+type GenericQueryArgs =
+  | FindManyArgs<unknown>
+  | FindUniqueArgs<unknown>
+  | FindFirstArgs<unknown>
+
 export interface QueryBuilderOptions {
   /**
    * Whether to validate queries against schema (future feature)
@@ -82,7 +87,7 @@ export class QueryBuilder {
   build(
     model: string,
     operation: QueryOperation,
-    args?: FindManyArgs<any> | FindUniqueArgs<any> | FindFirstArgs<any>,
+    args?: GenericQueryArgs,
     options?: { isLive?: boolean },
   ): GraphQLQuery {
     try {
@@ -121,6 +126,10 @@ export class QueryBuilder {
   buildFromFunction<T, TDb extends object = FrameworkDbClient>(
     queryFn: QueryFunction<T, TDb>,
     options?: { isLive?: boolean },
+  ): GraphQLQuery
+  buildFromFunction<T>(
+    queryFn: QueryFunction<T, object>,
+    options?: { isLive?: boolean },
   ): GraphQLQuery {
     // Create a proxy database client that captures method calls
     const capturedQuery = this.captureQuery(queryFn)
@@ -142,15 +151,15 @@ export class QueryBuilder {
   /**
    * Capture query details from a query function using a proxy
    */
-  private captureQuery<T, TDb extends object = DatabaseClient>(
-    queryFn: QueryFunction<T, TDb>,
+  private captureQuery<T>(
+    queryFn: QueryFunction<T, object>,
   ): CapturedQuery | null {
     let capturedQuery: CapturedQuery | null = null
 
     // Create proxy database client
-    const proxyDb = this.createProxyDatabase<TDb>((model, operation, args) => {
+    const proxyDb = this.createProxyDatabase((model, operation, args) => {
       capturedQuery = { model, operation, args }
-      return {} // Return empty object to satisfy type requirements
+      return {}
     })
 
     try {
@@ -158,20 +167,24 @@ export class QueryBuilder {
       queryFn(proxyDb)
       return capturedQuery
     } catch (error) {
-      throw new QueryBuilderError(
-        'Failed to capture query from function',
-        error as Error,
-      )
+      const e = error instanceof Error ? error : new Error(String(error))
+      throw new QueryBuilderError('Failed to capture query from function', e)
     }
   }
 
   /**
    * Create a proxy database client that captures method calls
    */
-  private createProxyDatabase<TDb extends object = DatabaseClient>(
-    onQuery: (model: string, operation: QueryOperation, args?: any) => void,
-  ): TDb {
-    return new Proxy({} as DatabaseClient, {
+  private createProxyDatabase(
+    onQuery: (
+      model: string,
+      operation: QueryOperation,
+      args?: GenericQueryArgs,
+    ) => void,
+  ): DatabaseClient {
+    const proxyTarget = {}
+
+    return new Proxy(proxyTarget, {
       get: (_, modelName) => {
         if (typeof modelName !== 'string') {
           return undefined
@@ -180,7 +193,7 @@ export class QueryBuilder {
         // Return a model delegate proxy
         return this.createModelDelegate(modelName, onQuery)
       },
-    }) as TDb
+    })
   }
 
   /**
@@ -188,30 +201,34 @@ export class QueryBuilder {
    */
   private createModelDelegate(
     model: string,
-    onQuery: (model: string, operation: QueryOperation, args?: any) => void,
-  ): ModelDelegate<any> {
-    const operations: readonly QueryOperation[] = [
-      'findMany',
-      'findUnique',
-      'findFirst',
-      'findUniqueOrThrow',
-      'findFirstOrThrow',
-    ] as const
-
-    // There are ways to get around `any` here, but they all made the code
-    // either very verbose/repetetive, or they made the code much more difficult
-    // to understand.
-    const delegate: any = {}
-
-    for (const operation of operations) {
-      delegate[operation] = (args?: any) => {
-        onQuery(model, operation, args)
-        // Return empty array to satisfy type
+    onQuery: (
+      model: string,
+      operation: QueryOperation,
+      args?: GenericQueryArgs,
+    ) => void,
+  ): ModelDelegate<unknown> {
+    return {
+      findMany: (args?: FindManyArgs<unknown>) => {
+        onQuery(model, 'findMany', args)
         return Promise.resolve([])
-      }
+      },
+      findUnique: (args: FindUniqueArgs<unknown>) => {
+        onQuery(model, 'findUnique', args)
+        return Promise.resolve(null)
+      },
+      findFirst: (args?: FindFirstArgs<unknown>) => {
+        onQuery(model, 'findFirst', args)
+        return Promise.resolve(null)
+      },
+      findUniqueOrThrow: (args: FindUniqueArgs<unknown>) => {
+        onQuery(model, 'findUniqueOrThrow', args)
+        return Promise.resolve(undefined)
+      },
+      findFirstOrThrow: (args?: FindFirstArgs<unknown>) => {
+        onQuery(model, 'findFirstOrThrow', args)
+        return Promise.resolve(undefined)
+      },
     }
-
-    return delegate
   }
 
   /**
@@ -220,7 +237,7 @@ export class QueryBuilder {
   parseAST(
     model: string,
     operation: QueryOperation,
-    args?: FindManyArgs<any> | FindUniqueArgs<any> | FindFirstArgs<any>,
+    args?: GenericQueryArgs,
   ): QueryAST {
     try {
       return this.#parser.parseQuery(model, operation, args)
@@ -289,7 +306,7 @@ export class QueryBuilder {
 interface CapturedQuery {
   model: string
   operation: QueryOperation
-  args?: any
+  args?: GenericQueryArgs
 }
 
 // Default query builder instance
@@ -299,13 +316,16 @@ export const queryBuilder = new QueryBuilder()
 export function buildQuery(
   model: string,
   operation: QueryOperation,
-  args?: FindManyArgs<any> | FindUniqueArgs<any> | FindFirstArgs<any>,
+  args?: GenericQueryArgs,
   options?: { isLive?: boolean },
 ): GraphQLQuery {
   return queryBuilder.build(model, operation, args, options)
 }
 
-export function buildQueryFromFunction<T, TDb extends object = FrameworkDbClient>(
+export function buildQueryFromFunction<
+  T,
+  TDb extends object = FrameworkDbClient,
+>(
   queryFn: QueryFunction<T, TDb>,
   options?: { isLive?: boolean },
 ): GraphQLQuery {
@@ -318,7 +338,7 @@ export function buildQueryFromFunction<T, TDb extends object = FrameworkDbClient
 export function buildLiveQuery(
   model: string,
   operation: QueryOperation,
-  args?: FindManyArgs<any> | FindUniqueArgs<any> | FindFirstArgs<any>,
+  args?: GenericQueryArgs,
 ): GraphQLQuery {
   return queryBuilder.build(model, operation, args, { isLive: true })
 }
@@ -329,9 +349,7 @@ export function buildLiveQuery(
 export function buildLiveQueryFromFunction<
   T,
   TDb extends object = FrameworkDbClient,
->(
-  queryFn: QueryFunction<T, TDb>,
-): GraphQLQuery {
+>(queryFn: QueryFunction<T, TDb>): GraphQLQuery {
   return queryBuilder.buildFromFunction(queryFn, { isLive: true })
 }
 
