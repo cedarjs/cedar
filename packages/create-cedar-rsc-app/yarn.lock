@@ -2175,8 +2175,8 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-package-json@npm:^0.88.0":
-  version: 0.88.2
-  resolution: "eslint-plugin-package-json@npm:0.88.2"
+  version: 0.88.3
+  resolution: "eslint-plugin-package-json@npm:0.88.3"
   dependencies:
     "@altano/repository-tools": "npm:^2.0.1"
     change-case: "npm:^5.4.4"
@@ -2191,7 +2191,7 @@ __metadata:
   peerDependencies:
     eslint: ">=8.0.0"
     jsonc-eslint-parser: ^2.0.0
-  checksum: 10c0/411983dbf8c9a30c3c675befdee900f5bcf6be870089a46e706cbec7fcbeabd11046a94581fa7dec27e00d166c3c956463b485de32c208916f953a5f61377e07
+  checksum: 10c0/74b397c5085d7ece637d936e22f535d3b6bb2f6ae33ca830a36c420ae5c95ecfacd313af876960d29babdc5ce4210657b61bdcb902e064cd0d5129b7d2ca9e78
   languageName: node
   linkType: hard
 
