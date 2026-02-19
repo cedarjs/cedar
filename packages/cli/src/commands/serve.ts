@@ -17,7 +17,6 @@ import { getPaths, getConfig } from '../lib/index.js'
 // @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
 
-// @ts-expect-error - Types not available for JS files
 import { webSsrServerHandler } from './serveWebHandler.js'
 
 export const command = 'serve [side]'
@@ -52,11 +51,9 @@ export const builder = async (yargs: Argv) => {
 
         // Run the server file, if it exists, with web side also
         if (serverFileExists()) {
-          // @ts-expect-error - Types not available for JS files
           const serveBothHandlers = await import('./serveBothHandler.js')
           await serveBothHandlers.bothServerFileHandler(argv)
         } else if (rscEnabled || streamingEnabled) {
-          // @ts-expect-error - Types not available for JS files
           const serveBothHandlers = await import('./serveBothHandler.js')
           await serveBothHandlers.bothSsrRscServerHandler(argv, rscEnabled)
         } else {
@@ -86,7 +83,6 @@ export const builder = async (yargs: Argv) => {
 
         // Run the server file, if it exists, api side only
         if (serverFileExists()) {
-          // @ts-expect-error - Types not available for JS files
           const { apiServerFileHandler } = await import('./serveApiHandler.js')
           await apiServerFileHandler(argv)
         } else {

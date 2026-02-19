@@ -6,17 +6,28 @@ import { Listr } from 'listr2'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../../../lib/colors.js'
 import {
   getPaths,
   writeFilesTask,
   transformTSToJS,
+  // @ts-expect-error - Types not available for JS files
 } from '../../../lib/index.js'
+// @ts-expect-error - Types not available for JS files
 import { prepareForRollback } from '../../../lib/rollback.js'
+// @ts-expect-error - Types not available for JS files
 import { validateName } from '../helpers.js'
+// @ts-expect-error - Types not available for JS files
 import { customOrDefaultTemplatePath } from '../yargsHandlerHelpers.js'
 
-export const files = async ({ name, typescript = false }) => {
+type ScriptArgs = {
+  name: string
+  typescript?: boolean
+  rollback?: boolean
+}
+
+export const files = async ({ name, typescript = false }: ScriptArgs) => {
   const outputFilename = `${name}.${typescript ? 'ts' : 'js'}`
   const outputPath = path.join(getPaths().scripts, outputFilename)
 
@@ -49,7 +60,10 @@ export const files = async ({ name, typescript = false }) => {
   }
 }
 
-export const handler = async ({ force, ...args }) => {
+export const handler = async ({
+  force,
+  ...args
+}: ScriptArgs & { force?: boolean }) => {
   recordTelemetryAttributes({
     command: 'generate script',
     force,
@@ -77,7 +91,7 @@ export const handler = async ({ force, ...args }) => {
       },
       {
         title: 'Next steps...',
-        task: (_ctx, task) => {
+        task: (_ctx: unknown, task: { title: string }) => {
           task.title = POST_RUN_INSTRUCTIONS
         },
       },
@@ -90,9 +104,10 @@ export const handler = async ({ force, ...args }) => {
       prepareForRollback(tasks)
     }
     await tasks.run()
-  } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.log(c.error(e.message))
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    errorTelemetry(process.argv, message)
+    console.log(c.error(message))
     process.exit(1)
   }
 }

@@ -21,7 +21,6 @@ export async function handler(options: StudioOptions) {
     open: options.open,
   })
 
-  // @ts-expect-error - Types not available for JS files
   const { handler } = await import('./studioHandler.js')
   return handler(options)
 }

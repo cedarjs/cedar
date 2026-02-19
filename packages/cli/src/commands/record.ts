@@ -17,8 +17,7 @@ export const builder = (yargs: Argv) =>
     )
 
 async function handler(argv: Record<string, unknown>) {
-  // @ts-expect-error - Types not available for JS files
   const recordInit = await import('./record/init.js')
 
-  recordInit(argv)
+  return recordInit.handler(argv)
 }
