@@ -10,7 +10,6 @@ import yargs from 'yargs'
 
 // @ts-expect-error - js file
 import * as script from '../script.js'
-// @ts-expect-error - js file
 import * as scriptHandler from '../scriptHandler.js'
 
 const PROJECT_PATH = path.normalize('/path/to/project')

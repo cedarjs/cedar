@@ -152,7 +152,7 @@ export const handler = async ({
     process.exitCode = result.exitCode
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'exitCode' in error) {
-      process.exitCode = (error as { exitCode?: number }).exitCode ?? 1
+      process.exitCode = typeof error.exitCode === 'number' ? error.exitCode : 1
       return
     }
 
