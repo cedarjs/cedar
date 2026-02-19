@@ -10,7 +10,7 @@ import { parse } from 'graphql'
 import { useQuery as cedarUseQuery } from '@cedarjs/web'
 
 import { queryBuilder } from '../queryBuilder.js'
-import type { QueryFunction } from '../types/orm.js'
+import type { FrameworkDbClient, QueryFunction } from '../types/orm.js'
 
 type QueryVariables = Record<string, unknown>
 type QueryPayload<T> = Record<string, T>
@@ -37,8 +37,8 @@ function extractRootFieldData<T>(
   return Object.values(payload)[0] as T | undefined
 }
 
-export function useLiveQuery<T>(
-  queryFn: QueryFunction<T>,
+export function useLiveQuery<T, TDb extends object = FrameworkDbClient>(
+  queryFn: QueryFunction<T, TDb>,
   options?: UseLiveQueryOptions,
 ): UseLiveQueryResult<T> {
   const { query, variables } = useMemo(() => {

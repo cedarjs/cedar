@@ -166,14 +166,51 @@ export interface DatabaseClient {
   [modelName: string]: ModelDelegate<any>
 }
 
+/**
+ * Framework-level type map that can be module-augmented by Cedar generated
+ * types. This lets Cedar inject `typeof db` without users writing wrappers.
+ *
+ * Example augmentation:
+ * declare module '@cedarjs/gqlorm/types/orm' {
+ *   interface GqlormTypeMap {
+ *     db: typeof db
+ *   }
+ * }
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface GqlormTypeMap {}
+
+type DefaultDbClient = GqlormTypeMap extends { db: infer TDb }
+  ? TDb
+  : DatabaseClient
+
+type ModelDelegatePropertyName<TDb> = {
+  [K in keyof TDb]-?: K extends string
+    ? K extends `$${string}`
+      ? never
+      : TDb[K] extends ModelDelegate<any>
+        ? K
+        : never
+    : never
+}[keyof TDb]
+
+export type ModelDelegatesOnly<TDb> = [ModelDelegatePropertyName<TDb>] extends [
+  never,
+]
+  ? DatabaseClient
+  : Pick<TDb, ModelDelegatePropertyName<TDb>>
+
+export type FrameworkDbClient = ModelDelegatesOnly<DefaultDbClient>
+
 // Query context interface (what gets passed to query functions)
-export interface QueryContext {
-  db: DatabaseClient
+export interface QueryContext<TDb extends object = FrameworkDbClient> {
+  db: TDb
 }
 
 // Query function type (used in useLiveQuery hook)
-// Uses DatabaseClient interface for proper typing while supporting proxies
-export type QueryFunction<T> = (db: DatabaseClient) => Promise<T> | T
+export type QueryFunction<T, TDb extends object = FrameworkDbClient> = (
+  db: TDb,
+) => Promise<T> | T
 
 // Result types with metadata
 export interface QueryResult<T> {

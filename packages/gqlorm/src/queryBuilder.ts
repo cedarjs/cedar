@@ -15,6 +15,7 @@ import {
   type FindFirstArgs,
   type FindManyArgs,
   type FindUniqueArgs,
+  type FrameworkDbClient,
   type ModelDelegate,
   type QueryFunction,
 } from './types/orm.js'
@@ -117,8 +118,8 @@ export class QueryBuilder {
   /**
    * Build GraphQL query from a query function (used with useLiveQuery)
    */
-  buildFromFunction<T>(
-    queryFn: QueryFunction<T>,
+  buildFromFunction<T, TDb extends object = FrameworkDbClient>(
+    queryFn: QueryFunction<T, TDb>,
     options?: { isLive?: boolean },
   ): GraphQLQuery {
     // Create a proxy database client that captures method calls
@@ -141,11 +142,13 @@ export class QueryBuilder {
   /**
    * Capture query details from a query function using a proxy
    */
-  private captureQuery<T>(queryFn: QueryFunction<T>): CapturedQuery | null {
+  private captureQuery<T, TDb extends object = DatabaseClient>(
+    queryFn: QueryFunction<T, TDb>,
+  ): CapturedQuery | null {
     let capturedQuery: CapturedQuery | null = null
 
     // Create proxy database client
-    const proxyDb = this.createProxyDatabase((model, operation, args) => {
+    const proxyDb = this.createProxyDatabase<TDb>((model, operation, args) => {
       capturedQuery = { model, operation, args }
       return {} // Return empty object to satisfy type requirements
     })
@@ -165,9 +168,9 @@ export class QueryBuilder {
   /**
    * Create a proxy database client that captures method calls
    */
-  private createProxyDatabase(
+  private createProxyDatabase<TDb extends object = DatabaseClient>(
     onQuery: (model: string, operation: QueryOperation, args?: any) => void,
-  ): DatabaseClient {
+  ): TDb {
     return new Proxy({} as DatabaseClient, {
       get: (_, modelName) => {
         if (typeof modelName !== 'string') {
@@ -177,7 +180,7 @@ export class QueryBuilder {
         // Return a model delegate proxy
         return this.createModelDelegate(modelName, onQuery)
       },
-    })
+    }) as TDb
   }
 
   /**
@@ -302,8 +305,8 @@ export function buildQuery(
   return queryBuilder.build(model, operation, args, options)
 }
 
-export function buildQueryFromFunction<T>(
-  queryFn: QueryFunction<T>,
+export function buildQueryFromFunction<T, TDb extends object = FrameworkDbClient>(
+  queryFn: QueryFunction<T, TDb>,
   options?: { isLive?: boolean },
 ): GraphQLQuery {
   return queryBuilder.buildFromFunction(queryFn, options)
@@ -323,8 +326,11 @@ export function buildLiveQuery(
 /**
  * Build a live GraphQL query from a query function (convenience function)
  */
-export function buildLiveQueryFromFunction<T>(
-  queryFn: QueryFunction<T>,
+export function buildLiveQueryFromFunction<
+  T,
+  TDb extends object = FrameworkDbClient,
+>(
+  queryFn: QueryFunction<T, TDb>,
 ): GraphQLQuery {
   return queryBuilder.buildFromFunction(queryFn, { isLive: true })
 }
