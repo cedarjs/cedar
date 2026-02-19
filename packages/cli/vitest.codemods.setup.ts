@@ -1,7 +1,7 @@
 /* eslint-env node, vitest */
 
 // Disable telemetry within framework tests
-process.env.REDWOOD_DISABLE_TELEMETRY = 1
+process.env.REDWOOD_DISABLE_TELEMETRY = '1'
 
 import fs from 'node:fs'
 import path from 'path'

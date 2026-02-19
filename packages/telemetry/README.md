@@ -28,7 +28,8 @@ Here is an example JSON packet containing the telemetry data for running yarn rw
 
 ## How do I turn it off?
 
-Set an environment variable, either in your app's .env file, or anywhere that creates variables for your user space, like `.bashrc` or `.bash_profile`:
+Set an environment variable, either in your app's .env file, or anywhere that
+creates variables for your user space, like `.bashrc` or `.bash_profile`:
 
 ```terminal
 REDWOOD_DISABLE_TELEMETRY=1

@@ -4,7 +4,7 @@ import { terminalLink } from 'termi-link'
 // Because telemetryMiddleware is added to Yargs as middleware,
 // we need to set the env var here outside the handler to correctly disable it.
 if (process.argv.slice(2).includes('api')) {
-  process.env.REDWOOD_DISABLE_TELEMETRY = 1
+  process.env.REDWOOD_DISABLE_TELEMETRY = '1'
 }
 
 export const command = 'render <side>'
