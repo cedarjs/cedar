@@ -3248,6 +3248,38 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@cedarjs/gqlorm@workspace:packages/gqlorm":
+  version: 0.0.0-use.local
+  resolution: "@cedarjs/gqlorm@workspace:packages/gqlorm"
+  dependencies:
+    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@babel/cli": "npm:7.28.6"
+    "@babel/core": "npm:^7.26.10"
+    "@babel/runtime-corejs3": "npm:7.29.0"
+    "@cedarjs/auth": "workspace:*"
+    "@cedarjs/framework-tools": "workspace:*"
+    "@cedarjs/server-store": "workspace:*"
+    "@cedarjs/web": "workspace:*"
+    "@testing-library/jest-dom": "npm:6.9.1"
+    "@types/react": "npm:^18.2.55"
+    "@types/react-dom": "npm:^18.2.19"
+    concurrently: "npm:9.2.1"
+    core-js: "npm:3.48.0"
+    graphql: "npm:16.12.0"
+    publint: "npm:0.3.17"
+    react: "npm:19.2.3"
+    react-dom: "npm:19.2.3"
+    react-server-dom-webpack: "npm:19.2.4"
+    tstyche: "npm:5.0.2"
+    tsx: "npm:4.21.0"
+    typescript: "npm:5.9.3"
+    vitest: "npm:3.2.4"
+  peerDependencies:
+    react: 19.2.3
+    react-dom: 19.2.3
+  languageName: unknown
+  linkType: soft
+
 "@cedarjs/graphql-server@workspace:*, @cedarjs/graphql-server@workspace:packages/graphql-server":
   version: 0.0.0-use.local
   resolution: "@cedarjs/graphql-server@workspace:packages/graphql-server"
