@@ -11,17 +11,107 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
+        "types": "./dist/queryBuilder.d.ts",
+        "default": "./dist/queryBuilder.js"
       },
       "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
+        "types": "./dist/cjs/queryBuilder.d.ts",
+        "default": "./dist/cjs/queryBuilder.js"
+      }
+    },
+    "./queryBuilder": {
+      "import": {
+        "types": "./dist/queryBuilder.d.ts",
+        "default": "./dist/queryBuilder.js"
+      },
+      "require": {
+        "types": "./dist/cjs/queryBuilder.d.ts",
+        "default": "./dist/cjs/queryBuilder.js"
+      }
+    },
+    "./react/useLiveQuery": {
+      "import": {
+        "types": "./dist/react/useLiveQuery.d.ts",
+        "default": "./dist/react/useLiveQuery.js"
+      },
+      "require": {
+        "types": "./dist/cjs/react/useLiveQuery.d.ts",
+        "default": "./dist/cjs/react/useLiveQuery.js"
+      }
+    },
+    "./parser/queryParser": {
+      "import": {
+        "types": "./dist/parser/queryParser.d.ts",
+        "default": "./dist/parser/queryParser.js"
+      },
+      "require": {
+        "types": "./dist/cjs/parser/queryParser.d.ts",
+        "default": "./dist/cjs/parser/queryParser.js"
+      }
+    },
+    "./generator/graphqlGenerator": {
+      "import": {
+        "types": "./dist/generator/graphqlGenerator.d.ts",
+        "default": "./dist/generator/graphqlGenerator.js"
+      },
+      "require": {
+        "types": "./dist/cjs/generator/graphqlGenerator.d.ts",
+        "default": "./dist/cjs/generator/graphqlGenerator.js"
+      }
+    },
+    "./live/types": {
+      "import": {
+        "types": "./dist/live/types.d.ts",
+        "default": "./dist/live/types.js"
+      },
+      "require": {
+        "types": "./dist/cjs/live/types.d.ts",
+        "default": "./dist/cjs/live/types.js"
+      }
+    },
+    "./types/ast": {
+      "import": {
+        "types": "./dist/types/ast.d.ts",
+        "default": "./dist/types/ast.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/ast.d.ts",
+        "default": "./dist/cjs/types/ast.js"
+      }
+    },
+    "./types/orm": {
+      "import": {
+        "types": "./dist/types/orm.d.ts",
+        "default": "./dist/types/orm.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/orm.d.ts",
+        "default": "./dist/cjs/types/orm.js"
+      }
+    },
+    "./types/schema": {
+      "import": {
+        "types": "./dist/types/schema.d.ts",
+        "default": "./dist/types/schema.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/schema.d.ts",
+        "default": "./dist/cjs/types/schema.js"
+      }
+    },
+    "./types/typeUtils": {
+      "import": {
+        "types": "./dist/types/typeUtils.d.ts",
+        "default": "./dist/types/typeUtils.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/typeUtils.d.ts",
+        "default": "./dist/cjs/types/typeUtils.js"
       }
     }
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/queryBuilder.js",
+  "types": "dist/queryBuilder.d.ts",
   "files": [
     "dist"
   ],
@@ -42,7 +132,9 @@
     "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
+    "@cedarjs/web": "workspace:*",
     "core-js": "3.48.0",
+    "graphql": "16.12.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-server-dom-webpack": "19.2.4"
