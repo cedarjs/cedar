@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react'
 import { describe, expect, it, beforeEach, vi } from 'vitest'
 
-import { useLiveQuery } from '../../react/useLiveQuery.js'
+import { useLiveQuery } from '../react/useLiveQuery.js'
 
 const useQueryMock = vi.fn()
 
