@@ -13,9 +13,18 @@ import {
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
 
-export const bothServerFileHandler = async (argv) => {
+type ServeBothArgv = {
+  apiRootPath?: string
+  apiHost?: string
+  apiPort?: number
+  webHost?: string
+  webPort?: number
+}
+
+export const bothServerFileHandler = async (argv: ServeBothArgv) => {
   if (
     getConfig().experimental?.rsc?.enabled ||
     getConfig().experimental?.streamingSsr?.enabled
@@ -66,11 +75,19 @@ export const bothServerFileHandler = async (argv) => {
 
     try {
       await result
-    } catch (error) {
-      if (typeof error?.message !== 'undefined') {
+    } catch (error: unknown) {
+      const message =
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof (error as { message?: unknown }).message === 'string'
+          ? (error as { message: string }).message
+          : undefined
+
+      if (typeof message !== 'undefined') {
         errorTelemetry(
           process.argv,
-          `Error concurrently starting sides: ${error.message}`,
+          `Error concurrently starting sides: ${message}`,
         )
         exitWithError(error)
       }
@@ -78,7 +95,10 @@ export const bothServerFileHandler = async (argv) => {
   }
 }
 
-export const bothSsrRscServerHandler = async (argv, rscEnabled) => {
+export const bothSsrRscServerHandler = async (
+  argv: ServeBothArgv,
+  rscEnabled?: boolean,
+) => {
   const apiPromise = apiServerHandler({
     apiRootPath: argv.apiRootPath,
     host: argv.apiHost,
@@ -91,11 +111,12 @@ export const bothSsrRscServerHandler = async (argv, rscEnabled) => {
     cwd: getPaths().web.base,
     stdio: 'inherit',
     env: rscEnabled
-      ? {
+      ? ({
+          ...process.env,
           // TODO (RSC): Is this how we want to do it? If so, we need to find a way
           // to merge this with users' NODE_OPTIONS
           NODE_OPTIONS: '--conditions react-server',
-        }
+        } as any)
       : undefined,
   })
 

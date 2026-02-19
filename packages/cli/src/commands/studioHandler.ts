@@ -1,6 +1,11 @@
+// @ts-expect-error - Types not available for JS files
 import { isModuleInstalled, installModule } from '../lib/packages.js'
 
-export const handler = async (options) => {
+type StudioOptions = {
+  open?: boolean
+}
+
+export const handler = async (options: StudioOptions): Promise<void> => {
   try {
     // Check the module is installed
     if (!isModuleInstalled('@cedarjs/studio')) {
@@ -27,11 +32,12 @@ export const handler = async (options) => {
     }
 
     // Import studio and start it
+    // @ts-expect-error - Types not available for JS files
     const { serve } = await import('@cedarjs/studio')
     await serve({ open: options.open, enableWeb: true })
-  } catch (e) {
+  } catch (error) {
     console.log('Cannot start the development studio')
-    console.log(e)
+    console.log(error)
     process.exit(1)
   }
 }
