@@ -97,4 +97,74 @@ describe('useBlocker', () => {
     gHistory.remove(listenerId)
     unmount()
   })
+
+  describe('when function', () => {
+    it('should initialize with IDLE state when using a function', () => {
+      const { result, unmount } = renderHook(() =>
+        useBlocker({ when: () => false }),
+      )
+      expect(result.current.state).toBe('IDLE')
+      unmount()
+    })
+
+    it('should block when function returns true', () => {
+      const whenFn = vi.fn(() => true)
+      const { result, unmount } = renderHook(() => useBlocker({ when: whenFn }))
+
+      act(() => {
+        navigate('/blocked-path')
+      })
+
+      expect(whenFn).toHaveBeenCalled()
+      expect(result.current.state).toBe('BLOCKED')
+      unmount()
+    })
+
+    it('should not block when function returns false', () => {
+      const whenFn = vi.fn(() => false)
+      const { result, unmount } = renderHook(() => useBlocker({ when: whenFn }))
+
+      act(() => {
+        navigate('/allowed-path')
+      })
+
+      expect(whenFn).toHaveBeenCalled()
+      expect(result.current.state).toBe('IDLE')
+      unmount()
+    })
+
+    it('should pass nextLocation to when function', () => {
+      const whenFn = vi.fn(() => true)
+      const { result, unmount } = renderHook(() => useBlocker({ when: whenFn }))
+
+      act(() => {
+        navigate('/new-destination')
+      })
+
+      expect(whenFn).toHaveBeenCalledWith({
+        nextLocation: '/new-destination',
+      })
+      expect(result.current.state).toBe('BLOCKED')
+      unmount()
+    })
+
+    it('should block based on nextLocation', () => {
+      const whenFn = vi.fn(({ nextLocation }: { nextLocation: string }) =>
+        nextLocation.startsWith('/protected'),
+      )
+      const { result, unmount } = renderHook(() => useBlocker({ when: whenFn }))
+
+      act(() => {
+        navigate('/allowed')
+      })
+      expect(result.current.state).toBe('IDLE')
+
+      act(() => {
+        navigate('/protected/page')
+      })
+      expect(result.current.state).toBe('BLOCKED')
+
+      unmount()
+    })
+  })
 })
