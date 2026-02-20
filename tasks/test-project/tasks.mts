@@ -1,7 +1,8 @@
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { setOutputPath, webTasksList, apiTasksList } from './base-tasks.mts'
+import { webTasksList, apiTasksList } from './base-tasks.mts'
+import { setOutputPath } from './paths.mts'
 import { getExecaOptions, getCfwBin } from './util.mts'
 
 interface WebTasksOptions {

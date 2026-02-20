@@ -21,7 +21,7 @@ export { Repeater } from 'graphql-yoga'
  * But not fully supported in TS
  * {
  *   schema: DocumentNode // <-- required
- *   [string]: RedwoodSubscription
+ *   [string]: CedarSubscription
  * }
  *
  * Note: This type is duplicated from packages/graphql-server/src/subscriptions/makeSubscriptions
@@ -67,8 +67,8 @@ export type CedarRealtimeOptions = {
   enableDeferStream?: boolean
   liveQueries?: {
     /**
-     * @description Cedar Realtime supports in-memory and Redis stores.
-     * @default 'in-memory'
+     * @description Cedar Realtime supports in-memory and Redis stores. If no
+     * `store` is configured, live queries will be disabled.
      */
     store:
       | 'in-memory'
@@ -86,8 +86,8 @@ export type CedarRealtimeOptions = {
   }
   subscriptions?: {
     /**
-     * @description Cedar Realtime supports in-memory and Redis stores.
-     * @default 'in-memory'
+     * @description Cedar Realtime supports in-memory and Redis stores. If no
+     * `store` is configured, subscriptions will be disabled.
      */
     store:
       | 'in-memory'
@@ -178,9 +178,7 @@ export const useCedarRealtime = (options: CedarRealtimeOptions): Plugin => {
       liveQueriesEnabled = true
 
       liveQueryStore = inMemoryLiveQueryStore
-      liveQueryPlugin = useLiveQuery({
-        liveQueryStore,
-      })
+      liveQueryPlugin = useLiveQuery({ liveQueryStore })
     } else if (options.liveQueries.store.redis) {
       liveQueriesEnabled = true
 
@@ -198,7 +196,7 @@ export const useCedarRealtime = (options: CedarRealtimeOptions): Plugin => {
     }
   }
 
-  if (options.subscriptions) {
+  if (options.subscriptions?.store) {
     if (options.subscriptions.store === 'in-memory') {
       subscriptionsEnabled = true
 
@@ -212,6 +210,8 @@ export const useCedarRealtime = (options: CedarRealtimeOptions): Plugin => {
       })
 
       pubSub = createPubSub({ eventTarget })
+    } else {
+      throw new Error('Invalid subscriptions store configuration.')
     }
   }
 

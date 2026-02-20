@@ -1,0 +1,7 @@
+import type { db } from '../../../api/src/lib/db.js'
+
+declare module '@cedarjs/gqlorm/types/orm' {
+  interface GqlormTypeMap {
+    db: typeof db
+  }
+}

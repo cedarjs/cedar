@@ -56,6 +56,7 @@ export const generateTypeDefs = async () => {
       ...generateMirrorCells(),
       ...generateTypeDefRouterPages(),
       ...generateTypeDefCurrentUser(),
+      ...generateTypeDefGqlorm(),
       ...generateTypeDefRouterRoutes(),
       ...generateTypeDefGlobImports(),
       ...generateTypeDefGlobalContext(),
@@ -359,6 +360,10 @@ export const generateTypeDefRouterPages = () => {
 
 export const generateTypeDefCurrentUser = () => {
   return writeTypeDefIncludeFile('all-currentUser.d.ts.template')
+}
+
+export const generateTypeDefGqlorm = () => {
+  return writeTypeDefIncludeFile('all-gqlorm.d.ts.template')
 }
 
 export const generateTypeDefScenarios = () => {

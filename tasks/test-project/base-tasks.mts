@@ -1,8 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
-
+import { contactTask } from './contact-task.mts'
+import { fullPath, getOutputPath } from './paths.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
 import {
   getExecaOptions,
@@ -11,63 +11,9 @@ import {
   getCfwBin,
   // TODO: See if we can get rid of this and just use execa directly
   exec,
+  addModel,
+  createBuilder,
 } from './util.mts'
-
-// This variable gets used in other functions
-// and is set when webTasks, apiTasks, streamingTasks or fragmentsTasks are
-// called
-let OUTPUT_PATH: string | undefined
-
-export function setOutputPath(path: string) {
-  OUTPUT_PATH = path
-}
-
-export function getOutputPath() {
-  if (!OUTPUT_PATH) {
-    throw new Error('Output path not set')
-  }
-
-  return OUTPUT_PATH
-}
-
-export function fullPath(
-  name: string,
-  { addExtension } = { addExtension: true },
-) {
-  if (!OUTPUT_PATH) {
-    throw new Error('Output path not set')
-  }
-
-  if (addExtension) {
-    if (name.startsWith('api')) {
-      name += '.ts'
-    } else if (name.startsWith('web')) {
-      name += '.tsx'
-    }
-  }
-
-  return path.join(OUTPUT_PATH, name)
-}
-
-/**
- * @param cmd The command to run
- */
-export function createBuilder(cmd: string, dir = '') {
-  if (!OUTPUT_PATH) {
-    throw new Error('Output path not set')
-  }
-
-  const execaOptions = getExecaOptions(path.join(OUTPUT_PATH, dir))
-
-  return async function createItem(positionals?: string | string[]) {
-    const args = positionals
-      ? Array.isArray(positionals)
-        ? positionals
-        : [positionals]
-      : []
-    return execa(cmd, args, execaOptions)
-  }
-}
 
 function getPagesTasks() {
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
@@ -250,8 +196,8 @@ export function apiTasksList({
         // Need both here since they have a relation
         const { post, user } = await import('./codemods/models.mts')
 
-        addModel(post)
-        addModel(user)
+        await addModel(post)
+        await addModel(user)
 
         return exec(
           `yarn cedar prisma migrate dev --name create_post_user`,
@@ -270,18 +216,12 @@ export function apiTasksList({
           'scenarioValueSuffix.js',
           fullPath('api/src/services/posts/posts.scenarios'),
         )
-
-        await exec(
-          `yarn ${getCfwBin(getOutputPath())} project:copy`,
-          [],
-          execaOptions,
-        )
       },
     },
     {
       title: 'Adding seed script',
-      task: async () => {
-        await applyCodemod(
+      task: () => {
+        return applyCodemod(
           'seed.js',
           fullPath('scripts/seed.ts', { addExtension: false }),
         )
@@ -289,59 +229,7 @@ export function apiTasksList({
     },
     {
       title: 'Adding contact model to prisma',
-      task: async () => {
-        const { contact } = await import('./codemods/models.mts')
-
-        addModel(contact)
-
-        await exec(
-          `yarn cedar prisma migrate dev --name create_contact`,
-          [],
-          execaOptions,
-        )
-
-        await generateScaffold('contacts')
-
-        const contactsServicePath = fullPath(
-          'api/src/services/contacts/contacts',
-        )
-        fs.writeFileSync(
-          contactsServicePath,
-          fs
-            .readFileSync(contactsServicePath, 'utf-8')
-            .replace(
-              "import { db } from 'src/lib/db'",
-              '// Testing aliased imports with extensions\n' +
-                "import { db } from 'src/lib/db.js'",
-            ),
-        )
-
-        const contactsTestPath = fullPath(
-          'api/src/services/contacts/contacts.test',
-        )
-        const contactsTest = fs.readFileSync(contactsTestPath, 'utf-8')
-
-        // Doing simple string replacing here allows me better control over
-        // blank lines compared to proper codemods with jscodeshift
-        fs.writeFileSync(
-          contactsTestPath,
-          contactsTest
-            .replace(
-              "describe('contacts', () => {",
-              "describe('contacts', () => {\n" +
-                '  afterEach(() => {\n' +
-                '    jest.mocked(console).log.mockRestore?.()\n' +
-                '  })\n',
-            )
-            .replace(
-              "  scenario('creates a contact', async () => {",
-              "  scenario('creates a contact', async () => {\n" +
-                "    jest.spyOn(console, 'log').mockImplementation(() => {})\n",
-            ),
-        )
-
-        return applyCodemod('contacts.mts', contactsServicePath)
-      },
+      task: contactTask,
     },
     {
       // This task renames the migration folders so that we don't have to deal
@@ -421,8 +309,7 @@ export function apiTasksList({
     },
     {
       title: 'Add dbAuth',
-      task: async () =>
-        addDbAuth(dbAuth === 'local', getOutputPath(), linkWithLatestFwBuild),
+      task: async () => addDbAuth(dbAuth === 'local', linkWithLatestFwBuild),
     },
     {
       title: 'Add describeScenario tests',
@@ -626,19 +513,8 @@ export async function updateCellMocks() {
   )
 }
 
-export async function addModel(schema: string) {
-  const prismaPath = `${getOutputPath()}/api/db/schema.prisma`
-
-  const current = fs.readFileSync(prismaPath, 'utf-8')
-
-  fs.writeFileSync(prismaPath, `${current.trim()}\n\n${schema}\n`)
-}
-
-async function addDbAuth(
-  localDbAuth: boolean,
-  outputPath: string,
-  linkWithLatestFwBuild: boolean,
-) {
+async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
+  const outputPath = getOutputPath()
   const execaOptions = getExecaOptions(outputPath)
 
   // Temporarily disable postinstall script
@@ -688,9 +564,11 @@ async function addDbAuth(
     const apiPkg = path.join(dbAuthPackagePath, 'api')
     const webPkg = path.join(dbAuthPackagePath, 'web')
 
-    await exec('yarn build:pack', [], getExecaOptions(setupPkg))
-    await exec('yarn build:pack', [], getExecaOptions(apiPkg))
-    await exec('yarn build:pack', [], getExecaOptions(webPkg))
+    await Promise.all([
+      exec('yarn build:pack', [], getExecaOptions(setupPkg)),
+      exec('yarn build:pack', [], getExecaOptions(apiPkg)),
+      exec('yarn build:pack', [], getExecaOptions(webPkg)),
+    ])
 
     const setupTgz = path.join(setupPkg, 'cedarjs-auth-dbauth-setup.tgz')
     const apiTgz = path.join(apiPkg, 'cedarjs-auth-dbauth-api.tgz')

@@ -26,6 +26,16 @@
 - Prefer consistent package naming and scopes: `packages/<area>/<name>`.
 - Keep file and symbol names aligned with existing package conventions.
 
+## Type Safety & Casting
+
+- Prefer precise types and type guards over casts whenever possible.
+- Use `unknown` for values from untyped/external boundaries (catch variables, dynamic module imports, process/env payloads) and narrow before use.
+- Use type assertions (`as`) only as a last resort after narrowing or introducing a local type alias/interface is not practical.
+- Avoid `as any`. If `any` is truly unavoidable, add a short inline comment that explains why and what boundary/limitation requires it.
+- Every non-obvious cast must include a short comment describing why it is safe or necessary.
+- Avoid chained assertions unless required (e.g. `as unknown as X` at library typing boundaries); document why when used.
+- When filtering arrays, prefer typed predicates (e.g. `(v): v is T => Boolean(v)`) instead of broad casts like `as T[]`.
+
 ## Testing Guidelines
 
 - Unit/integration tests are executed through `yarn test` (Nx targets).
