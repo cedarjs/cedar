@@ -11,6 +11,7 @@ import {
   generateMirrorDirectoryNamedModules,
   generateTypeDefRouterPages,
   generateTypeDefCurrentUser,
+  generateTypeDefGqlorm,
   generateTypeDefRouterRoutes,
   generateTypeDefGlobImports,
   generateTypeDefGlobalContext,
@@ -150,6 +151,12 @@ test('generate current user ', () => {
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.redwood/types/includes/all-currentUser.d.ts')
   // The type definition output is static, so there's nothing to test.
+})
+
+test('generate gqlorm db augmentation', () => {
+  const paths = generateTypeDefGqlorm()
+  const p = paths.map(cleanPaths)
+  expect(p[0]).toEqual('.redwood/types/includes/all-gqlorm.d.ts')
 })
 
 test('generates the router routes', () => {

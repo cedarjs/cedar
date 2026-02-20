@@ -290,6 +290,7 @@ export default [
   {
     files: [
       '**/.babelrc.js',
+      '**/.babelrc.cjs',
       '**/babel.config.js',
       '**/jest.config.js',
       '**/jest.setup.js',
