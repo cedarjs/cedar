@@ -6,7 +6,6 @@ import { Listr } from 'listr2'
 import prompts from 'prompts'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
-import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -412,7 +411,11 @@ export async function handler(args) {
       {
         title: `Generating types...`,
         task: async () => {
-          await generateTypes()
+          const { generate } =
+            await import('@cedarjs/internal/dist/generate/generate')
+
+          await generate()
+
           console.log(
             'Note: You may need to manually restart GraphQL in VSCode to see ' +
               'the new types take effect.\n\n',
