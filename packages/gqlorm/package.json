@@ -125,7 +125,6 @@
     "check:package": "concurrently npm:check:attw yarn publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
-    "test:types": "tstyche",
     "test:watch": "vitest watch"
   },
   "dependencies": {
