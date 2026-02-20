@@ -49,8 +49,8 @@ describe('QueryBuilder', () => {
 
   it('supports findUnique', () => {
     const result = buildQueryFromFunction(
-      (db) =>
-        db.user.findUnique({
+      (gqlorm) =>
+        gqlorm.user.findUnique({
           where: { id: 1 },
           select: { id: true, name: true },
         }),
@@ -65,8 +65,8 @@ describe('QueryBuilder', () => {
   })
 
   it('supports findMany', () => {
-    const result = buildQueryFromFunction((db) =>
-      db.user.findMany({
+    const result = buildQueryFromFunction((gqlorm) =>
+      gqlorm.user.findMany({
         where: { isActive: true },
         select: {
           id: true,
@@ -85,8 +85,8 @@ describe('QueryBuilder', () => {
   })
 
   it('supports findFirst', () => {
-    const result = buildQueryFromFunction((db) =>
-      db.post.findFirst({
+    const result = buildQueryFromFunction((gqlorm) =>
+      gqlorm.post.findFirst({
         where: {
           AND: [{ published: true }, { createdAt: { gt: new Date(0) } }],
         },

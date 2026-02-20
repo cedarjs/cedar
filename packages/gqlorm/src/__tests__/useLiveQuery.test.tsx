@@ -22,12 +22,13 @@ describe('useLiveQuery', () => {
   })
 
   it('builds a live query and forwards it to Cedar useQuery', () => {
-    const queryFn = (db: any) => db.user.findMany({ where: { isActive: true } })
-
     renderHook(() =>
-      useLiveQuery(queryFn, {
-        fetchPolicy: 'network-only',
-      } as any),
+      useLiveQuery(
+        (gqlorm) => gqlorm.user.findMany({ where: { isActive: true } }),
+        {
+          fetchPolicy: 'network-only',
+        },
+      ),
     )
 
     expect(useQueryMock).toHaveBeenCalledTimes(1)
@@ -55,8 +56,9 @@ describe('useLiveQuery', () => {
       refetch: vi.fn(),
     })
 
-    const queryFn = (db: any) => db.user.findMany()
-    const { result } = renderHook(() => useLiveQuery(queryFn))
+    const { result } = renderHook(() =>
+      useLiveQuery((gqlorm) => gqlorm.user.findMany()),
+    )
 
     expect(result.current.data).toEqual(users)
     expect(result.current.loading).toBe(false)
