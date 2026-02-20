@@ -5,6 +5,33 @@ import {
   buildQueryFromFunction,
   QueryBuilder,
 } from '../queryBuilder.js'
+import type * as OrmTypes from '../types/orm.js'
+
+interface CedarUser {
+  id: number
+  createdAt: Date
+  updatedAt: Date
+  email: string
+  name: string
+  isActive: boolean
+}
+
+interface CedarPost {
+  id: number
+  createdAt: Date
+  updatedAt: Date
+  title: string
+  published: boolean
+}
+
+declare module '../types/orm.js' {
+  interface GqlormTypeMap {
+    db: {
+      user: OrmTypes.ModelDelegate<CedarUser>
+      post: OrmTypes.ModelDelegate<CedarPost>
+    }
+  }
+}
 
 describe('QueryBuilder', () => {
   it('builds a live query when requested', () => {
@@ -20,7 +47,7 @@ describe('QueryBuilder', () => {
     expect(result.variables).toEqual({ var0: true })
   })
 
-  it('builds query from function capture', () => {
+  it('supports findUnique', () => {
     const result = buildQueryFromFunction(
       (db) =>
         db.user.findUnique({
@@ -35,6 +62,43 @@ describe('QueryBuilder', () => {
     expect(result.query).toMatch(/\bname\b/)
     expect(result.query).not.toContain('createdAt')
     expect(Object.values(result.variables || {})).toEqual([1])
+  })
+
+  it('supports findMany', () => {
+    const result = buildQueryFromFunction((db) =>
+      db.user.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          email: true,
+          // @ts-expect-error - Making sure types are correct
+          doesNotExist: false,
+        },
+      }),
+    )
+
+    expect(result.query).toContain('query findManyUser')
+    expect(result.query).toContain('users')
+    expect(result.query).toMatch(/\bid\b/)
+    expect(result.query).toMatch(/\bemail\b/)
+    expect(Object.values(result.variables || {})).toEqual([true])
+  })
+
+  it('supports findFirst', () => {
+    const result = buildQueryFromFunction((db) =>
+      db.post.findFirst({
+        where: {
+          AND: [{ published: true }, { createdAt: { gt: new Date(0) } }],
+        },
+        select: { id: true, title: true },
+      }),
+    )
+
+    expect(result.query).toContain('query findFirstPost')
+    expect(result.query).toContain('post(')
+    expect(result.query).toMatch(/\bid\b/)
+    expect(result.query).toMatch(/\btitle\b/)
+    expect(result.variables).toEqual({ var0: true, var1: new Date(0) })
   })
 
   it('respects forceLiveQueries but allows explicit override', () => {

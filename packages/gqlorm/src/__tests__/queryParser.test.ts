@@ -50,6 +50,7 @@ describe('QueryParser', () => {
 
     expect(() =>
       parser.parseQuery('user', 'findMany', {
+        // Casting to `any` to test thrown error
         orderBy: { createdAt: 'up' as any },
       }),
     ).toThrow(QueryParseError)
