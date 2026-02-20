@@ -1,3 +1,3 @@
 export interface ModelSchema {
-  [modelName: string]: string[];
+  [modelName: string]: string[]
 }

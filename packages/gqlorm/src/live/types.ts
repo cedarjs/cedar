@@ -3,7 +3,7 @@
  * Defines interfaces and types for real-time GraphQL queries with @live directive
  */
 
-import { type ModelSchema } from "../types/schema.js";
+import { type ModelSchema } from '../types/schema.js'
 
 // Live query configuration options
 export interface LiveQueryOptions {
@@ -11,106 +11,106 @@ export interface LiveQueryOptions {
    * Whether to automatically reconnect on connection loss
    * @default true
    */
-  autoReconnect?: boolean;
+  autoReconnect?: boolean
 
   /**
    * Maximum number of reconnection attempts
    * @default 5
    */
-  maxReconnectAttempts?: number;
+  maxReconnectAttempts?: number
 
   /**
    * Delay between reconnection attempts in milliseconds
    * @default 1000
    */
-  reconnectDelay?: number;
+  reconnectDelay?: number
 
   /**
    * Whether to use exponential backoff for reconnection delays
    * @default true
    */
-  exponentialBackoff?: boolean;
+  exponentialBackoff?: boolean
 
   /**
    * Maximum delay between reconnection attempts in milliseconds
    * @default 30000
    */
-  maxReconnectDelay?: number;
+  maxReconnectDelay?: number
 
   /**
    * Custom headers to send with live query requests
    */
-  headers?: Record<string, string>;
+  headers?: Record<string, string>
 
   /**
    * Custom authentication token
    */
-  authToken?: string;
+  authToken?: string
 
   /**
    * WebSocket URL for live query subscriptions
    */
-  websocketUrl?: string;
+  websocketUrl?: string
 
   /**
    * Whether to enable debug logging
    * @default false
    */
-  debug?: boolean;
+  debug?: boolean
 
   /**
    * Whether to resubscribe to queries upon reconnection
    * @default true
    */
-  refetchOnReconnect?: boolean;
+  refetchOnReconnect?: boolean
 }
 
 // Resolved options with all required fields (for internal use)
 export type ResolvedLiveQueryOptions = Required<
-  Omit<LiveQueryOptions, "authToken" | "websocketUrl">
+  Omit<LiveQueryOptions, 'authToken' | 'websocketUrl'>
 > & {
-  authToken: string | undefined;
-  websocketUrl: string | undefined;
-};
+  authToken: string | undefined
+  websocketUrl: string | undefined
+}
 
 // Live query connection states
 export type LiveQueryConnectionState =
-  | "connecting"
-  | "connected"
-  | "disconnected"
-  | "reconnecting"
-  | "error"
-  | "closed";
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'reconnecting'
+  | 'error'
+  | 'closed'
 
 // Live query update types
-export type LiveQueryUpdateType = "insert" | "update" | "delete" | "refresh";
+export type LiveQueryUpdateType = 'insert' | 'update' | 'delete' | 'refresh'
 
 // Live query update event
 export interface LiveQueryUpdate<T = any> {
   /**
    * Type of update that occurred
    */
-  type: LiveQueryUpdateType;
+  type: LiveQueryUpdateType
 
   /**
    * Updated data (for insert/update) or deleted item (for delete)
    */
-  data?: T;
+  data?: T
 
   /**
    * Complete updated result set (for refresh)
    */
-  result?: T;
+  result?: T
 
   /**
    * Timestamp when the update occurred
    */
-  timestamp: Date;
+  timestamp: Date
 
   /**
    * Optional metadata about the update
    */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any>
 }
 
 // Live query error types
@@ -118,22 +118,22 @@ export interface LiveQueryError {
   /**
    * Error code
    */
-  code: string;
+  code: string
 
   /**
    * Human-readable error message
    */
-  message: string;
+  message: string
 
   /**
    * Optional error details
    */
-  details?: any;
+  details?: any
 
   /**
    * Timestamp when the error occurred
    */
-  timestamp: Date;
+  timestamp: Date
 }
 
 // Live query subscription interface
@@ -141,53 +141,53 @@ export interface LiveQuerySubscription<T = any> {
   /**
    * Unique identifier for this subscription
    */
-  id: string;
+  id: string
 
   /**
    * GraphQL query string
    */
-  query: string;
+  query: string
 
   /**
    * Query variables
    */
-  variables?: Record<string, any>;
+  variables?: Record<string, any>
 
   /**
    * Current connection state
    */
-  connectionState: LiveQueryConnectionState;
+  connectionState: LiveQueryConnectionState
 
   /**
    * Latest query result
    */
-  data: T | undefined;
+  data: T | undefined
 
   /**
    * Latest error, if any
    */
-  error: LiveQueryError | undefined;
+  error: LiveQueryError | undefined
 
   /**
    * Whether the subscription is currently loading
    */
-  loading: boolean;
+  loading: boolean
 
   /**
    * Unsubscribe from live updates
    */
-  unsubscribe: () => void;
+  unsubscribe: () => void
 
   /**
    * Manually refetch the query
    */
-  refetch: () => Promise<void>;
+  refetch: () => Promise<void>
 
   /**
    * Register a callback for live data updates
    * Returns a function to unregister the callback
    */
-  onUpdate: (callback: (update: LiveQueryUpdate) => void) => () => void;
+  onUpdate: (callback: (update: LiveQueryUpdate) => void) => () => void
 }
 
 // Live query client configuration
@@ -195,17 +195,17 @@ export interface LiveQueryClientConfig extends LiveQueryOptions {
   /**
    * GraphQL endpoint URL
    */
-  endpoint: string;
+  endpoint: string
 
   /**
    * WebSocket endpoint URL (optional, will derive from endpoint if not provided)
    */
-  websocketUrl?: string;
+  websocketUrl?: string
 
   /**
    * Model schema defining scalar fields for each model
    */
-  schema?: ModelSchema;
+  schema?: ModelSchema
 }
 
 // Live query transport interface
@@ -213,12 +213,12 @@ export interface LiveQueryTransport {
   /**
    * Connect to the live query service
    */
-  connect(): Promise<void>;
+  connect(): Promise<void>
 
   /**
    * Disconnect from the live query service
    */
-  disconnect(): Promise<void>;
+  disconnect(): Promise<void>
 
   /**
    * Subscribe to a live query
@@ -227,24 +227,24 @@ export interface LiveQueryTransport {
     query: string,
     variables?: Record<string, any>,
     options?: LiveQueryOptions,
-  ): LiveQuerySubscription<T>;
+  ): LiveQuerySubscription<T>
 
   /**
    * Get current connection state
    */
-  getConnectionState(): LiveQueryConnectionState;
+  getConnectionState(): LiveQueryConnectionState
 
   /**
    * Add connection state change listener
    */
   onConnectionStateChange(
     listener: (state: LiveQueryConnectionState) => void,
-  ): () => void;
+  ): () => void
 
   /**
    * Add error listener
    */
-  onError(listener: (error: LiveQueryError) => void): () => void;
+  onError(listener: (error: LiveQueryError) => void): () => void
 }
 
 // Live query cache interface
@@ -252,27 +252,27 @@ export interface LiveQueryCache {
   /**
    * Get cached result for a query
    */
-  get<T>(key: string): T | undefined;
+  get<T>(key: string): T | undefined
 
   /**
    * Set cached result for a query
    */
-  set<T>(key: string, data: T): void;
+  set<T>(key: string, data: T): void
 
   /**
    * Remove cached result
    */
-  remove(key: string): void;
+  remove(key: string): void
 
   /**
    * Clear all cached results
    */
-  clear(): void;
+  clear(): void
 
   /**
    * Get cache key for a query
    */
-  getKey(query: string, variables?: Record<string, any>): string;
+  getKey(query: string, variables?: Record<string, any>): string
 }
 
 // Live query context value (for React context)
@@ -280,37 +280,37 @@ export interface LiveQueryContextValue {
   /**
    * Live query transport instance
    */
-  transport?: LiveQueryTransport;
+  transport?: LiveQueryTransport
 
   /**
    * Live query cache instance
    */
-  cache?: LiveQueryCache;
+  cache?: LiveQueryCache
 
   /**
    * Global live query options
    */
-  options?: LiveQueryOptions;
+  options?: LiveQueryOptions
 
   /**
    * Model schema defining scalar fields for each model
    */
-  schema?: ModelSchema;
+  schema?: ModelSchema
 
   /**
    * Query builder instance with schema
    */
-  queryBuilder?: any;
+  queryBuilder?: any
 
   /**
    * Whether the client is connected
    */
-  isConnected: boolean;
+  isConnected: boolean
 
   /**
    * Current connection state
    */
-  connectionState: LiveQueryConnectionState;
+  connectionState: LiveQueryConnectionState
 }
 
 // Hook return types for React integration (using explicit undefined for exactOptionalPropertyTypes)
@@ -318,30 +318,30 @@ export interface LiveQueryHookResult<T = any> {
   /**
    * Query result data
    */
-  data: T | undefined;
+  data: T | undefined
 
   /**
    * Loading state
    */
-  loading: boolean;
+  loading: boolean
 
   /**
    * Error state
    */
-  error: LiveQueryError | undefined;
+  error: LiveQueryError | undefined
 
   /**
    * Connection state
    */
-  connectionState: LiveQueryConnectionState;
+  connectionState: LiveQueryConnectionState
 
   /**
    * Refetch function
    */
-  refetch: () => Promise<void>;
+  refetch: () => Promise<void>
 
   /**
    * Subscription instance (for advanced usage)
    */
-  subscription: LiveQuerySubscription<T> | undefined;
+  subscription: LiveQuerySubscription<T> | undefined
 }
