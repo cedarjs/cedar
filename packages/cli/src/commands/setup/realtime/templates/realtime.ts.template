@@ -1,4 +1,4 @@
-import { CedarRealtimeOptions } from '@cedarjs/realtime'
+import type { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import subscriptions from 'src/subscriptions/**/*.{js,ts}'
 
