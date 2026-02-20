@@ -1,0 +1,164 @@
+{
+  "name": "@cedarjs/gqlorm",
+  "version": "2.6.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cedarjs/cedar.git",
+    "directory": "packages/gqlorm"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/queryBuilder.d.ts",
+        "default": "./dist/queryBuilder.js"
+      },
+      "require": {
+        "types": "./dist/cjs/queryBuilder.d.ts",
+        "default": "./dist/cjs/queryBuilder.js"
+      }
+    },
+    "./queryBuilder": {
+      "import": {
+        "types": "./dist/queryBuilder.d.ts",
+        "default": "./dist/queryBuilder.js"
+      },
+      "require": {
+        "types": "./dist/cjs/queryBuilder.d.ts",
+        "default": "./dist/cjs/queryBuilder.js"
+      }
+    },
+    "./react/useLiveQuery": {
+      "import": {
+        "types": "./dist/react/useLiveQuery.d.ts",
+        "default": "./dist/react/useLiveQuery.js"
+      },
+      "require": {
+        "types": "./dist/cjs/react/useLiveQuery.d.ts",
+        "default": "./dist/cjs/react/useLiveQuery.js"
+      }
+    },
+    "./parser/queryParser": {
+      "import": {
+        "types": "./dist/parser/queryParser.d.ts",
+        "default": "./dist/parser/queryParser.js"
+      },
+      "require": {
+        "types": "./dist/cjs/parser/queryParser.d.ts",
+        "default": "./dist/cjs/parser/queryParser.js"
+      }
+    },
+    "./generator/graphqlGenerator": {
+      "import": {
+        "types": "./dist/generator/graphqlGenerator.d.ts",
+        "default": "./dist/generator/graphqlGenerator.js"
+      },
+      "require": {
+        "types": "./dist/cjs/generator/graphqlGenerator.d.ts",
+        "default": "./dist/cjs/generator/graphqlGenerator.js"
+      }
+    },
+    "./live/types": {
+      "import": {
+        "types": "./dist/live/types.d.ts",
+        "default": "./dist/live/types.js"
+      },
+      "require": {
+        "types": "./dist/cjs/live/types.d.ts",
+        "default": "./dist/cjs/live/types.js"
+      }
+    },
+    "./types/ast": {
+      "import": {
+        "types": "./dist/types/ast.d.ts",
+        "default": "./dist/types/ast.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/ast.d.ts",
+        "default": "./dist/cjs/types/ast.js"
+      }
+    },
+    "./types/orm": {
+      "import": {
+        "types": "./dist/types/orm.d.ts",
+        "default": "./dist/types/orm.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/orm.d.ts",
+        "default": "./dist/cjs/types/orm.js"
+      }
+    },
+    "./types/schema": {
+      "import": {
+        "types": "./dist/types/schema.d.ts",
+        "default": "./dist/types/schema.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/schema.d.ts",
+        "default": "./dist/cjs/types/schema.js"
+      }
+    },
+    "./types/typeUtils": {
+      "import": {
+        "types": "./dist/types/typeUtils.d.ts",
+        "default": "./dist/types/typeUtils.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/typeUtils.d.ts",
+        "default": "./dist/cjs/types/typeUtils.js"
+      }
+    }
+  },
+  "main": "dist/queryBuilder.js",
+  "types": "dist/queryBuilder.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsx ./build.ts",
+    "build:pack": "yarn pack -o cedarjs-gqlorm.tgz",
+    "build:types": "tsc --build --verbose tsconfig.build.json",
+    "build:types-cjs": "tsc --build --verbose tsconfig.cjs.json",
+    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
+    "check:attw": "tsx ./attw.ts",
+    "check:package": "concurrently npm:check:attw yarn publint",
+    "prepublishOnly": "NODE_ENV=production yarn build",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@babel/runtime-corejs3": "7.29.0",
+    "@cedarjs/auth": "workspace:*",
+    "@cedarjs/server-store": "workspace:*",
+    "@cedarjs/web": "workspace:*",
+    "core-js": "3.48.0",
+    "graphql": "16.12.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-server-dom-webpack": "19.2.4"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.2",
+    "@babel/cli": "7.28.6",
+    "@babel/core": "^7.26.10",
+    "@cedarjs/framework-tools": "workspace:*",
+    "@testing-library/jest-dom": "6.9.1",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "concurrently": "9.2.1",
+    "publint": "0.3.17",
+    "tstyche": "5.0.2",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  },
+  "peerDependencies": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
+}
