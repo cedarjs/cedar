@@ -1,0 +1,137 @@
+import { Client } from 'pg'
+
+import { liveQueryStore } from '@cedarjs/realtime'
+
+import { logger } from 'src/lib/logger'
+
+const LIVE_QUERY_CHANNEL = 'table_change'
+const RECONNECT_DELAY_MS = 5000
+
+let client: Client | undefined
+let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
+let started = false
+let connectionGeneration = 0
+
+interface GetKeysToInvalidateArgs {
+  table: string
+  recordId: string
+}
+
+function getKeysToInvalidate({ table, recordId }: GetKeysToInvalidateArgs) {
+  const keys = [
+    `Query.${table}`,
+    `Query.${table.toLocaleLowerCase()}`,
+    `${table}:${recordId}`
+  ]
+
+  return keys
+}
+
+function reconnect(generation: number) {
+  if (reconnectTimeout) {
+    return
+  }
+
+  reconnectTimeout = setTimeout(async () => {
+    reconnectTimeout = undefined
+
+    if (generation !== connectionGeneration) {
+      return
+    }
+
+    await connect()
+  }, RECONNECT_DELAY_MS)
+}
+
+interface NotificationPayload {
+  table: string
+  operation: string
+  recordId: string
+}
+
+async function onNotification(payload: string | undefined) {
+  if (!payload) {
+    return
+  }
+
+  try {
+    const parsed: NotificationPayload = JSON.parse(payload)
+    const keys = getKeysToInvalidate(parsed)
+
+    await liveQueryStore?.invalidate(keys)
+
+    logger.debug(
+      { operation: parsed.operation, table: parsed.table, keys },
+      'Invalidated live query keys from Postgres notification'
+    )
+  } catch (error) {
+    logger.error(
+      { error, payload },
+      'Failed to process Postgres notification payload'
+    )
+  }
+}
+
+async function connect() {
+  connectionGeneration = connectionGeneration + 1
+  const generation = connectionGeneration
+
+  try {
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout)
+      reconnectTimeout = undefined
+    }
+
+    if (client) {
+      const previousClient = client
+      client = undefined
+      previousClient.removeAllListeners()
+      await previousClient.end().catch(() => {})
+    }
+
+    const nextClient = new Client({
+      connectionString: process.env.DATABASE_URL,
+    })
+
+    nextClient.on('notification', async (msg) => {
+      await onNotification(msg.payload)
+    })
+
+    nextClient.on('error', (error) => {
+      logger.error(
+        { error },
+        'Postgres live query listener encountered an error'
+      )
+      reconnect(generation)
+    })
+
+    nextClient.on('end', () => {
+      logger.warn('Postgres live query listener disconnected')
+      reconnect(generation)
+    })
+
+    await nextClient.connect()
+    await nextClient.query(`LISTEN ${LIVE_QUERY_CHANNEL}`)
+
+    if (generation !== connectionGeneration) {
+      nextClient.removeAllListeners()
+      await nextClient.end().catch(() => {})
+      return
+    }
+
+    client = nextClient
+    logger.info('Postgres live query listener connected')
+  } catch (error) {
+    logger.error({ error }, 'Failed to connect Postgres live query listener')
+    reconnect(generation)
+  }
+}
+
+export async function startLiveQueryListener() {
+  if (started) {
+    return
+  }
+
+  started = true
+  await connect()
+}

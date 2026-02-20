@@ -19,6 +19,8 @@ import * as setupI18n from './setup/i18n/i18n.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupJobs from './setup/jobs/jobs.js'
 // @ts-expect-error - Types not available for JS files
+import * as setupLiveQueries from './setup/live-queries/liveQueries.js'
+// @ts-expect-error - Types not available for JS files
 import * as setupMailer from './setup/mailer/mailer.js'
 import * as setupMiddleware from './setup/middleware/middleware.js'
 import * as setupMonitoring from './setup/monitoring/monitoring.js'
@@ -50,6 +52,7 @@ export const builder = (yargs: Argv) =>
     .command(setupGraphql)
     .command(setupI18n)
     .command(setupJobs)
+    .command(setupLiveQueries)
     .command(setupMailer)
     // @ts-expect-error - Yargs TS types aren't very good
     .command(setupMiddleware)
