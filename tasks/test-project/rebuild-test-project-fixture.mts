@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import { startPrismaDevServer } from '@prisma/dev'
 import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
@@ -75,17 +76,24 @@ const args = yargs(hideBin(process.argv))
     type: 'string',
     describe: 'Resume rebuild from the given step',
   })
+  .option('live', {
+    default: false,
+    type: 'boolean',
+    describe:
+      'Rebuild the @live test-project, using pglite for PostgreSQL-' +
+      'compatible migrations',
+  })
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep } = args
+const { verbose, resume, resumePath, resumeStep, live } = args
 
 const CEDAR_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
 const OUTPUT_PROJECT_PATH = resumePath
   ? /* path.resolve(String(resumePath)) */ resumePath
   : path.join(
       os.tmpdir(),
-      'cedar-test-project',
+      live ? 'cedar-test-project-live' : 'cedar-test-project',
       // ":" is problematic with paths
       new Date().toISOString().split(':').join('-'),
     )
@@ -336,7 +344,7 @@ const createProject = () => {
 const copyProject = async () => {
   const fixturePath = path.join(
     CEDAR_FRAMEWORK_PATH,
-    '__fixtures__/test-project',
+    live ? '__fixtures__/test-project-live' : '__fixtures__/test-project',
   )
 
   // remove existing Fixture
@@ -347,13 +355,18 @@ const copyProject = async () => {
   await rimraf(OUTPUT_PROJECT_PATH)
 }
 
-async function runCommand() {
+async function rebuildTestProject() {
   console.log()
   console.log('Rebuilding test project fixture...')
   console.log('Using temporary directory:', OUTPUT_PROJECT_PATH)
   console.log()
 
   const overallStart = Date.now()
+
+  let localPrisma: Awaited<ReturnType<typeof startPrismaDevServer>> | undefined
+  if (live) {
+    localPrisma = await startPrismaDevServer()
+  }
 
   // Maybe we could add all of the tasks to an array and infer the `step` from
   // the array index?
@@ -470,6 +483,35 @@ async function runCommand() {
 
   await tuiTask({
     step: 7,
+    title: (!live ? 'skip: ' : '') + 'Switch to PostgreSQL',
+    task: () => {
+      if (!live || !localPrisma) {
+        return
+      }
+
+      const projectSchemaPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'db',
+        'schema.prisma',
+      )
+      const projectSchemaPrisma = fs.readFileSync(projectSchemaPath, 'utf-8')
+      fs.writeFileSync(
+        projectSchemaPath,
+        projectSchemaPrisma.replace('sqlite', 'postgresql'),
+      )
+
+      const projectEnvPath = path.join(OUTPUT_PROJECT_PATH, '.env')
+      const projectEnv = fs.readFileSync(projectEnvPath, 'utf-8')
+      fs.writeFileSync(
+        projectEnvPath,
+        projectEnv + '\n\n' + 'DATABASE_URL=' + localPrisma.ppg.url,
+      )
+    },
+  })
+
+  await tuiTask({
+    step: 8,
     title: 'Apply web codemods',
     task: () => {
       return webTasks(OUTPUT_PROJECT_PATH)
@@ -477,7 +519,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 8,
+    step: 9,
     title: 'Apply api codemods',
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
@@ -487,7 +529,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 9,
+    step: 10,
     title: 'Add workspace packages',
     task: async () => {
       const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
@@ -620,7 +662,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 10,
+    step: 11,
     title: 'Add scripts',
     task: async () => {
       const nestedPath = path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one', 'two')
@@ -690,7 +732,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 11,
+    step: 12,
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
@@ -702,7 +744,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 13,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
@@ -733,7 +775,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 13,
+    step: 14,
     title: 'Replace and Cleanup Fixture',
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
@@ -792,7 +834,7 @@ async function runCommand() {
   })
 
   await tuiTask({
-    step: 14,
+    step: 15,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))
@@ -803,6 +845,10 @@ async function runCommand() {
     },
     enabled: verbose,
   })
+
+  if (localPrisma) {
+    await localPrisma.close()
+  }
 
   // overall end
   const overallEnd = Date.now()
@@ -870,4 +916,4 @@ async function runCommand() {
   console.log()
 }
 
-runCommand()
+rebuildTestProject()
