@@ -17,8 +17,8 @@
     "@cedarjs/web": "3.0.0-canary.13223+9e1d1011b",
     "@my-org/validators": "workspace:*",
     "humanize-string": "2.1.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@cedarjs/vite": "3.0.0-canary.13223+9e1d1011b",
