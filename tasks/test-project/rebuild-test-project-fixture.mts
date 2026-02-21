@@ -88,12 +88,14 @@ const args = yargs(hideBin(process.argv))
 
 const { verbose, resume, resumePath, resumeStep, live } = args
 
+const folderSuffix = live ? '-live' : ''
+
 const CEDAR_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
 const OUTPUT_PROJECT_PATH = resumePath
   ? /* path.resolve(String(resumePath)) */ resumePath
   : path.join(
       os.tmpdir(),
-      live ? 'cedar-test-project-live' : 'cedar-test-project',
+      'cedar-test-project' + folderSuffix,
       // ":" is problematic with paths
       new Date().toISOString().split(':').join('-'),
     )
@@ -344,7 +346,8 @@ const createProject = () => {
 const copyProject = async () => {
   const fixturePath = path.join(
     CEDAR_FRAMEWORK_PATH,
-    live ? '__fixtures__/test-project-live' : '__fixtures__/test-project',
+    '__fixtures__',
+    'test-project' + folderSuffix,
   )
 
   // remove existing Fixture
