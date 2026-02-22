@@ -70,8 +70,8 @@ export async function buildPackagesTask(task, nonApiWebWorkspaces) {
     const capturedOutput = outputChunks.join('')
 
     // concurrently rejects with an array of CloseEvent objects (not an Error)
-    // when one or more commands fail. Each CloseEvent has { command, index,
-    // exitCode, killed, timings } but no `.message` property.
+    // when one or more commands fail. Each CloseEvent has an `exitCode`, and a
+    // few more properties.
     if (Array.isArray(e)) {
       const failed = e.filter((closeEvent) => closeEvent.exitCode !== 0)
 
