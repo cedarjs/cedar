@@ -1,9 +1,11 @@
+import type { FederationMeta } from '@graphql-codegen/plugin-helpers'
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers'
 import { TypeScriptResolversVisitor } from '@graphql-codegen/typescript-resolvers'
 import {
   indent,
   DeclarationBlock,
 } from '@graphql-codegen/visitor-plugin-common'
+import type { FieldDefinitionResult } from '@graphql-codegen/visitor-plugin-common'
 import type {
   FieldDefinitionNode,
   GraphQLSchema,
@@ -15,37 +17,47 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
     pluginConfig: TypeScriptResolversPluginConfig,
     schema: GraphQLSchema,
   ) {
-    super(pluginConfig, schema)
+    // Pass an empty FederationMeta object since we don't use Apollo Federation.
+    super(pluginConfig, schema, {} as FederationMeta)
   }
 
   FieldDefinition(
     node: FieldDefinitionNode,
     key: string | number,
     parent: any,
-  ): (parentName: string) => string | null {
+  ): FieldDefinitionResult {
     const hasArguments = node.arguments && node.arguments.length > 0
 
     const superFieldDefinition = super.FieldDefinition(node, key, parent)
 
-    return (parentName: string) => {
-      // We're reusing pretty much all of the logic in the original plugin
-      // Visitor implementation by calling the `super` method here
-      const fieldDef = superFieldDefinition(parentName)
+    return {
+      node: superFieldDefinition.node,
+      printContent: (parentNode, avoidResolverOptionals) => {
+        // We're reusing pretty much all of the logic in the original plugin
+        // Visitor implementation by calling the `super` method here
+        const result = superFieldDefinition.printContent(
+          parentNode,
+          avoidResolverOptionals,
+        )
 
-      // If this field doesn't take any arguments, and it is a resolver, then
-      // we switch to using the OptArgsResolver type instead, so that the user
-      // isn't forced to pass in arguments that aren't going to be used anyway
-      if (!hasArguments && fieldDef?.includes(': Resolver<')) {
-        return fieldDef.replace(': Resolver<', ': OptArgsResolverFn<')
-      }
+        // If this field doesn't take any arguments, and it is a resolver, then
+        // we switch to using the OptArgsResolver type instead, so that the user
+        // isn't forced to pass in arguments that aren't going to be used anyway
+        if (!hasArguments && result.value?.includes(': Resolver<')) {
+          return {
+            ...result,
+            value: result.value.replace(': Resolver<', ': OptArgsResolverFn<'),
+          }
+        }
 
-      return fieldDef
+        return result
+      },
     }
   }
 
   // Original implementation is here:
   // https://github.com/dotansimha/graphql-code-generator/blob/c6c60a3078f3797af435c3852220d8898964031d/packages/plugins/other/visitor-plugin-common/src/base-resolvers-visitor.ts#L1091
-  ObjectTypeDefinition(node: ObjectTypeDefinitionNode): string {
+  ObjectTypeDefinition(node: ObjectTypeDefinitionNode): string | null {
     // Call the original implementation to get a block of resolvers
     const originalBlock = super.ObjectTypeDefinition(node)
 
@@ -56,9 +68,15 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
     const name = this.convertName(node, {
       suffix: this.config.resolverTypeSuffix,
     })
-    const typeName = node.name as any as string
+    const typeName = node.name.value
     const parentType = this.getParentTypeToUse(typeName)
-    const fieldsContent = (node.fields || []).map((f: any) => f(node.name))
+    const fieldsContent = (node.fields || []).map((f) => {
+      if ('printContent' in f && typeof f.printContent === 'function') {
+        return f.printContent(node, false).value
+      } else {
+        throw new Error('Unexpected field type')
+      }
+    })
 
     const isRootType = [
       this.schema.getQueryType()?.name,
@@ -130,14 +148,24 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
       )
       .withBlock(
         fieldsContent
+          // printContent can return null for fields that should be skipped
+          // (e.g., federation-only fields), so we filter those out
+          .filter((content): content is string => content !== null)
           .map((content) =>
+            // In v5, fields may already carry an optional marker `?:`. The
+            // regex consumes the optional `?` so we don't emit a double `??`.
             content.replace(
-              /: (?:OptArgs)?Resolver(?:Fn)?/,
+              /\??: (?:OptArgs)?Resolver(?:Fn)?/,
               '?: RequiredResolverFn',
             ),
           )
           .join('\n'),
       )
+
+    // originalBlock can be null if the type has no fields to generate
+    if (originalBlock === null) {
+      return null
+    }
 
     return originalBlock + '\n' + blockRelationsResolver.string
   }
