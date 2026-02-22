@@ -181,10 +181,12 @@ export function apiTasksList({
   dbAuth,
   linkWithLatestFwBuild = false,
   esmProject = false,
+  live = false,
 }: {
   dbAuth: 'local' | 'canary'
   linkWithLatestFwBuild?: boolean
   esmProject?: boolean
+  live?: boolean
 }) {
   const execaOptions = getExecaOptions(getOutputPath())
   const generateScaffold = createBuilder('yarn cedar g scaffold')
@@ -393,6 +395,19 @@ export function apiTasksList({
           path.join(templatesDir, 'vitest-sort.config.ts'),
           path.join(getOutputPath(), 'api', 'vitest-sort.config.ts'),
         )
+      },
+    },
+    {
+      title: 'Set up support for live queries',
+      task: async () => {
+        if (!live) {
+          return
+        }
+
+        const setup = createBuilder('yarn cedar setup')
+
+        await setup(['realtime', '--no-examples'])
+        await setup('live-queries')
       },
     },
   ]

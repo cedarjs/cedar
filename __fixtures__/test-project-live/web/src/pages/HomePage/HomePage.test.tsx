@@ -1,0 +1,14 @@
+import { render } from '@cedarjs/testing/web'
+
+import HomePage from './HomePage'
+
+//   Improve this test with help from the CedarJS Testing Doc:
+//   https://cedarjs.com/docs/testing#testing-pages-layouts
+
+describe('HomePage', () => {
+  it('renders successfully', () => {
+    expect(() => {
+      render(<HomePage />)
+    }).not.toThrow()
+  })
+})
