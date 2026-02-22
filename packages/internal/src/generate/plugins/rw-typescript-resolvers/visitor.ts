@@ -4,12 +4,11 @@ import { TypeScriptResolversVisitor } from '@graphql-codegen/typescript-resolver
 import {
   indent,
   DeclarationBlock,
-  type FieldDefinitionResult,
 } from '@graphql-codegen/visitor-plugin-common'
+import type { FieldDefinitionResult } from '@graphql-codegen/visitor-plugin-common'
 import type {
   FieldDefinitionNode,
   GraphQLSchema,
-  NameNode,
   ObjectTypeDefinitionNode,
 } from 'graphql'
 
@@ -19,8 +18,6 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
     schema: GraphQLSchema,
   ) {
     // Pass an empty FederationMeta object since we don't use Apollo Federation.
-    // This matches what the original plugin does when federation is disabled:
-    // `{ transformedSchema: schema, federationMeta: {} }`
     super(pluginConfig, schema, {} as FederationMeta)
   }
 
@@ -71,13 +68,15 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
     const name = this.convertName(node, {
       suffix: this.config.resolverTypeSuffix,
     })
-    // In graphql-codegen v5, the visitor does NOT convert NameNode to a string
-    // during traversal, so node.name is still a NameNode object. Access .value.
-    const typeName = (node.name as unknown as NameNode).value
+    const typeName = node.name.value
     const parentType = this.getParentTypeToUse(typeName)
-    const fieldsContent = (node.fields || []).map((f: any) =>
-      (f as FieldDefinitionResult).printContent(node, false).value,
-    )
+    const fieldsContent = (node.fields || []).map((f) => {
+      if ('printContent' in f && typeof f.printContent === 'function') {
+        return f.printContent(node, false).value
+      } else {
+        throw new Error('Unexpected field type')
+      }
+    })
 
     const isRootType = [
       this.schema.getQueryType()?.name,
