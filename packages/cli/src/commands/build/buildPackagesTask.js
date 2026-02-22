@@ -1,12 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { Writable } from 'node:stream'
 
 import concurrently from 'concurrently'
 
 import { importStatementPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { exitWithError } from '../../lib/exit.js'
 import { getPaths } from '../../lib/index.js'
 
 export async function buildPackagesTask(task, nonApiWebWorkspaces) {
@@ -39,6 +39,18 @@ export async function buildPackagesTask(task, nonApiWebWorkspaces) {
     return
   }
 
+  // Capture concurrently's output so we can include it in error messages.
+  // By default concurrently writes to process.stdout, but Listr's renderer
+  // takes control of the terminal and redraws over any direct stdout writes,
+  // effectively swallowing compilation errors.
+  const outputChunks = []
+  const outputStream = new Writable({
+    write(chunk, _encoding, callback) {
+      outputChunks.push(chunk.toString())
+      callback()
+    },
+  })
+
   const { result } = concurrently(
     workspacePaths.map((workspacePath) => {
       return {
@@ -50,16 +62,46 @@ export async function buildPackagesTask(task, nonApiWebWorkspaces) {
     {
       prefix: '{name} |',
       timestampFormat: 'HH:mm:ss',
+      outputStream,
     },
   )
 
   await result.catch((e) => {
-    if (e?.message) {
-      errorTelemetry(
-        process.argv,
-        `Error concurrently building sides: ${e.message}`,
-      )
-      exitWithError(e)
+    const capturedOutput = outputChunks.join('')
+
+    // concurrently rejects with an array of CloseEvent objects (not an Error)
+    // when one or more commands fail. Each CloseEvent has { command, index,
+    // exitCode, killed, timings } but no `.message` property.
+    if (Array.isArray(e)) {
+      const failed = e.filter((closeEvent) => closeEvent.exitCode !== 0)
+
+      if (failed.length > 0) {
+        const message = failed
+          .map(
+            (closeEvent) =>
+              `"${closeEvent.command?.name ?? closeEvent.command?.command}" exited with code ${closeEvent.exitCode}`,
+          )
+          .join(', ')
+
+        errorTelemetry(process.argv, `Error building packages: ${message}`)
+
+        const errorLines = [`Building packages failed: ${message}`]
+
+        if (capturedOutput.trim()) {
+          errorLines.push('', capturedOutput.trim())
+        }
+
+        throw new Error(errorLines.join('\n'))
+      }
+    } else {
+      errorTelemetry(process.argv, `Error building packages: ${e}`)
+
+      if (capturedOutput.trim()) {
+        const errorMessage = e instanceof Error ? e.message : String(e)
+        throw new Error(errorMessage + '\n\n' + capturedOutput.trim())
+      }
+
+      throw e
     }
   })
 }

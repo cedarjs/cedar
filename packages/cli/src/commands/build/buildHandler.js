@@ -13,10 +13,81 @@ import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { timedTelemetry } from '@cedarjs/telemetry'
 
+import c from '../../lib/colors.js'
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 import { getPaths, getConfig } from '../../lib/index.js'
 
 import { buildPackagesTask } from './buildPackagesTask.js'
+
+/**
+ * Checks that every workspace package under `packages/` has the entry files
+ * declared in its package.json (`main`, `exports`). If any are missing, prints
+ * a clear error message so users know which package needs to be built.
+ *
+ * Returns an array of human-readable problem descriptions (empty = all good).
+ */
+function checkWorkspacePackageEntryPoints(cedarPaths) {
+  const packagesDir = cedarPaths.packages
+
+  if (!packagesDir || !fs.existsSync(packagesDir)) {
+    return []
+  }
+
+  const problems = []
+  const packageDirs = fs.readdirSync(packagesDir, { withFileTypes: true })
+
+  for (const entry of packageDirs) {
+    if (!entry.isDirectory()) {
+      continue
+    }
+
+    const pkgJsonPath = path.join(packagesDir, entry.name, 'package.json')
+
+    if (!fs.existsSync(pkgJsonPath)) {
+      continue
+    }
+
+    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'))
+    const pkgName = pkgJson.name || entry.name
+    const pkgDir = path.join(packagesDir, entry.name)
+
+    // Collect declared entry files from "main" and "exports"
+    const entryFiles = new Set()
+
+    if (pkgJson.main) {
+      entryFiles.add(path.normalize(pkgJson.main))
+    }
+
+    if (pkgJson.exports) {
+      const collectPaths = (obj) => {
+        if (typeof obj === 'string') {
+          // Only check non-type entry points (JS files)
+          if (!obj.endsWith('.d.ts')) {
+            entryFiles.add(path.normalize(obj))
+          }
+        } else if (obj && typeof obj === 'object') {
+          for (const [key, value] of Object.entries(obj)) {
+            if (key !== 'types') {
+              collectPaths(value)
+            }
+          }
+        }
+      }
+
+      collectPaths(pkgJson.exports)
+    }
+
+    for (const entryFile of entryFiles) {
+      const resolvedPath = path.resolve(pkgDir, entryFile)
+
+      if (!fs.existsSync(resolvedPath)) {
+        problems.push({ pkgName, entryFile, pkgDir })
+      }
+    }
+  }
+
+  return problems
+}
 
 export const handler = async ({
   workspace = ['api', 'web', 'packages/*'],
@@ -75,6 +146,33 @@ export const handler = async ({
     nonApiWebWorkspaces.length > 0 && {
       title: 'Building Packages...',
       task: (_ctx, task) => buildPackagesTask(task, nonApiWebWorkspaces),
+    },
+    (workspace.includes('web') || workspace.includes('api')) && {
+      title: 'Checking workspace packages...',
+      task: () => {
+        const problems = checkWorkspacePackageEntryPoints(cedarPaths)
+
+        if (problems.length === 0) {
+          return
+        }
+
+        const details = problems
+          .map(
+            ({ pkgName, entryFile, pkgDir }) =>
+              `  • ${c.error(pkgName)}: missing "${entryFile}" (in ${pkgDir})`,
+          )
+          .join('\n')
+
+        throw new Error(
+          `The following workspace package entry points are missing:\n${details}\n\n` +
+            'This usually means the package has not been built yet.\n' +
+            'Run ' +
+            c.info('yarn cedar build') +
+            ' (without specifying a workspace) to build everything,\n' +
+            'or build the package manually first, e.g. ' +
+            c.info(`yarn workspace ${problems[0].pkgName} build`),
+        )
+      },
     },
     // If using GraphQL Fragments or Trusted Documents, then we need to use
     // codegen to generate the types needed for possible types and the trusted

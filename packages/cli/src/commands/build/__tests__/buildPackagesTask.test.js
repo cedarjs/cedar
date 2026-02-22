@@ -56,10 +56,6 @@ vi.mock('@cedarjs/telemetry', () => {
   }
 })
 
-vi.mock('../../lib/exit.js', () => ({
-  exitWithError: vi.fn(),
-}))
-
 import fs from 'node:fs'
 
 import concurrently from 'concurrently'
@@ -94,10 +90,10 @@ describe('buildPackagesTask', async () => {
           cwd: '/mocked/project/packages/baz',
         },
       ],
-      {
+      expect.objectContaining({
         prefix: '{name} |',
         timestampFormat: 'HH:mm:ss',
-      },
+      }),
     )
   })
 
@@ -118,10 +114,10 @@ describe('buildPackagesTask', async () => {
           cwd: '/mocked/project/packages/pkg-two',
         },
       ],
-      {
+      expect.objectContaining({
         prefix: '{name} |',
         timestampFormat: 'HH:mm:ss',
-      },
+      }),
     )
   })
 
@@ -162,14 +158,126 @@ describe('buildPackagesTask', async () => {
           cwd: '/mocked/project/packages/pkg-one',
         },
       ],
-      {
+      expect.objectContaining({
         prefix: '{name} |',
         timestampFormat: 'HH:mm:ss',
-      },
+      }),
     )
     // TODO: Maybe we should let the user know about the non-existing package
     // expect(vi.mocked(mockTask.skip)).toHaveBeenCalledWith(
     //   'No packages to build at non-existing-package',
     // )
+  })
+
+  it('throws when concurrently rejects with array of CloseEvent objects', async () => {
+    // Reset glob mock in case a previous test changed it
+    vi.mocked(fs).promises.glob.mockImplementation(() => {
+      return [
+        '/mocked/project/packages/foo',
+        '/mocked/project/packages/bar',
+        '/mocked/project/packages/baz',
+      ]
+    })
+
+    // concurrently rejects with an array of CloseEvent objects, not an Error
+    const closeEvents = [
+      {
+        command: { command: 'yarn build', name: 'validators' },
+        index: 0,
+        exitCode: 1,
+        killed: false,
+        timings: {},
+      },
+    ]
+
+    vi.mocked(concurrently).mockReturnValue({
+      result: Promise.reject(closeEvents),
+    })
+
+    await expect(
+      buildPackagesTask({ skip: vi.fn() }, ['packages/*']),
+    ).rejects.toThrow('"validators" exited with code 1')
+  })
+
+  it('throws when concurrently rejects with multiple failed commands', async () => {
+    // Reset glob mock in case a previous test changed it
+    vi.mocked(fs).promises.glob.mockImplementation(() => {
+      return [
+        '/mocked/project/packages/foo',
+        '/mocked/project/packages/bar',
+        '/mocked/project/packages/baz',
+      ]
+    })
+
+    const closeEvents = [
+      {
+        command: { command: 'yarn build', name: 'pkg-a' },
+        index: 0,
+        exitCode: 1,
+        killed: false,
+        timings: {},
+      },
+      {
+        command: { command: 'yarn build', name: 'pkg-b' },
+        index: 1,
+        exitCode: 0,
+        killed: false,
+        timings: {},
+      },
+      {
+        command: { command: 'yarn build', name: 'pkg-c' },
+        index: 2,
+        exitCode: 2,
+        killed: false,
+        timings: {},
+      },
+    ]
+
+    vi.mocked(concurrently).mockReturnValue({
+      result: Promise.reject(closeEvents),
+    })
+
+    await expect(
+      buildPackagesTask({ skip: vi.fn() }, ['packages/*']),
+    ).rejects.toThrow(/\"pkg-a\" exited with code 1/)
+
+    // Verify the error also mentions pkg-c but not pkg-b
+    try {
+      vi.mocked(concurrently).mockReturnValue({
+        result: Promise.reject(closeEvents),
+      })
+      await buildPackagesTask({ skip: vi.fn() }, ['packages/*'])
+    } catch (e) {
+      expect(e.message).toContain('"pkg-c" exited with code 2')
+      // pkg-b succeeded (exitCode 0), so it should not be mentioned
+      expect(e.message).not.toContain('pkg-b')
+    }
+  })
+
+  it('does not throw when all commands succeed', async () => {
+    // Reset glob mock in case a previous test changed it
+    vi.mocked(fs).promises.glob.mockImplementation(() => {
+      return [
+        '/mocked/project/packages/foo',
+        '/mocked/project/packages/bar',
+        '/mocked/project/packages/baz',
+      ]
+    })
+
+    vi.mocked(concurrently).mockReturnValue({
+      result: Promise.resolve(),
+    })
+
+    await expect(
+      buildPackagesTask({ skip: vi.fn() }, ['packages/*']),
+    ).resolves.toBeUndefined()
+  })
+
+  it('passes a custom outputStream to concurrently', async () => {
+    await buildPackagesTask({}, ['packages/*'])
+
+    const callArgs = vi.mocked(concurrently).mock.calls[0][1]
+    expect(callArgs).toHaveProperty('outputStream')
+    expect(callArgs.outputStream).toBeDefined()
   })
 })
