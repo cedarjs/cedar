@@ -9,6 +9,7 @@ import {
 import type {
   FieldDefinitionNode,
   GraphQLSchema,
+  NameNode,
   ObjectTypeDefinitionNode,
 } from 'graphql'
 
@@ -59,7 +60,7 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
 
   // Original implementation is here:
   // https://github.com/dotansimha/graphql-code-generator/blob/c6c60a3078f3797af435c3852220d8898964031d/packages/plugins/other/visitor-plugin-common/src/base-resolvers-visitor.ts#L1091
-  ObjectTypeDefinition(node: ObjectTypeDefinitionNode): string {
+  ObjectTypeDefinition(node: ObjectTypeDefinitionNode): string | null {
     // Call the original implementation to get a block of resolvers
     const originalBlock = super.ObjectTypeDefinition(node)
 
@@ -70,7 +71,9 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
     const name = this.convertName(node, {
       suffix: this.config.resolverTypeSuffix,
     })
-    const typeName = node.name as any as string
+    // In graphql-codegen v5, the visitor does NOT convert NameNode to a string
+    // during traversal, so node.name is still a NameNode object. Access .value.
+    const typeName = (node.name as unknown as NameNode).value
     const parentType = this.getParentTypeToUse(typeName)
     const fieldsContent = (node.fields || []).map((f: any) =>
       (f as FieldDefinitionResult).printContent(node, false).value,
@@ -150,13 +153,20 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
           // (e.g., federation-only fields), so we filter those out
           .filter((content): content is string => content !== null)
           .map((content) =>
+            // In v5, fields may already carry an optional marker `?:`. The
+            // regex consumes the optional `?` so we don't emit a double `??`.
             content.replace(
-              /: (?:OptArgs)?Resolver(?:Fn)?/,
+              /\??: (?:OptArgs)?Resolver(?:Fn)?/,
               '?: RequiredResolverFn',
             ),
           )
           .join('\n'),
       )
+
+    // originalBlock can be null if the type has no fields to generate
+    if (originalBlock === null) {
+      return null
+    }
 
     return originalBlock + '\n' + blockRelationsResolver.string
   }
