@@ -90,7 +90,9 @@ test('Generate gql typedefs api', async () => {
   expect(data).toMatchSnapshot()
 
   // Check that JSON types are imported from prisma
-  expect(data).toContain('JSON: { input: Prisma.JsonValue; output: Prisma.JsonValue; }')
+  expect(data).toContain(
+    'JSON: { input: Prisma.JsonValue; output: Prisma.JsonValue; }',
+  )
   expect(data).toContain(
     'JSONObject: { input: Prisma.JsonObject; output: Prisma.JsonObject; }',
   )
