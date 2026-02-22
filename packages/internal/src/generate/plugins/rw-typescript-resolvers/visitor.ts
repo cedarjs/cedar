@@ -1,10 +1,7 @@
 import type { FederationMeta } from '@graphql-codegen/plugin-helpers'
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers'
 import { TypeScriptResolversVisitor } from '@graphql-codegen/typescript-resolvers'
-import {
-  indent,
-  DeclarationBlock,
-} from '@graphql-codegen/visitor-plugin-common'
+import { DeclarationBlock } from '@graphql-codegen/visitor-plugin-common'
 import type { FieldDefinitionResult } from '@graphql-codegen/visitor-plugin-common'
 import type {
   FieldDefinitionNode,
@@ -78,24 +75,6 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
       }
     })
 
-    const isRootType = [
-      this.schema.getQueryType()?.name,
-      this.schema.getMutationType()?.name,
-      this.schema.getSubscriptionType()?.name,
-    ].includes(typeName)
-
-    if (!isRootType) {
-      fieldsContent.push(
-        indent(
-          `${
-            this.config.internalResolversPrefix
-          }isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>${this.getPunctuation(
-            'type',
-          )}`,
-        ),
-      )
-    }
-
     // This is what's different compared to the implementation I copy/pasted
     // We create a new block with a different type called
     // "ModelRelationResolver" where "Model" is the name of a prisma model.
@@ -133,7 +112,6 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
     //      createdAt?: RequiredResolverFn<ResolversTypes['DateTime'], ParentType, ContextType>;
     //      id?: RequiredResolverFn<ResolversTypes['Int'], ParentType, ContextType>;
     //      title?: RequiredResolverFn<ResolversTypes['String'], ParentType, ContextType>;
-    //      __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
     //    };
     const blockRelationsResolver = new DeclarationBlock(
       this._declarationBlockConfig,
