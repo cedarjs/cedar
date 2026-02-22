@@ -527,7 +527,7 @@ async function rebuildTestProject() {
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
 
-      return apiTasksList({ dbAuth: 'local' })
+      return apiTasksList({ dbAuth: 'local', live })
     },
   })
 
@@ -604,7 +604,7 @@ async function rebuildTestProject() {
       await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
 
       const build = await exec(
-        'yarn cedar build',
+        'yarn cedar build --no-prerender',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )

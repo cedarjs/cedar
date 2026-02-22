@@ -4,8 +4,15 @@
   "private": true,
   "dependencies": {
     "@cedarjs/api": "2.6.0",
+    "@cedarjs/api-server": "2.6.0",
     "@cedarjs/auth-dbauth-api": "2.6.0",
     "@cedarjs/graphql-server": "2.6.0",
-    "@my-org/validators": "workspace:*"
+    "@cedarjs/realtime": "2.6.0",
+    "@my-org/validators": "workspace:*",
+    "ioredis": "^5",
+    "pg": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8"
   }
 }
