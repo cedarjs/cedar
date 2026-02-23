@@ -1,12 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import concurrently from 'concurrently'
+import execa from 'execa'
 
 import { importStatementPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { exitWithError } from '../../lib/exit.js'
 import { getPaths } from '../../lib/index.js'
 
 export async function buildPackagesTask(task, nonApiWebWorkspaces) {
@@ -39,27 +38,30 @@ export async function buildPackagesTask(task, nonApiWebWorkspaces) {
     return
   }
 
-  const { result } = concurrently(
+  return task.newListr(
     workspacePaths.map((workspacePath) => {
+      const name = workspacePath.split('/').at(-1)
+
       return {
-        command: `yarn build`,
-        name: workspacePath.split('/').at(-1),
-        cwd: workspacePath,
+        title: name,
+        task: async () => {
+          try {
+            await execa('yarn', ['build'], { cwd: workspacePath })
+          } catch (e) {
+            errorTelemetry(
+              process.argv,
+              `Error building package "${name}": ${e.message}`,
+            )
+
+            // execa includes stderr in the error message, which contains
+            // the actual compilation errors (e.g. TypeScript errors)
+            throw new Error(
+              `Building "${name}" failed\n\n${e.stderr || e.message}`,
+            )
+          }
+        },
       }
     }),
-    {
-      prefix: '{name} |',
-      timestampFormat: 'HH:mm:ss',
-    },
+    { concurrent: true, rendererOptions: { collapseSubtasks: false } },
   )
-
-  await result.catch((e) => {
-    if (e?.message) {
-      errorTelemetry(
-        process.argv,
-        `Error concurrently building sides: ${e.message}`,
-      )
-      exitWithError(e)
-    }
-  })
 }

@@ -622,9 +622,25 @@ async function rebuildTestProject() {
       }
 
       // TODO: Update this when we refine the build process
-      if (!build.stdout.includes('yarn build exited with code 0')) {
+      if (!build.stdout.includes('validators')) {
         console.error('yarn cedar build output', build.stdout, build.stderr)
-        throw new Error('Unexpected output from `yarn cedar build`')
+        throw new Error(
+          'Unexpected output from `yarn cedar build` ' +
+            build.stdout +
+            ' ' +
+            build.stderr,
+        )
+      }
+
+      if (build.exitCode !== 0) {
+        throw new Error(
+          'Unexpected exitCode from `yarn cedar build` ' +
+            build.exitCode +
+            ' ' +
+            build.stdout +
+            ' ' +
+            build.stderr,
+        )
       }
 
       // Verify that `yarn cedar <cmd>` works inside package directories

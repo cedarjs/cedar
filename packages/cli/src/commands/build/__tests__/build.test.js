@@ -118,6 +118,7 @@ test('the build tasks are in the correct sequence', async () => {
     [
       "Generating Prisma Client...",
       "Building Packages...",
+      "Checking workspace packages...",
       "Verifying graphql schema...",
       "Building API...",
       "Building Web...",
@@ -135,6 +136,7 @@ test('Should run prerender for web', async () => {
   await handler({ workspace: ['web'], prerender: true })
   expect(Listr.mock.calls[0][0].map((x) => x.title)).toMatchInlineSnapshot(`
     [
+      "Checking workspace packages...",
       "Building Web...",
     ]
   `)
