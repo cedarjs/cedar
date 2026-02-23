@@ -1,8 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { Writable } from 'node:stream'
 
-import concurrently from 'concurrently'
+import execa from 'execa'
 
 import { importStatementPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -39,69 +38,30 @@ export async function buildPackagesTask(task, nonApiWebWorkspaces) {
     return
   }
 
-  // Capture concurrently's output so we can include it in error messages.
-  // By default concurrently writes to process.stdout, but Listr's renderer
-  // takes control of the terminal and redraws over any direct stdout writes,
-  // effectively swallowing compilation errors.
-  const outputChunks = []
-  const outputStream = new Writable({
-    write(chunk, _encoding, callback) {
-      outputChunks.push(chunk.toString())
-      callback()
-    },
-  })
-
-  const { result } = concurrently(
+  return task.newListr(
     workspacePaths.map((workspacePath) => {
+      const name = workspacePath.split('/').at(-1)
+
       return {
-        command: `yarn build`,
-        name: workspacePath.split('/').at(-1),
-        cwd: workspacePath,
+        title: name,
+        task: async () => {
+          try {
+            await execa('yarn', ['build'], { cwd: workspacePath })
+          } catch (e) {
+            errorTelemetry(
+              process.argv,
+              `Error building package "${name}": ${e.message}`,
+            )
+
+            // execa includes stderr in the error message, which contains
+            // the actual compilation errors (e.g. TypeScript errors)
+            throw new Error(
+              `Building "${name}" failed\n\n${e.stderr || e.message}`,
+            )
+          }
+        },
       }
     }),
-    {
-      prefix: '{name} |',
-      timestampFormat: 'HH:mm:ss',
-      outputStream,
-    },
+    { concurrent: true, rendererOptions: { collapseSubtasks: false } },
   )
-
-  await result.catch((e) => {
-    const capturedOutput = outputChunks.join('')
-
-    // concurrently rejects with an array of CloseEvent objects (not an Error)
-    // when one or more commands fail. Each CloseEvent has an `exitCode`, and a
-    // few more properties.
-    if (Array.isArray(e)) {
-      const failed = e.filter((closeEvent) => closeEvent.exitCode !== 0)
-
-      if (failed.length > 0) {
-        const message = failed
-          .map(
-            (closeEvent) =>
-              `"${closeEvent.command?.name ?? closeEvent.command?.command}" exited with code ${closeEvent.exitCode}`,
-          )
-          .join(', ')
-
-        errorTelemetry(process.argv, `Error building packages: ${message}`)
-
-        const errorLines = [`Building packages failed: ${message}`]
-
-        if (capturedOutput.trim()) {
-          errorLines.push('', capturedOutput.trim())
-        }
-
-        throw new Error(errorLines.join('\n'))
-      }
-    } else {
-      errorTelemetry(process.argv, `Error building packages: ${e}`)
-
-      if (capturedOutput.trim()) {
-        const errorMessage = e instanceof Error ? e.message : String(e)
-        throw new Error(errorMessage + '\n\n' + capturedOutput.trim())
-      }
-
-      throw e
-    }
-  })
 }
