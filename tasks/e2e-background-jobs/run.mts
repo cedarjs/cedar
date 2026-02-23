@@ -296,7 +296,7 @@ async function generateJob(
   fs.writeFileSync(functionPath, SAMPLE_FUNCTION)
 
   console.log('Action: Running `yarn cedar serve api`')
-  await $`yarn cedar build api validators`
+  await $`yarn cedar build api @my-org/validators`
   const apiServer = $`yarn cedar serve api`.nothrow()
 
   // Wait for the api server to start
@@ -344,7 +344,7 @@ async function scheduleCronJob(projectPath: string) {
   fs.writeFileSync(scriptPath, SCHEDULE_CRON_JOB_SCRIPT)
 
   console.log('Action: Building the api side')
-  await $`yarn cedar build api validators`
+  await $`yarn cedar build api @my-org/validators`
 
   console.log('Action: Running script')
   await $`yarn cedar exec scheduleCronJob`
