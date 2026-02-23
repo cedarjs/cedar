@@ -23796,13 +23796,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"npm-packlist@npm:10.0.3, npm-packlist@npm:^10.0.1":
+"npm-packlist@npm:10.0.3":
   version: 10.0.3
   resolution: "npm-packlist@npm:10.0.3"
   dependencies:
     ignore-walk: "npm:^8.0.0"
     proc-log: "npm:^6.0.0"
   checksum: 10c0/f4fa58890e7d9e80299c284cdf65fafac6eae0c23b830bbae9953255571364897a6f22a02b5da63f0c43e45019d7446feec6ed79124edc6a44c8d6c9a19d25cf
+  languageName: node
+  linkType: hard
+
+"npm-packlist@npm:10.0.4, npm-packlist@npm:^10.0.1":
+  version: 10.0.4
+  resolution: "npm-packlist@npm:10.0.4"
+  dependencies:
+    ignore-walk: "npm:^8.0.0"
+    proc-log: "npm:^6.0.0"
+  checksum: 10c0/500ec00ed5edc3f7136255a8c17dfd36fb718182af61a86a68768aa3b325f69739953fe8888fa8e4765db00e7892a9d0a30093b145d091b23e96b7d1bbf1187e
   languageName: node
   linkType: hard
 
@@ -26974,7 +26984,7 @@ __metadata:
     msw: "npm:1.3.5"
     ncp: "npm:2.0.0"
     nodemon: "npm:3.1.13"
-    npm-packlist: "npm:10.0.3"
+    npm-packlist: "npm:10.0.4"
     nx: "npm:22.5.0"
     ora: "npm:9.3.0"
     prettier: "npm:3.8.1"
