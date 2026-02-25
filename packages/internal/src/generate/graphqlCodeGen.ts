@@ -71,9 +71,9 @@ export const generateTypeDefGraphQLApi = async (): Promise<TypeDefResult> => {
       name: 'add',
       options: {
         content: [
-          'import { Prisma } from "@prisma/client"',
+          'import { Prisma } from "src/lib/db"',
           "import { MergePrismaWithSdlTypes, MakeRelationsOptional } from '@cedarjs/api'",
-          `import { ${prismaImports.join(', ')} } from '@prisma/client'`,
+          `import { ${prismaImports.join(', ')} } from 'src/lib/db'`,
         ],
         placement: 'prepend',
       },
@@ -135,7 +135,7 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
     {
       name: 'add',
       options: {
-        content: 'import { Prisma } from "@prisma/client"',
+        content: 'import { Prisma } from "$api/src/lib/db"',
         placement: 'prepend',
       },
       codegenPlugin: addPlugin,

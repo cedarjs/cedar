@@ -1,4 +1,4 @@
-import type { EmptyUser } from '@prisma/client'
+import type { EmptyUser } from 'src/lib/db'
 
 import {
   emptyUsers,

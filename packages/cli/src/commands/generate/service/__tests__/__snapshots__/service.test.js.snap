@@ -406,7 +406,7 @@ export const UserProfile: UserProfileRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a multi word service test file 1`] = `
-"import type { UserProfile } from '@prisma/client'
+"import type { UserProfile } from 'src/lib/db'
 
 import { userProfiles } from './userProfiles.js'
 import type { StandardScenario } from './userProfiles.scenarios.js'
@@ -428,7 +428,7 @@ describe('userProfiles', () => {
 `;
 
 exports[`in typescript mode > creates a multi word service test file with crud actions and only foreign as mandatory field 1`] = `
-"import type { Transaction } from '@prisma/client'
+"import type { Transaction } from 'src/lib/db'
 
 import {
   transactions,
@@ -494,7 +494,7 @@ describe('transactions', () => {
 `;
 
 exports[`in typescript mode > creates a multi word service test file with multiple scalar types 1`] = `
-"import type { ScalarType } from '@prisma/client'
+"import type { ScalarType } from 'src/lib/db'
 
 import {
   scalarTypes,
@@ -737,7 +737,7 @@ export const User: UserRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a single word service scenario file 1`] = `
-"import type { Prisma, User } from '@prisma/client'
+"import type { Prisma, User } from 'src/lib/db'
 
 import type { ScenarioData } from '@cedarjs/testing/api'
 
@@ -753,7 +753,7 @@ export type StandardScenario = ScenarioData<User, 'user'>
 `;
 
 exports[`in typescript mode > creates a single word service test file 1`] = `
-"import type { User } from '@prisma/client'
+"import type { User } from 'src/lib/db'
 
 import { users, user, createUser, updateUser, deleteUser } from './users.js'
 import type { StandardScenario } from './users.scenarios.js'
