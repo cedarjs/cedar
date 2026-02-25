@@ -2487,7 +2487,6 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@simplewebauthn/server": "npm:10.0.1"
     "@types/md5": "npm:2.3.6"
-    base64url: "npm:3.0.1"
     concurrently: "npm:9.2.1"
     md5: "npm:2.3.0"
     publint: "npm:0.3.17"
@@ -13133,13 +13132,6 @@ __metadata:
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
   checksum: 10c0/f23823513b63173a001030fae4f2dabe283b99a9d324ade3ad3d148e218134676f1ee8568c877cd79ec1c53158dcf2d2ba527a97c606618928ba99dd930102bf
-  languageName: node
-  linkType: hard
-
-"base64url@npm:3.0.1":
-  version: 3.0.1
-  resolution: "base64url@npm:3.0.1"
-  checksum: 10c0/5ca9d6064e9440a2a45749558dddd2549ca439a305793d4f14a900b7256b5f4438ef1b7a494e1addc66ced5d20f5c010716d353ed267e4b769e6c78074991241
   languageName: node
   linkType: hard
 
