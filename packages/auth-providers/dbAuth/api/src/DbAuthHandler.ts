@@ -12,7 +12,6 @@ import type {
   RegistrationResponseJSON,
 } from '@simplewebauthn/types'
 import type { APIGatewayProxyEvent, Context as LambdaContext } from 'aws-lambda'
-import base64url from 'base64url'
 import md5 from 'md5'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -834,9 +833,7 @@ export class DbAuthHandler<
         expectedOrigin: webAuthnOptions.origin,
         expectedRPID: webAuthnOptions.domain,
         authenticator: {
-          credentialID: base64url.toBuffer(
-            credential[webAuthnOptions.credentialFields.id],
-          ),
+          credentialID: credential[webAuthnOptions.credentialFields.id],
           credentialPublicKey:
             credential[webAuthnOptions.credentialFields.publicKey],
           counter: credential[webAuthnOptions.credentialFields.counter],
@@ -933,8 +930,7 @@ export class DbAuthHandler<
     const someOptions: GenerateAuthenticationOptionsOpts = {
       timeout: webAuthnOptions.timeout || 60000,
       allowCredentials: credentials.map((cred: Record<string, string>) => ({
-        id: base64url.toBuffer(cred[webAuthnOptions.credentialFields.id]),
-        type: 'public-key',
+        id: cred[webAuthnOptions.credentialFields.id],
         transports: cred[webAuthnOptions.credentialFields.transports]
           ? JSON.parse(cred[webAuthnOptions.credentialFields.transports])
           : DbAuthHandler.AVAILABLE_WEBAUTHN_TRANSPORTS,
@@ -957,6 +953,7 @@ export class DbAuthHandler<
   async webAuthnRegOptions(): Promise<AuthMethodOutput> {
     const { generateRegistrationOptions } =
       await import('@simplewebauthn/server')
+    const { isoUint8Array } = await import('@simplewebauthn/server/helpers')
 
     if (!this.options?.webAuthn?.enabled) {
       throw new DbAuthError.WebAuthnError('WebAuthn is not enabled')
@@ -968,8 +965,11 @@ export class DbAuthHandler<
     const options: GenerateRegistrationOptionsOpts = {
       rpName: webAuthnOptions.name,
       rpID: webAuthnOptions.domain,
-      userID: user[this.options.authFields.id],
+      userID: isoUint8Array.fromUTF8String(
+        String(user[this.options.authFields.id]),
+      ),
       userName: user[this.options.authFields.username],
+      userDisplayName: user[this.options.authFields.username],
       timeout: webAuthnOptions?.timeout || 60000,
       excludeCredentials: [],
       authenticatorSelection: {
@@ -1024,38 +1024,36 @@ export class DbAuthHandler<
     }
 
     const { verified, registrationInfo } = verification
-    let plainCredentialId
 
-    if (verified && registrationInfo) {
-      const { credentialPublicKey, credentialID, counter } = registrationInfo
-      plainCredentialId = base64url.encode(Buffer.from(credentialID))
+    if (!verified || !registrationInfo) {
+      throw new DbAuthError.WebAuthnError('Registration failed')
+    }
 
-      const existingDevice = await this.dbCredentialAccessor.findFirst({
-        where: {
-          [this.options.webAuthn.credentialFields.id]: plainCredentialId,
+    const { credentialPublicKey, credentialID, counter } = registrationInfo
+
+    const existingDevice = await this.dbCredentialAccessor.findFirst({
+      where: {
+        [this.options.webAuthn.credentialFields.id]: credentialID,
+        [this.options.webAuthn.credentialFields.userId]:
+          user[this.options.authFields.id],
+      },
+    })
+
+    if (!existingDevice) {
+      const { transports } = this.normalizedRequest.jsonBody || {}
+      await this.dbCredentialAccessor.create({
+        data: {
+          [this.options.webAuthn.credentialFields.id]: credentialID,
           [this.options.webAuthn.credentialFields.userId]:
             user[this.options.authFields.id],
+          [this.options.webAuthn.credentialFields.publicKey]:
+            credentialPublicKey,
+          [this.options.webAuthn.credentialFields.transports]: transports
+            ? JSON.stringify(transports)
+            : null,
+          [this.options.webAuthn.credentialFields.counter]: counter,
         },
       })
-
-      if (!existingDevice) {
-        const { transports } = this.normalizedRequest.jsonBody || {}
-        await this.dbCredentialAccessor.create({
-          data: {
-            [this.options.webAuthn.credentialFields.id]: plainCredentialId,
-            [this.options.webAuthn.credentialFields.userId]:
-              user[this.options.authFields.id],
-            [this.options.webAuthn.credentialFields.publicKey]:
-              credentialPublicKey,
-            [this.options.webAuthn.credentialFields.transports]: transports
-              ? JSON.stringify(transports)
-              : null,
-            [this.options.webAuthn.credentialFields.counter]: counter,
-          },
-        })
-      }
-    } else {
-      throw new DbAuthError.WebAuthnError('Registration failed')
     }
 
     // clear challenge
@@ -1064,7 +1062,7 @@ export class DbAuthHandler<
     const headers = new Headers([
       [
         'set-cookie',
-        this._webAuthnCookie(plainCredentialId, this.webAuthnExpiresDate),
+        this._webAuthnCookie(credentialID, this.webAuthnExpiresDate),
       ],
     ])
 

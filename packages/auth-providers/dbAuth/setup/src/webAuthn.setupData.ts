@@ -9,10 +9,10 @@ import { addModels, functionsPath, hasModel, libPath } from './shared'
 export { extraTask } from './setupData'
 
 // required packages to install on the web side
-export const webPackages = ['@simplewebauthn/browser@^9']
+export const webPackages = ['@simplewebauthn/browser@^10']
 
 // required packages to install on the api side
-export const apiPackages = ['@simplewebauthn/server@^9']
+export const apiPackages = ['@simplewebauthn/server@^10']
 
 export const createUserModelTask = {
   title: 'Creating model `User`...',
