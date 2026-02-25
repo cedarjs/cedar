@@ -2,6 +2,7 @@
   "name": "create-cedar-rsc-app",
   "version": "2.3.0",
   "description": "Quickstart for a Cedar React Server Components App",
+  "author": "Tobbe Lundberg",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -10,9 +11,13 @@
   "license": "MIT",
   "type": "module",
   "bin": "dist/index.js",
+  "exports": {
+		".": "./index.js"
+	},
   "files": [
     "dist/"
   ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsx build.ts",
     "check": "concurrently yarn:knip yarn:publint",
