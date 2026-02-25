@@ -2410,7 +2410,9 @@ describe('dbAuth', () => {
       expect(regOptions.rp.name).toEqual(options.webAuthn.name)
       expect(regOptions.rp.id).toEqual(options.webAuthn.domain)
       expect(regOptions.timeout).toEqual(options.webAuthn.timeout)
-      expect(regOptions.user.id).toEqual(user.id)
+      expect(regOptions.user.id).toEqual(
+        Buffer.from(String(user.id)).toString('base64url'),
+      )
       expect(regOptions.user.displayName).toEqual(user.email)
       expect(regOptions.user.name).toEqual(user.email)
     })

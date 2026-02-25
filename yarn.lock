@@ -2449,9 +2449,8 @@ __metadata:
     "@cedarjs/api": "npm:2.8.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "npm:2.8.0"
-    "@simplewebauthn/server": "npm:9.0.3"
+    "@simplewebauthn/server": "npm:10.0.1"
     "@types/md5": "npm:2.3.6"
-    base64url: "npm:3.0.1"
     concurrently: "npm:9.2.1"
     md5: "npm:2.3.0"
     publint: "npm:0.3.18"
@@ -2491,8 +2490,8 @@ __metadata:
     "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/cli-helpers": "npm:2.8.0"
     "@prisma/internals": "npm:6.19.2"
-    "@simplewebauthn/browser": "npm:9.0.1"
-    "@simplewebauthn/types": "npm:9.0.1"
+    "@simplewebauthn/browser": "npm:10.0.0"
+    "@simplewebauthn/types": "npm:10.0.0"
     "@types/yargs": "npm:17.0.35"
     core-js: "npm:3.48.0"
     prompts: "npm:2.4.2"
@@ -2510,8 +2509,8 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/auth": "npm:2.8.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@simplewebauthn/browser": "npm:9.0.1"
-    "@simplewebauthn/types": "npm:9.0.1"
+    "@simplewebauthn/browser": "npm:10.0.0"
+    "@simplewebauthn/types": "npm:10.0.0"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.18"
@@ -7010,22 +7009,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@isaacs/balanced-match@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "@isaacs/balanced-match@npm:4.0.1"
-  checksum: 10c0/7da011805b259ec5c955f01cee903da72ad97c5e6f01ca96197267d3f33103d5b2f8a1af192140f3aa64526c593c8d098ae366c2b11f7f17645d12387c2fd420
-  languageName: node
-  linkType: hard
-
-"@isaacs/brace-expansion@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@isaacs/brace-expansion@npm:5.0.0"
-  dependencies:
-    "@isaacs/balanced-match": "npm:^4.0.1"
-  checksum: 10c0/b4d4812f4be53afc2c5b6c545001ff7a4659af68d4484804e9d514e183d20269bb81def8682c01a22b17c4d6aed14292c8494f7d2ac664e547101c1a905aa977
-  languageName: node
-  linkType: hard
-
 "@isaacs/cliui@npm:^8.0.2":
   version: 8.0.2
   resolution: "@isaacs/cliui@npm:8.0.2"
@@ -9834,18 +9817,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@simplewebauthn/browser@npm:9.0.1":
-  version: 9.0.1
-  resolution: "@simplewebauthn/browser@npm:9.0.1"
+"@simplewebauthn/browser@npm:10.0.0":
+  version: 10.0.0
+  resolution: "@simplewebauthn/browser@npm:10.0.0"
   dependencies:
-    "@simplewebauthn/types": "npm:^9.0.1"
-  checksum: 10c0/141f3f55d99ad2b4dcf697026d2470fa10b65a36286b616ead71b56ddd5636c30eb001599d27c2509a87c93def6636a2c7081ae362910268b78733a676af3ebf
+    "@simplewebauthn/types": "npm:^10.0.0"
+  checksum: 10c0/da7764df8c5d3d4201ace4847f89416fbbfac7db254c94530ffc7e8ed3c4530f013950e074f5eae83eeb9ac9c1323f25813487c21c7d4827da485e739b8c6261
   languageName: node
   linkType: hard
 
-"@simplewebauthn/server@npm:9.0.3":
-  version: 9.0.3
-  resolution: "@simplewebauthn/server@npm:9.0.3"
+"@simplewebauthn/server@npm:10.0.1":
+  version: 10.0.1
+  resolution: "@simplewebauthn/server@npm:10.0.1"
   dependencies:
     "@hexagon/base64": "npm:^1.1.27"
     "@levischuck/tiny-cbor": "npm:^0.2.2"
@@ -9854,16 +9837,16 @@ __metadata:
     "@peculiar/asn1-rsa": "npm:^2.3.8"
     "@peculiar/asn1-schema": "npm:^2.3.8"
     "@peculiar/asn1-x509": "npm:^2.3.8"
-    "@simplewebauthn/types": "npm:^9.0.1"
+    "@simplewebauthn/types": "npm:^10.0.0"
     cross-fetch: "npm:^4.0.0"
-  checksum: 10c0/e1eae9b48020e37e5accef3832c14ac8d8fe4006e60ace24bcea6fb1c353c76e36daa02449f7aa1c0bc58915fd134ae984fc28e985f43ecdfa111068402ce701
+  checksum: 10c0/27bc37160f6324528d605c4eb3c4bcabffa2200b914d24919512e168fdac12f514c8d1f3f43c01ea8d6b503d1841eb1acece18c9c4b5966ea40c3ce33d894baa
   languageName: node
   linkType: hard
 
-"@simplewebauthn/types@npm:9.0.1, @simplewebauthn/types@npm:^9.0.1":
-  version: 9.0.1
-  resolution: "@simplewebauthn/types@npm:9.0.1"
-  checksum: 10c0/397f079ac029ada1413d6001850e3b49f99297a9933822758bdca9c47c36d6558e1dc81682725e0b03c501551c94fea040cead76883dcd2bb3a34b32984900f5
+"@simplewebauthn/types@npm:10.0.0, @simplewebauthn/types@npm:^10.0.0":
+  version: 10.0.0
+  resolution: "@simplewebauthn/types@npm:10.0.0"
+  checksum: 10c0/364dd5add9001ef17e2b54dd0f54ff1901cc2c455b195fcb7bf2108eec792709bd2747c5095b69efbc834c82a8ec602ef7362564e214c482251fc3f9c0b16f41
   languageName: node
   linkType: hard
 
@@ -11307,9 +11290,9 @@ __metadata:
   linkType: hard
 
 "@types/qs@npm:*":
-  version: 6.15.0
-  resolution: "@types/qs@npm:6.15.0"
-  checksum: 10c0/1b104cac50e655fc41d7fc1de2c2aba2908c4cf833a555b6808fb4c96752662b439238f2392a15d2590a7a6ca75dbd40e42d9378ac2be0d548ee484954363688
+  version: 6.14.0
+  resolution: "@types/qs@npm:6.14.0"
+  checksum: 10c0/5b3036df6e507483869cdb3858201b2e0b64b4793dc4974f188caa5b5732f2333ab9db45c08157975054d3b070788b35088b4bc60257ae263885016ee2131310
   languageName: node
   linkType: hard
 
@@ -13033,13 +13016,6 @@ __metadata:
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
   checksum: 10c0/f23823513b63173a001030fae4f2dabe283b99a9d324ade3ad3d148e218134676f1ee8568c877cd79ec1c53158dcf2d2ba527a97c606618928ba99dd930102bf
-  languageName: node
-  linkType: hard
-
-"base64url@npm:3.0.1":
-  version: 3.0.1
-  resolution: "base64url@npm:3.0.1"
-  checksum: 10c0/5ca9d6064e9440a2a45749558dddd2549ca439a305793d4f14a900b7256b5f4438ef1b7a494e1addc66ced5d20f5c010716d353ed267e4b769e6c78074991241
   languageName: node
   linkType: hard
 
@@ -22484,7 +22460,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:10.2.4, minimatch@npm:^10.0.0, minimatch@npm:^10.2.1, minimatch@npm:^10.2.2, minimatch@npm:^10.2.4":
+"minimatch@npm:10.2.4, minimatch@npm:^10.0.0, minimatch@npm:^10.2.2, minimatch@npm:^10.2.4":
   version: 10.2.4
   resolution: "minimatch@npm:10.2.4"
   dependencies:
@@ -22520,12 +22496,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^10.0.3, minimatch@npm:^10.1.1":
-  version: 10.1.1
-  resolution: "minimatch@npm:10.1.1"
+"minimatch@npm:^10.0.3, minimatch@npm:^10.1.1, minimatch@npm:^10.2.1":
+  version: 10.2.1
+  resolution: "minimatch@npm:10.2.1"
   dependencies:
-    "@isaacs/brace-expansion": "npm:^5.0.0"
-  checksum: 10c0/c85d44821c71973d636091fddbfbffe62370f5ee3caf0241c5b60c18cd289e916200acb2361b7e987558cd06896d153e25d505db9fc1e43e6b4b6752e2702902
+    brace-expansion: "npm:^5.0.2"
+  checksum: 10c0/86c3ed013630e820fda00336ee786a03098723b60bfae452de6306708fc83619df40a99dc6ec59c97d14e25b3b3371669a04e5bf508b1b00339b20229c4907d2
   languageName: node
   linkType: hard
 
