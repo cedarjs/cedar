@@ -58,7 +58,6 @@
   },
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
-    "base64url": "3.0.1",
     "md5": "2.3.0",
     "uuid": "11.1.0"
   },
