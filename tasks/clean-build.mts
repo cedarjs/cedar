@@ -42,7 +42,7 @@ try {
   // GraphQL language server that uses jiti to read TypeScript config files and
   // cache transpiled results to node_modules/.cache/jiti. This background
   // process, and other similar ones, can recreate subdirectories while git is
-  // trying to delete other fiels inside node_modules causing ENOTEMPTY. Using
+  // trying to delete other files inside node_modules causing ENOTEMPTY. Using
   // the shell rm -rf avoids this race condition entirely.
   // On Windows we fall back to the PowerShell equivalent.
   // For me the exact sequence is:
