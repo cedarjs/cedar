@@ -2485,7 +2485,7 @@ __metadata:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
-    "@simplewebauthn/server": "npm:9.0.3"
+    "@simplewebauthn/server": "npm:10.0.1"
     "@types/md5": "npm:2.3.6"
     base64url: "npm:3.0.1"
     concurrently: "npm:9.2.1"
@@ -2527,8 +2527,8 @@ __metadata:
     "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/cli-helpers": "workspace:*"
     "@prisma/internals": "npm:6.19.2"
-    "@simplewebauthn/browser": "npm:9.0.1"
-    "@simplewebauthn/types": "npm:9.0.1"
+    "@simplewebauthn/browser": "npm:10.0.0"
+    "@simplewebauthn/types": "npm:10.0.0"
     "@types/yargs": "npm:17.0.35"
     core-js: "npm:3.48.0"
     prompts: "npm:2.4.2"
@@ -2546,8 +2546,8 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@simplewebauthn/browser": "npm:9.0.1"
-    "@simplewebauthn/types": "npm:9.0.1"
+    "@simplewebauthn/browser": "npm:10.0.0"
+    "@simplewebauthn/types": "npm:10.0.0"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.17"
@@ -9885,18 +9885,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@simplewebauthn/browser@npm:9.0.1":
-  version: 9.0.1
-  resolution: "@simplewebauthn/browser@npm:9.0.1"
+"@simplewebauthn/browser@npm:10.0.0":
+  version: 10.0.0
+  resolution: "@simplewebauthn/browser@npm:10.0.0"
   dependencies:
-    "@simplewebauthn/types": "npm:^9.0.1"
-  checksum: 10c0/141f3f55d99ad2b4dcf697026d2470fa10b65a36286b616ead71b56ddd5636c30eb001599d27c2509a87c93def6636a2c7081ae362910268b78733a676af3ebf
+    "@simplewebauthn/types": "npm:^10.0.0"
+  checksum: 10c0/da7764df8c5d3d4201ace4847f89416fbbfac7db254c94530ffc7e8ed3c4530f013950e074f5eae83eeb9ac9c1323f25813487c21c7d4827da485e739b8c6261
   languageName: node
   linkType: hard
 
-"@simplewebauthn/server@npm:9.0.3":
-  version: 9.0.3
-  resolution: "@simplewebauthn/server@npm:9.0.3"
+"@simplewebauthn/server@npm:10.0.1":
+  version: 10.0.1
+  resolution: "@simplewebauthn/server@npm:10.0.1"
   dependencies:
     "@hexagon/base64": "npm:^1.1.27"
     "@levischuck/tiny-cbor": "npm:^0.2.2"
@@ -9905,16 +9905,16 @@ __metadata:
     "@peculiar/asn1-rsa": "npm:^2.3.8"
     "@peculiar/asn1-schema": "npm:^2.3.8"
     "@peculiar/asn1-x509": "npm:^2.3.8"
-    "@simplewebauthn/types": "npm:^9.0.1"
+    "@simplewebauthn/types": "npm:^10.0.0"
     cross-fetch: "npm:^4.0.0"
-  checksum: 10c0/e1eae9b48020e37e5accef3832c14ac8d8fe4006e60ace24bcea6fb1c353c76e36daa02449f7aa1c0bc58915fd134ae984fc28e985f43ecdfa111068402ce701
+  checksum: 10c0/27bc37160f6324528d605c4eb3c4bcabffa2200b914d24919512e168fdac12f514c8d1f3f43c01ea8d6b503d1841eb1acece18c9c4b5966ea40c3ce33d894baa
   languageName: node
   linkType: hard
 
-"@simplewebauthn/types@npm:9.0.1, @simplewebauthn/types@npm:^9.0.1":
-  version: 9.0.1
-  resolution: "@simplewebauthn/types@npm:9.0.1"
-  checksum: 10c0/397f079ac029ada1413d6001850e3b49f99297a9933822758bdca9c47c36d6558e1dc81682725e0b03c501551c94fea040cead76883dcd2bb3a34b32984900f5
+"@simplewebauthn/types@npm:10.0.0, @simplewebauthn/types@npm:^10.0.0":
+  version: 10.0.0
+  resolution: "@simplewebauthn/types@npm:10.0.0"
+  checksum: 10c0/364dd5add9001ef17e2b54dd0f54ff1901cc2c455b195fcb7bf2108eec792709bd2747c5095b69efbc834c82a8ec602ef7362564e214c482251fc3f9c0b16f41
   languageName: node
   linkType: hard
 
