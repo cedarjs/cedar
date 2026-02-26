@@ -1,5 +1,5 @@
-import type { Prisma } from 'src/lib/db'
 import { db } from 'api/src/lib/db'
+import type { Prisma } from 'api/src/lib/db'
 
 export default async () => {
   try {
