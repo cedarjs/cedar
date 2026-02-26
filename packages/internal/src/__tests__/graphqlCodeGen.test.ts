@@ -9,7 +9,6 @@ import {
   test,
   expect,
   describe,
-  type Mock,
 } from 'vitest'
 
 import {
@@ -75,8 +74,7 @@ test('Generate gql typedefs web', async () => {
 })
 
 test('Generate gql typedefs web (no re-export)', async () => {
-  // Mock dbReexportsPrismaClient to return false
-  ;(dbReexportsPrismaClient as unknown as Mock).mockReturnValue(false)
+  vi.mocked(dbReexportsPrismaClient).mockReturnValue(false)
 
   await generateGraphQLSchema()
 
@@ -143,8 +141,7 @@ test('Generate gql typedefs api', async () => {
 })
 
 test('Generate gql typedefs api (no re-export)', async () => {
-  // Mock dbReexportsPrismaClient to return false
-  ;(dbReexportsPrismaClient as unknown as Mock).mockReturnValue(false)
+  vi.mocked(dbReexportsPrismaClient).mockReturnValue(false)
 
   await generateGraphQLSchema()
 
