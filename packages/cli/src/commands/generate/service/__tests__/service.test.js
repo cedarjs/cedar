@@ -345,6 +345,23 @@ describe('in javascript mode', () => {
       ],
     ).toMatchSnapshot()
   })
+
+  test('creates a service scenario file with src/lib/db import when dbReexportsPrismaClient is true', async () => {
+    dbReexportsPrismaClient.mockReturnValue(true)
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+    })
+    dbReexportsPrismaClient.mockReturnValue(false)
+
+    expect(
+      files[
+        path.normalize(
+          '/path/to/project/api/src/services/users/users.scenarios.js',
+        )
+      ],
+    ).toMatchSnapshot()
+  })
 })
 
 describe('in typescript mode', () => {
@@ -369,6 +386,38 @@ describe('in typescript mode', () => {
   itCreatesASingleWordServiceFileWithABelongsToRelation(baseArgs)
   itCreatesASingleWordServiceFileWithMultipleRelations(baseArgs)
   itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired(baseArgs)
+
+  test('creates a service scenario file with src/lib/db import when dbReexportsPrismaClient is true', async () => {
+    dbReexportsPrismaClient.mockReturnValue(true)
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+    })
+    dbReexportsPrismaClient.mockReturnValue(false)
+
+    expect(
+      files[
+        path.normalize(
+          '/path/to/project/api/src/services/users/users.scenarios.ts',
+        )
+      ],
+    ).toMatchSnapshot()
+  })
+
+  test('creates a service test file with src/lib/db import when dbReexportsPrismaClient is true', async () => {
+    dbReexportsPrismaClient.mockReturnValue(true)
+    const files = await serviceHandler.files({
+      ...baseArgs,
+      name: 'User',
+    })
+    dbReexportsPrismaClient.mockReturnValue(false)
+
+    expect(
+      files[
+        path.normalize('/path/to/project/api/src/services/users/users.test.ts')
+      ],
+    ).toMatchSnapshot()
+  })
 })
 
 describe('parseSchema', () => {
