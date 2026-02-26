@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import path from 'node:path'
 
 import { paramCase } from 'change-case'
@@ -6,10 +5,15 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { dbReexportsPrismaClient } from '@cedarjs/internal/dist/project'
 import { getDataMigrationsPath } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
-import { getPaths, writeFilesTask } from '../../../lib/index.js'
+import {
+  generateTemplate,
+  getPaths,
+  writeFilesTask,
+} from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'
 import { getYargsDefaults } from '../yargsCommandHelpers.js'
@@ -45,8 +49,15 @@ export const files = async ({ name, typescript }) => {
   )
   const outputPath = path.join(dataMigrationsPath, outputFilename)
 
+  const prismaImportSource = dbReexportsPrismaClient()
+    ? 'src/lib/db'
+    : '@prisma/client'
+
   return {
-    [outputPath]: fs.readFileSync(TEMPLATE_PATHS[extension]).toString(),
+    [outputPath]: await generateTemplate(TEMPLATE_PATHS[extension], {
+      name,
+      prismaImportSource,
+    }),
   }
 }
 

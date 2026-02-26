@@ -2,6 +2,8 @@ import path from 'node:path'
 
 import camelcase from 'camelcase'
 
+import { dbReexportsPrismaClient } from '@cedarjs/internal/dist/project'
+
 import { pluralize, singularize } from '../../../lib/cedarPluralize.js'
 import { transformTSToJS } from '../../../lib/index.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
@@ -309,6 +311,10 @@ export const files = async ({
   const model = name
   const idName = await getIdName(model)
 
+  const prismaImportSource = dbReexportsPrismaClient()
+    ? 'src/lib/db'
+    : '@prisma/client'
+
   const modelRelations = relations || relationsForModel(await getSchema(model))
 
   const serviceFile = await templateForFile({
@@ -318,7 +324,12 @@ export const files = async ({
     generator: 'service',
     outputPath: path.join(componentName, componentName + '.ts'),
     templatePath: 'service.ts.template',
-    templateVars: { relations: modelRelations, idName, ...rest },
+    templateVars: {
+      relations: modelRelations,
+      idName,
+      prismaImportSource,
+      ...rest,
+    },
   })
 
   const testFile = await templateForFile({
@@ -338,6 +349,7 @@ export const files = async ({
       ),
       prismaModel: model,
       idName,
+      prismaImportSource,
       ...rest,
     },
   })
@@ -355,6 +367,7 @@ export const files = async ({
       prismaModel: model,
       idName,
       relations: modelRelations,
+      prismaImportSource,
       ...rest,
     },
   })

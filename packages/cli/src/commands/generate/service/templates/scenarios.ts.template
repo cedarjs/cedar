@@ -1,6 +1,6 @@
 import type { ScenarioData } from '@cedarjs/testing/api'
 
-import type { Prisma, ${prismaModel} } from 'src/lib/db'
+import type { Prisma, ${prismaModel} } from '${prismaImportSource}'
 
 export const standard = defineScenario<Prisma.${prismaModel}CreateArgs>(${stringifiedScenario})
 

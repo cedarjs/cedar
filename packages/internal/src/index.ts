@@ -3,6 +3,7 @@ export * from '@cedarjs/project-config'
 export * from './ts2js.js'
 export * from './dev.js'
 export * from './routes.js'
+export { dbReexportsPrismaClient } from './project.js'
 
 export * from './files.js'
 export { generate } from './generate/generate.js'

@@ -1,4 +1,4 @@
-import type { PrismaClient } from 'src/lib/db'
+import type { PrismaClient } from '${prismaImportSource}'
 
 export default async ({ db }: { db: PrismaClient }) => {
   // Migration here...

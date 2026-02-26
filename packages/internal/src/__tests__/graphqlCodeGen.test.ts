@@ -9,6 +9,7 @@ import {
   test,
   expect,
   describe,
+  type Mock,
 } from 'vitest'
 
 import {
@@ -16,6 +17,7 @@ import {
   generateTypeDefGraphQLWeb,
 } from '../generate/graphqlCodeGen.js'
 import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
+import { dbReexportsPrismaClient } from '../project.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
@@ -47,6 +49,14 @@ vi.mock('@prisma/client', () => {
   }
 })
 
+vi.mock('../project.js', async (importOriginal) => {
+  const original = await importOriginal<any>()
+  return {
+    ...original,
+    dbReexportsPrismaClient: vi.fn(() => true),
+  }
+})
+
 test('Generate gql typedefs web', async () => {
   await generateGraphQLSchema()
 
@@ -54,6 +64,26 @@ test('Generate gql typedefs web', async () => {
     (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
       expect(file).toMatch(path.join('web', 'types', 'graphql.d.ts'))
       expect(data).toMatchSnapshot()
+    },
+  )
+
+  const { typeDefFiles, errors } = await generateTypeDefGraphQLWeb()
+  expect(errors).toEqual([])
+
+  expect(typeDefFiles).toHaveLength(1)
+  expect(typeDefFiles[0]).toMatch(path.join('web', 'types', 'graphql.d.ts'))
+})
+
+test('Generate gql typedefs web (no re-export)', async () => {
+  // Mock dbReexportsPrismaClient to return false
+  ;(dbReexportsPrismaClient as unknown as Mock).mockReturnValue(false)
+
+  await generateGraphQLSchema()
+
+  vi.spyOn(fs, 'writeFileSync').mockImplementation(
+    (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
+      expect(file).toMatch(path.join('web', 'types', 'graphql.d.ts'))
+      expect(data).toContain('import { Prisma } from "@prisma/client"')
     },
   )
 
@@ -110,6 +140,37 @@ test('Generate gql typedefs api', async () => {
 
   // Should only contain the SDL models that are also in Prisma
   expect(data).toContain(`type AllMappedModels = MaybeOrArrayOfMaybe<Todo>`)
+})
+
+test('Generate gql typedefs api (no re-export)', async () => {
+  // Mock dbReexportsPrismaClient to return false
+  ;(dbReexportsPrismaClient as unknown as Mock).mockReturnValue(false)
+
+  await generateGraphQLSchema()
+
+  let codegenOutput: {
+    file: fs.PathOrFileDescriptor
+    data: string | ArrayBufferView
+  } = { file: '', data: '' }
+
+  vi.spyOn(fs, 'writeFileSync').mockImplementation(
+    (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
+      codegenOutput = { file, data }
+    },
+  )
+
+  const { typeDefFiles } = await generateTypeDefGraphQLApi()
+
+  expect(typeDefFiles).toHaveLength(1)
+  expect(typeDefFiles[0]).toMatch(path.join('api', 'types', 'graphql.d.ts'))
+
+  const { data } = codegenOutput
+
+  // Check that prisma model imports are added to the top of the file
+  // Should import from @prisma/client instead of src/lib/db
+  expect(data).toContain(
+    "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from '@prisma/client'",
+  )
 })
 
 test('respects user provided codegen config', async () => {

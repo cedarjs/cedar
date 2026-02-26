@@ -170,6 +170,56 @@ describe('scalarTypes', () => {
 "
 `;
 
+exports[`in javascript mode > creates a service test file with src/lib/db import when dbReexportsPrismaClient is true 1`] = `
+"import { users, user, createUser, updateUser, deleteUser } from './users.js'
+
+// Generated boilerplate tests do not account for all circumstances
+// and can fail without adjustments, e.g. Float.
+//           Please refer to the RedwoodJS Testing Docs:
+//       https://cedarjs.com/docs/testing#testing-services
+// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+
+describe('users', () => {
+  scenario('returns all users', async (scenario) => {
+    const result = await users()
+
+    expect(result.length).toEqual(Object.keys(scenario.user).length)
+  })
+
+  scenario('returns a single user', async (scenario) => {
+    const result = await user({ id: scenario.user.one.id })
+
+    expect(result).toEqual(scenario.user.one)
+  })
+
+  scenario('creates a user', async () => {
+    const result = await createUser({
+      input: { email: 'foo1234567@bar.com' },
+    })
+
+    expect(result.email).toEqual('foo1234567@bar.com')
+  })
+
+  scenario('updates a user', async (scenario) => {
+    const original = await user({ id: scenario.user.one.id })
+    const result = await updateUser({
+      id: original.id,
+      input: { email: 'foo1234567@bar.com2' },
+    })
+
+    expect(result.email).toEqual('foo1234567@bar.com2')
+  })
+
+  scenario('deletes a user', async (scenario) => {
+    const original = await deleteUser({ id: scenario.user.one.id })
+    const result = await user({ id: original.id })
+
+    expect(result).toEqual(null)
+  })
+})
+"
+`;
+
 exports[`in javascript mode > creates a single word service file 1`] = `
 "import { db } from 'src/lib/db'
 
@@ -406,7 +456,7 @@ export const UserProfile: UserProfileRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a multi word service test file 1`] = `
-"import type { UserProfile } from 'src/lib/db'
+"import type { UserProfile } from '@prisma/client'
 
 import { userProfiles } from './userProfiles.js'
 import type { StandardScenario } from './userProfiles.scenarios.js'
@@ -428,7 +478,7 @@ describe('userProfiles', () => {
 `;
 
 exports[`in typescript mode > creates a multi word service test file with crud actions and only foreign as mandatory field 1`] = `
-"import type { Transaction } from 'src/lib/db'
+"import type { Transaction } from '@prisma/client'
 
 import {
   transactions,
@@ -494,7 +544,7 @@ describe('transactions', () => {
 `;
 
 exports[`in typescript mode > creates a multi word service test file with multiple scalar types 1`] = `
-"import type { ScalarType } from 'src/lib/db'
+"import type { ScalarType } from '@prisma/client'
 
 import {
   scalarTypes,
@@ -739,7 +789,7 @@ export const User: UserRelationResolvers = {
 exports[`in typescript mode > creates a single word service scenario file 1`] = `
 "import type { ScenarioData } from '@cedarjs/testing/api'
 
-import type { Prisma, User } from 'src/lib/db'
+import type { Prisma, User } from '@prisma/client'
 
 export const standard = defineScenario<Prisma.UserCreateArgs>({
   user: {
@@ -753,7 +803,7 @@ export type StandardScenario = ScenarioData<User, 'user'>
 `;
 
 exports[`in typescript mode > creates a single word service test file 1`] = `
-"import type { User } from 'src/lib/db'
+"import type { User } from '@prisma/client'
 
 import { users, user, createUser, updateUser, deleteUser } from './users.js'
 import type { StandardScenario } from './users.scenarios.js'

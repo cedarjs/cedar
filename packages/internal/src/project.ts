@@ -3,7 +3,7 @@ import path from 'path'
 
 import { parseConfigFileTextToJson } from 'typescript'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, resolveFile } from '@cedarjs/project-config'
 
 export const getTsConfigs = () => {
   const rwPaths = getPaths()
@@ -54,4 +54,16 @@ export const isRealtimeSetup = () => {
   )
 
   return fs.existsSync(realtimePath)
+}
+
+export const dbReexportsPrismaClient = () => {
+  const dbPath = resolveFile(path.join(getPaths().api.lib, 'db'))
+
+  if (!dbPath) {
+    return false
+  }
+
+  const content = fs.readFileSync(dbPath, 'utf-8')
+
+  return /export\s+\*\s+from\s+['"]@prisma\/client['"]/.test(content)
 }
