@@ -12,8 +12,8 @@
   "type": "module",
   "bin": "dist/index.js",
   "exports": {
-		".": "./index.js"
-	},
+    ".": "./index.js"
+  },
   "files": [
     "dist/"
   ],
