@@ -1,12 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { FileInfo, API } from 'jscodeshift'
+import type { FileInfo } from 'jscodeshift'
+import j from 'jscodeshift'
 
 import { getDataMigrationsPath, getPaths } from '@cedarjs/project-config'
 
-function transformDbFile(file: FileInfo, api: API) {
-  const j = api.jscodeshift
+function transformDbFile(file: FileInfo) {
   const root = j(file.source)
 
   // Check if export * from '@prisma/client' already exists
@@ -29,7 +29,10 @@ function transformDbFile(file: FileInfo, api: API) {
 
   // Add the export after the import
   const importNode = prismaClientImport.get()
-  const exportStatement = j.exportAllDeclaration(j.literal('@prisma/client'))
+  const exportStatement = j.exportAllDeclaration(
+    j.literal('@prisma/client'),
+    null,
+  )
 
   // Insert after the import
   importNode.insertAfter(exportStatement)
@@ -37,14 +40,11 @@ function transformDbFile(file: FileInfo, api: API) {
   return root.toSource()
 }
 
-function transformOtherFile(file: FileInfo, api: API) {
-  const j = api.jscodeshift
+function transformOtherFile(file: FileInfo) {
   const root = j(file.source)
 
   // Determine the correct import path based on file location
-  const isInRootScripts = file.path.startsWith(
-    path.join(getPaths().scripts, path.sep),
-  )
+  const isInRootScripts = file.path.startsWith(getPaths().scripts + path.sep)
   const importPath = isInRootScripts ? 'api/src/lib/db' : 'src/lib/db'
 
   // Replace all imports from '@prisma/client' to the appropriate path
@@ -74,11 +74,8 @@ async function prismaV7Prep() {
   }
 
   if (fs.existsSync(dbFilePath)) {
-    const fileContent = fs.readFileSync(dbFilePath, 'utf-8')
-    const transformed = transformDbFile(
-      { source: fileContent, path: dbFilePath },
-      { jscodeshift: require('jscodeshift') },
-    )
+    const source = fs.readFileSync(dbFilePath, 'utf-8')
+    const transformed = transformDbFile({ source, path: dbFilePath })
     fs.writeFileSync(dbFilePath, transformed)
   }
 
@@ -92,7 +89,7 @@ async function prismaV7Prep() {
     }
 
     const files = fs
-      .readdirSync(dir, { recursive: true })
+      .readdirSync(dir, { recursive: true, encoding: 'utf8' })
       .filter(
         (file) =>
           file.endsWith('.ts') ||
@@ -109,11 +106,8 @@ async function prismaV7Prep() {
       .filter((file) => file !== dbFilePath) // Skip db.ts
 
     for (const file of files) {
-      const fileContent = fs.readFileSync(file, 'utf-8')
-      const transformed = transformOtherFile(
-        { source: fileContent, path: file },
-        { jscodeshift: require('jscodeshift') },
-      )
+      const source = fs.readFileSync(file, 'utf-8')
+      const transformed = transformOtherFile({ source, path: file })
       fs.writeFileSync(file, transformed)
     }
   }
