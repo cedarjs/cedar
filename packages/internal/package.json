@@ -60,6 +60,16 @@
         "default": "./dist/cjs/gql.js"
       }
     },
+    "./dist/project": {
+      "import": {
+        "types": "./dist/project.d.ts",
+        "default": "./dist/project.js"
+      },
+      "require": {
+        "types": "./dist/cjs/project.d.ts",
+        "default": "./dist/cjs/project.js"
+      }
+    },
     "./dist/routes.js": {
       "import": {
         "types": "./dist/routes.d.ts",

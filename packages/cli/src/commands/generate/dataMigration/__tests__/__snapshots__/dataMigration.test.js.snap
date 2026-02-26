@@ -9,9 +9,29 @@ export default async ({ db }: { db: PrismaClient }) => {
 "
 `;
 
+exports[`can generate a TS file with expected contents when dbReexportsPrismaClient is true 1`] = `
+"import type { PrismaClient } from 'src/lib/db'
+
+export default async ({ db }: { db: PrismaClient }) => {
+  // Migration here...
+}
+"
+`;
+
 exports[`creates a JS file with expected contents 1`] = `
 "/**
  * @typedef { import("@prisma/client").PrismaClient } PrismaClient
+ * @param {{db: PrismaClient}} db
+ */
+export default async ({ db }) => {
+  // Migration here...
+}
+"
+`;
+
+exports[`creates a JS file with expected contents when dbReexportsPrismaClient is true 1`] = `
+"/**
+ * @typedef { import("src/lib/db").PrismaClient } PrismaClient
  * @param {{db: PrismaClient}} db
  */
 export default async ({ db }) => {

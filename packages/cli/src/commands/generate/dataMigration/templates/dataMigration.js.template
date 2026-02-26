@@ -1,5 +1,5 @@
 /**
- * @typedef { import("@prisma/client").PrismaClient } PrismaClient
+ * @typedef { import("${prismaImportSource}").PrismaClient } PrismaClient
  * @param {{db: PrismaClient}} db
  */
 export default async ({ db }) => {

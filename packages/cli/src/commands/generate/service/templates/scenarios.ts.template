@@ -1,6 +1,8 @@
-import type { Prisma, ${prismaModel} } from '@prisma/client'
+<% if (prismaImportSource === 'src/lib/db') { %>import type { ScenarioData } from '@cedarjs/testing/api'
 
-import type { ScenarioData } from '@cedarjs/testing/api'
+import type { Prisma, ${prismaModel} } from '${prismaImportSource}'<% } else { %>import type { Prisma, ${prismaModel} } from '${prismaImportSource}'
+
+import type { ScenarioData } from '@cedarjs/testing/api'<% } %>
 
 export const standard = defineScenario<Prisma.${prismaModel}CreateArgs>(${stringifiedScenario})
 

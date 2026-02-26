@@ -31,7 +31,7 @@
     // Not all values can be represented as JSON, like function invocations
     return jsonString.replace(/"new Uint8Array\(([^)]+)\)"/g, 'new Uint8Array($1)')
   } %>
-<% if (prismaImport) { %>import { Prisma, ${prismaModel} } from '@prisma/client'<% } else { %>import type { ${prismaModel} } from '@prisma/client'<% } %>
+<% if (prismaImport) { %>import { Prisma, ${prismaModel} } from '${prismaImportSource}'<% } else { %>import type { ${prismaModel} } from '${prismaImportSource}'<% } %>
 
 import { ${pluralCamelName}<% if (crud) { %>,${singularCamelName}, create${singularPascalName}, update${singularPascalName}, delete${singularPascalName}<% } %> } from './${pluralCamelName}.js'
 import type { StandardScenario } from './${pluralCamelName}.scenarios.js'
