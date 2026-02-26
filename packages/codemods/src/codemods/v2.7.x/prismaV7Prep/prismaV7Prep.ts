@@ -6,11 +6,20 @@ import j from 'jscodeshift'
 
 import { getDataMigrationsPath, getPaths } from '@cedarjs/project-config'
 
+function getParserForFile(filePath: string) {
+  if (filePath.endsWith('.tsx') || filePath.endsWith('.jsx')) {
+    return j.withParser('tsx')
+  }
+
+  return j.withParser('ts')
+}
+
 function transformDbFile(file: FileInfo) {
-  const root = j(file.source)
+  const parser = getParserForFile(file.path)
+  const root = parser(file.source)
 
   // Check if export * from '@prisma/client' already exists
-  const existingExport = root.find(j.ExportAllDeclaration, {
+  const existingExport = root.find(parser.ExportAllDeclaration, {
     source: { value: '@prisma/client' },
   })
 
@@ -19,7 +28,7 @@ function transformDbFile(file: FileInfo) {
   }
 
   // Find the import of PrismaClient
-  const prismaClientImport = root.find(j.ImportDeclaration, {
+  const prismaClientImport = root.find(parser.ImportDeclaration, {
     source: { value: '@prisma/client' },
   })
 
@@ -29,8 +38,8 @@ function transformDbFile(file: FileInfo) {
 
   // Add the export after the import
   const importNode = prismaClientImport.get()
-  const exportStatement = j.exportAllDeclaration(
-    j.literal('@prisma/client'),
+  const exportStatement = parser.exportAllDeclaration(
+    parser.literal('@prisma/client'),
     null,
   )
 
@@ -41,7 +50,8 @@ function transformDbFile(file: FileInfo) {
 }
 
 function transformOtherFile(file: FileInfo) {
-  const root = j(file.source)
+  const parser = getParserForFile(file.path)
+  const root = parser(file.source)
 
   // Determine the correct import path based on file location
   const isInRootScripts = file.path.startsWith(getPaths().scripts + path.sep)
@@ -49,11 +59,11 @@ function transformOtherFile(file: FileInfo) {
 
   // Replace all imports from '@prisma/client' to the appropriate path
   root
-    .find(j.ImportDeclaration, {
+    .find(parser.ImportDeclaration, {
       source: { value: '@prisma/client' },
     })
     .forEach((importDecl) => {
-      importDecl.get('source').replace(j.literal(importPath))
+      importDecl.get('source').replace(parser.literal(importPath))
     })
 
   return root.toSource()
