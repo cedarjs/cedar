@@ -6,7 +6,7 @@ import * as schemaAstPlugin from '@graphql-codegen/schema-ast'
 import { CodeFileLoader } from '@graphql-tools/code-file-loader'
 import type { LoadSchemaOptions } from '@graphql-tools/load'
 import { loadSchema } from '@graphql-tools/load'
-import { getSchemaWithPath } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 // Here's an explanation of why we do ts-ignore:
 // https://github.com/webdiscus/ansis#troubleshooting
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -23,6 +23,8 @@ import {
   resolveFile,
   getSchemaPath,
 } from '@cedarjs/project-config'
+
+const { getSchemaWithPath } = prismaInternals
 
 export const generateGraphQLSchema = async () => {
   const redwoodProjectPaths = getPaths()
