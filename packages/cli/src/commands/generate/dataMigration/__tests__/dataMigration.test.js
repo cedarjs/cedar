@@ -2,7 +2,17 @@ globalThis.__dirname = __dirname
 import path from 'path'
 import '../../../../lib/test'
 
-import { afterEach, test, expect } from 'vitest'
+import { vi, afterEach, test, expect } from 'vitest'
+
+vi.mock('@cedarjs/internal/dist/project', async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    dbReexportsPrismaClient: vi.fn(() => false),
+  }
+})
+
+import { dbReexportsPrismaClient } from '@cedarjs/internal/dist/project'
 
 import * as generator from '../dataMigration.js'
 
@@ -52,8 +62,24 @@ test('creates a JS file with expected contents', async () => {
   expect(files[filename]).toMatchSnapshot()
 })
 
+test('creates a JS file with expected contents when dbReexportsPrismaClient is true', async () => {
+  dbReexportsPrismaClient.mockReturnValue(true)
+  const files = await generator.files({ name: 'MoveUser' })
+  dbReexportsPrismaClient.mockReturnValue(false)
+  const filename = Object.keys(files)[0]
+  expect(files[filename]).toMatchSnapshot()
+})
+
 test('can generate a TS file with expected contents', async () => {
   const files = await generator.files({ name: 'MoveUser', typescript: true })
+  const filename = Object.keys(files)[0]
+  expect(files[filename]).toMatchSnapshot()
+})
+
+test('can generate a TS file with expected contents when dbReexportsPrismaClient is true', async () => {
+  dbReexportsPrismaClient.mockReturnValue(true)
+  const files = await generator.files({ name: 'MoveUser', typescript: true })
+  dbReexportsPrismaClient.mockReturnValue(false)
   const filename = Object.keys(files)[0]
   expect(files[filename]).toMatchSnapshot()
 })

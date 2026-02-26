@@ -19,7 +19,7 @@ import { Kind, type DocumentNode } from 'graphql'
 
 import { getPaths, getConfig } from '@cedarjs/project-config'
 
-import { getTsConfigs } from '../project.js'
+import { getTsConfigs, dbReexportsPrismaClient } from '../project.js'
 
 import * as rwTypescriptResolvers from './plugins/rw-typescript-resolvers/index.js'
 enum CodegenSide {
@@ -65,14 +65,18 @@ export const generateTypeDefGraphQLApi = async (): Promise<TypeDefResult> => {
     return `${key} as Prisma${key}`
   })
 
+  const prismaImportSource = dbReexportsPrismaClient()
+    ? 'src/lib/db'
+    : '@prisma/client'
+
   const extraPlugins: CombinedPluginConfig[] = [
     {
       name: 'add',
       options: {
         content: [
-          'import { Prisma } from "@prisma/client"',
+          `import { Prisma } from "${prismaImportSource}"`,
           "import { MergePrismaWithSdlTypes, MakeRelationsOptional } from '@cedarjs/api'",
-          `import { ${prismaImports.join(', ')} } from '@prisma/client'`,
+          `import { ${prismaImports.join(', ')} } from '${prismaImportSource}'`,
         ],
         placement: 'prepend',
       },
@@ -134,7 +138,9 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
     {
       name: 'add',
       options: {
-        content: 'import { Prisma } from "@prisma/client"',
+        content: `import { Prisma } from "${
+          dbReexportsPrismaClient() ? '$api/src/lib/db' : '@prisma/client'
+        }"`,
         placement: 'prepend',
       },
       codegenPlugin: addPlugin,

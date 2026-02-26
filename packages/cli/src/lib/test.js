@@ -41,6 +41,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           ),
           dataMigrations: path.join(BASE_PATH, './api/dataMigrations'),
           src: path.join(BASE_PATH, './api/src'),
+          lib: path.join(BASE_PATH, './api/src/lib'),
           jobs: path.join(BASE_PATH, './api/src/jobs'),
           services: path.join(BASE_PATH, './api/src/services'),
           directives: path.join(BASE_PATH, './api/src/directives'),

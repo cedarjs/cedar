@@ -1,6 +1,6 @@
-import type { Prisma, Post } from '@prisma/client'
-
 import type { ScenarioData } from '@cedarjs/testing/api'
+
+import type { Prisma, Post } from 'src/lib/db'
 
 export const standard = defineScenario<Prisma.PostCreateArgs>({
   post: {
