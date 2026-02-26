@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import type { FileInfo, API } from 'jscodeshift'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getDataMigrationsPath, getPaths } from '@cedarjs/project-config'
 
 function transformDbFile(file: FileInfo, api: API) {
   const j = api.jscodeshift
