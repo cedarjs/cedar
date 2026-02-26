@@ -41,13 +41,19 @@ function transformOtherFile(file: FileInfo, api: API) {
   const j = api.jscodeshift
   const root = j(file.source)
 
-  // Replace all imports from '@prisma/client' to 'src/lib/db'
+  // Determine the correct import path based on file location
+  const isInRootScripts = file.path.startsWith(
+    path.join(getPaths().scripts, path.sep),
+  )
+  const importPath = isInRootScripts ? 'api/src/lib/db' : 'src/lib/db'
+
+  // Replace all imports from '@prisma/client' to the appropriate path
   root
     .find(j.ImportDeclaration, {
       source: { value: '@prisma/client' },
     })
     .forEach((importDecl) => {
-      importDecl.get('source').replace(j.literal('src/lib/db'))
+      importDecl.get('source').replace(j.literal(importPath))
     })
 
   return root.toSource()
@@ -55,6 +61,8 @@ function transformOtherFile(file: FileInfo, api: API) {
 
 async function prismaV7Prep() {
   const paths = getPaths()
+  const prismaConfigPath = paths.api.prismaConfig
+  const dataMigrationsPath = await getDataMigrationsPath(prismaConfigPath)
 
   // Transform db.ts or db.js
   const dbPath = path.join(paths.api.src, 'lib', 'db.ts')
@@ -74,11 +82,9 @@ async function prismaV7Prep() {
     fs.writeFileSync(dbFilePath, transformed)
   }
 
-  // Transform all other files under api/src/ and api/db/dataMigrations/
-  const dirsToTransform = [
-    path.join(paths.api.src),
-    path.join(paths.api.db, 'dataMigrations'),
-  ]
+  // Transform all other files under api/src/, api/db/dataMigrations/, and
+  // scripts/
+  const dirsToTransform = [paths.api.src, dataMigrationsPath, paths.scripts]
 
   for (const dir of dirsToTransform) {
     if (!fs.existsSync(dir)) {
@@ -87,7 +93,17 @@ async function prismaV7Prep() {
 
     const files = fs
       .readdirSync(dir, { recursive: true })
-      .filter((file) => file.endsWith('.ts') || file.endsWith('.js'))
+      .filter(
+        (file) =>
+          file.endsWith('.ts') ||
+          file.endsWith('.cts') ||
+          file.endsWith('.mts') ||
+          file.endsWith('.tsx') ||
+          file.endsWith('.js') ||
+          file.endsWith('.cjs') ||
+          file.endsWith('.mjs') ||
+          file.endsWith('.jsx'),
+      )
       .map((file) => path.join(dir, file))
       .filter((file) => fs.statSync(file).isFile())
       .filter((file) => file !== dbFilePath) // Skip db.ts
