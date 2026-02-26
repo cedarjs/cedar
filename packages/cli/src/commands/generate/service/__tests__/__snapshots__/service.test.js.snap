@@ -737,9 +737,9 @@ export const User: UserRelationResolvers = {
 `;
 
 exports[`in typescript mode > creates a single word service scenario file 1`] = `
-"import type { Prisma, User } from 'src/lib/db'
+"import type { ScenarioData } from '@cedarjs/testing/api'
 
-import type { ScenarioData } from '@cedarjs/testing/api'
+import type { Prisma, User } from 'src/lib/db'
 
 export const standard = defineScenario<Prisma.UserCreateArgs>({
   user: {
