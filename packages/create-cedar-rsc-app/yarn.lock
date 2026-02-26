@@ -1657,7 +1657,7 @@ __metadata:
     eslint-plugin-jsonc: "npm:^2.16.0"
     eslint-plugin-markdown: "npm:^5.1.0"
     eslint-plugin-n: "npm:^17.9.0"
-    eslint-plugin-package-json: "npm:^0.88.0"
+    eslint-plugin-package-json: "npm:^0.89.0"
     eslint-plugin-perfectionist: "npm:^3.0.0"
     eslint-plugin-regexp: "npm:^2.6.0"
     eslint-plugin-yml: "npm:^1.14.0"
@@ -2174,9 +2174,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-package-json@npm:^0.88.0":
-  version: 0.88.3
-  resolution: "eslint-plugin-package-json@npm:0.88.3"
+"eslint-plugin-package-json@npm:^0.89.0":
+  version: 0.89.1
+  resolution: "eslint-plugin-package-json@npm:0.89.1"
   dependencies:
     "@altano/repository-tools": "npm:^2.0.1"
     change-case: "npm:^5.4.4"
@@ -2190,8 +2190,8 @@ __metadata:
     validate-npm-package-name: "npm:^7.0.0"
   peerDependencies:
     eslint: ">=8.0.0"
-    jsonc-eslint-parser: ^2.0.0
-  checksum: 10c0/74b397c5085d7ece637d936e22f535d3b6bb2f6ae33ca830a36c420ae5c95ecfacd313af876960d29babdc5ce4210657b61bdcb902e064cd0d5129b7d2ca9e78
+    jsonc-eslint-parser: ">=2.0.0"
+  checksum: 10c0/b1596f3d8b56fbee37f62903759ea74327b37057d2db0abd2ba05c53179e949f3e33c3a42030156345c9094ac1706b69892cf2edec134f33cfef2633fb779d38
   languageName: node
   linkType: hard
 
