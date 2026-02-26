@@ -100,7 +100,7 @@ test('Generate gql typedefs api', async () => {
 
   // Check that prisma model imports are added to the top of the file
   expect(data).toContain(
-    "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from '@prisma/client'",
+    "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from 'src/lib/db'",
   )
 
   // Check printMappedModelsPlugin works correctly
