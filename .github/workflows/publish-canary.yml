@@ -64,7 +64,7 @@ jobs:
             VERSION="${{ steps.get-version.outputs.value }}"
             # Strip build metadata/commit hash suffix that starts with '+'
             VERSION="${VERSION%%+*}"
-            gh pr comment $PR_NUMBER --body "The changes in this PR are now available on npm.\n\nTry them out by running `yarn cedar upgrade -t $VERSION`"
+            gh pr comment $PR_NUMBER --body "$(printf "The changes in this PR are now available on npm.\n\nTry them out by running \`yarn cedar upgrade -t %s\`" "$VERSION")"
           else
             echo "No PR found for commit ${{ github.sha }}"
           fi
