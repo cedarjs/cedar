@@ -22,15 +22,15 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@typescript-eslint/utils": "8.56.0",
+    "@typescript-eslint/utils": "8.56.1",
     "eslint": "8.57.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/eslint": "8.56.12",
     "@types/estree": "1.0.8",
-    "@typescript-eslint/parser": "8.56.0",
-    "@typescript-eslint/rule-tester": "8.56.0",
+    "@typescript-eslint/parser": "8.56.1",
+    "@typescript-eslint/rule-tester": "8.56.1",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
