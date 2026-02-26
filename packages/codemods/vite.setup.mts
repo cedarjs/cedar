@@ -18,6 +18,11 @@ expect.extend({
       let actualOutput = fs.readFileSync(receivedPath, 'utf-8')
       let expectedOutput = fs.readFileSync(expectedPath, 'utf-8')
 
+      // Keep fixture assertions platform-independent. jscodeshift can emit
+      // CRLF on Windows while fixtures are committed with LF.
+      actualOutput = actualOutput.replace(/\r\n/g, '\n')
+      expectedOutput = expectedOutput.replace(/\r\n/g, '\n')
+
       if (removeWhitespace) {
         actualOutput = actualOutput.replace(/\s/g, '')
         expectedOutput = expectedOutput.replace(/\s/g, '')
