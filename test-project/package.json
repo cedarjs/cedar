@@ -18,7 +18,7 @@
   },
   "packageManager": "yarn@4.12.0",
   "resolutions": {
-    "react-is": "19.2.3",
+    "react-is": "19.2.4",
     "@cedarjs/fastify-web": "file:../packages/adapters/fastify/web/cedarjs-fastify-web.tgz",
     "@cedarjs/api": "file:../packages/api/cedarjs-api.tgz",
     "@cedarjs/api-server": "file:../packages/api-server/cedarjs-api-server.tgz",
@@ -89,7 +89,7 @@
     "@cedarjs/vite": "file:../packages/vite/cedarjs-vite.tgz",
     "@cedarjs/web": "file:../packages/web/cedarjs-web.tgz",
     "@cedarjs/web-server": "file:../packages/web-server/cedarjs-web-server.tgz",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   }
 }
