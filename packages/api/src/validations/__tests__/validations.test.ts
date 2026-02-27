@@ -1223,7 +1223,6 @@ describe('validateWith', () => {
 })
 
 const mockFindFirst = vi.fn()
-const mockFallbackDbFindFirst = vi.fn()
 const mockDb = {
   $transaction: async (func: (args: any) => Promise<any>) =>
     func({
@@ -1240,12 +1239,13 @@ const mockDb = {
 // mockFindFirst.mockImplementation() to change what `findFirst()` would return
 // TODO: Remove this mock when we've migrated to Prisma 7 where @prisma/client
 // shouldn't be instantiated directly anymore
+const mockPrismaFindFirst = vi.fn()
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn(() => ({
     $transaction: async (func: (args: any) => Promise<any>) =>
       func({
         user: {
-          findFirst: mockFindFirst,
+          findFirst: mockPrismaFindFirst,
         },
       }),
   })),
@@ -1254,7 +1254,7 @@ vi.mock('@prisma/client', () => ({
 describe('validateUniqueness', () => {
   beforeEach(() => {
     mockFindFirst.mockClear()
-    mockFallbackDbFindFirst.mockClear()
+    mockPrismaFindFirst.mockClear()
   })
 
   it('throws an error if record is not unique', async () => {
@@ -1401,14 +1401,14 @@ describe('validateUniqueness', () => {
   })
 
   it('falls back to @prisma/client if no db is passed as an argument', async () => {
-    mockFallbackDbFindFirst.mockImplementation(() => null)
+    mockPrismaFindFirst.mockImplementation(() => null)
 
     await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {
       expect(true).toEqual(true)
       return Promise.resolve()
     })
 
-    expect(mockFallbackDbFindFirst).toHaveBeenCalled()
+    expect(mockPrismaFindFirst).toHaveBeenCalled()
     expect(vi.mocked(PrismaClient)).toHaveBeenCalled()
   })
 })
