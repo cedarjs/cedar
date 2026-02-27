@@ -171,7 +171,7 @@ export const createCache = (
     // create the key so just return the query
     if (latest) {
       latestCacheKey = `${cacheKey}${cacheKeySeparator}${
-        latest.id
+        latest[fields.id]
       }${cacheKeySeparator}${latest[fields.updatedAt].getTime()}`
     } else {
       logger?.debug(
