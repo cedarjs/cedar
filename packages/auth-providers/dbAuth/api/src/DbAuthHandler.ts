@@ -176,7 +176,7 @@ type AuthMethodOutput = [
 export interface DbAuthHandlerOptions<
   TUser = UserType,
   TUserAttributes = Record<string, unknown>,
-  TDb extends Record<string, unknown> = Record<string, unknown>,
+  TDb extends object = Record<string, unknown>,
 > {
   /**
    * Provide prisma db client
@@ -314,7 +314,7 @@ const DEFAULT_ALLOWED_USER_FIELDS = ['id', 'email']
 export class DbAuthHandler<
   TUser extends UserType,
   TUserAttributes = Record<string, unknown>,
-  TDb extends Record<string, unknown> = Record<string, unknown>,
+  TDb extends object = Record<string, unknown>,
 > {
   event: Request | APIGatewayProxyEvent
   _normalizedRequest: PartialRequest<Params> | undefined
