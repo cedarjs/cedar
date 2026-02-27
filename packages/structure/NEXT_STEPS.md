@@ -1,3 +1,6 @@
+> If you look at the Structure package code, is there anything you would recommend doing to improve it? It could be anything. Something to make it more
+> performant, something to make it easier to work with, something to make it more modern. What's the one thing you'd recommend that'd have to biggest impact?
+
 ✦ If I had to recommend one change with the biggest impact on the Structure package, it would be replacing `ts-morph` with a high-performance AST parser like
 [`oxc-parser`](https://github.com/oxc-project/oxc) or [`swc`](https://swc.rs/).
 
@@ -47,3 +50,48 @@ Why this is better than inheritance:
 
 This approach is essentially how most modern compilers and high-performance tools (like ESLint or rust-analyzer) are built today. It trades "magical
 getters" for a transparent, predictable data flow.
+
+✦ To take full advantage of a move to a high-performance parser like oxc, you should eventually update the interface, though you could keep the current one
+as a temporary compatibility layer.
+
+Here is the breakdown of why keeping the current interface would actually limit the benefits of the rewrite:
+
+1. The "Compatibility Layer" Tax
+   The current interface is built on ts-morph, which provides a very high-level, human-friendly API (e.g., sourceFile.getVariableDeclaration('QUERY')).
+
+- The Problem: oxc (and most high-performance parsers) returns a raw, flat AST.
+- The Consequence: If you keep the current interface, you have to write a massive "compatibility layer" that mimics ts-morph's API using the raw AST. This
+  layer would likely be written in JavaScript, adding back some of the overhead you were trying to remove.
+
+2. From "Pull" to "Push" (Performance)
+
+- Current (Pull): The inheritance/lazy-getter model is a "Pull" system. You ask for project.cells, and it triggers a chain of getters that eventually call
+  ts-morph.
+- Optimal (Push): High-performance tools work better as "Push" systems. You run a fast Rust-based scanner over the whole project in one pass, which
+  "pushes" a plain data object representing the whole structure.
+- If you keep the current interface, you are forcing a high-speed stream of data into a slow, stateful object container.
+
+3. Serializability and Concurrency
+   One of the biggest hidden benefits of oxc is that because it’s so fast and the data it produces is simple, you can easily move the work to Worker Threads.
+
+- The Limitation: You cannot send class instances (like RWProject) across worker boundaries easily.
+- The Win: If you update the interface to use Plain Old JavaScript Objects (POJOs), the Structure package could parse 50 files in parallel on 50 threads
+  and return a single JSON-like object. Other packages would then "query" this data rather than interacting with live class instances.
+
+4. What a "Modern" Interface would look like
+   Instead of other packages doing this:
+
+1 const project = getProject(path)
+2 const routes = project.router.routes // Deep getter chain
+
+They would do this:
+1 // The structure package returns a frozen snapshot of the project
+2 const projectData = await scanProject(path)
+3 const routes = findRoutes(projectData) // Fast lookup in a data structure
+
+Recommendation
+If you want to move to oxc, I would recommend a Two-Phase Approach:
+
+1.  Phase 1 (Internal): Rewrite the internals to use oxc but keep the RWProject classes as "wrappers" so you don't break the CLI or Telemetry immediately.
+2.  Phase 2 (Public API): Introduce a new functional API (scanProject) and slowly migrate the CLI to use it. Once the CLI is migrated, you can delete the
+    inheritance-based classes entirely.
