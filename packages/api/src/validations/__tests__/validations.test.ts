@@ -1377,7 +1377,7 @@ describe('validateUniqueness', () => {
   })
 
   it('does not include $self or $scope in error message', async () => {
-    mockFindFirst.mockImplementation(() => ({
+    mockPrismaFindFirst.mockImplementation(() => ({
       id: 4,
       email: 'rob@cedarjs.com',
     }))
@@ -1398,6 +1398,8 @@ describe('validateUniqueness', () => {
         expect(e.message).toEqual('email must be unique')
       }
     }
+
+    expect(mockPrismaFindFirst).toHaveBeenCalled()
   })
 
   it('falls back to @prisma/client if no db is passed as an argument', async () => {
