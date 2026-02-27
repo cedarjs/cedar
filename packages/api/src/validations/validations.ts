@@ -681,7 +681,7 @@ export async function validateUniqueness(
   model: string,
   fields: Record<string, unknown>,
   optionsOrCallback: (tx: PrismaClient) => Promise<any>,
-  callback: never,
+  callback?: never,
 ): Promise<any>
 export async function validateUniqueness(
   model: string,
@@ -732,7 +732,7 @@ export async function validateUniqueness(
     const found = await tx[model].findFirst({ where })
 
     if (found) {
-      validationError('uniqueness', fieldsToString(fields), options)
+      validationError('uniqueness', fieldsToString(rest), options)
     }
 
     return validCallback(tx)

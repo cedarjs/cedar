@@ -1284,7 +1284,7 @@ describe('validateUniqueness', () => {
       await validateUniqueness(
         'user',
         { name: 'Rob', email: 'rob@cedarjs.com' },
-        () => {},
+        () => Promise.resolve(),
       )
     } catch (e) {
       expect(e.message).toEqual('name, email must be unique')
@@ -1305,7 +1305,7 @@ describe('validateUniqueness', () => {
         {
           message: 'Email already taken',
         },
-        () => {},
+        () => Promise.resolve(),
       )
     } catch (e) {
       expect(e.message).toEqual('Email already taken')
@@ -1335,11 +1335,35 @@ describe('validateUniqueness', () => {
         'user',
         { email: 'rob@cedarjs.com' },
         { db: mockPrismaClient },
-        () => {},
+        () => Promise.resolve(),
       ),
     ).rejects.toThrowError('email must be unique')
 
     expect(mockFindFirstOther).toBeCalled()
     expect(mockFindFirst).not.toBeCalled()
+  })
+
+  it('does not include $self or $scope in error message', async () => {
+    mockFindFirst.mockImplementation(() => ({
+      id: 4,
+      email: 'rob@cedarjs.com',
+    }))
+
+    try {
+      await validateUniqueness(
+        'user',
+        {
+          email: 'rob@cedarjs.com',
+          $self: { id: 123 },
+          $scope: { companyId: 5 },
+        },
+        () => Promise.resolve(),
+      )
+    } catch (e) {
+      expect(e).toBeInstanceOf(ValidationErrors.UniquenessValidationError)
+      if (e instanceof ValidationErrors.UniquenessValidationError) {
+        expect(e.message).toEqual('email must be unique')
+      }
+    }
   })
 })
