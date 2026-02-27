@@ -750,7 +750,7 @@ export async function validateUniqueness(
   if (!db) {
     throw new Error(
       'validateUniqueness could not resolve a Prisma `db` instance. Pass ' +
-        '`{ db }` in options, or ensure`src/lib/db` exports `db`',
+        '`{ db }` in options, or ensure `src/lib/db` exports `db`',
     )
   }
   const { db: _db, ...restOptions } = options
