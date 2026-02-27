@@ -1,4 +1,4 @@
-import type { Prisma, Post } from "src/lib/db"
+import type { Prisma, Post } from 'src/lib/db'
 
 export const standard = defineScenario<Prisma.PostCreateArgs>({
   post: {

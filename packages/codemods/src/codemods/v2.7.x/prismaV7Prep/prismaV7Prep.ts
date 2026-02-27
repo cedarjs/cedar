@@ -6,12 +6,27 @@ import j from 'jscodeshift'
 
 import { getDataMigrationsPath, getPaths } from '@cedarjs/project-config'
 
+import prettify from '../../../lib/prettify'
+
 function getParserForFile(filePath: string) {
   if (filePath.endsWith('.tsx') || filePath.endsWith('.jsx')) {
     return j.withParser('tsx')
   }
 
   return j.withParser('ts')
+}
+
+function getPrettierParserForFile(filePath: string) {
+  if (
+    filePath.endsWith('.ts') ||
+    filePath.endsWith('.tsx') ||
+    filePath.endsWith('.cts') ||
+    filePath.endsWith('.mts')
+  ) {
+    return 'typescript'
+  }
+
+  return 'babel'
 }
 
 function transformDbFile(file: FileInfo) {
@@ -86,7 +101,12 @@ async function prismaV7Prep() {
   if (fs.existsSync(dbFilePath)) {
     const source = fs.readFileSync(dbFilePath, 'utf-8')
     const transformed = transformDbFile({ source, path: dbFilePath })
-    fs.writeFileSync(dbFilePath, transformed)
+    fs.writeFileSync(
+      dbFilePath,
+      await prettify(transformed, {
+        parser: getPrettierParserForFile(dbFilePath),
+      }),
+    )
   }
 
   // Transform all other files under api/src/, api/db/dataMigrations/, and
@@ -118,7 +138,12 @@ async function prismaV7Prep() {
     for (const file of files) {
       const source = fs.readFileSync(file, 'utf-8')
       const transformed = transformOtherFile({ source, path: file })
-      fs.writeFileSync(file, transformed)
+      fs.writeFileSync(
+        file,
+        await prettify(transformed, {
+          parser: getPrettierParserForFile(file),
+        }),
+      )
     }
   }
 }

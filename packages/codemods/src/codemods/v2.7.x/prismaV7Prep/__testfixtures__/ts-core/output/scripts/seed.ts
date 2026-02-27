@@ -1,4 +1,4 @@
-import { PrismaClient } from "api/src/lib/db"
+import { PrismaClient } from 'api/src/lib/db'
 
 const db = new PrismaClient()
 
