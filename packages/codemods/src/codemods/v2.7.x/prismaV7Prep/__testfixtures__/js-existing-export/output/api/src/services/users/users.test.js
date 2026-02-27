@@ -1,3 +1,3 @@
-import { Prisma } from "src/lib/db"
+import { Prisma } from 'src/lib/db'
 
 export const x = Prisma
