@@ -155,7 +155,7 @@ export const createUploadsExtension = <MNames extends ModelNames = ModelNames>(
             )
           })
 
-          if (uploadFieldsToUpdate.length == 0) {
+          if (uploadFieldsToUpdate.length === 0) {
             return query(args)
           } else {
             // MULTIPLE!
@@ -306,7 +306,6 @@ export const createUploadsExtension = <MNames extends ModelNames = ModelNames>(
    * This function deletes files from the storage adapter, but importantly,
    * it does NOT throw, because if the file is already gone, that's fine,
    * no need to stop the actual db operation
-   *
    */
   async function removeUploadedFiles(
     fieldsToDelete: string[],
