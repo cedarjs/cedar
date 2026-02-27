@@ -721,8 +721,6 @@ export async function validateUniqueness(
     ) => Promise<any>
   }
 
-  console.log('options', options)
-
   const { db: _db, ...restOptions } = options
   const db = options.db || new PrismaClient()
   options = restOptions
@@ -749,7 +747,6 @@ export async function validateUniqueness(
 
   return await db.$transaction(async (tx: UniquenessTransactionClient) => {
     const found = await tx[model].findFirst({ where })
-    console.log('found', found)
 
     if (found) {
       validationError('uniqueness', fieldsToString(rest), options)
