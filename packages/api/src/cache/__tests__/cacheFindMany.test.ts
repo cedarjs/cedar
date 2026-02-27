@@ -134,4 +134,31 @@ describe('cacheFindMany', () => {
       `[Cache] cacheFindMany error: random failure`,
     )
   })
+
+  it('builds cache key using custom id and updatedAt fields', async () => {
+    const now = new Date()
+
+    const user = {
+      uuid: 'abc-123',
+      email: 'tester@example.com',
+      modifiedAt: now,
+    }
+
+    mockFindFirst.mockImplementation(() => user)
+    mockFindMany.mockImplementation(() => [user])
+
+    const client = new InMemoryClient()
+    const { cacheFindMany } = createCache(client, {
+      fields: { id: 'uuid', updatedAt: 'modifiedAt' },
+    })
+    const spy = vi.spyOn(client, 'set')
+
+    await cacheFindMany('test', PrismaClient().user)
+
+    expect(spy).toHaveBeenCalled()
+    // Expect the cache key to include the `uuid` value (not `id`)
+    expect(client.storage[`test-${user.uuid}-${now.getTime()}`].value).toEqual(
+      JSON.stringify([user]),
+    )
+  })
 })
