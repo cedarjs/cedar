@@ -15,7 +15,8 @@ export const DEFAULT_PRIORITY = 50
 export const DEFAULT_WAIT = 0
 export const DEFAULT_WAIT_UNTIL = null
 export const PROCESS_TITLE_PREFIX = 'rw-jobs-worker'
-export const DEFAULT_MODEL_NAME = 'backgroundJob'
+// TODO: Change this to 'backgroundJob' in the next major release
+export const DEFAULT_MODEL_NAME = 'BackgroundJob'
 
 /**
  * The name of the exported variable from the jobs config file that contains
