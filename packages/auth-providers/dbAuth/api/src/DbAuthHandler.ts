@@ -1,4 +1,3 @@
-import type { PrismaClient } from '@prisma/client'
 import type {
   GenerateAuthenticationOptionsOpts,
   GenerateRegistrationOptionsOpts,
@@ -178,21 +177,27 @@ type AuthMethodOutput = [
 export interface DbAuthHandlerOptions<
   TUser = UserType,
   TUserAttributes = Record<string, unknown>,
+  TDb extends object = Record<string, unknown>,
 > {
   /**
    * Provide prisma db client
+   *
+   * Typed generically so that `authModelAccessor` and `credentialModelAccessor`
+   * below are constrained to the model names that actually exist in the user's
+   * schema, without importing @prisma/client. A real PrismaClient instance
+   * always satisfies `Record<string, unknown>`.
    */
-  db: PrismaClient
+  db: TDb
   /**
    * The name of the property you'd call on `db` to access your user table.
    * ie. if your Prisma model is named `User` this value would be `user`, as in `db.user`
    */
-  authModelAccessor: keyof PrismaClient
+  authModelAccessor: keyof TDb
   /**
    * The name of the property you'd call on `db` to access your user credentials table.
    * ie. if your Prisma model is named `UserCredential` this value would be `userCredential`, as in `db.userCredential`
    */
-  credentialModelAccessor?: keyof PrismaClient
+  credentialModelAccessor?: keyof TDb
   /**
    * The fields that are allowed to be returned from the user table when
    * invoking handlers that return a user object (like forgotPassword and signup)
@@ -310,13 +315,14 @@ const DEFAULT_ALLOWED_USER_FIELDS = ['id', 'email']
 export class DbAuthHandler<
   TUser extends UserType,
   TUserAttributes = Record<string, unknown>,
+  TDb extends object = Record<string, unknown>,
 > {
   event: Request | APIGatewayProxyEvent
   _normalizedRequest: PartialRequest<Params> | undefined
   httpMethod: string
-  options: DbAuthHandlerOptions<TUser, TUserAttributes>
+  options: DbAuthHandlerOptions<TUser, TUserAttributes, TDb>
   cookie: string
-  db: PrismaClient
+  db: TDb
   dbAccessor: any
   dbCredentialAccessor: any
   allowedUserFields: string[]
@@ -432,7 +438,7 @@ export class DbAuthHandler<
   constructor(
     event: APIGatewayProxyEvent | Request,
     _context: LambdaContext, // @TODO:
-    options: DbAuthHandlerOptions<TUser, TUserAttributes>,
+    options: DbAuthHandlerOptions<TUser, TUserAttributes, TDb>,
   ) {
     this.options = options
     this.event = event
