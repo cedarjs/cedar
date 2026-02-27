@@ -1376,7 +1376,7 @@ describe('validateUniqueness', () => {
     expect(mockFindFirst).not.toBeCalled()
   })
 
-  it.only('does not include $self or $scope in error message', async () => {
+  it('does not include $self or $scope in error message', async () => {
     mockFindFirst.mockImplementation(() => ({
       id: 4,
       email: 'rob@cedarjs.com',
