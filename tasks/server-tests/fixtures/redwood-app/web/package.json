@@ -16,8 +16,8 @@
     "@cedarjs/router": "0.0.5",
     "@cedarjs/web": "0.0.5",
     "humanize-string": "2.1.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@cedarjs/vite": "0.0.5",
