@@ -54,7 +54,8 @@ export interface PrismaAdapterOptions<
    * `'backgroundJob'` (which is also the default). For a custom model named
    * `Job` this would be `'job'`.
    *
-   * @default 'backgroundJob'
+   * @default 'BackgroundJob' for now, but will be 'backgroundJob' in the next
+   * major release.
    */
   // TODO: Remove the `| string` part. It's only here to make this code
   // backward compatible with Cedar v2.6 and earlier
@@ -108,7 +109,7 @@ export class PrismaAdapter<
 
     // camelCase name of the model, as accessed on `db`
     // TODO: Remove type casting of `options.model` in the next major release
-    this.model = (options.model ?? DEFAULT_MODEL_NAME) as keyof TDb
+    this.model = (options.model || DEFAULT_MODEL_NAME) as keyof TDb
 
     // the function to call on `db` to make queries: `db.backgroundJob`
     // TODO: Remove the camelCase call in the next major release. It's only here
