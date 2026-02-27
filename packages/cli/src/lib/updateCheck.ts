@@ -128,7 +128,7 @@ export function isEnabled() {
 
 /**
  * Determines if an update check is due based on if enough time has elapsed since the last check
- * @return {boolean} `true` if an update check is overdue
+ * @return `true` if an update check is overdue
  * @see {@link CHECK_PERIOD} for the time between notifications
  */
 export function shouldCheck() {
@@ -144,7 +144,7 @@ export function shouldCheck() {
 
 /**
  * Determines if the user should see an update notification based on if a new version is available and enough time has elapsed since the last notification
- * @return {boolean} `true` if the user should see an update notification
+ * @return `true` if the user should see an update notification
  * @see {@link SHOW_PERIOD} for the time between notifications
  */
 export function shouldShow() {
@@ -173,7 +173,7 @@ export function showUpdateMessage() {
 
 /**
  * Returns a nicely formatted string containing an update notification
- * @return {string} A specifically formatted update notification message
+ * @return A specifically formatted update notification message
  */
 function getUpdateMessage() {
   const data = readUpdateDataFile()
@@ -300,19 +300,19 @@ export function updateCheckMiddleware(argv: { _: (string | number)[] }) {
     return
   }
 
-  if (shouldShow()) {
-    setLock(SHOW_LOCK_IDENTIFIER)
-    process.on('exit', () => {
-      showUpdateMessage()
-      unsetLock(SHOW_LOCK_IDENTIFIER)
-    })
-  }
-
+  // Always prefer refreshing cached version data first. This avoids showing a
+  // notification based on stale local/remote versions in the same run.
   if (shouldCheck()) {
     setLock(CHECK_LOCK_IDENTIFIER)
     spawnBackgroundProcess('updateCheck', 'yarn', [
       'node',
       path.join(import.meta.dirname, 'updateCheckExecute.js'),
     ])
+  } else if (shouldShow()) {
+    setLock(SHOW_LOCK_IDENTIFIER)
+    process.on('exit', () => {
+      showUpdateMessage()
+      unsetLock(SHOW_LOCK_IDENTIFIER)
+    })
   }
 }
