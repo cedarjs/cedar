@@ -28,17 +28,38 @@ export interface PrismaJob extends BaseJob {
   updatedAt: Date
 }
 
-export interface PrismaAdapterOptions extends BaseAdapterOptions {
+export interface PrismaAdapterOptions<
+  TDb extends PrismaClient = PrismaClient,
+> extends BaseAdapterOptions {
   /**
-   * An instance of PrismaClient which will be used to talk to the database
+   * An instance of PrismaClient which will be used to talk to the database.
+   *
+   * Typed generically so that `model` below is constrained to the model names
+   * that actually exist in the user's schema. When the user passes their typed
+   * db instance TypeScript infers TDb as the full generated client, giving
+   * autocomplete on model names. `PrismaClient` is only the lower bound — in
+   * v7 it may be a stub type, but TDb will still be inferred from the value
+   * passed at the call site.
    */
-  db: PrismaClient
+  // _activeProvider is an undocumented Prisma internal not present in the
+  // public type surface
+  // It's the database provider type: 'sqlite' | 'postgresql' | 'mysql'
+  db: TDb & { _activeProvider: string }
 
   /**
-   * The name of the model in the Prisma schema that represents the job table.
-   * @default 'BackgroundJob'
+   * The camelCase name of the Prisma model accessor that represents the job
+   * table, i.e. the key you'd use on `db` to query it.
+   *
+   * For a Prisma schema model named `BackgroundJob` this would be
+   * `'backgroundJob'` (which is also the default). For a custom model named
+   * `Job` this would be `'job'`.
+   *
+   * @default 'BackgroundJob' for now, but will be 'backgroundJob' in the next
+   * major release.
    */
-  model?: string
+  // TODO: Remove the `| string` part. It's only here to make this code
+  // backward compatible with Cedar v2.6 and earlier
+  model?: keyof TDb | string
 }
 
 interface FailureData {
@@ -73,30 +94,37 @@ interface FailureData {
  * }
  * ```
  */
-export class PrismaAdapter extends BaseAdapter<PrismaAdapterOptions> {
-  db: PrismaClient
-  model: string
+export class PrismaAdapter<
+  TDb extends PrismaClient = PrismaClient,
+> extends BaseAdapter<PrismaAdapterOptions<TDb>> {
+  db: TDb
+  model: keyof TDb
   accessor: PrismaClient[keyof PrismaClient]
   provider: string
 
-  constructor(options: PrismaAdapterOptions) {
+  constructor(options: PrismaAdapterOptions<TDb>) {
     super(options)
 
     this.db = options.db
 
-    // name of the model as defined in schema.prisma
-    this.model = options.model || DEFAULT_MODEL_NAME
+    // camelCase name of the model, as accessed on `db`
+    // TODO: Remove type casting of `options.model` in the next major release
+    this.model = (options.model || DEFAULT_MODEL_NAME) as keyof TDb
 
     // the function to call on `db` to make queries: `db.backgroundJob`
-    this.accessor = this.db[camelCase(this.model)]
+    // TODO: Remove the camelCase call in the next major release. It's only here
+    // to keep the code backwards compatible
+    const camelName = camelCase(String(this.model)) as keyof TDb
+    this.accessor = this.db[camelName]
 
-    // the database provider type: 'sqlite' | 'postgresql' | 'mysql'
-    // not used currently, but may be useful in the future for optimizations
+    // _activeProvider is an undocumented Prisma internal not present in the
+    // public type surface
+    // It's the database provider type: 'sqlite' | 'postgresql' | 'mysql'
     this.provider = options.db._activeProvider
 
     // validate that everything we need is available
     if (!this.accessor) {
-      throw new ModelNameError(this.model)
+      throw new ModelNameError(String(this.model))
     }
   }
 

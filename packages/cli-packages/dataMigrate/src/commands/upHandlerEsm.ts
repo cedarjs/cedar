@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { PrismaClient } from '@prisma/client'
 import { bundleRequire } from 'bundle-require'
 import { Listr } from 'listr2'
 
@@ -13,6 +12,24 @@ import {
 
 import c from '../lib/colors'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
+
+/**
+ * The subset of a Prisma client that the dataMigrate up handler requires.
+ *
+ * Using a structural interface rather than importing PrismaClient keeps this
+ * package decoupled from wherever the generated Prisma client lives (v6
+ * node_modules default or a v7 custom output path). A real PrismaClient
+ * instance always satisfies this interface.
+ */
+interface DataMigrateDb {
+  rW_DataMigration: {
+    findMany(args?: {
+      orderBy?: Record<string, 'asc' | 'desc'>
+    }): Promise<DataMigration[]>
+    create(args: { data: Record<string, unknown> }): Promise<unknown>
+  }
+  $disconnect(): Promise<void>
+}
 
 export async function handler({
   importDbClientFromDist,
@@ -139,7 +156,7 @@ export async function handler({
 }
 
 /** Return the list of migrations that haven't run against the database yet */
-async function getPendingDataMigrations(db: PrismaClient) {
+async function getPendingDataMigrations(db: DataMigrateDb) {
   const dataMigrationsPath = await getDataMigrationsPath(
     getPaths().api.prismaConfig,
   )
@@ -202,7 +219,7 @@ function sortDataMigrationsByVersion(
   return 0
 }
 
-async function runDataMigration(db: PrismaClient, dataMigrationPath: string) {
+async function runDataMigration(db: DataMigrateDb, dataMigrationPath: string) {
   const { mod } = await bundleRequire({
     filepath: dataMigrationPath,
     // TODO: Add plugins
@@ -224,7 +241,7 @@ export const NO_PENDING_MIGRATIONS_MESSAGE =
  * Adds data for completed migrations to the DB
  */
 async function recordDataMigration(
-  db: PrismaClient,
+  db: DataMigrateDb,
   { version, name, startedAt, finishedAt }: DataMigration,
 ) {
   await db.rW_DataMigration.create({
