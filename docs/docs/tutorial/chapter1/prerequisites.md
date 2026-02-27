@@ -50,7 +50,7 @@ There are many ways to install and manage both Node.js and Yarn. If you're insta
 Using the recommended [LTS version from Nodejs.org](https://nodejs.org/en/) is preferred.
 
 - `nvm` is a great tool for managing multiple versions of Node on one system. It takes a bit more effort to set up and learn, however. Follow the [nvm installation instructions](https://github.com/nvm-sh/nvm#installing-and-updating). (Windows users should go to [nvm-windows](https://github.com/coreybutler/nvm-windows/releases)). For **Mac** users with Homebrew installed, you can alternatively use it to [install `nvm`](https://formulae.brew.sh/formula/nvm). Or, refer to our how to guide [using nvm](../../how-to/using-nvm.md).
-- `n` is another great tool for managing multiple versions of Node on one system. Follow the [nvm installation instructions](https://github.com/tj/n).
+- `n` is another great tool for managing multiple versions of Node on one system. Follow the [installation instructions](https://github.com/tj/n).
 
 **2. Yarn**
 As of Node.js v18+, Node.js ships with a CLI tool called [Corepack](https://nodejs.org/docs/latest-v18.x/api/corepack.html) to manage package managers. All you have to do is enable it, then you'll have Yarn:
