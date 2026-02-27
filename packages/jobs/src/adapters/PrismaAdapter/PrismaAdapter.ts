@@ -104,7 +104,7 @@ export class PrismaAdapter<
 
     this.db = options.db
 
-    // name of the model as defined in schema.prisma
+    // camelCase name of the model, as accessed on `db`
     this.model = options.model ?? (DEFAULT_MODEL_NAME as keyof TDb)
 
     // the function to call on `db` to make queries: `db.backgroundJob`
