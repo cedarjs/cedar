@@ -1,5 +1,6 @@
 // Handles validating values in services
 
+import { PrismaClient } from '@prisma/client'
 import pascalcase from 'pascalcase'
 
 import * as ValidationErrors from './errors.js'
@@ -165,31 +166,6 @@ type UniquenessDb = {
   $transaction: <T>(
     callback: (tx: UniquenessTransactionClient) => Promise<T>,
   ) => Promise<T>
-}
-const UNIQUENESS_DB_MODULE_SPECIFIERS = ['src/lib/db', '$api/src/lib/db']
-
-const isUniquenessDb = (value: unknown): value is UniquenessDb => {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    '$transaction' in value &&
-    typeof (value as { $transaction: unknown }).$transaction === 'function'
-  )
-}
-
-const resolveAppDb = async (): Promise<UniquenessDb | undefined> => {
-  for (const specifier of UNIQUENESS_DB_MODULE_SPECIFIERS) {
-    try {
-      const dbModule = (await import(specifier)) as { db?: unknown }
-      if (isUniquenessDb(dbModule.db)) {
-        return dbModule.db
-      }
-    } catch {
-      // Keep trying known api-side db entry points.
-    }
-  }
-
-  return undefined
 }
 
 interface ValidationRecipe {
@@ -745,16 +721,20 @@ export async function validateUniqueness(
     ) => Promise<any>
   }
 
-  const db = options.db ?? (await resolveAppDb())
+  console.log('options', options)
 
-  if (!db) {
-    throw new Error(
-      'validateUniqueness could not resolve a Prisma `db` instance. Pass ' +
-        '`{ db }` in options, or ensure `src/lib/db` exports `db`',
-    )
-  }
   const { db: _db, ...restOptions } = options
+  const db = options.db || new PrismaClient()
   options = restOptions
+
+  // TODO: Enable this error when we've migrated to Prisma 7, where we can't
+  // do `new PrismaClient()` anymore
+  // if (!db) {
+  //   throw new Error(
+  //     'validateUniqueness could not resolve a Prisma `db` instance. Pass ' +
+  //       '`{ db }` in options, or ensure `src/lib/db` exports `db`',
+  //   )
+  // }
 
   const where: UniquenessWhere = {
     AND: [rest],
@@ -769,6 +749,7 @@ export async function validateUniqueness(
 
   return await db.$transaction(async (tx: UniquenessTransactionClient) => {
     const found = await tx[model].findFirst({ where })
+    console.log('found', found)
 
     if (found) {
       validationError('uniqueness', fieldsToString(rest), options)

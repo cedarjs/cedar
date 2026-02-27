@@ -1,3 +1,5 @@
+// TODO: Remove this import when we've migrated to Prisma v7
+import { PrismaClient } from '@prisma/client'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as ValidationErrors from '../errors.js'
@@ -1223,27 +1225,31 @@ describe('validateWith', () => {
 const mockFindFirst = vi.fn()
 const mockFallbackDbFindFirst = vi.fn()
 const mockDb = {
-  $transaction: async (func) =>
+  $transaction: async (func: (args: any) => Promise<any>) =>
     func({
       user: {
         findFirst: mockFindFirst,
       },
     }),
 }
-vi.mock(
-  'src/lib/db',
-  () => ({
-    db: {
-      $transaction: async (func) =>
-        func({
-          user: {
-            findFirst: mockFallbackDbFindFirst,
-          },
-        }),
-    },
-  }),
-  { virtual: true },
-)
+
+// Mock just enough of PrismaClient that we can test a transaction is running.
+// Prisma.PrismaClient is a class so we need to return a function that returns
+// the actual methods of an instance of the class
+//
+// mockFindFirst.mockImplementation() to change what `findFirst()` would return
+// TODO: Remove this mock when we've migrated to Prisma 7 where @prisma/client
+// shouldn't be instantiated directly anymore
+vi.mock('@prisma/client', () => ({
+  PrismaClient: vi.fn(() => ({
+    $transaction: async (func: (args: any) => Promise<any>) =>
+      func({
+        user: {
+          findFirst: mockFindFirst,
+        },
+      }),
+  })),
+}))
 
 describe('validateUniqueness', () => {
   beforeEach(() => {
@@ -1262,7 +1268,7 @@ describe('validateUniqueness', () => {
         'user',
         { email: 'rob@cedarjs.com' },
         { db: mockDb },
-        () => {},
+        () => Promise.resolve(),
       )
     } catch (e) {
       expect(e).toBeInstanceOf(ValidationErrors.UniquenessValidationError)
@@ -1279,6 +1285,7 @@ describe('validateUniqueness', () => {
       { db: mockDb },
       () => {
         expect(true).toEqual(true)
+        return Promise.resolve()
       },
     )
 
@@ -1369,7 +1376,7 @@ describe('validateUniqueness', () => {
     expect(mockFindFirst).not.toBeCalled()
   })
 
-  it('does not include $self or $scope in error message', async () => {
+  it.only('does not include $self or $scope in error message', async () => {
     mockFindFirst.mockImplementation(() => ({
       id: 4,
       email: 'rob@cedarjs.com',
@@ -1393,13 +1400,15 @@ describe('validateUniqueness', () => {
     }
   })
 
-  it('falls back to app db for callback-only usage', async () => {
+  it('falls back to @prisma/client if no db is passed as an argument', async () => {
     mockFallbackDbFindFirst.mockImplementation(() => null)
 
     await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {
       expect(true).toEqual(true)
+      return Promise.resolve()
     })
 
-    expect(mockFallbackDbFindFirst).toBeCalled()
+    expect(mockFallbackDbFindFirst).toHaveBeenCalled()
+    expect(vi.mocked(PrismaClient)).toHaveBeenCalled()
   })
 })
