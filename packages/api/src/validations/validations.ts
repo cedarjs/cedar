@@ -1,6 +1,5 @@
 // Handles validating values in services
 
-import { PrismaClient } from '@prisma/client'
 import pascalcase from 'pascalcase'
 
 import * as ValidationErrors from './errors.js'
@@ -153,9 +152,45 @@ interface CustomValidatorOptions extends WithOptionalMessage {
 }
 
 interface UniquenessValidatorOptions extends WithOptionalMessage {
-  db?: PrismaClient
+  db?: UniquenessDb
 }
 type UniquenessWhere = Record<'AND' | 'NOT', Record<string, unknown>[]>
+type UniquenessTransactionClient = Record<
+  string,
+  {
+    findFirst: (args: { where: UniquenessWhere }) => Promise<unknown>
+  }
+>
+type UniquenessDb = {
+  $transaction: <T>(
+    callback: (tx: UniquenessTransactionClient) => Promise<T>,
+  ) => Promise<T>
+}
+const UNIQUENESS_DB_MODULE_SPECIFIERS = ['src/lib/db', '$api/src/lib/db']
+
+const isUniquenessDb = (value: unknown): value is UniquenessDb => {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    '$transaction' in value &&
+    typeof (value as { $transaction: unknown }).$transaction === 'function'
+  )
+}
+
+const resolveAppDb = async (): Promise<UniquenessDb | undefined> => {
+  for (const specifier of UNIQUENESS_DB_MODULE_SPECIFIERS) {
+    try {
+      const dbModule = (await import(specifier)) as { db?: unknown }
+      if (isUniquenessDb(dbModule.db)) {
+        return dbModule.db
+      }
+    } catch {
+      // Keep trying known api-side db entry points.
+    }
+  }
+
+  return undefined
+}
 
 interface ValidationRecipe {
   /**
@@ -674,48 +709,52 @@ export const validateWith = async (func: () => Promise<any>) => {
 //     },
 //   },
 // })
-// return validateUniqueness('user', { email: 'rob@cedarjs.com' }, { prismaClient: myCustomDb}, (db) => {
+// return validateUniqueness('user', { email: 'rob@cedarjs.com' }, { db: myCustomDb}, (db) => {
 //   return db.create(data: { email })
 // })
 export async function validateUniqueness(
   model: string,
   fields: Record<string, unknown>,
-  optionsOrCallback: (tx: PrismaClient) => Promise<any>,
+  optionsOrCallback: (tx: UniquenessTransactionClient) => Promise<any>,
   callback: never,
 ): Promise<any>
 export async function validateUniqueness(
   model: string,
   fields: Record<string, unknown>,
   optionsOrCallback: UniquenessValidatorOptions,
-  callback?: (tx: PrismaClient) => Promise<any>,
+  callback?: (tx: UniquenessTransactionClient) => Promise<any>,
 ): Promise<any>
 export async function validateUniqueness(
   model: string,
   fields: Record<string, unknown>,
   optionsOrCallback:
     | UniquenessValidatorOptions
-    | ((tx: PrismaClient) => Promise<any>),
-  callback?: (tx: PrismaClient) => Promise<any>,
+    | ((tx: UniquenessTransactionClient) => Promise<any>),
+  callback?: (tx: UniquenessTransactionClient) => Promise<any>,
 ): Promise<any> {
   const { $self, $scope, ...rest } = fields
   let options: UniquenessValidatorOptions = {}
-  let validCallback: (tx: PrismaClient) => Promise<any>
-  let db = null
+  let validCallback: (tx: UniquenessTransactionClient) => Promise<any>
 
   if (typeof optionsOrCallback === 'function') {
     validCallback = optionsOrCallback
   } else {
     options = optionsOrCallback
-    validCallback = callback as (tx: PrismaClient) => Promise<any>
+    validCallback = callback as (
+      tx: UniquenessTransactionClient,
+    ) => Promise<any>
   }
 
-  if (options.db) {
-    const { db: customDb, ...restOptions } = options
-    options = restOptions
-    db = customDb
-  } else {
-    db = new PrismaClient()
+  const db = options.db ?? (await resolveAppDb())
+
+  if (!db) {
+    throw new Error(
+      'validateUniqueness could not resolve a Prisma `db` instance. Pass ' +
+        '`{ db }` in options, or ensure`src/lib/db` exports `db`',
+    )
   }
+  const { db: _db, ...restOptions } = options
+  options = restOptions
 
   const where: UniquenessWhere = {
     AND: [rest],
@@ -728,7 +767,7 @@ export async function validateUniqueness(
     where.NOT.push($self as Record<string, unknown>)
   }
 
-  return await db.$transaction(async (tx: PrismaClient) => {
+  return await db.$transaction(async (tx: UniquenessTransactionClient) => {
     const found = await tx[model].findFirst({ where })
 
     if (found) {

@@ -1220,26 +1220,35 @@ describe('validateWith', () => {
   })
 })
 
-// Mock just enough of PrismaClient that we can test a transaction is running.
-// Prisma.PrismaClient is a class so we need to return a function that returns
-// the actual methods of an instance of the class
-//
-// mockFindFirst.mockImplementation() to change what `findFirst()` would return
 const mockFindFirst = vi.fn()
-vi.mock('@prisma/client', () => ({
-  PrismaClient: vi.fn(() => ({
-    $transaction: async (func) =>
-      func({
-        user: {
-          findFirst: mockFindFirst,
-        },
-      }),
-  })),
-}))
+const mockFallbackDbFindFirst = vi.fn()
+const mockDb = {
+  $transaction: async (func) =>
+    func({
+      user: {
+        findFirst: mockFindFirst,
+      },
+    }),
+}
+vi.mock(
+  'src/lib/db',
+  () => ({
+    db: {
+      $transaction: async (func) =>
+        func({
+          user: {
+            findFirst: mockFallbackDbFindFirst,
+          },
+        }),
+    },
+  }),
+  { virtual: true },
+)
 
 describe('validateUniqueness', () => {
   beforeEach(() => {
     mockFindFirst.mockClear()
+    mockFallbackDbFindFirst.mockClear()
   })
 
   it('throws an error if record is not unique', async () => {
@@ -1249,7 +1258,12 @@ describe('validateUniqueness', () => {
     }))
 
     try {
-      await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {})
+      await validateUniqueness(
+        'user',
+        { email: 'rob@cedarjs.com' },
+        { db: mockDb },
+        () => {},
+      )
     } catch (e) {
       expect(e).toBeInstanceOf(ValidationErrors.UniquenessValidationError)
     }
@@ -1259,9 +1273,14 @@ describe('validateUniqueness', () => {
   it('calls callback if record is unique', async () => {
     mockFindFirst.mockImplementation(() => null)
 
-    await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {
-      expect(true).toEqual(true)
-    })
+    await validateUniqueness(
+      'user',
+      { email: 'rob@cedarjs.com' },
+      { db: mockDb },
+      () => {
+        expect(true).toEqual(true)
+      },
+    )
 
     expect.assertions(1)
   })
@@ -1274,7 +1293,12 @@ describe('validateUniqueness', () => {
 
     // single field
     try {
-      await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {})
+      await validateUniqueness(
+        'user',
+        { email: 'rob@cedarjs.com' },
+        { db: mockDb },
+        () => {},
+      )
     } catch (e) {
       expect(e.message).toEqual('email must be unique')
     }
@@ -1284,6 +1308,7 @@ describe('validateUniqueness', () => {
       await validateUniqueness(
         'user',
         { name: 'Rob', email: 'rob@cedarjs.com' },
+        { db: mockDb },
         () => {},
       )
     } catch (e) {
@@ -1303,6 +1328,7 @@ describe('validateUniqueness', () => {
         'user',
         { email: 'rob@cedarjs.com' },
         {
+          db: mockDb,
           message: 'Email already taken',
         },
         () => {},
@@ -1341,5 +1367,15 @@ describe('validateUniqueness', () => {
 
     expect(mockFindFirstOther).toBeCalled()
     expect(mockFindFirst).not.toBeCalled()
+  })
+
+  it('falls back to app db for callback-only usage', async () => {
+    mockFallbackDbFindFirst.mockImplementation(() => null)
+
+    await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {
+      expect(true).toEqual(true)
+    })
+
+    expect(mockFallbackDbFindFirst).toBeCalled()
   })
 })
