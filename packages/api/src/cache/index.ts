@@ -170,7 +170,7 @@ export const createCache = (
         )
       } else {
         const message =
-          e instanceof Error ? e.message : `${String(e ?? 'Unknown error')}`
+          e instanceof Error ? e.message : String(e ?? 'Unknown error')
         logger?.error(`[Cache] cacheFindMany error: ${message}`)
       }
 
