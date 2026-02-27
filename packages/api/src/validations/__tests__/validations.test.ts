@@ -1,3 +1,5 @@
+// TODO: Remove this import when we've migrated to Prisma v7
+import { PrismaClient } from '@prisma/client'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as ValidationErrors from '../errors.js'
@@ -1220,18 +1222,30 @@ describe('validateWith', () => {
   })
 })
 
+const mockFindFirst = vi.fn()
+const mockDb = {
+  $transaction: async (func: (args: any) => Promise<any>) =>
+    func({
+      user: {
+        findFirst: mockFindFirst,
+      },
+    }),
+}
+
 // Mock just enough of PrismaClient that we can test a transaction is running.
 // Prisma.PrismaClient is a class so we need to return a function that returns
 // the actual methods of an instance of the class
 //
 // mockFindFirst.mockImplementation() to change what `findFirst()` would return
-const mockFindFirst = vi.fn()
+// TODO: Remove this mock when we've migrated to Prisma 7 where @prisma/client
+// shouldn't be instantiated directly anymore
+const mockPrismaFindFirst = vi.fn()
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn(() => ({
-    $transaction: async (func) =>
+    $transaction: async (func: (args: any) => Promise<any>) =>
       func({
         user: {
-          findFirst: mockFindFirst,
+          findFirst: mockPrismaFindFirst,
         },
       }),
   })),
@@ -1240,6 +1254,7 @@ vi.mock('@prisma/client', () => ({
 describe('validateUniqueness', () => {
   beforeEach(() => {
     mockFindFirst.mockClear()
+    mockPrismaFindFirst.mockClear()
   })
 
   it('throws an error if record is not unique', async () => {
@@ -1249,7 +1264,12 @@ describe('validateUniqueness', () => {
     }))
 
     try {
-      await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {})
+      await validateUniqueness(
+        'user',
+        { email: 'rob@cedarjs.com' },
+        { db: mockDb },
+        () => Promise.resolve(),
+      )
     } catch (e) {
       expect(e).toBeInstanceOf(ValidationErrors.UniquenessValidationError)
     }
@@ -1259,9 +1279,15 @@ describe('validateUniqueness', () => {
   it('calls callback if record is unique', async () => {
     mockFindFirst.mockImplementation(() => null)
 
-    await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {
-      expect(true).toEqual(true)
-    })
+    await validateUniqueness(
+      'user',
+      { email: 'rob@cedarjs.com' },
+      { db: mockDb },
+      () => {
+        expect(true).toEqual(true)
+        return Promise.resolve()
+      },
+    )
 
     expect.assertions(1)
   })
@@ -1274,7 +1300,12 @@ describe('validateUniqueness', () => {
 
     // single field
     try {
-      await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {})
+      await validateUniqueness(
+        'user',
+        { email: 'rob@cedarjs.com' },
+        { db: mockDb },
+        () => Promise.resolve(),
+      )
     } catch (e) {
       expect(e.message).toEqual('email must be unique')
     }
@@ -1284,6 +1315,7 @@ describe('validateUniqueness', () => {
       await validateUniqueness(
         'user',
         { name: 'Rob', email: 'rob@cedarjs.com' },
+        { db: mockDb },
         () => Promise.resolve(),
       )
     } catch (e) {
@@ -1303,6 +1335,7 @@ describe('validateUniqueness', () => {
         'user',
         { email: 'rob@cedarjs.com' },
         {
+          db: mockDb,
           message: 'Email already taken',
         },
         () => Promise.resolve(),
@@ -1344,7 +1377,7 @@ describe('validateUniqueness', () => {
   })
 
   it('does not include $self or $scope in error message', async () => {
-    mockFindFirst.mockImplementation(() => ({
+    mockPrismaFindFirst.mockImplementation(() => ({
       id: 4,
       email: 'rob@cedarjs.com',
     }))
@@ -1365,5 +1398,19 @@ describe('validateUniqueness', () => {
         expect(e.message).toEqual('email must be unique')
       }
     }
+
+    expect(mockPrismaFindFirst).toHaveBeenCalled()
+  })
+
+  it('falls back to @prisma/client if no db is passed as an argument', async () => {
+    mockPrismaFindFirst.mockImplementation(() => null)
+
+    await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {
+      expect(true).toEqual(true)
+      return Promise.resolve()
+    })
+
+    expect(mockPrismaFindFirst).toHaveBeenCalled()
+    expect(vi.mocked(PrismaClient)).toHaveBeenCalled()
   })
 })
