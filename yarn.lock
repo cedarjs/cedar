@@ -153,25 +153,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client-react-streaming@npm:0.12.3":
-  version: 0.12.3
-  resolution: "@apollo/client-react-streaming@npm:0.12.3"
+"@apollo/client-react-streaming@npm:0.14.4":
+  version: 0.14.4
+  resolution: "@apollo/client-react-streaming@npm:0.14.4"
   dependencies:
     "@types/react-dom": "npm:^19.0.0"
     "@wry/equality": "npm:^0.5.6"
-    ts-invariant: "npm:^0.10.3"
   peerDependencies:
-    "@apollo/client": ^3.13.0
+    "@apollo/client": ^4.0.0
     graphql: ^16 || >=17.0.0-alpha.2
     react: ^19
     react-dom: ^19
-  checksum: 10c0/e3b6ee935ae70f16bda933def469987783a170984163e923590fae214034492b43d36c07d6a17eb7b43588618192a77dd954a3cac281c30ecbcb5390eb8bcff2
+    rxjs: ^7.3.0
+  checksum: 10c0/d0c72236c75d6601c3fd75f15f1b5c7ca97d22886089d18074ccf8f224c328b79a01d0ca33d4972360b29b72db81277648ef4d94bb0814c730a8c880fc13725a
   languageName: node
   linkType: hard
 
-"@apollo/client@npm:3.13.9, @apollo/client@npm:^3.8.0":
-  version: 3.13.9
-  resolution: "@apollo/client@npm:3.13.9"
+"@apollo/client@npm:3.14.0, @apollo/client@npm:^3.8.0":
+  version: 3.14.0
+  resolution: "@apollo/client@npm:3.14.0"
   dependencies:
     "@graphql-typed-document-node/core": "npm:^3.1.1"
     "@wry/caches": "npm:^1.0.0"
@@ -201,7 +201,7 @@ __metadata:
       optional: true
     subscriptions-transport-ws:
       optional: true
-  checksum: 10c0/aca33aa1d9971ae0814bd73912c993da83f69d53d9a5e7971e2b8364557821f0447276f507945b80365b1c4a6a541cd3602fa1343dc0d13769bc5a7d81a26461
+  checksum: 10c0/38776832627def88f707131f9fe394e10b067c67ce84102664cd8f922229671fc5d61bcff702c0c403972f6a57998f243210c681bcda96c68b2b3c82dbb1c789
   languageName: node
   linkType: hard
 
@@ -3878,8 +3878,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/web@workspace:packages/web"
   dependencies:
-    "@apollo/client": "npm:3.13.9"
-    "@apollo/client-react-streaming": "npm:0.12.3"
+    "@apollo/client": "npm:3.14.0"
+    "@apollo/client-react-streaming": "npm:0.14.4"
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
