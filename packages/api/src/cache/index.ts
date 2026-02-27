@@ -35,6 +35,17 @@ type GenericDelegate = {
   findFirst: (...args: any) => any
 }
 
+const PRISMA_CLIENT_VALIDATION_ERROR_NAME = 'PrismaClientValidationError'
+
+const isPrismaClientValidationError = (error: unknown) => {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'name' in error &&
+    error.name === PRISMA_CLIENT_VALIDATION_ERROR_NAME
+  )
+}
+
 const DEFAULT_LATEST_FIELDS = { id: 'id', updatedAt: 'updatedAt' }
 
 const wait = (ms: number) => {
@@ -143,9 +154,6 @@ export const createCache = (
     const cacheKey = formatCacheKey(key, prefix)
     let latest, latestCacheKey
 
-    // @ts-expect-error - Error object is not exported until `prisma generate`
-    const { PrismaClientValidationError } = await import('@prisma/client')
-
     // take the conditions from the query that's going to be cached, and only
     // return the latest record (based on `updatedAt`) from that set of
     // records, using its data as the cache key
@@ -155,13 +163,15 @@ export const createCache = (
         orderBy: { [fields.updatedAt]: 'desc' },
         select: { [fields.id]: true, [fields.updatedAt]: true },
       })
-    } catch (e: any) {
-      if (e instanceof PrismaClientValidationError) {
+    } catch (e: unknown) {
+      if (isPrismaClientValidationError(e)) {
         logger?.error(
           `[Cache] cacheFindMany error: model does not contain \`${fields.id}\` or \`${fields.updatedAt}\` fields`,
         )
       } else {
-        logger?.error(`[Cache] cacheFindMany error: ${e.message}`)
+        const message =
+          e instanceof Error ? e.message : `${String(e ?? 'Unknown error')}`
+        logger?.error(`[Cache] cacheFindMany error: ${message}`)
       }
 
       return serialize(await model.findMany(conditions))
