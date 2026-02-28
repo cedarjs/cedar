@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { vi, test, expect } from 'vitest'
+import { vi, test, expect, afterAll } from 'vitest'
 
 import { getPaths } from '../paths.js'
 import { resolveGeneratedPrismaClient } from '../prisma.js'
@@ -15,6 +15,10 @@ vi.mock('../paths.js', () => {
       base: tempDir,
     }),
   }
+})
+
+afterAll(() => {
+  fs.rmSync(getPaths().base, { recursive: true, force: true })
 })
 
 test('resolveGeneratedPrismaClient', () => {

@@ -83,7 +83,17 @@ function getDelegate(db: object, model: string) {
 
 function getActiveProvider(db: object) {
   const provider = (db as { _activeProvider?: unknown })._activeProvider
-  return typeof provider === 'string' ? provider : ''
+
+  if (typeof provider !== 'string') {
+    console.warn(
+      '[CedarJS Jobs] Could not determine Prisma active provider from db._activeProvider. ' +
+        'Provider-specific behaviour may not work correctly.',
+    )
+
+    return ''
+  }
+
+  return provider
 }
 
 export interface PrismaAdapterOptions<
