@@ -40,6 +40,4 @@ test('resolveGeneratedPrismaClient', () => {
   expect(resolveGeneratedPrismaClient({ mustExist: true })).toEqual(
     expectedPath,
   )
-
-  fs.rmSync(getPaths().base, { recursive: true, force: true })
 })
