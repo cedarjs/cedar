@@ -13,6 +13,20 @@ vi.useFakeTimers().setSystemTime(new Date('2024-01-01'))
 // the actual db value passed in, not from the @prisma/client stub.
 let mockDb: PrismaClient
 
+// If we wanted to mock PrismaClient instead, we could do something like this:
+// type MockPrismaDb = {
+//   _activeProvider: string
+//   backgroundJob: {
+//     create: ReturnType<typeof vi.fn>
+//     delete: ReturnType<typeof vi.fn>
+//     deleteMany: ReturnType<typeof vi.fn>
+//     findFirst: ReturnType<typeof vi.fn>
+//     update: ReturnType<typeof vi.fn>
+//     updateMany: ReturnType<typeof vi.fn>
+//   }
+//   [key: string]: unknown
+// }
+
 beforeEach(() => {
   mockDb = {
     _activeProvider: 'sqlite',

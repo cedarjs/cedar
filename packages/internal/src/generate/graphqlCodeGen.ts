@@ -17,7 +17,11 @@ import type { LoadTypedefsOptions } from '@graphql-tools/load'
 import execa from 'execa'
 import { Kind, type DocumentNode } from 'graphql'
 
-import { getPaths, getConfig } from '@cedarjs/project-config'
+import {
+  getPaths,
+  getConfig,
+  resolveGeneratedPrismaClient,
+} from '@cedarjs/project-config'
 
 import { getTsConfigs, dbReexportsPrismaClient } from '../project.js'
 
@@ -227,10 +231,7 @@ async function getPrismaClient(hasGenerated = false): Promise<{
   if (hasGenerated) {
     // Use file path with cache-busting query parameter to force fresh import
     const cacheBuster = `?t=${Date.now()}`
-    const prismaClientPath = path.resolve(
-      process.cwd(),
-      'node_modules/.prisma/client/index.js',
-    )
+    const prismaClientPath = resolveGeneratedPrismaClient({ mustExist: true })
     const { default: freshPrisma } = await import(
       `file://${prismaClientPath}${cacheBuster}`
     )

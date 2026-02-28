@@ -4,6 +4,8 @@ import { pathToFileURL } from 'node:url'
 
 import type { PrismaConfig } from 'prisma'
 
+import { getPaths } from './paths.js'
+
 // Cache for loaded configs to avoid repeated file system operations
 const configCache = new Map<string, PrismaConfig>()
 
@@ -129,4 +131,20 @@ export async function getDataMigrationsPath(
   const migrationsDir = path.dirname(migrationsPath)
 
   return path.join(migrationsDir, 'dataMigrations')
+}
+
+export function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
+  const prismaClientEntry = path.join(
+    getPaths().base,
+    'node_modules/.prisma/client/index.js',
+  )
+
+  if (mustExist && !fs.existsSync(prismaClientEntry)) {
+    throw new Error(
+      `Could not find generated Prisma client entry at ${prismaClientEntry}. ` +
+        'Run `yarn cedar prisma generate` and try again.',
+    )
+  }
+
+  return prismaClientEntry
 }

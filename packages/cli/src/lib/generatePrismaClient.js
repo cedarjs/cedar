@@ -2,7 +2,8 @@
 
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
-import path from 'node:path'
+
+import { resolveGeneratedPrismaClient } from '@cedarjs/project-config'
 
 import { runCommandTask, getPaths } from '../lib/index.js'
 
@@ -36,12 +37,11 @@ export const generatePrismaClient = async ({
 }) => {
   // Unless --force is used we do not generate the Prisma client if it exists.
   if (!force) {
-    const prismaClientPath = path.join(
-      getPaths().base,
-      'node_modules/.prisma/client/index.js',
-    )
+    const prismaClientPath = resolveGeneratedPrismaClient()
 
-    const prismaClientFile = fs.readFileSync(prismaClientPath, 'utf8')
+    const prismaClientFile = fs.existsSync(prismaClientPath)
+      ? fs.readFileSync(prismaClientPath, 'utf8')
+      : ''
 
     // This is a hack, and is likely to break. A better solution would be to
     // try to import the Prisma client. But that gets cached, so we'd have to
