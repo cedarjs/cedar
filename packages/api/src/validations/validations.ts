@@ -11,6 +11,7 @@ type WithOptionalMessage<T = Record<string, unknown>> = T & {
    */
   message?: string
 }
+
 type WithRequiredMessage<T = Record<string, unknown>> =
   Required<WithOptionalMessage> & T
 
@@ -156,7 +157,7 @@ interface UniquenessValidatorOptions extends WithOptionalMessage {
   db?: UniquenessDb
 }
 type UniquenessWhere = Record<'AND' | 'NOT', Record<string, unknown>[]>
-type UniquenessTransactionClient = Record<
+export type UniquenessTransactionClient = Record<
   string,
   {
     findFirst: (args: { where: UniquenessWhere }) => Promise<unknown>
@@ -227,11 +228,14 @@ interface ValidationRecipe {
   presence?: boolean | PresenceValidatorOptions
 
   /**
-   * Run a custom validation function which should either throw or return nothing.
-   * If the function throws an error, the error message will be used as the validation error associated with the field.
+   * Run a custom validation function which should either throw or return
+   * nothing.
+   * If the function throws an error, the error message will be used as the
+   * validation error associated with the field.
    */
   custom?: CustomValidatorOptions
 }
+
 // We extend ValidationRecipe to get its method's documentation.
 // Adding docs below will completely overwrite ValidationRecipe's.
 interface ValidationWithMessagesRecipe extends ValidationRecipe {
@@ -244,7 +248,10 @@ interface ValidationWithMessagesRecipe extends ValidationRecipe {
   length?: WithRequiredMessage<LengthValidatorOptions>
   numericality?: WithRequiredMessage<NumericalityValidatorOptions>
   presence?: WithRequiredMessage<PresenceValidatorOptions>
-  custom?: WithRequiredMessage<CustomValidatorOptions>
+  // `message` is optional here because the custom.with() function is expected
+  // to throw an Error, and we use the message from that error if no `message`
+  // is specified
+  custom?: CustomValidatorOptions
 }
 
 const VALIDATORS = {
@@ -550,9 +557,9 @@ const validationError = (
   options: any,
   substitutions = {},
 ) => {
-  const errorClassName = `${pascalcase(
-    type,
-  )}ValidationError` as keyof typeof ValidationErrors
+  const pascalType = pascalcase(type)
+  const errorClassName =
+    `${pascalType}ValidationError` as keyof typeof ValidationErrors
   const ErrorClass = ValidationErrors[errorClassName]
   const errorMessage =
     typeof options === 'object' ? (options.message as string) : undefined
@@ -606,9 +613,11 @@ export function validate(
   if (typeof labelOrRecipe === 'object') {
     label = ''
     validationRecipe = labelOrRecipe
-  } else {
+  } else if (recipe) {
     label = labelOrRecipe
-    validationRecipe = recipe as ValidationRecipe
+    validationRecipe = recipe
+  } else {
+    throw new Error('invalid options')
   }
 
   for (const [validator, options] of Object.entries(validationRecipe)) {
