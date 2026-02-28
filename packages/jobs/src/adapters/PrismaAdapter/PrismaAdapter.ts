@@ -1,4 +1,3 @@
-import type { PrismaClient } from '@prisma/client'
 import { camelCase } from 'change-case'
 
 import { DEFAULT_MAX_RUNTIME, DEFAULT_MODEL_NAME } from '../../consts.js'
@@ -28,8 +27,67 @@ export interface PrismaJob extends BaseJob {
   updatedAt: Date
 }
 
+interface PrismaAdapterDelegate {
+  findFirst(args: Record<string, unknown>): Promise<any>
+  updateMany(args: Record<string, unknown>): Promise<{ count: number }>
+  delete(args: Record<string, unknown>): Promise<unknown>
+  update(args: Record<string, unknown>): Promise<unknown>
+  create(args: Record<string, unknown>): Promise<unknown>
+  deleteMany(args?: Record<string, unknown>): Promise<unknown>
+}
+
+// TODO: See if we can tighten up this interface later once we've moved to
+// Prisma v7
+interface DelegateLike {
+  findFirst: (...args: any[]) => any
+  updateMany: (...args: any[]) => any
+  delete: (...args: any[]) => any
+  update: (...args: any[]) => any
+  create: (...args: any[]) => any
+  deleteMany: (...args: any[]) => any
+}
+
+type DelegateKey<TDb extends object> = Extract<
+  {
+    [K in keyof TDb]-?: TDb[K] extends DelegateLike ? K : never
+  }[keyof TDb],
+  string
+>
+
+function isPrismaAdapterDelegate(
+  value: unknown,
+): value is PrismaAdapterDelegate {
+  const candidate = value as Partial<PrismaAdapterDelegate> | null
+
+  return (
+    candidate !== null &&
+    typeof candidate === 'object' &&
+    typeof candidate.findFirst === 'function' &&
+    typeof candidate.updateMany === 'function' &&
+    typeof candidate.delete === 'function' &&
+    typeof candidate.update === 'function' &&
+    typeof candidate.create === 'function' &&
+    typeof candidate.deleteMany === 'function'
+  )
+}
+
+function getDelegate(db: object, model: string) {
+  const delegate = (db as Record<string, unknown>)[model]
+
+  if (!isPrismaAdapterDelegate(delegate)) {
+    throw new ModelNameError(model)
+  }
+
+  return delegate
+}
+
+function getActiveProvider(db: object) {
+  const provider = (db as { _activeProvider?: unknown })._activeProvider
+  return typeof provider === 'string' ? provider : ''
+}
+
 export interface PrismaAdapterOptions<
-  TDb extends PrismaClient = PrismaClient,
+  TDb extends object = object,
 > extends BaseAdapterOptions {
   /**
    * An instance of PrismaClient which will be used to talk to the database.
@@ -44,7 +102,7 @@ export interface PrismaAdapterOptions<
   // _activeProvider is an undocumented Prisma internal not present in the
   // public type surface
   // It's the database provider type: 'sqlite' | 'postgresql' | 'mysql'
-  db: TDb & { _activeProvider: string }
+  db: TDb
 
   /**
    * The camelCase name of the Prisma model accessor that represents the job
@@ -59,7 +117,7 @@ export interface PrismaAdapterOptions<
    */
   // TODO: Remove the `| string` part. It's only here to make this code
   // backward compatible with Cedar v2.6 and earlier
-  model?: keyof TDb | string
+  model?: DelegateKey<TDb> | string
 }
 
 interface FailureData {
@@ -94,12 +152,12 @@ interface FailureData {
  * }
  * ```
  */
-export class PrismaAdapter<
-  TDb extends PrismaClient = PrismaClient,
-> extends BaseAdapter<PrismaAdapterOptions<TDb>> {
+export class PrismaAdapter<TDb extends object = object> extends BaseAdapter<
+  PrismaAdapterOptions<TDb>
+> {
   db: TDb
-  model: keyof TDb
-  accessor: PrismaClient[keyof PrismaClient]
+  model: DelegateKey<TDb> | string
+  accessor: PrismaAdapterDelegate
   provider: string
 
   constructor(options: PrismaAdapterOptions<TDb>) {
@@ -109,23 +167,20 @@ export class PrismaAdapter<
 
     // camelCase name of the model, as accessed on `db`
     // TODO: Remove type casting of `options.model` in the next major release
-    this.model = (options.model || DEFAULT_MODEL_NAME) as keyof TDb
+    this.model = (options.model || DEFAULT_MODEL_NAME) as
+      | DelegateKey<TDb>
+      | string
 
     // the function to call on `db` to make queries: `db.backgroundJob`
     // TODO: Remove the camelCase call in the next major release. It's only here
     // to keep the code backwards compatible
-    const camelName = camelCase(String(this.model)) as keyof TDb
-    this.accessor = this.db[camelName]
+    const camelName = camelCase(String(this.model))
+    this.accessor = getDelegate(this.db, camelName)
 
     // _activeProvider is an undocumented Prisma internal not present in the
     // public type surface
     // It's the database provider type: 'sqlite' | 'postgresql' | 'mysql'
-    this.provider = options.db._activeProvider
-
-    // validate that everything we need is available
-    if (!this.accessor) {
-      throw new ModelNameError(String(this.model))
-    }
+    this.provider = getActiveProvider(options.db)
   }
 
   /**
