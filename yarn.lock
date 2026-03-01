@@ -2447,8 +2447,8 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@clerk/clerk-react": "npm:5.61.1"
-    "@clerk/types": "npm:4.101.18"
+    "@clerk/clerk-react": "npm:5.61.2"
+    "@clerk/types": "npm:4.101.19"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.17"
@@ -2457,7 +2457,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@clerk/clerk-react": 5.61.1
+    "@clerk/clerk-react": 5.61.2
   languageName: unknown
   linkType: soft
 
@@ -3985,20 +3985,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/clerk-react@npm:5.61.1":
-  version: 5.61.1
-  resolution: "@clerk/clerk-react@npm:5.61.1"
+"@clerk/clerk-react@npm:5.61.2":
+  version: 5.61.2
+  resolution: "@clerk/clerk-react@npm:5.61.2"
   dependencies:
-    "@clerk/shared": "npm:^3.47.0"
+    "@clerk/shared": "npm:^3.47.1"
     tslib: "npm:2.8.1"
   peerDependencies:
     react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
     react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-  checksum: 10c0/b9a5153c19d2eb34f87113e4b5940bbeefa63df0bb230229d0d9ce145800244a34a762c2b71971d94f1b57f8ce1a0bafca67abce03f9f2eb2a09a788a99459c9
+  checksum: 10c0/c5ed22aeeec449ac2b9e84c8ab42add1470934f84e64a493ad49984265e708a53797fc43866d30e41c1e9c911fbfd6914c44e9f267334bf592780c7971dcc266
   languageName: node
   linkType: hard
 
-"@clerk/shared@npm:^3.47.0, @clerk/shared@npm:^3.9.5":
+"@clerk/shared@npm:^3.47.1, @clerk/shared@npm:^3.9.5":
   version: 3.47.2
   resolution: "@clerk/shared@npm:3.47.2"
   dependencies:
@@ -4020,12 +4020,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clerk/types@npm:4.101.18, @clerk/types@npm:^4.59.3":
-  version: 4.101.18
-  resolution: "@clerk/types@npm:4.101.18"
+"@clerk/types@npm:4.101.19, @clerk/types@npm:^4.59.3":
+  version: 4.101.19
+  resolution: "@clerk/types@npm:4.101.19"
   dependencies:
-    "@clerk/shared": "npm:^3.47.0"
-  checksum: 10c0/1e88432855399ee9496cdbbab1164e52a9aa09a43224ff626c39269e242671aa6830ba29612368021089ba9f1abdb7035a57b27dc3b72390a790cc74b975964c
+    "@clerk/shared": "npm:^3.47.1"
+  checksum: 10c0/f884a49feee72846e049b2de88bc980dc9b4207643632b1c513abf0a212b88c4f239494839f525f5fdac653d87c5e2148436f6b4d7ed9e6a2d864c225c33e9e0
   languageName: node
   linkType: hard
 
