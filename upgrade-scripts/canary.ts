@@ -77,5 +77,5 @@ if (!hasPrismaV7PrepExport) {
   console.log(
     'Please run the following command after the upgrade has completed:',
   )
-  console.log('  yarn dlx @cedarjs/codemods prisma-v7-prep')
+  console.log('  yarn dlx @cedarjs/codemods@canary prisma-v7-prep')
 }
