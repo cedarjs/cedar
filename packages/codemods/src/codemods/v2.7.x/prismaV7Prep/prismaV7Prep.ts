@@ -19,6 +19,100 @@ export type TransformDirectoryResult = {
   filesUpdated: number
 }
 
+function getOffsetFromLineColumn(
+  source: string,
+  line: number,
+  column: number,
+): number {
+  const lines = source.split('\n')
+  let offset = 0
+
+  for (let i = 1; i < line; i += 1) {
+    offset += lines[i - 1].length + 1
+  }
+
+  return offset + column
+}
+
+function cloneImportDeclaration(
+  parser: ReturnType<typeof getParserForFile>,
+  node: {
+    importKind?: string | null
+    specifiers: Array<Record<string, any>>
+    comments?: Array<Record<string, any>>
+    leadingComments?: Array<Record<string, any>>
+    trailingComments?: Array<Record<string, any>>
+    innerComments?: Array<Record<string, any>>
+  },
+  source: string,
+) {
+  const cloneComments = (comments?: Array<Record<string, any>>) =>
+    comments?.map((comment) => ({ ...comment }))
+
+  const clonedSpecifiers = node.specifiers.map((specifier) => {
+    if (specifier.type === 'ImportDefaultSpecifier') {
+      const defaultSpecifier = parser.importDefaultSpecifier(
+        parser.identifier(specifier.local.name),
+      )
+      defaultSpecifier.comments = cloneComments(specifier.comments)
+      defaultSpecifier.leadingComments = cloneComments(specifier.leadingComments)
+      defaultSpecifier.trailingComments = cloneComments(
+        specifier.trailingComments,
+      )
+      return defaultSpecifier
+    }
+
+    if (specifier.type === 'ImportNamespaceSpecifier') {
+      const namespaceSpecifier = parser.importNamespaceSpecifier(
+        parser.identifier(specifier.local.name),
+      )
+      namespaceSpecifier.comments = cloneComments(specifier.comments)
+      namespaceSpecifier.leadingComments = cloneComments(
+        specifier.leadingComments,
+      )
+      namespaceSpecifier.trailingComments = cloneComments(
+        specifier.trailingComments,
+      )
+      return namespaceSpecifier
+    }
+
+    const imported =
+      specifier.imported.type === 'Identifier'
+        ? parser.identifier(specifier.imported.name)
+        : parser.literal(specifier.imported.value)
+    const local = specifier.local
+      ? parser.identifier(specifier.local.name)
+      : undefined
+    const clonedSpecifier = parser.importSpecifier(imported, local)
+
+    if (specifier.importKind) {
+      clonedSpecifier.importKind = specifier.importKind
+    }
+
+    clonedSpecifier.comments = cloneComments(specifier.comments)
+    clonedSpecifier.leadingComments = cloneComments(specifier.leadingComments)
+    clonedSpecifier.trailingComments = cloneComments(specifier.trailingComments)
+
+    return clonedSpecifier
+  })
+
+  const clonedImport = parser.importDeclaration(
+    clonedSpecifiers,
+    parser.literal(source),
+  )
+
+  if (node.importKind) {
+    clonedImport.importKind = node.importKind
+  }
+
+  clonedImport.comments = cloneComments(node.comments)
+  clonedImport.leadingComments = cloneComments(node.leadingComments)
+  clonedImport.trailingComments = cloneComments(node.trailingComments)
+  clonedImport.innerComments = cloneComments(node.innerComments)
+
+  return clonedImport
+}
+
 function getParserForFile(filePath: string) {
   if (filePath.endsWith('.tsx') || filePath.endsWith('.jsx')) {
     return j.withParser('tsx')
@@ -72,25 +166,53 @@ function transformDbFile(file: FileInfo) {
   // Insert after the import
   importNode.insertAfter(exportStatement)
 
-  return root.toSource()
+  return root.toSource({ quote: 'single' })
 }
 
 function transformOtherFile(file: FileInfo) {
   const parser = getParserForFile(file.path)
   const root = parser(file.source)
+  const rewrittenImportNodes = new Set<object>()
+  type ImportLike = { source: { value: unknown } }
+  const getImportSource = (node: ImportLike) =>
+    typeof node.source.value === 'string' ? node.source.value : ''
+  const isExternalPackageImport = (node: ImportLike) => {
+    const source = getImportSource(node)
+    return (
+      !source.startsWith('.') &&
+      !source.startsWith('src/') &&
+      !source.startsWith('api/src/')
+    )
+  }
+  const getInternalImportRank = (source: string) => {
+    if (source.startsWith('src/') || source.startsWith('api/src/')) {
+      return 0
+    }
+
+    if (source.startsWith('./') || source.startsWith('../')) {
+      return 1
+    }
+
+    return 2
+  }
 
   // Determine the correct import path based on file location
   const isInRootScripts = file.path.startsWith(getPaths().scripts + path.sep)
   const importPath = isInRootScripts ? 'api/src/lib/db' : 'src/lib/db'
 
+  const prismaImports = root.find(parser.ImportDeclaration, {
+    source: { value: '@prisma/client' },
+  })
+
+  if (prismaImports.length === 0) {
+    return file.source
+  }
+
   // Replace all imports from '@prisma/client' to the appropriate path
-  root
-    .find(parser.ImportDeclaration, {
-      source: { value: '@prisma/client' },
-    })
-    .forEach((importDecl) => {
-      importDecl.get('source').replace(parser.literal(importPath))
-    })
+  prismaImports.forEach((importDecl) => {
+    importDecl.get('source').replace(parser.literal(importPath))
+    rewrittenImportNodes.add(importDecl.value as object)
+  })
 
   const internalImportPaths = new Set(['src/lib/db', 'api/src/lib/db'])
   const programBody = root.get().node.program.body
@@ -103,6 +225,16 @@ function transformOtherFile(file: FileInfo) {
   ) {
     leadingImportCount += 1
   }
+  const originalRemainder =
+    leadingImportCount < programBody.length && leadingImportCount > 0
+      ? file.source.slice(
+          getOffsetFromLineColumn(
+            file.source,
+            programBody[leadingImportCount - 1].loc.end.line,
+            programBody[leadingImportCount - 1].loc.end.column,
+          ),
+        )
+      : ''
 
   if (leadingImportCount > 0) {
     const importBlock = programBody.slice(0, leadingImportCount)
@@ -115,37 +247,117 @@ function transformOtherFile(file: FileInfo) {
       if (
         typeof source === 'string' &&
         internalImportPaths.has(source) &&
+        rewrittenImportNodes.has(node as object) &&
         node.type === 'ImportDeclaration'
       ) {
-        dbImports.push(node)
+        const rebuiltImport = cloneImportDeclaration(parser, node, source)
+
+        dbImports.push(rebuiltImport)
       } else {
         otherImports.push(node)
       }
     }
 
     if (dbImports.length > 0) {
-      let insertAt = 0
+      let externalEnd = 0
       for (let i = 0; i < otherImports.length; i += 1) {
-        const node = otherImports[i]
-        const source = node.source.value
-
-        const isExternalPackageImport =
-          typeof source === 'string' &&
-          !source.startsWith('.') &&
-          !source.startsWith('src/') &&
-          !source.startsWith('api/src/')
-
-        if (isExternalPackageImport) {
-          insertAt = i + 1
+        if (isExternalPackageImport(otherImports[i])) {
+          externalEnd = i + 1
         }
       }
 
-      otherImports.splice(insertAt, 0, ...dbImports)
+      for (const dbImport of dbImports) {
+        const dbImportSource = getImportSource(dbImport)
+        const dbImportRank = getInternalImportRank(dbImportSource)
+        let insertAt = externalEnd
+
+        for (let i = externalEnd; i < otherImports.length; i += 1) {
+          const candidate = otherImports[i]
+
+          if (isExternalPackageImport(candidate)) {
+            continue
+          }
+
+          const candidateSource = getImportSource(candidate)
+          const candidateRank = getInternalImportRank(candidateSource)
+          const shouldInsertBefore =
+            candidateRank > dbImportRank ||
+            (candidateRank === dbImportRank && candidateSource > dbImportSource)
+
+          if (shouldInsertBefore) {
+            insertAt = i
+            break
+          }
+
+          insertAt = i + 1
+        }
+
+      otherImports.splice(insertAt, 0, dbImport)
+      }
+
       programBody.splice(0, leadingImportCount, ...otherImports)
     }
+
+    const normalizedImportBlock = programBody
+      .slice(0, leadingImportCount)
+      .map((node) => {
+        const source = node.source.value
+        if (typeof source !== 'string') {
+          return node
+        }
+
+        return cloneImportDeclaration(parser, node, source)
+      })
+
+    programBody.splice(0, leadingImportCount, ...normalizedImportBlock)
+
+    const groupedImportSource = normalizedImportBlock
+      .map((node) => {
+        const source = node.source.value
+        if (typeof source !== 'string') {
+          return {
+            group: 'external',
+            text: '',
+          }
+        }
+
+        const importDoc = parser('')
+        importDoc.get().node.program.body = [node]
+
+        const group = source.startsWith('.')
+          ? 'relative'
+          : source.startsWith('src/') || source.startsWith('api/src/')
+            ? 'internal'
+            : 'external'
+
+        return {
+          group,
+          text: importDoc.toSource({ quote: 'single', reuseWhitespace: false }),
+        }
+      })
+      .filter((entry) => entry.text.length > 0)
+
+    const rebuiltImportBlock = groupedImportSource
+      .map((entry, index) => {
+        if (index === 0) {
+          return entry.text
+        }
+
+        const previousGroup = groupedImportSource[index - 1].group
+        const separator = previousGroup === entry.group ? '\n' : '\n\n'
+        return separator + entry.text
+      })
+      .join('')
+
+    const remainingBody = programBody.slice(leadingImportCount)
+    if (remainingBody.length === 0) {
+      return rebuiltImportBlock
+    }
+
+    return `${rebuiltImportBlock}${originalRemainder}`
   }
 
-  return root.toSource()
+  return root.toSource({ quote: 'single', reuseWhitespace: false })
 }
 
 export async function getPrismaV7PrepContext(): Promise<PrismaV7PrepContext> {
@@ -182,6 +394,7 @@ export async function updateDbFile(
     dbFilePath,
     await prettify(transformed, {
       parser: getPrettierParserForFile(dbFilePath),
+      filepath: dbFilePath,
     }),
   )
 
@@ -221,14 +434,18 @@ export async function rewritePrismaImportsInDirectory(
   for (const file of files) {
     const source = fs.readFileSync(file, 'utf-8')
     const transformed = transformOtherFile({ source, path: file })
+
+    if (transformed === source) {
+      continue
+    }
+
     const prettified = await prettify(transformed, {
       parser: getPrettierParserForFile(file),
+      filepath: file,
     })
 
-    if (prettified !== source) {
-      filesUpdated += 1
-      fs.writeFileSync(file, prettified)
-    }
+    filesUpdated += 1
+    fs.writeFileSync(file, prettified)
   }
 
   return {
