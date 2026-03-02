@@ -92,6 +92,59 @@ function transformOtherFile(file: FileInfo) {
       importDecl.get('source').replace(parser.literal(importPath))
     })
 
+  const internalImportPaths = new Set(['src/lib/db', 'api/src/lib/db'])
+  const programBody = root.get().node.program.body
+
+  // Keep changes scoped to the leading import block.
+  let leadingImportCount = 0
+  while (
+    leadingImportCount < programBody.length &&
+    programBody[leadingImportCount]?.type === 'ImportDeclaration'
+  ) {
+    leadingImportCount += 1
+  }
+
+  if (leadingImportCount > 0) {
+    const importBlock = programBody.slice(0, leadingImportCount)
+    const dbImports: typeof importBlock = []
+    const otherImports: typeof importBlock = []
+
+    for (const node of importBlock) {
+      const source = node.source.value
+
+      if (
+        typeof source === 'string' &&
+        internalImportPaths.has(source) &&
+        node.type === 'ImportDeclaration'
+      ) {
+        dbImports.push(node)
+      } else {
+        otherImports.push(node)
+      }
+    }
+
+    if (dbImports.length > 0) {
+      let insertAt = 0
+      for (let i = 0; i < otherImports.length; i += 1) {
+        const node = otherImports[i]
+        const source = node.source.value
+
+        const isExternalPackageImport =
+          typeof source === 'string' &&
+          !source.startsWith('.') &&
+          !source.startsWith('src/') &&
+          !source.startsWith('api/src/')
+
+        if (isExternalPackageImport) {
+          insertAt = i + 1
+        }
+      }
+
+      otherImports.splice(insertAt, 0, ...dbImports)
+      programBody.splice(0, leadingImportCount, ...otherImports)
+    }
+  }
+
   return root.toSource()
 }
 
