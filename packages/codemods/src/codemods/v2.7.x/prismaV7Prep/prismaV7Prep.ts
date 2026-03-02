@@ -1,12 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { FileInfo } from 'jscodeshift'
-import j from 'jscodeshift'
-
-import { getDataMigrationsPath, getPaths } from '@cedarjs/project-config'
-
-import prettify from '../../../lib/prettify'
+import {
+  ensurePosixPath,
+  getDataMigrationsPath,
+  getPaths,
+} from '@cedarjs/project-config'
 
 export type PrismaV7PrepContext = {
   dataMigrationsPath: string
@@ -19,80 +18,43 @@ export type TransformDirectoryResult = {
   filesUpdated: number
 }
 
-function getParserForFile(filePath: string) {
-  if (filePath.endsWith('.tsx') || filePath.endsWith('.jsx')) {
-    return j.withParser('tsx')
+const CODE_FILE_GLOB = '**/*.{ts,tsx,cts,mts,js,jsx,cjs,mjs}'
+const PRISMA_CLIENT_REEXPORT = "export * from '@prisma/client'"
+
+function insertDbReexport(source: string) {
+  if (source.includes(PRISMA_CLIENT_REEXPORT)) {
+    return source
   }
 
-  return j.withParser('ts')
-}
-
-function getPrettierParserForFile(filePath: string) {
-  if (
-    filePath.endsWith('.ts') ||
-    filePath.endsWith('.tsx') ||
-    filePath.endsWith('.cts') ||
-    filePath.endsWith('.mts')
-  ) {
-    return 'typescript'
-  }
-
-  return 'babel'
-}
-
-function transformDbFile(file: FileInfo) {
-  const parser = getParserForFile(file.path)
-  const root = parser(file.source)
-
-  // Check if export * from '@prisma/client' already exists
-  const existingExport = root.find(parser.ExportAllDeclaration, {
-    source: { value: '@prisma/client' },
-  })
-
-  if (existingExport.length > 0) {
-    return file.source
-  }
-
-  // Find the import of PrismaClient
-  const prismaClientImport = root.find(parser.ImportDeclaration, {
-    source: { value: '@prisma/client' },
-  })
-
-  if (prismaClientImport.length === 0) {
-    return file.source
-  }
-
-  // Add the export after the import
-  const importNode = prismaClientImport.get()
-  const exportStatement = parser.exportAllDeclaration(
-    parser.literal('@prisma/client'),
-    null,
+  const lines = source.split('\n')
+  const prismaImportIndex = lines.findIndex((line) =>
+    /from\s+['"]@prisma\/client['"]/.test(line),
   )
 
-  // Insert after the import
-  importNode.insertAfter(exportStatement)
+  if (prismaImportIndex < 0) {
+    throw new Error('Unexpected src/lib/db content')
+  }
 
-  return root.toSource()
+  lines.splice(prismaImportIndex + 1, 0, '', PRISMA_CLIENT_REEXPORT)
+
+  return lines.join('\n')
 }
 
-function transformOtherFile(file: FileInfo) {
-  const parser = getParserForFile(file.path)
-  const root = parser(file.source)
+async function collectCodeFiles(dir: string) {
+  try {
+    return await Array.fromAsync(fs.promises.glob(CODE_FILE_GLOB, { cwd: dir }))
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return []
+    }
 
-  // Determine the correct import path based on file location
-  const isInRootScripts = file.path.startsWith(getPaths().scripts + path.sep)
-  const importPath = isInRootScripts ? 'api/src/lib/db' : 'src/lib/db'
-
-  // Replace all imports from '@prisma/client' to the appropriate path
-  root
-    .find(parser.ImportDeclaration, {
-      source: { value: '@prisma/client' },
-    })
-    .forEach((importDecl) => {
-      importDecl.get('source').replace(parser.literal(importPath))
-    })
-
-  return root.toSource()
+    throw error
+  }
 }
 
 export async function getPrismaV7PrepContext(): Promise<PrismaV7PrepContext> {
@@ -100,88 +62,69 @@ export async function getPrismaV7PrepContext(): Promise<PrismaV7PrepContext> {
   const prismaConfigPath = paths.api.prismaConfig
   const dataMigrationsPath = await getDataMigrationsPath(prismaConfigPath)
 
-  // Transform db.ts or db.js
-  const dbPath = path.join(paths.api.lib, 'db.ts')
+  const dbPathTs = path.join(paths.api.lib, 'db.ts')
   const dbPathJs = path.join(paths.api.lib, 'db.js')
 
-  let dbFilePath = dbPath
-  if (!fs.existsSync(dbPath)) {
+  let dbFilePath: string | null = null
+  if (fs.existsSync(dbPathTs)) {
+    dbFilePath = dbPathTs
+  } else if (fs.existsSync(dbPathJs)) {
     dbFilePath = dbPathJs
   }
 
   return {
     dataMigrationsPath,
-    dbFilePath: fs.existsSync(dbFilePath) ? dbFilePath : null,
+    dbFilePath,
     paths,
   }
 }
 
 export async function updateDbFile(
   dbFilePath: string | null,
-): Promise<'updated' | 'skipped'> {
+): Promise<'updated' | 'skipped' | 'unmodified'> {
   if (!dbFilePath) {
     return 'skipped'
   }
 
-  const source = fs.readFileSync(dbFilePath, 'utf-8')
-  const transformed = transformDbFile({ source, path: dbFilePath })
-  fs.writeFileSync(
-    dbFilePath,
-    await prettify(transformed, {
-      parser: getPrettierParserForFile(dbFilePath),
-    }),
-  )
+  const source = await fs.promises.readFile(dbFilePath, 'utf-8')
+  const transformed = insertDbReexport(source)
 
+  if (transformed === source) {
+    return 'unmodified'
+  }
+
+  await fs.promises.writeFile(dbFilePath, transformed)
   return 'updated'
 }
 
 export async function rewritePrismaImportsInDirectory(
   dir: string,
   dbFilePath: string | null,
-): Promise<TransformDirectoryResult> {
-  if (!fs.existsSync(dir)) {
-    return {
-      filesSeen: 0,
-      filesUpdated: 0,
+) {
+  const scriptsDir = ensurePosixPath(getPaths().scripts)
+  const normalizedDbFilePath = dbFilePath ? ensurePosixPath(dbFilePath) : null
+  const fileMatches = await collectCodeFiles(dir)
+  const files = fileMatches
+    .map((relativePath) => path.join(dir, relativePath))
+    .filter((filePath) => ensurePosixPath(filePath) !== normalizedDbFilePath)
+
+  if (files.length === 0) {
+    return 'skipped'
+  }
+
+  for (const filePath of files) {
+    const source = await fs.promises.readFile(filePath, 'utf-8')
+    const isScriptFile = ensurePosixPath(filePath).startsWith(scriptsDir)
+    const importPath = isScriptFile ? 'api/src/lib/db' : 'src/lib/db'
+    const importPattern = /(['"])@prisma\/client\1/g
+    const transformed = source.replace(importPattern, `$1${importPath}$1`)
+
+    if (transformed !== source) {
+      await fs.promises.writeFile(filePath, transformed)
     }
   }
 
-  const files = fs
-    .readdirSync(dir, { recursive: true, encoding: 'utf8' })
-    .filter(
-      (file) =>
-        file.endsWith('.ts') ||
-        file.endsWith('.cts') ||
-        file.endsWith('.mts') ||
-        file.endsWith('.tsx') ||
-        file.endsWith('.js') ||
-        file.endsWith('.cjs') ||
-        file.endsWith('.mjs') ||
-        file.endsWith('.jsx'),
-    )
-    .map((file) => path.join(dir, file))
-    .filter((file) => fs.statSync(file).isFile())
-    .filter((file) => file !== dbFilePath) // Skip db.ts
-
-  let filesUpdated = 0
-
-  for (const file of files) {
-    const source = fs.readFileSync(file, 'utf-8')
-    const transformed = transformOtherFile({ source, path: file })
-    const prettified = await prettify(transformed, {
-      parser: getPrettierParserForFile(file),
-    })
-
-    if (prettified !== source) {
-      filesUpdated += 1
-      fs.writeFileSync(file, prettified)
-    }
-  }
-
-  return {
-    filesSeen: files.length,
-    filesUpdated,
-  }
+  return 'updated'
 }
 
 async function prismaV7Prep() {

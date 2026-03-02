@@ -1,5 +1,4 @@
 import task from 'tasuku'
-import type { TaskInnerAPI } from 'tasuku'
 
 import {
   getPrismaV7PrepContext,
@@ -11,70 +10,55 @@ export const command = 'prisma-v7-prep'
 export const description =
   '(v2.7.x) Prepares for Prisma v7 by funneling imports through src/lib/db'
 
-export const handler = () => {
-  task('Prisma v7 Prep', async ({ setError }: TaskInnerAPI) => {
-    try {
-      const context = await getPrismaV7PrepContext()
+export const handler = async () => {
+  const context = await getPrismaV7PrepContext()
 
-      await task(
-        'Resolve project paths',
-        async ({ setOutput }: TaskInnerAPI) => {
-          setOutput(
-            `api/src: ${context.paths.api.src} | dataMigrations: ` +
-              `${context.dataMigrationsPath} | scripts: ` +
-              context.paths.scripts,
-          )
-        },
+  await task.group((task) => [
+    task('Add api/src/lib/db re-export', async ({ setOutput }) => {
+      const result = await updateDbFile(context.dbFilePath)
+      if (result === 'skipped') {
+        setOutput('Skipped (no api/src/lib/db.ts or api/src/lib/db.js found)')
+        return
+      } else if (result === 'unmodified') {
+        setOutput('Skipped (no changes needed)')
+        return
+      }
+
+      setOutput(`Updated ${context.dbFilePath}`)
+    }),
+
+    task('Rewrite imports in api/src', () =>
+      rewritePrismaImportsInDirectory(
+        context.paths.api.src,
+        context.dbFilePath,
+      ),
+    ),
+
+    task('Rewrite imports in api/db/dataMigrations', async ({ setOutput }) => {
+      const result = await rewritePrismaImportsInDirectory(
+        context.dataMigrationsPath,
+        context.dbFilePath,
       )
 
-      await task('Update api/src/lib/db re-export', async ({ setOutput }) => {
-        const result = await updateDbFile(context.dbFilePath)
-        if (result === 'skipped') {
-          setOutput('Skipped (no api/src/lib/db.ts or api/src/lib/db.js found)')
-          return
-        }
+      if (result === 'skipped') {
+        setOutput('Skipped (directory missing or empty)')
+      }
+    }),
 
-        setOutput(`Updated ${context.dbFilePath}`)
-      })
-
-      await task('Rewrite imports in api/src', async ({ setOutput }) => {
-        const result = await rewritePrismaImportsInDirectory(
-          context.paths.api.src,
-          context.dbFilePath,
-        )
-        setOutput(`Updated ${result.filesUpdated}/${result.filesSeen} files`)
-      })
-
-      await task(
-        'Rewrite imports in api/db/dataMigrations',
-        async ({ setOutput }) => {
-          const result = await rewritePrismaImportsInDirectory(
-            context.dataMigrationsPath,
-            context.dbFilePath,
-          )
-          if (result.filesSeen === 0) {
-            setOutput('Skipped (directory missing or empty)')
-            return
-          }
-
-          setOutput(`Updated ${result.filesUpdated}/${result.filesSeen} files`)
-        },
+    task('Rewrite imports in scripts', async ({ setOutput }) => {
+      const result = await rewritePrismaImportsInDirectory(
+        context.paths.scripts,
+        context.dbFilePath,
       )
 
-      await task('Rewrite imports in scripts', async ({ setOutput }) => {
-        const result = await rewritePrismaImportsInDirectory(
-          context.paths.scripts,
-          context.dbFilePath,
-        )
-        if (result.filesSeen === 0) {
-          setOutput('Skipped (directory missing or empty)')
-          return
-        }
+      if (result === 'skipped') {
+        setOutput('Skipped (directory missing or empty)')
+      }
+    }),
+  ])
 
-        setOutput(`Updated ${result.filesUpdated}/${result.filesSeen} files`)
-      })
-    } catch (e: any) {
-      setError('Failed to codemod your project \n' + e?.message)
-    }
-  })
+  console.log(
+    "Some imports might be in the wrong order. If that's the case, you can " +
+      'run `yarn cedar lint --fix` to reorder them.',
+  )
 }
