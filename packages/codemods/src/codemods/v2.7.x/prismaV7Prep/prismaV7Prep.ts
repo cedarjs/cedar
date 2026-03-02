@@ -38,11 +38,7 @@ function insertDbReexport(source: string) {
 
 async function collectCodeFiles(dir: string) {
   try {
-    return await Array.fromAsync(
-      fs.promises.glob(CODE_FILE_GLOB, {
-        cwd: dir,
-      }),
-    )
+    return await Array.fromAsync(fs.promises.glob(CODE_FILE_GLOB, { cwd: dir }))
   } catch (error) {
     if (
       typeof error === 'object' &&
@@ -122,6 +118,8 @@ export async function rewritePrismaImportsInDirectory(
       await fs.promises.writeFile(filePath, transformed)
     }
   }
+
+  return 'updated'
 }
 
 async function prismaV7Prep() {
