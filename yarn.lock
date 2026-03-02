@@ -2188,7 +2188,7 @@ __metadata:
     "@cedarjs/web-server": "npm:2.6.0"
     "@fastify/multipart": "npm:9.4.0"
     "@fastify/url-data": "npm:6.0.3"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     "@types/dotenv-defaults": "npm:^5.0.0"
     "@types/qs": "npm:6.14.0"
     "@types/split2": "npm:4.2.3"
@@ -2231,7 +2231,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@prisma/client": "npm:6.19.2"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     "@types/jsonwebtoken": "npm:9.0.10"
     "@types/memjs": "npm:1"
     "@types/pascalcase": "npm:1.0.3"
@@ -2330,7 +2330,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "npm:2.6.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
@@ -2386,7 +2386,7 @@ __metadata:
     "@cedarjs/api": "npm:2.6.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/backend": "npm:1.34.0"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.17"
     tsx: "npm:4.21.0"
@@ -2477,7 +2477,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "npm:2.6.0"
     "@cedarjs/web": "npm:2.6.0"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.17"
     ts-toolbelt: "npm:9.6.0"
@@ -2534,7 +2534,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "npm:2.6.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     concurrently: "npm:9.2.1"
     firebase-admin: "npm:13.7.0"
     publint: "npm:0.3.17"
@@ -2586,7 +2586,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "npm:2.6.0"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
@@ -2640,7 +2640,7 @@ __metadata:
     "@cedarjs/api": "npm:2.6.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.8.0"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
@@ -2663,7 +2663,7 @@ __metadata:
     "@cedarjs/graphql-server": "npm:2.6.0"
     "@cedarjs/web": "npm:2.6.0"
     "@supabase/ssr": "npm:0.8.0"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.17"
     ts-toolbelt: "npm:9.6.0"
@@ -3263,7 +3263,7 @@ __metadata:
     "@graphql-tools/utils": "npm:10.11.0"
     "@graphql-yoga/plugin-persisted-operations": "npm:3.18.0"
     "@opentelemetry/api": "npm:1.9.0"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     "@types/jsonwebtoken": "npm:9.0.10"
     "@types/lodash": "npm:4.17.24"
     "@whatwg-node/fetch": "npm:0.10.13"
@@ -3713,7 +3713,7 @@ __metadata:
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.6.1"
-    "@types/aws-lambda": "npm:8.10.160"
+    "@types/aws-lambda": "npm:8.10.161"
     "@types/babel-core": "npm:6.25.10"
     "@types/jest": "npm:29.5.14"
     "@types/node": "npm:24.10.4"
@@ -10838,10 +10838,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/aws-lambda@npm:8.10.160":
-  version: 8.10.160
-  resolution: "@types/aws-lambda@npm:8.10.160"
-  checksum: 10c0/0f524cbcab95108b9ef4876a0458fec11b948baa43741874bc5f10e6ba66bdde5245185adc33838fc057c6a2610a23ae610d3059ae90961eb8fdd126c042ebea
+"@types/aws-lambda@npm:8.10.161":
+  version: 8.10.161
+  resolution: "@types/aws-lambda@npm:8.10.161"
+  checksum: 10c0/5a779901bb29a1989fe0ef30e4a515522af8fc66c237e0eedc954ab650651920540196b4629df25068c130a05a2a6142f661db7e26c7fbacc17ce11338367eb1
   languageName: node
   linkType: hard
 
@@ -15262,6 +15262,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"data-uri-to-buffer@npm:^4.0.0":
+  version: 4.0.1
+  resolution: "data-uri-to-buffer@npm:4.0.1"
+  checksum: 10c0/20a6b93107597530d71d4cb285acee17f66bcdfc03fd81040921a81252f19db27588d87fc8fc69e1950c55cfb0bf8ae40d0e5e21d907230813eb5d5a7f9eb45b
+  languageName: node
+  linkType: hard
+
 "data-urls@npm:^3.0.2":
   version: 3.0.2
   resolution: "data-urls@npm:3.0.2"
@@ -17648,6 +17655,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fetch-blob@npm:^3.1.2, fetch-blob@npm:^3.1.4":
+  version: 3.2.0
+  resolution: "fetch-blob@npm:3.2.0"
+  dependencies:
+    node-domexception: "npm:^1.0.0"
+    web-streams-polyfill: "npm:^3.0.3"
+  checksum: 10c0/60054bf47bfa10fb0ba6cb7742acec2f37c1f56344f79a70bb8b1c48d77675927c720ff3191fa546410a0442c998d27ab05e9144c32d530d8a52fbe68f843b69
+  languageName: node
+  linkType: hard
+
 "fflate@npm:^0.8.2":
   version: 0.8.2
   resolution: "fflate@npm:0.8.2"
@@ -17951,6 +17968,15 @@ __metadata:
     hasown: "npm:^2.0.2"
     mime-types: "npm:^2.1.12"
   checksum: 10c0/373525a9a034b9d57073e55eab79e501a714ffac02e7a9b01be1c820780652b16e4101819785e1e18f8d98f0aee866cc654d660a435c378e16a72f2e7cac9695
+  languageName: node
+  linkType: hard
+
+"formdata-polyfill@npm:^4.0.10":
+  version: 4.0.10
+  resolution: "formdata-polyfill@npm:4.0.10"
+  dependencies:
+    fetch-blob: "npm:^3.1.2"
+  checksum: 10c0/5392ec484f9ce0d5e0d52fb5a78e7486637d516179b0eb84d81389d7eccf9ca2f663079da56f761355c0a65792810e3b345dc24db9a8bbbcf24ef3c8c88570c6
   languageName: node
   linkType: hard
 
@@ -23639,6 +23665,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-domexception@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "node-domexception@npm:1.0.0"
+  checksum: 10c0/5e5d63cda29856402df9472335af4bb13875e1927ad3be861dc5ebde38917aecbf9ae337923777af52a48c426b70148815e890a5d72760f1b4d758cc671b1a2b
+  languageName: node
+  linkType: hard
+
 "node-emoji@npm:^2.1.3":
   version: 2.1.3
   resolution: "node-emoji@npm:2.1.3"
@@ -23679,6 +23712,17 @@ __metadata:
     encoding:
       optional: true
   checksum: 10c0/b55786b6028208e6fbe594ccccc213cab67a72899c9234eb59dba51062a299ea853210fcf526998eaa2867b0963ad72338824450905679ff0fa304b8c5093ae8
+  languageName: node
+  linkType: hard
+
+"node-fetch@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "node-fetch@npm:3.3.2"
+  dependencies:
+    data-uri-to-buffer: "npm:^4.0.0"
+    fetch-blob: "npm:^3.1.4"
+    formdata-polyfill: "npm:^4.0.10"
+  checksum: 10c0/f3d5e56190562221398c9f5750198b34cf6113aa304e34ee97c94fd300ec578b25b2c2906edba922050fce983338fde0d5d34fcb0fc3336ade5bd0e429ad7538
   languageName: node
   linkType: hard
 
@@ -30468,10 +30512,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-streams-polyfill@npm:^3.2.1":
-  version: 3.2.1
-  resolution: "web-streams-polyfill@npm:3.2.1"
-  checksum: 10c0/70ed6b5708e14afa2ab699221ea197d7c68ec0c8274bbe0181aecc5ba636ca27cbd383d2049f0eb9d529e738f5c088825502b317f3df24d18a278e4cc9a10e8b
+"web-streams-polyfill@npm:^3.0.3, web-streams-polyfill@npm:^3.2.1":
+  version: 3.3.3
+  resolution: "web-streams-polyfill@npm:3.3.3"
+  checksum: 10c0/64e855c47f6c8330b5436147db1c75cb7e7474d924166800e8e2aab5eb6c76aac4981a84261dd2982b3e754490900b99791c80ae1407a9fa0dcff74f82ea3a7f
   languageName: node
   linkType: hard
 
