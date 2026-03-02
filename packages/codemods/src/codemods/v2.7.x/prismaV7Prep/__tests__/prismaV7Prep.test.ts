@@ -44,6 +44,7 @@ vi.mock('@cedarjs/project-config', () => {
       scripts: '/app/scripts',
     }),
     getDataMigrationsPath: () => '/app/api/db/dataMigrations',
+    ensurePosixPath: (path: string) => path.replace(/\\/g, '/'),
   }
 })
 

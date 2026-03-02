@@ -1,7 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { getDataMigrationsPath, getPaths } from '@cedarjs/project-config'
+import {
+  ensurePosixPath,
+  getDataMigrationsPath,
+  getPaths,
+} from '@cedarjs/project-config'
 
 export type PrismaV7PrepContext = {
   dataMigrationsPath: string
@@ -97,11 +101,12 @@ export async function rewritePrismaImportsInDirectory(
   dir: string,
   dbFilePath: string | null,
 ) {
-  const scriptsDir = getPaths().scripts
+  const scriptsDir = ensurePosixPath(getPaths().scripts)
+  const normalizedDbFilePath = dbFilePath ? ensurePosixPath(dbFilePath) : null
   const fileMatches = await collectCodeFiles(dir)
   const files = fileMatches
     .map((relativePath) => path.join(dir, relativePath))
-    .filter((filePath) => filePath !== dbFilePath)
+    .filter((filePath) => ensurePosixPath(filePath) !== normalizedDbFilePath)
 
   if (files.length === 0) {
     return 'skipped'
@@ -109,7 +114,7 @@ export async function rewritePrismaImportsInDirectory(
 
   for (const filePath of files) {
     const source = await fs.promises.readFile(filePath, 'utf-8')
-    const isScriptFile = filePath.startsWith(`${scriptsDir}${path.sep}`)
+    const isScriptFile = ensurePosixPath(filePath).startsWith(scriptsDir)
     const importPath = isScriptFile ? 'api/src/lib/db' : 'src/lib/db'
     const importPattern = /(['"])@prisma\/client\1/g
     const transformed = source.replace(importPattern, `$1${importPath}$1`)
