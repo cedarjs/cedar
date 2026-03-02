@@ -53,7 +53,9 @@
     "@types/babel__core": "7.20.5",
     "@types/jscodeshift": "0.12.0",
     "@types/yargs": "17.0.35",
+    "memfs": "4.56.10",
     "publint": "0.3.17",
+    "ts-dedent": "2.2.0",
     "tsx": "4.21.0",
     "vitest": "3.2.4"
   },
