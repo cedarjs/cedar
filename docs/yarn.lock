@@ -2704,8 +2704,8 @@ __metadata:
   linkType: hard
 
 "@easyops-cn/docusaurus-search-local@npm:^0.55.0":
-  version: 0.55.0
-  resolution: "@easyops-cn/docusaurus-search-local@npm:0.55.0"
+  version: 0.55.1
+  resolution: "@easyops-cn/docusaurus-search-local@npm:0.55.1"
   dependencies:
     "@docusaurus/plugin-content-docs": "npm:^2 || ^3"
     "@docusaurus/theme-translations": "npm:^2 || ^3"
@@ -2732,7 +2732,7 @@ __metadata:
   peerDependenciesMeta:
     open-ask-ai:
       optional: true
-  checksum: 10c0/67dc3414c051eaf20f733299de7c81b7d9116c4c5463f82bdf8c678f2a23aacbd476a3b2091e46f1713df298975743296878f4ba4e77ed470497d89ff9940f74
+  checksum: 10c0/fffcd976877cc2bdc0487c90140a3b0bae1eceb90fe51bd851fd5972cc66ebf241cf2292f9032496c5ce7354c2410c00f8a92f1c937e94f40851eca386bf8568
   languageName: node
   linkType: hard
 
