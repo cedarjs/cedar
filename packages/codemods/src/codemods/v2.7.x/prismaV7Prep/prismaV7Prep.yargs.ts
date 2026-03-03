@@ -72,7 +72,7 @@ export const handler = async () => {
     await task('One more thing...', async ({ setOutput }) => {
       setOutput(
         '\n\n' +
-          "Some imports might be in the wrong order. If that's the case, \n" +
+          "Some imports might be in the wrong order. If that's the case,\n" +
           'you can run `yarn cedar lint --fix` to reorder them.',
       )
     })
