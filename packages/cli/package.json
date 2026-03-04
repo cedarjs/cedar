@@ -40,6 +40,7 @@
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/prerender": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
+    "@cedarjs/realtime": "workspace:*",
     "@cedarjs/structure": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
     "@cedarjs/web-server": "workspace:*",

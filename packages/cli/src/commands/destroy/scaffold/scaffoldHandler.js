@@ -2,8 +2,8 @@ import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { pluralize } from '@cedarjs/realtime/dist/cedarPluralize.js'
 
-import { pluralize } from '../../../lib/cedarPluralize.js'
 import c from '../../../lib/colors.js'
 import {
   deleteFilesTask,
