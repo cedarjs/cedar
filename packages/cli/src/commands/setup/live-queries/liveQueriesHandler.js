@@ -125,10 +125,19 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
 
   const contentLines = fs.readFileSync(graphqlHandlerPath, 'utf-8').split('\n')
 
+  // Anchoring both these regexes to the start of the line to not match on
+  // imports that have been commented out. (This won't catch /* ... */ style
+  // multiline comments that start and end on lines before/after the listener
+  // import, but that's a tradeoff I'm willing to make in favor of not over-
+  // complicating this code)
+  const importLineRegex =
+    /^import {.*startLiveQueryListener.*} from ['"]src\/lib\/liveQueriesListener['"];?$/
   const multilineImportRegex =
     /^} from ['"]src\/lib\/liveQueriesListener['"];?$/
 
-  const hasImport = contentLines.some((line) => multilineImportRegex.test(line))
+  const hasImport = contentLines.some((line) => {
+    return importLineRegex.test(line) || multilineImportRegex.test(line)
+  })
 
   const hasStartCall = contentLines.some(
     (line) =>
