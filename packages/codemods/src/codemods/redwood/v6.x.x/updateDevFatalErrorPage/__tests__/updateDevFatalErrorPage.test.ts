@@ -1,7 +1,7 @@
 import { describe, it } from 'vitest'
 
-import { matchFolderTransform } from '../../../../../testUtils/matchFolderTransform'
-import { updateDevFatalErrorPage } from '../updateDevFatalErrorPage'
+import { matchFolderTransform } from '../../../../../testUtils/matchFolderTransform.js'
+import { updateDevFatalErrorPage } from '../updateDevFatalErrorPage.js'
 
 describe('updateDevFatalErrorPage', () => {
   it('Replaces the js FatalErrorPage with a new version that uses a regular import', async () => {

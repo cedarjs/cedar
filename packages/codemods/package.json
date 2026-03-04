@@ -8,7 +8,7 @@
     "directory": "packages/codemods"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "bin": "./dist/codemods.js",
   "files": [
     "dist"

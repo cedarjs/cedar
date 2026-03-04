@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest'
 
-import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot'
+import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot.js'
 
 describe('updateAuth0ToV2', () => {
   it('updates the web-side auth file to the v2 SDK', async () => {

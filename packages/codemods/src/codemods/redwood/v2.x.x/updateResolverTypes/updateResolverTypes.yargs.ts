@@ -6,7 +6,7 @@ import task from 'tasuku'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import runTransform from '../../../../lib/runTransform'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'update-resolver-types'
 export const description =
@@ -15,7 +15,7 @@ export const description =
 export const handler = () => {
   task('Update Resolver Types', async ({ setOutput }: TaskInnerAPI) => {
     await runTransform({
-      transformPath: path.join(__dirname, 'updateResolverTypes.js'),
+      transformPath: path.join(import.meta.dirname, 'updateResolverTypes.js'),
       // Target services written in TS only
       targetPaths: fg.sync('**/*.ts', {
         cwd: getPaths().api.services,

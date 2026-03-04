@@ -1,6 +1,6 @@
 import task from 'tasuku'
 
-import { updateNodeEngineTo18 } from './updateNodeEngineTo18'
+import { updateNodeEngineTo18 } from './updateNodeEngineTo18.js'
 
 export const command = 'update-node-engine-to-18'
 

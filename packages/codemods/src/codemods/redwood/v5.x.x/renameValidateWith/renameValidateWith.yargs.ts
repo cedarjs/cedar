@@ -4,8 +4,8 @@ import task from 'tasuku'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import getFilesWithPattern from '../../../../lib/getFilesWithPattern'
-import runTransform from '../../../../lib/runTransform'
+import getFilesWithPattern from '../../../../lib/getFilesWithPattern.js'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'rename-validate-with'
 
@@ -24,7 +24,7 @@ export const handler = () => {
       })
 
       await runTransform({
-        transformPath: path.join(__dirname, 'renameValidateWith.js'),
+        transformPath: path.join(import.meta.dirname, 'renameValidateWith.js'),
         targetPaths: files,
       })
 

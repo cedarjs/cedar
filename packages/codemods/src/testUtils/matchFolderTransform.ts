@@ -4,9 +4,9 @@ import path from 'node:path'
 import fg from 'fast-glob'
 import { expect } from 'vitest'
 
-import runTransform from '../lib/runTransform'
+import runTransform from '../lib/runTransform.js'
 
-import { createProjectMock } from './index'
+import { createProjectMock } from './index.js'
 
 type Options = {
   removeWhitespace?: boolean

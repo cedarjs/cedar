@@ -1,6 +1,6 @@
 import { getPaths } from '@cedarjs/project-config'
 
-import prettify from '../../../../lib/prettify'
+import prettify from '../../../../lib/prettify.js'
 
 export default async function addApiAliasToTsConfig() {
   // Ts is a heavy import, lets do it dynamically
