@@ -125,14 +125,10 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
 
   const contentLines = fs.readFileSync(graphqlHandlerPath, 'utf-8').split('\n')
 
-  const importLineRegex =
-    /^import {.*startLiveQueryListener.*} from ['"]src\/lib\/liveQueriesListener['"];?$/
   const multilineImportRegex =
     /^} from ['"]src\/lib\/liveQueriesListener['"];?$/
 
-  const hasImport = contentLines.some((line) => {
-    return importLineRegex.test(line) || multilineImportRegex.test(line)
-  })
+  const hasImport = contentLines.some((line) => multilineImportRegex.test(line))
 
   const hasStartCall = contentLines.some(
     (line) =>
@@ -170,8 +166,17 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
   }
 
   if (!hasImport) {
+    const loggerImportIndex = contentLines.findIndex((line) =>
+      /import { logger } from ['"]src\/lib\/logger['"]/.test(line),
+    )
+
+    // Right before the logger import if found, otherwise right after all
+    // existing imports
+    const insertIndex =
+      loggerImportIndex >= 0 ? loggerImportIndex : lastImportIndex + 1
+
     contentLines.splice(
-      lastImportIndex + 1,
+      insertIndex,
       0,
       "import { startLiveQueryListener } from 'src/lib/liveQueriesListener'",
     )
@@ -183,8 +188,8 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
     contentLines.splice(
       handlerIndexAfterImport,
       0,
+      'startLiveQueryListener()',
       '',
-      'void startLiveQueryListener()',
     )
   }
 
