@@ -13,9 +13,10 @@ export const builder = (yargs: yargs.Argv) => {
   yargs.positional('rwVersion', {
     type: 'string',
     required: true,
-    choices: fs
-      .readdirSync(__dirname)
-      .filter((file) => !fs.statSync(path.join(__dirname, file)).isFile()), // Only list the folders
+    choices: fs.readdirSync(import.meta.dirname).filter(
+      // Only list the folders
+      (file) => !fs.statSync(path.join(import.meta.dirname, file)).isFile(),
+    ),
   })
 }
 
@@ -24,7 +25,9 @@ export const handler = ({ rwVersion }: { rwVersion: string }) => {
 
   console.log()
 
-  const modsForVersion = fs.readdirSync(path.join(__dirname, rwVersion))
+  const modsForVersion = fs.readdirSync(
+    path.join(import.meta.dirname, rwVersion),
+  )
 
   modsForVersion.forEach((codemod) => {
     // Use decamelize to match the usual yargs names,

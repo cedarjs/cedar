@@ -4,7 +4,7 @@ import {
   getPrismaV7PrepContext,
   rewritePrismaImportsInDirectory,
   updateDbFile,
-} from './prismaV7Prep'
+} from './prismaV7Prep.js'
 
 export const command = 'prisma-v7-prep'
 export const description =

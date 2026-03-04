@@ -1,6 +1,6 @@
 import task from 'tasuku'
 
-import { updateGraphqlConfig } from './updateGraphqlConfig'
+import { updateGraphqlConfig } from './updateGraphqlConfig.js'
 
 export const command = 'update-graphql-config'
 export const description =

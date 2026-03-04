@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest'
 
-import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot'
+import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot.js'
 
 describe('updateThemeConfig', () => {
   it('Converts from module.exports to export default ', async () => {
