@@ -197,7 +197,12 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
     contentLines.splice(
       handlerIndexAfterImport,
       0,
-      'startLiveQueryListener()',
+      "// Fire-and-forget: we intentionally don't await this so it doesn't " +
+        'block the',
+      "// GraphQL handler from being registered. The listener doesn't need " +
+        'to be ready',
+      '// before the first request is handled.',
+      'void startLiveQueryListener()',
       '',
     )
   }
