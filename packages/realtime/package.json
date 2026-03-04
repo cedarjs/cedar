@@ -7,7 +7,19 @@
     "directory": "packages/realtime"
   },
   "license": "MIT",
-  "exports": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
