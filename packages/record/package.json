@@ -38,7 +38,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/internals": "6.19.2",
     "esbuild": "0.21.5",
-    "publint": "0.3.17",
+    "publint": "0.3.18",
     "tsx": "4.21.0",
     "vitest": "3.2.4"
   },
