@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import type yargs from 'yargs'
+import type { Argv } from 'yargs'
 import { decamelize } from 'yargs-parser'
 
 export const command = 'list <rwVersion>'
@@ -9,7 +9,7 @@ export const description = 'List available codemods for a specific version'
 
 export const aliases = ['ls']
 
-export const builder = (yargs: yargs.Argv) => {
+export const builder = (yargs: Argv) => {
   yargs.positional('rwVersion', {
     type: 'string',
     required: true,
