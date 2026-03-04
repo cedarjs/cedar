@@ -4,7 +4,7 @@
     "isolatedModules": true,
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
-    "outDir": "dist"
+    "outDir": "dist",
   },
   "include": ["."],
   "exclude": ["dist", "node_modules", "**/__tests__/fixtures"],
@@ -15,6 +15,6 @@
     { "path": "../project-config" },
     { "path": "../adapters/fastify/web" },
     { "path": "../web-server" },
-    { "path": "../realtime" }
-  ]
+    { "path": "../realtime/tsconfig.build.json" },
+  ],
 }
