@@ -343,8 +343,8 @@ export const handler = async ({ force }) => {
           Apply the migration to activate Postgres notifications:
           ${c.highlight('\n\u00A0\u00A0yarn cedar prisma migrate dev\n')}
 
-          Then run the API server and use @live queries with invalidation keys
-          based on your GraphQL types and fields.
+          You're then ready to use @live queries to get real-time updates as
+          soon as something in your database changes.
         `
         },
       },
