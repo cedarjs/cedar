@@ -21,7 +21,7 @@ function getKeysToInvalidate({ table, recordId }: GetKeysToInvalidateArgs) {
   const keys = [
     `Query.${table}`,
     `Query.${table.toLocaleLowerCase()}`,
-    `${table}:${recordId}`
+    `${table}:${recordId}`,
   ]
 
   return keys

@@ -125,6 +125,11 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
 
   const contentLines = fs.readFileSync(graphqlHandlerPath, 'utf-8').split('\n')
 
+  // Anchoring both these regexes to the start of the line to not match on
+  // imports that have been commented out. (This won't catch /* ... */ style
+  // multiline comments that start and end on lines before/after the listener
+  // import, but that's a tradeoff I'm willing to make in favor of not over-
+  // complicating this code)
   const importLineRegex =
     /^import {.*startLiveQueryListener.*} from ['"]src\/lib\/liveQueriesListener['"];?$/
   const multilineImportRegex =
@@ -170,8 +175,17 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
   }
 
   if (!hasImport) {
+    const loggerImportIndex = contentLines.findIndex((line) =>
+      /import { logger } from ['"]src\/lib\/logger['"]/.test(line),
+    )
+
+    // Right before the logger import if found, otherwise right after all
+    // existing imports
+    const insertIndex =
+      loggerImportIndex >= 0 ? loggerImportIndex : lastImportIndex + 1
+
     contentLines.splice(
-      lastImportIndex + 1,
+      insertIndex,
       0,
       "import { startLiveQueryListener } from 'src/lib/liveQueriesListener'",
     )
@@ -183,8 +197,8 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
     contentLines.splice(
       handlerIndexAfterImport,
       0,
+      'startLiveQueryListener()',
       '',
-      'void startLiveQueryListener()',
     )
   }
 
@@ -338,8 +352,8 @@ export const handler = async ({ force }) => {
           Apply the migration to activate Postgres notifications:
           ${c.highlight('\n\u00A0\u00A0yarn cedar prisma migrate dev\n')}
 
-          Then run the API server and use @live queries with invalidation keys
-          based on your GraphQL types and fields.
+          You're then ready to use @live queries to get real-time updates as
+          soon as something in your database changes.
         `
         },
       },
