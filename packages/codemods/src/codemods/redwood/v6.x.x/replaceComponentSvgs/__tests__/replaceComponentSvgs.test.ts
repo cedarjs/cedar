@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest'
 
-import { matchFolderTransform } from '../../../../../testUtils/matchFolderTransform'
+import { matchFolderTransform } from '../../../../../testUtils/matchFolderTransform.js'
 
 describe('replaceComponentSvgs', () => {
   it('Handles simple Svgs as components', async () => {

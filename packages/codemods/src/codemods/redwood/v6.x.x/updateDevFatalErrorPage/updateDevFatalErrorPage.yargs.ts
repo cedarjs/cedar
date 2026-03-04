@@ -1,6 +1,6 @@
 import task from 'tasuku'
 
-import { updateDevFatalErrorPage } from './updateDevFatalErrorPage'
+import { updateDevFatalErrorPage } from './updateDevFatalErrorPage.js'
 
 export const command = 'update-dev-fatal-error-page'
 export const description =

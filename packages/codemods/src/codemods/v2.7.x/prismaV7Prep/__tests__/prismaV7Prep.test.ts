@@ -51,7 +51,7 @@ vi.mock('@cedarjs/project-config', () => {
 import prismaV7Prep, {
   rewritePrismaImportsInDirectory,
   updateDbFile,
-} from '../prismaV7Prep'
+} from '../prismaV7Prep.js'
 
 describe('prismaV7Prep', () => {
   beforeEach(() => {

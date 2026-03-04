@@ -26,7 +26,7 @@ expect.extend({
       expect(actualOutput).toEqual(expectedOutput)
     } catch (e) {
       const relativePath = path.relative(
-        path.join(__dirname, 'src/codemods'),
+        path.join(import.meta.dirname, 'src/codemods'),
         expectedPath,
       )
       pass = false

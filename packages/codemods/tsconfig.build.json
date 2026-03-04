@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "module": "node20",
+    "moduleResolution": "node16"
+  },
+  "include": ["src", "./testUtils.d.ts"],
+  "exclude": ["**/__testfixtures__", "**/__tests__"],
+  "references": [
+    { "path": "../framework-tools" },
+    { "path": "../project-config" }
+  ]
+}

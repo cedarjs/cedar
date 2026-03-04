@@ -1,3 +1,3 @@
-import { build } from '@cedarjs/framework-tools'
+import { buildEsm } from '@cedarjs/framework-tools'
 
-await build()
+await buildEsm()
