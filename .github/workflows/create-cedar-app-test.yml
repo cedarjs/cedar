@@ -59,7 +59,7 @@ jobs:
           PROJECT_PATH: ${{ env.PROJECT_PATH }}
 
       - name: ⬢ Set up Node.js
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           # Use Node 20 here for testing behavior for node versions below the
           # minimum supported version
@@ -72,7 +72,7 @@ jobs:
           PROJECT_PATH: ${{ env.PROJECT_PATH }}
 
       - name: ⬢ Set up Node.js
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           # Use Node 25 here for testing behavior for node versions above the
           # maximum supported version
