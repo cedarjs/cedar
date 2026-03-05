@@ -18,7 +18,9 @@ interface GetKeysToInvalidateArgs {
 }
 
 function getKeysToInvalidate({ table, recordId }: GetKeysToInvalidateArgs) {
-  const typeName = table.charAt(0).toLocaleLowerCase() + table.slice(1)
+  // Using `toLowerCase()` rather than `toLocaleLowerCase()` because we want
+  // consistent casing across all locales.
+  const typeName = table.charAt(0).toLowerCase() + table.slice(1)
 
   const keys = [
     `Query.${typeName}`,
