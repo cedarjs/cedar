@@ -1,4 +1,4 @@
-import type { Plugin } from '@envelop/core'
+import type { Plugin as EnvelopPlugin } from '@envelop/core'
 import { useLiveQuery } from '@envelop/live-query'
 import { mergeSchemas } from '@graphql-tools/schema'
 import { astFromDirective } from '@graphql-tools/utils'
@@ -154,22 +154,26 @@ export class RedisLiveQueryStore {
   }
 }
 
-// These are exported to allow access to the store and pubsub outside of graphql execution
+// These are exported to allow access to the store and pubsub outside of graphql
+// execution
 export let liveQueryStore: LiveQueryStorageMechanism | undefined = undefined
 export let pubSub: ReturnType<typeof createPubSub> | undefined = undefined
 
-export const useCedarRealtime = (options: CedarRealtimeOptions): Plugin => {
+export const useCedarRealtime = (
+  options: CedarRealtimeOptions,
+): EnvelopPlugin => {
   let liveQueriesEnabled = false
   let subscriptionsEnabled = false
 
-  let liveQueryPlugin = {} as Plugin
+  let liveQueryPlugin: EnvelopPlugin | undefined
   const inMemoryLiveQueryStore = new InMemoryLiveQueryStore()
 
   liveQueryStore = {} as LiveQueryStorageMechanism
   pubSub = {} as ReturnType<typeof createPubSub>
 
   /**
-   * This symbol is added to the schema extensions for checking whether the live query was added to the schema only once.
+   * This symbol is added to the schema extensions for checking whether the live
+   * query was added to the schema only once.
    */
   const wasLiveQueryAdded = Symbol.for('useCedarRealtime.wasLiveQueryAdded')
 
@@ -236,15 +240,16 @@ export const useCedarRealtime = (options: CedarRealtimeOptions): Plugin => {
       }
     },
     onPluginInit({ addPlugin }) {
-      if (liveQueriesEnabled) {
+      if (liveQueriesEnabled && liveQueryPlugin) {
         addPlugin(liveQueryPlugin)
       }
+
       if (subscriptionsEnabled) {
-        addPlugin(useGraphQLSSE() as Plugin<object>)
+        addPlugin(useGraphQLSSE() as EnvelopPlugin)
       }
 
       if (options.enableDeferStream) {
-        addPlugin(useDeferStream() as Plugin<object>)
+        addPlugin(useDeferStream() as EnvelopPlugin)
       }
     },
     onContextBuilding() {
@@ -261,6 +266,8 @@ export const useCedarRealtime = (options: CedarRealtimeOptions): Plugin => {
 /**
  * @deprecated Use `useCedarRealtime` instead.
  */
-export const useRedwoodRealtime = (options: CedarRealtimeOptions): Plugin => {
+export const useRedwoodRealtime = (
+  options: CedarRealtimeOptions,
+): EnvelopPlugin => {
   return useCedarRealtime(options)
 }
