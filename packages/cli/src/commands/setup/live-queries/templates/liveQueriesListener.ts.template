@@ -18,7 +18,7 @@ interface GetKeysToInvalidateArgs {
 }
 
 function getKeysToInvalidate({ table, recordId }: GetKeysToInvalidateArgs) {
-  const typeName = table.at(0)?.toLocaleLowerCase() + table.slice(1)
+  const typeName = table.charAt(0).toLocaleLowerCase() + table.slice(1)
 
   const keys = [
     `Query.${typeName}`,
