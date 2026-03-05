@@ -40,6 +40,7 @@
     "@cedarjs/internal": "2.7.0",
     "@cedarjs/prerender": "2.7.0",
     "@cedarjs/project-config": "2.7.0",
+    "@cedarjs/realtime": "2.7.0",
     "@cedarjs/structure": "2.7.0",
     "@cedarjs/telemetry": "2.7.0",
     "@cedarjs/web-server": "2.7.0",
