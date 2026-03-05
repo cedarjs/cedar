@@ -12,6 +12,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./cedarPluralize": {
+      "types": "./dist/cedarPluralize.d.ts",
+      "default": "./dist/cedarPluralize.js"
     }
   },
   "types": "./dist/index.d.ts",
