@@ -1,10 +1,5 @@
-import { build, defaultBuildOptions } from '@cedarjs/framework-tools'
+import { buildEsm } from '@cedarjs/framework-tools'
+import { generateTypesEsm } from '@cedarjs/framework-tools/generateTypes'
 
-await build({
-  buildOptions: {
-    ...defaultBuildOptions,
-    bundle: true,
-    entryPoints: ['src/index.ts'],
-    packages: 'external',
-  },
-})
+await buildEsm()
+await generateTypesEsm()
