@@ -1,7 +1,8 @@
 import prompts from 'prompts'
 import { test, expect } from 'vitest'
 
-import { pluralize, singularize } from '../cedarPluralize.js'
+import { pluralize, singularize } from '@cedarjs/realtime/cedarPluralize'
+
 import * as helpers from '../pluralHelpers.js'
 
 test('validatePlural returns true if plural is single word and unique from singular', () => {
