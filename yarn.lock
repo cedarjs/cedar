@@ -2949,9 +2949,9 @@ __metadata:
     "@cedarjs/internal": "workspace:*"
     "@cedarjs/prerender": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
-    "@cedarjs/realtime": "workspace:*"
     "@cedarjs/structure": "workspace:*"
     "@cedarjs/telemetry": "workspace:*"
+    "@cedarjs/utils": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
     "@listr2/prompt-adapter-enquirer": "npm:2.0.16"
     "@opentelemetry/api": "npm:1.9.0"
@@ -3574,6 +3574,7 @@ __metadata:
   resolution: "@cedarjs/realtime@workspace:packages/realtime"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
+    "@cedarjs/utils": "workspace:*"
     "@envelop/core": "npm:5.5.1"
     "@envelop/live-query": "npm:7.0.0"
     "@envelop/testing": "npm:7.0.0"
@@ -3586,12 +3587,10 @@ __metadata:
     "@graphql-yoga/subscription": "npm:5.0.5"
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
-    "@types/pluralize": "npm:0.0.33"
     graphql: "npm:16.13.0"
     graphql-yoga: "npm:5.18.0"
     ioredis: "npm:5.10.0"
     nodemon: "npm:3.1.14"
-    pluralize: "npm:8.0.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3797,6 +3796,19 @@ __metadata:
 "@cedarjs/upgrade-scripts@workspace:upgrade-scripts":
   version: 0.0.0-use.local
   resolution: "@cedarjs/upgrade-scripts@workspace:upgrade-scripts"
+  languageName: unknown
+  linkType: soft
+
+"@cedarjs/utils@workspace:*, @cedarjs/utils@workspace:packages/utils":
+  version: 0.0.0-use.local
+  resolution: "@cedarjs/utils@workspace:packages/utils"
+  dependencies:
+    "@cedarjs/framework-tools": "workspace:*"
+    "@types/pluralize": "npm:0.0.33"
+    nodemon: "npm:3.1.14"
+    pluralize: "npm:8.0.0"
+    typescript: "npm:5.9.3"
+    vitest: "npm:3.2.4"
   languageName: unknown
   linkType: soft
 
