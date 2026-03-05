@@ -4,7 +4,7 @@ import {
   isSingular,
   isPlural,
   addSingularPlural,
-} from '@cedarjs/realtime/dist/cedarPluralize.js'
+} from '@cedarjs/realtime/cedarPluralize'
 
 export const isWordPluralizable = (word) => {
   return isPlural(word) !== isSingular(word)

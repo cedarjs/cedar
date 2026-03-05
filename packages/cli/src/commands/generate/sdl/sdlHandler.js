@@ -6,7 +6,7 @@ import { Listr } from 'listr2'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
-import { pluralize } from '@cedarjs/realtime/dist/cedarPluralize.js'
+import { pluralize } from '@cedarjs/realtime/cedarPluralize'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'

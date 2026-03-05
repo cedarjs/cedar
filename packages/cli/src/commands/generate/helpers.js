@@ -13,7 +13,7 @@ import {
   pluralize,
   isPlural,
   isSingular,
-} from '@cedarjs/realtime/dist/cedarPluralize.js'
+} from '@cedarjs/realtime/cedarPluralize'
 
 /**
  * Creates a route path, either returning the existing path if passed, or

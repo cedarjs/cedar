@@ -20,10 +20,7 @@ import {
   resolveFile as internalResolveFile,
   findUp,
 } from '@cedarjs/project-config'
-import {
-  pluralize,
-  singularize,
-} from '@cedarjs/realtime/dist/cedarPluralize.js'
+import { pluralize, singularize } from '@cedarjs/realtime/cedarPluralize'
 
 import c from './colors.js'
 import { addFileToRollback } from './rollback.js'

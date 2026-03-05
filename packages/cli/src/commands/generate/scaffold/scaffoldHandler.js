@@ -11,10 +11,7 @@ import pascalcase from 'pascalcase'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
-import {
-  pluralize,
-  singularize,
-} from '@cedarjs/realtime/dist/cedarPluralize.js'
+import { pluralize, singularize } from '@cedarjs/realtime/cedarPluralize'
 
 import c from '../../../lib/colors.js'
 import {
