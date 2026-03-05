@@ -3802,7 +3802,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/utils@workspace:packages/utils"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/pluralize": "npm:0.0.33"
     nodemon: "npm:3.1.14"
