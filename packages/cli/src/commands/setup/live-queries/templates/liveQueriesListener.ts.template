@@ -1,6 +1,6 @@
 import { Client } from 'pg'
 
-import { liveQueryStore } from '@cedarjs/realtime'
+import { liveQueryStore, pluralize } from '@cedarjs/realtime'
 
 import { logger } from 'src/lib/logger'
 
@@ -18,10 +18,12 @@ interface GetKeysToInvalidateArgs {
 }
 
 function getKeysToInvalidate({ table, recordId }: GetKeysToInvalidateArgs) {
+  const typeName = table.at(0)?.toLocaleLowerCase() + table.slice(1)
+
   const keys = [
-    `Query.${table}`,
-    `Query.${table.toLocaleLowerCase()}`,
-    `${table}:${recordId}`,
+    `Query.${typeName}`,
+    `Query.${pluralize(typeName)}`,
+    `${typeName}:${recordId}`,
   ]
 
   return keys
