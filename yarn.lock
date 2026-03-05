@@ -3574,7 +3574,6 @@ __metadata:
   resolution: "@cedarjs/realtime@workspace:packages/realtime"
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
-    "@cedarjs/utils": "workspace:*"
     "@envelop/core": "npm:5.5.1"
     "@envelop/live-query": "npm:7.0.0"
     "@envelop/testing": "npm:7.0.0"
@@ -3803,10 +3802,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/utils@workspace:packages/utils"
   dependencies:
+    "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/pluralize": "npm:0.0.33"
     nodemon: "npm:3.1.14"
     pluralize: "npm:8.0.0"
+    publint: "npm:0.3.18"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown

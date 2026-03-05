@@ -28,7 +28,6 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/utils": "workspace:*",
     "@envelop/live-query": "7.0.0",
     "@graphql-tools/schema": "10.0.31",
     "@graphql-tools/utils": "10.11.0",
