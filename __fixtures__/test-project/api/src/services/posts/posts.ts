@@ -4,6 +4,8 @@ import type {
   PostRelationResolvers,
 } from 'types/graphql'
 
+import { validateUniqueness } from '@cedarjs/api'
+
 import { db } from 'src/lib/db'
 
 export const posts: QueryResolvers['posts'] = () => {
@@ -17,9 +19,12 @@ export const post: QueryResolvers['post'] = ({ id }) => {
 }
 
 export const createPost: MutationResolvers['createPost'] = ({ input }) => {
-  return db.post.create({
-    data: input,
-  })
+  return validateUniqueness(
+    'post',
+    { title: input.title },
+    { db, message: 'A post with this title already exists.' },
+    (db) => db.post.create({ data: input })
+  )
 }
 
 export const updatePost: MutationResolvers['updatePost'] = ({ id, input }) => {

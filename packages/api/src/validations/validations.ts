@@ -153,21 +153,38 @@ interface CustomValidatorOptions extends WithOptionalMessage {
   with: () => void
 }
 
-interface UniquenessValidatorOptions extends WithOptionalMessage {
-  db?: UniquenessDb
+interface UniquenessValidatorOptions<
+  TDb extends UniquenessDb = UniquenessDb,
+> extends WithOptionalMessage {
+  db?: TDb
 }
+
 type UniquenessWhere = Record<'AND' | 'NOT', Record<string, unknown>[]>
+
 export type UniquenessTransactionClient = Record<
   string,
   {
     findFirst: (args: { where: UniquenessWhere }) => Promise<unknown>
   }
 >
-type UniquenessDb = {
-  $transaction: <T>(
-    callback: (tx: UniquenessTransactionClient) => Promise<T>,
-  ) => Promise<T>
+
+interface UniquenessDb {
+  // Prisma's `$transaction` is overloaded (batch + interactive). A single
+  // call-signature is not structurally assignable from an overloaded source,
+  // so we use a permissive signature here. Type safety for the interactive
+  // callback is enforced at the call-site inside `validateUniqueness`.
+  $transaction: (...args: any[]) => Promise<any>
 }
+
+// Extracts the transaction client type from db.$transaction.
+// TypeScript uses the *last* call signature for conditional type inference;
+// for PrismaClient that is the interactive-transaction overload, giving
+// Omit<PrismaClient, '$connect' | ...> — the fully-typed Prisma tx client.
+type TxClientOf<TDb extends UniquenessDb> = TDb extends {
+  $transaction: (callback: (tx: infer TTx) => any, ...args: any[]) => any
+}
+  ? TTx
+  : never
 
 interface ValidationRecipe {
   /**
@@ -662,11 +679,10 @@ export const validateWith = async (func: () => Promise<any>) => {
 // this case you can provide a `$self` key with the `where` object to exclude
 // the current record.
 //
-// There is an optional `$scope` key which contains additional the `where`
-// clauses to include when checking whether the field is unique. So rather than
-// a product name having to be unique across the entire database, you could
-// check that it is only unique among a subset of records with the same
-// `companyId`.
+// There is an optional `$scope` key which contains additional `where` clauses
+// to include when checking whether the field is unique. So rather than a
+// product name having to be unique across the entire database, you could check
+// that it is only unique among a subset of records with the same `companyId`.
 //
 // return validateUniqueness('user', { email: 'rob@cedarjs.com' }, { message: '...'}, (db) => {
 //   return db.create(data: { email })
@@ -697,37 +713,43 @@ export const validateWith = async (func: () => Promise<any>) => {
 // return validateUniqueness('user', { email: 'rob@cedarjs.com' }, { db: myCustomDb}, (db) => {
 //   return db.create(data: { email })
 // })
-export async function validateUniqueness(
+export async function validateUniqueness<
+  TDb extends UniquenessDb = UniquenessDb,
+>(
   model: string,
   fields: Record<string, unknown>,
-  optionsOrCallback: (tx: UniquenessTransactionClient) => Promise<any>,
+  optionsOrCallback: (tx: TxClientOf<TDb>) => Promise<any>,
   callback?: never,
 ): Promise<any>
-export async function validateUniqueness(
+export async function validateUniqueness<
+  TDb extends UniquenessDb = UniquenessDb,
+>(
   model: string,
   fields: Record<string, unknown>,
-  optionsOrCallback: UniquenessValidatorOptions,
-  callback?: (tx: UniquenessTransactionClient) => Promise<any>,
+  optionsOrCallback: UniquenessValidatorOptions<TDb>,
+  callback?: (tx: TxClientOf<TDb>) => Promise<any>,
 ): Promise<any>
-export async function validateUniqueness(
+export async function validateUniqueness<
+  TDb extends UniquenessDb = UniquenessDb,
+>(
   model: string,
   fields: Record<string, unknown>,
   optionsOrCallback:
-    | UniquenessValidatorOptions
-    | ((tx: UniquenessTransactionClient) => Promise<any>),
-  callback?: (tx: UniquenessTransactionClient) => Promise<any>,
+    | UniquenessValidatorOptions<TDb>
+    | ((tx: TxClientOf<TDb>) => Promise<any>),
+  callback?: (tx: TxClientOf<TDb>) => Promise<any>,
 ): Promise<any> {
   const { $self, $scope, ...rest } = fields
-  let options: UniquenessValidatorOptions = {}
-  let validCallback: (tx: UniquenessTransactionClient) => Promise<any>
+  let options: UniquenessValidatorOptions<TDb> = {}
+  let validCallback: (tx: TxClientOf<TDb>) => Promise<any>
 
   if (typeof optionsOrCallback === 'function') {
     validCallback = optionsOrCallback
-  } else {
+  } else if (callback) {
     options = optionsOrCallback
-    validCallback = callback as (
-      tx: UniquenessTransactionClient,
-    ) => Promise<any>
+    validCallback = callback
+  } else {
+    throw new Error('validateUniqueness requires a callback function')
   }
 
   const { db: _db, ...restOptions } = options
@@ -761,6 +783,8 @@ export async function validateUniqueness(
       validationError('uniqueness', fieldsToString(rest), options)
     }
 
-    return validCallback(tx)
+    // At runtime tx is the full Prisma transaction client; TxClientOf<TDb>
+    // is the TypeScript representation of that same type.
+    return validCallback(tx as unknown as TxClientOf<TDb>)
   })
 }
