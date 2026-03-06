@@ -53,7 +53,19 @@
     "test-ci": "nx run-many -t test"
   },
   "resolutions": {
+    "@actions/glob/minimatch": "npm:3.1.5",
+    "@eslint/eslintrc/minimatch": "npm:3.1.5",
+    "@humanwhocodes/config-array/minimatch": "npm:3.1.5",
+    "@lerna/create/minimatch": "npm:3.1.5",
+    "eslint-plugin-import/minimatch": "npm:3.1.5",
+    "eslint-plugin-jsx-a11y/minimatch": "npm:3.1.5",
+    "eslint-plugin-react/minimatch": "npm:3.1.5",
+    "eslint/minimatch": "npm:3.1.5",
+    "jake/minimatch": "npm:3.1.5",
+    "lerna/minimatch": "npm:3.1.5",
+    "multimatch/minimatch": "npm:3.1.5",
     "prettier-plugin-packagejson/sort-package-json": "3.6.1",
+    "test-exclude/minimatch": "npm:3.1.5",
     "vite": "5.4.21"
   },
   "devDependencies": {
