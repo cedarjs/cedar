@@ -5,8 +5,8 @@ import task from 'tasuku'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import isTSProject from '../../../../lib/isTSProject'
-import runTransform from '../../../../lib/runTransform'
+import isTSProject from '../../../../lib/isTSProject.js'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'update-clerk-get-current-user'
 export const description =
@@ -17,7 +17,10 @@ export const handler = () => {
     const authFile = isTSProject ? 'auth.ts' : 'auth.js'
 
     await runTransform({
-      transformPath: path.join(__dirname, 'updateClerkGetCurrentUser.js'),
+      transformPath: path.join(
+        import.meta.dirname,
+        'updateClerkGetCurrentUser.js',
+      ),
       targetPaths: [path.join(getPaths().api.base, 'src', 'lib', authFile)],
     })
 

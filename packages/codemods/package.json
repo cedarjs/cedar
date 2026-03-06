@@ -8,7 +8,7 @@
     "directory": "packages/codemods"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "bin": "./dist/codemods.js",
   "files": [
     "dist"
@@ -41,7 +41,7 @@
     "execa": "5.1.1",
     "fast-glob": "3.3.3",
     "graphql": "16.13.0",
-    "jscodeshift": "17.0.0",
+    "jscodeshift": "17.3.0",
     "pascalcase": "1.0.0",
     "prettier": "3.8.1",
     "tasuku": "2.3.0",
@@ -51,10 +51,10 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/babel__core": "7.20.5",
-    "@types/jscodeshift": "0.12.0",
+    "@types/jscodeshift": "17.3.0",
     "@types/yargs": "17.0.35",
     "memfs": "4.56.10",
-    "publint": "0.3.17",
+    "publint": "0.3.18",
     "ts-dedent": "2.2.0",
     "tsx": "4.21.0",
     "vitest": "3.2.4"

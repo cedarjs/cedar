@@ -5,8 +5,8 @@ import task from 'tasuku'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import isTSProject from '../../../../lib/isTSProject'
-import runTransform from '../../../../lib/runTransform'
+import isTSProject from '../../../../lib/isTSProject.js'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'update-auth0-to-v2'
 
@@ -28,7 +28,7 @@ export const handler = () => {
     }
 
     await runTransform({
-      transformPath: path.join(__dirname, 'updateAuth0ToV2.js'),
+      transformPath: path.join(import.meta.dirname, 'updateAuth0ToV2.js'),
       targetPaths: [path.join(getPaths().web.src, authFile)],
     })
 

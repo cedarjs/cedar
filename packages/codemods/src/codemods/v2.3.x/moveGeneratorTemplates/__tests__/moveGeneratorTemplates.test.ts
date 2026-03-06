@@ -1,7 +1,7 @@
 import { describe, it } from 'vitest'
 
-import { matchFolderTransform } from '../../../../testUtils/matchFolderTransform'
-import moveGeneratorTemplates from '../moveGeneratorTemplates'
+import { matchFolderTransform } from '../../../../testUtils/matchFolderTransform.js'
+import moveGeneratorTemplates from '../moveGeneratorTemplates.js'
 
 describe('moveGeneratorTemplates', () => {
   it('Moves web/ and api/ generator templates to the new top-level /generatorTemplates directory', async () => {

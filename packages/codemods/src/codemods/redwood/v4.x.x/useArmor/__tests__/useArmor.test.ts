@@ -1,7 +1,7 @@
 import { describe, it } from 'vitest'
 
-import { matchInlineTransformSnapshot } from '../../../../../testUtils/matchInlineTransformSnapshot'
-import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot'
+import { matchInlineTransformSnapshot } from '../../../../../testUtils/matchInlineTransformSnapshot.js'
+import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot.js'
 
 describe('useArmor', () => {
   describe('when depthLimitOptions is not configured in the GraphQL handler', () => {

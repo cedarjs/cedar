@@ -15,6 +15,7 @@
     { "path": "../internal/tsconfig.build.json" },
     { "path": "../prerender/tsconfig.build.json" },
     { "path": "../project-config" },
+    { "path": "../realtime" },
     { "path": "../structure" },
     { "path": "../telemetry" },
     { "path": "../vite/tsconfig.build.json" }

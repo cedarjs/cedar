@@ -2,6 +2,7 @@ import fastifyMultiPart from '@fastify/multipart'
 import fastifyUrlData from '@fastify/url-data'
 import fg from 'fast-glob'
 import type { FastifyInstance, HTTPMethods } from 'fastify'
+import type { Plugin as YogaPlugin } from 'graphql-yoga'
 
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
@@ -73,8 +74,13 @@ export async function redwoodFastifyGraphQLServer(
       const { useCedarRealtime } = await import('@cedarjs/realtime')
 
       const originalExtraPlugins = graphqlOptions.extraPlugins ?? []
-      // @ts-expect-error TODO(jgmw): Fix this type issue introduced after switching to Node16 module resolution
-      originalExtraPlugins.push(useCedarRealtime(graphqlOptions.realtime))
+      originalExtraPlugins.push(
+        // This type cast is needed because useCedarRealtime returns an
+        // EnvelopPlugin and here we need a YogaPlugin. I can't change the
+        // return type of `useCedarRealtime` yet, because it'd be a breaking
+        // change.
+        useCedarRealtime(graphqlOptions.realtime) as YogaPlugin,
+      )
       graphqlOptions.extraPlugins = originalExtraPlugins
 
       // uses for SSE single connection mode with the `/graphql/stream` endpoint

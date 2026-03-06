@@ -1,7 +1,7 @@
 import task from 'tasuku'
 import type { TaskInnerAPI } from 'tasuku'
 
-import moveGeneratorTemplates from './moveGeneratorTemplates'
+import moveGeneratorTemplates from './moveGeneratorTemplates.js'
 
 export const command = 'move-generator-templates'
 export const description =

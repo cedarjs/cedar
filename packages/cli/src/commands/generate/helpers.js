@@ -9,7 +9,7 @@
 import { paramCase } from 'change-case'
 import pascalcase from 'pascalcase'
 
-import { pluralize, isPlural, isSingular } from '../../lib/cedarPluralize.js'
+import { pluralize, isPlural, isSingular } from '@cedarjs/utils/cedarPluralize'
 
 /**
  * Creates a route path, either returning the existing path if passed, or

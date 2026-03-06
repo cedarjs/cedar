@@ -1,6 +1,6 @@
 import task from 'tasuku'
 
-import { detectEmptyCells } from './detectEmptyCells'
+import { detectEmptyCells } from './detectEmptyCells.js'
 
 export const command = 'detect-empty-cells'
 

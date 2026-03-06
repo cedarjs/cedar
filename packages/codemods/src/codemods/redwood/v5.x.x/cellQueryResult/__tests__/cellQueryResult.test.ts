@@ -1,6 +1,6 @@
 import { describe, test } from 'vitest'
 
-import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot'
+import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot.js'
 
 describe('cellQueryResult', () => {
   test('No query result properties used', async () => {

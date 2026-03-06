@@ -4,7 +4,7 @@ import {
   checkAndTransformReactRoot,
   upgradeReactDepsTo18,
   checkAndUpdateCustomWebIndex,
-} from './upgradeToReact18'
+} from './upgradeToReact18.js'
 
 export const command = 'upgrade-to-react-18'
 

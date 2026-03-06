@@ -4,7 +4,7 @@ import {
   getPrismaV7PrepContext,
   rewritePrismaImportsInDirectory,
   updateDbFile,
-} from './prismaV7Prep'
+} from './prismaV7Prep.js'
 
 export const command = 'prisma-v7-prep'
 export const description =
@@ -72,8 +72,9 @@ export const handler = async () => {
     await task('One more thing...', async ({ setOutput }) => {
       setOutput(
         '\n\n' +
-          "Some imports might be in the wrong order. If that's the case,\n" +
-          'you can run `yarn cedar lint --fix` to reorder them.',
+          'Some imports (most likely in your scenario files) might now be\n' +
+          "in the wrong order. If that's the case, you can run\n" +
+          '`yarn cedar lint --fix` to reorder them.',
       )
     })
   })

@@ -6,7 +6,7 @@ import task from 'tasuku'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import runTransform from '../../../../lib/runTransform'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'update-theme-config'
 export const description =
@@ -20,7 +20,7 @@ export const handler = () => {
     })
 
     await runTransform({
-      transformPath: path.join(__dirname, 'updateThemeConfig.js'),
+      transformPath: path.join(import.meta.dirname, 'updateThemeConfig.js'),
       targetPaths,
     })
 

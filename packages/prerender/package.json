@@ -81,7 +81,7 @@
     "@rollup/plugin-commonjs": "28.0.9",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-replace": "6.0.3",
-    "@swc/core": "1.15.17",
+    "@swc/core": "1.15.18",
     "@whatwg-node/fetch": "0.10.13",
     "babel-plugin-ignore-html-and-css-imports": "0.1.0",
     "cheerio": "1.2.0",
@@ -100,7 +100,7 @@
     "@types/react": "^18.2.55",
     "babel-plugin-tester": "11.0.4",
     "concurrently": "9.2.1",
-    "publint": "0.3.17",
+    "publint": "0.3.18",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
