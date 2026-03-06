@@ -1,7 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { addValidateUniquenessToPosts } from './codemods/posts.mts'
+import {
+  addValidateUniquenessToPosts,
+  uniquePostTitles,
+} from './codemods/posts.mts'
 import { contactTask } from './contact-task.mts'
 import { fullPath, getOutputPath } from './paths.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
@@ -221,6 +224,10 @@ export function apiTasksList({
         // Replace the random numbers in the scenario with consistent values
         await applyCodemod(
           'scenarioValueSuffix.js',
+          fullPath('api/src/services/posts/posts.scenarios'),
+        )
+
+        await uniquePostTitles(
           fullPath('api/src/services/posts/posts.scenarios'),
         )
       },

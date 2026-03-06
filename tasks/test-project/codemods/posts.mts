@@ -46,3 +46,14 @@ export async function addValidateUniquenessToPosts(postsServicePath: string) {
   )
   await fs.promises.writeFile(postsServicePath, contentLines.join('\n'))
 }
+
+export async function uniquePostTitles(postsScenariosPath: string) {
+  const content = await fs.promises.readFile(postsScenariosPath, 'utf-8')
+  await fs.promises.writeFile(
+    postsScenariosPath,
+    content.replaceAll(
+      "title: 'String'",
+      (_match, offset) => `title: 'String${offset}'`,
+    ),
+  )
+}
