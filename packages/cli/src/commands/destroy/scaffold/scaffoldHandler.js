@@ -2,7 +2,7 @@ import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { pluralize } from '@cedarjs/realtime/cedarPluralize'
+import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
 import c from '../../../lib/colors.js'
 import {
