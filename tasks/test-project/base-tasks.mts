@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { addValidateUniquenessToPosts } from './codemods/posts.mts'
 import { contactTask } from './contact-task.mts'
 import { fullPath, getOutputPath } from './paths.mts'
 import { getPrerenderTasks } from './prerender-tasks.mts'
@@ -212,6 +213,10 @@ export function apiTasksList({
       title: 'Scaffolding post',
       task: async () => {
         await generateScaffold('post')
+
+        await addValidateUniquenessToPosts(
+          fullPath('api/src/services/posts/posts'),
+        )
 
         // Replace the random numbers in the scenario with consistent values
         await applyCodemod(
