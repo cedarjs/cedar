@@ -1,7 +1,7 @@
 import prompts from 'prompts'
 import { test, expect } from 'vitest'
 
-import { pluralize, singularize } from '@cedarjs/realtime/cedarPluralize'
+import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
 import * as helpers from '../pluralHelpers.js'
 
