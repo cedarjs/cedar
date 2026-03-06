@@ -2884,7 +2884,6 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/telemetry": "workspace:*"
-    "@listr2/prompt-adapter-enquirer": "npm:4.2.1"
     "@opentelemetry/api": "npm:1.9.0"
     "@types/dotenv-defaults": "npm:^5.0.0"
     "@types/lodash": "npm:4.17.24"
