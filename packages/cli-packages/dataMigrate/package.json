@@ -31,7 +31,7 @@
     "bundle-require": "^5.1.0",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
-    "listr2": "9.0.5",
+    "listr2": "10.2.1",
     "termi-link": "1.1.0",
     "yargs": "17.7.2"
   },
