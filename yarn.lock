@@ -2895,6 +2895,7 @@ __metadata:
     ansis: "npm:4.2.0"
     dotenv: "npm:16.6.1"
     dotenv-defaults: "npm:5.0.2"
+    enquirer: "npm:2.4.1"
     execa: "npm:5.1.1"
     listr2: "npm:10.2.1"
     lodash: "npm:4.17.23"
