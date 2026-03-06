@@ -1,6 +1,7 @@
 import { Client } from 'pg'
 
-import { liveQueryStore, pluralize } from '@cedarjs/realtime'
+import { liveQueryStore } from '@cedarjs/realtime'
+import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
 import { logger } from 'src/lib/logger'
 
