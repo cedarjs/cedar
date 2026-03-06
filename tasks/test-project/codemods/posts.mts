@@ -42,7 +42,7 @@ export async function addValidateUniquenessToPosts(postsServicePath: string) {
     '    { title: input.title },',
     "    { db, message: 'A post with this title already exists.' },",
     '    (db) => db.post.create({ data: input })',
-    ')',
+    '  )',
   )
   await fs.promises.writeFile(postsServicePath, contentLines.join('\n'))
 }
