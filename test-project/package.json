@@ -86,6 +86,7 @@
     "@cedarjs/telemetry": "file:../packages/telemetry/cedarjs-telemetry.tgz",
     "@cedarjs/testing": "file:../packages/testing/cedarjs-testing.tgz",
     "@cedarjs/tui": "file:../packages/tui/cedarjs-tui.tgz",
+    "@cedarjs/utils": "file:../packages/utils/cedarjs-utils.tgz",
     "@cedarjs/vite": "file:../packages/vite/cedarjs-vite.tgz",
     "@cedarjs/web": "file:../packages/web/cedarjs-web.tgz",
     "@cedarjs/web-server": "file:../packages/web-server/cedarjs-web-server.tgz",
