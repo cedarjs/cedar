@@ -33,7 +33,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "graphql": "16.13.0",
+    "graphql": "16.13.1",
     "pascalcase": "1.0.0",
     "react-hook-form": "7.71.2"
   },
