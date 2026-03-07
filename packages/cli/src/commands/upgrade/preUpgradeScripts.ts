@@ -5,6 +5,7 @@ import path from 'node:path'
 
 import execa from 'execa'
 import type { ExecaError } from 'execa'
+import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import semver from 'semver'
 
 function isExecaError(e: unknown): e is ExecaError {
@@ -15,7 +16,7 @@ function isExecaError(e: unknown): e is ExecaError {
 
 export async function runPreUpgradeScripts(
   ctx: Record<string, unknown>,
-  task: { output: unknown },
+  task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>,
   { verbose, force }: { verbose?: boolean; force?: boolean },
 ) {
   if (!ctx.versionToUpgradeTo) {
