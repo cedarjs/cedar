@@ -10,8 +10,8 @@ datasource db {
 }
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
+  provider = "prisma-client"
+  output   = "./generated/prisma"
 }
 
 // Define your own datamodels here and run `yarn cedar prisma migrate dev`
