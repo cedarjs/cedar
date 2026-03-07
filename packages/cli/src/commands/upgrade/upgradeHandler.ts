@@ -233,7 +233,7 @@ export const handler = async ({
 
   if (preUpgradeMessage) {
     console.log('')
-    console.log(`  📣 ${c.info('Pre-upgrade Message:')}`)
+    console.log(`  📣 ${c.info('Pre-upgrade Script Messages:')}`)
     console.log('  ' + preUpgradeMessage.replace(/\n/g, '\n  '))
   }
 }
