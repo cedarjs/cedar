@@ -9,7 +9,7 @@
     "root": true
   },
   "resolutions": {
-    "react-is": "19.2.3"
+    "react-is": "19.2.4"
   },
   "devDependencies": {
     "@cedarjs/core": "0.0.5",
