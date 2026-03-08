@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import { EOL } from 'os'
 import path from 'path'
 
-import { getSchemaWithPath, getConfig } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -19,6 +19,8 @@ import {
   postgresDatabaseService,
   mysqlDatabaseService,
 } from '../templates/flightcontrol.js'
+
+const { getSchemaWithPath, getConfig } = prismaInternals
 
 const getFlightcontrolJson = async (database) => {
   if (database === 'none') {
