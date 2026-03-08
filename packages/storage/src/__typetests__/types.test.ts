@@ -4,6 +4,7 @@ import { createUploadsConfig, setupStorage } from '@cedarjs/storage'
 
 import { MemoryStorage } from '../adapters/MemoryStorage/MemoryStorage.js'
 import { type UploadsConfig } from '../prismaExtension.js'
+import type { PrismaClient } from '../__tests__/prisma-client/client.js'
 
 // Use the createUploadsConfig helper here....
 // otherwise the types won't be accurate
@@ -14,9 +15,9 @@ const uploadsConfig = createUploadsConfig({
   dumbo: {
     fields: ['firstUpload', 'secondUpload'],
   },
-})
+} satisfies UploadsConfig<PrismaClient, 'dummy' | 'dumbo'>)
 
-const { saveFiles } = setupStorage({
+const { saveFiles } = setupStorage<PrismaClient, 'dummy' | 'dumbo'>({
   uploadsConfig,
   storageAdapter: new MemoryStorage({
     baseDir: '/tmp',
@@ -36,12 +37,14 @@ test('only configured models have savers', () => {
 })
 
 test('inline config for save files is OK!', () => {
-  const { saveFiles } = setupStorage({
-    uploadsConfig: {
-      bookCover: {
-        fields: 'photo',
-      },
+  const inlineConfig = createUploadsConfig({
+    bookCover: {
+      fields: 'photo',
     },
+  } satisfies UploadsConfig<PrismaClient, 'bookCover'>)
+
+  const { saveFiles } = setupStorage<PrismaClient, 'bookCover'>({
+    uploadsConfig: inlineConfig,
     storageAdapter: new MemoryStorage({
       baseDir: '/tmp',
     }),
@@ -53,26 +56,26 @@ test('inline config for save files is OK!', () => {
 })
 
 test('UploadsConfig accepts all available models with their fields', () => {
-  expect<UploadsConfig>().type.toHaveProperty('dummy')
-  expect<UploadsConfig>().type.toHaveProperty('dumbo')
-  expect<UploadsConfig>().type.toHaveProperty('book')
-  expect<UploadsConfig>().type.toHaveProperty('bookCover')
-  expect<UploadsConfig>().type.toHaveProperty('noUploadFields')
+  expect<UploadsConfig<PrismaClient>>().type.toHaveProperty('dummy')
+  expect<UploadsConfig<PrismaClient>>().type.toHaveProperty('dumbo')
+  expect<UploadsConfig<PrismaClient>>().type.toHaveProperty('book')
+  expect<UploadsConfig<PrismaClient>>().type.toHaveProperty('bookCover')
+  expect<UploadsConfig<PrismaClient>>().type.toHaveProperty('noUploadFields')
 
-  expect<UploadsConfig['dumbo']>().type.toBeAssignableFrom<{
+  expect<UploadsConfig<PrismaClient>['dumbo']>().type.toBeAssignableFrom<{
     fields: ['firstUpload'] // one of the fields, but not all of them
   }>()
 
-  expect<UploadsConfig['dumbo']>().type.toBeAssignableFrom<{
+  expect<UploadsConfig<PrismaClient>['dumbo']>().type.toBeAssignableFrom<{
     fields: ['firstUpload', 'secondUpload'] // one of the fields, but not all of them
   }>()
 
-  expect<UploadsConfig['bookCover']>().type.toBeAssignableFrom<{
+  expect<UploadsConfig<PrismaClient>['bookCover']>().type.toBeAssignableFrom<{
     fields: 'photo'
   }>()
 
   // If you give it something else, it won't accept it
-  expect<UploadsConfig['bookCover']>().type.not.toBeAssignableFrom<{
+  expect<UploadsConfig<PrismaClient>['bookCover']>().type.not.toBeAssignableFrom<{
     fields: ['bazinga']
   }>()
 })
