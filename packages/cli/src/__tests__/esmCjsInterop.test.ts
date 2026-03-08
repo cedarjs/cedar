@@ -190,7 +190,15 @@ const spawnResult = spawnSync(
 )
 
 let probeData: ProbeEntry[] = []
-if (spawnResult.stdout) {
+if (spawnResult.error || spawnResult.status !== 0) {
+  // Only fail hard if we actually had packages to probe; an empty
+  // namedImportsByPkg means there's genuinely nothing to check.
+  if (namedImportsByPkg.size > 0) {
+    const msg =
+      spawnResult.stderr ?? spawnResult.error?.message ?? '(no output)'
+    throw new Error(`ESM probe subprocess failed:\n${msg}`)
+  }
+} else if (spawnResult.stdout) {
   try {
     probeData = JSON.parse(spawnResult.stdout) as ProbeEntry[]
   } catch {
