@@ -15,8 +15,7 @@ import { defineScenario } from '../../../api/scenario.js'
 // testing time
 // The key is to reduce the amount of imports in this file, because the
 // require.cache is not shared between each test context
-const { apiSrcPath, tearDownCachePath, prismaConfigPath } =
-  global.__RWJS__TEST_IMPORTS
+const { apiSrcPath, tearDownCachePath } = global.__RWJS__TEST_IMPORTS
 
 interface ScenarioData {
   [model: string]: {
@@ -113,9 +112,7 @@ const getQuoteStyle = async (): Promise<string> => {
   const result = await getPrismaSchemas()
 
   if (!quoteStyle) {
-    const config = await getPrismaConfig({
-      datamodel: result.schemas,
-    })
+    const config = await getPrismaConfig({ datamodel: result.schemas })
 
     switch (config.datasources?.[0]?.provider) {
       case 'mysql':

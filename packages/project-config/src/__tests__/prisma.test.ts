@@ -45,7 +45,7 @@ test('resolveGeneratedPrismaClient', async () => {
   provider = "prisma-client"
   output = "./generated/prisma"
 }
-datasource db { provider = "sqlite" url = "file:dev.db" }`,
+datasource db { provider = "sqlite" }`,
   )
 
   const expectedNodeModulesPath = path.join(
@@ -63,7 +63,6 @@ datasource db { provider = "sqlite" url = "file:dev.db" }`,
     `Could not find generated Prisma client entry. Checked: ` +
       `${path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.js')}, ` +
       `${path.join(getPaths().base, 'api', 'db', 'generated', 'client', 'client.js')}, ` +
-      `${path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.js')}, ` +
       `${expectedNodeModulesPath}. Run \`yarn cedar prisma generate\` and try again.`,
   )
 

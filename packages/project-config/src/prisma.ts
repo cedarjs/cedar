@@ -7,16 +7,11 @@ import type { PrismaConfig } from 'prisma'
 
 import { getPaths } from './paths.js'
 
-const { createSchemaPathInput, getSchemaWithPath } = prismaInternals
+const { createSchemaPathInput, getConfig, getSchemaWithPath } = prismaInternals
 
-/**
- * Parses the Prisma schema file to extract the generator output path.
- * Looks for the 'generator client' block and its 'output' field.
- *
- * @param schemaPath - Absolute path to the Prisma schema file
- * @returns The output path from the generator, or undefined if not found
- */
-function getGeneratorOutputPath(schemaPath: string): string | undefined {
+function getGeneratorOutputPathFromSchema(
+  schemaPath: string,
+): string | undefined {
   if (!fs.existsSync(schemaPath)) {
     return undefined
   }
@@ -25,15 +20,15 @@ function getGeneratorOutputPath(schemaPath: string): string | undefined {
   const generatorMatch = schemaContent.match(
     /generator\s+client\s*\{[\s\S]*?output\s*=\s*["']([^"']+)["'][^}]*\}/,
   )
+  const output = generatorMatch?.[1]
 
-  if (!generatorMatch) {
+  if (!output) {
     return undefined
   }
 
-  const output = generatorMatch[1]
-  const schemaDir = path.dirname(schemaPath)
-
-  return path.isAbsolute(output) ? output : path.resolve(schemaDir, output)
+  return path.isAbsolute(output)
+    ? output
+    : path.resolve(path.dirname(schemaPath), output)
 }
 
 // Cache for loaded configs to avoid repeated file system operations
@@ -193,9 +188,6 @@ export async function getDataMigrationsPath(
   return path.join(migrationsDir, 'dataMigrations')
 }
 
-// TODO: Greatly simplify this when the Prisma v7 migration is complete and
-// stable. The `getGeneratorOutputPath` implementation feels fragile, and I
-// don't like the list of fallback paths. Especially not the node_modules one.
 export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
   const prismaConfigPath = getPaths().api.prismaConfig
   const schemaPath = await getSchemaPath(prismaConfigPath)
@@ -203,24 +195,33 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
     ? schemaPath
     : path.dirname(schemaPath)
 
-  // First, try to get the output path from the schema generator config
-  const generatorOutputPath = getGeneratorOutputPath(schemaPath)
-  let candidateEntries: string[]
+  let generatorOutputPath: string | undefined
+  try {
+    const { schemas } = await getPrismaSchemasAtPath(schemaPath)
+    const config = await getConfig({ datamodel: schemas })
+    const generator =
+      config.generators.find((entry) => entry.name === 'client') ??
+      config.generators[0]
+    const output = generator?.output?.value
 
-  if (generatorOutputPath) {
-    candidateEntries = [
-      path.join(generatorOutputPath, 'client.js'),
-      path.join(schemaDir, 'generated', 'client', 'client.js'),
-      path.join(schemaDir, 'generated', 'prisma', 'client.js'),
-      path.join(getPaths().base, 'node_modules/.prisma/client/index.js'),
-    ]
-  } else {
-    candidateEntries = [
-      path.join(schemaDir, 'generated', 'client', 'client.js'),
-      path.join(schemaDir, 'generated', 'prisma', 'client.js'),
-      path.join(getPaths().base, 'node_modules/.prisma/client/index.js'),
-    ]
+    if (output) {
+      generatorOutputPath = path.isAbsolute(output)
+        ? output
+        : path.resolve(schemaDir, output)
+    }
+  } catch {
+    // Fall back to schema parsing + known default locations if config parsing fails.
+    generatorOutputPath = getGeneratorOutputPathFromSchema(schemaPath)
   }
+
+  const candidateEntries = [
+    ...(generatorOutputPath
+      ? [path.join(generatorOutputPath, 'client.js')]
+      : []),
+    path.join(schemaDir, 'generated', 'client', 'client.js'),
+    path.join(schemaDir, 'generated', 'prisma', 'client.js'),
+    path.join(getPaths().base, 'node_modules/.prisma/client/index.js'),
+  ].filter((entry, index, allEntries) => allEntries.indexOf(entry) === index)
 
   const prismaClientEntry = candidateEntries.find((entry) =>
     fs.existsSync(entry),
