@@ -2,13 +2,13 @@
 // for options.
 
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-import { PrismaClient } from 'api/db/generated/prisma'
+import { PrismaClient } from 'api/db/generated/prisma/client'
 
 import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
 
 import { logger } from './logger.js'
 
-export * from 'api/generated/prisma'
+export * from 'api/db/generated/prisma/client'
 
 const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL })
 const prismaClient = new PrismaClient({
