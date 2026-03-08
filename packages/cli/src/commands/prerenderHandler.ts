@@ -153,12 +153,16 @@ async function expandRouteParameters(route: PrerenderRoute) {
 }
 
 // This is used directly in build.js for nested ListrTasks
-export const getTasks = async (dryrun: boolean, routerPathFilter: string | null = null) => {
+export const getTasks = async (
+  dryrun: boolean,
+  routerPathFilter: string | null = null,
+) => {
   const detector = projectIsEsm()
     ? await import('@cedarjs/prerender/detection')
     : await import('@cedarjs/prerender/cjs/detection')
 
-  const detectedRoutes = detector.detectPrerenderRoutes() as MaybePrerenderRoute[]
+  const detectedRoutes =
+    detector.detectPrerenderRoutes() as MaybePrerenderRoute[]
   const prerenderRoutes = detectedRoutes.filter(hasPath).map(normalizeRoute)
   const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
   if (prerenderRoutes.length === 0) {
@@ -187,9 +191,11 @@ export const getTasks = async (dryrun: boolean, routerPathFilter: string | null 
     prerenderRoutes.map((route) => expandRouteParameters(route)),
   )
 
-  const prerenderer = (projectIsEsm()
-    ? await import('@cedarjs/prerender')
-    : await import('@cedarjs/prerender/cjs')) as PrerendererModule
+  const prerenderer = (
+    projectIsEsm()
+      ? await import('@cedarjs/prerender')
+      : await import('@cedarjs/prerender/cjs')
+  ) as PrerendererModule
 
   const listrTasks = expandedRouteParameters.flatMap((routesToPrerender) => {
     const queryCache: Record<string, unknown> = {}
@@ -363,7 +369,10 @@ const prerenderRoute = async (
       }" ${c.info('-'.repeat(10))}`,
     )
 
-    errorTelemetry(process.argv, `Error prerendering: ${getErrorMessage(error)}`)
+    errorTelemetry(
+      process.argv,
+      `Error prerendering: ${getErrorMessage(error)}`,
+    )
 
     console.error(c.error(getErrorStack(error)))
     console.log()

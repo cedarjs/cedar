@@ -133,7 +133,9 @@ export const handler = async ({
     }
   } catch (error: unknown) {
     // Errors already shown from execa inherited stderr
-    const message = hasStringMessage(error) ? error.message : 'Test command failed'
+    const message = hasStringMessage(error)
+      ? error.message
+      : 'Test command failed'
     errorTelemetry(process.argv, message)
     process.exit(getExitCode(error) ?? 1)
   }
