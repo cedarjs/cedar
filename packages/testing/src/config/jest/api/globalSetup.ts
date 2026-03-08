@@ -1,11 +1,7 @@
 import 'dotenv-defaults/config'
 import execa from 'execa'
 
-import {
-  getPaths,
-  getSchemaPath,
-  getPrismaSchemas,
-} from '@cedarjs/project-config'
+import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 
 import {
   getDefaultDb,
