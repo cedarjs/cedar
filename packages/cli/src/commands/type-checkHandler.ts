@@ -6,13 +6,41 @@ import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
+// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
-export const handler = async ({ sides, verbose, prisma, generate }) => {
+type TypeCheckHandlerArgs = Record<string, unknown> & {
+  sides?: string[]
+  verbose?: boolean
+  prisma?: boolean
+  generate?: boolean
+}
+
+type ConcurrentlyError = {
+  exitCode?: number
+}
+
+const isConcurrentlyErrorArray = (
+  value: unknown,
+): value is ConcurrentlyError[] => {
+  return Array.isArray(value)
+}
+
+export const handler = async ({
+  sides,
+  verbose = false,
+  prisma = true,
+  generate = true,
+}: TypeCheckHandlerArgs) => {
+  const selectedSides = (Array.isArray(sides) ? sides : []).filter(
+    (side): side is string => typeof side === 'string',
+  )
+
   recordTelemetryAttributes({
     command: 'type-check',
-    sides: JSON.stringify(sides),
+    sides: JSON.stringify(selectedSides),
     verbose,
     prisma,
     generate,
@@ -24,11 +52,11 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
   const typeCheck = async () => {
     let conclusiveExitCode = 0
 
-    const tscForAllSides = sides.map((side) => {
+    const tscForAllSides = selectedSides.map((side) => {
       const projectDir = path.join(getPaths().base, side)
       return {
         cwd: projectDir,
-        command: `yarn tsc --noEmit --skipLibCheck`,
+        command: 'yarn tsc --noEmit --skipLibCheck',
       }
     })
 
@@ -36,12 +64,15 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
       group: true,
       raw: true,
     })
+
     try {
       await result
-    } catch (err) {
-      if (err.length) {
-        // Non-null exit codes
-        const exitCodes = err.map((e) => e?.exitCode).filter(Boolean)
+    } catch (error: unknown) {
+      if (isConcurrentlyErrorArray(error)) {
+        const exitCodes = error
+          .map((entry) => entry.exitCode)
+          .filter((exitCode): exitCode is number => Boolean(exitCode))
+
         conclusiveExitCode = Math.max(...exitCodes)
       }
     }
@@ -51,7 +82,7 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
 
   if (generate && prisma) {
     await generatePrismaClient({
-      verbose: verbose,
+      verbose,
     })
   }
 
@@ -68,8 +99,7 @@ export const handler = async ({ sides, verbose, prisma, generate }) => {
         },
       ],
       {
-        renderer: verbose && 'verbose',
-        rendererOptions: { collapseSubtasks: false },
+        renderer: verbose ? 'verbose' : undefined,
       },
     ).run()
   }

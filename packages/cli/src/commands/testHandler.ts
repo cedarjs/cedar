@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 import execa from 'execa'
 
@@ -7,9 +7,42 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
+// @ts-expect-error - Types not available for JS files
 import * as project from '../lib/project.js'
+
+type TestHandlerArgs = Record<string, unknown> & {
+  filter?: string[]
+  watch?: boolean
+  collectCoverage?: boolean
+  dbPush?: boolean
+}
+
+const hasStringMessage = (value: unknown): value is { message: string } => {
+  const message =
+    typeof value === 'object' && value !== null
+      ? Reflect.get(value, 'message')
+      : undefined
+
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'message' in value &&
+    typeof message === 'string'
+  )
+}
+
+const getExitCode = (value: unknown): number | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined
+  }
+
+  const exitCode = Reflect.get(value, 'exitCode')
+  return typeof exitCode === 'number' ? exitCode : undefined
+}
 
 // https://github.com/facebook/create-react-app/blob/cbad256a4aacfc3084be7ccf91aad87899c63564/packages/react-scripts/scripts/test.js#L39
 function isInGitRepository() {
@@ -30,27 +63,29 @@ function isInMercurialRepository() {
   }
 }
 
-function isJestConfigFile(sides) {
-  for (let side of sides) {
+function isJestConfigFile(sides: string[]) {
+  for (const side of sides) {
     try {
-      if (sides.includes(side)) {
-        const jestConfigExists =
-          fs.existsSync(path.join(side, 'jest.config.js')) ||
-          fs.existsSync(path.join(side, 'jest.config.ts'))
+      const jestConfigExists =
+        fs.existsSync(path.join(side, 'jest.config.js')) ||
+        fs.existsSync(path.join(side, 'jest.config.ts'))
 
-        if (!jestConfigExists) {
-          console.error(
-            c.error(
-              `\nError: Missing Jest config file ${side}/jest.config.js` +
-                '\nTo add this file, run `npx @cedarjs/codemods update-jest-config`\n',
-            ),
-          )
-          throw new Error(`Error: Jest config file not found in ${side} side`)
-        }
+      if (!jestConfigExists) {
+        console.error(
+          c.error(
+            `\nError: Missing Jest config file ${side}/jest.config.js` +
+              '\nTo add this file, run `npx @cedarjs/codemods update-jest-config`\n',
+          ),
+        )
+        throw new Error(`Error: Jest config file not found in ${side} side`)
       }
-    } catch (e) {
-      errorTelemetry(process.argv, e.message)
-      process.exit(e?.exitCode || 1)
+    } catch (error: unknown) {
+      const message = hasStringMessage(error)
+        ? error.message
+        : `Error: Jest config file not found in ${side} side`
+
+      errorTelemetry(process.argv, message)
+      process.exit(getExitCode(error) ?? 1)
     }
   }
 }
@@ -61,13 +96,14 @@ export const handler = async ({
   collectCoverage = false,
   dbPush = true,
   ...others
-}) => {
+}: TestHandlerArgs) => {
   recordTelemetryAttributes({
     command: 'test',
     watch,
     collectCoverage,
     dbPush,
   })
+
   const rwjsPaths = getPaths()
   const forwardJestFlags = Object.keys(others).flatMap((flagName) => {
     if (
@@ -82,19 +118,19 @@ export const handler = async ({
     ) {
       // filter out flags meant for the rw test command only
       return []
-    } else {
-      // and forward on the other flags
-      const flag = flagName.length > 1 ? `--${flagName}` : `-${flagName}`
-      const flagValue = others[flagName]
-
-      if (Array.isArray(flagValue)) {
-        // jest does not collapse flags e.g. --coverageReporters=html --coverageReporters=text
-        // so we pass it on. Yargs collapses these flags into an array of values
-        return flagValue.flatMap((val) => [flag, val])
-      } else {
-        return [flag, flagValue]
-      }
     }
+
+    // and forward on the other flags
+    const flag = flagName.length > 1 ? `--${flagName}` : `-${flagName}`
+    const flagValue = others[flagName]
+
+    if (Array.isArray(flagValue)) {
+      // jest does not collapse flags e.g. --coverageReporters=html --coverageReporters=text
+      // so we pass it on. Yargs collapses these flags into an array of values
+      return flagValue.flatMap((val) => [flag, val])
+    }
+
+    return [flag, flagValue]
   })
 
   // Only the side params
@@ -125,14 +161,14 @@ export const handler = async ({
 
   // if no sides declared with yargs, default to all sides
   if (!sides.length) {
-    project.workspaces().forEach((side) => sides.push(side))
+    project.workspaces().forEach((side: string) => sides.push(side))
   }
 
   if (sides.length > 0) {
     jestArgs.push('--projects', ...sides)
   }
 
-  //checking if Jest config files exists in each of the sides
+  // checking if Jest config files exists in each of the sides
   isJestConfigFile(sides)
 
   try {
@@ -154,7 +190,7 @@ export const handler = async ({
       await execa('yarn', ['jest', ...jestArgs], {
         cwd: rwjsPaths.base,
         stdio: 'inherit',
-        env: { DATABASE_URL },
+        env: { ...process.env, DATABASE_URL },
       })
     }
 
@@ -165,9 +201,10 @@ export const handler = async ({
         await runCommand()
       })
     }
-  } catch (e) {
+  } catch (error: unknown) {
     // Errors already shown from execa inherited stderr
-    errorTelemetry(process.argv, e.message)
-    process.exit(e?.exitCode || 1)
+    const message = hasStringMessage(error) ? error.message : 'Test command failed'
+    errorTelemetry(process.argv, message)
+    process.exit(getExitCode(error) ?? 1)
   }
 }

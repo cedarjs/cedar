@@ -4,43 +4,75 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
+// @ts-expect-error - Types not available for JS files
 import * as project from '../lib/project.js'
+
+type TestEsmHandlerArgs = Record<string, unknown> & {
+  filter?: string[]
+  dbPush?: boolean
+}
+
+const hasStringMessage = (value: unknown): value is { message: string } => {
+  const message =
+    typeof value === 'object' && value !== null
+      ? Reflect.get(value, 'message')
+      : undefined
+
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'message' in value &&
+    typeof message === 'string'
+  )
+}
+
+const getExitCode = (value: unknown): number | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined
+  }
+
+  const exitCode = Reflect.get(value, 'exitCode')
+  return typeof exitCode === 'number' ? exitCode : undefined
+}
 
 export const handler = async ({
   filter: filterParams = [],
   dbPush = true,
   ...others
-}) => {
+}: TestEsmHandlerArgs) => {
   recordTelemetryAttributes({
     command: 'test',
     dbPush,
   })
+
   let watch = true
   const rwjsPaths = getPaths()
+
   const forwardVitestFlags = Object.keys(others).flatMap((flagName) => {
     if (['db-push', 'loadEnvFiles', '$0', '_'].includes(flagName)) {
       // filter out flags meant for the rw test command only
       return []
-    } else {
-      // and forward on the other flags
-      const flag = flagName.length > 1 ? `--${flagName}` : `-${flagName}`
-      const flagValue = others[flagName]
-
-      if (flagName === 'watch') {
-        watch = flagValue === true
-      } else if (flagName === 'run' && flagValue) {
-        watch = false
-      }
-
-      if (Array.isArray(flagValue)) {
-        // vitest does not collapse flags e.g. --coverageReporters=html --coverageReporters=text
-        // so we pass it on. Yargs collapses these flags into an array of values
-        return flagValue.flatMap((val) => [flag, val])
-      } else {
-        return [flag, flagValue]
-      }
     }
+
+    // and forward on the other flags
+    const flag = flagName.length > 1 ? `--${flagName}` : `-${flagName}`
+    const flagValue = others[flagName]
+
+    if (flagName === 'watch') {
+      watch = flagValue === true
+    } else if (flagName === 'run' && flagValue) {
+      watch = false
+    }
+
+    if (Array.isArray(flagValue)) {
+      // vitest does not collapse flags e.g. --coverageReporters=html --coverageReporters=text
+      // so we pass it on. Yargs collapses these flags into an array of values
+      return flagValue.flatMap((val) => [flag, val])
+    }
+
+    return [flag, flagValue]
   })
 
   // Only the side params
@@ -68,7 +100,7 @@ export const handler = async ({
 
   // if no sides declared with yargs, default to all sides
   if (!sides.length) {
-    project.workspaces().forEach((side) => sides.push(side))
+    project.workspaces().forEach((side: string) => sides.push(side))
   }
 
   sides.forEach((side) => vitestArgs.push('--project', side))
@@ -88,7 +120,7 @@ export const handler = async ({
       await execa('yarn', ['vitest', ...vitestArgs], {
         cwd: rwjsPaths.base,
         stdio: 'inherit',
-        env: { DATABASE_URL },
+        env: { ...process.env, DATABASE_URL },
       })
     }
 
@@ -99,9 +131,10 @@ export const handler = async ({
         await runCommand()
       })
     }
-  } catch (e) {
+  } catch (error: unknown) {
     // Errors already shown from execa inherited stderr
-    errorTelemetry(process.argv, e.message)
-    process.exit(e?.exitCode || 1)
+    const message = hasStringMessage(error) ? error.message : 'Test command failed'
+    errorTelemetry(process.argv, message)
+    process.exit(getExitCode(error) ?? 1)
   }
 }

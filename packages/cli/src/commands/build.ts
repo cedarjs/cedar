@@ -1,21 +1,32 @@
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
+// @ts-expect-error - Types not available for JS files
 import { workspaces } from '../lib/project.js'
+// @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
 export const command = 'build [workspace..]'
 export const description = 'Build for production'
 
-export const builder = (yargs) => {
+type BuildArgv = {
+  workspace?: string[]
+  [key: string]: unknown
+}
+
+export const builder = (yargs: Argv) => {
   yargs
     .positional('workspace', {
       default: ['api', 'web', 'packages/*'],
       description:
         'What workspace(s) to build. Valid values are: web, api, packages/*, ' +
         '<package-name>',
-      type: 'array',
+      type: 'string',
+      array: true,
     })
     .option('verbose', {
       alias: 'v',
@@ -46,7 +57,7 @@ export const builder = (yargs) => {
         includeEpilogue: false,
       })
     })
-    .check((argv) => {
+    .check((argv: BuildArgv) => {
       const workspacesArg = argv.workspace
 
       if (!Array.isArray(workspacesArg)) {
@@ -57,7 +68,6 @@ export const builder = (yargs) => {
       // remaining workspaces to build. This is an optimization to avoid calling
       // `workspaces({ includePackages: true }) as that's a somewhat expensive
       // method call that hits the filesystem and parses files
-
       const filtered = workspacesArg.filter(
         (item) => item !== 'api' && item !== 'web' && item !== 'packages/*',
       )
@@ -86,7 +96,8 @@ export const builder = (yargs) => {
     )
 }
 
-export const handler = async (options) => {
+export const handler = async (options: Record<string, unknown>) => {
+  // @ts-expect-error - Types not available for JS files
   const { handler } = await import('./build/buildHandler.js')
   return handler(options)
 }
