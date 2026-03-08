@@ -13,31 +13,79 @@ vi.mock('../paths.js', () => {
   return {
     getPaths: () => ({
       base: tempDir,
+      api: {
+        prismaConfig: path.join(tempDir, 'api', 'db', 'prisma.config.ts'),
+      },
     }),
   }
 })
+
+vi.mock('node:url', () => ({
+  pathToFileURL: (inputPath: string | URL) => ({
+    href: String(inputPath),
+  }),
+}))
 
 afterAll(() => {
   fs.rmSync(getPaths().base, { recursive: true, force: true })
 })
 
-test('resolveGeneratedPrismaClient', () => {
-  const expectedPath = path.join(
+test('resolveGeneratedPrismaClient', async () => {
+  const prismaConfigPath = getPaths().api.prismaConfig
+  const schemaPath = path.join(getPaths().base, 'api', 'db', 'schema.prisma')
+
+  fs.mkdirSync(path.dirname(prismaConfigPath), { recursive: true })
+  fs.writeFileSync(
+    prismaConfigPath,
+    'export default { schema: "./schema.prisma" }',
+  )
+  fs.writeFileSync(
+    schemaPath,
+    `generator client {
+  provider = "prisma-client"
+  output = "./generated/prisma"
+}
+datasource db { provider = "sqlite" url = "file:dev.db" }`,
+  )
+
+  const expectedNodeModulesPath = path.join(
     getPaths().base,
     'node_modules/.prisma/client/index.js',
   )
 
-  expect(resolveGeneratedPrismaClient()).toEqual(expectedPath)
-
-  expect(() => resolveGeneratedPrismaClient({ mustExist: true })).toThrow(
-    `Could not find generated Prisma client entry at ${expectedPath}. ` +
-      'Run `yarn cedar prisma generate` and try again.',
+  await expect(resolveGeneratedPrismaClient()).resolves.toEqual(
+    path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.js'),
   )
 
-  fs.mkdirSync(path.dirname(expectedPath), { recursive: true })
-  fs.writeFileSync(expectedPath, 'module.exports = {}')
-
-  expect(resolveGeneratedPrismaClient({ mustExist: true })).toEqual(
-    expectedPath,
+  await expect(
+    resolveGeneratedPrismaClient({ mustExist: true }),
+  ).rejects.toThrow(
+    `Could not find generated Prisma client entry. Checked: ` +
+      `${path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.js')}, ` +
+      `${path.join(getPaths().base, 'api', 'db', 'generated', 'client', 'client.js')}, ` +
+      `${path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.js')}, ` +
+      `${expectedNodeModulesPath}. Run \`yarn cedar prisma generate\` and try again.`,
   )
+
+  fs.mkdirSync(path.dirname(expectedNodeModulesPath), { recursive: true })
+  fs.writeFileSync(expectedNodeModulesPath, 'module.exports = {}')
+
+  await expect(
+    resolveGeneratedPrismaClient({ mustExist: true }),
+  ).resolves.toEqual(expectedNodeModulesPath)
+
+  const expectedGeneratedPath = path.join(
+    getPaths().base,
+    'api',
+    'db',
+    'generated',
+    'prisma',
+    'client.js',
+  )
+  fs.mkdirSync(path.dirname(expectedGeneratedPath), { recursive: true })
+  fs.writeFileSync(expectedGeneratedPath, 'export default { ModelName: {} }')
+
+  await expect(
+    resolveGeneratedPrismaClient({ mustExist: true }),
+  ).resolves.toEqual(expectedGeneratedPath)
 })

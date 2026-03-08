@@ -231,7 +231,9 @@ async function getPrismaClient(hasGenerated = false): Promise<{
   if (hasGenerated) {
     // Use file path with cache-busting query parameter to force fresh import
     const cacheBuster = `?t=${Date.now()}`
-    const prismaClientPath = resolveGeneratedPrismaClient({ mustExist: true })
+    const prismaClientPath = await resolveGeneratedPrismaClient({
+      mustExist: true,
+    })
     const { default: freshPrisma } = await import(
       `file://${prismaClientPath}${cacheBuster}`
     )
