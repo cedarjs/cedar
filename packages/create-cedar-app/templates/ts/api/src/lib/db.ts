@@ -4,13 +4,13 @@
 import path from 'node:path'
 
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-import { PrismaClient } from 'api/db/generated/prisma/client'
+import { PrismaClient } from 'api/db/generated/prisma/client.mts'
 
 import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
 
 import { logger } from './logger.js'
 
-export * from 'api/db/generated/prisma/client'
+export * from 'api/db/generated/prisma/client.mts'
 
 const apiDir = path.resolve(__dirname, '../..')
 

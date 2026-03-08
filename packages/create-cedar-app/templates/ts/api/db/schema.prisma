@@ -11,6 +11,9 @@ datasource db {
 generator client {
   provider = "prisma-client"
   output   = "./generated/prisma"
+  moduleFormat           = "cjs"
+  generatedFileExtension = "mts"
+  importFileExtension    = "mts"
 }
 
 // Define your own datamodels here and run `yarn cedar prisma migrate dev`
