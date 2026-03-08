@@ -2,9 +2,9 @@ import { expect, test } from 'tstyche'
 
 import { createUploadsConfig, setupStorage } from '@cedarjs/storage'
 
-import { MemoryStorage } from '../adapters/MemoryStorage/MemoryStorage.js'
-import { type UploadsConfig } from '../prismaExtension.js'
 import type { PrismaClient } from '../__tests__/prisma-client/client.js'
+import { MemoryStorage } from '../adapters/MemoryStorage/MemoryStorage.js'
+import type { UploadsConfig } from '../prismaExtension.js'
 
 // Use the createUploadsConfig helper here....
 // otherwise the types won't be accurate

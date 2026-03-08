@@ -1,10 +1,11 @@
 // See https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/constructor
 // for options.
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-import { PrismaClient } from 'api/db/generated/prisma/client'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaClient } from 'api/db/generated/prisma/client'
 
 import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
 
@@ -12,7 +13,10 @@ import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client'
 
-const apiDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const apiDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../..'
+)
 
 const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
   if (!url.startsWith('file:.')) {
