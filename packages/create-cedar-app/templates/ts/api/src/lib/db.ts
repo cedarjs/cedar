@@ -2,7 +2,6 @@
 // for options.
 
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from 'api/db/generated/prisma/client'
@@ -13,7 +12,7 @@ import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client'
 
-const apiDir = path.resolve(__dirname, '../..')
+  const apiDir = path.resolve(__dirname, '../..')
 
 const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
   if (!url.startsWith('file:.')) {
