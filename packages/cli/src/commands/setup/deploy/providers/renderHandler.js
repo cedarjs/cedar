@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { getSchemaWithPath, getConfig } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -17,6 +17,8 @@ import {
   RENDER_YAML,
   SQLITE_YAML,
 } from '../templates/render.js'
+
+const { getSchemaWithPath, getConfig } = prismaInternals
 
 const getRenderYamlContent = async (database) => {
   if (database === 'none') {

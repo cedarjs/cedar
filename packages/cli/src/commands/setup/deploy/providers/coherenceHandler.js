@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { getSchemaWithPath, getConfig } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 import * as toml from 'smol-toml'
 
@@ -17,6 +17,7 @@ import { printSetupNotes } from '../../../../lib/index.js'
 import { serverFileExists } from '../../../../lib/project.js'
 import { addFilesTask } from '../helpers/index.js'
 
+const { getSchemaWithPath, getConfig } = prismaInternals
 const cedarPaths = getPaths()
 
 const EXTENSION = isTypeScriptProject ? 'ts' : 'js'
