@@ -152,8 +152,7 @@ async function expandRouteParameters(route: PrerenderRoute) {
   return [route]
 }
 
-// This is used directly in build.js for nested ListrTasks
-export const getTasks = async (
+const getTasks = async (
   dryrun: boolean,
   routerPathFilter: string | null = null,
 ) => {
