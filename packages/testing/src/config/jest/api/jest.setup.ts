@@ -77,13 +77,12 @@ const isIdenticalArray = (a: unknown[], b: unknown[]) => {
 }
 
 const configureTeardown = async (): Promise<void> => {
-  const { getDMMF, getSchemaWithPath } = await import('@prisma/internals')
-  const { getSchemaPath } = await import('@cedarjs/project-config')
+  const { getDMMF } = await import('@prisma/internals')
+  const { getPrismaSchemas } = await import('@cedarjs/project-config')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const schemaPath = await getSchemaPath(prismaConfigPath)
-  const { schemas } = await getSchemaWithPath(schemaPath)
+  const { schemas } = await getPrismaSchemas()
   const schema = await getDMMF({ datamodel: schemas })
   const schemaModels: string[] = schema.datamodel.models.map(
     (m: { dbName: string | null; name: string }) => m.dbName || m.name,
@@ -106,14 +105,12 @@ const configureTeardown = async (): Promise<void> => {
 let quoteStyle: string
 // determine what kind of quotes are needed around table names in raw SQL
 const getQuoteStyle = async (): Promise<string> => {
-  const { getConfig: getPrismaConfig, getSchemaWithPath } =
-    await import('@prisma/internals')
-  const { getSchemaPath } = await import('@cedarjs/project-config')
+  const { getConfig: getPrismaConfig } = await import('@prisma/internals')
+  const { getPrismaSchemas } = await import('@cedarjs/project-config')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const schemaPath = await getSchemaPath(prismaConfigPath)
-  const result = await getSchemaWithPath(schemaPath)
+  const result = await getPrismaSchemas()
 
   if (!quoteStyle) {
     const config = await getPrismaConfig({

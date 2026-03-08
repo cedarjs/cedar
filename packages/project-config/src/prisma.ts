@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+import { createSchemaPathInput, getSchemaWithPath } from '@prisma/internals'
 import type { PrismaConfig } from 'prisma'
 
 import { getPaths } from './paths.js'
@@ -67,6 +68,36 @@ export async function getSchemaPath(prismaConfigPath: string) {
 
   // Default to schema.prisma in the same directory as the config
   return path.join(configDir, 'schema.prisma')
+}
+
+/**
+ * Gets the Prisma schemas for the given schema path.
+ *
+ * @param schemaPath - Absolute path to the Prisma schema file or directory
+ *   (typically the value returned by `getSchemaPath`)
+ * @returns The result of `getSchemaWithPath`, containing a `schemas` array of
+ *   `[filePath, content]` tuples
+ */
+export async function getPrismaSchemasAtPath(schemaPath: string) {
+  const schemaPathInput = createSchemaPathInput({
+    baseDir: fs.lstatSync(schemaPath).isDirectory()
+      ? schemaPath
+      : path.dirname(schemaPath),
+    schemaPathFromConfig: schemaPath,
+  })
+
+  return getSchemaWithPath({ schemaPath: schemaPathInput })
+}
+
+/**
+ * Gets the Prisma schemas for the current project's default schema location.
+ *
+ * @returns The result of `getSchemaWithPath`, containing a `schemas` array of
+ *   `[filePath, content]` tuples
+ */
+export async function getPrismaSchemas() {
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  return getPrismaSchemasAtPath(schemaPath)
 }
 
 /**

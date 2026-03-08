@@ -36,6 +36,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@prisma/internals": "7.4.2",
     "deepmerge": "4.3.1",
     "fast-glob": "3.3.3",
     "smol-toml": "1.6.0",

@@ -1,5 +1,4 @@
 import type { PrismaClient } from '@prisma/client'
-import type { Prisma } from '@prisma/client'
 import { Prisma as PrismaExtension } from '@prisma/client/extension'
 
 import type { BaseStorageAdapter } from './adapters/BaseStorageAdapter.js'
@@ -15,7 +14,7 @@ type FilterOutDollarPrefixed<T> = T extends `$${string}`
 // Filter out $on, $connect, etc.
 export type ModelNames = FilterOutDollarPrefixed<keyof PrismaClient>
 
-type PrismaModelFields<MName extends ModelNames> = keyof Prisma.Result<
+type PrismaModelFields<MName extends ModelNames> = keyof PrismaExtension.Result<
   PrismaClient[MName],
   any,
   'findFirstOrThrow'
