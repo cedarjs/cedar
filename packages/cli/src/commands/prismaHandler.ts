@@ -22,13 +22,17 @@ const getErrorMessage = (error: unknown): string => {
   return error instanceof Error ? error.message : String(error)
 }
 
-const getExitCode = (error: unknown): number | undefined => {
-  if (typeof error !== 'object' || error === null) {
+function getExitCode(value: unknown) {
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    !('exitCode' in value) ||
+    typeof value.exitCode !== 'number'
+  ) {
     return undefined
   }
 
-  const exitCode = Reflect.get(error, 'exitCode')
-  return typeof exitCode === 'number' ? exitCode : undefined
+  return value.exitCode
 }
 
 export const handler = async ({

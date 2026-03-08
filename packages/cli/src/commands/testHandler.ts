@@ -21,27 +21,26 @@ type TestHandlerArgs = Record<string, unknown> & {
   dbPush?: boolean
 }
 
-const hasStringMessage = (value: unknown): value is { message: string } => {
-  const message =
-    typeof value === 'object' && value !== null
-      ? Reflect.get(value, 'message')
-      : undefined
-
+function hasStringMessage(value: unknown): value is { message: string } {
   return (
     typeof value === 'object' &&
     value !== null &&
     'message' in value &&
-    typeof message === 'string'
+    value.message === 'string'
   )
 }
 
-const getExitCode = (value: unknown): number | undefined => {
-  if (typeof value !== 'object' || value === null) {
+function getExitCode(value: unknown) {
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    !('exitCode' in value) ||
+    typeof value.exitCode !== 'number'
+  ) {
     return undefined
   }
 
-  const exitCode = Reflect.get(value, 'exitCode')
-  return typeof exitCode === 'number' ? exitCode : undefined
+  return value.exitCode
 }
 
 // https://github.com/facebook/create-react-app/blob/cbad256a4aacfc3084be7ccf91aad87899c63564/packages/react-scripts/scripts/test.js#L39
