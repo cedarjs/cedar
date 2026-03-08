@@ -7,10 +7,10 @@ import * as toml from 'smol-toml'
 
 import {
   colors as c,
-  getPaths,
   isTypeScriptProject,
   getConfigPath,
 } from '@cedarjs/cli-helpers'
+import { getPaths, getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { printSetupNotes } from '../../../../lib/index.js'
@@ -89,7 +89,8 @@ async function getAddCoherenceFilesTask(force) {
  * ```
  */
 async function getCoherenceConfigFileContent() {
-  const result = await getSchemaWithPath(cedarPaths.api.dbSchema)
+  const schemaPath = await getSchemaPath(cedarPaths.api.prismaConfig)
+  const result = await getSchemaWithPath(schemaPath)
   const prismaConfig = await getConfig({ datamodel: result.schemas })
 
   let db = prismaConfig.datasources[0].activeProvider
