@@ -2,10 +2,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { createSchemaPathInput, getSchemaWithPath } from '@prisma/internals'
+import prismaInternals from '@prisma/internals'
 import type { PrismaConfig } from 'prisma'
 
 import { getPaths } from './paths.js'
+
+const { createSchemaPathInput, getSchemaWithPath } = prismaInternals
 
 /**
  * Parses the Prisma schema file to extract the generator output path.
