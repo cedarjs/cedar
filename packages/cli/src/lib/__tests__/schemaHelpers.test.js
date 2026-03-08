@@ -20,7 +20,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
       return prismaConfigPath.replace(/prisma\.config\.\w+$/, 'schema.prisma')
     },
     getPrismaSchemas: async () => {
-      const schemaPath = path.join(globalThis.__dirname, 'fixtures', 'schema.prisma')
+      const schemaPath = path.join(
+        globalThis.__dirname,
+        'fixtures',
+        'schema.prisma',
+      )
       return {
         schemas: [[schemaPath, fs.readFileSync(schemaPath, 'utf-8')]],
       }

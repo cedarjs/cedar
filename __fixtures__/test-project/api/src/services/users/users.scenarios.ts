@@ -1,6 +1,6 @@
-import type { ScenarioData } from '@cedarjs/testing/api'
+import type { Prisma, User } from '@prisma/client'
 
-import type { Prisma, User } from 'src/lib/db'
+import type { ScenarioData } from '@cedarjs/testing/api'
 
 export const standard = defineScenario<Prisma.UserCreateArgs>({
   user: {

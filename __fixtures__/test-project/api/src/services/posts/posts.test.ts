@@ -1,4 +1,4 @@
-import type { Post } from 'src/lib/db'
+import type { Post } from '@prisma/client'
 
 import { posts, post, createPost, updatePost, deletePost } from './posts.js'
 import type { StandardScenario } from './posts.scenarios.js'

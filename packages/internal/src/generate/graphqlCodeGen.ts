@@ -223,41 +223,67 @@ export function getLoadDocumentsOptions(filename: string) {
   return loadTypedefsConfig
 }
 
-async function getPrismaClient(hasGenerated = false): Promise<{
+async function importGeneratedPrismaClient() {
+  const cacheBuster = `?t=${Date.now()}`
+  const prismaClientPath = await resolveGeneratedPrismaClient({
+    mustExist: true,
+  })
+  const { default: freshPrisma } = await import(
+    `file://${prismaClientPath}${cacheBuster}`
+  )
+
+  return freshPrisma
+}
+
+type PrismaClientWithModelName = { ModelName: Record<string, string> }
+
+function hasModelName(value: unknown): value is PrismaClientWithModelName {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const valueRecord = value as Record<string, unknown>
+  return (
+    typeof valueRecord.ModelName === 'object' && valueRecord.ModelName !== null
+  )
+}
+
+async function getPrismaClient(): Promise<{
   ModelName: Record<string, string>
 }> {
-  let localPrisma
-
-  if (hasGenerated) {
-    // Use file path with cache-busting query parameter to force fresh import
-    const cacheBuster = `?t=${Date.now()}`
-    const prismaClientPath = await resolveGeneratedPrismaClient({
-      mustExist: true,
-    })
-    const { default: freshPrisma } = await import(
-      `file://${prismaClientPath}${cacheBuster}`
-    )
-    localPrisma = freshPrisma
-  } else {
-    // First attempt - use package name
-    const { default: packagePrisma } = await import('@prisma/client')
-    localPrisma = packagePrisma
-  }
-
-  if (!localPrisma.ModelName) {
-    if (hasGenerated) {
-      return { ModelName: {} }
-    } else {
-      execa.sync('yarn', ['cedar', 'prisma', 'generate'])
-
-      // Import the newly generated Prisma client. To make sure we actually get
-      // the newly generated Prisma client we pass `true` for `hasGenerated` so
-      // that the code above will bypass Node.js's module cache.
-      return getPrismaClient(true)
+  // Prefer a direct import of the generated client entry. This works for both
+  // Prisma v6 (node_modules/.prisma) and v7 custom output paths.
+  try {
+    const localPrisma = await importGeneratedPrismaClient()
+    if (hasModelName(localPrisma)) {
+      return localPrisma
     }
+  } catch {
+    // If no generated client exists yet we fall back and then generate.
   }
 
-  return localPrisma
+  // Fallback for older setups that still rely on package resolution.
+  try {
+    const { default: packagePrisma } = await import('@prisma/client')
+    if (hasModelName(packagePrisma)) {
+      return packagePrisma
+    }
+  } catch {
+    // Ignore and generate a fresh client below.
+  }
+
+  execa.sync('yarn', ['cedar', 'prisma', 'generate'])
+
+  try {
+    const freshPrisma = await importGeneratedPrismaClient()
+    if (hasModelName(freshPrisma)) {
+      return freshPrisma
+    }
+  } catch {
+    // Fall through to empty ModelName object below.
+  }
+
+  return { ModelName: {} }
 }
 
 async function getPrismaModels() {

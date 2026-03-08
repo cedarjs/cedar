@@ -75,7 +75,9 @@ test('UploadsConfig accepts all available models with their fields', () => {
   }>()
 
   // If you give it something else, it won't accept it
-  expect<UploadsConfig<PrismaClient>['bookCover']>().type.not.toBeAssignableFrom<{
+  expect<
+    UploadsConfig<PrismaClient>['bookCover']
+  >().type.not.toBeAssignableFrom<{
     fields: ['bazinga']
   }>()
 })
