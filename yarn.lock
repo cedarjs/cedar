@@ -25313,17 +25313,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-packagejson@npm:3.0.0":
-  version: 3.0.0
-  resolution: "prettier-plugin-packagejson@npm:3.0.0"
+"prettier-plugin-packagejson@npm:3.0.2":
+  version: 3.0.2
+  resolution: "prettier-plugin-packagejson@npm:3.0.2"
   dependencies:
-    sort-package-json: "npm:3.6.0"
+    sort-package-json: "npm:^3.6.0"
   peerDependencies:
     prettier: ^3
   peerDependenciesMeta:
     prettier:
       optional: true
-  checksum: 10c0/ddcc6d4b70dc6afb97775187e620fa102f2acd64fe7305651eea250505f0dc77da234e85d9fc1163a4cf0bc008a5e8e1772c00e29d22df735f0828efc7aabe45
+  checksum: 10c0/c277b3252ce299c11053ad1b01968b0895b3baf2483323fcedbdae66ce9999b76d4b9e70396c58c39c61429d4672ba3f63a5e6e9a3104ff3b0000ec5214a4963
   languageName: node
   linkType: hard
 
@@ -26982,7 +26982,7 @@ __metadata:
     ora: "npm:9.3.0"
     prettier: "npm:3.8.1"
     prettier-plugin-curly: "npm:0.3.2"
-    prettier-plugin-packagejson: "npm:3.0.0"
+    prettier-plugin-packagejson: "npm:3.0.2"
     prettier-plugin-sh: "npm:0.18.0"
     prompts: "npm:2.4.2"
     rimraf: "npm:6.1.3"
