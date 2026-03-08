@@ -45,7 +45,7 @@
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
-    "prisma": "6.19.2",
+    "prisma": "7.4.2",
     "publint": "0.3.18",
     "rimraf": "6.1.3",
     "tsx": "4.21.0",
