@@ -199,12 +199,10 @@ describe('setupData createUserModelTask', () => {
         'api/db/schema.prisma': dedent`
           datasource db {
             provider = "sqlite"
-            url      = env("DATABASE_URL")
           }
 
           generator client {
-            provider      = "prisma-client-js"
-            binaryTargets = "native"
+            provider      = "prisma-client"
           }
 
           // Define your own data models here and run 'yarn cedar prisma migrate dev'
@@ -235,12 +233,10 @@ describe('setupData createUserModelTask', () => {
         'api/db/schema.prisma': dedent`
           datasource db {
             provider = "sqlite"
-            url      = env("DATABASE_URL")
           }
 
           generator client {
-            provider      = "prisma-client-js"
-            binaryTargets = "native"
+            provider      = "prisma-client"
           }
 
           model User {
@@ -289,12 +285,10 @@ describe('setupData createUserModelTask', () => {
         'api/db/schema.prisma': dedent`
           datasource db {
             provider = "sqlite"
-            url      = env("DATABASE_URL")
           }
 
           generator client {
-            provider      = "prisma-client-js"
-            binaryTargets = "native"
+            provider      = "prisma-client"
           }
 
           // Define your own data models here and run 'yarn cedar prisma migrate dev'
@@ -388,12 +382,10 @@ describe('setupData createUserModelTask', () => {
         'api/db/schema.prisma': dedent`
           datasource db {
             provider = "sqlite"
-            url      = env("DATABASE_URL")
           }
 
           generator client {
-            provider      = "prisma-client-js"
-            binaryTargets = "native"
+            provider      = "prisma-client"
           }
 
           model ExampleModel {

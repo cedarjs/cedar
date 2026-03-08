@@ -84,7 +84,6 @@ async function getAddCoherenceFilesTask(force) {
  * ```prisma title="schema.prisma"
  * datasource db {
  *   provider = "sqlite"
- *   url      = env("DATABASE_URL")
  * }
  * ```
  */
