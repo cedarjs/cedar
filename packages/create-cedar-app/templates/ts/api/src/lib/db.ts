@@ -13,10 +13,7 @@ import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client'
 
-const apiDir = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../..'
-)
+const apiDir = path.resolve(__dirname, '../..')
 
 const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
   if (!url.startsWith('file:.')) {
