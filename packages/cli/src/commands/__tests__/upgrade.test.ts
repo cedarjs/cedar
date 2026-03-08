@@ -1,9 +1,20 @@
 import fs from 'node:fs'
 
+import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 import { runPreUpgradeScripts } from '../upgrade/preUpgradeScripts.js'
+
+const createMockTask = () => {
+  // For these tests we only assert/drive `task.output`; the full Listr task
+  // runtime surface is not used.
+  return { output: '' } as unknown as ListrTaskWrapper<
+    unknown,
+    ListrRendererFactory,
+    ListrRendererFactory
+  >
+}
 
 // Mock fetch globally
 global.fetch = vi.fn()
@@ -37,13 +48,11 @@ vi.mock('node:os', () => ({
 }))
 
 describe('runPreUpgradeScripts', () => {
-  let mockTask: { output: string }
+  let mockTask = createMockTask()
   let mockCtx: Record<string, unknown>
 
   beforeEach(() => {
-    mockTask = {
-      output: '',
-    }
+    mockTask = createMockTask()
     mockCtx = {}
 
     vi.clearAllMocks()
@@ -55,7 +64,7 @@ describe('runPreUpgradeScripts', () => {
 
   it('should return early when no versionToUpgradeTo is provided', async () => {
     const ctx = {}
-    const task = { output: '' }
+    const task = createMockTask()
 
     await runPreUpgradeScripts(ctx, task, { verbose: false, force: false })
 
