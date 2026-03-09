@@ -2027,7 +2027,7 @@ __metadata:
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=714f5a&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=b77647&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.0"
     "@babel/preset-typescript": "npm:7.28.5"
@@ -2096,7 +2096,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/641b380f6ee0f9201f8dc5b60e03f5b0450623bafc757a063871bd4484f72c604d589b4307d7d022540eb4ce3a9d0c2ef4114370edf3661b57024f701709fbab
+  checksum: 10c0/83adfbca24df44d0748f15d3ea1b0d2c00b61bb74d6a203562fa450f1c7a5d6d0c2d03e1697d477ac73f83132fba7fa9c6a8894e7659f1231043c1f05c029cc5
   languageName: node
   linkType: hard
 
@@ -2260,7 +2260,7 @@ __metadata:
 
 "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=85f321&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=eb280e&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.0"
@@ -2303,7 +2303,7 @@ __metadata:
   bin:
     rw-gen: ./dist/generate/generate.js
     rw-gen-watch: ./dist/generate/watch.js
-  checksum: 10c0/ada9f6671a2dbc38e73624cfe91a1a8956fa8720fa4a2871d715eaffba021a7153d92a8f3a2d39ea22734f4f7c031fd1d79e09bc383ba014f626d680dca36be3
+  checksum: 10c0/618fd4a06d8651e0874b39bcb4870412ac6d5154cbb222f4e812c6713804c4e907b8db145e90d5962098de9ab345b8842c1d7d9e931899e20005cfcdef5d5d80
   languageName: node
   linkType: hard
 
@@ -2432,7 +2432,7 @@ __metadata:
 
 "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=25bd89&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=967f7e&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/auth": "npm:2.8.0"
     "@cedarjs/babel-config": "npm:2.8.0"
@@ -2463,7 +2463,7 @@ __metadata:
   peerDependenciesMeta:
     vitest:
       optional: true
-  checksum: 10c0/a758b6d56f97ca66913d6d08a58bcae709e516e1adc239942e8f9bb1a645a55cc5845be2d6a2d2cc3585eb11d1719d72394f56b4953bdf7cd93fa57117971a2e
+  checksum: 10c0/b81e6b5657da29138a14ff6e4cfaee3a6c40b626abac117dfa12f70d16b52396f49007617b4156f16178e3b462de34b8d4a56dbee60655a402b3a4bc3c1e5857
   languageName: node
   linkType: hard
 
