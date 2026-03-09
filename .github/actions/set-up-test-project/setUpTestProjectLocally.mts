@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { setUpTestProject } from './setUpTestProject.mjs'
+import { setUpTestProject } from './setUpTestProject.mts'
 
 type ExecOptions = {
   cwd?: string

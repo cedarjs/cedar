@@ -10,7 +10,7 @@ import {
   CEDAR_FRAMEWORK_PATH,
 } from '../actionsLib.mjs'
 
-import { setUpTestProject } from './setUpTestProject.mjs'
+import { setUpTestProject } from './setUpTestProject.mts'
 
 const parentDir = path.dirname(process.cwd())
 const testProjectPath = path.join(parentDir, 'test-project')
