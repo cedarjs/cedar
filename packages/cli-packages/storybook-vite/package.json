@@ -28,7 +28,7 @@
     "ansis": "4.2.0",
     "execa": "5.1.1",
     "semver": "7.7.4",
-    "storybook": "8.6.17",
+    "storybook": "8.6.18",
     "storybook-framework-cedarjs": "2.8.0",
     "termi-link": "1.1.0",
     "vitest": "3.2.4",
