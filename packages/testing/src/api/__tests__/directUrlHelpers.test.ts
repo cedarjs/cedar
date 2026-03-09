@@ -47,7 +47,6 @@ it("overwrites directUrl if it's set", () => {
 it("overwrites directUrl if it's set and formatted", () => {
   const prismaSchema = `datasource db {
     provider          = "sqlite"
-    url               = env("DATABASE_URL")
     directUrl         = env("DIRECT_URL")
     shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
   }`

@@ -482,7 +482,6 @@ You'll need to add two fields to your `User` model, and a new `UserCredential` m
 ```javascript title="api/db/schema.prisma"
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
