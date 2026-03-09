@@ -109,6 +109,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     processPagesDir: () => {
       return []
     },
+    getPrismaSchemas: () => {
+      return {
+        schemas: [[dbSchemaPath, memfs.readFileSync(dbSchemaPath, 'utf-8')]],
+      }
+    },
   }
 })
 
@@ -132,6 +137,11 @@ vi.mock('@prisma/internals', () => ({
         models,
       },
     }
+  },
+  default: {
+    createSchemaPathInput: vi.fn(),
+    getConfig: vi.fn(),
+    getSchemaWithPath: vi.fn(),
   },
 }))
 
