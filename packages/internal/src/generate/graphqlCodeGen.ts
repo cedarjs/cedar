@@ -228,24 +228,52 @@ async function importGeneratedPrismaClient() {
   const prismaClientPath = await resolveGeneratedPrismaClient({
     mustExist: true,
   })
-  const { default: freshPrisma } = await import(
-    `file://${prismaClientPath}${cacheBuster}`
-  )
+  const freshPrisma = await import(`file://${prismaClientPath}${cacheBuster}`)
+
+  console.log()
+  console.log('freshPrisma', freshPrisma)
+  console.log()
 
   return freshPrisma
 }
 
 type PrismaClientWithModelName = { ModelName: Record<string, string> }
+type PrismaNamespaceWithModelName = {
+  Prisma: PrismaClientWithModelName
+}
+type PrismaClientModule = {
+  default?: unknown
+} & Partial<PrismaClientWithModelName> &
+  Partial<PrismaNamespaceWithModelName>
 
-function hasModelName(value: unknown): value is PrismaClientWithModelName {
+function isModelNameRecord(value: unknown): value is Record<string, string> {
   if (typeof value !== 'object' || value === null) {
     return false
   }
 
-  const valueRecord = value as Record<string, unknown>
-  return (
-    typeof valueRecord.ModelName === 'object' && valueRecord.ModelName !== null
-  )
+  return Object.values(value).every((entry) => typeof entry === 'string')
+}
+
+function getModelName(value: unknown): Record<string, string> | null {
+  if (typeof value !== 'object' || value === null) {
+    return null
+  }
+
+  const valueRecord = value as PrismaClientModule
+
+  if (isModelNameRecord(valueRecord.ModelName)) {
+    return valueRecord.ModelName
+  }
+
+  if (isModelNameRecord(valueRecord.Prisma?.ModelName)) {
+    return valueRecord.Prisma.ModelName
+  }
+
+  if ('default' in valueRecord) {
+    return getModelName(valueRecord.default)
+  }
+
+  return null
 }
 
 async function getPrismaClient(): Promise<{
@@ -255,8 +283,9 @@ async function getPrismaClient(): Promise<{
   // Prisma v6 (node_modules/.prisma) and v7 custom output paths.
   try {
     const localPrisma = await importGeneratedPrismaClient()
-    if (hasModelName(localPrisma)) {
-      return localPrisma
+    const modelName = getModelName(localPrisma)
+    if (modelName) {
+      return { ModelName: modelName }
     }
   } catch {
     // If no generated client exists yet we fall back and then generate.
@@ -264,9 +293,10 @@ async function getPrismaClient(): Promise<{
 
   // Fallback for older setups that still rely on package resolution.
   try {
-    const { default: packagePrisma } = await import('@prisma/client')
-    if (hasModelName(packagePrisma)) {
-      return packagePrisma
+    const packagePrisma = await import('@prisma/client')
+    const modelName = getModelName(packagePrisma)
+    if (modelName) {
+      return { ModelName: modelName }
     }
   } catch {
     // Ignore and generate a fresh client below.
@@ -276,8 +306,9 @@ async function getPrismaClient(): Promise<{
 
   try {
     const freshPrisma = await importGeneratedPrismaClient()
-    if (hasModelName(freshPrisma)) {
-      return freshPrisma
+    const modelName = getModelName(freshPrisma)
+    if (modelName) {
+      return { ModelName: modelName }
     }
   } catch {
     // Fall through to empty ModelName object below.
