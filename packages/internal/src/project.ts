@@ -56,6 +56,8 @@ export const isRealtimeSetup = () => {
   return fs.existsSync(realtimePath)
 }
 
+// TODO: Remove this in a future minor release. It should not be needed. The
+// re-export it detects should always be present in CedarJS v7 and later.
 export const dbReexportsPrismaClient = () => {
   const dbPath = resolveFile(path.join(getPaths().api.lib, 'db'))
 
@@ -65,5 +67,23 @@ export const dbReexportsPrismaClient = () => {
 
   const content = fs.readFileSync(dbPath, 'utf-8')
 
-  return /export\s+\*\s+from\s+['"]@prisma\/client['"]/.test(content)
+  // Find PrismaClient import.
+  // It can look like this:
+  // import { PrismaClient } from 'api/db/generated/prisma/client.mts'
+  // But can also be a multi-line import:
+  // import {
+  //   Member,
+  //   Price,
+  //   PrismaClient,
+  //   Store,
+  // } from 'api/db/generated/prisma/client.mts'
+  const prismaClientImportMatch = content.match(
+    /import\s+{[^}]*\bPrismaClient\b[^}]*}\s+from\s+['"](.*?)['"]/,
+  )
+  const prismaClientLocation = prismaClientImportMatch?.[1]
+
+  return new RegExp(
+    // @ts-expect-error - old types
+    `export \\* from ['"]${RegExp.escape(prismaClientLocation)}['"]`,
+  ).test(content)
 }

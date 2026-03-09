@@ -1,4 +1,4 @@
-import type { Contact } from '@prisma/client'
+import type { Contact } from 'src/lib/db'
 
 import {
   contacts,

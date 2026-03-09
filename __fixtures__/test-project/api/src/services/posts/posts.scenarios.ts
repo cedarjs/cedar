@@ -1,12 +1,12 @@
-import type { Prisma, Post } from '@prisma/client'
-
 import type { ScenarioData } from '@cedarjs/testing/api'
+
+import type { Prisma, Post } from 'src/lib/db'
 
 export const standard = defineScenario<Prisma.PostCreateArgs>({
   post: {
     one: {
       data: {
-        title: 'String217',
+        title: 'String213',
         body: 'String',
         author: {
           create: {
@@ -20,7 +20,7 @@ export const standard = defineScenario<Prisma.PostCreateArgs>({
     },
     two: {
       data: {
-        title: 'String503',
+        title: 'String499',
         body: 'String',
         author: {
           create: {
