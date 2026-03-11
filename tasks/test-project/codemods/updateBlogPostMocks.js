@@ -35,9 +35,30 @@ export default (file, api) => {
         j.literal('2022-01-17T13:57:51.607Z'),
       ),
     )
-    node.properties.push(
-      j.property('init', j.identifier('authorId'), j.literal(5)),
+
+    // Update authorId if it exists, otherwise push it
+    const authorIdProp = node.properties.find(
+      (prop) =>
+        prop.type === 'Property' &&
+        prop.key.type === 'Identifier' &&
+        prop.key.name === 'authorId',
     )
+    if (
+      authorIdProp &&
+      authorIdProp.type === 'Property' &&
+      authorIdProp.value.type === 'Literal'
+    ) {
+      authorIdProp.value.value = '005d3e8e-2b1a-4f5c-8c7d-000000000005'
+    } else {
+      node.properties.push(
+        j.property(
+          'init',
+          j.identifier('authorId'),
+          j.literal('005d3e8e-2b1a-4f5c-8c7d-000000000005'),
+        ),
+      )
+    }
+
     node.properties.push(j.property('init', j.identifier('author'), author))
   })
 

@@ -9,7 +9,7 @@ import {
 } from 'graphql-scalars'
 import { gql } from 'graphql-tag'
 
-import { prismaVersion, redwoodVersion, cedarjsVersion } from '@cedarjs/api'
+import { prismaVersion, cedarVersion } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
 
 /**
@@ -33,7 +33,7 @@ export const schema = gql`
 
   Defines details about Cedar such as the current user and version information.
   """
-  type Redwood {
+  type Cedar {
     "The version of CedarJS."
     version: String
     "The current user."
@@ -42,14 +42,23 @@ export const schema = gql`
     prismaVersion: String
   }
 
+  type Redwood {
+    "The version of CedarJS."
+    version: String @deprecated(reason: "Use the Cedar type instead.")
+    "The current user."
+    currentUser: JSON @deprecated(reason: "Use the Cedar type instead.")
+    "The version of Prisma."
+    prismaVersion: String @deprecated(reason: "Use the Cedar type instead.")
+  }
+
   """
-  About the Redwood queries.
+  About the Cedar queries.
   """
   type Query {
-    "Fetches the Redwood root schema."
-    redwood: Redwood
-    "Fetches the CedarJS root schema."
-    cedarjs: Redwood
+    "Fetches the Cedar root schema."
+    redwood: Redwood @deprecated(reason: "Use 'cedar' instead.")
+    "Fetches the Cedar root schema."
+    cedar: Cedar
   }
 `
 
@@ -79,15 +88,17 @@ export const resolvers: Resolvers = {
   JSON: JSONResolver,
   JSONObject: JSONObjectResolver,
   Query: {
+    // TODO: Remove this in the next major release. Don't forget to also update
+    // `validateSchema.ts`
     redwood: () => ({
-      version: redwoodVersion,
+      version: cedarVersion,
       prismaVersion: prismaVersion,
       currentUser: (_args: any, context: GlobalContext) => {
         return context?.currentUser
       },
     }),
-    cedarjs: () => ({
-      version: cedarjsVersion,
+    cedar: () => ({
+      version: cedarVersion,
       prismaVersion: prismaVersion,
       currentUser: (_args: any, context: GlobalContext) => {
         return context?.currentUser

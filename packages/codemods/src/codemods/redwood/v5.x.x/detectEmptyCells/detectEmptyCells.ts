@@ -5,7 +5,7 @@ import {
   fileToAst,
   getCellGqlQuery,
   parseGqlQueryToAst,
-} from '../../../../lib/cells'
+} from '../../../../lib/cells.js'
 
 async function detectEmptyCells(taskContext: TaskInnerAPI) {
   const warnings: string[] = []

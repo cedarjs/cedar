@@ -1,0 +1,98 @@
+CREATE OR REPLACE FUNCTION cedar_notify_table_change() RETURNS TRIGGER AS $$
+DECLARE
+  record_id text;
+BEGIN
+  IF (TG_OP = 'DELETE') THEN
+    record_id := OLD.id::text;
+  ELSE
+    record_id := NEW.id::text;
+  END IF;
+
+  PERFORM pg_notify(
+    'table_change',
+    json_build_object(
+      'table', TG_TABLE_NAME,
+      'operation', TG_OP,
+      'recordId', record_id
+    )::text
+  );
+
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION cedar_attach_notify_triggers() RETURNS void AS $$
+DECLARE
+  table_record record;
+BEGIN
+  FOR table_record IN
+    SELECT table_schema, table_name
+    FROM information_schema.tables
+    WHERE table_type = 'BASE TABLE'
+      AND table_schema NOT IN ('pg_catalog', 'information_schema')
+      AND table_name <> '_prisma_migrations'
+  LOOP
+    EXECUTE format(
+      'DROP TRIGGER IF EXISTS cedar_notify_change_trigger ON %I.%I',
+      table_record.table_schema,
+      table_record.table_name
+    );
+
+    EXECUTE format(
+      'CREATE TRIGGER cedar_notify_change_trigger
+       AFTER INSERT OR UPDATE OR DELETE ON %I.%I
+       FOR EACH ROW EXECUTE FUNCTION cedar_notify_table_change()',
+      table_record.table_schema,
+      table_record.table_name
+    );
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT cedar_attach_notify_triggers();
+
+CREATE OR REPLACE FUNCTION cedar_event_on_table_create() RETURNS event_trigger AS $$
+DECLARE
+  cmd record;
+  schema_name text;
+  table_name text;
+BEGIN
+  FOR cmd IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP
+    IF cmd.object_type = 'table' THEN
+      schema_name := cmd.schema_name;
+      table_name := regexp_replace(cmd.object_identity, '^.*\\.', '');
+
+      IF schema_name IS NULL THEN
+        CONTINUE;
+      END IF;
+
+      IF schema_name IN ('pg_catalog', 'information_schema') THEN
+        CONTINUE;
+      END IF;
+
+      IF table_name = '_prisma_migrations' THEN
+        CONTINUE;
+      END IF;
+
+      EXECUTE format(
+        'DROP TRIGGER IF EXISTS cedar_notify_change_trigger ON %I.%I',
+        schema_name,
+        table_name
+      );
+
+      EXECUTE format(
+        'CREATE TRIGGER cedar_notify_change_trigger
+         AFTER INSERT OR UPDATE OR DELETE ON %I.%I
+         FOR EACH ROW EXECUTE FUNCTION cedar_notify_table_change()',
+        schema_name,
+        table_name
+      );
+    END IF;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE EVENT TRIGGER cedar_on_create_table
+  ON ddl_command_end
+  WHEN TAG IN ('CREATE TABLE', 'CREATE TABLE AS')
+  EXECUTE FUNCTION cedar_event_on_table_create();

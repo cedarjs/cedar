@@ -8,7 +8,24 @@ import { PrismaAdapter } from '../PrismaAdapter.js'
 
 vi.useFakeTimers().setSystemTime(new Date('2024-01-01'))
 
+// PrismaClient is used only as the upper-bound constraint — the mock satisfies
+// it structurally. This mirrors how user projects work: TDb is inferred from
+// the actual db value passed in, not from the @prisma/client stub.
 let mockDb: PrismaClient
+
+// If we wanted to mock PrismaClient instead, we could do something like this:
+// type MockPrismaDb = {
+//   _activeProvider: string
+//   backgroundJob: {
+//     create: ReturnType<typeof vi.fn>
+//     delete: ReturnType<typeof vi.fn>
+//     deleteMany: ReturnType<typeof vi.fn>
+//     findFirst: ReturnType<typeof vi.fn>
+//     update: ReturnType<typeof vi.fn>
+//     updateMany: ReturnType<typeof vi.fn>
+//   }
+//   [key: string]: unknown
+// }
 
 beforeEach(() => {
   mockDb = {
@@ -43,26 +60,29 @@ describe('constructor', () => {
   })
 
   it('can manually set this.model', () => {
-    mockDb._runtimeDataModel.models = {
-      Job: {
-        dbName: null,
-      },
+    mockDb.job = {
+      create: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
     }
-    mockDb.job = {}
 
     const adapter = new PrismaAdapter({
       db: mockDb,
-      model: 'Job',
+      // 'job' is the camelCase accessor key for a Prisma model named 'Job'
+      model: 'job',
       logger: mockLogger,
     })
 
-    expect(adapter.model).toEqual('Job')
+    expect(adapter.model).toEqual('job')
   })
 
   it('throws an error with a model name that does not exist', () => {
     expect(
       () =>
-        new PrismaAdapter({ db: mockDb, model: 'FooBar', logger: mockLogger }),
+        new PrismaAdapter({ db: mockDb, model: 'fooBar', logger: mockLogger }),
     ).toThrow(errors.ModelNameError)
   })
 

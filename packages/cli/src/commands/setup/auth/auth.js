@@ -253,7 +253,8 @@ async function getAuthSetupHandler(module) {
 
   if (!isInstalled(module)) {
     // If the version includes a plus, like '4.0.0-rc.428+dd79f1726'
-    // (all @canary, @next, and @rc packages do), get rid of everything after the plus.
+    // (all @canary, @next, and @rc packages do), get rid of everything after
+    // the plus.
     if (version.includes('+')) {
       version = version.split('+')[0]
     }
@@ -284,7 +285,7 @@ async function getAuthSetupHandler(module) {
     }
 
     // We use `version` to make sure we install the same version of the auth
-    // setup package as the rest of the RW packages
+    // setup package as the rest of the Cedar packages
     await execa.command(`yarn add -D ${module}@${version}`, {
       stdio: 'inherit',
       cwd: getPaths().base,

@@ -1,5 +1,5 @@
 import * as t from '@babel/types'
-import _ from 'lodash'
+import uniqWith from 'lodash/uniqWith.js'
 
 import { nodeIs, sieve } from './algorithms.js'
 
@@ -86,7 +86,7 @@ const interleaveStrategy = {
       lhs.local?.name == rhs.local?.name
 
     const uniqueSpecifiersOfType = (type) =>
-      _.uniqWith(
+      uniqWith(
         [...baseSpecs, ...extSpecs].filter(nodeIs(type)),
         importSpecifierEquality,
       )
@@ -151,11 +151,11 @@ export function concat(base, ext) {
 const concatUniqueStrategy = {
   ArrayExpression(base, ext, eq) {
     eq ||= defaultEquality(base.elements, ext.elements)
-    base.elements = _.uniqWith([...base.elements, ...ext.elements], eq)
+    base.elements = uniqWith([...base.elements, ...ext.elements], eq)
   },
   ObjectExpression(base, ext, eq) {
     eq ||= defaultEquality(base.properties, ext.properties)
-    base.properties = _.uniqWith([...base.properties, ...ext.properties], eq)
+    base.properties = uniqWith([...base.properties, ...ext.properties], eq)
   },
 }
 export function concatUnique(baseOrEq, ext) {

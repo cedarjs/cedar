@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
@@ -36,7 +36,7 @@ jobs:
         working-directory: ${{ steps.crwa.outputs.project-path }}
 
       - name: 🌲 Run Cypress
-        uses: cypress-io/github-action@2ad32e649e4db26c07674ebae31a297601dbcbaf # v6.10.8
+        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
         env:
           CYPRESS_RW_PATH: ${{ steps.crwa.outputs.project-path }}
         with:

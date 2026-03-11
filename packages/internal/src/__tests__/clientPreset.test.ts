@@ -29,11 +29,11 @@ beforeEach(() => {
     '../../../../__fixtures__/example-todo-main',
   )
 
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 })
 
 afterEach(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
   mockedGetConfig.mockReturnValue({
     graphql: { trustedDocuments: false, includeScalars: { File: true } },
   })

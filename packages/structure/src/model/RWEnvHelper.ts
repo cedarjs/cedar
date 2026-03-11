@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import { join } from 'node:path'
 
 import * as dotenv from 'dotenv-defaults'
-import { pickBy } from 'lodash'
+import pickBy from 'lodash/pickBy.js'
 import type * as tsm from 'ts-morph'
 
 import { getSchemaPath } from '@cedarjs/project-config'
@@ -178,7 +178,7 @@ class ProcessDotEnvExpression extends BaseNode {
             message: `
 This env variable is present in '${this.value_definition_file_basename}',
 but it won't be available to your app in production *unless* you add it to includeEnvironmentVariables.
-Tip: add the following to your redwood.toml:
+Tip: add the following to your cedar.toml (or redwood.toml):
 ${snippet}
             `,
             severity: DiagnosticSeverity.Warning,

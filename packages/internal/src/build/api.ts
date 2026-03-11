@@ -33,14 +33,14 @@ export const rebuildApi = async () => {
 }
 
 export const cleanApiBuild = async () => {
-  const rwjsPaths = getPaths()
-  return fs.promises.rm(rwjsPaths.api.dist, { recursive: true, force: true })
+  const cedarPaths = getPaths()
+  return fs.promises.rm(cedarPaths.api.dist, { recursive: true, force: true })
 }
 
-const runRwBabelTransformsPlugin = {
-  name: 'rw-esbuild-babel-transform',
+const runCedarBabelTransformsPlugin = {
+  name: 'cedar-esbuild-babel-transform',
   setup(build: PluginBuild) {
-    const rwjsConfig = getConfig()
+    const cedarConfig = getConfig()
 
     build.onLoad({ filter: /\.(js|ts|tsx|jsx)$/ }, async (args) => {
       // @TODO Implement LRU cache? Unsure how much of a performance benefit its going to be
@@ -50,8 +50,8 @@ const runRwBabelTransformsPlugin = {
         args.path,
         getApiSideBabelPlugins({
           openTelemetry:
-            rwjsConfig.experimental.opentelemetry.enabled &&
-            rwjsConfig.experimental.opentelemetry.wrapApi,
+            cedarConfig.experimental.opentelemetry.enabled &&
+            cedarConfig.experimental.opentelemetry.wrapApi,
           projectIsEsm: projectSideIsEsm('api'),
         }),
       )
@@ -73,19 +73,19 @@ export const transpileApi = async (files: string[]) => {
 }
 
 function getEsbuildOptions(files: string[]): BuildOptions {
-  const rwjsPaths = getPaths()
+  const cedarPaths = getPaths()
   const format = projectSideIsEsm('api') ? 'esm' : 'cjs'
 
   return {
-    absWorkingDir: rwjsPaths.api.base,
+    absWorkingDir: cedarPaths.api.base,
     entryPoints: files,
     platform: 'node',
     target: 'node20',
     format,
     allowOverwrite: true,
     bundle: false,
-    plugins: [runRwBabelTransformsPlugin],
-    outdir: rwjsPaths.api.dist,
+    plugins: [runCedarBabelTransformsPlugin],
+    outdir: cedarPaths.api.dist,
     // setting this to 'true' will generate an external sourcemap x.js.map
     // AND set the sourceMappingURL comment
     // (setting it to 'external' will ONLY generate the file, but won't add the comment)

@@ -3,7 +3,7 @@ import { vol } from 'memfs'
 import { getCommonPlugins } from '../common'
 
 const redwoodProjectPath = '/redwood-app'
-process.env.RWJS_CWD = redwoodProjectPath
+process.env.CEDAR_CWD = redwoodProjectPath
 
 afterEach(() => {
   vol.reset()

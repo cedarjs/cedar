@@ -1,5 +1,6 @@
-import type { Prisma, EmptyUser } from '@prisma/client'
 import type { ScenarioData } from '@cedarjs/testing/api'
+
+import type { Prisma, EmptyUser } from 'src/lib/db'
 
 export const standard = defineScenario<Prisma.EmptyUserCreateArgs>({
   emptyUser: {

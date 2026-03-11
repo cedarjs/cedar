@@ -118,7 +118,7 @@ const runTarsync = () => {
       stdio: 'inherit',
       env: {
         CFW_PATH: CEDARJS_FRAMEWORK_PATH,
-        RWJS_CWD: CEDARJS_PROJECT_DIRECTORY,
+        CEDAR_CWD: CEDARJS_PROJECT_DIRECTORY,
       },
     })
   } catch (e) {
@@ -140,7 +140,7 @@ const runDevServerInBackground = () => {
       shell: true,
       stdio: 'inherit',
       env: {
-        RWJS_DELAY_RESTART: '500',
+        CEDAR_DELAY_API_RESTART: '500',
         REDWOOD_CI: '1',
       },
     })

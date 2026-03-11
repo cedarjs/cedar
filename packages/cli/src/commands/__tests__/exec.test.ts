@@ -6,7 +6,6 @@ import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 // @ts-expect-error - No types for .js files
 import { runScriptFunction } from '../../lib/exec.js'
 import '../../lib/mockTelemetry'
-// @ts-expect-error - No types for .js files
 import { handler } from '../execHandler.js'
 
 vi.mock('@cedarjs/babel-config', () => ({
@@ -73,7 +72,7 @@ describe('yarn cedar exec', () => {
       l: false,
       silent: false,
       s: false,
-      $0: 'rw',
+      $0: 'cedar',
       name: 'normalScript',
     }
     await handler(args)

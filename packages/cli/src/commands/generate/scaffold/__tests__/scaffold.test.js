@@ -13,9 +13,8 @@ import { getYargsDefaults } from '../../yargsCommandHelpers.js'
 import * as scaffoldHandler from '../scaffoldHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } = await import(
-    '../../../../__tests__/ufsFsProxy.js'
-  )
+  const { wrapFsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
   const originalFs = await importOriginal()
   ufs.use(wrapFsForUnionfs(originalFs)).use(memfs)
   return { ...ufs, default: { ...ufs } }
@@ -865,11 +864,11 @@ describe("'use client' directive", () => {
 
 describe('custom templates', () => {
   let tsFiles
-  let originalRwjsCwd
+  let originalCedarCwd
 
   beforeAll(async () => {
-    originalRwjsCwd = process.env.RWJS_CWD
-    process.env.RWJS_CWD = '/path/to/project'
+    originalCedarCwd = process.env.CEDAR_CWD
+    process.env.CEDAR_CWD = '/path/to/project'
 
     vol.fromJSON(
       {
@@ -883,7 +882,7 @@ describe('custom templates', () => {
         'generatorTemplates/web/scaffold/pages/NamesPage.tsx.template':
           'export default function CustomPluralPage() { return null }',
       },
-      process.env.RWJS_CWD,
+      process.env.CEDAR_CWD,
     )
 
     tsFiles = await scaffoldHandler.files({
@@ -897,7 +896,7 @@ describe('custom templates', () => {
 
   afterAll(() => {
     vol.reset()
-    process.env.RWJS_CWD = originalRwjsCwd
+    process.env.CEDAR_CWD = originalCedarCwd
   })
 
   test('returns exactly 19 files', () => {

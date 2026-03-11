@@ -39,7 +39,7 @@ vi.mock('@cedarjs/auth-supabase-api', () => {
 })
 
 beforeAll(() => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
   // the default cookie name in the Supabase client is based on the url
   // will always be in the format:
   // sb-<project_ref>-auth-token (e.g. sb-example-auth-token )
@@ -51,7 +51,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
   delete process.env.SUPABASE_URL
   delete process.env.SUPABASE_KEY
   delete process.env.SUPABASE_JWT_SECRET

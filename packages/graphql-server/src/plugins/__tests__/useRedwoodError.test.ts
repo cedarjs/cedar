@@ -13,16 +13,14 @@ import { createGraphQLHandler } from '../../functions/graphql.js'
 vi.mock('../../makeMergedSchema', async () => {
   const { createGraphQLError } = await import('graphql-yoga')
   const { makeExecutableSchema } = await import('@graphql-tools/schema')
-  const { ForbiddenError, RedwoodGraphQLError } = await import(
-    '../../errors.js'
-  )
+  const { ForbiddenError, RedwoodGraphQLError } =
+    await import('../../errors.js')
   const { CurrencyResolver } = await import('graphql-scalars')
-  const { RedwoodError, EmailValidationError } = (await import(
-    '@cedarjs/api'
-  )) as {
-    RedwoodError: typeof RedwoodErrorType
-    EmailValidationError: typeof EmailValidationErrorType
-  }
+  const { RedwoodError, EmailValidationError } =
+    (await import('@cedarjs/api')) as {
+      RedwoodError: typeof RedwoodErrorType
+      EmailValidationError: typeof EmailValidationErrorType
+    }
 
   class WeatherError extends RedwoodError {
     constructor(message: string, extensions?: Record<string, any>) {

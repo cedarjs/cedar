@@ -38,7 +38,7 @@ config.set('CFW_PATH', absCfwPath)
 
 // Execute the commands in the Cedar Framework Tools package.
 const projectPath = path.dirname(
-  getConfigPath(process.env.RWJS_CWD ?? process.cwd()),
+  getConfigPath(process.env.CEDAR_CWD ?? process.env.RWJS_CWD ?? process.cwd()),
 )
 console.log('Cedar Framework Tools Path:', terminalLink(absCfwPath, absCfwPath))
 
@@ -56,7 +56,7 @@ try {
     stdio: 'inherit',
     cwd: absCfwPath,
     env: {
-      RWJS_CWD: projectPath,
+      CEDAR_CWD: projectPath,
     },
   })
 } catch (e) {

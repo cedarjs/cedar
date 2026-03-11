@@ -2,7 +2,7 @@ import { defineConfig, configDefaults } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    exclude: [...configDefaults.exclude, '**/fixtures'],
+    exclude: [...configDefaults.exclude, '**/fixtures', '**/__fixtures__'],
     deps: {
       /** Note: needed for rsc-routes plugins
          a) Babel packages are CJS

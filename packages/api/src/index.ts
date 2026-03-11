@@ -34,5 +34,8 @@ if (packageJson?.name !== '@cedarjs/api') {
 }
 
 export const prismaVersion = packageJson?.dependencies['@prisma/client']
+/** @deprecated - use `cedarVersion` instead */
 export const redwoodVersion = packageJson?.version
+/** @deprecated - use `cedarVersion` instead */
 export const cedarjsVersion = packageJson?.version
+export const cedarVersion = packageJson?.version

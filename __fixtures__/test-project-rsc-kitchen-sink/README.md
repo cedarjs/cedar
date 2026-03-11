@@ -1,4 +1,4 @@
-RW smoke-test fixture project for an app that tests two RSC related features
+Cedar smoke-test fixture project for an app that tests two RSC related features
   1. imports external npm packages
   2. Uses client cells to do client-side gql data fetching
 

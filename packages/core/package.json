@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/core",
-  "version": "2.0.2",
+  "version": "2.8.0",
   "description": "Foundational packages and config required to build CedarJS",
   "repository": {
     "type": "git",
@@ -43,7 +43,7 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@babel/cli": "7.28.3",
+    "@babel/cli": "7.28.6",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli": "workspace:*",
     "@cedarjs/eslint-config": "workspace:*",
@@ -52,15 +52,15 @@
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "graphql-tag": "2.12.6",
-    "lodash": "4.17.21",
-    "nodemon": "3.1.11",
-    "rimraf": "6.1.2",
+    "lodash": "4.17.23",
+    "nodemon": "3.1.14",
+    "rimraf": "6.1.3",
     "typescript": "5.9.3"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/lodash": "4.17.21",
-    "publint": "0.3.16",
+    "@types/lodash": "4.17.24",
+    "publint": "0.3.18",
     "tsx": "4.21.0"
   },
   "publishConfig": {

@@ -14,8 +14,7 @@ export function builder(yargs: Argv): Argv {
 }
 
 export async function handler(): Promise<void> {
-  const { handler: dataMigrateInstallHandler } = await import(
-    './installHandler.js'
-  )
+  const { handler: dataMigrateInstallHandler } =
+    await import('./installHandler.js')
   await dataMigrateInstallHandler()
 }

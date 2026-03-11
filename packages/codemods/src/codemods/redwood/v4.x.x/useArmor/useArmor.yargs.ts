@@ -4,8 +4,8 @@ import task from 'tasuku'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import isTSProject from '../../../../lib/isTSProject'
-import runTransform from '../../../../lib/runTransform'
+import isTSProject from '../../../../lib/isTSProject.js'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'use-armor'
 export const description =
@@ -15,7 +15,7 @@ export const handler = () => {
   task('Use Armor', async ({ setOutput }) => {
     const graphqlHandlerFile = isTSProject ? 'graphql.ts' : 'graphql.js'
     await runTransform({
-      transformPath: path.join(__dirname, 'useArmor.js'),
+      transformPath: path.join(import.meta.dirname, 'useArmor.js'),
       targetPaths: [
         path.join(getPaths().api.base, 'src', 'functions', graphqlHandlerFile),
       ],

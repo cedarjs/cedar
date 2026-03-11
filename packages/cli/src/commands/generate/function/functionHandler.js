@@ -115,7 +115,7 @@ export const handler = async ({ name, force, ...rest }) => {
       `Please consult the ${terminalLink(
         'Serverless Function Considerations',
         'https://cedarjs.com/docs/serverless-functions#security-considerations',
-      )} in the RedwoodJS documentation for more information.`,
+      )} in the CedarJS documentation for more information.`,
     )
     console.info('')
   } catch (e) {

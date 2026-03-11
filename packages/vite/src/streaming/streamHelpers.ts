@@ -313,9 +313,8 @@ async function importModule(
       const loadedMod = await import('@cedarjs/router/location')
       return loadedMod
     } else if (mod === '__rwjs__server_auth_provider') {
-      const loadedMod = await import(
-        '@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js'
-      )
+      const loadedMod =
+        await import('@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js')
       return loadedMod
     } else if (mod === '__rwjs__server_inject') {
       const loadedMod = await import('@cedarjs/web/serverInject')

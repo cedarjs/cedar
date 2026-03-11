@@ -2,7 +2,9 @@ import path from 'node:path'
 
 import camelcase from 'camelcase'
 
-import { pluralize, singularize } from '../../../lib/cedarPluralize.js'
+import { dbReexportsPrismaClient } from '@cedarjs/internal/dist/project'
+import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
+
 import { transformTSToJS } from '../../../lib/index.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
 import { relationsForModel } from '../helpers.js'
@@ -39,7 +41,7 @@ export const parseSchema = async (model) => {
   return { scalarFields, relations, foreignKeys }
 }
 
-export const scenarioFieldValue = (field) => {
+export function scenarioFieldValue(field) {
   const randFloat = Math.random() * 10000000
   const randInt = parseInt(Math.random() * 10000000)
   const randIntArray = [
@@ -63,6 +65,10 @@ export const scenarioFieldValue = (field) => {
     case 'Json':
       return { foo: 'bar' }
     case 'String':
+      if (field.name?.toLowerCase().includes('email')) {
+        return field.isUnique ? `foo${randInt}@bar.com` : 'foo@bar.com'
+      }
+
       return field.isUnique ? `String${randInt}` : 'String'
     case 'Bytes':
       return `new Uint8Array([${randIntArray}])`
@@ -305,6 +311,10 @@ export const files = async ({
   const model = name
   const idName = await getIdName(model)
 
+  const prismaImportSource = dbReexportsPrismaClient()
+    ? 'src/lib/db'
+    : '@prisma/client'
+
   const modelRelations = relations || relationsForModel(await getSchema(model))
 
   const serviceFile = await templateForFile({
@@ -314,7 +324,12 @@ export const files = async ({
     generator: 'service',
     outputPath: path.join(componentName, componentName + '.ts'),
     templatePath: 'service.ts.template',
-    templateVars: { relations: modelRelations, idName, ...rest },
+    templateVars: {
+      relations: modelRelations,
+      idName,
+      prismaImportSource,
+      ...rest,
+    },
   })
 
   const testFile = await templateForFile({
@@ -334,6 +349,7 @@ export const files = async ({
       ),
       prismaModel: model,
       idName,
+      prismaImportSource,
       ...rest,
     },
   })
@@ -351,6 +367,7 @@ export const files = async ({
       prismaModel: model,
       idName,
       relations: modelRelations,
+      prismaImportSource,
       ...rest,
     },
   })

@@ -1,4 +1,4 @@
-# `@redwoodjs/storage`
+# `@cedarjs/storage`
 
 This package houses
 

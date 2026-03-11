@@ -9,7 +9,7 @@ of the documentation used. So I got used to the short and sweet `rw`.
 In practice though, it's really more like `yarn rw`, so seven characters. Pretty
 early I created an alias in my shell so I could just type `cedar` and it'd
 expand to `yarn cedarjs`. That meant I only had to type five characters instead
-of seven. And it felt really goot to use.
+of seven. And it felt really good to use.
 
 For the longest time I considered adding an optional step to the initial setup
 of a Cedar app to add that alias to the user's shell configuration file. And

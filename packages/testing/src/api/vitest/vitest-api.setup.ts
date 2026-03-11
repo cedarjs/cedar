@@ -328,9 +328,8 @@ const wasDbImported = () => {
 let quoteStyle: string
 // determine what kind of quotes are needed around table names in raw SQL
 async function getQuoteStyle() {
-  const { getConfig: getPrismaConfig, getSchemaWithPath } = await import(
-    '@prisma/internals'
-  )
+  const { getConfig: getPrismaConfig, getSchemaWithPath } =
+    await import('@prisma/internals')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest

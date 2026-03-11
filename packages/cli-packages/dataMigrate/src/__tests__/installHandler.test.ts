@@ -71,7 +71,7 @@ describe('installHandler', () => {
 
   it('adds a data migrations directory, model, and migration', async () => {
     const redwoodProjectPath = '/redwood-app'
-    process.env.RWJS_CWD = redwoodProjectPath
+    process.env.CEDAR_CWD = redwoodProjectPath
 
     vol.fromNestedJSON(
       {

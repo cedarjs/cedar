@@ -4,9 +4,9 @@ import path from 'node:path'
 import fg from 'fast-glob'
 import { expect } from 'vitest'
 
-import runTransform from '../lib/runTransform'
+import runTransform from '../lib/runTransform.js'
 
-import { createProjectMock } from './index'
+import { createProjectMock } from './index.js'
 
 type Options = {
   removeWhitespace?: boolean
@@ -36,7 +36,8 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
   const tempDir = createProjectMock()
 
   // Override paths used in getPaths() utility func
-  process.env.RWJS_CWD = tempDir
+  const originalCedarCwd = process.env.CEDAR_CWD || process.env.RWJS_CWD
+  process.env.CEDAR_CWD = tempDir
 
   // Looks up the path of the caller
   const testPath = expect.getState().testPath
@@ -63,7 +64,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
   const GLOB_CONFIG = {
     absolute: false,
     dot: true,
-    ignore: ['redwood.toml', '**/*.DS_Store'], // ignore the fake redwood.toml added for getPaths
+    ignore: ['cedar.toml', 'redwood.toml', '**/*.DS_Store'], // ignore the fake config file added for getPaths
   }
 
   // Step 2: Run transform against temp dir
@@ -85,7 +86,7 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
 
     // So that the transform can use getPaths() utility func
     // This is used inside the runTransform function
-    process.env.RWJS_CWD = tempDir
+    process.env.CEDAR_CWD = tempDir
 
     await runTransform({
       transformPath,
@@ -122,7 +123,12 @@ export const matchFolderTransform: MatchFolderTransformFunction = async (
     expect(actualPath).toMatchFileContents(expectedPath, { removeWhitespace })
   })
 
-  delete process.env.RWJS_CWD
+  // Restore environment
+  if (originalCedarCwd) {
+    process.env.CEDAR_CWD = originalCedarCwd
+  } else {
+    delete process.env.CEDAR_CWD
+  }
 
   // Not awaiting - it'll be cleaned up eventually. Also, I was getting errors
   // like these on Windows, so I'm just catching and ignoring them.

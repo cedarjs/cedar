@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useMemo } from 'react'
 
-import type { AuthContextInterface } from '@cedarjs/auth' with { 'resolution-mode': 'import' }
+import type { AuthContextInterface } from '@cedarjs/auth' with {
+  'resolution-mode': 'import',
+}
 import { useNoAuth } from '@cedarjs/auth'
 
 import type { analyzeRoutes } from './analyzeRoutes.js'
@@ -30,8 +32,10 @@ export interface RouterState {
 
 const RouterStateContext = createContext<RouterState | undefined>(undefined)
 
-export interface RouterContextProviderProps
-  extends Omit<RouterState, 'useAuth'> {
+export interface RouterContextProviderProps extends Omit<
+  RouterState,
+  'useAuth'
+> {
   useAuth?: UseAuth
   routes: ReturnType<typeof analyzeRoutes>
   activeRouteName?: string | undefined | null

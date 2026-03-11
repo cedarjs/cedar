@@ -28,11 +28,11 @@ async function getConfigsForFiles(files: string[]) {
 
 async function main() {
   // We need to be running commands within a redwood project
-  if (!process.env.RWJS_CWD) {
-    throw new Error('RWJS_CWD is not set')
+  if (!process.env.CEDAR_CWD) {
+    throw new Error('CEDAR_CWD is not set')
   }
   $.verbose = !!process.env.VERBOSE
-  $.cwd = process.env.RWJS_CWD
+  $.cwd = process.env.CEDAR_CWD
 
   // Get all the files in the project
   const files = await glob('**/*.*', {

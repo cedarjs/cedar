@@ -12,7 +12,7 @@ import {
   getPaths,
 } from '../paths'
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 /**
  * All paths relevant to the redwood stack as defined in
@@ -126,10 +126,10 @@ describe('paths', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct base directory', () =>
@@ -266,10 +266,10 @@ describe('paths', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct base directory', () =>
@@ -452,10 +452,10 @@ describe('paths', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct base directory', () =>
@@ -599,10 +599,10 @@ describe('paths', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct base directory', () => {

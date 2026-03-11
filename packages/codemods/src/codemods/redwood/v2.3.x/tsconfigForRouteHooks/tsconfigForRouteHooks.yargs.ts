@@ -1,6 +1,6 @@
 import task from 'tasuku'
 
-import addApiAliasToTsConfig from './tsconfigForRouteHooks'
+import addApiAliasToTsConfig from './tsconfigForRouteHooks.js'
 
 export const command = 'tsconfig-for-route-hooks'
 export const description =

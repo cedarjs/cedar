@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
+import yargs from 'yargs/yargs'
 
 import * as v2TsconfigForRouteHooks from './codemods/redwood/v2.3.x/tsconfigForRouteHooks/tsconfigForRouteHooks.yargs.js'
 import * as v2ConfigureFastify from './codemods/redwood/v2.x.x/configureFastify/configureFastify.yargs.js'
@@ -22,11 +23,13 @@ import * as v6DevFatalErrorPage from './codemods/redwood/v6.x.x/updateDevFatalEr
 import * as v6ThemeConfig from './codemods/redwood/v6.x.x/updateThemeConfig/updateThemeConfig.yargs.js'
 import * as v7Gql from './codemods/redwood/v7.x.x/updateGraphQLConfig/updateGraphqlConfig.yargs.js'
 import * as v2MoveGeneratorTemplates from './codemods/v2.3.x/moveGeneratorTemplates/moveGeneratorTemplates.yargs.js'
+import * as v2PrismaV7Prep from './codemods/v2.7.x/prismaV7Prep/prismaV7Prep.yargs.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-yargs
+yargs(hideBin(process.argv))
   .scriptName('')
   .command(v2MoveGeneratorTemplates)
+  .command(v2PrismaV7Prep)
   .command('redwood', 'List or run Redwood codemods', (yargs) => {
     return yargs
       .command(v2TsconfigForRouteHooks)

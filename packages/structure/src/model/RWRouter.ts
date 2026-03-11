@@ -1,5 +1,7 @@
 import * as tsm from 'ts-morph'
 
+import { getConfigPath } from '@cedarjs/project-config'
+
 import { RWError } from '../errors'
 import { FileNode } from '../nodes'
 import { iter } from '../x/Array'
@@ -105,8 +107,8 @@ export class RWRouter extends FileNode {
 
   *diagnostics() {
     if (!this.fileExists) {
-      // should we assign this error to the project? to redwood.toml?
-      const uri = URL_file(this.parent.projectRoot, 'redwood.toml')
+      // should we assign this error to the project? to cedar.toml?
+      const uri = URL_file(getConfigPath(this.parent.projectRoot))
       const message = `Routes.js does not exist`
       yield err(uri, message)
       // TODO: add quickFix (create a simple Routes.js)

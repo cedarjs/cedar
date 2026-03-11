@@ -1,8 +1,8 @@
 import pascalcase from 'pascalcase'
 
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
+import { isPlural, singularize } from '@cedarjs/utils/cedarPluralize'
 
-import { isPlural, singularize } from '../../../lib/cedarPluralize.js'
 import { nameVariants, transformTSToJS } from '../../../lib/index.js'
 import { isWordPluralizable } from '../../../lib/pluralHelpers.js'
 import { addFunctionToRollback } from '../../../lib/rollback.js'
@@ -27,9 +27,9 @@ const REDWOOD_WEB_PATH_NAME = 'components'
 export const files = async ({ name, typescript, ...argv }) => {
   let cellName = removeGeneratorName(name, 'cell')
   let idName = 'id'
-  let idType,
-    mockIdValues = [42, 43, 44],
-    model = null
+  let idType
+  let mockIdValues = [42, 43, 44]
+  let model = null
   let templateNameSuffix = ''
   let typeName = cellName
   // Create a unique operation name.

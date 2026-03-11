@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000 \
   --mount=type=cache,target=/home/node/.cache,uid=1000 \
   CI=1 yarn install
 
-COPY --chown=node:node redwood.toml .
+COPY --chown=node:node cedar.toml* redwood.toml* ./
 COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
@@ -82,7 +82,7 @@ RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000 \
   --mount=type=cache,target=/home/node/.cache,uid=1000 \
   CI=1 yarn workspaces focus api --production
 
-COPY --chown=node:node redwood.toml .
+COPY --chown=node:node cedar.toml* redwood.toml* ./
 COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 
@@ -122,7 +122,7 @@ RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000 \
   --mount=type=cache,target=/home/node/.cache,uid=1000 \
   CI=1 yarn workspaces focus web --production
 
-COPY --chown=node:node redwood.toml .
+COPY --chown=node:node cedar.toml* redwood.toml* ./
 COPY --chown=node:node graphql.config.cjs .
 COPY --chown=node:node .env.defaults .env.defaults
 

@@ -2,7 +2,7 @@ name: Set up test project
 description: Sets up the test project fixture in CI for smoke tests and CLI checks
 
 runs:
-  using: node20
+  using: node24
   main: 'setUpTestProjectEsm.mjs'
 
 inputs:

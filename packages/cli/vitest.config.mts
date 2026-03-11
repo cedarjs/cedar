@@ -40,6 +40,10 @@ export default defineConfig({
       },
     ],
     env: {
+      // If NO_COLOR is set in the parent shell, Node prints a warning, which
+      // breaks assertions in a few tests (i.e. cwd.test.js). Clearing NO_COLOR
+      // here fixes that issue
+      NO_COLOR: undefined,
       FORCE_COLOR: 'true',
     },
   },

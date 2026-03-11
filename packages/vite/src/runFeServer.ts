@@ -158,9 +158,8 @@ export async function runFeServer() {
   )
 
   if (rscEnabled) {
-    const { createRscRequestHandler } = await import(
-      './rsc/rscRequestHandler.js'
-    )
+    const { createRscRequestHandler } =
+      await import('./rsc/rscRequestHandler.js')
     // Mounting middleware at /rw-rsc will strip /rw-rsc from req.url
     app.use(
       '/rw-rsc',

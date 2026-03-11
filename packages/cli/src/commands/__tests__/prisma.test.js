@@ -31,7 +31,7 @@ import fs from 'node:fs'
 import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
-import { handler } from '../prisma.js'
+import { handler } from '../prismaHandler.ts'
 
 beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})
@@ -47,7 +47,7 @@ afterEach(() => {
 test('the prisma command handles spaces', async () => {
   await handler({
     _: ['prisma'],
-    $0: 'rw',
+    $0: 'cedar',
     commands: ['migrate', 'dev'],
     // options
     n: 'add bazingas',

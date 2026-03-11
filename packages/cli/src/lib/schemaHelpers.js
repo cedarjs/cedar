@@ -1,8 +1,8 @@
 import prismaInternals from '@prisma/internals'
 
 import { getSchemaPath } from '@cedarjs/project-config'
+import { singularize, isPlural } from '@cedarjs/utils/cedarPluralize'
 
-import { singularize, isPlural } from './cedarPluralize.js'
 import { ensureUniquePlural } from './pluralHelpers.js'
 
 import { getPaths } from './index.js'

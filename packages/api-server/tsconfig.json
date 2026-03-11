@@ -15,6 +15,6 @@
     { "path": "../project-config" },
     { "path": "../adapters/fastify/web" },
     { "path": "../web-server" },
-    { "path": "../realtime" }
+    { "path": "../realtime/tsconfig.build.json" }
   ]
 }

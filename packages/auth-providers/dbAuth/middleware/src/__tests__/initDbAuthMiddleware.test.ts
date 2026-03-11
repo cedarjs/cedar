@@ -18,7 +18,7 @@ const FIXTURE_PATH = path.resolve(
 )
 
 beforeAll(() => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 
   // Mock the session decryption
   vi.mock('@cedarjs/auth-dbauth-api', async (importOriginal) => {
@@ -49,7 +49,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
 })
 
 describe('dbAuthMiddleware', () => {

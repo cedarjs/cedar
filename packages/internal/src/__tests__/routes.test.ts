@@ -26,10 +26,10 @@ const FIXTURE_PATH_TEST_PROJECT = path.resolve(
 
 describe('Routes within the empty project', () => {
   beforeAll(() => {
-    process.env.RWJS_CWD = FIXTURE_PATH_EMPTY_PROJECT
+    process.env.CEDAR_CWD = FIXTURE_PATH_EMPTY_PROJECT
   })
   afterAll(() => {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   it('Detects no duplicate routes', () => {
@@ -43,10 +43,10 @@ describe('Routes within the empty project', () => {
 
 describe('Routes within the example todo project', () => {
   beforeAll(() => {
-    process.env.RWJS_CWD = FIXTURE_PATH_EXAMPLE
+    process.env.CEDAR_CWD = FIXTURE_PATH_EXAMPLE
   })
   afterAll(() => {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   it('Detects no duplicate routes', () => {
@@ -60,10 +60,10 @@ describe('Routes within the example todo project', () => {
 
 describe('Routes within the example todo with errors project', () => {
   beforeAll(() => {
-    process.env.RWJS_CWD = FIXTURE_PATH_EXAMPLE_WITH_ERRORS
+    process.env.CEDAR_CWD = FIXTURE_PATH_EXAMPLE_WITH_ERRORS
   })
   afterAll(() => {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   it('Detects duplicate root routes', () => {
@@ -82,10 +82,10 @@ describe('Routes within the example todo with errors project', () => {
 
 describe('Routes within the test project', () => {
   beforeAll(() => {
-    process.env.RWJS_CWD = FIXTURE_PATH_TEST_PROJECT
+    process.env.CEDAR_CWD = FIXTURE_PATH_TEST_PROJECT
   })
   afterAll(() => {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   it('Detects no duplicate routes', () => {

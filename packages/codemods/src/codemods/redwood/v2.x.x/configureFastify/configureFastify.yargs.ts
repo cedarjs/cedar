@@ -7,8 +7,8 @@ import task from 'tasuku'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import prettify from '../../../../lib/prettify'
-import runTransform from '../../../../lib/runTransform'
+import prettify from '../../../../lib/prettify.js'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'configure-fastify'
 export const description =
@@ -23,7 +23,7 @@ export const handler = () => {
 
     if (fs.existsSync(API_SERVER_CONFIG_PATH)) {
       await runTransform({
-        transformPath: path.join(__dirname, 'configureFastify.js'),
+        transformPath: path.join(import.meta.dirname, 'configureFastify.js'),
         targetPaths: [API_SERVER_CONFIG_PATH],
       })
 

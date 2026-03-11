@@ -16,7 +16,7 @@ jobs:
       REDWOOD_VERBOSE_TELEMETRY: 1
 
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
@@ -24,13 +24,13 @@ jobs:
         id: set-up-test-project
         uses: ./.github/actions/set-up-test-project
         with:
-          canary: true
+          canary: false
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: Run Fragments codemods on test project
-        run: npx -y tsx ./tasks/test-project/add-gql-fragments ${{ steps.set-up-test-project.outputs.test-project-path }}
+        run: node ./tasks/test-project/add-gql-fragments.mts ${{ steps.set-up-test-project.outputs.test-project-path }}
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 
@@ -46,7 +46,15 @@ jobs:
 
       - name: Build for production
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
-        run: yarn cedar build
+        shell: bash
+        run: |
+          set -o pipefail
+          yarn cedar build || {
+            echo "::group::package.json diagnostics"
+            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
+            echo "::endgroup::"
+            exit 1
+          }
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 
@@ -58,7 +66,7 @@ jobs:
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Enable trusted-documents in Fragments test project
-        run: npx -y tsx ./tasks/test-project/set-up-trusted-documents ${{ steps.set-up-test-project.outputs.test-project-path }}
+        run: node ./tasks/test-project/set-up-trusted-documents.mts ${{ steps.set-up-test-project.outputs.test-project-path }}
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 

@@ -3,7 +3,7 @@
 ## Contributing
 
 If you want to contribute a new auth provider integration we recommend you
-start by implementing it as a custom auth provider in a Redwood App first. When
+start by implementing it as a custom auth provider in a Cedar App first. When
 that works you can package it up as an npm package and publish it on your own.
 You can then create a PR on this repo with support for your new auth provider
 in our `yarn rw setup auth` cli command. The easiest option is probably to just

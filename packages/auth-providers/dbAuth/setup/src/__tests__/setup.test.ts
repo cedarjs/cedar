@@ -20,7 +20,7 @@ vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
 import { createAuthDecoderFunction, handler } from '../setupHandler'
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 const { redwoodProjectPath } = vi.hoisted(() => {
   return { redwoodProjectPath: '/redwood-app' }
@@ -82,11 +82,11 @@ vi.mock('@cedarjs/cli-helpers', () => {
 })
 
 beforeAll(() => {
-  process.env.RWJS_CWD = redwoodProjectPath
+  process.env.CEDAR_CWD = redwoodProjectPath
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 beforeEach(() => {

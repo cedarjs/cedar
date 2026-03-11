@@ -1,13 +1,21 @@
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import { format } from 'prettier'
 
 import { getPaths } from '@cedarjs/project-config'
 
 const getPrettierConfig = async () => {
+  const basePath = getPaths().base
+  const prettierConfigCjsPath = path.join(basePath, 'prettier.config.cjs')
+  const prettierConfigMjsPath = path.join(basePath, 'prettier.config.mjs')
+  const prettierConfigPath = fs.existsSync(prettierConfigCjsPath)
+    ? prettierConfigCjsPath
+    : prettierConfigMjsPath
+
   try {
     const { default: prettierConfig } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
+      `file://${prettierConfigPath}`
     )
     return prettierConfig
   } catch {

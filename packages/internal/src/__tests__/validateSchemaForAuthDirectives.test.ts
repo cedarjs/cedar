@@ -49,11 +49,11 @@ const validateSdlFile = async (sdlFile: string) => {
 
 describe('SDL uses auth directives', () => {
   beforeAll(() => {
-    process.env.RWJS_CWD = FIXTURE_ERROR_PATH
+    process.env.CEDAR_CWD = FIXTURE_ERROR_PATH
   })
 
   afterAll(() => {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   describe('SDL is valid', () => {

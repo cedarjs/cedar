@@ -2,8 +2,8 @@ import path from 'path'
 
 import task from 'tasuku'
 
-import { findCells } from '../../../../lib/cells'
-import runTransform from '../../../../lib/runTransform'
+import { findCells } from '../../../../lib/cells.js'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'cell-query-result'
 export const description =
@@ -12,7 +12,7 @@ export const description =
 export const handler = () => {
   task('cellQueryResult', async ({ setOutput }) => {
     await runTransform({
-      transformPath: path.join(__dirname, 'cellQueryResult.js'),
+      transformPath: path.join(import.meta.dirname, 'cellQueryResult.js'),
       targetPaths: findCells(),
     })
 

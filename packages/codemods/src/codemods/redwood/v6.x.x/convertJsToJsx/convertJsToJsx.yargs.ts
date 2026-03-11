@@ -4,7 +4,7 @@ import fg from 'fast-glob'
 import type { TaskInnerAPI } from 'tasuku'
 import task from 'tasuku'
 
-import runTransform from '../../../../lib/runTransform'
+import runTransform from '../../../../lib/runTransform.js'
 
 export const command = 'convert-js-to-jsx'
 export const description =
@@ -13,7 +13,7 @@ export const description =
 export const handler = () => {
   task('Convert Js To Jsx', async ({ setOutput }: TaskInnerAPI) => {
     await runTransform({
-      transformPath: path.join(__dirname, 'convertJsToJsx.js'),
+      transformPath: path.join(import.meta.dirname, 'convertJsToJsx.js'),
       // All files in web/src that are .js
       targetPaths: fg.sync('web/src/**/*.js'),
     })

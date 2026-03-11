@@ -1,6 +1,10 @@
 import prompts from 'prompts'
 
-import { isSingular, isPlural, addSingularPlural } from './cedarPluralize.js'
+import {
+  isSingular,
+  isPlural,
+  addSingularPlural,
+} from '@cedarjs/utils/cedarPluralize'
 
 export const isWordPluralizable = (word) => {
   return isPlural(word) !== isSingular(word)

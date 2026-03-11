@@ -7,14 +7,11 @@ import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { getPaths, getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../../lib/colors.js'
-import {
-  getPaths,
-  writeFilesTask,
-  printSetupNotes,
-} from '../../../../lib/index.js'
+import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
 import { updateApiURLTask } from '../helpers/index.js'
 import {
   flightcontrolConfig,
@@ -32,13 +29,14 @@ const getFlightcontrolJson = async (database) => {
       content: flightcontrolConfig,
     }
   }
-  if (!fs.existsSync(path.join(getPaths().base, 'api/db/schema.prisma'))) {
-    throw new Error("Could not find prisma schema at 'api/db/schema.prisma'")
+
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+
+  if (!fs.existsSync(schemaPath)) {
+    throw new Error(`Could not find prisma schema at ${schemaPath}`)
   }
 
-  const result = await getSchemaWithPath(
-    path.join(getPaths().base, 'api/db/schema.prisma'),
-  )
+  const result = await getSchemaWithPath(schemaPath)
   const config = await getConfig({ datamodel: result.schemas })
   const detectedDatabase = config.datasources[0].activeProvider
 

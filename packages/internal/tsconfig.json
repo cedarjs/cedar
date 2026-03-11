@@ -12,6 +12,7 @@
     { "path": "../babel-config" },
     { "path": "../graphql-server/tsconfig.build.json" },
     { "path": "../project-config" },
-    { "path": "../router/tsconfig.build.json" }
+    { "path": "../router/tsconfig.build.json" },
+    { "path": "../structure" }
   ]
 }

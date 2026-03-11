@@ -11,15 +11,15 @@ import {
   transformWithBabel,
 } from '../api'
 
-const RWJS_CWD = path.join(__dirname, '__fixtures__/redwood-app')
-process.env.RWJS_CWD = RWJS_CWD
+const CEDAR_CWD = path.join(__dirname, '__fixtures__/redwood-app')
+process.env.CEDAR_CWD = CEDAR_CWD
 
 let code: string
 
 describe('api prebuild ', () => {
   describe('polyfills unsupported functionality', () => {
     beforeAll(async () => {
-      const apiFile = path.join(RWJS_CWD, 'api/src/lib/polyfill.js')
+      const apiFile = path.join(CEDAR_CWD, 'api/src/lib/polyfill.js')
       code = await prebuildApiFileWrapper(apiFile)
     })
 
@@ -402,7 +402,7 @@ describe('api prebuild ', () => {
 
   describe('uses core-js3 aliasing', () => {
     beforeAll(async () => {
-      const apiFile = path.join(RWJS_CWD, 'api/src/lib/transform.js')
+      const apiFile = path.join(CEDAR_CWD, 'api/src/lib/transform.js')
       code = await prebuildApiFileWrapper(apiFile)
     })
 
@@ -434,7 +434,7 @@ describe('api prebuild ', () => {
 
   describe('typescript', () => {
     beforeAll(async () => {
-      const apiFile = path.join(RWJS_CWD, 'api/src/lib/typescript.ts')
+      const apiFile = path.join(CEDAR_CWD, 'api/src/lib/typescript.ts')
       code = await prebuildApiFileWrapper(apiFile)
     })
 
@@ -446,7 +446,7 @@ describe('api prebuild ', () => {
 
   describe('auto imports', () => {
     beforeAll(async () => {
-      const apiFile = path.join(RWJS_CWD, 'api/src/lib/autoImports.ts')
+      const apiFile = path.join(CEDAR_CWD, 'api/src/lib/autoImports.ts')
       code = await prebuildApiFileWrapper(apiFile)
     })
 

@@ -3,6 +3,7 @@
 import fs from 'node:fs'
 
 import core from '@actions/core'
+
 import { codeChanges } from './cases/code_changes.mjs'
 import { rscChanged } from './cases/rsc.mjs'
 import { ssrChanged } from './cases/ssr.mjs'
@@ -49,6 +50,8 @@ async function getPrBranchName() {
 /**
  * @typedef {Object} Workflow
  * @property {string} updated_at
+ * @property {string} id
+ * @property {string} conclusion
  *
  * @typedef {Object} Commit
  * @property {string} sha
@@ -76,6 +79,43 @@ async function getLatestCompletedWorkflowRun(branchName) {
   const { json } = await fetchJson(url)
 
   return json?.workflow_runs?.find((run) => run.status === 'completed')
+}
+
+/**
+ * @typedef {Object} WorkflowJob
+ * @property {string} name
+ * @property {string} conclusion
+ *
+ * @param {string} runId
+ * @returns {Promise<WorkflowJob[]>}
+ */
+async function getWorkflowJobs(runId, page = 1) {
+  const url = `${BASE_URL}/actions/runs/${runId}/jobs?per_page=100&page=${page}`
+  const { json, res } = await fetchJson(url)
+  let jobs = json?.jobs || []
+
+  const linkHeader = res?.headers?.get('link')
+  if (linkHeader && linkHeader.includes('rel="next"')) {
+    const nextJobs = await getWorkflowJobs(runId, page + 1)
+    jobs = jobs.concat(nextJobs)
+  }
+
+  return jobs
+}
+
+/**
+ * @param {WorkflowJob[]} jobs
+ * @param {string} prefix
+ * @returns {{ hadJobs: boolean, succeeded: boolean }}
+ */
+function summarizeJobResults(jobs, prefix) {
+  const matchingJobs = jobs.filter((job) => job.name.startsWith(prefix))
+  const hadJobs = matchingJobs.length > 0
+  const succeeded = hadJobs
+    ? matchingJobs.every((job) => job.conclusion === 'success')
+    : false
+
+  return { hadJobs, succeeded }
 }
 
 /**
@@ -150,6 +190,14 @@ async function getChangedFilesInPr(page = 1) {
   return changedFiles
 }
 
+/**
+ * Fetch JSON data from a URL with retries.
+ *
+ * @param {string} url - The URL to fetch.
+ * @param {number} [retries=0] - The number of retries.
+ *
+ * @return {Promise<{ json?: any, res?: Response }>}
+ */
 async function fetchJson(url, retries = 0) {
   if (retries) {
     console.log(`Retry ${retries}: ${url}`)
@@ -232,6 +280,12 @@ async function main() {
 
   const branchName = await getPrBranchName()
   const workflowRun = await getLatestCompletedWorkflowRun(branchName)
+  const workflowRunSucceeded = workflowRun?.conclusion === 'success'
+  const workflowJobs = workflowRun?.id
+    ? await getWorkflowJobs(workflowRun.id)
+    : []
+  const rscJobs = summarizeJobResults(workflowJobs, '🔄🐘 RSC Smoke tests')
+  const ssrJobs = summarizeJobResults(workflowJobs, '🔁 SSR Smoke tests')
   const prCommits = await getCommitsNewerThan(workflowRun?.updated_at)
   let changedFiles = await getFilesInCommits(prCommits)
 
@@ -277,15 +331,35 @@ async function main() {
 
   if (!codeChanges(changedFiles)) {
     console.log('Only docs and/or changesets changes detected')
-    core.setOutput('code', false)
-    core.setOutput('rsc', false)
-    core.setOutput('ssr', false)
+
+    if (!workflowRunSucceeded) {
+      console.log(
+        'No previous successful run. Falling back to running all tests.',
+      )
+      core.setOutput('code', true)
+      core.setOutput('rsc', true)
+      core.setOutput('ssr', true)
+    } else {
+      core.setOutput('code', false)
+      core.setOutput('rsc', false)
+      core.setOutput('ssr', false)
+    }
+
     return
   }
 
+  const rscChangesDetected = rscChanged(changedFiles)
+  const ssrChangesDetected = ssrChanged(changedFiles)
+
   core.setOutput('code', true)
-  core.setOutput('rsc', rscChanged(changedFiles))
-  core.setOutput('ssr', ssrChanged(changedFiles))
+  core.setOutput(
+    'rsc',
+    rscChangesDetected || (rscJobs.hadJobs && !rscJobs.succeeded),
+  )
+  core.setOutput(
+    'ssr',
+    ssrChangesDetected || (ssrJobs.hadJobs && !ssrJobs.succeeded),
+  )
 }
 
 main()

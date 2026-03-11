@@ -2,7 +2,7 @@ name: Set up RSA test project from fixture
 description: Sets up an RSA project for smoke-tests
 
 runs:
-  using: node20
+  using: node24
   main: 'setUpRsaProjectGitHub.mjs'
 
 outputs:

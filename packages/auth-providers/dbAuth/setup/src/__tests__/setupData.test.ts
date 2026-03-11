@@ -2,7 +2,7 @@ import { vi, beforeAll, afterAll, describe, it, expect } from 'vitest'
 
 import { createUserModelTask } from '../setupData'
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 const DATABASE_URL = process.env.DATABASE_URL
 
 const { redwoodProjectPath, prismaConfigPath, libPath, functionsPath } =
@@ -43,12 +43,12 @@ vi.mock('@cedarjs/cli-helpers', () => {
 })
 
 beforeAll(() => {
-  process.env.RWJS_CWD = redwoodProjectPath
+  process.env.CEDAR_CWD = redwoodProjectPath
   process.env.DATABASE_URL = 'file:./dev.db'
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
   process.env.DATABASE_URL = DATABASE_URL
 })
 

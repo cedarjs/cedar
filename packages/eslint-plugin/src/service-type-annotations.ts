@@ -39,10 +39,7 @@ export const serviceTypeAnnotations = createRule({
 
       // Then start looking at every exported fn/const
       ExportNamedDeclaration(node) {
-        if (
-          !node.declaration ||
-          node.declaration.type !== AST_NODE_TYPES.VariableDeclaration
-        ) {
+        if (node.declaration?.type !== AST_NODE_TYPES.VariableDeclaration) {
           return
         }
 

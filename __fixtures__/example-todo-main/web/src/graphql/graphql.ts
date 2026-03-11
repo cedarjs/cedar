@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
-export type InputMaybe<T> = Maybe<T>;
+export type InputMaybe<T> = T | null | undefined;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
@@ -22,6 +22,21 @@ export type Scalars = {
   JSON: { input: any; output: any; }
   JSONObject: { input: any; output: any; }
   Time: { input: any; output: any; }
+};
+
+/**
+ * The Cedar Root Schema
+ *
+ * Defines details about Cedar such as the current user and version information.
+ */
+export type Cedar = {
+  __typename?: 'Cedar';
+  /** The current user. */
+  currentUser?: Maybe<Scalars['JSON']['output']>;
+  /** The version of Prisma. */
+  prismaVersion?: Maybe<Scalars['String']['output']>;
+  /** The version of CedarJS. */
+  version?: Maybe<Scalars['String']['output']>;
 };
 
 export type Mutation = {
@@ -48,30 +63,37 @@ export type MutationUpdateTodoStatusArgs = {
   status: Scalars['String']['input'];
 };
 
-/** About the Redwood queries. */
+/** About the Cedar queries. */
 export type Query = {
   __typename?: 'Query';
-  /** Fetches the CedarJS root schema. */
-  cedarjs?: Maybe<Redwood>;
+  /** Fetches the Cedar root schema. */
+  cedar?: Maybe<Cedar>;
   currentUser?: Maybe<Scalars['JSON']['output']>;
-  /** Fetches the Redwood root schema. */
+  /**
+   * Fetches the Cedar root schema.
+   * @deprecated Use 'cedar' instead.
+   */
   redwood?: Maybe<Redwood>;
   todos?: Maybe<Array<Maybe<Todo>>>;
   todosCount: Scalars['Int']['output'];
 };
 
-/**
- * The Cedar Root Schema
- *
- * Defines details about Cedar such as the current user and version information.
- */
 export type Redwood = {
   __typename?: 'Redwood';
-  /** The current user. */
+  /**
+   * The current user.
+   * @deprecated Use the Cedar type instead.
+   */
   currentUser?: Maybe<Scalars['JSON']['output']>;
-  /** The version of Prisma. */
+  /**
+   * The version of Prisma.
+   * @deprecated Use the Cedar type instead.
+   */
   prismaVersion?: Maybe<Scalars['String']['output']>;
-  /** The version of CedarJS. */
+  /**
+   * The version of CedarJS.
+   * @deprecated Use the Cedar type instead.
+   */
   version?: Maybe<Scalars['String']['output']>;
 };
 

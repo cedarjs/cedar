@@ -4,7 +4,6 @@
 
 - [ESLint Config](#eslint-config)
   - [Purpose and Vision](#purpose-and-vision)
-  - [Package Leads](#package-leads)
   - [Roadmap](#roadmap)
   - [Contributing](#contributing)
   - [Usage (Flat Config - Recommended)](#usage-flat-config---recommended)
@@ -25,17 +24,13 @@ Our configuration uses recommended rule presets, including those from [ESLint](h
 - [Sort import declarations](https://eslint.org/docs/rules/sort-imports) by name
 - [Wrap block statements](https://eslint.org/docs/rules/curly) in curly braces
 
-## Package Leads
-
-Peter Pistorius (@peterp), David Price (@thedavidprice), Dominic Saadi (@jtoar), Daniel Choudhury (@dac09)
-
 ## Roadmap
 
 - Lint for case-sensitive imports (issue [#2806](https://github.com/redwoodjs/redwood/issues/2806))
 
 ## Contributing
 
-This package doesn't depend on other Redwood Framework packages. To contribute, you should be familiar with the ESLint package. Keep in mind that any rules added should not conflict with code formatting tools (e.g. [Prettier](https://prettier.io/docs/en/integrating-with-linters.html)).
+This package doesn't depend on other CedarJS Framework packages. To contribute, you should be familiar with the ESLint package. Keep in mind that any rules added should not conflict with code formatting tools (e.g. [Prettier](https://prettier.io/docs/en/integrating-with-linters.html)).
 
 ## Usage (Flat Config - Recommended)
 

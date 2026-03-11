@@ -1,6 +1,6 @@
 import task from 'tasuku'
 
-import ${name} from './${name}'
+import ${name} from './${name}.js'
 
 export const command = '${kebabName}'
 export const description = '(${version}->${version}) Changes the structure of your Redwood Project'

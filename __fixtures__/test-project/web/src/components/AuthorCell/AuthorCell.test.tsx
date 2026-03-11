@@ -24,7 +24,12 @@ describe('AuthorCell', () => {
 
   it('renders Failure successfully', async () => {
     expect(() => {
-      render(<Failure id={42} error={new Error('Oh no')} />)
+      render(
+        <Failure
+          id={'4c3d3e8e-2b1a-4f5c-8c7d-000000000042'}
+          error={new Error('Oh no')}
+        />
+      )
     }).not.toThrow()
   })
 
@@ -36,7 +41,12 @@ describe('AuthorCell', () => {
 
   it('renders Success successfully', async () => {
     expect(() => {
-      render(<Success id={42} author={standard().author} />)
+      render(
+        <Success
+          id={'4c3d3e8e-2b1a-4f5c-8c7d-000000000042'}
+          author={standard().author}
+        />
+      )
     }).not.toThrow()
   })
 })

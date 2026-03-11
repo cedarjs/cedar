@@ -88,7 +88,7 @@ async function main() {
     })
     .parseSync()
 
-  const redwoodProjectPath = positionals[0] ?? process.env.RWJS_CWD
+  const redwoodProjectPath = positionals[0] ?? process.env.CEDAR_CWD
 
   // Mostly just making TS happy with the second condition.
   if (!redwoodProjectPath || typeof redwoodProjectPath !== 'string') {

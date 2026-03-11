@@ -9,6 +9,22 @@ scalar BigInt
 
 scalar Byte
 
+"""
+The Cedar Root Schema
+
+Defines details about Cedar such as the current user and version information.
+"""
+type Cedar {
+  """The current user."""
+  currentUser: JSON
+
+  """The version of Prisma."""
+  prismaVersion: String
+
+  """The version of CedarJS."""
+  version: String
+}
+
 scalar Date
 
 scalar DateTime
@@ -25,32 +41,27 @@ type Mutation {
   updateTodoStatus(id: Int!, status: String!): Todo
 }
 
-"""About the Redwood queries."""
+"""About the Cedar queries."""
 type Query {
-  """Fetches the CedarJS root schema."""
-  cedarjs: Redwood
+  """Fetches the Cedar root schema."""
+  cedar: Cedar
   currentUser: JSON
 
-  """Fetches the Redwood root schema."""
-  redwood: Redwood
+  """Fetches the Cedar root schema."""
+  redwood: Redwood @deprecated(reason: "Use 'cedar' instead.")
   todos: [Todo]
   todosCount: Int!
 }
 
-"""
-The Cedar Root Schema
-
-Defines details about Cedar such as the current user and version information.
-"""
 type Redwood {
   """The current user."""
-  currentUser: JSON
+  currentUser: JSON @deprecated(reason: "Use the Cedar type instead.")
 
   """The version of Prisma."""
-  prismaVersion: String
+  prismaVersion: String @deprecated(reason: "Use the Cedar type instead.")
 
   """The version of CedarJS."""
-  version: String
+  version: String @deprecated(reason: "Use the Cedar type instead.")
 }
 
 scalar Time
@@ -71,6 +82,22 @@ scalar BigInt
 
 scalar Byte
 
+"""
+The Cedar Root Schema
+
+Defines details about Cedar such as the current user and version information.
+"""
+type Cedar {
+  """The current user."""
+  currentUser: JSON
+
+  """The version of Prisma."""
+  prismaVersion: String
+
+  """The version of CedarJS."""
+  version: String
+}
+
 scalar Date
 
 scalar DateTime
@@ -87,31 +114,26 @@ type Mutation {
   updateTodo(completed: Boolean!, id: Int!): Todo!
 }
 
-"""About the Redwood queries."""
+"""About the Cedar queries."""
 type Query {
-  """Fetches the CedarJS root schema."""
-  cedarjs: Redwood
+  """Fetches the Cedar root schema."""
+  cedar: Cedar
 
-  """Fetches the Redwood root schema."""
-  redwood: Redwood
+  """Fetches the Cedar root schema."""
+  redwood: Redwood @deprecated(reason: "Use 'cedar' instead.")
   todo(id: Int!): Todo
   todos: [Todo!]!
 }
 
-"""
-The Cedar Root Schema
-
-Defines details about Cedar such as the current user and version information.
-"""
 type Redwood {
   """The current user."""
-  currentUser: JSON
+  currentUser: JSON @deprecated(reason: "Use the Cedar type instead.")
 
   """The version of Prisma."""
-  prismaVersion: String
+  prismaVersion: String @deprecated(reason: "Use the Cedar type instead.")
 
   """The version of CedarJS."""
-  version: String
+  version: String @deprecated(reason: "Use the Cedar type instead.")
 }
 
 type Subscription {
@@ -150,6 +172,22 @@ scalar BigInt
 
 scalar Byte
 
+"""
+The Cedar Root Schema
+
+Defines details about Cedar such as the current user and version information.
+"""
+type Cedar {
+  """The current user."""
+  currentUser: JSON
+
+  """The version of Prisma."""
+  prismaVersion: String
+
+  """The version of CedarJS."""
+  version: String
+}
+
 scalar Date
 
 scalar DateTime
@@ -166,32 +204,27 @@ type Mutation {
   updateTodoStatus(id: Int!, status: String!): Todo
 }
 
-"""About the Redwood queries."""
+"""About the Cedar queries."""
 type Query {
-  """Fetches the CedarJS root schema."""
-  cedarjs: Redwood
+  """Fetches the Cedar root schema."""
+  cedar: Cedar
   currentUser: JSON
 
-  """Fetches the Redwood root schema."""
-  redwood: Redwood
+  """Fetches the Cedar root schema."""
+  redwood: Redwood @deprecated(reason: "Use 'cedar' instead.")
   todos: [Todo]
   todosCount: Int!
 }
 
-"""
-The Cedar Root Schema
-
-Defines details about Cedar such as the current user and version information.
-"""
 type Redwood {
   """The current user."""
-  currentUser: JSON
+  currentUser: JSON @deprecated(reason: "Use the Cedar type instead.")
 
   """The version of Prisma."""
-  prismaVersion: String
+  prismaVersion: String @deprecated(reason: "Use the Cedar type instead.")
 
   """The version of CedarJS."""
-  version: String
+  version: String @deprecated(reason: "Use the Cedar type instead.")
 }
 
 scalar Time

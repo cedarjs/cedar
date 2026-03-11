@@ -6,7 +6,8 @@ import { useErrorStyles } from './useErrorStyles'
 import { useRegister } from './useRegister'
 
 export interface TextAreaFieldProps
-  extends Omit<FieldProps<HTMLTextAreaElement>, 'type'>,
+  extends
+    Omit<FieldProps<HTMLTextAreaElement>, 'type'>,
     Omit<React.ComponentPropsWithRef<'textarea'>, 'name'> {}
 
 /**

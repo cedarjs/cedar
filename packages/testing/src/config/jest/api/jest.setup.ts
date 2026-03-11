@@ -106,9 +106,8 @@ const configureTeardown = async (): Promise<void> => {
 let quoteStyle: string
 // determine what kind of quotes are needed around table names in raw SQL
 const getQuoteStyle = async (): Promise<string> => {
-  const { getConfig: getPrismaConfig, getSchemaWithPath } = await import(
-    '@prisma/internals'
-  )
+  const { getConfig: getPrismaConfig, getSchemaWithPath } =
+    await import('@prisma/internals')
   const { getSchemaPath } = await import('@cedarjs/project-config')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers

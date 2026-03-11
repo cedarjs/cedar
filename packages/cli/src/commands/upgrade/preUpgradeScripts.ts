@@ -5,6 +5,7 @@ import path from 'node:path'
 
 import execa from 'execa'
 import type { ExecaError } from 'execa'
+import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import semver from 'semver'
 
 function isExecaError(e: unknown): e is ExecaError {
@@ -15,7 +16,7 @@ function isExecaError(e: unknown): e is ExecaError {
 
 export async function runPreUpgradeScripts(
   ctx: Record<string, unknown>,
-  task: { output: unknown },
+  task: ListrTaskWrapper<unknown, ListrRendererFactory, ListrRendererFactory>,
   { verbose, force }: { verbose?: boolean; force?: boolean },
 ) {
   if (!ctx.versionToUpgradeTo) {
@@ -197,7 +198,7 @@ export async function runPreUpgradeScripts(
 
     // Read script content for dependency extraction
     const scriptContent = await fs.promises.readFile(scriptPath, 'utf8')
-    const deps = extractDependencies(scriptContent)
+    const deps = extractDependencies(scriptContent, version)
 
     if (deps.length > 0) {
       const depList = deps.join(', ')
@@ -274,7 +275,7 @@ export async function runPreUpgradeScripts(
   }
 }
 
-const extractDependencies = (content: string) => {
+const extractDependencies = (content: string, version?: string) => {
   const deps = new Map()
 
   // 1. Explicit dependencies via comments
@@ -315,7 +316,11 @@ const extractDependencies = (content: string) => {
 
     // Explicit comments take precedence
     if (!deps.has(name)) {
-      deps.set(name, name)
+      if (version && name.startsWith('@cedarjs/')) {
+        deps.set(name, `${name}@${version}`)
+      } else {
+        deps.set(name, name)
+      }
     }
   }
 

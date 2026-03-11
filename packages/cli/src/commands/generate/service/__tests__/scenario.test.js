@@ -105,6 +105,14 @@ describe('the scenario generator', () => {
     expect(typeof value).toBe('string')
   })
 
+  test('scenarioFieldValue returns a valid email for non-unique String types with a field name that includes "email"', () => {
+    const field = { type: 'String', isUnique: false, name: 'email' }
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(typeof value).toBe('string')
+    expect(value).toEqual('foo@bar.com')
+  })
+
   test('scenarioFieldValue returns a unique string for unique String types', () => {
     const field = { type: 'String', isUnique: true }
     const value = serviceHandler.scenarioFieldValue(field)
@@ -112,6 +120,14 @@ describe('the scenario generator', () => {
     expect(value).toEqual(expect.any(String))
     // contains some unique digits somewhere
     expect(value).toMatch(/\d{1,}$/)
+    expect(typeof value).toBe('string')
+  })
+
+  test('scenarioFieldValue returns a valid unique email for unique String types with a field name that includes "email"', () => {
+    const field = { type: 'String', isUnique: true, name: 'authorEmail' }
+    const value = serviceHandler.scenarioFieldValue(field)
+
+    expect(value).toMatch(/foo\d+@bar\.com/)
     expect(typeof value).toBe('string')
   })
 

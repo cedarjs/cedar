@@ -17,8 +17,8 @@ import { printTaskEpilogue } from './util.js'
 
 export const handler = async ({ force, verbose }) => {
   const rwPaths = getPaths()
-  const redwoodTomlPath = getConfigPath()
-  const configContent = fs.readFileSync(redwoodTomlPath, 'utf-8')
+  const configTomlPath = getConfigPath()
+  const configContent = fs.readFileSync(configTomlPath, 'utf-8')
   const ext = path.extname(rwPaths.web.entryClient || '')
 
   const tasks = new Listr(
@@ -44,34 +44,35 @@ export const handler = async ({ force, verbose }) => {
         },
       },
       {
-        title: 'Adding config to redwood.toml...',
+        title: 'Adding config to cedar.toml...',
         task: (_ctx, task) => {
           if (!configContent.includes('[experimental.rsc]')) {
             writeFile(
-              redwoodTomlPath,
+              configTomlPath,
               configContent.concat('\n[experimental.rsc]\n  enabled = true\n'),
               {
-                overwriteExisting: true, // redwood.toml always exists
+                overwriteExisting: true, // cedar.toml always exists
               },
             )
           } else {
             if (force) {
-              task.output = 'Overwriting config in redwood.toml'
+              task.output = 'Overwriting config in cedar.toml'
 
               writeFile(
-                redwoodTomlPath,
+                configTomlPath,
                 configContent.replace(
                   // Enable if it's currently disabled
                   '\n[experimental.rsc]\n  enabled = false\n',
                   '\n[experimental.rsc]\n  enabled = true\n',
                 ),
                 {
-                  overwriteExisting: true, // redwood.toml always exists
+                  overwriteExisting: true, // cedar.toml always exists
                 },
               )
             } else {
               task.skip(
-                'The [experimental.rsc] config block already exists in your `redwood.toml` file.',
+                'The [experimental.rsc] config block already exists in your ' +
+                  'cedar.toml file.',
               )
             }
           }

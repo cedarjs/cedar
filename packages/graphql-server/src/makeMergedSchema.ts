@@ -16,8 +16,8 @@ import type {
   GraphQLUnionType,
   GraphQLObjectType,
 } from 'graphql'
-import lodash from 'lodash'
-const { merge, omitBy } = lodash
+import merge from 'lodash/merge.js'
+import omitBy from 'lodash/omitBy.js'
 
 import type { RedwoodDirective } from './plugins/useRedwoodDirective.js'
 import * as rootGqlSchema from './rootSchema.js'

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/forms",
-  "version": "2.0.2",
+  "version": "2.8.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -33,9 +33,9 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "graphql": "16.12.0",
+    "graphql": "16.13.1",
     "pascalcase": "1.0.0",
-    "react-hook-form": "7.69.0"
+    "react-hook-form": "7.71.2"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
@@ -47,8 +47,8 @@
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "concurrently": "9.2.1",
-    "nodemon": "3.1.11",
-    "publint": "0.3.16",
+    "nodemon": "3.1.14",
+    "publint": "0.3.18",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tsx": "4.21.0",

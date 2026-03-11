@@ -10,9 +10,8 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 import * as ogImageHandler from '../ogImageHandler.js'
 
 vi.mock('node:fs', async (importOriginal) => {
-  const { wrapFsForUnionfs } = await import(
-    '../../../../__tests__/ufsFsProxy.js'
-  )
+  const { wrapFsForUnionfs } =
+    await import('../../../../__tests__/ufsFsProxy.js')
   ufs.use(wrapFsForUnionfs(await importOriginal())).use(memfs)
   return { ...ufs, default: { ...ufs } }
 })
@@ -34,12 +33,12 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     }),
   }
 })
-let original_RWJS_CWD
+let original_CEDAR_CWD
 
 describe('ogImage generator', () => {
   beforeEach(() => {
-    original_RWJS_CWD = process.env.RWJS_CWD
-    process.env.RWJS_CWD = '/path/to/project'
+    original_CEDAR_CWD = process.env.CEDAR_CWD
+    process.env.CEDAR_CWD = '/path/to/project'
     vol.fromJSON(
       {
         'redwood.toml': '',
@@ -55,7 +54,7 @@ describe('ogImage generator', () => {
 
   afterEach(() => {
     vi.clearAllMocks()
-    process.env.RWJS_CWD = original_RWJS_CWD
+    process.env.CEDAR_CWD = original_CEDAR_CWD
   })
 
   describe('files', () => {

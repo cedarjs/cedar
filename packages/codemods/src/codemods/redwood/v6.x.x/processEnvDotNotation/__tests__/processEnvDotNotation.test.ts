@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest'
 
-import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot'
+import { matchTransformSnapshot } from '../../../../../testUtils/matchTransformSnapshot.js'
 
 describe('processEnvDotNotation', () => {
   it('Replaces array access syntax with dot notation', async () => {

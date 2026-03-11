@@ -15,11 +15,11 @@ const FIXTURE_ERROR_PATH = path.resolve(
 
 describe('SDL is missing directives', () => {
   beforeAll(() => {
-    process.env.RWJS_CWD = FIXTURE_ERROR_PATH
+    process.env.CEDAR_CWD = FIXTURE_ERROR_PATH
   })
 
   afterAll(() => {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   test('is invalid due to missing directives', async () => {

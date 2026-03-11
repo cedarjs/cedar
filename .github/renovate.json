@@ -32,6 +32,7 @@
       "matchPackageNames": [
         "boxen",
         "camelcase",
+        "cross-env",
         "execa",
         "humanize-string",
         "pascalcase",

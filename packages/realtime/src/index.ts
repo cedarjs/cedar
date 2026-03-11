@@ -1,4 +1,6 @@
 export {
+  useCedarRealtime,
+  /** @deprecated - please use useCedarRealtime instead */
   useRedwoodRealtime,
   createPubSub,
   liveDirectiveTypeDefs,
@@ -7,7 +9,7 @@ export {
   liveQueryStore,
   pubSub,
   Repeater,
-} from './graphql'
+} from './graphql/plugins/useCedarRealtime'
 
 export type {
   LiveQueryStorageMechanism,
@@ -15,5 +17,7 @@ export type {
   PublishClientType,
   SubscribeClientType,
   SubscriptionGlobImports,
+  CedarRealtimeOptions,
+  /** @deprecated - please use CedarRealtimeOptions instead */
   RedwoodRealtimeOptions,
-} from './graphql'
+} from './graphql/plugins/useCedarRealtime'

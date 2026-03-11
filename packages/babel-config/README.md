@@ -1,3 +1,3 @@
-# Redwood's Babel Config
+# Cedar's Babel Config
 
-Redwood's Babel config. This package has been extracted out of `@redwoodjs/internal`.
+Cedar's Babel config. This package has been extracted out of `@cedarjs/internal`.

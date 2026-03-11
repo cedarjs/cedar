@@ -1,7 +1,7 @@
 /* eslint-env node, vitest */
 
 // Disable telemetry within framework tests
-process.env.REDWOOD_DISABLE_TELEMETRY = 1
+process.env.REDWOOD_DISABLE_TELEMETRY = '1'
 
 import fs from 'node:fs'
 import path from 'path'
@@ -11,13 +11,13 @@ import { expect } from 'vitest'
 import { formatCode } from './src/testUtils/index.js'
 
 globalThis.matchInlineTransformSnapshot = (
-  await import('./src/testUtils/matchInlineTransformSnapshot')
+  await import('./src/testUtils/matchInlineTransformSnapshot.js')
 ).matchInlineTransformSnapshot
 globalThis.matchTransformSnapshot = (
-  await import('./src/testUtils/matchTransformSnapshot')
+  await import('./src/testUtils/matchTransformSnapshot.js')
 ).matchTransformSnapshot
 globalThis.matchFolderTransform = (
-  await import('./src/testUtils/matchFolderTransform')
+  await import('./src/testUtils/matchFolderTransform.js')
 ).matchFolderTransform
 
 // Custom matcher for checking fixtures using paths

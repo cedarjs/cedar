@@ -1,6 +1,6 @@
 # Telemetry
 
-RedwoodJS collects completely anonymous telemetry data about general usage.
+CedarJS collects completely anonymous telemetry data about general usage.
 
 Here is an example JSON packet containing the telemetry data for running yarn rw info:
 
@@ -19,7 +19,7 @@ Here is an example JSON packet containing the telemetry data for running yarn rw
   "yarnVersion": "14.17.1",
   "npmVersion": "14.17.1",
   "vsCodeVersion": "1.58.0",
-  "redwoodVersion": "0.35.1",
+  "cedarVersion": "0.35.1",
   "os": "macOS",
   "osVersion": "11.4",
   "system": "8.32" // number of cpu cores and system memory
@@ -28,7 +28,8 @@ Here is an example JSON packet containing the telemetry data for running yarn rw
 
 ## How do I turn it off?
 
-Set an environment variable, either in your app's .env file, or anywhere that creates variables for your user space, like `.bashrc` or `.bash_profile`:
+Set an environment variable, either in your app's .env file, or anywhere that
+creates variables for your user space, like `.bashrc` or `.bash_profile`:
 
 ```terminal
 REDWOOD_DISABLE_TELEMETRY=1

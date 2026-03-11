@@ -12,7 +12,7 @@ export const QUERY: TypedDocumentNode<
   FindAuthorQuery,
   FindAuthorQueryVariables
 > = gql`
-  query FindAuthorQuery($id: Int!) {
+  query FindAuthorQuery($id: String!) {
     author: user(id: $id) {
       email
       fullName

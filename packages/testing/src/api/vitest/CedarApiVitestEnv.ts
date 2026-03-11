@@ -46,7 +46,7 @@ const CedarApiVitestEnvironment: Environment = {
       ? { [directUrlEnvVar]: process.env[directUrlEnvVar] }
       : {}
 
-    execa.sync('yarn', ['rw', ...command], {
+    execa.sync('yarn', ['cedar', ...command], {
       cwd: cedarPaths.api.base,
       stdio: 'inherit',
       env: {

@@ -58,8 +58,8 @@ export default async function transform(file: FileInfo, api: API) {
     const source = path.value.source
     return Boolean(
       source &&
-        typeof source.value === 'string' &&
-        source.value.endsWith('.svg'),
+      typeof source.value === 'string' &&
+      source.value.endsWith('.svg'),
     )
   })
 

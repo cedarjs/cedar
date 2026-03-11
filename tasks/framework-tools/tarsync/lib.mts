@@ -71,7 +71,8 @@ export async function getOptions(): Promise<Options> {
   const [projectPath] = positionals
 
   const options: Options = {
-    projectPath: projectPath ?? process.env.RWJS_CWD ?? '',
+    projectPath:
+      projectPath ?? process.env.CEDAR_CWD ?? process.env.RWJS_CWD ?? '',
     watch: values.watch ?? false,
     verbose: values.verbose ?? false,
   }
@@ -79,15 +80,15 @@ export async function getOptions(): Promise<Options> {
   if (!options.projectPath) {
     throw new Error(
       [
-        'Error: You have to provide the path to a Redwood project as',
+        'Error: You have to provide the path to a Cedar project as',
         '',
         '  1. the first positional argument',
         '',
-        ansis.gray('  yarn project:tarsync /path/to/redwood/project'),
+        ansis.gray('  yarn project:tarsync /path/to/cedar/project'),
         '',
-        '  2. the `RWJS_CWD` env var',
+        '  2. the `CEDAR_CWD` env var',
         '',
-        ansis.gray('  RWJS_CWD=/path/to/redwood/project yarn project:tarsync'),
+        ansis.gray('  CEDAR_CWD=/path/to/cedar/project yarn project:tarsync'),
       ].join('\n'),
     )
   }
@@ -102,19 +103,17 @@ export async function buildTarballs() {
   await $`yarn nx run-many -t build:pack --exclude create-cedar-app`
 }
 
-export async function moveTarballs(projectPath: string) {
+export async function copyTarballs(projectPath: string) {
   const tarballDest = path.join(projectPath, TARBALL_DEST_DIRNAME)
   await fs.promises.mkdir(tarballDest, { recursive: true })
 
   const tarballs = await glob(['./packages/**/*.tgz'])
 
   await Promise.all(
-    tarballs.map((tarball) =>
-      fs.promises.rename(
-        tarball,
-        path.join(tarballDest, path.basename(tarball)),
-      ),
-    ),
+    tarballs.map(async (tarball) => {
+      const dest = path.join(tarballDest, path.basename(tarball))
+      await fs.promises.copyFile(tarball, dest)
+    }),
   )
 }
 
@@ -128,7 +127,7 @@ export async function updateResolutions(projectPath: string) {
     .reduce((resolutions, { name }) => {
       return {
         ...resolutions,
-        // Turn a Redwood package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
+        // Turn a Cedar package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
         [name]: `./${TARBALL_DEST_DIRNAME}/${
           name.replace('@', '').replaceAll('/', '-') + '.tgz'
         }`,

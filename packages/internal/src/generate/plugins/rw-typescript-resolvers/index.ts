@@ -12,7 +12,7 @@ import { RwTypeScriptResolversVisitor } from './visitor.js'
 export const plugin: PluginFunction<
   TypeScriptResolversPluginConfig,
   Types.ComplexPluginOutput
-> = (
+> = async (
   schema: GraphQLSchema,
   _documents: Types.DocumentFile[],
   config: TypeScriptResolversPluginConfig,
@@ -28,10 +28,7 @@ export const plugin: PluginFunction<
 
   // `content` here is the output of the original plugin, including the
   // original visitor
-  const { prepend, content } = originalPlugin(schema, [], config) as {
-    prepend: string[]
-    content: string
-  }
+  const { prepend = [], content } = await originalPlugin(schema, [], config)
 
   // A few types needed for our own RW-specific solution
   prepend.push(`export type OptArgsResolverFn<TResult, TParent = {}, TContext = {}, TArgs = {}> = (
@@ -72,7 +69,7 @@ export const plugin: PluginFunction<
       .split('\n')[0],
   )
 
-  const splitRootResolver = visitor.getRootResolver().split('\n')
+  const splitRootResolver = visitor.getRootResolver().content.split('\n')
   const visitorResultEnd = splitContent.findIndex(
     (line: string, index: number) =>
       line === splitRootResolver[0] &&

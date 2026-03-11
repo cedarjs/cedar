@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/project-config",
-  "version": "2.0.2",
+  "version": "2.8.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -45,9 +45,9 @@
     "@arethetypeswrong/cli": "0.18.2",
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
-    "prisma": "6.19.1",
-    "publint": "0.3.16",
-    "rimraf": "6.1.2",
+    "prisma": "6.19.2",
+    "publint": "0.3.18",
+    "rimraf": "6.1.3",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

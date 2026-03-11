@@ -11,7 +11,7 @@ import type { Plugin } from 'graphql-yoga'
 
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
 import type { CorsConfig } from '@cedarjs/api'
-import type { RedwoodRealtimeOptions } from '@cedarjs/realtime'
+import type { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import type { DirectiveGlobImports } from './directives/makeDirectives.js'
 import type {
@@ -70,10 +70,24 @@ export type ArmorConfig = {
   logErrors?: boolean
 } & GraphQLArmorConfig
 
-/** This is an interface so you can extend it inside your application when needed */
+/**
+ * This is an interface so you can extend it inside your application when needed
+ */
+export interface CedarGraphQLContext {
+  event: APIGatewayProxyEvent
+  requestContext?: LambdaContext | undefined
+  currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
+
+  [index: string]: unknown
+}
+
+/**
+ * This is an interface so you can extend it inside your application when needed
+ * @deprecated Please use CedarGraphQLContext
+ */
 export interface RedwoodGraphQLContext {
   event: APIGatewayProxyEvent
-  requestContext: LambdaContext
+  requestContext: LambdaContext | undefined
   currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
 
   [index: string]: unknown
@@ -234,11 +248,11 @@ export type GraphQLYogaOptions = {
   generateGraphiQLHeader?: GenerateGraphiQLHeader
 
   /**
-   * @description Configure RedwoodRealtime plugin with subscriptions and live queries
+   * @description Configure Cedar Realtime plugin with subscriptions and live queries
    *
    * Only supported in a server deploy and not allowed with GraphQLHandler config
    */
-  realtime?: RedwoodRealtimeOptions
+  realtime?: CedarRealtimeOptions
 
   /**
    * @description Configure Trusted Documents options
@@ -255,7 +269,7 @@ export type GraphQLYogaOptions = {
 
   /**
    * @description Configure which scalars to include in the schema. This should match your
-   * `graphql.includeScalars` configuration in `redwood.toml`.
+   * `graphql.includeScalars` configuration in `cedar.toml`.
    *
    * The default is to include. You must set to `false` to exclude.
    */
@@ -265,7 +279,7 @@ export type GraphQLYogaOptions = {
 /**
  * @description Configure GraphQLHandler with options
  *
- * Note: RedwoodRealtime is not supported
+ * Note: Cedar Realtime is not supported
  */
 export type GraphQLHandlerOptions = GraphQLYogaOptions
 
