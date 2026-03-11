@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 import boxen from 'boxen'
 import execa from 'execa'
@@ -7,71 +7,109 @@ import execa from 'execa'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
-// eslint-disable-next-line no-unused-vars
-export const handler = async ({ _, $0, commands = [], ...options }) => {
+type PrismaHandlerArgs = Record<string, unknown> & {
+  _?: unknown[]
+  $0?: string
+  commands?: unknown[]
+}
+
+const getErrorMessage = (error: unknown): string => {
+  return error instanceof Error ? error.message : String(error)
+}
+
+function getExitCode(value: unknown) {
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    !('exitCode' in value) ||
+    typeof value.exitCode !== 'number'
+  ) {
+    return undefined
+  }
+
+  return value.exitCode
+}
+
+export const handler = async ({
+  _: _positionals,
+  $0: _binName,
+  commands = [],
+  ...options
+}: PrismaHandlerArgs) => {
   recordTelemetryAttributes({
     command: 'prisma',
   })
 
-  const rwjsPaths = getPaths()
+  const cedarPaths = getPaths()
+  const args = [...(Array.isArray(commands) ? commands : [])].filter(
+    (value): value is string => typeof value === 'string',
+  )
 
   // Prisma only supports '--help', but Cedar's CLI supports `prisma <command> help`
-  const helpIndex = commands.indexOf('help')
+  const helpIndex = args.indexOf('help')
   if (helpIndex !== -1) {
     options.help = true
-    commands.splice(helpIndex, 1)
+    args.splice(helpIndex, 1)
   }
 
   // Automatically inject options for some commands.
   const hasHelpOption = options.help || options.h
   if (!hasHelpOption) {
-    if (!fs.existsSync(rwjsPaths.api.prismaConfig)) {
+    if (!fs.existsSync(cedarPaths.api.prismaConfig)) {
       console.error()
       console.error(c.error('No Prisma config file found.'))
-      console.error(`Cedar searched here '${rwjsPaths.api.prismaConfig}'`)
+      console.error(`Cedar searched here '${cedarPaths.api.prismaConfig}'`)
       console.error()
       process.exit(1)
     }
 
-    options.config = `${rwjsPaths.api.prismaConfig}`
+    options.config = `${cedarPaths.api.prismaConfig}`
   }
 
   // Convert command and options into a string that's run via execa
-  const args = commands
   for (const [name, value] of Object.entries(options)) {
     // Allow both long and short form commands, e.g. --name and -n
     args.push(name.length > 1 ? `--${name}` : `-${name}`)
     if (typeof value === 'string') {
-      // Make sure options that take multiple quoted words
-      // like `-n "create user"` are passed to prisma with quotes.
-      value.split(' ').length > 1 ? args.push(`"${value}"`) : args.push(value)
+      // Make sure options that take multiple quoted words, like
+      // `-n "create user"` are passed to prisma with quotes.
+      if (value.split(' ').length > 1) {
+        args.push(`"${value}"`)
+      } else {
+        args.push(value)
+      }
     } else if (typeof value === 'number') {
-      args.push(value)
+      args.push(String(value))
     }
   }
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(c.underline('$ yarn prisma ' + args.join(' ')))
+  console.log(c.underline(`$ yarn prisma ${args.join(' ')}`))
   console.log()
 
   try {
-    const prismaBin = path.join(rwjsPaths.base, 'node_modules/.bin/prisma')
+    const prismaBin = path.join(cedarPaths.base, 'node_modules/.bin/prisma')
     execa.sync(prismaBin, args, {
-      cwd: rwjsPaths.base,
+      cwd: cedarPaths.base,
       stdio: 'inherit',
       cleanup: true,
     })
 
-    if (hasHelpOption || commands.length === 0) {
+    if (hasHelpOption || args.length === 0) {
       printWrapInfo()
     }
-  } catch (e) {
-    errorTelemetry(process.argv, `Error generating prisma client: ${e.message}`)
-    process.exit(e?.exitCode || 1)
+  } catch (error: unknown) {
+    errorTelemetry(
+      process.argv,
+      `Error generating prisma client: ${getErrorMessage(error)}`,
+    )
+    process.exit(getExitCode(error) ?? 1)
   }
 }
 

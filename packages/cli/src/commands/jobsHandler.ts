@@ -1,19 +1,28 @@
 import execa from 'execa'
 
+// @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
+
+type JobsHandlerArgs = Record<string, unknown> & {
+  _?: unknown[]
+  $0?: string
+  commands?: unknown
+}
 
 export const handler = async ({
   _,
   $0: _rw,
   commands: _commands,
   ...options
-}) => {
-  const args = [_.pop()]
+}: JobsHandlerArgs) => {
+  const positionalArgs = Array.isArray(_) ? [..._] : []
+  const commandArg = positionalArgs.pop()
+  const args = [commandArg == null ? '' : String(commandArg)]
 
   for (const [name, value] of Object.entries(options)) {
     // Allow both long and short form commands, e.g. --name and -n
     args.push(name.length > 1 ? `--${name}` : `-${name}`)
-    args.push(value)
+    args.push(String(value))
   }
 
   let command = `yarn rw-jobs ${args.join(' ')}`
