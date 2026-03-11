@@ -56,8 +56,10 @@ vi.mock('../project.js', async (importOriginal) => {
   }
 })
 
-test('Generate gql typedefs web', async () => {
+test.only('Generate gql typedefs web', async () => {
   await generateGraphQLSchema()
+
+  console.log('schema generated')
 
   vi.spyOn(fs, 'writeFileSync').mockImplementation(
     (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {

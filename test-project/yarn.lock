@@ -2260,7 +2260,7 @@ __metadata:
 
 "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=eb280e&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=a3fd90&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.0"
@@ -2303,7 +2303,7 @@ __metadata:
   bin:
     rw-gen: ./dist/generate/generate.js
     rw-gen-watch: ./dist/generate/watch.js
-  checksum: 10c0/618fd4a06d8651e0874b39bcb4870412ac6d5154cbb222f4e812c6713804c4e907b8db145e90d5962098de9ab345b8842c1d7d9e931899e20005cfcdef5d5d80
+  checksum: 10c0/2565ef7447a98ae768fe3ef24a338700f4d3c43d4ddc2f1d4d3eff08ffbf14463c1fdaec2af7eb328c2ab602479b4c320e6760b86e40fd9854e0ad604748547d
   languageName: node
   linkType: hard
 
@@ -2346,14 +2346,14 @@ __metadata:
 
 "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz#../packages/project-config/cedarjs-project-config.tgz::hash=8d6a1e&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz#../packages/project-config/cedarjs-project-config.tgz::hash=5389e8&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@prisma/internals": "npm:7.4.2"
     deepmerge: "npm:4.3.1"
     fast-glob: "npm:3.3.3"
     smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
-  checksum: 10c0/307e9e473a5f3c67ba684bef2f8b99f40becf27f966bfb3d7e9f74c98f859bd066023ec53631a6a86ae8bcc85d4a2bc49a70ecfd716544293a8eee768a84973c
+  checksum: 10c0/9a4d213dad0dadc0f8bcc2f4b8dd84382c4743c0fa0cc1cd4146d9ddb66701486bda260d18deb4a52fd503bd5f847eb4f78d063bc3d4b366690ead06f4f731ae
   languageName: node
   linkType: hard
 
