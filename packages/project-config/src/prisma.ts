@@ -202,7 +202,7 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
   console.log('resolveGeneratedPrismaClient schemaDir', schemaDir)
 
   let generatorOutputPath: string | undefined
-  let ext = '.ts'
+  let ext = 'ts'
   try {
     const { schemas } = await getPrismaSchemasAtPath(schemaPath)
     console.log('resolveGeneratedPrismaClient schemas', schemas)

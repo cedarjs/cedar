@@ -42,10 +42,10 @@ test('resolveGeneratedPrismaClient', async () => {
   fs.writeFileSync(
     schemaPath,
     `generator client {
-  provider = "prisma-client"
-  output = "./generated/prisma"
-}
-datasource db { provider = "sqlite" }`,
+      provider = "prisma-client"
+      output = "./generated/prisma"
+    }
+    datasource db { provider = "sqlite" }`,
   )
 
   const expectedNodeModulesPath = path.join(
@@ -54,15 +54,15 @@ datasource db { provider = "sqlite" }`,
   )
 
   await expect(resolveGeneratedPrismaClient()).resolves.toEqual(
-    path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.js'),
+    path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.ts'),
   )
 
   await expect(
     resolveGeneratedPrismaClient({ mustExist: true }),
   ).rejects.toThrow(
     `Could not find generated Prisma client entry. Checked: ` +
-      `${path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.js')}, ` +
-      `${path.join(getPaths().base, 'api', 'db', 'generated', 'client', 'client.js')}, ` +
+      `${path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.ts')}, ` +
+      `${path.join(getPaths().base, 'api', 'db', 'generated', 'client', 'client.ts')}, ` +
       `${expectedNodeModulesPath}. Run \`yarn cedar prisma generate\` and try again.`,
   )
 
@@ -79,7 +79,7 @@ datasource db { provider = "sqlite" }`,
     'db',
     'generated',
     'prisma',
-    'client.js',
+    'client.ts',
   )
   fs.mkdirSync(path.dirname(expectedGeneratedPath), { recursive: true })
   fs.writeFileSync(expectedGeneratedPath, 'export default { ModelName: {} }')
