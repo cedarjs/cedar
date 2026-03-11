@@ -1,10 +1,7 @@
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import type { BlogPostsQuery, BlogPostsQueryVariables } from 'types/graphql'
 
-import type {
-  CellSuccessProps,
-  CellFailureProps,
-  TypedDocumentNode,
-} from '@cedarjs/web'
+import type { CellFailureProps, CellSuccessProps } from '@cedarjs/web'
 
 import BlogPost from 'src/components/BlogPost'
 
@@ -36,10 +33,12 @@ export const Failure = ({
 
 export const Success = ({
   blogPosts,
-}: CellSuccessProps<BlogPostsQuery, BlogPostsQueryVariables>) => (
-  <div className="divide-grey-700 divide-y">
-    {blogPosts.map((post) => (
-      <BlogPost key={post.id} blogPost={post} />
-    ))}
-  </div>
-)
+}: CellSuccessProps<BlogPostsQuery, BlogPostsQueryVariables>) => {
+  return (
+    <div className="divide-grey-700 divide-y">
+      {blogPosts.map((post) => (
+        <BlogPost key={post.id} blogPost={post} />
+      ))}
+    </div>
+  )
+}

@@ -1,11 +1,11 @@
 // import { Link, routes } from '@cedarjs/router'
 import { Metadata } from '@cedarjs/web'
 
+import BlogPostCell from 'src/components/BlogPostCell'
+
 type BlogPostPageProps = {
   id: number
 }
-
-import BlogPostCell from 'src/components/BlogPostCell'
 
 const BlogPostPage = ({ id }: BlogPostPageProps) => {
   return (

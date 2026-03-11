@@ -1,3 +1,5 @@
+// import { Link, routes } from '@cedarjs/router'
+
 const AboutPage = () => {
   return (
     <p className="font-light">
