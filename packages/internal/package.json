@@ -163,7 +163,7 @@
     "@graphql-codegen/typed-document-node": "6.1.7",
     "@graphql-codegen/typescript": "5.0.9",
     "@graphql-codegen/typescript-operations": "5.0.9",
-    "@graphql-codegen/typescript-react-apollo": "4.4.0",
+    "@graphql-codegen/typescript-react-apollo": "4.4.1",
     "@graphql-codegen/typescript-resolvers": "5.1.7",
     "@graphql-tools/documents": "1.0.1",
     "@sdl-codegen/node": "2.0.1",
