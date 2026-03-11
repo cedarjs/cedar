@@ -415,57 +415,180 @@ export default BlogLayout`,
 }
 
 function transformBlogPostsCell(source: string) {
-  let nextSource = insertImportBeforeFirstImportOrThrow(
-    source,
-    "import BlogPost from 'src/components/BlogPost'",
-    'Could not find where to insert BlogPost import in BlogPostsCell',
-  )
+  const typedCellPattern =
+    /import type \{\s*BlogPostsQuery,\s*BlogPostsQueryVariables,\s*\} from 'types\/graphql'[\s\S]*?export const Success = \(\{[\s\S]*?\n\)\n?/m
 
-  nextSource = replaceOrThrow(
-    nextSource,
-    /export const QUERY: TypedDocumentNode<BlogPostsQuery, BlogPostsQueryVariables> = gql`\n[\s\S]*?`\n/m,
-    `export const QUERY: TypedDocumentNode<BlogPostsQuery, BlogPostsQueryVariables> = gql\`${BLOG_POSTS_CELL_QUERY}\`\n`,
-    'Could not replace BlogPostsCell QUERY',
-  )
+  if (typedCellPattern.test(source)) {
+    return `import type { BlogPostsQuery, BlogPostsQueryVariables } from 'types/graphql'
 
-  return replaceOrThrow(
-    nextSource,
-    /export const Success = \(\{\s*blogPosts,\s*}: CellSuccessProps<BlogPostsQuery, BlogPostsQueryVariables>\) => \{[\s\S]*?^}\n/m,
-    `export const Success = ({
+import type {
+  CellSuccessProps,
+  CellFailureProps,
+  TypedDocumentNode,
+} from '@cedarjs/web'
+
+import BlogPost from 'src/components/BlogPost'
+
+export const QUERY: TypedDocumentNode<
+  BlogPostsQuery,
+  BlogPostsQueryVariables
+> = gql\`${BLOG_POSTS_CELL_QUERY}\`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({
+  error,
+}: CellFailureProps<BlogPostsQueryVariables>) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({
   blogPosts,
-}: CellSuccessProps<BlogPostsQuery, BlogPostsQueryVariables>) => {
+}: CellSuccessProps<BlogPostsQuery, BlogPostsQueryVariables>) => (
+  <div className="divide-grey-700 divide-y">
+    {blogPosts.map((post) => (
+      <BlogPost key={post.id} blogPost={post} />
+    ))}
+  </div>
+)
+`
+  }
+
+  const queryPattern = /export const QUERY = gql`\n[\s\S]*?`\n/m
+  const successPattern =
+    /export const Success = \(\{\s*blogPosts\s*\}\) => \{[\s\S]*?^}\n/m
+
+  if (queryPattern.test(source) && successPattern.test(source)) {
+    let nextSource = insertImportBeforeFirstImportOrThrow(
+      source,
+      "import BlogPost from 'src/components/BlogPost'",
+      'Could not find where to insert BlogPost import in BlogPostsCell',
+    )
+
+    nextSource = replaceOrThrow(
+      nextSource,
+      queryPattern,
+      `export const QUERY = gql\`${BLOG_POSTS_CELL_QUERY}\`\n`,
+      'Could not replace BlogPostsCell QUERY',
+    )
+
+    return replaceOrThrow(
+      nextSource,
+      successPattern,
+      `export const Success = ({ blogPosts }) => {
   return (${BLOG_POSTS_CELL_SUCCESS})
 }
 `,
-    'Could not replace BlogPostsCell Success',
-  )
+      'Could not replace BlogPostsCell Success',
+    )
+  }
+
+  return `import BlogPost from 'src/components/BlogPost'
+
+export const QUERY = gql\`${BLOG_POSTS_CELL_QUERY}\`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({ blogPosts }) => {
+  return (${BLOG_POSTS_CELL_SUCCESS})
+}
+`
 }
 
 function transformBlogPostCell(source: string) {
-  let nextSource = insertImportBeforeFirstImportOrThrow(
-    source,
-    "import BlogPost from 'src/components/BlogPost'",
-    'Could not find where to insert BlogPost import in BlogPostCell',
-  )
+  const typedCellPattern =
+    /import type \{\s*FindBlogPostQuery,\s*FindBlogPostQueryVariables,\s*\} from 'types\/graphql'[\s\S]*?export const Success = \(\{[\s\S]*?\n\)\n?/m
 
-  nextSource = replaceOrThrow(
-    nextSource,
-    /export const QUERY: TypedDocumentNode<FindBlogPostQuery, FindBlogPostQueryVariables> = gql`\n[\s\S]*?`\n/m,
-    `export const QUERY: TypedDocumentNode<FindBlogPostQuery, FindBlogPostQueryVariables> = gql\`${BLOG_POST_CELL_QUERY}\`\n`,
-    'Could not replace BlogPostCell QUERY',
-  )
+  if (typedCellPattern.test(source)) {
+    return `import type {
+  FindBlogPostQuery,
+  FindBlogPostQueryVariables,
+} from 'types/graphql'
 
-  return replaceOrThrow(
-    nextSource,
-    /export const Success = \(\{\s*blogPost,\s*}: CellSuccessProps<FindBlogPostQuery, FindBlogPostQueryVariables>\) => \{[\s\S]*?^}\n/m,
-    `export const Success = ({
+import type {
+  CellSuccessProps,
+  CellFailureProps,
+  TypedDocumentNode,
+} from '@cedarjs/web'
+
+import BlogPost from 'src/components/BlogPost'
+
+export const QUERY: TypedDocumentNode<
+  FindBlogPostQuery,
+  FindBlogPostQueryVariables
+> = gql\`${BLOG_POST_CELL_QUERY}\`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({
+  error,
+}: CellFailureProps<FindBlogPostQueryVariables>) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({
   blogPost,
-}: CellSuccessProps<FindBlogPostQuery, FindBlogPostQueryVariables>) => {
+}: CellSuccessProps<FindBlogPostQuery, FindBlogPostQueryVariables>) => (
+  <BlogPost blogPost={blogPost} />
+)
+`
+  }
+
+  const queryPattern = /export const QUERY = gql`\n[\s\S]*?`\n/m
+  const successPattern =
+    /export const Success = \(\{\s*blogPost\s*\}\) => \{[\s\S]*?^}\n/m
+
+  if (queryPattern.test(source) && successPattern.test(source)) {
+    let nextSource = insertImportBeforeFirstImportOrThrow(
+      source,
+      "import BlogPost from 'src/components/BlogPost'",
+      'Could not find where to insert BlogPost import in BlogPostCell',
+    )
+
+    nextSource = replaceOrThrow(
+      nextSource,
+      queryPattern,
+      `export const QUERY = gql\`${BLOG_POST_CELL_QUERY}\`\n`,
+      'Could not replace BlogPostCell QUERY',
+    )
+
+    return replaceOrThrow(
+      nextSource,
+      successPattern,
+      `export const Success = ({ blogPost }) => {
   return ${BLOG_POST_CELL_SUCCESS}
 }
 `,
-    'Could not replace BlogPostCell Success',
-  )
+      'Could not replace BlogPostCell Success',
+    )
+  }
+
+  return `import BlogPost from 'src/components/BlogPost'
+
+export const QUERY = gql\`${BLOG_POST_CELL_QUERY}\`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }) => (
+  <div style={{ color: 'red' }}>Error: {error?.message}</div>
+)
+
+export const Success = ({ blogPost }) => {
+  return ${BLOG_POST_CELL_SUCCESS}
+}
+`
 }
 
 function transformAuthor(source: string, target: string) {
