@@ -2178,7 +2178,7 @@ __metadata:
     "@fastify/url-data": "npm:6.0.3"
     "@types/aws-lambda": "npm:8.10.161"
     "@types/dotenv-defaults": "npm:^5.0.0"
-    "@types/qs": "npm:6.14.0"
+    "@types/qs": "npm:6.15.0"
     "@types/split2": "npm:4.2.3"
     "@types/yargs": "npm:17.0.35"
     ansis: "npm:4.2.0"
@@ -11123,10 +11123,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/qs@npm:*, @types/qs@npm:6.14.0":
-  version: 6.14.0
-  resolution: "@types/qs@npm:6.14.0"
-  checksum: 10c0/5b3036df6e507483869cdb3858201b2e0b64b4793dc4974f188caa5b5732f2333ab9db45c08157975054d3b070788b35088b4bc60257ae263885016ee2131310
+"@types/qs@npm:*, @types/qs@npm:6.15.0":
+  version: 6.15.0
+  resolution: "@types/qs@npm:6.15.0"
+  checksum: 10c0/1b104cac50e655fc41d7fc1de2c2aba2908c4cf833a555b6808fb4c96752662b439238f2392a15d2590a7a6ca75dbd40e42d9378ac2be0d548ee484954363688
   languageName: node
   linkType: hard
 
