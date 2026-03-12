@@ -1,61 +1,162 @@
-import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
-import { it, expect } from 'vitest'
+import { fs as memfs, vol } from 'memfs'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { checkAndReplaceDirectUrl, getDefaultDb } from '../directUrlHelpers.js'
 
-const FIXTURE_DIR_PATH = path.resolve('..', '..', '__fixtures__')
+vi.mock('node:fs', () => ({ ...memfs, default: memfs }))
 
-const NO_DIRECT_URL_FIXTURE_PATH = path.join(FIXTURE_DIR_PATH, 'test-project')
-const DIRECT_URL_FIXTURE_PATH = path.join(FIXTURE_DIR_PATH, 'empty-project')
+vi.mock('@prisma/config', () => ({
+  default: {
+    loadConfigFromFile: async ({ configRoot }: { configRoot: string }) => {
+      const configPath = path.join(configRoot, 'prisma.config.cjs')
 
-it("does nothing if directUrl isn't set", () => {
-  process.env.CEDAR_CWD = NO_DIRECT_URL_FIXTURE_PATH
+      console.log('configPath', configPath)
 
-  checkAndReplaceDirectUrl(
-    fs.readFileSync(
-      path.join(NO_DIRECT_URL_FIXTURE_PATH, 'api', 'db', 'schema.prisma'),
-      'utf-8',
-    ),
-    getDefaultDb(NO_DIRECT_URL_FIXTURE_PATH),
-  )
+      return JSON.parse(memfs.readFileSync(configPath).toString())
+    },
+  },
+}))
 
-  expect(process.env.DIRECT_URL).toBeUndefined()
+vi.mock('@prisma/internals', () => ({
+  default: {
+    getSchemaWithPath: vi.fn().mockImplementation((schemaPath: string) => {
+      return {
+        schemas: [[schemaPath, memfs.readFileSync(schemaPath, 'utf8')]],
+      }
+    }),
+  },
+}))
 
-  delete process.env.CEDAR_CWD
-})
+vi.mock('@cedarjs/project-config', () => ({
+  getPaths: () => {
+    return {
+      base: 'test-project',
+      api: {
+        base: path.join('test-project', 'api'),
+        prismaConfig: path.join('test-project', 'api', 'prisma.config.cjs'),
+      },
+    }
+  },
+  getSchemaPath: async (prismaConfigPath: string) => {
+    return path.join(path.dirname(prismaConfigPath), 'db', 'schema.prisma')
+  },
+}))
 
-it("overwrites directUrl if it's set", () => {
-  process.env.CEDAR_CWD = DIRECT_URL_FIXTURE_PATH
+describe('directUrlHelpers', () => {
+  beforeEach(() => {
+    vol.reset()
+    vi.clearAllMocks()
+    delete process.env.DIRECT_URL
+    delete process.env.TEST_DIRECT_URL
+    delete process.env.TEST_DATABASE_URL
+  })
 
-  const defaultDb = getDefaultDb(DIRECT_URL_FIXTURE_PATH)
+  afterEach(() => {
+    vol.reset()
+    delete process.env.DIRECT_URL
+    delete process.env.TEST_DIRECT_URL
+    delete process.env.TEST_DATABASE_URL
+  })
 
-  const directUrlEnvVar = checkAndReplaceDirectUrl(
-    fs.readFileSync(
-      path.join(DIRECT_URL_FIXTURE_PATH, 'api', 'db', 'schema.prisma'),
-      'utf-8',
-    ),
-    defaultDb,
-  )
+  it("does nothing if directUrl isn't set", async () => {
+    const prismaSchema = `datasource db {
+      provider          = "sqlite"
+      url               = env("DATABASE_URL")
+    }`
 
-  expect(process.env[directUrlEnvVar as string]).toBe(defaultDb)
+    vol.fromJSON(
+      {
+        'cedar.toml': '',
+        'api/prisma.config.cjs': '{}',
+        'api/db/schema.prisma': prismaSchema,
+      },
+      'test-project',
+    )
 
-  delete process.env.CEDAR_CWD
-})
+    await checkAndReplaceDirectUrl()
 
-it("overwrites directUrl if it's set and formatted", () => {
-  const prismaSchema = `datasource db {
-    provider          = "sqlite"
-    url               = env("DATABASE_URL")
-    directUrl         = env("DIRECT_URL")
-    shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
-  }`
-  process.env.CEDAR_CWD = DIRECT_URL_FIXTURE_PATH
+    expect(process.env.DIRECT_URL).toBeUndefined()
+  })
 
-  const defaultDb = getDefaultDb(DIRECT_URL_FIXTURE_PATH)
+  it("overwrites directUrl if it's set", async () => {
+    const prismaSchema = `datasource db {
+      provider = "sqlite"
+      url = env("DATABASE_URL")
+      directUrl = env("DIRECT_URL")
+    }`
 
-  const directUrlEnvVar = checkAndReplaceDirectUrl(prismaSchema, defaultDb)
+    vol.fromJSON(
+      {
+        'cedar.toml': '',
+        'api/prisma.config.cjs': '{}',
+        'api/db/schema.prisma': prismaSchema,
+      },
+      'test-project',
+    )
 
-  expect(process.env[directUrlEnvVar as string]).toBe(defaultDb)
+    const defaultDb = getDefaultDb('test-project')
+    const directUrlEnvVar = await checkAndReplaceDirectUrl()
+
+    if (!directUrlEnvVar) {
+      expect.fail('directUrlEnvVar is not defined')
+    } else {
+      expect(process.env[directUrlEnvVar]).toBe(defaultDb)
+    }
+  })
+
+  // From https://github.com/redwoodjs/graphql/pull/8001
+  it("overwrites directUrl if it's set and formatted", async () => {
+    const prismaSchema = `datasource db {
+      provider          = "sqlite"
+      url               = env("DATABASE_URL")
+      directUrl         = env("DIRECT_URL")
+      shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+    }`
+
+    vol.fromJSON(
+      {
+        'cedar.toml': '',
+        'api/prisma.config.cjs': '{}',
+        'api/db/schema.prisma': prismaSchema,
+      },
+      'test-project',
+    )
+
+    const defaultDb = getDefaultDb('test-project')
+    const directUrlEnvVar = await checkAndReplaceDirectUrl()
+
+    if (!directUrlEnvVar) {
+      expect.fail('directUrlEnvVar is not defined')
+    } else {
+      expect(process.env[directUrlEnvVar]).toBe(defaultDb)
+    }
+  })
+
+  it('Reads url from Prisma config if set', async () => {
+    const prismaSchema = `datasource db {
+      provider          = "sqlite"
+      url               = env("DATABASE_URL")
+    }`
+
+    const prismaConfig = `{
+      "datasource": {
+        "url": "process.env.DIRECT_URL"
+      }
+    }`
+
+    vol.fromJSON(
+      {
+        'cedar.toml': '',
+        'api/prisma.config.cjs': prismaConfig,
+        'api/db/schema.prisma': prismaSchema,
+      },
+      'test-project',
+    )
+
+    await checkAndReplaceDirectUrl()
+
+    expect(process.env.DIRECT_URL).toBeUndefined()
+  })
 })

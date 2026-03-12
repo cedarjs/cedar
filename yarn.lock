@@ -3706,6 +3706,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
+    "@prisma/config": "npm:6.19.2"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.6.1"
