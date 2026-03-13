@@ -1,5 +1,7 @@
 const { defineConfig, env } = require('prisma/config')
 
+console.log('process.env.NODE_ENV', process.env.NODE_ENV)
+
 module.exports = defineConfig({
   schema: 'db/schema.prisma',
   migrations: {
@@ -7,7 +9,6 @@ module.exports = defineConfig({
     seed: 'yarn cedar exec seed',
   },
   datasource: {
-    url: 'process.env.DATABASE_URL',
-    _url: env('DATABASE_URL'),
+    url: env('MY_DATABASE_URL'),
   },
 })

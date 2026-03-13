@@ -1,7 +1,7 @@
-import path from 'path'
-
-import prismaConfig from '@prisma/config'
-const { loadConfigFromFile } = prismaConfig
+import fs from 'node:fs'
+import path from 'node:path'
+import { stdin as input, stdout as output } from 'node:process'
+import readline from 'node:readline/promises'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -55,18 +55,54 @@ export async function checkAndReplaceDirectUrl() {
 
   console.log('configRoot', cedarPaths.api.base)
 
-  const prismaConfig = await loadConfigFromFile({
-    configRoot: cedarPaths.api.base,
-  })
-  // @ts-expect-error - Prisma v7 prep
-  const urlFromConfig = prismaConfig.config?.datasource?.url
-  console.log('prismaConfig', prismaConfig)
-
-  console.log('urlFromConfig', urlFromConfig)
-  console.log('configPath', prismaConfig.resolvedPath)
+  const prismaConfig = await fs.promises.readFile(
+    cedarPaths.api.prismaConfig,
+    'utf-8',
+  )
+  const prismaConfigLines = prismaConfig.split('\n')
 
   // If it is, set its env var to the test equivalent.
-  const directUrlEnvMatch = urlFromConfig
+  let directUrlEnvMatch = ''
+
+  for (const line of prismaConfigLines) {
+    console.log(line)
+    // Test with EOL comments - should match
+    // TODO: Only run as many matches as needed
+    const urlLineMatch1 = line.match(/^\s*url: process\.env\.(\w+),?$/)
+    const urlLineMatch2 = line.match(/^\s*url: env\(['"](\w+)['"]\),?$/)
+    // datasource: { url: env('DATABASE_URL') },
+    // datasource: { foo: 'bar', url: env('DATABASE_URL'), '1baz': '' },
+    const urlLineMatch3 = line.match(/[{,] url: process\.env\.(\w+)(?:,| })/)
+    const urlLineMatch4 = line.match(/[{,] url: env\(['"](\w+)['"]\)(?:,| })/)
+
+    if (urlLineMatch1 || urlLineMatch2 || urlLineMatch3 || urlLineMatch4) {
+      console.log('urlLine', line)
+      directUrlEnvMatch =
+        urlLineMatch1?.[1] ??
+        urlLineMatch2?.[1] ??
+        urlLineMatch3?.[1] ??
+        urlLineMatch4?.[1] ??
+        ''
+      console.log('directUrlEnvMatch', directUrlEnvMatch)
+
+      if (directUrlEnvMatch && directUrlEnvMatch !== 'DATABASE_URL') {
+        console.warn(
+          `Found a non-standard prisma config datasource url env var: "${directUrlEnvMatch}"`,
+        )
+
+        const rl = readline.createInterface({ input, output })
+        const answer = await rl.question(
+          'Are you sure you want to run tests against this database? [y/N] ',
+        )
+        rl.close()
+
+        if (answer.trim().toLowerCase() !== 'y') {
+          console.log('Aborting.')
+          process.exit(1)
+        }
+      }
+    }
+  }
 
   // This is mostly to please TS. But it's good to be safe because in this case
   // we want to be 100% correct.
