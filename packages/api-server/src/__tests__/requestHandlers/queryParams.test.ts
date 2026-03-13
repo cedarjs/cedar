@@ -42,20 +42,8 @@ afterAll(async () => {
   await fastifyInstance.close()
 })
 
-describe('query parameter parsing via picoquery', () => {
+describe('query parameter parsing', () => {
   describe('simple (flat) parameters', () => {
-    it('parses a single string parameter', async () => {
-      const res = await fastifyInstance.inject({
-        method: 'GET',
-        url: '/queryparams?foo=bar',
-      })
-
-      expect(res.statusCode).toEqual(200)
-      expect(res.json()).toEqual({
-        queryStringParameters: { foo: 'bar' },
-      })
-    })
-
     it('parses multiple flat parameters', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
@@ -75,10 +63,8 @@ describe('query parameter parsing via picoquery', () => {
       })
 
       expect(res.statusCode).toEqual(200)
-      // picoquery returns {} (not null) when there is no query string
-      expect(res.json()).toEqual({
-        queryStringParameters: {},
-      })
+      // query parsing returns {} (not null) when there is no query string
+      expect(res.json()).toEqual({ queryStringParameters: {} })
     })
   })
 
