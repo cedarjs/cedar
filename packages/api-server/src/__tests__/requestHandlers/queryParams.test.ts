@@ -16,7 +16,7 @@ beforeAll(() => {
   original_CEDAR_CWD = process.env.CEDAR_CWD
   process.env.CEDAR_CWD = path.resolve(
     __dirname,
-    '../fixtures/graphql/cedar-app',
+    '../fixtures/query-params-app',
   )
 })
 
