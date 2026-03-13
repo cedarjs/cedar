@@ -109,11 +109,11 @@ describe('query parameter parsing', () => {
     })
   })
 
-  describe('nested parameters (JS dot syntax)', () => {
+  describe('nested parameters (qs bracket syntax)', () => {
     it('parses a single level of nesting', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
-        url: '/queryparams?user.name=alice',
+        url: '/queryparams?user[name]=alice',
       })
 
       expect(res.statusCode).toEqual(200)
@@ -125,7 +125,7 @@ describe('query parameter parsing', () => {
     it('parses multiple keys under the same nested object', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
-        url: '/queryparams?user.name=alice&user.age=30',
+        url: '/queryparams?user[name]=alice&user[age]=30',
       })
 
       expect(res.statusCode).toEqual(200)
@@ -137,7 +137,7 @@ describe('query parameter parsing', () => {
     it('parses deeply nested parameters', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
-        url: '/queryparams?a.b.c=deep',
+        url: '/queryparams?a[b][c]=deep',
       })
 
       expect(res.statusCode).toEqual(200)
@@ -149,7 +149,7 @@ describe('query parameter parsing', () => {
     it('parses sibling nested objects', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
-        url: '/queryparams?filter.status=active&filter.role=admin&sort.field=name&sort.order=asc',
+        url: '/queryparams?filter[status]=active&filter[role]=admin&sort[field]=name&sort[order]=asc',
       })
 
       expect(res.statusCode).toEqual(200)
@@ -160,13 +160,25 @@ describe('query parameter parsing', () => {
         },
       })
     })
+
+    it('dot-notation keys are treated as flat (not expanded)', async () => {
+      const res = await fastifyInstance.inject({
+        method: 'GET',
+        url: '/queryparams?user.name=alice',
+      })
+
+      expect(res.statusCode).toEqual(200)
+      expect(res.json()).toEqual({
+        queryStringParameters: { 'user.name': 'alice' },
+      })
+    })
   })
 
   describe('combined nested and array parameters', () => {
     it('parses an array nested inside an object', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
-        url: '/queryparams?filter.ids[]=1&filter.ids[]=2',
+        url: '/queryparams?filter[ids][]=1&filter[ids][]=2',
       })
 
       expect(res.statusCode).toEqual(200)
@@ -178,7 +190,7 @@ describe('query parameter parsing', () => {
     it('parses a mix of flat, nested, and array parameters together', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
-        url: '/queryparams?page=1&filter.status=active&tags[]=a&tags[]=b',
+        url: '/queryparams?page=1&filter[status]=active&tags[]=a&tags[]=b',
       })
 
       expect(res.statusCode).toEqual(200)
