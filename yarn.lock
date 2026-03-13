@@ -2189,6 +2189,7 @@ __metadata:
     fastify-raw-body: "npm:5.0.0"
     graphql-yoga: "npm:5.18.1"
     memfs: "npm:4.56.11"
+    picoquery: "npm:2.5.0"
     pino-abstract-transport: "npm:1.2.0"
     pretty-bytes: "npm:5.6.0"
     pretty-ms: "npm:7.0.1"
@@ -24719,6 +24720,13 @@ __metadata:
   version: 4.0.3
   resolution: "picomatch@npm:4.0.3"
   checksum: 10c0/9582c951e95eebee5434f59e426cddd228a7b97a0161a375aed4be244bd3fe8e3a31b846808ea14ef2c8a2527a6eeab7b3946a67d5979e81694654f939473ae2
+  languageName: node
+  linkType: hard
+
+"picoquery@npm:2.5.0":
+  version: 2.5.0
+  resolution: "picoquery@npm:2.5.0"
+  checksum: 10c0/ac22a7622ecf6f6c0d2657b04d2ca346f814ff4d343827e6ca53d2d5cecfebee18d80b1290b916d11db6f62866bec26e92bb0a0d7939bd15971e60320db8d265
   languageName: node
   linkType: hard
 
