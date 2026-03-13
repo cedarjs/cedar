@@ -11,11 +11,6 @@ export function getDefaultDb(projectBaseDir: string) {
   return `file:${path.join(projectBaseDir, '.redwood', 'test.db')}`
 }
 
-// NOTE: This is a workaround to get the directUrl from the schema
-// Instead of using the schema, we can use the config file
-// const prismaConfig = await getConfig(rwjsPaths.api.dbSchema)
-// and then check for the prismaConfig.datasources[0].directUrl
-// TODO: Fix comment above now that we've changed to `getSchemaPath()`
 async function getFullPrismaSchema(prismaConfigPath: string) {
   const schemaPath = await getSchemaPath(prismaConfigPath)
   const result = await getSchemaWithPath(schemaPath)
@@ -78,7 +73,7 @@ export async function checkAndReplaceDirectUrl() {
     configRoot: cedarPaths.api.base,
   })
   // @ts-expect-error - Prisma v7 prep
-  const urlFromConfig = prismaConfig.datasource?.url
+  const urlFromConfig = prismaConfig.config?.datasource?.url
   console.log('prismaConfig', prismaConfig)
 
   console.log('urlFromConfig', urlFromConfig)

@@ -141,8 +141,10 @@ describe('directUrlHelpers', () => {
     }`
 
     const prismaConfig = `{
-      "datasource": {
-        "url": "process.env.DIRECT_URL"
+      "config": {
+        "datasource": {
+          "url": "process.env.DIRECT_URL"
+        }
       }
     }`
 
