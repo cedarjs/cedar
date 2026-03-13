@@ -126,8 +126,6 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
   const options = getLoadDocumentsOptions(filename)
   const documentsGlob = './web/src/**/!(*.d).{ts,tsx,js,jsx}'
 
-  console.log('how far do I get? 1')
-
   let documents
 
   try {
@@ -139,8 +137,6 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
       errors: [],
     }
   }
-
-  console.log('how far do I get? 2')
 
   const extraPlugins: CombinedPluginConfig[] = [
     {
@@ -163,7 +159,6 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
   const errors: { message: string; error: unknown }[] = []
 
   try {
-    console.log('how far do I get? 3')
     return {
       typeDefFiles: await runCodegenGraphQL(
         documents,
@@ -174,7 +169,6 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
       errors,
     }
   } catch (e) {
-    console.log('how far do I get? 4')
     errors.push({
       message: 'Error: Could not generate GraphQL type definitions (web)',
       error: e,
@@ -199,12 +193,9 @@ async function runCodegenGraphQL(
   filename: string,
   side: CodegenSide,
 ) {
-  console.log('how far do I get? 3.1')
   const userCodegenConfig = await loadCodegenConfig({
     configFilePath: getPaths().base,
   })
-
-  console.log('how far do I get? 3.2')
 
   const pluginConfig = await getPluginConfig(side)
 
@@ -214,12 +205,9 @@ async function runCodegenGraphQL(
     ...userCodegenConfig?.config?.config,
   }
 
-  console.log('how far do I get? 3.3')
   const options = getCodegenOptions(documents, mergedConfig, extraPlugins)
-  console.log('how far do I get? 3.4', options)
   const output = await codegen(options)
 
-  console.log('how far do I get? 3.5')
   fs.mkdirSync(path.dirname(filename), { recursive: true })
   fs.writeFileSync(filename, output)
 
@@ -243,10 +231,6 @@ async function importGeneratedPrismaClient() {
     mustExist: true,
   })
   const freshPrisma = await import(`file://${prismaClientPath}${cacheBuster}`)
-
-  console.log()
-  console.log('freshPrisma', freshPrisma)
-  console.log()
 
   return freshPrisma
 }
@@ -334,11 +318,9 @@ async function getPrismaClient(): Promise<{
 }
 
 async function getPrismaModels() {
-  console.log('how far do I get? 3.2.1.1')
   // Extract the models from the prisma client and use those to
   // set up internal redirects for the return values in resolvers.
   const localPrisma = await getPrismaClient()
-  console.log('how far do I get? 3.2.1.2')
   const prismaModels = localPrisma.ModelName
 
   // This isn't really something you'd put in the GraphQL API, so
@@ -351,9 +333,7 @@ async function getPrismaModels() {
 }
 
 async function getPluginConfig(side: CodegenSide) {
-  console.log('how far do I get? 3.2.1')
   const prismaModels: Record<string, string> = await getPrismaModels()
-  console.log('how far do I get? 3.2.2')
   Object.keys(prismaModels).forEach((key) => {
     /** creates an object like this
      * {
@@ -387,7 +367,6 @@ async function getPluginConfig(side: CodegenSide) {
   }
 
   const config = getConfig()
-  console.log('how far do I get? 3.2.3')
   if (config.graphql.includeScalars.File) {
     scalars.File = 'File'
   }
