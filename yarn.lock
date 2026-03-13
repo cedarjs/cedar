@@ -3023,7 +3023,6 @@ __metadata:
     lodash: "npm:4.17.23"
     nodemon: "npm:3.1.14"
     publint: "npm:0.3.18"
-    rimraf: "npm:6.1.3"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
   bin:
