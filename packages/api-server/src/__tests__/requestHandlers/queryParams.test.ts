@@ -109,7 +109,7 @@ describe('query parameter parsing', () => {
     })
   })
 
-  describe('nested parameters (qs bracket syntax)', () => {
+  describe('nested parameters (bracket syntax)', () => {
     it('parses a single level of nesting', async () => {
       const res = await fastifyInstance.inject({
         method: 'GET',
