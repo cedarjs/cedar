@@ -1935,7 +1935,7 @@ __metadata:
 
 "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz#../packages/cli-helpers/cedarjs-cli-helpers.tgz::hash=9fcb12&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz#../packages/cli-helpers/cedarjs-cli-helpers.tgz::hash=09d5af&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@cedarjs/project-config": "npm:2.8.0"
@@ -1956,7 +1956,7 @@ __metadata:
     smol-toml: "npm:1.6.0"
     termi-link: "npm:1.1.0"
     yargs-parser: "npm:21.1.1"
-  checksum: 10c0/ad42586357cfe74c5be195ca73c784585810f5f63c7b51a89057dd2cfb210af4688efc9c41d1b8c0b5921c04a778d477dc5907399ec7d1e4b326efc65f8db078
+  checksum: 10c0/d676fa05ea7492779e45edf8b1b67e99f8217c3cd27c0ba3f951a3a82ce116ffe3ccc8eaec16555f1e7b06133f41347c207095b7a25829e9edb34c80aef6e169
   languageName: node
   linkType: hard
 
@@ -2099,7 +2099,7 @@ __metadata:
 
 "@cedarjs/eslint-config@file:../packages/eslint-config/cedarjs-eslint-config.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/eslint-config@file:../packages/eslint-config/cedarjs-eslint-config.tgz#../packages/eslint-config/cedarjs-eslint-config.tgz::hash=2c4957&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/eslint-config@file:../packages/eslint-config/cedarjs-eslint-config.tgz#../packages/eslint-config/cedarjs-eslint-config.tgz::hash=010930&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/eslint-parser": "npm:7.28.6"
@@ -2124,7 +2124,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:4.6.2"
     prettier: "npm:3.8.1"
     typescript-eslint: "npm:8.56.1"
-  checksum: 10c0/d14bb100e6d29597cebf927c87b6fabd59663e595d5c4430a6376c8af33b56f45fe16aaec26959920b2315a6667707fd66ef7907aeca04671a25311546569f3f
+  checksum: 10c0/2e55abaa87f382291fb643d0fd9f5289e8b9fdea15f0862433f6fda5792ad3e0358ce424bcefee6046d7a689803ef905309eed743252c03c81f8f70aa4303c0b
   languageName: node
   linkType: hard
 
@@ -2323,7 +2323,7 @@ __metadata:
 
 "@cedarjs/structure@file:../packages/structure/cedarjs-structure.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/structure@file:../packages/structure/cedarjs-structure.tgz#../packages/structure/cedarjs-structure.tgz::hash=ce4e8c&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/structure@file:../packages/structure/cedarjs-structure.tgz#../packages/structure/cedarjs-structure.tgz::hash=3b0b49&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/project-config": "npm:2.8.0"
@@ -2344,7 +2344,7 @@ __metadata:
     smol-toml: "npm:1.6.0"
     ts-morph: "npm:23.0.0"
     yargs-parser: "npm:21.1.1"
-  checksum: 10c0/0a68a8c72b3584b0ce96c1c0e48fa3c91b3572eed61206b0567b2a716701c79df034e87e97b14599967a176f39de30f333b301b8d9081b7083985914cf2a8fc3
+  checksum: 10c0/4060c052ec0f2d858aeef5ef6590ec4efdb7c33ca45a1930d64c9098f9b5e35f64cb97efe364ff73d50bb72a7c670b8e589154138ce2c879150cfc66a6cd1199
   languageName: node
   linkType: hard
 
@@ -2366,7 +2366,7 @@ __metadata:
 
 "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=e84dba&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=d5ca3c&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/auth": "npm:2.8.0"
     "@cedarjs/babel-config": "npm:2.8.0"
@@ -2398,7 +2398,7 @@ __metadata:
   peerDependenciesMeta:
     vitest:
       optional: true
-  checksum: 10c0/66571a48aeba93b4b6fe899c52491da3cefdc206aa7ddf0c2770e3ac2b8f8ca09e83a8c5356d0c05d94ab09bbb8b439899ad59bb50d19f6472060ee9ddcb93e9
+  checksum: 10c0/6dfe9125c0202967dabce4a861310508dedc9c457150f8919afa84a44f57fb802194276c26ad958e0ec16b1cab844a1448fe869e335a760de7043576ca148938
   languageName: node
   linkType: hard
 
@@ -2413,7 +2413,7 @@ __metadata:
 
 "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=a5006e&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=805371&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.41.0"
     "@babel/generator": "npm:7.29.1"
@@ -2456,7 +2456,7 @@ __metadata:
     rw-vite-build: ./bins/rw-vite-build.mjs
     rw-vite-dev: ./bins/rw-vite-dev.mjs
     vite: ./bins/vite.mjs
-  checksum: 10c0/c14409fe7d4a6cae0cbb3654211fbcc76e37101f210c87156da1d0756a63498349856bef9017f7fc34727748907dc527ff229f8e82435a72e109608aace0e004
+  checksum: 10c0/f3e84c15aa6207bda5305bd93e2ccf6044c24d9c73f1f017d201fa3704bc2877ecf0ee5258e85d3d648385c6b25759d0237b7e0c799a2c5d2c0473bd2b5d8765
   languageName: node
   linkType: hard
 

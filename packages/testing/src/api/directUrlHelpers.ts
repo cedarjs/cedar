@@ -2,21 +2,11 @@ import path from 'path'
 
 import prismaConfig from '@prisma/config'
 const { loadConfigFromFile } = prismaConfig
-import prismaInternals from '@prisma/internals'
-const { getSchemaWithPath } = prismaInternals
 
-import { getPaths, getSchemaPath } from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/project-config'
 
 export function getDefaultDb(projectBaseDir: string) {
   return `file:${path.join(projectBaseDir, '.redwood', 'test.db')}`
-}
-
-async function getFullPrismaSchema(prismaConfigPath: string) {
-  const schemaPath = await getSchemaPath(prismaConfigPath)
-  const result = await getSchemaWithPath(schemaPath)
-  // For regex matching, we need to concatenate the schemas into a single string
-  const prismaSchema = result.schemas.map(([, content]) => content).join('\n')
-  return prismaSchema
 }
 
 // In Prisma v6 users can have something like
@@ -63,10 +53,6 @@ async function getFullPrismaSchema(prismaConfigPath: string) {
 export async function checkAndReplaceDirectUrl() {
   const cedarPaths = getPaths()
 
-  // Check the schema.prisma for a directUrl.
-  const prismaSchema = await getFullPrismaSchema(cedarPaths.api.prismaConfig)
-  const directUrl = prismaSchema.match(PRISMA_DIRECT_URL_REGEXP)
-
   console.log('configRoot', cedarPaths.api.base)
 
   const prismaConfig = await loadConfigFromFile({
@@ -79,13 +65,8 @@ export async function checkAndReplaceDirectUrl() {
   console.log('urlFromConfig', urlFromConfig)
   console.log('configPath', prismaConfig.resolvedPath)
 
-  // If it's not there, make this a no-op.
-  if (!directUrl) {
-    return
-  }
-
   // If it is, set its env var to the test equivalent.
-  const directUrlEnvMatch = directUrl[0].match(BETWEEN_PARENTHESES_REGEXP)
+  const directUrlEnvMatch = urlFromConfig
 
   // This is mostly to please TS. But it's good to be safe because in this case
   // we want to be 100% correct.
@@ -107,6 +88,3 @@ export async function checkAndReplaceDirectUrl() {
 
   return directUrlEnv
 }
-
-const PRISMA_DIRECT_URL_REGEXP = /directUrl(\s*)=(\s*)env\(('|")(.*)('|")\)/g
-const BETWEEN_PARENTHESES_REGEXP = /\(('|")([^)]+)('|")\)/
