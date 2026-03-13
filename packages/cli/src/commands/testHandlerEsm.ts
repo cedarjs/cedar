@@ -9,6 +9,8 @@ import { getPaths } from '../lib/index.js'
 // @ts-expect-error - Types not available for JS files
 import * as project from '../lib/project.js'
 
+import { warnIfNonStandardDatasourceUrl } from './testDatasourceHelpers.js'
+
 type TestEsmHandlerArgs = Record<string, unknown> & {
   filter?: string[]
   dbPush?: boolean
@@ -112,6 +114,10 @@ export const handler = async ({
 
     if (sides.includes('api') && !dbPush) {
       process.env.SKIP_DB_PUSH = '1'
+    }
+
+    if (sides.includes('api')) {
+      await warnIfNonStandardDatasourceUrl()
     }
 
     // TODO: Run vitest programmatically. See https://vitest.dev/advanced/api/

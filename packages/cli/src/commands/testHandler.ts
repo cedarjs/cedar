@@ -14,6 +14,8 @@ import { getPaths } from '../lib/index.js'
 // @ts-expect-error - Types not available for JS files
 import * as project from '../lib/project.js'
 
+import { warnIfNonStandardDatasourceUrl } from './testDatasourceHelpers.js'
+
 type TestHandlerArgs = Record<string, unknown> & {
   filter?: string[]
   watch?: boolean
@@ -180,6 +182,10 @@ export const handler = async ({
       // @NOTE
       // DB push code now lives in packages/testing/config/jest/api/jest-preset.js
       process.env.SKIP_DB_PUSH = '1'
+    }
+
+    if (sides.includes('api')) {
+      await warnIfNonStandardDatasourceUrl()
     }
 
     // **NOTE** There is no official way to run Jest programmatically,
