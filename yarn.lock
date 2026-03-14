@@ -3807,7 +3807,7 @@ __metadata:
     find-my-way: "npm:8.2.2"
     glob: "npm:11.1.0"
     http-proxy-middleware: "npm:3.0.5"
-    isbot: "npm:5.1.35"
+    isbot: "npm:5.1.36"
     memfs: "npm:4.56.11"
     publint: "npm:0.3.18"
     react: "npm:19.2.3"
@@ -19802,10 +19802,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"isbot@npm:5.1.35":
-  version: 5.1.35
-  resolution: "isbot@npm:5.1.35"
-  checksum: 10c0/7e13d264ef41ea69ca8addf7bdf49751903fbcab8d1e63458c581f0908f8d915c3c072188c43dc8d142b3708338290ad35476421131202f851301bfcc9c2c29f
+"isbot@npm:5.1.36":
+  version: 5.1.36
+  resolution: "isbot@npm:5.1.36"
+  checksum: 10c0/a0f137ecd2b52b8cc15691e4e74143e68c7275ca14b6cc2855d58394b59f65d29d30951105543bfd0c1b9bd97c77f699631a48ca0c065ec1ddc93945ae49a863
   languageName: node
   linkType: hard
 
