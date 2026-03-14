@@ -4,18 +4,20 @@ import type {
   Handler,
 } from 'aws-lambda'
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import qs from 'qs'
 
 import { mergeMultiValueHeaders, parseBody } from './utils.js'
 
 export const lambdaEventForFastifyRequest = (
   request: FastifyRequest,
 ): APIGatewayProxyEvent => {
+  const sp = new URLSearchParams(request.url.split(/\?(.+)/)[1])
+  const qsParams = Object.fromEntries(sp)
+
   return {
     httpMethod: request.method,
     headers: request.headers,
     path: request.urlData('path'),
-    queryStringParameters: qs.parse(request.url.split(/\?(.+)/)[1]),
+    queryStringParameters: qsParams,
     requestContext: {
       requestId: request.id,
       identity: {
