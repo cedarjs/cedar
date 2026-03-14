@@ -9,22 +9,15 @@ import { cedarFastifyAPI } from '../plugins/api.js'
 console.log = vi.fn()
 console.warn = vi.fn()
 
-// Set up CEDAR_CWD.
 let original_CEDAR_CWD: string | undefined
-
-beforeAll(() => {
-  original_CEDAR_CWD = process.env.CEDAR_CWD
-  process.env.CEDAR_CWD = path.resolve(__dirname, 'fixtures/graphql/cedar-app')
-})
-
-afterAll(() => {
-  process.env.CEDAR_CWD = original_CEDAR_CWD
-})
 
 // Set up and teardown the fastify instance for each test.
 let fastifyInstance: Awaited<ReturnType<typeof createFastifyInstance>>
 
 beforeAll(async () => {
+  original_CEDAR_CWD = process.env.CEDAR_CWD
+  process.env.CEDAR_CWD = path.resolve(__dirname, 'fixtures/graphql/cedar-app')
+
   fastifyInstance = await createFastifyInstance()
 
   fastifyInstance.register(cedarFastifyAPI, {
@@ -38,6 +31,12 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await fastifyInstance.close()
+
+  if (original_CEDAR_CWD === undefined) {
+    delete process.env.CEDAR_CWD
+  } else {
+    process.env.CEDAR_CWD = original_CEDAR_CWD
+  }
 })
 
 describe('cedarFastifyAPI', () => {
