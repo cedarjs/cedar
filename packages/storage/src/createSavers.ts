@@ -4,7 +4,7 @@ import type {
   SaveOptionsOverride,
   BaseStorageAdapter,
 } from './adapters/BaseStorageAdapter.js'
-import type { ModelNames, UploadsConfig } from './prismaExtension.js'
+import type { ModelNamesFor, UploadsConfig } from './prismaExtension.js'
 
 // Assumes you pass in the graphql type
 type MakeFilesString<T> = {
@@ -28,8 +28,11 @@ export const createFileListSaver = (storage: BaseStorageAdapter) => {
 This creates a "saver" for each model in the uploads config (i.e. tied to a model in the prisma schema)
 The saver will only handle single file uploads, not file lists.
 */
-export const createUploadSavers = <MNames extends ModelNames = ModelNames>(
-  uploadConfig: UploadsConfig<MNames>,
+export const createUploadSavers = <
+  TClient,
+  MNames extends ModelNamesFor<TClient> = ModelNamesFor<TClient>,
+>(
+  uploadConfig: UploadsConfig<TClient, MNames>,
   storage: BaseStorageAdapter,
 ) => {
   type uploadSaverNames = `for${Capitalize<string & MNames>}`

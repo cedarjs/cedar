@@ -10,14 +10,14 @@ import {
   isTypeScriptProject,
   getConfigPath,
 } from '@cedarjs/cli-helpers'
-import { getPaths, getSchemaPath } from '@cedarjs/project-config'
+import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { printSetupNotes } from '../../../../lib/index.js'
 import { serverFileExists } from '../../../../lib/project.js'
 import { addFilesTask } from '../helpers/index.js'
 
-const { getSchemaWithPath, getConfig } = prismaInternals
+const { getConfig } = prismaInternals
 const cedarPaths = getPaths()
 
 const EXTENSION = isTypeScriptProject ? 'ts' : 'js'
@@ -84,13 +84,11 @@ async function getAddCoherenceFilesTask(force) {
  * ```prisma title="schema.prisma"
  * datasource db {
  *   provider = "sqlite"
- *   url      = env("DATABASE_URL")
  * }
  * ```
  */
 async function getCoherenceConfigFileContent() {
-  const schemaPath = await getSchemaPath(cedarPaths.api.prismaConfig)
-  const result = await getSchemaWithPath(schemaPath)
+  const result = await getPrismaSchemas()
   const prismaConfig = await getConfig({ datamodel: result.schemas })
 
   let db = prismaConfig.datasources[0].activeProvider

@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import type { MockedFunction } from 'vitest'
 import { describe, it, vi, expect, beforeEach, beforeAll } from 'vitest'
 
@@ -9,8 +10,8 @@ import { FileSystemStorage } from '../adapters/FileSystemStorage/FileSystemStora
 import { createUploadsConfig, setupStorage } from '../index.js'
 
 // @MARK: use the local prisma client in the test
-import type { Dumbo, Dummy } from './prisma-client/index.js'
-import { PrismaClient } from './prisma-client/index.js'
+import type { Dumbo, Dummy } from './prisma-client/client.js'
+import { PrismaClient } from './prisma-client/client.js'
 
 vi.mock('node:fs/promises', () => ({
   default: {
@@ -46,7 +47,12 @@ describe('Query extensions', () => {
     }),
   })
 
-  const prismaClient = new PrismaClient().$extends(storagePrismaExtension)
+  const adapter = new PrismaBetterSqlite3({
+    url: 'file:src/__tests__/for_unit_test.db',
+  })
+  const prismaClient = new PrismaClient({ adapter }).$extends(
+    storagePrismaExtension,
+  )
 
   beforeEach(() => {
     vi.resetAllMocks()

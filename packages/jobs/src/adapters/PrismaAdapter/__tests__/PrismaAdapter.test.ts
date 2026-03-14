@@ -1,4 +1,3 @@
-import type { PrismaClient } from '@prisma/client'
 import { describe, expect, vi, it, beforeEach, afterEach } from 'vitest'
 
 import { DEFAULT_MODEL_NAME } from '../../../consts.js'
@@ -8,35 +7,25 @@ import { PrismaAdapter } from '../PrismaAdapter.js'
 
 vi.useFakeTimers().setSystemTime(new Date('2024-01-01'))
 
-// PrismaClient is used only as the upper-bound constraint — the mock satisfies
-// it structurally. This mirrors how user projects work: TDb is inferred from
-// the actual db value passed in, not from the @prisma/client stub.
-let mockDb: PrismaClient
+type MockPrismaDb = {
+  _activeProvider: string
+  backgroundJob: {
+    create: ReturnType<typeof vi.fn>
+    delete: ReturnType<typeof vi.fn>
+    deleteMany: ReturnType<typeof vi.fn>
+    findFirst: ReturnType<typeof vi.fn>
+    update: ReturnType<typeof vi.fn>
+    updateMany: ReturnType<typeof vi.fn>
+  }
+  [key: string]: unknown
+}
 
-// If we wanted to mock PrismaClient instead, we could do something like this:
-// type MockPrismaDb = {
-//   _activeProvider: string
-//   backgroundJob: {
-//     create: ReturnType<typeof vi.fn>
-//     delete: ReturnType<typeof vi.fn>
-//     deleteMany: ReturnType<typeof vi.fn>
-//     findFirst: ReturnType<typeof vi.fn>
-//     update: ReturnType<typeof vi.fn>
-//     updateMany: ReturnType<typeof vi.fn>
-//   }
-//   [key: string]: unknown
-// }
+let mockDb: MockPrismaDb
 
 beforeEach(() => {
+  // Setting up a mock generated PrismaClient instance
   mockDb = {
     _activeProvider: 'sqlite',
-    _runtimeDataModel: {
-      models: {
-        BackgroundJob: {
-          dbName: null,
-        },
-      },
-    },
     backgroundJob: {
       create: vi.fn(),
       delete: vi.fn(),

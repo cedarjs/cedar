@@ -1,4 +1,3 @@
-/* eslint-env node */
 // @ts-check
 
 import fs from 'node:fs'
@@ -74,7 +73,7 @@ export async function createCacheKeys({
   const baseKey = [
     baseKeyPrefix,
     process.env.RUNNER_OS,
-    process.env.GITHUB_REF.replaceAll('/', '-'),
+    process.env.GITHUB_REF?.replaceAll('/', '-'),
     await hashFiles(path.join('__fixtures__', 'test-project')),
   ].join('-')
 

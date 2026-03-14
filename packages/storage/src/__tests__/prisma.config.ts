@@ -6,4 +6,7 @@ export default defineConfig({
     path: 'migrations',
     seed: 'yarn cedar exec seed',
   },
+  datasource: {
+    url: 'file:for_unit_test.db',
+  },
 })
