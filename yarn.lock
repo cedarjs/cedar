@@ -5696,6 +5696,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@gar/promise-retry@npm:^1.0.0":
+  version: 1.0.2
+  resolution: "@gar/promise-retry@npm:1.0.2"
+  dependencies:
+    retry: "npm:^0.13.1"
+  checksum: 10c0/748a84fb0ab962f7867966f21dc24d1872c53c1656dd3352320fe69ad3b2043f2dfdb3be024c7636ce4904c5ba1da22d0f3558e489c3de578f5bb520f062d0fd
+  languageName: node
+  linkType: hard
+
 "@google-cloud/firestore@npm:^7.11.0":
   version: 7.11.6
   resolution: "@google-cloud/firestore@npm:7.11.6"
@@ -7747,10 +7756,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@npmcli/arborist@npm:9.4.0":
-  version: 9.4.0
-  resolution: "@npmcli/arborist@npm:9.4.0"
+"@npmcli/arborist@npm:9.4.1":
+  version: 9.4.1
+  resolution: "@npmcli/arborist@npm:9.4.1"
   dependencies:
+    "@gar/promise-retry": "npm:^1.0.0"
     "@isaacs/string-locale-compare": "npm:^1.1.0"
     "@npmcli/fs": "npm:^5.0.0"
     "@npmcli/installed-package-contents": "npm:^4.0.0"
@@ -7786,7 +7796,7 @@ __metadata:
     walk-up-path: "npm:^4.0.0"
   bin:
     arborist: bin/index.js
-  checksum: 10c0/c40ba2dcfb574ab26a1a84a61a2c4e1a432bff44736e78acc2020bca880baa6c8fe3f4252d83599a4508dfdc45dcbdfd901d48dcfcf21cddef33f517ad233b13
+  checksum: 10c0/27490f4a7ba76ee63120ca4647cd5c5a1dcf9dfb4463d2664ad0417e062d6cdecee48f58fa25eae806d998d07cf1cf98b42e151e082989b9051280174aa62ae8
   languageName: node
   linkType: hard
 
@@ -26224,7 +26234,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"retry@npm:0.13.1":
+"retry@npm:0.13.1, retry@npm:^0.13.1":
   version: 0.13.1
   resolution: "retry@npm:0.13.1"
   checksum: 10c0/9ae822ee19db2163497e074ea919780b1efa00431d197c7afdb950e42bf109196774b92a49fc9821f0b8b328a98eea6017410bfc5e8a0fc19c85c6d11adb3772
@@ -26436,7 +26446,7 @@ __metadata:
     "@babel/preset-react": "npm:7.28.5"
     "@babel/preset-typescript": "npm:7.28.5"
     "@babel/runtime-corejs3": "npm:7.29.0"
-    "@npmcli/arborist": "npm:9.4.0"
+    "@npmcli/arborist": "npm:9.4.1"
     "@playwright/test": "npm:1.58.2"
     "@prisma/dev": "npm:0.20.0"
     "@testing-library/jest-dom": "npm:6.9.1"
