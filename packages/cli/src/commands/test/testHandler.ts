@@ -8,17 +8,20 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
+import c from '../../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
-import { getPaths } from '../lib/index.js'
+import { getPaths } from '../../lib/index.js'
 // @ts-expect-error - Types not available for JS files
-import * as project from '../lib/project.js'
+import * as project from '../../lib/project.js'
+
+import { warnIfNonStandardDatasourceUrl } from './datasourceWarning.js'
 
 type TestHandlerArgs = Record<string, unknown> & {
   filter?: string[]
   watch?: boolean
   collectCoverage?: boolean
   dbPush?: boolean
+  force?: boolean
 }
 
 function hasStringMessage(value: unknown): value is { message: string } {
@@ -94,6 +97,7 @@ export const handler = async ({
   watch = true,
   collectCoverage = false,
   dbPush = true,
+  force = false,
   ...others
 }: TestHandlerArgs) => {
   recordTelemetryAttributes({
@@ -109,6 +113,7 @@ export const handler = async ({
       [
         'collect-coverage',
         'db-push',
+        'force',
         'loadEnvFiles',
         'watch',
         '$0',
@@ -180,6 +185,10 @@ export const handler = async ({
       // @NOTE
       // DB push code now lives in packages/testing/config/jest/api/jest-preset.js
       process.env.SKIP_DB_PUSH = '1'
+    }
+
+    if (sides.includes('api')) {
+      await warnIfNonStandardDatasourceUrl({ force })
     }
 
     // **NOTE** There is no official way to run Jest programmatically,
