@@ -1,5 +1,6 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import {
   beforeAll,
@@ -37,18 +38,21 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+const mockPrismaClientPath = path.resolve('/mock-prisma-client-path')
+const mockPrismaClientFileUrl = pathToFileURL(mockPrismaClientPath).href
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
 
   return {
     ...originalProjectConfig,
-    resolveGeneratedPrismaClient: () => '/mock-prisma-client-path',
+    resolveGeneratedPrismaClient: () => mockPrismaClientPath,
   }
 })
 
 const mockNow = vi.hoisted(() => new Date().getTime())
 
-vi.mock('file:///mock-prisma-client-path?t=' + mockNow, () => {
+vi.mock(mockPrismaClientFileUrl + '?t=' + mockNow, () => {
   // TODO: Should this be default: or just straight ModelName:?
   return {
     default: {

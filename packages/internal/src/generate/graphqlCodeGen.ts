@@ -1,5 +1,6 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import * as addPlugin from '@graphql-codegen/add'
 import { loadCodegenConfig } from '@graphql-codegen/cli'
@@ -230,7 +231,8 @@ async function importGeneratedPrismaClient() {
   const prismaClientPath = await resolveGeneratedPrismaClient({
     mustExist: true,
   })
-  const freshPrisma = await import(`file://${prismaClientPath}${cacheBuster}`)
+  const fileUrl = pathToFileURL(prismaClientPath).href + cacheBuster
+  const freshPrisma = await import(fileUrl)
 
   return freshPrisma
 }
