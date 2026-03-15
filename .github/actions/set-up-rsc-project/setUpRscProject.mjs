@@ -16,6 +16,12 @@ const CEDAR_APP_TEMPLATE_PATH = path.join(
 
 const PRISMA_SCHEMA_DATASOURCE_URL_OLD = /^\s*url\s*=\s*env\([^)]*\)\s*\n/m
 
+const CEDAR_APP_TEMPLATE_API_PACKAGE_JSON_PATH = path.join(
+  CEDAR_APP_TEMPLATE_PATH,
+  'api',
+  'package.json',
+)
+
 const PRISMA_SCHEMA_GENERATOR_OLD = /generator client \{[^}]*\}/s
 
 /**
@@ -108,8 +114,15 @@ async function setUpRscProject(rscProjectPath, exec, execInProject) {
   })
   console.log()
 
+  // TODO: Remove this block once Prisma v7 support has been merged into a
+  // canary release of create-cedar-app, at which point the created project
+  // will already be Prisma v7 compatible.
   console.log('Updating project for Prisma v7 compatibility')
   updateProjectForPrisma7(rscProjectPath)
+  console.log()
+
+  console.log('Installing new Prisma v7 dependencies')
+  await execInProject('yarn install')
   console.log()
 
   console.log(`Building project in ${rscProjectPath}`)
@@ -165,6 +178,24 @@ function updateProjectForPrisma7(rscProjectPath) {
     apiTsconfigPath,
   )
   console.log('  Updated api/tsconfig.json')
+
+  // Merge @prisma/adapter-better-sqlite3 and better-sqlite3 from template into
+  // api/package.json (the canary-generated project won't have these deps)
+  const apiPackageJsonPath = path.join(rscProjectPath, 'api', 'package.json')
+  const apiPackageJson = JSON.parse(fs.readFileSync(apiPackageJsonPath, 'utf8'))
+  const templateApiPackageJson = JSON.parse(
+    fs.readFileSync(CEDAR_APP_TEMPLATE_API_PACKAGE_JSON_PATH, 'utf8'),
+  )
+  const depsToAdd = ['@prisma/adapter-better-sqlite3', 'better-sqlite3']
+  for (const dep of depsToAdd) {
+    apiPackageJson.dependencies[dep] = templateApiPackageJson.dependencies[dep]
+  }
+  fs.writeFileSync(
+    apiPackageJsonPath,
+    JSON.stringify(apiPackageJson, null, 2) + '\n',
+    'utf8',
+  )
+  console.log('  Updated api/package.json')
 
   // Copy scripts/tsconfig.json from template (Prisma v7 / Node16 module resolution)
   const scriptsTsconfigPath = path.join(
