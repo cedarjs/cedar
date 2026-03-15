@@ -1872,7 +1872,7 @@ __metadata:
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=b50fc1&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=436620&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.0"
     "@babel/preset-typescript": "npm:7.28.5"
@@ -1941,7 +1941,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/b567d1f5f97d0456a2d11e35aad440d786219bf4e1a537f5cf15be9e39a5b7ed3d66ba643c23a0209da2f8b60be08a77f66bd5803d51cad0e6421a5a36944db0
+  checksum: 10c0/3f99d88ece76e0d8fc836a1e2c687df581e6f069bb66333a093d56e8d6958820af314f7ac61564e5703a7cf12e24ced2411664f3aaa6ca21cc23b835e892b238
   languageName: node
   linkType: hard
 
@@ -2276,7 +2276,7 @@ __metadata:
 
 "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=d5ca3c&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=37f876&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/auth": "npm:2.8.0"
     "@cedarjs/babel-config": "npm:2.8.0"
@@ -2308,7 +2308,7 @@ __metadata:
   peerDependenciesMeta:
     vitest:
       optional: true
-  checksum: 10c0/6dfe9125c0202967dabce4a861310508dedc9c457150f8919afa84a44f57fb802194276c26ad958e0ec16b1cab844a1448fe869e335a760de7043576ca148938
+  checksum: 10c0/be9855e56de12d7d9aa8bfb4d1097ac5c21b04f6beef534ad852b368123eb80a3674c08d2e22a64857e6f4155843e90d1925617b4eefb3313fd64115d0299a1d
   languageName: node
   linkType: hard
 
