@@ -17,7 +17,7 @@ export const lambdaEventForFastifyRequest = (
   const qsParams: APIGatewayProxyEventQueryStringParameters = parse(
     request.url.split(/\?(.+)/)[1],
     {
-      nestingSyntax: 'js',
+      nestingSyntax: 'index',
       arrayRepeat: true,
       arrayRepeatSyntax: 'bracket',
     },
