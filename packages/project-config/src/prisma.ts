@@ -2,12 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import prismaInternals from '@prisma/internals'
 import type { PrismaConfig } from 'prisma'
 
 import { getPaths } from './paths.js'
-
-const { createSchemaPathInput, getConfig, getSchemaWithPath } = prismaInternals
 
 function getGeneratorOutputPathFromSchema(schemaPath: string) {
   console.log('getGeneratorOutputPathFromSchema schemaPath', schemaPath)
@@ -105,6 +102,9 @@ export async function getSchemaPath(prismaConfigPath: string) {
  *   `[filePath, content]` tuples
  */
 export async function getPrismaSchemasAtPath(schemaPath: string) {
+  const { createSchemaPathInput, getSchemaWithPath } =
+    await import('@prisma/internals')
+
   const schemaPathInput = createSchemaPathInput({
     baseDir: fs.lstatSync(schemaPath).isDirectory()
       ? schemaPath
@@ -206,6 +206,7 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
   try {
     const { schemas } = await getPrismaSchemasAtPath(schemaPath)
     console.log('resolveGeneratedPrismaClient schemas', schemas)
+    const { getConfig } = await import('@prisma/internals')
     const config = await getConfig({ datamodel: schemas })
     console.log('resolveGeneratedPrismaClient config', config)
     const generator =
