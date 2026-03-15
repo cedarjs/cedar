@@ -155,7 +155,7 @@
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@graphql-codegen/add": "6.0.0",
-    "@graphql-codegen/cli": "6.1.3",
+    "@graphql-codegen/cli": "6.2.0",
     "@graphql-codegen/client-preset": "5.2.4",
     "@graphql-codegen/core": "5.0.1",
     "@graphql-codegen/fragment-matcher": "6.0.0",
