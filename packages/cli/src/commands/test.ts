@@ -47,6 +47,6 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: Record<string, unknown>) => {
-  const { handler } = await import('./testHandler.js')
+  const { handler } = await import('./test/testHandler.js')
   return handler(options)
 }

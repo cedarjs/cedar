@@ -5,11 +5,11 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
-import { getPaths } from '../lib/index.js'
+import { getPaths } from '../../lib/index.js'
 // @ts-expect-error - Types not available for JS files
-import * as project from '../lib/project.js'
+import * as project from '../../lib/project.js'
 
-import { warnIfNonStandardDatasourceUrl } from './testDatasourceHelpers.js'
+import { warnIfNonStandardDatasourceUrl } from './datasourceWarning.js'
 
 type TestEsmHandlerArgs = Record<string, unknown> & {
   filter?: string[]
