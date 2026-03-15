@@ -25,7 +25,7 @@ const CedarApiVitestEnvironment: Environment = {
 
     const command =
       process.env.TEST_DATABASE_STRATEGY === 'reset'
-        ? ['prisma', 'migrate', 'reset', '--force', '--skip-seed']
+        ? ['prisma', 'migrate', 'reset', '--force']
         : ['prisma', 'db', 'push', '--force-reset', '--accept-data-loss']
 
     execa.sync('yarn', ['cedar', ...command], {

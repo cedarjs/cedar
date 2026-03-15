@@ -18,7 +18,7 @@ export default async function () {
 
   const command =
     process.env.TEST_DATABASE_STRATEGY === 'reset'
-      ? ['prisma', 'migrate', 'reset', '--force', '--skip-seed']
+      ? ['prisma', 'migrate', 'reset', '--force']
       : ['prisma', 'db', 'push', '--force-reset', '--accept-data-loss']
 
   const env: Record<string, string | undefined> = {
