@@ -1,9 +1,5 @@
 # Prerequisites
 
-<div class="video-container">
-  <iframe src="https://www.youtube.com/embed/HJOzmp8oCIQ?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; modestbranding; showinfo=0; fullscreen"></iframe>
-</div>
-
 Cedar is composed of several popular libraries to make full-stack web development easier. Unfortunately, we can't teach all of those technologies from scratch during this tutorial, so we're going to assume you are already familiar with a few core concepts:
 
 - [React](https://react.dev/)
@@ -15,22 +11,11 @@ Cedar is composed of several popular libraries to make full-stack web developmen
 
 You could definitely learn them all at once, but it will be harder to determine where one ends and another begins, which makes it more difficult to find help once you're past the tutorial and want to dive deeper into one technology or another. Our advice? Make it through the tutorial and then start building something on your own! When you find that what you learned in the tutorial doesn't exactly apply to a feature you're trying to build, Google for where you're stuck ("prisma select only some fields") and you'll be an expert in no time. And don't forget our [Discourse](https://community.redwoodjs.com/) and [Discord](https://cedarjs.com/discord) where you can get help from the creators of the framework, as well as tons of helpful community members.
 
-### Cedar Versions
-
-You will want to be on at least version 7.0.0 to complete the tutorial. If this is your first time using Cedar then no worries: the latest version will be installed automatically when you create your app skeleton!
-
-If you have an existing site created with a prior version, you'll need to upgrade and (most likely) apply code modifications. Follow this two step process:
-
-1. For _each_ version included in your upgrade, follow the "Code Modifications" section or "Upgrade Guide" of the specific version's Release Notes:
-   - [Cedar Releases](https://github.com/cedarjs/cedar/releases)
-2. Then upgrade to the latest version. Run the command:
-   - `yarn redwood upgrade`
-
 ### Node.js and Yarn Versions
 
 During installation, CedarJS checks if your system meets version requirements for Node and Yarn:
 
-- node: "=20.x"
+- node: "=24.x"
 - yarn: ">=1.22.21"
 
 If you're using a version of Node or Yarn that's **less** than what's required, _the installation bootstrap will result in an ERROR_. To check, please run the following from your terminal command line:
