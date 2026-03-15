@@ -1,7 +1,5 @@
 const { defineConfig } = require('prisma/config')
 
-console.log('process.env.NODE_ENV', process.env.NODE_ENV)
-
 module.exports = defineConfig({
   schema: 'db/schema.prisma',
   migrations: {
