@@ -82,8 +82,16 @@ export const dbReexportsPrismaClient = () => {
   )
   const prismaClientLocation = prismaClientImportMatch?.[1]
 
+  if (!prismaClientLocation) {
+    return false
+  }
+
   return new RegExp(
-    // @ts-expect-error - old types
+    // @ts-expect-error - old types. This is supported in Node 24, which is the
+    // minimum supported version of Node for CedarJS.
+    // RegExp.escape has been added to the newer ES2025 target, but I'm not
+    // ready to change that just yet
+    // https://github.com/microsoft/TypeScript/pull/63046
     `export \\* from ['"]${RegExp.escape(prismaClientLocation)}['"]`,
   ).test(content)
 }
