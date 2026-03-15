@@ -32,6 +32,13 @@ export const builder = (yargs: Argv) => {
       type: 'boolean',
       default: true,
     })
+    .option('force', {
+      describe:
+        'Skip any confirmation prompts and run tests without interruption. ' +
+        'Useful in CI or scripted environments.',
+      type: 'boolean',
+      default: false,
+    })
     .epilogue(
       `For all available flags, run vitest cli directly ${vitestTip}\n\n` +
         `Also see the ${cliDocsLink}\n`,
@@ -39,6 +46,6 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: Record<string, unknown>) => {
-  const { handler } = await import('./testHandlerEsm.js')
+  const { handler } = await import('./test/testHandlerEsm.js')
   return handler(options)
 }
