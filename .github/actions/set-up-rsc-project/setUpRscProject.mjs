@@ -6,6 +6,30 @@ import path from 'node:path'
 
 import { CEDAR_FRAMEWORK_PATH } from '../actionsLib.mjs'
 
+const PRISMA_CONFIG_CJS_CONTENT = `const { defineConfig, env } = require('prisma/config')
+
+module.exports = defineConfig({
+  schema: 'db/schema.prisma',
+  migrations: {
+    path: 'db/migrations',
+    seed: 'yarn cedar exec seed',
+  },
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
+})
+`
+
+const PRISMA_SCHEMA_GENERATOR_OLD = /generator client \{[^}]*\}/s
+
+const PRISMA_SCHEMA_GENERATOR_NEW = `generator client {
+  provider               = "prisma-client"
+  output                 = "./generated/prisma"
+  moduleFormat           = "cjs"
+  generatedFileExtension = "mts"
+  importFileExtension    = "mts"
+}`
+
 /**
  * @typedef {import('@actions/exec').ExecOptions} ExecOptions
  */
@@ -96,7 +120,75 @@ async function setUpRscProject(rscProjectPath, exec, execInProject) {
   })
   console.log()
 
+  console.log('Updating project for Prisma v7 compatibility')
+  updateProjectForPrisma7(rscProjectPath)
+  console.log()
+
   console.log(`Building project in ${rscProjectPath}`)
   await execInProject(`node ${cedarBinPath} build -v`)
   console.log()
+}
+
+/**
+ * @param {string} rscProjectPath
+ * @returns {void}
+ */
+function updateProjectForPrisma7(rscProjectPath) {
+  // Replace prisma.config.cjs with Prisma v7 format
+  const prismaConfigPath = path.join(rscProjectPath, 'api', 'prisma.config.cjs')
+  fs.writeFileSync(prismaConfigPath, PRISMA_CONFIG_CJS_CONTENT, 'utf8')
+  console.log('  Updated api/prisma.config.cjs')
+
+  // Update schema.prisma generator block to Prisma v7 format
+  const schemaPath = path.join(rscProjectPath, 'api', 'db', 'schema.prisma')
+  const schemaContent = fs.readFileSync(schemaPath, 'utf8')
+  const updatedSchema = schemaContent.replace(
+    PRISMA_SCHEMA_GENERATOR_OLD,
+    PRISMA_SCHEMA_GENERATOR_NEW,
+  )
+  fs.writeFileSync(schemaPath, updatedSchema, 'utf8')
+  console.log('  Updated api/db/schema.prisma')
+
+  // Update api/tsconfig.json for Prisma v7 / Node16 module resolution
+  const apiTsconfigPath = path.join(rscProjectPath, 'api', 'tsconfig.json')
+  const apiTsconfig = JSON.parse(fs.readFileSync(apiTsconfigPath, 'utf8'))
+
+  apiTsconfig.compilerOptions.target = 'es2023'
+  apiTsconfig.compilerOptions.module = 'node20'
+  apiTsconfig.compilerOptions.moduleResolution = 'node16'
+  apiTsconfig.compilerOptions.allowImportingTsExtensions = true
+
+  fs.writeFileSync(
+    apiTsconfigPath,
+    JSON.stringify(apiTsconfig, null, 2) + '\n',
+    'utf8',
+  )
+
+  console.log('  Updated api/tsconfig.json')
+
+  // Update scripts/tsconfig.json for Prisma v7 / Node16 module resolution
+  const scriptsTsconfigPath = path.join(
+    rscProjectPath,
+    'scripts',
+    'tsconfig.json',
+  )
+
+  if (fs.existsSync(scriptsTsconfigPath)) {
+    const scriptsTsconfig = JSON.parse(
+      fs.readFileSync(scriptsTsconfigPath, 'utf8'),
+    )
+
+    scriptsTsconfig.compilerOptions.target = 'es2023'
+    scriptsTsconfig.compilerOptions.module = 'node20'
+    scriptsTsconfig.compilerOptions.moduleResolution = 'node16'
+    scriptsTsconfig.compilerOptions.allowImportingTsExtensions = true
+
+    fs.writeFileSync(
+      scriptsTsconfigPath,
+      JSON.stringify(scriptsTsconfig, null, 2) + '\n',
+      'utf8',
+    )
+
+    console.log('  Updated scripts/tsconfig.json')
+  }
 }
