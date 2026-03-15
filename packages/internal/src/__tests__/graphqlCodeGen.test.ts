@@ -1,6 +1,17 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+
+const { mockPrismaClientPath, mockPrismaClientFileUrl } = await vi.hoisted(
+  async () => {
+    const path = await import('node:path')
+    const { pathToFileURL } = await import('node:url')
+
+    // On Windows, path.resolve('/foo') gives e.g. 'C:\foo'
+    const mockPrismaClientPath = path.resolve('/mock-prisma-client-path')
+    const mockPrismaClientFileUrl = pathToFileURL(mockPrismaClientPath)
+    return { mockPrismaClientPath, mockPrismaClientFileUrl }
+  },
+)
 
 import {
   beforeAll,
@@ -37,9 +48,6 @@ afterAll(() => {
 afterEach(() => {
   vi.restoreAllMocks()
 })
-
-const mockPrismaClientPath = path.resolve('/mock-prisma-client-path')
-const mockPrismaClientFileUrl = pathToFileURL(mockPrismaClientPath).href
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
