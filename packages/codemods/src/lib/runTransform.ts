@@ -57,6 +57,11 @@ export const runTransform = async ({
       ...defaultJscodeshiftOpts,
       parser,
       babel: process.env.NODE_ENV === 'test',
+      // In test environments, run in-band so that any crash in the worker
+      // surfaces as a real thrown error instead of silently hanging until
+      // timeout. (e.g. a top-level import in a transform's dependency crashing
+      // because @babel/register resolves a CJS default import as undefined)
+      runInBand: process.env.NODE_ENV === 'test',
       ...options, // Putting options here lets them override all the defaults.
     })
   } catch (e: any) {
