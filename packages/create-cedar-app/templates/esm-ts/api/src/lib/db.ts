@@ -2,7 +2,6 @@
 // for options.
 
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from 'api/db/generated/prisma/client.mts'
