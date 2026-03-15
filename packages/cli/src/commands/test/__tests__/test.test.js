@@ -23,6 +23,12 @@ vi.mock('@cedarjs/structure', () => {
   }
 })
 
+vi.mock('../datasourceWarning', () => {
+  return {
+    warnIfNonStandardDatasourceUrl: vi.fn(),
+  }
+})
+
 beforeEach(() => {
   vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 })

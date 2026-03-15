@@ -64,7 +64,6 @@ export async function warnIfNonStandardDatasourceUrl() {
 
   const prismaConfigLines = prismaConfig.split('\n')
 
-  // TODO: Add tests for this
   for (const line of prismaConfigLines) {
     // The last two patterns are for lines like the ones below:
     // datasource: { url: env('DATABASE_URL') },
