@@ -64,6 +64,7 @@ export async function warnIfNonStandardDatasourceUrl() {
 
   const prismaConfigLines = prismaConfig.split('\n')
 
+  // TODO: Add tests for this
   for (const line of prismaConfigLines) {
     // The last two patterns are for lines like the ones below:
     // datasource: { url: env('DATABASE_URL') },
@@ -75,8 +76,9 @@ export async function warnIfNonStandardDatasourceUrl() {
 
     if (envVarName && envVarName !== 'DATABASE_URL') {
       console.warn(
-        `Found a non-standard prisma config datasource url env var: "${envVarName}". ` +
-          `Cedar will override this env var with TEST_DIRECT_URL, TEST_DATABASE_URL, or the default test DB.`,
+        'Found a non-standard prisma config datasource url env var: ' +
+          `"${envVarName}". Cedar will override this env var with ` +
+          'TEST_DIRECT_URL, TEST_DATABASE_URL, or the default test DB.',
       )
 
       const { proceed } = await Enquirer.prompt<{ proceed: boolean }>({

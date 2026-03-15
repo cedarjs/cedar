@@ -5,9 +5,8 @@
 // https://www.prisma.io/docs/orm/prisma-migrate
 
 datasource db {
-  provider  = "sqlite"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
