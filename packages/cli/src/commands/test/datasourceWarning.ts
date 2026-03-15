@@ -68,8 +68,10 @@ export async function warnIfNonStandardDatasourceUrl() {
     // The last two patterns are for lines like the ones below:
     // datasource: { url: env('DATABASE_URL') },
     // datasource: { foo: 'bar', url: env('DATABASE_URL'), '1baz': '' },
-    const envVarName = (line.match(/^\s*url: process\.env\.(\w+),?$/) ??
-      line.match(/^\s*url: env\(['"](\w+)['"]\),?$/) ??
+    const envVarName = (line.match(
+      /^\s*url: process\.env\.(\w+),?(\s*\/\/.*)?$/,
+    ) ??
+      line.match(/^\s*url: env\(['"](\w+)['"]\),?(\s*\/\/.*)?$/) ??
       line.match(/[{,] url: process\.env\.(\w+)(?:,| })/) ??
       line.match(/[{,] url: env\(['"](\w+)['"]\)(?:,| })/))?.[1]
 

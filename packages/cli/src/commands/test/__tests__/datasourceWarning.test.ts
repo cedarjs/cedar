@@ -48,7 +48,7 @@ describe('warnIfNonStandardDatasourceUrl', () => {
   })
 
   describe('when the datasource url uses DATABASE_URL', () => {
-    it('does not warn or prompt for a multi-line config', async () => {
+    it('does not warn or prompt for a multi-line env() config', async () => {
       vol.fromJSON({
         'project/api/prisma.config.ts': `
           export default defineConfig({
@@ -65,7 +65,58 @@ describe('warnIfNonStandardDatasourceUrl', () => {
       expect(Enquirer.prompt).not.toHaveBeenCalled()
     })
 
-    it('does not warn or prompt for a single-line config', async () => {
+    it('does not warn or prompt for a multi-line env() config with an eol comment', async () => {
+      vol.fromJSON({
+        'project/api/prisma.config.ts': `
+          export default defineConfig({
+            datasource: {
+              url: env('DATABASE_URL'), // some comment
+            },
+          })
+        `,
+      })
+
+      await warnIfNonStandardDatasourceUrl()
+
+      expect(console.warn).not.toHaveBeenCalled()
+      expect(Enquirer.prompt).not.toHaveBeenCalled()
+    })
+
+    it('does not warn or prompt for a multi-line process.env config', async () => {
+      vol.fromJSON({
+        'project/api/prisma.config.ts': `
+          export default defineConfig({
+            datasource: {
+              url: process.env.DATABASE_URL,
+            },
+          })
+        `,
+      })
+
+      await warnIfNonStandardDatasourceUrl()
+
+      expect(console.warn).not.toHaveBeenCalled()
+      expect(Enquirer.prompt).not.toHaveBeenCalled()
+    })
+
+    it('does not warn or prompt for a multi-line process.env config with an eol comment', async () => {
+      vol.fromJSON({
+        'project/api/prisma.config.ts': `
+          export default defineConfig({
+            datasource: {
+              url: process.env.DATABASE_URL, // some comment
+            },
+          })
+        `,
+      })
+
+      await warnIfNonStandardDatasourceUrl()
+
+      expect(console.warn).not.toHaveBeenCalled()
+      expect(Enquirer.prompt).not.toHaveBeenCalled()
+    })
+
+    it('does not warn or prompt for a single-line env() config', async () => {
       vol.fromJSON({
         'project/api/prisma.config.ts':
           "export default defineConfig({ datasource: { url: env('DATABASE_URL') } })",
@@ -77,15 +128,34 @@ describe('warnIfNonStandardDatasourceUrl', () => {
       expect(Enquirer.prompt).not.toHaveBeenCalled()
     })
 
-    it('does not warn or prompt for process.env syntax', async () => {
+    it('does not warn or prompt for a single-line env() config with an eol comment', async () => {
       vol.fromJSON({
-        'project/api/prisma.config.ts': `
-          export default defineConfig({
-            datasource: {
-              url: process.env.DATABASE_URL,
-            },
-          })
-        `,
+        'project/api/prisma.config.ts':
+          "export default defineConfig({ datasource: { url: env('DATABASE_URL') } }) // some comment",
+      })
+
+      await warnIfNonStandardDatasourceUrl()
+
+      expect(console.warn).not.toHaveBeenCalled()
+      expect(Enquirer.prompt).not.toHaveBeenCalled()
+    })
+
+    it('does not warn or prompt for a single-line process.env config', async () => {
+      vol.fromJSON({
+        'project/api/prisma.config.ts':
+          'export default defineConfig({ datasource: { url: process.env.DATABASE_URL } })',
+      })
+
+      await warnIfNonStandardDatasourceUrl()
+
+      expect(console.warn).not.toHaveBeenCalled()
+      expect(Enquirer.prompt).not.toHaveBeenCalled()
+    })
+
+    it('does not warn or prompt for a single-line process.env config with an eol comment', async () => {
+      vol.fromJSON({
+        'project/api/prisma.config.ts':
+          'export default defineConfig({ datasource: { url: process.env.DATABASE_URL } }) // some comment',
       })
 
       await warnIfNonStandardDatasourceUrl()
@@ -114,7 +184,7 @@ describe('warnIfNonStandardDatasourceUrl', () => {
   })
 
   describe('when the datasource url uses a non-standard env var', () => {
-    it('warns and prompts when using env() syntax on its own line', async () => {
+    it('warns and prompts when using multi-line env() syntax', async () => {
       vol.fromJSON({
         'project/api/prisma.config.ts': `
           export default defineConfig({
@@ -135,12 +205,12 @@ describe('warnIfNonStandardDatasourceUrl', () => {
       expect(Enquirer.prompt).toHaveBeenCalledOnce()
     })
 
-    it('warns and prompts when using env() syntax on its own line, with eol comment', async () => {
+    it('warns and prompts when using multi-line env() syntax with an eol comment', async () => {
       vol.fromJSON({
         'project/api/prisma.config.ts': `
           export default defineConfig({
             datasource: {
-              url: env('MY_DATABASE_URL'), // EOL comment
+              url: env('MY_DATABASE_URL'), // some comment
             },
           })
         `,
@@ -156,7 +226,7 @@ describe('warnIfNonStandardDatasourceUrl', () => {
       expect(Enquirer.prompt).toHaveBeenCalledOnce()
     })
 
-    it('warns and prompts when using process.env syntax on its own line', async () => {
+    it('warns and prompts when using multi-line process.env syntax', async () => {
       vol.fromJSON({
         'project/api/prisma.config.ts': `
           export default defineConfig({
@@ -177,7 +247,28 @@ describe('warnIfNonStandardDatasourceUrl', () => {
       expect(Enquirer.prompt).toHaveBeenCalledOnce()
     })
 
-    it('warns and prompts when using env() syntax on a single-line config', async () => {
+    it('warns and prompts when using multi-line process.env syntax with an eol comment', async () => {
+      vol.fromJSON({
+        'project/api/prisma.config.ts': `
+          export default defineConfig({
+            datasource: {
+              url: process.env.MY_DATABASE_URL, // some comment
+            },
+          })
+        `,
+      })
+
+      vi.mocked(Enquirer.prompt).mockResolvedValue({ proceed: true })
+
+      await warnIfNonStandardDatasourceUrl()
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('"MY_DATABASE_URL"'),
+      )
+      expect(Enquirer.prompt).toHaveBeenCalledOnce()
+    })
+
+    it('warns and prompts when using single-line env() syntax', async () => {
       vol.fromJSON({
         'project/api/prisma.config.ts':
           "export default defineConfig({ datasource: { url: env('MY_DATABASE_URL') } })",
@@ -193,10 +284,42 @@ describe('warnIfNonStandardDatasourceUrl', () => {
       expect(Enquirer.prompt).toHaveBeenCalledOnce()
     })
 
-    it('warns and prompts when using process.env syntax on a single-line config', async () => {
+    it('warns and prompts when using single-line env() syntax with an eol comment', async () => {
+      vol.fromJSON({
+        'project/api/prisma.config.ts':
+          "export default defineConfig({ datasource: { url: env('MY_DATABASE_URL') } }) // some comment",
+      })
+
+      vi.mocked(Enquirer.prompt).mockResolvedValue({ proceed: true })
+
+      await warnIfNonStandardDatasourceUrl()
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('"MY_DATABASE_URL"'),
+      )
+      expect(Enquirer.prompt).toHaveBeenCalledOnce()
+    })
+
+    it('warns and prompts when using single-line process.env syntax', async () => {
       vol.fromJSON({
         'project/api/prisma.config.ts':
           'export default defineConfig({ datasource: { url: process.env.MY_DATABASE_URL } })',
+      })
+
+      vi.mocked(Enquirer.prompt).mockResolvedValue({ proceed: true })
+
+      await warnIfNonStandardDatasourceUrl()
+
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('"MY_DATABASE_URL"'),
+      )
+      expect(Enquirer.prompt).toHaveBeenCalledOnce()
+    })
+
+    it('warns and prompts when using single-line process.env syntax with an eol comment', async () => {
+      vol.fromJSON({
+        'project/api/prisma.config.ts':
+          'export default defineConfig({ datasource: { url: process.env.MY_DATABASE_URL } }) // some comment',
       })
 
       vi.mocked(Enquirer.prompt).mockResolvedValue({ proceed: true })
