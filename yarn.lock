@@ -3251,7 +3251,7 @@ __metadata:
     "@cedarjs/project-config": "npm:2.8.0"
     "@cedarjs/router": "npm:2.8.0"
     "@graphql-codegen/add": "npm:6.0.0"
-    "@graphql-codegen/cli": "npm:6.2.0"
+    "@graphql-codegen/cli": "npm:6.2.1"
     "@graphql-codegen/client-preset": "npm:5.2.4"
     "@graphql-codegen/core": "npm:5.0.1"
     "@graphql-codegen/fragment-matcher": "npm:6.0.0"
@@ -5776,9 +5776,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-codegen/cli@npm:6.2.0":
-  version: 6.2.0
-  resolution: "@graphql-codegen/cli@npm:6.2.0"
+"@graphql-codegen/cli@npm:6.2.1":
+  version: 6.2.1
+  resolution: "@graphql-codegen/cli@npm:6.2.1"
   dependencies:
     "@babel/generator": "npm:^7.18.13"
     "@babel/template": "npm:^7.18.10"
@@ -5826,7 +5826,7 @@ __metadata:
     graphql-code-generator: cjs/bin.js
     graphql-codegen: cjs/bin.js
     graphql-codegen-esm: esm/bin.js
-  checksum: 10c0/bb03b2be864a416aeb88e393adeba821f07c4e9e40e43663bf27290db14c5a0073554a26f7435f54abceee094d02ee7a4791953e352c058606c42fef5a318b00
+  checksum: 10c0/a6377489a9bce8ff350c656b42dd6c83e6fbe99cb6cbe26da9b50dc8a43816dcb5bd4189a78198158a8c5ab457f337161333f12fd767331d4b3227836d0514bd
   languageName: node
   linkType: hard
 
