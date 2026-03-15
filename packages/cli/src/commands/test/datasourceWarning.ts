@@ -45,11 +45,15 @@ import { getPaths } from '@cedarjs/project-config'
 // an error if it could not find a valid `directUrl`. For the config file,
 // we will simply print a warning if we detect non-standard config.
 
+interface Args {
+  force?: boolean
+}
+
 // Parses the Prisma config file for a non-standard datasource url env var
 // (i.e. anything other than DATABASE_URL), warns the user, and prompts them
 // to confirm before continuing. This must be called before Jest/Vitest starts,
 // while the process still has an interactive TTY attached.
-export async function warnIfNonStandardDatasourceUrl() {
+export async function warnIfNonStandardDatasourceUrl({ force }: Args = {}) {
   const cedarPaths = getPaths()
 
   if (!fs.existsSync(cedarPaths.api.prismaConfig)) {
@@ -76,10 +80,15 @@ export async function warnIfNonStandardDatasourceUrl() {
       line.match(/[{,] url: env\(['"](\w+)['"]\)(?:,| })/))?.[1]
 
     if (envVarName && envVarName !== 'DATABASE_URL') {
+      if (force) {
+        return
+      }
+
       console.warn(
         'Found a non-standard prisma config datasource url env var: ' +
-          `"${envVarName}". Cedar will override this env var with ` +
-          'TEST_DIRECT_URL, TEST_DATABASE_URL, or the default test DB.',
+          `"${envVarName}".\nCedar will not override this env var, ` +
+          'potentially running destructive commands against your production ' +
+          'database.',
       )
 
       const { proceed } = await Enquirer.prompt<{ proceed: boolean }>({

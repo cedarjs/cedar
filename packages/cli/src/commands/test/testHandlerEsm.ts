@@ -14,6 +14,7 @@ import { warnIfNonStandardDatasourceUrl } from './datasourceWarning.js'
 type TestEsmHandlerArgs = Record<string, unknown> & {
   filter?: string[]
   dbPush?: boolean
+  force?: boolean
 }
 
 function hasStringMessage(value: unknown): value is { message: string } {
@@ -41,6 +42,7 @@ function getExitCode(value: unknown) {
 export const handler = async ({
   filter: filterParams = [],
   dbPush = true,
+  force = false,
   ...others
 }: TestEsmHandlerArgs) => {
   recordTelemetryAttributes({
@@ -52,7 +54,7 @@ export const handler = async ({
   const rwjsPaths = getPaths()
 
   const forwardVitestFlags = Object.keys(others).flatMap((flagName) => {
-    if (['db-push', 'loadEnvFiles', '$0', '_'].includes(flagName)) {
+    if (['db-push', 'force', 'loadEnvFiles', '$0', '_'].includes(flagName)) {
       // filter out flags meant for the rw test command only
       return []
     }
@@ -117,7 +119,7 @@ export const handler = async ({
     }
 
     if (sides.includes('api')) {
-      await warnIfNonStandardDatasourceUrl()
+      await warnIfNonStandardDatasourceUrl({ force })
     }
 
     // TODO: Run vitest programmatically. See https://vitest.dev/advanced/api/

@@ -36,6 +36,13 @@ export const builder = (yargs: Argv) => {
       type: 'boolean',
       default: true,
     })
+    .option('force', {
+      describe:
+        'Run tests without prompting for confirmation, even when a ' +
+        'non-standard datasource url env var is detected.',
+      type: 'boolean',
+      default: false,
+    })
     .epilogue(
       `For all available flags, run jest cli directly ${c.tip(
         'yarn jest --help',

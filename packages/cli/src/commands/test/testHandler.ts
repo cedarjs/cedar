@@ -21,6 +21,7 @@ type TestHandlerArgs = Record<string, unknown> & {
   watch?: boolean
   collectCoverage?: boolean
   dbPush?: boolean
+  force?: boolean
 }
 
 function hasStringMessage(value: unknown): value is { message: string } {
@@ -96,6 +97,7 @@ export const handler = async ({
   watch = true,
   collectCoverage = false,
   dbPush = true,
+  force = false,
   ...others
 }: TestHandlerArgs) => {
   recordTelemetryAttributes({
@@ -111,6 +113,7 @@ export const handler = async ({
       [
         'collect-coverage',
         'db-push',
+        'force',
         'loadEnvFiles',
         'watch',
         '$0',
@@ -185,7 +188,7 @@ export const handler = async ({
     }
 
     if (sides.includes('api')) {
-      await warnIfNonStandardDatasourceUrl()
+      await warnIfNonStandardDatasourceUrl({ force })
     }
 
     // **NOTE** There is no official way to run Jest programmatically,

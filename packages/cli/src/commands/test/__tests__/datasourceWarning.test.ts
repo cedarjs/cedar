@@ -332,6 +332,27 @@ describe('warnIfNonStandardDatasourceUrl', () => {
       expect(Enquirer.prompt).toHaveBeenCalledOnce()
     })
 
+    describe('when force is true', () => {
+      it('skips the prompt and does not exit the process', async () => {
+        vol.fromJSON({
+          'project/api/prisma.config.ts': `
+            export default defineConfig({
+              datasource: {
+                url: env('MY_DATABASE_URL'),
+              },
+            })
+          `,
+        })
+
+        await expect(
+          warnIfNonStandardDatasourceUrl({ force: true }),
+        ).resolves.not.toThrow()
+
+        expect(Enquirer.prompt).not.toHaveBeenCalled()
+        expect(process.exit).not.toHaveBeenCalled()
+      })
+    })
+
     describe('prompting', () => {
       it('when the user confirms, it does not exit the process', async () => {
         vol.fromJSON({
