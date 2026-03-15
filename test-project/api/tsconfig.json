@@ -11,17 +11,17 @@
     "paths": {
       "src/*": ["./src/*", "../.redwood/types/mirror/api/src/*"],
       "types/*": ["./types/*", "../types/*"],
-      "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"],
+      "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]
     },
     "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
     "types": ["jest"],
-    "jsx": "react-jsx",
+    "jsx": "react-jsx"
   },
   "include": [
     "src",
     "../.redwood/types/includes/all-*",
     "../.redwood/types/includes/api-*",
-    "../types",
+    "../types"
   ],
-  "references": [{ "path": "../packages/validators" }],
+  "references": [{ "path": "../packages/validators" }]
 }
