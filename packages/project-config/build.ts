@@ -49,14 +49,11 @@ fs.writeFileSync(
   indexFile
     .replace('await import(configUrl)', 'require(prismaConfigPath)')
     .replace(
-      'const { createSchemaPathInput, getSchemaWithPath } = await import("@prisma/internals")',
-      'const { createSchemaPathInput, getSchemaWithPath } = require("@prisma/internals")',
+      'const mod = await import("@prisma/internals")',
+      'const mod = require("@prisma/internals")',
     )
     .replace(
-      // The "3" in getConfig3 is from esbuild renaming the import to avoid a
-      // conflict. If this changes between builds we'll have to use a regexp
-      // here instead to be more flexible in what we match
-      'const { getConfig: getConfig3 } = await import("@prisma/internals")',
-      'const { getConfig: getConfig3 } = require("@prisma/internals")',
+      'const prismaInternalsMod = await import("@prisma/internals")',
+      'const prismaInternalsMod = require("@prisma/internals")',
     ),
 )
