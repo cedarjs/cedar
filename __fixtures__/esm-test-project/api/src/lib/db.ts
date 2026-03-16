@@ -13,12 +13,12 @@ import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client.mts'
 
-const apiDir = getPaths().api.base
-
 const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
   if (!url.startsWith('file:.')) {
     return url
   }
+
+  const apiDir = getPaths().api.base
 
   return `file:${path.resolve(apiDir, url.slice('file:'.length))}`
 }
