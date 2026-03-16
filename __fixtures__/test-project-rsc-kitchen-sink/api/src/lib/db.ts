@@ -12,7 +12,13 @@ import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client.mts'
 
-const apiDir = path.resolve(import.meta.dirname, '../..')
+// `import.meta.dirname` is available in ESM (e.g. when bundled by Vite for RSC/SSR),
+// while `__dirname` is available in CJS (e.g. when compiled by the API build).
+const currentDir: string =
+  typeof import.meta.dirname === 'string'
+    ? import.meta.dirname
+    : __dirname
+const apiDir = path.resolve(currentDir, '../..')
 
 const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
   if (!url.startsWith('file:.')) {
