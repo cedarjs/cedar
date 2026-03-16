@@ -210,9 +210,14 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
       config.generators.find((entry) => entry.name === 'client') ??
       config.generators[0]
     const output = generator?.output?.value
-    ext = Array.isArray(generator?.config?.generatedFileExtension)
-      ? generator?.config?.generatedFileExtension[0]
-      : generator?.config?.generatedFileExtension || ext
+    const generatedFileExtension = generator?.config?.generatedFileExtension
+    const resolvedExtension = Array.isArray(generatedFileExtension)
+      ? generatedFileExtension[0]
+      : generatedFileExtension
+
+    if (typeof resolvedExtension === 'string' && resolvedExtension.length > 0) {
+      ext = resolvedExtension
+    }
 
     if (output) {
       generatorOutputPath = path.isAbsolute(output)
@@ -227,17 +232,19 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
 
   // TODO: Fallbacks shouldn't be needed. Remove all of this
   const candidateEntries = [
-    ...(generatorOutputPath
+    ...(typeof generatorOutputPath === 'string'
       ? [path.join(generatorOutputPath, 'client.' + ext)]
       : []),
     path.join(schemaDir, 'generated', 'client', 'client.' + ext),
     path.join(schemaDir, 'generated', 'prisma', 'client.' + ext),
     path.join(getPaths().base, 'node_modules/.prisma/client/index.js'),
-  ].filter((entry, index, allEntries) => allEntries.indexOf(entry) === index)
+  ].filter((entry, index, allEntries) => {
+    return typeof entry === 'string' && allEntries.indexOf(entry) === index
+  })
 
-  const prismaClientEntry = candidateEntries.find((entry) =>
-    fs.existsSync(entry),
-  )
+  const prismaClientEntry = candidateEntries.find((entry) => {
+    return fs.existsSync(entry)
+  })
 
   if (mustExist && !prismaClientEntry) {
     throw new Error(
