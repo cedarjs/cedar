@@ -7,19 +7,15 @@ import type { PrismaConfig } from 'prisma'
 import { getPaths } from './paths.js'
 
 function getGeneratorOutputPathFromSchema(schemaPath: string) {
-  console.log('getGeneratorOutputPathFromSchema schemaPath', schemaPath)
   if (!fs.existsSync(schemaPath)) {
     return undefined
   }
 
   const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
-  console.log('getGeneratorOutputPathFromSchema schemaContent', schemaContent)
   const generatorMatch = schemaContent.match(
     /generator\s+client\s*\{[\s\S]*?output\s*=\s*["']([^"']+)["'][^}]*\}/,
   )
-  console.log('getGeneratorOutputPathFromSchema generatorMatch', generatorMatch)
   const output = generatorMatch?.[1]
-  console.log('getGeneratorOutputPathFromSchema output', output)
 
   if (!output) {
     return undefined
@@ -194,34 +190,26 @@ export async function getDataMigrationsPath(
 }
 
 export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
-  console.log('resolveGeneratedPrismaClient mustExist', mustExist)
   const prismaConfigPath = getPaths().api.prismaConfig
-  console.log('resolveGeneratedPrismaClient prismaConfigPath', prismaConfigPath)
   const schemaPath = await getSchemaPath(prismaConfigPath)
-  console.log('resolveGeneratedPrismaClient schemaPath', schemaPath)
   const schemaDir = fs.statSync(schemaPath).isDirectory()
     ? schemaPath
     : path.dirname(schemaPath)
-  console.log('resolveGeneratedPrismaClient schemaDir', schemaDir)
 
   let generatorOutputPath: string | undefined
   let ext = 'ts'
   try {
     const { schemas } = await getPrismaSchemasAtPath(schemaPath)
-    console.log('resolveGeneratedPrismaClient schemas', schemas)
     const prismaInternalsMod = await import('@prisma/internals')
     // `mod.default || mod` handles ESM vs CJS interop: in ESM context
     // @prisma/internals resolves everything onto `default`, in CJS it's
     // directly on the module object.
     const { getConfig } = prismaInternalsMod.default || prismaInternalsMod
     const config = await getConfig({ datamodel: schemas })
-    console.log('resolveGeneratedPrismaClient config', config)
     const generator =
       config.generators.find((entry) => entry.name === 'client') ??
       config.generators[0]
-    console.log('resolveGeneratedPrismaClient generator', generator)
     const output = generator?.output?.value
-    console.log('resolveGeneratedPrismaClient output', output)
     ext = Array.isArray(generator?.config?.generatedFileExtension)
       ? generator?.config?.generatedFileExtension[0]
       : generator?.config?.generatedFileExtension || ext
@@ -230,19 +218,11 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
       generatorOutputPath = path.isAbsolute(output)
         ? output
         : path.resolve(schemaDir, output)
-      console.log(
-        'resolveGeneratedPrismaClient config generatorOutputPath',
-        generatorOutputPath,
-      )
     }
   } catch {
     // Fall back to schema parsing
     // TODO: Remove this once we've verified that the code above works correctly
     generatorOutputPath = getGeneratorOutputPathFromSchema(schemaPath)
-    console.log(
-      'resolveGeneratedPrismaClient fallback generatorOutputPath',
-      generatorOutputPath,
-    )
   }
 
   // TODO: Fallbacks shouldn't be needed. Remove all of this
@@ -254,14 +234,9 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
     path.join(schemaDir, 'generated', 'prisma', 'client.' + ext),
     path.join(getPaths().base, 'node_modules/.prisma/client/index.js'),
   ].filter((entry, index, allEntries) => allEntries.indexOf(entry) === index)
-  console.log('resolveGeneratedPrismaClient candidateEntries', candidateEntries)
 
   const prismaClientEntry = candidateEntries.find((entry) =>
     fs.existsSync(entry),
-  )
-  console.log(
-    'resolveGeneratedPrismaClient prismaClientEntry',
-    prismaClientEntry,
   )
 
   if (mustExist && !prismaClientEntry) {
