@@ -32,8 +32,8 @@ import {
 
 // TODO (STREAMING) Just so it doesn't error out. Not sure how to handle this.
 globalThis.__REDWOOD__PRERENDER_PAGES = {}
-globalThis.__rwjs__vite_ssr_runtime = undefined
-globalThis.__rwjs__vite_rsc_runtime = undefined
+globalThis.__cedarjs__vite_ssr_runtime = undefined
+globalThis.__cedarjs__vite_rsc_runtime = undefined
 
 async function createServer() {
   ensureProcessDirWeb()
@@ -181,7 +181,7 @@ async function createServer() {
     appType: 'custom',
   })
 
-  globalThis.__rwjs__vite_ssr_runtime =
+  globalThis.__cedarjs__vite_ssr_runtime =
     await createViteRuntime(viteSsrDevServer)
   globalThis.__rwjs__client_references = new Set<string>()
   globalThis.__rwjs__server_references = new Set<string>()
@@ -375,7 +375,8 @@ async function createServer() {
     cacheDir: '../node_modules/.vite-rsc',
   })
 
-  globalThis.__rwjs__vite_rsc_runtime = await createViteRuntime(viteRscServer)
+  globalThis.__cedarjs__vite_rsc_runtime =
+    await createViteRuntime(viteRscServer)
 
   // create a handler that will invoke middleware with or without a route
   // The DEV one will create a new middleware router on each request
@@ -408,7 +409,7 @@ async function createServer() {
     createWebSocketServer()
 
     const { createRscRequestHandler } =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl(
+      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(
         new URL('./rsc/rscRequestHandler.js', import.meta.url).pathname,
       )
 

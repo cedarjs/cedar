@@ -20,7 +20,7 @@ export function makeFilePath(path: string) {
  * multiple instances of React
  */
 export async function importReact() {
-  if (globalThis.__rwjs__vite_ssr_runtime) {
+  if (globalThis.__cedarjs__vite_ssr_runtime) {
     const reactMod = await import('react')
     return reactMod.default
   }
@@ -38,7 +38,7 @@ export async function importReact() {
  * prevent multiple instances of React
  */
 export async function importRsdwClient(): Promise<RSDWClientType> {
-  if (globalThis.__rwjs__vite_ssr_runtime) {
+  if (globalThis.__cedarjs__vite_ssr_runtime) {
     const rsdwcMod = await import('react-server-dom-webpack/client.edge')
     return rsdwcMod.default
   }
@@ -52,10 +52,11 @@ export async function importRsdwClient(): Promise<RSDWClientType> {
 }
 
 export async function importRsdwServer(): Promise<RSDWServerType> {
-  if (globalThis.__rwjs__vite_rsc_runtime) {
-    const rsdwServerMod = await globalThis.__rwjs__vite_rsc_runtime.executeUrl(
-      'react-server-dom-webpack/server.edge',
-    )
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
+    const rsdwServerMod =
+      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(
+        'react-server-dom-webpack/server.edge',
+      )
 
     return rsdwServerMod.default
   } else {
