@@ -137,6 +137,7 @@ export const test_dynamic = () =>
       `cd ${BASE_DIR}; rm -rf ./api/db/migrations && yarn cedar prisma migrate reset --force`,
     )
     cy.exec(`cd ${BASE_DIR}; yarn cedar prisma migrate dev --name setup`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar prisma generate`)
     cy.exec(`cd ${BASE_DIR}; yarn cedar g scaffold post --force`)
 
     // The comment below is AI-generated and might be BS. Beware!
