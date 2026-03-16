@@ -49,8 +49,10 @@ export async function rscBuildForSsr({
       noExternal: true,
       external: [
         '@prisma/client',
+        '@prisma/adapter-better-sqlite3',
         '@prisma/fetch-engine',
         '@prisma/internals',
+        'better-sqlite3',
         '@cedarjs/auth-dbauth-api',
         '@cedarjs/cookie-jar',
         '@cedarjs/server-store',
