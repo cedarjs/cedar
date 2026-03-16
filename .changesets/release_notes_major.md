@@ -5,6 +5,31 @@ prisma.config.cjs. The config is for the cli.
 Need to remove it from `schema.prisma` and add it to the config file. Point to
 Prisma docs for this.
 
+## SQLite `DATABASE_URL` path change
+
+If your project uses SQLite, update your `DATABASE_URL` from:
+
+- `file:./dev.db`
+
+to:
+
+- `file:./db/dev.db`
+
+This keeps the SQLite database file in `api/db/dev.db`, which is where Cedar's
+Prisma 7 setup expects it to live.
+
+In practice, this means updating the value in the env file your project uses,
+for example:
+
+```js
+DATABASE_URL=file:./db/dev.db
+```
+
+If you leave the old value in place, Prisma CLI commands and runtime database
+access can end up pointing at different files, which may show up as errors like
+"table does not exist" even though the expected tables exist in another SQLite
+file.
+
 Testing potentially works differently. If you just have `DATABASE_URL` in your
 prisma.config.cjs file, it will be replaced by `TEST_DATABASE_URL` just like
 before. But if you need a specific `directUrl`, you should put that in your
