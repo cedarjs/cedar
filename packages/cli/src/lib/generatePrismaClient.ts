@@ -5,10 +5,23 @@ import { createRequire } from 'node:module'
 
 import { resolveGeneratedPrismaClient } from '@cedarjs/project-config'
 
-import { runCommandTask, getPaths } from '../lib/index.js'
+// @ts-expect-error - No types for JS files
+import { runCommandTask, getPaths } from './index.js'
 
-export const generatePrismaCommand = async () => {
+type GeneratePrismaClientOptions = {
+  verbose?: boolean
+  force?: boolean
+  silent?: boolean
+}
+
+export const generatePrismaCommand = async (): Promise<{
+  cmd: string
+  args: string[]
+}> => {
+  // @ts-expect-error - LSP TS config is old. It doesn't know about
+  // `"module": "node20"`, which is what we use
   const createdRequire = createRequire(import.meta.url)
+
   // I wanted to use `import.meta.resolve` here, but it's not supported by
   // vitest yet
   // https://github.com/vitest-dev/vitest/issues/6953
@@ -34,14 +47,15 @@ export const generatePrismaClient = async ({
   verbose = true,
   force = true,
   silent = false,
-}) => {
+}: GeneratePrismaClientOptions = {}): Promise<void> => {
   // Unless --force is used we do not generate the Prisma client if it exists.
   if (!force) {
-    const prismaClientPath = resolveGeneratedPrismaClient()
+    const prismaClientPath = await resolveGeneratedPrismaClient()
 
-    const prismaClientFile = fs.existsSync(prismaClientPath)
-      ? fs.readFileSync(prismaClientPath, 'utf8')
-      : ''
+    const prismaClientFile =
+      prismaClientPath && fs.existsSync(prismaClientPath)
+        ? fs.readFileSync(prismaClientPath, 'utf8')
+        : ''
 
     // This is a hack, and is likely to break. A better solution would be to
     // try to import the Prisma client. But that gets cached, so we'd have to

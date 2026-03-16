@@ -2199,6 +2199,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cedarjs/jobs@file:../packages/jobs/cedarjs-jobs.tgz::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 2.8.0
+  resolution: "@cedarjs/jobs@file:../packages/jobs/cedarjs-jobs.tgz#../packages/jobs/cedarjs-jobs.tgz::hash=954526&locator=root-workspace-0b6124%40workspace%3A."
+  dependencies:
+    "@cedarjs/cli-helpers": "npm:2.8.0"
+    "@cedarjs/project-config": "npm:2.8.0"
+    cron-parser: "npm:5.5.0"
+    type-fest: "npm:5.4.4"
+  bin:
+    rw-jobs: ./dist/bins/rw-jobs.js
+    rw-jobs-worker: ./dist/bins/rw-jobs-worker.js
+  checksum: 10c0/60d5b13cce2642035a71b7e8c9824126de7d5e41795309b9391bc708af089d2ca4faccd82a9a8a80c888abc51e6ff33d8231c89941c6ee5e04d29e63c2133b75
+  languageName: node
+  linkType: hard
+
 "@cedarjs/prerender@file:../packages/prerender/cedarjs-prerender.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
   resolution: "@cedarjs/prerender@file:../packages/prerender/cedarjs-prerender.tgz#../packages/prerender/cedarjs-prerender.tgz::hash=7b3aea&locator=root-workspace-0b6124%40workspace%3A."
@@ -7146,6 +7161,7 @@ __metadata:
     "@cedarjs/api": "npm:3.0.0-canary.13223+9e1d1011b"
     "@cedarjs/auth-dbauth-api": "npm:3.0.0-canary.13223+9e1d1011b"
     "@cedarjs/graphql-server": "npm:3.0.0-canary.13223+9e1d1011b"
+    "@cedarjs/jobs": "npm:3.0.0-canary.13223+9e1d1011b"
     "@my-org/validators": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -8875,6 +8891,15 @@ __metadata:
   version: 1.1.1
   resolution: "create-require@npm:1.1.1"
   checksum: 10c0/157cbc59b2430ae9a90034a5f3a1b398b6738bf510f713edc4d4e45e169bc514d3d99dd34d8d01ca7ae7830b5b8b537e46ae8f3c8f932371b0875c0151d7ec91
+  languageName: node
+  linkType: hard
+
+"cron-parser@npm:5.5.0":
+  version: 5.5.0
+  resolution: "cron-parser@npm:5.5.0"
+  dependencies:
+    luxon: "npm:^3.7.1"
+  checksum: 10c0/ffbda13dcfca26cd79c07d7cb4aa317c3634119696f3690dedf4f3baceacade5b1459fc160f65563b3a367ec1b020a2fd065fa49c4b6d937536ba3d637191cd2
   languageName: node
   linkType: hard
 
@@ -13842,6 +13867,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"luxon@npm:^3.7.1":
+  version: 3.7.2
+  resolution: "luxon@npm:3.7.2"
+  checksum: 10c0/ed8f0f637826c08c343a29dd478b00628be93bba6f068417b1d8896b61cb61c6deacbe1df1e057dbd9298334044afa150f9aaabbeb3181418ac8520acfdc2ae2
+  languageName: node
+  linkType: hard
+
 "lz-string@npm:^1.5.0":
   version: 1.5.0
   resolution: "lz-string@npm:1.5.0"
@@ -17793,6 +17825,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tagged-tag@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "tagged-tag@npm:1.0.0"
+  checksum: 10c0/91d25c9ffb86a91f20522cefb2cbec9b64caa1febe27ad0df52f08993ff60888022d771e868e6416cf2e72dab68449d2139e8709ba009b74c6c7ecd4000048d1
+  languageName: node
+  linkType: hard
+
 "tailwindcss@npm:^3.4.17":
   version: 3.4.19
   resolution: "tailwindcss@npm:3.4.19"
@@ -18220,6 +18259,15 @@ __metadata:
   version: 4.0.8
   resolution: "type-detect@npm:4.0.8"
   checksum: 10c0/8fb9a51d3f365a7de84ab7f73b653534b61b622aa6800aecdb0f1095a4a646d3f5eb295322127b6573db7982afcd40ab492d038cf825a42093a58b1e1353e0bd
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:5.4.4":
+  version: 5.4.4
+  resolution: "type-fest@npm:5.4.4"
+  dependencies:
+    tagged-tag: "npm:^1.0.0"
+  checksum: 10c0/bf9c6d7df5383fd720aac71da8ce8690ff1c554459d19cf3c72d61eac98255dba57abe20c628f91f4116f66211791462fdafa90b2be2d7405a5a4c295e4d849d
   languageName: node
   linkType: hard
 

@@ -54,3 +54,19 @@ model Contact {
   message   String
   createdAt DateTime @default(now())
 }
+
+model BackgroundJob {
+  id        Int       @id @default(autoincrement())
+  attempts  Int       @default(0)
+  handler   String
+  queue     String
+  priority  Int
+  runAt     DateTime?
+  cron      String?
+  lockedAt  DateTime?
+  lockedBy  String?
+  lastError String?
+  failedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
