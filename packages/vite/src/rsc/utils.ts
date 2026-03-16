@@ -7,9 +7,9 @@ type RSDWServerType = typeof RSDWServerModule
  * the react-server condition.
  */
 export async function importRscReact() {
-  if (globalThis.__rwjs__vite_rsc_runtime) {
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
     const reactMod =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl('react')
+      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl('react')
     return reactMod.default
   }
 
@@ -17,10 +17,11 @@ export async function importRscReact() {
 }
 
 export async function importRsdwServer(): Promise<RSDWServerType> {
-  if (globalThis.__rwjs__vite_rsc_runtime) {
-    const rsdwServerMod = await globalThis.__rwjs__vite_rsc_runtime.executeUrl(
-      'react-server-dom-webpack/server.edge',
-    )
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
+    const rsdwServerMod =
+      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(
+        'react-server-dom-webpack/server.edge',
+      )
 
     return rsdwServerMod.default
   } else {

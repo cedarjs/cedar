@@ -18,39 +18,12 @@ applications fast and enjoyable. It includes everything you need: React for the
 frontend, GraphQL for the API, Prisma for the database, and built-in support
 for authentication, testing, and deployment.
 
-CedarJS is a fork of the
-[RedwoodJS GraphQL](https://github.com/redwoodjs/graphql) framework that is
-actively maintained and used in production by companies of all sizes. With
-active development focused on modern web standards and developer experience,
-Cedar is evolving with new features and improvements that aren't available in
-RedwoodJS.
-
-CedarJS would obviously not be where it is today without the vision and heroic
-efforts of the RedwoodJS founders, maintainers and community.
-
 > cedar has become a powerful symbol of strength and revitalization\
 > _— https://indigenousfoundations.arts.ubc.ca/cedar/_
 
+See https://cedarjs.com for a modern overview of CedarJS
+
 ## Why Cedar?
-
-### For RedwoodGraphQL (formerly RedwoodJS) Users
-
-If you're currently using RedwoodGraphQL, here's why you might want to consider
-Cedar:
-
-- Cedar is actively maintained by developers who use it in production daily. New
-  features, bug fixes, and security updates are consistently delivered.
-- Cedar includes improvements and features that aren't available in RedwoodJS,
-  like
-  [Recurring Jobs](https://cedarjs.com/docs/background-jobs/#recurring-jobs) and
-  [experimental ESM support](https://github.com/cedarjs/cedar/tree/f824d9dbd87965fa96c9b7a06f62a14dc7f5b0a1/packages/create-cedar-app/templates/esm-ts).
-- Moving toward ESM-only packages and modern JavaScript standards to
-  future-proof your applications.
-- Cedar v1.x maintains backward compatibility with RedwoodJS v8.x, making
-  [migration](https://cedarjs.com/docs/upgrade-guides/redwood-to-cedar)
-  straightforward with a clear upgrade path.
-
-### For Everyone Else
 
 Whether you're building a startup MVP, a departmental tool, or a full production
 application, here's what you get with Cedar:
@@ -74,7 +47,7 @@ application, here's what you get with Cedar:
   testing – all configured and ready to go. And if there's more you need, like
   authorization, there's most likely a setup command or a generator for it.
 
-### Who Is Cedar For?
+## Who Is Cedar For?
 
 **Startups** that need to move fast and iterate quickly. **Solo developers** who
 want to build full-stack apps without managing complex tooling. **Development
@@ -85,25 +58,6 @@ focus on building features rather than configuring build tools and
 infrastructure
 
 ## Roadmap
-
-### Cleanup
-
-These are things I want to remove to make the surface area of things I need to
-maintain smaller. Notice that UI libraries you already have setup will continue
-to work. Just new projects won't have the setup support for them. Auth and
-deploy providers are more difficult. I'll leave those in longer. Let me know
-what you use so I know what to keep and what to remove!
-
-- [ ] Mantine and Chakra-UI setup
-- [ ] Redwood Record
-- [ ] Telemetry
-- [ ] Auth providers I don't know of anyone using
-- [ ] Deploy providers I don't know of anyone using
-- [x] Old docs versions
-- [ ] Old codemods
-- [ ] The structure package (internal legacy package)
-
-### Future Proofing
 
 - [x] Make all packages ESM only where possible and ESM+CJS where needed to
       keep compatibility with existing RW apps. Packages still to convert:
@@ -130,33 +84,14 @@ what you use so I know what to keep and what to remove!
   - [ ] `vite`
   - [x] `fastify`
 
-### Docs
-
-- [x] Mirror the RedwoodJS docs to make sure they don't get deleted
-  - Done. See https://cedarjs.com/docs
-- [ ] Document where CedarJS diverges from RedwoodJS. (Future major version.)
-
 ### New Features
 
 - [ ] Better support for file uploads
 - [ ] dbAuth version with OAuth support
 - [ ] Whatever I need to make it easier to work with the OpenAI API/SDK and
       other AI tools
+- [ ] New real-time features (`useLiveQuery` hook)
 - [ ] Your feature request here! Let me know what you need!
-
-## Documentation
-
-0.x releases of CedarJS will be fully compatible with RedwoodJS v8.6, so the
-best documentation for CedarJS is actually still the RedwoodJS documentation,
-which I have a copy of here: https://cedarjs.com/docs.
-I have made a few edits and updates to it, but it's still mostly the same as
-the original Redwood docs. Unfortunately they're not available at their old url
-anymore, but their sourcs are still here:
-https://github.com/redwoodjs/graphql/tree/main/docs
-
-The only thing you'll have to adjust when reading, and copying code examples
-from the docs, are the package names and replace every `@redwoodjs` package with
-a `@cedarjs` package of the same name.
 
 ## The CedarJS Team
 
@@ -174,9 +109,9 @@ a `@cedarjs` package of the same name.
 <table>
   <tr>
     <td align="center" valign="center" width="20%"><a href="https://twodots.net"><img src="https://github.com/user-attachments/assets/a98ae112-9f66-4c0a-a450-fa410725b230" width="100px;" alt="TwoDots"/></a></td>
+    <td align="center" valign="center" width="20%"><a href="https://aerafarms.com"><img src="https://raw.githubusercontent.com/cedarjs/cedar/main/docs/static/img/sponsors/aera-logo.png" width="100px;" alt="Aerafarms"/></a></td>
     <td align="center" valign="center" width="20%"><a href="https://rhoimpact.com/"><img src="https://github.com/user-attachments/assets/1eef45f4-e5a4-42a8-b98e-7ee1b711dc4b" width="100px;" alt="Rho Impact"/></a></td>
-    <td align="center" valign="center" width="20%"><img src="https://placehold.co/400x400?text=Your\nCompany?" width="100px;" alt=""/></td>
-    <td align="center" valign="center" width="20%"><img src="https://placehold.co/400x400?text=Your\nCompany?" width="100px;" alt=""/></td>
+    <td align="center" valign="center" width="20%"><a href="https://acm.se"><img src="https://raw.githubusercontent.com/cedarjs/cedar/main/docs/static/img/sponsors/acm_se-logo-bg.svg" width="100px;" alt="ACM"/></a></td>
     <td align="center" valign="center" width="20%"><img src="https://placehold.co/400x400?text=Your\nCompany?" width="100px;" alt=""/></td>
   </tr>
 </table>

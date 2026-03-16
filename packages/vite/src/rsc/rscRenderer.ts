@@ -25,9 +25,9 @@ export async function renderRscToStream(
 async function loadServerFile(filePath: string) {
   console.log('rscRenderer.ts loadServerFile filePath', filePath)
 
-  if (globalThis.__rwjs__vite_rsc_runtime) {
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
     const serverMod =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl(filePath)
+      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(filePath)
     return serverMod.default ? serverMod.default : serverMod
   }
 
@@ -35,11 +35,11 @@ async function loadServerFile(filePath: string) {
 }
 
 const getRoutesComponent: any = async () => {
-  if (globalThis.__rwjs__vite_rsc_runtime) {
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
     const routesPath = getPaths().web.routes
 
     const routesMod =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl(routesPath)
+      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(routesPath)
 
     return routesMod.default
   }
@@ -106,7 +106,7 @@ function getBundlerConfig() {
         // name Counter
 
         const filePathSlash = filePath.replaceAll('\\', '/')
-        const id = globalThis.__rwjs__vite_rsc_runtime
+        const id = globalThis.__cedarjs__vite_rsc_runtime
           ? filePath
           : absoluteClientEntries[filePathSlash]
 
