@@ -49,12 +49,15 @@ export function waitForApiSide() {
             'content-type': 'application/json',
           },
           body: JSON.stringify({
-            query: 'query Q { cedarjs { version } }',
+            query: 'query Q { cedar { version } }',
           }),
           failOnStatusCode: false,
         })
         .then((r) => {
-          return r.status === 200 // The first response could be 504 or 203 (reloading api server)
+          // HTTP 200 alone is not enough — GraphQL returns 200 even for unknown
+          // fields (with an `errors` body). Check that `data.cedar` is present
+          // so we know the API is genuinely ready to serve mutations.
+          return r.status === 200 && r.body?.data?.cedar !== undefined
         }),
     { timeout: 10_000, interval: 2_000 },
   )
