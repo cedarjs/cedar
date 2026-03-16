@@ -35,26 +35,7 @@ import Step9_3_DisableAuth from './codemods/Step9_3_DisableAuth'
 
 const BASE_DIR = Cypress.env('RW_PATH')
 
-// The default query checks the built-in Cedar root type is reachable.
-const DEFAULT_HEALTH_QUERY = 'query Q { cedar { version } }'
-const DEFAULT_HEALTH_CHECK = (r) =>
-  r.status === 200 && r.body?.data?.cedar !== undefined
-
-/**
- * Wait until the API server is ready and the given GraphQL query succeeds.
- *
- * @param {string} [query] - GraphQL query to poll with. Defaults to
- *   `{ cedar { version } }`. Pass a model-specific query (e.g.
- *   `{ posts { id } }`) when you need to confirm a freshly-scaffolded SDL
- *   has been picked up by the running dev server before proceeding.
- * @param {function} [check] - Predicate that receives the cy.request response
- *   and returns true when the server is considered ready. Must be provided
- *   whenever a custom `query` is passed.
- */
-export function waitForApiSide(
-  query = DEFAULT_HEALTH_QUERY,
-  check = DEFAULT_HEALTH_CHECK,
-) {
+export function waitForApiSide() {
   // Pause because chokidar `ignoreInitial` and debounce add at least 1000ms
   // delay to restarting the api-server in the e2e environment.
   cy.wait(10_000)
@@ -67,11 +48,16 @@ export function waitForApiSide(
           headers: {
             'content-type': 'application/json',
           },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify({
+            query: 'query Q { cedar { version } }',
+          }),
           failOnStatusCode: false,
         })
-        .then((r) => check(r)),
-    { timeout: 30_000, interval: 2_000 },
+        .then((r) => {
+          // The first response could be 504 or 203 (reloading api server)
+          return r.status === 200
+        }),
+    { timeout: 10_000, interval: 2_000 },
   )
 }
 
@@ -134,25 +120,14 @@ export const test_dynamic = () =>
     cy.exec(`rm ${BASE_DIR}/api/db/dev.db`, { failOnNonZeroExit: false })
     // need to also handle case where Prisma Client be out of sync
     cy.exec(
-      `cd ${BASE_DIR}; rm -rf ./api/db/migrations && yarn cedar prisma migrate reset --force`,
+      `cd ${BASE_DIR}; rm -rf ./api/db/migrations && ` +
+        'yarn cedar prisma migrate reset --force',
     )
     cy.exec(`cd ${BASE_DIR}; yarn cedar prisma migrate dev --name setup`)
     cy.exec(`cd ${BASE_DIR}; yarn cedar prisma generate`)
     cy.exec(`cd ${BASE_DIR}; yarn cedar g scaffold post --force`)
 
-    // The comment below is AI-generated and might be BS. Beware!
-    // Wait until the dev server has picked up the newly-scaffolded Post SDL.
-    // Using the default `cedar { version }` query is not sufficient here —
-    // that query is answered by the built-in root schema and succeeds even
-    // while the server is mid-restart after the scaffold wrote new SDL files.
-    // This PR's changes to getPrismaClient in graphqlCodeGen also make the
-    // generateTypes() step inside the scaffold take longer than before, which
-    // means the dev server restart takes more time than the old 10s + 10s
-    // budget. Polling `posts { id }` only resolves once the new SDL is live.
-    waitForApiSide(
-      'query Q { posts { id } }',
-      (r) => r.status === 200 && r.body?.data?.posts !== undefined,
-    )
+    waitForApiSide()
     cy.visit('http://localhost:8910/posts')
 
     cy.get('h1').should('contain', 'Posts')
