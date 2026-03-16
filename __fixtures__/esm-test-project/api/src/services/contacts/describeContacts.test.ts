@@ -17,7 +17,7 @@ describeScenario<StandardScenario>('contacts', (getScenario) => {
   })
 
   afterEach(() => {
-    jest.mocked(console).log.mockRestore?.()
+    vi.mocked(console).log.mockRestore?.()
   })
 
   it('returns all contacts', async () => {
@@ -33,7 +33,7 @@ describeScenario<StandardScenario>('contacts', (getScenario) => {
   })
 
   it('creates a contact', async () => {
-    jest.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const result = await createContact({
       input: {
