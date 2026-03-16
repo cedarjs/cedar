@@ -8,8 +8,7 @@ type RSDWServerType = typeof RSDWServerModule
  */
 export async function importRscReact() {
   if (globalThis.__rwjs__vite_rsc_runtime) {
-    const reactMod =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl('react')
+    const reactMod = await globalThis.__rwjs__vite_rsc_runtime.import('react')
     return reactMod.default
   }
 
@@ -18,7 +17,7 @@ export async function importRscReact() {
 
 export async function importRsdwServer(): Promise<RSDWServerType> {
   if (globalThis.__rwjs__vite_rsc_runtime) {
-    const rsdwServerMod = await globalThis.__rwjs__vite_rsc_runtime.executeUrl(
+    const rsdwServerMod = await globalThis.__rwjs__vite_rsc_runtime.import(
       'react-server-dom-webpack/server.edge',
     )
 

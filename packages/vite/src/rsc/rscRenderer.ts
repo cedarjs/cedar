@@ -26,8 +26,7 @@ async function loadServerFile(filePath: string) {
   console.log('rscRenderer.ts loadServerFile filePath', filePath)
 
   if (globalThis.__rwjs__vite_rsc_runtime) {
-    const serverMod =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl(filePath)
+    const serverMod = await globalThis.__rwjs__vite_rsc_runtime.import(filePath)
     return serverMod.default ? serverMod.default : serverMod
   }
 
@@ -39,7 +38,7 @@ const getRoutesComponent: any = async () => {
     const routesPath = getPaths().web.routes
 
     const routesMod =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl(routesPath)
+      await globalThis.__rwjs__vite_rsc_runtime.import(routesPath)
 
     return routesMod.default
   }

@@ -6,6 +6,7 @@
   "dependencies": {
     "@cedarjs/api": "2.8.0",
     "@cedarjs/auth-dbauth-api": "2.8.0",
-    "@cedarjs/graphql-server": "2.8.0"
+    "@cedarjs/graphql-server": "2.8.0",
+    "@my-org/validators": "workspace:*"
   }
 }

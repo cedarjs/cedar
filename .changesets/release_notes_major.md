@@ -28,3 +28,26 @@ Most projects should be able to just use `url: env('DATABASE_URL')` and rely on
 Cedar to replace it with the correct value during tests.
 
 - [ ] Write upgrade script that warns about `directUrl`
+
+# Vite 6
+
+CedarJS now uses Vite 6. This upgrade brings several changes and deprecations.
+
+### Key Changes
+
+- **Default Configuration:** `resolve.conditions` and `ssr.resolve.conditions`
+  have new defaults. If you have custom conditions in your `vite.config.ts`,
+  ensure they align with Vite 6.
+- **Sass API:** Now defaults to the modern API. If you rely on the legacy API,
+  you may need to explicitly set `css.preprocessorOptions.sass.api: 'legacy'`.
+- **JSON Stringify:** Defaults to `'auto'`. If you previously used
+  `json.stringify: true` to disable named exports, set
+  `json.namedExports: false` instead.
+- **CommonJS:** `strictRequires` is now `true` by default.
+
+### Upgrade Steps for Existing Projects
+
+1. Update `vite` to `6.3.7` in your `package.json`.
+2. Update `@rollup/plugin-commonjs` to `v28` (if used).
+3. Update `postcss-load-config` to `v6` (if used).
+4. Review your `vite.config.ts` for any deprecated options mentioned above.

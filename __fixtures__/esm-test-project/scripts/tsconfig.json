@@ -25,5 +25,6 @@
     "../.redwood/types/includes/all-*",
     "../.redwood/types/includes/web-*",
     "../types"
-  ]
+  ],
+  "references": [{ "path": "../packages/validators" }]
 }

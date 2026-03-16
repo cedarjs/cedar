@@ -1,7 +1,7 @@
 /* eslint-disable no-var */
 /// <reference types="react/experimental" />
 import type { HelmetServerState } from '@dr.pogodin/react-helmet'
-import type { ViteRuntime } from 'vite/runtime'
+import type { ModuleRunner } from 'vite/module-runner'
 
 declare global {
   // Provided by Vite.config
@@ -24,8 +24,8 @@ declare global {
   }
 
   var __REDWOOD__PRERENDER_PAGES: any
-  var __rwjs__vite_ssr_runtime: ViteRuntime | undefined
-  var __rwjs__vite_rsc_runtime: ViteRuntime | undefined
+  var __rwjs__vite_ssr_runtime: ModuleRunner | undefined
+  var __rwjs__vite_rsc_runtime: ModuleRunner | undefined
   var __rwjs__client_references: Set<string> | undefined
   var __rwjs__server_references: Set<string> | undefined
 

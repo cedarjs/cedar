@@ -53,7 +53,7 @@ export async function importRsdwClient(): Promise<RSDWClientType> {
 
 export async function importRsdwServer(): Promise<RSDWServerType> {
   if (globalThis.__rwjs__vite_rsc_runtime) {
-    const rsdwServerMod = await globalThis.__rwjs__vite_rsc_runtime.executeUrl(
+    const rsdwServerMod = await globalThis.__rwjs__vite_rsc_runtime.import(
       'react-server-dom-webpack/server.edge',
     )
 

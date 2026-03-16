@@ -4,7 +4,10 @@ import { createServerAdapter } from '@whatwg-node/server'
 import express from 'express'
 import type { HTTPMethod } from 'find-my-way'
 import type { ViteDevServer } from 'vite'
-import { createServer as createViteServer, createViteRuntime } from 'vite'
+import {
+  createServer as createViteServer,
+  createServerModuleRunner,
+} from 'vite'
 import { cjsInterop } from 'vite-plugin-cjs-interop'
 
 import type { RouteSpec } from '@cedarjs/internal/dist/routes.js'
@@ -181,8 +184,9 @@ async function createServer() {
     appType: 'custom',
   })
 
-  globalThis.__rwjs__vite_ssr_runtime =
-    await createViteRuntime(viteSsrDevServer)
+  globalThis.__rwjs__vite_ssr_runtime = createServerModuleRunner(
+    viteSsrDevServer.environments.ssr,
+  )
   globalThis.__rwjs__client_references = new Set<string>()
   globalThis.__rwjs__server_references = new Set<string>()
 
@@ -375,7 +379,9 @@ async function createServer() {
     cacheDir: '../node_modules/.vite-rsc',
   })
 
-  globalThis.__rwjs__vite_rsc_runtime = await createViteRuntime(viteRscServer)
+  globalThis.__rwjs__vite_rsc_runtime = createServerModuleRunner(
+    viteRscServer.environments.ssr,
+  )
 
   // create a handler that will invoke middleware with or without a route
   // The DEV one will create a new middleware router on each request
@@ -408,7 +414,7 @@ async function createServer() {
     createWebSocketServer()
 
     const { createRscRequestHandler } =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl(
+      await globalThis.__rwjs__vite_rsc_runtime.import(
         new URL('./rsc/rscRequestHandler.js', import.meta.url).pathname,
       )
 
