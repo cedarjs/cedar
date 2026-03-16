@@ -13,14 +13,14 @@ import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client.mts'
 
-const apiDir = getPaths().api.base
-
 const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
   if (!url.startsWith('file:.')) {
     return url
   }
 
-  return `file:${path.resolve(apiDir, url.slice('file:'.length))}`
+  const dbDir = path.join(getPaths().api.base, 'db')
+
+  return `file:${path.resolve(dbDir, url.slice('file:'.length))}`
 }
 
 const adapter = new PrismaBetterSqlite3({
