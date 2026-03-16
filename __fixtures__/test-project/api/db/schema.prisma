@@ -11,7 +11,7 @@ datasource db {
 generator client {
   provider               = "prisma-client"
   output                 = "./generated/prisma"
-  moduleFormat           = "esm"
+  moduleFormat           = "cjs"
   generatedFileExtension = "mts"
   importFileExtension    = "mts"
 }

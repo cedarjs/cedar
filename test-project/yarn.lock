@@ -2238,14 +2238,14 @@ __metadata:
 
 "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz#../packages/project-config/cedarjs-project-config.tgz::hash=fb1a45&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz#../packages/project-config/cedarjs-project-config.tgz::hash=bb214d&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@prisma/internals": "npm:7.4.2"
     deepmerge: "npm:4.3.1"
     fast-glob: "npm:3.3.3"
     smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
-  checksum: 10c0/59fe7a00fdc8f55a433f6bff69b61e8af92eeab37ce97d2aff146a55ff4618866f53fa566b47f1a4c2e2f5ab5f7517f8ee10aa4a24ea0c109bd565b02bc48358
+  checksum: 10c0/e673d8efdec78a6562f2a38e2d786b50861f3cdf3444bb9ff7bd938c1b1b9a6bf24ffc00f7c6304bd679cccb6e392a9797bf049b909e5226b268c4aff7e6c485
   languageName: node
   linkType: hard
 
