@@ -101,8 +101,8 @@ function registerFwShims() {
   globalThis.__webpack_chunk_load__ ||= async (id: string) => {
     console.log('registerFwShims chunk load id', id)
 
-    if (globalThis.__rwjs__vite_ssr_runtime) {
-      return globalThis.__rwjs__vite_ssr_runtime?.import(id).then((mod) => {
+    if (globalThis.__cedarjs__vite_ssr_runtime) {
+      return globalThis.__cedarjs__vite_ssr_runtime?.import(id).then((mod) => {
         console.log('registerFwShims chunk load mod', mod)
 
         // checking m.default to better support CJS. If it's an object, it's

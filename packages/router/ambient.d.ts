@@ -4,8 +4,8 @@ import type { ModuleRunner } from 'vite/module-runner'
 
 declare global {
   var __REDWOOD__PRERENDERING: boolean
-  var __rwjs__vite_ssr_runtime: ModuleRunner | undefined
-  var __rwjs__vite_rsc_runtime: ModuleRunner | undefined
+  var __cedarjs__vite_ssr_runtime: ModuleRunner | undefined
+  var __cedarjs__vite_rsc_runtime: ModuleRunner | undefined
 
   /**
    * URL or absolute path to the GraphQL serverless function, without the trailing slash.

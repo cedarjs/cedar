@@ -8,7 +8,7 @@ import { importRsdwClient, importReact, importRsdwServer } from './utils.js'
 import { makeFilePath } from './utils.js'
 
 async function getEntries() {
-  if (globalThis.__rwjs__vite_ssr_runtime) {
+  if (globalThis.__cedarjs__vite_ssr_runtime) {
     return {
       serverEntries: {
         __rwjs__Routes: '../../src/Routes.tsx',
@@ -24,8 +24,8 @@ async function getEntries() {
 
 async function getRoutesComponent(): Promise<React.FunctionComponent> {
   // For SSR during dev
-  if (globalThis.__rwjs__vite_rsc_runtime) {
-    const routesMod = await globalThis.__rwjs__vite_rsc_runtime.import(
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
+    const routesMod = await globalThis.__cedarjs__vite_rsc_runtime.import(
       getPaths().web.routes,
     )
 
@@ -121,7 +121,7 @@ export async function renderRoutesSsr(pathname: string) {
         // filePath /Users/tobbe/tmp/test-project-rsc-kitchen-sink/web/dist/rsc/assets/rsc-AboutCounter.tsx-1.mjs
         // name AboutCounter
 
-        const id = globalThis.__rwjs__vite_ssr_runtime
+        const id = globalThis.__cedarjs__vite_ssr_runtime
           ? filePath
           : resolveClientEntryForProd(filePath, clientEntries)
 
