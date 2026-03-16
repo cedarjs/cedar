@@ -7,12 +7,37 @@ import { importRsdwClient, importRsdwServer, importReact } from './utils.js'
 import { makeFilePath } from './utils.js'
 
 async function getEntries() {
+<<<<<<< HEAD
+=======
+  if (globalThis.__cedarjs__vite_ssr_runtime) {
+    return {
+      serverEntries: {
+        __rwjs__Routes: '../../src/Routes.tsx',
+      },
+      ssrEntries: {},
+    }
+  }
+
+>>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
   const entriesPath = getPaths().web.distRscEntries
   const entries = await import(makeFilePath(entriesPath))
   return entries
 }
 
 async function getRoutesComponent(): Promise<React.FunctionComponent> {
+<<<<<<< HEAD
+=======
+  // For SSR during dev
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
+    const routesMod = await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(
+      getPaths().web.routes,
+    )
+
+    return routesMod.default
+  }
+
+  // For SSR during prod
+>>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
   const { serverEntries } = await getEntries()
   const entryPath = path.join(
     getPaths().web.distRsc,
@@ -94,7 +119,13 @@ export async function renderRoutesSsr(pathname: string) {
         // filePath /Users/tobbe/tmp/test-project-rsc-kitchen-sink/web/dist/rsc/assets/rsc-AboutCounter.tsx-1.mjs
         // name AboutCounter
 
+<<<<<<< HEAD
         const id = resolveClientEntryForProd(filePath, clientEntries)
+=======
+        const id = globalThis.__cedarjs__vite_ssr_runtime
+          ? filePath
+          : resolveClientEntryForProd(filePath, clientEntries)
+>>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
 
         console.log('clientSsr.ts::Proxy id', id)
         // id /Users/tobbe/tmp/test-project-rsc-kitchen-sink/web/dist/browser/assets/rsc-AboutCounter.tsx-1-4kTKU8GC.mjs
