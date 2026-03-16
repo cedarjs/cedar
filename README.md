@@ -111,7 +111,7 @@ infrastructure
     <td align="center" valign="center" width="20%"><a href="https://twodots.net"><img src="https://github.com/user-attachments/assets/a98ae112-9f66-4c0a-a450-fa410725b230" width="100px;" alt="TwoDots"/></a></td>
     <td align="center" valign="center" width="20%"><a href="https://aerafarms.com"><img src="https://raw.githubusercontent.com/cedarjs/cedar/main/docs/static/img/sponsors/aera-logo.png" width="100px;" alt="Aerafarms"/></a></td>
     <td align="center" valign="center" width="20%"><a href="https://rhoimpact.com/"><img src="https://github.com/user-attachments/assets/1eef45f4-e5a4-42a8-b98e-7ee1b711dc4b" width="100px;" alt="Rho Impact"/></a></td>
-    <td align="center" valign="center" width="20%"><a href="https://acm.se"><img src="https://raw.githubusercontent.com/cedarjs/cedar/main/docs/static/img/sponsors/acm_se-logo.png" width="100px;" alt="ACM"/></a></td>
+    <td align="center" valign="center" width="20%"><a href="https://acm.se"><img src="https://raw.githubusercontent.com/cedarjs/cedar/main/docs/static/img/sponsors/acm_se-logo-bg.svg" width="100px;" alt="ACM"/></a></td>
     <td align="center" valign="center" width="20%"><img src="https://placehold.co/400x400?text=Your\nCompany?" width="100px;" alt=""/></td>
   </tr>
 </table>
