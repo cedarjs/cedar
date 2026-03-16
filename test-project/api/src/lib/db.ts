@@ -7,20 +7,21 @@ import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from 'api/db/generated/prisma/client.mts'
 
 import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
+import { getPaths } from '@cedarjs/project-config'
 
 import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client.mts'
 
-const apiDir = path.resolve(__dirname, '../..')
-logger.info(`apiDir: ${apiDir}`)
-
-const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
+const resolveSqliteUrl = (url = 'file:./dev.db') => {
   if (!url.startsWith('file:.')) {
     return url
   }
 
-  return `file:${path.resolve(apiDir, url.slice('file:'.length))}`
+  const dbDir = path.join(getPaths().api.base, 'db')
+  logger.info(`dbDir: ${dbDir}`)
+
+  return `file:${path.resolve(dbDir, url.slice('file:'.length))}`
 }
 
 const adapter = new PrismaBetterSqlite3({

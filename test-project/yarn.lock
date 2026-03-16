@@ -2251,7 +2251,7 @@ __metadata:
 
 "@cedarjs/router@file:../packages/router/cedarjs-router.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/router@file:../packages/router/cedarjs-router.tgz#../packages/router/cedarjs-router.tgz::hash=9a939b&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/router@file:../packages/router/cedarjs-router.tgz#../packages/router/cedarjs-router.tgz::hash=4ef7aa&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/auth": "npm:2.8.0"
@@ -2263,7 +2263,7 @@ __metadata:
   peerDependencies:
     react: 19.2.3
     react-dom: 19.2.3
-  checksum: 10c0/f4bba96eb6da47b85b2424654f377634fef550aecb89443b396051833d4c011c2d1f5da981c78350afc6871472170202dabf66cc4bb0fc6dc89a43602bb570fd
+  checksum: 10c0/9f599102e52592871e08fe1a96d6fa0b4e93022def2bc1573bd63400701489fb7f37db7f60f4e0ff67542d63ac1c67fc9c91d324802e0f04ae739a8dd3362f0f
   languageName: node
   linkType: hard
 
@@ -2370,7 +2370,7 @@ __metadata:
 
 "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=28b290&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=76a772&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.41.1"
     "@babel/generator": "npm:7.29.1"
@@ -2413,7 +2413,7 @@ __metadata:
     rw-vite-build: ./bins/rw-vite-build.mjs
     rw-vite-dev: ./bins/rw-vite-dev.mjs
     vite: ./bins/vite.mjs
-  checksum: 10c0/e201c029d70371060d7daa8d1f95f75f08c1aaa9142dd5199e376b8dbd1b28111ba513ee175719f419091b882869cc1bec7b6826d86331dcabf09c430bddb945
+  checksum: 10c0/c7e2c33c34197ec15206ae1f226aeb7f6c008950498dc60d1b919be0c709cebb00a2af6da8d56bc6aeb4f7211ba52e3e022a25303c21afcf574d9047b021a90e
   languageName: node
   linkType: hard
 
