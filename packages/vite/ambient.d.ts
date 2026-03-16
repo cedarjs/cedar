@@ -37,6 +37,7 @@ declare global {
     id: string,
   ) => Promise<typeof __rw_module_cache__>
   var __webpack_require__: (id: string) => unknown
+  var __non_webpack_require__: NodeRequire
 
   interface Thenable<T> {
     then<TResult1 = T, TResult2 = never>(

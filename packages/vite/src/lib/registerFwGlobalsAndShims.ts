@@ -1,3 +1,5 @@
+import { createRequire } from 'node:module'
+
 import { getConfig, getEnvVarDefinitions } from '@cedarjs/project-config'
 
 /**
@@ -136,6 +138,15 @@ function registerFwShims() {
     console.log('registerFwShims require id', id)
     return globalThis.__rw_module_cache__.get(id)
   }
+
+  // __non_webpack_require__ is the real Node.js `require` in a webpack bundle.
+  // Some CJS packages (e.g. `bindings`) check `typeof __webpack_require__` and
+  // then unconditionally access `__non_webpack_require__` without a typeof
+  // guard. Because Cedar sets `globalThis.__webpack_require__` above, those
+  // packages would throw a ReferenceError if we don't also provide
+  // `__non_webpack_require__`. We set it to a real `require` so those packages
+  // behave correctly when loaded as external CJS modules.
+  globalThis.__non_webpack_require__ ||= createRequire(import.meta.url)
 }
 
 function swapLocalhostFor127(hostString: string) {
