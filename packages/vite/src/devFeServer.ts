@@ -7,6 +7,7 @@ import type { ViteDevServer } from 'vite'
 import {
   createServer as createViteServer,
   createServerModuleRunner,
+  defaultServerConditions,
 } from 'vite'
 import { cjsInterop } from 'vite-plugin-cjs-interop'
 
@@ -235,8 +236,14 @@ async function createServer() {
         // dependencies apart from node built-ins.
         // TODO (RSC): What's the difference between `conditions` and
         // `externalConditions`? When is one used over the other?
-        conditions: ['react-server'],
-        externalConditions: ['react-server'],
+        // In Vite 6, we must include `defaultServerConditions` alongside
+        // `react-server` so that nested condition maps (e.g. the `node`
+        // sub-condition inside `react-server-dom-webpack/server`'s exports)
+        // can still be resolved. Without `node` (or another environment
+        // condition), the resolver throws "No known conditions for
+        // './server' specifier in 'react-server-dom-webpack' package".
+        conditions: ['react-server', ...defaultServerConditions],
+        externalConditions: ['react-server', ...defaultServerConditions],
       },
       optimizeDeps: {
         // We need Vite to optimize these dependencies so that they are resolved
@@ -284,7 +291,8 @@ async function createServer() {
       },
     },
     resolve: {
-      conditions: ['react-server'],
+      // See comment above in ssr.resolve for why we include defaultServerConditions.
+      conditions: ['react-server', ...defaultServerConditions],
     },
     plugins: [
       {
