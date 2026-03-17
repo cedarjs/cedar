@@ -40,7 +40,11 @@ export async function printDiagnostics(opts?: {
       )
       process.exit(1)
     }
-  } catch (e: any) {
-    throw new Error(e.message)
+  } catch (e) {
+    if (e instanceof Error) {
+      throw e
+    }
+
+    throw new Error(String(e))
   }
 }
