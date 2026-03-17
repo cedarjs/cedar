@@ -3,7 +3,7 @@ description: Sets up the test project fixture in CI for smoke tests and CLI chec
 
 runs:
   using: node24
-  main: 'setUpTestProject.mts'
+  main: 'setUpTestProjectGitHub.mts'
 
 inputs:
   canary:

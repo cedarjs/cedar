@@ -6,7 +6,7 @@ import {
   createExecWithEnvInCwd,
   execInFramework,
   CEDAR_FRAMEWORK_PATH,
-} from '../actionsLibLocally.mjs'
+} from '../actionsLibLocally.mts'
 
 import { setUpTestProject } from './setUpTestProject.mts'
 
