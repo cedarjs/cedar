@@ -11,8 +11,10 @@ export const description =
 export const handler = async () => {
   recordTelemetryAttributes({ command: 'check' })
 
-  const { printDiagnostics, DiagnosticSeverity } =
-    await import('@cedarjs/structure')
+  const { printDiagnostics } = await import('@cedarjs/structure')
+  // @ts-expect-error - babel-compiler enum issue. Keeping this as a separate
+  // import to preserve type information for printDiagnostics
+  const { DiagnosticSeverity } = (await import('@cedarjs/structure')).default
 
   printDiagnostics({
     getSeverityLabel: (severity) => {
