@@ -21,7 +21,7 @@ The most common use-case is getting the diagnostics of a complete Cedar project:
 ```ts
 import { getProject } from '@cedarjs/structure'
 async function test() {
-  const project = getProject('/path/to/app') // or "file:///path/to/app"
+  const project = getProject()
   for (const d of await project.collectDiagnostics()) {
     console.log(d.diagnostic.severity + ': ' + d.diagnostic.message)
   }

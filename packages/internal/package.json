@@ -154,6 +154,7 @@
     "@cedarjs/graphql-server": "2.8.0",
     "@cedarjs/project-config": "2.8.0",
     "@cedarjs/router": "2.8.0",
+    "@cedarjs/structure": "2.8.0",
     "@graphql-codegen/add": "6.0.0",
     "@graphql-codegen/cli": "6.2.1",
     "@graphql-codegen/client-preset": "5.2.4",

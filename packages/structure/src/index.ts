@@ -1,3 +1,5 @@
+import { getPaths } from '@cedarjs/project-config'
+
 export { DiagnosticSeverity } from './x/diagnostics'
 export { RWProject, RWRoute } from './model'
 export { URL_file } from './x/URL'
@@ -5,18 +7,16 @@ import { RWProject } from './model'
 import type { GetSeverityLabelFunction } from './x/diagnostics'
 import { ExtendedDiagnostic_format, DiagnosticSeverity } from './x/diagnostics'
 
-export function getProject(projectRoot: string) {
-  return new RWProject({
-    projectRoot,
-  })
+export function getProject() {
+  return new RWProject()
 }
 
-export async function printDiagnostics(
-  projectRoot: string,
-  opts?: { getSeverityLabel?: GetSeverityLabelFunction },
-) {
-  const project = getProject(projectRoot)
-  const formatOpts = { cwd: projectRoot, ...opts }
+export async function printDiagnostics(opts?: {
+  getSeverityLabel?: GetSeverityLabelFunction
+}) {
+  const base = getPaths().base
+  const project = getProject()
+  const formatOpts = { cwd: base, ...opts }
   try {
     let warnings = 0
     let errors = 0
@@ -40,7 +40,11 @@ export async function printDiagnostics(
       )
       process.exit(1)
     }
-  } catch (e: any) {
-    throw new Error(e.message)
+  } catch (e) {
+    if (e instanceof Error) {
+      throw e
+    }
+
+    throw new Error(String(e))
   }
 }
