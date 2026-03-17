@@ -73,8 +73,8 @@ export const getFullUrl = (req: ExpressRequest, rscEnabled: boolean) => {
   // object and have it do the parsing for us.
   const url = new URL(req.originalUrl || '', baseUrl)
 
-  const pathname = url.searchParams.get('__rwjs__pathname')
-  const search = url.searchParams.get('__rwjs__search')
+  const pathname = url.searchParams.get('__cedarjs__pathname')
+  const search = url.searchParams.get('__cedarjs__search')
 
   let pathnamePlusSearch = req.originalUrl
 

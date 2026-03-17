@@ -1,6 +1,6 @@
 export interface RscModel {
-  __rwjs__Routes: [React.ReactElement]
-  __rwjs__rsa_data?: unknown
+  __cedarjs__Routes: [React.ReactElement]
+  __cedarjs__rsa_data?: unknown
 }
 
 /**

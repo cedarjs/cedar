@@ -28,7 +28,7 @@ export async function importReact() {
 
 >>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
   const distSsr = getPaths().web.distSsr
-  const reactPath = makeFilePath(path.join(distSsr, '__rwjs__react.mjs'))
+  const reactPath = makeFilePath(path.join(distSsr, '__cedarjs__react.mjs'))
 
   return (await import(reactPath)).default
 }
@@ -49,7 +49,7 @@ export async function importRsdwClient(): Promise<RSDWClientType> {
 >>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
   const distSsr = getPaths().web.distSsr
   const rsdwClientPath = makeFilePath(
-    path.join(distSsr, '__rwjs__rsdw-client.mjs'),
+    path.join(distSsr, '__cedarjs__rsdw-client.mjs'),
   )
 
   return (await import(rsdwClientPath)).default
