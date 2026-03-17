@@ -32,10 +32,6 @@ import { RWSDL } from './RWSDL'
 import { RWService } from './RWService'
 import { RWTOML } from './RWTOML'
 
-export interface RWProjectOptions {
-  projectRoot: string
-}
-
 const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
 
 /**
@@ -43,17 +39,10 @@ const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
  * This is the root node.
  */
 export class RWProject extends BaseNode {
-  constructor(public opts: RWProjectOptions) {
-    super()
-  }
   parent = undefined
 
-  get projectRoot() {
-    return this.opts.projectRoot
-  }
-
   @lazy() get id() {
-    return URL_file(this.projectRoot)
+    return URL_file(this.pathHelper.base)
   }
 
   children() {
@@ -73,8 +62,9 @@ export class RWProject extends BaseNode {
    * Path constants that are relevant to a Redwood project.
    */
   @lazy() get pathHelper() {
-    return getPaths(this.projectRoot)
+    return getPaths()
   }
+
   /**
    * Checks for the presence of a tsconfig.json at the root.
    */
@@ -84,6 +74,7 @@ export class RWProject extends BaseNode {
       existsSync(join(this.pathHelper.api.base, 'tsconfig.json'))
     )
   }
+
   // TODO: do we move this to a separate node? (ex: RWDatabase)
   @memo() async prismaDMMF(): Promise<DMMF.Document | undefined> {
     try {
@@ -96,6 +87,7 @@ export class RWProject extends BaseNode {
       return undefined
     }
   }
+
   @memo() async prismaDMMFModelNames() {
     const dmmf = await this.prismaDMMF()
     if (!dmmf) {
@@ -103,9 +95,11 @@ export class RWProject extends BaseNode {
     }
     return dmmf.datamodel.models.map((m) => m.name)
   }
+
   @lazy() get redwoodTOML(): RWTOML {
-    return new RWTOML(getConfigPath(this.projectRoot), this)
+    return new RWTOML(getConfigPath(), this)
   }
+
   @lazy() private get processPagesDir() {
     try {
       return processPagesDir(this.pathHelper.web.pages)
@@ -113,11 +107,13 @@ export class RWProject extends BaseNode {
       return []
     }
   }
+
   @lazy() get pages(): RWPage[] {
     return this.processPagesDir.map(
       (p) => new RWPage(p.constName, p.path, this),
     )
   }
+
   @lazy() get router() {
     return this.getRouter()
   }

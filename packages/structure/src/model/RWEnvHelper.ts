@@ -82,7 +82,7 @@ export class RWEnvHelper extends BaseNode {
   }
 
   private _dotenv(f: string) {
-    const file = join(this.parent.projectRoot, f)
+    const file = join(this.parent.pathHelper.base, f)
     if (!fs.existsSync(file)) {
       return undefined
     }
