@@ -32,10 +32,6 @@ import { RWSDL } from './RWSDL'
 import { RWService } from './RWService'
 import { RWTOML } from './RWTOML'
 
-export interface RWProjectOptions {
-  projectRoot: string
-}
-
 const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
 
 /**
@@ -43,17 +39,10 @@ const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
  * This is the root node.
  */
 export class RWProject extends BaseNode {
-  constructor(public opts: RWProjectOptions) {
-    super()
-  }
   parent = undefined
 
-  get projectRoot() {
-    return this.opts.projectRoot
-  }
-
   @lazy() get id() {
-    return URL_file(this.projectRoot)
+    return URL_file(this.pathHelper.base)
   }
 
   children() {
@@ -73,7 +62,7 @@ export class RWProject extends BaseNode {
    * Path constants that are relevant to a Redwood project.
    */
   @lazy() get pathHelper() {
-    return getPaths(this.projectRoot)
+    return getPaths()
   }
   /**
    * Checks for the presence of a tsconfig.json at the root.
@@ -104,7 +93,7 @@ export class RWProject extends BaseNode {
     return dmmf.datamodel.models.map((m) => m.name)
   }
   @lazy() get redwoodTOML(): RWTOML {
-    return new RWTOML(getConfigPath(this.projectRoot), this)
+    return new RWTOML(getConfigPath(this.pathHelper.base), this)
   }
   @lazy() private get processPagesDir() {
     try {

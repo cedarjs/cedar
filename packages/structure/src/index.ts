@@ -5,17 +5,15 @@ import { RWProject } from './model'
 import type { GetSeverityLabelFunction } from './x/diagnostics'
 import { ExtendedDiagnostic_format, DiagnosticSeverity } from './x/diagnostics'
 
-export function getProject(projectRoot: string) {
-  return new RWProject({
-    projectRoot,
-  })
+export function getProject() {
+  return new RWProject()
 }
 
 export async function printDiagnostics(
   projectRoot: string,
   opts?: { getSeverityLabel?: GetSeverityLabelFunction },
 ) {
-  const project = getProject(projectRoot)
+  const project = getProject()
   const formatOpts = { cwd: projectRoot, ...opts }
   try {
     let warnings = 0
