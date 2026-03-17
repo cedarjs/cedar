@@ -1,8 +1,7 @@
-/* eslint-env node */
-// @ts-check
-
 import fs from 'node:fs'
 import path from 'node:path'
+
+import type { ExecOptions } from '@actions/exec'
 
 import { CEDAR_FRAMEWORK_PATH } from '../actionsLib.mjs'
 
@@ -25,37 +24,39 @@ const CEDAR_APP_TEMPLATE_API_PACKAGE_JSON_PATH = path.join(
 const PRISMA_SCHEMA_GENERATOR_OLD = /generator client \{[^}]*\}/s
 
 /**
- * @typedef {import('@actions/exec').ExecOptions} ExecOptions
- */
-
-/**
  * Exec a command.
  * Output will be streamed to the live console.
  * Returns promise with return code
  *
- * @callback Exec
- * @param {string} commandLine command to execute (can include additional args). Must be correctly escaped.
- * @param {string[]=} args arguments for tool. Escaping is handled by the lib.
- * @param {ExecOptions=} options exec options.  See ExecOptions
- * @returns {Promise<unknown>} exit code
+ * @param commandLine command to execute (can include additional args). Must be correctly escaped.
+ * @param args arguments for tool. Escaping is handled by the lib.
+ * @param options exec options. See ExecOptions
  */
+type Exec = (
+  commandLine: string,
+  args?: string[],
+  options?: ExecOptions,
+) => Promise<unknown>
 
 /**
- * @callback ExecInProject
- * @param {string} commandLine command to execute (can include additional args). Must be correctly escaped.
- * @param {Omit<ExecOptions, "cwd">=} options exec options.  See ExecOptions
- * @returns {Promise<unknown>} exit code
+ * Exec a command in the project directory.
+ * Output will be streamed to the live console.
+ * Returns promise with return code
+ *
+ * @param commandLine command to execute (can include additional args). Must be correctly escaped.
+ * @param options exec options. See ExecOptions
  */
+type ExecInProject = (
+  commandLine: string,
+  options?: Omit<ExecOptions, 'cwd'>,
+) => Promise<unknown>
 
-/**
- * @param {string} rscProjectPath
- * @param {Object} core
- * @param {(key: string, value: string) => void} core.setOutput
- * @param {Exec} exec
- * @param {ExecInProject} execInProject
- * @returns {Promise<void>}
- */
-export async function main(rscProjectPath, core, exec, execInProject) {
+export async function main(
+  rscProjectPath: string,
+  core: { setOutput: (key: string, value: string) => void },
+  exec: Exec,
+  execInProject: ExecInProject,
+): Promise<void> {
   core.setOutput('rsc-project-path', rscProjectPath)
 
   console.log('Cedar Framework Path', CEDAR_FRAMEWORK_PATH)
@@ -64,13 +65,11 @@ export async function main(rscProjectPath, core, exec, execInProject) {
   await setUpRscProject(rscProjectPath, exec, execInProject)
 }
 
-/**
- * @param {string} rscProjectPath
- * @param {Exec} exec
- * @param {ExecInProject} execInProject
- * @returns {Promise<void>}
- */
-async function setUpRscProject(rscProjectPath, exec, execInProject) {
+async function setUpRscProject(
+  rscProjectPath: string,
+  exec: Exec,
+  execInProject: ExecInProject,
+): Promise<void> {
   const cedarBinPath = path.join(
     CEDAR_FRAMEWORK_PATH,
     'packages/cli/dist/index.js',
