@@ -30,9 +30,9 @@ describe('getFullUrl', () => {
 
     it("reads pathname and search parameters from the request's searchParams if they're available", () => {
       const req = mockExpressRequest(
-        '/rw-rsc/__rwjs__Routes?__rwjs__pathname=' +
+        '/rw-rsc/__cedarjs__Routes?__cedarjs__pathname=' +
           encodeURIComponent('/cux/cuux') +
-          '&__rwjs__search=' +
+          '&__cedarjs__search=' +
           encodeURIComponent('extra=corge'),
       )
 

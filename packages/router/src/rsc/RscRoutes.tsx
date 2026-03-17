@@ -56,7 +56,7 @@ async function rsaFetch(
 }
 
 function rscFetch(serializedLocation: string) {
-  const rscId = '__rwjs__Routes'
+  const rscId = '__cedarjs__Routes'
 
   return fetch(BASE_PATH + rscId + '?' + serializedLocation, {
     headers: { 'rw-rsc': '1' },
@@ -64,8 +64,8 @@ function rscFetch(serializedLocation: string) {
 }
 
 type SerializedLocation =
-  | `__rwjs__pathname=${string}&__rwjs__search=${string}`
-  | `__rwjs__pathname=${string}&__rwjs__search=${string}::${string}`
+  | `__cedarjs__pathname=${string}&__cedarjs__search=${string}`
+  | `__cedarjs__pathname=${string}&__cedarjs__search=${string}::${string}`
 
 function rscFetchRoutes(serializedLocation: SerializedLocation) {
   console.log(
@@ -114,7 +114,7 @@ function rscFetchRoutes(serializedLocation: SerializedLocation) {
 
       const model = await modelPromise
 
-      return model.__rwjs__rsa_data
+      return model.__cedarjs__rsa_data
     },
   }
 
@@ -133,7 +133,7 @@ interface Props {
 }
 
 export const RscRoutes = ({ pathname, search }: Props) => {
-  const serializedLocation: SerializedLocation = `__rwjs__pathname=${pathname}&__rwjs__search=${search}`
+  const serializedLocation: SerializedLocation = `__cedarjs__pathname=${pathname}&__cedarjs__search=${search}`
   const [currentRscCacheKey, setCurrentRscCacheKey] = useState(() => {
     console.log('RscRoutes :: useState initial value')
     // Calling rscFetchRoutes here to prime the cache
@@ -165,5 +165,5 @@ export const RscRoutes = ({ pathname, search }: Props) => {
     throw new Error('Missing RSC cache entry for ' + currentRscCacheKey)
   }
 
-  return use(rscModelPromise).__rwjs__Routes[0]
+  return use(rscModelPromise).__cedarjs__Routes[0]
 }
