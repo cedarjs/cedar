@@ -27,7 +27,7 @@
   "dependencies": {
     "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/internals": "7.4.2",
+    "@prisma/internals": "7.5.0",
     "@types/line-column": "1.0.2",
     "camelcase": "6.3.0",
     "core-js": "3.48.0",
