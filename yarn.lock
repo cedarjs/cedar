@@ -3662,7 +3662,6 @@ __metadata:
     lodash: "npm:4.17.23"
     lodash-decorators: "npm:6.0.1"
     lru-cache: "npm:11.2.7"
-    proxyquire: "npm:2.1.3"
     smol-toml: "npm:1.6.0"
     ts-morph: "npm:23.0.0"
     typescript: "npm:5.9.3"
@@ -17114,16 +17113,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fill-keys@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "fill-keys@npm:1.0.2"
-  dependencies:
-    is-object: "npm:~1.0.1"
-    merge-descriptors: "npm:~1.0.0"
-  checksum: 10c0/39d01c6d1fbb7cbb05ccbfee5746afcb03dbaf8990f09f3b1b23a144d215c0b685b9db8f40b0e949627e49baa8e5530a1b7f9a2c50ef29acc715a91c45bbb6da
-  languageName: node
-  linkType: hard
-
 "fill-range@npm:^7.1.1":
   version: 7.1.1
   resolution: "fill-range@npm:7.1.1"
@@ -19437,13 +19426,6 @@ __metadata:
   version: 2.0.0
   resolution: "is-obj@npm:2.0.0"
   checksum: 10c0/85044ed7ba8bd169e2c2af3a178cacb92a97aa75de9569d02efef7f443a824b5e153eba72b9ae3aca6f8ce81955271aa2dc7da67a8b720575d3e38104208cb4e
-  languageName: node
-  linkType: hard
-
-"is-object@npm:~1.0.1":
-  version: 1.0.2
-  resolution: "is-object@npm:1.0.2"
-  checksum: 10c0/9cfb80c3a850f453d4a77297e0556bc2040ac6bea5b6e418aee208654938b36bab768169bef3945ccfac7a9bb460edd8034e7c6d8973bcf147d7571e1b53e764
   languageName: node
   linkType: hard
 
@@ -21978,7 +21960,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"merge-descriptors@npm:1.0.3, merge-descriptors@npm:~1.0.0":
+"merge-descriptors@npm:1.0.3":
   version: 1.0.3
   resolution: "merge-descriptors@npm:1.0.3"
   checksum: 10c0/866b7094afd9293b5ea5dcd82d71f80e51514bed33b4c4e9f516795dc366612a4cbb4dc94356e943a8a6914889a914530badff27f397191b9b75cda20b6bae93
@@ -22775,13 +22757,6 @@ __metadata:
   version: 1.0.1
   resolution: "modify-values@npm:1.0.1"
   checksum: 10c0/6acb1b82aaf7a02f9f7b554b20cbfc159f223a79c66b0a257511c5933d50b85e12ea1220b0a90a2af6f80bc29ff784f929a52a51881867a93ae6a12ce87a729a
-  languageName: node
-  linkType: hard
-
-"module-not-found-error@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "module-not-found-error@npm:1.0.1"
-  checksum: 10c0/e57250016b320ef9d0e0037fdb63fb279ca93100a0cee3ef6e90139cbec734215be4a70857dfc0d62ee353d9f8126d2882aa0a80dba49b69292901263a21ea69
   languageName: node
   linkType: hard
 
@@ -25234,17 +25209,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxyquire@npm:2.1.3":
-  version: 2.1.3
-  resolution: "proxyquire@npm:2.1.3"
-  dependencies:
-    fill-keys: "npm:^1.0.2"
-    module-not-found-error: "npm:^1.0.1"
-    resolve: "npm:^1.11.1"
-  checksum: 10c0/f2e57670ed57ef047720516f0ad2f88bfdba4aaa54139bf5d7fe6ec84bf91ec932f402c56439b44d3596743fd9405be4aac99a924eb897e3396c5be1a81672b0
-  languageName: node
-  linkType: hard
-
 "pseudomap@npm:^1.0.1":
   version: 1.0.2
   resolution: "pseudomap@npm:1.0.2"
@@ -26113,7 +26077,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@npm:^1.10.0, resolve@npm:^1.11.1, resolve@npm:^1.17.0, resolve@npm:^1.20.0, resolve@npm:^1.22.1, resolve@npm:^1.22.11, resolve@npm:^1.22.4, resolve@npm:^1.22.8":
+"resolve@npm:^1.10.0, resolve@npm:^1.17.0, resolve@npm:^1.20.0, resolve@npm:^1.22.1, resolve@npm:^1.22.11, resolve@npm:^1.22.4, resolve@npm:^1.22.8":
   version: 1.22.11
   resolution: "resolve@npm:1.22.11"
   dependencies:
@@ -26139,7 +26103,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@patch:resolve@npm%3A^1.10.0#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.11.1#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.17.0#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.20.0#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.1#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.11#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.4#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.8#optional!builtin<compat/resolve>":
+"resolve@patch:resolve@npm%3A^1.10.0#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.17.0#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.20.0#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.1#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.11#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.4#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.8#optional!builtin<compat/resolve>":
   version: 1.22.11
   resolution: "resolve@patch:resolve@npm%3A1.22.11#optional!builtin<compat/resolve>::version=1.22.11&hash=c3c19d"
   dependencies:
