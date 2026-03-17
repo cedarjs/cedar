@@ -6,6 +6,6 @@
     "module": "esnext",
     "moduleResolution": "node",
     "skipLibCheck": false,
-    "jsx": "react-jsx"
+    "allowImportingTsExtensions": true
   }
 }

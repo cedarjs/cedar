@@ -3,7 +3,7 @@ description: Sets up an RSC project for smoke-tests
 
 runs:
   using: node24
-  main: 'setUpRscProjectGitHub.mjs'
+  main: 'setUpRscProjectGitHub.mts'
 
 outputs:
   test-project-path:
