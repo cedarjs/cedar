@@ -17,7 +17,7 @@ const config: Config = {
   runner: path.join(__dirname, '../jest-serial-runner.js'),
   testEnvironment: path.join(__dirname, './RedwoodApiJestEnv.js'),
   globals: {
-    __RWJS__TEST_IMPORTS: {
+    __CEDARJS__TEST_IMPORTS: {
       apiSrcPath: rwjsPaths.api.src,
       tearDownCachePath: path.join(
         rwjsPaths.generated.base,
@@ -25,7 +25,7 @@ const config: Config = {
       ),
     },
   },
-  sandboxInjectedGlobals: ['__RWJS__TEST_IMPORTS'],
+  sandboxInjectedGlobals: ['__CEDARJS__TEST_IMPORTS'],
   displayName: {
     color: 'redBright',
     name: 'api',
