@@ -3,16 +3,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { DMMF } from '@prisma/generator-helper'
-
-// @prisma/internals is a CJS-only bundle that uses Object.defineProperty with
-// getter functions for its exports. Node's ESM named-export static analysis
-// cannot detect these, so we use createRequire to access them reliably.
-const _require = createRequire(import.meta.url)
-const { getDMMF } = _require('@prisma/internals') as {
-  getDMMF: (options: {
-    datamodel: string | [string, string][]
-  }) => Promise<DMMF.Document>
-}
+import type PrismaInternals from '@prisma/internals'
 
 import {
   getPaths,
@@ -41,6 +32,12 @@ import { RWRouter } from './RWRouter.js'
 import { RWSDL } from './RWSDL.js'
 import { RWService } from './RWService.js'
 import { RWTOML } from './RWTOML.js'
+
+// @prisma/internals is a CJS-only bundle that uses Object.defineProperty with
+// getter functions for its exports. Node's ESM named-export static analysis
+// cannot detect these, so we use createRequire to access them reliably.
+const _require = createRequire(import.meta.url)
+const { getDMMF } = _require('@prisma/internals') as typeof PrismaInternals
 
 const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
 
