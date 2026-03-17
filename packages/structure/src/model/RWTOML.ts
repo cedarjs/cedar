@@ -1,11 +1,11 @@
 import * as toml from 'smol-toml'
 
-import { FileNode } from '../nodes'
-import { lazy } from '../x/decorators'
-import { err } from '../x/diagnostics'
-import { Range_create } from '../x/Range'
+import { FileNode } from '../nodes.js'
+import { lazy } from '../x/decorators.js'
+import { err } from '../x/diagnostics.js'
+import { Range_create } from '../x/Range.js'
 
-import type { RWProject } from './RWProject'
+import type { RWProject } from './RWProject.js'
 
 export class RWTOML extends FileNode {
   constructor(

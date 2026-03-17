@@ -1,8 +1,18 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { DMMF } from '@prisma/generator-helper'
-import { getDMMF } from '@prisma/internals'
+
+// @prisma/internals is a CJS-only bundle that uses Object.defineProperty with
+// getter functions for its exports. Node's ESM named-export static analysis
+// cannot detect these, so we use createRequire to access them reliably.
+const _require = createRequire(import.meta.url)
+const { getDMMF } = _require('@prisma/internals') as {
+  getDMMF: (options: {
+    datamodel: string | [string, string][]
+  }) => Promise<DMMF.Document>
+}
 
 import {
   getPaths,
@@ -11,26 +21,26 @@ import {
   getPrismaSchemas,
 } from '@cedarjs/project-config'
 
-import { BaseNode } from '../nodes'
-import { lazy, memo } from '../x/decorators'
+import { BaseNode } from '../nodes.js'
+import { lazy, memo } from '../x/decorators.js'
 import {
   followsDirNameConvention,
   isCellFileName,
   isLayoutFileName,
   globSync,
-} from '../x/path'
-import { URL_file } from '../x/URL'
+} from '../x/path.js'
+import { URL_file } from '../x/URL.js'
 
-import { RWCell } from './RWCell'
-import { RWComponent } from './RWComponent'
-import { RWEnvHelper } from './RWEnvHelper'
-import { RWFunction } from './RWFunction'
-import { RWLayout } from './RWLayout'
-import { RWPage } from './RWPage'
-import { RWRouter } from './RWRouter'
-import { RWSDL } from './RWSDL'
-import { RWService } from './RWService'
-import { RWTOML } from './RWTOML'
+import { RWCell } from './RWCell.js'
+import { RWComponent } from './RWComponent.js'
+import { RWEnvHelper } from './RWEnvHelper.js'
+import { RWFunction } from './RWFunction.js'
+import { RWLayout } from './RWLayout.js'
+import { RWPage } from './RWPage.js'
+import { RWRouter } from './RWRouter.js'
+import { RWSDL } from './RWSDL.js'
+import { RWService } from './RWService.js'
+import { RWTOML } from './RWTOML.js'
 
 const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
 

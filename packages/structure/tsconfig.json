@@ -3,6 +3,7 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
+    "emitDeclarationOnly": false,
     "experimentalDecorators": true,
     "noImplicitReturns": false,
     "noImplicitAny": false,

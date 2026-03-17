@@ -2,17 +2,17 @@ import * as tsm from 'ts-morph'
 
 import { getConfigPath } from '@cedarjs/project-config'
 
-import { RWError } from '../errors'
-import { FileNode } from '../nodes'
-import { iter } from '../x/Array'
-import { lazy, memo } from '../x/decorators'
-import type { ExtendedDiagnostic } from '../x/diagnostics'
-import { err, LocationLike_toLocation } from '../x/diagnostics'
-import { DiagnosticSeverity } from '../x/diagnostics'
-import { URL_file } from '../x/URL'
+import { RWError } from '../errors.js'
+import { FileNode } from '../nodes.js'
+import { iter } from '../x/Array.js'
+import { lazy, memo } from '../x/decorators.js'
+import type { ExtendedDiagnostic } from '../x/diagnostics.js'
+import { err, LocationLike_toLocation } from '../x/diagnostics.js'
+import { DiagnosticSeverity } from '../x/diagnostics.js'
+import { URL_file } from '../x/URL.js'
 
-import type { RWProject } from './RWProject'
-import { RWRoute } from './RWRoute'
+import type { RWProject } from './RWProject.js'
+import { RWRoute } from './RWRoute.js'
 
 /**
  * one per Routes.js

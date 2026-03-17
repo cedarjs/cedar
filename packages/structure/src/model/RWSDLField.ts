@@ -1,18 +1,15 @@
-import type {
-  FieldDefinitionNode,
-  ObjectTypeDefinitionNode,
-} from 'graphql/language/ast'
+import type { FieldDefinitionNode, ObjectTypeDefinitionNode } from 'graphql'
 
-import { RWError } from '../errors'
-import { BaseNode } from '../nodes'
-import { lazy } from '../x/decorators'
-import type { ExtendedDiagnostic } from '../x/diagnostics'
-import { Position_fromTSMorphOffset } from '../x/diagnostics'
-import { DiagnosticSeverity } from '../x/diagnostics'
-import type { Location } from '../x/Location'
+import { RWError } from '../errors.js'
+import { BaseNode } from '../nodes.js'
+import { lazy } from '../x/decorators.js'
+import type { ExtendedDiagnostic } from '../x/diagnostics.js'
+import { Position_fromTSMorphOffset } from '../x/diagnostics.js'
+import { DiagnosticSeverity } from '../x/diagnostics.js'
+import type { Location } from '../x/Location.js'
 
-import type { RWSDL } from './RWSDL'
-import type { RWServiceFunction } from './RWServiceFunction'
+import type { RWSDL } from './RWSDL.js'
+import type { RWServiceFunction } from './RWServiceFunction.js'
 
 export class RWSDLField extends BaseNode {
   constructor(

@@ -3,14 +3,14 @@ import { basename } from 'node:path'
 
 import type * as tsm from 'ts-morph'
 
-import { ArrayLike_normalize } from './x/Array'
-import type { ArrayLike } from './x/Array'
-import { lazy, memo } from './x/decorators'
-import type { ExtendedDiagnostic } from './x/diagnostics'
-import { basenameNoExt } from './x/path'
-import { Range_create } from './x/Range'
-import { createTSMSourceFile_cached } from './x/ts-morph'
-import { URL_file } from './x/URL'
+import { ArrayLike_normalize } from './x/Array.js'
+import type { ArrayLike } from './x/Array.js'
+import { lazy, memo } from './x/decorators.js'
+import type { ExtendedDiagnostic } from './x/diagnostics.js'
+import { basenameNoExt } from './x/path.js'
+import { Range_create } from './x/Range.js'
+import { createTSMSourceFile_cached } from './x/ts-morph.js'
+import { URL_file } from './x/URL.js'
 
 export type NodeID = string
 
@@ -54,7 +54,7 @@ export abstract class BaseNode {
    * Collects diagnostics for this node and all descendants.
    * This is what you'll use to gather all the project diagnostics.
    */
-  @memo(JSON.stringify)
+  @memo((...args) => JSON.stringify(args))
   async collectDiagnostics(uri?: string): Promise<ExtendedDiagnostic[]> {
     // TODO: catch runtime errors and add them as diagnostics
     // TODO: we can parallelize this further
