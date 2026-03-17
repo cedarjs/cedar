@@ -64,6 +64,7 @@ export class RWProject extends BaseNode {
   @lazy() get pathHelper() {
     return getPaths()
   }
+
   /**
    * Checks for the presence of a tsconfig.json at the root.
    */
@@ -73,6 +74,7 @@ export class RWProject extends BaseNode {
       existsSync(join(this.pathHelper.api.base, 'tsconfig.json'))
     )
   }
+
   // TODO: do we move this to a separate node? (ex: RWDatabase)
   @memo() async prismaDMMF(): Promise<DMMF.Document | undefined> {
     try {
@@ -85,6 +87,7 @@ export class RWProject extends BaseNode {
       return undefined
     }
   }
+
   @memo() async prismaDMMFModelNames() {
     const dmmf = await this.prismaDMMF()
     if (!dmmf) {
@@ -92,9 +95,11 @@ export class RWProject extends BaseNode {
     }
     return dmmf.datamodel.models.map((m) => m.name)
   }
+
   @lazy() get redwoodTOML(): RWTOML {
     return new RWTOML(getConfigPath(), this)
   }
+
   @lazy() private get processPagesDir() {
     try {
       return processPagesDir(this.pathHelper.web.pages)
@@ -102,11 +107,13 @@ export class RWProject extends BaseNode {
       return []
     }
   }
+
   @lazy() get pages(): RWPage[] {
     return this.processPagesDir.map(
       (p) => new RWPage(p.constName, p.path, this),
     )
   }
+
   @lazy() get router() {
     return this.getRouter()
   }
