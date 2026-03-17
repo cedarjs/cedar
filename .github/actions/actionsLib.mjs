@@ -1,4 +1,3 @@
-/* eslint-env node */
 // @ts-check
 
 import fs from 'node:fs'
@@ -21,9 +20,17 @@ export const CEDAR_FRAMEWORK_PATH = fileURLToPath(
  * @param {ExecOptions} options
  */
 function execWithEnv(command, { env = {}, ...rest } = {}) {
+  /** @type {{ [key: string]: string }} */
+  const processEnv = Object.fromEntries(
+    Object.entries(process.env).filter(
+      /** @returns {entry is [string, string]} */
+      (entry) => entry[1] !== undefined,
+    ),
+  )
+
   return getExecOutput(command, undefined, {
     env: {
-      ...process.env,
+      ...processEnv,
       ...env,
     },
     ...rest,
@@ -74,7 +81,7 @@ export async function createCacheKeys({
   const baseKey = [
     baseKeyPrefix,
     process.env.RUNNER_OS,
-    process.env.GITHUB_REF.replaceAll('/', '-'),
+    process.env.GITHUB_REF?.replaceAll('/', '-'),
     await hashFiles(path.join('__fixtures__', 'test-project')),
   ].join('-')
 
