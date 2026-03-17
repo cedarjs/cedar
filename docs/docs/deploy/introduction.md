@@ -84,7 +84,6 @@ To use PostgreSQL in production, include this in your `schema.prisma`:
 ```jsx
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 ```
 

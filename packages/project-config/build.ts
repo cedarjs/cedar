@@ -46,5 +46,14 @@ const indexBuildPath = './dist/cjs/index.js'
 const indexFile = fs.readFileSync(indexBuildPath, 'utf-8')
 fs.writeFileSync(
   indexBuildPath,
-  indexFile.replace('await import(configUrl)', 'require(prismaConfigPath)'),
+  indexFile
+    .replace('await import(configUrl)', 'require(prismaConfigPath)')
+    .replace(
+      'const mod = await import("@prisma/internals")',
+      'const mod = require("@prisma/internals")',
+    )
+    .replace(
+      'const prismaInternalsMod = await import("@prisma/internals")',
+      'const prismaInternalsMod = require("@prisma/internals")',
+    ),
 )

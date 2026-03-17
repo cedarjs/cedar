@@ -29,7 +29,6 @@ error: Error validating datasource `db`: the URL must start with the protocol `p
   -->  schema.prisma:3
    |
  2 |   provider = "postgresql"
- 3 |   url      = env("DATABASE_URL")
    |
 
 Validation Error Count: 1

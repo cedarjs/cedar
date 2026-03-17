@@ -6,6 +6,7 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node16",
+    "allowImportingTsExtensions": true,
     "skipLibCheck": false,
     "rootDirs": [
       "./src",

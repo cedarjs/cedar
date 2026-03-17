@@ -5,13 +5,13 @@ import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
-import { getSchemaPath } from '@cedarjs/project-config'
+import { getSchemaPath, getPrismaSchemas } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 
-const { getDMMF, getSchemaWithPath } = prismaInternals
+const { getDMMF } = prismaInternals
 
 const MODEL_SCHEMA = `
 model BackgroundJob {
@@ -32,8 +32,7 @@ model BackgroundJob {
 `
 
 const getModelNames = async () => {
-  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
-  const { schemas } = await getSchemaWithPath(schemaPath)
+  const { schemas } = await getPrismaSchemas()
   const schema = await getDMMF({ datamodel: schemas })
 
   return schema.datamodel.models.map((model) => model.name)

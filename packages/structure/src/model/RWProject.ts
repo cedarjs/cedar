@@ -1,14 +1,14 @@
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import type { DMMF } from '@prisma/generator-helper'
-import { getDMMF, getSchemaWithPath } from '@prisma/internals'
+import { getDMMF } from '@prisma/internals'
 
 import {
   getPaths,
   processPagesDir,
-  getSchemaPath,
   getConfigPath,
+  getPrismaSchemas,
 } from '@cedarjs/project-config'
 
 import { BaseNode } from '../nodes'
@@ -70,16 +70,15 @@ export class RWProject extends BaseNode {
    */
   @lazy() get isTypeScriptProject(): boolean {
     return (
-      existsSync(join(this.pathHelper.web.base, 'tsconfig.json')) ||
-      existsSync(join(this.pathHelper.api.base, 'tsconfig.json'))
+      fs.existsSync(path.join(this.pathHelper.web.base, 'tsconfig.json')) ||
+      fs.existsSync(path.join(this.pathHelper.api.base, 'tsconfig.json'))
     )
   }
 
   // TODO: do we move this to a separate node? (ex: RWDatabase)
   @memo() async prismaDMMF(): Promise<DMMF.Document | undefined> {
     try {
-      const schemaPath = await getSchemaPath(this.pathHelper.api.prismaConfig)
-      const result = await getSchemaWithPath(schemaPath)
+      const result = await getPrismaSchemas()
       const datamodel = result.schemas
       // consider case where dmmf doesn't exist (or fails to parse)
       return await getDMMF({ datamodel })
@@ -125,13 +124,17 @@ export class RWProject extends BaseNode {
   servicesFilePath(name: string) {
     // name = blog,posts
     const ext = this.isTypeScriptProject ? '.ts' : '.js'
-    return join(this.pathHelper.api.services, name, name + ext)
+    return path.join(this.pathHelper.api.services, name, name + ext)
   }
 
   // TODO: move to path helper
   @lazy() get defaultNotFoundPageFilePath() {
     const ext = this.isTypeScriptProject ? '.tsx' : '.jsx'
-    return join(this.pathHelper.web.pages, 'NotFoundPage', 'NotFoundPage' + ext)
+    return path.join(
+      this.pathHelper.web.pages,
+      'NotFoundPage',
+      'NotFoundPage' + ext,
+    )
   }
 
   @lazy() get services() {

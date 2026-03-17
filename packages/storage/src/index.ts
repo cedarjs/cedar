@@ -1,25 +1,31 @@
 import type { BaseStorageAdapter } from './adapters/BaseStorageAdapter.js'
 import { createUploadSavers } from './createSavers.js'
 import type {
-  ModelNames,
+  ModelNamesFor,
   UploadConfigForModel,
   UploadsConfig,
 } from './prismaExtension.js'
 import { createUploadsExtension } from './prismaExtension.js'
 import type { UrlSigner } from './UrlSigner.js'
 
-type SetupStorageOptions<MNames extends ModelNames> = {
-  uploadsConfig: UploadsConfig<MNames>
+type SetupStorageOptions<
+  TClient,
+  MNames extends ModelNamesFor<TClient> = ModelNamesFor<TClient>,
+> = {
+  uploadsConfig: UploadsConfig<TClient, MNames>
   storageAdapter: BaseStorageAdapter
   urlSigner?: UrlSigner
 }
 
-export const setupStorage = <MNames extends ModelNames>({
+export const setupStorage = <
+  TClient,
+  MNames extends ModelNamesFor<TClient> = ModelNamesFor<TClient>,
+>({
   uploadsConfig,
   storageAdapter,
   urlSigner,
-}: SetupStorageOptions<MNames>) => {
-  const prismaExtension = createUploadsExtension(
+}: SetupStorageOptions<TClient, MNames>) => {
+  const prismaExtension = createUploadsExtension<TClient, MNames>(
     uploadsConfig,
     storageAdapter,
     urlSigner,
@@ -42,11 +48,12 @@ export const setupStorage = <MNames extends ModelNames>({
  * @returns The same uploads configuration object, but with filtered types
  */
 export function createUploadsConfig<
+  TClient,
   T extends Partial<{
-    [K in ModelNames]?: UploadConfigForModel<K>
+    [K in ModelNamesFor<TClient>]?: UploadConfigForModel<TClient, K>
   }>,
 >(uploadsConfig: T): T {
   return uploadsConfig
 }
 
-export type { ModelNames, UploadsConfig } from './prismaExtension.js'
+export type { ModelNamesFor, UploadsConfig } from './prismaExtension.js'

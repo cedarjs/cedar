@@ -1,6 +1,5 @@
 // Handles validating values in services
 
-import { PrismaClient } from '@prisma/client'
 import pascalcase from 'pascalcase'
 
 import * as ValidationErrors from './errors.js'
@@ -753,17 +752,15 @@ export async function validateUniqueness<
   }
 
   const { db: _db, ...restOptions } = options
-  const db = options.db || new PrismaClient()
+  const db = options.db
   options = restOptions
 
-  // TODO: Enable this error when we've migrated to Prisma 7, where we can't
-  // do `new PrismaClient()` anymore
-  // if (!db) {
-  //   throw new Error(
-  //     'validateUniqueness could not resolve a Prisma `db` instance. Pass ' +
-  //       '`{ db }` in options, or ensure `src/lib/db` exports `db`',
-  //   )
-  // }
+  if (!db) {
+    throw new Error(
+      'validateUniqueness could not resolve a Prisma `db` instance. Pass ' +
+        '`{ db }` in options, or ensure `src/lib/db` exports `db`',
+    )
+  }
 
   const where: UniquenessWhere = {
     AND: [rest],

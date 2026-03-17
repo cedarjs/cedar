@@ -54,8 +54,10 @@ export async function rscBuildAnalyze() {
       // it means we can skip analyzing them, which means faster build times.
       external: [
         '@prisma/client',
+        '@prisma/adapter-better-sqlite3',
         '@prisma/fetch-engine',
         '@prisma/internals',
+        'better-sqlite3',
         '@cedarjs/auth-dbauth-api',
         '@cedarjs/cookie-jar',
         '@cedarjs/server-store',

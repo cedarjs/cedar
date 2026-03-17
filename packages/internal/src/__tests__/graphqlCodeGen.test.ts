@@ -1,5 +1,17 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
+
+const { mockPrismaClientPath, mockPrismaClientFileUrl } = await vi.hoisted(
+  async () => {
+    const path = await import('node:path')
+    const { pathToFileURL } = await import('node:url')
+
+    // On Windows, path.resolve('/foo') gives e.g. 'C:\foo'
+    const mockPrismaClientPath = path.resolve('/mock-prisma-client-path')
+    const mockPrismaClientFileUrl = pathToFileURL(mockPrismaClientPath)
+    return { mockPrismaClientPath, mockPrismaClientFileUrl }
+  },
+)
 
 import {
   beforeAll,
@@ -10,6 +22,8 @@ import {
   expect,
   describe,
 } from 'vitest'
+
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import {
   generateTypeDefGraphQLApi,
@@ -35,7 +49,19 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-vi.mock('@prisma/client', () => {
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+
+  return {
+    ...originalProjectConfig,
+    resolveGeneratedPrismaClient: () => mockPrismaClientPath,
+  }
+})
+
+const mockNow = vi.hoisted(() => new Date().getTime())
+
+vi.mock(mockPrismaClientFileUrl + '?t=' + mockNow, () => {
+  // TODO: Should this be default: or just straight ModelName:?
   return {
     default: {
       ModelName: {
@@ -44,6 +70,12 @@ vi.mock('@prisma/client', () => {
         Post: 'Post',
         Todo: 'Todo',
       },
+    },
+    ModelName: {
+      PrismaModelOne: 'PrismaModelOne',
+      PrismaModelTwo: 'PrismaModelTwo',
+      Post: 'Post',
+      Todo: 'Todo',
     },
   }
 })
@@ -58,6 +90,8 @@ vi.mock('../project.js', async (importOriginal) => {
 
 test('Generate gql typedefs web', async () => {
   await generateGraphQLSchema()
+
+  vi.setSystemTime(mockNow)
 
   vi.spyOn(fs, 'writeFileSync').mockImplementation(
     (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {

@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "7.4.2",
     "@cedarjs/api": "2.8.0",
-    "@cedarjs/graphql-server": "2.8.0"
+    "@cedarjs/graphql-server": "2.8.0",
+    "better-sqlite3": "12.6.2"
   }
 }
