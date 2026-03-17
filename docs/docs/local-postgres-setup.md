@@ -37,7 +37,6 @@ First, update your Prisma schema to use PostgreSQL as the provider:
 ```graphql title="api/db/schema.prisma"
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
 }
 ```
 
@@ -131,7 +130,6 @@ Tell Prisma to use a Postgres database instead of SQLite by updating the `provid
 ```graphql title="api/db/schema.prisma"
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
 }
 ```
 

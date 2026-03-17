@@ -76,6 +76,16 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getSchemaPath: () => {
       return path.join(globalThis.__dirname, 'fixtures', 'schema.prisma')
     },
+    getPrismaSchemas: async () => {
+      const schemaPath = path.join(
+        globalThis.__dirname,
+        'fixtures',
+        'schema.prisma',
+      )
+      return {
+        schemas: [[schemaPath, fs.readFileSync(schemaPath, 'utf-8')]],
+      }
+    },
     getDataMigrationsPath: () => {
       return path.join(globalThis.__dirname, 'fixtures', 'migrations')
     },

@@ -138,7 +138,6 @@ Open up `schema.prisma` and add:
 ```javascript title="api/db/schema.prisma"
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 generator client {

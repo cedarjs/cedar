@@ -1,11 +1,11 @@
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { describe, it, expect, vi } from 'vitest'
 
 import { MemoryStorage } from '../adapters/MemoryStorage/MemoryStorage.js'
 import { createUploadsConfig, setupStorage } from '../index.js'
 import { UrlSigner } from '../UrlSigner.js'
 
-// @MARK: use the local prisma client in the test
-import { PrismaClient } from './prisma-client/index.js'
+import { PrismaClient } from './prisma-client/client.js'
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = (await importOriginal()) as any
@@ -44,7 +44,12 @@ describe('Result extensions', () => {
     }),
   })
 
-  const prismaClient = new PrismaClient().$extends(storagePrismaExtension)
+  const adapter = new PrismaBetterSqlite3({
+    url: 'file:src/__tests__/for_unit_test.db',
+  })
+  const prismaClient = new PrismaClient({ adapter }).$extends(
+    storagePrismaExtension,
+  )
 
   it('Adds signedURL and dataURI extensions', async () => {
     const dummy = await prismaClient.dummy.create({

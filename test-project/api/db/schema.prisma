@@ -6,12 +6,15 @@
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+
+  moduleFormat           = "cjs"
+  generatedFileExtension = "mts"
+  importFileExtension    = "mts"
 }
 
 // Define your own datamodels here and run `yarn cedar prisma migrate dev`
@@ -50,4 +53,20 @@ model Contact {
   email     String
   message   String
   createdAt DateTime @default(now())
+}
+
+model BackgroundJob {
+  id        Int       @id @default(autoincrement())
+  attempts  Int       @default(0)
+  handler   String
+  queue     String
+  priority  Int
+  runAt     DateTime?
+  cron      String?
+  lockedAt  DateTime?
+  lockedBy  String?
+  lastError String?
+  failedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

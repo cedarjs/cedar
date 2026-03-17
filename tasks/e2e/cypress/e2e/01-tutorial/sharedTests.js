@@ -121,12 +121,12 @@ export const test_dynamic = () =>
     // need to also handle case where Prisma Client be out of sync
     cy.exec(
       `cd ${BASE_DIR}; rm -rf ./api/db/migrations && ` +
-        'yarn cedar prisma migrate reset --skip-seed --force',
+        'yarn cedar prisma migrate reset --force',
     )
     cy.exec(`cd ${BASE_DIR}; yarn cedar prisma migrate dev --name setup`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar prisma generate`)
     cy.exec(`cd ${BASE_DIR}; yarn cedar g scaffold post --force`)
 
-    // Wait for API server to be available.
     waitForApiSide()
     cy.visit('http://localhost:8910/posts')
 
