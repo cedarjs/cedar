@@ -93,7 +93,7 @@ export class RWProject extends BaseNode {
     return dmmf.datamodel.models.map((m) => m.name)
   }
   @lazy() get redwoodTOML(): RWTOML {
-    return new RWTOML(getConfigPath(this.pathHelper.base), this)
+    return new RWTOML(getConfigPath(), this)
   }
   @lazy() private get processPagesDir() {
     try {
