@@ -1,5 +1,5 @@
-globalThis.__dirname = import.meta.dirname
-import '../../lib/test.js'
+globalThis.__dirname = __dirname
+import '../../../lib/test.js'
 
 vi.mock('execa', () => ({
   default: vi.fn((cmd, params) => ({
@@ -8,10 +8,12 @@ vi.mock('execa', () => ({
   })),
 }))
 
-import execa from 'execa'
-import { vi, afterEach, test, expect } from 'vitest'
+import fs from 'node:fs'
 
-import { handler } from '../testHandlerEsm.ts'
+import execa from 'execa'
+import { vi, afterEach, test, expect, beforeEach } from 'vitest'
+
+import { handler } from '../testHandler.ts'
 
 vi.mock('@cedarjs/structure', () => {
   return {
@@ -19,6 +21,16 @@ vi.mock('@cedarjs/structure', () => {
       sides: ['web', 'api'],
     }),
   }
+})
+
+vi.mock('../datasourceWarning', () => {
+  return {
+    warnIfNonStandardDatasourceUrl: vi.fn(),
+  }
+})
+
+beforeEach(() => {
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 })
 
 afterEach(() => {
@@ -29,7 +41,7 @@ test('Runs tests for all available sides if no filter passed', async () => {
   await handler({})
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-  expect(execa.mock.results[0].value.params).toContain('vitest')
+  expect(execa.mock.results[0].value.params).toContain('jest')
   expect(execa.mock.results[0].value.params).toContain('web')
   expect(execa.mock.results[0].value.params).toContain('api')
 })
@@ -41,11 +53,9 @@ test('Syncs or creates test database when the flag --db-push is set to true', as
   })
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-
-  expect(execa.mock.results[0].value.params).toContain('vitest')
-  expect(execa.mock.results[0].value.params).toEqual(
-    expect.arrayContaining(['--project', 'api']),
-  )
+  expect(execa.mock.results[0].value.params).toContain('jest')
+  expect(execa.mock.results[0].value.params).toContain('--projects')
+  expect(execa.mock.results[0].value.params).toContain('api')
 })
 
 test('Skips test database sync/creation when the flag --db-push is set to false', async () => {
@@ -55,7 +65,7 @@ test('Skips test database sync/creation when the flag --db-push is set to false'
   })
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-  expect(execa.mock.results[0].value.params).toContain('vitest')
+  expect(execa.mock.results[0].value.params).toContain('jest')
 })
 
 test('Runs tests for all available sides if no side filter passed', async () => {
@@ -64,13 +74,13 @@ test('Runs tests for all available sides if no side filter passed', async () => 
   })
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-  expect(execa.mock.results[0].value.params).toContain('vitest')
+  expect(execa.mock.results[0].value.params).toContain('jest')
   expect(execa.mock.results[0].value.params).toContain('bazinga')
   expect(execa.mock.results[0].value.params).toContain('web')
   expect(execa.mock.results[0].value.params).toContain('api')
 })
 
-test('Runs tests specified side even with additional filters', async () => {
+test('Runs tests specified side if even with additional filters', async () => {
   await handler({
     filter: ['web', 'bazinga'],
   })
@@ -79,7 +89,7 @@ test('Runs tests specified side even with additional filters', async () => {
   expect(execa.mock.results[0].value.params).not.toContain('api')
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-  expect(execa.mock.results[0].value.params).toContain('vitest')
+  expect(execa.mock.results[0].value.params).toContain('jest')
   expect(execa.mock.results[0].value.params).toContain('bazinga')
   expect(execa.mock.results[0].value.params).toContain('web')
 })
@@ -90,38 +100,36 @@ test('Does not create db when calling test with just web', async () => {
   })
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-  expect(execa.mock.results[0].value.params).toContain('vitest')
+  expect(execa.mock.results[0].value.params).toContain('jest')
 })
 
-test('Passes filter param to vitest command if passed', async () => {
+test('Passes filter param to jest command if passed', async () => {
   await handler({
     filter: ['web', 'bazinga'],
   })
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-  expect(execa.mock.results[0].value.params).toContain('vitest')
+  expect(execa.mock.results[0].value.params).toContain('jest')
   expect(execa.mock.results[0].value.params).toContain('bazinga')
 })
 
-test('Passes other flags to vitest', async () => {
+test('Passes other flags to jest', async () => {
   await handler({
     u: true,
     debug: true,
     json: true,
     collectCoverage: true,
-    watch: true,
   })
 
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-  expect(execa.mock.results[0].value.params).toContain('vitest')
+  expect(execa.mock.results[0].value.params).toContain('jest')
   expect(execa.mock.results[0].value.params).toContain('-u')
   expect(execa.mock.results[0].value.params).toContain('--debug')
   expect(execa.mock.results[0].value.params).toContain('--json')
   expect(execa.mock.results[0].value.params).toContain('--collectCoverage')
-  expect(execa.mock.results[0].value.params).toContain('--watch')
 })
 
-test('Passes values of other flags to vitest', async () => {
+test('Passes values of other flags to jest', async () => {
   await handler({
     bazinga: false,
     hello: 'world',
@@ -129,7 +137,7 @@ test('Passes values of other flags to vitest', async () => {
 
   // Second command because api side runs
   expect(execa.mock.results[0].value.cmd).toBe('yarn')
-  expect(execa.mock.results[0].value.params).toContain('vitest')
+  expect(execa.mock.results[0].value.params).toContain('jest')
 
   // Note that these below tests aren't the best, since they don't check for order
   // But I'm making sure only 2 extra params get passed

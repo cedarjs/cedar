@@ -5,13 +5,16 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
-import { getPaths } from '../lib/index.js'
+import { getPaths } from '../../lib/index.js'
 // @ts-expect-error - Types not available for JS files
-import * as project from '../lib/project.js'
+import * as project from '../../lib/project.js'
+
+import { warnIfNonStandardDatasourceUrl } from './datasourceWarning.js'
 
 type TestEsmHandlerArgs = Record<string, unknown> & {
   filter?: string[]
   dbPush?: boolean
+  force?: boolean
 }
 
 function hasStringMessage(value: unknown): value is { message: string } {
@@ -39,6 +42,7 @@ function getExitCode(value: unknown) {
 export const handler = async ({
   filter: filterParams = [],
   dbPush = true,
+  force = false,
   ...others
 }: TestEsmHandlerArgs) => {
   recordTelemetryAttributes({
@@ -50,7 +54,7 @@ export const handler = async ({
   const rwjsPaths = getPaths()
 
   const forwardVitestFlags = Object.keys(others).flatMap((flagName) => {
-    if (['db-push', 'loadEnvFiles', '$0', '_'].includes(flagName)) {
+    if (['db-push', 'force', 'loadEnvFiles', '$0', '_'].includes(flagName)) {
       // filter out flags meant for the rw test command only
       return []
     }
@@ -112,6 +116,10 @@ export const handler = async ({
 
     if (sides.includes('api') && !dbPush) {
       process.env.SKIP_DB_PUSH = '1'
+    }
+
+    if (sides.includes('api')) {
+      await warnIfNonStandardDatasourceUrl({ force })
     }
 
     // TODO: Run vitest programmatically. See https://vitest.dev/advanced/api/

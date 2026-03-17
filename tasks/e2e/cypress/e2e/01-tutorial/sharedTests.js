@@ -36,8 +36,8 @@ import Step9_3_DisableAuth from './codemods/Step9_3_DisableAuth'
 const BASE_DIR = Cypress.env('RW_PATH')
 
 export function waitForApiSide() {
-  // Pause because chokidar `ignoreInitial` and debounce add at least 1000ms delay
-  // to restarting the api-server in the e2e environment.
+  // Pause because chokidar `ignoreInitial` and debounce add at least 1000ms
+  // delay to restarting the api-server in the e2e environment.
   cy.wait(10_000)
   cy.waitUntil(
     () =>
@@ -49,12 +49,13 @@ export function waitForApiSide() {
             'content-type': 'application/json',
           },
           body: JSON.stringify({
-            query: 'query Q { cedarjs { version } }',
+            query: 'query Q { cedar { version } }',
           }),
           failOnStatusCode: false,
         })
         .then((r) => {
-          return r.status === 200 // The first response could be 504 or 203 (reloading api server)
+          // The first response could be 504 or 203 (reloading api server)
+          return r.status === 200
         }),
     { timeout: 10_000, interval: 2_000 },
   )
@@ -119,12 +120,13 @@ export const test_dynamic = () =>
     cy.exec(`rm ${BASE_DIR}/api/db/dev.db`, { failOnNonZeroExit: false })
     // need to also handle case where Prisma Client be out of sync
     cy.exec(
-      `cd ${BASE_DIR}; yarn dlx rimraf ./api/db/migrations && yarn cedar prisma migrate reset --skip-seed --force`,
+      `cd ${BASE_DIR}; rm -rf ./api/db/migrations && ` +
+        'yarn cedar prisma migrate reset --force',
     )
     cy.exec(`cd ${BASE_DIR}; yarn cedar prisma migrate dev --name setup`)
+    cy.exec(`cd ${BASE_DIR}; yarn cedar prisma generate`)
     cy.exec(`cd ${BASE_DIR}; yarn cedar g scaffold post --force`)
 
-    // Wait for API server to be available.
     waitForApiSide()
     cy.visit('http://localhost:8910/posts')
 

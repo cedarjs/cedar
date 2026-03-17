@@ -1,6 +1,5 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DB_HOST")
 }
 
 generator client {

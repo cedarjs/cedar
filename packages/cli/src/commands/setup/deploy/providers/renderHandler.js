@@ -1,11 +1,10 @@
-import fs from 'node:fs'
 import path from 'path'
 
 import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { getPaths, getSchemaPath } from '@cedarjs/project-config'
+import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../../lib/colors.js'
@@ -18,7 +17,7 @@ import {
   SQLITE_YAML,
 } from '../templates/render.js'
 
-const { getSchemaWithPath, getConfig } = prismaInternals
+const { getConfig } = prismaInternals
 
 const getRenderYamlContent = async (database) => {
   if (database === 'none') {
@@ -28,13 +27,7 @@ const getRenderYamlContent = async (database) => {
     }
   }
 
-  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
-
-  if (!fs.existsSync(schemaPath)) {
-    throw new Error(`Could not find prisma schema at ${schemaPath}`)
-  }
-
-  const result = await getSchemaWithPath(schemaPath)
+  const result = await getPrismaSchemas()
   const config = await getConfig({ datamodel: result.schemas })
   const detectedDatabase = config.datasources[0].activeProvider
 

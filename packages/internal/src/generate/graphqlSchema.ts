@@ -6,7 +6,6 @@ import * as schemaAstPlugin from '@graphql-codegen/schema-ast'
 import { CodeFileLoader } from '@graphql-tools/code-file-loader'
 import type { LoadSchemaOptions } from '@graphql-tools/load'
 import { loadSchema } from '@graphql-tools/load'
-import prismaInternals from '@prisma/internals'
 // Here's an explanation of why we do ts-ignore:
 // https://github.com/webdiscus/ansis#troubleshooting
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -21,14 +20,12 @@ import {
   getPaths,
   getConfig,
   resolveFile,
-  getSchemaPath,
+  getPrismaSchemas,
 } from '@cedarjs/project-config'
 
-const { getSchemaWithPath } = prismaInternals
-
 export const generateGraphQLSchema = async () => {
-  const redwoodProjectPaths = getPaths()
-  const redwoodProjectConfig = getConfig()
+  const cedarPaths = getPaths()
+  const cedarConfig = getConfig()
 
   const schemaPointerMap = {
     [print(rootSchema.schema)]: {},
@@ -43,9 +40,7 @@ export const generateGraphQLSchema = async () => {
 
   for (const [name, schema] of Object.entries(rootSchema.scalarSchemas)) {
     if (
-      redwoodProjectConfig.graphql.includeScalars[
-        name as rootSchema.ScalarSchemaKeys
-      ]
+      cedarConfig.graphql.includeScalars[name as rootSchema.ScalarSchemaKeys]
     ) {
       schemaPointerMap[print(schema)] = {}
     }
@@ -73,10 +68,10 @@ export const generateGraphQLSchema = async () => {
     sort: true,
     convertExtensions: true,
     includeSources: true,
-    cwd: redwoodProjectPaths.api.src,
+    cwd: cedarPaths.api.src,
     schema: Object.keys(schemaPointerMap),
     generates: {
-      [redwoodProjectPaths.generated.schema]: {
+      [cedarPaths.generated.schema]: {
         plugins: ['schema-ast'],
       },
     },
@@ -95,10 +90,7 @@ export const generateGraphQLSchema = async () => {
     if (e instanceof Error) {
       const match = e.message.match(/Unknown type: "(\w+)"/)
       const name = match?.[1]
-      const schemaPath = await getSchemaPath(
-        redwoodProjectPaths.api.prismaConfig,
-      )
-      const result = await getSchemaWithPath(schemaPath)
+      const result = await getPrismaSchemas()
       // For string operations, concatenate the schemas
       const schemaPrisma = result.schemas
         .map(([, content]) => content)
@@ -147,15 +139,15 @@ export const generateGraphQLSchema = async () => {
     pluginMap: { 'schema-ast': schemaAstPlugin },
     schema: {} as unknown as DocumentNode,
     schemaAst: loadedSchema,
-    filename: redwoodProjectPaths.generated.schema,
+    filename: cedarPaths.generated.schema,
     documents: [],
   }
 
   if (loadedSchema) {
     try {
       const schema = await codegen(options)
-      fs.writeFileSync(redwoodProjectPaths.generated.schema, schema)
-      return { schemaPath: redwoodProjectPaths.generated.schema, errors }
+      fs.writeFileSync(cedarPaths.generated.schema, schema)
+      return { schemaPath: cedarPaths.generated.schema, errors }
     } catch (e) {
       errors.push({
         message: `GraphQL Schema codegen failed`,

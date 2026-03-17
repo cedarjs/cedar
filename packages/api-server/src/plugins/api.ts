@@ -12,7 +12,8 @@ import { loadFastifyConfig } from '../fastify.js'
 
 import { lambdaRequestHandler, loadFunctionsFromDist } from './lambdaLoader.js'
 
-export interface RedwoodFastifyAPIOptions {
+export interface CedarFastifyAPIOptions {
+  // Have to keep this named `redwood` to avoid breaking changes
   redwood: {
     apiRootPath?: string
     fastGlobOptions?: FastGlobOptions
@@ -22,15 +23,15 @@ export interface RedwoodFastifyAPIOptions {
   }
 }
 
-export async function redwoodFastifyAPI(
+export async function cedarFastifyAPI(
   fastify: FastifyInstance,
-  opts: RedwoodFastifyAPIOptions,
+  opts: CedarFastifyAPIOptions,
 ) {
-  const redwoodOptions = opts.redwood ?? {}
-  redwoodOptions.apiRootPath ??= '/'
-  redwoodOptions.apiRootPath = coerceRootPath(redwoodOptions.apiRootPath)
-  redwoodOptions.fastGlobOptions ??= {}
-  redwoodOptions.loadUserConfig ??= false
+  const cedarOptions = opts.redwood ?? {}
+  cedarOptions.apiRootPath ??= '/'
+  cedarOptions.apiRootPath = coerceRootPath(cedarOptions.apiRootPath)
+  cedarOptions.fastGlobOptions ??= {}
+  cedarOptions.loadUserConfig ??= false
 
   fastify.register(fastifyUrlData)
   // Starting in Fastify v4, we have to await the fastifyRawBody plugin's registration
@@ -47,25 +48,25 @@ export async function redwoodFastifyAPI(
     fastify.defaultTextParser,
   )
 
-  if (redwoodOptions.loadUserConfig) {
+  if (cedarOptions.loadUserConfig) {
     const { configureFastify } = await loadFastifyConfig()
     if (configureFastify) {
       await configureFastify(fastify, {
         side: 'api',
-        apiRootPath: redwoodOptions.apiRootPath,
+        apiRootPath: cedarOptions.apiRootPath,
       })
     }
   }
 
   // Run users custom server configuration function
-  if (redwoodOptions.configureServer) {
-    await redwoodOptions.configureServer(fastify as Server)
+  if (cedarOptions.configureServer) {
+    await cedarOptions.configureServer(fastify as Server)
   }
 
-  fastify.all(`${redwoodOptions.apiRootPath}:routeName`, lambdaRequestHandler)
-  fastify.all(`${redwoodOptions.apiRootPath}:routeName/*`, lambdaRequestHandler)
+  fastify.all(`${cedarOptions.apiRootPath}:routeName`, lambdaRequestHandler)
+  fastify.all(`${cedarOptions.apiRootPath}:routeName/*`, lambdaRequestHandler)
   await loadFunctionsFromDist({
-    fastGlobOptions: redwoodOptions.fastGlobOptions,
-    discoverFunctionsGlob: redwoodOptions.discoverFunctionsGlob,
+    fastGlobOptions: cedarOptions.fastGlobOptions,
+    discoverFunctionsGlob: cedarOptions.discoverFunctionsGlob,
   })
 }

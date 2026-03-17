@@ -22,7 +22,7 @@ export interface RouteInformation {
  */
 export function getDuplicateRoutes(): RouteInformation[] {
   const duplicateRoutes: RouteInformation[] = []
-  const allRoutes: RWRoute[] = getProject(getPaths().base).router.routes
+  const allRoutes: RWRoute[] = getProject().router.routes
   const uniqueNames = new Set(
     allRoutes
       .filter((route) => route.name !== undefined)
@@ -96,8 +96,7 @@ export interface RouteSpec extends RWRouteManifestItem {
 }
 
 export const getProjectRoutes = (): RouteSpec[] => {
-  const rwProject = getProject(getPaths().base)
-  const routes = rwProject.getRouter().routes
+  const routes = getProject().getRouter().routes
 
   // @ts-expect-error - relativeFilePath issue. Fixing it is a semver breaking
   // change, so I'll leave it as is for now

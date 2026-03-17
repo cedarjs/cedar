@@ -2,20 +2,32 @@ import type {
   APIGatewayProxyResult,
   APIGatewayProxyEvent,
   Handler,
+  APIGatewayProxyEventQueryStringParameters,
 } from 'aws-lambda'
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import qs from 'qs'
+import { parse } from 'picoquery'
 
 import { mergeMultiValueHeaders, parseBody } from './utils.js'
 
 export const lambdaEventForFastifyRequest = (
   request: FastifyRequest,
 ): APIGatewayProxyEvent => {
+  // @ts-expect-error - Used to use `qs` for this, which just hid the fact that
+  // we could be getting arrays etc from the query string
+  const qsParams: APIGatewayProxyEventQueryStringParameters = parse(
+    request.url.split(/\?(.+)/)[1],
+    {
+      nestingSyntax: 'index',
+      arrayRepeat: true,
+      arrayRepeatSyntax: 'bracket',
+    },
+  )
+
   return {
     httpMethod: request.method,
     headers: request.headers,
     path: request.urlData('path'),
-    queryStringParameters: qs.parse(request.url.split(/\?(.+)/)[1]),
+    queryStringParameters: qsParams,
     requestContext: {
       requestId: request.id,
       identity: {

@@ -63,6 +63,9 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
       }
     },
     getSchemaPath: () => '',
+    getPrismaSchemas: async () => ({
+      schemas: [],
+    }),
   }
 })
 

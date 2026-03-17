@@ -156,7 +156,6 @@ Now we're into the backend code in the `api` directory.
 ```prisma
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {

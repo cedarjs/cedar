@@ -76,7 +76,6 @@ On to the changes. Modify your `schema.prisma` file to look like this:
 ```graphql title="api/db/prisma.schema"
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {

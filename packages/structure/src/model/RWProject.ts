@@ -1,14 +1,14 @@
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import type { DMMF } from '@prisma/generator-helper'
-import { getDMMF, getSchemaWithPath } from '@prisma/internals'
+import { getDMMF } from '@prisma/internals'
 
 import {
   getPaths,
   processPagesDir,
-  getSchemaPath,
   getConfigPath,
+  getPrismaSchemas,
 } from '@cedarjs/project-config'
 
 import { BaseNode } from '../nodes'
@@ -32,10 +32,6 @@ import { RWSDL } from './RWSDL'
 import { RWService } from './RWService'
 import { RWTOML } from './RWTOML'
 
-export interface RWProjectOptions {
-  projectRoot: string
-}
-
 const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
 
 /**
@@ -43,17 +39,10 @@ const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
  * This is the root node.
  */
 export class RWProject extends BaseNode {
-  constructor(public opts: RWProjectOptions) {
-    super()
-  }
   parent = undefined
 
-  get projectRoot() {
-    return this.opts.projectRoot
-  }
-
   @lazy() get id() {
-    return URL_file(this.projectRoot)
+    return URL_file(this.pathHelper.base)
   }
 
   children() {
@@ -73,22 +62,23 @@ export class RWProject extends BaseNode {
    * Path constants that are relevant to a Redwood project.
    */
   @lazy() get pathHelper() {
-    return getPaths(this.projectRoot)
+    return getPaths()
   }
+
   /**
    * Checks for the presence of a tsconfig.json at the root.
    */
   @lazy() get isTypeScriptProject(): boolean {
     return (
-      existsSync(join(this.pathHelper.web.base, 'tsconfig.json')) ||
-      existsSync(join(this.pathHelper.api.base, 'tsconfig.json'))
+      fs.existsSync(path.join(this.pathHelper.web.base, 'tsconfig.json')) ||
+      fs.existsSync(path.join(this.pathHelper.api.base, 'tsconfig.json'))
     )
   }
+
   // TODO: do we move this to a separate node? (ex: RWDatabase)
   @memo() async prismaDMMF(): Promise<DMMF.Document | undefined> {
     try {
-      const schemaPath = await getSchemaPath(this.pathHelper.api.prismaConfig)
-      const result = await getSchemaWithPath(schemaPath)
+      const result = await getPrismaSchemas()
       const datamodel = result.schemas
       // consider case where dmmf doesn't exist (or fails to parse)
       return await getDMMF({ datamodel })
@@ -96,6 +86,7 @@ export class RWProject extends BaseNode {
       return undefined
     }
   }
+
   @memo() async prismaDMMFModelNames() {
     const dmmf = await this.prismaDMMF()
     if (!dmmf) {
@@ -103,9 +94,11 @@ export class RWProject extends BaseNode {
     }
     return dmmf.datamodel.models.map((m) => m.name)
   }
+
   @lazy() get redwoodTOML(): RWTOML {
-    return new RWTOML(getConfigPath(this.projectRoot), this)
+    return new RWTOML(getConfigPath(), this)
   }
+
   @lazy() private get processPagesDir() {
     try {
       return processPagesDir(this.pathHelper.web.pages)
@@ -113,11 +106,13 @@ export class RWProject extends BaseNode {
       return []
     }
   }
+
   @lazy() get pages(): RWPage[] {
     return this.processPagesDir.map(
       (p) => new RWPage(p.constName, p.path, this),
     )
   }
+
   @lazy() get router() {
     return this.getRouter()
   }
@@ -129,13 +124,17 @@ export class RWProject extends BaseNode {
   servicesFilePath(name: string) {
     // name = blog,posts
     const ext = this.isTypeScriptProject ? '.ts' : '.js'
-    return join(this.pathHelper.api.services, name, name + ext)
+    return path.join(this.pathHelper.api.services, name, name + ext)
   }
 
   // TODO: move to path helper
   @lazy() get defaultNotFoundPageFilePath() {
     const ext = this.isTypeScriptProject ? '.tsx' : '.jsx'
-    return join(this.pathHelper.web.pages, 'NotFoundPage', 'NotFoundPage' + ext)
+    return path.join(
+      this.pathHelper.web.pages,
+      'NotFoundPage',
+      'NotFoundPage' + ext,
+    )
   }
 
   @lazy() get services() {

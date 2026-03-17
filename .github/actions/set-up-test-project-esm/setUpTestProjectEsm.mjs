@@ -66,6 +66,9 @@ async function setUpTestProjectEsm({ canary }) {
 
   console.log('Running prisma migrate reset')
   await execInProject('yarn cedar prisma migrate reset --force')
+
+  console.log('Running prisma db seed')
+  await execInProject('yarn cedar prisma db seed')
 }
 
 setUpTestProjectEsm({ canary })

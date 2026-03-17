@@ -6,6 +6,26 @@ import type { PrismaConfig } from 'prisma'
 
 import { getPaths } from './paths.js'
 
+function getGeneratorOutputPathFromSchema(schemaPath: string) {
+  if (!fs.existsSync(schemaPath)) {
+    return undefined
+  }
+
+  const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
+  const generatorMatch = schemaContent.match(
+    /generator\s+client\s*\{[\s\S]*?output\s*=\s*["']([^"']+)["'][^}]*\}/,
+  )
+  const output = generatorMatch?.[1]
+
+  if (!output) {
+    return undefined
+  }
+
+  return path.isAbsolute(output)
+    ? output
+    : path.resolve(path.dirname(schemaPath), output)
+}
+
 // Cache for loaded configs to avoid repeated file system operations
 const configCache = new Map<string, PrismaConfig>()
 
@@ -67,6 +87,27 @@ export async function getSchemaPath(prismaConfigPath: string) {
 
   // Default to schema.prisma in the same directory as the config
   return path.join(configDir, 'schema.prisma')
+}
+
+/**
+ * Gets the Prisma schemas for the current project's default schema location.
+ */
+export async function getPrismaSchemas() {
+  const mod = await import('@prisma/internals')
+  // `mod.default || mod` handles ESM vs CJS interop: in ESM context
+  // @prisma/internals resolves everything onto `default`, in CJS it's
+  // directly on the module object.
+  const { createSchemaPathInput, getSchemaWithPath } = mod.default || mod
+
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const schemaPathInput = createSchemaPathInput({
+    baseDir: fs.lstatSync(schemaPath).isDirectory()
+      ? schemaPath
+      : path.dirname(schemaPath),
+    schemaPathFromConfig: schemaPath,
+  })
+
+  return getSchemaWithPath({ schemaPath: schemaPathInput })
 }
 
 /**
@@ -133,18 +174,67 @@ export async function getDataMigrationsPath(
   return path.join(migrationsDir, 'dataMigrations')
 }
 
-export function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
-  const prismaClientEntry = path.join(
-    getPaths().base,
-    'node_modules/.prisma/client/index.js',
-  )
+export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
+  let generatorOutputPath: string | undefined
+  let ext = 'ts'
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const schemaDir = path.dirname(schemaPath)
 
-  if (mustExist && !fs.existsSync(prismaClientEntry)) {
+  try {
+    const prismaInternalsMod = await import('@prisma/internals')
+    // `mod.default || mod` handles ESM vs CJS interop: in ESM context
+    // @prisma/internals resolves everything onto `default`, in CJS it's
+    // directly on the module object.
+    const { getConfig } = prismaInternalsMod.default || prismaInternalsMod
+
+    const { schemas, schemaRootDir } = await getPrismaSchemas()
+    const config = await getConfig({ datamodel: schemas })
+    const generator =
+      config.generators.find((entry) => entry.name === 'client') ??
+      config.generators[0]
+    const output = generator?.output?.value
+    const generatedFileExtension = generator?.config?.generatedFileExtension
+    const resolvedExtension = Array.isArray(generatedFileExtension)
+      ? generatedFileExtension[0]
+      : generatedFileExtension
+
+    if (typeof resolvedExtension === 'string' && resolvedExtension.length > 0) {
+      ext = resolvedExtension
+    }
+
+    if (output) {
+      generatorOutputPath = path.isAbsolute(output)
+        ? output
+        : path.resolve(schemaRootDir, output)
+    }
+  } catch {
+    // Fall back to schema parsing
+    // TODO: Remove this once we've verified that the code above works correctly
+    generatorOutputPath = getGeneratorOutputPathFromSchema(schemaPath)
+  }
+
+  // TODO: Fallbacks shouldn't be needed. Remove all of this
+  const candidateEntries = [
+    ...(typeof generatorOutputPath === 'string'
+      ? [path.join(generatorOutputPath, 'client.' + ext)]
+      : []),
+    path.join(schemaDir, 'generated', 'client', 'client.' + ext),
+    path.join(schemaDir, 'generated', 'prisma', 'client.' + ext),
+    path.join(getPaths().base, 'node_modules/.prisma/client/index.js'),
+  ].filter((entry, index, allEntries) => {
+    return typeof entry === 'string' && allEntries.indexOf(entry) === index
+  })
+
+  const prismaClientEntry = candidateEntries.find((entry) => {
+    return fs.existsSync(entry)
+  })
+
+  if (mustExist && !prismaClientEntry) {
     throw new Error(
-      `Could not find generated Prisma client entry at ${prismaClientEntry}. ` +
+      `Could not find generated Prisma client entry. Checked: ${candidateEntries.join(', ')}. ` +
         'Run `yarn cedar prisma generate` and try again.',
     )
   }
 
-  return prismaClientEntry
+  return prismaClientEntry ?? candidateEntries[0]
 }
