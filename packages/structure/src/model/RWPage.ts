@@ -1,11 +1,11 @@
-import { dirname } from 'path'
+import { dirname } from 'node:path'
 
 import * as tsm from 'ts-morph'
 
-import { FileNode } from '../nodes'
-import { lazy } from '../x/decorators'
+import { FileNode } from '../nodes.js'
+import { lazy } from '../x/decorators.js'
 
-import type { RWProject } from './RWProject'
+import type { RWProject } from './RWProject.js'
 
 export class RWPage extends FileNode {
   constructor(

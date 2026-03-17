@@ -1,11 +1,11 @@
 import { Kind, parse as parseGraphQL } from 'graphql'
 import * as tsm from 'ts-morph'
 
-import { lazy } from '../x/decorators'
-import { err, Range_fromNode } from '../x/diagnostics'
-import { DiagnosticSeverity } from '../x/diagnostics'
+import { lazy } from '../x/decorators.js'
+import { err, Range_fromNode } from '../x/diagnostics.js'
+import { DiagnosticSeverity } from '../x/diagnostics.js'
 
-import { RWComponent } from './RWComponent'
+import { RWComponent } from './RWComponent.js'
 
 export class RWCell extends RWComponent {
   /**

@@ -2098,15 +2098,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime-corejs3@npm:7.29.0":
-  version: 7.29.0
-  resolution: "@babel/runtime-corejs3@npm:7.29.0"
-  dependencies:
-    core-js-pure: "npm:^3.48.0"
-  checksum: 10c0/7f1197fa3a50836a6ce1ca3b51df69b65421f790d3f877f2cba8e6c3c238e358da9eafa083fd100cc7a2c4c57db7e27c6bf36b8ea8dd4caa29bfa363adbbaa81
-  languageName: node
-  linkType: hard
-
 "@babel/runtime@npm:7.28.6, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.17.8, @babel/runtime@npm:^7.26.10, @babel/runtime@npm:^7.28.4":
   version: 7.28.6
   resolution: "@babel/runtime@npm:7.28.6"
@@ -3626,24 +3617,17 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/structure@workspace:packages/structure"
   dependencies:
-    "@babel/cli": "npm:7.28.6"
-    "@babel/core": "npm:^7.26.10"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/project-config": "npm:2.8.0"
     "@prisma/internals": "npm:7.5.0"
     "@types/line-column": "npm:1.0.2"
     "@types/lodash": "npm:4.17.24"
     "@types/node": "npm:24.10.4"
     camelcase: "npm:6.3.0"
-    core-js: "npm:3.48.0"
     deepmerge: "npm:4.3.1"
     dotenv-defaults: "npm:5.0.2"
-    enquirer: "npm:2.4.1"
     graphql: "npm:16.13.1"
-    lazy-get-decorator: "npm:2.2.1"
     line-column: "npm:1.0.2"
     lodash: "npm:4.17.23"
-    lodash-decorators: "npm:6.0.1"
     lru-cache: "npm:11.2.7"
     smol-toml: "npm:1.6.0"
     ts-morph: "npm:23.0.0"
@@ -14334,14 +14318,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js-pure@npm:^3.48.0":
-  version: 3.48.0
-  resolution: "core-js-pure@npm:3.48.0"
-  checksum: 10c0/8694e37e4df9a1ac878551ad2bfddf543f2563e7c2e98d2dd12ba29b7f1c1b0a2520ecc693102fc2b18bda1fad6f8a9d8009cf38c77249a8513a8dfccef1d635
-  languageName: node
-  linkType: hard
-
-"core-js@npm:3.48.0, core-js@npm:^3.27.2, core-js@npm:^3.43.0, core-js@npm:^3.45.1, core-js@npm:^3.48.0":
+"core-js@npm:^3.27.2, core-js@npm:^3.43.0, core-js@npm:^3.45.1, core-js@npm:^3.48.0":
   version: 3.48.0
   resolution: "core-js@npm:3.48.0"
   checksum: 10c0/6c3115900dd7cce9fab74c07cb262b3517fc250d02e8fd2ff34f80bda5f43a28482a909dbc4491dc6e1ddd9807f57a7df4c3eeecd1f202b7d9c8bfe25f9d680c
@@ -21017,13 +20994,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lazy-get-decorator@npm:2.2.1":
-  version: 2.2.1
-  resolution: "lazy-get-decorator@npm:2.2.1"
-  checksum: 10c0/58d6e3d82293a70c6d14d5648ff6d9acd8d3d67ab0a3205b5e6f24aef55094737a71ee3d4ea7950e57be3eadaee91faee960ee3fa14daede119ea93ebf625396
-  languageName: node
-  linkType: hard
-
 "lazystream@npm:^1.0.0":
   version: 1.0.1
   resolution: "lazystream@npm:1.0.1"
@@ -21444,17 +21414,6 @@ __metadata:
   dependencies:
     p-locate: "npm:^5.0.0"
   checksum: 10c0/d3972ab70dfe58ce620e64265f90162d247e87159b6126b01314dd67be43d50e96a50b517bce2d9452a79409c7614054c277b5232377de50416564a77ac7aad3
-  languageName: node
-  linkType: hard
-
-"lodash-decorators@npm:6.0.1":
-  version: 6.0.1
-  resolution: "lodash-decorators@npm:6.0.1"
-  dependencies:
-    tslib: "npm:^1.9.2"
-  peerDependencies:
-    lodash: 4.x
-  checksum: 10c0/02881ae6e595245badbc29f4b4bc57f6fbab45ed5d7117c269b9a3c5efa57726670028074c989bd8b0a587211fa6d9447ac6124fb9e887c0571b307e1746bac8
   languageName: node
   linkType: hard
 
@@ -28848,13 +28807,6 @@ __metadata:
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
-  languageName: node
-  linkType: hard
-
-"tslib@npm:^1.9.2":
-  version: 1.14.1
-  resolution: "tslib@npm:1.14.1"
-  checksum: 10c0/69ae09c49eea644bc5ebe1bca4fa4cc2c82b7b3e02f43b84bd891504edf66dbc6b2ec0eef31a957042de2269139e4acff911e6d186a258fb14069cd7f6febce2
   languageName: node
   linkType: hard
 

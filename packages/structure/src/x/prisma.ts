@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 
-import { Position_fromOffsetOrFail } from './diagnostics'
-import type { Location } from './Location'
-import { Range_create } from './Range'
-import { URL_file, URL_toFile } from './URL'
+import { Position_fromOffsetOrFail } from './diagnostics.js'
+import type { Location } from './Location.js'
+import { Range_create } from './Range.js'
+import { URL_file, URL_toFile } from './URL.js'
 
 /**
  * find "env()" expressions in a prisma file using regex
