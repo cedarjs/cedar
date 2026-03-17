@@ -90,20 +90,16 @@ export async function getSchemaPath(prismaConfigPath: string) {
 }
 
 /**
- * Gets the Prisma schemas for the given schema path.
- *
- * @param schemaPath - Absolute path to the Prisma schema file or directory
- *   (typically the value returned by `getSchemaPath`)
- * @returns The result of `getSchemaWithPath`, containing a `schemas` array of
- *   `[filePath, content]` tuples
+ * Gets the Prisma schemas for the current project's default schema location.
  */
-export async function getPrismaSchemasAtPath(schemaPath: string) {
+export async function getPrismaSchemas() {
   const mod = await import('@prisma/internals')
   // `mod.default || mod` handles ESM vs CJS interop: in ESM context
   // @prisma/internals resolves everything onto `default`, in CJS it's
   // directly on the module object.
   const { createSchemaPathInput, getSchemaWithPath } = mod.default || mod
 
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
   const schemaPathInput = createSchemaPathInput({
     baseDir: fs.lstatSync(schemaPath).isDirectory()
       ? schemaPath
@@ -112,17 +108,6 @@ export async function getPrismaSchemasAtPath(schemaPath: string) {
   })
 
   return getSchemaWithPath({ schemaPath: schemaPathInput })
-}
-
-/**
- * Gets the Prisma schemas for the current project's default schema location.
- *
- * @returns The result of `getSchemaWithPath`, containing a `schemas` array of
- *   `[filePath, content]` tuples
- */
-export async function getPrismaSchemas() {
-  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
-  return getPrismaSchemasAtPath(schemaPath)
 }
 
 /**
@@ -190,21 +175,19 @@ export async function getDataMigrationsPath(
 }
 
 export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
-  const prismaConfigPath = getPaths().api.prismaConfig
-  const schemaPath = await getSchemaPath(prismaConfigPath)
-  const schemaDir = fs.statSync(schemaPath).isDirectory()
-    ? schemaPath
-    : path.dirname(schemaPath)
-
   let generatorOutputPath: string | undefined
   let ext = 'ts'
+  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
+  const schemaDir = path.dirname(schemaPath)
+
   try {
-    const { schemas } = await getPrismaSchemasAtPath(schemaPath)
     const prismaInternalsMod = await import('@prisma/internals')
     // `mod.default || mod` handles ESM vs CJS interop: in ESM context
     // @prisma/internals resolves everything onto `default`, in CJS it's
     // directly on the module object.
     const { getConfig } = prismaInternalsMod.default || prismaInternalsMod
+
+    const { schemas, schemaRootDir } = await getPrismaSchemas()
     const config = await getConfig({ datamodel: schemas })
     const generator =
       config.generators.find((entry) => entry.name === 'client') ??
@@ -222,7 +205,7 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
     if (output) {
       generatorOutputPath = path.isAbsolute(output)
         ? output
-        : path.resolve(schemaDir, output)
+        : path.resolve(schemaRootDir, output)
     }
   } catch {
     // Fall back to schema parsing

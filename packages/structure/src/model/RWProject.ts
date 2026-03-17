@@ -7,9 +7,8 @@ import { getDMMF } from '@prisma/internals'
 import {
   getPaths,
   processPagesDir,
-  getSchemaPath,
   getConfigPath,
-  getPrismaSchemasAtPath,
+  getPrismaSchemas,
 } from '@cedarjs/project-config'
 
 import { BaseNode } from '../nodes'
@@ -79,8 +78,7 @@ export class RWProject extends BaseNode {
   // TODO: do we move this to a separate node? (ex: RWDatabase)
   @memo() async prismaDMMF(): Promise<DMMF.Document | undefined> {
     try {
-      const schemaPath = await getSchemaPath(this.pathHelper.api.prismaConfig)
-      const result = await getPrismaSchemasAtPath(schemaPath)
+      const result = await getPrismaSchemas()
       const datamodel = result.schemas
       // consider case where dmmf doesn't exist (or fails to parse)
       return await getDMMF({ datamodel })
