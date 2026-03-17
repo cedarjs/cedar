@@ -405,7 +405,7 @@ function babelPluginTransformServerAction({
                     throw new Error('Server action must have a name')
                   }
 
-                  const uniqueName = `__rwjs__rsa${serverActionNodes.length}_${name}`
+                  const uniqueName = `__cedarjs__rsa${serverActionNodes.length}_${name}`
                   serverActionNode.id = t.identifier(uniqueName)
                   serverActionNodes.push(serverActionNode)
 
@@ -464,7 +464,7 @@ function babelPluginTransformServerAction({
                   throw new Error('Server action must have a name')
                 }
 
-                const uniqueName = `__rwjs__rsa${serverActionNodes.length}_${name}`
+                const uniqueName = `__cedarjs__rsa${serverActionNodes.length}_${name}`
                 serverActionNode.id = t.identifier(uniqueName)
                 serverActionNodes.push(serverActionNode)
 

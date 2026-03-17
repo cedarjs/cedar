@@ -11,7 +11,7 @@ async function getEntries() {
   if (globalThis.__cedarjs__vite_ssr_runtime) {
     return {
       serverEntries: {
-        __rwjs__Routes: '../../src/Routes.tsx',
+        __cedarjs__Routes: '../../src/Routes.tsx',
       },
       ssrEntries: {},
     }
@@ -36,7 +36,7 @@ async function getRoutesComponent(): Promise<React.FunctionComponent> {
   const { serverEntries } = await getEntries()
   const entryPath = path.join(
     getPaths().web.distRsc,
-    serverEntries['__rwjs__Routes'],
+    serverEntries['__cedarjs__Routes'],
   )
   console.log('getRoutesComponent entryPath', entryPath)
   const routesModule = await import(makeFilePath(entryPath))

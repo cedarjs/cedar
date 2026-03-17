@@ -185,8 +185,8 @@ async function createServer() {
 
   globalThis.__cedarjs__vite_ssr_runtime =
     await createViteRuntime(viteSsrDevServer)
-  globalThis.__rwjs__client_references = new Set<string>()
-  globalThis.__rwjs__server_references = new Set<string>()
+  globalThis.__cedarjs__client_references = new Set<string>()
+  globalThis.__cedarjs__server_references = new Set<string>()
 
   // const clientEntryFileSet = new Set<string>()
   // const serverEntryFileSet = new Set<string>()
@@ -296,7 +296,7 @@ async function createServer() {
 
           // TODO (RSC): We need to make sure this `id` always matches what
           // vite uses
-          globalThis.__rwjs__client_references?.delete(id)
+          globalThis.__cedarjs__client_references?.delete(id)
 
           // If `code` doesn't start with "use client" or 'use client' we can
           // skip this file
@@ -309,7 +309,7 @@ async function createServer() {
               'adding client reference',
             id,
           )
-          globalThis.__rwjs__client_references?.add(id)
+          globalThis.__cedarjs__client_references?.add(id)
 
           // TODO (RSC): Proper AST parsing would be more robust than simple
           // regex matching. But this is a quick and dirty way to get started
