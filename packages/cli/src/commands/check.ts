@@ -11,12 +11,8 @@ export const description =
 export const handler = async () => {
   recordTelemetryAttributes({ command: 'check' })
 
-  const structure = await import('@cedarjs/structure')
-  const { printDiagnostics, DiagnosticSeverity } = structure.default
-
-  console.log('structure', structure)
-  console.log('structure.default', structure.default)
-  console.log('DiagnosticServerity', DiagnosticSeverity)
+  const { printDiagnostics, DiagnosticSeverity } =
+    await import('@cedarjs/structure')
 
   printDiagnostics({
     getSeverityLabel: (severity) => {
