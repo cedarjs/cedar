@@ -73,14 +73,17 @@ Here's a handy guide for how to [set it up locally](../local-postgres-setup). We
 
 On to the changes. Modify your `schema.prisma` file to look like this:
 
-```graphql title="api/db/prisma.schema"
+```graphql title="api/db/schema.prisma"
 datasource db {
   provider = "postgresql"
 }
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
+  provider               = "prisma-client"
+  output                 = "./generated/prisma"
+  moduleFormat           = "cjs"
+  generatedFileExtension = "mts"
+  importFileExtension    = "mts"
 }
 
 model UserExample {
