@@ -5,12 +5,29 @@ import type { ExecOptions } from '@actions/exec'
 
 import { CEDAR_FRAMEWORK_PATH } from '../actionsLib.mjs'
 
+/**
+ * Exec a command.
+ * Output will be streamed to the live console.
+ * Returns promise with return code
+ *
+ * @param commandLine command to execute (can include additional args). Must be correctly escaped.
+ * @param args arguments for tool. Escaping is handled by the lib.
+ * @param options exec options. See ExecOptions
+ */
 type Exec = (
   commandLine: string,
   args?: string[],
   options?: ExecOptions,
 ) => Promise<unknown>
 
+/**
+ * Exec a command in the project directory.
+ * Output will be streamed to the live console.
+ * Returns promise with return code
+ *
+ * @param commandLine command to execute (can include additional args). Must be correctly escaped.
+ * @param options exec options. See ExecOptions
+ */
 type ExecInProject = (
   commandLine: string,
   options?: Omit<ExecOptions, 'cwd'>,

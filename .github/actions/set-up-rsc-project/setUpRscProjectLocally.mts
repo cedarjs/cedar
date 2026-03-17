@@ -25,6 +25,10 @@ const execInRootWithCwd = createExecWithEnvInCwd('/')
  * Adapter to match the three-argument Exec signature expected by main().
  * The `args` array is joined into the command string because
  * createExecWithEnvInCwd passes the whole command to a shell anyway.
+ *
+ * @param commandLine command to execute (can include additional args). Must be correctly escaped.
+ * @param args arguments for tool. Escaping is handled by the lib.
+ * @param options exec options. See ExecOptions
  */
 function execInRoot(
   commandLine: string,
