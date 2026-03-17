@@ -108,7 +108,7 @@ export class RWRouter extends FileNode {
   *diagnostics() {
     if (!this.fileExists) {
       // should we assign this error to the project? to cedar.toml?
-      const uri = URL_file(getConfigPath(this.parent.projectRoot))
+      const uri = URL_file(getConfigPath())
       const message = `Routes.js does not exist`
       yield err(uri, message)
       // TODO: add quickFix (create a simple Routes.js)

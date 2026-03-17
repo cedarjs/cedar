@@ -3,8 +3,6 @@ import type { SpawnOptions } from 'child_process'
 import os from 'os'
 import path from 'path'
 
-import { getPaths } from '@cedarjs/project-config'
-
 const spawnProcess = (...args: string[]) => {
   // "os.type()" returns 'Windows_NT' on Windows.
   // See https://nodejs.org/docs/latest-v12.x/api/os.html#os_os_type.
@@ -30,12 +28,7 @@ const spawnProcess = (...args: string[]) => {
         windowsHide: true,
       }
 
-  const scriptArgs = [
-    path.join(__dirname, 'scripts', 'invoke.js'),
-    ...args,
-    '--root',
-    getPaths().base,
-  ]
+  const scriptArgs = [path.join(__dirname, 'scripts', 'invoke.js'), ...args]
 
   if (isWindows) {
     // Use command string with empty args array to avoid DEP0190 warning when

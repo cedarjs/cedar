@@ -15,8 +15,7 @@ export function getEntries() {
   // Build the entries object based on routes and pages
   // Given the page's route, we can determine whether or not
   // the entry requires authentication checks
-  const rwProject = getProject(getPaths().base)
-  const routes = rwProject.getRouter().routes
+  const routes = getProject().getRouter().routes
 
   // Add the various pages
   const pages = routes.map((route: RWRoute) => route.page) as RWPage[]
