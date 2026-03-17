@@ -41,10 +41,16 @@ jobs:
         working-directory: ./tasks/e2e
         run: |
           echo "Waiting for dev server..."
+          echo "Waiting for dev server..."
+          attempt=0
           until curl --silent --fail http://[::1]:8910; do
+            attempt=$((attempt + 1))
+            if [ $attempt -ge 60 ]; then
+              echo "Dev server did not start in time" >&2
+              exit 1
+            fi
             sleep 2
           done
-          echo "Dev server is up"
           npx cypress run \
             --browser chrome \
             --spec 'cypress/e2e/01-tutorial/*.cy.js'
