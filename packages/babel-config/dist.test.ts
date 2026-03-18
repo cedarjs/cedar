@@ -6,37 +6,9 @@ describe('dist', () => {
   it('exports', async () => {
     const { default: mod } = await import(path.join(distPath, 'index.js'))
 
-    // We use this to calculate the diff in minor versions
-    const runtimeMinorVersion = mod.RUNTIME_CORE_JS_VERSION.split('.')[1]
-    // We use this to allow all patch versions
-    const runtimePatchVersion = mod.RUNTIME_CORE_JS_VERSION.split('.')[2]
-
-    // We use this to calculate the diff in minor versions
-    const coreJsMinorVersion = mod.CORE_JS_VERSION.split('.')[1]
-
-    const expectedRuntimeMinorVersion = 28
-    const expectedCoreJsMinorVersion = 48
-
-    // Allow a minor version difference of 1
-    expect(
-      Math.abs(expectedRuntimeMinorVersion - runtimeMinorVersion),
-    ).toBeLessThanOrEqual(1)
-    expect(
-      Math.abs(expectedCoreJsMinorVersion - coreJsMinorVersion),
-    ).toBeLessThanOrEqual(1)
-
     expect(mod).toMatchInlineSnapshot(`
       {
-        "BABEL_PLUGIN_TRANSFORM_RUNTIME_OPTIONS": {
-          "corejs": {
-            "proposals": true,
-            "version": 3,
-          },
-          "version": "7.${runtimeMinorVersion}.${runtimePatchVersion}",
-        },
-        "CORE_JS_VERSION": "3.${coreJsMinorVersion}",
-        "RUNTIME_CORE_JS_VERSION": "7.${runtimeMinorVersion}.${runtimePatchVersion}",
-        "TARGETS_NODE": "20.10",
+        "TARGETS_NODE": "24",
         "getApiSideBabelConfigPath": [Function],
         "getApiSideBabelPlugins": [Function],
         "getApiSideBabelPresets": [Function],

@@ -7,11 +7,6 @@ export {
    * @deprecated This export isn't used by the framework, so it'll be removed
    * in a future version.
    */
-  BABEL_PLUGIN_TRANSFORM_RUNTIME_OPTIONS,
-  /**
-   * @deprecated This export isn't used by the framework, so it'll be removed
-   * in a future version.
-   */
   TARGETS_NODE,
   /**
    * @deprecated This export isn't used by the framework, so it'll be removed
@@ -60,16 +55,6 @@ export {
 export type { Flags } from './web'
 
 export {
-  /**
-   * @deprecated This export isn't used by the framework, so it'll be removed
-   * in a future version.
-   */
-  CORE_JS_VERSION,
-  /**
-   * @deprecated This export isn't used by the framework, so it'll be removed
-   * in a future version.
-   */
-  RUNTIME_CORE_JS_VERSION,
   /** Used by our eslint-config  */
   getCommonPlugins,
   /**

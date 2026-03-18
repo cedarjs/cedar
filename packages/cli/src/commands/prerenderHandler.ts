@@ -286,12 +286,6 @@ const diagnosticCheck = () => {
       ),
     },
     {
-      message: 'Duplicate core-js version found in web/node_modules',
-      failure: fs.existsSync(
-        path.join(getPaths().web.base, 'node_modules/core-js'),
-      ),
-    },
-    {
       message: 'Duplicate @cedarjs/web version found in web/node_modules',
       failure: fs.existsSync(
         path.join(getPaths().web.base, 'node_modules/@cedarjs/web'),

@@ -1290,7 +1290,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-class-properties@npm:7.28.6, @babel/plugin-transform-class-properties@npm:^7.24.7, @babel/plugin-transform-class-properties@npm:^7.28.6":
+"@babel/plugin-transform-class-properties@npm:^7.24.7, @babel/plugin-transform-class-properties@npm:^7.28.6":
   version: 7.28.6
   resolution: "@babel/plugin-transform-class-properties@npm:7.28.6"
   dependencies:
@@ -1588,7 +1588,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-nullish-coalescing-operator@npm:7.28.6, @babel/plugin-transform-nullish-coalescing-operator@npm:^7.24.7, @babel/plugin-transform-nullish-coalescing-operator@npm:^7.28.6":
+"@babel/plugin-transform-nullish-coalescing-operator@npm:^7.24.7, @babel/plugin-transform-nullish-coalescing-operator@npm:^7.28.6":
   version: 7.28.6
   resolution: "@babel/plugin-transform-nullish-coalescing-operator@npm:7.28.6"
   dependencies:
@@ -1671,7 +1671,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-private-methods@npm:7.28.6, @babel/plugin-transform-private-methods@npm:^7.24.7, @babel/plugin-transform-private-methods@npm:^7.28.6":
+"@babel/plugin-transform-private-methods@npm:^7.24.7, @babel/plugin-transform-private-methods@npm:^7.28.6":
   version: 7.28.6
   resolution: "@babel/plugin-transform-private-methods@npm:7.28.6"
   dependencies:
@@ -1683,7 +1683,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-private-property-in-object@npm:7.28.6, @babel/plugin-transform-private-property-in-object@npm:^7.28.6":
+"@babel/plugin-transform-private-property-in-object@npm:^7.28.6":
   version: 7.28.6
   resolution: "@babel/plugin-transform-private-property-in-object@npm:7.28.6"
   dependencies:
@@ -2098,15 +2098,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime-corejs3@npm:7.29.0":
-  version: 7.29.0
-  resolution: "@babel/runtime-corejs3@npm:7.29.0"
-  dependencies:
-    core-js-pure: "npm:^3.48.0"
-  checksum: 10c0/7f1197fa3a50836a6ce1ca3b51df69b65421f790d3f877f2cba8e6c3c238e358da9eafa083fd100cc7a2c4c57db7e27c6bf36b8ea8dd4caa29bfa363adbbaa81
-  languageName: node
-  linkType: hard
-
 "@babel/runtime@npm:7.28.6, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.17.8, @babel/runtime@npm:^7.26.10, @babel/runtime@npm:^7.28.4":
   version: 7.28.6
   resolution: "@babel/runtime@npm:7.28.6"
@@ -2478,14 +2469,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-setup@workspace:packages/auth-providers/dbAuth/setup"
   dependencies:
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@prisma/internals": "npm:7.5.0"
     "@simplewebauthn/browser": "npm:10.0.0"
     "@simplewebauthn/types": "npm:10.0.0"
     "@types/yargs": "npm:17.0.35"
-    core-js: "npm:3.48.0"
     nodemon: "npm:3.1.14"
     prompts: "npm:2.4.2"
     termi-link: "npm:1.1.0"
@@ -2760,7 +2749,6 @@ __metadata:
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     concurrently: "npm:9.2.1"
-    core-js: "npm:3.48.0"
     msw: "npm:1.3.5"
     publint: "npm:0.3.18"
     react: "npm:19.2.3"
@@ -2777,16 +2765,12 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.0"
-    "@babel/plugin-transform-class-properties": "npm:7.28.6"
-    "@babel/plugin-transform-private-methods": "npm:7.28.6"
-    "@babel/plugin-transform-private-property-in-object": "npm:7.28.6"
     "@babel/plugin-transform-react-jsx": "npm:7.28.6"
     "@babel/plugin-transform-runtime": "npm:7.29.0"
     "@babel/preset-env": "npm:7.29.0"
     "@babel/preset-react": "npm:7.28.5"
     "@babel/preset-typescript": "npm:7.28.5"
     "@babel/register": "npm:7.28.6"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
@@ -2798,7 +2782,6 @@ __metadata:
     babel-plugin-graphql-tag: "npm:3.3.0"
     babel-plugin-module-resolver: "npm:5.0.2"
     babel-plugin-tester: "npm:11.0.4"
-    core-js: "npm:3.48.0"
     fast-glob: "npm:3.3.3"
     graphql: "npm:16.13.1"
     tsx: "npm:4.21.0"
@@ -2900,7 +2883,6 @@ __metadata:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.0"
     "@babel/preset-typescript": "npm:7.28.5"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/api-server": "workspace:*"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/fastify-web": "workspace:*"
@@ -2928,7 +2910,6 @@ __metadata:
     ci-info: "npm:4.4.0"
     concurrently: "npm:9.2.1"
     configstore: "npm:7.1.0"
-    core-js: "npm:3.48.0"
     cross-env: "npm:7.0.3"
     decamelize: "npm:6.0.1"
     dotenv-defaults: "npm:5.0.2"
@@ -2983,7 +2964,6 @@ __metadata:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.0"
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
@@ -2995,7 +2975,6 @@ __metadata:
     "@vscode/ripgrep": "npm:1.17.1"
     "@whatwg-node/fetch": "npm:0.10.13"
     cheerio: "npm:1.2.0"
-    core-js: "npm:3.48.0"
     deepmerge: "npm:4.3.1"
     execa: "npm:5.1.1"
     fast-glob: "npm:3.3.3"
@@ -3204,7 +3183,6 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/server-store": "workspace:*"
@@ -3213,7 +3191,6 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     "@types/react-dom": "npm:^18.2.19"
     concurrently: "npm:9.2.1"
-    core-js: "npm:3.48.0"
     graphql: "npm:16.13.1"
     publint: "npm:0.3.18"
     react: "npm:19.2.3"
@@ -3235,7 +3212,6 @@ __metadata:
   dependencies:
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/context": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
@@ -3259,7 +3235,6 @@ __metadata:
     "@whatwg-node/fetch": "npm:0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.0"
     concurrently: "npm:9.2.1"
-    core-js: "npm:3.48.0"
     graphql: "npm:16.13.1"
     graphql-scalars: "npm:1.25.0"
     graphql-tag: "npm:2.12.6"
@@ -3283,7 +3258,6 @@ __metadata:
     "@babel/parser": "npm:7.29.0"
     "@babel/plugin-transform-react-jsx": "npm:7.28.6"
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/babel-config": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
@@ -3306,7 +3280,6 @@ __metadata:
     "@sdl-codegen/node": "npm:2.0.1"
     ansis: "npm:4.2.0"
     concurrently: "npm:9.2.1"
-    core-js: "npm:3.48.0"
     deepmerge: "npm:4.3.1"
     esbuild: "npm:0.21.5"
     fast-glob: "npm:3.3.3"
@@ -3582,7 +3555,6 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/server-store": "workspace:*"
@@ -3590,7 +3562,6 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     "@types/react-dom": "npm:^18.2.19"
     concurrently: "npm:9.2.1"
-    core-js: "npm:3.48.0"
     publint: "npm:0.3.18"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
@@ -3797,7 +3768,6 @@ __metadata:
     busboy: "npm:^1.6.0"
     concurrently: "npm:9.2.1"
     cookie: "npm:1.1.1"
-    core-js: "npm:3.48.0"
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
     express: "npm:4.22.1"
@@ -3857,7 +3827,6 @@ __metadata:
     "@babel/core": "npm:^7.26.10"
     "@babel/plugin-transform-runtime": "npm:7.29.0"
     "@babel/runtime": "npm:7.28.6"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/internal": "workspace:*"
@@ -3873,7 +3842,6 @@ __metadata:
     apollo-upload-client: "npm:18.0.1"
     concurrently: "npm:9.2.1"
     cookie: "npm:1.1.1"
-    core-js: "npm:3.48.0"
     graphql: "npm:16.13.1"
     graphql-sse: "npm:2.6.0"
     graphql-tag: "npm:2.12.6"
@@ -14341,14 +14309,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js-pure@npm:^3.48.0":
-  version: 3.48.0
-  resolution: "core-js-pure@npm:3.48.0"
-  checksum: 10c0/8694e37e4df9a1ac878551ad2bfddf543f2563e7c2e98d2dd12ba29b7f1c1b0a2520ecc693102fc2b18bda1fad6f8a9d8009cf38c77249a8513a8dfccef1d635
-  languageName: node
-  linkType: hard
-
-"core-js@npm:3.48.0, core-js@npm:^3.27.2, core-js@npm:^3.43.0, core-js@npm:^3.45.1, core-js@npm:^3.48.0":
+"core-js@npm:^3.27.2, core-js@npm:^3.43.0, core-js@npm:^3.45.1, core-js@npm:^3.48.0":
   version: 3.48.0
   resolution: "core-js@npm:3.48.0"
   checksum: 10c0/6c3115900dd7cce9fab74c07cb262b3517fc250d02e8fd2ff34f80bda5f43a28482a909dbc4491dc6e1ddd9807f57a7df4c3eeecd1f202b7d9c8bfe25f9d680c
@@ -26581,16 +26542,11 @@ __metadata:
     "@babel/generator": "npm:7.29.1"
     "@babel/node": "npm:7.29.0"
     "@babel/plugin-proposal-decorators": "npm:7.29.0"
-    "@babel/plugin-transform-class-properties": "npm:7.28.6"
-    "@babel/plugin-transform-nullish-coalescing-operator": "npm:7.28.6"
-    "@babel/plugin-transform-private-methods": "npm:7.28.6"
-    "@babel/plugin-transform-private-property-in-object": "npm:7.28.6"
     "@babel/plugin-transform-react-jsx": "npm:7.28.6"
     "@babel/plugin-transform-runtime": "npm:7.29.0"
     "@babel/preset-env": "npm:7.29.0"
     "@babel/preset-react": "npm:7.28.5"
     "@babel/preset-typescript": "npm:7.28.5"
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@npmcli/arborist": "npm:9.4.1"
     "@playwright/test": "npm:1.58.2"
     "@prisma/dev": "npm:0.20.0"
@@ -26612,7 +26568,6 @@ __metadata:
     babel-plugin-remove-code: "npm:0.0.6"
     boxen: "npm:5.1.2"
     concurrently: "npm:9.2.1"
-    core-js: "npm:3.48.0"
     cross-env: "npm:7.0.3"
     cypress: "npm:13.17.0"
     cypress-fail-fast: "npm:7.1.1"
