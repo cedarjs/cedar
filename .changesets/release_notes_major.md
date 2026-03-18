@@ -53,3 +53,25 @@ Most projects should be able to just use `url: env('DATABASE_URL')` and rely on
 Cedar to replace it with the correct value during tests.
 
 - [ ] Write upgrade script that warns about `directUrl`
+
+# Breaking Changes
+
+## Babel Target Updated: Node.js 20.10 → 24
+
+Cedar now targets **Node.js 24** as the minimum version for the API side for the
+babel config. This allows us to remove several Babel plugins for class fields,
+private methods, and nullish coalescing. All those are natively supported in
+Node 24.
+
+**Note** that Cedar already officially moved to Node 24 with the release of
+Cedar v2.0.0. So unless you're running on an unsupported version of Node, this
+change should not affect you at all.
+
+## Removed: core-js Polyfills
+
+`core-js` and `@babel/runtime-corejs3` have been completely removed from Cedar.
+The framework was only polyfilling stage 1–3 TC39 proposals, which are not
+recommended for production use and are not used anywhere in Cedar itself.
+
+If you need polyfills for any feature it's now up to you to configure it
+yourself in your app.
