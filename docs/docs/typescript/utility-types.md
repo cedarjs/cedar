@@ -116,7 +116,7 @@ defineScenario<PrismaCreateType, TName, TKey>
 An example:
 
 ```ts title="posts.scenarios.ts"
-import type { Prisma, Post } from '@prisma/client'
+import type { Prisma } from 'api/db/generated/prisma/client.mts'
 
 export const standard = defineScenario<Prisma.PostCreateArgs, 'post', 'one'>({
   //👇 TName
@@ -150,7 +150,7 @@ It takes three generic parameters:
 We know this is a lot of generics, but that's so you get to choose how specific you want to be with the types!
 
 ```ts title="api/src/services/posts/posts.scenario.ts"
-import type { Post } from '@prisma/client'
+import type { Post } from 'api/db/generated/prisma/client.mts'
 
 //...
 
@@ -203,7 +203,7 @@ It also takes a generic, `TUser`—the type of your User model. Note that this i
 You can import the type of the User model directly from Prisma and pass it to `DbAuthHandlerOptions`:
 
 ```ts
-import type { User as PrismaUser } from '@prisma/client'
+import type { User as PrismaUser } from 'api/db/generated/prisma/client.mts'
 
 import type { DbAuthHandlerOptions } from '@cedarjs/api'
 
