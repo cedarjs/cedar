@@ -90,7 +90,7 @@ Getting the right types for Prisma models can be tricky, but here's the formula:
 ```javascript title="scripts/seed.ts"
 import { db } from 'api/src/lib/db'
 // highlight-next-line
-import type { Prisma } from '@prisma/client'
+import type { Prisma } from 'api/db/generated/prisma/client.mts'
 
 export default async () => {
   try {

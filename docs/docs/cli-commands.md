@@ -1643,13 +1643,13 @@ If you look at your Prisma config file at `prisma.config.cjs`, you'll notice a
 `seed` definition:
 
 ```js
-{
+module.exports = defineConfig({
   // ...
-  "migrations": {
-    "seed": "yarn cedar exec seed"
-    // ...
+  migrations: {
+    path: 'db/migrations',
+    seed: 'yarn cedar exec seed',
   },
-}
+  // ...
 ```
 
 Prisma runs any command found in the `seed` setting when seeding via `yarn cedar prisma db seed` or `yarn cedar prisma migrate reset`.

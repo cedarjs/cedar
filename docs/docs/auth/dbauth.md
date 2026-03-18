@@ -485,8 +485,11 @@ datasource db {
 }
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
+  provider               = "prisma-client"
+  output                 = "./generated/prisma"
+  moduleFormat           = "cjs"
+  generatedFileExtension = "mts"
+  importFileExtension    = "mts"
 }
 
 model User {
