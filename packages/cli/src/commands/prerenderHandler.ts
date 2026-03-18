@@ -362,6 +362,18 @@ const diagnosticCheck = () => {
   }
 }
 
+/**
+ * Returns true if the given route path still contains unexpanded path
+ * parameter placeholders like `{id:Int}` or `{slug}`.
+ *
+ * This happens when a route has params but no `.routeHooks` file was found
+ * (or it returned no values), so the placeholders were never replaced with
+ * real values.
+ */
+export const hasUnexpandedPathParams = (routePath: string): boolean => {
+  return /\{.*}/.test(routePath)
+}
+
 const prerenderRoute = async (
   prerenderer: typeof Prerender,
   queryCache: Record<string, QueryInfo>,
@@ -369,7 +381,7 @@ const prerenderRoute = async (
   dryrun: boolean,
   outputHtmlPath: string,
 ) => {
-  if (/\\{.*}/.test(routeToPrerender.path)) {
+  if (hasUnexpandedPathParams(routeToPrerender.path)) {
     throw new PathParamError(
       `Could not retrieve route parameters for ${routeToPrerender.path}`,
     )

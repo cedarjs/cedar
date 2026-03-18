@@ -553,7 +553,8 @@ async function downloadYarnPatches(
           const res = await fetch(patch.url)
           if (!res.ok) {
             throw new Error(
-              `Failed to fetch patch metadata from ${url}: ` + res.statusText,
+              `Failed to fetch patch metadata from ${patch.url}: ` +
+                res.statusText,
             )
           }
           const patchMeta = await res.json()
