@@ -39,7 +39,6 @@ afterEach(() => {
 
 const defaultOptions = {
   filter: [],
-  watch: false,
   collectCoverage: false,
   dbPush: false,
 }
