@@ -14,7 +14,7 @@ import {
   assert,
 } from 'vitest'
 
-import { type AuthHandlerArgs } from '@cedarjs/cli-helpers'
+import type { AuthHandlerArgs } from '@cedarjs/cli-helpers'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
@@ -22,12 +22,12 @@ import { createAuthDecoderFunction, handler } from '../setupHandler'
 
 const CEDAR_CWD = process.env.CEDAR_CWD
 
-const { redwoodProjectPath } = vi.hoisted(() => {
-  return { redwoodProjectPath: '/redwood-app' }
+const { cedarProjectPath } = vi.hoisted(() => {
+  return { cedarProjectPath: '/cedar-app' }
 })
 
 const mockLoginPagePath = path.join(
-  redwoodProjectPath,
+  cedarProjectPath,
   'web/src/pages/LoginPage/LoginPage.tsx',
 )
 
@@ -49,18 +49,18 @@ vi.mock('../shared', () => ({
   },
   generateAuthPagesTask: () => undefined,
   getModelNames: () => ['ExampleUser'],
-  functionsPath: () => redwoodProjectPath + '/api/src/functions',
-  libPath: () => redwoodProjectPath + '/api/src/lib',
+  functionsPath: () => cedarProjectPath + '/api/src/functions',
+  libPath: () => cedarProjectPath + '/api/src/lib',
 }))
 
 vi.mock('@cedarjs/cli-helpers', () => {
   return {
     getGraphqlPath: () => {
-      return redwoodProjectPath + '/api/src/functions/graphql.ts'
+      return cedarProjectPath + '/api/src/functions/graphql.ts'
     },
     addEnvVarTask: () => undefined,
     getPaths: () => ({
-      base: redwoodProjectPath,
+      base: cedarProjectPath,
     }),
     colors: {
       error: (str: string) => str,
@@ -82,7 +82,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
 })
 
 beforeAll(() => {
-  process.env.CEDAR_CWD = redwoodProjectPath
+  process.env.CEDAR_CWD = cedarProjectPath
 })
 
 afterAll(() => {
@@ -130,12 +130,12 @@ export const handler = createGraphQLHandler({
 })
         `,
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     createAuthDecoderFunction.task()
     const updatedGraphqlTs =
-      vol.toJSON()[redwoodProjectPath + '/api/src/functions/graphql.ts']
+      vol.toJSON()[cedarProjectPath + '/api/src/functions/graphql.ts']
     expect(updatedGraphqlTs).toMatch(/import { cookieName, getCurrentUser } fr/)
     expect(updatedGraphqlTs).toMatch(/const authDecoder = createAuthDecoder\(c/)
     expect(updatedGraphqlTs).toMatchSnapshot()
@@ -143,7 +143,7 @@ export const handler = createGraphQLHandler({
     // Running again shouldn't change anything in this case
     createAuthDecoderFunction.task()
     const updatedGraphqlTs2 =
-      vol.toJSON()[redwoodProjectPath + '/api/src/functions/graphql.ts']
+      vol.toJSON()[cedarProjectPath + '/api/src/functions/graphql.ts']
     expect(updatedGraphqlTs).toEqual(updatedGraphqlTs2)
   })
 
@@ -154,7 +154,7 @@ export const handler = createGraphQLHandler({
       {
         [packageJsonPath]: '{ "version": "0.0.0" }',
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     await handler({
@@ -183,7 +183,7 @@ export const handler = createGraphQLHandler({
         [packageJsonPath]: '{ "version": "0.0.0" }',
         [mockLoginPagePath]: 'export default () => <div>Login</div>',
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     await handler({
@@ -205,7 +205,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -227,7 +227,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -249,7 +249,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -271,7 +271,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -293,7 +293,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -321,7 +321,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -349,7 +349,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -371,7 +371,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -393,7 +393,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
@@ -415,7 +415,7 @@ export const handler = createGraphQLHandler({
           {
             [packageJsonPath]: '{ "version": "0.0.0" }',
           },
-          redwoodProjectPath,
+          cedarProjectPath,
         )
 
         await handler({
