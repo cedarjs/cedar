@@ -2,6 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "configMigration": true,
   "extends": ["config:recommended"],
+  // Overriding ignorePaths from config:recommended to allow renovate to update
+  // __fixtures__/test-project/api/package.json etc, while still ignoring nested
+  // __fixtures__ directories
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/__tests__/**",
+    "**/tests/**",
+    "**/*/__fixtures__/**"
+  ],
   "postUpdateOptions": ["yarnDedupeHighest"],
   "prConcurrentLimit": 8,
   "rebaseWhen": "conflicted",
