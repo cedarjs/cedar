@@ -3850,7 +3850,7 @@ __metadata:
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
     react-hot-toast: "npm:2.6.0"
-    stacktracey: "npm:2.1.8"
+    stacktracey: "npm:2.2.0"
     ts-toolbelt: "npm:9.6.0"
     tstyche: "npm:5.0.2"
     tsx: "npm:4.21.0"
@@ -27530,13 +27530,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stacktracey@npm:2.1.8":
-  version: 2.1.8
-  resolution: "stacktracey@npm:2.1.8"
+"stacktracey@npm:2.2.0":
+  version: 2.2.0
+  resolution: "stacktracey@npm:2.2.0"
   dependencies:
     as-table: "npm:^1.0.36"
     get-source: "npm:^2.0.12"
-  checksum: 10c0/e17357d0a532d303138899b910ab660572009a1f4cde1cbf73b99416957a2378e6e1c791b3c31b043cf7c5f37647da1dd114e66c9203f23c65b34f783665405b
+  checksum: 10c0/fc5d58a85e76a1a13ce1a2ecac4029c5e889a7c437259023f5514dfc3b107603de944c46faa6c930e4991fe13d91deb385e9537ef7f6deb1bd2d8188f69eec30
   languageName: node
   linkType: hard
 
