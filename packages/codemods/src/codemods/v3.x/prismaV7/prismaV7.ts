@@ -3,6 +3,8 @@ import path from 'node:path'
 
 import { getSchemaPath, getPaths } from '@cedarjs/project-config'
 
+import runTransform from '../../../lib/runTransform.js'
+
 import rewriteRemainingImports from './rewriteRemainingImports.js'
 import { updateApiPackageJson } from './updateApiPackageJson.js'
 import { checkDotEnv, updateEnvDefaults } from './updateEnvDefaults.js'
@@ -63,28 +65,40 @@ export default async function prismaV7(): Promise<void> {
   // 2. Update prisma.config.cjs
   await updatePrismaConfig(paths.api.prismaConfig)
 
-  // 3. Rewrite remaining @prisma/client imports as safety net
+  // 3. Update api/src/lib/db.{ts,js}
+  if (context.dbFilePath) {
+    await runTransform({
+      transformPath: path.join(import.meta.dirname, 'updateDbFile.js'),
+      targetPaths: [context.dbFilePath],
+      parser: 'ts',
+      options: {
+        isSqlite,
+      } as Record<string, unknown>,
+    })
+  }
+
+  // 4. Rewrite remaining @prisma/client imports as safety net
   await rewriteRemainingImports()
 
-  // 4. Update api/package.json (SQLite only)
+  // 5. Update api/package.json (SQLite only)
   if (isSqlite) {
     await updateApiPackageJson(path.join(paths.api.base, 'package.json'))
   }
 
-  // 5. Update tsconfigs (TypeScript projects only)
+  // 6. Update tsconfigs (TypeScript projects only)
   await updateTsConfigs({
     apiTsConfig: path.join(paths.api.base, 'tsconfig.json'),
     scriptsTsConfig: path.join(paths.base, 'scripts', 'tsconfig.json'),
     webTsConfig: path.join(paths.web.base, 'tsconfig.json'),
   })
 
-  // 6. Update .gitignore
+  // 7. Update .gitignore
   await updateGitignore(path.join(paths.base, '.gitignore'))
 
-  // 7. Update .env.defaults
+  // 8. Update .env.defaults
   await updateEnvDefaults(path.join(paths.base, '.env.defaults'))
 
-  // 8. Check .env for stale SQLite URL (warn only, don't modify)
+  // 9. Check .env for stale SQLite URL (warn only, don't modify)
   const dotEnvWarning = checkDotEnv(path.join(paths.base, '.env'))
   if (dotEnvWarning) {
     console.warn(`\nWarning: ${dotEnvWarning}`)

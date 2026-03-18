@@ -83,10 +83,7 @@ describe('updateSchemaFile', () => {
     expect(result.status).toBe('updated')
     expect(result.warnings).toEqual([])
 
-    const written = memfs.readFileSync(
-      '/app/api/db/schema.prisma',
-      'utf-8',
-    ) as string
+    const written = memfs.readFileSync('/app/api/db/schema.prisma', 'utf-8')
 
     expect(written).not.toContain('url      = env("DATABASE_URL")')
     expect(written).toContain('provider               = "prisma-client"')
@@ -107,10 +104,7 @@ describe('updateSchemaFile', () => {
     expect(result.status).toBe('updated')
     expect(result.warnings).toEqual([])
 
-    const written = memfs.readFileSync(
-      '/app/api/db/schema.prisma',
-      'utf-8',
-    ) as string
+    const written = memfs.readFileSync('/app/api/db/schema.prisma', 'utf-8')
 
     expect(written).not.toContain('url      = env("DATABASE_URL")')
     expect(written).toContain('provider               = "prisma-client"')
@@ -122,7 +116,7 @@ describe('updateSchemaFile', () => {
       datasource db {
         provider  = "postgresql"
         url       = env("DATABASE_URL")
-        directUrl = env("DIRECT_URL")
+        directUrl = env("DIRECT_DATABASE_URL")
       }
 
       generator client {
@@ -138,12 +132,11 @@ describe('updateSchemaFile', () => {
 
     expect(result.status).toBe('updated')
     expect(result.warnings).toHaveLength(1)
-    expect(result.warnings[0]).toContain('DIRECT_URL')
+    // In Prisma v7, directUrl is gone. The direct URL value goes into `url:`
+    // (the CLI uses `url` for migrations etc)
+    expect(result.warnings[0]).toContain("url: env('DIRECT_DATABASE_URL')")
 
-    const written = memfs.readFileSync(
-      '/app/api/db/schema.prisma',
-      'utf-8',
-    ) as string
+    const written = memfs.readFileSync('/app/api/db/schema.prisma', 'utf-8')
 
     expect(written).not.toContain('directUrl')
     expect(written).not.toContain('url       = env("DATABASE_URL")')

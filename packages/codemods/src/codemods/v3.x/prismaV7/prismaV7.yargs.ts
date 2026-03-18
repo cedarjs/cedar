@@ -2,8 +2,6 @@ import path from 'node:path'
 
 import task from 'tasuku'
 
-import { getPaths } from '@cedarjs/project-config'
-
 import runTransform from '../../../lib/runTransform.js'
 
 import { getPrismaV7Context } from './prismaV7.js'
@@ -175,12 +173,6 @@ export const handler = async () => {
     )
 
     await task('Next steps', async ({ setOutput }) => {
-      const projectPaths = getPaths()
-      const dotEnvWarning = checkDotEnv(path.join(projectPaths.base, '.env'))
-      if (dotEnvWarning) {
-        console.warn(`\n⚠️  ${dotEnvWarning}`)
-      }
-
       const steps = [
         '  1. Run `yarn install` to install new dependencies',
         '  2. Run `yarn cedar prisma generate` to generate the new Prisma client',

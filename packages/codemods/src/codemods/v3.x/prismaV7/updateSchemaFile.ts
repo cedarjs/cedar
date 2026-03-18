@@ -106,7 +106,9 @@ export async function updateSchemaFile(
   if (directUrlEnvVar) {
     warnings.push(
       `A directUrl was found in your schema.prisma and has been removed. ` +
-        `You should add it to api/prisma.config.cjs manually:\n` +
+        `In Prisma v7 the \`url\` field in prisma.config.cjs is used by the ` +
+        `CLI for migrations (replacing directUrl). Update api/prisma.config.cjs ` +
+        `to use your direct URL value there:\n` +
         `  datasource: {\n` +
         `    url: env('${directUrlEnvVar}'),\n` +
         `  },`,
