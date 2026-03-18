@@ -3,8 +3,8 @@ import path from 'node:path'
 
 import * as tsm from 'ts-morph'
 
-import { globSync } from '../../x/path'
-import { createTSMSourceFile_cached } from '../../x/ts-morph'
+import { globSync } from '../../x/path.js'
+import { createTSMSourceFile_cached } from '../../x/ts-morph.js'
 
 export function process_env_findAll(dir: string) {
   const globPath = path.join(dir, 'src/**/*.{js,ts,jsx,tsx}')

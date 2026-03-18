@@ -1,13 +1,13 @@
 import * as tsm from 'ts-morph'
 
-import { RWError } from '../errors'
-import { BaseNode } from '../nodes'
-import { validateRoutePath } from '../util'
-import { lazy } from '../x/decorators'
-import { err, LocationLike_toLocation } from '../x/diagnostics'
-import type { Location } from '../x/Location'
+import { RWError } from '../errors.js'
+import { BaseNode } from '../nodes.js'
+import { validateRoutePath } from '../util.js'
+import { lazy } from '../x/decorators.js'
+import { err, LocationLike_toLocation } from '../x/diagnostics.js'
+import type { Location } from '../x/Location.js'
 
-import type { RWRouter } from './RWRouter'
+import type { RWRouter } from './RWRouter.js'
 
 export class RWRoute extends BaseNode {
   constructor(

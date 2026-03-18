@@ -1,11 +1,14 @@
 import { getPaths } from '@cedarjs/project-config'
 
-export { DiagnosticSeverity } from './x/diagnostics'
-export { RWProject, RWRoute } from './model'
-export { URL_file } from './x/URL'
-import { RWProject } from './model'
-import type { GetSeverityLabelFunction } from './x/diagnostics'
-import { ExtendedDiagnostic_format, DiagnosticSeverity } from './x/diagnostics'
+export { DiagnosticSeverity } from './x/diagnostics.js'
+export { RWProject, RWRoute } from './model/index.js'
+export { URL_file } from './x/URL.js'
+import { RWProject } from './model/index.js'
+import type { GetSeverityLabelFunction } from './x/diagnostics.js'
+import {
+  ExtendedDiagnostic_format,
+  DiagnosticSeverity,
+} from './x/diagnostics.js'
 
 export function getProject() {
   return new RWProject()

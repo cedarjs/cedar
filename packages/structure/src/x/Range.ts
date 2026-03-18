@@ -1,5 +1,5 @@
-import type { Position } from './Position'
-import { Position_create } from './Position'
+import type { Position } from './Position.js'
+import { Position_create } from './Position.js'
 
 export interface Range {
   start: Position
