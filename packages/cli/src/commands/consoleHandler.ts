@@ -83,6 +83,8 @@ export const handler = (_options?: Record<string, unknown>) => {
   type ReplWithHistory = REPLServer & {
     lines: string[]
     history: string[]
+    // `eval` is typed as readonly in the Node.js typings but is in fact
+    // reassignable at runtime
     eval: REPLEval
   }
   const r = repl.start() as unknown as ReplWithHistory
@@ -104,8 +106,6 @@ export const handler = (_options?: Record<string, unknown>) => {
       }
     })
   }
-  // `eval` is typed as readonly in the Node.js typings but is reassignable at
-  // runtime; cast to `any` here only to work around that limitation.
   r.eval = asyncEval
 
   loadConsoleHistory(r)

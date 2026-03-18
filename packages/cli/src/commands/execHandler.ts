@@ -176,7 +176,7 @@ function resolveScriptPath(name: string) {
   } else if (matches.length > 1) {
     console.error(
       c.error(
-        `\nMultiple scripts found for \`\${name}\`. Please specify the ` +
+        `\nMultiple scripts found for \`${name}\`. Please specify the ` +
           'extension.',
       ),
     )

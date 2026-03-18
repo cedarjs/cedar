@@ -95,7 +95,8 @@ vi.mock('./buildPackagesTask.js', () => ({
   buildPackagesTask: vi.fn(),
 }))
 
-import { Listr, type ListrTask } from 'listr2'
+import { Listr } from 'listr2'
+import type { ListrTask } from 'listr2'
 import { vi, afterEach, test, expect } from 'vitest'
 
 vi.mock('listr2')

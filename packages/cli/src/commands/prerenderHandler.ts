@@ -391,9 +391,8 @@ const prerenderRoute = async (
     )
     console.log()
 
-    console.log(
-      `${c.info('-'.repeat(10))} Error rendering path "${routeToPrerender.path}" ${c.info('-'.repeat(10))}`,
-    )
+    const sep = c.info('-'.repeat(10))
+    console.log(`${sep} Error rendering path "${routeToPrerender.path}" ${sep}`)
 
     errorTelemetry(
       process.argv,
