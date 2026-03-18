@@ -3599,7 +3599,7 @@ __metadata:
     "@prisma/client": "npm:7.5.0"
     "@types/better-sqlite3": "npm:7.6.13"
     "@types/mime-types": "npm:2.1.4"
-    better-sqlite3: "npm:12.6.2"
+    better-sqlite3: "npm:12.8.0"
     concurrently: "npm:9.2.1"
     esbuild: "npm:0.21.5"
     mime-types: "npm:2.1.35"
@@ -12765,18 +12765,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-sqlite3@npm:12.6.2":
-  version: 12.6.2
-  resolution: "better-sqlite3@npm:12.6.2"
-  dependencies:
-    bindings: "npm:^1.5.0"
-    node-gyp: "npm:latest"
-    prebuild-install: "npm:^7.1.1"
-  checksum: 10c0/a58fb3f7a7f5469ba0b8de0855aa67396ff34f951a6975746e4b21987f530be6a34427d1d4bd5958cf48c67ed7ba1df038ae163d2ee9d944237f6b8112f6640d
-  languageName: node
-  linkType: hard
-
-"better-sqlite3@npm:^12.6.0":
+"better-sqlite3@npm:12.8.0, better-sqlite3@npm:^12.6.0":
   version: 12.8.0
   resolution: "better-sqlite3@npm:12.8.0"
   dependencies:
