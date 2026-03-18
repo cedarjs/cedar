@@ -88,7 +88,6 @@ import { vi, describe, afterEach, it, expect } from 'vitest'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import type * as ProjectConfig from '@cedarjs/project-config'
 
-// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../../lib/index.js'

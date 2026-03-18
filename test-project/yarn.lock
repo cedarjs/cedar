@@ -1803,9 +1803,9 @@ __metadata:
 
 "@cedarjs/api@file:../packages/api/cedarjs-api.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/api@file:../packages/api/cedarjs-api.tgz#../packages/api/cedarjs-api.tgz::hash=2fbd98&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/api@file:../packages/api/cedarjs-api.tgz#../packages/api/cedarjs-api.tgz::hash=8c674e&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
-    "@prisma/client": "npm:7.4.2"
+    "@prisma/client": "npm:7.5.0"
     "@whatwg-node/fetch": "npm:0.10.13"
     cookie: "npm:1.1.1"
     humanize-string: "npm:2.1.0"
@@ -1828,7 +1828,7 @@ __metadata:
     redwood: ./dist/cjs/bins/redwood.js
     rw: ./dist/cjs/bins/redwood.js
     tsc: ./dist/cjs/bins/tsc.js
-  checksum: 10c0/3002768b455f06f6a248955ff34736d036c8fa1a6a094189479270b2f5e2964f05190bd591bbe3a1f248d96b20ab442af2cf22167aa1a3f1ae440a4fd83b00a2
+  checksum: 10c0/900992da3fd1117c21bcc00a3377dce9d4f6e71e6279d6f385be9a5dd4caf43b111bb2605c163a86851875d624af75540b972d32adb4c30a25204fe116739675
   languageName: node
   linkType: hard
 
@@ -1894,7 +1894,7 @@ __metadata:
 
 "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz#../packages/cli-helpers/cedarjs-cli-helpers.tgz::hash=dd2d1d&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz#../packages/cli-helpers/cedarjs-cli-helpers.tgz::hash=52afbb&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@cedarjs/project-config": "npm:2.8.0"
@@ -1915,13 +1915,13 @@ __metadata:
     smol-toml: "npm:1.6.0"
     termi-link: "npm:1.1.0"
     yargs-parser: "npm:21.1.1"
-  checksum: 10c0/3dee2b2f650ecd7bfb92af11f7b30265dd653abb91d2ae46d19290736a50fadb996676486b260207fae85df84184acd4da7ab9d656952abba423befe670738a1
+  checksum: 10c0/a30768485e33866ba83c640c11a14c0c6858d2ed20a7095230e805e4104fe68f2eb281583e42eb3ddf94c78af793a7873d6895c5646b08cd18ed25ab1a6e42ba
   languageName: node
   linkType: hard
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=82b387&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=c513c0&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.0"
     "@babel/preset-typescript": "npm:7.28.5"
@@ -1943,7 +1943,7 @@ __metadata:
     "@opentelemetry/resources": "npm:1.30.1"
     "@opentelemetry/sdk-trace-node": "npm:1.30.1"
     "@opentelemetry/semantic-conventions": "npm:1.38.0"
-    "@prisma/internals": "npm:7.4.2"
+    "@prisma/internals": "npm:7.5.0"
     ansis: "npm:4.2.0"
     archiver: "npm:7.0.1"
     boxen: "npm:5.1.2"
@@ -1970,7 +1970,7 @@ __metadata:
     pluralize: "npm:8.0.0"
     portfinder: "npm:1.0.38"
     prettier: "npm:3.8.1"
-    prisma: "npm:7.4.2"
+    prisma: "npm:7.5.0"
     prompts: "npm:2.4.2"
     recast: "npm:0.23.11"
     rimraf: "npm:6.1.3"
@@ -1990,7 +1990,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/e423c8f2588f9055b33c7a47cf8068b49b26f187713c1ed04411828d2930df456793fba3592386a78dc32755a5fbb87029a734c062335be85fcd5ebd68577a79
+  checksum: 10c0/54507d19d3a05e1ec90d2f8da497ef3bf90c7f526865751f0af706eaebab39fbe942236c97ba1ee31d1fa49c3a4bd8ab656eb6ffc503b050adbf751182b9b4c1
   languageName: node
   linkType: hard
 
@@ -2056,7 +2056,7 @@ __metadata:
 
 "@cedarjs/eslint-config@file:../packages/eslint-config/cedarjs-eslint-config.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/eslint-config@file:../packages/eslint-config/cedarjs-eslint-config.tgz#../packages/eslint-config/cedarjs-eslint-config.tgz::hash=6a51be&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/eslint-config@file:../packages/eslint-config/cedarjs-eslint-config.tgz#../packages/eslint-config/cedarjs-eslint-config.tgz::hash=4e2c4e&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/eslint-parser": "npm:7.28.6"
@@ -2081,7 +2081,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:4.6.2"
     prettier: "npm:3.8.1"
     typescript-eslint: "npm:8.57.0"
-  checksum: 10c0/4dab6fe162ce502a8bfbd9b68eb7fb279924f91e913060e2bfd877aa835d3b21b9e345ffae5bf5880882b81aa67e545567a9b139bc77c22efd588574f8632390
+  checksum: 10c0/e26848148ecfee85889858b5dc501082e1e3b530e882b23a47e7047d84aadb3b36841c6602f10cca4045eb3741fa1571098b384744953625f02d9620af188783
   languageName: node
   linkType: hard
 
@@ -2152,7 +2152,7 @@ __metadata:
 
 "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=3abb5a&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=3d6f66&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.0"
@@ -2196,13 +2196,13 @@ __metadata:
   bin:
     rw-gen: ./dist/generate/generate.js
     rw-gen-watch: ./dist/generate/watch.js
-  checksum: 10c0/ac9add843d95e2fad7fa9ccb74f4a9732d3ef62f0d1bba6406052dea974d007b358bb6408517b2eeb2a8c7270d55ebdd47cc4607da577ed79958a23543025183
+  checksum: 10c0/8713a70a17f578a4cf14169491bb2a5c6375bd709e659c03ee9e170056d9778590271232ddf3343f1311454bb77436298b8ba8d6060ae51dd486d85205826e6c
   languageName: node
   linkType: hard
 
 "@cedarjs/jobs@file:../packages/jobs/cedarjs-jobs.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/jobs@file:../packages/jobs/cedarjs-jobs.tgz#../packages/jobs/cedarjs-jobs.tgz::hash=954526&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/jobs@file:../packages/jobs/cedarjs-jobs.tgz#../packages/jobs/cedarjs-jobs.tgz::hash=58e73a&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/cli-helpers": "npm:2.8.0"
     "@cedarjs/project-config": "npm:2.8.0"
@@ -2211,7 +2211,7 @@ __metadata:
   bin:
     rw-jobs: ./dist/bins/rw-jobs.js
     rw-jobs-worker: ./dist/bins/rw-jobs-worker.js
-  checksum: 10c0/60d5b13cce2642035a71b7e8c9824126de7d5e41795309b9391bc708af089d2ca4faccd82a9a8a80c888abc51e6ff33d8231c89941c6ee5e04d29e63c2133b75
+  checksum: 10c0/ff006c435b7adbe74edbfe4ab50e200016926b589c30060c067d1fafc20f1feaf3c28d7eea63981f13b48d4fc1b447f118df42cadd9426e5eb213dbe524df582
   languageName: node
   linkType: hard
 
@@ -2254,20 +2254,20 @@ __metadata:
 
 "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz#../packages/project-config/cedarjs-project-config.tgz::hash=8dcb6e&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/project-config@file:../packages/project-config/cedarjs-project-config.tgz#../packages/project-config/cedarjs-project-config.tgz::hash=52a386&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
-    "@prisma/internals": "npm:7.4.2"
+    "@prisma/internals": "npm:7.5.0"
     deepmerge: "npm:4.3.1"
     fast-glob: "npm:3.3.3"
     smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
-  checksum: 10c0/ed873fb2dac9c9bce8506ae371d3cc4e04cb41688ffa09862580056186b4b0e57e9f79c74ba0c4f3aa75f5a03bbc083184a19828d99c09740a95da71e1ec4fb3
+  checksum: 10c0/55d5453a01dc2d6e76d7cc7c98fc6a3395e769b1c4bfec14b737b30d220f52c08302f77cee066482a1818fbf808a502045c380e081fa000f51b8381d12b895ab
   languageName: node
   linkType: hard
 
 "@cedarjs/router@file:../packages/router/cedarjs-router.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/router@file:../packages/router/cedarjs-router.tgz#../packages/router/cedarjs-router.tgz::hash=4ef7aa&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/router@file:../packages/router/cedarjs-router.tgz#../packages/router/cedarjs-router.tgz::hash=efde17&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/auth": "npm:2.8.0"
@@ -2279,7 +2279,7 @@ __metadata:
   peerDependencies:
     react: 19.2.3
     react-dom: 19.2.3
-  checksum: 10c0/9f599102e52592871e08fe1a96d6fa0b4e93022def2bc1573bd63400701489fb7f37db7f60f4e0ff67542d63ac1c67fc9c91d324802e0f04ae739a8dd3362f0f
+  checksum: 10c0/a8d333faa37bd813d2a1f6ad1acd4ba30558d0da61b4e17789a49db4d0b398faaf14c0b441f26544e1cbe6e9a9438b22ef068d63e92733c96d7a9359acf7a899
   languageName: node
   linkType: hard
 
@@ -2297,27 +2297,22 @@ __metadata:
 
 "@cedarjs/structure@file:../packages/structure/cedarjs-structure.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/structure@file:../packages/structure/cedarjs-structure.tgz#../packages/structure/cedarjs-structure.tgz::hash=a1ded5&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/structure@file:../packages/structure/cedarjs-structure.tgz#../packages/structure/cedarjs-structure.tgz::hash=952782&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
-    "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/project-config": "npm:2.8.0"
-    "@prisma/internals": "npm:7.4.2"
+    "@prisma/internals": "npm:7.5.0"
     "@types/line-column": "npm:1.0.2"
     camelcase: "npm:6.3.0"
-    core-js: "npm:3.48.0"
     deepmerge: "npm:4.3.1"
     dotenv-defaults: "npm:5.0.2"
-    enquirer: "npm:2.4.1"
     graphql: "npm:16.13.1"
-    lazy-get-decorator: "npm:2.2.1"
     line-column: "npm:1.0.2"
     lodash: "npm:4.17.23"
-    lodash-decorators: "npm:6.0.1"
     lru-cache: "npm:11.2.7"
     smol-toml: "npm:1.6.0"
     ts-morph: "npm:23.0.0"
     yargs-parser: "npm:21.1.1"
-  checksum: 10c0/e12676d48090c14a4578c68ea3751c6fa184a7336dab3c8ad2ef713c6467867e2520512d7bcf4898212b10b36ed1400d7d61ec277f0a0ec2a73fad20a5ac610c
+  checksum: 10c0/be4d48a8b4d65ef0825208eb47bf356cf581d9cf5d35168bbd124e0dafa0a03e67793e271a98caaf97f4d1d9a1f9b72131edbb0935483ac549a1f025c1857c10
   languageName: node
   linkType: hard
 
@@ -2339,7 +2334,7 @@ __metadata:
 
 "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=d9b53e&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/testing@file:../packages/testing/cedarjs-testing.tgz#../packages/testing/cedarjs-testing.tgz::hash=949db4&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/auth": "npm:2.8.0"
     "@cedarjs/babel-config": "npm:2.8.0"
@@ -2370,7 +2365,7 @@ __metadata:
   peerDependenciesMeta:
     vitest:
       optional: true
-  checksum: 10c0/a1e02f3578d0c3ac70d39df27ea35030b1b86554c17180d6120bae467be308eba9fe2d8b0e1e2078a7dcea3999766503f3e34270abc4534bb79cf9818ee97d1e
+  checksum: 10c0/9def9cabaadf3a69daad98280f1fb75811ba4d0582c158238084b1f5f0860a397ad75f508971c79836609b2cf0b39fb504009e919d200c8599f103a36684ec0a
   languageName: node
   linkType: hard
 
@@ -2385,7 +2380,7 @@ __metadata:
 
 "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 2.8.0
-  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=c7e415&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=9bb5df&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.41.1"
     "@babel/generator": "npm:7.29.1"
@@ -2428,7 +2423,7 @@ __metadata:
     rw-vite-build: ./bins/rw-vite-build.mjs
     rw-vite-dev: ./bins/rw-vite-dev.mjs
     vite: ./bins/vite.mjs
-  checksum: 10c0/0032b7e0d2b6c351d35dd2c45bde0484732ad4d8735107d15b8994f66d4d514d8a5ad674ecf4c7b4675516dba5c01f85a7d1d714f993a5f52d27a35ac3b1cc60
+  checksum: 10c0/50b9fc27fe0f5eac824708530c76839cfe188d446fd7580d1d2e47cdf0ebdfe174e0d68492a082d509df9a0021aa715996fc735d7958c9201c9130afe6b255e7
   languageName: node
   linkType: hard
 
@@ -5221,18 +5216,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/client-runtime-utils@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/client-runtime-utils@npm:7.4.2"
-  checksum: 10c0/d53184cb57d0782a0a5db8f48ba259c22c0ddb0801af657b060d0fc6cf8830699259b1f1909b2789ecdc10025faad7f82bdff61e75cd29022c810b715019cad3
+"@prisma/client-runtime-utils@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/client-runtime-utils@npm:7.5.0"
+  checksum: 10c0/e27efcdd47120f5fb27d236c5ee70b376a897e45c9b846a6139f843e052d196a12a44d3a0e9bf68dcb660d525478d307c7470829bd13ed92cd16c0c971272531
   languageName: node
   linkType: hard
 
-"@prisma/client@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/client@npm:7.4.2"
+"@prisma/client@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/client@npm:7.5.0"
   dependencies:
-    "@prisma/client-runtime-utils": "npm:7.4.2"
+    "@prisma/client-runtime-utils": "npm:7.5.0"
   peerDependencies:
     prisma: "*"
     typescript: ">=5.4.0"
@@ -5241,19 +5236,19 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/b33ea3c7256fa1b46adeec2b5d75384735702ed94df23c86cf1dcd86420a88e3e3129a186de8542d442cf022fa17e38dd2c1b583687db381b5bc14bb041c5068
+  checksum: 10c0/d7541305b405e731fee58f834aa15c41dd8873ed3d30959fe3a87522acf19befb99653d09e9597ccbfc7b85819b0689e1e8f57ef507d16ba5f349fcfa3ada43d
   languageName: node
   linkType: hard
 
-"@prisma/config@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/config@npm:7.4.2"
+"@prisma/config@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/config@npm:7.5.0"
   dependencies:
     c12: "npm:3.1.0"
     deepmerge-ts: "npm:7.1.5"
     effect: "npm:3.18.4"
     empathic: "npm:2.0.0"
-  checksum: 10c0/1e0ce5fcd32ed800272e29430093792d921c960d09b027dbc39bc20d33adb61a1eb3afb030d25cc4a6165b9a4cb306ebf7a277b59178b724d73e0905a9ed9ea6
+  checksum: 10c0/0fb1e128e1deeaa319fdaebd1f116f88be50bf3fd04c6891798ee60fafea5f13cac00c5e9f497ed4df60064cf6aa03e92e94826516ea298542f03a42aa136b13
   languageName: node
   linkType: hard
 
@@ -5264,10 +5259,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/debug@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/debug@npm:7.4.2"
-  checksum: 10c0/360e960a510f253625e1979d16a7467bb2080ab1ab439404eb7457a5773da781a8c7e52c962081d93538f20aaa75263daf86d866f69e36b0bd1e65a4203e6335
+"@prisma/debug@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/debug@npm:7.5.0"
+  checksum: 10c0/bb89975c4f202842f938720c00612d670914b1984d78466f472ee90cfc918f7e4463ca7ed6c0ff6a74bf8b4cad8fd2842fb8894b7de92921a99e37719d0ebfe2
   languageName: node
   linkType: hard
 
@@ -5296,67 +5291,67 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/dmmf@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/dmmf@npm:7.4.2"
-  checksum: 10c0/ef54dcea2833a19fd55db40953fe274d6db7366ac8f9e7b83a3caefcfbd056214a51135ed6808c909d8956b6785c748891f2163937baf92589b52abc971a6b0e
+"@prisma/dmmf@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/dmmf@npm:7.5.0"
+  checksum: 10c0/0de58c45a64743541e839c775315fae1d7ad70831cdfd11f951c34ce65579bcaaa94e0c3ed64f4dbc9655982abf0d0d63de3346ef8acd4331339234f91da2eff
   languageName: node
   linkType: hard
 
-"@prisma/driver-adapter-utils@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/driver-adapter-utils@npm:7.4.2"
+"@prisma/driver-adapter-utils@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/driver-adapter-utils@npm:7.5.0"
   dependencies:
-    "@prisma/debug": "npm:7.4.2"
-  checksum: 10c0/a88bb7d100131ab47892e45f7e8e92fd3a7a87859298e8e77e4326b6e43d910785d14a1b923f6a723d18c6847708ac53483fe52a92266076c297fd792b6f7297
+    "@prisma/debug": "npm:7.5.0"
+  checksum: 10c0/451899f308ddc107aae980746cdf03666c347889c73252f804b0c27ffef7b496574beb137be8a9e4378169f8e32403056242a2e4fae7162973994209092e603e
   languageName: node
   linkType: hard
 
-"@prisma/engines-version@npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919":
-  version: 7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919
-  resolution: "@prisma/engines-version@npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919"
-  checksum: 10c0/391e4a9162f921ca0d733301c48d4b035c7f1b7972a13f1f82ccec6cf38fc13a4a8cb68ef6fb9f35df27693404c91ae684f5f87423eeb635e10b4c2acaf9097e
+"@prisma/engines-version@npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e":
+  version: 7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e
+  resolution: "@prisma/engines-version@npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e"
+  checksum: 10c0/dd1fa41307278f7a57b1f90dfdff3cc7704a375fc1f34b74635068c07481d8533de1ec3c6579975650a39c883fd58249bf5956574a70aba814e11edb16ba2e62
   languageName: node
   linkType: hard
 
-"@prisma/engines@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/engines@npm:7.4.2"
+"@prisma/engines@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/engines@npm:7.5.0"
   dependencies:
-    "@prisma/debug": "npm:7.4.2"
-    "@prisma/engines-version": "npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919"
-    "@prisma/fetch-engine": "npm:7.4.2"
-    "@prisma/get-platform": "npm:7.4.2"
-  checksum: 10c0/5530e94126adea021166e865ac84688120bcfb3c37dc77a56c35b03d5e4062d72fcd8ea9dab0592e8082cb3d4e0f8942472ed45d4c91c6214788a5e61f247c4f
+    "@prisma/debug": "npm:7.5.0"
+    "@prisma/engines-version": "npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e"
+    "@prisma/fetch-engine": "npm:7.5.0"
+    "@prisma/get-platform": "npm:7.5.0"
+  checksum: 10c0/09015fe378dfb9634cc81c361039c211ebc66467a5b65deb9ba9a578815f1bd0694163bd744d37d125b798b3360c4b719b1efa394c6e051411c29b0c7dd1f389
   languageName: node
   linkType: hard
 
-"@prisma/fetch-engine@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/fetch-engine@npm:7.4.2"
+"@prisma/fetch-engine@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/fetch-engine@npm:7.5.0"
   dependencies:
-    "@prisma/debug": "npm:7.4.2"
-    "@prisma/engines-version": "npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919"
-    "@prisma/get-platform": "npm:7.4.2"
-  checksum: 10c0/2784e13cd559c27224393ecbe1dffd21290a8a6faaa01d5a59bf1506930f4a9dc9063f74c0c19fda8e9e762a2556ae01f2950dabc299f50d86d30235daaea50c
+    "@prisma/debug": "npm:7.5.0"
+    "@prisma/engines-version": "npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e"
+    "@prisma/get-platform": "npm:7.5.0"
+  checksum: 10c0/5772ffcd4c090fe0a4fb88a0af9ac5e2bbc3297dca4fa132e18b3cce0a605dff376a4442330ab449a8ee01ae6da83a09c13c2feaf8a2a0bb1f2d454cb001ada6
   languageName: node
   linkType: hard
 
-"@prisma/generator-helper@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/generator-helper@npm:7.4.2"
+"@prisma/generator-helper@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/generator-helper@npm:7.5.0"
   dependencies:
-    "@prisma/debug": "npm:7.4.2"
-    "@prisma/dmmf": "npm:7.4.2"
-    "@prisma/generator": "npm:7.4.2"
-  checksum: 10c0/74739ea2546afc3f9ef5c005a4ac7c21282a298c796493652d7b6aa026ff6128243719992bb5ca93c508d86ca81bfd8c86867c78ceba23c7aac3bfd070a47d0f
+    "@prisma/debug": "npm:7.5.0"
+    "@prisma/dmmf": "npm:7.5.0"
+    "@prisma/generator": "npm:7.5.0"
+  checksum: 10c0/eab9399b9f849c4f85949a44880508875f4791ecfe7670f5666a4c15500082ed7bfad460b39f5ab55865b6f207cf8977b1d4c3bc42670d5c2697e2ad64d15ad2
   languageName: node
   linkType: hard
 
-"@prisma/generator@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/generator@npm:7.4.2"
-  checksum: 10c0/66073392df5055f8ada86084f9c573c6a2144ce8ef9645eea55431a1f5b789e56939b77fb0aab7a8540076b71a31815158041fc8f4d1915e26fbc34d029d2774
+"@prisma/generator@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/generator@npm:7.5.0"
+  checksum: 10c0/2c9f362d1053fbb9c463cd092ba3f98127507d44482c3f8024ee09f2f77b6adf9551805e4540691f9df163e827bceb12e52da670a8473b3a91caa93440fae46e
   languageName: node
   linkType: hard
 
@@ -5369,31 +5364,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/get-platform@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/get-platform@npm:7.4.2"
+"@prisma/get-platform@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/get-platform@npm:7.5.0"
   dependencies:
-    "@prisma/debug": "npm:7.4.2"
-  checksum: 10c0/1381aefc77c6b38181e47f1b7e9727f0cb0655d27294d9af0c08047dbb7a0db535f96934860ce0e11ae4dfef0ae919b0514a028e3362e4ddcf9575fc86c74a67
+    "@prisma/debug": "npm:7.5.0"
+  checksum: 10c0/c9220e1fe3e5b1bead72313fc03ee29a2585bbae5d606079ea592aef09dcb5db1f21d404b8f73030a5a17a894fdd187a47073d25996629c52fc2b272de2d96a8
   languageName: node
   linkType: hard
 
-"@prisma/internals@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/internals@npm:7.4.2"
+"@prisma/internals@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/internals@npm:7.5.0"
   dependencies:
-    "@prisma/config": "npm:7.4.2"
-    "@prisma/debug": "npm:7.4.2"
-    "@prisma/dmmf": "npm:7.4.2"
-    "@prisma/driver-adapter-utils": "npm:7.4.2"
-    "@prisma/engines": "npm:7.4.2"
-    "@prisma/fetch-engine": "npm:7.4.2"
-    "@prisma/generator": "npm:7.4.2"
-    "@prisma/generator-helper": "npm:7.4.2"
-    "@prisma/get-platform": "npm:7.4.2"
-    "@prisma/prisma-schema-wasm": "npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919"
-    "@prisma/schema-engine-wasm": "npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919"
-    "@prisma/schema-files-loader": "npm:7.4.2"
+    "@prisma/config": "npm:7.5.0"
+    "@prisma/debug": "npm:7.5.0"
+    "@prisma/dmmf": "npm:7.5.0"
+    "@prisma/driver-adapter-utils": "npm:7.5.0"
+    "@prisma/engines": "npm:7.5.0"
+    "@prisma/fetch-engine": "npm:7.5.0"
+    "@prisma/generator": "npm:7.5.0"
+    "@prisma/generator-helper": "npm:7.5.0"
+    "@prisma/get-platform": "npm:7.5.0"
+    "@prisma/prisma-schema-wasm": "npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e"
+    "@prisma/schema-engine-wasm": "npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e"
+    "@prisma/schema-files-loader": "npm:7.5.0"
     arg: "npm:5.0.2"
     prompts: "npm:2.4.2"
   peerDependencies:
@@ -5401,14 +5396,14 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/b99ddaff219d3b9549c9c276542b9b1bb055121adee1ccebbbb59b2c075cad198fd68f05cb9d5272385d5243a22ef37021b4edb1885a055e352c973efc9ca999
+  checksum: 10c0/bafbd8e8c5dc3be860f54865032f3b29a106c99691d55954c90326eaa40e362db20f36379c6c7df127e3db4a06bd3b3e44dba09775c23b4694d1e8f7da3b8344
   languageName: node
   linkType: hard
 
-"@prisma/prisma-schema-wasm@npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919":
-  version: 7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919
-  resolution: "@prisma/prisma-schema-wasm@npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919"
-  checksum: 10c0/5d9489f415adced9b848a2c896b181db4f2468f6bb358bbaac62f76d7607c8783d94ef0f0fcb47dc889fff5b201bd613f7f2256489894702c220ab1d9fd25dc9
+"@prisma/prisma-schema-wasm@npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e":
+  version: 7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e
+  resolution: "@prisma/prisma-schema-wasm@npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e"
+  checksum: 10c0/04c7bda3557e7aae59ebd06293ff2c901e5e91f73117f68bd89b0ee9fd7d61266f2f97522391f1c227dd9ba83a8c475f39306348d29fe5fecc36330f10d1d2a6
   languageName: node
   linkType: hard
 
@@ -5419,31 +5414,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/schema-engine-wasm@npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919":
-  version: 7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919
-  resolution: "@prisma/schema-engine-wasm@npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919"
-  checksum: 10c0/cfb21aa96b39f81a2337d850d5db73c82bc33bbff5acddb39a07e31ad91acfbb172071ae2470f28a4a3d675a77a4351747343f68b4a26efd4914e07fcfe68921
+"@prisma/schema-engine-wasm@npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e":
+  version: 7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e
+  resolution: "@prisma/schema-engine-wasm@npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e"
+  checksum: 10c0/91bde03bb92204c57ed787051f032f9babecc88ff4fdfa8737b37c18715173cd565d5b24ba7cf21b4dd66ab18c0eda67ac2f2802f6f017d0a25f1a1077be39d5
   languageName: node
   linkType: hard
 
-"@prisma/schema-files-loader@npm:7.4.2":
-  version: 7.4.2
-  resolution: "@prisma/schema-files-loader@npm:7.4.2"
+"@prisma/schema-files-loader@npm:7.5.0":
+  version: 7.5.0
+  resolution: "@prisma/schema-files-loader@npm:7.5.0"
   dependencies:
-    "@prisma/prisma-schema-wasm": "npm:7.5.0-10.94a226be1cf2967af2541cca5529f0f7ba866919"
+    "@prisma/prisma-schema-wasm": "npm:7.5.0-15.280c870be64f457428992c43c1f6d557fab6e29e"
     fs-extra: "npm:11.3.0"
-  checksum: 10c0/42f17e3a5a8dbf421e486c83bfcd37d62df29468c9e0b68ff08341e74b257da1bbc3f4cbc3e721b2a1730390e30414d8d921dbc0f9ef27cecee7d2b2a47ebcfc
+  checksum: 10c0/e1b9a839d90c7bce9452a300d1150be7346943afc120ca9e0ca3e65c5bbe4110444052332f21013a99df70d436a440220fb340c65ece827bbbdeccc6ebff26bb
   languageName: node
   linkType: hard
 
-"@prisma/studio-core@npm:0.13.1":
-  version: 0.13.1
-  resolution: "@prisma/studio-core@npm:0.13.1"
+"@prisma/studio-core@npm:0.21.1":
+  version: 0.21.1
+  resolution: "@prisma/studio-core@npm:0.21.1"
   peerDependencies:
     "@types/react": ^18.0.0 || ^19.0.0
     react: ^18.0.0 || ^19.0.0
     react-dom: ^18.0.0 || ^19.0.0
-  checksum: 10c0/7217bf0f8454986b9a78b25c992c2ccc43464e3cbdff1b7c62ce5177158dd130736d1e20c0f3b99a796a18df36c896499625f7405fd79cd3644a67457333a94a
+  checksum: 10c0/66fce7f59a84455252dd78925ee62f8f9839b6429935e8cc0a87776fb607edb5c0bf3c694831b0e2df78282e37a027d71b4fcb7d0621f481b44491fac712b045
   languageName: node
   linkType: hard
 
@@ -13527,13 +13522,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lazy-get-decorator@npm:2.2.1":
-  version: 2.2.1
-  resolution: "lazy-get-decorator@npm:2.2.1"
-  checksum: 10c0/58d6e3d82293a70c6d14d5648ff6d9acd8d3d67ab0a3205b5e6f24aef55094737a71ee3d4ea7950e57be3eadaee91faee960ee3fa14daede119ea93ebf625396
-  languageName: node
-  linkType: hard
-
 "lazystream@npm:^1.0.0":
   version: 1.0.1
   resolution: "lazystream@npm:1.0.1"
@@ -13665,17 +13653,6 @@ __metadata:
   dependencies:
     p-locate: "npm:^5.0.0"
   checksum: 10c0/d3972ab70dfe58ce620e64265f90162d247e87159b6126b01314dd67be43d50e96a50b517bce2d9452a79409c7614054c277b5232377de50416564a77ac7aad3
-  languageName: node
-  linkType: hard
-
-"lodash-decorators@npm:6.0.1":
-  version: 6.0.1
-  resolution: "lodash-decorators@npm:6.0.1"
-  dependencies:
-    tslib: "npm:^1.9.2"
-  peerDependencies:
-    lodash: 4.x
-  checksum: 10c0/02881ae6e595245badbc29f4b4bc57f6fbab45ed5d7117c269b9a3c5efa57726670028074c989bd8b0a587211fa6d9447ac6124fb9e887c0571b307e1746bac8
   languageName: node
   linkType: hard
 
@@ -15685,14 +15662,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prisma@npm:7.4.2":
-  version: 7.4.2
-  resolution: "prisma@npm:7.4.2"
+"prisma@npm:7.5.0":
+  version: 7.5.0
+  resolution: "prisma@npm:7.5.0"
   dependencies:
-    "@prisma/config": "npm:7.4.2"
+    "@prisma/config": "npm:7.5.0"
     "@prisma/dev": "npm:0.20.0"
-    "@prisma/engines": "npm:7.4.2"
-    "@prisma/studio-core": "npm:0.13.1"
+    "@prisma/engines": "npm:7.5.0"
+    "@prisma/studio-core": "npm:0.21.1"
     mysql2: "npm:3.15.3"
     postgres: "npm:3.4.7"
   peerDependencies:
@@ -15705,7 +15682,7 @@ __metadata:
       optional: true
   bin:
     prisma: build/index.js
-  checksum: 10c0/ed37aeddfb3e8a01e53b48b99d3bc1b694ea5286ebe42fbb6dbf34e2da3957d87ebceac021e5146e123659d3a1991e392ce63880412eb80dbc957ff54332e372
+  checksum: 10c0/26e8c245eb75c09041e15b388b0e96d683f787dd80e935a07c2361ae794f54b159c8099ae05bdd87b485d57e3c3f00ca6d26353288b8399d7096deadeca3b6a9
   languageName: node
   linkType: hard
 
@@ -18196,13 +18173,6 @@ __metadata:
     minimist: "npm:^1.2.6"
     strip-bom: "npm:^3.0.0"
   checksum: 10c0/5b4f301a2b7a3766a986baf8fc0e177eb80bdba6e396792ff92dc23b5bca8bb279fc96517dcaaef63a3b49bebc6c4c833653ec58155780bc906bdbcf7dda0ef5
-  languageName: node
-  linkType: hard
-
-"tslib@npm:^1.9.2":
-  version: 1.14.1
-  resolution: "tslib@npm:1.14.1"
-  checksum: 10c0/69ae09c49eea644bc5ebe1bca4fa4cc2c82b7b3e02f43b84bd891504edf66dbc6b2ec0eef31a957042de2269139e4acff911e6d186a258fb14069cd7f6febce2
   languageName: node
   linkType: hard
 
