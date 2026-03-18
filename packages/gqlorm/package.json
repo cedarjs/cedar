@@ -128,11 +128,9 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "core-js": "3.48.0",
     "graphql": "16.13.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",

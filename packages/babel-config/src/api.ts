@@ -9,8 +9,6 @@ import { getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import type { RegisterHookOptions } from './common'
 import {
-  CORE_JS_VERSION,
-  RUNTIME_CORE_JS_VERSION,
   getCommonPlugins,
   getPathsFromTypeScriptConfig,
   parseTypeScriptConfigFiles,
@@ -23,7 +21,7 @@ import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir'
 import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector'
 import pluginRedwoodOTelWrapping from './plugins/babel-plugin-redwood-otel-wrapping'
 
-export const TARGETS_NODE = '20.10'
+export const TARGETS_NODE = '24'
 
 export const getApiSideBabelPresets = (
   { presetEnv } = { presetEnv: false },
@@ -44,32 +42,10 @@ export const getApiSideBabelPresets = (
         targets: {
           node: TARGETS_NODE,
         },
-        useBuiltIns: 'usage',
-        corejs: {
-          version: CORE_JS_VERSION,
-          // List of supported proposals: https://github.com/zloirock/core-js/blob/master/docs/2019-03-19-core-js-3-babel-and-a-look-into-the-future.md#ecmascript-proposals
-          proposals: true,
-        },
-        exclude: [
-          // Remove class-properties from preset-env, and include separately with loose
-          // https://github.com/webpack/webpack/issues/9708
-          '@babel/plugin-transform-class-properties',
-          '@babel/plugin-transform-private-methods',
-        ],
+        useBuiltIns: false,
       },
     ],
   ].filter(Boolean) as TransformOptions['presets']
-}
-
-export const BABEL_PLUGIN_TRANSFORM_RUNTIME_OPTIONS = {
-  // See https://babeljs.io/docs/babel-plugin-transform-runtime/#corejs
-  // and https://babeljs.io/docs/en/babel-plugin-transform-runtime/#core-js-aliasing.
-  //
-  // This results in over polyfilling.
-  corejs: { version: 3, proposals: true },
-
-  // See https://babeljs.io/docs/en/babel-plugin-transform-runtime/#version.
-  version: RUNTIME_CORE_JS_VERSION,
 }
 
 // Plugin shape: [ ["Target", "Options", "name"] ],
@@ -91,7 +67,7 @@ export const getApiSideBabelPlugins = ({
     // Needed to support `/** @jsxImportSource custom-jsx-library */`
     // comments in JSX files
     ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
-    ['@babel/plugin-transform-runtime', BABEL_PLUGIN_TRANSFORM_RUNTIME_OPTIONS],
+    ['@babel/plugin-transform-runtime', {}],
     [
       'babel-plugin-module-resolver',
       {
