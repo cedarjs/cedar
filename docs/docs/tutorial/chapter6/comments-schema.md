@@ -20,8 +20,11 @@ datasource db {
 }
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = "native"
+  provider               = "prisma-client"
+  output                 = "./generated/prisma"
+  moduleFormat           = "cjs"
+  generatedFileExtension = "mts"
+  importFileExtension    = "mts"
 }
 
 model Post {
@@ -283,7 +286,7 @@ export const Comment = {
 <TabItem value="ts" label="TypeScript">
 
 ```ts title="api/src/services/comments/comments.ts"
-import type { Prisma } from '@prisma/client'
+import type { Prisma } from 'api/db/generated/prisma/client.mts'
 import type { ResolverArgs } from '@cedarjs/graphql-server'
 
 import { db } from 'src/lib/db'
@@ -594,7 +597,7 @@ export const standard = defineScenario({
 <TabItem value="ts" label="TypeScript">
 
 ```ts title="api/src/services/comments.scenarios.ts"
-import type { Prisma } from '@prisma/client'
+import type { Prisma } from 'api/db/generated/prisma/client.mts'
 
 export const standard = defineScenario<Prisma.CommentCreateArgs>({
   comment: {
@@ -685,7 +688,7 @@ export const standard = defineScenario({
 <TabItem value="ts" label="TypeScript">
 
 ```ts title="api/src/services/comments/comments.scenarios.ts"
-import type { Prisma } from '@prisma/client'
+import type { Prisma } from 'api/db/generated/prisma/client.mts'
 
 export const standard = defineScenario<Prisma.CommentCreateArgs>({
   comment: {
@@ -756,7 +759,7 @@ export const postOnly = defineScenario({
 <TabItem value="ts" label="TypeScript">
 
 ```ts title="api/src/services/comments/comments.scenarios.ts"
-import type { Prisma } from '@prisma/client'
+import type { Prisma } from 'api/db/generated/prisma/client.mts'
 
 export const standard = defineScenario<Prisma.CommentCreateArgs>({
   // ...

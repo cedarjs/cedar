@@ -114,7 +114,7 @@ Within `api` there are four directories:
   - `schema.prisma` contains the database schema (tables and columns)
 
   After we add our first database table, there will also be a SQLite database
-  file named `dev.db` and a directory called `migrations` created for us.
+  file named `dev.db` (located at `api/db/dev.db`) and a directory called `migrations` created for us.
   `migrations` contains the files that act as snapshots of the database schema
   changing over time.
 
