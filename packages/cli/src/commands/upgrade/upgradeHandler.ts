@@ -12,7 +12,6 @@ import { getConfig } from '@cedarjs/project-config'
 
 // @ts-expect-error - Types not available for JS files
 import c from '../../lib/colors.js'
-// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
@@ -439,6 +438,12 @@ async function updatePackageVersionsFromTemplate(
         title: `Updating ${pkgJsonPath}`,
         task: async (_ctx: unknown, task: { title: string }) => {
           const res = await fetch(url)
+          if (!res.ok) {
+            throw new Error(
+              `Failed to fetch template package.json from ${url}: ` +
+                res.statusText,
+            )
+          }
           const text = await res.text()
           const templatePackageJson = JSON.parse(text)
 
@@ -507,17 +512,21 @@ async function downloadYarnPatches(
     process.env.GITHUB_TOKEN ||
     process.env.REDWOOD_GITHUB_TOKEN
 
-  const res = await fetch(
-    'https://api.github.com/repos/cedarjs/cedar/git/trees/main?recursive=1',
-    {
-      headers: {
-        ...(githubToken && { Authorization: `Bearer ${githubToken}` }),
-        ['X-GitHub-Api-Version']: '2022-11-28',
-        Accept: 'application/vnd.github+json',
-      },
+  const url =
+    'https://api.github.com/repos/cedarjs/cedar/git/trees/main?recursive=1'
+  const res = await fetch(url, {
+    headers: {
+      ...(githubToken && { Authorization: `Bearer ${githubToken}` }),
+      ['X-GitHub-Api-Version']: '2022-11-28',
+      Accept: 'application/vnd.github+json',
     },
-  )
+  })
 
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch list of yarn patches from ${url}: ` + res.statusText,
+    )
+  }
   const json = await res.json()
   const patches: { path: string; url: string }[] = json.tree?.filter(
     (patchInfo: { path: string }) =>
@@ -542,6 +551,12 @@ async function downloadYarnPatches(
         title: `Downloading ${patch.path}`,
         task: async () => {
           const res = await fetch(patch.url)
+          if (!res.ok) {
+            throw new Error(
+              `Failed to fetch patch metadata from ${patch.url}: ` +
+                res.statusText,
+            )
+          }
           const patchMeta = await res.json()
           const patchPath = path.join(
             getPaths().base,

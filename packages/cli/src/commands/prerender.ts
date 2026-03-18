@@ -28,7 +28,13 @@ export const builder = (yargs: Argv) => {
   })
 }
 
-export const handler = async (options: Record<string, unknown>) => {
+interface PrerenderOptions {
+  path?: string
+  dryRun?: boolean
+  verbose?: boolean
+}
+
+export const handler = async (options: PrerenderOptions) => {
   const { handler } = await import('./prerenderHandler.js')
   return handler(options)
 }

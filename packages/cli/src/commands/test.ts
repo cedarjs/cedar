@@ -53,7 +53,15 @@ export const builder = (yargs: Argv) => {
     )
 }
 
-export const handler = async (options: Record<string, unknown>) => {
+interface TestOptions {
+  filter: string[]
+  watch: boolean
+  collectCoverage: boolean
+  dbPush: boolean
+  [key: string]: unknown
+}
+
+export const handler = async (options: TestOptions) => {
   const { handler } = await import('./test/testHandler.js')
   return handler(options)
 }

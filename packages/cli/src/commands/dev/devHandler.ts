@@ -324,6 +324,7 @@ export const handler = async ({
         process.argv,
         `Error concurrently starting workspaces: ${e.message}`,
       )
+
       exitWithError(e)
     }
   })
