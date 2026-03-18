@@ -2,7 +2,6 @@ import path from 'node:path'
 
 import camelcase from 'camelcase'
 
-import { dbReexportsPrismaClient } from '@cedarjs/internal/dist/project'
 import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
 import { transformTSToJS } from '../../../lib/index.js'
@@ -311,9 +310,7 @@ export const files = async ({
   const model = name
   const idName = await getIdName(model)
 
-  const prismaImportSource = dbReexportsPrismaClient()
-    ? 'src/lib/db'
-    : '@prisma/client'
+  const prismaImportSource = 'src/lib/db'
 
   const modelRelations = relations || relationsForModel(await getSchema(model))
 

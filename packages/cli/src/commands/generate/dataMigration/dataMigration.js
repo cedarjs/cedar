@@ -5,7 +5,6 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { dbReexportsPrismaClient } from '@cedarjs/internal/dist/project'
 import { getDataMigrationsPath } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
@@ -49,9 +48,7 @@ export const files = async ({ name, typescript }) => {
   )
   const outputPath = path.join(dataMigrationsPath, outputFilename)
 
-  const prismaImportSource = dbReexportsPrismaClient()
-    ? 'src/lib/db'
-    : '@prisma/client'
+  const prismaImportSource = 'src/lib/db'
 
   return {
     [outputPath]: await generateTemplate(TEMPLATE_PATHS[extension], {

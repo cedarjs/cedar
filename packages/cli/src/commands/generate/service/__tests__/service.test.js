@@ -7,19 +7,9 @@ import yargs from 'yargs/yargs'
 // Load mocks
 import '../../../../lib/test'
 
-import { dbReexportsPrismaClient } from '@cedarjs/internal/dist/project'
-
 import { getDefaultArgs } from '../../../../lib/index.js'
 import * as service from '../service.js'
 import * as serviceHandler from '../serviceHandler.js'
-
-vi.mock('@cedarjs/internal/dist/project', async (importOriginal) => {
-  const original = await importOriginal()
-  return {
-    ...original,
-    dbReexportsPrismaClient: vi.fn(() => false),
-  }
-})
 
 beforeAll(() => {
   vi.useFakeTimers()
@@ -330,38 +320,6 @@ describe('in javascript mode', () => {
   itCreatesASingleWordServiceFileWithABelongsToRelation(baseArgs)
   itCreatesASingleWordServiceFileWithMultipleRelations(baseArgs)
   itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired(baseArgs)
-
-  test('creates a service test file with src/lib/db import when dbReexportsPrismaClient is true', async () => {
-    dbReexportsPrismaClient.mockReturnValue(true)
-    const files = await serviceHandler.files({
-      ...baseArgs,
-      name: 'User',
-    })
-    dbReexportsPrismaClient.mockReturnValue(false)
-
-    expect(
-      files[
-        path.normalize('/path/to/project/api/src/services/users/users.test.js')
-      ],
-    ).toMatchSnapshot()
-  })
-
-  test('creates a service scenario file with src/lib/db import when dbReexportsPrismaClient is true', async () => {
-    dbReexportsPrismaClient.mockReturnValue(true)
-    const files = await serviceHandler.files({
-      ...baseArgs,
-      name: 'User',
-    })
-    dbReexportsPrismaClient.mockReturnValue(false)
-
-    expect(
-      files[
-        path.normalize(
-          '/path/to/project/api/src/services/users/users.scenarios.js',
-        )
-      ],
-    ).toMatchSnapshot()
-  })
 })
 
 describe('in typescript mode', () => {
@@ -386,38 +344,6 @@ describe('in typescript mode', () => {
   itCreatesASingleWordServiceFileWithABelongsToRelation(baseArgs)
   itCreatesASingleWordServiceFileWithMultipleRelations(baseArgs)
   itCreatesAMultiWordServiceTestFileWithCRUDAndOnlyForeignKeyRequired(baseArgs)
-
-  test('creates a service scenario file with src/lib/db import when dbReexportsPrismaClient is true', async () => {
-    dbReexportsPrismaClient.mockReturnValue(true)
-    const files = await serviceHandler.files({
-      ...baseArgs,
-      name: 'User',
-    })
-    dbReexportsPrismaClient.mockReturnValue(false)
-
-    expect(
-      files[
-        path.normalize(
-          '/path/to/project/api/src/services/users/users.scenarios.ts',
-        )
-      ],
-    ).toMatchSnapshot()
-  })
-
-  test('creates a service test file with src/lib/db import when dbReexportsPrismaClient is true', async () => {
-    dbReexportsPrismaClient.mockReturnValue(true)
-    const files = await serviceHandler.files({
-      ...baseArgs,
-      name: 'User',
-    })
-    dbReexportsPrismaClient.mockReturnValue(false)
-
-    expect(
-      files[
-        path.normalize('/path/to/project/api/src/services/users/users.test.ts')
-      ],
-    ).toMatchSnapshot()
-  })
 })
 
 describe('parseSchema', () => {

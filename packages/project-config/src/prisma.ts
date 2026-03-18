@@ -6,26 +6,6 @@ import type { PrismaConfig } from 'prisma'
 
 import { getPaths } from './paths.js'
 
-function getGeneratorOutputPathFromSchema(schemaPath: string) {
-  if (!fs.existsSync(schemaPath)) {
-    return undefined
-  }
-
-  const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
-  const generatorMatch = schemaContent.match(
-    /generator\s+client\s*\{[\s\S]*?output\s*=\s*["']([^"']+)["'][^}]*\}/,
-  )
-  const output = generatorMatch?.[1]
-
-  if (!output) {
-    return undefined
-  }
-
-  return path.isAbsolute(output)
-    ? output
-    : path.resolve(path.dirname(schemaPath), output)
-}
-
 // Cache for loaded configs to avoid repeated file system operations
 const configCache = new Map<string, PrismaConfig>()
 
@@ -174,11 +154,13 @@ export async function getDataMigrationsPath(
   return path.join(migrationsDir, 'dataMigrations')
 }
 
-export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
+type ResolveReturnType =
+  | { clientPath: string; error: undefined }
+  | { clientPath: string | undefined; error: string }
+
+export async function resolveGeneratedPrismaClient(): Promise<ResolveReturnType> {
   let generatorOutputPath: string | undefined
   let ext = 'ts'
-  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
-  const schemaDir = path.dirname(schemaPath)
 
   try {
     const prismaInternalsMod = await import('@prisma/internals')
@@ -208,33 +190,27 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
         : path.resolve(schemaRootDir, output)
     }
   } catch {
-    // Fall back to schema parsing
-    // TODO: Remove this once we've verified that the code above works correctly
-    generatorOutputPath = getGeneratorOutputPathFromSchema(schemaPath)
+    // Ignore — generatorOutputPath remains undefined; the error will surface
+    // below when mustExist is true.
   }
 
-  // TODO: Fallbacks shouldn't be needed. Remove all of this
-  const candidateEntries = [
-    ...(typeof generatorOutputPath === 'string'
-      ? [path.join(generatorOutputPath, 'client.' + ext)]
-      : []),
-    path.join(schemaDir, 'generated', 'client', 'client.' + ext),
-    path.join(schemaDir, 'generated', 'prisma', 'client.' + ext),
-    path.join(getPaths().base, 'node_modules/.prisma/client/index.js'),
-  ].filter((entry, index, allEntries) => {
-    return typeof entry === 'string' && allEntries.indexOf(entry) === index
-  })
+  const prismaClientEntry =
+    typeof generatorOutputPath === 'string'
+      ? path.join(generatorOutputPath, 'client.' + ext)
+      : undefined
 
-  const prismaClientEntry = candidateEntries.find((entry) => {
-    return fs.existsSync(entry)
-  })
-
-  if (mustExist && !prismaClientEntry) {
-    throw new Error(
-      `Could not find generated Prisma client entry. Checked: ${candidateEntries.join(', ')}. ` +
+  if (!prismaClientEntry || !fs.existsSync(prismaClientEntry)) {
+    const checked = prismaClientEntry ?? '(could not determine output path)'
+    return {
+      clientPath: prismaClientEntry,
+      error:
+        `Could not find generated Prisma client entry. Checked: ${checked}. ` +
         'Run `yarn cedar prisma generate` and try again.',
-    )
+    }
   }
 
-  return prismaClientEntry ?? candidateEntries[0]
+  return {
+    clientPath: prismaClientEntry,
+    error: undefined,
+  }
 }
