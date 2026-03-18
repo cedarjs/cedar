@@ -2478,15 +2478,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-setup@workspace:packages/auth-providers/dbAuth/setup"
   dependencies:
-    "@babel/cli": "npm:7.28.6"
-    "@babel/core": "npm:^7.26.10"
     "@babel/runtime-corejs3": "npm:7.29.0"
     "@cedarjs/cli-helpers": "workspace:*"
+    "@cedarjs/framework-tools": "workspace:*"
     "@prisma/internals": "npm:7.5.0"
     "@simplewebauthn/browser": "npm:10.0.0"
     "@simplewebauthn/types": "npm:10.0.0"
     "@types/yargs": "npm:17.0.35"
     core-js: "npm:3.48.0"
+    nodemon: "npm:3.1.14"
     prompts: "npm:2.4.2"
     termi-link: "npm:1.1.0"
     ts-dedent: "npm:2.2.0"
