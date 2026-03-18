@@ -236,11 +236,6 @@ async function importGeneratedPrismaClient() {
   return freshPrisma
 }
 
-type PrismaClientModule = {
-  ModelName?: Record<string, string>
-  [key: string]: unknown
-}
-
 function isModelNameRecord(value: unknown): value is Record<string, string> {
   if (typeof value !== 'object' || value === null) {
     return false
@@ -250,14 +245,28 @@ function isModelNameRecord(value: unknown): value is Record<string, string> {
 }
 
 function getModelName(mod: unknown): Record<string, string> | null {
-  if (typeof mod !== 'object' || mod === null) {
+  if (typeof mod !== 'object' || mod === null || !('Prisma' in mod)) {
     return null
   }
 
-  const prismaModule = mod as PrismaClientModule
+  const prismaModule = mod.Prisma
 
-  if (isModelNameRecord(prismaModule.ModelName)) {
-    return prismaModule.ModelName
+  if (
+    typeof prismaModule !== 'object' ||
+    prismaModule === null ||
+    !('ModelName' in prismaModule)
+  ) {
+    return null
+  }
+
+  const modelName = prismaModule.ModelName
+
+  if (typeof modelName !== 'object' || modelName === null) {
+    return null
+  }
+
+  if (isModelNameRecord(modelName)) {
+    return modelName
   }
 
   return null

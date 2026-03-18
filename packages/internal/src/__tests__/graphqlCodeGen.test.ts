@@ -62,11 +62,13 @@ const mockNow = vi.hoisted(() => new Date().getTime())
 
 vi.mock(mockPrismaClientFileUrl + '?t=' + mockNow, () => {
   return {
-    ModelName: {
-      PrismaModelOne: 'PrismaModelOne',
-      PrismaModelTwo: 'PrismaModelTwo',
-      Post: 'Post',
-      Todo: 'Todo',
+    Prisma: {
+      ModelName: {
+        PrismaModelOne: 'PrismaModelOne',
+        PrismaModelTwo: 'PrismaModelTwo',
+        Post: 'Post',
+        Todo: 'Todo',
+      },
     },
   }
 })
