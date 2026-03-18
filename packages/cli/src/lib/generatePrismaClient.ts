@@ -18,13 +18,10 @@ export const generatePrismaCommand = async (): Promise<{
   cmd: string
   args: string[]
 }> => {
-  // @ts-expect-error - LSP TS config is old. It doesn't know about
-  // `"module": "node20"`, which is what we use
   const createdRequire = createRequire(import.meta.url)
 
-  // I wanted to use `import.meta.resolve` here, but it's not supported by
-  // vitest yet
-  // https://github.com/vitest-dev/vitest/issues/6953
+  // I wanted to use `import.meta.resolve` here, but it's not supported by our
+  // version of vitest: https://github.com/vitest-dev/vitest/issues/6953
   // The path will be something like
   // /Users/tobbe/tmp/cedar-test-project/node_modules/prisma/build/index.js
   const prismaIndexPath = createdRequire.resolve('prisma/build/index.js')
@@ -50,11 +47,11 @@ export const generatePrismaClient = async ({
 }: GeneratePrismaClientOptions = {}): Promise<void> => {
   // Unless --force is used we do not generate the Prisma client if it exists.
   if (!force) {
-    const prismaClientPath = await resolveGeneratedPrismaClient()
+    const { clientPath } = await resolveGeneratedPrismaClient()
 
     const prismaClientFile =
-      prismaClientPath && fs.existsSync(prismaClientPath)
-        ? fs.readFileSync(prismaClientPath, 'utf8')
+      clientPath && fs.existsSync(clientPath)
+        ? fs.readFileSync(clientPath, 'utf8')
         : ''
 
     // This is a hack, and is likely to break. A better solution would be to

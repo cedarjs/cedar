@@ -14,7 +14,6 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import c from '../../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../../lib/exit.js'
-// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
@@ -126,10 +125,7 @@ export const handler = async ({
 
   if (workspace.includes('api')) {
     try {
-      await generatePrismaClient({
-        verbose: false,
-        force: false,
-      })
+      await generatePrismaClient({ verbose: false, force: false })
     } catch (e) {
       const message = getErrorMessage(e)
       errorTelemetry(process.argv, `Error generating prisma client: ${message}`)

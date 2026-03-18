@@ -6,7 +6,6 @@ import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
@@ -81,9 +80,7 @@ export const handler = async ({
   }
 
   if (generate && prisma) {
-    await generatePrismaClient({
-      verbose,
-    })
+    await generatePrismaClient({ verbose })
   }
 
   if (generate) {
