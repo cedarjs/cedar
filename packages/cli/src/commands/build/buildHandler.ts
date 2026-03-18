@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import execa from 'execa'
 import { Listr } from 'listr2'
+import type { ListrTask } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -11,13 +12,24 @@ import { buildApi, cleanApiBuild } from '@cedarjs/internal/dist/build/api'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
+import { type Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - Types not available for JS files
 import c from '../../lib/colors.js'
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
+// @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../../lib/index.js'
 
+// @ts-expect-error - Types not available for JS files
 import { buildPackagesTask } from './buildPackagesTask.js'
+
+interface PackageJson {
+  name?: string
+  main?: string
+  exports?: unknown
+  workspaces?: unknown
+}
 
 /**
  * Checks that every workspace package under `packages/` has the entry files
@@ -26,14 +38,16 @@ import { buildPackagesTask } from './buildPackagesTask.js'
  *
  * Returns an array of human-readable problem descriptions (empty = all good).
  */
-function checkWorkspacePackageEntryPoints(cedarPaths) {
+function checkWorkspacePackageEntryPoints(
+  cedarPaths: Paths,
+): { pkgName: string; entryFile: string; pkgDir: string }[] {
   const packagesDir = cedarPaths.packages
 
   if (!packagesDir || !fs.existsSync(packagesDir)) {
     return []
   }
 
-  const problems = []
+  const problems: { pkgName: string; entryFile: string; pkgDir: string }[] = []
   const packageDirs = fs.readdirSync(packagesDir, { withFileTypes: true })
 
   for (const entry of packageDirs) {
@@ -47,19 +61,21 @@ function checkWorkspacePackageEntryPoints(cedarPaths) {
       continue
     }
 
-    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'))
+    const pkgJson: PackageJson = JSON.parse(
+      fs.readFileSync(pkgJsonPath, 'utf8'),
+    )
     const pkgName = pkgJson.name || entry.name
     const pkgDir = path.join(packagesDir, entry.name)
 
     // Collect declared entry files from "main" and "exports"
-    const entryFiles = new Set()
+    const entryFiles = new Set<string>()
 
     if (pkgJson.main) {
       entryFiles.add(path.normalize(pkgJson.main))
     }
 
     if (pkgJson.exports) {
-      const collectPaths = (obj) => {
+      const collectPaths = (obj: unknown) => {
         if (typeof obj === 'string') {
           // Only check non-type entry points (JS files)
           if (!obj.endsWith('.d.ts')) {
@@ -89,12 +105,19 @@ function checkWorkspacePackageEntryPoints(cedarPaths) {
   return problems
 }
 
+export interface BuildHandlerOptions {
+  workspace?: string[]
+  verbose?: boolean
+  prisma?: boolean
+  prerender?: boolean
+}
+
 export const handler = async ({
   workspace = ['api', 'web', 'packages/*'],
   verbose = false,
   prisma = true,
   prerender = true,
-}) => {
+}: BuildHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'build',
     workspace: JSON.stringify(workspace),
@@ -103,7 +126,7 @@ export const handler = async ({
     prerender,
   })
 
-  const cedarPaths = getPaths()
+  const cedarPaths: Paths = getPaths()
   const cedarConfig = getConfig()
   const useFragments = cedarConfig.graphql?.fragments
   const useTrustedDocuments = cedarConfig.graphql?.trustedDocuments
@@ -117,7 +140,9 @@ export const handler = async ({
     (workspace.includes('api') || prerenderRoutes.length > 0)
 
   const packageJsonPath = path.join(cedarPaths.base, 'package.json')
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+  const packageJson: { workspaces?: unknown } = JSON.parse(
+    fs.readFileSync(packageJsonPath, 'utf8'),
+  )
   const packageJsonWorkspaces = packageJson.workspaces
   const nonApiWebWorkspaces =
     Array.isArray(packageJsonWorkspaces) && packageJsonWorkspaces.length > 2
@@ -145,7 +170,8 @@ export const handler = async ({
     },
     nonApiWebWorkspaces.length > 0 && {
       title: 'Building Packages...',
-      task: (_ctx, task) => buildPackagesTask(task, nonApiWebWorkspaces),
+      task: (_ctx: unknown, task: unknown) =>
+        buildPackagesTask(task, nonApiWebWorkspaces),
     },
     (workspace.includes('web') || workspace.includes('api')) && {
       title: 'Checking workspace packages...',
@@ -245,7 +271,7 @@ export const handler = async ({
         }
       },
     },
-  ].filter(Boolean)
+  ].filter((t): t is ListrTask => Boolean(t))
 
   const triggerPrerender = async () => {
     console.log('Starting prerendering...')

@@ -1,7 +1,11 @@
 vi.mock('@cedarjs/telemetry', () => {
   return {
     errorTelemetry: () => vi.fn(),
-    timedTelemetry: (_argv, _options, callback) => {
+    timedTelemetry: (
+      _argv: unknown,
+      _options: unknown,
+      callback: () => unknown,
+    ) => {
       return callback()
     },
   }
@@ -37,7 +41,7 @@ vi.mock('@cedarjs/project-config', () => {
 vi.mock('node:fs', () => {
   return {
     default: {
-      existsSync: (path) => {
+      existsSync: (path: string): boolean | undefined => {
         if (path === '/mocked/project/api/prisma.config.js') {
           // Mock the existence of the Prisma config file
           return true
@@ -45,8 +49,9 @@ vi.mock('node:fs', () => {
           // Mock the existence of all packages/<pkg-name>/package.json files
           return true
         }
+        return undefined
       },
-      readFileSync: () => {
+      readFileSync: (): string => {
         // Reading /mocked/project/package.json
         // It just needs a workspace config section
         return JSON.stringify({
@@ -91,6 +96,7 @@ vi.mock('./buildPackagesTask.js', () => ({
 }))
 
 import { Listr } from 'listr2'
+import type { ListrTask } from 'listr2'
 import { vi, afterEach, test, expect } from 'vitest'
 
 vi.mock('listr2')
@@ -114,7 +120,9 @@ test('the build tasks are in the correct sequence', async () => {
 
   await handler({})
 
-  expect(Listr.mock.calls[0][0].map((x) => x.title)).toMatchInlineSnapshot(`
+  const firstCallArg = vi.mocked(Listr).mock.calls[0][0]
+  const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
+  expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
       "Generating Prisma Client...",
       "Building Packages...",
@@ -134,7 +142,9 @@ test('Should run prerender for web', async () => {
   const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
   await handler({ workspace: ['web'], prerender: true })
-  expect(Listr.mock.calls[0][0].map((x) => x.title)).toMatchInlineSnapshot(`
+  const firstCallArg = vi.mocked(Listr).mock.calls[0][0]
+  const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
+  expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
       "Checking workspace packages...",
       "Building Web...",

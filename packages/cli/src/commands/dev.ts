@@ -92,7 +92,7 @@ export const builder = (yargs: Argv) => {
     )
 }
 
-export const handler = async (options: any) => {
+export const handler = async (options: Record<string, unknown>) => {
   const { handler } = await import('./dev/devHandler.js')
   return handler(options)
 }
