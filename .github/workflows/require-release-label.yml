@@ -2,7 +2,7 @@ name: 🏷 Require release label
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened, labeled, unlabeled, edited]
 
 # We often cancel concurrent jobs, but this job is so fast it wouldn't really
 # save any resources. It just complicates things (GitHub's runners would
