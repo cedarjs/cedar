@@ -224,18 +224,13 @@ export function getLoadDocumentsOptions(filename: string) {
 
 async function importGeneratedPrismaClient() {
   const cacheBuster = `?t=${Date.now()}`
-  const prismaClientPath = await resolveGeneratedPrismaClient({
-    mustExist: true,
-  })
+  const { clientPath, error } = await resolveGeneratedPrismaClient()
 
-  if (!prismaClientPath) {
-    throw new Error(
-      'Could not resolve generated Prisma client path. ' +
-        'Run `yarn cedar prisma generate` and try again.',
-    )
+  if (!clientPath) {
+    throw new Error(error)
   }
 
-  const fileUrl = pathToFileURL(prismaClientPath).href + cacheBuster
+  const fileUrl = pathToFileURL(clientPath).href + cacheBuster
   const freshPrisma = await import(fileUrl)
 
   return freshPrisma

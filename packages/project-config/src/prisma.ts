@@ -154,7 +154,11 @@ export async function getDataMigrationsPath(
   return path.join(migrationsDir, 'dataMigrations')
 }
 
-export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
+type ResolveReturnType =
+  | { clientPath: string; error: undefined }
+  | { clientPath: string | undefined; error: string }
+
+export async function resolveGeneratedPrismaClient(): Promise<ResolveReturnType> {
   let generatorOutputPath: string | undefined
   let ext = 'ts'
 
@@ -195,13 +199,18 @@ export async function resolveGeneratedPrismaClient({ mustExist = false } = {}) {
       ? path.join(generatorOutputPath, 'client.' + ext)
       : undefined
 
-  if (mustExist && (!prismaClientEntry || !fs.existsSync(prismaClientEntry))) {
+  if (!prismaClientEntry || !fs.existsSync(prismaClientEntry)) {
     const checked = prismaClientEntry ?? '(could not determine output path)'
-    throw new Error(
-      `Could not find generated Prisma client entry. Checked: ${checked}. ` +
+    return {
+      clientPath: prismaClientEntry,
+      error:
+        `Could not find generated Prisma client entry. Checked: ${checked}. ` +
         'Run `yarn cedar prisma generate` and try again.',
-    )
+    }
   }
 
-  return prismaClientEntry
+  return {
+    clientPath: prismaClientEntry,
+    error: undefined,
+  }
 }

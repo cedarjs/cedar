@@ -53,7 +53,8 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 
   return {
     ...originalProjectConfig,
-    resolveGeneratedPrismaClient: () => Promise.resolve(mockPrismaClientPath),
+    resolveGeneratedPrismaClient: () =>
+      Promise.resolve({ clientPath: mockPrismaClientPath, error: undefined }),
   }
 })
 
