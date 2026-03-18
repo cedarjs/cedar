@@ -61,6 +61,8 @@ async function benchmark() {
   )
   console.log('')
 
+  process.env.CEDAR_CWD ??= fixturePath
+
   // Track individual measurements
   const initTimes: number[] = []
   const coldDiagnosticsTimes: number[] = []
@@ -71,7 +73,7 @@ async function benchmark() {
   // Warmup phase (don't measure these)
   console.log('Warming up...')
   for (let i = 0; i < WARMUP_ITERATIONS; i++) {
-    const project = new RWProject({ projectRoot: fixturePath })
+    const project = new RWProject()
     await project.collectDiagnostics()
     await project.collectDiagnostics() // Warm cache
   }
@@ -92,7 +94,7 @@ async function benchmark() {
 
     // 1. Project Initialization (Shallow)
     const t0 = performance.now()
-    const project = new RWProject({ projectRoot: fixturePath })
+    const project = new RWProject()
     const t1 = performance.now()
     initTimes.push(t1 - t0)
 
@@ -162,6 +164,8 @@ async function benchmark() {
 
   console.log('\n=== Memory Usage (Peak per Iteration) ===')
   if (memoryDeltas.length > 0) {
+    console.log(`Baseline memory: ${baselineMemory} MB`)
+    console.log()
     console.table({
       Mean: `${memStats.mean.toFixed(2)} MB`,
       Median: `${memStats.median.toFixed(2)} MB`,
