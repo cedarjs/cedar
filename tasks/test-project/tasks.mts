@@ -40,7 +40,7 @@ export async function webTasks(
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
           execa(
-            'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.5.12',
+            'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.7.0',
             [],
             getExecaOptions(outputPath),
           ),
