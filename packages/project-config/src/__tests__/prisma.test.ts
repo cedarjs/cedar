@@ -48,31 +48,6 @@ test('resolveGeneratedPrismaClient', async () => {
     datasource db { provider = "sqlite" }`,
   )
 
-  const expectedNodeModulesPath = path.join(
-    getPaths().base,
-    'node_modules/.prisma/client/index.js',
-  )
-
-  await expect(resolveGeneratedPrismaClient()).resolves.toEqual(
-    path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.ts'),
-  )
-
-  await expect(
-    resolveGeneratedPrismaClient({ mustExist: true }),
-  ).rejects.toThrow(
-    `Could not find generated Prisma client entry. Checked: ` +
-      `${path.join(getPaths().base, 'api', 'db', 'generated', 'prisma', 'client.ts')}, ` +
-      `${path.join(getPaths().base, 'api', 'db', 'generated', 'client', 'client.ts')}, ` +
-      `${expectedNodeModulesPath}. Run \`yarn cedar prisma generate\` and try again.`,
-  )
-
-  fs.mkdirSync(path.dirname(expectedNodeModulesPath), { recursive: true })
-  fs.writeFileSync(expectedNodeModulesPath, 'module.exports = {}')
-
-  await expect(
-    resolveGeneratedPrismaClient({ mustExist: true }),
-  ).resolves.toEqual(expectedNodeModulesPath)
-
   const expectedGeneratedPath = path.join(
     getPaths().base,
     'api',
@@ -81,9 +56,25 @@ test('resolveGeneratedPrismaClient', async () => {
     'prisma',
     'client.ts',
   )
+
+  // Without mustExist, returns the computed path even if the file doesn't exist yet
+  await expect(resolveGeneratedPrismaClient()).resolves.toEqual(
+    expectedGeneratedPath,
+  )
+
+  // With mustExist, throws when the file doesn't exist
+  await expect(
+    resolveGeneratedPrismaClient({ mustExist: true }),
+  ).rejects.toThrow(
+    `Could not find generated Prisma client entry. Checked: ${expectedGeneratedPath}. ` +
+      'Run `yarn cedar prisma generate` and try again.',
+  )
+
+  // Create the generated file
   fs.mkdirSync(path.dirname(expectedGeneratedPath), { recursive: true })
   fs.writeFileSync(expectedGeneratedPath, 'export default { ModelName: {} }')
 
+  // With mustExist, resolves when the file exists
   await expect(
     resolveGeneratedPrismaClient({ mustExist: true }),
   ).resolves.toEqual(expectedGeneratedPath)

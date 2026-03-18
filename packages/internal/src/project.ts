@@ -3,7 +3,7 @@ import path from 'path'
 
 import { parseConfigFileTextToJson } from 'typescript'
 
-import { getPaths, resolveFile } from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/project-config'
 
 export const getTsConfigs = () => {
   const rwPaths = getPaths()
@@ -54,44 +54,4 @@ export const isRealtimeSetup = () => {
   )
 
   return fs.existsSync(realtimePath)
-}
-
-// TODO: Remove this in a future minor release. It should not be needed. The
-// re-export it detects should always be present in CedarJS v7 and later.
-export const dbReexportsPrismaClient = () => {
-  const dbPath = resolveFile(path.join(getPaths().api.lib, 'db'))
-
-  if (!dbPath) {
-    return false
-  }
-
-  const content = fs.readFileSync(dbPath, 'utf-8')
-
-  // Find PrismaClient import.
-  // It can look like this:
-  // import { PrismaClient } from 'api/db/generated/prisma/client.mts'
-  // But can also be a multi-line import:
-  // import {
-  //   Member,
-  //   Price,
-  //   PrismaClient,
-  //   Store,
-  // } from 'api/db/generated/prisma/client.mts'
-  const prismaClientImportMatch = content.match(
-    /import\s+{[^}]*\bPrismaClient\b[^}]*}\s+from\s+['"](.*?)['"]/,
-  )
-  const prismaClientLocation = prismaClientImportMatch?.[1]
-
-  if (!prismaClientLocation) {
-    return false
-  }
-
-  return new RegExp(
-    // @ts-expect-error - old types. This is supported in Node 24, which is the
-    // minimum supported version of Node for CedarJS.
-    // RegExp.escape has been added to the newer ES2025 target, but I'm not
-    // ready to change that just yet
-    // https://github.com/microsoft/TypeScript/pull/63046
-    `export \\* from ['"]${RegExp.escape(prismaClientLocation)}['"]`,
-  ).test(content)
 }
