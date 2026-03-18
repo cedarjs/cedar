@@ -42,8 +42,6 @@ import { convertExpressHeaders, getFullUrl } from './utils.js'
 loadDotEnv({
   path: path.join(getPaths().base, '.env'),
   defaults: path.join(getPaths().base, '.env.defaults'),
-  // @ts-expect-error - Old typings. @types/dotenv-defaults depends on dotenv
-  // v8. dotenv-defaults uses dotenv v14
   multiline: true,
 })
 // ------------------------------------------------
@@ -160,9 +158,8 @@ export async function runFeServer() {
   )
 
   if (rscEnabled) {
-    const { createRscRequestHandler } = await import(
-      './rsc/rscRequestHandler.js'
-    )
+    const { createRscRequestHandler } =
+      await import('./rsc/rscRequestHandler.js')
     // Mounting middleware at /rw-rsc will strip /rw-rsc from req.url
     app.use(
       '/rw-rsc',

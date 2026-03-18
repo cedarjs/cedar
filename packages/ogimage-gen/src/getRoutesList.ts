@@ -7,9 +7,8 @@ export const getRoutesList = async () => {
   const rwPaths = getPaths()
 
   if (process.env.NODE_ENV === 'development') {
-    const { getProjectRoutes } = await import(
-      '@cedarjs/internal/dist/routes.js'
-    )
+    const { getProjectRoutes } =
+      await import('@cedarjs/internal/dist/routes.js')
     return getProjectRoutes()
   } else {
     const routeManifestUrl = url.pathToFileURL(rwPaths.web.routeManifest).href

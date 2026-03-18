@@ -26,10 +26,10 @@ yarn rw test
 Error: Get config: Schema Parsing P1012
 
 error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
-  -->  schema.prisma:3
+  -->  schema.prisma:2
    |
+ 1 |   datasource db {
  2 |   provider = "postgresql"
- 3 |   url      = env("DATABASE_URL")
    |
 
 Validation Error Count: 1

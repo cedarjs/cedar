@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/prerender",
-  "version": "2.0.2",
+  "version": "2.8.0",
   "description": "CedarJS prerender",
   "repository": {
     "type": "git",
@@ -67,10 +67,10 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@ast-grep/napi": "0.40.3",
-    "@babel/generator": "7.28.5",
-    "@babel/parser": "7.28.5",
-    "@babel/traverse": "7.28.5",
+    "@ast-grep/napi": "0.41.1",
+    "@babel/generator": "7.29.1",
+    "@babel/parser": "7.29.0",
+    "@babel/traverse": "7.29.0",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/router": "workspace:*",
@@ -81,17 +81,17 @@
     "@rollup/plugin-commonjs": "28.0.9",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-replace": "6.0.3",
-    "@swc/core": "1.15.7",
+    "@swc/core": "1.15.18",
     "@whatwg-node/fetch": "0.10.13",
     "babel-plugin-ignore-html-and-css-imports": "0.1.0",
-    "cheerio": "1.1.2",
-    "graphql": "16.12.0",
+    "cheerio": "1.2.0",
+    "graphql": "16.13.1",
     "mime-types": "2.1.35",
-    "rollup": "4.54.0",
+    "rollup": "4.59.0",
     "rollup-plugin-swc3": "0.12.1",
-    "unimport": "5.6.0",
+    "unimport": "5.7.0",
     "unplugin-auto-import": "19.3.0",
-    "vite": "5.4.19",
+    "vite": "5.4.21",
     "vite-node": "3.2.4"
   },
   "devDependencies": {
@@ -100,7 +100,7 @@
     "@types/react": "^18.2.55",
     "babel-plugin-tester": "11.0.4",
     "concurrently": "9.2.1",
-    "publint": "0.3.16",
+    "publint": "0.3.18",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

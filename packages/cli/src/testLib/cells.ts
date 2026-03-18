@@ -74,7 +74,8 @@ export const isFileInsideFolder = (filePath: string, folderPath: string) => {
 
 export const hasDefaultExport = (ast: types.Node): boolean => {
   let exported = false
-  traverse.default(ast, {
+  // @ts-expect-error - weird types. Clearly this has worked for several years
+  traverse(ast, {
     ExportDefaultDeclaration() {
       exported = true
       return
@@ -90,7 +91,8 @@ interface NamedExports {
 
 export const getNamedExports = (ast: types.Node): NamedExports[] => {
   const namedExports: NamedExports[] = []
-  traverse.default(ast, {
+  // @ts-expect-error - weird types. Clearly this has worked for several years
+  traverse(ast, {
     ExportNamedDeclaration(path: NodePath<types.ExportNamedDeclaration>) {
       // Re-exports from other modules
       // Eg: export { a, b } from './module.js'
@@ -163,7 +165,8 @@ export const fileToAst = (filePath: string): types.Node => {
 
 export const getCellGqlQuery = (ast: types.Node) => {
   let cellQuery: string | undefined = undefined
-  traverse.default(ast, {
+  // @ts-expect-error - weird types. Clearly this has worked for several years
+  traverse(ast, {
     ExportNamedDeclaration({ node }: NodePath<types.ExportNamedDeclaration>) {
       if (
         node.exportKind === 'value' &&

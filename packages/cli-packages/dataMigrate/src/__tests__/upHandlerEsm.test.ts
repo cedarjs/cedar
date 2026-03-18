@@ -118,10 +118,10 @@ vi.mock(`\\redwood-app\\api\\dist\\lib\\db.js`, () => {
   }
 })
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 beforeAll(() => {
-  process.env.RWJS_CWD = redwoodProjectPath
+  process.env.CEDAR_CWD = redwoodProjectPath
 })
 
 afterEach(() => {
@@ -130,7 +130,7 @@ afterEach(() => {
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 const ranDataMigration = {

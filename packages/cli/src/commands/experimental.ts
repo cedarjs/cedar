@@ -1,18 +1,17 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-// @ts-expect-error - No types for .js files
-import detectRxVersion from '../middleware/detectProjectRxVersion.js'
+import { detectCedarVersion } from '../middleware/detectProjectCedarVersion.js'
 
-// @ts-expect-error - No types for .js files
+// @ts-expect-error - Types not available for JS files
 import * as experimentalInngest from './experimental/setupInngest.js'
-// @ts-expect-error - No types for .js files
+// @ts-expect-error - Types not available for JS files
 import * as experimentalOpenTelemetry from './experimental/setupOpentelemetry.js'
-// @ts-expect-error - No types for .js files
+// @ts-expect-error - Types not available for JS files
 import * as experimentalReactCompiler from './experimental/setupReactCompiler.js'
-// @ts-expect-error - No types for .js files
+// @ts-expect-error - Types not available for JS files
 import * as experimentalRsc from './experimental/setupRsc.js'
-// @ts-expect-error - No types for .js files
+// @ts-expect-error - Types not available for JS files
 import * as experimentalStreamingSsr from './experimental/setupStreamingSsr.js'
 
 export const command = 'experimental <command>'
@@ -27,7 +26,8 @@ export const builder = (yargs: Argv) =>
     .command(experimentalRsc)
     .command(experimentalStreamingSsr)
     .demandCommand()
-    .middleware(detectRxVersion)
+    // @ts-expect-error - Yargs TS types aren't very good
+    .middleware(detectCedarVersion)
     .epilogue(
       `Also see the ${terminalLink(
         'CedarJS CLI Reference',

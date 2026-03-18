@@ -55,7 +55,6 @@ First, update your Prisma schema to use PostgreSQL as the provider:
 ```graphql title="api/db/schema.prisma"
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
 }
 ```
 

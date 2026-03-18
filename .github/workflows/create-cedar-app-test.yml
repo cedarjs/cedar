@@ -12,13 +12,19 @@ jobs:
       REDWOOD_DISABLE_TELEMETRY: 1
 
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Set up job
         uses: ./.github/actions/set-up-job
 
       - name: Set up test project
         run: |
-          yarn build:pack
+          set -o pipefail
+          yarn build:pack || {
+            echo "::group::package.json diagnostics"
+            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
+            echo "::endgroup::"
+            exit 1
+          }
           PROJECT_PATH=$(yarn set-up-test-project)
           echo "PROJECT_PATH=$PROJECT_PATH" >> $GITHUB_ENV
         working-directory: ./packages/create-cedar-app
@@ -53,7 +59,7 @@ jobs:
           PROJECT_PATH: ${{ env.PROJECT_PATH }}
 
       - name: ⬢ Set up Node.js
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           # Use Node 20 here for testing behavior for node versions below the
           # minimum supported version
@@ -66,7 +72,7 @@ jobs:
           PROJECT_PATH: ${{ env.PROJECT_PATH }}
 
       - name: ⬢ Set up Node.js
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           # Use Node 25 here for testing behavior for node versions above the
           # maximum supported version

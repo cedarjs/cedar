@@ -1,3 +1,5 @@
+import { createRequire } from 'node:module'
+
 import { getConfig, getEnvVarDefinitions } from '@cedarjs/project-config'
 
 /**
@@ -101,19 +103,21 @@ function registerFwShims() {
   globalThis.__webpack_chunk_load__ ||= async (id: string) => {
     console.log('registerFwShims chunk load id', id)
 
-    if (globalThis.__rwjs__vite_ssr_runtime) {
-      return globalThis.__rwjs__vite_ssr_runtime?.executeUrl(id).then((mod) => {
-        console.log('registerFwShims chunk load mod', mod)
+    if (globalThis.__cedarjs__vite_ssr_runtime) {
+      return globalThis.__cedarjs__vite_ssr_runtime
+        ?.executeUrl(id)
+        .then((mod) => {
+          console.log('registerFwShims chunk load mod', mod)
 
-        // checking m.default to better support CJS. If it's an object, it's
-        // likely a CJS module. Otherwise it's probably an ES module with a
-        // default export
-        if (mod.default && typeof mod.default === 'object') {
-          return globalThis.__rw_module_cache__.set(id, mod.default)
-        }
+          // checking m.default to better support CJS. If it's an object, it's
+          // likely a CJS module. Otherwise it's probably an ES module with a
+          // default export
+          if (mod.default && typeof mod.default === 'object') {
+            return globalThis.__rw_module_cache__.set(id, mod.default)
+          }
 
-        return globalThis.__rw_module_cache__.set(id, mod)
-      })
+          return globalThis.__rw_module_cache__.set(id, mod)
+        })
     }
 
     return import(id).then((mod) => {
@@ -134,6 +138,15 @@ function registerFwShims() {
     console.log('registerFwShims require id', id)
     return globalThis.__rw_module_cache__.get(id)
   }
+
+  // __non_webpack_require__ is the real Node.js `require` in a webpack bundle.
+  // Some CJS packages (e.g. `bindings`) check `typeof __webpack_require__` and
+  // then unconditionally access `__non_webpack_require__` without a typeof
+  // guard. Because Cedar sets `globalThis.__webpack_require__` above, those
+  // packages would throw a ReferenceError if we don't also provide
+  // `__non_webpack_require__`. We set it to a real `require` so those packages
+  // behave correctly when loaded as external CJS modules.
+  globalThis.__non_webpack_require__ ||= createRequire(import.meta.url)
 }
 
 function swapLocalhostFor127(hostString: string) {

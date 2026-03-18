@@ -12,7 +12,7 @@ import {
   getPaths,
 } from '../paths'
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 /**
  * All paths relevant to the redwood stack as defined in
@@ -29,6 +29,7 @@ const DEFAULT_PATHS = {
     },
     prebuild: ['.redwood', 'prebuild'],
   },
+  packages: ['packages'],
   scripts: ['scripts'],
   generatorTemplates: ['generatorTemplates'],
   api: {
@@ -37,6 +38,7 @@ const DEFAULT_PATHS = {
     functions: ['api', 'src', 'functions'],
     graphql: ['api', 'src', 'graphql'],
     lib: ['api', 'src', 'lib'],
+    generators: ['api', 'generators'],
     config: ['api', 'src', 'config'],
     services: ['api', 'src', 'services'],
     directives: ['api', 'src', 'directives'],
@@ -60,6 +62,7 @@ const DEFAULT_PATHS = {
     layouts: ['web', 'src', 'layouts/'],
     src: ['web', 'src'],
     storybook: ['web', '.storybook'],
+    generators: ['web', 'generators'],
     app: ['web', 'src', 'App.tsx'],
     document: ['web', 'src', 'Document'],
     html: ['web', 'src', 'index.html'],
@@ -123,10 +126,10 @@ describe('paths', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct base directory', () =>
@@ -263,10 +266,10 @@ describe('paths', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct base directory', () =>
@@ -449,10 +452,10 @@ describe('paths', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct base directory', () =>
@@ -596,10 +599,10 @@ describe('paths', () => {
     )
 
     beforeAll(() => {
-      process.env.RWJS_CWD = FIXTURE_BASEDIR
+      process.env.CEDAR_CWD = FIXTURE_BASEDIR
     })
     afterAll(() => {
-      process.env.RWJS_CWD = RWJS_CWD
+      process.env.CEDAR_CWD = CEDAR_CWD
     })
 
     it('finds the correct base directory', () => {

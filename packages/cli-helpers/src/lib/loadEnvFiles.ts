@@ -36,8 +36,6 @@ export function loadDefaultEnvFiles(cwd: string) {
   dotenvDefaultsConfig({
     path: path.join(cwd, '.env'),
     defaults: path.join(cwd, '.env.defaults'),
-    // @ts-expect-error - Old typings. @types/dotenv-defaults depends on dotenv
-    // v8. dotenv-defaults uses dotenv v14
     multiline: true,
   })
 }

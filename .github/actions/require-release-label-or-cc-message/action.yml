@@ -1,5 +1,12 @@
 name: 'Require Release Label Conditional'
 description: 'Require release labels on PRs unless title starts with conventional commit prefixes'
+
+inputs:
+  github-token:
+    description: 'GitHub token for setting milestones'
+    required: false
+    default: ''
+
 runs:
-  using: 'node20'
-  main: 'requireReleaseLabelOrCcMessage.mjs'
+  using: 'node24'
+  main: 'requireReleaseLabelOrCcMessage.mts'

@@ -72,7 +72,7 @@ describe('yarn cedar exec', () => {
       l: false,
       silent: false,
       s: false,
-      $0: 'rw',
+      $0: 'cedar',
       name: 'normalScript',
     }
     await handler(args)

@@ -47,7 +47,7 @@ describe('Check Redwood cli commands against tutorial', () => {
     cy.readFile(`${WEB_DIST}/index.html`).should('contain', 'Cedar Blog')
     cy.readFile(`${WEB_DIST}/about.html`).should(
       'contain',
-      'This site was created to demonstrate my mastery of Redwood'
+      'This site was created to demonstrate my mastery of Cedar'
     )
   })
 })

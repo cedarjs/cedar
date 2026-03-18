@@ -130,9 +130,9 @@ export function saveCommandCache(pluginCommandCache) {
 }
 
 /**
- * Logs warnings for any plugins that have invalid definitions in the redwood.toml file
+ * Logs warnings for any plugins that have invalid definitions in cedar.toml
  *
- * @param {any[]} plugins An array of plugin objects read from the redwood.toml file
+ * @param {any[]} plugins An array of plugin objects read from cedar.toml
  */
 export function checkPluginListAndWarn(plugins) {
   // Plugins must define a package
@@ -151,18 +151,21 @@ export function checkPluginListAndWarn(plugins) {
   if (pluginPackages.length !== new Set(pluginPackages).size) {
     console.warn(
       ansis.yellow(
-        '⚠️  Duplicate plugin packages found in redwood.toml, duplicates will be ignored.',
+        '⚠️  Duplicate plugin packages found in your cedar.toml, duplicates ' +
+          'will be ignored.',
       ),
     )
   }
 
-  // Plugins should be published to npm under a scope which is used as the namespace
+  // Plugins should be published to npm under a scope which is used as the
+  // namespace
   const namespaces = plugins.map((p) => p.package?.split('/')[0])
   namespaces.forEach((ns) => {
     if (ns !== undefined && !ns.startsWith('@')) {
       console.warn(
         ansis.yellow(
-          `⚠️  Plugin "${ns}" is missing a scope/namespace, it will not be loaded.`,
+          `⚠️  Plugin "${ns}" is missing a scope/namespace, it will not be ` +
+            'loaded.',
         ),
       )
     }

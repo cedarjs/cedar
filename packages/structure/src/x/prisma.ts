@@ -1,10 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 
-import type { Location } from 'vscode-languageserver'
-import { Range } from 'vscode-languageserver'
-
-import { URL_file, URL_toFile } from './URL'
-import { Position_fromOffsetOrFail } from './vscode-languageserver-types'
+import { Position_fromOffsetOrFail } from './diagnostics.js'
+import type { Location } from './Location.js'
+import { Range_create } from './Range.js'
+import { URL_file, URL_toFile } from './URL.js'
 
 /**
  * find "env()" expressions in a prisma file using regex
@@ -36,7 +35,7 @@ export function* prisma_parseEnvExpressions(src: string) {
     try {
       const start = Position_fromOffsetOrFail(match.index, src)
       const end = Position_fromOffsetOrFail(match.index + match[0].length, src)
-      const range = Range.create(start, end)
+      const range = Range_create(start, end)
       const key = JSON.parse(match[1])
       yield { range, key }
     } catch {

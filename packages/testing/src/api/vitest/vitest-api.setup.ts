@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { afterAll, beforeEach, it, describe, vi, beforeAll } from 'vitest'
 
-import { getPaths, getSchemaPath } from '@cedarjs/project-config'
+import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { defineScenario } from '@cedarjs/testing/api'
 import type { DefineScenario } from '@cedarjs/testing/api'
 
@@ -173,12 +173,11 @@ async function configureTeardown() {
     return
   }
 
-  const { getDMMF, getSchemaWithPath } = await import('@prisma/internals')
+  const { getDMMF } = await import('@prisma/internals')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const schemaPath = await getSchemaPath(cedarPaths.api.prismaConfig)
-  const result = await getSchemaWithPath(schemaPath)
+  const result = await getPrismaSchemas()
   const schema = await getDMMF({ datamodel: result.schemas })
   const schemaModels = schema.datamodel.models.map((m) => {
     return m.dbName || m.name
@@ -328,14 +327,11 @@ const wasDbImported = () => {
 let quoteStyle: string
 // determine what kind of quotes are needed around table names in raw SQL
 async function getQuoteStyle() {
-  const { getConfig: getPrismaConfig, getSchemaWithPath } = await import(
-    '@prisma/internals'
-  )
+  const { getConfig: getPrismaConfig } = await import('@prisma/internals')
 
   // @NOTE prisma utils are available in cli lib/schemaHelpers
   // But avoid importing them, to prevent memory leaks in jest
-  const schemaPath = await getSchemaPath(cedarPaths.api.prismaConfig)
-  const result = await getSchemaWithPath(schemaPath)
+  const result = await getPrismaSchemas()
 
   if (!quoteStyle) {
     const config = await getPrismaConfig({

@@ -14,7 +14,7 @@ import {
 vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 
 const redwoodProjectPath = '/redwood-app'
-process.env.RWJS_CWD = redwoodProjectPath
+process.env.CEDAR_CWD = redwoodProjectPath
 
 afterEach(() => {
   vol.reset()
@@ -22,7 +22,7 @@ afterEach(() => {
 
 describe('api', () => {
   test("TARGETS_NODE hasn't unintentionally changed", () => {
-    expect(TARGETS_NODE).toMatchInlineSnapshot(`"20.10"`)
+    expect(TARGETS_NODE).toMatchInlineSnapshot(`"24"`)
   })
 
   describe('getApiSideBabelPresets', () => {
@@ -44,33 +44,43 @@ describe('api', () => {
 
     it('can include `@babel/preset-env`', () => {
       const apiSideBabelPresets = getApiSideBabelPresets({ presetEnv: true })
-      expect(apiSideBabelPresets).toMatchInlineSnapshot(`
+
+      if (!Array.isArray(apiSideBabelPresets)) {
+        throw new Error('apiSideBabelPresets is not an array')
+      }
+
+      expect(apiSideBabelPresets.length).toBe(2)
+
+      const firstPlugin = apiSideBabelPresets[0]
+      const secondPlugin = apiSideBabelPresets[1]
+
+      if (!Array.isArray(secondPlugin)) {
+        throw new Error('secondPlugin is not an array')
+      }
+
+      const secondPluginName = secondPlugin[0]
+
+      expect(secondPluginName).toBe('@babel/preset-env')
+
+      expect(firstPlugin).toMatchInlineSnapshot(`
         [
-          [
-            "@babel/preset-typescript",
-            {
-              "allExtensions": true,
-              "isTSX": true,
+          "@babel/preset-typescript",
+          {
+            "allExtensions": true,
+            "isTSX": true,
+          },
+          "rwjs-babel-preset-typescript",
+        ]
+      `)
+      expect(secondPlugin).toMatchInlineSnapshot(`
+        [
+          "@babel/preset-env",
+          {
+            "targets": {
+              "node": "24",
             },
-            "rwjs-babel-preset-typescript",
-          ],
-          [
-            "@babel/preset-env",
-            {
-              "corejs": {
-                "proposals": true,
-                "version": "3.47",
-              },
-              "exclude": [
-                "@babel/plugin-transform-class-properties",
-                "@babel/plugin-transform-private-methods",
-              ],
-              "targets": {
-                "node": "20.10",
-              },
-              "useBuiltIns": "usage",
-            },
-          ],
+            "useBuiltIns": false,
+          },
         ]
       `)
     })
@@ -119,14 +129,11 @@ describe('api', () => {
       )
 
       const apiSideBabelPlugins = getApiSideBabelPlugins()
-      expect(apiSideBabelPlugins).toHaveLength(10)
+      expect(apiSideBabelPlugins).toHaveLength(7)
 
       const pluginNames = apiSideBabelPlugins.map(([name]) => name)
       expect(pluginNames).toMatchInlineSnapshot(`
         [
-          "@babel/plugin-transform-class-properties",
-          "@babel/plugin-transform-private-methods",
-          "@babel/plugin-transform-private-property-in-object",
           "@babel/plugin-transform-react-jsx",
           "@babel/plugin-transform-runtime",
           "babel-plugin-module-resolver",
@@ -149,35 +156,8 @@ describe('api', () => {
       `)
 
       expect(apiSideBabelPlugins).toContainEqual([
-        '@babel/plugin-transform-class-properties',
-        {
-          loose: true,
-        },
-      ])
-
-      expect(apiSideBabelPlugins).toContainEqual([
-        '@babel/plugin-transform-private-methods',
-        {
-          loose: true,
-        },
-      ])
-
-      expect(apiSideBabelPlugins).toContainEqual([
-        '@babel/plugin-transform-private-property-in-object',
-        {
-          loose: true,
-        },
-      ])
-
-      expect(apiSideBabelPlugins).toContainEqual([
         '@babel/plugin-transform-runtime',
-        {
-          corejs: {
-            proposals: true,
-            version: 3,
-          },
-          version: expect.any(String),
-        },
+        {},
       ])
 
       expect(apiSideBabelPlugins).toContainEqual([

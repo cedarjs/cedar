@@ -1,39 +1,43 @@
-import { join } from 'path'
+import fs from 'node:fs'
+import { createRequire } from 'node:module'
+import path from 'node:path'
 
 import type { DMMF } from '@prisma/generator-helper'
-import { getDMMF, getSchemaWithPath } from '@prisma/internals'
+import type PrismaInternals from '@prisma/internals'
 
 import {
   getPaths,
   processPagesDir,
-  getSchemaPath,
+  getConfigPath,
+  getPrismaSchemas,
 } from '@cedarjs/project-config'
 
-import type { Host } from '../hosts'
-import { BaseNode } from '../ide'
-import { lazy, memo } from '../x/decorators'
+import { BaseNode } from '../nodes.js'
+import { lazy, memo } from '../x/decorators.js'
 import {
   followsDirNameConvention,
   isCellFileName,
   isLayoutFileName,
-} from '../x/path'
-import { URL_file } from '../x/URL'
+  globSync,
+} from '../x/path.js'
+import { URL_file } from '../x/URL.js'
 
-import { RWCell } from './RWCell'
-import { RWComponent } from './RWComponent'
-import { RWEnvHelper } from './RWEnvHelper'
-import { RWFunction } from './RWFunction'
-import { RWLayout } from './RWLayout'
-import { RWPage } from './RWPage'
-import { RWRouter } from './RWRouter'
-import { RWSDL } from './RWSDL'
-import { RWService } from './RWService'
-import { RWTOML } from './RWTOML'
+import { RWCell } from './RWCell.js'
+import { RWComponent } from './RWComponent.js'
+import { RWEnvHelper } from './RWEnvHelper.js'
+import { RWFunction } from './RWFunction.js'
+import { RWLayout } from './RWLayout.js'
+import { RWPage } from './RWPage.js'
+import { RWRouter } from './RWRouter.js'
+import { RWSDL } from './RWSDL.js'
+import { RWService } from './RWService.js'
+import { RWTOML } from './RWTOML.js'
 
-export interface RWProjectOptions {
-  projectRoot: string
-  host: Host
-}
+// @prisma/internals is a CJS-only bundle that uses Object.defineProperty with
+// getter functions for its exports. Node's ESM named-export static analysis
+// cannot detect these, so we use createRequire to access them reliably.
+const _require = createRequire(import.meta.url)
+const { getDMMF } = _require('@prisma/internals') as typeof PrismaInternals
 
 const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
 
@@ -42,21 +46,10 @@ const allFilesGlob = '/**/*.{js,jsx,ts,tsx}'
  * This is the root node.
  */
 export class RWProject extends BaseNode {
-  constructor(public opts: RWProjectOptions) {
-    super()
-  }
   parent = undefined
 
-  get host() {
-    return this.opts.host
-  }
-
-  get projectRoot() {
-    return this.opts.projectRoot
-  }
-
   @lazy() get id() {
-    return URL_file(this.projectRoot)
+    return URL_file(this.pathHelper.base)
   }
 
   children() {
@@ -76,22 +69,23 @@ export class RWProject extends BaseNode {
    * Path constants that are relevant to a Redwood project.
    */
   @lazy() get pathHelper() {
-    return getPaths(this.projectRoot)
+    return getPaths()
   }
+
   /**
    * Checks for the presence of a tsconfig.json at the root.
    */
   @lazy() get isTypeScriptProject(): boolean {
     return (
-      this.host.existsSync(join(this.pathHelper.web.base, 'tsconfig.json')) ||
-      this.host.existsSync(join(this.pathHelper.api.base, 'tsconfig.json'))
+      fs.existsSync(path.join(this.pathHelper.web.base, 'tsconfig.json')) ||
+      fs.existsSync(path.join(this.pathHelper.api.base, 'tsconfig.json'))
     )
   }
+
   // TODO: do we move this to a separate node? (ex: RWDatabase)
   @memo() async prismaDMMF(): Promise<DMMF.Document | undefined> {
     try {
-      const schemaPath = await getSchemaPath(this.pathHelper.api.prismaConfig)
-      const result = await getSchemaWithPath(schemaPath)
+      const result = await getPrismaSchemas()
       const datamodel = result.schemas
       // consider case where dmmf doesn't exist (or fails to parse)
       return await getDMMF({ datamodel })
@@ -99,6 +93,7 @@ export class RWProject extends BaseNode {
       return undefined
     }
   }
+
   @memo() async prismaDMMFModelNames() {
     const dmmf = await this.prismaDMMF()
     if (!dmmf) {
@@ -106,9 +101,11 @@ export class RWProject extends BaseNode {
     }
     return dmmf.datamodel.models.map((m) => m.name)
   }
+
   @lazy() get redwoodTOML(): RWTOML {
-    return new RWTOML(join(this.projectRoot, 'redwood.toml'), this)
+    return new RWTOML(getConfigPath(), this)
   }
+
   @lazy() private get processPagesDir() {
     try {
       return processPagesDir(this.pathHelper.web.pages)
@@ -116,11 +113,13 @@ export class RWProject extends BaseNode {
       return []
     }
   }
+
   @lazy() get pages(): RWPage[] {
     return this.processPagesDir.map(
       (p) => new RWPage(p.constName, p.path, this),
     )
   }
+
   @lazy() get router() {
     return this.getRouter()
   }
@@ -132,34 +131,36 @@ export class RWProject extends BaseNode {
   servicesFilePath(name: string) {
     // name = blog,posts
     const ext = this.isTypeScriptProject ? '.ts' : '.js'
-    return join(this.pathHelper.api.services, name, name + ext)
+    return path.join(this.pathHelper.api.services, name, name + ext)
   }
 
   // TODO: move to path helper
   @lazy() get defaultNotFoundPageFilePath() {
     const ext = this.isTypeScriptProject ? '.tsx' : '.jsx'
-    return join(this.pathHelper.web.pages, 'NotFoundPage', 'NotFoundPage' + ext)
+    return path.join(
+      this.pathHelper.web.pages,
+      'NotFoundPage',
+      'NotFoundPage' + ext,
+    )
   }
 
   @lazy() get services() {
     // TODO: what is the official logic?
     // TODO: Support both `/services/todos/todos.js` AND `/services/todos.js`
-    return this.host
-      .globSync(this.pathHelper.api.services + allFilesGlob)
+    return globSync(this.pathHelper.api.services + allFilesGlob)
       .filter(followsDirNameConvention)
       .map((x) => new RWService(x, this))
   }
 
   @lazy() get sdls() {
-    return this.host
-      .globSync(this.pathHelper.api.graphql + '/**/*.sdl.{js,ts}')
-      .map((x) => new RWSDL(x, this))
+    return globSync(this.pathHelper.api.graphql + '/**/*.sdl.{js,ts}').map(
+      (x) => new RWSDL(x, this),
+    )
   }
 
   @lazy() get layouts(): RWLayout[] {
     // TODO: what is the official logic?
-    return this.host
-      .globSync(this.pathHelper.web.layouts + allFilesGlob)
+    return globSync(this.pathHelper.web.layouts + allFilesGlob)
       .filter(followsDirNameConvention)
       .filter(isLayoutFileName)
       .map((x) => new RWLayout(x, this))
@@ -167,15 +168,14 @@ export class RWProject extends BaseNode {
 
   @lazy() get functions(): RWFunction[] {
     // TODO: what is the official logic?
-    return this.host
-      .globSync(this.pathHelper.api.functions + allFilesGlob)
-      .map((x) => new RWFunction(x, this))
+    return globSync(this.pathHelper.api.functions + allFilesGlob).map(
+      (x) => new RWFunction(x, this),
+    )
   }
 
   @lazy() get components(): RWComponent[] {
-    return this.host
-      .globSync(this.pathHelper.web.components + allFilesGlob)
-      .map((file) => {
+    return globSync(this.pathHelper.web.components + allFilesGlob).map(
+      (file) => {
         if (isCellFileName(file)) {
           const possibleCell = new RWCell(file, this)
           return possibleCell.isCell
@@ -183,7 +183,8 @@ export class RWProject extends BaseNode {
             : new RWComponent(file, this)
         }
         return new RWComponent(file, this)
-      })
+      },
+    )
   }
 
   @lazy() get sides() {
@@ -192,7 +193,7 @@ export class RWProject extends BaseNode {
 
   // TODO: Wrap these in a real model.
   @lazy() get mocks() {
-    return this.host.globSync(this.pathHelper.web.base + '/**/*.mock.{js,ts}')
+    return globSync(this.pathHelper.web.base + '/**/*.mock.{js,ts}')
   }
 
   /**
@@ -200,8 +201,7 @@ export class RWProject extends BaseNode {
    * have a default export AND does not export `QUERY`
    **/
   @lazy() get cells(): RWCell[] {
-    return this.host
-      .globSync(this.pathHelper.web.base + '/**/*Cell.{js,jsx,tsx}')
+    return globSync(this.pathHelper.web.base + '/**/*Cell.{js,jsx,tsx}')
       .map((file) => new RWCell(file, this))
       .filter((file) => file.isCell)
   }

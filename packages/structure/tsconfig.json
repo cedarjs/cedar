@@ -1,17 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "target": "es2023",
+    "module": "node20",
+    "moduleResolution": "node16",
     "rootDir": "src",
     "outDir": "dist",
+    "emitDeclarationOnly": false,
     "experimentalDecorators": true,
     "noImplicitReturns": false,
     "noImplicitAny": false,
     "noUnusedLocals": false
   },
   "include": ["src"],
-  "references": [
-    {
-      "path": "../project-config"
-    }
-  ]
+  "references": [{ "path": "../project-config" }]
 }

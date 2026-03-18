@@ -7,15 +7,15 @@ import { cedarjsJobPathInjectorPlugin } from '../vite-plugin-cedarjs-job-path-in
 
 vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
-const RWJS_CWD = process.env.RWJS_CWD
-const TEST_RWJS_CWD = '/Users/tobbe/test-app/'
-process.env.RWJS_CWD = TEST_RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
+const TEST_CEDAR_CWD = '/Users/tobbe/test-app/'
+process.env.CEDAR_CWD = TEST_CEDAR_CWD
 
 // Mock the getPaths function
 vi.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({
     api: {
-      jobs: path.join(TEST_RWJS_CWD, 'api/src/jobs'),
+      jobs: path.join(TEST_CEDAR_CWD, 'api/src/jobs'),
     },
   }),
 }))
@@ -37,17 +37,17 @@ function getPluginTransform() {
 
 beforeAll(() => {
   // Add a toml entry for getPaths et al.
-  vol.fromJSON({ 'redwood.toml': '' }, TEST_RWJS_CWD)
+  vol.fromJSON({ 'redwood.toml': '' }, TEST_CEDAR_CWD)
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 describe('cedarjsJobPathInjectorPlugin', () => {
   it('should inject path and name into createJob call with empty object', async () => {
     const transform = getPluginTransform()
-    const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/testJob.js')
+    const testFilePath = path.join(TEST_CEDAR_CWD, 'api/src/jobs/testJob.js')
 
     const code = 'export const testJob = jobs.createJob({})'
 
@@ -63,7 +63,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
 
   it('should inject path and name into createJob call with existing properties', async () => {
     const transform = getPluginTransform()
-    const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/emailJob.js')
+    const testFilePath = path.join(TEST_CEDAR_CWD, 'api/src/jobs/emailJob.js')
 
     const code = `
       export const emailJob = jobs.createJob({
@@ -89,7 +89,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
   it('should handle nested directory paths correctly', async () => {
     const transform = getPluginTransform()
     const testFilePath = path.join(
-      TEST_RWJS_CWD,
+      TEST_CEDAR_CWD,
       'api/src/jobs/admin/cleanupJob.js',
     )
 
@@ -111,7 +111,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
 
   it('should handle TypeScript files', async () => {
     const transform = getPluginTransform()
-    const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/processJob.ts')
+    const testFilePath = path.join(TEST_CEDAR_CWD, 'api/src/jobs/processJob.ts')
 
     const code = `
       export const processJob = jobs.createJob({
@@ -134,7 +134,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
 
   it('should handle multiple createJob calls in the same file', async () => {
     const transform = getPluginTransform()
-    const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/multiJob.js')
+    const testFilePath = path.join(TEST_CEDAR_CWD, 'api/src/jobs/multiJob.js')
 
     const code = `
       export const firstJob = jobs.createJob({
@@ -159,7 +159,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
 
   it('should return null for files without createJob calls', async () => {
     const transform = getPluginTransform()
-    const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/noJob.js')
+    const testFilePath = path.join(TEST_CEDAR_CWD, 'api/src/jobs/noJob.js')
 
     const code = `
       export const someFunction = () => {
@@ -174,7 +174,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
 
   it('should handle different member expression patterns', async () => {
     const transform = getPluginTransform()
-    const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/aliasedJob.js')
+    const testFilePath = path.join(TEST_CEDAR_CWD, 'api/src/jobs/aliasedJob.js')
 
     const code = `
       import { jobs as j } from '@cedarjs/api'
@@ -196,7 +196,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
 
   it('should handle createJob calls with complex object properties', async () => {
     const transform = getPluginTransform()
-    const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/complexJob.js')
+    const testFilePath = path.join(TEST_CEDAR_CWD, 'api/src/jobs/complexJob.js')
 
     const code = `
       export const complexJob = jobs.createJob({
@@ -227,7 +227,7 @@ describe('cedarjsJobPathInjectorPlugin', () => {
 
   it('should not modify files that do not match the expected pattern', async () => {
     const transform = getPluginTransform()
-    const testFilePath = path.join(TEST_RWJS_CWD, 'api/src/jobs/notAJob.js')
+    const testFilePath = path.join(TEST_CEDAR_CWD, 'api/src/jobs/notAJob.js')
 
     const code = `
       // This mentions createJob but doesn't actually call it

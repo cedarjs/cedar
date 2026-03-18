@@ -1,13 +1,11 @@
 import prismaInternals from '@prisma/internals'
 
-import { getSchemaPath } from '@cedarjs/project-config'
+import { getPrismaSchemas } from '@cedarjs/project-config'
+import { singularize, isPlural } from '@cedarjs/utils/cedarPluralize'
 
-import { singularize, isPlural } from './cedarPluralize.js'
 import { ensureUniquePlural } from './pluralHelpers.js'
 
-import { getPaths } from './index.js'
-
-const { getConfig, getDMMF, getSchemaWithPath } = prismaInternals
+const { getConfig, getDMMF } = prismaInternals
 /**
  * Used to memoize results from `getSchema()` so we don't have to go through
  * the work of opening and parsing the file from scratch each time `getSchema()`
@@ -113,9 +111,7 @@ export const getEnum = async (name) => {
  * Returns the data model defined in `schema.prisma` (models, enums, etc.)
  */
 export const getDataModel = async () => {
-  const prismaConfigPath = getPaths().api.prismaConfig
-  const schemaPath = await getSchemaPath(prismaConfigPath)
-  const result = await getSchemaWithPath(schemaPath)
+  const result = await getPrismaSchemas()
   return result.schemas
 }
 

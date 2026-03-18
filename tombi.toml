@@ -1,0 +1,3 @@
+[[schemas]]
+path = "https://raw.githubusercontent.com/cedarjs/cedar/main/packages/project-config/cedar-toml-schema-2.0.json"
+include = ["cedar.toml"]

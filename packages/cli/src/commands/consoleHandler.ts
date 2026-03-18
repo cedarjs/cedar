@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import repl from 'node:repl'
+import type { REPLEval, REPLServer } from 'node:repl'
 
 import { registerApiSideBabelHook } from '@cedarjs/babel-config'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
@@ -11,8 +12,21 @@ import { getPaths } from '../lib/index.js'
 
 const paths = getPaths()
 
+interface REPLServerWithHistory extends REPLServer {
+  history: string[]
+  lines: string[]
+}
+
+function isREPLServerWithHistory(
+  replServer: REPLServer,
+): replServer is REPLServerWithHistory {
+  return 'history' in replServer && 'lines' in replServer
+}
+
 const loadPrismaClient = (replContext: Record<string, unknown>) => {
   const createdRequire = createRequire(import.meta.url)
+  // This module comes from the user project and is untyped here; we only need
+  // an indexable object to attach Prisma's inspect symbol for REPL display.
   const { db } = createdRequire(path.join(paths.api.lib, 'db'))
   // workaround for Prisma issue: https://github.com/prisma/prisma/issues/18292
   db[Symbol.for('nodejs.util.inspect.custom')] = 'PrismaClient'
@@ -21,18 +35,7 @@ const loadPrismaClient = (replContext: Record<string, unknown>) => {
 
 const consoleHistoryFile = path.join(paths.generated.base, 'console_history')
 
-interface REPLServerWithHistory extends repl.REPLServer {
-  history: string[]
-  lines: string[]
-}
-
-function isREPLServerWithHistory(
-  replServer: repl.REPLServer,
-): replServer is REPLServerWithHistory {
-  return 'history' in replServer && 'lines' in replServer
-}
-
-const persistConsoleHistory = (r: repl.REPLServer) => {
+const persistConsoleHistory = (r: REPLServer) => {
   const lines = isREPLServerWithHistory(r) ? r.lines : []
   fs.appendFileSync(
     consoleHistoryFile,
@@ -41,7 +44,7 @@ const persistConsoleHistory = (r: repl.REPLServer) => {
   )
 }
 
-const loadConsoleHistory = async (r: repl.REPLServer) => {
+const loadConsoleHistory = async (r: REPLServer) => {
   try {
     const history = await fs.promises.readFile(consoleHistoryFile, 'utf8')
     if (isREPLServerWithHistory(r)) {
@@ -55,7 +58,7 @@ const loadConsoleHistory = async (r: repl.REPLServer) => {
   }
 }
 
-export const handler = () => {
+export const handler = (_options?: Record<string, unknown>) => {
   recordTelemetryAttributes({
     command: 'console',
   })
@@ -75,19 +78,24 @@ export const handler = () => {
     ],
   })
 
-  const r = repl.start()
+  // REPL typings miss runtime `lines`/`history`, which we use for persisted
+  // command history.
+  type ReplWithHistory = REPLServer & {
+    lines: string[]
+    history: string[]
+    eval: REPLEval
+  }
+  const r = repl.start() as unknown as ReplWithHistory
 
   // always await promises.
   // source: https://github.com/nodejs/node/issues/13209#issuecomment-619526317
   const defaultEval = r.eval
-  // @ts-expect-error - overriding eval signature
-  r.eval = function (this: repl.REPLServer, cmd, context, filename, callback) {
-    defaultEval.call(this, cmd, context, filename, async (err, result) => {
+  const asyncEval: REPLEval = (cmd, context, filename, callback) => {
+    defaultEval.call(r, cmd, context, filename, async (err, result) => {
       if (err) {
         // propagate errors.
         callback(err, null)
       } else {
-        // await the promise and either return the result or error.
         try {
           callback(null, await Promise.resolve(result))
         } catch (err: unknown) {
@@ -96,12 +104,12 @@ export const handler = () => {
       }
     })
   }
+  // `eval` is typed as readonly in the Node.js typings but is reassignable at
+  // runtime; cast to `any` here only to work around that limitation.
+  r.eval = asyncEval
 
-  // Persist console history to .redwood/console_history. See
-  // https://tjwebb.medium.com/a-custom-node-repl-with-history-is-not-as-hard-as-it-looks-3eb2ca7ec0bd
   loadConsoleHistory(r)
   r.addListener('close', () => persistConsoleHistory(r))
 
-  // Make the project's db (i.e. Prisma Client) available
   loadPrismaClient(r.context)
 }

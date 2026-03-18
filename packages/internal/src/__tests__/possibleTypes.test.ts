@@ -9,7 +9,7 @@ import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
 import { generatePossibleTypes } from '../generate/possibleTypes.js'
 
 afterEach(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
   vi.restoreAllMocks()
 })
 
@@ -21,7 +21,7 @@ describe('Generate gql possible types web from the GraphQL Schema', () => {
         './__fixtures__/test-project',
       )
 
-      process.env.RWJS_CWD = FIXTURE_PATH
+      process.env.CEDAR_CWD = FIXTURE_PATH
 
       await generateGraphQLSchema()
 
@@ -47,7 +47,7 @@ describe('Generate gql possible types web from the GraphQL Schema', () => {
         './__fixtures__/fragment-test-project',
       )
 
-      process.env.RWJS_CWD = FIXTURE_PATH
+      process.env.CEDAR_CWD = FIXTURE_PATH
       await generateGraphQLSchema()
 
       vi.spyOn(fs, 'writeFileSync').mockImplementation(

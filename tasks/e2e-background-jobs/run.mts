@@ -1,6 +1,7 @@
+import fs from 'node:fs'
 import process from 'node:process'
 
-import { $, cd, path, ProcessOutput, fs } from 'zx'
+import { $, cd, path, ProcessOutput } from 'zx'
 
 // Suppress DEP0190 warning on Windows for zx shell usage
 // This warning occurs because zx uses `shell: true` with child processes on Windows
@@ -295,7 +296,7 @@ async function generateJob(
   fs.writeFileSync(functionPath, SAMPLE_FUNCTION)
 
   console.log('Action: Running `yarn cedar serve api`')
-  await $`yarn cedar build api`
+  await $`yarn cedar build api @my-org/validators`
   const apiServer = $`yarn cedar serve api`.nothrow()
 
   // Wait for the api server to start
@@ -343,7 +344,7 @@ async function scheduleCronJob(projectPath: string) {
   fs.writeFileSync(scriptPath, SCHEDULE_CRON_JOB_SCRIPT)
 
   console.log('Action: Building the api side')
-  await $`yarn cedar build api`
+  await $`yarn cedar build api @my-org/validators`
 
   console.log('Action: Running script')
   await $`yarn cedar exec scheduleCronJob`

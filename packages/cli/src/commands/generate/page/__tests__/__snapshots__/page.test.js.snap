@@ -68,7 +68,7 @@ exports[`Single world files > creates a page test 1`] = `
 
 import HomePage from './HomePage'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('HomePage', () => {
@@ -196,7 +196,7 @@ exports[`TS Files > generates typescript pages 3`] = `
 
 import TsFilesPage from './TsFilesPage'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('TsFilesPage', () => {
@@ -231,7 +231,7 @@ exports[`handler > file generation 2`] = `
 
 import HomePage from './HomePage'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('HomePage', () => {
@@ -315,7 +315,7 @@ exports[`handler > file generation with route params 2`] = `
 
 import PostPage from './PostPage'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('PostPage', () => {
@@ -423,7 +423,7 @@ exports[`multiWorldFiles > creates a test for a component with multiple words fo
 
 import ContactUsPage from './ContactUsPage'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('ContactUsPage', () => {
@@ -469,7 +469,7 @@ exports[`paramFiles > creates a test for page component with params 1`] = `
 
 import PostPage from './PostPage'
 
-//   Improve this test with help from the Redwood Testing Doc:
+//   Improve this test with help from the CedarJS Testing Doc:
 //   https://cedarjs.com/docs/testing#testing-pages-layouts
 
 describe('PostPage', () => {

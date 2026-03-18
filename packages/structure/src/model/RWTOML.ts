@@ -1,11 +1,11 @@
 import * as toml from 'smol-toml'
-import { Range } from 'vscode-languageserver-types'
 
-import { FileNode } from '../ide'
-import { lazy } from '../x/decorators'
-import { err } from '../x/vscode-languageserver-types'
+import { FileNode } from '../nodes.js'
+import { lazy } from '../x/decorators.js'
+import { err } from '../x/diagnostics.js'
+import { Range_create } from '../x/Range.js'
 
-import type { RWProject } from './RWProject'
+import type { RWProject } from './RWProject.js'
 
 export class RWTOML extends FileNode {
   constructor(
@@ -30,7 +30,7 @@ export class RWTOML extends FileNode {
       this.parsedTOML
     } catch (e: any) {
       const pos = { line: e.line - 1, character: e.column - 1 }
-      const range = Range.create(pos, pos)
+      const range = Range_create(pos, pos)
       // Forward the TOML parse error with correct location information
       yield err({ uri: this.uri, range }, 'TOML Parser Error: ' + e.message)
       return

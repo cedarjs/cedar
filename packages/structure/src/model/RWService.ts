@@ -1,13 +1,13 @@
 import * as tsm from 'ts-morph'
 
-import { FileNode } from '../ide'
-import { iter } from '../x/Array'
-import { lazy } from '../x/decorators'
-import { basenameNoExt } from '../x/path'
+import { FileNode } from '../nodes.js'
+import { iter } from '../x/Array.js'
+import { lazy } from '../x/decorators.js'
+import { basenameNoExt } from '../x/path.js'
 
-import type { RWProject } from './RWProject'
-import type { RWSDL } from './RWSDL'
-import { RWServiceFunction } from './RWServiceFunction'
+import type { RWProject } from './RWProject.js'
+import type { RWSDL } from './RWSDL.js'
+import { RWServiceFunction } from './RWServiceFunction.js'
 
 export class RWService extends FileNode {
   constructor(

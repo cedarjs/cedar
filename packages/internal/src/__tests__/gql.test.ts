@@ -104,7 +104,7 @@ test('listQueryTypeFieldsInProject', async () => {
     '../../../../__fixtures__/example-todo-main',
   )
   // Set fixture path so it reads the sdls from example-todo-main
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 
   // Reimport, because rwjs/internal already calculates the paths
   const result = await listQueryTypeFieldsInProject()
@@ -115,5 +115,5 @@ test('listQueryTypeFieldsInProject', async () => {
   expect(result).toContain('todosCount')
 
   // Restore RWJS config
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
 })

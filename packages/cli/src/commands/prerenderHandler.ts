@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 import { Listr } from 'listr2'
 
@@ -18,15 +18,64 @@ import { configureBabel } from '../lib/execBabel.js'
 
 class PathParamError extends Error {}
 
-const mapRouterPathToHtml = (routerPath: string) => {
-  if (routerPath === '/') {
-    return 'web/dist/index.html'
-  } else {
-    return `web/dist${routerPath}.html`
+type RouteParamValue = string | number | boolean
+type RouteParamValues = Record<string, RouteParamValue>
+
+type PrerenderRoute = {
+  name: string
+  path: string
+  routePath: string
+  filePath: string
+  [key: string]: unknown
+}
+
+type MaybePrerenderRoute = Partial<PrerenderRoute> & {
+  [key: string]: unknown
+}
+
+const hasPath = (
+  route: MaybePrerenderRoute,
+): route is MaybePrerenderRoute & { path: string } => {
+  return typeof route.path === 'string' && route.path.length > 0
+}
+
+const normalizeRoute = (
+  route: MaybePrerenderRoute & { path: string },
+): PrerenderRoute => {
+  const normalizedPath = route.path
+  const normalizedName =
+    typeof route.name === 'string' ? route.name : normalizedPath
+  const normalizedRoutePath =
+    typeof route.routePath === 'string' ? route.routePath : normalizedPath
+  const normalizedFilePath =
+    typeof route.filePath === 'string' ? route.filePath : ''
+
+  return {
+    ...route,
+    name: normalizedName,
+    path: normalizedPath,
+    routePath: normalizedRoutePath,
+    filePath: normalizedFilePath,
   }
 }
 
-function getRouteHooksFilePath(routeFilePath: string) {
+const getErrorMessage = (error: unknown): string => {
+  return error instanceof Error ? error.message : String(error)
+}
+
+const getErrorStack = (error: unknown): string => {
+  return error instanceof Error ? (error.stack ?? error.message) : String(error)
+}
+
+const mapRouterPathToHtml = (routerPath: string) => {
+  if (routerPath === '/') {
+    return 'web/dist/index.html'
+  }
+
+  return `web/dist${routerPath}.html`
+}
+
+function getRouteHooksFilePath(routeFilePath: string): string | undefined {
   const routeHooksFilePathTs = routeFilePath.replace(
     /\.[jt]sx?$/,
     '.routeHooks.ts',
@@ -46,17 +95,6 @@ function getRouteHooksFilePath(routeFilePath: string) {
   }
 
   return undefined
-}
-
-interface PrerenderRoute {
-  name: string
-  path: string
-  routePath: string
-  hasParams: boolean
-  id: string
-  isNotFound: boolean
-  filePath: string
-  pageIdentifier: string | undefined
 }
 
 /**
@@ -109,23 +147,30 @@ async function expandRouteParameters(route: PrerenderRoute) {
       },
     })
 
-    if (routeParameters) {
+    if (Array.isArray(routeParameters)) {
       return routeParameters.map((pathParamValues) => {
         let newPath = route.path
 
-        Object.entries(pathParamValues).forEach(([paramName, paramValue]) => {
-          newPath = newPath.replace(
-            new RegExp(`{${paramName}:?[^}]*}`),
-            String(paramValue),
+        if (
+          typeof pathParamValues === 'object' &&
+          pathParamValues !== null &&
+          !Array.isArray(pathParamValues)
+        ) {
+          Object.entries(pathParamValues as RouteParamValues).forEach(
+            ([paramName, paramValue]) => {
+              newPath = newPath.replace(
+                new RegExp(`{${paramName}:?[^}]*}`),
+                String(paramValue),
+              )
+            },
           )
-        })
+        }
 
         return { ...route, path: newPath }
       })
     }
-  } catch (e) {
-    const stack = e instanceof Error ? e.stack : String(e)
-    console.error(c.error(stack))
+  } catch (error: unknown) {
+    console.error(c.error(getErrorStack(error)))
     return [route]
   }
 
@@ -141,16 +186,9 @@ export const getTasks = async (
     ? await import('@cedarjs/prerender/detection')
     : await import('@cedarjs/prerender/cjs/detection')
 
-  const detectedRoutes: Partial<PrerenderRoute>[] =
-    detector.detectPrerenderRoutes()
-
-  const prerenderRoutes = detectedRoutes.filter(
-    (route): route is PrerenderRoute => {
-      return (
-        !!route.path && !!route.name && !!route.routePath && !!route.filePath
-      )
-    },
-  )
+  const detectedRoutes =
+    detector.detectPrerenderRoutes() as MaybePrerenderRoute[]
+  const prerenderRoutes = detectedRoutes.filter(hasPath).map(normalizeRoute)
 
   // TODO: Figure out how we want to handle the case where the user has only
   // marked the NotFound route for prerender
@@ -182,34 +220,24 @@ export const getTasks = async (
     prerenderRoutes.map((route) => expandRouteParameters(route)),
   )
 
-  const prerenderer = projectIsEsm()
-    ? await import('@cedarjs/prerender')
-    : await import('@cedarjs/prerender/cjs')
+  const prerenderer = (
+    projectIsEsm()
+      ? await import('@cedarjs/prerender')
+      : await import('@cedarjs/prerender/cjs')
+  ) as typeof Prerender
 
   const listrTasks = expandedRouteParameters.flatMap((routesToPrerender) => {
-    // queryCache will be filled with the queries from all the Cells we
-    // encounter while prerendering, and the result from executing those
-    // queries.
-    // We have this cache here because we can potentially reuse result data
-    // between different pages. I.e. if the same query, with the same
-    // variables is encountered twice, we'd only have to execute it once and
-    // then just reuse the cached result the second time.
-    const queryCache = {}
-
-    // In principle you could be prerendering a large number of routes, and
-    // when this occurs not only can it break but it's also not particularly
-    // useful to enumerate all the routes in the output.
+    const queryCache: Record<string, QueryInfo> = {}
     const shouldFold = routesToPrerender.length > 16
 
     if (shouldFold) {
-      // If we're folding the output, we don't need to return the individual
-      // routes, just a top level message indicating the route and the progress
       const displayIncrement = Math.max(
         1,
         Math.floor(routesToPrerender.length / 100),
       )
       const title = (i: number) =>
         `Prerendering ${routesToPrerender[0].name} (${i.toLocaleString()} of ${routesToPrerender.length.toLocaleString()})`
+
       return [
         {
           title: title(0),
@@ -240,6 +268,7 @@ export const getTasks = async (
                 task.title = title(i)
               }
             }
+
             task.title = title(routesToPrerender.length)
           },
         },
@@ -248,7 +277,7 @@ export const getTasks = async (
 
     // If we're not folding the output, we'll return a list of tasks for each
     // individual case.
-    return routesToPrerender.map((routeToPrerender) => {
+    return routesToPrerender.flatMap((routeToPrerender) => {
       // Filter out routes that don't match the supplied routePathFilter
       if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
         // TODO: Figure out if it's an error to return [] here
@@ -290,12 +319,6 @@ const diagnosticCheck = () => {
       message: 'Duplicate react-dom version found in web/node_modules',
       failure: fs.existsSync(
         path.join(getPaths().web.base, 'node_modules/react-dom'),
-      ),
-    },
-    {
-      message: 'Duplicate core-js version found in web/node_modules',
-      failure: fs.existsSync(
-        path.join(getPaths().web.base, 'node_modules/core-js'),
       ),
     },
     {
@@ -361,9 +384,7 @@ const prerenderRoute = async (
     if (!dryrun && typeof prerenderedHtml === 'string') {
       prerenderer.writePrerenderedHtmlFile(outputHtmlPath, prerenderedHtml)
     }
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : String(e)
-    const stack = e instanceof Error ? e.stack : String(e)
+  } catch (error: unknown) {
     console.log()
     console.log(
       c.warning('You can use `yarn cedar prerender --dry-run` to debug'),
@@ -374,9 +395,12 @@ const prerenderRoute = async (
       `${c.info('-'.repeat(10))} Error rendering path "${routeToPrerender.path}" ${c.info('-'.repeat(10))}`,
     )
 
-    errorTelemetry(process.argv, `Error prerendering: ${message}`)
+    errorTelemetry(
+      process.argv,
+      `Error prerendering: ${getErrorMessage(error)}`,
+    )
 
-    console.error(c.error(stack))
+    console.error(c.error(getErrorStack(error)))
     console.log()
 
     throw new Error(`Failed to render "${routeToPrerender.filePath}"`)
@@ -412,23 +436,25 @@ export const handler = async ({
 
   const listrTasks = await getTasks(dryRun, routerPath ?? null)
 
+  const tasks = new Listr(listrTasks, {
+    renderer: verbose ? 'verbose' : 'default',
+    rendererOptions: { collapseSubtasks: false },
+    concurrent: false,
+  })
+
   try {
     if (dryRun) {
       console.log(c.info('::: Dry run, not writing changes :::'))
     }
 
-    await new Listr(listrTasks, {
-      renderer: verbose ? 'verbose' : 'default',
-      rendererOptions: { collapseSubtasks: false },
-      concurrent: false,
-    }).run()
-  } catch (e) {
+    await tasks.run()
+  } catch (error: unknown) {
     console.log()
     diagnosticCheck()
 
     console.log(c.warning('Tips:'))
 
-    if (e instanceof PathParamError) {
+    if (error instanceof PathParamError) {
       console.log(
         c.info(
           "- You most likely need to add or update a *.routeHooks.{js,ts} file next to the Page you're trying to prerender",

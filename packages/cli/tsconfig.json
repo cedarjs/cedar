@@ -4,8 +4,8 @@
     "isolatedModules": true,
     "emitDeclarationOnly": false,
     "noEmit": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "module": "node20",
+    "moduleResolution": "node16",
   },
   "include": ["."],
   "exclude": ["**/__testfixtures__"],
@@ -15,8 +15,9 @@
     { "path": "../internal/tsconfig.build.json" },
     { "path": "../prerender/tsconfig.build.json" },
     { "path": "../project-config" },
+    { "path": "../realtime" },
     { "path": "../structure" },
     { "path": "../telemetry" },
-    { "path": "../vite/tsconfig.build.json" }
-  ]
+    { "path": "../vite/tsconfig.build.json" },
+  ],
 }

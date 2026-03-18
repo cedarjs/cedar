@@ -6,7 +6,8 @@ import { useErrorStyles } from './useErrorStyles'
 import { useRegister } from './useRegister'
 
 export interface CheckboxFieldProps
-  extends Omit<FieldProps<HTMLInputElement>, 'type' | 'emptyAs'>,
+  extends
+    Omit<FieldProps<HTMLInputElement>, 'type' | 'emptyAs'>,
     Omit<React.ComponentPropsWithRef<'input'>, 'name' | 'type'> {}
 
 /** Renders an `<input type="checkbox">` field */

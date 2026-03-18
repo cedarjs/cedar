@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import { getPaths, colors } from '@cedarjs/cli-helpers'
 import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers/src/auth/authTasks.js'
@@ -9,10 +9,10 @@ import { addModels, functionsPath, hasModel, libPath } from './shared'
 export { extraTask } from './setupData'
 
 // required packages to install on the web side
-export const webPackages = ['@simplewebauthn/browser@^9']
+export const webPackages = ['@simplewebauthn/browser@^10']
 
 // required packages to install on the api side
-export const apiPackages = ['@simplewebauthn/server@^9']
+export const apiPackages = ['@simplewebauthn/server@^10']
 
 export const createUserModelTask = {
   title: 'Creating model `User`...',
@@ -25,7 +25,7 @@ export const createUserModelTask = {
 
     addModels(`
 model User {
-  id                  Int       @id @default(autoincrement())
+  id                  String    @id @default(uuid())
   email               String    @unique
   hashedPassword      String
   salt                String
@@ -39,7 +39,7 @@ model User {
 
 model UserCredential {
   id         String  @id
-  userId     Int
+  userId     String
   user       User    @relation(fields: [userId], references: [id])
   publicKey  Bytes
   transports String?
@@ -58,7 +58,7 @@ export const notes = [
   'WebAuthn authentication:',
   '',
   '  model User {',
-  '    id                  Int @id @default(autoincrement())',
+  '    id                  String  @id @default(uuid())',
   '    email               String  @unique',
   '    hashedPassword      String',
   '    salt                String',
@@ -70,7 +70,7 @@ export const notes = [
   '',
   '  model UserCredential {',
   '    id         String  @id',
-  '    userId     Int',
+  '    userId     String',
   '    user       User    @relation(fields: [userId], references: [id])',
   '    publicKey  Bytes',
   '    transports String?',
@@ -88,10 +88,10 @@ export const notes = [
   '`hashedPassword` and `salt` (or whatever you named them) from the',
   'SDL file that defines the fields for your user.',
   '',
-  "You'll need to let Redwood know what fields you're using for your",
-  "users' `id` and `username` fields. In this case we're using `id` and",
-  '`email`, so update those in the `authFields` config in',
-  `\`${functionsPath}/auth.js\`. This is also the place to tell Redwood if`,
+  "You'll need to let Cedar know what fields you're using for your users'",
+  "`id` and `username` fields. In this case we're using `id` and `email`,",
+  'so update those in the `authFields` config in',
+  `\`${functionsPath}/auth.js\`. This is also the place to tell Cedar if`,
   'you used a different name for the `hashedPassword`, `salt`,',
   '`resetToken` or `resetTokenExpiresAt`, fields:`',
   '',

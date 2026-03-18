@@ -43,20 +43,22 @@ export const getInstalledRedwoodVersion = () => {
 }
 
 /**
- * Updates the project's redwood.toml file to include the specified packages plugin
+ * Updates the project's cedar.toml file to include the specified packages
+ * plugin
  *
- * Uses toml parsing to determine if the plugin is already included in the file and
- * only adds it if it is not.
+ * Uses toml parsing to determine if the plugin is already included in the file
+ * and only adds it if it is not.
  *
- * Writes the updated config to the file system by appending strings, not stringify-ing the toml.
+ * Writes the updated config to the file system by appending strings, not
+ * stringify-ing the toml.
  */
 export const updateTomlConfig = (packageName: string) => {
-  const redwoodTomlPath = getConfigPath()
-  const originalTomlContent = fs.readFileSync(redwoodTomlPath, 'utf-8')
+  const configTomlPath = getConfigPath()
+  const originalTomlContent = fs.readFileSync(configTomlPath, 'utf-8')
 
   let tomlToAppend: Record<string, toml.TomlPrimitive> = {}
 
-  const config = getConfig(redwoodTomlPath)
+  const config = getConfig(configTomlPath)
 
   const cliSection = config.experimental?.cli
 
@@ -100,12 +102,12 @@ export const updateTomlConfig = (packageName: string) => {
       ? toml.stringify(tomlToAppend) + '\n'
       : '')
 
-  return fs.writeFileSync(redwoodTomlPath, newConfig, 'utf-8')
+  return fs.writeFileSync(configTomlPath, newConfig, 'utf-8')
 }
 
 export const updateTomlConfigTask = (packageName: string) => {
   return {
-    title: `Updating redwood.toml to configure ${packageName} ...`,
+    title: `Updating config file to configure ${packageName} ...`,
     task: () => {
       updateTomlConfig(packageName)
     },
@@ -161,37 +163,48 @@ export const addEnvVar = (name: string, value: string, comment: string) => {
 }
 
 /**
- * This sets the `RWJS_CWD` env var to the redwood project directory. This is typically required for internal
+ * This sets the `CEDAR_CWD` env var to the redwood project directory. This is typically required for internal
  * redwood packages to work correctly. For example, `@cedarjs/project-config` uses this when reading config
  * or paths.
  *
  * @param cwd Explicitly set the redwood cwd. If not set, we'll try to determine it automatically. You likely
  * only want to set this based on some specific input, like a CLI flag.
  */
-export const setRedwoodCWD = (cwd?: string) => {
-  // Get the existing `cwd` from the `RWJS_CWD` env var, if it exists.
+export function setRedwoodCWD(cwd?: string) {
+  const configFiles = ['cedar.toml', 'redwood.toml']
+  // Get the existing `cwd` from the `CEDAR_CWD` env var, if it exists.
+  cwd ??= process.env.CEDAR_CWD
   cwd ??= process.env.RWJS_CWD
 
   if (cwd) {
-    // `cwd` was specifically passed in or the `RWJS_CWD` env var. In this case,
-    // we don't want to find up for a `redwood.toml` file. The `redwood.toml` should just be in that directory.
-    if (!fs.existsSync(path.join(cwd, 'redwood.toml'))) {
-      throw new Error(`Couldn't find a "redwood.toml" file in ${cwd}`)
+    // `cwd` was specifically passed in or the `CEDAR_CWD` env var was set. In
+    // this case, we don't want to find up for a `cedar.toml` or `redwood.toml`
+    // file. The config file should just be in that directory.
+
+    // `cwd` can be a relative path
+    const absCwd = path.resolve(process.cwd(), cwd)
+    const found = configFiles.some((f) => fs.existsSync(path.join(absCwd, f)))
+    if (!found) {
+      const tomls = configFiles.join('" or "')
+      throw new Error(`Couldn't find a "${tomls}" file in ${absCwd}`)
     }
   } else {
-    // `cwd` wasn't set. Odds are they're in a Redwood project,
-    // but they could be in ./api or ./web, so we have to find up to be sure.
-    const redwoodTOMLPath = findUp('redwood.toml', process.cwd())
-    if (!redwoodTOMLPath) {
+    // `cwd` wasn't set. Odds are they're in a Cedar project, but they could be
+    // in ./api or ./web, so we have to find up to be sure.
+    const configTomlPath =
+      findUp('cedar.toml', process.cwd()) ||
+      findUp('redwood.toml', process.cwd())
+
+    if (!configTomlPath) {
       throw new Error(
-        `Couldn't find up a "redwood.toml" file from ${process.cwd()}`,
+        `Couldn't find up a "cedar.toml" or "redwood.toml" file from ${process.cwd()}`,
       )
     }
-    if (redwoodTOMLPath) {
-      cwd = path.dirname(redwoodTOMLPath)
-    }
+
+    cwd = path.dirname(configTomlPath)
   }
 
+  process.env.CEDAR_CWD = cwd
   process.env.RWJS_CWD = cwd
 }
 

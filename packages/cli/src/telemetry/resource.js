@@ -8,7 +8,6 @@ import system from 'systeminformation'
 import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 
 import { getPaths, getRawConfig } from '@cedarjs/project-config'
-import { DefaultHost } from '@cedarjs/structure/dist/hosts'
 import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
 
 import {
@@ -75,10 +74,7 @@ export async function getResources() {
   const experiments = Object.keys(getRawConfig()['experimental'] || {})
 
   // Project complexity metric
-  const project = new RWProject({
-    host: new DefaultHost(),
-    projectRoot: getPaths().base,
-  })
+  const project = new RWProject()
 
   const routes = project.getRouter().routes
   const prerenderedRoutes = routes.filter((route) => route.hasPrerender)

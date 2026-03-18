@@ -13,11 +13,11 @@ const FIXTURE_PATH = path.resolve(
 )
 
 beforeEach(() => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 })
 
 afterEach(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
   vi.restoreAllMocks()
 })
 
@@ -42,7 +42,7 @@ test('Includes live query directive if serverful and realtime ', async () => {
     __dirname,
     './__fixtures__/graphqlCodeGen/realtime',
   )
-  process.env.RWJS_CWD = fixturePath
+  process.env.CEDAR_CWD = fixturePath
 
   const expectedPath = path.join(fixturePath, '.redwood', 'schema.graphql')
 
@@ -61,7 +61,7 @@ test('Returns error message when schema loading fails', async () => {
     __dirname,
     './__fixtures__/graphqlCodeGen/bookshelf',
   )
-  process.env.RWJS_CWD = fixturePath
+  process.env.CEDAR_CWD = fixturePath
 
   try {
     const { errors } = await generateGraphQLSchema()
@@ -93,7 +93,7 @@ test('Returns error message when schema loading fails', async () => {
       ].join('\n'),
     )
   } finally {
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   }
 })
 
@@ -102,7 +102,7 @@ test('Generates complete schema with directives and subscriptions while excludin
     __dirname,
     './__fixtures__/graphqlCodeGen/testFilesExclusion',
   )
-  process.env.RWJS_CWD = fixturePath
+  process.env.CEDAR_CWD = fixturePath
 
   const expectedPath = path.join(fixturePath, '.redwood', 'schema.graphql')
 

@@ -11,7 +11,7 @@ import {
 vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 
 const redwoodProjectPath = '/redwood-app'
-process.env.RWJS_CWD = redwoodProjectPath
+process.env.CEDAR_CWD = redwoodProjectPath
 
 afterEach(() => {
   vol.reset()

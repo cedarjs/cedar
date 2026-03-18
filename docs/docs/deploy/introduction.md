@@ -38,7 +38,7 @@ Deploying Cedar requires setup for the following four categories.
 
 Each hosting provider has different requirements for how (and where) the deployment is configured. Sometimes you'll need to add code to your repository, configure settings in a dashboard, or both. You'll need to read the provider specific documentation.
 
-The most important Cedar configuration is to set the `apiUrl` in your `redwood.toml` This sets the API path for your serverless functions specific to your hosting provider.
+The most important Cedar configuration is to set the `apiUrl` in your `cedar.toml` This sets the API path for your serverless functions specific to your hosting provider.
 
 ### 2. Build Command
 
@@ -77,18 +77,19 @@ yarn rw deploy baremetal [--first-run]
 
 ### 3. Prisma and Database
 
-Cedar uses Prisma for managing database access and migrations. The settings in `api/prisma/schema.prisma` must include the correct deployment database, e.g. postgresql, and the database connection string.
+Cedar uses Prisma for managing database access and migrations. The settings in
+`api/db/schema.prisma` must include the correct deployment database, e.g.
+postgresql.
 
 To use PostgreSQL in production, include this in your `schema.prisma`:
 
 ```jsx
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 ```
 
-The `url` setting above accesses the database connection string via an environment variable, `DATABASE_URL`. Using env vars is the recommended method for both ease of development process as well as security best practices.
+The database URL is configured both in the Prisma config file (`api/prisma.config.cjs`) via the `datasource.url` option using `env('DATABASE_URL')` and in `api/src/lib/db.{ts,js}` when constructing the Prisma client. Using env vars is the recommended method for both ease of development process as well as security best practices.
 
 Whenever you make changes to your `schema.prisma`, you must run the following command:
 

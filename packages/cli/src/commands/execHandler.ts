@@ -4,6 +4,7 @@ import path from 'node:path'
 import { context } from '@opentelemetry/api'
 import { suppressTracing } from '@opentelemetry/core'
 import { Listr } from 'listr2'
+import type { ListrTask } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
@@ -12,7 +13,6 @@ import { findScripts } from '@cedarjs/internal/dist/files'
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { runScriptFunction } from '../lib/exec.js'
-// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
@@ -35,11 +35,11 @@ const printAvailableScriptsToConsole = () => {
   )
 
   console.log('Available scripts:')
-  Object.entries(scripts).forEach(([name, paths]) => {
+  Object.entries(scripts).forEach(([name, scriptPaths]) => {
     // If a script name exists with multiple extensions, print them all,
     // including the extension
-    if (paths.length > 1) {
-      paths.forEach((scriptPath) => {
+    if (scriptPaths.length > 1) {
+      scriptPaths.forEach((scriptPath) => {
         console.log(c.info(`- ${scriptPath}`))
       })
     } else {
@@ -78,7 +78,7 @@ export const handler = async (args: ExecOptions) => {
   // yargs to parse the command `exec [name]`. So it plucked `scriptName` from
   // the command and placed that in a named variable called `name`.
   // And even further up the chain yargs has already eaten the `yarn` part and
-  // assigned 'rw' to `$0`
+  // assigned 'cedar' to `$0`
   // So what yargs has left in args._ is ['exec', 'arg1', 'arg2'] (and it has
   // also assigned 'foo' to `args.positional1` and 'bar' to `args.positional2`).
   // 'exec', 'arg1' and 'arg2' are in `args._` because those are positional
@@ -89,7 +89,7 @@ export const handler = async (args: ExecOptions) => {
     scriptArgs._ = scriptArgs._.slice(1)
   }
 
-  // 'rw' is not meant for the script's args, so delete that
+  // 'cedar' is not meant for the script's args, so delete that
   delete scriptArgs.$0
 
   // Other arguments that yargs adds are `prisma`, `list`, `l`, `silent` and
@@ -111,7 +111,7 @@ export const handler = async (args: ExecOptions) => {
     process.exit(1)
   }
 
-  const scriptTasks = [
+  const scriptTasks: ListrTask[] = [
     {
       title: 'Generating Prisma client',
       enabled: () => !!prisma,
@@ -131,10 +131,10 @@ export const handler = async (args: ExecOptions) => {
             functionName: 'default',
             args: { args: scriptArgs },
           })
-        } catch (e) {
-          const message = e instanceof Error ? e.message : String(e)
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error)
           console.error(c.error(`Error in script: ${message}`))
-          throw e
+          throw error
         }
       },
     },
@@ -164,10 +164,10 @@ function resolveScriptPath(name: string) {
   const matches: string[] = []
 
   for (const extension of extensions) {
-    const p = scriptPath + extension
+    const candidate = scriptPath + extension
 
-    if (fs.existsSync(p)) {
-      matches.push(p)
+    if (fs.existsSync(candidate)) {
+      matches.push(candidate)
     }
   }
 

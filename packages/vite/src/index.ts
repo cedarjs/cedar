@@ -14,13 +14,16 @@ import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-inj
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 import { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
 import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
+import { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-server.js'
 import { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 import { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 import { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 
+export { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 export { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
+export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 export { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
 export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 export { cedarjsDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedarjs-directory-named-import.js'
@@ -37,9 +40,9 @@ type PluginOptions = {
  * Pre-configured vite plugin, with required config for CedarJS apps.
  */
 export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
-  const rwConfig = getConfig()
+  const cedarConfig = getConfig()
 
-  const rscEnabled = rwConfig.experimental?.rsc?.enabled
+  const rscEnabled = cedarConfig.experimental?.rsc?.enabled
 
   const webSideDefaultBabelConfig = getWebSideDefaultBabelConfig()
 
@@ -63,6 +66,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     mode === 'test' && cedarJsRouterImportTransformPlugin(),
     mode === 'test' && createAuthImportTransformPlugin(),
     mode === 'test' && autoImportsPlugin(),
+    cedarWaitForApiServer(),
     cedarNodePolyfills(),
     cedarHtmlEnvPlugin(),
     cedarEntryInjectionPlugin(),

@@ -1,7 +1,7 @@
 name: Check create redwood app
 description: Determines if the create redwood app JS template should be rebuilt
 runs:
-  using: node20
+  using: node24
   main: check_create_redwood_app.mjs
 inputs:
   labels:

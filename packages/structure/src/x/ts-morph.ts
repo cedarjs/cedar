@@ -1,6 +1,6 @@
 import * as crypto from 'crypto'
 
-import { memoize } from 'lodash'
+import memoize from 'lodash/memoize.js'
 import { LRUCache } from 'lru-cache'
 import * as tsm from 'ts-morph'
 

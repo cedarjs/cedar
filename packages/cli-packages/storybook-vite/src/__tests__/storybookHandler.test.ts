@@ -48,7 +48,7 @@ vi.mock('execa', () => {
 describe('storybookHandler', () => {
   it('adds the config files', async () => {
     const redwoodProjectPath = '/redwood-app'
-    process.env.RWJS_CWD = redwoodProjectPath
+    process.env.CEDAR_CWD = redwoodProjectPath
 
     const options = {
       open: true,

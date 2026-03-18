@@ -16,7 +16,7 @@ const cliPackageJsonFileUrl = pathToFileURL(
 
 const requireFromCli = createRequire(cliPackageJsonFileUrl)
 const bins = requireFromCli('./package.json')['bin']
-const cliEntryPointUrl = new URL(bins['cedarjs'], cliPackageJsonFileUrl)
+const cliEntryPointUrl = new URL(bins['cedar'], cliPackageJsonFileUrl)
 
 // If this is defined, we're running through yarn and need to change the cwd.
 // See https://yarnpkg.com/advanced/lifecycle-scripts/#environment-variables.

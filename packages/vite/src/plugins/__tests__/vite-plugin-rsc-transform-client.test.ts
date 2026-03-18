@@ -16,9 +16,9 @@ import { rscTransformUseClientPlugin } from '../vite-plugin-rsc-transform-client
 
 vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
-const RWJS_CWD = process.env.RWJS_CWD
-const TEST_RWJS_CWD = '/Users/tobbe/rw-app/'
-process.env.RWJS_CWD = TEST_RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
+const TEST_CEDAR_CWD = '/Users/tobbe/rw-app/'
+process.env.CEDAR_CWD = TEST_CEDAR_CWD
 
 function getPluginTransform(clientEntryFiles: Record<string, string>) {
   const plugin = rscTransformUseClientPlugin(clientEntryFiles)
@@ -38,11 +38,11 @@ function getPluginTransform(clientEntryFiles: Record<string, string>) {
 
 beforeAll(() => {
   // Add a toml entry for getPaths et al.
-  vol.fromJSON({ 'redwood.toml': '' }, TEST_RWJS_CWD)
+  vol.fromJSON({ 'redwood.toml': '' }, TEST_CEDAR_CWD)
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 describe('rscRoutesAutoLoader', () => {
@@ -53,7 +53,7 @@ describe('rscRoutesAutoLoader', () => {
   it('should handle CJS modules with exports.Link = ...', async () => {
     const id = normalizePath(
       path.join(
-        TEST_RWJS_CWD,
+        TEST_CEDAR_CWD,
         'node_modules',
         '@cedarjs',
         'router',
@@ -68,9 +68,8 @@ describe('rscRoutesAutoLoader', () => {
 
       // This needs to be a client component because it uses onClick, and the onClick
       // event handler can't be serialized when passed as an RSC Flight response
-      var _Object$defineProperty = require("@babel/runtime-corejs3/core-js/object/define-property");
-      var _interopRequireWildcard = require("@babel/runtime-corejs3/helpers/interopRequireWildcard").default;
-      _Object$defineProperty(exports, "__esModule", {
+      var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard").default;
+      Object.defineProperty(exports, "__esModule", {
         value: true
       });
       exports.Link = void 0;
@@ -122,7 +121,7 @@ describe('rscRoutesAutoLoader', () => {
   it('should handle CJS modules with module.exports = { ErrorIcon, ToastBar, ... }', async () => {
     const id = normalizePath(
       path.join(
-        TEST_RWJS_CWD,
+        TEST_CEDAR_CWD,
         'node_modules',
         'react-hot-toast',
         'dist',

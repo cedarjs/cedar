@@ -2,9 +2,10 @@ name: Check changesets
 description: Checks if changeset was added to the PR
 
 runs:
-  using: node20
+  using: node24
   main: check_changesets.mjs
 
 inputs:
   labels:
+    description: The PR's labels
     required: true

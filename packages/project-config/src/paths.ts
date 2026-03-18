@@ -14,7 +14,10 @@ export interface NodeTargetPaths {
   functions: string
   graphql: string
   lib: string
+  /** @deprecated - Please use the root `generatorTemplates` directory */
+  generators: string
   services: string
+  subscriptions: string
   config: string
   dist: string
   types: string
@@ -33,6 +36,8 @@ export interface WebPaths {
   storybook: string
   app: string
   document: string
+  /** @deprecated - Please use the root `generatorTemplates` directory */
+  generators: string
   html: string
   routes: string
   pages: string
@@ -73,6 +78,7 @@ export interface Paths {
   web: WebPaths
   api: NodeTargetPaths
   scripts: string
+  packages: string
   generatorTemplates: string
 }
 
@@ -90,7 +96,8 @@ export interface PagesDependency {
 }
 
 /**
- * The Redwood config file is used as an anchor for the base directory of a project.
+ * The Cedar config file is used as an anchor for the base directory of a
+ * project.
  */
 export const getBaseDir = (configPath: string = getConfigPath()): string => {
   return path.dirname(configPath)
@@ -119,7 +126,7 @@ export const resolveFile = (
 
 /** Path constants that are relevant to a Cedar project */
 const getPathsCache = new Map<string, Paths>()
-export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
+export function getPaths(BASE_DIR: string = getBaseDir()) {
   if (getPathsCache.has(BASE_DIR)) {
     return getPathsCache.get(BASE_DIR) as Paths
   }
@@ -140,7 +147,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     path.join(BASE_DIR, 'web/vite.config'),
   ) as string
 
-  const paths = {
+  const paths: Paths = {
     base: BASE_DIR,
 
     generated: {
@@ -154,6 +161,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
     },
 
     scripts: path.join(BASE_DIR, 'scripts'),
+    packages: path.join(BASE_DIR, 'packages'),
     generatorTemplates: path.join(BASE_DIR, 'generatorTemplates'),
 
     api: {
@@ -162,6 +170,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
       functions: path.join(BASE_DIR, 'api/src/functions'),
       graphql: path.join(BASE_DIR, 'api/src/graphql'),
       lib: path.join(BASE_DIR, 'api/src/lib'),
+      generators: path.join(BASE_DIR, 'api/generators'),
       config: path.join(BASE_DIR, 'api/src/config'),
       services: path.join(BASE_DIR, 'api/src/services'),
       directives: path.join(BASE_DIR, 'api/src/directives'),
@@ -188,6 +197,7 @@ export const getPaths = (BASE_DIR: string = getBaseDir()): Paths => {
       layouts: path.join(BASE_DIR, 'web/src/layouts/'),
       src: path.join(BASE_DIR, 'web/src'),
       storybook: path.join(BASE_DIR, 'web/.storybook'),
+      generators: path.join(BASE_DIR, 'web/generators'),
       app: resolveFile(path.join(BASE_DIR, 'web/src/App')) as string,
       document: resolveFile(path.join(BASE_DIR, 'web/src/Document')) as string,
       html: path.join(BASE_DIR, 'web/src/index.html'),
@@ -341,7 +351,7 @@ export const processPagesDir = (
 
 /**
  * Converts Windows-style paths to Posix-style
- * C:\Users\Bob\dev\Redwood -> /c/Users/Bob/dev/Redwood
+ * C:\Users\Bob\dev\Cedar -> /c/Users/Bob/dev/Cedar
  *
  * The conversion only happens on Windows systems, and only for paths that are
  * not already Posix-style
@@ -366,8 +376,8 @@ export const ensurePosixPath = (path: string) => {
 /**
  * Switches backslash to regular slash on Windows so the path works in
  * import statements
- * C:\Users\Bob\dev\Redwood\UserPage\UserPage ->
- * C:/Users/Bob/dev/Redwood/UserPage/UserPage
+ * C:\Users\Bob\dev\Cedar\UserPage\UserPage ->
+ * C:/Users/Bob/dev/Cedar/UserPage/UserPage
  *
  * @param path Filesystem path
  */
@@ -394,10 +404,11 @@ export function projectRootIsEsm() {
   return packageJsonIsEsm(path.join(getPaths().base, 'package.json'))
 }
 
+// switches the cwd to the project base directory.
 export function projectSideIsEsm(side: 'api' | 'web') {
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
   return packageJsonIsEsm(
-    path.join(redwoodProjectPaths[side].base, 'package.json'),
+    path.join(cedarProjectPaths[side].base, 'package.json'),
   )
 }
 

@@ -40,7 +40,8 @@ const INPUT_TYPES = [
 type InputType = (typeof INPUT_TYPES)[number]
 
 export interface InputFieldProps
-  extends Omit<FieldProps<HTMLInputElement>, 'type'>,
+  extends
+    Omit<FieldProps<HTMLInputElement>, 'type'>,
     Omit<React.ComponentPropsWithRef<'input'>, 'name' | 'type'> {
   /**
    * @privateRemarks

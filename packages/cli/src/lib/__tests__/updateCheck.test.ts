@@ -1,7 +1,18 @@
 global.__dirname = __dirname
 
+const { spawnBackgroundProcessMock } = vi.hoisted(() => {
+  return {
+    spawnBackgroundProcessMock: vi.fn(),
+  }
+})
+
 vi.mock('node:fs')
 vi.mock('latest-version')
+vi.mock('../background.js', () => {
+  return {
+    spawnBackgroundProcess: spawnBackgroundProcessMock,
+  }
+})
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
@@ -305,5 +316,51 @@ describe('Update is available with rc tag (1.0.0-rc.1 -> 1.0.1-rc.58)', () => {
   it('Respects the lock', async () => {
     setLock(updateCheck.CHECK_LOCK_IDENTIFIER)
     expect(updateCheck.shouldCheck()).toBe(false)
+  })
+})
+
+describe('Update middleware', () => {
+  beforeAll(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(TESTING_CURRENT_DATETIME))
+  })
+
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
+  beforeEach(() => {
+    // Prevent the appearance of stale locks
+    // @ts-expect-error - This is assignable in tests
+    fs.statSync = vi.fn(() => {
+      return {
+        birthtimeMs: Date.now(),
+      }
+    })
+
+    vol.fromJSON({
+      '.redwood/updateCheck/data.json': JSON.stringify({
+        localVersion: '2.4.1',
+        remoteVersions: {
+          latest: '2.5.0',
+        },
+        checkedAt: updateCheck.DEFAULT_DATETIME_MS,
+        shownAt: updateCheck.DEFAULT_DATETIME_MS,
+      }),
+    })
+  })
+
+  afterEach(() => {
+    vol.reset()
+    vi.clearAllMocks()
+  })
+
+  it('does not show stale update info when a fresh check is due', () => {
+    const processOnSpy = vi.spyOn(process, 'on')
+
+    updateCheck.updateCheckMiddleware({ _: ['info'] })
+
+    expect(spawnBackgroundProcessMock).toHaveBeenCalledTimes(1)
+    expect(processOnSpy).not.toHaveBeenCalledWith('exit', expect.any(Function))
   })
 })

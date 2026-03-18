@@ -5,17 +5,17 @@ import { rscTransformUseServerPlugin } from '../vite-plugin-rsc-transform-server
 
 vi.mock('node:fs', async () => ({ default: (await import('memfs')).fs }))
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 
 beforeAll(() => {
-  process.env.RWJS_CWD = '/Users/tobbe/rw-app/'
+  process.env.CEDAR_CWD = '/Users/tobbe/rw-app/'
 
   // Add a toml entry for getPaths et al.
-  vol.fromJSON({ 'redwood.toml': '' }, process.env.RWJS_CWD)
+  vol.fromJSON({ 'redwood.toml': '' }, process.env.CEDAR_CWD)
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 function getPluginTransform(serverEntryFiles: Record<string, string>) {
@@ -621,19 +621,19 @@ describe('rscTransformUseServerPlugin function scoped "use server"', () => {
       expect(output).toMatchInlineSnapshot(`
         "import fs from 'node:fs';
         export default async function MyComponent() {
-          const formAction = __rwjs__rsa0_formAction;
+          const formAction = __cedarjs__rsa0_formAction;
           return <form action={formAction}>
                       <input type="number" name="delay" />
                       <button type="submit">Submit</button>
                     </form>;
         }
         import { registerServerReference } from "react-server-dom-webpack/server";
-        export async function __rwjs__rsa0_formAction(formData: FormData) {
+        export async function __cedarjs__rsa0_formAction(formData: FormData) {
           'use server';
 
           await fs.promises.writeFile('settings.json', \`{ "delay": \${formData.get('delay')} }\`);
         }
-        registerServerReference(__rwjs__rsa0_formAction, "some/dist/path/assets/rsa-Component.tsx-0.mjs", "__rwjs__rsa0_formAction");"
+        registerServerReference(__cedarjs__rsa0_formAction, "some/dist/path/assets/rsa-Component.tsx-0.mjs", "__cedarjs__rsa0_formAction");"
       `)
     })
 

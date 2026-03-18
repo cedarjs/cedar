@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-// A proxy for running the "redwood" @cedarjs/cli bin (`yarn redwood`, or
-// `yarn rw`) from @cedarjs/core.
+// A proxy for running the "cedar" @cedarjs/cli bin (`yarn cedar`, or
+// `yarn cedarjs`) from @cedarjs/core.
 //
 // createRequire is for ES modules. require literally doesn't exist in ES
 // modules, so if you want to use it, you have to create it.
@@ -30,19 +30,19 @@ import { pathToFileURL } from 'node:url'
 // > createRequire('/foo/bar')('./baz') may load /foo/bar/baz/index.js)
 //
 // Example import.meta.url value:
-// file:///Users/tobbe/tmp/rx-create-app/node_modules/@cedarjs/core/dist/bins/redwood.js
+// file:///Users/tobbe/tmp/cedar-create-app/node_modules/@cedarjs/core/dist/bins/cedar.js
 //
 // See https://github.com/nodejs/node/issues/40567#issuecomment-949825461.
 const require = createRequire(import.meta.url)
 
 // Example value:
-// file:///Users/tobbe/tmp/rx-create-app/node_modules/@cedarjs/cli/package.json
+// file:///Users/tobbe/tmp/cedar-create-app/node_modules/@cedarjs/cli/package.json
 const cliPackageJsonFileUrl = pathToFileURL(
   require.resolve('@cedarjs/cli/package.json'),
 )
 
 const requireFromCli = createRequire(cliPackageJsonFileUrl)
 const bins = requireFromCli('./package.json')['bin']
-const cliEntryPointUrl = new URL(bins['cedarjs'], cliPackageJsonFileUrl)
+const cliEntryPointUrl = new URL(bins['cedar'], cliPackageJsonFileUrl)
 
 import(cliEntryPointUrl.toString())

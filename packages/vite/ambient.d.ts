@@ -24,10 +24,10 @@ declare global {
   }
 
   var __REDWOOD__PRERENDER_PAGES: any
-  var __rwjs__vite_ssr_runtime: ViteRuntime | undefined
-  var __rwjs__vite_rsc_runtime: ViteRuntime | undefined
-  var __rwjs__client_references: Set<string> | undefined
-  var __rwjs__server_references: Set<string> | undefined
+  var __cedarjs__vite_ssr_runtime: ViteRuntime | undefined
+  var __cedarjs__vite_rsc_runtime: ViteRuntime | undefined
+  var __cedarjs__client_references: Set<string> | undefined
+  var __cedarjs__server_references: Set<string> | undefined
 
   var __REDWOOD__HELMET_CONTEXT: { helmet?: HelmetServerState }
 
@@ -37,6 +37,17 @@ declare global {
     id: string,
   ) => Promise<typeof __rw_module_cache__>
   var __webpack_require__: (id: string) => unknown
+  var __non_webpack_require__: NodeRequire
+
+  interface Thenable<T> {
+    then<TResult1 = T, TResult2 = never>(
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+    ): PromiseLike<TResult1 | TResult2>
+    status?: 'pending' | 'fulfilled' | 'rejected'
+    value?: T
+    reason?: any
+  }
 }
 
 export {}

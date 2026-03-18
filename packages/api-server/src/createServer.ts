@@ -19,7 +19,7 @@ import type {
   Server,
   StartOptions,
 } from './createServerHelpers.js'
-import { redwoodFastifyAPI } from './plugins/api.js'
+import { cedarFastifyAPI } from './plugins/api.js'
 
 // Load .env files if they haven't already been loaded. This makes importing this file effectful:
 //
@@ -117,7 +117,7 @@ export async function createServer(options: CreateServerOptions = {}) {
     getAsyncStoreInstance().run(new Map<string, GlobalContext>(), done)
   })
 
-  await server.register(redwoodFastifyAPI, {
+  await server.register(cedarFastifyAPI, {
     redwood: {
       apiRootPath,
       fastGlobOptions: {
@@ -166,12 +166,12 @@ export async function createServer(options: CreateServerOptions = {}) {
   })
 
   /**
-   * A wrapper around `fastify.listen` that handles `--apiPort`, `REDWOOD_API_PORT` and [api].port in redwood.toml (same for host)
+   * A wrapper around `fastify.listen` that handles `--apiPort`, `REDWOOD_API_PORT` and [api].port in cedar.toml (and redwood.toml) (same for host)
    *
    * The order of precedence is:
    * - `--apiPort`
    * - `REDWOOD_API_PORT`
-   * - [api].port in redwood.toml
+   * - [api].port in cedar.toml (and redwood.toml)
    */
   server.start = (options: StartOptions = {}) => {
     return server.listen({

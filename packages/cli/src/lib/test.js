@@ -41,11 +41,13 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           ),
           dataMigrations: path.join(BASE_PATH, './api/dataMigrations'),
           src: path.join(BASE_PATH, './api/src'),
+          lib: path.join(BASE_PATH, './api/src/lib'),
           jobs: path.join(BASE_PATH, './api/src/jobs'),
           services: path.join(BASE_PATH, './api/src/services'),
           directives: path.join(BASE_PATH, './api/src/directives'),
           graphql: path.join(BASE_PATH, './api/src/graphql'),
           functions: path.join(BASE_PATH, './api/src/functions'),
+          generators: path.join(BASE_PATH, './api/generators'),
         },
         web: {
           base: path.join(BASE_PATH, './web'),
@@ -56,8 +58,10 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
           layouts: path.join(BASE_PATH, '/web/src/layouts'),
           pages: path.join(BASE_PATH, '/web/src/pages'),
           app: path.join(BASE_PATH, '/web/src/App.js'),
+          generators: path.join(BASE_PATH, './web/generators'),
         },
         scripts: path.join(BASE_PATH, 'scripts'),
+        packages: path.join(BASE_PATH, 'packages'),
         generatorTemplates: path.join(BASE_PATH, 'generatorTemplates'),
         generated: {
           base: path.join(BASE_PATH, '.redwood'),
@@ -71,6 +75,16 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     },
     getSchemaPath: () => {
       return path.join(globalThis.__dirname, 'fixtures', 'schema.prisma')
+    },
+    getPrismaSchemas: async () => {
+      const schemaPath = path.join(
+        globalThis.__dirname,
+        'fixtures',
+        'schema.prisma',
+      )
+      return {
+        schemas: [[schemaPath, fs.readFileSync(schemaPath, 'utf-8')]],
+      }
     },
     getDataMigrationsPath: () => {
       return path.join(globalThis.__dirname, 'fixtures', 'migrations')
@@ -89,7 +103,7 @@ vi.mock('@cedarjs/cli-helpers', async (importOriginal) => {
 
 vi.mock('./project', () => ({
   isTypeScriptProject: () => false,
-  sides: () => ['web', 'api'],
+  workspaces: () => ['web', 'api'],
 }))
 
 globalThis.__prettierPath = path.resolve(

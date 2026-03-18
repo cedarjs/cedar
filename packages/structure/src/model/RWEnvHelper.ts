@@ -2,28 +2,24 @@ import fs from 'node:fs'
 import { join } from 'node:path'
 
 import * as dotenv from 'dotenv-defaults'
-import { pickBy } from 'lodash'
+import pickBy from 'lodash/pickBy.js'
 import type * as tsm from 'ts-morph'
-import type { Location } from 'vscode-languageserver'
-import { DiagnosticSeverity, Range } from 'vscode-languageserver'
 
 import { getSchemaPath } from '@cedarjs/project-config'
 
-import type { CodeLensX, Definition, HoverX, Reference } from '../ide'
-import { BaseNode } from '../ide'
-import { lazy } from '../x/decorators'
-import { prisma_parseEnvExpressionsInFile } from '../x/prisma'
-import { URL_file } from '../x/URL'
-import { Command_open } from '../x/vscode'
-import type { ExtendedDiagnostic } from '../x/vscode-languageserver-types'
+import { BaseNode } from '../nodes.js'
+import { lazy } from '../x/decorators.js'
+import type { ExtendedDiagnostic } from '../x/diagnostics.js'
 import {
-  ExtendedDiagnostic_is,
   LocationLike_toHashLink,
   LocationLike_toLocation,
-} from '../x/vscode-languageserver-types'
+} from '../x/diagnostics.js'
+import { DiagnosticSeverity } from '../x/diagnostics.js'
+import type { Location } from '../x/Location.js'
+import { prisma_parseEnvExpressionsInFile } from '../x/prisma.js'
 
-import type { RWProject } from './RWProject'
-import { process_env_findAll } from './util/process_env'
+import type { RWProject } from './RWProject.js'
+import { process_env_findAll } from './util/process_env.js'
 
 type EnvVarMap = Record<string, string>
 
@@ -86,7 +82,7 @@ export class RWEnvHelper extends BaseNode {
   }
 
   private _dotenv(f: string) {
-    const file = join(this.parent.projectRoot, f)
+    const file = join(this.parent.pathHelper.base, f)
     if (!fs.existsSync(file)) {
       return undefined
     }
@@ -162,18 +158,42 @@ class ProcessDotEnvExpression extends BaseNode {
     return LocationLike_toLocation(this.node)
   }
 
-  *ideInfo() {
-    for (const x of this.render()) {
-      if (!ExtendedDiagnostic_is(x)) {
-        yield x
-      }
-    }
-  }
-
   *diagnostics() {
-    for (const x of this.render()) {
-      if (ExtendedDiagnostic_is(x)) {
-        yield x
+    const { key, location, value_as_available } = this
+    const { uri, range } = location
+
+    if (typeof value_as_available === 'undefined') {
+      // the value is not available
+      // there are a few scenarios here...
+      if (this.parent.env_default_merged[key]) {
+        // value is actually in the merged env, but it is not visible here
+        // this is probably because the user forgot to add an includeEnvironmentVariables rule
+        const snippet = `
+[${this.side}]
+  includeEnvironmentVariables = ['${this.key}']`
+        yield {
+          uri,
+          diagnostic: {
+            range,
+            message: `
+This env variable is present in '${this.value_definition_file_basename}',
+but it won't be available to your app in production *unless* you add it to includeEnvironmentVariables.
+Tip: add the following to your cedar.toml (or redwood.toml):
+${snippet}
+            `,
+            severity: DiagnosticSeverity.Warning,
+          },
+        } as ExtendedDiagnostic
+      } else {
+        // the value is simply not visible
+        yield {
+          uri,
+          diagnostic: {
+            range,
+            message: `env value ${key} is not available. add it to your .env file`,
+            severity: DiagnosticSeverity.Warning,
+          },
+        } as ExtendedDiagnostic
       }
     }
   }
@@ -192,122 +212,11 @@ class ProcessDotEnvExpression extends BaseNode {
     return undefined
   }
 
-  @lazy() get value_definition_location(): Location | undefined {
-    const x = this.value_definition_file_basename
-    if (!x) {
-      return undefined
-    }
-    const file = join(this.parent.parent.projectRoot, x)
-    const content = fs.readFileSync(file).toString()
-    const lines = content.split('\n')
-    const index = lines.findIndex((l) => l.startsWith(this.key + '='))
-    return {
-      uri: URL_file(file),
-      range: Range.create(index, 0, index, lines[index].length),
-    }
-  }
-
   @lazy() get value_as_available() {
     if (this.side === 'web') {
       return this.parent.env_available_to_web[this.key]
     }
     const v = this.parent.env_available_to_api[this.key]
     return v
-  }
-
-  private *render() {
-    const { key, location, value_as_available } = this
-    const { uri, range } = location
-
-    // show reference to value definition
-    if (this.value_definition_location) {
-      yield {
-        kind: 'Reference',
-        location,
-        target: this.value_definition_location,
-      } as Reference
-      yield {
-        kind: 'Definition',
-        location,
-        target: this.value_definition_location,
-      } as Definition
-    }
-    // show hover with the actual value, if present
-    if (typeof value_as_available !== 'undefined') {
-      yield {
-        kind: 'Hover',
-        location,
-        hover: {
-          range: location.range,
-          contents: `${key}=${value_as_available} (${
-            this.value_definition_file_basename ?? ''
-          })`,
-        },
-      } as HoverX
-
-      if (
-        typeof value_as_available !== 'undefined' &&
-        this.value_definition_location
-      ) {
-        const title = `${key}=${value_as_available}`
-        const command = {
-          ...Command_open(this.value_definition_location),
-          title,
-        }
-        const codelens = {
-          kind: 'CodeLens',
-          location,
-          codeLens: {
-            range,
-
-            command,
-          },
-        } as CodeLensX
-        // TODO: we need to add middleware to the LSP client
-        // so the uri (string) is converted to a vscode.Uri
-        // https://github.com/microsoft/vscode-languageserver-node/issues/495
-        // eslint-disable-next-line no-constant-condition
-        if (false) {
-          yield codelens
-        }
-      }
-    }
-
-    if (typeof value_as_available === 'undefined') {
-      // the value is not available
-      // there are a few scenarios here...
-      if (this.parent.env_default_merged[key]) {
-        // value is actually in the merged env, but it is not visible here
-        // this is probably because the user forgot to add an includeEnvironmentVariables rule
-        const snippet = `
-[${this.side}]
-  includeEnvironmentVariables = ['${this.key}']`
-        yield {
-          uri,
-          diagnostic: {
-            range,
-            message: `
-This env variable is present in '${this.value_definition_file_basename}',
-but it won't be available to your app in production *unless* you add it to includeEnvironmentVariables.
-Tip: add the following to your redwood.toml:
-${snippet}
-            `,
-            severity: DiagnosticSeverity.Warning,
-            // TODO: quickFix
-          },
-        } as ExtendedDiagnostic
-      } else {
-        // the value is simply not visible
-        yield {
-          uri,
-          diagnostic: {
-            range,
-            message: `env value ${key} is not available. add it to your .env file`,
-            severity: DiagnosticSeverity.Warning,
-            // TODO: add a quickfix?
-          },
-        } as ExtendedDiagnostic
-      }
-    }
   }
 }

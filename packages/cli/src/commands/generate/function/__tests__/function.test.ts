@@ -119,3 +119,19 @@ test('creates a .ts file if --typescript=true', async () => {
   ).toMatchSnapshot()
   // ^ TS-functions, on the other hand, retain the 'aws-lamda' import and type-declartions.
 })
+
+test('creates a test file with correct import for dashed function name', async () => {
+  const dashedFunctionFiles = await functionHandler.files({
+    name: 'dashed-function',
+    tests: true,
+  })
+
+  const testFile =
+    dashedFunctionFiles[
+      path.normalize(
+        '/path/to/project/api/src/functions/dashedFunction/dashedFunction.test.js',
+      )
+    ]
+
+  expect(testFile).toMatch(/import { handler } from '\.\/dashedFunction'/)
+})

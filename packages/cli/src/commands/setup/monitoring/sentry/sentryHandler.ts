@@ -13,6 +13,7 @@ import {
   prettify,
   writeFilesTask,
 } from '@cedarjs/cli-helpers'
+import { getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import type { Args } from './sentry.js'
@@ -21,12 +22,14 @@ const rwPaths = getPaths()
 
 export const handler = async ({ force }: Args) => {
   const extension = isTypeScriptProject() ? 'ts' : 'js'
+  const configTomlPath = getConfigPath()
+  const configFileName = path.basename(configTomlPath)
 
   const notes: string[] = []
 
   const tasks = new Listr([
-    addApiPackages(['@envelop/sentry@5', '@sentry/node@7']),
-    addWebPackages(['@sentry/react@7', '@sentry/browser@7']),
+    addApiPackages(['@envelop/sentry@^15', '@sentry/node@^10']),
+    addWebPackages(['@sentry/react@^10', '@sentry/browser@^10']),
     addEnvVarTask(
       'SENTRY_DSN',
       '',
@@ -148,10 +151,12 @@ export const handler = async ({ force }: Args) => {
     },
     {
       title: 'One more thing...',
-      task: (ctx) => {
+      task: (ctx, task) => {
         notes.push(
           colors.important(
-            'You will need to add `SENTRY_DSN` to `includeEnvironmentVariables` in redwood.toml.',
+            (task.output =
+              'You will need to add `SENTRY_DSN` to ' +
+              `\`includeEnvironmentVariables\` in ${configFileName}.`),
           ),
         )
 

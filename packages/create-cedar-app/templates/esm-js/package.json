@@ -6,9 +6,10 @@
     "web"
   ],
   "devDependencies": {
-    "@cedarjs/core": "2.0.2",
-    "@cedarjs/project-config": "2.0.2",
-    "@cedarjs/testing": "2.0.2",
+    "@cedarjs/core": "2.8.0",
+    "@cedarjs/eslint-config": "2.8.0",
+    "@cedarjs/project-config": "2.8.0",
+    "@cedarjs/testing": "2.8.0",
     "vitest": "3.2.4"
   },
   "engines": {
@@ -17,6 +18,6 @@
   "packageManager": "yarn@4.12.0",
   "resolutions": {
     "react-is": "19.2.3",
-    "vite": "5.4.19"
+    "vite": "5.4.21"
   }
 }

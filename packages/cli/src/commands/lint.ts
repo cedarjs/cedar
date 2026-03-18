@@ -79,11 +79,11 @@ function showLegacyEslintDeprecationWarning(legacyFiles: string[]) {
   console.warn('')
 }
 
-export const command = 'lint [path..]'
+export const command = 'lint [paths..]'
 export const description = 'Lint your files'
 export const builder = (yargs: Argv) => {
   yargs
-    .positional('path', {
+    .positional('paths', {
       description:
         'Specify file(s) or directory(ies) to lint relative to project root',
       type: 'string',
@@ -108,17 +108,17 @@ export const builder = (yargs: Argv) => {
 }
 
 interface LintOptions {
-  path?: string[]
+  paths?: string[]
   fix?: boolean
   format?: string
 }
 
-export const handler = async ({ path: filePath, fix, format }: LintOptions) => {
-  recordTelemetryAttributes({
-    command: 'lint',
-    fix: !!fix,
-    format: format ?? 'stylish',
-  })
+export const handler = async ({
+  paths = [],
+  fix = false,
+  format = 'stylish',
+}: LintOptions) => {
+  recordTelemetryAttributes({ command: 'lint', fix, format })
 
   const config = getConfig()
   const legacyConfigFiles = detectLegacyEslintConfig()
@@ -132,36 +132,33 @@ export const handler = async ({ path: filePath, fix, format }: LintOptions) => {
   }
 
   try {
-    const pathString = filePath?.join(' ')
     const sbPath = getPaths().web.storybook
-    const args = [
-      'eslint',
-      fix && '--fix',
-      '--format',
-      format,
-      !pathString && fs.existsSync(getPaths().web.src) && 'web/src',
-      !pathString && fs.existsSync(getPaths().web.config) && 'web/config',
-      !pathString && fs.existsSync(sbPath) && 'web/.storybook',
-      !pathString && fs.existsSync(getPaths().scripts) && 'scripts',
-      !pathString && fs.existsSync(getPaths().api.src) && 'api/src',
-      pathString,
-    ].filter((x): x is string => !!x)
+    const args = ['eslint', fix && '--fix', '--format', format, ...paths]
 
-    const result = await execa('yarn', args, {
+    if (paths.length === 0) {
+      args.push(
+        fs.existsSync(getPaths().web.src) && 'web/src',
+        fs.existsSync(getPaths().web.config) && 'web/config',
+        fs.existsSync(sbPath) && 'web/.storybook',
+        fs.existsSync(getPaths().scripts) && 'scripts',
+        fs.existsSync(getPaths().api.src) && 'api/src',
+      )
+    }
+
+    const filteredArgs = args.filter((arg): arg is string => Boolean(arg))
+
+    const result = await execa('yarn', filteredArgs, {
       cwd: getPaths().base,
       stdio: 'inherit',
     })
 
     process.exitCode = result.exitCode
   } catch (error: unknown) {
-    if (
-      error instanceof Object &&
-      'exitCode' in error &&
-      typeof error.exitCode === 'number'
-    ) {
-      process.exitCode = error.exitCode
-    } else {
-      process.exitCode = 1
+    if (error && typeof error === 'object' && 'exitCode' in error) {
+      process.exitCode = typeof error.exitCode === 'number' ? error.exitCode : 1
+      return
     }
+
+    process.exitCode = 1
   }
 }

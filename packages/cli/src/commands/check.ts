@@ -2,8 +2,6 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 // @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
-// @ts-expect-error - Types not available for JS files
-import { getPaths } from '../lib/index.js'
 
 export const command = 'check'
 export const aliases = ['diagnostics']
@@ -13,14 +11,11 @@ export const description =
 export const handler = async () => {
   recordTelemetryAttributes({ command: 'check' })
 
-  const { printDiagnostics, DiagnosticSeverity } = (
+  const { printDiagnostics, DiagnosticSeverity } =
     await import('@cedarjs/structure')
-  ).default
 
-  console.log('DiagnosticServerity', DiagnosticSeverity)
-
-  printDiagnostics(getPaths().base, {
-    getSeverityLabel: (severity: unknown) => {
+  printDiagnostics({
+    getSeverityLabel: (severity) => {
       if (severity === DiagnosticSeverity.Error) {
         return c.error('error')
       }

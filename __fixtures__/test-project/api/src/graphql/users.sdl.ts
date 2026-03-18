@@ -1,6 +1,6 @@
 export const schema = gql`
   type User {
-    id: Int!
+    id: String!
     email: String!
     fullName: String!
     roles: String
@@ -8,7 +8,7 @@ export const schema = gql`
   }
 
   type Query {
-    user(id: Int!): User @skipAuth
+    user(id: String!): User @skipAuth
   }
 
   input CreateUserInput {

@@ -9,7 +9,8 @@ import { paramCase } from 'change-case'
 import decamelize from 'decamelize'
 import execa from 'execa'
 import { Listr } from 'listr2'
-import lodash from 'lodash'
+import memoize from 'lodash/memoize.js'
+import template from 'lodash/template.js'
 import pascalcase from 'pascalcase'
 import { format } from 'prettier'
 
@@ -19,14 +20,12 @@ import {
   resolveFile as internalResolveFile,
   findUp,
 } from '@cedarjs/project-config'
+import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
-import { pluralize, singularize } from './cedarPluralize.js'
 import c from './colors.js'
 import { addFileToRollback } from './rollback.js'
 
 export { findUp }
-
-const { memoize, template } = lodash
 
 /**
  * Returns variants of the passed `name` for usage in templates. If the given
@@ -59,10 +58,9 @@ export const nameVariants = (name) => {
   }
 }
 
-export const generateTemplate = async (templateFilename, { name, ...rest }) => {
+export const generateTemplate = (templateFilename, { name, ...rest }) => {
   try {
     const templateFn = template(readFile(templateFilename).toString())
-
     const renderedTemplate = templateFn({
       name,
       ...nameVariants(name),
@@ -224,13 +222,19 @@ export const getConfig = () => {
 }
 
 /**
- * This returns the config present in `prettier.config.cjs` of a Redwood project.
+ * This returns the config present in `prettier.config.cjs` or
+ * `prettier.config.mjs` of a Cedar project.
  */
 export const getPrettierOptions = async () => {
   try {
+    const cjsPath = path.join(getPaths().base, 'prettier.config.cjs')
+    const mjsPath = path.join(getPaths().base, 'prettier.config.mjs')
+    const prettierConfigPath = fs.existsSync(cjsPath) ? cjsPath : mjsPath
+
     const { default: prettierOptions } = await import(
-      `file://${path.join(getPaths().base, 'prettier.config.cjs')}`
+      `file://${prettierConfigPath}`
     )
+
     return prettierOptions
   } catch (e) {
     // If we're in our vitest environment we want to return a consistent set of prettier options
@@ -555,7 +559,6 @@ export const runCommandTask = async (commands, { verbose, silent }) => {
       title,
       task: async () => {
         return execa(cmd, args, {
-          shell: true,
           cwd,
           stdio: verbose && !silent ? 'inherit' : 'pipe',
           extendEnv: true,

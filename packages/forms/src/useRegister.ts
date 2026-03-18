@@ -7,10 +7,8 @@ import { setCoercion } from './coercion'
 import type { FieldProps } from './FieldProps'
 
 export type UseRegisterProps<
-  Element extends
-    | HTMLTextAreaElement
-    | HTMLSelectElement
-    | HTMLInputElement = HTMLInputElement,
+  Element extends HTMLTextAreaElement | HTMLSelectElement | HTMLInputElement =
+    HTMLInputElement,
 > = Pick<
   FieldProps<Element>,
   'name' | 'validation' | 'type' | 'onBlur' | 'onChange'
@@ -26,14 +24,12 @@ export type UseRegisterProps<
  * A field's `validation` prop is `react-hook-form`'s `RegisterOptions`
  * (with Redwood's extended `valueAs` props).
  *
- * @see {@link https://react-hook-form.com/api/useform/register}
+ * @see {@link https://react-hook-form.com/docs/useform/register}
  */
 export const useRegister = <
   T,
-  Element extends
-    | HTMLTextAreaElement
-    | HTMLSelectElement
-    | HTMLInputElement = HTMLInputElement,
+  Element extends HTMLTextAreaElement | HTMLSelectElement | HTMLInputElement =
+    HTMLInputElement,
 >(
   props: UseRegisterProps<Element> & { element?: string },
   ref?: React.ForwardedRef<T>,

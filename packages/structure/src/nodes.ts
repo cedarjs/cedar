@@ -1,0 +1,169 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { basename } from 'node:path'
+
+import type * as tsm from 'ts-morph'
+
+import { ArrayLike_normalize } from './x/Array.js'
+import type { ArrayLike } from './x/Array.js'
+import { lazy, memo } from './x/decorators.js'
+import type { ExtendedDiagnostic } from './x/diagnostics.js'
+import { basenameNoExt } from './x/path.js'
+import { Range_create } from './x/Range.js'
+import { createTSMSourceFile_cached } from './x/ts-morph.js'
+import { URL_file } from './x/URL.js'
+
+export type NodeID = string
+
+export abstract class BaseNode {
+  /**
+   * Each node MUST have a unique ID.
+   * IDs have meaningful information.
+   *
+   * examples:
+   * - /path/to/project
+   * - /path/to/project/web/src/Routes.js
+   * - /path/to/project/web/src/Routes.js /route1
+   */
+  abstract get id(): NodeID
+  abstract get parent(): BaseNode | undefined
+
+  exists = true
+  /**
+   * Returns the children of this node.
+   * Override this.
+   */
+  children(): ArrayLike<BaseNode> {
+    return []
+  }
+  @memo() private _children() {
+    return ArrayLike_normalize(this.children())
+  }
+
+  /**
+   * Diagnostics for this node (must not include children's diagnostics).
+   * Override this.
+   */
+  diagnostics(): ArrayLike<ExtendedDiagnostic> {
+    return []
+  }
+  @memo() private _diagnostics() {
+    return ArrayLike_normalize(this.diagnostics())
+  }
+
+  /**
+   * Collects diagnostics for this node and all descendants.
+   * This is what you'll use to gather all the project diagnostics.
+   */
+  @memo((...args) => JSON.stringify(args))
+  async collectDiagnostics(uri?: string): Promise<ExtendedDiagnostic[]> {
+    // TODO: catch runtime errors and add them as diagnostics
+    // TODO: we can parallelize this further
+    if (uri && this.bailOutOnCollection(uri)) {
+      return []
+    }
+    try {
+      const d1 = await this._diagnostics()
+      const dd = await Promise.all(
+        (await this._children()).map((c) => c.collectDiagnostics(uri)),
+      )
+      const d2 = dd.flat()
+      let all = [...d1, ...d2]
+      if (uri) {
+        all = all.filter((x) => x.uri === uri)
+      }
+      return all
+    } catch (e) {
+      const uri = this.closestContainingUri
+      if (!uri) {
+        throw e
+      }
+      const range = Range_create(0, 0, 0, 0)
+      return [
+        {
+          uri,
+          diagnostic: { message: e + '', range },
+        },
+      ]
+    }
+  }
+
+  bailOutOnCollection(uri: string): boolean {
+    if (this.id === uri) {
+      return false
+    }
+    if (uri.startsWith(this.id)) {
+      return false
+    }
+    return true
+  }
+
+  @lazy() get closestContainingUri(): string | undefined {
+    const { uri } = this as any
+    if (uri) {
+      return uri
+    }
+    if (this.parent) {
+      return this.parent.closestContainingUri
+    }
+    return undefined
+  }
+
+  /**
+   * Finds a node by ID.
+   * The default algorithm tries to be economic and only create the necessary
+   * intermediate nodes.
+   * Subclasses can override this to add further optimizations.
+   * @param id
+   */
+  @memo()
+  async findNode(id: NodeID): Promise<BaseNode | undefined> {
+    id = URL_file(id)
+    if (this.id === id) {
+      return this
+    }
+    if (id.startsWith(this.id)) {
+      for (const c of await this._children()) {
+        // depth first search by default
+        const cc = await c.findNode(id)
+        if (cc) {
+          return cc
+        }
+      }
+    }
+    return undefined
+  }
+}
+
+export abstract class FileNode extends BaseNode {
+  abstract get filePath(): string
+  @lazy() get uri(): string {
+    return URL_file(this.filePath)
+  }
+  /**
+   * the ID of a FileNode is its file:// uri.
+   */
+  @lazy() get id() {
+    return this.uri
+  }
+  @lazy() get text() {
+    return readFileSync(this.filePath, { encoding: 'utf8' }).toString()
+  }
+  @lazy() get fileExists(): boolean {
+    return existsSync(this.filePath)
+  }
+  /**
+   * parsed ts-morph source file
+   */
+  @lazy() get sf(): tsm.SourceFile {
+    if (typeof this.text === 'undefined') {
+      throw new Error('undefined file ' + this.filePath)
+    }
+    return createTSMSourceFile_cached(this.filePath, this.text)
+  }
+  @lazy() get basenameNoExt() {
+    return basenameNoExt(this.filePath)
+  }
+  @lazy() get basename() {
+    return basename(this.filePath)
+  }
+}

@@ -7,9 +7,11 @@
 .redwood/*
 !.redwood/README.md
 dev.db*
+api/db/generated/prisma
 dist
 dist-babel
 node_modules
+tsconfig.tsbuildinfo
 yarn-error.log
 web/public/mockServiceWorker.js
 web/types/graphql.d.ts

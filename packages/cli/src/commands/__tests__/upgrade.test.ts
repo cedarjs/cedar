@@ -1,9 +1,20 @@
 import fs from 'node:fs'
 
+import type { ListrRendererFactory, ListrTaskWrapper } from 'listr2'
 import { dedent } from 'ts-dedent'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-import { runPreUpgradeScripts } from '../upgrade.js'
+import { runPreUpgradeScripts } from '../upgrade/preUpgradeScripts.js'
+
+const createMockTask = () => {
+  // For these tests we only assert/drive `task.output`; the full Listr task
+  // runtime surface is not used.
+  return { output: '' } as unknown as ListrTaskWrapper<
+    unknown,
+    ListrRendererFactory,
+    ListrRendererFactory
+  >
+}
 
 // Mock fetch globally
 global.fetch = vi.fn()
@@ -37,13 +48,11 @@ vi.mock('node:os', () => ({
 }))
 
 describe('runPreUpgradeScripts', () => {
-  let mockTask: { output: string }
+  let mockTask = createMockTask()
   let mockCtx: Record<string, unknown>
 
   beforeEach(() => {
-    mockTask = {
-      output: '',
-    }
+    mockTask = createMockTask()
     mockCtx = {}
 
     vi.clearAllMocks()
@@ -55,7 +64,7 @@ describe('runPreUpgradeScripts', () => {
 
   it('should return early when no versionToUpgradeTo is provided', async () => {
     const ctx = {}
-    const task = { output: '' }
+    const task = createMockTask()
 
     await runPreUpgradeScripts(ctx, task, { verbose: false, force: false })
 
@@ -138,6 +147,7 @@ describe('runPreUpgradeScripts', () => {
       console.log('Running upgrade check')
     `
 
+    // Mock readFile to return the script content
     vi.mocked(fs.promises.readFile).mockResolvedValue(scriptContent)
 
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
@@ -217,7 +227,7 @@ describe('runPreUpgradeScripts', () => {
         'lodash@^4.17.0',
         '@cedarjs/internal@1.0.0',
         'semver',
-        '@cedarjs/structure',
+        '@cedarjs/structure@3.4.1',
         'execa',
       ],
       { cwd: '/tmp/cedar-upgrade-abc123' },
@@ -232,8 +242,14 @@ describe('runPreUpgradeScripts', () => {
       },
     )
 
+    const preUpgradeMessage = mockCtx.preUpgradeMessage
+
+    if (typeof preUpgradeMessage !== 'string') {
+      throw new Error('preUpgradeMessage is not a string')
+    }
+
     // Verify output was captured
-    expect(mockCtx.preUpgradeMessage).toContain('Upgrade check passed')
+    expect(preUpgradeMessage).toContain('Upgrade check passed')
 
     // Verify cleanup
     expect(fs.promises.rm).toHaveBeenCalledWith('/tmp/cedar-upgrade-abc123', {

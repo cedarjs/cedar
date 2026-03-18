@@ -79,8 +79,10 @@ export const mockContext = (): Context => {
   return context
 }
 
-interface MockedSignedWebhookParams
-  extends Omit<BuildEventParams, 'signature' | 'signatureHeader'> {
+interface MockedSignedWebhookParams extends Omit<
+  BuildEventParams,
+  'signature' | 'signatureHeader'
+> {
   signatureType: Exclude<SupportedVerifierTypes, 'skipVerifier'>
   signatureHeader: string // make this required
   secret: string

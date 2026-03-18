@@ -4,9 +4,9 @@ import path from 'node:path'
 
 import { expect } from 'vitest'
 
-import runTransform from '../lib/runTransform'
+import runTransform from '../lib/runTransform.js'
 
-import { formatCode } from './index'
+import { formatCode } from './index.js'
 
 export interface MatchTransformSnapshotFunction {
   (

@@ -12,10 +12,8 @@ import type { EmptyAsValue, RedwoodRegisterOptions } from './coercion'
  * @internal
  */
 export interface FieldProps<
-  Element extends
-    | HTMLTextAreaElement
-    | HTMLSelectElement
-    | HTMLInputElement = HTMLInputElement,
+  Element extends HTMLTextAreaElement | HTMLSelectElement | HTMLInputElement =
+    HTMLInputElement,
 > {
   name: string
   id?: string

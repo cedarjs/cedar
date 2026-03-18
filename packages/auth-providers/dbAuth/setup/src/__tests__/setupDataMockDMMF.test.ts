@@ -24,7 +24,7 @@ vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 import { createUserModelTask } from '../setupData'
 import { handler } from '../setupHandler'
 
-const RWJS_CWD = process.env.RWJS_CWD
+const CEDAR_CWD = process.env.CEDAR_CWD
 const {
   redwoodProjectPath,
   prismaConfigPath,
@@ -109,6 +109,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     processPagesDir: () => {
       return []
     },
+    getPrismaSchemas: () => {
+      return {
+        schemas: [[dbSchemaPath, memfs.readFileSync(dbSchemaPath, 'utf-8')]],
+      }
+    },
   }
 })
 
@@ -133,6 +138,11 @@ vi.mock('@prisma/internals', () => ({
       },
     }
   },
+  default: {
+    createSchemaPathInput: vi.fn(),
+    getConfig: vi.fn(),
+    getSchemaWithPath: vi.fn(),
+  },
 }))
 
 vi.mock('prompts', () => {
@@ -147,11 +157,11 @@ vi.mock('prompts', () => {
 })
 
 beforeAll(() => {
-  process.env.RWJS_CWD = redwoodProjectPath
+  process.env.CEDAR_CWD = redwoodProjectPath
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = RWJS_CWD
+  process.env.CEDAR_CWD = CEDAR_CWD
 })
 
 beforeEach(() => {
@@ -187,6 +197,9 @@ describe('setupData createUserModelTask', () => {
     })
 
     const schema = memfs.readFileSync(dbSchemaPath, 'utf-8')
+    expect(schema).toMatch(
+      /^model User {$.*id\s+String\s+@id\s+@default\(uuid\(\)\)/ms,
+    )
     expect(schema).toMatch(/^model User {$.*hashedPassword\s+String/ms)
   })
 
@@ -196,12 +209,10 @@ describe('setupData createUserModelTask', () => {
         'api/db/schema.prisma': dedent`
           datasource db {
             provider = "sqlite"
-            url      = env("DATABASE_URL")
           }
 
           generator client {
-            provider      = "prisma-client-js"
-            binaryTargets = "native"
+            provider      = "prisma-client"
           }
 
           // Define your own data models here and run 'yarn cedar prisma migrate dev'
@@ -232,12 +243,10 @@ describe('setupData createUserModelTask', () => {
         'api/db/schema.prisma': dedent`
           datasource db {
             provider = "sqlite"
-            url      = env("DATABASE_URL")
           }
 
           generator client {
-            provider      = "prisma-client-js"
-            binaryTargets = "native"
+            provider      = "prisma-client"
           }
 
           model User {
@@ -286,12 +295,10 @@ describe('setupData createUserModelTask', () => {
         'api/db/schema.prisma': dedent`
           datasource db {
             provider = "sqlite"
-            url      = env("DATABASE_URL")
           }
 
           generator client {
-            provider      = "prisma-client-js"
-            binaryTargets = "native"
+            provider      = "prisma-client"
           }
 
           // Define your own data models here and run 'yarn cedar prisma migrate dev'
@@ -385,12 +392,10 @@ describe('setupData createUserModelTask', () => {
         'api/db/schema.prisma': dedent`
           datasource db {
             provider = "sqlite"
-            url      = env("DATABASE_URL")
           }
 
           generator client {
-            provider      = "prisma-client-js"
-            binaryTargets = "native"
+            provider      = "prisma-client"
           }
 
           model ExampleModel {

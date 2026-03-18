@@ -3,7 +3,7 @@ import path from 'path'
 import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
-import pluralize, { singular } from 'pluralize'
+import pluralize from 'pluralize'
 import prompts from 'prompts'
 
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
@@ -22,7 +22,7 @@ import { isTypeScriptProject } from '../../../lib/project.js'
 import { isRealtimeSetup, isServerFileSetup } from '../../experimental/util.js'
 
 const templateVariables = (name) => {
-  name = singular(name.toLowerCase())
+  name = pluralize.singular(name.toLowerCase())
 
   return {
     name,
@@ -45,7 +45,7 @@ const templateVariables = (name) => {
 export async function handler({ name, type, force, verbose, silent }) {
   const redwoodPaths = getPaths()
   const ts = isTypeScriptProject()
-  name = singular(name.toLowerCase())
+  name = pluralize.singular(name.toLowerCase())
 
   let functionType = type
 

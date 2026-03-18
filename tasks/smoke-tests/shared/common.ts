@@ -24,13 +24,13 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
   // CSS checks. We saw this break when we switched bundlers, so while it's not comprehensive, it's at least something.
   // While playwright recommends against using locators that are too-closely tied to the DOM, `#redwood-app` is a stable ID.
   const bgBlue700 = 'rgb(29, 78, 216)'
-  expect(page.locator('#redwood-app > header')).toHaveCSS(
+  await expect(page.locator('#redwood-app > header')).toHaveCSS(
     'background-color',
     bgBlue700,
   )
 
   const textBlue400 = 'rgb(96, 165, 250)'
-  expect(await page.getByRole('link', { name: 'Cedar Blog' })).toHaveCSS(
+  await expect(page.getByRole('link', { name: 'Cedar Blog' })).toHaveCSS(
     'color',
     textBlue400,
   )
@@ -38,9 +38,11 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
   // Check the about page.
   await page.getByRole('link', { name: 'About', exact: true }).click()
   expect(page.url()).toBe('http://localhost:8910/about')
-  await page.getByText(
-    'This site was created to demonstrate my mastery of Redwood: Look on my works, ye',
-  )
+  await expect(
+    page.getByText(
+      'This site was created to demonstrate my mastery of Cedar: Look on my works, ye',
+    ),
+  ).toBeVisible()
 
   // Check the contact us page.
   await page.getByRole('link', { name: 'Contact Us' }).click()

@@ -8,7 +8,7 @@ import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { loadEnvFiles, recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import { projectIsEsm } from '@cedarjs/project-config'
+import { findUp, projectIsEsm, getConfigPath } from '@cedarjs/project-config'
 import { telemetryMiddleware } from '@cedarjs/telemetry'
 
 import * as buildCommand from './commands/build.js'
@@ -33,9 +33,9 @@ import * as testCommand from './commands/test.js'
 import * as testCommandEsm from './commands/testEsm.js'
 import * as tstojsCommand from './commands/ts-to-js.js'
 import * as typeCheckCommand from './commands/type-check.js'
-import * as upgradeCommand from './commands/upgrade.js'
+import * as upgradeCommand from './commands/upgrade/upgrade.js'
+import c from './lib/colors.js'
 import { exitWithError } from './lib/exit.js'
-import { findUp } from './lib/index.js'
 import * as updateCheck from './lib/updateCheck.js'
 import { loadPlugins } from './plugin.js'
 import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
@@ -45,19 +45,19 @@ import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
 // The current working directory can be set via:
 //
 // 1. The `--cwd` option
-// 2. The `RWJS_CWD` env-var
-// 3. By traversing directories upwards for the first `redwood.toml`
+// 2. The `CEDAR_CWD` env-var
+// 3. By traversing directories upwards for the first `cedar.toml` or `redwood.toml`
 //
 // ## Examples
 //
 // ```
 // yarn cedar info --cwd /path/to/project
-// RWJS_CWD=/path/to/project yarn cedar info
+// CEDAR_CWD=/path/to/project yarn cedar info
 //
-// # In this case, `--cwd` wins out over `RWJS_CWD`
-// RWJS_CWD=/path/to/project yarn cedar info --cwd /path/to/other/project
+// # In this case, `--cwd` wins out over `CEDAR_CWD`
+// CEDAR_CWD=/path/to/project yarn cedar info --cwd /path/to/other/project
 //
-// # Here we traverses upwards for a redwood.toml.
+// # Here we traverses upwards for a cedar.toml (or redwood.toml) file.
 // cd api
 // yarn cedar info
 // ```
@@ -73,35 +73,30 @@ let { cwd, telemetry, help, version } = Parser(hideBin(process.argv), {
       process.env.REDWOOD_DISABLE_TELEMETRY === '',
   },
 })
+cwd ??= process.env.CEDAR_CWD
 cwd ??= process.env.RWJS_CWD
-
-try {
-  if (cwd) {
-    // `cwd` was set by the `--cwd` option or the `RWJS_CWD` env var. In this case,
-    // we don't want to find up for a `redwood.toml` file. The `redwood.toml` should just be in that directory.
-    if (!fs.existsSync(path.join(cwd, 'redwood.toml'))) {
-      throw new Error(`Couldn't find a "redwood.toml" file in ${cwd}`)
-    }
-  } else {
-    // `cwd` wasn't set. Odds are they're in a Redwood project,
-    // but they could be in ./api or ./web, so we have to find up to be sure.
-
-    const redwoodTOMLPath = findUp('redwood.toml')
-
-    if (!redwoodTOMLPath) {
-      throw new Error(
-        `Couldn't find up a "redwood.toml" file from ${process.cwd()}`,
-      )
-    }
-
-    cwd = path.dirname(redwoodTOMLPath)
-  }
-} catch (error) {
-  console.error(error.message)
-  process.exit(1)
-}
-
+cwd = getTomlDir(cwd)
+process.env.CEDAR_CWD = cwd
 process.env.RWJS_CWD = cwd
+
+if (process.argv[1]?.endsWith('redwood.js')) {
+  const tomlPath = getConfigPath(cwd)
+  // I'm reading and "parsing" the toml file manually because I didn't want to
+  // load another package. Every package loaded increases the startup time.
+  const toml = fs.readFileSync(tomlPath, 'utf8')
+  const disableWarning = /^\s*rwBinWarning\s*=\s*false/m.test(toml)
+
+  if (!disableWarning) {
+    console.warn()
+    console.warn(
+      c.warning(
+        "'yarn rw' and 'yarn redwood' have been deprecated. Please use 'yarn " +
+          "cedar' instead.",
+      ),
+    )
+    console.warn()
+  }
+}
 
 if (process.cwd() !== cwd) {
   process.chdir(cwd)
@@ -163,7 +158,7 @@ async function runYargs() {
   // # Build the CLI yargs instance
   const yarg = yargs(hideBin(process.argv))
     // Config
-    .scriptName('rw')
+    .scriptName('cedar')
     .middleware(
       [
         // We've already handled `cwd` above, but it may still be in `argv`.
@@ -180,7 +175,8 @@ async function runYargs() {
       ].filter(Boolean),
     )
     .option('cwd', {
-      describe: 'Working directory to use (where `redwood.toml` is located)',
+      describe:
+        'Working directory to use (where `cedar.toml` or `redwood.toml` is located)',
     })
     .option('load-env-files', {
       describe:
@@ -256,6 +252,51 @@ async function runYargs() {
       }
     }
   })
+}
+
+function getTomlDir(cwd) {
+  const configFiles = ['cedar.toml', 'redwood.toml']
+  let tomlDir = ''
+
+  try {
+    if (cwd) {
+      // `cwd` was set by the `--cwd` option or the `CEDAR_CWD` env var. In this
+      // case, we don't want to find up for a configuration file. The
+      // config file should just be in that directory.
+
+      // `cwd` could be a relative path. Making it an absolute path is needed
+      // for when the cli calls itself (which it unfortunately does for example
+      // when generating the Prisma client).
+      const absCwd = path.resolve(process.cwd(), cwd)
+      const found = configFiles.some((f) => fs.existsSync(path.join(absCwd, f)))
+      if (!found) {
+        const tomls = configFiles.join('" or "')
+        throw new Error(`Couldn't find a "${tomls}" file in ${absCwd}`)
+      }
+
+      tomlDir = absCwd
+    } else {
+      // `cwd` wasn't set. Odds are they're in a Cedar project, but they could
+      // be in ./api or ./web, so we have to find up to be sure.
+
+      const configTomlPath =
+        findUp('cedar.toml', process.cwd()) ||
+        findUp('redwood.toml', process.cwd())
+
+      if (!configTomlPath) {
+        throw new Error(
+          `Couldn't find up a "cedar.toml" or "redwood.toml" file from ${process.cwd()}`,
+        )
+      }
+
+      tomlDir = path.dirname(configTomlPath)
+    }
+  } catch (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
+
+  return tomlDir
 }
 
 main()

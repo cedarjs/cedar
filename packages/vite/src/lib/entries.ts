@@ -15,8 +15,7 @@ export function getEntries() {
   // Build the entries object based on routes and pages
   // Given the page's route, we can determine whether or not
   // the entry requires authentication checks
-  const rwProject = getProject(getPaths().base)
-  const routes = rwProject.getRouter().routes
+  const routes = getProject().getRouter().routes
 
   // Add the various pages
   const pages = routes.map((route: RWRoute) => route.page) as RWPage[]
@@ -25,14 +24,14 @@ export function getEntries() {
     entries[page.constName] = ensurePosixPath(importStatementPath(page.path))
   }
 
-  // Add the ServerEntry entry, noting we use the "__rwjs__" prefix to avoid
+  // Add the ServerEntry entry, noting we use the "__cedarjs__" prefix to avoid
   // any potential conflicts with user-defined entries
   const serverEntry = getPaths().web.entryServer
   if (!serverEntry) {
     throw new Error('Server Entry file not found')
   }
-  entries['__rwjs__ServerEntry'] = serverEntry
-  entries['__rwjs__Routes'] = getPaths().web.routes
+  entries['__cedarjs__ServerEntry'] = serverEntry
+  entries['__cedarjs__Routes'] = getPaths().web.routes
 
   return entries
 }

@@ -1,5 +1,3 @@
-// api/src/graphql/auctions.sdl.ts
-
 export const schema = gql`
   type Query {
     auction(id: ID!): Auction @requireAuth

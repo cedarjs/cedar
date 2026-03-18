@@ -45,10 +45,12 @@ export const runTransform = async ({
   options = {},
 }: RunTransform) => {
   try {
-    // We have to do this here for the tests, because jscodeshift.run actually spawns
-    // a different process. If we use getPaths() in the transform, it would not find redwood.toml
-    if (process.env.NODE_ENV === 'test' && process.env.RWJS_CWD) {
-      process.chdir(process.env.RWJS_CWD)
+    // We have to do this here for the tests, because jscodeshift.run actually
+    // spawns a different process. If we use getPaths() in the transform, it
+    // would not find cedar.toml (or redwood.toml)
+    const cedarCwd = process.env.CEDAR_CWD || process.env.RWJS_CWD
+    if (process.env.NODE_ENV === 'test' && cedarCwd) {
+      process.chdir(cedarCwd)
     }
 
     await jscodeshift.run(transformPath, targetPaths, {

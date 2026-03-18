@@ -101,11 +101,11 @@ const FIXTURE_PATH = path.resolve(
 )
 
 beforeAll(() => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 })
 
 afterAll(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
 })
 
 const createDbUser = async (attributes = {}) => {
@@ -942,7 +942,7 @@ describe('dbAuth', () => {
         username: user.email,
       })
       options.forgotPassword.handler = (handlerUser, token) => {
-        // tokens should be the raw resetToken NOT the hash
+        // Tokens should be the raw resetToken NOT the hash.
         // resetToken consists of 16 base64 characters
         expect(handlerUser.resetToken).toBeUndefined()
         expect(token).toMatch(/^[A-Za-z0-9/+]{16}$/)
@@ -2230,7 +2230,9 @@ describe('dbAuth', () => {
       expect(regOptions.rp.name).toEqual(options.webAuthn.name)
       expect(regOptions.rp.id).toEqual(options.webAuthn.domain)
       expect(regOptions.timeout).toEqual(options.webAuthn.timeout)
-      expect(regOptions.user.id).toEqual(user.id)
+      expect(regOptions.user.id).toEqual(
+        Buffer.from(String(user.id)).toString('base64url'),
+      )
       expect(regOptions.user.displayName).toEqual(user.email)
       expect(regOptions.user.name).toEqual(user.email)
     })

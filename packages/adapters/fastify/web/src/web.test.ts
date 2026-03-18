@@ -9,15 +9,15 @@ import { getPaths } from '@cedarjs/project-config'
 
 import { redwoodFastifyWeb } from './web'
 
-let original_RWJS_CWD: string | undefined
+let original_CEDAR_CWD: string | undefined
 
 beforeAll(() => {
-  original_RWJS_CWD = process.env.RWJS_CWD
-  process.env.RWJS_CWD = path.join(__dirname, '__fixtures__/main')
+  original_CEDAR_CWD = process.env.CEDAR_CWD
+  process.env.CEDAR_CWD = path.join(__dirname, '__fixtures__/main')
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = original_RWJS_CWD
+  process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
 describe('redwoodFastifyWeb', () => {

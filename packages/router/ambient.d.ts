@@ -4,8 +4,8 @@ import type { ViteRuntime } from 'vite/runtime'
 
 declare global {
   var __REDWOOD__PRERENDERING: boolean
-  var __rwjs__vite_ssr_runtime: ViteRuntime | undefined
-  var __rwjs__vite_rsc_runtime: ViteRuntime | undefined
+  var __cedarjs__vite_ssr_runtime: ViteRuntime | undefined
+  var __cedarjs__vite_rsc_runtime: ViteRuntime | undefined
 
   /**
    * URL or absolute path to the GraphQL serverless function, without the trailing slash.
@@ -28,6 +28,13 @@ declare global {
    * Is the experimental RSC feature enabled?
    */
   var RWJS_EXP_RSC: boolean
+
+  interface Thenable<T> {
+    then<TResult1 = T, TResult2 = never>(
+      onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+      onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+    ): PromiseLike<TResult1 | TResult2>
+  }
 
   namespace NodeJS {
     interface Global {

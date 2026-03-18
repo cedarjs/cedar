@@ -58,8 +58,10 @@ export async function rscBuildForServer(
       // Server store has to be externalized, because it's a singleton (shared between FW and App)
       external: [
         '@prisma/client',
+        '@prisma/adapter-better-sqlite3',
         '@prisma/fetch-engine',
         '@prisma/internals',
+        'better-sqlite3',
         '@cedarjs/auth-dbauth-api',
         '@cedarjs/cookie-jar',
         '@cedarjs/server-store',

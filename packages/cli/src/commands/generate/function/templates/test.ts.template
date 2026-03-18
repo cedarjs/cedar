@@ -1,11 +1,11 @@
 import { mockHttpEvent, mockContext } from '@cedarjs/testing/api'
 
-import { handler } from './${name}'
+import { handler } from './${camelName}'
 
-//   Improve this test with help from the Redwood Testing Doc:
-//    https://cedarjs.com/docs/testing#testing-functions
+// Improve this test with help from the CedarJS Testing Doc:
+// https://cedarjs.com/docs/testing#testing-functions
 
-describe('${name} function', () => {
+describe('${camelName} function', () => {
 
   it('Should respond with 200', async () => {
     const httpEvent = mockHttpEvent({
@@ -18,13 +18,13 @@ describe('${name} function', () => {
     const { data } = JSON.parse(response.body)
 
     expect(response.statusCode).toBe(200)
-    expect(data).toBe('${name} function')
+    expect(data).toBe('${camelName} function')
   })
 
-// You can also use scenarios to test your api functions
-// See guide here: https://cedarjs.com/docs/testing#scenarios
-//
-// scenario('Scenario test', async () => {
-//
-// })
+  // You can also use scenarios to test your api functions
+  // See guide here: https://cedarjs.com/docs/testing#scenarios
+  //
+  // scenario('Scenario test', async () => {
+  //
+  // })
 })

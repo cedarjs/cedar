@@ -1,6 +1,5 @@
 // Handles validating values in services
 
-import { PrismaClient } from '@prisma/client'
 import pascalcase from 'pascalcase'
 
 import * as ValidationErrors from './errors.js'
@@ -11,6 +10,7 @@ type WithOptionalMessage<T = Record<string, unknown>> = T & {
    */
   message?: string
 }
+
 type WithRequiredMessage<T = Record<string, unknown>> =
   Required<WithOptionalMessage> & T
 
@@ -152,10 +152,38 @@ interface CustomValidatorOptions extends WithOptionalMessage {
   with: () => void
 }
 
-interface UniquenessValidatorOptions extends WithOptionalMessage {
-  db?: PrismaClient
+interface UniquenessValidatorOptions<
+  TDb extends UniquenessDb = UniquenessDb,
+> extends WithOptionalMessage {
+  db?: TDb
 }
+
 type UniquenessWhere = Record<'AND' | 'NOT', Record<string, unknown>[]>
+
+export type UniquenessTransactionClient = Record<
+  string,
+  {
+    findFirst: (args: { where: UniquenessWhere }) => Promise<unknown>
+  }
+>
+
+interface UniquenessDb {
+  // Prisma's `$transaction` is overloaded (batch + interactive). A single
+  // call-signature is not structurally assignable from an overloaded source,
+  // so we use a permissive signature here. Type safety for the interactive
+  // callback is enforced at the call-site inside `validateUniqueness`.
+  $transaction: (...args: any[]) => Promise<any>
+}
+
+// Extracts the transaction client type from db.$transaction.
+// TypeScript uses the *last* call signature for conditional type inference;
+// for PrismaClient that is the interactive-transaction overload, giving
+// Omit<PrismaClient, '$connect' | ...> — the fully-typed Prisma tx client.
+type TxClientOf<TDb extends UniquenessDb> = TDb extends {
+  $transaction: (callback: (tx: infer TTx) => any, ...args: any[]) => any
+}
+  ? TTx
+  : never
 
 interface ValidationRecipe {
   /**
@@ -216,11 +244,14 @@ interface ValidationRecipe {
   presence?: boolean | PresenceValidatorOptions
 
   /**
-   * Run a custom validation function which should either throw or return nothing.
-   * If the function throws an error, the error message will be used as the validation error associated with the field.
+   * Run a custom validation function which should either throw or return
+   * nothing.
+   * If the function throws an error, the error message will be used as the
+   * validation error associated with the field.
    */
   custom?: CustomValidatorOptions
 }
+
 // We extend ValidationRecipe to get its method's documentation.
 // Adding docs below will completely overwrite ValidationRecipe's.
 interface ValidationWithMessagesRecipe extends ValidationRecipe {
@@ -233,7 +264,10 @@ interface ValidationWithMessagesRecipe extends ValidationRecipe {
   length?: WithRequiredMessage<LengthValidatorOptions>
   numericality?: WithRequiredMessage<NumericalityValidatorOptions>
   presence?: WithRequiredMessage<PresenceValidatorOptions>
-  custom?: WithRequiredMessage<CustomValidatorOptions>
+  // `message` is optional here because the custom.with() function is expected
+  // to throw an Error, and we use the message from that error if no `message`
+  // is specified
+  custom?: CustomValidatorOptions
 }
 
 const VALIDATORS = {
@@ -539,9 +573,9 @@ const validationError = (
   options: any,
   substitutions = {},
 ) => {
-  const errorClassName = `${pascalcase(
-    type,
-  )}ValidationError` as keyof typeof ValidationErrors
+  const pascalType = pascalcase(type)
+  const errorClassName =
+    `${pascalType}ValidationError` as keyof typeof ValidationErrors
   const ErrorClass = ValidationErrors[errorClassName]
   const errorMessage =
     typeof options === 'object' ? (options.message as string) : undefined
@@ -595,9 +629,11 @@ export function validate(
   if (typeof labelOrRecipe === 'object') {
     label = ''
     validationRecipe = labelOrRecipe
-  } else {
+  } else if (recipe) {
     label = labelOrRecipe
-    validationRecipe = recipe as ValidationRecipe
+    validationRecipe = recipe
+  } else {
+    throw new Error('invalid options')
   }
 
   for (const [validator, options] of Object.entries(validationRecipe)) {
@@ -642,11 +678,10 @@ export const validateWith = async (func: () => Promise<any>) => {
 // this case you can provide a `$self` key with the `where` object to exclude
 // the current record.
 //
-// There is an optional `$scope` key which contains additional the `where`
-// clauses to include when checking whether the field is unique. So rather than
-// a product name having to be unique across the entire database, you could
-// check that it is only unique among a subset of records with the same
-// `companyId`.
+// There is an optional `$scope` key which contains additional `where` clauses
+// to include when checking whether the field is unique. So rather than a
+// product name having to be unique across the entire database, you could check
+// that it is only unique among a subset of records with the same `companyId`.
 //
 // return validateUniqueness('user', { email: 'rob@cedarjs.com' }, { message: '...'}, (db) => {
 //   return db.create(data: { email })
@@ -674,47 +709,57 @@ export const validateWith = async (func: () => Promise<any>) => {
 //     },
 //   },
 // })
-// return validateUniqueness('user', { email: 'rob@cedarjs.com' }, { prismaClient: myCustomDb}, (db) => {
+// return validateUniqueness('user', { email: 'rob@cedarjs.com' }, { db: myCustomDb}, (db) => {
 //   return db.create(data: { email })
 // })
-export async function validateUniqueness(
+export async function validateUniqueness<
+  TDb extends UniquenessDb = UniquenessDb,
+>(
   model: string,
   fields: Record<string, unknown>,
-  optionsOrCallback: (tx: PrismaClient) => Promise<any>,
-  callback: never,
+  optionsOrCallback: (tx: TxClientOf<TDb>) => Promise<any>,
+  callback?: never,
 ): Promise<any>
-export async function validateUniqueness(
+export async function validateUniqueness<
+  TDb extends UniquenessDb = UniquenessDb,
+>(
   model: string,
   fields: Record<string, unknown>,
-  optionsOrCallback: UniquenessValidatorOptions,
-  callback?: (tx: PrismaClient) => Promise<any>,
+  optionsOrCallback: UniquenessValidatorOptions<TDb>,
+  callback?: (tx: TxClientOf<TDb>) => Promise<any>,
 ): Promise<any>
-export async function validateUniqueness(
+export async function validateUniqueness<
+  TDb extends UniquenessDb = UniquenessDb,
+>(
   model: string,
   fields: Record<string, unknown>,
   optionsOrCallback:
-    | UniquenessValidatorOptions
-    | ((tx: PrismaClient) => Promise<any>),
-  callback?: (tx: PrismaClient) => Promise<any>,
+    | UniquenessValidatorOptions<TDb>
+    | ((tx: TxClientOf<TDb>) => Promise<any>),
+  callback?: (tx: TxClientOf<TDb>) => Promise<any>,
 ): Promise<any> {
   const { $self, $scope, ...rest } = fields
-  let options: UniquenessValidatorOptions = {}
-  let validCallback: (tx: PrismaClient) => Promise<any>
-  let db = null
+  let options: UniquenessValidatorOptions<TDb> = {}
+  let validCallback: (tx: TxClientOf<TDb>) => Promise<any>
 
   if (typeof optionsOrCallback === 'function') {
     validCallback = optionsOrCallback
-  } else {
+  } else if (callback) {
     options = optionsOrCallback
-    validCallback = callback as (tx: PrismaClient) => Promise<any>
+    validCallback = callback
+  } else {
+    throw new Error('validateUniqueness requires a callback function')
   }
 
-  if (options.db) {
-    const { db: customDb, ...restOptions } = options
-    options = restOptions
-    db = customDb
-  } else {
-    db = new PrismaClient()
+  const { db: _db, ...restOptions } = options
+  const db = options.db
+  options = restOptions
+
+  if (!db) {
+    throw new Error(
+      'validateUniqueness could not resolve a Prisma `db` instance. Pass ' +
+        '`{ db }` in options, or ensure `src/lib/db` exports `db`',
+    )
   }
 
   const where: UniquenessWhere = {
@@ -728,13 +773,15 @@ export async function validateUniqueness(
     where.NOT.push($self as Record<string, unknown>)
   }
 
-  return await db.$transaction(async (tx: PrismaClient) => {
+  return await db.$transaction(async (tx: UniquenessTransactionClient) => {
     const found = await tx[model].findFirst({ where })
 
     if (found) {
-      validationError('uniqueness', fieldsToString(fields), options)
+      validationError('uniqueness', fieldsToString(rest), options)
     }
 
-    return validCallback(tx)
+    // At runtime tx is the full Prisma transaction client; TxClientOf<TDb>
+    // is the TypeScript representation of that same type.
+    return validCallback(tx as unknown as TxClientOf<TDb>)
   })
 }

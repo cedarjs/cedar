@@ -1,11 +1,15 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { getDMMF, getSchemaWithPath } from '@prisma/internals'
+import { getDMMF } from '@prisma/internals'
 import execa from 'execa'
 
 import { getPaths } from '@cedarjs/cli-helpers'
-import { processPagesDir, getSchemaPath } from '@cedarjs/project-config'
+import {
+  processPagesDir,
+  getSchemaPath,
+  getPrismaSchemas,
+} from '@cedarjs/project-config'
 
 export const libPath = getPaths().api.lib.replace(getPaths().base, '')
 export const functionsPath = getPaths().api.functions.replace(
@@ -14,8 +18,7 @@ export const functionsPath = getPaths().api.functions.replace(
 )
 
 export const getModelNames = async () => {
-  const schemaPath = await getSchemaPath(getPaths().api.prismaConfig)
-  const result = await getSchemaWithPath(schemaPath)
+  const result = await getPrismaSchemas()
   const datamodel = result.schemas
   const schema = await getDMMF({ datamodel })
 
@@ -81,7 +84,7 @@ export function generateAuthPagesTask(generatingUserModel: boolean) {
     task: async () => {
       const rwjsPaths = getPaths()
 
-      const args = ['rw', 'g', 'dbAuth']
+      const args = ['cedar', 'g', 'dbAuth']
 
       if (generatingUserModel) {
         args.push(

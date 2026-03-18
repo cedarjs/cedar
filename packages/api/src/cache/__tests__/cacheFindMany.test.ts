@@ -14,8 +14,6 @@ vi.mock('@prisma/client', () => ({
       findMany: mockFindMany,
     },
   })),
-  // NOTE: This is only available after `prisma generate` has been run
-  PrismaClientValidationError: new Error('PrismaClientValidationError'),
 }))
 
 describe('cacheFindMany', () => {
@@ -97,5 +95,70 @@ describe('cacheFindMany', () => {
     expect(result).toEqual([])
     expect(getSpy).not.toHaveBeenCalled()
     expect(setSpy).not.toHaveBeenCalled()
+  })
+
+  it('treats Prisma validation errors as missing fields and reruns the query', async () => {
+    const client = new InMemoryClient()
+    const logger = { debug: vi.fn(), error: vi.fn() }
+    // @ts-expect-error - only mocking the functions we need on `logger`
+    const { cacheFindMany } = createCache(client, { logger })
+    const error = Object.assign(new Error('invalid field'), {
+      name: 'PrismaClientValidationError',
+    })
+
+    mockFindFirst.mockRejectedValue(error)
+    mockFindMany.mockResolvedValue([{ id: 1, updatedAt: new Date() }])
+
+    const result = await cacheFindMany('test', PrismaClient().user)
+
+    expect(result).toEqual([{ id: 1, updatedAt: expect.any(String) }])
+    expect(logger.error).toHaveBeenCalledWith(
+      `[Cache] cacheFindMany error: model does not contain \`id\` or \`updatedAt\` fields`,
+    )
+  })
+
+  it('logs a generic Prisma error message for non-validation failures', async () => {
+    const client = new InMemoryClient()
+    const logger = { debug: vi.fn(), error: vi.fn() }
+    // @ts-expect-error - only mocking the functions we need on `logger`
+    const { cacheFindMany } = createCache(client, { logger })
+    const error = new Error('random failure')
+
+    mockFindFirst.mockRejectedValue(error)
+    mockFindMany.mockResolvedValue([{ id: 2, updatedAt: new Date() }])
+
+    const result = await cacheFindMany('test', PrismaClient().user)
+
+    expect(result).toEqual([{ id: 2, updatedAt: expect.any(String) }])
+    expect(logger.error).toHaveBeenCalledWith(
+      `[Cache] cacheFindMany error: random failure`,
+    )
+  })
+
+  it('builds cache key using custom id and updatedAt fields', async () => {
+    const now = new Date()
+
+    const user = {
+      uuid: 'abc-123',
+      email: 'tester@example.com',
+      modifiedAt: now,
+    }
+
+    mockFindFirst.mockImplementation(() => user)
+    mockFindMany.mockImplementation(() => [user])
+
+    const client = new InMemoryClient()
+    const { cacheFindMany } = createCache(client, {
+      fields: { id: 'uuid', updatedAt: 'modifiedAt' },
+    })
+    const spy = vi.spyOn(client, 'set')
+
+    await cacheFindMany('test', PrismaClient().user)
+
+    expect(spy).toHaveBeenCalled()
+    // Expect the cache key to include the `uuid` value (not `id`)
+    expect(client.storage[`test-${user.uuid}-${now.getTime()}`].value).toEqual(
+      JSON.stringify([user]),
+    )
   })
 })

@@ -1,6 +1,6 @@
-import { FileNode } from '../ide'
+import { FileNode } from '../nodes.js'
 
-import type { RWProject } from './RWProject'
+import type { RWProject } from './RWProject.js'
 /**
  * layouts live in the src/layouts folder
  */

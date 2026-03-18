@@ -56,8 +56,20 @@ export const customOrDefaultTemplatePath = ({
     templatePath,
   )
 
+  // Old, deprecated, custom template path, e.g.
+  // /path/to/app/web/generators/page/page.tsx.template
+  const deprecatedCustomPath = getPaths()[side].generators
+    ? path.join(getPaths()[side].generators, generator, templatePath)
+    : undefined
+
   if (fs.existsSync(customPath)) {
     return customPath
+  } else if (deprecatedCustomPath && fs.existsSync(deprecatedCustomPath)) {
+    console.log(
+      `Having generator templates in ${getPaths()[side].generators} has been ` +
+        `deprecated. Please move them to ${getPaths().generatorTemplates}.`,
+    )
+    return deprecatedCustomPath
   } else {
     return defaultPath
   }
@@ -74,20 +86,23 @@ export const templateForFile = async ({
   templatePath,
   templateVars,
 }) => {
-  const basePath = getPaths()[side][sidePathSection]
+  const basePath = sidePathSection
+    ? getPaths()[side][sidePathSection]
+    : getPaths()[side]
   const fullOutputPath = path.join(basePath, outputPath)
   const fullTemplatePath = customOrDefaultTemplatePath({
     generator,
     templatePath,
     side,
   })
-  const content = await generateTemplate(fullTemplatePath, {
+  const mergedTemplateVars = {
     name,
     outputPath: ensurePosixPath(
       `./${path.relative(getPaths().base, fullOutputPath)}`,
     ),
     ...templateVars,
-  })
+  }
+  const content = await generateTemplate(fullTemplatePath, mergedTemplateVars)
 
   return [fullOutputPath, content]
 }

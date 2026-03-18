@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout the framework code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up job
         uses: ./.github/actions/set-up-job
@@ -47,8 +47,15 @@ jobs:
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Run `cedar build --no-prerender`
+        shell: bash
         run: |
-          yarn cedar build --no-prerender
+          set -o pipefail
+          yarn cedar build --no-prerender || {
+            echo "::group::package.json diagnostics"
+            node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
+            echo "::endgroup::"
+            exit 1
+          }
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar prerender`

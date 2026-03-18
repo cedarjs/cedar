@@ -30,11 +30,3 @@ runs:
         key: yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
         restore-keys: |
           yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-
-
-    - name: ♻️ Cache node_modules
-      uses: actions/cache@v5
-      with:
-        path: node_modules
-        key: yarn-node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
-        restore-keys: |
-          yarn-node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-

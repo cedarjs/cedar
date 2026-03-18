@@ -209,12 +209,13 @@ This will do three things:
 Let's break down the key components of the configuration.
 
 ```ts title="api/src/lib/uploads.ts"
+import type { PrismaClient } from 'api/db/generated/prisma/client.mts'
 import { createUploadsConfig, setupStorage } from '@cedarjs/storage'
 import { FileSystemStorage } from '@cedarjs/storage/FileSystemStorage'
 import { UrlSigner } from '@cedarjs/storage/signedUrl'
 
 // ⭐ (1)
-const uploadConfig = createUploadsConfig({
+const uploadsConfig = createUploadsConfig<PrismaClient>({
   profile: {
     fields: ['avatar'], // 👈 the fields that will contain your `File`s
   },
@@ -232,7 +233,7 @@ export const urlSigner = new UrlSigner({
 })
 
 // ⭐ (4)
-const { saveFiles, storagePrismaExtension } = setupStorage({
+const { saveFiles, storagePrismaExtension } = setupStorage<PrismaClient>({
   uploadsConfig,
   storageAdapter: fsStorage,
   urlSigner,
@@ -277,7 +278,7 @@ saveFiles.forProfile(gqlInput)
 Now we need to extend our db client in `api/src/lib/db.{js,ts}` to use the configured prisma client.
 
 ```ts title="api/src/lib/db.ts"
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from 'api/db/generated/prisma/client.mts'
 
 import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
 
@@ -349,7 +350,9 @@ For each of the models you configured when you setup uploads (in `UploadConfig`)
 So if you passed:
 
 ```ts
-const uploadConfig = createUploadsConfig({
+import type { PrismaClient } from 'api/db/generated/prisma/client.mts'
+
+const uploadsConfig = createUploadsConfig<PrismaClient>({
   profile: {
     fields: ['avatar'],
   },
@@ -358,7 +361,10 @@ const uploadConfig = createUploadsConfig({
   },
 })
 
-const { saveFiles } = setupStorage(uploadConfig)
+const { saveFiles } = setupStorage<PrismaClient>({
+  uploadsConfig,
+  storageAdapter: fsStorage,
+})
 
 // Available methods 👇
 saveFiles.forProfile(profileGqlInput)

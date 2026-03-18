@@ -88,7 +88,8 @@ export default [
     },
     rules: {
       // React recommended rules
-      ...reactPlugin.configs.recommended.rules,
+      ...reactPlugin.configs.flat.recommended.rules,
+      ...reactPlugin.configs.flat['jsx-runtime'].rules,
       // React hooks recommended rules
       ...reactHooksPlugin.configs.recommended.rules,
       // Jest DOM recommended rules
@@ -96,7 +97,6 @@ export default [
 
       curly: 'error',
       'unused-imports/no-unused-imports': 'error',
-      '@cedarjs/process-env-computed': 'error',
       'no-console': 'off',
       'no-extra-semi': 'off',
       'prefer-object-spread': 'warn',
@@ -290,12 +290,14 @@ export default [
   {
     files: [
       '**/.babelrc.js',
+      '**/.babelrc.cjs',
       '**/babel.config.js',
       '**/jest.config.js',
       '**/jest.setup.js',
       '**/*.config.js',
       '**/*.config.cjs',
       '**/*.config.mjs',
+      'docs/sidebars.js',
       'packages/web/apollo/index.js',
       'packages/web/toast/index.js',
       'packages/auth-providers/dbAuth/web/webAuthn/index.js',
@@ -378,6 +380,7 @@ export default [
   {
     files: [
       '.github/**',
+      'docs/ignore_build.mjs',
       'packages/api/src/**',
       'packages/api-server/src/**',
       'packages/cli/src/**',
@@ -447,6 +450,7 @@ export default [
       'packages/project-config/src/envVarDefinitions.ts',
       'packages/testing/**',
       'packages/vite/src/plugins/vite-plugin-cedar-html-env.ts',
+      '.github/**',
     ],
     rules: {
       '@cedarjs/process-env-computed': 'off',

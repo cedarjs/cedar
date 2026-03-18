@@ -10,7 +10,7 @@ be nested
 As far as I can tell, it does this in a more or less sensible way by hoisting
 the version that's requested the most.
 
-But when our own `@redwoodjs` packages become nested, it's usually a (painful)
+But when our own `@cedarjs` packages become nested, it's usually a (painful)
 problem for us and for our users. This script identifies which of CRWA's
 dependencies have a lot of nested dependencies:
 
@@ -18,35 +18,35 @@ dependencies have a lot of nested dependencies:
 yarn node ./tasks/nmHoisting/nmHoisting.mjs
 ```
 
-Here's a snippet of the nested dependencies for the `@redwoodjs` packages as of
+Here's a snippet of the nested dependencies for the `@cedarjs` packages as of
 version `v6.5.1`:
 
 ```json5
 {
   hoistedNodeModules: {
     // ...
-    '@redwoodjs/internal': {
+    '@cedarjs/internal': {
       'source-map': '0.7.4',
     },
-    '@redwoodjs/cli': {
+    '@cedarjs/cli': {
       decamelize: '5.0.1',
     },
-    '@redwoodjs/testing': {
+    '@cedarjs/testing': {
       '@types/node': '18.18.9',
     },
-    '@redwoodjs/api': {
+    '@cedarjs/api': {
       '@whatwg-node/fetch': '0.9.14',
     },
-    '@redwoodjs/telemetry': {
+    '@cedarjs/telemetry': {
       '@whatwg-node/fetch': '0.9.14',
     },
-    '@redwoodjs/prerender': {
+    '@cedarjs/prerender': {
       '@whatwg-node/fetch': '0.9.14',
     },
-    '@redwoodjs/structure': {
+    '@cedarjs/structure': {
       'lru-cache': '7.18.3',
     },
-    '@redwoodjs/graphql-server': {
+    '@cedarjs/graphql-server': {
       '@graphql-tools/utils': '10.0.11',
       '@graphql-tools/utils/cjs': 'null',
       '@graphql-tools/schema': '10.0.2',

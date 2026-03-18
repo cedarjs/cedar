@@ -1,1 +1,2 @@
-Project used for testing and visualizing caching in an RWSC app
+Project used for testing and visualizing caching in a Cedar app with RSC supoort
+enabled

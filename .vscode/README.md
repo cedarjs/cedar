@@ -1,6 +1,6 @@
 ## VS Code Settings
 
-This directory includes global workspace settings for local development of the Cedar Framework.
+This directory includes global workspace settings for local development of the CedarJS Framework.
 
 See:
 

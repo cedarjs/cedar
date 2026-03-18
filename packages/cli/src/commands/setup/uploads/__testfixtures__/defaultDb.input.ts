@@ -3,6 +3,8 @@
 
 import { PrismaClient } from '@prisma/client'
 
+export * from '@prisma/client'
+
 import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
 
 import { logger } from './logger.js'

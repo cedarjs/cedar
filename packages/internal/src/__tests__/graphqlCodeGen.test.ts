@@ -1,5 +1,17 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
+
+const { mockPrismaClientPath, mockPrismaClientFileUrl } = await vi.hoisted(
+  async () => {
+    const path = await import('node:path')
+    const { pathToFileURL } = await import('node:url')
+
+    // On Windows, path.resolve('/foo') gives e.g. 'C:\foo'
+    const mockPrismaClientPath = path.resolve('/mock-prisma-client-path')
+    const mockPrismaClientFileUrl = pathToFileURL(mockPrismaClientPath)
+    return { mockPrismaClientPath, mockPrismaClientFileUrl }
+  },
+)
 
 import {
   beforeAll,
@@ -11,11 +23,14 @@ import {
   describe,
 } from 'vitest'
 
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 import {
   generateTypeDefGraphQLApi,
   generateTypeDefGraphQLWeb,
 } from '../generate/graphqlCodeGen.js'
 import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
+import { dbReexportsPrismaClient } from '../project.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
@@ -23,18 +38,30 @@ const FIXTURE_PATH = path.resolve(
 )
 
 beforeAll(() => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
 })
 
 afterAll(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
 })
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
 
-vi.mock('@prisma/client', () => {
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+
+  return {
+    ...originalProjectConfig,
+    resolveGeneratedPrismaClient: () => mockPrismaClientPath,
+  }
+})
+
+const mockNow = vi.hoisted(() => new Date().getTime())
+
+vi.mock(mockPrismaClientFileUrl + '?t=' + mockNow, () => {
+  // TODO: Should this be default: or just straight ModelName:?
   return {
     default: {
       ModelName: {
@@ -44,16 +71,51 @@ vi.mock('@prisma/client', () => {
         Todo: 'Todo',
       },
     },
+    ModelName: {
+      PrismaModelOne: 'PrismaModelOne',
+      PrismaModelTwo: 'PrismaModelTwo',
+      Post: 'Post',
+      Todo: 'Todo',
+    },
+  }
+})
+
+vi.mock('../project.js', async (importOriginal) => {
+  const original = await importOriginal<any>()
+  return {
+    ...original,
+    dbReexportsPrismaClient: vi.fn(() => true),
   }
 })
 
 test('Generate gql typedefs web', async () => {
   await generateGraphQLSchema()
 
+  vi.setSystemTime(mockNow)
+
   vi.spyOn(fs, 'writeFileSync').mockImplementation(
     (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
       expect(file).toMatch(path.join('web', 'types', 'graphql.d.ts'))
       expect(data).toMatchSnapshot()
+    },
+  )
+
+  const { typeDefFiles, errors } = await generateTypeDefGraphQLWeb()
+  expect(errors).toEqual([])
+
+  expect(typeDefFiles).toHaveLength(1)
+  expect(typeDefFiles[0]).toMatch(path.join('web', 'types', 'graphql.d.ts'))
+})
+
+test('Generate gql typedefs web (no re-export)', async () => {
+  vi.mocked(dbReexportsPrismaClient).mockReturnValue(false)
+
+  await generateGraphQLSchema()
+
+  vi.spyOn(fs, 'writeFileSync').mockImplementation(
+    (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
+      expect(file).toMatch(path.join('web', 'types', 'graphql.d.ts'))
+      expect(data).toContain('import { Prisma } from "@prisma/client"')
     },
   )
 
@@ -90,13 +152,17 @@ test('Generate gql typedefs api', async () => {
   expect(data).toMatchSnapshot()
 
   // Check that JSON types are imported from prisma
-  expect(data).toContain('JSON: Prisma.JsonValue;')
-  expect(data).toContain('JSONObject: Prisma.JsonObject;')
-  expect(data).toContain('Byte: Uint8Array;')
+  expect(data).toContain(
+    'JSON: { input: Prisma.JsonValue; output: Prisma.JsonValue; }',
+  )
+  expect(data).toContain(
+    'JSONObject: { input: Prisma.JsonObject; output: Prisma.JsonObject; }',
+  )
+  expect(data).toContain('Byte: { input: Uint8Array; output: Uint8Array; }')
 
   // Check that prisma model imports are added to the top of the file
   expect(data).toContain(
-    "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from '@prisma/client'",
+    "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from 'src/lib/db'",
   )
 
   // Check printMappedModelsPlugin works correctly
@@ -106,6 +172,36 @@ test('Generate gql typedefs api', async () => {
 
   // Should only contain the SDL models that are also in Prisma
   expect(data).toContain(`type AllMappedModels = MaybeOrArrayOfMaybe<Todo>`)
+})
+
+test('Generate gql typedefs api (no re-export)', async () => {
+  vi.mocked(dbReexportsPrismaClient).mockReturnValue(false)
+
+  await generateGraphQLSchema()
+
+  let codegenOutput: {
+    file: fs.PathOrFileDescriptor
+    data: string | ArrayBufferView
+  } = { file: '', data: '' }
+
+  vi.spyOn(fs, 'writeFileSync').mockImplementation(
+    (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
+      codegenOutput = { file, data }
+    },
+  )
+
+  const { typeDefFiles } = await generateTypeDefGraphQLApi()
+
+  expect(typeDefFiles).toHaveLength(1)
+  expect(typeDefFiles[0]).toMatch(path.join('api', 'types', 'graphql.d.ts'))
+
+  const { data } = codegenOutput
+
+  // Check that prisma model imports are added to the top of the file
+  // Should import from @prisma/client instead of src/lib/db
+  expect(data).toContain(
+    "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from '@prisma/client'",
+  )
 })
 
 test('respects user provided codegen config', async () => {
@@ -147,7 +243,7 @@ test("Doesn't throw or print any errors with empty project", async () => {
     __dirname,
     '../../../../__fixtures__/empty-project',
   )
-  process.env.RWJS_CWD = fixturePath
+  process.env.CEDAR_CWD = fixturePath
   const oldConsoleError = console.error
   console.error = vi.fn()
 
@@ -165,7 +261,7 @@ test("Doesn't throw or print any errors with empty project", async () => {
     expect(console.error).not.toHaveBeenCalled()
   } finally {
     console.error = oldConsoleError
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   }
 })
 
@@ -175,14 +271,14 @@ describe("Doesn't swallow legit errors", () => {
       __dirname,
       './__fixtures__/graphqlCodeGen/invalidQueryType',
     )
-    process.env.RWJS_CWD = fixturePath
+    process.env.CEDAR_CWD = fixturePath
 
     const { errors } = await generateTypeDefGraphQLWeb()
     expect((errors[0].error as Error).toString()).toMatch(
       /field.*softKitten.*Query/,
     )
 
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   test('missingType', async () => {
@@ -190,12 +286,12 @@ describe("Doesn't swallow legit errors", () => {
       __dirname,
       './__fixtures__/graphqlCodeGen/missingType',
     )
-    process.env.RWJS_CWD = fixturePath
+    process.env.CEDAR_CWD = fixturePath
 
     const { errors } = await generateTypeDefGraphQLWeb()
     expect((errors[0].error as Error).toString()).toMatch(/Unknown type.*Todo/)
 
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 
   test('nonExistingField', async () => {
@@ -203,11 +299,11 @@ describe("Doesn't swallow legit errors", () => {
       __dirname,
       './__fixtures__/graphqlCodeGen/nonExistingField',
     )
-    process.env.RWJS_CWD = fixturePath
+    process.env.CEDAR_CWD = fixturePath
 
     const { errors } = await generateTypeDefGraphQLWeb()
     expect((errors[0].error as Error).toString()).toMatch(/field.*done.*Todo/)
 
-    delete process.env.RWJS_CWD
+    delete process.env.CEDAR_CWD
   })
 })

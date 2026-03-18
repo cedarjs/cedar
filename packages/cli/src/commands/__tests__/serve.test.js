@@ -7,7 +7,7 @@ import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import * as apiServerCLIConfigHandler from '@cedarjs/api-server/cjs/apiCliConfigHandler'
 
-import { builder } from '../serve.js'
+import { builder } from '../serve.ts'
 
 globalThis.__dirname = __dirname
 

@@ -1,19 +1,18 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
-// @ts-expect-error - No types for .js files
+// @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
-// @ts-expect-error - No types for .js files
-import { sides } from '../lib/project.js'
+// @ts-expect-error - Types not available for JS files
+import { workspaces } from '../lib/project.js'
 
 export const command = 'test [filter..]'
 export const description = 'Run Jest tests. Defaults to watch mode'
-
 export const builder = (yargs: Argv) => {
   yargs
     .strict(false) // so that we can forward arguments to jest
     .positional('filter', {
-      default: sides(),
+      default: workspaces(),
       description:
         'Which side(s) to test, and/or a regular expression to match against your test files to filter by',
       type: 'string',
@@ -37,6 +36,13 @@ export const builder = (yargs: Argv) => {
       type: 'boolean',
       default: true,
     })
+    .option('force', {
+      describe:
+        'Run tests without prompting for confirmation, even when a ' +
+        'non-standard datasource url env var is detected.',
+      type: 'boolean',
+      default: false,
+    })
     .epilogue(
       `For all available flags, run jest cli directly ${c.tip(
         'yarn jest --help',
@@ -56,7 +62,6 @@ interface TestOptions {
 }
 
 export const handler = async (options: TestOptions) => {
-  // @ts-expect-error - testHandler is not typed
-  const { handler } = await import('./testHandler.js')
+  const { handler } = await import('./test/testHandler.js')
   return handler(options)
 }

@@ -56,7 +56,7 @@ vi.mock('../../lib', async (importOriginal) => {
 import type * as Lib from '../../lib/index.js'
 // @ts-expect-error - No types for .js files
 import { runCommandTask } from '../../lib/index.js'
-import { handler } from '../type-check.js'
+import { handler } from '../type-checkHandler.ts'
 
 beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})

@@ -25,9 +25,9 @@ export async function renderRscToStream(
 async function loadServerFile(filePath: string) {
   console.log('rscRenderer.ts loadServerFile filePath', filePath)
 
-  if (globalThis.__rwjs__vite_rsc_runtime) {
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
     const serverMod =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl(filePath)
+      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(filePath)
     return serverMod.default ? serverMod.default : serverMod
   }
 
@@ -35,11 +35,11 @@ async function loadServerFile(filePath: string) {
 }
 
 const getRoutesComponent: any = async () => {
-  if (globalThis.__rwjs__vite_rsc_runtime) {
+  if (globalThis.__cedarjs__vite_rsc_runtime) {
     const routesPath = getPaths().web.routes
 
     const routesMod =
-      await globalThis.__rwjs__vite_rsc_runtime.executeUrl(routesPath)
+      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(routesPath)
 
     return routesMod.default
   }
@@ -49,11 +49,11 @@ const getRoutesComponent: any = async () => {
 
   const routesPath = path.join(
     getPaths().web.distRsc,
-    serverEntries['__rwjs__Routes'],
+    serverEntries['__cedarjs__Routes'],
   )
 
   if (!routesPath) {
-    throw new StatusError('No entry found for __rwjs__Routes', 404)
+    throw new StatusError('No entry found for __cedarjs__Routes', 404)
   }
 
   const routes = await loadServerFile(routesPath)
@@ -106,7 +106,7 @@ function getBundlerConfig() {
         // name Counter
 
         const filePathSlash = filePath.replaceAll('\\', '/')
-        const id = globalThis.__rwjs__vite_rsc_runtime
+        const id = globalThis.__cedarjs__vite_rsc_runtime
           ? filePath
           : absoluteClientEntries[filePathSlash]
 
@@ -128,8 +128,8 @@ function getBundlerConfig() {
 }
 
 interface RscModel {
-  __rwjs__Routes: React.ReactElement
-  __rwjs__rsa_data?: unknown
+  __cedarjs__Routes: React.ReactElement
+  __cedarjs__rsa_data?: unknown
 }
 
 async function renderRsc(input: RenderInput): Promise<ReadableStream> {
@@ -153,7 +153,7 @@ async function renderRsc(input: RenderInput): Promise<ReadableStream> {
   const { renderToReadableStream } = await importRsdwServer()
   const serverRoutes = await getRoutesComponent()
   const model: RscModel = {
-    __rwjs__Routes: createElement(serverRoutes),
+    __cedarjs__Routes: createElement(serverRoutes),
   }
 
   console.log('rscRenderer.ts renderRsc model', model)
@@ -218,8 +218,8 @@ async function executeRsa(input: RenderInput): Promise<ReadableStream> {
   const serverRoutes = await getRoutesComponent()
   console.log('rscRenderer.ts executeRsa serverRoutes', serverRoutes)
   const model: RscModel = {
-    __rwjs__Routes: createElement(serverRoutes),
-    __rwjs__rsa_data: data,
+    __cedarjs__Routes: createElement(serverRoutes),
+    __cedarjs__rsa_data: data,
   }
   console.log('rscRenderer.ts executeRsa model', model)
 

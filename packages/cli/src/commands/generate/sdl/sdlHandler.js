@@ -7,8 +7,8 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
+import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
-import { pluralize } from '../../../lib/cedarPluralize.js'
 import c from '../../../lib/colors.js'
 import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
 import {

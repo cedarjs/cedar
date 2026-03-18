@@ -313,7 +313,7 @@ For this example, assume we're using the following source code:
 /* base.js */
 const x = {
   foo: {
-    list: ['rw', 'setup'],
+    list: ['cedar', 'setup'],
     bar: {
       baz: [1, 2, 3, ['a', 'b', 'c']],
     },
@@ -380,7 +380,7 @@ const x = {
   foo: {
     // 7. x.foo
     // 6. x.foo.list
-    list: ['rw', 'setup'], // 5. x.foo.list.ArrayExpression
+    list: ['cedar', 'setup'], // 5. x.foo.list.ArrayExpression
     bar: {
       // 4. x.foo.bar
       // 3. x.foo.bar.baz
@@ -404,7 +404,7 @@ const y = 'Alpacas' // < is not merged! >
 /* base.js.1 */
 const x = {
   foo: {
-    list: ['rw', 'setup'],
+    list: ['cedar', 'setup'],
     bar: {
       baz: [1, 2, 3, ['a', 'b', 'c', 'd', 'e', 'f']],
     },
@@ -435,7 +435,7 @@ const y = 'Llamas'
 /* base.js.2 */
 const x = {
   foo: {
-    list: ['rw', 'setup'],
+    list: ['cedar', 'setup'],
     bar: {
       baz: [1, 2, 3, 4, 5, ['a', 'b', 'c', 'd', 'e', 'f']],
     },
@@ -463,7 +463,7 @@ const y = 'Llamas'
 /* base.js.4 */
 const x = {
   foo: {
-    list: ['rw', 'setup'],
+    list: ['cedar', 'setup'],
     bar: {
       baz: [1, 2, 3, 4, 5, ['a', 'b', 'c', 'd', 'e', 'f']],
       value: 10,
@@ -487,7 +487,7 @@ const y = 'Llamas'
 /* base.js.5 */
 const x = {
   foo: {
-    list: ['rw', 'setup', 'ui', 'mantine'],
+    list: ['cedar', 'setup', 'ui', 'mantine'],
     bar: {
       baz: [1, 2, 3, 4, 5, ['a', 'b', 'c', 'd', 'e', 'f']],
       value: 10,
@@ -509,7 +509,7 @@ const y = 'Llamas'
 /* base.js.6 */
 const x = {
   foo: {
-    list: ['rw', 'setup', 'ui', 'mantine'],
+    list: ['cedar', 'setup', 'ui', 'mantine'],
     bar: {
       baz: [1, 2, 3, 4, 5, ['a', 'b', 'c', 'd', 'e', 'f']],
       value: 10,
@@ -528,7 +528,7 @@ const y = 'Llamas'
 /* base.js.6 */
 const x = {
   foo: {
-    list: ['rw', 'setup', 'ui', 'mantine'],
+    list: ['cedar', 'setup', 'ui', 'mantine'],
     bar: {
       baz: [1, 2, 3, 4, 5, ['a', 'b', 'c', 'd', 'e', 'f']],
       value: 10,

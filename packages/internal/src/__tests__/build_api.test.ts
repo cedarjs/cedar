@@ -55,7 +55,7 @@ let prebuiltFiles: string[]
 let relativePaths: string[]
 
 beforeAll(async () => {
-  process.env.RWJS_CWD = FIXTURE_PATH
+  process.env.CEDAR_CWD = FIXTURE_PATH
   cleanApiBuild()
 
   const apiFiles = findApiFiles()
@@ -66,7 +66,7 @@ beforeAll(async () => {
     .map(cleanPaths)
 })
 afterAll(() => {
-  delete process.env.RWJS_CWD
+  delete process.env.CEDAR_CWD
 })
 
 test('api files are prebuilt', () => {

@@ -6,21 +6,25 @@ import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
 // @ts-expect-error - Types not available for JS files
-import { sides } from '../lib/project.js'
+import { workspaces } from '../lib/project.js'
 // @ts-expect-error - Types not available for JS files
 import { checkNodeVersion } from '../middleware/checkNodeVersion.js'
 
-export const command = 'build [side..]'
+export const command = 'build [workspace..]'
 export const description = 'Build for production'
 
-export const builder = (yargs: Argv) => {
-  const choices = sides()
+type BuildArgv = {
+  workspace?: string[]
+  [key: string]: unknown
+}
 
+export const builder = (yargs: Argv) => {
   yargs
-    .positional('side', {
-      choices,
-      default: choices,
-      description: 'Which side(s) to build',
+    .positional('workspace', {
+      default: ['api', 'web', 'packages/*'],
+      description:
+        'What workspace(s) to build. Valid values are: web, api, packages/*, ' +
+        '<package-name>',
       type: 'string',
       array: true,
     })
@@ -53,6 +57,37 @@ export const builder = (yargs: Argv) => {
         includeEpilogue: false,
       })
     })
+    .check((argv: BuildArgv) => {
+      const workspacesArg = argv.workspace
+
+      if (!Array.isArray(workspacesArg)) {
+        return 'Workspace must be an array'
+      }
+
+      // Remove all default workspace names and then check if there are any
+      // remaining workspaces to build. This is an optimization to avoid calling
+      // `workspaces({ includePackages: true }) as that's a somewhat expensive
+      // method call that hits the filesystem and parses files
+      const filtered = workspacesArg.filter(
+        (item) => item !== 'api' && item !== 'web' && item !== 'packages/*',
+      )
+
+      if (filtered.length === 0) {
+        return true
+      }
+
+      const workspaceNames = workspaces({ includePackages: true })
+
+      if (!workspacesArg.every((item) => workspaceNames.includes(item))) {
+        return (
+          c.error(`Unknown workspace(s) ${workspacesArg.join(' ')}`) +
+          '\n\nValid values are: ' +
+          workspaceNames.join(', ')
+        )
+      }
+
+      return true
+    })
     .epilogue(
       `Also see the ${terminalLink(
         'CedarJS CLI Reference',
@@ -62,6 +97,6 @@ export const builder = (yargs: Argv) => {
 }
 
 export const handler = async (options: Record<string, unknown>) => {
-  const { handler } = await import('./buildHandler.js')
+  const { handler } = await import('./build/buildHandler.js')
   return handler(options)
 }

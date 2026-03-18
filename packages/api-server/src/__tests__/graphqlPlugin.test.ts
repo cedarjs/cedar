@@ -14,16 +14,16 @@ import {
 import { createFastifyInstance } from '../fastify.js'
 import { redwoodFastifyGraphQLServer } from '../plugins/graphql.js'
 
-// Set up RWJS_CWD.
-let original_RWJS_CWD: string | undefined
+// Set up CEDAR_CWD.
+let original_CEDAR_CWD: string | undefined
 
 beforeAll(async () => {
-  original_RWJS_CWD = process.env.RWJS_CWD
-  process.env.RWJS_CWD = path.join(__dirname, './fixtures/graphql/cedar-app')
+  original_CEDAR_CWD = process.env.CEDAR_CWD
+  process.env.CEDAR_CWD = path.join(__dirname, './fixtures/graphql/cedar-app')
 })
 
 afterAll(() => {
-  process.env.RWJS_CWD = original_RWJS_CWD
+  process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
 describe('RedwoodFastifyGraphqlServer Fastify Plugin', () => {
