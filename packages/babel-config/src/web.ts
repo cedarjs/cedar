@@ -10,7 +10,6 @@ import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import type { RegisterHookOptions } from './common'
 import {
-  CORE_JS_VERSION,
   getCommonPlugins,
   registerBabel,
   parseTypeScriptConfigFiles,
@@ -195,17 +194,7 @@ export const getWebSideBabelPresets = (options: Flags) => {
         '@babel/preset-env',
         {
           // the targets are set in <userProject>/web/package.json
-          useBuiltIns: 'usage',
-          corejs: {
-            version: CORE_JS_VERSION,
-            proposals: true,
-          },
-          exclude: [
-            // Remove class-properties from preset-env, and include separately
-            // https://github.com/webpack/webpack/issues/9708
-            '@babel/plugin-transform-class-properties',
-            '@babel/plugin-transform-private-methods',
-          ],
+          useBuiltIns: false,
         },
         'rwjs-babel-preset-env',
       ],

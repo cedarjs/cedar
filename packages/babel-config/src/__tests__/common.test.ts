@@ -12,26 +12,5 @@ afterEach(() => {
 test("common plugins haven't changed unintentionally", () => {
   const commonPlugins = getCommonPlugins()
 
-  expect(commonPlugins).toMatchInlineSnapshot(`
-      [
-        [
-          "@babel/plugin-transform-class-properties",
-          {
-            "loose": true,
-          },
-        ],
-        [
-          "@babel/plugin-transform-private-methods",
-          {
-            "loose": true,
-          },
-        ],
-        [
-          "@babel/plugin-transform-private-property-in-object",
-          {
-            "loose": true,
-          },
-        ],
-      ]
-    `)
+  expect(commonPlugins).toMatchInlineSnapshot(`[]`)
 })
