@@ -1,4 +1,3 @@
-import { PrismaPg } from '@prisma/adapter-pg'
 // See https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/constructor
 // for options.
 
@@ -10,13 +9,8 @@ import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client.mts'
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-})
-
 const prismaClient = new PrismaClient({
   log: emitLogLevels(['info', 'warn', 'error']),
-  adapter,
 })
 
 handlePrismaLogging({

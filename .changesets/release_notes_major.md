@@ -2,8 +2,8 @@
 
 Cedar now ships with Prisma v7. This is a breaking change that affects how the
 Prisma client is generated, where your database URL is configured, and how
-`db.ts` is structured. Most of these changes can be applied automatically with
-the provided codemod.
+`api/src/lib/db.ts` is structured. Most of these changes can be applied
+automatically with the provided codemod.
 
 ## Automatic migration (recommended)
 

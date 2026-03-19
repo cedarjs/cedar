@@ -34,6 +34,10 @@ vi.mock('@cedarjs/project-config', () => {
 import {
   ADAPTER_PACKAGE,
   ADAPTER_VERSION,
+  PG_ADAPTER_PACKAGE,
+  PG_ADAPTER_VERSION,
+  PG_PACKAGE,
+  PG_VERSION,
   SQLITE_PACKAGE,
   SQLITE_VERSION,
   transformApiPackageJson,
@@ -59,7 +63,7 @@ describe('transformApiPackageJson', () => {
     expect(parsed.dependencies[SQLITE_PACKAGE]).toBe(SQLITE_VERSION)
   })
 
-  it('is idempotent when the adapter is already present', () => {
+  it('is idempotent when the sqlite adapter is already present', () => {
     const alreadyHasAdapter =
       JSON.stringify(
         {
@@ -125,18 +129,67 @@ describe('transformApiPackageJson', () => {
     expect(parsed.dependencies[SQLITE_PACKAGE]).toBe(SQLITE_VERSION)
   })
 
-  it('respects custom version overrides', () => {
-    const result = transformApiPackageJson(
-      MINIMAL_PACKAGE_JSON,
-      '^7.1.0',
-      '^12.1.0',
-    )
+  it('respects custom sqlite version overrides', () => {
+    const result = transformApiPackageJson(MINIMAL_PACKAGE_JSON, {
+      adapterVersion: '^7.1.0',
+      sqliteVersion: '^12.1.0',
+    })
     const parsed = JSON.parse(result) as {
       dependencies: Record<string, string>
     }
 
     expect(parsed.dependencies[ADAPTER_PACKAGE]).toBe('^7.1.0')
     expect(parsed.dependencies[SQLITE_PACKAGE]).toBe('^12.1.0')
+  })
+
+  it('adds pg adapter and pg deps for a postgresql provider', () => {
+    const result = transformApiPackageJson(MINIMAL_PACKAGE_JSON, {
+      provider: 'postgresql',
+    })
+    const parsed = JSON.parse(result) as {
+      dependencies: Record<string, string>
+    }
+
+    expect(parsed.dependencies[PG_ADAPTER_PACKAGE]).toBe(PG_ADAPTER_VERSION)
+    expect(parsed.dependencies[PG_PACKAGE]).toBe(PG_VERSION)
+    expect(parsed.dependencies[ADAPTER_PACKAGE]).toBeUndefined()
+    expect(parsed.dependencies[SQLITE_PACKAGE]).toBeUndefined()
+  })
+
+  it('is idempotent when the pg adapter is already present', () => {
+    const alreadyHasPgAdapter =
+      JSON.stringify(
+        {
+          name: 'api',
+          version: '1.0.0',
+          dependencies: {
+            [PG_ADAPTER_PACKAGE]: PG_ADAPTER_VERSION,
+            [PG_PACKAGE]: PG_VERSION,
+          },
+        },
+        null,
+        2,
+      ) + '\n'
+
+    const result = transformApiPackageJson(alreadyHasPgAdapter, {
+      provider: 'postgresql',
+    })
+
+    expect(result).toBe(alreadyHasPgAdapter)
+  })
+
+  it('respects custom pg version overrides', () => {
+    const result = transformApiPackageJson(MINIMAL_PACKAGE_JSON, {
+      provider: 'postgresql',
+      pgAdapterVersion: '^7.1.0',
+      pgVersion: '^8.1.0',
+    })
+    const parsed = JSON.parse(result) as {
+      dependencies: Record<string, string>
+    }
+
+    expect(parsed.dependencies[PG_ADAPTER_PACKAGE]).toBe('^7.1.0')
+    expect(parsed.dependencies[PG_PACKAGE]).toBe('^8.1.0')
   })
 })
 
@@ -152,7 +205,7 @@ describe('updateApiPackageJson (fs-level)', () => {
     expect(result).toBe('skipped')
   })
 
-  it('writes the file when the adapter is not yet present', async () => {
+  it('writes the sqlite adapter when not yet present', async () => {
     vol.fromJSON({
       '/app/api/package.json': MINIMAL_PACKAGE_JSON,
     })
@@ -173,7 +226,7 @@ describe('updateApiPackageJson (fs-level)', () => {
     expect(parsed.dependencies[SQLITE_PACKAGE]).toBe(SQLITE_VERSION)
   })
 
-  it('returns unmodified and does not rewrite when adapter already present', async () => {
+  it('returns unmodified and does not rewrite when sqlite adapter already present', async () => {
     const alreadyMigrated =
       JSON.stringify(
         {
@@ -193,6 +246,64 @@ describe('updateApiPackageJson (fs-level)', () => {
     })
 
     const result = await updateApiPackageJson('/app/api/package.json')
+
+    expect(result).toBe('unmodified')
+
+    const written = memfs.readFileSync(
+      '/app/api/package.json',
+      'utf-8',
+    ) as string
+
+    expect(written).toBe(alreadyMigrated)
+  })
+
+  it('writes the pg adapter when not yet present for postgresql provider', async () => {
+    vol.fromJSON({
+      '/app/api/package.json': MINIMAL_PACKAGE_JSON,
+    })
+
+    const result = await updateApiPackageJson('/app/api/package.json', {
+      provider: 'postgresql',
+    })
+
+    expect(result).toBe('updated')
+
+    const written = memfs.readFileSync(
+      '/app/api/package.json',
+      'utf-8',
+    ) as string
+    const parsed = JSON.parse(written) as {
+      dependencies: Record<string, string>
+    }
+
+    expect(parsed.dependencies[PG_ADAPTER_PACKAGE]).toBe(PG_ADAPTER_VERSION)
+    expect(parsed.dependencies[PG_PACKAGE]).toBe(PG_VERSION)
+    expect(parsed.dependencies[ADAPTER_PACKAGE]).toBeUndefined()
+    expect(parsed.dependencies[SQLITE_PACKAGE]).toBeUndefined()
+  })
+
+  it('returns unmodified and does not rewrite when pg adapter already present', async () => {
+    const alreadyMigrated =
+      JSON.stringify(
+        {
+          name: 'api',
+          version: '1.0.0',
+          dependencies: {
+            [PG_ADAPTER_PACKAGE]: PG_ADAPTER_VERSION,
+            [PG_PACKAGE]: PG_VERSION,
+          },
+        },
+        null,
+        2,
+      ) + '\n'
+
+    vol.fromJSON({
+      '/app/api/package.json': alreadyMigrated,
+    })
+
+    const result = await updateApiPackageJson('/app/api/package.json', {
+      provider: 'postgresql',
+    })
 
     expect(result).toBe('unmodified')
 
