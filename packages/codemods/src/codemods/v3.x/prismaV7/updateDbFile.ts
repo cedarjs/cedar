@@ -14,21 +14,31 @@ export default function transform(
   const j = api.jscodeshift
   const root = j(file.source)
 
-  // Idempotency: if the file already imports from the new path, skip
-  const alreadyMigrated =
-    root.find(j.ImportDeclaration, { source: { value: NEW_CLIENT_PATH } })
-      .length > 0
-
-  if (alreadyMigrated) {
-    return file.source
-  }
-
   // Detect the database provider. The orchestrator passes `isSqlite` and
   // `isPostgres` via jscodeshift options. `isSqlite` defaults to true so that
   // a plain invocation (e.g. tests without options) produces the full SQLite
   // output.
   const isSqlite: boolean = options['isSqlite'] !== false
   const isPostgres: boolean = options['isPostgres'] === true
+
+  // Idempotency: if the file already imports from the new path, skip —
+  // unless this is a PostgreSQL project that still needs the adapter wired up.
+  // A user who ran the old codemod (which only rewrote import paths for
+  // non-SQLite providers without injecting an adapter) will already have the
+  // new client path, so we must not bail out early in that case.
+  const hasNewClientPath =
+    root.find(j.ImportDeclaration, { source: { value: NEW_CLIENT_PATH } })
+      .length > 0
+
+  const hasPgAdapter =
+    root.find(j.ImportDeclaration, { source: { value: '@prisma/adapter-pg' } })
+      .length > 0
+
+  const alreadyMigrated = hasNewClientPath && (!isPostgres || hasPgAdapter)
+
+  if (alreadyMigrated) {
+    return file.source
+  }
 
   let didTransform = false
 
@@ -63,7 +73,10 @@ export default function transform(
       didTransform = true
     })
 
-  if (!didTransform) {
+  // For PostgreSQL, even if import paths were already rewritten by a previous
+  // codemod run (so didTransform is false), we still need to proceed to inject
+  // the adapter if it isn't wired up yet.
+  if (!didTransform && !isPostgres) {
     return file.source
   }
 
