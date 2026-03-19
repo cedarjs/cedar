@@ -24,7 +24,6 @@ const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
 const adapter = new PrismaBetterSqlite3({
   url: resolveSqliteUrl(process.env.DATABASE_URL),
 })
-
 const prismaClient = new PrismaClient({
   log: emitLogLevels(['info', 'warn', 'error']),
   adapter,

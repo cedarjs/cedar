@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@cedarjs/api": "3.0.0-canary.13223+9e1d1011b",
-    "@cedarjs/auth-dbauth-api": "3.0.0-canary.13223+9e1d1011b",
-    "@cedarjs/graphql-server": "3.0.0-canary.13223+9e1d1011b",
-    "@cedarjs/jobs": "3.0.0-canary.13223+9e1d1011b",
-    "@my-org/validators": "workspace:*"
+    "@cedarjs/api": "2.8.0",
+    "@cedarjs/auth-dbauth-api": "2.8.0",
+    "@cedarjs/graphql-server": "2.8.0",
+    "@my-org/validators": "workspace:*",
+    "@prisma/adapter-better-sqlite3": "7.5.0",
+    "better-sqlite3": "12.8.0"
   }
 }

@@ -36,11 +36,11 @@ describe('contacts', () => {
     jest.spyOn(console, 'log').mockImplementation(() => {})
 
     const result = await createContact({
-      input: { name: 'String', email: 'valid@email.com', message: 'String' },
+      input: { name: 'String', email: 'foo@bar.com', message: 'String' },
     })
 
     expect(result.name).toEqual('String')
-    expect(result.email).toEqual('valid@email.com')
+    expect(result.email).toEqual('foo@bar.com')
     expect(result.message).toEqual('String')
   })
 
