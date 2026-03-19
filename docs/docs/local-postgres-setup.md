@@ -133,7 +133,53 @@ datasource db {
 }
 ```
 
-> Note: If you run into a "PrismaClientInitializationError" then you may need to regenerate the prisma client using: `yarn rw prisma generate`
+> Note: If you run into a "PrismaClientInitializationError" then you may need to regenerate the prisma client using: `yarn cedar prisma generate`
+
+## Add the PostgreSQL Driver Adapter
+
+Prisma requires a [driver adapter](https://www.prisma.io/docs/orm/core-concepts/supported-databases/database-drivers) to connect to your database. For PostgreSQL, install the `@prisma/adapter-pg` and `pg` packages:
+
+```bash
+yarn workspace api add @prisma/adapter-pg pg
+```
+
+Then update `api/src/lib/db.ts` to use the adapter:
+
+```ts title="api/src/lib/db.ts"
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from 'api/db/generated/prisma/client.mts'
+
+import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
+
+import { logger } from './logger.js'
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+})
+
+const prismaClient = new PrismaClient({
+  log: emitLogLevels(['info', 'warn', 'error']),
+  adapter,
+})
+
+handlePrismaLogging({
+  db: prismaClient,
+  logger,
+  logLevels: ['info', 'warn', 'error'],
+})
+
+export const db = prismaClient
+```
+
+:::tip
+
+If you're migrating an existing project from Prisma v6, run the `prisma-v7` codemod which handles all of the above automatically:
+
+```bash
+yarn dlx @cedarjs/codemods prisma-v7
+```
+
+:::
 
 ## Connect to Postgres
 
@@ -142,22 +188,19 @@ following example uses `redwoodblog_dev` for the database. It also has `postgres
 superuser for ease of use.
 
 ```env
-DATABASE_URL="postgresql://postgres@localhost:5432/redwoodblog_dev?connection_limit=1"
+DATABASE_URL="postgresql://postgres@localhost:5432/cedarblog_dev"
 ```
-
-Note the `connection_limit` parameter. This is [recommended by Prisma](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/deployment#recommended-connection-limit) when working with
-relational databases in a Serverless context. You should also append this parameter to your production
-`DATABASE_URL` when configuring your deployments.
 
 ### Local Test DB
 
 You should also set up a test database similarly by adding `TEST_DATABASE_URL` to your `.env` file.
 
 ```env
-TEST_DATABASE_URL="postgresql://postgres@localhost:5432/redwoodblog_test?connection_limit=1"
+TEST_DATABASE_URL="postgresql://postgres@localhost:5432/cedarblog_test"
 ```
 
-> Note: local postgres server will need manual start/stop -- this is not handled automatically by RW CLI in a manner similar to sqlite
+> Note: local postgres server will need manual start/stop — this is not handled
+> automatically by the Cedar CLI in a manner similar to SQLite.
 
 ### Base URL and path
 
@@ -184,7 +227,7 @@ Migrations are snapshots of your DB structure, which, when applied, manage the s
 To create and apply a migration to the Postgres database specified in your `.env`, run the _migrate_ command. (Did this return an error? If so, see "Migrate from SQLite..." below.):
 
 ```bash
-yarn redwood prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 ### Migrate from SQLite to Postgres
@@ -213,12 +256,13 @@ rmdir /s api\db\migrations
 Run this command to create and apply a new migration to your local Postgres DB:
 
 ```bash
-yarn redwood prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 ## DB Management Tools
 
 Here are our recommendations in case you need a tool to manage your databases:
 
+- [DBeaver](https://dbeaver.io) (Linux, Mac, Windows – Open Source)
 - [TablePlus](https://tableplus.com/) (Mac, Windows)
 - [Beekeeper Studio](https://www.beekeeperstudio.io/) (Linux, Mac, Windows - Open Source)
