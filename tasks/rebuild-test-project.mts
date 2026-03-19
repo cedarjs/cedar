@@ -225,14 +225,13 @@ function installAndMigrate(): void {
 
 async function main() {
   const startTime = Date.now()
-
   const hr = '='.repeat(60)
 
   console.log(hr)
   console.log('Rebuilding /test-project')
   console.log(hr)
 
-  // buildPackages()
+  buildPackages()
   rebuildFixture()
   clearTestProject()
   copyFixture()
