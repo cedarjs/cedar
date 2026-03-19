@@ -7,6 +7,11 @@ export const SQLITE_PACKAGE = 'better-sqlite3'
 export const ADAPTER_VERSION = '^7.0.0'
 export const SQLITE_VERSION = '^12.0.0'
 
+export const PG_ADAPTER_PACKAGE = '@prisma/adapter-pg'
+export const PG_PACKAGE = 'pg'
+export const PG_ADAPTER_VERSION = '^7.0.0'
+export const PG_VERSION = '^8.0.0'
+
 export type UpdateApiPackageJsonResult = 'skipped' | 'unmodified' | 'updated'
 
 export type PackageJson = {
@@ -15,26 +20,55 @@ export type PackageJson = {
   [key: string]: unknown
 }
 
+export type TransformOptions = {
+  provider?: string
+  adapterVersion?: string
+  sqliteVersion?: string
+  pgAdapterVersion?: string
+  pgVersion?: string
+}
+
 /**
- * Transforms the api/package.json content by adding the SQLite adapter
- * dependencies. Returns the same string if no changes are needed.
+ * Transforms the api/package.json content by adding the appropriate adapter
+ * dependencies for the given provider. Returns the same string if no changes
+ * are needed.
  */
 export function transformApiPackageJson(
   source: string,
-  adapterVersion = ADAPTER_VERSION,
-  sqliteVersion = SQLITE_VERSION,
+  {
+    provider = 'sqlite',
+    adapterVersion = ADAPTER_VERSION,
+    sqliteVersion = SQLITE_VERSION,
+    pgAdapterVersion = PG_ADAPTER_VERSION,
+    pgVersion = PG_VERSION,
+  }: TransformOptions = {},
 ): string {
   const pkg = JSON.parse(source) as PackageJson
 
-  if (pkg.dependencies?.[ADAPTER_PACKAGE]) {
-    // Already present — idempotent
-    return source
-  }
+  const isPostgres = provider === 'postgresql' || provider === 'postgres'
 
-  pkg.dependencies = {
-    ...(pkg.dependencies ?? {}),
-    [ADAPTER_PACKAGE]: adapterVersion,
-    [SQLITE_PACKAGE]: sqliteVersion,
+  if (isPostgres) {
+    if (pkg.dependencies?.[PG_ADAPTER_PACKAGE]) {
+      // Already present — idempotent
+      return source
+    }
+
+    pkg.dependencies = {
+      ...(pkg.dependencies ?? {}),
+      [PG_ADAPTER_PACKAGE]: pgAdapterVersion,
+      [PG_PACKAGE]: pgVersion,
+    }
+  } else {
+    if (pkg.dependencies?.[ADAPTER_PACKAGE]) {
+      // Already present — idempotent
+      return source
+    }
+
+    pkg.dependencies = {
+      ...(pkg.dependencies ?? {}),
+      [ADAPTER_PACKAGE]: adapterVersion,
+      [SQLITE_PACKAGE]: sqliteVersion,
+    }
   }
 
   // Preserve the original indentation style
@@ -46,26 +80,24 @@ export function transformApiPackageJson(
 
 export async function updateApiPackageJson(
   packageJsonPath: string,
-  adapterVersion = ADAPTER_VERSION,
-  sqliteVersion = SQLITE_VERSION,
+  options: TransformOptions = {},
 ): Promise<UpdateApiPackageJsonResult> {
   if (!fs.existsSync(packageJsonPath)) {
     return 'skipped'
   }
 
   const source = fs.readFileSync(packageJsonPath, 'utf-8')
-
   const pkg = JSON.parse(source) as PackageJson
 
-  if (pkg.dependencies?.[ADAPTER_PACKAGE]) {
+  const isPostgres =
+    options.provider === 'postgresql' || options.provider === 'postgres'
+  const sentinelPackage = isPostgres ? PG_ADAPTER_PACKAGE : ADAPTER_PACKAGE
+
+  if (pkg.dependencies?.[sentinelPackage]) {
     return 'unmodified'
   }
 
-  const transformed = transformApiPackageJson(
-    source,
-    adapterVersion,
-    sqliteVersion,
-  )
+  const transformed = transformApiPackageJson(source, options)
 
   if (transformed === source) {
     return 'unmodified'

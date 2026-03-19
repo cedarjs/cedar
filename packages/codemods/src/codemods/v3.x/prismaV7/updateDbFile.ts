@@ -14,19 +14,31 @@ export default function transform(
   const j = api.jscodeshift
   const root = j(file.source)
 
-  // Idempotency: if the file already imports from the new path, skip
-  const alreadyMigrated =
+  // Detect the database provider. The orchestrator passes `isSqlite` and
+  // `isPostgres` via jscodeshift options. `isSqlite` defaults to true so that
+  // a plain invocation (e.g. tests without options) produces the full SQLite
+  // output.
+  const isSqlite: boolean = options['isSqlite'] !== false
+  const isPostgres: boolean = options['isPostgres'] === true
+
+  // Idempotency: if the file already imports from the new path, skip —
+  // unless this is a PostgreSQL project that still needs the adapter wired up.
+  // A user who ran the old codemod (which only rewrote import paths for
+  // non-SQLite providers without injecting an adapter) will already have the
+  // new client path, so we must not bail out early in that case.
+  const hasNewClientPath =
     root.find(j.ImportDeclaration, { source: { value: NEW_CLIENT_PATH } })
       .length > 0
+
+  const hasPgAdapter =
+    root.find(j.ImportDeclaration, { source: { value: '@prisma/adapter-pg' } })
+      .length > 0
+
+  const alreadyMigrated = hasNewClientPath && (!isPostgres || hasPgAdapter)
 
   if (alreadyMigrated) {
     return file.source
   }
-
-  // Detect whether this is a SQLite project. The orchestrator passes
-  // `isSqlite` via jscodeshift options. Defaults to true so that a plain
-  // invocation (e.g. tests without options) produces the full SQLite output.
-  const isSqlite: boolean = options['isSqlite'] !== false
 
   let didTransform = false
 
@@ -61,12 +73,129 @@ export default function transform(
       didTransform = true
     })
 
-  if (!didTransform) {
+  // For PostgreSQL, even if import paths were already rewritten by a previous
+  // codemod run (so didTransform is false), we still need to proceed to inject
+  // the adapter if it isn't wired up yet.
+  if (!didTransform && !isPostgres) {
     return file.source
   }
 
+  if (isPostgres) {
+    // -----------------------------------------------------------------------
+    // PostgreSQL path: add PrismaPg import, adapter constant, and pass it to
+    // PrismaClient.
+    // -----------------------------------------------------------------------
+
+    const hasAdapterImport =
+      root.find(j.ImportDeclaration, {
+        source: { value: '@prisma/adapter-pg' },
+      }).length > 0
+
+    if (!hasAdapterImport) {
+      const clientImport = root.find(j.ImportDeclaration, {
+        source: { value: NEW_CLIENT_PATH },
+      })
+
+      const adapterImport = j.importDeclaration(
+        [j.importSpecifier(j.identifier('PrismaPg'), j.identifier('PrismaPg'))],
+        j.stringLiteral('@prisma/adapter-pg'),
+      )
+
+      clientImport.insertBefore(adapterImport)
+    }
+
+    const hasAdapter =
+      root.find(j.VariableDeclarator, {
+        id: { type: 'Identifier', name: 'adapter' },
+      }).length > 0
+
+    const prismaClientNewExpr = root.find(j.NewExpression, {
+      callee: { type: 'Identifier', name: 'PrismaClient' },
+    })
+
+    if (prismaClientNewExpr.length > 0 && !hasAdapter) {
+      const prismaClientDeclaration = prismaClientNewExpr.closest(
+        j.VariableDeclaration,
+      )
+
+      // const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+      const adapterDecl = j.variableDeclaration('const', [
+        j.variableDeclarator(
+          j.identifier('adapter'),
+          j.newExpression(j.identifier('PrismaPg'), [
+            j.objectExpression([
+              j.objectProperty(
+                j.identifier('connectionString'),
+                j.memberExpression(
+                  j.memberExpression(
+                    j.identifier('process'),
+                    j.identifier('env'),
+                  ),
+                  j.identifier('DATABASE_URL'),
+                ),
+              ),
+            ]),
+          ]),
+        ),
+      ])
+
+      prismaClientDeclaration.insertBefore(adapterDecl)
+    }
+
+    // Add `adapter` property to new PrismaClient({...})
+    root
+      .find(j.NewExpression, {
+        callee: { type: 'Identifier', name: 'PrismaClient' },
+      })
+      .forEach((nodePath) => {
+        const args = nodePath.node.arguments
+
+        if (args.length === 0) {
+          nodePath.node.arguments = [
+            j.objectExpression([
+              Object.assign(
+                j.objectProperty(
+                  j.identifier('adapter'),
+                  j.identifier('adapter'),
+                ),
+                { shorthand: true },
+              ),
+            ]),
+          ]
+          return
+        }
+
+        const firstArg = args[0]
+
+        if (firstArg.type !== 'ObjectExpression') {
+          return
+        }
+
+        const hasAdapterProp = firstArg.properties.some(
+          (prop) =>
+            prop.type === 'ObjectProperty' &&
+            prop.key.type === 'Identifier' &&
+            (prop.key as any).name === 'adapter',
+        )
+
+        if (!hasAdapterProp) {
+          firstArg.properties.push(
+            Object.assign(
+              j.objectProperty(
+                j.identifier('adapter'),
+                j.identifier('adapter'),
+              ),
+              { shorthand: true },
+            ),
+          )
+        }
+      })
+
+    return root.toSource({ quote: 'single' })
+  }
+
   if (!isSqlite) {
-    // For non-SQLite projects, only rewrite the import paths.
+    // For other non-SQLite projects, only rewrite the import paths.
     // The user needs to add their own driver adapter.
     return root.toSource({ quote: 'single' })
   }
