@@ -124,7 +124,9 @@ async function promptForUntrackedFiles() {
     const confirmed = await question('\nDo you want to proceed? (y/N): ')
     if (!confirmed || !['y', 'yes'].includes(confirmed.toLowerCase())) {
       console.log('Operation cancelled.')
-      process.exit(0)
+      // Exit code 2 signals a user-initiated cancellation (distinct from
+      // success (0) and an unexpected failure (1)), so callers can detect it.
+      process.exit(2)
     }
   }
 }
