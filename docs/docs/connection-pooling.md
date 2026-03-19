@@ -100,36 +100,51 @@ To enable Prisma Accelerate with your existing database, visit the [Prisma Accel
 
 ### Prisma & PgBouncer
 
-PgBouncer holds a connection pool to the database and proxies incoming client connections by sitting between Prisma Client and the database. This reduces the number of processes a database has to handle at any given time. PgBouncer passes on a limited number of connections to the database and queues additional connections for delivery when space becomes available.
+PgBouncer holds a connection pool to the database and proxies incoming client
+connections by sitting between Prisma Client and the database. This reduces the
+number of processes a database has to handle at any given time. PgBouncer passes
+on a limited number of connections to the database and queues additional
+connections for delivery when space becomes available.
 
-To use Prisma Client with PgBouncer from a serverless function, add the `?pgbouncer=true` flag to the PostgreSQL connection URL:
+The recommended way to connect to PostgreSQL (including through PgBouncer) is
+via a [driver adapter](https://www.prisma.io/docs/orm/core-concepts/supported-databases/database-drivers)
+rather than connection string parameters. The `@prisma/adapter-pg` adapter
+handles connection management directly in Node.js.
 
+To use Prisma Client with PgBouncer via driver adapter:
+
+```ts title="api/src/lib/db.ts"
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from 'api/db/generated/prisma/client.mts'
+
+// Point DATABASE_URL at your PgBouncer endpoint (typically port 6543)
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+})
+
+export const db = new PrismaClient({ adapter })
 ```
-postgresql://USER:PASSWORD@HOST:PORT/DATABASE?pgbouncer=true
-```
 
-Typically, your PgBouncer port will be 6543 which is different from the Postgres default of 5432.
+> Note that Prisma Migrate uses database transactions and is not compatible with PgBouncer in transaction pooling mode. When running migrations, connect directly to the database (port 5432) rather than going through PgBouncer.
 
-> Note that since Prisma Migrate uses database transactions to check out the current state of the database and the migrations table, if you attempt to run Prisma Migrate commands in any environment that uses PgBouncer for connection pooling, you might see an error.
->
-> To work around this issue, you must connect directly to the database rather than going through PgBouncer when migrating.
-
-For more information on Prisma and PgBouncer, please refer to Prisma's Guide on [Configuring Prisma Client with PgBouncer](https://www.prisma.io/docs/guides/performance-and-optimization/connection-management/configure-pg-bouncer).
+For more information, refer to Prisma's guide on [Configuring Prisma Client with PgBouncer](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections/pgbouncer).
 
 ## Supabase
 
-For Postgres running on [Supabase](https://supabase.io) see: [PgBouncer is now available in Supabase](https://supabase.io/blog/2021/04/02/supabase-pgbouncer#using-connection-pooling-in-supabase).
+For Postgres running on [Supabase](https://supabase.com) see: [Using Connection Pooling in Supabase](https://supabase.com/blog/supabase-pgbouncer#using-connection-pooling-in-supabase).
 
 All new Supabase projects include connection pooling using [PgBouncer](https://www.pgbouncer.org/).
 
 We recommend that you connect to your Supabase Postgres instance using SSL which you can do by setting `sslmode` to `require` on the connection string:
 
 ```
-// not pooled typically uses port 5432
+# direct connection (typically port 5432)
 postgresql://postgres:mydb.supabase.co:5432/postgres?sslmode=require
-// pooled typically uses port 6543
-postgresql://postgres:mydb.supabase.co:6543/postgres?sslmode=require&pgbouncer=true
+# pooled via PgBouncer (typically port 6543)
+postgresql://postgres:mydb.supabase.co:6543/postgres?sslmode=require
 ```
+
+With Prisma v7 and the `@prisma/adapter-pg` driver adapter, pass the pooled connection string as `process.env.DATABASE_URL` — the `?pgbouncer=true` parameter is no longer required.
 
 ## Heroku
 
@@ -141,24 +156,17 @@ Heroku does not officially support MySQL.
 
 For Postgres, see [How to Manage Connection Pools](https://www.digitalocean.com/docs/databases/postgresql/how-to/manage-connection-pools)
 
-To run migrations through a connection pool, you're required to append connection parameters to your `DATABASE_URL`. Prisma needs to know to use pgbouncer (which is part of Digital Ocean's connection pool). If omitted, you may receive the following error:
+Digital Ocean managed databases expose two ports: typically `25060` for a direct connection and `25061` for the PgBouncer connection pool.
+
+With Prisma v7 and the `@prisma/adapter-pg` driver adapter, point `DATABASE_URL` at the PgBouncer port and include any required SSL/timeout parameters:
 
 ```
-Error: Migration engine error:
-db error: ERROR: prepared statement "s0" already exists
+postgresql://<user>:<pass>@<host>:25061/defaultdb?sslmode=require&connect_timeout=10
 ```
 
-To resolve this, use the following structure in your `DATABASE_URL`:
+The `?pgbouncer=true` and `connection_limit` parameters are no longer required when using a driver adapter.
 
-```
-<YOUR_CONNECTION_POOL_URL>:25061/defaultdb?connection_limit=3&sslmode=require&pgbouncer=true&connect_timeout=10&pool_timeout=30
-```
-
-Here's a couple more things to be aware of:
-
-- When using a Digital Ocean connection pool, you'll have multiple ports available. Typically the direct connection (without connection pooling) is on port `25060` and the connection through pgbouncer is served through port `25061`. Make sure you connect to your connection pool on port `25061`
-- Adjust the `connection_limit`. Clusters provide 25 connections per 1 GB of RAM. Three connections per cluster are reserved for maintenance, and all remaining connections can be allocated to connection pools
-- Both `pgbouncer=true` and `pool_timeout=30` are required to deploy successfully through your connection pool
+> Note: Prisma Migrate is not compatible with PgBouncer in transaction pooling mode. When running migrations (e.g. `yarn cedar prisma migrate deploy`), use the direct connection on port `25060` instead.
 
 Connection Pooling for MySQL is not yet supported.
 
