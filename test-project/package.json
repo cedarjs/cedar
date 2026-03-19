@@ -1,16 +1,15 @@
 {
   "private": true,
-  "version": "0.0.0",
   "workspaces": [
     "api",
     "web",
     "packages/*"
   ],
   "devDependencies": {
-    "@cedarjs/core": "3.0.0-canary.13223+9e1d1011b",
-    "@cedarjs/eslint-config": "3.0.0-canary.13223+9e1d1011b",
-    "@cedarjs/project-config": "3.0.0-canary.13223+9e1d1011b",
-    "@cedarjs/testing": "3.0.0-canary.13223+9e1d1011b",
+    "@cedarjs/core": "2.8.0",
+    "@cedarjs/eslint-config": "2.8.0",
+    "@cedarjs/project-config": "2.8.0",
+    "@cedarjs/testing": "2.8.0",
     "prettier-plugin-tailwindcss": "^0.7.0"
   },
   "engines": {
@@ -63,6 +62,7 @@
     "@cedarjs/eslint-config": "file:../packages/eslint-config/cedarjs-eslint-config.tgz",
     "@cedarjs/eslint-plugin": "file:../packages/eslint-plugin/cedarjs-eslint-plugin.tgz",
     "@cedarjs/forms": "file:../packages/forms/cedarjs-forms.tgz",
+    "@cedarjs/gqlorm": "file:../packages/gqlorm/cedarjs-gqlorm.tgz",
     "@cedarjs/graphql-server": "file:../packages/graphql-server/cedarjs-graphql-server.tgz",
     "@cedarjs/internal": "file:../packages/internal/cedarjs-internal.tgz",
     "@cedarjs/jobs": "file:../packages/jobs/cedarjs-jobs.tgz",
@@ -89,8 +89,6 @@
     "@cedarjs/utils": "file:../packages/utils/cedarjs-utils.tgz",
     "@cedarjs/vite": "file:../packages/vite/cedarjs-vite.tgz",
     "@cedarjs/web": "file:../packages/web/cedarjs-web.tgz",
-    "@cedarjs/web-server": "file:../packages/web-server/cedarjs-web-server.tgz",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "@cedarjs/web-server": "file:../packages/web-server/cedarjs-web-server.tgz"
   }
 }
