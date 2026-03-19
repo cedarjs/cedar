@@ -34,7 +34,7 @@
     "@cedarjs/project-config": "workspace:*",
     "babel-plugin-auto-import": "1.1.0",
     "babel-plugin-graphql-tag": "3.3.0",
-    "babel-plugin-module-resolver": "5.0.2",
+    "babel-plugin-module-resolver": "5.0.3",
     "fast-glob": "3.3.3",
     "graphql": "16.13.1",
     "typescript": "5.9.3"
