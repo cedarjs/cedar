@@ -12,7 +12,7 @@ But instead of just `git add README.md` use `git add .` since you've got an enti
 
 ### The Database
 
-We'll need a database somewhere on the internet to store our data. We've been using SQLite locally, but the kind of deployment we're going to do doesn't have a persistent disk store that we can put SQLite's file-based database on. So, for this part of this tutorial, we will use Postgres. (Prisma currently supports SQLite, Postgres, MySQL and SQL Server.) Don't worry if you aren't familiar with Postgres, Prisma will do all the heavy lifting. We just need to get a database available to the outside world so it can be accessed by our app.
+We'll need a database somewhere on the internet to store our data. We've been using SQLite locally, but the kind of deployment we're going to do doesn't have a persistent disk store that we can put SQLite's file-based database on. So, for this part of this tutorial, we will use Postgres. (Prisma currently supports SQLite, Postgres, MySQL, and SQL Server.) Don't worry if you aren't familiar with Postgres, Prisma will do all the heavy lifting. We just need to get a database available to the outside world so it can be accessed by our app.
 
 :::danger
 
@@ -45,8 +45,46 @@ And believe it or not, we're done! Now we just need the connection URL. Click on
 
 We need to let Prisma know that we intend to use Postgres instead of SQLite from now on. Update the `provider` entry in `schema.prisma`:
 
-```javascript
-provider = 'postgresql'
+```graphql title="api/db/schema.prisma"
+datasource db {
+  provider = "postgresql"
+}
+```
+
+### Add the PostgreSQL Driver Adapter
+
+Prisma requires a [driver adapter](https://www.prisma.io/docs/orm/core-concepts/supported-databases/database-drivers) to connect to your database. Install the `@prisma/adapter-pg` and `pg` packages:
+
+```bash
+yarn workspace api add @prisma/adapter-pg pg
+```
+
+Then update `api/src/lib/db.ts` to import and use the adapter:
+
+```ts title="api/src/lib/db.ts"
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from 'api/db/generated/prisma/client.mts'
+
+import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
+
+import { logger } from './logger.js'
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+})
+
+const prismaClient = new PrismaClient({
+  log: emitLogLevels(['info', 'warn', 'error']),
+  adapter,
+})
+
+handlePrismaLogging({
+  db: prismaClient,
+  logger,
+  logLevels: ['info', 'warn', 'error'],
+})
+
+export const db = prismaClient
 ```
 
 ### Recreate Migrations
@@ -66,7 +104,7 @@ Next, delete the `api/db/migrations` folder completely.
 Finally, run:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 All of the changes we made will be consolidated into a single, new migration file and applied to the Railway database instance. You can name this one something like "initial schema".
@@ -80,7 +118,7 @@ So the database is settled, but we need to actually put our code on the internet
 Before we setup Netlify we'll need to setup our code with a setup command. Setup!
 
 ```bash
-yarn rw setup deploy netlify
+yarn cedar setup deploy netlify
 ```
 
 This adds a `netlify.toml` config file in the root of the project that is good to go as-is, but you can tweak it as your app grows (check out the comments at the top of the file for links to resources about customizing). Make sure you commit and push up these code changes to your repo.
@@ -90,7 +128,7 @@ And with that, we're ready to setup Netlify itself.
 :::warning
 While you may be tempted to use the [Netlify CLI](https://cli.netlify.com) commands to [build](https://cli.netlify.com/commands/build) and [deploy](https://cli.netlify.com/commands/deploy) your project directly from you local project directory, doing so **will lead to errors when deploying and/or when running functions**. I.e. errors in the function needed for the GraphQL server, but also other serverless functions.
 
-The main reason for this is that these Netlify CLI commands simply build and deploy -- they build your project locally and then push the dist folder. That means that when building a CedarJS project, the [Prisma client is generated with binaries matching the operating system at build time](https://cli.netlify.com/commands/link) -- and not the [OS compatible](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#binarytargets-options) with running functions on Netlify. Your Prisma client engine may be `darwin` for OSX or `windows` for Windows, but it needs to be `debian-openssl-1.1.x` or `rhel-openssl-1.1.x`. If the client is incompatible, your functions will fail.
+The main reason for this is that these Netlify CLI commands simply build and deploy — they build your project locally and then push the dist folder. That means that when building a CedarJS project, the Prisma client is generated on your local machine and may not be compatible with the Linux environment that Netlify runs functions on. If the client is incompatible, your functions will fail.
 
 Therefore, **please follow the instructions below** to sync your GitHub (or other compatible source control service) repository with Netlify and allow their build and deploy system to manage deployments.
 :::
@@ -107,19 +145,14 @@ Netlify will start building your app and it will eventually say the deployment f
 
 #### Environment Variables
 
-Go back to the main site page and then to **Site configuration** on the left, and then **Environment variables**. Click the **Add a variable** button, then choose **Add a single variable** from the drop-down. This is where we'll paste the database connection URI we got from Railway (note the **Key** is "DATABASE_URL"). After pasting the value, append `?connection_limit=1` to the end. The URI will have the following format: `postgresql://<user>:<pass>@<url>/<db>?connection_limit=1`. The default values for Scopes and Values can be left as is. Click **Create variable** to proceed.
-
-:::tip
-
-This connection limit setting is [recommended by Prisma](https://www.prisma.io/docs/guides/performance-and-optimization/connection-management#recommended-connection-pool-size-1) when working with relational databases in a Serverless context.
-:::
+Go back to the main site page and then to **Site configuration** on the left, and then **Environment variables**. Click the **Add a variable** button, then choose **Add a single variable** from the drop-down. This is where we'll paste the database connection URI we got from Railway (note the **Key** is "DATABASE_URL"). The URI will have the following format: `postgresql://<user>:<pass>@<url>/<db>`. The default values for Scopes and Values can be left as is. Click **Create variable** to proceed.
 
 ![Screenshot_2024-03-19_231931_dkf](https://github.com/redwoodjs/redwood/assets/158021342/973c827f-1098-4952-b720-d982bc668853)
 
 We'll need to add one more environment variable, `SESSION_SECRET` which contains a big long string that's used to encrypt the session cookies for dbAuth. This was included in development when you installed dbAuth, but now we need to tell Netlify about it. If you look in your `.env` file you'll see it at the bottom, but we want to create a unique one for every environment we deploy to (each developer should have a unique one as well). We've got a CLI command to create a new one:
 
 ```bash
-yarn rw g secret
+yarn cedar generate secret
 ```
 
 Copy that over to Netlify along with `DATABASE_URL`:
@@ -160,7 +193,7 @@ You also have the ability to "lock" the `main` branch so that deploys do not aut
 
 #### Connections
 
-In this tutorial, your serverless functions will be connecting directly to the Postgres database. Because Postgres has a limited number of concurrent connections it will accept, this does not scale—imagine a flood of traffic to your site which causes a 100x increase in the number of serverless function calls. Netlify (and behind the scenes, AWS) will happily spin up 100+ serverless Lambda instances to handle the traffic. The problem is that each one will open its own connection to your database, potentially exhausting the number of available connections. The proper solution is to put a connection pooling service in front of Postgres and connect to that from your lambda functions. To learn how to do that, see the [Connection Pooling](../../connection-pooling.md) guide.
+In this tutorial, your serverless functions will be connecting directly to the Postgres database. Because Postgres has a limited number of concurrent connections it will accept, this does not scale—imagine a flood of traffic to your site which causes a 100x increase in the number of serverless function calls. Netlify (and behind the scenes, AWS) will happily spin up 100+ serverless Lambda instances to handle the traffic. The problem is that each one will open its own connection to your database, potentially exhausting the number of available connections. The proper solution is to put a connection pooling service in front of Postgres and connect to that from your serverless functions. To learn how to do that, see the [Connection Pooling](../../connection-pooling.md) guide.
 
 #### Security
 
