@@ -83,12 +83,28 @@ const args = yargs(hideBin(process.argv))
       'Rebuild the @live test-project, using pglite for PostgreSQL-' +
       'compatible migrations',
   })
+  .option('esm', {
+    default: false,
+    type: 'boolean',
+    describe: 'Rebuild the esm test-project',
+  })
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep, live } = args
+const { verbose, resume, resumePath, resumeStep, live, esm } = args
 
-const folderSuffix = live ? '-live' : ''
+if (live && esm) {
+  console.error('Using both --live and --esm is not supported')
+  process.exit(1)
+}
+
+let folderSuffix = ''
+
+if (live) {
+  folderSuffix = '-live'
+} else if (esm) {
+  folderSuffix += '-esm'
+}
 
 const CEDAR_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
 const OUTPUT_PROJECT_PATH = resumePath
@@ -336,7 +352,13 @@ const createProject = () => {
   const subprocess = exec(
     cmd,
     // We create a ts project and convert using ts-to-js at the end if typescript flag is false
-    ['--no-yarn-install', '--typescript', '--overwrite', '--no-git'],
+    [
+      '--no-yarn-install',
+      '--typescript',
+      '--overwrite',
+      '--no-git',
+      esm ? '--esm' : '',
+    ],
     getExecaOptions(CEDAR_FRAMEWORK_PATH),
   )
 

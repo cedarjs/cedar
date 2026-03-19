@@ -287,7 +287,7 @@ const createProject = () => {
 const copyProject = async () => {
   const fixturePath = path.join(
     CEDAR_FRAMEWORK_PATH,
-    '__fixtures__/esm-test-project',
+    '__fixtures__/test-project-esm',
   )
 
   // remove existing Fixture
