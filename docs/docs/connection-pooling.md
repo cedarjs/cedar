@@ -131,7 +131,7 @@ For more information, refer to Prisma's guide on [Configuring Prisma Client with
 
 ## Supabase
 
-For Postgres running on [Supabase](https://supabase.io) see: [Using Connectoin Pooling in Supabase](https://supabase.com/blog/supabase-pgbouncer#using-connection-pooling-in-supabase).
+For Postgres running on [Supabase](https://supabase.com) see: [Using Connection Pooling in Supabase](https://supabase.com/blog/supabase-pgbouncer#using-connection-pooling-in-supabase).
 
 All new Supabase projects include connection pooling using [PgBouncer](https://www.pgbouncer.org/).
 
