@@ -122,8 +122,12 @@ function buildTgzResolutions(): Record<string, string> {
           continue
         }
 
-        // Path relative to the test-project folder
-        const relPath = path.relative(TEST_PROJECT_PATH, fullPath)
+        // Path relative to the test-project folder.
+        // Replace backslashes with forward slashes so the file: resolution is
+        // valid on Windows too. Yarn Berry requires forward slashes in paths.
+        const relPath = path
+          .relative(TEST_PROJECT_PATH, fullPath)
+          .replaceAll('\\', '/')
         resolutions[packageJson.name] = `file:${relPath}`
       }
     }
