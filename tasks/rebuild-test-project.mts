@@ -104,7 +104,9 @@ function buildTgzResolutions(): Record<string, string> {
       const fullPath = path.join(dir, entry.name)
 
       if (entry.isDirectory()) {
-        walk(fullPath)
+        if (entry.name !== 'node_modules') {
+          walk(fullPath)
+        }
       } else if (entry.isFile() && entry.name.endsWith('.tgz')) {
         const packageJsonPath = path.join(dir, 'package.json')
 
