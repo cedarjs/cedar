@@ -12,7 +12,8 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'yarn cedar dev --no-generate --fwd="--no-open"',
+    command:
+      'yarn cedar dev --no-generate --load-env-files user --fwd="--no-open"',
     cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     url: 'http://localhost:8911/graphql?query={redwood{version}}',
     reuseExistingServer: !process.env.CI,
