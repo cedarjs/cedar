@@ -28,7 +28,7 @@ export async function setUpTestProject({
 }: Args) {
   const execInProject = createExecWithEnvInCwd(testProjectPath)
 
-  setOutput('test-project-path', testProjectPath)
+  setOutput('kitchen-sink-project-path', testProjectPath)
 
   const canary = getInput('canary') === 'true'
   console.log({ canary })
@@ -38,7 +38,7 @@ export async function setUpTestProject({
   const TEST_PROJECT_FIXTURE_PATH = path.join(
     cedarFrameworkPath,
     '__fixtures__',
-    'kitchen-sink',
+    'kitchen-sink-project',
   )
 
   console.log(`Creating project at ${testProjectPath}`)

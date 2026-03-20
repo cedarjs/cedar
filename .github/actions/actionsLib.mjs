@@ -82,7 +82,7 @@ export async function createCacheKeys({
     baseKeyPrefix,
     process.env.RUNNER_OS,
     process.env.GITHUB_REF?.replaceAll('/', '-'),
-    await hashFiles(path.join('__fixtures__', 'kitchen-sink')),
+    await hashFiles(path.join('__fixtures__', 'kitchen-sink-project')),
   ].join('-')
 
   const dependenciesKey =
@@ -138,7 +138,7 @@ export async function setUpRscTestProject(
   core,
   execInProject,
 ) {
-  core.setOutput('test-project-path', testProjectPath)
+  core.setOutput('kitchen-sink-project-path', testProjectPath)
 
   console.log('Cedar Framework Path', CEDAR_FRAMEWORK_PATH)
   console.log('testProjectPath', testProjectPath)

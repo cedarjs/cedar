@@ -5,7 +5,7 @@
     "module": "NodeNext",
     "allowJs": true,
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
   },
-  "exclude": ["test-project/templates"]
+  "exclude": ["kitchen-sink-project/templates"],
 }

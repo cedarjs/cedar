@@ -111,7 +111,7 @@ const OUTPUT_PROJECT_PATH = resumePath
   ? /* path.resolve(String(resumePath)) */ resumePath
   : path.join(
       os.tmpdir(),
-      'cedar-kitchen-sink' + folderSuffix,
+      'cedar-kitchen-sink-project' + folderSuffix,
       // ":" is problematic with paths
       new Date().toISOString().split(':').join('-'),
     )
@@ -369,7 +369,7 @@ const copyProject = async () => {
   const fixturePath = path.join(
     CEDAR_FRAMEWORK_PATH,
     '__fixtures__',
-    'kitchen-sink' + folderSuffix,
+    'kitchen-sink-project' + folderSuffix,
   )
 
   // remove existing Fixture
@@ -886,7 +886,9 @@ async function rebuildTestProject() {
     task: () => {
       console.log('-'.repeat(30))
       console.log()
-      console.log('✅ Success! The kitchen-sink fixture has been rebuilt')
+      console.log(
+        '✅ Success! The kitchen-sink-project fixture has been rebuilt',
+      )
       console.log()
       console.log('-'.repeat(30))
     },

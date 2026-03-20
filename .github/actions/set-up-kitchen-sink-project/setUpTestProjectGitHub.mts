@@ -11,7 +11,7 @@ import {
 import { setUpTestProject } from './setUpTestProject.mts'
 
 const parentDir = path.dirname(process.cwd())
-const testProjectPath = path.join(parentDir, 'kitchen-sink')
+const testProjectPath = path.join(parentDir, 'kitchen-sink-project')
 
 setUpTestProject({
   setOutput: core.setOutput,

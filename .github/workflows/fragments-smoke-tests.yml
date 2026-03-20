@@ -21,8 +21,8 @@ jobs:
         uses: ./.github/actions/set-up-job
 
       - name: 🌲 Set up test project
-        id: set-up-kitchen-sink
-        uses: ./.github/actions/set-up-kitchen-sink
+        id: set-up-kitchen-sink-project
+        uses: ./.github/actions/set-up-kitchen-sink-project
         with:
           canary: false
         env:
@@ -30,7 +30,7 @@ jobs:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: Run Fragments codemods on test project
-        run: node ./tasks/test-project/add-gql-fragments.mts ${{ steps.set-up-kitchen-sink.outputs.test-project-path }}
+        run: node ./tasks/kitchen-sink-project/add-gql-fragments.mts ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 
@@ -41,11 +41,11 @@ jobs:
         working-directory: ./tasks/smoke-tests/fragments-dev
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-kitchen-sink.outputs.test-project-path }}'
+          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}'
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Build for production
-        working-directory: ${{ steps.set-up-kitchen-sink.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
         shell: bash
         run: |
           set -o pipefail
@@ -62,11 +62,11 @@ jobs:
         working-directory: ./tasks/smoke-tests/fragments-serve
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-kitchen-sink.outputs.test-project-path }}'
+          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}'
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Enable trusted-documents in Fragments test project
-        run: node ./tasks/test-project/set-up-trusted-documents.mts ${{ steps.set-up-kitchen-sink.outputs.test-project-path }}
+        run: node ./tasks/kitchen-sink-project/set-up-trusted-documents.mts ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 
@@ -74,5 +74,5 @@ jobs:
         working-directory: tasks/smoke-tests/prerender
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-kitchen-sink.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
