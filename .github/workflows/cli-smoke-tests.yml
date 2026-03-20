@@ -68,18 +68,18 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar exec`
-        run: yarn cedar g script testScript && yarn cedar exec testScript
+        run: yarn cedar g script testScript && yarn cedar exec testScript --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Nested script | Run `cedar exec`
         # Using -f to overwrite script that already exists in the kitchen-sink
-        run: yarn cedar g script -f i/am/nested && yarn cedar exec i/am/nested
+        run: yarn cedar g script -f i/am/nested && yarn cedar exec i/am/nested --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Nested script | Run `cedar exec` in /scripts
         # This is probably stretching the definition of "smoke test" a bit too
         # much. But we don't have a better place to run a test like this
-        run: yarn cedar g script i/am/nested/too && yarn cedar exec i/am/nested/too | grep "Executing script with args"
+        run: yarn cedar g script i/am/nested/too && yarn cedar exec i/am/nested/too --load-env-files user | grep "Executing script with args"
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}/scripts/i/am
 
       - name: Run `cedar prisma generate`
@@ -119,7 +119,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar type-check`
-        run: yarn cedar type-check
+        run: yarn cedar type-check --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Throw Error | Run `cedar g sdl <model>`
