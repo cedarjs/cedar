@@ -132,7 +132,7 @@ export async function setUpRscTestProject(
   core: { setOutput: (key: string, value: string) => void },
   execInProject: ExecInProject,
 ) {
-  core.setOutput('test-project-path', testProjectPath)
+  core.setOutput('kitchen-sink-project-path', testProjectPath)
 
   console.log('Cedar Framework Path', CEDAR_FRAMEWORK_PATH)
   console.log('testProjectPath', testProjectPath)
