@@ -135,6 +135,8 @@ jobs:
       - name: Codemod | Verify env var loading via --load-env-files
         # Using `node` directly instead of `yarn dlx ...` to avoid the extra
         # dependency installation overhead, plus to be able to test changes
-        # without having to publish them to npm first
-        run: node node_modules/@cedarjs/codemods/dist/codemods.js prisma-v7 --load-env-files user
+        # without having to publish them to npm first. Have to use
+        # `$GITHUB_WORKSPACE` because project:tarsync skips codemods, so we have
+        # to find it in the framework directory
+        run: node $GITHUB_WORKSPACE/node_modules/@cedarjs/codemods/dist/codemods.js prisma-v7 --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
