@@ -63,9 +63,12 @@ export async function setUpTestProject({
   })
 
   console.log('Generating dbAuth secret')
-  const { stdout } = await execInProject('yarn cedar g secret --raw', {
-    silent: true,
-  })
+  const { stdout } = await execInProject(
+    'yarn cedar g secret --raw --no-prisma',
+    {
+      silent: true,
+    },
+  )
   fs.appendFileSync(
     path.join(testProjectPath, '.env'),
     `SESSION_SECRET='${stdout}'`,

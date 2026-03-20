@@ -206,7 +206,7 @@ export function apiTasksList({
         await addModel(user)
 
         return exec(
-          `yarn cedar prisma migrate dev --name create_post_user --load-env-files user`,
+          `yarn cedar prisma migrate dev --name create_post_user`,
           [],
           execaOptions,
         )
