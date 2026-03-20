@@ -776,9 +776,12 @@ async function rebuildTestProject() {
     step: 12,
     title: 'Running prisma migrate reset',
     task: () => {
-      // Add a console.log to prisma.config.cjs that uses an env var only
-      // available via --load-env-files. This is used by the CI cli smoke test
-      // to verify that the codemod CLI's --load-env-files flag works correctly.
+      // Prisma's `env()` helper will throw an error if it cannot find the env
+      // var. We add a simple `if`-statement to ensure the env var is read, and
+      // that it has the correct value.
+      // The env var is only available via --load-env-files. This is used by the
+      // CI cli smoke test to verify that the codemod CLI's --load-env-files
+      // flag works correctly.
       const prismaConfigPath = path.join(
         OUTPUT_PROJECT_PATH,
         'api',
