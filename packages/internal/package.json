@@ -145,7 +145,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.0",
+    "@babel/parser": "7.29.2",
     "@babel/plugin-transform-react-jsx": "7.28.6",
     "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/traverse": "7.29.0",
