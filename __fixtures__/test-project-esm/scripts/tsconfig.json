@@ -6,7 +6,6 @@
     "target": "es2023",
     "module": "node20",
     "moduleResolution": "node16",
-    "allowImportingTsExtensions": true,
     "paths": {
       "$api/*": ["../api/*"],
       "api/*": ["../api/*"],
@@ -26,5 +25,6 @@
     "../.redwood/types/includes/all-*",
     "../.redwood/types/includes/web-*",
     "../types"
-  ]
+  ],
+  "references": [{ "path": "../packages/validators" }]
 }

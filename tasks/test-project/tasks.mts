@@ -81,19 +81,19 @@ export async function webTasks(
 interface ApiTasksOptions {
   verbose: boolean
   linkWithLatestFwBuild: boolean
-  esmProject: boolean
+  esm: boolean
 }
 
 export async function apiTasks(
   outputPath: string,
-  { verbose, linkWithLatestFwBuild, esmProject }: ApiTasksOptions,
+  { verbose, linkWithLatestFwBuild, esm }: ApiTasksOptions,
 ) {
   setOutputPath(outputPath)
 
   const baseTasks = apiTasksList({
     dbAuth: 'canary',
     linkWithLatestFwBuild,
-    esmProject,
+    esm,
   })
 
   // Some tasks returns an array of tasks, those needs to be wrapped in a Listr
