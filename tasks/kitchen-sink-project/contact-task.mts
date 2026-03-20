@@ -16,7 +16,7 @@ export async function contactTask({ esm } = { esm: false }) {
   await addModel(contact)
 
   await exec(
-    `yarn cedar prisma migrate dev --name create_contact --load-env-files user`,
+    `yarn cedar prisma migrate dev --name create_contact`,
     [],
     getExecaOptions(path.join(getOutputPath())),
   )
