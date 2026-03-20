@@ -243,7 +243,7 @@ export function apiTasksList({
     },
     {
       title: 'Adding contact model to prisma',
-      task: contactTask,
+      task: () => contactTask({ esmProject }),
     },
     {
       // This task renames the migration folders so that we don't have to deal
@@ -339,7 +339,8 @@ export function apiTasksList({
           import.meta.dirname,
           'templates',
           'api',
-          'contacts.describeScenario.test.ts.template',
+          (esmProject ? 'esm-' : '') +
+            'contacts.describeScenario.test.ts.template',
         )
 
         fs.copyFileSync(
