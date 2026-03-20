@@ -5,25 +5,25 @@ import { createUserModelTask } from '../setupData'
 const CEDAR_CWD = process.env.CEDAR_CWD
 const DATABASE_URL = process.env.DATABASE_URL
 
-const { redwoodProjectPath, prismaConfigPath, libPath, functionsPath } =
+const { cedarProjectPath, prismaConfigPath, libPath, functionsPath } =
   vi.hoisted(() => {
-    const redwoodProjectPath = '../../../../__fixtures__/test-project'
+    const cedarProjectPath = '../../../../__fixtures__/kitchen-sink-project'
 
     return {
-      redwoodProjectPath,
-      prismaConfigPath: redwoodProjectPath + '/api/prisma.config.cjs',
-      libPath: redwoodProjectPath + '/api/src/lib',
-      functionsPath: redwoodProjectPath + '/api/src/functions',
+      cedarProjectPath,
+      prismaConfigPath: cedarProjectPath + '/api/prisma.config.cjs',
+      libPath: cedarProjectPath + '/api/src/lib',
+      functionsPath: cedarProjectPath + '/api/src/functions',
     }
   })
 
 vi.mock('@cedarjs/cli-helpers', () => {
   return {
     getGraphqlPath: () => {
-      return redwoodProjectPath + '/api/src/functions/graphql.ts'
+      return cedarProjectPath + '/api/src/functions/graphql.ts'
     },
     getPaths: () => ({
-      base: redwoodProjectPath,
+      base: cedarProjectPath,
       api: {
         lib: libPath,
         functions: functionsPath,
@@ -43,7 +43,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
 })
 
 beforeAll(() => {
-  process.env.CEDAR_CWD = redwoodProjectPath
+  process.env.CEDAR_CWD = cedarProjectPath
   process.env.DATABASE_URL = 'file:./dev.db'
 })
 
