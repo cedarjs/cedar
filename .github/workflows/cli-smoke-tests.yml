@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          yarn cedar build || {
+          yarn cedar build --load-env-files user || {
             echo "::group::package.json diagnostics"
             node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
             echo "::endgroup::"
@@ -83,7 +83,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}/scripts/i/am
 
       - name: Run `cedar prisma generate`
-        run: yarn cedar prisma generate
+        run: yarn cedar prisma generate --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar data-migrate`

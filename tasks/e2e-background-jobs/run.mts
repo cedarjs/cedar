@@ -134,7 +134,7 @@ async function runJobsSetup(projectPath: string) {
   console.log('\n❓ Testing: `yarn cedar setup jobs`')
 
   try {
-    await $`yarn cedar setup jobs`
+    await $`yarn cedar setup jobs --load-env-files user`
   } catch (error) {
     if (error instanceof ProcessOutput) {
       console.error("💥 Failed to run: 'yarn cedar setup jobs'")
@@ -209,7 +209,7 @@ async function runJobsSetup(projectPath: string) {
 async function migrateDatabase(projectPath: string) {
   console.log('\n❓ Testing: `yarn cedar prisma migrate dev`')
   try {
-    await $`yarn cedar prisma migrate dev --name e2e-background-jobs`
+    await $`yarn cedar prisma migrate dev --name e2e-background-jobs --load-env-files user`
   } catch (error) {
     if (error instanceof ProcessOutput) {
       console.error("💥 Failed to run: 'yarn cedar prisma migrate dev'")
