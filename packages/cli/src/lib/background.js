@@ -11,7 +11,7 @@ import { getPaths } from '@cedarjs/project-config'
  *
  * @param {string} name A name for this background process, will be used to name the log files
  * @param {string} cmd Command to pass to the `spawn` function
- * @param {string[]} args Arguements to pass to the `spawn` function
+ * @param {string[]} args Arguments to pass to the `spawn` function
  */
 export function spawnBackgroundProcess(name, cmd, args) {
   const logDirectory = path.join(getPaths().generated.base, 'logs')
@@ -78,4 +78,10 @@ export function spawnBackgroundProcess(name, cmd, args) {
     const child = spawn(cmd, args, spawnOptions)
     child.unref()
   }
+
+  // Close the parent's copies of the stdio file descriptors.
+  // The child process inherited its own copies via spawn(), so leaving these
+  // open in the parent leaks fds until process exit.
+  fs.closeSync(stdout)
+  fs.closeSync(stderr)
 }
