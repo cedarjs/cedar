@@ -231,7 +231,9 @@ async function migrateDatabase(projectPath: string) {
 async function confirmPrismaModelExists() {
   console.log('\n❓ Testing: the prisma model exists in the database')
 
-  const prismaData = (await $`yarn cedar exec prisma --silent`).toString()
+  const prismaData = (
+    await $`yarn cedar exec prisma --silent --load-env-files user`
+  ).toString()
 
   try {
     const { name } = JSON.parse(prismaData)
@@ -347,7 +349,7 @@ async function scheduleCronJob(projectPath: string) {
   await $`yarn cedar build api @my-org/validators --load-env-files user`
 
   console.log('Action: Running script')
-  await $`yarn cedar exec scheduleCronJob`
+  await $`yarn cedar exec scheduleCronJob --load-env-files user`
 }
 
 async function confirmJobDidNotRunSynchronously(
@@ -375,7 +377,9 @@ async function confirmJobsWereScheduled(
     '\n❓ Testing: Confirming the jobs were scheduled into the database',
   )
 
-  const rawJobs = (await $`yarn cedar exec jobs --silent`).toString()
+  const rawJobs = (
+    await $`yarn cedar exec jobs --silent --load-env-files user`
+  ).toString()
   let dataJob = undefined
   let cronJob = undefined
 
@@ -546,7 +550,9 @@ async function confirmJobsRan(
 async function confirmJobWasRemoved(job: Job) {
   console.log('\n❓ Testing: Confirming the job was removed from the database')
 
-  const rawJobsAfter = (await $`yarn cedar exec jobs --silent`).toString()
+  const rawJobsAfter = (
+    await $`yarn cedar exec jobs --silent --load-env-files user`
+  ).toString()
   const jobsAfter: Job[] = JSON.parse(rawJobsAfter)
   const jobAfter = jobsAfter.find((j) => j.id === job.id)
 
@@ -561,7 +567,9 @@ async function confirmJobWasRemoved(job: Job) {
 async function runCronJob(projectPath: string) {
   console.log('\n❓ Testing: Cron Job')
 
-  const rawJobsAfter = (await $`yarn cedar exec jobs --silent`).toString()
+  const rawJobsAfter = (
+    await $`yarn cedar exec jobs --silent --load-env-files user`
+  ).toString()
   const jobsAfter: Job[] = JSON.parse(rawJobsAfter)
   const cronJob = jobsAfter.find((j) => {
     const handler = JSON.parse(j.handler)

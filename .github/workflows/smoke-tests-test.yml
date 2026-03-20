@@ -77,8 +77,8 @@ jobs:
         shell: bash
         run: |
           # Only run this for ESM projects where the vitest config file exists
-          if test -f ./vitest-sort.config.ts; then
-            npx vitest --config ./vitest-sort.config.ts run
+          if test -f api/vitest-sort.config.ts; then
+            yarn cedar test api --no-watch --config api/vitest-sort.config.ts --load-env-files user
           fi
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}/api
 
