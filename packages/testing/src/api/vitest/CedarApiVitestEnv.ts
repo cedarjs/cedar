@@ -31,9 +31,7 @@ const CedarApiVitestEnvironment: Environment = {
     execa.sync('yarn', ['cedar', ...command], {
       cwd: cedarPaths.api.base,
       stdio: 'inherit',
-      env: {
-        DATABASE_URL: process.env.DATABASE_URL,
-      },
+      env: process.env,
     })
 
     return {

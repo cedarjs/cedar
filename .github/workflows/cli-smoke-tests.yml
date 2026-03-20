@@ -109,13 +109,13 @@ jobs:
       # Keeping this as `yarn rw` to make sure I don't break using `rw` until I
       # intend to
       - name: Run `rw g page`
-        run: yarn rw g page ciTest
+        run: yarn rw g page ciTest --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       # Keeping this as `yarn redwood` to make sure I don't break using
       # `redwood` until I intend to
       - name: Run `redwood g sdl`
-        run: yarn redwood g sdl userExample
+        run: yarn redwood g sdl userExample --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar type-check`
@@ -123,7 +123,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Throw Error | Run `cedar g sdl <model>`
-        run: yarn cedar g sdl DoesNotExist
+        run: yarn cedar g sdl DoesNotExist --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
         continue-on-error: true
 
