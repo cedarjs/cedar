@@ -797,9 +797,20 @@ async function rebuildTestProject() {
           '}\n\n' +
           'module.exports = defineConfig({',
       )
+
+      if (!updatedPrismaConfig.includes('CEDAR_SMOKE_TEST_ENV_VAR')) {
+        throw new Error(
+          'Failed to inject CEDAR_SMOKE_TEST_ENV_VAR check into ' +
+            'prisma.config.cjs – the expected anchor string ' +
+            '`module.exports = defineConfig({` was not found',
+        )
+      }
+
       fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
 
       // Create .env.user with the smoke test env var
+      // Note that this file is gitignored and won't be committed, but it's
+      // needed for the `prisma migrate` invocation below.
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, '.env.user'),
         'CEDAR_SMOKE_TEST_ENV_VAR=test-value\n',
