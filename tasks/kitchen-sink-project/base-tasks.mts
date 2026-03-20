@@ -637,7 +637,7 @@ async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
   }
 
   await exec(
-    'yarn cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages',
+    'yarn cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages --load-env-files user',
     [],
     execaOptions,
   )
@@ -672,7 +672,7 @@ async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
   }
 
   await exec(
-    'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password',
+    'yarn cedar g dbAuth --no-webauthn --username-label=username --password-label=password --load-env-files user',
     [],
     execaOptions,
   )

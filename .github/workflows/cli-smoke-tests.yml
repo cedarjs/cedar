@@ -91,7 +91,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar data-migrate install`
-        run: yarn cedar data-migrate install
+        run: yarn cedar data-migrate install --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar prisma migrate`

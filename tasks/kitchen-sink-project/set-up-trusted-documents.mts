@@ -22,7 +22,7 @@ const args = yargs(hideBin(process.argv))
 async function runCommand() {
   const OUTPUT_PROJECT_PATH = path.resolve(String(args._))
   await exec(
-    'yarn cedar setup graphql trusted-documents',
+    'yarn cedar setup graphql trusted-documents --load-env-files user',
     [],
     getExecaOptions(OUTPUT_PROJECT_PATH),
   )
