@@ -6,5 +6,5 @@ runs:
   main: 'setUpRscKitchenSinkProjectGitHub.mjs'
 
 outputs:
-  test-project-path:
+  kitchen-sink-project-path:
     description: Path to the test project
