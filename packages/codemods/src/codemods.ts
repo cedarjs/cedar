@@ -3,6 +3,10 @@
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
+import { loadEnvFiles } from '@cedarjs/cli-helpers'
+
+loadEnvFiles()
+
 import * as v2TsconfigForRouteHooks from './codemods/redwood/v2.3.x/tsconfigForRouteHooks/tsconfigForRouteHooks.yargs.js'
 import * as v2ConfigureFastify from './codemods/redwood/v2.x.x/configureFastify/configureFastify.yargs.js'
 import * as v2UpdateResolverTypes from './codemods/redwood/v2.x.x/updateResolverTypes/updateResolverTypes.yargs.js'
