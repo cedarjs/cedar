@@ -41,6 +41,7 @@ export const getExecaOptions = (
   cleanup: true,
   cwd,
   env: {
+    ...process.env,
     RW_PATH: path.join(__dirname, '../../'),
     CFW_PATH: path.join(__dirname, '../../'),
     RWFW_PATH: path.join(__dirname, '../../'),

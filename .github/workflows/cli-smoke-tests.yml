@@ -52,7 +52,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar test api`
-        run: yarn cedar test api --no-watch
+        run: yarn cedar test api --no-watch --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar test web`

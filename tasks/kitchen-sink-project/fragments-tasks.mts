@@ -41,7 +41,7 @@ export function fragmentsTasks(outputPath: string) {
         await addModel(stall)
 
         return exec(
-          'yarn cedar prisma migrate dev --name create_produce_stall',
+          'yarn cedar prisma migrate dev --name create_produce_stall --load-env-files user',
           [],
           getExecaOptions(outputPath),
         )
@@ -55,7 +55,11 @@ export function fragmentsTasks(outputPath: string) {
           fullPath('scripts/seed.ts', { addExtension: false }),
         )
 
-        await exec('yarn cedar prisma db seed', [], getExecaOptions(outputPath))
+        await exec(
+          'yarn cedar prisma db seed --load-env-files user',
+          [],
+          getExecaOptions(outputPath),
+        )
       },
     },
     {

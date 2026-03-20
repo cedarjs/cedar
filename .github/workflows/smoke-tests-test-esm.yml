@@ -70,7 +70,7 @@ jobs:
 
       - name: Run `cedar test api`
         run: |
-          yarn cedar test api --no-watch
+          yarn cedar test api --no-watch --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project-esm.outputs.kitchen-sink-project-path }}
 
       - name: Run db import tracking tests

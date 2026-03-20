@@ -83,7 +83,11 @@ async function runCommand() {
     throw new Error('Failed to set up trusted-document')
   }
 
-  await exec('yarn cedar build', [], getExecaOptions(OUTPUT_PROJECT_PATH))
+  await exec(
+    'yarn cedar build --load-env-files user',
+    [],
+    getExecaOptions(OUTPUT_PROJECT_PATH),
+  )
 }
 
 runCommand()
