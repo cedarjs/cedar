@@ -86,5 +86,5 @@ export async function setUpTestProject({
   )
 
   console.log('Running prisma db seed')
-  await execInProject('yarn cedar prisma db seed')
+  await execInProject('yarn cedar prisma db seed --load-env-files user')
 }
