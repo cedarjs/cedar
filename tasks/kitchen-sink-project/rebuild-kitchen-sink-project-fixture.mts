@@ -776,9 +776,49 @@ async function rebuildTestProject() {
     step: 12,
     title: 'Running prisma migrate reset',
     task: () => {
+      // Prisma's `env()` helper will throw an error if it cannot find the env
+      // var. We add a simple `if`-statement to ensure the env var is read, and
+      // that it has the correct value.
+      // The env var is only available via --load-env-files. This is used by the
+      // CI cli smoke test to verify that the codemod CLI's --load-env-files
+      // flag works correctly.
+      const prismaConfigPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'prisma.config.cjs',
+      )
+      const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
+      const updatedPrismaConfig = prismaConfig.replace(
+        'module.exports = defineConfig({',
+        "const testEnvVar = env('CEDAR_SMOKE_TEST_ENV_VAR')\n" +
+          "if (testEnvVar !== 'test-value') {\n" +
+          "  throw new Error('CEDAR_SMOKE_TEST_ENV_VAR has the wrong value: '" +
+          ' + testEnvVar)\n' +
+          '}\n\n' +
+          'module.exports = defineConfig({',
+      )
+
+      if (!updatedPrismaConfig.includes('CEDAR_SMOKE_TEST_ENV_VAR')) {
+        throw new Error(
+          'Failed to inject CEDAR_SMOKE_TEST_ENV_VAR check into ' +
+            'prisma.config.cjs – the expected anchor string ' +
+            '`module.exports = defineConfig({` was not found',
+        )
+      }
+
+      fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
+
+      // Create .env.user with the smoke test env var
+      // Note that this file is gitignored and won't be committed, but it's
+      // needed for the `prisma migrate` invocation below.
+      fs.writeFileSync(
+        path.join(OUTPUT_PROJECT_PATH, '.env.user'),
+        'CEDAR_SMOKE_TEST_ENV_VAR=test-value\n',
+      )
+
       return exec(
         'yarn cedar prisma migrate reset',
-        ['--force'],
+        ['--force', '--load-env-files', 'user'],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },

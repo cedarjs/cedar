@@ -101,12 +101,16 @@ export const handler = async ({
     vitestArgs.push('--run')
   }
 
-  // if no sides declared with yargs, default to all sides
-  if (!sides.length) {
-    project.workspaces().forEach((side: string) => sides.push(side))
-  }
+  // When a custom --config is provided the config manages its own project
+  // setup, so adding --project flags would fail with "No projects matched".
+  if (!others['config']) {
+    // if no sides declared with yargs, default to all sides
+    if (!sides.length) {
+      project.workspaces().forEach((side: string) => sides.push(side))
+    }
 
-  sides.forEach((side) => vitestArgs.push('--project', side))
+    sides.forEach((side) => vitestArgs.push('--project', side))
+  }
 
   try {
     const cacheDirDb = `file:${ensurePosixPath(

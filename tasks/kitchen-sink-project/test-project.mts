@@ -227,6 +227,7 @@ const globalTasks = () =>
           apiTasks(OUTPUT_PROJECT_PATH, {
             verbose,
             linkWithLatestFwBuild: link,
+            esm: false,
           }),
         enabled: () => !copyFromFixture,
       },
@@ -253,7 +254,7 @@ const globalTasks = () =>
         task: () => {
           return execa(
             'yarn cedar prisma migrate reset',
-            ['--force'],
+            ['--force', '--load-env-files', 'user'],
             getExecaOptions(OUTPUT_PROJECT_PATH),
           )
         },

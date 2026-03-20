@@ -13,7 +13,9 @@ export function streamingTasks(outputPath: string) {
     {
       title: 'Creating Delayed suspense delayed page',
       task: async () => {
-        const createPage = createBuilder('yarn cedar g page')
+        const createPage = createBuilder('yarn cedar g page', {
+          flags: '--load-env-files user',
+        })
         await createPage('delayed')
 
         await applyCodemod(
@@ -26,7 +28,7 @@ export function streamingTasks(outputPath: string) {
       title: 'Enable streaming-ssr experiment',
       task: async () => {
         const setupExperiment = createBuilder(
-          'yarn cedar experimental setup-streaming-ssr',
+          'yarn cedar experimental setup-streaming-ssr --load-env-files user',
         )
         await setupExperiment('--force')
       },

@@ -72,9 +72,19 @@ export async function setUpTestProject({
   )
   console.log()
 
+  // .env.user is gitignored in the fixture. Creating it here so that
+  // `--load-env-files user` can find it and prisma.config.cjs can read
+  // CEDAR_SMOKE_TEST_ENV_VAR
+  fs.writeFileSync(
+    path.join(testProjectPath, '.env.user'),
+    'CEDAR_SMOKE_TEST_ENV_VAR=test-value\n',
+  )
+
   console.log('Running prisma migrate reset')
-  await execInProject('yarn cedar prisma migrate reset --force')
+  await execInProject(
+    'yarn cedar prisma migrate reset --force --load-env-files user',
+  )
 
   console.log('Running prisma db seed')
-  await execInProject('yarn cedar prisma db seed')
+  await execInProject('yarn cedar prisma db seed --load-env-files user')
 }

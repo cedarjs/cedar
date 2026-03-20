@@ -2965,6 +2965,7 @@ __metadata:
     "@babel/parser": "npm:7.29.2"
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
     "@babel/traverse": "npm:7.29.0"
+    "@cedarjs/cli-helpers": "npm:2.8.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "npm:2.8.0"
     "@svgr/core": "npm:8.1.0"
