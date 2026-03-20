@@ -10,7 +10,7 @@ import {
   getExecaOptions,
 } from './util.mts'
 
-export async function contactTask({ esmProject } = { esmProject: false }) {
+export async function contactTask({ esm } = { esm: false }) {
   const { contact } = await import('./codemods/models.mts')
 
   await addModel(contact)
@@ -28,7 +28,7 @@ export async function contactTask({ esmProject } = { esmProject: false }) {
 
   await Promise.all([
     updateService(contactsServicePath),
-    updateServiceTest({ esmProject }),
+    updateServiceTest({ esm }),
   ])
 
   return applyCodemod('contacts.mts', contactsServicePath)
@@ -49,8 +49,8 @@ async function updateService(contactsServicePath: string) {
   )
 }
 
-async function updateServiceTest({ esmProject } = { esmProject: false }) {
-  const testFramework = esmProject ? 'vi' : 'jest'
+async function updateServiceTest({ esm } = { esm: false }) {
+  const testFramework = esm ? 'vi' : 'jest'
   const contactsTestPath = fullPath('api/src/services/contacts/contacts.test')
   const contactsTest = await fs.promises.readFile(contactsTestPath, 'utf-8')
 

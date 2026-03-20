@@ -184,12 +184,12 @@ export function webTasksList() {
 export function apiTasksList({
   dbAuth,
   linkWithLatestFwBuild = false,
-  esmProject = false,
+  esm = false,
   live = false,
 }: {
   dbAuth: 'local' | 'canary'
   linkWithLatestFwBuild?: boolean
-  esmProject?: boolean
+  esm?: boolean
   live?: boolean
 }) {
   const execaOptions = getExecaOptions(getOutputPath())
@@ -243,7 +243,7 @@ export function apiTasksList({
     },
     {
       title: 'Adding contact model to prisma',
-      task: () => contactTask({ esmProject }),
+      task: () => contactTask({ esm }),
     },
     {
       // This task renames the migration folders so that we don't have to deal
@@ -339,8 +339,7 @@ export function apiTasksList({
           import.meta.dirname,
           'templates',
           'api',
-          (esmProject ? 'esm-' : '') +
-            'contacts.describeScenario.test.ts.template',
+          (esm ? 'esm-' : '') + 'contacts.describeScenario.test.ts.template',
         )
 
         fs.copyFileSync(
@@ -382,7 +381,7 @@ export function apiTasksList({
     {
       title: 'Add vitest db import tracking tests for ESM test project',
       task: () => {
-        if (!esmProject) {
+        if (!esm) {
           return
         }
 

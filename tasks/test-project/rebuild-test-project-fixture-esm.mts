@@ -433,7 +433,7 @@ async function runCommand() {
 
       return apiTasksList({
         dbAuth: 'local',
-        esmProject: true,
+        esm: true,
       })
     },
   })
