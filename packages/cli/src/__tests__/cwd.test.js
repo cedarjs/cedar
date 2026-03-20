@@ -25,7 +25,7 @@ const VERSION = /^\d+\.\d+\.\d/
 describe('The CLI sets `cwd` correctly', () => {
   describe('--cwd', () => {
     it('lets the user set the cwd via the `--cwd` option', async () => {
-      const cwd = path.join('__fixtures__', 'test-project')
+      const cwd = path.join('__fixtures__', 'kitchen-sink-project')
       const { status, stdout, stderr } = cedar(['--cwd', cwd, '--version'])
 
       expect(status, 'status').toBe(0)
@@ -55,7 +55,7 @@ describe('The CLI sets `cwd` correctly', () => {
       const { status, stdout, stderr } = cedar(['--version'], {
         env: {
           ...process.env,
-          CEDAR_CWD: path.join('__fixtures__', 'test-project'),
+          CEDAR_CWD: path.join('__fixtures__', 'kitchen-sink-project'),
         },
       })
 
@@ -85,7 +85,11 @@ describe('The CLI sets `cwd` correctly', () => {
   describe('Prefers --cwd to CEDAR_CWD', () => {
     it('Succeeds when --cwd is a cedar project', () => {
       const { status, stdout, stderr } = cedar(
-        ['--cwd', path.join('__fixtures__', 'test-project'), '--version'],
+        [
+          '--cwd',
+          path.join('__fixtures__', 'kitchen-sink-project'),
+          '--version',
+        ],
         {
           env: {
             ...process.env,
@@ -105,7 +109,7 @@ describe('The CLI sets `cwd` correctly', () => {
         {
           env: {
             ...process.env,
-            CEDAR_CWD: path.join('__fixtures__', 'test-project'),
+            CEDAR_CWD: path.join('__fixtures__', 'kitchen-sink-project'),
           },
         },
       )
@@ -123,7 +127,7 @@ describe('The CLI sets `cwd` correctly', () => {
   describe('find up', () => {
     it("finds up for a cedar.toml if --cwd and CEDAR_CWD aren't set", () => {
       const { status, stdout, stderr } = cedar(['--version'], {
-        cwd: path.join(BASE_DIR, '__fixtures__', 'test-project', 'api'),
+        cwd: path.join(BASE_DIR, '__fixtures__', 'kitchen-sink-project', 'api'),
       })
 
       expect(status).toBe(0)

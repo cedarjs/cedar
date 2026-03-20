@@ -175,7 +175,7 @@ export const AuthProvider = ({ children }: Props) => {
         [path.join(getPaths().web.src, 'auth.js')]: actualFs.readFileSync(
           path.join(
             __dirname,
-            `../../../../../../../__fixtures__/test-project/web/src/auth.ts`,
+            `../../../../../../../__fixtures__/kitchen-sink-project/web/src/auth.ts`,
           ),
           'utf-8',
         ),

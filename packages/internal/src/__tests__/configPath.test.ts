@@ -20,7 +20,7 @@ describe('getConfigPath', () => {
       '..',
       '..',
       '__fixtures__',
-      'test-project',
+      'kitchen-sink-project',
     )
     afterAll(() => {
       process.env.CEDAR_CWD = CEDAR_CWD
@@ -52,7 +52,7 @@ describe('getConfigPath', () => {
       '..',
       '..',
       '__fixtures__',
-      'test-project',
+      'kitchen-sink-project',
     )
     beforeAll(() => {
       delete process.env.CEDAR_CWD

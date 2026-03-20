@@ -61,7 +61,7 @@ describe('mulitiple files ending in Page.{js,jsx,ts,tsx}', () => {
 describe('page auto loader correctly imports pages', () => {
   const FIXTURE_PATH = path.resolve(
     __dirname,
-    '../../../../../../__fixtures__/test-project/',
+    '../../../../../../__fixtures__/kitchen-sink-project/',
   )
 
   let result: { code?: string } | null
