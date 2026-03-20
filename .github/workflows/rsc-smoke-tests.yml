@@ -63,7 +63,7 @@ jobs:
         working-directory: tasks/smoke-tests/rsa
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsa-project.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsa-project.outputs.kitchen-sink-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 🌲 Set up RSC Kitchen Sink smoke test
@@ -77,5 +77,5 @@ jobs:
         working-directory: tasks/smoke-tests/rsc-kitchen-sink
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-kitchen-sink-project.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-rsc-kitchen-sink-project.outputs.kitchen-sink-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1

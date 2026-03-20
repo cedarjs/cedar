@@ -54,11 +54,11 @@ const args = yargs(hideBin(process.argv))
   .option('resume', {
     default: false,
     type: 'boolean',
-    describe: 'Resume rebuild of the latest unfinished test-project',
+    describe: 'Resume rebuild of the latest unfinished kitchen-sink',
   })
   .option('resumePath', {
     type: 'string',
-    describe: 'Resume rebuild given the specified test-project path',
+    describe: 'Resume rebuild given the specified kitchen-sink path',
   })
   .option('resumeStep', {
     type: 'string',
@@ -68,13 +68,13 @@ const args = yargs(hideBin(process.argv))
     default: false,
     type: 'boolean',
     describe:
-      'Rebuild the @live test-project, using pglite for PostgreSQL-' +
+      'Rebuild the @live kitchen-sink, using pglite for PostgreSQL-' +
       'compatible migrations',
   })
   .option('esm', {
     default: false,
     type: 'boolean',
-    describe: 'Rebuild the esm test-project',
+    describe: 'Rebuild the esm kitchen-sink',
   })
   .help()
   .parseSync()
@@ -84,7 +84,7 @@ const { verbose, resume, resumePath, resumeStep, live, esm } = args
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
 // hangs this script without any information to the user that tries to rebuild
-// the test-project. It's better to fail early so the correct node version can
+// the kitchen-sink. It's better to fail early so the correct node version can
 // be installed.
 if (!semver.satisfies(process.version, recommendedNodeVersion({ esm }))) {
   console.error('Unsupported Node.js version')
@@ -111,7 +111,7 @@ const OUTPUT_PROJECT_PATH = resumePath
   ? /* path.resolve(String(resumePath)) */ resumePath
   : path.join(
       os.tmpdir(),
-      'cedar-test-project' + folderSuffix,
+      'cedar-kitchen-sink-project' + folderSuffix,
       // ":" is problematic with paths
       new Date().toISOString().split(':').join('-'),
     )
@@ -369,7 +369,7 @@ const copyProject = async () => {
   const fixturePath = path.join(
     CEDAR_FRAMEWORK_PATH,
     '__fixtures__',
-    'test-project' + folderSuffix,
+    'kitchen-sink-project' + folderSuffix,
   )
 
   // remove existing Fixture
@@ -417,7 +417,7 @@ async function rebuildTestProject() {
   await tuiTask({
     step: 1,
     title: 'Creating project',
-    content: 'Building test-project from scratch...',
+    content: 'Building kitchen-sink from scratch...',
     task: createProject,
   })
 
@@ -912,7 +912,9 @@ async function rebuildTestProject() {
     task: () => {
       console.log('-'.repeat(30))
       console.log()
-      console.log('✅ Success! The test project fixture has been rebuilt')
+      console.log(
+        '✅ Success! The kitchen-sink-project fixture has been rebuilt',
+      )
       console.log()
       console.log('-'.repeat(30))
     },

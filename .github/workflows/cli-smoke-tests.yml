@@ -21,23 +21,23 @@ jobs:
         uses: ./.github/actions/set-up-job
 
       - name: 🌲 Set up test project
-        id: set-up-test-project
-        uses: ./.github/actions/set-up-test-project
+        id: set-up-kitchen-sink-project
+        uses: ./.github/actions/set-up-kitchen-sink-project
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
 
       - name: Run `cedar info`
         run: yarn cedar info
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar info` in /scripts
         run: yarn cedar info
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}/scripts
 
       - name: Run `cedar lint`
         run: yarn cedar lint ./api/src --fix
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar build`
         shell: bash
@@ -49,92 +49,92 @@ jobs:
             echo "::endgroup::"
             exit 1
           }
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar test api`
         run: yarn cedar test api --no-watch
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar test web`
         run: yarn cedar test web --no-watch
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar check`
         run: yarn cedar check
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar storybook`
         run: yarn cedar sb --smoke-test
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar exec`
         run: yarn cedar g script testScript && yarn cedar exec testScript
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Nested script | Run `cedar exec`
-        # Using -f to overwrite script that already exists in the test-project
+        # Using -f to overwrite script that already exists in the kitchen-sink
         run: yarn cedar g script -f i/am/nested && yarn cedar exec i/am/nested
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Nested script | Run `cedar exec` in /scripts
         # This is probably stretching the definition of "smoke test" a bit too
         # much. But we don't have a better place to run a test like this
         run: yarn cedar g script i/am/nested/too && yarn cedar exec i/am/nested/too | grep "Executing script with args"
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}/scripts/i/am
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}/scripts/i/am
 
       - name: Run `cedar prisma generate`
         run: yarn cedar prisma generate
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar data-migrate`
         run: yarn cedar data-migrate up
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar data-migrate install`
         run: yarn cedar data-migrate install
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar prisma migrate`
         run: yarn cedar prisma migrate dev --name ci-test --load-env-files user
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar deploy --help`
         run: yarn cedar setup deploy --help && yarn cedar deploy --help
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar setup ui --help`
         run: yarn cedar setup --help && yarn cedar setup ui --help
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       # Keeping this as `yarn rw` to make sure I don't break using `rw` until I
       # intend to
       - name: Run `rw g page`
         run: yarn rw g page ciTest
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       # Keeping this as `yarn redwood` to make sure I don't break using
       # `redwood` until I intend to
       - name: Run `redwood g sdl`
         run: yarn redwood g sdl userExample
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar type-check`
         run: yarn cedar type-check
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Throw Error | Run `cedar g sdl <model>`
         run: yarn cedar g sdl DoesNotExist
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
         continue-on-error: true
 
       - name: Run `cedar setup mailer`
         # `cat` will exit with an error code if the file doesn't exist
         run: yarn cedar setup mailer && cat api/src/lib/mailer.ts
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Codemod | Verify env var loading via --load-env-files
         # Using `node` directly instead of `yarn dlx ...` to avoid the extra
         # dependency installation overhead, plus to be able to test changes
         # without having to publish them to npm first
         run: node node_modules/@cedarjs/codemods/dist/codemods.js prisma-v7 --load-env-files user
-        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}

@@ -49,8 +49,8 @@ jobs:
           }
 
       - name: 🌲 Set up test project for React 18
-        id: set-up-test-project-react-18
-        uses: ./.github/actions/set-up-test-project
+        id: set-up-kitchen-sink-project-react-18
+        uses: ./.github/actions/set-up-kitchen-sink-project
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
@@ -62,14 +62,14 @@ jobs:
         working-directory: ./tasks/smoke-tests/dev
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-test-project-react-18.outputs.test-project-path }}'
+          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-kitchen-sink-project-react-18.outputs.kitchen-sink-project-path }}'
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 🔐 Run auth smoke tests
         working-directory: ./tasks/smoke-tests/auth
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-kitchen-sink-project-react-18.outputs.kitchen-sink-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: Run `cedar build --no-prerender`
@@ -82,30 +82,30 @@ jobs:
             echo "::endgroup::"
             exit 1
           }
-        working-directory: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project-react-18.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar prerender`
         run: |
           yarn cedar prerender --verbose
-        working-directory: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
+        working-directory: ${{ steps.set-up-kitchen-sink-project-react-18.outputs.kitchen-sink-project-path }}
 
       - name: 🖥️ Run serve smoke tests
         working-directory: tasks/smoke-tests/serve
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-kitchen-sink-project-react-18.outputs.kitchen-sink-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 📄 Run prerender smoke tests
         working-directory: tasks/smoke-tests/prerender
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-kitchen-sink-project-react-18.outputs.kitchen-sink-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
 
       - name: 📕 Run Storybook smoke tests
         working-directory: tasks/smoke-tests/storybook
         run: npx playwright test
         env:
-          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project-react-18.outputs.test-project-path }}
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-kitchen-sink-project-react-18.outputs.kitchen-sink-project-path }}
           REDWOOD_DISABLE_TELEMETRY: 1
