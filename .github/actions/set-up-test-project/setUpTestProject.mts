@@ -73,7 +73,9 @@ export async function setUpTestProject({
   console.log()
 
   console.log('Running prisma migrate reset')
-  await execInProject('yarn cedar prisma migrate reset --force')
+  await execInProject(
+    'yarn cedar prisma migrate reset --force --load-env-files user',
+  )
 
   console.log('Running prisma db seed')
   await execInProject('yarn cedar prisma db seed')

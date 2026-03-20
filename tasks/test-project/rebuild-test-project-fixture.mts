@@ -776,9 +776,35 @@ async function rebuildTestProject() {
     step: 12,
     title: 'Running prisma migrate reset',
     task: () => {
+      // Add a console.log to prisma.config.cjs that uses an env var only
+      // available via --load-env-files. This is used by the CI cli smoke test
+      // to verify that the codemod CLI's --load-env-files flag works correctly.
+      const prismaConfigPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'prisma.config.cjs',
+      )
+      const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
+      const updatedPrismaConfig = prismaConfig.replace(
+        'module.exports = defineConfig({',
+        "const testEnvVar = env('CEDAR_SMOKE_TEST_ENV_VAR')\n" +
+          "if (testEnvVar !== 'test-value') {\n" +
+          "  throw new Error('CEDAR_SMOKE_TEST_ENV_VAR has the wrong value: '" +
+          ' + testEnvVar)\n' +
+          '}\n\n' +
+          'module.exports = defineConfig({',
+      )
+      fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
+
+      // Create .env.user with the smoke test env var
+      fs.writeFileSync(
+        path.join(OUTPUT_PROJECT_PATH, '.env.user'),
+        'CEDAR_SMOKE_TEST_ENV_VAR=test-value\n',
+      )
+
       return exec(
         'yarn cedar prisma migrate reset',
-        ['--force'],
+        ['--force', '--load-env-files', 'user'],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },

@@ -95,7 +95,7 @@ jobs:
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar prisma migrate`
-        run: yarn cedar prisma migrate dev --name ci-test
+        run: yarn cedar prisma migrate dev --name ci-test --load-env-files user
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Run `cedar deploy --help`
@@ -130,4 +130,11 @@ jobs:
       - name: Run `cedar setup mailer`
         # `cat` will exit with an error code if the file doesn't exist
         run: yarn cedar setup mailer && cat api/src/lib/mailer.ts
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Codemod | Verify env var loading via --load-env-files
+        # Using `node` directly instead of `yarn dlx ...` to avoid the extra
+        # dependency installation overhead, plus to be able to test changes
+        # without having to publish them to npm first
+        run: node node_modules/@cedarjs/codemods/dist/codemods.js prisma-v7 --load-env-files user
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}

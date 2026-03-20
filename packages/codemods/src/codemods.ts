@@ -65,6 +65,11 @@ yargs(hideBin(process.argv))
       .strict()
   })
   .demandCommand()
+  .option('load-env-files', {
+    describe:
+      'Load additional .env files. Values defined in files specified later override earlier ones.',
+    array: true,
+  })
   .epilog(
     [
       'Examples:',
