@@ -12,7 +12,7 @@ import {
 } from '../actionsLib.mjs'
 
 const parentDir = path.dirname(process.cwd())
-const TEST_PROJECT_PATH = path.join(parentDir, 'test-project-esm')
+const TEST_PROJECT_PATH = path.join(parentDir, 'kitchen-sink-esm')
 const execInProject = createExecWithEnvInCwd(TEST_PROJECT_PATH)
 
 core.setOutput('test-project-path', TEST_PROJECT_PATH)
@@ -30,7 +30,7 @@ async function setUpTestProjectEsm({ canary }) {
   const TEST_PROJECT_FIXTURE_PATH = path.join(
     CEDAR_FRAMEWORK_PATH,
     '__fixtures__',
-    'test-project-esm',
+    'kitchen-sink-esm',
   )
 
   console.log(`Creating project at ${TEST_PROJECT_PATH}`)

@@ -38,7 +38,7 @@ export async function setUpTestProject({
   const TEST_PROJECT_FIXTURE_PATH = path.join(
     cedarFrameworkPath,
     '__fixtures__',
-    'test-project',
+    'kitchen-sink',
   )
 
   console.log(`Creating project at ${testProjectPath}`)

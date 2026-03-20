@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Rebuilds the root /test-project folder from the __fixtures__/test-project
+ * Rebuilds the root /test-project folder from the __fixtures__/kitchen-sink
  * fixture, with local "file:" resolutions pointing at the built .tgz packages.
  *
  * Steps:
  *  1. yarn build:clean && yarn build:pack
- *  2. yarn rebuild-test-project-fixture
+ *  2. yarn rebuild-kitchen-sink-fixture
  *  3. Delete contents of /test-project
- *  4. Copy all files from /__fixtures__/test-project
+ *  4. Copy all files from /__fixtures__/kitchen-sink
  *  5. Update /test-project/package.json with file: resolutions
  *  6. Copy .env template and append SESSION_SECRET
  *  7. yarn install, yarn cedar prisma migrate dev, yarn cedar prisma db seed,
@@ -20,7 +20,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const FRAMEWORK_ROOT = path.resolve(import.meta.dirname, '..')
-const FIXTURE_PATH = path.join(FRAMEWORK_ROOT, '__fixtures__', 'test-project')
+const FIXTURE_PATH = path.join(FRAMEWORK_ROOT, '__fixtures__', 'kitchen-sink')
 const TEST_PROJECT_PATH = path.join(FRAMEWORK_ROOT, 'test-project')
 const PACKAGES_PATH = path.join(FRAMEWORK_ROOT, 'packages')
 const ENV_TEMPLATE_PATH = path.join(
@@ -122,7 +122,7 @@ function buildTgzResolutions(): Record<string, string> {
           continue
         }
 
-        // Path relative to the test-project folder.
+        // Path relative to the kitchen-sink folder.
         // Replace backslashes with forward slashes so the file: resolution is
         // valid on Windows too. Yarn Berry requires forward slashes in paths.
         const relPath = path
@@ -148,8 +148,8 @@ function buildPackages(): void {
 }
 
 function rebuildFixture(): void {
-  console.log('\n=== Step 2: rebuild-test-project-fixture ===')
-  run('yarn rebuild-test-project-fixture')
+  console.log('\n=== Step 2: rebuild-kitchen-sink-fixture ===')
+  run('yarn rebuild-kitchen-sink-fixture')
 }
 
 function clearTestProject(): void {
@@ -159,7 +159,7 @@ function clearTestProject(): void {
 }
 
 function copyFixture(): void {
-  console.log('\n=== Step 4: Copying __fixtures__/test-project ===')
+  console.log('\n=== Step 4: Copying __fixtures__/kitchen-sink ===')
   // force: false + errorOnExist: false means existing files (e.g. README.md)
   // are silently skipped rather than overwritten or errored on.
   fs.cpSync(FIXTURE_PATH, TEST_PROJECT_PATH, {
@@ -213,7 +213,7 @@ function installAndMigrate(): void {
   console.log('\n=== Step 7: yarn install and prisma setup ===')
 
   // An empty yarn.lock must exist before `yarn install` so Yarn treats the
-  // test-project as its own independent workspace root rather than walking up
+  // kitchen-sink as its own independent workspace root rather than walking up
   // to the monorepo root and merging lock files.
   const yarnLockPath = path.join(TEST_PROJECT_PATH, 'yarn.lock')
   fs.writeFileSync(yarnLockPath, '')
@@ -234,7 +234,7 @@ async function main() {
   const hr = '='.repeat(60)
 
   console.log(hr)
-  console.log('Rebuilding /test-project')
+  console.log('Rebuilding /kitchen-sink')
   console.log(hr)
 
   buildPackages()
