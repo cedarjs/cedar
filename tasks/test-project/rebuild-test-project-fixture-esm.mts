@@ -578,7 +578,7 @@ async function runCommand() {
       await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
 
       const build = await exec(
-        'yarn cedar build',
+        'yarn cedar build --no-prerender',
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -595,9 +595,25 @@ async function runCommand() {
       }
 
       // TODO: Update this when we refine the build process
-      if (!build.stdout.includes('yarn build exited with code 0')) {
+      if (!build.stdout.includes('validators')) {
         console.error('yarn cedar build output', build.stdout, build.stderr)
-        throw new Error('Unexpected output from `yarn cedar build`')
+        throw new Error(
+          'Unexpected output from `yarn cedar build` ' +
+            build.stdout +
+            ' ' +
+            build.stderr,
+        )
+      }
+
+      if (build.exitCode !== 0) {
+        throw new Error(
+          'Unexpected exitCode from `yarn cedar build` ' +
+            build.exitCode +
+            ' ' +
+            build.stdout +
+            ' ' +
+            build.stderr,
+        )
       }
 
       // Verify that `yarn cedar <cmd>` works inside package directories
