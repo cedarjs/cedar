@@ -31,7 +31,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/parser": "7.29.0",
+    "@babel/parser": "7.29.2",
     "@babel/preset-typescript": "7.28.5",
     "@cedarjs/api-server": "2.8.0",
     "@cedarjs/cli-helpers": "2.8.0",
