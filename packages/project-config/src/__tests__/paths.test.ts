@@ -595,7 +595,7 @@ describe('paths', () => {
       '..',
       '..',
       '__fixtures__',
-      'test-project',
+      'kitchen-sink-project',
     )
 
     beforeAll(() => {

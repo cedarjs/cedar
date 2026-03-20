@@ -290,7 +290,7 @@ function getFixtureDir(
     | 'example-todo-main-with-errors'
     | 'example-todo-main'
     | 'empty-project'
-    | 'test-project',
+    | 'kitchen-sink-project',
 ) {
   return path.resolve(__dirname, `../../../../../__fixtures__/${name}`)
 }
