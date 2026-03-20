@@ -13,9 +13,9 @@ export function streamingTasks(outputPath: string) {
     {
       title: 'Creating Delayed suspense delayed page',
       task: async () => {
-        const createPage = createBuilder(
-          'yarn cedar g page --load-env-files user',
-        )
+        const createPage = createBuilder('yarn cedar g page', {
+          flags: '--load-env-files user',
+        })
         await createPage('delayed')
 
         await applyCodemod(

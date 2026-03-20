@@ -65,9 +65,9 @@ export function fragmentsTasks(outputPath: string) {
     {
       title: 'Generate SDLs for produce and stall',
       task: async () => {
-        const generateSdl = createBuilder(
-          'yarn cedar g sdl --load-env-files user',
-        )
+        const generateSdl = createBuilder('yarn cedar g sdl', {
+          flags: '--load-env-files user',
+        })
 
         await generateSdl('stall')
         await generateSdl('produce')
@@ -117,9 +117,9 @@ export function fragmentsTasks(outputPath: string) {
     {
       title: 'Creating Groceries page',
       task: async () => {
-        const createPage = createBuilder(
-          'yarn cedar g page --load-env-files user',
-        )
+        const createPage = createBuilder('yarn cedar g page', {
+          flags: '--load-env-files user',
+        })
         await createPage('groceries')
 
         await applyCodemod(
