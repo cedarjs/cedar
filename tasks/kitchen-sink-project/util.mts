@@ -168,6 +168,7 @@ export function createBuilder(cmd: string, dir = '') {
         ? positionals
         : [positionals]
       : []
+    args.push('--load-env-files', 'user')
     return execa(cmd, args, execaOptions)
   }
 }

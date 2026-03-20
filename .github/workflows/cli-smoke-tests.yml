@@ -60,7 +60,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar check`
-        run: yarn cedar check
+        run: yarn cedar check --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar storybook`
@@ -87,7 +87,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar data-migrate`
-        run: yarn cedar data-migrate up
+        run: yarn cedar data-migrate up --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar data-migrate install`

@@ -60,7 +60,7 @@ jobs:
 
       - name: Run `cedar prerender`
         run: |
-          yarn cedar prerender --verbose
+          yarn cedar prerender --verbose --load-env-files user
         working-directory: ${{ steps.set-up-kitchen-sink-project-esm.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar test web`
