@@ -141,9 +141,10 @@ jobs:
         run: |
           echo "CODEMOD_ENV_VAR=codemod-value" >> .env.codemod
 
-          echo "const testEnvVar = env(CODEMOD_ENV_VAR)" >> api/src/prisma.config.cjs
+          echo "const testEnvVar = env('CODEMOD_ENV_VAR')" >> api/src/prisma.config.cjs
+          echo "console.log('testEnvVar', testEnvVar)" >> api/src/prisma.config.cjs
           echo "if (testEnvVar !== 'codemod-value') {" >> api/src/prisma.config.cjs
-          echo "  throw new Error('CODEMOD_ENV_VAR has the wrong value' + testEnvVar)" >> api/src/prisma.config.cjs
+          echo "  throw new Error('CODEMOD_ENV_VAR has the wrong value)" >> api/src/prisma.config.cjs
           echo "}" >> api/src/prisma.config.cjs
 
           node ${{ github.workspace }}/node_modules/@cedarjs/codemods/dist/codemods.js prisma-v7 --load-env-files codemod
