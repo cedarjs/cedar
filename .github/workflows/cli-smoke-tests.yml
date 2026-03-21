@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          yarn cedar build --load-env-files user || {
+          yarn cedar build || {
             echo "::group::package.json diagnostics"
             node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
             echo "::endgroup::"
@@ -52,7 +52,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar test api`
-        run: yarn cedar test api --no-watch --load-env-files user
+        run: yarn cedar test api --no-watch
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar test web`
@@ -60,7 +60,7 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar check`
-        run: yarn cedar check --load-env-files user
+        run: yarn cedar check
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar storybook`
@@ -68,34 +68,34 @@ jobs:
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar exec`
-        run: yarn cedar g script testScript && yarn cedar exec testScript --load-env-files user
+        run: yarn cedar g script testScript && yarn cedar exec testScript
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Nested script | Run `cedar exec`
         # Using -f to overwrite script that already exists in the kitchen-sink
-        run: yarn cedar g script -f i/am/nested && yarn cedar exec i/am/nested --load-env-files user
+        run: yarn cedar g script -f i/am/nested && yarn cedar exec i/am/nested
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Nested script | Run `cedar exec` in /scripts
         # This is probably stretching the definition of "smoke test" a bit too
         # much. But we don't have a better place to run a test like this
-        run: yarn cedar g script i/am/nested/too && yarn cedar exec i/am/nested/too --load-env-files user | grep "Executing script with args"
+        run: yarn cedar g script i/am/nested/too && yarn cedar exec i/am/nested/too | grep "Executing script with args"
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}/scripts/i/am
 
       - name: Run `cedar prisma generate`
-        run: yarn cedar prisma generate --load-env-files user
+        run: yarn cedar prisma generate
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar data-migrate`
-        run: yarn cedar data-migrate up --load-env-files user
+        run: yarn cedar data-migrate up
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar data-migrate install`
-        run: yarn cedar data-migrate install --load-env-files user
+        run: yarn cedar data-migrate install
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar prisma migrate`
-        run: yarn cedar prisma migrate dev --name ci-test --load-env-files user
+        run: yarn cedar prisma migrate dev --name ci-test
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar deploy --help`
@@ -109,21 +109,21 @@ jobs:
       # Keeping this as `yarn rw` to make sure I don't break using `rw` until I
       # intend to
       - name: Run `rw g page`
-        run: yarn rw g page ciTest --load-env-files user
+        run: yarn rw g page ciTest
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       # Keeping this as `yarn redwood` to make sure I don't break using
       # `redwood` until I intend to
       - name: Run `redwood g sdl`
-        run: yarn redwood g sdl userExample --load-env-files user
+        run: yarn redwood g sdl userExample
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar type-check`
-        run: yarn cedar type-check --load-env-files user
+        run: yarn cedar type-check
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
 
       - name: Throw Error | Run `cedar g sdl <model>`
-        run: yarn cedar g sdl DoesNotExist --load-env-files user
+        run: yarn cedar g sdl DoesNotExist
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}
         continue-on-error: true
 
@@ -138,5 +138,14 @@ jobs:
         # without having to publish them to npm first. Have to use
         # `{{ github.workspace }}` because project:tarsync skips codemods, so we
         # have to find it in the framework directory
-        run: node ${{ github.workspace }}/node_modules/@cedarjs/codemods/dist/codemods.js prisma-v7 --load-env-files user
+        run: |
+          echo "CODEMOD_ENV_VAR=codemod-value" >> .env.codemod
+
+          echo "const testEnvVar = env('CODEMOD_ENV_VAR')" >> api/src/prisma.config.cjs
+          echo "console.log('testEnvVar', testEnvVar)" >> api/src/prisma.config.cjs
+          echo "if (testEnvVar !== 'codemod-value') {" >> api/src/prisma.config.cjs
+          echo "  throw new Error('CODEMOD_ENV_VAR has the wrong value)" >> api/src/prisma.config.cjs
+          echo "}" >> api/src/prisma.config.cjs
+
+          node ${{ github.workspace }}/node_modules/@cedarjs/codemods/dist/codemods.js prisma-v7 --load-env-files codemod
         working-directory: ${{ steps.set-up-kitchen-sink-project.outputs.kitchen-sink-project-path }}

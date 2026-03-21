@@ -41,7 +41,7 @@ export function fragmentsTasks(outputPath: string) {
         await addModel(stall)
 
         return exec(
-          'yarn cedar prisma migrate dev --name create_produce_stall --load-env-files user',
+          'yarn cedar prisma migrate dev --name create_produce_stall',
           [],
           getExecaOptions(outputPath),
         )
@@ -55,19 +55,13 @@ export function fragmentsTasks(outputPath: string) {
           fullPath('scripts/seed.ts', { addExtension: false }),
         )
 
-        await exec(
-          'yarn cedar prisma db seed --load-env-files user',
-          [],
-          getExecaOptions(outputPath),
-        )
+        await exec('yarn cedar prisma db seed', [], getExecaOptions(outputPath))
       },
     },
     {
       title: 'Generate SDLs for produce and stall',
       task: async () => {
-        const generateSdl = createBuilder('yarn cedar g sdl', {
-          flags: '--load-env-files user',
-        })
+        const generateSdl = createBuilder('yarn cedar g sdl', 'api')
 
         await generateSdl('stall')
         await generateSdl('produce')
@@ -117,9 +111,7 @@ export function fragmentsTasks(outputPath: string) {
     {
       title: 'Creating Groceries page',
       task: async () => {
-        const createPage = createBuilder('yarn cedar g page', {
-          flags: '--load-env-files user',
-        })
+        const createPage = createBuilder('yarn cedar g page')
         await createPage('groceries')
 
         await applyCodemod(

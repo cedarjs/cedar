@@ -11,7 +11,6 @@ import { getPrerenderTasks } from './prerender-tasks.mts'
 import {
   getExecaOptions,
   applyCodemod,
-  updatePkgJsonScripts,
   getCfwBin,
   // TODO: See if we can get rid of this and just use execa directly
   exec,
@@ -23,7 +22,7 @@ function getPagesTasks() {
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
   // to make sure it works as expected. We do the same for the /api directory
   // further down in this file.
-  const createPage = createBuilder('yarn cedar g page', { dir: 'web' })
+  const createPage = createBuilder('yarn cedar g page', 'web')
 
   return [
     {
@@ -288,9 +287,7 @@ export function apiTasksList({
     {
       title: 'Add users service',
       task: async () => {
-        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', {
-          dir: 'api',
-        })
+        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
 
         await generateSdl('user')
 
@@ -546,14 +543,6 @@ async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
   const outputPath = getOutputPath()
   const execaOptions = getExecaOptions(outputPath)
 
-  // Temporarily disable postinstall script
-  updatePkgJsonScripts({
-    projectPath: outputPath,
-    scripts: {
-      postinstall: '',
-    },
-  })
-
   // (This is really only needed for `tasks.mts`)
   const dbAuthSetupPath = path.join(
     outputPath,
@@ -660,14 +649,6 @@ async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
     fs.unlinkSync(apiTgzDest)
     fs.unlinkSync(webTgzDest)
   }
-
-  // Restore postinstall script
-  updatePkgJsonScripts({
-    projectPath: outputPath,
-    scripts: {
-      postinstall: `yarn ${getCfwBin(outputPath)} project:copy`,
-    },
-  })
 
   if (linkWithLatestFwBuild) {
     await exec(`yarn ${getCfwBin(outputPath)} project:copy`, [], execaOptions)
