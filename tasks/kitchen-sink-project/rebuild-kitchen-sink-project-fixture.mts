@@ -6,6 +6,7 @@ import { startPrismaDevServer } from '@prisma/dev'
 import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
+import { dedent } from 'ts-dedent'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
@@ -521,12 +522,14 @@ async function rebuildTestProject() {
       const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
       const updatedPrismaConfig = prismaConfig.replace(
         'module.exports = defineConfig({',
-        "const testEnvVar = env('ENV_DEFAULTS_VAR')\n" +
-          "if (testEnvVar !== 'default-value') {\n" +
-          "  throw new Error('ENV_DEFAULTS_VAR has the wrong value: '" +
-          ' + testEnvVar)\n' +
-          '}\n\n' +
-          'module.exports = defineConfig({',
+        dedent`
+          // ENV_DEFAULTS_VAR is loaded from .env.defaults
+          const testEnvVar = env('ENV_DEFAULTS_VAR')
+          if (testEnvVar !== 'default-value') {
+            throw new Error('ENV_DEFAULTS_VAR has the wrong value: ' + testEnvVar)
+          }
+
+          module.exports = defineConfig({`,
       )
 
       if (!updatedPrismaConfig.includes('ENV_DEFAULTS_VAR')) {
