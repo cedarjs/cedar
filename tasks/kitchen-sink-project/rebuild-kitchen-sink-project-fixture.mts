@@ -6,6 +6,7 @@ import { startPrismaDevServer } from '@prisma/dev'
 import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
+import { dedent } from 'ts-dedent'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
@@ -22,7 +23,6 @@ import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
-  updatePkgJsonScripts,
   ExecaError,
   exec,
   getCfwBin,
@@ -492,17 +492,46 @@ async function rebuildTestProject() {
     },
   })
 
-  // Note that we undo this at the end
   await tuiTask({
     step: 6,
-    title: '[link] Add cfw project:copy postinstall',
+    title: 'Prep for env var tests',
     task: () => {
-      return updatePkgJsonScripts({
-        projectPath: OUTPUT_PROJECT_PATH,
-        scripts: {
-          postinstall: `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:copy`,
-        },
-      })
+      // Prisma's `env()` helper will throw an error if it cannot find the
+      // referenced env var. We add a simple `if`-statement to ensure the env
+      // var is read, and that it has the correct value.
+      const prismaConfigPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'prisma.config.cjs',
+      )
+      const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
+      const updatedPrismaConfig = prismaConfig.replace(
+        'module.exports = defineConfig({',
+        dedent`
+          // ENV_DEFAULTS_VAR is loaded from .env.defaults
+          const testEnvVar = env('ENV_DEFAULTS_VAR')
+          if (testEnvVar !== 'default-value') {
+            throw new Error('ENV_DEFAULTS_VAR has the wrong value: ' + testEnvVar)
+          }
+
+          module.exports = defineConfig({`,
+      )
+
+      if (!updatedPrismaConfig.includes('ENV_DEFAULTS_VAR')) {
+        throw new Error(
+          'Failed to inject ENV_DEFAULTS_VAR check into ' +
+            'prisma.config.cjs – the expected anchor string ' +
+            '`module.exports = defineConfig({` was not found',
+        )
+      }
+
+      fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
+
+      // Append to .env.defaults
+      fs.appendFileSync(
+        path.join(OUTPUT_PROJECT_PATH, '.env.defaults'),
+        '\nENV_DEFAULTS_VAR=default-value\n',
+      )
     },
   })
 
@@ -776,49 +805,9 @@ async function rebuildTestProject() {
     step: 12,
     title: 'Running prisma migrate reset',
     task: () => {
-      // Prisma's `env()` helper will throw an error if it cannot find the env
-      // var. We add a simple `if`-statement to ensure the env var is read, and
-      // that it has the correct value.
-      // The env var is only available via --load-env-files. This is used by the
-      // CI cli smoke test to verify that the codemod CLI's --load-env-files
-      // flag works correctly.
-      const prismaConfigPath = path.join(
-        OUTPUT_PROJECT_PATH,
-        'api',
-        'prisma.config.cjs',
-      )
-      const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
-      const updatedPrismaConfig = prismaConfig.replace(
-        'module.exports = defineConfig({',
-        "const testEnvVar = env('CEDAR_SMOKE_TEST_ENV_VAR')\n" +
-          "if (testEnvVar !== 'test-value') {\n" +
-          "  throw new Error('CEDAR_SMOKE_TEST_ENV_VAR has the wrong value: '" +
-          ' + testEnvVar)\n' +
-          '}\n\n' +
-          'module.exports = defineConfig({',
-      )
-
-      if (!updatedPrismaConfig.includes('CEDAR_SMOKE_TEST_ENV_VAR')) {
-        throw new Error(
-          'Failed to inject CEDAR_SMOKE_TEST_ENV_VAR check into ' +
-            'prisma.config.cjs – the expected anchor string ' +
-            '`module.exports = defineConfig({` was not found',
-        )
-      }
-
-      fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
-
-      // Create .env.user with the smoke test env var
-      // Note that this file is gitignored and won't be committed, but it's
-      // needed for the `prisma migrate` invocation below.
-      fs.writeFileSync(
-        path.join(OUTPUT_PROJECT_PATH, '.env.user'),
-        'CEDAR_SMOKE_TEST_ENV_VAR=test-value\n',
-      )
-
       return exec(
         'yarn cedar prisma migrate reset',
-        ['--force', '--load-env-files', 'user'],
+        ['--force'],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
@@ -884,8 +873,8 @@ async function rebuildTestProject() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
       // Copy over package.json from template, so we remove the extra dev
-      // dependencies, and cfw postinstall script that we added in "Adding
-      // framework dependencies to project"
+      // dependencies that we added in "Adding framework dependencies to
+      // project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
       // We also want the `packages/*` workspace config that was added when
