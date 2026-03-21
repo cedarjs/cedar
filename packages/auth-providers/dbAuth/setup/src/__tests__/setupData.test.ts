@@ -44,7 +44,7 @@ vi.mock('@cedarjs/cli-helpers', () => {
 
 beforeAll(() => {
   process.env.CEDAR_CWD = cedarProjectPath
-  process.env.DATABASE_URL = 'file:./dev.db'
+  process.env.DATABASE_URL = 'file:./db/dev.db'
 })
 
 afterAll(() => {
@@ -52,7 +52,7 @@ afterAll(() => {
   process.env.DATABASE_URL = DATABASE_URL
 })
 
-describe('setupData createUserModelTask (test-project)', () => {
+describe('setupData createUserModelTask (kitchen-sink-project)', () => {
   it('throws an error if a User model already exists', async () => {
     await expect(() => {
       return createUserModelTask.task({
