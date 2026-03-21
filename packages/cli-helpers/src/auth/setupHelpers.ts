@@ -22,6 +22,8 @@ import {
   generateAuthApiFiles,
 } from './authTasks.js'
 
+export type { AuthGeneratorCtx }
+
 export const standardAuthBuilder = (yargs: Argv) => {
   return yargs
     .option('force', {
