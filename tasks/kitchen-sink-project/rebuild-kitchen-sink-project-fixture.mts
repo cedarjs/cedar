@@ -23,7 +23,6 @@ import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
-  updatePkgJsonScripts,
   ExecaError,
   exec,
   getCfwBin,
@@ -493,22 +492,8 @@ async function rebuildTestProject() {
     },
   })
 
-  // Note that we undo this at the end
   await tuiTask({
     step: 6,
-    title: '[link] Add cfw project:copy postinstall',
-    task: () => {
-      return updatePkgJsonScripts({
-        projectPath: OUTPUT_PROJECT_PATH,
-        scripts: {
-          postinstall: `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:copy`,
-        },
-      })
-    },
-  })
-
-  await tuiTask({
-    step: 7,
     title: 'Prep for env var tests',
     task: () => {
       // Prisma's `env()` helper will throw an error if it cannot find the
@@ -551,7 +536,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 8,
+    step: 7,
     title: (!live ? 'skip: ' : '') + 'Switch to PostgreSQL',
     task: () => {
       if (!live || !localPrisma) {
@@ -580,7 +565,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 9,
+    step: 8,
     title: 'Apply web codemods',
     task: () => {
       return webTasks(OUTPUT_PROJECT_PATH)
@@ -588,7 +573,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 10,
+    step: 9,
     title: 'Apply api codemods',
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
@@ -598,7 +583,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 11,
+    step: 10,
     title: 'Add workspace packages',
     task: async () => {
       const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
@@ -747,7 +732,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 11,
     title: 'Add scripts',
     task: async () => {
       const nestedPath = path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one', 'two')
@@ -817,7 +802,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 13,
+    step: 12,
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
@@ -829,7 +814,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 14,
+    step: 13,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
@@ -860,7 +845,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 15,
+    step: 14,
     title: 'Replace and Cleanup Fixture',
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
@@ -888,8 +873,8 @@ async function rebuildTestProject() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
       // Copy over package.json from template, so we remove the extra dev
-      // dependencies, and cfw postinstall script that we added in "Adding
-      // framework dependencies to project"
+      // dependencies that we added in "Adding framework dependencies to
+      // project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
       // We also want the `packages/*` workspace config that was added when
@@ -925,7 +910,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 16,
+    step: 15,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))

@@ -48,27 +48,6 @@ export const getExecaOptions = (
   },
 })
 
-export const updatePkgJsonScripts = ({
-  projectPath,
-  scripts,
-}: {
-  projectPath: string
-  scripts: Record<string, string>
-}) => {
-  const projectPackageJsonPath = path.join(projectPath, 'package.json')
-  const projectPackageJson = JSON.parse(
-    fs.readFileSync(projectPackageJsonPath, 'utf-8'),
-  )
-  projectPackageJson.scripts = {
-    ...projectPackageJson.scripts,
-    ...scripts,
-  }
-  fs.writeFileSync(
-    projectPackageJsonPath,
-    JSON.stringify(projectPackageJson, undefined, 2),
-  )
-}
-
 // Confirmation prompt when using --no-copyFromFixture --no-link'
 export async function confirmNoFixtureNoLink(
   copyFromFixtureOption: boolean,

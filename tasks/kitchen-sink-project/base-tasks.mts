@@ -11,7 +11,6 @@ import { getPrerenderTasks } from './prerender-tasks.mts'
 import {
   getExecaOptions,
   applyCodemod,
-  updatePkgJsonScripts,
   getCfwBin,
   // TODO: See if we can get rid of this and just use execa directly
   exec,
@@ -544,14 +543,6 @@ async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
   const outputPath = getOutputPath()
   const execaOptions = getExecaOptions(outputPath)
 
-  // Temporarily disable postinstall script
-  updatePkgJsonScripts({
-    projectPath: outputPath,
-    scripts: {
-      postinstall: '',
-    },
-  })
-
   // (This is really only needed for `tasks.mts`)
   const dbAuthSetupPath = path.join(
     outputPath,
@@ -658,14 +649,6 @@ async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {
     fs.unlinkSync(apiTgzDest)
     fs.unlinkSync(webTgzDest)
   }
-
-  // Restore postinstall script
-  updatePkgJsonScripts({
-    projectPath: outputPath,
-    scripts: {
-      postinstall: `yarn ${getCfwBin(outputPath)} project:copy`,
-    },
-  })
 
   if (linkWithLatestFwBuild) {
     await exec(`yarn ${getCfwBin(outputPath)} project:copy`, [], execaOptions)
