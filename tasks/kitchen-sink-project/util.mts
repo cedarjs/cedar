@@ -136,34 +136,17 @@ export async function addModel(model: string) {
 }
 
 /**
- * @param cmd The base command to run (e.g. 'yarn cedar g sdl')
- * @param options.dir Optional subdirectory to run the command in
- * @param options.flags Optional flags to append AFTER positionals. Use this
- *   instead of embedding flags in `cmd` when also passing positional arguments,
- *   to prevent yargs array-type options (e.g. --load-env-files) from greedily
- *   consuming the positionals as option values.
+ * @param cmd The command to run
  */
-export function createBuilder(
-  cmd: string,
-  { dir = '', flags = '' }: { dir?: string; flags?: string } = {},
-) {
+export function createBuilder(cmd: string, dir = '') {
   const execaOptions = getExecaOptions(path.join(getOutputPath(), dir))
 
   return async function createItem(positionals?: string | string[]) {
-    const positionalArgs = positionals
+    const args = positionals
       ? Array.isArray(positionals)
         ? positionals
         : [positionals]
       : []
-
-    if (flags) {
-      // Positionals must come before flags so that array-type yargs options
-      // (e.g. --load-env-files) don't greedily consume positionals as values.
-      // e.g. 'yarn cedar g sdl stall --load-env-files user' is correct,
-      //      'yarn cedar g sdl --load-env-files user stall' is not.
-      return execa(cmd, [...positionalArgs, flags], execaOptions)
-    }
-
-    return execa(cmd, positionalArgs, execaOptions)
+    return execa(cmd, args, execaOptions)
   }
 }
