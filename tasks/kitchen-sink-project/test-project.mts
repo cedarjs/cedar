@@ -254,7 +254,7 @@ const globalTasks = () =>
         task: () => {
           return execa(
             'yarn cedar prisma migrate reset',
-            ['--force', '--load-env-files', 'user'],
+            ['--force'],
             getExecaOptions(OUTPUT_PROJECT_PATH),
           )
         },

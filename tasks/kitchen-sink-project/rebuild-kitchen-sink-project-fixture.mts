@@ -508,6 +508,47 @@ async function rebuildTestProject() {
 
   await tuiTask({
     step: 7,
+    title: 'Prep for env var tests',
+    task: () => {
+      // Prisma's `env()` helper will throw an error if it cannot find the
+      // referenced env var. We add a simple `if`-statement to ensure the env
+      // var is read, and that it has the correct value.
+      const prismaConfigPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'prisma.config.cjs',
+      )
+      const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
+      const updatedPrismaConfig = prismaConfig.replace(
+        'module.exports = defineConfig({',
+        "const testEnvVar = env('ENV_DEFAULTS_VAR')\n" +
+          "if (testEnvVar !== 'default-value') {\n" +
+          "  throw new Error('ENV_DEFAULTS_VAR has the wrong value: '" +
+          ' + testEnvVar)\n' +
+          '}\n\n' +
+          'module.exports = defineConfig({',
+      )
+
+      if (!updatedPrismaConfig.includes('ENV_DEFAULTS_VAR')) {
+        throw new Error(
+          'Failed to inject ENV_DEFAULTS_VAR check into ' +
+            'prisma.config.cjs – the expected anchor string ' +
+            '`module.exports = defineConfig({` was not found',
+        )
+      }
+
+      fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
+
+      // Append to .env.defaults
+      fs.appendFileSync(
+        path.join(OUTPUT_PROJECT_PATH, '.env.defaults'),
+        '\nENV_DEFAULTS_VAR=default-value\n',
+      )
+    },
+  })
+
+  await tuiTask({
+    step: 8,
     title: (!live ? 'skip: ' : '') + 'Switch to PostgreSQL',
     task: () => {
       if (!live || !localPrisma) {
@@ -536,7 +577,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 8,
+    step: 9,
     title: 'Apply web codemods',
     task: () => {
       return webTasks(OUTPUT_PROJECT_PATH)
@@ -544,7 +585,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 9,
+    step: 10,
     title: 'Apply api codemods',
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
@@ -554,7 +595,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 10,
+    step: 11,
     title: 'Add workspace packages',
     task: async () => {
       const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
@@ -703,7 +744,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 11,
+    step: 12,
     title: 'Add scripts',
     task: async () => {
       const nestedPath = path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one', 'two')
@@ -773,59 +814,19 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 13,
     title: 'Running prisma migrate reset',
     task: () => {
-      // Prisma's `env()` helper will throw an error if it cannot find the env
-      // var. We add a simple `if`-statement to ensure the env var is read, and
-      // that it has the correct value.
-      // The env var is only available via --load-env-files. This is used by the
-      // CI cli smoke test to verify that the codemod CLI's --load-env-files
-      // flag works correctly.
-      const prismaConfigPath = path.join(
-        OUTPUT_PROJECT_PATH,
-        'api',
-        'prisma.config.cjs',
-      )
-      const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
-      const updatedPrismaConfig = prismaConfig.replace(
-        'module.exports = defineConfig({',
-        "const testEnvVar = env('CEDAR_SMOKE_TEST_ENV_VAR')\n" +
-          "if (testEnvVar !== 'test-value') {\n" +
-          "  throw new Error('CEDAR_SMOKE_TEST_ENV_VAR has the wrong value: '" +
-          ' + testEnvVar)\n' +
-          '}\n\n' +
-          'module.exports = defineConfig({',
-      )
-
-      if (!updatedPrismaConfig.includes('CEDAR_SMOKE_TEST_ENV_VAR')) {
-        throw new Error(
-          'Failed to inject CEDAR_SMOKE_TEST_ENV_VAR check into ' +
-            'prisma.config.cjs – the expected anchor string ' +
-            '`module.exports = defineConfig({` was not found',
-        )
-      }
-
-      fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
-
-      // Create .env.user with the smoke test env var
-      // Note that this file is gitignored and won't be committed, but it's
-      // needed for the `prisma migrate` invocation below.
-      fs.writeFileSync(
-        path.join(OUTPUT_PROJECT_PATH, '.env.user'),
-        'CEDAR_SMOKE_TEST_ENV_VAR=test-value\n',
-      )
-
       return exec(
         'yarn cedar prisma migrate reset',
-        ['--force', '--load-env-files', 'user'],
+        ['--force'],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
     },
   })
 
   await tuiTask({
-    step: 13,
+    step: 14,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
@@ -856,7 +857,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 14,
+    step: 15,
     title: 'Replace and Cleanup Fixture',
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
@@ -921,7 +922,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 15,
+    step: 16,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))

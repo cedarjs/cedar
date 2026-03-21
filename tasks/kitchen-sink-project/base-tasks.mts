@@ -23,7 +23,7 @@ function getPagesTasks() {
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
   // to make sure it works as expected. We do the same for the /api directory
   // further down in this file.
-  const createPage = createBuilder('yarn cedar g page', { dir: 'web' })
+  const createPage = createBuilder('yarn cedar g page', 'web')
 
   return [
     {
@@ -288,9 +288,7 @@ export function apiTasksList({
     {
       title: 'Add users service',
       task: async () => {
-        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', {
-          dir: 'api',
-        })
+        const generateSdl = createBuilder('yarn cedar g sdl --no-crud', 'api')
 
         await generateSdl('user')
 
