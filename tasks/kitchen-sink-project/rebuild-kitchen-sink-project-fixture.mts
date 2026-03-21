@@ -492,7 +492,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 7,
+    step: 6,
     title: (!live ? 'skip: ' : '') + 'Switch to PostgreSQL',
     task: () => {
       if (!live || !localPrisma) {
@@ -521,7 +521,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 8,
+    step: 7,
     title: 'Apply web codemods',
     task: () => {
       return webTasks(OUTPUT_PROJECT_PATH)
@@ -529,7 +529,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 9,
+    step: 8,
     title: 'Apply api codemods',
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
@@ -539,7 +539,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 10,
+    step: 9,
     title: 'Add workspace packages',
     task: async () => {
       const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
@@ -688,7 +688,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 11,
+    step: 10,
     title: 'Add scripts',
     task: async () => {
       const nestedPath = path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one', 'two')
@@ -758,7 +758,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 11,
     title: 'Running prisma migrate reset',
     task: () => {
       // Prisma's `env()` helper will throw an error if it cannot find the env
@@ -810,7 +810,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 13,
+    step: 12,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
@@ -841,7 +841,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 14,
+    step: 13,
     title: 'Replace and Cleanup Fixture',
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
@@ -906,7 +906,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 15,
+    step: 14,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))
