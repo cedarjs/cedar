@@ -22,7 +22,6 @@ import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
-  updatePkgJsonScripts,
   ExecaError,
   exec,
   getCfwBin,
@@ -492,20 +491,6 @@ async function rebuildTestProject() {
     },
   })
 
-  // Note that we undo this at the end
-  await tuiTask({
-    step: 6,
-    title: '[link] Add cfw project:copy postinstall',
-    task: () => {
-      return updatePkgJsonScripts({
-        projectPath: OUTPUT_PROJECT_PATH,
-        scripts: {
-          postinstall: `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:copy`,
-        },
-      })
-    },
-  })
-
   await tuiTask({
     step: 7,
     title: (!live ? 'skip: ' : '') + 'Switch to PostgreSQL',
@@ -884,8 +869,8 @@ async function rebuildTestProject() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
       // Copy over package.json from template, so we remove the extra dev
-      // dependencies, and cfw postinstall script that we added in "Adding
-      // framework dependencies to project"
+      // dependencies that we added in "Adding framework dependencies to
+      // project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
       // We also want the `packages/*` workspace config that was added when
