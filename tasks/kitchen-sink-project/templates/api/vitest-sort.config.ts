@@ -9,7 +9,7 @@ class SortSequencer extends BaseSequencer {
     // Test the Cedar CLI --load-env-files flag (see smoke-tests-test.yml)
     if (process.env.SMOKE_ENV_VAR !== 'smoke-value') {
       throw new Error(
-        'Unexpected SMOKE_ENV_VAR value: ' + process.env.SMOKE_ENV_VAR
+        'Unexpected SMOKE_ENV_VAR value: ' + process.env.SMOKE_ENV_VAR,
       )
     }
 
