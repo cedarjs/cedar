@@ -50,7 +50,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          yarn cedar build --no-prerender --load-env-files user || {
+          yarn cedar build --no-prerender || {
             echo "::group::package.json diagnostics"
             node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
             echo "::endgroup::"
@@ -60,7 +60,7 @@ jobs:
 
       - name: Run `cedar prerender`
         run: |
-          yarn cedar prerender --verbose --load-env-files user
+          yarn cedar prerender --verbose
         working-directory: ${{ steps.set-up-kitchen-sink-project-esm.outputs.kitchen-sink-project-path }}
 
       - name: Run `cedar test web`
@@ -70,15 +70,17 @@ jobs:
 
       - name: Run `cedar test api`
         run: |
-          yarn cedar test api --no-watch --load-env-files user
+          yarn cedar test api --no-watch
         working-directory: ${{ steps.set-up-kitchen-sink-project-esm.outputs.kitchen-sink-project-path }}
 
       - name: Run db import tracking tests
         shell: bash
         run: |
           # Only run this for ESM projects where the vitest config file exists
+          # Also taking this opportunity to test --load-env-files
+          echo "SMOKE_ENV_VAR=smoke-value" > .env.smoke
           if test -f api/vitest-sort.config.ts; then
-            yarn cedar test api --no-watch --config api/vitest-sort.config.ts --load-env-files user
+            yarn cedar test api --no-watch --config api/vitest-sort.config.ts --load-env-files smoke
           fi
         working-directory: ${{ steps.set-up-kitchen-sink-project-esm.outputs.kitchen-sink-project-path }}
 

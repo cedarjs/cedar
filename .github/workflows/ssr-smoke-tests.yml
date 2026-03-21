@@ -49,7 +49,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          yarn cedar build --no-prerender --verbose --load-env-files user || {
+          yarn cedar build --no-prerender --verbose || {
             echo "::group::package.json diagnostics"
             node $GITHUB_WORKSPACE/.github/scripts/diagnose-package-json.mjs || true
             echo "::endgroup::"
