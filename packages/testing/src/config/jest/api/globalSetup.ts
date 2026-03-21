@@ -21,13 +21,9 @@ export default async function () {
       ? ['prisma', 'migrate', 'reset', '--force']
       : ['prisma', 'db', 'push', '--force-reset', '--accept-data-loss']
 
-  const env: Record<string, string | undefined> = {
-    DATABASE_URL: process.env.DATABASE_URL,
-  }
-
   execa.sync('yarn', ['cedar', ...command], {
     cwd: cedarPaths.api.base,
     stdio: 'inherit',
-    env,
+    env: process.env,
   })
 }

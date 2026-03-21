@@ -42,7 +42,7 @@ vi.mock('../../lib', async (importOriginal) => {
     getPaths: () => ({
       base: './myBasePath',
       api: {
-        prismaConfig: '../../__fixtures__/test-project/api/prisma.config.ts',
+        prismaConfig: 'cedar-app/api/prisma.config.cjs',
       },
       web: {},
     }),

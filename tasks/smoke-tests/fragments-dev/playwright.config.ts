@@ -14,7 +14,8 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'yarn cedar dev --no-generate --fwd="--no-open"',
+    command:
+      'yarn cedar dev --no-generate --load-env-files user --fwd="--no-open"',
     cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     // We wait for the api server to be ready instead of the web server
     // because web starts much faster with Vite.

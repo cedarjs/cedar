@@ -917,14 +917,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:7.29.0, @babel/parser@npm:^7.1.0, @babel/parser@npm:^7.1.6, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.24.4, @babel/parser@npm:^7.24.7, @babel/parser@npm:^7.25.8, @babel/parser@npm:^7.26.10, @babel/parser@npm:^7.28.6, @babel/parser@npm:^7.29.0, @babel/parser@npm:^7.3.2":
-  version: 7.29.0
-  resolution: "@babel/parser@npm:7.29.0"
+"@babel/parser@npm:7.29.2, @babel/parser@npm:^7.1.0, @babel/parser@npm:^7.1.6, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.24.4, @babel/parser@npm:^7.24.7, @babel/parser@npm:^7.25.8, @babel/parser@npm:^7.26.10, @babel/parser@npm:^7.28.6, @babel/parser@npm:^7.29.0, @babel/parser@npm:^7.3.2":
+  version: 7.29.2
+  resolution: "@babel/parser@npm:7.29.2"
   dependencies:
     "@babel/types": "npm:^7.29.0"
   bin:
     parser: ./bin/babel-parser.js
-  checksum: 10c0/333b2aa761264b91577a74bee86141ef733f9f9f6d4fc52548e4847dc35dfbf821f58c46832c637bfa761a6d9909d6a68f7d1ed59e17e4ffbb958dc510c17b62
+  checksum: 10c0/e5a4e69e3ac7acdde995f37cf299a68458cfe7009dff66bd0962fd04920bef287201169006af365af479c08ff216bfefbb595e331f87f6ae7283858aebbc3317
   languageName: node
   linkType: hard
 
@@ -1946,9 +1946,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/preset-env@npm:7.29.0":
-  version: 7.29.0
-  resolution: "@babel/preset-env@npm:7.29.0"
+"@babel/preset-env@npm:7.29.2":
+  version: 7.29.2
+  resolution: "@babel/preset-env@npm:7.29.2"
   dependencies:
     "@babel/compat-data": "npm:^7.29.0"
     "@babel/helper-compilation-targets": "npm:^7.28.6"
@@ -2022,7 +2022,7 @@ __metadata:
     semver: "npm:^6.3.1"
   peerDependencies:
     "@babel/core": ^7.0.0-0
-  checksum: 10c0/08737e333a538703ba20e9e93b5bfbc01abbb9d3b2519b5b62ad05d3b6b92d79445b1dac91229b8cfcfb0b681b22b7c6fa88d7c1cc15df1690a23b21287f55b6
+  checksum: 10c0/d49cb005f2dbc3f2293ab6d80ee8f1380e6215af5518fe26b087c8961c1ea8ebaa554dfce589abe1fbebac25ad7c2515d943dec3859ea2d4981a3f8f4711c580
   languageName: node
   linkType: hard
 
@@ -2098,10 +2098,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:7.28.6, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.17.8, @babel/runtime@npm:^7.26.10, @babel/runtime@npm:^7.28.4":
-  version: 7.28.6
-  resolution: "@babel/runtime@npm:7.28.6"
-  checksum: 10c0/358cf2429992ac1c466df1a21c1601d595c46930a13c1d4662fde908d44ee78ec3c183aaff513ecb01ef8c55c3624afe0309eeeb34715672dbfadb7feedb2c0d
+"@babel/runtime@npm:7.29.2, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.17.8, @babel/runtime@npm:^7.26.10, @babel/runtime@npm:^7.28.4":
+  version: 7.29.2
+  resolution: "@babel/runtime@npm:7.29.2"
+  checksum: 10c0/30b80a0140d16467792e1bbeb06f655b0dab70407da38dfac7fedae9c859f9ae9d846ef14ad77bd3814c064295fe9b1bc551f1541ea14646ae9f22b71a8bc17a
   languageName: node
   linkType: hard
 
@@ -2764,10 +2764,10 @@ __metadata:
   resolution: "@cedarjs/babel-config@workspace:packages/babel-config"
   dependencies:
     "@babel/core": "npm:^7.26.10"
-    "@babel/parser": "npm:7.29.0"
+    "@babel/parser": "npm:7.29.2"
     "@babel/plugin-transform-react-jsx": "npm:7.28.6"
     "@babel/plugin-transform-runtime": "npm:7.29.0"
-    "@babel/preset-env": "npm:7.29.0"
+    "@babel/preset-env": "npm:7.29.2"
     "@babel/preset-react": "npm:7.28.5"
     "@babel/preset-typescript": "npm:7.28.5"
     "@babel/register": "npm:7.28.6"
@@ -2881,7 +2881,7 @@ __metadata:
   dependencies:
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
-    "@babel/parser": "npm:7.29.0"
+    "@babel/parser": "npm:7.29.2"
     "@babel/preset-typescript": "npm:7.28.5"
     "@cedarjs/api-server": "workspace:*"
     "@cedarjs/cli-helpers": "workspace:*"
@@ -2962,9 +2962,10 @@ __metadata:
   dependencies:
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
-    "@babel/parser": "npm:7.29.0"
+    "@babel/parser": "npm:7.29.2"
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
     "@babel/traverse": "npm:7.29.0"
+    "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@svgr/core": "npm:8.1.0"
@@ -3255,7 +3256,7 @@ __metadata:
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/core": "npm:^7.26.10"
-    "@babel/parser": "npm:7.29.0"
+    "@babel/parser": "npm:7.29.2"
     "@babel/plugin-transform-react-jsx": "npm:7.28.6"
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
     "@babel/traverse": "npm:7.29.0"
@@ -3439,7 +3440,7 @@ __metadata:
   dependencies:
     "@ast-grep/napi": "npm:0.42.0"
     "@babel/generator": "npm:7.29.1"
-    "@babel/parser": "npm:7.29.0"
+    "@babel/parser": "npm:7.29.2"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/babel-config": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
@@ -3743,7 +3744,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@ast-grep/napi": "npm:0.42.0"
     "@babel/generator": "npm:7.29.1"
-    "@babel/parser": "npm:7.29.0"
+    "@babel/parser": "npm:7.29.2"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/babel-config": "workspace:*"
@@ -3826,7 +3827,7 @@ __metadata:
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
     "@babel/plugin-transform-runtime": "npm:7.29.0"
-    "@babel/runtime": "npm:7.28.6"
+    "@babel/runtime": "npm:7.29.2"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/internal": "workspace:*"
@@ -26596,7 +26597,7 @@ __metadata:
     "@babel/plugin-proposal-decorators": "npm:7.29.0"
     "@babel/plugin-transform-react-jsx": "npm:7.28.6"
     "@babel/plugin-transform-runtime": "npm:7.29.0"
-    "@babel/preset-env": "npm:7.29.0"
+    "@babel/preset-env": "npm:7.29.2"
     "@babel/preset-react": "npm:7.28.5"
     "@babel/preset-typescript": "npm:7.28.5"
     "@npmcli/arborist": "npm:9.4.1"

@@ -63,7 +63,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
         path.join(
           rootFwPath,
           '__fixtures__',
-          'test-project',
+          'kitchen-sink-project',
           'web',
           'src',
           'App.tsx',
