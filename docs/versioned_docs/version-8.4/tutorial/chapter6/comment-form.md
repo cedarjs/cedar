@@ -1049,13 +1049,8 @@ export default BlogLayout
 </TabItem>
 <TabItem value="ts" label="TypeScript">
 
-<<<<<<< HEAD
 ```tsx title="web/src/layouts/BlogLayout/BlogLayout.tsx"
-import { Link, routes } from '@redmix/router'
-=======
-```jsx title="web/src/layouts/BlogLayout/BlogLayout.tsx"
 import { Link, routes } from '@cedarjs/router'
->>>>>>> 5918737c3 (Rename to CedarJS)
 // highlight-next-line
 import { Toaster } from '@cedarjs/web/toast'
 
