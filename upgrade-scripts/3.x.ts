@@ -41,8 +41,8 @@ if (fs.existsSync(prismaSchemaPath) && fs.existsSync(prismaConfigPath)) {
     .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
     .join('\n')
   const hasDatasourceUrl =
-    uncommentedConfig.includes('datasource') &&
-    uncommentedConfig.includes('url')
+    uncommentedConfig.includes('datasource: {') &&
+    uncommentedConfig.includes('url: ')
 
   if (hasOldProvider && !hasDatasourceUrl) {
     console.log(
