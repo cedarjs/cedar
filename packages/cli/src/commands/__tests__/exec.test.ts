@@ -8,7 +8,7 @@ import { runScriptFunction } from '../../lib/exec.js'
 import '../../lib/mockTelemetry.js'
 import { handler } from '../execHandler.js'
 
-vi.mock('@redwoodjs/babel-config', () => ({
+vi.mock('@cedarjs/babel-config', () => ({
   getWebSideDefaultBabelConfig: () => ({
     presets: [],
     plugins: [],
@@ -16,11 +16,11 @@ vi.mock('@redwoodjs/babel-config', () => ({
   registerApiSideBabelHook: () => {},
 }))
 
-vi.mock('@redwoodjs/project-config', () => ({
+vi.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({
     api: { base: '', src: '' },
     web: { base: '', src: '' },
-    scripts: path.join('redwood-app', 'scripts'),
+    scripts: path.join('cedar-app', 'scripts'),
   }),
   getConfig: () => ({}),
   resolveFile: (path: string) => path,
@@ -58,12 +58,12 @@ afterEach(() => {
 describe('yarn cedar exec', () => {
   it('passes args on to the script', async () => {
     vol.fromJSON({
-      'redwood.toml': '# redwood.toml',
-      [path.join('redwood-app', 'scripts', 'normalScript.ts')]: '// script',
+      'cedar.toml': '# cedar.toml',
+      [path.join('cedar-app', 'scripts', 'normalScript.ts')]: '// script',
     })
 
     // Running:
-    // `yarn rw exec normalScript positional1 --no-prisma positional2 --arg1=foo --arg2 bar`
+    // `yarn cedar exec normalScript positional1 --no-prisma positional2 --arg1=foo --arg2 bar`
     const args = {
       _: ['exec', 'positional1', 'positional2'],
       prisma: false,
@@ -73,7 +73,7 @@ describe('yarn cedar exec', () => {
       l: false,
       silent: false,
       s: false,
-      $0: 'rw',
+      $0: 'cedar',
       name: 'normalScript',
     }
     await handler(args)
@@ -86,7 +86,7 @@ describe('yarn cedar exec', () => {
         },
       },
       functionName: 'default',
-      path: path.join('redwood-app', 'scripts', 'normalScript.ts'),
+      path: path.join('cedar-app', 'scripts', 'normalScript.ts'),
     })
   })
 })
