@@ -27,3 +27,31 @@ if (fs.existsSync(apiGeneratorTemplatesPath)) {
       'information.',
   )
 }
+
+const prismaSchemaPath = path.join(
+  getPaths().api.base,
+  'prisma',
+  'schema.prisma',
+)
+const prismaConfigPath = path.join(getPaths().api.base, 'prisma.config.js')
+
+if (fs.existsSync(prismaSchemaPath) && fs.existsSync(prismaConfigPath)) {
+  const schema = fs.readFileSync(prismaSchemaPath, 'utf-8')
+  const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
+
+  const hasOldProvider = /provider\s*=\s*"prisma-client-js"/.test(schema)
+  const uncommentedConfig = prismaConfig
+    .split('\n')
+    .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
+    .join('\n')
+  const hasDatasourceUrl =
+    uncommentedConfig.includes('datasource') &&
+    uncommentedConfig.includes('url')
+
+  if (hasOldProvider && !hasDatasourceUrl) {
+    console.log(
+      "Don't forget to run the Prisma v7 codemod after completing the upgrade",
+    )
+    console.log('  `yarn dlx @cedarjs/codemods prismaV7`')
+  }
+}
