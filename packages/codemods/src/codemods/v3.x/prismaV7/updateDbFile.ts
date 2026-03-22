@@ -45,18 +45,56 @@ export default function transform(
   // -------------------------------------------------------------------------
 
   /**
+   * Move any leading comments from `fromNode` to `toNode`.
+   *
+   * recast attaches file-top comments as `leadingComments` on the first AST
+   * node. When we `insertBefore` that node the new import ends up above the
+   * comments in the output. Stealing them first keeps the comments at the
+   * top of the file.
+   *
+   * `node.comments` is a recast internal not exposed by jscodeshift's types,
+   * hence the `as any` casts.
+   */
+  function stealLeadingComments(fromNode: any, toNode: any) {
+    const fromComments: { leading: boolean }[] | undefined = fromNode.comments
+
+    if (!fromComments || fromComments.length === 0) {
+      return
+    }
+
+    const leading = fromComments.filter((c) => c.leading)
+
+    if (leading.length === 0) {
+      return
+    }
+
+    toNode.comments = [...leading, ...(toNode.comments ?? [])]
+    fromNode.comments = fromComments.filter((c) => !c.leading)
+  }
+
+  /**
    * Insert `importDecl` immediately before the PrismaClient import declaration.
    * Falls back to inserting before the first import in the file if the client
    * import cannot be found.
+   *
+   * Pass `takeLeadingComments: true` for the *first* import you insert so that
+   * any file-top comment block (e.g. `// See prisma docs`) is moved from the
+   * client import onto the new import and therefore stays at the top of the
+   * file.
    */
   function insertAdapterImport(
     importDecl: ReturnType<typeof j.importDeclaration>,
+    { takeLeadingComments = false }: { takeLeadingComments?: boolean } = {},
   ) {
     const clientImport = root.find(j.ImportDeclaration, {
       source: { value: NEW_CLIENT_PATH },
     })
 
     if (clientImport.length > 0) {
+      if (takeLeadingComments) {
+        stealLeadingComments(clientImport.get().node, importDecl)
+      }
+
       clientImport.insertBefore(importDecl)
     } else {
       root.find(j.ImportDeclaration).at(0).insertBefore(importDecl)
@@ -183,6 +221,7 @@ export default function transform(
           ],
           j.stringLiteral('@prisma/adapter-pg'),
         ),
+        { takeLeadingComments: true },
       )
     }
 
@@ -254,15 +293,13 @@ export default function transform(
     }).length > 0
 
   if (!hasPathImport) {
-    root
-      .find(j.ImportDeclaration)
-      .at(0)
-      .insertBefore(
-        j.importDeclaration(
-          [j.importDefaultSpecifier(j.identifier('path'))],
-          j.stringLiteral('node:path'),
-        ),
-      )
+    insertAdapterImport(
+      j.importDeclaration(
+        [j.importDefaultSpecifier(j.identifier('path'))],
+        j.stringLiteral('node:path'),
+      ),
+      { takeLeadingComments: true },
+    )
   }
 
   if (!hasAdapterImport) {
