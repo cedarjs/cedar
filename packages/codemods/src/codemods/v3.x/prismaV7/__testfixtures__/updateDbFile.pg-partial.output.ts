@@ -1,6 +1,7 @@
-import { PrismaPg } from '@prisma/adapter-pg'
 // See https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/constructor
 // for options.
+
+import { PrismaPg } from '@prisma/adapter-pg'
 
 import { PrismaClient } from 'api/db/generated/prisma/client.mts'
 
