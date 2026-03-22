@@ -393,15 +393,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@auth0/auth0-spa-js@npm:2.17.1":
-  version: 2.17.1
-  resolution: "@auth0/auth0-spa-js@npm:2.17.1"
+"@auth0/auth0-spa-js@npm:2.18.0":
+  version: 2.18.0
+  resolution: "@auth0/auth0-spa-js@npm:2.18.0"
   dependencies:
     "@auth0/auth0-auth-js": "npm:1.5.0"
     browser-tabs-lock: "npm:1.3.0"
     dpop: "npm:2.1.1"
     es-cookie: "npm:1.3.2"
-  checksum: 10c0/1fbeecf95717d1ea195ce77db9aaecc76e1dc5feb25d5d576eec6808ac289ae93c31ccb87b3226d03ea3b33185b8f5cd49b101e2e2cbe7a6b98db53b9e1bce96
+  checksum: 10c0/f2f8e87a375dfee255fcdb8420b102db2d47f1499bab2c8eeba3762a211e96d976ac4c71c1b5e3a1e338b222e2dab9c3d0c996f7a8fb178db8009ad1343aed7a
   languageName: node
   linkType: hard
 
@@ -2287,7 +2287,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-web@workspace:packages/auth-providers/auth0/web"
   dependencies:
-    "@auth0/auth0-spa-js": "npm:2.17.1"
+    "@auth0/auth0-spa-js": "npm:2.18.0"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/react": "npm:^18.2.55"
@@ -2298,7 +2298,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@auth0/auth0-spa-js": 2.17.1
+    "@auth0/auth0-spa-js": 2.18.0
   languageName: unknown
   linkType: soft
 
