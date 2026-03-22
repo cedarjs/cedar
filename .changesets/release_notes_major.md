@@ -240,7 +240,6 @@ from `schema.prisma` and print a warning reminding you to update
 - [ ] Write upgrade script that warns about `directUrl`
 - [ ] Warn about custom `prisma.config.cjs` path (from cedar.toml) for sqlite
       apps
-<<<<<<< HEAD
 
 # Breaking Changes
 
@@ -263,5 +262,3 @@ recommended for production use and are not used anywhere in Cedar itself.
 
 If you need polyfills for any feature it's now up to you to configure it
 yourself in your app.
-=======
->>>>>>> 4c692b53ec (feat(codemods): Prisma v7 (#1395))

@@ -24,32 +24,10 @@ export function renderRscToStream(input: RenderInput): Promise<ReadableStream> {
 
 async function loadServerFile(filePath: string) {
   console.log('rscRenderer.ts loadServerFile filePath', filePath)
-<<<<<<< HEAD
-=======
-
-  if (globalThis.__cedarjs__vite_rsc_runtime) {
-    const serverMod =
-      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(filePath)
-    return serverMod.default ? serverMod.default : serverMod
-  }
-
->>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
   return import(`file://${filePath}`)
 }
 
 const getRoutesComponent: any = async () => {
-<<<<<<< HEAD
-=======
-  if (globalThis.__cedarjs__vite_rsc_runtime) {
-    const routesPath = getPaths().web.routes
-
-    const routesMod =
-      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(routesPath)
-
-    return routesMod.default
-  }
-
->>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
   const serverEntries = await getEntriesFromDist()
   console.log('rscRenderer.ts serverEntries', serverEntries)
 
@@ -110,13 +88,7 @@ function getBundlerConfig() {
         // name Counter
 
         const filePathSlash = filePath.replaceAll('\\', '/')
-<<<<<<< HEAD
         const id = absoluteClientEntries[filePathSlash]
-=======
-        const id = globalThis.__cedarjs__vite_rsc_runtime
-          ? filePath
-          : absoluteClientEntries[filePathSlash]
->>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
 
         console.log('absoluteClientEntries', absoluteClientEntries)
         console.log('filePath', filePathSlash)

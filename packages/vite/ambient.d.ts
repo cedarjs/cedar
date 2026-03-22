@@ -23,18 +23,6 @@ declare global {
   }
 
   var __REDWOOD__PRERENDER_PAGES: any
-<<<<<<< HEAD
-=======
-  var __cedarjs__vite_ssr_runtime: ViteRuntime | undefined
-  var __cedarjs__vite_rsc_runtime: ViteRuntime | undefined
-<<<<<<< HEAD
-  var __rwjs__client_references: Set<string> | undefined
-  var __rwjs__server_references: Set<string> | undefined
->>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
-=======
-  var __cedarjs__client_references: Set<string> | undefined
-  var __cedarjs__server_references: Set<string> | undefined
->>>>>>> 7c725d87a9 (chore: internal renaming to __cedarjs__ (#1390))
 
   var __REDWOOD__HELMET_CONTEXT: { helmet?: HelmetServerState }
 

@@ -102,27 +102,6 @@ function registerFwShims() {
 
   globalThis.__webpack_chunk_load__ ||= async (id: string) => {
     console.log('registerFwShims chunk load id', id)
-<<<<<<< HEAD
-=======
-
-    if (globalThis.__cedarjs__vite_ssr_runtime) {
-      return globalThis.__cedarjs__vite_ssr_runtime
-        ?.executeUrl(id)
-        .then((mod) => {
-          console.log('registerFwShims chunk load mod', mod)
-
-          // checking m.default to better support CJS. If it's an object, it's
-          // likely a CJS module. Otherwise it's probably an ES module with a
-          // default export
-          if (mod.default && typeof mod.default === 'object') {
-            return globalThis.__rw_module_cache__.set(id, mod.default)
-          }
-
-          return globalThis.__rw_module_cache__.set(id, mod)
-        })
-    }
-
->>>>>>> f47b2d976b (chore(rsc): rwjs -> cedarjs (#1378))
     return import(id).then((mod) => {
       console.log('registerFwShims chunk load mod', mod)
 

@@ -102,11 +102,7 @@ export async function reactRenderToStreamResponse(
   const rscEnabled = getConfig().experimental?.rsc?.enabled
 
   const { createElement }: React = rscEnabled
-<<<<<<< HEAD
-    ? await importModule('__rwjs__react')
-=======
-    ? await importModule('__cedarjs__react', !!viteDevServer)
->>>>>>> 7c725d87a9 (chore: internal renaming to __cedarjs__ (#1390))
+    ? await importModule('__cedarjs__react')
     : await import('react')
 
   const {
@@ -114,11 +110,7 @@ export async function reactRenderToStreamResponse(
     ServerHtmlProvider,
     ServerInjectedHtml,
   }: ServerInjectType = rscEnabled
-<<<<<<< HEAD
-    ? await importModule('__rwjs__server_inject')
-=======
-    ? await importModule('__cedarjs__server_inject', !!viteDevServer)
->>>>>>> 7c725d87a9 (chore: internal renaming to __cedarjs__ (#1390))
+    ? await importModule('__cedarjs__server_inject')
     : await import('@cedarjs/web/serverInject')
   const { renderToString }: RDServerType = rscEnabled
     ? await importModule('rd-server')
@@ -149,17 +141,10 @@ export async function reactRenderToStreamResponse(
   const timeoutTransform = createTimeoutTransform(timeoutHandle)
 
   const { ServerAuthProvider }: ServerAuthProviderType = rscEnabled
-<<<<<<< HEAD
-    ? await importModule('__rwjs__server_auth_provider')
+    ? await importModule('__cedarjs__server_auth_provider')
     : await import('@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js')
   const { LocationProvider }: LocationType = rscEnabled
-    ? await importModule('__rwjs__location')
-=======
-    ? await importModule('__cedarjs__server_auth_provider', !!viteDevServer)
-    : await import('@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js')
-  const { LocationProvider }: LocationType = rscEnabled
-    ? await importModule('__cedarjs__location', !!viteDevServer)
->>>>>>> 7c725d87a9 (chore: internal renaming to __cedarjs__ (#1390))
+    ? await importModule('__cedarjs__location')
     : await import('@cedarjs/router/location')
 
   const renderRoot = (url: URL) => {
@@ -309,86 +294,35 @@ function applyStreamTransforms(
 export async function importModule(
   mod:
     | 'rd-server'
-<<<<<<< HEAD
-    | '__rwjs__react'
-    | '__rwjs__location'
-    | '__rwjs__server_auth_provider'
-    | '__rwjs__server_inject',
-) {
-  const distSsr = getPaths().web.distSsr
-  const rdServerPath = makeFilePath(path.join(distSsr, 'rd-server.mjs'))
-  const reactPath = makeFilePath(path.join(distSsr, '__rwjs__react.mjs'))
-  const locationPath = makeFilePath(path.join(distSsr, '__rwjs__location.mjs'))
-  const ServerAuthProviderPath = makeFilePath(
-    path.join(distSsr, '__rwjs__server_auth_provider.mjs'),
-  )
-  const ServerInjectPath = makeFilePath(
-    path.join(distSsr, '__rwjs__server_inject.mjs'),
-  )
-
-  if (mod === 'rd-server') {
-    return (await import(rdServerPath)).default
-  } else if (mod === '__rwjs__react') {
-    return (await import(reactPath)).default
-  } else if (mod === '__rwjs__location') {
-    return await import(locationPath)
-  } else if (mod === '__rwjs__server_auth_provider') {
-    return await import(ServerAuthProviderPath)
-  } else if (mod === '__rwjs__server_inject') {
-    // Don't need default because rwjs/web is now ESM
-    return await import(ServerInjectPath)
-=======
     | '__cedarjs__react'
     | '__cedarjs__location'
     | '__cedarjs__server_auth_provider'
     | '__cedarjs__server_inject',
-  isDev?: boolean,
 ) {
-  if (isDev) {
-    if (mod === 'rd-server') {
-      const loadedMod = await import('react-dom/server.edge')
-      return loadedMod.default
-    } else if (mod === '__cedarjs__react') {
-      const loadedMod = await import('react')
-      return loadedMod.default
-    } else if (mod === '__cedarjs__location') {
-      const loadedMod = await import('@cedarjs/router/location')
-      return loadedMod
-    } else if (mod === '__cedarjs__server_auth_provider') {
-      const loadedMod =
-        await import('@cedarjs/auth/dist/AuthProvider/ServerAuthProvider.js')
-      return loadedMod
-    } else if (mod === '__cedarjs__server_inject') {
-      const loadedMod = await import('@cedarjs/web/serverInject')
-      return loadedMod
-    }
-  } else {
-    const distSsr = getPaths().web.distSsr
-    const rdServerPath = makeFilePath(path.join(distSsr, 'rd-server.mjs'))
-    const reactPath = makeFilePath(path.join(distSsr, '__cedarjs__react.mjs'))
-    const locationPath = makeFilePath(
-      path.join(distSsr, '__cedarjs__location.mjs'),
-    )
-    const serverAuthProviderPath = makeFilePath(
-      path.join(distSsr, '__cedarjs__server_auth_provider.mjs'),
-    )
-    const serverInjectPath = makeFilePath(
-      path.join(distSsr, '__cedarjs__server_inject.mjs'),
-    )
+  const distSsr = getPaths().web.distSsr
+  const rdServerPath = makeFilePath(path.join(distSsr, 'rd-server.mjs'))
+  const reactPath = makeFilePath(path.join(distSsr, '__cedarjs__react.mjs'))
+  const locationPath = makeFilePath(
+    path.join(distSsr, '__cedarjs__location.mjs'),
+  )
+  const ServerAuthProviderPath = makeFilePath(
+    path.join(distSsr, '__cedarjs__server_auth_provider.mjs'),
+  )
+  const ServerInjectPath = makeFilePath(
+    path.join(distSsr, '__cedarjs__server_inject.mjs'),
+  )
 
-    if (mod === 'rd-server') {
-      return (await import(rdServerPath)).default
-    } else if (mod === '__cedarjs__react') {
-      return (await import(reactPath)).default
-    } else if (mod === '__cedarjs__location') {
-      return await import(locationPath)
-    } else if (mod === '__cedarjs__server_auth_provider') {
-      return await import(serverAuthProviderPath)
-    } else if (mod === '__cedarjs__server_inject') {
-      // Don't need default because rwjs/web is now ESM
-      return await import(serverInjectPath)
-    }
->>>>>>> 7c725d87a9 (chore: internal renaming to __cedarjs__ (#1390))
+  if (mod === 'rd-server') {
+    return (await import(rdServerPath)).default
+  } else if (mod === '__cedarjs__react') {
+    return (await import(reactPath)).default
+  } else if (mod === '__cedarjs__location') {
+    return await import(locationPath)
+  } else if (mod === '__cedarjs__server_auth_provider') {
+    return await import(ServerAuthProviderPath)
+  } else if (mod === '__cedarjs__server_inject') {
+    // Don't need default because rwjs/web is now ESM
+    return await import(ServerInjectPath)
   }
 
   throw new Error('Unknown module ' + mod)
