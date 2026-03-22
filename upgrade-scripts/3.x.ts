@@ -28,12 +28,8 @@ if (fs.existsSync(apiGeneratorTemplatesPath)) {
   )
 }
 
-const prismaSchemaPath = path.join(
-  getPaths().api.base,
-  'prisma',
-  'schema.prisma',
-)
-const prismaConfigPath = path.join(getPaths().api.base, 'prisma.config.js')
+const prismaSchemaPath = path.join(getPaths().api.base, 'db', 'schema.prisma')
+const prismaConfigPath = getPaths().api.prismaConfig
 
 if (fs.existsSync(prismaSchemaPath) && fs.existsSync(prismaConfigPath)) {
   const schema = fs.readFileSync(prismaSchemaPath, 'utf-8')
