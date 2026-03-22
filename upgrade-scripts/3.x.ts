@@ -48,6 +48,6 @@ if (fs.existsSync(prismaSchemaPath) && fs.existsSync(prismaConfigPath)) {
     console.log(
       "Don't forget to run the Prisma v7 codemod after completing the upgrade",
     )
-    console.log('  `yarn dlx @cedarjs/codemods prismaV7`')
+    console.log('  `yarn dlx @cedarjs/codemods prisma-v7`')
   }
 }
