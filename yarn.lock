@@ -3884,6 +3884,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chevrotain/cst-dts-gen@npm:11.2.0":
+  version: 11.2.0
+  resolution: "@chevrotain/cst-dts-gen@npm:11.2.0"
+  dependencies:
+    "@chevrotain/gast": "npm:11.2.0"
+    "@chevrotain/types": "npm:11.2.0"
+    lodash-es: "npm:4.17.23"
+  checksum: 10c0/a13238d0e05d9f8e057790f8587b2dc5df36ab60b6612f05207e3cbf8f3bbf966066abbf92bb4f9b7793bfa87e8710a00080b36cdfaaf2388a1d44f02e171632
+  languageName: node
+  linkType: hard
+
 "@chevrotain/gast@npm:10.5.0":
   version: 10.5.0
   resolution: "@chevrotain/gast@npm:10.5.0"
@@ -3894,6 +3905,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chevrotain/gast@npm:11.2.0":
+  version: 11.2.0
+  resolution: "@chevrotain/gast@npm:11.2.0"
+  dependencies:
+    "@chevrotain/types": "npm:11.2.0"
+    lodash-es: "npm:4.17.23"
+  checksum: 10c0/15b19041d053f6bebaf2b0e010fb42c423fad7752d68ac8c36ba20816fb306f4918f3beba712b32bed65944d1bc161db1f8726f36f02d23171414a047977156e
+  languageName: node
+  linkType: hard
+
+"@chevrotain/regexp-to-ast@npm:11.2.0":
+  version: 11.2.0
+  resolution: "@chevrotain/regexp-to-ast@npm:11.2.0"
+  checksum: 10c0/eca45ea6d975afcaeec5c5a6645dfec34a481a1259458d08dfb22736cd0d11080db7fc82506895bf22f28413badaa4bc24a8a97e33f6904bc1a44e1d47405a13
+  languageName: node
+  linkType: hard
+
 "@chevrotain/types@npm:10.5.0":
   version: 10.5.0
   resolution: "@chevrotain/types@npm:10.5.0"
@@ -3901,10 +3929,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chevrotain/types@npm:11.2.0":
+  version: 11.2.0
+  resolution: "@chevrotain/types@npm:11.2.0"
+  checksum: 10c0/6f69a220b81e0a5e2a3ae458364eada3aaa1cfc015506f2a29d455912b1107fef5e70600ac78189a5394e9d5f5089b0523896cc8a87742697e97379ece109ec5
+  languageName: node
+  linkType: hard
+
 "@chevrotain/utils@npm:10.5.0":
   version: 10.5.0
   resolution: "@chevrotain/utils@npm:10.5.0"
   checksum: 10c0/a7d99b8e9ecc8ceb0d46b5f194710768055c2b932aca316a5f1e77d8c1a6ecb8f4c5b39e4bac4dcd7189dfa5025dcdc112903511037b03a4ea88d216b68b4708
+  languageName: node
+  linkType: hard
+
+"@chevrotain/utils@npm:11.2.0":
+  version: 11.2.0
+  resolution: "@chevrotain/utils@npm:11.2.0"
+  checksum: 10c0/6811c8fa0a517993512674ce69db1a6b26dcd82db9ba16a93005d2d4b015957532238d6781cba785d37f2f845837fd99f9ef16e1e257b7580f0f59f4f632de40
   languageName: node
   linkType: hard
 
@@ -6651,6 +6693,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hono/node-server@npm:1.19.11":
+  version: 1.19.11
+  resolution: "@hono/node-server@npm:1.19.11"
+  peerDependencies:
+    hono: ^4
+  checksum: 10c0/34b1c29c249c5cd95469980b5c359370f3cbab49b3603f324a4afbf895d68b8d5485c71f1887769eabeb3499276c49e7102084234b4feb3853edb748aaa85f50
+  languageName: node
+  linkType: hard
+
 "@hono/node-server@npm:1.19.9":
   version: 1.19.9
   resolution: "@hono/node-server@npm:1.19.9"
@@ -7631,6 +7682,16 @@ __metadata:
     chevrotain: "npm:^10.5.0"
     lilconfig: "npm:^2.1.0"
   checksum: 10c0/9d50a1fb4700f8894f548cde88a8b6eca47b4a1f1fe7d2cef4525eb53d14f6416109c511f0540744744c5915b663b87baa6669917fa9a69b2dbee51c7a0b1a4e
+  languageName: node
+  linkType: hard
+
+"@mrleebo/prisma-ast@npm:0.15.0":
+  version: 0.15.0
+  resolution: "@mrleebo/prisma-ast@npm:0.15.0"
+  dependencies:
+    chevrotain: "npm:^11.1.1"
+    lilconfig: "npm:^2.1.0"
+  checksum: 10c0/3b0c460889ac610d8c3768ee67979d62d131d4c3a626484c5dd15e38180648ea8309324eee8830050cdc9d9119775622e2850cbbe2ec911e69cb356af223259b
   languageName: node
   linkType: hard
 
@@ -8864,20 +8925,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/dev@npm:0.22.0":
-  version: 0.22.0
-  resolution: "@prisma/dev@npm:0.22.0"
+"@prisma/dev@npm:0.22.2":
+  version: 0.22.2
+  resolution: "@prisma/dev@npm:0.22.2"
   dependencies:
     "@electric-sql/pglite": "npm:0.3.16"
     "@electric-sql/pglite-socket": "npm:0.0.22"
     "@electric-sql/pglite-tools": "npm:0.2.21"
-    "@hono/node-server": "npm:1.19.9"
-    "@mrleebo/prisma-ast": "npm:0.13.1"
+    "@hono/node-server": "npm:1.19.11"
+    "@mrleebo/prisma-ast": "npm:0.15.0"
     "@prisma/get-platform": "npm:7.2.0"
     "@prisma/query-plan-executor": "npm:7.2.0"
     foreground-child: "npm:3.3.1"
     get-port-please: "npm:3.2.0"
-    hono: "npm:4.11.4"
+    hono: "npm:^4.12.8"
     http-status-codes: "npm:2.3.0"
     pathe: "npm:2.0.3"
     proper-lockfile: "npm:4.1.2"
@@ -8885,7 +8946,7 @@ __metadata:
     std-env: "npm:3.10.0"
     valibot: "npm:1.2.0"
     zeptomatch: "npm:2.1.0"
-  checksum: 10c0/14df732648f56b662e76ce8e01d6169223a3a01b1e626b79cfa6820b46a852e5976dcdff4b5179b40e899478352a8266d024377db99336690e91cb84658f2899
+  checksum: 10c0/5a346ba7482f642d47a373a9f8e2615ad69ae707144921d4ed12305a795bf87110d7c7aad6cb15964d81490e3316e76b81fc845f0d3cc167d5adad46b78a42f1
   languageName: node
   linkType: hard
 
@@ -13640,6 +13701,20 @@ __metadata:
     lodash: "npm:4.17.21"
     regexp-to-ast: "npm:0.5.0"
   checksum: 10c0/a67a8b9f326231e6e4bf42e0c82d5f6e0b69bcfe4266e406d644ee58d22f7cba63deb034973813d0f5761026328cd4928250136cde940e3ef238a1f020c7307a
+  languageName: node
+  linkType: hard
+
+"chevrotain@npm:^11.1.1":
+  version: 11.2.0
+  resolution: "chevrotain@npm:11.2.0"
+  dependencies:
+    "@chevrotain/cst-dts-gen": "npm:11.2.0"
+    "@chevrotain/gast": "npm:11.2.0"
+    "@chevrotain/regexp-to-ast": "npm:11.2.0"
+    "@chevrotain/types": "npm:11.2.0"
+    "@chevrotain/utils": "npm:11.2.0"
+    lodash-es: "npm:4.17.23"
+  checksum: 10c0/247cb0061d35ba18e3ac87a021124882907f45f950255bb51262af46b8bb808233b292c2788455f771f2867d6a4309f16a08cfc497fbb3d164e1289486d10899
   languageName: node
   linkType: hard
 
@@ -18619,6 +18694,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hono@npm:^4.12.8":
+  version: 4.12.8
+  resolution: "hono@npm:4.12.8"
+  checksum: 10c0/10b8a5012e362824d97d0f11895da6e7ba3195320399684f07b3743801986647aeb8395f189a8fefbe8d4567f943c23dc0ba73834ce9a848640a5d37d50f29b6
+  languageName: node
+  linkType: hard
+
 "hosted-git-info@npm:^2.1.4":
   version: 2.8.9
   resolution: "hosted-git-info@npm:2.8.9"
@@ -21458,6 +21540,13 @@ __metadata:
   dependencies:
     p-locate: "npm:^5.0.0"
   checksum: 10c0/d3972ab70dfe58ce620e64265f90162d247e87159b6126b01314dd67be43d50e96a50b517bce2d9452a79409c7614054c277b5232377de50416564a77ac7aad3
+  languageName: node
+  linkType: hard
+
+"lodash-es@npm:4.17.23":
+  version: 4.17.23
+  resolution: "lodash-es@npm:4.17.23"
+  checksum: 10c0/3150fb6660c14c7a6b5f23bd11597d884b140c0e862a17fdb415aaa5ef7741523182904a6b7929f04e5f60a11edb5a79499eb448734381c99ffb3c4734beeddd
   languageName: node
   linkType: hard
 
@@ -26602,7 +26691,7 @@ __metadata:
     "@babel/preset-typescript": "npm:7.28.5"
     "@npmcli/arborist": "npm:9.4.2"
     "@playwright/test": "npm:1.58.2"
-    "@prisma/dev": "npm:0.22.0"
+    "@prisma/dev": "npm:0.22.2"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.6.1"
