@@ -40,11 +40,92 @@ export default function transform(
     return file.source
   }
 
+  // -------------------------------------------------------------------------
+  // Helpers
+  // -------------------------------------------------------------------------
+
+  /**
+   * Insert `importDecl` immediately before the PrismaClient import declaration.
+   * Falls back to inserting before the first import in the file if the client
+   * import cannot be found.
+   */
+  function insertAdapterImport(
+    importDecl: ReturnType<typeof j.importDeclaration>,
+  ) {
+    const clientImport = root.find(j.ImportDeclaration, {
+      source: { value: NEW_CLIENT_PATH },
+    })
+
+    if (clientImport.length > 0) {
+      clientImport.insertBefore(importDecl)
+    } else {
+      root.find(j.ImportDeclaration).at(0).insertBefore(importDecl)
+    }
+  }
+
+  /**
+   * Ensure every `new PrismaClient(...)` call in the file receives an
+   * `{ adapter }` shorthand property. Handles both the no-args case and the
+   * existing-object-arg case.
+   */
+  function addAdapterToPrismaClient() {
+    root
+      .find(j.NewExpression, {
+        callee: { type: 'Identifier', name: 'PrismaClient' },
+      })
+      .forEach((nodePath) => {
+        const args = nodePath.node.arguments
+
+        if (args.length === 0) {
+          nodePath.node.arguments = [
+            j.objectExpression([
+              Object.assign(
+                j.objectProperty(
+                  j.identifier('adapter'),
+                  j.identifier('adapter'),
+                ),
+                { shorthand: true },
+              ),
+            ]),
+          ]
+          return
+        }
+
+        const firstArg = args[0]
+
+        if (firstArg.type !== 'ObjectExpression') {
+          return
+        }
+
+        const hasAdapterProp = firstArg.properties.some(
+          (prop) =>
+            prop.type === 'ObjectProperty' &&
+            prop.key.type === 'Identifier' &&
+            'name' in prop.key &&
+            prop.key.name === 'adapter',
+        )
+
+        if (!hasAdapterProp) {
+          firstArg.properties.push(
+            Object.assign(
+              j.objectProperty(
+                j.identifier('adapter'),
+                j.identifier('adapter'),
+              ),
+              { shorthand: true },
+            ),
+          )
+        }
+      })
+  }
+
+  // -------------------------------------------------------------------------
+
   let didTransform = false
 
   // -------------------------------------------------------------------------
   // Step 1: Rewrite `import { PrismaClient } from '@prisma/client'`
-  //         to     `import { PrismaClient } from 'api/db/generated/prisma/client.mts'`
+  //         to      `import { PrismaClient } from 'api/db/generated/prisma/client.mts'`
   // -------------------------------------------------------------------------
   root
     .find(j.ImportDeclaration, { source: { value: OLD_PRISMA_CLIENT } })
@@ -55,7 +136,7 @@ export default function transform(
 
   // -------------------------------------------------------------------------
   // Step 2: Rewrite `export * from '@prisma/client'`
-  //         to     `export * from 'api/db/generated/prisma/client.mts'`
+  //         to      `export * from 'api/db/generated/prisma/client.mts'`
   //         Also handle `export * from 'src/lib/db'` (set by the prep codemod)
   // -------------------------------------------------------------------------
   root
@@ -92,16 +173,17 @@ export default function transform(
       }).length > 0
 
     if (!hasAdapterImport) {
-      const clientImport = root.find(j.ImportDeclaration, {
-        source: { value: NEW_CLIENT_PATH },
-      })
-
-      const adapterImport = j.importDeclaration(
-        [j.importSpecifier(j.identifier('PrismaPg'), j.identifier('PrismaPg'))],
-        j.stringLiteral('@prisma/adapter-pg'),
+      insertAdapterImport(
+        j.importDeclaration(
+          [
+            j.importSpecifier(
+              j.identifier('PrismaPg'),
+              j.identifier('PrismaPg'),
+            ),
+          ],
+          j.stringLiteral('@prisma/adapter-pg'),
+        ),
       )
-
-      clientImport.insertBefore(adapterImport)
     }
 
     const hasAdapter =
@@ -109,14 +191,12 @@ export default function transform(
         id: { type: 'Identifier', name: 'adapter' },
       }).length > 0
 
-    const prismaClientNewExpr = root.find(j.NewExpression, {
-      callee: { type: 'Identifier', name: 'PrismaClient' },
-    })
-
-    if (prismaClientNewExpr.length > 0 && !hasAdapter) {
-      const prismaClientDeclaration = prismaClientNewExpr.closest(
-        j.VariableDeclaration,
-      )
+    if (!hasAdapter) {
+      const prismaClientDeclaration = root
+        .find(j.NewExpression, {
+          callee: { type: 'Identifier', name: 'PrismaClient' },
+        })
+        .closest(j.VariableDeclaration)
 
       // const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
       const adapterDecl = j.variableDeclaration('const', [
@@ -142,54 +222,7 @@ export default function transform(
       prismaClientDeclaration.insertBefore(adapterDecl)
     }
 
-    // Add `adapter` property to new PrismaClient({...})
-    root
-      .find(j.NewExpression, {
-        callee: { type: 'Identifier', name: 'PrismaClient' },
-      })
-      .forEach((nodePath) => {
-        const args = nodePath.node.arguments
-
-        if (args.length === 0) {
-          nodePath.node.arguments = [
-            j.objectExpression([
-              Object.assign(
-                j.objectProperty(
-                  j.identifier('adapter'),
-                  j.identifier('adapter'),
-                ),
-                { shorthand: true },
-              ),
-            ]),
-          ]
-          return
-        }
-
-        const firstArg = args[0]
-
-        if (firstArg.type !== 'ObjectExpression') {
-          return
-        }
-
-        const hasAdapterProp = firstArg.properties.some(
-          (prop) =>
-            prop.type === 'ObjectProperty' &&
-            prop.key.type === 'Identifier' &&
-            (prop.key as any).name === 'adapter',
-        )
-
-        if (!hasAdapterProp) {
-          firstArg.properties.push(
-            Object.assign(
-              j.objectProperty(
-                j.identifier('adapter'),
-                j.identifier('adapter'),
-              ),
-              { shorthand: true },
-            ),
-          )
-        }
-      })
+    addAdapterToPrismaClient()
 
     return root.toSource({ quote: 'single' })
   }
@@ -220,34 +253,30 @@ export default function transform(
       source: { value: '@cedarjs/project-config' },
     }).length > 0
 
-  const allImports = root.find(j.ImportDeclaration)
-  const firstImport = allImports.at(0)
-
   if (!hasPathImport) {
-    const pathImport = j.importDeclaration(
-      [j.importDefaultSpecifier(j.identifier('path'))],
-      j.stringLiteral('node:path'),
-    )
-    firstImport.insertBefore(pathImport)
+    root
+      .find(j.ImportDeclaration)
+      .at(0)
+      .insertBefore(
+        j.importDeclaration(
+          [j.importDefaultSpecifier(j.identifier('path'))],
+          j.stringLiteral('node:path'),
+        ),
+      )
   }
 
-  // Find the new client import (which we just rewrote) and insert adapter
-  // import before it
-  const clientImport = root.find(j.ImportDeclaration, {
-    source: { value: NEW_CLIENT_PATH },
-  })
-
   if (!hasAdapterImport) {
-    const adapterImport = j.importDeclaration(
-      [
-        j.importSpecifier(
-          j.identifier('PrismaBetterSqlite3'),
-          j.identifier('PrismaBetterSqlite3'),
-        ),
-      ],
-      j.stringLiteral('@prisma/adapter-better-sqlite3'),
+    insertAdapterImport(
+      j.importDeclaration(
+        [
+          j.importSpecifier(
+            j.identifier('PrismaBetterSqlite3'),
+            j.identifier('PrismaBetterSqlite3'),
+          ),
+        ],
+        j.stringLiteral('@prisma/adapter-better-sqlite3'),
+      ),
     )
-    clientImport.insertBefore(adapterImport)
   }
 
   if (!hasGetPathsImport) {
@@ -260,6 +289,10 @@ export default function transform(
       [j.importSpecifier(j.identifier('getPaths'), j.identifier('getPaths'))],
       j.stringLiteral('@cedarjs/project-config'),
     )
+
+    const clientImport = root.find(j.ImportDeclaration, {
+      source: { value: NEW_CLIENT_PATH },
+    })
 
     if (cedarjsImports.length > 0) {
       cedarjsImports.at(-1).insertAfter(getPathsImport)
@@ -347,52 +380,7 @@ const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
   // -------------------------------------------------------------------------
   // Step 5 (SQLite only): Add `adapter` property to `new PrismaClient({...})`
   // -------------------------------------------------------------------------
-  root
-    .find(j.NewExpression, {
-      callee: { type: 'Identifier', name: 'PrismaClient' },
-    })
-    .forEach((nodePath) => {
-      const args = nodePath.node.arguments
-
-      if (args.length === 0) {
-        // new PrismaClient() → new PrismaClient({ adapter })
-        nodePath.node.arguments = [
-          j.objectExpression([
-            Object.assign(
-              j.objectProperty(
-                j.identifier('adapter'),
-                j.identifier('adapter'),
-              ),
-              { shorthand: true },
-            ),
-          ]),
-        ]
-        return
-      }
-
-      const firstArg = args[0]
-
-      if (firstArg.type !== 'ObjectExpression') {
-        return
-      }
-
-      // Check if adapter property already exists
-      const hasAdapterProp = firstArg.properties.some(
-        (prop) =>
-          prop.type === 'ObjectProperty' &&
-          prop.key.type === 'Identifier' &&
-          (prop.key as any).name === 'adapter',
-      )
-
-      if (!hasAdapterProp) {
-        firstArg.properties.push(
-          Object.assign(
-            j.objectProperty(j.identifier('adapter'), j.identifier('adapter')),
-            { shorthand: true },
-          ),
-        )
-      }
-    })
+  addAdapterToPrismaClient()
 
   return root.toSource({ quote: 'single' })
 }

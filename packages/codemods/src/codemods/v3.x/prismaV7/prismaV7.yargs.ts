@@ -1,6 +1,8 @@
 import path from 'node:path'
 import { styleText } from 'node:util'
 
+import { getPaths } from '@cedarjs/project-config'
+
 import runTransform from '../../../lib/runTransform.js'
 
 import { getPrismaV7Context } from './prismaV7.js'
@@ -23,8 +25,9 @@ function step(label: string, output: string) {
 }
 
 export const handler = async () => {
+  const paths = getPaths()
   const context = await getPrismaV7Context()
-  const { paths, isSqlite, isPostgres, provider, dbFilePath } = context
+  const { isSqlite, isPostgres, provider, dbFilePath } = context
 
   console.log(styleText('bold', '❯ Prisma v7 Migration'))
 
@@ -184,7 +187,7 @@ export const handler = async () => {
     `  ${offset + 1}. Run \`yarn install\` to install new dependencies`,
     `  ${offset + 2}. Run \`yarn cedar prisma generate\` to generate the new Prisma client`,
     `  ${offset + 3}. Run \`yarn cedar prisma migrate dev\` to verify migrations work`,
-    `  ${offset + 4}. Run \`yarn cedar lint --fix\` to fix import ordering issues etc`,
+    `  ${offset + 4}. Run \`yarn cedar lint --fix\` to fix code formatting issues`,
   )
   console.log(styleText('bold', '\n  Next steps:'))
   console.log(nextSteps.join('\n'))
