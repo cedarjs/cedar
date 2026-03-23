@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * Rebuilds the root /test-project folder from the __fixtures__/test-project
- * fixture, with local "file:" resolutions pointing at the built .tgz packages.
+ * Rebuilds the root /local-testing-project folder from the
+ * __fixtures__/test-project fixture, with local "file:" resolutions pointing at
+ * the built .tgz packages.
  *
  * Steps:
  *  1. yarn build:clean && yarn build:pack
  *  2. yarn rebuild-test-project-fixture
- *  3. Delete contents of /test-project
+ *  3. Delete contents of /local-testing-project
  *  4. Copy all files from /__fixtures__/test-project
- *  5. Update /test-project/package.json with file: resolutions
+ *  5. Update /local-testing-project/package.json with file: resolutions
  *  6. Copy .env template and append SESSION_SECRET
  *  7. yarn install, yarn cedar prisma migrate dev, yarn cedar prisma db seed,
  *     yarn cedar prisma generate
@@ -21,7 +22,7 @@ import path from 'node:path'
 
 const FRAMEWORK_ROOT = path.resolve(import.meta.dirname, '..')
 const FIXTURE_PATH = path.join(FRAMEWORK_ROOT, '__fixtures__', 'test-project')
-const TEST_PROJECT_PATH = path.join(FRAMEWORK_ROOT, 'test-project')
+const TEST_PROJECT_PATH = path.join(FRAMEWORK_ROOT, 'local-testing-project')
 const PACKAGES_PATH = path.join(FRAMEWORK_ROOT, 'packages')
 const ENV_TEMPLATE_PATH = path.join(
   FRAMEWORK_ROOT,
@@ -35,7 +36,7 @@ const ENV_TEMPLATE_PATH = path.join(
 const SESSION_SECRET_APPEND = `
 # Used to encrypt/decrypt session cookies. Change this value and re-deploy to
 # log out all users of your app at once.
-SESSION_SECRET=pe+1111111111111111111111111111111111111111=
+SESSION_SECRET=pe+111111111111111111111111111111111111111111=
 `
 
 // ---------------------------------------------------------------------------
