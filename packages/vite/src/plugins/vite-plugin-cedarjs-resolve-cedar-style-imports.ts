@@ -9,7 +9,7 @@ import { getPaths, resolveFile } from '@cedarjs/project-config'
 
 function resolveFromAbsolutePath(absolutePath: string) {
   const ext = path.extname(absolutePath)
-  const pathToResolve = absolutePath.slice(0, -ext.length)
+  const pathToResolve = ext ? absolutePath.slice(0, -ext.length) : absolutePath
 
   const direct = resolveFile(pathToResolve)
 
