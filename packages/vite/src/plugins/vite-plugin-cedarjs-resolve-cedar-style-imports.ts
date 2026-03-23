@@ -8,20 +8,23 @@ import type { Paths } from '@cedarjs/project-config'
 import { getPaths, resolveFile } from '@cedarjs/project-config'
 
 function resolveFromAbsolutePath(absolutePath: string) {
-  const direct = resolveFile(absolutePath)
+  const ext = path.extname(absolutePath)
+  const pathToResolve = absolutePath.slice(0, -ext.length)
+
+  const direct = resolveFile(pathToResolve)
 
   if (direct) {
     return direct
   }
 
-  const indexFile = resolveFile(path.join(absolutePath, 'index'))
+  const indexFile = resolveFile(path.join(pathToResolve, 'index'))
 
   if (indexFile) {
     return indexFile
   }
 
   const dirNamedFile = resolveFile(
-    path.join(absolutePath, path.basename(absolutePath)),
+    path.join(pathToResolve, path.basename(pathToResolve)),
   )
 
   if (dirNamedFile) {

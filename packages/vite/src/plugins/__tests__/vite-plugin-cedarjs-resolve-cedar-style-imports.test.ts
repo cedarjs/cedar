@@ -3,7 +3,7 @@ import path from 'node:path'
 import { build } from 'vite'
 import { describe, expect, it } from 'vitest'
 
-import { cedarjsResolveCedarStyleImportsPlugin } from '../vite-plugin-cedarjs-directory-named-import.js'
+import { cedarjsResolveCedarStyleImportsPlugin } from '../vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 
 const rootDir = path.join(__dirname, '__fixtures__', 'directory-named-imports')
 
