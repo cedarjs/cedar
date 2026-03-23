@@ -2,40 +2,46 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import type { Plugin } from 'vite'
+import { normalizePath } from 'vite'
 
-import { resolveFile } from '@cedarjs/project-config'
+import type { Paths } from '@cedarjs/project-config'
+import { getPaths, resolveFile } from '@cedarjs/project-config'
 
-function getNewPath(value: string, filename: string) {
-  const dirname = path.dirname(value)
-  const basename = path.basename(value)
+function resolveFromAbsolutePath(absolutePath: string) {
+  const direct = resolveFile(absolutePath)
 
-  // We try to resolve `index.[js*|ts*]` modules first,
-  // since that's the desired default behavior
-  const indexImportPath = [dirname, basename, 'index'].join('/')
-  const resolvedFile = resolveFile(
-    path.resolve(path.dirname(filename), indexImportPath),
+  if (direct) {
+    return direct
+  }
+
+  const indexFile = resolveFile(path.join(absolutePath, 'index'))
+
+  if (indexFile) {
+    return indexFile
+  }
+
+  const dirNamedFile = resolveFile(
+    path.join(absolutePath, path.basename(absolutePath)),
   )
 
-  if (resolvedFile) {
-    return resolvedFile
-  } else {
-    // No index file found, so try to import the directory-named-module instead
-    const dirnameImportPath = [dirname, basename, basename].join('/')
-
-    const resolvedPath = path.resolve(path.dirname(filename), dirnameImportPath)
-    const dirnameResolvedFile = resolveFile(resolvedPath)
-
-    if (dirnameResolvedFile) {
-      return dirnameResolvedFile
-    }
+  if (dirNamedFile) {
+    return dirNamedFile
   }
 
   return null
 }
 
-export function cedarjsDirectoryNamedImportPlugin(): Plugin {
+export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
+  let cedarPaths: Paths | undefined
+
+  try {
+    cedarPaths = getPaths()
+  } catch {
+    // getPaths() may throw in non-Cedar test environments
+  }
+
   return {
-    name: 'cedarjs-directory-named-import',
+    name: 'cedarjs-resolve-cedar-style-imports',
 
     resolveId(id: string, importer?: string) {
       // Skip if no importer (entry point) or if in node_modules
@@ -43,8 +49,34 @@ export function cedarjsDirectoryNamedImportPlugin(): Plugin {
         return null
       }
 
+      // Handle src/ bare specifiers
+      if (cedarPaths && id.startsWith('src/')) {
+        const normalizedImporter = normalizePath(importer)
+        const normalizedWebSrc = normalizePath(cedarPaths.web.src)
+        const normalizedApiSrc = normalizePath(cedarPaths.api.src)
+
+        let srcDir: string | undefined
+
+        if (normalizedImporter.startsWith(normalizedWebSrc)) {
+          srcDir = cedarPaths.web.src
+        } else if (normalizedImporter.startsWith(normalizedApiSrc)) {
+          srcDir = cedarPaths.api.src
+        }
+
+        if (srcDir) {
+          const resolved = resolveFromAbsolutePath(
+            path.join(srcDir, id.slice('src/'.length)),
+          )
+
+          if (resolved) {
+            return resolved
+          }
+        }
+      }
+
       // We only need this plugin when the module could not be found
       const resolvedPath = path.resolve(path.dirname(importer), id)
+
       if (fs.existsSync(resolvedPath)) {
         const stats = fs.statSync(resolvedPath)
 
@@ -53,15 +85,13 @@ export function cedarjsDirectoryNamedImportPlugin(): Plugin {
         }
       }
 
-      const newPath = getNewPath(id, importer)
+      const newPath = resolveFromAbsolutePath(resolvedPath)
+
       if (!newPath) {
         return null
       }
 
-      // Convert to absolute path
-      const resolvedDirnamePath = path.resolve(path.dirname(importer), newPath)
-
-      return resolvedDirnamePath
+      return newPath
     },
   }
 }

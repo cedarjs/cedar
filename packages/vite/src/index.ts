@@ -15,6 +15,7 @@ import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 import { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
 import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
 import { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-server.js'
+import { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-directory-named-import.js'
 import { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 import { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 import { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
@@ -26,7 +27,7 @@ export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 export { cedarImportDirPlugin } from './plugins/vite-plugin-cedar-import-dir.js'
 export { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
 export { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
-export { cedarjsDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedarjs-directory-named-import.js'
+export { cedarjsResolveCedarStyleImportsPlugin as cedarjsDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedarjs-directory-named-import.js'
 export { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-path-injector.js'
 export { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 export { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
@@ -44,7 +45,9 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
 
   const rscEnabled = cedarConfig.experimental?.rsc?.enabled
 
-  const webSideDefaultBabelConfig = getWebSideDefaultBabelConfig()
+  const webSideDefaultBabelConfig = getWebSideDefaultBabelConfig({
+    forVite: true,
+  })
 
   const babelConfig = {
     ...webSideDefaultBabelConfig,
@@ -71,6 +74,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     cedarHtmlEnvPlugin(),
     cedarEntryInjectionPlugin(),
     cedarMergedConfig(),
+    cedarjsResolveCedarStyleImportsPlugin(),
     cedarSwapApolloProvider(),
     cedarCellTransform(),
     cedarTransformJsAsJsx(),

@@ -3,14 +3,14 @@ import path from 'node:path'
 import { build } from 'vite'
 import { describe, expect, it } from 'vitest'
 
-import { cedarjsDirectoryNamedImportPlugin } from '../vite-plugin-cedarjs-directory-named-import.js'
+import { cedarjsResolveCedarStyleImportsPlugin } from '../vite-plugin-cedarjs-directory-named-import.js'
 
 const rootDir = path.join(__dirname, '__fixtures__', 'directory-named-imports')
 
 async function testTransformation(fileName: string) {
   const result = await build({
     root: rootDir,
-    plugins: [cedarjsDirectoryNamedImportPlugin()],
+    plugins: [cedarjsResolveCedarStyleImportsPlugin()],
     build: {
       lib: {
         entry: fileName,
