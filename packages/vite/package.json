@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/vite",
-  "version": "2.8.0",
+  "version": "3.0.0",
   "description": "Vite configuration package for CedarJS",
   "repository": {
     "type": "git",
@@ -60,9 +60,9 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@ast-grep/napi": "0.41.1",
+    "@ast-grep/napi": "0.42.0",
     "@babel/generator": "7.29.1",
-    "@babel/parser": "7.29.0",
+    "@babel/parser": "7.29.2",
     "@babel/traverse": "7.29.0",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
@@ -80,7 +80,6 @@
     "buffer": "6.0.3",
     "busboy": "^1.6.0",
     "cookie": "1.1.1",
-    "core-js": "3.48.0",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
     "express": "4.22.1",

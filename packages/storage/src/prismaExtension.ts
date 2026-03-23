@@ -1,5 +1,3 @@
-import type { PrismaClient } from '@prisma/client'
-import type { Prisma } from '@prisma/client'
 import { Prisma as PrismaExtension } from '@prisma/client/extension'
 
 import type { BaseStorageAdapter } from './adapters/BaseStorageAdapter.js'
@@ -13,30 +11,38 @@ type FilterOutDollarPrefixed<T> = T extends `$${string}`
     : T
 
 // Filter out $on, $connect, etc.
-export type ModelNames = FilterOutDollarPrefixed<keyof PrismaClient>
+export type ModelNamesFor<TClient> = FilterOutDollarPrefixed<keyof TClient>
 
-type PrismaModelFields<MName extends ModelNames> = keyof Prisma.Result<
-  PrismaClient[MName],
-  any,
-  'findFirstOrThrow'
->
+type PrismaModelFields<
+  TClient,
+  MName extends ModelNamesFor<TClient>,
+> = keyof PrismaExtension.Result<TClient[MName], any, 'findFirstOrThrow'>
 
-export type UploadConfigForModel<TPrismaModelName extends ModelNames> = {
+export type UploadConfigForModel<
+  TClient,
+  TPrismaModelName extends ModelNamesFor<TClient>,
+> = {
   fields:
-    | PrismaModelFields<TPrismaModelName>
-    | PrismaModelFields<TPrismaModelName>[]
+    | PrismaModelFields<TClient, TPrismaModelName>
+    | PrismaModelFields<TClient, TPrismaModelName>[]
 }
 
-export type UploadsConfig<MNames extends ModelNames = ModelNames> = {
-  [K in MNames]?: UploadConfigForModel<K>
+export type UploadsConfig<
+  TClient,
+  MNames extends ModelNamesFor<TClient> = ModelNamesFor<TClient>,
+> = {
+  [K in MNames]?: UploadConfigForModel<TClient, K>
 }
 
 type WithSignedUrlArgs = {
   expiresIn?: number
 }
 
-export const createUploadsExtension = <MNames extends ModelNames = ModelNames>(
-  config: UploadsConfig<MNames>,
+export const createUploadsExtension = <
+  TClient,
+  MNames extends ModelNamesFor<TClient> = ModelNamesFor<TClient>,
+>(
+  config: UploadsConfig<TClient, MNames>,
   storageAdapter: BaseStorageAdapter,
   urlSigner?: UrlSigner,
 ) => {

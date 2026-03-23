@@ -6,6 +6,7 @@ import { startPrismaDevServer } from '@prisma/dev'
 import ansis from 'ansis'
 import { rimraf } from 'rimraf'
 import semver from 'semver'
+import { dedent } from 'ts-dedent'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
@@ -22,13 +23,12 @@ import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
 import {
   getExecaOptions as utilGetExecaOptions,
-  updatePkgJsonScripts,
   ExecaError,
   exec,
   getCfwBin,
 } from './util.mts'
 
-function recommendedNodeVersion() {
+function recommendedNodeVersion({ esm } = { esm: false }) {
   const templatePackageJsonPath = path.join(
     import.meta.dirname,
     '..',
@@ -36,24 +36,12 @@ function recommendedNodeVersion() {
     'packages',
     'create-cedar-app',
     'templates',
-    'ts',
+    esm ? 'esm-ts' : 'ts',
     'package.json',
   )
   const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
 
   return json.engines.node
-}
-
-// If the current Node.js version is outside of the recommended range the Cedar
-// setup command will pause and ask the user if they want to continue. This
-// hangs this script without any information to the user that tries to rebuild
-// the test-project. It's better to fail early so the correct node version can
-// be installed.
-if (!semver.satisfies(process.version, recommendedNodeVersion())) {
-  console.error('Unsupported Node.js version')
-  console.error('  You are using:', process.version)
-  console.error('  Supported version:', recommendedNodeVersion())
-  process.exit(1)
 }
 
 const args = yargs(hideBin(process.argv))
@@ -83,12 +71,40 @@ const args = yargs(hideBin(process.argv))
       'Rebuild the @live test-project, using pglite for PostgreSQL-' +
       'compatible migrations',
   })
+  .option('esm', {
+    default: false,
+    type: 'boolean',
+    describe: 'Rebuild the esm test-project',
+  })
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep, live } = args
+const { verbose, resume, resumePath, resumeStep, live, esm } = args
 
-const folderSuffix = live ? '-live' : ''
+// If the current Node.js version is outside of the recommended range the Cedar
+// setup command will pause and ask the user if they want to continue. This
+// hangs this script without any information to the user that tries to rebuild
+// the test-project. It's better to fail early so the correct node version can
+// be installed.
+if (!semver.satisfies(process.version, recommendedNodeVersion({ esm }))) {
+  console.error('Unsupported Node.js version')
+  console.error('  You are using:', process.version)
+  console.error('  Supported version:', recommendedNodeVersion({ esm }))
+  process.exit(1)
+}
+
+if (live && esm) {
+  console.error('Using both --live and --esm is not supported')
+  process.exit(1)
+}
+
+let folderSuffix = ''
+
+if (live) {
+  folderSuffix = '-live'
+} else if (esm) {
+  folderSuffix += '-esm'
+}
 
 const CEDAR_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
 const OUTPUT_PROJECT_PATH = resumePath
@@ -336,7 +352,13 @@ const createProject = () => {
   const subprocess = exec(
     cmd,
     // We create a ts project and convert using ts-to-js at the end if typescript flag is false
-    ['--no-yarn-install', '--typescript', '--overwrite', '--no-git'],
+    [
+      '--no-yarn-install',
+      '--typescript',
+      '--overwrite',
+      '--no-git',
+      esm ? '--esm' : '',
+    ],
     getExecaOptions(CEDAR_FRAMEWORK_PATH),
   )
 
@@ -470,17 +492,46 @@ async function rebuildTestProject() {
     },
   })
 
-  // Note that we undo this at the end
   await tuiTask({
     step: 6,
-    title: '[link] Add cfw project:copy postinstall',
+    title: 'Prep for env var tests',
     task: () => {
-      return updatePkgJsonScripts({
-        projectPath: OUTPUT_PROJECT_PATH,
-        scripts: {
-          postinstall: `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:copy`,
-        },
-      })
+      // Prisma's `env()` helper will throw an error if it cannot find the
+      // referenced env var. We add a simple `if`-statement to ensure the env
+      // var is read, and that it has the correct value.
+      const prismaConfigPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'prisma.config.cjs',
+      )
+      const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
+      const updatedPrismaConfig = prismaConfig.replace(
+        'module.exports = defineConfig({',
+        dedent`
+          // ENV_DEFAULTS_VAR is loaded from .env.defaults
+          const testEnvVar = env('ENV_DEFAULTS_VAR')
+          if (testEnvVar !== 'default-value') {
+            throw new Error('ENV_DEFAULTS_VAR has the wrong value: ' + testEnvVar)
+          }
+
+          module.exports = defineConfig({`,
+      )
+
+      if (!updatedPrismaConfig.includes('ENV_DEFAULTS_VAR')) {
+        throw new Error(
+          'Failed to inject ENV_DEFAULTS_VAR check into ' +
+            'prisma.config.cjs – the expected anchor string ' +
+            '`module.exports = defineConfig({` was not found',
+        )
+      }
+
+      fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
+
+      // Append to .env.defaults
+      fs.appendFileSync(
+        path.join(OUTPUT_PROJECT_PATH, '.env.defaults'),
+        '\nENV_DEFAULTS_VAR=default-value\n',
+      )
     },
   })
 
@@ -527,7 +578,7 @@ async function rebuildTestProject() {
     task: async () => {
       setOutputPath(OUTPUT_PROJECT_PATH)
 
-      return apiTasksList({ dbAuth: 'local', live })
+      return apiTasksList({ dbAuth: 'local', live, esm })
     },
   })
 
@@ -538,11 +589,11 @@ async function rebuildTestProject() {
       const cedarTomlPath = path.join(OUTPUT_PROJECT_PATH, 'cedar.toml')
       const rwTomlPath = path.join(OUTPUT_PROJECT_PATH, 'redwood.toml')
       const tomlPath = fs.existsSync(cedarTomlPath) ? cedarTomlPath : rwTomlPath
-      const redwoodToml = fs.readFileSync(tomlPath, 'utf-8')
-      const newRedwoodToml =
-        redwoodToml + '\n[experimental.packagesWorkspace]\n  enabled = true\n'
+      const cedarToml = fs.readFileSync(tomlPath, 'utf-8')
+      const newCedarToml =
+        cedarToml + '\n[experimental.packagesWorkspace]\n  enabled = true\n'
 
-      fs.writeFileSync(tomlPath, newRedwoodToml)
+      fs.writeFileSync(tomlPath, newCedarToml)
 
       await exec(
         'yarn cedar g package @my-org/validators --workspace both',
@@ -822,8 +873,8 @@ async function rebuildTestProject() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
       // Copy over package.json from template, so we remove the extra dev
-      // dependencies, and cfw postinstall script that we added in "Adding
-      // framework dependencies to project"
+      // dependencies that we added in "Adding framework dependencies to
+      // project"
       // There's one devDep we actually do want in there though, and that's the
       // prettier plugin for Tailwind CSS
       // We also want the `packages/*` workspace config that was added when
@@ -831,12 +882,18 @@ async function rebuildTestProject() {
       const rootPackageJson = JSON.parse(
         fs.readFileSync(path.join(OUTPUT_PROJECT_PATH, 'package.json'), 'utf8'),
       )
-      const templateRootPackageJsonPath = path.join(
+      const templatePackageJsonPath = path.join(
         import.meta.dirname,
-        '../../packages/create-cedar-app/templates/ts/package.json',
+        '..',
+        '..',
+        'packages',
+        'create-cedar-app',
+        'templates',
+        esm ? 'esm-ts' : 'ts',
+        'package.json',
       )
       const newRootPackageJson = JSON.parse(
-        fs.readFileSync(templateRootPackageJsonPath, 'utf8'),
+        fs.readFileSync(templatePackageJsonPath, 'utf8'),
       )
       newRootPackageJson.devDependencies['prettier-plugin-tailwindcss'] =
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
@@ -858,7 +915,7 @@ async function rebuildTestProject() {
     task: () => {
       console.log('-'.repeat(30))
       console.log()
-      console.log('✅ Success! The test project fixture has been rebuilt')
+      console.log('✅ Success! The test-project fixture has been rebuilt')
       console.log()
       console.log('-'.repeat(30))
     },

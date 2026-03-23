@@ -1,17 +1,16 @@
-import { basename } from 'path'
+import { basename } from 'node:path'
 
-import { Kind } from 'graphql'
-import { parse as parseGraphQL } from 'graphql/language/parser'
+import { Kind, parse as parseGraphQL } from 'graphql'
 import * as tsm from 'ts-morph'
 
-import { RWError } from '../errors'
-import { FileNode } from '../nodes'
-import { iter } from '../x/Array'
-import { lazy } from '../x/decorators'
-import { err } from '../x/diagnostics'
+import { RWError } from '../errors.js'
+import { FileNode } from '../nodes.js'
+import { iter } from '../x/Array.js'
+import { lazy } from '../x/decorators.js'
+import { err } from '../x/diagnostics.js'
 
-import type { RWProject } from './RWProject'
-import { RWSDLField } from './RWSDLField'
+import type { RWProject } from './RWProject.js'
+import { RWSDLField } from './RWSDLField.js'
 
 export class RWSDL extends FileNode {
   constructor(

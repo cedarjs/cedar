@@ -41,32 +41,12 @@ export const getExecaOptions = (
   cleanup: true,
   cwd,
   env: {
+    ...process.env,
     RW_PATH: path.join(__dirname, '../../'),
     CFW_PATH: path.join(__dirname, '../../'),
     RWFW_PATH: path.join(__dirname, '../../'),
   },
 })
-
-export const updatePkgJsonScripts = ({
-  projectPath,
-  scripts,
-}: {
-  projectPath: string
-  scripts: Record<string, string>
-}) => {
-  const projectPackageJsonPath = path.join(projectPath, 'package.json')
-  const projectPackageJson = JSON.parse(
-    fs.readFileSync(projectPackageJsonPath, 'utf-8'),
-  )
-  projectPackageJson.scripts = {
-    ...projectPackageJson.scripts,
-    ...scripts,
-  }
-  fs.writeFileSync(
-    projectPackageJsonPath,
-    JSON.stringify(projectPackageJson, undefined, 2),
-  )
-}
 
 // Confirmation prompt when using --no-copyFromFixture --no-link'
 export async function confirmNoFixtureNoLink(

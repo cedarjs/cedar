@@ -7,8 +7,6 @@ import { parseConfigFileTextToJson } from 'typescript'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import pkgJson from '../package.json'
-
 import { getWebSideBabelPlugins } from './web'
 import type { Flags as WebFlags } from './web'
 
@@ -53,35 +51,8 @@ export const registerBabel = (options: RegisterOptions) => {
   require('@babel/register')(options)
 }
 
-export const CORE_JS_VERSION = pkgJson.dependencies['core-js']
-  .split('.')
-  .slice(0, 2)
-  .join('.') // Produces: 3.12, instead of 3.12.1
-
-if (!CORE_JS_VERSION) {
-  throw new Error(
-    'RedwoodJS Project Babel: Could not determine core-js version.',
-  )
-}
-
-export const RUNTIME_CORE_JS_VERSION =
-  pkgJson.dependencies['@babel/runtime-corejs3']
-
-if (!RUNTIME_CORE_JS_VERSION) {
-  throw new Error(
-    'RedwoodJS Project Babel: Could not determine core-js runtime version',
-  )
-}
-
 export const getCommonPlugins = (): [string, PluginOptions][] => {
-  return [
-    ['@babel/plugin-transform-class-properties', { loose: true }],
-    // Note: The private method loose mode configuration setting must be the
-    // same as @babel/plugin-proposal class-properties.
-    // (https://babeljs.io/docs/en/babel-plugin-proposal-private-methods#loose)
-    ['@babel/plugin-transform-private-methods', { loose: true }],
-    ['@babel/plugin-transform-private-property-in-object', { loose: true }],
-  ]
+  return []
 }
 
 // TODO (STREAMING) double check this, think about it more carefully please!

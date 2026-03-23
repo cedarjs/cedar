@@ -72,7 +72,7 @@ jobs:
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
       - name: Nested script | Run `cedar exec`
-        # Using -f to overwrite script that already exists in the test-project
+        # Using -f to overwrite script that already exists in the kitchen-sink
         run: yarn cedar g script -f i/am/nested && yarn cedar exec i/am/nested
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
@@ -130,4 +130,22 @@ jobs:
       - name: Run `cedar setup mailer`
         # `cat` will exit with an error code if the file doesn't exist
         run: yarn cedar setup mailer && cat api/src/lib/mailer.ts
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Codemod | Verify env var loading via --load-env-files
+        # Using `node` directly instead of `yarn dlx ...` to avoid the extra
+        # dependency installation overhead, plus to be able to test changes
+        # without having to publish them to npm first. Have to use
+        # `{{ github.workspace }}` because project:tarsync skips codemods, so we
+        # have to find it in the framework directory
+        run: |
+          echo "CODEMOD_ENV_VAR=codemod-value" >> .env.codemod
+
+          echo "const testEnvVar = env('CODEMOD_ENV_VAR')" >> api/src/prisma.config.cjs
+          echo "console.log('testEnvVar', testEnvVar)" >> api/src/prisma.config.cjs
+          echo "if (testEnvVar !== 'codemod-value') {" >> api/src/prisma.config.cjs
+          echo "  throw new Error('CODEMOD_ENV_VAR has the wrong value)" >> api/src/prisma.config.cjs
+          echo "}" >> api/src/prisma.config.cjs
+
+          node ${{ github.workspace }}/node_modules/@cedarjs/codemods/dist/codemods.js prisma-v7 --load-env-files codemod
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}

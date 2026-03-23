@@ -1,5 +1,17 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
+
+const { mockPrismaClientPath, mockPrismaClientFileUrl } = await vi.hoisted(
+  async () => {
+    const path = await import('node:path')
+    const { pathToFileURL } = await import('node:url')
+
+    // On Windows, path.resolve('/foo') gives e.g. 'C:\foo'
+    const mockPrismaClientPath = path.resolve('/mock-prisma-client-path')
+    const mockPrismaClientFileUrl = pathToFileURL(mockPrismaClientPath)
+    return { mockPrismaClientPath, mockPrismaClientFileUrl }
+  },
+)
 
 import {
   beforeAll,
@@ -11,12 +23,13 @@ import {
   describe,
 } from 'vitest'
 
+import type * as ProjectConfig from '@cedarjs/project-config'
+
 import {
   generateTypeDefGraphQLApi,
   generateTypeDefGraphQLWeb,
 } from '../generate/graphqlCodeGen.js'
 import { generateGraphQLSchema } from '../generate/graphqlSchema.js'
-import { dbReexportsPrismaClient } from '../project.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
@@ -35,9 +48,21 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-vi.mock('@prisma/client', () => {
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
+
   return {
-    default: {
+    ...originalProjectConfig,
+    resolveGeneratedPrismaClient: () =>
+      Promise.resolve({ clientPath: mockPrismaClientPath, error: undefined }),
+  }
+})
+
+const mockNow = vi.hoisted(() => new Date().getTime())
+
+vi.mock(mockPrismaClientFileUrl + '?t=' + mockNow, () => {
+  return {
+    Prisma: {
       ModelName: {
         PrismaModelOne: 'PrismaModelOne',
         PrismaModelTwo: 'PrismaModelTwo',
@@ -48,40 +73,15 @@ vi.mock('@prisma/client', () => {
   }
 })
 
-vi.mock('../project.js', async (importOriginal) => {
-  const original = await importOriginal<any>()
-  return {
-    ...original,
-    dbReexportsPrismaClient: vi.fn(() => true),
-  }
-})
-
 test('Generate gql typedefs web', async () => {
   await generateGraphQLSchema()
+
+  vi.setSystemTime(mockNow)
 
   vi.spyOn(fs, 'writeFileSync').mockImplementation(
     (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
       expect(file).toMatch(path.join('web', 'types', 'graphql.d.ts'))
       expect(data).toMatchSnapshot()
-    },
-  )
-
-  const { typeDefFiles, errors } = await generateTypeDefGraphQLWeb()
-  expect(errors).toEqual([])
-
-  expect(typeDefFiles).toHaveLength(1)
-  expect(typeDefFiles[0]).toMatch(path.join('web', 'types', 'graphql.d.ts'))
-})
-
-test('Generate gql typedefs web (no re-export)', async () => {
-  vi.mocked(dbReexportsPrismaClient).mockReturnValue(false)
-
-  await generateGraphQLSchema()
-
-  vi.spyOn(fs, 'writeFileSync').mockImplementation(
-    (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
-      expect(file).toMatch(path.join('web', 'types', 'graphql.d.ts'))
-      expect(data).toContain('import { Prisma } from "@prisma/client"')
     },
   )
 
@@ -138,36 +138,6 @@ test('Generate gql typedefs api', async () => {
 
   // Should only contain the SDL models that are also in Prisma
   expect(data).toContain(`type AllMappedModels = MaybeOrArrayOfMaybe<Todo>`)
-})
-
-test('Generate gql typedefs api (no re-export)', async () => {
-  vi.mocked(dbReexportsPrismaClient).mockReturnValue(false)
-
-  await generateGraphQLSchema()
-
-  let codegenOutput: {
-    file: fs.PathOrFileDescriptor
-    data: string | ArrayBufferView
-  } = { file: '', data: '' }
-
-  vi.spyOn(fs, 'writeFileSync').mockImplementation(
-    (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
-      codegenOutput = { file, data }
-    },
-  )
-
-  const { typeDefFiles } = await generateTypeDefGraphQLApi()
-
-  expect(typeDefFiles).toHaveLength(1)
-  expect(typeDefFiles[0]).toMatch(path.join('api', 'types', 'graphql.d.ts'))
-
-  const { data } = codegenOutput
-
-  // Check that prisma model imports are added to the top of the file
-  // Should import from @prisma/client instead of src/lib/db
-  expect(data).toContain(
-    "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from '@prisma/client'",
-  )
 })
 
 test('respects user provided codegen config', async () => {

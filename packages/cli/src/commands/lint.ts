@@ -6,15 +6,13 @@ import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
-// @ts-expect-error - Types not available for JS files
-import { getPaths, getConfig } from '../lib/index.js'
+import { getPaths, getConfig } from '@cedarjs/project-config'
 
 /**
  * Checks for legacy ESLint configuration files in the project root
- * @returns {string[]} Array of legacy config file names found
+ * @returns Array of legacy config file names found
  */
-function detectLegacyEslintConfig() {
+function detectLegacyEslintConfig(): string[] {
   const projectRoot = getPaths().base
   const legacyConfigFiles = [
     '.eslintrc.js',
@@ -54,7 +52,7 @@ function detectLegacyEslintConfig() {
 
 /**
  * Shows a deprecation warning for legacy ESLint configuration
- * @param {string[]} legacyFiles Array of legacy config file names
+ * @param legacyFiles Array of legacy config file names
  */
 function showLegacyEslintDeprecationWarning(legacyFiles: string[]) {
   console.warn('')
@@ -83,11 +81,6 @@ function showLegacyEslintDeprecationWarning(legacyFiles: string[]) {
 
 export const command = 'lint [paths..]'
 export const description = 'Lint your files'
-type LintOptions = {
-  paths?: string[]
-  fix?: boolean
-  format?: string
-}
 export const builder = (yargs: Argv) => {
   yargs
     .positional('paths', {
@@ -114,6 +107,12 @@ export const builder = (yargs: Argv) => {
     )
 }
 
+interface LintOptions {
+  paths?: string[]
+  fix?: boolean
+  format?: string
+}
+
 export const handler = async ({
   paths = [],
   fix = false,
@@ -121,10 +120,14 @@ export const handler = async ({
 }: LintOptions) => {
   recordTelemetryAttributes({ command: 'lint', fix, format })
 
-  // Check for legacy ESLint configuration and show deprecation warning
   const config = getConfig()
   const legacyConfigFiles = detectLegacyEslintConfig()
-  if (legacyConfigFiles.length > 0 && config.eslintLegacyConfigWarning) {
+  if (
+    legacyConfigFiles.length > 0 &&
+    config instanceof Object &&
+    'eslintLegacyConfigWarning' in config &&
+    config.eslintLegacyConfigWarning
+  ) {
     showLegacyEslintDeprecationWarning(legacyConfigFiles)
   }
 

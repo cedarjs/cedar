@@ -68,9 +68,8 @@ describe('rscRoutesAutoLoader', () => {
 
       // This needs to be a client component because it uses onClick, and the onClick
       // event handler can't be serialized when passed as an RSC Flight response
-      var _Object$defineProperty = require("@babel/runtime-corejs3/core-js/object/define-property");
-      var _interopRequireWildcard = require("@babel/runtime-corejs3/helpers/interopRequireWildcard").default;
-      _Object$defineProperty(exports, "__esModule", {
+      var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard").default;
+      Object.defineProperty(exports, "__esModule", {
         value: true
       });
       exports.Link = void 0;

@@ -40,10 +40,9 @@ declare global {
   var mockGraphQLMutation: typeof mockGqlMutation
   var mockGraphQLQuery: typeof mockGqlQuery
 
-  var __RWJS__TEST_IMPORTS: {
+  var __CEDARJS__TEST_IMPORTS: {
     apiSrcPath: string
     tearDownCachePath: string
-    prismaConfigPath: string
   }
   var __RWJS_TESTROOT_DIR: string
 }

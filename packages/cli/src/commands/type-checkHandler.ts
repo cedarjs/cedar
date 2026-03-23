@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import concurrently from 'concurrently'
 import execa from 'execa'
@@ -6,12 +6,11 @@ import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
-type TypeCheckHandlerArgs = Record<string, unknown> & {
+export type TypeCheckHandlerArgs = Record<string, unknown> & {
   sides?: string[]
   verbose?: boolean
   prisma?: boolean
@@ -81,9 +80,7 @@ export const handler = async ({
   }
 
   if (generate && prisma) {
-    await generatePrismaClient({
-      verbose,
-    })
+    await generatePrismaClient({ verbose })
   }
 
   if (generate) {
@@ -99,7 +96,8 @@ export const handler = async ({
         },
       ],
       {
-        renderer: verbose ? 'verbose' : undefined,
+        renderer: verbose ? 'verbose' : 'default',
+        rendererOptions: { collapseSubtasks: false },
       },
     ).run()
   }

@@ -11,40 +11,48 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths } from '../lib/index.js'
 
 const paths = getPaths()
-type ReplWithHistory = REPLServer & {
-  lines: string[]
+
+interface REPLServerWithHistory extends REPLServer {
   history: string[]
-  eval: REPLEval
+  lines: string[]
+}
+
+function isREPLServerWithHistory(
+  replServer: REPLServer,
+): replServer is REPLServerWithHistory {
+  return 'history' in replServer && 'lines' in replServer
 }
 
 const loadPrismaClient = (replContext: Record<string, unknown>) => {
   const createdRequire = createRequire(import.meta.url)
   // This module comes from the user project and is untyped here; we only need
   // an indexable object to attach Prisma's inspect symbol for REPL display.
-  const { db } = createdRequire(path.join(paths.api.lib, 'db')) as {
-    db: Record<string | symbol, unknown>
-  }
+  const { db } = createdRequire(path.join(paths.api.lib, 'db'))
   // workaround for Prisma issue: https://github.com/prisma/prisma/issues/18292
   db[Symbol.for('nodejs.util.inspect.custom')] = 'PrismaClient'
   replContext.db = db
 }
 
 const consoleHistoryFile = path.join(paths.generated.base, 'console_history')
-const persistConsoleHistory = (r: ReplWithHistory) => {
+
+const persistConsoleHistory = (r: REPLServer) => {
+  const lines = isREPLServerWithHistory(r) ? r.lines : []
   fs.appendFileSync(
     consoleHistoryFile,
-    r.lines.filter((line: string) => line.trim()).join('\n') + '\n',
+    lines.filter((line: string) => line.trim()).join('\n') + '\n',
     'utf8',
   )
 }
 
-const loadConsoleHistory = async (r: ReplWithHistory) => {
+const loadConsoleHistory = async (r: REPLServer) => {
   try {
     const history = await fs.promises.readFile(consoleHistoryFile, 'utf8')
-    history
-      .split('\n')
-      .reverse()
-      .map((line) => r.history.push(line))
+    if (isREPLServerWithHistory(r)) {
+      history
+        .split('\n')
+        .reverse()
+        .map((line) => r.history.push(line))
+    }
   } catch {
     // We can ignore this -- it just means the user doesn't have any history yet
   }
@@ -72,6 +80,13 @@ export const handler = (_options?: Record<string, unknown>) => {
 
   // REPL typings miss runtime `lines`/`history`, which we use for persisted
   // command history.
+  type ReplWithHistory = REPLServer & {
+    lines: string[]
+    history: string[]
+    // `eval` is typed as readonly in the Node.js typings but is in fact
+    // reassignable at runtime
+    eval: REPLEval
+  }
   const r = repl.start() as unknown as ReplWithHistory
 
   // always await promises.
@@ -80,13 +95,13 @@ export const handler = (_options?: Record<string, unknown>) => {
   const asyncEval: REPLEval = (cmd, context, filename, callback) => {
     defaultEval.call(r, cmd, context, filename, async (err, result) => {
       if (err) {
+        // propagate errors.
         callback(err, null)
       } else {
         try {
           callback(null, await Promise.resolve(result))
-        } catch (error) {
-          // `catch` variables are `unknown`; REPL expects an `Error | null`.
-          callback(error as Error, null)
+        } catch (err: unknown) {
+          callback(err instanceof Error ? err : new Error(String(err)), null)
         }
       }
     })

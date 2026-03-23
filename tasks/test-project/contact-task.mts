@@ -10,7 +10,7 @@ import {
   getExecaOptions,
 } from './util.mts'
 
-export async function contactTask() {
+export async function contactTask({ esm } = { esm: false }) {
   const { contact } = await import('./codemods/models.mts')
 
   await addModel(contact)
@@ -26,7 +26,10 @@ export async function contactTask() {
 
   const contactsServicePath = fullPath('api/src/services/contacts/contacts')
 
-  await Promise.all([updateService(contactsServicePath), updateServiceTest()])
+  await Promise.all([
+    updateService(contactsServicePath),
+    updateServiceTest({ esm }),
+  ])
 
   return applyCodemod('contacts.mts', contactsServicePath)
 }
@@ -46,7 +49,8 @@ async function updateService(contactsServicePath: string) {
   )
 }
 
-async function updateServiceTest() {
+async function updateServiceTest({ esm } = { esm: false }) {
+  const testFramework = esm ? 'vi' : 'jest'
   const contactsTestPath = fullPath('api/src/services/contacts/contacts.test')
   const contactsTest = await fs.promises.readFile(contactsTestPath, 'utf-8')
 
@@ -59,13 +63,13 @@ async function updateServiceTest() {
         "describe('contacts', () => {",
         "describe('contacts', () => {\n" +
           '  afterEach(() => {\n' +
-          '    jest.mocked(console).log.mockRestore?.()\n' +
+          `    ${testFramework}.mocked(console).log.mockRestore?.()\n` +
           '  })\n',
       )
       .replace(
         "  scenario('creates a contact', async () => {",
         "  scenario('creates a contact', async () => {\n" +
-          "    jest.spyOn(console, 'log').mockImplementation(() => {})\n",
+          `    ${testFramework}.spyOn(console, 'log').mockImplementation(() => {})\n`,
       ),
   )
 }

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/web",
-  "version": "2.8.0",
+  "version": "3.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -144,19 +144,17 @@
   },
   "dependencies": {
     "@apollo/client": "3.13.9",
-    "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "@dr.pogodin/react-helmet": "2.0.4",
     "@whatwg-node/fetch": "0.10.13",
     "apollo-upload-client": "18.0.1",
     "cookie": "1.1.1",
-    "core-js": "3.48.0",
     "graphql": "16.13.1",
     "graphql-sse": "2.6.0",
     "graphql-tag": "2.12.6",
     "react-hot-toast": "2.6.0",
-    "stacktracey": "2.1.8",
+    "stacktracey": "2.2.0",
     "ts-toolbelt": "9.6.0"
   },
   "devDependencies": {
@@ -165,7 +163,7 @@
     "@babel/cli": "7.28.6",
     "@babel/core": "^7.26.10",
     "@babel/plugin-transform-runtime": "7.29.0",
-    "@babel/runtime": "7.28.6",
+    "@babel/runtime": "7.29.2",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@rollup/plugin-babel": "6.1.0",

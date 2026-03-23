@@ -1,5 +1,3 @@
-// TODO: Remove this import when we've migrated to Prisma v7
-import { PrismaClient } from '@prisma/client'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as ValidationErrors from '../errors.js'
@@ -1232,29 +1230,9 @@ const mockDb = {
     }),
 }
 
-// Mock just enough of PrismaClient that we can test a transaction is running.
-// Prisma.PrismaClient is a class so we need to return a function that returns
-// the actual methods of an instance of the class
-//
-// mockFindFirst.mockImplementation() to change what `findFirst()` would return
-// TODO: Remove this mock when we've migrated to Prisma 7 where @prisma/client
-// shouldn't be instantiated directly anymore
-const mockPrismaFindFirst = vi.fn()
-vi.mock('@prisma/client', () => ({
-  PrismaClient: vi.fn(() => ({
-    $transaction: async (func: (args: any) => Promise<any>) =>
-      func({
-        user: {
-          findFirst: mockPrismaFindFirst,
-        },
-      }),
-  })),
-}))
-
 describe('validateUniqueness', () => {
   beforeEach(() => {
     mockFindFirst.mockClear()
-    mockPrismaFindFirst.mockClear()
   })
 
   it('throws an error if record is not unique', async () => {
@@ -1381,7 +1359,7 @@ describe('validateUniqueness', () => {
   })
 
   it('does not include $self or $scope in error message', async () => {
-    mockPrismaFindFirst.mockImplementation(() => ({
+    mockFindFirst.mockImplementation(() => ({
       id: 4,
       email: 'rob@cedarjs.com',
     }))
@@ -1394,6 +1372,7 @@ describe('validateUniqueness', () => {
           $self: { id: 123 },
           $scope: { companyId: 5 },
         },
+        { db: mockDb },
         () => Promise.resolve(),
       )
     } catch (e) {
@@ -1403,18 +1382,16 @@ describe('validateUniqueness', () => {
       }
     }
 
-    expect(mockPrismaFindFirst).toHaveBeenCalled()
+    expect(mockFindFirst).toHaveBeenCalled()
   })
 
-  it('falls back to @prisma/client if no db is passed as an argument', async () => {
-    mockPrismaFindFirst.mockImplementation(() => null)
-
-    await validateUniqueness('user', { email: 'rob@cedarjs.com' }, () => {
-      expect(true).toEqual(true)
-      return Promise.resolve()
-    })
-
-    expect(mockPrismaFindFirst).toHaveBeenCalled()
-    expect(vi.mocked(PrismaClient)).toHaveBeenCalled()
+  it('throws when no db is passed as an argument', async () => {
+    await expect(
+      validateUniqueness('user', { email: 'rob@cedarjs.com' }, () =>
+        Promise.resolve(),
+      ),
+    ).rejects.toThrowError(
+      'validateUniqueness could not resolve a Prisma `db` instance',
+    )
   })
 })

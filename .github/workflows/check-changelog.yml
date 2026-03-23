@@ -11,6 +11,7 @@ on:
         unlabeled,
         milestoned,
         demilestoned,
+        edited,
       ]
 
 # Cancel in-progress runs of this workflow.

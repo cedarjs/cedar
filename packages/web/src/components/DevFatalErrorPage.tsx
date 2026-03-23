@@ -165,7 +165,7 @@ export const DevFatalErrorPage = (props: { error?: ErrorWithRequestMeta }) => {
   const typeName = String(
     (err as any)['type'] || err.constructor?.name || typeof err,
   )
-  const msg = String(err && err.message)
+  const msg = String(err?.message)
 
   const FileRef = stack.items[0] ? (
     <a href={toVSCodeURL(stack.items[0])}>{stack.items[0].fileName}</a>

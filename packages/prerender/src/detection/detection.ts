@@ -1,9 +1,7 @@
-import { getPaths } from '@cedarjs/project-config'
 import { getProject } from '@cedarjs/structure'
 
 export const detectPrerenderRoutes = () => {
-  const rwProject = getProject(getPaths().base)
-  const routes = rwProject.getRouter().routes
+  const routes = getProject().getRouter().routes
 
   const prerenderRoutes = routes
     .filter((route) => route.prerender) // only select routes with prerender prop

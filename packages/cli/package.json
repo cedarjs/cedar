@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli",
-  "version": "2.8.0",
+  "version": "3.0.0",
   "description": "The CedarJS Command Line",
   "repository": {
     "type": "git",
@@ -31,9 +31,8 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/parser": "7.29.0",
+    "@babel/parser": "7.29.2",
     "@babel/preset-typescript": "7.28.5",
-    "@babel/runtime-corejs3": "7.29.0",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/fastify-web": "workspace:*",
@@ -51,7 +50,7 @@
     "@opentelemetry/resources": "1.30.1",
     "@opentelemetry/sdk-trace-node": "1.30.1",
     "@opentelemetry/semantic-conventions": "1.38.0",
-    "@prisma/internals": "6.19.2",
+    "@prisma/internals": "7.5.0",
     "ansis": "4.2.0",
     "archiver": "7.0.1",
     "boxen": "5.1.2",
@@ -60,7 +59,6 @@
     "ci-info": "4.4.0",
     "concurrently": "9.2.1",
     "configstore": "7.1.0",
-    "core-js": "3.48.0",
     "cross-env": "7.0.3",
     "decamelize": "6.0.1",
     "dotenv-defaults": "5.0.2",
@@ -78,7 +76,7 @@
     "pluralize": "8.0.0",
     "portfinder": "1.0.38",
     "prettier": "3.8.1",
-    "prisma": "6.19.2",
+    "prisma": "7.5.0",
     "prompts": "2.4.2",
     "recast": "0.23.11",
     "rimraf": "6.1.3",

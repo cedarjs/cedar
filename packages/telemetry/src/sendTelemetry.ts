@@ -8,7 +8,7 @@ import envinfo from 'envinfo'
 import system from 'systeminformation'
 import { v4 as uuidv4 } from 'uuid'
 
-import { getRawConfig } from '@cedarjs/project-config'
+import { getRawConfig, getPaths } from '@cedarjs/project-config'
 import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
 
 interface SensitiveArgPositions {
@@ -167,7 +167,6 @@ export const sanitizeArgv = (
 
 const buildPayload = async () => {
   let payload: Record<string, unknown> = {}
-  let project
 
   const processArgv = [...process.argv]
 
@@ -193,13 +192,12 @@ const buildPayload = async () => {
   }
 
   const argv = require('yargs/yargs')(processArgv.slice(2)).parse()
-  const rootDir = argv.root
   const command = argv.argv ? sanitizeArgv(JSON.parse(argv.argv)) : ''
   payload = {
     type: argv.type || 'command',
     command,
     duration: argv.duration ? parseInt(argv.duration) : null,
-    uid: uniqueId(rootDir) || null,
+    uid: uniqueId(),
     ci: ci.isCI,
     redwoodCi: !!process.env.REDWOOD_CI,
     NODE_ENV: process.env.NODE_ENV || null,
@@ -213,32 +211,27 @@ const buildPayload = async () => {
       .replace(/(\/[@\-\.\w]+)/g, '[path]')
   }
 
-  // if a root directory was specified, use that to look up framework stats
-  // with the `structure` package
-  if (rootDir) {
-    project = new RWProject({ projectRoot: rootDir })
+  const project = new RWProject()
+  const routes = project.getRouter().routes
+  const prerenderedRoutes = routes.filter((route) => route.hasPrerender)
 
-    const routes = project.getRouter().routes
-    const prerenderedRoutes = routes.filter((route) => route.hasPrerender)
-
-    // add in app stats
-    payload = {
-      ...payload,
-      complexity:
-        `${routes.length}.${prerenderedRoutes.length}.` +
-        `${project.services.length}.${project.cells.length}.` +
-        `${project.pages.length}`,
-      sides: project.sides.join(','),
-    }
+  // add in app stats
+  payload = {
+    ...payload,
+    complexity:
+      `${routes.length}.${prerenderedRoutes.length}.` +
+      `${project.services.length}.${project.cells.length}.` +
+      `${project.pages.length}`,
+    sides: project.sides.join(','),
   }
 
   return payload
 }
 
 // returns the UUID for this device. caches the UUID for 24 hours
-const uniqueId = (rootDir: string | null) => {
+function uniqueId() {
   const telemetryCachePath = path.join(
-    rootDir || '/tmp',
+    getPaths().base,
     '.redwood',
     'telemetry.txt',
   )

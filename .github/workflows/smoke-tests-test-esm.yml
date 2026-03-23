@@ -77,10 +77,12 @@ jobs:
         shell: bash
         run: |
           # Only run this for ESM projects where the vitest config file exists
-          if test -f ./vitest-sort.config.ts; then
-            npx vitest --config ./vitest-sort.config.ts run
+          # Also taking this opportunity to test --load-env-files
+          echo "SMOKE_ENV_VAR=smoke-value" > .env.smoke
+          if test -f api/vitest-sort.config.ts; then
+            yarn cedar test api --no-watch --config api/vitest-sort.config.ts --load-env-files smoke
           fi
-        working-directory: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}/api
+        working-directory: ${{ steps.set-up-test-project-esm.outputs.test-project-path }}
 
       - name: 🖥️ Run serve smoke tests
         working-directory: tasks/smoke-tests/serve

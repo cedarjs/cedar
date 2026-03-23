@@ -1,14 +1,14 @@
 import * as tsm from 'ts-morph'
 
-import { BaseNode } from '../nodes'
-import { iter } from '../x/Array'
-import { lazy } from '../x/decorators'
-import type { ExtendedDiagnostic } from '../x/diagnostics'
-import { Location_fromNode } from '../x/diagnostics'
-import { DiagnosticSeverity } from '../x/diagnostics'
+import { BaseNode } from '../nodes.js'
+import { iter } from '../x/Array.js'
+import { lazy } from '../x/decorators.js'
+import type { ExtendedDiagnostic } from '../x/diagnostics.js'
+import { Location_fromNode } from '../x/diagnostics.js'
+import { DiagnosticSeverity } from '../x/diagnostics.js'
 
-import type { RWSDLField } from './RWSDLField'
-import type { RWService } from './RWService'
+import type { RWSDLField } from './RWSDLField.js'
+import type { RWService } from './RWService.js'
 
 export class RWServiceFunction extends BaseNode {
   constructor(

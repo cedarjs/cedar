@@ -3,7 +3,7 @@ description: Sets up an RSA project for smoke-tests
 
 runs:
   using: node24
-  main: 'setUpRsaProjectGitHub.mjs'
+  main: 'setUpRsaProjectGitHub.mts'
 
 outputs:
   test-project-path:

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/prerender",
-  "version": "2.8.0",
+  "version": "3.0.0",
   "description": "CedarJS prerender",
   "repository": {
     "type": "git",
@@ -67,9 +67,9 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@ast-grep/napi": "0.41.1",
+    "@ast-grep/napi": "0.42.0",
     "@babel/generator": "7.29.1",
-    "@babel/parser": "7.29.0",
+    "@babel/parser": "7.29.2",
     "@babel/traverse": "7.29.0",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/project-config": "workspace:*",

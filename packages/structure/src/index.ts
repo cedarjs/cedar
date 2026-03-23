@@ -1,22 +1,25 @@
-export { DiagnosticSeverity } from './x/diagnostics'
-export { RWProject, RWRoute } from './model'
-export { URL_file } from './x/URL'
-import { RWProject } from './model'
-import type { GetSeverityLabelFunction } from './x/diagnostics'
-import { ExtendedDiagnostic_format, DiagnosticSeverity } from './x/diagnostics'
+import { getPaths } from '@cedarjs/project-config'
 
-export function getProject(projectRoot: string) {
-  return new RWProject({
-    projectRoot,
-  })
+export { DiagnosticSeverity } from './x/diagnostics.js'
+export { RWProject, RWRoute } from './model/index.js'
+export { URL_file } from './x/URL.js'
+import { RWProject } from './model/index.js'
+import type { GetSeverityLabelFunction } from './x/diagnostics.js'
+import {
+  ExtendedDiagnostic_format,
+  DiagnosticSeverity,
+} from './x/diagnostics.js'
+
+export function getProject() {
+  return new RWProject()
 }
 
-export async function printDiagnostics(
-  projectRoot: string,
-  opts?: { getSeverityLabel?: GetSeverityLabelFunction },
-) {
-  const project = getProject(projectRoot)
-  const formatOpts = { cwd: projectRoot, ...opts }
+export async function printDiagnostics(opts?: {
+  getSeverityLabel?: GetSeverityLabelFunction
+}) {
+  const base = getPaths().base
+  const project = getProject()
+  const formatOpts = { cwd: base, ...opts }
   try {
     let warnings = 0
     let errors = 0
@@ -40,7 +43,11 @@ export async function printDiagnostics(
       )
       process.exit(1)
     }
-  } catch (e: any) {
-    throw new Error(e.message)
+  } catch (e) {
+    if (e instanceof Error) {
+      throw e
+    }
+
+    throw new Error(String(e))
   }
 }

@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "api",
+    "web",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@cedarjs/core": "3.0.0",
+    "@cedarjs/eslint-config": "3.0.0",
+    "@cedarjs/project-config": "3.0.0",
+    "@cedarjs/testing": "3.0.0",
+    "vitest": "3.2.4",
+    "prettier-plugin-tailwindcss": "^0.7.0"
+  },
+  "engines": {
+    "node": "=24.x"
+  },
+  "packageManager": "yarn@4.13.0",
+  "resolutions": {
+    "react-is": "19.2.3",
+    "vite": "6.3.7"
+  }
+}

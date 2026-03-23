@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/internal",
-  "version": "2.8.0",
+  "version": "3.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -145,15 +145,15 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.0",
+    "@babel/parser": "7.29.2",
     "@babel/plugin-transform-react-jsx": "7.28.6",
     "@babel/plugin-transform-typescript": "^7.26.8",
-    "@babel/runtime-corejs3": "7.29.0",
     "@babel/traverse": "7.29.0",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/router": "workspace:*",
+    "@cedarjs/structure": "workspace:*",
     "@graphql-codegen/add": "6.0.0",
     "@graphql-codegen/cli": "6.2.1",
     "@graphql-codegen/client-preset": "5.2.4",
@@ -168,7 +168,6 @@
     "@graphql-tools/documents": "1.0.1",
     "@sdl-codegen/node": "2.0.1",
     "ansis": "4.2.0",
-    "core-js": "3.48.0",
     "deepmerge": "4.3.1",
     "esbuild": "0.25.12",
     "fast-glob": "3.3.3",

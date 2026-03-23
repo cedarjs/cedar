@@ -61,7 +61,7 @@ export function fragmentsTasks(outputPath: string) {
     {
       title: 'Generate SDLs for produce and stall',
       task: async () => {
-        const generateSdl = createBuilder('yarn cedar g sdl')
+        const generateSdl = createBuilder('yarn cedar g sdl', 'api')
 
         await generateSdl('stall')
         await generateSdl('produce')

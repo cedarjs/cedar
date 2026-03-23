@@ -49,8 +49,10 @@ export async function rscBuildForSsr({
       noExternal: true,
       external: [
         '@prisma/client',
+        '@prisma/adapter-better-sqlite3',
         '@prisma/fetch-engine',
         '@prisma/internals',
+        'better-sqlite3',
         '@cedarjs/auth-dbauth-api',
         '@cedarjs/cookie-jar',
         '@cedarjs/server-store',
@@ -86,19 +88,19 @@ export async function rscBuildForSsr({
           // index.css bundle but we don't actually want this on an rsc page!
           // TODO (RSC): Look into if we can remove this (and perhaps instead
           // use entry.server)
-          __rwjs__client_entry: rwPaths.web.entryClient,
+          __cedarjs__client_entry: rwPaths.web.entryClient,
           'entry.server': rwPaths.web.entryServer,
           // we need this, so that the output contains rsc-specific bundles
           // for the client-only components. They get loaded once the page is
           // rendered
           ...clientEntryFiles,
           // These import redirections are so that we don't bundle multiple versions of react
-          __rwjs__react: 'react',
-          __rwjs__location: '@cedarjs/router/location',
-          __rwjs__server_auth_provider: '@cedarjs/auth/ServerAuthProvider',
-          __rwjs__server_inject: '@cedarjs/web/serverInject',
-          '__rwjs__rsdw-client': 'react-server-dom-webpack/client.edge',
-          // TODO (RSC): add __rwjs__ prefix to the entry below
+          __cedarjs__react: 'react',
+          __cedarjs__location: '@cedarjs/router/location',
+          __cedarjs__server_auth_provider: '@cedarjs/auth/ServerAuthProvider',
+          __cedarjs__server_inject: '@cedarjs/web/serverInject',
+          '__cedarjs__rsdw-client': 'react-server-dom-webpack/client.edge',
+          // TODO (RSC): add __cedarjs__ prefix to the entry below
           'rd-server': 'react-dom/server.edge',
           // We need the document for React's fallback
           Document: rwPaths.web.document,
@@ -115,11 +117,11 @@ export async function rscBuildForSsr({
           entryFileNames: (chunkInfo) => {
             if (
               chunkInfo.name === 'rd-server' ||
-              chunkInfo.name === '__rwjs__react' ||
-              chunkInfo.name === '__rwjs__location' ||
-              chunkInfo.name === '__rwjs__server_auth_provider' ||
-              chunkInfo.name === '__rwjs__server_inject' ||
-              chunkInfo.name === '__rwjs__rsdw-client' ||
+              chunkInfo.name === '__cedarjs__react' ||
+              chunkInfo.name === '__cedarjs__location' ||
+              chunkInfo.name === '__cedarjs__server_auth_provider' ||
+              chunkInfo.name === '__cedarjs__server_inject' ||
+              chunkInfo.name === '__cedarjs__rsdw-client' ||
               chunkInfo.name === 'entry.server' ||
               chunkInfo.name === 'Document'
             ) {

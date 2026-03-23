@@ -4,9 +4,12 @@ import type { Argv } from 'yargs'
 // @ts-expect-error - Types not available for JS files
 import { workspaces } from '../lib/project.js'
 
+import type { TypeCheckHandlerArgs } from './type-checkHandler.js'
+
 export const command = 'type-check [sides..]'
 export const aliases = ['tsc', 'tc']
 export const description = 'Run a TypeScript compiler check on your project'
+
 export const builder = (yargs: Argv) => {
   yargs
     .strict(false) // so that we can forward arguments to tsc
@@ -40,7 +43,7 @@ export const builder = (yargs: Argv) => {
     )
 }
 
-export const handler = async (options: Record<string, unknown>) => {
+export const handler = async (options: TypeCheckHandlerArgs) => {
   const { handler } = await import('./type-checkHandler.js')
   return handler(options)
 }

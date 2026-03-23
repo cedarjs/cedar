@@ -4,13 +4,13 @@ import mapValues from 'lodash/mapValues.js'
 import uniqBy from 'lodash/uniqBy.js'
 import * as tsm from 'ts-morph'
 
-import type { Location } from './Location'
-import { Location_is } from './Location'
-import type { Position } from './Position'
-import { Position_compare } from './Position'
-import type { Range } from './Range'
-import { Range_create } from './Range'
-import { URL_file } from './URL'
+import type { Location } from './Location.js'
+import { Location_is } from './Location.js'
+import type { Position } from './Position.js'
+import { Position_compare } from './Position.js'
+import type { Range } from './Range.js'
+import { Range_create } from './Range.js'
+import { URL_file } from './URL.js'
 
 export type DocumentUri = string
 

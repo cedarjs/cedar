@@ -172,13 +172,15 @@ export const getCellGqlQuery = (ast: types.Node) => {
         node.exportKind === 'value' &&
         types.isVariableDeclaration(node.declaration)
       ) {
-        const exportedQueryNode = node.declaration.declarations.find((d) => {
-          return (
-            types.isIdentifier(d.id) &&
-            d.id.name === 'QUERY' &&
-            types.isTaggedTemplateExpression(d.init)
-          )
-        })
+        const exportedQueryNode = node.declaration.declarations.find(
+          (d: types.VariableDeclarator) => {
+            return (
+              types.isIdentifier(d.id) &&
+              d.id.name === 'QUERY' &&
+              types.isTaggedTemplateExpression(d.init)
+            )
+          },
+        )
 
         if (exportedQueryNode) {
           const templateExpression =

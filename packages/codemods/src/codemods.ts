@@ -3,6 +3,8 @@
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
+import { loadEnvFiles } from '@cedarjs/cli-helpers'
+
 import * as v2TsconfigForRouteHooks from './codemods/redwood/v2.3.x/tsconfigForRouteHooks/tsconfigForRouteHooks.yargs.js'
 import * as v2ConfigureFastify from './codemods/redwood/v2.x.x/configureFastify/configureFastify.yargs.js'
 import * as v2UpdateResolverTypes from './codemods/redwood/v2.x.x/updateResolverTypes/updateResolverTypes.yargs.js'
@@ -24,12 +26,20 @@ import * as v6ThemeConfig from './codemods/redwood/v6.x.x/updateThemeConfig/upda
 import * as v7Gql from './codemods/redwood/v7.x.x/updateGraphQLConfig/updateGraphqlConfig.yargs.js'
 import * as v2MoveGeneratorTemplates from './codemods/v2.3.x/moveGeneratorTemplates/moveGeneratorTemplates.yargs.js'
 import * as v2PrismaV7Prep from './codemods/v2.7.x/prismaV7Prep/prismaV7Prep.yargs.js'
+import * as v3PrismaV7 from './codemods/v3.x/prismaV7/prismaV7.yargs.js'
+
+// This only loads environment variables before the codemods run, not before
+// they're imported. So codemods can't access env vars at module initialization
+// time (e.g. to be used as part of a codemod description). This isn't a problem
+// today, but something to be aware of for the future
+loadEnvFiles()
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 yargs(hideBin(process.argv))
   .scriptName('')
   .command(v2MoveGeneratorTemplates)
   .command(v2PrismaV7Prep)
+  .command(v3PrismaV7)
   .command('redwood', 'List or run Redwood codemods', (yargs) => {
     return yargs
       .command(v2TsconfigForRouteHooks)
@@ -55,6 +65,11 @@ yargs(hideBin(process.argv))
       .strict()
   })
   .demandCommand()
+  .option('load-env-files', {
+    describe:
+      'Load additional .env files. Values defined in files specified later override earlier ones.',
+    array: true,
+  })
   .epilog(
     [
       'Examples:',

@@ -36,17 +36,24 @@ jobs:
         working-directory: ${{ steps.crwa.outputs.project-path }}
 
       - name: 🌲 Run Cypress
-        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
         env:
           CYPRESS_RW_PATH: ${{ steps.crwa.outputs.project-path }}
-        with:
-          browser: chrome
-          env: true
-          install: false
-          wait-on: 'http://[::1]:8910'
-          working-directory: ./tasks/e2e
-          spec: |
-            cypress/e2e/01-tutorial/*.cy.js
+        working-directory: ./tasks/e2e
+        run: |
+          echo "Waiting for dev server..."
+          attempt=0
+          until curl --silent --fail http://[::1]:8910; do
+            attempt=$((attempt + 1))
+            if [ $attempt -ge 60 ]; then
+              echo "Dev server did not start in time" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "Dev server is up"
+          npx cypress run \
+            --browser chrome \
+            --spec 'cypress/e2e/01-tutorial/*.cy.js'
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()

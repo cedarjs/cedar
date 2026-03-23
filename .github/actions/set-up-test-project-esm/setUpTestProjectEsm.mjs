@@ -12,7 +12,7 @@ import {
 } from '../actionsLib.mjs'
 
 const parentDir = path.dirname(process.cwd())
-const TEST_PROJECT_PATH = path.join(parentDir, 'esm-test-project')
+const TEST_PROJECT_PATH = path.join(parentDir, 'test-project-esm')
 const execInProject = createExecWithEnvInCwd(TEST_PROJECT_PATH)
 
 core.setOutput('test-project-path', TEST_PROJECT_PATH)
@@ -30,7 +30,7 @@ async function setUpTestProjectEsm({ canary }) {
   const TEST_PROJECT_FIXTURE_PATH = path.join(
     CEDAR_FRAMEWORK_PATH,
     '__fixtures__',
-    'esm-test-project',
+    'test-project-esm',
   )
 
   console.log(`Creating project at ${TEST_PROJECT_PATH}`)
@@ -66,6 +66,9 @@ async function setUpTestProjectEsm({ canary }) {
 
   console.log('Running prisma migrate reset')
   await execInProject('yarn cedar prisma migrate reset --force')
+
+  console.log('Running prisma db seed')
+  await execInProject('yarn cedar prisma db seed')
 }
 
 setUpTestProjectEsm({ canary })

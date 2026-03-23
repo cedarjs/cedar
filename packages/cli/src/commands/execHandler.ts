@@ -13,22 +13,9 @@ import { findScripts } from '@cedarjs/internal/dist/files'
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { runScriptFunction } from '../lib/exec.js'
-// @ts-expect-error - Types not available for JS files
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
-
-type ExecArgs = Record<string, unknown> & {
-  name?: string
-  prisma?: boolean
-  list?: boolean
-  silent?: boolean
-  _?: unknown[]
-  $0?: string
-  l?: boolean
-  s?: boolean
-}
-type ExecTask = ListrTask
 
 const printAvailableScriptsToConsole = () => {
   // Loop through all scripts and get their relative path
@@ -62,11 +49,19 @@ const printAvailableScriptsToConsole = () => {
   console.log()
 }
 
-export const handler = async (args: ExecArgs) => {
+interface ExecOptions {
+  name?: string
+  prisma?: boolean
+  list?: boolean
+  silent?: boolean
+  [key: string]: unknown
+}
+
+export const handler = async (args: ExecOptions) => {
   recordTelemetryAttributes({
     command: 'exec',
-    prisma: args.prisma,
-    list: args.list,
+    prisma: !!args.prisma,
+    list: !!args.list,
   })
 
   const { name, prisma, list, ...scriptArgs } = args
@@ -90,7 +85,9 @@ export const handler = async (args: ExecArgs) => {
   // arguments we haven't given a name.
   // `'exec'` is of no interest to the user, as its not meant to be an argument
   // to their script. And so we remove it from the array.
-  scriptArgs._ = (Array.isArray(scriptArgs._) ? scriptArgs._ : []).slice(1)
+  if (Array.isArray(scriptArgs._)) {
+    scriptArgs._ = scriptArgs._.slice(1)
+  }
 
   // 'cedar' is not meant for the script's args, so delete that
   delete scriptArgs.$0
@@ -114,15 +111,15 @@ export const handler = async (args: ExecArgs) => {
     process.exit(1)
   }
 
-  const scriptTasks: ExecTask[] = [
+  const scriptTasks: ListrTask[] = [
     {
       title: 'Generating Prisma client',
-      enabled: () => Boolean(prisma),
+      enabled: () => !!prisma,
       task: () =>
         generatePrismaClient({
           force: false,
           verbose: !args.silent,
-          silent: args.silent,
+          silent: !!args.silent,
         }),
     },
     {
@@ -153,7 +150,7 @@ export const handler = async (args: ExecArgs) => {
   })
 }
 
-function resolveScriptPath(name: string): string | null {
+function resolveScriptPath(name: string) {
   const scriptPath = path.join(getPaths().scripts, name)
 
   // If scriptPath already has an extension, and it's a valid path, return it

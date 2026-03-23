@@ -40,7 +40,7 @@ export async function webTasks(
         // @NOTE: use cfw, because calling the copy function doesn't seem to work here
         task: () =>
           execa(
-            'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.5.12',
+            'yarn workspace web add -D postcss postcss-loader tailwindcss autoprefixer prettier-plugin-tailwindcss@^0.7.0',
             [],
             getExecaOptions(outputPath),
           ),
@@ -81,19 +81,19 @@ export async function webTasks(
 interface ApiTasksOptions {
   verbose: boolean
   linkWithLatestFwBuild: boolean
-  esmProject: boolean
+  esm: boolean
 }
 
 export async function apiTasks(
   outputPath: string,
-  { verbose, linkWithLatestFwBuild, esmProject }: ApiTasksOptions,
+  { verbose, linkWithLatestFwBuild, esm }: ApiTasksOptions,
 ) {
   setOutputPath(outputPath)
 
   const baseTasks = apiTasksList({
     dbAuth: 'canary',
     linkWithLatestFwBuild,
-    esmProject,
+    esm,
   })
 
   // Some tasks returns an array of tasks, those needs to be wrapped in a Listr

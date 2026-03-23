@@ -7,19 +7,19 @@ import type * as tsm from 'ts-morph'
 
 import { getSchemaPath } from '@cedarjs/project-config'
 
-import { BaseNode } from '../nodes'
-import { lazy } from '../x/decorators'
-import type { ExtendedDiagnostic } from '../x/diagnostics'
+import { BaseNode } from '../nodes.js'
+import { lazy } from '../x/decorators.js'
+import type { ExtendedDiagnostic } from '../x/diagnostics.js'
 import {
   LocationLike_toHashLink,
   LocationLike_toLocation,
-} from '../x/diagnostics'
-import { DiagnosticSeverity } from '../x/diagnostics'
-import type { Location } from '../x/Location'
-import { prisma_parseEnvExpressionsInFile } from '../x/prisma'
+} from '../x/diagnostics.js'
+import { DiagnosticSeverity } from '../x/diagnostics.js'
+import type { Location } from '../x/Location.js'
+import { prisma_parseEnvExpressionsInFile } from '../x/prisma.js'
 
-import type { RWProject } from './RWProject'
-import { process_env_findAll } from './util/process_env'
+import type { RWProject } from './RWProject.js'
+import { process_env_findAll } from './util/process_env.js'
 
 type EnvVarMap = Record<string, string>
 
@@ -82,7 +82,7 @@ export class RWEnvHelper extends BaseNode {
   }
 
   private _dotenv(f: string) {
-    const file = join(this.parent.projectRoot, f)
+    const file = join(this.parent.pathHelper.base, f)
     if (!fs.existsSync(file)) {
       return undefined
     }

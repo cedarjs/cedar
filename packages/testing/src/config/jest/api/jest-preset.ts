@@ -17,22 +17,21 @@ const config: Config = {
   runner: path.join(__dirname, '../jest-serial-runner.js'),
   testEnvironment: path.join(__dirname, './RedwoodApiJestEnv.js'),
   globals: {
-    __RWJS__TEST_IMPORTS: {
+    __CEDARJS__TEST_IMPORTS: {
       apiSrcPath: rwjsPaths.api.src,
       tearDownCachePath: path.join(
         rwjsPaths.generated.base,
         'scenarioTeardown.json',
       ),
-      prismaConfigPath: rwjsPaths.api.prismaConfig,
     },
   },
-  sandboxInjectedGlobals: ['__RWJS__TEST_IMPORTS'],
+  sandboxInjectedGlobals: ['__CEDARJS__TEST_IMPORTS'],
   displayName: {
     color: 'redBright',
     name: 'api',
   },
   collectCoverageFrom: [
-    '**/*.{js,jsx,ts,tsx}',
+    '**/*.{js,jsx,ts,tsx,mts,cts}',
     '!**/node_modules/**',
     '!**/dist/**',
   ],
@@ -46,6 +45,8 @@ const config: Config = {
   // Note this setup runs for each test file!
   setupFilesAfterEnv: [path.join(__dirname, './jest.setup.js')],
   moduleNameMapper: {
+    '^api/(.*)$': path.join(rwjsPaths.base, 'api/$1'),
+    '^src/(.*)$': path.join(rwjsPaths.api.src, '$1'),
     // @NOTE: Import @cedarjs/testing in api tests, and it automatically remaps to the api side only
     // This is to prevent web stuff leaking into api, and vice versa
     '^@cedarjs/testing$': path.join(NODE_MODULES_PATH, '@cedarjs/testing/api'),
@@ -53,7 +54,7 @@ const config: Config = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
-    '\\.[jt]sx?$': [
+    '\\.[cm]?[jt]sx?$': [
       'babel-jest',
       // When jest runs tests in parallel, it serializes the config before passing down options to babel
       // that's why these must be serializable. So ideally, we should just pass reference to a
