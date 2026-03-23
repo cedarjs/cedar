@@ -12,7 +12,7 @@ import type { SupabaseAuthMiddlewareOptions } from '../index.js'
 
 const FIXTURE_PATH = path.resolve(
   __dirname,
-  '../../../../../../__fixtures__/kitchen-sink-project',
+  '../../../../../../__fixtures__/test-project',
 )
 
 vi.mock('jsonwebtoken', () => {

@@ -21,7 +21,7 @@ const FIXTURE_PATH_EXAMPLE_WITH_ERRORS = path.resolve(
 
 const FIXTURE_PATH_TEST_PROJECT = path.resolve(
   __dirname,
-  '../../../../__fixtures__/kitchen-sink-project',
+  '../../../../__fixtures__/test-project',
 )
 
 describe('Routes within the empty project', () => {
