@@ -1,7 +1,9 @@
-import path from 'node:path'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 // See https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/constructor
 // for options.
+
+import path from 'node:path'
+
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 
 import { PrismaClient } from 'api/db/generated/prisma/client.mts'
 

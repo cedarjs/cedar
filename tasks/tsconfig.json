@@ -7,5 +7,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "exclude": ["kitchen-sink-project/templates"]
+  "exclude": ["test-project/templates"]
 }

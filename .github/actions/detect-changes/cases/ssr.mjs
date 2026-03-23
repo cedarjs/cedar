@@ -11,7 +11,7 @@ export function ssrChanged(changedFiles) {
     if (
       changedFile.startsWith('tasks/smoke-tests/streaming-ssr') ||
       changedFile === 'tasks/smoke-tests/basePlaywright.config.ts' ||
-      changedFile === 'tasks/kitchen-sink-project/codemods/delayedPage.js' ||
+      changedFile === 'tasks/test-project/codemods/delayedPage.js' ||
       changedFile.startsWith('packages/internal/') ||
       changedFile.startsWith('packages/project-config/') ||
       changedFile.startsWith('packages/web/') ||
