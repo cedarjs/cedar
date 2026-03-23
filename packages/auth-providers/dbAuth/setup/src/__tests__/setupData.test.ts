@@ -8,7 +8,7 @@ const ENV_DEFAULTS_VAR = process.env.ENV_DEFAULTS_VAR
 
 const { cedarProjectPath, prismaConfigPath, libPath, functionsPath } =
   vi.hoisted(() => {
-    const cedarProjectPath = '../../../../__fixtures__/kitchen-sink-project'
+    const cedarProjectPath = '../../../../__fixtures__/test-project'
 
     return {
       cedarProjectPath,
@@ -55,7 +55,7 @@ afterAll(() => {
   process.env.ENV_DEFAULTS_VAR = ENV_DEFAULTS_VAR
 })
 
-describe('setupData createUserModelTask (kitchen-sink-project)', () => {
+describe('setupData createUserModelTask (test-project)', () => {
   it('throws an error if a User model already exists', async () => {
     await expect(() => {
       return createUserModelTask.task({

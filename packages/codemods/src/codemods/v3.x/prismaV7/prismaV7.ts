@@ -17,7 +17,6 @@ export type PrismaV7Context = {
   provider: string
   isSqlite: boolean
   isPostgres: boolean
-  paths: ReturnType<typeof getPaths>
   dbFilePath: string | null
 }
 
@@ -55,12 +54,12 @@ export async function getPrismaV7Context(): Promise<PrismaV7Context> {
     dbFilePath = dbPathJs
   }
 
-  return { provider, isSqlite, isPostgres, paths, dbFilePath }
+  return { provider, isSqlite, isPostgres, dbFilePath }
 }
 
 export default async function prismaV7(): Promise<void> {
+  const paths = getPaths()
   const context = await getPrismaV7Context()
-  const { paths, isSqlite } = context
 
   // 1. Update schema.prisma
   await runUpdateSchemaFile()
@@ -75,7 +74,7 @@ export default async function prismaV7(): Promise<void> {
       targetPaths: [context.dbFilePath],
       parser: 'ts',
       options: {
-        isSqlite,
+        isSqlite: context.isSqlite,
         isPostgres: context.isPostgres,
         silent: true,
       } as Record<string, unknown>,
@@ -86,7 +85,7 @@ export default async function prismaV7(): Promise<void> {
   await rewriteRemainingImports()
 
   // 5. Update api/package.json (SQLite and PostgreSQL)
-  if (isSqlite || context.isPostgres) {
+  if (context.isSqlite || context.isPostgres) {
     await updateApiPackageJson(path.join(paths.api.base, 'package.json'), {
       provider: context.provider,
     })

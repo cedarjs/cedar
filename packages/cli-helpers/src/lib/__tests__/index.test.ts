@@ -10,7 +10,7 @@ vi.mock('../paths', () => {
       return {
         base: path.resolve(
           __dirname,
-          '../../../../../__fixtures__/kitchen-sink-project',
+          '../../../../../__fixtures__/test-project',
         ),
       }
     },
@@ -22,7 +22,7 @@ const CEDAR_CWD = process.env.CEDAR_CWD
 beforeAll(() => {
   process.env.CEDAR_CWD = path.resolve(
     __dirname,
-    '../../../../../__fixtures__/kitchen-sink-project',
+    '../../../../../__fixtures__/test-project',
   )
 })
 
