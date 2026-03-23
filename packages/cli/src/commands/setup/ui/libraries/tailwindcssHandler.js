@@ -251,7 +251,8 @@ export const handler = async ({ force, install }) => {
           if (tailwindDirectivesExist(indexCSS)) {
             task.skip('Directives already exist in index.css')
           } else {
-            const newIndexCSS = getTailwindImportsAndNotes().join('\n') + indexCSS
+            const newIndexCSS =
+              getTailwindImportsAndNotes().join('\n') + indexCSS
             fs.writeFileSync(INDEX_CSS_PATH, newIndexCSS)
           }
         },

@@ -56,11 +56,15 @@ export const handler = async ({ force }) => {
                    */
                   const pm = getPackageManager()
                   await runPackageManagerCommand(
-                    addWorkspacePackages('web', [
-                      'i18next',
-                      'react-i18next',
-                      'i18next-browser-languagedetector',
-                    ], pm),
+                    addWorkspacePackages(
+                      'web',
+                      [
+                        'i18next',
+                        'react-i18next',
+                        'i18next-browser-languagedetector',
+                      ],
+                      pm,
+                    ),
                   )
                 },
               },

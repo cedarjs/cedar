@@ -187,8 +187,7 @@ function getUpdateMessage() {
 
   let updateCount = 0
   const pm = getPackageManager()
-  let message =
-    ` New updates to Cedar are available via \`${formatCedarCommand(['upgrade'], pm)}#REPLACEME#\` `
+  let message = ` New updates to Cedar are available via \`${formatCedarCommand(['upgrade'], pm)}#REPLACEME#\` `
   data.remoteVersions.forEach((version, tag) => {
     if (semver.gt(version, data.localVersion)) {
       updateCount += 1

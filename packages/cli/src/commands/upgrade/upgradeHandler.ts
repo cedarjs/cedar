@@ -248,9 +248,7 @@ async function pmInstall({ verbose }: { verbose?: boolean }) {
   } catch {
     const installCmd = formatInstallCommand(pm)
     const dedupeCmd =
-      pm === 'yarn'
-        ? ` and then \`${formatCedarCommand(['dedupe'], pm)}\``
-        : ''
+      pm === 'yarn' ? ` and then \`${formatCedarCommand(['dedupe'], pm)}\`` : ''
     throw new Error(
       `Could not finish installation. Please run \`${installCmd}\`${dedupeCmd}, before continuing`,
     )

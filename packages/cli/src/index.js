@@ -188,7 +188,10 @@ async function runYargs() {
       array: true,
     })
     .example(
-      formatCedarCommand(['exec', 'migrateUsers', '--load-env-files', 'stripe', 'nakama'], getPackageManager()),
+      formatCedarCommand(
+        ['exec', 'migrateUsers', '--load-env-files', 'stripe', 'nakama'],
+        getPackageManager(),
+      ),
       "Run a script, also loading env vars from '.env.stripe' and '.env.nakama'",
     )
     .option('telemetry', {

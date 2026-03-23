@@ -403,7 +403,9 @@ const prerenderRoute = async (
   } catch (error: unknown) {
     console.log()
     console.log(
-      c.warning(`You can use \`${formatCedarCommand(['prerender', '--dry-run'], getPackageManager())}\` to debug`),
+      c.warning(
+        `You can use \`${formatCedarCommand(['prerender', '--dry-run'], getPackageManager())}\` to debug`,
+      ),
     )
     console.log()
 

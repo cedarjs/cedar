@@ -119,10 +119,17 @@ async function getCoherenceConfigFileContent() {
   const buildCmd = formatCedarCommand(['build', 'api'], pm)
   const apiProdCommand = [...buildCmd.split(' '), '&&']
   if (serverFileExists()) {
-    const nodeCmd = formatRunBinCommand('node', ['api/dist/server.js', '--apiRootPath=/api'], pm)
+    const nodeCmd = formatRunBinCommand(
+      'node',
+      ['api/dist/server.js', '--apiRootPath=/api'],
+      pm,
+    )
     apiProdCommand.push(...nodeCmd.split(' '))
   } else {
-    const serveCmd = formatCedarCommand(['serve', 'api', '--apiRootPath=/api'], pm)
+    const serveCmd = formatCedarCommand(
+      ['serve', 'api', '--apiRootPath=/api'],
+      pm,
+    )
     apiProdCommand.push(...serveCmd.split(' '))
   }
 
@@ -217,7 +224,10 @@ const coherenceFiles = {
   yamlTemplate({ pm, db, apiProdCommand }) {
     // Helper: format a command string as a YAML array
     const yamlArray = (cmd) =>
-      `[${cmd.split(' ').map((s) => `"${s}"`).join(', ')}]`
+      `[${cmd
+        .split(' ')
+        .map((s) => `"${s}"`)
+        .join(', ')}]`
 
     const devCmd = yamlArray(
       `${formatCedarCommand(['build', 'api'], pm)} && ${formatCedarCommand(['dev', 'api', '--apiRootPath=/api'], pm)}`,
@@ -229,9 +239,7 @@ const coherenceFiles = {
     const dataMigrationCmd = yamlArray(
       `${formatCedarCommand(['prisma', 'migrate', 'deploy'], pm)} && ${formatCedarCommand(['data-migrate', 'up'], pm)}`,
     )
-    const webProdCmd = yamlArray(
-      formatCedarCommand(['serve', 'web'], pm),
-    )
+    const webProdCmd = yamlArray(formatCedarCommand(['serve', 'web'], pm))
     const webDevCmd = yamlArray(
       formatCedarCommand(['dev', 'web', '--fwd=\\"--allowed-hosts all\\"'], pm),
     )

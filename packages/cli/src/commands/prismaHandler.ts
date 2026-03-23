@@ -95,7 +95,11 @@ export const handler = async ({
 
   console.log()
   console.log(c.note('Running Prisma CLI...'))
-  console.log(c.underline(`$ ${formatRunBinCommand('prisma', args, getPackageManager())}`))
+  console.log(
+    c.underline(
+      `$ ${formatRunBinCommand('prisma', args, getPackageManager())}`,
+    ),
+  )
   console.log()
 
   try {

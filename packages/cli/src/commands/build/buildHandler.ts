@@ -201,7 +201,13 @@ export const handler = async ({
             c.info(formatCedarCommand(['build'], getPackageManager())) +
             ' (without specifying a workspace) to build everything,\n' +
             'or build the package manually first, e.g. ' +
-            c.info(formatRunWorkspaceScriptCommand(problems[0].pkgName, 'build', getPackageManager())),
+            c.info(
+              formatRunWorkspaceScriptCommand(
+                problems[0].pkgName,
+                'build',
+                getPackageManager(),
+              ),
+            ),
         )
       },
     },

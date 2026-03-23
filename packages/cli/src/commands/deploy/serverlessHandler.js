@@ -133,7 +133,11 @@ export const handler = async (yargs) => {
       const pm = getPackageManager()
 
       const { stdout: slsInfo } = await execa.command(
-        formatRunBinCommand('serverless', ['info', '--verbose', `--stage=${yargs.stage}`], pm),
+        formatRunBinCommand(
+          'serverless',
+          ['info', '--verbose', `--stage=${yargs.stage}`],
+          pm,
+        ),
         {
           shell: true,
           cwd: getPaths().api.base,
@@ -191,7 +195,11 @@ export const handler = async (yargs) => {
         await webDeployTasks.run()
 
         const { stdout: slsInfo } = await execa.command(
-          formatRunBinCommand('serverless', ['info', '--verbose', `--stage=${yargs.stage}`], pm),
+          formatRunBinCommand(
+            'serverless',
+            ['info', '--verbose', `--stage=${yargs.stage}`],
+            pm,
+          ),
           {
             shell: true,
             cwd: getPaths().web.base,

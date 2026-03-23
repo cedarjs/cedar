@@ -18,7 +18,9 @@ export const builder = (yargs: Argv) => {
     'CedarJS CLI Reference',
     'https://cedarjs.com/docs/cli-commands#test',
   )
-  const vitestTip = c.tip(formatRunBinCommand('vitest', ['--help'], getPackageManager()))
+  const vitestTip = c.tip(
+    formatRunBinCommand('vitest', ['--help'], getPackageManager()),
+  )
 
   yargs
     .strict(false) // so that we can forward arguments to vitest

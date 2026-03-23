@@ -31,7 +31,12 @@ export async function handler({ force }: { force: boolean }) {
         task: () => {
           if (!getConfig().experimental?.streamingSsr?.enabled) {
             throw new Error(
-              'The Streaming SSR experimental feature must be enabled before you can setup middleware.\n\nRun this command to setup streaming ssr: \n  ' + formatCedarCommand(['exp', 'setup-streaming-ssr'], getPackageManager()) + '\n',
+              'The Streaming SSR experimental feature must be enabled before you can setup middleware.\n\nRun this command to setup streaming ssr: \n  ' +
+                formatCedarCommand(
+                  ['exp', 'setup-streaming-ssr'],
+                  getPackageManager(),
+                ) +
+                '\n',
             )
           }
         },
@@ -116,8 +121,12 @@ export async function handler({ force }: { force: boolean }) {
             "og:image generation is almost ready to go! You'll need to add playwright as a dependency to the web side and then install the headless browser packages:",
           )
           notes.push('')
-          notes.push(`  ${formatAddWorkspacePackagesCommand('web', ['playwright'], getPackageManager())}`)
-          notes.push(`  ${formatRunWorkspaceBinCommand('web', 'playwright', ['install'], getPackageManager())}`)
+          notes.push(
+            `  ${formatAddWorkspacePackagesCommand('web', ['playwright'], getPackageManager())}`,
+          )
+          notes.push(
+            `  ${formatRunWorkspaceBinCommand('web', 'playwright', ['install'], getPackageManager())}`,
+          )
           notes.push('')
           notes.push(
             'Depending on how your host is configured you may need to install additional dependencies first. If so, the `playwright install` step will error out and give you the command to run to install those deps.',

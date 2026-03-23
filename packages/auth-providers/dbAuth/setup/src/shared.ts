@@ -100,13 +100,10 @@ export function generateAuthPagesTask(generatingUserModel: boolean) {
       }
 
       const pm = getPackageManager()
-      await runPackageManagerCommand(
-        runScript('cedar', pm, cedarArgs),
-        {
-          stdio: 'inherit',
-          cwd: rwjsPaths.base,
-        },
-      )
+      await runPackageManagerCommand(runScript('cedar', pm, cedarArgs), {
+        stdio: 'inherit',
+        cwd: rwjsPaths.base,
+      })
     },
   }
 }

@@ -6,10 +6,7 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-import {
-  getPackageManager,
-  runBin,
-} from '@cedarjs/cli-helpers/packageManager'
+import { getPackageManager, runBin } from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
