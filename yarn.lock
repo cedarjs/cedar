@@ -4148,14 +4148,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electric-sql/pglite-socket@npm:0.0.22":
-  version: 0.0.22
-  resolution: "@electric-sql/pglite-socket@npm:0.0.22"
+"@electric-sql/pglite-socket@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@electric-sql/pglite-socket@npm:0.1.1"
   peerDependencies:
-    "@electric-sql/pglite": 0.3.16
+    "@electric-sql/pglite": 0.4.1
   bin:
     pglite-server: dist/scripts/server.js
-  checksum: 10c0/4669678a1c8c482a515626cf3368f812d3d519c74d74d1ba2574368f37e045791e4b80dfefe45bc34e4d39d1ffd7008f23c0c54835cf2fc0106ed136149eee69
+  checksum: 10c0/9cb0b49b8919f40fa414f2afef3a51404c98d58e77c5e73850a62ca1856692ce06818eb84062ea461eb9cea12994447c62dc81cb9eec4c926d777a120b758525
   languageName: node
   linkType: hard
 
@@ -4168,12 +4168,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electric-sql/pglite-tools@npm:0.2.21":
-  version: 0.2.21
-  resolution: "@electric-sql/pglite-tools@npm:0.2.21"
+"@electric-sql/pglite-tools@npm:0.3.1":
+  version: 0.3.1
+  resolution: "@electric-sql/pglite-tools@npm:0.3.1"
   peerDependencies:
-    "@electric-sql/pglite": 0.3.16
-  checksum: 10c0/298779988f4485d3ed52ce0739cfe4888e69307e2c82b987074966ade6f7a7a8896242a2007b37ed09872ede6701b66d942e98c571181922c129b18977f817ab
+    "@electric-sql/pglite": 0.4.1
+  checksum: 10c0/564dfc5977a409a50ce1a0761910dd34390dee7b3b32c3ea1a1229b82b064ed0e49a6b66c2051959afb595adccc3a05b54ad4e51f5d7fedc6dce7c29a61c34e7
   languageName: node
   linkType: hard
 
@@ -4184,10 +4184,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electric-sql/pglite@npm:0.3.16":
-  version: 0.3.16
-  resolution: "@electric-sql/pglite@npm:0.3.16"
-  checksum: 10c0/fba05c2f8d225dc19b6582005b06ba1ae806549fea6b88404b0cbc6ee776ae9976f323130f03c5e74baeedf58d3566fd97a521cd7ed26a9f5c524c86c3123e1f
+"@electric-sql/pglite@npm:0.4.1":
+  version: 0.4.1
+  resolution: "@electric-sql/pglite@npm:0.4.1"
+  checksum: 10c0/42b7735cf6953804541ff308bb8c892458e4edc50975f440bab3b6ecb40a59dc67d0b59611d512d53b42f7615aa19de61d1a80be32c3443d9f5710b25f6e9110
   languageName: node
   linkType: hard
 
@@ -8764,13 +8764,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/dev@npm:0.22.2":
-  version: 0.22.2
-  resolution: "@prisma/dev@npm:0.22.2"
+"@prisma/dev@npm:0.23.1":
+  version: 0.23.1
+  resolution: "@prisma/dev@npm:0.23.1"
   dependencies:
-    "@electric-sql/pglite": "npm:0.3.16"
-    "@electric-sql/pglite-socket": "npm:0.0.22"
-    "@electric-sql/pglite-tools": "npm:0.2.21"
+    "@electric-sql/pglite": "npm:0.4.1"
+    "@electric-sql/pglite-socket": "npm:0.1.1"
+    "@electric-sql/pglite-tools": "npm:0.3.1"
     "@hono/node-server": "npm:1.19.11"
     "@mrleebo/prisma-ast": "npm:0.15.0"
     "@prisma/get-platform": "npm:7.2.0"
@@ -8785,7 +8785,7 @@ __metadata:
     std-env: "npm:3.10.0"
     valibot: "npm:1.2.0"
     zeptomatch: "npm:2.1.0"
-  checksum: 10c0/5a346ba7482f642d47a373a9f8e2615ad69ae707144921d4ed12305a795bf87110d7c7aad6cb15964d81490e3316e76b81fc845f0d3cc167d5adad46b78a42f1
+  checksum: 10c0/dd83917a259bd899a97acc45c866ff32152e5f79f921b8799cd5ae4048fb2a14e34b3037034df6058794ee5779beabcedf0e23d076673dc6ba9fd01f02452fc9
   languageName: node
   linkType: hard
 
@@ -26450,7 +26450,7 @@ __metadata:
     "@babel/preset-typescript": "npm:7.28.5"
     "@npmcli/arborist": "npm:9.4.2"
     "@playwright/test": "npm:1.58.2"
-    "@prisma/dev": "npm:0.22.2"
+    "@prisma/dev": "npm:0.23.1"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.6.1"
