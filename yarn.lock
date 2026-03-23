@@ -3428,7 +3428,7 @@ __metadata:
     ts-toolbelt: "npm:9.6.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
-    vite: "npm:6.3.7"
+    vite: "npm:6.4.1"
     vitest: "npm:3.2.4"
   languageName: unknown
   linkType: soft
@@ -3469,7 +3469,7 @@ __metadata:
     typescript: "npm:5.9.3"
     unimport: "npm:5.7.0"
     unplugin-auto-import: "npm:19.3.0"
-    vite: "npm:6.3.7"
+    vite: "npm:6.4.1"
     vite-node: "npm:3.2.4"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -3781,7 +3781,7 @@ __metadata:
     rollup: "npm:4.60.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
-    vite: "npm:6.3.7"
+    vite: "npm:6.4.1"
     vite-plugin-cjs-interop: "npm:2.4.4"
     vite-plugin-node-polyfills: "npm:0.25.0"
     vitest: "npm:3.2.4"
@@ -27501,7 +27501,7 @@ __metadata:
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     unplugin-auto-import: "npm:19.3.0"
-    vite: "npm:6.3.7"
+    vite: "npm:6.4.1"
     vite-plugin-node-polyfills: "npm:0.25.0"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -29554,9 +29554,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:6.3.7":
-  version: 6.3.7
-  resolution: "vite@npm:6.3.7"
+"vite@npm:6.4.1":
+  version: 6.4.1
+  resolution: "vite@npm:6.4.1"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.4.4"
@@ -29605,7 +29605,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/05949e10ff7cb7ff9f885497055bf2d8a8831881ad6d64fb1990fb28d0fbf83c102090f994529a05a27267afb9a269c82e13c1ce03561e80f86465c21cc5fc03
+  checksum: 10c0/77bb4c5b10f2a185e7859cc9a81c789021bc18009b02900347d1583b453b58e4b19ff07a5e5a5b522b68fc88728460bb45a63b104d969e8c6a6152aea3b849f7
   languageName: node
   linkType: hard
 
