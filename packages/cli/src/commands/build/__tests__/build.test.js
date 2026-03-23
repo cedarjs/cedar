@@ -1,3 +1,7 @@
+const { mockGetConfig } = vi.hoisted(() => ({
+  mockGetConfig: vi.fn(),
+}))
+
 vi.mock('@cedarjs/telemetry', () => {
   return {
     errorTelemetry: () => vi.fn(),
@@ -22,12 +26,7 @@ vi.mock('@cedarjs/project-config', () => {
         },
       }
     },
-    getConfig: () => {
-      return {
-        // The build command needs nothing in this config as all
-        // the values it currently reads are optional.
-      }
-    },
+    getConfig: mockGetConfig,
     resolveFile: () => {
       // Used by packages/cli/src/lib/index.js
     },
@@ -91,7 +90,7 @@ vi.mock('./buildPackagesTask.js', () => ({
 }))
 
 import { Listr } from 'listr2'
-import { vi, afterEach, test, expect } from 'vitest'
+import { vi, afterEach, beforeEach, test, expect } from 'vitest'
 
 vi.mock('listr2')
 
@@ -103,14 +102,25 @@ vi.mock('execa', () => ({
   })),
 }))
 
+vi.mock('@cedarjs/prerender/detection', () => {
+  return { detectPrerenderRoutes: () => [] }
+})
+
 import { handler } from '../buildHandler.js'
+
+beforeEach(() => {
+  mockGetConfig.mockReturnValue({})
+})
 
 afterEach(() => {
   vi.clearAllMocks()
 })
 
-test('the build tasks are in the correct sequence', async () => {
+test('the build tasks are in the correct sequence when packagesWorkspace is enabled', async () => {
   vi.spyOn(console, 'log').mockImplementation(() => {})
+  mockGetConfig.mockReturnValue({
+    experimental: { packagesWorkspace: { enabled: true } },
+  })
 
   await handler({})
 
@@ -126,17 +136,54 @@ test('the build tasks are in the correct sequence', async () => {
   `)
 })
 
-vi.mock('@cedarjs/prerender/detection', () => {
-  return { detectPrerenderRoutes: () => [] }
+test('the build tasks are in the correct sequence when packagesWorkspace is disabled', async () => {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+
+  await handler({})
+
+  const firstCallArg = vi.mocked(Listr).mock.calls[0][0]
+  const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
+  expect(tasks.map((x) => x.title)).toMatchInlineSnapshot(`
+    [
+      "Generating Prisma Client...",
+      "Verifying graphql schema...",
+      "Building API...",
+      "Building Web...",
+    ]
+  `)
 })
 
-test('Should run prerender for web', async () => {
+test('Should run prerender for web (packagesWorkspace enabled)', async () => {
   const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+  mockGetConfig.mockReturnValue({
+    experimental: { packagesWorkspace: { enabled: true } },
+  })
 
   await handler({ workspace: ['web'], prerender: true })
   expect(Listr.mock.calls[0][0].map((x) => x.title)).toMatchInlineSnapshot(`
     [
       "Checking workspace packages...",
+      "Building Web...",
+    ]
+  `)
+
+  // Run prerendering task, but expect warning,
+  // because `detectPrerenderRoutes` is empty.
+  expect(consoleSpy.mock.calls[0][0]).toBe('Starting prerendering...')
+  expect(consoleSpy.mock.calls[1][0]).toMatch(
+    /You have not marked any routes to "prerender"/,
+  )
+})
+
+test('Should run prerender for web (packagesWorkspace disabled)', async () => {
+  const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+  // mockGetConfig returns {} by default (set in beforeEach), so packagesWorkspace is disabled
+
+  await handler({ workspace: ['web'], prerender: true })
+  const firstCallArg = vi.mocked(Listr).mock.calls[0][0]
+  const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
+  expect(tasks.map((x) => x.title)).toMatchInlineSnapshot(`
+    [
       "Building Web...",
     ]
   `)

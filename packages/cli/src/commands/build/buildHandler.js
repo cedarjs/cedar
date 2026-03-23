@@ -107,6 +107,8 @@ export const handler = async ({
   const cedarConfig = getConfig()
   const useFragments = cedarConfig.graphql?.fragments
   const useTrustedDocuments = cedarConfig.graphql?.trustedDocuments
+  const usePackagesWorkspace =
+    cedarConfig.experimental?.packagesWorkspace?.enabled
 
   const prismaSchemaExists = fs.existsSync(cedarPaths.api.prismaConfig)
   const prerenderRoutes =
@@ -143,37 +145,39 @@ export const handler = async ({
         })
       },
     },
-    nonApiWebWorkspaces.length > 0 && {
-      title: 'Building Packages...',
-      task: (_ctx, task) => buildPackagesTask(task, nonApiWebWorkspaces),
-    },
-    (workspace.includes('web') || workspace.includes('api')) && {
-      title: 'Checking workspace packages...',
-      task: () => {
-        const problems = checkWorkspacePackageEntryPoints(cedarPaths)
-
-        if (problems.length === 0) {
-          return
-        }
-
-        const details = problems
-          .map(
-            ({ pkgName, entryFile, pkgDir }) =>
-              `  • ${c.error(pkgName)}: missing "${entryFile}" (in ${pkgDir})`,
-          )
-          .join('\n')
-
-        throw new Error(
-          `The following workspace package entry points are missing:\n${details}\n\n` +
-            'This usually means the package has not been built yet.\n' +
-            'Run ' +
-            c.info('yarn cedar build') +
-            ' (without specifying a workspace) to build everything,\n' +
-            'or build the package manually first, e.g. ' +
-            c.info(`yarn workspace ${problems[0].pkgName} build`),
-        )
+    nonApiWebWorkspaces.length > 0 &&
+      usePackagesWorkspace && {
+        title: 'Building Packages...',
+        task: (_ctx, task) => buildPackagesTask(task, nonApiWebWorkspaces),
       },
-    },
+    (workspace.includes('web') || workspace.includes('api')) &&
+      usePackagesWorkspace && {
+        title: 'Checking workspace packages...',
+        task: () => {
+          const problems = checkWorkspacePackageEntryPoints(cedarPaths)
+
+          if (problems.length === 0) {
+            return
+          }
+
+          const details = problems
+            .map(
+              ({ pkgName, entryFile, pkgDir }) =>
+                `  • ${c.error(pkgName)}: missing "${entryFile}" (in ${pkgDir})`,
+            )
+            .join('\n')
+
+          throw new Error(
+            `The following workspace package entry points are missing:\n${details}\n\n` +
+              'This usually means the package has not been built yet.\n' +
+              'Run ' +
+              c.info('yarn cedar build') +
+              ' (without specifying a workspace) to build everything,\n' +
+              'or build the package manually first, e.g. ' +
+              c.info(`yarn workspace ${problems[0].pkgName} build`),
+          )
+        },
+      },
     // If using GraphQL Fragments or Trusted Documents, then we need to use
     // codegen to generate the types needed for possible types and the trusted
     // document store hashes
