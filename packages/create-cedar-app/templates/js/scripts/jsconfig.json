@@ -5,6 +5,7 @@
     "target": "es2023",
     "module": "node20",
     "moduleResolution": "node16",
+    "allowImportingTsExtensions": true,
     "paths": {
       "$api/*": [
         "../api/*"

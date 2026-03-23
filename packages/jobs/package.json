@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/jobs",
-  "version": "2.8.0",
+  "version": "3.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -38,8 +38,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@cedarjs/cli-helpers": "2.8.0",
-    "@cedarjs/project-config": "2.8.0",
+    "@cedarjs/cli-helpers": "3.0.0",
+    "@cedarjs/project-config": "3.0.0",
     "cron-parser": "5.5.0",
     "type-fest": "5.5.0"
   },
