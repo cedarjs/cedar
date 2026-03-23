@@ -1,10 +1,10 @@
-import { FindBlogPostQuery } from 'types/graphql'
+import type { FindBlogPostQuery } from 'types/graphql'
 
 import { Link, routes } from '@cedarjs/router'
 
 import Author from 'src/components/Author'
 
-interface Props extends FindBlogPostQuery {}
+type Props = FindBlogPostQuery
 
 const BlogPost = ({ blogPost }: Props) => {
   return (

@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * Rebuilds the root /test-project folder from the __fixtures__/kitchen-sink-project
+ * Rebuilds the root /local-testing-project folder from the __fixtures__/kitchen-sink-project
  * fixture, with local "file:" resolutions pointing at the built .tgz packages.
  *
  * Steps:
  *  1. yarn build:clean && yarn build:pack
  *  2. yarn rebuild-kitchen-sink-project-fixture
- *  3. Delete contents of /test-project
+ *  3. Delete contents of /local-testing-project
  *  4. Copy all files from /__fixtures__/kitchen-sink-project
- *  5. Update /test-project/package.json with file: resolutions
+ *  5. Update /local-testing-project/package.json with file: resolutions
  *  6. Copy .env template and append SESSION_SECRET
  *  7. yarn install, yarn cedar prisma migrate dev, yarn cedar prisma db seed,
  *     yarn cedar prisma generate
@@ -25,7 +25,7 @@ const FIXTURE_PATH = path.join(
   '__fixtures__',
   'kitchen-sink-project',
 )
-const TEST_PROJECT_PATH = path.join(FRAMEWORK_ROOT, 'test-project')
+const TEST_PROJECT_PATH = path.join(FRAMEWORK_ROOT, 'local-testing-project')
 const PACKAGES_PATH = path.join(FRAMEWORK_ROOT, 'packages')
 const ENV_TEMPLATE_PATH = path.join(
   FRAMEWORK_ROOT,
@@ -39,7 +39,7 @@ const ENV_TEMPLATE_PATH = path.join(
 const SESSION_SECRET_APPEND = `
 # Used to encrypt/decrypt session cookies. Change this value and re-deploy to
 # log out all users of your app at once.
-SESSION_SECRET=pe+1111111111111111111111111111111111111111=
+SESSION_SECRET=pe+111111111111111111111111111111111111111111=
 `
 
 // ---------------------------------------------------------------------------

@@ -23,15 +23,15 @@ You don't need to commit any other contents of this directory to your version co
 
 ### Directories
 
-| Name        | Description                                                                                                                                      |
-| :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-| locks       | Stores temporary files that Cedar uses to keep track of the execution of async/background tasks between processes.                               |
-| logs        | Stores log files for background tasks such as update checking.                                                                                   |
-| prebuild    | Stores transpiled JavaScript that is generated as part of Cedar's build process.                                                                 |
-| telemetry   | Stores the recent telemetry that the Cedar CLI has generated. You may inspect these files to see everything Cedar is anonymously collecting.     |
-| types       | Stores the results of type generation.                                                                                                           |
-| updateCheck | Stores a file which contains the results of checking for Cedar updates.                                                                          |
-| studio      | Used to store data for `rw studio`                                                                                                               |
+| Name        | Description                                                                                                                                  |
+| :---------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
+| locks       | Stores temporary files that Cedar uses to keep track of the execution of async/background tasks between processes.                           |
+| logs        | Stores log files for background tasks such as update checking.                                                                               |
+| prebuild    | Stores transpiled JavaScript that is generated as part of Cedar's build process.                                                             |
+| telemetry   | Stores the recent telemetry that the Cedar CLI has generated. You may inspect these files to see everything Cedar is anonymously collecting. |
+| types       | Stores the results of type generation.                                                                                                       |
+| updateCheck | Stores a file which contains the results of checking for Cedar updates.                                                                      |
+| studio      | Used to store data for `rw studio`                                                                                                           |
 
 We try to keep this README up to date but you may, from time to time, find other files or directories in this `.redwood` directory that have not yet been documented here. This is likely nothing to worry about but feel free to let us know and we'll update this list.
 
