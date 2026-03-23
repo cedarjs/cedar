@@ -48,7 +48,8 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
 
     resolveId(id: string, importer?: string) {
       // Skip if no importer (entry point) or if in node_modules
-      if (!importer || importer.includes('/node_modules/')) {
+      // normalizePath ensures backslash Windows paths are handled correctly
+      if (!importer || normalizePath(importer).includes('/node_modules/')) {
         return null
       }
 
@@ -72,7 +73,8 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
           )
 
           if (resolved) {
-            return resolved
+            // Normalize so Vite receives forward-slash paths on Windows
+            return normalizePath(resolved)
           }
         }
       }
@@ -94,7 +96,8 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
         return null
       }
 
-      return newPath
+      // Normalize so Vite receives forward-slash paths on Windows
+      return normalizePath(newPath)
     },
   }
 }
