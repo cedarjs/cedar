@@ -31,14 +31,18 @@ export async function setUpTestProject({
   setOutput('test-project-path', testProjectPath)
 
   const canary = getInput('canary') === 'true'
-  console.log({ canary })
+  const packageManager = getInput('packageManager') || 'yarn'
+  console.log({ canary, packageManager })
+
+  const cedarCmd =
+    packageManager === 'npm' ? 'npx cedar' : `${packageManager} cedar`
 
   console.log()
 
   const TEST_PROJECT_FIXTURE_PATH = path.join(
     cedarFrameworkPath,
     '__fixtures__',
-    'test-project',
+    'test-project' + (packageManager === 'yarn' ? '' : `-${packageManager}`),
   )
 
   console.log(`Creating project at ${testProjectPath}`)
@@ -51,7 +55,7 @@ export async function setUpTestProject({
   if (canary) {
     console.log(`Upgrading project to canary`)
 
-    await execInProject('yarn cedar upgrade -t canary', {
+    await execInProject(`${cedarCmd} upgrade -t canary`, {
       input: Buffer.from('Y'),
     })
 
@@ -63,7 +67,7 @@ export async function setUpTestProject({
   })
 
   console.log('Generating dbAuth secret')
-  const { stdout } = await execInProject('yarn cedar g secret --raw', {
+  const { stdout } = await execInProject(`${cedarCmd} g secret --raw`, {
     silent: true,
   })
   fs.appendFileSync(
@@ -73,8 +77,8 @@ export async function setUpTestProject({
   console.log()
 
   console.log('Running prisma migrate reset')
-  await execInProject('yarn cedar prisma migrate reset --force')
+  await execInProject(`${cedarCmd} prisma migrate reset --force`)
 
   console.log('Running prisma db seed')
-  await execInProject('yarn cedar prisma db seed')
+  await execInProject(`${cedarCmd} prisma db seed`)
 }

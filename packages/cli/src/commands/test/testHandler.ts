@@ -4,6 +4,11 @@ import path from 'node:path'
 import execa from 'execa'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
@@ -195,11 +200,14 @@ export const handler = async ({
     // so we're running it via execa, since `jest.run()` is a bit unstable.
     // https://github.com/facebook/jest/issues/5048
     const runCommand = async () => {
-      await execa('yarn', ['jest', ...jestArgs], {
-        cwd: rwjsPaths.base,
-        stdio: 'inherit',
-        env: { ...process.env, DATABASE_URL },
-      })
+      await runPackageManagerCommand(
+        runBin('jest', jestArgs, getPackageManager()),
+        {
+          cwd: rwjsPaths.base,
+          stdio: 'inherit',
+          env: { ...process.env, DATABASE_URL },
+        },
+      )
     }
 
     if (watch) {

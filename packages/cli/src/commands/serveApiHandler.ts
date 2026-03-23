@@ -1,5 +1,8 @@
-import execa from 'execa'
-
+import {
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getPaths } from '@cedarjs/project-config'
 
 type ServeApiArgv = {
@@ -8,7 +11,7 @@ type ServeApiArgv = {
 }
 
 export const apiServerFileHandler = async (argv: ServeApiArgv) => {
-  const args = ['node', 'server.js', '--apiRootPath', argv.apiRootPath]
+  const args = ['server.js', '--apiRootPath', argv.apiRootPath]
 
   if (argv.port) {
     args.push('--apiPort', String(argv.port))
@@ -16,8 +19,11 @@ export const apiServerFileHandler = async (argv: ServeApiArgv) => {
 
   const filteredArgs = args.filter((arg): arg is string => Boolean(arg))
 
-  await execa('yarn', filteredArgs, {
-    cwd: getPaths().api.dist,
-    stdio: 'inherit',
-  })
+  await runPackageManagerCommand(
+    runBin('node', filteredArgs, getPackageManager()),
+    {
+      cwd: getPaths().api.dist,
+      stdio: 'inherit',
+    },
+  )
 }

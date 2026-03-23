@@ -9,6 +9,9 @@ inputs:
   canary:
     description: Upgrade the project to canary?
     default: 'false'
+  packageManager:
+    description: The package manager to use
+    default: 'yarn'
 
 outputs:
   test-project-path:

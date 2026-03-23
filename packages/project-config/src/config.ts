@@ -73,7 +73,10 @@ interface StudioConfig {
   graphiql?: GraphiQLStudioConfig
 }
 
+export type PackageManager = 'yarn' | 'npm' | 'pnpm'
+
 export interface Config {
+  packageManager: PackageManager
   web: BrowserTargetConfig
   api: NodeTargetConfig
   browser: {
@@ -132,6 +135,7 @@ export interface CLIPlugin {
 }
 
 export const DEFAULT_CONFIG: Config = {
+  packageManager: 'yarn',
   web: {
     title: 'Cedar App',
     port: 8910,

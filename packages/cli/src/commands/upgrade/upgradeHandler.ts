@@ -2,12 +2,18 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
-import execa from 'execa'
 import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  installPackagesFor,
+  runPackageManagerCommand,
+  dedupe,
+  formatInstallCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig } from '@cedarjs/project-config'
 
 // @ts-expect-error - Types not available for JS files
@@ -34,7 +40,7 @@ export const handler = async ({
   dryRun,
   tag,
   verbose,
-  dedupe,
+  dedupe: dedupeFlag,
   yes,
   force,
 }: UpgradeOptions) => {
@@ -43,7 +49,7 @@ export const handler = async ({
     dryRun: !!dryRun,
     tag: tag ?? 'latest',
     verbose: !!verbose,
-    dedupe: !!dedupe,
+    dedupe: !!dedupeFlag,
     yes: !!yes,
     force: !!force,
   })
@@ -130,20 +136,13 @@ export const handler = async ({
           !ctx.preUpgradeError,
       },
       {
-        title: 'Downloading yarn patches',
-        task: (ctx) => downloadYarnPatches(ctx, { dryRun, verbose }),
-        enabled: (ctx) =>
-          String(ctx.versionToUpgradeTo).includes('canary') &&
-          !ctx.preUpgradeError,
-      },
-      {
         title: 'Removing CLI cache',
         task: () => removeCliCache({ dryRun, verbose }),
         enabled: (ctx) => !ctx.preUpgradeError,
       },
       {
-        title: 'Running yarn install',
-        task: () => yarnInstall({ verbose }),
+        title: `Running ${formatInstallCommand(getPackageManager())}`,
+        task: () => pmInstall({ verbose }),
         enabled: (ctx) => !ctx.preUpgradeError,
         skip: () => !!dryRun,
       },
@@ -155,7 +154,7 @@ export const handler = async ({
       },
       {
         title: 'De-duplicating dependencies',
-        skip: () => !!dryRun || !dedupe,
+        skip: () => !!dryRun || !dedupeFlag || getPackageManager() !== 'yarn',
         enabled: (ctx) => !ctx.preUpgradeError,
         task: (_ctx, task) => dedupeDeps(task, { verbose }),
       },
@@ -238,16 +237,18 @@ export const handler = async ({
   }
 }
 
-async function yarnInstall({ verbose }: { verbose?: boolean }) {
+async function pmInstall({ verbose }: { verbose?: boolean }) {
+  const pm = getPackageManager()
   try {
-    await execa('yarn install', {
-      shell: true,
+    await runPackageManagerCommand(installPackagesFor(pm), {
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })
   } catch {
+    const installCmd = formatInstallCommand(pm)
+    const dedupeCmd = pm === 'yarn' ? ' and then `yarn dedupe`' : ''
     throw new Error(
-      'Could not finish installation. Please run `yarn install` and then `yarn dedupe`, before continuing',
+      `Could not finish installation. Please run \`${installCmd}\`${dedupeCmd}, before continuing`,
     )
   }
 }
@@ -499,85 +500,6 @@ async function updatePackageVersionsFromTemplate(
   )
 }
 
-async function downloadYarnPatches(
-  ctx: Record<string, unknown>,
-  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
-) {
-  if (!ctx.versionToUpgradeTo) {
-    throw new Error('Failed to upgrade')
-  }
-
-  const githubToken =
-    process.env.GH_TOKEN ||
-    process.env.GITHUB_TOKEN ||
-    process.env.REDWOOD_GITHUB_TOKEN
-
-  const url =
-    'https://api.github.com/repos/cedarjs/cedar/git/trees/main?recursive=1'
-  const res = await fetch(url, {
-    headers: {
-      ...(githubToken && { Authorization: `Bearer ${githubToken}` }),
-      ['X-GitHub-Api-Version']: '2022-11-28',
-      Accept: 'application/vnd.github+json',
-    },
-  })
-
-  if (!res.ok) {
-    throw new Error(
-      `Failed to fetch list of yarn patches from ${url}: ` + res.statusText,
-    )
-  }
-  const json = await res.json()
-  const patches: { path: string; url: string }[] = json.tree?.filter(
-    (patchInfo: { path: string }) =>
-      patchInfo.path.startsWith(
-        'packages/create-cedar-app/templates/ts/.yarn/patches/',
-      ),
-  )
-
-  const patchDir = path.join(getPaths().base, '.yarn', 'patches')
-
-  if (verbose) {
-    console.log('Creating patch directory', patchDir)
-  }
-
-  if (!dryRun) {
-    fs.mkdirSync(patchDir, { recursive: true })
-  }
-
-  return new Listr(
-    (patches || []).map((patch) => {
-      return {
-        title: `Downloading ${patch.path}`,
-        task: async () => {
-          const res = await fetch(patch.url)
-          if (!res.ok) {
-            throw new Error(
-              `Failed to fetch patch metadata from ${patch.url}: ` +
-                res.statusText,
-            )
-          }
-          const patchMeta = await res.json()
-          const patchPath = path.join(
-            getPaths().base,
-            '.yarn',
-            'patches',
-            path.basename(patch.path),
-          )
-
-          if (verbose) {
-            console.log('Writing patch', patchPath)
-          }
-
-          if (!dryRun) {
-            await fs.promises.writeFile(patchPath, patchMeta.content, 'base64')
-          }
-        },
-      }
-    }),
-  )
-}
-
 async function refreshPrismaClient(
   task: { skip: (msg: string) => void },
   { verbose }: { verbose?: boolean },
@@ -589,8 +511,11 @@ async function refreshPrismaClient(
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     task.skip('Refreshing the Prisma client caused an Error.')
+    const pm = getPackageManager()
+    const cedarCmd =
+      pm === 'yarn' ? 'yarn cedar prisma generate' : 'npx cedar prisma generate'
     console.log(
-      'You may need to update your prisma client manually: $ yarn cedar prisma generate',
+      `You may need to update your prisma client manually: $ ${cedarCmd}`,
     )
     console.log(c.error(message))
   }
@@ -600,9 +525,15 @@ const dedupeDeps = async (
   _task: unknown,
   { verbose }: { verbose?: boolean },
 ) => {
+  const pm = getPackageManager()
+  const dedupeCommand = dedupe(pm)
+
+  if (!dedupeCommand) {
+    return
+  }
+
   try {
-    await execa('yarn dedupe', {
-      shell: true,
+    await runPackageManagerCommand(dedupeCommand, {
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })
@@ -617,5 +548,5 @@ const dedupeDeps = async (
     )
   }
 
-  await yarnInstall({ verbose })
+  await pmInstall({ verbose })
 }
