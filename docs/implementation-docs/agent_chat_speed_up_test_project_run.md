@@ -1,6 +1,6 @@
 ## User (checkpoint)
 
-I ran [@rebuild-kitchen-sink-project-fixture.mts](file:///Users/tobbe/dev/cedarjs/cedar/tasks/kitchen-sink-project/rebuild-kitchen-sink-project-fixture.mts) and got this timing output
+I ran [@rebuild-test-project-fixture.mts](file:///Users/tobbe/dev/cedarjs/cedar/tasks/test-project/rebuild-test-project-fixture.mts) and got this timing output
 
 Execution time summary:
 {
@@ -285,10 +285,10 @@ The biggest time consumers are:
 
 Let me look at what each step does.
 
-**Tool Call: Read file `tasks/kitchen-sink-project/rebuild-test-project-fixture.mts` (lines 355-475)**
+**Tool Call: Read file `tasks/test-project/rebuild-test-project-fixture.mts` (lines 355-475)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/rebuild-test-project-fixture.mts
+```cedar/tasks/test-project/rebuild-test-project-fixture.mts
   const overallStart = Date.now()
 
   // Maybe we could add all of the tasks to an array and infer the `step` from
@@ -413,10 +413,10 @@ Status: Completed
 
 ```
 
-**Tool Call: Read file `tasks/kitchen-sink-project/rebuild-test-project-fixture.mts` (lines 475-870)**
+**Tool Call: Read file `tasks/test-project/rebuild-test-project-fixture.mts` (lines 475-870)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/rebuild-test-project-fixture.mts
+```cedar/tasks/test-project/rebuild-test-project-fixture.mts
     },
   })
 
@@ -825,7 +825,7 @@ Status: Completed
 
 Found 7 matches:
 
-## Matches in cedar/tasks/kitchen-sink-project/rebuild-test-project-fixture-esm.mts
+## Matches in cedar/tasks/test-project/rebuild-test-project-fixture-esm.mts
 
 ### L11-15
 
@@ -847,7 +847,7 @@ import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
 ```
 
-## Matches in cedar/tasks/kitchen-sink-project/rebuild-test-project-fixture.mts
+## Matches in cedar/tasks/test-project/rebuild-test-project-fixture.mts
 
 ### L11-15
 
@@ -869,7 +869,7 @@ import { isAwaitable, isTuiError } from './typing.mts'
 import type { TuiTaskDef } from './typing.mts'
 ```
 
-## Matches in cedar/tasks/kitchen-sink-project/tasks.mts
+## Matches in cedar/tasks/test-project/tasks.mts
 
 ### L1-11
 
@@ -889,7 +889,7 @@ interface WebTasksOptions {
 
 103 lines remaining in ancestor node. Read the file to see all.
 
-## Matches in cedar/tasks/kitchen-sink-project/test-project.mts
+## Matches in cedar/tasks/test-project/test-project.mts
 
 ### L12-16
 
@@ -901,7 +901,7 @@ import { confirmNoFixtureNoLink, getExecaOptions, getCfwBin } from './util.mts'
 
 ```
 
-## Matches in cedar/tasks/kitchen-sink-project/tui-tasks.mts
+## Matches in cedar/tasks/test-project/tui-tasks.mts
 
 ### L1-11
 
@@ -921,10 +921,10 @@ export async function webTasks(outputPath: string) {
 
 17 lines remaining in ancestor node. Read the file to see all.
 
-**Tool Call: Read file `tasks/kitchen-sink-project/tui-tasks.mts`**
+**Tool Call: Read file `tasks/test-project/tui-tasks.mts`**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/tui-tasks.mts
+```cedar/tasks/test-project/tui-tasks.mts
 import type { Options as ExecaOptions } from 'execa'
 
 import { setOutputPath, webTasksList } from './base-tasks.mts'
@@ -955,16 +955,16 @@ export async function webTasks(outputPath: string) {
 
 ```
 
-**Tool Call: Read file `tasks/kitchen-sink-project/base-tasks.mts`**
+**Tool Call: Read file `tasks/test-project/base-tasks.mts`**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/base-tasks.mts
+```cedar/tasks/test-project/base-tasks.mts
 SUCCESS: File outline retrieved. This file is too large to read all at once, so the outline below shows the file's structure with line numbers.
 
 IMPORTANT: Do NOT retry this call without line numbers - you will get the same outline.
 Instead, use the line numbers below to read specific sections by calling this tool again with start_line and end_line parameters.
 
-# File outline for /Users/tobbe/dev/cedarjs/cedar/tasks/kitchen-sink-project/base-tasks.mts
+# File outline for /Users/tobbe/dev/cedarjs/cedar/tasks/test-project/base-tasks.mts
 
 TODO: See if we can get rid of this and just use execa directly [L12]
 let OUTPUT_PATH [L19]
@@ -1189,10 +1189,10 @@ Let me verify they're truly independent. Step 7 is webTasks (operates on web sid
 
 Let me check if both call setOutputPath.
 
-**Tool Call: Read file `tasks/kitchen-sink-project/base-tasks.mts` (lines 19-50)**
+**Tool Call: Read file `tasks/test-project/base-tasks.mts` (lines 19-50)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/base-tasks.mts
+```cedar/tasks/test-project/base-tasks.mts
 let OUTPUT_PATH: string | undefined
 
 export function setOutputPath(path: string) {
@@ -1228,10 +1228,10 @@ export function fullPath(
 
 ```
 
-**Tool Call: Read file `tasks/kitchen-sink-project/base-tasks.mts` (lines 234-260)**
+**Tool Call: Read file `tasks/test-project/base-tasks.mts` (lines 234-260)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/base-tasks.mts
+```cedar/tasks/test-project/base-tasks.mts
 export function apiTasksList({
   dbAuth,
   linkWithLatestFwBuild = false,
@@ -1266,10 +1266,10 @@ export function apiTasksList({
 
 Now let me look at how the `tuiTask` function handles sub-tasks (the `TuiTaskList` return value):
 
-**Tool Call: Read file `tasks/kitchen-sink-project/rebuild-test-project-fixture.mts` (lines 141-277)**
+**Tool Call: Read file `tasks/test-project/rebuild-test-project-fixture.mts` (lines 141-277)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/rebuild-test-project-fixture.mts
+```cedar/tasks/test-project/rebuild-test-project-fixture.mts
 async function tuiTask({ step, title, content, task, parent }: TuiTaskDef) {
   const stepId = (parent ? parent + '.' : '') + step
 
@@ -1485,10 +1485,10 @@ Index 10: (8.10 = 0s)
 
 Let me count the tasks in apiTasksList more carefully.
 
-**Tool Call: Read file `tasks/kitchen-sink-project/base-tasks.mts` (lines 234-514)**
+**Tool Call: Read file `tasks/test-project/base-tasks.mts` (lines 234-514)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/base-tasks.mts
+```cedar/tasks/test-project/base-tasks.mts
 export function apiTasksList({
   dbAuth,
   linkWithLatestFwBuild = false,
@@ -1843,10 +1843,10 @@ Step 9 runs `yarn install` and `yarn cedar build` which is 17.68s.
 
 Actually, let me look for a different angle. Let me look at step 8.6 (dbAuth, 15.53s) more closely since it's a single task taking 15.53s.
 
-**Tool Call: Read file `tasks/kitchen-sink-project/base-tasks.mts` (lines 637-863)**
+**Tool Call: Read file `tasks/test-project/base-tasks.mts` (lines 637-863)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/base-tasks.mts
+```cedar/tasks/test-project/base-tasks.mts
 async function addDbAuth(
   localDbAuth: boolean,
   outputPath: string,
@@ -2116,10 +2116,10 @@ What about within step 7? Let me look at sub-steps:
 
 Let me check what 7.3 and 7.6 are.
 
-**Tool Call: Read file `tasks/kitchen-sink-project/base-tasks.mts` (lines 202-232)**
+**Tool Call: Read file `tasks/test-project/base-tasks.mts` (lines 202-232)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/base-tasks.mts
+```cedar/tasks/test-project/base-tasks.mts
 export function webTasksList() {
   const taskList = [
     {
@@ -2208,10 +2208,10 @@ If these page generation commands could run in parallel, we'd save ~12s. But the
 
 What about cells? Let me check what createCells does.
 
-**Tool Call: Read file `tasks/kitchen-sink-project/base-tasks.mts` (lines 559-594)**
+**Tool Call: Read file `tasks/test-project/base-tasks.mts` (lines 559-594)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/base-tasks.mts
+```cedar/tasks/test-project/base-tasks.mts
 export async function createCells() {
   const createCell = createBuilder('yarn cedar g cell')
 
@@ -2329,7 +2329,7 @@ Status: Completed
 
 Found 1 matches:
 
-## Matches in cedar/tasks/kitchen-sink-project/util.mts
+## Matches in cedar/tasks/test-project/util.mts
 
 ### L117-127
 
@@ -2396,10 +2396,10 @@ Steps 7 and 8 can't easily be parallelized because the api scaffolding (step 8) 
 
 But inside step **8.6** (`Add dbAuth` — 15.53s, the single biggest sub-step), there are three independent `yarn build:pack` calls that run sequentially:
 
-**Tool Call: Read file `tasks/kitchen-sink-project/base-tasks.mts` (lines 690-698)**
+**Tool Call: Read file `tasks/test-project/base-tasks.mts` (lines 690-698)**
 Status: Completed
 
-```cedar/tasks/kitchen-sink-project/base-tasks.mts
+```cedar/tasks/test-project/base-tasks.mts
 
     await exec('yarn build:pack', [], getExecaOptions(setupPkg))
     await exec('yarn build:pack', [], getExecaOptions(apiPkg))
@@ -2418,10 +2418,10 @@ Each of these builds a tarball in a **completely different directory** (`setup/`
 
 This is a 3-line → 5-line change that should cut ~10s off the 15.53s `addDbAuth` step by overlapping all three builds:
 
-**Tool Call: tasks/kitchen-sink-project/base-tasks.mts**
+**Tool Call: tasks/test-project/base-tasks.mts**
 Status: Completed
 
-Diff: tasks/kitchen-sink-project/base-tasks.mts
+Diff: tasks/test-project/base-tasks.mts
 
 ```
 import fs from 'node:fs'

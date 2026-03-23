@@ -11,5 +11,5 @@ inputs:
     default: 'false'
 
 outputs:
-  kitchen-sink-project-path:
+  test-project-path:
     description: Path to the test project
