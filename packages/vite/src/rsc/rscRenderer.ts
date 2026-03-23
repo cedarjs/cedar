@@ -27,7 +27,7 @@ async function loadServerFile(filePath: string) {
 
   if (globalThis.__cedarjs__vite_rsc_runtime) {
     const serverMod =
-      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(filePath)
+      await globalThis.__cedarjs__vite_rsc_runtime.import(filePath)
     return serverMod.default ? serverMod.default : serverMod
   }
 
@@ -39,7 +39,7 @@ const getRoutesComponent: any = async () => {
     const routesPath = getPaths().web.routes
 
     const routesMod =
-      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(routesPath)
+      await globalThis.__cedarjs__vite_rsc_runtime.import(routesPath)
 
     return routesMod.default
   }

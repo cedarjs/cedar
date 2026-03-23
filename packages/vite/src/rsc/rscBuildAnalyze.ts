@@ -1,4 +1,4 @@
-import { build as viteBuild } from 'vite'
+import { build as viteBuild, defaultServerConditions } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -68,7 +68,13 @@ export async function rscBuildAnalyze() {
         'react',
       ],
       resolve: {
-        externalConditions: ['react-server'],
+        // In Vite 6, we must include `defaultServerConditions` alongside
+        // `react-server` so that nested condition maps (e.g. the `node`
+        // sub-condition inside `react-server-dom-webpack/server`'s exports)
+        // can still be resolved. Without `node` (or another environment
+        // condition), the resolver throws "No known conditions for
+        // './server' specifier in 'react-server-dom-webpack' package".
+        externalConditions: ['react-server', ...defaultServerConditions],
       },
     },
     build: {

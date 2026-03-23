@@ -22,7 +22,9 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
   return (userConfig: ViteUserConfig, env: ConfigEnv): ViteUserConfig => {
     let apiHost = process.env.REDWOOD_API_HOST
     apiHost ??= cedarConfig.api.host
-    apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '[::]'
+    // In dev, use the IPv4 loopback so Node's http-proxy can connect to the
+    // API server. Vite's proxy library does a DNS lookup on the literal string
+    apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1'
 
     const streamingSsrEnabled = cedarConfig.experimental.streamingSsr?.enabled
     // @MARK: note that most RSC settings sit in their individual build functions

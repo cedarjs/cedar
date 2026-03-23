@@ -40,7 +40,7 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   const { plugins = [] } = config
 
   // Needs to run before the react plugin, so add to the front
-  plugins.unshift(reactDocgen())
+  plugins.unshift(await reactDocgen())
   plugins.unshift(nodePolyfills())
 
   return mergeConfig(config, {

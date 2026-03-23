@@ -4,13 +4,13 @@ import {
   trackDbImportsPlugin,
 } from '@cedarjs/testing/api/vitest'
 
-import { cedarjsDirectoryNamedImportPlugin } from '../plugins/vite-plugin-cedarjs-directory-named-import.js'
+import { cedarjsResolveCedarStyleImportsPlugin } from '../plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 
 export function cedarVitestPreset() {
   return [
     cedarVitestApiConfigPlugin(),
     autoImportsPlugin(),
-    cedarjsDirectoryNamedImportPlugin(),
+    cedarjsResolveCedarStyleImportsPlugin(),
     trackDbImportsPlugin(),
   ]
 }

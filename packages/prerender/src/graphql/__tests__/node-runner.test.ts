@@ -386,7 +386,7 @@ describe('NodeRunner', () => {
       })
     })
 
-    it('uses cedarjsDirectoryNamedImportPlugin to resolve directory-based named imports', async () => {
+    it('uses cedarjsResolveCedarStyleImportsPlugin to resolve directory-based named imports', async () => {
       const modulePath = path.join(
         fixturesDir,
         'test-modules',

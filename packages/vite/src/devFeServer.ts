@@ -4,7 +4,11 @@ import { createServerAdapter } from '@whatwg-node/server'
 import express from 'express'
 import type { HTTPMethod } from 'find-my-way'
 import type { ViteDevServer } from 'vite'
-import { createServer as createViteServer, createViteRuntime } from 'vite'
+import {
+  createServer as createViteServer,
+  createServerModuleRunner,
+  defaultServerConditions,
+} from 'vite'
 import { cjsInterop } from 'vite-plugin-cjs-interop'
 
 import {
@@ -188,8 +192,9 @@ async function createServer() {
     appType: 'custom',
   })
 
-  globalThis.__cedarjs__vite_ssr_runtime =
-    await createViteRuntime(viteSsrDevServer)
+  globalThis.__cedarjs__vite_ssr_runtime = createServerModuleRunner(
+    viteSsrDevServer.environments.ssr,
+  )
   globalThis.__cedarjs__client_references = new Set<string>()
   globalThis.__cedarjs__server_references = new Set<string>()
 
@@ -240,8 +245,14 @@ async function createServer() {
         // dependencies apart from node built-ins.
         // TODO (RSC): What's the difference between `conditions` and
         // `externalConditions`? When is one used over the other?
-        conditions: ['react-server'],
-        externalConditions: ['react-server'],
+        // In Vite 6, we must include `defaultServerConditions` alongside
+        // `react-server` so that nested condition maps (e.g. the `node`
+        // sub-condition inside `react-server-dom-webpack/server`'s exports)
+        // can still be resolved. Without `node` (or another environment
+        // condition), the resolver throws "No known conditions for
+        // './server' specifier in 'react-server-dom-webpack' package".
+        conditions: ['react-server', ...defaultServerConditions],
+        externalConditions: ['react-server', ...defaultServerConditions],
       },
       optimizeDeps: {
         // We need Vite to optimize these dependencies so that they are resolved
@@ -289,7 +300,8 @@ async function createServer() {
       },
     },
     resolve: {
-      conditions: ['react-server'],
+      // See comment above in ssr.resolve for why we include defaultServerConditions.
+      conditions: ['react-server', ...defaultServerConditions],
     },
     plugins: [
       {
@@ -384,8 +396,9 @@ async function createServer() {
     cacheDir: '../node_modules/.vite-rsc',
   })
 
-  globalThis.__cedarjs__vite_rsc_runtime =
-    await createViteRuntime(viteRscServer)
+  globalThis.__cedarjs__vite_rsc_runtime = createServerModuleRunner(
+    viteRscServer.environments.ssr,
+  )
 
   // create a handler that will invoke middleware with or without a route
   // The DEV one will create a new middleware router on each request
@@ -418,7 +431,7 @@ async function createServer() {
     createWebSocketServer()
 
     const { createRscRequestHandler } =
-      await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(
+      await globalThis.__cedarjs__vite_rsc_runtime.import(
         new URL('./rsc/rscRequestHandler.js', import.meta.url).pathname,
       )
 

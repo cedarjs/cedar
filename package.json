@@ -66,7 +66,7 @@
     "multimatch/minimatch": "npm:3.1.5",
     "prettier-plugin-packagejson/sort-package-json": "3.6.1",
     "test-exclude/minimatch": "npm:3.1.5",
-    "vite": "5.4.21"
+    "vite": "7.3.1"
   },
   "devDependencies": {
     "@actions/cache": "6.0.0",
@@ -85,7 +85,7 @@
     "@babel/preset-typescript": "7.28.5",
     "@npmcli/arborist": "9.4.2",
     "@playwright/test": "1.58.2",
-    "@prisma/dev": "0.22.2",
+    "@prisma/dev": "0.23.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "14.3.1",
     "@testing-library/user-event": "14.6.1",

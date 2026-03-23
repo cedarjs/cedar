@@ -25,7 +25,7 @@ async function getEntries() {
 async function getRoutesComponent(): Promise<React.FunctionComponent> {
   // For SSR during dev
   if (globalThis.__cedarjs__vite_rsc_runtime) {
-    const routesMod = await globalThis.__cedarjs__vite_rsc_runtime.executeUrl(
+    const routesMod = await globalThis.__cedarjs__vite_rsc_runtime.import(
       getPaths().web.routes,
     )
 

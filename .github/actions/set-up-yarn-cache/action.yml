@@ -30,3 +30,19 @@ runs:
         key: yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-${{ github.run_id }}
         restore-keys: |
           yarn-install-state-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}-
+
+    - name: ♻️ Cache node_modules
+      uses: actions/cache@v5
+      with:
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}
+        restore-keys: |
+          node-modules-${{ runner.os }}-
+
+    - name: ♻️ Cache create-cedar-rsc-app node_modules
+      uses: actions/cache@v5
+      with:
+        path: packages/create-cedar-rsc-app/node_modules
+        key: node-modules-create-cedar-rsc-app-${{ runner.os }}-${{ hashFiles('packages/create-cedar-rsc-app/yarn.lock', 'packages/create-cedar-rsc-app/package.json') }}
+        restore-keys: |
+          node-modules-create-cedar-rsc-app-${{ runner.os }}-
