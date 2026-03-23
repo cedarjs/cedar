@@ -69,6 +69,8 @@ describe('page auto loader correctly imports pages', () => {
 
   test('Already imported pages are left alone.', () => {
     expect(result?.code).toContain(`import FooPage from 'src/pages/FooPage'`)
+    // No const declaration should be emitted since the page is already imported
+    expect(result?.code).not.toContain('const FooPage =')
   })
 
   test('RSC specific code should not be added', () => {

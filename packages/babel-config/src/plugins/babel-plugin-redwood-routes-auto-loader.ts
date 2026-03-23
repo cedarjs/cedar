@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import type { PluginObj, types } from '@babel/core'
 
@@ -8,6 +8,7 @@ import {
   getPaths,
   importStatementPath,
   processPagesDir,
+  resolveFile,
 } from '@cedarjs/project-config'
 
 export interface PluginOptions {
@@ -21,7 +22,32 @@ export interface PluginOptions {
 //   'src/pages/ExamplePage' -> '/Users/blah/pathToProject/web/src/pages/ExamplePage'
 
 const getPathRelativeToSrc = (maybeAbsolutePath: string) => {
-  // If the path is already relative
+  // Handle src/ bare specifiers (e.g. 'src/pages/FooPage').
+  // When `forVite` is true (as set in packages/vite/src/index.ts),
+  // babel-plugin-module-resolver's src alias does not run, so these specifiers
+  // arrive here unresolved. We resolve them via the filesystem so that this
+  // auto-loader can correctly match and deregister pages that have been
+  // explicitly imported by the user.
+  if (maybeAbsolutePath.startsWith('src/')) {
+    const basePath = path.join(getPaths().web.base, maybeAbsolutePath)
+
+    const resolved =
+      resolveFile(basePath) ||
+      resolveFile(path.join(basePath, 'index')) ||
+      resolveFile(path.join(basePath, path.basename(basePath)))
+
+    if (resolved) {
+      // Strip the file extension and return a path relative to web.src with a
+      // leading ./ so it matches the format produced by processPagesDir.
+      const withoutExt = resolved.replace(/\.[^/.]+$/, '')
+      return './' + path.relative(getPaths().web.src, withoutExt)
+    }
+
+    // Fallback. This should not happen in a well-formed project
+    return './' + maybeAbsolutePath.slice('src/'.length)
+  }
+
+  // If the path is already relative (and not a src/ specifier), return as-is
   if (!path.isAbsolute(maybeAbsolutePath)) {
     return maybeAbsolutePath
   }

@@ -8,7 +8,7 @@ import { installSourcemapsSupport } from 'vite-node/source-map'
 import { getPaths, importStatementPath } from '@cedarjs/project-config'
 import {
   cedarCellTransform,
-  cedarjsDirectoryNamedImportPlugin,
+  cedarjsResolveCedarStyleImportsPlugin,
   cedarjsJobPathInjectorPlugin,
   cedarSwapApolloProvider,
   cedarImportDirPlugin,
@@ -88,7 +88,7 @@ export async function runScriptFunction({
       ],
     },
     plugins: [
-      cedarjsDirectoryNamedImportPlugin(),
+      cedarjsResolveCedarStyleImportsPlugin(),
       cedarCellTransform(),
       cedarjsJobPathInjectorPlugin(),
       cedarSwapApolloProvider(),
