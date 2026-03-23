@@ -570,7 +570,7 @@ That would increase CI time too much.
 
 Add a `--packageManager` flag to:
 
-- `tasks/test-project/rebuild-kitchen-sink-project-fixture.mts`
+- `tasks/test-project/rebuild-test-project-fixture.mts`
 - `tasks/rebuild-test-project.mts`
 
 This allows manual generation of test fixtures for npm and pnpm so changes can
