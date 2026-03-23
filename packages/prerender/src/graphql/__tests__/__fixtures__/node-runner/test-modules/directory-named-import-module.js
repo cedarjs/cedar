@@ -1,4 +1,4 @@
-// Test module for cedarjsDirectoryNamedImportPlugin functionality
+// Test module for cedarjsResolveCedarStyleImportsPlugin functionality
 // This module tests directory-based named imports that require the plugin
 
 // This import should fail without the directory named import plugin
