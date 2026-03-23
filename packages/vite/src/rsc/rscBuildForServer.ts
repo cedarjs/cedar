@@ -1,4 +1,4 @@
-import { build as viteBuild } from 'vite'
+import { build as viteBuild, defaultServerConditions } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -77,8 +77,15 @@ export async function rscBuildForServer(
         // dependencies apart from node built-ins.
         // TODO (RSC): What's the difference between `conditions` and
         // `externalConditions`? When is one used over the other?
-        conditions: ['react-server'],
-        externalConditions: ['react-server'],
+        //
+        // In Vite 6, we must include `defaultServerConditions` alongside
+        // `react-server` so that nested condition maps (e.g. the `node`
+        // sub-condition inside `react-server-dom-webpack/server`'s exports)
+        // can still be resolved. Without `node` (or another environment
+        // condition), the commonjs resolver throws "No known conditions for
+        // './server' specifier in 'react-server-dom-webpack' package".
+        conditions: ['react-server', ...defaultServerConditions],
+        externalConditions: ['react-server', ...defaultServerConditions],
       },
     },
     plugins: [
