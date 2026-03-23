@@ -6,10 +6,10 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@cedarjs/core": "2.8.0",
-    "@cedarjs/eslint-config": "2.8.0",
-    "@cedarjs/project-config": "2.8.0",
-    "@cedarjs/testing": "2.8.0",
+    "@cedarjs/core": "3.0.0",
+    "@cedarjs/eslint-config": "3.0.0",
+    "@cedarjs/project-config": "3.0.0",
+    "@cedarjs/testing": "3.0.0",
     "prettier-plugin-tailwindcss": "^0.7.0"
   },
   "engines": {
