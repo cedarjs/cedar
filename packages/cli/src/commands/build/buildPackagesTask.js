@@ -1,8 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
-
+import {
+  getPackageManager,
+  runPackageManagerCommand,
+  runScript,
+} from '@cedarjs/cli-helpers/packageManager'
 import { importStatementPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -46,7 +49,10 @@ export async function buildPackagesTask(task, nonApiWebWorkspaces) {
         title: name,
         task: async () => {
           try {
-            await execa('yarn', ['build'], { cwd: workspacePath })
+            const pm = getPackageManager()
+            await runPackageManagerCommand(runScript('build', pm), {
+              cwd: workspacePath,
+            })
           } catch (e) {
             errorTelemetry(
               process.argv,

@@ -1,6 +1,11 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
+import {
+  formatRunBinCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
+
 // @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
@@ -45,7 +50,7 @@ export const builder = (yargs: Argv) => {
     })
     .epilogue(
       `For all available flags, run jest cli directly ${c.tip(
-        'yarn jest --help',
+        formatRunBinCommand('jest', ['--help'], getPackageManager()),
       )}\n\nAlso see the ${terminalLink(
         'CedarJS CLI Reference',
         'https://cedarjs.com/docs/cli-commands#test',

@@ -3,6 +3,10 @@ import { pathToFileURL } from 'node:url'
 import type { Request as ExpressRequest } from 'express'
 import type { ViteDevServer } from 'vite'
 
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getPaths } from '@cedarjs/project-config'
 
 import type { EntryServer } from './types.js'
@@ -15,10 +19,11 @@ export function stripQueryStringAndHashFromPath(url: string) {
 // Without this Postcss can misbehave, and its hard to trace why.
 export function ensureProcessDirWeb(webDir: string = getPaths().web.base) {
   if (process.cwd() !== webDir) {
+    const pm = getPackageManager()
     console.error('⚠️  Warning: CWD is ', process.cwd())
     console.warn('~'.repeat(50))
     console.warn(
-      'The cwd must be web/. Please use `yarn cedar <command>` or run the command from the web/ directory.',
+      `The cwd must be web/. Please use \`${formatCedarCommand(['<command>'], pm)}\` or run the command from the web/ directory.`,
     )
     console.log(`Changing cwd to ${webDir}....`)
     console.log()

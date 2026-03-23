@@ -6,6 +6,10 @@ import boxen from 'boxen'
 import latestVersion from 'latest-version'
 import semver from 'semver'
 
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig } from '@cedarjs/project-config'
 
 // @ts-expect-error - Types not available for JS files
@@ -182,8 +186,9 @@ function getUpdateMessage() {
   const localTag = extractTagFromVersion(data.localVersion) || 'latest'
 
   let updateCount = 0
+  const pm = getPackageManager()
   let message =
-    ' New updates to Cedar are available via `yarn cedar upgrade#REPLACEME#` '
+    ` New updates to Cedar are available via \`${formatCedarCommand(['upgrade'], pm)}#REPLACEME#\` `
   data.remoteVersions.forEach((version, tag) => {
     if (semver.gt(version, data.localVersion)) {
       updateCount += 1
@@ -304,8 +309,7 @@ export function updateCheckMiddleware(argv: { _: (string | number)[] }) {
   // notification based on stale local/remote versions in the same run.
   if (shouldCheck()) {
     setLock(CHECK_LOCK_IDENTIFIER)
-    spawnBackgroundProcess('updateCheck', 'yarn', [
-      'node',
+    spawnBackgroundProcess('updateCheck', 'node', [
       path.join(import.meta.dirname, 'updateCheckExecute.js'),
     ])
   } else if (shouldShow()) {

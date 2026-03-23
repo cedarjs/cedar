@@ -13,6 +13,7 @@ import {
   runPackageManagerCommand,
   dedupe,
   formatInstallCommand,
+  formatCedarCommand,
 } from '@cedarjs/cli-helpers/packageManager'
 import { getConfig } from '@cedarjs/project-config'
 
@@ -246,7 +247,10 @@ async function pmInstall({ verbose }: { verbose?: boolean }) {
     })
   } catch {
     const installCmd = formatInstallCommand(pm)
-    const dedupeCmd = pm === 'yarn' ? ' and then `yarn dedupe`' : ''
+    const dedupeCmd =
+      pm === 'yarn'
+        ? ` and then \`${formatCedarCommand(['dedupe'], pm)}\``
+        : ''
     throw new Error(
       `Could not finish installation. Please run \`${installCmd}\`${dedupeCmd}, before continuing`,
     )
@@ -512,8 +516,7 @@ async function refreshPrismaClient(
     const message = e instanceof Error ? e.message : String(e)
     task.skip('Refreshing the Prisma client caused an Error.')
     const pm = getPackageManager()
-    const cedarCmd =
-      pm === 'yarn' ? 'yarn cedar prisma generate' : 'npx cedar prisma generate'
+    const cedarCmd = formatCedarCommand(['prisma', 'generate'], pm)
     console.log(
       `You may need to update your prisma client manually: $ ${cedarCmd}`,
     )
@@ -542,9 +545,9 @@ const dedupeDeps = async (
     const message = e instanceof Error ? e.message : String(e)
     console.log(c.error(message))
 
+    const pm = getPackageManager()
     throw new Error(
-      'Could not finish de-duplication. Please run `yarn dedupe` before ' +
-        'continuing',
+      `Could not finish de-duplication. Please run \`${formatCedarCommand(['dedupe'], pm)}\` before continuing`,
     )
   }
 

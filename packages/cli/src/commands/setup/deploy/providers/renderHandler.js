@@ -4,6 +4,10 @@ import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -52,11 +56,11 @@ const getRenderYamlContent = async (database) => {
     Prisma datasource provider is detected to be ${detectedDatabase}.
 
     Option 1: Update your schema.prisma provider to be ${database}, then run
-    yarn cedar prisma migrate dev
-    yarn cedar setup deploy render --database ${database}
+    ${formatCedarCommand(['prisma', 'migrate', 'dev'], getPackageManager())}
+    ${formatCedarCommand(['setup', 'deploy', 'render', '--database', database], getPackageManager())}
 
     Option 2: Rerun setup deploy command with current schema.prisma provider:
-    yarn cedar setup deploy render --database ${detectedDatabase}`)
+    ${formatCedarCommand(['setup', 'deploy', 'render', '--database', detectedDatabase], getPackageManager())}`)
   }
 }
 

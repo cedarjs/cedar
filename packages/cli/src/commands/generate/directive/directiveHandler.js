@@ -1,9 +1,13 @@
 import camelcase from 'camelcase'
-import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
@@ -136,12 +140,17 @@ export const handler = async (args) => {
       {
         title: 'Generating TypeScript definitions and GraphQL schemas ...',
         task: () => {
+          const pm = getPackageManager()
           // Regenerate again at the end if we rollback changes
           addFunctionToRollback(async () => {
-            await execa('yarn', ['rw-gen'], { stdio: 'pipe' })
+            await runPackageManagerCommand(runBin('rw-gen', [], pm), {
+              stdio: 'pipe',
+            })
           }, true)
 
-          return execa('yarn', ['rw-gen'], { stdio: 'inherit' })
+          return runPackageManagerCommand(runBin('rw-gen', [], pm), {
+            stdio: 'inherit',
+          })
         },
       },
       {

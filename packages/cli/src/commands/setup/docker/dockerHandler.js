@@ -11,7 +11,6 @@ import {
   addWorkspacePackages,
   runPackageManagerCommand,
   dedupe,
-  formatRunBinCommand,
   formatCedarCommand,
 } from '@cedarjs/cli-helpers/packageManager'
 import { getConfig, getConfigPath, getPaths } from '@cedarjs/project-config'

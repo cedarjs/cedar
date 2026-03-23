@@ -3,12 +3,17 @@ import path from 'path'
 
 import camelcase from 'camelcase'
 import { paramCase } from 'change-case'
-import execa from 'execa'
 import humanize from 'humanize-string'
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  addWorkspacePackages,
+  getPackageManager,
+  removeWorkspacePackages,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
@@ -701,9 +706,14 @@ const addHelperPackages = async (task) => {
   // Has to be v2.1.0 because v3 switched to ESM module format, which we don't
   // support yet (2022-09-20)
   // TODO: Update to latest version when RW supports ESMs
-  await execa('yarn', ['workspace', 'web', 'add', 'humanize-string@2.1.0'])
+  const pm = getPackageManager()
+  await runPackageManagerCommand(
+    addWorkspacePackages('web', ['humanize-string@2.1.0'], pm),
+  )
   addFunctionToRollback(async () => {
-    await execa('yarn', ['workspace', 'web', 'remove', 'humanize-string'])
+    await runPackageManagerCommand(
+      removeWorkspacePackages('web', ['humanize-string'], pm),
+    )
   })
 }
 

@@ -4,6 +4,10 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import type * as Prerender from '@cedarjs/prerender'
 import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -209,7 +213,7 @@ export const getTasks = async (
 
   if (!fs.existsSync(indexHtmlPath)) {
     console.error(
-      'You must run `yarn cedar build web` before trying to prerender.',
+      `You must run \`${formatCedarCommand(['build', 'web'], getPackageManager())}\` before trying to prerender.`,
     )
     process.exit(1)
   }
@@ -399,7 +403,7 @@ const prerenderRoute = async (
   } catch (error: unknown) {
     console.log()
     console.log(
-      c.warning('You can use `yarn cedar prerender --dry-run` to debug'),
+      c.warning(`You can use \`${formatCedarCommand(['prerender', '--dry-run'], getPackageManager())}\` to debug`),
     )
     console.log()
 

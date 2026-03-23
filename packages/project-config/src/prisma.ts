@@ -4,7 +4,27 @@ import { pathToFileURL } from 'node:url'
 
 import type { PrismaConfig } from 'prisma'
 
+import { getConfig } from './config.js'
+import type { PackageManager } from './config.js'
 import { getPaths } from './paths.js'
+
+function getPackageManager(): PackageManager {
+  try {
+    return getConfig().packageManager || 'yarn'
+  } catch {
+    return 'yarn'
+  }
+}
+
+function formatCedarCommand(
+  args: string[],
+  packageManager: PackageManager,
+): string {
+  if (packageManager === 'npm') {
+    return `npm run cedar -- ${args.join(' ')}`
+  }
+  return `${packageManager} cedar ${args.join(' ')}`
+}
 
 // Cache for loaded configs to avoid repeated file system operations
 const configCache = new Map<string, PrismaConfig>()
@@ -205,7 +225,7 @@ export async function resolveGeneratedPrismaClient(): Promise<ResolveReturnType>
       clientPath: prismaClientEntry,
       error:
         `Could not find generated Prisma client entry. Checked: ${checked}. ` +
-        'Run `yarn cedar prisma generate` and try again.',
+        `Run \`${formatCedarCommand(['prisma', 'generate'], getPackageManager())}\` and try again.`,
     }
   }
 

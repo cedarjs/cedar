@@ -15,6 +15,12 @@ import pascalcase from 'pascalcase'
 import { format } from 'prettier'
 
 import {
+  addRootPackages,
+  addWorkspacePackages,
+  getPackageManager,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
+import {
   getConfig as getRedwoodConfig,
   getPaths as getRedwoodPaths,
   resolveFile as internalResolveFile,
@@ -521,32 +527,23 @@ export const addPackagesTask = async ({
     }
   })
 
-  let installCommand
+  let pmCommand
+  const pm = getPackageManager()
   // if web,api
   if (side !== 'project') {
-    installCommand = [
-      'yarn',
-      [
-        'workspace',
-        side,
-        'add',
-        devDependency && '--dev',
-        ...packagesWithSameRWVersion,
-      ].filter(Boolean),
-    ]
+    pmCommand = addWorkspacePackages(side, packagesWithSameRWVersion, pm, {
+      dev: !!devDependency,
+    })
   } else {
-    installCommand = [
-      'yarn',
-      ['add', devDependency && '--dev', ...packagesWithSameRWVersion].filter(
-        Boolean,
-      ),
-    ]
+    pmCommand = addRootPackages(packagesWithSameRWVersion, pm, {
+      dev: !!devDependency,
+    })
   }
 
   return {
     title: `Adding dependencies to ${side}`,
     task: async () => {
-      await execa(...installCommand)
+      await runPackageManagerCommand(pmCommand)
     },
   }
 }

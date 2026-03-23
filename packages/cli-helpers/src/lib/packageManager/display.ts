@@ -4,6 +4,7 @@ import {
   addRootPackages,
   addWorkspacePackages,
   dlx,
+  removeWorkspacePackages,
   runBin,
   runScript,
   runWorkspaceBin,
@@ -48,6 +49,19 @@ export function formatAddWorkspacePackagesCommand(
     packages,
     packageManager,
     opts,
+  )
+  return formatCommand(command, args)
+}
+
+export function formatRemoveWorkspacePackagesCommand(
+  workspace: string,
+  packages: string[],
+  packageManager: PackageManager,
+): string {
+  const { command, args } = removeWorkspacePackages(
+    workspace,
+    packages,
+    packageManager,
   )
   return formatCommand(command, args)
 }

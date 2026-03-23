@@ -4,6 +4,10 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getSchemaPath, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -34,9 +38,9 @@ const notes = [
   '  want to give it a shot, open your `.env` file and add your AWS credentials,',
   '  then run: ',
   '',
-  '    yarn cedar deploy serverless --first-run',
+  `    ${formatCedarCommand(['deploy', 'serverless', '--first-run'], getPackageManager())}`,
   '',
-  '  For subsequent deploys you can just run `yarn cedar deploy serverless`.',
+  `  For subsequent deploys you can just run \`${formatCedarCommand(['deploy', 'serverless'], getPackageManager())}\`.`,
   '',
   '• If you want to use the Serverless Dashboard to manage your app, plug in',
   '  the values for `org` and `app` in `web/serverless.yml` and `api/serverless.yml`',

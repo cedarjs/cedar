@@ -7,6 +7,10 @@ import type { ViteDevServer } from 'vite'
 import { createServer as createViteServer, createViteRuntime } from 'vite'
 import { cjsInterop } from 'vite-plugin-cjs-interop'
 
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import type { RouteSpec } from '@cedarjs/internal/dist/routes.js'
 import { getProjectRoutes } from '@cedarjs/internal/dist/routes.js'
 import type { Paths } from '@cedarjs/project-config'
@@ -80,8 +84,9 @@ async function createServer() {
   }
 
   if (!rwPaths.web.viteConfig) {
+    const pm = getPackageManager()
     throw new Error(
-      'Vite config not found. You need to setup your project with Vite using `yarn cedar setup vite`',
+      `Vite config not found. You need to setup your project with Vite using \`${formatCedarCommand(['setup', 'vite'], pm)}\``,
     )
   }
   // ~~~~ Dev time validations ~~~~

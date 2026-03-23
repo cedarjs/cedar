@@ -8,6 +8,10 @@ import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
 import { loadEnvFiles, recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { findUp, projectIsEsm, getConfigPath } from '@cedarjs/project-config'
 import { telemetryMiddleware } from '@cedarjs/telemetry'
 
@@ -184,7 +188,7 @@ async function runYargs() {
       array: true,
     })
     .example(
-      'yarn cedar exec migrateUsers --load-env-files stripe nakama',
+      formatCedarCommand(['exec', 'migrateUsers', '--load-env-files', 'stripe', 'nakama'], getPackageManager()),
       "Run a script, also loading env vars from '.env.stripe' and '.env.nakama'",
     )
     .option('telemetry', {
@@ -193,7 +197,7 @@ async function runYargs() {
       // hidden: true,
     })
     .example(
-      'yarn cedar g page home /',
+      formatCedarCommand(['g', 'page', 'home', '/'], getPackageManager()),
       "Create a page component named 'Home' at path '/'",
     )
     .demandCommand()

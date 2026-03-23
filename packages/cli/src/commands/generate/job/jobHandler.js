@@ -6,6 +6,10 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  runBin,
+} from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
@@ -131,14 +135,19 @@ export const handler = async ({ name, force, ...rest }) => {
       {
         title: 'Cleaning up...',
         task: () => {
-          execa.sync('yarn', [
+          const pm = getPackageManager()
+          const { command, args } = runBin(
             'eslint',
-            '--fix',
-            '--config',
-            `${getPaths().base}/node_modules/@cedarjs/eslint-config/shared.js`,
-            `${getPaths().api.jobsConfig}`,
-            ...Object.keys(jobFiles),
-          ])
+            [
+              '--fix',
+              '--config',
+              `${getPaths().base}/node_modules/@cedarjs/eslint-config/shared.js`,
+              `${getPaths().api.jobsConfig}`,
+              ...Object.keys(jobFiles),
+            ],
+            pm,
+          )
+          execa.sync(command, args)
         },
       },
     ],

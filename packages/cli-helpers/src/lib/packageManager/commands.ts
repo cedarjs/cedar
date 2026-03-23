@@ -68,8 +68,6 @@ export function addWorkspacePackages(
   packageManager: PackageManager,
   opts: PackageOptions = {},
 ): PackageManagerCommand {
-  const args: string[] = []
-
   switch (packageManager) {
     case 'yarn':
       return {
@@ -108,6 +106,35 @@ export function addWorkspacePackages(
       return {
         command: 'yarn',
         args: ['workspace', workspace, 'add', ...packages],
+      }
+  }
+}
+
+export function removeWorkspacePackages(
+  workspace: string,
+  packages: string[],
+  packageManager: PackageManager,
+): PackageManagerCommand {
+  switch (packageManager) {
+    case 'yarn':
+      return {
+        command: 'yarn',
+        args: ['workspace', workspace, 'remove', ...packages],
+      }
+    case 'npm':
+      return {
+        command: 'npm',
+        args: ['uninstall', ...packages, '-w', workspace],
+      }
+    case 'pnpm':
+      return {
+        command: 'pnpm',
+        args: ['remove', ...packages, '--filter', workspace],
+      }
+    default:
+      return {
+        command: 'yarn',
+        args: ['workspace', workspace, 'remove', ...packages],
       }
   }
 }

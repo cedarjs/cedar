@@ -53,3 +53,22 @@
 
 - Prefer `rg` for searching and keep changes focused to the relevant package(s).
 - Avoid touching unrelated files unless required by the change.
+
+## Release Process – Package Manager Matrix
+
+Before publishing a release, run the full package-manager CI matrix to
+catch package manager-specific regressions:
+
+```bash
+gh workflow run package-manager-matrix.yml
+```
+
+Or trigger via the GitHub Actions UI:
+
+1. Go to Actions → "Package Manager Matrix"
+2. Click "Run workflow"
+3. Select the branch to release from
+
+The workflow (`.github/workflows/package-manager-matrix.yml`) rebuilds the test
+project fixture for each PM (yarn, npm, pnpm), then runs smoke tests, build, and
+test against all three.

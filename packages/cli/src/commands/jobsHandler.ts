@@ -1,5 +1,10 @@
 import execa from 'execa'
 
+import {
+  formatRunBinCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
+
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 
@@ -25,14 +30,15 @@ export const handler = async ({
     args.push(String(value))
   }
 
-  let command = `yarn rw-jobs ${args.join(' ')}`
+  const pm = getPackageManager()
+  let command = formatRunBinCommand('rw-jobs', args, pm)
   const originalLogLevel = process.env.LOG_LEVEL
   process.env.LOG_LEVEL = originalLogLevel || 'warn'
 
   // make logs look nice in development (assume any env that's not prod is dev)
   // that includes showing more verbose logs unless the user set otherwise
   if (process.env.NODE_ENV !== 'production') {
-    command += ' | yarn rw-log-formatter'
+    command += ` | ${formatRunBinCommand('rw-log-formatter', [], pm)}`
     process.env.LOG_LEVEL = originalLogLevel || 'debug'
   }
 

@@ -1,13 +1,13 @@
 import execa from 'execa'
 import type { Options as ExecaOptions } from 'execa'
 
-import { getPackageManager } from './config.js'
+import type { PackageManagerCommand } from './commands.js'
 import {
   installPackagesFor,
   addWorkspacePackages,
   addRootPackages,
 } from './commands.js'
-import type { PackageManagerCommand } from './commands.js'
+import { getPackageManager } from './config.js'
 
 export async function runPackageManagerCommand(
   pmCommand: PackageManagerCommand,

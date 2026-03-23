@@ -7,6 +7,14 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  addRootPackages,
+  addWorkspacePackages,
+  formatCedarCommand,
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../../lib/colors.js'
@@ -24,19 +32,22 @@ const tailwindDirectivesExist = (indexCSS) =>
     indexCSS.includes(tailwindDirective),
   )
 
-const tailwindImportsAndNotes = [
-  '/**',
-  ' * START --- SETUP TAILWINDCSS EDIT',
-  ' *',
-  ' * `yarn cedar setup ui tailwindcss` placed these directives here',
-  " * to inject Tailwind's styles into your CSS.",
-  ' * For more information, see: https://tailwindcss.com/docs/installation',
-  ' */',
-  ...tailwindDirectives,
-  '/**',
-  ' * END --- SETUP TAILWINDCSS EDIT',
-  ' */\n',
-]
+function getTailwindImportsAndNotes() {
+  const pm = getPackageManager()
+  return [
+    '/**',
+    ' * START --- SETUP TAILWINDCSS EDIT',
+    ' *',
+    ` * \`${formatCedarCommand(['setup', 'ui', 'tailwindcss'], pm)}\` placed these directives here`,
+    " * to inject Tailwind's styles into your CSS.",
+    ' * For more information, see: https://tailwindcss.com/docs/installation',
+    ' */',
+    ...tailwindDirectives,
+    '/**',
+    ' * END --- SETUP TAILWINDCSS EDIT',
+    ' */\n',
+  ]
+}
 
 const recommendedVSCodeExtensions = [
   'csstools.postcss',
@@ -116,9 +127,11 @@ export const handler = async ({ force, install }) => {
               {
                 title: `Install ${projectPackages.join(', ')}`,
                 task: async () => {
-                  await execa('yarn', ['add', '-D', ...projectPackages], {
-                    cwd: rwPaths.base,
-                  })
+                  const pm = getPackageManager()
+                  await runPackageManagerCommand(
+                    addRootPackages(projectPackages, pm, { dev: true }),
+                    { cwd: rwPaths.base },
+                  )
                 },
               },
             ],
@@ -135,9 +148,11 @@ export const handler = async ({ force, install }) => {
               {
                 title: `Install ${webWorkspacePackages.join(', ')}`,
                 task: async () => {
-                  await execa(
-                    'yarn',
-                    ['workspace', 'web', 'add', '-D', ...webWorkspacePackages],
+                  const pm = getPackageManager()
+                  await runPackageManagerCommand(
+                    addWorkspacePackages('web', webWorkspacePackages, pm, {
+                      dev: true,
+                    }),
                     {
                       cwd: rwPaths.base,
                       env: {
@@ -202,9 +217,13 @@ export const handler = async ({ force, install }) => {
             }
           }
 
-          await execa('yarn', ['tailwindcss', 'init', tailwindConfigPath], {
-            cwd: rwPaths.web.base,
-          })
+          const pm = getPackageManager()
+          await runPackageManagerCommand(
+            runBin('tailwindcss', ['init', tailwindConfigPath], pm),
+            {
+              cwd: rwPaths.web.base,
+            },
+          )
 
           // Replace `content`.
           const tailwindConfig = fs.readFileSync(tailwindConfigPath, 'utf-8')
@@ -232,7 +251,7 @@ export const handler = async ({ force, install }) => {
           if (tailwindDirectivesExist(indexCSS)) {
             task.skip('Directives already exist in index.css')
           } else {
-            const newIndexCSS = tailwindImportsAndNotes.join('\n') + indexCSS
+            const newIndexCSS = getTailwindImportsAndNotes().join('\n') + indexCSS
             fs.writeFileSync(INDEX_CSS_PATH, newIndexCSS)
           }
         },
