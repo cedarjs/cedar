@@ -9,6 +9,7 @@ import {
   getConfig,
   getEnvVarDefinitions,
   getPaths,
+  resolveFile,
 } from '@cedarjs/project-config'
 
 /**
@@ -22,7 +23,9 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
   return (userConfig: ViteUserConfig, env: ConfigEnv): ViteUserConfig => {
     let apiHost = process.env.REDWOOD_API_HOST
     apiHost ??= cedarConfig.api.host
-    apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '[::]'
+    // In dev, use the IPv4 loopback so Node's http-proxy can connect to the
+    // API server. Vite's proxy library does a DNS lookup on the literal string
+    apiHost ??= process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1'
 
     const streamingSsrEnabled = cedarConfig.experimental.streamingSsr?.enabled
     // @MARK: note that most RSC settings sit in their individual build functions
@@ -108,6 +111,50 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
           define: {
             global: 'globalThis',
           },
+          // Vite 7 now hard-fails the dep scan when esbuild encounters an
+          // import it cannot resolve. Cedar source files use bare `src/`
+          // specifiers (e.g. `src/pages/FatalErrorPage`) that are rewritten
+          // to relative paths by babel-plugin-module-resolver at transform
+          // time, but the dep scanner runs esbuild *without* Babel transforms.
+          // This small esbuild plugin replicates the same resolution logic so
+          // the dep scan can continue and pre-bundle npm packages normally.
+          plugins: [
+            {
+              name: 'cedar-src-alias',
+              setup(build) {
+                build.onResolve({ filter: /^src\// }, (args) => {
+                  const subPath = args.path.slice('src/'.length)
+                  const basePath = path.join(cedarPaths.web.src, subPath)
+
+                  // 1. Direct file match (e.g. src/lib/db.ts)
+                  const directResolved = resolveFile(basePath)
+                  if (directResolved) {
+                    return { path: directResolved }
+                  }
+
+                  const dirName = path.basename(basePath)
+
+                  // 2. Index file inside the directory
+                  const indexResolved = resolveFile(
+                    path.join(basePath, 'index'),
+                  )
+                  if (indexResolved) {
+                    return { path: indexResolved }
+                  }
+
+                  // 3. Directory-named file (e.g. FatalErrorPage/FatalErrorPage.tsx)
+                  const dirNameResolved = resolveFile(
+                    path.join(basePath, dirName),
+                  )
+                  if (dirNameResolved) {
+                    return { path: dirNameResolved }
+                  }
+
+                  return null
+                })
+              },
+            },
+          ],
         },
       },
       ssr: {
