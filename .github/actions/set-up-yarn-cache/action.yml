@@ -35,7 +35,7 @@ runs:
       uses: actions/cache@v5
       with:
         path: node_modules
-        key: node-modules-${{ runner.os }}-${{ hashFiles('yarn.lock', 'package.json', '.yarnrc.yml') }}
+        key: node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}
         restore-keys: |
           node-modules-${{ runner.os }}-
 
