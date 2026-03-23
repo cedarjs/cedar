@@ -1830,7 +1830,7 @@ __metadata:
 
 "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.0.0
-  resolution: "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz#../packages/cli-helpers/cedarjs-cli-helpers.tgz::hash=e66aff&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli-helpers@file:../packages/cli-helpers/cedarjs-cli-helpers.tgz#../packages/cli-helpers/cedarjs-cli-helpers.tgz::hash=82bc97&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@cedarjs/project-config": "npm:3.0.0"
@@ -1851,13 +1851,13 @@ __metadata:
     smol-toml: "npm:1.6.0"
     termi-link: "npm:1.1.0"
     yargs-parser: "npm:21.1.1"
-  checksum: 10c0/0b0d48a7401e5fdb7f9e668a3bebe0ddb7285e966f3ae3435d7d06fb273b9524af622d7a41d5ad4f32b570c9b1c05d96b91cc74d477f8033610ec4a21a5eadcb
+  checksum: 10c0/0382e3a87f6fe5c5b068ef455191fed8d38f2bfc2ae1a0d371bc601e6e23937fa08ba395212feeeda47c215d26343f15c97689856365d06cfb0ae438f1789d62
   languageName: node
   linkType: hard
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.0.0
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=dabf67&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=2563ca&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.2"
     "@babel/preset-typescript": "npm:7.28.5"
@@ -1911,7 +1911,7 @@ __metadata:
     semver: "npm:7.7.4"
     smol-toml: "npm:1.6.0"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.31.4"
+    systeminformation: "npm:5.31.5"
     termi-link: "npm:1.1.0"
     title-case: "npm:3.0.3"
     unionfs: "npm:4.6.0"
@@ -1924,7 +1924,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/051439b1cf6c16a6c4b18c8e84284f59fd9296163cdad2600c39839e037c70d5e8efc5bc56a06b25fceddf8cdeec1f0714e4d51aec3bdf0c130e326284f7b9e6
+  checksum: 10c0/052dc3fc082d7b4ea3912bb65ca0086c9a645fd36f97ffad85e663f594d19ea4b89a3e478ee2311c32b3a1453f3c8bcef9ca73542585d48bebf274ceb54eceed
   languageName: node
   linkType: hard
 
@@ -2031,14 +2031,14 @@ __metadata:
 
 "@cedarjs/fastify-web@file:../packages/adapters/fastify/web/cedarjs-fastify-web.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.0.0
-  resolution: "@cedarjs/fastify-web@file:../packages/adapters/fastify/web/cedarjs-fastify-web.tgz#../packages/adapters/fastify/web/cedarjs-fastify-web.tgz::hash=a093d8&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/fastify-web@file:../packages/adapters/fastify/web/cedarjs-fastify-web.tgz#../packages/adapters/fastify/web/cedarjs-fastify-web.tgz::hash=b4396d&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/project-config": "npm:3.0.0"
-    "@fastify/http-proxy": "npm:11.4.1"
+    "@fastify/http-proxy": "npm:11.4.2"
     "@fastify/static": "npm:8.3.0"
     "@fastify/url-data": "npm:6.0.3"
     fast-glob: "npm:3.3.3"
-  checksum: 10c0/e2a70cd39f6e2d2d8b85a81a701ae34df4a57a638a0f3c53ce655863e86c47bf2aaf7ab524042ac6dc985fe416ed2e36c32a6ec141c923945491325d9c152a28
+  checksum: 10c0/306da8f8e5d2be746e846aa3ecdb255027b037a20485b0352fb5bf8544a94400df6d0034b1f69841f978362b8968b119abd104c92b23fc6c8bc3b0c836c2998e
   languageName: node
   linkType: hard
 
@@ -2084,7 +2084,7 @@ __metadata:
 
 "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.0.0
-  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=99be99&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=d2faf5&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.2"
@@ -2119,20 +2119,20 @@ __metadata:
     rimraf: "npm:6.1.3"
     source-map: "npm:0.7.6"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.31.4"
+    systeminformation: "npm:5.31.5"
     termi-link: "npm:1.1.0"
     ts-node: "npm:10.9.2"
     typescript: "npm:5.9.3"
   bin:
     rw-gen: ./dist/generate/generate.js
     rw-gen-watch: ./dist/generate/watch.js
-  checksum: 10c0/c841d51d283d49c58edd2250267523f2312a82dc63f482f0c76c67efbd63ec39c2d4e97935162e0220e35056833b1083d8f6c4b8bf2bcfd554cc4011f797c5c0
+  checksum: 10c0/a76e5a38cf1d691da10a2d24048504d4c182b78f16883c21d62e16f43095845776bd14b69d6dcb4a7eaa8c374ce81d16707d263badb57cd74dc83cc8e2228bfa
   languageName: node
   linkType: hard
 
 "@cedarjs/prerender@file:../packages/prerender/cedarjs-prerender.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.0.0
-  resolution: "@cedarjs/prerender@file:../packages/prerender/cedarjs-prerender.tgz#../packages/prerender/cedarjs-prerender.tgz::hash=71a29c&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/prerender@file:../packages/prerender/cedarjs-prerender.tgz#../packages/prerender/cedarjs-prerender.tgz::hash=c4ad19&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.42.0"
     "@babel/generator": "npm:7.29.1"
@@ -2158,12 +2158,12 @@ __metadata:
     rollup-plugin-swc3: "npm:0.12.1"
     unimport: "npm:5.7.0"
     unplugin-auto-import: "npm:19.3.0"
-    vite: "npm:6.3.7"
+    vite: "npm:7.3.1"
     vite-node: "npm:3.2.4"
   peerDependencies:
     react: 19.2.3
     react-dom: 19.2.3
-  checksum: 10c0/2985d2f320729adb28d82af46d7f43a871256d2789516118e662395eece5c562ef2ee3f71d7f7a418c549039af171bb521e0af5cc0ff75d1a3fe014c65739d02
+  checksum: 10c0/79f2c0a2726562631686357fc6944584b3f7275962a5f788bc120163f19187391d3de4aa68a8ea9f241d9e023f48c103a8de279a05b089073ec9736f1f7a42d1
   languageName: node
   linkType: hard
 
@@ -2231,17 +2231,17 @@ __metadata:
 
 "@cedarjs/telemetry@file:../packages/telemetry/cedarjs-telemetry.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.0.0
-  resolution: "@cedarjs/telemetry@file:../packages/telemetry/cedarjs-telemetry.tgz#../packages/telemetry/cedarjs-telemetry.tgz::hash=560d92&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/telemetry@file:../packages/telemetry/cedarjs-telemetry.tgz#../packages/telemetry/cedarjs-telemetry.tgz::hash=0d226a&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/project-config": "npm:3.0.0"
     "@cedarjs/structure": "npm:3.0.0"
     "@whatwg-node/fetch": "npm:0.10.13"
     ci-info: "npm:4.4.0"
     envinfo: "npm:7.21.0"
-    systeminformation: "npm:5.31.4"
+    systeminformation: "npm:5.31.5"
     uuid: "npm:11.1.0"
     yargs: "npm:17.7.2"
-  checksum: 10c0/32195022209451b2bca081752c8f0e9109022a79cbe48aea3f17ac2e46c181a2fd33eabc010cde2f509ea2750e515cd89846245aebbfd034977c933cd20105f5
+  checksum: 10c0/ee89f495617430a80c1548a257a9981027ffa91f91540db2d7651445dbb7ef6c544cd2e86267caae2e7526edb5e4785ee444ecde0ae762f0ceef40f3a2160be9
   languageName: node
   linkType: hard
 
@@ -2293,7 +2293,7 @@ __metadata:
 
 "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.0.0
-  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=5f80a8&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=848e92&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.42.0"
     "@babel/generator": "npm:7.29.1"
@@ -2324,7 +2324,7 @@ __metadata:
     react: "npm:19.2.3"
     react-server-dom-webpack: "npm:19.2.4"
     rimraf: "npm:6.1.3"
-    vite: "npm:6.3.7"
+    vite: "npm:7.3.1"
     vite-plugin-cjs-interop: "npm:2.4.4"
     vite-plugin-node-polyfills: "npm:0.25.0"
     ws: "npm:8.19.0"
@@ -2335,7 +2335,7 @@ __metadata:
     rw-vite-build: ./bins/rw-vite-build.mjs
     rw-vite-dev: ./bins/rw-vite-dev.mjs
     vite: ./bins/vite.mjs
-  checksum: 10c0/2cf8cd72fb98c881566acc33ef4d6117f0011a018159693e589bce00641df3667ada0d676bdb180fc745026bd3f81c7abd8e31c318648d5f4d3778d2e67c1b88
+  checksum: 10c0/a75e30933a7926756c51dbde9b851b30e2c33e42c0bd01b811a3e700b0a19e9597fc79738593531675889e30c175af4fb1b72fa50dcb37b4a2a6789113a111aa
   languageName: node
   linkType: hard
 
@@ -3183,15 +3183,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/http-proxy@npm:11.4.1":
-  version: 11.4.1
-  resolution: "@fastify/http-proxy@npm:11.4.1"
+"@fastify/http-proxy@npm:11.4.2":
+  version: 11.4.2
+  resolution: "@fastify/http-proxy@npm:11.4.2"
   dependencies:
     "@fastify/reply-from": "npm:^12.5.0"
     fast-querystring: "npm:^1.1.2"
     fastify-plugin: "npm:^5.1.0"
     ws: "npm:^8.18.3"
-  checksum: 10c0/1905365dacb5d74fd3f8265a9a527b153d735269b15a39b3766a819eb26eef7cdaefffcce25864c502b90bdfc7f07d8f095a0762e83e6fdf95335447c61a70e5
+  checksum: 10c0/fd09ef7c4a89485aa7c21bbce861ef213bd5c210af8b67903eaf6dd6ead3eb5504a949402a8f2693589aa0f12861ab7d9ceb088a8de6b4b2f19a844da7a457c9
   languageName: node
   linkType: hard
 
@@ -9695,7 +9695,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:0.25.12, esbuild@npm:^0.25.0":
+"esbuild@npm:0.25.12":
   version: 0.25.12
   resolution: "esbuild@npm:0.25.12"
   dependencies:
@@ -10641,7 +10641,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fdir@npm:^6.2.0, fdir@npm:^6.4.4, fdir@npm:^6.5.0":
+"fdir@npm:^6.2.0, fdir@npm:^6.5.0":
   version: 6.5.0
   resolution: "fdir@npm:6.5.0"
   peerDependencies:
@@ -15366,7 +15366,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.4.47, postcss@npm:^8.5.3, postcss@npm:^8.5.6, postcss@npm:^8.5.8":
+"postcss@npm:^8.4.47, postcss@npm:^8.5.6, postcss@npm:^8.5.8":
   version: 8.5.8
   resolution: "postcss@npm:8.5.8"
   dependencies:
@@ -16420,7 +16420,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:4.59.0, rollup@npm:^4.34.9, rollup@npm:^4.43.0":
+"rollup@npm:4.59.0, rollup@npm:^4.43.0":
   version: 4.59.0
   resolution: "rollup@npm:4.59.0"
   dependencies:
@@ -17581,12 +17581,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"systeminformation@npm:5.31.4":
-  version: 5.31.4
-  resolution: "systeminformation@npm:5.31.4"
+"systeminformation@npm:5.31.5":
+  version: 5.31.5
+  resolution: "systeminformation@npm:5.31.5"
   bin:
     systeminformation: lib/cli.js
-  checksum: 10c0/b169d038916c2f9d013d36e6ce9ac25cbcbf204ea6a173bdc73ab854248bbb866026070f9144535ac178f9779b40f917363ea4b8d39f99223c0804715e7d5ed3
+  checksum: 10c0/d536dfb01529fd99e6c7c0f4239e309b0f5102b4816d9b14287b81033dd86b882fe238fee5a212d09ff8f368cc5eee618cc96bd196ce705af22f5acae9a5e773
   conditions: (os=darwin | os=linux | os=win32 | os=freebsd | os=openbsd | os=netbsd | os=sunos | os=android)
   languageName: node
   linkType: hard
@@ -17790,7 +17790,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyglobby@npm:^0.2.11, tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.13, tinyglobby@npm:^0.2.15":
+"tinyglobby@npm:^0.2.11, tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.15":
   version: 0.2.15
   resolution: "tinyglobby@npm:0.2.15"
   dependencies:
@@ -18588,62 +18588,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:6.3.7":
-  version: 6.3.7
-  resolution: "vite@npm:6.3.7"
-  dependencies:
-    esbuild: "npm:^0.25.0"
-    fdir: "npm:^6.4.4"
-    fsevents: "npm:~2.3.3"
-    picomatch: "npm:^4.0.2"
-    postcss: "npm:^8.5.3"
-    rollup: "npm:^4.34.9"
-    tinyglobby: "npm:^0.2.13"
-  peerDependencies:
-    "@types/node": ^18.0.0 || ^20.0.0 || >=22.0.0
-    jiti: ">=1.21.0"
-    less: "*"
-    lightningcss: ^1.21.0
-    sass: "*"
-    sass-embedded: "*"
-    stylus: "*"
-    sugarss: "*"
-    terser: ^5.16.0
-    tsx: ^4.8.1
-    yaml: ^2.4.2
-  dependenciesMeta:
-    fsevents:
-      optional: true
-  peerDependenciesMeta:
-    "@types/node":
-      optional: true
-    jiti:
-      optional: true
-    less:
-      optional: true
-    lightningcss:
-      optional: true
-    sass:
-      optional: true
-    sass-embedded:
-      optional: true
-    stylus:
-      optional: true
-    sugarss:
-      optional: true
-    terser:
-      optional: true
-    tsx:
-      optional: true
-    yaml:
-      optional: true
-  bin:
-    vite: bin/vite.js
-  checksum: 10c0/05949e10ff7cb7ff9f885497055bf2d8a8831881ad6d64fb1990fb28d0fbf83c102090f994529a05a27267afb9a269c82e13c1ce03561e80f86465c21cc5fc03
-  languageName: node
-  linkType: hard
-
-"vite@npm:^5.0.0 || ^6.0.0 || ^7.0.0-0":
+"vite@npm:7.3.1, vite@npm:^5.0.0 || ^6.0.0 || ^7.0.0-0":
   version: 7.3.1
   resolution: "vite@npm:7.3.1"
   dependencies:
