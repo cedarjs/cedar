@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-import { workspacePackageVersion } from '../index.js'
+import { workspacePackageSpecifier } from '../index.js'
 
 vi.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({
@@ -27,11 +27,11 @@ beforeEach(() => {
 
 describe('worspacePackageVersion', () => {
   it('returns the version string to use for yarn workspace packages', () => {
-    expect(workspacePackageVersion()).toBe('workspace:*')
+    expect(workspacePackageSpecifier()).toBe('workspace:*')
   })
 
   it('returns the version string to use for npm workspace packages', () => {
     vi.mocked(getPackageManager).mockReturnValue('npm')
-    expect(workspacePackageVersion()).toBe('*')
+    expect(workspacePackageSpecifier()).toBe('*')
   })
 })

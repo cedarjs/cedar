@@ -1,6 +1,6 @@
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-export function workspacePackageVersion(): string {
+export function workspacePackageSpecifier(): string {
   if (getPackageManager() === 'npm') {
     return '*'
   }

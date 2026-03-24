@@ -76,11 +76,16 @@ vi.mock('node:fs', async (importOriginal) => {
   )
   const originalFs = await importOriginal()
   ufs.use(wrapFsForUnionfs(originalFs)).use(memfs as any)
+
   return {
     ...ufs,
     default: ufs,
   }
 })
+
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: () => 'yarn',
+}))
 
 afterEach(() => {
   mockBase.path = '/path/to/project'
