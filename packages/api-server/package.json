@@ -138,7 +138,7 @@
     "@types/split2": "4.2.3",
     "@types/yargs": "17.0.35",
     "graphql-yoga": "5.18.1",
-    "memfs": "4.56.11",
+    "memfs": "4.57.0",
     "pino-abstract-transport": "1.2.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
