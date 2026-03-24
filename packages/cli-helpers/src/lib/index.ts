@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { pathToFileURL } from 'node:url'
 import path from 'path'
 
 import * as babel from '@babel/core'
@@ -59,7 +60,9 @@ export const getPrettierOptions = async () => {
     const mjsPath = path.join(getPaths().base, 'prettier.config.mjs')
     const prettierConfigPath = fs.existsSync(cjsPath) ? cjsPath : mjsPath
 
-    const { default: options } = await import(`file://${prettierConfigPath}`)
+    const { default: options } = await import(
+      pathToFileURL(prettierConfigPath).href
+    )
 
     if (options.tailwindConfig?.startsWith('.')) {
       // Make this work with --cwd
