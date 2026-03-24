@@ -109,6 +109,7 @@ describe('getConfig', () => {
         "notifications": {
           "versionUpdates": [],
         },
+        "packageManager": "yarn",
         "studio": {
           "basePort": 4318,
           "graphiql": {

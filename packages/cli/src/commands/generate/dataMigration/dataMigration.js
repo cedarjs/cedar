@@ -5,6 +5,10 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getDataMigrationsPath } from '@cedarjs/project-config'
 
 import c from '../../../lib/colors.js'
@@ -21,7 +25,7 @@ const POST_RUN_INSTRUCTIONS = `Next steps...\n\n   ${c.warning(
   'After writing your migration, you can run it with:',
 )}
 
-     yarn cedar dataMigrate up
+     ${formatCedarCommand(['dataMigrate', 'up'], getPackageManager())}
 `
 
 const TEMPLATE_PATHS = {

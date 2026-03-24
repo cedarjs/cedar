@@ -8,6 +8,11 @@ import { Listr } from 'listr2'
 import { titleCase } from 'title-case'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+  runScript,
+} from '@cedarjs/cli-helpers/packageManager'
 
 import c from '../../../lib/colors.js'
 import {
@@ -44,7 +49,7 @@ function getPostInstallMessage(isDbAuthSetup) {
     !isDbAuthSetup &&
       "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
         '   app setup by running:\n\n' +
-        '     yarn cedar setup auth dbAuth\n',
+        `     ${formatCedarCommand(['setup', 'auth', 'dbAuth'], getPackageManager())}\n`,
     '   Happy authenticating!',
   ]
     .filter(Boolean)
@@ -68,7 +73,7 @@ function getPostInstallWebauthnMessage(isDbAuthSetup) {
     !isDbAuthSetup &&
       "   Oh, and if you haven't already, add the necessary dbAuth functions and\n" +
         '   app setup by running:\n\n' +
-        '     yarn cedar setup auth dbAuth\n',
+        `     ${formatCedarCommand(['setup', 'auth', 'dbAuth'], getPackageManager())}\n`,
     '   Happy authenticating!',
   ]
     .filter(Boolean)
@@ -358,7 +363,9 @@ const tasks = ({
       {
         title: 'Generate types...',
         task: () => {
-          execa.commandSync('yarn cedar g types')
+          const pm = getPackageManager()
+          const { command, args } = runScript('cedar', pm, ['g', 'types'])
+          execa.commandSync(`${command} ${args.join(' ')}`)
         },
       },
       {

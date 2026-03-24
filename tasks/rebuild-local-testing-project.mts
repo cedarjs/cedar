@@ -20,6 +20,20 @@ import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { hideBin } from 'yargs/helpers'
+import yargs from 'yargs/yargs'
+
+const argv = yargs(hideBin(process.argv))
+  .option('packageManager', {
+    alias: 'pm',
+    type: 'string',
+    choices: ['yarn', 'npm', 'pnpm'],
+    default: 'yarn',
+  })
+  .parseSync()
+
+const packageManager = argv.packageManager as 'yarn' | 'npm' | 'pnpm'
+
 const FRAMEWORK_ROOT = path.resolve(import.meta.dirname, '..')
 const FIXTURE_PATH = path.join(FRAMEWORK_ROOT, '__fixtures__', 'test-project')
 const TEST_PROJECT_PATH = path.join(FRAMEWORK_ROOT, 'local-testing-project')
@@ -150,7 +164,7 @@ function buildPackages(): void {
 
 function rebuildFixture(): void {
   console.log('\n=== Step 2: rebuild-test-project-fixture ===')
-  run('yarn rebuild-test-project-fixture')
+  run(`yarn rebuild-test-project-fixture --packageManager ${packageManager}`)
 }
 
 function clearTestProject(): void {
@@ -211,19 +225,28 @@ function copyEnvFile(): void {
 }
 
 function installAndMigrate(): void {
-  console.log('\n=== Step 7: yarn install and prisma setup ===')
+  console.log(`\n=== Step 7: ${packageManager} install and prisma setup ===`)
 
-  // An empty yarn.lock must exist before `yarn install` so Yarn treats the
-  // test-project as its own independent workspace root rather than
+  // An empty lock file must exist before installation so the package manager
+  // treats the test-project as its own independent workspace root rather than
   // walking up to the monorepo root and merging lock files.
-  const yarnLockPath = path.join(TEST_PROJECT_PATH, 'yarn.lock')
-  fs.writeFileSync(yarnLockPath, '')
-  console.log(`Created empty ${yarnLockPath}`)
+  const lockFiles = {
+    yarn: 'yarn.lock',
+    npm: 'package-lock.json',
+    pnpm: 'pnpm-lock.yaml',
+  }
+  const lockPath = path.join(TEST_PROJECT_PATH, lockFiles[packageManager])
+  fs.writeFileSync(lockPath, '')
+  console.log(`Created empty ${lockPath}`)
 
-  run('yarn install', TEST_PROJECT_PATH)
-  run('yarn cedar prisma migrate dev', TEST_PROJECT_PATH)
-  run('yarn cedar prisma db seed', TEST_PROJECT_PATH)
-  run('yarn cedar prisma generate', TEST_PROJECT_PATH)
+  const installCmd = `${packageManager} install`
+  const cedarCmd =
+    packageManager === 'npm' ? 'npx cedar' : `${packageManager} cedar`
+
+  run(installCmd, TEST_PROJECT_PATH)
+  run(`${cedarCmd} prisma migrate dev`, TEST_PROJECT_PATH)
+  run(`${cedarCmd} prisma db seed`, TEST_PROJECT_PATH)
+  run(`${cedarCmd} prisma generate`, TEST_PROJECT_PATH)
 }
 
 // ---------------------------------------------------------------------------

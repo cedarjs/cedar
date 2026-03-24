@@ -6,6 +6,13 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { writeFile } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  addWorkspacePackages,
+  runPackageManagerCommand,
+  dedupe,
+  formatCedarCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig, getConfigPath, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -49,6 +56,7 @@ export async function handler({ force }) {
     [
       {
         title: 'Adding the official yarn workspace-tools plugin...',
+        enabled: () => getPackageManager() === 'yarn',
         task: async (_ctx, task) => {
           const { stdout } = await execa.command('yarn plugin runtime --json', {
             cwd: getPaths().base,
@@ -102,12 +110,18 @@ export async function handler({ force }) {
             return
           }
 
+          const pm = getPackageManager()
+
           if (!hasApiServerPackage) {
             const apiServerPackageVersion =
               await getVersionOfRedwoodPackageToInstall(apiServerPackageName)
 
-            await execa.command(
-              `yarn workspace api add ${apiServerPackageName}@${apiServerPackageVersion}`,
+            await runPackageManagerCommand(
+              addWorkspacePackages(
+                'api',
+                [`${apiServerPackageName}@${apiServerPackageVersion}`],
+                pm,
+              ),
               {
                 cwd: getPaths().base,
               },
@@ -118,17 +132,24 @@ export async function handler({ force }) {
             const webServerPackageVersion =
               await getVersionOfRedwoodPackageToInstall(webServerPackageName)
 
-            await execa.command(
-              `yarn workspace web add ${webServerPackageName}@${webServerPackageVersion}`,
+            await runPackageManagerCommand(
+              addWorkspacePackages(
+                'web',
+                [`${webServerPackageName}@${webServerPackageVersion}`],
+                pm,
+              ),
               {
                 cwd: getPaths().base,
               },
             )
           }
 
-          return execa.command(`yarn dedupe`, {
-            cwd: getPaths().base,
-          }).stdout
+          const dedupeCommand = dedupe(pm)
+          if (dedupeCommand) {
+            return runPackageManagerCommand(dedupeCommand, {
+              cwd: getPaths().base,
+            }).stdout
+          }
         },
       },
       {
@@ -144,6 +165,63 @@ export async function handler({ force }) {
           if (!force && shouldSkip) {
             task.skip('The Dockerfile and compose files already exist')
             return
+          }
+
+          const pm = getPackageManager()
+
+          // Replace package manager specific files and commands
+          if (pm === 'npm') {
+            dockerfileTemplateContent = dockerfileTemplateContent
+              .replaceAll('COPY --chown=node:node .yarnrc.yml .', '')
+              .replaceAll(
+                'COPY --chown=node:node yarn.lock .',
+                'COPY --chown=node:node package-lock.json .',
+              )
+              .replaceAll('RUN mkdir -p /home/node/.yarn/berry/index', '')
+              .replaceAll(
+                '--mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000',
+                '--mount=type=cache,target=/home/node/.npm,uid=1000',
+              )
+              .replaceAll('CI=1 yarn install', 'CI=1 npm ci')
+              .replaceAll('RUN yarn cedar build', 'RUN npx cedar build')
+              .replaceAll(
+                'CI=1 yarn workspaces focus api --production',
+                'CI=1 npm ci --omit=dev --workspace=api',
+              )
+              .replaceAll(
+                'CI=1 yarn workspaces focus web --production',
+                'CI=1 npm ci --omit=dev --workspace=web',
+              )
+              .replaceAll('yarn cedar dev', 'npm run cedar dev')
+          } else if (pm === 'pnpm') {
+            dockerfileTemplateContent = dockerfileTemplateContent
+              .replaceAll(
+                'COPY --chown=node:node .yarnrc.yml .',
+                'COPY --chown=node:node pnpm-workspace.yaml .',
+              )
+              .replaceAll(
+                'COPY --chown=node:node yarn.lock .',
+                'COPY --chown=node:node pnpm-lock.yaml .',
+              )
+              .replaceAll('RUN mkdir -p /home/node/.yarn/berry/index', '')
+              .replaceAll(
+                '--mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000',
+                '--mount=type=cache,target=/home/node/.pnpm-store,uid=1000',
+              )
+              .replaceAll(
+                'CI=1 yarn install',
+                'CI=1 pnpm install --frozen-lockfile',
+              )
+              .replaceAll('RUN yarn cedar build', 'RUN pnpm cedar build')
+              .replaceAll(
+                'CI=1 yarn workspaces focus api --production',
+                'CI=1 pnpm install --prod --filter api',
+              )
+              .replaceAll(
+                'CI=1 yarn workspaces focus web --production',
+                'CI=1 pnpm install --prod --filter web',
+              )
+              .replaceAll('yarn cedar dev', 'pnpm cedar dev')
           }
 
           const config = getConfig()
@@ -276,7 +354,7 @@ export async function handler({ force }) {
         'Then, connect to the container and migrate your database:',
         '',
         '  docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash',
-        '  root@...:/home/node/app# yarn cedar prisma migrate dev',
+        `  root@...:/home/node/app# ${formatCedarCommand(['prisma', 'migrate', 'dev'], getPackageManager())}`,
         '',
         "We assume you're using Postgres. If you're not, you'll need to make other changes to switch over.",
         "Lastly, ensure you have Docker. If you don't, see https://docs.docker.com/desktop/",

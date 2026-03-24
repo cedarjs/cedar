@@ -5,6 +5,10 @@ import { Listr } from 'listr2'
 import { format } from 'prettier'
 
 import { addApiPackages, getPrettierOptions } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
@@ -142,7 +146,7 @@ export const handler = async ({ force }) => {
 
           ${c.success('\nUploads and storage configured!\n')}
 
-          Remember to add UPLOADS_SECRET to your .env file. You can generate one with ${c.highlight('yarn cedar generate secret')}
+          Remember to add UPLOADS_SECRET to your .env file. You can generate one with ${c.highlight(formatCedarCommand(['generate', 'secret'], getPackageManager()))}
 
 
           Check out the docs for more info:

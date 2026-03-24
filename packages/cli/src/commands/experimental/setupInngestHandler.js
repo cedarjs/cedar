@@ -1,6 +1,11 @@
-import execa from 'execa'
 import { Listr } from 'listr2'
 
+import {
+  addRootPackages,
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../lib/colors.js'
@@ -10,27 +15,32 @@ import { command, description, EXPERIMENTAL_TOPIC_ID } from './setupInngest.js'
 import { printTaskEpilogue } from './util.js'
 
 export const handler = async ({ force }) => {
+  const pm = getPackageManager()
   const tasks = new Listr([
     {
       title: `Adding Inngest setup packages for RedwoodJS ...`,
       task: async () => {
-        await execa('yarn', ['add', '-D', 'inngest-setup-redwoodjs'], {
-          cwd: getPaths().base,
-        })
+        await runPackageManagerCommand(
+          addRootPackages(['inngest-setup-redwoodjs'], pm, { dev: true }),
+          { cwd: getPaths().base },
+        )
       },
     },
     {
       task: async () => {
-        const pluginCommands = ['inngest-setup-redwoodjs', 'plugin']
+        const pluginArgs = ['plugin']
 
         if (force) {
-          pluginCommands.push('--force')
+          pluginArgs.push('--force')
         }
 
-        await execa('yarn', [...pluginCommands], {
-          stdout: 'inherit',
-          cwd: getPaths().base,
-        })
+        await runPackageManagerCommand(
+          runBin('inngest-setup-redwoodjs', pluginArgs, pm),
+          {
+            stdout: 'inherit',
+            cwd: getPaths().base,
+          },
+        )
       },
     },
     {

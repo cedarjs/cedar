@@ -3,13 +3,19 @@ import path from 'node:path'
 
 import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import { paramCase, camelCase } from 'change-case'
-import execa from 'execa'
 import { modify, applyEdits } from 'jsonc-parser'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 import ts from 'typescript'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  installPackagesFor,
+  runScript,
+  runBin,
+  runPackageManagerCommand,
+  recordTelemetryAttributes,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -351,10 +357,18 @@ export function updateWorkspaceTsconfigReferences(
 }
 
 async function installAndBuild(folderName) {
-  const packagePath = path.join('packages', folderName)
-  await execa('yarn', ['install'], { stdio: 'inherit', cwd: getPaths().base })
+  const packagePath = path.join(getPaths().base, 'packages', folderName)
+  const pm = getPackageManager()
+
+  await runPackageManagerCommand(installPackagesFor(pm), {
+    stdio: 'inherit',
+    cwd: getPaths().base,
+  })
   // TODO: `yarn cedar build <packageName>`
-  await execa('yarn', ['build'], { stdio: 'inherit', cwd: packagePath })
+  await runPackageManagerCommand(runScript('build', pm), {
+    stdio: 'inherit',
+    cwd: packagePath,
+  })
 }
 
 /**
@@ -597,14 +611,21 @@ export const handler = async ({ name, force, ...rest }) => {
       },
       {
         title: 'Cleaning up...',
-        task: () => {
-          execa.sync('yarn', [
-            'eslint',
-            '--fix',
-            '--config',
-            `${getPaths().base}/node_modules/@cedarjs/eslint-config/index.js`,
-            ...Object.keys(packageFiles),
-          ])
+        task: async () => {
+          const pm = getPackageManager()
+          await runPackageManagerCommand(
+            runBin(
+              'eslint',
+              [
+                '--fix',
+                '--config',
+                `${getPaths().base}/node_modules/@cedarjs/eslint-config/index.js`,
+                ...Object.keys(packageFiles),
+              ],
+              pm,
+            ),
+            { stdio: 'inherit', cwd: getPaths().base },
+          )
         },
       },
     ]),

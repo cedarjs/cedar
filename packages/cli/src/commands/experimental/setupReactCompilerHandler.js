@@ -1,10 +1,15 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 import semver from 'semver'
 
+import {
+  addRootPackages,
+  addWorkspacePackages,
+  getPackageManager,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -96,20 +101,24 @@ export const handler = async ({ force, verbose }) => {
       {
         title: 'Installing eslint-plugin-react-compiler',
         task: async () => {
-          await execa('yarn', ['add', '-D', 'eslint-plugin-react-compiler'], {
-            cwd: getPaths().base,
-          })
+          const pm = getPackageManager()
+          await runPackageManagerCommand(
+            addRootPackages(['eslint-plugin-react-compiler'], pm, {
+              dev: true,
+            }),
+            { cwd: getPaths().base },
+          )
         },
       },
       {
         title: 'Installing babel-plugin-react-compiler',
         task: async () => {
-          await execa(
-            'yarn',
-            ['web/', 'add', '-D', 'babel-plugin-react-compiler'],
-            {
-              cwd: getPaths().base,
-            },
+          const pm = getPackageManager()
+          await runPackageManagerCommand(
+            addWorkspacePackages('web', ['babel-plugin-react-compiler'], pm, {
+              dev: true,
+            }),
+            { cwd: getPaths().base },
           )
         },
       },

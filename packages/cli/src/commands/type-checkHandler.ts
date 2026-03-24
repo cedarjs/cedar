@@ -1,10 +1,15 @@
 import path from 'node:path'
 
 import concurrently from 'concurrently'
-import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatRunBinCommand,
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
@@ -50,12 +55,13 @@ export const handler = async ({
    */
   const typeCheck = async () => {
     let conclusiveExitCode = 0
+    const pm = getPackageManager()
 
     const tscForAllSides = selectedSides.map((side) => {
       const projectDir = path.join(getPaths().base, side)
       return {
         cwd: projectDir,
-        command: 'yarn tsc --noEmit --skipLibCheck',
+        command: formatRunBinCommand('tsc', ['--noEmit', '--skipLibCheck'], pm),
       }
     })
 
@@ -84,13 +90,13 @@ export const handler = async ({
   }
 
   if (generate) {
+    const pm = getPackageManager()
     await new Listr(
       [
         {
           title: 'Generating types',
           task: () =>
-            execa('yarn rw-gen', {
-              shell: true,
+            runPackageManagerCommand(runBin('rw-gen', [], pm), {
               stdio: verbose ? 'inherit' : 'ignore',
             }),
         },

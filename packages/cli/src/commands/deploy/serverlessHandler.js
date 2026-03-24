@@ -9,26 +9,37 @@ import { Listr } from 'listr2'
 import prompts from 'prompts'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  formatRunBinCommand,
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 
 import c from '../../lib/colors.js'
 import { getPaths } from '../../lib/index.js'
 
-export const preRequisites = () => [
-  {
-    title: 'Checking if Serverless framework is installed...',
-    command: ['yarn serverless', ['--version']],
-    errorMessage: [
-      'Looks like Serverless is not installed.',
-      'Please run yarn add -W --dev serverless.',
-    ],
-  },
-]
+export const preRequisites = () => {
+  const pm = getPackageManager()
+  return [
+    {
+      title: 'Checking if Serverless framework is installed...',
+      command: formatRunBinCommand('serverless', ['--version'], pm),
+      errorMessage: [
+        'Looks like Serverless is not installed.',
+        'Please run `yarn add -W --dev serverless` (yarn) or your PM equivalent.',
+      ],
+    },
+  ]
+}
 
 export const buildCommands = ({ sides }) => {
+  const pm = getPackageManager()
   return [
     {
       title: `Building ${sides.join(' & ')}...`,
-      command: ['yarn', ['cedar', 'build', ...sides]],
+      command: formatCedarCommand(['build', ...sides], pm),
     },
     {
       title: 'Packing Functions...',
@@ -45,18 +56,22 @@ export const buildCommands = ({ sides }) => {
 }
 
 export const deployCommands = ({ stage, sides, firstRun, packOnly }) => {
+  const pm = getPackageManager()
   const slsStage = stage ? ['--stage', stage] : []
 
   return sides.map((side) => {
     return {
       title: `Deploying ${side}....`,
       task: async () => {
-        await execa('yarn', ['serverless', 'deploy', ...slsStage], {
-          cwd: path.join(getPaths().base, side),
-          shell: true,
-          stdio: 'inherit',
-          cleanup: true,
-        })
+        await runPackageManagerCommand(
+          runBin('serverless', ['deploy', ...slsStage], pm),
+          {
+            cwd: path.join(getPaths().base, side),
+            shell: true,
+            stdio: 'inherit',
+            cleanup: true,
+          },
+        )
       },
       skip: () => {
         if (firstRun && side === 'web') {
@@ -115,8 +130,14 @@ export const handler = async (yargs) => {
 
       console.log(SETUP_MARKER, c.success('Starting first setup wizard...'))
 
-      const { stdout: slsInfo } = await execa(
-        `yarn serverless info --verbose --stage=${yargs.stage}`,
+      const pm = getPackageManager()
+
+      const { stdout: slsInfo } = await execa.command(
+        formatRunBinCommand(
+          'serverless',
+          ['info', '--verbose', `--stage=${yargs.stage}`],
+          pm,
+        ),
         {
           shell: true,
           cwd: getPaths().api.base,
@@ -173,8 +194,12 @@ export const handler = async (yargs) => {
         // Deploy the web side now that the API_URL has been configured
         await webDeployTasks.run()
 
-        const { stdout: slsInfo } = await execa(
-          `yarn serverless info --verbose --stage=${yargs.stage}`,
+        const { stdout: slsInfo } = await execa.command(
+          formatRunBinCommand(
+            'serverless',
+            ['info', '--verbose', `--stage=${yargs.stage}`],
+            pm,
+          ),
           {
             shell: true,
             cwd: getPaths().web.base,
@@ -225,7 +250,7 @@ const mapCommandsToListr = ({
       ? task
       : async () => {
           try {
-            const executingCommand = execa(...command, {
+            const executingCommand = execa.command(command, {
               cwd: cwd || getPaths().base,
               shell: true,
             })

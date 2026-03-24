@@ -1,6 +1,11 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
+import {
+  formatRunBinCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
+
 // @ts-expect-error - Types not available for JS files
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
@@ -13,7 +18,9 @@ export const builder = (yargs: Argv) => {
     'CedarJS CLI Reference',
     'https://cedarjs.com/docs/cli-commands#test',
   )
-  const vitestTip = c.tip('yarn vitest --help')
+  const vitestTip = c.tip(
+    formatRunBinCommand('vitest', ['--help'], getPackageManager()),
+  )
 
   yargs
     .strict(false) // so that we can forward arguments to vitest

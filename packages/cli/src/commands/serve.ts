@@ -7,6 +7,10 @@ import type { Argv } from 'yargs'
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
@@ -133,7 +137,7 @@ export const builder = async (yargs: Argv) => {
       ) {
         console.error(
           c.error(
-            '\n Please run `yarn cedar build web` before trying to serve web. \n',
+            `\n Please run \`${formatCedarCommand(['build', 'web'], getPackageManager())}\` before trying to serve web. \n`,
           ),
         )
         process.exit(1)
@@ -153,7 +157,7 @@ export const builder = async (yargs: Argv) => {
         if (!fs.existsSync(path.join(getPaths().api.dist))) {
           console.error(
             c.error(
-              '\n Please run `yarn cedar build api` before trying to serve api. \n',
+              `\n Please run \`${formatCedarCommand(['build', 'api'], getPackageManager())}\` before trying to serve api. \n`,
             ),
           )
           process.exit(1)
@@ -166,7 +170,7 @@ export const builder = async (yargs: Argv) => {
           console.error(
             c.error(
               '\nUnable to serve web and api as no `api` folder exists. ' +
-                'Please use `yarn cedar serve web` instead. \n',
+                `Please use \`${formatCedarCommand(['serve', 'web'], getPackageManager())}\` instead. \n`,
             ),
           )
           process.exit(1)
@@ -183,7 +187,7 @@ export const builder = async (yargs: Argv) => {
         ) {
           console.error(
             c.error(
-              '\nPlease run `yarn cedar build` before trying to serve your ' +
+              `\nPlease run \`${formatCedarCommand(['build'], getPackageManager())}\` before trying to serve your ` +
                 'Cedar app.\n',
             ),
           )

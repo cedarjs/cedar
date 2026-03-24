@@ -1,9 +1,13 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 
+import {
+  addWorkspacePackages,
+  getPackageManager,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../../lib/colors.js'
@@ -50,14 +54,18 @@ export const handler = async ({ force }) => {
                   /**
                    * Install i18next, react-i18next and i18next-browser-languagedetector
                    */
-                  await execa('yarn', [
-                    'workspace',
-                    'web',
-                    'add',
-                    'i18next',
-                    'react-i18next',
-                    'i18next-browser-languagedetector',
-                  ])
+                  const pm = getPackageManager()
+                  await runPackageManagerCommand(
+                    addWorkspacePackages(
+                      'web',
+                      [
+                        'i18next',
+                        'react-i18next',
+                        'i18next-browser-languagedetector',
+                      ],
+                      pm,
+                    ),
+                  )
                 },
               },
             ],

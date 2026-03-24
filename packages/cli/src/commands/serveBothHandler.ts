@@ -1,7 +1,6 @@
 import path from 'path'
 
 import concurrently from 'concurrently'
-import execa from 'execa'
 
 import { handler as apiServerHandler } from '@cedarjs/api-server/cjs/apiCliConfigHandler'
 import {
@@ -10,6 +9,12 @@ import {
   getWebHost,
   getWebPort,
 } from '@cedarjs/api-server/cjs/cliHelpers'
+import {
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+  formatRunBinCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -45,10 +50,13 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
   ) {
     logSkippingFastifyWebServer()
 
-    await execa('yarn', ['rw-serve-fe'], {
-      cwd: getPaths().web.base,
-      stdio: 'inherit',
-    })
+    await runPackageManagerCommand(
+      runBin('rw-serve-fe', [], getPackageManager()),
+      {
+        cwd: getPaths().web.base,
+        stdio: 'inherit',
+      },
+    )
   } else {
     argv.apiPort ??= getAPIPort()
     argv.apiHost ??= getAPIHost()
@@ -67,15 +75,36 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
       [
         {
           name: 'api',
-          command: `yarn node ${path.join('dist', 'server.js')} --apiPort ${
-            argv.apiPort
-          } --apiHost ${argv.apiHost} --apiRootPath ${argv.apiRootPath}`,
+          command: formatRunBinCommand(
+            'node',
+            [
+              path.join('dist', 'server.js'),
+              '--apiPort',
+              argv.apiPort?.toString() || '',
+              '--apiHost',
+              argv.apiHost || '',
+              '--apiRootPath',
+              argv.apiRootPath || '',
+            ],
+            getPackageManager(),
+          ),
           cwd: getPaths().api.base,
           prefixColor: 'cyan',
         },
         {
           name: 'web',
-          command: `yarn rw-web-server --port ${argv.webPort} --host ${argv.webHost} --api-proxy-target ${apiProxyTarget}`,
+          command: formatRunBinCommand(
+            'rw-web-server',
+            [
+              '--port',
+              argv.webPort?.toString() || '',
+              '--host',
+              argv.webHost || '',
+              '--api-proxy-target',
+              apiProxyTarget,
+            ],
+            getPackageManager(),
+          ),
           cwd: getPaths().base,
           prefixColor: 'blue',
         },
@@ -115,18 +144,21 @@ export const bothSsrRscServerHandler = async (
 
   // TODO (RSC): More gracefully handle Ctrl-C
   // Right now you get a big red error box when you kill the process
-  const fePromise = execa('yarn', ['rw-serve-fe'], {
-    cwd: getPaths().web.base,
-    stdio: 'inherit',
-    env: rscEnabled
-      ? {
-          ...process.env,
-          // TODO (RSC): Is this how we want to do it? If so, we need to find a way
-          // to merge this with users' NODE_OPTIONS
-          NODE_OPTIONS: '--conditions react-server',
-        }
-      : undefined,
-  })
+  const fePromise = runPackageManagerCommand(
+    runBin('rw-serve-fe', [], getPackageManager()),
+    {
+      cwd: getPaths().web.base,
+      stdio: 'inherit',
+      env: rscEnabled
+        ? {
+            ...process.env,
+            // TODO (RSC): Is this how we want to do it? If so, we need to find a way
+            // to merge this with users' NODE_OPTIONS
+            NODE_OPTIONS: '--conditions react-server',
+          }
+        : undefined,
+    },
+  )
 
   await Promise.all([apiPromise, fePromise])
 }

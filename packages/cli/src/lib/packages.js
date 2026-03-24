@@ -2,7 +2,12 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
-import execa from 'execa'
+import {
+  addRootPackages,
+  dedupe,
+  getPackageManager,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 
 import { getPaths } from './index.js'
 
@@ -26,10 +31,14 @@ export async function installModule(name, version = undefined) {
   if (version === undefined) {
     return installRedwoodModule(name)
   } else {
-    await execa.command(`yarn add -D ${name}@${version}`, {
-      stdio: 'inherit',
-      cwd: getPaths().base,
-    })
+    const pm = getPackageManager()
+    await runPackageManagerCommand(
+      addRootPackages([`${name}@${version}`], pm, { dev: true }),
+      {
+        stdio: 'inherit',
+        cwd: getPaths().base,
+      },
+    )
   }
 
   return true
@@ -85,14 +94,21 @@ export async function installRedwoodModule(module) {
 
     // We use `version` to make sure we install the same version as the rest
     // of the RW packages
-    await execa.command(`yarn add -D ${module}@${version}`, {
-      stdio: 'inherit',
-      cwd: getPaths().base,
-    })
-    await execa.command(`yarn dedupe`, {
-      stdio: 'inherit',
-      cwd: getPaths().base,
-    })
+    const pm = getPackageManager()
+    await runPackageManagerCommand(
+      addRootPackages([`${module}@${version}`], pm, { dev: true }),
+      {
+        stdio: 'inherit',
+        cwd: getPaths().base,
+      },
+    )
+    const dedupeCommand = dedupe(pm)
+    if (dedupeCommand) {
+      await runPackageManagerCommand(dedupeCommand, {
+        stdio: 'inherit',
+        cwd: getPaths().base,
+      })
+    }
     return true
   }
   return false

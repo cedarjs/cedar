@@ -1,10 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { prettify } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  installPackagesFor,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -421,8 +425,9 @@ export const handler = async ({ force, verbose }) => {
             },
           )
 
-          // Run yarn install to apply the changes
-          await execa('yarn', [], {
+          // Run install to apply the changes
+          const pm = getPackageManager()
+          await runPackageManagerCommand(installPackagesFor(pm), {
             cwd: getPaths().web.base,
           })
         },

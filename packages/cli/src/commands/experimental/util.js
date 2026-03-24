@@ -4,6 +4,11 @@ import path from 'node:path'
 import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
 
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
+
 import { getPaths } from '../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../lib/project.js'
 
@@ -67,7 +72,7 @@ export const isRealtimeSetup = () => {
   if (!realtimeExists()) {
     throw new Error(
       'Adding realtime events requires that CedarJS Realtime is setup. ' +
-        'Please run `yarn cedar setup realtime` first.',
+        `Please run \`${formatCedarCommand(['setup', 'realtime'], getPackageManager())}\` first.`,
     )
   }
 

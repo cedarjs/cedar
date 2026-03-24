@@ -66,6 +66,7 @@
     "@babel/traverse": "7.29.0",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
+    "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/cookie-jar": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",

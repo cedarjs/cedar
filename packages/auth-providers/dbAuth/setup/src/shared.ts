@@ -2,9 +2,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { getDMMF } from '@prisma/internals'
-import execa from 'execa'
 
-import { getPaths } from '@cedarjs/cli-helpers'
+import {
+  getPaths,
+  getPackageManager,
+  runPackageManagerCommand,
+  runScript,
+} from '@cedarjs/cli-helpers'
 import {
   processPagesDir,
   getSchemaPath,
@@ -84,10 +88,10 @@ export function generateAuthPagesTask(generatingUserModel: boolean) {
     task: async () => {
       const rwjsPaths = getPaths()
 
-      const args = ['cedar', 'g', 'dbAuth']
+      const cedarArgs = ['g', 'dbAuth']
 
       if (generatingUserModel) {
-        args.push(
+        cedarArgs.push(
           '--username-label',
           'username',
           '--password-label',
@@ -95,9 +99,9 @@ export function generateAuthPagesTask(generatingUserModel: boolean) {
         )
       }
 
-      await execa('yarn', args, {
+      const pm = getPackageManager()
+      await runPackageManagerCommand(runScript('cedar', pm, cedarArgs), {
         stdio: 'inherit',
-        shell: true,
         cwd: rwjsPaths.base,
       })
     },

@@ -7,6 +7,10 @@ import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -78,8 +82,8 @@ const getFlightcontrolJson = async (database) => {
     Prisma datasource provider is detected to be ${detectedDatabase}.
 
     Update your schema.prisma provider to be postgresql or mysql, then run
-    yarn cedar prisma migrate dev
-    yarn cedar setup deploy flightcontrol
+    ${formatCedarCommand(['prisma', 'migrate', 'dev'], getPackageManager())}
+    ${formatCedarCommand(['setup', 'deploy', 'flightcontrol'], getPackageManager())}
     `)
   }
 }

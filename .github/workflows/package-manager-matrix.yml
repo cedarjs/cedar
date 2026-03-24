@@ -1,0 +1,74 @@
+name: 📅 Package Manager Matrix
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight
+  workflow_dispatch:
+
+jobs:
+  smoke-tests:
+    strategy:
+      matrix:
+        packageManager: [yarn, npm, pnpm]
+    runs-on: ubuntu-latest
+
+    env:
+      REDWOOD_CI: 1
+      REDWOOD_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - name: Checkout the framework code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Rebuild test project fixture for ${{ matrix.packageManager }}
+        run: |
+          yarn rebuild-test-project-fixture --packageManager ${{ matrix.packageManager }}
+
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        with:
+          packageManager: ${{ matrix.packageManager }}
+        env:
+          REDWOOD_DISABLE_TELEMETRY: 1
+
+      - name: 🎭 Install playwright dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: 🧑‍💻 Run dev smoke tests
+        working-directory: ./tasks/smoke-tests/dev
+        run: npx playwright test
+        env:
+          CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
+          REDWOOD_DISABLE_TELEMETRY: 1
+
+      - name: 🔐 Run auth smoke tests
+        working-directory: ./tasks/smoke-tests/auth
+        run: npx playwright test
+        env:
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
+          REDWOOD_DISABLE_TELEMETRY: 1
+
+      - name: Run build
+        shell: bash
+        run: |
+          set -o pipefail
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar build --no-prerender
+          else
+            ${{ matrix.packageManager }} cedar build --no-prerender
+          fi
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
+      - name: Run test
+        shell: bash
+        run: |
+          if [ "${{ matrix.packageManager }}" = "npm" ]; then
+            npx cedar test --no-watch
+          else
+            ${{ matrix.packageManager }} cedar test --no-watch
+          fi
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}

@@ -4,6 +4,10 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getMigrationsPath, getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -259,7 +263,7 @@ export const handler = async ({ force }) => {
           if (!hasRealtimeDependency) {
             throw new Error(
               '@cedarjs/realtime is not installed in your api workspace. ' +
-                `Please run ${c.highlight('yarn cedar setup realtime')} first.`,
+                `Please run ${c.highlight(formatCedarCommand(['setup', 'realtime'], getPackageManager()))} first.`,
             )
           }
         },
@@ -355,7 +359,7 @@ export const handler = async ({ force }) => {
           ${c.success('\nLive query notifications configured!\n')}
 
           Apply the migration to activate Postgres notifications:
-          ${c.highlight('\n\u00A0\u00A0yarn cedar prisma migrate dev\n')}
+          ${c.highlight(`\n\u00A0\u00A0${formatCedarCommand(['prisma', 'migrate', 'dev'], getPackageManager())}\n`)}
 
           You're then ready to use @live queries to get real-time updates as
           soon as something in your database changes.

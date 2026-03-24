@@ -7,6 +7,11 @@ import * as toml from 'smol-toml'
 import { env as envInterpolation } from 'string-env-interpolation'
 import { titleCase } from 'title-case'
 
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
+
 import c from '../../../lib/colors.js'
 import { getPaths } from '../../../lib/index.js'
 
@@ -36,8 +41,9 @@ export const throwMissingConfig = (name) => {
 
 export const verifyConfig = (config, yargs) => {
   if (!yargs.environment) {
+    const pm = getPackageManager()
     throw new Error(
-      'Must specify an environment to deploy to, ex: `yarn cedar deploy baremetal production`',
+      `Must specify an environment to deploy to, ex: \`${formatCedarCommand(['deploy', 'baremetal', 'production'], pm)}\``,
     )
   }
 
@@ -621,9 +627,10 @@ export const handler = async (yargs) => {
   const ecosystemPath = path.join(getPaths().base, 'ecosystem.config.js')
 
   if (!fs.existsSync(tomlPath) || !fs.existsSync(ecosystemPath)) {
+    const pm = getPackageManager()
     console.error(
       c.error('\nError: Baremetal deploy has not been properly setup.\n') +
-        'Please run `yarn cedar setup deploy baremetal` before deploying',
+        `Please run \`${formatCedarCommand(['setup', 'deploy', 'baremetal'], pm)}\` before deploying`,
     )
     process.exit(1)
   }

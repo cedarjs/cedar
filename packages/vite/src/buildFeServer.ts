@@ -1,3 +1,7 @@
+import {
+  formatCedarCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { buildWeb } from './build/build.js'
@@ -23,9 +27,10 @@ export const buildFeServer = async ({ verbose, webDir }: BuildOptions = {}) => {
   const streamingSsrEnabled = rwConfig.experimental?.streamingSsr?.enabled
 
   if (!viteConfigPath) {
+    const pm = getPackageManager()
     throw new Error(
       'Vite config not found. You need to setup your project with Vite ' +
-        'using `yarn cedar setup vite`',
+        `using \`${formatCedarCommand(['setup', 'vite'], pm)}\``,
     )
   }
 

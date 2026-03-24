@@ -7,6 +7,10 @@ import Configstore from 'configstore'
 import execa from 'execa'
 import { terminalLink } from 'termi-link'
 
+import {
+  formatRunBinCommand,
+  getPackageManager,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfigPath } from '@cedarjs/project-config'
 
 const config = new Configstore('@cedarjs/cli')
@@ -21,7 +25,9 @@ const CFW_PATH =
 
 if (!CFW_PATH) {
   console.error('Error: You must specify the path to Cedar Framework')
-  console.error('Usage: `CFW_PATH=~/gh/cedarjs/cedar yarn cfw <command>')
+  console.error(
+    `Usage: \`CFW_PATH=~/gh/cedarjs/cedar ${formatRunBinCommand('cfw', [], getPackageManager())} <command>`,
+  )
   process.exit(1)
 }
 
@@ -29,7 +35,9 @@ if (!fs.existsSync(CFW_PATH)) {
   console.error(
     `Error: The specified path to Cedar Framework (${CFW_PATH}) does not exist.`,
   )
-  console.error('Usage: `CFW_PATH=~/gh/cedarjs/cedar yarn cfw <command>')
+  console.error(
+    `Usage: \`CFW_PATH=~/gh/cedarjs/cedar ${formatRunBinCommand('cfw', [], getPackageManager())} <command>`,
+  )
   process.exit(1)
 }
 

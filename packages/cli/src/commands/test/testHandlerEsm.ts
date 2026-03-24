@@ -1,6 +1,9 @@
-import execa from 'execa'
-
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
@@ -128,11 +131,14 @@ export const handler = async ({
 
     // TODO: Run vitest programmatically. See https://vitest.dev/advanced/api/
     const runCommand = async () => {
-      await execa('yarn', ['vitest', ...vitestArgs], {
-        cwd: rwjsPaths.base,
-        stdio: 'inherit',
-        env: { ...process.env, DATABASE_URL },
-      })
+      await runPackageManagerCommand(
+        runBin('vitest', vitestArgs, getPackageManager()),
+        {
+          cwd: rwjsPaths.base,
+          stdio: 'inherit',
+          env: { ...process.env, DATABASE_URL },
+        },
+      )
     }
 
     if (watch) {

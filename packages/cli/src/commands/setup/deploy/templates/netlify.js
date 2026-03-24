@@ -1,10 +1,13 @@
+import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager'
+
 import { getConfig } from '../../../../lib/index.js'
 
 const config = getConfig()
 
-export const NETLIFY_TOML = `\
+export function getNetlifyToml(packageManager) {
+  return `\
 [build]
-  command = "yarn cedar deploy netlify"
+  command = "${formatCedarCommand(['deploy', 'netlify'], packageManager)}"
   publish = "web/dist"
   functions = "api/dist/functions"
 
@@ -31,3 +34,4 @@ export const NETLIFY_TOML = `\
   # Point your browser to this port to access your app
   port = 8888
 `
+}

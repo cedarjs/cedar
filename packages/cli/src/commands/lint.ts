@@ -1,11 +1,15 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  getPackageManager,
+  runBin,
+  runPackageManagerCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getPaths, getConfig } from '@cedarjs/project-config'
 
 /**
@@ -147,10 +151,18 @@ export const handler = async ({
 
     const filteredArgs = args.filter((arg): arg is string => Boolean(arg))
 
-    const result = await execa('yarn', filteredArgs, {
-      cwd: getPaths().base,
-      stdio: 'inherit',
-    })
+    // Remove 'eslint' from the start because runBin adds it back
+    if (filteredArgs[0] === 'eslint') {
+      filteredArgs.shift()
+    }
+
+    const result = await runPackageManagerCommand(
+      runBin('eslint', filteredArgs, getPackageManager()),
+      {
+        cwd: getPaths().base,
+        stdio: 'inherit',
+      },
+    )
 
     process.exitCode = result.exitCode
   } catch (error: unknown) {

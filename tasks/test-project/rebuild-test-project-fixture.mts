@@ -76,10 +76,18 @@ const args = yargs(hideBin(process.argv))
     type: 'boolean',
     describe: 'Rebuild the esm test-project',
   })
+  .option('packageManager', {
+    alias: 'pm',
+    type: 'string',
+    choices: ['yarn', 'npm', 'pnpm'],
+    default: 'yarn',
+    describe: 'The package manager to use for the test-project',
+  })
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep, live, esm } = args
+const { verbose, resume, resumePath, resumeStep, live, esm, packageManager } =
+  args
 
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
@@ -104,6 +112,10 @@ if (live) {
   folderSuffix = '-live'
 } else if (esm) {
   folderSuffix += '-esm'
+}
+
+if (packageManager !== 'yarn') {
+  folderSuffix += `-${packageManager}`
 }
 
 const CEDAR_FRAMEWORK_PATH = path.join(import.meta.dirname, '../../')
@@ -353,11 +365,12 @@ const createProject = () => {
     cmd,
     // We create a ts project and convert using ts-to-js at the end if typescript flag is false
     [
-      '--no-yarn-install',
+      '--no-install',
       '--typescript',
       '--overwrite',
       '--no-git',
       esm ? '--esm' : '',
+      `--package-manager ${packageManager}`,
     ],
     getExecaOptions(CEDAR_FRAMEWORK_PATH),
   )
@@ -385,6 +398,9 @@ async function rebuildTestProject() {
   console.log('Rebuilding test project fixture...')
   console.log('Using temporary directory:', OUTPUT_PROJECT_PATH)
   console.log()
+
+  const cedarCmd =
+    packageManager === 'npm' ? 'npx cedar' : `${packageManager} cedar`
 
   const overallStart = Date.now()
 
@@ -438,14 +454,18 @@ async function rebuildTestProject() {
   await tuiTask({
     step: 3,
     title: 'Installing node_modules',
-    content: 'yarn install',
+    content: `${packageManager} install`,
     task: async () => {
       // TODO: See if this is needed now with tarsync
-      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
+      await exec(
+        `${packageManager} install`,
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
 
       // TODO: Now that I've added this, I wonder what other steps I can remove
       return exec(
-        `yarn ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
+        `${packageManager} ${getCfwBin(OUTPUT_PROJECT_PATH)} project:tarsync`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -596,7 +616,7 @@ async function rebuildTestProject() {
       fs.writeFileSync(tomlPath, newCedarToml)
 
       await exec(
-        'yarn cedar g package @my-org/validators --workspace both',
+        `${cedarCmd} g package @my-org/validators --workspace both`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -652,10 +672,14 @@ async function rebuildTestProject() {
         JSON.stringify(webPackageJson, null, 2),
       )
 
-      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
+      await exec(
+        `${packageManager} install`,
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
 
       const build = await exec(
-        'yarn cedar build --no-prerender',
+        `${cedarCmd} build --no-prerender`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -749,7 +773,7 @@ async function rebuildTestProject() {
       )
 
       await exec(
-        'yarn cedar g script i/am/nested',
+        `${cedarCmd} g script i/am/nested`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -757,7 +781,7 @@ async function rebuildTestProject() {
       // Verify that the scripts are added and included in the list of
       // available scripts
       const list = await exec(
-        'yarn cedar exec',
+        `${cedarCmd} exec`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -767,33 +791,33 @@ async function rebuildTestProject() {
         !list.stdout.includes('i/am/nested') ||
         !list.stdout.includes('one/two/myNestedScript')
       ) {
-        console.error('yarn cedar exec output', list.stdout, list.stderr)
+        console.error(`${cedarCmd} exec output`, list.stdout, list.stderr)
 
         throw new Error('Scripts not included in list')
       }
 
       // Verify that the scripts can be executed
       const runFromRoot = await exec(
-        'yarn cedar exec one/two/myNestedScript',
+        `${cedarCmd} exec one/two/myNestedScript`,
         [],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
 
       if (!runFromRoot.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn cedar exec one/two/myNestedScript` output')
+        console.error(`\`${cedarCmd} exec one/two/myNestedScript\` output`)
         console.error(runFromRoot.stdout, runFromRoot.stderr)
 
         throw new Error('Script not executed successfully')
       }
 
       const runFromScripts = await exec(
-        'yarn cedar exec one/two/myNestedScript',
+        `${cedarCmd} exec one/two/myNestedScript`,
         [],
         getExecaOptions(path.join(OUTPUT_PROJECT_PATH, 'scripts', 'one')),
       )
 
       if (!runFromScripts.stdout.includes('Hello from myNestedScript')) {
-        console.error('`yarn cedar exec one/two/myNestedScript` output')
+        console.error(`\`${cedarCmd} exec one/two/myNestedScript\` output`)
         console.error(runFromScripts.stdout, runFromScripts.stderr)
 
         throw new Error('Script not executed successfully')
@@ -806,7 +830,7 @@ async function rebuildTestProject() {
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
-        'yarn cedar prisma migrate reset',
+        `${cedarCmd} prisma migrate reset`,
         ['--force'],
         getExecaOptions(OUTPUT_PROJECT_PATH),
       )
@@ -818,7 +842,8 @@ async function rebuildTestProject() {
     title: 'Lint --fix all the things',
     task: async () => {
       try {
-        await exec('yarn', ['cedar', 'lint', '--fix'], {
+        const [cmd, ...args] = cedarCmd.split(' ')
+        await exec(cmd, [...args, 'lint', '--fix'], {
           stdio: 'pipe',
           cleanup: true,
           cwd: OUTPUT_PROJECT_PATH,
@@ -867,7 +892,14 @@ async function rebuildTestProject() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/node_modules`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/web/node_modules`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/.env`)
-      await rimraf(`${OUTPUT_PROJECT_PATH}/yarn.lock`)
+
+      const lockFiles = {
+        yarn: 'yarn.lock',
+        npm: 'package-lock.json',
+        pnpm: 'pnpm-lock.yaml',
+      }
+      await rimraf(`${OUTPUT_PROJECT_PATH}/${lockFiles[packageManager]}`)
+
       await rimraf(`${OUTPUT_PROJECT_PATH}/step.txt`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
