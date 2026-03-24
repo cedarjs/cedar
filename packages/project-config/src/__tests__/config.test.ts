@@ -1,19 +1,19 @@
 import path from 'path'
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach } from 'vitest'
 
-import { getConfig, getRawConfig } from '../config'
+import { getConfig, getRawConfig, clearConfigCache } from '../config'
 
 describe('getRawConfig', () => {
   it('returns nothing for an empty config', () => {
     const config = getRawConfig(
-      path.join(__dirname, './fixtures/redwood.empty.toml'),
+      path.join(__dirname, './fixtures/cedar.empty.toml'),
     )
     expect(config).toMatchInlineSnapshot(`{}`)
   })
 
   it('returns only the defined values', () => {
-    const config = getRawConfig(path.join(__dirname, './fixtures/redwood.toml'))
+    const config = getRawConfig(path.join(__dirname, './fixtures/cedar.toml'))
     expect(config).toMatchInlineSnapshot(`
       {
         "web": {
@@ -25,10 +25,19 @@ describe('getRawConfig', () => {
 })
 
 describe('getConfig', () => {
+  const cedarCwd = process.env.CEDAR_CWD
+
+  beforeEach(() => {
+    clearConfigCache()
+  })
+
+  afterEach(() => {
+    process.env.CEDAR_CWD = cedarCwd
+  })
+
   it('returns a default config', () => {
-    const config = getConfig(
-      path.join(__dirname, './fixtures/redwood.empty.toml'),
-    )
+    process.env.CEDAR_CWD = path.join(__dirname, './fixtures/cedar.empty.toml')
+    const config = getConfig()
     expect(config).toMatchInlineSnapshot(`
       {
         "api": {
@@ -120,15 +129,18 @@ describe('getConfig', () => {
   })
 
   it('merges configs', () => {
-    const config = getConfig(path.join(__dirname, './fixtures/redwood.toml'))
+    process.env.CEDAR_CWD = path.join(__dirname, './fixtures/cedar.toml')
+    const config = getConfig()
     expect(config.web.port).toEqual(8888)
   })
 
   describe('with studio configs', () => {
     it('merges studio configs with dbAuth impersonation', () => {
-      const config = getConfig(
-        path.join(__dirname, './fixtures/redwood.studio.dbauth.toml'),
+      process.env.CEDAR_CWD = path.join(
+        __dirname,
+        './fixtures/cedar.studio.dbauth.toml',
       )
+      const config = getConfig()
       expect(config.studio.graphiql?.authImpersonation?.authProvider).toEqual(
         'dbAuth',
       )
@@ -139,10 +151,11 @@ describe('getConfig', () => {
     })
 
     it('merges studio configs with supabase impersonation', () => {
-      const config = getConfig(
-        path.join(__dirname, './fixtures/redwood.studio.supabase.toml'),
+      process.env.CEDAR_CWD = path.join(
+        __dirname,
+        './fixtures/cedar.studio.supabase.toml',
       )
-
+      const config = getConfig()
       expect(config.studio.graphiql?.authImpersonation?.authProvider).toEqual(
         'supabase',
       )
@@ -159,29 +172,31 @@ describe('getConfig', () => {
   describe('with graphql configs', () => {
     describe('sets defaults', () => {
       it('sets trustedDocuments to false', () => {
-        const config = getConfig(
-          path.join(__dirname, './fixtures/redwood.toml'),
-        )
+        process.env.CEDAR_CWD = path.join(__dirname, './fixtures/cedar.toml')
+        const config = getConfig()
         expect(config.graphql.trustedDocuments).toEqual(false)
         expect(config.graphql.fragments).toEqual(false)
       })
     })
 
     it('merges graphql configs', () => {
-      const config = getConfig(
-        path.join(__dirname, './fixtures/redwood.graphql.toml'),
+      process.env.CEDAR_CWD = path.join(
+        __dirname,
+        './fixtures/cedar.graphql.toml',
       )
+      const config = getConfig()
       expect(config.graphql.trustedDocuments).toEqual(true)
       expect(config.graphql.fragments).toEqual(true)
     })
   })
 
   it('throws an error when given a bad config path', () => {
+    process.env.CEDAR_CWD = path.join(__dirname, './fixtures/fake_cedar.toml')
     const runGetConfig = () => {
-      getConfig(path.join(__dirname, './fixtures/fake_redwood.toml'))
+      getConfig()
     }
     expect(runGetConfig).toThrow(
-      /Could not parse .+fake_redwood.toml.+ Error: ENOENT: no such file or directory, open .+fake_redwood.toml./,
+      /Could not parse .+fake_cedar.toml.+ Error: ENOENT: no such file or directory, open .+fake_cedar.toml./,
     )
   })
 
@@ -189,9 +204,11 @@ describe('getConfig', () => {
     process.env.API_URL = '/bazinga'
     process.env.APP_ENV = 'staging'
 
-    const config = getConfig(
-      path.join(__dirname, './fixtures/redwood.withEnv.toml'),
+    process.env.CEDAR_CWD = path.join(
+      __dirname,
+      './fixtures/cedar.withEnv.toml',
     )
+    const config = getConfig()
 
     // Fallsback to the default if env var not supplied
     expect(config.web.port).toBe('8910') // remember env vars have to be strings

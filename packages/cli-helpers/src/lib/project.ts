@@ -58,8 +58,7 @@ export const updateTomlConfig = (packageName: string) => {
 
   let tomlToAppend: Record<string, toml.TomlPrimitive> = {}
 
-  const config = getConfig(configTomlPath)
-
+  const config = getConfig()
   const cliSection = config.experimental?.cli
 
   if (!cliSection) {

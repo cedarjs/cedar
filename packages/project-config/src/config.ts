@@ -216,13 +216,23 @@ export const DEFAULT_CONFIG: Config = {
   eslintLegacyConfigWarning: true,
 }
 
+let configCache: Config | undefined = undefined
+
 /**
  * These configuration options are modified by the user via the Cedar
  * config file.
  */
-export const getConfig = (configPath = getConfigPath()): Config => {
+export function getConfig(): Config {
+  if (configCache) {
+    return configCache
+  }
+
+  const configPath = getConfigPath()
+
   try {
-    return merge(DEFAULT_CONFIG, getRawConfig(configPath))
+    const config = merge(DEFAULT_CONFIG, getRawConfig(configPath))
+    configCache = config
+    return config
   } catch (e) {
     throw new Error(`Could not parse "${configPath}": ${e}`)
   }
@@ -231,7 +241,8 @@ export const getConfig = (configPath = getConfigPath()): Config => {
 /**
  * Returns the JSON parse of the config file without any default values.
  *
- * @param configPath Path to the config file, defaults to automatically find the project config file (cedar.toml or redwood.toml)
+ * @param configPath Path to the config file, defaults to automatically find the
+ *   project config file (cedar.toml or redwood.toml)
  * @returns A JSON object from the parsed toml values
  */
 export function getRawConfig(configPath = getConfigPath()) {
@@ -240,4 +251,8 @@ export function getRawConfig(configPath = getConfigPath()) {
   } catch (e) {
     throw new Error(`Could not parse "${configPath}": ${e}`)
   }
+}
+
+export function clearConfigCache() {
+  configCache = undefined
 }
