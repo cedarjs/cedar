@@ -1,19 +1,35 @@
-import path from 'path'
-
-import { describe, it, expect, afterEach, beforeEach } from 'vitest'
+import { fs as memfs, vol } from 'memfs'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
 import { getConfig, getRawConfig, clearConfigCache } from '../config'
 
+vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
+
+const cedarCwd = process.env.CEDAR_CWD
+
+beforeEach(() => {
+  process.env.CEDAR_CWD = '/cedar-app'
+  clearConfigCache()
+})
+
+afterEach(() => {
+  process.env.CEDAR_CWD = cedarCwd
+})
+
 describe('getRawConfig', () => {
   it('returns nothing for an empty config', () => {
-    const config = getRawConfig(
-      path.join(__dirname, './fixtures/cedar.empty.toml'),
-    )
+    vol.fromJSON({ 'cedar.toml': '' }, '/cedar-app')
+
+    const config = getRawConfig()
+
     expect(config).toMatchInlineSnapshot(`{}`)
   })
 
   it('returns only the defined values', () => {
-    const config = getRawConfig(path.join(__dirname, './fixtures/cedar.toml'))
+    vol.fromJSON({ 'cedar.toml': '[web]\nport = 8888' }, '/cedar-app')
+
+    const config = getRawConfig()
+
     expect(config).toMatchInlineSnapshot(`
       {
         "web": {
@@ -25,19 +41,11 @@ describe('getRawConfig', () => {
 })
 
 describe('getConfig', () => {
-  const cedarCwd = process.env.CEDAR_CWD
-
-  beforeEach(() => {
-    clearConfigCache()
-  })
-
-  afterEach(() => {
-    process.env.CEDAR_CWD = cedarCwd
-  })
-
   it('returns a default config', () => {
-    process.env.CEDAR_CWD = path.join(__dirname, './fixtures/cedar.empty.toml')
+    vol.fromJSON({ 'cedar.toml': '' }, '/cedar-app')
+
     const config = getConfig()
+
     expect(config).toMatchInlineSnapshot(`
       {
         "api": {
@@ -129,16 +137,29 @@ describe('getConfig', () => {
   })
 
   it('merges configs', () => {
-    process.env.CEDAR_CWD = path.join(__dirname, './fixtures/cedar.toml')
+    vol.fromJSON({ 'cedar.toml': '[web]\nport = 8888' }, '/cedar-app')
+
     const config = getConfig()
+
     expect(config.web.port).toEqual(8888)
   })
 
   describe('with studio configs', () => {
     it('merges studio configs with dbAuth impersonation', () => {
-      process.env.CEDAR_CWD = path.join(
-        __dirname,
-        './fixtures/cedar.studio.dbauth.toml',
+      vol.fromJSON(
+        {
+          'cedar.toml': `
+            [web]
+              port = 8888
+            [studio]
+              [studio.graphiql]
+                [studio.graphiql.authImpersonation]
+                  authProvider = "dbAuth"
+                  email = "user@example.com"
+                  userId = "1"
+            `,
+        },
+        '/cedar-app',
       )
       const config = getConfig()
       expect(config.studio.graphiql?.authImpersonation?.authProvider).toEqual(
@@ -151,11 +172,25 @@ describe('getConfig', () => {
     })
 
     it('merges studio configs with supabase impersonation', () => {
-      process.env.CEDAR_CWD = path.join(
-        __dirname,
-        './fixtures/cedar.studio.supabase.toml',
+      vol.fromJSON(
+        {
+          'cedar.toml': `
+            [web]
+              port = 8888
+            [studio]
+              [studio.graphiql]
+                [studio.graphiql.authImpersonation]
+                  authProvider = "supabase"
+                  email = "supauser@example.com"
+                  jwtSecret = "supa-secret"
+                  userId = "1"
+            `,
+        },
+        '/cedar-app',
       )
+
       const config = getConfig()
+
       expect(config.studio.graphiql?.authImpersonation?.authProvider).toEqual(
         'supabase',
       )
@@ -172,17 +207,27 @@ describe('getConfig', () => {
   describe('with graphql configs', () => {
     describe('sets defaults', () => {
       it('sets trustedDocuments to false', () => {
-        process.env.CEDAR_CWD = path.join(__dirname, './fixtures/cedar.toml')
+        vol.fromJSON({ 'cedar.toml': '[web]\nport = 8888' }, '/cedar-app')
+
         const config = getConfig()
+
         expect(config.graphql.trustedDocuments).toEqual(false)
         expect(config.graphql.fragments).toEqual(false)
       })
     })
 
     it('merges graphql configs', () => {
-      process.env.CEDAR_CWD = path.join(
-        __dirname,
-        './fixtures/cedar.graphql.toml',
+      vol.fromJSON(
+        {
+          'cedar.toml': `
+            [web]
+              port = 8888
+            [graphql]
+              fragments = true
+              trustedDocuments = true
+            `,
+        },
+        '/cedar-app',
       )
       const config = getConfig()
       expect(config.graphql.trustedDocuments).toEqual(true)
@@ -190,32 +235,44 @@ describe('getConfig', () => {
     })
   })
 
-  it('throws an error when given a bad config path', () => {
-    process.env.CEDAR_CWD = path.join(__dirname, './fixtures/fake_cedar.toml')
-    const runGetConfig = () => {
-      getConfig()
-    }
-    expect(runGetConfig).toThrow(
-      /Could not parse .+fake_cedar.toml.+ Error: ENOENT: no such file or directory, open .+fake_cedar.toml./,
+  it('throws an error when the config file has the wrong format', () => {
+    vol.fromJSON({ 'cedar.toml': '-invalid content-' }, '/cedar-app')
+    expect(() => getConfig()).toThrow(
+      /Could not parse .+cedar.toml.+ Error: Invalid TOML/,
     )
   })
 
   it('interpolates environment variables correctly', () => {
     process.env.API_URL = '/bazinga'
     process.env.APP_ENV = 'staging'
+    process.env.API_PORT = '8915'
 
-    process.env.CEDAR_CWD = path.join(
-      __dirname,
-      './fixtures/cedar.withEnv.toml',
+    vol.fromJSON(
+      {
+        'cedar.toml': `
+          [web]
+            title = "App running on \${APP_ENV}"
+            port = "\${PORT:8910}"
+            apiUrl = "\${API_URL:/.redwood/functions}" # you can customise graphql and dbauth urls individually too: see https://cedarjs.com/docs/app-configuration-redwood-toml#api-paths
+            includeEnvironmentVariables = [] # any ENV vars that should be available to the web side, see https://cedarjs.com/docs/environment-variables#web
+          [api]
+            port = "\${API_PORT:8911}"
+          [browser]
+            open = true
+          `,
+      },
+      '/cedar-app',
     )
     const config = getConfig()
 
     // Fallsback to the default if env var not supplied
-    expect(config.web.port).toBe('8910') // remember env vars have to be strings
+    expect(config.web.port).toBe('8910')
 
     // Uses the env var if supplied
     expect(config.web.apiUrl).toBe('/bazinga')
     expect(config.web.title).toBe('App running on staging')
+    // env vars are always strings
+    expect(config.api.port).toBe('8915')
 
     delete process.env.API_URL
     delete process.env.APP_ENV

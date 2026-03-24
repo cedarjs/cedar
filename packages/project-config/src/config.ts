@@ -227,15 +227,9 @@ export function getConfig(): Config {
     return configCache
   }
 
-  const configPath = getConfigPath()
-
-  try {
-    const config = merge(DEFAULT_CONFIG, getRawConfig(configPath))
-    configCache = config
-    return config
-  } catch (e) {
-    throw new Error(`Could not parse "${configPath}": ${e}`)
-  }
+  const config = merge(DEFAULT_CONFIG, getRawConfig())
+  configCache = config
+  return config
 }
 
 /**
@@ -245,7 +239,8 @@ export function getConfig(): Config {
  *   project config file (cedar.toml or redwood.toml)
  * @returns A JSON object from the parsed toml values
  */
-export function getRawConfig(configPath = getConfigPath()) {
+export function getRawConfig() {
+  const configPath = getConfigPath()
   try {
     return toml.parse(envInterpolation(fs.readFileSync(configPath, 'utf8')))
   } catch (e) {
