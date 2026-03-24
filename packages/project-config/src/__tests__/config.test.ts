@@ -1,7 +1,7 @@
 import { fs as memfs, vol } from 'memfs'
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
-import { getConfig, getRawConfig, clearConfigCache } from '../config'
+import { getConfig, getRawConfig } from '../config'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: memfs }))
 
@@ -9,7 +9,6 @@ const cedarCwd = process.env.CEDAR_CWD
 
 beforeEach(() => {
   process.env.CEDAR_CWD = '/cedar-app'
-  clearConfigCache()
 })
 
 afterEach(() => {
@@ -276,5 +275,6 @@ describe('getConfig', () => {
 
     delete process.env.API_URL
     delete process.env.APP_ENV
+    delete process.env.API_PORT
   })
 })

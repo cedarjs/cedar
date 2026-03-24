@@ -216,32 +216,20 @@ export const DEFAULT_CONFIG: Config = {
   eslintLegacyConfigWarning: true,
 }
 
-let configCache: Config | undefined = undefined
-
 /**
  * These configuration options are modified by the user via the Cedar config
  * file.
  */
-export function getConfig(): Config {
-  if (configCache) {
-    return configCache
-  }
-
-  const config = merge(DEFAULT_CONFIG, getRawConfig())
-  configCache = config
+export function getConfig(configPath?: string): Config {
+  const config = merge(DEFAULT_CONFIG, getRawConfig(configPath))
   return config
 }
 
 /** Returns the JSON parse of the config file without any default values */
-export function getRawConfig() {
-  const configPath = getConfigPath()
+export function getRawConfig(configPath = getConfigPath()) {
   try {
     return toml.parse(envInterpolation(fs.readFileSync(configPath, 'utf8')))
   } catch (e) {
     throw new Error(`Could not parse "${configPath}": ${e}`)
   }
-}
-
-export function clearConfigCache() {
-  configCache = undefined
 }
