@@ -217,22 +217,22 @@ export const DEFAULT_CONFIG: Config = {
 }
 
 /**
- * These configuration options are modified by the user via the Cedar
- * config file.
+ * These configuration options are modified by the user via the Cedar config
+ * file.
+ *
+ * @param configPath Path to the config file. Defaults to automatically finding
+ *   the project config file (cedar.toml or redwood.toml)
  */
-export const getConfig = (configPath = getConfigPath()): Config => {
-  try {
-    return merge(DEFAULT_CONFIG, getRawConfig(configPath))
-  } catch (e) {
-    throw new Error(`Could not parse "${configPath}": ${e}`)
-  }
+export function getConfig(configPath?: string): Config {
+  const config = merge(DEFAULT_CONFIG, getRawConfig(configPath))
+  return config
 }
 
 /**
- * Returns the JSON parse of the config file without any default values.
+ * Returns a JSON representation of the config file without any default values.
  *
- * @param configPath Path to the config file, defaults to automatically find the project config file (cedar.toml or redwood.toml)
- * @returns A JSON object from the parsed toml values
+ * @param configPath Path to the config file. Defaults to automatically finding
+ *   the project config file (cedar.toml or redwood.toml)
  */
 export function getRawConfig(configPath = getConfigPath()) {
   try {

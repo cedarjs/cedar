@@ -25,17 +25,15 @@ const DEFAULT_SCRYPT_OPTIONS: ScryptOptions = {
 }
 
 const getPort = () => {
-  let configPath
-
   try {
-    configPath = getConfigPath()
+    getConfigPath()
   } catch {
     // If this throws, we're in a serverless environment, and the cedar.toml
     // file doesn't exist.
     return 8911
   }
 
-  return getConfig(configPath).api.port
+  return getConfig().api.port
 }
 
 // When in development environment, check for auth impersonation cookie
