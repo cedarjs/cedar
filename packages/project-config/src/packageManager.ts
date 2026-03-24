@@ -9,7 +9,7 @@ let packageManagerCache: PackageManager | undefined
 
 /**
  * Returns the package manager used by the Cedar project. Falls back to 'yarn'
- * if we can't determine what package managager the project uses
+ * if we can't determine what package manager the project uses
  */
 export function getPackageManager(): PackageManager {
   if (packageManagerCache) {
@@ -33,6 +33,7 @@ export function getPackageManager(): PackageManager {
     return packageManagerCache
   }
 
+  packageManagerCache = 'yarn'
   return 'yarn'
 }
 

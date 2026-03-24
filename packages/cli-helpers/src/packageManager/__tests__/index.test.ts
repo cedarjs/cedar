@@ -25,7 +25,7 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-describe('worspacePackageVersion', () => {
+describe('workspacePackageSpecifier', () => {
   it('returns the version string to use for yarn workspace packages', () => {
     expect(workspacePackageSpecifier()).toBe('workspace:*')
   })
