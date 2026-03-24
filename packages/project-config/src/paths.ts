@@ -132,8 +132,9 @@ export function getPaths(BASE_DIR: string = getBaseDir()) {
   }
 
   const routes = resolveFile(path.join(BASE_DIR, 'web/src/Routes')) as string
-
-  const { prismaConfig: prismaConfigFromConfig } = getConfig().api
+  const { prismaConfig: prismaConfigFromConfig } = getConfig(
+    getConfigPath(BASE_DIR),
+  ).api
   // Remove extension from config path before resolving to find actual file
   const prismaConfigBase = path.join(
     BASE_DIR,
