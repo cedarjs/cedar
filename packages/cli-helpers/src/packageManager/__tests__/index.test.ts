@@ -4,21 +4,8 @@ import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { workspacePackageSpecifier } from '../index.js'
 
-vi.mock('@cedarjs/project-config', () => ({
-  getPaths: () => ({
-    base: '/cedar-app',
-  }),
-}))
-
 vi.mock('@cedarjs/project-config/packageManager', () => ({
   getPackageManager: vi.fn(() => 'yarn'),
-}))
-
-vi.mock('node:fs', () => ({
-  default: {
-    existsSync: vi.fn(),
-  },
-  existsSync: vi.fn(),
 }))
 
 beforeEach(() => {
