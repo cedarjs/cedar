@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 
 import type { PrismaConfig } from 'prisma'
 
+import { prettyPrintCedarCommand } from './packageManager.js'
 import { getPaths } from './paths.js'
 
 // Cache for loaded configs to avoid repeated file system operations
@@ -201,11 +202,12 @@ export async function resolveGeneratedPrismaClient(): Promise<ResolveReturnType>
 
   if (!prismaClientEntry || !fs.existsSync(prismaClientEntry)) {
     const checked = prismaClientEntry ?? '(could not determine output path)'
+    const pmCommand = prettyPrintCedarCommand(['prisma', 'generate'])
     return {
       clientPath: prismaClientEntry,
       error:
         `Could not find generated Prisma client entry. Checked: ${checked}. ` +
-        'Run `yarn cedar prisma generate` and try again.',
+        `Run \`${pmCommand}\` and try again.`,
     }
   }
 

@@ -18,6 +18,16 @@
         "types": "./dist/cjs/index.d.ts",
         "default": "./dist/cjs/index.js"
       }
+    },
+    "./packageManager": {
+      "import": {
+        "types": "./dist/packageManager.d.ts",
+        "default": "./dist/packageManager.js"
+      },
+      "default": {
+        "types": "./dist/cjs/packageManager.d.ts",
+        "default": "./dist/cjs/packageManager.js"
+      }
     }
   },
   "types": "./dist/index.d.ts",
