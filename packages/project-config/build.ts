@@ -7,7 +7,7 @@ await build({
   buildOptions: {
     ...defaultBuildOptions,
     bundle: true,
-    entryPoints: ['./src/index.ts'],
+    entryPoints: ['./src/index.ts', './src/packageManager.ts'],
     format: 'esm',
     packages: 'external',
   },
@@ -18,7 +18,7 @@ await build({
   buildOptions: {
     ...defaultBuildOptions,
     bundle: true,
-    entryPoints: ['./src/index.ts'],
+    entryPoints: ['./src/index.ts', './src/packageManager.ts'],
     outdir: 'dist/cjs',
     packages: 'external',
   },

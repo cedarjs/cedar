@@ -10,6 +10,7 @@ import { terminalLink } from 'termi-link'
 import ts from 'typescript'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { workspacePackageSpecifier } from '@cedarjs/cli-helpers/packageManager'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
@@ -196,7 +197,7 @@ export async function addDependencyToPackageJson(
     return
   }
 
-  packageJson.dependencies[packageName] = 'workspace:*'
+  packageJson.dependencies[packageName] = workspacePackageSpecifier()
 
   await fs.promises.writeFile(
     packageJsonPath,

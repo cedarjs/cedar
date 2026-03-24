@@ -38,6 +38,16 @@
         "types": "./dist/cjs/lib/loadEnvFiles.d.ts",
         "default": "./dist/cjs/lib/loadEnvFiles.js"
       }
+    },
+    "./packageManager": {
+      "import": {
+        "types": "./dist/packageManager/index.d.ts",
+        "default": "./dist/packageManager/index.js"
+      },
+      "default": {
+        "types": "./dist/cjs/packageManager/index.d.ts",
+        "default": "./dist/cjs/packageManager/index.js"
+      }
     }
   },
   "types": "./dist/index.d.ts",
