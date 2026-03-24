@@ -4,7 +4,7 @@ import type { APIGatewayProxyEvent } from 'aws-lambda'
 
 import type { CorsHeaders } from '@cedarjs/api'
 import { getEventHeader, isFetchApiRequest } from '@cedarjs/api'
-import { getConfig } from '@cedarjs/project-config'
+import { getConfig, getConfigPath } from '@cedarjs/project-config'
 
 import * as DbAuthError from './errors'
 
@@ -26,12 +26,14 @@ const DEFAULT_SCRYPT_OPTIONS: ScryptOptions = {
 
 const getPort = () => {
   try {
-    return getConfig().api.port
+    getConfigPath()
   } catch {
     // If this throws, we're in a serverless environment, and the cedar.toml
     // file doesn't exist.
     return 8911
   }
+
+  return getConfig().api.port
 }
 
 // When in development environment, check for auth impersonation cookie
