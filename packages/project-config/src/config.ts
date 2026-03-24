@@ -219,8 +219,8 @@ export const DEFAULT_CONFIG: Config = {
 let configCache: Config | undefined = undefined
 
 /**
- * These configuration options are modified by the user via the Cedar
- * config file.
+ * These configuration options are modified by the user via the Cedar config
+ * file.
  */
 export function getConfig(): Config {
   if (configCache) {
@@ -232,13 +232,7 @@ export function getConfig(): Config {
   return config
 }
 
-/**
- * Returns the JSON parse of the config file without any default values.
- *
- * @param configPath Path to the config file, defaults to automatically find the
- *   project config file (cedar.toml or redwood.toml)
- * @returns A JSON object from the parsed toml values
- */
+/** Returns the JSON parse of the config file without any default values */
 export function getRawConfig() {
   const configPath = getConfigPath()
   try {
