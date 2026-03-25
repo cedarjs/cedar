@@ -11,7 +11,7 @@
     ]
   },
   "dependencies": {
-    "@apollo/client-react-streaming": "0.10.0",
+    "@apollo/client-react-streaming": "0.14.4",
     "@jtoar/throw-on-client": "0.0.1",
     "@cedarjs/auth-dbauth-middleware": "2.8.0",
     "@cedarjs/auth-dbauth-web": "2.8.0",

@@ -11,7 +11,7 @@
     ]
   },
   "dependencies": {
-    "@apollo/client-react-streaming": "0.10.0",
+    "@apollo/client-react-streaming": "0.14.4",
     "@cedarjs/forms": "2.8.0",
     "@cedarjs/router": "2.8.0",
     "@cedarjs/web": "2.8.0",
