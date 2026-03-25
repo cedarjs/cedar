@@ -5,7 +5,9 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 
 import { prettify } from '@cedarjs/cli-helpers'
+import { install } from '@cedarjs/cli-helpers/packageManager'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import c from '../../lib/colors.js'
@@ -422,9 +424,8 @@ export const handler = async ({ force, verbose }) => {
           )
 
           // Run yarn install to apply the changes
-          await execa('yarn', [], {
-            cwd: getPaths().web.base,
-          })
+          const pm = getPackageManager()
+          await execa(pm, [install()], { cwd: getPaths().web.base })
         },
       },
       {

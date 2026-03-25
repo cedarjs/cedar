@@ -1,6 +1,7 @@
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 export const command = 'baremetal [environment]'
 export const description = 'Deploy to baremetal server(s)'
@@ -31,7 +32,7 @@ export const builder = (yargs) => {
   })
 
   yargs.option('install', {
-    describe: 'Run `yarn install`',
+    describe: `Run \`${getPackageManager()} install\``,
     default: true,
     type: 'boolean',
   })
