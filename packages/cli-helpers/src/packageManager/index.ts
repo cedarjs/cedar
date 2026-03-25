@@ -35,7 +35,7 @@ export function installationErrorMessage() {
 
   return (
     `Could not finish installation. Please run \`${getPackageManager()} ` +
-    `${install()} \` before continuing`
+    `${install()}\` before continuing`
   )
 }
 
