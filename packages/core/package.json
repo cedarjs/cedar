@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/core",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Foundational packages and config required to build CedarJS",
   "repository": {
     "type": "git",
@@ -44,13 +44,13 @@
   },
   "dependencies": {
     "@babel/cli": "7.28.6",
-    "@cedarjs/api-server": "3.0.0",
-    "@cedarjs/cli": "3.0.0",
-    "@cedarjs/eslint-config": "3.0.0",
-    "@cedarjs/internal": "3.0.0",
-    "@cedarjs/project-config": "3.0.0",
-    "@cedarjs/testing": "3.0.0",
-    "@cedarjs/web-server": "3.0.0",
+    "@cedarjs/api-server": "3.1.0",
+    "@cedarjs/cli": "3.1.0",
+    "@cedarjs/eslint-config": "3.1.0",
+    "@cedarjs/internal": "3.1.0",
+    "@cedarjs/project-config": "3.1.0",
+    "@cedarjs/testing": "3.1.0",
+    "@cedarjs/web-server": "3.1.0",
     "graphql-tag": "2.12.6",
     "nodemon": "3.1.14",
     "typescript": "5.9.3"
