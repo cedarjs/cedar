@@ -22,7 +22,7 @@ export function dedupe() {
     return 'dedupe'
   }
 
-  return ''
+  return undefined
 }
 
 export function installationErrorMessage() {
