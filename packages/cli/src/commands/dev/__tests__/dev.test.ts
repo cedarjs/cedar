@@ -170,8 +170,8 @@ describe('yarn cedar dev', () => {
   afterEach(async () => {
     // Reset spy counters
     vi.clearAllMocks()
-    vi.mocked(getPaths).mockRestore()
-    vi.mocked(getConfig).mockRestore()
+    vi.mocked(getPaths).mockReset()
+    vi.mocked(getConfig).mockReset()
     mockCedarToml = ''
   })
 
