@@ -125,6 +125,9 @@
       "optional": true
     }
   },
+  "engines": {
+    "node": ">=24"
+  },
   "publishConfig": {
     "access": "public"
   },
