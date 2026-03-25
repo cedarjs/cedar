@@ -1,11 +1,7 @@
 import { terminalLink } from 'termi-link'
 
-<<<<<<< HEAD
-=======
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
->>>>>>> 57f7aa38f9 (feat(pm): Package manager agnostic install(), add(), dedupe() (#1457))
 export const command = 'baremetal [environment]'
 export const description = 'Deploy to baremetal server(s)'
 
