@@ -1,6 +1,8 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
+import { dedupeIsSupported } from '@cedarjs/cli-helpers/packageManager'
+
 // @ts-expect-error - Types not available for JS files
 import c from '../../lib/colors.js'
 
@@ -67,6 +69,7 @@ export const builder = (yargs: Argv) => {
       description: 'Skip dedupe check with --no-dedupe',
       type: 'boolean',
       default: true,
+      hidden: !dedupeIsSupported(),
     })
     .option('yes', {
       alias: 'y',
