@@ -30,7 +30,11 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  process.env.npm_config_user_agent = originalNpmConfigUserAgent
+  if (originalNpmConfigUserAgent === undefined) {
+    delete process.env.npm_config_user_agent
+  } else {
+    process.env.npm_config_user_agent = originalNpmConfigUserAgent
+  }
 })
 
 describe('getPackageManager', () => {

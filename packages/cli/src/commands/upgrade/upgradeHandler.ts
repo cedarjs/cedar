@@ -10,6 +10,7 @@ import { terminalLink } from 'termi-link'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import {
   dedupe as dedupeCmd,
+  dedupeIsSupported,
   install,
   installationErrorMessage,
   prettyPrintCedarCommand,
@@ -40,7 +41,7 @@ export interface UpgradeOptions {
 export const handler = async (upgradeOptions: UpgradeOptions) => {
   const { dryRun, tag, verbose, dedupe: dedupeOpt, yes, force } = upgradeOptions
 
-  const dedupe = dedupeOpt ? ` ${dedupeCmd()}` : ''
+  const dedupe = dedupeOpt && dedupeIsSupported() ? ` ${dedupeCmd()}` : ''
 
   recordTelemetryAttributes({
     command: 'upgrade',
@@ -601,7 +602,7 @@ async function refreshPrismaClient(
 
 async function dedupeDeps(_task: unknown, { verbose }: { verbose?: boolean }) {
   try {
-    await execa('yarn dedupe', {
+    await execa(`${getPackageManager()} ${dedupeCmd()}`, {
       shell: true,
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
@@ -612,8 +613,8 @@ async function dedupeDeps(_task: unknown, { verbose }: { verbose?: boolean }) {
     console.log(c.error(message))
 
     throw new Error(
-      'Could not finish de-duplication. Please run `yarn dedupe` before ' +
-        'continuing',
+      `Could not finish de-duplication. Please run \`${getPackageManager()} ` +
+        `${dedupeCmd()}\` before continuing`,
     )
   }
 

@@ -25,6 +25,10 @@ export function dedupe() {
   return undefined
 }
 
+export function dedupeIsSupported(): boolean {
+  return getPackageManager() === 'yarn'
+}
+
 export function installationErrorMessage() {
   if (getPackageManager() === 'yarn') {
     return (
