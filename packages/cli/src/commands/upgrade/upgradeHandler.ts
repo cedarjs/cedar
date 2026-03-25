@@ -166,10 +166,11 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
         title: 'One more thing..',
         task: (ctx, task) => {
           const version = ctx.versionToUpgradeTo
+          const upgradeMessage = dryRun
+            ? `🏃 Dry run complete. Your project would be upgraded to CedarJS ${version}.`
+            : `🎉 Your project has been upgraded to CedarJS ${version}!`
           const messageSections = [
-            `One more thing...\n\n   ${c.warning(
-              `🎉 Your project has been upgraded to CedarJS ${version}!`,
-            )} \n\n`,
+            `One more thing...\n\n   ${c.warning(upgradeMessage)} \n\n`,
           ]
           // Show links when switching to 'latest' or 'rc', undefined is essentially an alias of 'latest'
           if ([undefined, 'latest', 'rc'].includes(tag)) {
