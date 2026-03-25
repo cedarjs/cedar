@@ -118,6 +118,9 @@
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "publishConfig": {
     "access": "public"
   },

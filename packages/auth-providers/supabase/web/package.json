@@ -66,6 +66,9 @@
   "peerDependencies": {
     "@supabase/supabase-js": "2.99.3"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "publishConfig": {
     "access": "public"
   },

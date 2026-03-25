@@ -65,6 +65,9 @@
   "peerDependencies": {
     "netlify-identity-widget": "1.9.2"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "publishConfig": {
     "access": "public"
   },

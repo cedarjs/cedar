@@ -65,6 +65,9 @@
   "peerDependencies": {
     "supertokens-auth-react": "0.51.2"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "publishConfig": {
     "access": "public"
   },

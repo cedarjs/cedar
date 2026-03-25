@@ -51,8 +51,8 @@
     "vitest": "3.2.4",
     "yargs": "17.7.2"
   },
-  "publishConfig": {
-    "access": "public"
+  "engines": {
+    "node": ">=24"
   },
-  "gitHead": "d89c1b07faf4a35b7749ee06701dcb80deb31187"
+  "gitHead": "3905ed045508b861b495f8d5630d76c7a157d8f1"
 }

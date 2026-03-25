@@ -56,6 +56,9 @@
   "peerDependencies": {
     "supertokens-node": "15.2.3"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "publishConfig": {
     "access": "public"
   },
