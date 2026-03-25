@@ -143,7 +143,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@apollo/client": "3.13.9",
+    "@apollo/client": "3.14.1",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "@dr.pogodin/react-helmet": "2.0.4",
