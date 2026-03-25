@@ -9,7 +9,7 @@ import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import {
-  dedupe as dedupeCmd,
+  dedupe,
   dedupeIsSupported,
   install,
   installationErrorMessage,
@@ -39,9 +39,7 @@ export interface UpgradeOptions {
 }
 
 export const handler = async (upgradeOptions: UpgradeOptions) => {
-  const { dryRun, tag, verbose, dedupe: dedupeOpt, yes, force } = upgradeOptions
-
-  const dedupe = dedupeOpt && dedupeIsSupported() ? ` ${dedupeCmd()}` : ''
+  const { dryRun, tag, verbose, dedupe, yes, force } = upgradeOptions
 
   recordTelemetryAttributes({
     command: 'upgrade',
@@ -161,7 +159,7 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
       {
         title: 'De-duplicating dependencies',
         skip: () => !!dryRun || !dedupe,
-        enabled: (ctx) => !ctx.preUpgradeError,
+        enabled: (ctx) => dedupeIsSupported() && !ctx.preUpgradeError,
         task: (_ctx, task) => dedupeDeps(task, { verbose }),
       },
       {
@@ -601,8 +599,17 @@ async function refreshPrismaClient(
 }
 
 async function dedupeDeps(_task: unknown, { verbose }: { verbose?: boolean }) {
+  const dedupeCmd = dedupe()
+
+  // I could have/should have used `dedupeIsSupported()` but that doesn't make
+  // it as obvious that we'll never try to execute `pnpm undefined` or print an
+  // error message with `npm undefined`
+  if (!dedupeCmd) {
+    return
+  }
+
   try {
-    await execa(`${getPackageManager()} ${dedupeCmd()}`, {
+    await execa(`${getPackageManager()} ${dedupeCmd}`, {
       shell: true,
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
@@ -614,7 +621,7 @@ async function dedupeDeps(_task: unknown, { verbose }: { verbose?: boolean }) {
 
     throw new Error(
       `Could not finish de-duplication. Please run \`${getPackageManager()} ` +
-        `${dedupeCmd()}\` before continuing`,
+        `${dedupeCmd}\` before continuing`,
     )
   }
 
