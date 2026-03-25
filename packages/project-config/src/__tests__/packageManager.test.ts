@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 
 import {
   getPackageManager,
@@ -21,12 +21,26 @@ vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
 }))
 
+const originalNpmConfigUserAgent = process.env.npm_config_user_agent
+
 beforeEach(() => {
+  delete process.env.npm_config_user_agent
   resetPackageManagerCache()
   vi.resetAllMocks()
 })
 
+afterEach(() => {
+  process.env.npm_config_user_agent = originalNpmConfigUserAgent
+})
+
 describe('getPackageManager', () => {
+  it('reads env var if present', () => {
+    process.env.npm_config_user_agent =
+      'npm/11.8.0 node/v24.13.1 darwin arm64 workspaces/false'
+
+    expect(getPackageManager()).toBe('npm')
+  })
+
   it('prefers yarn when multiple lock files are present', () => {
     vi.mocked(fs.existsSync).mockImplementation((filePath) => {
       if (filePath.toString().endsWith('pnpm-lock.yaml')) {

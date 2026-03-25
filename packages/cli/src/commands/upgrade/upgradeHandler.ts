@@ -8,7 +8,14 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  dedupe as dedupeCmd,
+  install,
+  installationErrorMessage,
+  prettyPrintCedarCommand,
+} from '@cedarjs/cli-helpers/packageManager'
 import { getConfig } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 // @ts-expect-error - Types not available for JS files
 import c from '../../lib/colors.js'
@@ -30,14 +37,11 @@ export interface UpgradeOptions {
   force?: boolean
 }
 
-export const handler = async ({
-  dryRun,
-  tag,
-  verbose,
-  dedupe,
-  yes,
-  force,
-}: UpgradeOptions) => {
+export const handler = async (upgradeOptions: UpgradeOptions) => {
+  const { dryRun, tag, verbose, dedupe: dedupeOpt, yes, force } = upgradeOptions
+
+  const dedupe = dedupeOpt ? ` ${dedupeCmd()}` : ''
+
   recordTelemetryAttributes({
     command: 'upgrade',
     dryRun: !!dryRun,
@@ -142,8 +146,8 @@ export const handler = async ({
         enabled: (ctx) => !ctx.preUpgradeError,
       },
       {
-        title: 'Running yarn install',
-        task: () => yarnInstall({ verbose }),
+        title: `Running ${getPackageManager()} ${install()}`,
+        task: () => packageManagerInstall({ verbose }),
         enabled: (ctx) => !ctx.preUpgradeError,
         skip: () => !!dryRun,
       },
@@ -238,17 +242,15 @@ export const handler = async ({
   }
 }
 
-async function yarnInstall({ verbose }: { verbose?: boolean }) {
+async function packageManagerInstall({ verbose }: { verbose?: boolean }) {
   try {
-    await execa('yarn install', {
+    await execa(`${getPackageManager()} ${install()}`, {
       shell: true,
       stdio: verbose ? 'inherit' : 'pipe',
       cwd: getPaths().base,
     })
   } catch {
-    throw new Error(
-      'Could not finish installation. Please run `yarn install` and then `yarn dedupe`, before continuing',
-    )
+    throw new Error(installationErrorMessage())
   }
 }
 
@@ -590,16 +592,14 @@ async function refreshPrismaClient(
     const message = e instanceof Error ? e.message : String(e)
     task.skip('Refreshing the Prisma client caused an Error.')
     console.log(
-      'You may need to update your prisma client manually: $ yarn cedar prisma generate',
+      'You may need to update your prisma client manually: $ ' +
+        prettyPrintCedarCommand(['prisma', 'generate']),
     )
     console.log(c.error(message))
   }
 }
 
-const dedupeDeps = async (
-  _task: unknown,
-  { verbose }: { verbose?: boolean },
-) => {
+async function dedupeDeps(_task: unknown, { verbose }: { verbose?: boolean }) {
   try {
     await execa('yarn dedupe', {
       shell: true,
@@ -617,5 +617,5 @@ const dedupeDeps = async (
     )
   }
 
-  await yarnInstall({ verbose })
+  await packageManagerInstall({ verbose })
 }
