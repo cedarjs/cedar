@@ -48,7 +48,7 @@ describe('getConfig', () => {
     expect(config).toMatchInlineSnapshot(`
       {
         "api": {
-          "debugPort": 18911,
+          "debugPort": undefined,
           "path": "./api",
           "port": 8911,
           "prismaConfig": "./api/prisma.config.cjs",

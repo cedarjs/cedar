@@ -150,7 +150,7 @@ export const DEFAULT_CONFIG: Config = {
     target: TargetEnum.NODE,
     prismaConfig: './api/prisma.config.cjs',
     serverConfig: './api/server.config.js',
-    debugPort: 18911,
+    debugPort: undefined,
   },
   graphql: {
     fragments: false,

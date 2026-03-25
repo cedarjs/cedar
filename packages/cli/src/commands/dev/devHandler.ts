@@ -202,7 +202,7 @@ export const handler = async ({
         `  --watch "${cedarConfigPath}"`,
         `  --exec "yarn ${serverWatchCommand}`,
         `    --port ${apiAvailablePort}`,
-        `    ${getApiDebugFlag(apiDebugPort)}`,
+        `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort)}`,
         '    | rw-log-formatter"',
       ]
         .join(' ')
