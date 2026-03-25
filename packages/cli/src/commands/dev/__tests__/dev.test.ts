@@ -1,6 +1,19 @@
 import type FS from 'fs'
 
+import concurrently from 'concurrently'
+import find from 'lodash/find.js'
+import { vi, describe, afterEach, it, expect } from 'vitest'
+
+import { getConfig, getConfigPath } from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
+
+import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
+// @ts-expect-error - Types not available for JS files
+import { getPaths } from '../../../lib/index.js'
 import '../../../lib/mockTelemetry.js'
+import { handler } from '../devHandler.js'
+
+let mockCedarToml = ''
 
 vi.mock('concurrently', () => ({
   __esModule: true, // this property makes it work
@@ -30,6 +43,8 @@ vi.mock('node:fs', async (importOriginal) => {
           }
 
           return JSON.stringify(packgeJson)
+        } else if (filePath.endsWith('cedar.toml')) {
+          return mockCedarToml
         }
 
         return 'File content'
@@ -45,12 +60,14 @@ vi.mock('@cedarjs/internal/dist/dev', () => {
   }
 })
 
-vi.mock('@cedarjs/project-config', async (importActual) => {
-  const actualProjectConfig = await importActual<typeof ProjectConfig>()
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const originalProjectConfig = await importOriginal<typeof ProjectConfig>()
 
   return {
-    getConfig: vi.fn(() => actualProjectConfig.DEFAULT_CONFIG),
-    getConfigPath: vi.fn(() => '/mocked/project/redwood.toml'),
+    getConfig: vi.fn(() => {
+      return originalProjectConfig.getConfig()
+    }),
+    getConfigPath: vi.fn(() => '/mocked/project/cedar.toml'),
   }
 })
 
@@ -74,51 +91,37 @@ vi.mock('../../../lib/ports', () => {
 })
 
 vi.mock('../../../lib/index.js', () => ({
-  getPaths: vi.fn(defaultPaths),
+  getPaths: vi.fn(() => {
+    return {
+      base: '/mocked/project',
+      api: {
+        base: '/mocked/project/api',
+        src: '/mocked/project/api/src',
+        dist: '/mocked/project/api/dist',
+      },
+      web: {
+        base: '/mocked/project/web',
+        dist: '/mocked/project/web/dist',
+      },
+      packages: '/mocked/project/packages',
+      generated: {
+        base: '/mocked/project/.redwood',
+      },
+    }
+  }),
 }))
 
 vi.mock('../../lib/project.js', () => ({
   serverFileExists: vi.fn(() => false),
 }))
 
-import concurrently from 'concurrently'
-import find from 'lodash/find.js'
-import { vi, describe, afterEach, it, expect } from 'vitest'
-
-import { getConfig, getConfigPath } from '@cedarjs/project-config'
-import type * as ProjectConfig from '@cedarjs/project-config'
-
-import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
-// @ts-expect-error - Types not available for JS files
-import { getPaths } from '../../../lib/index.js'
-import { handler } from '../devHandler.js'
-import { getPackageWatchCommands } from '../packageWatchCommands.js'
-
-function defaultPaths() {
-  return {
-    base: '/mocked/project',
-    api: {
-      base: '/mocked/project/api',
-      src: '/mocked/project/api/src',
-      dist: '/mocked/project/api/dist',
-    },
-    web: {
-      base: '/mocked/project/web',
-      dist: '/mocked/project/web/dist',
-    },
-    packages: '/mocked/project/packages',
-    generated: {
-      base: '/mocked/project/.redwood',
-    },
-  }
-}
-
 async function defaultConfig() {
   const actualProjectConfig = await vi.importActual<typeof ProjectConfig>(
     '@cedarjs/project-config',
   )
+  const config = actualProjectConfig.getConfig()
 
-  return actualProjectConfig.DEFAULT_CONFIG
+  return config
 }
 
 function findApiCommands() {
@@ -165,10 +168,11 @@ function findCommands() {
 
 describe('yarn cedar dev', () => {
   afterEach(async () => {
+    // Reset spy counters
     vi.clearAllMocks()
-    vi.mocked(getPaths).mockReturnValue(defaultPaths())
-    vi.mocked(getConfig).mockReturnValue(await defaultConfig())
-    vi.mocked(getPackageWatchCommands).mockResolvedValue([])
+    vi.mocked(getPaths).mockRestore()
+    vi.mocked(getConfig).mockRestore()
+    mockCedarToml = ''
   })
 
   it('Should run api and web dev servers, and generator watcher by default', async () => {
@@ -189,7 +193,7 @@ describe('yarn cedar dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -229,7 +233,7 @@ describe('yarn cedar dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/redwood.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -238,7 +242,7 @@ describe('yarn cedar dev', () => {
   })
 
   it('Should use esm server-watch bin for esm projects', async () => {
-    vi.mocked(getConfigPath).mockReturnValue('/mocked/esm-project/redwood.toml')
+    vi.mocked(getConfigPath).mockReturnValue('/mocked/esm-project/cedar.toml')
     vi.mocked(getPaths).mockReturnValue({
       base: '/mocked/esm-project',
       api: {
@@ -272,7 +276,7 @@ describe('yarn cedar dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/esm-project/redwood.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/esm-project/cedar.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
     )
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -285,29 +289,39 @@ describe('yarn cedar dev', () => {
 
     const apiCommand = findApiCommands()
 
-    expect(apiCommand?.command.replace(/\s+/g, ' ')).toContain(
+    expect(apiCommand.command.replace(/\s+/g, ' ')).toContain(
       'yarn rw-api-server-watch --port 8911 --debug-port 90909090',
     )
   })
 
   it('Can disable debugger by setting toml to false', async () => {
-    const config = await defaultConfig()
-
-    vi.mocked(getConfig).mockReturnValue({
-      ...config,
-      ...{
-        api: {
-          ...config.api,
-          port: 8911,
-          debugPort: false,
-        },
-      },
-    })
+    mockCedarToml = `
+      [api]
+        port = 8913
+        debugPort = false
+    `
 
     await handler({ workspace: ['api'] })
 
     const apiCommand = findApiCommands()
 
     expect(apiCommand.command).not.toContain('--debug-port')
+  })
+
+  it('Derives debug port from api port when not explicitly configured', async () => {
+    mockCedarToml = `
+      [api]
+        port = 1337
+        # no debugPort, so it should be derived to 11337
+    `
+
+    await handler({ workspace: ['api'] })
+
+    const apiCommand = findApiCommands()
+
+    expect(apiCommand.command.replace(/\s+/g, ' ')).toContain('--port 1337')
+    expect(apiCommand.command.replace(/\s+/g, ' ')).toContain(
+      '--debug-port 11337',
+    )
   })
 })
