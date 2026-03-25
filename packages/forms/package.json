@@ -35,7 +35,7 @@
   "dependencies": {
     "graphql": "16.13.1",
     "pascalcase": "1.0.0",
-    "react-hook-form": "7.71.2"
+    "react-hook-form": "7.72.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
