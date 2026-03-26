@@ -1,0 +1,49 @@
+{
+  "@cedarjs/cli-storybook-vite": {
+    "storybook": {
+      "aliases": [
+        "sb"
+      ],
+      "description": "Launch Storybook: a tool for building UI components and pages in isolation"
+    }
+  },
+  "@cedarjs/cli-data-migrate": {
+    "data-migrate <command>": {
+      "aliases": [
+        "dataMigrate",
+        "dm"
+      ],
+      "description": "Migrate the data in your database"
+    }
+  },
+  "_builtin": [
+    "build",
+    "check",
+    "diagnostics",
+    "console",
+    "c",
+    "deploy",
+    "destroy",
+    "d",
+    "dev",
+    "exec",
+    "experimental",
+    "exp",
+    "generate",
+    "g",
+    "info",
+    "lint",
+    "prerender",
+    "render",
+    "prisma",
+    "record",
+    "serve",
+    "setup",
+    "test",
+    "ts-to-js",
+    "type-check",
+    "tsc",
+    "tc",
+    "upgrade"
+  ]
+}

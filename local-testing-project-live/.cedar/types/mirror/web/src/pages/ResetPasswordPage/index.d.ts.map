@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/ResetPasswordPage/ResetPasswordPage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AASA",
+  "file": "index.d.ts"
+}

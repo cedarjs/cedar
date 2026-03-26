@@ -1,0 +1,81 @@
+[{
+  "attributes": {
+    "command": "exec",
+    "prisma": true,
+    "list": false,
+    "errorReferenceCode": "9db96422-faf3-415b-821e-cccbaeb0e603"
+  },
+  "links": [],
+  "events": [
+    {
+      "name": "exception",
+      "attributes": {
+        "exception.type": "Error",
+        "exception.message": "Transform failed with 1 error:\n/Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/scripts/brokenScript.ts:1:46: ERROR: Unterminated string literal",
+        "exception.stacktrace": "Error: Transform failed with 1 error:\n/Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/scripts/brokenScript.ts:1:46: ERROR: Unterminated string literal\n    at failureErrorWithLog (/Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/vite/node_modules/esbuild/lib/main.js:1748:15)\n    at /Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/vite/node_modules/esbuild/lib/main.js:1017:50\n    at responseCallbacks.<computed> (/Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/vite/node_modules/esbuild/lib/main.js:884:9)\n    at handleIncomingPacket (/Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/vite/node_modules/esbuild/lib/main.js:939:12)\n    at Socket.readFromStdout (/Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/vite/node_modules/esbuild/lib/main.js:862:7)\n    at Socket.emit (node:events:508:28)\n    at addChunk (node:internal/streams/readable:563:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)\n    at Socket.Readable.push (node:internal/streams/readable:394:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)"
+      },
+      "time": [
+        1775583855,
+        592075625
+      ],
+      "droppedAttributesCount": 0
+    }
+  ],
+  "_droppedAttributesCount": 0,
+  "_droppedEventsCount": 0,
+  "_droppedLinksCount": 0,
+  "status": {
+    "code": 2,
+    "message": "Transform failed with 1 error:"
+  },
+  "endTime": [
+    1775583855,
+    592174500
+  ],
+  "_ended": true,
+  "_duration": [
+    1,
+    606174500
+  ],
+  "name": "cli",
+  "_spanContext": {
+    "traceId": "bff0ba045044707c922462fb9efbbab9",
+    "spanId": "6c28a56cd1c883a9",
+    "traceFlags": 1
+  },
+  "kind": 0,
+  "_performanceStartTime": 475.964083,
+  "_performanceOffset": -0.128173828125,
+  "_startTimeProvided": false,
+  "startTime": [
+    1775583853,
+    986000000
+  ],
+  "resource": {
+    "_attributes": {
+      "service.name": "unknown_service:/usr/local/bin/node",
+      "telemetry.sdk.language": "nodejs",
+      "telemetry.sdk.name": "opentelemetry",
+      "telemetry.sdk.version": "1.30.1"
+    },
+    "asyncAttributesPending": false,
+    "_syncAttributes": {
+      "service.name": "unknown_service:/usr/local/bin/node",
+      "telemetry.sdk.language": "nodejs",
+      "telemetry.sdk.name": "opentelemetry",
+      "telemetry.sdk.version": "1.30.1"
+    }
+  },
+  "instrumentationLibrary": {
+    "name": "redwoodjs"
+  },
+  "_spanLimits": {
+    "attributeValueLengthLimit": null,
+    "attributeCountLimit": 128,
+    "linkCountLimit": 128,
+    "eventCountLimit": 128,
+    "attributePerEventCountLimit": 128,
+    "attributePerLinkCountLimit": 128
+  },
+  "_attributeValueLengthLimit": null
+}]

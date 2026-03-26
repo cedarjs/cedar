@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../../web/src/components/Post/PostsCell/PostsCell.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;;;;;;;;;AAwCa",
+  "file": "index.d.ts"
+}

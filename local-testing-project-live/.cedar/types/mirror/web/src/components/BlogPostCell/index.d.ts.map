@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/components/BlogPostCell/BlogPostCell.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;;;;;;;;;AAyCa",
+  "file": "index.d.ts"
+}

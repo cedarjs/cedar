@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/LiveQueryPage/LiveQueryPage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAEA",
+  "file": "index.d.ts"
+}

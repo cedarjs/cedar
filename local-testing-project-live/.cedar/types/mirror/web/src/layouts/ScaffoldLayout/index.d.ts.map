@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/layouts/ScaffoldLayout/ScaffoldLayout.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAWA",
+  "file": "index.d.ts"
+}

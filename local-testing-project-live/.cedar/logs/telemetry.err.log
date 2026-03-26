@@ -1,0 +1,26 @@
+Starting log:
+ - Time: 2026-04-07T19:04:35.014Z
+ - Name: telemetry (telemetry)
+ - Command: yarn
+ - Arguments: node /Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/@cedarjs/cli/dist/telemetry/send.js
+
+node:internal/modules/esm/resolve:275
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/@cedarjs/cli/package.js' imported from /Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/@cedarjs/cli/dist/telemetry/resource.js
+    at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+    at moduleResolve (node:internal/modules/esm/resolve:865:10)
+    at defaultResolve (node:internal/modules/esm/resolve:991:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:765:52)
+    at #resolve (node:internal/modules/esm/loader:701:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:621:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:245:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/@cedarjs/cli/package.js'
+}
+
+Node.js v24.14.1

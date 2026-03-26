@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/layouts/BlogLayout/BlogLayout.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAQA",
+  "file": "index.d.ts"
+}

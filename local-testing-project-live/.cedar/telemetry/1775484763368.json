@@ -1,0 +1,63 @@
+[{
+  "attributes": {
+    "command": "prisma"
+  },
+  "links": [],
+  "events": [],
+  "_droppedAttributesCount": 0,
+  "_droppedEventsCount": 0,
+  "_droppedLinksCount": 0,
+  "status": {
+    "code": 1
+  },
+  "endTime": [
+    1775484777,
+    883895666
+  ],
+  "_ended": true,
+  "_duration": [
+    14,
+    515895666
+  ],
+  "name": "cli",
+  "_spanContext": {
+    "traceId": "6d97c9cd09965662d07b236878676b43",
+    "spanId": "de4060c95533a9c5",
+    "traceFlags": 1
+  },
+  "kind": 0,
+  "_performanceStartTime": 197.919459,
+  "_performanceOffset": -0.841552734375,
+  "_startTimeProvided": false,
+  "startTime": [
+    1775484763,
+    368000000
+  ],
+  "resource": {
+    "_attributes": {
+      "service.name": "unknown_service:/usr/local/bin/node",
+      "telemetry.sdk.language": "nodejs",
+      "telemetry.sdk.name": "opentelemetry",
+      "telemetry.sdk.version": "1.30.1"
+    },
+    "asyncAttributesPending": false,
+    "_syncAttributes": {
+      "service.name": "unknown_service:/usr/local/bin/node",
+      "telemetry.sdk.language": "nodejs",
+      "telemetry.sdk.name": "opentelemetry",
+      "telemetry.sdk.version": "1.30.1"
+    }
+  },
+  "instrumentationLibrary": {
+    "name": "redwoodjs"
+  },
+  "_spanLimits": {
+    "attributeValueLengthLimit": null,
+    "attributeCountLimit": 128,
+    "linkCountLimit": 128,
+    "eventCountLimit": 128,
+    "attributePerEventCountLimit": 128,
+    "attributePerLinkCountLimit": 128
+  },
+  "_attributeValueLengthLimit": null
+}]

@@ -1,0 +1,6 @@
+Starting log:
+ - Time: 2026-04-07T19:04:35.014Z
+ - Name: telemetry (telemetry)
+ - Command: yarn
+ - Arguments: node /Users/tobbe/dev/cedarjs/cedar/local-testing-project-live/node_modules/@cedarjs/cli/dist/telemetry/send.js
+

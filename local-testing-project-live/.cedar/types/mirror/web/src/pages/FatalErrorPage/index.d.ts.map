@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/FatalErrorPage/FatalErrorPage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAYA",
+  "file": "index.d.ts"
+}
