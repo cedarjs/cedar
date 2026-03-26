@@ -450,32 +450,76 @@ New functionality in `packages/create-cedar-app/`:
 - Interactive PM selection prompt when flag not provided
 - Default derived from `npm_config_user_agent`
 
-Template changes:
+Template changes — PM-specific files only, rest uses placeholders:
 
-- Move `.yarnrc.yml` from base templates into `templates/overlays/yarn/`
-- Create `templates/overlays/npm/` (empty or npm-specific files)
-- Create `templates/overlays/pnpm/pnpm-workspace.yaml`
+The existing structure is `templates/{ts,esm-ts,js,esm-js}/...`. Most files stay at
+the language level with placeholder strings that get replaced at generation time.
+Only `package.json` differs enough to warrant separate files:
 
-Generation flow changes in `create-cedar-app.js`:
+```
+templates/
+├── ts/
+│   ├── yarn/
+│   │   └── package.json     # yarn-specific: resolutions, packageManager field
+│   ├── npm/
+│   │   └── package.json     # npm-specific: overrides, no packageManager field
+│   ├── pnpm/
+│   │   └── package.json     # pnpm-specific: pnpm.overrides, packageManager field
+│   ├── .yarnrc.yml          # shared, no placeholders needed (Yarn-only)
+│   ├── cedar.toml           # shared, no yarn refs
+│   ├── README.md            # shared, uses placeholders like {{PM}} install
+│   ├── .vscode/
+│   │   └── launch.json     # shared, uses placeholders like {{PM}} cedar dev
+│   ├── scripts/
+│   │   └── seed.ts         # shared, uses placeholders like {{PM}} cedar prisma
+│   └── ... (base files: web/, api/, src/, vite.config.ts, etc.)
+├── esm-ts/
+│   ├── yarn/
+│   │   └── package.json
+│   ├── npm/
+│   │   └── package.json
+│   └── pnpm/
+│       └── package.json
+├── js/
+│   ├── yarn/
+│   │   └── package.json
+│   ├── npm/
+│   │   └── package.json
+│   └── pnpm/
+│       └── package.json
+└── esm-js/
+    ├── yarn/
+    │   └── package.json
+    ├── npm/
+    │   └── package.json
+    └── pnpm/
+        └── package.json
+```
 
-- After copying base template, copy PM-specific overlay directory
-- For yarn: copy `.yarnrc.yml` overlay, keep `packageManager: "yarn@4.13.0"`
-  and `resolutions` in package.json
-- For npm: remove `.yarnrc.yml`, set `packageManager: null` or remove field,
-  rename `resolutions` → `overrides` in package.json
-- For pnpm: remove `.yarnrc.yml`, set `packageManager: "pnpm@<version>"`,
-  rename `resolutions` → `pnpm.overrides` in package.json, copy
-  `pnpm-workspace.yaml`
-- Update install command: `yarn install` / `npm install` / `pnpm install`
-- Update type generation command: `yarn rw-gen` / `npx rw-gen` /
-  `pnpm exec rw-gen`
-- Rename all `yarn` references in messages/prompts/telemetry to PM-aware
-  strings
+**Why nested (not lifted up)?** Keeping `yarn/`, `npm/`, `pnpm/` under each
+language folder adds some duplication (12 package.json files total), but the
+generation logic stays simple — just copy files. Lifting PM folders up would
+require merge logic (combining base deps + PM-specific fields) for marginal
+gain.
 
-Template content updates:
+Placeholder strategy for shared files:
 
-- Update `cedar.toml` comment: `run \`yarn cedar dev\`` → PM-aware
-- Update README.md, VS Code launch.json, seed scripts that reference `yarn`
+- `{{PM}}` → `yarn` | `npm` | `pnpm`
+- `{{PM_INSTALL}}` → `yarn install` | `npm install` | `pnpm install`
+- `{{CEDAR_CLI}}` → `yarn cedar` | `npx cedar` | `pnpm exec cedar`
+
+This minimizes duplication: only `package.json` is truly different per PM. All
+other files use the same template with placeholder substitution.
+
+Generation flow in `create-cedar-app.js`:
+
+1. Copy all files from `templates/{language}/` (base files)
+2. Copy PM-specific directory (`templates/{language}/yarn/`,
+   `templates/{language}/npm/`, or `templates/{language}/pnpm/`)
+3. No file transformation needed — templates already contain correct content
+
+Rename all `yarn` references in messages/prompts/telemetry to PM-aware
+strings.
 
 **Shippable value:** `create-cedar-app --pm npm` scaffolds a working Cedar
 project configured for npm. All subsequent slices can be tested by scaffolding
@@ -818,6 +862,13 @@ Favor duplicated template files and strings rather than one file/string with
 complicated inline logic to make the content PM-specific. For example, if a
 setup handler needs to write a config file with PM-specific commands, prefer
 separate template strings per PM over a single template with conditionals.
+
+**Exception for scaffolding templates:** Simple placeholder replacement (e.g.
+`{{PM}}` → `yarn` | `npm` | `pnpm`) in template files is acceptable and
+preferred over duplicating every file. Use a small set of well-defined
+placeholders like `{{PM}}`, `{{PM_INSTALL}}`, `{{CEDAR_CLI}}`. Complicated
+inline logic (conditionals, loops, regex) in templates should still be
+avoided.
 
 ### Split Chained Commands
 
