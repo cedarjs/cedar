@@ -2,9 +2,7 @@
 
 import React from 'react'
 
-import * as helmetPkg from '@dr.pogodin/react-helmet'
-
-const { Helmet: HelmetHead } = helmetPkg
+import { Helmet as HelmetHead } from '@dr.pogodin/react-helmet'
 
 // Ideally we wouldn't include this for non experiment builds
 // But.... not worth the effort to remove it from bundle atm
