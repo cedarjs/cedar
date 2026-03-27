@@ -2176,7 +2176,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     fast-glob: "npm:3.3.3"
     fast-json-parse: "npm:1.0.3"
-    fastify: "npm:5.8.2"
+    fastify: "npm:5.8.3"
     fastify-raw-body: "npm:5.0.0"
     graphql-yoga: "npm:5.18.1"
     memfs: "npm:4.57.1"
@@ -3126,7 +3126,7 @@ __metadata:
     "@fastify/static": "npm:8.3.0"
     "@fastify/url-data": "npm:6.0.3"
     fast-glob: "npm:3.3.3"
-    fastify: "npm:5.8.2"
+    fastify: "npm:5.8.3"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3806,7 +3806,7 @@ __metadata:
     "@cedarjs/project-config": "npm:3.1.1"
     ansis: "npm:4.2.0"
     dotenv-defaults: "npm:5.0.2"
-    fastify: "npm:5.8.2"
+    fastify: "npm:5.8.3"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     yargs: "npm:17.7.2"
@@ -17332,9 +17332,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify@npm:5.8.2":
-  version: 5.8.2
-  resolution: "fastify@npm:5.8.2"
+"fastify@npm:5.8.3":
+  version: 5.8.3
+  resolution: "fastify@npm:5.8.3"
   dependencies:
     "@fastify/ajv-compiler": "npm:^4.0.5"
     "@fastify/error": "npm:^4.0.0"
@@ -17351,7 +17351,7 @@ __metadata:
     secure-json-parse: "npm:^4.0.0"
     semver: "npm:^7.6.0"
     toad-cache: "npm:^3.7.0"
-  checksum: 10c0/f6ee45032d8467c590b665a5d1d4c90b45c8cc51d427d29ff0c42759fa2ab88168bd9a473675bd163991bc84565e4d6ebdb8b914a6ecea5df59844fd1dfc7553
+  checksum: 10c0/8a127004ea030f160d3ab9db48bd3fb488574e5e87b051f6a66d21f723be6f152dbedf4f48f17e5ce9cb7fd4eb1e008a7cabf646aa239c8719d13ec4cce43a47
   languageName: node
   linkType: hard
 
