@@ -25,6 +25,56 @@ import {
 
 const INITIAL_COMMIT_MESSAGE = 'Initial commit'
 
+/** @typedef {'yarn' | 'npm' | 'pnpm'} PackageManager */
+
+/**
+ * Detects the package manager from the environment.
+ * Used before a project is created (no lockfile exists yet).
+ * @returns {PackageManager}
+ */
+function detectPackageManagerFromEnv() {
+  const userAgent = process.env.npm_config_user_agent
+  const envPackageManager = userAgent?.split(' ')[0]?.split('/')[0]
+
+  if (
+    envPackageManager === 'yarn' ||
+    envPackageManager === 'npm' ||
+    envPackageManager === 'pnpm'
+  ) {
+    return envPackageManager
+  }
+
+  return 'yarn'
+}
+
+/**
+ * Converts a PackageManager to its install command.
+ * @param {PackageManager} pm
+ * @returns {string}
+ */
+function getInstallCommand(pm) {
+  return pm === 'npm'
+    ? 'npm install'
+    : pm === 'pnpm'
+      ? 'pnpm install'
+      : 'yarn install'
+}
+
+/**
+ * Converts a PackageManager to its cedar command prefix.
+ * @param {PackageManager} pm
+ * @returns {string}
+ */
+function getCedarCommandPrefix(pm) {
+  if (pm === 'npm') {
+    return 'npx cedar'
+  }
+  if (pm === 'pnpm') {
+    return 'pnpm exec cedar'
+  }
+  return 'yarn cedar'
+}
+
 // Telemetry can be disabled in two ways:
 // - by passing `--telemetry false`  or `--no-telemetry`
 // - by setting the `REDWOOD_DISABLE_TELEMETRY` env var to `1`
@@ -39,7 +89,7 @@ const { telemetry } = Parser(hideBin(process.argv), {
 
 const tui = new RedwoodTUI()
 
-function isYarnBerryOrNewer() {
+function _isYarnBerryOrNewer() {
   const { npm_config_user_agent: npmConfigUserAgent } = process.env
 
   if (npmConfigUserAgent) {
@@ -184,7 +234,10 @@ function checkNodeVersion(templateDir) {
   })
 }
 
-async function createProjectFiles(appDir, { templateDir, overwrite }) {
+async function createProjectFiles(
+  appDir,
+  { templateDir, overwrite, packageManager },
+) {
   let newAppDir = appDir
 
   const tuiContent = new ReactiveTUIContent({
@@ -215,6 +268,9 @@ async function createProjectFiles(appDir, { templateDir, overwrite }) {
     path.join(newAppDir, '.gitignore'),
   )
 
+  // Replace placeholders in template files
+  await replacePlaceholders(newAppDir, packageManager)
+
   // Write the uid
   fs.mkdirSync(path.join(newAppDir, '.redwood'), { recursive: true })
   fs.writeFileSync(path.join(newAppDir, '.redwood', 'telemetry.txt'), UID)
@@ -230,10 +286,54 @@ async function createProjectFiles(appDir, { templateDir, overwrite }) {
   return newAppDir
 }
 
-async function installNodeModules(newAppDir) {
+/**
+ * Recursively replace placeholders in template files.
+ * @param {string} dir
+ * @param {PackageManager} packageManager
+ */
+async function replacePlaceholders(dir, packageManager) {
+  const installCommand = getInstallCommand(packageManager)
+  const cedarCommand = getCedarCommandPrefix(packageManager)
+
+  const replacements = {
+    '{{PM}}': packageManager,
+    '{{PM_INSTALL}}': installCommand,
+    '{{CEDAR_CLI}}': cedarCommand,
+  }
+
+  async function walk(dir) {
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name)
+
+      if (entry.isDirectory()) {
+        await walk(fullPath)
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name)
+        // Only process text files
+        if (
+          ['.json', '.md', '.js', '.ts', '.yml', '.yaml', '.txt'].includes(ext)
+        ) {
+          let content = await fs.promises.readFile(fullPath, 'utf-8')
+
+          for (const [placeholder, value] of Object.entries(replacements)) {
+            content = content.replaceAll(placeholder, value)
+          }
+
+          await fs.promises.writeFile(fullPath, content, 'utf-8')
+        }
+      }
+    }
+  }
+
+  await walk(dir)
+}
+
+async function installNodeModules(newAppDir, packageManager) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
-    header: 'Installing node modules',
+    header: `Installing node modules with ${packageManager}`,
     content: '  ⏱ This could take a while...',
     spinner: {
       enabled: true,
@@ -244,20 +344,21 @@ async function installNodeModules(newAppDir) {
   const oldCwd = process.cwd()
   process.chdir(newAppDir)
 
-  const yarnInstallSubprocess = execa(`yarn install`, {
+  const installCommand = getInstallCommand(packageManager)
+  const installSubprocess = execa(installCommand, {
     shell: true,
     cwd: newAppDir,
   })
 
   try {
-    await yarnInstallSubprocess
+    await installSubprocess
   } catch (error) {
     tui.stopReactive(true)
     tui.displayError(
       "Couldn't install node modules",
       [
         `We couldn't install node modules via ${RedwoodStyling.info(
-          "'yarn install'",
+          `'${installCommand}'`,
         )}. Please see below for the full error message.`,
         '',
         error,
@@ -281,7 +382,7 @@ async function installNodeModules(newAppDir) {
   tui.stopReactive()
 }
 
-async function generateTypes(newAppDir) {
+async function generateTypes(newAppDir, packageManager) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
     content: 'Generating types',
@@ -291,7 +392,8 @@ async function generateTypes(newAppDir) {
   })
   tui.startReactive(tuiContent)
 
-  const generateSubprocess = execa('yarn rw-gen', {
+  const cedarCommand = getCedarCommandPrefix(packageManager)
+  const generateSubprocess = execa(`${cedarCommand} rw-gen`, {
     shell: true,
     cwd: newAppDir,
   })
@@ -304,7 +406,7 @@ async function generateTypes(newAppDir) {
       "Couldn't generate types",
       [
         `We could not generate types using ${RedwoodStyling.info(
-          "'yarn rw-gen'",
+          `'${cedarCommand} rw-gen'`,
         )}. Please see below for the full error message.`,
         '',
         error,
@@ -632,32 +734,64 @@ async function handleCommitMessagePreference(commitMessageFlag) {
 }
 
 /**
- * @param {boolean?} yarnInstallFlag
+ * @param {boolean?} installFlag
+ * @param {PackageManager} packageManager
  */
-async function handleYarnInstallPreference(yarnInstallFlag) {
+async function handleInstallPreference(installFlag, packageManager) {
   // Handle case where flag is set
-  if (yarnInstallFlag !== null) {
+  if (installFlag !== null) {
     tui.drawText(
       `${RedwoodStyling.green('✔')} ${
-        yarnInstallFlag ? 'Will' : 'Will not'
-      } run yarn install based on command line flag`,
+        installFlag ? 'Will' : 'Will not'
+      } run ${packageManager} install based on command line flag`,
     )
-    return yarnInstallFlag
+    return installFlag
   }
 
   // Prompt user for preference
   try {
     const response = await tui.prompt({
       type: 'Toggle',
-      name: 'yarnInstall',
-      message: 'Do you want to run yarn install?',
+      name: 'install',
+      message: `Do you want to run ${packageManager} install?`,
       enabled: 'Yes',
       disabled: 'no',
       initial: 'Yes',
     })
-    return response.yarnInstall
+    return response.install
   } catch (_error) {
-    recordErrorViaTelemetry('User cancelled install at yarn install prompt')
+    recordErrorViaTelemetry('User cancelled install at install prompt')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+}
+
+/**
+ * @param {PackageManager} packageManagerFlag
+ * @returns {Promise<PackageManager>}
+ */
+async function handlePackageManagerPreference(packageManagerFlag) {
+  // Handle case where flag is set
+  if (packageManagerFlag) {
+    tui.drawText(
+      `${RedwoodStyling.green('✔')} Using ${packageManagerFlag} based on command line flag`,
+    )
+    return packageManagerFlag
+  }
+
+  // Prompt user for preference
+  try {
+    const detectedPm = detectPackageManagerFromEnv()
+    const response = await tui.prompt({
+      type: 'Select',
+      name: 'packageManager',
+      choices: ['yarn', 'npm', 'pnpm'],
+      message: 'Select your preferred package manager',
+      initial: detectedPm,
+    })
+    return response.packageManager
+  } catch (_error) {
+    recordErrorViaTelemetry('User cancelled install at package manager prompt')
     await shutdownTelemetry()
     process.exit(1)
   }
@@ -721,17 +855,17 @@ async function createRedwoodApp() {
       describe:
         'Enables sending telemetry events for this create command and all Cedar CLI commands https://telemetry.redwoodjs.com',
     })
-
-  const _isYarnBerryOrNewer = isYarnBerryOrNewer()
-
-  // Only add the yarn-install flag if the yarn version is >= 2
-  if (_isYarnBerryOrNewer) {
-    cli.option('yarn-install', {
+    .option('package-manager', {
+      alias: 'pm',
+      default: null,
+      type: 'string',
+      describe: 'Package manager to use (yarn, npm, pnpm)',
+    })
+    .option('install', {
       default: null,
       type: 'boolean',
-      describe: 'Install node modules. Skip via --no-yarn-install.',
+      describe: 'Install node modules. Skip via --no-install.',
     })
-  }
 
   const parsedFlags = cli.parse()
 
@@ -755,9 +889,8 @@ async function createRedwoodApp() {
   // Extract the args as provided by the user in the command line
   // TODO: Make all flags have the 'flag' suffix
   const args = parsedFlags._
-  const yarnInstallFlag =
-    parsedFlags['yarn-install'] ??
-    (_isYarnBerryOrNewer ? parsedFlags.yes : null)
+  const packageManagerFlag = parsedFlags['package-manager']
+  const installFlag = parsedFlags.install ?? (parsedFlags.yes ? true : null)
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
   const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
   const overwrite = parsedFlags.overwrite
@@ -767,7 +900,10 @@ async function createRedwoodApp() {
     (parsedFlags.yes ? INITIAL_COMMIT_MESSAGE : null)
 
   // Record some of the arguments for telemetry
-  trace.getActiveSpan()?.setAttribute('yarn-install', yarnInstallFlag)
+  trace
+    .getActiveSpan()
+    ?.setAttribute('package-manager', packageManagerFlag ?? 'detected')
+  trace.getActiveSpan()?.setAttribute('install', installFlag ?? false)
   trace.getActiveSpan()?.setAttribute('overwrite', overwrite)
 
   // Get the directory for installation from the args
@@ -794,9 +930,15 @@ async function createRedwoodApp() {
   const useEsm = await handleEsmPreference(esmFlag)
   trace.getActiveSpan()?.setAttribute('esm', useEsm)
 
+  // Determine package manager preference
+  const packageManager =
+    await handlePackageManagerPreference(packageManagerFlag)
+  trace.getActiveSpan()?.setAttribute('package-manager', packageManager)
+
   const templateDir = path.join(
     templatesDir,
     useTypescript ? (useEsm ? 'esm-ts' : 'ts') : useEsm ? 'esm-js' : 'js',
+    packageManager,
   )
 
   // Determine git preference
@@ -809,34 +951,36 @@ async function createRedwoodApp() {
     commitMessage = await handleCommitMessagePreference(commitMessageFlag)
   }
 
-  let yarnInstall = false
-
-  if (_isYarnBerryOrNewer) {
-    yarnInstall = await handleYarnInstallPreference(yarnInstallFlag)
-  }
+  // Determine install preference
+  const shouldInstall = await handleInstallPreference(
+    installFlag,
+    packageManager,
+  )
 
   let newAppDir = path.resolve(process.cwd(), targetDir)
 
   // Create project files
   // if this directory already exists then createProjectFiles may set a new directory name
-  newAppDir = await createProjectFiles(newAppDir, { templateDir, overwrite })
+  newAppDir = await createProjectFiles(newAppDir, {
+    templateDir,
+    overwrite,
+    packageManager,
+  })
 
   // Install the node packages
-  if (yarnInstall) {
-    const yarnInstallStart = Date.now()
-    await installNodeModules(newAppDir)
+  if (shouldInstall) {
+    const installStart = Date.now()
+    await installNodeModules(newAppDir, packageManager)
     trace
       .getActiveSpan()
-      ?.setAttribute('yarn-install-time', Date.now() - yarnInstallStart)
+      ?.setAttribute('install-time', Date.now() - installStart)
   } else {
-    if (_isYarnBerryOrNewer) {
-      tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped yarn install step`)
-    }
+    tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped install step`)
   }
 
   // Generate types
-  if (yarnInstall) {
-    await generateTypes(newAppDir)
+  if (shouldInstall) {
+    await generateTypes(newAppDir, packageManager)
   }
 
   // Initialize git repo
@@ -845,6 +989,8 @@ async function createRedwoodApp() {
   }
 
   const shouldPrintCdCommand = newAppDir !== process.cwd()
+  const installCommand = getInstallCommand(packageManager)
+  const cedarCommand = getCedarCommandPrefix(packageManager)
 
   // Post install message
   tui.drawText(
@@ -865,12 +1011,12 @@ async function createRedwoodApp() {
               `cd ${path.relative(process.cwd(), newAppDir)}`,
             )}`,
           )}`,
-        !yarnInstall &&
+        !shouldInstall &&
           `${RedwoodStyling.redwood(
-            ` > ${RedwoodStyling.green(`yarn install`)}`,
+            ` > ${RedwoodStyling.green(installCommand)}`,
           )}`,
         `${RedwoodStyling.redwood(
-          ` > ${RedwoodStyling.green(`yarn cedar dev`)}`,
+          ` > ${RedwoodStyling.green(cedarCommand + ' dev')}`,
         )}`,
       ].filter(Boolean),
       '',

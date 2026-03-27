@@ -21,7 +21,6 @@ test('files should not have changed unintentionally in TS template', () => {
       "/.vscode/launch.json",
       "/.vscode/settings.json",
       "/.vscode/tasks.json",
-      "/.yarnrc.yml",
       "/README.md",
       "/api",
       "/api/db",
@@ -53,7 +52,11 @@ test('files should not have changed unintentionally in TS template', () => {
       "/gitignore.template",
       "/graphql.config.cjs",
       "/jest.config.js",
+      "/npm",
+      "/npm/package.json",
       "/package.json",
+      "/pnpm",
+      "/pnpm/package.json",
       "/prettier.config.cjs",
       "/scripts",
       "/scripts/.keep",
@@ -83,6 +86,9 @@ test('files should not have changed unintentionally in TS template', () => {
       "/web/src/pages/NotFoundPage/NotFoundPage.tsx",
       "/web/tsconfig.json",
       "/web/vite.config.ts",
+      "/yarn",
+      "/yarn/.yarnrc.yml",
+      "/yarn/package.json",
     ]
   `)
 })
@@ -99,7 +105,6 @@ test('files should not have changed unintentionally in JS template', () => {
       "/.vscode/launch.json",
       "/.vscode/settings.json",
       "/.vscode/tasks.json",
-      "/.yarnrc.yml",
       "/README.md",
       "/api",
       "/api/db",
@@ -131,7 +136,11 @@ test('files should not have changed unintentionally in JS template', () => {
       "/gitignore.template",
       "/graphql.config.cjs",
       "/jest.config.js",
+      "/npm",
+      "/npm/package.json",
       "/package.json",
+      "/pnpm",
+      "/pnpm/package.json",
       "/prettier.config.cjs",
       "/scripts",
       "/scripts/.keep",
@@ -161,6 +170,9 @@ test('files should not have changed unintentionally in JS template', () => {
       "/web/src/pages/NotFoundPage",
       "/web/src/pages/NotFoundPage/NotFoundPage.jsx",
       "/web/vite.config.js",
+      "/yarn",
+      "/yarn/.yarnrc.yml",
+      "/yarn/package.json",
     ]
   `)
 })
@@ -177,7 +189,6 @@ test('files should not have changed unintentionally in esm TS template', () => {
       "/.vscode/launch.json",
       "/.vscode/settings.json",
       "/.vscode/tasks.json",
-      "/.yarnrc.yml",
       "/README.md",
       "/api",
       "/api/db",
@@ -208,7 +219,11 @@ test('files should not have changed unintentionally in esm TS template', () => {
       "/eslint.config.js",
       "/gitignore.template",
       "/graphql.config.cjs",
+      "/npm",
+      "/npm/package.json",
       "/package.json",
+      "/pnpm",
+      "/pnpm/package.json",
       "/prettier.config.cjs",
       "/scripts",
       "/scripts/.keep",
@@ -239,6 +254,9 @@ test('files should not have changed unintentionally in esm TS template', () => {
       "/web/tsconfig.json",
       "/web/vite.config.ts",
       "/web/vitest.setup.ts",
+      "/yarn",
+      "/yarn/.yarnrc.yml",
+      "/yarn/package.json",
     ]
   `)
 })
@@ -255,7 +273,6 @@ test('files should not have changed unintentionally in esm JS template', () => {
       "/.vscode/launch.json",
       "/.vscode/settings.json",
       "/.vscode/tasks.json",
-      "/.yarnrc.yml",
       "/README.md",
       "/api",
       "/api/db",
@@ -286,7 +303,11 @@ test('files should not have changed unintentionally in esm JS template', () => {
       "/eslint.config.js",
       "/gitignore.template",
       "/graphql.config.cjs",
+      "/npm",
+      "/npm/package.json",
       "/package.json",
+      "/pnpm",
+      "/pnpm/package.json",
       "/prettier.config.cjs",
       "/scripts",
       "/scripts/.keep",
@@ -317,6 +338,9 @@ test('files should not have changed unintentionally in esm JS template', () => {
       "/web/src/pages/NotFoundPage/NotFoundPage.jsx",
       "/web/vite.config.js",
       "/web/vitest.setup.js",
+      "/yarn",
+      "/yarn/.yarnrc.yml",
+      "/yarn/package.json",
     ]
   `)
 })
