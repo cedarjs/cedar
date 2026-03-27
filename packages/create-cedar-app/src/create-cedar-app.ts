@@ -3,7 +3,6 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { trace, SpanStatusCode } from '@opentelemetry/api'
-import checkNodeVersionCb from 'check-node-version'
 import execa from 'execa'
 import gradient from 'gradient-string'
 import semver from 'semver'
@@ -14,7 +13,8 @@ import yargs from 'yargs/yargs'
 
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
-import { name, version } from '../package.json'
+import pkgJson from '../package.json' with { type: 'json' }
+const { name, version } = pkgJson
 
 import {
   UID,
@@ -45,7 +45,7 @@ function isYarnBerryOrNewer() {
   if (npmConfigUserAgent) {
     const match = npmConfigUserAgent.match(/yarn\/(\d+)/)
 
-    if (match && match[1]) {
+    if (match?.[1]) {
       return parseInt(match[1], 10) >= 2
     }
   }
@@ -53,7 +53,7 @@ function isYarnBerryOrNewer() {
   return false
 }
 
-async function executeCompatibilityCheck(templateDir) {
+async function executeCompatibilityCheck(templateDir: string) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
     content: 'Checking node and yarn compatibility',
@@ -63,9 +63,9 @@ async function executeCompatibilityCheck(templateDir) {
   })
   tui.startReactive(tuiContent)
 
-  const [checksPassed, checksData] = await checkNodeVersion(templateDir)
+  const { isSatisfied, nodeRange } = checkNodeVersion(templateDir)
 
-  if (checksPassed) {
+  if (isSatisfied) {
     tuiContent.update({
       spinner: {
         enabled: false,
@@ -77,61 +77,25 @@ async function executeCompatibilityCheck(templateDir) {
     return
   }
 
-  if (!checksPassed) {
-    const foundNodeVersionIsLessThanRequired = semver.lt(
-      checksData.node.version.version,
-      semver.minVersion(checksData.node.wanted.raw),
-    )
+  const minRequired = semver.minVersion(nodeRange)
+  const nodeVersionIsTooOld =
+    minRequired && semver.lt(process.version, minRequired)
 
-    if (foundNodeVersionIsLessThanRequired) {
-      tui.stopReactive(true)
-      tui.displayError(
-        'Compatibility checks failed',
-        [
-          `  You need to upgrade the version of node you're using.`,
-          `  You're using ${checksData.node.version.version} and we currently support node ${checksData.node.wanted.range}.`,
-          '',
-          `  Please use tools like nvm or corepack to change to a compatible version.`,
-          `  See: ${terminalLink(
-            'How to - Using nvm',
-            'https://cedarjs.com/docs/how-to/using-nvm',
-            {
-              fallback: () =>
-                'How to - Using nvm https://cedarjs.com/docs/how-to/using-nvm',
-            },
-          )}`,
-          `  See: ${terminalLink(
-            'Tutorial - Prerequisites',
-            'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
-            {
-              fallback: () =>
-                'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
-            },
-          )}`,
-        ].join('\n'),
-      )
-
-      recordErrorViaTelemetry('Compatibility checks failed')
-      await shutdownTelemetry()
-      process.exit(1)
-    }
-
+  if (nodeVersionIsTooOld) {
     tui.stopReactive(true)
-    tui.displayWarning(
+    tui.displayError(
       'Compatibility checks failed',
       [
-        `  You may want to downgrade the version of node you're using.`,
-        `  You're using ${checksData.node.version.version} and we currently support node ${checksData.node.wanted.range}.`,
-        '',
-        `  This may make your project incompatible with some deploy targets, especially those using AWS Lambdas.`,
+        `  You need to upgrade the version of node you're using.`,
+        `  You're using ${process.version} and we currently support node ${nodeRange}.`,
         '',
         `  Please use tools like nvm or corepack to change to a compatible version.`,
         `  See: ${terminalLink(
-          'How to - Use nvm',
+          'How to - Using nvm',
           'https://cedarjs.com/docs/how-to/using-nvm',
           {
             fallback: () =>
-              'How to - Use nvm https://cedarjs.com/docs/how-to/using-nvm',
+              'How to - Using nvm https://cedarjs.com/docs/how-to/using-nvm',
           },
         )}`,
         `  See: ${terminalLink(
@@ -145,46 +109,80 @@ async function executeCompatibilityCheck(templateDir) {
       ].join('\n'),
     )
 
-    // Try catch for handling if the user cancels the prompt.
-    try {
-      const response = await tui.prompt({
-        type: 'select',
-        name: 'override-engine-error',
-        message: 'How would you like to proceed?',
-        choices: ['Override error and continue install', 'Quit install'],
-        initial: 0,
-      })
-      if (response['override-engine-error'] === 'Quit install') {
-        recordErrorViaTelemetry('User quit after engine check error')
-        await shutdownTelemetry()
-        process.exit(0)
-      }
-    } catch (error) {
-      recordErrorViaTelemetry('User cancelled install at engine check error')
+    recordErrorViaTelemetry('Compatibility checks failed')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  tui.stopReactive(true)
+  tui.displayWarning(
+    'Compatibility checks failed',
+    [
+      `  You may want to downgrade the version of node you're using.`,
+      `  You're using ${process.version} and we currently support node ${nodeRange}.`,
+      '',
+      `  This may make your project incompatible with some deploy targets, especially those using AWS Lambdas.`,
+      '',
+      `  Please use tools like nvm or corepack to change to a compatible version.`,
+      `  See: ${terminalLink(
+        'How to - Use nvm',
+        'https://cedarjs.com/docs/how-to/using-nvm',
+        {
+          fallback: () =>
+            'How to - Use nvm https://cedarjs.com/docs/how-to/using-nvm',
+        },
+      )}`,
+      `  See: ${terminalLink(
+        'Tutorial - Prerequisites',
+        'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
+        {
+          fallback: () =>
+            'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
+        },
+      )}`,
+    ].join('\n'),
+  )
+
+  // Try catch for handling if the user cancels the prompt.
+  try {
+    const response = await tui.prompt<{ 'override-engine-error': string }>({
+      type: 'select',
+      name: 'override-engine-error',
+      message: 'How would you like to proceed?',
+      choices: ['Override error and continue install', 'Quit install'],
+      initial: 0,
+    })
+    if (response['override-engine-error'] === 'Quit install') {
+      recordErrorViaTelemetry('User quit after engine check error')
       await shutdownTelemetry()
-      process.exit(1)
+      process.exit(0)
     }
+  } catch {
+    recordErrorViaTelemetry('User cancelled install at engine check error')
+    await shutdownTelemetry()
+    process.exit(1)
   }
 }
 
-/**
- * This type has to be updated if the engines field in the create cedar app
- * template package.json is updated.
- * @returns [boolean, Record<'node' | 'yarn', any>]
- */
-function checkNodeVersion(templateDir) {
-  return new Promise((resolve) => {
-    const { engines } = JSON.parse(
-      fs.readFileSync(path.join(templateDir, 'package.json'), 'utf-8'),
-    )
+function checkNodeVersion(templateDir: string) {
+  const { engines } = JSON.parse(
+    fs.readFileSync(path.join(templateDir, 'package.json'), 'utf-8'),
+  )
 
-    checkNodeVersionCb(engines, (_error, result) => {
-      return resolve([result.isSatisfied, result.versions])
-    })
-  })
+  const nodeRange = engines.node
+
+  if (!(typeof nodeRange === 'string')) {
+    throw new Error('Invalid node engine version range in package.json')
+  }
+
+  const isSatisfied = semver.satisfies(process.version, nodeRange)
+  return { isSatisfied, nodeRange }
 }
 
-async function createProjectFiles(appDir, { templateDir, overwrite }) {
+async function createProjectFiles(
+  appDir: string,
+  { templateDir, overwrite }: { templateDir: string; overwrite: boolean },
+) {
   let newAppDir = appDir
 
   const tuiContent = new ReactiveTUIContent({
@@ -230,7 +228,7 @@ async function createProjectFiles(appDir, { templateDir, overwrite }) {
   return newAppDir
 }
 
-async function installNodeModules(newAppDir) {
+async function installNodeModules(newAppDir: string) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
     header: 'Installing node modules',
@@ -260,7 +258,7 @@ async function installNodeModules(newAppDir) {
           "'yarn install'",
         )}. Please see below for the full error message.`,
         '',
-        error,
+        String(error),
       ].join('\n'),
     )
     recordErrorViaTelemetry(error)
@@ -281,7 +279,7 @@ async function installNodeModules(newAppDir) {
   tui.stopReactive()
 }
 
-async function generateTypes(newAppDir) {
+async function generateTypes(newAppDir: string) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
     content: 'Generating types',
@@ -307,7 +305,7 @@ async function generateTypes(newAppDir) {
           "'yarn rw-gen'",
         )}. Please see below for the full error message.`,
         '',
-        error,
+        String(error),
       ].join('\n'),
     )
     recordErrorViaTelemetry(error)
@@ -324,7 +322,7 @@ async function generateTypes(newAppDir) {
   tui.stopReactive()
 }
 
-async function initializeGit(newAppDir, commitMessage) {
+async function initializeGit(newAppDir: string, commitMessage: string) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
     content: 'Initializing a git repo',
@@ -350,7 +348,7 @@ async function initializeGit(newAppDir, commitMessage) {
           `git init && git add . && git commit -m "${commitMessage}"`,
         )}. Please see below for the full error message.`,
         '',
-        error,
+        String(error),
       ].join('\n'),
     )
     recordErrorViaTelemetry(error)
@@ -369,7 +367,7 @@ async function initializeGit(newAppDir, commitMessage) {
   tui.stopReactive()
 }
 
-async function handleTargetDirPreference(targetDir) {
+async function handleTargetDirPreference(targetDir: string) {
   if (targetDir) {
     const targetDirText =
       targetDir === '.' ? 'the current directory' : targetDir
@@ -384,7 +382,7 @@ async function handleTargetDirPreference(targetDir) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ targetDir: string }>({
       type: 'input',
       name: 'targetDir',
       message: 'Where would you like to create your CedarJS app?',
@@ -411,7 +409,7 @@ async function handleTargetDirPreference(targetDir) {
   }
 }
 
-async function handleTypescriptPreference(typescriptFlag) {
+async function handleTypescriptPreference(typescriptFlag: boolean | null) {
   // Handle case where flag is set
   if (typescriptFlag !== null) {
     tui.drawText(
@@ -424,22 +422,22 @@ async function handleTypescriptPreference(typescriptFlag) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ language: string }>({
       type: 'Select',
       name: 'language',
       choices: ['TypeScript', 'JavaScript'],
       message: 'Select your preferred language',
       initial: 'TypeScript',
-    })
+    } as Parameters<typeof tui.prompt>[0])
     return response.language === 'TypeScript'
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry('User cancelled install at language prompt')
     await shutdownTelemetry()
     process.exit(1)
   }
 }
 
-async function handleEsmPreference(esmFlag) {
+async function handleEsmPreference(esmFlag: boolean | null) {
   // Handle case where flag is set
   if (esmFlag !== null) {
     tui.drawText(
@@ -469,7 +467,7 @@ async function handleEsmPreference(esmFlag) {
   // }
 }
 
-async function handleGitPreference(gitInitFlag) {
+async function handleGitPreference(gitInitFlag: boolean | null) {
   // Handle case where flag is set
   if (gitInitFlag !== null) {
     tui.drawText(
@@ -482,7 +480,7 @@ async function handleGitPreference(gitInitFlag) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ git: boolean }>({
       type: 'Toggle',
       name: 'git',
       message: 'Do you want to initialize a git repo?',
@@ -491,7 +489,7 @@ async function handleGitPreference(gitInitFlag) {
       initial: 'Yes',
     })
     return response.git
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry('User cancelled install at git prompt')
     await shutdownTelemetry()
     process.exit(1)
@@ -499,8 +497,11 @@ async function handleGitPreference(gitInitFlag) {
 }
 
 async function doesDirectoryAlreadyExist(
-  appDir,
-  { overwrite, suppressWarning },
+  appDir: string,
+  {
+    overwrite,
+    suppressWarning,
+  }: { overwrite: boolean; suppressWarning?: boolean },
 ) {
   let newAppDir = appDir
 
@@ -519,7 +520,9 @@ async function doesDirectoryAlreadyExist(
       }
 
       try {
-        const response = await tui.prompt({
+        const response = await tui.prompt<{
+          projectDirectoryAlreadyExists: string
+        }>({
           type: 'select',
           name: 'projectDirectoryAlreadyExists',
           message: 'How would you like to proceed?',
@@ -575,7 +578,7 @@ async function doesDirectoryAlreadyExist(
           process.exit(1)
         }
         // overwrite the existing files
-      } catch (_error) {
+      } catch {
         recordErrorViaTelemetry(
           `User cancelled install after directory already exists error`,
         )
@@ -590,14 +593,14 @@ async function doesDirectoryAlreadyExist(
 
 async function handleNewDirectoryNamePreference() {
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ targetDirectoryInput: string }>({
       type: 'input',
       name: 'targetDirectoryInput',
       message: 'What directory would you like to create the app in?',
       initial: 'my-cedar-app',
     })
     return response.targetDirectoryInput
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry(
       'User cancelled install at specify a different directory prompt',
     )
@@ -606,10 +609,7 @@ async function handleNewDirectoryNamePreference() {
   }
 }
 
-/**
- * @param {string?} commitMessageFlag
- */
-async function handleCommitMessagePreference(commitMessageFlag) {
+async function handleCommitMessagePreference(commitMessageFlag: string | null) {
   // Handle case where flag is set
   if (commitMessageFlag !== null) {
     return commitMessageFlag
@@ -617,24 +617,21 @@ async function handleCommitMessagePreference(commitMessageFlag) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ commitMessage: string }>({
       type: 'input',
       name: 'commitMessage',
       message: 'Enter a commit message',
       initial: INITIAL_COMMIT_MESSAGE,
     })
     return response.commitMessage
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry('User cancelled install at commit message prompt')
     await shutdownTelemetry()
     process.exit(1)
   }
 }
 
-/**
- * @param {boolean?} yarnInstallFlag
- */
-async function handleYarnInstallPreference(yarnInstallFlag) {
+async function handleYarnInstallPreference(yarnInstallFlag: boolean | null) {
   // Handle case where flag is set
   if (yarnInstallFlag !== null) {
     tui.drawText(
@@ -647,7 +644,7 @@ async function handleYarnInstallPreference(yarnInstallFlag) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ yarnInstall: boolean }>({
       type: 'Toggle',
       name: 'yarnInstall',
       message: 'Do you want to run yarn install?',
@@ -656,7 +653,7 @@ async function handleYarnInstallPreference(yarnInstallFlag) {
       initial: 'Yes',
     })
     return response.yarnInstall
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry('User cancelled install at yarn install prompt')
     await shutdownTelemetry()
     process.exit(1)
@@ -669,11 +666,11 @@ async function handleYarnInstallPreference(yarnInstallFlag) {
  * It performs the following actions:
  *  - TODO - Add a list of what this function does
  */
-async function createRedwoodApp() {
+async function createCedarApp() {
   const cli = yargs(hideBin(process.argv))
     .scriptName(name)
     .usage('Usage: $0 <project directory>')
-    .example('$0 my-cedar-app')
+    .example('$0', 'my-cedar-app')
     .version(version)
     .option('yes', {
       alias: 'y',
@@ -722,10 +719,10 @@ async function createRedwoodApp() {
         'Enables sending telemetry events for this create command and all Cedar CLI commands https://telemetry.redwoodjs.com',
     })
 
-  const _isYarnBerryOrNewer = isYarnBerryOrNewer()
+  const isYarnBerry = isYarnBerryOrNewer()
 
   // Only add the yarn-install flag if the yarn version is >= 2
-  if (_isYarnBerryOrNewer) {
+  if (isYarnBerry) {
     cli.option('yarn-install', {
       default: null,
       type: 'boolean',
@@ -733,7 +730,7 @@ async function createRedwoodApp() {
     })
   }
 
-  const parsedFlags = cli.parse()
+  const parsedFlags = await cli.parse()
 
   // Logo generated by https://www.asciiart.eu/text-to-ascii-art using the "DOS
   // Rebel" font
@@ -756,8 +753,7 @@ async function createRedwoodApp() {
   // TODO: Make all flags have the 'flag' suffix
   const args = parsedFlags._
   const yarnInstallFlag =
-    parsedFlags['yarn-install'] ??
-    (_isYarnBerryOrNewer ? parsedFlags.yes : null)
+    parsedFlags['yarn-install'] ?? (isYarnBerry ? parsedFlags.yes : null)
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
   const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
   const overwrite = parsedFlags.overwrite
@@ -767,7 +763,7 @@ async function createRedwoodApp() {
     (parsedFlags.yes ? INITIAL_COMMIT_MESSAGE : null)
 
   // Record some of the arguments for telemetry
-  trace.getActiveSpan()?.setAttribute('yarn-install', yarnInstallFlag)
+  trace.getActiveSpan()?.setAttribute('yarn-install', !!yarnInstallFlag)
   trace.getActiveSpan()?.setAttribute('overwrite', overwrite)
 
   // Get the directory for installation from the args
@@ -803,16 +799,17 @@ async function createRedwoodApp() {
   const useGit = await handleGitPreference(gitInitFlag)
   trace.getActiveSpan()?.setAttribute('git', useGit)
 
-  /** @type {string} */
-  let commitMessage
+  let commitMessage: string | undefined
   if (useGit) {
     commitMessage = await handleCommitMessagePreference(commitMessageFlag)
   }
 
   let yarnInstall = false
 
-  if (_isYarnBerryOrNewer) {
-    yarnInstall = await handleYarnInstallPreference(yarnInstallFlag)
+  if (isYarnBerry) {
+    yarnInstall = await handleYarnInstallPreference(
+      yarnInstallFlag as boolean | null,
+    )
   }
 
   let newAppDir = path.resolve(process.cwd(), targetDir)
@@ -829,7 +826,7 @@ async function createRedwoodApp() {
       .getActiveSpan()
       ?.setAttribute('yarn-install-time', Date.now() - yarnInstallStart)
   } else {
-    if (_isYarnBerryOrNewer) {
+    if (isYarnBerry) {
       tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped yarn install step`)
     }
   }
@@ -841,7 +838,7 @@ async function createRedwoodApp() {
 
   // Initialize git repo
   if (useGit) {
-    await initializeGit(newAppDir, commitMessage)
+    await initializeGit(newAppDir, commitMessage!)
   }
 
   const shouldPrintCdCommand = newAppDir !== process.cwd()
@@ -890,7 +887,7 @@ if (telemetry) {
 // Execute create redwood app within a span
 const tracer = trace.getTracer('redwoodjs')
 await tracer.startActiveSpan('create-cedar-app', async (span) => {
-  await createRedwoodApp()
+  await createCedarApp()
 
   // Span housekeeping
   span?.setStatus({ code: SpanStatusCode.OK })

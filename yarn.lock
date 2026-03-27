@@ -13373,16 +13373,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "chalk@npm:3.0.0"
-  dependencies:
-    ansi-styles: "npm:^4.1.0"
-    supports-color: "npm:^7.1.0"
-  checksum: 10c0/ee650b0a065b3d7a6fda258e75d3a86fc8e4effa55871da730a9e42ccb035bf5fd203525e5a1ef45ec2582ecc4f65b47eb11357c526b84dd29a14fb162c414d2
-  languageName: node
-  linkType: hard
-
 "chalk@npm:^5.2.0, chalk@npm:^5.3.0, chalk@npm:^5.6.0, chalk@npm:^5.6.2":
   version: 5.6.2
   resolution: "chalk@npm:5.6.2"
@@ -13474,22 +13464,6 @@ __metadata:
   version: 2.24.0
   resolution: "check-more-types@npm:2.24.0"
   checksum: 10c0/93fda2c32eb5f6cd1161a84a2f4107c0e00b40a851748516791dd9a0992b91bdf504e3bf6bf7673ce603ae620042e11ed4084d16d6d92b36818abc9c2e725520
-  languageName: node
-  linkType: hard
-
-"check-node-version@npm:4.2.1":
-  version: 4.2.1
-  resolution: "check-node-version@npm:4.2.1"
-  dependencies:
-    chalk: "npm:^3.0.0"
-    map-values: "npm:^1.0.1"
-    minimist: "npm:^1.2.0"
-    object-filter: "npm:^1.0.2"
-    run-parallel: "npm:^1.1.4"
-    semver: "npm:^6.3.0"
-  bin:
-    check-node-version: bin.js
-  checksum: 10c0/7778e04d240710c64d952181d45c1efe21c2a032da529d8eafced5811652137bd24d53b0a850fac27cb75de8041f40fa268df66e8f57fbeeff82813215eefab7
   languageName: node
   linkType: hard
 
@@ -14375,7 +14349,6 @@ __metadata:
     "@types/babel__core": "npm:7.20.5"
     "@types/klaw-sync": "npm:6.0.5"
     ansis: "npm:4.2.0"
-    check-node-version: "npm:4.2.1"
     ci-info: "npm:4.4.0"
     envinfo: "npm:7.21.0"
     execa: "npm:5.1.1"
@@ -21776,13 +21749,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"map-values@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "map-values@npm:1.0.1"
-  checksum: 10c0/a1e2a4fe64f60e43c6f6508e872a081651544fd654b643ffcbdd2cae72611af1f6e4dfb51484fe3e802db4eb5f340cab4022b9b86075136801e9d1db45053b40
-  languageName: node
-  linkType: hard
-
 "marked-terminal@npm:^7.1.0":
   version: 7.1.0
   resolution: "marked-terminal@npm:7.1.0"
@@ -23555,13 +23521,6 @@ __metadata:
   version: 4.1.1
   resolution: "object-assign@npm:4.1.1"
   checksum: 10c0/1f4df9945120325d041ccf7b86f31e8bcc14e73d29171e37a7903050e96b81323784ec59f93f102ec635bcf6fa8034ba3ea0a8c7e69fa202b87ae3b6cec5a414
-  languageName: node
-  linkType: hard
-
-"object-filter@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "object-filter@npm:1.0.2"
-  checksum: 10c0/15ce6852c1826db20b7c65ddc7519ce76f9cf06b1cf5140b49a2d06b265ab897692cfc90627c0a907f4d1e8fd0c1fe6d36e20931d4ced5e2e30c49451b7d4b70
   languageName: node
   linkType: hard
 
@@ -26525,7 +26484,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"run-parallel@npm:^1.1.4, run-parallel@npm:^1.1.9":
+"run-parallel@npm:^1.1.9":
   version: 1.2.0
   resolution: "run-parallel@npm:1.2.0"
   dependencies:
