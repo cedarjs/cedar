@@ -675,7 +675,12 @@ async function createCedarApp() {
   const cli = yargs(hideBin(process.argv))
     .scriptName(pkgJson.name)
     .usage('Usage: $0 <project directory>')
-    .example('$0', 'my-cedar-app')
+    .example([
+      [
+        '$0 my-cedar-app',
+        'Create a new Cedar app in the "my-cedar-app" directory',
+      ],
+    ])
     .version(pkgJson.version)
     .option('yes', {
       alias: 'y',
