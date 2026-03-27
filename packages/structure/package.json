@@ -60,7 +60,7 @@
     "camelcase": "6.3.0",
     "deepmerge": "4.3.1",
     "dotenv-defaults": "5.0.2",
-    "graphql": "16.13.1",
+    "graphql": "16.13.2",
     "line-column": "1.0.2",
     "lodash": "4.17.23",
     "lru-cache": "11.2.7",
