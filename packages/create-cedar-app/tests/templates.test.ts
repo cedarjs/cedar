@@ -236,9 +236,6 @@ test('files should not have changed unintentionally in esm TS template', () => {
       "/web/tsconfig.json",
       "/web/vite.config.ts",
       "/web/vitest.setup.ts",
-      "/yarn",
-      "/yarn/.yarnrc.yml",
-      "/yarn/package.json",
     ]
   `)
 })
@@ -316,9 +313,6 @@ test('files should not have changed unintentionally in esm JS template', () => {
       "/web/src/pages/NotFoundPage/NotFoundPage.jsx",
       "/web/vite.config.js",
       "/web/vitest.setup.js",
-      "/yarn",
-      "/yarn/.yarnrc.yml",
-      "/yarn/package.json",
     ]
   `)
 })
