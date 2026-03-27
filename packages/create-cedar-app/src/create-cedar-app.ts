@@ -14,7 +14,6 @@ import yargs from 'yargs/yargs'
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import pkgJson from '../package.json' with { type: 'json' }
-const { name, version } = pkgJson
 
 import {
   UID,
@@ -165,13 +164,13 @@ async function executeCompatibilityCheck(templateDir: string) {
 }
 
 function checkNodeVersion(templateDir: string) {
-  const { engines } = JSON.parse(
+  const templatePackageJson = JSON.parse(
     fs.readFileSync(path.join(templateDir, 'package.json'), 'utf-8'),
   )
 
-  const nodeRange = engines.node
+  const nodeRange = templatePackageJson?.engines?.node
 
-  if (!(typeof nodeRange === 'string')) {
+  if (typeof nodeRange !== 'string') {
     throw new Error('Invalid node engine version range in package.json')
   }
 
@@ -428,6 +427,10 @@ async function handleTypescriptPreference(typescriptFlag: boolean | null) {
       choices: ['TypeScript', 'JavaScript'],
       message: 'Select your preferred language',
       initial: 'TypeScript',
+      // Have to type cast here because the type of the `choices` property is
+      // not inferred correctly. I could (should) fix this by updating the type
+      // definition for `tui.prompt`, but I want to get rid of RwTUI, so I'm not
+      // going to spend time on fixing the types now.
     } as Parameters<typeof tui.prompt>[0])
     return response.language === 'TypeScript'
   } catch {
@@ -667,11 +670,13 @@ async function handleYarnInstallPreference(yarnInstallFlag: boolean | null) {
  *  - TODO - Add a list of what this function does
  */
 async function createCedarApp() {
+  const isYarnBerry = isYarnBerryOrNewer()
+
   const cli = yargs(hideBin(process.argv))
-    .scriptName(name)
+    .scriptName(pkgJson.name)
     .usage('Usage: $0 <project directory>')
     .example('$0', 'my-cedar-app')
-    .version(version)
+    .version(pkgJson.version)
     .option('yes', {
       alias: 'y',
       default: null,
@@ -718,17 +723,12 @@ async function createCedarApp() {
       describe:
         'Enables sending telemetry events for this create command and all Cedar CLI commands https://telemetry.redwoodjs.com',
     })
-
-  const isYarnBerry = isYarnBerryOrNewer()
-
-  // Only add the yarn-install flag if the yarn version is >= 2
-  if (isYarnBerry) {
-    cli.option('yarn-install', {
+    .option('yarn-install', {
       default: null,
       type: 'boolean',
       describe: 'Install node modules. Skip via --no-yarn-install.',
+      hidden: !isYarnBerry,
     })
-  }
 
   const parsedFlags = await cli.parse()
 
@@ -807,9 +807,7 @@ async function createCedarApp() {
   let yarnInstall = false
 
   if (isYarnBerry) {
-    yarnInstall = await handleYarnInstallPreference(
-      yarnInstallFlag as boolean | null,
-    )
+    yarnInstall = await handleYarnInstallPreference(yarnInstallFlag)
   }
 
   let newAppDir = path.resolve(process.cwd(), targetDir)
