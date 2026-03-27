@@ -36,7 +36,6 @@
     "@types/babel__core": "7.20.5",
     "@types/klaw-sync": "6.0.5",
     "ansis": "4.2.0",
-    "check-node-version": "4.2.1",
     "ci-info": "4.4.0",
     "envinfo": "7.21.0",
     "execa": "5.1.1",

@@ -50,7 +50,8 @@ describe('create-cedar-app', () => {
                                                              [boolean] [default: null]
 
       Examples:
-        create-cedar-app my-cedar-app
+        create-cedar-app my-cedar-app  Create a new Cedar app in the "my-cedar-app"
+                                       directory
       [?25l[?25h"
     `)
     expect(p.stderr).toMatchInlineSnapshot(`"[?25l[?25h"`)
