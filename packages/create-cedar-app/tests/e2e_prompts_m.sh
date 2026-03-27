@@ -11,7 +11,7 @@ cd $projectPath
 
 set projectDirectory "redwood-app-prompt-m-test"
 
-spawn yarn create-cedar-app --no-yarn-install -m "first"
+spawn yarn create-cedar-app --no-install --pm yarn -m "first"
 
 expect "Where would you like to create your CedarJS app?"
 send "$projectDirectory\n"

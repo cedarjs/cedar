@@ -13,7 +13,7 @@ cd $projectPath
 
 set projectDirectory "redwood-app-prompt-node-greater-test"
 
-spawn yarn create-cedar-app --no-yarn-install
+spawn yarn create-cedar-app --no-install --pm yarn
 
 expect "How would you like to proceed?"
 # ❯ Override error and continue install
@@ -24,6 +24,10 @@ send "$projectDirectory\n"
 
 expect "Select your preferred language"
 # ❯ TypeScript
+send "\n"
+
+expect "Select your preferred package manager"
+# ❯ yarn
 send "\n"
 
 expect "Do you want to initialize a git repo?"

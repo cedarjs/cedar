@@ -55,7 +55,8 @@ function createCedarJsApp({ typescript }) {
       'yarn node dist/create-cedar-app.js',
       [
         CEDARJS_PROJECT_DIRECTORY,
-        '--no-yarn-install',
+        '--no-install',
+        '--pm yarn',
         `--typescript ${typescript}`,
         '--no-telemetry',
         '--git',

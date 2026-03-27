@@ -9,15 +9,19 @@ if {$projectPath eq ""} {
 
 cd $projectPath
 
-set projectDirectory "redwood-app-prompt-git-test"
+set projectDirectory "cedar-app-prompt-git-test"
 
-spawn yarn create-cedar-app --no-yarn-install --git
+spawn yarn create-cedar-app --no-install --git
 
 expect "Where would you like to create your CedarJS app?"
 send "$projectDirectory\n"
 
 expect "Select your preferred language"
 # ❯ TypeScript
+send "\n"
+
+expect "Select your preferred package manager"
+# ❯ yarn
 send "\n"
 
 expect "Enter a commit message"

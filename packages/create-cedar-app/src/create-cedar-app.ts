@@ -26,7 +26,7 @@ const INITIAL_COMMIT_MESSAGE = 'Initial commit'
 
 type PackageManager = 'yarn' | 'npm' | 'pnpm'
 
-function detectPackageManagerFromEnv(): PackageManager {
+function detectPackageManagerFromEnv() {
   const userAgent = process.env.npm_config_user_agent
   const envPackageManager = userAgent?.split(' ')[0]?.split('/')[0]
 
@@ -38,24 +38,20 @@ function detectPackageManagerFromEnv(): PackageManager {
     return envPackageManager
   }
 
-  return 'yarn'
+  return undefined
 }
 
-function getInstallCommand(pm: PackageManager): string {
-  return pm === 'npm'
-    ? 'npm install'
-    : pm === 'pnpm'
-      ? 'pnpm install'
-      : 'yarn install'
+function getInstallCommand(pm: PackageManager) {
+  return `${pm} install`
 }
 
-function getCedarCommandPrefix(pm: PackageManager): string {
+function getCedarCommandPrefix(pm: PackageManager) {
   if (pm === 'npm') {
     return 'npx cedar'
-  }
-  if (pm === 'pnpm') {
+  } else if (pm === 'pnpm') {
     return 'pnpm exec cedar'
   }
+
   return 'yarn cedar'
 }
 
@@ -73,10 +69,10 @@ const { telemetry } = Parser(hideBin(process.argv), {
 
 const tui = new RedwoodTUI()
 
-async function executeCompatibilityCheck(templateDir: string) {
+async function executeNodeCompatibilityCheck(templateDir: string) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
-    content: 'Checking node compatibility',
+    content: `Checking node compatibility`,
     spinner: {
       enabled: true,
     },
@@ -199,19 +195,18 @@ function checkNodeVersion(templateDir: string) {
   return { isSatisfied, nodeRange }
 }
 
+interface CreateProjectFilesOptions {
+  templateDir: string
+  overwrite: boolean
+  packageManager: PackageManager
+}
+
 async function createProjectFiles(
   appDir: string,
-  {
-    templateDir,
-    overwrite,
-    packageManager,
-  }: {
-    templateDir: string
-    overwrite: boolean
-    packageManager: PackageManager
-  },
+  { templateDir, overwrite, packageManager }: CreateProjectFilesOptions,
 ) {
   let newAppDir = appDir
+  const templatePmDir = path.join(templateDir, packageManager)
 
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
@@ -231,6 +226,10 @@ async function createProjectFiles(
   // Have to use fs.promises.cp here because of a bug in yarn
   // See https://github.com/yarnpkg/berry/issues/6488
   await fs.promises.cp(templateDir, newAppDir, {
+    recursive: true,
+    force: overwrite,
+  })
+  await fs.promises.cp(templatePmDir, newAppDir, {
     recursive: true,
     force: overwrite,
   })
@@ -749,7 +748,7 @@ async function handleInstallPreference(
 }
 
 async function handlePackageManagerPreference(
-  packageManagerFlag: string | null,
+  packageManagerFlag: string | null | undefined,
 ): Promise<PackageManager> {
   // Handle case where flag is set
   if (packageManagerFlag) {
@@ -758,6 +757,16 @@ async function handlePackageManagerPreference(
     )
     return packageManagerFlag as PackageManager
   }
+
+  // // Auto-detect in non-interactive mode (CI, piped stdin, etc.)
+  // const isInteractive = process.stdin.isTTY
+  // if (!isInteractive) {
+  //   const detectedPm = detectPackageManagerFromEnv()
+  //   tui.drawText(
+  //     `${RedwoodStyling.green('✔')} Detected ${detectedPm} from environment`,
+  //   )
+  //   return detectedPm
+  // }
 
   // Prompt user for preference
   try {
@@ -871,10 +880,13 @@ async function createCedarApp() {
 
   console.log(gradient(['#00ff41', '#008f11']).multiline(logo2))
 
+  const detectedPm = detectPackageManagerFromEnv()
+
   // Extract the args as provided by the user in the command line
   // TODO: Make all flags have the 'flag' suffix
   const args = parsedFlags._
-  const packageManagerFlag = parsedFlags['package-manager'] as string
+  const packageManagerFlag =
+    parsedFlags['package-manager'] ?? (parsedFlags.yes ? detectedPm : null)
   const installFlag = parsedFlags.install ?? (parsedFlags.yes ? true : null)
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
   const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
@@ -885,9 +897,6 @@ async function createCedarApp() {
     (parsedFlags.yes ? INITIAL_COMMIT_MESSAGE : null)
 
   // Record some of the arguments for telemetry
-  trace
-    .getActiveSpan()
-    ?.setAttribute('package-manager', packageManagerFlag ?? 'detected')
   trace.getActiveSpan()?.setAttribute('install', installFlag ?? false)
   trace.getActiveSpan()?.setAttribute('overwrite', overwrite)
 
@@ -899,7 +908,7 @@ async function createCedarApp() {
   // Node version check
   const nodeCheck = parsedFlags['node-check']
   if (nodeCheck) {
-    await executeCompatibilityCheck(path.join(templatesDir, 'ts'))
+    await executeNodeCompatibilityCheck(path.join(templatesDir, 'ts'))
   } else {
     tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped node version check`)
   }
@@ -923,9 +932,7 @@ async function createCedarApp() {
   const templateDir = path.join(
     templatesDir,
     useTypescript ? (useEsm ? 'esm-ts' : 'ts') : useEsm ? 'esm-js' : 'js',
-    packageManager,
   )
-
   // Determine git preference
   const useGit = await handleGitPreference(gitInitFlag)
   trace.getActiveSpan()?.setAttribute('git', useGit)
@@ -944,12 +951,15 @@ async function createCedarApp() {
   let newAppDir = path.resolve(process.cwd(), targetDir)
 
   // Create project files
-  // if this directory already exists then createProjectFiles may set a new directory name
+  // if this directory already exists then createProjectFiles may set a new
+  // directory name
   newAppDir = await createProjectFiles(newAppDir, {
     templateDir,
     overwrite,
     packageManager,
   })
+
+  const installCommand = getInstallCommand(packageManager)
 
   // Install the node packages
   if (shouldInstall) {
@@ -959,7 +969,7 @@ async function createCedarApp() {
       .getActiveSpan()
       ?.setAttribute('install-time', Date.now() - installStart)
   } else {
-    tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped install step`)
+    tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped ${installCommand} step`)
   }
 
   // Generate types
@@ -973,7 +983,6 @@ async function createCedarApp() {
   }
 
   const shouldPrintCdCommand = newAppDir !== process.cwd()
-  const installCommand = getInstallCommand(packageManager)
   const cedarCommand = getCedarCommandPrefix(packageManager)
 
   // Post install message
@@ -1017,7 +1026,7 @@ if (telemetry) {
   }
 }
 
-// Execute create redwood app within a span
+// Execute create cedar app within a span
 const tracer = trace.getTracer('redwoodjs')
 await tracer.startActiveSpan('create-cedar-app', async (span) => {
   await createCedarApp()

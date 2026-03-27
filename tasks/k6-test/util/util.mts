@@ -53,7 +53,8 @@ export function createRedwoodJSApp({
       'yarn node dist/create-cedar-app.js',
       [
         projectPath,
-        '--no-yarn-install',
+        '--no-install',
+        '--pm yarn',
         `--typescript ${typescript}`,
         '--no-telemetry',
         '--no-git',
