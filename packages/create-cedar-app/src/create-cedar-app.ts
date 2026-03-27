@@ -46,13 +46,9 @@ function getInstallCommand(pm: PackageManager) {
 }
 
 function getCedarCommandPrefix(pm: PackageManager) {
-  if (pm === 'npm') {
-    return 'npx cedar'
-  } else if (pm === 'pnpm') {
-    return 'pnpm exec cedar'
-  }
+  const binExecutor = pm === 'npm' ? 'npx' : pm
 
-  return 'yarn cedar'
+  return `${binExecutor} cedar`
 }
 
 // Telemetry can be disabled in two ways:
@@ -72,7 +68,7 @@ const tui = new RedwoodTUI()
 async function executeNodeCompatibilityCheck(templateDir: string) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
-    content: `Checking node compatibility`,
+    content: 'Checking node compatibility',
     spinner: {
       enabled: true,
     },
@@ -253,7 +249,6 @@ async function createProjectFiles(
     path.join(newAppDir, '.gitignore'),
   )
 
-  // Replace placeholders in template files
   await replacePlaceholders(newAppDir, packageManager)
 
   // Write the uid
@@ -271,6 +266,7 @@ async function createProjectFiles(
   return newAppDir
 }
 
+/** String replace of placeholders in template files */
 async function replacePlaceholders(
   dir: string,
   packageManager: PackageManager,
@@ -284,33 +280,18 @@ async function replacePlaceholders(
     '{{CEDAR_CLI}}': cedarCommand,
   }
 
-  async function walk(dir: string) {
-    const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+  const pattern = '**/*.{json,md,js,ts,yml,yaml,txt}'
 
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name)
+  for await (const file of fs.promises.glob(pattern, { cwd: dir })) {
+    const fullPath = path.join(dir, file)
+    let content = await fs.promises.readFile(fullPath, 'utf-8')
 
-      if (entry.isDirectory()) {
-        await walk(fullPath)
-      } else if (entry.isFile()) {
-        const ext = path.extname(entry.name)
-        // Only process text files
-        if (
-          ['.json', '.md', '.js', '.ts', '.yml', '.yaml', '.txt'].includes(ext)
-        ) {
-          let content = await fs.promises.readFile(fullPath, 'utf-8')
-
-          for (const [placeholder, value] of Object.entries(replacements)) {
-            content = content.replaceAll(placeholder, value)
-          }
-
-          await fs.promises.writeFile(fullPath, content, 'utf-8')
-        }
-      }
+    for (const [placeholder, value] of Object.entries(replacements)) {
+      content = content.replaceAll(placeholder, value)
     }
-  }
 
-  await walk(dir)
+    await fs.promises.writeFile(fullPath, content, 'utf-8')
+  }
 }
 
 async function installNodeModules(
@@ -339,13 +320,13 @@ async function installNodeModules(
   try {
     await installSubprocess
   } catch (error) {
+    const prettyInstallCommand = RedwoodStyling.info(`'${installCommand}'`)
     tui.stopReactive(true)
     tui.displayError(
       "Couldn't install node modules",
       [
-        `We couldn't install node modules via ${RedwoodStyling.info(
-          `'${installCommand}'`,
-        )}. Please see below for the full error message.`,
+        `We couldn't install node modules via ${prettyInstallCommand}. ` +
+          'Please see below for the full error message.',
         '',
         String(error),
       ].join('\n'),
@@ -390,13 +371,13 @@ async function generateTypes(
   try {
     await generateSubprocess
   } catch (error) {
+    const prettyGenCommand = RedwoodStyling.info(`'${cedarCommand} rw-gen'`)
     tui.stopReactive(true)
     tui.displayError(
       "Couldn't generate types",
       [
-        `We could not generate types using ${RedwoodStyling.info(
-          `'${cedarCommand} rw-gen'`,
-        )}. Please see below for the full error message.`,
+        `We could not generate types using ${prettyGenCommand}. Please see ` +
+          'below for the full error message.',
         '',
         String(error),
       ].join('\n'),
@@ -760,38 +741,32 @@ async function handleInstallPreference(
   }
 }
 
+function isPackageManager(value: string): value is PackageManager {
+  return ['yarn', 'npm', 'pnpm'].includes(value)
+}
+
 async function handlePackageManagerPreference(
   packageManagerFlag: string | null | undefined,
 ): Promise<PackageManager> {
   // Handle case where flag is set
-  if (packageManagerFlag) {
+  if (packageManagerFlag && isPackageManager(packageManagerFlag)) {
     tui.drawText(
       `${RedwoodStyling.green('✔')} Using ${packageManagerFlag} based on command line flag`,
     )
-    return packageManagerFlag as PackageManager
+    return packageManagerFlag
   }
-
-  // // Auto-detect in non-interactive mode (CI, piped stdin, etc.)
-  // const isInteractive = process.stdin.isTTY
-  // if (!isInteractive) {
-  //   const detectedPm = detectPackageManagerFromEnv()
-  //   tui.drawText(
-  //     `${RedwoodStyling.green('✔')} Detected ${detectedPm} from environment`,
-  //   )
-  //   return detectedPm
-  // }
 
   // Prompt user for preference
   try {
     const detectedPm = detectPackageManagerFromEnv()
-    const response = await tui.prompt<{ packageManager: string }>({
+    const response = await tui.prompt<{ packageManager: PackageManager }>({
       type: 'Select',
       name: 'packageManager',
       choices: ['yarn', 'npm', 'pnpm'],
       message: 'Select your preferred package manager',
       initial: detectedPm,
     } as Parameters<typeof tui.prompt>[0])
-    return response.packageManager as PackageManager
+    return response.packageManager
   } catch {
     recordErrorViaTelemetry('User cancelled install at package manager prompt')
     await shutdownTelemetry()

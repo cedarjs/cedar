@@ -54,7 +54,8 @@ export function createRedwoodJSApp({
       [
         projectPath,
         '--no-install',
-        '--pm yarn',
+        '--pm',
+        'pm yarn',
         `--typescript ${typescript}`,
         '--no-telemetry',
         '--no-git',

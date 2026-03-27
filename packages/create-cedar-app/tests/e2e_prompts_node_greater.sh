@@ -11,7 +11,7 @@ if {$projectPath eq ""} {
 
 cd $projectPath
 
-set projectDirectory "redwood-app-prompt-node-greater-test"
+set projectDirectory "cedar-app-prompt-node-greater-test"
 
 spawn yarn create-cedar-app --no-install --pm yarn
 

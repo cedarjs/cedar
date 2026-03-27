@@ -9,7 +9,7 @@ if {$projectPath eq ""} {
 
 cd $projectPath
 
-set projectDirectory "redwood-app-prompt-m-test"
+set projectDirectory "cedar-app-prompt-m-test"
 
 spawn yarn create-cedar-app --no-install --pm yarn -m "first"
 
