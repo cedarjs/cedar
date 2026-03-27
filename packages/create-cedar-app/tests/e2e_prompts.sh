@@ -11,7 +11,7 @@ cd $projectPath
 
 set projectDirectory "cedar-app-prompt-test"
 
-spawn yarn create-cedar-app --no-instal
+spawn yarn create-cedar-app --no-install
 
 expect "Where would you like to create your CedarJS app?"
 send "$projectDirectory\n"

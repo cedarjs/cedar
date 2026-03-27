@@ -238,10 +238,7 @@ async function createProjectFiles(
     recursive: true,
     force: overwrite,
   })
-  await fs.promises.cp(overlayDir, newAppDir, {
-    recursive: true,
-    force: overwrite,
-  })
+  await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
 
   // .gitignore is renamed here to force file inclusion during publishing
   fs.renameSync(
@@ -255,12 +252,8 @@ async function createProjectFiles(
   fs.mkdirSync(path.join(newAppDir, '.redwood'), { recursive: true })
   fs.writeFileSync(path.join(newAppDir, '.redwood', 'telemetry.txt'), UID)
 
-  tuiContent.update({
-    spinner: {
-      enabled: false,
-    },
-    content: `${RedwoodStyling.green('✔')} Project files created`,
-  })
+  const filesCreated = `${RedwoodStyling.green('✔')} Project files created`
+  tuiContent.update({ spinner: { enabled: false }, content: filesCreated })
   tui.stopReactive()
 
   return newAppDir
