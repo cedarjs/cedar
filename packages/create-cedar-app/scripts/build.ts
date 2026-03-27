@@ -15,7 +15,7 @@ await build({
       js: jsBanner,
     },
     bundle: true,
-    entryPoints: ['src/create-cedar-app.js'],
+    entryPoints: ['src/create-cedar-app.ts'],
     format: 'esm',
     minify: true,
   },

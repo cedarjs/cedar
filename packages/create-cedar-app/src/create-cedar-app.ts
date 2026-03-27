@@ -3,7 +3,6 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { trace, SpanStatusCode } from '@opentelemetry/api'
-import checkNodeVersionCb from 'check-node-version'
 import execa from 'execa'
 import gradient from 'gradient-string'
 import semver from 'semver'
@@ -14,7 +13,7 @@ import yargs from 'yargs/yargs'
 
 import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
-import { name, version } from '../package.json'
+import pkgJson from '../package.json' with { type: 'json' }
 
 import {
   UID,
@@ -25,14 +24,9 @@ import {
 
 const INITIAL_COMMIT_MESSAGE = 'Initial commit'
 
-/** @typedef {'yarn' | 'npm' | 'pnpm'} PackageManager */
+type PackageManager = 'yarn' | 'npm' | 'pnpm'
 
-/**
- * Detects the package manager from the environment.
- * Used before a project is created (no lockfile exists yet).
- * @returns {PackageManager}
- */
-function detectPackageManagerFromEnv() {
+function detectPackageManagerFromEnv(): PackageManager {
   const userAgent = process.env.npm_config_user_agent
   const envPackageManager = userAgent?.split(' ')[0]?.split('/')[0]
 
@@ -47,12 +41,7 @@ function detectPackageManagerFromEnv() {
   return 'yarn'
 }
 
-/**
- * Converts a PackageManager to its install command.
- * @param {PackageManager} pm
- * @returns {string}
- */
-function getInstallCommand(pm) {
+function getInstallCommand(pm: PackageManager): string {
   return pm === 'npm'
     ? 'npm install'
     : pm === 'pnpm'
@@ -60,12 +49,7 @@ function getInstallCommand(pm) {
       : 'yarn install'
 }
 
-/**
- * Converts a PackageManager to its cedar command prefix.
- * @param {PackageManager} pm
- * @returns {string}
- */
-function getCedarCommandPrefix(pm) {
+function getCedarCommandPrefix(pm: PackageManager): string {
   if (pm === 'npm') {
     return 'npx cedar'
   }
@@ -89,33 +73,19 @@ const { telemetry } = Parser(hideBin(process.argv), {
 
 const tui = new RedwoodTUI()
 
-function _isYarnBerryOrNewer() {
-  const { npm_config_user_agent: npmConfigUserAgent } = process.env
-
-  if (npmConfigUserAgent) {
-    const match = npmConfigUserAgent.match(/yarn\/(\d+)/)
-
-    if (match && match[1]) {
-      return parseInt(match[1], 10) >= 2
-    }
-  }
-
-  return false
-}
-
-async function executeCompatibilityCheck(templateDir) {
+async function executeCompatibilityCheck(templateDir: string) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
-    content: 'Checking node and yarn compatibility',
+    content: 'Checking node compatibility',
     spinner: {
       enabled: true,
     },
   })
   tui.startReactive(tuiContent)
 
-  const [checksPassed, checksData] = await checkNodeVersion(templateDir)
+  const { isSatisfied, nodeRange } = checkNodeVersion(templateDir)
 
-  if (checksPassed) {
+  if (isSatisfied) {
     tuiContent.update({
       spinner: {
         enabled: false,
@@ -127,61 +97,25 @@ async function executeCompatibilityCheck(templateDir) {
     return
   }
 
-  if (!checksPassed) {
-    const foundNodeVersionIsLessThanRequired = semver.lt(
-      checksData.node.version.version,
-      semver.minVersion(checksData.node.wanted.raw),
-    )
+  const minRequired = semver.minVersion(nodeRange)
+  const nodeVersionIsTooOld =
+    minRequired && semver.lt(process.version, minRequired)
 
-    if (foundNodeVersionIsLessThanRequired) {
-      tui.stopReactive(true)
-      tui.displayError(
-        'Compatibility checks failed',
-        [
-          `  You need to upgrade the version of node you're using.`,
-          `  You're using ${checksData.node.version.version} and we currently support node ${checksData.node.wanted.range}.`,
-          '',
-          `  Please use tools like nvm or corepack to change to a compatible version.`,
-          `  See: ${terminalLink(
-            'How to - Using nvm',
-            'https://cedarjs.com/docs/how-to/using-nvm',
-            {
-              fallback: () =>
-                'How to - Using nvm https://cedarjs.com/docs/how-to/using-nvm',
-            },
-          )}`,
-          `  See: ${terminalLink(
-            'Tutorial - Prerequisites',
-            'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
-            {
-              fallback: () =>
-                'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
-            },
-          )}`,
-        ].join('\n'),
-      )
-
-      recordErrorViaTelemetry('Compatibility checks failed')
-      await shutdownTelemetry()
-      process.exit(1)
-    }
-
+  if (nodeVersionIsTooOld) {
     tui.stopReactive(true)
-    tui.displayWarning(
+    tui.displayError(
       'Compatibility checks failed',
       [
-        `  You may want to downgrade the version of node you're using.`,
-        `  You're using ${checksData.node.version.version} and we currently support node ${checksData.node.wanted.range}.`,
-        '',
-        `  This may make your project incompatible with some deploy targets, especially those using AWS Lambdas.`,
+        `  You need to upgrade the version of node you're using.`,
+        `  You're using ${process.version} and we currently support node ${nodeRange}.`,
         '',
         `  Please use tools like nvm or corepack to change to a compatible version.`,
         `  See: ${terminalLink(
-          'How to - Use nvm',
+          'How to - Using nvm',
           'https://cedarjs.com/docs/how-to/using-nvm',
           {
             fallback: () =>
-              'How to - Use nvm https://cedarjs.com/docs/how-to/using-nvm',
+              'How to - Using nvm https://cedarjs.com/docs/how-to/using-nvm',
           },
         )}`,
         `  See: ${terminalLink(
@@ -195,48 +129,87 @@ async function executeCompatibilityCheck(templateDir) {
       ].join('\n'),
     )
 
-    // Try catch for handling if the user cancels the prompt.
-    try {
-      const response = await tui.prompt({
-        type: 'select',
-        name: 'override-engine-error',
-        message: 'How would you like to proceed?',
-        choices: ['Override error and continue install', 'Quit install'],
-        initial: 0,
-      })
-      if (response['override-engine-error'] === 'Quit install') {
-        recordErrorViaTelemetry('User quit after engine check error')
-        await shutdownTelemetry()
-        process.exit(0)
-      }
-    } catch (error) {
-      recordErrorViaTelemetry('User cancelled install at engine check error')
+    recordErrorViaTelemetry('Compatibility checks failed')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  tui.stopReactive(true)
+  tui.displayWarning(
+    'Compatibility checks failed',
+    [
+      `  You may want to downgrade the version of node you're using.`,
+      `  You're using ${process.version} and we currently support node ${nodeRange}.`,
+      '',
+      `  This may make your project incompatible with some deploy targets, especially those using AWS Lambdas.`,
+      '',
+      `  Please use tools like nvm or corepack to change to a compatible version.`,
+      `  See: ${terminalLink(
+        'How to - Use nvm',
+        'https://cedarjs.com/docs/how-to/using-nvm',
+        {
+          fallback: () =>
+            'How to - Use nvm https://cedarjs.com/docs/how-to/using-nvm',
+        },
+      )}`,
+      `  See: ${terminalLink(
+        'Tutorial - Prerequisites',
+        'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
+        {
+          fallback: () =>
+            'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
+        },
+      )}`,
+    ].join('\n'),
+  )
+
+  // Try catch for handling if the user cancels the prompt.
+  try {
+    const response = await tui.prompt<{ 'override-engine-error': string }>({
+      type: 'select',
+      name: 'override-engine-error',
+      message: 'How would you like to proceed?',
+      choices: ['Override error and continue install', 'Quit install'],
+      initial: 0,
+    })
+    if (response['override-engine-error'] === 'Quit install') {
+      recordErrorViaTelemetry('User quit after engine check error')
       await shutdownTelemetry()
-      process.exit(1)
+      process.exit(0)
     }
+  } catch {
+    recordErrorViaTelemetry('User cancelled install at engine check error')
+    await shutdownTelemetry()
+    process.exit(1)
   }
 }
 
-/**
- * This type has to be updated if the engines field in the create cedar app
- * template package.json is updated.
- * @returns [boolean, Record<'node' | 'yarn', any>]
- */
-function checkNodeVersion(templateDir) {
-  return new Promise((resolve) => {
-    const { engines } = JSON.parse(
-      fs.readFileSync(path.join(templateDir, 'package.json'), 'utf-8'),
-    )
+function checkNodeVersion(templateDir: string) {
+  const templatePackageJson = JSON.parse(
+    fs.readFileSync(path.join(templateDir, 'package.json'), 'utf-8'),
+  )
 
-    checkNodeVersionCb(engines, (_error, result) => {
-      return resolve([result.isSatisfied, result.versions])
-    })
-  })
+  const nodeRange = templatePackageJson?.engines?.node
+
+  if (typeof nodeRange !== 'string') {
+    throw new Error('Invalid node engine version range in package.json')
+  }
+
+  const isSatisfied = semver.satisfies(process.version, nodeRange)
+  return { isSatisfied, nodeRange }
 }
 
 async function createProjectFiles(
-  appDir,
-  { templateDir, overwrite, packageManager },
+  appDir: string,
+  {
+    templateDir,
+    overwrite,
+    packageManager,
+  }: {
+    templateDir: string
+    overwrite: boolean
+    packageManager: PackageManager
+  },
 ) {
   let newAppDir = appDir
 
@@ -286,22 +259,20 @@ async function createProjectFiles(
   return newAppDir
 }
 
-/**
- * Recursively replace placeholders in template files.
- * @param {string} dir
- * @param {PackageManager} packageManager
- */
-async function replacePlaceholders(dir, packageManager) {
+async function replacePlaceholders(
+  dir: string,
+  packageManager: PackageManager,
+) {
   const installCommand = getInstallCommand(packageManager)
   const cedarCommand = getCedarCommandPrefix(packageManager)
 
-  const replacements = {
+  const replacements: Record<string, string> = {
     '{{PM}}': packageManager,
     '{{PM_INSTALL}}': installCommand,
     '{{CEDAR_CLI}}': cedarCommand,
   }
 
-  async function walk(dir) {
+  async function walk(dir: string) {
     const entries = await fs.promises.readdir(dir, { withFileTypes: true })
 
     for (const entry of entries) {
@@ -330,7 +301,10 @@ async function replacePlaceholders(dir, packageManager) {
   await walk(dir)
 }
 
-async function installNodeModules(newAppDir, packageManager) {
+async function installNodeModules(
+  newAppDir: string,
+  packageManager: PackageManager,
+) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
     header: `Installing node modules with ${packageManager}`,
@@ -361,7 +335,7 @@ async function installNodeModules(newAppDir, packageManager) {
           `'${installCommand}'`,
         )}. Please see below for the full error message.`,
         '',
-        error,
+        String(error),
       ].join('\n'),
     )
     recordErrorViaTelemetry(error)
@@ -382,7 +356,10 @@ async function installNodeModules(newAppDir, packageManager) {
   tui.stopReactive()
 }
 
-async function generateTypes(newAppDir, packageManager) {
+async function generateTypes(
+  newAppDir: string,
+  packageManager: PackageManager,
+) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
     content: 'Generating types',
@@ -409,7 +386,7 @@ async function generateTypes(newAppDir, packageManager) {
           `'${cedarCommand} rw-gen'`,
         )}. Please see below for the full error message.`,
         '',
-        error,
+        String(error),
       ].join('\n'),
     )
     recordErrorViaTelemetry(error)
@@ -426,7 +403,7 @@ async function generateTypes(newAppDir, packageManager) {
   tui.stopReactive()
 }
 
-async function initializeGit(newAppDir, commitMessage) {
+async function initializeGit(newAppDir: string, commitMessage: string) {
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
     content: 'Initializing a git repo',
@@ -452,7 +429,7 @@ async function initializeGit(newAppDir, commitMessage) {
           `git init && git add . && git commit -m "${commitMessage}"`,
         )}. Please see below for the full error message.`,
         '',
-        error,
+        String(error),
       ].join('\n'),
     )
     recordErrorViaTelemetry(error)
@@ -471,7 +448,7 @@ async function initializeGit(newAppDir, commitMessage) {
   tui.stopReactive()
 }
 
-async function handleTargetDirPreference(targetDir) {
+async function handleTargetDirPreference(targetDir: string) {
   if (targetDir) {
     const targetDirText =
       targetDir === '.' ? 'the current directory' : targetDir
@@ -486,7 +463,7 @@ async function handleTargetDirPreference(targetDir) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ targetDir: string }>({
       type: 'input',
       name: 'targetDir',
       message: 'Where would you like to create your CedarJS app?',
@@ -513,7 +490,7 @@ async function handleTargetDirPreference(targetDir) {
   }
 }
 
-async function handleTypescriptPreference(typescriptFlag) {
+async function handleTypescriptPreference(typescriptFlag: boolean | null) {
   // Handle case where flag is set
   if (typescriptFlag !== null) {
     tui.drawText(
@@ -526,22 +503,26 @@ async function handleTypescriptPreference(typescriptFlag) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ language: string }>({
       type: 'Select',
       name: 'language',
       choices: ['TypeScript', 'JavaScript'],
       message: 'Select your preferred language',
       initial: 'TypeScript',
-    })
+      // Have to type cast here because the type of the `choices` property is
+      // not inferred correctly. I could (should) fix this by updating the type
+      // definition for `tui.prompt`, but I want to get rid of RwTUI, so I'm not
+      // going to spend time on fixing the types now.
+    } as Parameters<typeof tui.prompt>[0])
     return response.language === 'TypeScript'
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry('User cancelled install at language prompt')
     await shutdownTelemetry()
     process.exit(1)
   }
 }
 
-async function handleEsmPreference(esmFlag) {
+async function handleEsmPreference(esmFlag: boolean | null) {
   // Handle case where flag is set
   if (esmFlag !== null) {
     tui.drawText(
@@ -571,7 +552,7 @@ async function handleEsmPreference(esmFlag) {
   // }
 }
 
-async function handleGitPreference(gitInitFlag) {
+async function handleGitPreference(gitInitFlag: boolean | null) {
   // Handle case where flag is set
   if (gitInitFlag !== null) {
     tui.drawText(
@@ -584,7 +565,7 @@ async function handleGitPreference(gitInitFlag) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ git: boolean }>({
       type: 'Toggle',
       name: 'git',
       message: 'Do you want to initialize a git repo?',
@@ -593,7 +574,7 @@ async function handleGitPreference(gitInitFlag) {
       initial: 'Yes',
     })
     return response.git
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry('User cancelled install at git prompt')
     await shutdownTelemetry()
     process.exit(1)
@@ -601,8 +582,11 @@ async function handleGitPreference(gitInitFlag) {
 }
 
 async function doesDirectoryAlreadyExist(
-  appDir,
-  { overwrite, suppressWarning },
+  appDir: string,
+  {
+    overwrite,
+    suppressWarning,
+  }: { overwrite: boolean; suppressWarning?: boolean },
 ) {
   let newAppDir = appDir
 
@@ -621,7 +605,9 @@ async function doesDirectoryAlreadyExist(
       }
 
       try {
-        const response = await tui.prompt({
+        const response = await tui.prompt<{
+          projectDirectoryAlreadyExists: string
+        }>({
           type: 'select',
           name: 'projectDirectoryAlreadyExists',
           message: 'How would you like to proceed?',
@@ -677,7 +663,7 @@ async function doesDirectoryAlreadyExist(
           process.exit(1)
         }
         // overwrite the existing files
-      } catch (_error) {
+      } catch {
         recordErrorViaTelemetry(
           `User cancelled install after directory already exists error`,
         )
@@ -692,14 +678,14 @@ async function doesDirectoryAlreadyExist(
 
 async function handleNewDirectoryNamePreference() {
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ targetDirectoryInput: string }>({
       type: 'input',
       name: 'targetDirectoryInput',
       message: 'What directory would you like to create the app in?',
       initial: 'my-cedar-app',
     })
     return response.targetDirectoryInput
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry(
       'User cancelled install at specify a different directory prompt',
     )
@@ -708,10 +694,7 @@ async function handleNewDirectoryNamePreference() {
   }
 }
 
-/**
- * @param {string?} commitMessageFlag
- */
-async function handleCommitMessagePreference(commitMessageFlag) {
+async function handleCommitMessagePreference(commitMessageFlag: string | null) {
   // Handle case where flag is set
   if (commitMessageFlag !== null) {
     return commitMessageFlag
@@ -719,25 +702,24 @@ async function handleCommitMessagePreference(commitMessageFlag) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ commitMessage: string }>({
       type: 'input',
       name: 'commitMessage',
       message: 'Enter a commit message',
       initial: INITIAL_COMMIT_MESSAGE,
     })
     return response.commitMessage
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry('User cancelled install at commit message prompt')
     await shutdownTelemetry()
     process.exit(1)
   }
 }
 
-/**
- * @param {boolean?} installFlag
- * @param {PackageManager} packageManager
- */
-async function handleInstallPreference(installFlag, packageManager) {
+async function handleInstallPreference(
+  installFlag: boolean | null,
+  packageManager: PackageManager,
+) {
   // Handle case where flag is set
   if (installFlag !== null) {
     tui.drawText(
@@ -750,7 +732,7 @@ async function handleInstallPreference(installFlag, packageManager) {
 
   // Prompt user for preference
   try {
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ install: boolean }>({
       type: 'Toggle',
       name: 'install',
       message: `Do you want to run ${packageManager} install?`,
@@ -759,38 +741,36 @@ async function handleInstallPreference(installFlag, packageManager) {
       initial: 'Yes',
     })
     return response.install
-  } catch (_error) {
+  } catch {
     recordErrorViaTelemetry('User cancelled install at install prompt')
     await shutdownTelemetry()
     process.exit(1)
   }
 }
 
-/**
- * @param {PackageManager} packageManagerFlag
- * @returns {Promise<PackageManager>}
- */
-async function handlePackageManagerPreference(packageManagerFlag) {
+async function handlePackageManagerPreference(
+  packageManagerFlag: string | null,
+): Promise<PackageManager> {
   // Handle case where flag is set
   if (packageManagerFlag) {
     tui.drawText(
       `${RedwoodStyling.green('✔')} Using ${packageManagerFlag} based on command line flag`,
     )
-    return packageManagerFlag
+    return packageManagerFlag as PackageManager
   }
 
   // Prompt user for preference
   try {
     const detectedPm = detectPackageManagerFromEnv()
-    const response = await tui.prompt({
+    const response = await tui.prompt<{ packageManager: string }>({
       type: 'Select',
       name: 'packageManager',
       choices: ['yarn', 'npm', 'pnpm'],
       message: 'Select your preferred package manager',
       initial: detectedPm,
-    })
-    return response.packageManager
-  } catch (_error) {
+    } as Parameters<typeof tui.prompt>[0])
+    return response.packageManager as PackageManager
+  } catch {
     recordErrorViaTelemetry('User cancelled install at package manager prompt')
     await shutdownTelemetry()
     process.exit(1)
@@ -803,12 +783,17 @@ async function handlePackageManagerPreference(packageManagerFlag) {
  * It performs the following actions:
  *  - TODO - Add a list of what this function does
  */
-async function createRedwoodApp() {
+async function createCedarApp() {
   const cli = yargs(hideBin(process.argv))
-    .scriptName(name)
+    .scriptName(pkgJson.name)
     .usage('Usage: $0 <project directory>')
-    .example('$0 my-cedar-app')
-    .version(version)
+    .example([
+      [
+        '$0 my-cedar-app',
+        'Create a new Cedar app in the "my-cedar-app" directory',
+      ],
+    ])
+    .version(pkgJson.version)
     .option('yes', {
       alias: 'y',
       default: null,
@@ -867,7 +852,7 @@ async function createRedwoodApp() {
       describe: 'Install node modules. Skip via --no-install.',
     })
 
-  const parsedFlags = cli.parse()
+  const parsedFlags = await cli.parse()
 
   // Logo generated by https://www.asciiart.eu/text-to-ascii-art using the "DOS
   // Rebel" font
@@ -889,7 +874,7 @@ async function createRedwoodApp() {
   // Extract the args as provided by the user in the command line
   // TODO: Make all flags have the 'flag' suffix
   const args = parsedFlags._
-  const packageManagerFlag = parsedFlags['package-manager']
+  const packageManagerFlag = parsedFlags['package-manager'] as string
   const installFlag = parsedFlags.install ?? (parsedFlags.yes ? true : null)
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
   const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
@@ -945,8 +930,7 @@ async function createRedwoodApp() {
   const useGit = await handleGitPreference(gitInitFlag)
   trace.getActiveSpan()?.setAttribute('git', useGit)
 
-  /** @type {string} */
-  let commitMessage
+  let commitMessage: string | undefined
   if (useGit) {
     commitMessage = await handleCommitMessagePreference(commitMessageFlag)
   }
@@ -985,7 +969,7 @@ async function createRedwoodApp() {
 
   // Initialize git repo
   if (useGit) {
-    await initializeGit(newAppDir, commitMessage)
+    await initializeGit(newAppDir, commitMessage!)
   }
 
   const shouldPrintCdCommand = newAppDir !== process.cwd()
@@ -1036,7 +1020,7 @@ if (telemetry) {
 // Execute create redwood app within a span
 const tracer = trace.getTracer('redwoodjs')
 await tracer.startActiveSpan('create-cedar-app', async (span) => {
-  await createRedwoodApp()
+  await createCedarApp()
 
   // Span housekeeping
   span?.setStatus({ code: SpanStatusCode.OK })
