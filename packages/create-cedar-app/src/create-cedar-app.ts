@@ -197,16 +197,29 @@ function checkNodeVersion(templateDir: string) {
 
 interface CreateProjectFilesOptions {
   templateDir: string
+  templatesDir: string
   overwrite: boolean
   packageManager: PackageManager
+  useEsm: boolean
 }
 
 async function createProjectFiles(
   appDir: string,
-  { templateDir, overwrite, packageManager }: CreateProjectFilesOptions,
+  {
+    templateDir,
+    templatesDir,
+    overwrite,
+    packageManager,
+    useEsm,
+  }: CreateProjectFilesOptions,
 ) {
   let newAppDir = appDir
-  const templatePmDir = path.join(templateDir, packageManager)
+  const overlayDir = path.join(
+    templatesDir,
+    'overlays',
+    useEsm ? 'esm' : 'cjs',
+    packageManager,
+  )
 
   const tuiContent = new ReactiveTUIContent({
     mode: 'text',
@@ -229,7 +242,7 @@ async function createProjectFiles(
     recursive: true,
     force: overwrite,
   })
-  await fs.promises.cp(templatePmDir, newAppDir, {
+  await fs.promises.cp(overlayDir, newAppDir, {
     recursive: true,
     force: overwrite,
   })
@@ -955,8 +968,10 @@ async function createCedarApp() {
   // directory name
   newAppDir = await createProjectFiles(newAppDir, {
     templateDir,
+    templatesDir,
     overwrite,
     packageManager,
+    useEsm,
   })
 
   const installCommand = getInstallCommand(packageManager)
