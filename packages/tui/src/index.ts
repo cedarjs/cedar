@@ -337,21 +337,12 @@ export class RedwoodTUI {
   }
 
   /**
-   * Writes a fenced text block to the TUI output stream
+   * Writes a string to the TUI output stream
    *
-   * @param title The string to write out
+   * @param text The string to write out
    */
-  drawFencedText(color: AnsiColors, title: string, message: string) {
-    const width = Math.min(80, (this.outStream.columns || 80) - 2)
-
-    const headerText = `────  ${title}  `
-    const header =
-      headerText + '─'.repeat(Math.max(0, width - headerText.length))
-    const line = '─'.repeat(width)
-
-    this.outStream.write(
-      ansis[color](`\n${header}\n${line}\n\n  ${message}\n\n${line}`),
-    )
+  drawText(text: string) {
+    this.outStream.write(`${text}\n`)
   }
 
   // TODO: Consider a custom prompting implementation for full control of look/feel/functionality etc...
@@ -374,6 +365,24 @@ export class RedwoodTUI {
       this.startReactive()
     }
     return result
+  }
+
+  /**
+   * Writes a fenced text block to the TUI output stream
+   *
+   * @param title The string to write out
+   */
+  drawFencedText(color: AnsiColors, title: string, message: string) {
+    const width = Math.min(80, (this.outStream.columns || 80) - 2)
+
+    const headerText = `────  ${title}  `
+    const header =
+      headerText + '─'.repeat(Math.max(0, width - headerText.length))
+    const line = '─'.repeat(width)
+
+    this.outStream.write(
+      ansis[color](`\n${header}\n${line}\n\n  ${message}\n\n${line}`),
+    )
   }
 
   /**
