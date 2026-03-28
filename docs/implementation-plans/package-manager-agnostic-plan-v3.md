@@ -521,6 +521,15 @@ Generation flow in `create-cedar-app.js`:
 Rename all `yarn` references in messages/prompts/telemetry to PM-aware
 strings.
 
+**Lockfile generation:** The yarn template includes a `yarn.lock` in the
+published tarball to speed up installation for end users. `buildPack.js`
+currently generates this by running `yarn` in the template dir before
+`yarn pack`. When adding npm and pnpm templates, `buildPack.js` must also
+generate their lockfiles (`package-lock.json` via `npm install`,
+`pnpm-lock.yaml` via `pnpm install`) in the respective template dirs. The
+`node_modules` dirs created during install must be cleaned up afterward
+(they are not needed for the tarball and slow down template copying).
+
 **Shippable value:** `create-cedar-app --pm npm` scaffolds a working Cedar
 project configured for npm. All subsequent slices can be tested by scaffolding
 with the target PM.
