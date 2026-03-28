@@ -1,9 +1,6 @@
 {
   "private": true,
-  "workspaces": [
-    "api",
-    "web"
-  ],
+  "type": "module",
   "devDependencies": {
     "@cedarjs/core": "3.1.0",
     "@cedarjs/eslint-config": "3.1.0",
@@ -13,7 +10,7 @@
   "engines": {
     "node": "=24.x"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.33.0",
   "pnpm": {
     "overrides": {
       "react-is": "19.2.3"

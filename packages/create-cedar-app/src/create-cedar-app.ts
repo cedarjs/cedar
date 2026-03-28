@@ -45,8 +45,12 @@ function getInstallCommand(pm: PackageManager) {
   return `${pm} install`
 }
 
+function getBinExecutor(pm: PackageManager) {
+  return pm === 'npm' ? 'npx' : pm
+}
+
 function getCedarCommandPrefix(pm: PackageManager) {
-  const binExecutor = pm === 'npm' ? 'npx' : pm
+  const binExecutor = getBinExecutor(pm)
 
   return `${binExecutor} cedar`
 }
@@ -355,16 +359,13 @@ async function generateTypes(
   })
   tui.startReactive(tuiContent)
 
-  const cedarCommand = getCedarCommandPrefix(packageManager)
-  const generateSubprocess = execa(`${cedarCommand} rw-gen`, {
-    shell: true,
-    cwd: newAppDir,
-  })
+  const binExec = getBinExecutor(packageManager)
+  const generateSubprocess = execa(`${binExec} rw-gen`, { cwd: newAppDir })
 
   try {
     await generateSubprocess
   } catch (error) {
-    const prettyGenCommand = RedwoodStyling.info(`'${cedarCommand} rw-gen'`)
+    const prettyGenCommand = RedwoodStyling.info(`'${binExec} rw-gen'`)
     tui.stopReactive(true)
     tui.displayError(
       "Couldn't generate types",

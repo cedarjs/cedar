@@ -23,6 +23,7 @@ import {
   getConfig,
   resolveGeneratedPrismaClient,
 } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { getTsConfigs } from '../project.js'
 
@@ -286,7 +287,9 @@ async function getPrismaClient(): Promise<{
     // No generated client exists yet — fall through to generate one.
   }
 
-  execa.sync('yarn', ['cedar', 'prisma', 'generate'])
+  const pm = getPackageManager()
+  const pmExec = pm === 'npm' ? 'npx' : pm
+  execa.sync(pmExec, ['cedar', 'prisma', 'generate'])
 
   try {
     const freshPrisma = await importGeneratedPrismaClient()
