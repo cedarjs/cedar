@@ -365,10 +365,9 @@ async function generateTypes(
   tui.startReactive(tuiContent)
 
   const binExec = getBinExecutor(packageManager)
-  const generateSubprocess = execa(`${binExec} rw-gen`, { cwd: newAppDir })
 
   try {
-    await generateSubprocess
+    await execa(binExec, ['rw-gen'], { cwd: newAppDir })
   } catch (error) {
     const prettyGenCommand = RedwoodStyling.info(`'${binExec} rw-gen'`)
     tui.stopReactive(true)
