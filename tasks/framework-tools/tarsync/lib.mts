@@ -125,12 +125,12 @@ export async function updateResolutions(projectPath: string) {
     // Filter out the root workspace.
     .filter(({ name }) => name)
     .reduce((resolutions, { name }) => {
+      // Turn a Cedar package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
+      const tgzName = `${name.replace('@', '').replaceAll('/', '-')}.tgz`
+
       return {
         ...resolutions,
-        // Turn a Cedar package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
-        [name]: `./${TARBALL_DEST_DIRNAME}/${
-          name.replace('@', '').replaceAll('/', '-') + '.tgz'
-        }`,
+        [name]: `${projectPath}/${TARBALL_DEST_DIRNAME}/${tgzName}`,
       }
     }, {})
 
