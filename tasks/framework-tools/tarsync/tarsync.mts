@@ -6,7 +6,7 @@ import {
   FRAMEWORK_PATH,
   copyTarballs,
   updateResolutions,
-  yarnInstall,
+  pmInstall,
 } from './lib.mjs'
 import { OutputManager, Stage } from './output.mjs'
 
@@ -50,7 +50,7 @@ export async function tarsync(
 
   outputManager.switchStage(Stage.YARN)
   try {
-    await yarnInstall(projectPath)
+    await pmInstall(projectPath)
   } catch (error) {
     outputManager.stop(error)
     return
