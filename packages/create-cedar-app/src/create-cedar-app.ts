@@ -277,17 +277,22 @@ async function replacePlaceholders(
     '{{CEDAR_CLI}}': cedarCommand,
   }
 
-  const pattern = '**/*.{json,md,js,ts,yml,yaml,txt}'
+  const patterns = [
+    '**/*.{json,md,js,ts,yml,yaml}',
+    '**/.*/**/*.{json,md,js,ts,yml,yaml}',
+  ]
 
-  for await (const file of fs.promises.glob(pattern, { cwd: dir })) {
-    const fullPath = path.join(dir, file)
-    let content = await fs.promises.readFile(fullPath, 'utf-8')
+  for (const pattern of patterns) {
+    for await (const file of fs.promises.glob(pattern, { cwd: dir })) {
+      const fullPath = path.join(dir, file)
+      let content = await fs.promises.readFile(fullPath, 'utf-8')
 
-    for (const [placeholder, value] of Object.entries(replacements)) {
-      content = content.replaceAll(placeholder, value)
+      for (const [placeholder, value] of Object.entries(replacements)) {
+        content = content.replaceAll(placeholder, value)
+      }
+
+      await fs.promises.writeFile(fullPath, content, 'utf-8')
     }
-
-    await fs.promises.writeFile(fullPath, content, 'utf-8')
   }
 }
 
