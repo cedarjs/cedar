@@ -1,6 +1,7 @@
 import stream from 'stream'
 
 import ansis from 'ansis'
+import type { AnsiColors } from 'ansis'
 import { prompt as enquirerPrompt } from 'enquirer'
 import { UpdateManager } from 'stdout-update'
 
@@ -336,12 +337,21 @@ export class RedwoodTUI {
   }
 
   /**
-   * Writes a string to the TUI output stream
+   * Writes a fenced text block to the TUI output stream
    *
-   * @param text The string to write out
+   * @param title The string to write out
    */
-  drawText(text: string) {
-    this.outStream.write(`${text}\n`)
+  drawFencedText(color: AnsiColors, title: string, message: string) {
+    const width = Math.min(80, (this.outStream.columns || 80) - 2)
+
+    const headerText = `────  ${title}  `
+    const header =
+      headerText + '─'.repeat(Math.max(0, width - headerText.length))
+    const line = '─'.repeat(width)
+
+    this.outStream.write(
+      ansis[color](`\n${header}\n${line}\n\n  ${message}\n\n${line}`),
+    )
   }
 
   // TODO: Consider a custom prompting implementation for full control of look/feel/functionality etc...
@@ -373,14 +383,9 @@ export class RedwoodTUI {
    * @param message Error message
    */
   displayError(title: string, message: string) {
-    const width = Math.min(80, (this.outStream.columns || 80) - 2)
+    const headerText = `⚠ Error: ${title}`
 
-    const headerText = `────  ⚠ Error: ${title}  `
-    const header =
-      headerText + '─'.repeat(Math.max(0, width - headerText.length))
-    const line = '─'.repeat(width)
-
-    this.drawText(ansis.red(`\n${header}\n${line}\n\n  ${message}\n\n${line}`))
+    this.drawFencedText('red', headerText, message)
   }
 
   /**
@@ -390,15 +395,8 @@ export class RedwoodTUI {
    * @param message Warning message
    */
   displayWarning(title: string, message: string) {
-    const width = Math.min(80, (this.outStream.columns || 80) - 2)
+    const headerText = `⚠ Warning: ${title}`
 
-    const headerText = `────  ⚠ Warning: ${title}  `
-    const header =
-      headerText + '─'.repeat(Math.max(0, width - headerText.length))
-    const line = '─'.repeat(width)
-
-    this.drawText(
-      ansis.yellow(`\n${header}\n${line}\n\n  ${message}\n\n${line}`),
-    )
+    this.drawFencedText('yellow', headerText, message)
   }
 }
