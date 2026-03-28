@@ -1,7 +1,7 @@
 import stream from 'stream'
 
 import ansis from 'ansis'
-import boxen from 'boxen'
+import type { AnsiColors } from 'ansis'
 import { prompt as enquirerPrompt } from 'enquirer'
 import { UpdateManager } from 'stdout-update'
 
@@ -35,7 +35,6 @@ export class ReactiveTUIContent {
     enabled: boolean
     characters: string[]
   }
-  private boxen: boxen.Options
   private frameInterval: number
 
   // TODO: Implement a progress bar
@@ -50,7 +49,6 @@ export class ReactiveTUIContent {
       enabled?: boolean
       characters?: string[]
     }
-    boxen?: boxen.Options
     outStream?: stream.Readable
     frameInterval?: number
   }) {
@@ -77,7 +75,6 @@ export class ReactiveTUIContent {
     }
 
     this.spinner = { ...defaultSpinner, ...options.spinner }
-    this.boxen = { ...options.boxen }
 
     // Validate frameInterval if provided
     if (options.frameInterval !== undefined) {
@@ -105,7 +102,6 @@ export class ReactiveTUIContent {
       enabled?: boolean
       characters?: string[]
     }
-    boxen?: boxen.Options
     outStream?: stream.Readable
     frameInterval?: number
   }) {
@@ -130,9 +126,6 @@ export class ReactiveTUIContent {
         )
       }
       this.spinner = { ...this.spinner, ...options.spinner }
-    }
-    if (options.boxen) {
-      this.boxen = { ...this.boxen, ...options.boxen }
     }
     if (options.outStream) {
       this.setOutStream(options.outStream)
@@ -375,36 +368,43 @@ export class RedwoodTUI {
   }
 
   /**
-   * Display an error message in a box
+   * Writes a fenced text block to the TUI output stream
    *
-   * @param title Error box title
-   * @param message Error message
+   * @param title The string to write out
    */
-  displayError(title: string, message: string) {
-    this.drawText(
-      boxen(message, {
-        padding: 1,
-        borderColor: 'red',
-        title: `⚠ Error: ${title}`,
-        titleAlignment: 'left',
-      }),
+  drawFencedText(color: AnsiColors, title: string, message: string) {
+    const width = Math.min(80, (this.outStream.columns || 80) - 2)
+
+    const headerText = `────  ${title}  `
+    const header = ansis[color](
+      headerText + '─'.repeat(Math.max(0, width - headerText.length)),
     )
+    const line = ansis[color]('─'.repeat(width))
+
+    this.outStream.write(`\n${header}\n${line}\n\n  ${message}\n\n${line}\n`)
   }
 
   /**
-   * Display a warning message in a box
+   * Display an error message with a red header and footer
    *
-   * @param title Error box title
+   * @param title Error title
    * @param message Error message
    */
+  displayError(title: string, message: string) {
+    const headerText = `⚠ Error: ${title}`
+
+    this.drawFencedText('red', headerText, message)
+  }
+
+  /**
+   * Display a warning message with a yellow header and footer
+   *
+   * @param title Warning title
+   * @param message Warning message
+   */
   displayWarning(title: string, message: string) {
-    this.drawText(
-      boxen(message, {
-        padding: 1,
-        borderColor: 'yellow',
-        title: `⚠ Warning: ${title}`,
-        titleAlignment: 'left',
-      }),
-    )
+    const headerText = `⚠ Warning: ${title}`
+
+    this.drawFencedText('yellow', headerText, message)
   }
 }
