@@ -146,9 +146,13 @@ export async function updateResolutions(projectPath: string) {
     const parsed = JSON.parse(rawList)
     // pnpm list -r --json returns an array, but may be nested; flatten and
     // extract name/path pairs, filtering out the root package.
-    packages = (Array.isArray(parsed) ? parsed : [parsed]).flatMap(
-      flattenPnpmList,
-    )
+    packages = (Array.isArray(parsed) ? parsed : [parsed]).flatMap((entry) => {
+      if (typeof entry.name === 'string' && entry.name) {
+        return [{ name: entry.name }]
+      }
+
+      return []
+    })
   } else {
     packages = rawList
       .split('\n')
@@ -210,26 +214,6 @@ export async function updateResolutions(projectPath: string) {
   )
 }
 
-/**
- * Flatten the (potentially nested) output of `pnpm list -r --json` into a
- * simple array of `{ name }` objects.
- */
-function flattenPnpmList(entry: Record<string, unknown>) {
-  const result: { name: string }[] = []
-
-  if (typeof entry.name === 'string' && entry.name) {
-    result.push({ name: entry.name })
-  }
-
-  if (Array.isArray(entry.dependencies)) {
-    for (const dep of entry.dependencies) {
-      result.push(...flattenPnpmList(dep))
-    }
-  }
-
-  return result
-}
-
 export async function getReactResolutions() {
   const packageConfig = JSON.parse(
     await fs.promises.readFile(
@@ -253,9 +237,11 @@ export async function getReactResolutions() {
   }
 }
 
-export async function yarnInstall(projectPath: string) {
+export async function pmInstall(projectPath: string) {
+  const packageManager = await detectPackageManager(projectPath)
+
   await within(async () => {
     cd(projectPath)
-    await $`yarn install`
+    await $`${packageManager} install`
   })
 }
