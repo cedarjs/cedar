@@ -13,7 +13,7 @@ cd $projectPath
 
 set projectDirectory "cedar-app-prompt-node-greater-test"
 
-spawn yarn create-cedar-app --no-install --pm yarn
+spawn yarn create-cedar-app --no-install
 
 expect "How would you like to proceed?"
 # ❯ Override error and continue install

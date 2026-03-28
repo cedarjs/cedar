@@ -14,7 +14,7 @@ set projectDirectory "redwood-app-prompt-overwrite-test"
 exec mkdir $projectDirectory
 exec touch $projectDirectory/README.md
 
-spawn yarn create-cedar-app --no-install --pm yarn
+spawn yarn create-cedar-app --no-install
 
 expect "Where would you like to create your CedarJS app?"
 send "$projectDirectory\n"
