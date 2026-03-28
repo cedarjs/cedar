@@ -376,13 +376,12 @@ export class RedwoodTUI {
     const width = Math.min(80, (this.outStream.columns || 80) - 2)
 
     const headerText = `────  ${title}  `
-    const header =
-      headerText + '─'.repeat(Math.max(0, width - headerText.length))
-    const line = '─'.repeat(width)
-
-    this.outStream.write(
-      ansis[color](`\n${header}\n${line}\n\n  ${message}\n\n${line}`),
+    const header = ansis[color](
+      headerText + '─'.repeat(Math.max(0, width - headerText.length)),
     )
+    const line = ansis[color]('─'.repeat(width))
+
+    this.outStream.write(`\n${header}\n${line}\n\n  ${message}\n\n${line}\n`)
   }
 
   /**
