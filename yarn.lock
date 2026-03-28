@@ -3709,7 +3709,6 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     ansis: "npm:4.2.0"
-    boxen: "npm:5.1.2"
     enquirer: "npm:2.4.1"
     stdout-update: "npm:1.6.8"
     tsx: "npm:4.21.0"
