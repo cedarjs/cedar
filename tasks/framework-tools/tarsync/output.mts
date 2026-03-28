@@ -2,14 +2,20 @@ import ansis from 'ansis'
 import { ProcessOutput } from 'zx'
 
 import { FRAMEWORK_PATH } from './lib.mjs'
+import type { PackageManager } from './lib.mjs'
 
 export enum Stage {
   NONE = 0,
   BUILD_PACK = 1,
   MOVE = 2,
   RESOLUTIONS = 3,
-  YARN = 4,
+  INSTALL = 4,
   DONE = 5,
+}
+
+interface ConstructorArgs {
+  disabled: boolean
+  packageManager: PackageManager
 }
 
 export class OutputManager {
@@ -22,10 +28,11 @@ export class OutputManager {
   timings: Map<Stage, string>
   running: boolean
   disabled: boolean
+  packageManager: PackageManager
   previousLines: string[]
   blinker: string
 
-  constructor({ disabled }: { disabled: boolean }) {
+  constructor({ disabled, packageManager }: ConstructorArgs) {
     this.stage = Stage.NONE
     this.triggeredAt = new Date()
     this.triggeredBy = 'Unknown'
@@ -36,6 +43,7 @@ export class OutputManager {
     this.blinker = '-'
 
     this.disabled = disabled
+    this.packageManager = packageManager
   }
 
   start({ triggeredBy }: { triggeredBy: string }) {
@@ -131,9 +139,9 @@ export class OutputManager {
         this.getSuffix(Stage.RESOLUTIONS),
     )
     lines.push(
-      this.getPrefix(Stage.YARN) +
-        ' Running yarn install' +
-        this.getSuffix(Stage.YARN),
+      this.getPrefix(Stage.INSTALL) +
+        ` Running ${this.packageManager} install` +
+        this.getSuffix(Stage.INSTALL),
     )
 
     if (this.stage === Stage.DONE) {

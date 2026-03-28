@@ -117,42 +117,82 @@ export async function copyTarballs(projectPath: string) {
   )
 }
 
+export type PackageManager = 'yarn' | 'pnpm'
+
+export async function detectPackageManager(projectPath: string) {
+  const yarnLockExists = fs.existsSync(path.join(projectPath, 'yarn.lock'))
+  const pnpmLockExists = fs.existsSync(path.join(projectPath, 'pnpm-lock.yaml'))
+
+  if (pnpmLockExists && !yarnLockExists) {
+    return 'pnpm'
+  }
+
+  return 'yarn'
+}
+
 export async function updateResolutions(projectPath: string) {
-  const resolutions = (await $`yarn workspaces list --json`).stdout
-    .trim()
+  const packageManager = await detectPackageManager(projectPath)
+
+  // Always use yarn to list Cedar framework packages. The monorepo is a yarn
+  // workspace regardless of what package manager the user project uses.
+  const rawList = (await $`yarn workspaces list --json`).stdout.trim()
+
+  const workspaces = rawList
     .split('\n')
     .map((line) => JSON.parse(line))
     // Filter out the root workspace.
     .filter(({ name }) => name)
-    .reduce((resolutions, { name }) => {
+
+  const resolutions = workspaces.reduce<Record<string, string>>(
+    (acc, { name }) => {
       // Turn a Cedar package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
       const tgzName = `${name.replace('@', '').replaceAll('/', '-')}.tgz`
 
       return {
-        ...resolutions,
+        ...acc,
         [name]: `${projectPath}/${TARBALL_DEST_DIRNAME}/${tgzName}`,
       }
-    }, {})
+    },
+    {},
+  )
 
   const projectPackageJsonPath = path.join(projectPath, 'package.json')
   const projectPackageJson = JSON.parse(
     await fs.promises.readFile(projectPackageJsonPath, 'utf-8'),
   )
 
-  await fs.promises.writeFile(
-    projectPackageJsonPath,
-    JSON.stringify(
-      {
-        ...projectPackageJson,
-        resolutions: {
-          ...projectPackageJson.resolutions,
+  const reactResolutions = await getReactResolutions()
+
+  let updatedPackageJson: Record<string, unknown>
+
+  if (packageManager === 'pnpm') {
+    const existingOverrides = projectPackageJson.pnpm?.overrides ?? {}
+
+    updatedPackageJson = {
+      ...projectPackageJson,
+      pnpm: {
+        ...projectPackageJson.pnpm,
+        overrides: {
+          ...existingOverrides,
           ...resolutions,
-          ...(await getReactResolutions()),
+          ...reactResolutions,
         },
       },
-      null,
-      2,
-    ),
+    }
+  } else {
+    updatedPackageJson = {
+      ...projectPackageJson,
+      resolutions: {
+        ...projectPackageJson.resolutions,
+        ...resolutions,
+        ...reactResolutions,
+      },
+    }
+  }
+
+  await fs.promises.writeFile(
+    projectPackageJsonPath,
+    JSON.stringify(updatedPackageJson, null, 2),
   )
 }
 
@@ -179,9 +219,11 @@ export async function getReactResolutions() {
   }
 }
 
-export async function yarnInstall(projectPath: string) {
+export async function pmInstall(projectPath: string) {
+  const packageManager = await detectPackageManager(projectPath)
+
   await within(async () => {
     cd(projectPath)
-    await $`yarn install`
+    await $`${packageManager} install`
   })
 }
