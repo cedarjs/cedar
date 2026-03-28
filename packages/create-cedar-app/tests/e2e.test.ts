@@ -31,27 +31,22 @@ describe('create-cedar-app', () => {
       "Usage: create-cedar-app <project directory>
 
       Options:
-            --help                   Show help                               [boolean]
-            --version                Show version number                     [boolean]
-        -y, --yes                    Skip prompts and use defaults
-                                                             [boolean] [default: null]
-            --node-check             Check if the installed version of Node is
-                                     supported               [boolean] [default: true]
-            --overwrite              Create even if target directory isn't empty
-                                                            [boolean] [default: false]
-            --typescript, --ts       Generate a TypeScript project
-                                                             [boolean] [default: null]
-            --git-init, --git        Initialize a git repository
-                                                             [boolean] [default: null]
-        -m, --commit-message         Commit message for the initial commit
-                                                              [string] [default: null]
-            --telemetry              Enables sending telemetry events for this create
-                                     command and all Cedar CLI commands
-                                     https://telemetry.redwoodjs.com
+            --help              Show help                                    [boolean]
+            --version           Show version number                          [boolean]
+        -y, --yes               Skip prompts and use defaults[boolean] [default: null]
+            --node-check        Check if the installed version of Node is supported
                                                              [boolean] [default: true]
-            --package-manager, --pm  Package manager to use (yarn, npm, pnpm)
+            --overwrite         Create even if target directory isn't empty
+                                                            [boolean] [default: false]
+            --typescript, --ts  Generate a TypeScript project[boolean] [default: null]
+            --git-init, --git   Initialize a git repository  [boolean] [default: null]
+        -m, --commit-message    Commit message for the initial commit
                                                               [string] [default: null]
-            --install                Install node modules. Skip via --no-install.
+            --telemetry         Enables sending telemetry events for this create
+                                command and all Cedar CLI commands
+                                https://telemetry.redwoodjs.com
+                                                             [boolean] [default: true]
+            --yarn-install      Install node modules. Skip via --no-yarn-install.
                                                              [boolean] [default: null]
 
       Examples:
@@ -74,7 +69,7 @@ describe('create-cedar-app', () => {
     // Running `yarn install` in Jest test times out and the subsequent step,
     // generating types, is also flakey since `yarn pack` seems to skip
     // `.yarnrc.yml` which is necessary for configuring a proper install.
-    const p = await $`yarn create-cedar-app ./cedar-app --no-install --yes`
+    const p = await $`yarn create-cedar-app ./cedar-app --no-yarn-install --yes`
     const snapshotPath = path.join(SNAPSHOT_DIR, 'create-cedar-app.out')
     const expected = await fs.readFile(snapshotPath, 'utf8')
 
