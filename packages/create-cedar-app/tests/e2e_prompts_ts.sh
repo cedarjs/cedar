@@ -11,10 +11,15 @@ cd $projectPath
 
 set projectDirectory "redwood-app-prompt-ts-test"
 
-spawn yarn create-cedar-app --no-yarn-install --ts
+spawn yarn create-cedar-app --no-install --ts
 
 expect "Where would you like to create your CedarJS app?"
 send "$projectDirectory\n"
+
+# TODO: Re-enable this once --pm flag is no longer hidden
+# expect "Select your preferred package manager"
+# # ❯ yarn
+# send "\n"
 
 expect "Do you want to initialize a git repo?"
 # ❯ Yes

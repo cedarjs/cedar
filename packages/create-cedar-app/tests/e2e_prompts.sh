@@ -9,8 +9,10 @@ if {$projectPath eq ""} {
 
 cd $projectPath
 
-set projectDirectory "redwood-app-prompt-test"
+set projectDirectory "cedar-app-prompt-test"
 
+# Testing --no-yarn-install here to make sure we're not regressing on that flag
+# until we're ready to remove it and rely on --no-install only
 spawn yarn create-cedar-app --no-yarn-install
 
 expect "Where would you like to create your CedarJS app?"
@@ -19,6 +21,11 @@ send "$projectDirectory\n"
 expect "Select your preferred language"
 # ❯ TypeScript
 send "\n"
+
+# TODO: Re-enable this once --pm flag is no longer hidden
+# expect "Select your preferred package manager"
+# # ❯ yarn
+# send "\n"
 
 expect "Do you want to initialize a git repo?"
 # ❯ Yes

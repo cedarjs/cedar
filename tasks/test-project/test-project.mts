@@ -120,7 +120,7 @@ const createProject = async () => {
   // We create a ts project and convert using ts-to-js at the end if typescript flag is false
   return execa(
     cmd,
-    ['--no-yarn-install', '--typescript', '--overwrite', '--no-git'],
+    ['--no-install', '--pm', 'yarn', '--typescript', '--overwrite', '--no-git'],
     getExecaOptions(CEDAR_FRAMEWORK_PATH),
   )
 }

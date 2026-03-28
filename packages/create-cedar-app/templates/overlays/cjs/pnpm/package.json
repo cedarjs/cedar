@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@cedarjs/core": "3.1.0",
+    "@cedarjs/eslint-config": "3.1.0",
+    "@cedarjs/project-config": "3.1.0",
+    "@cedarjs/testing": "3.1.0"
+  },
+  "engines": {
+    "node": "=24.x"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "overrides": {
+      "react-is": "19.2.3"
+    }
+  }
+}
