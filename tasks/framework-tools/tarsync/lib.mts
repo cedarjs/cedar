@@ -133,33 +133,15 @@ export async function detectPackageManager(projectPath: string) {
 export async function updateResolutions(projectPath: string) {
   const packageManager = await detectPackageManager(projectPath)
 
-  const workspaceListCmd =
-    packageManager === 'pnpm'
-      ? $`pnpm list -r --json --depth=-1`
-      : $`yarn workspaces list --json`
+  // Always use yarn to list Cedar framework packages. The monorepo is a yarn
+  // workspace regardless of what package manager the user project uses.
+  const rawList = (await $`yarn workspaces list --json`).stdout.trim()
 
-  const rawList = (await workspaceListCmd).stdout.trim()
-
-  let packages: { name: string }[]
-
-  if (packageManager === 'pnpm') {
-    const parsed = JSON.parse(rawList)
-    // pnpm list -r --json returns an array, but may be nested; flatten and
-    // extract name/path pairs, filtering out the root package.
-    packages = (Array.isArray(parsed) ? parsed : [parsed]).flatMap((entry) => {
-      if (typeof entry.name === 'string' && entry.name) {
-        return [{ name: entry.name }]
-      }
-
-      return []
-    })
-  } else {
-    packages = rawList
-      .split('\n')
-      .map((line) => JSON.parse(line))
-      // Filter out the root workspace.
-      .filter(({ name }: { name?: string }) => name)
-  }
+  const packages = rawList
+    .split('\n')
+    .map((line) => JSON.parse(line))
+    // Filter out the root workspace.
+    .filter(({ name }) => name)
 
   const resolutions = packages.reduce<Record<string, string>>(
     (acc, { name }) => {
