@@ -23,9 +23,10 @@ expect "Select your preferred language"
 # ❯ TypeScript
 send "\n"
 
-expect "Select your preferred package manager"
-# ❯ yarn
-send "\n"
+# TODO: Re-enable this once --pm flag is no longer hidden
+# expect "Select your preferred package manager"
+# # ❯ yarn
+# send "\n"
 
 expect "Do you want to initialize a git repo?"
 # ❯ Yes

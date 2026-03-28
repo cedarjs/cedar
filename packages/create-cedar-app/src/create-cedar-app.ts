@@ -739,15 +739,15 @@ async function handleInstallPreference(
   }
 }
 
-function isPackageManager(value: string): value is PackageManager {
-  return ['yarn', 'npm', 'pnpm'].includes(value)
+function isPackageManager(value: string | null): value is PackageManager {
+  return ['yarn', 'npm', 'pnpm'].includes(value ?? '')
 }
 
 async function handlePackageManagerPreference(
-  packageManagerFlag: string | null | undefined,
-): Promise<PackageManager> {
+  packageManagerFlag: string | null,
+) {
   // Handle case where flag is set
-  if (packageManagerFlag && isPackageManager(packageManagerFlag)) {
+  if (isPackageManager(packageManagerFlag)) {
     tui.drawText(
       `${RedwoodStyling.green('✔')} Using ${packageManagerFlag} based on command line flag`,
     )
@@ -838,6 +838,7 @@ async function createCedarApp() {
     .option('package-manager', {
       alias: 'pm',
       default: null,
+      hidden: true,
       type: 'string',
       describe: 'Package manager to use (yarn, npm, pnpm)',
     })
@@ -872,7 +873,8 @@ async function createCedarApp() {
   // TODO: Make all flags have the 'flag' suffix
   const args = parsedFlags._
   const packageManagerFlag =
-    parsedFlags['package-manager'] ?? (parsedFlags.yes ? detectedPm : null)
+    parsedFlags['package-manager'] ??
+    (parsedFlags.yes ? (detectedPm ?? 'yarn') : null)
   const installFlag = parsedFlags.install ?? (parsedFlags.yes ? true : null)
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
   const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
@@ -911,8 +913,11 @@ async function createCedarApp() {
   trace.getActiveSpan()?.setAttribute('esm', useEsm)
 
   // Determine package manager preference
-  const packageManager =
-    await handlePackageManagerPreference(packageManagerFlag)
+  const packageManager = await handlePackageManagerPreference(
+    // TODO: Remove `|| 'yarn'` once we're ready to remove `hidden: true` from
+    // the flag
+    packageManagerFlag || 'yarn',
+  )
   trace.getActiveSpan()?.setAttribute('package-manager', packageManager)
 
   const templateDir = path.join(

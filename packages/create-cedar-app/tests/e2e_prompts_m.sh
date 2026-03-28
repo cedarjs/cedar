@@ -11,7 +11,7 @@ cd $projectPath
 
 set projectDirectory "cedar-app-prompt-m-test"
 
-spawn yarn create-cedar-app --no-install --pm yarn -m "first"
+spawn yarn create-cedar-app --no-install -m "first"
 
 expect "Where would you like to create your CedarJS app?"
 send "$projectDirectory\n"
@@ -19,6 +19,11 @@ send "$projectDirectory\n"
 expect "Select your preferred language"
 # ❯ TypeScript
 send "\n"
+
+# TODO: Re-enable this once --pm flag is no longer hidden
+# expect "Select your preferred package manager"
+# # ❯ yarn
+# send "\n"
 
 expect "Do you want to initialize a git repo?"
 # ❯ Yes

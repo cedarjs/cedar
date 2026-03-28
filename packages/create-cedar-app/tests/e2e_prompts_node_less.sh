@@ -13,7 +13,12 @@ cd $projectPath
 
 set projectDirectory "redwood-app-prompt-node-less-test"
 
-spawn yarn create-cedar-app --no-install --pm yarn
+spawn yarn create-cedar-app --no-install
+
+# TODO: Re-enable this once --pm flag is no longer hidden
+# expect "Select your preferred package manager"
+# # ❯ yarn
+# send "\n"
 
 expect eof
 catch wait result
