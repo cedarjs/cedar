@@ -3,6 +3,7 @@ import { $, cd } from 'zx'
 import type { Options } from './lib.mjs'
 import {
   buildTarballs,
+  detectPackageManager,
   FRAMEWORK_PATH,
   copyTarballs,
   updateResolutions,
@@ -18,7 +19,11 @@ export async function tarsync(
   const verboseOutput = verbose || !isTTY
   $.verbose = verboseOutput
 
-  const outputManager = new OutputManager({ disabled: verboseOutput })
+  const packageManager = await detectPackageManager(projectPath)
+  const outputManager = new OutputManager({
+    disabled: verboseOutput,
+    packageManager,
+  })
 
   outputManager.start({ triggeredBy })
 
@@ -48,7 +53,7 @@ export async function tarsync(
     return
   }
 
-  outputManager.switchStage(Stage.YARN)
+  outputManager.switchStage(Stage.INSTALL)
   try {
     await pmInstall(projectPath)
   } catch (error) {
