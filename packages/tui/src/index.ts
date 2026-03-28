@@ -374,10 +374,13 @@ export class RedwoodTUI {
    */
   displayError(title: string, message: string) {
     const width = Math.min(80, (this.outStream.columns || 80) - 2)
+
     const headerText = `────  ⚠ Error: ${title}  `
-    const header = ansis.red(headerText + '─'.repeat(width - headerText.length))
-    const line = ansis.red('─'.repeat(width))
-    this.drawText(`\n${header}\n${line}\n\n  ${message}\n\n${line}`)
+    const header =
+      headerText + '─'.repeat(Math.max(0, width - headerText.length))
+    const line = '─'.repeat(width)
+
+    this.drawText(ansis.red(`\n${header}\n${line}\n\n  ${message}\n\n${line}`))
   }
 
   /**
@@ -388,11 +391,14 @@ export class RedwoodTUI {
    */
   displayWarning(title: string, message: string) {
     const width = Math.min(80, (this.outStream.columns || 80) - 2)
+
     const headerText = `────  ⚠ Warning: ${title}  `
-    const header = ansis.yellow(
-      headerText + '─'.repeat(width - headerText.length),
+    const header =
+      headerText + '─'.repeat(Math.max(0, width - headerText.length))
+    const line = '─'.repeat(width)
+
+    this.drawText(
+      ansis.yellow(`\n${header}\n${line}\n\n  ${message}\n\n${line}`),
     )
-    const line = ansis.yellow('─'.repeat(width))
-    this.drawText(`\n${header}\n${line}\n\n  ${message}\n\n${line}`)
   }
 }
