@@ -117,43 +117,117 @@ export async function copyTarballs(projectPath: string) {
   )
 }
 
+export type PackageManager = 'yarn' | 'pnpm'
+
+export async function detectPackageManager(projectPath: string) {
+  const yarnLockExists = fs.existsSync(path.join(projectPath, 'yarn.lock'))
+  const pnpmLockExists = fs.existsSync(path.join(projectPath, 'pnpm-lock.yaml'))
+
+  if (pnpmLockExists && !yarnLockExists) {
+    return 'pnpm'
+  }
+
+  return 'yarn'
+}
+
 export async function updateResolutions(projectPath: string) {
-  const resolutions = (await $`yarn workspaces list --json`).stdout
-    .trim()
-    .split('\n')
-    .map((line) => JSON.parse(line))
-    // Filter out the root workspace.
-    .filter(({ name }) => name)
-    .reduce((resolutions, { name }) => {
+  const packageManager = await detectPackageManager(projectPath)
+
+  const workspaceListCmd =
+    packageManager === 'pnpm'
+      ? $`pnpm list -r --json --depth=-1`
+      : $`yarn workspaces list --json`
+
+  const rawList = (await workspaceListCmd).stdout.trim()
+
+  let packages: { name: string }[]
+
+  if (packageManager === 'pnpm') {
+    const parsed = JSON.parse(rawList)
+    // pnpm list -r --json returns an array, but may be nested; flatten and
+    // extract name/path pairs, filtering out the root package.
+    packages = (Array.isArray(parsed) ? parsed : [parsed]).flatMap(
+      flattenPnpmList,
+    )
+  } else {
+    packages = rawList
+      .split('\n')
+      .map((line) => JSON.parse(line))
+      // Filter out the root workspace.
+      .filter(({ name }: { name?: string }) => name)
+  }
+
+  const resolutions = packages.reduce<Record<string, string>>(
+    (acc, { name }) => {
       // Turn a Cedar package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
       const tgzName = `${name.replace('@', '').replaceAll('/', '-')}.tgz`
 
       return {
-        ...resolutions,
+        ...acc,
         [name]: `${projectPath}/${TARBALL_DEST_DIRNAME}/${tgzName}`,
       }
-    }, {})
+    },
+    {},
+  )
 
   const projectPackageJsonPath = path.join(projectPath, 'package.json')
   const projectPackageJson = JSON.parse(
     await fs.promises.readFile(projectPackageJsonPath, 'utf-8'),
   )
 
-  await fs.promises.writeFile(
-    projectPackageJsonPath,
-    JSON.stringify(
-      {
-        ...projectPackageJson,
-        resolutions: {
-          ...projectPackageJson.resolutions,
+  const reactResolutions = await getReactResolutions()
+
+  let updatedPackageJson: Record<string, unknown>
+
+  if (packageManager === 'pnpm') {
+    const existingOverrides = projectPackageJson.pnpm?.overrides ?? {}
+
+    updatedPackageJson = {
+      ...projectPackageJson,
+      pnpm: {
+        ...projectPackageJson.pnpm,
+        overrides: {
+          ...existingOverrides,
           ...resolutions,
-          ...(await getReactResolutions()),
+          ...reactResolutions,
         },
       },
-      null,
-      2,
-    ),
+    }
+  } else {
+    updatedPackageJson = {
+      ...projectPackageJson,
+      resolutions: {
+        ...projectPackageJson.resolutions,
+        ...resolutions,
+        ...reactResolutions,
+      },
+    }
+  }
+
+  await fs.promises.writeFile(
+    projectPackageJsonPath,
+    JSON.stringify(updatedPackageJson, null, 2),
   )
+}
+
+/**
+ * Flatten the (potentially nested) output of `pnpm list -r --json` into a
+ * simple array of `{ name }` objects.
+ */
+function flattenPnpmList(entry: Record<string, unknown>) {
+  const result: { name: string }[] = []
+
+  if (typeof entry.name === 'string' && entry.name) {
+    result.push({ name: entry.name })
+  }
+
+  if (Array.isArray(entry.dependencies)) {
+    for (const dep of entry.dependencies) {
+      result.push(...flattenPnpmList(dep))
+    }
+  }
+
+  return result
 }
 
 export async function getReactResolutions() {
