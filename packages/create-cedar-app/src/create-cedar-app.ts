@@ -843,6 +843,9 @@ async function createCedarApp() {
       describe: 'Package manager to use (yarn, npm, pnpm)',
     })
     .option('install', {
+      // TODO(PM): Remove this alias at the same time as we remove
+      // `hidden: true` from the --pm flag
+      alias: 'yarn-install',
       default: null,
       type: 'boolean',
       describe: 'Install node modules. Skip via --no-install.',
@@ -914,8 +917,8 @@ async function createCedarApp() {
 
   // Determine package manager preference
   const packageManager = await handlePackageManagerPreference(
-    // TODO: Remove `|| 'yarn'` once we're ready to remove `hidden: true` from
-    // the flag
+    // TODO(PM): Remove `|| 'yarn'` once we're ready to remove `hidden: true`
+    // from the flag
     packageManagerFlag || 'yarn',
   )
   trace.getActiveSpan()?.setAttribute('package-manager', packageManager)

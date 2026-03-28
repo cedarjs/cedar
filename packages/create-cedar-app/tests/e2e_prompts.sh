@@ -11,7 +11,9 @@ cd $projectPath
 
 set projectDirectory "cedar-app-prompt-test"
 
-spawn yarn create-cedar-app --no-install
+# Testing --no-yarn-install here to make sure we're not regressing on that flag
+# until we're ready to remove it and rely on --no-install only
+spawn yarn create-cedar-app --no-yarn-install
 
 expect "Where would you like to create your CedarJS app?"
 send "$projectDirectory\n"
