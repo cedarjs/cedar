@@ -137,13 +137,13 @@ export async function updateResolutions(projectPath: string) {
   // workspace regardless of what package manager the user project uses.
   const rawList = (await $`yarn workspaces list --json`).stdout.trim()
 
-  const packages = rawList
+  const workspaces = rawList
     .split('\n')
     .map((line) => JSON.parse(line))
     // Filter out the root workspace.
     .filter(({ name }) => name)
 
-  const resolutions = packages.reduce<Record<string, string>>(
+  const resolutions = workspaces.reduce<Record<string, string>>(
     (acc, { name }) => {
       // Turn a Cedar package name like `@cedarjs/project-config` into `cedarjs-project-config.tgz`.
       const tgzName = `${name.replace('@', '').replaceAll('/', '-')}.tgz`
