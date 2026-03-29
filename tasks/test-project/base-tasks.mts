@@ -180,6 +180,49 @@ export function webTasksList() {
   return taskList
 }
 
+// This function renames migration folders so that we don't have to deal
+// with duplicates/conflicts when committing to the repo
+function normalizeMigrationFolderNames() {
+  const migrationsFolderPath = path.join(
+    getOutputPath(),
+    'api',
+    'db',
+    'migrations',
+  )
+
+  // Migration folders are folders which start with 14 digits because they
+  // have a yyyymmddhhmmss
+  const migrationFolders = fs
+    .readdirSync(migrationsFolderPath)
+    .filter((name) => {
+      return (
+        name.match(/\d{14}.+/) &&
+        fs.lstatSync(path.join(migrationsFolderPath, name)).isDirectory()
+      )
+    })
+    .sort()
+
+  const datetime = new Date('2022-01-01T12:00:00.000Z')
+
+  migrationFolders.forEach((name) => {
+    const datetimeInCorrectFormat =
+      datetime.getFullYear() +
+      ('0' + (datetime.getMonth() + 1)).slice(-2) +
+      ('0' + datetime.getDate()).slice(-2) +
+      '120000' // Time hardcoded to 12:00:00 to limit TZ issues
+
+    fs.renameSync(
+      path.join(migrationsFolderPath, name),
+      path.join(
+        migrationsFolderPath,
+        `${datetimeInCorrectFormat}${name.substring(14)}`,
+      ),
+    )
+
+    datetime.setDate(datetime.getDate() + 1)
+  })
+}
+
 export function apiTasksList({
   dbAuth,
   linkWithLatestFwBuild = false,
@@ -245,43 +288,9 @@ export function apiTasksList({
       task: () => contactTask({ esm }),
     },
     {
-      // This task renames the migration folders so that we don't have to deal
-      // with duplicates/conflicts when committing to the repo
       title: 'Adjust dates within migration folder names',
       task: () => {
-        const migrationsFolderPath = path.join(
-          getOutputPath(),
-          'api',
-          'db',
-          'migrations',
-        )
-        // Migration folders are folders which start with 14 digits because they
-        // have a yyyymmddhhmmss
-        const migrationFolders = fs
-          .readdirSync(migrationsFolderPath)
-          .filter((name) => {
-            return (
-              name.match(/\d{14}.+/) &&
-              fs.lstatSync(path.join(migrationsFolderPath, name)).isDirectory()
-            )
-          })
-          .sort()
-        const datetime = new Date('2022-01-01T12:00:00.000Z')
-        migrationFolders.forEach((name) => {
-          const datetimeInCorrectFormat =
-            datetime.getFullYear() +
-            ('0' + (datetime.getMonth() + 1)).slice(-2) +
-            ('0' + datetime.getDate()).slice(-2) +
-            '120000' // Time hardcoded to 12:00:00 to limit TZ issues
-          fs.renameSync(
-            path.join(migrationsFolderPath, name),
-            path.join(
-              migrationsFolderPath,
-              `${datetimeInCorrectFormat}${name.substring(14)}`,
-            ),
-          )
-          datetime.setDate(datetime.getDate() + 1)
-        })
+        normalizeMigrationFolderNames()
       },
     },
     {
@@ -419,6 +428,16 @@ export function apiTasksList({
 
         await setup(['realtime', '--no-examples'])
         await setup('live-queries')
+      },
+    },
+    {
+      title: 'Adjust dates within live-queries migration folder name',
+      task: () => {
+        if (!live) {
+          return
+        }
+
+        normalizeMigrationFolderNames()
       },
     },
   ]
