@@ -16,6 +16,7 @@ import { runScriptFunction } from '../lib/exec.js'
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
+import { isPgliteProject, startPglite, stopPglite } from '../lib/pglite.js'
 
 const printAvailableScriptsToConsole = () => {
   // Loop through all scripts and get their relative path
@@ -111,7 +112,19 @@ export const handler = async (args: ExecOptions) => {
     process.exit(1)
   }
 
+  const isPglite = isPgliteProject()
+
   const scriptTasks: ListrTask[] = [
+    {
+      title: 'Starting PGlite server',
+      enabled: () => isPglite,
+      task: async () => {
+        const started = await startPglite()
+        if (!started) {
+          throw new Error('Failed to start PGlite server')
+        }
+      },
+    },
     {
       title: 'Generating Prisma client',
       enabled: () => !!prisma,
@@ -136,6 +149,13 @@ export const handler = async (args: ExecOptions) => {
           console.error(c.error(`Error in script: ${message}`))
           throw error
         }
+      },
+    },
+    {
+      title: 'Stopping PGlite server',
+      enabled: () => isPglite,
+      task: async () => {
+        await stopPglite()
       },
     },
   ]

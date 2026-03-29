@@ -201,6 +201,7 @@ interface CreateProjectFilesOptions {
   overwrite: boolean
   packageManager: PackageManager
   useEsm: boolean
+  database: string | null
 }
 
 async function createProjectFiles(
@@ -211,6 +212,7 @@ async function createProjectFiles(
     overwrite,
     packageManager,
     useEsm,
+    database,
   }: CreateProjectFilesOptions,
 ) {
   let newAppDir = appDir
@@ -243,6 +245,20 @@ async function createProjectFiles(
     force: overwrite,
   })
   await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
+
+  // Apply database overlay if pglite is selected
+  if (database === 'pglite') {
+    const dbOverlayDir = path.join(
+      templatesDir,
+      '..',
+      'database-overlays',
+      'pglite',
+    )
+    await fs.promises.cp(dbOverlayDir, newAppDir, {
+      recursive: true,
+      force: true,
+    })
+  }
 
   // .gitignore is renamed here to force file inclusion during publishing
   fs.renameSync(
@@ -850,6 +866,13 @@ async function createCedarApp() {
       type: 'boolean',
       describe: 'Install node modules. Skip via --no-install.',
     })
+    .option('database', {
+      alias: 'db',
+      hidden: true,
+      default: null,
+      type: 'string',
+      describe: 'Database to use (sqlite, pglite)',
+    })
 
   const parsedFlags = await cli.parse()
 
@@ -882,6 +905,7 @@ async function createCedarApp() {
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
   const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
   const overwrite = parsedFlags.overwrite
+  const databaseFlag = parsedFlags.database ?? null
   const gitInitFlag = parsedFlags['git-init'] ?? parsedFlags.yes
   const commitMessageFlag =
     parsedFlags['commit-message'] ??
@@ -890,6 +914,7 @@ async function createCedarApp() {
   // Record some of the arguments for telemetry
   trace.getActiveSpan()?.setAttribute('install', installFlag ?? false)
   trace.getActiveSpan()?.setAttribute('overwrite', overwrite)
+  trace.getActiveSpan()?.setAttribute('database', databaseFlag ?? 'sqlite')
 
   // Get the directory for installation from the args
   let targetDir = String(args).replace(/,/g, '-')
@@ -914,6 +939,30 @@ async function createCedarApp() {
   // Determine ESM or not
   const useEsm = await handleEsmPreference(esmFlag)
   trace.getActiveSpan()?.setAttribute('esm', useEsm)
+
+  // Validate database flag
+  if (databaseFlag && databaseFlag !== 'sqlite' && databaseFlag !== 'pglite') {
+    tui.stopReactive(true)
+    tui.displayError(
+      'Invalid database',
+      `Unknown database "${databaseFlag}". Supported values: sqlite, pglite`,
+    )
+    recordErrorViaTelemetry('Invalid database flag')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  if (databaseFlag === 'pglite' && !useEsm) {
+    tui.stopReactive(true)
+    tui.displayError(
+      'Invalid configuration',
+      'The --db pglite flag requires --esm. Use:\n' +
+        '  create-cedar-app --esm --db pglite my-app',
+    )
+    recordErrorViaTelemetry('pglite without esm')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
 
   // Determine package manager preference
   const packageManager = await handlePackageManagerPreference(
@@ -953,6 +1002,7 @@ async function createCedarApp() {
     overwrite,
     packageManager,
     useEsm,
+    database: databaseFlag,
   })
 
   const installCommand = getInstallCommand(packageManager)
