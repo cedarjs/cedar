@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "devDependencies": {
+    "@cedarjs/core": "3.1.0",
+    "@cedarjs/eslint-config": "3.1.0",
+    "@cedarjs/project-config": "3.1.0",
+    "@cedarjs/testing": "3.1.0"
+  },
+  "engines": {
+    "node": "=24.x"
+  },
+  "packageManager": "yarn@4.13.0",
+  "resolutions": {
+    "react-is": "19.2.3"
+  }
+}

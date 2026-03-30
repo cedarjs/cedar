@@ -371,7 +371,9 @@ const createProject = () => {
     cmd,
     // We create a ts project and convert using ts-to-js at the end if typescript flag is false
     [
-      '--no-yarn-install',
+      '--no-install',
+      '--pm',
+      'yarn',
       '--typescript',
       '--overwrite',
       '--no-git',

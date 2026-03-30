@@ -40,7 +40,7 @@ try {
   switch (mode) {
     case 'cca':
       exitCode = await exec(
-        `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ../project-for-telemetry --typescript true --git false --no-yarn-install`,
+        `yarn node ./packages/create-cedar-app/dist/create-cedar-app.js ../project-for-telemetry --typescript true --git false --no-install --pm yarn`,
       )
       if (exitCode) {
         process.exit(1)

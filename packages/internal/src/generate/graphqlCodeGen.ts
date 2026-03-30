@@ -23,6 +23,7 @@ import {
   getConfig,
   resolveGeneratedPrismaClient,
 } from '@cedarjs/project-config'
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
 import { getTsConfigs } from '../project.js'
 
@@ -286,7 +287,12 @@ async function getPrismaClient(): Promise<{
     // No generated client exists yet — fall through to generate one.
   }
 
-  execa.sync('yarn', ['cedar', 'prisma', 'generate'])
+  // TODO(PM): Abstract this like we do in @cedarjs/cli-helpers
+  // Ideally all the PM stuff would be its own package. For now we're keeping it
+  // simple.
+  const pm = getPackageManager()
+  const pmExec = pm === 'npm' ? 'npx' : pm
+  execa.sync(pmExec, ['cedar', 'prisma', 'generate'])
 
   try {
     const freshPrisma = await importGeneratedPrismaClient()
