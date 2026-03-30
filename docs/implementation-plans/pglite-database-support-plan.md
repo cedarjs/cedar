@@ -47,10 +47,8 @@ The default behavior (no `--db` flag) remains unchanged: SQLite via
 
 ## Reference Example
 
-The implementation is based on the working example at:
-`/Users/tobbe/tmp/pglite-llm-gen/`
-
-Key patterns from the example:
+The implementation is based on the working example. Key patterns from the
+example:
 
 - **Socket server approach**: PGlite is wrapped in a `PGLiteSocketServer` that
   listens on `127.0.0.1:5433`, making it look like a standard PostgreSQL server
