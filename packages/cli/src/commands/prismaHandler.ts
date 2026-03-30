@@ -94,8 +94,6 @@ export const handler = async ({
   console.log(c.underline(`$ yarn prisma ${args.join(' ')}`))
   console.log()
 
-  let exitCode = 0
-
   try {
     const prismaBin = path.join(cedarPaths.base, 'node_modules/.bin/prisma')
     execa.sync(prismaBin, args, {
@@ -112,11 +110,7 @@ export const handler = async ({
       process.argv,
       `Error generating prisma client: ${getErrorMessage(error)}`,
     )
-    exitCode = getExitCode(error) ?? 1
-  }
-
-  if (exitCode !== 0) {
-    process.exit(exitCode)
+    process.exit(getExitCode(error))
   }
 }
 
