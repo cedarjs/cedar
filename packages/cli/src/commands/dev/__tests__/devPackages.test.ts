@@ -4,6 +4,7 @@ vi.mock('concurrently', () => ({
   __esModule: true,
   default: vi.fn().mockReturnValue({
     result: {
+      then: () => new Promise(() => {}),
       catch: () => {},
     },
   }),
