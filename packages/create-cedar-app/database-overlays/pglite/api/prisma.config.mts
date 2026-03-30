@@ -1,13 +1,13 @@
-const path = require('node:path')
+import path from 'node:path'
 
-const { PGlite } = require('@electric-sql/pglite')
-const { PGLiteSocketServer } = require('@electric-sql/pglite-socket')
-const { defineConfig, env } = require('prisma/config')
+import { PGlite } from '@electric-sql/pglite'
+import { PGLiteSocketServer } from '@electric-sql/pglite-socket'
+import { defineConfig, env } from 'prisma/config'
 
-let pglite = null
-let pgliteServer = null
+let pglite: PGlite | null = null
+let pgliteServer: PGLiteSocketServer | null = null
 
-async function startPglite(databaseUrl) {
+async function startPglite(databaseUrl: string | undefined) {
   if (pglite || pgliteServer) {
     return
   }
@@ -19,7 +19,7 @@ async function startPglite(databaseUrl) {
 
   try {
     const url = new URL(databaseUrl)
-    const pgDataDir = path.join(__dirname, 'db', 'pglite-data')
+    const pgDataDir = path.join(import.meta.dirname, 'db', 'pglite-data')
 
     pglite = await PGlite.create(pgDataDir)
     pgliteServer = new PGLiteSocketServer({
@@ -47,6 +47,6 @@ const config = defineConfig({
   },
 })
 
-startPglite(config.datasource.url)
+await startPglite(config.datasource?.url)
 
-module.exports = config
+export default config

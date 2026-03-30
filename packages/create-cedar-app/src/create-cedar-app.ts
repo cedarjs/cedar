@@ -248,6 +248,18 @@ async function createProjectFiles(
 
   // Apply database overlay if pglite is selected
   if (database === 'pglite') {
+    // Remove the template's prisma config since the overlay provides its own
+    const templatePrismaConfig = path.join(
+      newAppDir,
+      'api',
+      'prisma.config.cjs',
+    )
+    try {
+      await fs.promises.unlink(templatePrismaConfig)
+    } catch {
+      // Ignore if the file doesn't exist
+    }
+
     const dbOverlayDir = path.join(
       templatesDir,
       '..',
