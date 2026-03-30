@@ -11,7 +11,6 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
-import { isPgliteProject, startPglite, stopPglite } from '../lib/pglite.js'
 
 type PrismaHandlerArgs = Record<string, unknown> & {
   _?: unknown[]
@@ -47,19 +46,6 @@ export const handler = async ({
   })
 
   const cedarPaths = getPaths()
-  const isPglite = isPgliteProject()
-
-  if (isPglite) {
-    console.log()
-    console.log(c.note('Detected PGlite project, starting socket server...'))
-    const started = await startPglite()
-    if (!started) {
-      console.error(c.error('Failed to start PGlite server'))
-      process.exit(1)
-    }
-    console.log(c.success('PGlite socket server started on port 5433'))
-    console.log()
-  }
 
   const args = [...(Array.isArray(commands) ? commands : [])].filter(
     (value): value is string => typeof value === 'string',
@@ -127,10 +113,6 @@ export const handler = async ({
       `Error generating prisma client: ${getErrorMessage(error)}`,
     )
     exitCode = getExitCode(error) ?? 1
-  } finally {
-    if (isPglite) {
-      await stopPglite()
-    }
   }
 
   if (exitCode !== 0) {

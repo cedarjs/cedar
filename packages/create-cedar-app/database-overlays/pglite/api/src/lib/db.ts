@@ -22,7 +22,7 @@ const pgliteServer = new PGLiteSocketServer({
 await pgliteServer.start()
 
 const adapter = new PrismaPg({
-  connectionString: 'postgresql://postgres:postgres@127.0.0.1:5433/postgres',
+  connectionString: process.env.DATABASE_URL,
 })
 const prismaClient = new PrismaClient({
   log: emitLogLevels(['info', 'warn', 'error']),
