@@ -6,7 +6,7 @@ export const standard = defineScenario<Prisma.PostCreateArgs>({
   post: {
     one: {
       data: {
-        title: 'String',
+        title: 'String213',
         body: 'String',
         author: {
           create: {
@@ -20,7 +20,7 @@ export const standard = defineScenario<Prisma.PostCreateArgs>({
     },
     two: {
       data: {
-        title: 'String',
+        title: 'String499',
         body: 'String',
         author: {
           create: {
