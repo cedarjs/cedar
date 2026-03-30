@@ -12,7 +12,12 @@ import { logger } from './logger.js'
 
 export * from 'api/db/generated/prisma/client.mts'
 
-const url = new URL(process.env.DATABASE_URL || '')
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set')
+}
+
+const connectionString = process.env.DATABASE_URL
+const url = new URL(connectionString)
 const pgDataDir = path.join(getPaths().api.base, 'db', 'pglite-data')
 
 const pglite = await PGlite.create(pgDataDir)
@@ -24,9 +29,7 @@ const pgliteServer = new PGLiteSocketServer({
 
 await pgliteServer.start()
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL || '',
-})
+const adapter = new PrismaPg({ connectionString })
 const prismaClient = new PrismaClient({
   log: emitLogLevels(['info', 'warn', 'error']),
   adapter,
