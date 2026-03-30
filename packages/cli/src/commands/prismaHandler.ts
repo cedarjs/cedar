@@ -46,7 +46,6 @@ export const handler = async ({
   })
 
   const cedarPaths = getPaths()
-
   const args = [...(Array.isArray(commands) ? commands : [])].filter(
     (value): value is string => typeof value === 'string',
   )
@@ -110,7 +109,7 @@ export const handler = async ({
       process.argv,
       `Error generating prisma client: ${getErrorMessage(error)}`,
     )
-    process.exit(getExitCode(error))
+    process.exit(getExitCode(error) ?? 1)
   }
 }
 
