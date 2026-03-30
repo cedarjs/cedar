@@ -13,7 +13,11 @@ import { realtime } from 'src/lib/realtime'
 
 const authDecoder = createAuthDecoder(cookieName)
 
+// Fire-and-forget: we intentionally don't await this so it doesn't block the
+// GraphQL handler from being registered. The listener doesn't need to be ready
+// before the first request is handled.
 void startLiveQueryListener()
+
 export const handler = createGraphQLHandler({
   authDecoder,
   getCurrentUser,
