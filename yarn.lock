@@ -8693,31 +8693,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/dev@npm:0.24.3":
-  version: 0.24.3
-  resolution: "@prisma/dev@npm:0.24.3"
-  dependencies:
-    "@electric-sql/pglite": "npm:0.4.1"
-    "@electric-sql/pglite-socket": "npm:0.1.1"
-    "@electric-sql/pglite-tools": "npm:0.3.1"
-    "@hono/node-server": "npm:1.19.11"
-    "@prisma/get-platform": "npm:7.2.0"
-    "@prisma/query-plan-executor": "npm:7.2.0"
-    "@prisma/streams-local": "npm:0.1.2"
-    foreground-child: "npm:3.3.1"
-    get-port-please: "npm:3.2.0"
-    hono: "npm:^4.12.8"
-    http-status-codes: "npm:2.3.0"
-    pathe: "npm:2.0.3"
-    proper-lockfile: "npm:4.1.2"
-    remeda: "npm:2.33.4"
-    std-env: "npm:3.10.0"
-    valibot: "npm:1.2.0"
-    zeptomatch: "npm:2.1.0"
-  checksum: 10c0/9494f86f02ce820ea959cb20ada0d462940ef212aa32c9e68556fa47271ecca14b71c3cb26a7dc477c1ae8f618156ec16dd5ab42b9d46c627240e152e0076d66
-  languageName: node
-  linkType: hard
-
 "@prisma/dmmf@npm:7.6.0":
   version: 7.6.0
   resolution: "@prisma/dmmf@npm:7.6.0"
