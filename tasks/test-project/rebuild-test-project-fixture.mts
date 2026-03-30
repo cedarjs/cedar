@@ -44,6 +44,24 @@ function recommendedNodeVersion({ esm } = { esm: false }) {
   return json.engines.node
 }
 
+function prismaVersion() {
+  const templatePackageJsonPath = path.join(
+    import.meta.dirname,
+    '..',
+    '..',
+    'packages',
+    'cli',
+    'package.json',
+  )
+  const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
+
+  if (!json.dependencies.prisma) {
+    throw new Error('prisma dependency not found in cli/package.json')
+  }
+
+  return json.dependencies.prisma
+}
+
 const args = yargs(hideBin(process.argv))
   .usage('Usage: $0 [option]')
   .option('verbose', {
@@ -614,8 +632,7 @@ async function rebuildTestProject() {
       delete apiPkg.dependencies['@prisma/adapter-better-sqlite3']
       delete apiPkg.dependencies['better-sqlite3']
       // Read the prisma version already installed to keep adapter versions in sync
-      const prismaVersion = apiPkg.dependencies['prisma'] ?? '7.5.0'
-      apiPkg.dependencies['@prisma/adapter-pg'] = prismaVersion
+      apiPkg.dependencies['@prisma/adapter-pg'] = prismaVersion()
       apiPkg.dependencies['pg'] = '^8.18.0'
       fs.writeFileSync(apiPkgPath, JSON.stringify(apiPkg, null, 2) + '\n')
 
