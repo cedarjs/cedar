@@ -8668,31 +8668,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/dev@npm:0.24.1":
-  version: 0.24.1
-  resolution: "@prisma/dev@npm:0.24.1"
-  dependencies:
-    "@electric-sql/pglite": "npm:0.4.1"
-    "@electric-sql/pglite-socket": "npm:0.1.1"
-    "@electric-sql/pglite-tools": "npm:0.3.1"
-    "@hono/node-server": "npm:1.19.11"
-    "@prisma/get-platform": "npm:7.2.0"
-    "@prisma/query-plan-executor": "npm:7.2.0"
-    "@prisma/streams-local": "npm:0.1.2"
-    foreground-child: "npm:3.3.1"
-    get-port-please: "npm:3.2.0"
-    hono: "npm:^4.12.8"
-    http-status-codes: "npm:2.3.0"
-    pathe: "npm:2.0.3"
-    proper-lockfile: "npm:4.1.2"
-    remeda: "npm:2.33.4"
-    std-env: "npm:3.10.0"
-    valibot: "npm:1.2.0"
-    zeptomatch: "npm:2.1.0"
-  checksum: 10c0/f2481e0f0b035685d4622ca14e9e11479231fcd2e59da94362912f82f90178a888b27174f9af746afc963d35ccf155215ab34fdd4c7a02bb92ffb239899463d4
-  languageName: node
-  linkType: hard
-
 "@prisma/dev@npm:0.24.3":
   version: 0.24.3
   resolution: "@prisma/dev@npm:0.24.3"
@@ -26499,7 +26474,7 @@ __metadata:
     "@babel/preset-typescript": "npm:7.28.5"
     "@npmcli/arborist": "npm:9.4.2"
     "@playwright/test": "npm:1.58.2"
-    "@prisma/dev": "npm:0.24.1"
+    "@prisma/dev": "npm:0.24.3"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.6.1"
