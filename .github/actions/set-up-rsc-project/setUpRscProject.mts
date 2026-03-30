@@ -64,7 +64,8 @@ async function setUpRscProject(
     'create-cedar-app@canary',
     '-y',
     '--no-git',
-    '--no-node-check',
+    '--pm',
+    'yarn',
     rscProjectPath,
   ])
   await execInProject('yarn install')

@@ -24,6 +24,7 @@
 │ AUTH: dbAuth│Auth0│Clerk│Firebase│Supabase│Netlify│AzureAD│ST│Custom │
 ├──────────────────────────────────────────────────────────────────────┤
 │ RUNTIME: Node.js │ Vite │ Fastify │ Apollo Client │ Prisma │ React   │
+│ version:   24    │  7   │    5    │       3       │   7    │ 18/19   │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
