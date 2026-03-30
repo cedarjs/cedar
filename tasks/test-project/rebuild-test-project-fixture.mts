@@ -595,6 +595,8 @@ async function rebuildTestProject() {
         'db.ts',
       )
 
+      This is a work in progress. The plan/goal is to leverage create-cedar-app --live to rebuild the test project fixture.
+
       const dbTsOverlayPath = path.join(
         import.meta.dirname,
         '..',
