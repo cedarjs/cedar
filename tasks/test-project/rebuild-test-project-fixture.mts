@@ -631,7 +631,6 @@ async function rebuildTestProject() {
       const apiPkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8'))
       delete apiPkg.dependencies['@prisma/adapter-better-sqlite3']
       delete apiPkg.dependencies['better-sqlite3']
-      // Read the prisma version already installed to keep adapter versions in sync
       apiPkg.dependencies['@prisma/adapter-pg'] = prismaVersion()
       apiPkg.dependencies['pg'] = '^8.18.0'
       fs.writeFileSync(apiPkgPath, JSON.stringify(apiPkg, null, 2) + '\n')
