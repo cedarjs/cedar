@@ -11,7 +11,8 @@
   "bin": "./dist/create-cedar-app.js",
   "files": [
     "dist",
-    "templates"
+    "templates",
+    "database-overlays"
   ],
   "scripts": {
     "build": "tsx ./scripts/build.ts",
