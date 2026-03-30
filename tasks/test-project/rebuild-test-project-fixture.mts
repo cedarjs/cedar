@@ -44,6 +44,24 @@ function recommendedNodeVersion({ esm } = { esm: false }) {
   return json.engines.node
 }
 
+function prismaVersion() {
+  const templatePackageJsonPath = path.join(
+    import.meta.dirname,
+    '..',
+    '..',
+    'packages',
+    'cli',
+    'package.json',
+  )
+  const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
+
+  if (!json.dependencies.prisma) {
+    throw new Error('prisma dependency not found in cli/package.json')
+  }
+
+  return json.dependencies.prisma
+}
+
 const args = yargs(hideBin(process.argv))
   .usage('Usage: $0 [option]')
   .option('verbose', {
@@ -540,11 +558,12 @@ async function rebuildTestProject() {
   await tuiTask({
     step: 7,
     title: (!live ? 'skip: ' : '') + 'Switch to PostgreSQL',
-    task: () => {
+    task: async () => {
       if (!live || !localPrisma) {
         return
       }
 
+      // 1. Change datasource provider from sqlite to postgresql
       const projectSchemaPath = path.join(
         OUTPUT_PROJECT_PATH,
         'api',
@@ -554,15 +573,177 @@ async function rebuildTestProject() {
       const projectSchemaPrisma = fs.readFileSync(projectSchemaPath, 'utf-8')
       fs.writeFileSync(
         projectSchemaPath,
-        projectSchemaPrisma.replace('sqlite', 'postgresql'),
+        projectSchemaPrisma.replace(
+          /provider\s+=\s+"sqlite"/,
+          'provider = "postgresql"',
+        ),
       )
 
+      // 2. Rewrite db.ts — swap SQLite adapter for PostgreSQL adapter
+      const dbPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'src',
+        'lib',
+        'db.ts',
+      )
+      fs.writeFileSync(
+        dbPath,
+        [
+          '// See https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/constructor',
+          '// for options.',
+          '',
+          "import { PrismaPg } from '@prisma/adapter-pg'",
+          "import { PrismaClient } from 'api/db/generated/prisma/client.mts'",
+          '',
+          "import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'",
+          '',
+          "import { logger } from './logger.js'",
+          '',
+          "export * from 'api/db/generated/prisma/client.mts'",
+          '',
+          'const adapter = new PrismaPg({',
+          '  connectionString: process.env.DATABASE_URL,',
+          '})',
+          '',
+          'const prismaClient = new PrismaClient({',
+          "  log: emitLogLevels(['info', 'warn', 'error']),",
+          '  adapter,',
+          '})',
+          '',
+          'handlePrismaLogging({',
+          '  db: prismaClient,',
+          '  logger,',
+          "  logLevels: ['info', 'warn', 'error'],",
+          '})',
+          '',
+          '/**',
+          ' * Global Prisma client extensions should be added here, as $extend',
+          ' * returns a new instance.',
+          ' * export const db = prismaClient.$extend(...)',
+          ' * Add any .$on hooks before using $extend',
+          ' */',
+          'export const db = prismaClient',
+          '',
+        ].join('\n'),
+      )
+
+      // 3. Swap SQLite deps for PostgreSQL deps in api/package.json
+      const apiPkgPath = path.join(OUTPUT_PROJECT_PATH, 'api', 'package.json')
+      const apiPkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8'))
+      delete apiPkg.dependencies['@prisma/adapter-better-sqlite3']
+      delete apiPkg.dependencies['better-sqlite3']
+      apiPkg.dependencies['@prisma/adapter-pg'] = prismaVersion()
+      apiPkg.dependencies['pg'] = '^8.18.0'
+      fs.writeFileSync(apiPkgPath, JSON.stringify(apiPkg, null, 2) + '\n')
+
+      // 4. Patch prisma.config.cjs to pass the shadow database URL to the
+      // Prisma Rust schema engine via the --datasource flag.
+      //
+      // Without shadowDatabaseUrl, the schema engine tries to CREATE DATABASE
+      // on the main PGlite server for its shadow database. PGlite does not
+      // support CREATE DATABASE, so it closes the connection — causing P1017.
+      //
+      // The conditional spread means the final fixture still works in test
+      // environments that don't set SHADOW_DATABASE_URL (a real PostgreSQL
+      // server can create its own shadow database).
+      const prismaConfigPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'prisma.config.cjs',
+      )
+      const prismaConfig = fs.readFileSync(prismaConfigPath, 'utf-8')
+      const updatedPrismaConfig = prismaConfig.replace(
+        "url: env('DATABASE_URL'),",
+        "url: env('DATABASE_URL'),\n    ...(process.env.SHADOW_DATABASE_URL ? { shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL } : {}),",
+      )
+      if (!updatedPrismaConfig.includes('SHADOW_DATABASE_URL')) {
+        throw new Error(
+          'Failed to inject SHADOW_DATABASE_URL into prisma.config.cjs – ' +
+            "the anchor string `url: env('DATABASE_URL'),` was not found",
+        )
+      }
+      fs.writeFileSync(prismaConfigPath, updatedPrismaConfig)
+
+      // 5. Write DATABASE_URL and SHADOW_DATABASE_URL to .env.
+      //
+      // Both are direct postgres:// connection strings to the two PGlite
+      // servers that @prisma/dev starts (main DB and shadow DB respectively).
+      //
+      // We also set process.env.SHADOW_DATABASE_URL in the parent process so
+      // that every subprocess spawned via getExecaOptions (which spreads
+      // ...process.env) inherits it. The @prisma/config loader deliberately
+      // does NOT load .env files before evaluating prisma.config.cjs, so the
+      // value must already be in the inherited environment — not just in .env.
+      const databaseUrl = localPrisma.database.connectionString
+      // Strip Prisma-specific pool params from the shadow URL; the Rust schema
+      // engine only needs a plain postgres:// URL.
+      const shadowUrlObj = new URL(localPrisma.shadowDatabase.connectionString)
+      for (const param of [
+        'connection_limit',
+        'connect_timeout',
+        'max_idle_connection_lifetime',
+        'pool_timeout',
+        'socket_timeout',
+      ]) {
+        shadowUrlObj.searchParams.delete(param)
+      }
+      const shadowDatabaseUrl = shadowUrlObj.toString()
+      process.env.SHADOW_DATABASE_URL = shadowDatabaseUrl
       const projectEnvPath = path.join(OUTPUT_PROJECT_PATH, '.env')
       const projectEnv = fs.readFileSync(projectEnvPath, 'utf-8')
       fs.writeFileSync(
         projectEnvPath,
-        projectEnv + '\n\n' + 'DATABASE_URL=' + localPrisma.ppg.url,
+        projectEnv +
+          '\n\n' +
+          'DATABASE_URL=' +
+          databaseUrl +
+          '\n' +
+          'SHADOW_DATABASE_URL=' +
+          shadowDatabaseUrl,
       )
+
+      // 6. Re-install so @prisma/adapter-pg is available in node_modules
+      await exec('yarn install', [], getExecaOptions(OUTPUT_PROJECT_PATH))
+
+      // 7. Pre-create the _prisma_migrations table to work around a PGlite
+      // protocol compatibility issue.
+      //
+      // When the Prisma Rust schema engine queries a non-existent
+      // _prisma_migrations table, PGlite sends an unexpected protocol message
+      // after the "table not found" error response. The Rust tokio-postgres
+      // driver treats this as an UnexpectedMessage error and surfaces it as
+      // P1017 "Server has closed the connection", aborting the entire
+      // `migrate dev` run.
+      //
+      // Pre-creating the empty table means the first query returns zero rows
+      // (instead of an error), so the unexpected-message path is never hit.
+      const initSqlPath = path.join(
+        OUTPUT_PROJECT_PATH,
+        '.prisma-migrations-init.sql',
+      )
+      fs.writeFileSync(
+        initSqlPath,
+        [
+          'CREATE TABLE IF NOT EXISTS "_prisma_migrations" (',
+          '  "id"                  VARCHAR(36)   NOT NULL,',
+          '  "checksum"            VARCHAR(64)   NOT NULL,',
+          '  "finished_at"         TIMESTAMPTZ,',
+          '  "migration_name"      VARCHAR(255)  NOT NULL,',
+          '  "logs"                TEXT,',
+          '  "rolled_back_at"      TIMESTAMPTZ,',
+          '  "started_at"          TIMESTAMPTZ   NOT NULL DEFAULT now(),',
+          '  "applied_steps_count" INTEGER       NOT NULL DEFAULT 0,',
+          '  PRIMARY KEY ("id")',
+          ');',
+        ].join('\n'),
+      )
+      await exec(
+        `yarn cedar prisma db execute --file ${initSqlPath} --config api/prisma.config.cjs`,
+        [],
+        getExecaOptions(OUTPUT_PROJECT_PATH),
+      )
+      fs.unlinkSync(initSqlPath)
     },
   })
 

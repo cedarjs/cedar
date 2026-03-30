@@ -1,0 +1,14 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cedarjs/api": "3.1.0",
+    "@cedarjs/graphql-server": "3.1.0",
+    "@electric-sql/pglite": "^0.4.2",
+    "@electric-sql/pglite-socket": "^0.1.2",
+    "@prisma/adapter-pg": "^7.5.0",
+    "pg": "^8.13.0"
+  }
+}

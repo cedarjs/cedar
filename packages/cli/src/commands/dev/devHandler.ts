@@ -318,16 +318,31 @@ export const handler = async ({
     outputStream,
   })
 
-  result.catch((e) => {
-    if (e?.message) {
-      errorTelemetry(
-        process.argv,
-        `Error concurrently starting workspaces: ${e.message}`,
-      )
+  // When the user press Ctrl+C, the terminal sends `SIGINT` to the entire
+  // process group. Concurrently's `KillOnSignal` controller catches it and
+  // forwards it to the child processes (web, gen, api) but it intentionally
+  // suppresses Node's default "exit on SIGINT" behaviour so it can wait for the
+  // children to shut down cleanly first.
+  // Once all three children exit, `KillOnSignal` remaps their exit codes to `0`
+  // (since they were killed by a signal, not a real failure), which causes
+  // `result` to resolve rather than reject. The `catch(...)` here then never
+  // fires. The `cedar dev` process ends up just sitting here with
+  // `process.stdin` still in flowing mode from `handleInput: true`, keeping the
+  // event loop alive indefinitely.
+  // So we have a `then` handler that cleanly exits the process when `result`
+  // resolves.
+  result
+    .then(() => process.exit(0))
+    .catch((e) => {
+      if (e?.message) {
+        errorTelemetry(
+          process.argv,
+          `Error concurrently starting workspaces: ${e.message}`,
+        )
 
-      exitWithError(e)
-    }
-  })
+        exitWithError(e)
+      }
+    })
 }
 
 /**
