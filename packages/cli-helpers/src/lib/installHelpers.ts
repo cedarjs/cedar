@@ -1,34 +1,33 @@
-import execa from 'execa'
-
-import { getPackageManager } from '@cedarjs/project-config/packageManager'
-
-import { add } from '../packageManager/index.js'
+import {
+  addWorkspacePackages,
+  addRootPackages as pmAddRootPackages,
+  installPackages as pmInstallPackages,
+} from '../packageManager/packages.js'
 
 import { getPaths } from './paths.js'
 
 export const addWebPackages = (webPackages: string[]) => ({
-  title: 'Adding required web packages...',
+  title: `Adding required web packages...`,
   task: async () => {
-    const pm = getPackageManager()
-    await execa(pm, [add(), ...webPackages], { cwd: getPaths().web.base })
+    const cwd = getPaths().web.base
+    await addWorkspacePackages('web', webPackages, { cwd })
   },
 })
 
 export const addApiPackages = (apiPackages: string[]) => ({
   title: 'Adding required api packages...',
   task: async () => {
-    const pm = getPackageManager()
-    await execa(pm, [add(), ...apiPackages], { cwd: getPaths().api.base })
+    const cwd = getPaths().api.base
+    await addWorkspacePackages('api', apiPackages, { cwd })
   },
 })
 
 export const addRootPackages = (packages: string[], devDependency = false) => {
-  const addMode = devDependency ? [add(), '-D'] : [add()]
   return {
     title: 'Installing packages...',
     task: async () => {
-      const pm = getPackageManager()
-      await execa(pm, [...addMode, ...packages], { cwd: getPaths().base })
+      const cwd = getPaths().base
+      await pmAddRootPackages(packages, { cwd, dev: devDependency })
     },
   }
 }
@@ -36,7 +35,7 @@ export const addRootPackages = (packages: string[], devDependency = false) => {
 export const installPackages = {
   title: 'Installing packages...',
   task: async () => {
-    const pm = getPackageManager()
-    await execa(pm, ['install'], { cwd: getPaths().base })
+    const cwd = getPaths().base
+    await pmInstallPackages({ cwd })
   },
 }

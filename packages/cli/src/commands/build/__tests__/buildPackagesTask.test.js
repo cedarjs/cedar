@@ -1,3 +1,7 @@
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
+
 vi.mock('node:fs', () => {
   return {
     default: {
@@ -25,7 +29,12 @@ vi.mock('node:fs', () => {
 })
 
 vi.mock('execa', () => ({
-  default: vi.fn(() => Promise.resolve({ stdout: '', stderr: '' })),
+  default: Object.assign(
+    vi.fn(() => Promise.resolve({ stdout: '', stderr: '' })),
+    {
+      sync: vi.fn(() => ({ stdout: '', stderr: '' })),
+    },
+  ),
 }))
 
 vi.mock('../../../lib/index.js', () => {
@@ -61,6 +70,7 @@ import fs from 'node:fs'
 import execa from 'execa'
 import { vi, afterEach, describe, it, expect } from 'vitest'
 
+import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { buildPackagesTask } from '../buildPackagesTask.js'
@@ -103,7 +113,7 @@ describe('buildPackagesTask', () => {
     expect(subtasks[2]).toMatchObject({ title: 'baz' })
   })
 
-  it('creates subtasks that run yarn build in the correct cwd', async () => {
+  it('creates subtasks that run the detected PM build script in the correct cwd', async () => {
     const mockTask = createMockTask()
     await buildPackagesTask(mockTask, ['packages/*'])
 
@@ -112,14 +122,15 @@ describe('buildPackagesTask', () => {
       await subtask.task()
     }
 
+    const pm = vi.mocked(getPackageManager)()
     expect(vi.mocked(execa)).toHaveBeenCalledTimes(3)
-    expect(vi.mocked(execa)).toHaveBeenCalledWith('yarn', ['build'], {
+    expect(vi.mocked(execa)).toHaveBeenCalledWith(pm, ['build'], {
       cwd: '/mocked/project/packages/foo',
     })
-    expect(vi.mocked(execa)).toHaveBeenCalledWith('yarn', ['build'], {
+    expect(vi.mocked(execa)).toHaveBeenCalledWith(pm, ['build'], {
       cwd: '/mocked/project/packages/bar',
     })
-    expect(vi.mocked(execa)).toHaveBeenCalledWith('yarn', ['build'], {
+    expect(vi.mocked(execa)).toHaveBeenCalledWith(pm, ['build'], {
       cwd: '/mocked/project/packages/baz',
     })
   })

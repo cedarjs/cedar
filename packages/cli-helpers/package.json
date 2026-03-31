@@ -48,6 +48,36 @@
         "types": "./dist/cjs/packageManager/index.d.ts",
         "default": "./dist/cjs/packageManager/index.js"
       }
+    },
+    "./packageManager/exec": {
+      "import": {
+        "types": "./dist/packageManager/exec.d.ts",
+        "default": "./dist/packageManager/exec.js"
+      },
+      "default": {
+        "types": "./dist/cjs/packageManager/exec.d.ts",
+        "default": "./dist/cjs/packageManager/exec.js"
+      }
+    },
+    "./packageManager/packages": {
+      "import": {
+        "types": "./dist/packageManager/packages.d.ts",
+        "default": "./dist/packageManager/packages.js"
+      },
+      "default": {
+        "types": "./dist/cjs/packageManager/packages.d.ts",
+        "default": "./dist/cjs/packageManager/packages.js"
+      }
+    },
+    "./packageManager/display": {
+      "import": {
+        "types": "./dist/packageManager/display.d.ts",
+        "default": "./dist/packageManager/display.js"
+      },
+      "default": {
+        "types": "./dist/cjs/packageManager/display.d.ts",
+        "default": "./dist/cjs/packageManager/display.js"
+      }
     }
   },
   "types": "./dist/index.d.ts",

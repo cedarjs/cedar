@@ -8,6 +8,11 @@ import type { ListrTask } from 'listr2'
 import { terminalLink } from 'termi-link'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import {
+  formatCedarCommand,
+  formatRunWorkspaceScriptCommand,
+} from '@cedarjs/cli-helpers/packageManager/display'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { buildApi, cleanApiBuild } from '@cedarjs/internal/dist/build/api'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
@@ -197,10 +202,12 @@ export const handler = async ({
             `The following workspace package entry points are missing:\n${details}\n\n` +
               'This usually means the package has not been built yet.\n' +
               'Run ' +
-              c.info('yarn cedar build') +
+              c.info(formatCedarCommand(['build'])) +
               ' (without specifying a workspace) to build everything,\n' +
               'or build the package manually first, e.g. ' +
-              c.info(`yarn workspace ${problems[0].pkgName} build`),
+              c.info(
+                formatRunWorkspaceScriptCommand(problems[0].pkgName, 'build'),
+              ),
           )
         },
       },
@@ -292,9 +299,8 @@ export const handler = async ({
 
     // Running a separate process here, otherwise it wouldn't pick up the
     // generated Prisma Client due to require module caching
-    await execa('yarn cedar prerender', {
+    await runBin('cedar', ['prerender'], {
       stdio: 'inherit',
-      shell: true,
       cwd: cedarPaths.web.base,
     })
   }
