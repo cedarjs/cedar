@@ -149,7 +149,7 @@ describe('formatRunWorkspaceScriptCommand', () => {
   it('pnpm: returns pnpm <script> --filter <workspace> with args', () => {
     vi.mocked(getPackageManager).mockReturnValue('pnpm')
     expect(formatRunWorkspaceScriptCommand('web', 'test', ['--watch'])).toBe(
-      'pnpm test --filter web --watch',
+      'pnpm test --filter web -- --watch',
     )
   })
 })

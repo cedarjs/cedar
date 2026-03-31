@@ -53,7 +53,7 @@ export function runScriptSync(
  *
  * - yarn:  `yarn workspace <workspace> <script> [args]`
  * - npm:   `npm run <script> -w <workspace> [-- args]`
- * - pnpm:  `pnpm <script> --filter <workspace> [args]`
+ * - pnpm:  `pnpm <script> --filter <workspace> [-- args]`
  */
 export function runWorkspaceScript(
   workspace: string,
@@ -76,7 +76,11 @@ export function runWorkspaceScript(
   }
 
   // pnpm
-  return execa(pm, [script, '--filter', workspace, ...args], options)
+  const pnpmArgs =
+    args.length > 0
+      ? [script, '--filter', workspace, '--', ...args]
+      : [script, '--filter', workspace]
+  return execa(pm, pnpmArgs, options)
 }
 
 /**

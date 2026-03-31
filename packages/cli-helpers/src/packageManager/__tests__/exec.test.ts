@@ -161,7 +161,7 @@ describe('runWorkspaceScript', () => {
     await runWorkspaceScript('web', 'test', ['--watch'])
     expect(execa).toHaveBeenCalledWith(
       'pnpm',
-      ['test', '--filter', 'web', '--watch'],
+      ['test', '--filter', 'web', '--', '--watch'],
       undefined,
     )
   })

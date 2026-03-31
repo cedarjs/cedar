@@ -63,7 +63,7 @@ export function formatRunScriptCommand(
  *
  * yarn → `yarn workspace <workspace> <script> [args]`
  * npm  → `npm run <script> -w <workspace>[ -- args]`
- * pnpm → `pnpm <script> --filter <workspace> [args]`
+ * pnpm → `pnpm <script> --filter <workspace>[-- args]`
  */
 export function formatRunWorkspaceScriptCommand(
   workspace: string,
@@ -83,7 +83,8 @@ export function formatRunWorkspaceScriptCommand(
   }
 
   // pnpm
-  return `pnpm ${script} --filter ${workspace}${argStr}`
+  const separator = args.length > 0 ? ' -- ' : ''
+  return `pnpm ${script} --filter ${workspace}${separator}${args.join(' ')}`
 }
 
 /**
