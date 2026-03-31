@@ -24,32 +24,3 @@ model UserExample {
   email String  @unique
   name  String?
 }
-
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  body      String
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
-}
-
-model User {
-  id                  String    @id @default(uuid())
-  email               String    @unique
-  hashedPassword      String
-  fullName            String
-  salt                String
-  resetToken          String?
-  resetTokenExpiresAt DateTime?
-  roles               String?
-  posts               Post[]
-}
-
-model Contact {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String
-  message   String
-  createdAt DateTime @default(now())
-}

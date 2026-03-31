@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@cedarjs/cli-helpers": "workspace:*",
-    "@prisma/internals": "7.5.0",
+    "@prisma/internals": "7.6.0",
     "@simplewebauthn/browser": "10.0.0",
     "prompts": "2.4.2",
     "termi-link": "1.1.0"
