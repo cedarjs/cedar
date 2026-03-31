@@ -145,10 +145,7 @@ export function formatRunWorkspaceBinCommand(
  * npm  → `npx <command> [args]`
  * pnpm → `pnpm dlx <command> [args]`
  */
-export function formatDlxCommand(
-  command: string,
-  args: string[] = [],
-): string {
+export function formatDlxCommand(command: string, args: string[] = []): string {
   const pm = getPackageManager()
   const argStr = args.length > 0 ? ` ${args.join(' ')}` : ''
 

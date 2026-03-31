@@ -32,10 +32,6 @@ export const addRootPackages = (packages: string[], devDependency = false) => {
   }
 }
 
-// installPackages is intentionally kept as a plain object so that getPaths() is
-// evaluated lazily inside the task, matching the behaviour of addWebPackages / addApiPackages
-// above and avoiding failures when the module is imported outside a Cedar
-// project (e.g. in tests).
 export const installPackages = {
   title: 'Installing packages...',
   task: async () => {

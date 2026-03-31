@@ -285,9 +285,7 @@ describe('formatAddRootPackagesCommand', () => {
 
   it('npm: returns npm install <packages>', () => {
     vi.mocked(getPackageManager).mockReturnValue('npm')
-    expect(formatAddRootPackagesCommand(['lodash'])).toBe(
-      'npm install lodash',
-    )
+    expect(formatAddRootPackagesCommand(['lodash'])).toBe('npm install lodash')
   })
 
   it('npm: returns npm install -D <packages> with dev flag', () => {
@@ -318,9 +316,9 @@ describe('formatAddWorkspacePackagesCommand', () => {
   })
 
   it('yarn: returns yarn workspace <workspace> add -D <packages>', () => {
-    expect(
-      formatAddWorkspacePackagesCommand('web', ['typescript'], true),
-    ).toBe('yarn workspace web add -D typescript')
+    expect(formatAddWorkspacePackagesCommand('web', ['typescript'], true)).toBe(
+      'yarn workspace web add -D typescript',
+    )
   })
 
   it('npm: returns npm install <packages> -w <workspace>', () => {
@@ -332,9 +330,9 @@ describe('formatAddWorkspacePackagesCommand', () => {
 
   it('npm: returns npm install -D <packages> -w <workspace>', () => {
     vi.mocked(getPackageManager).mockReturnValue('npm')
-    expect(
-      formatAddWorkspacePackagesCommand('web', ['typescript'], true),
-    ).toBe('npm install -D typescript -w web')
+    expect(formatAddWorkspacePackagesCommand('web', ['typescript'], true)).toBe(
+      'npm install -D typescript -w web',
+    )
   })
 
   it('pnpm: returns pnpm add <packages> --filter <workspace>', () => {
@@ -346,9 +344,9 @@ describe('formatAddWorkspacePackagesCommand', () => {
 
   it('pnpm: returns pnpm add -D <packages> --filter <workspace>', () => {
     vi.mocked(getPackageManager).mockReturnValue('pnpm')
-    expect(
-      formatAddWorkspacePackagesCommand('web', ['typescript'], true),
-    ).toBe('pnpm add -D typescript --filter web')
+    expect(formatAddWorkspacePackagesCommand('web', ['typescript'], true)).toBe(
+      'pnpm add -D typescript --filter web',
+    )
   })
 })
 
