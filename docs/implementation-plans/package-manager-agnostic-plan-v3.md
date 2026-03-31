@@ -558,7 +558,6 @@ New files in `packages/cli-helpers/src/packageManager/`:
   `formatRunBinCommand`, `formatRunWorkspaceBinCommand`, `formatDlxCommand`,
   `formatAddRootPackagesCommand`, `formatAddWorkspacePackagesCommand`,
   `formatRemoveWorkspacePackagesCommand`
-- Updated `index.ts` barrel export
 - Unit tests for all new helpers, tasks, and display functions
 
 Updated file:

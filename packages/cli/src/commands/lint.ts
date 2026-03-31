@@ -1,11 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import execa from 'execa'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getPaths, getConfig } from '@cedarjs/project-config'
 
 /**
@@ -133,10 +133,15 @@ export const handler = async ({
 
   try {
     const sbPath = getPaths().web.storybook
-    const args = ['eslint', fix && '--fix', '--format', format, ...paths]
+    const eslintArgs: (string | false)[] = [
+      fix && '--fix',
+      '--format',
+      format,
+      ...paths,
+    ]
 
     if (paths.length === 0) {
-      args.push(
+      eslintArgs.push(
         fs.existsSync(getPaths().web.src) && 'web/src',
         fs.existsSync(getPaths().web.config) && 'web/config',
         fs.existsSync(sbPath) && 'web/.storybook',
@@ -145,9 +150,11 @@ export const handler = async ({
       )
     }
 
-    const filteredArgs = args.filter((arg): arg is string => Boolean(arg))
+    const filteredEslintArgs = eslintArgs.filter((arg): arg is string =>
+      Boolean(arg),
+    )
 
-    const result = await execa('yarn', filteredArgs, {
+    const result = await runBin('eslint', filteredEslintArgs, {
       cwd: getPaths().base,
       stdio: 'inherit',
     })
