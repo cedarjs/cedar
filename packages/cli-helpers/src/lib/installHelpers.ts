@@ -17,8 +17,8 @@ export const addWebPackages = (webPackages: string[]) => ({
 export const addApiPackages = (apiPackages: string[]) => ({
   title: 'Adding required api packages...',
   task: async () => {
-    const cwd = getPaths().web.base
-    await addWorkspacePackages('web', apiPackages, { cwd })
+    const cwd = getPaths().api.base
+    await addWorkspacePackages('api', apiPackages, { cwd })
   },
 })
 
