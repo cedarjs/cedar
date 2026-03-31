@@ -28,7 +28,7 @@ to v2 or newer.
    expected.
 9. Make a new git commit (or amend the previous one you did)
 
-## Optional, but Hightly Recommended, Steps
+## Optional, but Highly Recommended, Steps
 
 - Update `web/vite.config.ts` to have `import { cedar } from '@cedarjs/vite'`
   and `plugins: [cedar()],` instead of the older
