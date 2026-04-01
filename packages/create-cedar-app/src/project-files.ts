@@ -17,7 +17,7 @@ interface CreateProjectFilesOptions {
   overwrite: boolean
   packageManager: PackageManager
   useEsm: boolean
-  database: string | null
+  database: string
 }
 
 export async function createProjectFiles(
@@ -62,6 +62,8 @@ export async function createProjectFiles(
   })
   await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
 
+  let databaseUrl: string | undefined
+
   // Apply database overlay if pglite is selected
   if (database === 'pglite') {
     // Remove the template's prisma config since the overlay provides its own
@@ -70,6 +72,7 @@ export async function createProjectFiles(
       'api',
       'prisma.config.cjs',
     )
+
     try {
       await fs.promises.unlink(templatePrismaConfig)
     } catch {
@@ -86,6 +89,53 @@ export async function createProjectFiles(
       recursive: true,
       force: true,
     })
+  } else if (database === 'neon-postgres') {
+    const dbOverlayDir = path.join(
+      templatesDir,
+      '..',
+      'database-overlays',
+      'neon-postgres',
+    )
+    await fs.promises.cp(dbOverlayDir, newAppDir, {
+      recursive: true,
+      force: true,
+    })
+
+    // curl -X POST https://neon.new/api/v1/database \
+    //   -H 'Content-Type: application/json' \
+    //   -d '{"ref": "your-app-name"}'
+    //
+    // Response: {
+    //   "id": "01abc123-def4-5678-9abc-def012345678",
+    //   "status": "UNCLAIMED",
+    //   "neon_project_id": "cool-breeze-12345678",
+    //   "connection_string": "postgresql://neondb_owner:npg_xxxx@ep-cool-breeze-pooler...",
+    //   "claim_url": "https://neon.new/claim/01abc123-def4-5678-9abc-def012345678",
+    //   "expires_at": "2026-02-01T12:00:00.000Z",
+    //   "created_at": "2026-01-29T12:00:00.000Z",
+    //   "updated_at": "2026-01-29T12:00:00.000Z"
+    // }
+    try {
+      const res = await fetch('https://neon.new/api/v1/database', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ref: 'cedarjs' }),
+      })
+      const data = await res.json()
+      databaseUrl = data.connection_string
+
+      tui.drawText('Database created successfully')
+      tui.drawText('Claim your Neon database by visiting: ' + data.claim_url)
+      tui.drawText(
+        `You can use the database until ${data.expires_at} without claiming it`,
+      )
+    } catch (e) {
+      databaseUrl = undefined
+      const msg = e instanceof Error ? e.message : String(e)
+      tui.displayError('Could not create database', msg)
+    }
   }
 
   // .gitignore is renamed here to force file inclusion during publishing
@@ -94,7 +144,7 @@ export async function createProjectFiles(
     path.join(newAppDir, '.gitignore'),
   )
 
-  await replacePlaceholders(newAppDir, packageManager)
+  await replacePlaceholders(newAppDir, packageManager, databaseUrl)
 
   // Write the uid
   fs.mkdirSync(path.join(newAppDir, '.cedar'), { recursive: true })
@@ -107,18 +157,39 @@ export async function createProjectFiles(
   return newAppDir
 }
 
+function prismaVersion() {
+  const cliPackageJsonPath = path.join(
+    import.meta.dirname,
+    '..',
+    '..',
+    'packages',
+    'cli',
+    'package.json',
+  )
+  const json = JSON.parse(fs.readFileSync(cliPackageJsonPath, 'utf8'))
+
+  if (!json.dependencies.prisma) {
+    throw new Error('prisma dependency not found in cli/package.json')
+  }
+
+  return json.dependencies.prisma
+}
+
 /** String replace of placeholders in template files */
 async function replacePlaceholders(
   dir: string,
   packageManager: PackageManager,
+  databaseUrl: string | undefined,
 ) {
   const installCommand = getInstallCommand(packageManager)
   const cedarCommand = getCedarCommandPrefix(packageManager)
 
-  const replacements: Record<string, string> = {
+  const replacements: Record<string, string | undefined> = {
     '{{PM}}': packageManager,
     '{{PM_INSTALL}}': installCommand,
     '{{CEDAR_CLI}}': cedarCommand,
+    '{{PRISMA_VERSION}}': prismaVersion(),
+    '{{DATABASE_URL}}': databaseUrl,
   }
 
   const patterns = [
@@ -132,7 +203,9 @@ async function replacePlaceholders(
       let content = await fs.promises.readFile(fullPath, 'utf-8')
 
       for (const [placeholder, value] of Object.entries(replacements)) {
-        content = content.replaceAll(placeholder, value)
+        if (value !== undefined) {
+          content = content.replaceAll(placeholder, value)
+        }
       }
 
       await fs.promises.writeFile(fullPath, content, 'utf-8')

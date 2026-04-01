@@ -265,3 +265,34 @@ export async function handlePackageManagerPreference(
     process.exit(1)
   }
 }
+
+export async function handleDatabasePreference(
+  databaseFlag: string | null,
+  useEsm: boolean,
+) {
+  // Validate database flag
+  if (databaseFlag && databaseFlag !== 'sqlite' && databaseFlag !== 'pglite') {
+    tui.stopReactive(true)
+    tui.displayError(
+      'Invalid database',
+      `Unknown database "${databaseFlag}". Supported values: sqlite, pglite`,
+    )
+    recordErrorViaTelemetry('Invalid database flag')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  if (databaseFlag === 'pglite' && !useEsm) {
+    tui.stopReactive(true)
+    tui.displayError(
+      'Invalid configuration',
+      'The --db pglite flag requires --esm. Use:\n' +
+        '  create-cedar-app --esm --db pglite my-app',
+    )
+    recordErrorViaTelemetry('pglite without esm')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  return databaseFlag ?? 'sqlite'
+}
