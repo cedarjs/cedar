@@ -333,11 +333,11 @@ test('files should not have changed unintentionally in esm JS template', () => {
  *   but will be picked up by this test and lead to a false negative without
  *   this.
  *
- * - the yarn lockfile/cache edge case
+ * - the yarn.lock edge case
  *
- *   When we release, we add lock files and cached yarn metadata to the
- *   templates to speed up install.
- *   We remove these after releasing.
+ *   When we release, we add lock files to the templates to speed up yarn
+ *   install.
+ *   We remove these lock files after releasing.
  *   But before we release, we run all our unit tests, so these test sees an
  *   extra file and fails.
  *   While this introduces a blind spot (if a lock file gets added, it won't be
@@ -345,6 +345,8 @@ test('files should not have changed unintentionally in esm JS template', () => {
  */
 function getDirectoryStructure(dir: string) {
   const fileStructure = klawSync(dir)
+
+  const filePathsToIgnore = ['.cedar', 'yarn.lock']
 
   return fileStructure
     .filter(
@@ -358,5 +360,3 @@ function getDirectoryStructure(dir: string) {
     )
     .sort()
 }
-
-const filePathsToIgnore = ['.cedar', '.redwood', '.yarn', 'yarn.lock']
