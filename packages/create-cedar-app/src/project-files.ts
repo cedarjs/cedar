@@ -3,14 +3,14 @@ import path from 'node:path'
 
 import untildify from 'untildify'
 
-import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
+import { ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import { handleNewDirectoryNamePreference } from './handle-args.js'
 import type { PackageManager } from './handle-args.js'
 import { getCedarCommandPrefix, getInstallCommand } from './package-manager.js'
 import { UID, shutdownTelemetry, recordErrorViaTelemetry } from './telemetry.js'
+import { tui } from './tui.js'
 
-const tui = new RedwoodTUI()
 interface CreateProjectFilesOptions {
   templateDir: string
   templatesDir: string

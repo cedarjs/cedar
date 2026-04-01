@@ -4,11 +4,10 @@ import path from 'node:path'
 import semver from 'semver'
 import { terminalLink } from 'termi-link'
 
-import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
+import { ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import { shutdownTelemetry, recordErrorViaTelemetry } from './telemetry.js'
-
-const tui = new RedwoodTUI()
+import { tui } from './tui.js'
 
 export async function executeNodeCompatibilityCheck(templateDir: string) {
   const tuiContent = new ReactiveTUIContent({

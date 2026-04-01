@@ -1,14 +1,13 @@
 import untildify from 'untildify'
 
-import { RedwoodTUI, RedwoodStyling } from '@cedarjs/tui'
+import { RedwoodStyling } from '@cedarjs/tui'
 
 import { shutdownTelemetry, recordErrorViaTelemetry } from './telemetry.js'
+import { tui } from './tui.js'
 
 export type PackageManager = 'yarn' | 'npm' | 'pnpm'
 
 export const INITIAL_COMMIT_MESSAGE = 'Initial commit'
-
-const tui = new RedwoodTUI()
 
 export async function handleTargetDirPreference(targetDir: string) {
   if (targetDir) {

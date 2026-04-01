@@ -7,7 +7,7 @@ import gradient from 'gradient-string'
 import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
+import { ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import pkgJson from '../package.json' with { type: 'json' }
 
@@ -35,6 +35,7 @@ import {
   shutdownTelemetry,
   recordErrorViaTelemetry,
 } from './telemetry.js'
+import { tui } from './tui.js'
 
 // Telemetry can be disabled in two ways:
 // - by passing `--telemetry false`  or `--no-telemetry`
@@ -47,8 +48,6 @@ const { telemetry } = Parser(hideBin(process.argv), {
       process.env.REDWOOD_DISABLE_TELEMETRY === '',
   },
 })
-
-const tui = new RedwoodTUI()
 
 async function installNodeModules(
   newAppDir: string,
