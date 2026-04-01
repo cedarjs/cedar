@@ -321,8 +321,6 @@ async function getPluginConfig(side: CodegenSide) {
   const prismaModels: Record<string, string> = await getPrismaModels()
   const modelNames = new Set(Object.keys(prismaModels))
 
-  // Load the GraphQL schema to determine relation fields at codegen time
-  // instead of deferring to expensive conditional types at type-check time
   const schema = loadSchemaSync(getPaths().generated.schema, {
     loaders: [new GraphQLFileLoader()],
     sort: true,
