@@ -17,8 +17,8 @@ export function getGeneratedDataDirPath(
   const projectRoot = path.dirname(configPath)
 
   const generatedDirPath =
-    findUp('.cedar', cwd) ||
-    findUp('.redwood', cwd) ||
+    findUp('.cedar', projectRoot) ||
+    findUp('.redwood', projectRoot) ||
     path.join(projectRoot, '.cedar')
 
   return generatedDirPath
