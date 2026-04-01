@@ -237,7 +237,7 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 ## CONVENTIONS
 
 - Config: `cedar.toml` (fallback `redwood.toml`)
-- User project is Yarn workspace: `["api", "web"]` (+ optional `packages/*`); framework monorepo: `["packages/*"]`
+- User project is a monorepo workspace: `["api", "web"]` (+ optional `packages/*`); framework monorepo: `["packages/*"]`
 - Auto-imports (Vite plugin): `gql` from graphql-tag, `context` from @cedarjs/context, `React` from react
 - Page auto-loading: Babel plugin scans `src/pages/` and auto-imports page components in `Routes.tsx`
 - Components/services: manual imports
@@ -250,4 +250,5 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 - Routes in `Routes.tsx` as JSX (virtual, never rendered — Babel auto-loads pages)
 - Build: Vite (web), esbuild (api)
 - Server: API always Fastify; Web: Fastify (SPA). \*SSR/RSC: Web uses Express
-- Package mgr: Yarn 4. Workspace: Nx (build orchestration). Codegen: compile-time (Vite plugins) + on-demand (rw-gen)
+- Package mgr: Yarn 4 (+ experimental support for npm and pnpm); Framework: Yarn 4 + Nx (build orchestration).
+- Codegen: compile-time (Vite plugins) + on-demand (rw-gen)

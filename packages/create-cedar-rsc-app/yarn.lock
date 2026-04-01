@@ -1916,8 +1916,8 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-package-json@npm:^0.91.0":
-  version: 0.91.0
-  resolution: "eslint-plugin-package-json@npm:0.91.0"
+  version: 0.91.1
+  resolution: "eslint-plugin-package-json@npm:0.91.1"
   dependencies:
     "@altano/repository-tools": "npm:^2.0.1"
     change-case: "npm:^5.4.4"
@@ -1932,7 +1932,7 @@ __metadata:
   peerDependencies:
     eslint: ">=8.0.0"
     jsonc-eslint-parser: ">=2.0.0"
-  checksum: 10c0/d2d33d4b9e33f8684c65cbfa33c2838a45f1bf86d1cbc670396d503f34fd93c50320818c19ec771cad115c9cac2134d5294b2c1f6c3b4d099b5720416d8500aa
+  checksum: 10c0/17de42584c405696d7d0171a3d4a143c322ce20aa420cf31c5e84bf90f6c33999e1e276c2894b6eeff04eee64ff7e04235199dbec50580397b079fc3656ea948
   languageName: node
   linkType: hard
 
@@ -2807,8 +2807,8 @@ __metadata:
   linkType: hard
 
 "knip@npm:^5.26.0":
-  version: 5.86.0
-  resolution: "knip@npm:5.86.0"
+  version: 5.88.1
+  resolution: "knip@npm:5.88.1"
   dependencies:
     "@nodelib/fs.walk": "npm:^1.2.3"
     fast-glob: "npm:^3.3.3"
@@ -2829,7 +2829,7 @@ __metadata:
   bin:
     knip: bin/knip.js
     knip-bun: bin/knip-bun.js
-  checksum: 10c0/6905c3c2bd21b1f5d51bf83568d1eff67d9d74dd9547c428f810b0dbc3624225a0c41b8e8caccbb111df2db175933aa853345798a05f91f9344ce3aca26898ff
+  checksum: 10c0/79a34e1d8e5bf5ead2b98a83159ce897e87c0de136a30eebe34ac61c6c465a61d0f6d1177cd76f69bda7939248d5c56611f8c52e8bcb5400d93964b908968ced
   languageName: node
   linkType: hard
 

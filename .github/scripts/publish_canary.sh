@@ -160,27 +160,16 @@ if [ ! -s canary_version ]; then
   exit 1
 fi
 
-# Update create-cedar-app templates to use canary packages
+# Update create-cedar-app templates and overlays to use canary packages
 
-sed "s/\"@cedarjs\/\(.*\)\": \".*\"/\"@cedarjs\/\1\": \"$(cat canary_version)\"/" \
-  packages/create-cedar-app/templates/js/package.json > tmpfile \
-  && mv tmpfile packages/create-cedar-app/templates/js/package.json
-sed "s/\"@cedarjs\/\(.*\)\": \".*\"/\"@cedarjs\/\1\": \"$(cat canary_version)\"/" \
-  packages/create-cedar-app/templates/js/api/package.json > tmpfile \
-  && mv tmpfile packages/create-cedar-app/templates/js/api/package.json
-sed "s/\"@cedarjs\/\(.*\)\": \".*\"/\"@cedarjs\/\1\": \"$(cat canary_version)\"/" \
-  packages/create-cedar-app/templates/js/web/package.json > tmpfile \
-  && mv tmpfile packages/create-cedar-app/templates/js/web/package.json
-
-sed "s/\"@cedarjs\/\(.*\)\": \".*\"/\"@cedarjs\/\1\": \"$(cat canary_version)\"/" \
-  packages/create-cedar-app/templates/ts/package.json > tmpfile \
-  && mv tmpfile packages/create-cedar-app/templates/ts/package.json
-sed "s/\"@cedarjs\/\(.*\)\": \".*\"/\"@cedarjs\/\1\": \"$(cat canary_version)\"/" \
-  packages/create-cedar-app/templates/ts/api/package.json > tmpfile \
-  && mv tmpfile packages/create-cedar-app/templates/ts/api/package.json
-sed "s/\"@cedarjs\/\(.*\)\": \".*\"/\"@cedarjs\/\1\": \"$(cat canary_version)\"/" \
-  packages/create-cedar-app/templates/ts/web/package.json > tmpfile \
-  && mv tmpfile packages/create-cedar-app/templates/ts/web/package.json
+canary_ver=$(cat canary_version)
+find packages/create-cedar-app/templates packages/create-cedar-app/database-overlays \
+  -name "package.json" \
+  | while IFS= read -r pkg_json; do
+    sed "s/\"@cedarjs\/\(.*\)\": \".*\"/\"@cedarjs\/\1\": \"$canary_ver\"/" \
+      "$pkg_json" > tmpfile \
+      && mv tmpfile "$pkg_json"
+  done
 
 # Update all packages to replace any "workspace:*" with this canary version
 
