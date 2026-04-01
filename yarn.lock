@@ -2227,7 +2227,6 @@ __metadata:
     redis: "npm:5.11.0"
     split2: "npm:4.2.0"
     title-case: "npm:3.0.3"
-    ts-toolbelt: "npm:9.6.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
