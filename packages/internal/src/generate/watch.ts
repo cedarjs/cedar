@@ -36,10 +36,11 @@ import {
 } from './typeDefinitions.js'
 
 const rwjsPaths = getPaths()
+const generatedDirName = path.basename(rwjsPaths.generated.base)
 
 const watcher = chokidar.watch('(web|api)/src/**/*.{ts,js,jsx,tsx}', {
   persistent: true,
-  ignored: ['node_modules', '.redwood'],
+  ignored: ['node_modules', generatedDirName],
   ignoreInitial: true,
   cwd: rwjsPaths.base,
   awaitWriteFinish: true,

@@ -1,0 +1,7 @@
+// See https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/constructor
+// for options.
+
+import { PrismaClient } from '@prisma/client';
+export * from '@prisma/client';
+export const db = new PrismaClient();
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJQcmlzbWFDbGllbnQiLCJkYiJdLCJzb3VyY2VzIjpbImRiLmpzIl0sInNvdXJjZXNDb250ZW50IjpbIi8vIFNlZSBodHRwczovL3d3dy5wcmlzbWEuaW8vZG9jcy9yZWZlcmVuY2UvdG9vbHMtYW5kLWludGVyZmFjZXMvcHJpc21hLWNsaWVudC9jb25zdHJ1Y3RvclxuLy8gZm9yIG9wdGlvbnMuXG5cbmltcG9ydCB7IFByaXNtYUNsaWVudCB9IGZyb20gJ0BwcmlzbWEvY2xpZW50J1xuXG5leHBvcnQgKiBmcm9tICdAcHJpc21hL2NsaWVudCdcblxuZXhwb3J0IGNvbnN0IGRiID0gbmV3IFByaXNtYUNsaWVudCgpXG4iXSwibWFwcGluZ3MiOiJBQUFBO0FBQ0E7O0FBRUEsU0FBU0EsWUFBWSxRQUFRLGdCQUFnQjtBQUU3QyxjQUFjLGdCQUFnQjtBQUU5QixPQUFPLE1BQU1DLEVBQUUsR0FBRyxJQUFJRCxZQUFZLENBQUMsQ0FBQyIsImlnbm9yZUxpc3QiOltdfQ==

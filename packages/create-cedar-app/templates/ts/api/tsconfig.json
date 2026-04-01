@@ -8,9 +8,9 @@
     "moduleResolution": "node16",
     "allowImportingTsExtensions": true,
     "skipLibCheck": false,
-    "rootDirs": ["./src", "../.redwood/types/mirror/api/src"],
+    "rootDirs": ["./src", "../.cedar/types/mirror/api/src"],
     "paths": {
-      "src/*": ["./src/*", "../.redwood/types/mirror/api/src/*"],
+      "src/*": ["./src/*", "../.cedar/types/mirror/api/src/*"],
       "types/*": ["./types/*", "../types/*"],
       "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]
     },
@@ -20,8 +20,8 @@
   },
   "include": [
     "src",
-    "../.redwood/types/includes/all-*",
-    "../.redwood/types/includes/api-*",
+    "../.cedar/types/includes/all-*",
+    "../.cedar/types/includes/api-*",
     "../types"
   ]
 }

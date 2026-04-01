@@ -42,9 +42,9 @@ test('generate the correct mirror types for cells', () => {
 
   expect(p).toMatchInlineSnapshot(`
     [
-      ".redwood/types/mirror/web/src/components/NumTodosCell/index.d.ts",
-      ".redwood/types/mirror/web/src/components/NumTodosTwoCell/index.d.ts",
-      ".redwood/types/mirror/web/src/components/TodoListCell/index.d.ts",
+      ".cedar/types/mirror/web/src/components/NumTodosCell/index.d.ts",
+      ".cedar/types/mirror/web/src/components/NumTodosTwoCell/index.d.ts",
+      ".cedar/types/mirror/web/src/components/TodoListCell/index.d.ts",
     ]
   `)
 
@@ -78,26 +78,26 @@ test('generate the correct mirror types for directory named modules', () => {
 
   expect(p).toMatchInlineSnapshot(`
     [
-      ".redwood/types/mirror/web/src/graphql/index.d.ts",
-      ".redwood/types/mirror/api/src/directives/requireAuth/index.d.ts",
-      ".redwood/types/mirror/api/src/directives/skipAuth/index.d.ts",
-      ".redwood/types/mirror/api/src/functions/healthz/index.d.ts",
-      ".redwood/types/mirror/api/src/functions/nested/index.d.ts",
-      ".redwood/types/mirror/api/src/services/todos/index.d.ts",
-      ".redwood/types/mirror/web/src/components/AddTodo/index.d.ts",
-      ".redwood/types/mirror/web/src/components/AddTodoControl/index.d.ts",
-      ".redwood/types/mirror/web/src/components/Check/index.d.ts",
-      ".redwood/types/mirror/web/src/components/TableCell/index.d.ts",
-      ".redwood/types/mirror/web/src/components/TodoItem/index.d.ts",
-      ".redwood/types/mirror/web/src/layouts/SetLayout/index.d.ts",
-      ".redwood/types/mirror/web/src/pages/BarPage/index.d.ts",
-      ".redwood/types/mirror/web/src/pages/FatalErrorPage/index.d.ts",
-      ".redwood/types/mirror/web/src/pages/FooPage/index.d.ts",
-      ".redwood/types/mirror/web/src/pages/HomePage/index.d.ts",
-      ".redwood/types/mirror/web/src/pages/NotFoundPage/index.d.ts",
-      ".redwood/types/mirror/web/src/pages/PrivatePage/index.d.ts",
-      ".redwood/types/mirror/web/src/pages/TypeScriptPage/index.d.ts",
-      ".redwood/types/mirror/web/src/pages/admin/EditUserPage/index.d.ts",
+      ".cedar/types/mirror/web/src/graphql/index.d.ts",
+      ".cedar/types/mirror/api/src/directives/requireAuth/index.d.ts",
+      ".cedar/types/mirror/api/src/directives/skipAuth/index.d.ts",
+      ".cedar/types/mirror/api/src/functions/healthz/index.d.ts",
+      ".cedar/types/mirror/api/src/functions/nested/index.d.ts",
+      ".cedar/types/mirror/api/src/services/todos/index.d.ts",
+      ".cedar/types/mirror/web/src/components/AddTodo/index.d.ts",
+      ".cedar/types/mirror/web/src/components/AddTodoControl/index.d.ts",
+      ".cedar/types/mirror/web/src/components/Check/index.d.ts",
+      ".cedar/types/mirror/web/src/components/TableCell/index.d.ts",
+      ".cedar/types/mirror/web/src/components/TodoItem/index.d.ts",
+      ".cedar/types/mirror/web/src/layouts/SetLayout/index.d.ts",
+      ".cedar/types/mirror/web/src/pages/BarPage/index.d.ts",
+      ".cedar/types/mirror/web/src/pages/FatalErrorPage/index.d.ts",
+      ".cedar/types/mirror/web/src/pages/FooPage/index.d.ts",
+      ".cedar/types/mirror/web/src/pages/HomePage/index.d.ts",
+      ".cedar/types/mirror/web/src/pages/NotFoundPage/index.d.ts",
+      ".cedar/types/mirror/web/src/pages/PrivatePage/index.d.ts",
+      ".cedar/types/mirror/web/src/pages/TypeScriptPage/index.d.ts",
+      ".cedar/types/mirror/web/src/pages/admin/EditUserPage/index.d.ts",
     ]
   `)
 
@@ -135,7 +135,7 @@ test('generate the correct mirror types for directory named modules', () => {
 test('generates global page imports', () => {
   const paths = generateTypeDefRouterPages()
   const p = paths.map(cleanPaths)
-  expect(p[0]).toEqual('.redwood/types/includes/web-routesPages.d.ts')
+  expect(p[0]).toEqual('.cedar/types/includes/web-routesPages.d.ts')
 
   const c = fs.readFileSync(paths[0], 'utf-8')
 
@@ -164,20 +164,20 @@ test('generates global page imports source maps', () => {
 test('generate current user ', () => {
   const paths = generateTypeDefCurrentUser()
   const p = paths.map(cleanPaths)
-  expect(p[0]).toEqual('.redwood/types/includes/all-currentUser.d.ts')
+  expect(p[0]).toEqual('.cedar/types/includes/all-currentUser.d.ts')
   // The type definition output is static, so there's nothing to test.
 })
 
 test('generate gqlorm db augmentation', () => {
   const paths = generateTypeDefGqlorm()
   const p = paths.map(cleanPaths)
-  expect(p[0]).toEqual('.redwood/types/includes/all-gqlorm.d.ts')
+  expect(p[0]).toEqual('.cedar/types/includes/all-gqlorm.d.ts')
 })
 
 test('generates the router routes', () => {
   const paths = generateTypeDefRouterRoutes()
   const p = paths.map(cleanPaths)
-  expect(p[0]).toEqual('.redwood/types/includes/web-routerRoutes.d.ts')
+  expect(p[0]).toEqual('.cedar/types/includes/web-routerRoutes.d.ts')
 
   const c = fs.readFileSync(paths[0], 'utf-8')
   expect(c).toContain(`
@@ -202,19 +202,19 @@ test('generates source maps for the router routes', () => {
 test('generate glob imports', () => {
   const paths = generateTypeDefGlobImports()
   const p = paths.map(cleanPaths)
-  expect(p[0]).toEqual('.redwood/types/includes/api-globImports.d.ts')
+  expect(p[0]).toEqual('.cedar/types/includes/api-globImports.d.ts')
 })
 
 test('generate api global context', () => {
   const paths = generateTypeDefGlobalContext()
   const p = paths.map(cleanPaths)
-  expect(p[0]).toEqual('.redwood/types/includes/api-globalContext.d.ts')
+  expect(p[0]).toEqual('.cedar/types/includes/api-globalContext.d.ts')
 })
 
 test('generate scenario type defs', () => {
   const paths = generateTypeDefScenarios()
   const p = paths.map(cleanPaths)
-  expect(p[0]).toEqual('.redwood/types/includes/api-scenarios.d.ts')
+  expect(p[0]).toEqual('.cedar/types/includes/api-scenarios.d.ts')
 })
 
 test('mirror path for directory named modules', () => {
@@ -230,6 +230,6 @@ test('mirror path for dir cells', () => {
   const p = mirrorPathForCell(c[0])
 
   expect(cleanPaths(p[0])).toMatchInlineSnapshot(
-    `".redwood/types/mirror/web/src/components/NumTodosCell"`,
+    `".cedar/types/mirror/web/src/components/NumTodosCell"`,
   )
 })

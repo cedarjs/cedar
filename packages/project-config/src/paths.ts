@@ -5,6 +5,7 @@ import fg from 'fast-glob'
 
 import { getConfig } from './config.js'
 import { getConfigPath } from './configPath.js'
+import { getGeneratedDataDirPath } from './generatedDataDir.js'
 
 export interface NodeTargetPaths {
   base: string
@@ -146,18 +147,19 @@ export function getPaths(BASE_DIR: string = getBaseDir()) {
   const viteConfig = resolveFile(
     path.join(BASE_DIR, 'web/vite.config'),
   ) as string
+  const generatedBase = getGeneratedDataDirPath(BASE_DIR)
 
   const paths: Paths = {
     base: BASE_DIR,
 
     generated: {
-      base: path.join(BASE_DIR, '.redwood'),
-      schema: path.join(BASE_DIR, '.redwood/schema.graphql'),
+      base: generatedBase,
+      schema: path.join(generatedBase, 'schema.graphql'),
       types: {
-        includes: path.join(BASE_DIR, '.redwood/types/includes'),
-        mirror: path.join(BASE_DIR, '.redwood/types/mirror'),
+        includes: path.join(generatedBase, 'types/includes'),
+        mirror: path.join(generatedBase, 'types/mirror'),
       },
-      prebuild: path.join(BASE_DIR, '.redwood/prebuild'),
+      prebuild: path.join(generatedBase, 'prebuild'),
     },
 
     scripts: path.join(BASE_DIR, 'scripts'),

@@ -9,16 +9,16 @@
     "baseUrl": "./",
     "rootDirs": [
       "./src",
-      "../.redwood/types/mirror/web/src",
+      "../.cedar/types/mirror/web/src",
       "../api/src",
-      "../.redwood/types/mirror/api/src"
+      "../.cedar/types/mirror/api/src"
     ],
     "paths": {
       "src/*": [
         "./src/*",
-        "../.redwood/types/mirror/web/src/*",
+        "../.cedar/types/mirror/web/src/*",
         "../api/src/*",
-        "../.redwood/types/mirror/api/src/*"
+        "../.cedar/types/mirror/api/src/*"
       ],
       "types/*": ["./types/*", "../types/*"],
       "@cedarjs/testing": ["../node_modules/@cedarjs/testing/web"]
@@ -29,8 +29,8 @@
   },
   "include": [
     "src",
-    "../.redwood/types/includes/all-*",
-    "../.redwood/types/includes/web-*",
+    "../.cedar/types/includes/all-*",
+    "../.cedar/types/includes/web-*",
     "../types"
   ]
 }

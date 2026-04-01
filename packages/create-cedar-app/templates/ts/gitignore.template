@@ -4,8 +4,8 @@
 !.env.example
 !.env.defaults
 .netlify
-.redwood/*
-!.redwood/README.md
+.cedar/*
+!.cedar/README.md
 dev.db*
 api/db/pglite-data
 api/db/generated/prisma

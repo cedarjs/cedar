@@ -64,11 +64,11 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
         packages: path.join(BASE_PATH, 'packages'),
         generatorTemplates: path.join(BASE_PATH, 'generatorTemplates'),
         generated: {
-          base: path.join(BASE_PATH, '.redwood'),
-          schema: path.join(BASE_PATH, '.redwood/schema.graphql'),
+          base: path.join(BASE_PATH, '.cedar'),
+          schema: path.join(BASE_PATH, '.cedar/schema.graphql'),
           types: {
-            includes: path.join(BASE_PATH, '.redwood/types/includes'),
-            mirror: path.join(BASE_PATH, '.redwood/types/mirror'),
+            includes: path.join(BASE_PATH, '.cedar/types/includes'),
+            mirror: path.join(BASE_PATH, '.cedar/types/mirror'),
           },
         },
       }

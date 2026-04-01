@@ -9,16 +9,16 @@
     "skipLibCheck": false,
     "rootDirs": [
       "./src",
-      "../.redwood/types/mirror/web/src",
+      "../.cedar/types/mirror/web/src",
       "../api/src",
-      "../.redwood/types/mirror/api/src"
+      "../.cedar/types/mirror/api/src"
     ],
     "paths": {
       "src/*": [
         "./src/*",
-        "../.redwood/types/mirror/web/src/*",
+        "../.cedar/types/mirror/web/src/*",
         "../api/src/*",
-        "../.redwood/types/mirror/api/src/*"
+        "../.cedar/types/mirror/api/src/*"
       ],
       "$api/*": [
         "../api/*"
@@ -46,8 +46,8 @@
     "src",
     "config",
     ".storybook/**/*",
-    "../.redwood/types/includes/all-*",
-    "../.redwood/types/includes/web-*",
+    "../.cedar/types/includes/all-*",
+    "../.cedar/types/includes/web-*",
     "../types",
     "./types"
   ]
