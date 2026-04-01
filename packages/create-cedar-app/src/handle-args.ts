@@ -270,12 +270,14 @@ export async function handleDatabasePreference(
   databaseFlag: string | null,
   useEsm: boolean,
 ) {
+  const supportedDatabases = ['sqlite', 'pglite', 'neon-postgres']
   // Validate database flag
-  if (databaseFlag && databaseFlag !== 'sqlite' && databaseFlag !== 'pglite') {
+  if (databaseFlag && !supportedDatabases.includes(databaseFlag)) {
     tui.stopReactive(true)
     tui.displayError(
       'Invalid database',
-      `Unknown database "${databaseFlag}". Supported values: sqlite, pglite`,
+      `Unknown database "${databaseFlag}". Supported values: ` +
+        supportedDatabases.join(', '),
     )
     recordErrorViaTelemetry('Invalid database flag')
     await shutdownTelemetry()
