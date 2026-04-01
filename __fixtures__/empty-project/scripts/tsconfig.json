@@ -22,11 +22,11 @@
       ],
       "$web/src/*": [
         "../web/src/*",
-        "../.redwood/types/mirror/web/src/*"
+        "../.cedar/types/mirror/web/src/*"
       ],
       "web/src/*": [
         "../web/src/*",
-        "../.redwood/types/mirror/web/src/*"
+        "../.cedar/types/mirror/web/src/*"
       ],
       "types/*": ["../types/*", "../web/types/*", "../api/types/*"],
     },

@@ -231,8 +231,7 @@ const buildPayload = async () => {
 // returns the UUID for this device. caches the UUID for 24 hours
 function uniqueId() {
   const telemetryCachePath = path.join(
-    getPaths().base,
-    '.redwood',
+    getPaths().generated.base,
     'telemetry.txt',
   )
   const now = Date.now()
@@ -245,7 +244,7 @@ function uniqueId() {
   ) {
     uuid = uuidv4()
     try {
-      // Create `.redwood` directory if it does not exist
+      // Create the generated directory if it does not exist
       if (!fs.existsSync(path.dirname(telemetryCachePath))) {
         fs.mkdirSync(path.dirname(telemetryCachePath), { recursive: true })
       }

@@ -1,0 +1,10 @@
+import gql from "graphql-tag";
+export const schema = gql`
+  type Query {
+    currentUser: JSON
+  }
+`;
+const a = x => {
+  return x;
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJncWwiLCJzY2hlbWEiLCJhIiwieCJdLCJzb3VyY2VzIjpbImN1cnJlbnRVc2VyLnNkbC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgY29uc3Qgc2NoZW1hID0gZ3FsYFxuICB0eXBlIFF1ZXJ5IHtcbiAgICBjdXJyZW50VXNlcjogSlNPTlxuICB9XG5gXG5cbmNvbnN0IGEgPSAoeDogc3RyaW5nKSA9PiB7IHJldHVybiB4IH0iXSwibWFwcGluZ3MiOiJPQUFzQkEsR0FBRztBQUF6QixPQUFPLE1BQU1DLE1BQU0sR0FBR0QsR0FBRztBQUN6QjtBQUNBO0FBQ0E7QUFDQSxDQUFDO0FBRUQsTUFBTUUsQ0FBQyxHQUFJQyxDQUFTLElBQUs7RUFBRSxPQUFPQSxDQUFDO0FBQUMsQ0FBQyIsImlnbm9yZUxpc3QiOltdfQ==

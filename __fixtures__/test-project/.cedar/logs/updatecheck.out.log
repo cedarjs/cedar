@@ -1,0 +1,13 @@
+Starting log:
+ - Time: 2026-03-31T13:06:27.641Z
+ - Name: updateCheck (updatecheck)
+ - Command: yarn
+ - Arguments: node /Users/tobbe/dev/cedarjs/cedar/packages/cli/dist/lib/updateCheckExecute.js
+
+[31m[1mUsage Error[22m[39m: The nearest package directory ([38;2;215;95;215m/Users/tobbe/dev/cedarjs/cedar/__fixtures__/test-project[39m) doesn't seem to be part of the project declared in [38;2;215;95;215m/Users/tobbe/dev/cedarjs/cedar[39m.
+
+- If [38;2;215;95;215m/Users/tobbe/dev/cedarjs/cedar[39m isn't intended to be a project, remove any yarn.lock and/or package.json file there.
+- If [38;2;215;95;215m/Users/tobbe/dev/cedarjs/cedar[39m is intended to be a project, it might be that you forgot to list [38;2;215;95;215m__fixtures__/test-project[39m in its workspace configuration.
+- Finally, if [38;2;215;95;215m/Users/tobbe/dev/cedarjs/cedar[39m is fine and you intend [38;2;215;95;215m__fixtures__/test-project[39m to be treated as a completely separate project (not even a workspace), create an empty yarn.lock file in it.
+
+[1m$ [22myarn exec <commandName> ...

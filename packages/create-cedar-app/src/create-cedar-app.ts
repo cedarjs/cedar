@@ -281,8 +281,8 @@ async function createProjectFiles(
   await replacePlaceholders(newAppDir, packageManager)
 
   // Write the uid
-  fs.mkdirSync(path.join(newAppDir, '.redwood'), { recursive: true })
-  fs.writeFileSync(path.join(newAppDir, '.redwood', 'telemetry.txt'), UID)
+  fs.mkdirSync(path.join(newAppDir, '.cedar'), { recursive: true })
+  fs.writeFileSync(path.join(newAppDir, '.cedar', 'telemetry.txt'), UID)
 
   const filesCreated = `${RedwoodStyling.green('✔')} Project files created`
   tuiContent.update({ spinner: { enabled: false }, content: filesCreated })
