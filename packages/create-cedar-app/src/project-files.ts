@@ -123,6 +123,10 @@ export async function createProjectFiles(
         },
         body: JSON.stringify({ ref: 'cedarjs' }),
       })
+      if (!res.ok) {
+        // Throw error that we'll catch below
+        throw new Error(`Neon API returned ${res.status} ${res.statusText}`)
+      }
       const data = await res.json()
       databaseUrl = data.connection_string
 
@@ -157,24 +161,6 @@ export async function createProjectFiles(
   return newAppDir
 }
 
-function prismaVersion() {
-  const cliPackageJsonPath = path.join(
-    import.meta.dirname,
-    '..',
-    '..',
-    'packages',
-    'cli',
-    'package.json',
-  )
-  const json = JSON.parse(fs.readFileSync(cliPackageJsonPath, 'utf8'))
-
-  if (!json.dependencies.prisma) {
-    throw new Error('prisma dependency not found in cli/package.json')
-  }
-
-  return json.dependencies.prisma
-}
-
 /** String replace of placeholders in template files */
 async function replacePlaceholders(
   dir: string,
@@ -183,12 +169,15 @@ async function replacePlaceholders(
 ) {
   const installCommand = getInstallCommand(packageManager)
   const cedarCommand = getCedarCommandPrefix(packageManager)
+  // TODO: Figure out how to make this dynamic, but still have it working with
+  // yarn dlx, npx etc
+  const prismaVersion = '7.6.0'
 
   const replacements: Record<string, string | undefined> = {
     '{{PM}}': packageManager,
     '{{PM_INSTALL}}': installCommand,
     '{{CEDAR_CLI}}': cedarCommand,
-    '{{PRISMA_VERSION}}': prismaVersion(),
+    '{{PRISMA_VERSION}}': prismaVersion,
     '{{DATABASE_URL}}': databaseUrl,
   }
 
