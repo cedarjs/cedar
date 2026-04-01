@@ -22,7 +22,7 @@ afterEach(() => {
 })
 
 test('Generates GraphQL schema', async () => {
-  const expectedPath = path.join(FIXTURE_PATH, '.redwood', 'schema.graphql')
+  const expectedPath = path.join(FIXTURE_PATH, '.cedar', 'schema.graphql')
 
   vi.spyOn(fs, 'writeFileSync').mockImplementation(
     (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
@@ -44,7 +44,7 @@ test('Includes live query directive if serverful and realtime ', async () => {
   )
   process.env.CEDAR_CWD = fixturePath
 
-  const expectedPath = path.join(fixturePath, '.redwood', 'schema.graphql')
+  const expectedPath = path.join(fixturePath, '.cedar', 'schema.graphql')
 
   vi.spyOn(fs, 'writeFileSync').mockImplementation(
     (file: fs.PathOrFileDescriptor, data: string | ArrayBufferView) => {
@@ -104,7 +104,7 @@ test('Generates complete schema with directives and subscriptions while excludin
   )
   process.env.CEDAR_CWD = fixturePath
 
-  const expectedPath = path.join(fixturePath, '.redwood', 'schema.graphql')
+  const expectedPath = path.join(fixturePath, '.cedar', 'schema.graphql')
 
   let generatedSchema = ''
   let writeFileSyncSchemaPath = ''
