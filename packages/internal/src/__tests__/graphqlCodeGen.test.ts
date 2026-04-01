@@ -131,13 +131,17 @@ test('Generate gql typedefs api', async () => {
     "import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from 'src/lib/db'",
   )
 
-  // Check printMappedModelsPlugin works correctly
-  expect(data).toContain(
-    `type MaybeOrArrayOfMaybe<T> = T | Maybe<T> | Maybe<T>[]`,
-  )
+  // Check that relation keys are pre-computed and AllMappedModels is no longer emitted
+  expect(data).not.toContain('AllMappedModels')
+  expect(data).not.toContain('MaybeOrArrayOfMaybe')
 
-  // Should only contain the SDL models that are also in Prisma
-  expect(data).toContain(`type AllMappedModels = MaybeOrArrayOfMaybe<Todo>`)
+  // Check that the new optimized mapper type is used
+  expect(data).toContain('MergePrismaWithSdlTypesWithKnownRelations')
+
+  // Check the import uses the new type
+  expect(data).toContain(
+    "import { MergePrismaWithSdlTypesWithKnownRelations } from '@cedarjs/api'",
+  )
 })
 
 test('respects user provided codegen config', async () => {

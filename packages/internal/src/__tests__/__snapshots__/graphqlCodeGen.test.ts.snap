@@ -2,7 +2,7 @@
 
 exports[`Generate gql typedefs api 1`] = `
 "import { Prisma } from "src/lib/db"
-import { MergePrismaWithSdlTypes, MakeRelationsOptional } from '@cedarjs/api'
+import { MergePrismaWithSdlTypesWithKnownRelations } from '@cedarjs/api'
 import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from 'src/lib/db'
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import { CedarGraphQLContext } from '@cedarjs/graphql-server/dist/types';
@@ -124,8 +124,6 @@ export type Todo = {
   status: Scalars['String']['output'];
 };
 
-type MaybeOrArrayOfMaybe<T> = T | Maybe<T> | Maybe<T>[];
-type AllMappedModels = MaybeOrArrayOfMaybe<Todo>
 
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -203,7 +201,7 @@ export type ResolversTypes = {
   Redwood: ResolverTypeWrapper<Redwood>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Time: ResolverTypeWrapper<Scalars['Time']['output']>;
-  Todo: ResolverTypeWrapper<MergePrismaWithSdlTypes<PrismaTodo, MakeRelationsOptional<Todo, AllMappedModels>, AllMappedModels>>;
+  Todo: ResolverTypeWrapper<MergePrismaWithSdlTypesWithKnownRelations<PrismaTodo, Todo, never>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -223,7 +221,7 @@ export type ResolversParentTypes = {
   Redwood: Redwood;
   String: Scalars['String']['output'];
   Time: Scalars['Time']['output'];
-  Todo: MergePrismaWithSdlTypes<PrismaTodo, MakeRelationsOptional<Todo, AllMappedModels>, AllMappedModels>;
+  Todo: MergePrismaWithSdlTypesWithKnownRelations<PrismaTodo, Todo, never>;
 };
 
 export type requireAuthDirectiveArgs = {

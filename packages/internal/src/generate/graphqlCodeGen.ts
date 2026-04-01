@@ -16,7 +16,7 @@ import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { loadDocuments, loadSchemaSync } from '@graphql-tools/load'
 import type { LoadTypedefsOptions } from '@graphql-tools/load'
 import execa from 'execa'
-import { Kind, type DocumentNode } from 'graphql'
+import { type DocumentNode, getNamedType, isObjectType } from 'graphql'
 
 import {
   getPaths,
@@ -79,17 +79,12 @@ export const generateTypeDefGraphQLApi = async (): Promise<TypeDefResult> => {
       options: {
         content: [
           `import { Prisma } from "${prismaImportSource}"`,
-          "import { MergePrismaWithSdlTypes, MakeRelationsOptional } from '@cedarjs/api'",
+          "import { MergePrismaWithSdlTypesWithKnownRelations } from '@cedarjs/api'",
           `import { ${prismaImports.join(', ')} } from '${prismaImportSource}'`,
         ],
         placement: 'prepend',
       },
       codegenPlugin: addPlugin,
-    },
-    {
-      name: 'print-mapped-models',
-      options: {},
-      codegenPlugin: printMappedModelsPlugin,
     },
     {
       name: 'typescript-resolvers',
@@ -324,15 +319,35 @@ async function getPrismaModels() {
 
 async function getPluginConfig(side: CodegenSide) {
   const prismaModels: Record<string, string> = await getPrismaModels()
+  const modelNames = new Set(Object.keys(prismaModels))
+
+  // Load the GraphQL schema to determine relation fields at codegen time
+  // instead of deferring to expensive conditional types at type-check time
+  const schema = loadSchemaSync(getPaths().generated.schema, {
+    loaders: [new GraphQLFileLoader()],
+    sort: true,
+  })
+
   Object.keys(prismaModels).forEach((key) => {
-    /** creates an object like this
-     * {
-     *  Post: MergePrismaWithSdlTypes<PrismaPost, MakeRelationsOptional<Post, AllMappedModels>, AllMappedModels>>
-     *  ...
-     * }
-     */
+    const sdlType = schema.getType(key)
+    let relationKeys = 'never'
+
+    if (sdlType && isObjectType(sdlType)) {
+      const fields = sdlType.getFields()
+      const relations = Object.entries(fields)
+        .filter(([_, field]) => {
+          const namedType = getNamedType(field.type)
+          return namedType != null && modelNames.has(namedType.name)
+        })
+        .map(([name]) => `'${name}'`)
+
+      if (relations.length > 0) {
+        relationKeys = relations.join(' | ')
+      }
+    }
+
     prismaModels[key] =
-      `MergePrismaWithSdlTypes<Prisma${key}, MakeRelationsOptional<${key}, AllMappedModels>, AllMappedModels>`
+      `MergePrismaWithSdlTypesWithKnownRelations<Prisma${key}, ${key}, ${relationKeys}>`
   })
 
   type ScalarKeys =
@@ -405,38 +420,6 @@ interface CombinedPluginConfig {
   name: string
   options: CodegenTypes.PluginConfig
   codegenPlugin: CodegenPlugin
-}
-
-/**
- * Codgen plugin that just lists all the SDL models that are also mapped Prisma models
- * We use a plugin, because its possible to have Prisma models that do not have an SDL model
- * so we can't just list all the Prisma models, even if they're included in the mappers object.
- *
- * Example:
- * type AllMappedModels = MaybeOrArrayOfMaybe<Post | User>
- *
- * Note that the types are SDL types, not Prisma types.
- * We do not include SDL-only types in this list.
- */
-const printMappedModelsPlugin: CodegenPlugin = {
-  plugin: (schema, _documents, config) => {
-    // this way we can make sure relation types are not required
-    const sdlTypesWhichAreMapped = Object.values(schema.getTypeMap())
-      .filter((type) => {
-        return type.astNode?.kind === Kind.OBJECT_TYPE_DEFINITION
-      })
-      .filter((objectDefType) => {
-        const modelName = objectDefType.astNode?.name.value
-        return (
-          modelName && modelName in config.mappers // Only keep the mapped Prisma models
-        )
-      })
-      .map((objectDefType) => objectDefType.astNode?.name.value)
-
-    return `type MaybeOrArrayOfMaybe<T> = T | Maybe<T> | Maybe<T>[];\ntype AllMappedModels = MaybeOrArrayOfMaybe<${sdlTypesWhichAreMapped.join(
-      ' | ',
-    )}>`
-  },
 }
 
 function getCodegenOptions(
