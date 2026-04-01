@@ -16,7 +16,12 @@ import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { loadDocuments, loadSchemaSync } from '@graphql-tools/load'
 import type { LoadTypedefsOptions } from '@graphql-tools/load'
 import execa from 'execa'
-import { type DocumentNode, getNamedType, isObjectType } from 'graphql'
+import {
+  type DocumentNode,
+  type GraphQLSchema,
+  getNamedType,
+  isObjectType,
+} from 'graphql'
 
 import {
   getPaths,
@@ -190,7 +195,7 @@ async function runCodegenGraphQL(
     configFilePath: getPaths().base,
   })
 
-  const pluginConfig = await getPluginConfig(side)
+  const { pluginConfig, schema } = await getPluginConfig(side)
 
   // Merge in user codegen config with the rw built-in one
   const mergedConfig = {
@@ -198,7 +203,12 @@ async function runCodegenGraphQL(
     ...userCodegenConfig?.config?.config,
   }
 
-  const options = getCodegenOptions(documents, mergedConfig, extraPlugins)
+  const options = getCodegenOptions(
+    documents,
+    mergedConfig,
+    extraPlugins,
+    schema,
+  )
   const output = await codegen(options)
 
   fs.mkdirSync(path.dirname(filename), { recursive: true })
@@ -394,7 +404,7 @@ async function getPluginConfig(side: CodegenSide) {
     contextType: `@cedarjs/graphql-server/dist/types#CedarGraphQLContext`,
   }
 
-  return pluginConfig
+  return { pluginConfig, schema }
 }
 
 export const getResolverFnType = () => {
@@ -424,6 +434,7 @@ function getCodegenOptions(
   documents: CodegenTypes.DocumentFile[],
   config: CodegenTypes.PluginConfig,
   extraPlugins: CombinedPluginConfig[],
+  schemaAst?: GraphQLSchema,
 ) {
   const plugins = [
     { typescript: { enumsAsTypes: true } },
@@ -450,10 +461,12 @@ function getCodegenOptions(
     // When that happens we'll have have to remove our `schema` line, and
     // rename `schemaAst` to `schema`
     schema: undefined as unknown as DocumentNode,
-    schemaAst: loadSchemaSync(getPaths().generated.schema, {
-      loaders: [new GraphQLFileLoader()],
-      sort: true,
-    }),
+    schemaAst:
+      schemaAst ??
+      loadSchemaSync(getPaths().generated.schema, {
+        loaders: [new GraphQLFileLoader()],
+        sort: true,
+      }),
     documents,
     config,
     plugins,
