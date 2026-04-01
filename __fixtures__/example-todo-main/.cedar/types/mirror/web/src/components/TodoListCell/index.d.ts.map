@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/components/TodoListCell/TodoListCell.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;;;;;;;;;AA8Ba",
+  "file": "index.d.ts"
+}

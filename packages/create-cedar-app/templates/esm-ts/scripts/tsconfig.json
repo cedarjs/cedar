@@ -9,12 +9,12 @@
     "paths": {
       "$api/*": ["../api/*"],
       "api/*": ["../api/*"],
-      "$api/src/*": ["../api/src/*", "../.redwood/types/mirror/api/src/*"],
-      "api/src/*": ["../api/src/*", "../.redwood/types/mirror/api/src/*"],
+      "$api/src/*": ["../api/src/*", "../.cedar/types/mirror/api/src/*"],
+      "api/src/*": ["../api/src/*", "../.cedar/types/mirror/api/src/*"],
       "$web/*": ["../web/*"],
       "web/*": ["../web/*"],
-      "$web/src/*": ["../web/src/*", "../.redwood/types/mirror/web/src/*"],
-      "web/src/*": ["../web/src/*", "../.redwood/types/mirror/web/src/*"],
+      "$web/src/*": ["../web/src/*", "../.cedar/types/mirror/web/src/*"],
+      "web/src/*": ["../web/src/*", "../.cedar/types/mirror/web/src/*"],
       "types/*": ["../types/*", "../web/types/*", "../api/types/*"]
     },
     "typeRoots": ["../node_modules/@types"],
@@ -22,8 +22,8 @@
   },
   "include": [
     ".",
-    "../.redwood/types/includes/all-*",
-    "../.redwood/types/includes/web-*",
+    "../.cedar/types/includes/all-*",
+    "../.cedar/types/includes/web-*",
     "../types"
   ]
 }

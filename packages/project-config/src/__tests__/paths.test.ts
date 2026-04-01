@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import { describe, beforeAll, afterAll, it, expect, test } from 'vitest'
 
@@ -15,19 +15,19 @@ import {
 const CEDAR_CWD = process.env.CEDAR_CWD
 
 /**
- * All paths relevant to the redwood stack as defined in
+ * All paths relevant to the cedar stack as defined in
  * {@link ../paths | paths.ts}, relative from project root
  */
 const DEFAULT_PATHS = {
   base: [],
   generated: {
-    base: ['.redwood'],
-    schema: ['.redwood', 'schema.graphql'],
+    base: ['.cedar'],
+    schema: ['.cedar', 'schema.graphql'],
     types: {
-      includes: ['.redwood', 'types', 'includes'],
-      mirror: ['.redwood', 'types', 'mirror'],
+      includes: ['.cedar', 'types', 'includes'],
+      mirror: ['.cedar', 'types', 'mirror'],
     },
-    prebuild: ['.redwood', 'prebuild'],
+    prebuild: ['.cedar', 'prebuild'],
   },
   packages: ['packages'],
   scripts: ['scripts'],
@@ -471,6 +471,16 @@ describe('paths', () => {
     it('gets the correct paths', () => {
       const pathTemplate = forJavascriptProject(DEFAULT_PATHS)
 
+      // Testing with .redwood here, because we still support that
+      Object.assign(pathTemplate.generated, {
+        base: ['.redwood'],
+        schema: ['.redwood', 'schema.graphql'],
+        types: {
+          includes: ['.redwood', 'types', 'includes'],
+          mirror: ['.redwood', 'types', 'mirror'],
+        },
+        prebuild: ['.redwood', 'prebuild'],
+      })
       Object.assign(pathTemplate.api, {
         jobsConfig: null,
         distJobsConfig: null,

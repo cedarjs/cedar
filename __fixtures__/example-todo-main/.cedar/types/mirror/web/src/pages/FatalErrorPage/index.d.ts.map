@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/FatalErrorPage/FatalErrorPage.js"
+  ],
+  "names": [],
+  "mappings": ";;;AAQA",
+  "file": "index.d.ts"
+}

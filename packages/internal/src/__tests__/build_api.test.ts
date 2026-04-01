@@ -19,7 +19,7 @@ const FIXTURE_PATH = path.resolve(
   '../../../../__fixtures__/example-todo-main',
 )
 
-// @NOTE: we no longer prebuild files into the .redwood/prebuild folder
+// @NOTE: we no longer prebuild files into the .cedar/prebuild folder
 // However, prebuilding in the tests is still helpful for us to validate
 // that everything is working as expected.
 export const prebuildApiFiles = async (srcFiles: string[]) => {
@@ -72,17 +72,17 @@ afterAll(() => {
 test('api files are prebuilt', () => {
   // Builds non-nested functions
   expect(relativePaths).toContain(
-    '.redwood/prebuild/api/src/functions/graphql.js',
+    '.cedar/prebuild/api/src/functions/graphql.js',
   )
 
   // Builds graphql folder
   expect(relativePaths).toContain(
-    '.redwood/prebuild/api/src/graphql/todos.sdl.js',
+    '.cedar/prebuild/api/src/graphql/todos.sdl.js',
   )
 
   // Builds nested function
   expect(relativePaths).toContain(
-    '.redwood/prebuild/api/src/functions/nested/nested.js',
+    '.cedar/prebuild/api/src/functions/nested/nested.js',
   )
 })
 

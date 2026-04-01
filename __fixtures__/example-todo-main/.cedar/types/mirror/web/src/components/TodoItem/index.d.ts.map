@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/components/TodoItem/TodoItem.js"
+  ],
+  "names": [],
+  "mappings": ";;;AAGA",
+  "file": "index.d.ts"
+}

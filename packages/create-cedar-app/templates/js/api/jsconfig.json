@@ -8,12 +8,12 @@
     "skipLibCheck": false,
     "rootDirs": [
       "./src",
-      "../.redwood/types/mirror/api/src"
+      "../.cedar/types/mirror/api/src"
     ],
     "paths": {
       "src/*": [
         "./src/*",
-        "../.redwood/types/mirror/api/src/*"
+        "../.cedar/types/mirror/api/src/*"
       ],
       "types/*": [
         "./types/*",
@@ -34,8 +34,8 @@
   },
   "include": [
     "src",
-    "../.redwood/types/includes/all-*",
-    "../.redwood/types/includes/api-*",
+    "../.cedar/types/includes/all-*",
+    "../.cedar/types/includes/api-*",
     "../types"
   ]
 }

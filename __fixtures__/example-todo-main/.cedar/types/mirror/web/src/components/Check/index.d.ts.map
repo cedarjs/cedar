@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/components/Check/Check.js"
+  ],
+  "names": [],
+  "mappings": ";;;AAcA",
+  "file": "index.d.ts"
+}

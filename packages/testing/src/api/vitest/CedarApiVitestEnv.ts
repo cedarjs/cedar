@@ -19,7 +19,7 @@ const CedarApiVitestEnvironment: Environment = {
 
     const cedarPaths = getPaths()
 
-    const defaultDb = `file:${path.join(cedarPaths.base, '.redwood', 'test.db')}`
+    const defaultDb = `file:${path.join(cedarPaths.generated.base, 'test.db')}`
 
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || defaultDb
 

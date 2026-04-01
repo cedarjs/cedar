@@ -328,7 +328,7 @@ test('files should not have changed unintentionally in esm JS template', () => {
  *
  *   We run `yarn lint` before `yarn test` in CI.
  *   Running `yarn lint` leads to a call to `getPaths` from `@cedarjs/internal`
- *   which creates the `.redwood` directory.
+ *   which creates the `.cedar` directory.
  *   That directory and its contents aren't part of the template,
  *   but will be picked up by this test and lead to a false negative without
  *   this.
@@ -346,6 +346,8 @@ test('files should not have changed unintentionally in esm JS template', () => {
 function getDirectoryStructure(dir: string) {
   const fileStructure = klawSync(dir)
 
+  const filePathsToIgnore = ['.cedar', 'yarn.lock']
+
   return fileStructure
     .filter(
       (file) =>
@@ -358,5 +360,3 @@ function getDirectoryStructure(dir: string) {
     )
     .sort()
 }
-
-const filePathsToIgnore = ['.redwood', 'yarn.lock']

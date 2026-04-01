@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "../../../../../../../web/src/pages/FooPage/FooPage.tsx"
+  ],
+  "names": [],
+  "mappings": ";;;AAAA",
+  "file": "index.d.ts"
+}
