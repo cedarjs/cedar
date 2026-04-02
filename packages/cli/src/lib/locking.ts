@@ -5,7 +5,7 @@ import path from 'path'
 import { getPaths } from './index.js'
 
 /**
- * Creates the ".redwood/locks" directory if it does not exist
+ * Creates the ".cedar/locks" directory if it does not exist
  */
 function ensureLockDirectoryExists() {
   const locksPath = path.join(getPaths().generated.base, 'locks')

@@ -34,7 +34,7 @@ vi.mock('@cedarjs/project-config', () => {
     getPaths: () => {
       return {
         generated: {
-          base: '.redwood',
+          base: '.cedar',
         },
         base: '',
       }

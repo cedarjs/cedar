@@ -79,9 +79,9 @@ describe('TypeScript config file parsing', () => {
 
   it('handles invalid JSON', () => {
     const apiTSConfig =
-      '{"compilerOptions": {"noEmit": true,"allowJs": true,"esModuleInterop": true,"target": "esnext","module": "esnext","moduleResolution": "node","baseUrl": "./","rootDirs": ["./src","../.redwood/types/mirror/api/src"],"paths": {"src/*": ["./src/*","../.redwood/types/mirror/api/src/*"],"types/*": ["./types/*", "../types/*"],"@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]},"typeRoots": ["../node_modules/@types","./node_modules/@types"],"types": ["jest"],},"include": ["src","../.redwood/types/includes/all-*","../.redwood/types/includes/api-*","../types"]}'
+      '{"compilerOptions": {"noEmit": true,"allowJs": true,"esModuleInterop": true,"target": "esnext","module": "esnext","moduleResolution": "node","baseUrl": "./","rootDirs": ["./src","../.cedar/types/mirror/api/src"],"paths": {"src/*": ["./src/*","../.cedar/types/mirror/api/src/*"],"types/*": ["./types/*", "../types/*"],"@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]},"typeRoots": ["../node_modules/@types","./node_modules/@types"],"types": ["jest"],},"include": ["src","../.cedar/types/includes/all-*","../.cedar/types/includes/api-*","../types"]}'
     const webTSConfig =
-      '{"compilerOptions": {"noEmit": true,"allowJs": true,"esModuleInterop": true,"target": "esnext","module": "esnext","moduleResolution": "node","baseUrl": "./","rootDirs": ["./src","../.redwood/types/mirror/web/src","../api/src","../.redwood/types/mirror/api/src"],"paths": {"src/*": ["./src/*","../.redwood/types/mirror/web/src/*","../api/src/*","../.redwood/types/mirror/api/src/*"],"$api/*": [ "../api/*" ],"types/*": ["./types/*", "../types/*"],"@cedarjs/testing": ["../node_modules/@cedarjs/testing/web"]},"typeRoots": ["../node_modules/@types", "./node_modules/@types"],"types": ["jest", "@testing-library/jest-dom"],"jsx": "preserve",},"include": ["src","../.redwood/types/includes/all-*","../.redwood/types/includes/web-*","../types","./types"]}'
+      '{"compilerOptions": {"noEmit": true,"allowJs": true,"esModuleInterop": true,"target": "esnext","module": "esnext","moduleResolution": "node","baseUrl": "./","rootDirs": ["./src","../.cedar/types/mirror/web/src","../api/src","../.cedar/types/mirror/api/src"],"paths": {"src/*": ["./src/*","../.cedar/types/mirror/web/src/*","../api/src/*","../.cedar/types/mirror/api/src/*"],"$api/*": [ "../api/*" ],"types/*": ["./types/*", "../types/*"],"@cedarjs/testing": ["../node_modules/@cedarjs/testing/web"]},"typeRoots": ["../node_modules/@types", "./node_modules/@types"],"types": ["jest", "@testing-library/jest-dom"],"jsx": "preserve",},"include": ["src","../.redwood/types/includes/all-*","../.cedar/types/includes/web-*","../types","./types"]}'
 
     vol.fromNestedJSON(
       {
@@ -165,9 +165,9 @@ describe('getPathsFromTypeScriptConfig', () => {
 
   it('excludes "src/*", "$api/*", "types/*", and "@cedarjs/testing"', () => {
     const apiTSConfig =
-      '{"compilerOptions":{"baseUrl":"./","paths":{"src/*":["./src/*","../.redwood/types/mirror/api/src/*"],"types/*":["./types/*","../types/*"],"@cedarjs/testing":["../node_modules/@cedarjs/testing/api"]}}}'
+      '{"compilerOptions":{"baseUrl":"./","paths":{"src/*":["./src/*","../.cedar/types/mirror/api/src/*"],"types/*":["./types/*","../types/*"],"@cedarjs/testing":["../node_modules/@cedarjs/testing/api"]}}}'
     const webTSConfig =
-      '{"compilerOptions":{"baseUrl":"./","paths":{"src/*":["./src/*","../.redwood/types/mirror/web/src/*"],"$api/*":[ "../api/*" ],"types/*":["./types/*", "../types/*"],"@cedarjs/testing":["../node_modules/@cedarjs/testing/web"]}}}'
+      '{"compilerOptions":{"baseUrl":"./","paths":{"src/*":["./src/*","../.cedar/types/mirror/web/src/*"],"$api/*":[ "../api/*" ],"types/*":["./types/*", "../types/*"],"@cedarjs/testing":["../node_modules/@cedarjs/testing/web"]}}}'
 
     vol.fromNestedJSON(
       {

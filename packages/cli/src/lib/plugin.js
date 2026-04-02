@@ -13,7 +13,7 @@ import { getPaths } from './index.js'
 const { Select } = enquirer
 
 /**
- * The file inside .redwood which will contain cached plugin command mappings
+ * The file inside .cedar which will contain cached plugin command mappings
  */
 export const PLUGIN_CACHE_FILENAME = 'commandCache.json'
 
