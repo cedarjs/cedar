@@ -2615,7 +2615,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@cedarjs/api": "npm:3.1.1"
     "@cedarjs/framework-tools": "workspace:*"
-    "@supabase/ssr": "npm:0.9.0"
+    "@supabase/ssr": "npm:0.10.0"
     "@types/aws-lambda": "npm:8.10.161"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
@@ -2638,7 +2638,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "npm:3.1.1"
     "@cedarjs/web": "npm:3.1.1"
-    "@supabase/ssr": "npm:0.9.0"
+    "@supabase/ssr": "npm:0.10.0"
     "@types/aws-lambda": "npm:8.10.161"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.18"
@@ -2670,7 +2670,7 @@ __metadata:
   dependencies:
     "@cedarjs/auth": "npm:3.1.1"
     "@cedarjs/framework-tools": "workspace:*"
-    "@supabase/ssr": "npm:0.9.0"
+    "@supabase/ssr": "npm:0.10.0"
     "@supabase/supabase-js": "npm:2.100.1"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.1"
@@ -10022,14 +10022,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/ssr@npm:0.9.0":
-  version: 0.9.0
-  resolution: "@supabase/ssr@npm:0.9.0"
+"@supabase/ssr@npm:0.10.0":
+  version: 0.10.0
+  resolution: "@supabase/ssr@npm:0.10.0"
   dependencies:
     cookie: "npm:^1.0.2"
   peerDependencies:
-    "@supabase/supabase-js": ^2.97.0
-  checksum: 10c0/72ae27d9f873c0fd69109126e9bbf1d6e994c5c3706041fca4daf1f6aa551402b3064c30178ad4fa4035156cd76cf537cddbc7c15000574365aa94651dbc3ec5
+    "@supabase/supabase-js": ^2.100.1
+  checksum: 10c0/7bce11c2eb52b2be3b8bd2f24be7f0a472d869eda84711b746184661048e7559a1455b6e380998086dabed216e49f6fc3fba2d44cba9d7c659dc0c915dec1b17
   languageName: node
   linkType: hard
 
