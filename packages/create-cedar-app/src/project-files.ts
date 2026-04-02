@@ -67,6 +67,9 @@ export async function createProjectFiles(
   await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
 
   let databaseUrl = ''
+  let directDatabaseUrl = ''
+  let neonClaimExpiry = ''
+  let neonClaimUrl = ''
 
   // Apply database overlay if pglite is selected
   if (database === 'pglite') {
@@ -113,7 +116,7 @@ export async function createProjectFiles(
     //   "id": "01abc123-def4-5678-9abc-def012345678",
     //   "status": "UNCLAIMED",
     //   "neon_project_id": "cool-breeze-12345678",
-    //   "connection_string": "postgresql://neondb_owner:npg_xxxx@ep-cool-breeze-pooler...",
+    //   "connection_string": "postgresql://neondb_owner:npg_xxxx@ep-cool-breeze-pooler.c-2...",
     //   "claim_url": "https://neon.new/claim/01abc123-def4-5678-9abc-def012345678",
     //   "expires_at": "2026-02-01T12:00:00.000Z",
     //   "created_at": "2026-01-29T12:00:00.000Z",
@@ -135,14 +138,18 @@ export async function createProjectFiles(
 
       const data = await res.json()
 
-      if (!data.connection_string) {
+      if (!data.connection_string || !data.expires_at || !data.claim_url) {
         throw new Error(
           'Neon API returned an invalid response\n\n' +
             JSON.stringify(data, null, 2),
         )
       }
 
+      // https://neon.com/docs/reference/glossary#pooled-connection-string
       databaseUrl = data.connection_string
+      directDatabaseUrl = data.connection_string.replace('-pooler.', '.')
+      neonClaimExpiry = new Date(data.expires_at).toUTCString()
+      neonClaimUrl = data.claim_url
 
       const d = new Date(data.expires_at)
       const yy = d.getFullYear()
@@ -151,7 +158,8 @@ export async function createProjectFiles(
       const expiresAt = `${yy}-${mm}-${dd}`
 
       tui.drawText('  Database created successfully')
-      tui.drawText('  Claim your Neon database by visiting ' + data.claim_url)
+      tui.drawText('  Claim your Neon database by visiting the url below:')
+      tui.drawText('    ' + neonClaimUrl)
       tui.drawText(
         `  You can use the database until ${expiresAt} without claiming it`,
       )
@@ -174,7 +182,13 @@ export async function createProjectFiles(
     path.join(newAppDir, '.gitignore'),
   )
 
-  await replacePlaceholders(newAppDir, packageManager, databaseUrl)
+  await replacePlaceholders(newAppDir, {
+    packageManager,
+    databaseUrl,
+    directDatabaseUrl,
+    neonClaimExpiry,
+    neonClaimUrl,
+  })
 
   // Write the uid
   fs.mkdirSync(path.join(newAppDir, '.cedar'), { recursive: true })
@@ -187,24 +201,31 @@ export async function createProjectFiles(
   return newAppDir
 }
 
+interface ReplacementValues {
+  packageManager: PackageManager
+  databaseUrl: string
+  directDatabaseUrl: string
+  neonClaimExpiry: string
+  neonClaimUrl: string
+}
+
 /** String replace of placeholders in template files */
-async function replacePlaceholders(
-  dir: string,
-  packageManager: PackageManager,
-  databaseUrl: string | undefined,
-) {
-  const installCommand = getInstallCommand(packageManager)
-  const cedarCommand = getCedarCommandPrefix(packageManager)
+async function replacePlaceholders(dir: string, values: ReplacementValues) {
+  const installCommand = getInstallCommand(values.packageManager)
+  const cedarCommand = getCedarCommandPrefix(values.packageManager)
   // TODO: Figure out how to make this dynamic, but still have it working with
   // yarn dlx, npx etc
   const prismaVersion = '7.6.0'
 
   const replacements: Record<string, string | undefined> = {
-    '{{PM}}': packageManager,
+    '{{PM}}': values.packageManager,
     '{{PM_INSTALL}}': installCommand,
     '{{CEDAR_CLI}}': cedarCommand,
     '{{PRISMA_VERSION}}': prismaVersion,
-    '{{DATABASE_URL}}': databaseUrl,
+    '{{DATABASE_URL}}': values.databaseUrl,
+    '{{DIRECT_DATABASE_URL}}': values.directDatabaseUrl,
+    '{{NEON_CLAIM_EXPIRY}}': values.neonClaimExpiry,
+    '{{NEON_CLAIM_URL}}': values.neonClaimUrl,
   }
 
   const patterns = [
