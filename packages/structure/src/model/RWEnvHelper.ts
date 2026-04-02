@@ -93,13 +93,13 @@ export class RWEnvHelper extends BaseNode {
     // in the API side, all variables are visible
     return this.env_default_merged
     // return this.env_merged_filter(
-    //   this.parent.redwoodTOML.api_includeEnvironmentVariables ?? []
+    //   this.parent.cedarTOML.api_includeEnvironmentVariables ?? []
     // )
   }
 
   @lazy() get env_available_to_web() {
     return this.env_default_merged_filtered(
-      this.parent.redwoodTOML.web_includeEnvironmentVariables ?? [],
+      this.parent.cedarTOML.web_includeEnvironmentVariables ?? [],
     )
   }
 

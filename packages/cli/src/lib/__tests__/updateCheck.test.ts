@@ -22,7 +22,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getPaths: () => {
       return {
         generated: {
-          base: '.redwood',
+          base: '.cedar',
         },
         base: '',
       }
@@ -339,7 +339,7 @@ describe('Update middleware', () => {
     })
 
     vol.fromJSON({
-      '.redwood/updateCheck/data.json': JSON.stringify({
+      '.cedar/updateCheck/data.json': JSON.stringify({
         localVersion: '2.4.1',
         remoteVersions: {
           latest: '2.5.0',

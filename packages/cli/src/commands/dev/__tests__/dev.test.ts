@@ -106,7 +106,7 @@ vi.mock('../../../lib/index.js', () => ({
       },
       packages: '/mocked/project/packages',
       generated: {
-        base: '/mocked/project/.redwood',
+        base: '/mocked/project/.cedar',
       },
     }
   }),
@@ -256,7 +256,7 @@ describe('yarn cedar dev', () => {
         dist: '/mocked/esm-project/web/dist',
       },
       generated: {
-        base: '/mocked/esm-project/.redwood',
+        base: '/mocked/esm-project/.cedar',
       },
     })
 

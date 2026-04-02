@@ -54,7 +54,7 @@ export class RWProject extends BaseNode {
 
   children() {
     return [
-      this.redwoodTOML,
+      this.cedarTOML,
       ...this.pages,
       this.router,
       ...this.services,
@@ -102,7 +102,7 @@ export class RWProject extends BaseNode {
     return dmmf.datamodel.models.map((m) => m.name)
   }
 
-  @lazy() get redwoodTOML(): RWTOML {
+  @lazy() get cedarTOML(): RWTOML {
     return new RWTOML(getConfigPath(), this)
   }
 
