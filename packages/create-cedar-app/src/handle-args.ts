@@ -265,3 +265,47 @@ export async function handlePackageManagerPreference(
     process.exit(1)
   }
 }
+
+export async function handleDatabasePreference(
+  databaseFlag: string | null,
+  useEsm: boolean,
+) {
+  const supportedDatabases = ['sqlite', 'pglite', 'neon-postgres']
+  if (databaseFlag && !supportedDatabases.includes(databaseFlag)) {
+    tui.stopReactive(true)
+    tui.displayError(
+      'Invalid database',
+      `Unknown database "${databaseFlag}". Supported values: ` +
+        supportedDatabases.join(', '),
+    )
+    recordErrorViaTelemetry('Invalid database flag')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  if (databaseFlag === 'pglite' && !useEsm) {
+    tui.stopReactive(true)
+    tui.displayError(
+      'Invalid configuration',
+      'The --db pglite flag requires --esm. Use:\n' +
+        '  create-cedar-app --esm --db pglite my-app',
+    )
+    recordErrorViaTelemetry('pglite without esm')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  if (databaseFlag === 'neon-postgres' && !useEsm) {
+    tui.stopReactive(true)
+    tui.displayError(
+      'Invalid configuration',
+      'The --db neon-postgres flag requires --esm. Use:\n' +
+        '  create-cedar-app --esm --db neon-postgres my-app',
+    )
+    recordErrorViaTelemetry('neon-postgres without esm')
+    await shutdownTelemetry()
+    process.exit(1)
+  }
+
+  return databaseFlag ?? 'sqlite'
+}

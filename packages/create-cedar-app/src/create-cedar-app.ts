@@ -14,6 +14,7 @@ import pkgJson from '../package.json' with { type: 'json' }
 import {
   detectPackageManagerFromEnv,
   handleCommitMessagePreference,
+  handleDatabasePreference,
   handleEsmPreference,
   handleGitPreference,
   handleInstallPreference,
@@ -272,7 +273,7 @@ async function createCedarApp() {
       hidden: true,
       default: null,
       type: 'string',
-      describe: 'Database to use (sqlite, pglite)',
+      describe: 'Database to use (sqlite, pglite, neon-postgres)',
     })
 
   const parsedFlags = await cli.parse()
@@ -315,7 +316,6 @@ async function createCedarApp() {
   // Record some of the arguments for telemetry
   trace.getActiveSpan()?.setAttribute('install', installFlag ?? false)
   trace.getActiveSpan()?.setAttribute('overwrite', overwrite)
-  trace.getActiveSpan()?.setAttribute('database', databaseFlag ?? 'sqlite')
 
   // Get the directory for installation from the args
   let targetDir = String(args).replace(/,/g, '-')
@@ -341,29 +341,8 @@ async function createCedarApp() {
   const useEsm = await handleEsmPreference(esmFlag)
   trace.getActiveSpan()?.setAttribute('esm', useEsm)
 
-  // Validate database flag
-  if (databaseFlag && databaseFlag !== 'sqlite' && databaseFlag !== 'pglite') {
-    tui.stopReactive(true)
-    tui.displayError(
-      'Invalid database',
-      `Unknown database "${databaseFlag}". Supported values: sqlite, pglite`,
-    )
-    recordErrorViaTelemetry('Invalid database flag')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-
-  if (databaseFlag === 'pglite' && !useEsm) {
-    tui.stopReactive(true)
-    tui.displayError(
-      'Invalid configuration',
-      'The --db pglite flag requires --esm. Use:\n' +
-        '  create-cedar-app --esm --db pglite my-app',
-    )
-    recordErrorViaTelemetry('pglite without esm')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
+  const database = await handleDatabasePreference(databaseFlag, useEsm)
+  trace.getActiveSpan()?.setAttribute('database', database)
 
   // Determine package manager preference
   const packageManager = await handlePackageManagerPreference(
@@ -403,7 +382,7 @@ async function createCedarApp() {
     overwrite,
     packageManager,
     useEsm,
-    database: databaseFlag,
+    database,
   })
 
   const installCommand = getInstallCommand(packageManager)

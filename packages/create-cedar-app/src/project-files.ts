@@ -7,7 +7,11 @@ import { ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import { handleNewDirectoryNamePreference } from './handle-args.js'
 import type { PackageManager } from './handle-args.js'
-import { getCedarCommandPrefix, getInstallCommand } from './package-manager.js'
+import {
+  getCedarCommandPrefix,
+  getDlx,
+  getInstallCommand,
+} from './package-manager.js'
 import { UID, shutdownTelemetry, recordErrorViaTelemetry } from './telemetry.js'
 import { tui } from './tui.js'
 
@@ -17,7 +21,7 @@ interface CreateProjectFilesOptions {
   overwrite: boolean
   packageManager: PackageManager
   useEsm: boolean
-  database: string | null
+  database: string
 }
 
 export async function createProjectFiles(
@@ -62,6 +66,8 @@ export async function createProjectFiles(
   })
   await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
 
+  let databaseUrl = ''
+
   // Apply database overlay if pglite is selected
   if (database === 'pglite') {
     // Remove the template's prisma config since the overlay provides its own
@@ -70,6 +76,7 @@ export async function createProjectFiles(
       'api',
       'prisma.config.cjs',
     )
+
     try {
       await fs.promises.unlink(templatePrismaConfig)
     } catch {
@@ -86,6 +93,79 @@ export async function createProjectFiles(
       recursive: true,
       force: true,
     })
+  } else if (database === 'neon-postgres') {
+    const dbOverlayDir = path.join(
+      templatesDir,
+      '..',
+      'database-overlays',
+      'neon-postgres',
+    )
+    await fs.promises.cp(dbOverlayDir, newAppDir, {
+      recursive: true,
+      force: true,
+    })
+
+    // curl -X POST https://neon.new/api/v1/database \
+    //   -H 'Content-Type: application/json' \
+    //   -d '{"ref": "your-app-name"}'
+    //
+    // Response: {
+    //   "id": "01abc123-def4-5678-9abc-def012345678",
+    //   "status": "UNCLAIMED",
+    //   "neon_project_id": "cool-breeze-12345678",
+    //   "connection_string": "postgresql://neondb_owner:npg_xxxx@ep-cool-breeze-pooler...",
+    //   "claim_url": "https://neon.new/claim/01abc123-def4-5678-9abc-def012345678",
+    //   "expires_at": "2026-02-01T12:00:00.000Z",
+    //   "created_at": "2026-01-29T12:00:00.000Z",
+    //   "updated_at": "2026-01-29T12:00:00.000Z"
+    // }
+    try {
+      const res = await fetch('https://neon.new/api/v1/database', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ref: 'cedarjs' }),
+      })
+
+      if (!res.ok) {
+        // Throw error that we'll catch below
+        throw new Error(`Neon API returned ${res.status} ${res.statusText}`)
+      }
+
+      const data = await res.json()
+
+      if (!data.connection_string) {
+        throw new Error(
+          'Neon API returned an invalid response\n\n' +
+            JSON.stringify(data, null, 2),
+        )
+      }
+
+      databaseUrl = data.connection_string
+
+      const d = new Date(data.expires_at)
+      const yy = d.getFullYear()
+      const mm = `0${d.getMonth() + 1}`.slice(-2)
+      const dd = `0${d.getDate()}`.slice(-2)
+      const expiresAt = `${yy}-${mm}-${dd}`
+
+      tui.drawText('  Database created successfully')
+      tui.drawText('  Claim your Neon database by visiting ' + data.claim_url)
+      tui.drawText(
+        `  You can use the database until ${expiresAt} without claiming it`,
+      )
+      tui.drawText('')
+    } catch (e) {
+      databaseUrl = ''
+
+      const errorMessage = e instanceof Error ? e.message : String(e)
+      tui.displayWarning(
+        'Could not create database',
+        `Run \`${getDlx(packageManager)} neon-new --yes\` to manually create ` +
+          `one.\n\n${errorMessage}`,
+      )
+    }
   }
 
   // .gitignore is renamed here to force file inclusion during publishing
@@ -94,7 +174,7 @@ export async function createProjectFiles(
     path.join(newAppDir, '.gitignore'),
   )
 
-  await replacePlaceholders(newAppDir, packageManager)
+  await replacePlaceholders(newAppDir, packageManager, databaseUrl)
 
   // Write the uid
   fs.mkdirSync(path.join(newAppDir, '.cedar'), { recursive: true })
@@ -111,14 +191,20 @@ export async function createProjectFiles(
 async function replacePlaceholders(
   dir: string,
   packageManager: PackageManager,
+  databaseUrl: string | undefined,
 ) {
   const installCommand = getInstallCommand(packageManager)
   const cedarCommand = getCedarCommandPrefix(packageManager)
+  // TODO: Figure out how to make this dynamic, but still have it working with
+  // yarn dlx, npx etc
+  const prismaVersion = '7.6.0'
 
-  const replacements: Record<string, string> = {
+  const replacements: Record<string, string | undefined> = {
     '{{PM}}': packageManager,
     '{{PM_INSTALL}}': installCommand,
     '{{CEDAR_CLI}}': cedarCommand,
+    '{{PRISMA_VERSION}}': prismaVersion,
+    '{{DATABASE_URL}}': databaseUrl,
   }
 
   const patterns = [
@@ -132,7 +218,9 @@ async function replacePlaceholders(
       let content = await fs.promises.readFile(fullPath, 'utf-8')
 
       for (const [placeholder, value] of Object.entries(replacements)) {
-        content = content.replaceAll(placeholder, value)
+        if (value !== undefined) {
+          content = content.replaceAll(placeholder, value)
+        }
       }
 
       await fs.promises.writeFile(fullPath, content, 'utf-8')
