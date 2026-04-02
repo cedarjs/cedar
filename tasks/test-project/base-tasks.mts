@@ -223,17 +223,19 @@ function normalizeMigrationFolderNames() {
   })
 }
 
+interface ApiTasksOptions {
+  dbAuth: 'local' | 'canary'
+  linkWithLatestFwBuild?: boolean
+  esm?: boolean
+  live?: boolean
+}
+
 export function apiTasksList({
   dbAuth,
   linkWithLatestFwBuild = false,
   esm = false,
   live = false,
-}: {
-  dbAuth: 'local' | 'canary'
-  linkWithLatestFwBuild?: boolean
-  esm?: boolean
-  live?: boolean
-}) {
+}: ApiTasksOptions) {
   const execaOptions = getExecaOptions(getOutputPath())
   const generateScaffold = createBuilder('yarn cedar g scaffold')
 

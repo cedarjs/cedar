@@ -13,7 +13,6 @@ module.exports = defineConfig({
     seed: 'yarn cedar exec seed',
   },
   datasource: {
-    url: env('DATABASE_URL'),
-    ...(process.env.SHADOW_DATABASE_URL ? { shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL } : {}),
+    url: env('DIRECT_DATABASE_URL'),
   },
 })
