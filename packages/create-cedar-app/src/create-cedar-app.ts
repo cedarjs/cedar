@@ -409,6 +409,9 @@ async function createCedarApp() {
   }
 
   const shouldPrintCdCommand = newAppDir !== process.cwd()
+  const newAppPath = newAppDir.startsWith(process.cwd() + path.sep)
+    ? path.relative(process.cwd(), newAppDir)
+    : newAppDir
   const cedarCommand = getCedarCommandPrefix(packageManager)
 
   // Post install message
@@ -426,9 +429,7 @@ async function createCedarApp() {
       ...[
         shouldPrintCdCommand &&
           `${RedwoodStyling.redwood(
-            ` > ${RedwoodStyling.green(
-              `cd ${path.relative(process.cwd(), newAppDir)}`,
-            )}`,
+            ` > ${RedwoodStyling.green(`cd ${newAppPath}`)}`,
           )}`,
         !shouldInstall &&
           `${RedwoodStyling.redwood(
