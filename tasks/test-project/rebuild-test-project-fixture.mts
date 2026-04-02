@@ -28,8 +28,8 @@ import {
   getCfwBin,
 } from './util.mts'
 
-function recommendedNodeVersion({ esm } = { esm: false }) {
-  const templatePackageJsonPath = path.join(
+function templateRootPackageJsonPath({ esm } = { esm: false }) {
+  return path.join(
     import.meta.dirname,
     '..',
     '..',
@@ -39,6 +39,10 @@ function recommendedNodeVersion({ esm } = { esm: false }) {
     esm ? 'esm-ts' : 'ts',
     'package.json',
   )
+}
+
+function recommendedNodeVersion({ esm } = { esm: false }) {
+  const templatePackageJsonPath = templateRootPackageJsonPath({ esm })
   const json = JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
 
   return json.engines.node
@@ -97,7 +101,9 @@ const args = yargs(hideBin(process.argv))
   .help()
   .parseSync()
 
-const { verbose, resume, resumePath, resumeStep, live, esm } = args
+const { verbose, resume, resumePath, resumeStep, live } = args
+// --live implies --esm
+const esm = args.esm || args.live
 
 // If the current Node.js version is outside of the recommended range the Cedar
 // setup command will pause and ask the user if they want to continue. This
@@ -378,6 +384,7 @@ const createProject = () => {
       '--overwrite',
       '--no-git',
       esm ? '--esm' : '',
+      live ? '--live' : '',
     ],
     getExecaOptions(CEDAR_FRAMEWORK_PATH),
   )
@@ -587,46 +594,23 @@ async function rebuildTestProject() {
         'lib',
         'db.ts',
       )
-      fs.writeFileSync(
-        dbPath,
-        [
-          '// See https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/constructor',
-          '// for options.',
-          '',
-          "import { PrismaPg } from '@prisma/adapter-pg'",
-          "import { PrismaClient } from 'api/db/generated/prisma/client.mts'",
-          '',
-          "import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'",
-          '',
-          "import { logger } from './logger.js'",
-          '',
-          "export * from 'api/db/generated/prisma/client.mts'",
-          '',
-          'const adapter = new PrismaPg({',
-          '  connectionString: process.env.DATABASE_URL,',
-          '})',
-          '',
-          'const prismaClient = new PrismaClient({',
-          "  log: emitLogLevels(['info', 'warn', 'error']),",
-          '  adapter,',
-          '})',
-          '',
-          'handlePrismaLogging({',
-          '  db: prismaClient,',
-          '  logger,',
-          "  logLevels: ['info', 'warn', 'error'],",
-          '})',
-          '',
-          '/**',
-          ' * Global Prisma client extensions should be added here, as $extend',
-          ' * returns a new instance.',
-          ' * export const db = prismaClient.$extend(...)',
-          ' * Add any .$on hooks before using $extend',
-          ' */',
-          'export const db = prismaClient',
-          '',
-        ].join('\n'),
+
+      This is a work in progress. The plan/goal is to leverage create-cedar-app --live to rebuild the test project fixture.
+
+      const dbTsOverlayPath = path.join(
+        import.meta.dirname,
+        '..',
+        '..',
+        'packages',
+        'create-cedar-app',
+        'templates',
+        'database-overlays',
+        'pglite',
+        'api',
+        'lib',
+        'db.ts',
       )
+      fs.writeFileSync(dbPath, fs.readFileSync(dbTsOverlayPath, 'utf-8'))
 
       // 3. Swap SQLite deps for PostgreSQL deps in api/package.json
       const apiPkgPath = path.join(OUTPUT_PROJECT_PATH, 'api', 'package.json')
@@ -1067,18 +1051,8 @@ async function rebuildTestProject() {
       const rootPackageJson = JSON.parse(
         fs.readFileSync(path.join(OUTPUT_PROJECT_PATH, 'package.json'), 'utf8'),
       )
-      const templatePackageJsonPath = path.join(
-        import.meta.dirname,
-        '..',
-        '..',
-        'packages',
-        'create-cedar-app',
-        'templates',
-        esm ? 'esm-ts' : 'ts',
-        'package.json',
-      )
       const newRootPackageJson = JSON.parse(
-        fs.readFileSync(templatePackageJsonPath, 'utf8'),
+        fs.readFileSync(templateRootPackageJsonPath({ esm }), 'utf8'),
       )
       newRootPackageJson.devDependencies['prettier-plugin-tailwindcss'] =
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
