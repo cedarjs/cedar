@@ -409,7 +409,7 @@ async function createCedarApp() {
   }
 
   const shouldPrintCdCommand = newAppDir !== process.cwd()
-  const newAppPath = newAppDir.startsWith(process.cwd())
+  const newAppPath = newAppDir.startsWith(process.cwd() + path.sep)
     ? path.relative(process.cwd(), newAppDir)
     : newAppDir
   const cedarCommand = getCedarCommandPrefix(packageManager)
