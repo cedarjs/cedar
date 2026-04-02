@@ -7,7 +7,7 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
     getPaths: () => {
       return {
         generated: {
-          base: '.redwood',
+          base: '.cedar',
         },
       }
     },
@@ -41,7 +41,7 @@ beforeEach(() => {
 it('Set a lock', () => {
   setLock('TEST')
 
-  const lockExists = fs.existsSync(path.join('.redwood', 'locks', 'TEST'))
+  const lockExists = fs.existsSync(path.join('.cedar', 'locks', 'TEST'))
   expect(lockExists).toBe(true)
 })
 
@@ -56,14 +56,14 @@ it('Unset a lock', () => {
   setLock('TEST')
   unsetLock('TEST')
 
-  const lockExists = fs.existsSync(path.join('.redwood', 'locks', 'TEST'))
+  const lockExists = fs.existsSync(path.join('.cedar', 'locks', 'TEST'))
   expect(lockExists).toBe(false)
 })
 
 it('Unset a lock which is not already set', () => {
   unsetLock('TEST')
 
-  const lockExists = fs.existsSync(path.join('.redwood', 'locks', 'TEST'))
+  const lockExists = fs.existsSync(path.join('.cedar', 'locks', 'TEST'))
   expect(lockExists).toBe(false)
 })
 

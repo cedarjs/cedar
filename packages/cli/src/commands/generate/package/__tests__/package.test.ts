@@ -43,11 +43,11 @@ vi.mock('../../../../lib/index.js', async (importOriginal) => {
         packages: path.join(mockBase.path, 'packages'),
         generatorTemplates: path.join(mockBase.path, 'generatorTemplates'),
         generated: {
-          base: path.join(mockBase.path, '.redwood'),
-          schema: path.join(mockBase.path, '.redwood/schema.graphql'),
+          base: path.join(mockBase.path, '.cedar'),
+          schema: path.join(mockBase.path, '.cedar/schema.graphql'),
           types: {
-            includes: path.join(mockBase.path, '.redwood/types/includes'),
-            mirror: path.join(mockBase.path, '.redwood/types/mirror'),
+            includes: path.join(mockBase.path, '.cedar/types/includes'),
+            mirror: path.join(mockBase.path, '.cedar/types/mirror'),
           },
         },
       }
@@ -351,9 +351,9 @@ describe('packageHandler', () => {
           "module": "Node16", // This is the line to update
           "moduleResolution": "node16",
           "skipLibCheck": false,
-          "rootDirs": ["./src", "../.redwood/types/mirror/api/src"],
+          "rootDirs": ["./src", "../.cedar/types/mirror/api/src"],
           "paths": {
-            "src/*": ["./src/*", "../.redwood/types/mirror/api/src/*"],
+            "src/*": ["./src/*", "../.cedar/types/mirror/api/src/*"],
             "types/*": ["./types/*", "../types/*"],
             "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]
           },
@@ -365,8 +365,8 @@ describe('packageHandler', () => {
         },
         "include": [
           "src",
-          "../.redwood/types/includes/all-*",
-          "../.redwood/types/includes/api-*",
+          "../.cedar/types/includes/all-*",
+          "../.cedar/types/includes/api-*",
           "../types"
         ]
       }
@@ -939,8 +939,8 @@ describe('packageHandler', () => {
       !.env.example
       !.env.defaults
       .netlify
-      .redwood/*
-      !.redwood/README.md
+      .cedar/*
+      !.cedar/README.md
       dev.db*
       dist
       dist-babel
@@ -966,8 +966,8 @@ describe('packageHandler', () => {
       !.env.example
       !.env.defaults
       .netlify
-      .redwood/*
-      !.redwood/README.md
+      .cedar/*
+      !.cedar/README.md
       dev.db*
       dist
       dist-babel
@@ -1022,8 +1022,8 @@ describe('packageHandler', () => {
           !.env.example
           !.env.defaults
           .netlify
-          .redwood/*
-          !.redwood/README.md
+          .cedar/*
+          !.cedar/README.md
           dev.db*
           dist
           dist-babel

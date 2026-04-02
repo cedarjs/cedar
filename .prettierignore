@@ -10,6 +10,7 @@ packages/testing/config
 # https://github.com/prettier/prettier/issues/4081
 # oxc-format does though, so we can remove this if/when we switch over
 # https://github.com/oxc-project/oxc/pull/17352
+/test-project/.cedar/
 /test-project/.redwood/
 /test-project/api/types/graphql.d.ts
 /test-project/web/types/graphql.d.ts

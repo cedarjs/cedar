@@ -22,7 +22,7 @@ Make sure that they're syntactically valid, and that every query and mutation on
 
 :::
 
-If you're curious, you can find the generated types in the `.redwood/types`, `web/types/graphql.d.ts`, and `api/types/graphql.d.ts` directories. Broadly speaking, Cedar generates the following types:
+If you're curious, you can find the generated types in the `.cedar/types`, `web/types/graphql.d.ts`, and `api/types/graphql.d.ts` directories. Broadly speaking, Cedar generates the following types:
 
 1. ["mirror" types](https://www.typescriptlang.org/docs/handbook/module-resolution.html#virtual-directories-with-rootdirs) for your components, pages, layouts, etc. on the web side, and for your services, lib, etc. on the api side
 2. types based on your queries and mutations on the web side (in `web/types/graphql.d.ts`)
@@ -200,7 +200,7 @@ Running `yarn rw g types` will generate types for your resolvers on a per-file b
 
 :::tip Using VSCode?
 
-As a part of type generation, the extension [GraphQL: Language Feature Support](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) configures itself based on the merged schema Cedar generates in `.redwood/schema.graphql`.
+As a part of type generation, the extension [GraphQL: Language Feature Support](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) configures itself based on the merged schema Cedar generates in `.cedar/schema.graphql`.
 You can configure it further in `graphql.config.cjs` at the root of your project.
 
 :::

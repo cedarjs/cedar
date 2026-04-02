@@ -30,5 +30,6 @@
       "cache": true
     }
   },
-  "nxCloudId": "67f96419000e9059b9b7a441"
+  "nxCloudId": "67f96419000e9059b9b7a441",
+  "analytics": false
 }
