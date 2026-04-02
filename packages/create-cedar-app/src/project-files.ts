@@ -210,6 +210,7 @@ async function replacePlaceholders(
   const patterns = [
     '**/*.{json,md,js,ts,yml,yaml}',
     '**/.*/**/*.{json,md,js,ts,yml,yaml}',
+    '**/.env*',
   ]
 
   for (const pattern of patterns) {
