@@ -9,6 +9,7 @@ yarn-error.log
 api/prisma/dev.sqlite
 
 # Generated files
+.cedar
 .redwood
 api/types/
 web/types/
