@@ -10,8 +10,8 @@ import {
 
 vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 
-const redwoodProjectPath = '/redwood-app'
-process.env.CEDAR_CWD = redwoodProjectPath
+const cedarProjectPath = '/cedar-app'
+process.env.CEDAR_CWD = cedarProjectPath
 
 afterEach(() => {
   vol.reset()
@@ -21,11 +21,11 @@ describe('TypeScript config file parsing', () => {
   it("returns `null` if it can't find TypeScript config files", () => {
     vol.fromNestedJSON(
       {
-        'redwood.toml': '',
+        'cedar.toml': '',
         api: {},
         web: {},
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     const typeScriptConfig = parseTypeScriptConfigFiles()
@@ -39,7 +39,7 @@ describe('TypeScript config file parsing', () => {
 
     vol.fromNestedJSON(
       {
-        'redwood.toml': '',
+        'cedar.toml': '',
         api: {
           'tsconfig.json': apiTSConfig,
         },
@@ -47,7 +47,7 @@ describe('TypeScript config file parsing', () => {
           'tsconfig.json': webTSConfig,
         },
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     const typeScriptConfig = parseTypeScriptConfigFiles()
@@ -61,7 +61,7 @@ describe('TypeScript config file parsing', () => {
 
     vol.fromNestedJSON(
       {
-        'redwood.toml': '',
+        'cedar.toml': '',
         api: {
           'jsconfig.json': apiJSConfig,
         },
@@ -69,7 +69,7 @@ describe('TypeScript config file parsing', () => {
           'jsconfig.json': webJSConfig,
         },
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     const typeScriptConfig = parseTypeScriptConfigFiles()
@@ -81,11 +81,11 @@ describe('TypeScript config file parsing', () => {
     const apiTSConfig =
       '{"compilerOptions": {"noEmit": true,"allowJs": true,"esModuleInterop": true,"target": "esnext","module": "esnext","moduleResolution": "node","baseUrl": "./","rootDirs": ["./src","../.cedar/types/mirror/api/src"],"paths": {"src/*": ["./src/*","../.cedar/types/mirror/api/src/*"],"types/*": ["./types/*", "../types/*"],"@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]},"typeRoots": ["../node_modules/@types","./node_modules/@types"],"types": ["jest"],},"include": ["src","../.cedar/types/includes/all-*","../.cedar/types/includes/api-*","../types"]}'
     const webTSConfig =
-      '{"compilerOptions": {"noEmit": true,"allowJs": true,"esModuleInterop": true,"target": "esnext","module": "esnext","moduleResolution": "node","baseUrl": "./","rootDirs": ["./src","../.cedar/types/mirror/web/src","../api/src","../.cedar/types/mirror/api/src"],"paths": {"src/*": ["./src/*","../.cedar/types/mirror/web/src/*","../api/src/*","../.cedar/types/mirror/api/src/*"],"$api/*": [ "../api/*" ],"types/*": ["./types/*", "../types/*"],"@cedarjs/testing": ["../node_modules/@cedarjs/testing/web"]},"typeRoots": ["../node_modules/@types", "./node_modules/@types"],"types": ["jest", "@testing-library/jest-dom"],"jsx": "preserve",},"include": ["src","../.redwood/types/includes/all-*","../.cedar/types/includes/web-*","../types","./types"]}'
+      '{"compilerOptions": {"noEmit": true,"allowJs": true,"esModuleInterop": true,"target": "esnext","module": "esnext","moduleResolution": "node","baseUrl": "./","rootDirs": ["./src","../.cedar/types/mirror/web/src","../api/src","../.cedar/types/mirror/api/src"],"paths": {"src/*": ["./src/*","../.cedar/types/mirror/web/src/*","../api/src/*","../.cedar/types/mirror/api/src/*"],"$api/*": [ "../api/*" ],"types/*": ["./types/*", "../types/*"],"@cedarjs/testing": ["../node_modules/@cedarjs/testing/web"]},"typeRoots": ["../node_modules/@types", "./node_modules/@types"],"types": ["jest", "@testing-library/jest-dom"],"jsx": "preserve",},"include": ["src","../.cedar/types/includes/all-*","../.cedar/types/includes/web-*","../types","./types"]}'
 
     vol.fromNestedJSON(
       {
-        'redwood.toml': '',
+        'cedar.toml': '',
         api: {
           'tsconfig.json': apiTSConfig,
         },
@@ -93,7 +93,7 @@ describe('TypeScript config file parsing', () => {
           'tsconfig.json': webTSConfig,
         },
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     expect(parseTypeScriptConfigFiles).not.toThrow()
@@ -102,18 +102,18 @@ describe('TypeScript config file parsing', () => {
 
 describe('getPathsFromTypeScriptConfig', () => {
   const FAKE_API_ROOT =
-    process.platform === 'win32' ? '/d/redwood-app/api' : '/redwood-app/api'
+    process.platform === 'win32' ? '/d/cedar-app/api' : '/cedar-app/api'
   const FAKE_WEB_ROOT =
-    process.platform === 'win32' ? '/d/redwood-app/web' : '/redwood-app/web'
+    process.platform === 'win32' ? '/d/cedar-app/web' : '/cedar-app/web'
 
   it("returns an empty object if there's no TypeScript config files", () => {
     vol.fromNestedJSON(
       {
-        'redwood.toml': '',
+        'cedar.toml': '',
         api: {},
         web: {},
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     const typeScriptConfig = parseTypeScriptConfigFiles()
@@ -137,7 +137,7 @@ describe('getPathsFromTypeScriptConfig', () => {
 
     vol.fromNestedJSON(
       {
-        'redwood.toml': '',
+        'cedar.toml': '',
         api: {
           'tsconfig.json': apiTSConfig,
         },
@@ -145,7 +145,7 @@ describe('getPathsFromTypeScriptConfig', () => {
           'tsconfig.json': webTSConfig,
         },
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     const typeScriptConfig = parseTypeScriptConfigFiles()
@@ -171,7 +171,7 @@ describe('getPathsFromTypeScriptConfig', () => {
 
     vol.fromNestedJSON(
       {
-        'redwood.toml': '',
+        'cedar.toml': '',
         api: {
           'tsconfig.json': apiTSConfig,
         },
@@ -179,7 +179,7 @@ describe('getPathsFromTypeScriptConfig', () => {
           'tsconfig.json': webTSConfig,
         },
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     const typeScriptConfig = parseTypeScriptConfigFiles()
@@ -205,7 +205,7 @@ describe('getPathsFromTypeScriptConfig', () => {
 
     vol.fromNestedJSON(
       {
-        'redwood.toml': '',
+        'cedar.toml': '',
         api: {
           'tsconfig.json': apiTSConfig,
         },
@@ -213,7 +213,7 @@ describe('getPathsFromTypeScriptConfig', () => {
           'tsconfig.json': webTSConfig,
         },
       },
-      redwoodProjectPath,
+      cedarProjectPath,
     )
 
     const typeScriptConfig = parseTypeScriptConfigFiles()
