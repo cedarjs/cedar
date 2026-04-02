@@ -7,7 +7,11 @@ import { ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import { handleNewDirectoryNamePreference } from './handle-args.js'
 import type { PackageManager } from './handle-args.js'
-import { getCedarCommandPrefix, getInstallCommand } from './package-manager.js'
+import {
+  getCedarCommandPrefix,
+  getDlx,
+  getInstallCommand,
+} from './package-manager.js'
 import { UID, shutdownTelemetry, recordErrorViaTelemetry } from './telemetry.js'
 import { tui } from './tui.js'
 
@@ -62,7 +66,7 @@ export async function createProjectFiles(
   })
   await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
 
-  let databaseUrl: string | undefined
+  let databaseUrl = ''
 
   // Apply database overlay if pglite is selected
   if (database === 'pglite') {
@@ -123,22 +127,44 @@ export async function createProjectFiles(
         },
         body: JSON.stringify({ ref: 'cedarjs' }),
       })
+
       if (!res.ok) {
         // Throw error that we'll catch below
         throw new Error(`Neon API returned ${res.status} ${res.statusText}`)
       }
+
       const data = await res.json()
+
+      if (!data.connection_string) {
+        throw new Error(
+          'Neon API returned an invalid response\n\n' +
+            JSON.stringify(data, null, 2),
+        )
+      }
+
       databaseUrl = data.connection_string
 
-      tui.drawText('Database created successfully')
-      tui.drawText('Claim your Neon database by visiting: ' + data.claim_url)
+      const d = new Date(data.expires_at)
+      const yy = d.getFullYear()
+      const mm = `0${d.getMonth() + 1}`.slice(-2)
+      const dd = `0${d.getDate()}`.slice(-2)
+      const expiresAt = `${yy}-${mm}-${dd}`
+
+      tui.drawText('  Database created successfully')
+      tui.drawText('  Claim your Neon database by visiting ' + data.claim_url)
       tui.drawText(
-        `You can use the database until ${data.expires_at} without claiming it`,
+        `  You can use the database until ${expiresAt} without claiming it`,
       )
+      tui.drawText('')
     } catch (e) {
-      databaseUrl = undefined
-      const msg = e instanceof Error ? e.message : String(e)
-      tui.displayError('Could not create database', msg)
+      databaseUrl = ''
+
+      const errorMessage = e instanceof Error ? e.message : String(e)
+      tui.displayWarning(
+        'Could not create database',
+        `Run \`${getDlx(packageManager)} neon-new --yes\` to manually create ` +
+          `one.\n\n${errorMessage}`,
+      )
     }
   }
 
