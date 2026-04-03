@@ -1,5 +1,6 @@
 import { Client } from 'pg'
 
+import { getPaths, loadPrismaConfig } from '@cedarjs/project-config'
 import { liveQueryStore } from '@cedarjs/realtime'
 import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
@@ -80,6 +81,18 @@ async function onNotification(payload: string | undefined) {
 async function connect() {
   connectionGeneration = connectionGeneration + 1
   const generation = connectionGeneration
+  const prismaConfigPath = getPaths().api.prismaConfig
+  const prismaConfig = await loadPrismaConfig(prismaConfigPath)
+  const prismaDatasourceUrl = prismaConfig.datasource?.url
+
+  if (!prismaDatasourceUrl) {
+    const config = JSON.stringify(prismaConfig, null, 2)
+
+    throw new Error(
+      'Could not determine Postgres connection URL from Prisma config ' +
+        `datasource. Using parsed Prisma config: ${config}`
+    )
+  }
 
   try {
     if (reconnectTimeout) {
@@ -94,9 +107,7 @@ async function connect() {
       await previousClient.end().catch(() => {})
     }
 
-    const nextClient = new Client({
-      connectionString: process.env.DATABASE_URL,
-    })
+    const nextClient = new Client({ connectionString: prismaDatasourceUrl })
 
     nextClient.on('notification', async (msg) => {
       await onNotification(msg.payload)
