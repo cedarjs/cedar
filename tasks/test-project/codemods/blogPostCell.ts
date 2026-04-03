@@ -1,6 +1,6 @@
 const query = `
-    query BlogPostsQuery {
-      blogPosts: posts {
+    query FindBlogPostQuery($id: Int!) {
+      blogPost: post(id: $id) {
         id
         title
         body
@@ -14,16 +14,12 @@ const query = `
   `
 
 const successComponent = `export const Success = ({
-  blogPosts,
-}: CellSuccessProps<BlogPostsQuery, BlogPostsQueryVariables>) => (
-  <div className="divide-grey-700 divide-y">
-    {blogPosts.map((post) => (
-      <BlogPost key={post.id} blogPost={post} />
-    ))}
-  </div>
+  blogPost,
+}: CellSuccessProps<FindBlogPostQuery, FindBlogPostQueryVariables>) => (
+  <BlogPost blogPost={blogPost} />
 )\n`
 
-export function applyBlogPostsCellCodemod(source: string, live = false) {
+export function applyBlogPostCellCodemod(source: string, live = false) {
   // Add BlogPost import after the @cedarjs/web import block
   let newSource = source.replace(
     "} from '@cedarjs/web'\n",
@@ -34,12 +30,12 @@ export function applyBlogPostsCellCodemod(source: string, live = false) {
   let queryStr = `gql\`${query}\``
   if (live) {
     queryStr = queryStr.replace(
-      'query BlogPostsQuery {',
-      'query BlogPostsQuery @live {',
+      'query FindBlogPostQuery($id: Int!) {',
+      'query FindBlogPostQuery($id: Int!) @live {',
     )
   }
   newSource = newSource.replace(
-    /gql`\s*query BlogPostsQuery[\s\S]*?`/,
+    /gql`\s*query FindBlogPostQuery[\s\S]*?`/,
     queryStr,
   )
 
