@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { applyBlogPostsCellCodemod } from './codemods/blogPostsCell.ts'
+import { applyBlogPostCellCodemod } from './codemods/blogPostCell.ts'
 import {
   addValidateUniquenessToPosts,
   uniquePostTitles,
@@ -500,23 +501,17 @@ export async function createCells(live = false) {
     'web/src/components/BlogPostsCell/BlogPostsCell',
   )
   const blogPostsCell = fs.readFileSync(blogPostsCellPath, 'utf8')
-  let updatedBlogPostsCell = applyBlogPostsCellCodemod(blogPostsCell)
-
-  if (live) {
-    updatedBlogPostsCell = updatedBlogPostsCell.replace(
-      'query BlogPostsQuery {',
-      'query BlogPostsQuery @live {',
-    )
-  }
-
+  const updatedBlogPostsCell = applyBlogPostsCellCodemod(blogPostsCell, live)
   fs.writeFileSync(blogPostsCellPath, updatedBlogPostsCell, 'utf8')
 
   await createCell('blogPost')
 
-  await applyCodemod(
-    'blogPostCell.js',
-    fullPath('web/src/components/BlogPostCell/BlogPostCell'),
+  const blogPostCellPath = fullPath(
+    'web/src/components/BlogPostCell/BlogPostCell',
   )
+  const blogPostCell = fs.readFileSync(blogPostCellPath, 'utf8')
+  const updatedBlogPostCell = applyBlogPostCellCodemod(blogPostCell, live)
+  fs.writeFileSync(blogPostCellPath, updatedBlogPostCell, 'utf8')
 
   await createCell('author')
 
