@@ -9,7 +9,7 @@ export {
   liveQueryStore,
   pubSub,
   Repeater,
-} from './graphql/plugins/useCedarRealtime'
+} from './graphql/plugins/useCedarRealtime.js'
 
 export type {
   LiveQueryStorageMechanism,
@@ -20,4 +20,4 @@ export type {
   CedarRealtimeOptions,
   /** @deprecated - please use CedarRealtimeOptions instead */
   RedwoodRealtimeOptions,
-} from './graphql/plugins/useCedarRealtime'
+} from './graphql/plugins/useCedarRealtime.js'
