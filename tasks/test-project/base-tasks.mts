@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { applyBlogPostsCellCodemod } from './codemods/blogPostsCell.ts'
 import {
   addValidateUniquenessToPosts,
   uniquePostTitles,
@@ -148,7 +149,7 @@ function getPagesTasks() {
   ]
 }
 
-export function webTasksList() {
+export function webTasksList(live = false) {
   const taskList = [
     {
       title: 'Creating pages',
@@ -165,7 +166,7 @@ export function webTasksList() {
     },
     {
       title: 'Creating cells',
-      task: () => createCells(),
+      task: () => createCells(live),
     },
     {
       title: 'Updating cell mocks',
@@ -490,15 +491,25 @@ export async function createComponents() {
   )
 }
 
-export async function createCells() {
+export async function createCells(live = false) {
   const createCell = createBuilder('yarn cedar g cell')
 
   await createCell('blogPosts')
 
-  await applyCodemod(
-    'blogPostsCell.js',
-    fullPath('web/src/components/BlogPostsCell/BlogPostsCell'),
+  const blogPostsCellPath = fullPath(
+    'web/src/components/BlogPostsCell/BlogPostsCell',
   )
+  const blogPostsCell = fs.readFileSync(blogPostsCellPath, 'utf8')
+  let updatedBlogPostsCell = applyBlogPostsCellCodemod(blogPostsCell)
+
+  if (live) {
+    updatedBlogPostsCell = updatedBlogPostsCell.replace(
+      'query BlogPostsQuery {',
+      'query BlogPostsQuery @live {',
+    )
+  }
+
+  fs.writeFileSync(blogPostsCellPath, updatedBlogPostsCell, 'utf8')
 
   await createCell('blogPost')
 
