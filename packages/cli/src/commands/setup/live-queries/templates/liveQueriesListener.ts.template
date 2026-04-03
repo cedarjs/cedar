@@ -81,11 +81,18 @@ async function onNotification(payload: string | undefined) {
 async function connect() {
   connectionGeneration = connectionGeneration + 1
   const generation = connectionGeneration
-
   const prismaConfigPath = getPaths().api.prismaConfig
-
   const prismaConfig = await loadPrismaConfig(prismaConfigPath)
   const prismaDatasourceUrl = prismaConfig.datasource?.url
+
+  if (!prismaDatasourceUrl) {
+    const config = JSON.stringify(prismaConfig, null, 2)
+
+    throw new Error(
+      'Could not determine Postgres connection URL from Prisma config ' +
+        `datasource. Using parsed Prisma config: ${config}`
+    )
+  }
 
   try {
     if (reconnectTimeout) {
