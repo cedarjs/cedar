@@ -17,7 +17,7 @@
     "strict": true,
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
-    "erasableSyntaxOnly": false,
+    "erasableSyntaxOnly": true,
     "rewriteRelativeImportExtensions": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
