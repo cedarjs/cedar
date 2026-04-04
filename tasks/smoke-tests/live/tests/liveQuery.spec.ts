@@ -9,7 +9,7 @@ test('@live query updates when data changes', async ({ page }) => {
 
   await expect(
     page.getByText(
-      "Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo chillwave ",
+      'Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo chillwave ',
     ),
   ).toBeVisible()
 
@@ -48,7 +48,7 @@ test('@live query reflects newly created records', async ({ page }) => {
 
   await expect(
     page.getByText(
-      "Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo chillwave ",
+      'Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo chillwave ',
     ),
   ).toBeVisible()
 

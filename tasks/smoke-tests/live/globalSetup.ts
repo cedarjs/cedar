@@ -76,7 +76,10 @@ async function execWithTimeout(
       },
     }),
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`Command timed out: ${command}`)), timeoutMs),
+      setTimeout(
+        () => reject(new Error(`Command timed out: ${command}`)),
+        timeoutMs,
+      ),
     ),
   ])
 }
