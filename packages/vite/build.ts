@@ -44,7 +44,7 @@ await esbuild.build({
   bundle: true,
   conditions: ['react-server'],
   platform: 'node',
-  target: ['node20'],
+  target: ['node24'],
   // Without this plugin, we get "Error: Dynamic require of "util" is not
   // supported" when trying to run the built files. This plugin will "just
   // rewrite that file to replace "require(node-module)" to a toplevel static
