@@ -52,6 +52,21 @@ npx playwright test
 Just remember to set `CEDAR_TEST_PROJECT_PATH` and have `yarn cfw project:sync`
 running in your test project if you want to test against framework changes.
 
+### Live smoke tests
+
+The `live` smoke test verifies the `@live` GraphQL directive by running against
+the `test-project-live` fixture, which uses PostgreSQL with `pg_notify` triggers
+for live query invalidation.
+
+It requires the `test-project-live` fixture instead of the default `test-project`:
+
+```
+CEDAR_TEST_PROJECT_PATH=__fixtures__/test-project-live yarn smoke-tests live
+```
+
+The live test provisions its own ephemeral Neon database on each run, so no
+external database setup is needed.
+
 ### Gotchas
 
 There's a few gotchas to be aware of:
