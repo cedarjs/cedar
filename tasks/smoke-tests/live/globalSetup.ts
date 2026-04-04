@@ -16,42 +16,61 @@ export default async function globalSetup() {
     )
   }
 
-  console.log('Provisioning ephemeral Neon database...')
-
-  const { databaseUrlDirect } = await Promise.race([
-    instantPostgres({ referrer: 'cedarjs' }),
-    new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error('Neon database provisioning timed out')),
-        NEON_TIMEOUT_MS,
-      ),
-    ),
-  ])
-
-  console.log('Neon database provisioned')
-
   const envPath = path.join(testProjectPath, '.env')
+  const existingEnv = fs.existsSync(envPath)
+    ? fs.readFileSync(envPath, 'utf-8')
+    : ''
 
-  fs.writeFileSync(
-    envPath,
-    `DIRECT_DATABASE_URL=${databaseUrlDirect}\nDATABASE_URL=${databaseUrlDirect}\n`,
-  )
+  const existingUrl = existingEnv
+    .split('\n')
+    .find((line) => line.startsWith('DIRECT_DATABASE_URL='))
+    ?.split('=')
+    .slice(1)
+    .join('=')
 
-  console.log('Running Prisma migrations...')
+  let databaseUrlDirect: string
 
-  await execWithTimeout(
-    'yarn cedar prisma migrate reset --force',
-    testProjectPath,
-    PRISMA_TIMEOUT_MS,
-  )
+  if (existingUrl) {
+    console.log('Using existing DIRECT_DATABASE_URL from .env')
+    databaseUrlDirect = existingUrl
+  } else {
+    console.log('Provisioning ephemeral Neon database...')
 
-  console.log('Seeding database...')
+    databaseUrlDirect = await Promise.race([
+      instantPostgres({ referrer: 'cedarjs' }).then(
+        (r) => r.databaseUrlDirect,
+      ),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Neon database provisioning timed out')),
+          NEON_TIMEOUT_MS,
+        ),
+      ),
+    ])
 
-  await execWithTimeout(
-    'yarn cedar prisma db seed',
-    testProjectPath,
-    PRISMA_TIMEOUT_MS,
-  )
+    console.log('Neon database provisioned')
+
+    fs.appendFileSync(
+      envPath,
+      `DIRECT_DATABASE_URL=${databaseUrlDirect}\nDATABASE_URL=${databaseUrlDirect}\n`,
+    )
+
+    console.log('Running Prisma migrations...')
+
+    await execWithTimeout(
+      'yarn cedar prisma migrate reset --force',
+      testProjectPath,
+      PRISMA_TIMEOUT_MS,
+    )
+
+    console.log('Seeding database...')
+
+    await execWithTimeout(
+      'yarn cedar prisma db seed',
+      testProjectPath,
+      PRISMA_TIMEOUT_MS,
+    )
+  }
 
   console.log('Database ready')
 
@@ -70,10 +89,7 @@ async function execWithTimeout(
   await Promise.race([
     execAsync(command, {
       cwd,
-      env: {
-        ...process.env,
-        DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
-      },
+      env: { ...process.env },
     }),
     new Promise<never>((_, reject) =>
       setTimeout(
