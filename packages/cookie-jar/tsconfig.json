@@ -1,8 +1,6 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.cjs-base.json",
   "compilerOptions": {
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext",
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "dist"

@@ -1,9 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "isolatedModules": true,
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext",
     "outDir": "dist"
   },
   "include": ["."],

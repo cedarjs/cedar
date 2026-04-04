@@ -2,8 +2,6 @@
   "extends": "../../tsconfig.base.json",
   "compileOnSave": true,
   "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "outDir": "./dist",
     "rootDir": "./src",
     "types": ["node", "vite/client"]

@@ -1,11 +1,10 @@
 {
-  "extends": "../../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.cjs-base.json",
   "compilerOptions": {
+    "moduleResolution": "bundler",
     "strict": true,
     "rootDir": "src",
     "outDir": "dist",
-    "module": "Node16",
-    "moduleResolution": "node16",
     "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
   "include": ["src"],

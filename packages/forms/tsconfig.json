@@ -1,8 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.cjs-base.json",
   "compilerOptions": {
-    "module": "Node16",
-    "moduleResolution": "node16"
+    "moduleResolution": "bundler"
   },
   "include": ["."],
   "exclude": ["dist", "node_modules", "**/__mocks__", "**/__tests__/fixtures"]

@@ -1,9 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "isolatedModules": true,
-    "moduleResolution": "node16",
-    "module": "Node16",
     "outDir": "dist"
   },
   "include": ["."],

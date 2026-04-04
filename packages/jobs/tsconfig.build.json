@@ -1,10 +1,8 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.cjs-base.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "moduleResolution": "node16",
-    "module": "Node16",
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src"],

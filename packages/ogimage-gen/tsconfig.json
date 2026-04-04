@@ -1,6 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.cjs-base.json",
   "compilerOptions": {
+    "moduleResolution": "bundler",
     "rootDir": "src",
     "outDir": "dist"
   },

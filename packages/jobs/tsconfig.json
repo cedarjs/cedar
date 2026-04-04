@@ -1,8 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.cjs-base.json",
   "compilerOptions": {
-    "moduleResolution": "node16",
-    "module": "Node16",
+    "moduleResolution": "bundler",
     "emitDeclarationOnly": false,
     "noEmit": true
   },

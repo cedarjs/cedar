@@ -1,10 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "isolatedModules": false,
-    "moduleResolution": "nodenext",
-    "module": "NodeNext"
-  },
+  "compilerOptions": {},
   "include": ["."],
   "references": [{ "path": "../framework-tools" }]
 }

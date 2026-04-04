@@ -1,11 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "isolatedModules": true,
     "emitDeclarationOnly": false,
-    "noEmit": true,
-    "module": "node20",
-    "moduleResolution": "node16"
+    "noEmit": true
   },
   "include": ["."],
   "exclude": ["**/__testfixtures__"],

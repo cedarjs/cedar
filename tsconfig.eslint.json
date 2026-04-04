@@ -1,5 +1,10 @@
 {
   "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false
+  },
   "exclude": ["dist", "node_modules", "**/__mocks__"],
   "include": ["**/*", ".github/actions/**/*", ".github/scripts/**/*"]
 }

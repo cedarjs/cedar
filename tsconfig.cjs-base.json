@@ -1,8 +1,7 @@
 {
-  "extends": "./tsconfig.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist/cjs",
-    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo",
     "module": "commonjs",
     "moduleResolution": "node",
     "verbatimModuleSyntax": false,

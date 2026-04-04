@@ -2,11 +2,11 @@
   "compilerOptions": {
     "noEmit": true,
     "allowJs": true,
-    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "rewriteRelativeImportExtensions": true,
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
     "skipLibCheck": false,
     "rootDirs": [
       "./src",

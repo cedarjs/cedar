@@ -2,9 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist",
-    "module": "node20",
-    "moduleResolution": "node16"
+    "outDir": "dist"
   },
   "include": ["src", "./testUtils.d.ts"],
   "exclude": ["**/__testfixtures__", "**/__tests__"],
