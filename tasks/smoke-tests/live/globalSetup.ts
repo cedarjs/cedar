@@ -37,9 +37,7 @@ export default async function globalSetup() {
     console.log('Provisioning ephemeral Neon database...')
 
     databaseUrlDirect = await Promise.race([
-      instantPostgres({ referrer: 'cedarjs' }).then(
-        (r) => r.databaseUrlDirect,
-      ),
+      instantPostgres({ referrer: 'cedarjs' }).then((r) => r.databaseUrlDirect),
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error('Neon database provisioning timed out')),
