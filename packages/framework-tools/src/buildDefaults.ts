@@ -10,7 +10,7 @@ export const defaultBuildOptions: ESBuildOptions = {
   outdir: 'dist',
 
   platform: 'node',
-  target: ['node20'],
+  target: ['node24'],
 
   format: 'cjs',
 

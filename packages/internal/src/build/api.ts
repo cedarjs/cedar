@@ -80,7 +80,7 @@ function getEsbuildOptions(files: string[]): BuildOptions {
     absWorkingDir: cedarPaths.api.base,
     entryPoints: files,
     platform: 'node',
-    target: 'node20',
+    target: 'node24',
     format,
     allowOverwrite: true,
     bundle: false,
