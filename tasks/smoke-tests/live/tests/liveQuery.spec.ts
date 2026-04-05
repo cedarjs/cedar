@@ -134,7 +134,8 @@ test('useLiveQuery hook updates when data changes', async ({ page }) => {
     export default async () => {
       const pool = new Pool({ connectionString: process.env.DATABASE_URL })
       const result = await pool.query(
-        "UPDATE posts SET title = 'Live Hook Updated Title' WHERE id = 1 RETURNING title",
+        "UPDATE \"Post\" SET title = 'Live Hook Updated Title' " +
+        "WHERE id = 1 RETURNING title",
       )
       console.log('Updated post:', result.rows[0].title)
       await pool.end()
@@ -177,7 +178,9 @@ test('useLiveQuery hook reflects newly created records', async ({ page }) => {
     export default async () => {
       const pool = new Pool({ connectionString: process.env.DATABASE_URL })
       const result = await pool.query(
-        "INSERT INTO posts (title, body, author_id, created_at) VALUES ('New Live Hook Post', 'Created during useLiveQuery test.', '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d', NOW()) RETURNING title",
+        'INSERT INTO "Post" (title, body, "authorId", "createdAt") ' +
+        "VALUES ('New Live Hook Post', 'Created during useLiveQuery test.', " +
+        "'4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d', NOW()) RETURNING title",
       )
       console.log('Created post:', result.rows[0].title)
       await pool.end()
