@@ -12,8 +12,8 @@ interface Post {
 }
 
 const LivePosts = () => {
-  const { data, loading, error } = useLiveQuery<Post[]>(
-    (db) => db.post.findMany(),
+  const { data, loading, error } = useLiveQuery<Post[]>((db) =>
+    db.post.findMany(),
   )
 
   if (loading) {
@@ -21,9 +21,7 @@ const LivePosts = () => {
   }
 
   if (error) {
-    return (
-      <div style={{ color: 'red' }}>Error: {error.message}</div>
-    )
+    return <div style={{ color: 'red' }}>Error: {error.message}</div>
   }
 
   if (!data || data.length === 0) {
