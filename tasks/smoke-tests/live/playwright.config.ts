@@ -5,7 +5,7 @@ import { basePlaywrightConfig } from '../basePlaywright.config'
 export default defineConfig({
   ...basePlaywrightConfig,
 
-  globalSetup: './globalSetup.ts',
+  globalSetup: './globalSetup.mts',
 
   timeout: 60_000,
 
