@@ -7,8 +7,8 @@ import { parseConfigFileTextToJson } from 'typescript'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { getWebSideBabelPlugins } from './web'
-import type { Flags as WebFlags } from './web'
+import { getWebSideBabelPlugins } from './web.js'
+import type { Flags as WebFlags } from './web.js'
 
 export interface RegisterHookOptions {
   /**

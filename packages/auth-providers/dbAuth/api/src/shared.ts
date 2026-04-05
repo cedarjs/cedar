@@ -6,7 +6,7 @@ import type { CorsHeaders } from '@cedarjs/api'
 import { getEventHeader, isFetchApiRequest } from '@cedarjs/api'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 
-import * as DbAuthError from './errors'
+import * as DbAuthError from './errors.js'
 
 type ScryptOptions = {
   cost?: number

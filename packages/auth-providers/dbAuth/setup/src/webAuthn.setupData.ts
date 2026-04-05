@@ -3,10 +3,10 @@ import path from 'node:path'
 import { getPaths, colors } from '@cedarjs/cli-helpers'
 import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers'
 
-import { addModels, functionsPath, hasModel, libPath } from './shared'
+import { addModels, functionsPath, hasModel, libPath } from './shared.js'
 
 // copy some identical values from dbAuth provider
-export { extraTask } from './setupData'
+export { extraTask } from './setupData.js'
 
 // required packages to install on the web side
 export const webPackages = ['@simplewebauthn/browser@^10']

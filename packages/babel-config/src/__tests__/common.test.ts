@@ -1,6 +1,6 @@
 import { vol } from 'memfs'
 
-import { getCommonPlugins } from '../common'
+import { getCommonPlugins } from '../common.js'
 
 const redwoodProjectPath = '/redwood-app'
 process.env.CEDAR_CWD = redwoodProjectPath

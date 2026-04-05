@@ -1,6 +1,6 @@
 import type { Logger } from '@cedarjs/api/logger'
 
-import type { AbstractMailHandler } from './handler'
+import type { AbstractMailHandler } from './handler.js'
 import type {
   MailerConfig,
   MailSendWithoutRenderingOptions,
@@ -10,8 +10,8 @@ import type {
   MailerDefaults,
   MailerMode,
   MailResult,
-} from './types'
-import { constructCompleteSendOptions, extractDefaults } from './utils'
+} from './types.js'
+import { constructCompleteSendOptions, extractDefaults } from './utils.js'
 
 export class Mailer<
   THandlers extends MailHandlers,

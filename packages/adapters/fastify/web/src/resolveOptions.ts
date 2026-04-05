@@ -1,6 +1,6 @@
 import { getConfig } from '@cedarjs/project-config'
 
-import type { RedwoodFastifyWebOptions } from './types'
+import type { RedwoodFastifyWebOptions } from './types.js'
 
 export function resolveOptions(options: RedwoodFastifyWebOptions) {
   const redwoodOptions = options.redwood ?? {}

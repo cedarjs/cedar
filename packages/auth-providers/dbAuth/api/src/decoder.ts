@@ -2,7 +2,7 @@ import type { APIGatewayProxyEvent } from 'aws-lambda'
 
 import type { Decoder } from '@cedarjs/api'
 
-import { dbAuthSession } from './shared'
+import { dbAuthSession } from './shared.js'
 
 export const createAuthDecoder = (cookieNameTemplate: string): Decoder => {
   return async (_token, type, req) => {
