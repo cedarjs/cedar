@@ -522,58 +522,10 @@ export async function createComponents(live = false) {
   if (live) {
     await createComponent('livePosts')
 
-    const livePostsComponentPath = fullPath(
-      'web/src/components/LivePosts/LivePosts',
-    )
-    const livePostsContent = `import { useLiveQuery } from '@cedarjs/gqlorm/react/useLiveQuery'
-
-interface Post {
-  id: number
-  title: string
-  body: string
-  author: {
-    email: string
-    fullName: string
-  }
-  createdAt: string
-}
-
-const LivePosts = () => {
-  const { data, loading, error } = useLiveQuery<Post[]>(
-    (db) => db.post.findMany(),
-  )
-
-  if (loading) {
-    return <div>Loading...</div>
-  }
-
-  if (error) {
-    return (
-      <div style={{ color: 'red' }}>Error: {error.message}</div>
-    )
-  }
-
-  if (!data || data.length === 0) {
-    return <div>No posts yet</div>
-  }
-
-  return (
-    <div className="divide-grey-700 divide-y">
-      {data.map((post) => (
-        <article key={post.id} className="py-4">
-          <header>
-            <h2 className="text-xl font-semibold">{post.title}</h2>
-          </header>
-          <div className="mt-2 font-light text-gray-900">{post.body}</div>
-        </article>
-      ))}
-    </div>
-  )
-}
-
-export default LivePosts
-`
-    fs.writeFileSync(livePostsComponentPath, livePostsContent, 'utf8')
+    const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
+    const templatePath = path.join(templatesPath, 'LivePosts.tsx')
+    const componentPath = fullPath('web/src/components/LivePosts/LivePosts')
+    fs.copyFileSync(templatePath, componentPath)
   }
 }
 
