@@ -1,4 +1,3 @@
-// TODO: Why do we need this? Is this even actually used anywhere except for the types?
 import type { default as docgenTypescript } from '@joshwooding/vite-plugin-react-docgen-typescript'
 import type {
   StorybookConfigVite,
@@ -55,7 +54,6 @@ type TypescriptOptions = TypescriptOptionsBase & {
    * Configures `@joshwooding/vite-plugin-react-docgen-typescript`
    */
   reactDocgenTypescriptOptions: Parameters<TDocgenTypescript>[0]
-  // reactDocgenTypescriptOptions?: Record<string, unknown>
 }
 
 /**

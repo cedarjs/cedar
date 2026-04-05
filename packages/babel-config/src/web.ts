@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 import type { TransformOptions } from '@babel/core'
 import { resolvePath } from 'babel-plugin-module-resolver'
