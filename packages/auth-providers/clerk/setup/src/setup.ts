@@ -1,11 +1,11 @@
-import type yargs from 'yargs'
+import type { Argv } from 'yargs'
 
 import { standardAuthBuilder } from '@cedarjs/cli-helpers'
 
 export const command = 'clerk'
 export const description = 'Set up auth for for Clerk'
 
-export function builder(yargs: yargs.Argv) {
+export function builder(yargs: Argv) {
   return standardAuthBuilder(yargs)
 }
 
