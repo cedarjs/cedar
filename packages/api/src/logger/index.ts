@@ -1,5 +1,5 @@
 import type P from 'pino'
-import pino from 'pino'
+import { pino } from 'pino'
 
 /**
  * Types from Pino
@@ -229,7 +229,6 @@ export const createLogger = ({
       )
     }
 
-    // @ts-expect-error - See https://github.com/pinojs/pino/issues/2120
     return pino(options, stream as DestinationStream)
   } else {
     if (isStream && isDevelopment && !isTest) {
@@ -239,7 +238,6 @@ export const createLogger = ({
       )
     }
 
-    // @ts-expect-error - See https://github.com/pinojs/pino/issues/2120
     return pino(options, stream as DestinationStream)
   }
 }

@@ -1,7 +1,7 @@
 import path from 'node:path'
 
 import { getPaths, colors } from '@cedarjs/cli-helpers'
-import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers/src/auth/authTasks.js'
+import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers'
 
 import { addModels, functionsPath, hasModel, libPath } from './shared'
 
