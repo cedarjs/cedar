@@ -85,3 +85,102 @@ test('@live query reflects newly created records', async ({ page }) => {
 
   fs.unlinkSync(scriptPath)
 })
+
+test('useLiveQuery hook renders posts', async ({ page }) => {
+  await page.goto('/live-query')
+
+  await expect(page.getByText('Loading')).not.toBeVisible()
+
+  await expect(
+    page.getByText(
+      'Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo',
+    ),
+  ).toBeVisible()
+})
+
+test('useLiveQuery hook updates when data changes', async ({ page }) => {
+  await page.goto('/live-query')
+
+  await expect(page.getByText('Loading')).not.toBeVisible()
+
+  await expect(
+    page.getByText(
+      'Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo',
+    ),
+  ).toBeVisible()
+
+  const testProjectPath = process.env.CEDAR_TEST_PROJECT_PATH
+
+  const scriptPath = path.join(
+    testProjectPath,
+    'scripts',
+    'updatePostTitleLiveHook.ts',
+  )
+  fs.writeFileSync(
+    scriptPath,
+    `\
+    import { Pool } from 'pg'
+
+    export default async () => {
+      const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+      const result = await pool.query(
+        "UPDATE posts SET title = 'Live Hook Updated Title' WHERE id = 1 RETURNING title",
+      )
+      console.log('Updated post:', result.rows[0].title)
+      await pool.end()
+    }
+    `,
+  )
+
+  await execa('yarn', ['cedar', 'exec', 'updatePostTitleLiveHook'], {
+    cwd: testProjectPath,
+    stdio: 'pipe',
+  })
+
+  await expect(page.getByText('Live Hook Updated Title')).toBeVisible({
+    timeout: 10_000,
+  })
+
+  fs.unlinkSync(scriptPath)
+})
+
+test('useLiveQuery hook reflects newly created records', async ({ page }) => {
+  await page.goto('/live-query')
+
+  await expect(page.getByText('Loading')).not.toBeVisible()
+
+  const testProjectPath = process.env.CEDAR_TEST_PROJECT_PATH
+
+  const scriptPath = path.join(
+    testProjectPath,
+    'scripts',
+    'createPostLiveHook.ts',
+  )
+  fs.writeFileSync(
+    scriptPath,
+    `\
+    import { Pool } from 'pg'
+
+    export default async () => {
+      const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+      const result = await pool.query(
+        "INSERT INTO posts (title, body, author_id, created_at) VALUES ('New Live Hook Post', 'Created during useLiveQuery test.', '4c3d3e8e-2b1a-4f5c-8c7d-9e0f1a2b3c4d', NOW()) RETURNING title",
+      )
+      console.log('Created post:', result.rows[0].title)
+      await pool.end()
+    }
+    `,
+  )
+
+  await execa('yarn', ['cedar', 'exec', 'createPostLiveHook'], {
+    cwd: testProjectPath,
+    stdio: 'pipe',
+  })
+
+  await expect(page.getByText('New Live Hook Post')).toBeVisible({
+    timeout: 10_000,
+  })
+  await expect(page.getByText('Created during useLiveQuery test')).toBeVisible()
+
+  fs.unlinkSync(scriptPath)
+})
