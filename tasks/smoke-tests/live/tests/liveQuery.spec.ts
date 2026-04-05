@@ -4,7 +4,16 @@ import path from 'node:path'
 import { test, expect } from '@playwright/test'
 import execa from 'execa'
 
+const testProjectPath = process.env.CEDAR_TEST_PROJECT_PATH
+
 test.describe('@live', () => {
+  test.afterAll(async () => {
+    await execa('yarn', ['cedar', 'exec', 'resetPostTitle'], {
+      cwd: testProjectPath,
+      stdio: 'pipe',
+    })
+  })
+
   test('@live query updates when data changes', async ({ page }) => {
     await page.goto('/')
 
@@ -13,8 +22,6 @@ test.describe('@live', () => {
         'Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo',
       ),
     ).toBeVisible()
-
-    const testProjectPath = process.env.CEDAR_TEST_PROJECT_PATH
 
     const scriptPath = path.join(
       testProjectPath,
@@ -46,11 +53,6 @@ test.describe('@live', () => {
     })
 
     fs.unlinkSync(scriptPath)
-
-    await execa('yarn', ['cedar', 'exec', 'resetPostTitle'], {
-      cwd: testProjectPath,
-      stdio: 'pipe',
-    })
   })
 
   test('@live query reflects newly created records', async ({ page }) => {
@@ -61,8 +63,6 @@ test.describe('@live', () => {
         'Meh waistcoat succulents umami asymmetrical, hoodie post-ironic paleo',
       ),
     ).toBeVisible()
-
-    const testProjectPath = process.env.CEDAR_TEST_PROJECT_PATH
 
     const scriptPath = path.join(testProjectPath, 'scripts', 'createPost.ts')
     fs.writeFileSync(
@@ -121,8 +121,6 @@ test('useLiveQuery hook updates when data changes', async ({ page }) => {
     ),
   ).toBeVisible()
 
-  const testProjectPath = process.env.CEDAR_TEST_PROJECT_PATH
-
   const scriptPath = path.join(
     testProjectPath,
     'scripts',
@@ -165,8 +163,6 @@ test('useLiveQuery hook reflects newly created records', async ({ page }) => {
   await page.goto('/live-query')
 
   await expect(page.getByText('Loading')).not.toBeVisible()
-
-  const testProjectPath = process.env.CEDAR_TEST_PROJECT_PATH
 
   const scriptPath = path.join(
     testProjectPath,

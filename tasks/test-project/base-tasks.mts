@@ -315,6 +315,30 @@ export function apiTasksList({
         )
       },
     },
+    ...(live
+      ? [
+          {
+            title: 'Adding reset scripts for live tests',
+            task: () => {
+              const templatesPath = path.join(
+                import.meta.dirname,
+                'templates',
+                'scripts',
+              )
+              const scriptsPath = fullPath('scripts')
+
+              fs.copyFileSync(
+                path.join(templatesPath, 'resetPostTitle.ts.template'),
+                path.join(scriptsPath, 'resetPostTitle.ts'),
+              )
+              fs.copyFileSync(
+                path.join(templatesPath, 'resetPostTitleLiveHook.ts.template'),
+                path.join(scriptsPath, 'resetPostTitleLiveHook.ts'),
+              )
+            },
+          },
+        ]
+      : []),
     {
       title: 'Adding contact model to prisma',
       task: () => contactTask({ esm }),
