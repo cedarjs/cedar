@@ -1,8 +1,12 @@
+import { createRequire } from 'node:module'
+
 import type { ESLintUtils } from '@typescript-eslint/utils'
 
 import { processEnvComputedRule } from './process-env-computed.js'
 import { serviceTypeAnnotations } from './service-type-annotations.js'
 import { unsupportedRouteComponents } from './unsupported-route-components.js'
+
+const require = createRequire(import.meta.url)
 
 export const meta = {
   name: '@cedarjs/eslint-plugin',

@@ -1,10 +1,10 @@
 import path from 'node:path'
 
 import babelGenerator from '@babel/generator'
-const { default: generate } = babelGenerator
+const generate = babelGenerator
 import { parse as babelParse } from '@babel/parser'
 import babelTraverse from '@babel/traverse'
-const { default: traverse } = babelTraverse
+const traverse = babelTraverse
 import * as t from '@babel/types'
 import type { Plugin } from 'vite'
 import { normalizePath } from 'vite'

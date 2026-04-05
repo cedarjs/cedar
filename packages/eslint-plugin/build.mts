@@ -1,3 +1,8 @@
 import { build } from '@cedarjs/framework-tools'
 
-await build()
+await build({
+  buildOptions: {
+    format: 'esm',
+    outdir: 'dist',
+  },
+})

@@ -13,7 +13,8 @@ import { coerceRootPath } from './helpers'
 import { resolveOptions } from './resolveOptions'
 import type { RedwoodFastifyWebOptions } from './types'
 
-export { coerceRootPath, RedwoodFastifyWebOptions }
+export { coerceRootPath }
+export type { RedwoodFastifyWebOptions }
 
 export async function redwoodFastifyWeb(
   fastify: FastifyInstance,

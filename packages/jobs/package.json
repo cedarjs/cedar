@@ -7,7 +7,7 @@
     "directory": "packages/jobs"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "default": {

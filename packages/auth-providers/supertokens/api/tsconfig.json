@@ -1,11 +1,9 @@
 {
-  "extends": "../../../../tsconfig.cjs-base.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "moduleResolution": "bundler",
     "strict": true,
     "rootDir": "src",
-    "outDir": "dist",
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+    "outDir": "dist"
   },
   "include": ["src"],
   "references": [{ "path": "../../../api" }]

@@ -4,17 +4,16 @@ import path from 'path'
 import type { TransformOptions } from '@babel/core'
 import { resolvePath } from 'babel-plugin-module-resolver'
 
-// This import is for types safety. Its just a type, no harm importing from src.
-import type { PluginOptions as RoutesAutoLoaderOptions } from '@cedarjs/babel-config/src/plugins/babel-plugin-redwood-routes-auto-loader'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
-import type { RegisterHookOptions } from './common'
+import type { RegisterHookOptions } from './common.js'
 import {
   getCommonPlugins,
   registerBabel,
   parseTypeScriptConfigFiles,
   getPathsFromTypeScriptConfig,
-} from './common'
+} from './common.js'
+import type { PluginOptions as RoutesAutoLoaderOptions } from './plugins/babel-plugin-redwood-routes-auto-loader.js'
 
 // These flags toggle on/off certain features
 export interface Flags {

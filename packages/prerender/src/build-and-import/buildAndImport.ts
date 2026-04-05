@@ -25,8 +25,7 @@ import { cedarjsPrerenderMediaImportsPlugin } from './rollupPlugins/rollup-plugi
 import { cedarjsRoutesAutoLoaderPlugin } from './rollupPlugins/rollup-plugin-cedarjs-routes-auto-loader.js'
 import { getPkgType, isValidJsFile, makeFilePath } from './utils.js'
 
-/** @see {@link https://github.com/rollup/plugins/issues/1541} */
-const fix = <T>(f: { default: T }): T => f as unknown as T
+const fix = <T>(f: T): T => f
 
 const tsconfigPathsToRegExp = (paths: Record<string, any>) => {
   return Object.keys(paths || {}).map((key) => {
@@ -92,7 +91,6 @@ export async function buildAndImport(
         exportConditions: ['node'],
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'],
       }),
-      // @ts-expect-error - Ignore type errors for now
       replace({
         preventAssignment: true,
         'process.env.NODE_ENV': '"production"',

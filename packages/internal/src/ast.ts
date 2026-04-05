@@ -15,10 +15,7 @@ import { getPaths } from '@cedarjs/project-config'
 
 import { isFileInsideFolder } from './files.js'
 
-// See https://github.com/babel/babel/discussions/13093
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-const traverse = babelTraverse.default || babelTraverse
+const traverse = babelTraverse
 
 export const fileToAst = (filePath: string): types.Node => {
   const code = fs.readFileSync(filePath, 'utf-8')

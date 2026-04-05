@@ -6,9 +6,8 @@ import babelTraverse from '@babel/traverse'
 import type * as t from '@babel/types'
 import type { Plugin } from 'rollup'
 
-// See https://github.com/babel/babel/issues/13855#issuecomment-945123514
-const traverse = babelTraverse.default
-const generate = babelGenerator.default
+const traverse = babelTraverse
+const generate = babelGenerator
 
 // A cell can export the declarations below.
 const EXPECTED_EXPORTS_FROM_CELL = [

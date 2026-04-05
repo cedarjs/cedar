@@ -7,7 +7,7 @@
     "directory": "packages/auth-providers/custom/setup"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

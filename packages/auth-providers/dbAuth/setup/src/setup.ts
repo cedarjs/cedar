@@ -1,10 +1,10 @@
 import { terminalLink } from 'termi-link'
-import type yargs from 'yargs'
+import type { Argv } from 'yargs'
 
 export const command = 'dbAuth'
 export const description = 'Set up auth for for dbAuth'
 
-export function builder(yargs: yargs.Argv) {
+export function builder(yargs: Argv) {
   yargs
     .option('force', {
       alias: 'f',

@@ -7,7 +7,7 @@
     "directory": "packages/auth-providers/firebase/api"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "default": {

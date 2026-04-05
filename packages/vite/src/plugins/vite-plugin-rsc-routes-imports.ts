@@ -1,10 +1,10 @@
 import path from 'path'
 
 import babelGenerator from '@babel/generator'
-const { default: generate } = babelGenerator
+const generate = babelGenerator
 import { parse as babelParse } from '@babel/parser'
 import babelTraverse from '@babel/traverse'
-const { default: traverse } = babelTraverse
+const traverse = babelTraverse
 import * as t from '@babel/types'
 import type { Plugin } from 'vite'
 import { normalizePath } from 'vite'
@@ -103,9 +103,9 @@ export function rscRoutesImports(): Plugin {
             importStatementPath(path.node.source?.value),
           )
 
-          const defaultSpecifier = path.node.specifiers.filter((specifier) =>
+          const defaultSpecifier = path.node.specifiers.find((specifier) =>
             t.isImportDefaultSpecifier(specifier),
-          )[0]
+          )
 
           if (userImportRelativePath && defaultSpecifier) {
             importedNames.add(defaultSpecifier.local.name)

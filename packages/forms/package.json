@@ -7,7 +7,7 @@
     "directory": "packages/forms"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "default": {

@@ -4,8 +4,6 @@
     "strict": true,
     "rootDir": "src",
     "outDir": "dist",
-    "module": "Node16",
-    "moduleResolution": "bundler",
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src/**/*"],

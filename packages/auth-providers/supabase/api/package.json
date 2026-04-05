@@ -7,7 +7,7 @@
     "directory": "packages/auth-providers/supabase/api"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "default": {

@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "erasableSyntaxOnly": false,
     "outDir": "dist"
   },
   "include": ["."],

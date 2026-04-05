@@ -229,7 +229,6 @@ export const createLogger = ({
       )
     }
 
-    // @ts-expect-error - See https://github.com/pinojs/pino/issues/2120
     return pino(options, stream as DestinationStream)
   } else {
     if (isStream && isDevelopment && !isTest) {
@@ -239,7 +238,6 @@ export const createLogger = ({
       )
     }
 
-    // @ts-expect-error - See https://github.com/pinojs/pino/issues/2120
     return pino(options, stream as DestinationStream)
   }
 }

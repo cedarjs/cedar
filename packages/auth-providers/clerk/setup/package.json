@@ -7,7 +7,7 @@
     "directory": "packages/auth-providers/clerk/setup"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.cjs-base.json",
   "compilerOptions": {
+    "module": "esnext",
     "moduleResolution": "bundler",
     "rootDir": "src",
     "outDir": "dist"
