@@ -7113,22 +7113,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@joshwooding/vite-plugin-react-docgen-typescript@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@joshwooding/vite-plugin-react-docgen-typescript@npm:0.7.0"
-  dependencies:
-    glob: "npm:^13.0.1"
-    react-docgen-typescript: "npm:^2.2.2"
-  peerDependencies:
-    typescript: ">= 4.3.x"
-    vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-  checksum: 10c0/6d1a353e4dd0d9d641beafcf8d5c36805ad7f916ae07b817642033bc85c388f819f92dc94db192117dedfaa5d981ac5ef72911315e3e4bf2fe9e23d8956618e6
-  languageName: node
-  linkType: hard
-
 "@jridgewell/gen-mapping@npm:^0.3.12, @jridgewell/gen-mapping@npm:^0.3.5":
   version: 0.3.13
   resolution: "@jridgewell/gen-mapping@npm:0.3.13"
@@ -18056,7 +18040,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^13.0.0, glob@npm:^13.0.1, glob@npm:^13.0.3":
+"glob@npm:^13.0.0, glob@npm:^13.0.3":
   version: 13.0.5
   resolution: "glob@npm:13.0.5"
   dependencies:
@@ -25793,15 +25777,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-docgen-typescript@npm:^2.2.2":
-  version: 2.2.2
-  resolution: "react-docgen-typescript@npm:2.2.2"
-  peerDependencies:
-    typescript: ">= 4.3.x"
-  checksum: 10c0/d31a061a21b5d4b67d4af7bc742541fd9e16254bd32861cd29c52565bc2175f40421a3550d52b6a6b0d0478e7cc408558eb0060a0bdd2957b02cfceeb0ee1e88
-  languageName: node
-  linkType: hard
-
 "react-docgen@npm:7.1.1":
   version: 7.1.1
   resolution: "react-docgen@npm:7.1.1"
@@ -27806,7 +27781,6 @@ __metadata:
   resolution: "storybook-framework-cedarjs@workspace:packages/storybook"
   dependencies:
     "@cedarjs/testing": "npm:3.1.1"
-    "@joshwooding/vite-plugin-react-docgen-typescript": "npm:0.7.0"
     "@rollup/pluginutils": "npm:5.3.0"
     "@storybook/addon-essentials": "npm:8.6.14"
     "@storybook/builder-vite": "npm:8.6.18"

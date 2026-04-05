@@ -11,7 +11,7 @@ pre-push:
   jobs:
     - run: NX_TUI=false yarn build
     - run: yarn lint
-    - run: yarn prettier --check --log-level=silent .
+    - run: yarn prettier --check .
     - run: yarn check
     - run: node tasks/check-no-only.mts
 
