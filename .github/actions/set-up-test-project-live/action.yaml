@@ -1,0 +1,15 @@
+name: Set up test project (live)
+description: Sets up the test-project-live fixture in CI for live smoke tests
+
+runs:
+  using: node24
+  main: 'setUpTestProjectLiveGitHub.mts'
+
+inputs:
+  canary:
+    description: Upgrade the project to canary?
+    default: 'false'
+
+outputs:
+  test-project-path:
+    description: Path to the test project
