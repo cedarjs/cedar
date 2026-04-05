@@ -199,6 +199,18 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
+  live-smoke-tests:
+    needs: check
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    name: 🔄 Live Smoke tests / ${{ matrix.os }}
+    uses: ./.github/workflows/live-smoke-tests.yml
+    with:
+      os: ${{ matrix.os }}
+
   create-cedar-app:
     needs: check
 
@@ -238,6 +250,7 @@ jobs:
       - rsc-smoke-tests
       - ssr-smoke-tests
       - fragments-smoke-tests
+      - live-smoke-tests
       - create-cedar-app
       - server-tests
       - background-jobs-e2e

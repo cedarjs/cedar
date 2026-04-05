@@ -1,11 +1,11 @@
-import type yargs from 'yargs'
+import type { Argv } from 'yargs'
 
 import { standardAuthBuilder } from '@cedarjs/cli-helpers'
 
 export const command = 'azure-active-directory'
 export const description = 'Set up auth for Azure Active Directory'
 
-export function builder(yargs: yargs.Argv) {
+export function builder(yargs: Argv) {
   return standardAuthBuilder(yargs)
 }
 

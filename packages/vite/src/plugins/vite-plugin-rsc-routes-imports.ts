@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import babelGenerator from '@babel/generator'
 const { default: generate } = babelGenerator
@@ -103,9 +103,9 @@ export function rscRoutesImports(): Plugin {
             importStatementPath(path.node.source?.value),
           )
 
-          const defaultSpecifier = path.node.specifiers.filter((specifier) =>
+          const defaultSpecifier = path.node.specifiers.find((specifier) =>
             t.isImportDefaultSpecifier(specifier),
-          )[0]
+          )
 
           if (userImportRelativePath && defaultSpecifier) {
             importedNames.add(defaultSpecifier.local.name)
