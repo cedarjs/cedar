@@ -2,6 +2,7 @@
   "name": "api",
   "version": "0.0.0",
   "private": true,
+  "type": "commonjs",
   "dependencies": {
     "@cedarjs/api": "0.0.5",
     "@cedarjs/auth-dbauth-api": "0.0.5",
