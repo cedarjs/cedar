@@ -19,8 +19,5 @@ export default defineConfig({
     url: 'http://localhost:8911/graphql?query={redwood{version}}',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
-    env: {
-      DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
-    },
   },
 })
