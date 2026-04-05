@@ -1,8 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { applyBlogPostsCellCodemod } from './codemods/blogPostsCell.ts'
 import { applyBlogPostCellCodemod } from './codemods/blogPostCell.ts'
+import { applyBlogPostsCellCodemod } from './codemods/blogPostsCell.ts'
 import {
   addValidateUniquenessToPosts,
   uniquePostTitles,
@@ -20,13 +20,13 @@ import {
   createBuilder,
 } from './util.mts'
 
-function getPagesTasks() {
+function getPagesTasks(live = false) {
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
   // to make sure it works as expected. We do the same for the /api directory
   // further down in this file.
   const createPage = createBuilder('yarn cedar g page', 'web')
 
-  return [
+  const pages = [
     {
       title: 'Creating home page',
       task: async () => {
@@ -147,14 +147,42 @@ function getPagesTasks() {
         )
       },
     },
+    ...(live
+      ? [
+          {
+            title: 'Creating live query page',
+            task: async () => {
+              await createPage('liveQuery')
+
+              const liveQueryPagePath = fullPath(
+                'web/src/pages/LiveQueryPage/LiveQueryPage',
+              )
+              const pageContent = fs.readFileSync(liveQueryPagePath, 'utf8')
+              const updatedContent = pageContent
+                .replace(
+                  /\/\/.*import \{ Metadata \} from '@cedarjs\/web'/,
+                  "import LivePosts from 'src/components/LivePosts'",
+                )
+                .replace(
+                  /return \(\s*<>\s*<Metadata.*?<\/Metadata>\s*<h1>.*?<\/h1>.*?<\/>/s,
+                  'return <LivePosts />',
+                )
+
+              fs.writeFileSync(liveQueryPagePath, updatedContent, 'utf8')
+            },
+          },
+        ]
+      : []),
   ]
+
+  return pages
 }
 
 export function webTasksList(live = false) {
   const taskList = [
     {
       title: 'Creating pages',
-      task: async () => getPagesTasks(),
+      task: async () => getPagesTasks(live),
       isNested: true,
     },
     {
@@ -163,7 +191,7 @@ export function webTasksList(live = false) {
     },
     {
       title: 'Creating components',
-      task: () => createComponents(),
+      task: () => createComponents(live),
     },
     {
       title: 'Creating cells',
@@ -460,7 +488,7 @@ export async function createLayout() {
   )
 }
 
-export async function createComponents() {
+export async function createComponents(live = false) {
   const createComponent = createBuilder('yarn cedar g component')
 
   await createComponent('blogPost')
@@ -490,6 +518,63 @@ export async function createComponents() {
     'classWithClassField.ts',
     fullPath('web/src/components/ClassWithClassField/ClassWithClassField'),
   )
+
+  if (live) {
+    await createComponent('livePosts')
+
+    const livePostsComponentPath = fullPath(
+      'web/src/components/LivePosts/LivePosts',
+    )
+    const livePostsContent = `import { useLiveQuery } from '@cedarjs/gqlorm/react/useLiveQuery'
+
+interface Post {
+  id: number
+  title: string
+  body: string
+  author: {
+    email: string
+    fullName: string
+  }
+  createdAt: string
+}
+
+const LivePosts = () => {
+  const { data, loading, error } = useLiveQuery<Post[]>(
+    (db) => db.post.findMany(),
+  )
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (error) {
+    return (
+      <div style={{ color: 'red' }}>Error: {error.message}</div>
+    )
+  }
+
+  if (!data || data.length === 0) {
+    return <div>No posts yet</div>
+  }
+
+  return (
+    <div className="divide-grey-700 divide-y">
+      {data.map((post) => (
+        <article key={post.id} className="py-4">
+          <header>
+            <h2 className="text-xl font-semibold">{post.title}</h2>
+          </header>
+          <div className="mt-2 font-light text-gray-900">{post.body}</div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+export default LivePosts
+`
+    fs.writeFileSync(livePostsComponentPath, livePostsContent, 'utf8')
+  }
 }
 
 export async function createCells(live = false) {

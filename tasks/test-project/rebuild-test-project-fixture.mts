@@ -606,6 +606,10 @@ async function rebuildTestProject() {
       apiPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
       webPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
 
+      if (live) {
+        webPackageJson.dependencies['@cedarjs/gqlorm'] = 'workspace:*'
+      }
+
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, 'api', 'package.json'),
         JSON.stringify(apiPackageJson, null, 2),
