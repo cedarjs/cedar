@@ -2,7 +2,7 @@ import path from 'path'
 
 import pluginTester from 'babel-plugin-tester'
 
-import plugin from '../babel-plugin-redwood-mock-cell-data'
+import plugin from '../babel-plugin-redwood-mock-cell-data.js'
 
 describe('babel plugin redwood mock cell data', () => {
   const __fixtures__ = path.resolve(__dirname, '../../../../../__fixtures__')

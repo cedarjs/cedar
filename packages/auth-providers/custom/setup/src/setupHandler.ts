@@ -3,7 +3,7 @@ import path from 'path'
 
 import { isTypeScriptProject, standardAuthHandler } from '@cedarjs/cli-helpers'
 
-import type { Args } from './setup'
+import type { Args } from './setup.js'
 
 const { version } = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'),

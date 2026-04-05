@@ -3,7 +3,6 @@
   "compilerOptions": {
     "outDir": "dist/cjs",
     "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo",
-    "module": "commonjs",
-    "moduleResolution": "node"
+    "verbatimModuleSyntax": false
   }
 }

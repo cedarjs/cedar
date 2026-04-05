@@ -2,7 +2,7 @@ import path from 'path'
 
 import { getConfig } from '@cedarjs/project-config'
 
-import { getApiSideBabelPlugins, transformWithBabel } from '../api'
+import { getApiSideBabelPlugins, transformWithBabel } from '../api.js'
 
 const CEDAR_CWD = path.join(__dirname, '__fixtures__/redwood-app')
 process.env.CEDAR_CWD = CEDAR_CWD

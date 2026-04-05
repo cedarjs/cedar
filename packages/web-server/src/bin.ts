@@ -6,10 +6,10 @@ import yargs from 'yargs/yargs'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { bin } from '../package.json'
+import pkg from '../package.json' with { type: 'json' }
 
-import { description, builder } from './cliConfig'
-import { handler } from './cliConfigHandler'
+import { description, builder } from './cliConfig.js'
+import { handler } from './cliConfigHandler.js'
 
 if (!process.env.REDWOOD_ENV_FILES_LOADED) {
   config({
@@ -23,7 +23,7 @@ if (!process.env.REDWOOD_ENV_FILES_LOADED) {
 
 process.env.NODE_ENV ??= 'production'
 
-const [scriptName] = Object.keys(bin)
+const [scriptName] = Object.keys(pkg.bin)
 
 yargs(hideBin(process.argv))
   .scriptName(scriptName)

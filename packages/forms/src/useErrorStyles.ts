@@ -2,8 +2,8 @@ import React, { useContext } from 'react'
 
 import { get, useFormContext } from 'react-hook-form'
 
-import type { FieldProps } from './FieldProps'
-import { ServerErrorsContext } from './ServerErrorsContext'
+import type { FieldProps } from './FieldProps.js'
+import { ServerErrorsContext } from './ServerErrorsContext.js'
 
 export type UseErrorStylesProps = Pick<
   FieldProps,

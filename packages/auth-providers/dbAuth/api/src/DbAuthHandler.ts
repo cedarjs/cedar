@@ -21,7 +21,7 @@ import {
   normalizeRequest,
 } from '@cedarjs/api'
 
-import * as DbAuthError from './errors'
+import * as DbAuthError from './errors.js'
 import {
   decryptSession,
   encryptSession,
@@ -35,7 +35,7 @@ import {
   isLegacySession,
   legacyHashPassword,
   webAuthnSession,
-} from './shared'
+} from './shared.js'
 
 interface SignupFlowOptions<TUserAttributes = Record<string, unknown>> {
   /**

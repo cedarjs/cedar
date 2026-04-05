@@ -8,6 +8,7 @@
     "directory": "packages/web-server"
   },
   "license": "MIT",
+  "type": "module",
   "main": "./dist/cliConfig.js",
   "types": "./dist/cliConfig.d.ts",
   "bin": {

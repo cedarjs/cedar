@@ -3,13 +3,13 @@ import { vi } from 'vitest'
 
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
 
-import type { PluginList } from '../api'
+import type { PluginList } from '../api.js'
 import {
   getApiSideBabelConfigPath,
   getApiSideBabelPlugins,
   getApiSideBabelPresets,
   TARGETS_NODE,
-} from '../api'
+} from '../api.js'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 

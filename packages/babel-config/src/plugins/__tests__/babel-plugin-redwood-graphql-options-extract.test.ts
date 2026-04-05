@@ -3,7 +3,7 @@ import path from 'path'
 import pluginTester from 'babel-plugin-tester'
 import { vi } from 'vitest'
 
-import redwoodGraphqlOptionsExtract from '../babel-plugin-redwood-graphql-options-extract'
+import redwoodGraphqlOptionsExtract from '../babel-plugin-redwood-graphql-options-extract.js'
 
 vi.mock('@cedarjs/project-config', () => {
   return {

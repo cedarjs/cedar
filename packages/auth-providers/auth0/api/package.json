@@ -7,7 +7,7 @@
     "directory": "packages/auth-providers/auth0/api"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "default": {

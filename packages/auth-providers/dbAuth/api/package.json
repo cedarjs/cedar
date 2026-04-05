@@ -7,7 +7,7 @@
     "directory": "packages/auth-providers/dbAuth/api"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "default": {

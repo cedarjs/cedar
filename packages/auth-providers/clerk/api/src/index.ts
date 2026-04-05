@@ -1,1 +1,1 @@
-export { clerkAuthDecoder } from './decoder'
+export { clerkAuthDecoder } from './decoder.js'

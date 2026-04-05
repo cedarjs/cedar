@@ -3,7 +3,7 @@ import path from 'path'
 
 import { getPaths, standardAuthHandler } from '@cedarjs/cli-helpers'
 
-import type { Args } from './setup'
+import type { Args } from './setup.js'
 
 export async function handler({ force: forceArg }: Args) {
   const { version } = JSON.parse(

@@ -7,6 +7,7 @@
     "directory": "packages/eslint-config"
   },
   "license": "MIT",
+  "type": "module",
   "exports": {
     ".": {
       "import": {

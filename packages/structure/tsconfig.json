@@ -8,6 +8,7 @@
     "outDir": "dist",
     "emitDeclarationOnly": false,
     "experimentalDecorators": true,
+    "erasableSyntaxOnly": false,
     "noImplicitReturns": false,
     "noImplicitAny": false,
     "noUnusedLocals": false

@@ -7,7 +7,7 @@
     "directory": "packages/ogimage-gen"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     "./plugin": {
       "types": "./dist/vite-plugin-ogimage-gen.d.ts",

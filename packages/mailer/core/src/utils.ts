@@ -1,11 +1,11 @@
-import type { Mailer } from './mailer'
+import type { Mailer } from './mailer.js'
 import type {
   MailAddress,
   MailSendOptions,
   MailSendWithoutRenderingOptions,
   MailSendOptionsComplete,
   MailerDefaults,
-} from './types'
+} from './types.js'
 
 export function convertAddress(address: MailAddress): string {
   if (typeof address === 'string') {

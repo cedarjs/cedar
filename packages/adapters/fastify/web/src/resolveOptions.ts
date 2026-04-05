@@ -1,6 +1,6 @@
 import { getConfig } from '@cedarjs/project-config'
 
-import type { RedwoodFastifyWebOptions } from './types'
+import type { RedwoodFastifyWebOptions } from './types.js'
 
 export function resolveOptions(options: RedwoodFastifyWebOptions) {
   const redwoodOptions = options.redwood ?? {}
@@ -11,7 +11,8 @@ export function resolveOptions(options: RedwoodFastifyWebOptions) {
   redwoodOptions.apiUrl ??= getConfig().web.apiUrl
   const apiUrlIsFullyQualifiedUrl = isFullyQualifiedUrl(redwoodOptions.apiUrl)
 
-  // `apiHost` is deprecated. If it's set and `apiProxyTarget` isn't, we'll use it as `apiProxyTarget`.
+  // `apiHost` is deprecated. If it's set and `apiProxyTarget` isn't, we'll use
+  // it as `apiProxyTarget`.
   if (redwoodOptions.apiHost && !redwoodOptions.apiProxyTarget) {
     redwoodOptions.apiProxyTarget = redwoodOptions.apiHost
     delete redwoodOptions.apiHost
@@ -26,7 +27,8 @@ export function resolveOptions(options: RedwoodFastifyWebOptions) {
     !isFullyQualifiedUrl(redwoodOptions.apiProxyTarget)
   ) {
     throw new Error(
-      `If you provide \`apiProxyTarget\`, it has to be a fully-qualified URL. \`apiProxyTarget\` is '${redwoodOptions.apiProxyTarget}'`,
+      'If you provide `apiProxyTarget`, it has to be a fully-qualified URL. ' +
+        `\`apiProxyTarget\` is '${redwoodOptions.apiProxyTarget}'`,
     )
   }
 
@@ -43,7 +45,8 @@ export function resolveOptions(options: RedwoodFastifyWebOptions) {
   // This is pretty unlikely because we default `apiUrl` to '/.redwood/functions'
   if (!redwoodOptions.apiUrl && redwoodOptions.apiProxyTarget) {
     throw new Error(
-      `If you provide \`apiProxyTarget\`, \`apiUrl\` has to be a relative URL. \`apiUrl\` is '${redwoodOptions.apiUrl}'`,
+      'If you provide `apiProxyTarget`, `apiUrl` has to be a relative URL. ' +
+        `\`apiUrl\` is '${redwoodOptions.apiUrl}'`,
     )
   }
 
@@ -52,17 +55,20 @@ export function resolveOptions(options: RedwoodFastifyWebOptions) {
   //
   // ```js
   // {
-  //   apiUrl: 'http://api.foo.com', // This isn't a prefix we can forward requests from
+  //   // This isn't a prefix we can forward requests from
+  //   apiUrl: 'http://api.foo.com',
   //   apiProxyTarget: 'http://api.bar.com'
   // }
   // ```
   if (apiUrlIsFullyQualifiedUrl && redwoodOptions.apiProxyTarget) {
     throw new Error(
-      `If you provide \`apiProxyTarget\`, \`apiUrl\` cannot be a fully-qualified URL. \`apiUrl\` is '${redwoodOptions.apiUrl}'`,
+      'If you provide `apiProxyTarget`, `apiUrl` cannot be a fully-qualified ' +
+        `URL. \`apiUrl\` is '${redwoodOptions.apiUrl}'`,
     )
   }
 
-  // If users supply a relative `apiUrl` but don't supply `apiProxyTarget`, error.
+  // If users supply a relative `apiUrl` but don't supply `apiProxyTarget`,
+  // error.
   // There's nowhere to proxy to.
   //
   // ```js

@@ -2,6 +2,7 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "outDir": "dist/cjs",
-    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
+    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo",
+    "verbatimModuleSyntax": false
   }
 }

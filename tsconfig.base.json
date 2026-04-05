@@ -1,21 +1,36 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
+  "$schema": "https://www.schemastore.org/tsconfig",
+  "_version": "24.0.0",
   "compilerOptions": {
-    "target": "esnext",
-    "moduleResolution": "node",
-    "module": "esnext",
+    "lib": [
+      "es2024",
+      "ESNext.Array",
+      "ESNext.Collection",
+      "ESNext.Error",
+      "ESNext.Iterator",
+      "ESNext.Promise"
+    ],
+    "module": "node20",
+    "target": "es2024",
+    "moduleResolution": "node16",
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "rewriteRelativeImportExtensions": true,
+
     "declarationMap": true,
     "emitDeclarationOnly": true,
     "sourceMap": true,
     "composite": true,
-    "strict": true,
-    "esModuleInterop": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "jsx": "preserve",
-    "skipLibCheck": true,
     "resolveJsonModule": true
   },
   "exclude": [

@@ -1,5 +1,5 @@
-import type { ParsedOptions } from './types'
-import { serveWeb } from './webServer'
+import type { ParsedOptions } from './types.js'
+import { serveWeb } from './webServer.js'
 
 export async function handler(options: ParsedOptions) {
   try {

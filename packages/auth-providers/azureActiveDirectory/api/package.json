@@ -7,7 +7,7 @@
     "directory": "packages/auth-providers/azureActiveDirectory/api"
   },
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
       "default": {

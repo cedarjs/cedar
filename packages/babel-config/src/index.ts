@@ -23,7 +23,7 @@ export {
   registerApiSideBabelHook,
   /** Used by @cedarjs/internal and @cedarjs/vite */
   transformWithBabel,
-} from './api'
+} from './api.js'
 
 export {
   /**
@@ -50,9 +50,9 @@ export {
   getWebSideOverrides,
   /** Used by @cedarjs/prerender */
   registerWebSideBabelHook,
-} from './web'
+} from './web.js'
 
-export type { Flags } from './web'
+export type { Flags } from './web.js'
 
 export {
   /** Used by our eslint-config  */
@@ -74,4 +74,4 @@ export {
    * in a future version.
    */
   registerBabel,
-} from './common'
+} from './common.js'

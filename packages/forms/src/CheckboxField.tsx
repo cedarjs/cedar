@@ -1,9 +1,9 @@
 import type { ForwardedRef } from 'react'
 import React, { forwardRef } from 'react'
 
-import type { FieldProps } from './FieldProps'
-import { useErrorStyles } from './useErrorStyles'
-import { useRegister } from './useRegister'
+import type { FieldProps } from './FieldProps.js'
+import { useErrorStyles } from './useErrorStyles.js'
+import { useRegister } from './useRegister.js'
 
 export interface CheckboxFieldProps
   extends

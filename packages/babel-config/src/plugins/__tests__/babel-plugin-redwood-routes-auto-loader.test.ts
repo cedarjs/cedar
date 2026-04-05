@@ -5,7 +5,7 @@ import * as babel from '@babel/core'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import babelRoutesAutoLoader from '../babel-plugin-redwood-routes-auto-loader'
+import babelRoutesAutoLoader from '../babel-plugin-redwood-routes-auto-loader.js'
 
 const transform = (filename: string) => {
   const code = fs.readFileSync(filename, 'utf-8')
