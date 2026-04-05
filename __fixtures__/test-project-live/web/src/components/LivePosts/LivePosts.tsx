@@ -29,7 +29,7 @@ const LivePosts = () => {
   }
 
   return (
-    <div className="divide-grey-700 divide-y">
+    <div className="divide-gray-700 divide-y">
       {data.map((post) => (
         <article key={post.id} className="py-4">
           <header>
