@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+// @ts-expect-error - bundle-require has a missing types export for the "."
+// specifier in its package.json
 import { bundleRequire } from 'bundle-require'
 import { Listr } from 'listr2'
 

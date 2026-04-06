@@ -1,10 +1,5 @@
 {
-  "extends": "../../../../tsconfig.base.json",
-  "compilerOptions": {
-    "strict": true,
-    "rootDir": "src",
-    "outDir": "dist"
-  },
+  "extends": "../../../../tsconfig.cjs-base.json",
   "include": ["src"],
   "references": [{ "path": "../../../cli-helpers" }]
 }

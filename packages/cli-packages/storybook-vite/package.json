@@ -7,6 +7,7 @@
     "directory": "packages/cli-packages/storybook-vite"
   },
   "license": "MIT",
+  "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [

@@ -1,8 +1,6 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.cjs-base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
     "types": ["node", "jest"]
   },
   "include": ["ambient.d.ts", "src"],
