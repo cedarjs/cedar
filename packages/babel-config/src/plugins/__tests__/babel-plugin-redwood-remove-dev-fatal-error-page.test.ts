@@ -2,7 +2,7 @@ import path from 'path'
 
 import pluginTester from 'babel-plugin-tester'
 
-import plugin from '../babel-plugin-redwood-remove-dev-fatal-error-page'
+import plugin from '../babel-plugin-redwood-remove-dev-fatal-error-page.js'
 
 describe('babel plugin redwood remove dev fatal error page', () => {
   pluginTester({

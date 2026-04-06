@@ -1,7 +1,7 @@
 import React from 'react'
 
-import type { FieldProps } from './FieldProps'
-import { useErrorStyles } from './useErrorStyles'
+import type { FieldProps } from './FieldProps.js'
+import { useErrorStyles } from './useErrorStyles.js'
 
 export interface LabelProps
   extends

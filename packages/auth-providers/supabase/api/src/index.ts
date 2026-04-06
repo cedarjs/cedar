@@ -1,1 +1,1 @@
-export { authDecoder, throwSupabaseSettingsError } from './decoder'
+export { authDecoder, throwSupabaseSettingsError } from './decoder.js'
