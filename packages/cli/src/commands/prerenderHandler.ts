@@ -221,11 +221,9 @@ export const getTasks = async (
     prerenderRoutes.map((route) => expandRouteParameters(route)),
   )
 
-  const prerenderer = (
-    projectIsEsm()
-      ? await import('@cedarjs/prerender')
-      : await import('@cedarjs/prerender/cjs')
-  ) as typeof Prerender
+  const prerenderer = projectIsEsm()
+    ? await import('@cedarjs/prerender')
+    : await import('@cedarjs/prerender/cjs')
 
   const listrTasks = expandedRouteParameters.flatMap((routesToPrerender) => {
     const queryCache: Record<string, QueryInfo> = {}
