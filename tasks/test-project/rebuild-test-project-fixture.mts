@@ -607,7 +607,8 @@ async function rebuildTestProject() {
       webPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
 
       if (live) {
-        webPackageJson.dependencies['@cedarjs/gqlorm'] = 'workspace:*'
+        webPackageJson.dependencies['@cedarjs/gqlorm'] =
+          webPackageJson.dependencies['@cedarjs/web']
       }
 
       fs.writeFileSync(
