@@ -2,9 +2,9 @@ import type React from 'react'
 
 import { useFormContext } from 'react-hook-form'
 
-import type { EmptyAsValue } from './coercion'
-import { setCoercion } from './coercion'
-import type { FieldProps } from './FieldProps'
+import type { EmptyAsValue } from './coercion.js'
+import { setCoercion } from './coercion.js'
+import type { FieldProps } from './FieldProps.js'
 
 export type UseRegisterProps<
   Element extends HTMLTextAreaElement | HTMLSelectElement | HTMLInputElement =

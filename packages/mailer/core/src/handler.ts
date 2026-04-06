@@ -3,7 +3,7 @@ import type {
   MailResult,
   MailUtilities,
   MailRenderedContent,
-} from './types'
+} from './types.js'
 
 export abstract class AbstractMailHandler {
   // Send a mail

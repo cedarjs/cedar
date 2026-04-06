@@ -6,7 +6,7 @@ import { ensurePosixPath } from '@cedarjs/project-config'
 import {
   getPathsFromTypeScriptConfig,
   parseTypeScriptConfigFiles,
-} from '../common'
+} from '../common.js'
 
 vi.mock('node:fs', async () => ({ ...memfs, default: { ...memfs } }))
 

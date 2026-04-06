@@ -1,4 +1,4 @@
-import type { EmptyAsValue, RedwoodRegisterOptions } from './coercion'
+import type { EmptyAsValue, RedwoodRegisterOptions } from './coercion.js'
 
 /**
  * The main interface, just to have some sort of source of truth.

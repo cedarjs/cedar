@@ -2,7 +2,7 @@ import path from 'path'
 
 import pluginTester from 'babel-plugin-tester'
 
-import redwoodOtelWrappingPlugin from '../babel-plugin-redwood-context-wrapping'
+import redwoodOtelWrappingPlugin from '../babel-plugin-redwood-context-wrapping.js'
 
 pluginTester({
   plugin: redwoodOtelWrappingPlugin,
