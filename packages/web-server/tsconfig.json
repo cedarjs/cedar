@@ -1,5 +1,8 @@
 {
   "extends": "../../tsconfig.cjs-base.json",
+  "compilerOptions": {
+    "resolveJsonModule": true
+  },
   "include": ["src", "ambient.d.ts"],
   "references": [
     { "path": "../adapters/fastify/web" },
