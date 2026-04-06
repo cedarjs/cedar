@@ -1,13 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "moduleResolution": "node16",
-    "module": "Node16",
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo"
   },
   "include": ["src"],
+  "exclude": ["**/__tests__"],
   "references": [
     { "path": "../cli-helpers/tsconfig.build.json" },
     { "path": "../project-config" }

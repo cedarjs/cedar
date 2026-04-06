@@ -1,11 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "isolatedModules": true,
-    "outDir": "dist"
-  },
   "include": ["."],
   "exclude": ["dist", "node_modules", "**/__fixtures__"],
   "references": [
