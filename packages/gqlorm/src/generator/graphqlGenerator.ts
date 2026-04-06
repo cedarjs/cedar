@@ -375,8 +375,8 @@ export class GraphQLGenerator {
       return fields.map((field) => `    ${field}`).join('\n')
     }
 
-    // Default selection - return all scalar fields
-    return '    id\n    createdAt\n    updatedAt'
+    // Only return the id field by default as a fallback
+    return '    id'
   }
 
   /**

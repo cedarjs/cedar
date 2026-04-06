@@ -47,8 +47,6 @@ describe('QueryBuilder', () => {
       "query findManyUser($var0: Boolean) @live {
         users(where: { isActive: $var0 }) {
           id
-          createdAt
-          updatedAt
         }
       }"
     `)
