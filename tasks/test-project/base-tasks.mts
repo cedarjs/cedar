@@ -160,11 +160,11 @@ function getPagesTasks(live = false) {
               const pageContent = fs.readFileSync(liveQueryPagePath, 'utf8')
               const updatedContent = pageContent
                 .replace(
-                  /\/\/.*import \{ Metadata \} from '@cedarjs\/web'/,
+                  /\/\/.*\nimport \{ Metadata \} from '@cedarjs\/web'/,
                   "import LivePosts from 'src/components/LivePosts'",
                 )
                 .replace(
-                  /return \(\s*<>\s*<Metadata.*?<\/Metadata>\s*<h1>.*?<\/h1>.*?<\/>/s,
+                  /return \(\s*<>[\s\S]*?<\/>\s*\)/,
                   'return <LivePosts />',
                 )
 

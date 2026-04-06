@@ -95,8 +95,7 @@ export class QueryBuilder {
       const ast = this.#parser.parseQuery(model, operation, args)
 
       // Determine if this should be a live query
-      const isLive = this.#shouldUseLiveQuery(options?.isLive)
-      if (isLive) {
+      if (this.#shouldUseLiveQuery(options?.isLive)) {
         ast.isLive = true
       }
 

@@ -70,6 +70,10 @@ export class GraphQLGenerator {
       query += `(${variableDefinitions})`
     }
 
+    if (ast.isLive) {
+      query += ' @live'
+    }
+
     query += ` {\n${queryBody}\n}`
 
     const result: GraphQLQuery = { query }
@@ -101,7 +105,7 @@ export class GraphQLGenerator {
    * Generate main query body
    */
   #generateQueryBody(ast: QueryAST): string {
-    const { model, operation, args, isLive } = ast
+    const { model, operation, args } = ast
 
     const fieldName = this.#getGraphQLFieldName(model, operation)
 
@@ -112,10 +116,6 @@ export class GraphQLGenerator {
       if (argsString) {
         query += `(${argsString})`
       }
-    }
-
-    if (isLive) {
-      query += ' @live'
     }
 
     const fields = this.#generateFieldSelection(args, model)
