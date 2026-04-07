@@ -129,13 +129,13 @@ export async function runScriptFunction({
   })
 
   let returnValue
+  let scriptError = null
 
   try {
     const script = await runner.executeFile(scriptPath)
-    returnValue = script[functionName](args)
+    returnValue = await script[functionName](args)
   } catch (error) {
-    // Log errors, but continue execution
-    console.error(error)
+    scriptError = error
   }
 
   try {
@@ -147,6 +147,10 @@ export async function runScriptFunction({
 
   await server.close()
   process.env.NODE_ENV = NODE_ENV
+
+  if (scriptError) {
+    throw scriptError
+  }
 
   return returnValue
 }
