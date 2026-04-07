@@ -134,7 +134,7 @@ test('useLiveQuery hook updates when data changes', async ({ page }) => {
     export default async () => {
       const pool = new Pool({ connectionString: process.env.DATABASE_URL })
       const result = await pool.query(
-        "UPDATE \"Post\" SET title = 'Live Hook Updated Title' " +
+        "UPDATE \\"Post\\" SET title = 'Live Hook Updated Title' " +
         "WHERE id = 1 RETURNING title",
       )
       console.log('Updated post:', result.rows[0].title)

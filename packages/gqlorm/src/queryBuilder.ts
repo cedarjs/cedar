@@ -283,6 +283,20 @@ export class QueryBuilder {
   }
 
   /**
+   * Configure the query builder options.
+   * Merges the provided options over the current options (non-destructive).
+   * When the `schema` key is present in the options object, it is forwarded
+   * to the generator — including `undefined`, which reverts to the id-only
+   * fallback. Safe to call multiple times — last call wins.
+   */
+  configure(options: Partial<QueryBuilderOptions>): void {
+    this.#options = { ...this.#options, ...options }
+    if ('schema' in options) {
+      this.#generator.setSchema(options.schema)
+    }
+  }
+
+  /**
    * Determine if a query should use @live directive
    */
   #shouldUseLiveQuery(explicitIsLive?: boolean): boolean {

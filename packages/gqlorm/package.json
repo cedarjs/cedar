@@ -19,6 +19,16 @@
         "default": "./dist/cjs/queryBuilder.js"
       }
     },
+    "./setup": {
+      "import": {
+        "types": "./dist/setup.d.ts",
+        "default": "./dist/setup.js"
+      },
+      "require": {
+        "types": "./dist/cjs/setup.d.ts",
+        "default": "./dist/cjs/setup.js"
+      }
+    },
     "./queryBuilder": {
       "import": {
         "types": "./dist/queryBuilder.d.ts",

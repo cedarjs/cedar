@@ -52,6 +52,15 @@ export class GraphQLGenerator {
   }
 
   /**
+   * Update the model schema used for automatic field selection.
+   * Pass `undefined` to revert to the id-only fallback.
+   * Safe to call multiple times — last call wins.
+   */
+  setSchema(schema: ModelSchema | undefined): void {
+    this.#schema = schema
+  }
+
+  /**
    * Generate GraphQL query from AST
    */
   generate(ast: QueryAST): GraphQLQuery {
