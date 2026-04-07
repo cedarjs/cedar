@@ -1,20 +1,7 @@
 import { useLiveQuery } from '@cedarjs/gqlorm/react/useLiveQuery'
 
-interface Post {
-  id: number
-  title: string
-  body: string
-  author: {
-    email: string
-    fullName: string
-  }
-  createdAt: string
-}
-
 const LivePosts = () => {
-  const { data, loading, error } = useLiveQuery<Post[]>((db) =>
-    db.post.findMany()
-  )
+  const { data, loading, error } = useLiveQuery((db) => db.post.findMany())
 
   if (loading) {
     return <div>Loading...</div>

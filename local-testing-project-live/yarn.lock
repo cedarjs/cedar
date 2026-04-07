@@ -2057,19 +2057,16 @@ __metadata:
 
 "@cedarjs/gqlorm@file:../packages/gqlorm/cedarjs-gqlorm.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.0
-  resolution: "@cedarjs/gqlorm@file:../packages/gqlorm/cedarjs-gqlorm.tgz#../packages/gqlorm/cedarjs-gqlorm.tgz::hash=e65ef0&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/gqlorm@file:../packages/gqlorm/cedarjs-gqlorm.tgz#../packages/gqlorm/cedarjs-gqlorm.tgz::hash=c0f00c&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/auth": "npm:3.1.0"
     "@cedarjs/server-store": "npm:3.1.0"
     "@cedarjs/web": "npm:3.1.0"
     graphql: "npm:16.13.2"
-    react: "npm:19.2.3"
-    react-dom: "npm:19.2.3"
-    react-server-dom-webpack: "npm:19.2.4"
   peerDependencies:
     react: 19.2.3
     react-dom: 19.2.3
-  checksum: 10c0/b54ca7466e4925bde834a5b48be339e09e3a7d948c6aa12fec02a4bb306c35eda6297028d9ab03fbd5f1936d6aea886101fe73268006066b58ab403ea0af34ad
+  checksum: 10c0/a127e830fa1b1b77025ba53a28709a722f659727219d88610b02114ae6ce33703d4f07ff2ad450f3addcf39099b3ec7efec56f9271382986b818f478cf5089bb
   languageName: node
   linkType: hard
 
@@ -2334,7 +2331,7 @@ __metadata:
 
 "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.0
-  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=e3c8bc&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=60f468&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.42.0"
     "@babel/generator": "npm:7.29.1"
@@ -2376,7 +2373,7 @@ __metadata:
     rw-vite-build: ./bins/rw-vite-build.mjs
     rw-vite-dev: ./bins/rw-vite-dev.mjs
     vite: ./bins/vite.mjs
-  checksum: 10c0/8711faa32ae5ab873c4e23a98d4783012029dad6c2d34f4445f9dd569ff7fb6261ef3a8fa8175c5572e4b86fe61c2ff396eb7cd56b4cbb3465651914b28cb3a7
+  checksum: 10c0/505a1c4a6f0ec3a617c88f8b8655a5676468826fe33600308d5c91d3a2ad021b0192748751afbabbfbfe48ed7889eee92240311c3a9e619996a3f4c3205dd38f
   languageName: node
   linkType: hard
 
