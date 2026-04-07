@@ -132,8 +132,8 @@ export const handler = async (args: ExecOptions) => {
             args: { args: scriptArgs },
           })
         } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : String(error)
-          console.error(c.error(`Error in script: ${message}`))
+          console.error(c.error('\nError in script:'))
+          console.error(error)
           throw error
         }
       },
@@ -145,9 +145,16 @@ export const handler = async (args: ExecOptions) => {
   })
 
   // Prevent user project telemetry from within the script from being recorded
-  await context.with(suppressTracing(context.active()), async () => {
-    await tasks.run()
-  })
+  try {
+    await context.with(suppressTracing(context.active()), async () => {
+      await tasks.run()
+    })
+  } catch {
+    // yargs is configured with `.exitProcess(false)`, so promise rejections
+    // from command handlers are swallowed by parseAsync() and never reach the
+    // top-level catch in index.js. We must exit explicitly here.
+    process.exit(1)
+  }
 }
 
 function resolveScriptPath(name: string) {
