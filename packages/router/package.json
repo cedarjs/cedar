@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/router",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -94,8 +94,8 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/auth": "3.1.0",
-    "@cedarjs/server-store": "3.1.0",
+    "@cedarjs/auth": "3.1.1",
+    "@cedarjs/server-store": "3.1.1",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
