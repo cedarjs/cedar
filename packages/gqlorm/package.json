@@ -19,6 +19,16 @@
         "default": "./dist/cjs/queryBuilder.js"
       }
     },
+    "./setup": {
+      "import": {
+        "types": "./dist/setup.d.ts",
+        "default": "./dist/setup.js"
+      },
+      "require": {
+        "types": "./dist/cjs/setup.d.ts",
+        "default": "./dist/cjs/setup.js"
+      }
+    },
     "./queryBuilder": {
       "import": {
         "types": "./dist/queryBuilder.d.ts",
@@ -131,9 +141,7 @@
     "@cedarjs/auth": "3.1.1",
     "@cedarjs/server-store": "3.1.1",
     "@cedarjs/web": "3.1.1",
-    "graphql": "16.13.2",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "graphql": "16.13.2"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
