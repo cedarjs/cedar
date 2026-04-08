@@ -263,18 +263,19 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
 })
 
 describe('generateGqlormArtifacts - integration', () => {
-  beforeAll(() => {
+  let outputPath: string
+
+  beforeAll(async () => {
     process.env.CEDAR_CWD = FIXTURE_PATH
+    outputPath = path.join(getPaths().generated.base, 'gqlorm-schema.json')
+
+    const { files, errors } = await generateGqlormArtifacts()
+    expect(errors).toEqual([])
+    expect(files).toHaveLength(1)
+    expect(files[0]).toEqual(outputPath)
   })
 
   afterAll(() => {
-    // Call getPaths() while CEDAR_CWD is still set so the cache key resolves
-    // to the fixture project, giving us the correct output path to clean up.
-    const outputPath = path.join(
-      getPaths().generated.base,
-      'gqlorm-schema.json',
-    )
-
     if (fs.existsSync(outputPath)) {
       fs.unlinkSync(outputPath)
     }
@@ -283,17 +284,6 @@ describe('generateGqlormArtifacts - integration', () => {
   })
 
   it('writes gqlorm-schema.json to the generated base dir and returns the path', async () => {
-    const { files, errors } = await generateGqlormArtifacts()
-
-    expect(errors).toEqual([])
-    expect(files).toHaveLength(1)
-
-    const outputPath = path.join(
-      getPaths().generated.base,
-      'gqlorm-schema.json',
-    )
-
-    expect(files[0]).toEqual(outputPath)
     expect(fs.existsSync(outputPath)).toBe(true)
 
     const raw = fs.readFileSync(outputPath, 'utf-8')
@@ -301,10 +291,6 @@ describe('generateGqlormArtifacts - integration', () => {
   })
 
   it('post fields include only scalar/enum fields and exclude the author relation', () => {
-    const outputPath = path.join(
-      getPaths().generated.base,
-      'gqlorm-schema.json',
-    )
     const schema = JSON.parse(fs.readFileSync(outputPath, 'utf-8'))
 
     expect(schema.post).toEqual([
@@ -317,10 +303,6 @@ describe('generateGqlormArtifacts - integration', () => {
   })
 
   it('user sensitive fields are excluded from the schema', () => {
-    const outputPath = path.join(
-      getPaths().generated.base,
-      'gqlorm-schema.json',
-    )
     const schema = JSON.parse(fs.readFileSync(outputPath, 'utf-8'))
 
     expect(schema.user).not.toContain('hashedPassword')
@@ -330,10 +312,6 @@ describe('generateGqlormArtifacts - integration', () => {
   })
 
   it('user non-sensitive fields are present in the schema', () => {
-    const outputPath = path.join(
-      getPaths().generated.base,
-      'gqlorm-schema.json',
-    )
     const schema = JSON.parse(fs.readFileSync(outputPath, 'utf-8'))
 
     expect(schema.user).toContain('id')
@@ -342,10 +320,6 @@ describe('generateGqlormArtifacts - integration', () => {
   })
 
   it('contact fields are complete and correct', () => {
-    const outputPath = path.join(
-      getPaths().generated.base,
-      'gqlorm-schema.json',
-    )
     const schema = JSON.parse(fs.readFileSync(outputPath, 'utf-8'))
 
     expect(schema.contact).toEqual([
@@ -362,8 +336,6 @@ describe('generateGqlormArtifacts - integration', () => {
 
     await generateGqlormArtifacts()
 
-    // hashedPassword (password), salt (salt), resetToken (token),
-    // resetTokenExpiresAt (token) — four sensitive fields in the User model.
     expect(warnSpy).toHaveBeenCalledTimes(4)
 
     warnSpy.mockRestore()
