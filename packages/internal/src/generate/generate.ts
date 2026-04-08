@@ -3,6 +3,7 @@
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { generateClientPreset } from './clientPreset.js'
+import { generateGqlormArtifacts } from './gqlormSchema.js'
 import { generateGraphQLSchema } from './graphqlSchema.js'
 import { generatePossibleTypes } from './possibleTypes.js'
 import { generateTypeDefs } from './typeDefinitions.js'
@@ -18,6 +19,9 @@ export const generate = async () => {
 
   const { possibleTypesFiles, errors: generatePossibleTypesErrors } =
     await generatePossibleTypes()
+
+  const { files: gqlormFiles, errors: gqlormErrors } =
+    await generateGqlormArtifacts()
 
   if (config.graphql.trustedDocuments) {
     const preset = await generateClientPreset()
@@ -35,6 +39,7 @@ export const generate = async () => {
     ...typeDefFiles,
     ...clientPresetFiles,
     ...possibleTypesFiles,
+    ...gqlormFiles,
   ].filter((x) => typeof x === 'string')
 
   return {
@@ -43,6 +48,7 @@ export const generate = async () => {
       ...generateGraphQLSchemaErrors,
       ...generateTypeDefsErrors,
       ...generatePossibleTypesErrors,
+      ...gqlormErrors,
     ],
   }
 }

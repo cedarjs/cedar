@@ -166,6 +166,7 @@
     "@graphql-codegen/typescript-react-apollo": "4.4.1",
     "@graphql-codegen/typescript-resolvers": "5.1.7",
     "@graphql-tools/documents": "1.0.1",
+    "@prisma/internals": "7.6.0",
     "@sdl-codegen/node": "2.0.1",
     "ansis": "4.2.0",
     "deepmerge": "4.3.1",
