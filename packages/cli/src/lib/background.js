@@ -6,7 +6,7 @@ import path from 'path'
 import { getPaths } from '@cedarjs/project-config'
 
 /**
- * Spawn a background process with the stdout/stderr redirected to log files within the `.redwood` directory.
+ * Spawn a background process with the stdout/stderr redirected to log files within the `.cedar` directory.
  * Stdin will not be available to the process as it will be set to the 'ignore' value.
  *
  * @param {string} name A name for this background process, will be used to name the log files

@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { applyBlogPostCellCodemod } from './codemods/blogPostCell.ts'
+import { applyBlogPostsCellCodemod } from './codemods/blogPostsCell.ts'
 import {
   addValidateUniquenessToPosts,
   uniquePostTitles,
@@ -18,13 +20,13 @@ import {
   createBuilder,
 } from './util.mts'
 
-function getPagesTasks() {
+function getPagesTasks(live = false) {
   // Passing 'web' here to test executing 'yarn cedar' in the /web directory
   // to make sure it works as expected. We do the same for the /api directory
   // further down in this file.
   const createPage = createBuilder('yarn cedar g page', 'web')
 
-  return [
+  const pages = [
     {
       title: 'Creating home page',
       task: async () => {
@@ -145,14 +147,42 @@ function getPagesTasks() {
         )
       },
     },
+    ...(live
+      ? [
+          {
+            title: 'Creating live query page',
+            task: async () => {
+              await createPage('liveQuery')
+
+              const liveQueryPagePath = fullPath(
+                'web/src/pages/LiveQueryPage/LiveQueryPage',
+              )
+              const pageContent = fs.readFileSync(liveQueryPagePath, 'utf8')
+              const updatedContent = pageContent
+                .replace(
+                  /\/\/.*\nimport \{ Metadata \} from '@cedarjs\/web'/,
+                  "import LivePosts from 'src/components/LivePosts'",
+                )
+                .replace(
+                  /return \(\s*<>[\s\S]*?<\/>\s*\)/,
+                  'return <LivePosts />',
+                )
+
+              fs.writeFileSync(liveQueryPagePath, updatedContent, 'utf8')
+            },
+          },
+        ]
+      : []),
   ]
+
+  return pages
 }
 
-export function webTasksList() {
+export function webTasksList(live = false) {
   const taskList = [
     {
       title: 'Creating pages',
-      task: async () => getPagesTasks(),
+      task: async () => getPagesTasks(live),
       isNested: true,
     },
     {
@@ -161,11 +191,11 @@ export function webTasksList() {
     },
     {
       title: 'Creating components',
-      task: () => createComponents(),
+      task: () => createComponents(live),
     },
     {
       title: 'Creating cells',
-      task: () => createCells(),
+      task: () => createCells(live),
     },
     {
       title: 'Updating cell mocks',
@@ -176,6 +206,42 @@ export function webTasksList() {
       task: () => applyCodemod('routes.js', fullPath('web/src/Routes')),
     },
   ]
+
+  if (live) {
+    taskList.push({
+      title: 'Adding configureGqlorm to App.tsx',
+      task: () => {
+        const appTsxPath = path.join(fullPath('web/src/App'))
+        let appTsxContent = fs.readFileSync(appTsxPath, 'utf8')
+
+        appTsxContent = appTsxContent.replace(
+          "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+          "import { configureGqlorm } from '@cedarjs/gqlorm/setup'\n" +
+            'import { FatalErrorBoundary, RedwoodProvider } from ' +
+            "'@cedarjs/web'",
+        )
+
+        appTsxContent = appTsxContent.replace(
+          'interface AppProps {',
+          `// Configure gqlorm with the scalar fields for each Prisma model.
+            // Sensitive fields (hashedPassword, salt, resetToken, resetTokenExpiresAt)
+            // and relation fields (author, posts) are intentionally excluded.
+            // We hardcode all of these for now, until we have codegen in place.
+            configureGqlorm({
+              schema: {
+                post: ['id', 'title', 'body', 'authorId', 'createdAt'],
+                user: ['id', 'email', 'fullName', 'roles'],
+                contact: ['id', 'name', 'email', 'message', 'createdAt'],
+              },
+            })
+
+            interface AppProps {`,
+        )
+
+        return fs.promises.writeFile(appTsxPath, appTsxContent)
+      },
+    })
+  }
 
   return taskList
 }
@@ -223,17 +289,19 @@ function normalizeMigrationFolderNames() {
   })
 }
 
+interface ApiTasksOptions {
+  dbAuth: 'local' | 'canary'
+  linkWithLatestFwBuild?: boolean
+  esm?: boolean
+  live?: boolean
+}
+
 export function apiTasksList({
   dbAuth,
   linkWithLatestFwBuild = false,
   esm = false,
   live = false,
-}: {
-  dbAuth: 'local' | 'canary'
-  linkWithLatestFwBuild?: boolean
-  esm?: boolean
-  live?: boolean
-}) {
+}: ApiTasksOptions) {
   const execaOptions = getExecaOptions(getOutputPath())
   const generateScaffold = createBuilder('yarn cedar g scaffold')
 
@@ -283,6 +351,30 @@ export function apiTasksList({
         )
       },
     },
+    ...(live
+      ? [
+          {
+            title: 'Adding reset scripts for live tests',
+            task: () => {
+              const templatesPath = path.join(
+                import.meta.dirname,
+                'templates',
+                'scripts',
+              )
+              const scriptsPath = fullPath('scripts')
+
+              fs.copyFileSync(
+                path.join(templatesPath, 'resetPostTitle.ts.template'),
+                path.join(scriptsPath, 'resetPostTitle.ts'),
+              )
+              fs.copyFileSync(
+                path.join(templatesPath, 'resetPostTitleLiveHook.ts.template'),
+                path.join(scriptsPath, 'resetPostTitleLiveHook.ts'),
+              )
+            },
+          },
+        ]
+      : []),
     {
       title: 'Adding contact model to prisma',
       task: () => contactTask({ esm }),
@@ -456,7 +548,7 @@ export async function createLayout() {
   )
 }
 
-export async function createComponents() {
+export async function createComponents(live = false) {
   const createComponent = createBuilder('yarn cedar g component')
 
   await createComponent('blogPost')
@@ -486,24 +578,37 @@ export async function createComponents() {
     'classWithClassField.ts',
     fullPath('web/src/components/ClassWithClassField/ClassWithClassField'),
   )
+
+  if (live) {
+    await createComponent('livePosts')
+
+    const templatesPath = path.join(import.meta.dirname, 'templates', 'web')
+    const templatePath = path.join(templatesPath, 'LivePosts.tsx')
+    const componentPath = fullPath('web/src/components/LivePosts/LivePosts')
+    fs.copyFileSync(templatePath, componentPath)
+  }
 }
 
-export async function createCells() {
+export async function createCells(live = false) {
   const createCell = createBuilder('yarn cedar g cell')
 
   await createCell('blogPosts')
 
-  await applyCodemod(
-    'blogPostsCell.js',
-    fullPath('web/src/components/BlogPostsCell/BlogPostsCell'),
+  const blogPostsCellPath = fullPath(
+    'web/src/components/BlogPostsCell/BlogPostsCell',
   )
+  const blogPostsCell = fs.readFileSync(blogPostsCellPath, 'utf8')
+  const updatedBlogPostsCell = applyBlogPostsCellCodemod(blogPostsCell, live)
+  fs.writeFileSync(blogPostsCellPath, updatedBlogPostsCell, 'utf8')
 
   await createCell('blogPost')
 
-  await applyCodemod(
-    'blogPostCell.js',
-    fullPath('web/src/components/BlogPostCell/BlogPostCell'),
+  const blogPostCellPath = fullPath(
+    'web/src/components/BlogPostCell/BlogPostCell',
   )
+  const blogPostCell = fs.readFileSync(blogPostCellPath, 'utf8')
+  const updatedBlogPostCell = applyBlogPostCellCodemod(blogPostCell, live)
+  fs.writeFileSync(blogPostCellPath, updatedBlogPostCell, 'utf8')
 
   await createCell('author')
 

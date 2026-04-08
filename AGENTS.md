@@ -5,7 +5,8 @@
 - Monorepo managed with Nx + Yarn workspaces.
 - Source packages live under `packages/` (framework packages, adapters, auth providers, CLI packages, mailer, templates).
 - Shared tooling and scripts live in `tasks/` and `upgrade-scripts/`.
-- Test fixtures live in `__fixtures__/` and `test-project/`.
+- Test fixtures live in `__fixtures__/`
+- Cedar test apps for local testing live in `local-testing-project` and `local-testing-project-live`
 - Docs and reference material are in `docs/` and top-level `README.md`.
 
 ## Build, Test, and Development Commands
@@ -17,7 +18,6 @@
 - `yarn format` / `yarn format:check`: run Prettier write/check.
 - `yarn test`: run package tests via Nx.
 - `yarn test:types`: run type-level tests.
-- `yarn e2e`: run Cypress-based integration flow in a temp project.
 
 ## Coding Style & Naming Conventions
 
@@ -40,8 +40,8 @@
 
 - Unit/integration tests are executed through `yarn test` (Nx targets).
 - Type tests use `yarn test:types`.
-- E2E coverage uses Cypress via `yarn e2e`.
 - When adding tests, follow local package naming patterns and keep tests colocated with the package.
+- For larger changes, run `yarn build:pack`to generate package tarballs, then run `yarn install` inside `local-testing-project` or `local-testing-project-live` to be able to verify your changes inside an actual Cedar application.
 
 ## Commit & Pull Request Guidelines
 

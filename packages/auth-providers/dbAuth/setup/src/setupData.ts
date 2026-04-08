@@ -2,9 +2,9 @@ import crypto from 'node:crypto'
 import path from 'node:path'
 
 import { getPaths, colors, addEnvVarTask } from '@cedarjs/cli-helpers'
-import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers/src/auth/authTasks'
+import type { AuthGeneratorCtx } from '@cedarjs/cli-helpers'
 
-import { addModels, functionsPath, hasModel, libPath } from './shared'
+import { addModels, functionsPath, hasModel, libPath } from './shared.js'
 
 const secret = crypto.randomBytes(32).toString('base64')
 

@@ -2,7 +2,7 @@ import path from 'path'
 
 import pluginTester from 'babel-plugin-tester'
 
-import plugin from '../babel-plugin-redwood-import-dir'
+import plugin from '../babel-plugin-redwood-import-dir.js'
 
 describe('babel plugin redwood import dir', () => {
   pluginTester({

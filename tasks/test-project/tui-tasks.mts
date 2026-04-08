@@ -9,13 +9,13 @@ function getExecaOptions(cwd: string): ExecaOptions {
   return { ...utilGetExecaOptions(cwd), stdio: 'pipe' as const }
 }
 
-export async function webTasks(outputPath: string) {
+export async function webTasks(outputPath: string, live = false) {
   setOutputPath(outputPath)
 
   const execaOptions = getExecaOptions(outputPath)
 
   const tuiTaskList: TuiTaskList = [
-    ...webTasksList(),
+    ...webTasksList(live),
     {
       title: 'Adding Tailwind',
       task: async () => {

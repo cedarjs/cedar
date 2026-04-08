@@ -8,8 +8,8 @@ import { getPaths } from '@cedarjs/project-config'
 
 import { bin } from '../package.json'
 
-import { description, builder } from './cliConfig'
-import { handler } from './cliConfigHandler'
+import { description, builder } from './cliConfig.js'
+import { handler } from './cliConfigHandler.js'
 
 if (!process.env.REDWOOD_ENV_FILES_LOADED) {
   config({

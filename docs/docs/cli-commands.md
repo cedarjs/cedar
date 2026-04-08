@@ -1469,18 +1469,18 @@ $ /redwood-app/node_modules/.bin/rw-gen
 
 Generating...
 
-- .redwood/schema.graphql
-- .redwood/types/mirror/api/src/services/posts/index.d.ts
-- .redwood/types/mirror/web/src/components/BlogPost/index.d.ts
-- .redwood/types/mirror/web/src/layouts/BlogLayout/index.d.ts
+- .cedar/schema.graphql
+- .cedar/types/mirror/api/src/services/posts/index.d.ts
+- .cedar/types/mirror/web/src/components/BlogPost/index.d.ts
+- .cedar/types/mirror/web/src/layouts/BlogLayout/index.d.ts
 ...
-- .redwood/types/mirror/web/src/components/Post/PostsCell/index.d.ts
-- .redwood/types/includes/web-routesPages.d.ts
-- .redwood/types/includes/all-currentUser.d.ts
-- .redwood/types/includes/web-routerRoutes.d.ts
-- .redwood/types/includes/api-globImports.d.ts
-- .redwood/types/includes/api-globalContext.d.ts
-- .redwood/types/includes/api-scenarios.d.ts
+- .cedar/types/mirror/web/src/components/Post/PostsCell/index.d.ts
+- .cedar/types/includes/web-routesPages.d.ts
+- .cedar/types/includes/all-currentUser.d.ts
+- .cedar/types/includes/web-routerRoutes.d.ts
+- .cedar/types/includes/api-globImports.d.ts
+- .cedar/types/includes/api-globalContext.d.ts
+- .cedar/types/includes/api-scenarios.d.ts
 - api/types/graphql.d.ts
 - web/types/graphql.d.ts
 

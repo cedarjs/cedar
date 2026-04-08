@@ -5,20 +5,20 @@ import prompts from 'prompts'
 
 import { getGraphqlPath, standardAuthHandler } from '@cedarjs/cli-helpers'
 
-import type { Args } from './setup'
+import type { Args } from './setup.js'
 import {
   notes,
   noteGenerate,
   notesCreatedUserModel,
   extraTask,
   createUserModelTask,
-} from './setupData'
+} from './setupData.js'
 import {
   generateAuthPagesTask,
   getModelNames,
   hasAuthPages,
   hasModel,
-} from './shared'
+} from './shared.js'
 import {
   notes as webAuthnNotes,
   noteGenerate as webAuthnNoteGenerate,
@@ -26,7 +26,7 @@ import {
   webPackages as webAuthnWebPackages,
   apiPackages as webAuthnApiPackages,
   createUserModelTask as webAuthnCreateUserModelTask,
-} from './webAuthn.setupData'
+} from './webAuthn.setupData.js'
 
 export async function handler({
   webauthn,

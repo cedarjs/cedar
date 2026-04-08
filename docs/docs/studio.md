@@ -118,6 +118,6 @@ the root of your Cedar project.
 
 ### Database File
 
-Studio stores the ingested telemetry to `studio/prisma.db` within the
-`.redwood` folder. You should not need to touch this file other than if you
-wish to delete it to erase any existing telemetry data.
+Studio stores the ingested telemetry to `studio/prisma.db` within the `.cedar`
+folder. You should not need to touch this file other than if you wish to delete
+it to erase any existing telemetry data.

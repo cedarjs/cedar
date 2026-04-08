@@ -1,6 +1,6 @@
 import * as babel from '@babel/core'
 
-import namedDirectory from '../babel-plugin-redwood-directory-named-import'
+import namedDirectory from '../babel-plugin-redwood-directory-named-import.js'
 
 const testCases = [
   // Directory named imports

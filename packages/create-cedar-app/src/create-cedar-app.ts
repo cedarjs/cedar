@@ -1,59 +1,42 @@
-import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { trace, SpanStatusCode } from '@opentelemetry/api'
 import execa from 'execa'
 import gradient from 'gradient-string'
-import semver from 'semver'
-import { terminalLink } from 'termi-link'
-import untildify from 'untildify'
 import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
-import { RedwoodTUI, ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
+import { ReactiveTUIContent, RedwoodStyling } from '@cedarjs/tui'
 
 import pkgJson from '../package.json' with { type: 'json' }
 
 import {
-  UID,
+  detectPackageManagerFromEnv,
+  handleCommitMessagePreference,
+  handleDatabasePreference,
+  handleEsmPreference,
+  handleGitPreference,
+  handleInstallPreference,
+  handlePackageManagerPreference,
+  handleTargetDirPreference,
+  handleTypescriptPreference,
+  INITIAL_COMMIT_MESSAGE,
+} from './handle-args.js'
+import type { PackageManager } from './handle-args.js'
+import { executeNodeCompatibilityCheck } from './node-version.js'
+import {
+  getBinExecutor,
+  getCedarCommandPrefix,
+  getInstallCommand,
+} from './package-manager.js'
+import { createProjectFiles } from './project-files.js'
+import {
   startTelemetry,
   shutdownTelemetry,
   recordErrorViaTelemetry,
 } from './telemetry.js'
-
-const INITIAL_COMMIT_MESSAGE = 'Initial commit'
-
-type PackageManager = 'yarn' | 'npm' | 'pnpm'
-
-function detectPackageManagerFromEnv() {
-  const userAgent = process.env.npm_config_user_agent
-  const envPackageManager = userAgent?.split(' ')[0]?.split('/')[0]
-
-  if (
-    envPackageManager === 'yarn' ||
-    envPackageManager === 'npm' ||
-    envPackageManager === 'pnpm'
-  ) {
-    return envPackageManager
-  }
-
-  return undefined
-}
-
-function getInstallCommand(pm: PackageManager) {
-  return `${pm} install`
-}
-
-function getBinExecutor(pm: PackageManager) {
-  return pm === 'npm' ? 'npx' : pm
-}
-
-function getCedarCommandPrefix(pm: PackageManager) {
-  const binExecutor = getBinExecutor(pm)
-
-  return `${binExecutor} cedar`
-}
+import { tui } from './tui.js'
 
 // Telemetry can be disabled in two ways:
 // - by passing `--telemetry false`  or `--no-telemetry`
@@ -66,263 +49,6 @@ const { telemetry } = Parser(hideBin(process.argv), {
       process.env.REDWOOD_DISABLE_TELEMETRY === '',
   },
 })
-
-const tui = new RedwoodTUI()
-
-async function executeNodeCompatibilityCheck(templateDir: string) {
-  const tuiContent = new ReactiveTUIContent({
-    mode: 'text',
-    content: 'Checking node compatibility',
-    spinner: {
-      enabled: true,
-    },
-  })
-  tui.startReactive(tuiContent)
-
-  const { isSatisfied, nodeRange } = checkNodeVersion(templateDir)
-
-  if (isSatisfied) {
-    tuiContent.update({
-      spinner: {
-        enabled: false,
-      },
-      content: `${RedwoodStyling.green('✔')} Compatibility checks passed`,
-    })
-    tui.stopReactive()
-
-    return
-  }
-
-  const minRequired = semver.minVersion(nodeRange)
-  const nodeVersionIsTooOld =
-    minRequired && semver.lt(process.version, minRequired)
-
-  if (nodeVersionIsTooOld) {
-    tui.stopReactive(true)
-    tui.displayError(
-      'Compatibility checks failed',
-      [
-        `  You need to upgrade the version of node you're using.`,
-        `  You're using ${process.version} and we currently support node ${nodeRange}.`,
-        '',
-        `  Please use tools like nvm or corepack to change to a compatible version.`,
-        `  See: ${terminalLink(
-          'How to - Using nvm',
-          'https://cedarjs.com/docs/how-to/using-nvm',
-          {
-            fallback: () =>
-              'How to - Using nvm https://cedarjs.com/docs/how-to/using-nvm',
-          },
-        )}`,
-        `  See: ${terminalLink(
-          'Tutorial - Prerequisites',
-          'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
-          {
-            fallback: () =>
-              'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
-          },
-        )}`,
-      ].join('\n'),
-    )
-
-    recordErrorViaTelemetry('Compatibility checks failed')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-
-  tui.stopReactive(true)
-  tui.displayWarning(
-    'Compatibility checks failed',
-    [
-      `  You may want to downgrade the version of node you're using.`,
-      `  You're using ${process.version} and we currently support node ${nodeRange}.`,
-      '',
-      `  This may make your project incompatible with some deploy targets, especially those using AWS Lambdas.`,
-      '',
-      `  Please use tools like nvm or corepack to change to a compatible version.`,
-      `  See: ${terminalLink(
-        'How to - Use nvm',
-        'https://cedarjs.com/docs/how-to/using-nvm',
-        {
-          fallback: () =>
-            'How to - Use nvm https://cedarjs.com/docs/how-to/using-nvm',
-        },
-      )}`,
-      `  See: ${terminalLink(
-        'Tutorial - Prerequisites',
-        'https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
-        {
-          fallback: () =>
-            'Tutorial - Prerequisites https://cedarjs.com/docs/tutorial/chapter1/prerequisites',
-        },
-      )}`,
-    ].join('\n'),
-  )
-
-  // Try catch for handling if the user cancels the prompt.
-  try {
-    const response = await tui.prompt<{ 'override-engine-error': string }>({
-      type: 'select',
-      name: 'override-engine-error',
-      message: 'How would you like to proceed?',
-      choices: ['Override error and continue install', 'Quit install'],
-      initial: 0,
-    })
-    if (response['override-engine-error'] === 'Quit install') {
-      recordErrorViaTelemetry('User quit after engine check error')
-      await shutdownTelemetry()
-      process.exit(0)
-    }
-  } catch {
-    recordErrorViaTelemetry('User cancelled install at engine check error')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-}
-
-function checkNodeVersion(templateDir: string) {
-  const templatePackageJson = JSON.parse(
-    fs.readFileSync(path.join(templateDir, 'package.json'), 'utf-8'),
-  )
-
-  const nodeRange = templatePackageJson?.engines?.node
-
-  if (typeof nodeRange !== 'string') {
-    throw new Error('Invalid node engine version range in package.json')
-  }
-
-  const isSatisfied = semver.satisfies(process.version, nodeRange)
-  return { isSatisfied, nodeRange }
-}
-
-interface CreateProjectFilesOptions {
-  templateDir: string
-  templatesDir: string
-  overwrite: boolean
-  packageManager: PackageManager
-  useEsm: boolean
-  database: string | null
-}
-
-async function createProjectFiles(
-  appDir: string,
-  {
-    templateDir,
-    templatesDir,
-    overwrite,
-    packageManager,
-    useEsm,
-    database,
-  }: CreateProjectFilesOptions,
-) {
-  let newAppDir = appDir
-  const overlayDir = path.join(
-    templatesDir,
-    'overlays',
-    useEsm ? 'esm' : 'cjs',
-    packageManager,
-  )
-
-  const tuiContent = new ReactiveTUIContent({
-    mode: 'text',
-    content: 'Creating project files',
-    spinner: {
-      enabled: true,
-    },
-  })
-  tui.startReactive(tuiContent)
-
-  newAppDir = await doesDirectoryAlreadyExist(newAppDir, { overwrite })
-
-  // Ensure the new app directory exists
-  fs.mkdirSync(path.dirname(newAppDir), { recursive: true })
-
-  // Copy the template files to the new app directory
-  // Have to use fs.promises.cp here because of a bug in yarn
-  // See https://github.com/yarnpkg/berry/issues/6488
-  await fs.promises.cp(templateDir, newAppDir, {
-    recursive: true,
-    force: overwrite,
-  })
-  await fs.promises.cp(overlayDir, newAppDir, { recursive: true, force: true })
-
-  // Apply database overlay if pglite is selected
-  if (database === 'pglite') {
-    // Remove the template's prisma config since the overlay provides its own
-    const templatePrismaConfig = path.join(
-      newAppDir,
-      'api',
-      'prisma.config.cjs',
-    )
-    try {
-      await fs.promises.unlink(templatePrismaConfig)
-    } catch {
-      // Ignore if the file doesn't exist
-    }
-
-    const dbOverlayDir = path.join(
-      templatesDir,
-      '..',
-      'database-overlays',
-      'pglite',
-    )
-    await fs.promises.cp(dbOverlayDir, newAppDir, {
-      recursive: true,
-      force: true,
-    })
-  }
-
-  // .gitignore is renamed here to force file inclusion during publishing
-  fs.renameSync(
-    path.join(newAppDir, 'gitignore.template'),
-    path.join(newAppDir, '.gitignore'),
-  )
-
-  await replacePlaceholders(newAppDir, packageManager)
-
-  // Write the uid
-  fs.mkdirSync(path.join(newAppDir, '.cedar'), { recursive: true })
-  fs.writeFileSync(path.join(newAppDir, '.cedar', 'telemetry.txt'), UID)
-
-  const filesCreated = `${RedwoodStyling.green('✔')} Project files created`
-  tuiContent.update({ spinner: { enabled: false }, content: filesCreated })
-  tui.stopReactive()
-
-  return newAppDir
-}
-
-/** String replace of placeholders in template files */
-async function replacePlaceholders(
-  dir: string,
-  packageManager: PackageManager,
-) {
-  const installCommand = getInstallCommand(packageManager)
-  const cedarCommand = getCedarCommandPrefix(packageManager)
-
-  const replacements: Record<string, string> = {
-    '{{PM}}': packageManager,
-    '{{PM_INSTALL}}': installCommand,
-    '{{CEDAR_CLI}}': cedarCommand,
-  }
-
-  const patterns = [
-    '**/*.{json,md,js,ts,yml,yaml}',
-    '**/.*/**/*.{json,md,js,ts,yml,yaml}',
-  ]
-
-  for (const pattern of patterns) {
-    for await (const file of fs.promises.glob(pattern, { cwd: dir })) {
-      const fullPath = path.join(dir, file)
-      let content = await fs.promises.readFile(fullPath, 'utf-8')
-
-      for (const [placeholder, value] of Object.entries(replacements)) {
-        content = content.replaceAll(placeholder, value)
-      }
-
-      await fs.promises.writeFile(fullPath, content, 'utf-8')
-    }
-  }
-}
 
 async function installNodeModules(
   newAppDir: string,
@@ -432,13 +158,10 @@ async function initializeGit(newAppDir: string, commitMessage: string) {
   })
   tui.startReactive(tuiContent)
 
-  const gitSubprocess = execa(
-    `git init && git add . && git commit -m "${commitMessage}"`,
-    { shell: true, cwd: newAppDir },
-  )
-
   try {
-    await gitSubprocess
+    await execa('git', ['init'], { cwd: newAppDir })
+    await execa('git', ['add', '.'], { cwd: newAppDir })
+    await execa('git', ['commit', '-m', commitMessage], { cwd: newAppDir })
   } catch (error) {
     tui.stopReactive(true)
     tui.displayError(
@@ -465,339 +188,6 @@ async function initializeGit(newAppDir: string, commitMessage: string) {
     },
   })
   tui.stopReactive()
-}
-
-async function handleTargetDirPreference(targetDir: string) {
-  if (targetDir) {
-    const targetDirText =
-      targetDir === '.' ? 'the current directory' : targetDir
-
-    tui.drawText(
-      `${RedwoodStyling.green('✔')} Creating your Cedar app in ` +
-        `${targetDirText} based on command line argument`,
-    )
-
-    return targetDir
-  }
-
-  // Prompt user for preference
-  try {
-    const response = await tui.prompt<{ targetDir: string }>({
-      type: 'input',
-      name: 'targetDir',
-      message: 'Where would you like to create your CedarJS app?',
-      initial: 'my-cedar-app',
-    })
-
-    if (/^~\w/.test(response.targetDir)) {
-      tui.stopReactive(true)
-      tui.displayError(
-        'The `~username` syntax is not supported here',
-        'Please use the full path or specify the target directory on the command line.',
-      )
-
-      recordErrorViaTelemetry('Target dir prompt path syntax not supported')
-      await shutdownTelemetry()
-      process.exit(1)
-    }
-
-    return untildify(response.targetDir)
-  } catch {
-    recordErrorViaTelemetry('User cancelled install at target dir prompt')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-}
-
-async function handleTypescriptPreference(typescriptFlag: boolean | null) {
-  // Handle case where flag is set
-  if (typescriptFlag !== null) {
-    tui.drawText(
-      `${RedwoodStyling.green('✔')} Using ${
-        typescriptFlag ? 'TypeScript' : 'JavaScript'
-      } based on command line flag`,
-    )
-    return typescriptFlag
-  }
-
-  // Prompt user for preference
-  try {
-    const response = await tui.prompt<{ language: string }>({
-      type: 'Select',
-      name: 'language',
-      choices: ['TypeScript', 'JavaScript'],
-      message: 'Select your preferred language',
-      initial: 'TypeScript',
-      // Have to type cast here because the type of the `choices` property is
-      // not inferred correctly. I could (should) fix this by updating the type
-      // definition for `tui.prompt`, but I want to get rid of RwTUI, so I'm not
-      // going to spend time on fixing the types now.
-    } as Parameters<typeof tui.prompt>[0])
-    return response.language === 'TypeScript'
-  } catch {
-    recordErrorViaTelemetry('User cancelled install at language prompt')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-}
-
-async function handleEsmPreference(esmFlag: boolean | null) {
-  // Handle case where flag is set
-  if (esmFlag !== null) {
-    tui.drawText(
-      `${RedwoodStyling.green('✔')} Setting up ${
-        esmFlag ? 'an ESM' : 'a CJS'
-      } project based on command line flag`,
-    )
-    return esmFlag
-  }
-
-  return false
-  // Disable this for now, while the ESM flag is hidden
-  // Prompt user for preference
-  // try {
-  //   const response = await tui.prompt({
-  //     type: 'Select',
-  //     name: 'esm',
-  //     choices: ['CJS', 'ESM'],
-  //     message: 'Select your preferred project type',
-  //     initial: 'CJS',
-  //   })
-  //   return response.esm === 'ESM'
-  // } catch (_error) {
-  //   recordErrorViaTelemetry('User cancelled install at esm prompt')
-  //   await shutdownTelemetry()
-  //   process.exit(1)
-  // }
-}
-
-async function handleGitPreference(gitInitFlag: boolean | null) {
-  // Handle case where flag is set
-  if (gitInitFlag !== null) {
-    tui.drawText(
-      `${RedwoodStyling.green('✔')} ${
-        gitInitFlag ? 'Will' : 'Will not'
-      } initialize a git repo based on command line flag`,
-    )
-    return gitInitFlag
-  }
-
-  // Prompt user for preference
-  try {
-    const response = await tui.prompt<{ git: boolean }>({
-      type: 'Toggle',
-      name: 'git',
-      message: 'Do you want to initialize a git repo?',
-      enabled: 'Yes',
-      disabled: 'no',
-      initial: 'Yes',
-    })
-    return response.git
-  } catch {
-    recordErrorViaTelemetry('User cancelled install at git prompt')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-}
-
-async function doesDirectoryAlreadyExist(
-  appDir: string,
-  {
-    overwrite,
-    suppressWarning,
-  }: { overwrite: boolean; suppressWarning?: boolean },
-) {
-  let newAppDir = appDir
-
-  // Check if the new app directory already exists
-  if (fs.existsSync(newAppDir) && !overwrite) {
-    // Check if the directory contains files and show an error if it does
-    if (fs.readdirSync(newAppDir).length > 0) {
-      const styledAppDir = RedwoodStyling.info(newAppDir)
-
-      if (!suppressWarning) {
-        tui.stopReactive(true)
-        tui.displayWarning(
-          'Project directory already contains files',
-          [`'${styledAppDir}' already exists and is not empty`].join('\n'),
-        )
-      }
-
-      try {
-        const response = await tui.prompt<{
-          projectDirectoryAlreadyExists: string
-        }>({
-          type: 'select',
-          name: 'projectDirectoryAlreadyExists',
-          message: 'How would you like to proceed?',
-          choices: [
-            'Quit install',
-            `Overwrite files in '${styledAppDir}' and continue install`,
-            'Specify a different directory',
-          ],
-          initial: 0,
-        })
-
-        // overwrite the existing files
-        if (
-          response.projectDirectoryAlreadyExists ===
-          `Overwrite files in '${styledAppDir}' and continue install`
-        ) {
-          // blow away the existing directory and create a new one
-          await fs.promises.rm(newAppDir, { recursive: true, force: true })
-        } // specify a different directory
-        else if (
-          response.projectDirectoryAlreadyExists ===
-          'Specify a different directory'
-        ) {
-          const newDirectoryName = await handleNewDirectoryNamePreference()
-
-          if (/^~\w/.test(newDirectoryName)) {
-            tui.stopReactive(true)
-            tui.displayError(
-              'The `~username` syntax is not supported here',
-              'Please use the full path or specify the target directory on the command line.',
-            )
-
-            // Calling doesDirectoryAlreadyExist again with the same old
-            // appDir as a way to prompt the user for a new directory name
-            // after displaying the error above
-            newAppDir = await doesDirectoryAlreadyExist(appDir, {
-              overwrite,
-              suppressWarning: true,
-            })
-          } else {
-            newAppDir = path.resolve(process.cwd(), untildify(newDirectoryName))
-          }
-
-          // check to see if the new directory exists
-          newAppDir = await doesDirectoryAlreadyExist(newAppDir, { overwrite })
-        } // Quit Install and Throw and Error
-        else if (response.projectDirectoryAlreadyExists === 'Quit install') {
-          // quit and throw an error
-          recordErrorViaTelemetry(
-            'User quit after directory already exists error',
-          )
-          await shutdownTelemetry()
-          process.exit(1)
-        }
-        // overwrite the existing files
-      } catch {
-        recordErrorViaTelemetry(
-          `User cancelled install after directory already exists error`,
-        )
-        await shutdownTelemetry()
-        process.exit(1)
-      }
-    }
-  }
-
-  return newAppDir
-}
-
-async function handleNewDirectoryNamePreference() {
-  try {
-    const response = await tui.prompt<{ targetDirectoryInput: string }>({
-      type: 'input',
-      name: 'targetDirectoryInput',
-      message: 'What directory would you like to create the app in?',
-      initial: 'my-cedar-app',
-    })
-    return response.targetDirectoryInput
-  } catch {
-    recordErrorViaTelemetry(
-      'User cancelled install at specify a different directory prompt',
-    )
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-}
-
-async function handleCommitMessagePreference(commitMessageFlag: string | null) {
-  // Handle case where flag is set
-  if (commitMessageFlag !== null) {
-    return commitMessageFlag
-  }
-
-  // Prompt user for preference
-  try {
-    const response = await tui.prompt<{ commitMessage: string }>({
-      type: 'input',
-      name: 'commitMessage',
-      message: 'Enter a commit message',
-      initial: INITIAL_COMMIT_MESSAGE,
-    })
-    return response.commitMessage
-  } catch {
-    recordErrorViaTelemetry('User cancelled install at commit message prompt')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-}
-
-async function handleInstallPreference(
-  installFlag: boolean | null,
-  packageManager: PackageManager,
-) {
-  // Handle case where flag is set
-  if (installFlag !== null) {
-    tui.drawText(
-      `${RedwoodStyling.green('✔')} ${
-        installFlag ? 'Will' : 'Will not'
-      } run ${packageManager} install based on command line flag`,
-    )
-    return installFlag
-  }
-
-  // Prompt user for preference
-  try {
-    const response = await tui.prompt<{ install: boolean }>({
-      type: 'Toggle',
-      name: 'install',
-      message: `Do you want to run ${packageManager} install?`,
-      enabled: 'Yes',
-      disabled: 'no',
-      initial: 'Yes',
-    })
-    return response.install
-  } catch {
-    recordErrorViaTelemetry('User cancelled install at install prompt')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-}
-
-function isPackageManager(value: string | null): value is PackageManager {
-  return ['yarn', 'npm', 'pnpm'].includes(value ?? '')
-}
-
-async function handlePackageManagerPreference(
-  packageManagerFlag: string | null,
-) {
-  // Handle case where flag is set
-  if (isPackageManager(packageManagerFlag)) {
-    tui.drawText(
-      `${RedwoodStyling.green('✔')} Using ${packageManagerFlag} based on command line flag`,
-    )
-    return packageManagerFlag
-  }
-
-  // Prompt user for preference
-  try {
-    const detectedPm = detectPackageManagerFromEnv()
-    const response = await tui.prompt<{ packageManager: PackageManager }>({
-      type: 'Select',
-      name: 'packageManager',
-      choices: ['yarn', 'npm', 'pnpm'],
-      message: 'Select your preferred package manager',
-      initial: detectedPm,
-    } as Parameters<typeof tui.prompt>[0])
-    return response.packageManager
-  } catch {
-    recordErrorViaTelemetry('User cancelled install at package manager prompt')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
 }
 
 /**
@@ -883,7 +273,7 @@ async function createCedarApp() {
       hidden: true,
       default: null,
       type: 'string',
-      describe: 'Database to use (sqlite, pglite)',
+      describe: 'Database to use (sqlite, pglite, neon-postgres)',
     })
 
   const parsedFlags = await cli.parse()
@@ -926,7 +316,6 @@ async function createCedarApp() {
   // Record some of the arguments for telemetry
   trace.getActiveSpan()?.setAttribute('install', installFlag ?? false)
   trace.getActiveSpan()?.setAttribute('overwrite', overwrite)
-  trace.getActiveSpan()?.setAttribute('database', databaseFlag ?? 'sqlite')
 
   // Get the directory for installation from the args
   let targetDir = String(args).replace(/,/g, '-')
@@ -952,29 +341,8 @@ async function createCedarApp() {
   const useEsm = await handleEsmPreference(esmFlag)
   trace.getActiveSpan()?.setAttribute('esm', useEsm)
 
-  // Validate database flag
-  if (databaseFlag && databaseFlag !== 'sqlite' && databaseFlag !== 'pglite') {
-    tui.stopReactive(true)
-    tui.displayError(
-      'Invalid database',
-      `Unknown database "${databaseFlag}". Supported values: sqlite, pglite`,
-    )
-    recordErrorViaTelemetry('Invalid database flag')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
-
-  if (databaseFlag === 'pglite' && !useEsm) {
-    tui.stopReactive(true)
-    tui.displayError(
-      'Invalid configuration',
-      'The --db pglite flag requires --esm. Use:\n' +
-        '  create-cedar-app --esm --db pglite my-app',
-    )
-    recordErrorViaTelemetry('pglite without esm')
-    await shutdownTelemetry()
-    process.exit(1)
-  }
+  const database = await handleDatabasePreference(databaseFlag, useEsm)
+  trace.getActiveSpan()?.setAttribute('database', database)
 
   // Determine package manager preference
   const packageManager = await handlePackageManagerPreference(
@@ -1014,7 +382,7 @@ async function createCedarApp() {
     overwrite,
     packageManager,
     useEsm,
-    database: databaseFlag,
+    database,
   })
 
   const installCommand = getInstallCommand(packageManager)
@@ -1041,6 +409,9 @@ async function createCedarApp() {
   }
 
   const shouldPrintCdCommand = newAppDir !== process.cwd()
+  const newAppPath = newAppDir.startsWith(process.cwd() + path.sep)
+    ? path.relative(process.cwd(), newAppDir)
+    : newAppDir
   const cedarCommand = getCedarCommandPrefix(packageManager)
 
   // Post install message
@@ -1058,9 +429,7 @@ async function createCedarApp() {
       ...[
         shouldPrintCdCommand &&
           `${RedwoodStyling.redwood(
-            ` > ${RedwoodStyling.green(
-              `cd ${path.relative(process.cwd(), newAppDir)}`,
-            )}`,
+            ` > ${RedwoodStyling.green(`cd ${newAppPath}`)}`,
           )}`,
         !shouldInstall &&
           `${RedwoodStyling.redwood(

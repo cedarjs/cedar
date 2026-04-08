@@ -7,7 +7,7 @@ import Fastify from 'fastify'
 import { redwoodFastifyWeb } from '@cedarjs/fastify-web'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
-import type { ParsedOptions } from './types'
+import type { ParsedOptions } from './types.js'
 
 export async function serveWeb(options: ParsedOptions = {}) {
   const start = Date.now()

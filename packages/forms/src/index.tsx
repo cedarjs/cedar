@@ -48,12 +48,13 @@
 
 export * from 'react-hook-form'
 
-export { CheckboxField } from './CheckboxField'
-export type { EmptyAsValue, RedwoodRegisterOptions } from './coercion'
-export { FieldError } from './FieldError'
-export { Form, FormProps } from './Form'
-export { default as FormError } from './FormError'
-export type { ServerError, RWGqlError, ServerParseError } from './FormError'
+export { CheckboxField } from './CheckboxField.js'
+export type { EmptyAsValue, RedwoodRegisterOptions } from './coercion.js'
+export { FieldError } from './FieldError.js'
+export { Form } from './Form.js'
+export type { FormProps } from './Form.js'
+export { default as FormError } from './FormError.js'
+export type { ServerError, RWGqlError, ServerParseError } from './FormError.js'
 export {
   InputField,
   ButtonField,
@@ -77,12 +78,12 @@ export {
   TimeField,
   UrlField,
   WeekField,
-} from './InputComponents'
-export type { InputFieldProps } from './InputComponents'
-export { Label } from './Label'
-export { SelectField } from './SelectField'
-export { ServerErrorsContext } from './ServerErrorsContext'
-export { Submit } from './Submit'
-export { TextAreaField } from './TextAreaField'
-export { useErrorStyles } from './useErrorStyles'
-export { useRegister } from './useRegister'
+} from './InputComponents.js'
+export type { InputFieldProps } from './InputComponents.js'
+export { Label } from './Label.js'
+export { SelectField } from './SelectField.js'
+export { ServerErrorsContext } from './ServerErrorsContext.js'
+export { Submit } from './Submit.js'
+export { TextAreaField } from './TextAreaField.js'
+export { useErrorStyles } from './useErrorStyles.js'
+export { useRegister } from './useRegister.js'

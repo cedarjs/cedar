@@ -15,7 +15,7 @@ describe('Retrieves TSConfig settings', () => {
       {
         'api/tsconfig.json': JSON.stringify({
           compilerOptions: {
-            rootDirs: ['./src', '../.redwood/types/mirror/api/src'],
+            rootDirs: ['./src', '../.cedar/types/mirror/api/src'],
           },
         }),
         'web/tsconfig.json': JSON.stringify({
@@ -37,7 +37,7 @@ describe('Retrieves TSConfig settings', () => {
     expect(tsConfiguration.web.compilerOptions.noEmit).toBe(true)
     expect(tsConfiguration.api.compilerOptions.rootDirs).toEqual([
       './src',
-      '../.redwood/types/mirror/api/src',
+      '../.cedar/types/mirror/api/src',
     ])
   })
 

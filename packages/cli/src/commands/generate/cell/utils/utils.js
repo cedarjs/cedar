@@ -49,7 +49,7 @@ export const getIdName = (model) => {
 
 /**
  * This function checks the project for the field name supplied,
- * assuming the schema file has been generated in .redwood/schema.graphql
+ * assuming the schema file has been generated in .cedar/schema.graphql
  * @example
  * checkProjectForQueryField('blogPost') => true/false
  * checkProjectForQueryField('cedar') => true

@@ -3,9 +3,9 @@ import React, { forwardRef } from 'react'
 
 import pascalcase from 'pascalcase'
 
-import type { FieldProps } from './FieldProps'
-import { useErrorStyles } from './useErrorStyles'
-import { useRegister } from './useRegister'
+import type { FieldProps } from './FieldProps.js'
+import { useErrorStyles } from './useErrorStyles.js'
+import { useRegister } from './useRegister.js'
 
 /**
  * All the types we'll be generating named `<InputFields>` for (which is basically all of them).

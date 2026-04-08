@@ -1,7 +1,7 @@
 import type { Logger } from '@cedarjs/api/logger'
 
-import type { AbstractMailHandler } from './handler'
-import type { AbstractMailRenderer } from './renderer'
+import type { AbstractMailHandler } from './handler.js'
+import type { AbstractMailRenderer } from './renderer.js'
 
 // TODO: Some properties we have marked as unknown or similar are actually expected to be spreadable
 //       so we should probably attempt narrow the type to ensure that remains possible

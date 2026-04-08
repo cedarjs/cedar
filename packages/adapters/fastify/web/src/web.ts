@@ -9,11 +9,12 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { coerceRootPath } from './helpers'
-import { resolveOptions } from './resolveOptions'
-import type { RedwoodFastifyWebOptions } from './types'
+import { coerceRootPath } from './helpers.js'
+import { resolveOptions } from './resolveOptions.js'
+import type { RedwoodFastifyWebOptions } from './types.js'
 
-export { coerceRootPath, RedwoodFastifyWebOptions }
+export { coerceRootPath }
+export type { RedwoodFastifyWebOptions }
 
 export async function redwoodFastifyWeb(
   fastify: FastifyInstance,

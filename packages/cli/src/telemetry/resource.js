@@ -16,8 +16,8 @@ import {
 } from '../../package.js'
 
 export async function getResources() {
-  // Read the UUID from the file within .redwood or generate a new one if it doesn't exist
-  // or if it is too old
+  // Read the UUID from the file within .cedar or generate a new one if it
+  // doesn't exist or if it is too old
   let UID = uuidv4()
   try {
     const telemetryFile = path.join(getPaths().generated.base, 'telemetry.txt')

@@ -2,7 +2,7 @@ import type {
   MailUtilities,
   MailRenderedContent,
   MailRendererOptions,
-} from './types'
+} from './types.js'
 
 export abstract class AbstractMailRenderer {
   // Render a template

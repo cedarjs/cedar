@@ -78,7 +78,7 @@ vi.mock('../../../lib/index.js', () => ({
     },
     packages: '/mocked/project/packages',
     generated: {
-      base: '/mocked/project/.redwood',
+      base: '/mocked/project/.cedar',
     },
   })),
 }))

@@ -7,6 +7,7 @@
     "directory": "packages/eslint-plugin"
   },
   "license": "MIT",
+  "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -22,15 +23,15 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@typescript-eslint/utils": "8.57.2",
+    "@typescript-eslint/utils": "8.58.0",
     "eslint": "8.57.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/eslint": "8.56.12",
     "@types/estree": "1.0.8",
-    "@typescript-eslint/parser": "8.57.2",
-    "@typescript-eslint/rule-tester": "8.57.2",
+    "@typescript-eslint/parser": "8.58.0",
+    "@typescript-eslint/rule-tester": "8.58.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

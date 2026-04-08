@@ -7,19 +7,19 @@ import { resolvePath } from 'babel-plugin-module-resolver'
 
 import { getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
-import type { RegisterHookOptions } from './common'
+import type { RegisterHookOptions } from './common.js'
 import {
   getCommonPlugins,
   getPathsFromTypeScriptConfig,
   parseTypeScriptConfigFiles,
   registerBabel,
-} from './common'
-import pluginRedwoodContextWrapping from './plugins/babel-plugin-redwood-context-wrapping'
-import pluginRedwoodDirectoryNamedImport from './plugins/babel-plugin-redwood-directory-named-import'
-import pluginRedwoodGraphqlOptionsExtract from './plugins/babel-plugin-redwood-graphql-options-extract'
-import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir'
-import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector'
-import pluginRedwoodOTelWrapping from './plugins/babel-plugin-redwood-otel-wrapping'
+} from './common.js'
+import pluginRedwoodContextWrapping from './plugins/babel-plugin-redwood-context-wrapping.js'
+import pluginRedwoodDirectoryNamedImport from './plugins/babel-plugin-redwood-directory-named-import.js'
+import pluginRedwoodGraphqlOptionsExtract from './plugins/babel-plugin-redwood-graphql-options-extract.js'
+import pluginRedwoodImportDir from './plugins/babel-plugin-redwood-import-dir.js'
+import pluginRedwoodJobPathInjector from './plugins/babel-plugin-redwood-job-path-injector.js'
+import pluginRedwoodOTelWrapping from './plugins/babel-plugin-redwood-otel-wrapping.js'
 
 export const TARGETS_NODE = '24'
 

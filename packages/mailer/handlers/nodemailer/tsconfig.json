@@ -1,13 +1,8 @@
 {
-  "extends": "../../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.cjs-base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist"
+    "erasableSyntaxOnly": false
   },
   "include": ["src"],
-  "references": [
-    {
-      "path": "../../core"
-    }
-  ]
+  "references": [{ "path": "../../core" }]
 }

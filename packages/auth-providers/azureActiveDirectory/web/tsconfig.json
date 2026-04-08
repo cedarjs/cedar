@@ -1,9 +1,7 @@
 {
-  "extends": "../../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.cjs-base.json",
   "compilerOptions": {
-    "strict": true,
-    "module": "Node16",
-    "moduleResolution": "node16"
+    "rootDir": "."
   },
   "include": ["."],
   "references": [

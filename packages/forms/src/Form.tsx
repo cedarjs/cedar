@@ -4,7 +4,7 @@ import type { ForwardedRef } from 'react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { FieldValues, UseFormReturn, UseFormProps } from 'react-hook-form'
 
-import { ServerErrorsContext } from './ServerErrorsContext'
+import { ServerErrorsContext } from './ServerErrorsContext.js'
 
 export interface FormProps<
   TFieldValues extends FieldValues = FieldValues,

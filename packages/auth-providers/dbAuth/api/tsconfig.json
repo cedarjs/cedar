@@ -1,13 +1,5 @@
 {
-  "extends": "../../../../tsconfig.base.json",
-  "compilerOptions": {
-    "strict": true,
-    "rootDir": "src",
-    "outDir": "dist",
-    "module": "Node16",
-    "moduleResolution": "node16",
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
-  },
+  "extends": "../../../../tsconfig.cjs-base.json",
   "include": ["src"],
   "references": [
     { "path": "../../../auth/tsconfig.build.json" },

@@ -4,7 +4,7 @@ import path from 'path'
 import { getPaths } from '@cedarjs/project-config'
 
 /**
- * Custom exporter which writes spans to a file inside of .redwood/spans
+ * Custom exporter which writes spans to a file inside of .cedar/spans
  */
 export class CustomFileExporter {
   /**

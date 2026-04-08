@@ -32,7 +32,7 @@ export { parseSearch, getRouteRegexAndParams, matchPath } from './util.js'
 export { SkipNavLink, SkipNavContent } from './skipNav.js'
 
 /**
- * A more specific interface is created in `.redwood/types/includes/web-routerRoutes`
+ * A more specific interface is created in `.cedar/types/includes/web-routerRoutes`
  * when the site is built, which will describe all known routes.
  *
  * @example

@@ -42,9 +42,14 @@ describe('QueryBuilder', () => {
       { isLive: true },
     )
 
-    expect(result.query).toContain('@live')
-    expect(result.query).toContain('users')
     expect(result.variables).toEqual({ var0: true })
+    expect(result.query).toMatchInlineSnapshot(`
+      "query findManyUser($var0: Boolean) @live {
+        users(where: { isActive: $var0 }) {
+          id
+        }
+      }"
+    `)
   })
 
   it('supports findUnique', () => {
@@ -57,11 +62,14 @@ describe('QueryBuilder', () => {
       { isLive: true },
     )
 
-    expect(result.query).toContain('user(')
-    expect(result.query).toContain('@live')
-    expect(result.query).toMatch(/\bname\b/)
-    expect(result.query).not.toContain('createdAt')
-    expect(Object.values(result.variables || {})).toEqual([1])
+    expect(result.query).toMatchInlineSnapshot(`
+      "query findUniqueUser($var0: ID!) @live {
+        user(id: $var0) {
+          id
+          name
+        }
+      }"
+    `)
   })
 
   it('supports findMany', () => {
@@ -77,28 +85,38 @@ describe('QueryBuilder', () => {
       }),
     )
 
-    expect(result.query).toContain('query findManyUser')
-    expect(result.query).toContain('users')
-    expect(result.query).toMatch(/\bid\b/)
-    expect(result.query).toMatch(/\bemail\b/)
-    expect(Object.values(result.variables || {})).toEqual([true])
+    expect(result.variables).toEqual({ var0: true })
+    expect(result.query).toMatchInlineSnapshot(`
+      "query findManyUser($var0: Boolean) {
+        users(where: { isActive: $var0 }) {
+          id
+          email
+        }
+      }"
+    `)
   })
 
   it('supports findFirst', () => {
-    const result = buildQueryFromFunction((gqlorm) =>
-      gqlorm.post.findFirst({
-        where: {
-          AND: [{ published: true }, { createdAt: { gt: new Date(0) } }],
-        },
-        select: { id: true, title: true },
-      }),
+    const result = buildQueryFromFunction(
+      (gqlorm) =>
+        gqlorm.post.findFirst({
+          where: {
+            AND: [{ published: true }, { createdAt: { gt: new Date(0) } }],
+          },
+          select: { id: true, title: true },
+        }),
+      { isLive: true },
     )
 
-    expect(result.query).toContain('query findFirstPost')
-    expect(result.query).toContain('post(')
-    expect(result.query).toMatch(/\bid\b/)
-    expect(result.query).toMatch(/\btitle\b/)
     expect(result.variables).toEqual({ var0: true, var1: new Date(0) })
+    expect(result.query).toMatchInlineSnapshot(`
+      "query findFirstPost($var0: Boolean, $var1: DateTime) @live {
+        post(where: { AND: [{ published: $var0 }, { createdAt: { gt: $var1 } }] }) {
+          id
+          title
+        }
+      }"
+    `)
   })
 
   it('respects forceLiveQueries but allows explicit override', () => {

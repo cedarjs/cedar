@@ -7,7 +7,7 @@ import { createServerStorage } from '@cedarjs/server-store'
 import type { Middleware, MiddlewareRequest } from '@cedarjs/web/middleware'
 import { MiddlewareResponse } from '@cedarjs/web/middleware'
 
-import { invoke } from './invokeMiddleware'
+import { invoke } from './invokeMiddleware.js'
 
 describe('Invoke middleware', () => {
   beforeAll(() => {

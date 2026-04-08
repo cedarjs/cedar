@@ -1,0 +1,12 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cedarjs/api": "3.1.0",
+    "@cedarjs/graphql-server": "3.1.0",
+    "@prisma/adapter-pg": "{{PRISMA_VERSION}}",
+    "pg": "^8.13.0"
+  }
+}

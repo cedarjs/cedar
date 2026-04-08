@@ -5,7 +5,9 @@
 !.env.defaults
 .netlify
 .redwood/*
+.cedar/*
 !.redwood/README.md
+!.cedar/README.md
 dev.db*
 api/db/generated/prisma
 dist

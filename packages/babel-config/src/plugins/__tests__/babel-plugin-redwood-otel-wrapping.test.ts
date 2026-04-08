@@ -3,7 +3,7 @@ import path from 'path'
 import pluginTester from 'babel-plugin-tester'
 import { vi } from 'vitest'
 
-import redwoodOtelWrappingPlugin from '../babel-plugin-redwood-otel-wrapping'
+import redwoodOtelWrappingPlugin from '../babel-plugin-redwood-otel-wrapping.js'
 
 vi.mock('@cedarjs/project-config', () => {
   return {

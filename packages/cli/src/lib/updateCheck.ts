@@ -54,7 +54,7 @@ export const EXCLUDED_COMMANDS = ['upgrade', 'ts-to-js']
 
 /**
  * @const {string} Filepath of the file which persists update check data within
- * the .redwood directory
+ * the .cedar directory
  */
 let persistenceDirectory: string | undefined
 
@@ -70,7 +70,7 @@ function getPersistenceDirectory() {
 
 /**
  * Performs an update check to detect if a newer version of Cedar is available
- * and records the result to a file within .redwood for persistence
+ * and records the result to a file within .cedar for persistence
  */
 export async function check() {
   try {
@@ -217,7 +217,7 @@ function isErrorWithCode(error: unknown, code: string) {
 }
 
 /**
- * Reads update data from a file within .redwood
+ * Reads update data from a file within .cedar
  * @return {UpdateData} The update data object containing the localVersion, remoteVersion, checkedAt and shownAt properties
  */
 export function readUpdateDataFile(): UpdateData {
@@ -252,7 +252,7 @@ export function readUpdateDataFile(): UpdateData {
 }
 
 /**
- * Writes update data to a file within .redwood for persistence
+ * Writes update data to a file within .cedar for persistence
  * @param {UpdateData} updateData The data to persist.
  */
 function updateUpdateDataFile({

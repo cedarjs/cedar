@@ -1,4 +1,4 @@
-export * from './DbAuthHandler'
-export { PasswordValidationError } from './errors'
-export * from './shared'
-export { authDecoder, createAuthDecoder } from './decoder'
+export * from './DbAuthHandler.js'
+export { PasswordValidationError } from './errors.js'
+export * from './shared.js'
+export { authDecoder, createAuthDecoder } from './decoder.js'
