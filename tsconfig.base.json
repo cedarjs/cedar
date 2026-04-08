@@ -20,7 +20,7 @@
     "skipLibCheck": true,
 
     "verbatimModuleSyntax": true,
-    // "erasableSyntaxOnly": true,
+    "erasableSyntaxOnly": true,
     "rewriteRelativeImportExtensions": true,
 
     "declarationMap": true,

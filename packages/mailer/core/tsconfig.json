@@ -1,4 +1,7 @@
 {
   "extends": "../../../tsconfig.cjs-base.json",
+  "compilerOptions": {
+    "erasableSyntaxOnly": false
+  },
   "include": ["src"]
 }
