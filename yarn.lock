@@ -284,82 +284,82 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-darwin-arm64@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-darwin-arm64@npm:0.42.0"
+"@ast-grep/napi-darwin-arm64@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-darwin-arm64@npm:0.42.1"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-darwin-x64@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-darwin-x64@npm:0.42.0"
+"@ast-grep/napi-darwin-x64@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-darwin-x64@npm:0.42.1"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-arm64-gnu@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-linux-arm64-gnu@npm:0.42.0"
+"@ast-grep/napi-linux-arm64-gnu@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-linux-arm64-gnu@npm:0.42.1"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-arm64-musl@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-linux-arm64-musl@npm:0.42.0"
+"@ast-grep/napi-linux-arm64-musl@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-linux-arm64-musl@npm:0.42.1"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-x64-gnu@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-linux-x64-gnu@npm:0.42.0"
+"@ast-grep/napi-linux-x64-gnu@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-linux-x64-gnu@npm:0.42.1"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-linux-x64-musl@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-linux-x64-musl@npm:0.42.0"
+"@ast-grep/napi-linux-x64-musl@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-linux-x64-musl@npm:0.42.1"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-arm64-msvc@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-win32-arm64-msvc@npm:0.42.0"
+"@ast-grep/napi-win32-arm64-msvc@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-win32-arm64-msvc@npm:0.42.1"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-ia32-msvc@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-win32-ia32-msvc@npm:0.42.0"
+"@ast-grep/napi-win32-ia32-msvc@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-win32-ia32-msvc@npm:0.42.1"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@ast-grep/napi-win32-x64-msvc@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi-win32-x64-msvc@npm:0.42.0"
+"@ast-grep/napi-win32-x64-msvc@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi-win32-x64-msvc@npm:0.42.1"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@ast-grep/napi@npm:0.42.0":
-  version: 0.42.0
-  resolution: "@ast-grep/napi@npm:0.42.0"
+"@ast-grep/napi@npm:0.42.1":
+  version: 0.42.1
+  resolution: "@ast-grep/napi@npm:0.42.1"
   dependencies:
-    "@ast-grep/napi-darwin-arm64": "npm:0.42.0"
-    "@ast-grep/napi-darwin-x64": "npm:0.42.0"
-    "@ast-grep/napi-linux-arm64-gnu": "npm:0.42.0"
-    "@ast-grep/napi-linux-arm64-musl": "npm:0.42.0"
-    "@ast-grep/napi-linux-x64-gnu": "npm:0.42.0"
-    "@ast-grep/napi-linux-x64-musl": "npm:0.42.0"
-    "@ast-grep/napi-win32-arm64-msvc": "npm:0.42.0"
-    "@ast-grep/napi-win32-ia32-msvc": "npm:0.42.0"
-    "@ast-grep/napi-win32-x64-msvc": "npm:0.42.0"
+    "@ast-grep/napi-darwin-arm64": "npm:0.42.1"
+    "@ast-grep/napi-darwin-x64": "npm:0.42.1"
+    "@ast-grep/napi-linux-arm64-gnu": "npm:0.42.1"
+    "@ast-grep/napi-linux-arm64-musl": "npm:0.42.1"
+    "@ast-grep/napi-linux-x64-gnu": "npm:0.42.1"
+    "@ast-grep/napi-linux-x64-musl": "npm:0.42.1"
+    "@ast-grep/napi-win32-arm64-msvc": "npm:0.42.1"
+    "@ast-grep/napi-win32-ia32-msvc": "npm:0.42.1"
+    "@ast-grep/napi-win32-x64-msvc": "npm:0.42.1"
   dependenciesMeta:
     "@ast-grep/napi-darwin-arm64":
       optional: true
@@ -379,7 +379,7 @@ __metadata:
       optional: true
     "@ast-grep/napi-win32-x64-msvc":
       optional: true
-  checksum: 10c0/a210db0a57ed38602d9d96bc8c3c269c838be3b3e2b3c63ceef943b207289acb7a81102b5f353564c3243c0223879d5cc9ddb8e897f708356943083979fba7e0
+  checksum: 10c0/560c360522a98cff508bdb0d839c36d364afd296a8b04d2193ad63fdec352c949d803565cde74c11f7d496e8e6f2f105ed6129ebbd9f9f4e286f39a2eed14f02
   languageName: node
   linkType: hard
 
@@ -2178,7 +2178,7 @@ __metadata:
     fast-json-parse: "npm:1.0.3"
     fastify: "npm:5.8.4"
     fastify-raw-body: "npm:5.0.0"
-    graphql-yoga: "npm:5.20.0"
+    graphql-yoga: "npm:5.21.0"
     memfs: "npm:4.57.1"
     picoquery: "npm:2.5.0"
     pino-abstract-transport: "npm:1.2.0"
@@ -3152,7 +3152,7 @@ __metadata:
     publint: "npm:0.3.18"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
-    react-hook-form: "npm:7.72.0"
+    react-hook-form: "npm:7.72.1"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -3194,9 +3194,6 @@ __metadata:
     concurrently: "npm:9.2.1"
     graphql: "npm:16.13.2"
     publint: "npm:0.3.18"
-    react: "npm:19.2.3"
-    react-dom: "npm:19.2.3"
-    react-server-dom-webpack: "npm:19.2.4"
     tstyche: "npm:5.0.2"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -3228,7 +3225,7 @@ __metadata:
     "@graphql-tools/merge": "npm:9.1.7"
     "@graphql-tools/schema": "npm:10.0.31"
     "@graphql-tools/utils": "npm:10.11.0"
-    "@graphql-yoga/plugin-persisted-operations": "npm:3.20.0"
+    "@graphql-yoga/plugin-persisted-operations": "npm:3.21.0"
     "@opentelemetry/api": "npm:1.9.0"
     "@types/aws-lambda": "npm:8.10.161"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -3239,7 +3236,7 @@ __metadata:
     graphql: "npm:16.13.2"
     graphql-scalars: "npm:1.25.0"
     graphql-tag: "npm:2.12.6"
-    graphql-yoga: "npm:5.20.0"
+    graphql-yoga: "npm:5.21.0"
     jsonwebtoken: "npm:9.0.3"
     lodash: "npm:4.18.1"
     publint: "npm:0.3.18"
@@ -3438,7 +3435,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/prerender@workspace:packages/prerender"
   dependencies:
-    "@ast-grep/napi": "npm:0.42.0"
+    "@ast-grep/napi": "npm:0.42.1"
     "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.2"
     "@babel/traverse": "npm:7.29.0"
@@ -3511,14 +3508,14 @@ __metadata:
     "@envelop/types": "npm:5.2.1"
     "@graphql-tools/schema": "npm:10.0.31"
     "@graphql-tools/utils": "npm:10.11.0"
-    "@graphql-yoga/plugin-defer-stream": "npm:3.20.0"
-    "@graphql-yoga/plugin-graphql-sse": "npm:3.20.0"
+    "@graphql-yoga/plugin-defer-stream": "npm:3.21.0"
+    "@graphql-yoga/plugin-graphql-sse": "npm:3.21.0"
     "@graphql-yoga/redis-event-target": "npm:3.0.3"
     "@graphql-yoga/subscription": "npm:5.0.5"
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
     "@n1ru4l/in-memory-live-query-store": "npm:0.10.0"
     graphql: "npm:16.13.2"
-    graphql-yoga: "npm:5.20.0"
+    graphql-yoga: "npm:5.21.0"
     ioredis: "npm:5.10.1"
     nodemon: "npm:3.1.14"
     tsx: "npm:4.21.0"
@@ -3741,7 +3738,7 @@ __metadata:
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
     "@arethetypeswrong/cli": "npm:0.18.2"
-    "@ast-grep/napi": "npm:0.42.0"
+    "@ast-grep/napi": "npm:0.42.1"
     "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.2"
     "@babel/traverse": "npm:7.29.0"
@@ -6392,40 +6389,40 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-defer-stream@npm:3.20.0":
-  version: 3.20.0
-  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.20.0"
+"@graphql-yoga/plugin-defer-stream@npm:3.21.0":
+  version: 3.21.0
+  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.21.0"
   dependencies:
     "@graphql-tools/utils": "npm:^10.11.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.20.0
-  checksum: 10c0/cee5b1e9488b28e511e21a0bb099310b792cee8910b1c8d2c31f5e8d79693f0615419c7aa886d5e3c37b39d371d7fabfdbec423f70c97f11214785a5b3f15102
+    graphql-yoga: ^5.21.0
+  checksum: 10c0/bcc501d607eee2bab4f83cc6ed40af6c0432e9bda7ea5ca96ab8584f0b70b17f8f9c91cdb92d7fe656128e24e9fd2ffa2d0df5a5d827b1523deb07f69f64da88
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-graphql-sse@npm:3.20.0":
-  version: 3.20.0
-  resolution: "@graphql-yoga/plugin-graphql-sse@npm:3.20.0"
+"@graphql-yoga/plugin-graphql-sse@npm:3.21.0":
+  version: 3.21.0
+  resolution: "@graphql-yoga/plugin-graphql-sse@npm:3.21.0"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql-sse: "npm:^2.0.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.20.0
-  checksum: 10c0/c57207acd3d7bec237684741086ffd59d1b441af12e067aafef43ff2f866c1dfeecb03d7de7bd051beff65dbae5dc21537df5ae7caabe83e54a797bde4b851e8
+    graphql-yoga: ^5.21.0
+  checksum: 10c0/24fd588b81b077cd80f3d6064c6713ff43ed11edba40f517b8db7231ea261cf6a9063dcec0d30a72697e52a9e78bb1ef961cda4cfa1a2b536d0010d4ffaee432
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-persisted-operations@npm:3.20.0":
-  version: 3.20.0
-  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.20.0"
+"@graphql-yoga/plugin-persisted-operations@npm:3.21.0":
+  version: 3.21.0
+  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.21.0"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.20.0
-  checksum: 10c0/1aad6ff5ecff83328d81c8d9bb9c7f593d1e1f9c35dff1c492af65fb1de3b54bab6aed3a5b38605f22b646cc45336761b8ff36ad32b5c10678ec17c84aa44072
+    graphql-yoga: ^5.21.0
+  checksum: 10c0/fd130ac0ec53f0cbd17933ed13fc540cbc3211b900e9aa966229d856ed6d38496ae7378cb5343cc5891ca37e07d4f7d6e52d33091733d4c5ebed0927b6f210ba
   languageName: node
   linkType: hard
 
@@ -18339,9 +18336,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:5.20.0":
-  version: 5.20.0
-  resolution: "graphql-yoga@npm:5.20.0"
+"graphql-yoga@npm:5.21.0":
+  version: 5.21.0
+  resolution: "graphql-yoga@npm:5.21.0"
   dependencies:
     "@envelop/core": "npm:^5.5.1"
     "@envelop/instrumentation": "npm:^1.0.0"
@@ -18357,7 +18354,7 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-  checksum: 10c0/027b5c540092268719536e293981920f498ff8ff752d5ffe0de80e5212da4c554962a8522a5650db3fcc54b93fc49b9b86f58158b916c44053a2c2e0f9ce5817
+  checksum: 10c0/15e344ffd77e29e1f09efcaf4d6cb4d0bf92cb4a2f3e81d69c009c55103a03cd7eb1c24fdbafc31d67204b5e6669e2c3e5afef34ccea13d012a1f2581184eb44
   languageName: node
   linkType: hard
 
@@ -25815,12 +25812,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hook-form@npm:7.72.0":
-  version: 7.72.0
-  resolution: "react-hook-form@npm:7.72.0"
+"react-hook-form@npm:7.72.1":
+  version: 7.72.1
+  resolution: "react-hook-form@npm:7.72.1"
   peerDependencies:
     react: ^16.8.0 || ^17 || ^18 || ^19
-  checksum: 10c0/c689992ef95fcf6a7e622aba447756c5d770b8f89efbd700e9432e127185cff687f8dd7439e235c177371abf5595a7c8dae6c6220b9c3ab29ccfdd543b0b5b9e
+  checksum: 10c0/b96fb9c10893fd5b31151c412fe3dd475a207e2ca7e7d41f0b3d98c05e3d6e556b9c2edfb568820fcbf598f257871a87b91c9909cc6e07a7ab7bf6b36e22035a
   languageName: node
   linkType: hard
 

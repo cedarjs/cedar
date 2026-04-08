@@ -19,6 +19,16 @@
         "default": "./dist/cjs/queryBuilder.js"
       }
     },
+    "./setup": {
+      "import": {
+        "types": "./dist/setup.d.ts",
+        "default": "./dist/setup.js"
+      },
+      "require": {
+        "types": "./dist/cjs/setup.d.ts",
+        "default": "./dist/cjs/setup.js"
+      }
+    },
     "./queryBuilder": {
       "import": {
         "types": "./dist/queryBuilder.d.ts",
@@ -131,10 +141,7 @@
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "graphql": "16.13.2",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-server-dom-webpack": "19.2.4"
+    "graphql": "16.13.2"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",

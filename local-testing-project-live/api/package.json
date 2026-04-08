@@ -1,0 +1,17 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cedarjs/api": "3.1.0",
+    "@cedarjs/api-server": "3.1.0",
+    "@cedarjs/auth-dbauth-api": "3.1.0",
+    "@cedarjs/graphql-server": "3.1.0",
+    "@cedarjs/realtime": "3.1.0",
+    "@my-org/validators": "workspace:*",
+    "@prisma/adapter-pg": "7.6.0",
+    "ioredis": "^5",
+    "pg": "^8.13.0"
+  }
+}

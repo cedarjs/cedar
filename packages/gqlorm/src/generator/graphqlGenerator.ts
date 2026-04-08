@@ -52,6 +52,15 @@ export class GraphQLGenerator {
   }
 
   /**
+   * Update the model schema used for automatic field selection.
+   * Pass `undefined` to revert to the id-only fallback.
+   * Safe to call multiple times — last call wins.
+   */
+  setSchema(schema: ModelSchema | undefined): void {
+    this.#schema = schema
+  }
+
+  /**
    * Generate GraphQL query from AST
    */
   generate(ast: QueryAST): GraphQLQuery {
@@ -68,6 +77,10 @@ export class GraphQLGenerator {
     if (hasVariables) {
       const variableDefinitions = this.#generateVariableDefinitions()
       query += `(${variableDefinitions})`
+    }
+
+    if (ast.isLive) {
+      query += ' @live'
     }
 
     query += ` {\n${queryBody}\n}`
@@ -101,7 +114,7 @@ export class GraphQLGenerator {
    * Generate main query body
    */
   #generateQueryBody(ast: QueryAST): string {
-    const { model, operation, args, isLive } = ast
+    const { model, operation, args } = ast
 
     const fieldName = this.#getGraphQLFieldName(model, operation)
 
@@ -112,10 +125,6 @@ export class GraphQLGenerator {
       if (argsString) {
         query += `(${argsString})`
       }
-    }
-
-    if (isLive) {
-      query += ' @live'
     }
 
     const fields = this.#generateFieldSelection(args, model)
@@ -375,8 +384,8 @@ export class GraphQLGenerator {
       return fields.map((field) => `    ${field}`).join('\n')
     }
 
-    // Default selection - return all scalar fields
-    return '    id\n    createdAt\n    updatedAt'
+    // Only return the id field by default as a fallback
+    return '    id'
   }
 
   /**

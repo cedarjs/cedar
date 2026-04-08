@@ -95,8 +95,7 @@ export class QueryBuilder {
       const ast = this.#parser.parseQuery(model, operation, args)
 
       // Determine if this should be a live query
-      const isLive = this.#shouldUseLiveQuery(options?.isLive)
-      if (isLive) {
+      if (this.#shouldUseLiveQuery(options?.isLive)) {
         ast.isLive = true
       }
 
@@ -281,6 +280,20 @@ export class QueryBuilder {
    */
   updateOptions(newOptions: Partial<QueryBuilderOptions>): void {
     this.#options = { ...this.#options, ...newOptions }
+  }
+
+  /**
+   * Configure the query builder options.
+   * Merges the provided options over the current options (non-destructive).
+   * When the `schema` key is present in the options object, it is forwarded
+   * to the generator — including `undefined`, which reverts to the id-only
+   * fallback. Safe to call multiple times — last call wins.
+   */
+  configure(options: Partial<QueryBuilderOptions>): void {
+    this.#options = { ...this.#options, ...options }
+    if ('schema' in options) {
+      this.#generator.setSchema(options.schema)
+    }
   }
 
   /**
