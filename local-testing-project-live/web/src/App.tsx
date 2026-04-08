@@ -14,6 +14,7 @@ import './scaffold.css'
 // Configure gqlorm with the scalar fields for each Prisma model.
 // Sensitive fields (hashedPassword, salt, resetToken, resetTokenExpiresAt)
 // and relation fields (author, posts) are intentionally excluded.
+// We hardcode all of these for now, until we have codegen in place.
 configureGqlorm({
   schema: {
     post: ['id', 'title', 'body', 'authorId', 'createdAt'],
