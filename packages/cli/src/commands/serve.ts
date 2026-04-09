@@ -10,7 +10,6 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
-// @ts-expect-error - Types not available for JS files
 import { colors as c } from '@cedarjs/cli-helpers'
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
