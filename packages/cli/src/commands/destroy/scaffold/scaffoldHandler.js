@@ -1,10 +1,9 @@
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import {
   deleteFilesTask,
   getPaths,

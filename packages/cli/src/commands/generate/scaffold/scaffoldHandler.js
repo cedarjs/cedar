@@ -8,12 +8,11 @@ import humanize from 'humanize-string'
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import {
   generateTemplate,
   readFile,

@@ -7,7 +7,7 @@ import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import {
   formatCedarCommand,
   formatRunWorkspaceScriptCommand,
@@ -20,8 +20,6 @@ import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { type Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
-import { colors as c } from '@cedarjs/cli-helpers'
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../../lib/index.js'

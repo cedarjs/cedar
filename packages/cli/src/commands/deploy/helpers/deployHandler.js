@@ -1,8 +1,7 @@
 import execa from 'execa'
 
-import { getPaths } from '@cedarjs/project-config'
-
 import { colors as c } from '@cedarjs/cli-helpers'
+import { getPaths } from '@cedarjs/project-config'
 
 export const deployHandler = ({ build, prisma, dm: dataMigrate }) => {
   const paths = getPaths()

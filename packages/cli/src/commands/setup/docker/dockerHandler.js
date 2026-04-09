@@ -5,11 +5,9 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { writeFile } from '@cedarjs/cli-helpers'
+import { writeFile, colors as c } from '@cedarjs/cli-helpers'
 import { getConfig, getConfigPath, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
-
-import { colors as c } from '@cedarjs/cli-helpers'
 
 export async function handler({ force }) {
   const TEMPLATE_DIR = path.join(import.meta.dirname, 'templates')

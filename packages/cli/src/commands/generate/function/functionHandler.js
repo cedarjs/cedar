@@ -1,10 +1,9 @@
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 import { validateName } from '../helpers.js'

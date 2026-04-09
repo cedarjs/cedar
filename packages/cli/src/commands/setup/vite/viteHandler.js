@@ -3,10 +3,9 @@ import path from 'path'
 
 import { Listr } from 'listr2'
 
-import { addWebPackages } from '@cedarjs/cli-helpers'
+import { addWebPackages, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 

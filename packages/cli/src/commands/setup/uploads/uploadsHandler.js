@@ -4,10 +4,9 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 import { format } from 'prettier'
 
-import { addApiPackages, getPrettierOptions } from '@cedarjs/cli-helpers'
+import { addApiPackages, getPrettierOptions, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
@@ -143,7 +142,6 @@ export const handler = async ({ force }) => {
           ${c.success('\nUploads and storage configured!\n')}
 
           Remember to add UPLOADS_SECRET to your .env file. You can generate one with ${c.highlight('yarn cedar generate secret')}
-
 
           Check out the docs for more info:
           ${c.link('https://cedarjs.com/docs/uploads')}

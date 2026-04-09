@@ -7,7 +7,7 @@ import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import {
   dedupe,
   dedupeIsSupported,
@@ -18,8 +18,6 @@ import {
 import { getConfig } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 
-// @ts-expect-error - Types not available for JS files
-import { colors as c } from '@cedarjs/cli-helpers'
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'

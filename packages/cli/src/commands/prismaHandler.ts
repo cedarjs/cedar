@@ -4,11 +4,9 @@ import path from 'node:path'
 import boxen from 'boxen'
 import execa from 'execa'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
-import { colors as c } from '@cedarjs/cli-helpers'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
 

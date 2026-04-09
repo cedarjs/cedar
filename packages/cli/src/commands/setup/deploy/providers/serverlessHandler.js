@@ -3,11 +3,10 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { getSchemaPath, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import {
   addPackagesTask,
   getPaths,

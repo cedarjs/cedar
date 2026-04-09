@@ -3,15 +3,13 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import type * as Prerender from '@cedarjs/prerender'
 import { getConfig, getPaths, projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 import type { QueryInfo } from '@cedarjs/web'
 
-// @ts-expect-error - Types not available for JS files
-import { colors as c } from '@cedarjs/cli-helpers'
 // @ts-expect-error - Types not available for JS files
 import { runScriptFunction } from '../lib/exec.js'
 // @ts-expect-error - Types not available for JS files

@@ -1,10 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import { importStatementPath } from '@cedarjs/project-config'
 
-// @ts-expect-error - Types not available for JS files
-import { colors as c } from '@cedarjs/cli-helpers'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
 

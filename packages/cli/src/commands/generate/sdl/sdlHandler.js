@@ -3,13 +3,12 @@ import boxen from 'boxen'
 import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
 import {
   prepareForRollback,

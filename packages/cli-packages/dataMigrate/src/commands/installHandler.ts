@@ -4,13 +4,12 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   getPaths,
   getSchemaPath,
   getDataMigrationsPath,
 } from '@cedarjs/project-config'
-
-import { colors as c } from '@cedarjs/cli-helpers'
 
 export async function handler() {
   const cedarProjectPaths = getPaths()

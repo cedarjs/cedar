@@ -4,13 +4,12 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { prettify } from '@cedarjs/cli-helpers'
+import { prettify, colors as c } from '@cedarjs/cli-helpers'
 import { install } from '@cedarjs/cli-helpers/packageManager'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths, transformTSToJS, writeFile } from '../../lib/index.js'
 import { isTypeScriptProject } from '../../lib/project.js'
 

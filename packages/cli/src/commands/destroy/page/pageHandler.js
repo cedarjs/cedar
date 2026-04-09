@@ -1,9 +1,8 @@
 import camelcase from 'camelcase'
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import {
   deleteFilesTask,
   removeRoutesFromRouterTask,

@@ -1,6 +1,4 @@
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
-import { colors as c } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 
 export const command = 'check'
 export const aliases = ['diagnostics']

@@ -8,9 +8,8 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths } from '../../lib/index.js'
 
 export const preRequisites = () => [

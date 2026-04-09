@@ -13,11 +13,10 @@ import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { colors as c } from '@cedarjs/cli-helpers'
 import { generateTemplate, getPaths, writeFilesTask } from '../../lib/index.js'
 import { prepareForRollback } from '../../lib/rollback.js'
 
