@@ -1,11 +1,13 @@
 import ansis from 'ansis'
 
 /**
- * To keep a consistent color/style palette between cli packages, such as
- * @redwood/cli and @redwood/create-cedar-app, please only use the colors
- * defined here. If you *really* can't find a color that fits your needs,
- * it's better to add it here than to introduce a new one-off color in whatever
- * package you're going to use it in.
+ * Canonical color/style palette for all Cedar CLI packages.
+ *
+ * Import from here rather than defining local copies:
+ *   import { colors } from '@cedarjs/cli-helpers'
+ *
+ * If you need a color that isn't here, add it here rather than
+ * introducing a one-off in another package.
  */
 export const colors = {
   error: ansis.bold.red,
@@ -19,5 +21,5 @@ export const colors = {
   tip: ansis.green,
   important: ansis.magenta,
   caution: ansis.red,
-  link: ansis.underline,
+  link: ansis.underline.hex('#e8e8e8'),
 }
