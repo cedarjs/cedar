@@ -1,5 +1,17 @@
 # Plan: Support Both `.redwood/` and `.cedar/`
 
+> **Status**: Implemented (April 2026)
+
+## Implementation Summary
+
+The plan has been fully implemented:
+
+- **`generatedDataDir.ts`**: Created at `packages/project-config/src/generatedDataDir.ts` with `getGeneratedDataDirPath()` function that implements the resolution rules.
+- **`getPaths()` updated**: Now uses `getGeneratedDataDirPath()` instead of hardcoding `.redwood`.
+- **Tests added**: `generatedDataDir.test.ts` covers all four resolution cases.
+- **Templates updated**: Create-app templates use `.cedar/` (gitignore, README placeholder).
+- **Fixtures migrated**: Most fixtures now use `.cedar/` except `example-todo-main-with-errors` which is kept on `.redwood/` for testing compatibility.
+
 ## Goal
 
 Add compatibility for both generated directories, `.redwood/` and `.cedar/`, in the same spirit as current support for both `redwood.toml` and `cedar.toml`.
@@ -175,3 +187,4 @@ The work is done when:
 - precedence is defined and tested when both dirs exist
 - no behavior-critical code paths still require `.redwood` specifically
 - templates/docs are aligned with the chosen default
+- **One fixture (`example-todo-main-with-errors`) intentionally kept on `.redwood/` for compatibility testing**
