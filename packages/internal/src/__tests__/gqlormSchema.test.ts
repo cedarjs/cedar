@@ -336,6 +336,8 @@ describe('generateGqlormArtifacts - integration', () => {
 
     await generateGqlormArtifacts()
 
+    // hashedPassword (password), salt (salt), resetToken (token),
+    // resetTokenExpiresAt (token) — four sensitive fields in the User model.
     expect(warnSpy).toHaveBeenCalledTimes(4)
 
     warnSpy.mockRestore()
