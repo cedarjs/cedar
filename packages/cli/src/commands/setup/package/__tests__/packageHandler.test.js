@@ -10,6 +10,22 @@ vi.mock('@cedarjs/project-config', () => {
 })
 vi.mock('@cedarjs/cli-helpers', () => {
   return {
+    colors: Object.fromEntries(
+      [
+        'error',
+        'warning',
+        'highlight',
+        'success',
+        'info',
+        'bold',
+        'underline',
+        'note',
+        'tip',
+        'important',
+        'caution',
+        'link',
+      ].map((k) => [k, (s) => s]),
+    ),
     getCompatibilityData: vi.fn(() => {
       throw new Error('Mock Not Implemented')
     }),
