@@ -3,7 +3,7 @@ import path from 'path'
 
 import { Listr } from 'listr2'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths } from '../../../lib/index.js'
 
 const SIDE_MAP = {

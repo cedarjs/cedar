@@ -13,7 +13,7 @@ import { generate as generateTypes } from '@cedarjs/internal/dist/generate/gener
 import { getConfig } from '@cedarjs/project-config'
 import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   generateTemplate,
   readFile,

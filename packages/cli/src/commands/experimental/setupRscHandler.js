@@ -10,7 +10,7 @@ import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths, transformTSToJS, writeFile } from '../../lib/index.js'
 import { isTypeScriptProject } from '../../lib/project.js'
 

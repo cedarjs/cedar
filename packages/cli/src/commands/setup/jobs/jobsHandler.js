@@ -7,7 +7,7 @@ import { Listr } from 'listr2'
 import { addApiPackages } from '@cedarjs/cli-helpers'
 import { getSchemaPath, getPrismaSchemas } from '@cedarjs/project-config'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 

@@ -9,7 +9,7 @@ import { titleCase } from 'title-case'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   addRoutesToRouterTask,
   addScaffoldImport,

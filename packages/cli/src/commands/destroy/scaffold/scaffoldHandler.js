@@ -4,7 +4,7 @@ import pascalcase from 'pascalcase'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   deleteFilesTask,
   getPaths,

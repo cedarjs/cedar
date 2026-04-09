@@ -9,7 +9,7 @@ import { generate as generateTypes } from '@cedarjs/internal/dist/generate/gener
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   addRoutesToRouterTask,
   transformTSToJS,

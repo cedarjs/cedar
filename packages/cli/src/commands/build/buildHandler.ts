@@ -21,7 +21,7 @@ import { type Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../../lib/index.js'

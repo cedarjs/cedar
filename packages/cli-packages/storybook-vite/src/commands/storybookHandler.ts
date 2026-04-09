@@ -10,7 +10,7 @@ import { isTypeScriptProject, transformTSToJS } from '@cedarjs/cli-helpers'
 import { getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../lib/colors'
+import { colors as c } from '@cedarjs/cli-helpers'
 import type { StorybookYargsOptions } from '../types'
 
 const readFile = (target: fs.PathOrFileDescriptor) =>

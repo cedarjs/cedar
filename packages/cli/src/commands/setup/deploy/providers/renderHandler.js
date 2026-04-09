@@ -7,7 +7,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
 import { addFilesTask, updateApiURLTask } from '../helpers/index.js'
 import {

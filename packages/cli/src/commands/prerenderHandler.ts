@@ -11,7 +11,7 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import type { QueryInfo } from '@cedarjs/web'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 // @ts-expect-error - Types not available for JS files
 import { runScriptFunction } from '../lib/exec.js'
 // @ts-expect-error - Types not available for JS files

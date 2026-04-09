@@ -6,7 +6,7 @@ import prompts from 'prompts'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getConfig } from '@cedarjs/project-config'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { writeFilesTask, transformTSToJS } from '../../../lib/index.js'
 import {
   prepareForRollback,

@@ -4,7 +4,7 @@ import { Listr } from 'listr2'
 
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   getInstalledCedarVersion,
   getPaths,

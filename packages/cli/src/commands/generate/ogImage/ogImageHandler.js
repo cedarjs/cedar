@@ -8,7 +8,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   generateTemplate,
   getPaths,

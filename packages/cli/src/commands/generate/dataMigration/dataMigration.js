@@ -7,7 +7,7 @@ import { terminalLink } from 'termi-link'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { getDataMigrationsPath } from '@cedarjs/project-config'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   generateTemplate,
   getPaths,

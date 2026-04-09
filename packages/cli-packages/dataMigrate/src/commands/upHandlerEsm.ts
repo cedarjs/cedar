@@ -12,7 +12,7 @@ import {
   resolveFile,
 } from '@cedarjs/project-config'
 
-import c from '../lib/colors'
+import { colors as c } from '@cedarjs/cli-helpers'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
 
 /**

@@ -17,7 +17,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { generateTemplate, getPaths, writeFilesTask } from '../../lib/index.js'
 import { prepareForRollback } from '../../lib/rollback.js'
 

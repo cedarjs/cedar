@@ -9,7 +9,7 @@ import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { transformTSToJS, writeFilesTask } from '../../../lib/index.js'
 import {
   prepareForRollback,

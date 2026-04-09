@@ -10,7 +10,7 @@ import prompts from 'prompts'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-import c from '../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths } from '../../lib/index.js'
 
 export const preRequisites = () => [

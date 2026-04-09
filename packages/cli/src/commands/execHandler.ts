@@ -10,7 +10,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 import { findScripts } from '@cedarjs/internal/dist/files'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 // @ts-expect-error - Types not available for JS files
 import { runScriptFunction } from '../lib/exec.js'
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'

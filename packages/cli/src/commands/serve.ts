@@ -11,7 +11,7 @@ import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
 // @ts-expect-error - Types not available for JS files

@@ -4,7 +4,7 @@ import type { Argv } from 'yargs'
 import { dedupeIsSupported } from '@cedarjs/cli-helpers/packageManager'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 
 import { isValidCedarJSTag } from './tags.js'
 import type { UpgradeOptions } from './upgradeHandler.js'

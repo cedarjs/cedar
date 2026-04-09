@@ -6,7 +6,7 @@ import { Listr } from 'listr2'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-import c from '../../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import extendStorybookConfiguration from '../../../../lib/configureStorybook.js'
 import { extendJSXFile, fileIncludes } from '../../../../lib/extendFile.js'
 import { getPaths, writeFile } from '../../../../lib/index.js'

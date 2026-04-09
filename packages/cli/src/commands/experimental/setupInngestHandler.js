@@ -3,7 +3,7 @@ import { Listr } from 'listr2'
 
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths } from '../../lib/index.js'
 
 import { command, description, EXPERIMENTAL_TOPIC_ID } from './setupInngest.js'

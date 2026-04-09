@@ -9,7 +9,7 @@ import { writeFile } from '@cedarjs/cli-helpers'
 import { getConfig, getConfigPath, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 
 export async function handler({ force }) {
   const TEMPLATE_DIR = path.join(import.meta.dirname, 'templates')

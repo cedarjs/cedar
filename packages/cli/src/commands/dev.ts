@@ -2,7 +2,7 @@ import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
 // @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 // @ts-expect-error - Types not available for JS files
 import { workspaces } from '../lib/project.js'
 // @ts-expect-error - Types not available for JS files

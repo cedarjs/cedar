@@ -21,5 +21,5 @@ export const colors = {
   tip: ansis.green,
   important: ansis.magenta,
   caution: ansis.red,
-  link: ansis.underline.hex('#e8e8e8'),
+  link: ansis.underline,
 }
