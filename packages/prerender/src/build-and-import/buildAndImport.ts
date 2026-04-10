@@ -117,9 +117,14 @@ export async function buildAndImport(
           if (!id.endsWith('.json')) {
             return null
           }
-          return {
-            code: `export default ${code}`,
-            map: { mappings: '' },
+          try {
+            const parsed = JSON.parse(code)
+            return {
+              code: `export default ${JSON.stringify(parsed)}`,
+              map: { mappings: '' },
+            }
+          } catch {
+            return null
           }
         },
       },
