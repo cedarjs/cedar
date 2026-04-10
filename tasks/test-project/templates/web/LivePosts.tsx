@@ -36,6 +36,9 @@ const LivePosts = () => {
             <h2 className="text-xl font-semibold">{post.title}</h2>
           </header>
           <div className="mt-2 font-light text-gray-900">{post.body}</div>
+          <time data-testid="post-created-at" className="text-sm text-gray-500">
+            {post.createdAt}
+          </time>
         </article>
       ))}
     </div>

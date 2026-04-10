@@ -385,7 +385,3 @@ Once this task is complete:
 5. Phase 1.2 (TypeScript declaration file generation) can now be implemented
    independently — it reuses the same DMMF parsing logic but writes a `.d.ts`
    file for type-safe return values.
-
-```
-
-```

@@ -12,15 +12,11 @@ import {
   generateGqlormArtifacts,
 } from '../generate/gqlormSchema.js'
 
-// ---------------------------------------------------------------------------
-// DMMF mock helpers
-// ---------------------------------------------------------------------------
-
 function makeField(
   name: string,
   kind: FieldKind = 'scalar',
   documentation?: string,
-): Field {
+) {
   return {
     name,
     kind,
@@ -32,14 +28,10 @@ function makeField(
     isReadOnly: false,
     hasDefaultValue: false,
     documentation,
-  } as Field
+  } satisfies Field
 }
 
-function makeModel(
-  name: string,
-  fields: Field[],
-  documentation?: string,
-): Model {
+function makeModel(name: string, fields: Field[], documentation?: string) {
   return {
     name,
     dbName: null,
@@ -49,10 +41,10 @@ function makeModel(
     uniqueIndexes: [],
     primaryKey: null,
     documentation,
-  } as unknown as Model
+  } satisfies Model
 }
 
-function makeDmmf(models: Model[]): Document {
+function makeDmmf(models: Model[]) {
   return {
     datamodel: {
       models,
@@ -60,12 +52,9 @@ function makeDmmf(models: Model[]): Document {
       types: [],
       indexes: [],
     },
+    // We only mock what we need for the test
   } as unknown as Document
 }
-
-// ---------------------------------------------------------------------------
-// Unit tests — buildModelSchema (pure function, no fixtures required)
-// ---------------------------------------------------------------------------
 
 describe('buildModelSchema', () => {
   it('collects basic scalar fields and excludes object/relation fields', () => {
