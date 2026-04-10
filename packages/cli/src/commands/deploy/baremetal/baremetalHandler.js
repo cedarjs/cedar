@@ -7,7 +7,8 @@ import * as toml from 'smol-toml'
 import { env as envInterpolation } from 'string-env-interpolation'
 import { titleCase } from 'title-case'
 
-import c from '../../../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
+
 import { getPaths } from '../../../lib/index.js'
 
 const CONFIG_FILENAME = 'deploy.toml'

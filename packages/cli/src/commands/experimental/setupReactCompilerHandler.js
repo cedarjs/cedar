@@ -5,10 +5,10 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import semver from 'semver'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import { getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../lib/colors.js'
 import { getPaths, writeFile } from '../../lib/index.js'
 
 import {

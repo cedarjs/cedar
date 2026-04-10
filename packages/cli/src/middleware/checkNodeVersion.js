@@ -1,6 +1,6 @@
 import semver from 'semver'
 
-import c from '../lib/colors.js'
+import { colors as c } from '@cedarjs/cli-helpers'
 
 export function checkNodeVersion() {
   const checks = { ok: true }

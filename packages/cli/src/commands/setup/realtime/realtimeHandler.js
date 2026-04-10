@@ -5,12 +5,11 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
-import { addApiPackages } from '@cedarjs/cli-helpers'
+import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../lib/colors.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../../lib/project.js'
 import { setupServerFileTasks } from '../server-file/serverFileHandler.js'

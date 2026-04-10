@@ -79,6 +79,22 @@ vi.mock('@cedarjs/internal/dist/validateSchema', () => ({
 }))
 
 vi.mock('@cedarjs/cli-helpers', () => ({
+  colors: Object.fromEntries(
+    [
+      'error',
+      'warning',
+      'highlight',
+      'success',
+      'info',
+      'bold',
+      'underline',
+      'note',
+      'tip',
+      'important',
+      'caution',
+      'link',
+    ].map((k) => [k, (s) => s]),
+  ),
   recordTelemetryAttributes: vi.fn(),
 }))
 

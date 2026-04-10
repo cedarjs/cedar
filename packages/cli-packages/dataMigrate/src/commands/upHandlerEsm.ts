@@ -6,13 +6,13 @@ import path from 'node:path'
 import { bundleRequire } from 'bundle-require'
 import { Listr } from 'listr2'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   getPaths,
   getDataMigrationsPath,
   resolveFile,
 } from '@cedarjs/project-config'
 
-import c from '../lib/colors'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
 
 /**
