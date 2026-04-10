@@ -2,14 +2,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import type * as DMMF from '@prisma/dmmf'
+import type * as PrismaInternals from '@prisma/internals'
 
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 
-// These are Cedar/Redwood internal migration models that should never be exposed
-const INTERNAL_MODEL_NAMES = new Set([
-  'RW_DataMigration',
-  'Cedar_DataMigration',
-])
+// These are Cedar/Redwood internal migration models that should never be
+// exposed
+const INTERNAL_MODEL_NAMES = new Set(['RW_DataMigration'])
 
 // Substrings that indicate a field likely contains sensitive data.
 // Fields whose lowercased name contains any of these strings are auto-hidden
@@ -46,8 +45,8 @@ function emitSensitivityWarning(modelName: string, fieldName: string): void {
   console.warn(
     `[gqlorm] ${modelName}.${fieldName} was automatically hidden because its` +
       ` name appears sensitive. Add a directive to suppress this warning:\n\n` +
-      `  /// @gqlorm hide   — to confirm it should stay hidden\n` +
-      `  /// @gqlorm show   — to explicitly expose it\n`,
+      `  /// @gqlorm hide – to confirm it should stay hidden\n` +
+      `  /// @gqlorm show – to explicitly expose it\n`,
   )
 }
 
@@ -100,7 +99,9 @@ export function buildModelSchema(dmmf: DMMF.Document): ModelSchema {
     }
 
     if (visibleFields.length > 0) {
-      schema[model.name.toLowerCase()] = visibleFields
+      const camelCaseName =
+        model.name.charAt(0).toLowerCase() + model.name.slice(1)
+      schema[camelCaseName] = visibleFields
     }
   }
 
@@ -130,12 +131,7 @@ export async function generateGqlormArtifacts(): Promise<{
     const mod = await import('@prisma/internals')
     // ESM vs CJS interop: in ESM context @prisma/internals resolves
     // everything onto `default`, in CJS it's directly on the module.
-    const { getDMMF } = (mod.default || mod) as {
-      getDMMF: (options: {
-        datamodel: typeof schemas
-      }) => Promise<DMMF.Document>
-    }
-
+    const { getDMMF } = (mod.default || mod) as typeof PrismaInternals
     const dmmf = await getDMMF({ datamodel: schemas })
     const modelSchema = buildModelSchema(dmmf)
 

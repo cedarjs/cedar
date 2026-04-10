@@ -2,7 +2,15 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import type { Document, Field, FieldKind, Model } from '@prisma/dmmf'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  afterEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
 import type * as ProjectConfig from '@cedarjs/project-config'
 import { getPaths } from '@cedarjs/project-config'
@@ -148,33 +156,23 @@ describe('buildModelSchema', () => {
     expect(result).not.toHaveProperty('post')
   })
 
-  it('skips RW_DataMigration and Cedar_DataMigration but keeps other models', () => {
-    const rwMigration = makeModel('RW_DataMigration', [
-      makeField('id', 'scalar'),
-    ])
-    const cedarMigration = makeModel('Cedar_DataMigration', [
-      makeField('id', 'scalar'),
-    ])
-    const contact = makeModel('Contact', [
-      makeField('id', 'scalar'),
-      makeField('name', 'scalar'),
-    ])
+  it('skips framework internal models but keeps other models', () => {
+    const idField = makeField('id', 'scalar')
+    const rwMigration = makeModel('RW_DataMigration', [idField])
+    const contact = makeModel('Contact', [idField, makeField('name', 'scalar')])
 
-    const result = buildModelSchema(
-      makeDmmf([rwMigration, cedarMigration, contact]),
-    )
+    const result = buildModelSchema(makeDmmf([rwMigration, contact]))
 
-    expect(result).not.toHaveProperty('rw_datamigration')
-    expect(result).not.toHaveProperty('cedar_datamigration')
+    expect(result).not.toHaveProperty('rW_DataMigration')
     expect(result).toHaveProperty('contact')
   })
 
-  it('uses lowercased model names as keys in the returned record', () => {
+  it('uses camelCase model names as keys in the returned record', () => {
     const model = makeModel('BlogPost', [makeField('id', 'scalar')])
 
     const result = buildModelSchema(makeDmmf([model]))
 
-    expect(result).toHaveProperty('blogpost')
+    expect(result).toHaveProperty('blogPost')
     expect(result).not.toHaveProperty('BlogPost')
   })
 
@@ -258,18 +256,29 @@ describe('generateGqlormArtifacts - integration', () => {
     process.env.CEDAR_CWD = FIXTURE_PATH
     outputPath = path.join(getPaths().generated.base, 'gqlorm-schema.json')
 
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+
     const { files, errors } = await generateGqlormArtifacts()
+
     expect(errors).toEqual([])
     expect(files).toHaveLength(1)
     expect(files[0]).toEqual(outputPath)
+
+    vi.mocked(console).warn.mockClear()
   })
 
   afterAll(() => {
+    vi.mocked(console).warn.mockRestore()
+
     if (fs.existsSync(outputPath)) {
       fs.unlinkSync(outputPath)
     }
 
     delete process.env.CEDAR_CWD
+  })
+
+  afterEach(() => {
+    vi.mocked(console).warn.mockClear()
   })
 
   it('writes gqlorm-schema.json to the generated base dir and returns the path', async () => {
@@ -321,14 +330,10 @@ describe('generateGqlormArtifacts - integration', () => {
   })
 
   it('emits console.warn for each sensitive field found in the User model', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
     await generateGqlormArtifacts()
 
     // hashedPassword (password), salt (salt), resetToken (token),
     // resetTokenExpiresAt (token) — four sensitive fields in the User model.
-    expect(warnSpy).toHaveBeenCalledTimes(4)
-
-    warnSpy.mockRestore()
+    expect(vi.mocked(console).warn).toHaveBeenCalledTimes(4)
   })
 })
