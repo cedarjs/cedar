@@ -110,6 +110,19 @@ export async function buildAndImport(
           ...getPathsFromTypeScriptConfig(tsConfigs.web, webBase),
         ],
       }),
+      // Handle JSON imports (e.g. .cedar/gqlorm-schema.json)
+      {
+        name: 'json',
+        transform(code, id) {
+          if (!id.endsWith('.json')) {
+            return null
+          }
+          return {
+            code: `export default ${code}`,
+            map: { mappings: '' },
+          }
+        },
+      },
       ignoreHtmlAndCssImportsPlugin(),
       cellTransformPlugin(),
       cedarjsRoutesAutoLoaderPlugin(),
