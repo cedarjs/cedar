@@ -51,7 +51,7 @@ export const handler = async ({ force }) => {
         task: (_ctx, task) => {
           task.title = `One more thing...\n
           ${c.tip('Quick link to the docs on configuring TypeScript')}
-          ${terminalLink('https://cedarjs.com/docs/typescript', 'https://cedarjs.com/docs/typescript')}
+          ${terminalLink('', 'https://cedarjs.com/docs/typescript')}
         `
         },
       },

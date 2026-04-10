@@ -123,7 +123,7 @@ const tasks = async ({ force }) => {
           Execute jobs with:  ${c.highlight('yarn cedar jobs work\n')}
 
           Check out the docs for more info:
-          ${terminalLink('https://cedarjs.com/docs/background-jobs', 'https://cedarjs.com/docs/background-jobs')}
+          ${terminalLink('', 'https://cedarjs.com/docs/background-jobs')}
 
         `
         },

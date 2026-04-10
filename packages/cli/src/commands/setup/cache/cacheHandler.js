@@ -61,7 +61,7 @@ export const handler = async ({ client, force }) => {
       task: (_ctx, task) => {
         task.title = `One more thing...\n
           ${c.tip('Check out the Service Cache docs for config and usage:')}
-          ${terminalLink('https://cedarjs.com/docs/services#caching', 'https://cedarjs.com/docs/services#caching')}
+          ${terminalLink('', 'https://cedarjs.com/docs/services#caching')}
         `
       },
     },

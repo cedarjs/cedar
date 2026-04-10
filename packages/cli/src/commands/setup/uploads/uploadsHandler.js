@@ -147,7 +147,7 @@ export const handler = async ({ force }) => {
 
 
           Check out the docs for more info:
-          ${terminalLink('https://cedarjs.com/docs/uploads', 'https://cedarjs.com/docs/uploads')}
+          ${terminalLink('', 'https://cedarjs.com/docs/uploads')}
 
         `
         },
