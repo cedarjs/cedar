@@ -61,7 +61,9 @@ global.mockCurrentUser = (currentUser: Record<string, unknown> | null) => {
 
 // Error codes thrown by [MySQL, SQLite, Postgres] when foreign key constraint
 // fails on DELETE
-const FOREIGN_KEY_ERRORS = [1451, 1811, 23503]
+// 23001: PostgreSQL RESTRICT violation (PG 18+ strictly enforces this on DELETE)
+// 23503: PostgreSQL FK constraint violation on DELETE
+const FOREIGN_KEY_ERRORS = [1451, 1811, 23001, 23503]
 const TEARDOWN_CACHE_PATH = tearDownCachePath
 const DEFAULT_SCENARIO = 'standard'
 let teardownOrder: string[] = []
