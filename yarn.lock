@@ -3274,6 +3274,8 @@ __metadata:
     "@graphql-codegen/typescript-react-apollo": "npm:4.4.1"
     "@graphql-codegen/typescript-resolvers": "npm:5.1.7"
     "@graphql-tools/documents": "npm:1.0.1"
+    "@prisma/dmmf": "npm:7.6.0"
+    "@prisma/internals": "npm:7.6.0"
     "@sdl-codegen/node": "npm:2.0.1"
     ansis: "npm:4.2.0"
     concurrently: "npm:9.2.1"

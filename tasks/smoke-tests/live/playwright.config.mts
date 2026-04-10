@@ -1,11 +1,9 @@
 import { defineConfig } from '@playwright/test'
 
-import { basePlaywrightConfig } from '../basePlaywright.config'
+import { basePlaywrightConfig } from '../basePlaywright.config.mts'
 
 export default defineConfig({
   ...basePlaywrightConfig,
-
-  globalSetup: './globalSetup.mts',
 
   timeout: 60_000,
 
@@ -14,9 +12,9 @@ export default defineConfig({
   },
 
   webServer: {
-    command: 'yarn cedar dev --no-generate --fwd="--no-open"',
+    command: `node ${import.meta.dirname}/setup.mts && yarn cedar dev --fwd="--no-open"`,
     cwd: process.env.CEDAR_TEST_PROJECT_PATH,
-    url: 'http://localhost:8911/graphql?query={redwood{version}}',
+    url: 'http://localhost:8911/graphql?query={cedar{version}}',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
   },
