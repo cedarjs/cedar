@@ -2,9 +2,11 @@
 /* eslint-env node */
 // @ts-check
 
-// There are a few footguns to running a smoke tests locally. (And if you have to run a smoke tests locally, it's already painful enough.)
+// There are a few footguns to running a smoke tests locally. (And if you have
+// to run a smoke tests locally, it's already painful enough.)
 //
-// - you don't have a test project, or you're running against a different test project than you expect
+// - you don't have a test project, or you're running against a different test
+//   project than you expect
 // - `yarn cfw project:sync` isn't running
 //
 // This script checks for them.
@@ -68,12 +70,14 @@ main()
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
- * Parses the command line arguments and returns an object containing the parsed values.
+ * Parses the command line arguments and returns an object containing the parsed
+ * values.
  *
  * @typedef {Object} CliArgs
  * @property {string} testProjectPath The path to the test project.
  * @property {string[]} smokeTests The smoke tests to run.
- * @property {string | undefined} playwrightOptions The options to forward to `npx playwright test`.
+ * @property {string | undefined} playwrightOptions The options to forward to
+ * `npx playwright test`.
  *
  * @returns {Promise<CliArgs>} The parsed command line arguments.
  */
@@ -191,7 +195,8 @@ async function parseArgs() {
     )
   }
 
-  // The user can pass a smoke test to run as the first argument; if they don't, we prompt them for it.
+  // The user can pass a smoke test to run as the first argument; if they don't,
+  // we prompt them for it.
   //
   // ```
   // yarn node ./tasks/smoke-tests/smoke-tests.mjs dev auth

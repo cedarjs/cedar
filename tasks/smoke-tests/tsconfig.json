@@ -1,10 +1,13 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
     "esModuleInterop": true,
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
-    "skipLibCheck": false
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": false,
+    "rootDir": "."
   }
 }
