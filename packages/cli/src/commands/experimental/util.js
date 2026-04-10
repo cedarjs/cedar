@@ -7,8 +7,9 @@ import { terminalLink } from 'termi-link'
 import { getPaths } from '../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../lib/project.js'
 
-const link = (topicId, isTerminal = false) => {
+function link(topicId, isTerminal = false) {
   const communityLink = `https://community.redwoodjs.com/t/${topicId}`
+
   if (isTerminal) {
     return terminalLink(communityLink, communityLink)
   } else {
@@ -16,32 +17,33 @@ const link = (topicId, isTerminal = false) => {
   }
 }
 
-export const getEpilogue = (
-  command,
-  description,
-  topicId,
-  isTerminal = false,
-) =>
-  `This is an experimental feature to: ${description}.\n\nPlease find documentation and links to provide feedback for ${command} at:\n -> ${link(
-    topicId,
-    isTerminal,
-  )}`
+export function getEpilogue(command, description, topicId, isTerminal = false) {
+  let epilogue =
+    `This is an experimental feature to: ${description}.\n\n` +
+    `If you need help with ${command}, please join our Discord community.\n` +
+    ` -> ${link('', 'https://cedarjs.com/discord')}`
 
-export const printTaskEpilogue = (command, description, topicId) => {
+  if (topicId) {
+    epilogue +=
+      '\n\nYou might also be able to find some information at:\n' +
+      ` -> ${link(topicId, isTerminal)}`
+  }
+
+  return epilogue
+}
+
+export function printTaskEpilogue(command, description, topicId) {
+  const orangeLine = ansis.hex('#ff845e')('-'.repeat(64))
+
   console.log(
-    `${ansis.hex('#ff845e')(
-      `------------------------------------------------------------------\n 🧪 ${ansis.green(
-        'Experimental Feature',
-      )} 🧪\n------------------------------------------------------------------`,
-    )}`,
+    [
+      orangeLine,
+      `🧪 ${ansis.green('Experimental Feature')} 🧪`,
+      orangeLine,
+    ].join('\n'),
   )
   console.log(getEpilogue(command, description, topicId, false))
-
-  console.log(
-    `${ansis.hex('#ff845e')(
-      '------------------------------------------------------------------',
-    )}\n`,
-  )
+  console.log(`${orangeLine}\n`)
 }
 
 export const isServerFileSetup = () => {

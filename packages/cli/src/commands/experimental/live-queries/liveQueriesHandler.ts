@@ -7,7 +7,9 @@ import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
 import { getMigrationsPath, getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - No types for JS files
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
+// @ts-expect-error - No types for JS files
 import { isTypeScriptProject } from '../../../lib/project.js'
 
 function getApiPackageJson() {
@@ -15,7 +17,13 @@ function getApiPackageJson() {
   return JSON.parse(fs.readFileSync(apiPackageJsonPath, 'utf-8'))
 }
 
-function hasPackage(packageJson, packageName) {
+function hasPackage(
+  packageJson: {
+    dependencies?: Record<string, string>
+    devDependencies?: Record<string, string>
+  },
+  packageName: string,
+) {
   return Boolean(
     packageJson.dependencies?.[packageName] ||
     packageJson.devDependencies?.[packageName],
@@ -29,7 +37,7 @@ function hasPackage(packageJson, packageName) {
  * - It prefers to allow the setup to continue rather than produce false
  *   positives by throwing on ambiguous content.
  *
- * @returns {Promise<string|undefined>} provider name in lowercase, or undefined
+ * @returns provider name in lowercase, or undefined
  */
 async function getPrismaProvider() {
   try {
@@ -49,11 +57,11 @@ async function getPrismaProvider() {
     let stat
     try {
       stat = fs.statSync(schemaPath)
-    } catch (e) {
+    } catch {
       stat = undefined
     }
 
-    if (stat && stat.isDirectory()) {
+    if (stat?.isDirectory()) {
       const candidate = path.join(schemaPath, 'schema.prisma')
       if (fs.existsSync(candidate)) {
         schemaPath = candidate
@@ -68,7 +76,7 @@ async function getPrismaProvider() {
 
     const content = fs.readFileSync(schemaPath, 'utf-8')
     const match = content.match(/^\s*provider\s*=\s*["']([^"']+)["']/im)
-    if (match && match[1]) {
+    if (match?.[1]) {
       return match[1].toLowerCase()
     }
 
@@ -79,7 +87,7 @@ async function getPrismaProvider() {
   }
 }
 
-function findExistingLiveQueryMigration({ migrationsDirectoryPath }) {
+function findExistingLiveQueryMigration(migrationsDirectoryPath: string) {
   if (!fs.existsSync(migrationsDirectoryPath)) {
     return undefined
   }
@@ -109,7 +117,7 @@ function generateMigrationFolderName() {
   return `${year}${month}${day}${hour}${minute}${second}_live_queries_notifications`
 }
 
-function addLiveQueryListenerToGraphqlHandler({ force }) {
+function addLiveQueryListenerToGraphqlHandler({ force }: { force?: boolean }) {
   const graphqlHandlerPath = path.join(
     getPaths().api.functions,
     `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
@@ -213,7 +221,7 @@ function addLiveQueryListenerToGraphqlHandler({ force }) {
   }
 }
 
-export async function handler({ force }) {
+export async function handler({ force }: { force?: boolean }) {
   const projectIsTypescript = isTypeScriptProject()
   const apiPackageJson = getApiPackageJson()
   const migrationsPath = await getMigrationsPath(getPaths().api.prismaConfig)
@@ -234,10 +242,7 @@ export async function handler({ force }) {
     'liveQueriesListener.ts.template',
   )
 
-  const existingMigrationPath = findExistingLiveQueryMigration({
-    migrationsDirectoryPath: migrationsPath,
-  })
-
+  const existingMigrationPath = findExistingLiveQueryMigration(migrationsPath)
   const migrationDirPath = path.join(
     migrationsPath,
     generateMigrationFolderName(),
@@ -290,6 +295,8 @@ export async function handler({ force }) {
           if (hasPgDependency) {
             return 'pg is already installed'
           }
+
+          return false
         },
       },
       {
@@ -318,6 +325,8 @@ export async function handler({ force }) {
 
             return `Existing live query migration found: ${migrationPath}`
           }
+
+          return false
         },
       },
       {
@@ -370,8 +379,22 @@ export async function handler({ force }) {
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    if (isObject(e) && 'message' in e) {
+      errorTelemetry(process.argv, e.message)
+      console.error(c.error(e.message))
+    } else {
+      errorTelemetry(process.argv, e)
+      console.error(c.error(e))
+    }
+
+    process.exit(isObjectWithExitCode(e) ? e.exitCode : 1)
   }
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isObjectWithExitCode(value: unknown): value is { exitCode: number } {
+  return isObject(value) && typeof value.exitCode === 'number'
 }
