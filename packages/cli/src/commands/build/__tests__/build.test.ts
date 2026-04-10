@@ -153,6 +153,7 @@ test('the build tasks are in the correct sequence when packagesWorkspace is enab
       "Generating Prisma Client...",
       "Building Packages...",
       "Checking workspace packages...",
+      "Generating gqlorm schema...",
       "Verifying graphql schema...",
       "Building API...",
       "Building Web...",
@@ -170,6 +171,7 @@ test('the build tasks are in the correct sequence when packagesWorkspace is disa
   expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
       "Generating Prisma Client...",
+      "Generating gqlorm schema...",
       "Verifying graphql schema...",
       "Building API...",
       "Building Web...",
@@ -189,6 +191,7 @@ test('Should run prerender for web (packagesWorkspace enabled)', async () => {
   expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
       "Checking workspace packages...",
+      "Generating gqlorm schema...",
       "Building Web...",
     ]
   `)
@@ -210,6 +213,7 @@ test('Should run prerender for web (packagesWorkspace disabled)', async () => {
   const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
   expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
+      "Generating gqlorm schema...",
       "Building Web...",
     ]
   `)

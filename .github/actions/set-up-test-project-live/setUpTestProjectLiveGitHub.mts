@@ -15,7 +15,6 @@ const testProjectPath = path.join(parentDir, 'test-project-live')
 
 setUpTestProjectLive({
   setOutput: core.setOutput,
-  getInput: core.getInput,
   createExecWithEnvInCwd,
   execInFramework,
   cedarFrameworkPath: CEDAR_FRAMEWORK_PATH,
