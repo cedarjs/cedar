@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 import { format } from 'prettier'
+import { terminalLink } from 'termi-link'
 
 import {
   addApiPackages,
@@ -148,7 +149,7 @@ export const handler = async ({ force }) => {
           Remember to add UPLOADS_SECRET to your .env file. You can generate one with ${c.highlight('yarn cedar generate secret')}
 
           Check out the docs for more info:
-          ${c.link('https://cedarjs.com/docs/uploads')}
+          ${terminalLink('', 'https://cedarjs.com/docs/uploads')}
 
         `
         },
