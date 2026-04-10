@@ -12,10 +12,8 @@ export default defineConfig({
   },
 
   webServer: {
-    command: `node ${import.meta.dirname}/setup.mts && yarn cedar dev --no-generate --fwd="--no-open"`,
-    cwd:
-      process.env.CEDAR_TEST_PROJECT_PATH ||
-      '/Users/tobbe/dev/cedarjs/cedar-gemini/local-testing-project-live',
+    command: `node ${import.meta.dirname}/setup.mts && yarn cedar dev --fwd="--no-open"`,
+    cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     url: 'http://localhost:8911/graphql?query={cedar{version}}',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
