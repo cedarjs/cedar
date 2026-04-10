@@ -5,7 +5,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 // @ts-expect-error - No types for JS files
 import { getEpilogue } from './util.js'
 
-export const command = 'live-queries'
+export const command = 'setup-live-queries'
 
 export const description =
   'Setup live query invalidation with Postgres notifications'

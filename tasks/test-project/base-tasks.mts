@@ -488,9 +488,10 @@ export function apiTasksList({
         }
 
         const setup = createBuilder('yarn cedar setup')
+        const experimental = createBuilder('yarn cedar experimental')
 
         await setup(['realtime', '--no-examples'])
-        await setup('live-queries')
+        await experimental('setup-live-queries')
       },
     },
     {
