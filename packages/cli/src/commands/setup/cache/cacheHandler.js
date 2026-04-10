@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'path'
 
 import { Listr } from 'listr2'
+import { terminalLink } from 'termi-link'
 
 import { addEnvVarTask, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -59,7 +60,7 @@ export const handler = async ({ client, force }) => {
       task: (_ctx, task) => {
         task.title = `One more thing...\n
           ${c.tip('Check out the Service Cache docs for config and usage:')}
-          ${c.link('https://cedarjs.com/docs/services#caching')}
+          ${terminalLink('', 'https://cedarjs.com/docs/services#caching')}
         `
       },
     },
