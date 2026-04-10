@@ -11,12 +11,12 @@ import c from '../../../lib/colors.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 
-const getApiPackageJson = () => {
+function getApiPackageJson() {
   const apiPackageJsonPath = path.join(getPaths().api.base, 'package.json')
   return JSON.parse(fs.readFileSync(apiPackageJsonPath, 'utf-8'))
 }
 
-const hasPackage = (packageJson, packageName) => {
+function hasPackage(packageJson, packageName) {
   return Boolean(
     packageJson.dependencies?.[packageName] ||
     packageJson.devDependencies?.[packageName],
@@ -32,7 +32,7 @@ const hasPackage = (packageJson, packageName) => {
  *
  * @returns {Promise<string|undefined>} provider name in lowercase, or undefined
  */
-const getPrismaProvider = async () => {
+async function getPrismaProvider() {
   try {
     const prismaConfigPath = getPaths().api.prismaConfig
 
@@ -80,7 +80,7 @@ const getPrismaProvider = async () => {
   }
 }
 
-const findExistingLiveQueryMigration = ({ migrationsDirectoryPath }) => {
+function findExistingLiveQueryMigration({ migrationsDirectoryPath }) {
   if (!fs.existsSync(migrationsDirectoryPath)) {
     return undefined
   }
@@ -97,7 +97,7 @@ const findExistingLiveQueryMigration = ({ migrationsDirectoryPath }) => {
   })
 }
 
-const generateMigrationFolderName = () => {
+function generateMigrationFolderName() {
   const now = new Date()
 
   const year = String(now.getFullYear())
@@ -110,7 +110,7 @@ const generateMigrationFolderName = () => {
   return `${year}${month}${day}${hour}${minute}${second}_live_queries_notifications`
 }
 
-const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
+function addLiveQueryListenerToGraphqlHandler({ force }) {
   const graphqlHandlerPath = path.join(
     getPaths().api.functions,
     `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
@@ -214,7 +214,7 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
   }
 }
 
-export const handler = async ({ force }) => {
+export async function handler({ force }) {
   const projectIsTypescript = isTypeScriptProject()
   const apiPackageJson = getApiPackageJson()
   const migrationsPath = await getMigrationsPath(getPaths().api.prismaConfig)
