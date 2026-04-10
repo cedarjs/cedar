@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 import { format } from 'prettier'
+import { terminalLink } from 'termi-link'
 
 import { addApiPackages, getPrettierOptions } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
@@ -146,7 +147,7 @@ export const handler = async ({ force }) => {
 
 
           Check out the docs for more info:
-          ${c.link('https://cedarjs.com/docs/uploads')}
+          ${terminalLink('https://cedarjs.com/docs/uploads', 'https://cedarjs.com/docs/uploads')}
 
         `
         },

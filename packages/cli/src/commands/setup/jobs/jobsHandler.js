@@ -3,6 +3,7 @@ import * as path from 'node:path'
 
 import prismaInternals from '@prisma/internals'
 import { Listr } from 'listr2'
+import { terminalLink } from 'termi-link'
 
 import { addApiPackages } from '@cedarjs/cli-helpers'
 import { getSchemaPath, getPrismaSchemas } from '@cedarjs/project-config'
@@ -122,7 +123,7 @@ const tasks = async ({ force }) => {
           Execute jobs with:  ${c.highlight('yarn cedar jobs work\n')}
 
           Check out the docs for more info:
-          ${c.link('https://cedarjs.com/docs/background-jobs')}
+          ${terminalLink('https://cedarjs.com/docs/background-jobs', 'https://cedarjs.com/docs/background-jobs')}
 
         `
         },
