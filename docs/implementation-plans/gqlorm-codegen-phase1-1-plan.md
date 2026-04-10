@@ -75,10 +75,7 @@ the Prisma process.
 Always exclude these Cedar/Redwood internal migration models by name:
 
 ```ts
-const INTERNAL_MODEL_NAMES = new Set([
-  'RW_DataMigration',
-  'Cedar_DataMigration',
-])
+const INTERNAL_MODEL_NAMES = new Set(['RW_DataMigration'])
 ```
 
 #### Directive detection
@@ -261,10 +258,9 @@ objects — no file system, no Prisma process required.
   Assert `post` is absent from the output entirely.
 
 - **Internal Cedar/Redwood migration models are skipped**
-  Include models named `RW_DataMigration` and `Cedar_DataMigration` alongside
-  a normal `Contact` model.
-  Assert neither `rw_datamigration` nor `cedar_datamigration` appear in the
-  output, and `contact` is present.
+  Include a model named `RW_DataMigration` alongside a normal `Contact` model.
+  Assert `rw_datamigration` doesn't appear in the output, and `contact` is
+  present.
 
 - **Model names are lowercased in the output**
   Provide a model named `BlogPost`.

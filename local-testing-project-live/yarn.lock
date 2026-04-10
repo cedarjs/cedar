@@ -1857,7 +1857,7 @@ __metadata:
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=695f12&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=ae389e&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.2"
     "@babel/preset-typescript": "npm:7.28.5"
@@ -1924,7 +1924,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/47f8a14bd6527d5077bd8dc443ddc60a7e135e061b5e3b4aa1d3c0b608f7bbd0d8c00a578b74b1e45e453846c3d447ffc838ae65cac09f808854ab120d651282
+  checksum: 10c0/ef26b843f45f9bb07b7220198383b1bef9582b924cd0ec285465f2fbb540349d4badda7ad7eee3e6c501eca2fe385ae6a4aef6a9b8ce77d652f6fadf6ef64544
   languageName: node
   linkType: hard
 
@@ -2099,7 +2099,7 @@ __metadata:
 
 "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=aaa8ae&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=903162&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.2"
@@ -2143,7 +2143,7 @@ __metadata:
   bin:
     rw-gen: ./dist/generate/generate.js
     rw-gen-watch: ./dist/generate/watch.js
-  checksum: 10c0/d446e152e25bca608418a914adb6fae929a56d68d77fb72b4846be2c88ddf9293addda9c5fd8fb4d53156c99cd8932b2d8c8de72099e7e403f6b3bdcd9d7beae
+  checksum: 10c0/667a190f04527ada08604dfeb8651534196275f38c9be5d70dcd7bfdddb7864d537acfdb9179efc7fad6834a4935a9d02d8245b778d1f895030a38b77de9471b
   languageName: node
   linkType: hard
 

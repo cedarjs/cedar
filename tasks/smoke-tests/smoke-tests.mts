@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
-// @ts-check
 
 // There are a few footguns to running a smoke tests locally. (And if you have
 // to run a smoke tests locally, it's already painful enough.)
@@ -25,13 +23,14 @@
 // - [ ] errors if the test project isn't built and the prerender or serve smoke tests are specified
 // - [ ] passes `--playwrightOptions` to `npx playwright test` (`yarn smoke-tests --playwrightOptions="--debug"`)
 
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import util from 'node:util'
 
 import ansis from 'ansis'
 import execa from 'execa'
 import prompts from 'prompts'
-import { cd, fs, path, within, $ } from 'zx'
+import { cd, path, within, $ } from 'zx'
 
 async function main() {
   let options
@@ -39,7 +38,12 @@ async function main() {
   try {
     options = await parseArgs()
   } catch (e) {
-    console.error(e.message)
+    if (e instanceof Error) {
+      console.error(e.message)
+    } else {
+      console.error(e)
+    }
+
     return
   }
 
@@ -57,7 +61,7 @@ async function main() {
 
       try {
         await $`npx playwright test ${playwrightOptions}`
-      } catch (e) {
+      } catch {
         // Let the others run, but make sure we exit with a non-zero exit code.
         process.exitCode = 1
       }
@@ -67,44 +71,48 @@ async function main() {
 
 main()
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Parses the command line arguments and returns an object containing the parsed
- * values.
- *
- * @typedef {Object} CliArgs
- * @property {string} testProjectPath The path to the test project.
- * @property {string[]} smokeTests The smoke tests to run.
- * @property {string | undefined} playwrightOptions The options to forward to
- * `npx playwright test`.
- *
- * @returns {Promise<CliArgs>} The parsed command line arguments.
- */
 async function parseArgs() {
-  let positionals
-  let values
+  let positionals: string[] = []
+  let values: {
+    help?: unknown
+    testProjectPath?: unknown
+    playwrightOptions?: unknown
+  }
 
-  const options = {
+  const options: {
+    testProjectPath: {
+      description: string
+      short: string
+      type: 'string'
+      default: string | undefined
+    }
+    playwrightOptions: { description: string; type: 'string'; default: string }
+    help: {
+      description: string
+      short: string
+      type: 'boolean'
+      default: boolean
+    }
+  } = {
     testProjectPath: {
       description: `Path to the test project. Defaults to the ${ansis.magenta(
         'CEDAR_TEST_PROJECT_PATH',
       )} env var`,
       short: 'p',
-      type: /** @type {const} */ ('string'),
+      type: 'string',
       default: process.env.CEDAR_TEST_PROJECT_PATH ?? process.env.PROJECT_PATH,
     },
 
     playwrightOptions: {
       description: `Options to forward to ${ansis.cyan('npx playwright test')}`,
-      type: /** @type {const} */ ('string'),
+      type: 'string',
       default: '',
     },
 
     help: {
       description: 'Show help',
       short: 'h',
-      type: /** @type {const} */ ('boolean'),
+      type: 'boolean',
       default: false,
     },
   }
@@ -118,7 +126,7 @@ async function parseArgs() {
     positionals = parsedArgs.positionals
     values = parsedArgs.values
   } catch (e) {
-    if (e.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION') {
+    if (isErrorWithCode(e, 'ERR_PARSE_ARGS_UNKNOWN_OPTION')) {
       // Message is something like...
       //
       // ```
@@ -175,7 +183,7 @@ async function parseArgs() {
     throw new Error(ansis.red('Error: playwrightOptions must be a string.'))
   }
 
-  if (!(await fs.exists(testProjectPath))) {
+  if (!fs.existsSync(testProjectPath)) {
     process.exitCode = 1
     throw new Error(
       [
@@ -204,7 +212,7 @@ async function parseArgs() {
   let smokeTests = positionals
 
   const availableSmokeTests = (
-    await fs.readdir(new URL('./', import.meta.url), {
+    await fs.promises.readdir(new URL('./', import.meta.url), {
       withFileTypes: true,
     })
   )
@@ -319,7 +327,21 @@ async function parseArgs() {
   }
 }
 
-function getHelp(options) {
+function getHelp(options: {
+  testProjectPath: {
+    description: string
+    short: string
+    type: 'string'
+    default: string | undefined
+  }
+  playwrightOptions: { description: string; type: 'string'; default: string }
+  help: {
+    description: string
+    short: string
+    type: 'boolean'
+    default: boolean
+  }
+}) {
   // Find the length of the longest option and justify the text based on it.
   const longestOptionLength = Object.entries(options).reduce(
     (max, [name]) => Math.max(max, name.length),
@@ -328,15 +350,19 @@ function getHelp(options) {
 
   const justifiedOptions = Object.entries(options).map(([name, config]) => {
     const paddedFlag = name.padEnd(longestOptionLength, ' ')
-    return [
-      '•',
-      ansis.green(`--${paddedFlag}`),
-      config.description,
-      config.default && ansis.dim(`(default: ${config.default})`),
-    ]
+    const defaultStr =
+      config.default !== undefined
+        ? ansis.dim(`(default: ${config.default})`)
+        : ''
+    return ['•', ansis.green(`--${paddedFlag}`), config.description, defaultStr]
       .filter(Boolean)
       .join(' ')
   })
+
+  const greenBuildTestProjectCommand = ansis.green(
+    'yarn build:test-project --link <path>',
+  )
+  const magentaTestProjectPath = ansis.magenta('CEDAR_TEST_PROJECT_PATH')
 
   return [
     ansis.bold('# 🔄 Smoke tests'),
@@ -347,12 +373,8 @@ function getHelp(options) {
     '',
     ansis.green('  yarn smoke-tests [options] [smoke-test..]'),
     '',
-    `Make sure you've got a test project. (You can make one via ${ansis.green(
-      'yarn build:test-project --link <path>',
-    )}.)`,
-    `Then set the ${ansis.magenta(
-      'CEDAR_TEST_PROJECT_PATH',
-    )} env var to the path of your test project.`,
+    `Make sure you've got a test project. (You can make one via ${greenBuildTestProjectCommand}.)`,
+    `Then set the ${magentaTestProjectPath} env var to the path of your test project.`,
     '',
     ansis.dim('  # Let this script prompt you for which smoke test to run'),
     ansis.cyan('  CEDAR_TEST_PROJECT_PATH=<path> yarn smoke-tests '),
@@ -371,4 +393,17 @@ function getHelp(options) {
     '',
     ...justifiedOptions,
   ].join('\n')
+}
+
+function isErrorWithCode(
+  error: unknown,
+  code: string,
+): error is { code: string; message: string } {
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === code &&
+    'message' in error
+  )
 }

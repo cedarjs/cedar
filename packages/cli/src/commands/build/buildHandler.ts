@@ -15,6 +15,7 @@ import {
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { buildApi, cleanApiBuild } from '@cedarjs/internal/dist/build/api'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
+import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { type Paths } from '@cedarjs/project-config'
@@ -217,6 +218,17 @@ export const handler = async ({
     (useFragments || useTrustedDocuments) && {
       title: gqlFeaturesTaskTitle,
       task: generate,
+    },
+    workspace.includes('web') && {
+      title: 'Generating gqlorm schema...',
+      task: async () => {
+        const { errors } = await generateGqlormArtifacts()
+        if (errors.length > 0) {
+          for (const { message } of errors) {
+            console.warn(`Warning: ${message}`)
+          }
+        }
+      },
     },
     workspace.includes('api') && {
       title: 'Verifying graphql schema...',

@@ -119,6 +119,16 @@
         "types": "./dist/cjs/generate/generate.d.ts",
         "default": "./dist/cjs/generate/generate.js"
       }
+    },
+    "./dist/generate/gqlormSchema": {
+      "import": {
+        "types": "./dist/generate/gqlormSchema.d.ts",
+        "default": "./dist/generate/gqlormSchema.js"
+      },
+      "require": {
+        "types": "./dist/cjs/generate/gqlormSchema.d.ts",
+        "default": "./dist/cjs/generate/gqlormSchema.js"
+      }
     }
   },
   "types": "dist/index.d.ts",
