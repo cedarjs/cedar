@@ -7,9 +7,8 @@ import * as toml from 'smol-toml'
 import { env as envInterpolation } from 'string-env-interpolation'
 import { titleCase } from 'title-case'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { colors as c, recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-import c from '../../../lib/colors.js'
 import { getPaths } from '../../../lib/index.js'
 
 import { SshExecutor } from './SshExecutor.js'

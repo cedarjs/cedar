@@ -4,9 +4,9 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { registerApiSideBabelHook } from '@cedarjs/babel-config'
+import { colors as c } from '@cedarjs/cli-helpers'
 import { getPaths, getDataMigrationsPath } from '@cedarjs/project-config'
 
-import c from '../lib/colors'
 import type { DataMigrateUpOptions, DataMigration } from '../types'
 
 /**
