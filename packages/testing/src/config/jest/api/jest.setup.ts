@@ -59,11 +59,12 @@ global.mockCurrentUser = (currentUser: Record<string, unknown> | null) => {
   mockContextStore.set('context', { currentUser })
 }
 
-// Error codes thrown by [MySQL, SQLite, Postgres] when foreign key constraint
-// fails on DELETE
-// 23001: PostgreSQL RESTRICT violation (PG 18+ strictly enforces this on DELETE)
+// Error codes thrown by the database driver when DELETE fails
+// 1451: MySQL FK constraint violation on DELETE
+// 1811: SQLite FK constraint violation on DELETE
+// 23001: PostgreSQL RESTRICT violation. PG 18+ strictly enforces this on DELETE
 // 23503: PostgreSQL FK constraint violation on DELETE
-const FOREIGN_KEY_ERRORS = [1451, 1811, 23001, 23503]
+const HANDLED_ERRORS = [1451, 1811, 23001, 23503]
 const TEARDOWN_CACHE_PATH = tearDownCachePath
 const DEFAULT_SCENARIO = 'standard'
 let teardownOrder: string[] = []
@@ -242,7 +243,7 @@ const teardown = async (): Promise<void> => {
       const message = isErrorWithMessage(e) ? e.message : ''
       const match = message.match(/Code: `(\d+)`/)
 
-      if (match && FOREIGN_KEY_ERRORS.includes(parseInt(match[1]))) {
+      if (match && HANDLED_ERRORS.includes(parseInt(match[1]))) {
         // Remove the model that failed and add it to the end
         teardownOrder.splice(i, 1)
         teardownOrder.push(modelName)
