@@ -220,11 +220,11 @@ export function setTomlSetting(
   setting: string,
   value: string | boolean | number,
 ) {
-  const redwoodTomlPath = getConfigPath()
-  const originalTomlContent = fs.readFileSync(redwoodTomlPath, 'utf-8')
+  const cedarTomlPath = getConfigPath()
+  const originalTomlContent = fs.readFileSync(cedarTomlPath, 'utf-8')
 
-  const redwoodTomlObject = toml.parse(originalTomlContent)
-  const sectionValue = redwoodTomlObject[section]
+  const cedarTomlObject = toml.parse(originalTomlContent)
+  const sectionValue = cedarTomlObject[section]
 
   const existingValue =
     // I don't like this type cast, but I couldn't come up with a much better
@@ -244,10 +244,10 @@ export function setTomlSetting(
     originalTomlContent.replace(/\n$/, '') +
     `\n\n[${section}]\n  ${setting} = ${value}`
 
-  const hasExistingSettingSection = !!redwoodTomlObject?.[section]
+  const hasExistingSettingSection = !!cedarTomlObject?.[section]
 
   if (hasExistingSettingSection) {
-    const existingSectionSettings = Object.keys(redwoodTomlObject[section])
+    const existingSectionSettings = Object.keys(cedarTomlObject[section])
 
     let inSection = false
     let indentation = ''
@@ -339,5 +339,5 @@ export function setTomlSetting(
     newTomlContent = tomlLines.join('\n')
   }
 
-  fs.writeFileSync(redwoodTomlPath, newTomlContent)
+  fs.writeFileSync(cedarTomlPath, newTomlContent)
 }
