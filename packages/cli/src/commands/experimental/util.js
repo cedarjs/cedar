@@ -21,7 +21,7 @@ export function getEpilogue(command, description, topicId, isTerminal = false) {
   let epilogue =
     `This is an experimental feature to: ${description}.\n\n` +
     `If you need help with ${command}, please join our Discord community.\n` +
-    ` -> ${link('', 'https://cedarjs.com/discord')}`
+    ` -> ${terminalLink('', 'https://cedarjs.com/discord')}`
 
   if (topicId) {
     epilogue +=
