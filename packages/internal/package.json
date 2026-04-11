@@ -160,6 +160,7 @@
     "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/traverse": "7.29.0",
     "@cedarjs/babel-config": "workspace:*",
+    "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/router": "workspace:*",
