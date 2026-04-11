@@ -1,6 +1,0 @@
-Starting log:
- - Time: 2026-04-08T10:33:21.265Z
- - Name: updateCheck (updatecheck)
- - Command: yarn
- - Arguments: node /Users/tobbe/dev/cedarjs/cedar/packages/cli/dist/lib/updateCheckExecute.js
-

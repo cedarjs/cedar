@@ -3,7 +3,6 @@ import path from 'node:path'
 
 interface Args {
   setOutput: (key: string, value: string) => void
-  getInput: (key: string) => string
   createExecWithEnvInCwd: (
     cwd: string,
   ) => (
@@ -20,7 +19,6 @@ interface Args {
 
 export async function setUpTestProjectLive({
   setOutput,
-  getInput,
   createExecWithEnvInCwd,
   execInFramework,
   cedarFrameworkPath,
@@ -29,9 +27,6 @@ export async function setUpTestProjectLive({
   const execInProject = createExecWithEnvInCwd(testProjectPath)
 
   setOutput('test-project-path', testProjectPath)
-
-  const canary = getInput('canary') === 'true'
-  console.log({ canary })
 
   console.log()
 
@@ -47,16 +42,6 @@ export async function setUpTestProjectLive({
   await fs.promises.cp(TEST_PROJECT_FIXTURE_PATH, testProjectPath, {
     recursive: true,
   })
-
-  if (canary) {
-    console.log(`Upgrading project to canary`)
-
-    await execInProject('yarn cedar upgrade -t canary', {
-      input: Buffer.from('Y'),
-    })
-
-    console.log()
-  }
 
   await execInFramework('yarn project:tarsync --verbose', {
     env: { CEDAR_CWD: testProjectPath },

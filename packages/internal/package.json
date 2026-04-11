@@ -119,6 +119,16 @@
         "types": "./dist/cjs/generate/generate.d.ts",
         "default": "./dist/cjs/generate/generate.js"
       }
+    },
+    "./dist/generate/gqlormSchema": {
+      "import": {
+        "types": "./dist/generate/gqlormSchema.d.ts",
+        "default": "./dist/generate/gqlormSchema.js"
+      },
+      "require": {
+        "types": "./dist/cjs/generate/gqlormSchema.d.ts",
+        "default": "./dist/cjs/generate/gqlormSchema.js"
+      }
     }
   },
   "types": "dist/index.d.ts",
@@ -150,6 +160,7 @@
     "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/traverse": "7.29.0",
     "@cedarjs/babel-config": "workspace:*",
+    "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/router": "workspace:*",
@@ -166,6 +177,8 @@
     "@graphql-codegen/typescript-react-apollo": "4.4.1",
     "@graphql-codegen/typescript-resolvers": "5.1.7",
     "@graphql-tools/documents": "1.0.1",
+    "@prisma/dmmf": "7.6.0",
+    "@prisma/internals": "7.6.0",
     "@sdl-codegen/node": "2.0.1",
     "ansis": "4.2.0",
     "deepmerge": "4.3.1",

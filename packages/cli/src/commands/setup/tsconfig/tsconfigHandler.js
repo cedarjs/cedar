@@ -1,10 +1,11 @@
 import path from 'path'
 
 import { Listr } from 'listr2'
+import { terminalLink } from 'termi-link'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../lib/colors.js'
 import {
   getInstalledCedarVersion,
   getPaths,
@@ -50,7 +51,7 @@ export const handler = async ({ force }) => {
         task: (_ctx, task) => {
           task.title = `One more thing...\n
           ${c.tip('Quick link to the docs on configuring TypeScript')}
-          ${c.link('https://cedarjs.com/docs/typescript')}
+          ${terminalLink('', 'https://cedarjs.com/docs/typescript')}
         `
         },
       },

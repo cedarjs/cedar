@@ -1,7 +1,4 @@
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
-// @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 
 export const command = 'check'
 export const aliases = ['diagnostics']

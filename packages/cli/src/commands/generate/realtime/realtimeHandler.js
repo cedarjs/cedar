@@ -6,12 +6,12 @@ import pascalcase from 'pascalcase'
 import pluralize from 'pluralize'
 import prompts from 'prompts'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { projectIsEsm } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // Move this check out of experimental when server file is moved as well
-import c from '../../../lib/colors.js'
 import {
   generateTemplate,
   getPaths,

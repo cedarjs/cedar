@@ -5,11 +5,6 @@ runs:
   using: node24
   main: 'setUpTestProjectLiveGitHub.mts'
 
-inputs:
-  canary:
-    description: Upgrade the project to canary?
-    default: 'false'
-
 outputs:
   test-project-path:
     description: Path to the test project

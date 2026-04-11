@@ -1,12 +1,14 @@
+import { exec } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import util from 'node:util'
 
 import { instantPostgres } from 'neon-new/sdk'
 
-const PRISMA_TIMEOUT_MS = 120_000
+const PRISMA_TIMEOUT_MS = 30_000
 const NEON_TIMEOUT_MS = 30_000
 
-export default async function globalSetup() {
+export default async function setup() {
   const testProjectPath = process.env.CEDAR_TEST_PROJECT_PATH
 
   if (!testProjectPath) {
@@ -52,23 +54,23 @@ export default async function globalSetup() {
       envPath,
       `DIRECT_DATABASE_URL=${databaseUrlDirect}\nDATABASE_URL=${databaseUrlDirect}\n`,
     )
-
-    console.log('Running Prisma migrations...')
-
-    await execWithTimeout(
-      'yarn cedar prisma migrate reset --force',
-      testProjectPath,
-      PRISMA_TIMEOUT_MS,
-    )
-
-    console.log('Seeding database...')
-
-    await execWithTimeout(
-      'yarn cedar prisma db seed',
-      testProjectPath,
-      PRISMA_TIMEOUT_MS,
-    )
   }
+
+  console.log('Running Prisma migrations...')
+
+  await execWithTimeout(
+    'yarn cedar prisma migrate reset --force',
+    testProjectPath,
+    PRISMA_TIMEOUT_MS,
+  )
+
+  console.log('Seeding database...')
+
+  await execWithTimeout(
+    'yarn cedar prisma db seed',
+    testProjectPath,
+    PRISMA_TIMEOUT_MS,
+  )
 
   console.log('Database ready')
 
@@ -80,20 +82,30 @@ async function execWithTimeout(
   cwd: string,
   timeoutMs: number,
 ) {
-  const { exec } = await import('node:child_process')
-  const { promisify } = await import('node:util')
-  const execAsync = promisify(exec)
+  const execAsync = util.promisify(exec)
+
+  let timer: NodeJS.Timeout | undefined
 
   await Promise.race([
     execAsync(command, {
       cwd,
       env: { ...process.env },
     }),
-    new Promise<never>((_, reject) =>
-      setTimeout(
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(
         () => reject(new Error(`Command timed out: ${command}`)),
         timeoutMs,
-      ),
-    ),
+      )
+    }),
   ])
+
+  if (timer) {
+    clearTimeout(timer)
+  }
+}
+
+const entryFile = process.argv?.[1]
+
+if (entryFile === import.meta.filename) {
+  await setup()
 }

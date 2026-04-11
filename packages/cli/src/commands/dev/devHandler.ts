@@ -5,13 +5,12 @@ import { Writable } from 'node:stream'
 import concurrently from 'concurrently'
 import type { Command } from 'concurrently'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { shutdownPort } from '@cedarjs/internal/dist/dev'
+import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
-import c from '../../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../../lib/exit.js'
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
@@ -156,6 +155,19 @@ export const handler = async ({
       console.error(
         `Error whilst shutting down "web" port: ${c.error(message)}`,
       )
+    }
+  }
+
+  // Ensure gqlorm-schema.json exists before Vite starts. Vite resolves the
+  // static `import schema from '../../.cedar/gqlorm-schema.json'` in App.tsx
+  // almost immediately (~200ms), but rw-gen-watch doesn't write the file until
+  // chokidar's 'ready' event + full DMMF parse (~3-8s later).
+  if (generate && workspace.includes('web')) {
+    try {
+      await generateGqlormArtifacts()
+    } catch (e) {
+      const message = getErrorMessage(e)
+      console.error(c.error(`Error generating gqlorm schema: ${message}`))
     }
   }
 
