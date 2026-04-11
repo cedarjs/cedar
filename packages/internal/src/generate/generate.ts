@@ -22,7 +22,9 @@ export const generate = async () => {
     await generatePossibleTypes()
 
   const { files: gqlormFiles, errors: gqlormErrors } =
-    await generateGqlormArtifacts()
+    config.experimental.gqlorm.enabled
+      ? await generateGqlormArtifacts()
+      : { files: [], errors: [] }
 
   if (config.graphql.trustedDocuments) {
     const preset = await generateClientPreset()
