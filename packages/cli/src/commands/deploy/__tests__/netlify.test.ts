@@ -15,6 +15,22 @@ vi.mock('@cedarjs/project-config', async () => ({
 }))
 
 vi.mock('@cedarjs/cli-helpers', async () => ({
+  colors: Object.fromEntries(
+    [
+      'error',
+      'warning',
+      'highlight',
+      'success',
+      'info',
+      'bold',
+      'underline',
+      'note',
+      'tip',
+      'important',
+      'caution',
+      'link',
+    ].map((k) => [k, (s) => s]),
+  ),
   recordTelemetryAttributes: vi.fn(),
 }))
 

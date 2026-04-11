@@ -110,6 +110,38 @@ test('useLiveQuery hook renders posts', async ({ page }) => {
   ).toBeVisible()
 })
 
+test('useLiveQuery schema-aware selection: post body field is rendered', async ({
+  page,
+}) => {
+  // This test verifies that the generated gqlorm-schema.json causes
+  // useLiveQuery to request the `body` field in addition to `id`. If only
+  // `id` were selected (the id-only fallback), the body text would not be
+  // returned by the GraphQL server and this assertion would fail.
+  await page.goto('/live-query')
+
+  await expect(page.getByText('Loading')).not.toBeVisible()
+
+  await expect(page.getByText('hoodie post-ironic paleo')).toBeVisible()
+})
+
+test('useLiveQuery schema-aware selection: post createdAt field is rendered', async ({
+  page,
+}) => {
+  // This test verifies that `createdAt` — a field that is included in the
+  // auto-generated gqlorm-schema.json — is fetched and displayed. The
+  // LivePosts component renders a <time data-testid="post-created-at"> element.
+  // If the schema did not include `createdAt`, the element would be empty or
+  // missing, and this assertion would fail.
+  await page.goto('/live-query')
+
+  await expect(page.getByText('Loading')).not.toBeVisible()
+
+  const createdAtEl = page.getByTestId('post-created-at').first()
+
+  await expect(createdAtEl).toBeVisible()
+  await expect(createdAtEl).not.toBeEmpty()
+})
+
 test('useLiveQuery hook updates when data changes', async ({ page }) => {
   await page.goto('/live-query')
 

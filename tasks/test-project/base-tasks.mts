@@ -209,37 +209,8 @@ export function webTasksList(live = false) {
 
   if (live) {
     taskList.push({
-      title: 'Adding configureGqlorm to App.tsx',
-      task: () => {
-        const appTsxPath = path.join(fullPath('web/src/App'))
-        let appTsxContent = fs.readFileSync(appTsxPath, 'utf8')
-
-        appTsxContent = appTsxContent.replace(
-          "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
-          "import { configureGqlorm } from '@cedarjs/gqlorm/setup'\n" +
-            'import { FatalErrorBoundary, RedwoodProvider } from ' +
-            "'@cedarjs/web'",
-        )
-
-        appTsxContent = appTsxContent.replace(
-          'interface AppProps {',
-          `// Configure gqlorm with the scalar fields for each Prisma model.
-            // Sensitive fields (hashedPassword, salt, resetToken, resetTokenExpiresAt)
-            // and relation fields (author, posts) are intentionally excluded.
-            // We hardcode all of these for now, until we have codegen in place.
-            configureGqlorm({
-              schema: {
-                post: ['id', 'title', 'body', 'authorId', 'createdAt'],
-                user: ['id', 'email', 'fullName', 'roles'],
-                contact: ['id', 'name', 'email', 'message', 'createdAt'],
-              },
-            })
-
-            interface AppProps {`,
-        )
-
-        return fs.promises.writeFile(appTsxPath, appTsxContent)
-      },
+      title: 'Adding configureGqlorm(...) to App.tsx',
+      task: () => addGqlorm(),
     })
   }
 
@@ -517,9 +488,10 @@ export function apiTasksList({
         }
 
         const setup = createBuilder('yarn cedar setup')
+        const experimental = createBuilder('yarn cedar experimental')
 
         await setup(['realtime', '--no-examples'])
-        await setup('live-queries')
+        await experimental('setup-live-queries')
       },
     },
     {
@@ -661,6 +633,31 @@ export async function updateCellMocks() {
       },
     ),
   )
+}
+
+async function addGqlorm() {
+  const appTsxPath = path.join(fullPath('web/src/App'))
+  let appTsxContent = fs.readFileSync(appTsxPath, 'utf8')
+
+  appTsxContent = appTsxContent.replace(
+    "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+    "import { configureGqlorm } from '@cedarjs/gqlorm/setup'\n" +
+      "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+  )
+
+  appTsxContent = appTsxContent.replace(
+    "import FatalErrorPage from 'src/pages/FatalErrorPage'",
+    "import FatalErrorPage from 'src/pages/FatalErrorPage'\n\n" +
+      "import schema from '../../.cedar/gqlorm-schema.json' " +
+      "with { type: 'json' }",
+  )
+
+  appTsxContent = appTsxContent.replace(
+    'interface AppProps {',
+    'configureGqlorm({ schema })\n\ninterface AppProps {',
+  )
+
+  return fs.promises.writeFile(appTsxPath, appTsxContent)
 }
 
 async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {

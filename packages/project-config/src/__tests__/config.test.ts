@@ -72,6 +72,9 @@ describe('getConfig', () => {
               },
             ],
           },
+          "gqlorm": {
+            "enabled": false,
+          },
           "opentelemetry": {
             "enabled": false,
             "wrapApi": true,

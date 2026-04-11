@@ -9,12 +9,11 @@ import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 import ts from 'typescript'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { workspacePackageSpecifier } from '@cedarjs/cli-helpers/packageManager'
 import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../lib/colors.js'
 import { getPaths, writeFilesTask } from '../../../lib/index.js'
 import { prepareForRollback } from '../../../lib/rollback.js'
 

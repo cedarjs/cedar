@@ -36,6 +36,22 @@ vi.mock('@prisma/internals', async () => ({
 }))
 
 vi.mock('@cedarjs/cli-helpers', () => ({
+  colors: Object.fromEntries(
+    [
+      'error',
+      'warning',
+      'highlight',
+      'success',
+      'info',
+      'bold',
+      'underline',
+      'note',
+      'tip',
+      'important',
+      'caution',
+      'link',
+    ].map((k) => [k, (s) => s]),
+  ),
   addApiPackages: () => ({
     title: 'Adding required api packages...',
     task: async () => {},

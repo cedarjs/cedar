@@ -4,10 +4,9 @@ import { paramCase } from 'change-case'
 import { Listr } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { getDataMigrationsPath } from '@cedarjs/project-config'
 
-import c from '../../../lib/colors.js'
 import {
   generateTemplate,
   getPaths,
