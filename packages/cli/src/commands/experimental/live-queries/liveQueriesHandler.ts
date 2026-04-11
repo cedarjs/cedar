@@ -225,7 +225,12 @@ function addLiveQueryListenerToGraphqlHandler({ force }: { force?: boolean }) {
   }
 }
 
-export async function handler({ force }: { force?: boolean }) {
+interface HandlerArgs {
+  force?: boolean
+  verbose?: boolean
+}
+
+export async function handler({ force, verbose }: HandlerArgs) {
   const projectIsTypescript = isTypeScriptProject()
   const apiPackageJson = getApiPackageJson()
   const migrationsPath = await getMigrationsPath(getPaths().api.prismaConfig)
@@ -416,6 +421,7 @@ export async function handler({ force }: { force?: boolean }) {
     ],
     {
       rendererOptions: { collapseSubtasks: false },
+      renderer: verbose ? 'verbose' : 'default',
     },
   )
 
