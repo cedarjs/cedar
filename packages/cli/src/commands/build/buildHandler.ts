@@ -217,7 +217,7 @@ export const handler = async ({
       title: gqlFeaturesTaskTitle,
       task: generate,
     },
-    workspace.includes('web') && getConfig().experimental.gqlorm.enabled && {
+    workspace.includes('web') && cedarConfig.experimental.gqlorm.enabled && {
       title: 'Generating gqlorm schema...',
       task: async () => {
         const { errors } = await generateGqlormArtifacts()
