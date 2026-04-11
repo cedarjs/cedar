@@ -122,6 +122,9 @@ export interface Config {
     packagesWorkspace: {
       enabled: boolean
     }
+    gqlorm: {
+      enabled: boolean
+    }
   }
   eslintLegacyConfigWarning: boolean
 }
@@ -210,6 +213,9 @@ export const DEFAULT_CONFIG: Config = {
       lintOnly: false,
     },
     packagesWorkspace: {
+      enabled: false,
+    },
+    gqlorm: {
       enabled: false,
     },
   },

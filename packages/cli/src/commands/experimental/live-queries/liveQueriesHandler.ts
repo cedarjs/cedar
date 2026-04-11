@@ -4,18 +4,30 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
-import { getMigrationsPath, getSchemaPath } from '@cedarjs/project-config'
+import {
+  getConfigPath,
+  getMigrationsPath,
+  getSchemaPath,
+} from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+// @ts-expect-error - No types for JS files
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
+// @ts-expect-error - No types for JS files
 import { isTypeScriptProject } from '../../../lib/project.js'
 
-const getApiPackageJson = () => {
+function getApiPackageJson() {
   const apiPackageJsonPath = path.join(getPaths().api.base, 'package.json')
   return JSON.parse(fs.readFileSync(apiPackageJsonPath, 'utf-8'))
 }
 
-const hasPackage = (packageJson, packageName) => {
+function hasPackage(
+  packageJson: {
+    dependencies?: Record<string, string>
+    devDependencies?: Record<string, string>
+  },
+  packageName: string,
+) {
   return Boolean(
     packageJson.dependencies?.[packageName] ||
     packageJson.devDependencies?.[packageName],
@@ -29,9 +41,9 @@ const hasPackage = (packageJson, packageName) => {
  * - It prefers to allow the setup to continue rather than produce false
  *   positives by throwing on ambiguous content.
  *
- * @returns {Promise<string|undefined>} provider name in lowercase, or undefined
+ * @returns provider name in lowercase, or undefined
  */
-const getPrismaProvider = async () => {
+async function getPrismaProvider() {
   try {
     const prismaConfigPath = getPaths().api.prismaConfig
 
@@ -49,11 +61,11 @@ const getPrismaProvider = async () => {
     let stat
     try {
       stat = fs.statSync(schemaPath)
-    } catch (e) {
+    } catch {
       stat = undefined
     }
 
-    if (stat && stat.isDirectory()) {
+    if (stat?.isDirectory()) {
       const candidate = path.join(schemaPath, 'schema.prisma')
       if (fs.existsSync(candidate)) {
         schemaPath = candidate
@@ -68,7 +80,7 @@ const getPrismaProvider = async () => {
 
     const content = fs.readFileSync(schemaPath, 'utf-8')
     const match = content.match(/^\s*provider\s*=\s*["']([^"']+)["']/im)
-    if (match && match[1]) {
+    if (match?.[1]) {
       return match[1].toLowerCase()
     }
 
@@ -79,7 +91,7 @@ const getPrismaProvider = async () => {
   }
 }
 
-const findExistingLiveQueryMigration = ({ migrationsDirectoryPath }) => {
+function findExistingLiveQueryMigration(migrationsDirectoryPath: string) {
   if (!fs.existsSync(migrationsDirectoryPath)) {
     return undefined
   }
@@ -96,7 +108,7 @@ const findExistingLiveQueryMigration = ({ migrationsDirectoryPath }) => {
   })
 }
 
-const generateMigrationFolderName = () => {
+function generateMigrationFolderName() {
   const now = new Date()
 
   const year = String(now.getFullYear())
@@ -109,7 +121,7 @@ const generateMigrationFolderName = () => {
   return `${year}${month}${day}${hour}${minute}${second}_live_queries_notifications`
 }
 
-const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
+function addLiveQueryListenerToGraphqlHandler({ force }: { force?: boolean }) {
   const graphqlHandlerPath = path.join(
     getPaths().api.functions,
     `graphql.${isTypeScriptProject() ? 'ts' : 'js'}`,
@@ -213,7 +225,12 @@ const addLiveQueryListenerToGraphqlHandler = ({ force }) => {
   }
 }
 
-export const handler = async ({ force }) => {
+interface HandlerArgs {
+  force?: boolean
+  verbose?: boolean
+}
+
+export async function handler({ force, verbose }: HandlerArgs) {
   const projectIsTypescript = isTypeScriptProject()
   const apiPackageJson = getApiPackageJson()
   const migrationsPath = await getMigrationsPath(getPaths().api.prismaConfig)
@@ -234,10 +251,7 @@ export const handler = async ({ force }) => {
     'liveQueriesListener.ts.template',
   )
 
-  const existingMigrationPath = findExistingLiveQueryMigration({
-    migrationsDirectoryPath: migrationsPath,
-  })
-
+  const existingMigrationPath = findExistingLiveQueryMigration(migrationsPath)
   const migrationDirPath = path.join(
     migrationsPath,
     generateMigrationFolderName(),
@@ -284,12 +298,53 @@ export const handler = async ({ force }) => {
         },
       },
       {
+        title: 'Adding [experimental.gqlorm] config...',
+        task: (_ctx, task) => {
+          const configTomlPath = getConfigPath()
+          const configFileName = path.basename(configTomlPath)
+          const configContent = fs.readFileSync(configTomlPath, 'utf-8')
+
+          if (!configContent.includes('[experimental.gqlorm]')) {
+            writeFile(
+              configTomlPath,
+              configContent.concat(
+                '\n\n[experimental.gqlorm]\n  enabled = true\n',
+              ),
+              {
+                overwriteExisting: true,
+              },
+            )
+          } else {
+            if (force) {
+              task.output = `Overwriting config in ${configFileName}`
+              writeFile(
+                configTomlPath,
+                configContent.replace(
+                  '\n[experimental.gqlorm]\n  enabled = false\n',
+                  '\n[experimental.gqlorm]\n  enabled = true\n',
+                ),
+                {
+                  overwriteExisting: true,
+                },
+              )
+            } else {
+              task.skip(
+                `The [experimental.gqlorm] config block already exists in ${configFileName}.`,
+              )
+            }
+          }
+        },
+        rendererOptions: { persistentOutput: true },
+      },
+      {
         ...addApiPackages(['pg@^8.18.0']),
         title: 'Adding pg dependency to your api side...',
         skip: () => {
           if (hasPgDependency) {
             return 'pg is already installed'
           }
+
+          return false
         },
       },
       {
@@ -318,6 +373,8 @@ export const handler = async ({ force }) => {
 
             return `Existing live query migration found: ${migrationPath}`
           }
+
+          return false
         },
       },
       {
@@ -364,14 +421,29 @@ export const handler = async ({ force }) => {
     ],
     {
       rendererOptions: { collapseSubtasks: false },
+      renderer: verbose ? 'verbose' : 'default',
     },
   )
 
   try {
     await tasks.run()
   } catch (e) {
-    errorTelemetry(process.argv, e.message)
-    console.error(c.error(e.message))
-    process.exit(e?.exitCode || 1)
+    if (isObject(e) && 'message' in e) {
+      errorTelemetry(process.argv, e.message)
+      console.error(c.error(e.message))
+    } else {
+      errorTelemetry(process.argv, e)
+      console.error(c.error(e))
+    }
+
+    process.exit(isObjectWithExitCode(e) ? e.exitCode : 1)
   }
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isObjectWithExitCode(value: unknown): value is { exitCode: number } {
+  return isObject(value) && typeof value.exitCode === 'number'
 }
