@@ -4,7 +4,11 @@ import path from 'node:path'
 import { Listr } from 'listr2'
 
 import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
-import { getMigrationsPath, getSchemaPath } from '@cedarjs/project-config'
+import {
+  getConfigPath,
+  getMigrationsPath,
+  getSchemaPath,
+} from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - No types for JS files
@@ -287,6 +291,45 @@ export async function handler({ force }: { force?: boolean }) {
             )
           }
         },
+      },
+      {
+        title: 'Adding [experimental.gqlorm] config...',
+        task: (_ctx, task) => {
+          const configTomlPath = getConfigPath()
+          const configFileName = path.basename(configTomlPath)
+          const configContent = fs.readFileSync(configTomlPath, 'utf-8')
+
+          if (!configContent.includes('[experimental.gqlorm]')) {
+            writeFile(
+              configTomlPath,
+              configContent.concat(
+                '\n\n[experimental.gqlorm]\n  enabled = true\n',
+              ),
+              {
+                overwriteExisting: true,
+              },
+            )
+          } else {
+            if (force) {
+              task.output = `Overwriting config in ${configFileName}`
+              writeFile(
+                configTomlPath,
+                configContent.replace(
+                  '\n[experimental.gqlorm]\n  enabled = false\n',
+                  '\n[experimental.gqlorm]\n  enabled = true\n',
+                ),
+                {
+                  overwriteExisting: true,
+                },
+              )
+            } else {
+              task.skip(
+                `The [experimental.gqlorm] config block already exists in ${configFileName}.`,
+              )
+            }
+          }
+        },
+        rendererOptions: { persistentOutput: true },
       },
       {
         ...addApiPackages(['pg@^8.18.0']),
