@@ -1,9 +1,9 @@
 import execa from 'execa'
 import { Listr } from 'listr2'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../lib/colors.js'
 import { getPaths } from '../../lib/index.js'
 
 import { command, description, EXPERIMENTAL_TOPIC_ID } from './setupInngest.js'

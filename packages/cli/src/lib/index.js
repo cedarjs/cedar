@@ -14,6 +14,7 @@ import template from 'lodash/template.js'
 import pascalcase from 'pascalcase'
 import { format } from 'prettier'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import {
   getConfig as getRedwoodConfig,
   getPaths as getRedwoodPaths,
@@ -22,7 +23,6 @@ import {
 } from '@cedarjs/project-config'
 import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
-import c from './colors.js'
 import { addFileToRollback } from './rollback.js'
 
 export { findUp }

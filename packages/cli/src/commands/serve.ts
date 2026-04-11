@@ -6,12 +6,10 @@ import type { Argv } from 'yargs'
 
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { projectIsEsm } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
-// @ts-expect-error - Types not available for JS files
-import c from '../lib/colors.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
 // @ts-expect-error - Types not available for JS files

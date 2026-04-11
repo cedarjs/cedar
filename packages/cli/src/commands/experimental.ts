@@ -3,6 +3,7 @@ import type { Argv } from 'yargs'
 
 import { detectCedarVersion } from '../middleware/detectProjectCedarVersion.js'
 
+import * as experimentalLiveQueries from './experimental/live-queries/liveQueries.js'
 // @ts-expect-error - Types not available for JS files
 import * as experimentalInngest from './experimental/setupInngest.js'
 // @ts-expect-error - Types not available for JS files
@@ -21,6 +22,7 @@ export const description = 'Run or setup experimental features'
 export const builder = (yargs: Argv) =>
   yargs
     .command(experimentalInngest)
+    .command(experimentalLiveQueries)
     .command(experimentalOpenTelemetry)
     .command(experimentalReactCompiler)
     .command(experimentalRsc)

@@ -2,10 +2,9 @@ import path from 'path'
 
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import c from '../../../../lib/colors.js'
 import { getPaths, printSetupNotes } from '../../../../lib/index.js'
 import { addFilesTask, updateApiURLTask } from '../helpers/index.js'
 import { NETLIFY_TOML } from '../templates/netlify.js'

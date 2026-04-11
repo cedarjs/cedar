@@ -1,10 +1,8 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
+import { colors as c } from '@cedarjs/cli-helpers'
 import { dedupeIsSupported } from '@cedarjs/cli-helpers/packageManager'
-
-// @ts-expect-error - Types not available for JS files
-import c from '../../lib/colors.js'
 
 import { isValidCedarJSTag } from './tags.js'
 import type { UpgradeOptions } from './upgradeHandler.js'

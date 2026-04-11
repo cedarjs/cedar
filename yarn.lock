@@ -2671,7 +2671,7 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.10.0"
-    "@supabase/supabase-js": "npm:2.101.1"
+    "@supabase/supabase-js": "npm:2.102.0"
     "@types/react": "npm:^18.2.55"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.18"
@@ -2680,7 +2680,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    "@supabase/supabase-js": 2.101.1
+    "@supabase/supabase-js": 2.102.0
   languageName: unknown
   linkType: soft
 
@@ -2795,11 +2795,11 @@ __metadata:
   resolution: "@cedarjs/cli-data-migrate@workspace:packages/cli-packages/dataMigrate"
   dependencies:
     "@cedarjs/babel-config": "workspace:*"
+    "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@prisma/client": "npm:7.6.0"
     "@types/yargs": "npm:17.0.35"
-    ansis: "npm:4.2.0"
     bundle-require: "npm:^5.1.0"
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
@@ -2862,7 +2862,6 @@ __metadata:
     "@cedarjs/telemetry": "workspace:*"
     "@types/semver": "npm:^7"
     "@types/yargs": "npm:17.0.35"
-    ansis: "npm:4.2.0"
     execa: "npm:5.1.1"
     semver: "npm:7.7.4"
     storybook: "npm:8.6.18"
@@ -3258,6 +3257,7 @@ __metadata:
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/babel-config": "workspace:*"
+    "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
@@ -3275,6 +3275,8 @@ __metadata:
     "@graphql-codegen/typescript-react-apollo": "npm:4.4.1"
     "@graphql-codegen/typescript-resolvers": "npm:5.1.7"
     "@graphql-tools/documents": "npm:1.0.1"
+    "@prisma/dmmf": "npm:7.6.0"
+    "@prisma/internals": "npm:7.6.0"
     "@sdl-codegen/node": "npm:2.0.1"
     ansis: "npm:4.2.0"
     concurrently: "npm:9.2.1"
@@ -8712,6 +8714,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@prisma/dev@npm:0.24.5":
+  version: 0.24.5
+  resolution: "@prisma/dev@npm:0.24.5"
+  dependencies:
+    "@electric-sql/pglite": "npm:0.4.1"
+    "@electric-sql/pglite-socket": "npm:0.1.1"
+    "@electric-sql/pglite-tools": "npm:0.3.1"
+    "@hono/node-server": "npm:1.19.11"
+    "@prisma/get-platform": "npm:7.2.0"
+    "@prisma/query-plan-executor": "npm:7.2.0"
+    "@prisma/streams-local": "npm:0.1.3"
+    foreground-child: "npm:3.3.1"
+    get-port-please: "npm:3.2.0"
+    hono: "npm:^4.12.8"
+    http-status-codes: "npm:2.3.0"
+    pathe: "npm:2.0.3"
+    proper-lockfile: "npm:4.1.2"
+    remeda: "npm:2.33.4"
+    std-env: "npm:3.10.0"
+    valibot: "npm:1.2.0"
+    zeptomatch: "npm:2.1.0"
+  checksum: 10c0/4ae51eb162e129cc81a56f6f1c5f2bfae47b862c3fdae568bd107569443751cbefacd3e191f9b14d864cbf276757b552dd336557af6872b9c886f53fafe4aeb8
+  languageName: node
+  linkType: hard
+
 "@prisma/dmmf@npm:7.6.0":
   version: 7.6.0
   resolution: "@prisma/dmmf@npm:7.6.0"
@@ -8862,6 +8889,18 @@ __metadata:
     env-paths: "npm:^3.0.0"
     proper-lockfile: "npm:^4.1.2"
   checksum: 10c0/1f491f247d2f792cdc8ba476ee5d41b2a1f02d5d54a59c3bc612f6ffb3a853f15638ffc8341870927520b305f0a6f9591abc2e8da96b1fd14c9b403145c807c3
+  languageName: node
+  linkType: hard
+
+"@prisma/streams-local@npm:0.1.3":
+  version: 0.1.3
+  resolution: "@prisma/streams-local@npm:0.1.3"
+  dependencies:
+    ajv: "npm:^8.12.0"
+    better-result: "npm:^2.7.0"
+    env-paths: "npm:^3.0.0"
+    proper-lockfile: "npm:^4.1.2"
+  checksum: 10c0/45aef2532c689d2a14cf7bb641bf800b7b098f4a8e6726aa89506600839c35166477acf6bd6243408eb6e3169c783c4150d15622969ec3b7f25180e760c7b064
   languageName: node
   linkType: hard
 
@@ -9990,21 +10029,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/auth-js@npm:2.101.1":
-  version: 2.101.1
-  resolution: "@supabase/auth-js@npm:2.101.1"
+"@supabase/auth-js@npm:2.102.0":
+  version: 2.102.0
+  resolution: "@supabase/auth-js@npm:2.102.0"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/82821b6e1a8f96a53f2d3c05e1b0bd597ad044dbc1562f826fbe93f354d0ca1f149b9ff2e4f8f02908b17468edad15014ed264667eec076016ab6c9c3294f571
+  checksum: 10c0/68964f44bb1d0a7b14b44dcb5e5630e6b462034f47f6957ac2226c9bc9a1cb49b8a095ced6914b26a56343507ff3895133279b4ad34bb4e196546bd14537e27e
   languageName: node
   linkType: hard
 
-"@supabase/functions-js@npm:2.101.1":
-  version: 2.101.1
-  resolution: "@supabase/functions-js@npm:2.101.1"
+"@supabase/functions-js@npm:2.102.0":
+  version: 2.102.0
+  resolution: "@supabase/functions-js@npm:2.102.0"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/0c00d58a9b1ff11cd686c085d73e6e330b71f5232bf630a10689f4eae61c7496b1235cb65f7c79b54cb2ce50e87ed0b9a5e2736d61227997fa395f4dc2f8e946
+  checksum: 10c0/d30f9b256d59e56e04f25f26a214ca60ca2c4f4a9a581f4c3c4eacac6d95941619558c5ad1b861cbabc54b594ede9020cc1d2282767d6d35db28515cf5a367bf
   languageName: node
   linkType: hard
 
@@ -10015,24 +10054,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/postgrest-js@npm:2.101.1":
-  version: 2.101.1
-  resolution: "@supabase/postgrest-js@npm:2.101.1"
+"@supabase/postgrest-js@npm:2.102.0":
+  version: 2.102.0
+  resolution: "@supabase/postgrest-js@npm:2.102.0"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/ba6403768d6cd840032b0193f0839d95a2d8e3bb1c0256c13fc343219adf442904c8797c37da1c05174ed339bc301fdefb73324d676e266922ad6858a09a5275
+  checksum: 10c0/efbfa0a12dd3e2608c97cf3067b057ceb67922d9ad84bdcf950b0abe42fb060fbde18510ce2b174f5a3e061a2f269b7d3a98412acb6a19d04cb1df1aa211a461
   languageName: node
   linkType: hard
 
-"@supabase/realtime-js@npm:2.101.1":
-  version: 2.101.1
-  resolution: "@supabase/realtime-js@npm:2.101.1"
+"@supabase/realtime-js@npm:2.102.0":
+  version: 2.102.0
+  resolution: "@supabase/realtime-js@npm:2.102.0"
   dependencies:
     "@supabase/phoenix": "npm:^0.4.0"
     "@types/ws": "npm:^8.18.1"
     tslib: "npm:2.8.1"
     ws: "npm:^8.18.2"
-  checksum: 10c0/0317723fa6cc5d554f1d16dcc5683cb86e7339e3a89db0aac6895629b59b2a6423ea24f0995e369cb1453215053db3868f094ff3cad87701a8551f827925c4be
+  checksum: 10c0/1586885537d785f4cc711d8c478eb5dad1c95ce84e7e489c313c97000bad7ab64863193688d1084ba71b73c0610b5b0b7b7895924819770ace64875c5f972197
   languageName: node
   linkType: hard
 
@@ -10047,26 +10086,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/storage-js@npm:2.101.1":
-  version: 2.101.1
-  resolution: "@supabase/storage-js@npm:2.101.1"
+"@supabase/storage-js@npm:2.102.0":
+  version: 2.102.0
+  resolution: "@supabase/storage-js@npm:2.102.0"
   dependencies:
     iceberg-js: "npm:^0.8.1"
     tslib: "npm:2.8.1"
-  checksum: 10c0/02ecbf2f6e02b62785924a9b498b7b990c9a7710d4468a7a9a8b34bbf66dde0c4c061cc91ed661b62db6ee2b84053e33f0e6cfc973bb68b61811123ddf95aae3
+  checksum: 10c0/50d2cd6c743d9cb9b2dd322cae8627a85f92f188d1f1d4ae9792a6d24f311a8b6126d30f9ea462517fa505161c58fa4d495d75ae3228e3cdd005fcf970209a3c
   languageName: node
   linkType: hard
 
-"@supabase/supabase-js@npm:2.101.1":
-  version: 2.101.1
-  resolution: "@supabase/supabase-js@npm:2.101.1"
+"@supabase/supabase-js@npm:2.102.0":
+  version: 2.102.0
+  resolution: "@supabase/supabase-js@npm:2.102.0"
   dependencies:
-    "@supabase/auth-js": "npm:2.101.1"
-    "@supabase/functions-js": "npm:2.101.1"
-    "@supabase/postgrest-js": "npm:2.101.1"
-    "@supabase/realtime-js": "npm:2.101.1"
-    "@supabase/storage-js": "npm:2.101.1"
-  checksum: 10c0/0bec714d55d56c5d12ff81470c44a5954f59c4bbcce838211f01c019ffcaf48b88d4f9e6c46bb78a4740bc0194effe839bbd535f62448d0506ba3fa0980f25f4
+    "@supabase/auth-js": "npm:2.102.0"
+    "@supabase/functions-js": "npm:2.102.0"
+    "@supabase/postgrest-js": "npm:2.102.0"
+    "@supabase/realtime-js": "npm:2.102.0"
+    "@supabase/storage-js": "npm:2.102.0"
+  checksum: 10c0/8866960552671061da12e3151774bdc74f37304e6da28e6c45ce16bda31a365a38fb1c33c859a056d2297626885c057ca9bb0bcf8876cdf556d73b2f68d27f89
   languageName: node
   linkType: hard
 
@@ -21052,90 +21091,90 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lefthook-darwin-arm64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-darwin-arm64@npm:2.1.4"
+"lefthook-darwin-arm64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-darwin-arm64@npm:2.1.5"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-darwin-x64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-darwin-x64@npm:2.1.4"
+"lefthook-darwin-x64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-darwin-x64@npm:2.1.5"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-freebsd-arm64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-freebsd-arm64@npm:2.1.4"
+"lefthook-freebsd-arm64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-freebsd-arm64@npm:2.1.5"
   conditions: os=freebsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-freebsd-x64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-freebsd-x64@npm:2.1.4"
+"lefthook-freebsd-x64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-freebsd-x64@npm:2.1.5"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-linux-arm64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-linux-arm64@npm:2.1.4"
+"lefthook-linux-arm64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-linux-arm64@npm:2.1.5"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-linux-x64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-linux-x64@npm:2.1.4"
+"lefthook-linux-x64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-linux-x64@npm:2.1.5"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-openbsd-arm64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-openbsd-arm64@npm:2.1.4"
+"lefthook-openbsd-arm64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-openbsd-arm64@npm:2.1.5"
   conditions: os=openbsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-openbsd-x64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-openbsd-x64@npm:2.1.4"
+"lefthook-openbsd-x64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-openbsd-x64@npm:2.1.5"
   conditions: os=openbsd & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-windows-arm64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-windows-arm64@npm:2.1.4"
+"lefthook-windows-arm64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-windows-arm64@npm:2.1.5"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-windows-x64@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook-windows-x64@npm:2.1.4"
+"lefthook-windows-x64@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook-windows-x64@npm:2.1.5"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook@npm:2.1.4":
-  version: 2.1.4
-  resolution: "lefthook@npm:2.1.4"
+"lefthook@npm:2.1.5":
+  version: 2.1.5
+  resolution: "lefthook@npm:2.1.5"
   dependencies:
-    lefthook-darwin-arm64: "npm:2.1.4"
-    lefthook-darwin-x64: "npm:2.1.4"
-    lefthook-freebsd-arm64: "npm:2.1.4"
-    lefthook-freebsd-x64: "npm:2.1.4"
-    lefthook-linux-arm64: "npm:2.1.4"
-    lefthook-linux-x64: "npm:2.1.4"
-    lefthook-openbsd-arm64: "npm:2.1.4"
-    lefthook-openbsd-x64: "npm:2.1.4"
-    lefthook-windows-arm64: "npm:2.1.4"
-    lefthook-windows-x64: "npm:2.1.4"
+    lefthook-darwin-arm64: "npm:2.1.5"
+    lefthook-darwin-x64: "npm:2.1.5"
+    lefthook-freebsd-arm64: "npm:2.1.5"
+    lefthook-freebsd-x64: "npm:2.1.5"
+    lefthook-linux-arm64: "npm:2.1.5"
+    lefthook-linux-x64: "npm:2.1.5"
+    lefthook-openbsd-arm64: "npm:2.1.5"
+    lefthook-openbsd-x64: "npm:2.1.5"
+    lefthook-windows-arm64: "npm:2.1.5"
+    lefthook-windows-x64: "npm:2.1.5"
   dependenciesMeta:
     lefthook-darwin-arm64:
       optional: true
@@ -21159,7 +21198,7 @@ __metadata:
       optional: true
   bin:
     lefthook: bin/index.js
-  checksum: 10c0/8238c33a00a5770e02bf2b12c6191994f05a785339a4ac2e994c2027209b49af8f7e9d38e4f9ca6d16a6815c8141c9f7d69a162571d632ee746f0b7a27e06047
+  checksum: 10c0/534c0e3b62e5032d6b61031b695aa562932e5cb147d124884fa66d12d1849a9b2843ae434fc2846b06d2f59a3e2d0d4fb0c099f2f972a93e55c331f8a50607f9
   languageName: node
   linkType: hard
 
@@ -25028,13 +25067,13 @@ __metadata:
   linkType: hard
 
 "postcss@npm:^8.5.6":
-  version: 8.5.8
-  resolution: "postcss@npm:8.5.8"
+  version: 8.5.9
+  resolution: "postcss@npm:8.5.9"
   dependencies:
     nanoid: "npm:^3.3.11"
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
-  checksum: 10c0/dd918f7127ee7c60a0295bae2e72b3787892296e1d1c3c564d7a2a00c68d8df83cadc3178491259daa19ccc54804fb71ed8c937c6787e08d8bd4bedf8d17044c
+  checksum: 10c0/7cb2b32202ea1ead03f15cfbb2756a64a0f98942378e99b3dfce33678fe5eaf93e31d675a46e3a0dfb417d7b49b82d8999d0dd42a33c3b128e71ade0f978719a
   languageName: node
   linkType: hard
 
@@ -26688,7 +26727,7 @@ __metadata:
     "@babel/preset-typescript": "npm:7.28.5"
     "@npmcli/arborist": "npm:9.4.2"
     "@playwright/test": "npm:1.59.1"
-    "@prisma/dev": "npm:0.24.3"
+    "@prisma/dev": "npm:0.24.5"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.6.1"
@@ -26723,7 +26762,7 @@ __metadata:
     human-id: "npm:^4.1.1"
     jest: "npm:29.7.0"
     jscodeshift: "npm:17.3.0"
-    lefthook: "npm:2.1.4"
+    lefthook: "npm:2.1.5"
     lerna: "npm:9.0.7"
     listr2: "npm:10.2.1"
     make-dir-cli: "npm:4.0.0"
