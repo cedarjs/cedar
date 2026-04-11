@@ -81,14 +81,7 @@ async function setUpRscProject(
   console.log()
 
   console.log('Syncing framework')
-  // TODO: hard code this to just be `yarn cfw proje...` as soon as cfw is part
-  // of a stable Cedar release
-  const cfwBin = fs.existsSync(
-    path.join(rscProjectPath, 'node_modules/.bin/cfw'),
-  )
-    ? 'cfw'
-    : 'rwfw'
-  await execInProject(`yarn ${cfwBin} project:tarsync --verbose`, {
+  await execInProject(`yarn cfw project:tarsync --verbose`, {
     env: {
       CFW_PATH: CEDAR_FRAMEWORK_PATH,
       RWFW_PATH: CEDAR_FRAMEWORK_PATH,
