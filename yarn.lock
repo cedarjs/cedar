@@ -3257,6 +3257,7 @@ __metadata:
     "@babel/plugin-transform-typescript": "npm:^7.26.8"
     "@babel/traverse": "npm:7.29.0"
     "@cedarjs/babel-config": "npm:3.1.1"
+    "@cedarjs/cli-helpers": "npm:3.1.1"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "npm:3.1.1"
     "@cedarjs/project-config": "npm:3.1.1"
