@@ -111,7 +111,7 @@ CLIENT CELL (GraphQL via Apollo):
 ```
 cedar dev:
   concurrently ─┬─ nodemon → api-server (Fastify, port from toml)
-                └─ rw-gen-watch (regenerate types on SDL change)
+                └─ cedar-gen-watch (regenerate types on SDL change)
 
 *SSR/RSC: rw-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
 
@@ -251,4 +251,4 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 - Build: Vite (web), esbuild (api)
 - Server: API always Fastify; Web: Fastify (SPA). \*SSR/RSC: Web uses Express
 - Package mgr: Yarn 4 (+ experimental support for npm and pnpm); Framework: Yarn 4 + Nx (build orchestration).
-- Codegen: compile-time (Vite plugins) + on-demand (rw-gen)
+- Codegen: compile-time (Vite plugins) + on-demand (cedar-gen)

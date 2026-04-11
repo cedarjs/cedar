@@ -133,8 +133,8 @@
   },
   "types": "dist/index.d.ts",
   "bin": {
-    "rw-gen": "./dist/generate/generate.js",
-    "rw-gen-watch": "./dist/generate/watch.js"
+    "cedar-gen": "./dist/generate/generate.js",
+    "cedar-gen-watch": "./dist/generate/watch.js"
   },
   "files": [
     "dist"
