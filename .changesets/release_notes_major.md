@@ -6,7 +6,6 @@ rw-gen -> cedar-gen
 Internal:
 REDWOOD_ENV_FILES_LOADED -> CEDAR_ENV_FILES_LOADED
 
-
 ## .cedar/
 
 This isn't breaking, but I wanted to call it out anyway, and recommend you
