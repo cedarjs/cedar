@@ -84,7 +84,6 @@ async function setUpRscProject(
   await execInProject(`yarn cfw project:tarsync --verbose`, {
     env: {
       CFW_PATH: CEDAR_FRAMEWORK_PATH,
-      RWFW_PATH: CEDAR_FRAMEWORK_PATH,
     },
   })
   console.log()
