@@ -470,18 +470,28 @@ export const resolvers: Resolvers = {
 }
 ```
 
-{/* ### The query workflow
+<SourceComment>
+### The query workflow
 
-The GraphQL Playground's nice, but if you're a power user, you'll want to be using something a little more dedicated and always on; where you can save things like environments...
+The GraphQL Playground's nice, but if you're a power user, you'll want to be
+using something a little more dedicated and always on; where you can save
+things like environments...
 
 <div class="relative pb-9/16">
-  <iframe class="absolute inset-0 w-full h-full" src="https://www.youtube.com/watch?v=SU4g9_K0H1c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; modestbranding; showinfo=0; fullscreen"></iframe>
+  <iframe
+    class="absolute inset-0 w-full h-full"
+    src="https://www.youtube.com/watch?v=SU4g9_K0H1c"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; modestbranding; showinfo=0; fullscreen"
+  ></iframe>
 </div>
 
 - todo
 - link to claire's video
 - dt has some thoughts on this
-- insomnia */}
+- insomnia
+
+</SourceComment>
 
 ## CORS Configuration
 

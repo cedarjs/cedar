@@ -221,8 +221,8 @@ const QUERY = gql`
 
 But, like `Loading`, Storybook is probably a better place to develop this.
 
-{/* In development, we have it so that errors blanket the page.
-In production, failed cells won't break your app, they'll just be empty divs... */}
+{/* In development, we have it so that errors blanket the page. */}
+{/* In production, failed cells won't break your app, they'll just be empty divs... */}
 
 In this example, we use the `errorCode` to conditionally render the error heading title, and we also use it for our translation string.
 
