@@ -42,7 +42,15 @@ Pretty simple, right? The secret is that this simple check _is the basis of all 
 
 You can [run that code with Node](https://nodejs.dev/learn/run-nodejs-scripts-from-the-command-line) or just copy/paste it into the [web console of a browser](https://developers.google.com/web/tools/chrome-devtools/console/javascript). You can also run it in a dedicated web development environment like JSFiddle. Switch to the **Javascript** tab below to see the code:
 
-<iframe width="100%" height="300" src="//jsfiddle.net/cannikin/mgy4ja1q/2/embedded/result,js/dark/" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0" class="border"></iframe>
+<iframe
+  width="100%"
+  height="300"
+  src="//jsfiddle.net/cannikin/mgy4ja1q/2/embedded/result,js/dark/"
+  allowfullscreen="allowfullscreen"
+  allowpaymentrequest
+  frameborder="0"
+  class="border"
+></iframe>
 
 > Note that you'll see `document.write()` in the JSFiddle examples instead of `console.log`; this is just so that you can actually see something in the **Result** tab, which is HTML output.
 
@@ -88,7 +96,15 @@ This is interesting because we actually _expect_ an error to be thrown, but we d
 
 Run this test and what happens? (If you previously made a change to `add()` to see the test fail, change it back now):
 
-<iframe width="100%" height="300" src="//jsfiddle.net/cannikin/mgy4ja1q/6/embedded/result,js/dark/" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0" class="border"></iframe>
+<iframe
+  width="100%"
+  height="300"
+  src="//jsfiddle.net/cannikin/mgy4ja1q/6/embedded/result,js/dark/"
+  allowfullscreen="allowfullscreen"
+  allowpaymentrequest
+  frameborder="0"
+  class="border"
+></iframe>
 
 Where did _that_ come from? Well, our subject `add()` didn't raise any errors (Javascript doesn't care about the number of arguments passed to a function) and so it tried to add `1` to `undefined`, and that's Not A Number. We didn't think about that! Testing is already helping us catch edge cases.
 
@@ -109,7 +125,15 @@ try {
 
 We also added a little more information to the "fail" messages so we know which one we encountered. Try running that code again and you should see "fail: no error thrown" in the console.
 
-<iframe width="100%" height="300" src="//jsfiddle.net/cannikin/mgy4ja1q/7/embedded/result,js/dark/" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0" class="border"></iframe>
+<iframe
+  width="100%"
+  height="300"
+  src="//jsfiddle.net/cannikin/mgy4ja1q/7/embedded/result,js/dark/"
+  allowfullscreen="allowfullscreen"
+  allowpaymentrequest
+  frameborder="0"
+  class="border"
+></iframe>
 
 Now we'll actually update `add()` to behave as we expect: by throwing an error if less than two arguments are passed.
 
@@ -124,7 +148,15 @@ const add = (...nums) => {
 
 Javascript doesn't have a simple way to check how many arguments were passed to a function, so we've converted the incoming arguments to an array via [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax) and then we check the length of that instead.
 
-<iframe width="100%" height="300" src="//jsfiddle.net/cannikin/mgy4ja1q/10/embedded/result,js/dark/" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0" class="border"></iframe>
+<iframe
+  width="100%"
+  height="300"
+  src="//jsfiddle.net/cannikin/mgy4ja1q/10/embedded/result,js/dark/"
+  allowfullscreen="allowfullscreen"
+  allowpaymentrequest
+  frameborder="0"
+  class="border"
+></iframe>
 
 We've covered passing too few arguments, what if we pass too many? We'll leave writing that test as homework, but you should have everything you need, and you won't even need any changes to the `add()` function to make it work!
 
@@ -1746,8 +1778,16 @@ describeScenario('contacts', (getScenario) => {
 Rationale for using `describeScenario` include:
 
 <ul>
-<li>Create multi-step tests where the next test is dependent upon the results of the previous test (Note caution above).</li>
-<li>Reduce testing run time.  There is an overhead to setting up and tearing down the db on each test, and in some cases a reduced testing run time may be of significant benefit.  This may be of benefit where the likelihood of side-effects is low, such as in query testing</li>
+  <li>
+    Create multi-step tests where the next test is dependent upon the results of
+    the previous test (Note caution above).
+  </li>
+  <li>
+    Reduce testing run time. There is an overhead to setting up and tearing down
+    the db on each test, and in some cases a reduced testing run time may be of
+    significant benefit. This may be of benefit where the likelihood of
+    side-effects is low, such as in query testing
+  </li>
 </ul>
 
 ### describeScenario Examples

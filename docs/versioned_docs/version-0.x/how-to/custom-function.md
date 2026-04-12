@@ -2,9 +2,9 @@
 
 You may not have noticed, but when you're making GraphQL calls, you're actually calling a [Function](https://docs.netlify.com/functions/overview/) (not to be confused with a Javascript `function`) on the API side. Capital-F Functions are meant to be deployed to serverless providers like AWS Lambda. (We're using Netlify's nomenclature when we call them Functions.)
 
-<!-- turn this into an aside where you can expand on it, maybe. > We're using Netlify's nomenclature when we call them Functions. -->
+{/* turn this into an aside where you can expand on it, maybe. > We're using Netlify's nomenclature when we call them Functions. */}
 
-<!-- as a... could be reworded -->
+{/* as a... could be reworded */}
 
 Did you know you can create your own Functions that do whatever you want? Normally we recommend that if you have custom behavior, even if it's unrelated to the database, you make it available as a GraphQL field so that your entire application has one, unified API interface. But rules were meant to be broken!
 
@@ -36,8 +36,8 @@ The `.redwood/functions` bit in the link you pointed your browser to is what's c
 
 After you setup a deploy (via `yarn rw setup deploy <provider>`), it'll change to something more appropriate, like `.netlify/functions` in Netlify's case.
 
-<!-- https://community.redwoodjs.com/t/getting-cors-error-while-calling-a-lambda-function/186 -->
-<!-- link to something; maybe even  -->
+{/* https://community.redwoodjs.com/t/getting-cors-error-while-calling-a-lambda-function/186 */}
+{/* link to something; maybe even */}
 
 Why do we need `apiUrl`? Well, when you go to deploy, your serverless functions won't be in the same place as your app; they'll be somewhere else. Sending requests to the `apiUrl` let's your provider handle the hard work of figuring out where they actually are, and making sure that your app can actually access them.
 
