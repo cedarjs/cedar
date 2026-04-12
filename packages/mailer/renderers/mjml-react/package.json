@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-renderer-mjml-react",
-  "version": "3.1.1",
+  "version": "4.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -21,7 +21,7 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "dependencies": {
-    "@cedarjs/mailer-core": "3.1.1",
+    "@cedarjs/mailer-core": "4.0.0",
     "@faire/mjml-react": "3.5.3",
     "mjml": "4.18.0"
   },
