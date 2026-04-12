@@ -331,7 +331,7 @@ export const Users = {
 }
 ```
 
-<!-- Source: https://community.redwoodjs.com/t/how-to-create-field-resolver/195/7 -->
+{/* Source: https://community.redwoodjs.com/t/how-to-create-field-resolver/195/7 */}
 
 ### Cedar's Resolver Args
 
@@ -470,18 +470,28 @@ export const resolvers: Resolvers = {
 }
 ```
 
-<!-- ### The query workflow
+<SourceComment>
+### The query workflow
 
-The GraphQL Playground's nice, but if you're a power user, you'll want to be using something a little more dedicated and always on; where you can save things like environments...
+The GraphQL Playground's nice, but if you're a power user, you'll want to be
+using something a little more dedicated and always on; where you can save
+things like environments...
 
 <div class="relative pb-9/16">
-  <iframe class="absolute inset-0 w-full h-full" src="https://www.youtube.com/watch?v=SU4g9_K0H1c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; modestbranding; showinfo=0; fullscreen"></iframe>
+  <iframe
+    class="absolute inset-0 w-full h-full"
+    src="https://www.youtube.com/watch?v=SU4g9_K0H1c"
+    frameborder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; modestbranding; showinfo=0; fullscreen"
+  ></iframe>
 </div>
 
 - todo
 - link to claire's video
 - dt has some thoughts on this
-- insomnia -->
+- insomnia
+
+</SourceComment>
 
 ## CORS Configuration
 
@@ -2368,19 +2378,35 @@ The documentation generated is present when exploring the schema.
 
 #### Queries
 
-<img alt="graphiql-queries" src="/img/graphql-api-docs/graphiql-queries.png" width="400" />
+<img
+  alt="graphiql-queries"
+  src="/img/graphql-api-docs/graphiql-queries.png"
+  width="400"
+/>
 
 #### Mutations
 
-<img alt="graphiql-mutations" src="/img/graphql-api-docs/graphiql-mutations.png" width="400" />
+<img
+  alt="graphiql-mutations"
+  src="/img/graphql-api-docs/graphiql-mutations.png"
+  width="400"
+/>
 
 #### Model Types
 
-<img alt="graphiql-type" src="/img/graphql-api-docs/graphiql-type.png" width="400" />
+<img
+  alt="graphiql-type"
+  src="/img/graphql-api-docs/graphiql-type.png"
+  width="400"
+/>
 
 #### Input Types
 
-<img alt="graphiql-input-type" src="/img/graphql-api-docs/graphiql-input-type.png" width="400" />
+<img
+  alt="graphiql-input-type"
+  src="/img/graphql-api-docs/graphiql-input-type.png"
+  width="400"
+/>
 
 ### Use in Docusaurus
 
@@ -2519,8 +2545,8 @@ This might be one of our most frequently asked questions of all time. Here's [To
 
 > We started with Nexus, but ended up pulling it out because we felt like it was too much of an abstraction over the SDL. It’s so nice being able to just read the raw SDL to see what the GraphQL API is.
 
-<!-- TODO -->
-<!-- This https://community.redwoodjs.com/t/how-to-add-resolvetype-resolver-for-interfaces/432/7 -->
+{/* TODO */}
+{/* This https://community.redwoodjs.com/t/how-to-add-resolvetype-resolver-for-interfaces/432/7 */}
 
 ## Further Reading
 

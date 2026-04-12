@@ -64,7 +64,7 @@ mockGraphQLQuery('OperationName', (_variables, { ctx }) => {
 })
 ```
 
-<br/>
+<br />
 
 - `ctx.delay(numOfMS)`: delay the response
 
@@ -75,7 +75,7 @@ mockGraphQLQuery('OperationName', (_variables, { ctx }) => {
 })
 ```
 
-<br/>
+<br />
 
 - `ctx.errors(e: GraphQLError[])`: return an error object in the response:
 
