@@ -1975,8 +1975,8 @@ __metadata:
     rw: ./dist/bins/redwood.js
     rw-api-server-watch: ./dist/bins/rw-api-server-watch.js
     rw-dev-fe: ./dist/bins/rw-dev-fe.js
-    rw-gen: ./dist/bins/rw-gen.js
-    rw-gen-watch: ./dist/bins/rw-gen-watch.js
+    cedar-gen: ./dist/bins/cedar-gen.js
+    cedar-gen-watch: ./dist/bins/cedar-gen-watch.js
     rw-jobs: ./dist/bins/rw-jobs.js
     rw-jobs-worker: ./dist/bins/rw-jobs-worker.js
     rw-log-formatter: ./dist/bins/rw-log-formatter.js
@@ -2126,8 +2126,8 @@ __metadata:
     ts-node: "npm:10.9.2"
     typescript: "npm:5.9.3"
   bin:
-    rw-gen: ./dist/generate/generate.js
-    rw-gen-watch: ./dist/generate/watch.js
+    cedar-gen: ./dist/generate/generate.js
+    cedar-gen-watch: ./dist/generate/watch.js
   checksum: 10c0/d446e152e25bca608418a914adb6fae929a56d68d77fb72b4846be2c88ddf9293addda9c5fd8fb4d53156c99cd8932b2d8c8de72099e7e403f6b3bdcd9d7beae
   languageName: node
   linkType: hard
