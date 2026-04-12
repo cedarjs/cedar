@@ -3,11 +3,13 @@ name: 🚩 Require milestone
 on:
   pull_request:
     types: [opened, synchronize, reopened, milestoned, demilestoned, edited]
+  pull_request_target:
+    types: [opened, synchronize, reopened, milestoned, demilestoned, edited]
 
 # Cancel in-progress runs of this workflow.
 # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -17,6 +19,14 @@ jobs:
   require-milestone:
     name: 🚩 Require milestone
     runs-on: ubuntu-latest
+    # For same-repo PRs, use the pull_request event so the job runs from the
+    # PR branch (allowing workflow changes to be tested in the same PR).
+    # For fork PRs, use pull_request_target so the job runs from the base
+    # branch with a write-capable token (fork PRs get a read-only token with
+    # pull_request).
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository)
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
