@@ -331,7 +331,7 @@ export const Users = {
 }
 ```
 
-<!-- Source: https://community.redwoodjs.com/t/how-to-create-field-resolver/195/7 -->
+{/* Source: https://community.redwoodjs.com/t/how-to-create-field-resolver/195/7 */}
 
 ### Redwood's Resolver Args
 
@@ -470,7 +470,7 @@ export const resolvers: Resolvers = {
 }
 ```
 
-<!-- ### The query workflow
+{/* ### The query workflow
 
 The GraphQL Playground's nice, but if you're a power user, you'll want to be using something a little more dedicated and always on; where you can save things like environments...
 
@@ -481,7 +481,7 @@ The GraphQL Playground's nice, but if you're a power user, you'll want to be usi
 - todo
 - link to claire's video
 - dt has some thoughts on this
-- insomnia -->
+- insomnia */}
 
 ## CORS Configuration
 
@@ -2520,8 +2520,8 @@ This might be one of our most frequently asked questions of all time. Here's [To
 
 > We started with Nexus, but ended up pulling it out because we felt like it was too much of an abstraction over the SDL. It’s so nice being able to just read the raw SDL to see what the GraphQL API is.
 
-<!-- TODO -->
-<!-- This https://community.redwoodjs.com/t/how-to-add-resolvetype-resolver-for-interfaces/432/7 -->
+{/* TODO */}
+{/* This https://community.redwoodjs.com/t/how-to-add-resolvetype-resolver-for-interfaces/432/7 */}
 
 ## Further Reading
 
