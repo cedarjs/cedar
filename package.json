@@ -145,8 +145,14 @@
     "typescript-eslint": "8.58.0",
     "vitest": "3.2.4",
     "yargs": "17.7.2",
-    "zx": "8.8.5"
+    "zx": "8.8.5",
+    "prettier-plugin-jsdoc": "^3.0.0"
   },
   "packageManager": "yarn@4.13.0",
-  "npmClient": "yarn"
+  "npmClient": "yarn",
+  "prettier": {
+    "plugins": [
+      "prettier-plugin-jsdoc"
+    ]
+  }
 }
