@@ -8,6 +8,4 @@ const requireFromInternal = createRequire(
 
 const bins = requireFromInternal('./package.json')['bin']
 
-const { run } = requireFromInternal(bins['rw-gen'])
-
-run()
+requireFromInternal(bins['cedar-gen-watch'])
