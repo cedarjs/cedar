@@ -217,17 +217,18 @@ export const handler = async ({
       title: gqlFeaturesTaskTitle,
       task: generate,
     },
-    workspace.includes('web') && cedarConfig.experimental.gqlorm.enabled && {
-      title: 'Generating gqlorm schema...',
-      task: async () => {
-        const { errors } = await generateGqlormArtifacts()
-        if (errors.length > 0) {
-          for (const { message } of errors) {
-            console.warn(`Warning: ${message}`)
+    workspace.includes('web') &&
+      cedarConfig.experimental?.gqlorm?.enabled && {
+        title: 'Generating gqlorm schema...',
+        task: async () => {
+          const { errors } = await generateGqlormArtifacts()
+          if (errors.length > 0) {
+            for (const { message } of errors) {
+              console.warn(`Warning: ${message}`)
+            }
           }
-        }
+        },
       },
-    },
     workspace.includes('api') && {
       title: 'Verifying graphql schema...',
       task: loadAndValidateSdls,
