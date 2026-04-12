@@ -343,15 +343,27 @@ Often it's nice to experiment and call your API in a more "raw" form before you 
 
 When you started development with `yarn redwood dev` (or `yarn rw dev`) you actually started a second process running at the same time. Open a new browser tab and head to [http://localhost:8911/graphql](http://localhost:8911/graphql) This is GraphQL Yoga's [GraphiQL](https://www.graphql-yoga.com/docs/features/graphiql), a web-based GUI for GraphQL APIs:
 
-<img width="1410" alt="image" src="https://user-images.githubusercontent.com/22184161/226866579-896e8edc-4ac0-48bd-80f0-2ba28da677b5.png" />
+<img
+  width="1410"
+  alt="image"
+  src="https://user-images.githubusercontent.com/22184161/226866579-896e8edc-4ac0-48bd-80f0-2ba28da677b5.png"
+/>
 
 Not very exciting yet, but select the "Docs" tab on the top left and click on `query: Query`.
 
-<img width="1410" alt="image" src="https://user-images.githubusercontent.com/22184161/226866573-41697d10-a056-4e3a-add3-b940147de802.png" />
+<img
+  width="1410"
+  alt="image"
+  src="https://user-images.githubusercontent.com/22184161/226866573-41697d10-a056-4e3a-add3-b940147de802.png"
+/>
 
 It's the complete schema as defined by our SDL files! The Playground will ingest these definitions and give you autocomplete hints on the left to help you build queries from scratch. Try getting the IDs of all the posts in the database; type the query at the left and then click the "Play" button to execute:
 
-<img width="1410" alt="image" src="https://user-images.githubusercontent.com/22184161/226866554-3daefe7f-7b4d-4503-aaa0-9895ee5bd38e.png" />
+<img
+  width="1410"
+  alt="image"
+  src="https://user-images.githubusercontent.com/22184161/226866554-3daefe7f-7b4d-4503-aaa0-9895ee5bd38e.png"
+/>
 
 The GraphQL Playground is a great way to experiment with your API or troubleshoot when you come across a query or mutation that isn't behaving in the way you expect.
 
@@ -926,7 +938,11 @@ export default ContactPage
 
 Try filling out the form and submitting—you should have a new Contact in the database! You can verify that with [Prisma Studio](/docs/tutorial/chapter2/getting-dynamic#prisma-studio) or [GraphQL Playground](#graphql-playground) if you were so inclined:
 
-<img width="1410" alt="image" src="https://user-images.githubusercontent.com/32992335/161488540-a7ad1a57-7432-4171-bd75-500eeaa17bcb.png" />
+<img
+  width="1410"
+  alt="image"
+  src="https://user-images.githubusercontent.com/32992335/161488540-a7ad1a57-7432-4171-bd75-500eeaa17bcb.png"
+/>
 
 :::info Wait, I thought you said this was secure by default and someone couldn't view all contacts without being logged in?
 

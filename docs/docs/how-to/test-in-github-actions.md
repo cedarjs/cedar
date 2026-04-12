@@ -246,7 +246,11 @@ jobs:
 
 Now push your changes to the `main` branch on GitHub; the "Cedar CI" action we just made will run like this:
 
-<img width="1140" alt="ci-results-1" src="https://user-images.GitHubusercontent.com/14810250/202825732-c7d77929-58ff-4ad5-9072-48e4403471c9.png" />
+<img
+  width="1140"
+  alt="ci-results-1"
+  src="https://user-images.GitHubusercontent.com/14810250/202825732-c7d77929-58ff-4ad5-9072-48e4403471c9.png"
+/>
 
 1. Set up the job ("build")
 2. Initialize the containers and create the postgres instance
@@ -275,11 +279,19 @@ on:
 
 Now, if you open or push to a pull request, this action will run and you'll see something like this:
 
-<img width="1460" alt="ci-pr-1" src="https://user-images.GitHubusercontent.com/14810250/202825767-c7f23b24-e311-4a70-bf50-fbad40a6abee.png" />
+<img
+  width="1460"
+  alt="ci-pr-1"
+  src="https://user-images.GitHubusercontent.com/14810250/202825767-c7f23b24-e311-4a70-bf50-fbad40a6abee.png"
+/>
 
 Once the action is done running, you can see the results in the "Conversation" tab:
 
-<img width="1385" alt="ci-pr-2" src="https://user-images.GitHubusercontent.com/14810250/202825772-93c8fe50-6b91-4048-882b-21497d47e211.png" />
+<img
+  width="1385"
+  alt="ci-pr-2"
+  src="https://user-images.GitHubusercontent.com/14810250/202825772-93c8fe50-6b91-4048-882b-21497d47e211.png"
+/>
 
 ### 6. Deploy the database changes to an actual database
 
@@ -379,9 +391,8 @@ As you consider automating your project workflows, keep the following wise philo
 
 <blockquote>
   <p>
-    Civilization advances by extending the number of important operations we can perform without thinking.
+    Civilization advances by extending the number of important operations we can
+    perform without thinking.
   </p>
-  <cite>
-    —Alfred North Whitehead
-  </cite>
+  <cite>—Alfred North Whitehead</cite>
 </blockquote>

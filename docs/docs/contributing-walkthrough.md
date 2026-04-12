@@ -262,7 +262,11 @@ There are two ways to get started with Gitpod + Cedar.
 _Option 1: Open a PR_
 Every PR will trigger a Gitpod prebuild using the PR branch. Just look for Gitpod in the list of checks at the bottom of the PR — click the “Details” link and away you’ll go!
 
-<img width="350" alt="PR Checks" src="https://user-images.githubusercontent.com/2951/151928088-58e26232-b752-4471-adf4-a2bc59b79ac8.png" />
+<img
+  width="350"
+  alt="PR Checks"
+  src="https://user-images.githubusercontent.com/2951/151928088-58e26232-b752-4471-adf4-a2bc59b79ac8.png"
+/>
 
 _Option 2: Use the link from your project or branch_
 
