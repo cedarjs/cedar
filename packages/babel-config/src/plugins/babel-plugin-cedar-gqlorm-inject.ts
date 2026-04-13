@@ -126,9 +126,16 @@ export default function ({ types: t }: { types: typeof types }): PluginObj {
           return
         }
 
-        const relPath = nodePath
-          .relative(nodePath.dirname(filename), backendPathWithoutExt)
-          .replace(/\\/g, '/')
+        // Use explicit .ts extension: Cedar targets Node.js 24, which strips
+        // TypeScript types natively (unflagged since v24.0). The API build uses
+        // esbuild with bundle:false so this import stays as a runtime reference
+        // resolved directly by Node.js against the file system. All TypeScript
+        // constructs in backend.ts (interface declarations, type annotations)
+        // are erasable and fully supported by Node.js type stripping.
+        const relPath =
+          nodePath
+            .relative(nodePath.dirname(filename), backendPathWithoutExt)
+            .replace(/\\/g, '/') + '.ts'
 
         // Build the two import declarations to inject
         const importSdl = t.importDeclaration(

@@ -322,6 +322,8 @@ export function getExistingSdlTypeNames(graphqlDir: string): Set<string> {
     return typeNames
   }
 
+  // TODO(gqlorm): Is this still needed? We don't genreate __gqlorm__.sdl.ts
+  // anymore, do we?
   const sdlFiles = fs.readdirSync(graphqlDir).filter((file) => {
     // Match *.sdl.ts and *.sdl.js but NOT the generated __gqlorm__.sdl.ts
     return /\.sdl\.(ts|js)$/.test(file) && !file.startsWith('__gqlorm__')
@@ -610,8 +612,11 @@ export function generateGqlormBackendContent(
  * (@gqlorm directives + sensitivity heuristics), and writes:
  *
  * 1. `.cedar/gqlorm-schema.json` — the frontend ModelSchema (field names only)
- * 2. `api/src/graphql/__gqlorm__.sdl.ts` — auto-generated GraphQL types and
- *    resolvers for models that don't already have manually-written SDL files
+ * 2. `.cedar/gqlorm/backend.ts` — auto-generated GraphQL types and resolvers
+ *    for models that don't already have manually-written SDL files
+ *
+ * Cedar targets Node.js 24, which strips TypeScript types natively without any
+ * flags, so backend.ts can be imported directly at runtime
  *
  * Returns the same `{ files, errors }` shape used by other generators so it
  * can be integrated into `generate.ts` without special handling.

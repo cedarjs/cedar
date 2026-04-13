@@ -1172,8 +1172,8 @@ describe('generateGqlormArtifacts - integration', () => {
     const { files, errors } = await generateGqlormArtifacts()
 
     expect(errors).toEqual([])
-    // Should produce the JSON schema file + the SDL file
-    expect(files.length).toBeGreaterThanOrEqual(1)
+    // Should produce: gqlorm-schema.json + backend.ts
+    expect(files.length).toEqual(2)
     expect(files).toContain(schemaOutputPath)
     expect(files).toContain(backendOutputPath)
 
