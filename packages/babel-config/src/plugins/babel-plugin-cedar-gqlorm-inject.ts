@@ -157,36 +157,46 @@ export default function ({ types: t }: { types: typeof types }): PluginObj {
         programPath.unshiftContainer('body', [importDb, importSdl])
 
         // Build the sdls mutation statement:
-        //   sdls = { ...sdls, __gqlorm__: { schema: ..., resolvers: ... } }
+        //   Object.assign(sdls, { __gqlorm__: { schema: ..., resolvers: ... } })
+        //
+        // We use Object.assign (mutate in-place) rather than
+        //   sdls = { ...sdls, __gqlorm__: ... }
+        // because pluginRedwoodGraphqlOptionsExtract has already run and
+        // captured `sdls` by reference inside __rw_graphqlOptions:
+        //   const __rw_graphqlOptions = { ..., sdls, ... }
+        // Both __rw_graphqlOptions.sdls and the `sdls` variable point at the
+        // same object, so mutating it in-place ensures createGraphQLHandler
+        // sees the __gqlorm__ addition.
         const sdlsMutation = t.expressionStatement(
-          t.assignmentExpression(
-            '=',
-            t.identifier('sdls'),
-            t.objectExpression([
-              t.spreadElement(t.identifier('sdls')),
-              t.objectProperty(
-                t.identifier('__gqlorm__'),
-                t.objectExpression([
-                  t.objectProperty(
-                    t.identifier('schema'),
-                    t.memberExpression(
-                      t.identifier('__gqlorm_sdl__'),
+          t.callExpression(
+            t.memberExpression(t.identifier('Object'), t.identifier('assign')),
+            [
+              t.identifier('sdls'),
+              t.objectExpression([
+                t.objectProperty(
+                  t.identifier('__gqlorm__'),
+                  t.objectExpression([
+                    t.objectProperty(
                       t.identifier('schema'),
-                    ),
-                  ),
-                  t.objectProperty(
-                    t.identifier('resolvers'),
-                    t.callExpression(
                       t.memberExpression(
                         t.identifier('__gqlorm_sdl__'),
-                        t.identifier('createGqlormResolvers'),
+                        t.identifier('schema'),
                       ),
-                      [t.identifier('__gqlorm_db__')],
                     ),
-                  ),
-                ]),
-              ),
-            ]),
+                    t.objectProperty(
+                      t.identifier('resolvers'),
+                      t.callExpression(
+                        t.memberExpression(
+                          t.identifier('__gqlorm_sdl__'),
+                          t.identifier('createGqlormResolvers'),
+                        ),
+                        [t.identifier('__gqlorm_db__')],
+                      ),
+                    ),
+                  ]),
+                ),
+              ]),
+            ],
           ),
         )
 

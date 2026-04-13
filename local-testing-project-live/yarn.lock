@@ -1806,7 +1806,7 @@ __metadata:
 
 "@cedarjs/babel-config@file:../packages/babel-config/cedarjs-babel-config.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/babel-config@file:../packages/babel-config/cedarjs-babel-config.tgz#../packages/babel-config/cedarjs-babel-config.tgz::hash=9c28de&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/babel-config@file:../packages/babel-config/cedarjs-babel-config.tgz#../packages/babel-config/cedarjs-babel-config.tgz::hash=594e1b&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.2"
@@ -1824,7 +1824,7 @@ __metadata:
     fast-glob: "npm:3.3.3"
     graphql: "npm:16.13.2"
     typescript: "npm:5.9.3"
-  checksum: 10c0/0ae1c6aa0a765a8945107db7dc3ec82e95e11fe44cb81eac2aaea9e7ceffc122e2c3143ac09076787a5a20a15303fbe901d73994a745bf08106d8f2428c4f35f
+  checksum: 10c0/901894c06b4b030193f812c3a9cbec78ead8255cf777f2255d8e6bc24da5c49b4516c67954e054a2eea68cb1b47de25db4a2ca29c954247d703239bd190d521d
   languageName: node
   linkType: hard
 
