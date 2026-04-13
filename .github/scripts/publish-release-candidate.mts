@@ -493,24 +493,20 @@ async function main() {
 
     log('Step 10: Updating template package.json files')
 
-    for (const templateDir of TEMPLATE_DIRS) {
-      const templatePath = path.join(TEMPLATES_DIR, templateDir)
+    // Find all package.json files across templates and database-overlays,
+    // excluding node_modules. This covers base templates, overlay variants
+    // (cjs/esm × npm/pnpm/yarn), and database overlays in one pass.
+    const packageJsonFiles = fs.globSync(
+      ['templates/**/package.json', 'database-overlays/**/package.json'],
+      {
+        cwd: CREATE_CEDAR_APP_DIR,
+        exclude: (filePath) => filePath.includes('node_modules'),
+      },
+    )
 
-      // Update root package.json
+    for (const pkgJsonFile of packageJsonFiles) {
       updatePackageJsonWithVersion(
-        path.join(templatePath, 'package.json'),
-        publishedVersion,
-      )
-
-      // Update web/package.json
-      updatePackageJsonWithVersion(
-        path.join(templatePath, 'web/package.json'),
-        publishedVersion,
-      )
-
-      // Update api/package.json
-      updatePackageJsonWithVersion(
-        path.join(templatePath, 'api/package.json'),
+        path.join(CREATE_CEDAR_APP_DIR, pkgJsonFile),
         publishedVersion,
       )
     }

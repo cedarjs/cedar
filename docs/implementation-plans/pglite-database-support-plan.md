@@ -108,8 +108,8 @@ include this. Instead, the generated app relies on Cedar's standard Prisma
 workflow:
 
 ```bash
-yarn cedar prisma migrate dev    # Create and apply migrations
-yarn cedar prisma db push        # Push schema changes without migration files
+yarn cedar prisma migrate dev # Create and apply migrations
+yarn cedar prisma db push     # Push schema changes without migration files
 ```
 
 Because PGlite's socket server looks like a real PostgreSQL server, Prisma's
