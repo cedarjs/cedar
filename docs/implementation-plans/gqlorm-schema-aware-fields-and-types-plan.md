@@ -98,6 +98,14 @@ configuration files are needed beyond `cedar.toml` and provider setup.
    membership-based organization access convention) live in `cedar.toml`.
    Generated artifacts live in `.cedar/` and are gitignored.
 
+8. **Generated code never intermingles with user-authored source files.** All
+   codegen output lives in `.cedar/` (gitignored) and never in `api/src/` or
+   `web/src/`. The only exception is one-off scaffolding — code generated once
+   at setup time that the developer is expected to own, version-control, and
+   modify (e.g., the initial `graphql.ts` function file, or a component
+   scaffold). Continuously-regenerated artifacts must stay out of user-managed
+   directories.
+
 ---
 
 ## Architecture
@@ -224,6 +232,34 @@ App startup  (yarn dev / server boot)
 │    ...                                                       │
 └──────────────────────────────────────────────────────────────┘
 ```
+
+### Prisma Integration
+
+Cedar targets **Prisma v7** exclusively. There is no need to support Prisma v6
+or earlier versions. All DMMF access, client generation, and query APIs
+referenced in this plan assume Prisma v7 semantics and module structure.
+
+The generated Prisma client is exported from the Cedar app's
+`api/src/lib/db.ts` file:
+
+```ts
+// api/src/lib/db.ts (standard Cedar convention)
+import { PrismaClient } from 'api/db/generated/prisma/client.mts'
+
+export * from 'api/db/generated/prisma/client.mts'
+
+const prismaClient = new PrismaClient({
+  log: emitLogLevels(['info', 'warn', 'error']),
+  adapter,
+})
+
+export const db = prismaClient
+```
+
+All backend resolver code — whether hand-written in services or auto-generated
+by gqlorm — imports the prisma client (`db`) from this canonical location. This
+single instance ensures connection pooling is shared across the entire API
+surface.
 
 ---
 
@@ -562,28 +598,37 @@ per-model access configuration is required.
 This is completely separate from Cedar's existing SDL + services pattern. The two
 can coexist in the same app.
 
-#### 4.1 Add `buildGqlormSchema()` in `packages/graphql-server`
+#### 4.1 Extend `generateGqlormArtifacts()` with backend artifact generation
 
-Create `packages/graphql-server/src/gqlorm/buildGqlormSchema.ts`.
+Extend the `generateGqlormArtifacts()` function in `packages/internal`
+(introduced in Phase 1) to also produce backend artifacts at **codegen time**
+alongside the existing `.cedar/gqlorm-schema.json` output. The same DMMF parse
+that drives frontend field selection is reused — no additional I/O, and no
+runtime DMMF access.
 
-This function:
+For each non-hidden model, the codegen:
 
-- Accepts the Prisma `db` client instance.
-- Reads `Prisma.dmmf.datamodel.models` — available as a static property on the
-  generated `Prisma` namespace, requiring no async I/O.
-- Reads the `[experimental.gqlorm]` section of `cedar.toml` via `getConfig()` — for the
-  organization and membership model convention.
-- For each model:
-  - Skips the model entirely if `model.documentation` contains `@gqlorm hide`.
-  - Applies the same field visibility logic as codegen (step 1.1): skip fields
-    with `@gqlorm hide`, include fields with `@gqlorm show`, auto-skip fields
-    matching sensitivity heuristics (logging a startup notice for any auto-hidden
-    field that has no directive, mirroring the codegen warning).
-  - Generates a GraphQL type definition string using only visible fields.
-  - Generates Query field definitions.
-  - Generates a resolver function with the fixed auth model (see 4.3).
-- Returns `{ schema: DocumentNode, resolvers: Record<string, unknown> }` — the
-  exact shape required by `SdlGlobImports` in `packages/graphql-server`.
+- Applies the same visibility rules as Phase 1 (skip `@gqlorm hide`, honour
+  `@gqlorm show`, auto-hide sensitivity-heuristic matches) but additionally
+  collects each field's GraphQL type and nullability.
+- Detects models that already have a hand-written SDL file in `api/src/graphql/`
+  and skips generating backend artifacts for them, avoiding type conflicts.
+- Produces a `{ schema: DocumentNode, resolvers: Record<string, unknown> }` entry
+  — the exact shape required by `SdlGlobImports` — containing GraphQL type
+  definitions, query fields, and resolver functions that call
+  `db.<model>.findMany` / `db.<model>.findUnique` with an explicit `select` of
+  only visible fields.
+
+The resolver code is **generated with concrete field and model names** derived at
+codegen time from the DMMF and `[experimental.gqlorm]` config. There are no
+runtime `modelHasField` checks, no dynamic bracket lookups, and no config-driven
+branching inside the resolver body. The generated code reads as if a developer
+wrote it by hand.
+
+The specific output location of the generated artifact and the injection
+mechanism are implementation choices covered by the dedicated phase sub-plans.
+In all variants the result is injected into the `sdls` map as `__gqlorm__`
+before `makeMergedSchema` runs (see 4.2).
 
 **Prisma DMMF type → GraphQL SDL type mapping:**
 
@@ -605,36 +650,28 @@ non-null.
 
 #### 4.2 Wire into `createGraphQLHandler`
 
-In `packages/graphql-server/src/functions/graphql.ts`, check config and merge
-the gqlorm schema before calling `createGraphQLYoga`:
+When `experimental.gqlorm.enabled = true`, the codegen-produced backend artifact
+is loaded at server startup and merged into the `sdls` map before
+`makeMergedSchema` runs:
 
 ```ts
-if (getConfig().experimental?.gqlorm?.enabled) {
-  const gqlormEntry = await buildGqlormSchema(db)
-  if (gqlormEntry) {
-    handlerOptions.sdls = {
-      ...handlerOptions.sdls,
-      __gqlorm__: gqlormEntry,
-    }
-  }
-}
+sdls['__gqlorm__'] = gqlormEntry // { schema: DocumentNode, resolvers: ... }
 ```
 
 The `__gqlorm__` key is a reserved internal name that cannot clash with
 user-authored SDL keys (which are derived from file names). This flows into the
-existing `makeMergedSchema` pipeline unchanged.
+existing `makeMergedSchema` pipeline unchanged — no changes to `makeMergedSchema`
+itself are required.
 
 #### 4.3 Auth model: fixed, secure by default
 
 All auto-generated resolvers apply the same layered auth model. There are no
 per-model access overrides — the behavior is uniform and predictable.
 
-Because `buildGqlormSchema()` runs at startup with full knowledge of the DMMF
-and the `[experimental.gqlorm]` config, resolver code is **statically
-generated** with concrete field and model names. There are no runtime
-`modelHasField` checks, no dynamic bracket lookups, and no config-driven
-branching inside the resolver body. The generated code is as if a developer
-wrote it by hand.
+Because resolver code is **generated at codegen time** with full DMMF and
+`[experimental.gqlorm]` config knowledge, each resolver contains only the
+checks that apply to its specific model. The generated code reads as if a
+developer wrote it by hand.
 
 In the examples below, the names `userId`, `organizationId`, `membership`,
 `organizationId` (on the membership model), `post`, etc. are **not hardcoded** —
@@ -711,9 +748,9 @@ corresponding field.
 
 #### 4.4 Field visibility: explicit directives and automatic hiding
 
-The visibility of a field is determined identically in both `buildGqlormSchema()`
-(backend) and `generateGqlormArtifacts()` (codegen/frontend). The same logic
-applies in both places so the two tiers always agree on what is exposed.
+The visibility of a field is determined identically by the backend codegen and
+`generateGqlormArtifacts()` (codegen/frontend). The same logic applies in both
+places so the two tiers always agree on what is exposed.
 
 **Visibility decision order for each scalar field:**
 
