@@ -65,14 +65,14 @@ function getMilestoneFromConventionalCommit(title) {
  * Sets the milestone on a pull request using the GitHub API
  * @param {number} prNumber - The pull request number
  * @param {string} milestoneName - The name of the milestone to set
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>} - True if the milestone was set successfully, false otherwise
  */
 async function setMilestone(prNumber, milestoneName) {
   if (!env.GITHUB_TOKEN) {
     console.error(
       'GITHUB_TOKEN is not set. Cannot automatically set milestone.',
     )
-    return
+    return false
   }
 
   const [owner, repo] = env.GITHUB_REPOSITORY.split('/')
@@ -92,7 +92,7 @@ async function setMilestone(prNumber, milestoneName) {
     console.error(
       `Failed to fetch milestones: ${milestonesResponse.status} ${milestonesResponse.statusText}`,
     )
-    return
+    return false
   }
 
   const milestones = await milestonesResponse.json()
@@ -100,7 +100,7 @@ async function setMilestone(prNumber, milestoneName) {
 
   if (!milestone) {
     console.error(`Milestone "${milestoneName}" not found in repository`)
-    return
+    return false
   }
 
   // Set the milestone on the PR
@@ -124,12 +124,13 @@ async function setMilestone(prNumber, milestoneName) {
     console.error(
       `Failed to set milestone: ${response.status} ${response.statusText}\n${errorText}`,
     )
-    return
+    return false
   }
 
   console.log(
     `Successfully set milestone "${milestoneName}" on PR #${prNumber}`,
   )
+  return true
 }
 
 async function main() {
@@ -185,7 +186,14 @@ async function main() {
         `Automatically setting milestone to "${suggestedMilestone}"...`,
     )
 
-    await setMilestone(pullRequest.number, suggestedMilestone)
+    const milestoneSet = await setMilestone(
+      pullRequest.number,
+      suggestedMilestone,
+    )
+
+    if (!milestoneSet) {
+      process.exitCode = 1
+    }
 
     return
   }

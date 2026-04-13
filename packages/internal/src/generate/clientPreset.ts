@@ -17,7 +17,6 @@ export const shouldGenerateTrustedDocuments = (): boolean => {
 }
 
 export const generateClientPreset = async () => {
-  let generatedFiles = []
   let clientPresetFiles = [] as string[]
 
   const errors: { message: string; error: unknown }[] = []
@@ -47,7 +46,7 @@ export const generateClientPreset = async () => {
   }
 
   try {
-    generatedFiles = await generate(config, true)
+    const generatedFiles = await generate(config, true)
 
     clientPresetFiles = generatedFiles.map((f: GeneratedFile) => f.filename)
 

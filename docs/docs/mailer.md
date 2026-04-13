@@ -19,6 +19,7 @@ The CedarJS Mailer does more than "just send an email". It is a complete end-to-
 The CedarJS Mailer consists of [handlers](#handlers) and [renderers](#renderers), which carry out the core functionality of sending (handling) your emails and composing (rendering) your emails, respectively. This is combined with a few required files which define the necessary configuration.
 
 A high-level overview of the Mailer Flow is shown in the diagram below, and each case is covered in more detail below the diagram.
+
 <img alt="mailer-flow" src="/img/mailer/flow.svg" />
 
 ### Renderers

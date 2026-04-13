@@ -15,7 +15,7 @@ For a reference on dotenv syntax, see the dotenv README's [Usage](https://github
 
 > Technically, we use [dotenv-defaults](https://github.com/mrsteele/dotenv-defaults), which is how we also supply and load `.env.defaults`.
 
-<!-- also in a Cedar app's base directory. -->
+{/* also in a Cedar app's base directory. */}
 
 Cedar also configures Vite, so that all references to `process.env` vars on the Web side will be replaced with the variable's actual value at build-time. More on this in [Web](#Web).
 
@@ -106,15 +106,15 @@ export const handler = async (event, context) => {
 
 Navigating to http://localhost:8911/hello shows that the Function successfully accesses the environment variable:
 
-<!-- @todo -->
-<!-- Get a better-quality pic -->
+{/* @todo */}
+{/* Get a better-quality pic */}
 
 ![rw-envVars-api](https://user-images.githubusercontent.com/32992335/86520528-47112100-bdfa-11ea-8d7e-1c0d502805b2.png)
 
 ### Production
 
-<!-- @todo -->
-<!-- Deployment system? platform? -->
+{/* @todo */}
+{/* Deployment system? platform? */}
 
 Whichever platform you deploy to, they'll have some specific way of making environment variables available to the serverless environment where your Functions run. For example, if you deploy to Netlify, you set your environment variables in **Settings** > **Build & Deploy** > **Environment**. You'll just have to read your provider's documentation.
 Some hosting providers distinguish between build and runtime environments for configuring environment variables. Environment variables for the api side should in those cases be configured as runtime variables.

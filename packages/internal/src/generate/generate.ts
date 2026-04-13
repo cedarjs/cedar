@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { loadEnvFiles } from '@cedarjs/cli-helpers/loadEnvFiles'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { generateClientPreset } from './clientPreset.js'
@@ -20,8 +21,10 @@ export const generate = async () => {
   const { possibleTypesFiles, errors: generatePossibleTypesErrors } =
     await generatePossibleTypes()
 
-  const { files: gqlormFiles, errors: gqlormErrors } =
-    await generateGqlormArtifacts()
+  const { files: gqlormFiles, errors: gqlormErrors } = config.experimental
+    ?.gqlorm?.enabled
+    ? await generateGqlormArtifacts()
+    : { files: [], errors: [] }
 
   if (config.graphql.trustedDocuments) {
     const preset = await generateClientPreset()
@@ -54,6 +57,14 @@ export const generate = async () => {
 }
 
 export const run = async () => {
+  // Load .env, .env.defaults, and .env.{NODE_ENV} before doing anything else.
+  // This mirrors what the Cedar CLI does in packages/cli/src/index.js and
+  // ensures that env vars like DATABASE_URL (which live in .env.defaults in
+  // freshly-created projects) are available when getPrismaSchemas() loads the
+  // Prisma config. Without this, cedar-gen bypasses the CLI bootstrap and
+  // prisma.config.cjs throws PrismaConfigEnvError for unresolved variables.
+  loadEnvFiles()
+
   console.log('Generating...')
   console.log()
 

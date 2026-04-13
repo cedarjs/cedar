@@ -108,7 +108,11 @@ yarn rw prisma migrate dev
 
 Whoops!
 
-<img width="584" alt="image" src="https://user-images.githubusercontent.com/300/192899337-9cc1167b-e6da-42d4-83dc-d2a6c0cd1179.png" />
+<img
+  width="584"
+  alt="image"
+  src="https://user-images.githubusercontent.com/300/192899337-9cc1167b-e6da-42d4-83dc-d2a6c0cd1179.png"
+/>
 
 Similar to what happened when we added `roles` to `User`, We made `userId` a required field, but we already have several posts in our development database. Since we don't have a default value for `userId` defined, it's impossible to add this column to the database.
 
@@ -409,11 +413,19 @@ So `context.currentUser` will always be around if you need access to the user th
 
 You should be able to create a post via the admin now:
 
-<img width="937" alt="image" src="https://user-images.githubusercontent.com/300/193152401-d98b488e-dd71-475a-a78c-6cd5233e5bee.png" />
+<img
+  width="937"
+  alt="image"
+  src="https://user-images.githubusercontent.com/300/193152401-d98b488e-dd71-475a-a78c-6cd5233e5bee.png"
+/>
 
 And going back to the hompage should actually start showing posts and their authors!
 
-<img width="937" alt="image" src="https://user-images.githubusercontent.com/300/193152524-2715e49d-a1c3-43a1-b968-84a4f8ae3846.png" />
+<img
+  width="937"
+  alt="image"
+  src="https://user-images.githubusercontent.com/300/193152524-2715e49d-a1c3-43a1-b968-84a4f8ae3846.png"
+/>
 
 ## Only Show a User Their Posts in Admin
 

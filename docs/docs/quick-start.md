@@ -39,9 +39,19 @@ yarn cedar dev
 
 Your browser should automatically open to [http://localhost:8910](http://localhost:8910) where you'll see the Welcome Page, which links out to many great resources:
 
-<img data-mode="light" src="/img/quick-start-light-theme.png" alt="CedarJS Welcome Page" style={{ marginBottom: 20 }} />
+<img
+  data-mode="light"
+  src="/img/quick-start-light-theme.png"
+  alt="CedarJS Welcome Page"
+  style={{ marginBottom: 20 }}
+/>
 
-<img data-mode="dark" src="/img/quick-start-dark-theme.png" alt="CedarJS Welcome Page" style={{ marginBottom: 20 }} />
+<img
+  data-mode="dark"
+  src="/img/quick-start-dark-theme.png"
+  alt="CedarJS Welcome Page"
+  style={{ marginBottom: 20 }}
+/>
 
 Congratulations on running your first Cedar CLI command!
 From dev to deploy, the CLI is with you the whole way.
@@ -111,7 +121,10 @@ yarn cedar generate scaffold post
 
 Navigate to [http://localhost:8910/posts/new](http://localhost:8910/posts/new), fill in the title and body, and click "Save":
 
-<img src="https://user-images.githubusercontent.com/300/73028004-72262c00-3de9-11ea-8924-66d1cc1fceb6.png" alt="Create a new post" />
+<img
+  src="https://user-images.githubusercontent.com/300/73028004-72262c00-3de9-11ea-8924-66d1cc1fceb6.png"
+  alt="Create a new post"
+/>
 
 Did we just create a post in the database? Yup! With `yarn cedar generate scaffold <model>`, Cedar created all the pages, components, and services necessary to perform all CRUD actions on our posts table.
 

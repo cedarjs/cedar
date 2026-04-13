@@ -190,6 +190,12 @@
           "properties": {
             "enabled": { "type": "boolean" }
           }
+        },
+        "gqlorm": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
         }
       }
     },

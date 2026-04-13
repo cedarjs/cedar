@@ -9,14 +9,14 @@ import { getPaths } from '@cedarjs/project-config'
 import { description, builder } from './commands/up'
 import { handler } from './commands/upHandler'
 
-if (!process.env.REDWOOD_ENV_FILES_LOADED) {
+if (!process.env.CEDAR_ENV_FILES_LOADED) {
   config({
     path: path.join(getPaths().base, '.env'),
     defaults: path.join(getPaths().base, '.env.defaults'),
     multiline: true,
   })
 
-  process.env.REDWOOD_ENV_FILES_LOADED = 'true'
+  process.env.CEDAR_ENV_FILES_LOADED = 'true'
 }
 
 yargs(hideBin(process.argv))
