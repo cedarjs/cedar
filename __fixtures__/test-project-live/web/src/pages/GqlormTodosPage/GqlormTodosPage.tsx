@@ -1,7 +1,7 @@
 import LiveTodos from 'src/components/LiveTodos'
 
-const GqlormTodoPage = () => {
+const GqlormTodosPage = () => {
   return <LiveTodos />
 }
 
-export default GqlormTodoPage
+export default GqlormTodosPage

@@ -36,8 +36,8 @@ const Routes = () => {
         <Route path="/posts" page={PostPostsPage} name="posts" />
       </Set>
       <Set wrap={BlogLayout}>
+        <Route path="/gqlorm-todos" page={GqlormTodosPage} name="gqlormTodos" />
         <Route path="/live-query" page={LiveQueryPage} name="liveQuery" />
-        <Route path="/gqlorm-todos" page={GqlormTodoPage} name="gqlormTodos" />
         <Route path="/waterfall/{id:Int}" page={WaterfallPage} prerender name="waterfall" />
         <Private unauthenticated="login">
           <Route path="/profile" page={ProfilePage} name="profile" />

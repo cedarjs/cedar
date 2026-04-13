@@ -93,7 +93,7 @@ export default async () => {
         todos.map(async (todo) => {
           const newTodo = await db.todo.create({ data: todo })
           console.log(newTodo)
-        }),
+        })
       )
     } else {
       console.log('Todos already seeded')
@@ -101,7 +101,6 @@ export default async () => {
   } catch (error) {
     console.error(error)
   }
-
   try {
     // Create your database records here! For example, seed some users:
     //
