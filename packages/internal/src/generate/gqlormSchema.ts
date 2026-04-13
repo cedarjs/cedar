@@ -5,6 +5,7 @@ import type * as DMMF from '@prisma/dmmf'
 import type * as PrismaInternals from '@prisma/internals'
 
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
+import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
 // These are Cedar/Redwood internal migration models that should never be
 // exposed
@@ -276,8 +277,7 @@ export function buildBackendModelInfo(dmmf: DMMF.Document): BackendModelInfo[] {
     if (fields.length > 0) {
       const camelName = model.name.charAt(0).toLowerCase() + model.name.slice(1)
 
-      // TODO: Use Cedar's pluralization utility for proper English plurals
-      const pluralName = camelName + 's'
+      const pluralName = pluralize(camelName)
 
       models.push({
         modelName: model.name,
@@ -446,7 +446,7 @@ export function generateGqlormBackendContent(
     if (model.idField) {
       const idNullMark = model.idField.isRequired ? '!' : ''
       lines.push(
-        `    ${model.camelName}(id: ${model.idField.graphqlType}${idNullMark}): ${model.modelName} @skipAuth`,
+        `    ${model.camelName}(${model.idField.name}: ${model.idField.graphqlType}${idNullMark}): ${model.modelName} @skipAuth`,
       )
     }
   }
@@ -478,12 +478,13 @@ export function generateGqlormBackendContent(
 
     // findUnique resolver
     if (model.idField) {
+      const idFieldName = model.idField.name
       const tsType = graphqlTypeToTsType(model.idField.graphqlType)
       lines.push(
-        `      ${model.camelName}: (_root: unknown, { id }: { id: ${tsType} }) => {`,
+        `      ${model.camelName}: (_root: unknown, { ${idFieldName} }: { ${idFieldName}: ${tsType} }) => {`,
       )
       lines.push(`        return db.${model.camelName}.findUnique({`)
-      lines.push(`          where: { id },`)
+      lines.push(`          where: { ${idFieldName} },`)
       lines.push(`          select: { ${selectObj} },`)
       lines.push('        })')
       lines.push('      },')
