@@ -124,6 +124,10 @@ export interface Config {
     }
     gqlorm: {
       enabled: boolean
+      organizationModel?: string
+      membershipModel?: string
+      membershipUserField?: string
+      membershipOrganizationField?: string
     }
   }
   eslintLegacyConfigWarning: boolean
@@ -217,6 +221,10 @@ export const DEFAULT_CONFIG: Config = {
     },
     gqlorm: {
       enabled: false,
+      organizationModel: 'Organization',
+      membershipModel: 'Membership',
+      membershipUserField: 'userId',
+      membershipOrganizationField: 'organizationId',
     },
   },
   eslintLegacyConfigWarning: true,

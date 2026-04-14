@@ -180,6 +180,12 @@ export interface DatabaseClient {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface GqlormTypeMap {}
 
+export type ScalarTypeForModel<TModel extends string> = GqlormTypeMap extends {
+  models: Record<TModel, infer TScalar>
+}
+  ? TScalar
+  : unknown
+
 type DefaultDbClient = GqlormTypeMap extends { db: infer TDb }
   ? TDb
   : DatabaseClient
@@ -194,11 +200,19 @@ type ModelDelegatePropertyName<TDb> = {
     : never
 }[keyof TDb]
 
+type RemapModelDelegatesToScalarTypes<TDb> = {
+  [K in keyof TDb]: K extends string
+    ? TDb[K] extends ModelDelegate<any>
+      ? ModelDelegate<ScalarTypeForModel<K>>
+      : TDb[K]
+    : TDb[K]
+}
+
 export type ModelDelegatesOnly<TDb> = [ModelDelegatePropertyName<TDb>] extends [
   never,
 ]
   ? DatabaseClient
-  : Pick<TDb, ModelDelegatePropertyName<TDb>>
+  : Pick<RemapModelDelegatesToScalarTypes<TDb>, ModelDelegatePropertyName<TDb>>
 
 export type FrameworkDbClient = ModelDelegatesOnly<DefaultDbClient>
 
