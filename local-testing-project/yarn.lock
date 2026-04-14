@@ -1706,7 +1706,7 @@ __metadata:
 
 "@cedarjs/api-server@file:../packages/api-server/cedarjs-api-server.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/api-server@file:../packages/api-server/cedarjs-api-server.tgz#../packages/api-server/cedarjs-api-server.tgz::hash=ede784&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/api-server@file:../packages/api-server/cedarjs-api-server.tgz#../packages/api-server/cedarjs-api-server.tgz::hash=975ae2&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/context": "npm:3.1.1"
     "@cedarjs/fastify-web": "npm:3.1.1"
@@ -1739,7 +1739,7 @@ __metadata:
     rw-api-server-watch: ./dist/cjs/watch.js
     rw-log-formatter: ./dist/cjs/logFormatter/bin.js
     rw-server: ./dist/cjs/bin.js
-  checksum: 10c0/c9a54861391c07edb2c03360d744f6e5f54395124018abc991ef083405b094de73298397b0a2757a0545e476e350258e4420af21ff142b8e50a7fa71f7d7e013
+  checksum: 10c0/e52c8b1b33d0bedd7b7f48e77b7e78f39ccb66953137998a1b278270d7667abd5bdf89e95928bcf6398f2a6d2f839dbd2fed41fa9ed2e2331a3c7b7d32fc67cd
   languageName: node
   linkType: hard
 
@@ -2057,7 +2057,7 @@ __metadata:
 
 "@cedarjs/graphql-server@file:../packages/graphql-server/cedarjs-graphql-server.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/graphql-server@file:../packages/graphql-server/cedarjs-graphql-server.tgz#../packages/graphql-server/cedarjs-graphql-server.tgz::hash=d1d6ee&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/graphql-server@file:../packages/graphql-server/cedarjs-graphql-server.tgz#../packages/graphql-server/cedarjs-graphql-server.tgz::hash=2ac924&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/api": "npm:3.1.1"
     "@cedarjs/context": "npm:3.1.1"
@@ -2078,7 +2078,7 @@ __metadata:
     graphql-yoga: "npm:5.21.0"
     lodash: "npm:4.18.1"
     uuid: "npm:11.1.0"
-  checksum: 10c0/8dec03c386c29d7d2ccfa8d3988cf32789f2aeb7387a5d11fa2893623e68e16ffd8ffb8454303010637bc8e9702f1735ef786c994b59eda56e9df5821d4bdaf4
+  checksum: 10c0/56ab054cfc11940fcf8ce0a8d36f2c8064bcc8ce8a8094b88e17efad42b05bad61da5a6e83f3cc57adc19c4abb14a49d9ac5b61c9b8cc5ae87fd4c797fa2ae94
   languageName: node
   linkType: hard
 

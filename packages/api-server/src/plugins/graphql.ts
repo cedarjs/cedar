@@ -4,13 +4,20 @@ import fg from 'fast-glob'
 import type { FastifyInstance, HTTPMethods } from 'fastify'
 import type { Plugin as YogaPlugin } from 'graphql-yoga'
 
-import type { CedarHandler, CedarRequestContext } from '@cedarjs/api'
-import { buildCedarContext } from '@cedarjs/api'
+import type {
+  CedarHandler,
+  CedarRequestContext,
+  LegacyHandlerResult,
+} from '@cedarjs/api'
+import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
-import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
+import type {
+  CedarGraphQLContext,
+  GraphQLYogaOptions,
+} from '@cedarjs/graphql-server'
 import { getPaths } from '@cedarjs/project-config'
 
 import { lambdaEventForFastifyRequest } from '../requestHandlers/awsLambdaFastify.js'
@@ -98,7 +105,20 @@ export async function redwoodFastifyGraphQLServer(
       request: Request,
       cedarContext: CedarRequestContext,
     ) => {
-      return yoga.fetch(request, { cedarContext, request })
+      const legacyGraphQLHandler = wrapLegacyHandler(
+        async (event, requestContext): Promise<LegacyHandlerResult> => {
+          const graphQLContext: CedarGraphQLContext = {
+            request,
+            cedarContext,
+            event,
+            requestContext,
+          }
+
+          return yoga.fetch(request, graphQLContext)
+        },
+      )
+
+      return legacyGraphQLHandler(request, cedarContext)
     }
 
     const graphqlEndpoint = trimSlashes(yoga.graphqlEndpoint)
@@ -113,10 +133,10 @@ export async function redwoodFastifyGraphQLServer(
             const requestBody =
               req.method === 'GET' || req.method === 'HEAD'
                 ? undefined
-                : typeof req.rawBody === 'string'
-                  ? req.rawBody
-                  : req.rawBody
-                    ? Buffer.from(req.rawBody).toString()
+                : typeof req.body === 'string'
+                  ? req.body
+                  : req.body
+                    ? JSON.stringify(req.body)
                     : undefined
 
             const request = new Request(

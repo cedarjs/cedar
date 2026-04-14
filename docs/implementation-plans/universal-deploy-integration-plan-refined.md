@@ -497,6 +497,66 @@ GraphQL migration is mostly wiring:
 This should be one of the first things done in Phase 1 because it
 validates the handler contract against a real, complex entry point.
 
+#### GraphQL Transitional Context Bridge
+
+During the Phase 1 migration, Cedar's GraphQL execution path may still
+need to provide legacy-shaped GraphQL context fields to existing Yoga
+plugins and auth integrations. In practice, this means Cedar can be
+Fetch-native at the handler boundary while still passing these
+transitional fields into Yoga context:
+
+- `request: Request`
+- `cedarContext: CedarRequestContext`
+- `event: APIGatewayProxyEvent` (legacy bridge)
+- `requestContext: LambdaContext | undefined` (legacy bridge)
+
+This bridge is transitional. It exists to keep current GraphQL auth,
+logging, and context plugins working while Cedar moves the GraphQL
+stack toward Fetch-native shapes internally.
+
+The important distinction is:
+
+- Cedar's public server-entry contract should be `Request -> Response`
+- GraphQL's internal plugin context may temporarily carry both
+  Fetch-native and legacy fields
+- New Cedar GraphQL code should prefer `request` and `cedarContext`
+  over `event` and `requestContext`
+
+#### GraphQL Plugin Migration Path
+
+GraphQL plugin migration should happen in explicit steps:
+
+1. Introduce Fetch-native fields into GraphQL context:
+   - `request`
+   - `cedarContext`
+   - Status: Completed
+2. Teach Cedar-owned Yoga plugins to prefer Fetch-native fields first,
+   while still falling back to legacy fields when needed
+   - Status: In progress
+   - Completed so far:
+     - `useRedwoodAuthContext`
+     - `useRedwoodLogger`
+   - Remaining Cedar-owned plugins to review and migrate where
+     applicable:
+     - `useArmor`
+     - `useRedwoodDirective`
+     - `useRedwoodError`
+     - `useRedwoodGlobalContextSetter`
+     - `useRedwoodOpenTelemetry`
+     - `useRedwoodPopulateContext`
+     - `useRedwoodTrustedDocuments`
+3. Deprecate direct dependence on:
+   - `event`
+   - `requestContext`
+   - Status: Not started
+4. Remove legacy GraphQL context fields only after Cedar-owned plugins
+   and supported auth integrations no longer require them
+   - Status: Not started
+
+This avoids a flag day for GraphQL internals while still keeping the
+overall Cedar runtime migration pointed at the correct target
+architecture.
+
 #### Compatibility Shim
 
 To avoid a flag day for existing apps, Phase 1 includes a shim:
@@ -523,6 +583,12 @@ the new shape.
 - Legacy handler compatibility shim (`wrapLegacyHandler`)
 - Function execution that no longer depends on Lambda shape internally
 - GraphQL running as a Fetch-native Cedar server entry
+- Transitional GraphQL context bridge that exposes `request` and
+  `cedarContext` while preserving `event` and `requestContext` for
+  compatibility
+- First-stage GraphQL plugin migration where Cedar-owned plugins can
+  begin preferring Fetch-native context while still supporting legacy
+  fields
 
 #### Exit Criteria
 
@@ -530,6 +596,11 @@ the new shape.
   `Request → Response`
 - GraphQL is treated as a Fetch-native Cedar server entry
 - Existing legacy-shaped handlers work via the compatibility shim
+- Cedar-owned GraphQL plugins can read Fetch-native context fields
+  (`request`, `cedarContext`) and prefer them over legacy fields
+  where migrated
+- Remaining Cedar-owned GraphQL plugins are explicitly identified for
+  follow-up migration work
 - Middleware composes over the new handler contract
 - Fastify is no longer the defining contract for Cedar backend
   execution
@@ -885,6 +956,13 @@ migration path is provided.
 Existing legacy-shaped handlers are wrapped automatically by
 `wrapLegacyHandler`.
 This buys time for app developers to migrate at their own pace.
+
+GraphQL has a similar transitional bridge during Phase 1, but at the
+plugin-context level rather than the server-entry level: Cedar may
+continue to provide `event` and `requestContext` to existing Yoga
+plugins while also introducing `request` and `cedarContext`. This is
+meant to preserve compatibility while Cedar-owned GraphQL plugins are
+updated to prefer Fetch-native context.
 
 ### Codemod for Handler Migration
 

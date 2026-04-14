@@ -1,3 +1,4 @@
+import type { APIGatewayProxyEvent } from 'aws-lambda'
 import type { Plugin } from 'graphql-yoga'
 
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
@@ -18,9 +19,11 @@ export const useRedwoodAuthContext = (
       let authContext: AuthContextPayload | undefined = undefined
 
       try {
+        const authEvent = getAuthEvent(context)
+
         authContext = await getAuthenticationContext({
           authDecoder,
-          event: context.event,
+          event: authEvent,
           context: context.requestContext,
         })
       } catch (error: any) {
@@ -48,4 +51,14 @@ export const useRedwoodAuthContext = (
       }
     },
   }
+}
+
+function getAuthEvent(
+  context: CedarGraphQLContext,
+): APIGatewayProxyEvent | Request {
+  if (context.request) {
+    return context.request
+  }
+
+  return context.event
 }

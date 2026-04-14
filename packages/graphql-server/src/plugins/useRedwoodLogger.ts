@@ -269,13 +269,16 @@ export const useRedwoodLogger = (
 
       if (includeRequestId) {
         options['requestId'] =
+          args.contextValue.request?.headers.get('x-request-id') ||
           args.contextValue.requestContext?.awsRequestId ||
           args.contextValue.event?.requestContext?.requestId ||
           uuidv4()
       }
 
       if (includeUserAgent) {
-        options['userAgent'] = args.contextValue.event?.headers['user-agent']
+        options['userAgent'] =
+          args.contextValue.request?.headers.get('user-agent') ||
+          args.contextValue.event?.headers['user-agent']
       }
 
       const envelopLogger = childLogger.child({
