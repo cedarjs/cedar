@@ -26,16 +26,24 @@ export const lambdaEventForFastifyRequest = (
   return {
     httpMethod: request.method,
     headers: request.headers,
+    multiValueHeaders: {},
     path: request.urlData('path'),
+    pathParameters: null,
     queryStringParameters: qsParams,
+    multiValueQueryStringParameters: null,
+    stageVariables: null,
     requestContext: {
       requestId: request.id,
       identity: {
         sourceIp: request.ip,
       },
     },
+    resource: request.urlData('path') ?? request.url,
     ...parseBody(request.rawBody || ''), // adds `body` and `isBase64Encoded`
-  } as APIGatewayProxyEvent
+    // Safe at this Fastify-to-Lambda boundary: we populate the APIGatewayProxyEvent
+    // fields Cedar's legacy handlers rely on, and the remaining fields are optional
+    // in practice across our supported adapters.
+  } as unknown as APIGatewayProxyEvent
 }
 
 const fastifyResponseForLambdaResult = (

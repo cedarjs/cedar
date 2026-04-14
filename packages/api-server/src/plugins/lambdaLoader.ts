@@ -194,7 +194,16 @@ export const lambdaRequestHandler = async (
   reply: FastifyReply,
 ) => {
   const { routeName } = req.params
-  const cedarHandler = CEDAR_HANDLERS[routeName]
+  const cedarHandlerCandidate = Object.prototype.hasOwnProperty.call(
+    CEDAR_HANDLERS,
+    routeName,
+  )
+    ? CEDAR_HANDLERS[routeName]
+    : undefined
+  const cedarHandler =
+    typeof cedarHandlerCandidate === 'function'
+      ? cedarHandlerCandidate
+      : undefined
 
   if (cedarHandler) {
     const requestBody =

@@ -16,16 +16,19 @@ export const useRedwoodAuthContext = (
 ): Plugin<CedarGraphQLContext> => {
   return {
     async onContextBuilding({ context, extendContext }) {
-      let authContext: AuthContextPayload | undefined = undefined
+      let authContext: AuthContextPayload | undefined =
+        context.cedarContext?.serverAuthState
 
       try {
-        const authEvent = getAuthEvent(context)
+        if (!authContext) {
+          const authEvent = getAuthEvent(context)
 
-        authContext = await getAuthenticationContext({
-          authDecoder,
-          event: authEvent,
-          context: context.requestContext,
-        })
+          authContext = await getAuthenticationContext({
+            authDecoder,
+            event: authEvent,
+            context: context.requestContext,
+          })
+        }
       } catch (error: any) {
         throw new Error(
           `Exception in getAuthenticationContext: ${error.message}`,

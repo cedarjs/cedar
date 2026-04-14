@@ -4,6 +4,7 @@ import type {
   Context as LambdaContext,
 } from 'aws-lambda'
 
+import { getAuthenticationContext } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
@@ -102,6 +103,16 @@ export const createGraphQLHandler = ({
         {
           event,
           requestContext,
+          cedarContext: {
+            params: event.pathParameters ?? {},
+            query: event.queryStringParameters ?? {},
+            cookies: {},
+            serverAuthState: await getAuthenticationContext({
+              authDecoder,
+              event,
+              context: requestContext,
+            }),
+          },
         },
       )
 
