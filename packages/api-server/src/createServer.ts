@@ -152,7 +152,10 @@ export async function createServer(options: CreateServerOptions = {}) {
 
   // For baremetal and pm2. See https://github.com/redwoodjs/redwood/pull/4744
   server.addHook('onReady', (done) => {
-    process.send?.('ready')
+    if (process.env.VITEST !== 'true') {
+      process.send?.('ready')
+    }
+
     done()
   })
 

@@ -901,7 +901,7 @@ export const handler = async (event, context) => {
 }
 
 // After: Cedar handle shape
-export const handle = async (request, ctx) => {
+export async function handle(request, ctx) {
   const body = await request.json()
   return new Response(JSON.stringify({ data: body }), {
     status: 200,

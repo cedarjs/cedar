@@ -31,6 +31,7 @@ await build({
     // NOTE: building the bins as CJS only so they can still use
     // require.resolve()
     ignore: [...defaultIgnorePatterns, 'src/bins/**'],
+    extra: ['runtime.js'],
   },
   buildOptions: {
     ...defaultBuildOptions,

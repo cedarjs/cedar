@@ -20,6 +20,17 @@
       }
     },
     "./package.json": "./package.json",
+    "./runtime": {
+      "import": {
+        "types": "./dist/runtime.d.ts",
+        "default": "./dist/runtime.js"
+      },
+      "require": {
+        "types": "./dist/cjs/runtime.d.ts",
+        "default": "./dist/cjs/runtime.js"
+      }
+    },
+    "./src/runtime.js": "./runtime.js",
     "./auth": {
       "import": {
         "types": "./dist/auth/index.d.ts",

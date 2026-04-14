@@ -20,6 +20,7 @@ export interface CedarFastifyAPIOptions {
     discoverFunctionsGlob?: string | string[]
     loadUserConfig?: boolean
     configureServer?: (server: Server) => void | Promise<void>
+    onRoutesDiscovered?: (routes: unknown[]) => void | Promise<void>
   }
 }
 

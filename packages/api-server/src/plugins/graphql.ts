@@ -4,6 +4,8 @@ import fg from 'fast-glob'
 import type { FastifyInstance, HTTPMethods } from 'fastify'
 import type { Plugin as YogaPlugin } from 'graphql-yoga'
 
+import type { CedarHandler } from '@cedarjs/api'
+import { buildCedarContext } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
@@ -24,6 +26,7 @@ export async function redwoodFastifyGraphQLServer(
   fastify: FastifyInstance,
   options: RedwoodFastifyGraphQLOptions,
 ) {
+  let cedarGraphQLHandler: CedarHandler | undefined
   const redwoodOptions = options.redwood ?? {}
   redwoodOptions.apiRootPath ??= '/'
   redwoodOptions.apiRootPath = coerceRootPath(redwoodOptions.apiRootPath)
@@ -91,6 +94,16 @@ export async function redwoodFastifyGraphQLServer(
 
     const { yoga } = createGraphQLYoga(graphqlOptions)
 
+    cedarGraphQLHandler = async (request: Request) => {
+      const ctx = await buildCedarContext(request)
+      const response = await yoga.fetch(request, {
+        cedarContext: ctx,
+        request,
+      })
+
+      return response
+    }
+
     const graphqlEndpoint = trimSlashes(yoga.graphqlEndpoint)
 
     const routePaths = ['', '/health', '/readiness', '/stream']
@@ -98,12 +111,49 @@ export async function redwoodFastifyGraphQLServer(
       fastify.route({
         url: `${redwoodOptions.apiRootPath}${graphqlEndpoint}${routePath}`,
         method,
-        handler: (req, reply) =>
-          yoga.handleNodeRequestAndResponse(req, reply, {
+        handler: async (req, reply) => {
+          if (cedarGraphQLHandler) {
+            const requestBody =
+              req.method === 'GET' || req.method === 'HEAD'
+                ? undefined
+                : typeof req.rawBody === 'string'
+                  ? req.rawBody
+                  : req.rawBody
+                    ? Buffer.from(req.rawBody).toString()
+                    : undefined
+
+            const request = new Request(
+              `http://localhost${req.raw.url ?? '/'}`,
+              {
+                method: req.method,
+                headers: req.headers as HeadersInit,
+                body: requestBody,
+              },
+            )
+
+            const response = await cedarGraphQLHandler(
+              request,
+              await buildCedarContext(request),
+            )
+
+            reply.status(response.status)
+
+            response.headers.forEach((value: string, name: string) => {
+              reply.header(name, value)
+            })
+
+            const body = await response.arrayBuffer()
+            reply.send(Buffer.from(body))
+
+            return
+          }
+
+          return yoga.handleNodeRequestAndResponse(req, reply, {
             req,
             reply,
             event: lambdaEventForFastifyRequest(req),
-          }),
+          })
+        },
       })
     }
 

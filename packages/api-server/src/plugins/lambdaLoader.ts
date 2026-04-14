@@ -13,6 +13,16 @@ import type {
   RequestGenericInterface,
 } from 'fastify'
 
+import type {
+  CedarHandler,
+  CedarRouteRecord,
+  LegacyHandler,
+} from '@cedarjs/api'
+import {
+  buildCedarContext,
+  routeManifestToJSON,
+  wrapLegacyHandler,
+} from '@cedarjs/api'
 import { getPaths } from '@cedarjs/project-config'
 
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
@@ -20,6 +30,8 @@ import { escape } from '../utils.js'
 
 export type Lambdas = Record<string, Handler>
 export const LAMBDA_FUNCTIONS: Lambdas = {}
+export const CEDAR_HANDLERS: Record<string, CedarHandler> = {}
+export const CEDAR_ROUTE_MANIFEST: CedarRouteRecord[] = []
 
 // Import the API functions and add them to the LAMBDA_FUNCTIONS object
 
@@ -27,9 +39,12 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
   const tsImport = Date.now()
   console.log(ansis.dim.italic('Importing Server Functions... '))
 
+  CEDAR_ROUTE_MANIFEST.length = 0
+
   const imports = foundFunctions.map(async (fnPath) => {
     const ts = Date.now()
     const routeName = path.basename(fnPath).replace('.js', '')
+    const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
 
     const fnImport = await import(`file://${fnPath}`)
     const handler: Handler = (() => {
@@ -56,15 +71,57 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
       return undefined
     })()
 
+    const cedarHandler: CedarHandler | undefined = (() => {
+      if ('handle' in fnImport && typeof fnImport.handle === 'function') {
+        return fnImport.handle as CedarHandler
+      }
+
+      if (
+        'default' in fnImport &&
+        fnImport.default &&
+        'handle' in fnImport.default &&
+        typeof fnImport.default.handle === 'function'
+      ) {
+        return fnImport.default.handle as CedarHandler
+      }
+
+      return undefined
+    })()
+
     LAMBDA_FUNCTIONS[routeName] = handler
-    if (!handler) {
+
+    if (cedarHandler) {
+      CEDAR_HANDLERS[routeName] = cedarHandler
+    } else if (handler) {
+      CEDAR_HANDLERS[routeName] = await wrapLegacyHandler(
+        handler as LegacyHandler,
+      )
+    }
+
+    if (!handler && !cedarHandler) {
       console.warn(
         routeName,
         'at',
         fnPath,
-        'does not have a function called handler defined.',
+        'does not have a function called handler or handle defined.',
       )
     }
+
+    CEDAR_ROUTE_MANIFEST.push({
+      path: routePath,
+      methods:
+        routeName === 'graphql' ? ['GET', 'POST', 'OPTIONS'] : ['GET', 'POST'],
+      type:
+        routeName === 'graphql'
+          ? 'graphql'
+          : routeName === 'health'
+            ? 'health'
+            : routeName.toLowerCase().includes('auth')
+              ? 'auth'
+              : 'function',
+      entry: fnPath,
+    })
+
     // TODO: Use terminal link.
     console.log(
       ansis.magenta('/' + routeName),
@@ -74,6 +131,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
 
   await Promise.all(imports)
 
+  console.log(routeManifestToJSON(CEDAR_ROUTE_MANIFEST))
   console.log(
     ansis.dim.italic('...Done importing in ' + (Date.now() - tsImport) + ' ms'),
   )
@@ -143,6 +201,43 @@ export const lambdaRequestHandler = async (
   reply: FastifyReply,
 ) => {
   const { routeName } = req.params
+  const cedarHandler = CEDAR_HANDLERS[routeName]
+
+  if (cedarHandler) {
+    const requestBody =
+      req.method === 'GET' || req.method === 'HEAD'
+        ? undefined
+        : typeof req.rawBody === 'string'
+          ? req.rawBody
+          : req.rawBody
+            ? Buffer.from(req.rawBody).toString()
+            : undefined
+
+    const request = new Request(`http://localhost${req.raw.url ?? '/'}`, {
+      method: req.method,
+      headers: req.headers as HeadersInit,
+      body: requestBody,
+    })
+
+    const ctx = await buildCedarContext(request, {
+      params: {
+        routeName,
+      },
+    })
+
+    const response = await cedarHandler(request, ctx)
+
+    reply.status(response.status)
+
+    response.headers.forEach((value: string, name: string) => {
+      reply.header(name, value)
+    })
+
+    const body = await response.arrayBuffer()
+    reply.send(Buffer.from(body))
+
+    return
+  }
 
   if (!LAMBDA_FUNCTIONS[routeName]) {
     const errorMessage = `Function "${routeName}" was not found.`
@@ -152,7 +247,10 @@ export const lambdaRequestHandler = async (
     if (process.env.NODE_ENV === 'development') {
       const devError = {
         error: errorMessage,
-        availableFunctions: Object.keys(LAMBDA_FUNCTIONS),
+        availableFunctions: Object.keys({
+          ...LAMBDA_FUNCTIONS,
+          ...CEDAR_HANDLERS,
+        }),
       }
       reply.send(devError)
     } else {
@@ -161,5 +259,6 @@ export const lambdaRequestHandler = async (
 
     return
   }
+
   return requestHandler(req, reply, LAMBDA_FUNCTIONS[routeName])
 }
