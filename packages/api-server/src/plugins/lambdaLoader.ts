@@ -18,11 +18,7 @@ import type {
   CedarRouteRecord,
   LegacyHandler,
 } from '@cedarjs/api'
-import {
-  buildCedarContext,
-  routeManifestToJSON,
-  wrapLegacyHandler,
-} from '@cedarjs/api'
+import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api'
 import { getPaths } from '@cedarjs/project-config'
 
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
@@ -129,7 +125,6 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
 
   await Promise.all(imports)
 
-  console.log(routeManifestToJSON(CEDAR_ROUTE_MANIFEST))
   console.log(
     ansis.dim.italic('...Done importing in ' + (Date.now() - tsImport) + ' ms'),
   )

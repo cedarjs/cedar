@@ -266,9 +266,7 @@ describe('wrapLegacyHandler', () => {
       }
     })
 
-    const wrapped = await wrapLegacyHandler(legacyHandler)
-
-    const response = await wrapped(
+    const response = await wrapLegacyHandler(legacyHandler)(
       new Request('http://localhost/hello?name=cedar', {
         method: 'POST',
         body: JSON.stringify({
