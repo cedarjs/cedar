@@ -23,12 +23,12 @@ vi.mock('@cedarjs/project-config', async (importOriginal) => {
   }
 })
 
-beforeEach(() => {
-  const FIXTURE_PATH = path.resolve(
-    __dirname,
-    '../../../../__fixtures__/example-todo-main',
-  )
+const FIXTURE_PATH = path.resolve(
+  __dirname,
+  '../../../../__fixtures__/example-todo-main',
+)
 
+beforeEach(() => {
   process.env.CEDAR_CWD = FIXTURE_PATH
 })
 

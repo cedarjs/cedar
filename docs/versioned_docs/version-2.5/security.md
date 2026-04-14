@@ -53,7 +53,7 @@ Because both introspection and the playground share possibly sensitive informati
 
 :::note
 
-<!-- Link to graphql.md docs -->
+{/* Link to graphql.md docs */}
 
 For more information on how to enable introspection in production, please see the [GraphQL Docs](graphql.md#introspection-and-playground-disabled-in-production).
 :::

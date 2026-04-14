@@ -171,6 +171,24 @@ function getPagesTasks(live = false) {
               fs.writeFileSync(liveQueryPagePath, updatedContent, 'utf8')
             },
           },
+          {
+            title: 'Creating gqlorm todo page',
+            task: async () => {
+              await createPage('gqlormTodos')
+
+              const gqlormTodosPagePath = fullPath(
+                'web/src/pages/GqlormTodosPage/GqlormTodosPage',
+              )
+              const pageContent =
+                "import LiveTodos from 'src/components/LiveTodos'\n\n" +
+                'const GqlormTodosPage = () => {\n' +
+                '  return <LiveTodos />\n' +
+                '}\n\n' +
+                'export default GqlormTodosPage\n'
+
+              fs.writeFileSync(gqlormTodosPagePath, pageContent, 'utf8')
+            },
+          },
         ]
       : []),
   ]
@@ -209,37 +227,8 @@ export function webTasksList(live = false) {
 
   if (live) {
     taskList.push({
-      title: 'Adding configureGqlorm to App.tsx',
-      task: () => {
-        const appTsxPath = path.join(fullPath('web/src/App'))
-        let appTsxContent = fs.readFileSync(appTsxPath, 'utf8')
-
-        appTsxContent = appTsxContent.replace(
-          "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
-          "import { configureGqlorm } from '@cedarjs/gqlorm/setup'\n" +
-            'import { FatalErrorBoundary, RedwoodProvider } from ' +
-            "'@cedarjs/web'",
-        )
-
-        appTsxContent = appTsxContent.replace(
-          'interface AppProps {',
-          `// Configure gqlorm with the scalar fields for each Prisma model.
-            // Sensitive fields (hashedPassword, salt, resetToken, resetTokenExpiresAt)
-            // and relation fields (author, posts) are intentionally excluded.
-            // We hardcode all of these for now, until we have codegen in place.
-            configureGqlorm({
-              schema: {
-                post: ['id', 'title', 'body', 'authorId', 'createdAt'],
-                user: ['id', 'email', 'fullName', 'roles'],
-                contact: ['id', 'name', 'email', 'message', 'createdAt'],
-              },
-            })
-
-            interface AppProps {`,
-        )
-
-        return fs.promises.writeFile(appTsxPath, appTsxContent)
-      },
+      title: 'Adding configureGqlorm(...) to App.tsx',
+      task: () => addGqlorm(),
     })
   }
 
@@ -517,9 +506,50 @@ export function apiTasksList({
         }
 
         const setup = createBuilder('yarn cedar setup')
+        const experimental = createBuilder('yarn cedar experimental')
 
         await setup(['realtime', '--no-examples'])
-        await setup('live-queries')
+        await experimental('setup-live-queries')
+      },
+    },
+    {
+      title: 'Adding Todo model for gqlorm',
+      task: async () => {
+        if (!live) {
+          return
+        }
+
+        const { todo } = await import('./codemods/models.mts')
+        await addModel(todo)
+
+        // Insert todo seed data before the "no seed data" placeholder block
+        const seedPath = path.join(getOutputPath(), 'scripts', 'seed.ts')
+        const seedContent = fs.readFileSync(seedPath, 'utf8')
+        const templatePath = path.join(
+          import.meta.dirname,
+          'templates',
+          'scripts',
+          'todoSeed.ts.template',
+        )
+        const todoSeedTemplate = fs.readFileSync(templatePath, 'utf8')
+        const newSeedContent = seedContent.replace(
+          '  try {\n    // Create your database records here',
+          `${todoSeedTemplate}try {\n    // Create your database records here`,
+        )
+        fs.writeFileSync(seedPath, newSeedContent, 'utf8')
+
+        // The earlier normalizeMigrationFolderNames() call renamed migration
+        // folders on disk, but the database's _prisma_migrations table still
+        // holds the old timestamp names. Reset the database first so all
+        // existing migrations are re-applied under their current names, then
+        // create the Todo migration on top of a clean, in-sync baseline.
+        await exec('yarn cedar prisma migrate reset', ['--force'], execaOptions)
+
+        return exec(
+          'yarn cedar prisma migrate dev --name todo-model',
+          [],
+          execaOptions,
+        )
       },
     },
     {
@@ -586,6 +616,14 @@ export async function createComponents(live = false) {
     const templatePath = path.join(templatesPath, 'LivePosts.tsx')
     const componentPath = fullPath('web/src/components/LivePosts/LivePosts')
     fs.copyFileSync(templatePath, componentPath)
+
+    await createComponent('liveTodos')
+
+    const liveTodosTemplatePath = path.join(templatesPath, 'LiveTodos.tsx')
+    const liveTodosComponentPath = fullPath(
+      'web/src/components/LiveTodos/LiveTodos',
+    )
+    fs.copyFileSync(liveTodosTemplatePath, liveTodosComponentPath)
   }
 }
 
@@ -661,6 +699,31 @@ export async function updateCellMocks() {
       },
     ),
   )
+}
+
+async function addGqlorm() {
+  const appTsxPath = path.join(fullPath('web/src/App'))
+  let appTsxContent = fs.readFileSync(appTsxPath, 'utf8')
+
+  appTsxContent = appTsxContent.replace(
+    "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+    "import { configureGqlorm } from '@cedarjs/gqlorm/setup'\n" +
+      "import { FatalErrorBoundary, RedwoodProvider } from '@cedarjs/web'",
+  )
+
+  appTsxContent = appTsxContent.replace(
+    "import FatalErrorPage from 'src/pages/FatalErrorPage'",
+    "import FatalErrorPage from 'src/pages/FatalErrorPage'\n\n" +
+      "import schema from '../../.cedar/gqlorm-schema.json' " +
+      "with { type: 'json' }",
+  )
+
+  appTsxContent = appTsxContent.replace(
+    'interface AppProps {',
+    'configureGqlorm({ schema })\n\ninterface AppProps {',
+  )
+
+  return fs.promises.writeFile(appTsxPath, appTsxContent)
 }
 
 async function addDbAuth(localDbAuth: boolean, linkWithLatestFwBuild: boolean) {

@@ -3,10 +3,9 @@ import execa from 'execa'
 import { Listr } from 'listr2'
 import prompts from 'prompts'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { getConfig } from '@cedarjs/project-config'
 
-import c from '../../../lib/colors.js'
 import { writeFilesTask, transformTSToJS } from '../../../lib/index.js'
 import {
   prepareForRollback,
@@ -138,10 +137,10 @@ export const handler = async (args) => {
         task: () => {
           // Regenerate again at the end if we rollback changes
           addFunctionToRollback(async () => {
-            await execa('yarn', ['rw-gen'], { stdio: 'pipe' })
+            await execa('yarn', ['cedar-gen'], { stdio: 'pipe' })
           }, true)
 
-          return execa('yarn', ['rw-gen'], { stdio: 'inherit' })
+          return execa('yarn', ['cedar-gen'], { stdio: 'inherit' })
         },
       },
       {

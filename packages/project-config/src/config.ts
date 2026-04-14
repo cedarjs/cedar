@@ -122,6 +122,13 @@ export interface Config {
     packagesWorkspace: {
       enabled: boolean
     }
+    gqlorm: {
+      enabled: boolean
+      organizationModel?: string
+      membershipModel?: string
+      membershipUserField?: string
+      membershipOrganizationField?: string
+    }
   }
   eslintLegacyConfigWarning: boolean
 }
@@ -211,6 +218,13 @@ export const DEFAULT_CONFIG: Config = {
     },
     packagesWorkspace: {
       enabled: false,
+    },
+    gqlorm: {
+      enabled: false,
+      organizationModel: 'Organization',
+      membershipModel: 'Membership',
+      membershipUserField: 'userId',
+      membershipOrganizationField: 'organizationId',
     },
   },
   eslintLegacyConfigWarning: true,

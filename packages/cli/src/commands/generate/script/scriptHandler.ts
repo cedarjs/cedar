@@ -3,11 +3,9 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
-import c from '../../../lib/colors.js'
 import {
   getPaths,
   writeFilesTask,

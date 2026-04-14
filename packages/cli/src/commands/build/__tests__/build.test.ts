@@ -74,11 +74,31 @@ vi.mock('@cedarjs/internal/dist/generate/generate', () => ({
   generate: vi.fn(),
 }))
 
+vi.mock('@cedarjs/internal/dist/generate/gqlormSchema', () => ({
+  generateGqlormArtifacts: vi.fn().mockResolvedValue({ errors: [] }),
+}))
+
 vi.mock('@cedarjs/internal/dist/validateSchema', () => ({
   loadAndValidateSdls: vi.fn(),
 }))
 
 vi.mock('@cedarjs/cli-helpers', () => ({
+  colors: Object.fromEntries(
+    [
+      'error',
+      'warning',
+      'highlight',
+      'success',
+      'info',
+      'bold',
+      'underline',
+      'note',
+      'tip',
+      'important',
+      'caution',
+      'link',
+    ].map((k) => [k, (s) => s]),
+  ),
   recordTelemetryAttributes: vi.fn(),
 }))
 
@@ -204,4 +224,22 @@ test('Should run prerender for web (packagesWorkspace disabled)', async () => {
   expect(consoleSpy.mock.calls[1][0]).toMatch(
     /You have not marked any routes to "prerender"/,
   )
+})
+
+test('Generating gqlorm schema task is included when experimental.gqlorm.enabled is true', async () => {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+  mockGetConfig.mockReturnValue({
+    experimental: { gqlorm: { enabled: true } },
+  })
+
+  await handler({ workspace: ['web'] })
+
+  const firstCallArg = vi.mocked(Listr).mock.calls[0][0]
+  const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
+  expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
+    [
+      "Generating gqlorm schema...",
+      "Building Web...",
+    ]
+  `)
 })

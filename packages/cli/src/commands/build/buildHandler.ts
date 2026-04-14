@@ -7,7 +7,7 @@ import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 import { terminalLink } from 'termi-link'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
+import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import {
   formatCedarCommand,
   formatRunWorkspaceScriptCommand,
@@ -15,13 +15,12 @@ import {
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { buildApi, cleanApiBuild } from '@cedarjs/internal/dist/build/api'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
+import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { type Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
-import c from '../../lib/colors.js'
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../../lib/index.js'
@@ -218,6 +217,18 @@ export const handler = async ({
       title: gqlFeaturesTaskTitle,
       task: generate,
     },
+    workspace.includes('web') &&
+      cedarConfig.experimental?.gqlorm?.enabled && {
+        title: 'Generating gqlorm schema...',
+        task: async () => {
+          const { errors } = await generateGqlormArtifacts()
+          if (errors.length > 0) {
+            for (const { message } of errors) {
+              console.warn(`Warning: ${message}`)
+            }
+          }
+        },
+      },
     workspace.includes('api') && {
       title: 'Verifying graphql schema...',
       task: loadAndValidateSdls,

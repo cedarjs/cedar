@@ -23,5 +23,8 @@
 [notifications]
   versionUpdates = ["latest"]
 
+[experimental.gqlorm]
+  enabled = true
+
 [experimental.packagesWorkspace]
   enabled = true

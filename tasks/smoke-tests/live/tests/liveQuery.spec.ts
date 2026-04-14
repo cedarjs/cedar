@@ -110,6 +110,38 @@ test('useLiveQuery hook renders posts', async ({ page }) => {
   ).toBeVisible()
 })
 
+test('useLiveQuery schema-aware selection: post body field is rendered', async ({
+  page,
+}) => {
+  // This test verifies that the generated gqlorm-schema.json causes
+  // useLiveQuery to request the `body` field in addition to `id`. If only
+  // `id` were selected (the id-only fallback), the body text would not be
+  // returned by the GraphQL server and this assertion would fail.
+  await page.goto('/live-query')
+
+  await expect(page.getByText('Loading')).not.toBeVisible()
+
+  await expect(page.getByText('hoodie post-ironic paleo')).toBeVisible()
+})
+
+test('useLiveQuery schema-aware selection: post createdAt field is rendered', async ({
+  page,
+}) => {
+  // This test verifies that `createdAt` — a field that is included in the
+  // auto-generated gqlorm-schema.json — is fetched and displayed. The
+  // LivePosts component renders a <time data-testid="post-created-at"> element.
+  // If the schema did not include `createdAt`, the element would be empty or
+  // missing, and this assertion would fail.
+  await page.goto('/live-query')
+
+  await expect(page.getByText('Loading')).not.toBeVisible()
+
+  const createdAtEl = page.getByTestId('post-created-at').first()
+
+  await expect(createdAtEl).toBeVisible()
+  await expect(createdAtEl).not.toBeEmpty()
+})
+
 test('useLiveQuery hook updates when data changes', async ({ page }) => {
   await page.goto('/live-query')
 
@@ -199,4 +231,52 @@ test('useLiveQuery hook reflects newly created records', async ({ page }) => {
   await expect(page.getByText('Created during useLiveQuery test')).toBeVisible()
 
   fs.unlinkSync(scriptPath)
+})
+
+test.describe('gqlorm auto-generated backend', () => {
+  test('todo list renders', async ({ page }) => {
+    // This test verifies the full gqlorm backend pipeline: the Todo model has
+    // no manually-written SDL or service file. The codegen generates
+    // __gqlorm__.sdl.ts which provides the GraphQL type and query resolvers.
+    // useLiveQuery((db) => db.todo.findMany()) on the frontend generates a
+    // query against the auto-generated `todos` field.
+    await page.goto('/gqlorm-todos')
+
+    await expect(page.getByText('Loading')).not.toBeVisible({ timeout: 10_000 })
+
+    // Verify seeded todo items are rendered
+    await expect(page.getByText('Learn Cedar')).toBeVisible()
+    await expect(page.getByText('Try gqlorm')).toBeVisible()
+    await expect(page.getByText('Write tests')).toBeVisible()
+  })
+
+  test('todo fields are present', async ({ page }) => {
+    // Verify that all scalar fields are fetched and rendered, not just `id`.
+    // The LiveTodos component renders body, done status, and createdAt for
+    // each todo. If the auto-generated backend didn't select these fields,
+    // the elements would be empty or missing.
+    await page.goto('/gqlorm-todos')
+
+    await expect(page.getByText('Loading')).not.toBeVisible({ timeout: 10_000 })
+
+    // body field
+    await expect(
+      page.getByText('Read the docs and try building a small app.'),
+    ).toBeVisible()
+    await expect(
+      page.getByText('Auto-generated backend resolvers are pretty neat!'),
+    ).toBeVisible()
+
+    // done field — rendered as "Done" or "Pending" badges
+    const doneEls = page.getByTestId('todo-done')
+    await expect(doneEls.first()).toBeVisible()
+    const allDoneTexts = await doneEls.allTextContents()
+    expect(allDoneTexts).toContain('Done')
+    expect(allDoneTexts).toContain('Pending')
+
+    // createdAt field
+    const createdAtEl = page.getByTestId('todo-created-at').first()
+    await expect(createdAtEl).toBeVisible()
+    await expect(createdAtEl).not.toBeEmpty()
+  })
 })

@@ -27,8 +27,8 @@
   },
   "dependencies": {
     "@cedarjs/babel-config": "workspace:*",
+    "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "ansis": "4.2.0",
     "bundle-require": "^5.1.0",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/client": "7.6.0",
+    "@prisma/client": "7.7.0",
     "@types/yargs": "17.0.35",
     "memfs": "4.57.1",
     "tsx": "4.21.0",

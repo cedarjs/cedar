@@ -110,7 +110,12 @@ export default HomePage
 
 Clicking sign up should navigate you to `/auth` where SuperToken's default login/sign up UI is rendered.
 
-<img width="463" height="696" alt="SuperTokens default UI" src="https://user-images.githubusercontent.com/30793/215893664-d367eb3d-566e-4541-a01a-5772d95cc9c7.png" />
+<img
+  width="463"
+  height="696"
+  alt="SuperTokens default UI"
+  src="https://user-images.githubusercontent.com/30793/215893664-d367eb3d-566e-4541-a01a-5772d95cc9c7.png"
+/>
 
 After you sign up, you should be redirected back to your Cedar app, and you should see `{"isAuthenticated":true}` on the page.
 

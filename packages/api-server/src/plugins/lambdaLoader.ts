@@ -93,9 +93,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     if (cedarHandler) {
       CEDAR_HANDLERS[routeName] = cedarHandler
     } else if (handler) {
-      CEDAR_HANDLERS[routeName] = await wrapLegacyHandler(
-        handler as LegacyHandler,
-      )
+      CEDAR_HANDLERS[routeName] = wrapLegacyHandler(handler as LegacyHandler)
     }
 
     if (!handler && !cedarHandler) {
