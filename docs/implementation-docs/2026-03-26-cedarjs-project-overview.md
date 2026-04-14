@@ -111,7 +111,8 @@ CLIENT CELL (GraphQL via Apollo):
 ```
 cedar dev:
   concurrently ─┬─ nodemon → api-server (Fastify, port from toml)
-                └─ cedar-gen-watch (regenerate types on SDL change)
+                └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
+                   change)
 
 *SSR/RSC: rw-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
 
