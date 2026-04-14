@@ -3263,6 +3263,7 @@ __metadata:
     "@cedarjs/project-config": "npm:4.0.0"
     "@cedarjs/router": "npm:4.0.0"
     "@cedarjs/structure": "npm:4.0.0"
+    "@cedarjs/utils": "npm:4.0.0"
     "@graphql-codegen/add": "npm:6.0.0"
     "@graphql-codegen/cli": "npm:6.2.1"
     "@graphql-codegen/client-preset": "npm:5.2.4"
