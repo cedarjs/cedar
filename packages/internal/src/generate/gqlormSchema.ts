@@ -23,7 +23,10 @@ const SENSITIVE_PATTERNS = [
   'token',
   'hash',
   'salt',
-  'key',
+  'apikey',
+  'secretkey',
+  'encryptionkey',
+  'privatekey',
 ]
 
 // ModelSchema type (same as @cedarjs/gqlorm's ModelSchema, re-declared here to

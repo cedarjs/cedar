@@ -40,7 +40,7 @@ const rwjsPaths = getPaths()
 const generatedDirName = path.basename(rwjsPaths.generated.base)
 
 const watcher = chokidar.watch(
-  ['(web|api)/src/**/*.{ts,js,jsx,tsx}', 'api/db/schema.prisma'],
+  ['(web|api)/src/**/*.{ts,js,jsx,tsx}', 'api/db/**/*.prisma'],
   {
     persistent: true,
     ignored: ['node_modules', generatedDirName],
@@ -135,7 +135,10 @@ watcher
       await generateGraphQLSchema()
       await generateTypeDefGraphQLApi()
       finished('GraphQL Schema')
-    } else if (absPath === path.join(rwjsPaths.base, 'api/db/schema.prisma')) {
+    } else if (
+      absPath.startsWith(path.join(rwjsPaths.base, 'api/db/')) &&
+      absPath.endsWith('.prisma')
+    ) {
       await generateGqlormArtifacts()
       finished('Prisma Schema')
     }
