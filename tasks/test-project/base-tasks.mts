@@ -171,6 +171,24 @@ function getPagesTasks(live = false) {
               fs.writeFileSync(liveQueryPagePath, updatedContent, 'utf8')
             },
           },
+          {
+            title: 'Creating gqlorm todo page',
+            task: async () => {
+              await createPage('gqlormTodos')
+
+              const gqlormTodosPagePath = fullPath(
+                'web/src/pages/GqlormTodosPage/GqlormTodosPage',
+              )
+              const pageContent =
+                "import LiveTodos from 'src/components/LiveTodos'\n\n" +
+                'const GqlormTodosPage = () => {\n' +
+                '  return <LiveTodos />\n' +
+                '}\n\n' +
+                'export default GqlormTodosPage\n'
+
+              fs.writeFileSync(gqlormTodosPagePath, pageContent, 'utf8')
+            },
+          },
         ]
       : []),
   ]
@@ -495,6 +513,46 @@ export function apiTasksList({
       },
     },
     {
+      title: 'Adding Todo model for gqlorm',
+      task: async () => {
+        if (!live) {
+          return
+        }
+
+        const { todo } = await import('./codemods/models.mts')
+        await addModel(todo)
+
+        // Insert todo seed data before the "no seed data" placeholder block
+        const seedPath = path.join(getOutputPath(), 'scripts', 'seed.ts')
+        const seedContent = fs.readFileSync(seedPath, 'utf8')
+        const templatePath = path.join(
+          import.meta.dirname,
+          'templates',
+          'scripts',
+          'todoSeed.ts.template',
+        )
+        const todoSeedTemplate = fs.readFileSync(templatePath, 'utf8')
+        const newSeedContent = seedContent.replace(
+          '  try {\n    // Create your database records here',
+          `${todoSeedTemplate}try {\n    // Create your database records here`,
+        )
+        fs.writeFileSync(seedPath, newSeedContent, 'utf8')
+
+        // The earlier normalizeMigrationFolderNames() call renamed migration
+        // folders on disk, but the database's _prisma_migrations table still
+        // holds the old timestamp names. Reset the database first so all
+        // existing migrations are re-applied under their current names, then
+        // create the Todo migration on top of a clean, in-sync baseline.
+        await exec('yarn cedar prisma migrate reset', ['--force'], execaOptions)
+
+        return exec(
+          'yarn cedar prisma migrate dev --name todo-model',
+          [],
+          execaOptions,
+        )
+      },
+    },
+    {
       title: 'Adjust dates within live-queries migration folder name',
       task: () => {
         if (!live) {
@@ -558,6 +616,14 @@ export async function createComponents(live = false) {
     const templatePath = path.join(templatesPath, 'LivePosts.tsx')
     const componentPath = fullPath('web/src/components/LivePosts/LivePosts')
     fs.copyFileSync(templatePath, componentPath)
+
+    await createComponent('liveTodos')
+
+    const liveTodosTemplatePath = path.join(templatesPath, 'LiveTodos.tsx')
+    const liveTodosComponentPath = fullPath(
+      'web/src/components/LiveTodos/LiveTodos',
+    )
+    fs.copyFileSync(liveTodosTemplatePath, liveTodosComponentPath)
   }
 }
 

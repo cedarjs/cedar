@@ -165,6 +165,7 @@
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/structure": "workspace:*",
+    "@cedarjs/utils": "workspace:*",
     "@graphql-codegen/add": "6.0.0",
     "@graphql-codegen/cli": "6.2.1",
     "@graphql-codegen/client-preset": "5.2.4",

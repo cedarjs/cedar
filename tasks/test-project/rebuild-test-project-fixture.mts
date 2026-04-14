@@ -868,6 +868,9 @@ async function rebuildTestProject() {
       newRootPackageJson.devDependencies['prettier-plugin-tailwindcss'] =
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
       newRootPackageJson.workspaces.push('packages/*')
+      if (live) {
+        newRootPackageJson.type = 'module'
+      }
       fs.writeFileSync(
         path.join(OUTPUT_PROJECT_PATH, 'package.json'),
         JSON.stringify(newRootPackageJson, null, 2) + '\n',

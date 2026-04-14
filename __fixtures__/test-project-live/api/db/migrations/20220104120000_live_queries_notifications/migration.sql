@@ -56,11 +56,13 @@ DECLARE
   cmd record;
   schema_name text;
   table_name text;
+  ident_parts text[];
 BEGIN
   FOR cmd IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP
     IF cmd.object_type = 'table' THEN
       schema_name := cmd.schema_name;
-      table_name := regexp_replace(cmd.object_identity, '^.*\\.', '');
+      ident_parts := parse_ident(cmd.object_identity);
+      table_name := ident_parts[array_length(ident_parts, 1)];
 
       IF schema_name IS NULL THEN
         CONTINUE;
