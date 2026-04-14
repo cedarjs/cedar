@@ -130,10 +130,10 @@ export function routeManifestToJSON(routes: CedarRouteRecord[]): string {
   return JSON.stringify(createRouteManifest(routes), null, 2)
 }
 
-export async function wrapLegacyHandler(
+export function wrapLegacyHandler(
   legacyHandler: LegacyHandler,
   options: BuildCedarContextOptions = {},
-): Promise<CedarHandler> {
+): CedarHandler {
   return async (request, ctx) => {
     const lambdaContext = options.lambdaContext ?? DEFAULT_LAMBDA_CONTEXT
     const event = await requestToLegacyEvent(request, ctx)

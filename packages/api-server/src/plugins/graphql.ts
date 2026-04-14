@@ -4,7 +4,7 @@ import fg from 'fast-glob'
 import type { FastifyInstance, HTTPMethods } from 'fastify'
 import type { Plugin as YogaPlugin } from 'graphql-yoga'
 
-import type { CedarHandler } from '@cedarjs/api'
+import type { CedarHandler, CedarRequestContext } from '@cedarjs/api'
 import { buildCedarContext } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
@@ -94,14 +94,11 @@ export async function redwoodFastifyGraphQLServer(
 
     const { yoga } = createGraphQLYoga(graphqlOptions)
 
-    cedarGraphQLHandler = async (request: Request) => {
-      const ctx = await buildCedarContext(request)
-      const response = await yoga.fetch(request, {
-        cedarContext: ctx,
-        request,
-      })
-
-      return response
+    cedarGraphQLHandler = async (
+      request: Request,
+      cedarContext: CedarRequestContext,
+    ) => {
+      return yoga.fetch(request, { cedarContext, request })
     }
 
     const graphqlEndpoint = trimSlashes(yoga.graphqlEndpoint)
@@ -131,10 +128,8 @@ export async function redwoodFastifyGraphQLServer(
               },
             )
 
-            const response = await cedarGraphQLHandler(
-              request,
-              await buildCedarContext(request),
-            )
+            const ctx = await buildCedarContext(request)
+            const response = await cedarGraphQLHandler(request, ctx)
 
             reply.status(response.status)
 
