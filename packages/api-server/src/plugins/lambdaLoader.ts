@@ -27,7 +27,7 @@ import { escape } from '../utils.js'
 
 export type Lambdas = Record<string, Handler>
 export const LAMBDA_FUNCTIONS: Lambdas = {}
-export const CEDAR_HANDLERS: Record<string, CedarHandler> = {}
+export const CEDAR_HANDLERS = new Map<string, CedarHandler>()
 const cedarRouteManifest: CedarRouteRecord[] = []
 
 /**
@@ -96,9 +96,9 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     LAMBDA_FUNCTIONS[routeName] = handler
 
     if (cedarHandler) {
-      CEDAR_HANDLERS[routeName] = cedarHandler
+      CEDAR_HANDLERS.set(routeName, cedarHandler)
     } else if (handler) {
-      CEDAR_HANDLERS[routeName] = wrapLegacyHandler(handler as LegacyHandler)
+      CEDAR_HANDLERS.set(routeName, wrapLegacyHandler(handler as LegacyHandler))
     }
 
     if (!handler && !cedarHandler) {
@@ -203,12 +203,7 @@ export const lambdaRequestHandler = async (
   reply: FastifyReply,
 ) => {
   const { routeName } = req.params
-  const cedarHandlerCandidate = Object.prototype.hasOwnProperty.call(
-    CEDAR_HANDLERS,
-    routeName,
-  )
-    ? CEDAR_HANDLERS[routeName]
-    : undefined
+  const cedarHandlerCandidate = CEDAR_HANDLERS.get(routeName)
   const cedarHandler =
     typeof cedarHandlerCandidate === 'function'
       ? cedarHandlerCandidate
@@ -259,10 +254,12 @@ export const lambdaRequestHandler = async (
     if (process.env.NODE_ENV === 'development') {
       const devError = {
         error: errorMessage,
-        availableFunctions: Object.keys({
-          ...LAMBDA_FUNCTIONS,
-          ...CEDAR_HANDLERS,
-        }),
+        availableFunctions: [
+          ...new Set([
+            ...Object.keys(LAMBDA_FUNCTIONS),
+            ...CEDAR_HANDLERS.keys(),
+          ]),
+        ],
       }
       reply.send(devError)
     } else {
