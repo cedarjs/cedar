@@ -1,4 +1,5 @@
-import path from 'path'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 // See https://github.com/webdiscus/ansis#troubleshooting
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -31,7 +32,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     const ts = Date.now()
     const routeName = path.basename(fnPath).replace('.js', '')
 
-    const fnImport = await import(`file://${fnPath}`)
+    const fnImport = await import(pathToFileURL(fnPath).href)
     const handler: Handler = (() => {
       if ('handler' in fnImport) {
         // ESModule export of handler - when using
