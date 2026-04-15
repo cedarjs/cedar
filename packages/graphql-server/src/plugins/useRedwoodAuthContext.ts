@@ -63,5 +63,15 @@ function getAuthEvent(
     return context.request
   }
 
-  return context.event
+  if (context.event) {
+    return context.event
+  }
+
+  // This should never happen in practice — either a fetch-native Request
+  // (Fastify path) or a Lambda event (Lambda path) is always present in the
+  // GraphQL context.
+  throw new Error(
+    'GraphQL context contains neither a fetch-native Request nor a Lambda ' +
+      'event. This is a Cedar bug — please report it.',
+  )
 }
