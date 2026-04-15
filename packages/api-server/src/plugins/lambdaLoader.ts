@@ -224,7 +224,8 @@ export const lambdaRequestHandler = async (
             ? Buffer.from(req.rawBody).toString()
             : undefined
 
-    const request = new Request(`http://localhost${req.raw.url ?? '/'}`, {
+    const href = `${req.protocol}://${req.hostname}${req.raw.url ?? '/'}`
+    const request = new Request(href, {
       method: req.method,
       headers: req.headers as HeadersInit,
       body: requestBody,
