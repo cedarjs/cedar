@@ -1,5 +1,4 @@
 import path from 'node:path'
-import { Readable } from 'node:stream'
 import { pathToFileURL } from 'node:url'
 
 // See https://github.com/webdiscus/ansis#troubleshooting
@@ -241,20 +240,8 @@ export const lambdaRequestHandler = async (
       reply.header(name, value)
     })
 
-    // Stream the response body rather than buffering it. This is critical
-    // for any CedarHandler that returns a streaming Response (e.g. SSE /
-    // @live endpoints) — arrayBuffer() would wait for the stream to close,
-    // which it never does, hanging the connection indefinitely.
-    //
-    // Readable.from() is used instead of Readable.fromWeb() because GraphQL
-    // Yoga (and other fetch-native libraries) may return a
-    // PonyfillReadableStream from @whatwg-node/fetch. Readable.fromWeb() uses
-    // instanceof under the hood and only accepts the native Node.js built-in
-    // ReadableStream, rejecting the ponyfill with ERR_INVALID_ARG_TYPE.
-    // Readable.from() accepts any AsyncIterable, and PonyfillReadableStream
-    // implements [Symbol.asyncIterator], so it works for both native and
-    // ponyfilled streams.
-    reply.send(response.body ? Readable.from(response.body) : '')
+    const body = await response.arrayBuffer()
+    reply.send(Buffer.from(body))
 
     return
   }
