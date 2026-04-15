@@ -1,5 +1,4 @@
-import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import path from 'path'
 
 // See https://github.com/webdiscus/ansis#troubleshooting
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -51,7 +50,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     const routeName = path.basename(fnPath).replace('.js', '')
     const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
 
-    const fnImport = await import(pathToFileURL(fnPath).href)
+    const fnImport = await import(`file://${fnPath}`)
     const handler: Handler = (() => {
       if ('handler' in fnImport) {
         // ESModule export of handler - when using

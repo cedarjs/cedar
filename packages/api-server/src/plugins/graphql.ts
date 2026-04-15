@@ -1,5 +1,3 @@
-import { pathToFileURL } from 'node:url'
-
 import fastifyMultiPart from '@fastify/multipart'
 import fastifyUrlData from '@fastify/url-data'
 import fg from 'fast-glob'
@@ -48,7 +46,7 @@ export async function redwoodFastifyGraphQLServer(
         cwd: getPaths().api.base,
         absolute: true,
       })
-      const filePath = pathToFileURL(graphqlFunctionPath).href
+      const filePath = `file://${graphqlFunctionPath}`
 
       // This comes from a babel plugin that's applied to
       // api/dist/functions/graphql.{ts,js} in user projects

@@ -11,6 +11,56 @@ import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '../createGraphQLYoga.js'
 import type { GraphQLHandlerOptions } from '../types.js'
 
+function lambdaQueryToSearchParams(
+  event: APIGatewayProxyEvent,
+): URLSearchParams {
+  const query = new URLSearchParams()
+
+  if (event.multiValueQueryStringParameters) {
+    for (const [key, values] of Object.entries(
+      event.multiValueQueryStringParameters,
+    )) {
+      if (values) {
+        for (const value of values) {
+          query.append(key, value)
+        }
+      }
+    }
+  } else if (event.queryStringParameters) {
+    for (const [key, value] of Object.entries(event.queryStringParameters)) {
+      if (value != null) {
+        query.set(key, value)
+      }
+    }
+  }
+
+  return query
+}
+
+function parseLambdaCookies(
+  event: APIGatewayProxyEvent,
+): Record<string, string> {
+  const rawCookie = event.headers?.cookie ?? ''
+
+  if (!rawCookie) {
+    return {}
+  }
+
+  const cookies: Record<string, string> = {}
+
+  for (const part of rawCookie.split(';')) {
+    const eqIdx = part.indexOf('=')
+
+    if (eqIdx !== -1) {
+      const key = part.slice(0, eqIdx).trim()
+      const value = part.slice(eqIdx + 1).trim()
+      cookies[key] = value
+    }
+  }
+
+  return cookies
+}
+
 /**
  * Creates an Enveloped GraphQL Server, configured with default Redwood plugins
  *
@@ -105,8 +155,8 @@ export const createGraphQLHandler = ({
           requestContext,
           cedarContext: {
             params: event.pathParameters ?? {},
-            query: event.queryStringParameters ?? {},
-            cookies: {},
+            query: lambdaQueryToSearchParams(event),
+            cookies: parseLambdaCookies(event),
             serverAuthState: await getAuthenticationContext({
               authDecoder,
               event,
