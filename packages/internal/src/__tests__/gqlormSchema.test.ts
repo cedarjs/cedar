@@ -759,8 +759,8 @@ describe('generateGqlormBackendContent', () => {
     // Must import graphql-tag
     expect(content).toContain("import gql from 'graphql-tag'")
 
-    // Must import auth error classes
-    expect(content).toContain(
+    // Public models only — auth error classes must NOT be imported (avoids TS6133)
+    expect(content).not.toContain(
       "import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'",
     )
 
@@ -1014,7 +1014,8 @@ describe('generateGqlormBackendContent', () => {
       },
     ])
 
-    expect(content).toContain(
+    // Plain public models must NOT import auth error classes (avoids TS6133)
+    expect(content).not.toContain(
       "import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'",
     )
     expect(content).toContain('interface GqlormContext {')
@@ -1054,6 +1055,10 @@ describe('generateGqlormBackendContent', () => {
       },
     ])
 
+    // Auth error classes must be imported when a model needs auth
+    expect(content).toContain(
+      "import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'",
+    )
     // Both resolvers have at least one auth check each
     const authCheckCount = (
       content.match(/throw new AuthenticationError/g) ?? []
@@ -1061,6 +1066,74 @@ describe('generateGqlormBackendContent', () => {
     expect(authCheckCount).toBeGreaterThanOrEqual(2)
     // Resolvers use context (used) for auth-gated models
     expect(content).toContain('context: GqlormContext')
+  })
+
+  it('does not org-scope the Membership model against itself (no N+1)', () => {
+    // When the Membership model is gqlorm-visible it has both userId and
+    // organizationId. Without the isMembershipModel guard the generated
+    // memberships resolver would call db.membership.findMany to look up org
+    // IDs, then call db.membership.findMany again for the actual data — a
+    // self-referential N+1. The resolver should only apply user-scoping.
+    const config: GqlormBackendConfig = {
+      membershipModel: 'Membership',
+      membershipModelCamel: 'membership',
+      membershipUserField: 'userId',
+      membershipOrganizationField: 'organizationId',
+      membershipModelExists: true,
+    }
+
+    const content = generateGqlormBackendContent(
+      [
+        {
+          modelName: 'Membership',
+          camelName: 'membership',
+          pluralName: 'memberships',
+          fields: [
+            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+            {
+              name: 'userId',
+              graphqlType: 'String',
+              isRequired: true,
+              isId: false,
+            },
+            {
+              name: 'organizationId',
+              graphqlType: 'String',
+              isRequired: true,
+              isId: false,
+            },
+          ],
+          idField: {
+            name: 'id',
+            graphqlType: 'Int',
+            isRequired: true,
+            isId: true,
+          },
+        },
+      ],
+      config,
+    )
+
+    // User scoping IS applied (scope by userId)
+    expect(content).toContain("where['userId'] = currentUserId")
+
+    // Org-scoping lookup must NOT be emitted for the membership resolver
+    // itself — that would be a self-referential N+1.
+    expect(content).not.toContain(
+      "// Scope to the current user's organizations",
+    )
+    // The scoping pre-fetch is emitted as `const memberships = await db.<model>.findMany`.
+    // The resolver's own query uses `return db.<model>.findMany`, which IS
+    // expected. Only the prefetch form must be absent.
+    expect(content).not.toContain(
+      `const memberships = await db.${config.membershipModelCamel}.findMany(`,
+    )
+
+    // Auth is still required (userId is present)
+    expect(content).toContain('memberships: [Membership!]! @requireAuth')
+    expect(content).toContain(
+      'throw new AuthenticationError("You don\'t have permission to do that.")',
+    )
   })
 
   it('scopes findMany to current user when model has userId field', () => {
