@@ -25,7 +25,7 @@ import {
   generateGqlormArtifacts,
   generateWebGqlormModelsContent,
 } from '../generate/gqlormSchema.js'
-import { type GqlormBackendConfig } from '../generate/gqlormSchema.js'
+import type { GqlormBackendConfig } from '../generate/gqlormSchema.js'
 
 function makeField(
   name: string,
