@@ -32,16 +32,16 @@
   - [x] Add `membershipUserField`
   - [x] Add `membershipOrganizationField`
 
-- [ ] Implement the planned backend auth model for auto-generated resolvers
-  - [ ] Require auth in generated gqlorm resolvers
-  - [ ] Scope models with `userId` to the current user
-  - [ ] Scope models with `organizationId` through the configured membership model
-  - [ ] Enforce equivalent checks for single-record resolvers
-  - [ ] Log a startup/codegen notice when organization scoping cannot be applied because membership config/model is unavailable
+- [x] Implement the planned backend auth model for auto-generated resolvers
+  - [x] Require auth in generated gqlorm resolvers
+  - [x] Scope models with `userId` to the current user
+  - [x] Scope models with `organizationId` through the configured membership model
+  - [x] Enforce equivalent checks for single-record resolvers
+  - [x] Log a startup/codegen notice when organization scoping cannot be applied because membership config/model is unavailable
 
-- [ ] Add/adjust tests for the remaining planned behavior
+- [x] Add/adjust tests for the remaining planned behavior
   - [x] Test generated `web-gqlorm-models.d.ts` output
   - [x] Test scalar type inference through gqlorm delegates and `useLiveQuery`
   - [ ] Test watch-mode regeneration on Prisma schema changes
   - [x] Test config typing/defaults for gqlorm membership settings
-  - [ ] Test backend auth scoping behavior
+  - [x] Test backend auth scoping behavior

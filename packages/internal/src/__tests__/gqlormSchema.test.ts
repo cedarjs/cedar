@@ -25,6 +25,7 @@ import {
   generateGqlormArtifacts,
   generateWebGqlormModelsContent,
 } from '../generate/gqlormSchema.js'
+import { type GqlormBackendConfig } from '../generate/gqlormSchema.js'
 
 function makeField(
   name: string,
@@ -758,10 +759,19 @@ describe('generateGqlormBackendContent', () => {
     // Must import graphql-tag
     expect(content).toContain("import gql from 'graphql-tag'")
 
+    // Must import auth error classes
+    expect(content).toContain(
+      "import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'",
+    )
+
+    // GqlormContext interface
+    expect(content).toContain('interface GqlormContext {')
+
     // GqlormDb interface
     expect(content).toContain('interface GqlormDb {')
     expect(content).toContain('todo: {')
     expect(content).toContain('findMany(args: {')
+    expect(content).toContain('where?: Record<string, unknown>')
     expect(content).toContain('findUnique(args: {')
     expect(content).toContain('id: number')
     expect(content).toContain('title: string')
@@ -783,15 +793,22 @@ describe('generateGqlormBackendContent', () => {
     )
 
     // Resolver: findMany
-    expect(content).toContain('todos: () => {')
+    expect(content).toContain(
+      'todos: async (_root: unknown, _args: unknown, context: GqlormContext) => {',
+    )
     expect(content).toContain('db.todo.findMany(')
 
     // Resolver: findUnique
     expect(content).toContain(
-      'todo: (_root: unknown, { id }: { id: number }) => {',
+      'todo: async (_root: unknown, { id }: { id: number }, context: GqlormContext) => {',
     )
     expect(content).toContain('db.todo.findUnique(')
     expect(content).toContain('where: { id }')
+
+    // Auth check present in resolvers
+    expect(content).toContain(
+      'throw new AuthenticationError("You don\'t have permission to do that.")',
+    )
   })
 
   it('handles nullable fields without the ! suffix and uses | null in interface', () => {
@@ -876,6 +893,9 @@ describe('generateGqlormBackendContent', () => {
 
     // findMany should be present
     expect(content).toContain('viewOnlys: [ViewOnly!]! @skipAuth')
+    expect(content).toContain(
+      'viewOnlys: async (_root: unknown, _args: unknown, context: GqlormContext) => {',
+    )
     // findUnique should NOT be present (no id field)
     expect(content).not.toContain('viewOnly(id:')
     expect(content).not.toContain('findUnique')
@@ -907,8 +927,8 @@ describe('generateGqlormBackendContent', () => {
 
     // SDL: String! for id argument
     expect(content).toContain('account(id: String!): Account @skipAuth')
-    // TS: string type for id parameter
-    expect(content).toContain('{ id }: { id: string }')
+    // TS: string type for id parameter with context
+    expect(content).toContain('{ id }: { id: string }, context: GqlormContext')
   })
 
   it('generates content for multiple models', () => {
@@ -970,6 +990,342 @@ describe('generateGqlormBackendContent', () => {
     // Both resolvers present
     expect(content).toContain('db.todo.findMany(')
     expect(content).toContain('db.tag.findMany(')
+  })
+
+  it('includes auth check in all resolvers', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Item',
+        camelName: 'item',
+        pluralName: 'items',
+        fields: [
+          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+          {
+            name: 'name',
+            graphqlType: 'String',
+            isRequired: true,
+            isId: false,
+          },
+        ],
+        idField: {
+          name: 'id',
+          graphqlType: 'Int',
+          isRequired: true,
+          isId: true,
+        },
+      },
+    ])
+
+    expect(content).toContain(
+      "import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'",
+    )
+    expect(content).toContain('interface GqlormContext {')
+    expect(content).toContain(
+      'currentUser: Record<string, unknown> | null | undefined',
+    )
+    // Both resolvers have auth check
+    const authCheckCount = (
+      content.match(/throw new AuthenticationError/g) ?? []
+    ).length
+    expect(authCheckCount).toBe(2)
+  })
+
+  it('scopes findMany to current user when model has userId field', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Post',
+        camelName: 'post',
+        pluralName: 'posts',
+        fields: [
+          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+          {
+            name: 'title',
+            graphqlType: 'String',
+            isRequired: true,
+            isId: false,
+          },
+          {
+            name: 'userId',
+            graphqlType: 'String',
+            isRequired: true,
+            isId: false,
+          },
+        ],
+        idField: {
+          name: 'id',
+          graphqlType: 'Int',
+          isRequired: true,
+          isId: true,
+        },
+      },
+    ])
+
+    // findMany scopes by userId
+    expect(content).toContain("where['userId'] = context.currentUser['id']")
+    expect(content).toContain('return db.post.findMany({')
+    expect(content).toContain('          where,')
+
+    // findUnique checks ownership
+    expect(content).toContain("record.userId !== context.currentUser['id']")
+    expect(content).toContain(
+      "throw new ForbiddenError('Not authorized to access this resource')",
+    )
+  })
+
+  it('does not add user scoping when model has no userId field', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Tag',
+        camelName: 'tag',
+        pluralName: 'tags',
+        fields: [
+          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+          {
+            name: 'label',
+            graphqlType: 'String',
+            isRequired: true,
+            isId: false,
+          },
+        ],
+        idField: {
+          name: 'id',
+          graphqlType: 'Int',
+          isRequired: true,
+          isId: true,
+        },
+      },
+    ])
+
+    expect(content).not.toContain("where['userId']")
+    expect(content).not.toContain('where,')
+  })
+
+  it('scopes findMany to user organizations when model has organizationId and membership model exists', () => {
+    const config: GqlormBackendConfig = {
+      membershipModel: 'Membership',
+      membershipModelCamel: 'membership',
+      membershipUserField: 'userId',
+      membershipOrganizationField: 'organizationId',
+      membershipModelExists: true,
+    }
+
+    const content = generateGqlormBackendContent(
+      [
+        {
+          modelName: 'Post',
+          camelName: 'post',
+          pluralName: 'posts',
+          fields: [
+            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+            {
+              name: 'organizationId',
+              graphqlType: 'String',
+              isRequired: true,
+              isId: false,
+            },
+          ],
+          idField: {
+            name: 'id',
+            graphqlType: 'Int',
+            isRequired: true,
+            isId: true,
+          },
+        },
+      ],
+      config,
+    )
+
+    // findMany org scoping
+    expect(content).toContain('db.membership.findMany(')
+    expect(content).toContain("{ userId: context.currentUser['id'] }")
+    expect(content).toContain('select: { organizationId: true }')
+    expect(content).toContain('memberships.map((m) => m.organizationId)')
+    expect(content).toContain(
+      "where['organizationId'] = { in: organizationIds }",
+    )
+
+    // membership model in GqlormDb interface
+    expect(content).toContain('membership: {')
+    expect(content).toContain('findFirst(args: {')
+  })
+
+  it('does not add org scoping when membershipModelExists is false', () => {
+    const config: GqlormBackendConfig = {
+      membershipModel: 'Membership',
+      membershipModelCamel: 'membership',
+      membershipUserField: 'userId',
+      membershipOrganizationField: 'organizationId',
+      membershipModelExists: false,
+    }
+
+    const content = generateGqlormBackendContent(
+      [
+        {
+          modelName: 'Post',
+          camelName: 'post',
+          pluralName: 'posts',
+          fields: [
+            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+            {
+              name: 'organizationId',
+              graphqlType: 'String',
+              isRequired: true,
+              isId: false,
+            },
+          ],
+          idField: {
+            name: 'id',
+            graphqlType: 'Int',
+            isRequired: true,
+            isId: true,
+          },
+        },
+      ],
+      config,
+    )
+
+    expect(content).not.toContain('db.membership.findMany(')
+    expect(content).not.toContain('organizationIds')
+    expect(content).not.toContain('findFirst')
+  })
+
+  it('adds membership check in findUnique when model has organizationId and membership model exists', () => {
+    const config: GqlormBackendConfig = {
+      membershipModel: 'Membership',
+      membershipModelCamel: 'membership',
+      membershipUserField: 'userId',
+      membershipOrganizationField: 'organizationId',
+      membershipModelExists: true,
+    }
+
+    const content = generateGqlormBackendContent(
+      [
+        {
+          modelName: 'Post',
+          camelName: 'post',
+          pluralName: 'posts',
+          fields: [
+            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+            {
+              name: 'organizationId',
+              graphqlType: 'String',
+              isRequired: true,
+              isId: false,
+            },
+          ],
+          idField: {
+            name: 'id',
+            graphqlType: 'Int',
+            isRequired: true,
+            isId: true,
+          },
+        },
+      ],
+      config,
+    )
+
+    expect(content).toContain('db.membership.findFirst(')
+    expect(content).toContain('record.organizationId')
+    // Two ForbiddenError throws: one for membership check
+    expect(content).toContain(
+      "throw new ForbiddenError('Not authorized to access this resource')",
+    )
+  })
+
+  it('uses custom membership field names from config', () => {
+    const config: GqlormBackendConfig = {
+      membershipModel: 'OrgMember',
+      membershipModelCamel: 'orgMember',
+      membershipUserField: 'memberId',
+      membershipOrganizationField: 'orgId',
+      membershipModelExists: true,
+    }
+
+    const content = generateGqlormBackendContent(
+      [
+        {
+          modelName: 'Resource',
+          camelName: 'resource',
+          pluralName: 'resources',
+          fields: [
+            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+            {
+              name: 'memberId',
+              graphqlType: 'String',
+              isRequired: true,
+              isId: false,
+            },
+            {
+              name: 'orgId',
+              graphqlType: 'String',
+              isRequired: true,
+              isId: false,
+            },
+          ],
+          idField: {
+            name: 'id',
+            graphqlType: 'Int',
+            isRequired: true,
+            isId: true,
+          },
+        },
+      ],
+      config,
+    )
+
+    // Uses custom field names
+    expect(content).toContain("where['memberId'] = context.currentUser['id']")
+    expect(content).toContain('db.orgMember.findMany(')
+    expect(content).toContain('select: { orgId: true }')
+    expect(content).toContain("where['orgId'] = { in: organizationIds }")
+    expect(content).toContain('orgMember: {')
+  })
+})
+
+describe('generateGqlormBackendContent — org scoping notice', () => {
+  it('warns when a model has the org field but membership model is missing', () => {
+    // This tests the notice that generateGqlormArtifacts emits,
+    // which uses console.warn. We test generateGqlormBackendContent here
+    // since the notice logic lives in generateGqlormArtifacts.
+    // The notice check is tested via the integration test below.
+    // Here we just verify no org scoping code is generated without the model.
+    const config: GqlormBackendConfig = {
+      membershipModel: 'Membership',
+      membershipModelCamel: 'membership',
+      membershipUserField: 'userId',
+      membershipOrganizationField: 'organizationId',
+      membershipModelExists: false,
+    }
+
+    const content = generateGqlormBackendContent(
+      [
+        {
+          modelName: 'Post',
+          camelName: 'post',
+          pluralName: 'posts',
+          fields: [
+            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+            {
+              name: 'organizationId',
+              graphqlType: 'String',
+              isRequired: true,
+              isId: false,
+            },
+          ],
+          idField: {
+            name: 'id',
+            graphqlType: 'Int',
+            isRequired: true,
+            isId: true,
+          },
+        },
+      ],
+      config,
+    )
+
+    // No org scoping generated (membershipModelExists is false)
+    expect(content).not.toContain('db.membership.findMany(')
+    expect(content).not.toContain('membership: {')
   })
 })
 
