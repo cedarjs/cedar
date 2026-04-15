@@ -591,7 +591,7 @@ export function generateGqlormBackendContent(
     // findMany
     lines.push('    findMany(args: {')
     lines.push('      where?: Record<string, unknown>')
-    lines.push(`      select: { ${selectType} }`)
+    lines.push(`      select: Partial<{ ${selectType} }>`)
     lines.push('    }): Promise<')
     lines.push('      Array<{')
     for (const field of model.fields) {
@@ -619,6 +619,16 @@ export function generateGqlormBackendContent(
         lines.push(`      ${field.name}: ${tsType}`)
       }
       lines.push('    } | null>')
+    }
+
+    // findFirst — needed for org-scoping when this is the membership model
+    if (
+      anyModelNeedsOrgScoping &&
+      model.camelName === config.membershipModelCamel
+    ) {
+      lines.push('    findFirst(args: {')
+      lines.push('      where: Record<string, unknown>')
+      lines.push('    }): Promise<Record<string, unknown> | null>')
     }
 
     lines.push('  }')
@@ -663,11 +673,22 @@ export function generateGqlormBackendContent(
 
   lines.push('  type Query {')
   for (const model of models) {
-    lines.push(`    ${model.pluralName}: [${model.modelName}!]! @skipAuth`)
+    const hasUserField = model.fields.some(
+      (f) => f.name === config.membershipUserField,
+    )
+    const hasOrgField = model.fields.some(
+      (f) => f.name === config.membershipOrganizationField,
+    )
+    const needsAuth =
+      hasUserField || (hasOrgField && config.membershipModelExists)
+    const authDirective = needsAuth ? '@requireAuth' : '@skipAuth'
+    lines.push(
+      `    ${model.pluralName}: [${model.modelName}!]! ${authDirective}`,
+    )
     if (model.idField) {
       const idNullMark = model.idField.isRequired ? '!' : ''
       lines.push(
-        `    ${model.camelName}(${model.idField.name}: ${model.idField.graphqlType}${idNullMark}): ${model.modelName} @skipAuth`,
+        `    ${model.camelName}(${model.idField.name}: ${model.idField.graphqlType}${idNullMark}): ${model.modelName} ${authDirective}`,
       )
     }
   }
@@ -700,15 +721,15 @@ export function generateGqlormBackendContent(
 
     // findMany resolver
     lines.push(
-      `      ${model.pluralName}: async (_root: unknown, _args: unknown, context: GqlormContext) => {`,
+      `      ${model.pluralName}: async (_root: unknown, _args: unknown, ${hasUserField || useOrgScoping ? 'context' : '_context'}: GqlormContext) => {`,
     )
-    lines.push('        if (!context.currentUser) {')
-    lines.push(
-      `          throw new AuthenticationError("You don't have permission to do that.")`,
-    )
-    lines.push('        }')
 
     if (hasUserField || useOrgScoping) {
+      lines.push('        if (!context.currentUser) {')
+      lines.push(
+        `          throw new AuthenticationError("You don't have permission to do that.")`,
+      )
+      lines.push('        }')
       lines.push("        const currentUserId = context.currentUser['id']")
       lines.push(
         '        if (currentUserId === undefined || currentUserId === null) {',
@@ -763,13 +784,25 @@ export function generateGqlormBackendContent(
       const idFieldName = model.idField.name
       const tsType = graphqlTypeToTsType(model.idField.graphqlType)
       lines.push(
-        `      ${model.camelName}: async (_root: unknown, { ${idFieldName} }: { ${idFieldName}: ${tsType} }, context: GqlormContext) => {`,
+        `      ${model.camelName}: async (_root: unknown, { ${idFieldName} }: { ${idFieldName}: ${tsType} }, ${hasUserField || useOrgScoping ? 'context' : '_context'}: GqlormContext) => {`,
       )
-      lines.push('        if (!context.currentUser) {')
-      lines.push(
-        `          throw new AuthenticationError("You don't have permission to do that.")`,
-      )
-      lines.push('        }')
+
+      if (hasUserField || useOrgScoping) {
+        lines.push('        if (!context.currentUser) {')
+        lines.push(
+          `          throw new AuthenticationError("You don't have permission to do that.")`,
+        )
+        lines.push('        }')
+        lines.push("        const currentUserId = context.currentUser['id']")
+        lines.push(
+          '        if (currentUserId === undefined || currentUserId === null) {',
+        )
+        lines.push(
+          `          throw new AuthenticationError("Could not determine the current user's ID.")`,
+        )
+        lines.push('        }')
+      }
+
       lines.push('')
       lines.push(
         `        const record = await db.${model.camelName}.findUnique({`,
@@ -782,52 +815,38 @@ export function generateGqlormBackendContent(
       lines.push('          return null')
       lines.push('        }')
 
-      if (hasUserField || useOrgScoping) {
+      if (hasUserField) {
         lines.push('')
-        lines.push("        const currentUserId = context.currentUser['id']")
+        lines.push('        // Verify the current user owns this record')
         lines.push(
-          '        if (currentUserId === undefined || currentUserId === null) {',
+          `        if (record.${config.membershipUserField} !== currentUserId) {`,
         )
         lines.push(
-          `          throw new AuthenticationError("Could not determine the current user's ID.")`,
+          `          throw new ForbiddenError('Not authorized to access this resource')`,
         )
         lines.push('        }')
+      }
 
-        if (hasUserField) {
-          lines.push('')
-          lines.push('        // Verify the current user owns this record')
-          lines.push(
-            `        if (record.${config.membershipUserField} !== currentUserId) {`,
-          )
-          lines.push(
-            `          throw new ForbiddenError('Not authorized to access this resource')`,
-          )
-          lines.push('        }')
-        }
-
-        if (useOrgScoping) {
-          lines.push('')
-          lines.push(
-            "        // Verify the current user belongs to the record's organization",
-          )
-          lines.push(
-            `        const membership = await db.${config.membershipModelCamel}.findFirst({`,
-          )
-          lines.push('          where: {')
-          lines.push(
-            `            ${config.membershipUserField}: currentUserId,`,
-          )
-          lines.push(
-            `            ${config.membershipOrganizationField}: record.${config.membershipOrganizationField},`,
-          )
-          lines.push('          },')
-          lines.push('        })')
-          lines.push('        if (!membership) {')
-          lines.push(
-            `          throw new ForbiddenError('Not authorized to access this resource')`,
-          )
-          lines.push('        }')
-        }
+      if (useOrgScoping) {
+        lines.push('')
+        lines.push(
+          "        // Verify the current user belongs to the record's organization",
+        )
+        lines.push(
+          `        const membership = await db.${config.membershipModelCamel}.findFirst({`,
+        )
+        lines.push('          where: {')
+        lines.push(`            ${config.membershipUserField}: currentUserId,`)
+        lines.push(
+          `            ${config.membershipOrganizationField}: record.${config.membershipOrganizationField},`,
+        )
+        lines.push('          },')
+        lines.push('        })')
+        lines.push('        if (!membership) {')
+        lines.push(
+          `          throw new ForbiddenError('Not authorized to access this resource')`,
+        )
+        lines.push('        }')
       }
 
       lines.push('')

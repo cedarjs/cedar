@@ -792,23 +792,21 @@ describe('generateGqlormBackendContent', () => {
       'export function createGqlormResolvers(db: GqlormDb)',
     )
 
-    // Resolver: findMany
+    // Resolver: findMany — Todo has no user/org fields so context is unused
     expect(content).toContain(
-      'todos: async (_root: unknown, _args: unknown, context: GqlormContext) => {',
+      'todos: async (_root: unknown, _args: unknown, _context: GqlormContext) => {',
     )
     expect(content).toContain('db.todo.findMany(')
 
-    // Resolver: findUnique
+    // Resolver: findUnique — Todo has no user/org fields so context is unused
     expect(content).toContain(
-      'todo: async (_root: unknown, { id }: { id: number }, context: GqlormContext) => {',
+      'todo: async (_root: unknown, { id }: { id: number }, _context: GqlormContext) => {',
     )
     expect(content).toContain('db.todo.findUnique(')
     expect(content).toContain('where: { id }')
 
-    // Auth check present in resolvers
-    expect(content).toContain(
-      'throw new AuthenticationError("You don\'t have permission to do that.")',
-    )
+    // No auth check for plain public models
+    expect(content).not.toContain('throw new AuthenticationError')
   })
 
   it('handles nullable fields without the ! suffix and uses | null in interface', () => {
@@ -894,7 +892,7 @@ describe('generateGqlormBackendContent', () => {
     // findMany should be present
     expect(content).toContain('viewOnlys: [ViewOnly!]! @skipAuth')
     expect(content).toContain(
-      'viewOnlys: async (_root: unknown, _args: unknown, context: GqlormContext) => {',
+      'viewOnlys: async (_root: unknown, _args: unknown, _context: GqlormContext) => {',
     )
     // findUnique should NOT be present (no id field)
     expect(content).not.toContain('viewOnly(id:')
@@ -927,8 +925,8 @@ describe('generateGqlormBackendContent', () => {
 
     // SDL: String! for id argument
     expect(content).toContain('account(id: String!): Account @skipAuth')
-    // TS: string type for id parameter with context
-    expect(content).toContain('{ id }: { id: string }, context: GqlormContext')
+    // TS: string type for id parameter — Account has no user/org fields so context is unused
+    expect(content).toContain('{ id }: { id: string }, _context: GqlormContext')
   })
 
   it('generates content for multiple models', () => {
@@ -992,7 +990,7 @@ describe('generateGqlormBackendContent', () => {
     expect(content).toContain('db.tag.findMany(')
   })
 
-  it('includes auth check in all resolvers', () => {
+  it('does not add auth check for models without user or org fields', () => {
     const content = generateGqlormBackendContent([
       {
         modelName: 'Item',
@@ -1023,11 +1021,46 @@ describe('generateGqlormBackendContent', () => {
     expect(content).toContain(
       'currentUser: Record<string, unknown> | null | undefined',
     )
-    // Both resolvers have auth check
+    // Plain models (no userId / organizationId) are public — no auth throws
     const authCheckCount = (
       content.match(/throw new AuthenticationError/g) ?? []
     ).length
-    expect(authCheckCount).toBe(2)
+    expect(authCheckCount).toBe(0)
+    // Resolvers use _context (unused) for public models
+    expect(content).toContain('_context: GqlormContext')
+  })
+
+  it('includes auth check in resolvers for models with user field', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Post',
+        camelName: 'post',
+        pluralName: 'posts',
+        fields: [
+          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
+          {
+            name: 'userId',
+            graphqlType: 'String',
+            isRequired: true,
+            isId: false,
+          },
+        ],
+        idField: {
+          name: 'id',
+          graphqlType: 'Int',
+          isRequired: true,
+          isId: true,
+        },
+      },
+    ])
+
+    // Both resolvers have at least one auth check each
+    const authCheckCount = (
+      content.match(/throw new AuthenticationError/g) ?? []
+    ).length
+    expect(authCheckCount).toBeGreaterThanOrEqual(2)
+    // Resolvers use context (used) for auth-gated models
+    expect(content).toContain('context: GqlormContext')
   })
 
   it('scopes findMany to current user when model has userId field', () => {
