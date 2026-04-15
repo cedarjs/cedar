@@ -18,8 +18,8 @@ import type {
   CedarHandler,
   CedarRouteRecord,
   LegacyHandler,
-} from '@cedarjs/api'
-import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api'
+} from '@cedarjs/api/runtime'
+import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import { getPaths } from '@cedarjs/project-config'
 
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'

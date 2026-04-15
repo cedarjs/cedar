@@ -8,7 +8,6 @@ export * from './types.js'
 export * from './transforms.js'
 export * from './cors.js'
 export * from './event.js'
-export * from './runtime.js'
 
 // Use native `require` for CJS builds, and create a require function with the
 // base dir set to the dir of this file for ESM builds

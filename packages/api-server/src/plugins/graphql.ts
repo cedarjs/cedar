@@ -6,7 +6,7 @@ import fg from 'fast-glob'
 import type { FastifyInstance, HTTPMethods } from 'fastify'
 import type { Plugin as YogaPlugin } from 'graphql-yoga'
 
-import { buildCedarContext } from '@cedarjs/api'
+import { buildCedarContext } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
