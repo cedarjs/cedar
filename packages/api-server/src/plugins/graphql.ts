@@ -116,7 +116,9 @@ export async function redwoodFastifyGraphQLServer(
             body: requestBody,
           })
 
-          const cedarContext = await buildCedarContext(request)
+          const cedarContext = await buildCedarContext(request, {
+            authDecoder: graphqlOptions.authDecoder,
+          })
           const response = await yoga.handle(request, { request, cedarContext })
 
           reply.status(response.status)
