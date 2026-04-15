@@ -1,15 +1,17 @@
 import type {
   APIGatewayProxyEvent,
+  APIGatewayProxyEventQueryStringParameters,
   APIGatewayProxyResult,
   Context as LambdaContext,
 } from 'aws-lambda'
 import * as cookie from 'cookie'
+import { parse } from 'picoquery'
 
 import { getAuthenticationContext } from './auth/index.js'
 
 export interface CedarRequestContext {
   params: Record<string, string>
-  query: Record<string, string>
+  query: URLSearchParams
   cookies: Record<string, string>
   serverAuthState?: Awaited<ReturnType<typeof getAuthenticationContext>>
 }
@@ -80,7 +82,7 @@ export async function buildCedarContext(
   options: BuildCedarContextOptions = {},
 ): Promise<CedarRequestContext> {
   const url = new URL(request.url)
-  const query = Object.fromEntries(url.searchParams.entries())
+  const query = url.searchParams
   const cookies = Object.fromEntries(
     Object.entries(cookie.parse(request.headers.get('cookie') ?? '')).filter(
       (entry): entry is [string, string] => {
@@ -150,6 +152,16 @@ export async function requestToLegacyEvent(
   const url = new URL(request.url)
   const bodyText = await request.clone().text()
   const headers = Object.fromEntries(request.headers.entries())
+  // @ts-expect-error - picoquery returns nested objects and arrays for
+  // bracket-notation params (e.g. ids[]=1&ids[]=2, user[name]=alice).
+  // APIGatewayProxyEventQueryStringParameters is too narrow for this richer
+  // structure, but legacy handlers depend on it.
+  const queryStringParameters: APIGatewayProxyEventQueryStringParameters =
+    parse(url.search ? url.search.slice(1) : '', {
+      nestingSyntax: 'index',
+      arrayRepeat: true,
+      arrayRepeatSyntax: 'bracket',
+    })
 
   return {
     body: bodyText || null,
@@ -159,7 +171,7 @@ export async function requestToLegacyEvent(
     isBase64Encoded: false,
     path: url.pathname,
     pathParameters: Object.keys(ctx.params).length > 0 ? ctx.params : null,
-    queryStringParameters: Object.keys(ctx.query).length > 0 ? ctx.query : null,
+    queryStringParameters,
     multiValueQueryStringParameters: toMultiValueQueryStringParameters(url),
     stageVariables: null,
     requestContext: {

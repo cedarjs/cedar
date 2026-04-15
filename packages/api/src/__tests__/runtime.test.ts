@@ -30,20 +30,35 @@ describe('buildCedarContext', () => {
       },
     })
 
-    expect(ctx).toEqual({
-      params: {
-        id: '42',
-      },
-      query: {
-        hello: 'world',
-        its: 'bugs',
-      },
-      cookies: {
-        session: 'abc123',
-        theme: 'dark',
-      },
-      serverAuthState: undefined,
+    expect(ctx.params).toEqual({ id: '42' })
+
+    expect(ctx.query.get('hello')).toBe('world')
+    expect(ctx.query.get('its')).toBe('bugs')
+
+    expect(ctx.cookies).toEqual({
+      session: 'abc123',
+      theme: 'dark',
     })
+
+    expect(ctx.serverAuthState).toBeUndefined()
+  })
+
+  it('returns an empty query when there is no query string', async () => {
+    const request = new Request('http://localhost:8911/graphql')
+
+    const ctx = await buildCedarContext(request)
+
+    expect(ctx.query.size).toBe(0)
+  })
+
+  it('supports multi-value params via getAll', async () => {
+    const request = new Request(
+      'http://localhost:8911/api?tag=cedar&tag=framework',
+    )
+
+    const ctx = await buildCedarContext(request)
+
+    expect(ctx.query.getAll('tag')).toEqual(['cedar', 'framework'])
   })
 
   it('hydrates auth state when an auth decoder is provided', async () => {
@@ -138,7 +153,7 @@ describe('composeCedarMiddleware', () => {
       params: {
         id: 'base',
       },
-      query: {},
+      query: new URLSearchParams(),
       cookies: {},
       serverAuthState: undefined,
     })
@@ -178,10 +193,7 @@ describe('requestToLegacyEvent', () => {
       params: {
         routeName: 'hello',
       },
-      query: {
-        greeting: 'hello',
-        name: 'cedar',
-      },
+      query: new URLSearchParams('greeting=hi&greeting=hello&name=cedar'),
       cookies: {
         session: 'abc123',
       },
@@ -196,7 +208,7 @@ describe('requestToLegacyEvent', () => {
       routeName: 'hello',
     })
     expect(event.queryStringParameters).toEqual({
-      greeting: 'hello',
+      greeting: ['hi', 'hello'],
       name: 'cedar',
     })
     expect(event.multiValueQueryStringParameters).toEqual({
@@ -275,9 +287,7 @@ describe('wrapLegacyHandler', () => {
       }),
       {
         params: {},
-        query: {
-          name: 'cedar',
-        },
+        query: new URLSearchParams('name=cedar'),
         cookies: {},
         serverAuthState: undefined,
       },
