@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream'
 import { pathToFileURL } from 'node:url'
 
 import fastifyMultiPart from '@fastify/multipart'
@@ -13,6 +14,8 @@ import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getPaths } from '@cedarjs/project-config'
+
+import { lambdaEventForFastifyRequest } from '../requestHandlers/awsLambdaFastify.js'
 
 export interface RedwoodFastifyGraphQLOptions {
   redwood: {
@@ -119,7 +122,20 @@ export async function redwoodFastifyGraphQLServer(
           const cedarContext = await buildCedarContext(request, {
             authDecoder: graphqlOptions.authDecoder,
           })
-          const response = await yoga.handle(request, { request, cedarContext })
+          // Phase 1 of transitional context bridge: pass both the Fetch-native
+          // fields (request, cedarContext) and the legacy bridge fields
+          // (event, requestContext) so that Cedar-owned Yoga plugins that
+          // have not yet been migrated to the Fetch-native shape continue
+          // to work. The bridge fields will be removed once all Cedar-owned
+          // plugins prefer request/cedarContext over event/requestContext.
+          // See: docs/implementation-plans/universal-deploy-integration-plan-refined.md
+          // § "GraphQL Transitional Context Bridge"
+          const response = await yoga.handle(request, {
+            request,
+            cedarContext,
+            event: lambdaEventForFastifyRequest(req),
+            requestContext: undefined,
+          })
 
           reply.status(response.status)
 
@@ -127,8 +143,30 @@ export async function redwoodFastifyGraphQLServer(
             reply.header(name, value)
           })
 
-          const body = await response.arrayBuffer()
-          reply.send(Buffer.from(body))
+          // Stream the response body rather than buffering it. This is
+          // critical for SSE / @live query connections, which use
+          // text/event-stream and keep the response open indefinitely.
+          // Calling arrayBuffer() on such a stream would hang forever and
+          // the client would never receive any events.
+          //
+          // This adapter (api-server) is Node/Fastify-specific.
+          // On other runtimes (Cloudflare Workers, Bun, Deno) the fetch
+          // Response is returned directly by the runtime handler and
+          // streaming is handled natively so no conversion needed there.
+          // The cast is needed because the Fetch API's ReadableStream type
+          // (from lib.dom) and the ReadableStream type expected by
+          // Readable.fromWeb (from @types/node) are declared in separate
+          // .d.ts files and TypeScript considers them incompatible, even
+          // though they are the same runtime object.
+          reply.send(
+            response.body
+              ? Readable.fromWeb(
+                  response.body as unknown as Parameters<
+                    typeof Readable.fromWeb
+                  >[0],
+                )
+              : '',
+          )
         },
       })
     }
