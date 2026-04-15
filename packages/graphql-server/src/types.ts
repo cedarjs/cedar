@@ -80,7 +80,7 @@ export type ArmorConfig = {
 export interface CedarGraphQLContext {
   request?: Request
   cedarContext?: CedarRequestContext
-  event: APIGatewayProxyEvent
+  event?: APIGatewayProxyEvent
   requestContext?: LambdaContext | undefined
   currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
 
@@ -94,7 +94,7 @@ export interface CedarGraphQLContext {
 export interface RedwoodGraphQLContext {
   request?: Request
   cedarContext?: CedarRequestContext
-  event: APIGatewayProxyEvent
+  event?: APIGatewayProxyEvent
   requestContext: LambdaContext | undefined
   currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
 

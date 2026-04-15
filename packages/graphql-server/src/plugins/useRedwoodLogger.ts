@@ -269,6 +269,13 @@ export const useRedwoodLogger = (
 
       if (includeRequestId) {
         options['requestId'] =
+          // x-request-id is a widely adopted (though informal) HTTP header for
+          // distributed tracing. Load balancers, API gateways, and clients set
+          // it on each request so that all log lines for a single request can
+          // be correlated across services. We check it first so that an
+          // externally assigned ID is preserved end-to-end; if it is absent we
+          // fall back to the Lambda/API-Gateway request ID, and finally
+          // generate a UUID so there is always something to correlate on.
           args.contextValue.request?.headers.get('x-request-id') ||
           args.contextValue.requestContext?.awsRequestId ||
           args.contextValue.event?.requestContext?.requestId ||

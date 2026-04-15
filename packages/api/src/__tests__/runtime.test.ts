@@ -8,9 +8,11 @@ import {
   requestToLegacyEvent,
   routeManifestToJSON,
   wrapLegacyHandler,
-  type CedarHandler,
-  type CedarMiddleware,
-  type CedarRouteRecord,
+} from '../runtime.js'
+import type {
+  CedarHandler,
+  CedarMiddleware,
+  CedarRouteRecord,
 } from '../runtime.js'
 
 describe('buildCedarContext', () => {

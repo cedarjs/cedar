@@ -4,7 +4,7 @@ import { vi, beforeAll, afterAll, describe, it, expect } from 'vitest'
 
 import { createFastifyInstance } from '../fastify.js'
 import { cedarFastifyAPI } from '../plugins/api.js'
-import { CEDAR_ROUTE_MANIFEST } from '../plugins/lambdaLoader.js'
+import { getCedarRouteManifest } from '../plugins/lambdaLoader.js'
 
 // Suppress terminal logging.
 console.log = vi.fn()
@@ -138,7 +138,7 @@ describe('cedarFastifyAPI', () => {
 
     describe('route manifest', () => {
       it('records provider-relevant backend routes', () => {
-        expect(CEDAR_ROUTE_MANIFEST).toEqual(
+        expect(getCedarRouteManifest()).toEqual(
           expect.arrayContaining([
             {
               path: '/graphql',
@@ -190,7 +190,7 @@ describe('cedarFastifyAPI', () => {
             },
           ]),
         )
-        expect(CEDAR_ROUTE_MANIFEST).toHaveLength(7)
+        expect(getCedarRouteManifest()).toHaveLength(7)
       })
     })
   })

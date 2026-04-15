@@ -1,4 +1,5 @@
-import path from 'path'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 // See https://github.com/webdiscus/ansis#troubleshooting
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -27,7 +28,15 @@ import { escape } from '../utils.js'
 export type Lambdas = Record<string, Handler>
 export const LAMBDA_FUNCTIONS: Lambdas = {}
 export const CEDAR_HANDLERS: Record<string, CedarHandler> = {}
-export const CEDAR_ROUTE_MANIFEST: CedarRouteRecord[] = []
+const cedarRouteManifest: CedarRouteRecord[] = []
+
+/**
+ * Exports a copy of the Cedar route manifest.
+ *
+ * This is intended to be used to later build WinterTC compatible `fetch`
+ * exports
+ */
+export const getCedarRouteManifest = () => [...cedarRouteManifest]
 
 // Import the API functions and add them to the LAMBDA_FUNCTIONS object
 
@@ -35,14 +44,14 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
   const tsImport = Date.now()
   console.log(ansis.dim.italic('Importing Server Functions... '))
 
-  CEDAR_ROUTE_MANIFEST.length = 0
+  cedarRouteManifest.length = 0
 
   const imports = foundFunctions.map(async (fnPath) => {
     const ts = Date.now()
     const routeName = path.basename(fnPath).replace('.js', '')
     const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
 
-    const fnImport = await import(`file://${fnPath}`)
+    const fnImport = await import(pathToFileURL(fnPath).href)
     const handler: Handler = (() => {
       if ('handler' in fnImport) {
         // ESModule export of handler - when using
@@ -101,7 +110,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
       )
     }
 
-    CEDAR_ROUTE_MANIFEST.push({
+    cedarRouteManifest.push({
       path: routePath,
       methods:
         routeName === 'graphql' ? ['GET', 'POST', 'OPTIONS'] : ['GET', 'POST'],

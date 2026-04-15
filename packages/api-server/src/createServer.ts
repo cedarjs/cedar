@@ -1,5 +1,6 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 // See https://github.com/webdiscus/ansis#troubleshooting
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -140,7 +141,7 @@ export async function createServer(options: CreateServerOptions = {}) {
     // This comes from a babel plugin that's applied to
     // api/dist/functions/graphql.{ts,js} in user projects
     const { __rw_graphqlOptions } = await import(
-      `file://${graphqlFunctionPath}`
+      pathToFileURL(graphqlFunctionPath).href
     )
 
     await server.register(redwoodFastifyGraphQLServer, {
@@ -153,9 +154,7 @@ export async function createServer(options: CreateServerOptions = {}) {
 
   // For baremetal and pm2. See https://github.com/redwoodjs/redwood/pull/4744
   server.addHook('onReady', (done) => {
-    if (process.env.VITEST !== 'true') {
-      process.send?.('ready')
-    }
+    process.send?.('ready')
 
     done()
   })
