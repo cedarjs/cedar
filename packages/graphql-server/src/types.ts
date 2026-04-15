@@ -9,12 +9,8 @@ import type {
 } from 'graphql'
 import type { Plugin } from 'graphql-yoga'
 
-import type {
-  AuthContextPayload,
-  CedarRequestContext,
-  Decoder,
-} from '@cedarjs/api'
-import type { CorsConfig } from '@cedarjs/api'
+import type { AuthContextPayload, CorsConfig, Decoder } from '@cedarjs/api'
+import type { CedarRequestContext } from '@cedarjs/api/runtime'
 import type { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import type { DirectiveGlobImports } from './directives/makeDirectives.js'
