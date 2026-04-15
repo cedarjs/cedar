@@ -3,6 +3,7 @@ import type {
   APIGatewayProxyResult,
   Context as LambdaContext,
 } from 'aws-lambda'
+import * as cookie from 'cookie'
 
 import { getAuthenticationContext } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
@@ -16,6 +17,12 @@ function lambdaQueryToSearchParams(
 ): URLSearchParams {
   const query = new URLSearchParams()
 
+  // For standard API Gateway v1 proxy events, multiValueQueryStringParameters
+  // is a strict superset of queryStringParameters: every key present in the
+  // single-value map also appears in the multi-value map (with at least one
+  // entry). We therefore prefer it when available so that repeated keys like
+  // `?tag=a&tag=b` are preserved. The single-value fallback handles Lambda
+  // invocation sources that do not populate the multi-value field.
   if (event.multiValueQueryStringParameters) {
     for (const [key, values] of Object.entries(
       event.multiValueQueryStringParameters,
@@ -40,25 +47,11 @@ function lambdaQueryToSearchParams(
 function parseLambdaCookies(
   event: APIGatewayProxyEvent,
 ): Record<string, string> {
-  const rawCookie = event.headers?.cookie ?? ''
-
-  if (!rawCookie) {
-    return {}
-  }
-
-  const cookies: Record<string, string> = {}
-
-  for (const part of rawCookie.split(';')) {
-    const eqIdx = part.indexOf('=')
-
-    if (eqIdx !== -1) {
-      const key = part.slice(0, eqIdx).trim()
-      const value = part.slice(eqIdx + 1).trim()
-      cookies[key] = value
-    }
-  }
-
-  return cookies
+  return Object.fromEntries(
+    Object.entries(cookie.parse(event.headers?.cookie ?? '')).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined,
+    ),
+  )
 }
 
 /**
