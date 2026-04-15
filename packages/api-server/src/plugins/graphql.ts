@@ -153,20 +153,16 @@ export async function redwoodFastifyGraphQLServer(
           // On other runtimes (Cloudflare Workers, Bun, Deno) the fetch
           // Response is returned directly by the runtime handler and
           // streaming is handled natively so no conversion needed there.
-          // The cast is needed because the Fetch API's ReadableStream type
-          // (from lib.dom) and the ReadableStream type expected by
-          // Readable.fromWeb (from @types/node) are declared in separate
-          // .d.ts files and TypeScript considers them incompatible, even
-          // though they are the same runtime object.
-          reply.send(
-            response.body
-              ? Readable.fromWeb(
-                  response.body as unknown as Parameters<
-                    typeof Readable.fromWeb
-                  >[0],
-                )
-              : '',
-          )
+          //
+          // Readable.from() is used instead of Readable.fromWeb() because
+          // GraphQL Yoga returns a PonyfillReadableStream from
+          // @whatwg-node/fetch. Readable.fromWeb() requires a native Node.js
+          // built-in ReadableStream and uses instanceof under the hood, so it
+          // rejects the ponyfill with ERR_INVALID_ARG_TYPE. Readable.from()
+          // accepts any AsyncIterable, and PonyfillReadableStream implements
+          // [Symbol.asyncIterator], so it works for both native and ponyfilled
+          // streams.
+          reply.send(response.body ? Readable.from(response.body) : '')
         },
       })
     }
