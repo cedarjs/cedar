@@ -1061,12 +1061,16 @@ describe('generateGqlormBackendContent', () => {
     ])
 
     // findMany scopes by userId
-    expect(content).toContain("where['userId'] = context.currentUser['id']")
+    expect(content).toContain("const currentUserId = context.currentUser['id']")
+    expect(content).toContain(
+      'if (currentUserId === undefined || currentUserId === null) {',
+    )
+    expect(content).toContain("where['userId'] = currentUserId")
     expect(content).toContain('return db.post.findMany({')
     expect(content).toContain('          where,')
 
     // findUnique checks ownership
-    expect(content).toContain("record.userId !== context.currentUser['id']")
+    expect(content).toContain('record.userId !== currentUserId')
     expect(content).toContain(
       "throw new ForbiddenError('Not authorized to access this resource')",
     )
@@ -1137,7 +1141,7 @@ describe('generateGqlormBackendContent', () => {
 
     // findMany org scoping
     expect(content).toContain('db.membership.findMany(')
-    expect(content).toContain("{ userId: context.currentUser['id'] }")
+    expect(content).toContain('{ userId: currentUserId }')
     expect(content).toContain('select: { organizationId: true }')
     expect(content).toContain('memberships.map((m) => m.organizationId)')
     expect(content).toContain(
@@ -1274,7 +1278,7 @@ describe('generateGqlormBackendContent', () => {
     )
 
     // Uses custom field names
-    expect(content).toContain("where['memberId'] = context.currentUser['id']")
+    expect(content).toContain("where['memberId'] = currentUserId")
     expect(content).toContain('db.orgMember.findMany(')
     expect(content).toContain('select: { orgId: true }')
     expect(content).toContain("where['orgId'] = { in: organizationIds }")

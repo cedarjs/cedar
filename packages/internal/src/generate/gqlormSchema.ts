@@ -625,7 +625,11 @@ export function generateGqlormBackendContent(
   }
 
   // Membership model entry in GqlormDb if any model needs org scoping
-  if (anyModelNeedsOrgScoping) {
+  // and the model wasn't already emitted by the models loop above
+  const membershipAlreadyInModels = models.some(
+    (m) => m.camelName === config.membershipModelCamel,
+  )
+  if (anyModelNeedsOrgScoping && !membershipAlreadyInModels) {
     lines.push(`  ${config.membershipModelCamel}: {`)
     lines.push('    findMany(args: {')
     lines.push('      where: Record<string, unknown>')
@@ -705,12 +709,20 @@ export function generateGqlormBackendContent(
     lines.push('        }')
 
     if (hasUserField || useOrgScoping) {
+      lines.push("        const currentUserId = context.currentUser['id']")
+      lines.push(
+        '        if (currentUserId === undefined || currentUserId === null) {',
+      )
+      lines.push(
+        `          throw new AuthenticationError("Could not determine the current user's ID.")`,
+      )
+      lines.push('        }')
       lines.push('        const where: Record<string, unknown> = {}')
 
       if (hasUserField) {
         lines.push('        // Scope to the current user')
         lines.push(
-          `        where['${config.membershipUserField}'] = context.currentUser['id']`,
+          `        where['${config.membershipUserField}'] = currentUserId`,
         )
       }
 
@@ -720,7 +732,7 @@ export function generateGqlormBackendContent(
           `        const memberships = await db.${config.membershipModelCamel}.findMany({`,
         )
         lines.push(
-          `          where: { ${config.membershipUserField}: context.currentUser['id'] },`,
+          `          where: { ${config.membershipUserField}: currentUserId },`,
         )
         lines.push(
           `          select: { ${config.membershipOrganizationField}: true },`,
@@ -770,40 +782,52 @@ export function generateGqlormBackendContent(
       lines.push('          return null')
       lines.push('        }')
 
-      if (hasUserField) {
+      if (hasUserField || useOrgScoping) {
         lines.push('')
-        lines.push('        // Verify the current user owns this record')
+        lines.push("        const currentUserId = context.currentUser['id']")
         lines.push(
-          `        if (record.${config.membershipUserField} !== context.currentUser['id']) {`,
+          '        if (currentUserId === undefined || currentUserId === null) {',
         )
         lines.push(
-          `          throw new ForbiddenError('Not authorized to access this resource')`,
+          `          throw new AuthenticationError("Could not determine the current user's ID.")`,
         )
         lines.push('        }')
-      }
 
-      if (useOrgScoping) {
-        lines.push('')
-        lines.push(
-          "        // Verify the current user belongs to the record's organization",
-        )
-        lines.push(
-          `        const membership = await db.${config.membershipModelCamel}.findFirst({`,
-        )
-        lines.push('          where: {')
-        lines.push(
-          `            ${config.membershipUserField}: context.currentUser['id'],`,
-        )
-        lines.push(
-          `            ${config.membershipOrganizationField}: record.${config.membershipOrganizationField},`,
-        )
-        lines.push('          },')
-        lines.push('        })')
-        lines.push('        if (!membership) {')
-        lines.push(
-          `          throw new ForbiddenError('Not authorized to access this resource')`,
-        )
-        lines.push('        }')
+        if (hasUserField) {
+          lines.push('')
+          lines.push('        // Verify the current user owns this record')
+          lines.push(
+            `        if (record.${config.membershipUserField} !== currentUserId) {`,
+          )
+          lines.push(
+            `          throw new ForbiddenError('Not authorized to access this resource')`,
+          )
+          lines.push('        }')
+        }
+
+        if (useOrgScoping) {
+          lines.push('')
+          lines.push(
+            "        // Verify the current user belongs to the record's organization",
+          )
+          lines.push(
+            `        const membership = await db.${config.membershipModelCamel}.findFirst({`,
+          )
+          lines.push('          where: {')
+          lines.push(
+            `            ${config.membershipUserField}: currentUserId,`,
+          )
+          lines.push(
+            `            ${config.membershipOrganizationField}: record.${config.membershipOrganizationField},`,
+          )
+          lines.push('          },')
+          lines.push('        })')
+          lines.push('        if (!membership) {')
+          lines.push(
+            `          throw new ForbiddenError('Not authorized to access this resource')`,
+          )
+          lines.push('        }')
+        }
       }
 
       lines.push('')
