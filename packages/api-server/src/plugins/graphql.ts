@@ -1,15 +1,9 @@
-import { Readable } from 'node:stream'
 import { pathToFileURL } from 'node:url'
 
 import fastifyMultiPart from '@fastify/multipart'
 import fastifyUrlData from '@fastify/url-data'
 import fg from 'fast-glob'
-import type {
-  FastifyInstance,
-  FastifyReply,
-  FastifyRequest,
-  HTTPMethods,
-} from 'fastify'
+import type { FastifyInstance, FastifyRequest, HTTPMethods } from 'fastify'
 import type { Plugin as YogaPlugin } from 'graphql-yoga'
 
 import { buildCedarContext } from '@cedarjs/api/runtime'
@@ -107,7 +101,7 @@ export async function redwoodFastifyGraphQLServer(
       fastify.route({
         url: `${redwoodOptions.apiRootPath}${graphqlEndpoint}${routePath}`,
         method,
-        handler: async (req, reply) => {
+        handler: async (req, _reply) => {
           const request = createFetchRequest(req)
           const cedarContext = await buildCedarContext(request, {
             authDecoder: graphqlOptions.authDecoder,
@@ -121,14 +115,20 @@ export async function redwoodFastifyGraphQLServer(
           // plugins prefer request/cedarContext over event/requestContext.
           // See: docs/implementation-plans/universal-deploy-integration-plan-refined.md
           // § "GraphQL Transitional Context Bridge"
-          const response = await yoga.handle(request, {
+          //
+          // We return the Fetch-native Response directly. Fastify v5 has
+          // first-class support for WHATWG Response objects: it reads the
+          // status, copies headers, and for a ReadableStream body it calls
+          // sendWebStream (via getReader()) which correctly keeps SSE /
+          // @live query connections open for as long as the client is
+          // connected. This is the fetch-native adapter pattern described in
+          // the Universal Deploy integration plan.
+          return yoga.handle(request, {
             request,
             cedarContext,
             event: lambdaEventForFastifyRequest(req),
             requestContext: undefined,
           })
-
-          await sendGraphQLResponse(reply, response)
         },
       })
     }
@@ -169,53 +169,4 @@ function createFetchRequest(req: FastifyRequest) {
     headers: req.headers as HeadersInit,
     body: requestBody,
   })
-}
-
-async function sendGraphQLResponse(reply: FastifyReply, response: Response) {
-  reply.status(response.status)
-
-  response.headers.forEach((value: string, name: string) => {
-    reply.header(name, value)
-  })
-
-  if (shouldStreamGraphQLResponse(response)) {
-    // Stream the response body rather than buffering it. This is critical for
-    // SSE / @live query connections, which use text/event-stream and keep the
-    // response open indefinitely.
-    // Calling arrayBuffer() on such a stream would hang forever and the client
-    // would never receive any events.
-    //
-    // This adapter (api-server) is Node/Fastify-specific.
-    // On other runtimes (Cloudflare Workers, Bun, Deno) the fetch Response is
-    // returned directly by the runtime handler and streaming is handled
-    // natively so no conversion needed there.
-    //
-    // Readable.from() is used instead of Readable.fromWeb() because GraphQL
-    // Yoga returns a PonyfillReadableStream from @whatwg-node/fetch.
-    // Readable.fromWeb() requires a native Node.js built-in ReadableStream and
-    // uses instanceof under the hood, so it rejects the ponyfill with
-    // ERR_INVALID_ARG_TYPE. Readable.from() accepts any AsyncIterable, and
-    // PonyfillReadableStream implements [Symbol.asyncIterator], so it works for
-    // both native and ponyfilled streams.
-    reply.send(response.body ? Readable.from(response.body) : '')
-
-    return
-  }
-
-  const body = await response.arrayBuffer()
-  reply.send(Buffer.from(body))
-}
-
-function shouldStreamGraphQLResponse(response: Response) {
-  const contentType = response.headers.get('content-type') ?? ''
-
-  if (contentType.includes('text/event-stream')) {
-    return true
-  }
-
-  if (contentType.includes('multipart/mixed')) {
-    return true
-  }
-
-  return false
 }
