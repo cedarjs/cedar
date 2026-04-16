@@ -7,6 +7,6 @@
     "@cedarjs/api": "4.0.0",
     "@cedarjs/graphql-server": "4.0.0",
     "@prisma/adapter-better-sqlite3": "7.7.0",
-    "better-sqlite3": "12.8.0"
+    "better-sqlite3": "12.9.0"
   }
 }
