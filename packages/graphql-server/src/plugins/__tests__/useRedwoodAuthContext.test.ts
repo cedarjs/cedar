@@ -1,70 +1,132 @@
-import { useEngine } from '@envelop/core'
-import * as GraphQLJS from 'graphql'
-import { beforeEach, vi, describe, expect, it } from 'vitest'
+import type { APIGatewayProxyEvent } from 'aws-lambda'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type Api from '@cedarjs/api'
+import type { AuthContextPayload, Decoder } from '@cedarjs/api'
+import * as apiAuth from '@cedarjs/api/auth'
 
-import { testSchema, testQuery } from '../__fixtures__/common.js'
-import {
-  createSpiedPlugin,
-  createTestkit,
-} from '../__fixtures__/envelop-testing.js'
 import { useRedwoodAuthContext } from '../useRedwoodAuthContext.js'
 
-const authDecoder = async (token: string) => ({ token })
+const authDecoder: Decoder = async (token: string) => ({ token })
 
-vi.mock('@cedarjs/api/auth', async (importOriginal) => {
-  const originalApi = await importOriginal<typeof Api>()
+vi.mock('@cedarjs/api/auth', async () => {
   return {
-    ...originalApi,
-    getAuthenticationContext: vi.fn().mockResolvedValue([
-      { sub: '1', email: 'ba@zin.ga' },
-      {
-        type: 'mocked-auth-type',
-        schema: 'mocked-schema-bearer',
-        token: 'mocked-undecoded-token',
-      },
-      { event: {}, context: {} },
-    ]),
+    getAuthenticationContext: vi.fn(),
   }
 })
 
-describe('useRedwoodAuthContext', () => {
-  const spiedPlugin = createSpiedPlugin()
+const MOCK_AUTH_CONTEXT: AuthContextPayload = [
+  { sub: '1', email: 'ba@zin.ga' },
+  {
+    type: 'mocked-auth-type',
+    schema: 'mocked-schema-bearer',
+    token: 'mocked-undecoded-token',
+  },
+  { event: new Request('http://localhost/mock'), context: undefined },
+]
 
-  const expectContextContains = (obj) => {
-    expect(spiedPlugin.spies.beforeContextBuilding).toHaveBeenCalledWith(
-      expect.objectContaining({
-        context: expect.objectContaining(obj),
-      }),
-    )
+const createMockLambdaEvent = (
+  headers: Record<string, string>,
+): APIGatewayProxyEvent => {
+  return {
+    body: null,
+    headers,
+    multiValueHeaders: {},
+    httpMethod: 'POST',
+    isBase64Encoded: false,
+    path: '/graphql',
+    pathParameters: null,
+    queryStringParameters: null,
+    multiValueQueryStringParameters: null,
+    stageVariables: null,
+    requestContext: {
+      accountId: 'MOCKED_ACCOUNT',
+      apiId: 'MOCKED_API_ID',
+      authorizer: undefined,
+      protocol: 'HTTP/1.1',
+      identity: {
+        accessKey: null,
+        accountId: null,
+        apiKey: null,
+        apiKeyId: null,
+        caller: null,
+        clientCert: null,
+        cognitoAuthenticationProvider: null,
+        cognitoAuthenticationType: null,
+        cognitoIdentityId: null,
+        cognitoIdentityPoolId: null,
+        principalOrgId: null,
+        sourceIp: '127.0.0.1',
+        user: null,
+        userAgent: headers['user-agent'] ?? null,
+        userArn: null,
+      },
+      path: '/graphql',
+      stage: 'dev',
+      requestId: 'legacy-request-id',
+      requestTimeEpoch: Date.now(),
+      resourceId: 'resource-id',
+      resourcePath: '/graphql',
+      httpMethod: 'POST',
+    },
+    resource: '/graphql',
   }
+}
 
+type MockContextBuildingArgs = Parameters<
+  NonNullable<ReturnType<typeof useRedwoodAuthContext>['onContextBuilding']>
+>[0]
+
+describe('useRedwoodAuthContext', () => {
   beforeEach(() => {
-    spiedPlugin.reset()
+    vi.clearAllMocks()
+    vi.mocked(apiAuth.getAuthenticationContext).mockResolvedValue(
+      MOCK_AUTH_CONTEXT,
+    )
   })
 
-  it('Updates context with output of current user', async () => {
-    const MOCK_USER = {
+  it('updates context with output of current user', async () => {
+    const mockUser = {
       id: 'my-user-id',
       name: 'Mockity MockFace',
     }
 
-    const mockedGetCurrentUser = vi.fn().mockResolvedValue(MOCK_USER)
+    const mockedGetCurrentUser = vi.fn().mockResolvedValue(mockUser)
+    const plugin = useRedwoodAuthContext(mockedGetCurrentUser, authDecoder)
+    const onContextBuilding = plugin.onContextBuilding
 
-    const testkit = createTestkit(
-      [
-        useEngine(GraphQLJS),
-        useRedwoodAuthContext(mockedGetCurrentUser, authDecoder),
-        spiedPlugin.plugin,
-      ],
-      testSchema,
-    )
+    if (!onContextBuilding) {
+      throw new Error('Expected onContextBuilding hook to be defined')
+    }
 
-    await testkit.execute(testQuery, {}, {})
+    const extendContext = vi.fn()
+    const request = new Request('http://localhost/graphql', {
+      headers: {
+        authorization: 'Bearer fetch-token',
+        'auth-provider': 'test',
+      },
+    })
+    const legacyEvent = createMockLambdaEvent({
+      authorization: 'Bearer legacy-token',
+      'auth-provider': 'legacy',
+    })
 
-    expectContextContains({
-      currentUser: MOCK_USER,
+    await onContextBuilding({
+      context: {
+        params: {},
+        request,
+        event: legacyEvent,
+        requestContext: undefined,
+      } as MockContextBuildingArgs['context'],
+      extendContext,
+      breakContextBuilding() {
+        return undefined
+      },
+    } as MockContextBuildingArgs)
+
+    expect(apiAuth.getAuthenticationContext).toHaveBeenCalledWith({
+      authDecoder,
+      event: request,
+      context: undefined,
     })
 
     expect(mockedGetCurrentUser).toHaveBeenCalledWith(
@@ -74,30 +136,54 @@ describe('useRedwoodAuthContext', () => {
         token: 'mocked-undecoded-token',
         type: 'mocked-auth-type',
       },
-      { context: {}, event: {} },
+      MOCK_AUTH_CONTEXT[2],
     )
+
+    expect(extendContext).toHaveBeenCalledWith({
+      currentUser: mockUser,
+    })
   })
 
-  it('Does not swallow exceptions raised in getCurrentUser', async () => {
+  it('does not swallow exceptions raised in getCurrentUser', async () => {
     const mockedGetCurrentUser = vi
       .fn()
       .mockRejectedValue(new Error('Could not fetch user from db.'))
 
-    const testkit = createTestkit(
-      [
-        useEngine(GraphQLJS),
-        useRedwoodAuthContext(mockedGetCurrentUser, authDecoder),
-      ],
-      testSchema,
-    )
+    const plugin = useRedwoodAuthContext(mockedGetCurrentUser, authDecoder)
+    const onContextBuilding = plugin.onContextBuilding
 
-    await expect(async () => {
-      await testkit.execute(testQuery, {}, {})
-    }).rejects.toEqual(
+    if (!onContextBuilding) {
+      throw new Error('Expected onContextBuilding hook to be defined')
+    }
+
+    const extendContext = vi.fn()
+    const legacyEvent = createMockLambdaEvent({
+      authorization: 'Bearer legacy-token',
+      'auth-provider': 'legacy',
+    })
+
+    await expect(
+      onContextBuilding({
+        context: {
+          params: {},
+          event: legacyEvent,
+          requestContext: undefined,
+        } as MockContextBuildingArgs['context'],
+        extendContext,
+        breakContextBuilding() {
+          return undefined
+        },
+      } as MockContextBuildingArgs),
+    ).rejects.toEqual(
       new Error('Exception in getCurrentUser: Could not fetch user from db.'),
     )
-    expect(mockedGetCurrentUser).toHaveBeenCalled()
-  })
 
-  // @todo: Test exception raised when fetching auth context/parsing provider header
+    expect(apiAuth.getAuthenticationContext).toHaveBeenCalledWith({
+      authDecoder,
+      event: legacyEvent,
+      context: undefined,
+    })
+    expect(mockedGetCurrentUser).toHaveBeenCalled()
+    expect(extendContext).not.toHaveBeenCalled()
+  })
 })

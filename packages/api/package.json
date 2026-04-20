@@ -20,6 +20,16 @@
       }
     },
     "./package.json": "./package.json",
+    "./runtime": {
+      "import": {
+        "types": "./dist/runtime.d.ts",
+        "default": "./dist/runtime.js"
+      },
+      "require": {
+        "types": "./dist/cjs/runtime.d.ts",
+        "default": "./dist/cjs/runtime.js"
+      }
+    },
     "./auth": {
       "import": {
         "types": "./dist/auth/index.d.ts",
@@ -93,6 +103,7 @@
     "humanize-string": "2.1.0",
     "jsonwebtoken": "9.0.3",
     "pascalcase": "1.0.0",
+    "picoquery": "2.5.0",
     "pino": "9.7.0",
     "title-case": "3.0.3"
   },
