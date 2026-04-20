@@ -29,9 +29,6 @@
       "types": "./dist/preset.d.ts",
       "default": "./dist/preset.js"
     },
-    "./dist/mocks/MockRouter": {
-      "default": "./dist/mocks/MockRouter.js"
-    },
     "./dist/preview.js": "./dist/preview.js",
     "./package.json": "./package.json"
   },
@@ -60,6 +57,7 @@
     "empathic": "2.0.0",
     "magic-string": "0.30.21",
     "react-docgen": "7.1.1",
+    "tsconfig-paths": "^3.15.0",
     "unplugin-auto-import": "19.3.0",
     "vite-plugin-node-polyfills": "0.26.0"
   },
