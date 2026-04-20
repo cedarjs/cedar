@@ -3,9 +3,10 @@ import { pathToFileURL } from 'node:url'
 import fastifyMultiPart from '@fastify/multipart'
 import fastifyUrlData from '@fastify/url-data'
 import fg from 'fast-glob'
-import type { FastifyInstance, HTTPMethods } from 'fastify'
+import type { FastifyInstance, FastifyRequest, HTTPMethods } from 'fastify'
 import type { Plugin as YogaPlugin } from 'graphql-yoga'
 
+import { buildCedarContext } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
@@ -100,12 +101,35 @@ export async function redwoodFastifyGraphQLServer(
       fastify.route({
         url: `${redwoodOptions.apiRootPath}${graphqlEndpoint}${routePath}`,
         method,
-        handler: (req, reply) =>
-          yoga.handleNodeRequestAndResponse(req, reply, {
-            req,
-            reply,
+        handler: async (req, _reply) => {
+          const request = createFetchRequest(req)
+          const cedarContext = await buildCedarContext(request, {
+            authDecoder: graphqlOptions.authDecoder,
+          })
+
+          // Phase 1 of transitional context bridge: pass both the Fetch-native
+          // fields (request, cedarContext) and the legacy bridge fields
+          // (event, requestContext) so that Cedar-owned Yoga plugins that
+          // have not yet been migrated to the Fetch-native shape continue
+          // to work. The bridge fields will be removed once all Cedar-owned
+          // plugins prefer request/cedarContext over event/requestContext.
+          // See: docs/implementation-plans/universal-deploy-integration-plan-refined.md
+          // § "GraphQL Transitional Context Bridge"
+          //
+          // We return the Fetch-native Response directly. Fastify v5 has
+          // first-class support for WHATWG Response objects: it reads the
+          // status, copies headers, and for a ReadableStream body it calls
+          // sendWebStream (via getReader()) which correctly keeps SSE /
+          // @live query connections open for as long as the client is
+          // connected. This is the fetch-native adapter pattern described in
+          // the Universal Deploy integration plan.
+          return yoga.handle(request, {
+            request,
+            cedarContext,
             event: lambdaEventForFastifyRequest(req),
-          }),
+            requestContext: undefined,
+          })
+        },
       })
     }
 
@@ -127,4 +151,22 @@ export async function redwoodFastifyGraphQLServer(
 
 function trimSlashes(path: string) {
   return path.replace(/^\/|\/$/g, '')
+}
+
+function createFetchRequest(req: FastifyRequest) {
+  const requestBody =
+    req.method === 'GET' || req.method === 'HEAD'
+      ? undefined
+      : typeof req.body === 'string'
+        ? req.body
+        : req.body
+          ? JSON.stringify(req.body)
+          : undefined
+
+  const href = `${req.protocol}://${req.hostname}${req.raw.url ?? '/'}`
+  return new Request(href, {
+    method: req.method,
+    headers: req.headers as HeadersInit,
+    body: requestBody,
+  })
 }

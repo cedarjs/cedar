@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent, Context } from 'aws-lambda'
-import { vi, describe, expect, it } from 'vitest'
+import { vi, beforeEach, describe, expect, it } from 'vitest'
 
 import type { Decoder } from '@cedarjs/api'
 import { createLogger } from '@cedarjs/api/logger'
@@ -115,6 +115,21 @@ const mockLambdaEvent = ({
 }
 
 describe('createGraphQLHandler', () => {
+  const getCurrentUserSpy = vi.fn<GraphQLHandlerOptions['getCurrentUser']>()
+
+  beforeEach(() => {
+    getCurrentUserSpy.mockReset()
+    getCurrentUserSpy.mockImplementation(async (decoded) => {
+      if (decoded?.userId === 'admin-one') {
+        return { ...decoded, roles: ['admin'] }
+      } else if (decoded?.userId === 'customer-one') {
+        return { ...decoded, roles: ['user'] }
+      }
+
+      return null
+    })
+  })
+
   const adminAuthDecoder: Decoder = async (token, type) => {
     if (type !== 'admin-auth') {
       return null
@@ -139,14 +154,10 @@ describe('createGraphQLHandler', () => {
 
   const getCurrentUser: GraphQLHandlerOptions['getCurrentUser'] = async (
     decoded,
+    authInfo,
+    req,
   ) => {
-    if (decoded?.userId === 'admin-one') {
-      return { ...decoded, roles: ['admin'] }
-    } else if (decoded?.userId === 'customer-one') {
-      return { ...decoded, roles: ['user'] }
-    }
-
-    return null
+    return getCurrentUserSpy(decoded, authInfo, req)
   }
 
   it('should allow you to pass an auth decoder', async () => {
@@ -175,6 +186,7 @@ describe('createGraphQLHandler', () => {
     const response = await handler(mockedEvent, {} as Context)
 
     const body = JSON.parse(response.body)
+
     expect(body.data.me.id).toEqual('admin-one')
     expect(body.data.me.token).toEqual('auth test token admin')
     expect(body.data.me.roles).toEqual(['admin'])
@@ -245,5 +257,49 @@ describe('createGraphQLHandler', () => {
     expect(body.data.me.token).toEqual('auth test token customer')
     expect(body.data.me.roles).toEqual(['user'])
     expect(response.statusCode).toBe(200)
+  })
+
+  it('passes the legacy lambda event through to getCurrentUser', async () => {
+    const handler = createGraphQLHandler({
+      getCurrentUser,
+      authDecoder: adminAuthDecoder,
+      loggerConfig: { logger: createLogger({}), options: {} },
+      sdls: {},
+      directives: {},
+      services: {},
+      onException: () => {},
+    })
+
+    const mockedEvent = mockLambdaEvent({
+      headers: {
+        'Content-Type': 'application/json',
+        'auth-provider': 'admin-auth',
+        authorization: 'Bearer auth-test-token-admin',
+      },
+      body: JSON.stringify({
+        query: '{ me { id } }',
+      }),
+      httpMethod: 'POST',
+    })
+
+    await handler(mockedEvent, {} as Context)
+
+    expect(getCurrentUserSpy).toHaveBeenCalledWith(
+      {
+        userId: 'admin-one',
+        token: 'auth test token admin',
+      },
+      {
+        schema: 'Bearer',
+        token: 'auth-test-token-admin',
+        type: 'admin-auth',
+      },
+      {
+        event: mockedEvent,
+        context: expect.objectContaining({
+          callbackWaitsForEmptyEventLoop: false,
+        }),
+      },
+    )
   })
 })
