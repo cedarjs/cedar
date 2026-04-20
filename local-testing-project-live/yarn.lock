@@ -1857,7 +1857,7 @@ __metadata:
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=935449&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=8d4042&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.2"
     "@babel/preset-typescript": "npm:7.28.5"
@@ -1924,7 +1924,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/d13434153c3133cd41facf3068f11b9f6128512906e21dbecd382fec2e6049dfff0cb7d9ade5f2092861c3799bd7558085f7658c863f1a9106922a4933242bdc
+  checksum: 10c0/7b319c5a2da2783d4682e0ecb722d60102eb9acf11fe6027d82e040f89b6d5d6f19af1c6a8889582ce3cb9828c3aa858f175fd86dad294f8d65e1f2b04aa3559
   languageName: node
   linkType: hard
 
@@ -2099,7 +2099,7 @@ __metadata:
 
 "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=eb226e&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=f439e3&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.2"
@@ -2112,6 +2112,7 @@ __metadata:
     "@cedarjs/project-config": "npm:3.1.1"
     "@cedarjs/router": "npm:3.1.1"
     "@cedarjs/structure": "npm:3.1.1"
+    "@cedarjs/utils": "npm:3.1.1"
     "@graphql-codegen/add": "npm:6.0.0"
     "@graphql-codegen/cli": "npm:6.2.1"
     "@graphql-codegen/client-preset": "npm:5.2.4"
@@ -2144,7 +2145,7 @@ __metadata:
   bin:
     cedar-gen: ./dist/generate/generate.js
     cedar-gen-watch: ./dist/generate/watch.js
-  checksum: 10c0/b28764319cc49b2c3712fbfca7835d337a394bb785df8ec974cc2c2ec4ba9cf1b6cc81847d7fbf9a872fe42239b18041295540b5cb612bad5fd9feec08eb4e06
+  checksum: 10c0/e6226186531f56e2c5e7373a7701491e45c0f8e0437fc3ada7397085a53f21e2581a7a1ea746897abb32637d573c9cc94cd12b1f58e6d2b453dbffcd4e0ebab2
   languageName: node
   linkType: hard
 
@@ -2334,7 +2335,7 @@ __metadata:
 
 "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=f209dc&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=e046b0&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.42.1"
     "@babel/generator": "npm:7.29.1"
@@ -2376,7 +2377,7 @@ __metadata:
     rw-vite-build: ./bins/rw-vite-build.mjs
     rw-vite-dev: ./bins/rw-vite-dev.mjs
     vite: ./bins/vite.mjs
-  checksum: 10c0/7f99f8195c601824ee2334a7e9c553a587954ecee191d7f147711c40ce66a1eb5fdc24b54c9ca53f28567c9072a4aa285085926e24a540820311e3749bfd866d
+  checksum: 10c0/a0551293b1fcf38ce2a8feee64583d2e0cbab0bbe70fdb7973b612d2804b2f9e647cb9d5ebc7631feaa34f8e675a34a6182127a93fe14991f927ecd789151c07
   languageName: node
   linkType: hard
 
@@ -15498,7 +15499,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.4.47, postcss@npm:^8.5.6, postcss@npm:^8.5.8":
+"postcss@npm:^8.4.47, postcss@npm:^8.5.6":
   version: 8.5.8
   resolution: "postcss@npm:8.5.8"
   dependencies:
@@ -15506,6 +15507,17 @@ __metadata:
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
   checksum: 10c0/dd918f7127ee7c60a0295bae2e72b3787892296e1d1c3c564d7a2a00c68d8df83cadc3178491259daa19ccc54804fb71ed8c937c6787e08d8bd4bedf8d17044c
+  languageName: node
+  linkType: hard
+
+"postcss@npm:^8.5.10":
+  version: 8.5.10
+  resolution: "postcss@npm:8.5.10"
+  dependencies:
+    nanoid: "npm:^3.3.11"
+    picocolors: "npm:^1.1.1"
+    source-map-js: "npm:^1.2.1"
+  checksum: 10c0/c592dffa0c4873b401f01955b265538d9942f425040df5e2b8f0ad34c83773a792ea0fa5859ccc99cfb5b955b4ebff118ab7056315388dc83b107b0fa8313576
   languageName: node
   linkType: hard
 
@@ -18875,7 +18887,7 @@ __metadata:
     "@types/react-dom": "npm:^18.2.19"
     autoprefixer: "npm:^10.4.27"
     humanize-string: "npm:2.1.0"
-    postcss: "npm:^8.5.8"
+    postcss: "npm:^8.5.10"
     postcss-loader: "npm:^8.2.1"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
