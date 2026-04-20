@@ -53,3 +53,11 @@ model Contact {
   message   String
   createdAt DateTime @default(now())
 }
+
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String?
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

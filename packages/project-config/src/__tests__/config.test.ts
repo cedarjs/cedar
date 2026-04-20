@@ -74,6 +74,10 @@ describe('getConfig', () => {
           },
           "gqlorm": {
             "enabled": false,
+            "membershipModel": "Membership",
+            "membershipOrganizationField": "organizationId",
+            "membershipUserField": "userId",
+            "organizationModel": "Organization",
           },
           "opentelemetry": {
             "enabled": false,

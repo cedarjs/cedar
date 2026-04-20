@@ -1,2 +1,0 @@
-export const value = 'HELLO from X';
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJ2YWx1ZSJdLCJzb3VyY2VzIjpbImluZGV4LmpzIl0sInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBjb25zdCB2YWx1ZSA9ICdIRUxMTyBmcm9tIFgnXG4iXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sTUFBTUEsS0FBSyxHQUFHLGNBQWMiLCJpZ25vcmVMaXN0IjpbXX0=

@@ -59,7 +59,7 @@ export const run = async () => {
   // This mirrors what the Cedar CLI does in packages/cli/src/index.js and
   // ensures that env vars like DATABASE_URL (which live in .env.defaults in
   // freshly-created projects) are available when getPrismaSchemas() loads the
-  // Prisma config. Without this, rw-gen bypasses the CLI bootstrap and
+  // Prisma config. Without this, cedar-gen bypasses the CLI bootstrap and
   // prisma.config.cjs throws PrismaConfigEnvError for unresolved variables.
   loadEnvFiles()
 

@@ -308,7 +308,7 @@ export async function handler({ force, verbose }: HandlerArgs) {
             writeFile(
               configTomlPath,
               configContent.concat(
-                '\n\n[experimental.gqlorm]\n  enabled = true\n',
+                '\n[experimental.gqlorm]\n  enabled = true\n',
               ),
               {
                 overwriteExisting: true,

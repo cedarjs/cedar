@@ -14,7 +14,7 @@ As Danny said in his [Prerender demo](https://www.youtube.com/watch?v=iorKyMlASZ
 Cedar currently supports prerendering at _build_ time. So before you deploy your web side, Cedar will render your pages into HTML, and once the JavaScript has been loaded on the browser, the page becomes dynamic.
 :::
 
-<!-- [This comment](https://community.redwoodjs.com/t/prerender-proposal/849/12) on our Community forum. -->
+{/* [This comment](https://community.redwoodjs.com/t/prerender-proposal/849/12) on our Community forum. */}
 
 ## Prerendering a Page
 
@@ -26,8 +26,8 @@ Prerendering a page is as easy as it gets. Just add the `prerender` prop to the 
 
 Then run `yarn rw build` and enjoy the performance boost!
 
-<!-- this doesn't render... -->
-<!-- ![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/b2c2aa27-3b2b-4ab7-b514-6ebc963d5312/2021-02-19_20.24.00.gif](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/b2c2aa27-3b2b-4ab7-b514-6ebc963d5312/2021-02-19_20.24.00.gif) -->
+{/* this doesn't render... */}
+{/* ![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/b2c2aa27-3b2b-4ab7-b514-6ebc963d5312/2021-02-19_20.24.00.gif](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/b2c2aa27-3b2b-4ab7-b514-6ebc963d5312/2021-02-19_20.24.00.gif) */}
 
 ### Prerendering all pages in a Set
 
@@ -222,7 +222,7 @@ We're actively looking for feedback! Do let us know if: everything built ok? you
 
 ## Images and Assets
 
-<!-- should name it... -->
+{/* should name it... */}
 
 Images and assets continue to work the way they used to. For more, see [this doc](assets-and-files.md).
 
