@@ -160,9 +160,13 @@ export const handler = async ({
 
   // Ensure gqlorm-schema.json exists before Vite starts. Vite resolves the
   // static `import schema from '../../.cedar/gqlorm-schema.json'` in App.tsx
-  // almost immediately (~200ms), but rw-gen-watch doesn't write the file until
-  // chokidar's 'ready' event + full DMMF parse (~3-8s later).
-  if (generate && workspace.includes('web')) {
+  // almost immediately (~200ms), but cedar-gen-watch doesn't write the file
+  // until chokidar's 'ready' event + full DMMF parse (~3-8s later).
+  if (
+    generate &&
+    workspace.includes('web') &&
+    getConfig().experimental?.gqlorm?.enabled
+  ) {
     try {
       await generateGqlormArtifacts()
     } catch (e) {
@@ -241,7 +245,7 @@ export const handler = async ({
   if (generate) {
     jobs.push({
       name: 'gen',
-      command: 'yarn rw-gen-watch',
+      command: 'yarn cedar-gen-watch',
       prefixColor: 'green',
     })
   }

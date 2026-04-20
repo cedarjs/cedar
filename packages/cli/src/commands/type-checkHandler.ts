@@ -89,7 +89,7 @@ export const handler = async ({
         {
           title: 'Generating types',
           task: () =>
-            execa('yarn rw-gen', {
+            execa('yarn cedar-gen', {
               shell: true,
               stdio: verbose ? 'inherit' : 'ignore',
             }),

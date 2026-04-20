@@ -60,9 +60,9 @@ export const builder = (yargs: Argv) =>
       recordTelemetryAttributes({ command: 'generate types' })
 
       try {
-        execa.sync('yarn', ['rw-gen'], { stdio: 'inherit' })
+        execa.sync('yarn', ['cedar-gen'], { stdio: 'inherit' })
       } catch (error: unknown) {
-        // rw-gen is responsible for logging its own errors but we need to
+        // cedar-gen is responsible for logging its own errors but we need to
         // make sure we exit with a non-zero exit code
         process.exitCode = getExitCode(error) ?? 1
       }

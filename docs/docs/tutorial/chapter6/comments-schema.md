@@ -901,6 +901,7 @@ interface CreateCommentArgs {
 ```
 
 in case we wanted to allow both ways – which Prisma generally allows, however [it doesn't allow to pick and mix](https://stackoverflow.com/a/69169106/1246547) within the same input.
+
 </ShowForTs>
 
 :::

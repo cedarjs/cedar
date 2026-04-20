@@ -218,22 +218,22 @@ describe('runBin', () => {
 
 describe('runBinSync', () => {
   it('yarn: runs yarn <bin> synchronously', () => {
-    runBinSync('rw-gen')
-    expect(execa.sync).toHaveBeenCalledWith('yarn', ['rw-gen'], undefined)
+    runBinSync('cedar-gen')
+    expect(execa.sync).toHaveBeenCalledWith('yarn', ['cedar-gen'], undefined)
   })
 
   it('npm: runs npx <bin> synchronously', () => {
     vi.mocked(getPackageManager).mockReturnValue('npm')
-    runBinSync('rw-gen')
-    expect(execa.sync).toHaveBeenCalledWith('npx', ['rw-gen'], undefined)
+    runBinSync('cedar-gen')
+    expect(execa.sync).toHaveBeenCalledWith('npx', ['cedar-gen'], undefined)
   })
 
   it('pnpm: runs pnpm exec <bin> synchronously', () => {
     vi.mocked(getPackageManager).mockReturnValue('pnpm')
-    runBinSync('rw-gen')
+    runBinSync('cedar-gen')
     expect(execa.sync).toHaveBeenCalledWith(
       'pnpm',
-      ['exec', 'rw-gen'],
+      ['exec', 'cedar-gen'],
       undefined,
     )
   })

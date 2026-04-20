@@ -1,9 +1,0 @@
-{
-  "version": 3,
-  "sources": [
-    "../../../../../../web/src/graphql/graphql.ts"
-  ],
-  "names": [],
-  "mappings": ";;;AAAA",
-  "file": "index.d.ts"
-}

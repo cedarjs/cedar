@@ -55,10 +55,18 @@ const HomePage = () => {
 
 Clicking sign up should open a modal; paste the API endpoint you copied earlier there:
 
-<img width="1522" alt="image" src="https://user-images.githubusercontent.com/32992335/209391973-239d5a12-649f-4e33-9098-cd297034f563.png" />
+<img
+  width="1522"
+  alt="image"
+  src="https://user-images.githubusercontent.com/32992335/209391973-239d5a12-649f-4e33-9098-cd297034f563.png"
+/>
 
 After that, you should see a sign-up modal. Go ahead and sign up:
 
-<img width="1522" alt="image" src="https://user-images.githubusercontent.com/32992335/209392156-e87a04b8-9ce8-4bc6-bc6b-92a2de8effe3.png" />
+<img
+  width="1522"
+  alt="image"
+  src="https://user-images.githubusercontent.com/32992335/209392156-e87a04b8-9ce8-4bc6-bc6b-92a2de8effe3.png"
+/>
 
 After you sign up, you should see `{"isAuthenticated":true}` on the page.

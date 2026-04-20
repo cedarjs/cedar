@@ -4,7 +4,11 @@ One way to solve the duplication of the `<header>` would be to create a `<Header
 
 When you look at these two pages what do they really care about? They have some content they want to display. They really shouldn't have to care what comes before (like a `<header>`) or after (like a `<footer>`). That's where layouts come in: they wrap a page in a component that then renders the page as its child. The layout can contain any content that's outside the page itself. Conceptually, the final rendered document will be structured something like:
 
-<img src="https://user-images.githubusercontent.com/300/70486228-dc874500-1aa5-11ea-81d2-eab69eb96ec0.png" alt="Layouts structure diagram" width="300"/>
+<img
+  src="https://user-images.githubusercontent.com/300/70486228-dc874500-1aa5-11ea-81d2-eab69eb96ec0.png"
+  alt="Layouts structure diagram"
+  width="300"
+/>
 
 Let's create a layout to hold that `<header>`:
 
@@ -254,7 +258,10 @@ When you have dozens of files open in your editor it's easy to get lost, especia
 
 If you're using the [React Developer Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) plugin this also helps disambiguate when browsing through your component stack:
 
-<img src="https://user-images.githubusercontent.com/300/145901282-e4b6ec92-8cee-42d0-97ea-1ffe99328e53.png" width="400"/>
+<img
+  src="https://user-images.githubusercontent.com/300/145901282-e4b6ec92-8cee-42d0-97ea-1ffe99328e53.png"
+  width="400"
+/>
 
 :::
 
