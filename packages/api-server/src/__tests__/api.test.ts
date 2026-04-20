@@ -4,6 +4,7 @@ import { vi, beforeAll, afterAll, describe, it, expect } from 'vitest'
 
 import { createFastifyInstance } from '../fastify.js'
 import { cedarFastifyAPI } from '../plugins/api.js'
+import { getCedarRouteManifest } from '../plugins/lambdaLoader.js'
 
 // Suppress terminal logging.
 console.log = vi.fn()
@@ -133,6 +134,64 @@ describe('cedarFastifyAPI', () => {
       expect(res.body).toEqual(
         'Function &quot;deeplyNested&quot; was not found.',
       )
+    })
+
+    describe('route manifest', () => {
+      it('records provider-relevant backend routes', () => {
+        expect(getCedarRouteManifest()).toEqual(
+          expect.arrayContaining([
+            {
+              path: '/graphql',
+              methods: ['GET', 'POST', 'OPTIONS'],
+              type: 'graphql',
+              entry: expect.stringContaining('/api/dist/functions/graphql.js'),
+            },
+            {
+              path: '/health',
+              methods: ['GET', 'POST'],
+              type: 'health',
+              entry: expect.stringContaining('/api/dist/functions/health.js'),
+            },
+            {
+              path: '/hello',
+              methods: ['GET', 'POST'],
+              type: 'function',
+              entry: expect.stringContaining('/api/dist/functions/hello.js'),
+            },
+            {
+              path: '/env',
+              methods: ['GET', 'POST'],
+              type: 'function',
+              entry: expect.stringContaining('/api/dist/functions/env.js'),
+            },
+            {
+              path: '/another-graphql',
+              methods: ['GET', 'POST'],
+              type: 'function',
+              entry: expect.stringContaining(
+                '/api/dist/functions/another-graphql.js',
+              ),
+            },
+            {
+              path: '/nested',
+              methods: ['GET', 'POST'],
+              type: 'function',
+              entry: expect.stringContaining(
+                '/api/dist/functions/nested/nested.js',
+              ),
+            },
+            {
+              path: '/noHandler',
+              methods: ['GET', 'POST'],
+              type: 'function',
+              entry: expect.stringContaining(
+                '/api/dist/functions/noHandler.js',
+              ),
+            },
+          ]),
+        )
+        expect(getCedarRouteManifest()).toHaveLength(7)
+      })
     })
   })
 })
