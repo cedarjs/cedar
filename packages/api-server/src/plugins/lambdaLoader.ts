@@ -45,6 +45,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
   console.log(ansis.dim.italic('Importing Server Functions... '))
 
   cedarRouteManifest.length = 0
+  CEDAR_HANDLERS.clear()
 
   const imports = foundFunctions.map(async (fnPath) => {
     const ts = Date.now()
