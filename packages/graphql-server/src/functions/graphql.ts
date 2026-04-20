@@ -46,8 +46,8 @@ function lambdaQueryToSearchParams(
 
 function parseLambdaCookies(
   event: APIGatewayProxyEvent,
-): Record<string, string> {
-  return Object.fromEntries(
+): ReadonlyMap<string, string> {
+  return new Map(
     Object.entries(cookie.parse(event.headers?.cookie ?? '')).filter(
       (entry): entry is [string, string] => entry[1] !== undefined,
     ),

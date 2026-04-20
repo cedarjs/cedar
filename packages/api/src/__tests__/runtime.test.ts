@@ -37,10 +37,9 @@ describe('buildCedarContext', () => {
     expect(ctx.query.get('hello')).toBe('world')
     expect(ctx.query.get('its')).toBe('bugs')
 
-    expect(ctx.cookies).toEqual({
-      session: 'abc123',
-      theme: 'dark',
-    })
+    expect(ctx.cookies.get('session')).toBe('abc123')
+    expect(ctx.cookies.get('theme')).toBe('dark')
+    expect(ctx.cookies.size).toBe(2)
 
     expect(ctx.serverAuthState).toBeUndefined()
   })
@@ -118,13 +117,8 @@ describe('composeCedarMiddleware', () => {
 
     const middlewareOne: CedarMiddleware = async (request, ctx, next) => {
       calls.push('mw1:before')
-      const response = await next(request, {
-        ...ctx,
-        params: {
-          ...ctx.params,
-          id: `${ctx.params.id}-one`,
-        },
-      })
+      ctx.params = { ...ctx.params, id: `${ctx.params.id}-one` }
+      const response = await next()
       calls.push('mw1:after')
       response.headers.set('x-mw1', 'true')
 
@@ -133,13 +127,8 @@ describe('composeCedarMiddleware', () => {
 
     const middlewareTwo: CedarMiddleware = async (request, ctx, next) => {
       calls.push('mw2:before')
-      const response = await next(request, {
-        ...ctx,
-        params: {
-          ...ctx.params,
-          id: `${ctx.params.id}-two`,
-        },
-      })
+      ctx.params = { ...ctx.params, id: `${ctx.params.id}-two` }
+      const response = await next()
       calls.push('mw2:after')
       response.headers.set('x-mw2', 'true')
 
@@ -156,7 +145,7 @@ describe('composeCedarMiddleware', () => {
         id: 'base',
       },
       query: new URLSearchParams(),
-      cookies: {},
+      cookies: new Map(),
       serverAuthState: undefined,
     })
 
@@ -196,9 +185,7 @@ describe('requestToLegacyEvent', () => {
         routeName: 'hello',
       },
       query: new URLSearchParams('greeting=hi&greeting=hello&name=cedar'),
-      cookies: {
-        session: 'abc123',
-      },
+      cookies: new Map([['session', 'abc123']]),
       serverAuthState: undefined,
     })
 
@@ -290,7 +277,7 @@ describe('wrapLegacyHandler', () => {
       {
         params: {},
         query: new URLSearchParams('name=cedar'),
-        cookies: {},
+        cookies: new Map(),
         serverAuthState: undefined,
       },
     )

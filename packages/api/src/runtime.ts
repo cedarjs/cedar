@@ -12,7 +12,7 @@ import { getAuthenticationContext } from './auth/index.js'
 export interface CedarRequestContext {
   params: Record<string, string>
   query: URLSearchParams
-  cookies: Record<string, string>
+  cookies: ReadonlyMap<string, string>
   serverAuthState?: Awaited<ReturnType<typeof getAuthenticationContext>>
 }
 
@@ -24,8 +24,8 @@ export type CedarHandler = (
 export type CedarMiddleware = (
   request: Request,
   ctx: CedarRequestContext,
-  next: CedarHandler,
-) => Promise<Response> | Response
+  next: () => Promise<Response>,
+) => Promise<Response>
 
 export interface CedarRouteRecord {
   path: string
@@ -83,7 +83,7 @@ export async function buildCedarContext(
 ): Promise<CedarRequestContext> {
   const url = new URL(request.url)
   const query = url.searchParams
-  const cookies = Object.fromEntries(
+  const cookies: ReadonlyMap<string, string> = new Map(
     Object.entries(cookie.parse(request.headers.get('cookie') ?? '')).filter(
       (entry): entry is [string, string] => {
         return entry[1] !== undefined
@@ -111,8 +111,8 @@ export function composeCedarMiddleware(
   middleware: CedarMiddleware[],
 ): CedarHandler {
   return middleware.reduceRight<CedarHandler>((next, current) => {
-    return async (request, ctx) => {
-      return current(request, ctx, next)
+    return (request, ctx) => {
+      return current(request, ctx, async () => next(request, ctx))
     }
   }, handler)
 }

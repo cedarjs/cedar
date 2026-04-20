@@ -162,9 +162,9 @@ internally before calling `handle()`.
 
 ```ts
 interface CedarRequestContext {
-  cookies: CookieJar
+  cookies: ReadonlyMap<string, string>
   params: Record<string, string>
-  query: Record<string, string | string[] | undefined>
+  query: URLSearchParams
   serverAuthState?: ServerAuthState
 }
 
@@ -190,20 +190,21 @@ The context includes fields that are derived, parsed, or mutable
 enrichments over the raw `Request`, not direct copies:
 
 - `cookies` — Though cookies are transmitted via the `Cookie` HTTP
-  header, `CookieJar` is a parsed, mutable abstraction that tracks
-  cookie changes throughout the request lifecycle so they can be
-  serialized into `Set-Cookie` response headers. Unlike `request.headers`
-  (which is immutable and models only inbound headers), `CookieJar`
-  carries the response-side lifecycle that `Request` does not model at
-  all. This is genuine enrichment, not duplication.
+  header, `ReadonlyMap<string, string>` is a parsed, read-only map of
+  inbound cookies keyed by name. The `ReadonlyMap` interface gives
+  handlers ergonomic `.get()` and `.has()` access consistent with how
+  `ctx.query` (a `URLSearchParams`) works, while making it structurally
+  impossible to mutate the field — response-side cookies belong in
+  `Set-Cookie` headers on the returned `Response`, not in the context.
 - `params` — Cedar parses URL path parameters from the matched route
   pattern. `Request.url` contains the raw URL; extracting params requires
   route matching logic that belongs in Cedar's router, not on the
   `Request` object.
-- `query` — Cedar parses and normalizes query strings into a structured
-  object. `request.url.searchParams` is available, but Cedar's normalized
-  form (with support for array values, etc.) is what route handlers and
-  middleware actually use.
+- `query` — `URLSearchParams` parsed from the request URL. This is
+  identical to `new URL(request.url).searchParams` and is included in
+  the context purely for convenience so handlers do not have to
+  construct a `URL` object themselves. Multi-value params are
+  accessible via `ctx.query.getAll(key)`.
 - `serverAuthState` — Cedar computes this during auth middleware
   execution. It does not exist on `Request` at all; it is purely a
   Cedar concept derived from auth cookies or headers.
