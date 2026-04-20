@@ -19,15 +19,11 @@ export async function replacePlaceholders(
 ) {
   const installCommand = getInstallCommand(values.packageManager)
   const cedarCommand = getCedarCommandPrefix(values.packageManager)
-  // TODO: Figure out how to make this dynamic, but still have it working with
-  // yarn dlx, npx etc where there are no adjacent package.json files to look at
-  const prismaVersion = '7.7.0'
 
   const replacements: Record<string, string | undefined> = {
     '{{PM}}': values.packageManager,
     '{{PM_INSTALL}}': installCommand,
     '{{CEDAR_CLI}}': cedarCommand,
-    '{{PRISMA_VERSION}}': prismaVersion,
     '{{DATABASE_URL}}': values.databaseUrl,
     '{{DIRECT_DATABASE_URL}}': values.directDatabaseUrl,
     '{{NEON_CLAIM_EXPIRY}}': values.neonClaimExpiry,
