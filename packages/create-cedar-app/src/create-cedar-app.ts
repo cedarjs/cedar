@@ -298,7 +298,6 @@ async function createCedarApp() {
   const detectedPm = detectPackageManagerFromEnv()
 
   // Extract the args as provided by the user in the command line
-  // TODO: Make all flags have the 'flag' suffix
   const args = parsedFlags._
   const packageManagerFlag =
     parsedFlags['package-manager'] ??
@@ -306,7 +305,7 @@ async function createCedarApp() {
   const installFlag = parsedFlags.install ?? (parsedFlags.yes ? true : null)
   const typescriptFlag = parsedFlags.typescript ?? parsedFlags.yes
   const esmFlag = parsedFlags.esm // TODO: ?? parsedFlags.yes
-  const overwrite = parsedFlags.overwrite
+  const overwriteFlag = parsedFlags.overwrite
   const databaseFlag = parsedFlags.database ?? null
   const gitInitFlag = parsedFlags['git-init'] ?? parsedFlags.yes
   const commitMessageFlag =
@@ -315,7 +314,7 @@ async function createCedarApp() {
 
   // Record some of the arguments for telemetry
   trace.getActiveSpan()?.setAttribute('install', installFlag ?? false)
-  trace.getActiveSpan()?.setAttribute('overwrite', overwrite)
+  trace.getActiveSpan()?.setAttribute('overwrite', overwriteFlag)
 
   // Get the directory for installation from the args
   let targetDir = String(args).replace(/,/g, '-')
@@ -379,7 +378,7 @@ async function createCedarApp() {
   newAppDir = await createProjectFiles(newAppDir, {
     templateDir,
     templatesDir,
-    overwrite,
+    overwrite: overwriteFlag,
     packageManager,
     useEsm,
     database,
