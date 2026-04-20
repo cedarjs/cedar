@@ -3,12 +3,56 @@ import type {
   APIGatewayProxyResult,
   Context as LambdaContext,
 } from 'aws-lambda'
+import * as cookie from 'cookie'
 
+import { getAuthenticationContext } from '@cedarjs/api'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 
 import { createGraphQLYoga } from '../createGraphQLYoga.js'
 import type { GraphQLHandlerOptions } from '../types.js'
+
+function lambdaQueryToSearchParams(
+  event: APIGatewayProxyEvent,
+): URLSearchParams {
+  const query = new URLSearchParams()
+
+  // For standard API Gateway v1 proxy events, multiValueQueryStringParameters
+  // is a strict superset of queryStringParameters: every key present in the
+  // single-value map also appears in the multi-value map (with at least one
+  // entry). We therefore prefer it when available so that repeated keys like
+  // `?tag=a&tag=b` are preserved. The single-value fallback handles Lambda
+  // invocation sources that do not populate the multi-value field.
+  if (event.multiValueQueryStringParameters) {
+    for (const [key, values] of Object.entries(
+      event.multiValueQueryStringParameters,
+    )) {
+      if (values) {
+        for (const value of values) {
+          query.append(key, value)
+        }
+      }
+    }
+  } else if (event.queryStringParameters) {
+    for (const [key, value] of Object.entries(event.queryStringParameters)) {
+      if (value != null) {
+        query.set(key, value)
+      }
+    }
+  }
+
+  return query
+}
+
+function parseLambdaCookies(
+  event: APIGatewayProxyEvent,
+): ReadonlyMap<string, string> {
+  return new Map(
+    Object.entries(cookie.parse(event.headers?.cookie ?? '')).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined,
+    ),
+  )
+}
 
 /**
  * Creates an Enveloped GraphQL Server, configured with default Redwood plugins
@@ -102,6 +146,16 @@ export const createGraphQLHandler = ({
         {
           event,
           requestContext,
+          cedarContext: {
+            params: event.pathParameters ?? {},
+            query: lambdaQueryToSearchParams(event),
+            cookies: parseLambdaCookies(event),
+            serverAuthState: await getAuthenticationContext({
+              authDecoder,
+              event,
+              context: requestContext,
+            }),
+          },
         },
       )
 

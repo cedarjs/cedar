@@ -19,6 +19,7 @@ export const DEFAULT_OPTIONS = {
 }
 
 let isServerConfigLoaded = false
+let loadedServerConfigPath: string | undefined
 let serverConfigFile: {
   config: FastifyServerOptions
   configureFastify: FastifySideConfigFn
@@ -47,6 +48,10 @@ export async function loadFastifyConfig() {
     return serverConfigFile
   }
 
+  if (loadedServerConfigPath !== serverConfigPath) {
+    isServerConfigLoaded = false
+  }
+
   if (!isServerConfigLoaded) {
     console.log(`Loading server config from ${serverConfigPath}`)
     console.log(`Loading server config from URL file://${serverConfigPath}`)
@@ -55,6 +60,7 @@ export async function loadFastifyConfig() {
     )
     const config = await import(pathToFileURL(serverConfigPath).href)
     serverConfigFile = { ...config.default }
+    loadedServerConfigPath = serverConfigPath
     isServerConfigLoaded = true
   }
 

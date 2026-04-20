@@ -9,8 +9,8 @@ import type {
 } from 'graphql'
 import type { Plugin } from 'graphql-yoga'
 
-import type { AuthContextPayload, Decoder } from '@cedarjs/api'
-import type { CorsConfig } from '@cedarjs/api'
+import type { AuthContextPayload, CorsConfig, Decoder } from '@cedarjs/api'
+import type { CedarRequestContext } from '@cedarjs/api/runtime'
 import type { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import type { DirectiveGlobImports } from './directives/makeDirectives.js'
@@ -74,7 +74,9 @@ export type ArmorConfig = {
  * This is an interface so you can extend it inside your application when needed
  */
 export interface CedarGraphQLContext {
-  event: APIGatewayProxyEvent
+  request?: Request
+  cedarContext?: CedarRequestContext
+  event?: APIGatewayProxyEvent
   requestContext?: LambdaContext | undefined
   currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
 
@@ -86,7 +88,9 @@ export interface CedarGraphQLContext {
  * @deprecated Please use CedarGraphQLContext
  */
 export interface RedwoodGraphQLContext {
-  event: APIGatewayProxyEvent
+  request?: Request
+  cedarContext?: CedarRequestContext
+  event?: APIGatewayProxyEvent
   requestContext: LambdaContext | undefined
   currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
 

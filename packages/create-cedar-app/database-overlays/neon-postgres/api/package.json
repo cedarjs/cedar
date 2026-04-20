@@ -6,7 +6,7 @@
   "dependencies": {
     "@cedarjs/api": "3.1.0",
     "@cedarjs/graphql-server": "3.1.0",
-    "@prisma/adapter-pg": "{{PRISMA_VERSION}}",
+    "@prisma/adapter-pg": "7.7.0",
     "pg": "^8.13.0"
   }
 }
