@@ -27824,6 +27824,7 @@ __metadata:
     empathic: "npm:2.0.0"
     magic-string: "npm:0.30.21"
     react-docgen: "npm:7.1.1"
+    tsconfig-paths: "npm:^3.15.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     unplugin-auto-import: "npm:19.3.0"
