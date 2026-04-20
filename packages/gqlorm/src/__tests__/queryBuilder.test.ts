@@ -24,11 +24,29 @@ interface CedarPost {
   published: boolean
 }
 
+interface GqlormScalarUser {
+  id: number
+  email: string
+  name: string
+  isActive: boolean
+}
+
+interface GqlormScalarPost {
+  id: number
+  title: string
+  published: boolean
+  createdAt: string
+}
+
 declare module '../types/orm.js' {
   interface GqlormTypeMap {
     db: {
       user: OrmTypes.ModelDelegate<CedarUser>
       post: OrmTypes.ModelDelegate<CedarPost>
+    }
+    models: {
+      user: GqlormScalarUser
+      post: GqlormScalarPost
     }
   }
 }
@@ -101,16 +119,22 @@ describe('QueryBuilder', () => {
       (gqlorm) =>
         gqlorm.post.findFirst({
           where: {
-            AND: [{ published: true }, { createdAt: { gt: new Date(0) } }],
+            AND: [
+              { published: true },
+              { createdAt: { gt: '1970-01-01T00:00:00.000Z' } },
+            ],
           },
           select: { id: true, title: true },
         }),
       { isLive: true },
     )
 
-    expect(result.variables).toEqual({ var0: true, var1: new Date(0) })
+    expect(result.variables).toEqual({
+      var0: true,
+      var1: '1970-01-01T00:00:00.000Z',
+    })
     expect(result.query).toMatchInlineSnapshot(`
-      "query findFirstPost($var0: Boolean, $var1: DateTime) @live {
+      "query findFirstPost($var0: Boolean, $var1: String) @live {
         post(where: { AND: [{ published: $var0 }, { createdAt: { gt: $var1 } }] }) {
           id
           title
@@ -129,5 +153,50 @@ describe('QueryBuilder', () => {
       isLive: false,
     })
     expect(explicitNonLive.query).not.toContain('@live')
+  })
+
+  it('maps model delegates to generated scalar model types', () => {
+    type UserDelegate = OrmTypes.FrameworkDbClient['user']
+    type PostDelegate = OrmTypes.FrameworkDbClient['post']
+
+    type UserResult = Awaited<ReturnType<UserDelegate['findMany']>>
+    type PostResult = Awaited<ReturnType<PostDelegate['findUniqueOrThrow']>>
+
+    const userRows: UserResult = [
+      {
+        id: 1,
+        email: 'user@example.com',
+        name: 'User',
+        isActive: true,
+      },
+    ]
+    const postRow: PostResult = {
+      id: 1,
+      title: 'Hello',
+      published: true,
+      createdAt: '2024-01-01T00:00:00.000Z',
+    }
+
+    expect(userRows[0]?.email).toBe('user@example.com')
+    expect(postRow.title).toBe('Hello')
+  })
+
+  it('keeps query function inference aligned with generated scalar model types', () => {
+    type QueryResult = Awaited<
+      ReturnType<
+        (db: OrmTypes.FrameworkDbClient) => ReturnType<typeof db.post.findMany>
+      >
+    >
+
+    const rows: QueryResult = [
+      {
+        id: 1,
+        title: 'Hello',
+        published: true,
+        createdAt: '2024-01-01T00:00:00.000Z',
+      },
+    ]
+
+    expect(rows[0]?.published).toBe(true)
   })
 })

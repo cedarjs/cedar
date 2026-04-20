@@ -22,14 +22,14 @@ import {
 } from './bothCLIConfig.js'
 import { handler as bothHandler } from './bothCLIConfigHandler.js'
 
-if (!process.env.REDWOOD_ENV_FILES_LOADED) {
+if (!process.env.CEDAR_ENV_FILES_LOADED) {
   config({
     path: path.join(getPaths().base, '.env'),
     defaults: path.join(getPaths().base, '.env.defaults'),
     multiline: true,
   })
 
-  process.env.REDWOOD_ENV_FILES_LOADED = 'true'
+  process.env.CEDAR_ENV_FILES_LOADED = 'true'
 }
 
 process.env.NODE_ENV ??= 'production'

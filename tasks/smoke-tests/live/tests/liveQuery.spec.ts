@@ -232,3 +232,51 @@ test('useLiveQuery hook reflects newly created records', async ({ page }) => {
 
   fs.unlinkSync(scriptPath)
 })
+
+test.describe('gqlorm auto-generated backend', () => {
+  test('todo list renders', async ({ page }) => {
+    // This test verifies the full gqlorm backend pipeline: the Todo model has
+    // no manually-written SDL or service file. The codegen generates
+    // __gqlorm__.sdl.ts which provides the GraphQL type and query resolvers.
+    // useLiveQuery((db) => db.todo.findMany()) on the frontend generates a
+    // query against the auto-generated `todos` field.
+    await page.goto('/gqlorm-todos')
+
+    await expect(page.getByText('Loading')).not.toBeVisible({ timeout: 10_000 })
+
+    // Verify seeded todo items are rendered
+    await expect(page.getByText('Learn Cedar')).toBeVisible()
+    await expect(page.getByText('Try gqlorm')).toBeVisible()
+    await expect(page.getByText('Write tests')).toBeVisible()
+  })
+
+  test('todo fields are present', async ({ page }) => {
+    // Verify that all scalar fields are fetched and rendered, not just `id`.
+    // The LiveTodos component renders body, done status, and createdAt for
+    // each todo. If the auto-generated backend didn't select these fields,
+    // the elements would be empty or missing.
+    await page.goto('/gqlorm-todos')
+
+    await expect(page.getByText('Loading')).not.toBeVisible({ timeout: 10_000 })
+
+    // body field
+    await expect(
+      page.getByText('Read the docs and try building a small app.'),
+    ).toBeVisible()
+    await expect(
+      page.getByText('Auto-generated backend resolvers are pretty neat!'),
+    ).toBeVisible()
+
+    // done field — rendered as "Done" or "Pending" badges
+    const doneEls = page.getByTestId('todo-done')
+    await expect(doneEls.first()).toBeVisible()
+    const allDoneTexts = await doneEls.allTextContents()
+    expect(allDoneTexts).toContain('Done')
+    expect(allDoneTexts).toContain('Pending')
+
+    // createdAt field
+    const createdAtEl = page.getByTestId('todo-created-at').first()
+    await expect(createdAtEl).toBeVisible()
+    await expect(createdAtEl).not.toBeEmpty()
+  })
+})

@@ -84,6 +84,10 @@ const HomePage = () => {
 
 Clicking sign up should redirect you to Auth0:
 
-<img width="1522" alt="image" src="https://user-images.githubusercontent.com/32992335/209001246-244db949-31f8-42ff-804e-18f3e423ce89.png" />
+<img
+  width="1522"
+  alt="image"
+  src="https://user-images.githubusercontent.com/32992335/209001246-244db949-31f8-42ff-804e-18f3e423ce89.png"
+/>
 
 After you sign up, you should be redirected back to your Cedar app, and you should see `{"isAuthenticated":true}` on the page.

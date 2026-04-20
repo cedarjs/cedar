@@ -12,11 +12,21 @@ This how to examines how RBAC is implemented in CedarJS and <a href="#how-to-cod
 
 ### Quick Links
 
-- <a href="#authentication-vs-authorization" data-turbolinks="false">Authentication vs Authorization</a>
-- <a href="#house-and-blog-role-access-examples" data-turbolinks="false">House and Blog Role-access Examples</a>
-- <a href="#identity-as-a-service" data-turbolinks="false">Identity as a Service</a>
-- <a href="#how-to-code-examples" data-turbolinks="false">How To Code Examples</a>
-- <a href="#additional-resources" data-turbolinks="false">Additional Resources</a>
+- <a href="#authentication-vs-authorization" data-turbolinks="false">
+    Authentication vs Authorization
+  </a>
+- <a href="#house-and-blog-role-access-examples" data-turbolinks="false">
+    House and Blog Role-access Examples
+  </a>
+- <a href="#identity-as-a-service" data-turbolinks="false">
+    Identity as a Service
+  </a>
+- <a href="#how-to-code-examples" data-turbolinks="false">
+    How To Code Examples
+  </a>
+- <a href="#additional-resources" data-turbolinks="false">
+    Additional Resources
+  </a>
 
 ## Authentication vs Authorization
 

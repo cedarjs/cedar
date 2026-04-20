@@ -1,5 +1,6 @@
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 // See https://github.com/webdiscus/ansis#troubleshooting
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -28,15 +29,16 @@ import { cedarFastifyAPI } from './plugins/api.js'
 // import { createServer } from '@cedarjs/api-server'
 // ```
 //
-// We do it here and not in the function below so that users can access env vars before calling `createServer`
-if (!process.env.REDWOOD_ENV_FILES_LOADED) {
+// We do it here and not in the function below so that users can access env vars
+// before calling `createServer`
+if (!process.env.CEDAR_ENV_FILES_LOADED) {
   config({
     path: path.join(getPaths().base, '.env'),
     defaults: path.join(getPaths().base, '.env.defaults'),
     multiline: true,
   })
 
-  process.env.REDWOOD_ENV_FILES_LOADED = 'true'
+  process.env.CEDAR_ENV_FILES_LOADED = 'true'
 }
 
 /**
@@ -139,7 +141,7 @@ export async function createServer(options: CreateServerOptions = {}) {
     // This comes from a babel plugin that's applied to
     // api/dist/functions/graphql.{ts,js} in user projects
     const { __rw_graphqlOptions } = await import(
-      `file://${graphqlFunctionPath}`
+      pathToFileURL(graphqlFunctionPath).href
     )
 
     await server.register(redwoodFastifyGraphQLServer, {

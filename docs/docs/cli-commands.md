@@ -1456,16 +1456,16 @@ export const users = () => {
 Generates supplementary code (project types)
 
 ```bash
-yarn redwood generate types
+yarn cedar generate types
 ```
 
 #### Usage
 
 ```
-~/redwood-app$ yarn redwood generate types
+~/cedar-app$ yarn cedar generate types
 yarn run v1.22.10
-$ /redwood-app/node_modules/.bin/redwood g types
-$ /redwood-app/node_modules/.bin/rw-gen
+$ /cedar-app/node_modules/.bin/cedar g types
+$ /cedar-app/node_modules/.bin/cedar-gen
 
 Generating...
 
@@ -1492,7 +1492,7 @@ Generating...
 Print your system environment information.
 
 ```bash
-yarn redwood info
+yarn cedar info
 ```
 
 This command's primarily intended for getting information others might need to know to help you debug:

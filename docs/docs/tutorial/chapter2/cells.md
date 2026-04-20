@@ -415,7 +415,10 @@ export default HomePage
 
 The browser should actually show the `id` and a GraphQL-specific `__typename` properties for any posts in the database. If you just see "Empty" then return to the scaffold we created [last time](getting-dynamic.md#creating-a-post-editor) and add a couple. Neat!
 
-<img src="https://user-images.githubusercontent.com/300/145910525-6a9814d1-0808-4f7e-aeab-303bd5dbac5e.png" alt="Showing articles in the database" />
+<img
+  src="https://user-images.githubusercontent.com/300/145910525-6a9814d1-0808-4f7e-aeab-303bd5dbac5e.png"
+  alt="Showing articles in the database"
+/>
 
 :::info
 
@@ -632,7 +635,10 @@ export const QUERY: TypedDocumentNode<ArticlesQuery, ArticlesQueryVariables> =
 
 The page should now show a dump of all the data you created for any blog posts you scaffolded:
 
-<img src="https://user-images.githubusercontent.com/300/145911009-b83fd07f-0412-489c-a088-4e89faceea1c.png" alt="Articles with all DB values" />
+<img
+  src="https://user-images.githubusercontent.com/300/145911009-b83fd07f-0412-489c-a088-4e89faceea1c.png"
+  alt="Articles with all DB values"
+/>
 
 Now we're in the realm of good ol' React components, so just build out the `Success` component to display the blog post in a nicer format:
 

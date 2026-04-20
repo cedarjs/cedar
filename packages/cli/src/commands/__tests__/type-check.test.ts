@@ -79,7 +79,7 @@ test('Should run tsc commands correctly, in order', async () => {
 
   const concurrentlyArgs = vi.mocked(concurrently).mock.results[0].value
 
-  expect(vi.mocked(execa).mock.results[0].value.cmd).toEqual('yarn rw-gen')
+  expect(vi.mocked(execa).mock.results[0].value.cmd).toEqual('yarn cedar-gen')
 
   // Ensure tsc command run correctly for web side
   expect(concurrentlyArgs.commands).toContainEqual({
@@ -105,7 +105,7 @@ test('Should generate prisma client', async () => {
 
   const concurrentlyArgs = vi.mocked(concurrently).mock.results[0].value
 
-  expect(vi.mocked(execa).mock.results[0].value.cmd).toEqual('yarn rw-gen')
+  expect(vi.mocked(execa).mock.results[0].value.cmd).toEqual('yarn cedar-gen')
 
   // Ensure tsc command run correctly for web side
   expect(concurrentlyArgs.commands).toContainEqual({

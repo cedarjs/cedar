@@ -37,7 +37,15 @@ Cedar Studio is a command line tool which offers a web UI aimed at providing ins
 ### Demo
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/zAViN-J-iFs?si=YywnOvMT1Fy3hKzd" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+  <iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/zAViN-J-iFs?si=YywnOvMT1Fy3hKzd"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+  ></iframe>
 </div>
 
 ### Setup
