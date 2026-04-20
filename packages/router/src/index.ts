@@ -47,4 +47,3 @@ export interface AvailableRoutes {}
 
 // Used by packages/internal/src/generate/templates/web-routerRoutes.d.ts.template
 export * from './routeParamsTypes.js'
-
