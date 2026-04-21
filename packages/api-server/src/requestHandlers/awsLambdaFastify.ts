@@ -33,6 +33,8 @@ export const lambdaEventForFastifyRequest = (
       identity: {
         sourceIp: request.ip,
       },
+      domainName: request.hostname,
+      protocol: request.protocol,
     },
     ...parseBody(request.rawBody || ''), // adds `body` and `isBase64Encoded`
   } as APIGatewayProxyEvent
