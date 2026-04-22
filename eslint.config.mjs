@@ -460,7 +460,13 @@ export default [
   // project-config package specific rules
   {
     files: ['packages/project-config/**'],
-    ignores: ['**/__tests__/**', '**/*.test.ts?(x)', '**/*.spec.ts?(x)'],
+    ignores: [
+      '**/__tests__/**',
+      '**/*.test.ts?(x)',
+      '**/*.spec.ts?(x)',
+      'build.ts',
+      'vitest.config.mts',
+    ],
     plugins: {
       import: importPlugin,
     },
