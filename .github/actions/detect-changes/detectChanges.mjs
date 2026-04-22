@@ -332,9 +332,13 @@ async function main() {
   if (!codeChanges(changedFiles)) {
     console.log('Only docs and/or changesets changes detected')
 
-    if (!workflowRunSucceeded) {
+    // We need to guard against first having a code change that fails in CI,
+    // and then pushing just a docs/changesets change – detecting the docs-only
+    // change and then skipping CI. If there is a previous failed run, we need
+    // to run all tests again, even if the latest commit is only touching docs
+    if (workflowRun && !workflowRunSucceeded) {
       console.log(
-        'No previous successful run. Falling back to running all tests.',
+        'Previous run did not succeed. Falling back to running all tests.',
       )
       core.setOutput('code', true)
       core.setOutput('rsc', true)
