@@ -464,8 +464,8 @@ export default [
       '**/__tests__/**',
       '**/*.test.ts?(x)',
       '**/*.spec.ts?(x)',
-      'build.ts',
-      'vitest.config.mts',
+      '**/build.ts',
+      '**/vitest.config.mts',
     ],
     plugins: {
       import: importPlugin,
