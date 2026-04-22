@@ -1,9 +1,0 @@
-{
-  "version": 3,
-  "sources": [
-    "../../../web/src/Routes.js"
-  ],
-  "names": [],
-  "mappings": ";;;;;;IAiBM;IACA;IACA;IAEE;IACA;IAGA;IAGA;IAGA",
-  "file": "web-routerRoutes.d.ts"
-}

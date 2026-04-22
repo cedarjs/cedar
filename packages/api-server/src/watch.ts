@@ -22,14 +22,14 @@ import { getIgnoreFunction, pathsToWatch } from './watchPaths.js'
 
 const cedarPaths = getPaths()
 
-if (!process.env.REDWOOD_ENV_FILES_LOADED) {
+if (!process.env.CEDAR_ENV_FILES_LOADED) {
   config({
     path: path.join(cedarPaths.base, '.env'),
     defaults: path.join(cedarPaths.base, '.env.defaults'),
     multiline: true,
   })
 
-  process.env.REDWOOD_ENV_FILES_LOADED = 'true'
+  process.env.CEDAR_ENV_FILES_LOADED = 'true'
 }
 
 async function buildAndServe(options: BuildAndRestartOptions) {

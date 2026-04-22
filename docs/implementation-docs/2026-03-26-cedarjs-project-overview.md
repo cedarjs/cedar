@@ -111,7 +111,8 @@ CLIENT CELL (GraphQL via Apollo):
 ```
 cedar dev:
   concurrently ─┬─ nodemon → api-server (Fastify, port from toml)
-                └─ rw-gen-watch (regenerate types on SDL change)
+                └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
+                   change)
 
 *SSR/RSC: rw-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
 
@@ -216,8 +217,8 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 | gqlorm               | Prisma API → Proxy → GraphQL. useLiveQuery. Parser+generator.                                                                                                                                      |
 | structure            | Project model (pages/routes/cells/services/SDLs). Diagnostics. ts-morph.                                                                                                                           |
 | codemods             | jscodeshift transforms. Version-organized (v2-v7). Cedar+migration from Redwood.                                                                                                                   |
-| testing              | Jest/Vitest config. MockProviders, mockGql, scenario helpers.                                                                                                                                      |
-| storybook            | Vite Storybook. MockRouter.                                                                                                                                                                        |
+| testing              | Jest/Vitest config. MockProviders, MockRouter, mockGql, scenario helpers.                                                                                                                          |
+| storybook            | Vite Storybook.                                                                                                                                                                                    |
 | project-config       | Read cedar.toml. getPaths/getConfig/findUp.                                                                                                                                                        |
 | internal             | Re-exports project-config+babel-config. buildApi/dev/generate. Route extraction.                                                                                                                   |
 | api-server           | Fastify. Auto-discover Lambda functions. Mount GraphQL. Custom server.ts.                                                                                                                          |
@@ -251,4 +252,4 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 - Build: Vite (web), esbuild (api)
 - Server: API always Fastify; Web: Fastify (SPA). \*SSR/RSC: Web uses Express
 - Package mgr: Yarn 4 (+ experimental support for npm and pnpm); Framework: Yarn 4 + Nx (build orchestration).
-- Codegen: compile-time (Vite plugins) + on-demand (rw-gen)
+- Codegen: compile-time (Vite plugins) + on-demand (cedar-gen)

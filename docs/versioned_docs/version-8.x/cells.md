@@ -221,8 +221,8 @@ const QUERY = gql`
 
 But, like `Loading`, Storybook is probably a better place to develop this.
 
-<!-- In development, we have it so that errors blanket the page.
-In production, failed cells won't break your app, they'll just be empty divs... -->
+{/* In development, we have it so that errors blanket the page. */}
+{/* In production, failed cells won't break your app, they'll just be empty divs... */}
 
 In this example, we use the `errorCode` to conditionally render the error heading title, and we also use it for our translation string.
 
@@ -303,10 +303,10 @@ Redwood looks for all files ending in "Cell" (so if you want your component to b
 
 When would you want to do this? If you just want a file to end in "Cell" for some reason. Otherwise, don't worry about it!
 
-<!-- Source: https://github.com/redwoodjs/redwood/pull/597 -->
-<!-- Source: https://github.com/redwoodjs/redwood/pull/554 -->
-<!-- Code: https://github.com/redwoodjs/redwood/blob/60cb628d5f369d62607fa2f47c694d9a5c00540d/packages/core/config/babel-preset.js#L132-L136 -->
-<!-- Code: https://github.com/redwoodjs/redwood/blob/60cb628d5f369d62607fa2f47c694d9a5c00540d/packages/core/src/babel-plugin-redwood-cell.ts#L58-L60 -->
+{/* Source: https://github.com/redwoodjs/redwood/pull/597 */}
+{/* Source: https://github.com/redwoodjs/redwood/pull/554 */}
+{/* Code: https://github.com/redwoodjs/redwood/blob/60cb628d5f369d62607fa2f47c694d9a5c00540d/packages/core/config/babel-preset.js#L132-L136 */}
+{/* Code: https://github.com/redwoodjs/redwood/blob/60cb628d5f369d62607fa2f47c694d9a5c00540d/packages/core/src/babel-plugin-redwood-cell.ts#L58-L60 */}
 
 ## Advanced Example: Implementing a Cell Yourself
 
@@ -348,7 +348,7 @@ And now let's say that Babel isn't going to come along and assemble our exports.
 
 We'd probably do something like this:
 
-<!-- {35,39,44,47,49} -->
+{/* {35,39,44,47,49} */}
 
 ```jsx
 const QUERY = gql`

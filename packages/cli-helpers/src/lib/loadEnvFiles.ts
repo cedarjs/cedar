@@ -9,7 +9,7 @@ import parser from 'yargs-parser'
 import { getPaths } from '@cedarjs/project-config'
 
 export function loadEnvFiles() {
-  if (process.env.REDWOOD_ENV_FILES_LOADED) {
+  if (process.env.CEDAR_ENV_FILES_LOADED) {
     return
   }
 
@@ -29,7 +29,7 @@ export function loadEnvFiles() {
     loadUserSpecifiedEnvFiles(base, loadEnvFiles)
   }
 
-  process.env.REDWOOD_ENV_FILES_LOADED = 'true'
+  process.env.CEDAR_ENV_FILES_LOADED = 'true'
 }
 
 export function loadDefaultEnvFiles(cwd: string) {

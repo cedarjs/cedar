@@ -121,9 +121,9 @@ async function generateTypes(
   const binExec = getBinExecutor(packageManager)
 
   try {
-    await execa(binExec, ['rw-gen'], { cwd: newAppDir })
+    await execa(binExec, ['cedar-gen'], { cwd: newAppDir })
   } catch (error) {
-    const prettyGenCommand = RedwoodStyling.info(`'${binExec} rw-gen'`)
+    const prettyGenCommand = RedwoodStyling.info(`'${binExec} cedar-gen'`)
     tui.stopReactive(true)
     tui.displayError(
       "Couldn't generate types",

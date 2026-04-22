@@ -377,13 +377,13 @@ Example — `devHandler.ts`:
 command: `yarn cross-env NODE_ENV=development rw-vite-dev ${forward}`
 command: 'yarn nodemon'
 command: `  --exec "yarn ${serverWatchCommand}`
-command: 'yarn rw-gen-watch'
+command: 'yarn cedar-gen-watch'
 
 // After:
 command: `${formatRunBinCommand('cross-env', ['NODE_ENV=development', 'rw-vite-dev', ...forward])}`
 command: formatRunBinCommand('nodemon')
 command: `  --exec "${formatRunBinCommand(serverWatchCommand)}`
-command: formatRunBinCommand('rw-gen-watch')
+command: formatRunBinCommand('cedar-gen-watch')
 ```
 
 ## Config Template Files
@@ -597,7 +597,7 @@ Updated file:
 - `packages/cli/src/commands/test/testHandlerEsm.ts` —
   `execa('yarn', ['vitest', ...])` → `runScript('vitest', args, { cwd })`
 - `packages/cli/src/commands/type-checkHandler.ts` —
-  `execa('yarn rw-gen', { shell: true })` → `runBin('rw-gen')` without
+  `execa('yarn cedar-gen', { shell: true })` → `runBin('cedar-gen')` without
   `shell: true`; concurrently string `'yarn tsc ...'` →
   `formatRunBinCommand('tsc', ['--noEmit', '--skipLibCheck'])`
 - `packages/cli/src/commands/serveWebHandler.ts` —
@@ -636,7 +636,7 @@ with detected PM.
   - `'yarn nodemon'` → `formatRunBinCommand('nodemon')`
   - `` `--exec "yarn ${serverWatchCommand}` `` →
     `` `--exec "${formatRunBinCommand(serverWatchCommand)}` ``
-  - `'yarn rw-gen-watch'` → `formatRunBinCommand('rw-gen-watch')`
+  - `'yarn cedar-gen-watch'` → `formatRunBinCommand('cedar-gen-watch')`
 
 **PR updates tests:**
 
@@ -656,7 +656,7 @@ review.
 **PR migrates:**
 
 - `packages/cli/src/commands/generate.ts` —
-  `execa.sync('yarn', ['rw-gen'])` → `runBinSync('rw-gen', [], { stdio: 'inherit' })`
+  `execa.sync('yarn', ['cedar-gen'])` → `runBinSync('cedar-gen', [], { stdio: 'inherit' })`
 - `packages/cli/src/commands/generate/scaffold/scaffoldHandler.js` —
   workspace add/remove → `addWorkspacePackages`, `removeWorkspacePackages`
 - `packages/cli/src/commands/generate/package/packageHandler.js` —
@@ -672,7 +672,7 @@ review.
   `execa.commandSync('yarn cedar g types')` →
   `runBinSync('cedar', ['g', 'types'])`
 - `packages/cli/src/commands/generate/directive/directiveHandler.js` —
-  `execa('yarn', ['rw-gen'])` → `runBin('rw-gen', [], { stdio })`
+  `execa('yarn', ['cedar-gen'])` → `runBin('cedar-gen', [], { stdio })`
 - `packages/cli/src/commands/generate/job/jobHandler.js` —
   `execa.sync('yarn', [...])` → `runBinSync(...)`
 

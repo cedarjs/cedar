@@ -74,6 +74,10 @@ vi.mock('@cedarjs/internal/dist/generate/generate', () => ({
   generate: vi.fn(),
 }))
 
+vi.mock('@cedarjs/internal/dist/generate/gqlormSchema', () => ({
+  generateGqlormArtifacts: vi.fn().mockResolvedValue({ errors: [] }),
+}))
+
 vi.mock('@cedarjs/internal/dist/validateSchema', () => ({
   loadAndValidateSdls: vi.fn(),
 }))
@@ -153,7 +157,6 @@ test('the build tasks are in the correct sequence when packagesWorkspace is enab
       "Generating Prisma Client...",
       "Building Packages...",
       "Checking workspace packages...",
-      "Generating gqlorm schema...",
       "Verifying graphql schema...",
       "Building API...",
       "Building Web...",
@@ -171,7 +174,6 @@ test('the build tasks are in the correct sequence when packagesWorkspace is disa
   expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
       "Generating Prisma Client...",
-      "Generating gqlorm schema...",
       "Verifying graphql schema...",
       "Building API...",
       "Building Web...",
@@ -191,7 +193,6 @@ test('Should run prerender for web (packagesWorkspace enabled)', async () => {
   expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
       "Checking workspace packages...",
-      "Generating gqlorm schema...",
       "Building Web...",
     ]
   `)
@@ -213,7 +214,6 @@ test('Should run prerender for web (packagesWorkspace disabled)', async () => {
   const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
   expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
     [
-      "Generating gqlorm schema...",
       "Building Web...",
     ]
   `)
@@ -224,4 +224,22 @@ test('Should run prerender for web (packagesWorkspace disabled)', async () => {
   expect(consoleSpy.mock.calls[1][0]).toMatch(
     /You have not marked any routes to "prerender"/,
   )
+})
+
+test('Generating gqlorm schema task is included when experimental.gqlorm.enabled is true', async () => {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+  mockGetConfig.mockReturnValue({
+    experimental: { gqlorm: { enabled: true } },
+  })
+
+  await handler({ workspace: ['web'] })
+
+  const firstCallArg = vi.mocked(Listr).mock.calls[0][0]
+  const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
+  expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
+    [
+      "Generating gqlorm schema...",
+      "Building Web...",
+    ]
+  `)
 })

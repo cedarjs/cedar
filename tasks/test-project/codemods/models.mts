@@ -52,3 +52,11 @@ export const stall = `model Stall {
   stallNumber String    @unique
   produce     Produce[]
 }`
+
+export const todo = `model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String?
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}`

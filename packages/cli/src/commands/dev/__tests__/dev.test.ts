@@ -199,7 +199,7 @@ describe('yarn cedar dev', () => {
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
-    expect(generateCommand.command).toEqual('yarn rw-gen-watch')
+    expect(generateCommand.command).toEqual('yarn cedar-gen-watch')
   })
 
   it('Should run api and FE dev server, when streaming experimental flag enabled', async () => {
@@ -239,7 +239,7 @@ describe('yarn cedar dev', () => {
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
-    expect(generateCommand.command).toEqual('yarn rw-gen-watch')
+    expect(generateCommand.command).toEqual('yarn cedar-gen-watch')
   })
 
   it('Should use esm server-watch bin for esm projects', async () => {
@@ -282,7 +282,7 @@ describe('yarn cedar dev', () => {
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
-    expect(generateCommand.command).toEqual('yarn rw-gen-watch')
+    expect(generateCommand.command).toEqual('yarn cedar-gen-watch')
   })
 
   it('Debug port passed in command line overrides TOML', async () => {
