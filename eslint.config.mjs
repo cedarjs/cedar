@@ -63,7 +63,7 @@ export default [
   {
     plugins: {
       '@babel': babelPlugin,
-      import: importPlugin,
+      'import-x': importPlugin,
       'jsx-a11y': jsxA11yPlugin,
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
@@ -84,7 +84,7 @@ export default [
       // See...
       // - https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/order.md#groups-array
       // - https://github.com/import-js/eslint-plugin-import/blob/main/README.md#importinternal-regex
-      'import/internal-regex': '^src/',
+      'import-x/internal-regex': '^src/',
     },
     rules: {
       // React recommended rules
@@ -117,7 +117,7 @@ export default [
       'react/prop-types': 'off',
       'react/display-name': 'off',
       'react-hooks/exhaustive-deps': 'warn',
-      'import/order': [
+      'import-x/order': [
         'error',
         {
           'newlines-between': 'always',
@@ -164,11 +164,6 @@ export default [
                 nobrace: true,
                 noglobstar: true,
               },
-              group: 'internal',
-              position: 'before',
-            },
-            {
-              pattern: 'src/**',
               group: 'internal',
               position: 'before',
             },
@@ -473,10 +468,10 @@ export default [
       'packages/project-config/vitest.config.mts',
     ],
     plugins: {
-      import: importPlugin,
+      'import-x': importPlugin,
     },
     rules: {
-      'import/no-extraneous-dependencies': [
+      'import-x/no-extraneous-dependencies': [
         'error',
         {
           devDependencies: false,
