@@ -71,7 +71,7 @@ export async function createUDServer(
 
   // Put the graphql function first for consistent load ordering
   const graphqlIdx = serverFunctions.findIndex(
-    (x) => path.basename(x) === 'graphql.js',
+    (x) => path.basename(x, path.extname(x)) === 'graphql',
   )
 
   if (graphqlIdx >= 0) {
@@ -86,7 +86,7 @@ export async function createUDServer(
   const router = createRouter<string>()
 
   for (const fnPath of serverFunctions) {
-    const routeName = path.basename(fnPath).replace('.js', '')
+    const routeName = path.basename(fnPath, path.extname(fnPath))
     const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
 
     const fnImport = await import(pathToFileURL(fnPath).href)
@@ -170,7 +170,7 @@ export async function createUDServer(
         'does not export a Fetch-native `handle` function and will not be' +
           ' served by the Universal Deploy server. Migrate to' +
           ' `export async function handle(request, ctx)` or use' +
-          ' `yarn rw serve` for legacy Lambda-shaped handler support.',
+          ' `yarn cedar serve` for legacy Lambda-shaped handler support.',
       )
       continue
     }
@@ -232,7 +232,16 @@ export async function createUDServer(
             return new Response('Not Found', { status: 404 })
           }
 
-          return fetchable.fetch(request)
+          try {
+            return await fetchable.fetch(request)
+          } catch (err) {
+            console.error(
+              'Unhandled error in fetch handler for route',
+              matchedRouteName,
+              err,
+            )
+            return new Response('Internal Server Error', { status: 500 })
+          }
         },
       )
     },

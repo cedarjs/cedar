@@ -2198,13 +2198,13 @@ __metadata:
     "@cedarjs/graphql-server":
       optional: true
   bin:
+    cedar-ud-server: ./dist/udBin.js
     cedarjs-api-server-watch: ./dist/watch.js
     cedarjs-log-formatter: ./dist/logFormatter/bin.js
     cedarjs-server: ./dist/bin.js
     rw-api-server-watch: ./dist/cjs/watch.js
     rw-log-formatter: ./dist/cjs/logFormatter/bin.js
     rw-server: ./dist/cjs/bin.js
-    rw-ud-server: ./dist/udBin.js
   languageName: unknown
   linkType: soft
 
