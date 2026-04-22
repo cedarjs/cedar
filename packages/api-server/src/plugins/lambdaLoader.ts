@@ -78,17 +78,20 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     })()
 
     const cedarHandler: CedarHandler | undefined = (() => {
-      if ('handle' in fnImport && typeof fnImport.handle === 'function') {
-        return fnImport.handle as CedarHandler
+      if (
+        'handleRequest' in fnImport &&
+        typeof fnImport.handleRequest === 'function'
+      ) {
+        return fnImport.handleRequest as CedarHandler
       }
 
       if (
         'default' in fnImport &&
         fnImport.default &&
-        'handle' in fnImport.default &&
-        typeof fnImport.default.handle === 'function'
+        'handleRequest' in fnImport.default &&
+        typeof fnImport.default.handleRequest === 'function'
       ) {
-        return fnImport.default.handle as CedarHandler
+        return fnImport.default.handleRequest as CedarHandler
       }
 
       return undefined
@@ -107,7 +110,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
         routeName,
         'at',
         fnPath,
-        'does not have a function called handler or handle defined.',
+        'does not have a function called handler or handleRequest defined.',
       )
     }
 
