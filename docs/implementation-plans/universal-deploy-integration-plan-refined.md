@@ -9,17 +9,17 @@ Vite for web, Fastify/Lambda for API — to a unified Fetch-native model
 where:
 
 - Cedar's primary server contract is
-  `handle(request: Request, ctx: CedarRequestContext): Response`
+  `handleRequest(request: Request, ctx: CedarRequestContext): Response`
 - Vite is the full-stack dev host
 - Cedar exposes explicit server entries and route metadata for providers
 - SSR becomes just another server entry, not a special legacy runtime
 
-The `handle()` contract is Phase 1 because everything else depends on
+The `handleRequest()` contract is Phase 1 because everything else depends on
 it. The context object carries only Cedar-specific enrichments —
 `headers` and `url` already live on `Request` and must not be
 duplicated.
 
-Cedar uses two distinct handler shapes: `handle(request, ctx)` as the
+Cedar uses two distinct handler shapes: `handleRequest(request, ctx)` as the
 authoring surface for app developers, and `export default { fetch }` as
 the WinterCG-compatible deployment artifact that Cedar's build tooling
 emits. These are intentionally different — see Guiding Principle 6 for
@@ -146,7 +146,7 @@ forward as a special case from the current experimental implementation.
 Cedar maintains two distinct handler shapes at two different abstraction
 layers:
 
-- **Authoring surface** — `handle(request, ctx)`, used by Cedar app
+- **Authoring surface** — `handleRequest(request, ctx)`, used by Cedar app
   developers and middleware authors. The `ctx` parameter carries
   Cedar-specific enrichments no platform provides natively.
 - **Deployment artifact** — `export default { fetch(request) }`, the
@@ -156,7 +156,7 @@ layers:
 The transformation between these layers is Cedar's responsibility. App
 developers never write `export default { fetch }`; Cedar generates it.
 Provider integrators never see `CedarRequestContext`; Cedar populates it
-internally before calling `handle()`.
+internally before calling `handleRequest()`.
 
 ## The Handler Contract
 
@@ -168,7 +168,7 @@ interface CedarRequestContext {
   serverAuthState?: ServerAuthState
 }
 
-export async function handle(
+export async function handleRequest(
   request: Request,
   ctx: CedarRequestContext
 ): Promise<Response>
@@ -230,7 +230,7 @@ layers. These are not in conflict — they serve different audiences.
 
 ```ts
 // api/src/functions/myFunction.ts
-export async function handle(
+export async function handleRequest(
   request: Request,
   ctx: CedarRequestContext
 ): Promise<Response> {
@@ -247,7 +247,7 @@ WinterCG-compatible runtimes — app developers never write this directly:
 export default {
   async fetch(request: Request): Promise<Response> {
     const ctx = await buildCedarContext(request)
-    return handle(request, ctx)
+    return handleRequest(request, ctx)
   },
 }
 ```
@@ -266,7 +266,7 @@ These are intentionally different because:
 
 **Provider developers and framework integrators interact with the
 deployment artifact** (`export default { fetch }`). **Cedar app
-developers interact with `handle(request, ctx)`**. Adapters (see The
+developers interact with `handleRequest(request, ctx)`**. Adapters (see The
 Adapter Pattern below) handle the translation in both directions.
 
 ## The Middleware Model
@@ -344,7 +344,7 @@ of responsibility between Cedar and Universal Deploy.
    export default {
      async fetch(request: Request): Promise<Response> {
        const ctx = await buildCedarContext(request)
-       return handle(request, ctx)
+       return handleRequest(request, ctx)
      },
    }
    ```
@@ -381,7 +381,7 @@ knowledge lives entirely in UD's adapters.
 
 The one "adaptation" Cedar does perform is internal and invisible to
 deployment: `buildCedarContext(request)` enriches a standard `Request`
-into a `CedarRequestContext` before calling `handle()`. This is not a
+into a `CedarRequestContext` before calling `handleRequest()`. This is not a
 deployment adapter — it is Cedar's request enrichment step, and it
 runs inside every `fetch()` wrapper Cedar emits.
 
@@ -456,7 +456,7 @@ This is the foundational phase. Everything else depends on it.
 Make this Cedar's primary backend handler contract:
 
 ```ts
-export async function handle(
+export async function handleRequest(
   request: Request,
   ctx: CedarRequestContext
 ): Promise<Response>
@@ -696,14 +696,14 @@ adapter ecosystem. Cedar builds no adapters of its own.
 
 - Implement `buildCedarContext(request)` — the internal enrichment
   step that produces `CedarRequestContext` from a standard `Request`
-- Implement Cedar's build tooling to wrap each `handle()` export in a
+- Implement Cedar's build tooling to wrap each `handleRequest()` export in a
   `Fetchable`:
   ```ts
   // Generated output per Cedar server entry
   export default {
     async fetch(request: Request): Promise<Response> {
       const ctx = await buildCedarContext(request)
-      return handle(request, ctx)
+      return handleRequest(request, ctx)
     },
   }
   ```
@@ -979,8 +979,8 @@ export const handler = async (event, context) => {
   }
 }
 
-// After: Cedar handle shape
-export async function handle(request, ctx) {
+// After: Cedar handleRequest shape
+export async function handleRequest(request, ctx) {
   const body = await request.json()
   return new Response(JSON.stringify({ data: body }), {
     status: 200,
@@ -1058,30 +1058,31 @@ Do not begin with UD plugin work or SSR migration.
 Begin by making Cedar's backend Fetch-native with:
 
 ```ts
-export async function handle(
+export async function handleRequest(
   request: Request,
   ctx: CedarRequestContext
 ): Promise<Response>
 ```
 
-**Why `handle` and not `handler`**: `handler` is the exact export name
+**Why `handleRequest` and not `handler`**: `handler` is the exact export name
 AWS Lambda uses (`export async function handler(event, context)`). Even
 though the signatures are completely different, the name collision
 creates a misleading mental model that Cedar is still Lambda-first.
-`handle` is a verb — you `handle` a request — and carries no
-Lambda-specific baggage. The internal type `CedarHandler` (describing
-what kind of thing a handler is) is unaffected by this choice.
+`handleRequest` is explicit about what it does — it handles an incoming
+HTTP request — and carries no Lambda-specific baggage. The internal type
+`CedarHandler` (describing what kind of thing a handler is) is unaffected
+by this choice.
 
 **Why two shapes and not one**: Framework developers and deployment
 providers strongly prefer `export default { async fetch(request) }` as
 the deployment artifact. Cedar agrees — and that is exactly what Cedar's
 build tooling should emit for WinterCG-compatible targets. But app
-developers need `handle(request, ctx)` because `ctx` carries
+developers need `handleRequest(request, ctx)` because `ctx` carries
 Cedar-specific enrichments (parsed cookies, route params, auth state)
 that no platform provides natively. Making app developers write
 `export default { fetch }` directly would mean losing the `ctx`
 parameter or hiding it behind module-level magic. The two-layer model
-keeps both audiences happy: Cedar app developers write `handle()`, Cedar
+keeps both audiences happy: Cedar app developers write `handleRequest()`, Cedar
 generates the right deployment artifact.
 
 Wrap GraphQL (via Yoga) first — it is the quickest validation of the
