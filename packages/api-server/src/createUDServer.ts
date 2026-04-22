@@ -11,7 +11,6 @@ import type { CedarHandler } from '@cedarjs/api/runtime'
 import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
-import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getPaths } from '@cedarjs/project-config'
 
 import type { Fetchable } from './udFetchable.js'
@@ -98,7 +97,14 @@ export async function createUDServer(
       fnImport.__rw_graphqlOptions != null
     ) {
       const { createGraphQLYoga } = await import('@cedarjs/graphql-server')
-      const graphqlOptions = fnImport.__rw_graphqlOptions as GraphQLYogaOptions
+      // Cast through unknown to bridge the CJS/ESM module resolution type
+      // mismatch: the static import resolves to CJS types in a CJS build, while
+      // the dynamic import always resolves to ESM types. Deriving the type from
+      // createGraphQLYoga itself guarantees both sides use the same resolution.
+      const graphqlOptions =
+        fnImport.__rw_graphqlOptions as unknown as Parameters<
+          typeof createGraphQLYoga
+        >[0]
 
       const { yoga } = createGraphQLYoga(graphqlOptions)
 
