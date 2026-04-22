@@ -79,7 +79,6 @@ export interface CedarGraphQLContext {
   event?: APIGatewayProxyEvent
   requestContext?: LambdaContext | undefined
   currentUser?: ThenArg<ReturnType<GetCurrentUser>> | AuthContextPayload | null
-  request?: Request
 
   [index: string]: unknown
 }
