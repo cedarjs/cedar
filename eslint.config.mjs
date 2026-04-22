@@ -167,6 +167,11 @@ export default [
               group: 'internal',
               position: 'before',
             },
+            {
+              pattern: 'src/**',
+              group: 'internal',
+              position: 'before',
+            },
           ],
           alphabetize: {
             order: 'asc',
