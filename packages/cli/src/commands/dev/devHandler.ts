@@ -80,7 +80,10 @@ export const handler = async ({
       webPreferredPort = port ? parseInt(port, 10) : undefined
     }
 
-    webAvailablePort = await getFreePort(webPreferredPort)
+    webAvailablePort = await getFreePort(
+      webPreferredPort,
+      apiAvailablePort !== undefined ? [apiAvailablePort] : [],
+    )
 
     if (webAvailablePort === -1) {
       exitWithError(undefined, {

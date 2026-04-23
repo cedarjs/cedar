@@ -110,7 +110,12 @@ CLIENT CELL (GraphQL via Apollo):
 
 ```
 cedar dev:
-  concurrently ─┬─ nodemon → api-server (Fastify, port from toml)
+  concurrently ─┬─ rw-vite-dev → Vite web dev server
+                │                + cedarDevDispatcherPlugin
+                │                (standard apps: API requests handled inline,
+                │                 no separate API process)
+                ├─ nodemon → api-server (custom-server compatibility lane only:
+                │            apps with api/src/server.{ts,js})
                 └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
                    change)
 
@@ -118,12 +123,15 @@ cedar dev:
 
 cedar build:
   prisma gen → GraphQL types → validate SDLs →
-  API (esbuild→api/dist/) → Web (Vite→web/dist/) → prerender marked routes
+  API (esbuild→api/dist/) →
+  API server entry (Vite + cedarUniversalDeployPlugin→api/dist/ud/index.js) →
+  Web (Vite→web/dist/) → prerender marked routes
 
 *SSR/RSC: adds route hooks build, route manifest, SSR client+server builds.
 
-Vite plugins: cell transform | entry injection | html env | node polyfills |
-  auto-imports | import-dir | js-as-jsx | merged config
+Vite plugins: dev dispatcher | node polyfills | html env | entry injection |
+  merged config | cedar style resolution | apollo swap | cell transform |
+  js-as-jsx | react
   *SSR/RSC: adds RSC transforms
 ```
 
