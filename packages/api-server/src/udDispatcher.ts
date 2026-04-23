@@ -14,6 +14,20 @@ import { getPaths } from '@cedarjs/project-config'
 import type { Fetchable } from './udFetchable.js'
 import { createCedarFetchable } from './udFetchable.js'
 
+type HttpMethod = Extract<NonNullable<EntryMeta['method']>, string>
+
+const ALL_HTTP_METHODS: HttpMethod[] = [
+  'GET',
+  'HEAD',
+  'POST',
+  'PUT',
+  'DELETE',
+  'PATCH',
+  'OPTIONS',
+  'CONNECT',
+  'TRACE',
+]
+
 export interface CedarDispatcherOptions {
   apiRootPath?: string
   discoverFunctionsGlob?: string | string[]
@@ -196,15 +210,13 @@ export async function buildCedarDispatcher(
 
     fetchableMap.set(routeName, createCedarFetchable(handler))
 
-    const regularMethods = ['GET', 'POST'] as const
-
     registrations.push({
       id: routePath,
       route: routePath,
-      method: [...regularMethods],
+      // method omitted → matches all HTTP methods per @universal-deploy/store docs
     })
 
-    for (const method of regularMethods) {
+    for (const method of ALL_HTTP_METHODS) {
       addRoute(router, method, routePath, routeName)
       addRoute(router, method, `${routePath}/**`, routeName)
     }
