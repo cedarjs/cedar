@@ -41,7 +41,7 @@ const parseArgs = (argv: string[]) => {
   const parsed: Record<string, any> = yargs(commandString)
     .usage(
       'Starts the CedarJS Jobs runner to process background jobs\n\n' +
-        'Usage: rw jobs <command> [options]',
+        'Usage: cedar jobs <command> [options]',
     )
     .command('work', 'Start a worker and process jobs')
     .command('workoff', 'Start a worker and exit after all jobs processed')
@@ -51,12 +51,12 @@ const parseArgs = (argv: string[]) => {
     .command('clear', 'Clear the job queue')
     .demandCommand(1, 'You must specify a mode to start in')
     .example(
-      'rw jobs work',
+      'cedar jobs work',
       'Start the job workers using the job config and work on jobs until ' +
         'manually stopped',
     )
     .example(
-      'rw jobs start',
+      'cedar jobs start',
       'Start the job workers using the job config and detach, running in ' +
         'daemon mode',
     )

@@ -2,10 +2,10 @@
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
-const requireFromRwJobs = createRequire(
+const requireFromCedarJobs = createRequire(
   require.resolve('@cedarjs/jobs/package.json'),
 )
 
-const bins = requireFromRwJobs('./package.json')['bin']
+const bins = requireFromCedarJobs('./package.json')['bin']
 
-requireFromRwJobs(bins['cedar-jobs'])
+requireFromCedarJobs(bins['cedar-jobs'])
