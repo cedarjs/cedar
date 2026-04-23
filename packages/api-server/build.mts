@@ -73,7 +73,7 @@ await generateTypesCjs()
 
 await insertCommonJsPackageJson({ buildFileUrl: import.meta.url })
 
-// Build the cedarjs-server and rw-server bins
+// Build the cedarjs-server and cedar-server bins
 await buildBinEsm({
   buildOptions: {
     entryPoints: ['./src/bin.ts'],

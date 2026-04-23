@@ -758,10 +758,10 @@ ENV NODE_ENV="production"
 
 As noted above, although the workers are started and detached using the `yarn rw jobs start` command, there is nothing to monitor those workers to make sure they keep running. To do that, you'll want to start the workers yourself (or have your process monitor start them) using command line flags.
 
-You can do this with the `yarn rw-jobs-worker` command. The flags passed to the script tell it which worker group config to use to start itself, and which `id` to give this worker (if you're running more than one). To start a single worker, using the first `workers` config object, you would run:
+You can do this with the `yarn cedar-jobs-worker` command. The flags passed to the script tell it which worker group config to use to start itself, and which `id` to give this worker (if you're running more than one). To start a single worker, using the first `workers` config object, you would run:
 
 ```bash
-yarn rw-jobs-worker --index=0 --id=0
+yarn cedar-jobs-worker --index=0 --id=0
 ```
 
 :::info
@@ -773,7 +773,7 @@ The job runner started with `yarn rw jobs start` runs this same command behind t
 ### Flags
 
 - `--index` : a number that represents the index of the `workers` config array you passed to the `JobManager`. Setting this to `0`, for example, uses the first object in the array to set all config options for the worker.
-- `--id` : a number identifier that's set as part of the process name. Starting a worker with `--id=0` and then inspecting your process list will show one worker running named `rw-job-worker.queue-name.0`. Using `yarn rw-jobs-worker` only ever starts a single instance, so if your config had a `count` of `2` you'd need to run the command twice, once with `--id=0` and a second time with `--id=1`.
+- `--id` : a number identifier that's set as part of the process name. Starting a worker with `--id=0` and then inspecting your process list will show one worker running named `cedar-jobs-worker.queue-name.0`. Using `yarn cedar-jobs-worker` only ever starts a single instance, so if your config had a `count` of `2` you'd need to run the command twice, once with `--id=0` and a second time with `--id=1`.
 - `--workoff` : a boolean that will execute all currently available jobs and then cause the worker to exit. Defaults to `false`
 - `--clear` : a boolean that starts a worker to remove all jobs from all queues. Defaults to `false`
 

@@ -29,7 +29,6 @@ packages/create-cedar-app/create-cedar-app.tgz
 **/meta.json
 **/meta.*.json
 
-.nx/cache
-.nx/workspace-data
+.nx/*
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md

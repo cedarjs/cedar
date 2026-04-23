@@ -132,7 +132,7 @@ SERVER CELL (RSC)
 
 ```
 cedar dev:
-  rw-vite-dev runs Express with 2 Vite SSR servers (1 for SSR, 1 for RSC)
+  cedar-vite-dev runs Express with 2 Vite SSR servers (1 for SSR, 1 for RSC)
 
 cedar build:
   Web build modes:

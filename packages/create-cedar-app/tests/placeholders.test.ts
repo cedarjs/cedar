@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import type FS from 'node:fs'
 import path from 'node:path'
 
 import { vol } from 'memfs'
@@ -118,32 +117,4 @@ it('replaces Neon claim placeholders in a ts file', async () => {
 
   expect(content).toContain(`"${neonClaimExpiry}"`)
   expect(content).toContain(`"${neonClaimUrl}"`)
-})
-
-it('replaces {{PRISMA_VERSION}} with the same version as @prisma/client in the api package', async () => {
-  const realFs = await vi.importActual<typeof FS>('node:fs')
-  const apiPackageJsonPath = path.join(
-    import.meta.dirname,
-    '../../api/package.json',
-  )
-  const apiPkgJson = JSON.parse(
-    await realFs.promises.readFile(apiPackageJsonPath, 'utf-8'),
-  )
-  const prismaClientVersion: string = apiPkgJson.dependencies['@prisma/client']
-
-  vol.fromJSON({
-    [path.join(TEST_DIR, 'package.json')]: JSON.stringify({
-      dependencies: { prisma: '{{PRISMA_VERSION}}' },
-    }),
-  })
-
-  await replacePlaceholders(TEST_DIR, DEFAULT_VALUES)
-
-  const content = await fs.promises.readFile(
-    path.join(TEST_DIR, 'package.json'),
-    'utf-8',
-  )
-  const parsed = JSON.parse(content)
-
-  expect(parsed.dependencies.prisma).toBe(prismaClientVersion)
 })

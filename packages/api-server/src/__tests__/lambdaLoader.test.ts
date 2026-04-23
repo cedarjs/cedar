@@ -11,6 +11,7 @@ import {
 } from 'vitest'
 
 import {
+  CEDAR_HANDLERS,
   LAMBDA_FUNCTIONS,
   loadFunctionsFromDist,
 } from '../plugins/lambdaLoader.js'
@@ -31,11 +32,12 @@ afterAll(() => {
   process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
-// Reset the LAMBDA_FUNCTIONS object after each test.
+// Reset the LAMBDA_FUNCTIONS object and CEDAR_HANDLERS map after each test.
 afterEach(() => {
   for (const key in LAMBDA_FUNCTIONS) {
     delete LAMBDA_FUNCTIONS[key]
   }
+  CEDAR_HANDLERS.clear()
 })
 
 describe('loadFunctionsFromDist', () => {
@@ -80,7 +82,7 @@ describe('loadFunctionsFromDist', () => {
       'noHandler',
       'at',
       expect.any(String),
-      'does not have a function called handler defined.',
+      'does not have a function called handler or handleRequest defined.',
     )
   })
 
