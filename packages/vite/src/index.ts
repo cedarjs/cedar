@@ -32,7 +32,6 @@ export { cedarjsJobPathInjectorPlugin } from './plugins/vite-plugin-cedarjs-job-
 export { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 export { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 export { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
-export { cedarUniversalDeployPlugin } from './plugins/vite-plugin-cedar-universal-deploy.js'
 
 type PluginOptions = {
   mode?: string | undefined

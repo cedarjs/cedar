@@ -14,9 +14,7 @@ import { getPaths } from '@cedarjs/project-config'
 import type { Fetchable } from './udFetchable.js'
 import { createCedarFetchable } from './udFetchable.js'
 
-type HttpMethod = Extract<NonNullable<EntryMeta['method']>, string>
-
-const ALL_HTTP_METHODS: HttpMethod[] = [
+const ALL_HTTP_METHODS = [
   'GET',
   'HEAD',
   'POST',
@@ -26,7 +24,8 @@ const ALL_HTTP_METHODS: HttpMethod[] = [
   'OPTIONS',
   'CONNECT',
   'TRACE',
-]
+] as const
+const GRAPHQL_METHODS = ['GET', 'POST', 'OPTIONS'] as const
 
 export interface CedarDispatcherOptions {
   apiRootPath?: string
@@ -155,15 +154,13 @@ export async function buildCedarDispatcher(
 
       fetchableMap.set(routeName, graphqlFetchable)
 
-      const graphqlMethods = ['GET', 'POST', 'OPTIONS'] as const
-
       registrations.push({
         id: routePath,
         route: routePath,
-        method: [...graphqlMethods],
+        method: [...GRAPHQL_METHODS],
       })
 
-      for (const method of graphqlMethods) {
+      for (const method of GRAPHQL_METHODS) {
         addRoute(router, method, routePath, routeName)
         addRoute(router, method, `${routePath}/**`, routeName)
       }

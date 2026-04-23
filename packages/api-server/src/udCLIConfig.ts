@@ -1,3 +1,4 @@
+import ansis from 'ansis'
 import type { Argv } from 'yargs'
 
 type UDParsedOptions = {
@@ -34,11 +35,6 @@ export function builder(yargs: Argv<UDParsedOptions>) {
 
 export async function handler(options: UDParsedOptions) {
   const timeStart = Date.now()
-
-  // See https://github.com/webdiscus/ansis#troubleshooting
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const { default: ansis } = await import('ansis')
 
   console.log(ansis.dim.italic('Starting Universal Deploy Server...'))
 

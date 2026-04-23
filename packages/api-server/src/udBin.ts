@@ -6,11 +6,7 @@ import yargs from 'yargs/yargs'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import {
-  description as udDescription,
-  builder as udBuilder,
-  handler as udHandler,
-} from './udCLIConfig.js'
+import { description, builder, handler } from './udCLIConfig.js'
 
 if (!process.env.CEDAR_ENV_FILES_LOADED) {
   config({
@@ -31,9 +27,10 @@ yargs(hideBin(process.argv))
   .alias('v', 'version')
   .command(
     '$0',
-    udDescription,
-    // @ts-expect-error The yargs types seem wrong; it's ok for builder to be a function
-    udBuilder,
-    udHandler,
+    description,
+    // @ts-expect-error The yargs types aren't very good; it's ok for builder to
+    // be a function
+    builder,
+    handler,
   )
   .parse()

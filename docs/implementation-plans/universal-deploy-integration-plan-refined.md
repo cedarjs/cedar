@@ -390,7 +390,7 @@ runs inside every `fetch()` wrapper Cedar emits.
 A Cedar app's production deployment looks like this:
 
 ```
-Cedar build tooling emits:    export default { fetch }    (Fetchable, per entry)
+Cedar build tooling emits:    export default { fetch }     (Fetchable, per entry)
 Cedar registers with:         @universal-deploy/store      (addEntry)
 UD adapter consumes:          store entries                (e.g. adapter-node, adapter-netlify)
 Platform receives:            provider-specific artifact   (UD's problem, not Cedar's)
@@ -438,9 +438,9 @@ Phases are not strictly sequential. After Phase 1 completes:
 
 ```
 Phase 1 ──┬── Phase 2 ──┐
-           │             ├── Phase 4 ── Phase 5 ──┐
-           └── Phase 3 ──┘                        ├── Phase 7
-                    Phase 6 (design: Phase 4–5) ──┘
+          │             ├── Phase 4 ── Phase 5 ──┐
+          └── Phase 3 ──┘                        ├── Phase 7
+                   Phase 6 (design: Phase 4–5) ──┘
 ```
 
 ---
@@ -711,15 +711,6 @@ which does not happen until Phase 4.
   for each discovered function for UD store introspection
 - Expose `cedar-ud-server` binary and `cedar serve api --ud` CLI flag,
   both delegating to `createUDServer` instead of Fastify
-- Implement the `virtual:cedar-api` virtual module in
-  `cedarUniversalDeployPlugin()` (`@cedarjs/vite`): exports the
-  `Fetchable` from `buildCedarDispatcher()` as the module's default
-  export, making Cedar's API consumable as a standard UD entry
-- Resolve `virtual:ud:catch-all` → `virtual:cedar-api` in the Vite
-  plugin: the UD catch-all ID is the virtual module that
-  `@universal-deploy/node/serve` imports to start its srvx server;
-  pre-wiring it to `virtual:cedar-api` now means Phase 4 can plug in
-  `@universal-deploy/node` without touching the Vite plugin
 
 #### Why `@universal-deploy/node` proper is a Phase 4 concern
 
@@ -747,15 +738,19 @@ through a Vite virtual module graph.
 
 #### How to wire in `@universal-deploy/node` once Phase 4 is done
 
-When Phase 4 gives Cedar a Vite-based server build, the hookup is
+When Phase 4 gives Cedar a Vite-based API server build, the hookup is
 straightforward:
 
-1. Add `node()` from `@universal-deploy/node/vite` to the
-   **server-side Vite build config** — not to `cedarUniversalDeployPlugin()`,
-   which belongs to the web client build
-2. `virtual:ud:catch-all` is already wired to `virtual:cedar-api`
-   in `cedarUniversalDeployPlugin()` (done in Phase 3)
-3. `cedar serve` runs the Vite-built output directly
+1. Introduce `cedarUniversalDeployPlugin()` in `@cedarjs/vite` and add
+   it to the **API server Vite build config** (not the web client
+   config — the plugin resolves API-server virtual modules that have
+   no relevance to the browser bundle)
+2. Wire `virtual:ud:catch-all` → `virtual:cedar-api` inside the plugin
+   so that `@universal-deploy/node/serve` can import Cedar's aggregate
+   Fetchable at build time
+3. Add `node()` from `@universal-deploy/node/vite` to the same
+   **API server Vite build config**
+4. `cedar serve` runs the Vite-built output directly
 
 **Naming caution for Phase 4**: Vite calls its Node.js server build
 environment **"SSR"** regardless of whether it renders HTML. This is
@@ -773,20 +768,11 @@ any Vite config that also builds the HTML SSR entry.
   dispatcher, in `@cedarjs/api-server`
 - `cedar-ud-server` binary and `cedar serve api --ud` flag — serve
   the Cedar API without Fastify
-- `virtual:cedar-api` virtual module in `cedarUniversalDeployPlugin()`
-  — exports the Cedar API Fetchable for UD adapter consumption
-- `virtual:ud:catch-all` → `virtual:cedar-api` wired in the Vite
-  plugin, ready for Phase 4's `@universal-deploy/node` hookup
 
 #### Exit Criteria
 
 - Cedar can run in production on Node without Fastify via
   `cedar serve api --ud` or the `cedar-ud-server` binary
-- Cedar's API entry is registered in the UD store and exposed as
-  `virtual:cedar-api`, consumable by any UD adapter
-- `virtual:ud:catch-all` resolves correctly so that plugging in
-  `node()` from `@universal-deploy/node/vite` in Phase 4 requires no
-  further changes to `cedarUniversalDeployPlugin()`
 
 #### Temporary scaffolding introduced in Phase 3
 
@@ -818,19 +804,6 @@ removed or replaced in the phases noted below.
   function can be deleted. If a non-Vite standalone mode is kept,
   `buildCedarDispatcher` can be retained for that path only.
 
-**Replace in Phase 5:**
-
-- `virtual:ud:catch-all` → `virtual:cedar-api` single re-export in
-  `cedarUniversalDeployPlugin()` — works only because Phase 3 uses a
-  single aggregate entry. Phase 5 replaces it with a generated
-  multi-route dispatcher that imports each per-route entry and routes
-  via rou3 (matching what `@universal-deploy/vite`'s `catchAll()`
-  plugin does).
-- The single `addEntry({ id: 'virtual:cedar-api', route: ['/api/**', ...] })`
-  call in `cedarUniversalDeployPlugin()` — Phase 5 replaces this with
-  per-route `addEntry()` calls derived from Cedar's route manifest
-  (Phase 2). The hardcoded route list is a stopgap.
-
 **User-facing impact**: None for most developers. Self-hosting users
 can opt in to the Fastify-free srvx server via `cedar serve api --ud`
 or the `cedar-ud-server` binary. Full `@universal-deploy/node`
@@ -860,13 +833,30 @@ development entrypoint.
   entries
 - Preserve strong DX for browser requests, direct `curl` requests,
   and GraphQL tooling (e.g., GraphiQL must still work)
-- Wire in `@universal-deploy/node` for production serving: add
-  `node()` from `@universal-deploy/node/vite` to the **server-side**
-  Vite build config (the config that builds API functions — not
-  `cedarUniversalDeployPlugin()`, which lives in the web build). The
-  `virtual:ud:catch-all` → `virtual:cedar-api` redirect is already in
-  place from Phase 3. After this, `cedar serve` runs the Vite-built
-  server entry instead of `createUDServer`
+- Introduce `cedarUniversalDeployPlugin()` in `@cedarjs/vite` and wire
+  it into the **API server Vite build config**: register
+  `virtual:cedar-api` with the UD store via `addEntry()`, resolve
+  `virtual:ud:catch-all` → `virtual:cedar-api`, and export the Cedar
+  API Fetchable as the virtual module's default export. This plugin
+  belongs to the API server build — not the web client build — because
+  it resolves API-server virtual modules that have no relevance to the
+  browser bundle. When the plugin is introduced, add
+  `@cedarjs/api-server` as a `peerDependency` of `@cedarjs/vite` in
+  `packages/vite/package.json` — the virtual module emitted by the
+  plugin imports `buildCedarDispatcher` from `@cedarjs/api-server`, so
+  consumers need it installed alongside `@cedarjs/vite`
+- Add `node()` from `@universal-deploy/node/vite` to the same API
+  server Vite build config (not the web client config, and not the
+  HTML SSR config — see naming caution below). After this, `cedar
+  serve` runs the Vite-built server entry instead of `createUDServer`
+
+**Naming caution**: Vite calls its Node.js server build environment
+**"SSR"** regardless of whether it renders HTML. This is confusing in
+Cedar's context, where "SSR" specifically means React streaming / RSC.
+The Vite "SSR environment" output that `@universal-deploy/node`
+produces is purely the API server entry — it has no connection to
+Cedar's HTML SSR feature. Do not add `node()` to any Vite config that
+also builds the HTML SSR entry.
 
 #### Deliverables
 
@@ -898,21 +888,22 @@ Depends on Phase 4.
 
 #### Goal
 
-Expand `cedarUniversalDeployPlugin()` (already in `@cedarjs/vite`
-since Phase 3) from a single aggregate entry into a complete,
-per-route registration that UD adapters and provider plugins can
-rely on. Phase 3 ships a working plugin with one catch-all entry;
+Expand `cedarUniversalDeployPlugin()` (introduced in Phase 4 as part
+of the API server Vite build) from a single aggregate entry into a
+complete, per-route registration that UD adapters and provider plugins
+can rely on. Phase 4 ships a working plugin with one catch-all entry;
 Phase 5 makes it correct and provider-discoverable.
 
-#### Current state after Phase 3
+#### Current state after Phase 4
 
-`cedarUniversalDeployPlugin()` already exists and provides:
+`cedarUniversalDeployPlugin()` exists (introduced in Phase 4) and
+provides:
 
 - A single aggregate `virtual:cedar-api` entry registered with
   `addEntry()`, covering all Cedar API routes via one catch-all
   Fetchable
-- `virtual:cedar-api` virtual module: exports `buildCedarDispatcher()`
-  as a Fetchable so UD adapters can consume the Cedar API
+- `virtual:cedar-api` virtual module: exports Cedar's API Fetchable
+  so UD adapters can consume it
 - `virtual:ud:catch-all` → `virtual:cedar-api` resolution: routes
   the UD catch-all ID (used by `@universal-deploy/node/serve`) to
   Cedar's aggregate API entry
@@ -934,7 +925,7 @@ Phase 5 makes it correct and provider-discoverable.
   from the manifest, not maintained separately
 - Update `virtual:ud:catch-all` to generate a proper multi-route
   dispatcher (using rou3 across all registered entries) rather than
-  the simple single-entry re-export from Phase 3
+  the simple single-entry re-export from Phase 4
 - Validate the plugin against `@universal-deploy/node` and
   `@universal-deploy/adapter-netlify`
 - Document the plugin's role so future UD adapter authors know what
