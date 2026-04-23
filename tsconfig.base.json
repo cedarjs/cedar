@@ -5,6 +5,7 @@
     "lib": [
       "es2024",
       "DOM",
+      "DOM.AsyncIterable",
       "DOM.Iterable",
       "ESNext.Array",
       "ESNext.Collection",

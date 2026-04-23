@@ -70,6 +70,39 @@ export default async () => {
   }
 
   try {
+    const todos = [
+      {
+        title: 'Learn Cedar',
+        body: 'Read the docs and try building a small app.',
+        done: true,
+      },
+      {
+        title: 'Try gqlorm',
+        body: 'Auto-generated backend resolvers are pretty neat!',
+        done: false,
+      },
+      {
+        title: 'Write tests',
+        body: null,
+        done: false,
+      },
+    ]
+
+    if ((await db.todo.count()) === 0) {
+      await Promise.all(
+        todos.map(async (todo) => {
+          const newTodo = await db.todo.create({ data: todo })
+          console.log(newTodo)
+        })
+      )
+    } else {
+      console.log('Todos already seeded')
+    }
+  } catch (error) {
+    console.error(error)
+  }
+
+  try {
     // Create your database records here! For example, seed some users:
     //
     // const users = [

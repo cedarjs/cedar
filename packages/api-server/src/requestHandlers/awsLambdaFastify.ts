@@ -3,6 +3,7 @@ import type {
   APIGatewayProxyEvent,
   Handler,
   APIGatewayProxyEventQueryStringParameters,
+  APIGatewayProxyEventHeaders,
 } from 'aws-lambda'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { parse } from 'picoquery'
@@ -25,7 +26,10 @@ export const lambdaEventForFastifyRequest = (
 
   return {
     httpMethod: request.method,
-    headers: request.headers,
+    headers: {
+      'x-forwarded-proto': request.protocol,
+      ...request.headers,
+    } as unknown as APIGatewayProxyEventHeaders,
     path: request.urlData('path'),
     queryStringParameters: qsParams,
     requestContext: {
@@ -33,6 +37,7 @@ export const lambdaEventForFastifyRequest = (
       identity: {
         sourceIp: request.ip,
       },
+      domainName: request.hostname,
     },
     ...parseBody(request.rawBody || ''), // adds `body` and `isBase64Encoded`
   } as APIGatewayProxyEvent

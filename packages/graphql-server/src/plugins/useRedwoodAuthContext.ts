@@ -1,3 +1,4 @@
+import type { APIGatewayProxyEvent } from 'aws-lambda'
 import type { Plugin } from 'graphql-yoga'
 
 import type { AuthContextPayload, Decoder } from '@cedarjs/api'
@@ -15,14 +16,19 @@ export const useRedwoodAuthContext = (
 ): Plugin<CedarGraphQLContext> => {
   return {
     async onContextBuilding({ context, extendContext }) {
-      let authContext: AuthContextPayload | undefined = undefined
+      let authContext: AuthContextPayload | undefined =
+        context.cedarContext?.serverAuthState
 
       try {
-        authContext = await getAuthenticationContext({
-          authDecoder,
-          event: context.event,
-          context: context.requestContext,
-        })
+        if (!authContext) {
+          const authEvent = getAuthEvent(context)
+
+          authContext = await getAuthenticationContext({
+            authDecoder,
+            event: authEvent,
+            context: context.requestContext,
+          })
+        }
       } catch (error: any) {
         throw new Error(
           `Exception in getAuthenticationContext: ${error.message}`,
@@ -48,4 +54,23 @@ export const useRedwoodAuthContext = (
       }
     },
   }
+}
+
+function getAuthEvent(
+  context: CedarGraphQLContext,
+): APIGatewayProxyEvent | Request {
+  if (context.request) {
+    return context.request
+  }
+
+  if (context.event) {
+    return context.event
+  }
+
+  // This should never happen in practice. Either a fetch-native Request
+  // or a Lambda event is always present in the GraphQL context.
+  throw new Error(
+    'GraphQL context contains neither a fetch-native Request nor a Lambda ' +
+      'event. Please report this as a Cedar bug.',
+  )
 }

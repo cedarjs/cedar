@@ -2,6 +2,8 @@
 
 This is a test project to use for testing changes to the framework.
 
+## Syncing Framework Changes
+
 Run `yarn cfw project:tarsync` in the root to copy in the latest framework
 changes.
 
@@ -29,3 +31,24 @@ Finally I tried `yarn add -D ../packages/testing/cedarjs-testing.tgz` but that
 installs published versions of other Cedar packages that testing depends on,
 like `@cedarjs/auth`, `@cedarjs/context` etc, but I want it to use the latest
 (unpublished) code in the workspace.
+
+I'm currently using `file:`, which works alright. I do have to first build the
+framework and then pack all the packages up into tarballs. But at least I don't
+have to do the copy step that `project:tarsync` uses.
+
+## Preparing the Database
+
+- Delete the .env file, and create a new one that's empty
+- Run `echo "SESSION_SECRET=$(yarn cedar g secret --raw)" >> .env` to generate
+  a new session secret for use with dbAuth
+- Run migrations: `yarn cedar prisma migrate deploy`
+- Seed the database: `yarn cedar prisma db seed`
+
+## Testing with `curl`
+
+```
+curl -X POST 'http://localhost:8911/graphql' -H 'content-type: application/json' -d '{"query":"{ cedar { version } }"}'
+curl 'http://localhost:8911/graphql?query=\{cedar\{version\}\}'
+curl -i 'http://localhost:8911/graphql/health'
+curl -i 'http://localhost:8911/graphql/readiness'
+```
