@@ -82,7 +82,7 @@
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "@fastify/url-data": "6.0.3",
-    "@swc/core": "1.15.24",
+    "@swc/core": "1.15.30",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
