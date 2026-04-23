@@ -83,6 +83,14 @@ export async function buildCedarDispatcher(
     options?.discoverFunctionsGlob ?? 'dist/functions/**/*.{ts,js}'
 
   // Discover function files in api/dist/functions/
+  // deep: 2 is intentional: with cwd=api/, depth 1 is dist/ and depth 2 is
+  // dist/functions/, so one level of subdirectory nesting below
+  // dist/functions/ (e.g. dist/functions/nested/nested.js) is supported but
+  // deeper nesting is not. This matches the behaviour of the Fastify-based
+  // lambdaLoader and @cedarjs/internal's findApiDistFunctions, which carry
+  // the same deep: 2 limit with the explicit note "We don't support deeply
+  // nested api functions, to maximise compatibility with deployment providers".
+  // See packages/internal/src/files.ts
   const serverFunctions = fg.sync(discoverFunctionsGlob, {
     cwd: getPaths().api.base,
     deep: 2,

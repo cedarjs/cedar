@@ -3766,7 +3766,6 @@ __metadata:
     "@types/react": "npm:^18.2.55"
     "@types/ws": "npm:^8"
     "@types/yargs-parser": "npm:21.0.3"
-    "@universal-deploy/store": "npm:^0.2.1"
     "@vitejs/plugin-react": "npm:4.7.0"
     "@whatwg-node/fetch": "npm:0.10.13"
     "@whatwg-node/server": "npm:0.10.18"
@@ -3796,8 +3795,6 @@ __metadata:
     vitest: "npm:3.2.4"
     ws: "npm:8.20.0"
     yargs-parser: "npm:21.1.1"
-  peerDependencies:
-    "@cedarjs/api-server": "workspace:*"
   bin:
     rw-dev-fe: ./dist/devFeServer.js
     rw-serve-fe: ./dist/runFeServer.js
