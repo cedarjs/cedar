@@ -175,7 +175,7 @@
     "@graphql-codegen/typed-document-node": "6.1.8",
     "@graphql-codegen/typescript": "5.0.10",
     "@graphql-codegen/typescript-operations": "5.1.0",
-    "@graphql-codegen/typescript-react-apollo": "4.4.1",
+    "@graphql-codegen/typescript-react-apollo": "4.4.2",
     "@graphql-codegen/typescript-resolvers": "5.1.8",
     "@graphql-tools/documents": "1.0.1",
     "@prisma/dmmf": "7.7.0",
