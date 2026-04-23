@@ -27,9 +27,9 @@ export type NumWorkersConfig = [number, number][]
 
 setupEnv()
 
-process.title = 'rw-jobs'
+process.title = 'cedar-jobs'
 
-const WORKER_PATH = path.join(__dirname, 'rw-jobs-worker.js')
+const WORKER_PATH = path.join(__dirname, 'cedar-jobs-worker.js')
 
 const parseArgs = (argv: string[]) => {
   const commandString = hideBin(argv)
@@ -63,7 +63,7 @@ const parseArgs = (argv: string[]) => {
     .help()
     .parse(commandString, (_err: any, _argv: any, output: any) => {
       if (output) {
-        const newOutput = output.replaceAll('rw-jobs.js', 'rw jobs')
+        const newOutput = output.replaceAll('cedar-jobs.js', 'cedar jobs')
         console.log(newOutput)
       }
     })

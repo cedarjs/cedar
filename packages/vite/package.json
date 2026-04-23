@@ -37,13 +37,13 @@
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
     },
-    "./bins/rw-vite-build.mjs": "./bins/rw-vite-build.mjs"
+    "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs"
   },
   "bin": {
-    "rw-dev-fe": "./dist/devFeServer.js",
-    "rw-serve-fe": "./dist/runFeServer.js",
-    "rw-vite-build": "./bins/rw-vite-build.mjs",
-    "rw-vite-dev": "./bins/rw-vite-dev.mjs",
+    "cedar-dev-fe": "./dist/devFeServer.js",
+    "cedar-serve-fe": "./dist/runFeServer.js",
+    "cedar-vite-build": "./bins/cedar-vite-build.mjs",
+    "cedar-vite-dev": "./bins/cedar-vite-dev.mjs",
     "vite": "./bins/vite.mjs"
   },
   "files": [

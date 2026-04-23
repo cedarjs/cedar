@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MockAdapter, mockLogger } from '../../core/__tests__/mocks.js'
 import { JobManager } from '../../core/JobManager.js'
 import { Worker } from '../../core/Worker.js'
-import { getWorker, processName } from '../rw-jobs-worker.js'
+import { getWorker, processName } from '../cedar-jobs-worker.js'
 
 vi.mock('@cedarjs/cli-helpers/loadEnvFiles', () => {
   return {
@@ -27,13 +27,13 @@ describe('processName', () => {
   it('sets the process title for a single queue', () => {
     const title = processName({ id: 1, queues: 'default' })
 
-    expect(title).toEqual('rw-jobs-worker.default.1')
+    expect(title).toEqual('cedar-jobs-worker.default.1')
   })
 
   it('sets the process title for an array of queues', () => {
     const title = processName({ id: 1, queues: ['default', 'email'] })
 
-    expect(title).toEqual('rw-jobs-worker.default-email.1')
+    expect(title).toEqual('cedar-jobs-worker.default-email.1')
   })
 })
 
@@ -105,7 +105,7 @@ describe('getWorker', () => {
       index: 0,
       workoff: false,
       clear: false,
-      processName: 'rw-jobs-worker.*.0',
+      processName: 'cedar-jobs-worker.*.0',
     })
   })
 })

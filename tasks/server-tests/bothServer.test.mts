@@ -103,14 +103,14 @@ describe('rwServer', () => {
   it('has help configured', async () => {
     const { stdout } = await $`yarn node ${rwServer} --help`
     expect(stdout).toMatchInlineSnapshot(`
-      "rw-server
+      "cedar-server
 
       Start a server for serving the api and web sides
 
       Commands:
-        rw-server      Start a server for serving the api and web sides      [default]
-        rw-server api  Start a server for serving the api side
-        rw-server web  Start a server for serving the web side
+        cedar-server      Start a server for serving the api and web sides      [default]
+        cedar-server api  Start a server for serving the api side
+        cedar-server web  Start a server for serving the web side
 
       Options:
             --webPort, --web-port                 The port for the web server to
@@ -141,14 +141,14 @@ describe('rwServer', () => {
       expect(p.exitCode).toEqual(1)
       expect(p.stdout).toEqual('')
       expect(p.stderr).toMatchInlineSnapshot(`
-        "rw-server
+        "cedar-server
 
         Start a server for serving the api and web sides
 
         Commands:
-          rw-server      Start a server for serving the api and web sides      [default]
-          rw-server api  Start a server for serving the api side
-          rw-server web  Start a server for serving the web side
+          cedar-server      Start a server for serving the api and web sides      [default]
+          cedar-server api  Start a server for serving the api side
+          cedar-server web  Start a server for serving the web side
 
         Options:
               --webPort, --web-port                 The port for the web server to

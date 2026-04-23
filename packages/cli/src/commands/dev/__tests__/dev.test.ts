@@ -184,7 +184,7 @@ describe('yarn cedar dev', () => {
 
     // Uses absolute path, so not doing a snapshot
     expect(webCommand?.command).toContain(
-      'yarn cross-env NODE_ENV=development rw-vite-dev',
+      'yarn cross-env NODE_ENV=development cedar-vite-dev',
     )
 
     expect(
@@ -194,7 +194,7 @@ describe('yarn cedar dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn cedar-api-server-watch --port 8911 --debug-port 18911 | cedar-log-formatter"',
     )
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -224,7 +224,7 @@ describe('yarn cedar dev', () => {
 
     // Uses absolute path, so not doing a snapshot
     expect(webCommand.command).toContain(
-      'yarn cross-env NODE_ENV=development rw-dev-fe',
+      'yarn cross-env NODE_ENV=development cedar-dev-fe',
     )
 
     expect(
@@ -234,7 +234,7 @@ describe('yarn cedar dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn rw-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn cedar-api-server-watch --port 8911 --debug-port 18911 | cedar-log-formatter"',
     )
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -267,7 +267,7 @@ describe('yarn cedar dev', () => {
 
     // Uses absolute path, so not doing a snapshot
     expect(webCommand.command).toContain(
-      'yarn cross-env NODE_ENV=development rw-vite-dev',
+      'yarn cross-env NODE_ENV=development cedar-vite-dev',
     )
 
     expect(
@@ -277,7 +277,7 @@ describe('yarn cedar dev', () => {
         // test environments (vite sets this in their vite-ecosystem-ci tests)
         .replace(/--max-old-space-size=\d+\s/, ''),
     ).toEqual(
-      'yarn nodemon --quiet --watch "/mocked/esm-project/cedar.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | rw-log-formatter"',
+      'yarn nodemon --quiet --watch "/mocked/esm-project/cedar.toml" --exec "yarn cedarjs-api-server-watch --port 8911 --debug-port 18911 | cedar-log-formatter"',
     )
     expect(apiCommand.env?.NODE_ENV).toEqual('development')
     expect(apiCommand.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -291,7 +291,7 @@ describe('yarn cedar dev', () => {
     const apiCommand = findApiCommands()
 
     expect(apiCommand.command.replace(/\s+/g, ' ')).toContain(
-      'yarn rw-api-server-watch --port 8911 --debug-port 90909090',
+      'yarn cedar-api-server-watch --port 8911 --debug-port 90909090',
     )
   })
 

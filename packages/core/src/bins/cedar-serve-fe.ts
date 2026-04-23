@@ -8,4 +8,4 @@ const requireFromRwVite = createRequire(
 
 const bins = requireFromRwVite('./package.json')['bin']
 
-requireFromRwVite(bins['rw-serve-fe'])
+requireFromRwVite(bins['cedar-serve-fe'])
