@@ -87,7 +87,7 @@
     "cheerio": "1.2.0",
     "graphql": "16.13.2",
     "mime-types": "2.1.35",
-    "rollup": "4.60.1",
+    "rollup": "4.60.2",
     "rollup-plugin-swc3": "0.12.1",
     "unimport": "5.7.0",
     "unplugin-auto-import": "19.3.0",
