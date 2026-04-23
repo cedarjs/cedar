@@ -13,7 +13,10 @@ import {
   formatRunWorkspaceScriptCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { buildApi, cleanApiBuild } from '@cedarjs/internal/dist/build/api'
+import {
+  buildApiWithVite,
+  cleanApiBuild,
+} from '@cedarjs/internal/dist/build/api'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
@@ -237,14 +240,7 @@ export const handler = async ({
       title: 'Building API...',
       task: async () => {
         await cleanApiBuild()
-        const { errors, warnings } = await buildApi()
-
-        if (errors.length) {
-          console.error(errors)
-        }
-        if (warnings.length) {
-          console.warn(warnings)
-        }
+        await buildApiWithVite()
       },
     },
     workspace.includes('web') && {

@@ -3299,6 +3299,7 @@ __metadata:
     ts-node: "npm:10.9.2"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
+    vite: "npm:7.3.2"
     vitest: "npm:3.2.4"
   bin:
     cedar-gen: ./dist/generate/generate.js
@@ -3747,6 +3748,7 @@ __metadata:
     "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.2"
     "@babel/traverse": "npm:7.29.0"
+    "@cedarjs/api-server": "workspace:*"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/babel-config": "workspace:*"
     "@cedarjs/cookie-jar": "workspace:*"
@@ -3755,8 +3757,10 @@ __metadata:
     "@cedarjs/server-store": "workspace:*"
     "@cedarjs/testing": "workspace:*"
     "@cedarjs/web": "workspace:*"
+    "@fastify/url-data": "npm:6.0.3"
     "@hyrious/esbuild-plugin-commonjs": "npm:0.2.6"
     "@swc/core": "npm:1.15.24"
+    "@types/aws-lambda": "npm:8.10.161"
     "@types/busboy": "npm:^1"
     "@types/express": "npm:4"
     "@types/react": "npm:^18.2.55"
@@ -3773,6 +3777,8 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
     express: "npm:4.22.1"
+    fastify: "npm:5.8.4"
+    fastify-raw-body: "npm:5.0.0"
     find-my-way: "npm:8.2.2"
     glob: "npm:11.1.0"
     http-proxy-middleware: "npm:3.0.5"
@@ -3792,6 +3798,7 @@ __metadata:
     ws: "npm:8.20.0"
     yargs-parser: "npm:21.1.1"
   bin:
+    cedar-unified-dev: ./dist/cedar-unified-dev.js
     rw-dev-fe: ./dist/devFeServer.js
     rw-serve-fe: ./dist/runFeServer.js
     rw-vite-build: ./bins/rw-vite-build.mjs
