@@ -28,44 +28,75 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 // ---------------------------------------------------------------------------
 
 /**
- * Reads the root package.json and the API package.json to find workspace
- * package names that the API directly depends on (via "workspace:*" version
- * specifiers). These packages are symlinked into node_modules but may not
- * have a built dist/ directory, so Vite SSR must NOT externalize them –
- * instead it processes their source files through the module pipeline.
+ * Mirrors the logic used in buildHandler.ts / buildPackagesTask.js:
+ * - Only runs when `experimental.packagesWorkspace.enabled` is true
+ * - Reads the root package.json workspaces array to find non-api/web entries
+ * - Globs the packages/ directory to get each package's name from its
+ *   package.json
+ *
+ * Returns the package names (e.g. ["@my-org/validators"]) so they can be
+ * added to Vite's ssr.noExternal. Workspace packages are symlinked into
+ * node_modules but may not have a built dist/ directory, so Vite SSR must
+ * NOT externalize them – instead it processes their source files through the
+ * module pipeline.
  */
-function getWorkspacePackageNames(
+async function getWorkspacePackageNames(
   cedarPaths: ReturnType<typeof getPaths>,
-): string[] {
+  cedarConfig: ReturnType<typeof getConfig>,
+): Promise<string[]> {
+  if (!cedarConfig.experimental?.packagesWorkspace?.enabled) {
+    return []
+  }
+
+  if (!cedarPaths.packages || !fs.existsSync(cedarPaths.packages)) {
+    return []
+  }
+
   try {
     const rootPkgPath = path.join(cedarPaths.base, 'package.json')
     const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8')) as {
-      workspaces?: string[]
+      workspaces?: unknown
     }
 
-    if (
-      !Array.isArray(rootPkg.workspaces) ||
-      !rootPkg.workspaces.some((w) => w.startsWith('packages/'))
-    ) {
+    if (!Array.isArray(rootPkg.workspaces) || rootPkg.workspaces.length <= 2) {
       return []
     }
 
-    const apiPkgPath = path.join(cedarPaths.api.base, 'package.json')
-    const apiPkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8')) as {
-      dependencies?: Record<string, string>
-      devDependencies?: Record<string, string>
-      peerDependencies?: Record<string, string>
+    // Find workspaces that are not 'api' or 'web' (i.e. packages/* entries)
+    const nonApiWebWorkspaces = (rootPkg.workspaces as string[]).filter(
+      (w) => w !== 'api' && w !== 'web',
+    )
+
+    if (nonApiWebWorkspaces.length === 0) {
+      return []
     }
 
-    const allDeps = {
-      ...apiPkg.dependencies,
-      ...apiPkg.devDependencies,
-      ...apiPkg.peerDependencies,
+    // Glob the packages/ directory to get all package dirs, mirroring
+    // the buildPackagesTask.js approach
+    const globPattern = path
+      .join(cedarPaths.packages, '*')
+      .replaceAll('\\', '/')
+    const packageDirs = await Array.fromAsync(glob(globPattern))
+
+    const names: string[] = []
+
+    for (const pkgDir of packageDirs) {
+      const pkgJsonPath = path.join(pkgDir, 'package.json')
+
+      if (!fs.existsSync(pkgJsonPath)) {
+        continue
+      }
+
+      const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8')) as {
+        name?: string
+      }
+
+      if (pkgJson.name) {
+        names.push(pkgJson.name)
+      }
     }
 
-    return Object.entries(allDeps)
-      .filter(([, version]) => String(version).startsWith('workspace:'))
-      .map(([name]) => name)
+    return names
   } catch {
     return []
   }
@@ -214,7 +245,10 @@ export async function startApiDevServer(port: number): Promise<{
   //    - Vite externalises node_modules in SSR mode by default, which is
   //      exactly what we want; only api/src files go through the Babel plugin
   // ---------------------------------------------------------------------------
-  const workspacePackageNames = getWorkspacePackageNames(cedarPaths)
+  const workspacePackageNames = await getWorkspacePackageNames(
+    cedarPaths,
+    cedarConfig,
+  )
 
   const viteServer = await createViteServer({
     configFile: false,
