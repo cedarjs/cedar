@@ -7,6 +7,10 @@ import { getConfig } from '@cedarjs/project-config'
 type Fetchable = { fetch(request: Request): Response | Promise<Response> }
 
 let cachedDispatcher: Fetchable | null = null
+// Each invalidation increments this counter. The in-flight build closure
+// captures the generation at start and checks it before writing
+// cachedDispatcher, so a superseded build never overwrites a newer one.
+let dispatcherGeneration = 0
 let buildPromise: Promise<Fetchable> | null = null
 
 async function getDispatcher(): Promise<Fetchable> {
@@ -18,12 +22,45 @@ async function getDispatcher(): Promise<Fetchable> {
     return buildPromise
   }
 
+  // Capture the current generation so we can detect if we've been
+  // invalidated by the time the build finishes.
+  const generationAtStart = dispatcherGeneration
+
   buildPromise = (async () => {
+    // Recompile api/src/ -> api/dist/ before loading the dispatcher, so the
+    // dispatcher always reads fresh build artifacts. We use rebuildApi when a
+    // build context already exists (incremental rebuild is faster), and fall
+    // back to a full buildApi on the very first run or after a clean.
+    try {
+      const { rebuildApi, buildApi } =
+        await import('@cedarjs/internal/dist/build/api')
+      try {
+        await rebuildApi()
+      } catch {
+        // rebuildApi can throw if there is no existing build context yet
+        // (e.g. first run). Fall back to a full build.
+        await buildApi()
+      }
+    } catch (err) {
+      console.warn(
+        '[cedar-dev-dispatcher] API compilation failed; serving with last-known-good dist:',
+        err,
+      )
+    }
+
     const { buildCedarDispatcher } =
       await import('@cedarjs/api-server/udDispatcher')
     const { fetchable } = await buildCedarDispatcher()
-    cachedDispatcher = fetchable
-    buildPromise = null
+
+    // Only commit if we are still the current generation. If invalidate() was
+    // called while we were building, a newer build will be (or already is)
+    // in-flight and we must not overwrite cachedDispatcher with our stale
+    // result.
+    if (generationAtStart === dispatcherGeneration) {
+      cachedDispatcher = fetchable
+      buildPromise = null
+    }
+
     return fetchable
   })()
 
@@ -33,6 +70,8 @@ async function getDispatcher(): Promise<Fetchable> {
 function invalidateDispatcher() {
   cachedDispatcher = null
   buildPromise = null
+  // Increment so any in-flight build can detect it has been superseded.
+  dispatcherGeneration++
 }
 
 function isViteInternalRequest(url: string): boolean {
