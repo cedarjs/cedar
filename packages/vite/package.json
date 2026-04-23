@@ -72,7 +72,7 @@
     "@cedarjs/server-store": "4.0.0",
     "@cedarjs/testing": "4.0.0",
     "@cedarjs/web": "4.0.0",
-    "@swc/core": "1.15.24",
+    "@swc/core": "1.15.30",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
