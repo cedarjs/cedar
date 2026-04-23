@@ -6,6 +6,6 @@ const pkgPath = require.resolve('@cedarjs/vite/package.json')
 const vitePackageJsonFileUrl = pathToFileURL(pkgPath)
 const requireFromRxVite = createRequire(vitePackageJsonFileUrl)
 const bins = requireFromRxVite('./package.json')['bin']
-const viteEntryPointUrl = new URL(bins['rw-dev-fe'], vitePackageJsonFileUrl)
+const viteEntryPointUrl = new URL(bins['cedar-dev-fe'], vitePackageJsonFileUrl)
 
 import(viteEntryPointUrl.toString())

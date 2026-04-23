@@ -6,7 +6,7 @@ export const description =
 
 export const builder = (yargs: Argv) => {
   // Disable yargs parsing of commands and options because it's forwarded
-  // to rw-jobs
+  // to cedar-jobs
   yargs
     .strictOptions(false)
     .strictCommands(false)

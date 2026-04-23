@@ -2,7 +2,10 @@ import type { Handler } from 'aws-lambda'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { vi, describe, beforeEach, test, expect, afterEach } from 'vitest'
 
-import { requestHandler } from '../../requestHandlers/awsLambdaFastify.js'
+import {
+  lambdaEventForFastifyRequest,
+  requestHandler,
+} from '../../requestHandlers/awsLambdaFastify.js'
 
 describe('Tests AWS Lambda to Fastify request transformation and handling', () => {
   beforeEach(() => {
@@ -170,5 +173,39 @@ describe('Tests AWS Lambda to Fastify request transformation and handling', () =
       'content-type',
       'application/json; text/html',
     )
+  })
+})
+
+describe('lambdaEventForFastifyRequest', () => {
+  const baseRequest = {
+    method: 'GET',
+    headers: {},
+    url: '/',
+    urlData: () => ({ path: '/' }),
+    ip: '127.0.0.1',
+    id: 'req-1',
+    hostname: 'localhost',
+    rawBody: '',
+  } as unknown as FastifyRequest
+
+  test('sets x-forwarded-proto from request.protocol when header is absent', () => {
+    const req = {
+      ...baseRequest,
+      protocol: 'https',
+    } as unknown as FastifyRequest
+
+    const event = lambdaEventForFastifyRequest(req)
+    expect(event.headers?.['x-forwarded-proto']).toBe('https')
+  })
+
+  test('preserves x-forwarded-proto from upstream headers over request.protocol', () => {
+    const req = {
+      ...baseRequest,
+      headers: { 'x-forwarded-proto': 'https' },
+      protocol: 'http',
+    } as unknown as FastifyRequest
+
+    const event = lambdaEventForFastifyRequest(req)
+    expect(event.headers?.['x-forwarded-proto']).toBe('https')
   })
 })
