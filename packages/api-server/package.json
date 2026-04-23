@@ -73,6 +73,12 @@
       "types": "./dist/cjs/bothCLIConfigHandler.d.ts",
       "default": "./dist/cjs/bothCLIConfigHandler.js"
     },
+    "./udDispatcher": {
+      "import": {
+        "types": "./dist/udDispatcher.d.ts",
+        "default": "./dist/udDispatcher.js"
+      }
+    },
     "./udServer": {
       "import": {
         "types": "./dist/createUDServer.d.ts",

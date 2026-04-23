@@ -27,6 +27,7 @@ type ServeArgv = Record<string, unknown> & {
   socket?: string
   apiRootPath?: string
   apiHost?: string
+  ud?: boolean
 }
 
 export const builder = async (yargs: Argv) => {
@@ -69,7 +70,23 @@ export const builder = async (yargs: Argv) => {
     .command({
       command: 'api',
       description: apiServerCLIConfig.description,
-      builder: apiServerCLIConfig.builder,
+      builder: (yargs: Argv) => {
+        if (typeof apiServerCLIConfig.builder === 'function') {
+          apiServerCLIConfig.builder(yargs)
+        }
+        return yargs.option('ud', {
+          // TODO(Phase 4): remove this flag. It is temporary scaffolding that
+          // bridges to createUDServer while Cedar's API is not yet Vite-built.
+          // Phase 4 wires in @universal-deploy/node/vite and makes UD serving
+          // the default, at which point this flag has no remaining purpose.
+          // See the Phase 3 "Temporary scaffolding" section in
+          // docs/implementation-plans/universal-deploy-integration-plan-refined.md
+          description:
+            'Use the Universal Deploy server (srvx) instead of Fastify',
+          type: 'boolean',
+          default: false,
+        })
+      },
       handler: async (argv: ServeArgv) => {
         recordTelemetryAttributes({
           command: 'serve',
@@ -78,6 +95,17 @@ export const builder = async (yargs: Argv) => {
           socket: argv.socket,
           apiRootPath: argv.apiRootPath,
         })
+
+        if (argv.ud) {
+          const { handler: udHandler } =
+            await import('@cedarjs/api-server/udCLIConfig')
+          await udHandler({
+            port: argv.port,
+            host: argv.host,
+            apiRootPath: argv.apiRootPath,
+          })
+          return
+        }
 
         // Run the server file, if it exists, api side only
         if (serverFileExists()) {
