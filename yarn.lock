@@ -3796,6 +3796,8 @@ __metadata:
     vitest: "npm:3.2.4"
     ws: "npm:8.20.0"
     yargs-parser: "npm:21.1.1"
+  peerDependencies:
+    "@cedarjs/api-server": "workspace:*"
   bin:
     rw-dev-fe: ./dist/devFeServer.js
     rw-serve-fe: ./dist/runFeServer.js
