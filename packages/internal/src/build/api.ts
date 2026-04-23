@@ -140,7 +140,7 @@ export const buildApiWithVite = async () => {
   })
 }
 
-export const transpileApi = async (files: string[]) => {
+const transpileApi = async (files: string[]) => {
   return build(getEsbuildOptions(files))
 }
 
