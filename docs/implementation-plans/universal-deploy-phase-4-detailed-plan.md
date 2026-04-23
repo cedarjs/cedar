@@ -99,14 +99,19 @@ It also preserves the phase boundary:
 
 ### Primary Goals
 
-- Make `cedar dev` expose one externally visible host/port for the app
-- Route web and API traffic through one development dispatcher
-- Execute Cedar backend handlers in a Vite-centric runtime
+- Make `cedar dev` expose one externally visible host/port for the default app
+  runtime
+- Route web and API traffic through one development dispatcher for the default
+  Cedar runtime path
+- Execute Cedar-owned backend handlers in a Vite-centric runtime
 - Ensure backend source changes are reflected through a coherent dev invalidation
   model
-- Make `cedar serve` run the Vite-built UD Node server entry
+- Make `cedar serve` run the Vite-built UD Node server entry for the default
+  non-custom-server path
 - Introduce the first production-worthy version of
   `cedarUniversalDeployPlugin()` for the API server build
+- Preserve a compatibility lane for apps that depend on custom Fastify server
+  setup
 
 ### Secondary Goals
 
@@ -114,6 +119,8 @@ It also preserves the phase boundary:
 - Preserve existing auth and function behavior during the transition
 - Minimise app-level migration burden
 - Keep Phase 4 compatible with the later Phase 5 route-registration expansion
+- Make the compatibility story for `api/src/server.{ts,js}`,
+  `configureFastify`, and custom Fastify plugins explicit
 
 ## Non-Goals
 
@@ -127,14 +134,20 @@ Phase 4 should explicitly not try to do all of the following:
 - merge web and API build outputs into one universal production artifact
 - introduce a new public app authoring API unless required for runtime
   correctness
+- remove the custom Fastify server path for apps that already depend on it
+- force all existing Fastify-specific customisations onto the new runtime in
+  this phase
 
 ## Current Baseline Before Phase 4
 
-Based on the current Cedar architecture and the refined integration plan, the
-baseline is:
+Based on the current Cedar architecture, the refined integration plan, and the
+current codebase, the baseline is:
 
 - web development is Vite-centric
 - API development is still conceptually separate
+- `cedar dev` still starts separate web and API jobs
+- the current web/API relationship still assumes a proxy-oriented model in
+  important places
 - production API serving has a temporary UD-oriented path
 - Cedar already has or is expected to have:
   - fetch-native handlers
@@ -142,15 +155,48 @@ baseline is:
   - temporary UD scaffolding
 - `cedar serve api --ud` or equivalent transitional paths exist, but they are
   not yet the default unified runtime story
+- Cedar still has a real, supported Fastify customisation surface through
+  `api/src/server.{ts,js}`, `configureApiServer`, and older
+  `configureFastify`-style configuration
+- the current UD dispatcher is an aggregate Cedar API dispatcher, but it is not
+  yet a complete replacement for arbitrary Fastify custom routes, hooks,
+  decorators, or plugins
 
 This means Phase 4 is not starting from zero. It is integrating already-created
-pieces into a coherent dev runtime.
+pieces into a coherent dev runtime while preserving a compatibility path for
+apps that depend on Fastify-specific server customisation.
+
+## Codebase Alignment Notes
+
+The current codebase already supports the main direction of this phase:
+
+- temporary UD scaffolding exists specifically to be removed in Phase 4
+- a shared aggregate Cedar dispatcher already exists and is intended to be used
+  by both the temporary server path and the future Vite virtual module path
+- the CLI already marks the current UD serve path as transitional
+- the current dev model is still clearly split between web and API processes
+
+At the same time, the codebase also makes two important constraints visible:
+
+1. The current aggregate UD dispatcher is still narrower than the final Phase 4
+   target. It already handles Cedar-owned API surfaces such as GraphQL and
+   filesystem-discovered functions, but it should not be treated as proof that
+   all Fastify-based customisation has already been subsumed by the fetch-native
+   runtime.
+2. Cedar currently exposes a real Fastify customisation surface. That means
+   Phase 4 cannot be treated as a blanket removal of Fastify from every app
+   runtime path without breaking supported user setups.
+
+These constraints shape the recommended implementation approach for this phase:
+the unified Vite-centric runtime becomes the default path for standard Cedar
+apps, while custom-server apps remain on an explicit compatibility lane until a
+later migration path exists.
 
 ## Architectural Target for Phase 4
 
 ### High-Level Shape
 
-After Phase 4, the development architecture should look like this:
+After Phase 4, the default development architecture should look like this:
 
 - one Vite-hosted dev server is externally visible
 - that dev server owns the request entrypoint
@@ -162,6 +208,12 @@ After Phase 4, the development architecture should look like this:
   - installs `cedarUniversalDeployPlugin()`
   - installs `node()` from `@universal-deploy/node/vite`
   - emits a self-contained Node server entry for `cedar serve`
+
+For apps with custom Fastify setup, Phase 4 should preserve a compatibility
+lane rather than forcing them onto the default unified runtime immediately.
+Those apps may continue to use a custom-server path until Cedar provides a
+framework-agnostic replacement for the Fastify-specific extension points they
+depend on.
 
 ### Conceptual Request Flow in Dev
 
@@ -241,6 +293,17 @@ build machinery without implying Cedar HTML SSR.
 App authors should not need to rewrite routes, functions, GraphQL handlers, or
 auth setup just to adopt Phase 4.
 
+### 7. Preserve a Compatibility Lane for Custom Fastify Apps
+
+Apps that use `api/src/server.{ts,js}`, `configureApiServer`,
+`configureFastify`, or direct `server.register(...)` Fastify plugin setup are
+using a supported Cedar extension path today. Phase 4 should not silently
+bypass or ignore those customisations.
+
+Instead, the default unified runtime should apply to standard Cedar apps, while
+custom-server apps remain on an explicit compatibility lane until Cedar offers a
+clear migration path to framework-agnostic extension points.
+
 ## Proposed Runtime Architecture
 
 ## 1. Dev Runtime Composition
@@ -275,11 +338,19 @@ Responsibilities:
 - execute GraphQL
 - execute auth endpoints
 - execute filesystem-discovered functions
-- execute any other fetch-native backend entries included in the aggregate
-  dispatcher
+- execute any other Cedar-owned fetch-native backend entries included in the
+  aggregate dispatcher
 
 This layer should be built on the Phase 1 and Phase 2 contracts, not on legacy
 event-shaped APIs.
+
+### Important Scope Note
+
+In the current codebase, the aggregate UD dispatcher should be treated as the
+Cedar-owned backend runtime path, not as a complete replacement for arbitrary
+Fastify customisation. Phase 4 should unify Cedar's default runtime path first,
+while preserving a separate compatibility lane for apps that depend on
+Fastify-specific hooks, decorators, routes, or plugins.
 
 ## 2. Request Classification Model
 
@@ -430,7 +501,7 @@ An aggregate entry:
 ## 6. `cedarUniversalDeployPlugin()` Responsibilities in Phase 4
 
 The plugin introduced in this phase should do exactly the minimum needed for a
-working system.
+working system on the default Cedar runtime path.
 
 ### Required Responsibilities
 
@@ -470,6 +541,45 @@ This is a Vite server build concern, not a Cedar HTML SSR concern.
 Any implementation notes, config names, comments, and docs should repeatedly
 make this clear to avoid future confusion.
 
+## Runtime Lanes in Phase 4
+
+Phase 4 should explicitly support two runtime lanes.
+
+### Lane A: Default Unified Runtime
+
+This is the primary Phase 4 target for standard Cedar apps:
+
+- one visible Vite-hosted dev port
+- one Cedar dev request dispatcher
+- Cedar-owned backend execution through the aggregate fetch-native runtime
+- API server Vite build integrated with `cedarUniversalDeployPlugin()`
+- `cedar serve` running the Vite-built UD Node server entry
+
+### Lane B: Custom Fastify Compatibility Runtime
+
+This lane exists for apps that depend on Cedar's current Fastify-specific server
+extension points, including:
+
+- `api/src/server.{ts,js}`
+- `configureApiServer`
+- `configureFastify`
+- direct `server.register(...)` plugin setup
+- custom Fastify routes, hooks, decorators, parsers, or reply/request behavior
+
+For these apps, Phase 4 should preserve a supported compatibility path rather
+than forcing immediate migration.
+
+### Runtime Selection Rule
+
+The implementation should treat the presence of a custom server path as a
+meaningful runtime distinction. If an app is using a custom server entry or
+Fastify-specific setup, Cedar should either:
+
+- keep that app on the compatibility lane automatically, or
+- fail clearly with guidance rather than silently dropping custom behaviour
+
+Silent partial compatibility is the worst outcome here.
+
 ## Workstreams
 
 ## Workstream 1: Inventory and Stabilise Existing Dev Entry Logic
@@ -488,6 +598,11 @@ can replace the split runtime without regressing unrelated behavior.
 - identify current file watching and restart behavior for backend code
 - identify any assumptions in CLI output, port reporting, or generated URLs that
   depend on separate web/API ports
+- identify all current custom-server and Fastify-specific extension points that
+  must remain supported on the compatibility lane
+- identify where `serverFileExists()` and related custom-server branching
+  already exist so Phase 4 can build on those distinctions rather than fighting
+  them
 
 ### Deliverable
 
@@ -536,7 +651,8 @@ startup path.
 
 ### Objective
 
-Create the aggregate fetch-native backend runtime that the dispatcher will call.
+Create the aggregate fetch-native backend runtime that the dispatcher will call
+for the default Cedar runtime path.
 
 ### Tasks
 
@@ -548,6 +664,9 @@ Create the aggregate fetch-native backend runtime that the dispatcher will call.
 - ensure request context enrichment still works correctly
 - ensure cookies, params, query, and auth state are available through the new
   fetch-native path
+- explicitly document that this aggregate runtime covers Cedar-owned backend
+  surfaces and is not yet a general replacement for arbitrary Fastify plugins or
+  custom Fastify routes
 
 ### Deliverable
 
@@ -565,7 +684,7 @@ A single backend fetch dispatcher that can answer all Cedar API requests in dev.
 ### Objective
 
 Mount Cedar backend handling into the Vite dev server so one visible host serves
-the whole app.
+the whole app on the default runtime lane.
 
 ### Tasks
 
@@ -575,6 +694,8 @@ the whole app.
 - fall through to Vite for frontend requests
 - ensure Vite internal endpoints are never intercepted incorrectly
 - ensure response streaming and headers are preserved correctly where relevant
+- ensure this integration is only the default path for standard apps, not a
+  silent override of custom Fastify server setups
 
 ### Deliverable
 
@@ -670,16 +791,20 @@ Make `cedar serve` run the Vite-built Node server entry.
 
 ### Objective
 
-Make the new runtime feel intentional rather than transitional.
+Make the new runtime feel intentional rather than transitional, while making the
+compatibility lane explicit for custom-server apps.
 
 ### Tasks
 
-- update CLI startup messaging to show one visible port
-- remove or reduce references to separate web/API dev ports in normal output
+- update CLI startup messaging to show one visible port for the default runtime
+- remove or reduce references to separate web/API dev ports in normal output for
+  standard apps
 - update any generated URLs, docs, or help text that assume proxying
 - ensure error messages mention the unified host where appropriate
 - ensure debugging output still makes it clear whether a request was handled by
   Vite web logic or Cedar backend logic
+- add explicit messaging for custom-server apps so users understand when Cedar
+  is using the compatibility lane instead of the default unified runtime
 
 ### Deliverable
 
@@ -743,7 +868,7 @@ Test the request dispatcher in isolation.
 
 ## 2. Integration Testing for Dev Runtime
 
-Test the unified dev host end-to-end.
+Test the unified dev host end-to-end for the default runtime lane.
 
 ### Cases
 
@@ -758,7 +883,7 @@ Test the unified dev host end-to-end.
 
 ## 3. Serve-Path Testing
 
-Test the Vite-built Node server output.
+Test the Vite-built Node server output for the default runtime lane.
 
 ### Cases
 
@@ -779,6 +904,9 @@ Focus on areas most likely to break:
 - middleware ordering
 - generated route manifest changes
 - direct `curl` requests without browser headers
+- custom-server apps that use `api/src/server.{ts,js}`
+- Fastify plugin registration and custom Fastify routes on the compatibility
+  lane
 
 ## Suggested Milestones
 
@@ -889,6 +1017,24 @@ server builds with Cedar HTML SSR.
 - use precise naming in config and comments
 - avoid ambiguous labels like "SSR build" without qualification
 
+## Risk 7: Custom Fastify Behaviour Is Silently Lost
+
+### Impact
+
+Apps that rely on `api/src/server.{ts,js}`, `configureFastify`,
+`configureApiServer`, or direct Fastify plugin registration appear to start, but
+some custom routes, hooks, parsers, decorators, or request/reply behaviour stop
+working.
+
+### Mitigation
+
+- preserve an explicit compatibility lane for custom-server apps
+- detect custom-server usage and branch intentionally
+- never silently route custom-server apps through the default unified runtime if
+  that would drop supported behaviour
+- document the boundary between Cedar-owned fetch-native runtime support and
+  Fastify-specific compatibility support
+
 ## Open Design Questions to Resolve During Implementation
 
 These do not block writing the plan, but they should be resolved early in
@@ -910,54 +1056,51 @@ implementation:
    behind the unified host?
 7. What is the cleanest migration path for any existing CLI flags or docs that
    expose separate dev ports?
+8. What is the exact runtime-selection rule for deciding when an app stays on
+   the custom Fastify compatibility lane?
+9. Should custom-server apps keep the current split dev model in Phase 4, or is
+   there a safe compatibility wrapper that still preserves Fastify behaviour?
+10. Which current Fastify extension points need a future framework-agnostic
+    replacement, and which should remain explicitly serverful-only?
 
 ## Exit Criteria for Phase 4
 
 Phase 4 should be considered complete when all of the following are true:
 
-- `cedar dev` exposes one externally visible host/port for normal development
-- GraphQL requests work directly against that host
-- auth requests work directly against that host
-- function requests work directly against that host
-- browser app loading and HMR still work
+- `cedar dev` exposes one externally visible host/port for the default runtime
+  path
+- GraphQL requests work directly against that host on the default runtime path
+- auth requests work directly against that host on the default runtime path
+- function requests work directly against that host on the default runtime path
+- browser app loading and HMR still work on the default runtime path
 - backend code changes are reflected without manual restart in normal workflows
+  on the default runtime path
 - the API server Vite build includes `cedarUniversalDeployPlugin()`
 - the API server Vite build includes `node()` from
   `@universal-deploy/node/vite`
-- `cedar serve` runs the Vite-built Node server entry
+- `cedar serve` runs the Vite-built Node server entry for the default runtime
+  path
 - Cedar no longer depends on a separately exposed backend port for the standard
   dev experience
+- custom-server apps still have a documented and supported compatibility path
 - the implementation does not require Cedar HTML SSR/RSC work to be complete
 
 ## Deliverables
 
 Phase 4 should produce the following concrete outputs:
 
-- unified one-port dev runtime
+- unified one-port dev runtime for the default Cedar runtime lane
 - internal dev request dispatcher
 - aggregate Cedar API fetch dispatcher for dev
 - backend invalidation/reload behavior integrated with the Vite-centric runtime
 - initial `cedarUniversalDeployPlugin()` in `@cedarjs/vite`
 - `@cedarjs/api-server` peer dependency declared by `@cedarjs/vite`
 - API server Vite build wired with `node()` from `@universal-deploy/node/vite`
-- `cedar serve` updated to run the built Node server entry
-- updated docs and CLI messaging reflecting the unified runtime
-
-## Recommended Scope Boundary for the PR Series
-
-This phase is large enough that it should likely land as a sequence of focused
-PRs rather than one giant change.
-
-A sensible split is:
-
-1. internal dispatcher contract and aggregate backend runtime
-2. Vite dev integration for one-port handling
-3. backend invalidation/watch behavior
-4. `cedarUniversalDeployPlugin()` introduction
-5. `@universal-deploy/node` serve-path integration
-6. docs, CLI messaging, and cleanup
-
-That keeps the architecture moving forward while preserving reviewability.
+- `cedar serve` updated to run the built Node server entry for the default
+  runtime lane
+- documented compatibility lane for apps using custom Fastify server setup
+- updated docs and CLI messaging reflecting both the unified runtime and the
+  compatibility lane
 
 ## Recommendation
 
@@ -965,8 +1108,17 @@ Implement Phase 4 as a runtime unification phase, not as a provider-expansion
 phase.
 
 The most important outcome is that Cedar development becomes operationally
-single-host and architecturally Vite-centric, while `cedar serve` moves onto the
-UD Node build output. If that is achieved with an aggregate API entry and
+single-host and architecturally Vite-centric on the default runtime lane, while
+`cedar serve` moves onto the UD Node build output for that same lane. If that is
+achieved with an aggregate API entry and conservative backend invalidation,
+Phase 4 is successful.
+
+That success condition should not require Cedar to immediately eliminate the
+custom Fastify server path. Existing apps that depend on `api/src/server.{ts,js}`
+or Fastify-specific plugin setup should remain supported through an explicit
+compatibility lane. Phase 5 and later work can then build on a stable default
+runtime foundation while separately addressing longer-term migration away from
+Fastify-specific extension points where appropriate.
 conservative backend invalidation, Phase 4 is successful.
 
 Phase 5 can then build on a stable runtime foundation to formalise per-route UD

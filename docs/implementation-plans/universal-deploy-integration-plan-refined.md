@@ -51,8 +51,6 @@ https://github.com/universal-deploy/universal-deploy/blob/main/docs/framework-de
   contract
 - Preserving the current Express-based SSR runtime as foundational
   architecture
-- Minimizing breaking changes for existing Cedar apps (though a
-  migration path is provided)
 - Implementing full UD support before Cedar has standardized its own
   runtime contracts
 
@@ -820,19 +818,26 @@ Depends on Phases 2 and 3.
 #### Goal
 
 Replace the current web+API split dev model with a single Vite-hosted
-development entrypoint.
+development entrypoint for Cedar's default runtime path, while preserving
+a compatibility path for existing apps that depend on custom Fastify
+server setup.
 
 #### Work
 
-- Eliminate the `8910 → proxy → 8911` mental model
+- Eliminate the `8910 → proxy → 8911` mental model for the default
+  Cedar runtime path
 - Route page, GraphQL, auth, and function requests through one
-  externally visible dev host
+  externally visible dev host on that default path
 - Integrate backend handler execution into the Vite dev runtime
   (likely via Vite's `server.middlewareMode` or custom plugin)
 - Ensure server-side file watching and invalidation work for backend
   entries
 - Preserve strong DX for browser requests, direct `curl` requests,
   and GraphQL tooling (e.g., GraphiQL must still work)
+- Preserve a compatibility path for apps that use `api/src/server.{ts,js}`,
+  `configureFastify`, `configureApiServer`, or direct Fastify plugin
+  registration, rather than silently routing them through the new
+  default runtime and dropping supported behavior
 - Introduce `cedarUniversalDeployPlugin()` in `@cedarjs/vite` and wire
   it into the **API server Vite build config**: register
   `virtual:cedar-api` with the UD store via `addEntry()`, resolve
@@ -860,23 +865,33 @@ also builds the HTML SSR entry.
 
 #### Deliverables
 
-- One visible development port
-- One dev request dispatcher
-- One shared module graph for frontend and backend development
+- One visible development port on the default runtime path
+- One dev request dispatcher on the default runtime path
+- One shared module graph for frontend and backend development on the
+  default runtime path
+- A documented compatibility path for apps with custom Fastify server
+  setup
 - `@universal-deploy/node` wired end-to-end: Vite builds a
-  self-contained server entry; `cedar serve` runs it
+  self-contained server entry; `cedar serve` runs it on the default
+  runtime path
 
 #### Exit Criteria
 
-- Cedar dev no longer requires a separately exposed backend port
+- Cedar dev no longer requires a separately exposed backend port on the
+  default runtime path
 - Requests to functions and GraphQL can be made directly against the
-  Vite dev host
-- `cedar serve` runs an `@universal-deploy/node`-built server entry,
-  completing the Phase 3 goal of removing Fastify from the production
-  path entirely
+  Vite dev host on the default runtime path
+- `cedar serve` runs an `@universal-deploy/node`-built server entry on
+  the default runtime path, completing the Phase 3 goal of removing
+  Fastify from that production path
+- Existing apps with custom Fastify server setup still have a supported
+  compatibility path and are not silently forced onto the new default
+  runtime
 
-**User-facing impact**: High (positive). Developers see one port, one
-process, simpler mental model. Config files may need minor updates.
+**User-facing impact**: High (positive). Most developers see one port,
+one process, and a simpler mental model. Existing apps with custom
+Fastify setup remain on a compatibility path until a later migration
+story exists. Config files may need minor updates.
 
 ---
 
@@ -1060,8 +1075,11 @@ nothing.**
 developer's perspective. UD's node adapter is wired up but used only
 for production self-hosting. Dev still uses two ports.
 
-**After Phase 4**: Single-port dev. This is the first major visible
-change. Developers update their config and enjoy a simpler mental model.
+**After Phase 4**: Single-port dev on the default runtime path. This is
+the first major visible change. Developers on the standard Cedar path
+update their config and enjoy a simpler mental model. Apps with custom
+Fastify server setup remain on a compatibility path rather than being
+silently forced onto the new runtime.
 
 **After Phase 5**: No visible change for developers. UD integration is
 framework-internal.
@@ -1131,18 +1149,20 @@ impact (Phases 4, 6, 7). The guide should cover:
 - Step-by-step migration instructions
 - Before/after code examples
 - Common pitfalls
+- How to identify whether an app is on the default runtime path or the
+  custom Fastify compatibility path
 
 ### Which Phases Require App Developer Action
 
-| Phase | App Developer Action Required               |
-| ----- | ------------------------------------------- |
-| 1     | None (shim handles it)                      |
-| 2     | None                                        |
-| 3     | None                                        |
-| 4     | Config updates, possible dev script changes |
-| 5     | None                                        |
-| 6     | SSR config migration                        |
-| 7     | Deploy config updates                       |
+| Phase | App Developer Action Required                                                       |
+| ----- | ----------------------------------------------------------------------------------- |
+| 1     | None (shim handles it)                                                              |
+| 2     | None                                                                                |
+| 3     | None                                                                                |
+| 4     | Config updates for standard apps; compatibility-path review for custom Fastify apps |
+| 5     | None                                                                                |
+| 6     | SSR config migration                                                                |
+| 7     | Deploy config updates                                                               |
 
 ## Risks
 
@@ -1160,6 +1180,9 @@ impact (Phases 4, 6, 7). The guide should cover:
   to edge cases in existing auth middleware
 - Phase 4 (Vite-centric dev) being significantly harder than estimated
   due to HMR, module graph, and backend file watching interactions
+- Silently dropping supported Fastify-specific behavior for existing
+  apps that use `api/src/server.{ts,js}`, `configureFastify`,
+  `configureApiServer`, or direct Fastify plugin registration
 
 ## Open Questions
 
