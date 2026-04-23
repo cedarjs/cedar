@@ -1,11 +1,22 @@
 #!/usr/bin/env node
+
+// Deprecated: `rw-jobs-worker` has been renamed to `cedar-jobs-worker`.
+// This proxy exists for backward compatibility and will be removed in a future
+// major release.
+
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
-const requireFromRwJobs = createRequire(
+const requireFromJobs = createRequire(
   require.resolve('@cedarjs/jobs/package.json'),
 )
 
-const bins = requireFromRwJobs('./package.json')['bin']
+console.warn()
+console.warn(
+  "'rw-jobs-worker' has been deprecated. Please use 'cedar-jobs-worker' instead.",
+)
+console.warn()
 
-requireFromRwJobs(bins['rw-jobs-worker'])
+const bins = requireFromJobs('./package.json')['bin']
+
+requireFromJobs(bins['cedar-jobs-worker'])

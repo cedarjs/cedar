@@ -6,8 +6,6 @@ import yargs from 'yargs/yargs'
 
 import { getPaths } from '@cedarjs/project-config'
 
-import { bin } from '../package.json'
-
 import { description, builder } from './cliConfig.js'
 import { handler } from './cliConfigHandler.js'
 
@@ -23,10 +21,8 @@ if (!process.env.CEDAR_ENV_FILES_LOADED) {
 
 process.env.NODE_ENV ??= 'production'
 
-const [scriptName] = Object.keys(bin)
-
 yargs(hideBin(process.argv))
-  .scriptName(scriptName)
+  .scriptName('cedar-web-server')
   .alias('h', 'help')
   .alias('v', 'version')
   .strict()

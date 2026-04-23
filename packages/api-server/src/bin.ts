@@ -35,7 +35,7 @@ if (!process.env.CEDAR_ENV_FILES_LOADED) {
 process.env.NODE_ENV ??= 'production'
 
 yargs(hideBin(process.argv))
-  .scriptName('rw-server')
+  .scriptName('cedar-server')
   .strict()
   .alias('h', 'help')
   .alias('v', 'version')

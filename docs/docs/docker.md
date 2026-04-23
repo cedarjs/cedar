@@ -352,13 +352,13 @@ COPY --chown=node:node --from=web_build /home/node/app/web/dist /home/node/app/w
 ENV NODE_ENV=production \
     API_PROXY_TARGET=http://api:8911
 
-CMD "node_modules/.bin/rw-web-server" "--api-proxy-target" "$API_PROXY_TARGET"
+CMD "node_modules/.bin/cedar-web-server" "--api-proxy-target" "$API_PROXY_TARGET"
 ```
 
 Most of this stage is similar to the `api_serve` stage, except that we're copying from the `web_build` stage instead of the `api_build`.
 (If you're prerendering, you'll want to change the `--from=web_build` to `--from=web_prerender_build`.)
 
-The binary we're using here to serve the web side is `rw-web-server` which comes from the `@cedarjs/web-server` package.
+The binary we're using here to serve the web side is `cedar-web-server` which comes from the `@cedarjs/web-server` package.
 While this web server will be much more fully featured in the future, right now it's mostly just to get you going.
 Ideally you want to put a web server like Nginx or Caddy in front of it.
 

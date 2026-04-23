@@ -12,6 +12,7 @@
   "main": "./dist/cliConfig.js",
   "types": "./dist/cliConfig.d.ts",
   "bin": {
+    "cedar-web-server": "./dist/bin.js",
     "rw-web-server": "./dist/bin.js"
   },
   "files": [
