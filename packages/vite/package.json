@@ -87,6 +87,7 @@
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
     "acorn-loose": "8.5.2",
+    "ansis": "4.2.0",
     "buffer": "6.0.3",
     "busboy": "^1.6.0",
     "cookie": "1.1.1",

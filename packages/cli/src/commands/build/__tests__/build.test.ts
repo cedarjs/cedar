@@ -97,7 +97,7 @@ vi.mock('@cedarjs/cli-helpers', () => ({
       'important',
       'caution',
       'link',
-    ].map((k) => [k, (s) => s]),
+    ].map((k) => [k, (s: string) => s]),
   ),
   recordTelemetryAttributes: vi.fn(),
 }))

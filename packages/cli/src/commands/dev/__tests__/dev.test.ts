@@ -1,5 +1,6 @@
 import type FS from 'fs'
 
+import type { ConcurrentlyCommandInput } from 'concurrently'
 import concurrently from 'concurrently'
 import find from 'lodash/find.js'
 import { vi, describe, afterEach, it, expect } from 'vitest'
@@ -148,12 +149,27 @@ function findUnifiedDevCommand() {
  * In fallback mode (e.g. streaming SSR, or only one workspace selected) the
  * old separate 'api' and 'web' commands are still used.
  */
+type ConcurrentlyCommandObject = {
+  command: string
+  env?: Record<string, string>
+  name?: string
+}
+
+function asCommandInfo(
+  cmd: ConcurrentlyCommandInput | undefined,
+): ConcurrentlyCommandObject | undefined {
+  if (!cmd || typeof cmd === 'string') {
+    return undefined
+  }
+  return cmd as ConcurrentlyCommandObject
+}
+
 function findSeparateCommands() {
   const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
 
-  const webCommand = find(concurrentlyArgs, { name: 'web' })
-  const apiCommand = find(concurrentlyArgs, { name: 'api' })
-  const generateCommand = find(concurrentlyArgs, { name: 'gen' })
+  const webCommand = asCommandInfo(find(concurrentlyArgs, { name: 'web' }))
+  const apiCommand = asCommandInfo(find(concurrentlyArgs, { name: 'api' }))
+  const generateCommand = asCommandInfo(find(concurrentlyArgs, { name: 'gen' }))
 
   return {
     webCommand,

@@ -6,10 +6,9 @@ import { getPaths, getConfig } from '@cedarjs/project-config'
 
 import { startApiDevServer } from './apiDevServer.js'
 
-const rwPaths = getPaths()
-const cedarConfig = getConfig()
-
 const startUnifiedDevServer = async () => {
+  const rwPaths = getPaths()
+  const cedarConfig = getConfig()
   const configFile = rwPaths.web.viteConfig
 
   if (!configFile) {

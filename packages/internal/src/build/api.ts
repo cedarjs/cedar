@@ -71,6 +71,15 @@ function createCedarViteApiPlugin(): Plugin {
         return null
       }
 
+      if (id.includes('node_modules')) {
+        return null
+      }
+
+      const cedarPaths = getPaths()
+      if (!id.startsWith(cedarPaths.api.base)) {
+        return null
+      }
+
       const transformedCode = await transformWithBabel(
         id,
         getApiSideBabelPlugins({

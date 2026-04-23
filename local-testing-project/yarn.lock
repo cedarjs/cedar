@@ -2086,7 +2086,7 @@ __metadata:
 
 "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=d5795e&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=0ff6f1&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.2"
@@ -2133,7 +2133,7 @@ __metadata:
   bin:
     cedar-gen: ./dist/generate/generate.js
     cedar-gen-watch: ./dist/generate/watch.js
-  checksum: 10c0/5f2cd5674e0c7c0a41cf0056f1f0c6d73d4d7c8492e5065f11aa6d3df79f31b5cc37c92ad2731d7969df7f80aed92079edfbfbb99fc61a5d1dfb63686fc496d5
+  checksum: 10c0/56e4aeb9f6c6f8a90082b9fbb06505d047e907066cdabf3c78e34ccf782de0309428cb2e22f05da6e524c33630d54bc3e6832db885fbea90fece4779b14373af
   languageName: node
   linkType: hard
 
@@ -2300,7 +2300,7 @@ __metadata:
 
 "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=1c4134&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=4e08cb&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.42.1"
     "@babel/generator": "npm:7.29.1"
@@ -2321,6 +2321,7 @@ __metadata:
     "@whatwg-node/fetch": "npm:0.10.13"
     "@whatwg-node/server": "npm:0.10.18"
     acorn-loose: "npm:8.5.2"
+    ansis: "npm:4.2.0"
     buffer: "npm:6.0.3"
     busboy: "npm:^1.6.0"
     cookie: "npm:1.1.1"
@@ -2347,7 +2348,7 @@ __metadata:
     rw-vite-build: ./bins/rw-vite-build.mjs
     rw-vite-dev: ./bins/rw-vite-dev.mjs
     vite: ./bins/vite.mjs
-  checksum: 10c0/233cc572faafd019581df72dadc9ccf76d29388f2b33f891ec1968c68ef97de86e8b3c860dbfbdd917e6dc190a2cdf7a574abd361847fa04d18f304743d5e0bd
+  checksum: 10c0/bdcc6d3d1177e4ffa1b6eee05deb870a2f6e5893149712a771b4eb19c38b2268930e7b4df9f5151a82db565d1433194d1ae1cce321f3625ea52da09fc7fdcd74
   languageName: node
   linkType: hard
 

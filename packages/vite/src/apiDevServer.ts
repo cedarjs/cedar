@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { glob } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -21,6 +22,54 @@ import {
   transformWithBabel,
 } from '@cedarjs/babel-config'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
+
+// ---------------------------------------------------------------------------
+// Workspace package helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Reads the root package.json and the API package.json to find workspace
+ * package names that the API directly depends on (via "workspace:*" version
+ * specifiers). These packages are symlinked into node_modules but may not
+ * have a built dist/ directory, so Vite SSR must NOT externalize them –
+ * instead it processes their source files through the module pipeline.
+ */
+function getWorkspacePackageNames(
+  cedarPaths: ReturnType<typeof getPaths>,
+): string[] {
+  try {
+    const rootPkgPath = path.join(cedarPaths.base, 'package.json')
+    const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8')) as {
+      workspaces?: string[]
+    }
+
+    if (
+      !Array.isArray(rootPkg.workspaces) ||
+      !rootPkg.workspaces.some((w) => w.startsWith('packages/'))
+    ) {
+      return []
+    }
+
+    const apiPkgPath = path.join(cedarPaths.api.base, 'package.json')
+    const apiPkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8')) as {
+      dependencies?: Record<string, string>
+      devDependencies?: Record<string, string>
+      peerDependencies?: Record<string, string>
+    }
+
+    const allDeps = {
+      ...apiPkg.dependencies,
+      ...apiPkg.devDependencies,
+      ...apiPkg.peerDependencies,
+    }
+
+    return Object.entries(allDeps)
+      .filter(([, version]) => String(version).startsWith('workspace:'))
+      .map(([name]) => name)
+  } catch {
+    return []
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Module registry – populated on startup and refreshed on HMR invalidation
@@ -165,6 +214,8 @@ export async function startApiDevServer(port: number): Promise<{
   //    - Vite externalises node_modules in SSR mode by default, which is
   //      exactly what we want; only api/src files go through the Babel plugin
   // ---------------------------------------------------------------------------
+  const workspacePackageNames = getWorkspacePackageNames(cedarPaths)
+
   const viteServer = await createViteServer({
     configFile: false,
     root: cedarPaths.api.base,
@@ -173,6 +224,12 @@ export async function startApiDevServer(port: number): Promise<{
     logLevel: 'warn',
     server: {
       middlewareMode: true,
+    },
+    ssr: {
+      // Workspace packages are symlinked into node_modules but may not have a
+      // built dist/ directory. Tell Vite to process them through the module
+      // pipeline rather than externalizing them.
+      noExternal: workspacePackageNames,
     },
     plugins: [
       {
@@ -186,7 +243,7 @@ export async function startApiDevServer(port: number): Promise<{
             return null
           }
 
-          if (!id.startsWith(cedarPaths.api.base)) {
+          if (!id.startsWith(cedarPaths.base)) {
             return null
           }
 
@@ -237,7 +294,18 @@ export async function startApiDevServer(port: number): Promise<{
       viteServer.moduleGraph.getModuleById(fileUrl)
 
     if (mod) {
-      viteServer.moduleGraph.invalidateModule(mod)
+      const invalidated = new Set<string>()
+      const invalidateWithImporters = (m: typeof mod) => {
+        if (!m || invalidated.has(m.id ?? m.url)) {
+          return
+        }
+        invalidated.add(m.id ?? m.url)
+        viteServer.moduleGraph.invalidateModule(m)
+        for (const importer of m.importers) {
+          invalidateWithImporters(importer)
+        }
+      }
+      invalidateWithImporters(mod)
     }
 
     await loadApiFunctions(viteServer)
