@@ -8,7 +8,7 @@ import type { Command } from 'concurrently'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { shutdownPort } from '@cedarjs/internal/dist/dev'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
-import { getConfig } from '@cedarjs/project-config'
+import { getConfig, getConfigPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
@@ -20,6 +20,7 @@ import { getFreePort } from '../../lib/ports.js'
 // @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../../lib/project.js'
 
+import { getApiDebugFlag } from './apiDebugFlag.js'
 import { getPackageWatchCommands } from './packageWatchCommands.js'
 
 interface DevHandlerOptions {
@@ -33,7 +34,7 @@ export const handler = async ({
   workspace = ['api', 'web', 'packages/*'],
   forward = '',
   generate = true,
-  apiDebugPort: _apiDebugPort,
+  apiDebugPort,
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
@@ -251,14 +252,20 @@ export const handler = async ({
       const isEsm = rootPackageJson.type === 'module'
       const serverWatchCommand = isEsm
         ? `cedarjs-api-server-watch`
-        : `rw-api-server-watch`
+        : `cedar-api-server-watch`
+
+      const cedarConfigPath = getConfigPath()
 
       jobs.push({
         name: 'api',
         command: [
-          `yarn ${serverWatchCommand}`,
-          `  --port ${apiAvailablePort}`,
-          `  | rw-log-formatter`,
+          'yarn nodemon',
+          '  --quiet',
+          `  --watch "${cedarConfigPath}"`,
+          `  --exec "yarn ${serverWatchCommand}`,
+          `    --port ${apiAvailablePort}`,
+          `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort)}`,
+          `    | cedar-log-formatter"`,
         ]
           .join(' ')
           .replace(/\s+/g, ' '),
@@ -272,10 +279,10 @@ export const handler = async ({
     }
 
     if (workspace.includes('web')) {
-      let webCommand = `yarn cross-env NODE_ENV=development rw-vite-dev ${forward}`
+      let webCommand = `yarn cross-env NODE_ENV=development cedar-vite-dev ${forward}`
 
       if (streamingSsrEnabled) {
-        webCommand = `yarn cross-env NODE_ENV=development rw-dev-fe ${forward}`
+        webCommand = `yarn cross-env NODE_ENV=development cedar-dev-fe ${forward}`
       }
 
       jobs.push({

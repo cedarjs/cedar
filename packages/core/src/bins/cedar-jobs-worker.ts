@@ -8,4 +8,4 @@ const requireFromRwJobs = createRequire(
 
 const bins = requireFromRwJobs('./package.json')['bin']
 
-requireFromRwJobs(bins['rw-jobs'])
+requireFromRwJobs(bins['cedar-jobs-worker'])

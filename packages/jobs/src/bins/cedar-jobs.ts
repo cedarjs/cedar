@@ -27,9 +27,9 @@ export type NumWorkersConfig = [number, number][]
 
 setupEnv()
 
-process.title = 'rw-jobs'
+process.title = 'cedar-jobs'
 
-const WORKER_PATH = path.join(__dirname, 'rw-jobs-worker.js')
+const WORKER_PATH = path.join(__dirname, 'cedar-jobs-worker.js')
 
 const parseArgs = (argv: string[]) => {
   const commandString = hideBin(argv)
@@ -41,7 +41,7 @@ const parseArgs = (argv: string[]) => {
   const parsed: Record<string, any> = yargs(commandString)
     .usage(
       'Starts the CedarJS Jobs runner to process background jobs\n\n' +
-        'Usage: rw jobs <command> [options]',
+        'Usage: cedar jobs <command> [options]',
     )
     .command('work', 'Start a worker and process jobs')
     .command('workoff', 'Start a worker and exit after all jobs processed')
@@ -51,19 +51,19 @@ const parseArgs = (argv: string[]) => {
     .command('clear', 'Clear the job queue')
     .demandCommand(1, 'You must specify a mode to start in')
     .example(
-      'rw jobs work',
+      'cedar jobs work',
       'Start the job workers using the job config and work on jobs until ' +
         'manually stopped',
     )
     .example(
-      'rw jobs start',
+      'cedar jobs start',
       'Start the job workers using the job config and detach, running in ' +
         'daemon mode',
     )
     .help()
     .parse(commandString, (_err: any, _argv: any, output: any) => {
       if (output) {
-        const newOutput = output.replaceAll('rw-jobs.js', 'rw jobs')
+        const newOutput = output.replaceAll('cedar-jobs.js', 'cedar jobs')
         console.log(newOutput)
       }
     })

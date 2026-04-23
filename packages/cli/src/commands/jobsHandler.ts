@@ -25,14 +25,14 @@ export const handler = async ({
     args.push(String(value))
   }
 
-  let command = `yarn rw-jobs ${args.join(' ')}`
+  let command = `yarn cedar-jobs ${args.join(' ')}`
   const originalLogLevel = process.env.LOG_LEVEL
   process.env.LOG_LEVEL = originalLogLevel || 'warn'
 
   // make logs look nice in development (assume any env that's not prod is dev)
   // that includes showing more verbose logs unless the user set otherwise
   if (process.env.NODE_ENV !== 'production') {
-    command += ' | yarn rw-log-formatter'
+    command += ' | yarn cedar-log-formatter'
     process.env.LOG_LEVEL = originalLogLevel || 'debug'
   }
 

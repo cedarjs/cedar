@@ -43,14 +43,14 @@
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
     },
-    "./bins/rw-vite-build.mjs": "./bins/rw-vite-build.mjs"
+    "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs"
   },
   "bin": {
+    "cedar-dev-fe": "./dist/devFeServer.js",
+    "cedar-serve-fe": "./dist/runFeServer.js",
     "cedar-unified-dev": "./dist/cedar-unified-dev.js",
-    "rw-dev-fe": "./dist/devFeServer.js",
-    "rw-serve-fe": "./dist/runFeServer.js",
-    "rw-vite-build": "./bins/rw-vite-build.mjs",
-    "rw-vite-dev": "./bins/rw-vite-dev.mjs",
+    "cedar-vite-build": "./bins/cedar-vite-build.mjs",
+    "cedar-vite-dev": "./bins/cedar-vite-dev.mjs",
     "vite": "./bins/vite.mjs"
   },
   "files": [
@@ -94,7 +94,7 @@
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
     "express": "4.22.1",
-    "fastify": "5.8.4",
+    "fastify": "5.8.5",
     "fastify-raw-body": "5.0.0",
     "find-my-way": "8.2.2",
     "http-proxy-middleware": "3.0.5",

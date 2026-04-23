@@ -252,7 +252,7 @@ export const handler = async ({
 
         const createdRequire = createRequire(import.meta.url)
         const buildBinPath = createdRequire.resolve(
-          '@cedarjs/vite/bins/rw-vite-build.mjs',
+          '@cedarjs/vite/bins/cedar-vite-build.mjs',
         )
 
         // @NOTE: we're using the vite build command here, instead of the
@@ -269,7 +269,7 @@ export const handler = async ({
           {
             stdio: verbose ? 'inherit' : 'pipe',
             shell: true,
-            // `cwd` is needed for yarn to find the rw-vite-build binary
+            // `cwd` is needed for yarn to find the cedar-vite-build binary
             // It won't change process.cwd for anything else here, in this
             // process
             cwd: cedarPaths.web.base,

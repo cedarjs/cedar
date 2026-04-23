@@ -178,6 +178,22 @@ function findSeparateCommands() {
   }
 }
 
+function findApiCommands() {
+  const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
+
+  const apiCommand = find(concurrentlyArgs, { name: 'api' })
+
+  if (!apiCommand) {
+    throw new Error('Missing command')
+  }
+
+  if (typeof apiCommand === 'string') {
+    throw new Error('Unexpected command')
+  }
+
+  return apiCommand
+}
+
 describe('yarn cedar dev', () => {
   afterEach(async () => {
     // Reset spy counters
@@ -238,14 +254,23 @@ describe('yarn cedar dev', () => {
 
     const { webCommand, apiCommand, generateCommand } = findSeparateCommands()
 
-    // In streaming SSR mode the web side uses the rw-dev-fe server
+    // In streaming SSR mode the web side uses the cedar-dev-fe server
     expect(webCommand?.command).toContain(
-      'yarn cross-env NODE_ENV=development rw-dev-fe',
+      'yarn cross-env NODE_ENV=development cedar-dev-fe',
     )
 
-    // API side still uses the legacy watcher in streaming SSR mode
-    expect(apiCommand?.command).toContain('rw-api-server-watch')
-    expect(apiCommand?.command).toContain('--port 8911')
+    // API side uses nodemon with cedar-api-server-watch in streaming SSR fallback mode
+    expect(
+      apiCommand?.command
+        .replace(/\s+/g, ' ')
+        // Remove the --max-old-space-size flag, as it's not consistent across
+        // test environments (vite sets this in their vite-ecosystem-ci tests)
+        .replace(/--max-old-space-size=\d+\s/, ''),
+    ).toEqual(
+      'yarn nodemon --quiet --watch "/mocked/project/cedar.toml" --exec "yarn cedar-api-server-watch --port 8911 --debug-port 18911 | cedar-log-formatter"',
+    )
+    expect(apiCommand?.env?.NODE_ENV).toEqual('development')
+    expect(apiCommand?.env?.NODE_OPTIONS).toContain('--enable-source-maps')
 
     expect(generateCommand?.command).toEqual('yarn cedar-gen-watch')
 
@@ -262,8 +287,8 @@ describe('yarn cedar dev', () => {
 
     const { apiCommand } = findSeparateCommands()
 
-    // API uses the legacy watcher when running solo
-    expect(apiCommand?.command).toContain('rw-api-server-watch')
+    // API uses cedar-api-server-watch when running solo
+    expect(apiCommand?.command).toContain('cedar-api-server-watch')
     expect(apiCommand?.command).toContain('--port 8911')
     expect(apiCommand?.env?.NODE_ENV).toEqual('development')
     expect(apiCommand?.env?.NODE_OPTIONS).toContain('--enable-source-maps')
@@ -280,7 +305,7 @@ describe('yarn cedar dev', () => {
     const { webCommand } = findSeparateCommands()
 
     expect(webCommand?.command).toContain(
-      'yarn cross-env NODE_ENV=development rw-vite-dev',
+      'yarn cross-env NODE_ENV=development cedar-vite-dev',
     )
 
     // No unified dev command and no api command
@@ -319,5 +344,46 @@ describe('yarn cedar dev', () => {
     // ESM project should use the ESM bin
     expect(apiCommand?.command).toContain('cedarjs-api-server-watch')
     expect(apiCommand?.command).toContain('--port 8911')
+  })
+
+  it('Debug port passed in command line overrides TOML', async () => {
+    await handler({ workspace: ['api'], apiDebugPort: 90909090 })
+
+    const apiCommand = findApiCommands()
+
+    expect(apiCommand.command.replace(/\s+/g, ' ')).toContain(
+      'yarn cedar-api-server-watch --port 8911 --debug-port 90909090',
+    )
+  })
+
+  it('Can disable debugger by setting toml to false', async () => {
+    mockCedarToml = `
+      [api]
+        port = 8913
+        debugPort = false
+    `
+
+    await handler({ workspace: ['api'] })
+
+    const apiCommand = findApiCommands()
+
+    expect(apiCommand.command).not.toContain('--debug-port')
+  })
+
+  it('Derives debug port from api port when not explicitly configured', async () => {
+    mockCedarToml = `
+      [api]
+        port = 1337
+        # no debugPort, so it should be derived to 11337
+    `
+
+    await handler({ workspace: ['api'] })
+
+    const apiCommand = findApiCommands()
+
+    expect(apiCommand.command.replace(/\s+/g, ' ')).toContain('--port 1337')
+    expect(apiCommand.command.replace(/\s+/g, ' ')).toContain(
+      '--debug-port 11337',
+    )
   })
 })

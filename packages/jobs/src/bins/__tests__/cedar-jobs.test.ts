@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockLogger } from '../../core/__tests__/mocks.js'
-import { buildNumWorkers, clearQueue, startWorkers } from '../rw-jobs.js'
+import { buildNumWorkers, clearQueue, startWorkers } from '../cedar-jobs.js'
 
 vi.mock('@cedarjs/cli-helpers/loadEnvFiles', () => {
   return {
@@ -86,7 +86,7 @@ describe('startWorkers()', () => {
 
     // single worker only
     expect(mocks.fork).toHaveBeenCalledWith(
-      expect.stringContaining('rw-jobs-worker.js'),
+      expect.stringContaining('cedar-jobs-worker.js'),
       ['--index', '0', '--id', '0'],
       expect.objectContaining({
         detached: false,
@@ -111,13 +111,13 @@ describe('startWorkers()', () => {
 
     // first worker
     expect(mocks.fork).toHaveBeenCalledWith(
-      expect.stringContaining('rw-jobs-worker.js'),
+      expect.stringContaining('cedar-jobs-worker.js'),
       ['--index', '0', '--id', '0'],
       expect.any(Object),
     )
     // second worker
     expect(mocks.fork).toHaveBeenCalledWith(
-      expect.stringContaining('rw-jobs-worker.js'),
+      expect.stringContaining('cedar-jobs-worker.js'),
       ['--index', '0', '--id', '1'],
       expect.any(Object),
     )
@@ -139,7 +139,7 @@ describe('clearQueue()', () => {
 
     // single worker only
     expect(mocks.fork).toHaveBeenCalledWith(
-      expect.stringContaining('rw-jobs-worker.js'),
+      expect.stringContaining('cedar-jobs-worker.js'),
       ['--clear', '--index', '0', '--id', '0'],
     )
   })
