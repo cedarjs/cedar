@@ -20,7 +20,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "rw-jobs": "./dist/bins/rw-jobs.js",
+    "cedar-jobs": "./dist/bins/cedar-jobs.js",
+    "cedar-jobs-worker": "./dist/bins/cedar-jobs-worker.js",
     "rw-jobs-worker": "./dist/bins/rw-jobs-worker.js"
   },
   "files": [
@@ -31,7 +32,7 @@
     "build:pack": "yarn pack -o cedarjs-jobs.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "check:attw": "yarn rw-fwtools-attw",
+    "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
     "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",

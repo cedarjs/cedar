@@ -21,7 +21,7 @@
   },
   "types": "./dist/buildDefaults.d.ts",
   "bin": {
-    "rw-fwtools-attw": "./dist/bins/rw-fwtools-attw.js"
+    "cedar-fwtools-attw": "./dist/bins/cedar-fwtools-attw.js"
   },
   "files": [
     "dist"

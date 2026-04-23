@@ -2195,10 +2195,12 @@ __metadata:
     "@cedarjs/graphql-server":
       optional: true
   bin:
+    cedar-api-server-watch: ./dist/cjs/watch.js
+    cedar-log-formatter: ./dist/cjs/logFormatter/bin.js
+    cedar-server: ./dist/cjs/bin.js
     cedarjs-api-server-watch: ./dist/watch.js
     cedarjs-log-formatter: ./dist/logFormatter/bin.js
     cedarjs-server: ./dist/bin.js
-    rw-api-server-watch: ./dist/cjs/watch.js
     rw-log-formatter: ./dist/cjs/logFormatter/bin.js
     rw-server: ./dist/cjs/bin.js
   languageName: unknown
@@ -3043,8 +3045,17 @@ __metadata:
     typescript: "npm:5.9.3"
   bin:
     cedar: ./dist/bins/cedar.js
+    cedar-api-server-watch: ./dist/bins/cedar-api-server-watch.js
+    cedar-dev-fe: ./dist/bins/cedar-dev-fe.js
     cedar-gen: ./dist/bins/cedar-gen.js
     cedar-gen-watch: ./dist/bins/cedar-gen-watch.js
+    cedar-jobs: ./dist/bins/cedar-jobs.js
+    cedar-jobs-worker: ./dist/bins/cedar-jobs-worker.js
+    cedar-log-formatter: ./dist/bins/cedar-log-formatter.js
+    cedar-serve-api: ./dist/bins/cedar-serve-api.js
+    cedar-serve-fe: ./dist/bins/cedar-serve-fe.js
+    cedar-server: ./dist/bins/cedar-server.js
+    cedar-web-server: ./dist/bins/cedar-web-server.js
     cedarjs: ./dist/bins/cedar.js
     cedarjs-api-server-watch: ./dist/bins/cedarjs-api-server-watch.js
     cedarjs-serve-api: ./dist/bins/cedarjs-serve-api.js
@@ -3055,13 +3066,9 @@ __metadata:
     nodemon: ./dist/bins/nodemon.js
     redwood: ./dist/bins/redwood.js
     rw: ./dist/bins/redwood.js
-    rw-api-server-watch: ./dist/bins/rw-api-server-watch.js
-    rw-dev-fe: ./dist/bins/rw-dev-fe.js
-    rw-jobs: ./dist/bins/rw-jobs.js
     rw-jobs-worker: ./dist/bins/rw-jobs-worker.js
     rw-log-formatter: ./dist/bins/rw-log-formatter.js
-    rw-serve-api: ./dist/bins/rw-serve-api.js
-    rw-serve-fe: ./dist/bins/rw-serve-fe.js
+    rw-server: ./dist/bins/rw-server.js
     rw-web-server: ./dist/bins/rw-web-server.js
     vitest: ./dist/bins/vitest.js
   languageName: unknown
@@ -3173,7 +3180,7 @@ __metadata:
     typescript: "npm:5.9.3"
     zx: "npm:8.8.5"
   bin:
-    rw-fwtools-attw: ./dist/bins/rw-fwtools-attw.js
+    cedar-fwtools-attw: ./dist/bins/cedar-fwtools-attw.js
   languageName: unknown
   linkType: soft
 
@@ -3322,7 +3329,8 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   bin:
-    rw-jobs: ./dist/bins/rw-jobs.js
+    cedar-jobs: ./dist/bins/cedar-jobs.js
+    cedar-jobs-worker: ./dist/bins/cedar-jobs-worker.js
     rw-jobs-worker: ./dist/bins/rw-jobs-worker.js
   languageName: unknown
   linkType: soft
@@ -3791,10 +3799,10 @@ __metadata:
     ws: "npm:8.20.0"
     yargs-parser: "npm:21.1.1"
   bin:
-    rw-dev-fe: ./dist/devFeServer.js
-    rw-serve-fe: ./dist/runFeServer.js
-    rw-vite-build: ./bins/rw-vite-build.mjs
-    rw-vite-dev: ./bins/rw-vite-dev.mjs
+    cedar-dev-fe: ./dist/devFeServer.js
+    cedar-serve-fe: ./dist/runFeServer.js
+    cedar-vite-build: ./bins/cedar-vite-build.mjs
+    cedar-vite-dev: ./bins/cedar-vite-dev.mjs
     vite: ./bins/vite.mjs
   languageName: unknown
   linkType: soft
@@ -3813,6 +3821,7 @@ __metadata:
     typescript: "npm:5.9.3"
     yargs: "npm:17.7.2"
   bin:
+    cedar-web-server: ./dist/bin.js
     rw-web-server: ./dist/bin.js
   languageName: unknown
   linkType: soft

@@ -114,7 +114,7 @@ cedar dev:
                 └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
                    change)
 
-*SSR/RSC: rw-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
+*SSR/RSC: cedar-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
 
 cedar build:
   prisma gen → GraphQL types → validate SDLs →
