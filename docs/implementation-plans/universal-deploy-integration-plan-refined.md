@@ -847,8 +847,8 @@ development entrypoint.
   consumers need it installed alongside `@cedarjs/vite`
 - Add `node()` from `@universal-deploy/node/vite` to the same API
   server Vite build config (not the web client config, and not the
-  HTML SSR config — see naming caution below). After this, `cedar
-  serve` runs the Vite-built server entry instead of `createUDServer`
+  HTML SSR config — see naming caution below). After this,
+  `cedar serve` runs the Vite-built server entry instead of `createUDServer`
 
 **Naming caution**: Vite calls its Node.js server build environment
 **"SSR"** regardless of whether it renders HTML. This is confusing in
