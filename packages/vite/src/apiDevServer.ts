@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import { glob } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -23,84 +22,7 @@ import {
 } from '@cedarjs/babel-config'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
-// ---------------------------------------------------------------------------
-// Workspace package helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Mirrors the logic used in buildHandler.ts / buildPackagesTask.js:
- * - Only runs when `experimental.packagesWorkspace.enabled` is true
- * - Reads the root package.json workspaces array to find non-api/web entries
- * - Globs the packages/ directory to get each package's name from its
- *   package.json
- *
- * Returns the package names (e.g. ["@my-org/validators"]) so they can be
- * added to Vite's ssr.noExternal. Workspace packages are symlinked into
- * node_modules but may not have a built dist/ directory, so Vite SSR must
- * NOT externalize them – instead it processes their source files through the
- * module pipeline.
- */
-async function getWorkspacePackageNames(
-  cedarPaths: ReturnType<typeof getPaths>,
-  cedarConfig: ReturnType<typeof getConfig>,
-): Promise<string[]> {
-  if (!cedarConfig.experimental?.packagesWorkspace?.enabled) {
-    return []
-  }
-
-  if (!cedarPaths.packages || !fs.existsSync(cedarPaths.packages)) {
-    return []
-  }
-
-  try {
-    const rootPkgPath = path.join(cedarPaths.base, 'package.json')
-    const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8')) as {
-      workspaces?: unknown
-    }
-
-    if (!Array.isArray(rootPkg.workspaces) || rootPkg.workspaces.length <= 2) {
-      return []
-    }
-
-    // Find workspaces that are not 'api' or 'web' (i.e. packages/* entries)
-    const nonApiWebWorkspaces = (rootPkg.workspaces as string[]).filter(
-      (w) => w !== 'api' && w !== 'web',
-    )
-
-    if (nonApiWebWorkspaces.length === 0) {
-      return []
-    }
-
-    // Glob the packages/ directory to get all package dirs, mirroring
-    // the buildPackagesTask.js approach
-    const globPattern = path
-      .join(cedarPaths.packages, '*')
-      .replaceAll('\\', '/')
-    const packageDirs = await Array.fromAsync(glob(globPattern))
-
-    const names: string[] = []
-
-    for (const pkgDir of packageDirs) {
-      const pkgJsonPath = path.join(pkgDir, 'package.json')
-
-      if (!fs.existsSync(pkgJsonPath)) {
-        continue
-      }
-
-      const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8')) as {
-        name?: string
-      }
-
-      if (pkgJson.name) {
-        names.push(pkgJson.name)
-      }
-    }
-
-    return names
-  } catch {
-    return []
-  }
-}
+import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 
 // ---------------------------------------------------------------------------
 // Module registry – populated on startup and refreshed on HMR invalidation
@@ -245,7 +167,10 @@ export async function startApiDevServer(port: number): Promise<{
   //    - Vite externalises node_modules in SSR mode by default, which is
   //      exactly what we want; only api/src files go through the Babel plugin
   // ---------------------------------------------------------------------------
-  const workspacePackageNames = await getWorkspacePackageNames(
+  // Build a map of workspace package name → TypeScript source entry path.
+  // Mirrors the logic in buildHandler.ts / buildPackagesTask.js and is only
+  // active when experimental.packagesWorkspace.enabled = true.
+  const workspacePkgSourceMap = getWorkspacePackageAliases(
     cedarPaths,
     cedarConfig,
   )
@@ -259,11 +184,18 @@ export async function startApiDevServer(port: number): Promise<{
     server: {
       middlewareMode: true,
     },
-    ssr: {
-      // Workspace packages are symlinked into node_modules but may not have a
-      // built dist/ directory. Tell Vite to process them through the module
-      // pipeline rather than externalizing them.
-      noExternal: workspacePackageNames,
+    resolve: {
+      // Map workspace package names directly to their TypeScript source entry
+      // files. This is processed by Vite's built-in alias plugin (enforce:
+      // 'pre') which runs before vite:resolve and correctly intercepts imports
+      // in the SSR module runner context – unlike a custom resolveId hook which
+      // is not invoked during SSR module loading in Vite 7.
+      alias: Object.fromEntries(
+        Object.entries(workspacePkgSourceMap).map(([name, sourceFile]) => [
+          name,
+          sourceFile,
+        ]),
+      ),
     },
     plugins: [
       {
