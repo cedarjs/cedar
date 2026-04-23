@@ -17,10 +17,11 @@ const startUnifiedDevServer = async () => {
 
   const {
     force: forceOptimize,
-    forwardedServerArgs,
     debug,
     port: portArg,
     apiPort: apiPortArg,
+    _: _positional,
+    ...serverArgs
   } = yargsParser(process.argv.slice(2), {
     boolean: ['https', 'open', 'strictPort', 'force', 'cors', 'debug'],
     number: ['port', 'apiPort'],
@@ -45,7 +46,7 @@ const startUnifiedDevServer = async () => {
     },
     server: {
       port: webPort,
-      ...(forwardedServerArgs as Record<string, unknown>),
+      ...serverArgs,
     },
     logLevel: debug ? 'info' : undefined,
   })

@@ -119,7 +119,7 @@ cedar dev:
                    change)
 
   Fallback (api-only or web-only, or streamingSsr): separate processes
-    api: cedarjs-api-server-watch (chokidar + esbuild, kept for SSR/RSC)
+    api: rw-api-server-watch (CJS projects) or cedarjs-api-server-watch (ESM projects) (chokidar + esbuild, kept for SSR/RSC)
     web: rw-vite-dev (SPA) or rw-dev-fe (Streaming SSR)
 
 *SSR/RSC: rw-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].

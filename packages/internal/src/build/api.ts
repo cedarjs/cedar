@@ -112,7 +112,7 @@ export const buildApiWithVite = async () => {
   for (const f of apiFiles) {
     const key = path
       .relative(cedarPaths.api.src, f)
-      .replace(/\.(ts|tsx|jsx)$/, '')
+      .replace(/\.(ts|tsx|mts|js|jsx|mjs)$/, '')
     input[key] = f
   }
 
