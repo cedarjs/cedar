@@ -12,6 +12,7 @@
   "main": "./dist/cliConfig.js",
   "types": "./dist/cliConfig.d.ts",
   "bin": {
+    "cedar-web-server": "./dist/bin.js",
     "rw-web-server": "./dist/bin.js"
   },
   "files": [
@@ -30,7 +31,7 @@
     "@cedarjs/project-config": "workspace:*",
     "ansis": "4.2.0",
     "dotenv-defaults": "5.0.2",
-    "fastify": "5.8.4",
+    "fastify": "5.8.5",
     "yargs": "17.7.2"
   },
   "devDependencies": {

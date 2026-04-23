@@ -37,13 +37,13 @@
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
     },
-    "./bins/rw-vite-build.mjs": "./bins/rw-vite-build.mjs"
+    "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs"
   },
   "bin": {
-    "rw-dev-fe": "./dist/devFeServer.js",
-    "rw-serve-fe": "./dist/runFeServer.js",
-    "rw-vite-build": "./bins/rw-vite-build.mjs",
-    "rw-vite-dev": "./bins/rw-vite-dev.mjs",
+    "cedar-dev-fe": "./dist/devFeServer.js",
+    "cedar-serve-fe": "./dist/runFeServer.js",
+    "cedar-vite-build": "./bins/cedar-vite-build.mjs",
+    "cedar-vite-dev": "./bins/cedar-vite-dev.mjs",
     "vite": "./bins/vite.mjs"
   },
   "files": [
@@ -72,7 +72,7 @@
     "@cedarjs/server-store": "workspace:*",
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "@swc/core": "1.15.24",
+    "@swc/core": "1.15.30",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",

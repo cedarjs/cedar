@@ -186,11 +186,11 @@ export const handler = async ({
   // Disable the new warning in Vite v5 about the CJS build being deprecated
   // so that users don't have to see it every time the dev server starts up.
   process.env.VITE_CJS_IGNORE_WARNING = 'true'
-  let webCommand = `yarn cross-env NODE_ENV=development rw-vite-dev ${forward}`
+  let webCommand = `yarn cross-env NODE_ENV=development cedar-vite-dev ${forward}`
 
   // 2. Vite with SSR
   if (streamingSsrEnabled) {
-    webCommand = `yarn cross-env NODE_ENV=development rw-dev-fe ${forward}`
+    webCommand = `yarn cross-env NODE_ENV=development cedar-dev-fe ${forward}`
   }
 
   const rootPackageJsonPath = path.join(cedarPaths.base, 'package.json')
@@ -201,7 +201,7 @@ export const handler = async ({
   const isEsm = rootPackageJson.type === 'module'
   const serverWatchCommand = isEsm
     ? `cedarjs-api-server-watch`
-    : `rw-api-server-watch`
+    : `cedar-api-server-watch`
 
   const jobs: (Partial<Command> & {
     name: string
@@ -219,7 +219,7 @@ export const handler = async ({
         `  --exec "yarn ${serverWatchCommand}`,
         `    --port ${apiAvailablePort}`,
         `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort)}`,
-        '    | rw-log-formatter"',
+        `    | cedar-log-formatter"`,
       ]
         .join(' ')
         .replace(/\s+/g, ' '),
