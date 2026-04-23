@@ -11,10 +11,9 @@ describe('dist', () => {
     expect(fs.existsSync(path.join(distPath, '__tests__'))).toEqual(false)
   })
 
-  it('ships seven bins', () => {
+  it('ships six bins', () => {
     expect(packageConfig.bin).toMatchInlineSnapshot(`
       {
-        "cedar-ud-server": "./dist/udBin.js",
         "cedarjs-api-server-watch": "./dist/watch.js",
         "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
         "cedarjs-server": "./dist/bin.js",

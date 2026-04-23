@@ -20,6 +20,7 @@ import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { type Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
+import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
 
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
@@ -233,6 +234,11 @@ export const handler = async ({
       title: 'Verifying graphql schema...',
       task: loadAndValidateSdls,
     },
+    // The API build has two sequential steps:
+    // 1. esbuild compiles api/src/** → api/dist/ (functions, services, etc.)
+    // 2. Vite wraps api/dist/functions/ into a self-contained UD Node server
+    //    entry at api/dist/ud/index.js for `cedar serve api`
+    // Step 2 depends on step 1 having completed.
     workspace.includes('api') && {
       title: 'Building API...',
       task: async () => {
@@ -245,6 +251,12 @@ export const handler = async ({
         if (warnings.length) {
           console.warn(warnings)
         }
+      },
+    },
+    workspace.includes('api') && {
+      title: 'Bundling API server entry (Universal Deploy)...',
+      task: async () => {
+        await buildUDApiServer({ verbose })
       },
     },
     workspace.includes('web') && {

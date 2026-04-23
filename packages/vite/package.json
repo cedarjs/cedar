@@ -33,6 +33,9 @@
       "require": "./dist/cjs/buildFeServer.js",
       "import": "./dist/buildFeServer.js"
     },
+    "./buildUDApiServer": {
+      "import": "./dist/buildUDApiServer.js"
+    },
     "./build": {
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
@@ -73,6 +76,7 @@
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "@swc/core": "1.15.24",
+    "@universal-deploy/node": "^0.1.6",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
@@ -111,6 +115,14 @@
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
+  },
+  "peerDependencies": {
+    "@cedarjs/api-server": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@cedarjs/api-server": {
+      "optional": false
+    }
   },
   "engines": {
     "node": ">=24"

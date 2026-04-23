@@ -46,23 +46,12 @@ export const handler = async ({
 
   const serverFile = serverFileExists()
 
-  // Starting values of ports from config (cedar.toml or redwood.toml)
-  const apiPreferredPort = parseInt(String(getConfig().api.port))
-
-  let webPreferredPort: number | undefined = parseInt(
-    String(getConfig().web.port),
-  )
-
-  // Assume we can have the ports we want
-  let apiAvailablePort = apiPreferredPort
-  let apiPortChangeNeeded = false
-  let webAvailablePort = webPreferredPort
-  let webPortChangeNeeded = false
-
-  // Check api port, unless there's a serverFile. If there is a serverFile, we
-  // don't know what port will end up being used in the end. It's up to the
-  // author of the server file to decide and handle that
-  if (workspace.includes('api') && !serverFile) {
+  // For the custom-server lane (apps with api/src/server.{ts,js}), we still
+  // need to find a free API port since the server file controls its own
+  // listening and we don't know what port it will use.
+  let apiAvailablePort: number | undefined
+  if (workspace.includes('api') && serverFile) {
+    const apiPreferredPort = parseInt(String(getConfig().api.port))
     apiAvailablePort = await getFreePort(apiPreferredPort)
 
     if (apiAvailablePort === -1) {
@@ -70,9 +59,13 @@ export const handler = async ({
         message: `Could not determine a free port for the api server`,
       })
     }
-
-    apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
   }
+
+  let webPreferredPort: number | undefined = parseInt(
+    String(getConfig().web.port),
+  )
+  let webAvailablePort = webPreferredPort
+  let webPortChangeNeeded = false
 
   // Check web port
   if (workspace.includes('web')) {
@@ -87,10 +80,7 @@ export const handler = async ({
       webPreferredPort = port ? parseInt(port, 10) : undefined
     }
 
-    webAvailablePort = await getFreePort(webPreferredPort, [
-      apiPreferredPort,
-      apiAvailablePort,
-    ])
+    webAvailablePort = await getFreePort(webPreferredPort)
 
     if (webAvailablePort === -1) {
       exitWithError(undefined, {
@@ -102,19 +92,16 @@ export const handler = async ({
   }
 
   // Check for port conflict and exit with message if found
-  if (apiPortChangeNeeded || webPortChangeNeeded) {
+  if (webPortChangeNeeded) {
     const message = [
-      'The currently configured ports for the development server are',
-      'unavailable. Suggested changes to your ports, which can be changed in',
-      'cedar.toml (or redwood.toml), are:\n',
-      apiPortChangeNeeded && ` - API to use port ${apiAvailablePort} instead`,
-      apiPortChangeNeeded && 'of your currently configured',
-      apiPortChangeNeeded && `${apiPreferredPort}\n`,
-      webPortChangeNeeded && ` - Web to use port ${webAvailablePort} instead`,
-      webPortChangeNeeded && 'of your currently configured',
-      webPortChangeNeeded && `${webPreferredPort}\n`,
-      '\nCannot run the development server until your configured ports are',
-      'changed or become available.',
+      'The currently configured port for the development server is',
+      'unavailable. Suggested change to your port, which can be changed in',
+      'cedar.toml (or redwood.toml):\n',
+      ` - Web to use port ${webAvailablePort} instead`,
+      'of your currently configured',
+      `${webPreferredPort}\n`,
+      '\nCannot run the development server until your configured port is',
+      'changed or becomes available.',
     ]
       .filter(Boolean)
       .join(' ')
@@ -130,23 +117,9 @@ export const handler = async ({
       errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
       console.error(c.error(message))
     }
-
-    // Again, if a server file is configured, we don't know what port it'll end
-    // up using
-    if (!serverFile) {
-      try {
-        await shutdownPort(apiAvailablePort)
-      } catch (e) {
-        const message = getErrorMessage(e)
-        errorTelemetry(process.argv, `Error shutting down "api": ${message}`)
-        console.error(
-          `Error whilst shutting down "api" port: ${c.error(message)}`,
-        )
-      }
-    }
   }
 
-  if (workspace.includes('web')) {
+  if (workspace.includes('web') && webAvailablePort !== undefined) {
     try {
       await shutdownPort(webAvailablePort)
     } catch (e) {
@@ -209,7 +182,13 @@ export const handler = async ({
     runWhen?: () => boolean
   })[] = []
 
-  if (workspace.includes('api')) {
+  // For the custom-server compatibility lane (apps with api/src/server.{ts,js}),
+  // we still start a separate API process because those apps use Fastify-specific
+  // extension points (configureApiServer, direct plugin registration, etc.) that
+  // are not yet covered by the unified Vite dev runtime. For standard Cedar apps
+  // the cedarDevDispatcherPlugin handles API requests directly inside the Vite
+  // dev server — no separate API process is needed.
+  if (workspace.includes('api') && serverFile) {
     jobs.push({
       name: 'api',
       command: [
@@ -218,7 +197,7 @@ export const handler = async ({
         `  --watch "${cedarConfigPath}"`,
         `  --exec "yarn ${serverWatchCommand}`,
         `    --port ${apiAvailablePort}`,
-        `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort)}`,
+        `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort!)}`,
         '    | rw-log-formatter"',
       ]
         .join(' ')

@@ -1,5 +1,6 @@
+import { fork } from 'node:child_process'
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
@@ -75,16 +76,11 @@ export const builder = async (yargs: Argv) => {
           apiServerCLIConfig.builder(yargs)
         }
         return yargs.option('ud', {
-          // TODO(Phase 4): remove this flag. It is temporary scaffolding that
-          // bridges to createUDServer while Cedar's API is not yet Vite-built.
-          // Phase 4 wires in @universal-deploy/node/vite and makes UD serving
-          // the default, at which point this flag has no remaining purpose.
-          // See the Phase 3 "Temporary scaffolding" section in
-          // docs/implementation-plans/universal-deploy-integration-plan-refined.md
+          // UD serving is the default. Pass --no-ud to use the legacy Fastify server instead.
           description:
-            'Use the Universal Deploy server (srvx) instead of Fastify',
+            'Use the Universal Deploy server (srvx). This is the default; pass --no-ud to use Fastify instead.',
           type: 'boolean',
-          default: false,
+          default: true,
         })
       },
       handler: async (argv: ServeArgv) => {
@@ -97,13 +93,54 @@ export const builder = async (yargs: Argv) => {
         })
 
         if (argv.ud) {
-          const { handler: udHandler } =
-            await import('@cedarjs/api-server/udCLIConfig')
-          await udHandler({
-            port: argv.port,
-            host: argv.host,
-            apiRootPath: argv.apiRootPath,
+          // Launch the Vite-built Universal Deploy Node server entry produced
+          // by `cedar build api`. The entry at api/dist/ud/index.js is a
+          // self-contained srvx server that imports virtual:ud:catch-all,
+          // resolved by cedarUniversalDeployPlugin to Cedar's aggregate fetch
+          // dispatcher.
+          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+
+          if (!fs.existsSync(udEntryPath)) {
+            console.error(
+              c.error(
+                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                  ' Please run `yarn cedar build api` before serving.\n',
+              ),
+            )
+            process.exit(1)
+          }
+
+          const udArgs: string[] = []
+
+          if (argv.port) {
+            udArgs.push('--port', String(argv.port))
+          }
+
+          if (argv.host) {
+            udArgs.push('--host', argv.host)
+          }
+
+          await new Promise<void>((resolve, reject) => {
+            const child = fork(udEntryPath, udArgs, {
+              execArgv: process.execArgv,
+              env: {
+                ...process.env,
+                NODE_ENV: process.env.NODE_ENV ?? 'production',
+                PORT: argv.port ? String(argv.port) : process.env.PORT,
+                HOST: argv.host ?? process.env.HOST,
+              },
+            })
+
+            child.on('error', reject)
+            child.on('exit', (code) => {
+              if (code !== 0) {
+                reject(new Error(`UD server exited with code ${code}`))
+              } else {
+                resolve()
+              }
+            })
           })
+
           return
         }
 

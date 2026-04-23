@@ -1,0 +1,181 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
+
+import type { Plugin, ViteDevServer } from 'vite'
+
+import { getConfig } from '@cedarjs/project-config'
+
+type Fetchable = { fetch(request: Request): Response | Promise<Response> }
+
+let cachedDispatcher: Fetchable | null = null
+let buildPromise: Promise<Fetchable> | null = null
+
+async function getDispatcher(): Promise<Fetchable> {
+  if (cachedDispatcher !== null) {
+    return cachedDispatcher
+  }
+
+  if (buildPromise !== null) {
+    return buildPromise
+  }
+
+  buildPromise = (async () => {
+    const { buildCedarDispatcher } =
+      await import('@cedarjs/api-server/udDispatcher')
+    const { fetchable } = await buildCedarDispatcher()
+    cachedDispatcher = fetchable
+    buildPromise = null
+    return fetchable
+  })()
+
+  return buildPromise
+}
+
+function invalidateDispatcher() {
+  cachedDispatcher = null
+  buildPromise = null
+}
+
+function isViteInternalRequest(url: string): boolean {
+  return (
+    url.startsWith('/@') ||
+    url.startsWith('/__vite') ||
+    url.startsWith('/__hmr') ||
+    url.includes('?import') ||
+    url.includes('?t=') ||
+    url.includes('?v=')
+  )
+}
+
+function isApiRequest(url: string): boolean {
+  const cedarConfig = getConfig()
+  const apiUrl = cedarConfig.web.apiUrl.replace(/\/$/, '')
+  const apiGqlUrl = cedarConfig.web.apiGraphQLUrl ?? apiUrl + '/graphql'
+
+  return (
+    url.startsWith(apiUrl) ||
+    url === apiGqlUrl ||
+    url.startsWith(apiGqlUrl + '/') ||
+    url.startsWith(apiGqlUrl + '?')
+  )
+}
+
+async function nodeRequestToFetch(req: IncomingMessage): Promise<Request> {
+  const host = req.headers.host ?? 'localhost'
+  const url = `http://${host}${req.url ?? '/'}`
+
+  const headers = new Headers()
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (value === undefined) {
+      continue
+    }
+
+    if (Array.isArray(value)) {
+      for (const v of value) {
+        headers.append(key, v)
+      }
+    } else {
+      headers.set(key, value)
+    }
+  }
+
+  const method = (req.method ?? 'GET').toUpperCase()
+  const hasBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
+
+  let body: Buffer | undefined
+
+  if (hasBody) {
+    body = await new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = []
+      req.on('data', (chunk: Buffer) => chunks.push(chunk))
+      req.on('end', () => resolve(Buffer.concat(chunks)))
+      req.on('error', reject)
+    })
+  }
+
+  return new Request(url, {
+    method,
+    headers,
+    body: hasBody && body && body.length > 0 ? new Uint8Array(body) : undefined,
+  })
+}
+
+async function fetchResponseToNode(
+  fetchRes: Response,
+  res: ServerResponse,
+): Promise<void> {
+  res.statusCode = fetchRes.status
+
+  fetchRes.headers.forEach((value, key) => {
+    res.setHeader(key, value)
+  })
+
+  const bodyBuffer = await fetchRes.arrayBuffer()
+
+  if (bodyBuffer.byteLength > 0) {
+    res.end(Buffer.from(bodyBuffer))
+  } else {
+    res.end()
+  }
+}
+
+export function cedarDevDispatcherPlugin(): Plugin {
+  return {
+    name: 'cedar-dev-dispatcher',
+    apply: 'serve',
+
+    configureServer(server: ViteDevServer) {
+      server.watcher.on('change', (filePath: string) => {
+        if (filePath.includes('/api/src/')) {
+          invalidateDispatcher()
+        }
+      })
+
+      server.middlewares.use(
+        async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+          const url = req.url ?? '/'
+
+          if (isViteInternalRequest(url)) {
+            return next()
+          }
+
+          if (!isApiRequest(url)) {
+            return next()
+          }
+
+          try {
+            const dispatcher = await getDispatcher()
+            const fetchRequest = await nodeRequestToFetch(req)
+            const fetchResponse = await dispatcher.fetch(fetchRequest)
+            await fetchResponseToNode(fetchResponse, res)
+          } catch (err) {
+            console.error(
+              '[cedar-dev-dispatcher] Error handling API request:',
+              err,
+            )
+
+            if (!res.headersSent) {
+              res.writeHead(500, { 'Content-Type': 'application/json' })
+            }
+
+            res.end(
+              JSON.stringify(
+                {
+                  errors: [
+                    {
+                      message:
+                        err instanceof Error
+                          ? err.message
+                          : 'Internal Server Error',
+                    },
+                  ],
+                },
+                null,
+                2,
+              ),
+            )
+          }
+        },
+      )
+    },
+  }
+}
