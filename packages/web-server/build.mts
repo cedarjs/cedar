@@ -1,5 +1,3 @@
-import fs from 'node:fs'
-
 import {
   build,
   defaultBuildOptions,

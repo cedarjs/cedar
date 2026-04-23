@@ -53,22 +53,22 @@ function getBinPaths() {
   )
 
   return {
-    rw: findBinPath(cliPackagePath, 'cedar'),
-    rwServer: findBinPath(apiServerPackagePath, 'cedarjs-server'),
-    rwWebServer: findBinPath(webServerPackagePath, 'rw-web-server'),
+    cedar: findBinPath(cliPackagePath, 'cedar'),
+    cedarServer: findBinPath(apiServerPackagePath, 'cedarjs-server'),
+    cedarWebServer: findBinPath(webServerPackagePath, 'cedar-web-server'),
   }
 }
 
 const binPaths = getBinPaths()
 
-// @cedarjs/cli (yarn rw)
-export const rw = binPaths.rw
+// @cedarjs/cli (yarn cedar)
+export const cedar = binPaths.cedar
 
 // @cedarjs/api-server (yarn cedarjs-server)
-export const rwServer = binPaths.rwServer
+export const cedarServer = binPaths.cedarServer
 
-// @cedarjs/web-server (yarn rw-web-server)
-export const rwWebServer = binPaths.rwWebServer
+// @cedarjs/web-server (yarn cedar-web-server)
+export const cedarWebServer = binPaths.cedarWebServer
 
 let original_CEDAR_CWD: string | undefined
 
@@ -89,9 +89,9 @@ beforeAll(() => {
     console.log(
       [
         'These tests use the following commands to run the server:',
-        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${rw} serve`,
-        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${rwServer}`,
-        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${rwWebServer}`,
+        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${cedar} serve`,
+        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${cedarServer}`,
+        `• CEDAR_CWD=${process.env.CEDAR_CWD} yarn node ${cedarWebServer}`,
       ].join('\n'),
     )
     globalThis.loggedBinPaths = true

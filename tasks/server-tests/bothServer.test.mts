@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { $ } from 'zx'
 
-import { rw, rwServer } from './vitest.setup.mjs'
+import { cedar, cedarServer } from './vitest.setup.mjs'
 
 describe('cedar serve', () => {
   it('has help configured', async () => {
-    const { stdout } = await $`yarn node ${rw} serve --help`
+    const { stdout } = await $`yarn node ${cedar} serve --help`
     expect(stdout).toMatchInlineSnapshot(`
       "cedar serve [side]
 
@@ -49,7 +49,7 @@ describe('cedar serve', () => {
 
   it('errors out on unknown args', async () => {
     try {
-      await $`yarn node ${rw} serve --foo --bar --baz`
+      await $`yarn node ${cedar} serve --foo --bar --baz`
       expect(true).toEqual(false)
     } catch (p) {
       expect(p.exitCode).toEqual(1)
@@ -99,16 +99,16 @@ describe('cedar serve', () => {
   })
 })
 
-describe('rwServer', () => {
+describe('cedarServer', () => {
   it('has help configured', async () => {
-    const { stdout } = await $`yarn node ${rwServer} --help`
+    const { stdout } = await $`yarn node ${cedarServer} --help`
     expect(stdout).toMatchInlineSnapshot(`
       "cedar-server
 
       Start a server for serving the api and web sides
 
       Commands:
-        cedar-server      Start a server for serving the api and web sides      [default]
+        cedar-server      Start a server for serving the api and web sides   [default]
         cedar-server api  Start a server for serving the api side
         cedar-server web  Start a server for serving the web side
 
@@ -135,7 +135,7 @@ describe('rwServer', () => {
 
   it('errors out on unknown args', async () => {
     try {
-      await $`yarn node ${rwServer} --foo --bar --baz`
+      await $`yarn node ${cedarServer} --foo --bar --baz`
       expect(true).toEqual(false)
     } catch (p) {
       expect(p.exitCode).toEqual(1)
@@ -146,7 +146,7 @@ describe('rwServer', () => {
         Start a server for serving the api and web sides
 
         Commands:
-          cedar-server      Start a server for serving the api and web sides      [default]
+          cedar-server      Start a server for serving the api and web sides   [default]
           cedar-server api  Start a server for serving the api side
           cedar-server web  Start a server for serving the web side
 
