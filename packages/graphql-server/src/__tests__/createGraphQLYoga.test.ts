@@ -5,8 +5,8 @@ import { createLogger } from '@cedarjs/api/logger'
 import { createGraphQLYoga } from '../createGraphQLYoga.js'
 
 describe('createGraphQLYoga smoke-test', () => {
-  it('Should only require required parameters', () => {
-    const { logger, yoga } = createGraphQLYoga({
+  it('Should only require required parameters', async () => {
+    const { logger, yoga } = await createGraphQLYoga({
       loggerConfig: { logger: createLogger({}) },
       sdls: {},
       services: {},

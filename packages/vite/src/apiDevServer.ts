@@ -20,15 +20,22 @@ import {
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
+import { createGraphQLYoga } from '@cedarjs/graphql-server'
+import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 
-// ---------------------------------------------------------------------------
-// Module registry – populated on startup and refreshed on HMR invalidation
-// ---------------------------------------------------------------------------
-
+// This const acts as a module registry. It is populated on startup and
+// refreshed on HMR invalidation
 const LAMBDA_FUNCTIONS: Record<string, Handler> = {}
+
+interface YogaInstance {
+  handle(request: Request, context: Record<string, unknown>): Promise<Response>
+  graphqlEndpoint: string
+}
+
+let graphqlYoga: YogaInstance | null = null
 
 interface LambdaHandlerRequest extends RequestGenericInterface {
   Params: {
@@ -81,6 +88,8 @@ async function loadApiFunctions(viteServer: ViteDevServer): Promise<void> {
   console.log(ansis.dim.italic('Importing Server Functions... '))
   const tsImport = Date.now()
 
+  let extractedGraphqlOptions: GraphQLYogaOptions | null = null
+
   const imports = srcFunctions.map(async (fnPath) => {
     const ts = Date.now()
     const routeName = path.basename(fnPath).replace(/\.(ts|tsx|js|jsx)$/, '')
@@ -110,6 +119,11 @@ async function loadApiFunctions(viteServer: ViteDevServer): Promise<void> {
           `[apiDevServer] No handler export found in function: ${fnPath}`,
         )
       }
+
+      // Extract __rw_graphqlOptions from the graphql module
+      if (routeName === 'graphql' && '__rw_graphqlOptions' in mod) {
+        extractedGraphqlOptions = mod.__rw_graphqlOptions as GraphQLYogaOptions
+      }
     } catch (err) {
       viteServer.ssrFixStacktrace(err as Error)
       console.error(
@@ -121,14 +135,37 @@ async function loadApiFunctions(viteServer: ViteDevServer): Promise<void> {
 
   await Promise.all(imports)
 
+  if (extractedGraphqlOptions) {
+    const { yoga } = await createGraphQLYoga(extractedGraphqlOptions)
+    graphqlYoga = yoga
+  }
+
   console.log(
     ansis.dim.italic('...Done importing in ' + (Date.now() - tsImport) + ' ms'),
   )
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
+/**
+ * Convert a Fastify request to a Fetch API Request object.
+ * This is needed for passing to Yoga's handle method which expects a Fetch Request.
+ */
+function createFetchRequestFromFastify(req: FastifyRequest): Request {
+  const requestBody =
+    req.method === 'GET' || req.method === 'HEAD'
+      ? undefined
+      : typeof req.body === 'string'
+        ? req.body
+        : req.body
+          ? JSON.stringify(req.body)
+          : undefined
+
+  const href = `${req.protocol}://${req.hostname}${req.raw.url ?? '/'}`
+  return new Request(href, {
+    method: req.method,
+    headers: req.headers as HeadersInit,
+    body: requestBody,
+  })
+}
 
 /**
  * Start the Cedar API dev server using Vite's SSR module runner for HMR.
@@ -362,6 +399,26 @@ export async function startApiDevServer(port: number): Promise<{
     return requestHandler(req, reply, handler)
   }
 
+  // GraphQL routes with streaming support via Yoga's handle method
+  // These must be registered BEFORE the catch-all routes for other functions
+  const graphqlHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    if (!graphqlYoga) {
+      return reply
+        .status(503)
+        .send({ error: 'GraphQL Yoga instance not initialized' })
+    }
+
+    const request = createFetchRequestFromFastify(req)
+    const response = await graphqlYoga.handle(request, { req, reply })
+
+    // Fastify v5 has first-class support for WHATWG Response objects
+    return response
+  }
+
+  app.all('/graphql', graphqlHandler)
+  app.all('/graphql/*', graphqlHandler)
+
+  // Catch-all routes for other API functions (non-GraphQL)
   app.all('/:routeName', lambdaRequestHandler)
   app.all('/:routeName/*', lambdaRequestHandler)
 
