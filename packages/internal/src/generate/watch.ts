@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs'
-import path from 'path'
+import path from 'node:path'
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import ansis from 'ansis'
 import chokidar from 'chokidar'
 
-import { getPaths } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import { cliLogger } from '../cliLogger.js'
 import {
@@ -21,6 +21,7 @@ import { warningForDuplicateRoutes } from '../routes.js'
 
 import { generateClientPreset } from './clientPreset.js'
 import { generate } from './generate.js'
+import { generateGqlormArtifacts } from './gqlormSchema.js'
 import {
   generateTypeDefGraphQLApi,
   generateTypeDefGraphQLWeb,
@@ -38,13 +39,16 @@ import {
 const rwjsPaths = getPaths()
 const generatedDirName = path.basename(rwjsPaths.generated.base)
 
-const watcher = chokidar.watch('(web|api)/src/**/*.{ts,js,jsx,tsx}', {
-  persistent: true,
-  ignored: ['node_modules', generatedDirName],
-  ignoreInitial: true,
-  cwd: rwjsPaths.base,
-  awaitWriteFinish: true,
-})
+const watcher = chokidar.watch(
+  ['(web|api)/src/**/*.{ts,js,jsx,tsx}', 'api/db/**/*.prisma'],
+  {
+    persistent: true,
+    ignored: ['node_modules', generatedDirName],
+    ignoreInitial: true,
+    cwd: rwjsPaths.base,
+    awaitWriteFinish: true,
+  },
+)
 
 const action = {
   add: 'Created',
@@ -131,6 +135,14 @@ watcher
       await generateGraphQLSchema()
       await generateTypeDefGraphQLApi()
       finished('GraphQL Schema')
+    } else if (
+      absPath.startsWith(path.join(rwjsPaths.base, 'api/db/')) &&
+      absPath.endsWith('.prisma')
+    ) {
+      if (getConfig().experimental?.gqlorm?.enabled) {
+        await generateGqlormArtifacts()
+      }
+      finished('Prisma Schema')
     }
 
     if (routesWarningMessage) {
