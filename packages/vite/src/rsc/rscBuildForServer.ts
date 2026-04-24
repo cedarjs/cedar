@@ -110,6 +110,7 @@ export async function rscBuildForServer(
       manifest: 'server-build-manifest.json',
       rollupOptions: {
         onwarn: onWarn,
+        external: ['@cedarjs/realtime'],
         input: {
           ...entryFiles,
           ...clientEntryFiles,

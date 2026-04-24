@@ -84,6 +84,7 @@ export async function rscBuildForSsr({
       emptyOutDir: true, // Needed because `outDir` is not inside `root`
       rollupOptions: {
         onwarn: onWarn,
+        external: ['@cedarjs/realtime'],
         input: {
           // @MARK: temporary hack to find the entry client so we can get the
           // index.css bundle but we don't actually want this on an rsc page!

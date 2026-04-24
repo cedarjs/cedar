@@ -90,6 +90,7 @@ export async function rscBuildAnalyze() {
       ssr: true,
       rollupOptions: {
         onwarn: onWarn,
+        external: ['@cedarjs/realtime'],
         input: getEntries(),
       },
     },
