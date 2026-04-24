@@ -20,6 +20,7 @@ import {
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
+import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
@@ -189,28 +190,50 @@ export async function startApiDevServer(port: number): Promise<{
   const apiHost = cedarConfig.api.host || '::'
   const isEsm = projectSideIsEsm('api')
 
-  // Build Babel plugins once; they are shared across all transform calls
-  const babelPlugins = getApiSideBabelPlugins({
-    openTelemetry:
-      (cedarConfig.experimental?.opentelemetry?.enabled ?? false) &&
-      (cedarConfig.experimental?.opentelemetry?.wrapApi ?? false),
-    projectIsEsm: isEsm,
-  })
-
-  // ---------------------------------------------------------------------------
-  // 1. Vite SSR dev server
-  //    - `configFile: false` so we configure everything programmatically
-  //    - `middlewareMode: true` + `appType: 'custom'` – no HTML serving
-  //    - Vite externalises node_modules in SSR mode by default, which is
-  //      exactly what we want; only api/src files go through the Babel plugin
-  // ---------------------------------------------------------------------------
-
   // On Windows, path.join produces backslash-separated paths while Vite
   // normalises all module ids to forward slashes. Pre-normalise every Cedar
   // path we compare against Vite ids so the checks work on all platforms.
   const normalizedBase = cedarPaths.base.replaceAll('\\', '/')
   const normalizedApiSrc = cedarPaths.api.src.replaceAll('\\', '/')
   const normalizedApiBase = cedarPaths.api.base.replaceAll('\\', '/')
+
+  const viteServer = await createViteDevServer(
+    cedarPaths,
+    cedarConfig,
+    isEsm,
+    normalizedBase,
+  )
+
+  console.log(ansis.dim.italic('Starting API dev server...'))
+  await loadApiFunctions(viteServer)
+
+  setupHmrHandlers(viteServer, normalizedApiSrc, normalizedApiBase)
+
+  const app = await createFastifyApp(apiPort, apiHost)
+
+  const close = async () => {
+    await app.close()
+    await viteServer.close()
+  }
+
+  return { viteServer, close }
+}
+
+/**
+ * Create and configure the Vite SSR dev server with Babel transform plugin.
+ */
+async function createViteDevServer(
+  cedarPaths: ReturnType<typeof getPaths>,
+  cedarConfig: ReturnType<typeof getConfig>,
+  projectIsEsm: boolean,
+  normalizedBase: string,
+): Promise<ViteDevServer> {
+  const babelPlugins = getApiSideBabelPlugins({
+    openTelemetry:
+      (cedarConfig.experimental?.opentelemetry?.enabled ?? false) &&
+      (cedarConfig.experimental?.opentelemetry?.wrapApi ?? false),
+    projectIsEsm,
+  })
 
   // Build a map of workspace package name → TypeScript source entry path.
   // Mirrors the logic in buildHandler.ts / buildPackagesTask.js and is only
@@ -223,6 +246,10 @@ export async function startApiDevServer(port: number): Promise<{
     ),
   )
 
+  // - `configFile: false` so we configure everything programmatically
+  // - `middlewareMode: true` + `appType: 'custom'` – no HTML serving
+  // - Vite externalises node_modules in SSR mode by default, which is
+  //   exactly what we want; only api/src files go through the Babel plugin
   const viteServer = await createViteServer({
     configFile: false,
     root: cedarPaths.api.base,
@@ -236,8 +263,7 @@ export async function startApiDevServer(port: number): Promise<{
       // Map workspace package names directly to their TypeScript source entry
       // files. This is processed by Vite's built-in alias plugin (enforce:
       // 'pre') which runs before vite:resolve and correctly intercepts imports
-      // in the SSR module runner context – unlike a custom resolveId hook which
-      // is not invoked during SSR module loading in Vite 7.
+      // in the SSR module runner context.
       alias: workspacePkgSourceMap,
     },
     plugins: [
@@ -282,17 +308,20 @@ export async function startApiDevServer(port: number): Promise<{
     ],
   })
 
-  // ---------------------------------------------------------------------------
-  // 2. Initial function load
-  // ---------------------------------------------------------------------------
-  console.log(ansis.dim.italic('Starting API dev server...'))
-  await loadApiFunctions(viteServer)
+  return viteServer
+}
 
-  // ---------------------------------------------------------------------------
-  // 3. HMR: watch for file changes, invalidate modules, and reload functions
-  // ---------------------------------------------------------------------------
+/**
+ * Set up HMR handlers for the Vite SSR module runner. It watches for file
+ * changes, invalidates the module graph when necessary and reloads functions
+ */
+function setupHmrHandlers(
+  viteServer: ViteDevServer,
+  normalizedApiSrc: string,
+  normalizedApiBase: string,
+): void {
   viteServer.watcher.on('change', async (filePath) => {
-    // Vite's chokidar watcher emits forward-slash paths on all platforms;
+    // Vite's file watcher emits forward-slash paths on all platforms;
     // use the pre-normalised Cedar paths for comparison.
     const normalizedFilePath = filePath.replaceAll('\\', '/')
 
@@ -356,14 +385,23 @@ export async function startApiDevServer(port: number): Promise<{
     )
     await loadApiFunctions(viteServer)
   })
+}
 
-  // ---------------------------------------------------------------------------
-  // 4. Fastify server
-  //    Mirrors the setup in @cedarjs/api-server's cedarFastifyAPI plugin,
-  //    but uses the in-process LAMBDA_FUNCTIONS registry (loaded via Vite SSR)
-  //    instead of importing from api/dist.
-  // ---------------------------------------------------------------------------
-  const app = fastify({ logger: false })
+/**
+ * Create and configure the Fastify server with all routes registered.
+ * This mirrors the setup in @cedarjs/api-server's cedarFastifyAPI plugin, but
+ * uses the in-process LAMBDA_FUNCTIONS registry (loaded via Vite SSR) instead
+ * of importing from api/dist.
+ */
+async function createFastifyApp(apiPort: number, apiHost: string) {
+  // Enable Fastify's built-in logger so that errors surfaced by
+  // requestHandler (e.g. 500s from user functions) are visible in the
+  // dev server output instead of being swallowed.
+  const app = fastify({
+    logger: {
+      level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+    },
+  })
 
   // fastify-raw-body is required by the requestHandler helper so it can
   // access the raw request body for base64 encoding / parsing
@@ -409,7 +447,15 @@ export async function startApiDevServer(port: number): Promise<{
     }
 
     const request = createFetchRequestFromFastify(req)
-    const response = await graphqlYoga.handle(request, { req, reply })
+    const yoga = graphqlYoga
+
+    // Mirror the lambda handler path by wrapping Yoga execution in an
+    // AsyncLocalStorage context so that Cedar's global `context` proxy
+    // (used by requireAuth / isAuthenticated) can read currentUser and
+    // other context values set by the Redwood auth plugins.
+    const response = await getAsyncStoreInstance().run(new Map(), async () => {
+      return yoga.handle(request, { req, reply })
+    })
 
     // Fastify v5 has first-class support for WHATWG Response objects
     return response
@@ -438,10 +484,5 @@ export async function startApiDevServer(port: number): Promise<{
 
   await app.listen({ port: apiPort, host: apiHost })
 
-  const close = async () => {
-    await app.close()
-    await viteServer.close()
-  }
-
-  return { viteServer, close }
+  return app
 }
