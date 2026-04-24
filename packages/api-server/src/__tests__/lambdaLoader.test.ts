@@ -32,21 +32,19 @@ afterAll(() => {
   process.env.CEDAR_CWD = original_CEDAR_CWD
 })
 
-// Reset the LAMBDA_FUNCTIONS object and CEDAR_HANDLERS map after each test.
+// Reset the LAMBDA_FUNCTIONS map and CEDAR_HANDLERS map after each test.
 afterEach(() => {
-  for (const key in LAMBDA_FUNCTIONS) {
-    delete LAMBDA_FUNCTIONS[key]
-  }
+  LAMBDA_FUNCTIONS.clear()
   CEDAR_HANDLERS.clear()
 })
 
 describe('loadFunctionsFromDist', () => {
   it('loads functions from the api/dist directory', async () => {
-    expect(LAMBDA_FUNCTIONS).toEqual({})
+    expect(LAMBDA_FUNCTIONS.size).toBe(0)
 
     await loadFunctionsFromDist()
 
-    expect(LAMBDA_FUNCTIONS).toEqual({
+    expect(Object.fromEntries(LAMBDA_FUNCTIONS)).toEqual({
       'another-graphql': expect.any(Function),
       env: expect.any(Function),
       graphql: expect.any(Function),
@@ -60,23 +58,21 @@ describe('loadFunctionsFromDist', () => {
   // Though it's not clear why or if this is actually respected by how JS objects work.
   // See the complementary lambdaLoaderNumberFunctions test.
   it('puts the graphql function first', async () => {
-    expect(LAMBDA_FUNCTIONS).toEqual({})
+    expect(LAMBDA_FUNCTIONS.size).toBe(0)
 
     await loadFunctionsFromDist()
 
-    expect(Object.keys(LAMBDA_FUNCTIONS)[0]).toEqual('graphql')
+    expect([...LAMBDA_FUNCTIONS.keys()][0]).toEqual('graphql')
   })
 
-  // `loadFunctionsFromDist` loads files that don't export a handler into the object as `undefined`.
+  // `loadFunctionsFromDist` loads files that don't export a handler into the map as `undefined`.
   // This is probably harmless, but we could also probably go without it.
   it("warns if a function doesn't have a handler and sets it to `undefined`", async () => {
-    expect(LAMBDA_FUNCTIONS).toEqual({})
+    expect(LAMBDA_FUNCTIONS.size).toBe(0)
 
     await loadFunctionsFromDist()
 
-    expect(LAMBDA_FUNCTIONS).toMatchObject({
-      noHandler: undefined,
-    })
+    expect(LAMBDA_FUNCTIONS.get('noHandler')).toBeUndefined()
 
     expect(console.warn).toHaveBeenCalledWith(
       'noHandler',
@@ -88,13 +84,13 @@ describe('loadFunctionsFromDist', () => {
 
   describe('when "discoverFunctionsGlob" is set', () => {
     it('loads the same functions as the default value', async () => {
-      expect(LAMBDA_FUNCTIONS).toEqual({})
+      expect(LAMBDA_FUNCTIONS.size).toBe(0)
 
       await loadFunctionsFromDist({
         discoverFunctionsGlob: ['dist/functions/**/*.{ts,js}'],
       })
 
-      expect(LAMBDA_FUNCTIONS).toEqual({
+      expect(Object.fromEntries(LAMBDA_FUNCTIONS)).toEqual({
         'another-graphql': expect.any(Function),
         env: expect.any(Function),
         graphql: expect.any(Function),
@@ -105,20 +101,20 @@ describe('loadFunctionsFromDist', () => {
     })
 
     it('loads functions when discoverFunctionsGlob is an array', async () => {
-      expect(LAMBDA_FUNCTIONS).toEqual({})
+      expect(LAMBDA_FUNCTIONS.size).toBe(0)
 
       await loadFunctionsFromDist({
         discoverFunctionsGlob: ['dist/functions/**/[eg]*.{ts,js}'],
       })
 
-      expect(LAMBDA_FUNCTIONS).toEqual({
+      expect(Object.fromEntries(LAMBDA_FUNCTIONS)).toEqual({
         graphql: expect.any(Function),
         env: expect.any(Function),
       })
     })
 
     it('loads functions when discoverFunctionsGlob has include and exclude values', async () => {
-      expect(LAMBDA_FUNCTIONS).toEqual({})
+      expect(LAMBDA_FUNCTIONS.size).toBe(0)
 
       await loadFunctionsFromDist({
         discoverFunctionsGlob: [
@@ -127,7 +123,7 @@ describe('loadFunctionsFromDist', () => {
         ],
       })
 
-      expect(LAMBDA_FUNCTIONS).toEqual({
+      expect(Object.fromEntries(LAMBDA_FUNCTIONS)).toEqual({
         'another-graphql': expect.any(Function),
         env: expect.any(Function),
         graphql: expect.any(Function),
