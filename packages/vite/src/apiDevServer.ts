@@ -13,7 +13,7 @@ import type {
 } from 'fastify'
 import fastifyRawBody from 'fastify-raw-body'
 import { createServer as createViteServer } from 'vite'
-import type { ViteDevServer } from 'vite'
+import type { ModuleNode, ViteDevServer } from 'vite'
 
 import { requestHandler } from '@cedarjs/api-server/requestHandlers'
 import {
@@ -38,6 +38,11 @@ interface YogaInstance {
 
 let graphqlYoga: YogaInstance | null = null
 
+// In-flight guard to prevent concurrent executions of loadApiFunctions from
+// corrupting the LAMBDA_FUNCTIONS registry when multiple file-change events
+// fire in quick succession (e.g. codegen, scaffold, git checkout).
+let loadApiFunctionsInFlight: Promise<void> | null = null
+
 interface LambdaHandlerRequest extends RequestGenericInterface {
   Params: {
     routeName: string
@@ -48,8 +53,24 @@ interface LambdaHandlerRequest extends RequestGenericInterface {
  * Discover all function source files under api/src/functions/ and load them
  * through Vite's SSR module runner so that the Babel transforms are applied
  * and HMR invalidation works correctly.
+ *
+ * This function is wrapped with an in-flight guard so that rapid file-change
+ * events don't trigger overlapping reloads that could leave the function
+ * registry empty or corrupted.
  */
 async function loadApiFunctions(viteServer: ViteDevServer): Promise<void> {
+  if (loadApiFunctionsInFlight) {
+    await loadApiFunctionsInFlight
+    return
+  }
+
+  loadApiFunctionsInFlight = _loadApiFunctions(viteServer).finally(() => {
+    loadApiFunctionsInFlight = null
+  })
+  return loadApiFunctionsInFlight
+}
+
+async function _loadApiFunctions(viteServer: ViteDevServer): Promise<void> {
   const cedarPaths = getPaths()
 
   // Clear the registry before reloading
@@ -316,14 +337,30 @@ async function createViteDevServer(
  * that `ssrLoadModule` re-executes it on the next call. This is needed when
  * files are added or removed because modules using `import.meta.glob` (e.g.
  * `graphql.js`) won't otherwise notice the new/deleted files.
+ *
+ * Invalidation propagates recursively to importers so that function modules
+ * which import changed utilities or services are also refreshed.
  */
 function invalidateApiModules(
   viteServer: ViteDevServer,
   normalizedApiSrc: string,
 ): void {
+  const invalidated = new Set<string>()
+
+  const invalidateWithImporters = (mod: ModuleNode) => {
+    if (!mod || invalidated.has(mod.id ?? mod.url)) {
+      return
+    }
+    invalidated.add(mod.id ?? mod.url)
+    viteServer.moduleGraph.invalidateModule(mod)
+    for (const importer of mod.importers) {
+      invalidateWithImporters(importer)
+    }
+  }
+
   for (const mod of viteServer.moduleGraph.idToModuleMap.values()) {
     if (mod.id?.startsWith(normalizedApiSrc)) {
-      viteServer.moduleGraph.invalidateModule(mod)
+      invalidateWithImporters(mod)
     }
   }
 }

@@ -207,6 +207,11 @@ export const handler = async ({
       return null
     }
 
+    if (serverFile) {
+      // Custom server files are not supported by the unified dev server
+      return null
+    }
+
     if (
       !fs.existsSync(cedarPaths.api.src) ||
       !fs.existsSync(cedarPaths.web.src)
