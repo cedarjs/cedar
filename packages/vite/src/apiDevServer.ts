@@ -312,6 +312,23 @@ async function createViteDevServer(
 }
 
 /**
+ * Invalidate every module whose id lies inside the API source directory so
+ * that `ssrLoadModule` re-executes it on the next call. This is needed when
+ * files are added or removed because modules using `import.meta.glob` (e.g.
+ * `graphql.js`) won't otherwise notice the new/deleted files.
+ */
+function invalidateApiModules(
+  viteServer: ViteDevServer,
+  normalizedApiSrc: string,
+): void {
+  for (const mod of viteServer.moduleGraph.idToModuleMap.values()) {
+    if (mod.id?.startsWith(normalizedApiSrc)) {
+      viteServer.moduleGraph.invalidateModule(mod)
+    }
+  }
+}
+
+/**
  * Set up HMR handlers for the Vite SSR module runner. It watches for file
  * changes, invalidates the module graph when necessary and reloads functions
  */
@@ -368,6 +385,11 @@ function setupHmrHandlers(
         `[add] ${path.relative(normalizedApiBase, normalizedFilePath)}`,
       ),
     )
+
+    // New files (e.g. generated SDLs) can be picked up by existing modules
+    // via import.meta.glob. Invalidate all API modules so those globs are
+    // re-evaluated on the next ssrLoadModule call.
+    invalidateApiModules(viteServer, normalizedApiSrc)
     await loadApiFunctions(viteServer)
   })
 
@@ -383,6 +405,10 @@ function setupHmrHandlers(
         `[unlink] ${path.relative(normalizedApiBase, normalizedFilePath)}`,
       ),
     )
+
+    // When a file is removed, invalidate all API modules so that modules
+    // using import.meta.glob or dynamic imports don't keep stale references.
+    invalidateApiModules(viteServer, normalizedApiSrc)
     await loadApiFunctions(viteServer)
   })
 }
