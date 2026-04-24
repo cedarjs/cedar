@@ -76,7 +76,11 @@ function createCedarViteApiPlugin(): Plugin {
       }
 
       const cedarPaths = getPaths()
-      if (!id.startsWith(cedarPaths.api.base)) {
+      if (
+        !id
+          .replaceAll('\\', '/')
+          .startsWith(cedarPaths.api.base.replaceAll('\\', '/'))
+      ) {
         return null
       }
 

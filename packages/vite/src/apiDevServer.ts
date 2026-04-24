@@ -167,12 +167,23 @@ export async function startApiDevServer(port: number): Promise<{
   //    - Vite externalises node_modules in SSR mode by default, which is
   //      exactly what we want; only api/src files go through the Babel plugin
   // ---------------------------------------------------------------------------
+
+  // On Windows, path.join produces backslash-separated paths while Vite
+  // normalises all module ids to forward slashes. Pre-normalise every Cedar
+  // path we compare against Vite ids so the checks work on all platforms.
+  const normalizedBase = cedarPaths.base.replaceAll('\\', '/')
+  const normalizedApiSrc = cedarPaths.api.src.replaceAll('\\', '/')
+  const normalizedApiBase = cedarPaths.api.base.replaceAll('\\', '/')
+
   // Build a map of workspace package name → TypeScript source entry path.
   // Mirrors the logic in buildHandler.ts / buildPackagesTask.js and is only
   // active when experimental.packagesWorkspace.enabled = true.
-  const workspacePkgSourceMap = getWorkspacePackageAliases(
-    cedarPaths,
-    cedarConfig,
+  // Normalise source-file paths to forward slashes so Vite's alias plugin
+  // resolves them correctly on Windows.
+  const workspacePkgSourceMap = Object.fromEntries(
+    Object.entries(getWorkspacePackageAliases(cedarPaths, cedarConfig)).map(
+      ([name, sourceFile]) => [name, sourceFile.replaceAll('\\', '/')],
+    ),
   )
 
   const viteServer = await createViteServer({
@@ -190,12 +201,7 @@ export async function startApiDevServer(port: number): Promise<{
       // 'pre') which runs before vite:resolve and correctly intercepts imports
       // in the SSR module runner context – unlike a custom resolveId hook which
       // is not invoked during SSR module loading in Vite 7.
-      alias: Object.fromEntries(
-        Object.entries(workspacePkgSourceMap).map(([name, sourceFile]) => [
-          name,
-          sourceFile,
-        ]),
-      ),
+      alias: workspacePkgSourceMap,
     },
     plugins: [
       {
@@ -209,7 +215,10 @@ export async function startApiDevServer(port: number): Promise<{
             return null
           }
 
-          if (!id.startsWith(cedarPaths.base)) {
+          // Vite normalises ids to forward slashes on all platforms; Cedar
+          // paths may use backslashes on Windows – compare using the
+          // pre-normalised forward-slash version.
+          if (!id.startsWith(normalizedBase)) {
             return null
           }
 
@@ -246,17 +255,21 @@ export async function startApiDevServer(port: number): Promise<{
   // 3. HMR: watch for file changes, invalidate modules, and reload functions
   // ---------------------------------------------------------------------------
   viteServer.watcher.on('change', async (filePath) => {
-    if (!filePath.startsWith(cedarPaths.api.src)) {
+    // Vite's chokidar watcher emits forward-slash paths on all platforms;
+    // use the pre-normalised Cedar paths for comparison.
+    const normalizedFilePath = filePath.replaceAll('\\', '/')
+
+    if (!normalizedFilePath.startsWith(normalizedApiSrc)) {
       return
     }
 
-    const displayPath = path.relative(cedarPaths.api.base, filePath)
+    const displayPath = path.relative(normalizedApiBase, normalizedFilePath)
     console.log(ansis.dim(`[change] ${displayPath}`))
 
     // Invalidate so ssrLoadModule re-executes the module on the next call
-    const fileUrl = pathToFileURL(filePath).href
+    const fileUrl = pathToFileURL(normalizedFilePath).href
     const mod =
-      viteServer.moduleGraph.getModuleById(filePath) ??
+      viteServer.moduleGraph.getModuleById(normalizedFilePath) ??
       viteServer.moduleGraph.getModuleById(fileUrl)
 
     if (mod) {
@@ -278,23 +291,31 @@ export async function startApiDevServer(port: number): Promise<{
   })
 
   viteServer.watcher.on('add', async (filePath) => {
-    if (!filePath.startsWith(cedarPaths.api.src)) {
+    const normalizedFilePath = filePath.replaceAll('\\', '/')
+
+    if (!normalizedFilePath.startsWith(normalizedApiSrc)) {
       return
     }
 
     console.log(
-      ansis.dim(`[add] ${path.relative(cedarPaths.api.base, filePath)}`),
+      ansis.dim(
+        `[add] ${path.relative(normalizedApiBase, normalizedFilePath)}`,
+      ),
     )
     await loadApiFunctions(viteServer)
   })
 
   viteServer.watcher.on('unlink', async (filePath) => {
-    if (!filePath.startsWith(cedarPaths.api.src)) {
+    const normalizedFilePath = filePath.replaceAll('\\', '/')
+
+    if (!normalizedFilePath.startsWith(normalizedApiSrc)) {
       return
     }
 
     console.log(
-      ansis.dim(`[unlink] ${path.relative(cedarPaths.api.base, filePath)}`),
+      ansis.dim(
+        `[unlink] ${path.relative(normalizedApiBase, normalizedFilePath)}`,
+      ),
     )
     await loadApiFunctions(viteServer)
   })

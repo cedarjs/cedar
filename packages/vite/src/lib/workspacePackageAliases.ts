@@ -54,7 +54,9 @@ function findSourceEntry(
     const candidate = path.join(pkgDir, srcBase + ext)
 
     if (fs.existsSync(candidate)) {
-      return candidate
+      // Normalise to forward slashes so Vite's alias plugin resolves the path
+      // correctly on Windows (Vite uses forward slashes for all module ids).
+      return candidate.replaceAll('\\', '/')
     }
   }
 
