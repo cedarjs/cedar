@@ -115,7 +115,7 @@ vi.mock('../../../lib/index.js', () => ({
   }),
 }))
 
-vi.mock('../../lib/project.js', () => ({
+vi.mock('../../../lib/project.js', () => ({
   serverFileExists: vi.fn(() => false),
 }))
 
