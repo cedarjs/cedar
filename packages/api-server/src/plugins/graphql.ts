@@ -4,7 +4,6 @@ import fastifyMultiPart from '@fastify/multipart'
 import fastifyUrlData from '@fastify/url-data'
 import fg from 'fast-glob'
 import type { FastifyInstance, FastifyRequest, HTTPMethods } from 'fastify'
-import type { Plugin as YogaPlugin } from 'graphql-yoga'
 
 import { buildCedarContext } from '@cedarjs/api/runtime'
 import type { GlobalContext } from '@cedarjs/context'
@@ -68,31 +67,12 @@ export async function redwoodFastifyGraphQLServer(
 
     const graphqlOptions = redwoodOptions.graphql
 
-    // Here we can add any plugins that we want to use with GraphQL Yoga Server
-    // that we do not want to add the the GraphQLHandler in the graphql-server
-    // graphql function.
-    //
-    // These would be plugins that need a server instance such as Cedar Realtime
-    if (graphqlOptions?.realtime) {
-      const { useCedarRealtime } = await import('@cedarjs/realtime')
-
-      const originalExtraPlugins = graphqlOptions.extraPlugins ?? []
-      originalExtraPlugins.push(
-        // This type cast is needed because useCedarRealtime returns an
-        // EnvelopPlugin and here we need a YogaPlugin. I can't change the
-        // return type of `useCedarRealtime` yet, because it'd be a breaking
-        // change.
-        useCedarRealtime(graphqlOptions.realtime) as YogaPlugin,
-      )
-      graphqlOptions.extraPlugins = originalExtraPlugins
-
-      // uses for SSE single connection mode with the `/graphql/stream` endpoint
-      if (graphqlOptions.realtime.subscriptions) {
-        method.push('PUT')
-      }
+    // Used for SSE single connection mode with the `/graphql/stream` endpoint
+    if (graphqlOptions?.realtime?.subscriptions) {
+      method.push('PUT')
     }
 
-    const { yoga } = createGraphQLYoga(graphqlOptions)
+    const { yoga } = await createGraphQLYoga(graphqlOptions)
 
     const graphqlEndpoint = trimSlashes(yoga.graphqlEndpoint)
 
