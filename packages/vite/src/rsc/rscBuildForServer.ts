@@ -64,6 +64,7 @@ export async function rscBuildForServer(
         'better-sqlite3',
         '@cedarjs/auth-dbauth-api',
         '@cedarjs/cookie-jar',
+        '@cedarjs/realtime',
         '@cedarjs/server-store',
         '@simplewebauthn/server',
         'graphql-scalars',
@@ -109,6 +110,7 @@ export async function rscBuildForServer(
       manifest: 'server-build-manifest.json',
       rollupOptions: {
         onwarn: onWarn,
+        external: ['@cedarjs/realtime'],
         input: {
           ...entryFiles,
           ...clientEntryFiles,
