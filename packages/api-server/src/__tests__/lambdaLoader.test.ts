@@ -55,8 +55,6 @@ describe('loadFunctionsFromDist', () => {
   })
 
   // We have logic that specifically puts the graphql function at the front.
-  // Though it's not clear why or if this is actually respected by how JS objects work.
-  // See the complementary lambdaLoaderNumberFunctions test.
   it('puts the graphql function first', async () => {
     expect(LAMBDA_FUNCTIONS.size).toBe(0)
 

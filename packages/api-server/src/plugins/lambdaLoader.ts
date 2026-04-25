@@ -25,7 +25,7 @@ import { getPaths } from '@cedarjs/project-config'
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
 import { escape } from '../utils.js'
 
-export const LAMBDA_FUNCTIONS = new Map<string, Handler>()
+export const LAMBDA_FUNCTIONS = new Map<string, Handler | undefined>()
 export const CEDAR_HANDLERS = new Map<string, CedarHandler>()
 const cedarRouteManifest: CedarRouteRecord[] = []
 
@@ -44,6 +44,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
   console.log(ansis.dim.italic('Importing Server Functions... '))
 
   cedarRouteManifest.length = 0
+  LAMBDA_FUNCTIONS.clear()
   CEDAR_HANDLERS.clear()
 
   const imports = foundFunctions.map(async (fnPath) => {
@@ -250,10 +251,10 @@ export const lambdaRequestHandler = async (
     return
   }
 
-  const func = LAMBDA_FUNCTIONS.get(routeName)
+  const handler = LAMBDA_FUNCTIONS.get(routeName)
 
-  if (func) {
-    return requestHandler(req, reply, func)
+  if (handler) {
+    return requestHandler(req, reply, handler)
   } else {
     const errorMessage = `Function "${routeName}" was not found.`
     req.log.error(errorMessage)
