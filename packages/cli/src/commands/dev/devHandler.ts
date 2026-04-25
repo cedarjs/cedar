@@ -224,6 +224,7 @@ export const handler = async ({
       `yarn cross-env NODE_ENV=development cedar-unified-dev`,
       `  --port ${webAvailablePort}`,
       `  --apiPort ${apiAvailablePort}`,
+      getApiDebugFlag(apiDebugPort, apiAvailablePort),
       forward,
     ]
       .join(' ')
