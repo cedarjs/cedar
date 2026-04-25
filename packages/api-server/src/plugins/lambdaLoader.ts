@@ -25,8 +25,7 @@ import { getPaths } from '@cedarjs/project-config'
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
 import { escape } from '../utils.js'
 
-export type Lambdas = Record<string, Handler>
-export const LAMBDA_FUNCTIONS: Lambdas = {}
+export const LAMBDA_FUNCTIONS = new Map<string, Handler | undefined>()
 export const CEDAR_HANDLERS = new Map<string, CedarHandler>()
 const cedarRouteManifest: CedarRouteRecord[] = []
 
@@ -38,13 +37,14 @@ const cedarRouteManifest: CedarRouteRecord[] = []
  */
 export const getCedarRouteManifest = () => [...cedarRouteManifest]
 
-// Import the API functions and add them to the LAMBDA_FUNCTIONS object
+// Import the API functions and add them to the LAMBDA_FUNCTIONS map
 
 export const setLambdaFunctions = async (foundFunctions: string[]) => {
   const tsImport = Date.now()
   console.log(ansis.dim.italic('Importing Server Functions... '))
 
   cedarRouteManifest.length = 0
+  LAMBDA_FUNCTIONS.clear()
   CEDAR_HANDLERS.clear()
 
   const imports = foundFunctions.map(async (fnPath) => {
@@ -97,7 +97,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
       return undefined
     })()
 
-    LAMBDA_FUNCTIONS[routeName] = handler
+    LAMBDA_FUNCTIONS.set(routeName, handler)
 
     if (cedarHandler) {
       CEDAR_HANDLERS.set(routeName, cedarHandler)
@@ -250,7 +250,11 @@ export const lambdaRequestHandler = async (
     return
   }
 
-  if (!LAMBDA_FUNCTIONS[routeName]) {
+  const handler = LAMBDA_FUNCTIONS.get(routeName)
+
+  if (handler) {
+    return requestHandler(req, reply, handler)
+  } else {
     const errorMessage = `Function "${routeName}" was not found.`
     req.log.error(errorMessage)
     reply.status(404)
@@ -259,10 +263,7 @@ export const lambdaRequestHandler = async (
       const devError = {
         error: errorMessage,
         availableFunctions: [
-          ...new Set([
-            ...Object.keys(LAMBDA_FUNCTIONS),
-            ...CEDAR_HANDLERS.keys(),
-          ]),
+          ...new Set([...LAMBDA_FUNCTIONS.keys(), ...CEDAR_HANDLERS.keys()]),
         ],
       }
       reply.send(devError)
@@ -272,6 +273,4 @@ export const lambdaRequestHandler = async (
 
     return
   }
-
-  return requestHandler(req, reply, LAMBDA_FUNCTIONS[routeName])
 }
