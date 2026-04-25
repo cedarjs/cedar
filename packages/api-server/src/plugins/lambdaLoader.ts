@@ -25,7 +25,7 @@ import { getPaths } from '@cedarjs/project-config'
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
 import { escape } from '../utils.js'
 
-export const LAMBDA_FUNCTIONS = new Map<string, Handler | undefined>()
+export const LAMBDA_FUNCTIONS = new Map<string, Handler>()
 export const CEDAR_HANDLERS = new Map<string, CedarHandler>()
 const cedarRouteManifest: CedarRouteRecord[] = []
 
