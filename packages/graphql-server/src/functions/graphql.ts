@@ -89,8 +89,9 @@ export const createGraphQLHandler = ({
   openTelemetryOptions,
   trustedDocuments,
 }: GraphQLHandlerOptions) => {
-  // Eager initialization of GraphQL Yoga
-  // Starts immediately (non-blocking because createGraphQLYoga is async)
+  // Eager initialization of GraphQL Yoga. It starts immediately when the
+  // handler is first created and is awaited on each request. Initialization is
+  // shared across all Lambda invocations within the same process lifecycle.
   const yogaAndLoggerPromise = createGraphQLYoga({
     healthCheckId,
     loggerConfig,

@@ -64,6 +64,7 @@ export async function rscBuildForServer(
         'better-sqlite3',
         '@cedarjs/auth-dbauth-api',
         '@cedarjs/cookie-jar',
+        '@cedarjs/realtime',
         '@cedarjs/server-store',
         '@cedarjs/realtime',
         '@simplewebauthn/server',

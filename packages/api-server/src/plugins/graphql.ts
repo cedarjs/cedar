@@ -67,7 +67,7 @@ export async function redwoodFastifyGraphQLServer(
 
     const graphqlOptions = redwoodOptions.graphql
 
-    // Add PUT method for SSE single connection mode with the `/graphql/stream` endpoint
+    // Used for SSE single connection mode with the `/graphql/stream` endpoint
     if (graphqlOptions?.realtime?.subscriptions) {
       method.push('PUT')
     }
