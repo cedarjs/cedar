@@ -25,7 +25,7 @@ import { getPaths } from '@cedarjs/project-config'
 import { requestHandler } from '../requestHandlers/awsLambdaFastify.js'
 import { escape } from '../utils.js'
 
-export const LAMBDA_FUNCTIONS = new Map<string, Handler | undefined>()
+export const LAMBDA_FUNCTIONS = new Map<string, Handler>()
 export const CEDAR_HANDLERS = new Map<string, CedarHandler>()
 const cedarRouteManifest: CedarRouteRecord[] = []
 
@@ -53,7 +53,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
 
     const fnImport = await import(pathToFileURL(fnPath).href)
-    const handler: Handler = (() => {
+    const handler: Handler | undefined = (() => {
       if ('handler' in fnImport) {
         // ESModule export of handler - when using
         // `export const handler = ...` - most common case
@@ -97,7 +97,9 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
       return undefined
     })()
 
-    LAMBDA_FUNCTIONS.set(routeName, handler)
+    if (handler) {
+      LAMBDA_FUNCTIONS.set(routeName, handler)
+    }
 
     if (cedarHandler) {
       CEDAR_HANDLERS.set(routeName, cedarHandler)
