@@ -12,7 +12,7 @@ import type {
   RequestGenericInterface,
 } from 'fastify'
 import fastifyRawBody from 'fastify-raw-body'
-import { createServer as createViteServer } from 'vite'
+import { createServer as createViteServer, normalizePath } from 'vite'
 import type { ModuleNode, ViteDevServer } from 'vite'
 
 import { requestHandler } from '@cedarjs/api-server/requestHandlers'
@@ -211,12 +211,11 @@ export async function startApiDevServer(port: number): Promise<{
   const apiHost = cedarConfig.api.host || '::'
   const isEsm = projectSideIsEsm('api')
 
-  // On Windows, path.join produces backslash-separated paths while Vite
-  // normalises all module ids to forward slashes. Pre-normalise every Cedar
-  // path we compare against Vite ids so the checks work on all platforms.
-  const normalizedBase = cedarPaths.base.replaceAll('\\', '/')
-  const normalizedApiSrc = cedarPaths.api.src.replaceAll('\\', '/')
-  const normalizedApiBase = cedarPaths.api.base.replaceAll('\\', '/')
+  // Pre-normalise every Cedar path we compare against Vite ids so the checks
+  // work both Windows and Linux/MacOS.
+  const normalizedBase = normalizePath(cedarPaths.base)
+  const normalizedApiSrc = normalizePath(cedarPaths.api.src)
+  const normalizedApiBase = normalizePath(cedarPaths.api.base)
 
   const viteServer = await createViteDevServer(
     cedarPaths,
@@ -263,7 +262,7 @@ async function createViteDevServer(
   // resolves them correctly on Windows.
   const workspacePkgSourceMap = Object.fromEntries(
     Object.entries(getWorkspacePackageAliases(cedarPaths, cedarConfig)).map(
-      ([name, sourceFile]) => [name, sourceFile.replaceAll('\\', '/')],
+      ([name, sourceFile]) => [name, normalizePath(sourceFile)],
     ),
   )
 
@@ -377,7 +376,7 @@ function setupHmrHandlers(
   viteServer.watcher.on('change', async (filePath) => {
     // Vite's file watcher emits forward-slash paths on all platforms;
     // use the pre-normalised Cedar paths for comparison.
-    const normalizedFilePath = filePath.replaceAll('\\', '/')
+    const normalizedFilePath = normalizePath(filePath)
 
     if (!normalizedFilePath.startsWith(normalizedApiSrc)) {
       return
@@ -411,7 +410,7 @@ function setupHmrHandlers(
   })
 
   viteServer.watcher.on('add', async (filePath) => {
-    const normalizedFilePath = filePath.replaceAll('\\', '/')
+    const normalizedFilePath = normalizePath(filePath)
 
     if (!normalizedFilePath.startsWith(normalizedApiSrc)) {
       return
@@ -431,7 +430,7 @@ function setupHmrHandlers(
   })
 
   viteServer.watcher.on('unlink', async (filePath) => {
-    const normalizedFilePath = filePath.replaceAll('\\', '/')
+    const normalizedFilePath = normalizePath(filePath)
 
     if (!normalizedFilePath.startsWith(normalizedApiSrc)) {
       return
@@ -460,11 +459,8 @@ async function createFastifyApp(apiPort: number, apiHost: string) {
   // Enable Fastify's built-in logger so that errors surfaced by
   // requestHandler (e.g. 500s from user functions) are visible in the
   // dev server output instead of being swallowed.
-  const app = fastify({
-    logger: {
-      level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
-    },
-  })
+  const logLevel = process.env.NODE_ENV === 'development' ? 'debug' : 'info'
+  const app = fastify({ logger: { level: logLevel } })
 
   // fastify-raw-body is required by the requestHandler helper so it can
   // access the raw request body for base64 encoding / parsing

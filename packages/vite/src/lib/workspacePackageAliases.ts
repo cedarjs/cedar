@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { normalizePath } from 'vite'
+
 import type { Config, Paths } from '@cedarjs/project-config'
 
 /**
@@ -46,17 +48,14 @@ function findSourceEntry(
   const withoutLeadingDot = distEntry.replace(/^\.\//, '')
   const withoutExt = withoutLeadingDot.replace(/\.(js|cjs|mjs)$/, '')
 
-  // Map dist/ → src/
+  // Map dist/ -> src/
   const srcBase = withoutExt.replace(/^dist\//, 'src/')
 
-  // Try TypeScript extensions first, then JavaScript
   for (const ext of ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs']) {
     const candidate = path.join(pkgDir, srcBase + ext)
 
     if (fs.existsSync(candidate)) {
-      // Normalise to forward slashes so Vite's alias plugin resolves the path
-      // correctly on Windows (Vite uses forward slashes for all module ids).
-      return candidate.replaceAll('\\', '/')
+      return normalizePath(candidate)
     }
   }
 

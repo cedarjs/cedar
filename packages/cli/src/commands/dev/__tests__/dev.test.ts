@@ -147,20 +147,19 @@ function findUnifiedDevCommand() {
   return devCommand
 }
 
-// When only one workspace selected is selected, or we're running in SSR mode,
-// separate 'api' and 'web' commands are used.
+// When only one workspace is selected, or we're running in SSR mode, separate
+// 'api' and 'web' commands are used.
 type ConcurrentlyCommandObject = {
   command: string
   env?: Record<string, string>
   name?: string
 }
 
-function asCommandInfo(
-  cmd: ConcurrentlyCommandInput | undefined,
-): ConcurrentlyCommandObject | undefined {
-  if (!cmd || typeof cmd === 'string') {
+function asCommandInfo(cmd: ConcurrentlyCommandInput | undefined) {
+  if (!cmd || typeof cmd !== 'object' || !cmd.command) {
     return undefined
   }
+
   return cmd as ConcurrentlyCommandObject
 }
 

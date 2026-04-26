@@ -241,7 +241,7 @@ export const handler = async ({
   })[] = []
 
   if (unifiedDevCommand) {
-    // Unified dev mode: one process handles both web (Vite client) and API
+    // Unified dev mode: one node process handles both web (Vite client) and API
     // (Vite SSR + Fastify) with true HMR – no nodemon, no separate watcher.
     jobs.push({
       name: 'dev',

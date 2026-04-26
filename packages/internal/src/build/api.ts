@@ -4,7 +4,7 @@ import path from 'node:path'
 import type { BuildContext, BuildOptions, PluginBuild } from 'esbuild'
 import { build, context } from 'esbuild'
 import type { Plugin } from 'vite'
-import { build as viteBuild } from 'vite'
+import { build as viteBuild, normalizePath } from 'vite'
 
 import {
   getApiSideBabelPlugins,
@@ -76,11 +76,7 @@ function createCedarViteApiPlugin(): Plugin {
       }
 
       const cedarPaths = getPaths()
-      if (
-        !id
-          .replaceAll('\\', '/')
-          .startsWith(cedarPaths.api.base.replaceAll('\\', '/'))
-      ) {
+      if (!normalizePath(id).startsWith(normalizePath(cedarPaths.api.base))) {
         return null
       }
 
