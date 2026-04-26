@@ -200,10 +200,11 @@ interface LambdaHandlerRequest extends RequestGenericInterface {
 }
 
 /**
- This will take a fastify request
- Then convert it to a lambdaEvent, and pass it to the the appropriate handler for the routeName
- The LAMBDA_FUNCTIONS lookup has been populated already by this point
- **/
+ * This will take a fastify request
+ * Then convert it to a lambdaEvent, and pass it to the the appropriate handler
+ * for the routeName
+ * The LAMBDA_FUNCTIONS map has been populated already by this point
+ */
 export const lambdaRequestHandler = async (
   req: FastifyRequest<LambdaHandlerRequest>,
   reply: FastifyReply,
