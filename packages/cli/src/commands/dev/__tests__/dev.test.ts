@@ -132,6 +132,8 @@ async function defaultConfig() {
  * In the default (unified) dev mode, `concurrently` receives a single command
  * named 'dev' that starts both the web Vite client and the API Vite SSR server
  * in a single process.
+ *
+ * This function finds that command and returns it.
  */
 function findUnifiedDevCommand() {
   const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
@@ -145,10 +147,8 @@ function findUnifiedDevCommand() {
   return devCommand
 }
 
-/**
- * In fallback mode (e.g. streaming SSR, or only one workspace selected) the
- * old separate 'api' and 'web' commands are still used.
- */
+// When only one workspace selected is selected, or we're running in SSR mode,
+// separate 'api' and 'web' commands are used.
 type ConcurrentlyCommandObject = {
   command: string
   env?: Record<string, string>
