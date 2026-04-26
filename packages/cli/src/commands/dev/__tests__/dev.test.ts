@@ -35,15 +35,15 @@ vi.mock('node:fs', async (importOriginal) => {
       readFileSync: (filePath: string) => {
         if (filePath.endsWith('.json')) {
           // For a test, using `any` will have to be good enough
-          const packgeJson: Record<string, any> = {
+          const packageJson: Record<string, any> = {
             workspaces: ['api', 'web', 'packages/*'],
           }
 
           if (filePath.includes('esm-project')) {
-            packgeJson.type = 'module'
+            packageJson.type = 'module'
           }
 
-          return JSON.stringify(packgeJson)
+          return JSON.stringify(packageJson)
         } else if (filePath.endsWith('cedar.toml')) {
           return mockCedarToml
         }
@@ -98,10 +98,12 @@ vi.mock('../../../lib/index.js', () => ({
       api: {
         base: '/mocked/project/api',
         src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
         dist: '/mocked/project/api/dist',
       },
       web: {
         base: '/mocked/project/web',
+        src: '/mocked/project/web/src',
         dist: '/mocked/project/web/dist',
       },
       packages: '/mocked/project/packages',
@@ -112,7 +114,7 @@ vi.mock('../../../lib/index.js', () => ({
   }),
 }))
 
-vi.mock('../../lib/project.js', () => ({
+vi.mock('../../../lib/project.js', () => ({
   serverFileExists: vi.fn(() => false),
 }))
 
