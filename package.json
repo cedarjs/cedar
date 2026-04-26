@@ -13,7 +13,7 @@
     "upgrade-scripts"
   ],
   "scripts": {
-    "build": "nx run-many -t build",
+    "build": "cross-env NX_DAEMON=false nx run-many -t build",
     "build:clean": "node ./tasks/clean-build.mts",
     "build:pack": "nx run-many -t build:pack",
     "build:test-project": "node ./tasks/test-project/test-project.mts",

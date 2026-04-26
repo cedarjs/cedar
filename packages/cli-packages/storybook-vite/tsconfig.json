@@ -2,7 +2,7 @@
   "extends": "../../../tsconfig.cjs-base.json",
   "include": ["src"],
   "references": [
-    { "path": "../../cli-helpers" },
+    { "path": "../../cli-helpers/tsconfig.build.json" },
     { "path": "../../project-config" },
     { "path": "../../telemetry" }
   ]
