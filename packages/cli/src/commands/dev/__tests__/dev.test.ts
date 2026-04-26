@@ -101,7 +101,6 @@ vi.mock('../../../lib/index.js', () => ({
         src: '/mocked/project/api/src',
         functions: '/mocked/project/api/src/functions',
         dist: '/mocked/project/api/dist',
-        functions: '/mocked/project/api/src/functions',
       },
       web: {
         base: '/mocked/project/web',
@@ -323,8 +322,8 @@ describe('yarn cedar dev', () => {
       api: {
         base: '/mocked/esm-project/api',
         src: '/mocked/esm-project/api/src',
-        dist: '/mocked/esm-project/api/dist',
         functions: '/mocked/esm-project/api/src/functions',
+        dist: '/mocked/esm-project/api/dist',
       },
       web: {
         base: '/mocked/esm-project/web',

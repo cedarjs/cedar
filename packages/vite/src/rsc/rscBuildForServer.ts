@@ -66,7 +66,6 @@ export async function rscBuildForServer(
         '@cedarjs/cookie-jar',
         '@cedarjs/realtime',
         '@cedarjs/server-store',
-        '@cedarjs/realtime',
         '@simplewebauthn/server',
         'graphql-scalars',
         'minimatch',

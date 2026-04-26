@@ -136,15 +136,19 @@ export const buildApiWithVite = async () => {
           entryFileNames: '[name].js',
         },
         external: (id) => {
-          // Externalize all node_modules (same as esbuild's bundle: false)
+          // Externalize as much as possible to mimic esbuild's bundle: false
+
+          // Node built-ins
           if (id.startsWith('node:')) {
             return true
           }
+
           // Externalize anything that looks like a bare module specifier
           // (i.e. not a relative or absolute path)
           if (!id.startsWith('.') && !path.isAbsolute(id)) {
             return true
           }
+
           return false
         },
       },
@@ -160,6 +164,7 @@ const transpileApi = async (files: string[]) => {
 function getEsbuildOptions(files: string[]): BuildOptions {
   const cedarPaths = getPaths()
   const format = projectSideIsEsm('api') ? 'esm' : 'cjs'
+
   return {
     absWorkingDir: cedarPaths.api.base,
     entryPoints: files,
@@ -170,6 +175,9 @@ function getEsbuildOptions(files: string[]): BuildOptions {
     bundle: false,
     plugins: [runCedarBabelTransformsPlugin],
     outdir: cedarPaths.api.dist,
+    // setting this to 'true' will generate an external sourcemap x.js.map
+    // AND set the sourceMappingURL comment
+    // (setting it to 'external' will ONLY generate the file, but won't add the comment)
     sourcemap: true,
   }
 }
