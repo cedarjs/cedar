@@ -99,6 +99,7 @@ vi.mock('../../../lib/index.js', () => ({
       api: {
         base: '/mocked/project/api',
         src: '/mocked/project/api/src',
+        functions: '/mocked/project/api/src/functions',
         dist: '/mocked/project/api/dist',
         functions: '/mocked/project/api/src/functions',
       },
