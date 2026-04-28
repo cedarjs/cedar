@@ -83,7 +83,7 @@
     "@babel/preset-env": "7.29.2",
     "@babel/preset-react": "7.28.5",
     "@babel/preset-typescript": "7.28.5",
-    "@npmcli/arborist": "9.4.2",
+    "@npmcli/arborist": "9.4.3",
     "@playwright/test": "1.59.1",
     "@prisma/dev": "0.24.7",
     "@testing-library/jest-dom": "6.9.1",
