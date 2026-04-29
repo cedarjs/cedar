@@ -11,7 +11,7 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
-import { getUserApiUrl } from '../helpers/index.js'
+import { getUserApiUrl, updateApiURLTask } from '../helpers/index.js'
 import {
   flightcontrolConfig,
   databaseEnvVariables,
@@ -55,7 +55,7 @@ const getFlightcontrolJson = async (database) => {
             ...flightcontrolConfig.environments[0],
             services: [
               ...flightcontrolConfig.environments[0].services.map((service) => {
-                if (service.id === 'redwood-api') {
+                if (service.id === 'cedar-api') {
                   return {
                     ...service,
                     envVariables: {
@@ -106,7 +106,7 @@ const updateGraphQLFunction = () => {
     Couldn't find graphql handler in api/src/functions/graphql.js.
     You'll have to add the following cors config manually:
 
-      cors: { origin: process.env.REDWOOD_WEB_URL, credentials: true}
+      cors: { origin: process.env.CEDAR_WEB_URL, credentials: true}
     `)
         return
       }
@@ -123,7 +123,7 @@ const updateGraphQLFunction = () => {
     Couldn't find graphql handler in api/src/functions/graphql.js.
     You'll have to add the following cors config manually:
 
-      cors: { origin: process.env.REDWOOD_WEB_URL, credentials: true}
+      cors: { origin: process.env.CEDAR_WEB_URL, credentials: true}
     `)
         return
       }
@@ -131,7 +131,7 @@ const updateGraphQLFunction = () => {
       graphqlContent.splice(
         graphqlHanderIndex + 1,
         0,
-        '  cors: { origin: process.env.REDWOOD_WEB_URL, credentials: true },',
+        '  cors: { origin: process.env.CEDAR_WEB_URL, credentials: true },',
       )
 
       fs.writeFileSync(graphqlFunctionsPath, graphqlContent.join(EOL))
@@ -179,14 +179,14 @@ const updateDbAuth = () => {
     Couldn't find DbAuthHandler in api/src/functions/auth.js.
     You'll have to add the following cors config manually:
 
-      cors: { origin: process.env.REDWOOD_WEB_URL, credentials: true}
+      cors: { origin: process.env.CEDAR_WEB_URL, credentials: true}
     `)
         return
       }
       authContent.splice(
         dbHandlerIndex + 1,
         0,
-        '  cors: { origin: process.env.REDWOOD_WEB_URL, credentials: true },',
+        '  cors: { origin: process.env.CEDAR_WEB_URL, credentials: true },',
       )
 
       fs.writeFileSync(authFnPath, authContent.join(EOL))
@@ -264,14 +264,14 @@ const addToDotEnvDefaultTask = () => {
 
         You'll have to add the following env var manually:
 
-        REDWOOD_API_URL=${getUserApiUrl()}
+        CEDAR_API_URL=${getUserApiUrl()}
         `
       }
     },
     task: async (_ctx) => {
       const env = path.resolve(getPaths().base, '.env.defaults')
       const apiUrl = getUserApiUrl()
-      const line = `\n\nREDWOOD_API_URL=${apiUrl}\n`
+      const line = `\n\nCEDAR_API_URL=${apiUrl}\n`
 
       fs.appendFileSync(env, line)
     },
@@ -306,6 +306,7 @@ export const handler = async ({ force, database }) => {
       updateGraphQLFunction(),
       updateDbAuth(),
       updateApp(),
+      updateApiURLTask('${CEDAR_API_URL}'),
       addToDotEnvDefaultTask(),
       printSetupNotes(notes),
     ],
