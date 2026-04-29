@@ -3814,11 +3814,6 @@ __metadata:
     vitest: "npm:3.2.4"
     ws: "npm:8.20.0"
     yargs-parser: "npm:21.1.1"
-  peerDependencies:
-    "@cedarjs/api-server": "workspace:*"
-  peerDependenciesMeta:
-    "@cedarjs/api-server":
-      optional: false
   bin:
     cedar-dev-fe: ./dist/devFeServer.js
     cedar-serve-fe: ./dist/runFeServer.js

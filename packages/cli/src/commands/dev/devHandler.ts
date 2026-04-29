@@ -28,6 +28,7 @@ interface DevHandlerOptions {
   forward?: string
   generate?: boolean
   apiDebugPort?: number
+  ud?: boolean
 }
 
 export const handler = async ({
@@ -35,6 +36,7 @@ export const handler = async ({
   forward = '',
   generate = true,
   apiDebugPort,
+  ud = false,
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
@@ -46,9 +48,11 @@ export const handler = async ({
 
   const serverFile = serverFileExists()
 
+  const apiPreferredPort = parseInt(String(getConfig().api.port))
   let apiAvailablePort: number | undefined
+  let apiPortChangeNeeded = false
+
   if (workspace.includes('api')) {
-    const apiPreferredPort = parseInt(String(getConfig().api.port))
     apiAvailablePort = await getFreePort(apiPreferredPort)
 
     if (apiAvailablePort === -1) {
@@ -56,6 +60,8 @@ export const handler = async ({
         message: `Could not determine a free port for the api server`,
       })
     }
+
+    apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
   }
 
   let webPreferredPort: number | undefined = parseInt(
@@ -171,6 +177,10 @@ export const handler = async ({
   //
   // When only web is included, fall back to the standalone Vite dev server.
   const buildUnifiedDevCommand = () => {
+    if (!ud) {
+      return null
+    }
+
     if (streamingSsrEnabled) {
       // Streaming SSR has its own dev server setup
       return null
@@ -206,6 +216,26 @@ export const handler = async ({
   }
 
   const unifiedDevCommand = buildUnifiedDevCommand()
+
+  // In fallback (non-unified) mode the web Vite dev server proxy targets the
+  // configured API port. If the API silently binds to a different free port,
+  // all proxied API requests will fail with no diagnostic output.
+  if (!unifiedDevCommand && apiPortChangeNeeded) {
+    const message = [
+      'The currently configured port for the development server is',
+      'unavailable. Suggested change to your port, which can be changed in',
+      'cedar.toml (or redwood.toml):\n',
+      ` - API to use port ${apiAvailablePort} instead`,
+      'of your currently configured',
+      `${apiPreferredPort}\n`,
+      '\nCannot run the development server until your configured port is',
+      'changed or becomes available.',
+    ]
+      .filter(Boolean)
+      .join(' ')
+
+    exitWithError(undefined, { message })
+  }
 
   const jobs: (Partial<Command> & {
     name: string

@@ -76,11 +76,12 @@ export const builder = async (yargs: Argv) => {
           apiServerCLIConfig.builder(yargs)
         }
         return yargs.option('ud', {
-          // UD serving is the default. Pass --no-ud to use the legacy Fastify server instead.
+          // UD serving is opt-in. Pass --ud to use the new srvx server instead
+          // of the legacy Fastify server.
           description:
-            'Use the Universal Deploy server (srvx). This is the default; pass --no-ud to use Fastify instead.',
+            'Use the Universal Deploy server (srvx). Pass --ud to opt in; the default is Fastify.',
           type: 'boolean',
-          default: true,
+          default: false,
         })
       },
       handler: async (argv: ServeArgv) => {

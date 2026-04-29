@@ -204,8 +204,8 @@ describe('yarn cedar dev', () => {
     mockCedarToml = ''
   })
 
-  it('Should run unified dev server (both api and web) by default', async () => {
-    await handler({ workspace: ['api', 'web'] })
+  it('Should run unified dev server when --ud is passed', async () => {
+    await handler({ workspace: ['api', 'web'], ud: true })
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
 
@@ -224,8 +224,23 @@ describe('yarn cedar dev', () => {
     expect(apiCommand).toBeUndefined()
   })
 
-  it('Should include the gen watcher alongside the unified dev server', async () => {
+  it('Should fall back to separate api+web servers by default (no --ud)', async () => {
     await handler({ workspace: ['api', 'web'] })
+
+    expect(generatePrismaClient).toHaveBeenCalledTimes(1)
+
+    const { webCommand, apiCommand } = findSeparateCommands()
+    expect(webCommand?.command).toContain('cedar-vite-dev')
+    expect(apiCommand?.command).toContain('cedar-api-server-watch')
+
+    // No unified dev command should be present
+    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
+    const devCommand = find(concurrentlyArgs, { name: 'dev' })
+    expect(devCommand).toBeUndefined()
+  })
+
+  it('Should include the gen watcher alongside the unified dev server', async () => {
+    await handler({ workspace: ['api', 'web'], ud: true })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const genCommand = find(concurrentlyArgs, { name: 'gen' })
