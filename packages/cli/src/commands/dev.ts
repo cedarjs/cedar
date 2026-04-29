@@ -44,6 +44,13 @@ export const builder = (yargs: Argv) => {
         'with no value it defaults to 1 prepended to the api port (e.g. api ' +
         'port 8913 -> debug port 18913).',
     })
+    .option('ud', {
+      type: 'boolean',
+      default: false,
+      description:
+        'Use the unified Vite dev server that handles both web and API in a ' +
+        'single process (experimental).',
+    })
     .middleware(() => {
       const check = checkNodeVersion()
 

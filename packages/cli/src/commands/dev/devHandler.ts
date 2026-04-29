@@ -28,6 +28,7 @@ interface DevHandlerOptions {
   forward?: string
   generate?: boolean
   apiDebugPort?: number
+  ud?: boolean
 }
 
 export const handler = async ({
@@ -35,6 +36,7 @@ export const handler = async ({
   forward = '',
   generate = true,
   apiDebugPort,
+  ud = false,
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
@@ -46,33 +48,34 @@ export const handler = async ({
 
   const serverFile = serverFileExists()
 
-  // Starting values of ports from config (cedar.toml or redwood.toml)
   const apiPreferredPort = parseInt(String(getConfig().api.port))
+  let apiAvailablePort: number | undefined
+  let apiPortChangeNeeded = false
+
+  if (workspace.includes('api')) {
+    if (!serverFile) {
+      // Check api port availability. If there's a serverFile we don't know
+      // what port will end up being used — it's up to the author to decide.
+      apiAvailablePort = await getFreePort(apiPreferredPort)
+
+      if (apiAvailablePort === -1) {
+        exitWithError(undefined, {
+          message: `Could not determine a free port for the api server`,
+        })
+      }
+
+      apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
+    } else {
+      // Forward the configured port even though we don't verify it's free.
+      apiAvailablePort = apiPreferredPort
+    }
+  }
 
   let webPreferredPort: number | undefined = parseInt(
     String(getConfig().web.port),
   )
-
-  // Assume we can have the ports we want
-  let apiAvailablePort = apiPreferredPort
-  let apiPortChangeNeeded = false
   let webAvailablePort = webPreferredPort
   let webPortChangeNeeded = false
-
-  // Check api port, unless there's a serverFile. If there is a serverFile, we
-  // don't know what port will end up being used in the end. It's up to the
-  // author of the server file to decide and handle that
-  if (workspace.includes('api') && !serverFile) {
-    apiAvailablePort = await getFreePort(apiPreferredPort)
-
-    if (apiAvailablePort === -1) {
-      exitWithError(undefined, {
-        message: `Could not determine a free port for the api server`,
-      })
-    }
-
-    apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
-  }
 
   // Check web port
   if (workspace.includes('web')) {
@@ -87,10 +90,12 @@ export const handler = async ({
       webPreferredPort = port ? parseInt(port, 10) : undefined
     }
 
-    webAvailablePort = await getFreePort(webPreferredPort, [
-      apiPreferredPort,
-      apiAvailablePort,
-    ])
+    webAvailablePort = await getFreePort(
+      webPreferredPort,
+      apiAvailablePort !== undefined
+        ? [apiPreferredPort, apiAvailablePort]
+        : [apiPreferredPort],
+    )
 
     if (webAvailablePort === -1) {
       exitWithError(undefined, {
@@ -102,19 +107,16 @@ export const handler = async ({
   }
 
   // Check for port conflict and exit with message if found
-  if (apiPortChangeNeeded || webPortChangeNeeded) {
+  if (webPortChangeNeeded) {
     const message = [
-      'The currently configured ports for the development server are',
-      'unavailable. Suggested changes to your ports, which can be changed in',
-      'cedar.toml (or redwood.toml), are:\n',
-      apiPortChangeNeeded && ` - API to use port ${apiAvailablePort} instead`,
-      apiPortChangeNeeded && 'of your currently configured',
-      apiPortChangeNeeded && `${apiPreferredPort}\n`,
-      webPortChangeNeeded && ` - Web to use port ${webAvailablePort} instead`,
-      webPortChangeNeeded && 'of your currently configured',
-      webPortChangeNeeded && `${webPreferredPort}\n`,
-      '\nCannot run the development server until your configured ports are',
-      'changed or become available.',
+      'The currently configured port for the development server is',
+      'unavailable. Suggested change to your port, which can be changed in',
+      'cedar.toml (or redwood.toml):\n',
+      ` - Web to use port ${webAvailablePort} instead`,
+      'of your currently configured',
+      `${webPreferredPort}\n`,
+      '\nCannot run the development server until your configured port is',
+      'changed or becomes available.',
     ]
       .filter(Boolean)
       .join(' ')
@@ -130,23 +132,9 @@ export const handler = async ({
       errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
       console.error(c.error(message))
     }
-
-    // Again, if a server file is configured, we don't know what port it'll end
-    // up using
-    if (!serverFile) {
-      try {
-        await shutdownPort(apiAvailablePort)
-      } catch (e) {
-        const message = getErrorMessage(e)
-        errorTelemetry(process.argv, `Error shutting down "api": ${message}`)
-        console.error(
-          `Error whilst shutting down "api" port: ${c.error(message)}`,
-        )
-      }
-    }
   }
 
-  if (workspace.includes('web')) {
+  if (workspace.includes('web') && webAvailablePort !== undefined) {
     try {
       await shutdownPort(webAvailablePort)
     } catch (e) {
@@ -198,6 +186,10 @@ export const handler = async ({
   //
   // When only web is included, fall back to the standalone Vite dev server.
   const buildUnifiedDevCommand = () => {
+    if (!ud) {
+      return null
+    }
+
     if (streamingSsrEnabled) {
       // Streaming SSR has its own dev server setup
       return null
@@ -234,6 +226,26 @@ export const handler = async ({
 
   const unifiedDevCommand = buildUnifiedDevCommand()
 
+  // In fallback (non-unified) mode the web Vite dev server proxy targets the
+  // configured API port. If the API silently binds to a different free port,
+  // all proxied API requests will fail with no diagnostic output.
+  if (!unifiedDevCommand && apiPortChangeNeeded) {
+    const message = [
+      'The currently configured port for the development server is',
+      'unavailable. Suggested change to your port, which can be changed in',
+      'cedar.toml (or redwood.toml):\n',
+      ` - API to use port ${apiAvailablePort} instead`,
+      'of your currently configured',
+      `${apiPreferredPort}\n`,
+      '\nCannot run the development server until your configured port is',
+      'changed or becomes available.',
+    ]
+      .filter(Boolean)
+      .join(' ')
+
+    exitWithError(undefined, { message })
+  }
+
   const jobs: (Partial<Command> & {
     name: string
     command: string
@@ -242,10 +254,11 @@ export const handler = async ({
 
   if (unifiedDevCommand) {
     // Unified dev mode: one node process handles both web (Vite client) and API
-    // (Vite SSR + Fastify) with true HMR – no nodemon, no separate watcher.
+    // (Vite SSR + Fastify in-process) with true HMR – no nodemon, no separate watcher.
     jobs.push({
       name: 'dev',
       command: unifiedDevCommand,
+
       env: {
         NODE_ENV: 'development',
         NODE_OPTIONS: getDevNodeOptions(),
