@@ -17,7 +17,7 @@ const defaultRedwoodToml: Record<string, any> = {
   web: {
     title: 'Redwood App',
     port: 8910,
-    apiUrl: '/.redwood/functions',
+    apiUrl: '/.api/functions',
     includeEnvironmentVariables: [],
   },
   api: {
