@@ -2185,6 +2185,7 @@ __metadata:
     pretty-bytes: "npm:5.6.0"
     pretty-ms: "npm:7.0.1"
     split2: "npm:4.2.0"
+    termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
