@@ -4,7 +4,7 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import { getConfigPath } from '@cedarjs/project-config'
+import { getConfigPath, getConfig } from '@cedarjs/project-config'
 
 import { getPaths, writeFilesTask } from '../../../../lib/index.js'
 
@@ -29,6 +29,10 @@ export const updateApiURLTask = (apiUrl) => {
       fs.writeFileSync(configTomlPath, newToml)
     },
   }
+}
+
+export function getUserApiUrl() {
+  return getConfig().web.apiUrl
 }
 
 /**

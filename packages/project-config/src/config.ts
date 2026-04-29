@@ -145,7 +145,7 @@ export const DEFAULT_CONFIG: Config = {
     path: './web',
     target: TargetEnum.BROWSER,
     includeEnvironmentVariables: [],
-    apiUrl: '/.redwood/functions',
+    apiUrl: '/.api/functions',
     fastRefresh: true,
     a11y: true,
     sourceMap: false,

@@ -40,7 +40,7 @@ export function resolveOptions(options: RedwoodFastifyWebOptions) {
   // }
   // ```
   //
-  // This is pretty unlikely because we default `apiUrl` to '/.redwood/functions'
+  // This is pretty unlikely because we default `apiUrl` to '/.api/functions'
   if (!redwoodOptions.apiUrl && redwoodOptions.apiProxyTarget) {
     throw new Error(
       `If you provide \`apiProxyTarget\`, \`apiUrl\` has to be a relative URL. \`apiUrl\` is '${redwoodOptions.apiUrl}'`,

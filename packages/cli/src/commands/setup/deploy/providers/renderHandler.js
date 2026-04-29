@@ -8,7 +8,7 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
-import { addFilesTask, updateApiURLTask } from '../helpers/index.js'
+import { addFilesTask } from '../helpers/index.js'
 import {
   POSTGRES_YAML,
   RENDER_HEALTH_CHECK,
@@ -91,7 +91,6 @@ export const handler = async ({ force, database }) => {
           return writeFilesTask(files, { overwriteExisting: force })
         },
       },
-      updateApiURLTask('/.redwood/functions'),
       // Add health check api function
       addFilesTask({
         files: additionalFiles,

@@ -1,10 +1,12 @@
 import path from 'path'
 
 import { getPaths } from '../../../../lib/index.js'
+import { getUserApiUrl } from '../helpers/index.js'
 
 export const PROJECT_NAME = path.basename(getPaths().base)
 
 export const RENDER_YAML = (database) => {
+  const apiUrl = getUserApiUrl().replace(/\/$/, '')
   return `# Quick links to the docs:
 # - Redwood on Render: https://render.com/docs/deploy-redwood
 # - Render's Blueprint spec: https://render.com/docs/yaml-spec
@@ -22,7 +24,7 @@ services:
 
   routes:
   - type: rewrite
-    source: /.redwood/functions/*
+    source: ${apiUrl}/*
     # Replace \`destination\` here after your first deploy:
     #
     # \`\`\`

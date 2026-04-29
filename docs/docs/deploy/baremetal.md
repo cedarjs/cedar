@@ -359,9 +359,9 @@ wget http://localhost:8910
 If you don't see the content of your `web/src/index.html` file then something isn't working. You'll need to fix those issues before you can deploy. Verify the api side is responding:
 
 ```bash
-curl http://localhost:8910/.redwood/functions/graphql?query={redwood{version}}
+curl http://localhost:8910/.api/functions/graphql?query={redwood{version}}
 # or
-wget http://localhost:8910/.redwood/functions/graphql?query={redwood{version}}
+wget http://localhost:8910/.api/functions/graphql?query={redwood{version}}
 ```
 
 You should see something like:
@@ -653,7 +653,7 @@ This should get your site available on port 80 (for HTTP), but you really want i
 
 [nginx](https://www.nginx.com/) is a very robust, dedicated web server that can do a better job of serving our static web-side files than Cedar's own built-in web server (Fastify) which isn't really configured in Cedar for a high traffic, production website.
 
-If nginx will be serving our web side, what about api-side? Cedar's internal API server will be running, but on the default port of 8911. But browsers are going to want to connect on port 80 (HTTP) or 443 (HTTPS). nginx takes care of this as well: it will [proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) (forward) any requests to a path of your choosing (like the default of `/.redwood/functions`) to port 8911 behind the scenes, then return the response to the browser.
+If nginx will be serving our web side, what about api-side? Cedar's internal API server will be running, but on the default port of 8911. But browsers are going to want to connect on port 80 (HTTP) or 443 (HTTPS). nginx takes care of this as well: it will [proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) (forward) any requests to a path of your choosing (like the default of `/.api/functions`) to port 8911 behind the scenes, then return the response to the browser.
 
 This doc isn't going to go through installing and getting nginx running, there are plenty of resources for that available. What we will show is a successful nginx configuration file used by several Cedar apps currently in production.
 
@@ -688,8 +688,8 @@ server {
     add_header Cache-Control public;
   }
 
-  location ~ /.redwood/functions(.*) {
-    rewrite ^/.redwood/functions(.*) $1 break;
+  location ~ /.api/functions(.*) {
+    rewrite ^/.api/functions(.*) $1 break;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_pass http://redwood_server;
   }
@@ -741,7 +741,7 @@ This is the bare minimum to get your site served over HTTP, insecurely. After ve
 
 #### Custom API Path
 
-If you don't love the path of `/.redwood/functions` for your API calls, this is easy to change. You'll need to tell Cedar to use a different path in development, and then let nginx know about that same path so that it resolves the same in production.
+If you don't love the path of `/.api/functions` for your API calls, this is easy to change. You'll need to tell Cedar to use a different path in development, and then let nginx know about that same path so that it resolves the same in production.
 
 For example, to simplify the path to just `/api` you'll need to make a change to `cedar.toml` and your new nginx config file:
 
