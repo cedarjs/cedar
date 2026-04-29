@@ -408,7 +408,9 @@ describe('yarn cedar dev', () => {
 
     await handler({ workspace: ['api', 'web'] })
 
-    expect(getFreePort).toHaveBeenNthCalledWith(1, 8911)
-    expect(getFreePort).toHaveBeenNthCalledWith(2, 8910, [8911])
+    // Custom server files manage their own API port, so Cedar does not check
+    // it — but the web port selection still excludes the configured API port.
+    expect(getFreePort).toHaveBeenCalledTimes(1)
+    expect(getFreePort).toHaveBeenNthCalledWith(1, 8910, [8911])
   })
 })
