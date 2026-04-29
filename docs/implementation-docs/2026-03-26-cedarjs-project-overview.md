@@ -118,7 +118,7 @@ cedar dev:
                 └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
                    change)
 
-  Fallback (api-only or web-only, or streamingSsr): separate processes
+  Fallback (api-only or web-only, streamingSsr, custom serverFile, or missing api/src or web/src): separate processes
     api: cedar-api-server-watch (CJS projects) or cedarjs-api-server-watch (ESM projects) (chokidar + esbuild, kept for SSR/RSC)
     web: cedar-vite-dev (SPA) or cedar-dev-fe (Streaming SSR)
 

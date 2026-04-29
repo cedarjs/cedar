@@ -73,7 +73,6 @@ async function loadApiFunctions(viteServer: ViteDevServer) {
     } finally {
       loadApiFunctionsInFlight = null
     }
-    loadApiFunctionsInFlight = null
   } while (needsReloadAfterInFlight)
 }
 
@@ -188,7 +187,7 @@ function createFetchRequestFromFastify(req: FastifyRequest): Request {
           ? JSON.stringify(req.body)
           : undefined
 
-  const href = `${req.protocol}://${req.hostname}${req.raw.url ?? '/'}`
+  const href = `${req.protocol}://${req.host}${req.raw.url ?? '/'}`
   return new Request(href, {
     method: req.method,
     headers: req.headers as HeadersInit,
