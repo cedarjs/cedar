@@ -60,6 +60,7 @@ export async function rscBuildAnalyze() {
         'better-sqlite3',
         '@cedarjs/auth-dbauth-api',
         '@cedarjs/cookie-jar',
+        '@cedarjs/realtime',
         '@cedarjs/server-store',
         '@simplewebauthn/server',
         'graphql-scalars',
@@ -89,6 +90,7 @@ export async function rscBuildAnalyze() {
       ssr: true,
       rollupOptions: {
         onwarn: onWarn,
+        external: ['@cedarjs/realtime'],
         input: getEntries(),
       },
     },

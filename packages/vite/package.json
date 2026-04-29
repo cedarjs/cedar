@@ -25,6 +25,12 @@
       "types": "./dist/api/vite-plugin-cedar-vitest-api-preset.d.ts",
       "default": "./dist/api/vite-plugin-cedar-vitest-api-preset.js"
     },
+    "./apiDevServer": {
+      "import": {
+        "types": "./dist/apiDevServer.d.ts",
+        "default": "./dist/apiDevServer.js"
+      }
+    },
     "./client": {
       "require": "./dist/cjs/client.js",
       "import": "./dist/client.js"
@@ -40,17 +46,19 @@
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
     },
-    "./bins/rw-vite-build.mjs": "./bins/rw-vite-build.mjs"
+    "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs"
   },
   "bin": {
-    "rw-dev-fe": "./dist/devFeServer.js",
-    "rw-serve-fe": "./dist/runFeServer.js",
-    "rw-vite-build": "./bins/rw-vite-build.mjs",
-    "rw-vite-dev": "./bins/rw-vite-dev.mjs",
+    "cedar-dev-fe": "./dist/devFeServer.js",
+    "cedar-serve-fe": "./dist/runFeServer.js",
+    "cedar-unified-dev": "./dist/cedar-unified-dev.js",
+    "cedar-vite-build": "./bins/cedar-vite-build.mjs",
+    "cedar-vite-dev": "./bins/cedar-vite-dev.mjs",
     "vite": "./bins/vite.mjs"
   },
   "files": [
     "dist",
+    "bins",
     "inject"
   ],
   "scripts": {
@@ -67,26 +75,33 @@
     "@babel/generator": "7.29.1",
     "@babel/parser": "7.29.2",
     "@babel/traverse": "7.29.0",
+    "@cedarjs/api-server": "workspace:*",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
+    "@cedarjs/context": "workspace:*",
     "@cedarjs/cookie-jar": "workspace:*",
+    "@cedarjs/graphql-server": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "@swc/core": "1.15.24",
+    "@fastify/url-data": "6.0.3",
+    "@swc/core": "1.15.30",
     "@universal-deploy/node": "^0.1.6",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
     "acorn-loose": "8.5.2",
+    "ansis": "4.2.0",
     "buffer": "6.0.3",
     "busboy": "^1.6.0",
     "cookie": "1.1.1",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
     "express": "4.22.1",
+    "fastify": "5.8.5",
+    "fastify-raw-body": "5.0.0",
     "find-my-way": "8.2.2",
     "http-proxy-middleware": "3.0.5",
     "isbot": "5.1.39",
@@ -102,6 +117,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",
+    "@types/aws-lambda": "8.10.161",
     "@types/busboy": "^1",
     "@types/express": "4",
     "@types/react": "^18.2.55",
@@ -111,7 +127,7 @@
     "glob": "11.1.0",
     "memfs": "4.57.2",
     "publint": "0.3.18",
-    "rollup": "4.60.1",
+    "rollup": "4.60.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

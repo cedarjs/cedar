@@ -45,7 +45,7 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
   ) {
     logSkippingFastifyWebServer()
 
-    await execa('yarn', ['rw-serve-fe'], {
+    await execa('yarn', ['cedar-serve-fe'], {
       cwd: getPaths().web.base,
       stdio: 'inherit',
     })
@@ -75,7 +75,7 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
         },
         {
           name: 'web',
-          command: `yarn rw-web-server --port ${argv.webPort} --host ${argv.webHost} --api-proxy-target ${apiProxyTarget}`,
+          command: `yarn cedar-web-server --port ${argv.webPort} --host ${argv.webHost} --api-proxy-target ${apiProxyTarget}`,
           cwd: getPaths().base,
           prefixColor: 'blue',
         },
@@ -115,7 +115,7 @@ export const bothSsrRscServerHandler = async (
 
   // TODO (RSC): More gracefully handle Ctrl-C
   // Right now you get a big red error box when you kill the process
-  const fePromise = execa('yarn', ['rw-serve-fe'], {
+  const fePromise = execa('yarn', ['cedar-serve-fe'], {
     cwd: getPaths().web.base,
     stdio: 'inherit',
     env: rscEnabled

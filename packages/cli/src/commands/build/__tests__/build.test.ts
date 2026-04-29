@@ -66,7 +66,7 @@ vi.mock('node:fs', () => {
 // With these mocks it's down to ~250ms
 
 vi.mock('@cedarjs/internal/dist/build/api', () => ({
-  buildApi: vi.fn(),
+  buildApiWithVite: vi.fn(),
   cleanApiBuild: vi.fn(),
 }))
 
@@ -97,7 +97,7 @@ vi.mock('@cedarjs/cli-helpers', () => ({
       'important',
       'caution',
       'link',
-    ].map((k) => [k, (s) => s]),
+    ].map((k) => [k, (s: string) => s]),
   ),
   recordTelemetryAttributes: vi.fn(),
 }))

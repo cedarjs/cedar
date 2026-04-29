@@ -1,10 +1,10 @@
 import { useDisableIntrospection } from '@envelop/disable-introspection'
 import { useFilterAllowedOperations } from '@envelop/filter-operation-type'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { GraphQLSchema } from 'graphql'
 import { OperationTypeNode } from 'graphql'
-import type { Plugin } from 'graphql-yoga'
+import type { GraphQLSchema } from 'graphql'
 import { useReadinessCheck, createYoga } from 'graphql-yoga'
+import type { Plugin } from 'graphql-yoga'
 
 import { mapRwCorsOptionsToYoga } from './cors.js'
 import { makeDirectivesForPlugin } from './directives/makeDirectives.js'
@@ -30,7 +30,7 @@ import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
 import type { RedwoodSubscription } from './subscriptions/makeSubscriptions.js'
 import type { GraphQLYogaOptions, CedarGraphQLContext } from './types.js'
 
-export const createGraphQLYoga = ({
+export const createGraphQLYoga = async ({
   healthCheckId = 'yoga',
   loggerConfig,
   context,
@@ -105,6 +105,14 @@ export const createGraphQLYoga = ({
     // Important: Plugins are executed in order of their usage, and inject functionality serially,
     // so the order here matters
     const plugins: Plugin<any>[] = []
+
+    if (realtime) {
+      // Add Cedar Realtime plugin for live queries and subscriptions support
+      // This registers the @live directive on the schema and handles live query
+      // execution
+      const { useCedarRealtime } = await import('@cedarjs/realtime')
+      plugins.push(useCedarRealtime(realtime))
+    }
 
     const { disableIntrospection } = configureGraphQLIntrospection({
       allowIntrospection,

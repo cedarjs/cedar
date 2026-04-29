@@ -13,7 +13,10 @@ import {
   formatRunWorkspaceScriptCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { buildApi, cleanApiBuild } from '@cedarjs/internal/dist/build/api'
+import {
+  buildApiWithVite,
+  cleanApiBuild,
+} from '@cedarjs/internal/dist/build/api'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
@@ -243,14 +246,7 @@ export const handler = async ({
       title: 'Building API...',
       task: async () => {
         await cleanApiBuild()
-        const { errors, warnings } = await buildApi()
-
-        if (errors.length) {
-          console.error(errors)
-        }
-        if (warnings.length) {
-          console.warn(warnings)
-        }
+        await buildApiWithVite()
       },
     },
     workspace.includes('api') && {
@@ -268,7 +264,7 @@ export const handler = async ({
 
         const createdRequire = createRequire(import.meta.url)
         const buildBinPath = createdRequire.resolve(
-          '@cedarjs/vite/bins/rw-vite-build.mjs',
+          '@cedarjs/vite/bins/cedar-vite-build.mjs',
         )
 
         // @NOTE: we're using the vite build command here, instead of the
@@ -285,7 +281,7 @@ export const handler = async ({
           {
             stdio: verbose ? 'inherit' : 'pipe',
             shell: true,
-            // `cwd` is needed for yarn to find the rw-vite-build binary
+            // `cwd` is needed for yarn to find the cedar-vite-build binary
             // It won't change process.cwd for anything else here, in this
             // process
             cwd: cedarPaths.web.base,

@@ -204,7 +204,6 @@ export function setRedwoodCWD(cwd?: string) {
   }
 
   process.env.CEDAR_CWD = cwd
-  process.env.RWJS_CWD = cwd
 }
 
 /**
