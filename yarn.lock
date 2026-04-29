@@ -95,7 +95,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/glob@npm:0.6.1, @actions/glob@npm:^0.6.1":
+"@actions/glob@npm:0.7.0":
+  version: 0.7.0
+  resolution: "@actions/glob@npm:0.7.0"
+  dependencies:
+    "@actions/core": "npm:^3.0.0"
+    minimatch: "npm:^10.2.5"
+  checksum: 10c0/9280903868718c33c42761345ebc01218e3d0ad0db6446814111e5e3e77302c81a4a66f45b8334e26cee5d2951e936885584bc4450bc00abba94c99f22134a2b
+  languageName: node
+  linkType: hard
+
+"@actions/glob@npm:^0.6.1":
   version: 0.6.1
   resolution: "@actions/glob@npm:0.6.1"
   dependencies:
@@ -26893,7 +26903,7 @@ __metadata:
     "@actions/cache": "npm:6.0.0"
     "@actions/core": "npm:2.0.3"
     "@actions/exec": "npm:2.0.0"
-    "@actions/glob": "npm:0.6.1"
+    "@actions/glob": "npm:0.7.0"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
     "@babel/generator": "npm:7.29.1"
