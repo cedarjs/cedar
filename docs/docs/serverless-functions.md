@@ -89,7 +89,7 @@ api/src
 When you run `yarn rw dev` - it'll watch for changes and make your functions available at:
 
 - `localhost:8911/{functionName}` and
-- `localhost:8910/.redwood/functions/{functionName}` (used by the web side).
+- `localhost:8910/.api/functions/{functionName}` (used by the web side).
 
 Note that the `.redwood/functions` path is determined by your setting in your [cedar.toml](app-configuration-cedar-toml.md#web) - and is used both in development and in the deployed Cedar app
 

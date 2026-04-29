@@ -11,7 +11,7 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { writeFilesTask, printSetupNotes } from '../../../../lib/index.js'
-import { updateApiURLTask } from '../helpers/index.js'
+import { getUserApiUrl } from '../helpers/index.js'
 import {
   flightcontrolConfig,
   databaseEnvVariables,
@@ -264,13 +264,14 @@ const addToDotEnvDefaultTask = () => {
 
         You'll have to add the following env var manually:
 
-        REDWOOD_API_URL=/.redwood/functions
+        REDWOOD_API_URL=${getUserApiUrl()}
         `
       }
     },
     task: async (_ctx) => {
       const env = path.resolve(getPaths().base, '.env.defaults')
-      const line = '\n\nREDWOOD_API_URL=/.redwood/functions\n'
+      const apiUrl = getUserApiUrl()
+      const line = `\n\nREDWOOD_API_URL=${apiUrl}\n`
 
       fs.appendFileSync(env, line)
     },
@@ -305,7 +306,6 @@ export const handler = async ({ force, database }) => {
       updateGraphQLFunction(),
       updateDbAuth(),
       updateApp(),
-      updateApiURLTask('${REDWOOD_API_URL}'),
       addToDotEnvDefaultTask(),
       printSetupNotes(notes),
     ],
