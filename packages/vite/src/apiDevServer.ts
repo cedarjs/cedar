@@ -68,7 +68,11 @@ async function loadApiFunctions(viteServer: ViteDevServer) {
   do {
     needsReloadAfterInFlight = false
     loadApiFunctionsInFlight = internalLoadApiFunctions(viteServer)
-    await loadApiFunctionsInFlight
+    try {
+      await loadApiFunctionsInFlight
+    } finally {
+      loadApiFunctionsInFlight = null
+    }
     loadApiFunctionsInFlight = null
   } while (needsReloadAfterInFlight)
 }
