@@ -7,7 +7,7 @@
     "@cedarjs/auth-dbauth-api": "2.8.0",
     "@cedarjs/graphql-server": "2.8.0",
     "@my-org/validators": "workspace:*",
-    "@prisma/adapter-better-sqlite3": "7.7.0",
+    "@prisma/adapter-better-sqlite3": "7.8.0",
     "better-sqlite3": "12.9.0"
   }
 }
