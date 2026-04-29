@@ -42,6 +42,7 @@ let graphqlYoga: YogaInstance | null = null
 // corrupting the LAMBDA_FUNCTIONS registry when multiple file-change events
 // fire in quick succession (e.g. codegen, scaffold, git checkout).
 let loadApiFunctionsInFlight: Promise<void> | null = null
+let needsReloadAfterInFlight = false
 
 interface LambdaHandlerRequest extends RequestGenericInterface {
   Params: {
@@ -58,19 +59,21 @@ interface LambdaHandlerRequest extends RequestGenericInterface {
  * events don't trigger overlapping reloads that could leave the function
  * registry empty or corrupted.
  */
-async function loadApiFunctions(viteServer: ViteDevServer): Promise<void> {
+async function loadApiFunctions(viteServer: ViteDevServer) {
   if (loadApiFunctionsInFlight) {
-    await loadApiFunctionsInFlight
+    needsReloadAfterInFlight = true
     return
   }
 
-  loadApiFunctionsInFlight = _loadApiFunctions(viteServer).finally(() => {
+  do {
+    needsReloadAfterInFlight = false
+    loadApiFunctionsInFlight = internalLoadApiFunctions(viteServer)
+    await loadApiFunctionsInFlight
     loadApiFunctionsInFlight = null
-  })
-  return loadApiFunctionsInFlight
+  } while (needsReloadAfterInFlight)
 }
 
-async function _loadApiFunctions(viteServer: ViteDevServer): Promise<void> {
+async function internalLoadApiFunctions(viteServer: ViteDevServer) {
   const cedarPaths = getPaths()
 
   // Clear the registry before reloading
@@ -99,11 +102,11 @@ async function _loadApiFunctions(viteServer: ViteDevServer): Promise<void> {
   }
 
   // Load graphql first so it is registered before other functions
-  const graphqlIdx = srcFunctions.findIndex((f) =>
+  const graphqlFunctionIndex = srcFunctions.findIndex((f) =>
     path.basename(f).startsWith('graphql.'),
   )
-  if (graphqlIdx > 0) {
-    const [graphqlFn] = srcFunctions.splice(graphqlIdx, 1)
+  if (graphqlFunctionIndex > 0) {
+    const [graphqlFn] = srcFunctions.splice(graphqlFunctionIndex, 1)
     srcFunctions.unshift(graphqlFn)
   }
 
@@ -397,12 +400,15 @@ function setupHmrHandlers(
         if (!m || invalidated.has(m.id ?? m.url)) {
           return
         }
+
         invalidated.add(m.id ?? m.url)
         viteServer.moduleGraph.invalidateModule(m)
+
         for (const importer of m.importers) {
           invalidateWithImporters(importer)
         }
       }
+
       invalidateWithImporters(mod)
     }
 
