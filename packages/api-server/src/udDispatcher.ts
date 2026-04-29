@@ -143,7 +143,7 @@ export async function buildCedarDispatcher(
           typeof createGraphQLYoga
         >[0]
 
-      const { yoga } = createGraphQLYoga(graphqlOptions)
+      const { yoga } = await createGraphQLYoga(graphqlOptions)
 
       const graphqlFetchable: Fetchable = {
         async fetch(request: Request): Promise<Response> {

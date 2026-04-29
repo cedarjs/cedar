@@ -1,8 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import path from 'node:path'
 
 import type { Plugin, ViteDevServer } from 'vite'
 
-import { getConfig } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 type Fetchable = { fetch(request: Request): Response | Promise<Response> }
 
@@ -19,7 +20,11 @@ async function getDispatcher(): Promise<Fetchable> {
   }
 
   if (buildPromise !== null) {
-    return buildPromise
+    await buildPromise
+    // After awaiting, cachedDispatcher may have been populated by a newer
+    // build that started after we began waiting. If not, we were invalidated
+    // and need to trigger a fresh build.
+    return cachedDispatcher ?? getDispatcher()
   }
 
   // Capture the current generation so we can detect if we've been
@@ -58,13 +63,28 @@ async function getDispatcher(): Promise<Fetchable> {
     // result.
     if (generationAtStart === dispatcherGeneration) {
       cachedDispatcher = fetchable
-      buildPromise = null
     }
 
     return fetchable
   })()
 
-  return buildPromise
+  try {
+    await buildPromise
+  } finally {
+    // Only clear buildPromise if no invalidate happened during our build.
+    // If invalidate DID happen, buildPromise is already null (set by
+    // invalidateDispatcher), and a new build may already be in flight.
+    if (generationAtStart === dispatcherGeneration) {
+      buildPromise = null
+    }
+  }
+
+  if (cachedDispatcher !== null) {
+    return cachedDispatcher
+  }
+
+  // We were invalidated during build. Recurse to get the fresh dispatcher.
+  return getDispatcher()
 }
 
 function invalidateDispatcher() {
@@ -91,7 +111,9 @@ function isApiRequest(url: string): boolean {
   const apiGqlUrl = cedarConfig.web.apiGraphQLUrl ?? apiUrl + '/graphql'
 
   return (
-    url.startsWith(apiUrl) ||
+    url === apiUrl ||
+    url.startsWith(apiUrl + '/') ||
+    url.startsWith(apiUrl + '?') ||
     url === apiGqlUrl ||
     url.startsWith(apiGqlUrl + '/') ||
     url.startsWith(apiGqlUrl + '?')
@@ -164,7 +186,7 @@ export function cedarDevDispatcherPlugin(): Plugin {
 
     configureServer(server: ViteDevServer) {
       server.watcher.on('change', (filePath: string) => {
-        if (filePath.includes('/api/src/')) {
+        if (filePath.startsWith(getPaths().api.src + path.sep)) {
           invalidateDispatcher()
         }
       })
