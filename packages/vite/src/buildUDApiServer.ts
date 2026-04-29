@@ -85,8 +85,6 @@ export const buildUDApiServer = async ({
     },
 
     build: {
-      // Write the server entry to api/dist/ud/
-      outDir,
       // This is a server (Node) build, not a browser build.
       ssr: true,
     },

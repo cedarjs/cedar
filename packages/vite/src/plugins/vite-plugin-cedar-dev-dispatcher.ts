@@ -108,21 +108,6 @@ function isViteInternalRequest(url: string): boolean {
   )
 }
 
-function isApiRequest(url: string): boolean {
-  const cedarConfig = getConfig()
-  const apiUrl = cedarConfig.web.apiUrl.replace(/\/$/, '')
-  const apiGqlUrl = cedarConfig.web.apiGraphQLUrl ?? apiUrl + '/graphql'
-
-  return (
-    url === apiUrl ||
-    url.startsWith(apiUrl + '/') ||
-    url.startsWith(apiUrl + '?') ||
-    url === apiGqlUrl ||
-    url.startsWith(apiGqlUrl + '/') ||
-    url.startsWith(apiGqlUrl + '?')
-  )
-}
-
 async function nodeRequestToFetch(req: IncomingMessage): Promise<Request> {
   const host = req.headers.host ?? 'localhost'
   const url = `http://${host}${req.url ?? '/'}`
@@ -214,6 +199,24 @@ export function cedarDevDispatcherPlugin(): Plugin {
     apply: 'serve',
 
     configureServer(server: ViteDevServer) {
+      // Cache config once at server init instead of per-request.
+      const cedarConfig = getConfig()
+      const apiUrl = cedarConfig.web.apiUrl.replace(/\/$/, '')
+      const apiGqlUrl = cedarConfig.web.apiGraphQLUrl ?? apiUrl + '/graphql'
+      const apiPort = cedarConfig.api.port
+      const apiHost = cedarConfig.api.host || '127.0.0.1'
+
+      function isApiRequest(url: string): boolean {
+        return (
+          url === apiUrl ||
+          url.startsWith(apiUrl + '/') ||
+          url.startsWith(apiUrl + '?') ||
+          url === apiGqlUrl ||
+          url.startsWith(apiGqlUrl + '/') ||
+          url.startsWith(apiGqlUrl + '?')
+        )
+      }
+
       server.watcher.on('change', (filePath: string) => {
         if (filePath.startsWith(getPaths().api.src + path.sep)) {
           invalidateDispatcher()
@@ -237,9 +240,6 @@ export function cedarDevDispatcherPlugin(): Plugin {
           // let Vite's proxy handle the request instead of intercepting it
           // ourselves. This avoids double-compilation and ensures legacy
           // Lambda-shaped handlers are still served.
-          const cedarConfig = getConfig()
-          const apiPort = cedarConfig.api.port
-          const apiHost = cedarConfig.api.host || '127.0.0.1'
 
           if (apiServerIsUp === undefined) {
             apiServerIsUp = await checkApiPort(apiHost, apiPort)
