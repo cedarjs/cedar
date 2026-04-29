@@ -62,21 +62,17 @@ function normalizeApiRootPath(rootPath: string): string {
 }
 
 // NOTE: The runtime function-discovery approach used here (scanning
-// `api/dist/functions/` with fast-glob at startup) is now used by two
-// callers:
-//   1. `cedarUniversalDeployPlugin` — the Phase 4 Vite plugin that registers
-//      `virtual:cedar-api` in the API server Vite build
-//   2. `cedarDevDispatcherPlugin` — the Phase 4 Vite dev middleware that
-//      serves API requests from the unified Vite dev host
+// `api/dist/functions/` with fast-glob at startup) is used by
+// `cedarUniversalDeployPlugin` — the Phase 4 Vite plugin that registers
+// `virtual:cedar-api` in the API server Vite build.
 //
 // TODO: Once the API server is fully Vite-built and Phase 5 introduces
 // per-route static entry registration, the fast-glob discovery path can be
 // removed in favour of statically-known routes. Until then, this function
-// remains the shared aggregate dispatcher for both callers.
+// remains the shared aggregate dispatcher.
 /**
  * Shared aggregate Cedar API dispatcher used by
- * `cedarUniversalDeployPlugin` (via `virtual:cedar-api`) and
- * `cedarDevDispatcherPlugin` (the unified Vite dev host middleware).
+ * `cedarUniversalDeployPlugin` (via `virtual:cedar-api`).
  *
  * Discovers Cedar API functions in `api/dist/functions/`, builds a rou3 router
  * and a map of route names to Fetchables, then returns a single Fetchable that

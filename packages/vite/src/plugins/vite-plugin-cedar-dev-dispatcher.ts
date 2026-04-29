@@ -1,3 +1,11 @@
+/**
+ * NOTE: This plugin is fully implemented but not yet wired into the dev server.
+ * Phase 4's unified dev server (`cedar-unified-dev`) still uses the two-port
+ * model (web Vite dev server + separate Fastify API listener via
+ * `startApiDevServer`). This plugin will be installed into the web Vite dev
+ * server's middleware stack in Phase 5 to achieve true single-port dev, where
+ * API requests are dispatched inline without a separate listener.
+ */
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import net from 'node:net'
 import path from 'node:path'

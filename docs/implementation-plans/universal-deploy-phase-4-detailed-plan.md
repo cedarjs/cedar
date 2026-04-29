@@ -349,7 +349,7 @@ Responsibilities:
 - frontend module graph ownership
 - browser-facing dev ergonomics
 
-### Layer B: Cedar Dev Request Dispatcher
+### Layer B: Cedar Dev Request Dispatcher (prepared, not active)
 
 Responsibilities:
 
@@ -358,7 +358,10 @@ Responsibilities:
 - invoke the aggregate Cedar API fetch dispatcher when appropriate
 - fall through to Vite web handling when appropriate
 
-This is the key new Phase 4 layer.
+This layer is implemented as `cedarDevDispatcherPlugin` and is fully built and
+exported from `@cedarjs/vite`, but it is **not installed** in Phase 4's dev
+server. It will be wired into the web Vite dev server's middleware stack in
+Phase 5 when the two-port model is replaced by single-port inline dispatch.
 
 ### Layer C: Cedar Aggregate API Runtime
 
@@ -456,12 +459,21 @@ internal worker/sub-runtime managed by the dev system.
 
 ### Recommendation
 
-Phase 4 should prefer **Option A** unless implementation evidence proves it
-unworkable. The refined plan already points toward Vite middleware integration,
-and that is the shortest path to the intended developer experience.
+Phase 4 **prepares** Option A by implementing `cedarDevDispatcherPlugin`, a Vite
+middleware plugin that classifies and dispatches API requests inline. However,
+the plugin is **not wired into the dev server** in Phase 4.
 
-If isolation issues appear, they should be documented as follow-up work rather
-than causing Phase 4 to balloon into a multi-runtime orchestration project.
+Instead, Phase 4 keeps the two-port model for stability:
+
+- `cedar-unified-dev` starts two listeners (web Vite dev server + API Vite SSR
+  dev server with Fastify)
+- API requests are proxied from the web port to the API port
+- `cedarDevDispatcherPlugin` is built and exported but not installed
+
+The actual switch to single-port inline middleware is a **Phase 5** goal. Phase
+4 intentionally ships a working two-port unified dev command rather than
+risking regressions by changing both the orchestration and the transport layer
+at once.
 
 ## 4. Backend Invalidation and Reload Strategy
 

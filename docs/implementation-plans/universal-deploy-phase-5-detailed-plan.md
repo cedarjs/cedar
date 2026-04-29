@@ -90,7 +90,8 @@ server's middleware pipeline.
 ### Current State
 
 `apiDevServer.ts` creates a Vite SSR dev server (`middlewareMode: true`) and
-mounts a Fastify app on a separate port. The Fastify app handles:
+mounts a Fastify app on a separate port. `cedarDevDispatcherPlugin` exists in
+`@cedarjs/vite` but is not installed in the dev server. The Fastify app handles:
 
 - body parsing (`fastify-raw-body`)
 - URL data extraction (`fastify-url-data`)
@@ -103,12 +104,15 @@ mounts a Fastify app on a separate port. The Fastify app handles:
 A single `createServer()` call in `cedar-unified-dev` that:
 
 - starts one Vite dev server on the visible port
-- uses `configureServer` middleware to intercept API requests
-- routes them to Cedar's aggregate fetch dispatcher directly
+- installs `cedarDevDispatcherPlugin` (already built in Phase 4) into the
+  `configureServer` middleware pipeline
+- routes API requests to Cedar's aggregate fetch dispatcher directly
 - falls through to Vite's normal web handling for non-API requests
 
 ### Tasks
 
+- install `cedarDevDispatcherPlugin` into the web Vite dev server's
+  `configureServer` hook (the plugin was built in Phase 4 but not wired up)
 - replace Fastify routing with fetch-native request classification and dispatch
 - implement body parsing as a utility function (or use a WHATWG-compatible
   parser) rather than a Fastify plugin
