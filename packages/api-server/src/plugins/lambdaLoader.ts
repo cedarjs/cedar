@@ -13,6 +13,7 @@ import type {
   FastifyRequest,
   RequestGenericInterface,
 } from 'fastify'
+import { terminalLink } from 'termi-link'
 
 import type {
   CedarHandler,
@@ -131,9 +132,8 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
       entry: fnPath,
     })
 
-    // TODO: Use terminal link.
     console.log(
-      ansis.magenta('/' + routeName),
+      terminalLink(ansis.magenta('/' + routeName), pathToFileURL(fnPath).href),
       ansis.dim.italic(Date.now() - ts + ' ms'),
     )
   })
