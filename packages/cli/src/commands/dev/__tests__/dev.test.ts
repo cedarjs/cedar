@@ -411,6 +411,10 @@ describe('yarn cedar dev', () => {
     // Custom server files manage their own API port, so Cedar does not check
     // it — but the web port selection still excludes the configured API port.
     expect(getFreePort).toHaveBeenCalledTimes(1)
-    expect(getFreePort).toHaveBeenNthCalledWith(1, 8910, [8911])
+    expect(getFreePort).toHaveBeenNthCalledWith(1, 8910, [8911, 8911])
+
+    // The configured API port must still be forwarded in the command.
+    const { apiCommand } = findSeparateCommands()
+    expect(apiCommand?.command).toContain('--port 8911')
   })
 })

@@ -52,19 +52,23 @@ export const handler = async ({
   let apiAvailablePort: number | undefined
   let apiPortChangeNeeded = false
 
-  // Check api port, unless there's a serverFile. If there is a serverFile, we
-  // don't know what port will end up being used in the end. It's up to the
-  // author of the server file to decide and handle that
-  if (workspace.includes('api') && !serverFile) {
-    apiAvailablePort = await getFreePort(apiPreferredPort)
+  if (workspace.includes('api')) {
+    if (!serverFile) {
+      // Check api port availability. If there's a serverFile we don't know
+      // what port will end up being used — it's up to the author to decide.
+      apiAvailablePort = await getFreePort(apiPreferredPort)
 
-    if (apiAvailablePort === -1) {
-      exitWithError(undefined, {
-        message: `Could not determine a free port for the api server`,
-      })
+      if (apiAvailablePort === -1) {
+        exitWithError(undefined, {
+          message: `Could not determine a free port for the api server`,
+        })
+      }
+
+      apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
+    } else {
+      // Forward the configured port even though we don't verify it's free.
+      apiAvailablePort = apiPreferredPort
     }
-
-    apiPortChangeNeeded = apiAvailablePort !== apiPreferredPort
   }
 
   let webPreferredPort: number | undefined = parseInt(
