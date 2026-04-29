@@ -30,6 +30,12 @@ const GRAPHQL_METHODS = ['GET', 'POST', 'OPTIONS'] as const
 export interface CedarDispatcherOptions {
   apiRootPath?: string
   discoverFunctionsGlob?: string | string[]
+  /**
+   * Cache-bust token appended to dynamic ESM imports. Use this in dev to
+   * bypass Node.js's ESM module cache after a rebuild. Production builds
+   * should omit this.
+   */
+  cacheBust?: string | number
 }
 
 export interface CedarDispatcherResult {
@@ -124,7 +130,13 @@ export async function buildCedarDispatcher(
     const routeName = path.basename(fnPath, path.extname(fnPath))
     const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
 
-    const fnImport = await import(pathToFileURL(fnPath).href)
+    // In dev we append a cache-bust query to bypass Node.js's ESM module
+    // cache so that rebuilt function files are re-evaluated on every
+    // invalidation. Production builds omit this and rely on normal caching.
+    const importUrl = options?.cacheBust
+      ? `${pathToFileURL(fnPath).href}?t=${options.cacheBust}`
+      : pathToFileURL(fnPath).href
+    const fnImport = await import(importUrl)
 
     // Check if this is a GraphQL function — the babel plugin adds
     // `__rw_graphqlOptions` to api/dist/functions/graphql.js

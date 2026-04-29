@@ -55,7 +55,9 @@ async function getDispatcher(): Promise<Fetchable> {
 
     const { buildCedarDispatcher } =
       await import('@cedarjs/api-server/udDispatcher')
-    const { fetchable } = await buildCedarDispatcher()
+    // Pass a cache-bust token so that rebuilt API functions are re-imported
+    // rather than served from Node.js's ESM module cache.
+    const { fetchable } = await buildCedarDispatcher({ cacheBust: Date.now() })
 
     // Only commit if we are still the current generation. If invalidate() was
     // called while we were building, a newer build will be (or already is)
