@@ -22,6 +22,7 @@
     },
     "test": {
       "inputs": ["default", "^prod"],
+      "outputs": ["{projectRoot}/coverage"],
       "cache": true
     },
     "build:pack": {
@@ -31,5 +32,6 @@
     }
   },
   "nxCloudId": "67f96419000e9059b9b7a441",
-  "analytics": false
+  "analytics": false,
+  "useDaemonProcess": false
 }
