@@ -43,7 +43,7 @@ For certain options, instead of having to configure build tools directly, there'
 
 ### Customizing the GraphQL Endpoint
 
-By default, Cedar derives the GraphQL endpoint from `apiUrl` such that it's `${apiUrl}/graphql`, (with the default `apiUrl`, `./redwood/functions/graphql`).
+By default, Cedar derives the GraphQL endpoint from `apiUrl` such that it's `${apiUrl}/graphql`, (with the default `apiUrl`, `./api/functions/graphql`).
 But sometimes you want to host your api side somewhere else.
 There's two ways you can do this:
 
