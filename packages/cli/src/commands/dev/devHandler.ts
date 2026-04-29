@@ -46,11 +46,8 @@ export const handler = async ({
 
   const serverFile = serverFileExists()
 
-  // For the custom-server lane (apps with api/src/server.{ts,js}), we still
-  // need to find a free API port since the server file controls its own
-  // listening and we don't know what port it will use.
   let apiAvailablePort: number | undefined
-  if (workspace.includes('api') && serverFile) {
+  if (workspace.includes('api')) {
     const apiPreferredPort = parseInt(String(getConfig().api.port))
     apiAvailablePort = await getFreePort(apiPreferredPort)
 

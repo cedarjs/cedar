@@ -13,7 +13,7 @@ import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 import { getPaths } from '../../../lib/index.js'
 import { getFreePort } from '../../../lib/ports'
 import '../../../lib/mockTelemetry.js'
-import { serverFileExists } from '../../lib/project.js'
+import { serverFileExists } from '../../../lib/project.js'
 import { handler } from '../devHandler.js'
 
 let mockCedarToml = ''

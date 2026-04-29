@@ -89,7 +89,9 @@ describe('yarn cedar serve', () => {
   it('Should proxy serve api with params to api-server handler', async () => {
     const parser = yargs().command('serve [side]', false, builder)
 
-    await parser.parse('serve api --port 5555 --apiRootPath funkyFunctions')
+    await parser.parse(
+      'serve api --port 5555 --apiRootPath funkyFunctions --no-ud',
+    )
 
     expect(apiServerCLIConfig.handler).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -104,7 +106,9 @@ describe('yarn cedar serve', () => {
 
     const parser = yargs().command('serve [side]', false, builder)
 
-    await parser.parse('serve api --port 5555 --apiRootPath funkyFunctions')
+    await parser.parse(
+      'serve api --port 5555 --apiRootPath funkyFunctions --no-ud',
+    )
 
     expect(apiServerCLIConfigHandler.handler).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -118,7 +122,7 @@ describe('yarn cedar serve', () => {
     const parser = yargs().command('serve [side]', false, builder)
 
     await parser.parse(
-      'serve api --port 5555 --rootPath funkyFunctions/nested/',
+      'serve api --port 5555 --rootPath funkyFunctions/nested/ --no-ud',
     )
 
     expect(apiServerCLIConfig.handler).toHaveBeenCalledWith(
@@ -135,7 +139,7 @@ describe('yarn cedar serve', () => {
     const parser = yargs().command('serve [side]', false, builder)
 
     await parser.parse(
-      'serve api --port 5555 --rootPath funkyFunctions/nested/',
+      'serve api --port 5555 --rootPath funkyFunctions/nested/ --no-ud',
     )
 
     expect(apiServerCLIConfigHandler.handler).toHaveBeenCalledWith(

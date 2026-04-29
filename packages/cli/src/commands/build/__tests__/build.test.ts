@@ -159,6 +159,7 @@ test('the build tasks are in the correct sequence when packagesWorkspace is enab
       "Checking workspace packages...",
       "Verifying graphql schema...",
       "Building API...",
+      "Bundling API server entry (Universal Deploy)...",
       "Building Web...",
     ]
   `)
@@ -176,6 +177,7 @@ test('the build tasks are in the correct sequence when packagesWorkspace is disa
       "Generating Prisma Client...",
       "Verifying graphql schema...",
       "Building API...",
+      "Bundling API server entry (Universal Deploy)...",
       "Building Web...",
     ]
   `)
