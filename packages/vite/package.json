@@ -25,6 +25,12 @@
       "types": "./dist/api/vite-plugin-cedar-vitest-api-preset.d.ts",
       "default": "./dist/api/vite-plugin-cedar-vitest-api-preset.js"
     },
+    "./apiDevServer": {
+      "import": {
+        "types": "./dist/apiDevServer.d.ts",
+        "default": "./dist/apiDevServer.js"
+      }
+    },
     "./client": {
       "require": "./dist/cjs/client.js",
       "import": "./dist/client.js"
@@ -42,12 +48,14 @@
   "bin": {
     "cedar-dev-fe": "./dist/devFeServer.js",
     "cedar-serve-fe": "./dist/runFeServer.js",
+    "cedar-unified-dev": "./dist/cedar-unified-dev.js",
     "cedar-vite-build": "./bins/cedar-vite-build.mjs",
     "cedar-vite-dev": "./bins/cedar-vite-dev.mjs",
     "vite": "./bins/vite.mjs"
   },
   "files": [
     "dist",
+    "bins",
     "inject"
   ],
   "scripts": {
@@ -64,25 +72,32 @@
     "@babel/generator": "7.29.1",
     "@babel/parser": "7.29.2",
     "@babel/traverse": "7.29.0",
+    "@cedarjs/api-server": "4.0.0",
     "@cedarjs/auth": "4.0.0",
     "@cedarjs/babel-config": "4.0.0",
+    "@cedarjs/context": "4.0.0",
     "@cedarjs/cookie-jar": "4.0.0",
+    "@cedarjs/graphql-server": "4.0.0",
     "@cedarjs/internal": "4.0.0",
     "@cedarjs/project-config": "4.0.0",
     "@cedarjs/server-store": "4.0.0",
     "@cedarjs/testing": "4.0.0",
     "@cedarjs/web": "4.0.0",
+    "@fastify/url-data": "6.0.3",
     "@swc/core": "1.15.30",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
     "acorn-loose": "8.5.2",
+    "ansis": "4.2.0",
     "buffer": "6.0.3",
     "busboy": "^1.6.0",
     "cookie": "1.1.1",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
     "express": "4.22.1",
+    "fastify": "5.8.5",
+    "fastify-raw-body": "5.0.0",
     "find-my-way": "8.2.2",
     "http-proxy-middleware": "3.0.5",
     "isbot": "5.1.39",
@@ -98,6 +113,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",
+    "@types/aws-lambda": "8.10.161",
     "@types/busboy": "^1",
     "@types/express": "4",
     "@types/react": "^18.2.55",

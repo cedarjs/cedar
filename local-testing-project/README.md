@@ -38,7 +38,9 @@ have to do the copy step that `project:tarsync` uses.
 
 ## Preparing the Database
 
-- Delete the .env file, and create a new one that's empty
+- Delete the .env file
+- Run `yarn dlx neon-new --yes` to generate a new .env file with neon
+  credentials added. Then rename DATABASE_URL_DIRECT to DIRECT_DATABASE_URL
 - Run `echo "SESSION_SECRET=$(yarn cedar g secret --raw)" >> .env` to generate
   a new session secret for use with dbAuth
 - Run migrations: `yarn cedar prisma migrate deploy`

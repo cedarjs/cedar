@@ -82,6 +82,16 @@
         "types": "./dist/cjs/watch.d.ts",
         "default": "./dist/cjs/watch.js"
       }
+    },
+    "./requestHandlers": {
+      "import": {
+        "types": "./dist/requestHandlers/awsLambdaFastify.d.ts",
+        "default": "./dist/requestHandlers/awsLambdaFastify.js"
+      },
+      "require": {
+        "types": "./dist/cjs/requestHandlers/awsLambdaFastify.d.ts",
+        "default": "./dist/cjs/requestHandlers/awsLambdaFastify.js"
+      }
     }
   },
   "main": "./dist/createServer.js",
