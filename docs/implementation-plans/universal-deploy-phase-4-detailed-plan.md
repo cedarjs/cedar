@@ -3,37 +3,38 @@
 ## Summary
 
 Phase 4 is the point where Cedar's Universal Deploy work becomes visible in
-day-to-day development. The core shift is not just "use Vite more"; it is
-"make Vite the single externally visible development runtime for the whole app."
+day-to-day development. The core shift is introducing a unified `cedar dev`
+command that runs both web and API sides from one CLI entrypoint, while
+moving API code compilation into the Vite module graph for true HMR.
 
 Today, Cedar development is still mentally and operationally split:
 
 - the web side is served through Vite
-- the API side runs as a separate backend process
+- the API side runs as a separate backend process (nodemon + esbuild)
 - requests move through a proxy boundary
-- backend invalidation and frontend invalidation are related, but not truly part
-  of one runtime model
+- backend invalidation requires full process restarts
 
-Phase 4 replaces that with a single dev host and a single request entrypoint
-that can serve:
+Phase 4 improves this by:
 
-- web assets and HTML
-- GraphQL requests
-- auth requests
-- server function requests
-- future fetch-native backend handlers
+- introducing `cedar-unified-dev` as the default dev command (one CLI process
+  orchestrating both sides)
+- compiling API code through Vite's module graph so functions get HMR without
+  nodemon restarts
+- wiring `@universal-deploy/node` into the API server build so `cedar serve`
+  runs a Vite-built entry instead of the temporary direct-server path
+
+Phase 4 still uses **two ports** (`8910` web + `8911` API) and still proxies
+API requests. The single visible port and inline API middleware belong to
+Phase 5.
 
 This phase is also where the temporary Phase 3 scaffolding starts turning into a
 real runtime architecture. In particular:
 
-- Cedar dev should stop exposing a separate backend port as part of the normal
-  developer experience
 - the API runtime should execute inside a Vite-centric development environment
-- the API server Vite build should gain the first real
-  `cedarUniversalDeployPlugin()`
-- `@universal-deploy/node` should be wired into the API server build and serve
-  path so `cedar serve` runs the Vite-built server entry rather than the
-  temporary direct server construction path
+- the API server build has a Vite config that:
+  - installs `cedarUniversalDeployPlugin()`
+  - installs `node()` from `@universal-deploy/node/vite`
+  - emits a self-contained Node server entry for `cedar serve`
 
 Phase 4 is still not the phase where Cedar fully formalises per-route UD entry
 registration. That belongs to Phase 6. Phase 4 should intentionally ship a
@@ -53,25 +54,29 @@ feels like a split system unless development itself is unified.
 
 Phase 4 exists to solve five concrete problems:
 
-1. **Port split**
-   - Developers should not need to think in terms of "frontend port" and
-     "backend port" for normal app development.
+1. **Dev command split**
+   - Developers currently run two separate commands or rely on `concurrently`
+     orchestration. Phase 4 introduces one `cedar dev` command that starts both
+     sides.
 
-2. **Proxy split**
-   - Requests should not conceptually travel from "the Vite server" to "the API
-     server" as two separate application runtimes.
+2. **No HMR for API code**
+   - Backend code changes currently trigger nodemon process restarts. Phase 4
+     moves API compilation into the Vite module graph so functions get true
+     HMR without restarts.
 
-3. **Module graph split**
-   - Backend code changes should participate in a Vite-owned invalidation and
-     restart model rather than a separate watcher/process model.
-
-4. **Serve path split**
+3. **Serve path split**
    - `cedar serve` should move onto the same UD-oriented build output that the
      broader integration is targeting.
 
-5. **Architecture split**
+4. **Architecture split**
    - Cedar should stop treating the API runtime as a special non-Vite island in
      development.
+
+5. **Proxy/port split**
+   - _This is intentionally not solved in Phase 4._ The two-port model persists
+     here because eliminating it requires a full rewrite of the dev server
+     composition (single Vite listener with inline API middleware). That is a
+     Phase 5 goal.
 
 ## Relationship to the Refined Integration Plan
 
@@ -81,13 +86,14 @@ criteria.
 
 It preserves the refined plan's key constraints:
 
-- one visible development port
-- one dev request dispatcher
-- backend execution integrated into the Vite dev runtime
+- one `cedar dev` command orchestrating both sides
+- backend execution integrated into the Vite module graph for true HMR
 - strong DX for browser traffic and direct HTTP tooling
 - `cedarUniversalDeployPlugin()` introduced in the API server Vite build
 - `node()` from `@universal-deploy/node/vite` added to the API server Vite build
 - no confusion between Vite's "SSR environment" and Cedar's HTML SSR feature
+- the single visible port and inline API middleware are explicitly Phase 5 goals,
+  not Phase 4 deliverables
 
 It also preserves the phase boundary:
 
@@ -198,12 +204,13 @@ later migration path exists.
 
 After Phase 4, the default development architecture should look like this:
 
-- one Vite-hosted dev server is externally visible
-- that dev server owns the request entrypoint
-- browser-facing web requests are handled by Vite as usual
-- API-like requests are dispatched into Cedar's fetch-native backend runtime
-- backend modules are loaded through a Vite-aware mechanism rather than a
-  completely separate long-lived backend process
+- one CLI command (`cedar dev`) starts both the web Vite dev server and the
+  API dev server
+- the web Vite dev server on `8910` handles browser-facing requests as usual
+- API requests are proxied from `8910` to the API dev server on `8911`
+- the API dev server compiles backend modules through Vite's module graph
+  (Vite SSR + Babel transform + Fastify), giving true HMR without nodemon
+  restarts
 - the API server build has a Vite config that:
   - installs `cedarUniversalDeployPlugin()`
   - installs `node()` from `@universal-deploy/node/vite`
@@ -215,22 +222,25 @@ Those apps may continue to use a custom-server path until Cedar provides a
 framework-agnostic replacement for the Fastify-specific extension points they
 depend on.
 
+**Note**: The single visible port and inline API middleware are Phase 5 goals.
+Phase 4 intentionally keeps the proxy/port split to deliver HMR and unified
+orchestration without a full dev server rewrite.
+
 ### Conceptual Request Flow in Dev
 
-The intended request flow is:
+The intended request flow in Phase 4 is:
 
-1. request arrives at the single Vite dev host
-2. Cedar dev middleware classifies the request
-3. request is dispatched to one of:
-   - Vite static/HMR/web handling
-   - GraphQL handler
-   - auth handler
-   - function handler
-   - aggregate Cedar API dispatcher
-4. response is returned directly from the same host
+1. request arrives at the web Vite dev host on port `8910`
+2. Vite's proxy forwards API requests to the separate API dev server on port
+   `8911`
+3. the API dev server (Vite SSR + Fastify) classifies and dispatches the
+   request to the appropriate handler
+4. response is returned through the proxy back to the browser
 
-The important change is that the browser, GraphQL clients, auth callbacks, and
-CLI HTTP tooling all target the same visible origin.
+The important change from the pre-Phase-4 state is that the API side now
+compiles through Vite's module graph (giving true HMR) and both servers are
+orchestrated by a single `cedar dev` command. The proxy/port split still
+exists; eliminating it (single visible port, inline middleware) is Phase 5.
 
 ### Conceptual Build/Serve Flow
 
@@ -1115,11 +1125,10 @@ implementation:
 
 Phase 4 should be considered complete when all of the following are true:
 
-- `cedar dev` exposes one externally visible host/port for the default runtime
-  path
-- GraphQL requests work directly against that host on the default runtime path
-- auth requests work directly against that host on the default runtime path
-- function requests work directly against that host on the default runtime path
+- `cedar dev` starts both web and API dev servers from one CLI command
+- GraphQL requests work against the API dev server on the default runtime path
+- auth requests work against the API dev server on the default runtime path
+- function requests work against the API dev server on the default runtime path
 - browser app loading and HMR still work on the default runtime path
 - backend code changes are reflected without manual restart in normal workflows
   on the default runtime path
@@ -1128,8 +1137,6 @@ Phase 4 should be considered complete when all of the following are true:
   `@universal-deploy/node/vite`
 - `cedar serve` runs the Vite-built Node server entry for the default runtime
   path
-- Cedar no longer depends on a separately exposed backend port for the standard
-  dev experience
 - custom-server apps still have a documented and supported compatibility path
 - the implementation does not require Cedar HTML SSR/RSC work to be complete
 
@@ -1137,9 +1144,10 @@ Phase 4 should be considered complete when all of the following are true:
 
 Phase 4 should produce the following concrete outputs:
 
-- unified one-port dev runtime for the default Cedar runtime lane
-- internal dev request dispatcher
-- aggregate Cedar API fetch dispatcher for dev
+- unified `cedar dev` command that orchestrates web + API dev servers
+- API dev server running through Vite's module graph (Vite SSR + Babel +
+  Fastify) with true HMR
+- aggregate Cedar API fetch dispatcher for the serve path
 - backend invalidation/reload behavior integrated with the Vite-centric runtime
 - initial `cedarUniversalDeployPlugin()` in `@cedarjs/vite`
 - `@cedarjs/api-server` peer dependency declared by `@cedarjs/vite`

@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import net from 'node:net'
 import path from 'node:path'
 
 import type { Plugin, ViteDevServer } from 'vite'
@@ -181,6 +182,32 @@ async function fetchResponseToNode(
   }
 }
 
+let apiServerIsUp: boolean | undefined
+
+async function checkApiPort(host: string, port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket()
+    socket.setTimeout(100)
+
+    socket.on('connect', () => {
+      socket.destroy()
+      resolve(true)
+    })
+
+    socket.on('timeout', () => {
+      socket.destroy()
+      resolve(false)
+    })
+
+    socket.on('error', () => {
+      socket.destroy()
+      resolve(false)
+    })
+
+    socket.connect(port, host)
+  })
+}
+
 export function cedarDevDispatcherPlugin(): Plugin {
   return {
     name: 'cedar-dev-dispatcher',
@@ -202,6 +229,23 @@ export function cedarDevDispatcherPlugin(): Plugin {
           }
 
           if (!isApiRequest(url)) {
+            return next()
+          }
+
+          // If a separate API dev server is already running (e.g. in unified
+          // dev mode or when api and web are started as separate processes),
+          // let Vite's proxy handle the request instead of intercepting it
+          // ourselves. This avoids double-compilation and ensures legacy
+          // Lambda-shaped handlers are still served.
+          const cedarConfig = getConfig()
+          const apiPort = cedarConfig.api.port
+          const apiHost = cedarConfig.api.host || '127.0.0.1'
+
+          if (apiServerIsUp === undefined) {
+            apiServerIsUp = await checkApiPort(apiHost, apiPort)
+          }
+
+          if (apiServerIsUp) {
             return next()
           }
 

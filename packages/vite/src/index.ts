@@ -10,11 +10,11 @@ import {
 } from '@cedarjs/testing/web/vitest'
 
 import { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
-import { cedarDevDispatcherPlugin } from './plugins/vite-plugin-cedar-dev-dispatcher.js'
 import { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 import { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'
 import { cedarNodePolyfills } from './plugins/vite-plugin-cedar-node-polyfills.js'
 import { cedarRemoveFromBundle } from './plugins/vite-plugin-cedar-remove-from-bundle.js'
+import { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-server.js'
 import { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
 import { cedarTransformJsAsJsx } from './plugins/vite-plugin-jsx-loader.js'
 import { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
@@ -34,7 +34,6 @@ export { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 export { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 export { cedarUniversalDeployPlugin } from './plugins/vite-plugin-cedar-universal-deploy.js'
 export { cedarDevDispatcherPlugin } from './plugins/vite-plugin-cedar-dev-dispatcher.js'
-/** @deprecated The default cedar() plugin array now uses cedarDevDispatcherPlugin. This export is kept for apps that reference cedarWaitForApiServer directly. */
 export { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-server.js'
 
 type PluginOptions = {
@@ -73,7 +72,7 @@ export function cedar({ mode }: PluginOptions = {}): PluginOption[] {
     mode === 'test' && cedarJsRouterImportTransformPlugin(),
     mode === 'test' && createAuthImportTransformPlugin(),
     mode === 'test' && autoImportsPlugin(),
-    cedarDevDispatcherPlugin(),
+    cedarWaitForApiServer(),
     cedarNodePolyfills(),
     cedarHtmlEnvPlugin(),
     cedarEntryInjectionPlugin(),

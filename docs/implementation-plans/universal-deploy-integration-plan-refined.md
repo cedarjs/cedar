@@ -818,23 +818,27 @@ Depends on Phases 2 and 3.
 
 #### Goal
 
-Replace the current web+API split dev model with a single Vite-hosted
-development entrypoint for Cedar's default runtime path, while preserving
-a compatibility path for existing apps that depend on custom Fastify
-server setup.
+Introduce a unified `cedar dev` command that runs both web and API sides
+from a single CLI entrypoint, while preserving a compatibility path for
+existing apps that depend on custom Fastify server setup. The dev
+runtime still uses two ports (`8910` web + `8911` API) in this phase;
+moving to a single visible port is Phase 5 work.
 
 #### Work
 
-- Eliminate the `8910 → proxy → 8911` mental model for the default
-  Cedar runtime path
-- Route page, GraphQL, auth, and function requests through one
-  externally visible dev host on that default path
-- Integrate backend handler execution into the Vite dev runtime
-  (likely via Vite's `server.middlewareMode` or custom plugin)
+- Introduce `cedar-unified-dev` as the default dev command: one CLI
+  process that orchestrates the web Vite dev server and the API dev
+  server together, eliminating the need for developers to run two
+  separate terminals or commands
+- Keep the existing proxy model (`8910 → proxy → 8911`) for the default
+  Cedar runtime path in this phase
+- Move API code compilation into the Vite module graph (via Vite SSR +
+  Babel transform) so API functions get true HMR without nodemon
+  restarts
 - Ensure server-side file watching and invalidation work for backend
   entries
 - Preserve strong DX for browser requests, direct `curl` requests,
-  and GraphQL tooling (e.g., GraphiQL must still work)
+  and GraphQL tooling (e.g. GraphiQL must still work)
 - Preserve a compatibility path for apps that use `api/src/server.{ts,js}`,
   `configureFastify`, `configureApiServer`, or direct Fastify plugin
   registration, rather than silently routing them through the new
@@ -866,22 +870,18 @@ also builds the HTML SSR entry.
 
 #### Deliverables
 
-- One visible development port on the default runtime path
-- One dev request dispatcher on the default runtime path
-- One shared module graph for frontend and backend development on the
-  default runtime path
-- A documented compatibility path for apps with custom Fastify server
-  setup
+- One `cedar dev` command that starts both web and API dev servers
+- API code compiled through Vite's module graph with true HMR
 - `@universal-deploy/node` wired end-to-end: Vite builds a
   self-contained server entry; `cedar serve` runs it on the default
   runtime path
+- A documented compatibility path for apps with custom Fastify server
+  setup
 
 #### Exit Criteria
 
-- Cedar dev no longer requires a separately exposed backend port on the
-  default runtime path
-- Requests to functions and GraphQL can be made directly against the
-  Vite dev host on the default runtime path
+- `cedar dev` runs both web and API dev servers from one CLI command
+- API functions receive Vite HMR without nodemon process restarts
 - `cedar serve` runs an `@universal-deploy/node`-built server entry on
   the default runtime path, completing the Phase 3 goal of removing
   Fastify from that production path
@@ -889,9 +889,10 @@ also builds the HTML SSR entry.
   compatibility path and are not silently forced onto the new default
   runtime
 
-**User-facing impact**: High (positive). Most developers see one port,
-one process, and a simpler mental model. Existing apps with custom
-Fastify setup remain on a compatibility path until a later migration
+**User-facing impact**: Medium (positive). Developers get one CLI command
+and faster API HMR. The port model is still two ports (`8910` + `8911`);
+the single-port simplification arrives in Phase 5. Existing apps with
+custom Fastify setup remain on a compatibility path until a later migration
 story exists. Config files may need minor updates.
 
 ---
@@ -921,6 +922,14 @@ than by a separate Fastify listener. This eliminates the last proxy/port
 split, simplifies auth flows and CORS, and aligns Cedar with Nuxt,
 SvelteKit, and other Vite full-stack frameworks.
 
+- Introduce a Vite dev-server plugin (e.g. `cedarDevDispatcherPlugin` or
+  equivalent) that mounts Cedar's fetch-native API dispatcher directly
+  into the web Vite dev server's middleware stack. When the plugin is
+  active, API requests are served inline without proxying to a separate
+  port.
+- Remove the separate Fastify API listener from `cedar-unified-dev`;
+  the web Vite server becomes the only visible HTTP listener.
+
 **2. `buildApp()` with declared environments**
 
 Replace the three standalone `viteBuild()` calls with a single `buildApp()`
@@ -932,7 +941,7 @@ builds, and prepares the infrastructure for a future SSR environment.
 #### Deliverables
 
 - refactored `cedar-unified-dev` using a single Vite dev server with inline
-  API middleware
+  API middleware (no separate API listener)
 - refactored `cedar build` using `buildApp()` with `client` and `api`
   environments
 - updated documentation reflecting the single-port dev model and unified build
