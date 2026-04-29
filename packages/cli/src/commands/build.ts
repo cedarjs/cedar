@@ -45,6 +45,12 @@ export const builder = (yargs: Argv) => {
       default: true,
       description: 'Generate the Prisma client',
     })
+    .option('ud', {
+      type: 'boolean',
+      default: false,
+      description:
+        'Build the Universal Deploy server entry (api/dist/ud/index.js).',
+    })
     .middleware(() => {
       const check = checkNodeVersion()
 

@@ -226,6 +226,24 @@ test('Should run prerender for web (packagesWorkspace disabled)', async () => {
   )
 })
 
+test('UD server entry task is included when --ud is passed', async () => {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+
+  await handler({ ud: true })
+
+  const firstCallArg = vi.mocked(Listr).mock.calls[0][0]
+  const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
+  expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
+    [
+      "Generating Prisma Client...",
+      "Verifying graphql schema...",
+      "Building API...",
+      "Bundling API server entry (Universal Deploy)...",
+      "Building Web...",
+    ]
+  `)
+})
+
 test('Generating gqlorm schema task is included when experimental.gqlorm.enabled is true', async () => {
   vi.spyOn(console, 'log').mockImplementation(() => {})
   mockGetConfig.mockReturnValue({
