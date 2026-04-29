@@ -6,7 +6,7 @@ import { getUserApiUrl } from '../helpers/index.js'
 export const PROJECT_NAME = path.basename(getPaths().base)
 
 export const RENDER_YAML = (database) => {
-  const apiUrl = getUserApiUrl()
+  const apiUrl = getUserApiUrl().replace(/\/$/, '')
   return `# Quick links to the docs:
 # - Redwood on Render: https://render.com/docs/deploy-redwood
 # - Render's Blueprint spec: https://render.com/docs/yaml-spec
