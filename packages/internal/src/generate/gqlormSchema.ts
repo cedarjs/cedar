@@ -923,6 +923,23 @@ export async function generateGqlormArtifacts(): Promise<{
   files: string[]
   errors: { message: string; error: unknown }[]
 }> {
+  if (!getConfig().experimental?.gqlorm?.enabled) {
+    // Clean up any stale files left over from when gqlorm was previously
+    // enabled, so that disabling the flag removes all generated artifacts.
+    const generatedBase = getPaths().generated.base
+    const staleFiles = [
+      path.join(generatedBase, 'gqlorm', 'backend.ts'),
+      path.join(generatedBase, 'gqlorm-schema.json'),
+      path.join(generatedBase, 'types', 'includes', 'web-gqlorm-models.d.ts'),
+    ]
+    for (const staleFile of staleFiles) {
+      if (fs.existsSync(staleFile)) {
+        fs.unlinkSync(staleFile)
+      }
+    }
+    return { files: [], errors: [] }
+  }
+
   const files: string[] = []
   const errors: { message: string; error: unknown }[] = []
 
@@ -968,68 +985,61 @@ export async function generateGqlormArtifacts(): Promise<{
     const backendOutputDir = path.join(generatedBase, 'gqlorm')
     const backendOutputPath = path.join(backendOutputDir, 'backend.ts')
 
-    if (getConfig().experimental?.gqlorm?.enabled) {
-      const graphqlDir = paths.api.graphql
-      const existingTypes = getExistingSdlTypeNames(graphqlDir)
-      const allModels = buildBackendModelInfo(dmmf)
+    const graphqlDir = paths.api.graphql
+    const existingTypes = getExistingSdlTypeNames(graphqlDir)
+    const allModels = buildBackendModelInfo(dmmf)
 
-      const gqlormConfig = getConfig().experimental.gqlorm
-      const membershipModel: string =
-        gqlormConfig.membershipModel ?? 'Membership'
-      const membershipModelCamel =
-        membershipModel.charAt(0).toLowerCase() + membershipModel.slice(1)
-      const membershipUserField: string =
-        gqlormConfig.membershipUserField ?? 'userId'
-      const membershipOrganizationField: string =
-        gqlormConfig.membershipOrganizationField ?? 'organizationId'
+    const gqlormConfig = getConfig().experimental.gqlorm
+    const membershipModel: string = gqlormConfig.membershipModel ?? 'Membership'
+    const membershipModelCamel =
+      membershipModel.charAt(0).toLowerCase() + membershipModel.slice(1)
+    const membershipUserField: string =
+      gqlormConfig.membershipUserField ?? 'userId'
+    const membershipOrganizationField: string =
+      gqlormConfig.membershipOrganizationField ?? 'organizationId'
 
-      // Check if membership model exists in the DMMF (not just gqlorm-visible models)
-      const membershipModelExists = dmmf.datamodel.models.some(
-        (m) => m.name === membershipModel,
+    // Check if membership model exists in the DMMF (not just gqlorm-visible models)
+    const membershipModelExists = dmmf.datamodel.models.some(
+      (m) => m.name === membershipModel,
+    )
+
+    const backendConfig: GqlormBackendConfig = {
+      membershipModel,
+      membershipModelCamel,
+      membershipUserField,
+      membershipOrganizationField,
+      membershipModelExists,
+    }
+
+    // Filter out models whose type name already exists in user-authored SDLs
+    const gqlormModels = allModels.filter(
+      (m) => !existingTypes.has(m.modelName),
+    )
+
+    // Warn when org scoping can't be applied because the membership model is missing
+    const anyModelHasOrgField = gqlormModels.some((m) =>
+      m.fields.some((f) => f.name === membershipOrganizationField),
+    )
+    if (anyModelHasOrgField && !membershipModelExists) {
+      console.warn(
+        `[gqlorm] One or more models have a \`${membershipOrganizationField}\` field, ` +
+          `but the membership model "${membershipModel}" was not found in the schema. ` +
+          `Organization-based access scoping will not be applied for these models. ` +
+          `Add a \`${membershipModel}\` model to your schema.prisma or configure ` +
+          `\`experimental.gqlorm.membershipModel\` in cedar.toml.`,
       )
+    }
 
-      const backendConfig: GqlormBackendConfig = {
-        membershipModel,
-        membershipModelCamel,
-        membershipUserField,
-        membershipOrganizationField,
-        membershipModelExists,
-      }
-
-      // Filter out models whose type name already exists in user-authored SDLs
-      const gqlormModels = allModels.filter(
-        (m) => !existingTypes.has(m.modelName),
+    if (gqlormModels.length > 0) {
+      const backendContent = generateGqlormBackendContent(
+        gqlormModels,
+        backendConfig,
       )
-
-      // Warn when org scoping can't be applied because the membership model is missing
-      const anyModelHasOrgField = gqlormModels.some((m) =>
-        m.fields.some((f) => f.name === membershipOrganizationField),
-      )
-      if (anyModelHasOrgField && !membershipModelExists) {
-        console.warn(
-          `[gqlorm] One or more models have a \`${membershipOrganizationField}\` field, ` +
-            `but the membership model "${membershipModel}" was not found in the schema. ` +
-            `Organization-based access scoping will not be applied for these models. ` +
-            `Add a \`${membershipModel}\` model to your schema.prisma or configure ` +
-            `\`experimental.gqlorm.membershipModel\` in cedar.toml.`,
-        )
-      }
-
-      if (gqlormModels.length > 0) {
-        const backendContent = generateGqlormBackendContent(
-          gqlormModels,
-          backendConfig,
-        )
-        fs.mkdirSync(backendOutputDir, { recursive: true })
-        fs.writeFileSync(backendOutputPath, backendContent)
-        files.push(backendOutputPath)
-      } else {
-        // No models to generate — clean up stale file if it exists
-        if (fs.existsSync(backendOutputPath)) {
-          fs.unlinkSync(backendOutputPath)
-        }
-      }
+      fs.mkdirSync(backendOutputDir, { recursive: true })
+      fs.writeFileSync(backendOutputPath, backendContent)
+      files.push(backendOutputPath)
     } else {
+      // No models to generate — clean up stale file if it exists
       if (fs.existsSync(backendOutputPath)) {
         fs.unlinkSync(backendOutputPath)
       }
