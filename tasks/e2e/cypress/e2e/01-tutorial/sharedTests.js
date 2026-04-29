@@ -44,7 +44,7 @@ export function waitForApiSide() {
       cy
         .request({
           method: 'POST',
-          url: 'http://localhost:8910/.redwood/functions/graphql',
+          url: 'http://localhost:8910/.api/functions/graphql',
           headers: {
             'content-type': 'application/json',
           },

@@ -41,7 +41,7 @@ mv ecosystem.config.js pm2.config.js
 Last but not least, change the API endpoint in `cedar.toml`:
 
 ```diff
-- apiUrl = "/.redwood/functions"
+- apiUrl = "/.api/functions"
 + apiUrl = "/api"
 ```
 

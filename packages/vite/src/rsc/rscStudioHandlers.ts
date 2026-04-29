@@ -71,10 +71,11 @@ const postFlightToStudio = (payload: string, metadata: Record<string, any>) => {
 
   // Options to configure the HTTP POST request
   // TODO (RSC): Get these from the toml and Studio config
+  const apiUrl = getConfig().web.apiUrl.replace(/\/$/, '')
   const options = {
     hostname: 'localhost',
     port: getStudioPort(),
-    path: '/.redwood/functions/rsc-flight',
+    path: `${apiUrl}/rsc-flight`,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

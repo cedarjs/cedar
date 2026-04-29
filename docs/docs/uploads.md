@@ -615,18 +615,18 @@ The object being returned will look like:
 ```ts
 {
   id: 125,
-  avatar: '/.redwood/functions/signedUrl?s=s1gnatur3&expiry=1725190749613&path=path.png'
+  avatar: '/.api/functions/signedUrl?s=s1gnatur3&expiry=1725190749613&path=path.png'
 }
 ```
 
 This will generate a URL that will expire in 2 days (from the point of query). Let's breakdown the URL:
 
-| URL Component                   |                                                      |
-| ------------------------------- | ---------------------------------------------------- |
-| `/.redwood/functions/signedUrl` | Point to the API server, and the endpoint configured |
-| `s=s1gnatur3`                   | The signature that we'll validate                    |
-| `expiry=1725190749613`          | Time stamp for when it expires                       |
-| `path=path.png`                 | The key to look up the file on your storage          |
+| URL Component               |                                                      |
+| --------------------------- | ---------------------------------------------------- |
+| `/.api/functions/signedUrl` | Point to the API server, and the endpoint configured |
+| `s=s1gnatur3`               | The signature that we'll validate                    |
+| `expiry=1725190749613`      | Time stamp for when it expires                       |
+| `path=path.png`             | The key to look up the file on your storage          |
 
 <details>
 <summary>How the signedUrl function validates</summary>
@@ -788,7 +788,7 @@ main()
 
 Based on the above, you'll be able to access your files at:
 
-`http://localhost:8910/.redwood/functions/public_uploads/01J6AF89Y89WTWZF12DRC72Q2A.jpeg`
+`http://localhost:8910/.api/functions/public_uploads/01J6AF89Y89WTWZF12DRC72Q2A.jpeg`
 
 OR directly
 
