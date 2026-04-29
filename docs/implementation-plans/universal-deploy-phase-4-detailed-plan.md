@@ -16,11 +16,11 @@ Today, Cedar development is still mentally and operationally split:
 
 Phase 4 improves this by:
 
-- introducing `cedar-unified-dev` as the default dev command (one CLI process
-  orchestrating both sides)
+- making `cedar-unified-dev` available via an opt-in `--ud` flag on `cedar dev`
+  (one CLI process orchestrating both sides)
 - compiling API code through Vite's module graph so functions get HMR without
   nodemon restarts
-- wiring `@universal-deploy/node` into the API server build so `cedar serve`
+- wiring `@universal-deploy/node` into the API server build so `cedar serve api --ud`
   runs a Vite-built entry instead of the temporary direct-server path
 
 Phase 4 still uses **two ports** (`8910` web + `8911` API) and still proxies
@@ -105,10 +105,9 @@ It also preserves the phase boundary:
 
 ### Primary Goals
 
-- Make `cedar dev` expose one externally visible host/port for the default app
-  runtime
-- Route web and API traffic through one development dispatcher for the default
-  Cedar runtime path
+- Keep `cedar dev` backward-compatible by default; make the unified Vite-centric
+  runtime available via an opt-in `--ud` flag
+- Route web and API traffic through one development dispatcher when `--ud` is used
 - Execute Cedar-owned backend handlers in a Vite-centric runtime
 - Ensure backend source changes are reflected through a coherent dev invalidation
   model
@@ -194,18 +193,21 @@ At the same time, the codebase also makes two important constraints visible:
    runtime path without breaking supported user setups.
 
 These constraints shape the recommended implementation approach for this phase:
-the unified Vite-centric runtime becomes the default path for standard Cedar
-apps, while custom-server apps remain on an explicit compatibility lane until a
-later migration path exists.
+the unified Vite-centric runtime is available as an opt-in path (via `--ud`) for
+standard Cedar apps, while the default `cedar dev` behaviour is unchanged. Custom-
+server apps remain on an explicit compatibility lane until a later migration path
+exists.
 
 ## Architectural Target for Phase 4
 
 ### High-Level Shape
 
-After Phase 4, the default development architecture should look like this:
+After Phase 4, the development architecture looks like this:
 
-- one CLI command (`cedar dev`) starts both the web Vite dev server and the
-  API dev server
+- `cedar dev` (default) still starts separate web and API dev servers,
+  preserving backward compatibility
+- `cedar dev --ud` (opt-in) starts both the web Vite dev server and the
+  API dev server in one CLI process
 - the web Vite dev server on `8910` handles browser-facing requests as usual
 - API requests are proxied from `8910` to the API dev server on `8911`
 - the API dev server compiles backend modules through Vite's module graph
@@ -217,7 +219,7 @@ After Phase 4, the default development architecture should look like this:
   - emits a self-contained Node server entry for `cedar serve`
 
 For apps with custom Fastify setup, Phase 4 should preserve a compatibility
-lane rather than forcing them onto the default unified runtime immediately.
+lane rather than forcing them onto the unified runtime.
 Those apps may continue to use a custom-server path until Cedar provides a
 framework-agnostic replacement for the Fastify-specific extension points they
 depend on.
@@ -310,9 +312,9 @@ Apps that use `api/src/server.{ts,js}`, `configureApiServer`,
 using a supported Cedar extension path today. Phase 4 should not silently
 bypass or ignore those customisations.
 
-Instead, the default unified runtime should apply to standard Cedar apps, while
-custom-server apps remain on an explicit compatibility lane until Cedar offers a
-clear migration path to framework-agnostic extension points.
+Instead, the unified runtime is opt-in (via `--ud`) for standard Cedar apps,
+while custom-server apps remain on an explicit compatibility lane until Cedar
+offers a clear migration path to framework-agnostic extension points.
 
 ## Vite Architecture Alignment
 
@@ -860,7 +862,7 @@ compatibility lane explicit for custom-server apps.
 
 ### Tasks
 
-- update CLI startup messaging to show one visible port for the default runtime
+- update CLI startup messaging to show one visible port when `--ud` is used
 - remove or reduce references to separate web/API dev ports in normal output for
   standard apps
 - update any generated URLs, docs, or help text that assume proxying
@@ -868,7 +870,7 @@ compatibility lane explicit for custom-server apps.
 - ensure debugging output still makes it clear whether a request was handled by
   Vite web logic or Cedar backend logic
 - add explicit messaging for custom-server apps so users understand when Cedar
-  is using the compatibility lane instead of the default unified runtime
+  is using the compatibility lane instead of the unified runtime
 
 ### Deliverable
 
@@ -932,7 +934,8 @@ Test the request dispatcher in isolation.
 
 ## 2. Integration Testing for Dev Runtime
 
-Test the unified dev host end-to-end for the default runtime lane.
+Test the unified dev host end-to-end for the standard (non-custom-server)
+runtime lane.
 
 ### Cases
 
@@ -1094,7 +1097,7 @@ working.
 
 - preserve an explicit compatibility lane for custom-server apps
 - detect custom-server usage and branch intentionally
-- never silently route custom-server apps through the default unified runtime if
+- never silently route custom-server apps through the unified runtime if
   that would drop supported behaviour
 - document the boundary between Cedar-owned fetch-native runtime support and
   Fastify-specific compatibility support

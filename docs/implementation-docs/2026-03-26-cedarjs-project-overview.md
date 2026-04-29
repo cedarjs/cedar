@@ -110,24 +110,28 @@ CLIENT CELL (GraphQL via Apollo):
 
 ```
 cedar dev:
-  concurrently ─┬─ cedar-unified-dev (single process, both sides)
-                │    ├─ Vite SSR dev server for API (Fastify in-process,
-                │    │    Babel transforms via Vite plugin, HMR via module
-                │    │    graph invalidation – no rebuild, no restart)
-                │    └─ Vite client dev server for Web (SPA, HMR)
-                └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
-                   change)
+  Default (no flags):
+    concurrently ─┬─ api: cedar-api-server-watch (CJS) or cedarjs-api-server-watch (ESM)
+                  │      (chokidar + esbuild, kept for SSR/RSC)
+                  ├─ web: cedar-vite-dev (SPA) or cedar-dev-fe (Streaming SSR)
+                  └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
+                     change)
 
-  Fallback (api-only or web-only, streamingSsr, custom serverFile, or missing api/src or web/src): separate processes
-    api: cedar-api-server-watch (CJS projects) or cedarjs-api-server-watch (ESM projects) (chokidar + esbuild, kept for SSR/RSC)
-    web: cedar-vite-dev (SPA) or cedar-dev-fe (Streaming SSR)
+  With --ud (opt-in unified dev):
+    concurrently ─┬─ cedar-unified-dev (single process, both sides)
+                  │    ├─ Vite SSR dev server for API (Fastify in-process,
+                  │    │    Babel transforms via Vite plugin, HMR via module
+                  │    │    graph invalidation – no rebuild, no restart)
+                  │    └─ Vite client dev server for Web (SPA, HMR)
+                  └─ cedar-gen-watch
 
 *SSR/RSC: cedar-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
 
 cedar build:
   prisma gen → GraphQL types → validate SDLs →
   API (Vite SSR build → api/dist/, preserveModules, Babel plugin) →
-  UD (Vite SSR build → api/dist/ud/index.js, self-contained Node entry) →
+  UD (Vite SSR build → api/dist/ud/index.js, self-contained Node entry, only
+      when --ud is passed) →
   Web (Vite → web/dist/) → prerender marked routes
 
 *SSR/RSC: adds route hooks build, route manifest, SSR client+server builds.
@@ -233,7 +237,7 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 | storybook            | Vite Storybook.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | project-config       | Read cedar.toml. getPaths/getConfig/findUp.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | internal             | Re-exports project-config+babel-config. buildApi/buildApiWithVite/dev/generate. Route extraction.                                                                                                                                                                                                                                                                                                                                                                                |
-| api-server           | Fastify. Auto-discover Lambda functions. Mount GraphQL. Custom server.ts. Exports `requestHandlers` used by the Vite API dev server. Opt-in srvx/WinterTC path via `cedar serve api --ud` (`buildUDApiServer` emits `api/dist/ud/index.js`, a self-contained Node entry).                                                                                                                                                                                                        |
+| api-server           | Fastify. Auto-discover Lambda functions. Mount GraphQL. Custom server.ts. Exports `requestHandlers` used by the Vite API dev server. Opt-in srvx/WinterTC path via `cedar serve api --ud`.                                                                                                                                                                                                                                                                                       |
 | web-server           | Fastify for web side. Uses fastify-web adapter.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | fastify-web          | Fastify plugin. Static files, SPA fallback, API proxy, prerender.                                                                                                                                                                                                                                                                                                                                                                                                                |
 | babel-config         | Presets/plugins for api+web. registerApiSideBabelHook.                                                                                                                                                                                                                                                                                                                                                                                                                           |

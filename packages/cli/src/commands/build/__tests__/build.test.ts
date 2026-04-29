@@ -159,7 +159,6 @@ test('the build tasks are in the correct sequence when packagesWorkspace is enab
       "Checking workspace packages...",
       "Verifying graphql schema...",
       "Building API...",
-      "Bundling API server entry (Universal Deploy)...",
       "Building Web...",
     ]
   `)
@@ -177,7 +176,6 @@ test('the build tasks are in the correct sequence when packagesWorkspace is disa
       "Generating Prisma Client...",
       "Verifying graphql schema...",
       "Building API...",
-      "Bundling API server entry (Universal Deploy)...",
       "Building Web...",
     ]
   `)
@@ -226,6 +224,24 @@ test('Should run prerender for web (packagesWorkspace disabled)', async () => {
   expect(consoleSpy.mock.calls[1][0]).toMatch(
     /You have not marked any routes to "prerender"/,
   )
+})
+
+test('UD server entry task is included when --ud is passed', async () => {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+
+  await handler({ ud: true })
+
+  const firstCallArg = vi.mocked(Listr).mock.calls[0][0]
+  const tasks = Array.isArray(firstCallArg) ? firstCallArg : [firstCallArg]
+  expect(tasks.map((x: ListrTask) => x.title)).toMatchInlineSnapshot(`
+    [
+      "Generating Prisma Client...",
+      "Verifying graphql schema...",
+      "Building API...",
+      "Bundling API server entry (Universal Deploy)...",
+      "Building Web...",
+    ]
+  `)
 })
 
 test('Generating gqlorm schema task is included when experimental.gqlorm.enabled is true', async () => {

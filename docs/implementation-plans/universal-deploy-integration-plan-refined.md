@@ -763,15 +763,16 @@ any Vite config that also builds the HTML SSR entry.
 
 - `buildCedarDispatcher(options)` — runtime function discovery and
   Fetchable dispatch, in `@cedarjs/api-server`
-- `createUDServer(options)` — srvx-based API server wrapping the
-  dispatcher, in `@cedarjs/api-server`
-- `cedar-ud-server` binary and `cedar serve api --ud` flag — serve
-  the Cedar API without Fastify
+- `buildUDApiServer()` — Vite SSR build that produces a self-contained Node
+  server entry at `api/dist/ud/index.js`, in `@cedarjs/vite`
+- `cedarUniversalDeployPlugin()` — Vite plugin that registers Cedar's aggregate
+  API entry with the UD store, in `@cedarjs/vite`
+- `cedar serve api --ud` flag — serve the Cedar API without Fastify
 
 #### Exit Criteria
 
 - Cedar can run in production on Node without Fastify via
-  `cedar serve api --ud` or the `cedar-ud-server` binary
+  `cedar serve api --ud` (forks the Vite-built `api/dist/ud/index.js` entry)
 
 #### Temporary scaffolding introduced in Phase 3
 
@@ -782,31 +783,25 @@ removed or replaced in the phases noted below.
 
 **Remove / replace in Phase 4:**
 
-- `createUDServer` (`packages/api-server/src/createUDServer.ts`) —
-  the srvx runtime stand-in for `@universal-deploy/node`. Phase 4
-  replaces it with a Vite-built server entry produced by
-  `@universal-deploy/node/vite`'s `node()` plugin. Once `cedar serve`
-  runs that built output, `createUDServer` has no remaining purpose
-  and should be deleted.
-- `udBin.ts` / `udCLIConfig.ts` / the `cedar-ud-server` binary —
-  these exist solely to invoke `createUDServer`. They go away together
-  with it in Phase 4, unless a non-Vite standalone serve mode is
-  deliberately kept.
-- `cedar serve api --ud` CLI flag (`packages/cli/src/commands/serve.ts`)
-  — the temporary bridge that routes to `createUDServer` instead of
-  Fastify. Phase 4 should make UD serving the default and remove the
-  flag entirely.
+- `createUDServer` and `cedar-ud-server` — the temporary srvx runtime stand-in
+  from Phase 3. Phase 4 replaces them with `buildUDApiServer()`, a Vite SSR
+  build that produces a self-contained Node server entry via
+  `@universal-deploy/node/vite`'s `node()` plugin.
+- `cedar serve api --ud` CLI flag — updated in Phase 4 to fork the Vite-built
+  `api/dist/ud/index.js` entry instead of invoking the deleted `createUDServer`.
+  The flag remains **opt-in** (not the default) to preserve backward
+  compatibility with existing Fastify setups.
+
+**Keep in Phase 4:**
+
 - `buildCedarDispatcher` (`packages/api-server/src/udDispatcher.ts`) —
-  the runtime function-discovery function (uses `fast-glob` to scan
-  `api/dist/functions/` at startup). In Phase 4 the API is built and
-  bundled by Vite, so runtime discovery is no longer needed; the
-  function can be deleted. If a non-Vite standalone mode is kept,
-  `buildCedarDispatcher` can be retained for that path only.
+  still needed at build time by `cedarUniversalDeployPlugin` to resolve
+  `virtual:ud:catch-all` → Cedar's aggregate fetchable. It is bundled into
+  the Vite-built output, not executed at runtime in production.
 
 **User-facing impact**: None for most developers. Self-hosting users
-can opt in to the Fastify-free srvx server via `cedar serve api --ud`
-or the `cedar-ud-server` binary. Full `@universal-deploy/node`
-end-to-end arrives in Phase 4.
+can opt in to the Fastify-free srvx server via `cedar serve api --ud`.
+Full `@universal-deploy/node` end-to-end arrives in Phase 4.
 
 ---
 
@@ -826,10 +821,10 @@ moving to a single visible port is Phase 5 work.
 
 #### Work
 
-- Introduce `cedar-unified-dev` as the default dev command: one CLI
-  process that orchestrates the web Vite dev server and the API dev
-  server together, eliminating the need for developers to run two
-  separate terminals or commands
+- Make `cedar-unified-dev` available via an opt-in `--ud` flag on
+  `cedar dev`: one CLI process that orchestrates the web Vite dev
+  server and the API dev server together. The default `cedar dev`
+  behaviour (without `--ud`) remains unchanged.
 - Keep the existing proxy model (`8910 → proxy → 8911`) for the default
   Cedar runtime path in this phase
 - Move API code compilation into the Vite module graph (via Vite SSR +
@@ -870,21 +865,19 @@ also builds the HTML SSR entry.
 
 #### Deliverables
 
-- One `cedar dev` command that starts both web and API dev servers
-- API code compiled through Vite's module graph with true HMR
+- `cedar dev --ud` starts both web and API dev servers in one process
+- API code compiled through Vite's module graph with true HMR (when `--ud` is used)
 - `@universal-deploy/node` wired end-to-end: Vite builds a
-  self-contained server entry; `cedar serve` runs it on the default
-  runtime path
+  self-contained server entry; `cedar serve api --ud` forks it
 - A documented compatibility path for apps with custom Fastify server
   setup
 
 #### Exit Criteria
 
-- `cedar dev` runs both web and API dev servers from one CLI command
-- API functions receive Vite HMR without nodemon process restarts
-- `cedar serve` runs an `@universal-deploy/node`-built server entry on
-  the default runtime path, completing the Phase 3 goal of removing
-  Fastify from that production path
+- `cedar dev --ud` runs both web and API dev servers from one CLI command
+- API functions receive Vite HMR without nodemon process restarts (when `--ud` is used)
+- `cedar serve api --ud` runs an `@universal-deploy/node`-built server entry,
+  completing the Phase 3 goal of making Fastify-free serving possible
 - Existing apps with custom Fastify server setup still have a supported
   compatibility path and are not silently forced onto the new default
   runtime
@@ -922,11 +915,10 @@ than by a separate Fastify listener. This eliminates the last proxy/port
 split, simplifies auth flows and CORS, and aligns Cedar with Nuxt,
 SvelteKit, and other Vite full-stack frameworks.
 
-- Introduce a Vite dev-server plugin (e.g. `cedarDevDispatcherPlugin` or
-  equivalent) that mounts Cedar's fetch-native API dispatcher directly
-  into the web Vite dev server's middleware stack. When the plugin is
-  active, API requests are served inline without proxying to a separate
-  port.
+- Install `cedarDevDispatcherPlugin` (already built and exported in
+  Phase 4) into the web Vite dev server's `configureServer` middleware
+  stack. When the plugin is active, API requests are served inline
+  without proxying to a separate port.
 - Remove the separate Fastify API listener from `cedar-unified-dev`;
   the web Vite server becomes the only visible HTTP listener.
 

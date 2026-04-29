@@ -118,6 +118,7 @@ export interface BuildHandlerOptions {
   verbose?: boolean
   prisma?: boolean
   prerender?: boolean
+  ud?: boolean
 }
 
 export const handler = async ({
@@ -125,6 +126,7 @@ export const handler = async ({
   verbose = false,
   prisma = true,
   prerender = true,
+  ud = false,
 }: BuildHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'build',
@@ -249,12 +251,13 @@ export const handler = async ({
         await buildApiWithVite()
       },
     },
-    workspace.includes('api') && {
-      title: 'Bundling API server entry (Universal Deploy)...',
-      task: async () => {
-        await buildUDApiServer({ verbose })
+    ud &&
+      workspace.includes('api') && {
+        title: 'Bundling API server entry (Universal Deploy)...',
+        task: async () => {
+          await buildUDApiServer({ verbose })
+        },
       },
-    },
     workspace.includes('web') && {
       title: 'Building Web...',
       task: async () => {
