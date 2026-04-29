@@ -36,7 +36,7 @@ real runtime architecture. In particular:
   temporary direct server construction path
 
 Phase 4 is still not the phase where Cedar fully formalises per-route UD entry
-registration. That belongs to Phase 5. Phase 4 should intentionally ship a
+registration. That belongs to Phase 6. Phase 4 should intentionally ship a
 working aggregate-entry model that is operationally correct for local
 development and for the Node serve path.
 
@@ -92,7 +92,7 @@ It preserves the refined plan's key constraints:
 It also preserves the phase boundary:
 
 - Phase 4 delivers a working aggregate-entry plugin and runtime
-- Phase 5 expands that into full per-route registration and provider-facing
+- Phase 6 expands that into full per-route registration and provider-facing
   correctness
 
 ## Goals
@@ -118,7 +118,7 @@ It also preserves the phase boundary:
 - Preserve GraphiQL and direct `curl` workflows
 - Preserve existing auth and function behavior during the transition
 - Minimise app-level migration burden
-- Keep Phase 4 compatible with the later Phase 5 route-registration expansion
+- Keep Phase 4 compatible with the later Phase 6 route-registration expansion
 - Make the compatibility story for `api/src/server.{ts,js}`,
   `configureFastify`, and custom Fastify plugins explicit
 
@@ -275,7 +275,7 @@ not through reintroduced Node/Express/Fastify-specific request objects.
 ### 4. Aggregate Entry First, Per-Route Later
 
 Phase 4 should use one aggregate Cedar API entry for correctness and speed of
-delivery. It should not prematurely implement the full Phase 5 route-splitting
+delivery. It should not prematurely implement the full Phase 6 route-splitting
 model.
 
 ### 5. No Cedar/SSR Terminology Drift
@@ -303,6 +303,25 @@ bypass or ignore those customisations.
 Instead, the default unified runtime should apply to standard Cedar apps, while
 custom-server apps remain on an explicit compatibility lane until Cedar offers a
 clear migration path to framework-agnostic extension points.
+
+## Vite Architecture Alignment
+
+The Vite team recommends a specific architecture for full-stack frameworks:
+
+- **Dev**: a **single** Vite dev server with an API middleware mounted directly on it. API requests hit the same origin/port as the web dev server and are handled inline by Vite middleware — no separate HTTP listener for the API.
+- **Build**: Vite's **`buildApp`** API (or the builder `buildApp()` hook) used to build the **client** and **SSR/custom** environments together in a single build pass, with environments declared in `vite.config`.
+
+### Current Implementation Gap
+
+The Phase 4 implementation as it exists today is an **incremental step** toward that architecture, but it does not yet match it:
+
+- **Dev**: `cedar-unified-dev` still runs **two HTTP listeners** in one Node process:
+  1. A Vite SSR dev server (`middlewareMode: true`) + a Fastify app listening on `apiPort`
+  2. A regular Vite client dev server listening on `webPort`
+     This means the browser still conceptually targets two ports, even though they are orchestrated by one CLI command.
+- **Build**: `buildApiWithVite()` calls `viteBuild()` **standalone** for the API side. It does not yet use `buildApp()` or the builder API with declared environments. Web and API are built as two separate Vite invocations, not as coordinated environments within one `buildApp` pass.
+
+This is acceptable for Phase 4 because it delivers the core operational wins (one CLI command, Vite module graph for API code, HMR) without requiring a full rewrite of the dev server composition. A future phase should close the gap by moving to a true single-listener Vite dev server with inline API middleware, and by adopting `buildApp()` with client + API environments.
 
 ## Proposed Runtime Architecture
 
@@ -466,7 +485,7 @@ Phase 4 should start with a conservative invalidation model:
   system
 - prefer correctness over maximal granularity
 
-This is another place where Phase 5 can later improve precision once per-route
+This is another place where Phase 6 can later improve precision once per-route
 entries exist.
 
 ### Important Constraint
@@ -496,7 +515,7 @@ An aggregate entry:
 - keeps plugin complexity manageable
 - avoids premature provider-specific route splitting
 - is sufficient for local dev and Node serve
-- aligns with the refined plan's explicit Phase 4/Phase 5 boundary
+- aligns with the refined plan's explicit Phase 4/Phase 6 boundary
 
 ## 6. `cedarUniversalDeployPlugin()` Responsibilities in Phase 4
 
@@ -579,6 +598,29 @@ Fastify-specific setup, Cedar should either:
 - fail clearly with guidance rather than silently dropping custom behaviour
 
 Silent partial compatibility is the worst outcome here.
+
+### The Default Production Path Has No Fastify
+
+An important implication of Lane A is that **there is no Fastify in production on the default path**. When `cedar serve` runs the Vite-built output through `@universal-deploy/node`, the HTTP server is `srvx` (WinterTC-compatible), not Fastify. There is no `server.register()`, no Fastify plugin system, and no reply/request lifecycle to hook into.
+
+This means:
+
+- **Fastify plugins are not portable to the default lane**. A user who needs a Fastify-specific plugin must either write an equivalent as Cedar middleware (see Phase 1 middleware model) or stay on Lane B (custom Fastify compatibility).
+- **Deployment-level concerns belong to the UD adapter**, not the Cedar app. Compression, TLS termination, rate limiting, edge headers, and static file serving are the responsibility of `@universal-deploy/node` (or the relevant cloud adapter), not `handleRequest()`.
+
+### Testing Deployment Concerns: `cedar dev` vs `cedar serve`
+
+Because deployment-level behavior lives in the UD adapter, it is **not exercised during `cedar dev`** on the default lane. The Vite dev server runs app logic only. If a user wants to verify that compression is active, that CORS headers are correct, or that the static asset pipeline behaves as expected in production, they must run **`cedar serve`**.
+
+This represents a mental model shift from the old architecture:
+
+|                               | Old architecture          | New default architecture                    |
+| ----------------------------- | ------------------------- | ------------------------------------------- |
+| **Dev**                       | Fastify (app + plugins)   | Vite (app logic only)                       |
+| **Production**                | Fastify (app + plugins)   | UD adapter (`srvx` + Cedar `fetch` handler) |
+| **Where to test compression** | `cedar dev` (same server) | `cedar serve` (adapter layer)               |
+
+If this split proves too painful in practice, Cedar can add optional dev conveniences (e.g. a compression middleware in the dev dispatcher), but that should be explicitly framed as a dev aid, not the production code path.
 
 ## Workstreams
 
@@ -991,7 +1033,7 @@ Developer workflows become worse even if browser flows work.
 - test non-browser requests explicitly
 - avoid assumptions that all requests originate from the SPA
 
-## Risk 5: Phase 4 Accidentally Expands into Phase 5
+## Risk 5: Phase 4 Accidentally Expands into Phase 6
 
 ### Impact
 
@@ -1001,7 +1043,7 @@ registration too early.
 ### Mitigation
 
 - keep the aggregate-entry boundary explicit
-- defer per-route UD registration to Phase 5
+- defer per-route UD registration to Phase 6
 - document temporary limitations clearly
 
 ## Risk 6: Terminology Confusion Around "SSR"
@@ -1062,6 +1104,12 @@ implementation:
    there a safe compatibility wrapper that still preserves Fastify behaviour?
 10. Which current Fastify extension points need a future framework-agnostic
     replacement, and which should remain explicitly serverful-only?
+11. What is the migration path from the current two-listener dev model
+    (`webPort` + `apiPort`) to the Vite-recommended single-listener model with
+    inline API middleware? Is this a Phase 4 follow-up, or does it belong to
+    Phase 6?
+12. When should Cedar adopt `buildApp()` with declared `client` and `api`
+    environments instead of separate `viteBuild()` calls for each side?
 
 ## Exit Criteria for Phase 4
 
@@ -1116,10 +1164,10 @@ Phase 4 is successful.
 That success condition should not require Cedar to immediately eliminate the
 custom Fastify server path. Existing apps that depend on `api/src/server.{ts,js}`
 or Fastify-specific plugin setup should remain supported through an explicit
-compatibility lane. Phase 5 and later work can then build on a stable default
+compatibility lane. Phase 6 and later work can then build on a stable default
 runtime foundation while separately addressing longer-term migration away from
 Fastify-specific extension points where appropriate.
-conservative backend invalidation, Phase 4 is successful.
 
-Phase 5 can then build on a stable runtime foundation to formalise per-route UD
-entry registration and provider-facing metadata correctness.
+Phase 5 closes the architectural gap between Phase 4's incremental bridge and
+an idiomatic Vite full-stack integration. See
+`universal-deploy-phase-5-detailed-plan.md` for details.

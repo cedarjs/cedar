@@ -429,16 +429,17 @@ Phases are not strictly sequential. After Phase 1 completes:
   only on Phase 1
 - **Phase 4** depends on Phases 2 and 3
 - **Phase 5** depends on Phase 4
-- **Phase 6** (SSR rebuild) can begin **design work during Phases
-  4–5** — the handler contract and middleware model are already
+- **Phase 6** depends on Phase 5
+- **Phase 7** (SSR rebuild) can begin **design work during Phases
+  5–6** — the handler contract and middleware model are already
   stable after Phase 1
-- **Phase 7** depends on Phases 5 and 6
+- **Phase 8** depends on Phases 6 and 7
 
 ```
 Phase 1 ──┬── Phase 2 ──┐
-          │             ├── Phase 4 ── Phase 5 ──┐
-          └── Phase 3 ──┘                        ├── Phase 7
-                   Phase 6 (design: Phase 4–5) ──┘
+          │             ├── Phase 4 ── Phase 5 ── Phase 6 ──┐
+          └── Phase 3 ──┘                                   ├── Phase 8
+                   Phase 7 (design: Phase 5–6) ─────────────┘
 ```
 
 ---
@@ -895,24 +896,76 @@ story exists. Config files may need minor updates.
 
 ---
 
-### Phase 5: Formalise the Cedar UD Vite Plugin
+### Phase 5: Idiomatic Vite Full-Stack Integration
 
-**Effort: M (Medium)**
+**Effort: L (Large)**
 
 Depends on Phase 4.
 
 #### Goal
 
-Expand `cedarUniversalDeployPlugin()` (introduced in Phase 4 as part
-of the API server Vite build) from a single aggregate entry into a
-complete, per-route registration that UD adapters and provider plugins
-can rely on. Phase 4 ships a working plugin with one catch-all entry;
-Phase 5 makes it correct and provider-discoverable.
+Close the architectural gap between Phase 4's incremental bridge and an
+idiomatic Vite full-stack integration. Phase 4 delivered user-facing wins
+(one `cedar dev` command, API HMR, Vite-built serve output) using two HTTP
+listeners in dev and three separate `viteBuild()` calls in production. Phase
+5 makes the underlying architecture match what the Vite team recommends for
+full-stack frameworks.
 
-#### Current state after Phase 4
+#### Two Workstreams
 
-`cedarUniversalDeployPlugin()` exists (introduced in Phase 4) and
-provides:
+**1. Single-listener dev server**
+
+Replace the two-listener dev model with one Vite dev server on a single
+visible port. API requests are handled inline via Vite middleware rather
+than by a separate Fastify listener. This eliminates the last proxy/port
+split, simplifies auth flows and CORS, and aligns Cedar with Nuxt,
+SvelteKit, and other Vite full-stack frameworks.
+
+**2. `buildApp()` with declared environments**
+
+Replace the three standalone `viteBuild()` calls with a single `buildApp()`
+invocation that declares `client` and `api` environments. Both environments
+share one module graph, one transform pipeline, and consistent resolution.
+This reduces build time, eliminates silent divergence between client and API
+builds, and prepares the infrastructure for a future SSR environment.
+
+#### Deliverables
+
+- refactored `cedar-unified-dev` using a single Vite dev server with inline
+  API middleware
+- refactored `cedar build` using `buildApp()` with `client` and `api`
+  environments
+- updated documentation reflecting the single-port dev model and unified build
+
+#### Exit Criteria
+
+- `cedar dev` runs on one visible port with no separate API listener
+- `cedar build` uses `buildApp()` with declared environments in a single pass
+- All existing Phase 4 functionality continues to work
+- The custom Fastify compatibility lane is unaffected
+
+**User-facing impact**: Low. Internal architecture alignment; no new user
+features.
+
+---
+
+### Phase 6: Formalise the Cedar UD Vite Plugin
+
+**Effort: M (Medium)**
+
+Depends on Phase 5.
+
+#### Goal
+
+Expand `cedarUniversalDeployPlugin()` from a single aggregate entry into a
+complete, per-route registration that UD adapters and provider plugins can
+rely on. Phase 4 ships a working plugin with one catch-all entry; Phase 5
+makes the Vite integration idiomatic; Phase 6 makes the plugin correct and
+provider-discoverable.
+
+#### Current state after Phase 5
+
+`cedarUniversalDeployPlugin()` exists and provides:
 
 - A single aggregate `virtual:cedar-api` entry registered with
   `addEntry()`, covering all Cedar API routes via one catch-all
@@ -967,11 +1020,11 @@ provides:
 
 ---
 
-### Phase 6: Rebuild SSR on the New Runtime
+### Phase 7: Rebuild SSR on the New Runtime
 
 **Effort: XL (Extra Large)**
 
-Design work can begin **during Phases 4–5**. Implementation depends on
+Design work can begin **during Phases 5–6**. Implementation depends on
 Phase 1 (handler contract and middleware model).
 
 #### Goal
@@ -1008,11 +1061,11 @@ SSR-specific configuration.
 
 ---
 
-### Phase 7: Provider Validation
+### Phase 8: Provider Validation
 
 **Effort: L (Large)**
 
-Depends on Phases 5 and 6.
+Depends on Phases 6 and 7.
 
 #### Goal
 
@@ -1048,17 +1101,18 @@ targets Cedar cares about.
 
 ## Phase Summary
 
-| Phase | Description           | Effort | Parallel? | User-Facing? |
-| ----- | --------------------- | ------ | --------- | ------------ |
-| 1     | Fetch-native handlers | L      | —         | No (shim)    |
-| 2     | Route discovery       | M      | With 3    | No           |
-| 3     | UD adapter adoption   | M      | With 2    | No           |
-| 4     | Vite-centric dev      | XL     | —         | Yes          |
-| 5     | UD registration       | M      | —         | No           |
-| 6     | SSR rebuild           | XL     | Design‡   | Yes          |
-| 7     | Provider validation   | L      | —         | Yes          |
+| Phase | Description                | Effort | Parallel? | User-Facing? |
+| ----- | -------------------------- | ------ | --------- | ------------ |
+| 1     | Fetch-native handlers      | L      | —         | No (shim)    |
+| 2     | Route discovery            | M      | With 3    | No           |
+| 3     | UD adapter adoption        | M      | With 2    | No           |
+| 4     | Vite-centric dev           | XL     | —         | Yes          |
+| 5     | Idiomatic Vite integration | L      | —         | No           |
+| 6     | UD registration            | M      | —         | No           |
+| 7     | SSR rebuild                | XL     | Design‡   | Yes          |
+| 8     | Provider validation        | L      | —         | Yes          |
 
-‡ Design work can overlap with Phases 4–5.
+‡ Design work can overlap with Phases 5–6.
 
 ## Transitional Developer Experience
 
@@ -1081,10 +1135,13 @@ update their config and enjoy a simpler mental model. Apps with custom
 Fastify server setup remain on a compatibility path rather than being
 silently forced onto the new runtime.
 
-**After Phase 5**: No visible change for developers. UD integration is
+**After Phase 5**: No visible change for developers. Internal architecture
+alignment only.
+
+**After Phase 6**: No visible change for developers. UD integration is
 framework-internal.
 
-**After Phases 6–7**: Full SSR support on the new runtime. Deploy to
+**After Phases 7–8**: Full SSR support on the new runtime. Deploy to
 supported providers.
 
 ## Migration Path
@@ -1143,7 +1200,7 @@ comments for manual review.
 ### Migration Guide
 
 A migration guide should accompany each phase that has user-facing
-impact (Phases 4, 6, 7). The guide should cover:
+impact (Phases 4, 7, 8). The guide should cover:
 
 - What changed and why
 - Step-by-step migration instructions
@@ -1161,8 +1218,9 @@ impact (Phases 4, 6, 7). The guide should cover:
 | 3     | None                                                                                |
 | 4     | Config updates for standard apps; compatibility-path review for custom Fastify apps |
 | 5     | None                                                                                |
-| 6     | SSR config migration                                                                |
-| 7     | Deploy config updates                                                               |
+| 6     | None                                                                                |
+| 7     | SSR config migration                                                                |
+| 8     | Deploy config updates                                                               |
 
 ## Risks
 
@@ -1240,5 +1298,5 @@ the middleware model, the remaining UD work becomes implementation
 detail instead of architectural guesswork.
 
 Phase 2 and Phase 3 can proceed in parallel immediately after Phase 1.
-Phase 6 design work can start during Phases 4–5. Take advantage of
+Phase 7 design work can start during Phases 5–6. Take advantage of
 this parallelism to reduce the overall timeline.
