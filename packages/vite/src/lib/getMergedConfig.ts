@@ -11,6 +11,8 @@ import {
   getPaths,
 } from '@cedarjs/project-config'
 
+import { getWorkspacePackageAliases } from './workspacePackageAliases.js'
+
 /**
  * This function will merge in the default Cedar Vite config passed into the
  * build function (or in Vite.config.xxx)
@@ -20,6 +22,14 @@ import {
  */
 export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
   return (userConfig: ViteUserConfig, env: ConfigEnv): ViteUserConfig => {
+    // In dev/serve mode, resolve workspace package imports directly to their
+    // TypeScript source files so the web Vite server doesn't fail when a
+    // workspace package hasn't been built yet (i.e. dist/ doesn't exist).
+    const workspaceAliases =
+      env.command === 'serve'
+        ? getWorkspacePackageAliases(cedarPaths, cedarConfig)
+        : {}
+
     let apiHost = process.env.REDWOOD_API_HOST
     apiHost ??= cedarConfig.api.host
     // In dev, use the IPv4 loopback so Node's http-proxy can connect to the
@@ -39,6 +49,9 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
 
     const defaultCedarViteConfig: ViteUserConfig = {
       root: cedarPaths.web.src,
+      resolve: {
+        alias: workspaceAliases,
+      },
       // @MARK: when we have these aliases, the warnings from the FE server go
       // away BUT, if you have imports like this:
       // ```

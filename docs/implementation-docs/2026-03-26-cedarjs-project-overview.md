@@ -110,20 +110,29 @@ CLIENT CELL (GraphQL via Apollo):
 
 ```
 cedar dev:
-  concurrently ─┬─ nodemon → api-server (Fastify, port from toml)
+  concurrently ─┬─ cedar-unified-dev (single process, both sides)
+                │    ├─ Vite SSR dev server for API (Fastify in-process,
+                │    │    Babel transforms via Vite plugin, HMR via module
+                │    │    graph invalidation – no rebuild, no restart)
+                │    └─ Vite client dev server for Web (SPA, HMR)
                 └─ cedar-gen-watch (regenerate types on SDL or Prisma schema
                    change)
+
+  Fallback (api-only or web-only, streamingSsr, custom serverFile, or missing api/src or web/src): separate processes
+    api: cedar-api-server-watch (CJS projects) or cedarjs-api-server-watch (ESM projects) (chokidar + esbuild, kept for SSR/RSC)
+    web: cedar-vite-dev (SPA) or cedar-dev-fe (Streaming SSR)
 
 *SSR/RSC: cedar-vite-dev adds Express + Vite SSR servers. See [SSR-RSC-DOC].
 
 cedar build:
   prisma gen → GraphQL types → validate SDLs →
-  API (esbuild→api/dist/) → Web (Vite→web/dist/) → prerender marked routes
+  API (Vite SSR build → api/dist/, preserveModules, Babel plugin) →
+  Web (Vite → web/dist/) → prerender marked routes
 
 *SSR/RSC: adds route hooks build, route manifest, SSR client+server builds.
 
 Vite plugins: cell transform | entry injection | html env | node polyfills |
-  auto-imports | import-dir | js-as-jsx | merged config
+  auto-imports | import-dir | js-as-jsx | merged config | api-babel-transform
   *SSR/RSC: adds RSC transforms
 ```
 
@@ -195,45 +204,45 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 
 ## PACKAGES (behavioral)
 
-| Package              | Behavior                                                                                                                                                                                           |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| core                 | Umbrella. Re-exports CLI, servers, testing, config. Bin shims.                                                                                                                                     |
-| router               | JSX routing. `<Route path="/{id:Int}" page={P} name="r"/>`. Typed params, globs, redirects, `<Set>` layouts, `<PrivateSet>` auth guards. Named route helpers. Link/navigate/useLocation/useParams. |
-| auth                 | Provider-agnostic. `createAuth(provider)` → {AuthProvider, useAuth}. State: loading/authenticated/user. \*SSR/RSC: ServerAuthProvider injects state for SSR.                                       |
-| web                  | App shell. RedwoodProvider. createCell (GraphQL state→UI). Apollo (useQuery/useMutation). Head/MetaTags. FatalErrorBoundary. Toast. FetchConfig.                                                   |
-| api                  | Server runtime. Auth extraction. Validations (validate/validateWith). CORS. Logging (Pino). Cache (Redis/Memcached/InMemory). Webhooks. RedwoodError.                                              |
-| graphql-server       | Yoga factory. Merge SDLs (schema) + services (resolvers) + directives + subscriptions. Armor. GraphiQL. useRequireAuth. Directive system (validator+transformer).                                  |
-| vite                 | cedar() → Vite plugins. Cell transform, entry injection, auto-imports. \*SSR/RSC: adds Express + 2 Vite servers, RSC transforms, Hot Module Replacement.                                           |
-| cli                  | Yargs. 25+ commands. Generators for all types. Plugin system. Telemetry. .env loading.                                                                                                             |
-| forms                | react-hook-form wrapper. Typed fields. GraphQL coercion (valueAsBoolean/JSON). Error display.                                                                                                      |
-| prerender            | Static Site Generation. renderToString at build, extract react-helmet meta tags, populate Apollo cache, write static HTML.                                                                         |
-| realtime             | Live queries + subscriptions. @live directive. createPubSub. InMemory/Redis stores.                                                                                                                |
-| jobs                 | Background processing. JobManager/jobs/queues/workers. Delay/waitUntil/cron. Prisma adapter.                                                                                                       |
-| mailer               | Email. Core + handlers (nodemailer/resend/in-memory) + renderers (react-email/mjml).                                                                                                               |
-| storage              | File uploads. setupStorage→Prisma extension. FileSystem/Memory adapters. UrlSigner.                                                                                                                |
-| record               | ActiveRecord on Prisma. Validations, reflections, relations.                                                                                                                                       |
-| context              | Request-scoped context via AsyncLocalStorage. Proxy-based. Declaration merging.                                                                                                                    |
-| server-store         | Per-request store: auth state, headers, cookies, URL. \*SSR/RSC: used by middleware.                                                                                                               |
-| gqlorm               | Prisma API → Proxy → GraphQL. useLiveQuery. Parser+generator.                                                                                                                                      |
-| structure            | Project model (pages/routes/cells/services/SDLs). Diagnostics. ts-morph.                                                                                                                           |
-| codemods             | jscodeshift transforms. Version-organized (v2-v7). Cedar+migration from Redwood.                                                                                                                   |
-| testing              | Jest/Vitest config. MockProviders, MockRouter, mockGql, scenario helpers.                                                                                                                          |
-| storybook            | Vite Storybook.                                                                                                                                                                                    |
-| project-config       | Read cedar.toml. getPaths/getConfig/findUp.                                                                                                                                                        |
-| internal             | Re-exports project-config+babel-config. buildApi/dev/generate. Route extraction.                                                                                                                   |
-| api-server           | Fastify. Auto-discover Lambda functions. Mount GraphQL. Custom server.ts.                                                                                                                          |
-| web-server           | Fastify for web side. Uses fastify-web adapter.                                                                                                                                                    |
-| fastify-web          | Fastify plugin. Static files, SPA fallback, API proxy, prerender.                                                                                                                                  |
-| babel-config         | Presets/plugins for api+web. registerApiSideBabelHook.                                                                                                                                             |
-| eslint-config        | Flat config. TS+React+a11y+react-compiler+prettier.                                                                                                                                                |
-| eslint-plugin        | Rules: process-env-computed, service-type-annotations, unsupported-route-components.                                                                                                               |
-| create-cedar-app     | Standalone scaffolding CLI. Interactive. TS/JS. Copies templates.                                                                                                                                  |
-| create-cedar-rsc-app | Standalone RSC scaffolding. Downloads template zip.                                                                                                                                                |
-| telemetry            | Anonymous CLI telemetry. Duration/errors.                                                                                                                                                          |
-| tui                  | Terminal UI. spinners, boxes, reactive updates.                                                                                                                                                    |
-| ogimage-gen          | Vite plugin+middleware. OG images from React components.                                                                                                                                           |
-| cookie-jar           | Typed cookie map. get/set/has/unset/serialize.                                                                                                                                                     |
-| utils                | Pluralization wrapper.                                                                                                                                                                             |
+| Package              | Behavior                                                                                                                                                                                                                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| core                 | Umbrella. Re-exports CLI, servers, testing, config. Bin shims.                                                                                                                                                                                                                                         |
+| router               | JSX routing. `<Route path="/{id:Int}" page={P} name="r"/>`. Typed params, globs, redirects, `<Set>` layouts, `<PrivateSet>` auth guards. Named route helpers. Link/navigate/useLocation/useParams.                                                                                                     |
+| auth                 | Provider-agnostic. `createAuth(provider)` → {AuthProvider, useAuth}. State: loading/authenticated/user. \*SSR/RSC: ServerAuthProvider injects state for SSR.                                                                                                                                           |
+| web                  | App shell. RedwoodProvider. createCell (GraphQL state→UI). Apollo (useQuery/useMutation). Head/MetaTags. FatalErrorBoundary. Toast. FetchConfig.                                                                                                                                                       |
+| api                  | Server runtime. Auth extraction. Validations (validate/validateWith). CORS. Logging (Pino). Cache (Redis/Memcached/InMemory). Webhooks. RedwoodError.                                                                                                                                                  |
+| graphql-server       | Yoga factory. Merge SDLs (schema) + services (resolvers) + directives + subscriptions. Armor. GraphiQL. useRequireAuth. Directive system (validator+transformer).                                                                                                                                      |
+| vite                 | cedar() → Vite plugins. Cell transform, entry injection, auto-imports. `startApiDevServer()` → Vite SSR dev server + Fastify in-process with HMR for the API side. `buildApiWithVite()` → Vite SSR production build. \*SSR/RSC: adds Express + 2 Vite servers, RSC transforms, Hot Module Replacement. |
+| cli                  | Yargs. 25+ commands. Generators for all types. Plugin system. Telemetry. .env loading.                                                                                                                                                                                                                 |
+| forms                | react-hook-form wrapper. Typed fields. GraphQL coercion (valueAsBoolean/JSON). Error display.                                                                                                                                                                                                          |
+| prerender            | Static Site Generation. renderToString at build, extract react-helmet meta tags, populate Apollo cache, write static HTML.                                                                                                                                                                             |
+| realtime             | Live queries + subscriptions. @live directive. createPubSub. InMemory/Redis stores.                                                                                                                                                                                                                    |
+| jobs                 | Background processing. JobManager/jobs/queues/workers. Delay/waitUntil/cron. Prisma adapter.                                                                                                                                                                                                           |
+| mailer               | Email. Core + handlers (nodemailer/resend/in-memory) + renderers (react-email/mjml).                                                                                                                                                                                                                   |
+| storage              | File uploads. setupStorage→Prisma extension. FileSystem/Memory adapters. UrlSigner.                                                                                                                                                                                                                    |
+| record               | ActiveRecord on Prisma. Validations, reflections, relations.                                                                                                                                                                                                                                           |
+| context              | Request-scoped context via AsyncLocalStorage. Proxy-based. Declaration merging.                                                                                                                                                                                                                        |
+| server-store         | Per-request store: auth state, headers, cookies, URL. \*SSR/RSC: used by middleware.                                                                                                                                                                                                                   |
+| gqlorm               | Prisma API → Proxy → GraphQL. useLiveQuery. Parser+generator.                                                                                                                                                                                                                                          |
+| structure            | Project model (pages/routes/cells/services/SDLs). Diagnostics. ts-morph.                                                                                                                                                                                                                               |
+| codemods             | jscodeshift transforms. Version-organized (v2-v7). Cedar+migration from Redwood.                                                                                                                                                                                                                       |
+| testing              | Jest/Vitest config. MockProviders, MockRouter, mockGql, scenario helpers.                                                                                                                                                                                                                              |
+| storybook            | Vite Storybook.                                                                                                                                                                                                                                                                                        |
+| project-config       | Read cedar.toml. getPaths/getConfig/findUp.                                                                                                                                                                                                                                                            |
+| internal             | Re-exports project-config+babel-config. buildApi/buildApiWithVite/dev/generate. Route extraction.                                                                                                                                                                                                      |
+| api-server           | Fastify. Auto-discover Lambda functions. Mount GraphQL. Custom server.ts. Exports `requestHandlers` used by the Vite API dev server.                                                                                                                                                                   |
+| web-server           | Fastify for web side. Uses fastify-web adapter.                                                                                                                                                                                                                                                        |
+| fastify-web          | Fastify plugin. Static files, SPA fallback, API proxy, prerender.                                                                                                                                                                                                                                      |
+| babel-config         | Presets/plugins for api+web. registerApiSideBabelHook.                                                                                                                                                                                                                                                 |
+| eslint-config        | Flat config. TS+React+a11y+react-compiler+prettier.                                                                                                                                                                                                                                                    |
+| eslint-plugin        | Rules: process-env-computed, service-type-annotations, unsupported-route-components.                                                                                                                                                                                                                   |
+| create-cedar-app     | Standalone scaffolding CLI. Interactive. TS/JS. Copies templates.                                                                                                                                                                                                                                      |
+| create-cedar-rsc-app | Standalone RSC scaffolding. Downloads template zip.                                                                                                                                                                                                                                                    |
+| telemetry            | Anonymous CLI telemetry. Duration/errors.                                                                                                                                                                                                                                                              |
+| tui                  | Terminal UI. spinners, boxes, reactive updates.                                                                                                                                                                                                                                                        |
+| ogimage-gen          | Vite plugin+middleware. OG images from React components.                                                                                                                                                                                                                                               |
+| cookie-jar           | Typed cookie map. get/set/has/unset/serialize.                                                                                                                                                                                                                                                         |
+| utils                | Pluralization wrapper.                                                                                                                                                                                                                                                                                 |
 
 ## CONVENTIONS
 
@@ -249,7 +258,7 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
   and `meta()` (SSR/RSC only: per-request meta tag injection)
 - Entry: `entry.client.tsx` (always). \*SSR/RSC: also `entry.server.tsx`
 - Routes in `Routes.tsx` as JSX (virtual, never rendered — Babel auto-loads pages)
-- Build: Vite (web), esbuild (api)
+- Build: Vite (web + api); api uses `build.ssr: true` + `preserveModules: true` + Babel plugin
 - Server: API always Fastify; Web: Fastify (SPA). \*SSR/RSC: Web uses Express
 - Package mgr: Yarn 4 (+ experimental support for npm and pnpm); Framework: Yarn 4 + Nx (build orchestration).
 - Codegen: compile-time (Vite plugins) + on-demand (cedar-gen)

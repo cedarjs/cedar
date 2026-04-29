@@ -41,7 +41,7 @@
 - Unit/integration tests are executed through `yarn test` (Nx targets).
 - Type tests use `yarn test:types`.
 - When adding tests, follow local package naming patterns and keep tests colocated with the package.
-- For larger changes, run `yarn build:pack`to generate package tarballs, then run `yarn install` inside `local-testing-project` or `local-testing-project-live` to be able to verify your changes inside an actual Cedar application.
+- For larger changes, run `yarn build && yarn build:pack` to generate package tarballs, then run `yarn install` inside `local-testing-project` to verify your changes inside an actual Cedar application.
 
 ## Commit & Pull Request Guidelines
 

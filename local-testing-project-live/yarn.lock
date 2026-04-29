@@ -1706,7 +1706,7 @@ __metadata:
 
 "@cedarjs/api-server@file:../packages/api-server/cedarjs-api-server.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/api-server@file:../packages/api-server/cedarjs-api-server.tgz#../packages/api-server/cedarjs-api-server.tgz::hash=4b118d&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/api-server@file:../packages/api-server/cedarjs-api-server.tgz#../packages/api-server/cedarjs-api-server.tgz::hash=eab953&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/context": "npm:3.1.1"
     "@cedarjs/fastify-web": "npm:3.1.1"
@@ -1741,7 +1741,7 @@ __metadata:
     cedarjs-server: ./dist/bin.js
     rw-log-formatter: ./dist/cjs/logFormatter/bin.js
     rw-server: ./dist/cjs/bin.js
-  checksum: 10c0/d795ff1a00bad8ebb56c795eb2e1a83cc86f35516d446d95e3c6f2a44cdbed0504b766cf764692262b85b3d129d396a60d831a59a46d09e16f7615065a980b02
+  checksum: 10c0/6b444326dc49c4ff451d0ab35e1e1bdae7894efd2733b01d25061fe0bc45942190224cc100da5a5e7991b48d71ea4bd7e472381423c3c24686efaa9356e46d78
   languageName: node
   linkType: hard
 
@@ -1860,7 +1860,7 @@ __metadata:
 
 "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=ad91e6&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/cli@file:../packages/cli/cedarjs-cli.tgz#../packages/cli/cedarjs-cli.tgz::hash=96963a&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/parser": "npm:7.29.2"
     "@babel/preset-typescript": "npm:7.28.5"
@@ -1927,7 +1927,7 @@ __metadata:
     cfw: ./dist/cfw.js
     redwood: ./dist/index.js
     rw: ./dist/index.js
-  checksum: 10c0/bb19e0ebd43a666f3d1609c805d8036af4f9a3eec380f70d4313555c6f1d0b423f34c8b73b459dce450fc4ba35fcc30d4c32e599f9c8c22869c26447bf76765a
+  checksum: 10c0/33e0ebb5c6ddb94c4abbb56c83def8b2f9d83c660917a05b447b8f784ac7b2f08eaef3d3fe996a63f31b829f6666a4dc0ec96a642be5ed293a40535063aa270c
   languageName: node
   linkType: hard
 
@@ -1951,7 +1951,7 @@ __metadata:
 
 "@cedarjs/core@file:../packages/core/cedarjs-core.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/core@file:../packages/core/cedarjs-core.tgz#../packages/core/cedarjs-core.tgz::hash=87f770&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/core@file:../packages/core/cedarjs-core.tgz#../packages/core/cedarjs-core.tgz::hash=1cad68&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/cli": "npm:7.28.6"
     "@cedarjs/api-server": "npm:3.1.1"
@@ -1992,7 +1992,7 @@ __metadata:
     rw-server: ./dist/bins/rw-server.js
     rw-web-server: ./dist/bins/rw-web-server.js
     vitest: ./dist/bins/vitest.js
-  checksum: 10c0/555059db647c78c2522512b616ef63603136641419d7b04c52eec562da773164fd757679480e4f32fdc9e91da2f5d0885874bd3c7edc5c16f6f282962cfd53a2
+  checksum: 10c0/774e176472f66784587956a71e617e77add7cba8363d0990e5192a588ff6c86191ab4d764f894fc857c64e63c7736639641c3c8b7c378ae7070a6780aec7e392
   languageName: node
   linkType: hard
 
@@ -2080,7 +2080,7 @@ __metadata:
 
 "@cedarjs/graphql-server@file:../packages/graphql-server/cedarjs-graphql-server.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/graphql-server@file:../packages/graphql-server/cedarjs-graphql-server.tgz#../packages/graphql-server/cedarjs-graphql-server.tgz::hash=b84210&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/graphql-server@file:../packages/graphql-server/cedarjs-graphql-server.tgz#../packages/graphql-server/cedarjs-graphql-server.tgz::hash=4c7b56&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@cedarjs/api": "npm:3.1.1"
     "@cedarjs/context": "npm:3.1.1"
@@ -2102,13 +2102,13 @@ __metadata:
     graphql-yoga: "npm:5.21.0"
     lodash: "npm:4.18.1"
     uuid: "npm:11.1.0"
-  checksum: 10c0/3f5c73805d527cd00a2ddbb30f4352a8e29bb91d56b4e4ffe66535bcbfd30ee89171b1054f7fcb002f202939b626158138b9111da9bb1edf340f050bfdc78b39
+  checksum: 10c0/115b07d1ed9a3d22151df20454ac65d0b39d8a774bbe4aab2c26dffb6771577053f7d3f78ff26685264291d92ab19d6eb4b501d5a7359ba96d1e196506cfa5fa
   languageName: node
   linkType: hard
 
 "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=00dd26&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/internal@file:../packages/internal/cedarjs-internal.tgz#../packages/internal/cedarjs-internal.tgz::hash=15c261&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.2"
@@ -2151,10 +2151,11 @@ __metadata:
     termi-link: "npm:1.1.0"
     ts-node: "npm:10.9.2"
     typescript: "npm:5.9.3"
+    vite: "npm:7.3.2"
   bin:
     cedar-gen: ./dist/generate/generate.js
     cedar-gen-watch: ./dist/generate/watch.js
-  checksum: 10c0/fcfb5c1aef116af580d45c19a0e4be403c709667ac956122b377ea0fa0c2ad76305524ead7eb9eceacd506a068860d2458839dfc0c66c881905972b2aae79cc3
+  checksum: 10c0/a884724a3387d9029f4356e8bc2c1f406625441b9f95cbfa85c6acf19cdf3e0749978b183fb24d8a45ba762ab7f4612752a3fbadb2adc4c30ee1a96d96a352c5
   languageName: node
   linkType: hard
 
@@ -2344,12 +2345,13 @@ __metadata:
 
 "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz::locator=root-workspace-0b6124%40workspace%3A.":
   version: 3.1.1
-  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=bf9e70&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@cedarjs/vite@file:../packages/vite/cedarjs-vite.tgz#../packages/vite/cedarjs-vite.tgz::hash=f19117&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@ast-grep/napi": "npm:0.42.1"
     "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.2"
     "@babel/traverse": "npm:7.29.0"
+    "@cedarjs/api-server": "npm:3.1.1"
     "@cedarjs/auth": "npm:3.1.1"
     "@cedarjs/babel-config": "npm:3.1.1"
     "@cedarjs/cookie-jar": "npm:3.1.1"
@@ -2358,17 +2360,21 @@ __metadata:
     "@cedarjs/server-store": "npm:3.1.1"
     "@cedarjs/testing": "npm:3.1.1"
     "@cedarjs/web": "npm:3.1.1"
+    "@fastify/url-data": "npm:6.0.3"
     "@swc/core": "npm:1.15.30"
     "@vitejs/plugin-react": "npm:4.7.0"
     "@whatwg-node/fetch": "npm:0.10.13"
     "@whatwg-node/server": "npm:0.10.18"
     acorn-loose: "npm:8.5.2"
+    ansis: "npm:4.2.0"
     buffer: "npm:6.0.3"
     busboy: "npm:^1.6.0"
     cookie: "npm:1.1.1"
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
     express: "npm:4.22.1"
+    fastify: "npm:5.8.5"
+    fastify-raw-body: "npm:5.0.0"
     find-my-way: "npm:8.2.2"
     http-proxy-middleware: "npm:3.0.5"
     isbot: "npm:5.1.39"
@@ -2383,10 +2389,11 @@ __metadata:
   bin:
     cedar-dev-fe: ./dist/devFeServer.js
     cedar-serve-fe: ./dist/runFeServer.js
+    cedar-unified-dev: ./dist/cedar-unified-dev.js
     cedar-vite-build: ./bins/cedar-vite-build.mjs
     cedar-vite-dev: ./bins/cedar-vite-dev.mjs
     vite: ./bins/vite.mjs
-  checksum: 10c0/54edbeedc56768c5f6592610b233ef0968e3d6c7b477e10b2bd08b4be6b427e10d075fc0735b82c98835a1c15aefd804211b6085ca7ebb3b5377120c0fbbe2fd
+  checksum: 10c0/b853a3c169a9133e661f58e001b9ba09210f5d8f2a052d2d212ad8d13e8f1af446abdfe9a0d2703ef047ed37f8093a5b7343bfaadaa056bd277251f9b91e66c5
   languageName: node
   linkType: hard
 

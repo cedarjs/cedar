@@ -175,33 +175,64 @@ export const handler = async ({
     }
   }
 
-  const cedarConfigPath = getConfigPath()
   const streamingSsrEnabled = getConfig().experimental?.streamingSsr?.enabled
 
   // @TODO (Streaming) Lot of temporary feature flags for started dev server.
   // Written this way to make it easier to read
 
-  // 1. default: Vite (SPA)
-  //
   // Disable the new warning in Vite v5 about the CJS build being deprecated
   // so that users don't have to see it every time the dev server starts up.
   process.env.VITE_CJS_IGNORE_WARNING = 'true'
-  let webCommand = `yarn cross-env NODE_ENV=development cedar-vite-dev ${forward}`
-
-  // 2. Vite with SSR
-  if (streamingSsrEnabled) {
-    webCommand = `yarn cross-env NODE_ENV=development cedar-dev-fe ${forward}`
-  }
 
   const rootPackageJsonPath = path.join(cedarPaths.base, 'package.json')
   const rootPackageJson = JSON.parse(
     fs.readFileSync(rootPackageJsonPath, 'utf8'),
   )
 
-  const isEsm = rootPackageJson.type === 'module'
-  const serverWatchCommand = isEsm
-    ? `cedarjs-api-server-watch`
-    : `cedar-api-server-watch`
+  // Determine which dev command to use based on which workspaces are included
+  // and which experimental features are enabled.
+  //
+  // When both api and web are included (the default), use the unified Vite dev
+  // server that handles both sides in a single process with true HMR for the
+  // API via Vite's SSR environment.
+  //
+  // When only web is included, fall back to the standalone Vite dev server.
+  const buildUnifiedDevCommand = () => {
+    if (streamingSsrEnabled) {
+      // Streaming SSR has its own dev server setup
+      return null
+    }
+
+    if (!workspace.includes('api') || !workspace.includes('web')) {
+      return null
+    }
+
+    if (serverFile) {
+      // Custom server files are not supported by the unified dev server
+      return null
+    }
+
+    if (
+      !fs.existsSync(cedarPaths.api.src) ||
+      !fs.existsSync(cedarPaths.web.src)
+    ) {
+      console.log('api.src or web.src does not exist')
+      return null
+    }
+
+    return [
+      `yarn cross-env NODE_ENV=development cedar-unified-dev`,
+      `  --port ${webAvailablePort}`,
+      `  --apiPort ${apiAvailablePort}`,
+      getApiDebugFlag(apiDebugPort, apiAvailablePort),
+      forward,
+    ]
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  const unifiedDevCommand = buildUnifiedDevCommand()
 
   const jobs: (Partial<Command> & {
     name: string
@@ -209,37 +240,66 @@ export const handler = async ({
     runWhen?: () => boolean
   })[] = []
 
-  if (workspace.includes('api')) {
+  if (unifiedDevCommand) {
+    // Unified dev mode: one node process handles both web (Vite client) and API
+    // (Vite SSR + Fastify) with true HMR – no nodemon, no separate watcher.
     jobs.push({
-      name: 'api',
-      command: [
-        'yarn nodemon',
-        '  --quiet',
-        `  --watch "${cedarConfigPath}"`,
-        `  --exec "yarn ${serverWatchCommand}`,
-        `    --port ${apiAvailablePort}`,
-        `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort)}`,
-        `    | cedar-log-formatter"`,
-      ]
-        .join(' ')
-        .replace(/\s+/g, ' '),
+      name: 'dev',
+      command: unifiedDevCommand,
       env: {
         NODE_ENV: 'development',
         NODE_OPTIONS: getDevNodeOptions(),
       },
       prefixColor: 'cyan',
-      runWhen: () => fs.existsSync(cedarPaths.api.src),
-    })
-  }
-
-  if (workspace.includes('web')) {
-    jobs.push({
-      name: 'web',
-      command: webCommand,
-      prefixColor: 'blue',
       cwd: cedarPaths.web.base,
-      runWhen: () => fs.existsSync(cedarPaths.web.src),
     })
+  } else {
+    // Fallback: start api and web as separate processes.
+    if (workspace.includes('api')) {
+      const isEsm = rootPackageJson.type === 'module'
+      const serverWatchCommand = isEsm
+        ? `cedarjs-api-server-watch`
+        : `cedar-api-server-watch`
+
+      const cedarConfigPath = getConfigPath()
+
+      jobs.push({
+        name: 'api',
+        command: [
+          'yarn nodemon',
+          '  --quiet',
+          `  --watch "${cedarConfigPath}"`,
+          `  --exec "yarn ${serverWatchCommand}`,
+          `    --port ${apiAvailablePort}`,
+          `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort)}`,
+          `    | cedar-log-formatter"`,
+        ]
+          .join(' ')
+          .replace(/\s+/g, ' '),
+        env: {
+          NODE_ENV: 'development',
+          NODE_OPTIONS: getDevNodeOptions(),
+        },
+        prefixColor: 'cyan',
+        runWhen: () => fs.existsSync(cedarPaths.api.src),
+      })
+    }
+
+    if (workspace.includes('web')) {
+      let webCommand = `yarn cross-env NODE_ENV=development cedar-vite-dev ${forward}`
+
+      if (streamingSsrEnabled) {
+        webCommand = `yarn cross-env NODE_ENV=development cedar-dev-fe ${forward}`
+      }
+
+      jobs.push({
+        name: 'web',
+        command: webCommand,
+        prefixColor: 'blue',
+        cwd: cedarPaths.web.base,
+        runWhen: () => fs.existsSync(cedarPaths.web.src),
+      })
+    }
   }
 
   if (generate) {
