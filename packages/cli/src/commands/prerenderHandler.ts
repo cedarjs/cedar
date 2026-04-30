@@ -274,31 +274,30 @@ export const getTasks = async (
 
     // If we're not folding the output, we'll return a list of tasks for each
     // individual case.
-    return routesToPrerender.flatMap((routeToPrerender) => {
-      // Filter out routes that don't match the supplied routePathFilter
-      if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
-        // TODO: Figure out if it's an error to return [] here
-        // TS is complaining. If it is actually correct, we can use flatMap(),
-        // or append .flat() to the end of the map call that begins above
-        // This code was originally added in
-        // https://github.com/redwoodjs/graphql/pull/10888
-        return [] as unknown as { title: string; task: () => Promise<void> }
-      }
+    return routesToPrerender.flatMap(
+      (routeToPrerender): { title: string; task: () => Promise<void> }[] => {
+        // Filter out routes that don't match the supplied routePathFilter
+        if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
+          return []
+        }
 
-      const outputHtmlPath = mapRouterPathToHtml(routeToPrerender.path)
-      return {
-        title: `Prerendering ${routeToPrerender.path} -> ${outputHtmlPath}`,
-        task: async () => {
-          await prerenderRoute(
-            prerenderer,
-            queryCache,
-            routeToPrerender,
-            dryrun,
-            outputHtmlPath,
-          )
-        },
-      }
-    })
+        const outputHtmlPath = mapRouterPathToHtml(routeToPrerender.path)
+        return [
+          {
+            title: `Prerendering ${routeToPrerender.path} -> ${outputHtmlPath}`,
+            task: async () => {
+              await prerenderRoute(
+                prerenderer,
+                queryCache,
+                routeToPrerender,
+                dryrun,
+                outputHtmlPath,
+              )
+            },
+          },
+        ]
+      },
+    )
   })
 
   return listrTasks
