@@ -10,7 +10,7 @@
     "@cedarjs/graphql-server": "3.1.0",
     "@cedarjs/realtime": "3.1.1",
     "@my-org/validators": "workspace:*",
-    "@prisma/adapter-pg": "7.7.0",
+    "@prisma/adapter-pg": "7.8.0",
     "ioredis": "^5",
     "pg": "^8.13.0"
   }
