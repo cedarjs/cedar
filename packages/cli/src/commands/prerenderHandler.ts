@@ -274,9 +274,8 @@ export const getTasks = async (
 
     // If we're not folding the output, we'll return a list of tasks for each
     // individual case.
-    type PrerenderTask = { title: string; task: () => Promise<void> }
     return routesToPrerender.flatMap(
-      (routeToPrerender): PrerenderTask[] => {
+      (routeToPrerender): { title: string; task: () => Promise<void> }[] => {
         // Filter out routes that don't match the supplied routePathFilter
         if (routerPathFilter && routeToPrerender.path !== routerPathFilter) {
           return []
