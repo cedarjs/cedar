@@ -2,10 +2,10 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@cedarjs/core": "4.0.0",
-    "@cedarjs/eslint-config": "4.0.0",
-    "@cedarjs/project-config": "4.0.0",
-    "@cedarjs/testing": "4.0.0"
+    "@cedarjs/core": "4.1.0",
+    "@cedarjs/eslint-config": "4.1.0",
+    "@cedarjs/project-config": "4.1.0",
+    "@cedarjs/testing": "4.1.0"
   },
   "engines": {
     "node": "=24.x"
