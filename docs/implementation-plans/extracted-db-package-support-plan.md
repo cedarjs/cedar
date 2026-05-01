@@ -18,12 +18,13 @@ fully respect that config. Instead, it hardcodes `api/db/` or `api/src/lib/db` i
 many places.
 
 This plan adds:
+
 1. A new `api.dbModule` config option in `cedar.toml` — a single string that tells
-the framework where to import the user's `db` export from.
+   the framework where to import the user's `db` export from.
 2. Proper path derivation from `prismaConfig` everywhere — schema, migrations,
-generated client, and data migrations are all resolved dynamically.
+   generated client, and data migrations are all resolved dynamically.
 3. A `db` sub-path object added to the framework's `Paths` interface, so downstream
-code stops computing its own Prisma-related paths.
+   code stops computing its own Prisma-related paths.
 
 The framework will **not** dictate how the separate DB package is structured. It only
 needs to know: (a) where `prisma.config.cjs` lives, and (b) where the `db` export lives.
@@ -69,7 +70,7 @@ Add `dbModule` to `NodeTargetConfig`:
 export interface NodeTargetConfig {
   // ...existing fields...
   prismaConfig: string
-  dbModule: string        // <-- new
+  dbModule: string // <-- new
   serverConfig: string
 }
 ```
@@ -97,6 +98,7 @@ dbModule = '@myorg/db'
 
 The `dbModule` value is treated as a bare module specifier (like an import path).
 It can be:
+
 - A relative path like `src/lib/db` (resolved relative to the API side)
 - A workspace package name like `@myorg/db`
 - Any other path that the app's module resolution understands
@@ -113,14 +115,14 @@ Add a `db` field to the `Paths` interface:
 export interface Paths {
   // ...existing...
   api: NodeTargetPaths
-  db: DbPaths            // <-- new
+  db: DbPaths // <-- new
 }
 
 export interface DbPaths {
-  base: string           // directory containing prisma.config.cjs
-  prismaConfig: string   // absolute path to prisma.config.cjs
-  schema: string         // absolute path to schema.prisma (or schema dir)
-  migrations: string     // absolute path to migrations directory
+  base: string // directory containing prisma.config.cjs
+  prismaConfig: string // absolute path to prisma.config.cjs
+  schema: string // absolute path to schema.prisma (or schema dir)
+  migrations: string // absolute path to migrations directory
   dataMigrations: string // absolute path to dataMigrations directory
   generatedClient: string | undefined // absolute path to generated client entry
 }
@@ -169,9 +171,10 @@ unchanged and continue to work.
 **File:** `packages/internal/src/generate/watch.ts`
 
 **Current (line 43):**
+
 ```ts
 const watcher = chokidar.watch(
-  ['(web|api)/src/**/*.{ts,js,jsx,tsx}', 'api/db/**/*.prisma'],
+  ['(web|api)/src/**/*.{ts,js,jsx,tsx}', 'api/db/**/*.prisma']
   // ...
 )
 ```
@@ -187,12 +190,13 @@ const dbPaths = await getDbPaths(getPaths().api.prismaConfig)
 const prismaGlob = path.join(dbPaths.base, '**/*.prisma')
 
 const watcher = chokidar.watch(
-  ['(web|api)/src/**/*.{ts,js,jsx,tsx}', prismaGlob],
+  ['(web|api)/src/**/*.{ts,js,jsx,tsx}', prismaGlob]
   // ...
 )
 ```
 
 **Current (line 139):**
+
 ```ts
 } else if (
   absPath.startsWith(path.join(rwjsPaths.base, 'api/db/')) &&
@@ -201,6 +205,7 @@ const watcher = chokidar.watch(
 ```
 
 **Change:**
+
 ```ts
 } else if (
   absPath.startsWith(dbPaths.base) &&
@@ -229,14 +234,12 @@ In the Babel plugin:
 ```ts
 // Read dbModule from Babel options (injected by Cedar's Vite/babel setup)
 const dbModule =
-  state.opts.dbModule ??
-  state.file.opts.cedarDbModule ??
-  'src/lib/db'
+  state.opts.dbModule ?? state.file.opts.cedarDbModule ?? 'src/lib/db'
 
 // Use dbModule in the injected import
 const importDeclaration = t.importDeclaration(
   [t.importSpecifier(t.identifier('db'), t.identifier('__gqlorm_db__'))],
-  t.stringLiteral(dbModule),
+  t.stringLiteral(dbModule)
 )
 ```
 
@@ -253,6 +256,7 @@ fallback, and extracted-DB apps get their configured path injected instead.
 ### 5. Fix testing setup — use `dbModule` for dynamic imports
 
 **Files:**
+
 - `packages/testing/src/api/vitest/vitest-api.setup.ts`
 - `packages/testing/src/config/jest/api/jest.setup.ts`
 
@@ -271,9 +275,9 @@ const dbModule = getConfig().api.dbModule // e.g. 'src/lib/db' or '@myorg/db'
 
 // For relative paths, resolve relative to api base
 // For package names, import directly
-const db = await import(dbModule.startsWith('.')
-  ? path.join(cedarPaths.api.base, dbModule)
-  : dbModule)
+const db = await import(
+  dbModule.startsWith('.') ? path.join(cedarPaths.api.base, dbModule) : dbModule
+)
 ```
 
 The exact resolution logic depends on whether `dbModule` is a relative path or a
@@ -306,16 +310,17 @@ returns the correct absolute path.
 
 **Files to audit (search for `api/db/` and `api\\/db/` in `packages/`):**
 
-| File | Issue | Fix |
-|------|-------|-----|
-| `packages/internal/src/generate/gqlormSchema.ts` | Hardcoded `api/db/schema.prisma` in generated comment | Use `getSchemaPath()` |
-| `packages/cli/src/lib/generatePrismaClient.ts` | Passes `--config=${getPaths().api.prismaConfig}` — already correct | Verify |
-| `packages/cli/src/commands/prismaHandler.ts` | Already uses `getPaths().api.prismaConfig` | Verify |
-| `packages/cli/src/commands/build/buildHandler.ts` | Already uses `getPaths().api.prismaConfig` | Verify |
-| `packages/cli/src/commands/experimental/live-queries/...` | Already uses `getPaths().api.prismaConfig` | Verify |
-| `packages/cli-packages/dataMigrate/...` | Already uses `getPaths().api.prismaConfig` | Verify |
+| File                                                      | Issue                                                              | Fix                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------- |
+| `packages/internal/src/generate/gqlormSchema.ts`          | Hardcoded `api/db/schema.prisma` in generated comment              | Use `getSchemaPath()` |
+| `packages/cli/src/lib/generatePrismaClient.ts`            | Passes `--config=${getPaths().api.prismaConfig}` — already correct | Verify                |
+| `packages/cli/src/commands/prismaHandler.ts`              | Already uses `getPaths().api.prismaConfig`                         | Verify                |
+| `packages/cli/src/commands/build/buildHandler.ts`         | Already uses `getPaths().api.prismaConfig`                         | Verify                |
+| `packages/cli/src/commands/experimental/live-queries/...` | Already uses `getPaths().api.prismaConfig`                         | Verify                |
+| `packages/cli-packages/dataMigrate/...`                   | Already uses `getPaths().api.prismaConfig`                         | Verify                |
 
 Most CLI commands are already correct. The violations are primarily in:
+
 - Codegen watcher (`watch.ts`)
 - Babel plugin (`babel-plugin-cedar-gqlorm-inject.ts`)
 - Testing setup (`vitest-api.setup.ts`, `jest.setup.ts`)
@@ -324,6 +329,7 @@ Most CLI commands are already correct. The violations are primarily in:
 **Generators** (`cedar generate scaffold`) should also be audited. They currently
 read the schema from the default location. If they use `getSchemaPath()` and
 `getDbPaths()`, they should already work with an extracted DB. Verify that:
+
 - `packages/internal/src/generate/graphqlSchema.ts` and related generators do not
   hardcode schema paths.
 - `packages/cli/src/commands/generate/` commands resolve schema locations dynamically.
@@ -338,17 +344,24 @@ Add a test case where `prisma.config.cjs` lives outside `api/`:
 
 ```ts
 it('resolves paths when prisma.config.cjs is in a separate package', async () => {
-  const prismaConfigPath = path.join(tempDir, 'packages', 'db', 'prisma.config.ts')
+  const prismaConfigPath = path.join(
+    tempDir,
+    'packages',
+    'db',
+    'prisma.config.ts'
+  )
   // ...setup mock config and schema...
-  
+
   const dbDir = await getDbDir(prismaConfigPath)
   expect(dbDir).toBe(path.join(tempDir, 'packages', 'db'))
-  
+
   const schemaPath = await getSchemaPath(prismaConfigPath)
   expect(schemaPath).toBe(path.join(tempDir, 'packages', 'db', 'schema.prisma'))
-  
+
   const migrationsPath = await getMigrationsPath(prismaConfigPath)
-  expect(migrationsPath).toBe(path.join(tempDir, 'packages', 'db', 'migrations'))
+  expect(migrationsPath).toBe(
+    path.join(tempDir, 'packages', 'db', 'migrations')
+  )
 })
 ```
 
@@ -366,6 +379,7 @@ it('defaults dbModule to src/lib/db', () => {
 **File:** `packages/babel-config/src/__tests__/...` (or create new test)
 
 Add a test for the gqlorm Babel plugin that verifies:
+
 - With default options, it injects `from 'src/lib/db'`
 - With `dbModule: '@myorg/db'` passed in state.opts, it injects `from '@myorg/db'`
 

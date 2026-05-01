@@ -32,10 +32,10 @@ This has two problems:
 
 After investigation, the API build pipeline has **two active paths**:
 
-| Path | Tool | Used by |
-|------|------|---------|
-| Vite SSR | `buildApiWithVite()` | `cedar build api`, unified dev mode |
-| esbuild | `buildApi()` / `rebuildApi()` | fallback dev mode (`cedar-api-server-watch`) |
+| Path     | Tool                          | Used by                                      |
+| -------- | ----------------------------- | -------------------------------------------- |
+| Vite SSR | `buildApiWithVite()`          | `cedar build api`, unified dev mode          |
+| esbuild  | `buildApi()` / `rebuildApi()` | fallback dev mode (`cedar-api-server-watch`) |
 
 **Both paths go through Babel.** The esbuild path calls `transformWithBabel()`
 which applies `getApiSideBabelPlugins()` and `getApiSideBabelOverrides()`. The
@@ -61,6 +61,7 @@ Keep the Babel plugin architecture but rewrite it to:
    call.
 
 **Before (current hardcoded injection):**
+
 ```ts
 // Babel injects:
 import { db as __gqlorm_db__ } from 'src/lib/db'
@@ -75,9 +76,10 @@ Object.assign(sdls, {
 ```
 
 **After (smart detection):**
+
 ```ts
 // User already has:
-import { db } from '@myorg/db'   // or 'src/lib/db', or any other path
+import { db } from '@myorg/db' // or 'src/lib/db', or any other path
 
 // Babel injects:
 import * as __gqlorm_sdl__ from '../../../.cedar/gqlorm/backend'
@@ -85,7 +87,7 @@ import * as __gqlorm_sdl__ from '../../../.cedar/gqlorm/backend'
 Object.assign(sdls, {
   __gqlorm__: {
     schema: __gqlorm_sdl__.schema,
-    resolvers: __gqlorm_sdl__.createGqlormResolvers(db),  // uses user's identifier
+    resolvers: __gqlorm_sdl__.createGqlormResolvers(db), // uses user's identifier
   },
 })
 ```
@@ -124,11 +126,13 @@ No `db` import is injected. The plugin finds whichever import in the file brings
 **File:** `packages/babel-config/src/plugins/babel-plugin-cedar-gqlorm-inject.ts`
 
 **Current behavior:** The plugin unconditionally injects:
+
 ```ts
 import { db as __gqlorm_db__ } from 'src/lib/db'
 ```
 
 **New behavior:** The plugin:
+
 1. Scans all existing `ImportDeclaration` nodes in `graphql.ts`
 2. Finds the one that imports a binding named `db` (handles aliasing:
    `import { db as prisma }` → uses `prisma`)
@@ -139,15 +143,20 @@ import { db as __gqlorm_db__ } from 'src/lib/db'
 **Implementation sketch:**
 
 ```ts
-function findDbBinding(programPath: NodePath<types.Program>): { name: string } | null {
+function findDbBinding(
+  programPath: NodePath<types.Program>
+): { name: string } | null {
   let dbName: string | null = null
 
   programPath.traverse({
     ImportDeclaration(p) {
       for (const specifier of p.node.specifiers) {
-        if (t.isImportSpecifier(specifier) && t.isIdentifier(specifier.imported)) {
+        if (
+          t.isImportSpecifier(specifier) &&
+          t.isIdentifier(specifier.imported)
+        ) {
           if (specifier.imported.name === 'db') {
-            dbName = specifier.local.name  // handles aliasing
+            dbName = specifier.local.name // handles aliasing
           }
         }
       }
@@ -184,24 +193,24 @@ const sdlsMutation = t.expressionStatement(
               t.identifier('schema'),
               t.memberExpression(
                 t.identifier('__gqlorm_sdl__'),
-                t.identifier('schema'),
-              ),
+                t.identifier('schema')
+              )
             ),
             t.objectProperty(
               t.identifier('resolvers'),
               t.callExpression(
                 t.memberExpression(
                   t.identifier('__gqlorm_sdl__'),
-                  t.identifier('createGqlormResolvers'),
+                  t.identifier('createGqlormResolvers')
                 ),
-                [t.identifier(dbBinding.name)],  // <-- detected identifier
-              ),
+                [t.identifier(dbBinding.name)] // <-- detected identifier
+              )
             ),
-          ]),
+          ])
         ),
       ]),
-    ],
-  ),
+    ]
+  )
 )
 ```
 
@@ -237,7 +246,7 @@ Test cases:
 
 - **Default `db` import:** Given `import { db } from 'src/lib/db'` in the input,
   the plugin injects `Object.assign(sdls, { __gqlorm__: { ..., resolvers:
-  __gqlorm_sdl__.createGqlormResolvers(db) } })` — using the identifier `db`.
+__gqlorm_sdl__.createGqlormResolvers(db) } })` — using the identifier `db`.
 
 - **Aliased `db` import:** Given `import { db as prisma } from '@myorg/db'`,
   the plugin uses `prisma` in the resolver call.
@@ -307,7 +316,7 @@ yarn playwright test tests/liveQuery.spec.ts
 - **Runs in both build paths.** Because the transform stays at the Babel layer,
   it works in both Vite SSR builds and esbuild fallback dev mode.
 - **Zero changes for existing apps.** The default template has `import { db }
-  from 'src/lib/db'` — the plugin detects this and continues to work exactly as
+from 'src/lib/db'` — the plugin detects this and continues to work exactly as
   before.
 
 ---

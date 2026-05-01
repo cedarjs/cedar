@@ -94,7 +94,7 @@ Add a new key to the `api` config section:
 ```typescript
 api: {
   // ... existing keys
-  prismaClientModule: string  // default: "src/lib/db"
+  prismaClientModule: string // default: "src/lib/db"
 }
 ```
 
@@ -125,6 +125,7 @@ These are blocking — the app will not work without them when
 ### 1. `packages/babel-config/src/plugins/babel-plugin-cedar-gqlorm-inject.ts`
 
 **Line 153** — Hardcodes:
+
 ```js
 t.stringLiteral('src/lib/db')
 ```
@@ -149,6 +150,7 @@ side), so it has access to the full Cedar project config at that point.
 ### 2. `packages/testing/src/api/vitest/vite-plugin-track-db-imports.ts`
 
 **Line 10** — Hardcoded regex:
+
 ```js
 id.match(/\/api\/src\/lib\/db\.(js|ts)$/)
 ```
@@ -164,26 +166,32 @@ this regex won't match. The plugin needs to either:
 ### 3. `packages/testing/src/api/vitest/vitest-api.setup.ts`
 
 **Line 357:**
+
 ```js
 const libDb = await import(`${cedarPaths.api.lib}/db`)
 ```
 
 **Change:** Use the configured module path:
+
 ```js
 const prismaModule = getPrismaClientModule()
-const libDb = await import(prismaModule.startsWith('src/')
-  ? `${cedarPaths.api.src}/${prismaModule.replace('src/', '')}`
-  : prismaModule)
+const libDb = await import(
+  prismaModule.startsWith('src/')
+    ? `${cedarPaths.api.src}/${prismaModule.replace('src/', '')}`
+    : prismaModule
+)
 ```
 
 ### 4. `packages/testing/src/config/jest/api/jest.setup.ts`
 
 **Line 134:**
+
 ```js
 const { db } = await import(`${apiSrcPath}/lib/db`)
 ```
 
 **Line 306:**
+
 ```js
 const libDbPath = require.resolve(`${apiSrcPath}/lib/db`)
 ```
@@ -193,6 +201,7 @@ const libDbPath = require.resolve(`${apiSrcPath}/lib/db`)
 ### 5. `packages/testing/src/config/jest/api/jest-preset.ts`
 
 **Line 49** — Jest `moduleNameMapper`:
+
 ```js
 '^src/(.*)$': path.join(rwjsPaths.api.src, '$1')
 ```
@@ -205,6 +214,7 @@ the existing mapper handles it.
 ### 6. `packages/testing/src/api/vitest/vite-plugin-cedar-vitest-api-config.ts`
 
 **Line 18:**
+
 ```js
 src: getPaths().api.src
 ```
@@ -222,11 +232,13 @@ These generate user-facing code with wrong import paths when
 ### 7. `packages/cli/src/commands/generate/service/serviceHandler.js`
 
 **Line 313:**
+
 ```js
 const prismaImportSource = 'src/lib/db'
 ```
 
 **Change:** Read from project config:
+
 ```js
 const { getPrismaClientModule } = require('@cedarjs/project-config')
 const prismaImportSource = getPrismaClientModule()
@@ -238,11 +250,13 @@ scenariosFile).
 ### 8. `packages/cli/src/commands/generate/service/templates/service.ts.template`
 
 **Line 3** — Hardcoded (not using the template variable):
+
 ```
 import { db } from 'src/lib/db'
 ```
 
 **Change:** Use the template variable `${prismaImportSource}` consistently:
+
 ```
 import { db } from '${prismaImportSource}'
 ```
@@ -250,6 +264,7 @@ import { db } from '${prismaImportSource}'
 ### 9. `packages/cli/src/commands/generate/service/templates/test.ts.template`
 
 **Line 34:**
+
 ```
 import { Prisma, Model } from '${prismaImportSource}'
 ```
@@ -260,6 +275,7 @@ The fix in `serviceHandler.js` (item 7) flows through.
 ### 10. `packages/cli/src/commands/generate/service/templates/scenarios.ts.template`
 
 **Lines 1-3:**
+
 ```
 import type { Prisma, ${prismaModel} } from '${prismaImportSource}'
 ```
@@ -269,6 +285,7 @@ import type { Prisma, ${prismaModel} } from '${prismaImportSource}'
 ### 11. `packages/cli/src/commands/generate/dataMigration/dataMigration.js`
 
 **Line 50:**
+
 ```js
 const prismaImportSource = 'src/lib/db'
 ```
@@ -278,6 +295,7 @@ const prismaImportSource = 'src/lib/db'
 ### 12. `packages/cli/src/commands/generate/dataMigration/templates/dataMigration.ts.template`
 
 **Line 1:**
+
 ```
 import type { PrismaClient } from '${prismaImportSource}'
 ```
@@ -287,6 +305,7 @@ import type { PrismaClient } from '${prismaImportSource}'
 ### 13. `packages/cli/src/commands/generate/dataMigration/templates/dataMigration.js.template`
 
 **Line 2:**
+
 ```
 @param {{db: PrismaClient}} db
 ```
@@ -297,11 +316,13 @@ variable indirectly).
 ### 14. `packages/internal/src/generate/graphqlCodeGen.ts`
 
 **Line 74:**
+
 ```ts
 const prismaImportSource = 'src/lib/db'
 ```
 
 **Line 145:**
+
 ```ts
 content: `import { Prisma } from "$api/src/lib/db"`
 ```
@@ -311,7 +332,6 @@ the tricky one:
 
 ```ts
 const prismaImportSource = getPrismaClientModule()
-
 // api/types/graphql.d.ts
 // If bare specifier, use directly. If src/ path, use as-is (Vite resolves).
 `import { Prisma } from "${prismaImportSource}"`
@@ -321,18 +341,19 @@ const prismaImportSource = getPrismaClientModule()
 // If src/ path, wrap with $api/ (existing behavior).
 const webImportSource = prismaImportSource.startsWith('src/')
   ? `$api/${prismaImportSource}`
-  : prismaImportSource
-`import { Prisma } from "${webImportSource}"`
+  : prismaImportSource`import { Prisma } from "${webImportSource}"`
 ```
 
 ### 15. `packages/record/src/tasks/parse.js`
 
 **Line 16:**
+
 ```js
 "import { db } from 'src/lib/db'",
 ```
 
 **Change:** Read from project config:
+
 ```js
 const { getPrismaClientModule } = require('@cedarjs/project-config')
 // ...
@@ -350,6 +371,7 @@ import it.
 ### 16-19. `packages/create-cedar-app/templates/*/scripts/seed.{ts,js}` (4 files)
 
 All four have a commented-out import:
+
 ```ts
 // import { db } from 'api/src/lib/db.js'
 ```
@@ -387,6 +409,7 @@ controls this manually.
 ### 26. `packages/cli/src/commands/setup/uploads/uploadsHandler.js`
 
 **Line 89-91:**
+
 ```js
 const dbPath = path.join(getPaths().api.lib, `db.${ext}`)
 ```
@@ -402,6 +425,7 @@ the workspace package. The setup command needs to:
 ### 27. `packages/cli/src/lib/exec.js`
 
 **Line 142:**
+
 ```js
 path.join(getPaths().api.lib, 'db')
 ```
@@ -426,28 +450,30 @@ needed.
 ## Complete File Change Summary
 
 ### Additions (1 file)
+
 - New config key documentation / defaults in `project-config/src/config.ts`
 
 ### Modifications (13 files)
 
-| # | File | Effort | Notes |
-|---|------|--------|-------|
-| 1 | `packages/project-config/src/paths.ts` | Small | Add `getPrismaClientModule()` |
-| 2 | `packages/babel-config/src/plugins/babel-plugin-cedar-gqlorm-inject.ts` | Medium | Read config, use dynamic import source |
-| 3 | `packages/testing/src/api/vitest/vite-plugin-track-db-imports.ts` | Medium | Make regex/module detection config-aware |
-| 4 | `packages/testing/src/api/vitest/vitest-api.setup.ts` | Small | Dynamic import from configured module |
-| 5 | `packages/testing/src/config/jest/api/jest.setup.ts` | Small | Two dynamic import sites |
-| 6 | `packages/testing/src/config/jest/api/jest-preset.ts` | Small | Module mapper for custom paths |
-| 7 | `packages/testing/src/api/vitest/vite-plugin-cedar-vitest-api-config.ts` | Small | Alias for bare specifiers |
-| 8 | `packages/cli/src/commands/generate/service/serviceHandler.js` | Small | `prismaImportSource` from config |
-| 9 | `packages/cli/src/commands/generate/service/templates/service.ts.template` | Small | Use `${prismaImportSource}` |
-| 10 | `packages/cli/src/commands/generate/dataMigration/dataMigration.js` | Small | `prismaImportSource` from config |
-| 11 | `packages/internal/src/generate/graphqlCodeGen.ts` | Medium | API + web type gen, `$api` handling |
-| 12 | `packages/record/src/tasks/parse.js` | Small | `prismaClientModule` from config |
-| 13 | `packages/cli/src/commands/setup/uploads/uploadsHandler.js` | Medium | Resolve db file path from module |
-| 14 | `packages/cli/src/lib/exec.js` | Small | Resolve from config |
+| #   | File                                                                       | Effort | Notes                                    |
+| --- | -------------------------------------------------------------------------- | ------ | ---------------------------------------- |
+| 1   | `packages/project-config/src/paths.ts`                                     | Small  | Add `getPrismaClientModule()`            |
+| 2   | `packages/babel-config/src/plugins/babel-plugin-cedar-gqlorm-inject.ts`    | Medium | Read config, use dynamic import source   |
+| 3   | `packages/testing/src/api/vitest/vite-plugin-track-db-imports.ts`          | Medium | Make regex/module detection config-aware |
+| 4   | `packages/testing/src/api/vitest/vitest-api.setup.ts`                      | Small  | Dynamic import from configured module    |
+| 5   | `packages/testing/src/config/jest/api/jest.setup.ts`                       | Small  | Two dynamic import sites                 |
+| 6   | `packages/testing/src/config/jest/api/jest-preset.ts`                      | Small  | Module mapper for custom paths           |
+| 7   | `packages/testing/src/api/vitest/vite-plugin-cedar-vitest-api-config.ts`   | Small  | Alias for bare specifiers                |
+| 8   | `packages/cli/src/commands/generate/service/serviceHandler.js`             | Small  | `prismaImportSource` from config         |
+| 9   | `packages/cli/src/commands/generate/service/templates/service.ts.template` | Small  | Use `${prismaImportSource}`              |
+| 10  | `packages/cli/src/commands/generate/dataMigration/dataMigration.js`        | Small  | `prismaImportSource` from config         |
+| 11  | `packages/internal/src/generate/graphqlCodeGen.ts`                         | Medium | API + web type gen, `$api` handling      |
+| 12  | `packages/record/src/tasks/parse.js`                                       | Small  | `prismaClientModule` from config         |
+| 13  | `packages/cli/src/commands/setup/uploads/uploadsHandler.js`                | Medium | Resolve db file path from module         |
+| 14  | `packages/cli/src/lib/exec.js`                                             | Small  | Resolve from config                      |
 
 ### No Changes (de-scoped)
+
 - All `create-cedar-app` template files (db.ts/db.js, seed scripts)
 - All codemod packages (v2.7.x, v3.x Prisma migrations)
 - Database overlay files (pglite, neon-postgres)
@@ -575,6 +601,7 @@ yarn cedar generate scaffold Post
 
 1. **Multi-database support** — if Cedar ever supports multiple databases
    (e.g., one for auth, one for app data), this config key could become a map:
+
    ```toml
    [api.prismaClients]
      default = "@scope/db"
