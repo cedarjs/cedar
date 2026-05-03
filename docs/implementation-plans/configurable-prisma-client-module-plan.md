@@ -51,7 +51,7 @@ This plan makes the `db` module path a first-class configuration option.
 
 ## Architecture Decisions
 
-**Decision 1: Single config key in `cedar.toml` (`[api].prismaClientModule`)**
+**Decision 1: Single config key in `cedar.toml` (`[api].dbModule`)**
 
 A single key controls the import source for the Prisma client singleton.
 Default: `"src/lib/db"`. Users set it to a bare package specifier like
@@ -68,20 +68,19 @@ the existing `src/` alias machinery. This preserves backward compatibility.
 **Decision 3: `$api` alias in web-side types gets special handling**
 
 The web-side type generation in `graphqlCodeGen.ts` currently generates
-`import { Prisma } from "$api/src/lib/db"`. The `$api` prefix is a
-web-side Vite alias that resolves to the api workspace. When
-`prismaClientModule` is set to a bare package specifier (e.g. `@scope/db`),
-the `$api` wrapper is unnecessary — the web workspace can import directly from
-the shared package. The codegen must detect this case and omit the `$api`
-prefix.
+`import { Prisma } from "$api/src/lib/db"`. The `$api` prefix is a web-side Vite
+alias that resolves to the api workspace. When `dbModule` is set to a bare
+package specifier (e.g. `@scope/db`), the `$api` wrapper is unnecessary — the
+web workspace can import directly from the shared package. The codegen must
+detect this case and omit the `$api` prefix.
 
 **Decision 4: Codemods stay pinned to the default convention (de-scoped)**
 
 The `v2.7.x` and `v3.x` Prisma codemods that rewrite imports through
 `src/lib/db` are migration tools for existing projects. Users who change
-`prismaClientModule` are self-selecting for a non-default setup and are
-responsible for their own import paths. Updating codemods for this edge case
-adds complexity without meaningful value.
+`dbModule` are self-selecting for a non-default setup and are responsible for
+their own import paths. Updating codemods for this edge case adds complexity
+without meaningful value.
 
 ---
 
@@ -94,7 +93,7 @@ Add a new key to the `api` config section:
 ```typescript
 api: {
   // ... existing keys
-  prismaClientModule: string // default: "src/lib/db"
+  dbModule: string // default: "src/lib/db"
 }
 ```
 
@@ -110,7 +109,7 @@ Add a helper to resolve the module identifier:
 // For relative paths (e.g. "src/lib/db"), returns the path relative to
 // the api src directory (so the existing "src/" Vite/Babel alias works).
 getPrismaClientModule(): string {
-  const module = getConfig(getConfigPath(BASE_DIR)).api.prismaClientModule
+  const module = getConfig(getConfigPath(BASE_DIR)).api.dbModule
   return module
 }
 ```
@@ -120,7 +119,7 @@ getPrismaClientModule(): string {
 ## Runtime Infrastructure Changes
 
 These are blocking — the app will not work without them when
-`prismaClientModule` is changed.
+`dbModule` is changed.
 
 ### 1. `packages/babel-config/src/plugins/babel-plugin-cedar-gqlorm-inject.ts`
 
@@ -130,7 +129,7 @@ These are blocking — the app will not work without them when
 t.stringLiteral('src/lib/db')
 ```
 
-**Change:** Read `prismaClientModule` from `@cedarjs/project-config` and use
+**Change:** Read `dbModule` from `@cedarjs/project-config` and use
 that value instead:
 
 ```js
@@ -155,7 +154,7 @@ side), so it has access to the full Cedar project config at that point.
 id.match(/\/api\/src\/lib\/db\.(js|ts)$/)
 ```
 
-**Change:** When `prismaClientModule` is a bare specifier (e.g. `@scope/db`),
+**Change:** When `dbModule` is a bare specifier (e.g. `@scope/db`),
 this regex won't match. The plugin needs to either:
 
 - Build a pattern that matches the configured module name (for bare specifiers,
@@ -206,7 +205,7 @@ const libDbPath = require.resolve(`${apiSrcPath}/lib/db`)
 '^src/(.*)$': path.join(rwjsPaths.api.src, '$1')
 ```
 
-**Change:** If `prismaClientModule` is a bare specifier, the Jest config needs
+**Change:** If `dbModule` is a bare specifier, the Jest config needs
 a module mapper entry for that package to resolve it correctly (e.g., map
 `@scope/db` to the workspace package's source). If it's still a `src/` path,
 the existing mapper handles it.
@@ -219,7 +218,7 @@ the existing mapper handles it.
 src: getPaths().api.src
 ```
 
-**Change:** If `prismaClientModule` is a bare specifier, add an additional
+**Change:** If `dbModule` is a bare specifier, add an additional
 Vite resolve alias mapping the package name to its source directory.
 
 ---
@@ -227,7 +226,7 @@ Vite resolve alias mapping the package name to its source directory.
 ## Code Generator Changes
 
 These generate user-facing code with wrong import paths when
-`prismaClientModule` is changed.
+`dbModule` is changed.
 
 ### 7. `packages/cli/src/commands/generate/service/serviceHandler.js`
 
@@ -393,11 +392,11 @@ These are the actual `db.ts`/`db.js` files that instantiate and export the
 Prisma client.
 
 **Change:** No template changes needed. These files define the `db` export.
-When a user changes `prismaClientModule` to a shared package, they would:
+When a user changes `dbModule` to a shared package, they would:
 
 1. Move this file to `packages/db/src/index.ts` in the shared package.
 2. Delete it from `api/src/lib/db.ts`.
-3. Set `prismaClientModule = "@scope/db"` in `cedar.toml`.
+3. Set `dbModule = "@scope/db"` in `cedar.toml`.
 
 The framework doesn't need to generate different templates — the user
 controls this manually.
@@ -418,7 +417,7 @@ const dbPath = path.join(getPaths().api.lib, `db.${ext}`)
 bare specifier, the file doesn't live in `api/src/lib/` at all — it lives in
 the workspace package. The setup command needs to:
 
-- Detect if `prismaClientModule` is a bare specifier → find the package source
+- Detect if `dbModule` is a bare specifier → find the package source
   file via workspace resolution (`require.resolve` or `readPackageUp`).
 - If it's a `src/` path → maintain current behavior.
 
@@ -442,7 +441,7 @@ path (or `require.resolve` it) rather than assuming `api/src/lib/db`.
 
 **Decision:** De-scoped. These Prisma migration codemods assume the default
 convention (`src/lib/db` / `api/src/lib/db`). Users who customize
-`prismaClientModule` are responsible for their own import paths. No changes
+`dbModule` are responsible for their own import paths. No changes
 needed.
 
 ---
@@ -468,7 +467,7 @@ needed.
 | 9   | `packages/cli/src/commands/generate/service/templates/service.ts.template` | Small  | Use `${prismaImportSource}`              |
 | 10  | `packages/cli/src/commands/generate/dataMigration/dataMigration.js`        | Small  | `prismaImportSource` from config         |
 | 11  | `packages/internal/src/generate/graphqlCodeGen.ts`                         | Medium | API + web type gen, `$api` handling      |
-| 12  | `packages/record/src/tasks/parse.js`                                       | Small  | `prismaClientModule` from config         |
+| 12  | `packages/record/src/tasks/parse.js`                                       | Small  | `dbModule` from config                   |
 | 13  | `packages/cli/src/commands/setup/uploads/uploadsHandler.js`                | Medium | Resolve db file path from module         |
 | 14  | `packages/cli/src/lib/exec.js`                                             | Small  | Resolve from config                      |
 
@@ -485,7 +484,7 @@ needed.
 
 ### Default (no change to `cedar.toml`)
 
-`prismaClientModule` defaults to `"src/lib/db"`. All existing behavior is
+`dbModule` defaults to `"src/lib/db"`. All existing behavior is
 preserved. The framework resolves `src/` imports via the Vite/Babel `src`
 alias pointing to `api/src/`. Zero behavioral change for existing projects.
 
@@ -494,7 +493,7 @@ alias pointing to `api/src/`. Zero behavioral change for existing projects.
 ```toml
 # cedar.toml
 [api]
-  prismaClientModule = "@my-scope/db"
+  dbModule = "@my-scope/db"
 ```
 
 ```json
@@ -549,7 +548,7 @@ If the user only extracts the `db` module but keeps the Prisma schema and
 migrations in `api/db/`, they can set:
 
 ```toml
-prismaClientModule = "@my-scope/db"
+dbModule = "@my-scope/db"
 ```
 
 And point `prismaConfig` to the existing location:
@@ -575,7 +574,7 @@ mkdir packages/db
 
 # Update cedar.toml
 #   [api]
-#     prismaClientModule = "@my-scope/db"
+#     dbModule = "@my-scope/db"
 #     prismaConfig = "./api/prisma.config.cjs"  # or point into packages/db/
 
 # Remove the old db file
@@ -613,7 +612,7 @@ yarn cedar generate scaffold Post
    `[api].prismaConfig` in `cedar.toml` already supports this. The two config
    keys work independently.
 
-3. **Vite caching** — changing `prismaClientModule` changes import sources
+3. **Vite caching** — changing `dbModule` changes import sources
    across many files. A `yarn cedar dev` restart or Vite cache clear may be
    needed after the change (this is already the case for other config changes).
 
