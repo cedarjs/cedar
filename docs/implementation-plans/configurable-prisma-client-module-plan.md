@@ -340,7 +340,8 @@ const prismaImportSource = getPrismaClientModule()
 // If src/ path, wrap with $api/ (existing behavior).
 const webImportSource = prismaImportSource.startsWith('src/')
   ? `$api/${prismaImportSource}`
-  : prismaImportSource`import { Prisma } from "${webImportSource}"`
+  : prismaImportSource`
+import { Prisma } from "${webImportSource}"`
 ```
 
 ### 15. `packages/record/src/tasks/parse.js`
