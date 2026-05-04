@@ -11,13 +11,7 @@ import { getConfigPath } from '@cedarjs/project-config'
 
 const config = new Configstore('@cedarjs/cli')
 
-// TODO: Remove RW related fallbacks here
-const CFW_PATH =
-  process.env.CFW_PATH ||
-  process.env.RWFW_PATH ||
-  process.env.RW_PATH ||
-  config.get('CFW_PATH') ||
-  config.get('RWFW_PATH')
+const CFW_PATH = process.env.CFW_PATH || config.get('CFW_PATH')
 
 if (!CFW_PATH) {
   console.error('Error: You must specify the path to Cedar Framework')
