@@ -9,14 +9,16 @@
     "@cedarjs/core": "4.1.0",
     "@cedarjs/eslint-config": "4.1.0",
     "@cedarjs/project-config": "4.1.0",
-    "@cedarjs/testing": "4.1.0"
+    "@cedarjs/testing": "4.1.0",
+    "vitest": "3.2.4"
   },
   "engines": {
     "node": "=24.x"
   },
   "packageManager": "yarn@4.14.1",
   "resolutions": {
-    "react-is": "19.2.3"
+    "react-is": "19.2.3",
+    "vite": "7.3.2"
   },
   "dependenciesMeta": {
     "@clerk/shared": {
