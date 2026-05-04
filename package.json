@@ -57,7 +57,6 @@
     "@eslint/eslintrc/minimatch": "npm:3.1.5",
     "@humanwhocodes/config-array/minimatch": "npm:3.1.5",
     "@lerna/create/minimatch": "npm:3.1.5",
-    "eslint-plugin-import/minimatch": "npm:3.1.5",
     "eslint-plugin-jsx-a11y/minimatch": "npm:3.1.5",
     "eslint-plugin-react/minimatch": "npm:3.1.5",
     "eslint/minimatch": "npm:3.1.5",
