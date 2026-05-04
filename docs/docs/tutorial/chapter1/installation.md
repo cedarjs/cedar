@@ -6,25 +6,25 @@ We'll use yarn ([yarn](https://yarnpkg.com/getting-started/install) is a require
 <TabItem value="js" label="JavaScript">
 
 ```bash
-yarn create cedar-app ./redwoodblog
+yarn create cedar-app ./cedarblog
 ```
 
 </TabItem>
 <TabItem value="ts" label="TypeScript">
 
 ```bash
-yarn create cedar-app --ts ./redwoodblog
+yarn create cedar-app --ts ./cedarblog
 ```
 
 </TabItem>
 </Tabs>
 
-You'll have a new directory `redwoodblog` containing several directories and files. Change to that directory and we'll start the development server:
+You'll have a new directory `cedarblog` containing several directories and files. Change to that directory and we'll start the development server:
 
 ```bash
-cd redwoodblog
+cd cedarblog
 yarn install
-yarn redwood dev
+yarn cedar dev
 ```
 
 A browser should automatically open to [http://localhost:8910](http://localhost:8910) and you will see the Cedar welcome page:

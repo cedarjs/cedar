@@ -13,7 +13,7 @@ When you look at these two pages what do they really care about? They have some 
 Let's create a layout to hold that `<header>`:
 
 ```bash
-yarn redwood g layout blog
+yarn cedar g layout blog
 ```
 
 :::tip
@@ -242,7 +242,7 @@ export default Routes
 </TabItem>
 </Tabs>
 
-:::info The `src` alias
+:::info[The `src` alias]
 
 Notice that the import statement uses `src/layouts/BlogLayout` and not `../src/layouts/BlogLayout` or `./src/layouts/BlogLayout`. Being able to use just `src` is a convenience feature provided by Cedar: `src` is an alias to the `src` path in the current workspace. So if you're working in `web` then `src` points to `web/src` and in `api` it points to `api/src`.
 
@@ -250,7 +250,7 @@ Notice that the import statement uses `src/layouts/BlogLayout` and not `../src/l
 
 Back to the browser (you may need to manually refresh) and you should see...nothing different. But that's good, it means our layout is working!
 
-:::info Why are things named the way they are?
+:::info[Why are things named the way they are?]
 
 You may have noticed some duplication in Cedar's file names. Pages live in a directory called `/pages` and also contain `Page` in their name. Same with Layouts. What's the deal?
 
