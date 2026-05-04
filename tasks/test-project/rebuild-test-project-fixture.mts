@@ -852,6 +852,18 @@ async function rebuildTestProject() {
       const rootPackageJson = JSON.parse(
         fs.readFileSync(path.join(OUTPUT_PROJECT_PATH, 'package.json'), 'utf8'),
       )
+      const templateOverlayPackageJsonPath = path.join(
+        import.meta.dirname,
+        '..',
+        '..',
+        'packages',
+        'create-cedar-app',
+        'templates',
+        'overlays',
+        esm ? 'esm' : 'cjs',
+        'yarn',
+        'package.json',
+      )
       const templatePackageJsonPath = path.join(
         import.meta.dirname,
         '..',
@@ -862,9 +874,9 @@ async function rebuildTestProject() {
         esm ? 'esm-ts' : 'ts',
         'package.json',
       )
-      const newRootPackageJson = JSON.parse(
-        fs.readFileSync(templatePackageJsonPath, 'utf8'),
-      )
+      const newRootPackageJson = fs.existsSync(templateOverlayPackageJsonPath)
+        ? JSON.parse(fs.readFileSync(templateOverlayPackageJsonPath, 'utf8'))
+        : JSON.parse(fs.readFileSync(templatePackageJsonPath, 'utf8'))
       newRootPackageJson.devDependencies['prettier-plugin-tailwindcss'] =
         rootPackageJson.devDependencies['prettier-plugin-tailwindcss']
       newRootPackageJson.workspaces.push('packages/*')
