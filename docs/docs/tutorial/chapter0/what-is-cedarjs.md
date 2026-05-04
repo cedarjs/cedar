@@ -314,18 +314,21 @@ The entire framework is ([strictly](https://cedarjs.com/docs/typescript/strict-m
 
 ## Deployment
 
-Cedar's job doesn't end until your application is deployed to the world! That's why we include deploy commands and config to get your app running on the most popular hosts (whether they are serverless or traditional server infrastructure) including:
+Cedar's job doesn't end until your application is deployed to the world! That's
+why we include deploy commands and config to get your app running on the most
+popular hosts (whether they are serverless or traditional server infrastructure)
+including:
 
 - [Coherence (GWC/AWS)](https://www.withcoherence.com/)
 - [Flightcontrol.dev (AWS)](https://www.flightcontrol.dev?ref=redwood)
-- [Edg.io](https://edg.io)
 - [Netlify.com](https://www.netlify.com/)
 - [Render.com](https://render.com)
 - [Serverless.com](https://serverless.com)
 - [Vercel.com](https://vercel.com)
 - anywhere [Docker](https://www.docker.com) is accepted
 
-* You can even deploy to your own server via SSH commands (we call that our [Baremetal](../../deploy/baremetal.md) deploy)!
+* You can even deploy to your own server via SSH commands (we call that our
+  [Baremetal](../../deploy/baremetal.md) deploy)!
 
 ## Coming Soon
 
@@ -341,7 +344,8 @@ You can see the full list and follow along via our [Roadmap](https://github.com/
 
 ## Backing
 
-CedarJS is a fork of [RedwoodJS](https://redwoodjs.com/), which was created by Tom Preston-Werner, cofounder of GitHub. CedarJS is not affiliated with or endorsed by Tom Preston-Werner or the RedwoodJS project.
+CedarJS is supported by our generous sponsors. See the [Sponsors section in our
+README](https://github.com/cedarjs/cedar#sponsors) for the current list.
 
 ## Updates
 
