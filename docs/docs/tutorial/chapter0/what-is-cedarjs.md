@@ -314,38 +314,56 @@ The entire framework is ([strictly](https://cedarjs.com/docs/typescript/strict-m
 
 ## Deployment
 
-Cedar's job doesn't end until your application is deployed to the world! That's why we include deploy commands and config to get your app running on the most popular hosts (whether they are serverless or traditional server infrastructure) including:
+Cedar's job doesn't end until your application is deployed to the world! That's
+why we include deploy commands and config to get your app running on the most
+popular hosts (whether they are serverless or traditional server infrastructure)
+including:
 
 - [Coherence (GWC/AWS)](https://www.withcoherence.com/)
-- [Flightcontrol.dev (AWS)](https://www.flightcontrol.dev?ref=redwood)
-- [Edg.io](https://edg.io)
+- [Flightcontrol.dev (AWS)](https://www.flightcontrol.dev?ref=cedarjs)
 - [Netlify.com](https://www.netlify.com/)
 - [Render.com](https://render.com)
 - [Serverless.com](https://serverless.com)
 - [Vercel.com](https://vercel.com)
 - anywhere [Docker](https://www.docker.com) is accepted
 
-* You can even deploy to your own server via SSH commands (we call that our [Baremetal](../../deploy/baremetal.md) deploy)!
+* You can even deploy to your own server via SSH commands (we call that our
+  [Baremetal](../../deploy/baremetal.md) deploy)!
 
 ## Coming Soon
 
-Cedar is still in active development, and we're working on some features that are on the cutting edge of the React ecosystem:
+Cedar is still in active development, and we're working on some features that
+are on the cutting edge of the React, GraphQL and tooling ecosystems:
 
+- [gqlorm](https://github.com/cedarjs/cedar/tree/main/packages/gqlorm)
+- [universal deploy](https://github.com/cedarjs/cedar/pull/1616) https://github.com/universal-deploy/universal-deploy
+- [npm and pnpm support](https://github.com/cedarjs/cedar/blob/main/docs/implementation-plans/package-manager-agnostic-plan-v3.md)
 - [React Server Components](https://community.redwoodjs.com/t/react-server-components-rsc/5081) and a new transparent, non-GraphQL API
 - [SSR/Streaming](https://community.redwoodjs.com/t/render-modes-ssr-streaming-experimental/4858)
 - [Realtime and GraphQL Subscriptions](https://community.redwoodjs.com/t/redwoodjs-realtime/5002)
 - [Cedar Studio](https://community.redwoodjs.com/t/redwood-studio-experimental/4771) for getting runtime insights into your project
 - [Mailer](https://github.com/redwoodjs/redwood/pull/9058)
 
-You can see the full list and follow along via our [Roadmap](https://github.com/cedarjs/cedar#roadmap).
+You can see the full list and follow along via our
+[Roadmap](https://github.com/cedarjs/cedar#roadmap).
+
+Many of the features listed above are available today behind feature flags.
 
 ## Backing
 
-CedarJS is a fork of [RedwoodJS](https://redwoodjs.com/), which was created by Tom Preston-Werner, cofounder of GitHub. CedarJS is not affiliated with or endorsed by Tom Preston-Werner or the RedwoodJS project.
+CedarJS is supported by our generous sponsors. See the [Sponsors section in our
+README](https://github.com/cedarjs/cedar#sponsors) for the current list.
 
 ## Updates
 
-Cedar follows semantic versioning strictly, and we don't shy away from releasing major versions when breaking changes are needed. In practice, most breaking changes affect only a small subset of Cedar apps, so upgrading is often straightforward. We publish [release notes](https://github.com/cedarjs/cedar/releases/tag/v3.0.0) for everything user-facing, along with comprehensive upgrade guides, and where code changes are needed we do our best to include a codemod script that will make the changes for you automatically.
+Cedar follows semantic versioning strictly, and we don't shy away from releasing
+major versions when breaking changes are needed. In practice, most breaking
+changes affect only a small subset of Cedar apps, so upgrading is often
+straightforward. We publish [release
+notes](https://github.com/cedarjs/cedar/releases/tag/v3.0.0) for everything
+user-facing, along with comprehensive upgrade guides, and where code changes are
+needed we do our best to include a codemod script that will make the changes for
+you automatically.
 
 ## Community
 
