@@ -8,7 +8,7 @@ Now that the elevator pitch is out of the way, what does that actually _mean_? A
 
 - GraphQL
 - Prisma
-- Vitest
+- Jest
 - Storybook
 - Vite
 - Typescript
@@ -296,7 +296,7 @@ You can write Jest tests in both the front- and backend of your app.
 
 ## Storybook
 
-While Jest can test your code, [Storybook](https://storybook.js.org/) can be used to catalog and test your UI. They call themselves a "frontend workshop for building UI components in isolation" and we couldn't agree more. Build your components separate from your app, even having props be dynamic while viewing their effects. All you have to do is run `yarn redwood storybook`.
+While Jest can test your code, [Storybook](https://storybook.js.org/) can be used to catalog and test your UI. They call themselves a "frontend workshop for building UI components in isolation" and we couldn't agree more. Build your components separate from your app, even having props be dynamic while viewing their effects. All you have to do is run `yarn cedar storybook`.
 
 Cedar adds data mocking for Storybook so that you can display components that would normally be populated with data from GraphQL, but without needing a server running.
 
@@ -308,45 +308,63 @@ Storybook is strictly a frontend codebase concern.
 
 Notice at no point above did we say "and then we need to write configuration for this package..." Cedar has done all of that for you and will continue to do that with every release of a new version. We're sure you won't miss spending hours or days trying to add and configure a package in your application. You can eject from our default configs, and add custom code if needed, but most apps will never need to do this: everything Just Works.
 
-We use vite as our bundler, packaging up the frontend code and automatically code splitting on pages. It also serves the frontend (the `web` directory). The backend (the `api` directory) is compiled by Babel and served with [Fastify](https://fastify.dev/).
+We use vite as our bundler, packaging up the frontend code and automatically code splitting on pages. It also serves the frontend (the `web` directory). The backend (the `api` directory) is compiled by Babel (via a Vite SSR build) and served with [Fastify](https://fastify.dev/).
 
 The entire framework is ([strictly](https://cedarjs.com/docs/typescript/strict-mode)) typed so you can autocomplete all the things in your IDE.
 
 ## Deployment
 
-Cedar's job doesn't end until your application is deployed to the world! That's why we include deploy commands and config to get your app running on the most popular hosts (whether they are serverless or traditional server infrastructure) including:
+Cedar's job doesn't end until your application is deployed to the world! That's
+why we include deploy commands and config to get your app running on the most
+popular hosts (whether they are serverless or traditional server infrastructure)
+including:
 
 - [Coherence (GWC/AWS)](https://www.withcoherence.com/)
-- [Flightcontrol.dev (AWS)](https://www.flightcontrol.dev?ref=redwood)
-- [Edg.io](https://edg.io)
+- [Flightcontrol.dev (AWS)](https://www.flightcontrol.dev?ref=cedarjs)
 - [Netlify.com](https://www.netlify.com/)
 - [Render.com](https://render.com)
 - [Serverless.com](https://serverless.com)
 - [Vercel.com](https://vercel.com)
 - anywhere [Docker](https://www.docker.com) is accepted
 
-* You can even deploy to your own server via SSH commands (we call that our [Baremetal](../../deploy/baremetal.md) deploy)!
+* You can even deploy to your own server via SSH commands (we call that our
+  [Baremetal](../../deploy/baremetal.md) deploy)!
 
 ## Coming Soon
 
-Cedar is still in active development, and we're working on some [features](https://community.redwoodjs.com/c/experimental-features/25) that are on the cutting edge of the React ecosystem:
+Cedar is still in active development, and we're working on some features that
+are on the cutting edge of the React, GraphQL and tooling ecosystems:
 
+- [gqlorm](https://github.com/cedarjs/cedar/tree/main/packages/gqlorm)
+- [universal deploy](https://github.com/cedarjs/cedar/pull/1616) https://github.com/universal-deploy/universal-deploy
+- [npm and pnpm support](https://github.com/cedarjs/cedar/blob/main/docs/implementation-plans/package-manager-agnostic-plan-v3.md)
 - [React Server Components](https://community.redwoodjs.com/t/react-server-components-rsc/5081) and a new transparent, non-GraphQL API
 - [SSR/Streaming](https://community.redwoodjs.com/t/render-modes-ssr-streaming-experimental/4858)
 - [Realtime and GraphQL Subscriptions](https://community.redwoodjs.com/t/redwoodjs-realtime/5002)
 - [Cedar Studio](https://community.redwoodjs.com/t/redwood-studio-experimental/4771) for getting runtime insights into your project
 - [Mailer](https://github.com/redwoodjs/redwood/pull/9058)
 
-These are just a few highlights from our current [Bighorn Epoch](https://tom.preston-werner.com/2023/05/30/redwoods-next-epoch-all-in-on-rsc). You can see the full list and follow along via our Roadmap project board at [www.redwoodjs.com/roadmap](https://redwoodjs.com/roadmap).
+You can see the full list and follow along via our
+[Roadmap](https://github.com/cedarjs/cedar#roadmap).
+
+Many of the features listed above are available today behind feature flags.
 
 ## Backing
 
-Cedar was created by Tom Preston-Werner, cofounder of GitHub and projects like Semantic Versioning, TOML, Jekyll, and many more. Tom believes that JavaScript applications, specifically full-stack JS applications, are the future of the web, and Cedar has his full support.
+CedarJS is supported by our generous sponsors. See the [Sponsors section in our
+README](https://github.com/cedarjs/cedar#sponsors) for the current list.
 
 ## Updates
 
-Cedar is constantly being updated and sticks strictly to semantic versioning requirements. You can be sure that there won't be any sudden, breaking changes without a major version revision. Cedar is famous for its [copious release notes](https://community.redwoodjs.com/t/redwood-3-0-0-is-now-available/3989) and comprehensive upgrade guides, and if code changes need to be made to your app, we make every effort to include a codemod script that will make the changes for you.
+Cedar follows semantic versioning strictly, and we don't shy away from releasing
+major versions when breaking changes are needed. In practice, most breaking
+changes affect only a small subset of Cedar apps, so upgrading is often
+straightforward. We publish [release
+notes](https://github.com/cedarjs/cedar/releases/tag/v3.0.0) for everything
+user-facing, along with comprehensive upgrade guides, and where code changes are
+needed we do our best to include a codemod script that will make the changes for
+you automatically.
 
 ## Community
 
-There's a very active community around Cedar, including a [Discourse forum](https://community.redwoodjs.com/) and [Discord chat](https://cedarjs.com/discord), where even members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!
+There's a growing community around Cedar. Join us on [Discord](https://cedarjs.com/discord) where members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!
