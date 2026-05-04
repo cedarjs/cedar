@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/vite",
-  "version": "3.1.1",
+  "version": "4.1.0",
   "description": "Vite configuration package for CedarJS",
   "repository": {
     "type": "git",
@@ -38,6 +38,9 @@
     "./buildFeServer": {
       "require": "./dist/cjs/buildFeServer.js",
       "import": "./dist/buildFeServer.js"
+    },
+    "./buildUDApiServer": {
+      "import": "./dist/buildUDApiServer.js"
     },
     "./build": {
       "import": "./dist/build/build.js",
@@ -84,7 +87,8 @@
     "@cedarjs/testing": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "@fastify/url-data": "6.0.3",
-    "@swc/core": "1.15.30",
+    "@swc/core": "1.15.32",
+    "@universal-deploy/node": "^0.1.6",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
