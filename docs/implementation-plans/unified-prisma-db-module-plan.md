@@ -251,8 +251,11 @@ const dbModule =
   state.opts.dbModule ?? state.file.opts.cedarDbModule ?? 'src/lib/db'
 
 // Use dbModule in the injected import
+// t.importSpecifier(local, imported) — local is the name used in this file,
+// imported is the name exported from the target module.
+// This produces: import { db as __gqlorm_db__ } from '<dbModule>'
 const importDeclaration = t.importDeclaration(
-  [t.importSpecifier(t.identifier('db'), t.identifier('__gqlorm_db__'))],
+  [t.importSpecifier(t.identifier('__gqlorm_db__'), t.identifier('db'))],
   t.stringLiteral(dbModule)
 )
 ```
@@ -507,7 +510,7 @@ const prismaImportSource = getPrismaClientModule()
 // api/types/graphql.d.ts
 // Use the dbModule value directly — api-side resolution (Vite/Babel alias)
 // handles src/ paths and bare specifiers alike.
-`import { Prisma } from "${prismaImportSource}"`
+// → `import { Prisma } from "${prismaImportSource}"`
 
 // web/types/graphql.d.ts
 // The web side uses the $api/ Vite alias to reach into the api workspace.
@@ -524,7 +527,8 @@ function isBareSpecifier(module) {
 }
 const webImportSource = isBareSpecifier(prismaImportSource)
   ? prismaImportSource
-  : `$api/${prismaImportSource}``import { Prisma } from "${webImportSource}"`
+  : `$api/${prismaImportSource}`
+// → `import { Prisma } from "${webImportSource}"`
 ```
 
 ### 17. `packages/record/src/tasks/parse.js`
