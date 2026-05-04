@@ -576,25 +576,53 @@ content: `import { Prisma } from "$api/src/lib/db"`
 the tricky one:
 
 ```ts
-const prismaImportSource = getPrismaClientModule()
-// api/types/graphql.d.ts
-// Use the dbModule value directly — api-side resolution (Vite/Babel alias)
-// handles src/ paths and bare specifiers alike.
-// → `import { Prisma } from "${prismaImportSource}"`
+import path from 'path'
+import { getPrismaClientModule, resolveDbModule } from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/internal'
 
-// web/types/graphql.d.ts
-// The web side uses the $api/ Vite alias to reach into the api workspace.
-// Bare specifiers (e.g. "@scope/db") and relative paths don't need $api/ —
-// the web workspace can resolve them directly from the project root.
-// Only src/ paths need $api/ wrapping because the "src" alias lives inside
-// the api workspace.
-function needsApiPrefix(module) {
-  return module.startsWith('src/')
+const prismaImportSource = getPrismaClientModule()
+const apiTypesDir = path.join(getPaths().api.types) // e.g. <project>/api/types
+const webTypesDir = path.join(getPaths().web.types) // e.g. <project>/web/types
+const projectBase = getPaths().base
+const apiSrc = getPaths().api.src
+const apiBase = getPaths().api.base
+
+// Resolve the dbModule to an absolute path (or keep bare specifiers as-is)
+const resolvedDbModule = resolveDbModule(
+  prismaImportSource,
+  apiSrc,
+  apiBase,
+  projectBase
+)
+
+// Compute the import source for a given output directory.
+// Relative paths must be expressed relative to the .d.ts file's location,
+// because TypeScript resolves relative imports from the containing file.
+function getImportSourceFor(outputDir: string): string {
+  if (
+    prismaImportSource.startsWith('src/') ||
+    prismaImportSource.startsWith('/')
+  ) {
+    // src/ paths rely on the Vite/Babel alias; absolute paths work as-is.
+    return prismaImportSource
+  }
+  if (
+    prismaImportSource.startsWith('./') ||
+    prismaImportSource.startsWith('../')
+  ) {
+    // Compute relative path from the output file's directory to the resolved
+    // db module so TypeScript resolves it correctly.
+    return path.relative(outputDir, resolvedDbModule)
+  }
+  // Bare specifier — resolved by the package manager / bundler.
+  return prismaImportSource
 }
-const webImportSource = needsApiPrefix(prismaImportSource)
-  ? `$api/${prismaImportSource}`
-  : prismaImportSource
-// → `import { Prisma } from "${webImportSource}"`
+
+const apiImportSource = getImportSourceFor(apiTypesDir)
+const webImportSource = getImportSourceFor(webTypesDir)
+
+// api/types/graphql.d.ts → `import { Prisma } from "${apiImportSource}"`
+// web/types/graphql.d.ts → `import { Prisma } from "${webImportSource}"`
 ```
 
 ### 17. `packages/record/src/tasks/parse.js`
