@@ -58,12 +58,20 @@ Default: `"src/lib/db"`. Users set it to a bare package specifier like
 `"@scope/db"` to point at a shared workspace package. All generators, Babel
 plugins, testing infrastructure, and templates read from this one value.
 
-**Decision 2: Support both bare specifiers and path-based imports**
+**Decision 2: Support bare specifiers, `src/` paths, and relative paths**
 
-When the value starts with `@` or is a package name (no leading `.` or `/`),
-treat it as a bare specifier — pass it directly into `import` statements.
-When the value looks like a relative path (e.g. `src/lib/db`), resolve it via
-the existing `src/` alias machinery. This preserves backward compatibility.
+The `dbModule` value is resolved using a unified strategy based on its prefix:
+
+| Prefix          | Example                      | Resolution                                                                    |
+| --------------- | ---------------------------- | ----------------------------------------------------------------------------- |
+| `src/`          | `src/lib/db`                 | Resolve to `api.src + '/lib/db'` (uses existing `src/` Vite/Babel/Jest alias) |
+| `./` or `../`   | `./packages/db/src/index`    | Resolve relative to `api.base` (the api workspace root)                       |
+| begins with `/` | `/absolute/path/db`          | Use as-is (absolute path)                                                     |
+| everything else | `@scope/db`, `my-db-package` | Bare specifier — pass directly into `import` statements                       |
+
+This preserves backward compatibility (the default `src/lib/db` matches the
+first case) while also supporting extracted packages and arbitrary filesystem
+paths.
 
 **Decision 3: `$api` alias in web-side types gets special handling**
 
@@ -170,15 +178,29 @@ this regex won't match. The plugin needs to either:
 const libDb = await import(`${cedarPaths.api.lib}/db`)
 ```
 
-**Change:** Use the configured module path:
+**Change:** Use the configured module path with unified resolution:
 
 ```js
+import { getPrismaClientModule } from '@cedarjs/project-config'
+import path from 'node:path'
+
 const prismaModule = getPrismaClientModule()
-const libDb = await import(
-  prismaModule.startsWith('src/')
-    ? `${cedarPaths.api.src}/${prismaModule.replace('src/', '')}`
-    : prismaModule
-)
+
+function resolveDbModule(module, cedarPaths) {
+  if (module.startsWith('src/')) {
+    return path.join(cedarPaths.api.src, module.replace('src/', ''))
+  }
+  if (
+    module.startsWith('./') ||
+    module.startsWith('../') ||
+    module.startsWith('/')
+  ) {
+    return path.resolve(cedarPaths.api.base, module)
+  }
+  return module // bare specifier
+}
+
+const libDb = await import(resolveDbModule(prismaModule, cedarPaths))
 ```
 
 ### 4. `packages/testing/src/config/jest/api/jest.setup.ts`
@@ -195,7 +217,10 @@ const { db } = await import(`${apiSrcPath}/lib/db`)
 const libDbPath = require.resolve(`${apiSrcPath}/lib/db`)
 ```
 
-**Change:** Same pattern — resolve the module path from config.
+**Change:** Same unified resolution pattern as item 3. Both the
+`import()` at line 134 and `require.resolve()` at line 306 must use the
+`resolveDbModule()` helper to handle `src/` paths, relative paths, and bare
+specifiers correctly. See item 3 for the resolution function.
 
 ### 5. `packages/testing/src/config/jest/api/jest-preset.ts`
 
@@ -332,16 +357,26 @@ the tricky one:
 ```ts
 const prismaImportSource = getPrismaClientModule()
 // api/types/graphql.d.ts
-// If bare specifier, use directly. If src/ path, use as-is (Vite resolves).
+// Use the dbModule value directly — api-side resolution (Vite/Babel alias)
+// handles src/ paths and bare specifiers alike.
 `import { Prisma } from "${prismaImportSource}"`
 
 // web/types/graphql.d.ts
-// If bare specifier (e.g. "@scope/db"), use directly — no $api prefix needed.
-// If src/ path, wrap with $api/ (existing behavior).
-const webImportSource = prismaImportSource.startsWith('src/')
-  ? `$api/${prismaImportSource}`
-  : prismaImportSource`
-import { Prisma } from "${webImportSource}"`
+// The web side uses the $api/ Vite alias to reach into the api workspace.
+// Bare specifiers (e.g. "@scope/db") don't need $api/ — the web workspace
+// can import from the shared package directly.
+// src/ and relative paths DO need $api/ wrapping.
+function isBareSpecifier(module) {
+  return (
+    !module.startsWith('src/') &&
+    !module.startsWith('./') &&
+    !module.startsWith('../') &&
+    !module.startsWith('/')
+  )
+}
+const webImportSource = isBareSpecifier(prismaImportSource)
+  ? prismaImportSource
+  : `$api/${prismaImportSource}``import { Prisma } from "${webImportSource}"`
 ```
 
 ### 15. `packages/record/src/tasks/parse.js`

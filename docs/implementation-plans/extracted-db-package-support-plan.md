@@ -96,12 +96,15 @@ prismaConfig = './packages/db/prisma.config.cjs'
 dbModule = '@myorg/db'
 ```
 
-The `dbModule` value is treated as a bare module specifier (like an import path).
-It can be:
+The `dbModule` value supports three path forms, resolved by prefix:
 
-- A relative path like `src/lib/db` (resolved relative to the API side)
-- A workspace package name like `@myorg/db`
-- Any other path that the app's module resolution understands
+| Prefix              | Example                      | Resolution                                                                    |
+| ------------------- | ---------------------------- | ----------------------------------------------------------------------------- |
+| `src/`              | `src/lib/db`                 | Resolve to `api.src` + remainder (uses existing `src/` Vite/Babel/Jest alias) |
+| `./`, `../`, or `/` | `./packages/db/src/index`    | Resolve relative to `api.base` (for `./`/`../`) or use as-is (for `/`)        |
+| everything else     | `@myorg/db`, `my-db-package` | Bare specifier — passed directly to `import()` / `require()`                  |
+
+The default `'src/lib/db'` matches the first case, preserving backward compatibility.
 
 ---
 
@@ -270,20 +273,33 @@ const libDb = await import(`${cedarPaths.api.lib}/db`)
 
 ```ts
 import { getConfig } from '@cedarjs/project-config'
+import path from 'node:path'
 
-const dbModule = getConfig().api.dbModule // e.g. 'src/lib/db' or '@myorg/db'
+const dbModule = getConfig().api.dbModule // e.g. 'src/lib/db', './packages/db/src/index', or '@myorg/db'
 
-// For relative paths, resolve relative to api base
-// For package names, import directly
+function resolveDbModule(module, apiSrc, apiBase) {
+  if (module.startsWith('src/')) {
+    return path.join(apiSrc, module.replace('src/', ''))
+  }
+  if (
+    module.startsWith('./') ||
+    module.startsWith('../') ||
+    module.startsWith('/')
+  ) {
+    return path.resolve(apiBase, module)
+  }
+  return module // bare specifier
+}
+
 const db = await import(
-  dbModule.startsWith('.') ? path.join(cedarPaths.api.base, dbModule) : dbModule
+  resolveDbModule(dbModule, cedarPaths.api.src, cedarPaths.api.base)
 )
 ```
 
-The exact resolution logic depends on whether `dbModule` is a relative path or a
-package specifier. The simplest robust approach: if it starts with `.` or `/`, resolve
-relative to `api.base`. Otherwise, treat it as a bare import and let Node's module
-resolution handle it.
+The `src/` paths use the existing `api.src` (matching Vite/Babel/Jest alias resolution).
+`./` and `../` paths are resolved relative to `api.base` (the api workspace root).
+Bare specifiers (e.g. `@myorg/db`) are passed directly to `import()` — Node's module
+resolution handles them.
 
 ---
 
