@@ -9,7 +9,7 @@ Cedar is composed of several popular libraries to make full-stack web developmen
 
 **Don't panic!** You can work through this tutorial without knowing much of anything about these technologies. You may find yourself getting lost in terminology that we don't stop and take the time to explain, but that's okay: just know that the nitty-gritty details of how those technologies work is out there and there will be plenty of time to learn them. As you learn more about them you'll start to see the lines between what Cedar provides on top of the stock implementations of these projects.
 
-You could definitely learn them all at once, but it will be harder to determine where one ends and another begins, which makes it more difficult to find help once you're past the tutorial and want to dive deeper into one technology or another. Our advice? Make it through the tutorial and then start building something on your own! When you find that what you learned in the tutorial doesn't exactly apply to a feature you're trying to build, Google for where you're stuck ("prisma select only some fields") and you'll be an expert in no time. And don't forget our [Discourse](https://community.redwoodjs.com/) and [Discord](https://cedarjs.com/discord) where you can get help from the creators of the framework, as well as tons of helpful community members.
+You could definitely learn them all at once, but it will be harder to determine where one ends and another begins, which makes it more difficult to find help once you're past the tutorial and want to dive deeper into one technology or another. Our advice? Make it through the tutorial and then start building something on your own! When you find that what you learned in the tutorial doesn't exactly apply to a feature you're trying to build, Google for where you're stuck ("prisma select only some fields") and you'll be an expert in no time. And don't forget our [Discord](https://cedarjs.com/discord) where you can get help from the creators of the framework, as well as tons of helpful community members.
 
 ### Node.js and Yarn Versions
 
@@ -27,7 +27,7 @@ yarn --version
 
 Please do upgrade accordingly. Then proceed to the Cedar installation when you're ready!
 
-:::info Installing Node and Yarn
+:::info[Installing Node and Yarn]
 
 There are many ways to install and manage both Node.js and Yarn. If you're installing for the first time, we recommend the following:
 
