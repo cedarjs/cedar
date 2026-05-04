@@ -102,7 +102,7 @@ jobs:
             non_package_json=$(git status --porcelain | grep '^ M ' | awk '{print $2}' | grep -v 'package\.json$' || true)
             if [ -z "$non_package_json" ]; then
               # Check if the only changes are to postcss, postcss-loader, or autoprefixer versions
-              remaining=$(git diff -- '*package.json' | grep -E '^[+-]' | grep -vE '^[+-]\s*"(postcss"|postcss-loader"|autoprefixer"):' || true)
+              remaining=$(git diff -- '*package.json' | grep -E '^[+-][^+-]' | grep -vE '^[+-]\s*"(postcss"|postcss-loader"|autoprefixer"):' || true)
               if [ -z "$remaining" ]; then
                 echo 'Only allowed package version changes (postcss, postcss-loader, autoprefixer) detected. Ignoring.'
                 exit 0
