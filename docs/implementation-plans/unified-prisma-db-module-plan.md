@@ -596,14 +596,19 @@ const resolvedDbModule = resolveDbModule(
 )
 
 // Compute the import source for a given output directory.
-// Relative paths must be expressed relative to the .d.ts file's location,
-// because TypeScript resolves relative imports from the containing file.
-function getImportSourceFor(outputDir: string): string {
-  if (
-    prismaImportSource.startsWith('src/') ||
-    prismaImportSource.startsWith('/')
-  ) {
-    // src/ paths rely on the Vite/Babel alias; absolute paths work as-is.
+//
+// - `src/` paths use the Vite/Babel "src" alias, which is workspace-specific.
+//   On the api side `src/` resolves to `api/src/`; on the web side it would
+//   resolve to `web/src/`. Therefore `src/` paths on the web side must be
+//   prefixed with `$api/` so they resolve inside the api workspace.
+// - Relative paths must be expressed relative to the .d.ts file's location,
+//   because TypeScript resolves relative imports from the containing file.
+// - Absolute paths and bare specifiers work as-is on both sides.
+function getImportSourceFor(outputDir: string, isWeb: boolean): string {
+  if (prismaImportSource.startsWith('src/')) {
+    return isWeb ? `$api/${prismaImportSource}` : prismaImportSource
+  }
+  if (prismaImportSource.startsWith('/')) {
     return prismaImportSource
   }
   if (
@@ -618,8 +623,8 @@ function getImportSourceFor(outputDir: string): string {
   return prismaImportSource
 }
 
-const apiImportSource = getImportSourceFor(apiTypesDir)
-const webImportSource = getImportSourceFor(webTypesDir)
+const apiImportSource = getImportSourceFor(apiTypesDir, false)
+const webImportSource = getImportSourceFor(webTypesDir, true)
 
 // api/types/graphql.d.ts → `import { Prisma } from "${apiImportSource}"`
 // web/types/graphql.d.ts → `import { Prisma } from "${webImportSource}"`
