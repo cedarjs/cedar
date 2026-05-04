@@ -121,7 +121,7 @@ No `db` import is injected. The plugin finds whichever import in the file brings
 
 ## Changes
 
-### 1. Rewrite `babel-plugin-cedar-gqlorm-inject` to detect existing `db` import
+### 1. Rewrite `babel-plugin-cedar-gqlorm-inject` to detect existing `db` binding
 
 **File:** `packages/babel-config/src/plugins/babel-plugin-cedar-gqlorm-inject.ts`
 
@@ -133,50 +133,46 @@ import { db as __gqlorm_db__ } from 'src/lib/db'
 
 **New behavior:** The plugin:
 
-1. Scans all existing `ImportDeclaration` nodes in `graphql.ts`
-2. Finds the one that imports a binding named `db` (handles aliasing:
-   `import { db as prisma }` → uses `prisma`)
-3. If no `db` binding is found, logs a warning and returns (no-op)
-4. Uses the detected identifier in the `Object.assign(sdls, ...)` call instead
-   of `__gqlorm_db__`
+1. Uses Babel's scope analysis to find a **top-level binding named `db`** in the
+   module. This catches named imports, default imports, and local declarations.
+2. If no `db` binding exists, **throws a hard build error**. gqlorm is opt-in; if
+   the user enabled it, the build must guarantee resolvers are wired up.
+3. Uses the detected `db` identifier in the `Object.assign(sdls, ...)` call.
+
+**Why a hard error (not a warning):**
+
+- gqlorm is opt-in via `experimental.gqlorm.enabled = true`
+- A silent skip means the build succeeds but queries return null at runtime
+- A failed build with a clear message is infinitely better than a production bug
 
 **Implementation sketch:**
 
 ```ts
-function findDbBinding(
+function getTopLevelDbBinding(
   programPath: NodePath<types.Program>
 ): { name: string } | null {
-  let dbName: string | null = null
-
-  programPath.traverse({
-    ImportDeclaration(p) {
-      for (const specifier of p.node.specifiers) {
-        if (
-          t.isImportSpecifier(specifier) &&
-          t.isIdentifier(specifier.imported)
-        ) {
-          if (specifier.imported.name === 'db') {
-            dbName = specifier.local.name // handles aliasing
-          }
-        }
-      }
-    },
-  })
-
-  return dbName ? { name: dbName } : null
+  const binding = programPath.scope.getBinding('db')
+  // Must exist and be defined at the top-level (module scope)
+  if (binding && binding.scope.block.type === 'Program') {
+    return { name: binding.identifier.name }
+  }
+  return null
 }
 ```
 
 Then in the main plugin logic:
 
 ```ts
-const dbBinding = findDbBinding(programPath)
+const dbBinding = getTopLevelDbBinding(programPath)
 if (!dbBinding) {
-  console.warn(
-    '[gqlorm] Could not find a `db` import in graphql.ts. ' +
-      'Skipping gqlorm resolver injection.'
+  throw new Error(
+    `[gqlorm] Could not find a top-level 'db' binding in ${state.file.opts.filename}.\n\n` +
+      `gqlorm requires a 'db' identifier to be available in the top-level scope ` +
+      `of your GraphQL handler file. Expected something like:\n\n` +
+      `  import { db } from 'src/lib/db'\n` +
+      `  // or\n` +
+      `  import { db } from '@myorg/db'\n`
   )
-  return
 }
 
 // Build the sdls mutation using the detected identifier:
@@ -251,7 +247,7 @@ __gqlorm_sdl__.createGqlormResolvers(db) } })` — using the identifier `db`.
 - **Aliased `db` import:** Given `import { db as prisma } from '@myorg/db'`,
   the plugin uses `prisma` in the resolver call.
 
-- **No `db` import:** The plugin logs a warning and does not inject anything.
+- **No `db` binding:** The plugin **throws a build error** with a helpful message.
 
 - **No `sdls` in scope:** The plugin still works (it mutates the `sdls` binding
   that the Babel glob-import plugin has already created). If `sdls` genuinely
@@ -269,17 +265,17 @@ __gqlorm_sdl__.createGqlormResolvers(db) } })` — using the identifier `db`.
 
 ## Acceptance Criteria
 
-- [ ] The Babel plugin detects the user's existing `db` import identifier instead
+- [ ] The Babel plugin detects the user's existing top-level `db` binding instead
       of hardcoding `src/lib/db`.
 - [ ] The plugin handles aliased imports (`import { db as prisma }`).
 - [ ] The plugin does not inject any synthetic `db` import.
 - [ ] The plugin still correctly injects the `__gqlorm_sdl__` import and the
       `Object.assign(sdls, ...)` statement.
-- [ ] If no `db` import is found, the plugin logs a warning and returns without
-      modifying the file.
+- [ ] If no top-level `db` binding is found, the plugin **throws a hard build
+      error** with a clear, actionable message.
 - [ ] The plugin is idempotent (does not double-inject on rebuilds).
 - [ ] All existing babel-config tests pass.
-- [ ] New unit tests cover smart `db` detection and aliasing.
+- [ ] New unit tests cover smart `db` detection, aliasing, and the hard error path.
 - [ ] Playwright smoke tests for live queries / gqlorm continue to pass.
 
 ---
