@@ -7,8 +7,8 @@
     ]
   },
   "devDependencies": {
-    "@cedarjs/core": "2.8.0",
-    "@cedarjs/project-config": "2.8.0"
+    "@cedarjs/core": "4.1.0",
+    "@cedarjs/project-config": "4.1.0"
   },
   "eslintConfig": {
     "extends": "@cedarjs/eslint-config",
@@ -21,5 +21,34 @@
   "resolutions": {
     "@apollo/client-react-streaming/superjson": "^1.12.2",
     "react-is": "19.2.3"
+  },
+  "dependenciesMeta": {
+    "@clerk/shared": {
+      "built": true
+    },
+    "@firebase/util": {
+      "built": true
+    },
+    "@prisma/engines": {
+      "built": true
+    },
+    "@swc/core": {
+      "built": true
+    },
+    "better-sqlite3": {
+      "built": true
+    },
+    "esbuild": {
+      "built": true
+    },
+    "msw": {
+      "built": true
+    },
+    "prisma": {
+      "built": true
+    },
+    "protobufjs": {
+      "built": true
+    }
   }
 }

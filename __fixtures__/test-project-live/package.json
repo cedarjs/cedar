@@ -7,10 +7,10 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@cedarjs/core": "3.1.1",
-    "@cedarjs/eslint-config": "3.1.1",
-    "@cedarjs/project-config": "3.1.1",
-    "@cedarjs/testing": "3.1.1",
+    "@cedarjs/core": "4.1.0",
+    "@cedarjs/eslint-config": "4.1.0",
+    "@cedarjs/project-config": "4.1.0",
+    "@cedarjs/testing": "4.1.0",
     "prettier-plugin-tailwindcss": "^0.7.0"
   },
   "engines": {
@@ -19,5 +19,34 @@
   "packageManager": "yarn@4.14.1",
   "resolutions": {
     "react-is": "19.2.3"
+  },
+  "dependenciesMeta": {
+    "@clerk/shared": {
+      "built": true
+    },
+    "@firebase/util": {
+      "built": true
+    },
+    "@prisma/engines": {
+      "built": true
+    },
+    "@swc/core": {
+      "built": true
+    },
+    "better-sqlite3": {
+      "built": true
+    },
+    "esbuild": {
+      "built": true
+    },
+    "msw": {
+      "built": true
+    },
+    "prisma": {
+      "built": true
+    },
+    "protobufjs": {
+      "built": true
+    }
   }
 }
