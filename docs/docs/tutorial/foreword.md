@@ -10,7 +10,7 @@ If you went through an earlier version of this tutorial you may remember it bein
 
 You'll find some callouts throughout the text to draw your attention:
 
-:::tip
+:::info
 
 They might look like this...
 
