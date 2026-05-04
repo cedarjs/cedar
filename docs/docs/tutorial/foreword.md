@@ -35,7 +35,7 @@ comes one now:
 :::tip
 
 If you get stuck at any point during the tutorial, the [CedarJS community on
-Discord](https://discord.gg/cedarjs) is a great place to ask for help!
+Discord](https://cedarjs.com/discord) is a great place to ask for help!
 
 :::
 
