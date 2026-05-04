@@ -8,7 +8,7 @@ Now that the elevator pitch is out of the way, what does that actually _mean_? A
 
 - GraphQL
 - Prisma
-- Vitest
+- Jest
 - Storybook
 - Vite
 - Typescript
@@ -296,7 +296,7 @@ You can write Jest tests in both the front- and backend of your app.
 
 ## Storybook
 
-While Jest can test your code, [Storybook](https://storybook.js.org/) can be used to catalog and test your UI. They call themselves a "frontend workshop for building UI components in isolation" and we couldn't agree more. Build your components separate from your app, even having props be dynamic while viewing their effects. All you have to do is run `yarn redwood storybook`.
+While Jest can test your code, [Storybook](https://storybook.js.org/) can be used to catalog and test your UI. They call themselves a "frontend workshop for building UI components in isolation" and we couldn't agree more. Build your components separate from your app, even having props be dynamic while viewing their effects. All you have to do is run `yarn cedar storybook`.
 
 Cedar adds data mocking for Storybook so that you can display components that would normally be populated with data from GraphQL, but without needing a server running.
 
@@ -304,11 +304,11 @@ Cedar adds data mocking for Storybook so that you can display components that wo
 
 Storybook is strictly a frontend codebase concern.
 
-## Vite, Babel and Typescript
+## Vite, esbuild and Typescript
 
 Notice at no point above did we say "and then we need to write configuration for this package..." Cedar has done all of that for you and will continue to do that with every release of a new version. We're sure you won't miss spending hours or days trying to add and configure a package in your application. You can eject from our default configs, and add custom code if needed, but most apps will never need to do this: everything Just Works.
 
-We use vite as our bundler, packaging up the frontend code and automatically code splitting on pages. It also serves the frontend (the `web` directory). The backend (the `api` directory) is compiled by Babel and served with [Fastify](https://fastify.dev/).
+We use vite as our bundler, packaging up the frontend code and automatically code splitting on pages. It also serves the frontend (the `web` directory). The backend (the `api` directory) is compiled by esbuild and served with [Fastify](https://fastify.dev/).
 
 The entire framework is ([strictly](https://cedarjs.com/docs/typescript/strict-mode)) typed so you can autocomplete all the things in your IDE.
 
@@ -329,7 +329,7 @@ Cedar's job doesn't end until your application is deployed to the world! That's 
 
 ## Coming Soon
 
-Cedar is still in active development, and we're working on some [features](https://community.redwoodjs.com/c/experimental-features/25) that are on the cutting edge of the React ecosystem:
+Cedar is still in active development, and we're working on some features that are on the cutting edge of the React ecosystem:
 
 - [React Server Components](https://community.redwoodjs.com/t/react-server-components-rsc/5081) and a new transparent, non-GraphQL API
 - [SSR/Streaming](https://community.redwoodjs.com/t/render-modes-ssr-streaming-experimental/4858)
@@ -337,11 +337,11 @@ Cedar is still in active development, and we're working on some [features](https
 - [Cedar Studio](https://community.redwoodjs.com/t/redwood-studio-experimental/4771) for getting runtime insights into your project
 - [Mailer](https://github.com/redwoodjs/redwood/pull/9058)
 
-These are just a few highlights from our current [Bighorn Epoch](https://tom.preston-werner.com/2023/05/30/redwoods-next-epoch-all-in-on-rsc). You can see the full list and follow along via our Roadmap project board at [www.redwoodjs.com/roadmap](https://redwoodjs.com/roadmap).
+You can see the full list and follow along via our [Roadmap](https://github.com/cedarjs/cedar#roadmap).
 
 ## Backing
 
-Cedar was created by Tom Preston-Werner, cofounder of GitHub and projects like Semantic Versioning, TOML, Jekyll, and many more. Tom believes that JavaScript applications, specifically full-stack JS applications, are the future of the web, and Cedar has his full support.
+CedarJS is a fork of [RedwoodJS](https://redwoodjs.com/), which was created by Tom Preston-Werner, cofounder of GitHub. CedarJS is not affiliated with or endorsed by Tom Preston-Werner or the RedwoodJS project.
 
 ## Updates
 
@@ -349,4 +349,4 @@ Cedar is constantly being updated and sticks strictly to semantic versioning req
 
 ## Community
 
-There's a very active community around Cedar, including a [Discourse forum](https://community.redwoodjs.com/) and [Discord chat](https://cedarjs.com/discord), where even members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!
+There's a growing community around Cedar. Join us on [Discord](https://cedarjs.com/discord) where members of the core team can be found answering questions. We're building this framework for users like you, and we need your feedback if we're going to be successful!
