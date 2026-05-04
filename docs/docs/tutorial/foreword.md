@@ -28,12 +28,6 @@ or maybe even like this!
 
 :::
 
-It's usually something that goes into more detail about a specific point, refers you to further reading, or calls out something important you should know. Here comes one now:
-
-:::info
-
-This tutorial assumes you are using version 0.1.0 or greater of CedarJS.
-
-:::
+It's usually something that goes into more detail about a specific point, refers you to further reading, or calls out something important you should know.
 
 Let's get started!
