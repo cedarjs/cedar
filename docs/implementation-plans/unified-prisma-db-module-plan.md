@@ -584,20 +584,16 @@ const prismaImportSource = getPrismaClientModule()
 
 // web/types/graphql.d.ts
 // The web side uses the $api/ Vite alias to reach into the api workspace.
-// Bare specifiers (e.g. "@scope/db") don't need $api/ — the web workspace
-// can import from the shared package directly.
-// src/ and relative paths DO need $api/ wrapping.
-function isBareSpecifier(module) {
-  return (
-    !module.startsWith('src/') &&
-    !module.startsWith('./') &&
-    !module.startsWith('../') &&
-    !module.startsWith('/')
-  )
+// Bare specifiers (e.g. "@scope/db") and relative paths don't need $api/ —
+// the web workspace can resolve them directly from the project root.
+// Only src/ paths need $api/ wrapping because the "src" alias lives inside
+// the api workspace.
+function needsApiPrefix(module) {
+  return module.startsWith('src/')
 }
-const webImportSource = isBareSpecifier(prismaImportSource)
-  ? prismaImportSource
-  : `$api/${prismaImportSource}`
+const webImportSource = needsApiPrefix(prismaImportSource)
+  ? `$api/${prismaImportSource}`
+  : prismaImportSource
 // → `import { Prisma } from "${webImportSource}"`
 ```
 
