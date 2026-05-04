@@ -5,5 +5,5 @@
     "@actions/core": "2.0.3",
     "@actions/exec": "2.0.0"
   },
-  "packageManager": "yarn@4.13.0"
+  "packageManager": "yarn@4.14.1"
 }
