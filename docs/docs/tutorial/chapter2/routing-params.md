@@ -3,7 +3,7 @@
 Now that we have our homepage listing all the posts, let's build the "detail" page—a canonical URL that displays a single post. First we'll generate the page and route:
 
 ```bash
-yarn rw g page Article
+yarn cedar g page Article
 ```
 
 Now let's link the title of the post on the homepage to the detail page (and include the `import` for `Link` and `routes`):
@@ -186,9 +186,9 @@ Cool, cool, cool. Now we need to construct a link that has the ID of a post in i
 
 <ShowForTs>
 
-:::info Wait... why am I getting a TypeScript error?
+:::info[Wait... why am I getting a TypeScript error?]
 
-When you have your dev server running, the Cedar CLI will watch your project and generate types. You can regenerate these types manually too, by running `yarn rw g types`.
+When you have your dev server running, the Cedar CLI will watch your project and generate types. You can regenerate these types manually too, by running `yarn cedar g types`.
 
 In this case, the path `/article/{id}` doesn't specify the type of `id` - so it defaults to `string` - where as our article id is actually a `number`. We'll tackle this in the next few sections - so you can ignore the red squiggle for now, and power through!
 :::
@@ -261,7 +261,7 @@ You may have noticed that when trying to view the new single-article page that y
 Ok, so the ID is in the URL. What do we need next in order to display a specific post? It sounds like we'll be doing some data retrieval from the database, which means we want a cell. Note the singular `Article` here since we're only displaying one:
 
 ```bash
-yarn rw g cell Article
+yarn cedar g cell Article
 ```
 
 And then we'll use that cell in `ArticlePage`:
@@ -494,7 +494,7 @@ What if you could request the conversion right in the route's path? Introducing 
 
 Voilà! Not only will this convert the `id` param to a number before passing it to your Page, it will prevent the route from matching unless the `id` path segment consists entirely of digits. If any non-digits are found, the router will keep trying other routes, eventually showing the `NotFoundPage` if no routes match.
 
-:::info What if I want to pass some other prop to the cell that I don't need in the query, but do need in the Success/Loader/etc. components?
+:::info[What if I want to pass some other prop to the cell that I don't need in the query, but do need in the Success/Loader/etc. components?]
 
 All of the props you give to the cell will be automatically available as props in the render components. Only the ones that match the GraphQL variables list will be given to the query. You get the best of both worlds! In our post display above, if you wanted to display some random number along with the post (for some contrived, tutorial-like reason), just pass that prop:
 
@@ -552,7 +552,7 @@ Thanks again, Cedar!
 Now let's display the actual post instead of just dumping the query result. We could copy the display from the articles on the homepage, but that's not very reusable! This is the perfect place for a good old fashioned component—define the display once and then reuse the component on the homepage and the article display page. Both `ArticlesCell` and `ArticleCell` will display our new component. Let's Cedar-up a component (I just invented that phrase):
 
 ```bash
-yarn rw g component Article
+yarn cedar g component Article
 ```
 
 Which creates `web/src/components/Article/Article.{jsx,tsx}` (and corresponding test and more!) as a super simple React component:
