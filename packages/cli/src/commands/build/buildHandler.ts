@@ -13,13 +13,17 @@ import {
   formatRunWorkspaceScriptCommand,
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
-import { buildApi, cleanApiBuild } from '@cedarjs/internal/dist/build/api'
+import {
+  buildApiWithVite,
+  cleanApiBuild,
+} from '@cedarjs/internal/dist/build/api'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { type Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
+import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
 
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
@@ -114,6 +118,7 @@ export interface BuildHandlerOptions {
   verbose?: boolean
   prisma?: boolean
   prerender?: boolean
+  ud?: boolean
 }
 
 export const handler = async ({
@@ -121,6 +126,7 @@ export const handler = async ({
   verbose = false,
   prisma = true,
   prerender = true,
+  ud = false,
 }: BuildHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'build',
@@ -233,20 +239,25 @@ export const handler = async ({
       title: 'Verifying graphql schema...',
       task: loadAndValidateSdls,
     },
+    // The API build has two sequential steps:
+    // 1. esbuild compiles api/src/** → api/dist/ (functions, services, etc.)
+    // 2. Vite wraps api/dist/functions/ into a self-contained UD Node server
+    //    entry at api/dist/ud/index.js for `cedar serve api`
+    // Step 2 depends on step 1 having completed.
     workspace.includes('api') && {
       title: 'Building API...',
       task: async () => {
         await cleanApiBuild()
-        const { errors, warnings } = await buildApi()
-
-        if (errors.length) {
-          console.error(errors)
-        }
-        if (warnings.length) {
-          console.warn(warnings)
-        }
+        await buildApiWithVite()
       },
     },
+    ud &&
+      workspace.includes('api') && {
+        title: 'Bundling API server entry (Universal Deploy)...',
+        task: async () => {
+          await buildUDApiServer({ verbose })
+        },
+      },
     workspace.includes('web') && {
       title: 'Building Web...',
       task: async () => {
@@ -256,7 +267,7 @@ export const handler = async ({
 
         const createdRequire = createRequire(import.meta.url)
         const buildBinPath = createdRequire.resolve(
-          '@cedarjs/vite/bins/rw-vite-build.mjs',
+          '@cedarjs/vite/bins/cedar-vite-build.mjs',
         )
 
         // @NOTE: we're using the vite build command here, instead of the
@@ -273,7 +284,7 @@ export const handler = async ({
           {
             stdio: verbose ? 'inherit' : 'pipe',
             shell: true,
-            // `cwd` is needed for yarn to find the rw-vite-build binary
+            // `cwd` is needed for yarn to find the cedar-vite-build binary
             // It won't change process.cwd for anything else here, in this
             // process
             cwd: cedarPaths.web.base,

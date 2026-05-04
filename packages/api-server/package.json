@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "3.1.1",
+  "version": "4.1.0",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
@@ -73,6 +73,18 @@
       "types": "./dist/cjs/bothCLIConfigHandler.d.ts",
       "default": "./dist/cjs/bothCLIConfigHandler.js"
     },
+    "./udDispatcher": {
+      "import": {
+        "types": "./dist/udDispatcher.d.ts",
+        "default": "./dist/udDispatcher.js"
+      }
+    },
+    "./udFetchable": {
+      "import": {
+        "types": "./dist/udFetchable.d.ts",
+        "default": "./dist/udFetchable.js"
+      }
+    },
     "./watch": {
       "import": {
         "types": "./dist/watch.d.ts",
@@ -82,15 +94,27 @@
         "types": "./dist/cjs/watch.d.ts",
         "default": "./dist/cjs/watch.js"
       }
+    },
+    "./requestHandlers": {
+      "import": {
+        "types": "./dist/requestHandlers/awsLambdaFastify.d.ts",
+        "default": "./dist/requestHandlers/awsLambdaFastify.js"
+      },
+      "require": {
+        "types": "./dist/cjs/requestHandlers/awsLambdaFastify.d.ts",
+        "default": "./dist/cjs/requestHandlers/awsLambdaFastify.js"
+      }
     }
   },
   "main": "./dist/createServer.js",
   "types": "./dist/createServer.d.ts",
   "bin": {
+    "cedar-api-server-watch": "./dist/cjs/watch.js",
+    "cedar-log-formatter": "./dist/cjs/logFormatter/bin.js",
+    "cedar-server": "./dist/cjs/bin.js",
     "cedarjs-api-server-watch": "./dist/watch.js",
     "cedarjs-log-formatter": "./dist/logFormatter/bin.js",
     "cedarjs-server": "./dist/bin.js",
-    "rw-api-server-watch": "./dist/cjs/watch.js",
     "rw-log-formatter": "./dist/cjs/logFormatter/bin.js",
     "rw-server": "./dist/cjs/bin.js"
   },
@@ -118,17 +142,22 @@
     "@cedarjs/web-server": "workspace:*",
     "@fastify/multipart": "9.4.0",
     "@fastify/url-data": "6.0.3",
+    "@universal-deploy/node": "^0.1.6",
+    "@universal-deploy/store": "^0.2.1",
     "ansis": "4.2.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
     "fast-json-parse": "1.0.3",
-    "fastify": "5.8.4",
+    "fastify": "5.8.5",
     "fastify-raw-body": "5.0.0",
     "picoquery": "2.5.0",
     "pretty-bytes": "5.6.0",
     "pretty-ms": "7.0.1",
+    "rou3": "^0.8.1",
     "split2": "4.2.0",
+    "srvx": "^0.11.9",
+    "termi-link": "1.1.0",
     "yargs": "17.7.2"
   },
   "devDependencies": {

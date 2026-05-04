@@ -85,10 +85,14 @@ export const createGraphQLHandler = ({
   defaultError = 'Something went wrong.',
   graphiQLEndpoint = '/graphql',
   schemaOptions,
+  realtime,
   openTelemetryOptions,
   trustedDocuments,
 }: GraphQLHandlerOptions) => {
-  const { yoga, logger } = createGraphQLYoga({
+  // Eager initialization of GraphQL Yoga. It starts immediately when the
+  // handler is first created and is awaited on each request. Initialization is
+  // shared across all Lambda invocations within the same process lifecycle.
+  const yogaAndLoggerPromise = createGraphQLYoga({
     healthCheckId,
     loggerConfig,
     context,
@@ -108,6 +112,7 @@ export const createGraphQLHandler = ({
     defaultError,
     graphiQLEndpoint,
     schemaOptions,
+    realtime,
     openTelemetryOptions,
     trustedDocuments,
   })
@@ -118,6 +123,8 @@ export const createGraphQLHandler = ({
   ): Promise<APIGatewayProxyResult> => {
     // In the future, this could be part of a specific handler for AWS lambdas
     requestContext.callbackWaitsForEmptyEventLoop = false
+
+    const { yoga, logger } = await yogaAndLoggerPromise
 
     let lambdaResponse: APIGatewayProxyResult
     try {

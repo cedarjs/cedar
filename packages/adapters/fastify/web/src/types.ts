@@ -2,9 +2,9 @@ export interface RedwoodFastifyWebOptions {
   redwood?: {
     /**
      * Specify the URL to your API server.
-     * This can be a relative URL on the current domain (`/.redwood/functions`),
+     * This can be a relative URL on the current domain (`/.api/functions`),
      * in which case the `apiProxyTarget` option must be set,
-     * or a fully-qualified URL (`https://api.redwood.horse`).
+     * or a fully-qualified URL (`https://api.example.com`).
      *
      * Note: This should not include the path to the GraphQL Server.
      **/

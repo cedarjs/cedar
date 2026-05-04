@@ -8,7 +8,7 @@ export default `
 
 [web]
   port = 8910
-  apiProxyPath = "/.redwood/functions"
+  apiProxyPath = "/.api/functions"
 [api]
   port = 8911
 [browser]

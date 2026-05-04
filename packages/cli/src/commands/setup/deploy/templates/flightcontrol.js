@@ -10,8 +10,8 @@ export const flightcontrolConfig = {
       },
       services: [
         {
-          id: 'redwood-api',
-          name: 'Redwood API',
+          id: 'cedar-api',
+          name: 'Cedar API',
           type: 'web',
           buildType: 'nixpacks',
           cpu: 0.5,
@@ -24,14 +24,14 @@ export const flightcontrolConfig = {
             type: 'ec2',
           },
           envVariables: {
-            REDWOOD_WEB_URL: {
-              fromService: { id: 'redwood-web', value: 'origin' },
+            CEDAR_WEB_URL: {
+              fromService: { id: 'cedar-web', value: 'origin' },
             },
           },
         },
         {
-          id: 'redwood-web',
-          name: 'Redwood Web',
+          id: 'cedar-web',
+          name: 'Cedar Web',
           type: 'static',
           buildType: 'nixpacks',
           singlePageApp: true,
@@ -41,8 +41,8 @@ export const flightcontrolConfig = {
             type: 'ec2',
           },
           envVariables: {
-            REDWOOD_API_URL: {
-              fromService: { id: 'redwood-api', value: 'origin' },
+            CEDAR_API_URL: {
+              fromService: { id: 'cedar-api', value: 'origin' },
             },
           },
         },

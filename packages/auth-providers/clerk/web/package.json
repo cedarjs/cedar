@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-clerk-web",
-  "version": "3.1.1",
+  "version": "4.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
