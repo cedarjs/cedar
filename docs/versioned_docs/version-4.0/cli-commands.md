@@ -1706,7 +1706,11 @@ export default async () => {
 You can pipe the script output to the formatter:
 
 ```bash
+<<<<<<< HEAD
 yarn rw prisma db seed | yarn rw-log-formatter
+=======
+yarn rw prisma db seed | yarn cedar-log-formatter
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 > Note: Just be sure to set `data` attribute, so the formatter recognizes the content.
@@ -2218,7 +2222,11 @@ For the full list of Server Configuration settings, see [this documentation](app
 If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
 
 ```
+<<<<<<< HEAD
 yarn rw serve api | yarn rw-log-formatter
+=======
+yarn rw serve api | yarn cedar-log-formatter
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 ### serve web
@@ -2244,7 +2252,11 @@ This command serves the contents in `web/dist`. Use this command if you're debug
 If you want to format your log output, you can pipe the command to the Cedar LogFormatter:
 
 ```
+<<<<<<< HEAD
 yarn rw serve web | yarn rw-log-formatter
+=======
+yarn rw serve web | yarn cedar-log-formatter
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 ## upgrade

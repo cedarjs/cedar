@@ -18,20 +18,32 @@ Step one is to actually create the custom Function. Naturally, we have a generat
 yarn rw generate function serverTime
 ```
 
+<<<<<<< HEAD
 That creates a stub you can test out right away. Make sure your dev server is running (`yarn rw dev`), then point your browser to `http://localhost:8910/.redwood/functions/serverTime`.
+=======
+That creates a stub you can test out right away. Make sure your dev server is running (`yarn rw dev`), then point your browser to `http://localhost:8910/.api/functions/serverTime`.
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 
 ![serverTime Function output](https://user-images.githubusercontent.com/32992335/107839683-609c2300-6d62-11eb-93d7-ff9c1bfb0ff2.png)
 
 ### Interlude: `apiUrl`
 
+<<<<<<< HEAD
 The `.redwood/functions` bit in the link you pointed your browser to is what's called the `apiUrl`. You can configure it in your `cedar.toml`:
+=======
+The `.api/functions` bit in the link you pointed your browser to is what's called the `apiUrl`. You can configure it in your `cedar.toml`:
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 
 ```toml {5}
 # cedar.toml
 
 [web]
   port = 8910
+<<<<<<< HEAD
   apiUrl = "/.redwood/functions"
+=======
+  apiUrl = "/.api/functions"
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 After you setup a deploy (via `yarn rw setup deploy <provider>`), it'll change to something more appropriate, like `.netlify/functions` in Netlify's case.
@@ -60,7 +72,11 @@ from the web side would give you an error like:
 Access to fetch at 'http://localhost:8911/serverTime' from origin 'http://localhost:8910' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
 ```
 
+<<<<<<< HEAD
 We could set the headers for `serverTime` to allow requests from any origin... but maybe a better idea would be to never request `8911` from `8910` in the first place. Hence the `apiUrl`! We're making a request to `8910/.redwood/functions/serverTime`&mdash;still the same domain&mdash;but [Vite](https://github.com/cedarjs/cedar/blob/main/packages/vite/src/index.ts#L119) proxies them to `localhost:8911/serverTime` for us. Since we can access the `apiUrl` on the frontend via [environment variables](../environment-variables#accessing-api-urls), we can now change the above fetch to work in development as well as in production:
+=======
+We could set the headers for `serverTime` to allow requests from any origin... but maybe a better idea would be to never request `8911` from `8910` in the first place. Hence the `apiUrl`! We're making a request to `8910/.api/functions/serverTime`&mdash;still the same domain&mdash;but [Vite](https://github.com/cedarjs/cedar/blob/main/packages/vite/src/index.ts#L119) proxies them to `localhost:8911/serverTime` for us. Since we can access the `apiUrl` on the frontend via [environment variables](../environment-variables#accessing-api-urls), we can now change the above fetch to work in development as well as in production:
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 
 ```javascript
 const serverTime = await fetch(globalThis.RWJS_API_URL + '/serverTime')

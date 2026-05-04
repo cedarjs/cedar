@@ -11,7 +11,11 @@ It allows you to:
 Get started by running the setup command:
 
 ```
+<<<<<<< HEAD
 yarn rw setup server-file
+=======
+yarn cedar setup server-file
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 This should give you a new file at `api/src/server.ts`:
@@ -45,10 +49,17 @@ yarn node api/dist/server.js
 You can't run the server file directly with Node.js; it has to be built first:
 
 ```
+<<<<<<< HEAD
 yarn rw build api
 ```
 
 The api serve stage in the Dockerfile pulls from the api build stage, so things are already in the right order there. Similarly, for `yarn rw dev`, the dev server will build and reload the server file for you.
+=======
+yarn cedar build api
+```
+
+The api serve stage in the Dockerfile pulls from the api build stage, so things are already in the right order there. Similarly, for `yarn cedar dev`, the dev server will build and reload the server file for you.
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 
 ### Command
 

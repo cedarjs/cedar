@@ -15,7 +15,11 @@ You certainly want to change the title of your Cedar app from the default of "Ce
 - title = "Cedar App"
 + title = "My Cool App"
   port = 8910
+<<<<<<< HEAD
   apiUrl = "/.redwood/functions"
+=======
+  apiUrl = "/.api/functions"
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 This title (the app title) is used by default for all your pages if you don't define another one.

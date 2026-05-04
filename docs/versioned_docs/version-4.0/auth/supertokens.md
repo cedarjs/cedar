@@ -31,7 +31,11 @@ The environment variables have to be added either to your project's `.env` file 
 
 ```bash
 SUPERTOKENS_APP_NAME="Redwoodjs App" # this will be used in the email template for password reset or email verification emails.
+<<<<<<< HEAD
 SUPERTOKENS_JWKS_URL=http://localhost:8910/.redwood/functions/auth/jwt/jwks.json
+=======
+SUPERTOKENS_JWKS_URL=http://localhost:8910/.api/functions/auth/jwt/jwks.json
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 SUPERTOKENS_CONNECTION_URI=https://try.supertokens.io # set to the correct connection uri
 ```
 
@@ -41,7 +45,11 @@ Assuming that your web side is hosted on `https://myapp.com`:
 
 ```bash
 SUPERTOKENS_WEBSITE_DOMAIN=https://myapp.com
+<<<<<<< HEAD
 SUPERTOKENS_JWKS_URL=https://myapp.com/.redwood/functions/auth/jwt/jwks.json
+=======
+SUPERTOKENS_JWKS_URL=https://myapp.com/.api/functions/auth/jwt/jwks.json
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 ## Managed Supertokens service setup

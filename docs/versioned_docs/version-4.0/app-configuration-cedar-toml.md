@@ -12,7 +12,11 @@ default, `cedar.toml` lists the following configuration options:
 [web]
   title = "Cedar App"
   port = 8910
+<<<<<<< HEAD
   apiUrl = "/.redwood/functions"
+=======
+  apiUrl = "/.api/functions"
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
   includeEnvironmentVariables = []
 [api]
   port = 8911
@@ -33,7 +37,11 @@ For certain options, instead of having to configure build tools directly, there'
 | :---------------------------- | :-------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------- |
 | `title`                       | Title of your Cedar app                                                                                         | `'Cedar App'`                                                   |
 | `port`                        | Port for the web server to listen at                                                                            | `8910`                                                          |
+<<<<<<< HEAD
 | `apiUrl`                      | URL to your api server. This can be a relative URL in which case it acts like a proxy, or a fully-qualified URL | `'/.redwood/functions'`                                         |
+=======
+| `apiUrl`                      | URL to your api server. This can be a relative URL in which case it acts like a proxy, or a fully-qualified URL | `'/.api/functions'`                                             |
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 | `includeEnvironmentVariables` | Environment variables made available to the web side during dev and build                                       | `[]`                                                            |
 | `host`                        | Hostname for the web server to listen at                                                                        | Defaults to `'0.0.0.0'` in production and `'::'` in development |
 | `apiGraphQLUrl`               | URL to your GraphQL function                                                                                    | `'${apiUrl}/graphql'`                                           |
@@ -43,7 +51,11 @@ For certain options, instead of having to configure build tools directly, there'
 
 ### Customizing the GraphQL Endpoint
 
+<<<<<<< HEAD
 By default, Cedar derives the GraphQL endpoint from `apiUrl` such that it's `${apiUrl}/graphql`, (with the default `apiUrl`, `./redwood/functions/graphql`).
+=======
+By default, Cedar derives the GraphQL endpoint from `apiUrl` such that it's `${apiUrl}/graphql`, (with the default `apiUrl`, `./api/functions/graphql`).
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 But sometimes you want to host your api side somewhere else.
 There's two ways you can do this:
 
@@ -60,7 +72,11 @@ Now the GraphQL endpoint is at `https://api.coolcedarapp.com/graphql`.
 
 ```diff title="cedar.toml"
  [web]
+<<<<<<< HEAD
    apiUrl = "/.redwood/functions"
+=======
+   apiUrl = "/.api/functions"
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 +  apiGraphQLUrl = "https://api.coolcedarapp.com/graphql"
 ```
 
@@ -72,7 +88,11 @@ your `cedar.toml`:
 
 ```diff title="cedar.toml"
  [web]
+<<<<<<< HEAD
    apiUrl = "/.redwood/functions"
+=======
+   apiUrl = "/.api/functions"
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 +  apiDbAuthUrl = "https://api.coolcedarapp.com/auth"
 ```
 
@@ -167,7 +187,11 @@ Let's look at an example:
   // highlight-start
   title = "App running on ${APP_TITLE}"
   port = "${PORT:8910}"
+<<<<<<< HEAD
   apiUrl = "${API_URL:/.redwood/functions}"
+=======
+  apiUrl = "${API_URL:/.api/functions}"
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
   // highlight-end
   includeEnvironmentVariables = []
 ```
@@ -176,7 +200,11 @@ This `${<envVar>:[fallback]}` syntax does the following:
 
 - sets `title` by interpolating the env var `APP_TITLE`
 - sets `port` to the env var `PORT`, falling back to `8910`
+<<<<<<< HEAD
 - sets `apiUrl` to the env var `API_URL`, falling back to `/.redwood/functions` (the default)
+=======
+- sets `apiUrl` to the env var `API_URL`, falling back to `/.api/functions` (the default)
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 
 That's pretty much all there is to it.
 Just remember two things:

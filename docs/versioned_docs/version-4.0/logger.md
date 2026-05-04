@@ -169,12 +169,20 @@ It is based on [pino-colada](https://github.com/lrlna/pino-colada/blob/master/RE
 
 #### Command
 
+<<<<<<< HEAD
 The `LogFormatter` is distributed as a bin that can be invoke via the `yarn rw-log-formatter` command
+=======
+The `LogFormatter` is distributed as a bin that can be invoke via the `yarn cedar-log-formatter` command
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 
 To pipe logs to the formatter:
 
 ```bash
+<<<<<<< HEAD
 echo "{\"level\": 30, \"message\": \"Hello CedarJS\"}" | yarn rw-log-formatter
+=======
+echo "{\"level\": 30, \"message\": \"Hello CedarJS\"}" | yarn cedar-log-formatter
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 Output:
@@ -195,8 +203,13 @@ yarn rw dev
 You may also pipe logs to the formatter when using `rw serve`:
 
 ```bash
+<<<<<<< HEAD
 yarn rw serve | yarn rw-log-formatter
 yarn rw serve api | yarn rw-log-formatter
+=======
+yarn rw serve | yarn cedar-log-formatter
+yarn rw serve api | yarn cedar-log-formatter
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 > Note: Since `rw serve` sets the Node environment to `production` you will not see log non-warn/error output unless you configure your logging level to `debug` or below.

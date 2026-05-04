@@ -53,7 +53,11 @@ Click [**New OAuth App**](https://github.com/settings/applications/new) and fill
 
 ![New OAuth app settings](https://user-images.githubusercontent.com/300/245298106-b35a6abe-6e8c-4ab1-8ab5-7b7e1dcc0a39.png)
 
+<<<<<<< HEAD
 The important part is the **Authorization callback URL** which is where GitHub will redirect you back once authenticated (step 4 of the login flow above). This callback URL assumes you're using the default function location of `/.redwood/functions`. If you've changed that in your app be sure to change it here as well.
+=======
+The important part is the **Authorization callback URL** which is where GitHub will redirect you back once authenticated (step 4 of the login flow above). This callback URL assumes you're using the default function location of `/.api/functions`. If you've changed that in your app be sure to change it here as well.
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 
 Click **Register application** and then on the screen that follows, click the **Generate a new client secret** button:
 
@@ -88,7 +92,11 @@ GITHUB_OAUTH_CLIENT_ID=41a08ae238b5aee4121d
 GITHUB_OAUTH_CLIENT_SECRET=92e8662e9c562aca8356d45562911542d89450e1
 GITHUB_OAUTH_SCOPES="read:user user:email"
 # highlight-next-line
+<<<<<<< HEAD
 GITHUB_OAUTH_REDIRECT_URI="http://localhost:8910/.redwood/functions/oauth/callback"
+=======
+GITHUB_OAUTH_REDIRECT_URI="http://localhost:8910/.api/functions/oauth/callback"
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
 ```
 
 ## The Login Button
@@ -120,7 +128,11 @@ We're using several of our new ENV vars here, and need to tell Cedar to make the
 [web]
   title = "Cedar App"
   port = "${WEB_DEV_PORT:8910}"
+<<<<<<< HEAD
   apiUrl = "/.redwood/functions"
+=======
+  apiUrl = "/.api/functions"
+>>>>>>> 8be06e33a9 (docs(versioning): Fix v4.0 docs (#1707))
   # highlight-next-line
   includeEnvironmentVariables = ["GITHUB_OAUTH_CLIENT_ID", "GITHUB_OAUTH_REDIRECT_URI", "GITHUB_OAUTH_SCOPES"]
 [api]
