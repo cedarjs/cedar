@@ -321,13 +321,58 @@ const watcher = chokidar.watch(
 id.match(/\/api\/src\/lib\/db\.(js|ts)$/)
 ```
 
-**Change:** When `dbModule` is a bare specifier (e.g. `@scope/db`),
-this regex won't match. The plugin needs to either:
+**Change:** Pass `dbModule` as a plugin option (injected by the Cedar Vite config).
+Build a dynamic matcher based on the resolution type:
 
-- Build a pattern that matches the configured module name (for bare specifiers,
-  match `node_modules/@scope/db/index.{js,ts}` or the resolved Vite path).
-- Or broaden the detection to use a different mechanism — e.g., look for the
-  Vite-resolved module ID rather than the file-system path.
+```ts
+export function trackDbImportsPlugin(dbModule: string): Plugin {
+  return {
+    name: 'db-import-tracker',
+    transform(code, id) {
+      function matchesDbModule(id: string, dbModule: string): boolean {
+        if (dbModule.startsWith('src/')) {
+          // Vite resolves src/ via the 'src' alias → match the tail of the path
+          return (
+            id.endsWith(dbModule.replace('src/', '') + '.ts') ||
+            id.endsWith(dbModule.replace('src/', '') + '.js')
+          )
+        }
+        if (dbModule.startsWith('./') || dbModule.startsWith('../')) {
+          // Relative path — match the resolved absolute path
+          return (
+            id.endsWith(
+              dbModule.replace(/^\.\//, '').replace(/^\.\.\//, '') + '.ts'
+            ) ||
+            id.endsWith(
+              dbModule.replace(/^\.\//, '').replace(/^\.\.\//, '') + '.js'
+            )
+          )
+        }
+        if (dbModule.startsWith('/')) {
+          // Absolute path — exact match
+          return (
+            id === dbModule ||
+            id === dbModule + '.ts' ||
+            id === dbModule + '.js'
+          )
+        }
+        // Bare specifier (e.g. "@scope/db") — match package name in resolved path
+        // Vite resolves this to the workspace package entry point
+        return id.includes(dbModule) && id.match(/\.(js|ts)$/)
+      }
+
+      if (matchesDbModule(id, dbModule) && code.includes('PrismaClient')) {
+        // ... existing injection code ...
+      }
+
+      return code
+    },
+  }
+}
+```
+
+The Cedar Vite plugin that creates `trackDbImportsPlugin()` reads
+`getConfig().api.dbModule` and passes it as the argument.
 
 ### 4. `packages/testing/src/api/vitest/vitest-api.setup.ts`
 
