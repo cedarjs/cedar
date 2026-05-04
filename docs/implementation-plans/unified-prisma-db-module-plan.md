@@ -82,7 +82,7 @@ The `dbModule` value is resolved using a unified strategy based on its prefix:
 | Prefix          | Example                      | Resolution                                                                    |
 | --------------- | ---------------------------- | ----------------------------------------------------------------------------- |
 | `src/`          | `src/lib/db`                 | Resolve to `api.src + '/lib/db'` (uses existing `src/` Vite/Babel/Jest alias) |
-| `./` or `../`   | `./packages/db/src/index`    | Resolve relative to `api.base` (the api workspace root)                       |
+| `./` or `../`   | `./packages/db/src/index`    | Resolve relative to project root (where `cedar.toml` lives)                   |
 | begins with `/` | `/absolute/path/db`          | Use as-is (absolute path)                                                     |
 | everything else | `@scope/db`, `my-db-package` | Bare specifier — pass directly into `import` statements                       |
 
@@ -211,17 +211,19 @@ export function getPrismaClientModule(): string {
 export function resolveDbModule(
   module: string,
   apiSrc: string,
-  apiBase: string
+  apiBase: string,
+  projectBase: string
 ): string {
   if (module.startsWith('src/')) {
     return path.join(apiSrc, module.replace('src/', ''))
   }
-  if (
-    module.startsWith('./') ||
-    module.startsWith('../') ||
-    module.startsWith('/')
-  ) {
-    return path.resolve(apiBase, module)
+  if (module.startsWith('/')) {
+    return module // absolute path
+  }
+  if (module.startsWith('./') || module.startsWith('../')) {
+    // Resolve relative to project root (where cedar.toml lives) for consistency
+    // with other cedar.toml paths like prismaConfig.
+    return path.resolve(projectBase, module)
   }
   return module // bare specifier
 }
@@ -325,7 +327,10 @@ id.match(/\/api\/src\/lib\/db\.(js|ts)$/)
 Build a dynamic matcher based on the resolution type:
 
 ```ts
-export function trackDbImportsPlugin(dbModule: string): Plugin {
+export function trackDbImportsPlugin(
+  dbModule: string,
+  projectBase: string
+): Plugin {
   return {
     name: 'db-import-tracker',
     transform(code, id) {
@@ -338,14 +343,13 @@ export function trackDbImportsPlugin(dbModule: string): Plugin {
           )
         }
         if (dbModule.startsWith('./') || dbModule.startsWith('../')) {
-          // Relative path — match the resolved absolute path
+          // Relative path — resolve to absolute and match exactly.
+          // Resolves relative to project root (where cedar.toml lives).
+          const resolved = path.resolve(projectBase, dbModule)
           return (
-            id.endsWith(
-              dbModule.replace(/^\.\//, '').replace(/^\.\.\//, '') + '.ts'
-            ) ||
-            id.endsWith(
-              dbModule.replace(/^\.\//, '').replace(/^\.\.\//, '') + '.js'
-            )
+            id === resolved ||
+            id === resolved + '.ts' ||
+            id === resolved + '.js'
           )
         }
         if (dbModule.startsWith('/')) {
@@ -359,16 +363,19 @@ export function trackDbImportsPlugin(dbModule: string): Plugin {
         // Bare specifier (e.g. "@scope/db") — match package name in resolved path
         // Vite resolves this to the workspace package entry point.
         // We require an exact segment boundary to avoid false positives
-        // (e.g. "@myorg/db" must not match "@myorg/db-extra").
+        // (e.g. "@myorg/db" must not match "@myorg/db-extra", and "db"
+        // must not match "somedb").
         const moduleIndex = id.indexOf(dbModule)
 
         if (moduleIndex === -1) {
           return false
         }
 
+        const prevChar = id[moduleIndex - 1]
         const nextChar = id[moduleIndex + dbModule.length]
 
         return (
+          (prevChar === undefined || prevChar === '/' || prevChar === '\\') &&
           (nextChar === '/' || nextChar === '.' || nextChar === undefined) &&
           /\.(js|ts)$/.test(id)
         )
@@ -385,7 +392,7 @@ export function trackDbImportsPlugin(dbModule: string): Plugin {
 ```
 
 The Cedar Vite plugin that creates `trackDbImportsPlugin()` reads
-`getConfig().api.dbModule` and passes it as the argument.
+`getConfig().api.dbModule` and `getPaths().base`, then passes both to the plugin.
 
 ### 4. `packages/testing/src/api/vitest/vitest-api.setup.ts`
 
@@ -402,7 +409,12 @@ import { getPrismaClientModule, resolveDbModule } from '@cedarjs/project-config'
 
 const prismaModule = getPrismaClientModule()
 const libDb = await import(
-  resolveDbModule(prismaModule, cedarPaths.api.src, cedarPaths.api.base)
+  resolveDbModule(
+    prismaModule,
+    cedarPaths.api.src,
+    cedarPaths.api.base,
+    cedarPaths.base
+  )
 )
 ```
 
@@ -759,7 +771,9 @@ alias pointing to `api/src/`. Zero behavioral change for existing projects.
 // packages/db/package.json
 {
   "name": "@my-scope/db",
-  "main": "./src/index.ts",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "dependencies": {
     "@prisma/client": "^7.0.0"
   }
