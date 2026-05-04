@@ -28,6 +28,12 @@ or maybe even like this!
 
 :::
 
-It's usually something that goes into more detail about a specific point, refers you to further reading, or calls out something important you should know.
+It's usually something that goes into more detail about a specific point, refers you to further reading, or calls out something important you should know. Here comes one now:
+
+:::tip
+
+If you get stuck at any point during the tutorial, the [CedarJS community on Discord](https://discord.gg/cedarjs) is a great place to ask for help!
+
+:::
 
 Let's get started!
