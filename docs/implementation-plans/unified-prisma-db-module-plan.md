@@ -357,8 +357,21 @@ export function trackDbImportsPlugin(dbModule: string): Plugin {
           )
         }
         // Bare specifier (e.g. "@scope/db") — match package name in resolved path
-        // Vite resolves this to the workspace package entry point
-        return id.includes(dbModule) && id.match(/\.(js|ts)$/)
+        // Vite resolves this to the workspace package entry point.
+        // We require an exact segment boundary to avoid false positives
+        // (e.g. "@myorg/db" must not match "@myorg/db-extra").
+        const moduleIndex = id.indexOf(dbModule)
+
+        if (moduleIndex === -1) {
+          return false
+        }
+
+        const nextChar = id[moduleIndex + dbModule.length]
+
+        return (
+          (nextChar === '/' || nextChar === '.' || nextChar === undefined) &&
+          /\.(js|ts)$/.test(id)
+        )
       }
 
       if (matchesDbModule(id, dbModule) && code.includes('PrismaClient')) {
