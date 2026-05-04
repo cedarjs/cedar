@@ -304,11 +304,11 @@ Cedar adds data mocking for Storybook so that you can display components that wo
 
 Storybook is strictly a frontend codebase concern.
 
-## Vite, esbuild and Typescript
+## Vite, Babel and Typescript
 
 Notice at no point above did we say "and then we need to write configuration for this package..." Cedar has done all of that for you and will continue to do that with every release of a new version. We're sure you won't miss spending hours or days trying to add and configure a package in your application. You can eject from our default configs, and add custom code if needed, but most apps will never need to do this: everything Just Works.
 
-We use vite as our bundler, packaging up the frontend code and automatically code splitting on pages. It also serves the frontend (the `web` directory). The backend (the `api` directory) is compiled by esbuild and served with [Fastify](https://fastify.dev/).
+We use vite as our bundler, packaging up the frontend code and automatically code splitting on pages. It also serves the frontend (the `web` directory). The backend (the `api` directory) is compiled by Babel (via a Vite SSR build) and served with [Fastify](https://fastify.dev/).
 
 The entire framework is ([strictly](https://cedarjs.com/docs/typescript/strict-mode)) typed so you can autocomplete all the things in your IDE.
 
@@ -345,7 +345,7 @@ CedarJS is a fork of [RedwoodJS](https://redwoodjs.com/), which was created by T
 
 ## Updates
 
-Cedar is constantly being updated and sticks strictly to semantic versioning requirements. You can be sure that there won't be any sudden, breaking changes without a major version revision. Cedar is famous for its [copious release notes](https://community.redwoodjs.com/t/redwood-3-0-0-is-now-available/3989) and comprehensive upgrade guides, and if code changes need to be made to your app, we make every effort to include a codemod script that will make the changes for you.
+Cedar follows semantic versioning strictly, and we don't shy away from releasing major versions when breaking changes are needed. In practice, most breaking changes affect only a small subset of Cedar apps, so upgrading is often straightforward. We publish [release notes](https://github.com/cedarjs/cedar/releases/tag/v3.0.0) for everything user-facing, along with comprehensive upgrade guides, and where code changes are needed we do our best to include a codemod script that will make the changes for you automatically.
 
 ## Community
 
