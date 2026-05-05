@@ -117,9 +117,7 @@ export async function runScriptFunction({
   }
 
   try {
-    const { db } = await env.runner.import(
-      path.join(getPaths().api.lib, 'db'),
-    )
+    const { db } = await env.runner.import(path.join(getPaths().api.lib, 'db'))
     db.$disconnect()
   } catch (e) {
     // silence
