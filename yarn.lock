@@ -26986,6 +26986,23 @@ __metadata:
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
     zx: "npm:8.8.5"
+  dependenciesMeta:
+    "@prisma/engines":
+      built: true
+    "@swc/core":
+      built: true
+    better-sqlite3:
+      built: true
+    cypress:
+      built: true
+    esbuild:
+      built: true
+    lefthook:
+      built: true
+    msw:
+      built: true
+    prisma:
+      built: true
   languageName: unknown
   linkType: soft
 
