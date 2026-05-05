@@ -92,6 +92,7 @@
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
+    "acorn": "8.16.0",
     "acorn-loose": "8.5.2",
     "ansis": "4.2.0",
     "buffer": "6.0.3",
