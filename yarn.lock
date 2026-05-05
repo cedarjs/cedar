@@ -3760,6 +3760,7 @@ __metadata:
     "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.2"
     "@babel/traverse": "npm:7.29.0"
+    "@cedarjs/api": "npm:4.1.0"
     "@cedarjs/api-server": "npm:4.1.0"
     "@cedarjs/auth": "npm:4.1.0"
     "@cedarjs/babel-config": "npm:4.1.0"
