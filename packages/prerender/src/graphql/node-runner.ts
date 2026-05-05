@@ -1,3 +1,4 @@
+import commonjs from '@rollup/plugin-commonjs'
 import { createServer, isRunnableDevEnvironment, mergeConfig } from 'vite'
 import type { ViteDevServer, RunnableDevEnvironment, UserConfig } from 'vite'
 
@@ -35,6 +36,7 @@ async function createViteServer(customConfig: UserConfig = {}) {
       ],
     },
     plugins: [
+      commonjs(),
       cedarImportDirPlugin(),
       cedarAutoImportsPlugin(),
       cedarjsResolveCedarStyleImportsPlugin(),
