@@ -2,6 +2,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import { createServer, isRunnableDevEnvironment, mergeConfig } from 'vite'
 import type { ViteDevServer, RunnableDevEnvironment, UserConfig } from 'vite'
 
+/** @see {@link https://github.com/rollup/plugins/issues/1541} */
 const fix = <T>(f: { default: T }): T => f as unknown as T
 
 import { getPaths } from '@cedarjs/project-config'
