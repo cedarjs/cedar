@@ -132,10 +132,11 @@ cedar build:
   default: legacy separate builds
     API (`buildApi()` esbuild → api/dist/, Babel plugin) →
     Web (`cedar-vite-build` → web/dist/) →
-  --ud: unified Vite `buildApp()` with declared `client` and `api` environments
-    (web/dist/ + api/dist/, preserveModules, Babel plugin) →
-  UD server entry (Vite SSR build → api/dist/ud/index.js, self-contained Node
-    entry, only when --ud is passed) →
+  --ud:
+    UD server entry (Vite SSR build → api/dist/ud/index.js, self-contained Node
+      entry) →
+    unified Vite `buildApp()` with declared `client` and `api` environments
+      (web/dist/ + api/dist/, preserveModules, Babel plugin) →
   prerender marked routes
 
 *SSR/RSC: falls back to legacy separate builds; adds route hooks build, route
@@ -269,7 +270,7 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
   and `meta()` (SSR/RSC only: per-request meta tag injection)
 - Entry: `entry.client.tsx` (always). \*SSR/RSC: also `entry.server.tsx`
 - Routes in `Routes.tsx` as JSX (virtual, never rendered — Babel auto-loads pages)
-- Build: Vite (web + api); api uses `build.ssr: true` + `preserveModules: true` + Babel plugin
+- Build: default = esbuild (api) + Vite (web); `--ud` = unified Vite (web + api with `build.ssr: true` + `preserveModules: true` + Babel plugin)
 - Server: API always Fastify; opt-in srvx/WinterTC via `cedar serve api --ud` (`buildUDApiServer` emits `api/dist/ud/index.js`). Web: Fastify (SPA). \*SSR/RSC: Web uses Express
 - Package mgr: Yarn 4 (+ experimental support for npm and pnpm); Framework: Yarn 4 + Nx (build orchestration).
 - Codegen: compile-time (Vite plugins) + on-demand (cedar-gen)
