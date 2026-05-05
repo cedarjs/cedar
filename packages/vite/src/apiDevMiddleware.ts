@@ -7,6 +7,8 @@ import type { Handler } from 'aws-lambda'
 import { normalizePath } from 'vite'
 import type { ModuleNode, ViteDevServer } from 'vite'
 
+import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
+import type { LegacyHandler } from '@cedarjs/api/runtime'
 import {
   getApiSideBabelPlugins,
   transformWithBabel,
@@ -15,8 +17,6 @@ import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLYoga } from '@cedarjs/graphql-server'
 import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
 import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
-import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
-import type { LegacyHandler } from '@cedarjs/api/runtime'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 

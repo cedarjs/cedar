@@ -17,13 +17,13 @@ import {
   buildApiWithVite,
   cleanApiBuild,
 } from '@cedarjs/internal/dist/build/api'
-import { buildCedarApp } from '@cedarjs/vite/build'
 import { generate } from '@cedarjs/internal/dist/generate/generate'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { loadAndValidateSdls } from '@cedarjs/internal/dist/validateSchema'
 import { detectPrerenderRoutes } from '@cedarjs/prerender/detection'
 import { type Paths } from '@cedarjs/project-config'
 import { timedTelemetry } from '@cedarjs/telemetry'
+import { buildCedarApp } from '@cedarjs/vite/build'
 import { buildUDApiServer } from '@cedarjs/vite/buildUDApiServer'
 
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
