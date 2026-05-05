@@ -14,18 +14,18 @@ import {
 } from '@cedarjs/vite'
 
 // When the customResolver returns an id, that id is final — Vite won't try
-// alternative extensions on it. This helper maps .js/.jsx to the actual file
-// on disk (e.g. db.js → db.ts in a TypeScript project).
+// alternative extensions on it. This helper resolves the actual file on disk,
+// handling both bare paths (src/lib/jobs) and .js/.jsx paths that map to .ts
+// files in a TypeScript project (e.g. db.js → db.ts).
 function resolveExtension(id) {
   if (existsSync(id)) {
     return id
   }
-  if (/\.jsx?$/.test(id)) {
-    const withoutExt = id.replace(/\.jsx?$/, '')
-    for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
-      if (existsSync(withoutExt + ext)) {
-        return withoutExt + ext
-      }
+  // Strip .js/.jsx extension if present, then try TypeScript and JS extensions
+  const withoutExt = /\.jsx?$/.test(id) ? id.replace(/\.jsx?$/, '') : id
+  for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+    if (existsSync(withoutExt + ext)) {
+      return withoutExt + ext
     }
   }
   return id
