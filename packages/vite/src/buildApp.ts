@@ -8,8 +8,8 @@ import {
   getApiSideBabelPlugins,
   transformWithBabel,
 } from '@cedarjs/babel-config'
-import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 import { findApiFiles } from '@cedarjs/internal/dist/files.js'
+import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 
@@ -119,6 +119,14 @@ export async function buildCedarApp({
     {
       name: 'cedar-build-app-cleanup',
       configResolved(config) {
+        // Vite always instantiates a default 'client' environment from the
+        // config file, even when the caller didn't declare it. Remove it when
+        // the workspace filter excludes 'web' so that API-only builds don't
+        // accidentally compile the web client.
+        if (!workspace.includes('web') && config.environments.client) {
+          delete (config.environments as Record<string, unknown>).client
+        }
+
         // Vite adds a default 'ssr' environment alongside 'client'. When we
         // are building the API as a separate environment ('api'), the default
         // 'ssr' environment is redundant and inherits the web HTML input,
