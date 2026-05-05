@@ -107,21 +107,43 @@ export const handler = async ({
   }
 
   // Check for port conflict and exit with message if found
-  if (webPortChangeNeeded) {
-    const message = [
-      'The currently configured port for the development server is',
-      'unavailable. Suggested change to your port, which can be changed in',
-      'cedar.toml (or redwood.toml):\n',
-      ` - Web to use port ${webAvailablePort} instead`,
-      'of your currently configured',
-      `${webPreferredPort}\n`,
-      '\nCannot run the development server until your configured port is',
-      'changed or becomes available.',
-    ]
-      .filter(Boolean)
-      .join(' ')
+  if (ud) {
+    if (webPortChangeNeeded) {
+      const message = [
+        'The currently configured port for the development server is',
+        'unavailable. Suggested change to your port, which can be changed in',
+        'cedar.toml (or redwood.toml):\n',
+        ` - Web to use port ${webAvailablePort} instead`,
+        'of your currently configured',
+        `${webPreferredPort}\n`,
+        '\nCannot run the development server until your configured port is',
+        'changed or becomes available.',
+      ]
+        .filter(Boolean)
+        .join(' ')
 
-    exitWithError(undefined, { message })
+      exitWithError(undefined, { message })
+    }
+  } else {
+    if (apiPortChangeNeeded || webPortChangeNeeded) {
+      const message = [
+        'The currently configured ports for the development server are',
+        'unavailable. Suggested changes to your ports, which can be changed in',
+        'cedar.toml (or redwood.toml), are:\n',
+        apiPortChangeNeeded && ` - API to use port ${apiAvailablePort} instead`,
+        apiPortChangeNeeded && 'of your currently configured',
+        apiPortChangeNeeded && `${apiPreferredPort}\n`,
+        webPortChangeNeeded && ` - Web to use port ${webAvailablePort} instead`,
+        webPortChangeNeeded && 'of your currently configured',
+        webPortChangeNeeded && `${webPreferredPort}\n`,
+        '\nCannot run the development server until your configured ports are',
+        'changed or become available.',
+      ]
+        .filter(Boolean)
+        .join(' ')
+
+      exitWithError(undefined, { message })
+    }
   }
 
   if (workspace.includes('api')) {
@@ -131,6 +153,18 @@ export const handler = async ({
       const message = getErrorMessage(e)
       errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
       console.error(c.error(message))
+    }
+
+    if (!ud && !serverFile) {
+      try {
+        await shutdownPort(apiAvailablePort)
+      } catch (e) {
+        const message = getErrorMessage(e)
+        errorTelemetry(process.argv, `Error shutting down "api": ${message}`)
+        console.error(
+          `Error whilst shutting down "api" port: ${c.error(message)}`,
+        )
+      }
     }
   }
 
