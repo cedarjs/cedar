@@ -1,8 +1,12 @@
-import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { createServer, isRunnableDevEnvironment, mergeConfig } from 'vite'
-import type { Plugin, ViteDevServer, RunnableDevEnvironment, UserConfig } from 'vite'
+import type {
+  Plugin,
+  ViteDevServer,
+  RunnableDevEnvironment,
+  UserConfig,
+} from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
 import {
@@ -65,7 +69,10 @@ function cjsCompatPlugin(): Plugin {
       const filePath = JSON.stringify(id)
 
       const namedExportLines = namedExports
-        .map((name) => `export const ${name} = __cjs_result__[${JSON.stringify(name)}]`)
+        .map(
+          (name) =>
+            `export const ${name} = __cjs_result__[${JSON.stringify(name)}]`,
+        )
         .join('\n')
 
       return {
