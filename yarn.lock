@@ -2899,6 +2899,7 @@ __metadata:
     "@cedarjs/structure": "workspace:*"
     "@cedarjs/telemetry": "workspace:*"
     "@cedarjs/utils": "workspace:*"
+    "@cedarjs/vite": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
     "@listr2/prompt-adapter-enquirer": "npm:4.2.1"
     "@opentelemetry/api": "npm:1.9.0"

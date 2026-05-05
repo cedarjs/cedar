@@ -42,6 +42,7 @@
     "@cedarjs/structure": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
     "@cedarjs/utils": "workspace:*",
+    "@cedarjs/vite": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "@listr2/prompt-adapter-enquirer": "4.2.1",
     "@opentelemetry/api": "1.9.0",

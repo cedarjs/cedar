@@ -21,6 +21,7 @@ import { cedarMergedConfig } from './plugins/vite-plugin-merged-config.js'
 import { cedarSwapApolloProvider } from './plugins/vite-plugin-swap-apollo-provider.js'
 
 export { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
+export { cedarCjsCompatPlugin } from './plugins/vite-plugin-cedar-cjs-compat.js'
 export { cedarCellTransform } from './plugins/vite-plugin-cedar-cell.js'
 export { cedarEntryInjectionPlugin } from './plugins/vite-plugin-cedar-entry-injection.js'
 export { cedarHtmlEnvPlugin } from './plugins/vite-plugin-cedar-html-env.js'

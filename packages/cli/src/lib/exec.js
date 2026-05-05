@@ -11,6 +11,7 @@ import {
   cedarSwapApolloProvider,
   cedarImportDirPlugin,
   cedarAutoImportsPlugin,
+  cedarCjsCompatPlugin,
 } from '@cedarjs/vite'
 
 // When the customResolver returns an id, that id is final — Vite won't try
@@ -105,6 +106,7 @@ export async function runScriptFunction({
       ],
     },
     plugins: [
+      cedarCjsCompatPlugin(),
       cedarjsResolveCedarStyleImportsPlugin(),
       cedarCellTransform(),
       cedarjsJobPathInjectorPlugin(),
