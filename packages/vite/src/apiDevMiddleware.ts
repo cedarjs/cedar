@@ -75,14 +75,6 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
     srcFunctions = []
   }
 
-  const graphqlFunctionIndex = srcFunctions.findIndex((f) =>
-    path.basename(f).startsWith('graphql.'),
-  )
-  if (graphqlFunctionIndex > 0) {
-    const [graphqlFn] = srcFunctions.splice(graphqlFunctionIndex, 1)
-    srcFunctions.unshift(graphqlFn)
-  }
-
   console.log(ansis.dim.italic('Importing Server Functions... '))
   const tsImport = Date.now()
 

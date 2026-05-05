@@ -176,7 +176,7 @@ export async function buildCedarApp({
             }
           }
 
-          throw new Error(`Could not transform file: ${id}`)
+          return null
         },
       })
     }
