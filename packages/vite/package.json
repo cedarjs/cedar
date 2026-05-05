@@ -25,12 +25,6 @@
       "types": "./dist/api/vite-plugin-cedar-vitest-api-preset.d.ts",
       "default": "./dist/api/vite-plugin-cedar-vitest-api-preset.js"
     },
-    "./apiDevServer": {
-      "import": {
-        "types": "./dist/apiDevServer.d.ts",
-        "default": "./dist/apiDevServer.js"
-      }
-    },
     "./client": {
       "require": "./dist/cjs/client.js",
       "import": "./dist/client.js"

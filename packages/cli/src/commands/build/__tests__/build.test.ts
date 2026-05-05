@@ -66,8 +66,11 @@ vi.mock('node:fs', () => {
 // With these mocks it's down to ~250ms
 
 vi.mock('@cedarjs/internal/dist/build/api', () => ({
-  buildApiWithVite: vi.fn(),
   cleanApiBuild: vi.fn(),
+}))
+
+vi.mock('@cedarjs/vite/build', () => ({
+  buildCedarApp: vi.fn(),
 }))
 
 vi.mock('@cedarjs/internal/dist/generate/generate', () => ({
@@ -158,8 +161,7 @@ test('the build tasks are in the correct sequence when packagesWorkspace is enab
       "Building Packages...",
       "Checking workspace packages...",
       "Verifying graphql schema...",
-      "Building API...",
-      "Building Web...",
+      "Building App...",
     ]
   `)
 })
@@ -175,8 +177,7 @@ test('the build tasks are in the correct sequence when packagesWorkspace is disa
     [
       "Generating Prisma Client...",
       "Verifying graphql schema...",
-      "Building API...",
-      "Building Web...",
+      "Building App...",
     ]
   `)
 })
@@ -237,9 +238,8 @@ test('UD server entry task is included when --ud is passed', async () => {
     [
       "Generating Prisma Client...",
       "Verifying graphql schema...",
-      "Building API...",
       "Bundling API server entry (Universal Deploy)...",
-      "Building Web...",
+      "Building App...",
     ]
   `)
 })
