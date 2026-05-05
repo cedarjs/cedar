@@ -76,7 +76,12 @@ export class NodeRunner {
       await this.init()
     }
 
-    return this.env?.runner.import(filePath)
+    const env = this.env
+    if (!env) {
+      throw new Error('NodeRunner failed to initialize')
+    }
+
+    return env.runner.import(filePath)
   }
 
   async close() {
