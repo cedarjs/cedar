@@ -115,9 +115,15 @@ function isReExport(node: unknown): boolean {
 }
 
 /**
- * Check whether a node represents `Object.defineProperty(exports, ...)`.
+ * Check whether a node represents `Object.defineProperty(exports, key, { get: … })`
+ * or a setter descriptor. Plain value descriptors (e.g. `__esModule` markers)
+ * are allowed because they are harmless and are handled correctly by the
+ * generated wrapper at runtime.
+ *
+ * If the descriptor is not a statically analyzable object literal we return
+ * `false` — a false negative is safer than breaking on harmless code.
  */
-function isObjectDefinePropertyOnExports(node: unknown): boolean {
+function isObjectDefinePropertyWithGetterOnExports(node: unknown): boolean {
   if (!isAstNode(node) || node.type !== 'CallExpression') {
     return false
   }
@@ -127,11 +133,31 @@ function isObjectDefinePropertyOnExports(node: unknown): boolean {
   }
 
   const args = node.arguments
-  return (
-    Array.isArray(args) &&
-    args.length > 0 &&
-    getIdentifierName(args[0]) === 'exports'
-  )
+  if (
+    !Array.isArray(args) ||
+    args.length < 3 ||
+    getIdentifierName(args[0]) !== 'exports'
+  ) {
+    return false
+  }
+
+  const descriptor = args[2]
+  if (!isAstNode(descriptor) || descriptor.type !== 'ObjectExpression') {
+    return false
+  }
+
+  const props = descriptor.properties
+  if (!Array.isArray(props)) {
+    return false
+  }
+
+  return props.some((prop) => {
+    if (!isAstNode(prop) || prop.type !== 'Property') {
+      return false
+    }
+    const name = getIdentifierName(prop.key)
+    return name === 'get' || name === 'set'
+  })
 }
 
 /**
@@ -213,8 +239,9 @@ function formatLoc(node: AstNode): string {
  *
  * Known limitations (documented inline where relevant):
  *  - No source-map support (`map: null`).
- *  - Object.defineProperty(exports, key, { get: () => ... }) getters are
- *    evaluated eagerly at module-load time rather than lazily.
+ *  - Object.defineProperty(exports, key, { get: () => ... }) with getter or
+ *    setter descriptors are evaluated eagerly at module-load time rather than
+ *    lazily; plain value descriptors (e.g. __esModule) are allowed.
  *  - Properties added to a function/class after `module.exports = fn` are
  *    not re-exported.
  *  - Circular dependencies rely on Node's native behaviour via
@@ -299,12 +326,15 @@ export function cedarCjsCompatPlugin(): Plugin {
             )
           }
 
-          // 2) Object.defineProperty(exports, ...)
-          if (isObjectDefinePropertyOnExports(expr)) {
+          // 2) Object.defineProperty(exports, key, { get: () => ... }) —
+          // getter/setter descriptors are evaluated eagerly. Plain value
+          // descriptors (e.g. __esModule markers) are allowed.
+          if (isObjectDefinePropertyWithGetterOnExports(expr)) {
             throw new Error(
               `CedarJS CJS compat plugin does not support Object.defineProperty ` +
-                `on exports because getters would be evaluated eagerly at load ` +
-                `time rather than lazily. File: ${id}\n` +
+                `with getter/setter descriptors on exports because they would ` +
+                `be evaluated eagerly at load time rather than lazily. ` +
+                `File: ${id}\n` +
                 `Convert the file to plain property assignments ` +
                 `(exports.foo = ...) or use an ESM build of the package.`,
             )
