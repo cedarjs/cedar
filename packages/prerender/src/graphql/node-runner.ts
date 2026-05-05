@@ -65,6 +65,7 @@ export class NodeRunner {
 
     const env = this.viteServer.environments.nodeRunnerEnv
     if (!env || !isRunnableDevEnvironment(env)) {
+      await this.viteServer.close()
       throw new Error('Vite environment is not runnable.')
     }
 
