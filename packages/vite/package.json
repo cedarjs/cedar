@@ -25,12 +25,6 @@
       "types": "./dist/api/vite-plugin-cedar-vitest-api-preset.d.ts",
       "default": "./dist/api/vite-plugin-cedar-vitest-api-preset.js"
     },
-    "./apiDevServer": {
-      "import": {
-        "types": "./dist/apiDevServer.d.ts",
-        "default": "./dist/apiDevServer.js"
-      }
-    },
     "./client": {
       "require": "./dist/cjs/client.js",
       "import": "./dist/client.js"
@@ -75,6 +69,7 @@
     "@babel/generator": "7.29.1",
     "@babel/parser": "7.29.2",
     "@babel/traverse": "7.29.0",
+    "@cedarjs/api": "workspace:*",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
