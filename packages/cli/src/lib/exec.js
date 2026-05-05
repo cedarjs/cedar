@@ -102,6 +102,7 @@ export async function runScriptFunction({
 
   const env = server.environments.nodeRunnerEnv
   if (!env || !isRunnableDevEnvironment(env)) {
+    await server.close()
     throw new Error('Vite environment is not runnable.')
   }
 
