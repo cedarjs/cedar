@@ -20,6 +20,17 @@ function isViteInternalRequest(url: string): boolean {
   )
 }
 
+function isApiRequest(url: string, apiUrl: string, apiGqlUrl: string): boolean {
+  return (
+    url === apiUrl ||
+    url.startsWith(apiUrl + '/') ||
+    url.startsWith(apiUrl + '?') ||
+    url === apiGqlUrl ||
+    url.startsWith(apiGqlUrl + '/') ||
+    url.startsWith(apiGqlUrl + '?')
+  )
+}
+
 const startUnifiedDevServer = async () => {
   // Signal to Cedar plugins (e.g. cedarWaitForApiServer) that we're running
   // in unified-dev mode so they can skip behaviours that assume a separate
@@ -76,17 +87,6 @@ const startUnifiedDevServer = async () => {
           const apiUrl = cedarConfig.web.apiUrl.replace(/\/$/, '')
           const apiGqlUrl = cedarConfig.web.apiGraphQLUrl ?? apiUrl + '/graphql'
 
-          function isApiRequest(url: string): boolean {
-            return (
-              url === apiUrl ||
-              url.startsWith(apiUrl + '/') ||
-              url.startsWith(apiUrl + '?') ||
-              url === apiGqlUrl ||
-              url.startsWith(apiGqlUrl + '/') ||
-              url.startsWith(apiGqlUrl + '?')
-            )
-          }
-
           server.middlewares.use(
             async (
               req: IncomingMessage,
@@ -99,7 +99,7 @@ const startUnifiedDevServer = async () => {
                 return next()
               }
 
-              if (!isApiRequest(url)) {
+              if (!isApiRequest(url, apiUrl, apiGqlUrl)) {
                 return next()
               }
 

@@ -126,6 +126,10 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
   if (extractedGraphqlOptions) {
     const { yoga } = await createGraphQLYoga(extractedGraphqlOptions)
     graphqlYoga = yoga
+  } else {
+    // Reset so deleted/missing graphql.ts is reflected immediately (i.e. during
+    // a dev session)
+    graphqlYoga = null
   }
 
   console.log(
