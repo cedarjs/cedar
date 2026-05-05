@@ -2899,6 +2899,7 @@ __metadata:
     "@cedarjs/structure": "workspace:*"
     "@cedarjs/telemetry": "workspace:*"
     "@cedarjs/utils": "workspace:*"
+    "@cedarjs/vite": "workspace:*"
     "@cedarjs/web-server": "workspace:*"
     "@listr2/prompt-adapter-enquirer": "npm:4.2.1"
     "@opentelemetry/api": "npm:1.9.0"
@@ -2951,7 +2952,6 @@ __metadata:
     typescript: "npm:5.9.3"
     unionfs: "npm:4.6.0"
     uuid: "npm:11.1.0"
-    vite-node: "npm:3.2.4"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
   bin:
@@ -3487,7 +3487,6 @@ __metadata:
     unimport: "npm:5.7.0"
     unplugin-auto-import: "npm:19.3.0"
     vite: "npm:7.3.2"
-    vite-node: "npm:3.2.4"
     vitest: "npm:3.2.4"
   peerDependencies:
     react: 19.2.3
@@ -3761,6 +3760,7 @@ __metadata:
     "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.2"
     "@babel/traverse": "npm:7.29.0"
+    "@cedarjs/api": "workspace:*"
     "@cedarjs/api-server": "workspace:*"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/babel-config": "workspace:*"
@@ -3785,6 +3785,7 @@ __metadata:
     "@vitejs/plugin-react": "npm:4.7.0"
     "@whatwg-node/fetch": "npm:0.10.13"
     "@whatwg-node/server": "npm:0.10.18"
+    acorn: "npm:8.16.0"
     acorn-loose: "npm:8.5.2"
     ansis: "npm:4.2.0"
     buffer: "npm:6.0.3"
@@ -12161,7 +12162,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.1.0, acorn@npm:^8.11.0, acorn@npm:^8.12.1, acorn@npm:^8.14.1, acorn@npm:^8.15.0, acorn@npm:^8.16.0, acorn@npm:^8.4.1, acorn@npm:^8.8.1, acorn@npm:^8.9.0":
+"acorn@npm:8.16.0, acorn@npm:^8.1.0, acorn@npm:^8.11.0, acorn@npm:^8.12.1, acorn@npm:^8.14.1, acorn@npm:^8.15.0, acorn@npm:^8.16.0, acorn@npm:^8.4.1, acorn@npm:^8.8.1, acorn@npm:^8.9.0":
   version: 8.16.0
   resolution: "acorn@npm:8.16.0"
   bin:
@@ -27116,6 +27117,23 @@ __metadata:
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
     zx: "npm:8.8.5"
+  dependenciesMeta:
+    "@prisma/engines":
+      built: true
+    "@swc/core":
+      built: true
+    better-sqlite3:
+      built: true
+    cypress:
+      built: true
+    esbuild:
+      built: true
+    lefthook:
+      built: true
+    msw:
+      built: true
+    prisma:
+      built: true
   languageName: unknown
   linkType: soft
 

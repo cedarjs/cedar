@@ -915,12 +915,15 @@ than by a separate Fastify listener. This eliminates the last proxy/port
 split, simplifies auth flows and CORS, and aligns Cedar with Nuxt,
 SvelteKit, and other Vite full-stack frameworks.
 
-- Install `cedarDevDispatcherPlugin` (already built and exported in
-  Phase 4) into the web Vite dev server's `configureServer` middleware
-  stack. When the plugin is active, API requests are served inline
-  without proxying to a separate port.
-- Remove the separate Fastify API listener from `cedar-unified-dev`;
-  the web Vite server becomes the only visible HTTP listener.
+- Replace the separate Fastify API listener in `cedar-unified-dev` with
+  inline API middleware (`apiDevMiddleware.ts`) installed via the web Vite
+  dev server's `configureServer` hook. API requests are converted from
+  `IncomingMessage` to Fetch `Request`, dispatched through the Vite SSR
+  module runner, and the Fetch `Response` is piped back to `ServerResponse`.
+  The web Vite server becomes the only visible HTTP listener.
+- Remove `apiDevServer.ts` (Phase 4's Fastify-based dev server) and
+  `cedarDevDispatcherPlugin` (the Phase 4 middleware plugin that was never
+  installed); both are superseded by `apiDevMiddleware.ts`.
 
 **2. `buildApp()` with declared environments**
 
