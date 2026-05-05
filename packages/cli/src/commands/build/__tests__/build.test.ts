@@ -67,6 +67,7 @@ vi.mock('node:fs', () => {
 
 vi.mock('@cedarjs/internal/dist/build/api', () => ({
   cleanApiBuild: vi.fn(),
+  buildApi: vi.fn().mockResolvedValue({ errors: [], warnings: [] }),
 }))
 
 vi.mock('@cedarjs/vite/build', () => ({
@@ -161,7 +162,8 @@ test('the build tasks are in the correct sequence when packagesWorkspace is enab
       "Building Packages...",
       "Checking workspace packages...",
       "Verifying graphql schema...",
-      "Building App...",
+      "Building API...",
+      "Building Web...",
     ]
   `)
 })
@@ -177,7 +179,8 @@ test('the build tasks are in the correct sequence when packagesWorkspace is disa
     [
       "Generating Prisma Client...",
       "Verifying graphql schema...",
-      "Building App...",
+      "Building API...",
+      "Building Web...",
     ]
   `)
 })

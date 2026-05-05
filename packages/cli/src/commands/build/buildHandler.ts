@@ -14,6 +14,7 @@ import {
 } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import {
+  buildApi,
   buildApiWithVite,
   cleanApiBuild,
 } from '@cedarjs/internal/dist/build/api'
@@ -290,8 +291,74 @@ export const handler = async ({
           }
         },
       },
-    // Unified build path (default, non-streaming-SSR)
+    // Legacy separate build path (default when not --ud, non-streaming-SSR)
+    workspace.includes('api') &&
+      !ud &&
+      !getConfig().experimental?.streamingSsr?.enabled && {
+        title: 'Building API...',
+        task: async () => {
+          await cleanApiBuild()
+          const { errors, warnings } = await buildApi()
+
+          if (errors.length) {
+            console.error(errors)
+          }
+          if (warnings.length) {
+            console.warn(warnings)
+          }
+        },
+      },
+    workspace.includes('web') &&
+      !ud &&
+      !getConfig().experimental?.streamingSsr?.enabled && {
+        title: 'Building Web...',
+        task: async () => {
+          // Disable the new warning in Vite v5 about the CJS build being deprecated
+          // so that users don't have to see it when this command is called with --verbose
+          process.env.VITE_CJS_IGNORE_WARNING = 'true'
+
+          const createdRequire = createRequire(import.meta.url)
+          const buildBinPath = createdRequire.resolve(
+            '@cedarjs/vite/bins/cedar-vite-build.mjs',
+          )
+
+          // @NOTE: we're using the vite build command here, instead of the
+          // buildWeb function directly because we want the process.cwd to be
+          // the web directory, not the root of the project.
+          // This is important for postcss/tailwind to work correctly
+          // Having a separate binary lets us contain the change of cwd to that
+          // process only. If we changed cwd here, or in the buildWeb function,
+          // it could affect other things that run in parallel while building.
+          // We don't have any parallel tasks right now, but someone might add
+          // one in the future as a performance optimization.
+          await execa(
+            `node ${buildBinPath} --webDir="${cedarPaths.web.base}" --verbose=${verbose}`,
+            {
+              stdio: verbose ? 'inherit' : 'pipe',
+              shell: true,
+              // `cwd` is needed for yarn to find the cedar-vite-build binary
+              // It won't change process.cwd for anything else here, in this
+              // process
+              cwd: cedarPaths.web.base,
+            },
+          )
+
+          // Streaming SSR does not use the index.html file.
+          if (!getConfig().experimental?.streamingSsr?.enabled) {
+            console.log('Creating 200.html...')
+
+            const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
+
+            fs.copyFileSync(
+              indexHtmlPath,
+              path.join(getPaths().web.dist, '200.html'),
+            )
+          }
+        },
+      },
+    // Unified build path (experimental, non-streaming-SSR, --ud)
     (workspace.includes('api') || workspace.includes('web')) &&
+      ud &&
       !getConfig().experimental?.streamingSsr?.enabled && {
         title:
           workspace.includes('api') && workspace.includes('web')
