@@ -2951,7 +2951,6 @@ __metadata:
     typescript: "npm:5.9.3"
     unionfs: "npm:4.6.0"
     uuid: "npm:11.1.0"
-    vite-node: "npm:3.2.4"
     vitest: "npm:3.2.4"
     yargs: "npm:17.7.2"
   bin:
@@ -3487,7 +3486,6 @@ __metadata:
     unimport: "npm:5.7.0"
     unplugin-auto-import: "npm:19.3.0"
     vite: "npm:7.3.2"
-    vite-node: "npm:3.2.4"
     vitest: "npm:3.2.4"
   peerDependencies:
     react: 19.2.3
