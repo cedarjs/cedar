@@ -300,11 +300,14 @@ export const handler = async ({
           await cleanApiBuild()
           const { errors, warnings } = await buildApi()
 
-          if (errors.length) {
-            console.error(errors)
-          }
           if (warnings.length) {
             console.warn(warnings)
+          }
+
+          if (errors.length) {
+            throw new Error(
+              `API build failed with ${errors.length} error(s). See output above for details.`,
+            )
           }
         },
       },
@@ -343,17 +346,14 @@ export const handler = async ({
             },
           )
 
-          // Streaming SSR does not use the index.html file.
-          if (!getConfig().experimental?.streamingSsr?.enabled) {
-            console.log('Creating 200.html...')
+          console.log('Creating 200.html...')
 
-            const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
+          const indexHtmlPath = path.join(getPaths().web.dist, 'index.html')
 
-            fs.copyFileSync(
-              indexHtmlPath,
-              path.join(getPaths().web.dist, '200.html'),
-            )
-          }
+          fs.copyFileSync(
+            indexHtmlPath,
+            path.join(getPaths().web.dist, '200.html'),
+          )
         },
       },
     // Unified build path (experimental, non-streaming-SSR, --ud)

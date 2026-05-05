@@ -129,10 +129,13 @@ cedar dev:
 
 cedar build:
   prisma gen → GraphQL types → validate SDLs →
-  API + Web (unified Vite `buildApp()` with declared `client` and `api`
-      environments → web/dist/ + api/dist/, preserveModules, Babel plugin) →
-  UD (Vite SSR build → api/dist/ud/index.js, self-contained Node entry, only
-      when --ud is passed) →
+  default: legacy separate builds
+    API (`buildApi()` esbuild → api/dist/, Babel plugin) →
+    Web (`cedar-vite-build` → web/dist/) →
+  --ud: unified Vite `buildApp()` with declared `client` and `api` environments
+    (web/dist/ + api/dist/, preserveModules, Babel plugin) →
+  UD server entry (Vite SSR build → api/dist/ud/index.js, self-contained Node
+    entry, only when --ud is passed) →
   prerender marked routes
 
 *SSR/RSC: falls back to legacy separate builds; adds route hooks build, route
