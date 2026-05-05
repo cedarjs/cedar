@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 
 import { createServer, isRunnableDevEnvironment } from 'vite'
@@ -11,6 +12,24 @@ import {
   cedarImportDirPlugin,
   cedarAutoImportsPlugin,
 } from '@cedarjs/vite'
+
+// When the customResolver returns an id, that id is final — Vite won't try
+// alternative extensions on it. This helper maps .js/.jsx to the actual file
+// on disk (e.g. db.js → db.ts in a TypeScript project).
+function resolveExtension(id) {
+  if (existsSync(id)) {
+    return id
+  }
+  if (/\.jsx?$/.test(id)) {
+    const withoutExt = id.replace(/\.jsx?$/, '')
+    for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+      if (existsSync(withoutExt + ext)) {
+        return withoutExt + ext
+      }
+    }
+  }
+  return id
+}
 
 export async function runScriptFunction({
   path: scriptPath,
@@ -66,14 +85,18 @@ export async function runScriptFunction({
             // from scripts/ because it doesn't know what the src/ alias is.
             // So we have to tell it to use the correct path based on what file
             // is doing the importing.
+            // Also, to support imports like 'src/lib/db.js' in TS projects
+            // where only a .ts file exists, we resolve the correct extension
+            // ourselves — the customResolver result is final and Vite won't
+            // try alternative extensions on it.
             if (importer.startsWith(apiImportBase)) {
               const apiImportSrc = importStatementPath(getPaths().api.src)
               const resolvedId = id.replace('src', apiImportSrc)
-              return { id: resolvedId }
+              return { id: resolveExtension(resolvedId) }
             } else if (importer.startsWith(webImportBase)) {
               const webImportSrc = importStatementPath(getPaths().web.src)
               const resolvedId = id.replace('src', webImportSrc)
-              return { id: resolvedId }
+              return { id: resolveExtension(resolvedId) }
             }
 
             return null
