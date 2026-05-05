@@ -10,13 +10,12 @@ import { getPaths, getConfig } from '@cedarjs/project-config'
 import { startApiDevMiddleware } from './apiDevMiddleware.js'
 
 function isViteInternalRequest(url: string): boolean {
+  const pathname = url.split('?')[0]
+
   return (
-    url.startsWith('/@') ||
-    url.startsWith('/__vite') ||
-    url.startsWith('/__hmr') ||
-    url.includes('?import') ||
-    url.includes('?t=') ||
-    url.includes('?v=')
+    pathname.startsWith('/@') ||
+    pathname.startsWith('/__vite') ||
+    pathname.startsWith('/__hmr')
   )
 }
 
