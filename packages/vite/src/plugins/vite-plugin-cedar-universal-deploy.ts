@@ -191,66 +191,16 @@ export function cedarUniversalDeployPlugin(
 
 function generateGraphQLModule(distPath: string): string {
   return `
-import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime';
-import { createGraphQLYoga } from '@cedarjs/graphql-server';
-import { pathToFileURL } from 'node:url';
-
-const distPath = ${JSON.stringify(distPath)};
-
-let yogaInitPromise = null;
-
-async function getYoga() {
-  if (!yogaInitPromise) {
-    yogaInitPromise = (async () => {
-      const mod = await import(pathToFileURL(distPath).href);
-      const opts = mod.__rw_graphqlOptions;
-      const { yoga } = await createGraphQLYoga(opts);
-      return { yoga, graphqlOptions: opts };
-    })();
-  }
-  return yogaInitPromise;
-}
-
-export default {
-  async fetch(request) {
-    const { yoga, graphqlOptions } = await getYoga();
-    const cedarContext = await buildCedarContext(request, {
-      authDecoder: graphqlOptions?.authDecoder,
-    });
-    const event = await requestToLegacyEvent(request, cedarContext);
-    return yoga.handle(request, {
-      request,
-      cedarContext,
-      event,
-      requestContext: undefined,
-    });
-  }
-};
-`
+    import { createGraphQLHandler } from '@cedarjs/vite/ud-handlers/graphql';
+    export default createGraphQLHandler({ distPath: ${JSON.stringify(distPath)} });
+  `
 }
 
 function generateFunctionModule(distPath: string): string {
   return `
-import { createCedarFetchable } from '@cedarjs/api-server/udFetchable';
-import { pathToFileURL } from 'node:url';
-
-const distPath = ${JSON.stringify(distPath)};
-
-async function handleRequest(request, ctx) {
-  const mod = await import(pathToFileURL(distPath).href);
-  const handler = mod.handleRequest || (mod.default && mod.default.handleRequest);
-  if (!handler) {
-    throw new Error(
-      'Fetch-native handler not found in ' + distPath +
-      '. Expected \`export async function handleRequest(request, ctx)\` ' +
-      'or \`export default { handleRequest }\`.'
-    );
-  }
-  return handler(request, ctx);
-}
-
-export default createCedarFetchable(handleRequest);
-`
+    import { createFunctionHandler } from '@cedarjs/vite/ud-handlers/function';
+    export default createFunctionHandler({ distPath: ${JSON.stringify(distPath)} });
+  `
 }
 
 function generateCatchAllModule(
@@ -264,52 +214,24 @@ function generateCatchAllModule(
     )
     .join('\n')
 
-  const routerSetup = routes
-    .flatMap((route, i) => {
-      const methods =
-        route.methods.length > 0
-          ? route.methods
-          : // Intentionally excludes TRACE (security / XST concern) and CONNECT
-            // (proxy-tunnel only). All other common HTTP verbs are registered
-            // so Cedar handlers can receive them via rou3.
-            ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
-
-      return methods.flatMap((method) => [
-        `addRoute(router, '${method}', '${route.path}', mod${i});`,
-        `addRoute(router, '${method}', '${route.path}/**', mod${i});`,
-      ])
-    })
-    .join('\n')
+  const routesArray = routes
+    .map(
+      (route, i) =>
+        `{
+           path: ${JSON.stringify(route.path)},
+           methods: ${JSON.stringify(route.methods)},
+           module: mod${i}
+        }`,
+    )
+    .join(', ')
 
   return `
-import { createRouter, addRoute, findRoute } from 'rou3';
-${imports}
+    import { createCatchAllHandler } from '@cedarjs/vite/ud-handlers/catch-all';
+    ${imports}
 
-const router = createRouter();
-${routerSetup}
-
-function normalizePathname(requestUrl) {
-  const url = new URL(requestUrl);
-  let pathname = url.pathname;
-  const apiRootPath = ${JSON.stringify(normalizedApiRootPath)};
-  if (apiRootPath !== '/' && pathname.startsWith(apiRootPath)) {
-    pathname = pathname.slice(apiRootPath.length - 1);
-  }
-  if (!pathname.startsWith('/')) {
-    pathname = '/' + pathname;
-  }
-  return pathname;
-}
-
-export default {
-  async fetch(request) {
-    const pathname = normalizePathname(request.url);
-    const match = findRoute(router, request.method, pathname);
-    if (!match) {
-      return new Response('Not Found', { status: 404 });
-    }
-    return match.data.fetch(request);
-  }
-};
-`
+    export default createCatchAllHandler({
+      routes: [${routesArray}],
+      apiRootPath: ${JSON.stringify(normalizedApiRootPath)}
+    });
+  `
 }

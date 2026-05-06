@@ -40,7 +40,37 @@
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
     },
-    "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs"
+    "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs",
+    "./ud-handlers/graphql": {
+      "import": {
+        "types": "./dist/ud-handlers/graphql.d.ts",
+        "default": "./dist/ud-handlers/graphql.js"
+      },
+      "require": {
+        "types": "./dist/cjs/ud-handlers/graphql.d.ts",
+        "default": "./dist/cjs/ud-handlers/graphql.js"
+      }
+    },
+    "./ud-handlers/function": {
+      "import": {
+        "types": "./dist/ud-handlers/function.d.ts",
+        "default": "./dist/ud-handlers/function.js"
+      },
+      "require": {
+        "types": "./dist/cjs/ud-handlers/function.d.ts",
+        "default": "./dist/cjs/ud-handlers/function.js"
+      }
+    },
+    "./ud-handlers/catch-all": {
+      "import": {
+        "types": "./dist/ud-handlers/catch-all.d.ts",
+        "default": "./dist/ud-handlers/catch-all.js"
+      },
+      "require": {
+        "types": "./dist/cjs/ud-handlers/catch-all.d.ts",
+        "default": "./dist/cjs/ud-handlers/catch-all.js"
+      }
+    }
   },
   "bin": {
     "cedar-dev-fe": "./dist/devFeServer.js",
