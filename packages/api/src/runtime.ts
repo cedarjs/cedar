@@ -28,6 +28,11 @@ export type CedarMiddleware = (
 ) => Promise<Response>
 
 export interface CedarRouteRecord {
+  /**
+   * Unique identifier for this route, typically the URL path (e.g. `/graphql`).
+   * Used to derive the UD `EntryMeta.id`.
+   */
+  id: string
   path: string
   methods: string[]
   type: 'graphql' | 'auth' | 'function' | 'health'
