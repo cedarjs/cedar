@@ -44,6 +44,9 @@
     },
     "protobufjs": {
       "built": true
+    },
+    "unrs-resolver": {
+      "built": true
     }
   }
 }

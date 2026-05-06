@@ -15,7 +15,7 @@
 import babelParser from '@babel/eslint-parser'
 import babelPlugin from '@babel/eslint-plugin'
 import js from '@eslint/js'
-import importPlugin from 'eslint-plugin-import'
+import importPlugin from 'eslint-plugin-import-x'
 import jestDomPlugin from 'eslint-plugin-jest-dom'
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 import prettierRecommended from 'eslint-plugin-prettier/recommended'
@@ -47,7 +47,7 @@ export default [
   {
     plugins: {
       '@babel': babelPlugin,
-      import: importPlugin,
+      'import-x': importPlugin,
       'jsx-a11y': jsxA11yPlugin,
       'react-hooks': reactHooksPlugin,
       '@cedarjs': cedarjsPlugin,
@@ -73,7 +73,7 @@ export default [
       // See...
       // - https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/order.md#groups-array
       // - https://github.com/import-js/eslint-plugin-import/blob/main/README.md#importinternal-regex
-      'import/internal-regex': '^src/',
+      'import-x/internal-regex': '^src/',
     },
     rules: {
       '@cedarjs/process-env-computed': 'error',
@@ -96,7 +96,7 @@ export default [
       'react/prop-types': 'off',
       'react/display-name': 'off',
       'react-hooks/exhaustive-deps': 'warn',
-      'import/order': [
+      'import-x/order': [
         'error',
         {
           'newlines-between': 'always',

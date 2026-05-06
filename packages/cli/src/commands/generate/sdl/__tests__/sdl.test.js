@@ -19,7 +19,7 @@ vi.mock('node:fs', async (importOriginal) => {
 })
 
 // Have to import fs after memfs is mocked
-// eslint-disable-next-line import/order
+// eslint-disable-next-line import-x/order
 import fs from 'node:fs'
 
 import { ensurePosixPath } from '@cedarjs/project-config'
