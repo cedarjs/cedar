@@ -315,7 +315,7 @@ function generateCatchAllModule(
       const methods =
         route.methods.length > 0
           ? route.methods
-          : ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+          : ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 
       return methods.flatMap((method) => [
         `addRoute(router, '${method}', '${route.path}', mod${i});`,
