@@ -241,8 +241,8 @@ test('UD server entry task is included when --ud is passed', async () => {
     [
       "Generating Prisma Client...",
       "Verifying graphql schema...",
-      "Bundling API server entry (Universal Deploy)...",
       "Building App...",
+      "Bundling API server entry (Universal Deploy)...",
     ]
   `)
 })
