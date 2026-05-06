@@ -36,18 +36,24 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  process.env.CEDAR_CWD = original_CEDAR_CWD
+  if (original_CEDAR_CWD === undefined) {
+    delete process.env.CEDAR_CWD
+  } else {
+    process.env.CEDAR_CWD = original_CEDAR_CWD
+  }
 })
 
 afterEach(async () => {
   for (const p of testContext.processes) {
     p.kill()
+
     try {
       await p
     } catch {
       // ignore
     }
   }
+
   testContext.processes = []
 })
 
@@ -65,12 +71,14 @@ export async function pollForReady(
   while (Date.now() - start < timeout) {
     try {
       const res = await fetch(url)
+
       if (res.status < 500) {
         return res
       }
     } catch {
       // not ready yet
     }
+
     await sleep(interval)
   }
 
