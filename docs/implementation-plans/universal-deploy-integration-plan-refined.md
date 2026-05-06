@@ -646,6 +646,7 @@ default.
 - Define a normalized backend route record type:
   ```ts
   interface CedarRouteRecord {
+    id: string // route identifier, typically the URL path (e.g. `/graphql`)
     path: string
     methods: string[]
     type: 'graphql' | 'auth' | 'function' | 'health'
@@ -744,9 +745,11 @@ straightforward:
    it to the **API server Vite build config** (not the web client
    config — the plugin resolves API-server virtual modules that have
    no relevance to the browser bundle)
-2. Wire `virtual:ud:catch-all` → `virtual:cedar-api` inside the plugin
-   so that `@universal-deploy/node/serve` can import Cedar's aggregate
-   Fetchable at build time
+2. Wire `virtual:ud:catch-all` → Cedar's multi-route dispatcher inside
+   the plugin so that `@universal-deploy/node/serve` can import Cedar's
+   API handler at build time. Phase 4 initially wired this to a single
+   aggregate `virtual:cedar-api` entry; Phase 6 replaced it with a
+   per-route `rou3` dispatcher.
 3. Add `node()` from `@universal-deploy/node/vite` to the same
    **API server Vite build config**
 4. `cedar serve` runs the Vite-built output directly
@@ -765,8 +768,9 @@ any Vite config that also builds the HTML SSR entry.
   Fetchable dispatch, in `@cedarjs/api-server`
 - `buildUDApiServer()` — Vite SSR build that produces a self-contained Node
   server entry at `api/dist/ud/index.js`, in `@cedarjs/vite`
-- `cedarUniversalDeployPlugin()` — Vite plugin that registers Cedar's aggregate
-  API entry with the UD store, in `@cedarjs/vite`
+- `cedarUniversalDeployPlugin()` — Vite plugin (initially a single aggregate
+  entry; expanded to per-route registration in Phase 6) that registers Cedar's
+  API entries with the UD store, in `@cedarjs/vite`
 - `cedar serve api --ud` flag — serve the Cedar API without Fastify
 
 #### Exit Criteria
@@ -792,12 +796,11 @@ removed or replaced in the phases noted below.
   The flag remains **opt-in** (not the default) to preserve backward
   compatibility with existing Fastify setups.
 
-**Keep in Phase 4:**
+**Remove in Phase 6:**
 
 - `buildCedarDispatcher` (`packages/api-server/src/udDispatcher.ts`) —
-  still needed at build time by `cedarUniversalDeployPlugin` to resolve
-  `virtual:ud:catch-all` → Cedar's aggregate fetchable. It is bundled into
-  the Vite-built output, not executed at runtime in production.
+  removed along with the legacy `virtual:cedar-api` aggregate path.
+  Phase 6's plugin generates per-route virtual modules directly.
 
 **User-facing impact**: None for most developers. Self-hosting users
 can opt in to the Fastify-free srvx server via `cedar serve api --ud`.
@@ -845,11 +848,10 @@ moving to a single visible port is Phase 5 work.
   API Fetchable as the virtual module's default export. This plugin
   belongs to the API server build — not the web client build — because
   it resolves API-server virtual modules that have no relevance to the
-  browser bundle. When the plugin is introduced, add
-  `@cedarjs/api-server` as a `peerDependency` of `@cedarjs/vite` in
-  `packages/vite/package.json` — the virtual module emitted by the
-  plugin imports `buildCedarDispatcher` from `@cedarjs/api-server`, so
-  consumers need it installed alongside `@cedarjs/vite`
+  browser bundle. The initial Phase 4 implementation uses a single
+  aggregate entry; Phase 6 expands this to per-route registration.
+  When the plugin is introduced, add `@cedarjs/api-server` as a
+  `peerDependency` of `@cedarjs/vite` in `packages/vite/package.json`.
 - Add `node()` from `@universal-deploy/node/vite` to the same API
   server Vite build config (not the web client config, and not the
   HTML SSR config — see naming caution below). After this,
@@ -955,7 +957,7 @@ features.
 
 ### Phase 6: Formalise the Cedar UD Vite Plugin
 
-**Effort: M (Medium)**
+**Effort: M (Medium)** — **Status: Completed**
 
 Depends on Phase 5.
 
@@ -963,45 +965,56 @@ Depends on Phase 5.
 
 Expand `cedarUniversalDeployPlugin()` from a single aggregate entry into a
 complete, per-route registration that UD adapters and provider plugins can
-rely on. Phase 4 ships a working plugin with one catch-all entry; Phase 5
-makes the Vite integration idiomatic; Phase 6 makes the plugin correct and
+rely on. Phase 4 shipped a working plugin with one catch-all entry; Phase 5
+made the Vite integration idiomatic; Phase 6 made the plugin correct and
 provider-discoverable.
 
-#### Current state after Phase 5
+#### What was delivered
 
-`cedarUniversalDeployPlugin()` exists and provides:
+`cedarUniversalDeployPlugin()` was expanded to provide:
 
-- A single aggregate `virtual:cedar-api` entry registered with
-  `addEntry()`, covering all Cedar API routes via one catch-all
-  Fetchable
-- `virtual:cedar-api` virtual module: exports Cedar's API Fetchable
-  so UD adapters can consume it
-- `virtual:ud:catch-all` → `virtual:cedar-api` resolution: routes
-  the UD catch-all ID (used by `@universal-deploy/node/serve`) to
-  Cedar's aggregate API entry
+- **Per-function `addEntry()` registration**: each discovered API function
+  (GraphQL, auth, health, and regular functions) is registered with UD's
+  store using the correct `id`, `route`, and `method` metadata. Route
+  patterns include both the exact path and a `/**` wildcard so sub-paths
+  (e.g. `/graphql/health`) are correctly matched.
+- **Per-function virtual modules**: generated on-the-fly for each route.
+  Regular functions are wrapped in `createCedarFetchable` with lazy dynamic
+  imports of the compiled dist file. GraphQL gets special Yoga
+  initialization handling.
+- **Multi-route `virtual:ud:catch-all` dispatcher**: replaces the old
+  single-entry re-export. It statically imports all per-route virtual
+  modules, builds a `rou3` router at build time, and dispatches requests
+  to the correct handler. It also handles `apiRootPath` stripping.
+- **Web fallback entry**: optional `virtual:cedar-web` entry that serves
+  `web/dist/index.html` for SPA fallback on providers that need it.
 
-#### Work
+Route discovery happens at **build time** by scanning `api/src/functions/`
+via `findApiServerFunctions` from `@cedarjs/internal`, so the plugin does
+not require `api/dist/functions/` to exist at plugin instantiation time.
 
-- Replace the single `virtual:cedar-api` aggregate entry with
-  per-function entries derived from Cedar's route manifest (Phase 2),
-  so providers that benefit from per-route isolation (e.g., Cloudflare
-  Workers) can split on individual functions
-- Ensure all Cedar server entries are registered with the correct
-  `route`, `method`, and `environment` metadata:
+#### Work completed
+
+- [x] Replaced the single `virtual:cedar-api` aggregate entry with
+      per-function entries derived from Cedar's route manifest (Phase 2),
+      so providers that benefit from per-route isolation (e.g., Cloudflare
+      Workers) can split on individual functions
+- [x] Ensured all Cedar server entries are registered with the correct
+      `route`, `method`, and `environment` metadata:
   - GraphQL entry
   - auth entry
   - filesystem-discovered function entries
   - web catch-all / SPA fallback (web side)
-- Align Cedar's `CedarRouteRecord` manifest (Phase 2) with the
-  `EntryMeta` shape UD's store expects — entries should be derived
-  from the manifest, not maintained separately
-- Update `virtual:ud:catch-all` to generate a proper multi-route
-  dispatcher (using rou3 across all registered entries) rather than
-  the simple single-entry re-export from Phase 4
-- Validate the plugin against `@universal-deploy/node` and
-  `@universal-deploy/adapter-netlify`
-- Document the plugin's role so future UD adapter authors know what
-  Cedar registers and in what shape
+- [x] Aligned Cedar's `CedarRouteRecord` manifest (Phase 2) with the
+      `EntryMeta` shape UD's store expects — added `id` field; entries are
+      derived from the manifest, not maintained separately
+- [x] Updated `virtual:ud:catch-all` to generate a proper multi-route
+      dispatcher (using rou3 across all registered entries) rather than
+      the simple single-entry re-export from Phase 4
+- [x] Validated the plugin against `@universal-deploy/node` architecture
+      (catch-all entry consumed by `serve.js`)
+- [x] Documented the plugin's role inline so future UD adapter authors
+      know what Cedar registers and in what shape
 
 #### Deliverables
 
@@ -1015,10 +1028,10 @@ provider-discoverable.
 
 #### Exit Criteria
 
-- Provider plugins can discover Cedar's server entries without custom
-  Cedar-specific logic
-- Cedar's `CedarRouteRecord` manifest is the single source of truth
-  from which UD entries are derived
+- [x] Provider plugins can discover Cedar's server entries without custom
+      Cedar-specific logic
+- [x] Cedar's `CedarRouteRecord` manifest is the single source of truth
+      from which UD entries are derived
 
 **User-facing impact**: None directly. Enables deploy provider support.
 
@@ -1105,16 +1118,16 @@ targets Cedar cares about.
 
 ## Phase Summary
 
-| Phase | Description                | Effort | Parallel? | User-Facing? |
-| ----- | -------------------------- | ------ | --------- | ------------ |
-| 1     | Fetch-native handlers      | L      | —         | No (shim)    |
-| 2     | Route discovery            | M      | With 3    | No           |
-| 3     | UD adapter adoption        | M      | With 2    | No           |
-| 4     | Vite-centric dev           | XL     | —         | Yes          |
-| 5     | Idiomatic Vite integration | L      | —         | No           |
-| 6     | UD registration            | M      | —         | No           |
-| 7     | SSR rebuild                | XL     | Design‡   | Yes          |
-| 8     | Provider validation        | L      | —         | Yes          |
+| Phase | Description                | Effort | Parallel? | User-Facing? | Status      |
+| ----- | -------------------------- | ------ | --------- | ------------ | ----------- |
+| 1     | Fetch-native handlers      | L      | —         | No (shim)    | Completed   |
+| 2     | Route discovery            | M      | With 3    | No           | Completed   |
+| 3     | UD adapter adoption        | M      | With 2    | No           | Completed   |
+| 4     | Vite-centric dev           | XL     | —         | Yes          | Completed   |
+| 5     | Idiomatic Vite integration | L      | —         | No           | Completed   |
+| 6     | UD registration            | M      | —         | No           | Completed   |
+| 7     | SSR rebuild                | XL     | Design‡   | Yes          | Not started |
+| 8     | Provider validation        | L      | —         | Yes          | Not started |
 
 ‡ Design work can overlap with Phases 5–6.
 

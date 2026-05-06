@@ -150,28 +150,28 @@ describe('cedarFastifyAPI', () => {
             {
               id: '/health',
               path: '/health',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'health',
               entry: expect.stringContaining('/api/dist/functions/health.js'),
             },
             {
               id: '/hello',
               path: '/hello',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining('/api/dist/functions/hello.js'),
             },
             {
               id: '/env',
               path: '/env',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining('/api/dist/functions/env.js'),
             },
             {
               id: '/another-graphql',
               path: '/another-graphql',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining(
                 '/api/dist/functions/another-graphql.js',
@@ -180,7 +180,7 @@ describe('cedarFastifyAPI', () => {
             {
               id: '/nested',
               path: '/nested',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining(
                 '/api/dist/functions/nested/nested.js',
@@ -189,7 +189,7 @@ describe('cedarFastifyAPI', () => {
             {
               id: '/noHandler',
               path: '/noHandler',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining(
                 '/api/dist/functions/noHandler.js',

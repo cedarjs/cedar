@@ -120,8 +120,7 @@ export const setLambdaFunctions = async (foundFunctions: string[]) => {
     cedarRouteManifest.push({
       id: routePath,
       path: routePath,
-      methods:
-        routeName === 'graphql' ? ['GET', 'POST', 'OPTIONS'] : ['GET', 'POST'],
+      methods: routeName === 'graphql' ? ['GET', 'POST', 'OPTIONS'] : [],
       type:
         routeName === 'graphql'
           ? 'graphql'

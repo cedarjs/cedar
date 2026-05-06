@@ -13,9 +13,6 @@ export interface CedarUniversalDeployPluginOptions {
   webFallback?: boolean
 }
 
-const VIRTUAL_CEDAR_API = 'virtual:cedar-api'
-const RESOLVED_VIRTUAL_CEDAR_API = '\0virtual:cedar-api'
-
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
 
@@ -73,8 +70,7 @@ function discoverCedarRoutes(): CedarRouteRecord[] {
     }
 
     const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
-    const methods =
-      routeName === 'graphql' ? [...GRAPHQL_METHODS] : ['GET', 'POST']
+    const methods = routeName === 'graphql' ? [...GRAPHQL_METHODS] : []
     const type: CedarRouteRecord['type'] =
       routeName === 'graphql'
         ? 'graphql'
@@ -117,7 +113,9 @@ function toEntryMeta(route: CedarRouteRecord): EntryMeta {
   return {
     id: `${VIRTUAL_CEDAR_FN_PREFIX}${route.id}`,
     route: routePatterns,
-    method: route.methods as EntryMeta['method'],
+    ...(route.methods.length > 0 && {
+      method: route.methods as EntryMeta['method'],
+    }),
   }
 }
 
@@ -162,22 +160,12 @@ export function cedarUniversalDeployPlugin(
           id: catchAllEntry,
           route: '/**',
         })
-
-        // Backward compatibility: keep the old aggregate entry working.
-        addEntry({
-          id: VIRTUAL_CEDAR_API,
-          route: '/**',
-        })
       },
     },
 
     resolveId(id) {
       if (id === catchAllEntry) {
         return RESOLVED_VIRTUAL_UD_CATCH_ALL
-      }
-
-      if (id === VIRTUAL_CEDAR_API) {
-        return RESOLVED_VIRTUAL_CEDAR_API
       }
 
       if (id === VIRTUAL_CEDAR_WEB) {
@@ -216,20 +204,6 @@ export function cedarUniversalDeployPlugin(
       // Multi-route catch-all dispatcher
       if (id === RESOLVED_VIRTUAL_UD_CATCH_ALL) {
         return generateCatchAllModule(routes, normalizedApiRootPath)
-      }
-
-      // Backward compatibility
-      if (id === RESOLVED_VIRTUAL_CEDAR_API) {
-        const apiRootPathArg =
-          apiRootPath !== undefined
-            ? `{ apiRootPath: ${JSON.stringify(apiRootPath)} }`
-            : 'undefined'
-
-        return `
-import { buildCedarDispatcher } from '@cedarjs/api-server/udDispatcher';
-const { fetchable } = await buildCedarDispatcher(${apiRootPathArg});
-export default fetchable;
-`
       }
 
       return undefined
