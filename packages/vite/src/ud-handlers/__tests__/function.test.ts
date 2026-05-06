@@ -9,7 +9,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 vi.mock('@cedarjs/api-server/udFetchable', () => ({
   createCedarFetchable: vi.fn((handler) => ({
-    fetch: (request: Request) => handler(request, { mock: 'context' }),
+    fetch: (request: Request) =>
+      handler(request, {
+        params: {},
+        query: new URLSearchParams(),
+        cookies: new Map(),
+      }),
   })),
 }))
 
@@ -22,12 +27,21 @@ describe('createFunctionHandler', () => {
     expect(await response.text()).toBe('hello from function')
   })
 
+  it('falls back to a legacy handler export wrapped with wrapLegacyHandler', async () => {
+    const fixturePath = path.join(
+      __dirname,
+      '__fixtures__/legacy-function-module.js',
+    )
+    const handler = createFunctionHandler({ distPath: fixturePath })
+    const request = new Request('http://localhost/api/test')
+    const response = await handler.fetch(request)
+    expect(await response.text()).toBe('hello from legacy handler')
+  })
+
   it('throws if no handler is found', async () => {
     const fixturePath = path.join(__dirname, '__fixtures__/empty-module.js')
     const handler = createFunctionHandler({ distPath: fixturePath })
     const request = new Request('http://localhost/api/test')
-    await expect(handler.fetch(request)).rejects.toThrow(
-      'Fetch-native handler not found',
-    )
+    await expect(handler.fetch(request)).rejects.toThrow('Handler not found')
   })
 })
