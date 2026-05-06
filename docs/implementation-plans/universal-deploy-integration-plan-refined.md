@@ -988,6 +988,9 @@ provider-discoverable.
   to the correct handler. It also handles `apiRootPath` stripping.
 - **Web fallback entry**: optional `virtual:cedar-web` entry that serves
   `web/dist/index.html` for SPA fallback on providers that need it.
+  _(Note: this was later removed because it was never wired to a user-facing
+  toggle — see Phase 6 Addendum below for details on when and how to bring it
+  back.)_
 
 Route discovery happens at **build time** by scanning `api/src/functions/`
 via `findApiServerFunctions` from `@cedarjs/internal`, so the plugin does
@@ -1034,6 +1037,51 @@ not require `api/dist/functions/` to exist at plugin instantiation time.
       from which UD entries are derived
 
 **User-facing impact**: None directly. Enables deploy provider support.
+
+---
+
+### Phase 6 Addendum: Web Fallback Entry Removed
+
+The optional `virtual:cedar-web` entry ("web fallback") was temporarily part of
+Phase 6 but was **removed from `cedarUniversalDeployPlugin()`** during review.
+
+**Why it was removed:**
+
+- The `webFallback` boolean option was never wired to any CLI flag, config
+  value, or build option. It always defaulted to `false` and there was no
+  exposed way for a deployment target or app developer to enable it.
+- Because it was unreachable, the code was effectively dead code — untested,
+  unused, and potentially confusing to future readers.
+
+**When to bring it back:**
+A web fallback entry is needed when a UD adapter runs the **API and web sides
+in a single runtime** (e.g., a single Cloudflare Worker) and that runtime must
+serve the SPA shell (`web/dist/index.html`) for unmatched `GET` requests.
+Providers that deploy web and API separately (Node self-hosting, Netlify,
+Vercel) handle SPA fallback at the edge or static-host layer and do not need
+this entry.
+
+**How to re-implement:**
+
+1. Re-add `webFallback?: boolean` to `CedarUniversalDeployPluginOptions`.
+2. In the plugin's `config` hook, when `webFallback` is `true`, register an
+   entry with:
+   ```ts
+   addEntry({
+     id: 'virtual:cedar-web',
+     route: '/**',
+     method: 'GET',
+   })
+   ```
+3. In `resolveId`, resolve `'virtual:cedar-web'` to a virtual module.
+4. In `load`, generate a module that reads and serves
+   `getPaths().web.dist + '/index.html'` as a `Response`.
+5. Thread the option through `buildUDApiServer()` and expose it via a CLI
+   flag or adapter config so it is actually reachable.
+
+See the original implementation in git history (file:
+`packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts`,
+commit range around Phase 6) for the exact module generation code.
 
 ---
 

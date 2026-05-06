@@ -10,14 +10,10 @@ import { getPaths } from '@cedarjs/project-config'
 
 export interface CedarUniversalDeployPluginOptions {
   apiRootPath?: string
-  webFallback?: boolean
 }
 
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
-
-const VIRTUAL_CEDAR_WEB = 'virtual:cedar-web'
-const RESOLVED_VIRTUAL_CEDAR_WEB = '\0virtual:cedar-web'
 
 const RESOLVED_VIRTUAL_UD_CATCH_ALL = '\0virtual:ud:catch-all'
 
@@ -122,7 +118,7 @@ function toEntryMeta(route: CedarRouteRecord): EntryMeta {
 export function cedarUniversalDeployPlugin(
   options: CedarUniversalDeployPluginOptions = {},
 ): Plugin {
-  const { apiRootPath, webFallback = false } = options
+  const { apiRootPath } = options
   const normalizedApiRootPath = normalizeApiRootPath(apiRootPath ?? '/')
   const routes = discoverCedarRoutes()
 
@@ -146,15 +142,6 @@ export function cedarUniversalDeployPlugin(
           addEntry(toEntryMeta(route))
         }
 
-        // Register a web-side SPA fallback entry for providers that need it.
-        if (webFallback) {
-          addEntry({
-            id: VIRTUAL_CEDAR_WEB,
-            route: '/**',
-            method: 'GET',
-          })
-        }
-
         // Register the catch-all entry consumed by @universal-deploy/node/serve.
         addEntry({
           id: catchAllEntry,
@@ -166,10 +153,6 @@ export function cedarUniversalDeployPlugin(
     resolveId(id) {
       if (id === catchAllEntry) {
         return RESOLVED_VIRTUAL_UD_CATCH_ALL
-      }
-
-      if (id === VIRTUAL_CEDAR_WEB) {
-        return RESOLVED_VIRTUAL_CEDAR_WEB
       }
 
       if (id.startsWith(VIRTUAL_CEDAR_FN_PREFIX)) {
@@ -194,11 +177,6 @@ export function cedarUniversalDeployPlugin(
         }
 
         return generateFunctionModule(route.entry)
-      }
-
-      // Web fallback virtual module
-      if (id === RESOLVED_VIRTUAL_CEDAR_WEB) {
-        return generateWebFallbackModule()
       }
 
       // Multi-route catch-all dispatcher
@@ -275,30 +253,6 @@ export default createCedarFetchable(handleRequest);
 `
 }
 
-function generateWebFallbackModule(): string {
-  return `
-import fs from 'node:fs';
-import path from 'node:path';
-import { getPaths } from '@cedarjs/project-config';
-
-const indexHtmlPath = path.join(getPaths().web.dist, 'index.html');
-
-export default {
-  async fetch() {
-    try {
-      const body = fs.readFileSync(indexHtmlPath, 'utf-8');
-      return new Response(body, {
-        status: 200,
-        headers: { 'Content-Type': 'text/html' },
-      });
-    } catch {
-      return new Response('Not Found', { status: 404 });
-    }
-  }
-};
-`
-}
-
 function generateCatchAllModule(
   routes: CedarRouteRecord[],
   normalizedApiRootPath: string,
@@ -315,7 +269,10 @@ function generateCatchAllModule(
       const methods =
         route.methods.length > 0
           ? route.methods
-          : ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+          : // Intentionally excludes TRACE (security / XST concern) and CONNECT
+            // (proxy-tunnel only). All other common HTTP verbs are registered
+            // so Cedar handlers can receive them via rou3.
+            ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 
       return methods.flatMap((method) => [
         `addRoute(router, '${method}', '${route.path}', mod${i});`,
