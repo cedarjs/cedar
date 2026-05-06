@@ -78,5 +78,7 @@ export async function pollForReady(
 }
 
 export async function buildFixture(args: string[] = []) {
+  // Runs from the monorepo root so yarn/node resolve correctly.
+  // CEDAR_CWD (set in beforeAll) tells the Cedar CLI where the project is.
   await $`yarn node ${cedar} build api web --ud ${args}`
 }

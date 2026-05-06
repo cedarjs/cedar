@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { fs, $ } from 'zx'
+import { fs, path, $ } from 'zx'
 
 import {
-  cedar,
   FIXTURE_PATH,
   pollForReady,
   sleep,
@@ -26,11 +25,14 @@ async function fetchJson(url, init) {
 // unified dev server without going through `cedar dev --ud` (which requires
 // the fixture to be a fully set-up Yarn project with lockfiles).
 function resolveUnifiedDevBin() {
-  const vitePackagePath = '/Users/tobbe/dev/cedarjs/cedar-gemini/packages/vite'
-  const packageJson = JSON.parse(
-    fs.readFileSync(`${vitePackagePath}/package.json`, 'utf-8'),
+  const vitePackagePath = path.resolve(
+    import.meta.dirname,
+    '../../packages/vite',
   )
-  return `${vitePackagePath}/${packageJson.bin['cedar-unified-dev']}`
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(vitePackagePath, 'package.json'), 'utf-8'),
+  )
+  return path.resolve(vitePackagePath, packageJson.bin['cedar-unified-dev'])
 }
 
 describe('cedar dev --ud', () => {
@@ -84,11 +86,9 @@ describe('cedar dev --ud', () => {
     try {
       // Poll until the updated response is returned (or timeout)
       let updated = false
-      let lastBody = null
       for (let i = 0; i < 40; i++) {
         await sleep(250)
         const res = await fetchJson(`${BASE_URL}/.api/functions/hello`)
-        lastBody = res.body
         if (
           res.status === 200 &&
           res.body?.data === 'hello from cedar (updated)'
