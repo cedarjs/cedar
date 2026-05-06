@@ -55,7 +55,7 @@ function discoverCedarRoutes(): CedarRouteRecord[] {
 
   for (const sourcePath of sourceFiles) {
     const relative = path.relative(srcFunctions, sourcePath)
-    const { dir, name, ext } = path.parse(relative)
+    const { dir, name, ext: _ext } = path.parse(relative)
 
     let routeName: string
     if (dir === name) {
@@ -80,7 +80,7 @@ function discoverCedarRoutes(): CedarRouteRecord[] {
             ? 'auth'
             : 'function'
 
-    const distPath = path.join(distFunctions, relative).replace(ext, '.js')
+    const distPath = path.join(distFunctions, dir, name + '.js')
 
     routes.push({
       id: routePath,
@@ -219,21 +219,23 @@ import { pathToFileURL } from 'node:url';
 
 const distPath = ${JSON.stringify(distPath)};
 
-let yogaInstance = null;
-let graphqlOptions = null;
+let yogaInitPromise = null;
 
 async function getYoga() {
-  if (yogaInstance) return yogaInstance;
-  const mod = await import(pathToFileURL(distPath).href);
-  graphqlOptions = mod.__rw_graphqlOptions;
-  const { yoga } = await createGraphQLYoga(mod.__rw_graphqlOptions);
-  yogaInstance = yoga;
-  return yoga;
+  if (!yogaInitPromise) {
+    yogaInitPromise = (async () => {
+      const mod = await import(pathToFileURL(distPath).href);
+      const opts = mod.__rw_graphqlOptions;
+      const { yoga } = await createGraphQLYoga(opts);
+      return { yoga, graphqlOptions: opts };
+    })();
+  }
+  return yogaInitPromise;
 }
 
 export default {
   async fetch(request) {
-    const yoga = await getYoga();
+    const { yoga, graphqlOptions } = await getYoga();
     const cedarContext = await buildCedarContext(request, {
       authDecoder: graphqlOptions?.authDecoder,
     });
