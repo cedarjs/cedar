@@ -241,13 +241,6 @@ export const handler = async ({
       title: 'Verifying graphql schema...',
       task: loadAndValidateSdls,
     },
-    ud &&
-      workspace.includes('api') && {
-        title: 'Bundling API server entry (Universal Deploy)...',
-        task: async () => {
-          await buildUDApiServer({ verbose })
-        },
-      },
     // When streaming SSR is enabled, fall back to the legacy separate build
     // paths because streaming SSR has its own complex build orchestration.
     // Phase 7 (SSR/RSC rebuild) will address unifying this path.
@@ -397,6 +390,13 @@ export const handler = async ({
               path.join(getPaths().web.dist, '200.html'),
             )
           }
+        },
+      },
+    ud &&
+      workspace.includes('api') && {
+        title: 'Bundling API server entry (Universal Deploy)...',
+        task: async () => {
+          await buildUDApiServer({ verbose })
         },
       },
   ].filter((t): t is ListrTask => Boolean(t))

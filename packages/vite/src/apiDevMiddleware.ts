@@ -8,7 +8,7 @@ import { normalizePath } from 'vite'
 import type { ModuleNode, ViteDevServer } from 'vite'
 
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
-import type { LegacyHandler } from '@cedarjs/api/runtime'
+import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
 import {
   getApiSideBabelPlugins,
   transformWithBabel,
@@ -20,7 +20,7 @@ import { getConfig, getPaths, projectSideIsEsm } from '@cedarjs/project-config'
 
 import { getWorkspacePackageAliases } from './lib/workspacePackageAliases.js'
 
-const LAMBDA_FUNCTIONS: Record<string, Handler> = {}
+const LAMBDA_FUNCTIONS: Record<string, CedarHandler> = {}
 
 interface YogaInstance {
   handle(request: Request, context: Record<string, unknown>): Promise<Response>
@@ -87,25 +87,45 @@ async function internalLoadApiFunctions(viteServer: ViteDevServer) {
     try {
       const mod = await viteServer.ssrLoadModule(pathToFileURL(fnPath).href)
 
-      const handler: Handler | undefined = (() => {
+      const cedarHandler: CedarHandler | undefined = (() => {
+        // Prefer the new Fetch-native handleRequest shape.
+        if ('handleRequest' in mod) {
+          return mod.handleRequest as CedarHandler
+        }
+
+        if ('default' in mod && mod.default && 'handleRequest' in mod.default) {
+          return mod.default.handleRequest as CedarHandler
+        }
+
+        // Fall back to the legacy Lambda-shaped handler and wrap it.
+        let legacyHandler: Handler | undefined
+
         if ('handler' in mod) {
-          return mod.handler as Handler
+          legacyHandler = mod.handler as Handler
+        } else if (
+          'default' in mod &&
+          mod.default &&
+          'handler' in mod.default
+        ) {
+          legacyHandler = mod.default.handler as Handler
         }
-        if ('default' in mod && mod.default && 'handler' in mod.default) {
-          return mod.default.handler as Handler
+
+        if (legacyHandler) {
+          return wrapLegacyHandler(legacyHandler as LegacyHandler)
         }
+
         return undefined
       })()
 
-      if (handler) {
-        LAMBDA_FUNCTIONS[routeName] = handler
+      if (cedarHandler) {
+        LAMBDA_FUNCTIONS[routeName] = cedarHandler
         console.log(
           ansis.magenta('/' + routeName),
           ansis.dim.italic(Date.now() - ts + ' ms'),
         )
       } else {
         console.warn(
-          `[apiDevMiddleware] No handler export found in function: ${fnPath}`,
+          `[apiDevMiddleware] No handler or handleRequest export found in function: ${fnPath}`,
         )
       }
 
@@ -370,9 +390,9 @@ export function createApiFetchHandler() {
         params: { routeName },
       })
 
-      // Wrap the legacy Lambda handler into a fetch-native CedarHandler
-      const cedarHandler = wrapLegacyHandler(handler as LegacyHandler)
-      return await cedarHandler(request, ctx)
+      // LAMBDA_FUNCTIONS stores CedarHandlers directly (either native
+      // handleRequest or already-wrapped legacy handlers).
+      return await handler(request, ctx)
     } catch (err) {
       console.error(
         `[apiDevMiddleware] Error handling function "${routeName}":`,

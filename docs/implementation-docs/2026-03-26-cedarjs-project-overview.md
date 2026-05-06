@@ -133,10 +133,10 @@ cedar build:
     API (`buildApi()` esbuild → api/dist/, Babel plugin) →
     Web (`cedar-vite-build` → web/dist/) →
   --ud:
-    UD server entry (Vite SSR build → api/dist/ud/index.js, self-contained Node
-      entry) →
     unified Vite `buildApp()` with declared `client` and `api` environments
       (web/dist/ + api/dist/, preserveModules, Babel plugin) →
+    UD server entry (Vite SSR build → api/dist/ud/index.js, self-contained Node
+      entry) →
   prerender marked routes
 
 *SSR/RSC: falls back to legacy separate builds; adds route hooks build, route
