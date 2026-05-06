@@ -141,48 +141,55 @@ describe('cedarFastifyAPI', () => {
         expect(getCedarRouteManifest()).toEqual(
           expect.arrayContaining([
             {
+              id: '/graphql',
               path: '/graphql',
               methods: ['GET', 'POST', 'OPTIONS'],
               type: 'graphql',
               entry: expect.stringContaining('/api/dist/functions/graphql.js'),
             },
             {
+              id: '/health',
               path: '/health',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'health',
               entry: expect.stringContaining('/api/dist/functions/health.js'),
             },
             {
+              id: '/hello',
               path: '/hello',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining('/api/dist/functions/hello.js'),
             },
             {
+              id: '/env',
               path: '/env',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining('/api/dist/functions/env.js'),
             },
             {
+              id: '/another-graphql',
               path: '/another-graphql',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining(
                 '/api/dist/functions/another-graphql.js',
               ),
             },
             {
+              id: '/nested',
               path: '/nested',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining(
                 '/api/dist/functions/nested/nested.js',
               ),
             },
             {
+              id: '/noHandler',
               path: '/noHandler',
-              methods: ['GET', 'POST'],
+              methods: [],
               type: 'function',
               entry: expect.stringContaining(
                 '/api/dist/functions/noHandler.js',
