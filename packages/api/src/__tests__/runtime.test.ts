@@ -295,12 +295,14 @@ describe('routeManifestToJSON', () => {
   it('serializes route records as pretty-printed JSON', () => {
     const routes: CedarRouteRecord[] = [
       {
+        id: '/graphql',
         path: '/graphql',
         methods: ['GET', 'POST'],
         type: 'graphql',
         entry: 'api/dist/functions/graphql.js',
       },
       {
+        id: '/health',
         path: '/health',
         methods: ['GET'],
         type: 'health',
@@ -310,6 +312,7 @@ describe('routeManifestToJSON', () => {
 
     expect(routeManifestToJSON(routes)).toBe(`[
   {
+    "id": "/graphql",
     "path": "/graphql",
     "methods": [
       "GET",
@@ -319,6 +322,7 @@ describe('routeManifestToJSON', () => {
     "entry": "api/dist/functions/graphql.js"
   },
   {
+    "id": "/health",
     "path": "/health",
     "methods": [
       "GET"
