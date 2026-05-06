@@ -33,18 +33,27 @@
 
 ---
 
-## Recommended next step
+## Potential next step
 
-Modify `.github/actions/set-up-yarn-cache/action.yml` to skip the `node_modules` cache step when `runner.os == 'Windows'`, while keeping the yarn-cache and install-state caches (those are already keyed with `github.run_id` and do not race).
+Modify `.github/actions/set-up-yarn-cache/action.yml` to skip the `node_modules`
+cache step when `runner.os == 'Windows'`, while keeping the yarn-cache and
+install-state caches (those are already keyed with `github.run_id` and do not
+race).
+
+However, disabling the `node_modules` cache on Windows works but trades speed
+for reliability. With `nodeLinker: node-modules`, the link step on a cold
+install isn't trivial — worth checking if Windows job times increase
+meaningfully before committing to it.
 
 ---
 
 ## A Better Fix
 
-Split `actions/cache` into explicit restore + save steps, which lets you add `continue-on-error: true` to the save:
+Split `actions/cache` into explicit restore + save steps, which lets you add
+`continue-on-error: true` to the save:
 
 ```yaml
-- uses: actions/cache/restore@v4
+- uses: actions/cache/restore@v5
   id: node-modules-cache
   with:
     path: node_modules
@@ -52,7 +61,7 @@ Split `actions/cache` into explicit restore + save steps, which lets you add `co
 
 # ... install step ...
 
-- uses: actions/cache/save@v4
+- uses: actions/cache/save@v5
   if: steps.node-modules-cache.outputs.cache-hit != 'true'
   continue-on-error: true # ← silences the race condition failure
   with:
@@ -60,4 +69,5 @@ Split `actions/cache` into explicit restore + save steps, which lets you add `co
     key: node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}
 ```
 
-This keeps the cache (so no speed regression) and silences the race. The first job to save wins; the rest fail gracefully.
+This keeps the cache (so no speed regression) and silences the race. The first
+job to save wins; the rest fail gracefully.
