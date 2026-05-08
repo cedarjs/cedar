@@ -40,6 +40,12 @@ describe('cedar serve', () => {
                                                   production                  [string]
             --apiRootPath, --api-root-path,       Root path where your api functions
             --rootPath, --root-path               are served   [string] [default: "/"]
+            --ud                                  Use the Universal Deploy server
+                                                  (srvx) for the API side. The web
+                                                  side is served by the existing
+                                                  static file server. Pass --ud to opt
+                                                  in; the default is Fastify for both
+                                                  sides.    [boolean] [default: false]
         -h, --help                                Show help                  [boolean]
 
       Also see the CedarJS CLI Reference (https://cedarjs.com/docs/cli-commands#serve)
@@ -88,6 +94,12 @@ describe('cedar serve', () => {
                                                     production                  [string]
               --apiRootPath, --api-root-path,       Root path where your api functions
               --rootPath, --root-path               are served   [string] [default: "/"]
+              --ud                                  Use the Universal Deploy server
+                                                    (srvx) for the API side. The web
+                                                    side is served by the existing
+                                                    static file server. Pass --ud to opt
+                                                    in; the default is Fastify for both
+                                                    sides.    [boolean] [default: false]
           -h, --help                                Show help                  [boolean]
 
         Also see the CedarJS CLI Reference (https://cedarjs.com/docs/cli-commands#serve)
