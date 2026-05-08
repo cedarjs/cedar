@@ -11,7 +11,9 @@ import type * as ProjectConfig from '@cedarjs/project-config'
 import { generatePrismaClient } from '../../../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../../lib/index.js'
+import { getFreePort } from '../../../lib/ports'
 import '../../../lib/mockTelemetry.js'
+import { serverFileExists } from '../../../lib/project.js'
 import { handler } from '../devHandler.js'
 
 let mockCedarToml = ''
@@ -88,7 +90,7 @@ vi.mock('../../../lib/ports', () => {
     // We're not actually going to use the port, so it's fine to just say it's
     // free. It prevents the tests from failing if the ports are already in use
     // (probably by some external `yarn cedar dev` process)
-    getFreePort: (port: number) => port,
+    getFreePort: vi.fn((port: number) => port),
   }
 })
 
@@ -202,8 +204,8 @@ describe('yarn cedar dev', () => {
     mockCedarToml = ''
   })
 
-  it('Should run unified dev server (both api and web) by default', async () => {
-    await handler({ workspace: ['api', 'web'] })
+  it('Should run unified dev server when --ud is passed', async () => {
+    await handler({ workspace: ['api', 'web'], ud: true })
 
     expect(generatePrismaClient).toHaveBeenCalledTimes(1)
 
@@ -222,8 +224,23 @@ describe('yarn cedar dev', () => {
     expect(apiCommand).toBeUndefined()
   })
 
-  it('Should include the gen watcher alongside the unified dev server', async () => {
+  it('Should fall back to separate api+web servers by default (no --ud)', async () => {
     await handler({ workspace: ['api', 'web'] })
+
+    expect(generatePrismaClient).toHaveBeenCalledTimes(1)
+
+    const { webCommand, apiCommand } = findSeparateCommands()
+    expect(webCommand?.command).toContain('cedar-vite-dev')
+    expect(apiCommand?.command).toContain('cedar-api-server-watch')
+
+    // No unified dev command should be present
+    const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
+    const devCommand = find(concurrentlyArgs, { name: 'dev' })
+    expect(devCommand).toBeUndefined()
+  })
+
+  it('Should include the gen watcher alongside the unified dev server', async () => {
+    await handler({ workspace: ['api', 'web'], ud: true })
 
     const concurrentlyArgs = vi.mocked(concurrently).mock.lastCall![0]
     const genCommand = find(concurrentlyArgs, { name: 'gen' })
@@ -384,5 +401,20 @@ describe('yarn cedar dev', () => {
     expect(apiCommand.command.replace(/\s+/g, ' ')).toContain(
       '--debug-port 11337',
     )
+  })
+
+  it('Excludes the reserved api port when selecting the web port in the custom-server lane', async () => {
+    vi.mocked(serverFileExists).mockReturnValue(true)
+
+    await handler({ workspace: ['api', 'web'] })
+
+    // Custom server files manage their own API port, so Cedar does not check
+    // it — but the web port selection still excludes the configured API port.
+    expect(getFreePort).toHaveBeenCalledTimes(1)
+    expect(getFreePort).toHaveBeenNthCalledWith(1, 8910, [8911, 8911])
+
+    // The configured API port must still be forwarded in the command.
+    const { apiCommand } = findSeparateCommands()
+    expect(apiCommand?.command).toContain('--port 8911')
   })
 })

@@ -86,7 +86,7 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
             target: `http://${apiHost}:${apiPort}`,
             changeOrigin: false,
             rewrite: (path) => {
-              // Remove the `.redwood/functions` part, but leave the `/graphql`
+              // Remove the `apiUrl` part, but leave the `/graphql`
               return path.replace(cedarConfig.web.apiUrl, '')
             },
           },

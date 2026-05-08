@@ -101,7 +101,7 @@ A guideline for when to use cells is if your component needs some data from the 
 
 <ShowForTs>
 
-:::tip Wait... what are those types?
+:::tip[Wait... what are those types?]
 
 Cedar comes with some built-in utility types. You can see two of them in the example above: `CellSuccessProps` and `CellFailureProps`. Read more about them [here](typescript/utility-types.md).
 
@@ -115,7 +115,7 @@ Also notice the `FindPosts` type imported from `types/graphql`. This and other t
 
 Usually in a blog the homepage will display a list of recent posts. This list is a perfect candidate for our first cell.
 
-:::info Wait, don't we already have a home page?
+:::info[Wait, don't we already have a home page?]
 
 We do, but you will generally want to use a _cell_ when you need data from the database. A best practice for Cedar is to create a Page for each unique URL your app has, but that you fetch and display data in Cells. So the existing HomePage will render this new cell as a child.
 
@@ -124,7 +124,7 @@ We do, but you will generally want to use a _cell_ when you need data from the d
 As you'll see repeatedly going forward, Cedar has a generator for this feature! Let's call this the "Articles" cell, since "Posts" was already used by our scaffold generator, and although the names won't clash (the scaffold files were created in the `Post` directory), it will be easier to keep them straight in our heads if the names are fairly different from each other. We're going to be showing multiple things, so we'll use the plural version "Articles," rather than "Article":
 
 ```bash
-yarn rw g cell Articles
+yarn cedar g cell Articles
 ```
 
 This command will result in a new file at `/web/src/components/ArticlesCell/ArticlesCell.{jsx,tsx}` (and `test.{jsx,tsx}` `mock.{js,ts}` and `stories.{jsx,tsx}` files—more on those in [chapter 5 of the tutorial](../chapter5/storybook.md)!). This file will contain some boilerplate to get you started:
@@ -207,20 +207,20 @@ export const Success = ({
 </TabItem>
 </Tabs>
 
-:::info Indicating Multiplicity to the Cell Generator
+:::info[Indicating Multiplicity to the Cell Generator]
 
 When generating a cell you can use any case you'd like and Cedar will do the right thing when it comes to naming. These will all create the same filename (`web/src/components/BlogArticlesCell/BlogArticlesCell.{jsx,tsx}`):
 
 ```bash
-yarn rw g cell blog_articles
-yarn rw g cell blog-articles
-yarn rw g cell blogArticles
-yarn rw g cell BlogArticles
+yarn cedar g cell blog_articles
+yarn cedar g cell blog-articles
+yarn cedar g cell blogArticles
+yarn cedar g cell BlogArticles
 ```
 
 You will need _some_ kind of indication that you're using more than one word: either snake_case (`blog_articles`), kebab-case (`blog-articles`), camelCase (`blogArticles`) or PascalCase (`BlogArticles`).
 
-Calling `yarn redwood g cell blogarticles` (without any indication that we're using two words) will generate a file at `web/src/components/BlogarticlesCell/BlogarticlesCell.{jsx,tsx}`.
+Calling `yarn cedar g cell blogarticles` (without any indication that we're using two words) will generate a file at `web/src/components/BlogarticlesCell/BlogarticlesCell.{jsx,tsx}`.
 
 :::
 
@@ -348,14 +348,14 @@ export const Success = ({
 
 <ShowForTs>
 
-:::tip Using generated types
+:::tip[Using generated types]
 
 At this point, you might see an error in your Cell while trying to import from `types/graphql`: "The type ArticlesQuery does not exist"
 
-When you have the dev server (via `yarn rw dev`) running, the CLI watches files for changes and triggers type generation automatically, but you can trigger it manually too by running:
+When you have the dev server (via `yarn cedar dev`) running, the CLI watches files for changes and triggers type generation automatically, but you can trigger it manually too by running:
 
 ```bash
-yarn rw g types
+yarn cedar g types
 ```
 
 This looks at your Cell's `QUERY` and—as long as it's valid—tries to automatically create a TypeScript type for you to use in your code.

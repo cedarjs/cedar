@@ -51,8 +51,6 @@ https://github.com/universal-deploy/universal-deploy/blob/main/docs/framework-de
   contract
 - Preserving the current Express-based SSR runtime as foundational
   architecture
-- Minimizing breaking changes for existing Cedar apps (though a
-  migration path is provided)
 - Implementing full UD support before Cedar has standardized its own
   runtime contracts
 
@@ -365,7 +363,7 @@ of responsibility between Cedar and Universal Deploy.
 UD provides adapters that read from its store and handle all
 deployment-target-specific wiring:
 
-- `@universal-deploy/adapter-node` — wraps store entries with `srvx`
+- `@universal-deploy/node` — wraps store entries with `srvx`
   (a WinterTC-compatible Node.js HTTP server) and `sirv` for static
   assets. Handles baremetal and VPS self-hosting.
 - `@universal-deploy/adapter-netlify` — wires Cedar's entries into
@@ -390,7 +388,7 @@ runs inside every `fetch()` wrapper Cedar emits.
 A Cedar app's production deployment looks like this:
 
 ```
-Cedar build tooling emits:    export default { fetch }    (Fetchable, per entry)
+Cedar build tooling emits:    export default { fetch }     (Fetchable, per entry)
 Cedar registers with:         @universal-deploy/store      (addEntry)
 UD adapter consumes:          store entries                (e.g. adapter-node, adapter-netlify)
 Platform receives:            provider-specific artifact   (UD's problem, not Cedar's)
@@ -418,7 +416,7 @@ is UD's domain.
 - Cedar owns zero deployment adapters — Node, Netlify, Vercel,
   Cloudflare, and any future targets are UD's responsibility
 - Nginx or another reverse proxy can sit in front for self-hosting;
-  the Node runtime is provided by `@universal-deploy/adapter-node`
+  the Node runtime is provided by `@universal-deploy/node`
 
 ## Implementation Phases
 
@@ -431,16 +429,17 @@ Phases are not strictly sequential. After Phase 1 completes:
   only on Phase 1
 - **Phase 4** depends on Phases 2 and 3
 - **Phase 5** depends on Phase 4
-- **Phase 6** (SSR rebuild) can begin **design work during Phases
-  4–5** — the handler contract and middleware model are already
+- **Phase 6** depends on Phase 5
+- **Phase 7** (SSR rebuild) can begin **design work during Phases
+  5–6** — the handler contract and middleware model are already
   stable after Phase 1
-- **Phase 7** depends on Phases 5 and 6
+- **Phase 8** depends on Phases 6 and 7
 
 ```
 Phase 1 ──┬── Phase 2 ──┐
-           │             ├── Phase 4 ── Phase 5 ──┐
-           └── Phase 3 ──┘                        ├── Phase 7
-                    Phase 6 (design: Phase 4–5) ──┘
+          │             ├── Phase 4 ── Phase 5 ── Phase 6 ──┐
+          └── Phase 3 ──┘                                   ├── Phase 8
+                   Phase 7 (design: Phase 5–6) ─────────────┘
 ```
 
 ---
@@ -647,6 +646,7 @@ default.
 - Define a normalized backend route record type:
   ```ts
   interface CedarRouteRecord {
+    id: string // route identifier, typically the URL path (e.g. `/graphql`)
     path: string
     methods: string[]
     type: 'graphql' | 'auth' | 'function' | 'health'
@@ -689,53 +689,122 @@ Can proceed **in parallel with Phase 2** after Phase 1.
 #### Goal
 
 Replace Fastify as Cedar's production runtime by emitting
-WinterTC-compatible `Fetchable` entries and wiring them into UD's
-adapter ecosystem. Cedar builds no adapters of its own.
+WinterTC-compatible `Fetchable` entries that UD adapters can consume,
+and providing a working srvx-based API server as the immediate
+Fastify replacement. Cedar builds no adapters of its own.
+
+Phase 3 delivers the runtime dispatch infrastructure and the virtual
+module wiring that UD adapters need. Full end-to-end validation using
+`@universal-deploy/node` proper is deferred to Phase 4, because
+`@universal-deploy/node` requires Cedar's API to be built with Vite —
+which does not happen until Phase 4.
 
 #### Work
 
-- Implement `buildCedarContext(request)` — the internal enrichment
-  step that produces `CedarRequestContext` from a standard `Request`
-- Implement Cedar's build tooling to wrap each `handleRequest()` export in a
-  `Fetchable`:
-  ```ts
-  // Generated output per Cedar server entry
-  export default {
-    async fetch(request: Request): Promise<Response> {
-      const ctx = await buildCedarContext(request)
-      return handleRequest(request, ctx)
-    },
-  }
-  ```
-- Integrate `@universal-deploy/store`: call `addEntry()` for each
-  Cedar server entry (GraphQL, auth, filesystem functions) during the
-  build
-- Validate self-hosting using `@universal-deploy/adapter-node`, which
-  wraps store entries with `srvx` + `sirv` — Cedar does not implement
-  any Node HTTP handling itself
-- Validate Netlify deployment using `@universal-deploy/adapter-netlify`
-  as an early end-to-end check
-- Confirm `yarn rw serve` delegates to UD's node adapter rather than
-  Fastify
+- Implement `buildCedarDispatcher(options)` in `@cedarjs/api-server`:
+  discovers API functions from `api/dist/functions/` at runtime,
+  builds a rou3 router and per-function `Fetchable` map, and returns a
+  single dispatch `Fetchable` together with the `EntryMeta[]` needed to
+  register each function with the UD store
+- Implement `createUDServer(options)` in `@cedarjs/api-server`: wraps
+  `buildCedarDispatcher` in an srvx HTTP server and calls `addEntry()`
+  for each discovered function for UD store introspection
+- Expose `cedar-ud-server` binary and `cedar serve api --ud` CLI flag,
+  both delegating to `createUDServer` instead of Fastify
+
+#### Why `@universal-deploy/node` proper is a Phase 4 concern
+
+`@universal-deploy/node` is designed to be consumed through a Vite
+build pipeline. Its server entry (`@universal-deploy/node/serve`)
+starts srvx by statically importing the catch-all handler as a virtual
+module:
+
+```ts
+// @universal-deploy/node/serve (simplified)
+import userServerEntry from 'virtual:ud:catch-all'
+// srvx then calls userServerEntry.fetch for every request
+```
+
+`virtual:ud:catch-all` is not a real module path — it only resolves
+during a Vite build. Cedar's API side is currently compiled with
+Babel/esbuild, not Vite, so `@universal-deploy/node/serve` cannot be
+imported or run for `cedar serve api` today.
+
+Phase 3's `createUDServer` is the practical equivalent for the
+current build pipeline: it uses the same srvx server and produces
+identical runtime behaviour, discovering and loading functions from
+the already-compiled `api/dist/functions/` at startup rather than
+through a Vite virtual module graph.
+
+#### How to wire in `@universal-deploy/node` once Phase 4 is done
+
+When Phase 4 gives Cedar a Vite-based API server build, the hookup is
+straightforward:
+
+1. Introduce `cedarUniversalDeployPlugin()` in `@cedarjs/vite` and add
+   it to the **API server Vite build config** (not the web client
+   config — the plugin resolves API-server virtual modules that have
+   no relevance to the browser bundle)
+2. Wire `virtual:ud:catch-all` → Cedar's multi-route dispatcher inside
+   the plugin so that `@universal-deploy/node/serve` can import Cedar's
+   API handler at build time. Phase 4 initially wired this to a single
+   aggregate `virtual:cedar-api` entry; Phase 6 replaced it with a
+   per-route `rou3` dispatcher.
+3. Add `node()` from `@universal-deploy/node/vite` to the same
+   **API server Vite build config**
+4. `cedar serve` runs the Vite-built output directly
+
+**Naming caution for Phase 4**: Vite calls its Node.js server build
+environment **"SSR"** regardless of whether it renders HTML. This is
+confusing in Cedar's context, where "SSR" specifically means React
+streaming / RSC. The Vite "SSR environment" output that
+`@universal-deploy/node` produces is purely the API server entry — it
+has no connection to Cedar's HTML SSR feature. Do not add `node()` to
+any Vite config that also builds the HTML SSR entry.
 
 #### Deliverables
 
-- `buildCedarContext` utility in a shared framework package
-- Build tooling that emits `Fetchable` entries per Cedar server entry
-- `@universal-deploy/store` integration (`addEntry` calls at build time)
-- Validated self-hosting via `@universal-deploy/adapter-node`
+- `buildCedarDispatcher(options)` — runtime function discovery and
+  Fetchable dispatch, in `@cedarjs/api-server`
+- `buildUDApiServer()` — Vite SSR build that produces a self-contained Node
+  server entry at `api/dist/ud/index.js`, in `@cedarjs/vite`
+- `cedarUniversalDeployPlugin()` — Vite plugin (initially a single aggregate
+  entry; expanded to per-route registration in Phase 6) that registers Cedar's
+  API entries with the UD store, in `@cedarjs/vite`
+- `cedar serve api --ud` flag — serve the Cedar API without Fastify
 
 #### Exit Criteria
 
-- Cedar can run in production on Node without Fastify, using
-  `@universal-deploy/adapter-node`
-- Cedar's server entries are registered in the UD store at build time
-- `yarn rw serve` no longer depends on the Fastify-first API server
-  architecture
+- Cedar can run in production on Node without Fastify via
+  `cedar serve api --ud` (forks the Vite-built `api/dist/ud/index.js` entry)
+
+#### Temporary scaffolding introduced in Phase 3
+
+Several pieces of Phase 3 are deliberate scaffolding — they make Cedar
+work without Fastify today while the Vite-based build pipeline that
+`@universal-deploy/node` requires does not yet exist. They should be
+removed or replaced in the phases noted below.
+
+**Remove / replace in Phase 4:**
+
+- `createUDServer` and `cedar-ud-server` — the temporary srvx runtime stand-in
+  from Phase 3. Phase 4 replaces them with `buildUDApiServer()`, a Vite SSR
+  build that produces a self-contained Node server entry via
+  `@universal-deploy/node/vite`'s `node()` plugin.
+- `cedar serve api --ud` CLI flag — updated in Phase 4 to fork the Vite-built
+  `api/dist/ud/index.js` entry instead of invoking the deleted `createUDServer`.
+  The flag remains **opt-in** (not the default) to preserve backward
+  compatibility with existing Fastify setups.
+
+**Remove in Phase 6:**
+
+- `buildCedarDispatcher` (`packages/api-server/src/udDispatcher.ts`) —
+  removed along with the legacy `virtual:cedar-api` aggregate path.
+  Phase 6's plugin generates per-route virtual modules directly.
 
 **User-facing impact**: None for most developers. Self-hosting users
-get a simpler, Fastify-free production server backed by UD's node
-adapter.
+can opt in to the Fastify-free srvx server via `cedar serve api --ud`.
+Full `@universal-deploy/node` end-to-end arrives in Phase 4.
 
 ---
 
@@ -747,94 +816,280 @@ Depends on Phases 2 and 3.
 
 #### Goal
 
-Replace the current web+API split dev model with a single Vite-hosted
-development entrypoint.
+Introduce a unified `cedar dev` command that runs both web and API sides
+from a single CLI entrypoint, while preserving a compatibility path for
+existing apps that depend on custom Fastify server setup. The dev
+runtime still uses two ports (`8910` web + `8911` API) in this phase;
+moving to a single visible port is Phase 5 work.
 
 #### Work
 
-- Eliminate the `8910 → proxy → 8911` mental model
-- Route page, GraphQL, auth, and function requests through one
-  externally visible dev host
-- Integrate backend handler execution into the Vite dev runtime
-  (likely via Vite's `server.middlewareMode` or custom plugin)
+- Make `cedar-unified-dev` available via an opt-in `--ud` flag on
+  `cedar dev`: one CLI process that orchestrates the web Vite dev
+  server and the API dev server together. The default `cedar dev`
+  behaviour (without `--ud`) remains unchanged.
+- Keep the existing proxy model (`8910 → proxy → 8911`) for the default
+  Cedar runtime path in this phase
+- Move API code compilation into the Vite module graph (via Vite SSR +
+  Babel transform) so API functions get true HMR without nodemon
+  restarts
 - Ensure server-side file watching and invalidation work for backend
   entries
 - Preserve strong DX for browser requests, direct `curl` requests,
-  and GraphQL tooling (e.g., GraphiQL must still work)
+  and GraphQL tooling (e.g. GraphiQL must still work)
+- Preserve a compatibility path for apps that use `api/src/server.{ts,js}`,
+  `configureFastify`, `configureApiServer`, or direct Fastify plugin
+  registration, rather than silently routing them through the new
+  default runtime and dropping supported behavior
+- Introduce `cedarUniversalDeployPlugin()` in `@cedarjs/vite` and wire
+  it into the **API server Vite build config**: register
+  `virtual:cedar-api` with the UD store via `addEntry()`, resolve
+  `virtual:ud:catch-all` → `virtual:cedar-api`, and export the Cedar
+  API Fetchable as the virtual module's default export. This plugin
+  belongs to the API server build — not the web client build — because
+  it resolves API-server virtual modules that have no relevance to the
+  browser bundle. The initial Phase 4 implementation uses a single
+  aggregate entry; Phase 6 expands this to per-route registration.
+  When the plugin is introduced, add `@cedarjs/api-server` as a
+  `peerDependency` of `@cedarjs/vite` in `packages/vite/package.json`.
+- Add `node()` from `@universal-deploy/node/vite` to the same API
+  server Vite build config (not the web client config, and not the
+  HTML SSR config — see naming caution below). After this,
+  `cedar serve` runs the Vite-built server entry instead of `createUDServer`
+
+**Naming caution**: Vite calls its Node.js server build environment
+**"SSR"** regardless of whether it renders HTML. This is confusing in
+Cedar's context, where "SSR" specifically means React streaming / RSC.
+The Vite "SSR environment" output that `@universal-deploy/node`
+produces is purely the API server entry — it has no connection to
+Cedar's HTML SSR feature. Do not add `node()` to any Vite config that
+also builds the HTML SSR entry.
 
 #### Deliverables
 
-- One visible development port
-- One dev request dispatcher
-- One shared module graph for frontend and backend development
+- `cedar dev --ud` starts both web and API dev servers in one process
+- API code compiled through Vite's module graph with true HMR (when `--ud` is used)
+- `@universal-deploy/node` wired end-to-end: Vite builds a
+  self-contained server entry; `cedar serve api --ud` forks it
+- A documented compatibility path for apps with custom Fastify server
+  setup
 
 #### Exit Criteria
 
-- Cedar dev no longer requires a separately exposed backend port
-- Requests to functions and GraphQL can be made directly against the
-  Vite dev host
+- `cedar dev --ud` runs both web and API dev servers from one CLI command
+- API functions receive Vite HMR without nodemon process restarts (when `--ud` is used)
+- `cedar serve api --ud` runs an `@universal-deploy/node`-built server entry,
+  completing the Phase 3 goal of making Fastify-free serving possible
+- Existing apps with custom Fastify server setup still have a supported
+  compatibility path and are not silently forced onto the new default
+  runtime
 
-**User-facing impact**: High (positive). Developers see one port, one
-process, simpler mental model. Config files may need minor updates.
+**User-facing impact**: Medium (positive). Developers get one CLI command
+and faster API HMR. The port model is still two ports (`8910` + `8911`);
+the single-port simplification arrives in Phase 5. Existing apps with
+custom Fastify setup remain on a compatibility path until a later migration
+story exists. Config files may need minor updates.
 
 ---
 
-### Phase 5: Formalise the Cedar UD Vite Plugin
+### Phase 5: Idiomatic Vite Full-Stack Integration
 
-**Effort: M (Medium)**
+**Effort: L (Large)**
 
 Depends on Phase 4.
 
 #### Goal
 
-Promote the initial `addEntry()` wiring from Phase 3 into a
-first-class Cedar Vite plugin in `@cedarjs/vite`. Phase 3 gets Cedar
-running without Fastify using UD's adapters; Phase 5 makes the
-integration complete, correct, and provider-discoverable.
+Close the architectural gap between Phase 4's incremental bridge and an
+idiomatic Vite full-stack integration. Phase 4 delivered user-facing wins
+(one `cedar dev` command, API HMR, Vite-built serve output) using two HTTP
+listeners in dev and three separate `viteBuild()` calls in production. Phase
+5 makes the underlying architecture match what the Vite team recommends for
+full-stack frameworks.
 
-#### Work
+#### Two Workstreams
 
-- Extract the `addEntry()` calls from Phase 3's ad-hoc build wiring
-  into a formal `@cedarjs/vite` plugin
-- Ensure all Cedar server entries are registered with the correct
-  `route`, `method`, and `environment` metadata that UD and provider
-  plugins need:
-  - web catch-all SSR entry (or SPA fallback)
-  - GraphQL entry
-  - auth entry
-  - filesystem-discovered function entries
-- Align Cedar's internal `CedarRouteRecord` manifest (from Phase 2)
-  with the `EntryMeta` shape UD's store expects — Cedar should derive
-  UD entries from its own route manifest, not maintain them separately
-- Validate the plugin against `@universal-deploy/adapter-node` and
-  `@universal-deploy/adapter-netlify`
-- Document the plugin's role so future UD adapter authors know what
-  Cedar registers and in what shape
+**1. Single-listener dev server**
+
+Replace the two-listener dev model with one Vite dev server on a single
+visible port. API requests are handled inline via Vite middleware rather
+than by a separate Fastify listener. This eliminates the last proxy/port
+split, simplifies auth flows and CORS, and aligns Cedar with Nuxt,
+SvelteKit, and other Vite full-stack frameworks.
+
+- Replace the separate Fastify API listener in `cedar-unified-dev` with
+  inline API middleware (`apiDevMiddleware.ts`) installed via the web Vite
+  dev server's `configureServer` hook. API requests are converted from
+  `IncomingMessage` to Fetch `Request`, dispatched through the Vite SSR
+  module runner, and the Fetch `Response` is piped back to `ServerResponse`.
+  The web Vite server becomes the only visible HTTP listener.
+- Remove `apiDevServer.ts` (Phase 4's Fastify-based dev server) and
+  `cedarDevDispatcherPlugin` (the Phase 4 middleware plugin that was never
+  installed); both are superseded by `apiDevMiddleware.ts`.
+
+**2. `buildApp()` with declared environments**
+
+Replace the three standalone `viteBuild()` calls with a single `buildApp()`
+invocation that declares `client` and `api` environments. Both environments
+share one module graph, one transform pipeline, and consistent resolution.
+This reduces build time, eliminates silent divergence between client and API
+builds, and prepares the infrastructure for a future SSR environment.
 
 #### Deliverables
 
-- `@cedarjs/vite` Cedar UD plugin
+- refactored `cedar-unified-dev` using a single Vite dev server with inline
+  API middleware (no separate API listener)
+- refactored `cedar build` using `buildApp()` with `client` and `api`
+  environments
+- updated documentation reflecting the single-port dev model and unified build
+
+#### Exit Criteria
+
+- `cedar dev` runs on one visible port with no separate API listener
+- `cedar build` uses `buildApp()` with declared environments in a single pass
+- All existing Phase 4 functionality continues to work
+- The custom Fastify compatibility lane is unaffected
+
+**User-facing impact**: Low. Internal architecture alignment; no new user
+features.
+
+---
+
+### Phase 6: Formalise the Cedar UD Vite Plugin
+
+**Effort: M (Medium)** — **Status: Completed**
+
+Depends on Phase 5.
+
+#### Goal
+
+Expand `cedarUniversalDeployPlugin()` from a single aggregate entry into a
+complete, per-route registration that UD adapters and provider plugins can
+rely on. Phase 4 shipped a working plugin with one catch-all entry; Phase 5
+made the Vite integration idiomatic; Phase 6 made the plugin correct and
+provider-discoverable.
+
+#### What was delivered
+
+`cedarUniversalDeployPlugin()` was expanded to provide:
+
+- **Per-function `addEntry()` registration**: each discovered API function
+  (GraphQL, auth, health, and regular functions) is registered with UD's
+  store using the correct `id`, `route`, and `method` metadata. Route
+  patterns include both the exact path and a `/**` wildcard so sub-paths
+  (e.g. `/graphql/health`) are correctly matched.
+- **Per-function virtual modules**: generated on-the-fly for each route.
+  Regular functions are wrapped in `createCedarFetchable` with lazy dynamic
+  imports of the compiled dist file. GraphQL gets special Yoga
+  initialization handling.
+- **Multi-route `virtual:ud:catch-all` dispatcher**: replaces the old
+  single-entry re-export. It statically imports all per-route virtual
+  modules, builds a `rou3` router at build time, and dispatches requests
+  to the correct handler. It also handles `apiRootPath` stripping.
+- **Web fallback entry**: optional `virtual:cedar-web` entry that serves
+  `web/dist/index.html` for SPA fallback on providers that need it.
+  _(Note: this was later removed because it was never wired to a user-facing
+  toggle — see Phase 6 Addendum below for details on when and how to bring it
+  back.)_
+
+Route discovery happens at **build time** by scanning `api/src/functions/`
+via `findApiServerFunctions` from `@cedarjs/internal`, so the plugin does
+not require `api/dist/functions/` to exist at plugin instantiation time.
+
+#### Work completed
+
+- [x] Replaced the single `virtual:cedar-api` aggregate entry with
+      per-function entries derived from Cedar's route manifest (Phase 2),
+      so providers that benefit from per-route isolation (e.g., Cloudflare
+      Workers) can split on individual functions
+- [x] Ensured all Cedar server entries are registered with the correct
+      `route`, `method`, and `environment` metadata:
+  - GraphQL entry
+  - auth entry
+  - filesystem-discovered function entries
+  - web catch-all / SPA fallback (web side)
+- [x] Aligned Cedar's `CedarRouteRecord` manifest (Phase 2) with the
+      `EntryMeta` shape UD's store expects — added `id` field; entries are
+      derived from the manifest, not maintained separately
+- [x] Updated `virtual:ud:catch-all` to generate a proper multi-route
+      dispatcher (using rou3 across all registered entries) rather than
+      the simple single-entry re-export from Phase 4
+- [x] Validated the plugin against `@universal-deploy/node` architecture
+      (catch-all entry consumed by `serve.js`)
+- [x] Documented the plugin's role inline so future UD adapter authors
+      know what Cedar registers and in what shape
+
+#### Deliverables
+
+- `cedarUniversalDeployPlugin()` expanded with per-route entries
+  from Cedar's route manifest
 - All Cedar server entries registered via `addEntry()` with complete
   metadata at Vite/plugin time
 - Cedar's route manifest and UD's store in sync from a single source
   of truth
+- Validated against `@universal-deploy/node` end-to-end
 
 #### Exit Criteria
 
-- Provider plugins can discover Cedar's server entries without custom
-  Cedar-specific logic
-- Cedar's `CedarRouteRecord` manifest is the single source of truth
-  from which UD entries are derived
+- [x] Provider plugins can discover Cedar's server entries without custom
+      Cedar-specific logic
+- [x] Cedar's `CedarRouteRecord` manifest is the single source of truth
+      from which UD entries are derived
 
 **User-facing impact**: None directly. Enables deploy provider support.
 
 ---
 
-### Phase 6: Rebuild SSR on the New Runtime
+### Phase 6 Addendum: Web Fallback Entry Removed
+
+The optional `virtual:cedar-web` entry ("web fallback") was temporarily part of
+Phase 6 but was **removed from `cedarUniversalDeployPlugin()`** during review.
+
+**Why it was removed:**
+
+- The `webFallback` boolean option was never wired to any CLI flag, config
+  value, or build option. It always defaulted to `false` and there was no
+  exposed way for a deployment target or app developer to enable it.
+- Because it was unreachable, the code was effectively dead code — untested,
+  unused, and potentially confusing to future readers.
+
+**When to bring it back:**
+A web fallback entry is needed when a UD adapter runs the **API and web sides
+in a single runtime** (e.g., a single Cloudflare Worker) and that runtime must
+serve the SPA shell (`web/dist/index.html`) for unmatched `GET` requests.
+Providers that deploy web and API separately (Node self-hosting, Netlify,
+Vercel) handle SPA fallback at the edge or static-host layer and do not need
+this entry.
+
+**How to re-implement:**
+
+1. Re-add `webFallback?: boolean` to `CedarUniversalDeployPluginOptions`.
+2. In the plugin's `config` hook, when `webFallback` is `true`, register an
+   entry with:
+   ```ts
+   addEntry({
+     id: 'virtual:cedar-web',
+     route: '/**',
+     method: 'GET',
+   })
+   ```
+3. In `resolveId`, resolve `'virtual:cedar-web'` to a virtual module.
+4. In `load`, generate a module that reads and serves
+   `getPaths().web.dist + '/index.html'` as a `Response`.
+5. Thread the option through `buildUDApiServer()` and expose it via a CLI
+   flag or adapter config so it is actually reachable.
+
+See the original implementation in git history (file:
+`packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts`,
+commit range around Phase 6) for the exact module generation code.
+
+---
+
+### Phase 7: Rebuild SSR on the New Runtime
 
 **Effort: XL (Extra Large)**
 
-Design work can begin **during Phases 4–5**. Implementation depends on
+Design work can begin **during Phases 5–6**. Implementation depends on
 Phase 1 (handler contract and middleware model).
 
 #### Goal
@@ -871,11 +1126,11 @@ SSR-specific configuration.
 
 ---
 
-### Phase 7: Provider Validation
+### Phase 8: Provider Validation
 
 **Effort: L (Large)**
 
-Depends on Phases 5 and 6.
+Depends on Phases 6 and 7.
 
 #### Goal
 
@@ -885,9 +1140,9 @@ targets Cedar cares about.
 #### Work
 
 - Validate Netlify and Vercel first (largest user base)
-- Validate Node/self-hosted via `@universal-deploy/adapter-node`
+- Validate Node/self-hosted via `@universal-deploy/node`
 - Optionally validate Cloudflare after the first pass
-- Use UD's adapters (`@universal-deploy/adapter-node`,
+- Use UD's adapters (`@universal-deploy/node`,
   `@universal-deploy/adapter-netlify`, and equivalent) — Cedar builds
   none of its own
 - Test:
@@ -911,17 +1166,18 @@ targets Cedar cares about.
 
 ## Phase Summary
 
-| Phase | Description           | Effort | Parallel? | User-Facing? |
-| ----- | --------------------- | ------ | --------- | ------------ |
-| 1     | Fetch-native handlers | L      | —         | No (shim)    |
-| 2     | Route discovery       | M      | With 3    | No           |
-| 3     | UD adapter adoption   | M      | With 2    | No           |
-| 4     | Vite-centric dev      | XL     | —         | Yes          |
-| 5     | UD registration       | M      | —         | No           |
-| 6     | SSR rebuild           | XL     | Design‡   | Yes          |
-| 7     | Provider validation   | L      | —         | Yes          |
+| Phase | Description                | Effort | Parallel? | User-Facing? | Status      |
+| ----- | -------------------------- | ------ | --------- | ------------ | ----------- |
+| 1     | Fetch-native handlers      | L      | —         | No (shim)    | Completed   |
+| 2     | Route discovery            | M      | With 3    | No           | Completed   |
+| 3     | UD adapter adoption        | M      | With 2    | No           | Completed   |
+| 4     | Vite-centric dev           | XL     | —         | Yes          | Completed   |
+| 5     | Idiomatic Vite integration | L      | —         | No           | Completed   |
+| 6     | UD registration            | M      | —         | No           | Completed   |
+| 7     | SSR rebuild                | XL     | Design‡   | Yes          | Not started |
+| 8     | Provider validation        | L      | —         | Yes          | Not started |
 
-‡ Design work can overlap with Phases 4–5.
+‡ Design work can overlap with Phases 5–6.
 
 ## Transitional Developer Experience
 
@@ -938,13 +1194,19 @@ nothing.**
 developer's perspective. UD's node adapter is wired up but used only
 for production self-hosting. Dev still uses two ports.
 
-**After Phase 4**: Single-port dev. This is the first major visible
-change. Developers update their config and enjoy a simpler mental model.
+**After Phase 4**: Single-port dev on the default runtime path. This is
+the first major visible change. Developers on the standard Cedar path
+update their config and enjoy a simpler mental model. Apps with custom
+Fastify server setup remain on a compatibility path rather than being
+silently forced onto the new runtime.
 
-**After Phase 5**: No visible change for developers. UD integration is
+**After Phase 5**: No visible change for developers. Internal architecture
+alignment only.
+
+**After Phase 6**: No visible change for developers. UD integration is
 framework-internal.
 
-**After Phases 6–7**: Full SSR support on the new runtime. Deploy to
+**After Phases 7–8**: Full SSR support on the new runtime. Deploy to
 supported providers.
 
 ## Migration Path
@@ -1003,24 +1265,27 @@ comments for manual review.
 ### Migration Guide
 
 A migration guide should accompany each phase that has user-facing
-impact (Phases 4, 6, 7). The guide should cover:
+impact (Phases 4, 7, 8). The guide should cover:
 
 - What changed and why
 - Step-by-step migration instructions
 - Before/after code examples
 - Common pitfalls
+- How to identify whether an app is on the default runtime path or the
+  custom Fastify compatibility path
 
 ### Which Phases Require App Developer Action
 
-| Phase | App Developer Action Required               |
-| ----- | ------------------------------------------- |
-| 1     | None (shim handles it)                      |
-| 2     | None                                        |
-| 3     | None                                        |
-| 4     | Config updates, possible dev script changes |
-| 5     | None                                        |
-| 6     | SSR config migration                        |
-| 7     | Deploy config updates                       |
+| Phase | App Developer Action Required                                                       |
+| ----- | ----------------------------------------------------------------------------------- |
+| 1     | None (shim handles it)                                                              |
+| 2     | None                                                                                |
+| 3     | None                                                                                |
+| 4     | Config updates for standard apps; compatibility-path review for custom Fastify apps |
+| 5     | None                                                                                |
+| 6     | None                                                                                |
+| 7     | SSR config migration                                                                |
+| 8     | Deploy config updates                                                               |
 
 ## Risks
 
@@ -1038,6 +1303,9 @@ impact (Phases 4, 6, 7). The guide should cover:
   to edge cases in existing auth middleware
 - Phase 4 (Vite-centric dev) being significantly harder than estimated
   due to HMR, module graph, and backend file watching interactions
+- Silently dropping supported Fastify-specific behavior for existing
+  apps that use `api/src/server.{ts,js}`, `configureFastify`,
+  `configureApiServer`, or direct Fastify plugin registration
 
 ## Open Questions
 
@@ -1095,5 +1363,5 @@ the middleware model, the remaining UD work becomes implementation
 detail instead of architectural guesswork.
 
 Phase 2 and Phase 3 can proceed in parallel immediately after Phase 1.
-Phase 6 design work can start during Phases 4–5. Take advantage of
+Phase 7 design work can start during Phases 5–6. Take advantage of
 this parallelism to reduce the overall timeline.

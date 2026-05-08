@@ -1,9 +1,7 @@
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 
-import { createServer, version as viteVersion } from 'vite'
-import { ViteNodeRunner } from 'vite-node/client'
-import { ViteNodeServer } from 'vite-node/server'
-import { installSourcemapsSupport } from 'vite-node/source-map'
+import { createServer, isRunnableDevEnvironment } from 'vite'
 
 import { getPaths, importStatementPath } from '@cedarjs/project-config'
 import {
@@ -13,7 +11,26 @@ import {
   cedarSwapApolloProvider,
   cedarImportDirPlugin,
   cedarAutoImportsPlugin,
+  cedarCjsCompatPlugin,
 } from '@cedarjs/vite'
+
+// When the customResolver returns an id, that id is final — Vite won't try
+// alternative extensions on it. This helper resolves the actual file on disk,
+// handling both bare paths (src/lib/jobs) and .js/.jsx paths that map to .ts
+// files in a TypeScript project (e.g. db.js → db.ts).
+function resolveExtension(id) {
+  if (existsSync(id)) {
+    return id
+  }
+  // Strip .js/.jsx extension if present, then try TypeScript and JS extensions
+  const withoutExt = /\.jsx?$/.test(id) ? id.replace(/\.jsx?$/, '') : id
+  for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+    if (existsSync(withoutExt + ext)) {
+      return withoutExt + ext
+    }
+  }
+  return id
+}
 
 export async function runScriptFunction({
   path: scriptPath,
@@ -28,9 +45,15 @@ export async function runScriptFunction({
   const server = await createServer({
     mode: 'production',
     optimizeDeps: {
-      // This is recommended in the vite-node readme
       noDiscovery: true,
       include: undefined,
+    },
+    server: {
+      hmr: false,
+      watch: null,
+    },
+    environments: {
+      nodeRunnerEnv: {},
     },
     resolve: {
       alias: [
@@ -63,23 +86,18 @@ export async function runScriptFunction({
             // from scripts/ because it doesn't know what the src/ alias is.
             // So we have to tell it to use the correct path based on what file
             // is doing the importing.
-            // Also, to support both imports like 'src/lib/db.js' and
-            // 'src/lib/db' in ts files we need to have special treatment for
-            // the .js extension.
+            // Also, to support imports like 'src/lib/db.js' in TS projects
+            // where only a .ts file exists, we resolve the correct extension
+            // ourselves — the customResolver result is final and Vite won't
+            // try alternative extensions on it.
             if (importer.startsWith(apiImportBase)) {
               const apiImportSrc = importStatementPath(getPaths().api.src)
-              let resolvedId = id.replace('src', apiImportSrc)
-              if (importer.endsWith('.ts') || importer.endsWith('.tsx')) {
-                resolvedId = resolvedId.replace(/\.jsx?$/, '')
-              }
-              return { id: resolvedId }
+              const resolvedId = id.replace('src', apiImportSrc)
+              return { id: resolveExtension(resolvedId) }
             } else if (importer.startsWith(webImportBase)) {
               const webImportSrc = importStatementPath(getPaths().web.src)
-              let resolvedId = id.replace('src', webImportSrc)
-              if (importer.endsWith('.ts') || importer.endsWith('.tsx')) {
-                resolvedId = resolvedId.replace(/\.jsx?$/, '')
-              }
-              return { id: resolvedId }
+              const resolvedId = id.replace('src', webImportSrc)
+              return { id: resolveExtension(resolvedId) }
             }
 
             return null
@@ -88,6 +106,7 @@ export async function runScriptFunction({
       ],
     },
     plugins: [
+      cedarCjsCompatPlugin(),
       cedarjsResolveCedarStyleImportsPlugin(),
       cedarCellTransform(),
       cedarjsJobPathInjectorPlugin(),
@@ -97,49 +116,24 @@ export async function runScriptFunction({
     ],
   })
 
-  // For old Vite, this is needed to initialize the plugins.
-  if (Number(viteVersion.split('.')[0]) < 6) {
-    await server.pluginContainer.buildStart({})
+  const env = server.environments.nodeRunnerEnv
+  if (!env || !isRunnableDevEnvironment(env)) {
+    await server.close()
+    throw new Error('Vite environment is not runnable.')
   }
-
-  const node = new ViteNodeServer(server, {
-    transformMode: {
-      ssr: [/.*/],
-      web: [/\/web\//],
-    },
-    deps: {
-      fallbackCJS: true,
-    },
-  })
-
-  // fixes stacktraces in Errors
-  installSourcemapsSupport({
-    getSourceMap: (source) => node.getSourceMap(source),
-  })
-
-  const runner = new ViteNodeRunner({
-    root: server.config.root,
-    base: server.config.base,
-    fetchModule(id) {
-      return node.fetchModule(id)
-    },
-    resolveId(id, importer) {
-      return node.resolveId(id, importer)
-    },
-  })
 
   let returnValue
   let scriptError = null
 
   try {
-    const script = await runner.executeFile(scriptPath)
+    const script = await env.runner.import(scriptPath)
     returnValue = await script[functionName](args)
   } catch (error) {
     scriptError = error
   }
 
   try {
-    const { db } = await runner.executeFile(path.join(getPaths().api.lib, 'db'))
+    const { db } = await env.runner.import(path.join(getPaths().api.lib, 'db'))
     db.$disconnect()
   } catch (e) {
     // silence

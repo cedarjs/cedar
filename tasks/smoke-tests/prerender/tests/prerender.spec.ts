@@ -48,7 +48,7 @@ test('Check that rehydration works for page not wrapped in Set', async ({
   // Wait for page to have been rehydrated before getting page content.
   // We know the page has been rehydrated when it sends an auth request
   await page.waitForResponse((response) =>
-    response.url().includes('/.redwood/functions/auth'),
+    response.url().includes('/.api/functions/auth'),
   )
 
   await page.locator('h1').first().waitFor()
@@ -89,7 +89,7 @@ test('Check that rehydration works for page with Cell in Set', async ({
   // before getting page content.
   // We know cells have started fetching data when we see graphql requests
   await page.waitForResponse((response) =>
-    response.url().includes('/.redwood/functions/graphql'),
+    response.url().includes('/.api/functions/graphql'),
   )
 
   await page.locator('h2').first().waitFor()
@@ -137,7 +137,7 @@ test('Check that rehydration works for page with code split chunks', async ({
   // Wait for page to have been rehydrated before getting page content.
   // We know the page has been rehydrated when it sends an auth request
   await page.waitForResponse((response) =>
-    response.url().includes('/.redwood/functions/auth'),
+    response.url().includes('/.api/functions/auth'),
   )
 
   await expect(page.getByLabel('Name')).toBeVisible()

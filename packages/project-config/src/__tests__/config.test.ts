@@ -129,7 +129,7 @@ describe('getConfig', () => {
         },
         "web": {
           "a11y": true,
-          "apiUrl": "/.redwood/functions",
+          "apiUrl": "/.api/functions",
           "fastRefresh": true,
           "includeEnvironmentVariables": [],
           "path": "./web",
@@ -259,7 +259,7 @@ describe('getConfig', () => {
           [web]
             title = "App running on \${APP_ENV}"
             port = "\${PORT:8910}"
-            apiUrl = "\${API_URL:/.redwood/functions}" # you can customise graphql and dbauth urls individually too: see https://cedarjs.com/docs/app-configuration-redwood-toml#api-paths
+            apiUrl = "\${API_URL:/.api/functions}" # you can customise graphql and dbauth urls individually too: see https://cedarjs.com/docs/app-configuration-cedar-toml#api-paths
             includeEnvironmentVariables = [] # any ENV vars that should be available to the web side, see https://cedarjs.com/docs/environment-variables#web
           [api]
             port = "\${API_PORT:8911}"

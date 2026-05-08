@@ -54,7 +54,7 @@ exports[`updateTomlConfig > updateTomlConfig configures a new CLI plugin > adds 
 "[web]
 title = "Redwood App"
 port = 8910
-apiUrl = "/.redwood/functions"
+apiUrl = "/.api/functions"
 includeEnvironmentVariables = []
 
 [api]
@@ -74,7 +74,7 @@ exports[`updateTomlConfig > updateTomlConfig configures a new CLI plugin > adds 
 "[web]
 title = "Redwood App"
 port = 8910
-apiUrl = "/.redwood/functions"
+apiUrl = "/.api/functions"
 includeEnvironmentVariables = []
 
 [api]
@@ -97,7 +97,7 @@ exports[`updateTomlConfig > updateTomlConfig configures a new CLI plugin > adds 
 "[web]
 title = "Redwood App"
 port = 8910
-apiUrl = "/.redwood/functions"
+apiUrl = "/.api/functions"
 includeEnvironmentVariables = []
 
 [api]
@@ -117,7 +117,7 @@ exports[`updateTomlConfig > updateTomlConfig configures a new CLI plugin > adds 
 "[web]
 title = "Redwood App"
 port = 8910
-apiUrl = "/.redwood/functions"
+apiUrl = "/.api/functions"
 includeEnvironmentVariables = []
 
 [api]
@@ -137,7 +137,7 @@ exports[`updateTomlConfig > updateTomlConfig configures a new CLI plugin > does 
 "[web]
 title = "Redwood App"
 port = 8910
-apiUrl = "/.redwood/functions"
+apiUrl = "/.api/functions"
 includeEnvironmentVariables = []
 
 [api]

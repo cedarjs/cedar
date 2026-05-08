@@ -1,7 +1,7 @@
 import babelParser from '@babel/eslint-parser'
 import babelPlugin from '@babel/eslint-plugin'
 import js from '@eslint/js'
-import importPlugin from 'eslint-plugin-import'
+import importPlugin from 'eslint-plugin-import-x'
 import jestDomPlugin from 'eslint-plugin-jest-dom'
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 import reactPlugin from 'eslint-plugin-react'
@@ -63,7 +63,7 @@ export default [
   {
     plugins: {
       '@babel': babelPlugin,
-      import: importPlugin,
+      'import-x': importPlugin,
       'jsx-a11y': jsxA11yPlugin,
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
@@ -84,7 +84,7 @@ export default [
       // See...
       // - https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/order.md#groups-array
       // - https://github.com/import-js/eslint-plugin-import/blob/main/README.md#importinternal-regex
-      'import/internal-regex': '^src/',
+      'import-x/internal-regex': '^src/',
     },
     rules: {
       // React recommended rules
@@ -117,7 +117,7 @@ export default [
       'react/prop-types': 'off',
       'react/display-name': 'off',
       'react-hooks/exhaustive-deps': 'warn',
-      'import/order': [
+      'import-x/order': [
         'error',
         {
           'newlines-between': 'always',
@@ -460,12 +460,18 @@ export default [
   // project-config package specific rules
   {
     files: ['packages/project-config/**'],
-    ignores: ['**/__tests__/**', '**/*.test.ts?(x)', '**/*.spec.ts?(x)'],
+    ignores: [
+      '**/__tests__/**',
+      '**/*.test.ts?(x)',
+      '**/*.spec.ts?(x)',
+      'packages/project-config/build.ts',
+      'packages/project-config/vitest.config.mts',
+    ],
     plugins: {
-      import: importPlugin,
+      'import-x': importPlugin,
     },
     rules: {
-      'import/no-extraneous-dependencies': [
+      'import-x/no-extraneous-dependencies': [
         'error',
         {
           devDependencies: false,

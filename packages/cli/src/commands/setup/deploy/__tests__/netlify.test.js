@@ -69,7 +69,7 @@ beforeEach(() => {
     [mockConfigPath]: `[web]
   title = "Cedar App"
   port = 8910
-  apiUrl = "/.redwood/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-cedar-toml#api-paths
+  apiUrl = "/.api/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-cedar-toml#api-paths
   includeEnvironmentVariables = [
     # Add any ENV vars that should be available to the web side to this array
     # See https://cedarjs.com/docs/environment-variables#web

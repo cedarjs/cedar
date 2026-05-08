@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "3.1.1",
+  "version": "4.1.0",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
@@ -73,6 +73,12 @@
       "types": "./dist/cjs/bothCLIConfigHandler.d.ts",
       "default": "./dist/cjs/bothCLIConfigHandler.js"
     },
+    "./udFetchable": {
+      "import": {
+        "types": "./dist/udFetchable.d.ts",
+        "default": "./dist/udFetchable.js"
+      }
+    },
     "./watch": {
       "import": {
         "types": "./dist/watch.d.ts",
@@ -130,6 +136,7 @@
     "@cedarjs/web-server": "workspace:*",
     "@fastify/multipart": "9.4.0",
     "@fastify/url-data": "6.0.3",
+    "@universal-deploy/node": "^0.1.6",
     "ansis": "4.2.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
