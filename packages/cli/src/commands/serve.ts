@@ -1,5 +1,6 @@
 import { fork } from 'node:child_process'
 import fs from 'node:fs'
+import net from 'node:net'
 import path from 'node:path'
 
 import { terminalLink } from 'termi-link'
@@ -170,16 +171,16 @@ export const builder = async (yargs: Argv) => {
             }
           })
 
-          await new Promise<void>((resolve) => {
-            child.on('message', (msg) => {
-              if (msg === 'ready') {
-                resolve()
-              }
-            })
-          })
-
           console.log(`Web server listening at http://${webHost}:${webPort}`)
-          console.log(`API server listening at http://${apiHost}:${apiPort}`)
+          process.stdout.write(
+            `API server starting at http://${apiHost}:${apiPort}...`,
+          )
+
+          await waitForPort(apiHost, apiPort)
+
+          process.stdout.write(
+            `\rAPI server listening at http://${apiHost}:${apiPort}\n`,
+          )
 
           return
         }
@@ -256,18 +257,37 @@ export const builder = async (yargs: Argv) => {
             udArgs.push('--host', argv.host)
           }
 
-          await new Promise<void>((resolve, reject) => {
-            const child = fork(udEntryPath, udArgs, {
-              execArgv: process.execArgv,
-              env: {
-                ...process.env,
-                NODE_ENV: process.env.NODE_ENV ?? 'production',
-                PORT: argv.port ? String(argv.port) : process.env.PORT,
-                HOST: argv.host ?? process.env.HOST,
-              },
-            })
+          const child = fork(udEntryPath, udArgs, {
+            execArgv: process.execArgv,
+            env: {
+              ...process.env,
+              NODE_ENV: process.env.NODE_ENV ?? 'production',
+              PORT: argv.port ? String(argv.port) : process.env.PORT,
+              HOST: argv.host ?? process.env.HOST,
+            },
+          })
 
-            child.on('error', reject)
+          child.on('error', (err) => {
+            console.error(
+              c.error(`\n Failed to start UD server: ${err.message}\n`),
+            )
+            process.exit(1)
+          })
+
+          const apiPort = argv.port ?? parseInt(process.env.PORT ?? '8911', 10)
+          const apiHost = argv.host ?? process.env.HOST ?? 'localhost'
+
+          process.stdout.write(
+            `API server starting at http://${apiHost}:${apiPort}...`,
+          )
+
+          await waitForPort(apiHost, apiPort)
+
+          process.stdout.write(
+            `\rAPI server listening at http://${apiHost}:${apiPort}\n`,
+          )
+
+          await new Promise<void>((resolve, reject) => {
             child.on('exit', (code) => {
               if (code !== 0) {
                 reject(new Error(`UD server exited with code ${code}`))
@@ -454,4 +474,38 @@ function webSideIsBuilt(isStreamingOrRSC: boolean) {
   } else {
     return fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
   }
+}
+
+function waitForPort(host: string, port: number): Promise<void> {
+  const maxAttempts = 50
+  const intervalMs = 200
+
+  return new Promise<void>((resolve, reject) => {
+    let attempts = 0
+
+    const tryConnect = () => {
+      attempts++
+      const socket = net.createConnection({ host, port })
+
+      socket.on('connect', () => {
+        socket.destroy()
+        resolve()
+      })
+
+      socket.on('error', () => {
+        socket.destroy()
+        if (attempts >= maxAttempts) {
+          reject(
+            new Error(
+              `API server did not become ready on port ${port} after ${maxAttempts * intervalMs}ms`,
+            ),
+          )
+        } else {
+          setTimeout(tryConnect, intervalMs)
+        }
+      })
+    }
+
+    tryConnect()
+  })
 }
