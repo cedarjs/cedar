@@ -170,6 +170,14 @@ export const builder = async (yargs: Argv) => {
             }
           })
 
+          await new Promise<void>((resolve) => {
+            child.on('message', (msg) => {
+              if (msg === 'ready') {
+                resolve()
+              }
+            })
+          })
+
           console.log(`Web server listening at http://${webHost}:${webPort}`)
           console.log(`API server listening at http://${apiHost}:${apiPort}`)
 
