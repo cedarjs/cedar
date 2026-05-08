@@ -162,4 +162,100 @@ describe('yarn cedar serve', () => {
       }),
     )
   })
+
+  it('Should reject --port flag when --ud is used on both sides', async () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const parser = yargs().command('serve [side]', false, builder)
+
+    await expect(parser.parse('serve --port 9898 --ud')).rejects.toThrow(
+      'process.exit called',
+    )
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('--port flag is not supported with --ud'),
+    )
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
+
+  it('Should error when UD entry is missing for both sides with --ud', async () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    vi.spyOn(fs, 'existsSync').mockImplementation((pathToCheck) => {
+      const normalizedPath = pathToCheck.toString().replaceAll('\\', '/')
+      // UD entry doesn't exist
+      if (normalizedPath.includes('/mocked/project/api/dist/ud/index.js')) {
+        return false
+      }
+      // web dist exists
+      if (normalizedPath.includes('/mocked/project/web/dist')) {
+        return true
+      }
+      // api base exists
+      if (normalizedPath.includes('/mocked/project/api')) {
+        return true
+      }
+      // Don't detect the server file
+      return !normalizedPath.includes('/mocked/project/api/src/server.')
+    })
+
+    const parser = yargs().command('serve [side]', false, builder)
+
+    await expect(parser.parse('serve --ud')).rejects.toThrow(
+      'process.exit called',
+    )
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('yarn cedar build --ud'),
+    )
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
+
+  it('Should error when web dist is missing for both sides with --ud', async () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called')
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    vi.spyOn(fs, 'existsSync').mockImplementation((pathToCheck) => {
+      const normalizedPath = pathToCheck.toString().replaceAll('\\', '/')
+      // UD entry exists
+      if (normalizedPath.includes('/mocked/project/api/dist/ud/index.js')) {
+        return true
+      }
+      // web dist index.html doesn't exist
+      if (normalizedPath.includes('/mocked/project/web/dist/index.html')) {
+        return false
+      }
+      // api base exists
+      if (normalizedPath.includes('/mocked/project/api')) {
+        return true
+      }
+      // Don't detect the server file
+      return !normalizedPath.includes('/mocked/project/api/src/server.')
+    })
+
+    const parser = yargs().command('serve [side]', false, builder)
+
+    await expect(parser.parse('serve --ud')).rejects.toThrow(
+      'process.exit called',
+    )
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Web build artifacts not found'),
+    )
+
+    exitSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
 })

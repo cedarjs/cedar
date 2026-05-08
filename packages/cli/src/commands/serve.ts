@@ -28,6 +28,9 @@ type ServeArgv = Record<string, unknown> & {
   socket?: string
   apiRootPath?: string
   apiHost?: string
+  apiPort?: number
+  webHost?: string
+  webPort?: number
   ud?: boolean
 }
 
@@ -40,7 +43,17 @@ export const builder = async (yargs: Argv) => {
     .command({
       command: '$0',
       description: bothServerCLIConfig.description,
-      builder: bothServerCLIConfig.builder,
+      builder: (yargs: Argv) => {
+        bothServerCLIConfig.builder(yargs)
+        return yargs.option('ud', {
+          description:
+            'Use the Universal Deploy server (srvx) for the API side. ' +
+            'The web side is served by the existing static file server. ' +
+            'Pass --ud to opt in; the default is Fastify for both sides.',
+          type: 'boolean',
+          default: false,
+        })
+      },
       handler: async (argv: ServeArgv) => {
         recordTelemetryAttributes({
           command: 'serve',
@@ -48,6 +61,120 @@ export const builder = async (yargs: Argv) => {
           host: argv.host,
           socket: argv.socket,
         })
+
+        if (argv.ud) {
+          if (argv.port) {
+            console.error(
+              c.error(
+                '\n The --port flag is not supported with --ud. ' +
+                  'Use --web-port and --api-port instead.\n',
+              ),
+            )
+            process.exit(1)
+          }
+
+          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+
+          if (!fs.existsSync(udEntryPath)) {
+            console.error(
+              c.error(
+                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                  ' Please run `yarn cedar build --ud` before serving.\n',
+              ),
+            )
+            process.exit(1)
+          }
+
+          const webDistIndexHtml = path.join(getPaths().web.dist, 'index.html')
+
+          if (!fs.existsSync(webDistIndexHtml)) {
+            console.error(
+              c.error(
+                '\n Web build artifacts not found.\n' +
+                  ' Please run `yarn cedar build` before serving.\n',
+              ),
+            )
+            process.exit(1)
+          }
+
+          if (serverFileExists()) {
+            console.warn(
+              c.warning(
+                '\n Note: api/src/server.ts was detected. ' +
+                  'This file is a Fastify concept and will be ignored when using --ud. ' +
+                  'You are testing the experimental UD support, so the behavior will not match your production Fastify setup.\n',
+              ),
+            )
+          }
+
+          const { getAPIHost, getAPIPort, getWebHost, getWebPort } =
+            await import('@cedarjs/api-server/cliHelpers')
+
+          const apiPort = argv.apiPort ?? getAPIPort()
+          const apiHost = argv.apiHost ?? getAPIHost()
+          const webPort = argv.webPort ?? getWebPort()
+          const webHost = argv.webHost ?? getWebHost()
+
+          const apiRootPath = argv.apiRootPath ?? '/'
+          const apiProxyTarget = [
+            'http://',
+            apiHost.includes(':') ? `[${apiHost}]` : apiHost,
+            ':',
+            apiPort,
+            apiRootPath,
+          ].join('')
+
+          const { redwoodFastifyWeb } = await import('@cedarjs/fastify-web')
+          const { createFastifyInstance } =
+            await import('@cedarjs/api-server/fastify')
+
+          const webFastify = await createFastifyInstance()
+          webFastify.register(redwoodFastifyWeb, {
+            redwood: {
+              apiProxyTarget,
+            },
+          })
+
+          await webFastify.listen({
+            port: webPort,
+            host: webHost,
+          })
+
+          const child = fork(
+            udEntryPath,
+            ['--port', String(apiPort), '--host', apiHost],
+            {
+              execArgv: process.execArgv,
+              env: {
+                ...process.env,
+                NODE_ENV: process.env.NODE_ENV ?? 'production',
+                PORT: String(apiPort),
+                HOST: apiHost,
+              },
+            },
+          )
+
+          child.on('error', (err) => {
+            console.error(
+              c.error(`\n Failed to start UD API server: ${err.message}\n`),
+            )
+            process.exit(1)
+          })
+
+          child.on('exit', (code) => {
+            if (code !== 0) {
+              console.error(
+                c.error(`\n UD API server exited with code ${code}\n`),
+              )
+              process.exit(1)
+            }
+          })
+
+          console.log(`Web server listening at http://${webHost}:${webPort}`)
+          console.log(`API server listening at http://${apiHost}:${apiPort}`)
+
+          return
+        }
 
         // Run the server file, if it exists, with web side also
         if (serverFileExists()) {
@@ -105,7 +232,7 @@ export const builder = async (yargs: Argv) => {
             console.error(
               c.error(
                 `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
-                  ' Please run `yarn cedar build api` before serving.\n',
+                  ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
             process.exit(1)
@@ -222,6 +349,19 @@ export const builder = async (yargs: Argv) => {
           )
           process.exit(1)
         }
+
+        if (argv.ud) {
+          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+          if (!fs.existsSync(udEntryPath)) {
+            console.error(
+              c.error(
+                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                  ' Please run `yarn cedar build --ud` before serving.\n',
+              ),
+            )
+            process.exit(1)
+          }
+        }
       }
 
       // serve both
@@ -236,22 +376,46 @@ export const builder = async (yargs: Argv) => {
           process.exit(1)
         }
 
-        // We need the web side (and api side, if it exists) to have been built
+        if (argv.ud) {
+          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+          if (!fs.existsSync(udEntryPath)) {
+            console.error(
+              c.error(
+                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                  ' Please run `yarn cedar build --ud` before serving.\n',
+              ),
+            )
+            process.exit(1)
+          }
 
-        const apiExistsButIsNotBuilt =
-          apiSideExists && !fs.existsSync(getPaths().api.dist)
+          const webDistIndexHtml = path.join(getPaths().web.dist, 'index.html')
+          if (!fs.existsSync(webDistIndexHtml)) {
+            console.error(
+              c.error(
+                '\n Web build artifacts not found.\n' +
+                  ' Please run `yarn cedar build` before serving.\n',
+              ),
+            )
+            process.exit(1)
+          }
+        } else {
+          // We need the web side (and api side, if it exists) to have been built
 
-        if (
-          apiExistsButIsNotBuilt ||
-          !webSideIsBuilt(streamingEnabled || rscEnabled)
-        ) {
-          console.error(
-            c.error(
-              '\nPlease run `yarn cedar build` before trying to serve your ' +
-                'Cedar app.\n',
-            ),
-          )
-          process.exit(1)
+          const apiExistsButIsNotBuilt =
+            apiSideExists && !fs.existsSync(getPaths().api.dist)
+
+          if (
+            apiExistsButIsNotBuilt ||
+            !webSideIsBuilt(streamingEnabled || rscEnabled)
+          ) {
+            console.error(
+              c.error(
+                '\nPlease run `yarn cedar build` before trying to serve your ' +
+                  'Cedar app.\n',
+              ),
+            )
+            process.exit(1)
+          }
         }
       }
 
