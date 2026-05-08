@@ -12,6 +12,10 @@ export function cedarWaitForApiServer(): PluginOption {
   const apiPort = cedarConfig.api.port
   const apiHost = cedarConfig.api.host || 'localhost'
 
+  // In unified-dev mode the API is handled inline by the same Vite dev server,
+  // so there is no separate API listener to wait for.
+  const isUnifiedDev = process.env.__CEDAR_UNIFIED_DEV === 'true'
+
   return {
     name: 'cedar-wait-for-api-server',
     apply: 'serve',
@@ -35,7 +39,7 @@ export function cedarWaitForApiServer(): PluginOption {
             url.startsWith(apiGqlUrl + '/') ||
             url.startsWith(apiGqlUrl + '?'))
 
-        if (!isApiRequest || serverHasBeenUp) {
+        if (!isApiRequest || serverHasBeenUp || isUnifiedDev) {
           return next()
         }
 

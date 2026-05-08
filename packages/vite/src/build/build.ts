@@ -1,5 +1,7 @@
 import { getPaths } from '@cedarjs/project-config'
 
+export { buildCedarApp } from '../buildApp.js'
+
 interface BuildOptions {
   verbose?: boolean
 }

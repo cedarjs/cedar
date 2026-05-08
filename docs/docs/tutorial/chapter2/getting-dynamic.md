@@ -55,13 +55,13 @@ This says that we want a table called `Post` and it should have:
 - A `body` field that will contain a `String`
 - A `createdAt` field that will be a `DateTime` and will `@default` to `now()` when we create a new record (so we don't have to set the time manually in our app, the database will do it for us)
 
-:::info Integer vs. String IDs
+:::info[Integer vs. String IDs]
 
 For the tutorial we're keeping things simple and using an integer for our ID column. Some apps may want to use a CUID or a UUID, which Prisma supports. In that case you would use `String` for the datatype instead of `Int` and use `cuid()` or `uuid()` instead of `autoincrement()`:
 
 `id String @id @default(cuid())`
 
-Integers make for nicer URLs like https://redwoodblog.com/posts/123 instead of https://redwoodblog.com/posts/eebb026c-b661-42fe-93bf-f1a373421a13.
+Integers make for nicer URLs like https://cedarblog.com/posts/123 instead of https://cedarblog.com/posts/eebb026c-b661-42fe-93bf-f1a373421a13.
 
 Take a look at the [official Prisma documentation](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-schema/data-model#defining-an-id-field) for more on ID fields.
 
@@ -72,14 +72,8 @@ Take a look at the [official Prisma documentation](https://www.prisma.io/docs/re
 Now we'll want to snapshot the schema changes as a migration:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
-
-:::tip
-
-From now on we'll use the shorter `rw` alias instead of the full `redwood` argument.
-
-:::
 
 You'll be prompted to give this migration a name. Something that describes what it does is ideal, so how about "create post" (without the quotes, of course). This is for your own benefit—neither Cedar nor Prisma care about the migration's name, it's just a reference when looking through old migrations and trying to find when you created or modified something specific.
 
@@ -96,7 +90,7 @@ A database is a pretty abstract thing: where's the data? What's it look like? Ho
 (Ours won't have any data there yet.) To open Prisma Studio, run the command:
 
 ```bash
-yarn rw prisma studio
+yarn cedar prisma studio
 ```
 
 A new browser should open to [http://localhost:5555](http://localhost:5555) and now you can view and manipulate data in the database directly!
@@ -112,7 +106,7 @@ We haven't decided on the look and feel of our site yet, but wouldn't it be amaz
 Let's generate everything we need to perform all the CRUD (Create, Retrieve, Update, Delete) actions on posts so we can not only verify that we've got the right fields in the database, but that it will let us get some sample posts in there so we can start laying out our pages and see real content. Cedar has a _generator_ for just this occasion:
 
 ```bash
-yarn rw g scaffold post
+yarn cedar g scaffold post
 ```
 
 Let's point the browser to [http://localhost:8910/posts](http://localhost:8910/posts) and see what we have:
@@ -145,12 +139,12 @@ So, Cedar just created all the pages, components and services necessary to perfo
 
 If you head back to VSCode at some point and get a notice in one of the generated Post cells about `Cannot query "posts" on type "Query"` don't worry: we've seen this from time to time on some systems. There are two easy fixes:
 
-1. Run `yarn rw g types` in a terminal
+1. Run `yarn cedar g types` in a terminal
 2. Reload the GraphQL engine in VSCode: open the Command Palette (Cmd+Shift+P for Mac, Ctrl+Shift+P for Windows) and find "VSCode GraphQL: Manual Restart"
 
 :::
 
-Here's what happened when we ran that `yarn rw g scaffold post` command:
+Here's what happened when we ran that `yarn cedar g scaffold post` command:
 
 - Created several _pages_ in `web/src/pages/Post`:
   - `EditPostPage` for editing a post
@@ -168,14 +162,14 @@ Here's what happened when we ran that `yarn rw g scaffold post` command:
   - `Post` displays a single post
   - `PostForm` the actual form used by both the New and Edit components
   - `Posts` displays the table of all posts
-- Added an _SDL_ file to define several GraphQL queries and mutations in `api/src/graphql/posts.sdl.{jsx,ts}`
+- Added an _SDL_ file to define several GraphQL queries and mutations in `api/src/graphql/posts.sdl.{js,ts}`
 - Added a _services_ file in `api/src/services/posts/posts.{js,ts}` that makes the Prisma client calls to get data in and out of the database
 
 Pages and components/cells are nicely contained in `Post` directories to keep them organized while the layout is at the top level since there's only one of them.
 
 Whew! That may seem like a lot of stuff but we wanted to follow best-practices and separate out common functionality into individual components, just like you'd do in a real app. Sure we could have crammed all of this functionality into a single component, but we wanted these scaffolds to set an example of good development habits: we have to practice what we preach!
 
-:::info Generator Naming Conventions
+:::info[Generator Naming Conventions]
 
 You'll notice that some of the generated parts have plural names and some have singular. This convention is borrowed from Ruby on Rails which uses a more "human" naming convention: if you're dealing with multiple of something (like the list of all posts) it will be plural. If you're only dealing with a single something (like creating a new post) it will be singular. It sounds natural when speaking, too: "show me a list of all the posts" and "I'm going to create a new post."
 

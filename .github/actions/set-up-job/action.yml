@@ -46,6 +46,7 @@ runs:
 
     - name: 🐈 Set up yarn cache
       if: inputs.set-up-yarn-cache == 'true'
+      id: set-up-yarn-cache
       uses: ./.github/actions/set-up-yarn-cache
 
     # One of our dependencies is on GitHub instead of NPM and without authentication
@@ -56,6 +57,22 @@ runs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: yarn install --inline-builds && yarn --cwd packages/create-cedar-rsc-app install --inline-builds
+
+    - name: 💾 Save node_modules cache
+      if: inputs.set-up-yarn-cache == 'true' && steps.set-up-yarn-cache.outputs.node-modules-cache-hit != 'true'
+      uses: actions/cache/save@v5
+      continue-on-error: true
+      with:
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ hashFiles('package.json', 'yarn.lock', '.yarnrc.yml') }}
+
+    - name: 💾 Save create-cedar-rsc-app node_modules cache
+      if: inputs.set-up-yarn-cache == 'true' && steps.set-up-yarn-cache.outputs.create-cedar-rsc-app-cache-hit != 'true'
+      uses: actions/cache/save@v5
+      continue-on-error: true
+      with:
+        path: packages/create-cedar-rsc-app/node_modules
+        key: node-modules-create-cedar-rsc-app-${{ runner.os }}-${{ hashFiles('packages/create-cedar-rsc-app/yarn.lock', 'packages/create-cedar-rsc-app/package.json') }}
 
     - name: 🏗️ Build
       if: inputs.build == 'true'
