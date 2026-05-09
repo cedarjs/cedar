@@ -73,6 +73,16 @@
       "types": "./dist/cjs/bothCLIConfigHandler.d.ts",
       "default": "./dist/cjs/bothCLIConfigHandler.js"
     },
+    "./fastify": {
+      "import": {
+        "types": "./dist/fastify.d.ts",
+        "default": "./dist/fastify.js"
+      },
+      "require": {
+        "types": "./dist/cjs/fastify.d.ts",
+        "default": "./dist/cjs/fastify.js"
+      }
+    },
     "./udFetchable": {
       "import": {
         "types": "./dist/udFetchable.d.ts",
