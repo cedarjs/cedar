@@ -48,9 +48,9 @@ export const builder = async (yargs: Argv) => {
         bothServerCLIConfig.builder(yargs)
         return yargs.option('ud', {
           description:
-            'Use the Universal Deploy server (srvx) for the API side. ' +
-            'The web side is served by the existing static file server. ' +
-            'Pass --ud to opt in; the default is Fastify for both sides.',
+            'Use the Universal Deploy server for the API side. The web side ' +
+            'is served by the existing static file server. Pass --ud to opt ' +
+            'in; the default is Fastify for both sides.',
           type: 'boolean',
           default: false,
         })
@@ -215,7 +215,7 @@ export const builder = async (yargs: Argv) => {
           // UD serving is opt-in. Pass --ud to use the new srvx server instead
           // of the legacy Fastify server.
           description:
-            'Use the Universal Deploy server (srvx). Pass --ud to opt in; the default is Fastify.',
+            'Use the Universal Deploy server. Pass --ud to opt in; the default is Fastify.',
           type: 'boolean',
           default: false,
         })

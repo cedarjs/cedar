@@ -73,9 +73,9 @@ No changes to the Vite plugin or the build pipeline are needed.
    ```ts
    yargs.option('ud', {
      description:
-       'Use the Universal Deploy server (srvx) for the API side. ' +
-       'The web side is served by the existing static file server. ' +
-       'Pass --ud to opt in; the default is Fastify for both sides.',
+       'Use the Universal Deploy server for the API side. The web side is ' +
+       'served by the existing static file server. Pass --ud to opt in; the ' +
+       'default is Fastify for both sides.',
      type: 'boolean',
      default: false,
    })
