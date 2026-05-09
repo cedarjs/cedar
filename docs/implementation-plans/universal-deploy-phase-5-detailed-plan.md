@@ -89,33 +89,27 @@ server's middleware pipeline.
 
 ### Current State
 
-`apiDevServer.ts` creates a Vite SSR dev server (`middlewareMode: true`) and
-mounts a Fastify app on a separate port. `cedarDevDispatcherPlugin` exists in
-`@cedarjs/vite` but is not installed in the dev server. The Fastify app handles:
-
-- body parsing (`fastify-raw-body`)
-- URL data extraction (`fastify-url-data`)
-- route matching to the `LAMBDA_FUNCTIONS` registry
-- GraphQL Yoga streaming via `createFetchRequestFromFastify`
-- content-type parsing for form data and multipart
+`apiDevServer.ts` (removed in this phase) previously created a Vite SSR dev server
+(`middlewareMode: true`) and mounted a Fastify app on a separate port. The Fastify
+app handled body parsing, URL data extraction, route matching, GraphQL Yoga
+streaming, and content-type parsing.
 
 ### Target State
 
 A single `createServer()` call in `cedar-unified-dev` that:
 
 - starts one Vite dev server on the visible port
-- installs `cedarDevDispatcherPlugin` (already built in Phase 4) into the
-  `configureServer` middleware pipeline
-- routes API requests to Cedar's aggregate fetch dispatcher directly
+- installs inline API middleware via the `configureServer` hook
+- routes API requests through `apiDevMiddleware.ts` (Vite SSR + fetch-native
+  dispatch) directly inside the web server's middleware pipeline
 - falls through to Vite's normal web handling for non-API requests
 
 ### Tasks
 
-- install `cedarDevDispatcherPlugin` into the web Vite dev server's
-  `configureServer` hook (the plugin was built in Phase 4 but not wired up)
 - replace Fastify routing with fetch-native request classification and dispatch
-- implement body parsing as a utility function (or use a WHATWG-compatible
-  parser) rather than a Fastify plugin
+  via `apiDevMiddleware.ts`
+- implement body parsing as a utility function (`nodeRequestToFetch`) rather
+  than a Fastify plugin
 - mount GraphQL Yoga directly inside the middleware pipeline using its
   `handle(request, context)` method, which already expects a Fetch `Request`
 - preserve the `LAMBDA_FUNCTIONS` registry and HMR invalidation logic — only
@@ -124,6 +118,8 @@ A single `createServer()` call in `cedar-unified-dev` that:
   flows correctly without Fastify's `req`/`reply` objects
 - preserve error surfacing: backend errors should still be visible in both
   terminal and HTTP response where appropriate
+- remove `apiDevServer.ts` and `cedarDevDispatcherPlugin` (both superseded by
+  `apiDevMiddleware.ts`)
 
 ### Blockers to Resolve
 
@@ -132,10 +128,9 @@ A single `createServer()` call in `cedar-unified-dev` that:
   code wraps it in `getAsyncStoreInstance().run()` inside a Fastify handler.
   That AsyncLocalStorage context needs to be established in the middleware
   pipeline instead.
-- The `requestHandler` helper from `@cedarjs/api-server/requestHandlers` is
-  currently coupled to Fastify `req`/`reply` objects. It may need a thin
-  fetch-native wrapper, or the helper itself may need to be split into
-  transport-agnostic and Fastify-specific variants.
+- Legacy Lambda-shaped handlers need to be wrapped for the fetch-native path.
+  `wrapLegacyHandler` from `@cedarjs/api/runtime` provides this bridge, letting
+  the inline middleware treat all handlers uniformly as `CedarHandler`.
 
 ### Deliverable
 
@@ -265,6 +260,59 @@ A single `buildApp()` call builds both environments from the same module graph.
   interleaved in the same Vite server output
 - The web client build's `cwd` sensitivity (PostCSS/Tailwind) may resist
   merging into a unified config
+
+## Implementation Notes
+
+### Why Cedar Uses `RunnableDevEnvironment` Instead of `FetchableDevEnvironment`
+
+Vite 6+ introduced the **Environment API** with two primary dev-environment
+abstractions for full-stack frameworks:
+
+- **`RunnableDevEnvironment`** — Vite transforms code AND executes it via a
+  `ModuleRunner` (`.import()` / `.runner`). This is the default for Node.js SSR.
+- **`FetchableDevEnvironment`** — Vite transforms code, but the runtime executes
+  it via `environment.transformRequest(url)`. The environment exposes a
+  `handleRequest(Request)` method that returns `Response`. This is designed for
+  non-Node runtimes (Cloudflare Workers, Deno, Bun edge) where the app code runs
+  in a different process/runtime than the Vite dev server.
+
+After evaluating both patterns against Cedar's requirements, Cedar's unified dev
+server (`cedar-unified-dev`) uses **two Vite dev servers** internally:
+
+1. A **client** dev server (standard Vite, port 8910) that serves web assets and
+   runs the inline API middleware.
+2. An internal **SSR** dev server (`middlewareMode: true`, no visible port) that
+   loads API functions via `ssrLoadModule` and provides HMR for the API side.
+
+This is functionally equivalent to `RunnableDevEnvironment` and is the pattern
+that the Vite team explicitly recommends for **Node-based full-stack
+frameworks**. The Vite core team decided **not** to make the default SSR
+environment a `FetchableDevEnvironment` because `RunnableDevEnvironment` is the
+correct abstraction when the dev server and the app runtime share the same Node
+process.
+
+**Conclusion**: Cedar's current approach is architecturally sound for Node.
+`FetchableDevEnvironment` would only be needed if Cedar wants to support
+**dev-mode simulation of edge runtimes** (e.g. running API code in `workerd`
+locally to match Cloudflare Workers production). That is a future enhancement,
+not a requirement for the default Node path.
+
+Reference: [vitejs/vite Discussion #18191](https://github.com/vitejs/vite/discussions/18191)
+
+### Default `ssr` Environment in `buildApp()`
+
+When using Vite's `createBuilder()` with a config file that contains `build`
+options, Vite automatically injects a default `ssr` environment alongside the
+`client` environment. Because Cedar declares its own `api` environment (which
+replaces the default `ssr` environment conceptually), the leftover default
+`ssr` environment inherits the web `index.html` input and causes Vite to throw:
+
+> "rollupOptions.input should not be an html file when building for SSR"
+
+Cedar resolves this with a small `configResolved` plugin (`cedar-build-app-cleanup`)
+that removes the redundant `ssr` environment from the resolved config before
+`createBuilder()` instantiates it. This lets `buildApp()` build only the two
+environments Cedar actually needs: `client` and `api`.
 
 ## Deliverables
 

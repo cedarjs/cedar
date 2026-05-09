@@ -226,6 +226,11 @@ jobs:
     name: Server tests
     uses: ./.github/workflows/server-tests.yml
 
+  ud-tests:
+    needs: check
+    name: Universal Deploy tests
+    uses: ./.github/workflows/ud-tests.yml
+
   background-jobs-e2e:
     needs: check
 
@@ -253,6 +258,7 @@ jobs:
       - live-smoke-tests
       - create-cedar-app
       - server-tests
+      - ud-tests
       - background-jobs-e2e
     if: always()
 

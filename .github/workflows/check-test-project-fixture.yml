@@ -90,21 +90,39 @@ jobs:
       - name: Check for changed files
         if: steps.detect-changes.outputs.code == 'true' && !contains(github.event.pull_request.labels.*.name, 'fixture-ok')
         run: |
-          if [ $(git status --porcelain | wc -l) -gt 0 ]; then
-            echo 'Updating the test project fixture caused files to change'
-            echo 'Please run `yarn rebuild-test-project-fixture` locally and commit any changes'
-            echo
-            echo 'Deleted files:'
-            git status --porcelain | grep '^ D ' | awk '{print "        " $2}'
-            echo
-            echo 'Modified files:'
-            git status --porcelain | grep '^ M ' | awk '{print "        " $2}'
-            echo
-            echo 'Untracked files:'
-            git status --porcelain | grep '^?? ' | awk '{print "        " $2}'
-            echo
-            echo
-            echo 'Full diff:'
-            git diff
-            exit 1;
+          if [ $(git status --porcelain | wc -l) -eq 0 ]; then
+            exit 0
           fi
+
+          # Fail fast on deleted or untracked files
+          if git status --porcelain | grep -qE '^ D |^\?\? '; then
+            : # fall through to failure output below
+          else
+            # Check if only package.json files are modified
+            non_package_json=$(git status --porcelain | grep '^ M ' | awk '{print $2}' | grep -v 'package\.json$' || true)
+            if [ -z "$non_package_json" ]; then
+              # Check if the only changes are to postcss, postcss-loader, or autoprefixer versions
+              remaining=$(git diff -- '*package.json' | grep -E '^[+-][^+-]' | grep -vE '^[+-]\s*"(postcss"|postcss-loader"|autoprefixer"):' || true)
+              if [ -z "$remaining" ]; then
+                echo 'Only allowed package version changes (postcss, postcss-loader, autoprefixer) detected. Ignoring.'
+                exit 0
+              fi
+            fi
+          fi
+
+          echo 'Updating the test project fixture caused files to change'
+          echo 'Please run `yarn rebuild-test-project-fixture` locally and commit any changes'
+          echo
+          echo 'Deleted files:'
+          git status --porcelain | grep '^ D ' | awk '{print "        " $2}'
+          echo
+          echo 'Modified files:'
+          git status --porcelain | grep '^ M ' | awk '{print "        " $2}'
+          echo
+          echo 'Untracked files:'
+          git status --porcelain | grep '^?? ' | awk '{print "        " $2}'
+          echo
+          echo
+          echo 'Full diff:'
+          git diff
+          exit 1

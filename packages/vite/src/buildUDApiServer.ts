@@ -11,8 +11,9 @@ export interface BuildUDApiServerOptions {
  * Builds the API server Universal Deploy Node entry using Vite.
  *
  * Runs a Vite server build that:
- *   1. Installs `cedarUniversalDeployPlugin()` to register `virtual:cedar-api`
- *      and resolve `virtual:ud:catch-all` → Cedar's aggregate fetch dispatcher
+ *   1. Installs `cedarUniversalDeployPlugin()` to register per-route API
+ *      entries (GraphQL, auth, functions) with UD's store and resolve
+ *      `virtual:ud:catch-all` → Cedar's multi-route rou3 dispatcher.
  *   2. Installs `node()` from `@universal-deploy/node/vite` to emit a
  *      self-contained Node server entry at `api/dist/ud/index.js`
  *
@@ -49,8 +50,8 @@ export const buildUDApiServer = async ({
     logLevel: verbose ? 'info' : 'warn',
 
     plugins: [
-      // Registers virtual:cedar-api with @universal-deploy/store and resolves
-      // virtual:ud:catch-all → virtual:cedar-api → Cedar's aggregate fetchable.
+      // Registers per-route API entries with @universal-deploy/store and
+      // resolves virtual:ud:catch-all → Cedar's multi-route rou3 dispatcher.
       cedarUniversalDeployPlugin({ apiRootPath }),
 
       // Emits a self-contained Node server entry (api/dist/ud/index.js) that

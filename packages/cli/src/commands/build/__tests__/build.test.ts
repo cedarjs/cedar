@@ -66,8 +66,12 @@ vi.mock('node:fs', () => {
 // With these mocks it's down to ~250ms
 
 vi.mock('@cedarjs/internal/dist/build/api', () => ({
-  buildApiWithVite: vi.fn(),
   cleanApiBuild: vi.fn(),
+  buildApi: vi.fn().mockResolvedValue({ errors: [], warnings: [] }),
+}))
+
+vi.mock('@cedarjs/vite/build', () => ({
+  buildCedarApp: vi.fn(),
 }))
 
 vi.mock('@cedarjs/internal/dist/generate/generate', () => ({
@@ -237,9 +241,8 @@ test('UD server entry task is included when --ud is passed', async () => {
     [
       "Generating Prisma Client...",
       "Verifying graphql schema...",
-      "Building API...",
+      "Building App...",
       "Bundling API server entry (Universal Deploy)...",
-      "Building Web...",
     ]
   `)
 })

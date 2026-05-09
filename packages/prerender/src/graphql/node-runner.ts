@@ -1,8 +1,5 @@
-import { createServer, version as viteVersion, mergeConfig } from 'vite'
-import type { ViteDevServer, UserConfig } from 'vite'
-import { ViteNodeRunner } from 'vite-node/client'
-import { ViteNodeServer } from 'vite-node/server'
-import { installSourcemapsSupport } from 'vite-node/source-map'
+import { createServer, isRunnableDevEnvironment, mergeConfig } from 'vite'
+import type { ViteDevServer, RunnableDevEnvironment, UserConfig } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
 import {
@@ -10,6 +7,7 @@ import {
   cedarjsResolveCedarStyleImportsPlugin,
   cedarjsJobPathInjectorPlugin,
   cedarSwapApolloProvider,
+  cedarCjsCompatPlugin,
 } from '@cedarjs/vite'
 
 import { cedarAutoImportsPlugin } from './vite-plugin-cedar-auto-import.js'
@@ -19,9 +17,15 @@ async function createViteServer(customConfig: UserConfig = {}) {
   const defaultConfig: UserConfig = {
     mode: 'production',
     optimizeDeps: {
-      // This is recommended in the vite-node readme
       noDiscovery: true,
       include: undefined,
+    },
+    server: {
+      hmr: false,
+      watch: null,
+    },
+    environments: {
+      nodeRunnerEnv: {},
     },
     resolve: {
       alias: [
@@ -32,6 +36,7 @@ async function createViteServer(customConfig: UserConfig = {}) {
       ],
     },
     plugins: [
+      cedarCjsCompatPlugin(),
       cedarImportDirPlugin(),
       cedarAutoImportsPlugin(),
       cedarjsResolveCedarStyleImportsPlugin(),
@@ -45,17 +50,12 @@ async function createViteServer(customConfig: UserConfig = {}) {
 
   const server = await createServer(mergedConfig)
 
-  // For old Vite, this is needed to initialize the plugins.
-  if (Number(viteVersion.split('.')[0]) < 6) {
-    await server.pluginContainer.buildStart({})
-  }
-
   return server
 }
 
 export class NodeRunner {
   private viteServer?: ViteDevServer = undefined
-  private runner?: ViteNodeRunner = undefined
+  private env?: RunnableDevEnvironment = undefined
   private readonly customViteConfig: UserConfig
 
   constructor(customViteConfig: UserConfig = {}) {
@@ -64,39 +64,27 @@ export class NodeRunner {
 
   async init() {
     this.viteServer = await createViteServer(this.customViteConfig)
-    const nodeServer = new ViteNodeServer(this.viteServer, {
-      transformMode: {
-        ssr: [/.*/],
-        web: [/\/web\//],
-      },
-      deps: {
-        fallbackCJS: true,
-      },
-    })
 
-    // fixes stacktraces in Errors
-    installSourcemapsSupport({
-      getSourceMap: (source) => nodeServer?.getSourceMap(source),
-    })
+    const env = this.viteServer.environments.nodeRunnerEnv
+    if (!env || !isRunnableDevEnvironment(env)) {
+      await this.viteServer.close()
+      throw new Error('Vite environment is not runnable.')
+    }
 
-    this.runner = new ViteNodeRunner({
-      root: this.viteServer.config.root,
-      base: this.viteServer.config.base,
-      fetchModule(id) {
-        return nodeServer.fetchModule(id)
-      },
-      resolveId(id, importer) {
-        return nodeServer.resolveId(id, importer)
-      },
-    })
+    this.env = env
   }
 
   async importFile(filePath: string) {
-    if (!this.runner) {
+    if (!this.env) {
       await this.init()
     }
 
-    return this.runner?.executeFile(filePath)
+    const env = this.env
+    if (!env) {
+      throw new Error('NodeRunner failed to initialize')
+    }
+
+    return env.runner.import(filePath)
   }
 
   async close() {

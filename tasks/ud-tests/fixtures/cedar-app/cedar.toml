@@ -1,0 +1,7 @@
+[web]
+  title = "Cedar App"
+  port = 18910
+  apiUrl = "/.api/functions"
+
+[api]
+  port = 18911
