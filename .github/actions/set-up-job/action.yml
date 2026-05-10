@@ -4,6 +4,12 @@ description: >
   Enable corepack, set up Node.js, yarn install, and build.
 
 inputs:
+  node-version:
+    description: >
+      The version of Node.js to use.
+    required: false
+    default: '24'
+
   set-up-yarn-cache:
     description: >
       For some actions, setting up the yarn cache takes longer than it would to just yarn install.
@@ -33,7 +39,7 @@ runs:
     - name: ⬢ Set up Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: 24
+        node-version: ${{ inputs.node-version }}
 
     # We have to enable Corepack again for Windows. 🤷
     # In general, we're waiting on [this issue](https://github.com/actions/setup-node/issues/531)
