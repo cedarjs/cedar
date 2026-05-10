@@ -84,11 +84,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        node-version: [24, 26]
 
-    name: 🏗 Build, lint, test / ${{ matrix.os }} / node 24 latest
+    name: 🏗 Build, lint, test / ${{ matrix.os }} / node ${{ matrix.node-version }} latest
     uses: ./.github/workflows/build-lint-test.yml
     with:
       os: ${{ matrix.os }}
+      node-version: ${{ matrix.node-version }}
 
   tutorial-e2e:
     needs: check
