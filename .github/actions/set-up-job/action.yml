@@ -54,9 +54,15 @@ runs:
       shell: bash
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
-          echo "cache-path=$APPDATA/npm-cache/_prebuilds" >> "$GITHUB_OUTPUT"
+          PREBUILD_PATH="$APPDATA/npm-cache/_prebuilds"
         else
-          echo "cache-path=$HOME/.npm/_prebuilds" >> "$GITHUB_OUTPUT"
+          PREBUILD_PATH="$HOME/.npm/_prebuilds"
+        fi
+        echo "cache-path=$PREBUILD_PATH" >> "$GITHUB_OUTPUT"
+        if [ -d "$PREBUILD_PATH" ]; then
+          echo "cache-path-exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "cache-path-exists=false" >> "$GITHUB_OUTPUT"
         fi
 
     - name: 🔧 Get better-sqlite3 version
@@ -100,7 +106,7 @@ runs:
         key: node-modules-create-cedar-rsc-app-${{ runner.os }}-${{ hashFiles('packages/create-cedar-rsc-app/yarn.lock', 'packages/create-cedar-rsc-app/package.json') }}
 
     - name: 💾 Save prebuild-install cache
-      if: steps.cache-prebuild-install.outputs.cache-hit != 'true'
+      if: steps.cache-prebuild-install.outputs.cache-hit != 'true' && steps.prebuild-cache-path.outputs.cache-path-exists == 'true'
       uses: actions/cache/save@v5
       continue-on-error: true
       with:
