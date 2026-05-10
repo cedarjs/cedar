@@ -63,7 +63,7 @@ runs:
       id: bs3-version
       shell: bash
       run: |
-        VERSION=$(grep -A 2 "^better-sqlite3@" yarn.lock | awk '/^  version:/ {print $2}')
+        VERSION=$(grep -A 1 "^\"better-sqlite3@" yarn.lock | awk '/^  version:/ {print $2}')
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
     - name: ♻️ Restore prebuild-install cache
