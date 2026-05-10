@@ -83,7 +83,7 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
         yarn install --inline-builds
-        cd packages/create-cedar-rsc-app
+        cd "$GITHUB_WORKSPACE/packages/create-cedar-rsc-app"
         yarn install --inline-builds
 
     - name: 💾 Save node_modules cache
