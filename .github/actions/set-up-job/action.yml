@@ -49,6 +49,24 @@ runs:
       id: set-up-yarn-cache
       uses: ./.github/actions/set-up-yarn-cache
 
+    - name: 🔧 Get prebuild-install cache path
+      id: prebuild-cache-path
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          echo "cache-path=$APPDATA/npm-cache/_prebuilds" >> "$GITHUB_OUTPUT"
+        else
+          echo "cache-path=$HOME/.npm/_prebuilds" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: ♻️ Restore prebuild-install cache
+      id: cache-prebuild-install
+      uses: actions/cache/restore@v5
+      continue-on-error: true
+      with:
+        path: ${{ steps.prebuild-cache-path.outputs.cache-path }}
+        key: prebuild-cache-${{ runner.os }}
+
     # One of our dependencies is on GitHub instead of NPM and without authentication
     # we'll get rate limited and this step becomes flaky.
     - name: 🐈 Yarn install
@@ -73,6 +91,14 @@ runs:
       with:
         path: packages/create-cedar-rsc-app/node_modules
         key: node-modules-create-cedar-rsc-app-${{ runner.os }}-${{ hashFiles('packages/create-cedar-rsc-app/yarn.lock', 'packages/create-cedar-rsc-app/package.json') }}
+
+    - name: 💾 Save prebuild-install cache
+      if: steps.cache-prebuild-install.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      continue-on-error: true
+      with:
+        path: ${{ steps.prebuild-cache-path.outputs.cache-path }}
+        key: prebuild-cache-${{ runner.os }}
 
     - name: 🏗️ Build
       if: inputs.build == 'true'
