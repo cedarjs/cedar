@@ -5,9 +5,21 @@ import type {
   Context as LambdaContext,
 } from 'aws-lambda'
 import * as cookie from 'cookie'
-import { parse } from 'picoquery'
+import type { parse as picoqueryParse } from 'picoquery'
 
 import { getAuthenticationContext } from './auth/index.js'
+
+// `picoquery` is published as ESM-only (`"type": "module"`), so requiring it
+// from the CJS build of this file throws `ERR_REQUIRE_ESM` on Node runtimes
+// that don't enable `require(esm)` (e.g. Vercel's serverless runtime).
+// Lazy-load it via dynamic import so the CJS bundle stays loadable.
+let picoqueryParsePromise: Promise<typeof picoqueryParse> | undefined
+const getPicoqueryParse = () => {
+  if (!picoqueryParsePromise) {
+    picoqueryParsePromise = import('picoquery').then((m) => m.parse)
+  }
+  return picoqueryParsePromise
+}
 
 export interface CedarRequestContext {
   params: Record<string, string>
@@ -157,6 +169,7 @@ export async function requestToLegacyEvent(
   const url = new URL(request.url)
   const bodyText = await request.clone().text()
   const headers = Object.fromEntries(request.headers.entries())
+  const parse = await getPicoqueryParse()
   // @ts-expect-error - picoquery returns nested objects and arrays for
   // bracket-notation params (e.g. ids[]=1&ids[]=2, user[name]=alice).
   // APIGatewayProxyEventQueryStringParameters is too narrow for this richer
