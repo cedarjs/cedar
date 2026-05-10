@@ -10,7 +10,8 @@ async function run() {
 
   if (!version) {
     console.error(
-      'You have to provide a version.\nUsage ./update-package-versions <version>',
+      'You have to provide a version.\n' +
+        'Usage ./update-package-versions.cjs <version>',
     )
     process.exitCode = 1
     return
@@ -18,25 +19,48 @@ async function run() {
 
   const cwd = path.join(__dirname, '../')
 
-  const cmd = [
-    'yarn lerna version',
-    version,
-    '--force-publish',
-    '--no-push',
-    '--no-git-tag-version',
-    '--exact',
-    '--yes',
-  ].join(' ')
-
-  console.log(`Running "${cmd}"`)
+  console.log(`Updating all packages to version ${version}`)
   console.log()
-  child.execSync(cmd, {
-    cwd,
-  })
+
+  // Get all workspace packages
+  const workspacesOutput = child
+    .execSync('yarn workspaces list --json', { cwd, encoding: 'utf-8' })
+    .toString()
+    .trim()
+
+  const workspaces = workspacesOutput
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line))
+    .filter((ws) => ws.location !== '.')
+
+  for (const workspace of workspaces) {
+    const pkgJsonPath = path.join(cwd, workspace.location, 'package.json')
+    const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
+
+    // Update the package's own version
+    pkg.version = version
+
+    // Update dependencies and devDependencies
+    for (const deps of [pkg.dependencies, pkg.devDependencies]) {
+      if (!deps) {
+        continue
+      }
+      for (const dep of Object.keys(deps)) {
+        if (dep.startsWith('@cedarjs/') || deps[dep] === 'workspace:*') {
+          deps[dep] = version
+        }
+      }
+    }
+
+    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n')
+    console.log(`  Updated ${workspace.location}/package.json`)
+  }
+
   console.log()
 
   // Updates create-cedar-app template
-  console.log('Updating CRWA template...')
+  console.log('Updating create-cedar-app template...')
   const tsTemplatePath = path.join(
     cwd,
     'packages/create-cedar-app/templates/ts',
@@ -64,12 +88,6 @@ async function run() {
   console.log()
 }
 
-/**
- * Iterates over `@cedarjs/*` dependencies in a package.json and updates their version.
- *
- * @param {string} pkgPath
- * @param {string} version
- */
 function updateRWJSPkgsVersion(pkgPath, version) {
   const pkg = JSON.parse(
     fs.readFileSync(path.join(pkgPath, 'package.json'), 'utf-8'),

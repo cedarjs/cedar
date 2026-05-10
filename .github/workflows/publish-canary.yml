@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         # `fetch-depth`—number of commits to fetch. `0` fetches all history for all branches and tags.
-        #  This is required because lerna uses tags to determine the version.
+        #  This is required because we use git tags to determine the version.
         with:
           fetch-depth: 0
 
