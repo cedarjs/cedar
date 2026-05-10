@@ -99,6 +99,11 @@ runs:
         path: packages/create-cedar-rsc-app/node_modules
         key: node-modules-create-cedar-rsc-app-${{ runner.os }}-${{ hashFiles('packages/create-cedar-rsc-app/yarn.lock', 'packages/create-cedar-rsc-app/package.json') }}
 
+    - name: 💾 Ensure prebuild-install cache path exists
+      if: steps.cache-prebuild-install.outputs.cache-hit != 'true'
+      shell: bash
+      run: mkdir -p "${{ steps.prebuild-cache-path.outputs.cache-path }}"
+
     - name: 💾 Save prebuild-install cache
       if: steps.cache-prebuild-install.outputs.cache-hit != 'true'
       uses: actions/cache/save@v5
