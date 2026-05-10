@@ -104,7 +104,6 @@ export async function createCacheKeys({
           'tsconfig.json',
           'tsconfig.base.json',
           'nx.json',
-          'lerna.json',
           'packages',
         ].join('\n'),
       ),

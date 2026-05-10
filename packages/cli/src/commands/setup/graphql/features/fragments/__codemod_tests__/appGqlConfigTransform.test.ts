@@ -58,7 +58,7 @@ describe.skipIf(process.env.CI && process.platform === 'win32')(
     })
 
     test('test-project App.tsx', async () => {
-      const rootFwPath = path.dirname(findUp('lerna.json') || '')
+      const rootFwPath = path.dirname(findUp('nx.json') || '')
       const testProjectAppTsx = fs.readFileSync(
         path.join(
           rootFwPath,
