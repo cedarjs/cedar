@@ -675,8 +675,9 @@ async function publishPackages(distTag: string, dryRun: boolean) {
         path.join(REPO_ROOT, workspace.location),
         dryRun,
       )
-    } catch {
-      continue
+    } catch (e) {
+      log(`❌ Failed to publish ${workspace.location}: ${e}`)
+      throw e
     }
   }
 }

@@ -135,7 +135,7 @@ PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
 if [[ "$GITHUB_REF_NAME" = 'main' ]]; then
   BASE_VERSION="$((MAJOR + 1)).0.0"
 else
-  BASE_VERSION="$MAJOR.$MINOR.$PATCH"
+  BASE_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
 fi
 
 CANARY_VERSION="${BASE_VERSION}-${TAG}.${COMMIT_COUNT}"
