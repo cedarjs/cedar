@@ -119,13 +119,11 @@ echo "Publishing $TAG from $GITHUB_REF_NAME using npm token ${NPM_AUTH_TOKEN:0:5
 
 # ── Calculate version ──────────────────────────────────────────────────────────
 
-LATEST_TAG=$(git describe --abbrev=0 --tags)
+LATEST_TAG=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
 echo "Latest tag: $LATEST_TAG"
 
-COMMIT_COUNT=$(git rev-list --count "${LATEST_TAG}..HEAD")
-echo "Commits since tag: $COMMIT_COUNT"
-
-CURRENT_VERSION="${LATEST_TAG#v}"
+CURRENT_VERSION="${LATEST_TAG##*/}"
+CURRENT_VERSION="${CURRENT_VERSION#v}"
 echo "Current version: $CURRENT_VERSION"
 
 MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
