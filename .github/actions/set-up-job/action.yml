@@ -59,13 +59,20 @@ runs:
           echo "cache-path=$HOME/.npm/_prebuilds" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: 🔧 Get better-sqlite3 version
+      id: bs3-version
+      shell: bash
+      run: |
+        VERSION=$(grep -A 2 "^better-sqlite3@" yarn.lock | awk '/^  version:/ {print $2}')
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
     - name: ♻️ Restore prebuild-install cache
       id: cache-prebuild-install
       uses: actions/cache/restore@v5
       continue-on-error: true
       with:
         path: ${{ steps.prebuild-cache-path.outputs.cache-path }}
-        key: prebuild-cache-${{ runner.os }}
+        key: prebuild-cache-${{ runner.os }}-${{ steps.bs3-version.outputs.version }}
 
     # One of our dependencies is on GitHub instead of NPM and without authentication
     # we'll get rate limited and this step becomes flaky.
@@ -98,7 +105,7 @@ runs:
       continue-on-error: true
       with:
         path: ${{ steps.prebuild-cache-path.outputs.cache-path }}
-        key: prebuild-cache-${{ runner.os }}
+        key: prebuild-cache-${{ runner.os }}-${{ steps.bs3-version.outputs.version }}
 
     - name: 🏗️ Build
       if: inputs.build == 'true'
