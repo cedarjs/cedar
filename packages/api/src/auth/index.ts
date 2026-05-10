@@ -14,7 +14,14 @@ export const AUTH_PROVIDER_HEADER = 'auth-provider'
 export const getAuthProviderHeader = (
   event: APIGatewayProxyEvent | Request,
 ) => {
-  const authProviderKey = Object.keys(event?.headers ?? {}).find(
+  // `Request.headers` is a `Headers` instance, not a plain object — `Object.keys`
+  // returns `[]` for class instances, so look it up directly via the `.get()` API.
+  const headers = event?.headers
+  if (headers && typeof (headers as Headers).get === 'function') {
+    return (headers as Headers).get(AUTH_PROVIDER_HEADER) ?? undefined
+  }
+
+  const authProviderKey = Object.keys(headers ?? {}).find(
     (key) => key.toLowerCase() === AUTH_PROVIDER_HEADER,
   )
   if (authProviderKey) {

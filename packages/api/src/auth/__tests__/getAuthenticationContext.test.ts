@@ -195,6 +195,56 @@ describe('getAuthenticationContext with bearer tokens', () => {
   })
 })
 
+describe('getAuthenticationContext with a Fetch Request and bearer token', () => {
+  const authDecoderOne = async (_token: string, type: string) => {
+    return new Promise<Decoded>((resolve) => {
+      if (type !== 'one') {
+        return resolve(null)
+      }
+
+      return resolve({
+        iss: 'one',
+        sub: 'user-id',
+      })
+    })
+  }
+
+  // Regression test: `Request.headers` is a `Headers` instance (a class),
+  // not a plain object. `Object.keys(headers)` returns `[]` for class
+  // instances, so the previous implementation silently treated authenticated
+  // requests as unauthenticated when no cookie was set.
+  it('Reads auth-provider header from a Fetch Request when no cookie is set', async () => {
+    const fetchRequest = new Request('http://localhost:3000', {
+      method: 'POST',
+      body: '',
+      headers: {
+        'auth-provider': 'one',
+        authorization: 'Bearer auth-test-token',
+      },
+    })
+
+    const result = await getAuthenticationContext({
+      authDecoder: authDecoderOne,
+      event: fetchRequest,
+      context: {} as Context,
+    })
+
+    if (!result) {
+      fail('Result is undefined')
+    }
+
+    const [decoded, { type, schema, token }] = result
+
+    expect(decoded).toMatchObject({
+      iss: 'one',
+      sub: 'user-id',
+    })
+    expect(type).toEqual('one')
+    expect(schema).toEqual('Bearer')
+    expect(token).toEqual('auth-test-token')
+  })
+})
+
 describe('getAuthenticationContext with cookies', () => {
   const authDecoderOne = async (_token: string, type: string) => {
     return new Promise<Decoded>((resolve) => {
