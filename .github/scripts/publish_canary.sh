@@ -2,6 +2,8 @@
 #
 # Used in the publish-canary.yml GitHub Action workflow.
 
+set -euo pipefail
+
 echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
 
 if [[ -z "$NPM_AUTH_TOKEN" ]]; then
@@ -115,97 +117,155 @@ echo "NPM token for 'cedarjs' org scope is valid and not expired"
 TAG='canary' && [[ "$GITHUB_REF_NAME" = 'next' ]] && TAG='next'
 echo "Publishing $TAG from $GITHUB_REF_NAME using npm token ${NPM_AUTH_TOKEN:0:5}"
 
-args=()
+# ── Calculate version ──────────────────────────────────────────────────────────
+
+LATEST_TAG=$(git describe --abbrev=0 --tags)
+echo "Latest tag: $LATEST_TAG"
+
+COMMIT_COUNT=$(git rev-list --count "${LATEST_TAG}..HEAD")
+echo "Commits since tag: $COMMIT_COUNT"
+
+CURRENT_VERSION="${LATEST_TAG#v}"
+echo "Current version: $CURRENT_VERSION"
+
+MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
+PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
 
 if [[ "$GITHUB_REF_NAME" = 'main' ]]; then
-  args+=(premajor)
+  BASE_VERSION="$((MAJOR + 1)).0.0"
+else
+  BASE_VERSION="$MAJOR.$MINOR.$PATCH"
 fi
 
-args+=(
-  --include-merged-tags
-  --canary
-  --exact
-  --preid "$TAG"
-  --dist-tag "$TAG"
-  --force-publish
-  --loglevel verbose
-  --no-git-reset
-)
+CANARY_VERSION="${BASE_VERSION}-${TAG}.${COMMIT_COUNT}"
+echo "Canary version: $CANARY_VERSION"
 
-# `echo 'n'` to answer "no" to the "Are you sure you want to publish these
-#   packages?" prompt.
-# `2>&1` to pipe both stdout and stderr to grep. Mostly do this keep the github
-#   action output clean.
-# At the end we use awk to increase the commit count by 1, because we'll commit
-#   updated package.jsons in the next step, which will increase the final
-#   number that lerna will use when publishing the canary packages.
-echo 'n' \
-  | yarn lerna publish "${args[@]}" 2>&1 \
-    > publish_output
-cat publish_output \
-  | grep -E '\-canary\.|\-next\.' \
-  | tail -n 1 \
-  | sed 's/.*=> //' \
-  | sed 's/\+.*//' \
-  | awk -F. '{ $NF = $NF + 1 } 1' OFS=. \
-    > canary_version
+# ── Update all packages to canary version ──────────────────────────────────────
 
-if [ ! -s canary_version ]; then
-  echo "The canary_version file is empty or does not exist."
-  echo "'yarn lerna publish' output was:"
-  echo "---------------\n"
-  cat publish_output
-  echo "---------------\n"
-
-  exit 1
-fi
-
-# Update create-cedar-app templates and overlays to use canary packages
-
-canary_ver=$(cat canary_version)
-find packages/create-cedar-app/templates packages/create-cedar-app/database-overlays \
-  -name "package.json" \
-  | while IFS= read -r pkg_json; do
-    sed "s/\"@cedarjs\/\(.*\)\": \".*\"/\"@cedarjs\/\1\": \"$canary_ver\"/" \
-      "$pkg_json" > tmpfile \
-      && mv tmpfile "$pkg_json"
-  done
-
-# Update all packages to replace any "workspace:*" with this canary version
+echo "Updating package versions to $CANARY_VERSION"
 
 framework_dir="$(cd "$(dirname "$0")" && pwd)/../.."
-ws="$(yarn workspaces list --json)"
 
-IFS=$'\n'
-for line in $ws; do
-  location=$(
-    echo "$line" \
-      | jq -r '.location'
-  )
+# Use a tempfile for sed compatibility across platforms
+workspaces=$(yarn workspaces list --json)
 
-  relative_pkg_json_path="$location/package.json"
+while IFS= read -r line; do
+  location=$(echo "$line" | jq -r '.location')
 
-  if [[ $location == "." ]]; then
-    printf "Skipping:\t%s\n" "$relative_pkg_json_path"
+  if [[ "$location" == "." ]]; then
     continue
   fi
 
-  pkg_json_path="$framework_dir/$relative_pkg_json_path"
+  pkg_json_path="$framework_dir/$location/package.json"
+
   if [ ! -f "$pkg_json_path" ]; then
-    printf "ERROR:\nNo package.json found at%s\n" "$relative_pkg_json_path"
+    echo "ERROR: No package.json at $location/package.json"
     exit 1
   fi
 
-  printf "Processing:\t%s\n" "$relative_pkg_json_path"
-  sed "s/workspace:\*/$(cat canary_version)/g" "$pkg_json_path" > tmpfile \
-    && mv tmpfile "$pkg_json_path"
-done
+  # Update version field in package.json using jq
+  tmpfile=$(mktemp)
+  jq --arg ver "$CANARY_VERSION" '.version = $ver' "$pkg_json_path" > "$tmpfile" \
+    && mv "$tmpfile" "$pkg_json_path"
+  echo "  Updated $location/package.json"
+done <<< "$workspaces"
 
-# Commit the changes
+# ── Update workspace:* dependencies ────────────────────────────────────────────
+
+echo "Updating workspace:* dependencies to $CANARY_VERSION"
+
+while IFS= read -r line; do
+  location=$(echo "$line" | jq -r '.location')
+
+  if [[ "$location" == "." ]]; then
+    continue
+  fi
+
+  pkg_json_path="$framework_dir/$location/package.json"
+
+  tmpfile=$(mktemp)
+  jq \
+    --arg ver "$CANARY_VERSION" \
+    '
+      if .dependencies then
+        .dependencies |= with_entries(
+          if .value == "workspace:*" then .value = $ver else . end
+        )
+      else . end
+      | if .devDependencies then
+          .devDependencies |= with_entries(
+            if .value == "workspace:*" then .value = $ver else . end
+          )
+        else . end
+    ' "$pkg_json_path" > "$tmpfile" && mv "$tmpfile" "$pkg_json_path"
+
+  echo "  Updated $location/package.json workspace deps"
+done <<< "$workspaces"
+
+# ── Update create-cedar-app templates and overlays ─────────────────────────────
+
+echo "Updating create-cedar-app templates to $CANARY_VERSION"
+
+find "$framework_dir/packages/create-cedar-app/templates" \
+  "$framework_dir/packages/create-cedar-app/database-overlays" \
+  -name "package.json" \
+  | while IFS= read -r pkg_json; do
+    tmpfile=$(mktemp)
+    jq --arg ver "$CANARY_VERSION" '
+      if .dependencies then
+        .dependencies |= with_entries(
+          if .key | startswith("@cedarjs/") then .value = $ver else . end
+        )
+      else . end
+      | if .devDependencies then
+          .devDependencies |= with_entries(
+            if .key | startswith("@cedarjs/") then .value = $ver else . end
+          )
+        else . end
+    ' "$pkg_json" > "$tmpfile" && mv "$tmpfile" "$pkg_json"
+    echo "  Updated $(basename "$(dirname "$pkg_json")")/package.json"
+  done
+
+# ── Commit the changes ─────────────────────────────────────────────────────────
+
 git config user.name "GitHub Actions"
 git config user.email "<>"
 
-git commit -am "Update create-cedar-app templates to use canary packages"
+git commit -am "Update packages and templates to canary version $CANARY_VERSION"
 
-args+=(--yes)
-yarn lerna publish "${args[@]}"
+# ── Publish all packages ───────────────────────────────────────────────────────
+
+echo "Publishing all packages with tag $TAG"
+
+while IFS= read -r line; do
+  location=$(echo "$line" | jq -r '.location')
+
+  if [[ "$location" == "." ]]; then
+    continue
+  fi
+
+  pkg_json_path="$framework_dir/$location/package.json"
+  is_private=$(jq -r '.private // false' "$pkg_json_path")
+
+  if [[ "$is_private" == "true" ]]; then
+    echo "Skipping private package at $location"
+    continue
+  fi
+
+  package_name=$(jq -r '.name' "$pkg_json_path")
+  package_version=$(jq -r '.version' "$pkg_json_path")
+
+  echo "Publishing $package_name@$package_version..."
+
+  # Check if already published
+  if npm view "$package_name@$package_version" version &> /dev/null; then
+    echo "  Already published, skipping"
+    continue
+  fi
+
+  (cd "$framework_dir/$location" && npm publish --tag "$TAG" --access public)
+  echo "  ✅ Published $package_name@$package_version"
+done <<< "$workspaces"
+
+echo "✅ Canary publishing completed successfully!"

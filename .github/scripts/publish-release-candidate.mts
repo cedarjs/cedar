@@ -296,101 +296,36 @@ async function main() {
     log('Step 1: Removing create-cedar-app from workspaces')
     restoreWorkspaces = await removeCreateCedarAppFromWorkspaces()
 
-    log('Step 2: Calculating RC version without publishing')
+    log('Step 2: Calculating RC version')
 
-    // Temporarily set workspace to only include @cedarjs/core for version
-    // calculation
-    log('Setting workspace to only @cedarjs/core for version calculation')
-    const versionCalcPackageConfigPath = path.join(REPO_ROOT, 'package.json')
-    const originalVersionCalcConfig = fs.readFileSync(
-      versionCalcPackageConfigPath,
-      'utf-8',
-    )
-    const versionCalcPackageConfig: PackageJson = JSON.parse(
-      originalVersionCalcConfig,
-    )
+    const latestTag = execCommand('git describe --abbrev=0 --tags').trim()
+    const currentVersion = latestTag.replace(/^v/, '')
+    const [major, minor, patch] = currentVersion.split('.').map(Number)
 
-    // Update workspace to only include core package
-    if (Array.isArray(versionCalcPackageConfig.workspaces)) {
-      versionCalcPackageConfig.workspaces = ['packages/core']
-    } else if (
-      versionCalcPackageConfig.workspaces &&
-      typeof versionCalcPackageConfig.workspaces === 'object' &&
-      'packages' in versionCalcPackageConfig.workspaces
-    ) {
-      versionCalcPackageConfig.workspaces.packages = ['packages/core']
+    let baseVersion: string
+    switch (semver) {
+      case 'major':
+        baseVersion = `${major + 1}.0.0`
+        break
+      case 'minor':
+        baseVersion = `${major}.${minor + 1}.0`
+        break
+      case 'patch':
+        baseVersion = `${major}.${minor}.${patch + 1}`
+        break
+      default:
+        throw new Error(`Unknown semver type: ${semver}`)
     }
 
-    fs.writeFileSync(
-      versionCalcPackageConfigPath,
-      JSON.stringify(versionCalcPackageConfig, null, 2) + '\n',
-    )
+    const commitCount = execCommand(
+      `git rev-list --count ${latestTag}..HEAD`,
+    ).trim()
 
-    execCommand('git add package.json')
-    execCommand('git commit -m "tmp @cedarjs/core only workspace update"')
-
-    const versioningArgs = [
-      'lerna',
-      'publish',
-      `pre${semver}`,
-      '--include-merged-tags',
-      '--exact',
-      '--canary',
-      '--preid',
-      'rc',
-      '--dist-tag',
-      'rc',
-      '--force-publish',
-      '--loglevel',
-      'verbose',
-      '--no-git-reset',
-    ].join(' ')
-
-    log('📝 dry-run canary publish of @cedarjs/core to calculate version')
-    // lerna will ask for confirmation before publishing. We pass 'n' as input
-    // to answer "no" to that question to abort the publishing process. That's
-    // how we make this a dry-run
-    const publishOutput = execCommand(
-      `yarn ${versioningArgs}`,
-      REPO_ROOT,
-      'n\n',
-    )
-
-    log('Restoring original workspace configuration')
-    fs.writeFileSync(versionCalcPackageConfigPath, originalVersionCalcConfig)
-    log('✅ Completed version calculation without publishing')
-
-    log('Step 3: Extracting calculated version')
-
-    let publishedVersion: string | null = null
-
-    // Look for RC version pattern in the canary publish output
-    const rcVersionMatch = publishOutput.match(/(\d+\.\d+\.\d+-rc\.\d+)/g)
-    if (rcVersionMatch && rcVersionMatch.length > 0) {
-      publishedVersion = rcVersionMatch[rcVersionMatch.length - 1]
-    }
-
-    // Fallback: Look for "=> version" pattern
-    if (!publishedVersion) {
-      const versionMatch = publishOutput.match(/=> ([^\s+]+)/g)
-      if (versionMatch && versionMatch.length > 0) {
-        const lastMatch = versionMatch[versionMatch.length - 1]
-        publishedVersion = lastMatch.replace(/^=> /, '').replace(/\+.*$/, '')
-      }
-    }
-
-    if (!publishedVersion) {
-      console.error('Lerna publish output:')
-      console.error(publishOutput)
-      throw new Error('Could not extract RC version from lerna output')
-    }
-
-    log(`✅ Extracted published version: ${publishedVersion}`)
+    const versionToPublish = `${baseVersion}-rc.${commitCount}`
+    log(`✅ Calculated RC version: ${versionToPublish}`)
 
     log('Step 4: Manually updating package.json files with calculated version')
 
-    // Since we only did a dry-run canary publish lerna didn't actually version
-    // the files, we need to do it manually
     // Get all workspace packages and update their versions
     const workspacesOutput = execCommand('yarn workspaces list --json')
     const workspaces: WorkspaceInfo[] = workspacesOutput
@@ -410,7 +345,7 @@ async function main() {
         const packageJson = JSON.parse(content)
 
         // Update the version
-        packageJson.version = publishedVersion
+        packageJson.version = versionToPublish
 
         fs.writeFileSync(
           packageJsonPath,
@@ -424,7 +359,7 @@ async function main() {
     }
 
     log('Step 5: Updating workspace dependencies')
-    updateWorkspaceDependencies(publishedVersion)
+    updateWorkspaceDependencies(versionToPublish)
 
     log('Step 6: Committing version and dependency updates')
     execCommand('git add .')
@@ -432,24 +367,7 @@ async function main() {
 
     log('Step 7: Publishing RC versions of all packages')
 
-    const publishArgs = [
-      'lerna',
-      'publish',
-      'from-package',
-      '--dist-tag',
-      'rc',
-      '--loglevel',
-      'verbose',
-    ].join(' ')
-
-    if (isDryRun) {
-      // Pipe 'n' to answer "no" to publish prompt
-      execCommand(`yarn ${publishArgs}`, REPO_ROOT, 'n\n')
-      log('✅ Dry-run - tested publish command without actually publishing')
-    } else {
-      execCommand(`yarn ${publishArgs} --yes`)
-      log('✅ Published packages except create-cedar-app')
-    }
+    await publishPackages('rc', isDryRun)
 
     log('Step 8: Restoring workspaces configuration')
     if (restoreWorkspaces) {
@@ -483,7 +401,7 @@ async function main() {
         continue
       }
 
-      const packageAvailable = await waitForNpm(packageName, publishedVersion)
+      const packageAvailable = await waitForNpm(packageName, versionToPublish)
       if (!packageAvailable) {
         throw new Error(`Package ${packageName} not available in time on npm`)
       }
@@ -507,7 +425,7 @@ async function main() {
     for (const pkgJsonFile of packageJsonFiles) {
       updatePackageJsonWithVersion(
         path.join(CREATE_CEDAR_APP_DIR, pkgJsonFile),
-        publishedVersion,
+        versionToPublish,
       )
     }
 
@@ -584,34 +502,28 @@ async function main() {
     )
     updatePackageJsonWithVersion(
       createCedarAppPackageJsonPath,
-      publishedVersion,
+      versionToPublish,
       true,
     )
-    log(`✅ Updated create-cedar-app version to ${publishedVersion}`)
+    log(`✅ Updated create-cedar-app version to ${versionToPublish}`)
 
     // Commit the version update
     execCommand('git add packages/create-cedar-app/package.json')
     execCommand(
-      `git commit -m "Update create-cedar-app version to ${publishedVersion}"`,
+      `git commit -m "Update create-cedar-app version to ${versionToPublish}"`,
     )
     log('✅ Committed create-cedar-app version update')
 
-    const ccaPublishArgs = [
-      'lerna',
-      'publish',
-      'from-package',
-      '--dist-tag',
-      'rc',
-      '--loglevel',
-      'verbose',
-    ]
-
     if (isDryRun) {
-      // Pipe 'n' to answer "no" to publish prompt
-      execCommand(`yarn ${ccaPublishArgs.join(' ')}`, REPO_ROOT, 'n\n')
       log('✅ Dry-run completed - would have published create-cedar-app')
     } else {
-      execCommand(`yarn ${ccaPublishArgs.join(' ')} --yes`)
+      const ccaPkgJsonPath = path.join(CREATE_CEDAR_APP_DIR, 'package.json')
+      const ccaPkgJson: PackageJson = JSON.parse(
+        fs.readFileSync(ccaPkgJsonPath, 'utf-8'),
+      )
+      const ccaPackageName = ccaPkgJson.name || 'create-cedar-app'
+      log(`Publishing ${ccaPackageName}@${versionToPublish}...`)
+      execCommand(`npm publish --tag rc --access public`, CREATE_CEDAR_APP_DIR)
       log('✅ Published create-cedar-app')
     }
 
@@ -713,6 +625,60 @@ async function waitForNpm(packageName: string, version: string) {
   }
 
   return packageAvailable
+}
+
+async function publishPackage(
+  packageName: string,
+  version: string,
+  distTag: string,
+  packageDir: string,
+  dryRun: boolean,
+) {
+  if (dryRun) {
+    log(`Dry-run: would publish ${packageName}@${version} --tag ${distTag}`)
+    return
+  }
+
+  const alreadyPublished = await isPublished(packageName, version)
+  if (alreadyPublished) {
+    log(`Already published: ${packageName}@${version}`)
+    return
+  }
+
+  log(`Publishing ${packageName}@${version}...`)
+  execCommand(`npm publish --tag ${distTag} --access public`, packageDir)
+  log(`✅ Published ${packageName}@${version}`)
+}
+
+async function publishPackages(distTag: string, dryRun: boolean) {
+  const workspacesOutput = execCommand('yarn workspaces list --json')
+  const workspaces: WorkspaceInfo[] = workspacesOutput
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line))
+    .filter((ws) => ws.location !== '.')
+
+  for (const workspace of workspaces) {
+    const pkgJsonPath = path.join(REPO_ROOT, workspace.location, 'package.json')
+    try {
+      const pkgJson: PackageJson = JSON.parse(
+        fs.readFileSync(pkgJsonPath, 'utf-8'),
+      )
+      if (pkgJson.private) {
+        log(`Skipping private package: ${pkgJson.name}`)
+        continue
+      }
+      await publishPackage(
+        pkgJson.name!,
+        pkgJson.version!,
+        distTag,
+        path.join(REPO_ROOT, workspace.location),
+        dryRun,
+      )
+    } catch {
+      continue
+    }
+  }
 }
 
 // Run the script
