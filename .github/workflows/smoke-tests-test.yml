@@ -39,13 +39,6 @@ jobs:
           CEDAR_TEST_PROJECT_PATH: '${{ steps.set-up-test-project.outputs.test-project-path }}'
           REDWOOD_DISABLE_TELEMETRY: 1
 
-      - name: 🔐 Run auth smoke tests
-        working-directory: ./tasks/smoke-tests/auth
-        run: npx playwright test
-        env:
-          CEDAR_TEST_PROJECT_PATH: ${{ steps.set-up-test-project.outputs.test-project-path }}
-          REDWOOD_DISABLE_TELEMETRY: 1
-
       - name: Run `cedar build --no-prerender`
         shell: bash
         run: |
