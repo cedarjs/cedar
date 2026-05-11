@@ -61,5 +61,5 @@ if (existingFiles.length > 0) {
 }
 
 function quoteAll(files: string[]): string {
-  return files.map((f) => `'${f.replaceAll("'", `'\\''`)}'`).join(' ')
+  return files.map((f) => `'${f.replaceAll("'", "'\\''")}'`).join(' ')
 }
