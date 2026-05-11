@@ -174,6 +174,7 @@ module.exports = {
             },
           ],
         },
+        'gqlorm',
         'local-postgres-setup',
         'logger',
         {
