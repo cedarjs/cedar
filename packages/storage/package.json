@@ -68,7 +68,7 @@
     "concurrently": "9.2.1",
     "esbuild": "0.27.7",
     "prisma": "7.8.0",
-    "publint": "0.3.18",
+    "publint": "0.3.19",
     "tstyche": "5.0.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",

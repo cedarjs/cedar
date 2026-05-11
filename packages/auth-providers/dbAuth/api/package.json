@@ -68,7 +68,7 @@
     "@simplewebauthn/server": "10.0.1",
     "@types/md5": "2.3.6",
     "concurrently": "9.2.1",
-    "publint": "0.3.18",
+    "publint": "0.3.19",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
