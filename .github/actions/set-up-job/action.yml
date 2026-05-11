@@ -81,7 +81,10 @@ runs:
       working-directory: ${{ inputs.yarn-install-directory }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: yarn install --inline-builds && yarn --cwd packages/create-cedar-rsc-app install --inline-builds
+      run: |
+        yarn install --inline-builds
+        cd "$GITHUB_WORKSPACE/packages/create-cedar-rsc-app"
+        yarn install --inline-builds
 
     - name: 💾 Save node_modules cache
       if: inputs.set-up-yarn-cache == 'true' && steps.set-up-yarn-cache.outputs.node-modules-cache-hit != 'true'
