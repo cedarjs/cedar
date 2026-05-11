@@ -10,7 +10,7 @@
  * Expects to receive a list of staged files from lefthook.
  */
 
-import { execSync } from 'node:child_process'
+import { execSync, spawnSync } from 'node:child_process'
 
 import { dim } from 'ansis'
 
@@ -23,12 +23,11 @@ if (args.length === 0) {
 const mdGlobs = /\.(md|mdx)$/i
 
 function isNewFile(file: string): boolean {
-  try {
-    execSync(`git cat-file -e HEAD:"${file}"`, { stdio: 'ignore' })
-    return false
-  } catch {
-    return true
-  }
+  const result = spawnSync('git', ['cat-file', '-e', `HEAD:${file}`], {
+    stdio: 'ignore',
+  })
+
+  return result.status !== 0
 }
 
 const newMdFiles: string[] = []
@@ -42,12 +41,12 @@ for (const file of args) {
   }
 }
 
-// Run prettier with proseWrap only on new markdown files
-
 if (newMdFiles.length > 0) {
-  console.log(
-    dim(`Applying proseWrap: always to ${newMdFiles.length} new markdown file(s)…`),
-  )
+  const logMsg =
+    `Applying \`proseWrap: always\` to ${newMdFiles.length} new markdown ` +
+    'file(s)...'
+  console.log(dim(logMsg))
+
   execSync(
     `yarn prettier --write --log-level=silent --prose-wrap always ${quoteAll(newMdFiles)}`,
     { stdio: 'inherit' },
