@@ -27,7 +27,7 @@ const { data } = useLiveQuery((db) => db.todo.findMany())
 
 When `experimental.gqlorm.enabled` is set to `true`, gqlorm automatically
 generates GraphQL types and resolvers for your Prisma models. On the frontend,
-`useLiveQuery` replaces `useQuery` and `useMutation` for CRUD operations —
+`useLiveQuery` replaces `useQuery` for read operations —
 queries support live updates via the `@live` directive with no extra work.
 
 ## Configuration
@@ -58,14 +58,8 @@ field, resolvers are scoped to the current user.
 
 ## Setup
 
-After enabling gqlorm in `cedar.toml`, run codegen to generate the model schema
-and backend resolvers:
-
-```bash
-yarn cedar generate
-```
-
-This produces three artifacts:
+After enabling gqlorm in `cedar.toml`, the codegen runs automatically whenever
+you start the dev server or build your app. It produces three artifacts:
 
 | Artifact          | Path                                           | Purpose                                             |
 | ----------------- | ---------------------------------------------- | --------------------------------------------------- |
@@ -190,7 +184,7 @@ const { query, variables } = buildQueryFromFunction(
   { isLive: true }
 )
 
-// query: "query findManyUser($var0: Boolean!) @live { users(where: { isActive: $var0 }) { id email name } }"
+// query: "query findManyUser($var0: Boolean) @live { users(where: { isActive: $var0 }) { id email name } }"
 // variables: { var0: true }
 ```
 
@@ -228,9 +222,10 @@ warning is printed during codegen. Add `/// @gqlorm show` to override, or
 
 The pipeline has four phases:
 
-1. **Codegen** (`yarn cedar generate`) — Parses your Prisma schema, applies
-   visibility rules, and generates `gqlorm-schema.json` (frontend) plus
-   `backend.ts` (GraphQL SDL + resolvers).
+1. **Codegen** (runs automatically on `yarn dev` and `yarn build`) — Parses
+   your Prisma schema, applies visibility rules, and generates
+   `gqlorm-schema.json` (frontend) plus `backend.ts` (GraphQL SDL +
+   resolvers).
 
 2. **Build-time injection** — A Babel plugin merges the generated SDL and
    resolvers into your GraphQL handler automatically.
