@@ -209,10 +209,9 @@ describe('getAuthenticationContext with a Fetch Request and bearer token', () =>
     })
   }
 
-  // Regression test: `Request.headers` is a `Headers` instance (a class),
-  // not a plain object. `Object.keys(headers)` returns `[]` for class
-  // instances, so the previous implementation silently treated authenticated
-  // requests as unauthenticated when no cookie was set.
+  // Reading from a Fetch Request means reading from a class instance. This
+  // works differently compared to Lambda events where `headers` is a plain
+  // object. So we need a specific test for Fetch requests.
   it('Reads auth-provider header from a Fetch Request when no cookie is set', async () => {
     const fetchRequest = new Request('http://localhost:3000', {
       method: 'POST',

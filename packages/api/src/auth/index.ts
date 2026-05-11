@@ -22,14 +22,16 @@ export const getAuthProviderHeader = (
     return event.headers.get(AUTH_PROVIDER_HEADER) ?? undefined
   }
 
-  // Lambda `event.headers` is a plain object, but API Gateway preserves the
-  // header case the client sent — match case-insensitively.
+  // Lambda `event.headers` is a plain object. API Gateway preserves the header
+  // case the client sent, so we need to match case-insensitively
   const authProviderKey = Object.keys(event.headers ?? {}).find(
     (key) => key.toLowerCase() === AUTH_PROVIDER_HEADER,
   )
+
   if (authProviderKey) {
     return event.headers[authProviderKey]
   }
+
   return undefined
 }
 
