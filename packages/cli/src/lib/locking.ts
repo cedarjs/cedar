@@ -67,11 +67,13 @@ export function unsetLock(identifier: string) {
 export function isLockSet(identifier: string): boolean {
   const lockfilePath = path.join(getPaths().generated.base, 'locks', identifier)
 
-  // Stat the lockfile directly so that we don't race against another process
-  // removing it between an `existsSync` check and the subsequent `statSync`
-  // call. This race surfaces on environments with aggressive build caches
-  // (e.g. Vercel), where a broken symlink can satisfy `existsSync` but make
-  // `statSync` throw ENOENT.
+  // We stat the lockfile directly here instead of doing `existsSync` +
+  // `statSync` so that we don't race against another process removing it
+  // between the `existsSync` check and the subsequent `stat` call
+  //
+  // This also helps in environments with aggressive build caches (e.g. Vercel),
+  // where cache restoration can restore a dangling symlink which satisfies
+  // `existsSync` but makes `statSync` throw ENOENT
   let createdAt: number
   try {
     createdAt = fs.statSync(lockfilePath).birthtimeMs
@@ -79,6 +81,7 @@ export function isLockSet(identifier: string): boolean {
     if (isErrorWithCode(error, 'ENOENT')) {
       return false
     }
+
     throw error
   }
 

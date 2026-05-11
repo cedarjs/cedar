@@ -37,8 +37,10 @@ beforeEach(() => {
         `ENOENT: no such file or directory, stat '${lockfilePath}'`,
       ) as NodeJS.ErrnoException
       error.code = 'ENOENT'
+
       throw error
     }
+
     return {
       birthtimeMs: Date.now(),
     }
@@ -112,7 +114,6 @@ it('Returns false when statSync throws ENOENT', () => {
   // Simulate a stale `existsSync`/`statSync` race (or a broken symlink, as
   // seen in Vercel's cached builds) where the lockfile disappears between
   // the existence check and the stat call.
-  // @ts-expect-error - Partial mock for what's needed in our test
   vi.mocked(fs).statSync.mockImplementation(() => {
     const error = new Error('ENOENT') as NodeJS.ErrnoException
     error.code = 'ENOENT'
@@ -124,7 +125,6 @@ it('Returns false when statSync throws ENOENT', () => {
 })
 
 it('Re-throws non-ENOENT statSync errors', () => {
-  // @ts-expect-error - Partial mock for what's needed in our test
   vi.mocked(fs).statSync.mockImplementation(() => {
     const error = new Error('EACCES') as NodeJS.ErrnoException
     error.code = 'EACCES'
