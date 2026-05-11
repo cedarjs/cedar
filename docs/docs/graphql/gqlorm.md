@@ -86,9 +86,11 @@ const LiveTodos = () => {
   if (loading) {
     return <div>Loading...</div>
   }
+
   if (error) {
     return <div>Error: {error.message}</div>
   }
+
   if (!data || data.length === 0) {
     return <div>No todos yet</div>
   }
@@ -116,6 +118,8 @@ The query function supports the same read operations you know from Prisma:
 | `findFirst`         | Fetch the first matching record         | `db.todo.findFirst({ where: { done: true } })`        |
 | `findUniqueOrThrow` | Like `findUnique` but throws if missing | `db.todo.findUniqueOrThrow({ where: { id: 1 } })`     |
 | `findFirstOrThrow`  | Like `findFirst` but throws if missing  | `db.todo.findFirstOrThrow({ where: { done: true } })` |
+
+`findFirst`, `findUniqueOrThrow`, and `findFirstOrThrow` are client-side abstractions. They generate GraphQL queries against the same singular-model field that `findUnique` uses. The only difference is how the result is handled: `findUnique`/`findFirst` return `null` when no record matches, while `findUniqueOrThrow`/`findFirstOrThrow` throw an error.
 
 ### Filtering and sorting
 
@@ -244,9 +248,21 @@ Cedar generates `.cedar/gqlorm/backend.ts` during the build. This file:
 1. Exports a `schema` object (a `gql` document) with GraphQL types for each visible model and `Query` fields for `findMany` and `findUnique`.
 2. Exports a `createGqlormResolvers(db)` factory that returns resolver functions wired to your Prisma client.
 
-A Babel plugin injects the `db` import into `api/src/functions/graphql.ts` and passes it to `createGqlormResolvers`, so the generated resolvers are merged into your GraphQL schema automatically.
+The frontend query builder supports five operations (`findMany`, `findUnique`,
+`findFirst`, `findUniqueOrThrow`, `findFirstOrThrow`), but the backend only
+needs two GraphQL fields: a plural one (`models`) for `findMany`, and a singular
+one (`model`) for the other four. `findFirst`, `findUniqueOrThrow`, and
+`findFirstOrThrow` are client-side abstractions — the generated GraphQL queries
+hit the same singular-model resolver as `findUnique`, and only differ in how the
+result is handled (returning `null` vs. throwing).
 
-If you already have a manually-written SDL file that defines a type with the same name (e.g. `type Todo { ... }` in `api/src/graphql/todos.sdl.ts`), gqlorm skips generating that model to avoid duplicate-type errors.
+A Babel plugin injects the `db` import into `api/src/functions/graphql.ts` and
+passes it to `createGqlormResolvers`, so the generated resolvers are merged into
+your GraphQL schema automatically.
+
+If you already have a manually-written SDL file that defines a type with the
+same name (e.g. `type Todo { ... }` in `api/src/graphql/todos.sdl.ts`), gqlorm
+skips generating that model to avoid duplicate-type errors.
 
 ## Limitations and known behavior
 
