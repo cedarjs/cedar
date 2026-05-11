@@ -14,7 +14,7 @@ import { loginAsTestUser, signUpTestUser } from '../../shared/common.js'
 const adminEmail = 'admin@bazinga.com'
 const password = 'test123'
 
-let messageDate
+const messageDate = new Date().toISOString()
 
 test.beforeAll(async ({ browser }) => {
   const adminSignupPage = await browser.newPage()
@@ -147,7 +147,8 @@ async function fillOutContactFormAsAnonymousUser({
   page: PlaywrightTestArgs['page']
   messageDate: string
 }) {
-  await page.goto('localhost:8910/contact')
+  // Go to http://localhost:8910/contact
+  await page.goto('/contact')
   // Click input[name="name"]
   await page.locator('input[name="name"]').click()
   // Fill input[name="name"]
@@ -174,7 +175,7 @@ async function fillOutContactFormAsAnonymousUser({
 function waitForContact(page: Page) {
   const MAX_INTERVALS = 10
 
-  return new Promise<number>((resolve) => {
+  return new Promise<number>((resolve, reject) => {
     let intervals = 0
     const watchInterval = setInterval(async () => {
       console.log('Waiting for Charlie...')
@@ -188,7 +189,8 @@ function waitForContact(page: Page) {
       }
 
       if (intervals > MAX_INTERVALS) {
-        expect(contactCount).toBeGreaterThan(0)
+        clearInterval(watchInterval)
+        reject(new Error('Timed out waiting for contact'))
       }
 
       intervals++
