@@ -195,6 +195,55 @@ describe('getAuthenticationContext with bearer tokens', () => {
   })
 })
 
+describe('getAuthenticationContext with a Fetch Request and bearer token', () => {
+  const authDecoderOne = async (_token: string, type: string) => {
+    return new Promise<Decoded>((resolve) => {
+      if (type !== 'one') {
+        return resolve(null)
+      }
+
+      return resolve({
+        iss: 'one',
+        sub: 'user-id',
+      })
+    })
+  }
+
+  // Reading from a Fetch Request means reading from a class instance. This
+  // works differently compared to Lambda events where `headers` is a plain
+  // object. So we need a specific test for Fetch requests.
+  it('Reads auth-provider header from a Fetch Request when no cookie is set', async () => {
+    const fetchRequest = new Request('http://localhost:3000', {
+      method: 'POST',
+      body: '',
+      headers: {
+        'auth-provider': 'one',
+        authorization: 'Bearer auth-test-token',
+      },
+    })
+
+    const result = await getAuthenticationContext({
+      authDecoder: authDecoderOne,
+      event: fetchRequest,
+      context: {} as Context,
+    })
+
+    if (!result) {
+      fail('Result is undefined')
+    }
+
+    const [decoded, { type, schema, token }] = result
+
+    expect(decoded).toMatchObject({
+      iss: 'one',
+      sub: 'user-id',
+    })
+    expect(type).toEqual('one')
+    expect(schema).toEqual('Bearer')
+    expect(token).toEqual('auth-test-token')
+  })
+})
+
 describe('getAuthenticationContext with cookies', () => {
   const authDecoderOne = async (_token: string, type: string) => {
     return new Promise<Decoded>((resolve) => {
