@@ -222,8 +222,8 @@ warning is printed during codegen. Add `/// @gqlorm show` to override, or
 
 The pipeline has four phases:
 
-1. **Codegen** (runs automatically on `yarn dev` and `yarn build`) — Parses
-   your Prisma schema, applies visibility rules, and generates
+1. **Codegen** (runs automatically on `yarn cedar dev` and `yarn cedar build`)
+   — Parses your Prisma schema, applies visibility rules, and generates
    `gqlorm-schema.json` (frontend) plus `backend.ts` (GraphQL SDL +
    resolvers).
 
