@@ -274,7 +274,7 @@ function getModelName(mod: unknown): Record<string, string> | null {
   return null
 }
 
-async function readModelNamesFromSchema(): Promise<Record<
+export async function readModelNamesFromSchema(): Promise<Record<
   string,
   string
 > | null> {
@@ -287,9 +287,11 @@ async function readModelNamesFromSchema(): Promise<Record<
 
     const schemaSource = fs.statSync(schemaPath).isDirectory()
       ? fs
-          .readdirSync(schemaPath)
-          .filter((entry) => entry.endsWith('.prisma'))
-          .map((entry) => fs.readFileSync(path.join(schemaPath, entry), 'utf8'))
+          .readdirSync(schemaPath, { withFileTypes: true })
+          .filter((entry) => entry.isFile() && entry.name.endsWith('.prisma'))
+          .map((entry) =>
+            fs.readFileSync(path.join(schemaPath, entry.name), 'utf8'),
+          )
           .join('\n')
       : fs.readFileSync(schemaPath, 'utf8')
 
