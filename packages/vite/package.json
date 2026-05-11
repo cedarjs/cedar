@@ -97,7 +97,7 @@
   "dependencies": {
     "@ast-grep/napi": "0.42.1",
     "@babel/generator": "7.29.1",
-    "@babel/parser": "7.29.2",
+    "@babel/parser": "7.29.3",
     "@babel/traverse": "7.29.0",
     "@cedarjs/api": "4.1.0",
     "@cedarjs/api-server": "4.1.0",
