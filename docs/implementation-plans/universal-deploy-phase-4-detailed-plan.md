@@ -33,7 +33,7 @@ real runtime architecture. In particular:
 - the API runtime should execute inside a Vite-centric development environment
 - the API server build has a Vite config that:
   - installs `cedarUniversalDeployPlugin()`
-  - installs `node()` from `@universal-deploy/node/vite`
+  - installs `universalDeploy()` from `@universal-deploy/vite`
   - emits a self-contained Node server entry for `cedar serve`
 
 Phase 4 is still not the phase where Cedar fully formalises per-route UD entry
@@ -90,7 +90,7 @@ It preserves the refined plan's key constraints:
 - backend execution integrated into the Vite module graph for true HMR
 - strong DX for browser traffic and direct HTTP tooling
 - `cedarUniversalDeployPlugin()` introduced in the API server Vite build
-- `node()` from `@universal-deploy/node/vite` added to the API server Vite build
+- `universalDeploy()` from `@universal-deploy/vite` added to the API server Vite build
 - no confusion between Vite's "SSR environment" and Cedar's HTML SSR feature
 - the single visible port and inline API middleware are explicitly Phase 5 goals,
   not Phase 4 deliverables
@@ -215,7 +215,7 @@ After Phase 4, the development architecture looks like this:
   restarts
 - the API server build has a Vite config that:
   - installs `cedarUniversalDeployPlugin()`
-  - installs `node()` from `@universal-deploy/node/vite`
+  - installs `universalDeploy()` from `@universal-deploy/vite`
   - emits a self-contained Node server entry for `cedar serve`
 
 For apps with custom Fastify setup, Phase 4 should preserve a compatibility
@@ -250,7 +250,7 @@ For `cedar serve`, the intended flow is:
 
 1. API server Vite config builds the server entry
 2. `cedarUniversalDeployPlugin()` registers Cedar's aggregate API entry
-3. `node()` from `@universal-deploy/node/vite` produces the Node-compatible
+3. `universalDeploy()` from `@universal-deploy/vite` produces the Node-compatible
    server output
 4. `cedar serve` launches that built server entry
 
@@ -568,7 +568,7 @@ matching the refined plan.
 
 ## 7. `@universal-deploy/node` Integration in Phase 4
 
-The API server Vite build should add `node()` from
+The API server Vite build should add `universalDeploy()` from
 `@universal-deploy/node/vite`.
 
 ### Purpose
@@ -833,7 +833,7 @@ Make `cedar serve` run the Vite-built Node server entry.
 
 ### Tasks
 
-- add `node()` from `@universal-deploy/node/vite` to the API server Vite build
+- add `universalDeploy()` from `@universal-deploy/vite` to the API server Vite build
 - ensure the build output is self-contained enough for `cedar serve`
 - update `cedar serve` to launch the built server entry
 - remove or bypass the temporary direct `createUDServer`-style path for the Node
@@ -908,7 +908,7 @@ Introduce `cedarUniversalDeployPlugin()` in the API server Vite build.
 
 ### Step 7: Node Serve Integration
 
-Add `node()` and switch `cedar serve` to the built server entry.
+Add `universalDeploy()` and switch `cedar serve` to the built server entry.
 
 ### Step 8: DX Cleanup and Documentation
 
@@ -1075,7 +1075,7 @@ registration too early.
 
 ### Impact
 
-Future maintainers wire `node()` into the wrong Vite config or conflate API
+Future maintainers wire `universalDeploy()` into the wrong Vite config or conflate API
 server builds with Cedar HTML SSR.
 
 ### Mitigation
@@ -1148,7 +1148,7 @@ Phase 4 should be considered complete when all of the following are true:
 - backend code changes are reflected without manual restart in normal workflows
   on the default runtime path
 - the API server Vite build includes `cedarUniversalDeployPlugin()`
-- the API server Vite build includes `node()` from
+- the API server Vite build includes `universalDeploy()` from
   `@universal-deploy/node/vite`
 - `cedar serve` runs the Vite-built Node server entry for the default runtime
   path
@@ -1166,7 +1166,7 @@ Phase 4 should produce the following concrete outputs:
 - backend invalidation/reload behavior integrated with the Vite-centric runtime
 - initial `cedarUniversalDeployPlugin()` in `@cedarjs/vite`
 - `@cedarjs/api-server` peer dependency declared by `@cedarjs/vite`
-- API server Vite build wired with `node()` from `@universal-deploy/node/vite`
+- API server Vite build wired with `universalDeploy()` from `@universal-deploy/vite`
 - `cedar serve` updated to run the built Node server entry for the default
   runtime lane
 - documented compatibility lane for apps using custom Fastify server setup

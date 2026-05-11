@@ -8,14 +8,15 @@ export interface BuildUDApiServerOptions {
 }
 
 /**
- * Builds the API server Universal Deploy Node entry using Vite.
+ * Builds the API server Universal Deploy entry using Vite.
  *
  * Runs a Vite server build that:
  *   1. Installs `cedarUniversalDeployPlugin()` to register per-route API
- *      entries (GraphQL, auth, functions) with UD's store and resolve
- *      `virtual:ud:catch-all` → Cedar's multi-route rou3 dispatcher.
- *   2. Installs `node()` from `@universal-deploy/node/vite` to emit a
- *      self-contained Node server entry at `api/dist/ud/index.js`
+ *      entries (GraphQL, auth, functions) with UD's store.
+ *   2. Installs `universalDeploy()` from `@universal-deploy/vite` which
+ *      provides `catchAll()` (rou3-based route dispatch), `devServer()`, and
+ *      auto-detection of deployment targets (Node by default, or Netlify/
+ *      Vercel/Cloudflare if the user has added the corresponding Vite plugin).
  *
  * The emitted entry can be launched directly:  node api/dist/ud/index.js
  * That is what `cedar serve api` does.
@@ -34,30 +35,26 @@ export const buildUDApiServer = async ({
   const { build } = await import('vite')
   const { cedarUniversalDeployPlugin } =
     await import('./plugins/vite-plugin-cedar-universal-deploy.js')
-  const { node } = await import('@universal-deploy/node/vite')
+  const { default: universalDeploy } = await import('@universal-deploy/vite')
 
   const rwPaths = getPaths()
 
-  // The UD Node server entry is placed under api/dist/ud/ so it does not
+  // The UD server entry is placed under api/dist/ud/ so it does not
   // collide with the existing esbuild output under api/dist/.
   const outDir = path.join(rwPaths.api.dist, 'ud')
 
   await build({
-    // No configFile — we configure everything inline so this build is
-    // self-contained and does not require a vite.config.ts in api/.
-    configFile: false,
-    envFile: false,
     logLevel: verbose ? 'info' : 'warn',
 
     plugins: [
-      // Registers per-route API entries with @universal-deploy/store and
-      // resolves virtual:ud:catch-all → Cedar's multi-route rou3 dispatcher.
+      // Registers per-route API entries with @universal-deploy/store.
       cedarUniversalDeployPlugin({ apiRootPath }),
 
-      // Emits a self-contained Node server entry (api/dist/ud/index.js) that
-      // imports virtual:ud:catch-all and starts an srvx HTTP server.
-      // This is a Vite server-build concern, not Cedar HTML SSR.
-      ...node(),
+      // Includes catchAll(), devServer(), and auto-detection of
+      // deployment targets. Enables @universal-deploy/node by default
+      // when no other target (Netlify, Vercel, Cloudflare) is detected
+      // in the user's Vite config.
+      universalDeploy(),
     ],
 
     // The ssr environment is the Vite mechanism for server-side builds.
@@ -67,20 +64,6 @@ export const buildUDApiServer = async ({
       ssr: {
         build: {
           outDir,
-          // Ensure @universal-deploy/node is bundled into the output so the
-          // emitted entry is self-contained.
-          rollupOptions: {
-            output: {
-              // Produce a single-file entry where possible; srvx chunks are
-              // split by the node() plugin automatically.
-              entryFileNames: '[name].js',
-            },
-          },
-        },
-        resolve: {
-          // Do not externalise @universal-deploy/node — the node() plugin
-          // requires it to be bundled into the server entry.
-          noExternal: ['@universal-deploy/node'],
         },
       },
     },

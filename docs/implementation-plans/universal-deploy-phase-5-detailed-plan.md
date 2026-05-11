@@ -152,7 +152,7 @@ Production build uses three standalone Vite builds:
 1. `buildApiWithVite()` — builds API functions with `ssr: true` and
    `preserveModules: true`
 2. `buildUDApiServer()` — builds the UD Node server entry with the
-   `cedarUniversalDeployPlugin` and `node()` plugin
+   `cedarUniversalDeployPlugin` and `universalDeploy()` plugin
 3. `cedar-vite-build` binary — builds the web client bundle
 
 These share no module graph, no transform pipeline, and no invalidation.
@@ -194,7 +194,7 @@ A single `buildApp()` call builds both environments from the same module graph.
   use case (check current Vite version support)
 - merge the three existing build configurations into one unified config with
   declared environments
-- ensure `node()` from `@universal-deploy/node/vite` works correctly within the
+- ensure `universalDeploy()` from `@universal-deploy/vite` works correctly within the
   `buildApp()` environment model
 - ensure the web client build's special requirements (cwd, PostCSS/Tailwind
   resolution, etc.) are preserved in the unified config
