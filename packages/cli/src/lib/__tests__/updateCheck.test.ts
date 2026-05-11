@@ -73,9 +73,18 @@ describe('Update is not available (1.0.0 -> 1.0.0)', () => {
       },
     })
 
-    // Prevent the appearance of stale locks
+    // Prevent the appearance of stale locks. Throw ENOENT when the underlying
+    // memfs filesystem doesn't have the path so `isLockSet` can distinguish
+    // a missing lock from a fresh one.
     // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn(() => {
+    fs.statSync = vi.fn((lockfilePath) => {
+      if (!vol.existsSync(lockfilePath as string)) {
+        const error = new Error(
+          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
+        ) as NodeJS.ErrnoException
+        error.code = 'ENOENT'
+        throw error
+      }
       return {
         birthtimeMs: Date.now(),
       }
@@ -160,9 +169,18 @@ describe('Update is available (1.0.0 -> 2.0.0)', () => {
       },
     })
 
-    // Prevent the appearance of stale locks
+    // Prevent the appearance of stale locks. Throw ENOENT when the underlying
+    // memfs filesystem doesn't have the path so `isLockSet` can distinguish
+    // a missing lock from a fresh one.
     // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn(() => {
+    fs.statSync = vi.fn((lockfilePath) => {
+      if (!vol.existsSync(lockfilePath as string)) {
+        const error = new Error(
+          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
+        ) as NodeJS.ErrnoException
+        error.code = 'ENOENT'
+        throw error
+      }
       return {
         birthtimeMs: Date.now(),
       }
@@ -249,9 +267,18 @@ describe('Update is available with rc tag (1.0.0-rc.1 -> 1.0.1-rc.58)', () => {
       },
     })
 
-    // Prevent the appearance of stale locks
+    // Prevent the appearance of stale locks. Throw ENOENT when the underlying
+    // memfs filesystem doesn't have the path so `isLockSet` can distinguish
+    // a missing lock from a fresh one.
     // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn(() => {
+    fs.statSync = vi.fn((lockfilePath) => {
+      if (!vol.existsSync(lockfilePath as string)) {
+        const error = new Error(
+          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
+        ) as NodeJS.ErrnoException
+        error.code = 'ENOENT'
+        throw error
+      }
       return {
         birthtimeMs: Date.now(),
       }
@@ -330,9 +357,18 @@ describe('Update middleware', () => {
   })
 
   beforeEach(() => {
-    // Prevent the appearance of stale locks
+    // Prevent the appearance of stale locks. Throw ENOENT when the underlying
+    // memfs filesystem doesn't have the path so `isLockSet` can distinguish
+    // a missing lock from a fresh one.
     // @ts-expect-error - This is assignable in tests
-    fs.statSync = vi.fn(() => {
+    fs.statSync = vi.fn((lockfilePath) => {
+      if (!vol.existsSync(lockfilePath as string)) {
+        const error = new Error(
+          `ENOENT: no such file or directory, stat '${lockfilePath}'`,
+        ) as NodeJS.ErrnoException
+        error.code = 'ENOENT'
+        throw error
+      }
       return {
         birthtimeMs: Date.now(),
       }
