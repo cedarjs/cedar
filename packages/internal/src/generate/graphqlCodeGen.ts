@@ -21,6 +21,7 @@ import { Kind, type DocumentNode } from 'graphql'
 import {
   getPaths,
   getConfig,
+  getSchemaPath,
   resolveGeneratedPrismaClient,
 } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
@@ -273,6 +274,38 @@ function getModelName(mod: unknown): Record<string, string> | null {
   return null
 }
 
+async function readModelNamesFromSchema(): Promise<Record<
+  string,
+  string
+> | null> {
+  try {
+    const cedarPaths = getPaths()
+    const schemaPath = await getSchemaPath(cedarPaths.api.prismaConfig)
+    if (!schemaPath || !fs.existsSync(schemaPath)) {
+      return null
+    }
+
+    const schemaSource = fs.statSync(schemaPath).isDirectory()
+      ? fs
+          .readdirSync(schemaPath)
+          .filter((entry) => entry.endsWith('.prisma'))
+          .map((entry) => fs.readFileSync(path.join(schemaPath, entry), 'utf8'))
+          .join('\n')
+      : fs.readFileSync(schemaPath, 'utf8')
+
+    const modelRegex = /^\s*model\s+(\w+)\s*\{/gm
+    const modelNames: Record<string, string> = {}
+    let match
+    while ((match = modelRegex.exec(schemaSource)) !== null) {
+      modelNames[match[1]] = match[1]
+    }
+
+    return Object.keys(modelNames).length > 0 ? modelNames : null
+  } catch {
+    return null
+  }
+}
+
 async function getPrismaClient(): Promise<{
   ModelName: Record<string, string>
 }> {
@@ -301,7 +334,15 @@ async function getPrismaClient(): Promise<{
       return { ModelName: modelName }
     }
   } catch {
-    // Fall through to empty ModelName object below.
+    // Fall through to schema-based fallback below.
+  }
+
+  // Prisma 7's `prisma-client` provider no longer exports `Prisma.ModelName`,
+  // so neither attempt above can populate it. Fall back to parsing the schema
+  // file(s) directly — model declarations are stable across all providers.
+  const schemaModelNames = await readModelNamesFromSchema()
+  if (schemaModelNames) {
+    return { ModelName: schemaModelNames }
   }
 
   return { ModelName: {} }
