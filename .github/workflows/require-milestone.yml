@@ -19,11 +19,31 @@ jobs:
   require-milestone:
     name: 🚩 Require milestone
     runs-on: ubuntu-latest
-    # For same-repo PRs, use the pull_request event so the job runs from the
-    # PR branch (allowing workflow changes to be tested in the same PR).
-    # For fork PRs, use pull_request_target so the job runs from the base
-    # branch with a write-capable token (fork PRs get a read-only token with
-    # pull_request).
+    # We listen to both pull_request and pull_request_target, then route based
+    # on whether the PR comes from a fork.
+    #
+    # Using pull_request_target can be dangerous as it allows fork PRs to
+    # execute code in the context of the base repo with a write-capable
+    # GITHUB_TOKEN. The safety of this workflow depends on two things:
+    #   1. It never checks out the fork's merge ref (refs/pull/.../merge).
+    #      The checkout step runs against the base branch only.
+    #   2. It never executes fork-controlled code. The milestone action only
+    #      reads PR metadata and calls the GitHub API.
+    #
+    # Same-repo PRs -> pull_request:
+    #   The runner uses the PR branch's code. This allows contributors to test
+    #   workflow changes in their own PR before they land on the base branch.
+    #   The GITHUB_TOKEN defaults to read-only; we override that and grant
+    #   pull-requests: write (the narrowest permission needed for the
+    #   milestone API call). Again, this is safe because this only happens for
+    #   same-repo PRs, not fork PRs.
+    #
+    # Fork PRs -> pull_request_target:
+    #   The runner always uses the base branch's code. This is the critical
+    #   safety property: a fork PR can't inject code into our workflow run.
+    #   We must use pull_request_target here because fork PRs get a read-only
+    #   GITHUB_TOKEN under pull_request regardless of declared permissions – the
+    #   milestone API call (which needs write access) would fail.
     if: |
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository)
