@@ -42,7 +42,11 @@ to evolve as the feature matures.
 - **ORM-style query builder** on the frontend: `db.todo.findMany()`,
   `db.post.findUnique({ where: { id: 1 } })`, etc.
 - **Real-time data** using live queries. The `useLiveQuery` hook automatically
-  adds the `@live` directive and React's reactivity updates your page
+  adds the `@live` directive and React's reactivity updates your page. **Cedar
+  detects changes at the database level**. When data changes, affected live
+  queries are invalidated and re-fetched automatically. This makes updates
+  agnostic to where the change originated: a GraphQL mutation, a background job,
+  a direct database write, or an external service
 - **Automatic auth scoping:** Queries are scoped to the current user and
   organization when your schema includes membership fields
 - **Sensitive-field filtering.** Fields like `password`, `secret`, and `token`
@@ -97,10 +101,13 @@ instead of falling back to `id` only.
 
 ## Fetching data with `useLiveQuery`
 
-`useLiveQuery` is the primary way to fetch data on the web side. Pass it a query
-function and it returns `{ data, loading, error }` just like a standard GraphQL
-query hook. The query is annotated with `@live` so it automatically re-fetches
-when the underlying data changes.
+`useLiveQuery` is the primary way to get real-time data on the web side. Pass it
+a query function and it returns `{ data, loading, error }` just like a standard
+GraphQL query hook. The query is annotated with `@live`, which registers it for
+automatic invalidation. When data changes in your database, Cedar detects the
+change and re-fetches any affected queries, no matter where the change came
+from. A mutation from another user, a background job, even a direct SQL write
+would trigger an update.
 
 ```tsx title="web/src/components/LiveTodos/LiveTodos.tsx"
 import { useLiveQuery } from '@cedarjs/gqlorm/react/useLiveQuery'
