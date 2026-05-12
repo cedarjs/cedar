@@ -274,11 +274,32 @@ export async function handler({ force }: Args) {
           }
           return false
         },
-        task: () => {
-          execa.commandSync('yarn cedar prisma migrate dev --name init-neon', {
-            cwd: cedarPaths.base,
-            stdio: 'inherit',
-          })
+        task: (ctx) => {
+          // The process we spawn here will inherit its parent's process.env.
+          // We've added DIRECT_DATABASE_URL to the project's .env file, but we
+          // haven't refreshed our environment variables. Explicitly passing it
+          // in below ensures the migrate command works correctly.
+          const result = execa.commandSync(
+            'yarn cedar prisma migrate dev --name init-neon',
+            {
+              cwd: cedarPaths.base,
+              stdio: ['inherit', 'inherit', 'pipe'],
+              reject: false,
+              env: {
+                ...process.env,
+                DIRECT_DATABASE_URL: ctx.databaseUrlDirect,
+              },
+            },
+          )
+
+          if (result.exitCode !== 0) {
+            throw new Error(
+              'Prisma migration failed:\n\n' +
+                result.stderr +
+                '\n\nYou can try running it manually:\n' +
+                '  yarn cedar prisma migrate dev --name init-neon',
+            )
+          }
         },
       },
       {
