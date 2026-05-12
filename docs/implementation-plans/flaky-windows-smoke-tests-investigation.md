@@ -272,3 +272,197 @@ runs could be coincidental.
 
 Still open: the root cause of the server crash (PID change mid-run) and the
 Apollo error during `/double` prerender remain uninvestigated.
+
+---
+
+## Update 2026-05-12 — Vite crash on `yarn cedar dev` + Windows + Node 24
+
+### Evidence: Vite dev server dies mid-run after dependency re-optimization
+
+From run
+[25750099805](https://github.com/cedarjs/cedar/actions/runs/25750099805/job/75624312182)
+(PR #1761, Windows dev smoke tests, Node 24):
+
+```
+[WebServer] web | 5:25:48 PM [vite]   ➜  Local:   http://localhost:8910/
+[WebServer] web | 5:25:55 PM [vite] (client) ✨ new dependencies optimized: @cedarjs/forms
+[WebServer] web | 5:25:55 PM [vite] (client) ✨ optimized dependencies changed. reloading
+[WebServer] web | 5:26:03 PM [vite] (client) ✨ new dependencies optimized: humanize-string
+[WebServer] web | 5:26:03 PM [vite] (client) ✨ optimized dependencies changed. reloading
+[WebServer] web | yarn cross-env NODE_ENV=development cedar-vite-dev --no-open
+                 exited with code 3221226505
+```
+
+### Chronology
+
+| Time (UTC) | Event                                                                     |
+| ---------- | ------------------------------------------------------------------------- |
+| 17:25:44   | Prisma client generation starts                                           |
+| 17:25:48   | Vite web server starts and reports listening on port 8910                 |
+| 17:25:52   | API server starts on port 8911, health check passes                       |
+| 17:25:54   | Playwright begins running 7 tests using 1 worker                          |
+| 17:25:55   | Vite re-optimizes for `@cedarjs/forms`, triggers reload                   |
+| 17:26:00   | Test 1 passes: `authChecks` (2.5s)                                        |
+| 17:26:03   | Vite re-optimizes for `humanize-string`, triggers reload                  |
+| 17:26:04   | Test 2 passes: `authChecks` (4.4s), test 3 passes: `dev.spec.ts` (1.0s)   |
+| 17:26:07   | **Vite crashes** — exit code `3221226505` (`STATUS_STACK_BUFFER_OVERRUN`) |
+| 17:27:05   | Test 4 `rbacChecks` `beforeAll` hang starts (web server dead)             |
+| 17:27:38   | `beforeAll` timeout (60s exceeded)                                        |
+| 17:27:38   | All remaining tests fail with `ERR_CONNECTION_REFUSED`                    |
+
+### Affected Tests (all 3 passed before crash, all 3 failed after)
+
+| #    | Test                                                           | Status  |
+| ---- | -------------------------------------------------------------- | ------- |
+| 1    | `authChecks` — useAuth hook, auth redirects                    | ✅ pass |
+| 2    | `authChecks` — requireAuth graphql checks                      | ✅ pass |
+| 3    | `dev.spec.ts` — Smoke test with dev server                     | ✅ pass |
+| 4    | `rbacChecks` — Should not be able to delete as non-admin       | ❌ fail |
+| 5    | `rbacChecks` — Admin user should be able to delete (skipped)   | ⏭ skip |
+| 6–15 | Retries of tests 4–5 + static assets (robots.txt, favicon.png) | ❌ fail |
+
+### Failure breakdown per test
+
+**`rbacChecks` (test 4–9, 3 attempts)**
+
+- First attempt: `beforeAll` times out after 60s waiting to navigate to `/signup`. The error context shows `page.goto('/signup')` succeeded but `page.getByLabel('Username').fill(...)` got `Test ended` — meaning the page started loading but the dev server died before the form rendered.
+- Retries 1–2: `net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8910/signup`
+
+**Static assets — `robots.txt` (test 10–12, 3 attempts)**
+
+- All 3 attempts: `net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8910/robots.txt`
+
+**Static assets — `favicon.png` (test 13–15, 3 attempts)**
+
+- All 3 attempts: `net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8910/favicon.png`
+
+### Key Observations
+
+1. **The crash is the same `STATUS_STACK_BUFFER_OVERRUN` seen on React 18 + Windows**, but this is on the regular (React 19) track with Node 24.
+2. The crash happens ~4 seconds **after** a Vite dependency re-optimization for
+   `humanize-string`. The first re-optimization for `@cedarjs/forms` (at 17:25:55)
+   did NOT crash — the server survived for 12 more seconds.
+3. This was a **trivial PR** (comment-only change to a Prisma schema) — ruling
+   out any code changes as the cause.
+4. The server was fully functional for ~19 seconds before crashing — the first
+   3 tests all passed with `page.goto()` navigation.
+5. Unlike the earlier `cedar serve` crash (PID change mid-run from #1754), this
+   is a `cedar dev` crash. The `dev` scenario uses Vite in dev mode with HMR,
+   while `serve` serves pre-built assets. The crash trigger appears to be Vite's
+   dependency pre-bundling/optimization step.
+
+### What's Different from the React 18 Crash
+
+- The React 18 crash (run 25729552439) happened **2 seconds after startup**, before
+  any re-optimization — the initial dependency optimization already overflowed.
+- This crash (run 25750099805) happened **after the initial optimization succeeded**,
+  but a **second-wave** re-optimization (triggered by a page loading new dependencies)
+  caused the overflow.
+- Both are the same exit code `3221226505`, indicating the same class of native
+  stack corruption.
+
+### Updated Hypothesis (superseded — see root cause section below)
+
+The `STATUS_STACK_BUFFER_OVERRUN` was initially hypothesized to be caused by
+**esbuild** (Vite's dependency pre-bundler) overflowing the Windows 1MB default
+stack during `node_modules` scanning. However, the GitHub issue search
+(see [Root cause identified](#update-2026-05-12--root-cause-identified-v8-maglev-jit-bug-on-windows))
+revealed the actual cause: V8's **Maglev** JIT compiler producing
+stack-corrupting native code on Windows. The crash is a V8 bug, not an esbuild
+or Vite bug — esbuild simply provides enough JavaScript execution to trigger
+Maglev optimization of the vulnerable code paths.
+
+### Recommendation
+
+This finding partially answers two open questions from the initial investigation:
+
+- **"Why does the server die permanently?"** — It doesn't die gracefully; it
+  crashes with a native stack overflow. No recovery mechanism exists.
+- **"Is the crash related to the React 18 downgrade?"** — No, it affects the
+  main (React 19) dev smoke tests too.
+
+The crash is **not isolated to React 18** — it affects the main smoke test
+suite too. Next steps:
+
+1. Run the test project locally with `yarn cedar dev` on Windows to verify
+   reproducibility
+2. Check if esbuild or Vite have known issues on Node 24 + Windows
+   _(subsequently resolved — see root cause section below)_
+3. As a temporary mitigation, consider making Windows smoke tests non-blocking
+   or retry-on-failure in CI
+
+---
+
+## Update 2026-05-12 — Root cause identified: V8 Maglev JIT bug on Windows
+
+### Upstream issue: nodejs/node#62260
+
+A search for `STATUS_STACK_BUFFER_OVERRUN` / `0xC0000409` across GitHub
+found a direct match:
+
+- **[nodejs/node#62260](https://github.com/nodejs/node/issues/62260)** — "V8
+  Maglev JIT causes STATUS_STACK_BUFFER_OVERRUN (0xC0000409) on Windows"
+
+Key details from the issue:
+
+- **Root cause**: V8's **Maglev** JIT compiler (enabled by default in Node 20+)
+  triggers a stack corruption on Windows, causing the process to crash via
+  `__fastfail` with exit code `-1073740791` (`0xC0000409`)
+- **No JavaScript stack trace** — the crash is in native JIT-compiled code
+- **Workaround**: `--no-maglev` flag eliminates the crash entirely
+- **Not limited to Insider builds**: The latest comment (May 12, 2026 — today)
+  confirms: _"I'm seeing this happen occasionally when running Node actions on
+  GitHub's Windows Server 2025 runners"_ — exactly our environment
+- Node.js collaborator [@joyeecheung](https://github.com/joyeecheung) confirmed
+  the same crashes in Node.js CI: _"there are a bunch of tests related to HTTP
+  crashing with the same code on Windows"_
+- A Node.js PR ([#62272](https://github.com/nodejs/node/pull/62272)) attempted a
+  fix but was **closed** with: _"Issues with the V8 compiler should be reported
+  and fixed in V8. We shouldn't be hacking this at the embedder layer."_
+- The Chromium issue tracker has a corresponding bug:
+  [issues.chromium.org/issues/464515848](https://issues.chromium.org/issues/464515848)
+
+### Why This Affects Cedar CI
+
+1. **Node 24** is used on the Windows smoke test runner
+2. Maglev has been enabled by default since Node 20.11, and its optimization
+   aggressiveness increases with each V8 version
+3. Vite and esbuild are JavaScript-heavy tools that exercise the JIT compiler
+   heavily, making them likely to hit Maglev-compiled code paths
+4. The crash timing (19 seconds after startup, during dependency
+   re-optimization) is consistent with the issue description: _"crashes within
+   20-70 seconds of startup"_
+5. The non-deterministic nature (sometimes passes, sometimes crashes) is
+   characteristic of JIT bugs — whether a particular code path gets Maglev
+   optimization depends on runtime heuristics
+
+### Why the `react-18` and `react` tracks both crash
+
+The V8 Maglev crash is triggered by **any sufficiently complex JavaScript
+execution**, not by React itself. Both the React 18 and React 19 test projects
+trigger enough Vite/esbuild/Node.js activity to cause Maglev optimization of
+the same underlying code paths. The crash is **environmental** (Node 24 +
+Windows), not framework-dependent.
+
+### Updated Recommendations
+
+**Immediate mitigation (short-term):**
+
+- Pass `--no-maglev` to `node` in the Playwright `webServer.command` or via an
+  wrapper script. The flag **cannot** be set via `NODE_OPTIONS` — it must be
+  passed directly to `node` on the command line:
+  ```
+  node --no-maglev node_modules/.bin/cedar dev --no-generate --fwd="--no-open"
+  ```
+  This disables only the Maglev tier while keeping TurboFan and `fetch()`
+  functional.
+
+**Long-term:**
+
+- Monitor the upstream V8 fix in
+  [issues.chromium.org/issues/464515848](https://issues.chromium.org/issues/464515848)
+- Once fixed, it will be backported to Node.js via a V8 cherry-pick (similar to
+  [#62784](https://github.com/nodejs/node/pull/62784) for a different Maglev
+  bug)
+- Remove the `--no-maglev` workaround after the fix lands in a Node 24.x
+  release
