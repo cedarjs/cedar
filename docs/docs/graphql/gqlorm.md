@@ -1,5 +1,7 @@
 ---
-description: Prisma-inspired GraphQL query builder with automatic schema generation and live queries
+description:
+  Prisma-inspired GraphQL query builder with automatic schema generation and
+  live queries
 ---
 
 # gqlorm
@@ -72,6 +74,9 @@ artifacts in `.cedar/`:
 | `.cedar/gqlorm-schema.json`                    | Frontend model schema mapping model names to visible scalar fields |
 | `.cedar/gqlorm/backend.ts`                     | Auto-generated GraphQL SDL and resolvers for the API side          |
 | `.cedar/types/includes/web-gqlorm-models.d.ts` | TypeScript type declarations for the frontend query builder        |
+
+Like everything else in `.cedar/`, these artifacts are generated automatically
+and should not be edited by hand.
 
 #### Frontend setup
 
@@ -247,7 +252,8 @@ model User {
 By default, gqlorm hides any scalar field whose lowercased name contains one of
 these substrings:
 
-`password`, `secret`, `token`, `hash`, `salt`, `apikey`, `secretkey`, `encryptionkey`, `privatekey`
+`password`, `secret`, `token`, `hash`, `salt`, `apikey`, `secretkey`,
+`encryptionkey`, `privatekey`
 
 If a field is auto-hidden, Cedar prints a warning at build time telling you how
 to confirm the hide (`/// @gqlorm hide`) or override it (`/// @gqlorm show`).
@@ -284,8 +290,10 @@ membershipOrganizationField = "teamId"
 
 Cedar generates `.cedar/gqlorm/backend.ts` during the build. This file:
 
-1. Exports a `schema` object (a `gql` document) with GraphQL types for each visible model and `Query` fields for `findMany` and `findUnique`.
-2. Exports a `createGqlormResolvers(db)` factory that returns resolver functions wired to your Prisma client.
+1. Exports a `schema` object (a `gql` document) with GraphQL types for each
+   visible model and `Query` fields for `findMany` and `findUnique`.
+2. Exports a `createGqlormResolvers(db)` factory that returns resolver functions
+   wired to your Prisma client.
 
 The frontend query builder supports five operations (`findMany`, `findUnique`,
 `findFirst`, `findUniqueOrThrow`, `findFirstOrThrow`), but the backend only
@@ -305,17 +313,28 @@ skips generating that model to avoid duplicate-type errors.
 
 ## Limitations and known behavior
 
-- **Read-only for now** — gqlorm currently generates queries (`findMany`, `findUnique`, `findFirst`, etc.). Mutations (`create`, `update`, `delete`) are not yet auto-generated.
-- **Scalar and enum fields only** — relation fields are excluded from the generated schema. You can still use `include` in the query builder, but nested relations default to selecting `id` only unless the schema is extended.
-- **Live queries require a stateful server** — because `@live` uses Server-Sent Events, you cannot use live queries on serverless deploy targets like Netlify or Vercel without additional infrastructure. See the [Realtime docs](realtime.md) for details.
-- **Experimental flag required** — all gqlorm behavior is gated behind `experimental.gqlorm.enabled`.
+- **Read-only for now** — gqlorm currently generates queries (`findMany`,
+  `findUnique`, `findFirst`, etc.). Mutations (`create`, `update`, `delete`) are
+  not yet auto-generated.
+- **Scalar and enum fields only** — relation fields are excluded from the
+  generated schema. You can still use `include` in the query builder, but nested
+  relations default to selecting `id` only unless the schema is extended.
+- **Live queries require a stateful server** — because `@live` uses Server-Sent
+  Events, you cannot use live queries on serverless deploy targets like Netlify
+  or Vercel without additional infrastructure. See the
+  [Realtime docs](realtime.md) for details.
+- **Experimental flag required** — all gqlorm behavior is gated behind
+  `experimental.gqlorm.enabled`.
 
 ## Summary
 
-gqlorm lets you treat your GraphQL API like a Prisma client on the frontend. After enabling the experimental flag and calling `configureGqlorm`, you can write:
+gqlorm lets you treat your GraphQL API like a Prisma client on the frontend.
+After enabling the (experimental) gqlorm feature, you can write:
 
 ```tsx
 const { data } = useLiveQuery((db) => db.todo.findMany())
 ```
 
-and Cedar handles the rest: generating the GraphQL document, keeping it in sync with your schema, scoping it to the current user, and re-fetching automatically when data changes.
+and Cedar handles the rest: generating the GraphQL document, keeping it in sync
+with your schema, scoping it to the current user, and re-fetching automatically
+when data changes in your database.
