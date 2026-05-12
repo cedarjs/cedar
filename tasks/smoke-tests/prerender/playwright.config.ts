@@ -18,6 +18,5 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
     // Give the server more time to start on CI
-    timeout: process.env.CI ? 120_000 : 60_000,
   },
 })

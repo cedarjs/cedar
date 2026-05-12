@@ -21,7 +21,7 @@ test('useAuth hook, auth redirects checks', async ({ page }) => {
 
   // To check redirects to the login page
   await expect(page).toHaveURL(
-    `http://localhost:8910/login?redirectTo=/profile`,
+    `http://127.0.0.1:8910/login?redirectTo=/profile`,
   )
 
   await loginAsTestUser({ page, ...testUser })
