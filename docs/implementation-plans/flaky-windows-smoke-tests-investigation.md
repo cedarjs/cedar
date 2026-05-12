@@ -303,8 +303,8 @@ From run
 | 17:25:54   | Playwright begins running 7 tests using 1 worker                          |
 | 17:25:55   | Vite re-optimizes for `@cedarjs/forms`, triggers reload                   |
 | 17:26:00   | Test 1 passes: `authChecks` (2.5s)                                        |
-| 17:26:04   | Test 2 passes: `authChecks` (4.4s), test 3 passes: `dev.spec.ts` (1.0s)   |
 | 17:26:03   | Vite re-optimizes for `humanize-string`, triggers reload                  |
+| 17:26:04   | Test 2 passes: `authChecks` (4.4s), test 3 passes: `dev.spec.ts` (1.0s)   |
 | 17:26:07   | **Vite crashes** — exit code `3221226505` (`STATUS_STACK_BUFFER_OVERRUN`) |
 | 17:27:05   | Test 4 `rbacChecks` `beforeAll` hang starts (web server dead)             |
 | 17:27:38   | `beforeAll` timeout (60s exceeded)                                        |
@@ -361,20 +361,16 @@ From run
 - Both are the same exit code `3221226505`, indicating the same class of native
   stack corruption.
 
-### Updated Hypothesis
+### Updated Hypothesis (superseded — see root cause section below)
 
-The `STATUS_STACK_BUFFER_OVERRUN` is likely caused by **esbuild** (Vite's
-dependency pre-bundler) during `node_modules` scanning and optimization. The
-second-wave optimization for `humanize-string` may process a different set of
-dependencies than the initial pass, hitting a path that overflows the Windows
-default 1MB stack. Possible triggers:
-
-- A deeply-nested or circular dependency tree in `humanize-string`'s
-  sub-dependencies
-- The combination of Node 24's V8 engine + esbuild's native binary on Windows
-  allocating too much stack space
-- The Vite optimizer running concurrently with page requests from the 3 active
-  test pages
+The `STATUS_STACK_BUFFER_OVERRUN` was initially hypothesized to be caused by
+**esbuild** (Vite's dependency pre-bundler) overflowing the Windows 1MB default
+stack during `node_modules` scanning. However, the GitHub issue search
+(see [Root cause identified](#update-2026-05-12--root-cause-identified-v8-maglev-jit-bug-on-windows))
+revealed the actual cause: V8's **Maglev** JIT compiler producing
+stack-corrupting native code on Windows. The crash is a V8 bug, not an esbuild
+or Vite bug — esbuild simply provides enough JavaScript execution to trigger
+Maglev optimization of the vulnerable code paths.
 
 ### Recommendation
 
@@ -388,12 +384,11 @@ This finding partially answers two open questions from the initial investigation
 The crash is **not isolated to React 18** — it affects the main smoke test
 suite too. Next steps:
 
-1. Run the test project locally with `yarn cedar dev` on Windows and reproduce
-   the crash with all 7 tests running
-2. Attach a debugger (or use Windows Error Reporting) to identify the exact
-   native module causing the stack overflow
-3. Check if esbuild or Vite have known issues on Node 24 + Windows
-4. As a temporary mitigation, consider making Windows smoke tests non-blocking
+1. Run the test project locally with `yarn cedar dev` on Windows to verify
+   reproducibility
+2. Check if esbuild or Vite have known issues on Node 24 + Windows
+   _(subsequently resolved — see root cause section below)_
+3. As a temporary mitigation, consider making Windows smoke tests non-blocking
    or retry-on-failure in CI
 
 ---
@@ -453,16 +448,14 @@ Windows), not framework-dependent.
 
 **Immediate mitigation (short-term):**
 
-- Pass `--no-maglev` to `NODE_OPTIONS` in the Windows smoke test CI job:
-  ```yaml
-  env:
-    NODE_OPTIONS: --no-maglev
+- Pass `--no-maglev` to `node` in the Playwright `webServer.command` or via an
+  wrapper script. The flag **cannot** be set via `NODE_OPTIONS` — it must be
+  passed directly to `node` on the command line:
+  ```
+  node --no-maglev node_modules/.bin/cedar dev --no-generate --fwd="--no-open"
   ```
   This disables only the Maglev tier while keeping TurboFan and `fetch()`
   functional.
-- Note: the `--no-maglev` flag **cannot** be set via `NODE_OPTIONS` (only as a
-  CLI flag), so we may need to use `node --no-maglev` explicitly in the
-  Playwright `webServer.command` or use a wrapper script.
 
 **Long-term:**
 
