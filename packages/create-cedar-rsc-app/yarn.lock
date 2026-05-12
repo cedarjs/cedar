@@ -1983,15 +1983,15 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-package-json@npm:^0.91.0":
-  version: 0.91.1
-  resolution: "eslint-plugin-package-json@npm:0.91.1"
+  version: 0.91.2
+  resolution: "eslint-plugin-package-json@npm:0.91.2"
   dependencies:
     "@altano/repository-tools": "npm:^2.0.1"
     change-case: "npm:^5.4.4"
     detect-indent: "npm:^7.0.2"
     detect-newline: "npm:^4.0.1"
     eslint-fix-utils: "npm:~0.4.1"
-    package-json-validator: "npm:^1.3.1"
+    package-json-validator: "npm:^1.4.1"
     semver: "npm:^7.7.3"
     sort-object-keys: "npm:^2.0.0"
     sort-package-json: "npm:^3.4.0"
@@ -1999,7 +1999,7 @@ __metadata:
   peerDependencies:
     eslint: ">=8.0.0"
     jsonc-eslint-parser: ">=2.0.0"
-  checksum: 10c0/17de42584c405696d7d0171a3d4a143c322ce20aa420cf31c5e84bf90f6c33999e1e276c2894b6eeff04eee64ff7e04235199dbec50580397b079fc3656ea948
+  checksum: 10c0/60ff9c6ee9cc5833ac5fb98a608938242b703782fccbae91b9eeec0e00ac68d32c89e3db0796510b9087a788c7e07373df1c3213fb635267d595b4004be67249
   languageName: node
   linkType: hard
 
@@ -2571,6 +2571,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hosted-git-info@npm:^9.0.0":
+  version: 9.0.3
+  resolution: "hosted-git-info@npm:9.0.3"
+  dependencies:
+    lru-cache: "npm:^11.1.0"
+  checksum: 10c0/8f216ccb461ca54ae1846745325ced6a880b53101a58c820b813f067caa301576bf974f787df5688b7f0f1b752cdfcbaa2979751d1fcfd604032cc57bc538607
+  languageName: node
+  linkType: hard
+
 "http-cache-semantics@npm:^4.1.1":
   version: 4.1.1
   resolution: "http-cache-semantics@npm:4.1.1"
@@ -2933,10 +2942,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^11.0.0":
-  version: 11.0.0
-  resolution: "lru-cache@npm:11.0.0"
-  checksum: 10c0/827ff0e0739f9b0f30f92f5a5fc97c6a2bd3ae32c0452bc58cb7411d6c589d49536073027293f2d1f02d0c2e72b63b162f238df7e9ff6f4cc0345f92afec4d1d
+"lru-cache@npm:^11.0.0, lru-cache@npm:^11.1.0":
+  version: 11.3.6
+  resolution: "lru-cache@npm:11.3.6"
+  checksum: 10c0/3afe3e3000e424c18b640dcea5776b5c1de8684b7dac9718d58792dff1a4692b38cc14e263cbb41bdab98ffcf5408f003b33133b179ce5d271284be72a3ff2a9
   languageName: node
   linkType: hard
 
@@ -3218,6 +3227,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"npm-package-arg@npm:^13.0.2":
+  version: 13.0.2
+  resolution: "npm-package-arg@npm:13.0.2"
+  dependencies:
+    hosted-git-info: "npm:^9.0.0"
+    proc-log: "npm:^6.0.0"
+    semver: "npm:^7.3.5"
+    validate-npm-package-name: "npm:^7.0.0"
+  checksum: 10c0/bf4ecdbfac876250f17710c6d0fac014bb345555acc80ce3b9e685d828107f3682378a9c413278c2fe4e958f4aad261677769be9a2b7c3965ab219b5bb852197
+  languageName: node
+  linkType: hard
+
 "object-keys@npm:^1.1.1":
   version: 1.1.1
   resolution: "object-keys@npm:1.1.1"
@@ -3342,14 +3363,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-json-validator@npm:^1.3.1":
-  version: 1.3.1
-  resolution: "package-json-validator@npm:1.3.1"
+"package-json-validator@npm:^1.4.1":
+  version: 1.5.1
+  resolution: "package-json-validator@npm:1.5.1"
   dependencies:
+    npm-package-arg: "npm:^13.0.2"
     semver: "npm:^7.7.2"
     validate-npm-package-license: "npm:^3.0.4"
     validate-npm-package-name: "npm:^7.0.0"
-  checksum: 10c0/ef471423fa31d58093988392878b37ce950be239320ac938f8dc94197fefae46cca7fcdd3e0d248cd7cf39ac1734f6b3a9bbcd32347a9f44843353f59756d657
+  checksum: 10c0/70369a44e659816a0316d67812a636c939ba7b9eac31d791f179c531388a8591de5aaabfa065534d62ebcfa435d9c350f283d84580cab79ffa6dfacd7fe95cd0
   languageName: node
   linkType: hard
 
@@ -3507,6 +3529,13 @@ __metadata:
   version: 4.2.0
   resolution: "proc-log@npm:4.2.0"
   checksum: 10c0/17db4757c2a5c44c1e545170e6c70a26f7de58feb985091fb1763f5081cab3d01b181fb2dd240c9f4a4255a1d9227d163d5771b7e69c9e49a561692db865efb9
+  languageName: node
+  linkType: hard
+
+"proc-log@npm:^6.0.0":
+  version: 6.1.0
+  resolution: "proc-log@npm:6.1.0"
+  checksum: 10c0/4f178d4062733ead9d71a9b1ab24ebcecdfe2250916a5b1555f04fe2eda972a0ec76fbaa8df1ad9c02707add6749219d118a4fc46dc56bdfe4dde4b47d80bb82
   languageName: node
   linkType: hard
 
