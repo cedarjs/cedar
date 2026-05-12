@@ -773,7 +773,7 @@ entry.
 
 - `buildCedarDispatcher(options)` — runtime function discovery and
   Fetchable dispatch, in `@cedarjs/api-server`
-- `buildUDApiServer()` — Vite SSR build that produces a self-contained Node
+- `buildUDApiServer()` — Vite SSR build that produces a self-contained
   server entry at `api/dist/ud/index.js` via `universalDeploy()` from
   `@universal-deploy/vite`, in `@cedarjs/vite`
 - `cedarUniversalDeployPlugin()` — Vite plugin that registers Cedar's API
@@ -798,7 +798,7 @@ removed or replaced in the phases noted below.
 
 - `createUDServer` and `cedar-ud-server` — the temporary srvx runtime stand-in
   from Phase 3. Phase 4 replaces them with `buildUDApiServer()`, a Vite SSR
-  build that produces a self-contained Node server entry via
+  build that produces a self-contained server entry via
   `universalDeploy()` from `@universal-deploy/vite`.
 - `cedar serve api --ud` CLI flag — updated in Phase 4 to fork the Vite-built
   `api/dist/ud/index.js` entry instead of invoking the deleted `createUDServer`.

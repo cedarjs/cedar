@@ -34,7 +34,7 @@ real runtime architecture. In particular:
 - the API server build has a Vite config that:
   - installs `cedarUniversalDeployPlugin()`
   - installs `universalDeploy()` from `@universal-deploy/vite`
-  - emits a self-contained Node server entry for `cedar serve`
+  - emits a self-contained server entry for `cedar serve`
 
 Phase 4 is still not the phase where Cedar fully formalises per-route UD entry
 registration. That belongs to Phase 6. Phase 4 should intentionally ship a
@@ -216,7 +216,7 @@ After Phase 4, the development architecture looks like this:
 - the API server build has a Vite config that:
   - installs `cedarUniversalDeployPlugin()`
   - installs `universalDeploy()` from `@universal-deploy/vite`
-  - emits a self-contained Node server entry for `cedar serve`
+  - emits a self-contained server entry for `cedar serve`
 
 For apps with custom Fastify setup, Phase 4 should preserve a compatibility
 lane rather than forcing them onto the unified runtime.
@@ -573,7 +573,7 @@ The API server Vite build should add `universalDeploy()` from
 
 ### Purpose
 
-- produce a self-contained Node server entry
+- produce a self-contained server entry
 - let `cedar serve` run the built output
 - replace the temporary direct server construction path for the Node serve case
 

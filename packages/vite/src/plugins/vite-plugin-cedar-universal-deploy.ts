@@ -18,14 +18,30 @@ const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
 const GRAPHQL_METHODS = ['GET', 'POST', 'OPTIONS'] as const
 
 /**
+ * Normalise apiRootPath: strip leading/trailing slashes, then prepend
+ * exactly one `/` if the result is non-empty. For `/` (root) the prefix
+ * is empty since routes already start with `/`.
+ */
+function normaliseApiPrefix(apiPrefix: string): string {
+  apiPrefix = apiPrefix.trim()
+
+  while (apiPrefix.startsWith('/')) {
+    apiPrefix = apiPrefix.slice(1)
+  }
+
+  while (apiPrefix.endsWith('/')) {
+    apiPrefix = apiPrefix.slice(0, -1)
+  }
+
+  return apiPrefix ? '/' + apiPrefix : ''
+}
+
+/**
  * Discovers Cedar API function source files and derives the production route
  * manifest from them. The manifest is the single source of truth for both
  * Cedar's backend routing and UD store registration.
  */
 function discoverCedarRoutes(apiRootPath: string): CedarRouteRecord[] {
-  // Strip trailing slash so we can prepend it cleanly.
-  // If apiRootPath is `/` we use an empty prefix since routes already start with `/`.
-  const apiPrefix = apiRootPath.replace(/\/+$/, '') || ''
   const srcFunctions = getPaths().api.functions
   const distFunctions = path.join(getPaths().api.base, 'dist', 'functions')
 
@@ -49,6 +65,7 @@ function discoverCedarRoutes(apiRootPath: string): CedarRouteRecord[] {
       continue
     }
 
+    const apiPrefix = normaliseApiPrefix(apiRootPath)
     const routePath =
       routeName === 'graphql'
         ? `${apiPrefix}/graphql`
