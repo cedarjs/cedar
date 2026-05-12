@@ -56,6 +56,13 @@ export async function handler({ force }: Args) {
           ctx.isSqlite = schemaContent.includes('provider = "sqlite"')
           ctx.isPostgres = schemaContent.includes('provider = "postgresql"')
 
+          if (fs.existsSync(dbTsPath)) {
+            ctx.dbTsContent = fs.readFileSync(dbTsPath, 'utf-8')
+            ctx.isNeon = ctx.dbTsContent.includes('PrismaPg')
+          } else {
+            ctx.isNeon = false
+          }
+
           if (!ctx.isSqlite && !ctx.isPostgres) {
             ctx.unsupportedProvider = true
             notes.push(
@@ -90,12 +97,15 @@ export async function handler({ force }: Args) {
           if (ctx.unsupportedProvider) {
             return 'Unsupported database provider'
           }
+
           if (ctx.isPostgres) {
             return 'Already configured for PostgreSQL'
           }
+
           if (ctx.hasSqliteUsageOutsideDb) {
             return 'SQLite is in use outside db.ts — keeping packages'
           }
+
           return false
         },
         task: () => {
@@ -115,6 +125,7 @@ export async function handler({ force }: Args) {
           if (ctx.unsupportedProvider) {
             return 'Unsupported database provider'
           }
+
           if (ctx.isPostgres) {
             return 'Already configured for PostgreSQL'
           }
@@ -149,9 +160,11 @@ export async function handler({ force }: Args) {
           if (ctx.unsupportedProvider) {
             return 'Unsupported database provider'
           }
+
           if (ctx.isPostgres) {
             return 'Schema is already configured for PostgreSQL'
           }
+
           return false
         },
         task: (ctx) => {
@@ -168,9 +181,11 @@ export async function handler({ force }: Args) {
           if (ctx.unsupportedProvider) {
             return 'Unsupported database provider'
           }
-          if (ctx.isPostgres) {
-            return 'Database adapter is already configured for PostgreSQL'
+
+          if (ctx.isNeon) {
+            return 'Database adapter is already configured for Neon (PrismaPg)'
           }
+
           return false
         },
         task: () => {
@@ -184,7 +199,8 @@ export async function handler({ force }: Args) {
           if (ctx.unsupportedProvider) {
             return 'Unsupported database provider'
           }
-          if (ctx.isPostgres) {
+
+          if (ctx.isNeon) {
             return 'Prisma config is already configured for Neon'
           }
 
@@ -249,6 +265,14 @@ export async function handler({ force }: Args) {
             '-pooler.',
             '.',
           )
+
+          if (ctx.databaseUrlDirect === ctx.databaseUrl) {
+            throw new Error(
+              'Could not derive a direct (non-pooler) connection string from the Neon response. ' +
+                'Expected the connection string to contain "-pooler." in the hostname.',
+            )
+          }
+
           ctx.neonClaimUrl = data.claim_url
           ctx.neonClaimExpiry = new Date(data.expires_at).toUTCString()
         },
@@ -259,6 +283,7 @@ export async function handler({ force }: Args) {
           if (ctx.unsupportedProvider) {
             return true
           }
+
           if (hasDirectDatabaseUrl && !force) {
             return true
           }
@@ -346,6 +371,7 @@ export async function handler({ force }: Args) {
             task.output = 'Skipped — unsupported database provider'
             return
           }
+
           if (ctx.skipWithNote) {
             task.output = 'Skipped — DATABASE_URL already configured'
             return
