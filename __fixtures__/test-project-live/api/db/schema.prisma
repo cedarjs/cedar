@@ -8,18 +8,9 @@ datasource db {
   provider = "postgresql"
 }
 
-// For CJS Cedar apps:
-// It might feel a little out of place to have .mts files in the codebase, and
-// especially importing them like we do in `src/lib/db`.
-// For ESM Cedar apps:
-// It might feel a little weird to ask Prisma to generate CJS compatible format.
-//
-// Setting `moduleFormat = "cjs"` and using `.mts` extensions is however the
-// only combination that makes Prisma 7, which is ESM-only, work in CJS Cedar
-// apps while also having the same configuration work for ESM Cedar apps.
-//
-// The only reason this works is thanks to Node 24's support for require(esm).
-// https://www.prisma.io/docs/orm/prisma-schema/overview/generators
+// This specific combination of settings is the only way to make Prisma 7 work
+// in both CJS and ESM Cedar apps.
+// See https://github.com/cedarjs/cedar/pull/1761 for more info
 generator client {
   provider               = "prisma-client"
   output                 = "./generated/prisma"
