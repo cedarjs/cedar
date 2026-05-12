@@ -28,6 +28,13 @@ export async function handler({ force }: Args) {
     'prisma.config.mts',
   )
   const envPath = path.join(cedarPaths.base, '.env')
+  const rootPkgPath = path.join(cedarPaths.base, 'package.json')
+  const apiPkgPath = path.join(cedarPaths.api.base, 'package.json')
+  const dbTsTemplatePath = path.join(
+    import.meta.dirname,
+    'templates',
+    'db.ts.template',
+  )
 
   let hasDirectDatabaseUrl = false
   if (fs.existsSync(envPath)) {
@@ -47,6 +54,13 @@ export async function handler({ force }: Args) {
           ctx.isPostgres = schemaContent.includes('provider = "postgresql"')
           ctx.schemaContent = schemaContent
 
+          if (!ctx.isPostgres) {
+            ctx.hasSqliteUsageOutsideDb = hasSqliteUsageOutsideDb(
+              cedarPaths.api.src,
+              dbTsPath,
+            )
+          }
+
           if (hasDirectDatabaseUrl && !force) {
             ctx.skipWithNote = true
             notes.push(
@@ -57,7 +71,59 @@ export async function handler({ force }: Args) {
           }
         },
       },
-      // --- Project conversion tasks (skip if already postgres) ---
+      {
+        title: 'Removing SQLite dependencies from api/package.json',
+        skip: (ctx) => {
+          if (ctx.isPostgres) {
+            return 'Already configured for PostgreSQL'
+          }
+          if (ctx.hasSqliteUsageOutsideDb) {
+            return 'SQLite is in use outside db.ts — keeping packages'
+          }
+          return false
+        },
+        task: () => {
+          const pkg = JSON.parse(fs.readFileSync(apiPkgPath, 'utf-8'))
+
+          if (pkg.dependencies) {
+            delete pkg.dependencies['better-sqlite3']
+            delete pkg.dependencies['@prisma/adapter-better-sqlite3']
+          }
+
+          fs.writeFileSync(apiPkgPath, JSON.stringify(pkg, null, 2) + '\n')
+        },
+      },
+      {
+        title: 'Removing better-sqlite3 dependenciesMeta',
+        skip: (ctx) => {
+          if (ctx.isPostgres) {
+            return 'Already configured for PostgreSQL'
+          }
+
+          if (ctx.hasSqliteUsageOutsideDb) {
+            return "SQLite is in use outside db.ts so we're keeping it installed"
+          }
+
+          return false
+        },
+        task: () => {
+          if (!fs.existsSync(rootPkgPath)) {
+            return
+          }
+
+          const pkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8'))
+
+          if (pkg.dependenciesMeta?.['better-sqlite3']) {
+            delete pkg.dependenciesMeta['better-sqlite3']
+
+            if (Object.keys(pkg.dependenciesMeta).length === 0) {
+              delete pkg.dependenciesMeta
+            }
+
+            fs.writeFileSync(rootPkgPath, JSON.stringify(pkg, null, 2) + '\n')
+          }
+        },
+      },
       {
         title: 'Switching Prisma schema to PostgreSQL',
         skip: (ctx) => {
@@ -83,39 +149,7 @@ export async function handler({ force }: Args) {
           return false
         },
         task: () => {
-          const neonDbTs = `import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from 'api/db/generated/prisma/client.mts'
-
-import { emitLogLevels, handlePrismaLogging } from '@cedarjs/api/logger'
-
-import { logger } from './logger.js'
-
-export * from 'api/db/generated/prisma/client.mts'
-
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set')
-}
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prismaClient = new PrismaClient({
-  log: emitLogLevels(['info', 'warn', 'error']),
-  adapter,
-})
-
-handlePrismaLogging({
-  db: prismaClient,
-  logger,
-  logLevels: ['info', 'warn', 'error'],
-})
-
-/**
- * Global Prisma client extensions should be added here, as $extend
- * returns a new instance.
- * export const db = prismaClient.$extend(...)
- * Add any .$on hooks before using $extend
- */
-export const db = prismaClient
-`
+          const neonDbTs = fs.readFileSync(dbTsTemplatePath, 'utf-8')
           fs.writeFileSync(dbTsPath, neonDbTs)
         },
       },
@@ -125,6 +159,7 @@ export const db = prismaClient
           if (ctx.isPostgres) {
             return 'Prisma config is already configured for Neon'
           }
+
           return false
         },
         task: () => {
@@ -149,8 +184,7 @@ export const db = prismaClient
           fs.writeFileSync(configPath, updated)
         },
       },
-      // --- Always-run tasks ---
-      addApiPackages(['@prisma/adapter-pg@7.8.0', 'pg@^8.13.0']),
+      addApiPackages(['@prisma/adapter-pg@7.8.0']),
       {
         title: 'Provisioning Neon database',
         skip: () => {
@@ -194,9 +228,11 @@ export const db = prismaClient
           if (hasDirectDatabaseUrl && !force) {
             return true
           }
+
           if (!ctx.databaseUrl) {
             return 'No database URL to write (Neon provisioning skipped)'
           }
+
           return false
         },
         task: (ctx) => {
@@ -305,4 +341,28 @@ function isErrorWithExitCode(e: unknown): e is { exitCode: number } {
     'exitCode' in e &&
     typeof e.exitCode === 'number'
   )
+}
+
+function hasSqliteUsageOutsideDb(srcPath: string, dbTsPath: string): boolean {
+  const sqlitePattern = /better-sqlite3|@prisma\/adapter-better-sqlite3/
+
+  const files = fs.globSync('**/*.{ts,tsx,js,jsx}', { cwd: srcPath })
+
+  for (const file of files) {
+    const fullPath = path.join(srcPath, file)
+    if (fullPath === dbTsPath) {
+      continue
+    }
+
+    try {
+      const content = fs.readFileSync(fullPath, 'utf-8')
+      if (sqlitePattern.test(content)) {
+        return true
+      }
+    } catch {
+      // Skip unreadable files
+    }
+  }
+
+  return false
 }
