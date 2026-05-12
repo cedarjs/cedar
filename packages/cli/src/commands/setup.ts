@@ -22,6 +22,7 @@ import * as setupJobs from './setup/jobs/jobs.js'
 import * as setupMailer from './setup/mailer/mailer.js'
 import * as setupMiddleware from './setup/middleware/middleware.js'
 import * as setupMonitoring from './setup/monitoring/monitoring.js'
+import * as setupNeon from './setup/neon.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupPackage from './setup/package/package.js'
 // @ts-expect-error - Types not available for JS files
@@ -55,6 +56,8 @@ export const builder = (yargs: Argv) =>
     .command(setupMiddleware)
     // @ts-expect-error - Yargs TS types aren't very good
     .command(setupMonitoring)
+    // @ts-expect-error - Yargs TS types aren't very good
+    .command(setupNeon)
     .command(setupPackage)
     .command(setupRealtime)
     .command(setupServerFile)
