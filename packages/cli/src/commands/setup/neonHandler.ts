@@ -143,7 +143,7 @@ export const db = prismaClient
 
           const configContent = fs.readFileSync(configPath, 'utf-8')
           const updated = configContent.replace(
-            "env('DATABASE_URL')",
+            /env\(["']DATABASE_URL["']\)/,
             "env('DIRECT_DATABASE_URL')",
           )
           fs.writeFileSync(configPath, updated)
