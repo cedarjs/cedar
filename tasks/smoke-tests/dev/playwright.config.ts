@@ -9,7 +9,7 @@ export default defineConfig({
   timeout: 30_000 * 2,
 
   use: {
-    baseURL: 'http://localhost:8910',
+    baseURL: 'http://127.0.0.1:8910',
   },
 
   // Run your local dev server before starting the tests
@@ -18,7 +18,7 @@ export default defineConfig({
     cwd: process.env.CEDAR_TEST_PROJECT_PATH,
     // We wait for the api server to be ready instead of the web server
     // because web starts much faster with Vite.
-    url: 'http://localhost:8911/graphql?query={redwood{version}}',
+    url: 'http://127.0.0.1:8911/graphql?query={redwood{version}}',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
   },

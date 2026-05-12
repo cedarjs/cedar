@@ -177,7 +177,8 @@ cedar
 ├── exec [script]            │   ├── auth <provider>
 ├── experimental             │   ├── vite│docker│i18n│jobs
 │   ├── rsc│streaming-ssr    │   ├── deploy│ui│cache│realtime
-│   └── opentelemetry        │   └── mailer│middleware│server-file
+│   ├── live-queries         │   └── mailer│middleware│server-file
+│   └── opentelemetry        │
 ├── info│jobs│lint           ├── test│type-check│upgrade
 ├── prerender│prisma [args]  ├── serve [api|web]
 ├── record│studio            └── ts-to-js (deprecated)

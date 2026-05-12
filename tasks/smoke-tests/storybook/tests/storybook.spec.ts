@@ -12,7 +12,7 @@ test('Loads Cell stories', async ({ page }: PlaywrightTestArgs) => {
   await page.getByRole('link', { name: 'Loading' }).click()
 
   await expect(page).toHaveURL(
-    `http://localhost:7910/?path=/story/cells-blogpostcell--loading`,
+    `http://127.0.0.1:7910/?path=/story/cells-blogpostcell--loading`,
   )
 
   await expect(
@@ -24,7 +24,7 @@ test('Loads Cell stories', async ({ page }: PlaywrightTestArgs) => {
   // Click text=Failure
   await page.locator('text=Failure').click()
   await expect(page).toHaveURL(
-    `http://localhost:7910/?path=/story/cells-blogpostcell--failure`,
+    `http://127.0.0.1:7910/?path=/story/cells-blogpostcell--failure`,
   )
 
   await expect(
@@ -34,7 +34,7 @@ test('Loads Cell stories', async ({ page }: PlaywrightTestArgs) => {
   // Check Loading
   await page.locator('text=Empty').click()
   await expect(page).toHaveURL(
-    `http://localhost:7910/?path=/story/cells-blogpostcell--empty`,
+    `http://127.0.0.1:7910/?path=/story/cells-blogpostcell--empty`,
   )
 
   await expect(
@@ -45,7 +45,7 @@ test('Loads Cell stories', async ({ page }: PlaywrightTestArgs) => {
   // And make sure MSW Cell mocks are loaded as expected
   await page.locator('text=Success').click()
   await expect(page).toHaveURL(
-    `http://localhost:7910/?path=/story/cells-blogpostcell--success`,
+    `http://127.0.0.1:7910/?path=/story/cells-blogpostcell--success`,
   )
 
   await expect(
@@ -67,7 +67,7 @@ test('Loads Cell mocks when Cell is nested in another story', async ({
 
   // Click text=Empty
   await expect(page).toHaveURL(
-    `http://localhost:7910/?path=/story/pages-blogpostpage--primary`,
+    `http://127.0.0.1:7910/?path=/story/pages-blogpostpage--primary`,
   )
 
   await expect(
@@ -158,7 +158,7 @@ test('Loads MDX Stories', async ({ page }: PlaywrightTestArgs) => {
   await page.locator('id=cedarjs--docs').click()
 
   await expect(page).toHaveURL(
-    `http://localhost:7910/?path=/docs/cedarjs--docs`,
+    `http://127.0.0.1:7910/?path=/docs/cedarjs--docs`,
   )
 
   await expect(
