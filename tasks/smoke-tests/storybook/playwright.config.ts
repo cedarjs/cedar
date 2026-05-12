@@ -7,14 +7,14 @@ export default defineConfig({
   ...basePlaywrightConfig,
 
   use: {
-    baseURL: 'http://localhost:7910',
+    baseURL: 'http://127.0.0.1:7910',
   },
 
   // Run your local dev server before starting the tests
   webServer: {
     command: 'yarn cedar storybook --ci --no-open',
     cwd: process.env.CEDAR_TEST_PROJECT_PATH,
-    url: 'http://localhost:7910',
+    url: 'http://127.0.0.1:7910',
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
     // The Storybook v7 CLI seems noticeably slower, and it times out in Windows CI.

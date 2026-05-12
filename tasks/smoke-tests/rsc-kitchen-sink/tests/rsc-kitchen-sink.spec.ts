@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-import { loginAsTestUser } from '../../shared/common'
+import { loginAsTestUser } from '../../shared/common.ts'
 
 const testUser = {
   email: 'testuser@bazinga.com',
@@ -264,7 +264,7 @@ test('Retrieving request details in a', async ({ page }) => {
       name: 'smoke-test-cookie',
       value: 'this-cookie-is-set-by-smoke-tests',
       path: '/',
-      domain: 'localhost:8910',
+      domain: '127.0.0.1',
       expires: Math.floor(Date.now() / 1000) + 300, // 5 minutes from now in seconds
       secure: true,
       httpOnly: true,
@@ -285,7 +285,7 @@ test('Retrieving request details in a', async ({ page }) => {
   expect(userAgentLine).toMatch(/User-Agent Header:.*Chrome\/.*/)
   expect(userAgentLine).not.toContain('NO USER AGENT!')
 
-  await expect(
-    await page.getByTestId('smoke-test-cookie').textContent(),
-  ).toEqual('Smoke Test Cookie: this-cookie-is-set-by-smoke-tests')
+  expect(await page.getByTestId('smoke-test-cookie').textContent()).toEqual(
+    'Smoke Test Cookie: this-cookie-is-set-by-smoke-tests',
+  )
 })
