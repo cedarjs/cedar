@@ -54,7 +54,7 @@ to evolve as the feature matures.
 
 ## Enabling gqlorm
 
-The simplest way to enable gqlorm is to run
+The simplest way to enable gqlorm is to run the
 `yarn cedar experimental setup-live-queries` command.
 
 ### Manual setup
@@ -321,7 +321,7 @@ skips generating that model to avoid duplicate-type errors.
 ## Limitations and known behavior
 
 - **Read-only for now** — gqlorm currently generates queries (`findMany`,
-  `findUnique`, `findFirst`, etc.). Mutations (`create`, `update`, `delete`) are
+  `findUnique`, `findFirst`, etc). Mutations (`create`, `update`, `delete`) are
   not yet auto-generated.
 - **Scalar and enum fields only** — relation fields are excluded from the
   generated schema. You can still use `include` in the query builder, but nested
