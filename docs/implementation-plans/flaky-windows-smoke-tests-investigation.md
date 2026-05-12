@@ -182,3 +182,67 @@ issue on Windows CI runners is eliminated for all suites.
 Still open: the root cause of the server crash (PID change mid-run) and the
 Apollo error during `/double` prerender remain uninvestigated. If flakiness
 continues, those are the next areas to focus on.
+
+---
+
+## Update 2026-05-12 — Vite native crash on React 18 + Windows
+
+### Evidence: buffer overrun in `cedar-vite-dev`
+
+From run
+[25729552439](https://github.com/cedarjs/cedar/actions/runs/25729552439/job/75551189080)
+(PR #1756, React 18 + Windows smoke tests), the Vite web server crashes hard
+two seconds after startup:
+
+```
+[WebServer] web | 10:57:56 AM [vite] (client) ✨ new dependencies optimized
+[WebServer] web | 10:57:56 AM [vite] (client) ✨ optimized dependencies changed. reloading
+[WebServer] web | yarn cross-env NODE_ENV=development cedar-vite-dev --no-open
+                 exited with code 3221226505
+```
+
+Exit code `3221226505` (`0xC0000409`) is Windows'
+`STATUS_STACK_BUFFER_OVERRUN` — a native stack corruption, typically caused by
+a native addon (esbuild, SWC, better-sqlite3, etc.) writing past a buffer
+boundary. This is a hard crash, not a Node.js exception.
+
+### Exit code 1 is not a crash
+
+The same run (and another renovate run) also showed `exited with code 1` from
+the Vite process, but these occur right after the last test passes — they're
+Playwright tearing down the `webServer` child process after the dev test step
+completes. Both the API server and Vite exit with code 1 simultaneously, which
+is normal clean-up behavior.
+
+### Prevalence check
+
+The `STATUS_STACK_BUFFER_OVERRUN` crash was systematically searched for across:
+
+- 7 recent failed PR runs: 0 occurrences
+- 20 recent main branch runs: 0 occurrences
+- All non-zero Vite exit codes in 40 runs: only clean teardowns (exit code 1)
+
+However, the crash recurred shortly after in an unrelated PR —
+`renovate/publint` (#1758, a trivial `publint` version bump). Same React 18 +
+Windows smoke test, same exit code `3221226505`. This confirms the crash is
+**not** a one-off — it's a recurring issue potentially related to the React 18
+downgrade on Windows runners.
+
+### Decision
+
+This is a framework-level bug in the React 18 + Vite + Windows combination, not
+a CI fluke. The next step is running the React 18 downgrade scenario locally on
+Windows with a debugger attached to identify which native addon (esbuild, SWC,
+better-sqlite3, etc.) is causing the stack corruption.
+
+---
+
+## Update 2026-05-12 — Current state
+
+The `localhost` → `127.0.0.1` change has been applied across all 12 Playwright
+configs and 3 test files. However, since the failures are flaky, a passing run
+is **not** sufficient proof that the change fixed anything — several passing
+runs could be coincidental.
+
+Still open: the root cause of the server crash (PID change mid-run) and the
+Apollo error during `/double` prerender remain uninvestigated.
