@@ -51,8 +51,21 @@ export async function handler({ force }: Args) {
         title: 'Checking current database configuration',
         task: (ctx) => {
           const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
-          ctx.isPostgres = schemaContent.includes('provider = "postgresql"')
           ctx.schemaContent = schemaContent
+
+          ctx.isSqlite = schemaContent.includes('provider = "sqlite"')
+          ctx.isPostgres = schemaContent.includes('provider = "postgresql"')
+
+          if (!ctx.isSqlite && !ctx.isPostgres) {
+            ctx.unsupportedProvider = true
+            notes.push(
+              colors.note(
+                'setup neon only supports migrating from SQLite to PostgreSQL.' +
+                  ' Your project uses a different database provider.',
+              ),
+            )
+            return
+          }
 
           if (!ctx.isPostgres) {
             ctx.hasSqliteUsageOutsideDb = hasSqliteUsageOutsideDb(
@@ -74,6 +87,9 @@ export async function handler({ force }: Args) {
       {
         title: 'Removing SQLite dependencies from api/package.json',
         skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return 'Unsupported database provider'
+          }
           if (ctx.isPostgres) {
             return 'Already configured for PostgreSQL'
           }
@@ -96,6 +112,9 @@ export async function handler({ force }: Args) {
       {
         title: 'Removing better-sqlite3 dependenciesMeta',
         skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return 'Unsupported database provider'
+          }
           if (ctx.isPostgres) {
             return 'Already configured for PostgreSQL'
           }
@@ -127,6 +146,9 @@ export async function handler({ force }: Args) {
       {
         title: 'Switching Prisma schema to PostgreSQL',
         skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return 'Unsupported database provider'
+          }
           if (ctx.isPostgres) {
             return 'Schema is already configured for PostgreSQL'
           }
@@ -143,6 +165,9 @@ export async function handler({ force }: Args) {
       {
         title: 'Updating database adapter',
         skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return 'Unsupported database provider'
+          }
           if (ctx.isPostgres) {
             return 'Database adapter is already configured for PostgreSQL'
           }
@@ -156,6 +181,9 @@ export async function handler({ force }: Args) {
       {
         title: 'Updating Prisma config',
         skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return 'Unsupported database provider'
+          }
           if (ctx.isPostgres) {
             return 'Prisma config is already configured for Neon'
           }
@@ -187,7 +215,10 @@ export async function handler({ force }: Args) {
       addApiPackages(['@prisma/adapter-pg@7.8.0']),
       {
         title: 'Provisioning Neon database',
-        skip: () => {
+        skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return true
+          }
           if (hasDirectDatabaseUrl && !force) {
             return true
           }
@@ -225,6 +256,9 @@ export async function handler({ force }: Args) {
       {
         title: 'Writing database connection to .env',
         skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return true
+          }
           if (hasDirectDatabaseUrl && !force) {
             return true
           }
@@ -266,6 +300,9 @@ export async function handler({ force }: Args) {
       {
         title: 'Running Prisma migrations',
         skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return true
+          }
           if (ctx.skipWithNote) {
             return 'DATABASE_URL already configured — skipping migration'
           }
@@ -305,6 +342,10 @@ export async function handler({ force }: Args) {
       {
         title: 'One more thing...',
         task: (ctx, task) => {
+          if (ctx.unsupportedProvider) {
+            task.output = 'Skipped — unsupported database provider'
+            return
+          }
           if (ctx.skipWithNote) {
             task.output = 'Skipped — DATABASE_URL already configured'
             return
