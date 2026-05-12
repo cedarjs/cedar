@@ -29,9 +29,6 @@ export async function handler({ force }: Args) {
   )
   const envPath = path.join(cedarPaths.base, '.env')
 
-  const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
-  const isPostgres = schemaContent.includes('provider = "postgresql"')
-
   let hasDirectDatabaseUrl = false
   if (fs.existsSync(envPath)) {
     hasDirectDatabaseUrl = /^DATABASE_URL=/m.test(
@@ -46,6 +43,10 @@ export async function handler({ force }: Args) {
       {
         title: 'Checking current database configuration',
         task: (ctx) => {
+          const schemaContent = fs.readFileSync(schemaPath, 'utf-8')
+          ctx.isPostgres = schemaContent.includes('provider = "postgresql"')
+          ctx.schemaContent = schemaContent
+
           if (hasDirectDatabaseUrl && !force) {
             ctx.skipWithNote = true
             notes.push(
@@ -59,14 +60,14 @@ export async function handler({ force }: Args) {
       // --- Project conversion tasks (skip if already postgres) ---
       {
         title: 'Switching Prisma schema to PostgreSQL',
-        skip: () => {
-          if (isPostgres) {
+        skip: (ctx) => {
+          if (ctx.isPostgres) {
             return 'Schema is already configured for PostgreSQL'
           }
           return false
         },
-        task: () => {
-          const updated = schemaContent.replace(
+        task: (ctx) => {
+          const updated = (ctx.schemaContent as string).replace(
             'provider = "sqlite"',
             'provider = "postgresql"',
           )
@@ -75,8 +76,8 @@ export async function handler({ force }: Args) {
       },
       {
         title: 'Updating database adapter',
-        skip: () => {
-          if (isPostgres) {
+        skip: (ctx) => {
+          if (ctx.isPostgres) {
             return 'Database adapter is already configured for PostgreSQL'
           }
           return false
@@ -120,13 +121,22 @@ export const db = prismaClient
       },
       {
         title: 'Updating Prisma config',
-        skip: () => {
-          if (isPostgres) {
+        skip: (ctx) => {
+          if (ctx.isPostgres) {
             return 'Prisma config is already configured for Neon'
           }
           return false
         },
         task: () => {
+          if (
+            !fs.existsSync(prismaConfigPathCjs) &&
+            !fs.existsSync(prismaConfigPathMts)
+          ) {
+            throw new Error(
+              'No Prisma config file found. Expected prisma.config.cjs or prisma.config.mts in the api directory.',
+            )
+          }
+
           const configPath = fs.existsSync(prismaConfigPathCjs)
             ? prismaConfigPathCjs
             : prismaConfigPathMts
@@ -221,7 +231,10 @@ export const db = prismaClient
         title: 'Running Prisma migrations',
         skip: (ctx) => {
           if (ctx.skipWithNote) {
-            return true
+            return 'DATABASE_URL already configured — skipping migration'
+          }
+          if (!ctx.databaseUrl) {
+            return 'No database provisioned — skipping migration'
           }
           return false
         },
