@@ -180,8 +180,34 @@ smoke test suites that use Playwright with a `webServer` now resolve to
 issue on Windows CI runners is eliminated for all suites.
 
 Still open: the root cause of the server crash (PID change mid-run) and the
-Apollo error during `/double` prerender remain uninvestigated. If flakiness
-continues, those are the next areas to focus on.
+Apollo error during `/double` prerender remain uninvestigated.
+
+---
+
+## Update 2026-05-12 — CLI smoke test failure: "Generating dbAuth secret"
+
+### Evidence
+
+From run
+[25732654425](https://github.com/cedarjs/cedar/actions/runs/25732654425/job/75561731517)
+(PR #1757, CLI smoke tests on Windows):
+
+```
+Generating dbAuth secret
+Error: The process 'C:\npm\prefix\yarn.cmd' failed with exit code 1
+    at ChildProcess._handle.onexit (node:internal/child_process:306:5)
+```
+
+The `yarn.cmd` process fails during the `cedar build` step of the CLI smoke
+test, specifically at the "Generating dbAuth secret" phase. This is a different
+failure mode from the `ERR_CONNECTION_REFUSED` and Vite crashes — it's a build
+infrastructure issue, not a runtime server crash.
+
+### Prevalence
+
+I (@tobbe) think I've seen this before. Needs tracking if it appears again to
+determine if it's specific to Windows or certain dependency versions. If
+flakiness continues, those are the next areas to focus on.
 
 ---
 
