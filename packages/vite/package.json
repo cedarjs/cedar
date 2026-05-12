@@ -115,6 +115,7 @@
     "@swc/core": "1.15.32",
     "@universal-deploy/node": "^0.1.6",
     "@universal-deploy/store": "^0.2.1",
+    "@universal-deploy/vite": "^0.1.9",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.10.13",
     "@whatwg-node/server": "0.10.18",
