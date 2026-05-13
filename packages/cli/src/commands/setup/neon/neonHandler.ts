@@ -4,12 +4,8 @@ import path from 'node:path'
 import execa from 'execa'
 import { Listr } from 'listr2'
 
-import {
-  addApiPackages,
-  colors,
-  getPaths,
-  installPackages,
-} from '@cedarjs/cli-helpers'
+import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
+import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import type { Args } from './neon.js'
@@ -228,7 +224,20 @@ export async function handler({ force }: Args) {
           fs.writeFileSync(configPath, updated)
         },
       },
-      addApiPackages(['@prisma/adapter-pg@7.8.0']),
+      {
+        title: 'Adding required api packages...',
+        skip: (ctx) => {
+          if (ctx.unsupportedProvider) {
+            return true
+          }
+          return false
+        },
+        task: async () => {
+          await addWorkspacePackages('api', ['@prisma/adapter-pg@7.8.0'], {
+            cwd: cedarPaths.api.base,
+          })
+        },
+      },
       {
         title: 'Provisioning Neon database',
         skip: (ctx) => {
