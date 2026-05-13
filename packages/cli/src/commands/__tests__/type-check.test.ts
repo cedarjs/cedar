@@ -4,6 +4,8 @@ import concurrently from 'concurrently'
 import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
+import type * as ProjecConfig from '@cedarjs/project-config'
+
 import '../../lib/mockTelemetry.js'
 
 vi.mock('execa', () => ({
@@ -22,6 +24,47 @@ vi.mock('concurrently', () => ({
     options,
   })),
 }))
+
+vi.mock('@cedarjs/project-config', async (importOriginal) => {
+  const actual = await importOriginal<typeof ProjecConfig>()
+
+  return {
+    ...actual,
+    getConfig: () => ({
+      api: {
+        prismaGenerateArgs: [],
+        prismaConfig: 'cedar-app/api/prisma.config.cjs',
+        port: 8911,
+        title: 'Cedar App',
+        path: './api',
+        target: 'node',
+        serverConfig: './api/server.config.js',
+      },
+      web: {
+        title: 'Cedar App',
+        port: 8910,
+        path: './web',
+        target: 'browser',
+        includeEnvironmentVariables: [],
+        apiUrl: '/.api/functions',
+        fastRefresh: true,
+        a11y: true,
+        sourceMap: false,
+      },
+      browser: { open: false },
+      generate: { tests: true, stories: true, nestScaffoldByModel: true },
+      graphql: {
+        fragments: false,
+        trustedDocuments: false,
+        includeScalars: { File: true },
+      },
+      notifications: { versionUpdates: [] },
+      studio: { basePort: 4318 },
+      eslintLegacyConfigWarning: true,
+      experimental: {},
+    }),
+  }
+})
 
 const mockedRedwoodConfig = {
   api: {},
