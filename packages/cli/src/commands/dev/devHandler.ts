@@ -146,13 +146,18 @@ export const handler = async ({
     }
   }
 
-  if (workspace.includes('api') && generate) {
-    try {
-      await generatePrismaClient({ verbose: false })
-    } catch (e) {
-      const message = getErrorMessage(e)
-      errorTelemetry(process.argv, `Error generating prisma client: ${message}`)
-      console.error(c.error(message))
+  if (workspace.includes('api')) {
+    if (generate) {
+      try {
+        await generatePrismaClient({ verbose: false })
+      } catch (e) {
+        const message = getErrorMessage(e)
+        errorTelemetry(
+          process.argv,
+          `Error generating prisma client: ${message}`,
+        )
+        console.error(c.error(message))
+      }
     }
 
     if (!ud && !serverFile) {
