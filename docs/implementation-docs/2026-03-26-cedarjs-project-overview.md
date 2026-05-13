@@ -175,7 +175,7 @@ cedar
 │   └── render│serverless    │   └── secret│package│model
 ├── destroy (d) [mirror]     ├── setup
 ├── exec [script]            │   ├── auth <provider>
-├── experimental             │   ├── vite│docker│i18n│jobs
+├── experimental             │   ├── vite│docker│i18n│jobs|neon
 │   ├── rsc│streaming-ssr    │   ├── deploy│ui│cache│realtime
 │   ├── live-queries         │   └── mailer│middleware│server-file
 │   └── opentelemetry        │
@@ -188,10 +188,10 @@ cedar new → yarn create cedar-app (standalone)
 ## SCAFFOLD OUTPUT (`cedar generate scaffold Post`)
 
 ```
-api/src/graphql/posts.sdl.ts              ← schema only (types, queries, mutations, inputs)
-api/src/services/posts/posts.ts           ← resolver implementations (typed against auto-generated types/graphql)
-api/src/services/posts/posts.test.ts      ← tests
-api/src/services/posts/posts.scenarios.ts ← test fixtures
+api/src/graphql/posts.sdl.ts              <- schema only (types, queries, mutations, inputs)
+api/src/services/posts/posts.ts           <- resolver implementations (typed against auto-generated types/graphql)
+api/src/services/posts/posts.test.ts      <- tests
+api/src/services/posts/posts.scenarios.ts <- test fixtures
 
 web/src/components/Post/
   PostForm.tsx        ← form (uses @cedarjs/forms typed fields)

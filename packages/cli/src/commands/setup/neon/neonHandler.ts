@@ -67,6 +67,7 @@ export async function handler({ force }: Args) {
                   ' Your project uses a different database provider.',
               ),
             )
+
             return
           }
 
@@ -234,12 +235,7 @@ export async function handler({ force }: Args) {
       },
       {
         title: 'Adding required api packages...',
-        skip: (ctx) => {
-          if (ctx.unsupportedProvider) {
-            return true
-          }
-          return false
-        },
+        skip: (ctx) => ctx.unsupportedProvider,
         task: async () => {
           await addWorkspacePackages('api', ['@prisma/adapter-pg@7.8.0'], {
             cwd: cedarPaths.api.base,
@@ -252,9 +248,11 @@ export async function handler({ force }: Args) {
           if (ctx.unsupportedProvider) {
             return true
           }
+
           if (hasDirectDatabaseUrl && !force) {
             return true
           }
+
           return false
         },
         task: async (ctx) => {
@@ -345,12 +343,15 @@ export async function handler({ force }: Args) {
           if (ctx.unsupportedProvider) {
             return true
           }
+
           if (ctx.skipWithNote) {
             return 'DATABASE_URL already configured — skipping migration'
           }
+
           if (!ctx.databaseUrl) {
             return 'No database provisioned — skipping migration'
           }
+
           return false
         },
         task: (ctx) => {
@@ -455,12 +456,14 @@ function hasSqliteUsageOutsideDb(srcPath: string, dbTsPath: string): boolean {
 
   for (const file of files) {
     const fullPath = path.join(srcPath, file)
+
     if (fullPath === dbTsPath) {
       continue
     }
 
     try {
       const content = fs.readFileSync(fullPath, 'utf-8')
+
       if (sqlitePattern.test(content)) {
         return true
       }
