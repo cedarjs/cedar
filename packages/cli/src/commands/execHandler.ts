@@ -115,7 +115,6 @@ export const handler = async (args: ExecOptions) => {
       enabled: () => !!prisma,
       task: () =>
         generatePrismaClient({
-          force: false,
           verbose: !args.silent,
           silent: !!args.silent,
         }),
