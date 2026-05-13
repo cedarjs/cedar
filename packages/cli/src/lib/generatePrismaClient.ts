@@ -67,7 +67,8 @@ export const generatePrismaClient = async ({
     // TODO: Revisit this when we've switched to Prisma's new TS engine
     if (
       !prismaClientFile.includes('@prisma/client did not initialize yet.') &&
-      prismaClientFile.includes('exports.Prisma.')
+      (prismaClientFile.includes('exports.Prisma.') ||
+        prismaClientFile.includes('export const PrismaClient'))
     ) {
       // Client exists, so abort.
       return
