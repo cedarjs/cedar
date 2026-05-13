@@ -4,7 +4,7 @@ import concurrently from 'concurrently'
 import execa from 'execa'
 import { vi, beforeEach, afterEach, test, expect } from 'vitest'
 
-import type * as ProjecConfig from '@cedarjs/project-config'
+import type * as ProjectConfig from '@cedarjs/project-config'
 
 import '../../lib/mockTelemetry.js'
 
@@ -26,7 +26,7 @@ vi.mock('concurrently', () => ({
 }))
 
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
-  const actual = await importOriginal<typeof ProjecConfig>()
+  const actual = await importOriginal<typeof ProjectConfig>()
 
   return {
     ...actual,
