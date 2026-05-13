@@ -1,3 +1,9 @@
+## RWJS_DELAY_RESTART removed
+
+The `RWJS_DELAY_RESTART` environment variable has been removed. It was renamed
+to `CEDAR_DELAY_API_RESTART` in a previous release. If you still have
+`RWJS_DELAY_RESTART` in your `.env` file, rename it to `CEDAR_DELAY_API_RESTART`.
+
 ## cedar-gen
 
 Public:
