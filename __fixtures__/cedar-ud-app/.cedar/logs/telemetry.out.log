@@ -1,0 +1,17 @@
+Starting log:
+ - Time: 2026-06-30T10:05:04.984Z
+ - Name: telemetry (telemetry)
+ - Command: yarn
+ - Arguments: node /Users/tobbe/dev/cedarjs/cedar/packages/cli/dist/telemetry/send.js
+
+[31m[1mInternal Error[22m[39m: root-workspace-0b6124@workspace:.: This package doesn't seem to be present in your lockfile; run "yarn install" to update the lockfile
+    at DT.getCandidates (/Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:204:4607)
+    at em.getCandidates (/Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:141:1311)
+    at /Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:209:8420
+    at VE (/Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:140:45054)
+    at st (/Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:209:8400)
+    at async Promise.allSettled (index 0)
+    at async Lu (/Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:140:44382)
+    at async /Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:209:9166
+    at async ki.startProgressPromise (/Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:140:130220)
+    at async e.resolveEverything (/Users/tobbe/.cache/node/corepack/v1/yarn/4.14.1/yarn.js:209:7138)
