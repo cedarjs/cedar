@@ -1,12 +1,11 @@
 // helper used in Dev and Build commands
 
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
+import path from 'node:path'
 
-import {
-  getConfig,
-  resolveGeneratedPrismaClient,
-} from '@cedarjs/project-config'
+import { getConfig, getPrismaSchemas } from '@cedarjs/project-config'
 
 // @ts-expect-error - No types for JS files
 import { runCommandTask, getPaths } from './index.js'
@@ -42,39 +41,73 @@ export const generatePrismaCommand = async (): Promise<{
 }
 
 /**
- * Conditionally generate the prisma client, skip if it already exists (unless
- * forced).
+ * Hashes the prisma config so changes to provider, output, etc. trigger
+ * regeneration, and the schema content to detect model changes.
  */
-export const generatePrismaClient = async ({
+async function computePrismaSchemaHash() {
+  try {
+    const hash = createHash('sha256')
+    const configPath = getPaths().api.prismaConfig
+
+    if (fs.existsSync(configPath)) {
+      hash.update(fs.readFileSync(configPath))
+    }
+
+    const { schemas } = await getPrismaSchemas()
+
+    for (const schema of schemas) {
+      // `schema` is a tuple: [filePath: string, content: string]
+      hash.update(schema[1])
+    }
+
+    return hash.digest('hex')
+  } catch {
+    // If we can't hash (e.g., invalid schema, @prisma/internals unavailable),
+    // return null so the caller falls through to generation.
+    return null
+  }
+}
+
+function getHashFilePath(): string {
+  const generatedBase = getPaths().generated.base
+
+  return path.join(generatedBase, 'prisma-schema-hash')
+}
+
+function getStoredSchemaHash() {
+  const hashFile = getHashFilePath()
+
+  if (fs.existsSync(hashFile)) {
+    return fs.readFileSync(hashFile, 'utf-8').trim()
+  }
+
+  return null
+}
+
+function storeSchemaHash(hash: string) {
+  const hashFile = getHashFilePath()
+
+  fs.mkdirSync(path.dirname(hashFile), { recursive: true })
+  fs.writeFileSync(hashFile, hash)
+}
+
+/**
+ * Conditionally generate the prisma client. Uses a schema hash stored in
+ * `.cedar/prisma-schema-hash` to skip regeneration when the schema hasn't
+ * changed
+ */
+export async function generatePrismaClient({
   verbose = true,
-  force = true,
+  force = false,
   silent = false,
-}: GeneratePrismaClientOptions = {}): Promise<void> => {
-  // Unless --force is used we do not generate the Prisma client if it exists.
+}: GeneratePrismaClientOptions = {}) {
+  const hash = await computePrismaSchemaHash()
+
   if (!force) {
-    const { clientPath } = await resolveGeneratedPrismaClient()
+    const storedHash = hash ? getStoredSchemaHash() : null
 
-    const prismaClientFile =
-      clientPath && fs.existsSync(clientPath)
-        ? fs.readFileSync(clientPath, 'utf8')
-        : ''
-
-    // This is a hack, and is likely to break. A better solution would be to
-    // try to import the Prisma client. But that gets cached, so we'd have to
-    // do it in a worker thread.
-    // See https://github.com/nodejs/node/issues/49442#issuecomment-1703472299
-    // for an idea on how to do that
-    // Just reading the file and manually looking for known strings is faster
-    // and works around the caching issue. But is less future proof. But it's
-    // good enough for now.
-    // If we want to go back to `await import(...)` we could try appending
-    // `?cache_busting=${Date.now()}` to the URL.
-    // TODO: Revisit this when we've switched to Prisma's new TS engine
-    if (
-      !prismaClientFile.includes('@prisma/client did not initialize yet.') &&
-      prismaClientFile.includes('exports.Prisma.')
-    ) {
-      // Client exists, so abort.
+    if (hash !== null && hash === storedHash) {
+      // Schema hasn't changed since last generate, skip.
       return
     }
   }
@@ -91,4 +124,8 @@ export const generatePrismaClient = async ({
       silent,
     },
   )
+
+  if (hash !== null) {
+    storeSchemaHash(hash)
+  }
 }
