@@ -16,6 +16,12 @@ class BuildManager {
     this.shouldClean = false
     this.buildFn = buildFn
     // TODO: Remove process.env.RWJS_DELAY_RESTART in next major release
+    if (process.env.RWJS_DELAY_RESTART) {
+      console.warn(
+        '[DEPRECATED] RWJS_DELAY_RESTART is deprecated and will be removed in the next major release. ' +
+          'Please rename it to CEDAR_DELAY_API_RESTART in your .env file.',
+      )
+    }
     const delay =
       process.env.CEDAR_DELAY_API_RESTART || process.env.RWJS_DELAY_RESTART
     this.debouncedBuild = debounce(
