@@ -182,6 +182,10 @@ export async function handler({ force }: Args) {
             return 'Database adapter is already configured for Neon (PrismaPg)'
           }
 
+          if (ctx.skipWithNote) {
+            return 'DATABASE_URL already configured — skipping adapter update'
+          }
+
           return false
         },
         task: () => {
@@ -198,6 +202,10 @@ export async function handler({ force }: Args) {
 
           if (ctx.isNeon) {
             return 'Prisma config is already configured for Neon'
+          }
+
+          if (ctx.skipWithNote) {
+            return 'DATABASE_URL already configured — skipping config update'
           }
 
           return false
