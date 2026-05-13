@@ -3,7 +3,10 @@
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 
-import { resolveGeneratedPrismaClient } from '@cedarjs/project-config'
+import {
+  getConfig,
+  resolveGeneratedPrismaClient,
+} from '@cedarjs/project-config'
 
 // @ts-expect-error - No types for JS files
 import { runCommandTask, getPaths } from './index.js'
@@ -18,6 +21,7 @@ export const generatePrismaCommand = async (): Promise<{
   cmd: string
   args: string[]
 }> => {
+  const config = getConfig()
   const createdRequire = createRequire(import.meta.url)
 
   // I wanted to use `import.meta.resolve` here, but it's not supported by our
@@ -32,6 +36,7 @@ export const generatePrismaCommand = async (): Promise<{
       prismaIndexPath,
       'generate',
       `--config=${getPaths().api.prismaConfig}`,
+      ...config.api.prismaGenerateArgs,
     ],
   }
 }
