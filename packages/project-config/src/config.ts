@@ -21,6 +21,7 @@ export interface NodeTargetConfig {
   path: string
   target: TargetEnum.NODE
   prismaConfig: string
+  prismaGenerateArgs: string[]
   serverConfig: string
   debugPort?: number | boolean
 }
@@ -156,6 +157,7 @@ export const DEFAULT_CONFIG: Config = {
     path: './api',
     target: TargetEnum.NODE,
     prismaConfig: './api/prisma.config.cjs',
+    prismaGenerateArgs: [],
     serverConfig: './api/server.config.js',
     debugPort: undefined,
   },

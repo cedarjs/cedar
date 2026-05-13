@@ -56,6 +56,10 @@
           "const": "node"
         },
         "prismaConfig": { "type": "string" },
+        "prismaGenerateArgs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
         "serverConfig": { "type": "string" },
         "debugPort": {
           "anyOf": [{ "type": "integer" }, { "type": "boolean" }]
