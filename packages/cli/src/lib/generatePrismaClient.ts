@@ -98,14 +98,18 @@ function storeSchemaHash(hash: string) {
  */
 export async function generatePrismaClient({
   verbose = true,
+  force = false,
   silent = false,
 }: GeneratePrismaClientOptions = {}) {
   const hash = await computePrismaSchemaHash()
-  const storedHash = hash ? getStoredSchemaHash() : null
 
-  if (hash !== null && hash === storedHash) {
-    // Schema hasn't changed since last generate, skip.
-    return
+  if (!force) {
+    const storedHash = hash ? getStoredSchemaHash() : null
+
+    if (hash !== null && hash === storedHash) {
+      // Schema hasn't changed since last generate, skip.
+      return
+    }
   }
 
   await runCommandTask(
