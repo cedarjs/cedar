@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/storage",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -53,13 +53,13 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/project-config": "4.1.0",
+    "@cedarjs/project-config": "4.2.0",
     "mime-types": "2.1.35",
     "ulid": "3.0.2"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@cedarjs/framework-tools": "workspace:*",
+    "@cedarjs/framework-tools": "4.2.0",
     "@prisma/adapter-better-sqlite3": "7.8.0",
     "@prisma/client": "7.8.0",
     "@types/better-sqlite3": "7.6.13",

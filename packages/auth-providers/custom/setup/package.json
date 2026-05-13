@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-custom-setup",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -39,11 +39,11 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@cedarjs/cli-helpers": "4.1.0"
+    "@cedarjs/cli-helpers": "4.2.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@cedarjs/framework-tools": "workspace:*",
+    "@cedarjs/framework-tools": "4.2.0",
     "@types/yargs": "17.0.35",
     "concurrently": "9.2.1",
     "publint": "0.3.20",

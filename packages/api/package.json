@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -108,7 +108,7 @@
     "title-case": "3.0.3"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "workspace:*",
+    "@cedarjs/framework-tools": "4.2.0",
     "@types/aws-lambda": "8.10.161",
     "@types/jsonwebtoken": "9.0.10",
     "@types/memjs": "1",

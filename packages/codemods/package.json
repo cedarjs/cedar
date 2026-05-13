@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/codemods",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Codemods to ease upgrading a CedarJS Project",
   "repository": {
     "type": "git",
@@ -29,8 +29,8 @@
     "@babel/parser": "7.29.3",
     "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/traverse": "7.29.0",
-    "@cedarjs/cli-helpers": "4.1.0",
-    "@cedarjs/project-config": "4.1.0",
+    "@cedarjs/cli-helpers": "4.2.0",
+    "@cedarjs/project-config": "4.2.0",
     "@svgr/core": "8.1.0",
     "@svgr/plugin-jsx": "8.1.0",
     "@vscode/ripgrep": "1.17.1",
@@ -48,7 +48,7 @@
     "yargs": "17.7.2"
   },
   "devDependencies": {
-    "@cedarjs/framework-tools": "workspace:*",
+    "@cedarjs/framework-tools": "4.2.0",
     "@types/babel__core": "7.20.5",
     "@types/jscodeshift": "17.3.0",
     "@types/yargs": "17.0.35",

@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-clerk-api",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -43,8 +43,8 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",
-    "@cedarjs/api": "4.1.0",
-    "@cedarjs/framework-tools": "workspace:*",
+    "@cedarjs/api": "4.2.0",
+    "@cedarjs/framework-tools": "4.2.0",
     "@types/aws-lambda": "8.10.161",
     "concurrently": "9.2.1",
     "publint": "0.3.20",
