@@ -19,6 +19,7 @@ const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
  * globalThis across Vite plugin instances and separate build calls.
  * We need direct access here so that cedarUniversalDeployPlugin can clear
  * stale entries before re-registering.
+ *
  */
 const UD_STORE_SYMBOL = Symbol.for('ud:store')
 
@@ -137,6 +138,15 @@ function toEntryMeta(route: CedarRouteRecord): EntryMeta {
  * entry IDs that the API build's load handler cannot resolve.
  */
 function clearCedarEntries(): void {
+  // This couples directly to @universal-deploy/store internals (the symbol key
+  // and the { entries: { id?: string }[] } shape are not part of that library's
+  // public API). If the library ever renames its symbol or changes the entry
+  // shape, clearCedarEntries will silently become a no-op. The proper fix is to
+  // eliminate the need for clearing entirely, see
+  // docs/implementation-plans/universal-deploy-serve-refactoring.md which
+  // proposes merging buildCedarApp and buildUDApiServer into a single
+  // build step, removing the cross-build-step entry accumulation issue.
+  // TODO: Remove the need for this
   const store: { entries: { id?: string }[] } | undefined = (
     globalThis as Record<symbol, unknown>
   )[UD_STORE_SYMBOL] as { entries: { id?: string }[] } | undefined

@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { describe, it, expect, vi } from 'vitest'
 
@@ -20,7 +20,9 @@ vi.mock('@cedarjs/api-server/udFetchable', () => ({
 
 describe('createFunctionHandler', () => {
   it('delegates to the module handleRequest export', async () => {
-    const distUrl = path.resolve(__dirname, '__fixtures__/function-module.js')
+    const distUrl = pathToFileURL(
+      path.resolve(__dirname, '__fixtures__/function-module.js'),
+    ).href
     const handler = createFunctionHandler({ distUrl })
     const request = new Request('http://localhost/api/test')
     const response = await handler.fetch(request)
@@ -28,10 +30,9 @@ describe('createFunctionHandler', () => {
   })
 
   it('falls back to a legacy handler export wrapped with wrapLegacyHandler', async () => {
-    const distUrl = path.resolve(
-      __dirname,
-      '__fixtures__/legacy-function-module.js',
-    )
+    const distUrl = pathToFileURL(
+      path.resolve(__dirname, '__fixtures__/legacy-function-module.js'),
+    ).href
     const handler = createFunctionHandler({ distUrl })
     const request = new Request('http://localhost/api/test')
     const response = await handler.fetch(request)
@@ -39,7 +40,9 @@ describe('createFunctionHandler', () => {
   })
 
   it('throws if no handler is found', async () => {
-    const distUrl = path.resolve(__dirname, '__fixtures__/empty-module.js')
+    const distUrl = pathToFileURL(
+      path.resolve(__dirname, '__fixtures__/empty-module.js'),
+    ).href
     const handler = createFunctionHandler({ distUrl })
     const request = new Request('http://localhost/api/test')
     await expect(handler.fetch(request)).rejects.toThrow('Handler not found')

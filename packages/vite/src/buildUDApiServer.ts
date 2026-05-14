@@ -52,6 +52,26 @@ export const buildUDApiServer = async ({
     configFile: rwPaths.web.viteConfig,
     logLevel: verbose ? 'info' : 'warn',
 
+    // Vite creates a default 'client' environment from the user's config
+    // file (with index.html as entry). Strip it here — we only want the
+    // explicitly declared 'ssr' environment for the API server build.
+    //
+    // NOTE: build: { ssr: true } is intentionally omitted because the
+    // environments.ssr declaration already establishes an SSR environment.
+    // A top-level build.ssr: true flag also makes Vite create a default SSR
+    // environment that inherits index.html from the client config, resulting
+    // in: "rollupOptions.input should not be an html file when building for SSR"
+    plugins: [
+      {
+        name: 'cedar-ud-build-strip-client',
+        config(userConfig) {
+          const envs = { ...userConfig.environments }
+          delete (envs as Record<string, unknown>).client
+          return { environments: envs }
+        },
+      },
+    ],
+
     // The ssr environment is the Vite mechanism for server-side builds.
     // Reminder: "ssr" here means "server-side module execution", NOT
     // Cedar HTML SSR / streaming / RSC.
@@ -61,11 +81,6 @@ export const buildUDApiServer = async ({
           outDir,
         },
       },
-    },
-
-    build: {
-      // This is a server (Node) build, not a browser build.
-      ssr: true,
     },
   })
 }
