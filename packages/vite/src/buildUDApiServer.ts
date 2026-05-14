@@ -4,19 +4,22 @@ import { getPaths } from '@cedarjs/project-config'
 
 export interface BuildUDApiServerOptions {
   verbose?: boolean
+  apiRootPath?: string
 }
 
 /**
  * Builds the API server Universal Deploy server entry using Vite.
  *
  * Runs a Vite SSR build that produces a pure WinterTC-compatible Fetchable
- * (`export default { fetch }`) at `api/dist/ud/index.mjs`. The output
+ * (`export default { fetch }`) at `api/dist/ud/index.js`. The output
  * contains NO HTTP server startup code — the Fetchable is wrapped by
  * `cedar serve` at runtime.
  *
- * Deployment-specific plugins (Netlify, Vercel, etc.) are independent;
- * they must be added to the user's vite config and run as a separate
- * `vite build` (or via the provider's own CLI).
+ * Loads the user's Vite config (`web/vite.config.ts`) so provider plugins
+ * (Netlify, Vercel, etc.) can produce their own deployment artifacts
+ * alongside Cedar's canonical local-serve artifact. Cedar's own UD plugins
+ * (`cedarUniversalDeployPlugin`, `catchAll`, `devServer`) are injected
+ * independently and are not affected by user config.
  *
  * The emitted server entry is placed under `api/dist/ud/` so it does not
  * collide with the existing esbuild output under `api/dist/`.
@@ -28,11 +31,13 @@ export interface BuildUDApiServerOptions {
  */
 export const buildUDApiServer = async ({
   verbose = false,
+  apiRootPath,
 }: BuildUDApiServerOptions = {}) => {
   const { build } = await import('vite')
   const { cedarUniversalDeployPlugin } =
     await import('./plugins/vite-plugin-cedar-universal-deploy.js')
   const { catchAll, devServer } = await import('@universal-deploy/vite')
+  const { catchAllEntry } = await import('@universal-deploy/store')
 
   const rwPaths = getPaths()
 
@@ -41,11 +46,16 @@ export const buildUDApiServer = async ({
   const outDir = path.join(rwPaths.api.dist, 'ud')
 
   await build({
+    // Load the user's Vite config so provider plugins can run alongside
+    // Cedar's canonical UD build.
+    configFile: rwPaths.web.viteConfig,
     logLevel: verbose ? 'info' : 'warn',
 
     plugins: [
       // Registers per-route API entries with @universal-deploy/store.
-      cedarUniversalDeployPlugin(),
+      // The apiRootPath is baked into the generated route patterns by
+      // cedarUniversalDeployPlugin's normaliseApiPrefix helper.
+      cedarUniversalDeployPlugin({ apiRootPath }),
 
       // catchAll() generates the rou3-based route dispatcher
       // (virtual:ud:catch-all). devServer() provides Vite dev support for
@@ -60,15 +70,16 @@ export const buildUDApiServer = async ({
       devServer(),
     ],
 
+    // Legacy ssr flag approach. The explicit rollupOptions.input prevents the
+    // "index.html as SSR entry" error. Vite will also build a 'client'
+    // environment from the user's config file (wasteful but harmless), and
+    // the 'ssr' environment produces our canonical Fetchable artifact at
+    // api/dist/ud/index.js.
     build: {
-      // This is a server (Node) build, not a browser build.
       ssr: true,
       outDir,
-
-      // Explicitly set the input to the UD catch-all dispatcher so Vite
-      // does not auto-detect an index.html file as the SSR entry point.
       rollupOptions: {
-        input: 'virtual:ud:catch-all',
+        input: catchAllEntry,
         output: {
           entryFileNames: 'index.js',
         },

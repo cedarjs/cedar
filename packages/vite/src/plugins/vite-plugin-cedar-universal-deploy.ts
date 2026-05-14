@@ -231,10 +231,10 @@ export function cedarUniversalDeployPlugin(
 }
 
 function generateGraphQLModule(distPath: string): string {
-  // Relative path from the UD entry output directory (api/dist/ud) to the
-  // function dist file (api/dist/functions/...). Resolved at runtime via
+  // Relative path from the UD assets output directory (api/dist/ud/assets) to
+  // the function dist file (api/dist/functions/...). Resolved at runtime via
   // import.meta.url so the artifact is portable between machines.
-  const udOutDir = path.join(getPaths().api.dist, 'ud')
+  const udOutDir = path.join(getPaths().api.dist, 'ud', 'assets')
   const relPath = './' + path.relative(udOutDir, distPath)
 
   return `
@@ -244,7 +244,7 @@ function generateGraphQLModule(distPath: string): string {
 }
 
 function generateFunctionModule(distPath: string): string {
-  const udOutDir = path.join(getPaths().api.dist, 'ud')
+  const udOutDir = path.join(getPaths().api.dist, 'ud', 'assets')
   const relPath = './' + path.relative(udOutDir, distPath)
 
   return `
