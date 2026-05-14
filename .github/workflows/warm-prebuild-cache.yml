@@ -1,0 +1,37 @@
+name: 🔥 Warm prebuild cache
+
+# Runs on every push to main so that PRs can fall back to a warm cache.
+# This avoids cold-start cache misses on Windows, where building better-sqlite3
+# from source is broken (Python 3.12+ removed distutils).
+
+on:
+  push:
+    branches: ['main']
+
+permissions: {}
+
+# Only keep the latest run per OS to avoid redundant cache writes,
+# but don't cancel in-progress runs since a partial run leaves the cache cold.
+concurrency:
+  group: warm-prebuild-cache-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  warm-prebuild-cache:
+    name: 🔥 Warm prebuild cache / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Let each OS run independently — a flaky Ubuntu run must not cancel
+      # the Windows job, which would leave the Windows cache cold.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+        with:
+          build: false
