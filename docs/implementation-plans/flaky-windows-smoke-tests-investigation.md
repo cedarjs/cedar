@@ -466,3 +466,176 @@ Windows), not framework-dependent.
   bug)
 - Remove the `--no-maglev` workaround after the fix lands in a Node 24.x
   release
+
+---
+
+## Update 2026-05-14 — Repeat of "Generating dbAuth secret" yarn failure
+
+### Evidence
+
+From run
+[25850869052](https://github.com/cedarjs/cedar/actions/runs/25850869052/job/75957041258)
+(PR #1775 `feat(gqlorm): Add web workspace setup steps`, CLI smoke tests on Windows):
+
+```
+$ cd D:\a\cedar\test-project
+$ yarn install
+➤ YN0000: Yarn detected that the current workflow is executed from a public pull request...
+➤ YN0000: ┌ Resolution step
+Generating dbAuth secret
+Error: The process 'C:\npm\prefix\yarn.cmd' failed with exit code 1
+    at ExecState._setResult (D:\a\cedar\cedar\node_modules\@actions\exec\lib\toolrunner.js:600:25)
+```
+
+### Assessment
+
+This is the same failure mode logged on 2026-05-12 from run
+[25732654425](https://github.com/cedarjs/cedar/actions/runs/25732654425/job/75561731517)
+— `yarn install` in the test project fails with exit code 1 during the
+Resolution step, with "Generating dbAuth secret" appearing concurrently in the
+output.
+
+PR #1775 is an unrelated feature addition (`gqlorm` web workspace setup), so
+the failure is not caused by the PR changes. This is at least the second
+occurrence across different PRs, confirming it is a recurring flaky failure on
+the Windows CLI smoke test runner.
+
+The "Generating dbAuth secret" line comes from a concurrent process step (test
+project scaffolding), not from `yarn install` itself.
+
+The actual yarn error from within the Resolution step is not visible — it is
+swallowed inside a closed `##[group]Resolution step` log group. The failure
+happens only ~2 seconds into the install, which rules out a native module build
+failure (building from source via node-gyp takes much longer and occurs in the
+Link step, not Resolution). Root cause is unknown. Possible candidates:
+
+- Lockfile integrity check rejection (yarn 4 hardened mode is enabled for public PRs)
+- A tarball referenced in the test project's `package.json` not yet available
+- Network or filesystem error during package resolution
+
+To investigate further, a re-run with verbose yarn output would be needed to
+surface the actual error from within the resolution step.
+
+---
+
+## Update 2026-05-14 — Three new Windows failures in PR #1778 CI run
+
+From run
+[25856361532](https://github.com/cedarjs/cedar/actions/runs/25856361532)
+(PR #1778 `fix: set output.exports: named in API Vite build`):
+
+### 1. Fragments Smoke tests — "Generating dbAuth secret" yarn failure (again)
+
+[Job 75975300598](https://github.com/cedarjs/cedar/actions/runs/25856361532/job/75975300598)
+
+Identical to the pattern from runs 25732654425 and 25850869052:
+
+```
+➤ YN0000: ┌ Resolution step
+Generating dbAuth secret
+Error: The process 'C:\npm\prefix\yarn.cmd' failed with exit code 1
+```
+
+This is now the third occurrence across three different PRs (#1757, #1775, #1778),
+confirming it is a recurring issue unrelated to any specific code change.
+
+### 2. Background jobs E2E — yarn exit code 127
+
+[Job 75975300609](https://github.com/cedarjs/cedar/actions/runs/25856361532/job/75975300609)
+
+```
+➤ YN0000: ┌ Resolution step
+##[error]Process completed with exit code 127.
+```
+
+Exit code 127 means "command not found". The `yarn install` in the test project
+fails ~1.4 seconds into the Resolution step with a different exit code than the
+exit-code-1 failures. The command that cannot be found is not visible in the
+logs. Possible cause: a postinstall script or yarn plugin calls a Windows command
+that doesn't exist on the runner.
+
+### 3. Smoke tests — Storybook crashes on startup (exit code 1)
+
+[Job 75975300251](https://github.com/cedarjs/cedar/actions/runs/25856361532/job/75975300251)
+
+The test project setup completes successfully, but the Playwright `webServer`
+(Storybook) crashes 14 seconds after starting:
+
+```
+[WebServer] @storybook/core v8.6.18
+[WebServer]
+##[error]Process completed with exit code 1.
+```
+
+No error output is emitted between the version banner and the crash. Earlier in
+the same job log, yarn warns:
+
+```
+YN0060: vite is listed by your project with version 7.3.2, which doesn't satisfy
+what @storybook/builder-vite and other dependencies request (^4.0.0 || ^5.0.0 || ^6.0.0).
+```
+
+**Likely cause:** `@storybook/builder-vite` does not support Vite 7. Storybook
+attempts to start, fails internally due to the incompatible Vite version, and
+exits with code 1. This is different from the V8 Maglev JIT crash (which exits
+with code `3221226505`).
+
+**Next step:** Check if there is a newer version of `@storybook/builder-vite`
+that supports Vite 7, or whether the test project's Storybook setup needs to be
+pinned to a compatible Vite version.
+
+**Update:** In the subsequent CI run (25858321273), the `Smoke tests /
+windows-latest` job **passed** — the Storybook crash did not recur. This
+suggests the exit-code-1 failure might have been a fluke (runner condition,
+timing issue), or it self-resolved. The Vite 7 / Storybook incompatibility
+warning is still present in later runs, but Storybook appears to start
+successfully regardless. Needs more data points.
+
+---
+
+## Update 2026-05-14 — PR #1778 second CI run (25858321273)
+
+From run
+[25858321273](https://github.com/cedarjs/cedar/actions/runs/25858321273)
+(PR #1778, re-triggered after fork push):
+
+### 1. Smoke tests ESM / windows-latest — V8 Maglev JIT crash (again)
+
+[Job 75981804553](https://github.com/cedarjs/cedar/actions/runs/25858321273/job/75981804553)
+
+```
+[WebServer] web | yarn cross-env NODE_ENV=development cedar-vite-dev --no-open
+            exited with code 3221226505
+```
+
+Followed by `ERR_CONNECTION_REFUSED` on all subsequent `page.goto()` calls.
+Same V8 Maglev JIT crash (`STATUS_STACK_BUFFER_OVERRUN`) as previously
+documented. The `cedar-vite-dev` process running in ESM mode crashes mid-run,
+taking down the web server.
+
+### 2. RSC Smoke tests / ubuntu-latest — yarn install fails in RSC project
+
+[Job 75981804767](https://github.com/cedarjs/cedar/actions/runs/25858321273/job/75981804767)
+
+`create-cedar-rsc-app` scaffolds a new RSC project and immediately runs
+`yarn install` inside it. The install fails after ~17 seconds:
+
+```
+⚠ Error: Couldn't install node modules
+Error: Command failed with exit code 1: yarn install
+```
+
+This is on **Ubuntu**, not Windows, and it fails inside the newly created RSC
+project (not the main cedar repo). Yarn 4 hardened mode is active. The actual
+yarn error is not visible in the logs.
+
+Notable: the prebuild cache was restored as `prebuild-cache-Linux-12.9.0`, but
+the cedar repo now also includes `better-sqlite3@npm:12.10.0` alongside
+`12.9.0`. If the RSC project template depends on the newer version, it would
+not be covered by the cached 12.9.0 prebuild — though this would cause a link
+step failure, not a resolution failure.
+
+This failure mode (RSC project yarn install) has not been seen in prior runs.
+Could be a transient network issue, a lockfile incompatibility introduced by
+the version bump, or a hardened mode lockfile check rejection on the freshly
+scaffolded project's lockfile.
