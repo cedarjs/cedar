@@ -10,12 +10,21 @@ on:
 
 permissions: {}
 
+# Only keep the latest run per OS to avoid redundant cache writes,
+# but don't cancel in-progress runs since a partial run leaves the cache cold.
+concurrency:
+  group: warm-prebuild-cache-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   warm-prebuild-cache:
     name: 🔥 Warm prebuild cache / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
+      # Let each OS run independently — a flaky Ubuntu run must not cancel
+      # the Windows job, which would leave the Windows cache cold.
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
 
