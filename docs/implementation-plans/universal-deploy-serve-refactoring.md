@@ -546,5 +546,3 @@ to accomplish this refactor's goals.
    build-time `apiRootPath` behavior.
 7. Re-evaluate unified-build follow-up work once the artifact/serve boundary is
    stable.
-
-
