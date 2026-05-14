@@ -159,6 +159,36 @@ type ResolveReturnType =
   | { clientPath: string; error: undefined }
   | { clientPath: string | undefined; error: string }
 
+/**
+ * Resolves the absolute path the Prisma client generator writes to.
+ * Returns `undefined` if the schema or generator can't be read.
+ */
+export async function getPrismaGeneratorOutputPath(): Promise<
+  string | undefined
+> {
+  try {
+    const prismaInternalsMod = await import('@prisma/internals')
+    const { getConfig } = prismaInternalsMod.default || prismaInternalsMod
+
+    const { schemas, schemaRootDir } = await getPrismaSchemas()
+    const config = await getConfig({ datamodel: schemas })
+    const generator =
+      config.generators.find((entry) => entry.name === 'client') ??
+      config.generators[0]
+    const output = generator?.output?.value
+
+    if (!output) {
+      return undefined
+    }
+
+    return path.isAbsolute(output)
+      ? output
+      : path.resolve(schemaRootDir, output)
+  } catch {
+    return undefined
+  }
+}
+
 export async function resolveGeneratedPrismaClient(): Promise<ResolveReturnType> {
   let generatorOutputPath: string | undefined
   let ext = 'ts'
