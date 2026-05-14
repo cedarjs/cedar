@@ -235,16 +235,16 @@ function addLiveQueryListenerToGraphqlHandler({ force }: { force?: boolean }) {
 }
 
 function addConfigureGqlormToApp({ force }: { force?: boolean }) {
-  const appTsxPath = getPaths().web.app
+  const appPath = getPaths().web.app
 
-  if (!fs.existsSync(appTsxPath)) {
+  if (!fs.existsSync(appPath)) {
     return {
       skipped: true,
-      reason: 'App.tsx not found',
+      reason: `${path.basename(appPath)} not found`,
     }
   }
 
-  const content = fs.readFileSync(appTsxPath, 'utf-8')
+  const content = fs.readFileSync(appPath, 'utf-8')
   const contentLines = content.split('\n')
 
   const hasGqlormImport = contentLines.some((line) =>
@@ -262,7 +262,7 @@ function addConfigureGqlormToApp({ force }: { force?: boolean }) {
   if (hasGqlormImport && hasSchemaImport && hasConfigureCall && !force) {
     return {
       skipped: true,
-      reason: 'configureGqlorm is already wired into App.tsx',
+      reason: 'configureGqlorm is already wired into App',
     }
   }
 
@@ -271,13 +271,20 @@ function addConfigureGqlormToApp({ force }: { force?: boolean }) {
       line.includes("from '@cedarjs/web'"),
     )
 
-    if (redwoodWebImportIndex >= 0) {
-      contentLines.splice(
-        redwoodWebImportIndex,
-        0,
-        "import { configureGqlorm } from '@cedarjs/gqlorm/setup'",
-      )
+    if (redwoodWebImportIndex === -1) {
+      return {
+        skipped: true,
+        reason:
+          "Unexpected syntax. Could not find @cedarjs/web import to " +
+          'insert gqlorm import',
+      }
     }
+
+    contentLines.splice(
+      redwoodWebImportIndex,
+      0,
+      "import { configureGqlorm } from '@cedarjs/gqlorm/setup'",
+    )
   }
 
   if (!hasSchemaImport) {
@@ -285,32 +292,48 @@ function addConfigureGqlormToApp({ force }: { force?: boolean }) {
       line.includes("import FatalErrorPage from 'src/pages/FatalErrorPage'"),
     )
 
-    if (fatalErrorPageIndex >= 0) {
-      contentLines.splice(
-        fatalErrorPageIndex + 1,
-        0,
-        "import schema from '../../.cedar/gqlorm-schema.json' " +
-          "with { type: 'json' }",
-      )
+    if (fatalErrorPageIndex === -1) {
+      return {
+        skipped: true,
+        reason:
+          'Unexpected syntax. Could not find FatalErrorPage import to ' +
+          'insert schema import',
+      }
     }
+
+    contentLines.splice(
+      fatalErrorPageIndex + 1,
+      0,
+      "import schema from '../../.cedar/gqlorm-schema.json' " +
+        "with { type: 'json' }",
+    )
   }
 
   if (!hasConfigureCall) {
-    const interfaceAppPropsIndex = contentLines.findIndex(
-      (line) => line === 'interface AppProps {',
+    // const App = works for both TS (const App = ({ children }: AppProps) => ()
+    // and JS (const App = () => ()
+    const appComponentIndex = contentLines.findIndex((line) =>
+      /^const App\s*=/.test(line),
     )
 
-    if (interfaceAppPropsIndex >= 0) {
-      contentLines.splice(
-        interfaceAppPropsIndex,
-        0,
-        'configureGqlorm({ schema })',
-        '',
-      )
+    if (appComponentIndex === -1) {
+      return {
+        skipped: true,
+        reason:
+          'Unexpected syntax. Could not find `const App =` to insert ' +
+          'configureGqlorm call',
+      }
     }
+
+    contentLines.splice(
+      appComponentIndex,
+      0,
+      'configureGqlorm({ schema })',
+      '',
+    )
   }
 
-  fs.writeFileSync(appTsxPath, contentLines.join('\n'))
+  fs.writeFileSync(appPath, contentLines.join('\n'))
 
   return {
     skipped: false,
