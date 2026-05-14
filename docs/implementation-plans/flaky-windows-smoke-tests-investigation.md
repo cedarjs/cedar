@@ -515,3 +515,72 @@ Link step, not Resolution). Root cause is unknown. Possible candidates:
 
 To investigate further, a re-run with verbose yarn output would be needed to
 surface the actual error from within the resolution step.
+
+---
+
+## Update 2026-05-14 — Three new Windows failures in PR #1778 CI run
+
+From run
+[25856361532](https://github.com/cedarjs/cedar/actions/runs/25856361532)
+(PR #1778 `fix: set output.exports: named in API Vite build`):
+
+### 1. Fragments Smoke tests — "Generating dbAuth secret" yarn failure (again)
+
+[Job 75975300598](https://github.com/cedarjs/cedar/actions/runs/25856361532/job/75975300598)
+
+Identical to the pattern from runs 25732654425 and 25850869052:
+
+```
+➤ YN0000: ┌ Resolution step
+Generating dbAuth secret
+Error: The process 'C:\npm\prefix\yarn.cmd' failed with exit code 1
+```
+
+This is now the third occurrence across three different PRs (#1757, #1775, #1778),
+confirming it is a recurring issue unrelated to any specific code change.
+
+### 2. Background jobs E2E — yarn exit code 127
+
+[Job 75975300609](https://github.com/cedarjs/cedar/actions/runs/25856361532/job/75975300609)
+
+```
+➤ YN0000: ┌ Resolution step
+##[error]Process completed with exit code 127.
+```
+
+Exit code 127 means "command not found". The `yarn install` in the test project
+fails ~1.4 seconds into the Resolution step with a different exit code than the
+exit-code-1 failures. The command that cannot be found is not visible in the
+logs. Possible cause: a postinstall script or yarn plugin calls a Windows command
+that doesn't exist on the runner.
+
+### 3. Smoke tests — Storybook crashes on startup (exit code 1)
+
+[Job 75975300251](https://github.com/cedarjs/cedar/actions/runs/25856361532/job/75975300251)
+
+The test project setup completes successfully, but the Playwright `webServer`
+(Storybook) crashes 14 seconds after starting:
+
+```
+[WebServer] @storybook/core v8.6.18
+[WebServer]
+##[error]Process completed with exit code 1.
+```
+
+No error output is emitted between the version banner and the crash. Earlier in
+the same job log, yarn warns:
+
+```
+YN0060: vite is listed by your project with version 7.3.2, which doesn't satisfy
+what @storybook/builder-vite and other dependencies request (^4.0.0 || ^5.0.0 || ^6.0.0).
+```
+
+**Likely cause:** `@storybook/builder-vite` does not support Vite 7. Storybook
+attempts to start, fails internally due to the incompatible Vite version, and
+exits with code 1. This is different from the V8 Maglev JIT crash (which exits
+with code `3221226505`). This is a dependency compatibility issue, not a
+flakiness issue — it would fail consistently on any runner.
+
+**Next step:** Check if there is a newer version of `@storybook/builder-vite`
+that supports Vite 7, or whether the test project's Storybook setup needs to be
+pinned to a compatible Vite version.
