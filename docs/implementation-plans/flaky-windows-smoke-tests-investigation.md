@@ -466,3 +466,52 @@ Windows), not framework-dependent.
   bug)
 - Remove the `--no-maglev` workaround after the fix lands in a Node 24.x
   release
+
+---
+
+## Update 2026-05-14 — Repeat of "Generating dbAuth secret" yarn failure
+
+### Evidence
+
+From run
+[25850869052](https://github.com/cedarjs/cedar/actions/runs/25850869052/job/75957041258)
+(PR #1775 `feat(gqlorm): Add web workspace setup steps`, CLI smoke tests on Windows):
+
+```
+$ cd D:\a\cedar\test-project
+$ yarn install
+➤ YN0000: Yarn detected that the current workflow is executed from a public pull request...
+➤ YN0000: ┌ Resolution step
+Generating dbAuth secret
+Error: The process 'C:\npm\prefix\yarn.cmd' failed with exit code 1
+    at ExecState._setResult (D:\a\cedar\cedar\node_modules\@actions\exec\lib\toolrunner.js:600:25)
+```
+
+### Assessment
+
+This is the same failure mode logged on 2026-05-12 from run
+[25732654425](https://github.com/cedarjs/cedar/actions/runs/25732654425/job/75561731517)
+— `yarn install` in the test project fails with exit code 1 during the
+Resolution step, with "Generating dbAuth secret" appearing concurrently in the
+output.
+
+PR #1775 is an unrelated feature addition (`gqlorm` web workspace setup), so
+the failure is not caused by the PR changes. This is at least the second
+occurrence across different PRs, confirming it is a recurring flaky failure on
+the Windows CLI smoke test runner.
+
+The "Generating dbAuth secret" line comes from a concurrent process step (test
+project scaffolding), not from `yarn install` itself.
+
+The actual yarn error from within the Resolution step is not visible — it is
+swallowed inside a closed `##[group]Resolution step` log group. The failure
+happens only ~2 seconds into the install, which rules out a native module build
+failure (building from source via node-gyp takes much longer and occurs in the
+Link step, not Resolution). Root cause is unknown. Possible candidates:
+
+- Lockfile integrity check rejection (yarn 4 hardened mode is enabled for public PRs)
+- A tarball referenced in the test project's `package.json` not yet available
+- Network or filesystem error during package resolution
+
+To investigate further, a re-run with verbose yarn output would be needed to
+surface the actual error from within the resolution step.
