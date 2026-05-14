@@ -17,7 +17,7 @@
   },
   "packageManager": "yarn@4.14.1",
   "resolutions": {
-    "react-is": "19.2.3",
+    "react-is": "19.2.6",
     "@cedarjs/fastify-web": "file:../packages/adapters/fastify/web/cedarjs-fastify-web.tgz",
     "@cedarjs/api": "file:../packages/api/cedarjs-api.tgz",
     "@cedarjs/api-server": "file:../packages/api-server/cedarjs-api-server.tgz",

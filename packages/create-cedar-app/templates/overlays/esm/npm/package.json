@@ -15,6 +15,6 @@
     "node": "=24.x"
   },
   "overrides": {
-    "react-is": "19.2.3"
+    "react-is": "19.2.6"
   }
 }

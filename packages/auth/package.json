@@ -87,7 +87,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "react": "19.2.3"
+    "react": "19.2.6"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.2",

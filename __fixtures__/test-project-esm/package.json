@@ -19,7 +19,7 @@
   },
   "packageManager": "yarn@4.14.1",
   "resolutions": {
-    "react-is": "19.2.3",
+    "react-is": "19.2.6",
     "vite": "7.3.2"
   },
   "dependenciesMeta": {
