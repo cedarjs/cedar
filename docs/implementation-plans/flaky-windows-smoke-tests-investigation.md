@@ -584,3 +584,59 @@ flakiness issue — it would fail consistently on any runner.
 **Next step:** Check if there is a newer version of `@storybook/builder-vite`
 that supports Vite 7, or whether the test project's Storybook setup needs to be
 pinned to a compatible Vite version.
+
+**Update:** In the subsequent CI run (25858321273), the `Smoke tests /
+windows-latest` job **passed** — the Storybook crash did not recur. This
+suggests the exit-code-1 failure might have been a fluke (runner condition,
+timing issue), or it self-resolved. The Vite 7 / Storybook incompatibility
+warning is still present in later runs, but Storybook appears to start
+successfully regardless. Needs more data points.
+
+---
+
+## Update 2026-05-14 — PR #1778 second CI run (25858321273)
+
+From run
+[25858321273](https://github.com/cedarjs/cedar/actions/runs/25858321273)
+(PR #1778, re-triggered after fork push):
+
+### 1. Smoke tests ESM / windows-latest — V8 Maglev JIT crash (again)
+
+[Job 75981804553](https://github.com/cedarjs/cedar/actions/runs/25858321273/job/75981804553)
+
+```
+[WebServer] web | yarn cross-env NODE_ENV=development cedar-vite-dev --no-open
+            exited with code 3221226505
+```
+
+Followed by `ERR_CONNECTION_REFUSED` on all subsequent `page.goto()` calls.
+Same V8 Maglev JIT crash (`STATUS_STACK_BUFFER_OVERRUN`) as previously
+documented. The `cedar-vite-dev` process running in ESM mode crashes mid-run,
+taking down the web server.
+
+### 2. RSC Smoke tests / ubuntu-latest — yarn install fails in RSC project
+
+[Job 75981804767](https://github.com/cedarjs/cedar/actions/runs/25858321273/job/75981804767)
+
+`create-cedar-rsc-app` scaffolds a new RSC project and immediately runs
+`yarn install` inside it. The install fails after ~17 seconds:
+
+```
+⚠ Error: Couldn't install node modules
+Error: Command failed with exit code 1: yarn install
+```
+
+This is on **Ubuntu**, not Windows, and it fails inside the newly created RSC
+project (not the main cedar repo). Yarn 4 hardened mode is active. The actual
+yarn error is not visible in the logs.
+
+Notable: the prebuild cache was restored as `prebuild-cache-Linux-12.9.0`, but
+the cedar repo now also includes `better-sqlite3@npm:12.10.0` alongside
+`12.9.0`. If the RSC project template depends on the newer version, it would
+not be covered by the cached 12.9.0 prebuild — though this would cause a link
+step failure, not a resolution failure.
+
+This failure mode (RSC project yarn install) has not been seen in prior runs.
+Could be a transient network issue, a lockfile incompatibility introduced by
+the version bump, or a hardened mode lockfile check rejection on the freshly
+scaffolded project's lockfile.
