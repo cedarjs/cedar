@@ -22,8 +22,10 @@ vi.mock('@cedarjs/api/runtime', () => ({
 
 describe('createGraphQLHandler', () => {
   it('lazily initializes yoga and handles a request', async () => {
-    const fixturePath = path.join(__dirname, '__fixtures__/graphql-module.js')
-    const handler = createGraphQLHandler({ distPath: fixturePath })
+    const distUrl = path.resolve(__dirname, '__fixtures__/graphql-module.js')
+    const handler = createGraphQLHandler({
+      distUrl,
+    })
     const request = new Request('http://localhost/graphql')
     const response = await handler.fetch(request)
     expect(response.status).toBe(200)

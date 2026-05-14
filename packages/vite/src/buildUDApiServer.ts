@@ -4,22 +4,32 @@ import { getPaths } from '@cedarjs/project-config'
 
 export interface BuildUDApiServerOptions {
   verbose?: boolean
-  apiRootPath?: string
 }
 
 /**
- * Builds the API server Universal Deploy entry using Vite.
+ * Builds the API server Universal Deploy server entry using Vite.
  *
- * Runs a Vite server build that:
- *   1. Installs `cedarUniversalDeployPlugin()` to register per-route API
- *      entries (GraphQL, auth, functions) with UD's store.
- *   2. Installs `universalDeploy()` from `@universal-deploy/vite` which
- *      provides `catchAll()` (rou3-based route dispatch), `devServer()`, and
- *      auto-detection of deployment targets (Node by default, or Netlify/
- *      Vercel/Cloudflare if the user has added the corresponding Vite plugin).
+ * Runs a Vite SSR build using the **user's own vite config**
+ * (`web/vite.config.ts`), so whatever deployment plugins the user has added
+ * (Netlify, Vercel, Cloudflare, Node, etc.) are active during the build.
  *
- * The emitted entry can be launched directly:  node api/dist/ud/index.js
- * That is what `cedar serve api` does.
+ * The user's config is expected to include:
+ *   - `cedarUniversalDeployPlugin()` — registers per-route API entries with
+ *     `@universal-deploy/store`
+ *   - `universalDeploy()` from `@universal-deploy/vite` — provides
+ *     `catchAll()`, `devServer()`, and auto-detection of the deployment
+ *     target. When a specific deployment Vite plugin (e.g. `@netlify/
+ *     vite-plugin`) is present, `universalDeploy()` detects it and adapts;
+ *     otherwise it defaults to `@universal-deploy/node`.
+ *   - Any adapter plugin the user's deployment target requires (e.g.
+ *     `@netlify/vite-plugin` + `@universal-deploy/netlify/vite` for Netlify)
+ *
+ * Because the build uses the user's config, `cedar build --ud` is
+ * **adapter-agnostic** — Cedar does not know or care which deployment target
+ * the user has configured.
+ *
+ * The emitted server entry is placed under `api/dist/ud/` so it does not
+ * collide with the existing esbuild output under `api/dist/`.
  *
  * NOTE: The Vite "ssr" build target used here is a server-side module build
  * concern — it is NOT related to Cedar HTML SSR or RSC. "ssr" simply means
@@ -27,15 +37,8 @@ export interface BuildUDApiServerOptions {
  */
 export const buildUDApiServer = async ({
   verbose = false,
-  apiRootPath,
 }: BuildUDApiServerOptions = {}) => {
-  // Dynamic imports so that vite and the UD plugins are only loaded when
-  // this function is actually called (keeps cold-start cost of importing
-  // @cedarjs/vite low for callers that only need the web build path).
   const { build } = await import('vite')
-  const { cedarUniversalDeployPlugin } =
-    await import('./plugins/vite-plugin-cedar-universal-deploy.js')
-  const { default: universalDeploy } = await import('@universal-deploy/vite')
 
   const rwPaths = getPaths()
 
@@ -44,18 +47,10 @@ export const buildUDApiServer = async ({
   const outDir = path.join(rwPaths.api.dist, 'ud')
 
   await build({
+    // Use the user's vite config so their deployment plugins (Netlify, etc.)
+    // are active. No hardcoded plugins.
+    configFile: rwPaths.web.viteConfig,
     logLevel: verbose ? 'info' : 'warn',
-
-    plugins: [
-      // Registers per-route API entries with @universal-deploy/store.
-      cedarUniversalDeployPlugin({ apiRootPath }),
-
-      // Includes catchAll(), devServer(), and auto-detection of
-      // deployment targets. Enables @universal-deploy/node by default
-      // when no other target (Netlify, Vercel, Cloudflare) is detected
-      // in the user's Vite config.
-      universalDeploy(),
-    ],
 
     // The ssr environment is the Vite mechanism for server-side builds.
     // Reminder: "ssr" here means "server-side module execution", NOT

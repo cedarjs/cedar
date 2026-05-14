@@ -1,16 +1,14 @@
-import { pathToFileURL } from 'node:url'
-
 import { wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
 import { createCedarFetchable } from '@cedarjs/api-server/udFetchable'
 
 export interface FunctionHandlerOptions {
-  distPath: string
+  distUrl: string
 }
 
 export function createFunctionHandler(options: FunctionHandlerOptions) {
   const handleRequest: CedarHandler = async (request, ctx) => {
-    const mod = await import(pathToFileURL(options.distPath).href)
+    const mod = await import(options.distUrl)
 
     // Prefer the new Fetch-native handleRequest shape.
     const nativeHandler = mod.handleRequest || mod.default?.handleRequest
@@ -25,7 +23,7 @@ export function createFunctionHandler(options: FunctionHandlerOptions) {
     }
 
     throw new Error(
-      `Handler not found in ${options.distPath}. Expected ` +
+      `Handler not found in ${options.distUrl}. Expected ` +
         '`export async function handleRequest(request, ctx)`, ' +
         '`export default { handleRequest }`, ' +
         'or a legacy Lambda-shaped `handler`.',
