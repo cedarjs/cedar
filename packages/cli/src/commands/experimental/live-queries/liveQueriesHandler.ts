@@ -3,7 +3,11 @@ import path from 'node:path'
 
 import { Listr } from 'listr2'
 
-import { addApiPackages, colors as c } from '@cedarjs/cli-helpers'
+import {
+  addApiPackages,
+  addWebPackages,
+  colors as c,
+} from '@cedarjs/cli-helpers'
 import {
   getConfigPath,
   getMigrationsPath,
@@ -19,6 +23,11 @@ import { isTypeScriptProject } from '../../../lib/project.js'
 function getApiPackageJson() {
   const apiPackageJsonPath = path.join(getPaths().api.base, 'package.json')
   return JSON.parse(fs.readFileSync(apiPackageJsonPath, 'utf-8'))
+}
+
+function getWebPackageJson() {
+  const webPackageJsonPath = path.join(getPaths().web.base, 'package.json')
+  return JSON.parse(fs.readFileSync(webPackageJsonPath, 'utf-8'))
 }
 
 function hasPackage(
@@ -225,6 +234,107 @@ function addLiveQueryListenerToGraphqlHandler({ force }: { force?: boolean }) {
   }
 }
 
+function addConfigureGqlormToApp({ force }: { force?: boolean }) {
+  const appPath = getPaths().web.app
+
+  if (!fs.existsSync(appPath)) {
+    return {
+      skipped: true,
+      reason: `${path.basename(appPath)} not found`,
+    }
+  }
+
+  const content = fs.readFileSync(appPath, 'utf-8')
+  const contentLines = content.split('\n')
+
+  const hasGqlormImport = contentLines.some((line) =>
+    line.includes("from '@cedarjs/gqlorm/setup'"),
+  )
+
+  const hasSchemaImport = contentLines.some((line) =>
+    line.includes("from '../../.cedar/gqlorm-schema.json'"),
+  )
+
+  const hasConfigureCall = contentLines.some((line) =>
+    line.includes('configureGqlorm({ schema })'),
+  )
+
+  if (hasGqlormImport && hasSchemaImport && hasConfigureCall && !force) {
+    return {
+      skipped: true,
+      reason: 'configureGqlorm is already wired into App',
+    }
+  }
+
+  if (!hasGqlormImport) {
+    const redwoodWebImportIndex = contentLines.findIndex((line) =>
+      line.includes("from '@cedarjs/web'"),
+    )
+
+    if (redwoodWebImportIndex === -1) {
+      return {
+        skipped: true,
+        reason:
+          'Unexpected syntax. Could not find @cedarjs/web import to ' +
+          'insert gqlorm import',
+      }
+    }
+
+    contentLines.splice(
+      redwoodWebImportIndex,
+      0,
+      "import { configureGqlorm } from '@cedarjs/gqlorm/setup'",
+    )
+  }
+
+  if (!hasSchemaImport) {
+    const fatalErrorPageIndex = contentLines.findIndex((line) =>
+      line.includes("import FatalErrorPage from 'src/pages/FatalErrorPage'"),
+    )
+
+    if (fatalErrorPageIndex === -1) {
+      return {
+        skipped: true,
+        reason:
+          'Unexpected syntax. Could not find FatalErrorPage import to ' +
+          'insert schema import',
+      }
+    }
+
+    contentLines.splice(
+      fatalErrorPageIndex + 1,
+      0,
+      "import schema from '../../.cedar/gqlorm-schema.json' " +
+        "with { type: 'json' }",
+    )
+  }
+
+  if (!hasConfigureCall) {
+    // const App = works for both TS (const App = ({ children }: AppProps) => ()
+    // and JS (const App = () => ()
+    const appComponentIndex = contentLines.findIndex((line) =>
+      /^const App\s*=/.test(line),
+    )
+
+    if (appComponentIndex === -1) {
+      return {
+        skipped: true,
+        reason:
+          'Unexpected syntax. Could not find `const App =` to insert ' +
+          'configureGqlorm call',
+      }
+    }
+
+    contentLines.splice(appComponentIndex, 0, 'configureGqlorm({ schema })', '')
+  }
+
+  fs.writeFileSync(appPath, contentLines.join('\n'))
+
+  return {
+    skipped: false,
+  }
+}
+
 interface HandlerArgs {
   force?: boolean
   verbose?: boolean
@@ -237,6 +347,8 @@ export async function handler({ force, verbose }: HandlerArgs) {
 
   const hasRealtimeDependency = hasPackage(apiPackageJson, '@cedarjs/realtime')
   const hasPgDependency = hasPackage(apiPackageJson, 'pg')
+  const webPackageJson = getWebPackageJson()
+  const hasGqlormDependency = hasPackage(webPackageJson, '@cedarjs/gqlorm')
   const ext = projectIsTypescript ? 'ts' : 'js'
 
   const migrationTemplatePath = path.resolve(
@@ -338,7 +450,7 @@ export async function handler({ force, verbose }: HandlerArgs) {
       },
       {
         ...addApiPackages(['pg@^8.18.0']),
-        title: 'Adding pg dependency to your api side...',
+        title: 'Adding pg dependency to your api workspace...',
         skip: () => {
           if (hasPgDependency) {
             return 'pg is already installed'
@@ -397,6 +509,27 @@ export async function handler({ force, verbose }: HandlerArgs) {
         title: 'Wiring listener startup into GraphQL handler...',
         task: (_ctx, task) => {
           const result = addLiveQueryListenerToGraphqlHandler({ force })
+
+          if (result.skipped) {
+            task.skip(result.reason)
+          }
+        },
+      },
+      {
+        ...addWebPackages(['@cedarjs/gqlorm']),
+        title: 'Adding @cedarjs/gqlorm to your web workspace...',
+        skip: () => {
+          if (hasGqlormDependency) {
+            return '@cedarjs/gqlorm is already installed'
+          }
+
+          return false
+        },
+      },
+      {
+        title: 'Wiring configureGqlorm into App.tsx...',
+        task: (_ctx, task) => {
+          const result = addConfigureGqlormToApp({ force })
 
           if (result.skipped) {
             task.skip(result.reason)
