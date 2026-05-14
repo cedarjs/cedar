@@ -37,18 +37,18 @@ export const buildUDApiServer = async ({
   const { cedarUniversalDeployPlugin } =
     await import('./plugins/vite-plugin-cedar-universal-deploy.js')
   const { catchAll, devServer } = await import('@universal-deploy/vite')
-  const { catchAllEntry } = await import('@universal-deploy/store')
+  const { catchAllEntry, getAllEntries } = await import('@universal-deploy/store')
 
-  const rwPaths = getPaths()
+  const cedarPaths = getPaths()
 
   // The UD server entry is placed under api/dist/ud/ so it does not
   // collide with the existing esbuild output under api/dist/.
-  const outDir = path.join(rwPaths.api.dist, 'ud')
+  const outDir = path.join(cedarPaths.api.dist, 'ud')
 
   await build({
     // Load the user's Vite config so provider plugins can run alongside
     // Cedar's canonical UD build.
-    configFile: rwPaths.web.viteConfig,
+    configFile: cedarPaths.web.viteConfig,
     logLevel: verbose ? 'info' : 'warn',
 
     plugins: [
@@ -68,6 +68,25 @@ export const buildUDApiServer = async ({
       // serve wraps it in srvx at runtime.
       catchAll(),
       devServer(),
+
+      // Warn if no Cedar API routes were registered — likely means the
+      // user's vite config is missing cedarUniversalDeployPlugin or there
+      // are no API functions to serve.
+      {
+        name: 'cedar-ud-verify-routes',
+        configResolved() {
+          const entries = getAllEntries()
+          if (entries.length === 0) {
+            console.warn(
+              '\n  Warning: No Universal Deploy API routes were registered.',
+              '\n  The built server entry will be an empty router (404 for all',
+              '\n  requests). Ensure your vite config includes',
+              '\n  `cedarUniversalDeployPlugin()` or that you have API',
+              '\n  functions under `api/src/functions/`.\n',
+            )
+          }
+        },
+      },
     ],
 
     // Legacy ssr flag approach. The explicit rollupOptions.input prevents the

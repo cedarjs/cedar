@@ -127,12 +127,12 @@ export const builder = async (yargs: Argv) => {
             process.exit(1)
           }
 
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+          const udEntryPath = resolveUDEntryPath()
 
-          if (!fs.existsSync(udEntryPath)) {
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
