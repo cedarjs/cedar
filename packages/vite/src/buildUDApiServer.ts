@@ -37,7 +37,8 @@ export const buildUDApiServer = async ({
   const { cedarUniversalDeployPlugin } =
     await import('./plugins/vite-plugin-cedar-universal-deploy.js')
   const { catchAll, devServer } = await import('@universal-deploy/vite')
-  const { catchAllEntry, getAllEntries } = await import('@universal-deploy/store')
+  const { catchAllEntry, getAllEntries } =
+    await import('@universal-deploy/store')
 
   const cedarPaths = getPaths()
 
