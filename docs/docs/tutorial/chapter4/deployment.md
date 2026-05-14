@@ -171,11 +171,11 @@ If you view a deploy via the **Preview** button notice that the URL contains a h
 
 Did it work? If you see "Empty" under the About and Contact links then it did! Yay! You're seeing "Empty" because you don't have any posts in your brand new production database so head to `/admin/posts` and create a couple, then go back to the homepage to see them.
 
-If the deploy failed, check the log output in Netlify and see if you can make sense of the error. If the deploy was successful but the site doesn't come up, try opening the web inspector and look for errors. Are you sure you pasted the entire Postgres connection string correctly? If you're really, really stuck head over to the [Cedar Discord](https://cedarjs.com/discord) and ask for help.
+If the deploy failed, check the log output in Netlify and see if you can make sense of the error. If the deploy was successful but the site doesn't come up, try opening the web inspector and look for errors. Are you sure you pasted the entire Postgres connection string correctly? If you're really, really stuck head over to the [Cedar Community](https://community.redwoodjs.com) and ask for help.
 
 #### Custom Subdomain
 
-You can customize the subdomain that your site is published at (who wants to go to `agitated-mongoose-849e99.netlify.app`??) by going to **Site Settings > Domain Management > Domains > Custom Domains**. Open up the **Options** menu and select **Edit site name**. Your site should be available at your custom subdomain (`cedar-tutorial.netlify.app` is much nicer) almost immediately.
+You can customize the subdomain that your site is published at (who wants to go to `agitated-mongoose-849e99.netlify.app`??) by going to **Site Settings > Domain Management > Domains > Custom Domains**. Open up the **Options** menu and select **Edit site name**. Your site should be available at your custom subdomain (`redwood-tutorial.netlify.app` is much nicer) almost immediately.
 
 ![image](https://user-images.githubusercontent.com/300/154521450-ee64c77c-e658-4045-9dd6-119858b6739e.png)
 
