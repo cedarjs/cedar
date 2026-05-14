@@ -19,6 +19,22 @@ import { serverFileExists } from '../lib/project.js'
 
 import { webSsrServerHandler } from './serveWebHandler.js'
 
+/**
+ * Resolve the path to the UD server entry, checking for either .mjs or .js
+ * extension. Vite's SSR build outputs index.mjs when the project is ESM;
+ * the serve command must accept both.
+ */
+function resolveUDEntryPath(): string | null {
+  const base = path.join(getPaths().api.dist, 'ud', 'index')
+  for (const ext of ['.mjs', '.js']) {
+    const entryPath = base + ext
+    if (fs.existsSync(entryPath)) {
+      return entryPath
+    }
+  }
+  return null
+}
+
 export const command = 'serve [side]'
 export const description =
   'Start a server for serving both the api and web sides'
@@ -235,12 +251,12 @@ export const builder = async (yargs: Argv) => {
           // self-contained srvx server that imports virtual:ud:catch-all,
           // resolved by cedarUniversalDeployPlugin to Cedar's aggregate fetch
           // dispatcher.
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+          const udEntryPath = resolveUDEntryPath()
 
-          if (!fs.existsSync(udEntryPath)) {
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
@@ -379,11 +395,11 @@ export const builder = async (yargs: Argv) => {
         }
 
         if (argv.ud) {
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
-          if (!fs.existsSync(udEntryPath)) {
+          const udEntryPath = resolveUDEntryPath()
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
@@ -405,11 +421,11 @@ export const builder = async (yargs: Argv) => {
         }
 
         if (argv.ud) {
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
-          if (!fs.existsSync(udEntryPath)) {
+          const udEntryPath = resolveUDEntryPath()
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )

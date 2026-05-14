@@ -1,215 +1,550 @@
-# Refactoring: Adapter-Agnostic Build + Adapter-Free Serve
+# Refactoring: Adapter-Agnostic UD Build + Adapter-Free Local Serve
+
+## Status
+
+Draft for implementation review.
 
 ## Summary
 
-Separate the Fetchable build output from the HTTP server wrapper so that
-`cedar build --ud` produces a pure WinterTC-compatible artifact regardless of
-which deployment plugins the user has in their vite config, and
-`cedar serve --ud` provides the local Node HTTP server (srvx).
+Split the Universal Deploy (UD) API build artifact from the local HTTP server.
+After this refactor:
+
+- `cedar build --ud` produces a pure WinterTC-compatible API artifact at
+  `api/dist/ud/index.js`
+- `cedar serve api --ud` imports that artifact and hosts it via srvx
+- `cedar serve --ud` imports that same artifact and runs a production-like
+  two-port topology for local testing
+- provider-specific Vite plugins in the user's config may emit their own deploy
+  artifacts, but they do not change Cedar's canonical local UD artifact
+
+The key change is architectural: **build produces a Fetchable, serve wraps the
+Fetchable**.
 
 ## Motivation
 
-Currently `cedar build --ud` embeds the HTTP server startup code into the built
-artifact via `@universal-deploy/node` (auto-detected by `universalDeploy()` from
-`@universal-deploy/vite`). This creates problems:
+Today the UD flow mixes two concerns:
 
-- **Config duality**: The same vite config can't serve both local testing (needs
-  Node server startup) and remote deployment (needs Netlify/Vercel output). The
-  user has to maintain separate configs or use env vars.
-- **Runtime lock-in**: The built artifact is tied to Node. Can't test the same
-  artifact on Bun, Deno, or workerd without rebuilding.
-- **Adapter coupling**: Changing the HTTP server (e.g. srvx → Fastify) requires
-  changing the build config, even for local testing.
+1. generating the API artifact Cedar wants to test and deploy
+2. deciding how that artifact is hosted in Node for local/prod usage
 
-## Approach
+That creates several problems:
 
-### Principle: Build produces Fetchable, Serve wraps Fetchable
+- **Config duality**: one Vite config cannot cleanly support both local testing
+  and deployment adapters when the build output itself changes shape based on
+  adapter auto-detection.
+- **Runtime lock-in**: the built API output is tied to a Node startup wrapper
+  instead of being a portable Fetch-compatible module.
+- **Serve/build coupling**: changing the local server implementation should not
+  require changing the build artifact.
+- **Provider ambiguity**: Cedar needs one canonical artifact it can always serve
+  locally, even when the user's Vite config also contains Netlify, Vercel, or
+  other provider plugins.
 
-The `api/dist/ud/index.mjs` output is always a pure `export default { fetch }`
-WinterTC-compatible module. No server startup code, no provider-specific
-wrapping. `cedar serve --ud` is where the HTTP server lives — it imports the
-Fetchable and wraps it for local development.
+## Goals
 
-### What changes
+- Make `cedar build --ud` always emit Cedar's canonical API artifact in a
+  provider-independent format.
+- Make `cedar serve --ud` and `cedar serve api --ud` host that artifact without
+  requiring the artifact itself to boot an HTTP server.
+- Preserve the current `cedar dev --ud` model, which is already Vite-driven.
+- Allow user Vite configs to include deployment plugins without breaking local
+  `cedar build --ud` + `cedar serve --ud` workflows.
+- Keep `cedar serve --ud` production-like for VPS/baremetal/Docker by using a
+  separate web port and API port.
 
-#### 1. `cedar build --ud` produces a pure Fetchable
+## Non-Goals
 
-Remove `universalDeploy()` from `buildUDApiServer`. Use the individual plugins
-from `@universal-deploy/vite` that `buildUDApiServer` actually needs:
-`catchAll()` (generates the rou3 route dispatcher) and `devServer()` (for
-`cedar dev --ud`). Do NOT include the Node adapter auto-detection.
+- Merging the existing Cedar build pipeline into a single Vite build step in
+  this refactor.
+- Designing the long-term pluggable HTTP server API beyond the minimum seam
+  needed for this refactor.
+- Changing `cedar dev --ud` behavior.
+- Solving non-Node runtime hosting in this change. This refactor makes that
+  possible later, but the implementation target here is still local Node serve.
+- Reworking the older `cedar-serve-ud-both-sides-plan.md` document yet.
 
-The `cedarUniversalDeployPlugin()` continues to register per-route entries with
-the UD store and generate per-function virtual modules.
+## Guiding principle
 
-The build output structure is always:
+### Build produces Fetchable, serve wraps Fetchable
 
-```
+The canonical Cedar UD API output should be a module whose default export is a
+WinterTC-compatible Fetchable. It should not start listening on a port. It
+should not embed srvx or any other HTTP server. It should not auto-select a
+provider adapter.
+
+`cedar serve --ud` is responsible for hosting the built Fetchable locally.
+
+## Decisions locked for this refactor
+
+### 1. Cedar owns `cedarUniversalDeployPlugin()` injection
+
+Cedar should continue to inject `cedarUniversalDeployPlugin()` itself during the
+UD build. Users should **not** be required to remember to add a Cedar-internal
+plugin to their Vite config.
+
+User config is still loaded so provider plugins can run, but the canonical Cedar
+UD artifact remains Cedar-owned.
+
+### 2. Canonical output stays `api/dist/ud/index.js`
+
+Use the lowest-friction output shape that matches the current implementation.
+`resolveUDEntryPath()` may continue to tolerate both `.js` and `.mjs`, but the
+canonical emitted filename remains `index.js`.
+
+### 3. UD `apiRootPath` is part of the build contract
+
+Silent remapping is not acceptable.
+
+In UD mode, the effective API prefix is baked into the generated artifact.
+`cedar serve --ud` should host the artifact as-built, not reinterpret route
+prefixes at runtime.
+
+Preferred UX for this refactor:
+
+- support `--apiRootPath` for `cedar build --ud`
+- do **not** support it for `cedar serve --ud` unless implementation reality
+  makes that too awkward
+- if serve-time support is needed as a fallback, it should only be used to
+  match/validate the built prefix, never to remap it
+
+### 4. `cedar serve --ud` remains two-port
+
+For local production-like testing, `cedar serve --ud` should continue to model a
+split topology:
+
+- web server on the web port
+- API server on the API port
+- web server proxies API requests to the API server
+
+The artifact is still pure Fetchable; the topology remains split because that is
+closer to likely VPS/baremetal/Docker production setups.
+
+### 5. srvx is the local UD host for now
+
+Use srvx as the Node host for the imported Fetchable. Alternative hosts such as
+Fastify can be added later as follow-up work.
+
+### 6. User Vite config must participate in UD builds
+
+`buildUDApiServer()` should load the user's Vite config so deployment plugins
+can run during `cedar build --ud`.
+
+## Current state
+
+From the current code:
+
+- `packages/vite/src/buildUDApiServer.ts` already builds an adapter-free entry
+  with `cedarUniversalDeployPlugin()`, `catchAll()`, and `devServer()`.
+- `packages/cli/src/commands/serve.ts` still assumes the built UD entry is a
+  self-starting Node server and uses `fork()` to launch it.
+- `cedar serve --ud` currently uses two ports in the implementation: Fastify
+  serves web on one port and proxies to a forked UD API process on another
+  port.
+- `cedar serve api --ud` also forks the built UD entry as a child process.
+
+So the build side is already partly aligned, while the serve side still targets
+an older self-starting-artifact model.
+
+## Target state
+
+### Canonical build artifact
+
+`cedar build --ud` emits Cedar's canonical local UD artifact at:
+
+```text
 api/dist/ud/
-  index.mjs          # export default { fetch } — pure Fetchable
-  assets/            # per-function chunks (lazy-loaded by index.mjs)
-    graphql-*.mjs
+  index.js           # default export is a pure Fetchable
+  assets/            # lazily loaded route chunks, if generated by Vite/Rollup
 ```
 
-The user's vite config can include any deployment plugins (Netlify, Vercel,
-etc.) without affecting the build output. Those plugins produce their own
-additional artifacts alongside the Fetchable.
+Notes:
 
-#### 2. `cedar serve --ud` hosts the Fetchable locally
+- The current implementation emits `index.js`, not `index.mjs`.
+- `serve.ts` may continue to resolve either `.mjs` or `.js` defensively.
+- Provider plugins may emit additional artifacts elsewhere, but Cedar's own
+  local-serve contract is anchored on `api/dist/ud/index.js|mjs`.
 
-`cedar serve --ud` (both sides) currently starts a Fastify web proxy and forks
-the UD server as a child process. Instead, it should:
+### Local serving model
 
-1. Dynamically import `api/dist/ud/index.mjs`
-2. Wrap the Fetchable in srvx's `serve()`
-3. Serve `web/dist/` as static files via srvx's `serveStatic`
-4. Single HTTP listener serving both web and API on one port
+#### `cedar serve api --ud`
 
-`cedar serve api --ud` starts the same srvx server without static file serving
-(for use behind a reverse proxy like nginx).
+- dynamically imports the built Fetchable
+- wraps it in srvx
+- listens on the configured API host/port
+- does not fork a child process
 
-srvx is the default HTTP server. To support alternatives (Fastify, Bun, Deno),
-the serve handler is pluggable — see Future Work below.
+#### `cedar serve --ud`
 
-#### 3. `cedar dev --ud` continues to use Vite's dev server
+- validates API and web build artifacts
+- starts a web server on the configured web host/port
+- starts an API server on the configured API host/port by importing the same UD
+  Fetchable and hosting it with srvx
+- proxies API requests from web → API
+- preserves production-like split topology for local testing
 
-No change needed. The dev server already handles both web and API inline via
-Vite middleware, not via the built Fetchable.
+## Why two-port serve is the right target for now
 
-### Files to modify
+There are two plausible local-serve designs:
 
-#### `packages/vite/src/buildUDApiServer.ts`
+1. **single-port in-process host** for both web and API
+2. **split web/API ports** that more closely mirror reverse-proxy production
+   setups
 
-- Remove dynamic imports of `universalDeploy` and `cedarUniversalDeployPlugin`
-  (the plugin comes from the user's config file now).
-- Remove the `plugins` array from the `build()` call.
-- Call `build()` with only `configFile`, `logLevel`, `environments`, and
-  `build: { ssr: true }`.
-- Pass `configFile: rwPaths.web.viteConfig` to `build()` so the user's
-  deployment plugins (Netlify, etc.) are active. This was already added in an
-  earlier refactoring — see git history around May 2026 for the change that
-  replaced the hardcoded plugin list with `configFile`.
-- Ensure `cedarUniversalDeployPlugin` is in the user's config (or add a safety
-  check that warns if it's missing).
+For this refactor, the second option is the better fit because:
 
-#### `packages/cli/src/commands/serve.ts`
+- it preserves the current mental model of `cedar serve`
+- it more closely resembles likely VPS/baremetal/Docker production deployments
+- it reduces CLI churn and routing/fallback complexity
+- it still fully achieves the important architectural separation: the built UD
+  artifact is no longer a self-starting server
 
-Refactor the `ud` path in both the `$0` and `api` subcommand handlers:
+A future single-port option is still possible later, but it is not required to
+get the core artifact/serve separation right.
 
-- Replace `fork(udEntryPath, ...args)` with import + srvx `serve()`.
-- Remove the Fastify web proxy in the `$0` handler (srvx handles static files
-  now).
-- Handle graceful shutdown (SIGINT/SIGTERM → server.close()).
+## Proposed implementation
 
-The serve handler should:
+### 1. Update `buildUDApiServer` to combine Cedar-owned plugins with user config
 
-```ts
-// Pseudocode
-async function startUDServer(entryPath: string, options: ServeOptions) {
-  const fetchable = await import(entryPath)
+File:
 
-  const staticDir = options.serveWeb
-    ? path.join(getPaths().web.dist, 'index.html')
-    : undefined
+- `packages/vite/src/buildUDApiServer.ts`
 
-  const server = serve({
-    ...fetchable,
-    static: staticDir,
-    gracefulShutdown: true,
-  })
+What the code already does correctly:
 
-  server.serve()
-  await server.ready()
+- uses `catchAll()` and `devServer()` from `@universal-deploy/vite`
+- does **not** use `universalDeploy()`
+- emits an SSR build to `api/dist/ud`
+- registers Cedar routes through `cedarUniversalDeployPlugin()`
+- emits `index.js`
 
-  // Handle shutdown
-  process.on('SIGINT', () => server.close())
-  process.on('SIGTERM', () => server.close())
-}
-```
+What should change:
 
-#### `packages/vite/src/buildApp.ts` (or `packages/cli/src/commands/build/buildHandler.ts`)
+1. **Load the user's Vite config** via `configFile: rwPaths.web.viteConfig`.
+2. **Keep Cedar-owned UD plugin injection**. Do not move
+   `cedarUniversalDeployPlugin()` ownership into user config.
+3. **Ensure the effective `apiRootPath` matches non-UD semantics.** If needed,
+   thread the resolved prefix into `cedarUniversalDeployPlugin()` rather than
+   relying on its default `'/'`.
+4. **Preserve adapter-free output.** User deployment plugins may emit their own
+   artifacts, but Cedar's canonical `api/dist/ud/index.js` must remain a pure
+   Fetchable.
 
-Consider whether `buildCedarApp` and `buildUDApiServer` can be merged into a
-single build step. Currently they're sequential: web client + API functions
-first, then UD server entry. Since `buildUDApiServer` now uses the same
-`configFile` as `buildCedarApp`, they could potentially share a single Vite
-builder. This is optional — the two-step build may still be the cleanest
-approach.
+#### Recommended build shape
 
-Do not do this now. Keep the two-step build as-is.
+The UD build should explicitly include:
 
-#### `packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts`
+- `configFile: rwPaths.web.viteConfig`
+- `logLevel`
+- Cedar-controlled UD plugins required for the canonical artifact
+- `build: { ssr: true, outDir, rollupOptions: { input: 'virtual:ud:catch-all', output: { entryFileNames: 'index.js' } } }`
 
-No structural changes needed. The `clearCedarEntries()` fix and relative path
-generation via `new URL(relPath, import.meta.url)` — see the
-`generateGraphQLModule` and `generateFunctionModule` functions in the plugin
-file. The `clearCedarEntries()` function was also added to prevent stale entries
-from accumulating in the UD store across build steps.
+### 2. Refactor `cedar serve api --ud` to import, not fork
 
-### User-facing changes
+File:
 
-| Before                                                   | After                                                             |
-| -------------------------------------------------------- | ----------------------------------------------------------------- |
-| `cedar build --ud` produces a self-starting Node server  | `cedar build --ud` produces a pure Fetchable                      |
-| `cedar serve api --ud` forks the built entry             | `cedar serve api --ud` imports + wraps in srvx                    |
-| `cedar serve --ud` creates Fastify web proxy + forks API | `cedar serve --ud` runs a single srvx server for both web and API |
-| vite config with Netlify plugins breaks local serve      | vite config with any adapter plugins still works locally          |
+- `packages/cli/src/commands/serve.ts`
 
-### Developer experience workflow
+Current behavior:
 
-```sh
-# Local development
-yarn cedar dev --ud # Vite dev server (HMR for web + API)
+- resolves `api/dist/ud/index.[m]js`
+- `fork()`s it as a child process
+- waits for the child to bind a port
 
-# Local prod-like testing
-yarn cedar build --ud # web/dist/ + api/dist/ud/ (Fetchable)
-yarn cedar serve --ud # srvx serves everything on one port
-# or
-yarn cedar serve api --ud # srvx serves API only (behind nginx)
+Target behavior:
 
-# Deploy to Netlify/Vercel (CI/CD)
-yarn cedar build --ud # Build with Netlify plugins in config
-npx netlify deploy    # Netlify CLI handles deployment
+- dynamically import the built module in-process
+- read its default export as a Fetchable
+- host it with srvx
+- support graceful shutdown in-process
+- preserve current API host/port CLI behavior
 
-# VPS/Baremetal
-yarn cedar build --ud # Build with Node plugins in config
-# Copy api/dist/ and web/dist/ to VPS
-nginx -c cedar-web.conf # Serve web/dist/, proxy /api/* to srvx
-cedar serve api --ud    # Start API server on VPS
-```
+This should be extracted into a helper so both `serve api --ud` and `serve --ud`
+use the same import-and-host logic.
 
-### Edge cases
+Suggested responsibilities for the helper:
 
-- **`cedarUniversalDeployPlugin` missing from user config**: `buildUDApiServer`
-  should fail with a clear message.
-- **`api/dist/ud/index.mjs` doesn't exist when serve is called**: Already
-  handled — `serve.ts` checks with a clear error message.
-- **No GraphQL or API functions**: `cedarUniversalDeployPlugin` registers no
-  entries, catch-all generates an empty router that returns 404. srvx still
-  starts and serves static files.
+- `resolveUDEntryPath()`
+- `import()` the module via a file URL-safe path
+- validate that the default export looks like a Fetchable (`fetch` function)
+- start srvx on configured host/port
+- expose shutdown/close handling
 
-### Test plan
+### 3. Refactor `cedar serve --ud` to host the Fetchable externally, but keep the split topology
 
-1. **Unit tests**: Update `createGraphQLHandler` and `createFunctionHandler`
-   tests (already done — see `packages/vite/src/ud-handlers/` and its
-   `__tests__/` directory). Add tests for the new `startUDServer` function.
-2. **Integration test**: `cedar build --ud` → `cedar serve api --ud` →
-   `curl localhost:8911/graphql` → 200 with GraphQL response.
-3. **Integration test**: Same flow but with Netlify plugins in the user's vite
-   config — verify the serve path still works.
-4. **SPA test**: `cedar serve --ud` → `curl localhost:8910/` → serves
-   `web/dist/index.html`. `curl /graphql` → GraphQL response.
-5. **404 test**: `curl /nonexistent` → 404 (not SPA shell for API routes).
+File:
 
-### Future work
+- `packages/cli/src/commands/serve.ts`
 
-- **Pluggable HTTP server**: `cedar serve` could support alternative HTTP
-  servers via a configuration option or a plugin registration system. For
-  example: `cedar serve --http-server=bun` or a `@cedarjs/adapter-fastify`
-  package that provides a serve handler.
-- **Unified build step**: Merge `buildCedarApp` and `buildUDApiServer` into a
-  single `cedar build` with declared environments. This would eliminate the
-  two-step build and the shared global UD store issue.
-- **Web fallback entry**: Re-implement the `virtual:cedar-web` virtual module
-  (removed in Phase 6 addendum) for runtimes that serve web and API in a single
-  process. Currently not needed since `cedar serve` handles this.
+Current behavior:
+
+- validates `api/dist/ud/index.js`
+- validates `web/dist/index.html`
+- starts Fastify web server on one port
+- forks UD API process on another port
+- proxies web → API
+
+Target behavior:
+
+- validate API and web build artifacts
+- dynamically import the built Fetchable in-process
+- start the API host with srvx on the configured API port
+- start the existing web server on the configured web port
+- keep proxying web → API
+- remove child-process management for the UD API side
+- support coordinated graceful shutdown of both servers
+
+This keeps the local topology stable while still separating the artifact from
+its Node host.
+
+### 4. Keep `cedar dev --ud` unchanged
+
+No implementation change is planned for dev. The dev story remains the Vite dev
+server handling both web and API inline.
+
+## `apiRootPath` alignment work
+
+This is the most important semantic detail to get right before coding.
+
+### What non-UD mode does today
+
+From the current code, non-UD mode does **not** have a single shared
+`getApiRootPath()` helper today.
+
+Instead:
+
+- `packages/api-server/src/apiCLIConfig.ts` and
+  `packages/api-server/src/bothCLIConfig.ts` expose an `--apiRootPath` CLI flag
+  with a default of `'/'`
+- `packages/api-server/src/apiCLIConfigHandler.ts` and
+  `packages/api-server/src/bothCLIConfigHandler.ts` normalize that flag via
+  `coerceRootPath(options.apiRootPath ?? '/')`
+- `packages/api-server/src/createServerHelpers.ts` also defaults
+  `apiRootPath` to `'/'`, parses CLI args, and normalizes via `coerceRootPath`
+- the Fastify API plugins then register routes under that normalized prefix
+
+Separately, Cedar config has `getConfig().web.apiUrl`, whose default is
+`'/.api/functions'`. That value is used on the **web/proxy side** and for web
+runtime env vars. It is not the same thing as the Fastify API server's
+`apiRootPath` input.
+
+In `serve` both-sides mode today, those two pieces are connected by the CLI
+handler:
+
+- `options.apiRootPath` determines the API server route prefix
+- that same `options.apiRootPath` is appended when constructing the web
+  `apiProxyTarget`
+
+So the practical non-UD source of truth for serve is:
+
+- **CLI option if provided**
+- otherwise **default `'/'`**
+- then normalized with `coerceRootPath`
+
+### Desired behavior for UD
+
+UD mode should preserve the important invariant even if the UX differs from
+non-UD mode:
+
+- the built artifact should contain routes with the effective Cedar API prefix
+- local serve should not silently remap those routes later
+- mismatches between build-time and runtime API prefix expectations should not
+  be papered over by proxy magic
+
+### Preferred decision for this refactor
+
+The preferred contract is:
+
+- `buildUDApiServer()` resolves `apiRootPath` using build-time input, with the
+  same normalization rule as non-UD mode: **CLI value if supplied, otherwise
+  `'/'`, then `coerceRootPath()`**
+- that resolved prefix is passed into `cedarUniversalDeployPlugin()` so the
+  built UD routes are generated with the correct prefix
+- `cedar serve api --ud` and `cedar serve --ud` do **not** accept
+  `--apiRootPath`; they serve the built artifact at whatever prefix it was built
+  for
+
+### Fallback if implementation gets awkward
+
+If removing `--apiRootPath` from UD serve paths turns out to be too awkward or
+invasive for this refactor, a fallback is acceptable:
+
+- keep `--apiRootPath` on UD serve commands temporarily
+- but use it only for prefix matching/validation or proxy wiring
+- never use it to remap an artifact built for a different prefix into working
+
+### Consequence of this decision
+
+Because the UD artifact bakes the route prefix into the generated router,
+production-like correctness requires build-time and serve-time prefix agreement.
+
+That means:
+
+- `cedar build --ud --apiRootPath /foo` should produce an artifact whose routes
+  live under `/foo/`
+- ideally `cedar serve --ud` should infer or read that built prefix, rather than
+  asking the user to repeat it
+- if a temporary serve-time `--apiRootPath` escape hatch remains, then
+  `cedar serve --ud --apiRootPath /bar` against an artifact built for `/foo/`
+  should not be silently remapped into working
+
+Ideally, Cedar should detect and fail clearly on that mismatch if we have an
+inexpensive way to record/read the built prefix. If not, the plan should still
+assume prefix parity is required and cover it in tests/docs.
+
+### Important non-goal for now
+
+Do **not** try to redefine UD semantics around `getConfig().web.apiUrl` in this
+refactor.
+
+That config still matters for the web side, but the current non-UD API-server
+behavior is driven by `apiRootPath` CLI/server options, not by deriving the
+server prefix from `web.apiUrl`.
+
+## Routing / fallback behavior
+
+The simplest correct behavior is:
+
+- API-prefix paths go to the API server and preserve API responses and API 404s
+- web asset requests are handled by the web server
+- non-API browser route requests fall back to the SPA shell according to current
+  web-serve semantics
+- API misses do **not** return the SPA shell
+
+Because `cedar serve --ud` remains two-port, this is simpler than a single-port
+mixed dispatcher:
+
+- web concerns stay on the web server
+- API concerns stay on the API server
+- the proxy boundary keeps the behaviors separate
+
+## Proposed serve abstraction
+
+For this refactor, the serve abstraction is concrete:
+
+- **API host**: srvx hosting the imported UD Fetchable
+- **web host**: existing Cedar web serving path
+- **both-side UD serve**: existing split-topology arrangement, but with the API
+  side hosted in-process rather than forked as a self-starting entry
+
+Longer-term pluggability can be added later.
+
+## Files likely affected
+
+### Required
+
+- `packages/cli/src/commands/serve.ts`
+- `packages/vite/src/buildUDApiServer.ts`
+
+### Possibly required
+
+- tests for `serve.ts`
+- build tests covering UD artifact shape, `configFile` loading, and
+  `apiRootPath` semantics
+- potentially a small new helper file under `packages/cli/src/commands/` if the
+  UD host logic is extracted
+
+### Probably not required
+
+- `packages/vite/src/plugins/vite-plugin-cedar-universal-deploy.ts`
+
+That plugin already:
+
+- discovers Cedar API routes
+- registers UD store entries
+- generates per-function virtual modules
+- clears stale Cedar entries between build steps
+
+The only plugin-related change I would expect is if it needs a resolved
+`apiRootPath` explicitly threaded in from the same source non-UD mode uses.
+
+## Revised test plan
+
+### Unit / command-level tests
+
+1. `serve api --ud` imports the built artifact instead of forking.
+2. `serve --ud` starts the API side in-process instead of forking a child.
+3. `serve --ud` still uses the configured split web/API topology.
+4. missing `api/dist/ud/index.[m]js` prints a clear `build --ud` error.
+5. missing `web/dist/index.html` prints a clear web build error for
+   `serve --ud`.
+6. invalid UD module shape fails with a clear message.
+7. shutdown handlers close the in-process srvx server cleanly.
+8. the existing warning for `api/src/server.ts` remains in the UD both-sides
+   path.
+9. UD serve does not silently remap an artifact built for one `apiRootPath` to
+   another prefix.
+
+### Integration tests
+
+1. `cedar build --ud` emits a canonical Fetchable artifact at
+   `api/dist/ud/index.js`.
+2. `cedar serve api --ud` serves GraphQL successfully from the built artifact.
+3. `cedar serve --ud` serves web and API from separate ports, with the API side
+   hosted from the imported Fetchable rather than a forked process.
+4. a user Vite config containing provider plugins still allows
+   `cedar build --ud` + `cedar serve --ud` to work.
+5. `cedar build --ud --apiRootPath /foo` produces routes under `/foo/`.
+6. UD serve hosts the artifact at its built prefix without silent remapping.
+7. API-prefix routes preserve API 404 behavior and do not fall through to SPA
+   fallback.
+
+## Remaining question to settle before coding
+
+I think there is now one practical implementation question left:
+
+1. **Can UD serve cleanly infer/use the built `apiRootPath` without exposing an
+   `--apiRootPath` serve flag, or do we need a temporary serve-time fallback
+   argument for this refactor?**
+
+Everything else needed for the plan direction now appears decided enough to
+start implementation once that answer is clear.
+
+## Future work
+
+### 1. Unified Vite build pipeline
+
+There is a real architectural tension in the current two-build setup. The likely
+end state is a more unified Vite build pipeline that removes duplicated setup,
+reduces shared global UD store awkwardness, and makes plugin/environment
+coordination cleaner.
+
+However, that should come **after** this refactor, not before it.
+
+Reasoning:
+
+- the important contract to stabilize first is **artifact shape vs hosting**
+- once the artifact is cleanly separated from its local host, build unification
+  becomes an internal cleanup rather than a contract-defining change
+- trying to unify the build first would increase scope and couple Vite builder
+  orchestration changes to the serve refactor
+
+So unified build remains the likely next architectural step, but is explicitly
+out of scope for this implementation.
+
+### 2. Alternative HTTP hosts
+
+Add support for alternative HTTP hosts such as Fastify while preserving the same
+"import Fetchable and host it externally" contract.
+
+### 3. Optional single-port local serve
+
+A future single-port local serve mode may still be useful, but it is not needed
+to accomplish this refactor's goals.
+
+## Recommended implementation sequence
+
+1. Update `buildUDApiServer()` so it resolves and bakes `apiRootPath`, loads
+   user config, and preserves Cedar-owned plugin injection plus adapter-free
+   output.
+2. Decide whether UD serve can cleanly avoid exposing `--apiRootPath` entirely,
+   or whether a temporary serve-time compatibility flag is needed.
+3. Implement a reusable UD import-and-host helper for srvx.
+4. Switch `serve api --ud` to in-process srvx hosting.
+5. Switch `serve --ud` to use the same imported Fetchable on the API side while
+   keeping the split web/API topology.
+6. Add integration coverage for provider plugins in user Vite config and for
+   build-time `apiRootPath` behavior.
+7. Re-evaluate unified-build follow-up work once the artifact/serve boundary is
+   stable.
+
+
