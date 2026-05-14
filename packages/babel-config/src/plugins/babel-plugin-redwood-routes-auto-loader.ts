@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { PluginObj, types } from '@babel/core'
@@ -160,6 +161,25 @@ export default function (
       Program: {
         enter() {
           pages = processPagesDir().map(withRelativeImports)
+
+          // De-register pages that are already statically imported outside of
+          // Routes.tsx (e.g. FatalErrorPage in App.tsx). If we leave them in
+          // the list, the auto-loader adds a `lazy(() => import(...))` for
+          // them here in Routes.tsx, which produces a Vite warning:
+          // "dynamically imported by Routes.tsx but also statically imported
+          // by App.tsx – dynamic import will not move module into another chunk"
+          const appPath = resolveFile(path.join(getPaths().web.src, 'App'))
+          if (appPath) {
+            const appSource = fs.readFileSync(appPath, 'utf8')
+            const importRe = /^import\s+\w+\s+from\s+['"]([^'"]+)['"]/gm
+            let m: RegExpExecArray | null
+            while ((m = importRe.exec(appSource)) !== null) {
+              const rel = ensurePosixPath(
+                getPathRelativeToSrc(importStatementPath(m[1])),
+              )
+              pages = pages.filter((page) => page.relativeImport !== rel)
+            }
+          }
         },
         exit(p) {
           if (pages.length === 0) {
