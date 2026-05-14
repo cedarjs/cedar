@@ -275,7 +275,7 @@ function addConfigureGqlormToApp({ force }: { force?: boolean }) {
       return {
         skipped: true,
         reason:
-          "Unexpected syntax. Could not find @cedarjs/web import to " +
+          'Unexpected syntax. Could not find @cedarjs/web import to ' +
           'insert gqlorm import',
       }
     }
@@ -325,12 +325,7 @@ function addConfigureGqlormToApp({ force }: { force?: boolean }) {
       }
     }
 
-    contentLines.splice(
-      appComponentIndex,
-      0,
-      'configureGqlorm({ schema })',
-      '',
-    )
+    contentLines.splice(appComponentIndex, 0, 'configureGqlorm({ schema })', '')
   }
 
   fs.writeFileSync(appPath, contentLines.join('\n'))
