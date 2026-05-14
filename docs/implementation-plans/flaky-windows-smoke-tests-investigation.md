@@ -578,8 +578,7 @@ what @storybook/builder-vite and other dependencies request (^4.0.0 || ^5.0.0 ||
 **Likely cause:** `@storybook/builder-vite` does not support Vite 7. Storybook
 attempts to start, fails internally due to the incompatible Vite version, and
 exits with code 1. This is different from the V8 Maglev JIT crash (which exits
-with code `3221226505`). This is a dependency compatibility issue, not a
-flakiness issue — it would fail consistently on any runner.
+with code `3221226505`).
 
 **Next step:** Check if there is a newer version of `@storybook/builder-vite`
 that supports Vite 7, or whether the test project's Storybook setup needs to be
