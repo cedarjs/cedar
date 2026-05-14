@@ -130,10 +130,6 @@ export const buildApiWithVite = async () => {
           preserveModules: true,
           preserveModulesRoot: cedarPaths.api.src,
           entryFileNames: '[name].js',
-          // Directives (and other entry modules) intentionally use both named
-          // and default exports (e.g. `export const schema` + `export default`).
-          // Tell Rollup to expect this so it doesn't warn about mixed exports.
-          exports: 'named',
         },
         external: (id) => {
           // Externalize as much as possible to mimic esbuild's bundle: false
