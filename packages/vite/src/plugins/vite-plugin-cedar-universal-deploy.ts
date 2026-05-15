@@ -178,10 +178,18 @@ export function cedarUniversalDeployPlugin(
 
     config: {
       order: 'pre',
-      handler() {
+      handler(_config, env) {
+        // Only register routes for SSR builds. During client builds the
+        // emitted chunks would reference paths that don't exist (e.g.
+        // new URL("./../functions/...")), causing Rollup resolution errors.
+        if (!env.isSsrBuild) {
+          return
+        }
+
         if (entriesInjected) {
           return
         }
+
         entriesInjected = true
 
         // Clear any stale Cedar entries from previous build steps (e.g. the web
@@ -196,7 +204,13 @@ export function cedarUniversalDeployPlugin(
       },
     },
 
-    buildStart(this) {
+    buildStart() {
+      // Skip during client builds — the emitted chunks reference Node.js
+      // builtins and paths that only exist during SSR builds.
+      if (this.environment?.name !== 'ssr') {
+        return
+      }
+
       // Emit each per-function virtual module as a chunk with a fixed output
       // path. This guarantees import.meta.url resolves from a predictable
       // location regardless of whether @universal-deploy/vite's catchAll()
@@ -215,6 +229,12 @@ export function cedarUniversalDeployPlugin(
     },
 
     resolveId(id) {
+      // Skip during client builds — the virtual modules reference Node.js
+      // APIs and paths that only work in an SSR context.
+      if (this.environment?.name !== 'ssr') {
+        return undefined
+      }
+
       // Match the null-byte-prefixed form that Rollup uses for already-resolved
       // virtual modules (e.g. when UD's catchAll generates dynamic imports).
       if (id.startsWith(RESOLVED_CEDAR_FN_PREFIX)) {
@@ -229,6 +249,11 @@ export function cedarUniversalDeployPlugin(
     },
 
     load(id) {
+      // Skip during client builds.
+      if (this.environment?.name !== 'ssr') {
+        return undefined
+      }
+
       // Per-function virtual modules
       if (id.startsWith(RESOLVED_CEDAR_FN_PREFIX)) {
         const routeId = id.slice(RESOLVED_CEDAR_FN_PREFIX.length)
