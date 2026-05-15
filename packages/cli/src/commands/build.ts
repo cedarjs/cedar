@@ -50,6 +50,13 @@ export const builder = (yargs: Argv) => {
       default: false,
       description: 'Build the Universal Deploy server entry (api/dist/ud/).',
     })
+    .option('apiRootPath', {
+      type: 'string',
+      description:
+        'Root path where API functions are served. Overrides the ' +
+        'apiRootPath option on cedarUniversalDeployPlugin() in your ' +
+        'vite config. Defaults to "/".',
+    })
     .middleware(() => {
       const check = checkNodeVersion()
 

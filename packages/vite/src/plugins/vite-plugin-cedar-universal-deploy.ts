@@ -163,8 +163,12 @@ function clearCedarEntries(): void {
 export function cedarUniversalDeployPlugin(
   options: CedarUniversalDeployPluginOptions = {},
 ): Plugin {
-  const { apiRootPath } = options
-  const routes = discoverCedarRoutes(apiRootPath ?? '/')
+  // CEDAR_API_ROOT_PATH is set by buildUDApiServer when the --apiRootPath CLI
+  // flag is passed. It takes precedence over the option value in the user's
+  // vite config so CI/deploy can override without editing tracked files.
+  const effectiveApiRootPath =
+    process.env.CEDAR_API_ROOT_PATH ?? options.apiRootPath
+  const routes = discoverCedarRoutes(effectiveApiRootPath ?? '/')
 
   let entriesInjected = false
 
