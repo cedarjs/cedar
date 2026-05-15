@@ -21,7 +21,7 @@ Let's build the simplest form that still makes sense for our blog, a "Contact Us
 ### The Page
 
 ```bash
-yarn rw g page contact
+yarn cedar g page contact
 ```
 
 We can put a link to Contact in our layout's header:
