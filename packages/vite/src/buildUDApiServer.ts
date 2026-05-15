@@ -81,9 +81,8 @@ export const buildUDApiServer = async ({
             console.warn(
               '\n  Warning: No Universal Deploy API routes were registered.',
               '\n  The built server entry will be an empty router (404 for all',
-              '\n  requests). Ensure your vite config includes',
-              '\n  `cedarUniversalDeployPlugin()` or that you have API',
-              '\n  functions under `api/src/functions/`.\n',
+              '\n  requests). Check that you have API functions under',
+              '\n  `api/src/functions/`.\n',
             )
           }
         },
