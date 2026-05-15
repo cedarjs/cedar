@@ -76,6 +76,15 @@ export const builder = (yargs: Argv) => {
         return 'Workspace must be an array'
       }
 
+      // --apiRootPath requires --ud; silently ignoring it would be confusing
+      if (argv.apiRootPath && !argv.ud) {
+        return (
+          c.error('Error:') +
+          ' --apiRootPath requires --ud.\n' +
+          '  Use --ud to build the Universal Deploy server entry.'
+        )
+      }
+
       // Remove all default workspace names and then check if there are any
       // remaining workspaces to build. This is an optimization to avoid calling
       // `workspaces({ includePackages: true }) as that's a somewhat expensive

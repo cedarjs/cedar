@@ -255,7 +255,7 @@ From the current code:
   hosts it with srvx via `startUDServer()`.
 - `cedar serve --ud` cleans up unused `net` import and `waitForPort`.
 
-The key change is architectural: \*\*build produces a Fetchable, serve wraps the
+The key change is architectural: **build produces a Fetchable, serve wraps the Fetchable**.
 
 ## Target state
 
