@@ -1,9 +1,9 @@
 import dns from 'dns'
 import { defineConfig } from 'vite'
-import { cedar } from '@cedarjs/vite'
+import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'
 
 dns.setDefaultResultOrder('verbatim')
 
 export default defineConfig({
-  plugins: [cedar()],
+  plugins: [cedar(), cedarUniversalDeployPlugin()],
 })

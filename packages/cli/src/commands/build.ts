@@ -50,6 +50,13 @@ export const builder = (yargs: Argv) => {
       default: false,
       description: 'Build the Universal Deploy server entry (api/dist/ud/).',
     })
+    .option('apiRootPath', {
+      type: 'string',
+      description:
+        'Root path where API functions are served. Overrides the ' +
+        'apiRootPath option on cedarUniversalDeployPlugin() in your ' +
+        'vite config. Defaults to "/".',
+    })
     .middleware(() => {
       const check = checkNodeVersion()
 
@@ -67,6 +74,15 @@ export const builder = (yargs: Argv) => {
 
       if (!Array.isArray(workspacesArg)) {
         return 'Workspace must be an array'
+      }
+
+      // --apiRootPath requires --ud; silently ignoring it would be confusing
+      if (argv.apiRootPath && !argv.ud) {
+        return (
+          c.error('Error:') +
+          ' --apiRootPath requires --ud.\n' +
+          '  Use --ud to build the Universal Deploy server entry.'
+        )
       }
 
       // Remove all default workspace names and then check if there are any

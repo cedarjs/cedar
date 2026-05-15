@@ -121,6 +121,7 @@ export interface BuildHandlerOptions {
   prisma?: boolean
   prerender?: boolean
   ud?: boolean
+  apiRootPath?: string
 }
 
 export const handler = async ({
@@ -129,6 +130,7 @@ export const handler = async ({
   prisma = true,
   prerender = true,
   ud = false,
+  apiRootPath,
 }: BuildHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'build',
@@ -136,6 +138,7 @@ export const handler = async ({
     verbose,
     prisma,
     prerender,
+    apiRootPath,
   })
 
   const cedarPaths: Paths = getPaths()
@@ -396,7 +399,7 @@ export const handler = async ({
       workspace.includes('api') && {
         title: 'Bundling API server entry (Universal Deploy)...',
         task: async () => {
-          await buildUDApiServer({ verbose })
+          await buildUDApiServer({ verbose, apiRootPath })
         },
       },
   ].filter((t): t is ListrTask => Boolean(t))
