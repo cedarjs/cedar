@@ -255,11 +255,9 @@ export const builder = async (yargs: Argv) => {
         })
 
         if (argv.ud) {
-          // Launch the Vite-built Universal Deploy Node server entry produced
-          // by `cedar build api`. The entry at api/dist/ud/index.js is a
-          // self-contained srvx server that imports virtual:ud:catch-all,
-          // resolved by cedarUniversalDeployPlugin to Cedar's aggregate fetch
-          // dispatcher.
+          // Import the built Fetchable and host it in-process with srvx.
+          // The artifact at api/dist/ud/index.js is a pure Fetchable (`export
+          // default { fetch }`) emitted by buildUDApiServer.
           const udEntryPath = resolveUDEntryPath()
 
           if (!udEntryPath) {
