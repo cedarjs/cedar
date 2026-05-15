@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { describe, it, expect, vi } from 'vitest'
 
@@ -22,8 +22,12 @@ vi.mock('@cedarjs/api/runtime', () => ({
 
 describe('createGraphQLHandler', () => {
   it('lazily initializes yoga and handles a request', async () => {
-    const fixturePath = path.join(__dirname, '__fixtures__/graphql-module.js')
-    const handler = createGraphQLHandler({ distPath: fixturePath })
+    const distUrl = pathToFileURL(
+      path.resolve(__dirname, '__fixtures__/graphql-module.js'),
+    ).href
+    const handler = createGraphQLHandler({
+      distUrl,
+    })
     const request = new Request('http://localhost/graphql')
     const response = await handler.fetch(request)
     expect(response.status).toBe(200)
