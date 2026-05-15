@@ -4,7 +4,7 @@ description: Redwood quick start
 
 # Quick Start
 
-:::info Prerequisites
+:::info[Prerequisites]
 
 - Redwood requires [Node.js](https://nodejs.org/en/) (=20.x) and [Yarn](https://yarnpkg.com/) (>=1.22.21)
 - Are you on Windows? For best results, follow our [Windows development setup](how-to/windows-development-setup.md) guide
@@ -17,7 +17,7 @@ Create a Redwood project with `yarn create redwood-app`:
 yarn create redwood-app my-redwood-project
 ```
 
-:::tip Prefer TypeScript?
+:::tip[Prefer TypeScript?]
 
 Redwood comes with full TypeScript support from the get-go:
 

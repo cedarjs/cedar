@@ -24,12 +24,6 @@ const config: Config = {
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },
-    // future.v4 disables mdx1Compat.admonitions by default, which breaks the
-    // old :::info Title syntax (requires :::info[Title] in v4). Re-enable it
-    // here until all docs are migrated to the bracket syntax.
-    mdx1Compat: {
-      admonitions: true,
-    },
   },
   favicon: '/img/favicon.ico',
   organizationName: 'cedarjs', // Usually your GitHub org/user name.

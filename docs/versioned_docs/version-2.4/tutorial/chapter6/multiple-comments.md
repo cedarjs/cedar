@@ -4,7 +4,7 @@ Our amazing blog posts will obviously garner a huge and passionate fanbase and w
 
 Let's think about where our comments are being displayed. Probably not on the homepage, since that only shows a summary of each post. A user would need to go to the full page to show the comments for that blog post. But that page is only fetching the data for the single blog post itself, nothing else. We'll need to get the comments and since we'll be fetching _and_ displaying them, that sounds like a job for a Cell.
 
-:::info Couldn't the query for the blog post page also fetch the comments?
+:::info[Couldn't the query for the blog post page also fetch the comments?]
 
 Yes, it could! But the idea behind Cells is to make components even more [composable](https://en.wikipedia.org/wiki/Composability) by having them be responsible for their own data fetching _and_ display. If we rely on a blog post to fetch the comments then the new Comments component we're about to create now requires something _else_ to fetch the comments and pass them in. If we re-use the Comments component somewhere, now we're fetching comments in two different places.
 
@@ -191,7 +191,7 @@ export const standard = () => ({
 </TabItem>
 </Tabs>
 
-:::info What's this `standard` thing?
+:::info[What's this `standard` thing?]
 
 Think of it as the standard, default mock if you don't do anything else. We would have loved to use the name "default" but that's already a reserved word in JavaScript!
 
@@ -326,7 +326,7 @@ export default Article
 
 If we are _not_ showing the summary, then we'll show the comments. Take a look at the **Full** and **Summary** stories in Storybook and you should see comments on one and not on the other.
 
-:::info Shouldn't the `CommentsCell` cause an actual GraphQL request? How does this work?
+:::info[Shouldn't the `CommentsCell` cause an actual GraphQL request? How does this work?]
 
 Cedar has added some functionality around Storybook so that if you're testing a component that itself isn't a Cell (like the `Article` component) but that renders a cell (like `CommentsCell`), then it will mock the GraphQL and use the `standard` mock that goes along with that Cell. Pretty cool, huh?
 

@@ -34,7 +34,7 @@ And the prod compose file with:
 docker compose -f ./docker-compose.prod.yml up
 ```
 
-:::info make sure to specify build args
+:::info[make sure to specify build args]
 
 If your api side or web side depend on env vars at build time, you may need to supply them as `--build-args`, or in the compose files.
 
@@ -49,7 +49,7 @@ docker compose -f ./docker-compose.dev.yml run --rm -it console /bin/bash
 root@...:/home/node/app# yarn rw prisma migrate dev
 ```
 
-:::info database choice
+:::info[database choice]
 The docker setup command assumes that you are using Postgres as your database provider and sets up a local Postgres database for you. You may have to switch from SQLite to Postgres if you have not done so and want to continue with the default setup.
 :::
 
@@ -77,7 +77,7 @@ We use a Node.js 20 image as the base image because that's the version Cedar tar
 "bookworm" is the codename for the current stable distribution of Debian (version 12).
 Lastly, the "slim" variant of the `node:20-bookworm` image only includes what Node.js needs which reduces the image's size while making it more secure.
 
-:::tip Why not alpine?
+:::tip[Why not alpine?]
 
 While alpine may be smaller, it uses musl, a different C standard library.
 In developing this Dockerfile, we prioritized security over size.
@@ -172,7 +172,7 @@ We'll need these config files for the build and production stages.
 The `redwood.toml` file is Cedar's de-facto config file.
 Both the build and serve stages read it to enable and configure functionality.
 
-:::warning `.env.defaults` is ok to include but `.env` is not
+:::warning[`.env.defaults` is ok to include but `.env` is not]
 
 If you add a secret to the Dockerfile, it can be excavated.
 While it's technically true that multi stage builds add a sort of security layer, it's not a best practice.

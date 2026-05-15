@@ -309,7 +309,7 @@ If your tests aren't already running in another terminal window, you can start t
 yarn rw test
 ```
 
-:::info What happens if we change the formatted output of the timestamp? Wouldn't we have to change the test?
+:::info[What happens if we change the formatted output of the timestamp? Wouldn't we have to change the test?]
 
 Yes, just like we'd have to change the truncation text if we changed the length of the truncation. One alternative approach to testing for the formatted output could be to move the date formatting formula into a function that you can export from the `Comment` component. Then you can import that in your test and use it to check the formatted output. Now if you change the formula the test keeps passing because it's sharing the function with `Comment`.
 

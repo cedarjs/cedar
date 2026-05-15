@@ -65,7 +65,7 @@ Watch Usage: Press w to show more.
 For the purpose of this how to, we'll use the `UserExample` model that comes with the Cedar app.
 We'll also change the database to Postgres since that's what we'll be using in our GitHub Actions.
 
-:::note Make sure you have a Postgres instance ready to use
+:::note[Make sure you have a Postgres instance ready to use]
 
 Here's a handy guide for how to [set it up locally](../local-postgres-setup). We'll need the connection string so our Cedar app knows where to store the data
 

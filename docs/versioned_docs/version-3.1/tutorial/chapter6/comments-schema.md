@@ -555,7 +555,7 @@ describe('comments', () => {
 
 What is this `scenario()` function? That's made available by Cedar that mostly acts like Jest's built-in `it()` and `test()` functions, but with one important difference: it pre-seeds a test database with data that is then passed to you in the `scenario` argument. You can count on this data existing in the database and being reset between tests in case you make changes to it. You can create the data structure for any and all models defined in `schema.prisma`, not just comments (the file happens to be named that because it's the ones that will load when running `comments.test.js`).
 
-:::info In the section on mocks you said relying on data in the database for testing was dumb?
+:::info[In the section on mocks you said relying on data in the database for testing was dumb?]
 
 Yes, all things being equal it would be great to not have these tests depend on a piece of software outside of our control.
 
@@ -624,7 +624,7 @@ export const standard = defineScenario<Prisma.CommentCreateArgs>({
 
 This calls a `defineScenario()` function which checks that your data structure matches what's defined in Prisma. Each scenario data object (for example, `scenario.comment.one`) is passed as-is to Prisma's [`create`](https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#create). That way you can customize the scenario object using any of Prisma's supported options.
 
-:::info The "standard" scenario
+:::info[The "standard" scenario]
 
 The exported scenario here is named "standard." Remember when we worked on component tests and mocks, there was a special mock named `standard` which Cedar would use by default if you didn't specify a name? The same rule applies here! When we add a test for `createComment()` we'll see an example of using a different scenario with a unique name.
 
@@ -640,7 +640,7 @@ The nested structure of a scenario is defined like this:
 
 When you receive the `scenario` argument in your test, the `data` key gets unwrapped so that you can reference fields like `scenario.comment.one.name`.
 
-:::info Why does every field just contain the string "String"?
+:::info[Why does every field just contain the string "String"?]
 
 When generating the service (and the test and scenarios) all we (Cedar) knows about your data is the types for each field as defined in `schema.prisma`, namely `String`, `Integer` or `DateTime`. So we add the simplest data possible that fulfills the type requirement by Prisma to get the data into the database. You should definitely replace this data with something that looks more like the real data your app will be expecting. In fact...
 
@@ -876,7 +876,7 @@ We pass an optional first argument to `scenario()` which is the named scenario t
 
 We were able to use the `id` of the post that we created in our scenario because the scenarios contain the actual database data after being inserted, not just the few fields we defined in the scenario itself. In addition to `id` we could access `createdAt` which is defaulted to `now()` in the database.
 
-:::info What's that `post: { connect: { id } }` nested structure? Can't we simply pass the Post's ID directly here?
+:::info[What's that `post: { connect: { id } }` nested structure? Can't we simply pass the Post's ID directly here?]
 
 What you're looking at is the [connect syntax](https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#connect-an-existing-record), which is a Prisma
 core concept. And yes, we could simply pass `postId: scenario.post.bark.id` instead – as a so-called "unchecked" input. But as the name implies, the connect syntax is king
@@ -907,7 +907,7 @@ in case we wanted to allow both ways – which Prisma generally allows, however 
 
 We'll test that all the fields we give to the `createComment()` function are actually created in the database, and for good measure just make sure that `createdAt` is set to a non-null value. We could test that the actual timestamp is correct, but that involves freezing the JavaScript Date object so that no matter how long the test takes, you can still compare the value to `new Date` which is right _now_, down to the millisecond. While possible, it's beyond the scope of our easy, breezy tutorial since it gets [very gnarly](https://codewithhugo.com/mocking-the-current-date-in-jest-tests/)!
 
-:::info What's up with the names for scenario data? `posts.bark`? Really?
+:::info[What's up with the names for scenario data? `posts.bark`? Really?]
 
 This makes reasoning about your tests much nicer! Which of these would you rather work with:
 
@@ -923,7 +923,7 @@ If you said the second one, remember: you're not writing your code for the compu
 
 Okay, our comments service is feeling pretty solid now that we have our tests in place. The last step is add a form so that users can actually leave a comment on a blog post.
 
-:::info Mocks vs. Scenarios
+:::info[Mocks vs. Scenarios]
 
 Mocks are used on the web site and scenarios are used on the api side. It might be helpful to remember that **mock** is a synonym for "fake", as in "this is fake data not really in the database" (so that we can create stories and tests in isolation without the api side getting involved). Whereas a **scenario** is real data in the database, it's just pre-set to some known state that we can rely on.
 
