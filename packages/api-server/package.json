@@ -146,7 +146,6 @@
     "@cedarjs/web-server": "workspace:*",
     "@fastify/multipart": "9.4.0",
     "@fastify/url-data": "6.0.3",
-    "@universal-deploy/node": "^0.1.6",
     "ansis": "4.2.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",

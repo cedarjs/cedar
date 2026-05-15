@@ -113,7 +113,6 @@
     "@cedarjs/web": "workspace:*",
     "@fastify/url-data": "6.0.3",
     "@swc/core": "1.15.33",
-    "@universal-deploy/node": "^0.1.6",
     "@universal-deploy/store": "^0.2.1",
     "@universal-deploy/vite": "^0.1.9",
     "@vitejs/plugin-react": "4.7.0",
