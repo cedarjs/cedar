@@ -57,7 +57,7 @@ model User {
 }
 ```
 
-:::info User SDL
+:::info[User SDL]
 We created a User model in Chapter 4 when we set up authentication for our blog. Redwood's `setup auth dbAuth` command generated two files for us that manage authentication: the `auth` file in `api/src/lib/`, and the `auth` file in `api/src/functions/`. Both of these files use our PrismaClient directly to work with the User model, so we didn't need to set up an SDL or services for the User model.
 
 If you followed our recommendation in the Intermission to use the Example repo, the User SDL and service is already added for you. If not, you'll need to add it yourself:
@@ -112,7 +112,7 @@ Whoops!
 
 Similar to what happened when we added `roles` to `User`, We made `userId` a required field, but we already have several posts in our development database. Since we don't have a default value for `userId` defined, it's impossible to add this column to the database.
 
-:::warning Why don't we just set `@default(1)` in the schema?
+:::warning[Why don't we just set `@default(1)` in the schema?]
 
 This would get us past this problem, but could cause hard-to-track-down bugs in the future: if you ever forget to assign a `post` to a `user`, rather than fail it'll happily just set `userId` to `1`, which may or may not even exist some day! It's best to take the extra time to do things The Right Way and avoid the quick hacks to get past an annoyance like this. Your future self will thank you!
 
@@ -124,7 +124,7 @@ Since we're in development, let's just blow away the database and start over:
 yarn rw prisma migrate reset
 ```
 
-:::info Database Seeds
+:::info[Database Seeds]
 
 If you started the second half the tutorial from the [Redwood Tutorial repo](https://github.com/redwoodjs/redwood-tutorial) you'll get an error after resetting the database—Prisma attempts to seed the database with a user and some posts to get you started, but the posts in that seed do not have the new required `userId` field! Open up `scripts/seed.js` and edit each post to add `userId: 1` to each:
 
@@ -198,7 +198,7 @@ To enable this we'll need to make two modifications on the api side:
   }
 ```
 
-:::info What about the mutations?
+:::info[What about the mutations?]
 
 We did _not_ add `user` or `userId` to the `CreatePostInput` or `UpdatePostInput` types. Although we want to set a user on each newly created post, we don't want just anyone to do that via a GraphQL call! You could easily create or edit a post and assign it to someone else by just modifying the GraphQL payload. We'll save assigning the user to just the service, so it can't be manipulated by the outside world.
 
@@ -276,7 +276,7 @@ export const Post = {
 
 Note that if you keep the relation resolver above, but also included a `user` property in the post(s) returned from `posts` and `post`, this field resolver will still be invoked and whatever is returned will override any `user` property that exists already. Why? That's just how GraphQL works—resolvers, if they are present for a named field, will always be invoked and their return value used, even if the `root` already contains that data.
 
-:::info Prisma and the N+1 Problem
+:::info[Prisma and the N+1 Problem]
 
 If you have any experience with database design and retrieval you may have noticed this method presents a less than ideal solution: for every post that's found, you need to perform an _additional_ query just to get the user data associated with that `post`, also known as the [N+1 problem](https://medium.com/the-marcy-lab-school/what-is-the-n-1-problem-in-graphql-dd4921cb3c1a). This is just due to the nature of GraphQL queries: each resolver function really only knows about its own parent object, nothing about potential children.
 
@@ -462,7 +462,7 @@ export const Post = {
 }
 ```
 
-:::info Prisma's `findUnique()` vs. `findFirst()`
+:::info[Prisma's `findUnique()` vs. `findFirst()`]
 
 Note that we switched from `findUnique()` to `findFirst()` here. Prisma's `findUnique()` requires that any attributes in the `where` clause have unique indexes, which `id` does, but `userId` does not. So we need to switch to the `findFirst()` function which allows you to put whatever you want in the `where`, which may return more than one record, but Prisma will only return the first of that set. In this case we know there'll always only be one, because we're selecting by `id` _in addition_ to `userId`.
 

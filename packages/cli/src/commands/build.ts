@@ -48,8 +48,7 @@ export const builder = (yargs: Argv) => {
     .option('ud', {
       type: 'boolean',
       default: false,
-      description:
-        'Build the Universal Deploy server entry (api/dist/ud/index.js).',
+      description: 'Build the Universal Deploy server entry (api/dist/ud/).',
     })
     .middleware(() => {
       const check = checkNodeVersion()

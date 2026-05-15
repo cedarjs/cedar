@@ -253,7 +253,7 @@ describe('Article', () => {
 
 This test (if it worked) would prove that you are indeed rendering an article. But it's also extremely brittle: any change to the component, even adding a `className` attribute for styling, will cause the test to break. That's not ideal, especially when you're just starting out building your components and will constantly be making changes as you improve them.
 
-:::info Why do we keep saying this test won't work?
+:::info[Why do we keep saying this test won't work?]
 Because as far as we can tell there's no easy way to simply render to a string. `render` actually returns an object that has several functions for testing different parts of the output. Those are what we'll look into in the next section.
 
 Note that Cedar's `render` function is based on React Testing Library's. The only difference is that Cedar's wraps everything with mock providers for the various providers in Cedar, such as auth, the GraphQL client, the router, etc.
@@ -1019,7 +1019,7 @@ describe('ArticleCell', () => {
 
 Note that this second mock simply returns an object instead of a function. In the simplest case all you need your mock to return is an object. But there are cases where you may want to include logic in your mock, and in these cases you'll appreciate the function container. Especially in the following scenario...
 
-:::tip important
+:::tip[important]
 If using [fragments](./graphql/fragments.md) it is important to include the `__typename` otherwise Apollo client will not be able to map the mocked data to the fragment attributes.
 :::
 
@@ -1294,7 +1294,7 @@ Does anyone else find it confusing that the software itself is called a "databas
 
 When you start your test suite you may notice some output from Prisma talking about migrating the database. Cedar will automatically run `yarn rw prisma db push` against your test database to make sure it's up-to-date.
 
-:::warning What if I have custom migration SQL?
+:::warning[What if I have custom migration SQL?]
 
 The `prisma db push` command only restores a snapshot of the current database schema (so that it runs as fast as possible). **It does not actually run migrations in sequence.** This can cause a [problem](https://github.com/cedarjs/cedar/issues/5818) if you have certain database configuration that _must_ occur as a result of the SQL statements inside the migration files.
 
@@ -1797,7 +1797,7 @@ describeScenario<StandardScenario>('user query service', (getScenario) => {
 })
 ```
 
-:::tip Using named scenarios with describeScenario
+:::tip[Using named scenarios with describeScenario]
 
 If you have multiple scenarios, you can also use named scenario with `describeScenario`
 
@@ -1980,7 +1980,7 @@ scenario('returns a single product', async (scenario: StandardScenario) => {
   )
 ```
 
-:::info Serialized Objects in Cache
+:::info[Serialized Objects in Cache]
 Remember that the cache only ever contains serialized objects. So if you passed an object like this:
 
 ```js

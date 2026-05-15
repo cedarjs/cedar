@@ -1,8 +1,8 @@
-import { fork } from 'node:child_process'
 import fs from 'node:fs'
-import net from 'node:net'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
+import { serve as serveSrvx } from 'srvx'
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
 
@@ -18,6 +18,59 @@ import { getPaths, getConfig } from '../lib/index.js'
 import { serverFileExists } from '../lib/project.js'
 
 import { webSsrServerHandler } from './serveWebHandler.js'
+
+/**
+ * Resolve the path to the UD server entry, checking for either .mjs or .js
+ * extension. Vite's SSR build outputs index.mjs when the project is ESM;
+ * the serve command must accept both.
+ */
+function resolveUDEntryPath(): string | null {
+  const base = path.join(getPaths().api.dist, 'ud', 'index')
+  for (const ext of ['.mjs', '.js']) {
+    const entryPath = base + ext
+    if (fs.existsSync(entryPath)) {
+      return entryPath
+    }
+  }
+  return null
+}
+
+/**
+ * Import the built UD Fetchable from disk and host it with srvx on the
+ * configured host and port. Does NOT fork — the Fetchable runs in-process.
+ *
+ * Returns the srvx server instance so callers can await server.ready() or
+ * close it on shutdown.
+ */
+async function startUDServer(
+  entryPath: string,
+  host: string,
+  port: number,
+): Promise<ReturnType<typeof serveSrvx>> {
+  const mod = await import(pathToFileURL(entryPath).href)
+  const fetchable = mod.default ?? mod
+
+  if (!fetchable || typeof fetchable.fetch !== 'function') {
+    throw new Error(
+      `UD entry at ${entryPath} does not export a Fetchable ` +
+        '(`export default { fetch }`).',
+    )
+  }
+
+  const server = serveSrvx({
+    ...fetchable,
+    port,
+    hostname: host,
+    gracefulShutdown: false,
+    manual: true,
+  })
+
+  server.serve()
+
+  await server.ready()
+
+  return server
+}
 
 export const command = 'serve [side]'
 export const description =
@@ -74,12 +127,12 @@ export const builder = async (yargs: Argv) => {
             process.exit(1)
           }
 
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+          const udEntryPath = resolveUDEntryPath()
 
-          if (!fs.existsSync(udEntryPath)) {
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
@@ -125,6 +178,7 @@ export const builder = async (yargs: Argv) => {
             apiRootPath,
           ].join('')
 
+          // Start the Fastify web server (same as before)
           const { redwoodFastifyWeb } = await import('@cedarjs/fastify-web')
           const { createFastifyInstance } =
             await import('@cedarjs/api-server/fastify')
@@ -141,42 +195,13 @@ export const builder = async (yargs: Argv) => {
             host: webHost,
           })
 
-          const child = fork(
-            udEntryPath,
-            ['--port', String(apiPort), '--host', apiHost],
-            {
-              execArgv: process.execArgv,
-              env: {
-                ...process.env,
-                NODE_ENV: process.env.NODE_ENV ?? 'production',
-                PORT: String(apiPort),
-                HOST: apiHost,
-              },
-            },
-          )
-
-          child.on('error', (err) => {
-            console.error(
-              c.error(`\n Failed to start UD API server: ${err.message}\n`),
-            )
-            process.exit(1)
-          })
-
-          child.on('exit', (code) => {
-            if (code !== 0) {
-              console.error(
-                c.error(`\n UD API server exited with code ${code}\n`),
-              )
-              process.exit(1)
-            }
-          })
-
+          // Import and host the UD Fetchable in-process with srvx
           console.log(`Web server listening at http://${webHost}:${webPort}`)
           process.stdout.write(
             `API server starting at http://${apiHost}:${apiPort}...`,
           )
 
-          await waitForPort(apiHost, apiPort)
+          await startUDServer(udEntryPath, apiHost, apiPort)
 
           process.stdout.write(
             `\rAPI server listening at http://${apiHost}:${apiPort}\n`,
@@ -230,49 +255,20 @@ export const builder = async (yargs: Argv) => {
         })
 
         if (argv.ud) {
-          // Launch the Vite-built Universal Deploy Node server entry produced
-          // by `cedar build api`. The entry at api/dist/ud/index.js is a
-          // self-contained srvx server that imports virtual:ud:catch-all,
-          // resolved by cedarUniversalDeployPlugin to Cedar's aggregate fetch
-          // dispatcher.
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
+          // Import the built Fetchable and host it in-process with srvx.
+          // The artifact at api/dist/ud/index.js is a pure Fetchable (`export
+          // default { fetch }`) emitted by buildUDApiServer.
+          const udEntryPath = resolveUDEntryPath()
 
-          if (!fs.existsSync(udEntryPath)) {
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
             process.exit(1)
           }
-
-          const udArgs: string[] = []
-
-          if (argv.port) {
-            udArgs.push('--port', String(argv.port))
-          }
-
-          if (argv.host) {
-            udArgs.push('--host', argv.host)
-          }
-
-          const child = fork(udEntryPath, udArgs, {
-            execArgv: process.execArgv,
-            env: {
-              ...process.env,
-              NODE_ENV: process.env.NODE_ENV ?? 'production',
-              PORT: argv.port ? String(argv.port) : process.env.PORT,
-              HOST: argv.host ?? process.env.HOST,
-            },
-          })
-
-          child.on('error', (err) => {
-            console.error(
-              c.error(`\n Failed to start UD server: ${err.message}\n`),
-            )
-            process.exit(1)
-          })
 
           const apiPort = argv.port ?? parseInt(process.env.PORT ?? '8911', 10)
           const apiHost = argv.host ?? process.env.HOST ?? 'localhost'
@@ -281,21 +277,11 @@ export const builder = async (yargs: Argv) => {
             `API server starting at http://${apiHost}:${apiPort}...`,
           )
 
-          await waitForPort(apiHost, apiPort)
+          await startUDServer(udEntryPath, apiHost, apiPort)
 
           process.stdout.write(
             `\rAPI server listening at http://${apiHost}:${apiPort}\n`,
           )
-
-          await new Promise<void>((resolve, reject) => {
-            child.on('exit', (code) => {
-              if (code !== 0) {
-                reject(new Error(`UD server exited with code ${code}`))
-              } else {
-                resolve()
-              }
-            })
-          })
 
           return
         }
@@ -379,11 +365,11 @@ export const builder = async (yargs: Argv) => {
         }
 
         if (argv.ud) {
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
-          if (!fs.existsSync(udEntryPath)) {
+          const udEntryPath = resolveUDEntryPath()
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
@@ -405,11 +391,11 @@ export const builder = async (yargs: Argv) => {
         }
 
         if (argv.ud) {
-          const udEntryPath = path.join(getPaths().api.dist, 'ud', 'index.js')
-          if (!fs.existsSync(udEntryPath)) {
+          const udEntryPath = resolveUDEntryPath()
+          if (!udEntryPath) {
             console.error(
               c.error(
-                `\n Universal Deploy server entry not found at ${udEntryPath}.\n` +
+                '\n Universal Deploy server entry not found. ' +
                   ' Please run `yarn cedar build --ud` before serving.\n',
               ),
             )
@@ -474,38 +460,4 @@ function webSideIsBuilt(isStreamingOrRSC: boolean) {
   } else {
     return fs.existsSync(path.join(getPaths().web.dist, 'index.html'))
   }
-}
-
-function waitForPort(host: string, port: number): Promise<void> {
-  const maxAttempts = 50
-  const intervalMs = 200
-
-  return new Promise<void>((resolve, reject) => {
-    let attempts = 0
-
-    const tryConnect = () => {
-      attempts++
-      const socket = net.createConnection({ host, port })
-
-      socket.on('connect', () => {
-        socket.destroy()
-        resolve()
-      })
-
-      socket.on('error', () => {
-        socket.destroy()
-        if (attempts >= maxAttempts) {
-          reject(
-            new Error(
-              `API server did not become ready on port ${port} after ${maxAttempts * intervalMs}ms`,
-            ),
-          )
-        } else {
-          setTimeout(tryConnect, intervalMs)
-        }
-      })
-    }
-
-    tryConnect()
-  })
 }

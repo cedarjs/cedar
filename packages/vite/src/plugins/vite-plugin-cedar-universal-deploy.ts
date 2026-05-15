@@ -1,7 +1,6 @@
 import path from 'node:path'
 
-import { addEntry } from '@universal-deploy/store'
-import type { EntryMeta } from '@universal-deploy/store'
+import { addEntry, type EntryMeta } from '@universal-deploy/store'
 import type { Plugin } from 'vite'
 
 import type { CedarRouteRecord } from '@cedarjs/api/runtime'
@@ -14,6 +13,15 @@ export interface CedarUniversalDeployPluginOptions {
 
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
+
+/**
+ * The Symbol.for key used by @universal-deploy/store to persist entries on
+ * globalThis across Vite plugin instances and separate build calls.
+ * We need direct access here so that cedarUniversalDeployPlugin can clear
+ * stale entries before re-registering.
+ *
+ */
+const UD_STORE_SYMBOL = Symbol.for('ud:store')
 
 const GRAPHQL_METHODS = ['GET', 'POST', 'OPTIONS'] as const
 
@@ -119,6 +127,39 @@ function toEntryMeta(route: CedarRouteRecord): EntryMeta {
   }
 }
 
+/**
+ * Remove any previously registered Cedar UD entries from the global store.
+ *
+ * This prevents stale entries (registered by an earlier Vite build step or by
+ * a different plugin instance) from being picked up by UD's catchAll()
+ * dispatcher. For example, when `cedar build --ud` runs the web client build
+ * before the API server build, the user's web vite.config.ts may include
+ * cedarUniversalDeployPlugin with a different apiRootPath, producing stale
+ * entry IDs that the API build's load handler cannot resolve.
+ */
+function clearCedarEntries(): void {
+  // This couples directly to @universal-deploy/store internals (the symbol key
+  // and the { entries: { id?: string }[] } shape are not part of that library's
+  // public API). If the library ever renames its symbol or changes the entry
+  // shape, clearCedarEntries will silently become a no-op. The proper fix is to
+  // eliminate the need for clearing entirely, see
+  // docs/implementation-plans/universal-deploy-serve-refactoring.md which
+  // proposes merging buildCedarApp and buildUDApiServer into a single
+  // build step, removing the cross-build-step entry accumulation issue.
+  // TODO: Remove the need for this
+  const store: { entries: { id?: string }[] } | undefined = (
+    globalThis as Record<symbol, unknown>
+  )[UD_STORE_SYMBOL] as { entries: { id?: string }[] } | undefined
+
+  if (!store) {
+    return
+  }
+
+  store.entries = store.entries.filter(
+    (entry) => !entry.id?.startsWith(VIRTUAL_CEDAR_FN_PREFIX),
+  )
+}
+
 export function cedarUniversalDeployPlugin(
   options: CedarUniversalDeployPluginOptions = {},
 ): Plugin {
@@ -139,12 +180,34 @@ export function cedarUniversalDeployPlugin(
         }
         entriesInjected = true
 
+        // Clear any stale Cedar entries from previous build steps (e.g. the web
+        // client build, which may use a different apiRootPath).
+        clearCedarEntries()
+
         // Register per-route API entries so UD adapters can split on
         // individual functions (e.g. Cloudflare Workers).
         for (const route of routes) {
           addEntry(toEntryMeta(route))
         }
       },
+    },
+
+    buildStart(this) {
+      // Emit each per-function virtual module as a chunk with a fixed output
+      // path. This guarantees import.meta.url resolves from a predictable
+      // location regardless of whether @universal-deploy/vite's catchAll()
+      // uses static or dynamic imports.
+      for (const route of routes) {
+        const resolvedId = RESOLVED_CEDAR_FN_PREFIX + route.id
+        const safeName = route.id
+          .replace(/[/\\?%*:|"<>]/g, '_')
+          .replace(/^_+/, '')
+        this.emitFile({
+          type: 'chunk',
+          id: resolvedId,
+          fileName: safeName + '-handler.js',
+        })
+      }
     },
 
     resolveId(id) {
@@ -184,15 +247,27 @@ export function cedarUniversalDeployPlugin(
 }
 
 function generateGraphQLModule(distPath: string): string {
+  // Relative path from the UD output directory (api/dist/ud) to the function
+  // dist file (api/dist/functions/...). Resolved at runtime via
+  // import.meta.url. The path is predictable because the buildStart hook
+  // emits each virtual module as a chunk with a fixed fileName (e.g.
+  // graphql-handler.js), preventing Rollup from nesting it under assets/
+  // or inlining it into index.js.
+  const udOutDir = path.join(getPaths().api.dist, 'ud')
+  const relPath = './' + path.relative(udOutDir, distPath)
+
   return `
     import { createGraphQLHandler } from '@cedarjs/vite/ud-handlers/graphql';
-    export default createGraphQLHandler({ distPath: ${JSON.stringify(distPath)} });
+    export default createGraphQLHandler({ distUrl: new URL(${JSON.stringify(relPath)}, import.meta.url).href });
   `
 }
 
 function generateFunctionModule(distPath: string): string {
+  const udOutDir = path.join(getPaths().api.dist, 'ud')
+  const relPath = './' + path.relative(udOutDir, distPath)
+
   return `
     import { createFunctionHandler } from '@cedarjs/vite/ud-handlers/function';
-    export default createFunctionHandler({ distPath: ${JSON.stringify(distPath)} });
+    export default createFunctionHandler({ distUrl: new URL(${JSON.stringify(relPath)}, import.meta.url).href });
   `
 }

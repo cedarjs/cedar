@@ -759,7 +759,7 @@ yarn redwood generate job WelcomeEmail
 yarn rw g job WelcomeEmail
 ```
 
-:::info Job naming
+:::info[Job naming]
 By convention a job filename and exported code ends in `Job` and the generate command enforces this. If you don't include "Job" at the end of the name, the generator will add it. For example, with the above command, the file generated would be `api/src/jobs/WelcomeEmailJob/WelcomeEmailJob.{js|ts}`.
 :::
 
