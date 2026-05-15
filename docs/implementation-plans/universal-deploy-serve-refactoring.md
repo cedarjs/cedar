@@ -169,8 +169,9 @@ artifacts alongside Cedar's canonical one.
   Deno, workerd in the future).
 - The user's Vite config can include deployment plugins (Netlify, Vercel, etc.)
   without affecting the canonical artifact shape.
-- `cedar serve` must import the Fetchable and host it with srvx explicitly —
-  this is an architectural improvement, not a regression.
+- `cedar serve api --ud` / `cedar serve --ud` must import the Fetchable and
+  host it with srvx explicitly — this is an architectural improvement, not a
+  regression.
 - If `catchAll()` changes its implementation (e.g., switching from dynamic to
   static imports), the path resolution for runtime dynamic imports could break.
   Mitigated by emitting handler chunks with fixed filenames via
