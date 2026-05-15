@@ -129,6 +129,59 @@ Fastify can be added later as follow-up work.
 `buildUDApiServer()` should load the user's Vite config so deployment plugins
 can run during `cedar build --ud`.
 
+## Decision Log
+
+This section records architectural decisions made during implementation, why
+they were made, and what alternatives were considered.
+
+### Use `catchAll()` + `devServer()` instead of `universalDeploy()`
+
+**Date:** 2026-05-15
+
+**Context:** UD's framework-developers guide recommends including the
+`universalDeploy()` plugin, which provides `catchAll()`, `devServer()`, and
+auto-detection of the deployment target. When no specific target is detected,
+it defaults to `@universal-deploy/node`, embedding srvx server startup code
+into the built artifact.
+
+**Decision:** Use `catchAll()` and `devServer()` individually, bypassing
+`universalDeploy()` entirely.
+
+**Rationale:** `universalDeploy()`'s auto-detection is an either/or — it
+produces one artifact shape, not both. If the user's vite config includes
+Netlify plugins, `universalDeploy()` detects them and adapts its output,
+suppressing the Node server startup code. The same build that works for local
+testing would silently produce no Node server when Netlify plugins are
+present. Conversely, removing Netlify plugins to get a self-starting artifact
+means the build no longer produces Netlify-compatible output. There is no
+combination of a single vite config and a single build command that produces
+both a locally-servable Node server and a deployable Netlify artifact.
+
+The only way to support both local testing and provider-specific deployment
+from the same vite config is to decouple the build artifact from the runtime
+host: the build always produces a pure Fetchable, and `cedar serve` provides
+the local Node host. Deployment plugins in the config produce their own
+artifacts alongside Cedar's canonical one.
+
+**Consequences:**
+
+- The artifact is portable across runtimes (Node only for now, possibly Bun,
+  Deno, workerd in the future).
+- The user's Vite config can include deployment plugins (Netlify, Vercel, etc.)
+  without affecting the canonical artifact shape.
+- `cedar serve api --ud` / `cedar serve --ud` must import the Fetchable and
+  host it with srvx explicitly — this is an architectural improvement, not a
+  regression.
+- If `catchAll()` changes its implementation (e.g., switching from dynamic to
+  static imports), the path resolution for runtime dynamic imports could break.
+  Mitigated by emitting handler chunks with fixed filenames via
+  `emitFile({ type: 'chunk', fileName })`.
+
+**Alternatives considered:**
+
+- Using `universalDeploy()` and stripping the server startup code post-build
+  — fragile and version-dependent.
+
 ## Current state
 
 From the current code:
