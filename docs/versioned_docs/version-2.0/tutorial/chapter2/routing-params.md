@@ -186,7 +186,7 @@ Cool, cool, cool. Now we need to construct a link that has the ID of a post in i
 
 <ShowForTs>
 
-:::info Wait... why am I getting a TypeScript error?
+:::info[Wait... why am I getting a TypeScript error?]
 
 When you have your dev server running, the Cedar CLI will watch your project and generate types. You can regenerate these types manually too, by running `yarn rw g types`.
 
@@ -494,7 +494,7 @@ What if you could request the conversion right in the route's path? Introducing 
 
 Voilà! Not only will this convert the `id` param to a number before passing it to your Page, it will prevent the route from matching unless the `id` path segment consists entirely of digits. If any non-digits are found, the router will keep trying other routes, eventually showing the `NotFoundPage` if no routes match.
 
-:::info What if I want to pass some other prop to the cell that I don't need in the query, but do need in the Success/Loader/etc. components?
+:::info[What if I want to pass some other prop to the cell that I don't need in the query, but do need in the Success/Loader/etc. components?]
 
 All of the props you give to the cell will be automatically available as props in the render components. Only the ones that match the GraphQL variables list will be given to the query. You get the best of both worlds! In our post display above, if you wanted to display some random number along with the post (for some contrived, tutorial-like reason), just pass that prop:
 

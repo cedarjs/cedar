@@ -101,7 +101,7 @@ Redwood includes [integrations](../../authentication.md) for several of the most
 
 As for our blog, we're going to use self-hosted authentication (named _dbAuth_ in Redwood) since it's the simplest to get started with and doesn't involve any third party signups.
 
-:::info Authentication vs. Authorization
+:::info[Authentication vs. Authorization]
 
 There are two terms which contain a lot of letters, starting with an "A" and ending in "ation" (which means you could rhyme them if you wanted to) that become involved in most discussions about login:
 
@@ -458,7 +458,7 @@ We're back in business! Once you add authentication into your app you'll probabl
 
 Now that our pages are behind login, let's actually create a login page so that we can see them again.
 
-:::info Skipping auth altogether for `posts` and `post` feels bad somehow...
+:::info[Skipping auth altogether for `posts` and `post` feels bad somehow...]
 
 Ahh, good eye. While posts don't currently expose any particularly secret information, what if we eventually add a field like `publishStatus` where you could mark a post as `draft` so that it doesn't show on the homepage. But, if you knew enough about GraphQL, you could easily request all posts in the database and be able to read all the drafts!
 

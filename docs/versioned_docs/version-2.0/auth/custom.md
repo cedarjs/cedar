@@ -6,7 +6,7 @@ sidebar_label: Custom
 
 If Cedar doesn't officially integrate with the auth provider you want to use, you're not out of luck just yet: Cedar has an API you can use to integrate your auth provider of choice.
 
-:::tip Were you using Nhost, magic.link, GoTrue, Okta or Wallet Connect (ethereum)?
+:::tip[Were you using Nhost, magic.link, GoTrue, Okta or Wallet Connect (ethereum)?]
 
 If you're here because you're using one of the providers Cedar used to support (Nhost, magic.link, GoTrue, Okta or Wallet Connect (Ethereum)), we've moved the code for them out into their own separate repos:
 

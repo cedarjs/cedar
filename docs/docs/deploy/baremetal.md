@@ -22,7 +22,7 @@ Subsequent deploys:
 yarn rw deploy baremetal production
 ```
 
-:::warning Deploying to baremetal is an advanced topic
+:::warning[Deploying to baremetal is an advanced topic]
 
 If you haven't done any kind of remote server work before, you may be in a little over your head to start with. But don't worry: until relatively recently (cloud computing, serverless, lambda functions) this is how all websites were deployed, so we've got a good 30 years of experience getting this working!
 
@@ -277,7 +277,7 @@ sudo chown deploy:deploy /var/www/myapp
 
 You'll want to create an `.env` file in this directory containing any environment variables that are needed by your app (like `DATABASE_URL` at a minimum). This will be symlinked to each release directory so that it's available as the app expects (in the root directory of the codebase).
 
-:::warning SSH and Non-interactive Sessions
+:::warning[SSH and Non-interactive Sessions]
 
 The deployment process uses a '[non-interactive](https://tldp.org/LDP/abs/html/intandnonint.html)' SSH session to run commands on the remote server. A non-interactive session will often load a minimal amount of settings for better compatibility and speed. In some versions of Linux `.bashrc` by default does not load (by design) from a non-interactive session. This can lead to `yarn` (or other commands) not being found by the deployment script, even though they are in your path, because additional ENV vars are set in `~/.bashrc` which provide things like NPM paths and setup.
 
@@ -380,7 +380,7 @@ If so then your API side is up and running! The only thing left to test is that 
 
 Was the problem with starting your PM2 process? That will be harder to debug here in this doc, but visit us in the [forums](https://community.redwoodjs.com) or [Discord](https://cedarjs.com/discord) and we'll try to help!
 
-:::note My pm2 processes are running but your app has errors, how do I see them?
+:::note[My pm2 processes are running but your app has errors, how do I see them?]
 
 If your processes are up and running in pm2 you can monitor their log output. Run `pm2 monit` and get a nice graphical interface for watching the logs on your processes. Press the up/down arrows to move through the processes and left/right to switch panes.
 

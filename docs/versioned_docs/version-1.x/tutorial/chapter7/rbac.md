@@ -253,7 +253,7 @@ Now head back to [http://localhost:8910/admin/posts](http://localhost:8910/admin
 
 Let's create a new user that will represent the comment moderator. Since this is in development you can just make up an email address, but if you needed to do this in a real system that verified email addresses you could use **The Plus Trick** to create a new, unique email address that is actually the same as your original email address!
 
-:::tip The Plus Trick
+:::tip[The Plus Trick]
 
 The Plus Trick is a very handy feature of the email standard known as a "boxname", the idea being that you may have other incoming boxes besides one just named "Inbox" and by adding `+something` to your email address you can specify which box the mail should be sorted into. They don't appear to be in common use these days, but they are ridiculously helpful for us developers when we're constantly needing new email addresses for testing: it gives us an infinite number of _valid_ email addresses—they all come to your regular inbox!
 
@@ -780,7 +780,7 @@ export const moderatorView = () => {
 </TabItem>
 </Tabs>
 
-:::info Where did `mockCurrentUser()` come from?
+:::info[Where did `mockCurrentUser()` come from?]
 
 Similar to `mockGraphQLQuery()` and `mockGraphQLMutation()`, `mockCurrentUser()` is a global available in Storybook automatically, no need to import.
 
@@ -916,7 +916,7 @@ describe('Comment', () => {
 
 We moved the default `comment` object to a constant `COMMENT` and then used that in all tests. We also needed to add `waitFor()` since the `hasRole()` check in the Comment itself actually executes some GraphQL calls behind the scenes to figure out who the user is. The test suite makes mocked GraphQL calls, but they're still asynchronous and need to be waited for. If you don't wait, then `currentUser` will be `null` when the test starts, and Jest will be happy with that result. But we won't—we need to wait for the actual value from the GraphQL call.
 
-:::warning Seeing errors in your test suite?
+:::warning[Seeing errors in your test suite?]
 
 We added fields to the database and sometimes the test runner doesn't realize this. You may need to restart it to get the test database migrated to match what's in `schema.prisma`. Press `q` or `Ctrl-C` in your test runner if it's still running, then:
 

@@ -230,7 +230,7 @@ If you validate your persisted operations while building your store, we recommen
 
 Sometimes it is handy to allow non-persisted operations aside from the persisted ones. E.g. you want to allow developers to execute arbitrary GraphQL operations on your production server.
 
-:::note Info
+:::note[Info]
 To support authentication, the `redwood.currentUser` query is always allowed.
 
 Even if you define `allowArbitraryOperations` the plugin will always check for this request, so you don't need to add this check to any custom logic.
@@ -238,7 +238,7 @@ Even if you define `allowArbitraryOperations` the plugin will always check for t
 
 This can be achieved using the `allowArbitraryOperations` option.
 
-:::warning Important
+:::warning[Important]
 Override this option with caution!
 :::
 

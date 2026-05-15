@@ -728,7 +728,7 @@ export default ContactPage
 
 <ShowForTs>
 
-:::tip Reminder about generated types
+:::tip[Reminder about generated types]
 
 Just a quick reminder that Cedar will automatically generate types for your GraphQL queries and mutations if you have the dev server running (or if you run `yarn cedar generate types`).
 
@@ -944,7 +944,7 @@ Try filling out the form and submitting—you should have a new Contact in the d
   src="https://user-images.githubusercontent.com/32992335/161488540-a7ad1a57-7432-4171-bd75-500eeaa17bcb.png"
 />
 
-:::info Wait, I thought you said this was secure by default and someone couldn't view all contacts without being logged in?
+:::info[Wait, I thought you said this was secure by default and someone couldn't view all contacts without being logged in?]
 
 Remember: we haven't added authentication yet, so the concept of someone being logged in is meaningless right now. In order to prevent frustrating errors in a new application, the `@requireAuth` directive simply returns `true` until you setup an authentication system. At that point the directive will use real logic for determining if the user is logged in or not and behave accordingly.
 
@@ -1258,7 +1258,7 @@ Next we'll inform the user of any server errors. So far we've only notified the 
 
 We have email validation on the client, but any developer worth their silicon knows [never trust the client](https://www.codebyamir.com/blog/never-trust-data-from-the-browser). Let's add the email validation into the api side as well to be sure no bad data gets into our database, even if someone somehow bypassed our client-side validation (l33t hackers do this all the time).
 
-:::info No server-side validation for some fields?
+:::info[No server-side validation for some fields?]
 
 Why don't we need server-side validation for the existence of name, email and message? Because GraphQL is already doing that for us! You may remember the `String!` declaration in our SDL file for the `Contact` type: that adds a constraint that those fields cannot be `null` as soon as it arrives on the api side. If it is, GraphQL would reject the request and throw an error back to us on the client.
 
