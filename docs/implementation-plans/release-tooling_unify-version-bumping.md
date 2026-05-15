@@ -24,7 +24,6 @@ What it misses:
 - Template overlays (6 directories under `templates/overlays/`)
 - Database overlays (2 directories under `database-overlays/`)
 - Peer deps in `api-server`, `storybook`, `storybook-vite`
-- Runs `yarn install` — callers should decide when to install
 
 ### 2. `.github/scripts/publish_canary.sh`
 
@@ -53,8 +52,6 @@ Does everything inline with Node.js. Covers:
 Misses:
 
 - Fixtures
-- Template overlays
-- Database overlays
 - Peer deps
 
 ### 4. `release-tooling/release/lib/release_functions.ts` (`updatePackageVersions()`)
@@ -80,8 +77,8 @@ The script (`tasks/update-package-versions.cjs`) should handle:
    `@cedarjs/*` peer deps that need updating
 3. **Templates** — `ts`, `js`, `esm-ts`, `esm-js` — each has `package.json` +
    `api/package.json` + `web/package.json`
-4. **Fixtures** — `test-project`, `test-project-esm` — same structure as
-   templates
+4. **Fixtures** — `test-project`, `test-project-esm`, `test-project-live` — same
+   structure as templates
 5. **Template overlays** (6 directories):
    - `templates/overlays/esm/pnpm`
    - `templates/overlays/esm/yarn`
@@ -100,9 +97,9 @@ The script should **only mutate files** — it should not run `yarn install`,
 
 ### Step 1 — Expand `tasks/update-package-versions.cjs`
 
-Add the missing paths (esm-ts, esm-js templates; test-project-esm fixture; all
-template overlays; all database overlays; peer deps) so it covers everything
-listed above.
+Add the missing paths (esm-ts, esm-js templates; `test-project-esm` and
+`test-project-live` fixtures; all template overlays; all database overlays; peer
+deps) so it covers everything listed above.
 
 Accept a version argument (already does). Strip optional `v` prefix (already
 does).
