@@ -639,3 +639,70 @@ This failure mode (RSC project yarn install) has not been seen in prior runs.
 Could be a transient network issue, a lockfile incompatibility introduced by
 the version bump, or a hardened mode lockfile check rejection on the freshly
 scaffolded project's lockfile.
+
+---
+
+## Update 2026-05-15 — 4th occurrence of "Generating dbAuth secret" failure + debug improvement
+
+### New occurrence
+
+From run
+[25841578454](https://github.com/cedarjs/cedar/actions/runs/25841578454/job/75927972987)
+(PR #1773 `feat(gqlorm)`, Background jobs E2E on Windows):
+
+```
+$ cd D:\a\cedar\test-project
+$ yarn install
+➤ YN0000: ┌ Resolution step
+Generating dbAuth secret
+Error: The process 'C:\npm\prefix\yarn.cmd' failed with exit code 1
+    at ExecState._setResult (D:\a\cedar\cedar\node_modules\@actions\exec\lib\toolrunner.js:600:25)
+```
+
+Same pattern as runs 25732654425, 25850869052, and 25856361532 (PRs #1757,
+#1775, #1778). This is now the 4th occurrence across 4 different unrelated PRs,
+confirming it is a recurring environmental failure on Windows CI.
+
+### What's actually failing
+
+Despite the log appearance suggesting `yarn install` is the culprit, the failure
+is in `yarn cedar g secret --raw`, not in `yarn install`. The sequence inside the
+`set-up-test-project` action is:
+
+1. `yarn project:tarsync --verbose` runs (which internally calls `yarn install`
+   in the test project — this is the "Resolution step" shown in the log)
+2. `console.log('Generating dbAuth secret')` fires **after** tarsync finishes
+3. `yarn cedar g secret --raw` runs and fails with exit code 1 in ~0.5 seconds
+
+The `yarn install` output from step 1 and the "Generating dbAuth secret" line
+from step 2 appear interleaved in the GitHub Actions log due to log group
+handling — this is misleading.
+
+The actual failure in `yarn cedar g secret --raw` was invisible because it was
+called with `silent: true`, which buffers stdout/stderr but doesn't stream them.
+When `getExecOutput` throws on non-zero exit code, the buffered output is
+discarded — so nothing about the actual error was logged.
+
+### Debug improvement applied
+
+Changed `.github/actions/set-up-test-project/setUpTestProject.mts`:
+
+- Call `yarn cedar g secret --raw` with `ignoreReturnCode: true` instead of
+  relying on the default throw behaviour
+- On non-zero exit, explicitly log captured `stdout` and `stderr` before
+  throwing a descriptive error
+- Updated the `Args` TypeScript interface to expose `ignoreReturnCode?: boolean`
+  in options and `exitCode: number` in the return type (the underlying
+  `@actions/exec` `getExecOutput` already supports and returns both — the
+  interface was just incomplete)
+
+The next time this fails, the actual error output from yarn/Cedar CLI will be
+visible in the CI log.
+
+### Possible causes (still unknown)
+
+- A module resolution error in the Cedar CLI when loading the `g secret` command
+- A Windows path or permission issue with yarn's shim (`C:\npm\prefix\yarn.cmd`)
+- A race condition or lock contention from the preceding `yarn install` not fully
+  releasing file locks before `yarn cedar` starts
+- A transient yarn registry or filesystem error on the Windows runner
