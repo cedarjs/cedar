@@ -182,21 +182,80 @@ artifacts alongside Cedar's canonical one.
 - Using `universalDeploy()` and stripping the server startup code post-build
   — fragile and version-dependent.
 
+### `cedarUniversalDeployPlugin` is user-owned, not auto-injected
+
+**Date:** 2026-05-15
+
+**Context:** Earlier implementations had `buildUDApiServer()` inject
+`cedarUniversalDeployPlugin()` directly, so users didn't need to remember to
+add it to their vite config.
+
+**Decision:** Do not inject the plugin. The user must include
+`cedarUniversalDeployPlugin()` in their vite config alongside their provider
+plugins.
+
+**Rationale:** Auto-injection creates a silent conflict when the user also
+has `cedarUniversalDeployPlugin({ apiRootPath: '/foo' })` in their config.
+Our injected instance uses the default `apiRootPath: '/'`, calls
+`clearCedarEntries()`, and re-registers all routes with `/` — silently
+overwriting the user's prefix. The only safe approach is to let the user own
+the plugin instance. The `cedar-ud-verify-routes` warning catches the case
+where the plugin was forgotten entirely.
+
+**Consequences:**
+
+- Users who scaffold a new Cedar app need `cedarUniversalDeployPlugin()` in
+  their vite config for `--ud` builds. This should be included in project
+  templates and setup commands.
+- No conflicts or silent overwrites regardless of the user's `apiRootPath`.
+- The `cedar-ud-verify-routes` warning provides a clear error message if the
+  plugin is missing.
+
+### `apiRootPath` CLI flag overrides the plugin's value
+
+**Date:** 2026-05-15
+
+**Context:** The `apiRootPath` option on `cedarUniversalDeployPlugin()` is the
+user's vite-config source of truth — checked into the repo, shared by the team.
+But CI/deploy scenarios often need a different prefix (e.g., staging behind a
+gateway path) without editing vite config. The `build` command doesn't define
+`--apiRootPath`, so there's no way to override at build time.
+
+**Decision:** Add `--apiRootPath` to `cedar build` and wire it through to
+`buildUDApiServer()`, which sets `process.env.CEDAR_API_ROOT_PATH` before
+calling `vite.build()`. The plugin reads that env var as an override — if set,
+it wins over the plugin's option value.
+
+The template default stays in the user's config; the CLI flag is for
+one-off/CI overrides. `cedar serve --ud` does not get `--apiRootPath` (per the
+serve-time prefix verboten rule), and is correct by construction since the
+prefix is baked into the artifact.
+
+**Rationale:** An env var is the simplest mechanism that works across the
+plugin/Vite boundary without changing the plugin's API. No dead options on
+`buildUDApiServer` — it forwards CLI input to the env var. No conflicts,
+because the env var source is unambiguous: present means override, absent
+means use plugin config.
+
+**Consequences:**
+
+- `cedar build --ud --apiRootPath /foo` produces routes under `/foo/`.
+- `cedar serve --ud` serves the artifact as-built, no remapping.
+- The plugin still works standalone in dev mode with its own config.
+- CI can set a different prefix without modifying tracked files.
+
 ## Current state
 
 From the current code:
 
-- `packages/vite/src/buildUDApiServer.ts` already builds an adapter-free entry
-  with `cedarUniversalDeployPlugin()`, `catchAll()`, and `devServer()`.
-- `packages/cli/src/commands/serve.ts` still assumes the built UD entry is a
-  self-starting Node server and uses `fork()` to launch it.
-- `cedar serve --ud` currently uses two ports in the implementation: Fastify
-  serves web on one port and proxies to a forked UD API process on another
-  port.
-- `cedar serve api --ud` also forks the built UD entry as a child process.
+- `packages/vite/src/buildUDApiServer.ts` builds an adapter-free entry with
+  `catchAll()` and `devServer()`. The user's config (loaded via `configFile`)
+  provides `cedarUniversalDeployPlugin()`.
+- `packages/cli/src/commands/serve.ts` imports the Fetchable in-process and
+  hosts it with srvx via `startUDServer()`.
+- `cedar serve --ud` cleans up unused `net` import and `waitForPort`.
 
-So the build side is already partly aligned, while the serve side still targets
-an older self-starting-artifact model.
+The key change is architectural: **build produces a Fetchable, serve wraps the Fetchable**.
 
 ## Target state
 
