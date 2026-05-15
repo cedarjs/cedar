@@ -124,7 +124,7 @@ As you probably have guessed, Cedar has a couple of generators to get you going.
 Run this setup command to get the internals of dbAuth added to our app:
 
 ```bash
-yarn rw setup auth dbAuth
+yarn cedar setup auth dbAuth
 ```
 
 When prompted to "Enable WebAuthn support", pick no—this is a separate piece of functionality we won't need for the tutorial. You'll see that the process creates several files and includes some post-install instructions for the last couple of customizations you'll need to make. Let's go through them now.
@@ -186,7 +186,7 @@ This gives us a user with a name and email, as well as four fields that dbAuth w
 Let's create the user model by migrating the database, naming it something like "create user":
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 That's it for the database setup!
@@ -473,7 +473,7 @@ It would be more future-proof to create a _new_ endpoint for public display of p
 Yet another generator is here for you, this time one that will create pages for login, signup and forgot password pages:
 
 ```bash
-yarn rw g dbAuth
+yarn cedar g dbAuth
 ```
 
 :::warning
@@ -894,7 +894,7 @@ Before we leave this file, take a look at `requireAuth()`. Remember when we talk
 
 After the initial `setup` command, which installed dbAuth, you may have noticed that an edit was made to the `.env` file in the root of your project. The `setup` script appended a new ENV var called `SESSION_SECRET` along with a big random string of numbers and letters. This is the encryption key for the cookies that are stored in the user's browser when they log in. This secret should never be shared, never checked into your repo, and should be re-generated for each environment you deploy to.
 
-You can generate a new value with the `yarn rw g secret` command. It only outputs it to the terminal, you'll need to copy/paste to your `.env` file. Note that if you change this secret in a production environment, all users will be logged out on their next request because the cookie they currently have cannot be decrypted with the new key! They'll need to log in again to a new cookie encrypted with the new key.
+You can generate a new value with the `yarn cedar g secret` command. It only outputs it to the terminal, you'll need to copy/paste to your `.env` file. Note that if you change this secret in a production environment, all users will be logged out on their next request because the cookie they currently have cannot be decrypted with the new key! They'll need to log in again to a new cookie encrypted with the new key.
 
 ## Wrapping Up
 
