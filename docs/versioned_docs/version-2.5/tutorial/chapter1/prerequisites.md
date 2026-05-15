@@ -42,7 +42,7 @@ yarn --version
 
 Please do upgrade accordingly. Then proceed to the Cedar installation when you're ready!
 
-:::info Installing Node and Yarn
+:::info[Installing Node and Yarn]
 
 There are many ways to install and manage both Node.js and Yarn. If you're installing for the first time, we recommend the following:
 

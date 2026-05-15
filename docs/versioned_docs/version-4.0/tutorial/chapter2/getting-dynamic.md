@@ -55,7 +55,7 @@ This says that we want a table called `Post` and it should have:
 - A `body` field that will contain a `String`
 - A `createdAt` field that will be a `DateTime` and will `@default` to `now()` when we create a new record (so we don't have to set the time manually in our app, the database will do it for us)
 
-:::info Integer vs. String IDs
+:::info[Integer vs. String IDs]
 
 For the tutorial we're keeping things simple and using an integer for our ID column. Some apps may want to use a CUID or a UUID, which Prisma supports. In that case you would use `String` for the datatype instead of `Int` and use `cuid()` or `uuid()` instead of `autoincrement()`:
 
@@ -175,7 +175,7 @@ Pages and components/cells are nicely contained in `Post` directories to keep th
 
 Whew! That may seem like a lot of stuff but we wanted to follow best-practices and separate out common functionality into individual components, just like you'd do in a real app. Sure we could have crammed all of this functionality into a single component, but we wanted these scaffolds to set an example of good development habits: we have to practice what we preach!
 
-:::info Generator Naming Conventions
+:::info[Generator Naming Conventions]
 
 You'll notice that some of the generated parts have plural names and some have singular. This convention is borrowed from Ruby on Rails which uses a more "human" naming convention: if you're dealing with multiple of something (like the list of all posts) it will be plural. If you're only dealing with a single something (like creating a new post) it will be singular. It sounds natural when speaking, too: "show me a list of all the posts" and "I'm going to create a new post."
 

@@ -530,7 +530,7 @@ Now comes the ultimate test: creating a comment! LET'S DO IT:
 
 What happened here? Notice towards the end of the error message: `Field "postId" of required type "Int!" was not provided`. When we created our data schema we said that a post belongs to a comment via the `postId` field. And that field is required, so the GraphQL server is rejecting the request because we're not including that field. We're only sending `name` and `body`. Luckily we have access to the ID of the post we're commenting on thanks to the `article` object that's being passed into `Article` itself!
 
-:::info Why didn't the Storybook story we wrote earlier expose this problem?
+:::info[Why didn't the Storybook story we wrote earlier expose this problem?]
 
 We manually mocked the GraphQL response in the story, and our mock always returns a correct response, regardless of the input!
 
@@ -1261,7 +1261,7 @@ Now we'll try our comment query again, once with each `postId`:
 
 Great! Now that we've tested out the syntax let's use that in the service. You can exit the console by pressing Ctrl-C twice or typing `.exit`
 
-:::info Where's the `await`?
+:::info[Where's the `await`?]
 
 Calls to `db` return a Promise, which you would normally need to add an `await` to in order to get the results right away. Having to add `await` every time is pretty annoying though, so the Redwood console does it for you—Redwood `await`s so you don't have to!
 

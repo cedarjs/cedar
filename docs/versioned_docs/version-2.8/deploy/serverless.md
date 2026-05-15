@@ -115,7 +115,7 @@ Note that `production` is the default stage when you deploy with `yarn rw server
 
 This will take several minutes, so grab your favorite beverage and enjoy your new $0 monthly bill!
 
-:::tip Pro tip
+:::tip[Pro tip]
 If you get tired of typing `serverless` each time, you can use the much shorter `sls` alias: `yarn rw deploy sls`
 :::
 

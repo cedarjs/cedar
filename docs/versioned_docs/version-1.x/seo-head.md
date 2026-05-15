@@ -64,7 +64,7 @@ const AboutPage = () => {
 
 You can include any valid `<head>` tag in here that you like. However, Redwood also provides a utility component [&lt;Metadata&gt;](#setting-meta-tags-and-opengraph-directives-with-metadata).
 
-:::caution `<MetaTags>` Deprecation
+:::caution[`<MetaTags>` Deprecation]
 
 Prior to Redwood 6.6.0 this component was called `<MetaTags>` and had several special hard-coded props like `ogContentUrl`, which didn't properly map to the OpenGraph spec. We'll still render `<MetaTags>` for the foreseeable future, but it's deprecated and you should migrate to `<Metadata>` if you have an existing app.
 
@@ -76,7 +76,7 @@ Redwood uses [@dr.pogodin/react-helmet](https://github.com/birdofpreyru/react-he
 
 For example, if you set title in your Layout, and a title in your Page, it'll render the one in Page - this way you can override the tags you wish, while sharing the tags defined in Layout.
 
-:::info Bots & `<meta>` Tags
+:::info[Bots & `<meta>` Tags]
 
 For these headers to appear to bots and scrapers e.g. for twitter to show your title, you have to make sure your page is prerendered. If your content is static you can use Redwood's built-in [Prerender](prerender.md). For dynamic tags, check the [Dynamic head tags](#dynamic-tags)
 
@@ -284,7 +284,7 @@ We simplified some of the examples above by excluding the generated `<title>` an
 
 ```
 
-:::info Do I need to apply these same tags over and over in every page?
+:::info[Do I need to apply these same tags over and over in every page?]
 
 Some `<meta>` tags, like `charset` or `locale` are probably applicable to the entire site, in which case it would be simpler to just include these once in your `index.html` instead of having to set them manually on each and every page/cell of your site.
 
@@ -310,7 +310,7 @@ This should allow you to create a fairly full-featured set of `<meta>` tags with
 
 Bots will pick up our tags if we've prerendered the page, but what if we want to set the `<meta>` based on the output of the Cell?
 
-:::info Prerendering
+:::info[Prerendering]
 
 As of v3.x, Redwood supports prerendering your [Cells](https://redwoodjs.com/docs/cells) with the data you were querying. For more information please refer [to this section](https://redwoodjs.com/docs/prerender#cell-prerendering).
 

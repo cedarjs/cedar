@@ -34,7 +34,7 @@ There are three components to the Background Job system in Cedar:
 
 **Execution** is handled by a **job worker**, which takes a job from storage, executes it, and then does something with the result, whether it was a success or failure.
 
-:::info Job execution time is never guaranteed
+:::info[Job execution time is never guaranteed]
 
 When scheduling a job, you're really saying "this is the earliest possible time I want this job to run": based on what other jobs are in the queue, and how busy the workers are, they may not get a chance to execute this one particular job for an indeterminate amount of time.
 
@@ -228,7 +228,7 @@ At a minimum, a job must contain the name of the `queue` the job should be saved
 
 Note that `perform()` can take any argument(s) you want (or none at all), but it's a best practice to keep them as simple as possible. With the `PrismaAdapter` the arguments are stored in the database, so the list of arguments must be serializable to and from a string of JSON.
 
-:::info Keeping Arguments Simple
+:::info[Keeping Arguments Simple]
 
 Most jobs will probably act against data in your database, so it makes sense to have the arguments simply be the `id` of those database records. When the job executes it will look up the full database record and then proceed from there.
 
@@ -307,7 +307,7 @@ Because we're using the `PrismaAdapter` here all jobs are stored in the database
 
 The `handler` column contains the name of the job, file path to find it, and the arguments its `perform()` function will receive. Where did the `name` and `path` come from? We have a babel plugin that adds them to your job when they are built!
 
-:::warning Jobs Must Be Built
+:::warning[Jobs Must Be Built]
 
 Jobs are run from the `api/dist` directory, which will exist only after running `yarn rw build api` or `yarn rw dev`. If you are working on a job in development, you're probably running `yarn rw dev` anyway. But just be aware that if the dev server is _not_ running then any changes to your job will not be reflected unless you run `yarn rw build api` (or start the dev server) to compile your job into `api/dist`.
 
@@ -575,7 +575,7 @@ yarn rw jobs work
 
 This process will stay attached to the console and continually look for new jobs and execute them as they are found. The log level is set to `debug` by default so you'll see everything. Pressing `Ctrl-C` to cancel the process (sending `SIGINT`) will start a graceful shutdown: the workers will complete any work they're in the middle of before exiting. To cancel immediately, hit `Ctrl-C` again (or send `SIGTERM`) and they'll stop in the middle of what they're doing. Note that this could leave locked jobs in the database, but they will be picked back up again if a new worker starts with the same name as the one that locked the process. They'll also be picked up automatically after `maxRuntime` has expired, even if they are still locked.
 
-:::caution Long running jobs
+:::caution[Long running jobs]
 
 It's currently up to you to make sure your job completes before your `maxRuntime` limit is reached! NodeJS Promises are not truly cancelable: you can reject early, but any Promises that were started _inside_ will continue running unless they are also early rejected, recursively forever.
 

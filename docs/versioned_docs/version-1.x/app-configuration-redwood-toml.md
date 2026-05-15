@@ -97,7 +97,7 @@ PUBLIC_KEY=...
 
 Instead of including them in `includeEnvironmentVariables`, you can also prefix them with `REDWOOD_ENV_` (see [Environment Variables](environment-variables.md#web)).
 
-:::caution `includeEnvironmentVariables` isn't for secrets
+:::caution[`includeEnvironmentVariables` isn't for secrets]
 
 Don't make secrets available to your web side. Everything in `includeEnvironmentVariables` is included in the bundle.
 
@@ -118,7 +118,7 @@ Additional server configuration can be done using [Server File](docker.md#using-
 
 Prisma's `prismaSchemaFolder` [feature](https://www.prisma.io/docs/orm/prisma-schema/overview/location#multi-file-prisma-schema) allows you to define multiple files in a schema subdirectory of your prisma directory.
 
-:::note Important
+:::note[Important]
 If you wish to [organize your Prisma Schema into multiple files](https://www.prisma.io/blog/organize-your-prisma-schema-with-multi-file-support), you will need [enable](https://www.prisma.io/docs/orm/prisma-schema/overview/location#multi-file-prisma-schema) that feature in Prisma, move your `schema.prisma` file into a new directory such as `./api/db/schema` and then set `schemaPath` in the api toml config.
 :::
 

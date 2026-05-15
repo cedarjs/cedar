@@ -4,7 +4,7 @@ sidebar_label: Clerk
 
 # Clerk Authentication
 
-:::warning Did you set up Clerk a while ago?
+:::warning[Did you set up Clerk a while ago?]
 
 If you set up Clerk a while ago, you may be using a deprecated `authDecoder` that's subject to rate limiting.
 This decoder will be removed in the next major.
@@ -27,7 +27,7 @@ If you don't have a Clerk account yet, now's the time to make one: navigate to h
 The defaults are good enough to get us going, but feel free to configure things as you wish.
 We'll get the application's API keys from its dashboard next.
 
-:::note we'll only focus on the development instance
+:::note[we'll only focus on the development instance]
 
 By default, Clerk applications have two instances, "Development" and "Production".
 We'll only focus on the "Development" instance here, which is used for local development.

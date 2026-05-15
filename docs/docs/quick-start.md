@@ -4,7 +4,7 @@ description: CedarJS quick start
 
 # Quick Start
 
-:::info Prerequisites
+:::info[Prerequisites]
 
 - CedarJS requires [Node.js](https://nodejs.org/en/) (=24.x) and
   [Yarn](https://yarnpkg.com/) (>=1.22.21)
@@ -19,7 +19,7 @@ Create a Cedar project with `yarn create cedar-app`:
 yarn create cedar-app my-cedar-project
 ```
 
-:::tip Prefer TypeScript?
+:::tip[Prefer TypeScript?]
 
 CedarJS comes with full TypeScript support from the get-go:
 

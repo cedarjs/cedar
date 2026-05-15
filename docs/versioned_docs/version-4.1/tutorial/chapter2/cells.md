@@ -101,7 +101,7 @@ A guideline for when to use cells is if your component needs some data from the 
 
 <ShowForTs>
 
-:::tip Wait... what are those types?
+:::tip[Wait... what are those types?]
 
 Cedar comes with some built-in utility types. You can see two of them in the example above: `CellSuccessProps` and `CellFailureProps`. Read more about them [here](typescript/utility-types.md).
 
@@ -115,7 +115,7 @@ Also notice the `FindPosts` type imported from `types/graphql`. This and other t
 
 Usually in a blog the homepage will display a list of recent posts. This list is a perfect candidate for our first cell.
 
-:::info Wait, don't we already have a home page?
+:::info[Wait, don't we already have a home page?]
 
 We do, but you will generally want to use a _cell_ when you need data from the database. A best practice for Cedar is to create a Page for each unique URL your app has, but that you fetch and display data in Cells. So the existing HomePage will render this new cell as a child.
 
@@ -207,7 +207,7 @@ export const Success = ({
 </TabItem>
 </Tabs>
 
-:::info Indicating Multiplicity to the Cell Generator
+:::info[Indicating Multiplicity to the Cell Generator]
 
 When generating a cell you can use any case you'd like and Cedar will do the right thing when it comes to naming. These will all create the same filename (`web/src/components/BlogArticlesCell/BlogArticlesCell.{jsx,tsx}`):
 
@@ -348,7 +348,7 @@ export const Success = ({
 
 <ShowForTs>
 
-:::tip Using generated types
+:::tip[Using generated types]
 
 At this point, you might see an error in your Cell while trying to import from `types/graphql`: "The type ArticlesQuery does not exist"
 

@@ -28,7 +28,7 @@ Redwood has a simple API to integrate any auth provider you can think of. But to
 - [Supabase](./auth/supabase.md)
 - [SuperTokens](./auth/supertokens.md)
 
-:::tip how to tell if an integration is official
+:::tip[how to tell if an integration is official]
 
 To tell if an integration is official, look for the `@cedarjs` scope.
 For example, Redwood's Auth0 integration comprises two npm packages: `@cedarjs/auth-auth0-web` and `@cedarjs/auth-auth0-api`.
@@ -165,7 +165,7 @@ const Routes = () => {
 }
 ```
 
-:::note Note about roles
+:::note[Note about roles]
 A route is permitted when authenticated and user has **any** of the provided roles such as `"admin"` or `["admin", "editor"]`.
 :::
 

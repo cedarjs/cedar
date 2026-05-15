@@ -100,7 +100,7 @@ PUBLIC_KEY=...
 
 Instead of including them in `includeEnvironmentVariables`, you can also prefix them with `REDWOOD_ENV_` (see [Environment Variables](environment-variables.md#web)).
 
-:::caution `includeEnvironmentVariables` isn't for secrets
+:::caution[`includeEnvironmentVariables` isn't for secrets]
 
 Don't make secrets available to your web side. Everything in `includeEnvironmentVariables` is included in the bundle.
 
