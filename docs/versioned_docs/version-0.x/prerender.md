@@ -8,7 +8,7 @@ Prerendering is great for providing a faster experience for your end users. Your
 
 We thought a lot about what the developer experience should be for route-based prerendering. The result is one of the smallest APIs imaginable!
 
-:::info How's Prerendering different from SSR/SSG/SWR/ISSG/...?
+:::info[How's Prerendering different from SSR/SSG/SWR/ISSG/...?]
 As Danny said in his [Prerender demo](https://www.youtube.com/watch?v=iorKyMlASZc&t=2844s) at our Community Meetup, the thing all of these have in common is that they render your markup in a Node.js context to produce HTML. The difference is when (build or runtime) and how often.
 
 Redwood currently supports prerendering at _build_ time. So before you deploy your web side, Redwood will render your pages into HTML, and once the JavaScript has been loaded on the browser, the page becomes dynamic.
@@ -155,7 +155,7 @@ Sometimes you need more fine-grained control over whether something gets prerend
 - `useIsBrowser`
 - `isBrowser`
 
-:::tip Heads-up!
+:::tip[Heads-up!]
 If you're prerendering a page that uses a third-party library, make sure it's "universal". If it's not, try calling the library after doing a browser check using one of the utils above.
 
 Look for these key words when choosing a library: _universal module, SSR compatible, server compatible_&mdash;all these indicate that the library also works in Node.js.

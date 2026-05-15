@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/core",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Foundational packages and config required to build CedarJS",
   "repository": {
     "type": "git",
@@ -62,7 +62,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "publint": "0.3.19",
+    "publint": "0.3.20",
     "tsx": "4.21.0"
   },
   "engines": {

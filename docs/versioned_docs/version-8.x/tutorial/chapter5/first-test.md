@@ -218,7 +218,7 @@ expect(ellipsis).toBeInTheDocument()
 
 Assert that the ellipsis is present.
 
-:::info What's the difference between `getByText()` and `queryByText()`?
+:::info[What's the difference between `getByText()` and `queryByText()`?]
 
 `getByText()` will throw an error if the text isn't found in the document, whereas `queryByText()` will return `null` and let you continue with your testing (and is one way to test that some text is _not_ present on the page). You can read more about these in the [DOM Testing Library Queries](https://testing-library.com/docs/dom-testing-library/api-queries) docs.
 
@@ -232,7 +232,7 @@ To double check that we're testing what we think we're testing, open up `Article
 
 Did you wonder where the articles were coming from in our test? Was it the development database? Nope: that data came from a **Mock**. That's the `ArticlesCell.mock.js` file that lives next to your component, test and stories files. Mocks are used when you want to define the data that would normally be returned by GraphQL in your Storybook stories or tests. In cells, a GraphQL call goes out (the query defined by the variable `QUERY` at the top of the file) and is returned to the `Success` component. We don't want to have to run the api-side server and have real data in the database just for Storybook or our tests, so Redwood intercepts those GraphQL calls and returns the data from the mock instead.
 
-:::info If the server is being mocked, how do we test the api-side code?
+:::info[If the server is being mocked, how do we test the api-side code?]
 
 We'll get to that next when we create a new feature for our blog from scratch!
 

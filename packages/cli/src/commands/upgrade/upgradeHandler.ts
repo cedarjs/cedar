@@ -585,7 +585,7 @@ async function refreshPrismaClient(
   // Relates to prisma/client issue
   // See: https://github.com/redwoodjs/redwood/issues/1083
   try {
-    await generatePrismaClient({ verbose, force: false })
+    await generatePrismaClient({ verbose, force: true })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     task.skip('Refreshing the Prisma client caused an Error.')

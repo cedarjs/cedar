@@ -44,7 +44,7 @@ To mark a field as optional (that is, allowing `NULL` as a value) you can suffix
 Next we create and apply a migration:
 
 ```bash
-yarn rw prisma migrate dev
+yarn cedar prisma migrate dev
 ```
 
 We can name this one something like "create contact".
@@ -54,7 +54,7 @@ We can name this one something like "create contact".
 Now we'll create the GraphQL interface to access this table. We haven't used this `generate` command yet (although the `scaffold` command did use it behind the scenes):
 
 ```bash
-yarn rw g sdl Contact
+yarn cedar g sdl Contact
 ```
 
 Just like the `scaffold` command, this will create a few new files under the `api` directory:
@@ -169,7 +169,7 @@ As described in [Side Quest: How Cedar Deals with Data](../chapter2/side-quest.m
 
 _Psssstttt_ I'll let you in on a little secret: if you just need a simple read-only SDL, you can skip creating the create/update/delete mutations by passing a flag to the SDL generator like so:
 
-`yarn rw g sdl Contact --no-crud`
+`yarn cedar g sdl Contact --no-crud`
 
 You'd only get a single `contacts` type to return them all.
 
@@ -335,13 +335,13 @@ Pretty simple. You can see here how the `createContact()` function expects the `
 
 You can delete `updateContact` and `deleteContact` here if you want, but since there's no longer an accessible GraphQL field for them they can't be used by the client anyway.
 
-Before we plug this into the UI, let's take a look at a nifty GUI you get just by running `yarn redwood dev`.
+Before we plug this into the UI, let's take a look at a nifty GUI you get just by running `yarn cedar dev`.
 
 ### GraphQL Playground
 
 Often it's nice to experiment and call your API in a more "raw" form before you get too far down the path of implementation only to find out something is missing. Is there a typo in the API layer or the web layer? Let's find out by accessing just the API layer.
 
-When you started development with `yarn redwood dev` (or `yarn rw dev`) you actually started a second process running at the same time. Open a new browser tab and head to [http://localhost:8911/graphql](http://localhost:8911/graphql) This is GraphQL Yoga's [GraphiQL](https://www.graphql-yoga.com/docs/features/graphiql), a web-based GUI for GraphQL APIs:
+When you started development with `yarn cedar dev` you actually started a second process running at the same time. Open a new browser tab and head to [http://localhost:8911/graphql](http://localhost:8911/graphql) This is GraphQL Yoga's [GraphiQL](https://www.graphql-yoga.com/docs/features/graphiql), a web-based GUI for GraphQL APIs:
 
 <img
   width="1410"
@@ -728,9 +728,9 @@ export default ContactPage
 
 <ShowForTs>
 
-:::tip Reminder about generated types
+:::tip[Reminder about generated types]
 
-Just a quick reminder that Cedar will automatically generate types for your GraphQL queries and mutations if you have the dev server running (or if you run `yarn rw generate types`).
+Just a quick reminder that Cedar will automatically generate types for your GraphQL queries and mutations if you have the dev server running (or if you run `yarn cedar generate types`).
 
 Once you define the `CreateContactMutation` (the GraphQL one), Cedar will generate the `CreateContactMutation` and `CreateContactMutationVariables` types from it for you.
 
@@ -944,7 +944,7 @@ Try filling out the form and submitting—you should have a new Contact in the d
   src="https://user-images.githubusercontent.com/32992335/161488540-a7ad1a57-7432-4171-bd75-500eeaa17bcb.png"
 />
 
-:::info Wait, I thought you said this was secure by default and someone couldn't view all contacts without being logged in?
+:::info[Wait, I thought you said this was secure by default and someone couldn't view all contacts without being logged in?]
 
 Remember: we haven't added authentication yet, so the concept of someone being logged in is meaningless right now. In order to prevent frustrating errors in a new application, the `@requireAuth` directive simply returns `true` until you setup an authentication system. At that point the directive will use real logic for determining if the user is logged in or not and behave accordingly.
 
@@ -1258,7 +1258,7 @@ Next we'll inform the user of any server errors. So far we've only notified the 
 
 We have email validation on the client, but any developer worth their silicon knows [never trust the client](https://www.codebyamir.com/blog/never-trust-data-from-the-browser). Let's add the email validation into the api side as well to be sure no bad data gets into our database, even if someone somehow bypassed our client-side validation (l33t hackers do this all the time).
 
-:::info No server-side validation for some fields?
+:::info[No server-side validation for some fields?]
 
 Why don't we need server-side validation for the existence of name, email and message? Because GraphQL is already doing that for us! You may remember the `String!` declaration in our SDL file for the `Contact` type: that adds a constraint that those fields cannot be `null` as soon as it arrives on the api side. If it is, GraphQL would reject the request and throw an error back to us on the client.
 

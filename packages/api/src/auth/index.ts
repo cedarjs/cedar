@@ -4,6 +4,7 @@ import type { APIGatewayProxyEvent, Context as LambdaContext } from 'aws-lambda'
 import * as cookie from 'cookie'
 
 import { getEventHeader } from '../event.js'
+import { isFetchApiRequest } from '../transforms.js'
 
 import type { Decoded } from './parseJWT.js'
 export type { Decoded }
@@ -14,12 +15,23 @@ export const AUTH_PROVIDER_HEADER = 'auth-provider'
 export const getAuthProviderHeader = (
   event: APIGatewayProxyEvent | Request,
 ) => {
-  const authProviderKey = Object.keys(event?.headers ?? {}).find(
+  // Fetch `Request.headers` is a `Headers` instance — `Object.keys()` returns
+  // `[]` for it, so we have to dispatch on the event type. `isFetchApiRequest`
+  // is the canonical dispatch helper, also used by `getEventHeader`.
+  if (isFetchApiRequest(event)) {
+    return event.headers.get(AUTH_PROVIDER_HEADER) ?? undefined
+  }
+
+  // Lambda `event.headers` is a plain object. API Gateway preserves the header
+  // case the client sent, so we need to match case-insensitively
+  const authProviderKey = Object.keys(event.headers ?? {}).find(
     (key) => key.toLowerCase() === AUTH_PROVIDER_HEADER,
   )
+
   if (authProviderKey) {
-    return getEventHeader(event, authProviderKey)
+    return event.headers[authProviderKey]
   }
+
   return undefined
 }
 

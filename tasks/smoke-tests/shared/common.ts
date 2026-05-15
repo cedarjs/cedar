@@ -37,7 +37,7 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
 
   // Check the about page.
   await page.getByRole('link', { name: 'About', exact: true }).click()
-  expect(page.url()).toBe('http://localhost:8910/about')
+  expect(page.url()).toBe('http://127.0.0.1:8910/about')
   await expect(
     page.getByText(
       'This site was created to demonstrate my mastery of Cedar: Look on my works, ye',
@@ -46,11 +46,11 @@ export async function smokeTest({ page }: PlaywrightTestArgs) {
 
   // Check the contact us page.
   await page.getByRole('link', { name: 'Contact Us' }).click()
-  expect(page.url()).toBe('http://localhost:8910/contact')
+  expect(page.url()).toBe('http://127.0.0.1:8910/contact')
 
   // Check the admin page.
   await page.getByRole('link', { name: 'Admin' }).click()
-  expect(page.url()).toBe('http://localhost:8910/posts')
+  expect(page.url()).toBe('http://127.0.0.1:8910/posts')
 }
 
 interface AuthUtilsParams {

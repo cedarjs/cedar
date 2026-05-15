@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/internal",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -155,7 +155,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.2",
+    "@babel/parser": "7.29.3",
     "@babel/plugin-transform-react-jsx": "7.28.6",
     "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/traverse": "7.29.0",
@@ -202,7 +202,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
     "graphql-tag": "2.12.6",
-    "publint": "0.3.19",
+    "publint": "0.3.20",
     "tsx": "4.21.0",
     "vitest": "3.2.4"
   },

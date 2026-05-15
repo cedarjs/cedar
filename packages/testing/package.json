@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/testing",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Tools, wrappers and configuration for testing a Cedar project.",
   "repository": {
     "type": "git",
@@ -148,7 +148,7 @@
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
     "jsdom": "27.4.0",
-    "publint": "0.3.19",
+    "publint": "0.3.20",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

@@ -21,7 +21,7 @@ Let's build the simplest form that still makes sense for our blog, a "Contact Us
 ### The Page
 
 ```bash
-yarn rw g page contact
+yarn cedar g page contact
 ```
 
 We can put a link to Contact in our layout's header:
@@ -1220,7 +1220,7 @@ export default ContactPage
 
 <img src="https://user-images.githubusercontent.com/300/146104647-25f1b2cf-a3cd-4737-aa2d-9aa984c08e39.png" />
 
-:::info Error styling
+:::info[Error styling]
 
 In addition to `className` and `errorClassName` you can also use `style` and `errorStyle`. Check out the [Form docs](../../forms.md) for more details on error styling.
 

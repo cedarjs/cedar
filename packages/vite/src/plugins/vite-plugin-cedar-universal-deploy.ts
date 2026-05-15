@@ -1,7 +1,6 @@
 import path from 'node:path'
 
-import { addEntry, catchAllEntry } from '@universal-deploy/store'
-import type { EntryMeta } from '@universal-deploy/store'
+import { addEntry, type EntryMeta } from '@universal-deploy/store'
 import type { Plugin } from 'vite'
 
 import type { CedarRouteRecord } from '@cedarjs/api/runtime'
@@ -15,25 +14,34 @@ export interface CedarUniversalDeployPluginOptions {
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
 
-const RESOLVED_VIRTUAL_UD_CATCH_ALL = '\0virtual:ud:catch-all'
+/**
+ * The Symbol.for key used by @universal-deploy/store to persist entries on
+ * globalThis across Vite plugin instances and separate build calls.
+ * We need direct access here so that cedarUniversalDeployPlugin can clear
+ * stale entries before re-registering.
+ *
+ */
+const UD_STORE_SYMBOL = Symbol.for('ud:store')
 
 const GRAPHQL_METHODS = ['GET', 'POST', 'OPTIONS'] as const
 
 /**
- * Normalises the API root path so it always starts and ends with `/`.
+ * Normalise apiRootPath: strip leading/trailing slashes, then prepend
+ * exactly one `/` if the result is non-empty. For `/` (root) the prefix
+ * is empty since routes already start with `/`.
  */
-function normalizeApiRootPath(rootPath: string): string {
-  let normalized = rootPath
+function normaliseApiPrefix(apiPrefix: string): string {
+  apiPrefix = apiPrefix.trim()
 
-  if (!normalized.startsWith('/')) {
-    normalized = '/' + normalized
+  while (apiPrefix.startsWith('/')) {
+    apiPrefix = apiPrefix.slice(1)
   }
 
-  if (!normalized.endsWith('/')) {
-    normalized = normalized + '/'
+  while (apiPrefix.endsWith('/')) {
+    apiPrefix = apiPrefix.slice(0, -1)
   }
 
-  return normalized
+  return apiPrefix ? '/' + apiPrefix : ''
 }
 
 /**
@@ -41,7 +49,7 @@ function normalizeApiRootPath(rootPath: string): string {
  * manifest from them. The manifest is the single source of truth for both
  * Cedar's backend routing and UD store registration.
  */
-function discoverCedarRoutes(): CedarRouteRecord[] {
+function discoverCedarRoutes(apiRootPath: string): CedarRouteRecord[] {
   const srcFunctions = getPaths().api.functions
   const distFunctions = path.join(getPaths().api.base, 'dist', 'functions')
 
@@ -65,7 +73,11 @@ function discoverCedarRoutes(): CedarRouteRecord[] {
       continue
     }
 
-    const routePath = routeName === 'graphql' ? '/graphql' : `/${routeName}`
+    const apiPrefix = normaliseApiPrefix(apiRootPath)
+    const routePath =
+      routeName === 'graphql'
+        ? `${apiPrefix}/graphql`
+        : `${apiPrefix}/${routeName}`
     const methods = routeName === 'graphql' ? [...GRAPHQL_METHODS] : []
     const type: CedarRouteRecord['type'] =
       routeName === 'graphql'
@@ -115,12 +127,44 @@ function toEntryMeta(route: CedarRouteRecord): EntryMeta {
   }
 }
 
+/**
+ * Remove any previously registered Cedar UD entries from the global store.
+ *
+ * This prevents stale entries (registered by an earlier Vite build step or by
+ * a different plugin instance) from being picked up by UD's catchAll()
+ * dispatcher. For example, when `cedar build --ud` runs the web client build
+ * before the API server build, the user's web vite.config.ts may include
+ * cedarUniversalDeployPlugin with a different apiRootPath, producing stale
+ * entry IDs that the API build's load handler cannot resolve.
+ */
+function clearCedarEntries(): void {
+  // This couples directly to @universal-deploy/store internals (the symbol key
+  // and the { entries: { id?: string }[] } shape are not part of that library's
+  // public API). If the library ever renames its symbol or changes the entry
+  // shape, clearCedarEntries will silently become a no-op. The proper fix is to
+  // eliminate the need for clearing entirely, see
+  // docs/implementation-plans/universal-deploy-serve-refactoring.md which
+  // proposes merging buildCedarApp and buildUDApiServer into a single
+  // build step, removing the cross-build-step entry accumulation issue.
+  // TODO: Remove the need for this
+  const store: { entries: { id?: string }[] } | undefined = (
+    globalThis as Record<symbol, unknown>
+  )[UD_STORE_SYMBOL] as { entries: { id?: string }[] } | undefined
+
+  if (!store) {
+    return
+  }
+
+  store.entries = store.entries.filter(
+    (entry) => !entry.id?.startsWith(VIRTUAL_CEDAR_FN_PREFIX),
+  )
+}
+
 export function cedarUniversalDeployPlugin(
   options: CedarUniversalDeployPluginOptions = {},
 ): Plugin {
   const { apiRootPath } = options
-  const normalizedApiRootPath = normalizeApiRootPath(apiRootPath ?? '/')
-  const routes = discoverCedarRoutes()
+  const routes = discoverCedarRoutes(apiRootPath ?? '/')
 
   let entriesInjected = false
 
@@ -136,23 +180,41 @@ export function cedarUniversalDeployPlugin(
         }
         entriesInjected = true
 
+        // Clear any stale Cedar entries from previous build steps (e.g. the web
+        // client build, which may use a different apiRootPath).
+        clearCedarEntries()
+
         // Register per-route API entries so UD adapters can split on
         // individual functions (e.g. Cloudflare Workers).
         for (const route of routes) {
           addEntry(toEntryMeta(route))
         }
-
-        // Register the catch-all entry consumed by @universal-deploy/node/serve.
-        addEntry({
-          id: catchAllEntry,
-          route: '/**',
-        })
       },
     },
 
+    buildStart(this) {
+      // Emit each per-function virtual module as a chunk with a fixed output
+      // path. This guarantees import.meta.url resolves from a predictable
+      // location regardless of whether @universal-deploy/vite's catchAll()
+      // uses static or dynamic imports.
+      for (const route of routes) {
+        const resolvedId = RESOLVED_CEDAR_FN_PREFIX + route.id
+        const safeName = route.id
+          .replace(/[/\\?%*:|"<>]/g, '_')
+          .replace(/^_+/, '')
+        this.emitFile({
+          type: 'chunk',
+          id: resolvedId,
+          fileName: safeName + '-handler.js',
+        })
+      }
+    },
+
     resolveId(id) {
-      if (id === catchAllEntry) {
-        return RESOLVED_VIRTUAL_UD_CATCH_ALL
+      // Match the null-byte-prefixed form that Rollup uses for already-resolved
+      // virtual modules (e.g. when UD's catchAll generates dynamic imports).
+      if (id.startsWith(RESOLVED_CEDAR_FN_PREFIX)) {
+        return id
       }
 
       if (id.startsWith(VIRTUAL_CEDAR_FN_PREFIX)) {
@@ -179,59 +241,33 @@ export function cedarUniversalDeployPlugin(
         return generateFunctionModule(route.entry)
       }
 
-      // Multi-route catch-all dispatcher
-      if (id === RESOLVED_VIRTUAL_UD_CATCH_ALL) {
-        return generateCatchAllModule(routes, normalizedApiRootPath)
-      }
-
       return undefined
     },
   }
 }
 
 function generateGraphQLModule(distPath: string): string {
+  // Relative path from the UD output directory (api/dist/ud) to the function
+  // dist file (api/dist/functions/...). Resolved at runtime via
+  // import.meta.url. The path is predictable because the buildStart hook
+  // emits each virtual module as a chunk with a fixed fileName (e.g.
+  // graphql-handler.js), preventing Rollup from nesting it under assets/
+  // or inlining it into index.js.
+  const udOutDir = path.join(getPaths().api.dist, 'ud')
+  const relPath = './' + path.relative(udOutDir, distPath)
+
   return `
     import { createGraphQLHandler } from '@cedarjs/vite/ud-handlers/graphql';
-    export default createGraphQLHandler({ distPath: ${JSON.stringify(distPath)} });
+    export default createGraphQLHandler({ distUrl: new URL(${JSON.stringify(relPath)}, import.meta.url).href });
   `
 }
 
 function generateFunctionModule(distPath: string): string {
+  const udOutDir = path.join(getPaths().api.dist, 'ud')
+  const relPath = './' + path.relative(udOutDir, distPath)
+
   return `
     import { createFunctionHandler } from '@cedarjs/vite/ud-handlers/function';
-    export default createFunctionHandler({ distPath: ${JSON.stringify(distPath)} });
-  `
-}
-
-function generateCatchAllModule(
-  routes: CedarRouteRecord[],
-  normalizedApiRootPath: string,
-): string {
-  const imports = routes
-    .map(
-      (route, i) =>
-        `import mod${i} from '${VIRTUAL_CEDAR_FN_PREFIX}${route.id}';`,
-    )
-    .join('\n')
-
-  const routesArray = routes
-    .map(
-      (route, i) =>
-        `{
-           path: ${JSON.stringify(route.path)},
-           methods: ${JSON.stringify(route.methods)},
-           module: mod${i}
-        }`,
-    )
-    .join(', ')
-
-  return `
-    import { createCatchAllHandler } from '@cedarjs/vite/ud-handlers/catch-all';
-    ${imports}
-
-    export default createCatchAllHandler({
-      routes: [${routesArray}],
-      apiRootPath: ${JSON.stringify(normalizedApiRootPath)}
-    });
+    export default createFunctionHandler({ distUrl: new URL(${JSON.stringify(relPath)}, import.meta.url).href });
   `
 }

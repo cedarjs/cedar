@@ -83,6 +83,7 @@ export async function buildCedarApp({
             preserveModules: true,
             preserveModulesRoot: cedarPaths.api.src,
             entryFileNames: '[name].js',
+            exports: 'named',
           },
           external: (id: string) => {
             if (id.startsWith('node:')) {
