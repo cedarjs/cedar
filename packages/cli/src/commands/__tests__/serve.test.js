@@ -191,18 +191,22 @@ describe('yarn cedar serve', () => {
 
     vi.spyOn(fs, 'existsSync').mockImplementation((pathToCheck) => {
       const normalizedPath = pathToCheck.toString().replaceAll('\\', '/')
-      // UD entry doesn't exist
-      if (normalizedPath.includes('/mocked/project/api/dist/ud/index.js')) {
+      // UD entry doesn't exist (check for index with any extension. The code
+      // accepts both .js and .mjs)
+      if (normalizedPath.includes('/mocked/project/api/dist/ud/index')) {
         return false
       }
+
       // web dist exists
       if (normalizedPath.includes('/mocked/project/web/dist')) {
         return true
       }
+
       // api base exists
       if (normalizedPath.includes('/mocked/project/api')) {
         return true
       }
+
       // Don't detect the server file
       return !normalizedPath.includes('/mocked/project/api/src/server.')
     })
@@ -229,8 +233,9 @@ describe('yarn cedar serve', () => {
 
     vi.spyOn(fs, 'existsSync').mockImplementation((pathToCheck) => {
       const normalizedPath = pathToCheck.toString().replaceAll('\\', '/')
-      // UD entry exists
-      if (normalizedPath.includes('/mocked/project/api/dist/ud/index.js')) {
+      // UD entry exists (check for index with any extension — the
+      // code uses resolveUDEntryPath which accepts both .js and .mjs)
+      if (normalizedPath.includes('/mocked/project/api/dist/ud/index')) {
         return true
       }
       // web dist index.html doesn't exist
