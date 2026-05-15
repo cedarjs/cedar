@@ -4,16 +4,18 @@ import path from 'node:path'
 interface Args {
   setOutput: (key: string, value: string) => void
   getInput: (key: string) => string
-  createExecWithEnvInCwd: (
-    cwd: string,
-  ) => (
+  createExecWithEnvInCwd: (cwd: string) => (
     command: string,
-    options?: { silent?: boolean; input?: Buffer },
-  ) => Promise<{ stdout: string; stderr: string }>
+    options?: {
+      silent?: boolean
+      input?: Buffer
+      ignoreReturnCode?: boolean
+    },
+  ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   execInFramework: (
     command: string,
     options?: { env?: Record<string, string> },
-  ) => Promise<{ stdout: string; stderr: string }>
+  ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   cedarFrameworkPath: string
   testProjectPath: string
 }
@@ -63,12 +65,23 @@ export async function setUpTestProject({
   })
 
   console.log('Generating dbAuth secret')
-  const { stdout } = await execInProject('yarn cedar g secret --raw', {
+  const secretResult = await execInProject('yarn cedar g secret --raw', {
     silent: true,
+    ignoreReturnCode: true,
   })
+  if (secretResult.exitCode !== 0) {
+    console.error(
+      `yarn cedar g secret --raw failed with exit code ${secretResult.exitCode}`,
+    )
+    console.error('stdout:', secretResult.stdout || '(empty)')
+    console.error('stderr:', secretResult.stderr || '(empty)')
+    throw new Error(
+      `yarn cedar g secret --raw failed with exit code ${secretResult.exitCode}`,
+    )
+  }
   fs.appendFileSync(
     path.join(testProjectPath, '.env'),
-    `SESSION_SECRET='${stdout}'`,
+    `SESSION_SECRET='${secretResult.stdout}'`,
   )
   console.log()
 
