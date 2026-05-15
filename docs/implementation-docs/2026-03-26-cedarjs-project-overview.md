@@ -271,6 +271,6 @@ Routes.tsx ← 4 routes added inside <Set wrap={ScaffoldLayout} title="Posts" ..
 - Entry: `entry.client.tsx` (always). \*SSR/RSC: also `entry.server.tsx`
 - Routes in `Routes.tsx` as JSX (virtual, never rendered — Babel auto-loads pages)
 - Build: default = esbuild (api) + Vite (web); `--ud` = unified Vite (web + api with `build.ssr: true` + `preserveModules: true` + Babel plugin)
-- Server: API (Fastify by default; opt-in srvx via `cedar serve api --ud`, which hosts the `buildUDApiServer` Fetchable from `api/dist/ud/index.js`). Web: Fastify (SPA). \*SSR/RSC: Web uses Express
+- Server: API (Fastify by default; opt-in srvx via `cedar serve api --ud` or `cedar serve --ud`, which host the `buildUDApiServer` Fetchable from `api/dist/ud/index.js`). Web: Fastify (SPA). \*SSR/RSC: Web uses Express
 - Package mgr: Yarn 4 (+ experimental support for npm and pnpm); Framework: Yarn 4 + Nx (build orchestration).
 - Codegen: compile-time (Vite plugins) + on-demand (cedar-gen)

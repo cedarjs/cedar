@@ -182,8 +182,6 @@ export function cedarUniversalDeployPlugin(
 
         // Clear any stale Cedar entries from previous build steps (e.g. the web
         // client build, which may use a different apiRootPath).
-        // TODO: I think this is overly defensive. We should see if we can
-        // remove this call (and the entire clearCedarEntries function)
         clearCedarEntries()
 
         // Register per-route API entries so UD adapters can split on
@@ -192,6 +190,24 @@ export function cedarUniversalDeployPlugin(
           addEntry(toEntryMeta(route))
         }
       },
+    },
+
+    buildStart(this) {
+      // Emit each per-function virtual module as a chunk with a fixed output
+      // path. This guarantees import.meta.url resolves from a predictable
+      // location regardless of whether @universal-deploy/vite's catchAll()
+      // uses static or dynamic imports.
+      for (const route of routes) {
+        const resolvedId = RESOLVED_CEDAR_FN_PREFIX + route.id
+        const safeName = route.id
+          .replace(/[/\\?%*:|"<>]/g, '_')
+          .replace(/^_+/, '')
+        this.emitFile({
+          type: 'chunk',
+          id: resolvedId,
+          fileName: safeName + '-handler.js',
+        })
+      }
     },
 
     resolveId(id) {
@@ -231,10 +247,13 @@ export function cedarUniversalDeployPlugin(
 }
 
 function generateGraphQLModule(distPath: string): string {
-  // Relative path from the UD assets output directory (api/dist/ud/assets) to
-  // the function dist file (api/dist/functions/...). Resolved at runtime via
-  // import.meta.url so the artifact is portable between machines.
-  const udOutDir = path.join(getPaths().api.dist, 'ud', 'assets')
+  // Relative path from the UD output directory (api/dist/ud) to the function
+  // dist file (api/dist/functions/...). Resolved at runtime via
+  // import.meta.url. The path is predictable because the buildStart hook
+  // emits each virtual module as a chunk with a fixed fileName (e.g.
+  // graphql-handler.js), preventing Rollup from nesting it under assets/
+  // or inlining it into index.js.
+  const udOutDir = path.join(getPaths().api.dist, 'ud')
   const relPath = './' + path.relative(udOutDir, distPath)
 
   return `
@@ -244,7 +263,7 @@ function generateGraphQLModule(distPath: string): string {
 }
 
 function generateFunctionModule(distPath: string): string {
-  const udOutDir = path.join(getPaths().api.dist, 'ud', 'assets')
+  const udOutDir = path.join(getPaths().api.dist, 'ud')
   const relPath = './' + path.relative(udOutDir, distPath)
 
   return `
