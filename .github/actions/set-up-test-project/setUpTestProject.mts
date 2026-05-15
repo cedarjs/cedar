@@ -4,9 +4,7 @@ import path from 'node:path'
 interface Args {
   setOutput: (key: string, value: string) => void
   getInput: (key: string) => string
-  createExecWithEnvInCwd: (
-    cwd: string,
-  ) => (
+  createExecWithEnvInCwd: (cwd: string) => (
     command: string,
     options?: {
       silent?: boolean
