@@ -126,7 +126,7 @@
     "cookie": "1.1.1",
     "dotenv-defaults": "5.0.2",
     "execa": "5.1.1",
-    "express": "4.22.1",
+    "express": "4.22.2",
     "fastify": "5.8.5",
     "fastify-raw-body": "5.0.0",
     "find-my-way": "8.2.2",
