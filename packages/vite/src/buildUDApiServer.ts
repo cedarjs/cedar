@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -59,6 +60,13 @@ export async function buildUDApiServer({
       // Load the user's Vite config so all plugins (Cedar's UD plugin,
       // provider plugins, etc.) run during the build.
       configFile: cedarPaths.web.viteConfig,
+      // Cedar's getMergedConfig (from the cedar() plugin) overrides root to
+      // web/src/. For the UD server build, we want root to be the config
+      // file directory (web/) so that plugins like @netlify/vite-plugin
+      // output their files relative to the project structure, not a source
+      // directory.
+      // TODO: See what it'd take to *not* have cedar() set it to web/src
+      root: cedarPaths.web.base,
       logLevel: verbose ? 'info' : 'warn',
 
       plugins: [
@@ -110,6 +118,16 @@ export async function buildUDApiServer({
         },
       },
     })
+
+    // Write a package.json to mark the UD output directory as ESM. This
+    // ensures Node.js treats .js files (index.js, handler chunks) as ES
+    // modules regardless of the parent package.json type setting.
+    // TODO: Probably remove this - It's here to support CJS apps, but I'm not
+    // sure we'll ever be able to fully support that with UD
+    fs.writeFileSync(
+      path.join(outDir, 'package.json'),
+      JSON.stringify({ type: 'module' }, null, 2),
+    )
   } finally {
     if (apiRootPath !== undefined) {
       delete process.env.CEDAR_API_ROOT_PATH
