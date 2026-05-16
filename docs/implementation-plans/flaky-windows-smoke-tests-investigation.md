@@ -706,3 +706,62 @@ visible in the CI log.
 - A race condition or lock contention from the preceding `yarn install` not fully
   releasing file locks before `yarn cedar` starts
 - A transient yarn registry or filesystem error on the Windows runner
+
+---
+
+## Update 2026-05-16 — Root cause identified: Yarn hardened mode blocking tarsync
+
+### New occurrence
+
+From run
+[25958253061](https://github.com/cedarjs/cedar/actions/runs/25958253061/job/76308881324)
+(PR #1796, Background jobs E2E on Windows):
+
+```
+yarn cedar g secret --raw failed with exit code 1
+stdout: Internal Error: root-workspace-0b6124@workspace:.: This package doesn't seem
+to be present in your lockfile; run "yarn install" to update the lockfile
+    at DT.getCandidates (C:\Users\runneradmin\AppData\Local\node\corepack\v1\yarn\4.14.1\yarn.js:204:4607)
+stderr: (empty)
+```
+
+### Root cause
+
+The debug improvement from PR #1789 finally surfaced the actual error. The failure
+chain:
+
+1. `yarn project:tarsync --verbose` (with `CEDAR_CWD` pointing at the test project)
+   modifies the test project's `package.json`, replacing `@cedarjs/*` npm references
+   with paths to local framework tarballs
+2. Internally, tarsync runs `yarn install` inside the test project to pick up those
+   changes and update the lockfile
+3. **Yarn 4 hardened mode** is automatically enabled for public PRs on GitHub Actions
+   (yarn logs: _"Yarn detected that the current workflow is executed from a public pull
+   request"_)
+4. Hardened mode enforces immutable installs — `yarn install` cannot modify the lockfile
+5. With the lockfile not updated, the root workspace entry
+   (`root-workspace-0b6124@workspace:.`) goes missing from the lockfile
+6. When `yarn cedar g secret --raw` runs, yarn validates the lockfile at startup and
+   immediately throws: _"This package doesn't seem to be present in your lockfile"_
+
+### Why `YARN_ENABLE_IMMUTABLE_INSTALLS: false` doesn't help
+
+The `set-up-test-project` workflow step already sets `YARN_ENABLE_IMMUTABLE_INSTALLS: false`
+in its `env:` block. This is not sufficient. Yarn 4 hardened mode
+(`YARN_ENABLE_HARDENED_MODE`) is a separate, higher-priority setting that overrides
+the immutable installs flag.
+
+### Fix applied
+
+Added `YARN_ENABLE_HARDENED_MODE: '0'` to the `execInFramework` call for tarsync in
+`.github/actions/set-up-test-project/setUpTestProject.mts`:
+
+```typescript
+await execInFramework('yarn project:tarsync --verbose', {
+  env: { CEDAR_CWD: testProjectPath, YARN_ENABLE_HARDENED_MODE: '0' },
+})
+```
+
+This allows tarsync's internal `yarn install` to update the test project lockfile
+with the tarball-based dependency entries, resolving the lockfile validation failure
+that `yarn cedar g secret --raw` hits at startup.

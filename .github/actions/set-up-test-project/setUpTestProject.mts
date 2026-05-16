@@ -61,7 +61,7 @@ export async function setUpTestProject({
   }
 
   await execInFramework('yarn project:tarsync --verbose', {
-    env: { CEDAR_CWD: testProjectPath },
+    env: { CEDAR_CWD: testProjectPath, YARN_ENABLE_HARDENED_MODE: '0' },
   })
 
   console.log('Generating dbAuth secret')
