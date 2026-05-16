@@ -71,7 +71,9 @@ export async function setUpTestProject({
     const lineCount =
       lines[lines.length - 1] === '' ? lines.length - 1 : lines.length
     console.log(`yarn.lock created (${lineCount} lines)`)
-    const rootWorkspaceLine = lines.find((l) => l.startsWith('"root-workspace-'))
+    const rootWorkspaceLine = lines.find((l) =>
+      l.startsWith('"root-workspace-'),
+    )
     if (rootWorkspaceLine) {
       console.log(`Root workspace entry found: ${rootWorkspaceLine}`)
     } else {
