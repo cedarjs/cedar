@@ -1,0 +1,461 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Diagnostic Parity > captures correct diagnostics for example-todo-main-with-errors 1`] = `
+[
+  {
+    "end": {
+      "character": 62,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosMutations.sdl.js",
+  },
+  {
+    "end": {
+      "character": 68,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithAuthInvalidRolesErrors.sdl.js",
+  },
+  {
+    "end": {
+      "character": 65,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithAuthMissingRoleError.sdl.js",
+  },
+  {
+    "end": {
+      "character": 60,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithAuthRoles.sdl.js",
+  },
+  {
+    "end": {
+      "character": 75,
+      "line": 3,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 3,
+    },
+    "uri": "file:///api/src/graphql/todosWithAuthRoles.sdl.js",
+  },
+  {
+    "end": {
+      "character": 108,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithBuiltInDirectives.sdl.js",
+  },
+  {
+    "end": {
+      "character": 0,
+      "line": 0,
+    },
+    "message": "Syntax Error: Expected Name, found String "ADMIN".
+
+GraphQL request:3:57
+2 |   type Query {
+3 |     todosWithMissingRolesAttribute: [Todo] @requireAuth("ADMIN")
+  |                                                         ^
+4 |   }",
+    "severity": undefined,
+    "start": {
+      "character": 0,
+      "line": 0,
+    },
+    "uri": "file:///api/src/graphql/todosWithMissingAuthRolesAttributeError.sdl.js",
+  },
+  {
+    "end": {
+      "character": 0,
+      "line": 0,
+    },
+    "message": "Syntax Error: Expected Name, found Int "42".
+
+GraphQL request:3:64
+2 |   type Query {
+3 |     todosWithMissingRolesAttributeNumeric: [Todo] @requireAuth(42)
+  |                                                                ^
+4 |   }",
+    "severity": undefined,
+    "start": {
+      "character": 0,
+      "line": 0,
+    },
+    "uri": "file:///api/src/graphql/todosWithMissingAuthRolesAttributeNumericError.sdl.js",
+  },
+  {
+    "end": {
+      "character": 56,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithNumericRoleAuthError.sdl.js",
+  },
+  {
+    "end": {
+      "character": 1,
+      "line": 12,
+    },
+    "message": "We recommend that you name your query operation",
+    "severity": 2,
+    "start": {
+      "character": 24,
+      "line": 4,
+    },
+    "uri": "file:///web/src/components/TodoListCell/TodoListCell.js",
+  },
+  {
+    "end": {
+      "character": 21,
+      "line": 14,
+    },
+    "message": "Duplicate Path",
+    "severity": 1,
+    "start": {
+      "character": 18,
+      "line": 14,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+  {
+    "end": {
+      "character": 21,
+      "line": 15,
+    },
+    "message": "Duplicate Path",
+    "severity": 1,
+    "start": {
+      "character": 18,
+      "line": 15,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+  {
+    "end": {
+      "character": 32,
+      "line": 16,
+    },
+    "message": "Error: Route path contains duplicate parameter: "/{foo}/{foo}"",
+    "severity": 1,
+    "start": {
+      "character": 18,
+      "line": 16,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+  {
+    "end": {
+      "character": 51,
+      "line": 16,
+    },
+    "message": "Page component not found",
+    "severity": 1,
+    "start": {
+      "character": 39,
+      "line": 16,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+  {
+    "end": {
+      "character": 12,
+      "line": 13,
+    },
+    "message": "You must specify a 'notfound' page",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 13,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+]
+`;
+
+exports[`Diagnostic Parity > captures correct diagnostics for local:structure-test-project 1`] = `
+[
+  {
+    "end": {
+      "character": 0,
+      "line": 0,
+    },
+    "message": "Every Cell MUST export a Success variable (React Component)",
+    "severity": 1,
+    "start": {
+      "character": 0,
+      "line": 0,
+    },
+    "uri": "file:///web/src/components/UnusualCell/UnusualCell.tsx",
+  },
+]
+`;
+
+exports[`Diagnostic Parity > captures correct diagnostics for test-project 1`] = `
+[
+  {
+    "end": {
+      "character": 36,
+      "line": 185,
+    },
+    "message": "env value NODE_ENV is not available. add it to your .env file",
+    "severity": 2,
+    "start": {
+      "character": 16,
+      "line": 185,
+    },
+    "uri": "file:///api/src/functions/auth.ts",
+  },
+]
+`;
+
+exports[`Diagnostic Parity > captures the exact same diagnostics for a project with errors 1`] = `
+[
+  {
+    "end": {
+      "character": 21,
+      "line": 14,
+    },
+    "message": "Duplicate Path",
+    "severity": 1,
+    "start": {
+      "character": 18,
+      "line": 14,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+  {
+    "end": {
+      "character": 21,
+      "line": 15,
+    },
+    "message": "Duplicate Path",
+    "severity": 1,
+    "start": {
+      "character": 18,
+      "line": 15,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+  {
+    "end": {
+      "character": 32,
+      "line": 16,
+    },
+    "message": "Error: Route path contains duplicate parameter: "/{foo}/{foo}"",
+    "severity": 1,
+    "start": {
+      "character": 18,
+      "line": 16,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+  {
+    "end": {
+      "character": 51,
+      "line": 16,
+    },
+    "message": "Page component not found",
+    "severity": 1,
+    "start": {
+      "character": 39,
+      "line": 16,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+  {
+    "end": {
+      "character": 62,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosMutations.sdl.js",
+  },
+  {
+    "end": {
+      "character": 68,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithAuthInvalidRolesErrors.sdl.js",
+  },
+  {
+    "end": {
+      "character": 65,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithAuthMissingRoleError.sdl.js",
+  },
+  {
+    "end": {
+      "character": 60,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithAuthRoles.sdl.js",
+  },
+  {
+    "end": {
+      "character": 75,
+      "line": 3,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 3,
+    },
+    "uri": "file:///api/src/graphql/todosWithAuthRoles.sdl.js",
+  },
+  {
+    "end": {
+      "character": 108,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithBuiltInDirectives.sdl.js",
+  },
+  {
+    "end": {
+      "character": 56,
+      "line": 2,
+    },
+    "message": "Service Not Implemented",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 2,
+    },
+    "uri": "file:///api/src/graphql/todosWithNumericRoleAuthError.sdl.js",
+  },
+  {
+    "end": {
+      "character": 0,
+      "line": 0,
+    },
+    "message": "Syntax Error: Expected Name, found Int "42".
+
+GraphQL request:3:64
+2 |   type Query {
+3 |     todosWithMissingRolesAttributeNumeric: [Todo] @requireAuth(42)
+  |                                                                ^
+4 |   }",
+    "severity": undefined,
+    "start": {
+      "character": 0,
+      "line": 0,
+    },
+    "uri": "file:///api/src/graphql/todosWithMissingAuthRolesAttributeNumericError.sdl.js",
+  },
+  {
+    "end": {
+      "character": 0,
+      "line": 0,
+    },
+    "message": "Syntax Error: Expected Name, found String "ADMIN".
+
+GraphQL request:3:57
+2 |   type Query {
+3 |     todosWithMissingRolesAttribute: [Todo] @requireAuth("ADMIN")
+  |                                                         ^
+4 |   }",
+    "severity": undefined,
+    "start": {
+      "character": 0,
+      "line": 0,
+    },
+    "uri": "file:///api/src/graphql/todosWithMissingAuthRolesAttributeError.sdl.js",
+  },
+  {
+    "end": {
+      "character": 1,
+      "line": 12,
+    },
+    "message": "We recommend that you name your query operation",
+    "severity": 2,
+    "start": {
+      "character": 24,
+      "line": 4,
+    },
+    "uri": "file:///web/src/components/TodoListCell/TodoListCell.js",
+  },
+  {
+    "end": {
+      "character": 12,
+      "line": 13,
+    },
+    "message": "You must specify a 'notfound' page",
+    "severity": 1,
+    "start": {
+      "character": 4,
+      "line": 13,
+    },
+    "uri": "file:///web/src/Routes.js",
+  },
+]
+`;
