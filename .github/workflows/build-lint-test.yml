@@ -6,6 +6,10 @@ on:
       os:
         required: true
         type: string
+      node-version:
+        required: false
+        type: string
+        default: '24'
 
 jobs:
   build-lint-test:
@@ -19,6 +23,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Set up job
         uses: ./.github/actions/set-up-job
+        with:
+          node-version: ${{ inputs.node-version }}
 
       - name: 🔎 Lint
         run: yarn lint
