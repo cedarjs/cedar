@@ -30,11 +30,19 @@ function getPagesTasks(live = false) {
     {
       title: 'Creating home page',
       task: async () => {
+        const now = new Date()
         await createPage('home /')
+        const middle = new Date()
 
         await applyCodemod(
           'homePage.js',
           fullPath('web/src/pages/HomePage/HomePage'),
+        )
+        const after = new Date()
+
+        console.log(`home page took ${middle.getTime() - now.getTime()}ms`)
+        console.log(
+          `home page codemod took ${after.getTime() - middle.getTime()}ms`,
         )
       },
     },
