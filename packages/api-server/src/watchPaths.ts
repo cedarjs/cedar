@@ -4,6 +4,7 @@ import path from 'node:path'
 import {
   getDbDir,
   getPaths,
+  getPrismaGeneratorOutputPath,
   importStatementPath,
 } from '@cedarjs/project-config'
 
@@ -93,6 +94,16 @@ async function apiIgnorePaths() {
     cedarPaths.api.types,
     dbDir,
   ]
+
+  // Always ignore the Prisma client generator output. It's usually inside
+  // `dbDir` (already ignored above), but projects that point the generator
+  // `output` outside the schema directory — e.g. into `api/src/lib/...` —
+  // otherwise trigger an infinite rebuild loop: each build regenerates the
+  // client, chokidar sees the writes, and another build is scheduled.
+  const prismaGeneratorOutputPath = await getPrismaGeneratorOutputPath()
+  if (prismaGeneratorOutputPath) {
+    ignoredApiPaths.push(prismaGeneratorOutputPath)
+  }
 
   return ignoredApiPaths
 }
