@@ -153,19 +153,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client-react-streaming@npm:0.12.3":
-  version: 0.12.3
-  resolution: "@apollo/client-react-streaming@npm:0.12.3"
+"@apollo/client-react-streaming@npm:0.14.5":
+  version: 0.14.5
+  resolution: "@apollo/client-react-streaming@npm:0.14.5"
   dependencies:
     "@types/react-dom": "npm:^19.0.0"
     "@wry/equality": "npm:^0.5.6"
-    ts-invariant: "npm:^0.10.3"
   peerDependencies:
-    "@apollo/client": ^3.13.0
+    "@apollo/client": ^4.0.0
     graphql: ^16 || >=17.0.0-alpha.2
     react: ^19
     react-dom: ^19
-  checksum: 10c0/e3b6ee935ae70f16bda933def469987783a170984163e923590fae214034492b43d36c07d6a17eb7b43588618192a77dd954a3cac281c30ecbcb5390eb8bcff2
+    rxjs: ^7.3.0
+  checksum: 10c0/878df3a3b970cc4200f43eb9d6bab383a3156e78ab065bea436109564cf5352c39b8287cf25c187ef66a2fe6cf218c2ba5a4fd29833518d8c30c10296e014cd7
   languageName: node
   linkType: hard
 
@@ -3861,7 +3861,7 @@ __metadata:
   resolution: "@cedarjs/web@workspace:packages/web"
   dependencies:
     "@apollo/client": "npm:3.14.1"
-    "@apollo/client-react-streaming": "npm:0.12.3"
+    "@apollo/client-react-streaming": "npm:0.14.5"
     "@arethetypeswrong/cli": "npm:0.18.2"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
