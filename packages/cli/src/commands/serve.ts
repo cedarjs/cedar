@@ -170,30 +170,59 @@ export const builder = async (yargs: Argv) => {
           const webHost = argv.webHost ?? getWebHost()
 
           const apiRootPath = argv.apiRootPath ?? '/'
-          const apiProxyTarget = [
-            'http://',
-            apiHost.includes(':') ? `[${apiHost}]` : apiHost,
-            ':',
-            apiPort,
-            apiRootPath,
-          ].join('')
+          const apiTarget = `http://${apiHost.includes(':') ? `[${apiHost}]` : apiHost}:${apiPort}`
 
-          // Start the Fastify web server (same as before)
-          const { redwoodFastifyWeb } = await import('@cedarjs/fastify-web')
-          const { createFastifyInstance } =
-            await import('@cedarjs/api-server/fastify')
+          // Start the srvx web server (replaces Fastify + proxy).
+          // Middleware chain:
+          // 1. serveStatic: serve files from web/dist/ (SPA assets)
+          // 2. apiProxy: forward API-prefixed requests to UD Fetchable on API
+          //    port
+          // 3. spaFallback: serve index.html for client-side routing
+          const { serveStatic } = await import('srvx/static')
+          const apiUrl = getConfig().web.apiUrl
+          const webDist = getPaths().web.dist
 
-          const webFastify = await createFastifyInstance()
-          webFastify.register(redwoodFastifyWeb, {
-            redwood: {
-              apiProxyTarget,
-            },
-          })
+          const webServer = serveSrvx({
+            // Dummy fetch handler. All requests are handled by middleware
+            fetch: async () => new Response('Not Found', { status: 404 }),
+            middleware: [
+              serveStatic({ dir: webDist }),
+              async (req, next) => {
+                const url = new URL(req.url, 'http://localhost')
 
-          await webFastify.listen({
+                if (!url.pathname.startsWith(apiUrl)) {
+                  return next()
+                }
+
+                // Strip the apiUrl prefix and forward to the API server
+                const targetPath = url.pathname.slice(apiUrl.length) || '/'
+                const targetUrl = `${apiTarget}${apiRootPath}${targetPath}${url.search}`
+
+                return fetch(targetUrl, {
+                  method: req.method,
+                  headers: req.headers,
+                  body: req.body,
+                })
+              },
+              () => {
+                const html = fs.readFileSync(
+                  path.join(webDist, 'index.html'),
+                  'utf-8',
+                )
+
+                return new Response(html, {
+                  headers: { 'Content-Type': 'text/html' },
+                })
+              },
+            ],
             port: webPort,
-            host: webHost,
+            hostname: webHost,
+            gracefulShutdown: false,
+            manual: true,
           })
+
+          webServer.serve()
+          await webServer.ready()
 
           // Import and host the UD Fetchable in-process with srvx
           console.log(`Web server listening at http://${webHost}:${webPort}`)
