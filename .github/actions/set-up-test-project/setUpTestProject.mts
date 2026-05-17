@@ -64,6 +64,27 @@ export async function setUpTestProject({
     env: { CEDAR_CWD: testProjectPath },
   })
 
+  const yarnLockPath = path.join(testProjectPath, 'yarn.lock')
+  if (fs.existsSync(yarnLockPath)) {
+    const lockfileContent = fs.readFileSync(yarnLockPath, 'utf-8')
+    const lines = lockfileContent.split('\n')
+    const lineCount =
+      lines[lines.length - 1] === '' ? lines.length - 1 : lines.length
+    console.log(`yarn.lock created (${lineCount} lines)`)
+    const rootWorkspaceLine = lines.find((l) =>
+      l.startsWith('"root-workspace-'),
+    )
+    if (rootWorkspaceLine) {
+      console.log(`Root workspace entry found: ${rootWorkspaceLine}`)
+    } else {
+      console.error(
+        'WARNING: yarn.lock exists but has no root-workspace- entry!',
+      )
+    }
+  } else {
+    console.error('WARNING: yarn.lock was not created by tarsync!')
+  }
+
   console.log('Generating dbAuth secret')
   const secretResult = await execInProject('yarn cedar g secret --raw', {
     silent: true,
