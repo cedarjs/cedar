@@ -18,7 +18,9 @@ export function cedarEntryInjectionPlugin(): Plugin {
     )
   }
 
-  const relativeEntryPath = path.relative(rwPaths.web.base, clientEntryPath)
+  const relativeEntryPath = normalizePath(
+    path.relative(rwPaths.web.base, clientEntryPath),
+  )
 
   return {
     name: 'cedar-entry-injection',
