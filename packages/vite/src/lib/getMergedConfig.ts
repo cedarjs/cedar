@@ -48,7 +48,6 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
     }
 
     const defaultCedarViteConfig: ViteUserConfig = {
-      root: cedarPaths.web.src,
       resolve: {
         alias: workspaceAliases,
       },

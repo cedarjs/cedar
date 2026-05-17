@@ -202,7 +202,7 @@ export function getPaths(BASE_DIR: string = getBaseDir()) {
       generators: path.join(BASE_DIR, 'web/generators'),
       app: resolveFile(path.join(BASE_DIR, 'web/src/App')) as string,
       document: resolveFile(path.join(BASE_DIR, 'web/src/Document')) as string,
-      html: path.join(BASE_DIR, 'web/src/index.html'),
+      html: path.join(BASE_DIR, 'web/index.html'),
       config: path.join(BASE_DIR, 'web/config'),
       viteConfig,
       postcss: path.join(BASE_DIR, 'web/config/postcss.config.cjs'),
