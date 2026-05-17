@@ -182,6 +182,11 @@ export const builder = async (yargs: Argv) => {
           const apiUrl = getConfig().web.apiUrl
           const webDist = getPaths().web.dist
 
+          const indexHtml = fs.readFileSync(
+            path.join(webDist, 'index.html'),
+            'utf-8',
+          )
+
           const webServer = serveSrvx({
             // Dummy fetch handler. All requests are handled by middleware
             fetch: async () => new Response('Not Found', { status: 404 }),
@@ -194,9 +199,12 @@ export const builder = async (yargs: Argv) => {
                   return next()
                 }
 
-                // Strip the apiUrl prefix and forward to the API server
+                // Strip the apiUrl prefix and forward to the API server.
+                // Normalise apiRootPath to avoid double-slash when it's '/'
+                // and targetPath already starts with '/'.
                 const targetPath = url.pathname.slice(apiUrl.length) || '/'
-                const targetUrl = `${apiTarget}${apiRootPath}${targetPath}${url.search}`
+                const root = apiRootPath === '/' ? '' : apiRootPath
+                const targetUrl = `${apiTarget}${root}${targetPath}${url.search}`
 
                 return fetch(targetUrl, {
                   method: req.method,
@@ -205,14 +213,8 @@ export const builder = async (yargs: Argv) => {
                 })
               },
               () => {
-                const html = fs.readFileSync(
-                  path.join(webDist, 'index.html'),
-                  'utf-8',
-                )
-
-                return new Response(html, {
-                  headers: { 'Content-Type': 'text/html' },
-                })
+                const headers = { 'Content-Type': 'text/html' }
+                return new Response(indexHtml, { headers })
               },
             ],
             port: webPort,
