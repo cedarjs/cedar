@@ -37,13 +37,18 @@ export const previewAnnotations: StorybookConfig['previewAnnotations'] = (
 const cedarProjectPaths = getPaths()
 
 export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
-  const { plugins = [] } = config
+  // Filter out cedar-entry-injection: with web/ as Vite root, Storybook's
+  // Vite processes web/index.html whose path matches cedarPaths.web.html,
+  // so the plugin would inject Cedar's entry script and break dep scanning.
+  const plugins = (config.plugins ?? []).filter(
+    (p) => !p || Array.isArray(p) || (p as { name?: string }).name !== 'cedar-entry-injection',
+  )
 
   // Needs to run before the react plugin, so add to the front
   plugins.unshift(await reactDocgen())
   plugins.unshift(nodePolyfills())
 
-  return mergeConfig(config, {
+  return mergeConfig({ ...config, plugins }, {
     plugins: [mockRouter(), mockAuth(), autoImports],
     resolve: {
       alias: {
