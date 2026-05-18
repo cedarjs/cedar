@@ -44,9 +44,6 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   plugins.unshift(nodePolyfills())
 
   return mergeConfig(config, {
-    // This is necessary as it otherwise just points to the `web` directory,
-    // but it needs to point to `web/src`
-    root: cedarProjectPaths.web.src,
     plugins: [mockRouter(), mockAuth(), autoImports],
     resolve: {
       alias: {
