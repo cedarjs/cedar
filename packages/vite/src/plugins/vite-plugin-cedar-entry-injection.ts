@@ -7,9 +7,9 @@ import { normalizePath } from 'vite'
 import { getPaths } from '@cedarjs/project-config'
 
 export function cedarEntryInjectionPlugin(): Plugin {
-  const rwPaths = getPaths()
+  const cedarPaths = getPaths()
 
-  const clientEntryPath = rwPaths.web.entryClient
+  const clientEntryPath = cedarPaths.web.entryClient
 
   if (!clientEntryPath) {
     throw new Error(
@@ -19,7 +19,7 @@ export function cedarEntryInjectionPlugin(): Plugin {
   }
 
   const relativeEntryPath = normalizePath(
-    path.relative(rwPaths.web.base, clientEntryPath),
+    path.relative(cedarPaths.web.base, clientEntryPath),
   )
 
   return {
@@ -41,7 +41,16 @@ export function cedarEntryInjectionPlugin(): Plugin {
     // Used by Vite during dev, to inject the entrypoint.
     transformIndexHtml: {
       order: 'pre',
-      handler: (html: string) => {
+      handler: (html: string, ctx) => {
+        // Only inject for the project's own index.html, not for other
+        // consumers of this plugin (e.g. Storybook).
+        if (
+          ctx.filename &&
+          normalizePath(ctx.filename) !== normalizePath(cedarPaths.web.html)
+        ) {
+          return html
+        }
+
         // So we inject the entrypoint with the correct extension .tsx vs .jsx
 
         // And then inject the entry
@@ -63,7 +72,7 @@ export function cedarEntryInjectionPlugin(): Plugin {
     transform: (code: string, id: string) => {
       if (
         fs.existsSync(clientEntryPath) &&
-        normalizePath(id) === normalizePath(rwPaths.web.html)
+        normalizePath(id) === normalizePath(cedarPaths.web.html)
       ) {
         return {
           code: code.replace(
