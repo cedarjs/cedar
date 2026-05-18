@@ -244,6 +244,55 @@ means use plugin config.
 - The plugin still works standalone in dev mode with its own config.
 - CI can set a different prefix without modifying tracked files.
 
+### Drop Fastify from `cedar serve --ud` (two-port, srvx only)
+
+**Date:** 2026-05-15
+
+**Context:** `cedar serve --ud` uses a two-port topology: a Fastify web server
+(serving the SPA) on the web port, and srvx (hosting the UD Fetchable) on the
+API port. The Fastify proxy strips `apiUrl` from request paths before
+forwarding to srvx, meaning the Fetchable receives a different path locally
+than it does on deployment targets like Netlify, Vercel, or Cloudflare
+(where no proxy strips the prefix). This forces users to track
+`apiRootPath` across plugin config, `cedar.toml`, and the `--apiRootPath`
+CLI flag — too many knobs that must be kept in sync.
+
+The original rationale for keeping Fastify was "production-like split
+topology for local testing," mirroring a VPS/baremetal reverse-proxy setup.
+But the deployment targets that benefit most from UD (Netlify, Vercel,
+Cloudflare) do not use a reverse-proxy that strips prefixes — the function
+receives the full request path. The two-port Fastify model is not
+production-like for those targets.
+
+With no proxy stripping prefixes, the Fetchable receives the same path locally
+as it does on Netlify — meaning the same `apiRootPath` works everywhere, and the
+`--apiRootPath` CLI flag is only needed for CI overrides, not for environment-
+specific path tracking.
+
+**Decision:** Start by replacing the Fastify web server with srvx hosting both
+the UD Fetchable and static files (`web/dist/`) on a single listener per port.
+Keep two ports: one for the web server (srvx + static files) and one for
+the API server (srvx + the Fetchable). This simplifies the server topology
+and eliminates a server-technology boundary (Fastify ↔ srvx) that has no
+equivalent in production UD deployments.
+
+**Rationale:** srvx can already serve static files (the UD Node adapter
+uses `sirv` for this). The Fetchable already returns `undefined` for
+non-API paths, so the static fallback is natural. Not using Fastify means one
+less server-technology boundary to maintain.
+
+**Consequences:**
+
+- Static file serving (`web/dist/`) moves from Fastify to srvx (or srvx +
+  `sirv`). This needs to be implemented and tested.
+- The Fastify web server is no longer part of `cedar serve --ud`. Apps
+  that rely on Fastify-specific customization (compression, custom
+  middleware) must use the non-UD path or a Lane B compatibility option.
+- The `cedar serve --ud` UX does not change: same two ports, same CLI
+  flags, same developer workflows.
+- A future single-port option is still possible (as noted in the "Future
+  work" section) but is not required by this change.
+
 ## Current state
 
 From the current code:
