@@ -43,9 +43,10 @@ export function cedarEntryInjectionPlugin(): Plugin {
       order: 'pre',
       handler: (html: string, ctx) => {
         // Only inject for the project's own index.html, not for other
-        // consumers of this plugin (e.g. Storybook).
+        // consumers of this plugin (e.g. Storybook). If ctx.filename is
+        // not set or doesn't match Cedar's index.html, skip injection.
         if (
-          ctx.filename &&
+          !ctx.filename ||
           normalizePath(ctx.filename) !== normalizePath(cedarPaths.web.html)
         ) {
           return html
