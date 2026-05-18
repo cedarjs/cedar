@@ -25,6 +25,18 @@ export function cedarEntryInjectionPlugin(): Plugin {
   return {
     name: 'cedar-entry-injection',
 
+    // Vite's dependency optimizer and dev server resolve the script tag
+    // src="/src/entry.client.{tsx,jsx}" as an absolute filesystem path
+    // (/src/entry.client.tsx) instead of relative to the Vite root.
+    // This hook maps it to the real file path so Vite can find it.
+    resolveId(id) {
+      if (id === '/' + relativeEntryPath) {
+        return clientEntryPath
+      }
+
+      return null
+    },
+
     // ---------- Bundle injection ----------
     // Used by Vite during dev, to inject the entrypoint.
     transformIndexHtml: {
