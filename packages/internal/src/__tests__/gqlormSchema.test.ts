@@ -61,6 +61,27 @@ function makeModel(name: string, fields: Field[], documentation?: string) {
   } satisfies Model
 }
 
+function backendField(
+  name: string,
+  graphqlType: string,
+  isRequired: boolean,
+  isId = false,
+  overrides?: Partial<{
+    hasDefaultValue: boolean
+    isUpdatedAt: boolean
+  }>,
+) {
+  return {
+    name,
+    graphqlType,
+    isRequired,
+    isId,
+    hasDefaultValue: false,
+    isUpdatedAt: false,
+    ...overrides,
+  }
+}
+
 function makeDmmf(models: Model[]) {
   return {
     datamodel: {
@@ -301,19 +322,37 @@ describe('buildBackendModelInfo', () => {
     expect(result[0].camelName).toBe('todo')
     expect(result[0].pluralName).toBe('todos')
     expect(result[0].fields).toEqual([
-      { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-      { name: 'title', graphqlType: 'String', isRequired: true, isId: false },
+      {
+        name: 'id',
+        graphqlType: 'Int',
+        isRequired: true,
+        isId: true,
+        hasDefaultValue: false,
+        isUpdatedAt: false,
+      },
+      {
+        name: 'title',
+        graphqlType: 'String',
+        isRequired: true,
+        isId: false,
+        hasDefaultValue: false,
+        isUpdatedAt: false,
+      },
       {
         name: 'done',
         graphqlType: 'Boolean',
         isRequired: true,
         isId: false,
+        hasDefaultValue: false,
+        isUpdatedAt: false,
       },
       {
         name: 'createdAt',
         graphqlType: 'DateTime',
         isRequired: true,
         isId: false,
+        hasDefaultValue: false,
+        isUpdatedAt: false,
       },
     ])
     expect(result[0].idField).toEqual({
@@ -321,6 +360,8 @@ describe('buildBackendModelInfo', () => {
       graphqlType: 'Int',
       isRequired: true,
       isId: true,
+      hasDefaultValue: false,
+      isUpdatedAt: false,
     })
 
     warnSpy.mockRestore()
@@ -451,6 +492,8 @@ describe('buildBackendModelInfo', () => {
       graphqlType: 'String',
       isRequired: false,
       isId: false,
+      hasDefaultValue: false,
+      isUpdatedAt: false,
     })
 
     warnSpy.mockRestore()
@@ -724,26 +767,11 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'todo',
         pluralName: 'todos',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'title',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
-          {
-            name: 'done',
-            graphqlType: 'Boolean',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('title', 'String', true),
+          backendField('done', 'Boolean', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
     ])
 
@@ -816,20 +844,10 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'post',
         pluralName: 'posts',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'body',
-            graphqlType: 'String',
-            isRequired: false,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('body', 'String', false),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
     ])
 
@@ -848,20 +866,10 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'event',
         pluralName: 'events',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'createdAt',
-            graphqlType: 'DateTime',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('createdAt', 'DateTime', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
     ])
 
@@ -877,14 +885,7 @@ describe('generateGqlormBackendContent', () => {
         modelName: 'ViewOnly',
         camelName: 'viewOnly',
         pluralName: 'viewOnlys',
-        fields: [
-          {
-            name: 'name',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
-        ],
+        fields: [backendField('name', 'String', true)],
         idField: undefined,
       },
     ])
@@ -906,20 +907,10 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'account',
         pluralName: 'accounts',
         fields: [
-          { name: 'id', graphqlType: 'String', isRequired: true, isId: true },
-          {
-            name: 'name',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'String', true, true),
+          backendField('name', 'String', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'String',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'String', true, true),
       },
     ])
 
@@ -929,6 +920,43 @@ describe('generateGqlormBackendContent', () => {
     expect(content).toContain('{ id }: { id: string }, _context: GqlormContext')
   })
 
+  it('includes defaulted scalar fields in generated create inputs', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Task',
+        camelName: 'task',
+        pluralName: 'tasks',
+        fields: [
+          backendField('id', 'Int', true, true),
+          backendField('title', 'String', true),
+          backendField('status', 'String', true, false, {
+            hasDefaultValue: true,
+          }),
+          backendField('createdAt', 'DateTime', true, false, {
+            hasDefaultValue: true,
+          }),
+          backendField('updatedAt', 'DateTime', true, false, {
+            isUpdatedAt: true,
+          }),
+        ],
+        idField: backendField('id', 'Int', true, true),
+      },
+    ])
+
+    const createInputStart = content.indexOf('input CreateTaskInput {')
+    const createInputEnd = content.indexOf('}', createInputStart)
+    const createInputBlock = content.slice(createInputStart, createInputEnd)
+
+    expect(createInputBlock).toContain('title: String!')
+    expect(createInputBlock).toContain('status: String!')
+    expect(createInputBlock).toContain('createdAt: DateTime!')
+    expect(createInputBlock).not.toContain('updatedAt: DateTime')
+    expect(createInputBlock).not.toContain('id: Int')
+    expect(content).toContain(
+      'createTask(input: CreateTaskInput!): Task! @skipAuth',
+    )
+  })
+
   it('generates content for multiple models', () => {
     const content = generateGqlormBackendContent([
       {
@@ -936,40 +964,20 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'todo',
         pluralName: 'todos',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'title',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('title', 'String', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
       {
         modelName: 'Tag',
         camelName: 'tag',
         pluralName: 'tags',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'label',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('label', 'String', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
     ])
 
@@ -997,20 +1005,10 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'item',
         pluralName: 'items',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'name',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('name', 'String', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
     ])
 
@@ -1038,20 +1036,10 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'post',
         pluralName: 'posts',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'userId',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('userId', 'String', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
     ])
 
@@ -1089,26 +1077,11 @@ describe('generateGqlormBackendContent', () => {
           camelName: 'membership',
           pluralName: 'memberships',
           fields: [
-            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-            {
-              name: 'userId',
-              graphqlType: 'String',
-              isRequired: true,
-              isId: false,
-            },
-            {
-              name: 'organizationId',
-              graphqlType: 'String',
-              isRequired: true,
-              isId: false,
-            },
+            backendField('id', 'Int', true, true),
+            backendField('userId', 'String', true),
+            backendField('organizationId', 'String', true),
           ],
-          idField: {
-            name: 'id',
-            graphqlType: 'Int',
-            isRequired: true,
-            isId: true,
-          },
+          idField: backendField('id', 'Int', true, true),
         },
       ],
       config,
@@ -1143,26 +1116,11 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'post',
         pluralName: 'posts',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'title',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
-          {
-            name: 'userId',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('title', 'String', true),
+          backendField('userId', 'String', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
     ])
 
@@ -1189,20 +1147,10 @@ describe('generateGqlormBackendContent', () => {
         camelName: 'tag',
         pluralName: 'tags',
         fields: [
-          { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-          {
-            name: 'label',
-            graphqlType: 'String',
-            isRequired: true,
-            isId: false,
-          },
+          backendField('id', 'Int', true, true),
+          backendField('label', 'String', true),
         ],
-        idField: {
-          name: 'id',
-          graphqlType: 'Int',
-          isRequired: true,
-          isId: true,
-        },
+        idField: backendField('id', 'Int', true, true),
       },
     ])
 
@@ -1226,20 +1174,10 @@ describe('generateGqlormBackendContent', () => {
           camelName: 'post',
           pluralName: 'posts',
           fields: [
-            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-            {
-              name: 'organizationId',
-              graphqlType: 'String',
-              isRequired: true,
-              isId: false,
-            },
+            backendField('id', 'Int', true, true),
+            backendField('organizationId', 'String', true),
           ],
-          idField: {
-            name: 'id',
-            graphqlType: 'Int',
-            isRequired: true,
-            isId: true,
-          },
+          idField: backendField('id', 'Int', true, true),
         },
       ],
       config,
@@ -1275,20 +1213,10 @@ describe('generateGqlormBackendContent', () => {
           camelName: 'post',
           pluralName: 'posts',
           fields: [
-            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-            {
-              name: 'organizationId',
-              graphqlType: 'String',
-              isRequired: true,
-              isId: false,
-            },
+            backendField('id', 'Int', true, true),
+            backendField('organizationId', 'String', true),
           ],
-          idField: {
-            name: 'id',
-            graphqlType: 'Int',
-            isRequired: true,
-            isId: true,
-          },
+          idField: backendField('id', 'Int', true, true),
         },
       ],
       config,
@@ -1315,20 +1243,10 @@ describe('generateGqlormBackendContent', () => {
           camelName: 'post',
           pluralName: 'posts',
           fields: [
-            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-            {
-              name: 'organizationId',
-              graphqlType: 'String',
-              isRequired: true,
-              isId: false,
-            },
+            backendField('id', 'Int', true, true),
+            backendField('organizationId', 'String', true),
           ],
-          idField: {
-            name: 'id',
-            graphqlType: 'Int',
-            isRequired: true,
-            isId: true,
-          },
+          idField: backendField('id', 'Int', true, true),
         },
       ],
       config,
@@ -1358,26 +1276,11 @@ describe('generateGqlormBackendContent', () => {
           camelName: 'resource',
           pluralName: 'resources',
           fields: [
-            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-            {
-              name: 'memberId',
-              graphqlType: 'String',
-              isRequired: true,
-              isId: false,
-            },
-            {
-              name: 'orgId',
-              graphqlType: 'String',
-              isRequired: true,
-              isId: false,
-            },
+            backendField('id', 'Int', true, true),
+            backendField('memberId', 'String', true),
+            backendField('orgId', 'String', true),
           ],
-          idField: {
-            name: 'id',
-            graphqlType: 'Int',
-            isRequired: true,
-            isId: true,
-          },
+          idField: backendField('id', 'Int', true, true),
         },
       ],
       config,
@@ -1414,20 +1317,10 @@ describe('generateGqlormBackendContent — org scoping notice', () => {
           camelName: 'post',
           pluralName: 'posts',
           fields: [
-            { name: 'id', graphqlType: 'Int', isRequired: true, isId: true },
-            {
-              name: 'organizationId',
-              graphqlType: 'String',
-              isRequired: true,
-              isId: false,
-            },
+            backendField('id', 'Int', true, true),
+            backendField('organizationId', 'String', true),
           ],
-          idField: {
-            name: 'id',
-            graphqlType: 'Int',
-            isRequired: true,
-            isId: true,
-          },
+          idField: backendField('id', 'Int', true, true),
         },
       ],
       config,
