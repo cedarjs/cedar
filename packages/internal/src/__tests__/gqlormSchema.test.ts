@@ -920,7 +920,7 @@ describe('generateGqlormBackendContent', () => {
     expect(content).toContain('{ id }: { id: string }, _context: GqlormContext')
   })
 
-  it('includes defaulted scalar fields in generated create inputs', () => {
+  it('includes defaulted scalar fields in generated create inputs and makes them optional', () => {
     const content = generateGqlormBackendContent([
       {
         modelName: 'Task',
@@ -948,13 +948,48 @@ describe('generateGqlormBackendContent', () => {
     const createInputBlock = content.slice(createInputStart, createInputEnd)
 
     expect(createInputBlock).toContain('title: String!')
-    expect(createInputBlock).toContain('status: String!')
-    expect(createInputBlock).toContain('createdAt: DateTime!')
+    expect(createInputBlock).toContain('status: String')
+    expect(createInputBlock).toContain('createdAt: DateTime')
+    expect(createInputBlock).not.toContain('status: String!')
+    expect(createInputBlock).not.toContain('createdAt: DateTime!')
     expect(createInputBlock).not.toContain('updatedAt: DateTime')
     expect(createInputBlock).not.toContain('id: Int')
     expect(content).toContain(
       'createTask(input: CreateTaskInput!): Task! @skipAuth',
     )
+  })
+
+  it('omits auth-owned user fields from generated create and update inputs', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'SavedFilter',
+        camelName: 'savedFilter',
+        pluralName: 'savedFilters',
+        fields: [
+          backendField('id', 'Int', true, true),
+          backendField('name', 'String', true),
+          backendField('userId', 'String', true),
+          backendField('organizationId', 'Int', true),
+        ],
+        idField: backendField('id', 'Int', true, true),
+      },
+    ])
+
+    const createInputStart = content.indexOf('input CreateSavedFilterInput {')
+    const createInputEnd = content.indexOf('}', createInputStart)
+    const createInputBlock = content.slice(createInputStart, createInputEnd)
+
+    const updateInputStart = content.indexOf('input UpdateSavedFilterInput {')
+    const updateInputEnd = content.indexOf('}', updateInputStart)
+    const updateInputBlock = content.slice(updateInputStart, updateInputEnd)
+
+    expect(createInputBlock).toContain('name: String!')
+    expect(createInputBlock).toContain('organizationId: Int!')
+    expect(createInputBlock).not.toContain('userId: String')
+
+    expect(updateInputBlock).toContain('name: String')
+    expect(updateInputBlock).toContain('organizationId: Int')
+    expect(updateInputBlock).not.toContain('userId: String')
   })
 
   it('generates content for multiple models', () => {

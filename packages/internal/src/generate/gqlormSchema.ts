@@ -742,15 +742,22 @@ export function generateGqlormBackendContent(
     lines.push('')
 
     const writableCreateFields = model.fields.filter(
-      (field) => !field.isId && !field.isUpdatedAt,
+      (field) =>
+        !field.isId &&
+        !field.isUpdatedAt &&
+        field.name !== config.membershipUserField,
     )
     const writableUpdateFields = model.fields.filter(
-      (field) => !field.isId && !field.isUpdatedAt,
+      (field) =>
+        !field.isId &&
+        !field.isUpdatedAt &&
+        field.name !== config.membershipUserField,
     )
 
     lines.push(`  input Create${model.modelName}Input {`)
     for (const field of writableCreateFields) {
-      const nullMark = field.isRequired ? '!' : ''
+      const isClientRequired = field.isRequired && !field.hasDefaultValue
+      const nullMark = isClientRequired ? '!' : ''
       lines.push(`    ${field.name}: ${field.graphqlType}${nullMark}`)
     }
     lines.push('  }')
