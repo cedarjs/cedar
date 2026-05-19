@@ -14,14 +14,9 @@ import { MockParamsProvider } from './MockParamsProvider.js'
 // Import the user's Routes from `./web/src/Routes.{tsx,jsx}`,
 // we pass the `children` from the user's Routes to `./MockRouter.Router`
 // so that we can populate the `routes object` in Storybook and tests.
-let UserRoutes: React.FC
-
-try {
-  const userRoutesModule = require('~__REDWOOD__USER_ROUTES_FOR_MOCK')
-  UserRoutes = userRoutesModule.default
-} catch {
-  UserRoutes = () => <></>
-}
+// Use a static ESM import so Vite resolves the alias correctly without
+// relying on CJS `require()`, which fails in browser ESM context.
+import UserRoutes from '~__REDWOOD__USER_ROUTES_FOR_MOCK'
 
 // TODO(pc): see if there are props we want to allow to be passed into our mock provider (e.g. AuthProviderProps)
 export const MockProviders: React.FunctionComponent<{
