@@ -1155,7 +1155,9 @@ export function generateGqlormBackendContent(
       }
     }
 
-    lines.push('        const data: Record<string, unknown> = { ...input }')
+    if (!(hasUserField || useOrgScoping)) {
+      lines.push('        const data: Record<string, unknown> = { ...input }')
+    }
     lines.push(`        return db.${model.camelName}.update({`)
     lines.push(`          where: { ${idFieldName} },`)
     lines.push('          data,')

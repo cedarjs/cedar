@@ -1370,6 +1370,11 @@ describe('generateGqlormBackendContent', () => {
     expect(updateResolverBlock).not.toContain('data: input')
     expect(dataDeclarationIndex).toBeGreaterThanOrEqual(0)
     expect(deleteUserIdIndex).toBeGreaterThan(dataDeclarationIndex)
+    expect(
+      updateResolverBlock.match(
+        /const data: Record<string, unknown> = \{ \.\.\.input \}/g,
+      ),
+    ).toHaveLength(1)
   })
 
   it('checks for existing records before delete even for public models', () => {
