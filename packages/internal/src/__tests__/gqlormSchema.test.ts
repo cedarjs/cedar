@@ -1295,6 +1295,44 @@ describe('generateGqlormBackendContent', () => {
     )
   })
 
+  it('checks both source and destination org membership in org-scoped update resolvers', () => {
+    const config: GqlormBackendConfig = {
+      membershipModel: 'Membership',
+      membershipModelCamel: 'membership',
+      membershipUserField: 'userId',
+      membershipOrganizationField: 'organizationId',
+      membershipModelExists: true,
+    }
+
+    const content = generateGqlormBackendContent(
+      [
+        {
+          modelName: 'Resource',
+          camelName: 'resource',
+          pluralName: 'resources',
+          fields: [
+            backendField('id', 'Int', true, true),
+            backendField('organizationId', 'Int', true),
+          ],
+          idField: backendField('id', 'Int', true, true),
+        },
+      ],
+      config,
+    )
+
+    expect(content).toContain(
+      'const currentOrganizationId = existingRecord.organizationId',
+    )
+    expect(content).toContain(
+      'const currentOrganizationMembership = await db.membership.findFirst(',
+    )
+    expect(content).toContain('organizationId: currentOrganizationId')
+    expect(content).toContain(
+      'const requestedOrganizationMembership = await db.membership.findFirst(',
+    )
+    expect(content).toContain('organizationId: requestedOrganizationId')
+  })
+
   it('uses custom membership field names from config', () => {
     const config: GqlormBackendConfig = {
       membershipModel: 'OrgMember',

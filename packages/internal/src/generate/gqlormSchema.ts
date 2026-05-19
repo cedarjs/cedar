@@ -1125,10 +1125,25 @@ export function generateGqlormBackendContent(
           `        const currentOrganizationId = existingRecord.${config.membershipOrganizationField}`,
         )
         lines.push(
+          `        const currentOrganizationMembership = await db.${config.membershipModelCamel}.findFirst({`,
+        )
+        lines.push('          where: {')
+        lines.push(`            ${config.membershipUserField}: currentUserId,`)
+        lines.push(
+          `            ${config.membershipOrganizationField}: currentOrganizationId,`,
+        )
+        lines.push('          },')
+        lines.push('        })')
+        lines.push('        if (!currentOrganizationMembership) {')
+        lines.push(
+          `          throw new ForbiddenError('Not authorized to access this resource')`,
+        )
+        lines.push('        }')
+        lines.push(
           `        const requestedOrganizationId = input['${config.membershipOrganizationField}'] ?? currentOrganizationId`,
         )
         lines.push(
-          `        const membership = await db.${config.membershipModelCamel}.findFirst({`,
+          `        const requestedOrganizationMembership = await db.${config.membershipModelCamel}.findFirst({`,
         )
         lines.push('          where: {')
         lines.push(`            ${config.membershipUserField}: currentUserId,`)
@@ -1137,7 +1152,7 @@ export function generateGqlormBackendContent(
         )
         lines.push('          },')
         lines.push('        })')
-        lines.push('        if (!membership) {')
+        lines.push('        if (!requestedOrganizationMembership) {')
         lines.push(
           `          throw new ForbiddenError('Not authorized to access this resource')`,
         )
