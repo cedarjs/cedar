@@ -741,13 +741,7 @@ export function generateGqlormBackendContent(
     lines.push('  }')
     lines.push('')
 
-    const writableCreateFields = model.fields.filter(
-      (field) =>
-        !field.isId &&
-        !field.isUpdatedAt &&
-        field.name !== config.membershipUserField,
-    )
-    const writableUpdateFields = model.fields.filter(
+    const writableFields = model.fields.filter(
       (field) =>
         !field.isId &&
         !field.isUpdatedAt &&
@@ -755,7 +749,7 @@ export function generateGqlormBackendContent(
     )
 
     lines.push(`  input Create${model.modelName}Input {`)
-    for (const field of writableCreateFields) {
+    for (const field of writableFields) {
       const isClientRequired = field.isRequired && !field.hasDefaultValue
       const nullMark = isClientRequired ? '!' : ''
       lines.push(`    ${field.name}: ${field.graphqlType}${nullMark}`)
@@ -764,7 +758,7 @@ export function generateGqlormBackendContent(
     lines.push('')
 
     lines.push(`  input Update${model.modelName}Input {`)
-    for (const field of writableUpdateFields) {
+    for (const field of writableFields) {
       lines.push(`    ${field.name}: ${field.graphqlType}`)
     }
     lines.push('  }')
@@ -999,9 +993,9 @@ export function generateGqlormBackendContent(
   lines.push('    },')
   lines.push('    Mutation: {')
 
-  for (let i = 0; i < models.length; i++) {
-    const model = models[i]
+  for (const model of models) {
     if (!model.idField) {
+      // Mutations are only generated for models with a unique ID field.
       continue
     }
 
@@ -1117,7 +1111,7 @@ export function generateGqlormBackendContent(
           `          throw new ForbiddenError('Not authorized to access this resource')`,
         )
         lines.push('        }')
-        lines.push(`        delete input['${config.membershipUserField}']`)
+        lines.push(`        delete data['${config.membershipUserField}']`)
       }
 
       if (useOrgScoping) {
@@ -1160,9 +1154,10 @@ export function generateGqlormBackendContent(
       }
     }
 
+    lines.push('        const data: Record<string, unknown> = { ...input }')
     lines.push(`        return db.${model.camelName}.update({`)
     lines.push(`          where: { ${idFieldName} },`)
-    lines.push('          data: input,')
+    lines.push('          data,')
     lines.push(`          select: { ${selectObj} },`)
     lines.push('        })')
     lines.push('      },')
@@ -1170,6 +1165,18 @@ export function generateGqlormBackendContent(
     lines.push(
       `      delete${model.modelName}: async (_root: unknown, { ${idFieldName} }: { ${idFieldName}: ${idTsType} }, ${hasUserField || useOrgScoping ? 'context' : '_context'}: GqlormContext) => {`,
     )
+
+    lines.push(
+      `        const existingRecord = await db.${model.camelName}.findUnique({`,
+    )
+    lines.push(`          where: { ${idFieldName} },`)
+    lines.push(`          select: { ${selectObj} },`)
+    lines.push('        })')
+    lines.push('        if (!existingRecord) {')
+    lines.push(
+      `          throw new ForbiddenError('Not authorized to access this resource')`,
+    )
+    lines.push('        }')
 
     if (hasUserField || useOrgScoping) {
       lines.push('        if (!context.currentUser) {')
@@ -1183,17 +1190,6 @@ export function generateGqlormBackendContent(
       )
       lines.push(
         `          throw new AuthenticationError("Could not determine the current user's ID.")`,
-      )
-      lines.push('        }')
-      lines.push(
-        `        const existingRecord = await db.${model.camelName}.findUnique({`,
-      )
-      lines.push(`          where: { ${idFieldName} },`)
-      lines.push(`          select: { ${selectObj} },`)
-      lines.push('        })')
-      lines.push('        if (!existingRecord) {')
-      lines.push(
-        `          throw new ForbiddenError('Not authorized to access this resource')`,
       )
       lines.push('        }')
 
@@ -1231,10 +1227,11 @@ export function generateGqlormBackendContent(
     lines.push(`          select: { ${selectObj} },`)
     lines.push('        })')
     lines.push('      },')
+    lines.push('')
+  }
 
-    if (i < models.length - 1) {
-      lines.push('')
-    }
+  while (lines[lines.length - 1] === '') {
+    lines.pop()
   }
 
   lines.push('    },')

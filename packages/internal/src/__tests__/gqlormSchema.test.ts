@@ -1333,6 +1333,76 @@ describe('generateGqlormBackendContent', () => {
     expect(content).toContain('organizationId: requestedOrganizationId')
   })
 
+  it('uses a copied data object in update resolvers instead of mutating input directly', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Post',
+        camelName: 'post',
+        pluralName: 'posts',
+        fields: [
+          backendField('id', 'Int', true, true),
+          backendField('title', 'String', true),
+          backendField('userId', 'String', true),
+        ],
+        idField: backendField('id', 'Int', true, true),
+      },
+    ])
+
+    expect(content).toContain(
+      'const data: Record<string, unknown> = { ...input }',
+    )
+    expect(content).toContain("delete data['userId']")
+    expect(content).toContain('data,')
+    expect(content).not.toContain("delete input['userId']")
+    expect(content).not.toContain('data: input')
+  })
+
+  it('checks for existing records before delete even for public models', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Tag',
+        camelName: 'tag',
+        pluralName: 'tags',
+        fields: [
+          backendField('id', 'Int', true, true),
+          backendField('label', 'String', true),
+        ],
+        idField: backendField('id', 'Int', true, true),
+      },
+    ])
+
+    expect(content).toContain('const existingRecord = await db.tag.findUnique(')
+    expect(content).toContain(
+      "throw new ForbiddenError('Not authorized to access this resource')",
+    )
+    expect(content).toContain('return db.tag.delete({')
+  })
+
+  it('does not emit extra trailing blank lines when the final model has no id field', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Todo',
+        camelName: 'todo',
+        pluralName: 'todos',
+        fields: [
+          backendField('id', 'Int', true, true),
+          backendField('title', 'String', true),
+        ],
+        idField: backendField('id', 'Int', true, true),
+      },
+      {
+        modelName: 'ViewOnly',
+        camelName: 'viewOnly',
+        pluralName: 'viewOnlys',
+        fields: [backendField('name', 'String', true)],
+        idField: undefined,
+      },
+    ])
+
+    expect(content).toContain('deleteTodo(id: Int!): Todo! @skipAuth')
+    expect(content).not.toContain('\n\n\n    },')
+  })
+
   it('uses custom membership field names from config', () => {
     const config: GqlormBackendConfig = {
       membershipModel: 'OrgMember',
