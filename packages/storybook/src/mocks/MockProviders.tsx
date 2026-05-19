@@ -14,14 +14,13 @@ import { MockParamsProvider } from './MockParamsProvider.js'
 // Import the user's Routes from `./web/src/Routes.{tsx,jsx}`,
 // we pass the `children` from the user's Routes to `./MockRouter.Router`
 // so that we can populate the `routes object` in Storybook and tests.
-let UserRoutes: React.FC
-
-try {
-  const userRoutesModule = require('~__REDWOOD__USER_ROUTES_FOR_MOCK')
-  UserRoutes = userRoutesModule.default
-} catch {
-  UserRoutes = () => <></>
-}
+//
+// Use a static ESM import so Vite resolves the alias at transform time through
+// its full plugin pipeline (including Cedar's Cell transform). A CJS require()
+// in try/catch caused esbuild to inline the module during dep pre-bundling,
+// which ran before Cedar's Cell plugin and produced missing default export
+// errors for Cell files in the import chain.
+import UserRoutes from '~__REDWOOD__USER_ROUTES_FOR_MOCK'
 
 // TODO(pc): see if there are props we want to allow to be passed into our mock provider (e.g. AuthProviderProps)
 export const MockProviders: React.FunctionComponent<{
