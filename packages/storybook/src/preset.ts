@@ -54,14 +54,6 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   return mergeConfig(
     { ...config, plugins },
     {
-      // With web/ as Vite root, esbuild's dep scan picks up web/index.html and
-      // follows imports into web/src/ Cell files, which have no default export
-      // (Cedar's Cell plugin isn't run during esbuild dep scan). This breaks
-      // pre-bundling of storybook-framework-cedarjs, causing require() in
-      // MockProviders.js to fail at runtime and leaving routes unpopulated.
-      // Setting root to web/src avoids scanning web/index.html and keeps dep
-      // optimization working exactly as it did before the index.html move.
-      root: cedarProjectPaths.web.src,
       plugins: [mockRouter(), mockAuth(), autoImports],
       resolve: {
         alias: {
