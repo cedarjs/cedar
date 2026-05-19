@@ -1102,6 +1102,7 @@ export function generateGqlormBackendContent(
         `          throw new ForbiddenError('Not authorized to access this resource')`,
       )
       lines.push('        }')
+      lines.push('        const data: Record<string, unknown> = { ...input }')
 
       if (hasUserField) {
         lines.push(

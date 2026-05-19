@@ -1348,13 +1348,28 @@ describe('generateGqlormBackendContent', () => {
       },
     ])
 
-    expect(content).toContain(
+    const updateResolverStart = content.indexOf('updatePost: async')
+    const deleteResolverStart = content.indexOf('deletePost: async')
+    const updateResolverBlock = content.slice(
+      updateResolverStart,
+      deleteResolverStart,
+    )
+    const dataDeclarationIndex = updateResolverBlock.indexOf(
       'const data: Record<string, unknown> = { ...input }',
     )
-    expect(content).toContain("delete data['userId']")
-    expect(content).toContain('data,')
-    expect(content).not.toContain("delete input['userId']")
-    expect(content).not.toContain('data: input')
+    const deleteUserIdIndex = updateResolverBlock.indexOf(
+      "delete data['userId']",
+    )
+
+    expect(updateResolverBlock).toContain(
+      'const data: Record<string, unknown> = { ...input }',
+    )
+    expect(updateResolverBlock).toContain("delete data['userId']")
+    expect(updateResolverBlock).toContain('data,')
+    expect(updateResolverBlock).not.toContain("delete input['userId']")
+    expect(updateResolverBlock).not.toContain('data: input')
+    expect(dataDeclarationIndex).toBeGreaterThanOrEqual(0)
+    expect(deleteUserIdIndex).toBeGreaterThan(dataDeclarationIndex)
   })
 
   it('checks for existing records before delete even for public models', () => {
