@@ -741,6 +741,10 @@ export function generateGqlormBackendContent(
     lines.push('  }')
     lines.push('')
 
+    if (!model.idField) {
+      continue
+    }
+
     const writableFields = model.fields.filter(
       (field) =>
         !field.isId &&
@@ -1156,6 +1160,17 @@ export function generateGqlormBackendContent(
     }
 
     if (!(hasUserField || useOrgScoping)) {
+      lines.push(
+        `        const existingRecord = await db.${model.camelName}.findUnique({`,
+      )
+      lines.push(`          where: { ${idFieldName} },`)
+      lines.push(`          select: { ${selectObj} },`)
+      lines.push('        })')
+      lines.push('        if (!existingRecord) {')
+      lines.push(
+        `          throw new ForbiddenError('Not authorized to access this resource')`,
+      )
+      lines.push('        }')
       lines.push('        const data: Record<string, unknown> = { ...input }')
     }
     lines.push(`        return db.${model.camelName}.update({`)

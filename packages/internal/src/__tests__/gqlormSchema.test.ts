@@ -1398,6 +1398,58 @@ describe('generateGqlormBackendContent', () => {
     expect(content).toContain('return db.tag.delete({')
   })
 
+  it('checks for existing records before update even for public models', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'Tag',
+        camelName: 'tag',
+        pluralName: 'tags',
+        fields: [
+          backendField('id', 'Int', true, true),
+          backendField('label', 'String', true),
+        ],
+        idField: backendField('id', 'Int', true, true),
+      },
+    ])
+
+    const updateResolverStart = content.indexOf('updateTag: async')
+    const deleteResolverStart = content.indexOf('deleteTag: async')
+    const updateResolverBlock = content.slice(
+      updateResolverStart,
+      deleteResolverStart,
+    )
+
+    expect(updateResolverBlock).toContain(
+      'const existingRecord = await db.tag.findUnique(',
+    )
+    expect(updateResolverBlock).toContain(
+      "throw new ForbiddenError('Not authorized to access this resource')",
+    )
+    expect(updateResolverBlock).toContain(
+      'const data: Record<string, unknown> = { ...input }',
+    )
+    expect(updateResolverBlock).toContain('return db.tag.update({')
+  })
+
+  it('does not emit create/update input types for models without an id field', () => {
+    const content = generateGqlormBackendContent([
+      {
+        modelName: 'ViewOnly',
+        camelName: 'viewOnly',
+        pluralName: 'viewOnlys',
+        fields: [backendField('name', 'String', true)],
+        idField: undefined,
+      },
+    ])
+
+    expect(content).toContain('type ViewOnly {')
+    expect(content).not.toContain('input CreateViewOnlyInput {')
+    expect(content).not.toContain('input UpdateViewOnlyInput {')
+    expect(content).not.toContain('createViewOnly(')
+    expect(content).not.toContain('updateViewOnly(')
+    expect(content).not.toContain('deleteViewOnly(')
+  })
+
   it('does not emit extra trailing blank lines when the final model has no id field', () => {
     const content = generateGqlormBackendContent([
       {
