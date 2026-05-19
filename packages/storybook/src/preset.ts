@@ -41,7 +41,10 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   // Vite processes web/index.html whose path matches cedarPaths.web.html,
   // so the plugin would inject Cedar's entry script and break dep scanning.
   const plugins = (config.plugins ?? []).filter(
-    (p) => !p || Array.isArray(p) || (p as { name?: string }).name !== 'cedar-entry-injection',
+    (p) =>
+      !p ||
+      Array.isArray(p) ||
+      (p as { name?: string }).name !== 'cedar-entry-injection',
   )
 
   // Needs to run before the react plugin, so add to the front
