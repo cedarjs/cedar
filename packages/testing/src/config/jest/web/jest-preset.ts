@@ -4,28 +4,28 @@ import type { Config } from 'jest'
 
 import { getPaths } from '@cedarjs/project-config'
 
-const rwjsPaths = getPaths()
-const NODE_MODULES_PATH = path.join(rwjsPaths.base, 'node_modules')
+const cedarPaths = getPaths()
+const NODE_MODULES_PATH = path.join(cedarPaths.base, 'node_modules')
 
 const config: Config = {
   // To make sure other config option which depends on rootDir always
   // use correct path, for example, coverageDirectory
-  rootDir: rwjsPaths.base,
-  roots: [path.join(rwjsPaths.web.src)],
+  rootDir: cedarPaths.base,
+  roots: [path.join(cedarPaths.web.src)],
   testEnvironment: path.join(__dirname, './RedwoodWebJestEnv.js'),
   displayName: {
     color: 'blueBright',
     name: 'web',
   },
   globals: {
-    __RWJS_TESTROOT_DIR: path.join(rwjsPaths.web.src), // used in jest setup to load mocks
+    __RWJS_TESTROOT_DIR: path.join(cedarPaths.web.src), // used in jest setup to load mocks
     RWJS_ENV: {
       RWJS_API_URL: '',
       RWJS_API_GRAPHQL_URL: '/',
       __REDWOOD__APP_TITLE: 'Redwood App',
     },
     RWJS_DEBUG_ENV: {
-      RWJS_SRC_ROOT: rwjsPaths.web.src,
+      RWJS_SRC_ROOT: cedarPaths.web.src,
     },
   },
   collectCoverageFrom: [
@@ -33,7 +33,7 @@ const config: Config = {
     '!**/node_modules/**',
     '!**/dist/**',
   ],
-  coverageDirectory: path.join(rwjsPaths.base, 'coverage'),
+  coverageDirectory: path.join(cedarPaths.base, 'coverage'),
   watchPlugins: [
     'jest-watch-typeahead/filename',
     'jest-watch-typeahead/testname',
@@ -67,8 +67,8 @@ const config: Config = {
     // @NOTE: Import @cedarjs/testing in web tests, and it automatically remaps to the web side only
     // This is to prevent web stuff leaking into api, and vice versa
     '^@cedarjs/testing$': path.join(NODE_MODULES_PATH, '@cedarjs/testing/web'),
-    '~__REDWOOD__USER_ROUTES_FOR_MOCK': rwjsPaths.web.routes,
-    '~__REDWOOD__USER_AUTH_FOR_MOCK': path.join(rwjsPaths.web.src, 'auth'),
+    '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarPaths.web.routes,
+    '~__CEDAR__USER_AUTH_FOR_MOCK': path.join(cedarPaths.web.src, 'auth'),
     /**
      * Mock out files that aren't particularly useful in tests. See fileMock.js for more info.
      */
