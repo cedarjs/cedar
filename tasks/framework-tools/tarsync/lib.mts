@@ -222,8 +222,34 @@ export async function getReactResolutions() {
 export async function pmInstall(projectPath: string) {
   const packageManager = await detectPackageManager(projectPath)
 
+  console.log(
+    `[tarsync] Running '${packageManager} install' in ${projectPath}`,
+  )
+  const start = Date.now()
+
   await within(async () => {
     cd(projectPath)
     await $`${packageManager} install`
   })
+
+  const elapsed = Date.now() - start
+  console.log(`[tarsync] '${packageManager} install' completed in ${elapsed}ms`)
+
+  // Verify that the install actually produced a lockfile. On Windows the
+  // install process can crash (e.g. V8 Maglev JIT bug, exit code 0xC0000409)
+  // without zx detecting a non-zero exit code. If the lockfile is still
+  // missing after install, fail loudly here rather than silently producing a
+  // broken project that fails at a later, less obvious step.
+  const lockfileName =
+    packageManager === 'pnpm' ? 'pnpm-lock.yaml' : 'yarn.lock'
+  const lockfilePath = path.join(projectPath, lockfileName)
+  if (!fs.existsSync(lockfilePath)) {
+    throw new Error(
+      `[tarsync] '${packageManager} install' completed but ${lockfileName} was not created in ${projectPath}. ` +
+        `The install process likely crashed silently (e.g. V8 Maglev JIT bug on Windows). ` +
+        `Check the install output above for clues.`,
+    )
+  }
+
+  console.log(`[tarsync] ${lockfileName} exists after install — OK`)
 }
