@@ -73,7 +73,7 @@ export async function tarsync(
   outputManager.switchStage(Stage.INSTALL)
   stageLog(verboseOutput, `stage: run ${packageManager} install`)
   try {
-    await pmInstall(projectPath)
+    await pmInstall(projectPath, verboseOutput)
   } catch (error) {
     outputManager.stop(error)
     console.error(`[tarsync] ERROR in ${packageManager} install stage:`, error)
