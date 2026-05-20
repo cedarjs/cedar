@@ -6,10 +6,7 @@
     "moduleResolution": "nodenext",
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["node", "vite/client"],
-    "paths": {
-      "~__REDWOOD__USER_ROUTES_FOR_MOCK": ["./src/ambient.d.ts"]
-    }
+    "types": ["node", "vite/client"]
   },
   "include": ["src/**/*"]
 }
