@@ -53,6 +53,8 @@ export interface BackendFieldInfo {
   graphqlType: string // e.g. "Int", "String", "DateTime", "Boolean"
   isRequired: boolean
   isId: boolean
+  hasDefaultValue: boolean
+  isUpdatedAt: boolean
 }
 
 export interface BackendModelInfo {
@@ -457,6 +459,8 @@ export function buildBackendModelInfo(dmmf: DMMF.Document): BackendModelInfo[] {
         graphqlType: mapDmmfTypeToGraphql(field.type, field.kind),
         isRequired: field.isRequired,
         isId: field.isId,
+        hasDefaultValue: field.hasDefaultValue,
+        isUpdatedAt: field.isUpdatedAt ?? false,
       })
     }
 
@@ -655,6 +659,49 @@ export function generateGqlormBackendContent(
       lines.push('    }): Promise<Record<string, unknown> | null>')
     }
 
+    lines.push('    create(args: {')
+    lines.push('      data: Record<string, unknown>')
+    lines.push(`      select: { ${selectType} }`)
+    lines.push('    }): Promise<{')
+    for (const field of model.fields) {
+      const tsType = graphqlTypeToTsInterfaceType(
+        field.graphqlType,
+        field.isRequired,
+      )
+      lines.push(`      ${field.name}: ${tsType}`)
+    }
+    lines.push('    }>')
+
+    if (model.idField) {
+      const idTsType = graphqlTypeToTsType(model.idField.graphqlType)
+      lines.push('    update(args: {')
+      lines.push(`      where: { ${model.idField.name}: ${idTsType} }`)
+      lines.push('      data: Record<string, unknown>')
+      lines.push(`      select: { ${selectType} }`)
+      lines.push('    }): Promise<{')
+      for (const field of model.fields) {
+        const tsType = graphqlTypeToTsInterfaceType(
+          field.graphqlType,
+          field.isRequired,
+        )
+        lines.push(`      ${field.name}: ${tsType}`)
+      }
+      lines.push('    }>')
+
+      lines.push('    delete(args: {')
+      lines.push(`      where: { ${model.idField.name}: ${idTsType} }`)
+      lines.push(`      select: { ${selectType} }`)
+      lines.push('    }): Promise<{')
+      for (const field of model.fields) {
+        const tsType = graphqlTypeToTsInterfaceType(
+          field.graphqlType,
+          field.isRequired,
+        )
+        lines.push(`      ${field.name}: ${tsType}`)
+      }
+      lines.push('    }>')
+    }
+
     lines.push('  }')
   }
 
@@ -693,6 +740,33 @@ export function generateGqlormBackendContent(
     }
     lines.push('  }')
     lines.push('')
+
+    if (!model.idField) {
+      continue
+    }
+
+    const writableFields = model.fields.filter(
+      (field) =>
+        !field.isId &&
+        !field.isUpdatedAt &&
+        field.name !== config.membershipUserField,
+    )
+
+    lines.push(`  input Create${model.modelName}Input {`)
+    for (const field of writableFields) {
+      const isClientRequired = field.isRequired && !field.hasDefaultValue
+      const nullMark = isClientRequired ? '!' : ''
+      lines.push(`    ${field.name}: ${field.graphqlType}${nullMark}`)
+    }
+    lines.push('  }')
+    lines.push('')
+
+    lines.push(`  input Update${model.modelName}Input {`)
+    for (const field of writableFields) {
+      lines.push(`    ${field.name}: ${field.graphqlType}`)
+    }
+    lines.push('  }')
+    lines.push('')
   }
 
   lines.push('  type Query {')
@@ -715,6 +789,35 @@ export function generateGqlormBackendContent(
       const idNullMark = model.idField.isRequired ? '!' : ''
       lines.push(
         `    ${model.camelName}(${model.idField.name}: ${model.idField.graphqlType}${idNullMark}): ${model.modelName} ${authDirective}`,
+      )
+    }
+  }
+  lines.push('  }')
+  lines.push('')
+  lines.push('  type Mutation {')
+  for (const model of models) {
+    if (model.idField) {
+      const hasUserField = model.fields.some(
+        (f) => f.name === config.membershipUserField,
+      )
+      const hasOrgField = model.fields.some(
+        (f) => f.name === config.membershipOrganizationField,
+      )
+      const isMembershipModel = model.camelName === config.membershipModelCamel
+      const needsAuth =
+        hasUserField ||
+        (hasOrgField && config.membershipModelExists && !isMembershipModel)
+      const authDirective = needsAuth ? '@requireAuth' : '@skipAuth'
+      const idNullMark = model.idField.isRequired ? '!' : ''
+
+      lines.push(
+        `    create${model.modelName}(input: Create${model.modelName}Input!): ${model.modelName}! ${authDirective}`,
+      )
+      lines.push(
+        `    update${model.modelName}(${model.idField.name}: ${model.idField.graphqlType}${idNullMark}, input: Update${model.modelName}Input!): ${model.modelName}! ${authDirective}`,
+      )
+      lines.push(
+        `    delete${model.modelName}(${model.idField.name}: ${model.idField.graphqlType}${idNullMark}): ${model.modelName}! ${authDirective}`,
       )
     }
   }
@@ -889,6 +992,264 @@ export function generateGqlormBackendContent(
     if (i < models.length - 1) {
       lines.push('')
     }
+  }
+
+  lines.push('    },')
+  lines.push('    Mutation: {')
+
+  for (const model of models) {
+    if (!model.idField) {
+      // Mutations are only generated for models with a unique ID field.
+      continue
+    }
+
+    const selectObj = model.fields.map((f) => `${f.name}: true`).join(', ')
+    const hasUserField = model.fields.some(
+      (f) => f.name === config.membershipUserField,
+    )
+    const hasOrgField = model.fields.some(
+      (f) => f.name === config.membershipOrganizationField,
+    )
+    const isMembershipModel = model.camelName === config.membershipModelCamel
+    const useOrgScoping =
+      hasOrgField && config.membershipModelExists && !isMembershipModel
+    const idFieldName = model.idField.name
+    const idTsType = graphqlTypeToTsType(model.idField.graphqlType)
+    lines.push(
+      `      create${model.modelName}: async (_root: unknown, { input }: { input: Record<string, unknown> }, ${hasUserField || useOrgScoping ? 'context' : '_context'}: GqlormContext) => {`,
+    )
+
+    if (hasUserField || useOrgScoping) {
+      lines.push('        if (!context.currentUser) {')
+      lines.push(
+        `          throw new AuthenticationError("You don't have permission to do that.")`,
+      )
+      lines.push('        }')
+      lines.push("        const currentUserId = context.currentUser['id']")
+      lines.push(
+        '        if (currentUserId === undefined || currentUserId === null) {',
+      )
+      lines.push(
+        `          throw new AuthenticationError("Could not determine the current user's ID.")`,
+      )
+      lines.push('        }')
+    }
+
+    lines.push('        const data: Record<string, unknown> = { ...input }')
+
+    if (hasUserField) {
+      lines.push(
+        `        data['${config.membershipUserField}'] = currentUserId`,
+      )
+    }
+
+    if (useOrgScoping) {
+      lines.push(
+        `        const organizationId = data['${config.membershipOrganizationField}']`,
+      )
+      lines.push(
+        '        if (organizationId === undefined || organizationId === null) {',
+      )
+      lines.push(
+        `          throw new ForbiddenError('Organization membership is required for this operation')`,
+      )
+      lines.push('        }')
+      lines.push(
+        `        const membership = await db.${config.membershipModelCamel}.findFirst({`,
+      )
+      lines.push('          where: {')
+      lines.push(`            ${config.membershipUserField}: currentUserId,`)
+      lines.push(
+        `            ${config.membershipOrganizationField}: organizationId,`,
+      )
+      lines.push('          },')
+      lines.push('        })')
+      lines.push('        if (!membership) {')
+      lines.push(
+        `          throw new ForbiddenError('Not authorized to access this resource')`,
+      )
+      lines.push('        }')
+    }
+
+    lines.push(`        return db.${model.camelName}.create({`)
+    lines.push('          data,')
+    lines.push(`          select: { ${selectObj} },`)
+    lines.push('        })')
+    lines.push('      },')
+
+    lines.push(
+      `      update${model.modelName}: async (_root: unknown, { ${idFieldName}, input }: { ${idFieldName}: ${idTsType}; input: Record<string, unknown> }, ${hasUserField || useOrgScoping ? 'context' : '_context'}: GqlormContext) => {`,
+    )
+
+    if (hasUserField || useOrgScoping) {
+      lines.push('        if (!context.currentUser) {')
+      lines.push(
+        `          throw new AuthenticationError("You don't have permission to do that.")`,
+      )
+      lines.push('        }')
+      lines.push("        const currentUserId = context.currentUser['id']")
+      lines.push(
+        '        if (currentUserId === undefined || currentUserId === null) {',
+      )
+      lines.push(
+        `          throw new AuthenticationError("Could not determine the current user's ID.")`,
+      )
+      lines.push('        }')
+      lines.push(
+        `        const existingRecord = await db.${model.camelName}.findUnique({`,
+      )
+      lines.push(`          where: { ${idFieldName} },`)
+      lines.push(`          select: { ${selectObj} },`)
+      lines.push('        })')
+      lines.push('        if (!existingRecord) {')
+      lines.push(
+        `          throw new ForbiddenError('Not authorized to access this resource')`,
+      )
+      lines.push('        }')
+      lines.push('        const data: Record<string, unknown> = { ...input }')
+
+      if (hasUserField) {
+        lines.push(
+          `        if (existingRecord.${config.membershipUserField} !== currentUserId) {`,
+        )
+        lines.push(
+          `          throw new ForbiddenError('Not authorized to access this resource')`,
+        )
+        lines.push('        }')
+        lines.push(`        delete data['${config.membershipUserField}']`)
+      }
+
+      if (useOrgScoping) {
+        lines.push(
+          `        const currentOrganizationId = existingRecord.${config.membershipOrganizationField}`,
+        )
+        lines.push(
+          `        const currentOrganizationMembership = await db.${config.membershipModelCamel}.findFirst({`,
+        )
+        lines.push('          where: {')
+        lines.push(`            ${config.membershipUserField}: currentUserId,`)
+        lines.push(
+          `            ${config.membershipOrganizationField}: currentOrganizationId,`,
+        )
+        lines.push('          },')
+        lines.push('        })')
+        lines.push('        if (!currentOrganizationMembership) {')
+        lines.push(
+          `          throw new ForbiddenError('Not authorized to access this resource')`,
+        )
+        lines.push('        }')
+        lines.push(
+          `        const requestedOrganizationId = input['${config.membershipOrganizationField}'] ?? currentOrganizationId`,
+        )
+        lines.push(
+          `        const requestedOrganizationMembership = await db.${config.membershipModelCamel}.findFirst({`,
+        )
+        lines.push('          where: {')
+        lines.push(`            ${config.membershipUserField}: currentUserId,`)
+        lines.push(
+          `            ${config.membershipOrganizationField}: requestedOrganizationId,`,
+        )
+        lines.push('          },')
+        lines.push('        })')
+        lines.push('        if (!requestedOrganizationMembership) {')
+        lines.push(
+          `          throw new ForbiddenError('Not authorized to access this resource')`,
+        )
+        lines.push('        }')
+      }
+    }
+
+    if (!(hasUserField || useOrgScoping)) {
+      lines.push(
+        `        const existingRecord = await db.${model.camelName}.findUnique({`,
+      )
+      lines.push(`          where: { ${idFieldName} },`)
+      lines.push(`          select: { ${selectObj} },`)
+      lines.push('        })')
+      lines.push('        if (!existingRecord) {')
+      lines.push(
+        `          throw new ForbiddenError('Not authorized to access this resource')`,
+      )
+      lines.push('        }')
+      lines.push('        const data: Record<string, unknown> = { ...input }')
+    }
+    lines.push(`        return db.${model.camelName}.update({`)
+    lines.push(`          where: { ${idFieldName} },`)
+    lines.push('          data,')
+    lines.push(`          select: { ${selectObj} },`)
+    lines.push('        })')
+    lines.push('      },')
+
+    lines.push(
+      `      delete${model.modelName}: async (_root: unknown, { ${idFieldName} }: { ${idFieldName}: ${idTsType} }, ${hasUserField || useOrgScoping ? 'context' : '_context'}: GqlormContext) => {`,
+    )
+
+    lines.push(
+      `        const existingRecord = await db.${model.camelName}.findUnique({`,
+    )
+    lines.push(`          where: { ${idFieldName} },`)
+    lines.push(`          select: { ${selectObj} },`)
+    lines.push('        })')
+    lines.push('        if (!existingRecord) {')
+    lines.push(
+      `          throw new ForbiddenError('Not authorized to access this resource')`,
+    )
+    lines.push('        }')
+
+    if (hasUserField || useOrgScoping) {
+      lines.push('        if (!context.currentUser) {')
+      lines.push(
+        `          throw new AuthenticationError("You don't have permission to do that.")`,
+      )
+      lines.push('        }')
+      lines.push("        const currentUserId = context.currentUser['id']")
+      lines.push(
+        '        if (currentUserId === undefined || currentUserId === null) {',
+      )
+      lines.push(
+        `          throw new AuthenticationError("Could not determine the current user's ID.")`,
+      )
+      lines.push('        }')
+
+      if (hasUserField) {
+        lines.push(
+          `        if (existingRecord.${config.membershipUserField} !== currentUserId) {`,
+        )
+        lines.push(
+          `          throw new ForbiddenError('Not authorized to access this resource')`,
+        )
+        lines.push('        }')
+      }
+
+      if (useOrgScoping) {
+        lines.push(
+          `        const membership = await db.${config.membershipModelCamel}.findFirst({`,
+        )
+        lines.push('          where: {')
+        lines.push(`            ${config.membershipUserField}: currentUserId,`)
+        lines.push(
+          `            ${config.membershipOrganizationField}: existingRecord.${config.membershipOrganizationField},`,
+        )
+        lines.push('          },')
+        lines.push('        })')
+        lines.push('        if (!membership) {')
+        lines.push(
+          `          throw new ForbiddenError('Not authorized to access this resource')`,
+        )
+        lines.push('        }')
+      }
+    }
+
+    lines.push(`        return db.${model.camelName}.delete({`)
+    lines.push(`          where: { ${idFieldName} },`)
+    lines.push(`          select: { ${selectObj} },`)
+    lines.push('        })')
+    lines.push('      },')
+    lines.push('')
+  }
+
+  while (lines[lines.length - 1] === '') {
+    lines.pop()
   }
 
   lines.push('    },')
