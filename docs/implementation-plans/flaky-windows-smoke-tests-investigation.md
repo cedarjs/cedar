@@ -706,3 +706,85 @@ visible in the CI log.
 - A race condition or lock contention from the preceding `yarn install` not fully
   releasing file locks before `yarn cedar` starts
 - A transient yarn registry or filesystem error on the Windows runner
+
+---
+
+## Update 2026-05-20 — Root cause of CLI smoke test failure identified
+
+### Evidence from PR #1806
+
+With the debug improvement from 2026-05-15 now active, the captured stdout from
+`yarn cedar g secret --raw` was visible for the first time:
+
+```
+stdout: Internal Error: root-workspace-0b6124@workspace:.: This package doesn't
+seem to be present in your lockfile; run "yarn install" to update the lockfile
+    at DT.getCandidates (yarn.js:204:4607)
+    at em.getCandidates (yarn.js:141:1311)
+    ...
+    at async e.resolveEverything (yarn.js:209:7138)
+```
+
+And, crucially, the preceding warning that was already present:
+
+```
+WARNING: yarn.lock was not created by tarsync!
+```
+
+### Root cause
+
+The `__fixtures__/test-project` fixture has no committed `yarn.lock`. Tarsync is
+responsible for creating it via `pmInstall`. When `yarn.lock` is absent, yarn 4's
+hardened mode (active on public PRs) rejects any subsequent yarn invocation —
+including `yarn cedar g secret --raw` — with "not present in your lockfile".
+
+So the question becomes: **why does tarsync's `yarn install` step sometimes
+fail to produce `yarn.lock`?**
+
+The answer is the same V8 Maglev JIT bug documented above. The `yarn install`
+call inside tarsync's `pmInstall` is a long-running process (58+ seconds in
+observed runs). The JIT crash (`0xC0000409`) can occur at any point during that
+execution. When it does, Node exits hard and `yarn.lock` is never written.
+
+**Why tarsync silently absorbed the failure:** In verbose/CI mode (`verbose=true`
+or non-TTY), `OutputManager` is constructed with `disabled=true`. Its `start()`
+method returns early without setting `this.running = true`. Consequently, every
+`outputManager.stop(error)` call also returns early (`!this.running`). The error
+is stored in `this.error` but never rendered and never re-thrown — tarsync exits
+with code 0 despite the failure.
+
+### Why it's intermittent
+
+The V8 Maglev JIT crash is non-deterministic. Whether a given code path gets
+Maglev-compiled depends on runtime heuristics. Most runs complete the
+`yarn install` before any vulnerable code path triggers JIT compilation at the
+Maglev tier; occasionally it does, and the process hard-crashes.
+
+### Fixes applied in this PR
+
+**`tasks/framework-tools/tarsync/tarsync.mts`**
+
+- Added `stageLog()` helper that emits plain `console.log` lines in verbose/CI
+  mode, so each stage transition is visible in CI logs even when the spinner is
+  disabled.
+- Changed all `catch` blocks to re-throw after logging, so tarsync exits
+  non-zero when any stage fails. Previously the error was absorbed and tarsync
+  reported success.
+
+**`tasks/framework-tools/tarsync/lib.mts`** (`pmInstall`)
+
+- Added entry/exit console logs with elapsed time.
+- Added a post-install lockfile existence check. If the lockfile is absent after
+  `yarn install` returns, `pmInstall` now throws immediately with an explanation.
+  This catches the case where the install process crashes but zx somehow sees a
+  zero exit code (possible if the crash occurs in a subprocess that zx doesn't
+  track directly).
+
+**`.github/actions/set-up-test-project/setUpTestProject.mts`**
+
+- Changed the "WARNING: yarn.lock was not created by tarsync!" path from a
+  warning-and-continue to a hard throw. Failing fast here gives a clear error
+  message with context, rather than the confusing downstream
+  "not present in your lockfile" error from `yarn cedar g secret --raw`.
+- Similarly, if `yarn.lock` exists but has no `root-workspace-` entry, now
+  throws instead of warning.

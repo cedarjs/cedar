@@ -57,8 +57,8 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
       plugins: [mockRouter(), mockAuth(), autoImports],
       resolve: {
         alias: {
-          '~__REDWOOD__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
-          '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
+          '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
+          '~__CEDAR__USER_WEB_SRC': cedarProjectPaths.web.src,
         },
       },
       optimizeDeps: {
@@ -72,10 +72,11 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         //
         // Exclude storybook-framework-cedarjs from pre-bundling. Its
         // MockProviders module has a static import of the
-        // ~__REDWOOD__USER_ROUTES_FOR_MOCK alias, which esbuild would try to
+        // ~__CEDAR__USER_ROUTES_FOR_MOCK alias, which esbuild would try to
         // resolve during pre-bundling. That leads esbuild into user Cell files
-        // which have no default export (Cedar's Cell transform doesn't run
-        // during esbuild dep scan), causing pre-bundling to fail entirely.
+        // which have no default export at that point (Cedar's Cell transform
+        // doesn't run during esbuild dep scan), causing pre-bundled Cell
+        // components to silently resolve as undefined.
         // When excluded, Vite serves the package directly through its normal
         // transform pipeline, which does run the Cell plugin correctly.
         exclude: ['@storybook/addon-docs', 'storybook-framework-cedarjs'],

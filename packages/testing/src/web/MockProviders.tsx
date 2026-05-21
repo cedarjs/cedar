@@ -13,12 +13,12 @@ import { MockParamsProvider } from './MockParamsProvider.js'
 // so that we can populate the `routes object` in Storybook and tests.
 let UserRoutes: React.FC
 
-// we need to do this to avoid "Could not resolve "~__REDWOOD__USER_ROUTES_FOR_MOCK"" errors
+// we need to do this to avoid "Could not resolve "~__CEDAR__USER_ROUTES_FOR_MOCK"" errors
 try {
-  const userRoutesModule = require('~__REDWOOD__USER_ROUTES_FOR_MOCK')
+  const userRoutesModule = require('~__CEDAR__USER_ROUTES_FOR_MOCK')
   UserRoutes = userRoutesModule.default
 } catch (error) {
-  if (!isModuleNotFoundError(error, '~__REDWOOD__USER_ROUTES_FOR_MOCK')) {
+  if (!isModuleNotFoundError(error, '~__CEDAR__USER_ROUTES_FOR_MOCK')) {
     // if it's not "MODULE_NOT_FOUND" it's more likely a user error. Let's
     // surface that to help the user debug the issue.
     console.warn(error)
