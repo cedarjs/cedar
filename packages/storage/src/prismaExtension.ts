@@ -130,7 +130,9 @@ export const createUploadsExtension = <
               model
             ].findFirstOrThrow({
               where: args.where,
-              // @TODO: should we select here to reduce the amount of data we're handling
+              select: Object.fromEntries(
+                uploadFieldsToUpdate.map((f) => [f, true]),
+              ),
             })
 
             // Similar, but not same as create
@@ -167,7 +169,9 @@ export const createUploadsExtension = <
             // MULTIPLE!
             const originalRecords = await (client as any)[model].findMany({
               where: args.where,
-              // @TODO: should we select here to reduce the amount of data we're handling
+              select: Object.fromEntries(
+                uploadFieldsToUpdate.map((f) => [f, true]),
+              ),
             })
 
             try {
@@ -205,6 +209,9 @@ export const createUploadsExtension = <
               // We only need to check for existing records if we're updating
               existingRecord = await (client as any)[model].findUnique({
                 where: args.where,
+                select: Object.fromEntries(
+                  uploadFieldsToUpdate.map((f) => [f, true]),
+                ),
               })
               isUpdate = !!existingRecord
             }
