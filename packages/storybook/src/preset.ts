@@ -72,7 +72,7 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         //
         // Exclude storybook-framework-cedarjs from pre-bundling. Its
         // MockProviders module has a static import of the
-        // ~__REDWOOD__USER_ROUTES_FOR_MOCK alias, which esbuild would try to
+        // ~__CEDAR__USER_ROUTES_FOR_MOCK alias, which esbuild would try to
         // resolve during pre-bundling. That leads esbuild into user Cell files
         // which have no default export (Cedar's Cell transform doesn't run
         // during esbuild dep scan), causing pre-bundling to fail entirely.
