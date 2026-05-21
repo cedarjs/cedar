@@ -57,8 +57,8 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
       plugins: [mockRouter(), mockAuth(), autoImports],
       resolve: {
         alias: {
-          '~__REDWOOD__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
-          '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
+          '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
+          '~__CEDAR__USER_WEB_SRC': cedarProjectPaths.web.src,
         },
       },
       optimizeDeps: {
