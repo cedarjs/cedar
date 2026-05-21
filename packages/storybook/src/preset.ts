@@ -102,7 +102,11 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // Force pre-bundling of CJS-only packages that are only reachable through
         // storybook-framework-cedarjs (excluded above). Without this, Vite serves
         // them via ?import interop, which can't detect named exports in CJS files.
-        include: ['rehackt'],
+        // Also include packages that trigger a mid-run Vite dep re-optimisation
+        // (and page reload) if discovered late: that reload causes a module
+        // instance split where the GraphQLHooksProvider context set up by the
+        // StorybookProvider decorator is lost, so Cells can't find useQuery.
+        include: ['rehackt', 'react-hook-form', '@cedarjs/forms'],
       },
     },
   )
