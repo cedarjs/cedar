@@ -223,7 +223,9 @@ export async function pmInstall(projectPath: string, verbose = false) {
   const packageManager = await detectPackageManager(projectPath)
 
   if (verbose) {
-    console.log(`[tarsync] Running '${packageManager} install' in ${projectPath}`)
+    console.log(
+      `[tarsync] Running '${packageManager} install' in ${projectPath}`,
+    )
   }
   const start = Date.now()
 
@@ -234,7 +236,9 @@ export async function pmInstall(projectPath: string, verbose = false) {
 
   if (verbose) {
     const elapsed = Date.now() - start
-    console.log(`[tarsync] '${packageManager} install' completed in ${elapsed}ms`)
+    console.log(
+      `[tarsync] '${packageManager} install' completed in ${elapsed}ms`,
+    )
   }
 
   // Verify that the install actually produced a lockfile. On Windows the
@@ -242,7 +246,8 @@ export async function pmInstall(projectPath: string, verbose = false) {
   // without zx detecting a non-zero exit code. If the lockfile is still
   // missing after install, fail loudly here rather than silently producing a
   // broken project that fails at a later, less obvious step.
-  const lockfileName = packageManager === 'pnpm' ? 'pnpm-lock.yaml' : 'yarn.lock'
+  const lockfileName =
+    packageManager === 'pnpm' ? 'pnpm-lock.yaml' : 'yarn.lock'
   const lockfilePath = path.join(projectPath, lockfileName)
   if (!fs.existsSync(lockfilePath)) {
     throw new Error(
