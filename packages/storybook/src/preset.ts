@@ -76,6 +76,9 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
           '@apollo/client/react/hooks/hooks.cjs': '@apollo/client/react/hooks',
           '@apollo/client/react/react.cjs': '@apollo/client/react',
           '@apollo/client/utilities/utilities.cjs': '@apollo/client/utilities',
+          // graphql ships CJS-only; alias the explicit sub-path to the package
+          // root so Vite resolves it through the exports field (ESM build).
+          'graphql/language/printer.js': 'graphql',
         },
       },
       optimizeDeps: {
