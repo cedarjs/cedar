@@ -99,6 +99,10 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // When excluded, Vite serves the package directly through its normal
         // transform pipeline, which does run the Cell plugin correctly.
         exclude: ['@storybook/addon-docs', 'storybook-framework-cedarjs'],
+        // Force pre-bundling of CJS-only packages that are only reachable through
+        // storybook-framework-cedarjs (excluded above). Without this, Vite serves
+        // them via ?import interop, which can't detect named exports in CJS files.
+        include: ['rehackt'],
       },
     },
   )
