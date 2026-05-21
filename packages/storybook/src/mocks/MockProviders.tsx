@@ -17,7 +17,7 @@ import { MockParamsProvider } from './MockParamsProvider.js'
 let UserRoutes: React.FC
 
 try {
-  const userRoutesModule = require('~__REDWOOD__USER_ROUTES_FOR_MOCK')
+  const userRoutesModule = require('~__CEDAR__USER_ROUTES_FOR_MOCK')
   UserRoutes = userRoutesModule.default
 } catch {
   UserRoutes = () => <></>
