@@ -59,6 +59,23 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         alias: {
           '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
           '~__CEDAR__USER_WEB_SRC': cedarProjectPaths.web.src,
+          // @cedarjs/web imports @apollo/client via explicit .cjs sub-paths
+          // (e.g. `@apollo/client/cache/cache.cjs`). In a Node.js / tsc build
+          // context these resolve fine, but Vite (ESM-first, browser target)
+          // falls back to a ?import CJS interop that can't statically detect
+          // named exports, causing runtime SyntaxErrors. Alias the .cjs paths
+          // to their package-root equivalents so Vite resolves them through
+          // Apollo's package.json `exports` field and picks up the ESM build.
+          '@apollo/client/cache/cache.cjs': '@apollo/client/cache',
+          '@apollo/client/core/core.cjs': '@apollo/client/core',
+          '@apollo/client/link/context/context.cjs':
+            '@apollo/client/link/context',
+          '@apollo/client/link/core/core.cjs': '@apollo/client/link/core',
+          '@apollo/client/link/persisted-queries/persisted-queries.cjs':
+            '@apollo/client/link/persisted-queries',
+          '@apollo/client/react/hooks/hooks.cjs': '@apollo/client/react/hooks',
+          '@apollo/client/react/react.cjs': '@apollo/client/react',
+          '@apollo/client/utilities/utilities.cjs': '@apollo/client/utilities',
         },
       },
       optimizeDeps: {
@@ -79,17 +96,6 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // When excluded, Vite serves the package directly through its normal
         // transform pipeline, which does run the Cell plugin correctly.
         exclude: ['@storybook/addon-docs', 'storybook-framework-cedarjs'],
-        // Explicitly force-include the CJS files from @cedarjs/web that are
-        // imported by the excluded storybook-framework-cedarjs package tree.
-        // Because storybook-framework-cedarjs is excluded from dep
-        // pre-bundling, its transitive CJS deps are never scanned by esbuild.
-        // Without this, Vite falls back to a runtime `?import` CJS interop
-        // that can't statically detect named exports like `createFragmentRegistry`,
-        // causing a SyntaxError at runtime in the browser.
-        include: [
-          '@apollo/client/cache/cache.cjs',
-          '@apollo/client/utilities/utilities.cjs',
-        ],
       },
     },
   )
