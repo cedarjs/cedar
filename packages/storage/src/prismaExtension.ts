@@ -209,9 +209,13 @@ export const createUploadsExtension = <
               // We only need to check for existing records if we're updating
               existingRecord = await (client as any)[model].findUnique({
                 where: args.where,
-                select: Object.fromEntries(
-                  uploadFieldsToUpdate.map((f) => [f, true]),
-                ),
+                ...(uploadFieldsToUpdate.length > 0
+                  ? {
+                      select: Object.fromEntries(
+                        uploadFieldsToUpdate.map((f) => [f, true]),
+                      ),
+                    }
+                  : {}),
               })
               isUpdate = !!existingRecord
             }
