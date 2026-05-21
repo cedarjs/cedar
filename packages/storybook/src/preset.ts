@@ -58,6 +58,8 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
       resolve: {
         alias: {
           '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
+          '~__REDWOOD__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
+          '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
           '~__CEDAR__USER_WEB_SRC': cedarProjectPaths.web.src,
           // @cedarjs/web imports @apollo/client via explicit .cjs sub-paths
           // (e.g. `@apollo/client/cache/cache.cjs`). In a Node.js / tsc build
