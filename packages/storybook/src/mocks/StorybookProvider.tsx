@@ -21,7 +21,7 @@ export const MockingLoader = async () => {
    *
    * More info on Glob Import here: https://vitejs.dev/guide/features#glob-import
    */
-  import.meta.glob('~__REDWOOD__USER_WEB_SRC/**/*.+(mock).(js|ts)', {
+  import.meta.glob('~__CEDAR__USER_WEB_SRC/**/*.+(mock).(js|ts)', {
     eager: true,
   })
 
