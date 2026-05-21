@@ -11,14 +11,15 @@ import type {
   DocumentNode,
   HttpLink,
 } from '@apollo/client'
-import { InMemoryCache } from '@apollo/client/cache/cache.cjs'
+import { InMemoryCache } from '@apollo/client/cache'
 import {
   ApolloClient,
   setLogVerbosity as apolloSetLogVerbosity,
-} from '@apollo/client/core/core.cjs'
-import { setContext } from '@apollo/client/link/context/context.cjs'
-import { ApolloLink, split } from '@apollo/client/link/core/core.cjs'
-import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries/persisted-queries.cjs'
+} from '@apollo/client/core'
+import { setContext } from '@apollo/client/link/context'
+import { ApolloLink, split } from '@apollo/client/link/core'
+import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries'
+import { ApolloProvider } from '@apollo/client/react'
 import {
   useQuery,
   useMutation,
@@ -26,9 +27,8 @@ import {
   useBackgroundQuery,
   useReadQuery,
   useSuspenseQuery,
-} from '@apollo/client/react/hooks/hooks.cjs'
-import { ApolloProvider } from '@apollo/client/react/react.cjs'
-import { getMainDefinition } from '@apollo/client/utilities/utilities.cjs'
+} from '@apollo/client/react/hooks'
+import { getMainDefinition } from '@apollo/client/utilities'
 import { print } from 'graphql/language/printer.js'
 
 import type { UseAuth } from '@cedarjs/auth'
