@@ -57,8 +57,8 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
       plugins: [mockRouter(), mockAuth(), autoImports],
       resolve: {
         alias: {
-          '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
-          '~__CEDAR__USER_WEB_SRC': cedarProjectPaths.web.src,
+          '~__REDWOOD__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,
+          '~__REDWOOD__USER_WEB_SRC': cedarProjectPaths.web.src,
         },
       },
       optimizeDeps: {
@@ -72,14 +72,24 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         //
         // Exclude storybook-framework-cedarjs from pre-bundling. Its
         // MockProviders module has a static import of the
-        // ~__CEDAR__USER_ROUTES_FOR_MOCK alias, which esbuild would try to
+        // ~__REDWOOD__USER_ROUTES_FOR_MOCK alias, which esbuild would try to
         // resolve during pre-bundling. That leads esbuild into user Cell files
-        // which have no default export at that point (Cedar's Cell transform
-        // doesn't run during esbuild dep scan), causing pre-bundled Cell
-        // components to silently resolve as undefined.
+        // which have no default export (Cedar's Cell transform doesn't run
+        // during esbuild dep scan), causing pre-bundling to fail entirely.
         // When excluded, Vite serves the package directly through its normal
         // transform pipeline, which does run the Cell plugin correctly.
         exclude: ['@storybook/addon-docs', 'storybook-framework-cedarjs'],
+        // Explicitly force-include the CJS files from @cedarjs/web that are
+        // imported by the excluded storybook-framework-cedarjs package tree.
+        // Because storybook-framework-cedarjs is excluded from dep
+        // pre-bundling, its transitive CJS deps are never scanned by esbuild.
+        // Without this, Vite falls back to a runtime `?import` CJS interop
+        // that can't statically detect named exports like `createFragmentRegistry`,
+        // causing a SyntaxError at runtime in the browser.
+        include: [
+          '@apollo/client/cache/cache.cjs',
+          '@apollo/client/utilities/utilities.cjs',
+        ],
       },
     },
   )
