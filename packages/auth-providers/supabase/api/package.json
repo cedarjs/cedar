@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@cedarjs/api": "workspace:*",
-    "@supabase/ssr": "0.10.2",
+    "@supabase/ssr": "0.10.3",
     "jsonwebtoken": "9.0.3"
   },
   "devDependencies": {
@@ -49,7 +49,7 @@
     "@types/aws-lambda": "8.10.161",
     "@types/jsonwebtoken": "9.0.10",
     "concurrently": "9.2.1",
-    "publint": "0.3.20",
+    "publint": "0.3.21",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

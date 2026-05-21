@@ -20,7 +20,7 @@ import { MockParamsProvider } from './MockParamsProvider.js'
 // in try/catch caused esbuild to inline the module during dep pre-bundling,
 // which ran before Cedar's Cell plugin and produced missing default export
 // errors for Cell files in the import chain.
-import UserRoutes from '~__REDWOOD__USER_ROUTES_FOR_MOCK'
+import UserRoutes from '~__CEDAR__USER_ROUTES_FOR_MOCK'
 
 // TODO(pc): see if there are props we want to allow to be passed into our mock provider (e.g. AuthProviderProps)
 export const MockProviders: React.FunctionComponent<{
