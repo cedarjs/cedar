@@ -788,3 +788,53 @@ Maglev tier; occasionally it does, and the process hard-crashes.
   "not present in your lockfile" error from `yarn cedar g secret --raw`.
 - Similarly, if `yarn.lock` exists but has no `root-workspace-` entry, now
   throws instead of warning.
+
+---
+
+## Update 2026-05-22 — Exit code 127 in `create-cedar-rsc-app` yarn install (PR #1811)
+
+### Evidence
+
+From run [26263998951](https://github.com/cedarjs/cedar/actions/runs/26263998951/job/77303444093)
+(PR #1811 `chore(ci): Fix flaky cca tests`, Windows):
+
+```
+➤ YN0000: · Yarn 4.14.1
+➤ YN0000: ┌ Resolution step
+##[error]Process completed with exit code 127.
+```
+
+The failure occurs in the `set-up-job` action's `🐈 Yarn install` step, during
+the second `yarn install --inline-builds` (for `packages/create-cedar-rsc-app`).
+The process exits with code 127 ("command not found") approximately 2 seconds
+into the Resolution step. The actual failing command is invisible because it's
+inside a closed `##[group]` log block.
+
+### Relation to previous entry
+
+This is the same `create-cedar-rsc-app` yarn install that has been flaky. Exit
+code 127 is distinct from the V8 Maglev JIT crash (exit code `3221226505`) —
+it indicates a missing binary or command during dependency resolution.
+
+The ~2 second window before the crash is suspicious: it's long enough for Yarn
+to have started a subprocess (e.g. a lifecycle script or prebuild download) but
+short enough to suggest the process was killed before doing meaningful work.
+
+### Fix applied
+
+Added `--verbose` to the `create-cedar-rsc-app` yarn install step in
+`.github/actions/set-up-job/action.yml`:
+
+```yaml
+cd "$GITHUB_WORKSPACE/packages/create-cedar-rsc-app"
+yarn install --inline-builds --verbose
+```
+
+This surfaces the actual failing package/command in the Resolution step output
+so the next occurrence can be diagnosed.
+
+### Open questions
+
+- What command triggers exit 127? (Needs next failure with `--verbose` to answer)
+- Is this the same intermittent failure as the V8 crash, or a separate issue?
+- Could skipping install when cache hits (conditionally) avoid the failure entirely?
