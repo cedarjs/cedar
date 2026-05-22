@@ -104,7 +104,27 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // Force pre-bundling of CJS-only packages that are only reachable through
         // storybook-framework-cedarjs (excluded above). Without this, Vite serves
         // them via ?import interop, which can't detect named exports in CJS files.
-        include: ['rehackt'],
+        //
+        // Also pre-bundle the Apollo .cjs sub-paths that @cedarjs/web imports.
+        // resolve.alias redirects them in the transform pipeline, but esbuild
+        // (dep optimizer) ignores resolve.alias. Without this, Vite discovers
+        // them on the first page load and triggers a mid-session reload, which
+        // tears down the StorybookProvider's GraphQLHooksProvider context and
+        // breaks nested-Cell stories. These are structural deps of @cedarjs/web
+        // itself, so this list is valid for all Cedar apps, not just the test
+        // project.
+        include: [
+          'rehackt',
+          '@apollo/client/cache/cache.cjs',
+          '@apollo/client/core/core.cjs',
+          '@apollo/client/link/context/context.cjs',
+          '@apollo/client/link/core/core.cjs',
+          '@apollo/client/link/persisted-queries/persisted-queries.cjs',
+          '@apollo/client/react/hooks/hooks.cjs',
+          '@apollo/client/react/react.cjs',
+          '@apollo/client/utilities/utilities.cjs',
+          'graphql/language/printer.js',
+        ],
         esbuildOptions: {
           plugins: [
             {
