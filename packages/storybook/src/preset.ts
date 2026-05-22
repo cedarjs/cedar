@@ -141,9 +141,16 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
                     return
                   }
 
+                  // The `as` cast is safe because of the filter regexp above
+                  const ext = path.extname(args.path).slice(1) as
+                    | 'js'
+                    | 'jsx'
+                    | 'ts'
+                    | 'tsx'
+
                   return {
                     contents: `${contents}\nexport default {}`,
-                    loader: 'js',
+                    loader: ext,
                   }
                 })
               },
