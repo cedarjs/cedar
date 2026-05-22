@@ -184,17 +184,21 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
                   // Extract every explicitly exported name so that
                   // `import { Loading, Success } from './MyCell'` resolves
                   // to a stub value rather than undefined.
+
                   const exportedNames = new Set<string>()
+
                   // Covers: export const/let/var/function/class Foo
                   for (const m of src.matchAll(
                     /^export\s+(?:const|let|var|function|class)\s+(\w+)/gm,
                   )) {
                     exportedNames.add(m[1])
                   }
+
                   // Covers: export { Foo, Bar } and export { Foo as Bar }
                   for (const m of src.matchAll(/^export\s*\{([^}]+)\}/gm)) {
                     for (const part of m[1].split(',')) {
                       const name = (part.split(/\bas\b/).pop() ?? '').trim()
+
                       if (name) {
                         exportedNames.add(name)
                       }
