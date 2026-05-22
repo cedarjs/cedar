@@ -820,21 +820,40 @@ The ~2 second window before the crash is suspicious: it's long enough for Yarn
 to have started a subprocess (e.g. a lifecycle script or prebuild download) but
 short enough to suggest the process was killed before doing meaningful work.
 
-### Fix applied
+### Fixes applied
 
-Added `--verbose` to the `create-cedar-rsc-app` yarn install step in
-`.github/actions/set-up-job/action.yml`:
+Two mitigations added to `.github/actions/set-up-job/action.yml`:
+
+**1. Skip install on cache hit**
+
+The `create-cedar-rsc-app` install step is now a separate step gated on a cache
+miss:
 
 ```yaml
-cd "$GITHUB_WORKSPACE/packages/create-cedar-rsc-app"
-yarn install --inline-builds --verbose
+- name: 🐈 Yarn install (create-cedar-rsc-app)
+  if: inputs.set-up-yarn-cache != 'true' || steps.set-up-yarn-cache.outputs.create-cedar-rsc-app-cache-hit != 'true'
 ```
 
-This surfaces the actual failing package/command in the Resolution step output
-so the next occurrence can be diagnosed.
+The cache key covers `yarn.lock` + `package.json`, so a hit means the modules
+are already correct. Skipping avoids the crash entirely on cache-hit runs.
+
+**2. Retry on failure**
+
+For cache-miss runs, the install retries up to 3 times with a 10s delay:
+
+```bash
+for i in 1 2 3; do
+  yarn install --inline-builds
+  EXIT_CODE=$?
+  if [ $EXIT_CODE -eq 0 ]; then break; fi
+  if [ $i -eq 3 ]; then exit $EXIT_CODE; fi
+  echo "Attempt $i failed (exit $EXIT_CODE), retrying in 10s..."
+  sleep 10
+done
+```
 
 ### Open questions
 
-- What command triggers exit 127? (Needs next failure with `--verbose` to answer)
+- What command triggers exit 127? (Not yet known — the failing command is inside
+  a closed `##[group]` log block)
 - Is this the same intermittent failure as the V8 crash, or a separate issue?
-- Could skipping install when cache hits (conditionally) avoid the failure entirely?
