@@ -141,9 +141,10 @@ GraphQL Request
       ▼
  Batch flush (Promise.resolve().then)
       │
-      ├──► services[Type][field](args, { roots: [...], context, info })
+      ├──► services[Type][field](args, { roots: [...], context })
       │                                    ▲
-      │                          array of parent objects
+      │                 array of parent objects (info intentionally omitted —
+      │                 see Layer 1 and Layer 3 for rationale)
       │
       ▼
  Result array  ←── length-checked against roots array
@@ -644,28 +645,28 @@ Changes needed:
    delivery — where parents may arrive across multiple ticks — still needs
    investigation.
 
-3a. **`info` alternatives considered.** The plan omits `info` from
-`BatchResolverArgs` entirely. Two alternatives were considered and rejected:
-(a) passing an array `infos: GraphQLResolveInfo[]` — added complexity for
-an edge case almost no batch resolver needs; (b) passing the first
-invocation's `info` — silently wrong for any code that inspects
-`info.path.key`. Omitting it with a clear error if accessed is the least
-surprising option. Revisit if a concrete use-case emerges.
+4. **`info` alternatives considered.** The plan omits `info` from
+   `BatchResolverArgs` entirely. Two alternatives were considered and rejected:
+   (a) passing an array `infos: GraphQLResolveInfo[]` — added complexity for
+   an edge case almost no batch resolver needs; (b) passing the first
+   invocation's `info` — silently wrong for any code that inspects
+   `info.path.key`. Omitting it with a clear error if accessed is the least
+   surprising option. Revisit if a concrete use-case emerges.
 
-4. **Subscription resolvers.** Subscriptions have a different execution model.
+5. **Subscription resolvers.** Subscriptions have a different execution model.
    Should batch resolvers apply to type-level fields resolved within a
    subscription payload? Likely yes, but needs explicit testing.
 
-5. **`useRedwoodError` integration.** Does per-slot rejection via a rejected
+6. **`useRedwoodError` integration.** Does per-slot rejection via a rejected
    Promise already integrate cleanly with Yoga's error handling pipeline, or
    does `useRedwoodError` need to be taught about per-slot errors explicitly?
 
-6. **DataLoader interop.** Some existing Cedar projects may already use
+7. **DataLoader interop.** Some existing Cedar projects may already use
    DataLoader manually. The `singleResolver()` wrapper is the intended bridge,
    but should Cedar provide an explicit `dataLoaderResolver()` helper that
    adapts a DataLoader to the batch resolver contract?
 
-7. **Directive compatibility.** Cedar's `useRedwoodDirective` wraps the
+8. **Directive compatibility.** Cedar's `useRedwoodDirective` wraps the
    `resolve` function on individual fields (via `mapSchema`). Does the batch
    resolver wrapping compose correctly with directive wrapping, or does the
    order of `mapSchema` vs `addResolversToSchema` need to be adjusted?
