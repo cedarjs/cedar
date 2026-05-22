@@ -7,6 +7,14 @@ import type { PlaywrightTestArgs } from '@playwright/test'
 test('Loads Cell stories', async ({ page }: PlaywrightTestArgs) => {
   await page.goto('/')
 
+  // Storybook listens on port 7910 but the sidebar/story index may still
+  // be building when the port is ready. Wait for the sidebar to show a
+  // known story entry before proceeding.
+  await page.locator('text=/\\bBlogPostCell\\b/').waitFor({
+    state: 'visible',
+    timeout: 30_000,
+  })
+
   // Click text=BlogPostCell
   await page.locator('text=/\\bBlogPostCell\\b/').click()
   await page.getByRole('link', { name: 'Loading' }).click()
