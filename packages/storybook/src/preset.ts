@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
@@ -125,36 +126,26 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
               // requests the file.
               name: 'cedar-cell-stub',
               setup(build: PluginBuild) {
-                const resolveDirByPath = new Map<string, string>()
+                build.onLoad({ filter: /Cell\.[jt]sx?$/ }, async (args) => {
+                  if (args.path.includes('node_modules')) {
+                    return
+                  }
 
-                build.onResolve({ filter: /Cell\.[jt]sx?$/ }, (args) => {
-                  resolveDirByPath.set(args.path, args.resolveDir)
+                  const contents = await fs.promises.readFile(
+                    args.path,
+                    'utf-8',
+                  )
+
+                  // Skip stubbing if the file already exports a default value
+                  if (contents.includes('export default')) {
+                    return
+                  }
+
                   return {
-                    path: args.path,
-                    namespace: 'cedar-cell-stub',
+                    contents: `${contents}\nexport default {}`,
+                    loader: 'js',
                   }
                 })
-
-                build.onLoad(
-                  { filter: /.*/, namespace: 'cedar-cell-stub' },
-                  async (args) => {
-                    const fs = await import('node:fs')
-
-                    const resolveDir = resolveDirByPath.get(args.path)
-                    const result = await build.resolve(args.path, {
-                      resolveDir,
-                    })
-                    const contents = await fs.promises.readFile(
-                      result.path,
-                      'utf-8',
-                    )
-
-                    return {
-                      contents: `${contents}\nexport default {}`,
-                      loader: 'js',
-                    }
-                  },
-                )
               },
             },
           ],
