@@ -187,13 +187,13 @@ different arguments on the same type — e.g.:
 }
 ```
 
-— would collapse into a single batch. The second alias's `batchFn` (which
-closes over `{ limit: 10 }`) would be silently dropped, and all parents would
-receive results computed with `{ limit: 3 }` only. The key must therefore be
+— would collapse into a single batch. The second alias's `batchFn` (which closes
+over `{ limit: 10 }`) would be silently dropped, and all parents would receive
+results computed with `{ limit: 3 }` only. The key must therefore be
 `${typeName}.${fieldName}:${stableSerialize(args)}`.
 
-A simple stable serialization can use `JSON.stringify` with sorted keys. For
-the common case of no arguments the suffix is just `:{}`, adding negligible
+A simple stable serialization can use `JSON.stringify` with sorted keys. For the
+common case of no arguments the suffix is just `:{}`, adding negligible
 overhead.
 
 #### `typeName` threading
@@ -209,9 +209,9 @@ holds `type.name` — is the call site that passes it through.
 
 Each of the N individual resolver invocations that feed a batch carries a
 distinct `GraphQLResolveInfo` object (with a different `info.path.key` for each
-parent position). The framework only has a single opportunity to call the
-batch service function, so it cannot pass all N `info` objects in the existing
-scalar slot.
+parent position). The framework only has a single opportunity to call the batch
+service function, so it cannot pass all N `info` objects in the existing scalar
+slot.
 
 **Decision:** batch resolvers do **not** receive `info` in the second argument.
 The `BatchResolverArgs` type omits it entirely. Developers who genuinely need
@@ -531,19 +531,19 @@ Two separate codegen sites produce service stubs and must both be updated:
   — the template used by `cedar generate service` to scaffold new service files.
   This is the primary place developers first encounter the service function
   signature, so the batched stub shape must land here.
-- **`packages/cli/src/commands/generate/sdl/templates/sdl.ts.template`**
-  — the SDL generator, which also emits companion service stubs when
+- **`packages/cli/src/commands/generate/sdl/templates/sdl.ts.template`** — the
+  SDL generator, which also emits companion service stubs when
   `cedar generate sdl` is run with `--crud`.
 
-Note: gqlorm is split across two packages — the runtime lives in `packages/gqlorm`
-and the codegen (schema and service stub generation) lives in `packages/internal`.
-Neither needs updating for batch resolvers. The codegen in `packages/internal`
-unconditionally excludes relation fields, emitting only scalar and enum fields
-as flat Query/Mutation root resolvers. There are no type-level field resolvers
-in gqlorm output and therefore no N+1 exposure.
+Note: gqlorm is split across two packages — the runtime lives in
+`packages/gqlorm` and the codegen (schema and service stub generation) lives in
+`packages/internal`. Neither needs updating for batch resolvers. The codegen in
+`packages/internal` unconditionally excludes relation fields, emitting only
+scalar and enum fields as flat Query/Mutation root resolvers. There are no
+type-level field resolvers in gqlorm output and therefore no N+1 exposure.
 
-Both must emit batched stubs for non-root type field resolvers. Example
-output for the CLI service template:
+Both must emit batched stubs for non-root type field resolvers. Example output
+for the CLI service template:
 
 ```ts
 // Generated stub for Post type resolvers
@@ -567,8 +567,8 @@ export const Post = {
 }
 ```
 
-Single-call root field stubs (Query/Mutation) remain unchanged in both
-codegen sites.
+Single-call root field stubs (Query/Mutation) remain unchanged in both codegen
+sites.
 
 All generated stubs should include a comment pointing developers toward the
 length invariant and the `singleResolver()` opt-out.
@@ -592,16 +592,18 @@ remain consistent with each other).
 
 Changes needed:
 
-- Align all span name prefixes to a single value (recommended: `cedarjs:graphql:`).
+- Align all span name prefixes to a single value (recommended:
+  `cedarjs:graphql:`).
 - Non-batched root resolver spans: `cedarjs:graphql:resolver:${name}`.
-- Batch resolver spans: `cedarjs:graphql:batchResolver:${typeName}.${fieldName}`.
+- Batch resolver spans:
+  `cedarjs:graphql:batchResolver:${typeName}.${fieldName}`.
 - A span attribute `graphql.batch.size` records how many root objects were in
   the batch (useful for diagnosing unexpectedly large or small batches).
 - The span wraps the single batch function call rather than each individual
   invocation.
-- Note: updating the tracer name from `'redwoodjs'` to `'cedarjs'` is a
-  separate concern and should be tracked as its own task to avoid conflating
-  the two changes.
+- Note: updating the tracer name from `'redwoodjs'` to `'cedarjs'` is a separate
+  concern and should be tracked as its own task to avoid conflating the two
+  changes.
 
 ---
 
@@ -630,8 +632,8 @@ Changes needed:
 
 - Flip `batchResolvers` to default `true`.
 - Update the service file template in
-  `packages/cli/src/commands/generate/service/templates/service.ts.template`
-  to emit batched stubs for non-root type resolvers.
+  `packages/cli/src/commands/generate/service/templates/service.ts.template` to
+  emit batched stubs for non-root type resolvers.
 - Update the SDL generator template in
   `packages/cli/src/commands/generate/sdl/templates/sdl.ts.template` to emit
   batched stubs for the companion service it generates alongside the SDL.
@@ -660,20 +662,19 @@ Changes needed:
 2. **Max batch size per field.** The spec recommends offering a max batch size
    option. What should the default be — unlimited, or a safe cap like 1000?
 
-3. **`args` in batch resolvers.** Within a single batch all roots share the
-   same `args` (they are the same field invocation, just with different
-   parents). The batch key serializes `args` to correctly segregate aliased
-   fields with different arguments. What happens with `@stream` or incremental
-   delivery — where parents may arrive across multiple ticks — still needs
-   investigation.
+3. **`args` in batch resolvers.** Within a single batch all roots share the same
+   `args` (they are the same field invocation, just with different parents). The
+   batch key serializes `args` to correctly segregate aliased fields with
+   different arguments. What happens with `@stream` or incremental delivery —
+   where parents may arrive across multiple ticks — still needs investigation.
 
 4. **`info` alternatives considered.** The plan omits `info` from
    `BatchResolverArgs` entirely. Two alternatives were considered and rejected:
-   (a) passing an array `infos: GraphQLResolveInfo[]` — added complexity for
-   an edge case almost no batch resolver needs; (b) passing the first
-   invocation's `info` — silently wrong for any code that inspects
-   `info.path.key`. Omitting it with a clear error if accessed is the least
-   surprising option. Revisit if a concrete use-case emerges.
+   (a) passing an array `infos: GraphQLResolveInfo[]` — added complexity for an
+   edge case almost no batch resolver needs; (b) passing the first invocation's
+   `info` — silently wrong for any code that inspects `info.path.key`. Omitting
+   it with a clear error if accessed is the least surprising option. Revisit if
+   a concrete use-case emerges.
 
 5. **Subscription resolvers.** Subscriptions have a different execution model.
    Should batch resolvers apply to type-level fields resolved within a
