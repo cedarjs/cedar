@@ -525,8 +525,21 @@ validated during implementation.
 
 ### Layer 6: Developer Experience & Codegen
 
-Cedar's SDL service stub generator (`packages/internal`, gqlorm codegen) would
-emit batched stubs for non-root type field resolvers:
+Two separate codegen sites produce service stubs and must both be updated:
+
+- **`packages/cli/src/commands/generate/service/templates/service.ts.template`**
+  — the template used by `cedar generate service` to scaffold new service files.
+  This is the primary place developers first encounter the service function
+  signature, so the batched stub shape must land here.
+- **`packages/cli/src/commands/generate/sdl/templates/sdl.ts.template`**
+  — the SDL generator, which also emits companion service stubs when
+  `cedar generate sdl` is run with `--crud`.
+- **`packages/internal`** (gqlorm codegen) — generates type-level resolver
+  stubs for gqlorm-managed models. Also needs updating, but affects fewer
+  projects than the CLI templates above.
+
+All three must emit batched stubs for non-root type field resolvers. Example
+output for the CLI service template:
 
 ```ts
 // Generated stub for Post type resolvers
@@ -550,10 +563,11 @@ export const Post = {
 }
 ```
 
-Single-call root field stubs remain unchanged.
+Single-call root field stubs (Query/Mutation) remain unchanged in all three
+codegen sites.
 
-The SDL type generator should also emit helper comments pointing developers
-toward the length invariant and the `singleResolver()` opt-out.
+All generated stubs should include a comment pointing developers toward the
+length invariant and the `singleResolver()` opt-out.
 
 ---
 
@@ -611,8 +625,14 @@ Changes needed:
 ### Phase 3 — Default on
 
 - Flip `batchResolvers` to default `true`.
-- Update codegen in `packages/internal` to emit batched stubs for non-root type
-  resolvers.
+- Update the service file template in
+  `packages/cli/src/commands/generate/service/templates/service.ts.template`
+  to emit batched stubs for non-root type resolvers.
+- Update the SDL generator template in
+  `packages/cli/src/commands/generate/sdl/templates/sdl.ts.template` to emit
+  batched stubs for the companion service it generates alongside the SDL.
+- Update gqlorm codegen in `packages/internal` to emit batched stubs for
+  non-root type resolvers on gqlorm-managed models.
 - Update documentation and the Cedar tutorial to use the batched signature.
 - Add migration guide for existing projects (rename `root` to first element of
   `roots`, or wrap with `singleResolver()`).
