@@ -106,7 +106,36 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // (and page reload) if discovered late: that reload causes a module
         // instance split where the GraphQLHooksProvider context set up by the
         // StorybookProvider decorator is lost, so Cells can't find useQuery.
-        include: ['rehackt', 'react-hook-form', '@cedarjs/forms'],
+        include: [
+          'rehackt',
+          'react-hook-form',
+          '@cedarjs/forms',
+          'humanize-string',
+          // @cedarjs/web imports Apollo via explicit .cjs sub-paths. The
+          // resolve.alias above redirects these in Vite's transform pipeline,
+          // but esbuild (dep scanner) doesn't use resolve.alias. So Vite
+          // discovers them on first load and triggers a mid-session reload,
+          // which tears down the StorybookProvider's GraphQLHooksProvider
+          // context. Pre-bundling them eagerly prevents that reload.
+          '@apollo/client/cache/cache.cjs',
+          '@apollo/client/core/core.cjs',
+          '@apollo/client/link/context/context.cjs',
+          '@apollo/client/link/core/core.cjs',
+          '@apollo/client/link/persisted-queries/persisted-queries.cjs',
+          '@apollo/client/react/hooks/hooks.cjs',
+          '@apollo/client/react/react.cjs',
+          '@apollo/client/utilities/utilities.cjs',
+          'graphql/language/printer.js',
+          'graphql-tag',
+          '@cedarjs/web',
+          '@cedarjs/web/apollo',
+          '@cedarjs/testing/web/MockRouter.js',
+          '@cedarjs/testing/auth',
+          '@cedarjs/auth-dbauth-web',
+          'vite-plugin-node-polyfills/shims/buffer',
+          'vite-plugin-node-polyfills/shims/global',
+          'vite-plugin-node-polyfills/shims/process',
+        ],
       },
     },
   )
