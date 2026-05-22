@@ -60,13 +60,6 @@ export async function buildUDApiServer({
       // Load the user's Vite config so all plugins (Cedar's UD plugin,
       // provider plugins, etc.) run during the build.
       configFile: cedarPaths.web.viteConfig,
-      // Cedar's getMergedConfig (from the cedar() plugin) overrides root to
-      // web/src/. For the UD server build, we want root to be the config
-      // file directory (web/) so that plugins like @netlify/vite-plugin
-      // output their files relative to the project structure, not a source
-      // directory.
-      // TODO: See what it'd take to *not* have cedar() set it to web/src
-      root: cedarPaths.web.base,
       logLevel: verbose ? 'info' : 'warn',
 
       plugins: [

@@ -198,7 +198,7 @@ function insertChunkLoadingScript(
 
   if (route?.filePath) {
     const pagesIndex =
-      route.filePath.indexOf(path.join('web', 'src', 'pages')) + 8
+      route.filePath.indexOf(path.join('web', 'src', 'pages')) + 4
     const pagePath = ensurePosixPath(route.filePath.slice(pagesIndex))
     const pageChunkPath = buildManifest[pagePath]?.file
 

@@ -356,7 +356,7 @@ curl http://localhost:8910
 wget http://localhost:8910
 ```
 
-If you don't see the content of your `web/src/index.html` file then something isn't working. You'll need to fix those issues before you can deploy. Verify the api side is responding:
+If you don't see the content of your `web/index.html` file then something isn't working. You'll need to fix those issues before you can deploy. Verify the api side is responding:
 
 ```bash
 curl http://localhost:8910/.api/functions/graphql?query={redwood{version}}

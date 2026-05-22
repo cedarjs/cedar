@@ -65,7 +65,7 @@ const DEFAULT_PATHS = {
     generators: ['web', 'generators'],
     app: ['web', 'src', 'App.tsx'],
     document: ['web', 'src', 'Document'],
-    html: ['web', 'src', 'index.html'],
+    html: ['web', 'index.html'],
     config: ['web', 'config'],
     viteConfig: ['web', 'vite.config.ts'],
     postcss: ['web', 'config', 'postcss.config.cjs'],

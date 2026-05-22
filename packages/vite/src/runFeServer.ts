@@ -95,8 +95,8 @@ export async function runFeServer() {
   // In addition to all the above the discovered CSS files are also passed to
   // all middleware that have been registered
   const clientEntry = rscEnabled
-    ? clientBuildManifest['entry.client.tsx'] ||
-      clientBuildManifest['entry.client.jsx']
+    ? clientBuildManifest['src/entry.client.tsx'] ||
+      clientBuildManifest['src/entry.client.jsx']
     : Object.values(clientBuildManifest).find(
         (manifestItem) => manifestItem.isEntry,
       )
