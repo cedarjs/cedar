@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
@@ -156,45 +155,33 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
               // createCell(...)` at transform time, which doesn't run during
               // esbuild's dep scan. Without a default export, esbuild crashes
               // the scan with "No matching export ... for import 'default'",
-              // causing Vite to skip pre-bundling entirely. That in turn means
-              // all deps are discovered on first page load, triggering
-              // mid-session reloads that tear down Storybook's
-              // GraphQLHooksProvider context and break nested-Cell stories.
+              // causing Vite to skip pre-bundling entirely.
               //
-              // This plugin intercepts Cell files during the dep scan, reads
-              // the real file from disk, and appends a default export stub to
-              // it. This satisfies the default import requirement while
-              // keeping the real code available so esbuild can discover the
-              // file's actual imports and re-exports. The real Cell transform
-              // still runs later via Vite's normal pipeline when the browser
-              // requests the file.
+              // Additionally, if we include the real Cell file contents in the
+              // stub, esbuild follows the Cell's imports (e.g. createCell from
+              // @cedarjs/web) and pulls GraphQLHooksProvider into its own
+              // pre-bundled chunk separate from the @cedarjs/web chunk. That
+              // produces two distinct GraphQLHooksContext instances, so the
+              // context set by RedwoodApolloProvider is invisible to the Cell's
+              // useQuery, causing the "You must register a useQuery hook"
+              // error.
+              //
+              // By returning ONLY `export default {}` (ignoring the real file
+              // contents), esbuild treats the Cell as a leaf node and does not
+              // follow its imports. This keeps @cedarjs/web's module graph in a
+              // single pre-bundled chunk. The real Cell transform runs later via
+              // Vite's normal transform pipeline when the browser requests the
+              // file.
               name: 'cedar-cell-stub',
               setup(build: PluginBuild) {
-                build.onLoad({ filter: /Cell\.[jt]sx?$/ }, async (args) => {
+                build.onLoad({ filter: /Cell\.[jt]sx?$/ }, (args) => {
                   if (args.path.includes('node_modules')) {
-                    return
+                    return undefined
                   }
-
-                  const contents = await fs.promises.readFile(
-                    args.path,
-                    'utf-8',
-                  )
-
-                  // Skip stubbing if the file already exports a default value
-                  if (contents.includes('export default')) {
-                    return
-                  }
-
-                  // The `as` cast is safe because of the filter regexp above
-                  const ext = path.extname(args.path).slice(1) as
-                    | 'js'
-                    | 'jsx'
-                    | 'ts'
-                    | 'tsx'
 
                   return {
-                    contents: `${contents}\nexport default {}`,
-                    loader: ext,
+                    contents: 'export default {}',
+                    loader: 'js',
                   }
                 })
               },
