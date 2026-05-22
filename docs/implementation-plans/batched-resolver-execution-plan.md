@@ -171,16 +171,71 @@ generates a single-call wrapper. It would instead generate a wrapper that:
 3. On flush, calls the service function once with all accumulated roots, checks
    the length invariant, and resolves/rejects each individual promise.
 
+#### Batch key design
+
+The batch key must include a stable serialization of the field arguments, not
+just the type and field names. Without args in the key, aliased fields with
+different arguments on the same type — e.g.:
+
+```graphql
+{
+  posts {
+    fewTags: limitedTags(limit: 3)
+    manyTags: limitedTags(limit: 10)
+  }
+}
+```
+
+— would collapse into a single batch. The second alias's `batchFn` (which
+closes over `{ limit: 10 }`) would be silently dropped, and all parents would
+receive results computed with `{ limit: 3 }` only. The key must therefore be
+`${typeName}.${fieldName}:${stableSerialize(args)}`.
+
+A simple stable serialization can use `JSON.stringify` with sorted keys. For
+the common case of no arguments the suffix is just `:{}`, adding negligible
+overhead.
+
+#### `typeName` threading
+
+`mapFieldsToService` currently only receives `fields`, `resolvers`, and
+`services` — it does not have access to the name of the type being processed.
+Both the batch key and the OTel span require `typeName`. The signature of
+`mapFieldsToService` must be extended to accept `typeName: string`.
+`mergeResolversWithServices` — which iterates `typesWithFields` and already
+holds `type.name` — is the call site that passes it through.
+
+#### `info` object semantics
+
+Each of the N individual resolver invocations that feed a batch carries a
+distinct `GraphQLResolveInfo` object (with a different `info.path.key` for each
+parent position). The framework only has a single opportunity to call the
+batch service function, so it cannot pass all N `info` objects in the existing
+scalar slot.
+
+**Decision:** batch resolvers do **not** receive `info` in the second argument.
+The `BatchResolverArgs` type omits it entirely. Developers who genuinely need
+field-level introspection should use `singleResolver()`. This matches the
+behaviour of DataLoader, which also provides no `info` access, and keeps the
+batch signature unambiguous. See [Open Questions](#open-questions) for
+alternatives that were considered.
+
 ```ts
 // Conceptual sketch — not final API
+
+// Stable key serialization helper
+function stableSerializeArgs(args: Record<string, unknown>): string {
+  return JSON.stringify(args, Object.keys(args).sort())
+}
+
 const pendingBatches = new WeakMap<
   object, // GraphQL context object as the per-request key
   Map<
-    string, // `${typeName}.${fieldName}`
+    string, // `${typeName}.${fieldName}:${stableSerializeArgs(args)}`
     {
       roots: unknown[]
       resolvers: Array<(value: unknown) => void>
       rejecters: Array<(reason: unknown) => void>
+      batchFn: (roots: unknown[]) => Promise<unknown[]>
     }
   >
 >()
@@ -197,7 +252,12 @@ function enqueueBatch(
   const contextBatches = pendingBatches.get(context)!
 
   if (!contextBatches.has(key)) {
-    contextBatches.set(key, { roots: [], resolvers: [], rejecters: [] })
+    contextBatches.set(key, {
+      roots: [],
+      resolvers: [],
+      rejecters: [],
+      batchFn,
+    })
 
     Promise.resolve().then(async () => {
       const batch = contextBatches.get(key)
@@ -207,7 +267,7 @@ function enqueueBatch(
       contextBatches.delete(key)
 
       try {
-        const results = await batchFn(batch.roots)
+        const results = await batch.batchFn(batch.roots)
 
         if (results.length !== batch.roots.length) {
           const err = new Error(
@@ -244,26 +304,31 @@ function enqueueBatch(
 The generated resolver wrapper for a non-root field becomes:
 
 ```ts
-[name]: (root, args, context, info) => {
-  const key = `${typeName}.${name}`
+// typeName is now threaded into mapFieldsToService from mergeResolversWithServices
+[name]: (root, args, context, _info) => {
+  const key = `${typeName}.${name}:${stableSerializeArgs(args)}`
   return enqueueBatch(
     context,
     key,
     root,
-    (roots) => services[name](args, { roots, context, info }),
+    (roots) => services[name](args, { roots, context }),
   )
 }
 ```
 
 The existing branch in `mergeResolversWithServices` that already separates root
-types from other object types is exactly where this switch happens:
+types from other object types is exactly where this switch happens, and is also
+where `typeName` is threaded into `mapFieldsToService`:
 
 ```ts
 // packages/graphql-server/src/makeMergedSchema.ts
-// This branch already exists — non-root types get servicesForType
+// This branch already exists — non-root types get servicesForType.
+// type.name (e.g. "Post") must now be passed into mapFieldsToService
+// as a new `typeName` parameter so batch keys and OTel spans can use it.
 if (!['Query', 'Mutation', 'Subscription'].includes(type.name)) {
   servicesForType = mergedServices?.[type.name]
   // batch wiring applied here for non-root types
+  // mapFieldsToService is called with { ..., typeName: type.name }
 }
 ```
 
@@ -333,11 +398,13 @@ New types would be added to `packages/graphql-server/src/types.ts`:
 // Existing — unchanged, used for root field resolvers
 export type ResolverArgs<TRoot> = { root: ThenArg<TRoot> }
 
-// New — used for non-root batched field resolvers
+// New — used for non-root batched field resolvers.
+// Note: `info` is intentionally omitted. Each root in the batch has a distinct
+// GraphQLResolveInfo (different path.key), so there is no single authoritative
+// info object to provide. Resolvers that need info should use singleResolver().
 export type BatchResolverArgs<TRoot> = {
   roots: ThenArg<TRoot>[]
   context: CedarGraphQLContext
-  info: GraphQLResolveInfo
 }
 
 export type BatchResolver<TRoot = unknown, TReturn = unknown> = (
@@ -473,14 +540,27 @@ The existing `wrapWithOpenTelemetry` function in `makeMergedSchema.ts` wraps
 individual resolver calls. With batching, a single batch flush replaces N
 individual resolver invocations.
 
+The current code uses tracer name `'redwoodjs'` and span name prefix
+`redwoodjs:graphql:resolver:`. Introducing a separate `cedarjs:*` prefix for
+batch resolvers would mean a single schema emits spans under two different
+prefixes, breaking any dashboards or alert rules that match on that prefix.
+Batch resolver spans must therefore use the **same prefix as the existing
+non-batched spans**, updating both to `cedarjs:graphql:` as part of this work
+(or keeping `redwoodjs:graphql:` if the rename is deferred — but they must
+remain consistent with each other).
+
 Changes needed:
 
-- The span name would be
-  `cedarjs:graphql:batchResolver:${typeName}.${fieldName}`.
+- Align all span name prefixes to a single value (recommended: `cedarjs:graphql:`).
+- Non-batched root resolver spans: `cedarjs:graphql:resolver:${name}`.
+- Batch resolver spans: `cedarjs:graphql:batchResolver:${typeName}.${fieldName}`.
 - A span attribute `graphql.batch.size` records how many root objects were in
   the batch (useful for diagnosing unexpectedly large or small batches).
 - The span wraps the single batch function call rather than each individual
   invocation.
+- Note: updating the tracer name from `'redwoodjs'` to `'cedarjs'` is a
+  separate concern and should be tracked as its own task to avoid conflating
+  the two changes.
 
 ---
 
@@ -535,11 +615,20 @@ Changes needed:
 2. **Max batch size per field.** The spec recommends offering a max batch size
    option. What should the default be — unlimited, or a safe cap like 1000?
 
-3. **`args` in batch resolvers.** In the current model, `args` come from the
-   GraphQL field arguments on the query. When batching, all roots in a batch
-   share the same `args` (because they are the same field in the same query).
-   This holds true for most cases, but what happens with `@stream` or
-   incremental delivery? This needs investigation.
+3. **`args` in batch resolvers.** Within a single batch all roots share the
+   same `args` (they are the same field invocation, just with different
+   parents). The batch key serializes `args` to correctly segregate aliased
+   fields with different arguments. What happens with `@stream` or incremental
+   delivery — where parents may arrive across multiple ticks — still needs
+   investigation.
+
+3a. **`info` alternatives considered.** The plan omits `info` from
+`BatchResolverArgs` entirely. Two alternatives were considered and rejected:
+(a) passing an array `infos: GraphQLResolveInfo[]` — added complexity for
+an edge case almost no batch resolver needs; (b) passing the first
+invocation's `info` — silently wrong for any code that inspects
+`info.path.key`. Omitting it with a clear error if accessed is the least
+surprising option. Revisit if a concrete use-case emerges.
 
 4. **Subscription resolvers.** Subscriptions have a different execution model.
    Should batch resolvers apply to type-level fields resolved within a
