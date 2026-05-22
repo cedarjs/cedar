@@ -98,15 +98,46 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // during esbuild dep scan), causing pre-bundling to fail entirely.
         // When excluded, Vite serves the package directly through its normal
         // transform pipeline, which does run the Cell plugin correctly.
-        exclude: ['@storybook/addon-docs', 'storybook-framework-cedarjs'],
+        exclude: [
+          '@storybook/addon-docs',
+          'storybook-framework-cedarjs',
+          // Exclude @cedarjs/web and its apollo sub-entry from pre-bundling so
+          // they are served through Vite's transform pipeline. Pre-bundling them
+          // as separate esbuild entries causes each chunk to inline its own copy
+          // of GraphQLHooksProvider.js, producing two distinct
+          // GraphQLHooksContext instances — the StorybookProvider decorator
+          // registers useQuery on one instance while Cells read from the other,
+          // causing "You must register a useQuery hook" errors for nested Cells.
+          // Serving both through the transform pipeline means all imports of
+          // GraphQLHooksProvider.js resolve to the same file-level module.
+          '@cedarjs/web',
+          '@cedarjs/web/apollo',
+        ],
         // Force pre-bundling of CJS-only packages that are only reachable through
         // storybook-framework-cedarjs (excluded above). Without this, Vite serves
         // them via ?import interop, which can't detect named exports in CJS files.
-        // Also include packages that trigger a mid-run Vite dep re-optimisation
-        // (and page reload) if discovered late: that reload causes a module
-        // instance split where the GraphQLHooksProvider context set up by the
-        // StorybookProvider decorator is lost, so Cells can't find useQuery.
-        include: ['rehackt', 'react-hook-form', '@cedarjs/forms'],
+        //
+        // The remaining entries prevent mid-session Vite dep re-optimisation
+        // reloads. When Vite discovers a new dep mid-session it triggers a full
+        // page reload, which tears down the StorybookProvider decorator's
+        // GraphQLHooksProvider context so subsequent nested-Cell stories throw.
+        include: [
+          'rehackt',
+          'react-hook-form',
+          '@cedarjs/forms',
+          '@cedarjs/testing/web/MockRouter.js',
+          '@cedarjs/testing/auth',
+          '@cedarjs/auth-dbauth-web',
+          'graphql-tag',
+          // invariant is a transitive dep of @cedarjs/web (which is excluded
+          // above). Since it's CJS-only, serving it raw without pre-bundling
+          // causes "does not provide an export named 'default'" errors. Force
+          // pre-bundling here so Vite converts it to ESM.
+          'invariant',
+          'vite-plugin-node-polyfills/shims/buffer',
+          'vite-plugin-node-polyfills/shims/global',
+          'vite-plugin-node-polyfills/shims/process',
+        ],
       },
     },
   )
