@@ -123,15 +123,25 @@ fields, which can break client tooling that expects a uniform structure.
 
 ### 1. Per-error hash and unique ID (high value, moderate effort)
 
-Add a step inside `useRedwoodError` (or a new `useRedwoodErrorId` plugin) that,
-for every error that will be masked, computes:
+Inside the `else` branch of `useRedwoodError` — i.e. only for errors that are
+_not_ a `RedwoodError` and will therefore be masked — compute:
 
-- `errorId` — a `uuidv4()` unique to this instance.
-- `errorHash` — a short hash (e.g. SHA-256 truncated to 8 hex chars) of the
-  original error message.
+- `errorId` — a `uuidv4()` unique to this instance, so a client or support
+  ticket can pinpoint the exact log entry.
+- `errorHash` — a short hash (e.g. SHA-256 truncated to 8 hex chars) used to
+  group recurrences of the same error _shape_.
 
-Return both on the masked GraphQL error's `extensions` and include both in the
-server-side log entry. The masked response would look like:
+**Important:** the hash must be derived from something stable across instances,
+not the raw `error.message`. Dynamic messages (e.g. `"User 42 not found"`,
+`"Connection refused at 192.168.1.5:5432"`) would produce a unique hash for
+every occurrence, defeating the grouping purpose. Use the error's **constructor
+name** (i.e. `error.originalError?.constructor?.name ?? error.name`) as the
+hash input instead. For anonymous or plain `Error` instances this will produce
+`"Error"`, which is an acceptable broad bucket.
+
+Both values are added only to the **masked** error's `extensions` and to the
+server-side log entry. They must not appear on `RedwoodError`-derived errors
+that pass through unmasked, since those are already fully visible to clients.
 
 ```json
 {
@@ -148,16 +158,16 @@ server-side log entry. The masked response would look like:
 }
 ```
 
-The server log entry at `error` level would include both fields so operators can
-search by `errorId` for a specific instance or by `errorHash` to find
-recurrences of the same error shape.
+The server log entry at `error` level would include both fields alongside the
+full original error so operators can search by `errorId` for a specific instance
+or by `errorHash` to find recurrences of the same error class.
 
 **Files to change:**
 
 - `packages/graphql-server/src/plugins/useRedwoodError.ts` — add hash + ID
-  generation for masked errors.
+  generation in the masked-error (`else`) branch only.
 - `packages/graphql-server/src/plugins/useRedwoodLogger.ts` — ensure `errorId`
-  and `errorHash` are included in the log object.
+  and `errorHash` are included in the log object when present.
 
 **Dependencies:** `node:crypto` (already available); `uuid` is already a
 dependency.
@@ -165,18 +175,29 @@ dependency.
 ### 2. Explicit `exposedErrorCodes` allowlist (low–moderate effort)
 
 Add an optional `exposedErrorCodes` array to `GraphQLYogaOptions`. When
-provided, a non-`RedwoodError` that carries one of the listed `extensions.code`
-values is passed through unmasked. This makes the allowlist inspectable at
-configuration time and decouples it from the class hierarchy for teams that
-prefer ad-hoc `GraphQLError` throws.
+provided, errors whose `extensions.code` matches one of the listed values are
+passed through to the client unmasked.
 
 ```ts
 // Proposed addition to GraphQLYogaOptions
 exposedErrorCodes?: string[]
 ```
 
+**Scope clarification:** this allowlist only applies to errors that already carry
+an `extensions.code` — that is, `GraphQLError` instances and subclasses
+(including `RedwoodGraphQLError`). Plain `Error` throws have no `extensions`
+property and will never match a code in this list; they will continue to be
+masked regardless. The allowlist is therefore an ergonomic alternative to
+subclassing `RedwoodGraphQLError` for teams that already throw `GraphQLError`
+instances with a known code (e.g. from a third-party library), not a general
+mechanism for exposing arbitrary thrown errors.
+
 The `useRedwoodError` plugin would consult this list alongside the
-`instanceof RedwoodError` check.
+`instanceof RedwoodError` check. The precedence order is:
+
+1. `instanceof RedwoodError` → pass through unmasked (existing behaviour).
+2. `extensions.code` in `exposedErrorCodes` → pass through unmasked (new).
+3. Everything else → mask and attach `errorId` + `errorHash` (see item 1).
 
 **Files to change:**
 
@@ -185,7 +206,7 @@ The `useRedwoodError` plugin would consult this list alongside the
 - `packages/graphql-server/src/createGraphQLYoga.ts` — thread the option through
   to the plugin.
 - `packages/graphql-server/src/plugins/useRedwoodError.ts` — implement the
-  allowlist check.
+  allowlist check in the correct precedence position.
 
 ### 3. Standardised error envelope (low effort, high consistency value)
 
