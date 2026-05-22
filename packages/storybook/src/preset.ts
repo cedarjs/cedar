@@ -116,16 +116,45 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
               // mid-session reloads that tear down Storybook's
               // GraphQLHooksProvider context and break nested-Cell stories.
               //
-              // This plugin intercepts Cell files during the dep scan and
-              // returns a stub that satisfies the default import, allowing the
-              // scan to complete. The real transform still runs later via
-              // Vite's normal pipeline when the browser requests the file.
+              // This plugin intercepts Cell files during the dep scan, reads
+              // the real file from disk, and appends a default export stub to
+              // it. This satisfies the default import requirement while
+              // keeping the real code available so esbuild can discover the
+              // file's actual imports and re-exports. The real Cell transform
+              // still runs later via Vite's normal pipeline when the browser
+              // requests the file.
               name: 'cedar-cell-stub',
               setup(build: PluginBuild) {
-                build.onLoad({ filter: /Cell\.[jt]sx?$/ }, () => ({
-                  contents: 'export default {}',
-                  loader: 'js',
-                }))
+                const resolveDirByPath = new Map<string, string>()
+
+                build.onResolve({ filter: /Cell\.[jt]sx?$/ }, (args) => {
+                  resolveDirByPath.set(args.path, args.resolveDir)
+                  return {
+                    path: args.path,
+                    namespace: 'cedar-cell-stub',
+                  }
+                })
+
+                build.onLoad(
+                  { filter: /.*/, namespace: 'cedar-cell-stub' },
+                  async (args) => {
+                    const fs = await import('node:fs')
+
+                    const resolveDir = resolveDirByPath.get(args.path)
+                    const result = await build.resolve(args.path, {
+                      resolveDir,
+                    })
+                    const contents = await fs.promises.readFile(
+                      result.path,
+                      'utf-8',
+                    )
+
+                    return {
+                      contents: `${contents}\nexport default {}`,
+                      loader: 'js',
+                    }
+                  },
+                )
               },
             },
           ],
