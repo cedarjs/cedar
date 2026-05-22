@@ -222,9 +222,31 @@ alternatives that were considered.
 ```ts
 // Conceptual sketch — not final API
 
-// Stable key serialization helper
+// Stable key serialization helper.
+// We cannot use JSON.stringify's replacer-array form
+// (e.g. `JSON.stringify(args, Object.keys(args).sort())`) because the
+// replacer array is applied recursively as an allowlist: any property on a
+// nested input-type object whose name does not appear among the top-level arg
+// keys is silently omitted. Two aliased fields with different complex filter
+// arguments would produce the same key and be incorrectly merged into one batch.
+//
+// Instead, we deep-sort keys at every level of nesting before serializing.
+function deepSortKeys(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(deepSortKeys)
+  }
+  if (value !== null && typeof value === 'object') {
+    const sorted: Record<string, unknown> = {}
+    for (const key of Object.keys(value as object).sort()) {
+      sorted[key] = deepSortKeys((value as Record<string, unknown>)[key])
+    }
+    return sorted
+  }
+  return value
+}
+
 function stableSerializeArgs(args: Record<string, unknown>): string {
-  return JSON.stringify(args, Object.keys(args).sort())
+  return JSON.stringify(deepSortKeys(args))
 }
 
 const pendingBatches = new WeakMap<
