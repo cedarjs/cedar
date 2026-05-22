@@ -38,12 +38,15 @@ expect eof
 catch wait result
 set exitStatus [lindex $result 3]
 
+# Git can still be finishing work in .git/objects right after the generator exits,
+# so wait briefly and treat cleanup as best-effort to avoid flaky local and CI runs.
+after 500
+catch {exec rm -rf $projectDirectory}
+
 if {$exitStatus == 0} {
     puts "Success"
-    exec rm -rf $projectDirectory
     exit 0
 } else {
     puts "Error: The process failed with exit status $exitStatus"
-    exec rm -rf $projectDirectory
     exit 1
 }
