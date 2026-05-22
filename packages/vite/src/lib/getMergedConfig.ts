@@ -1,6 +1,5 @@
 import path from 'node:path'
 
-import type { InputOption } from 'rollup'
 import { mergeConfig } from 'vite'
 import type { ConfigEnv, ViteUserConfig } from 'vitest/config'
 
@@ -48,7 +47,7 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
     }
 
     const defaultCedarViteConfig: ViteUserConfig = {
-      root: cedarPaths.web.src,
+      root: cedarPaths.web.base,
       resolve: {
         alias: workspaceAliases,
       },
@@ -105,7 +104,7 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
         // Note that sourcemap can be boolean or 'inline'
         sourcemap: !env.isSsrBuild && cedarConfig.web.sourceMap,
         rollupOptions: {
-          input: getRollupInput(!!env.isSsrBuild),
+          input: getRollupInput(userConfig, !!env.isSsrBuild),
         },
       },
       // @MARK: do not set buildSsrCjsExternalHeuristics here
@@ -153,9 +152,15 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
  * @param ssr Whether to return the SSR inputs or not
  * @returns Rollup input Options
  */
-function getRollupInput(ssr: boolean): InputOption | undefined {
+function getRollupInput(userConfig: ViteUserConfig, ssr: boolean) {
   const cedarConfig = getConfig()
   const cedarPaths = getPaths()
+
+  // Don't override the input if the user has already set it in their config.
+  // This is also needed for when this runs inside Storybook's Vite server.
+  if (userConfig.build?.rollupOptions?.input) {
+    return userConfig.build.rollupOptions.input
+  }
 
   if (!cedarPaths.web.entryClient) {
     throw new Error('entryClient not defined')

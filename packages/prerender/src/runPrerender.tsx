@@ -197,8 +197,11 @@ function insertChunkLoadingScript(
   const chunkPaths: string[] = []
 
   if (route?.filePath) {
+    // + 4 skips the 'web/' prefix (4 chars). The resulting pagePath
+    // includes 'src/pages/...' which matches the build manifest keys which are
+    // relative to Vite's root, which is web/
     const pagesIndex =
-      route.filePath.indexOf(path.join('web', 'src', 'pages')) + 8
+      route.filePath.indexOf(path.join('web', 'src', 'pages')) + 4
     const pagePath = ensurePosixPath(route.filePath.slice(pagesIndex))
     const pageChunkPath = buildManifest[pagePath]?.file
 

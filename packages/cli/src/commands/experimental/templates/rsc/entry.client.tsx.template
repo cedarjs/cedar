@@ -14,7 +14,7 @@ const redwoodAppElement = document.getElementById('redwood-app')
 if (!redwoodAppElement) {
   throw new Error(
     "Could not find an element with ID 'redwood-app'. Please ensure it " +
-      "exists in your 'web/src/index.html' file."
+      "exists in your 'web/index.html' file."
   )
 }
 
