@@ -139,6 +139,15 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
           '@cedarjs/testing/web/MockRouter.js',
           '@cedarjs/testing/auth',
           'graphql-tag',
+          // Pre-bundle @cedarjs/web so there is only one instance of
+          // GraphQLHooksProvider. Without this, the pre-bundled dep graph and
+          // the Vite transform pipeline can each produce their own copy of
+          // the module, so RedwoodApolloProvider sets context in one copy
+          // while NamedCell reads from the other, causing the
+          // "You must register a useQuery hook via the GraphQLHooksProvider"
+          // error when a Cell is nested inside another story.
+          '@cedarjs/web',
+          '@cedarjs/web/apollo',
         ],
         esbuildOptions: {
           plugins: [
