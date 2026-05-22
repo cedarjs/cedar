@@ -2,6 +2,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { PresetProperty } from '@storybook/types'
+import type { PluginBuild } from 'esbuild'
 import { mergeConfig } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
@@ -102,40 +103,33 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
         // Force pre-bundling of CJS-only packages that are only reachable through
         // storybook-framework-cedarjs (excluded above). Without this, Vite serves
         // them via ?import interop, which can't detect named exports in CJS files.
-        // Also include packages that trigger a mid-run Vite dep re-optimisation
-        // (and page reload) if discovered late: that reload causes a module
-        // instance split where the GraphQLHooksProvider context set up by the
-        // StorybookProvider decorator is lost, so Cells can't find useQuery.
-        include: [
-          'rehackt',
-          'react-hook-form',
-          '@cedarjs/forms',
-          'humanize-string',
-          // @cedarjs/web imports Apollo via explicit .cjs sub-paths. The
-          // resolve.alias above redirects these in Vite's transform pipeline,
-          // but esbuild (dep scanner) doesn't use resolve.alias. So Vite
-          // discovers them on first load and triggers a mid-session reload,
-          // which tears down the StorybookProvider's GraphQLHooksProvider
-          // context. Pre-bundling them eagerly prevents that reload.
-          '@apollo/client/cache/cache.cjs',
-          '@apollo/client/core/core.cjs',
-          '@apollo/client/link/context/context.cjs',
-          '@apollo/client/link/core/core.cjs',
-          '@apollo/client/link/persisted-queries/persisted-queries.cjs',
-          '@apollo/client/react/hooks/hooks.cjs',
-          '@apollo/client/react/react.cjs',
-          '@apollo/client/utilities/utilities.cjs',
-          'graphql/language/printer.js',
-          'graphql-tag',
-          '@cedarjs/web',
-          '@cedarjs/web/apollo',
-          '@cedarjs/testing/web/MockRouter.js',
-          '@cedarjs/testing/auth',
-          '@cedarjs/auth-dbauth-web',
-          'vite-plugin-node-polyfills/shims/buffer',
-          'vite-plugin-node-polyfills/shims/global',
-          'vite-plugin-node-polyfills/shims/process',
-        ],
+        include: ['rehackt'],
+        esbuildOptions: {
+          plugins: [
+            {
+              // Cedar's Cell transform (a Vite plugin) injects `export default
+              // createCell(...)` at transform time, which doesn't run during
+              // esbuild's dep scan. Without a default export, esbuild crashes
+              // the scan with "No matching export ... for import 'default'",
+              // causing Vite to skip pre-bundling entirely. That in turn means
+              // all deps are discovered on first page load, triggering
+              // mid-session reloads that tear down Storybook's
+              // GraphQLHooksProvider context and break nested-Cell stories.
+              //
+              // This plugin intercepts Cell files during the dep scan and
+              // returns a stub that satisfies the default import, allowing the
+              // scan to complete. The real transform still runs later via
+              // Vite's normal pipeline when the browser requests the file.
+              name: 'cedar-cell-stub',
+              setup(build: PluginBuild) {
+                build.onLoad({ filter: /Cell\.[jt]sx?$/ }, () => ({
+                  contents: 'export default {}',
+                  loader: 'js',
+                }))
+              },
+            },
+          ],
+        },
       },
     },
   )
