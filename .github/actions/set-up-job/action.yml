@@ -81,10 +81,29 @@ runs:
       working-directory: ${{ inputs.yarn-install-directory }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
+      run: yarn install --inline-builds
+
+    # Run create-cedar-rsc-app install separately so we can skip it on cache hit
+    # and retry on failure. The install has been flaky on Windows (exit code 127).
+    - name: 🐈 Yarn install (create-cedar-rsc-app)
+      if: inputs.set-up-yarn-cache != 'true' || steps.set-up-yarn-cache.outputs.create-cedar-rsc-app-cache-hit != 'true'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
-        yarn install --inline-builds
         cd "$GITHUB_WORKSPACE/packages/create-cedar-rsc-app"
-        yarn install --inline-builds
+        for i in 1 2 3; do
+          yarn install --inline-builds
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            break
+          fi
+          if [ $i -eq 3 ]; then
+            exit $EXIT_CODE
+          fi
+          echo "Attempt $i failed (exit $EXIT_CODE), retrying in 10s..."
+          sleep 10
+        done
 
     - name: 💾 Save node_modules cache
       if: inputs.set-up-yarn-cache == 'true' && steps.set-up-yarn-cache.outputs.node-modules-cache-hit != 'true'
