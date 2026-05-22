@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
@@ -157,30 +158,56 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
               // the scan with "No matching export ... for import 'default'",
               // causing Vite to skip pre-bundling entirely.
               //
-              // Additionally, if we include the real Cell file contents in the
-              // stub, esbuild follows the Cell's imports (e.g. createCell from
-              // @cedarjs/web) and pulls GraphQLHooksProvider into its own
-              // pre-bundled chunk separate from the @cedarjs/web chunk. That
-              // produces two distinct GraphQLHooksContext instances, so the
-              // context set by RedwoodApolloProvider is invisible to the Cell's
-              // useQuery, causing the "You must register a useQuery hook"
-              // error.
+              // We must NOT return the real Cell file contents here. If esbuild
+              // follows the Cell's imports (e.g. createCell from @cedarjs/web),
+              // it pulls GraphQLHooksProvider into its own pre-bundled chunk
+              // separately from the @cedarjs/web chunk. That produces two
+              // distinct GraphQLHooksContext instances, so the context set by
+              // RedwoodApolloProvider is invisible to the Cell's useQuery,
+              // causing "You must register a useQuery hook via the
+              // GraphQLHooksProvider".
               //
-              // By returning ONLY `export default {}` (ignoring the real file
-              // contents), esbuild treats the Cell as a leaf node and does not
-              // follow its imports. This keeps @cedarjs/web's module graph in a
-              // single pre-bundled chunk. The real Cell transform runs later via
-              // Vite's normal transform pipeline when the browser requests the
-              // file.
+              // Instead we synthesize a stub module: we scan the source for
+              // exported names and re-export them as empty stubs, plus add a
+              // default export. esbuild treats the Cell as a leaf (no real
+              // imports to follow), keeping @cedarjs/web in a single chunk.
+              // The real Cell transform runs later via Vite's normal pipeline.
               name: 'cedar-cell-stub',
               setup(build: PluginBuild) {
-                build.onLoad({ filter: /Cell\.[jt]sx?$/ }, (args) => {
+                build.onLoad({ filter: /Cell\.[jt]sx?$/ }, async (args) => {
                   if (args.path.includes('node_modules')) {
                     return undefined
                   }
 
+                  const src = await fs.promises.readFile(args.path, 'utf-8')
+
+                  // Extract every explicitly exported name so that
+                  // `import { Loading, Success } from './MyCell'` resolves
+                  // to a stub value rather than undefined.
+                  const exportedNames = new Set<string>()
+                  // Covers: export const/let/var/function/class Foo
+                  for (const m of src.matchAll(
+                    /^export\s+(?:const|let|var|function|class)\s+(\w+)/gm,
+                  )) {
+                    exportedNames.add(m[1])
+                  }
+                  // Covers: export { Foo, Bar } and export { Foo as Bar }
+                  for (const m of src.matchAll(/^export\s*\{([^}]+)\}/gm)) {
+                    for (const part of m[1].split(',')) {
+                      const name = (part.split(/\bas\b/).pop() ?? '').trim()
+                      if (name) {
+                        exportedNames.add(name)
+                      }
+                    }
+                  }
+
+                  const namedStubs = [...exportedNames]
+                    .filter((n) => n !== 'default')
+                    .map((n) => `export const ${n} = undefined`)
+                    .join('\n')
+
                   return {
-                    contents: 'export default {}',
+                    contents: `${namedStubs}\nexport default {}`,
                     loader: 'js',
                   }
                 })
