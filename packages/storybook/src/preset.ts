@@ -124,6 +124,21 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
           '@apollo/client/react/react.cjs',
           '@apollo/client/utilities/utilities.cjs',
           'graphql/language/printer.js',
+          // Pre-bundle node-polyfill shims so Vite doesn't discover them
+          // mid-session when storybook-framework-cedarjs (which uses
+          // nodePolyfills()) is first rendered. Without this, each shim
+          // triggers a separate optimized-deps reload that tears down
+          // GraphQLHooksProvider and breaks nested-Cell stories.
+          'vite-plugin-node-polyfills/shims/buffer',
+          'vite-plugin-node-polyfills/shims/global',
+          'vite-plugin-node-polyfills/shims/process',
+          // Pre-bundle @cedarjs/testing and graphql-tag so they don't cause
+          // mid-session reloads when StorybookProvider loads mock files.
+          '@cedarjs/testing/web',
+          // Sub-path explicitly imported by @cedarjs/router mock infrastructure
+          '@cedarjs/testing/web/MockRouter.js',
+          '@cedarjs/testing/auth',
+          'graphql-tag',
         ],
         esbuildOptions: {
           plugins: [
