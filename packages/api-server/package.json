@@ -83,12 +83,6 @@
         "default": "./dist/cjs/fastify.js"
       }
     },
-    "./udFetchable": {
-      "import": {
-        "types": "./dist/udFetchable.d.ts",
-        "default": "./dist/udFetchable.js"
-      }
-    },
     "./watch": {
       "import": {
         "types": "./dist/watch.d.ts",
