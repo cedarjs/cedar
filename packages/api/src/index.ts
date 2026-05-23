@@ -31,7 +31,9 @@ type PackageJson = {
 
 let packageJson: PackageJson | undefined
 
-if ((import.meta as { resolve?: unknown }).resolve) {
+// @ts-expect-error - import.meta is replaced with {} in CJS build, so .resolve
+// is undefined, but TS's typings declare it as always present
+if (import.meta.resolve) {
   const cedarApiEntryUrl = import.meta.resolve('@cedarjs/api')
   const cedarApiDir = fileURLToPath(new URL('.', cedarApiEntryUrl))
   const cedarApiRequire = createRequire(cedarApiEntryUrl)
