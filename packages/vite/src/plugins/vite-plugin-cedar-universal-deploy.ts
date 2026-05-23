@@ -276,27 +276,86 @@ export function cedarUniversalDeployPlugin(
 }
 
 function generateGraphQLModule(distPath: string): string {
-  // Relative path from the UD output directory (api/dist/ud) to the function
-  // dist file (api/dist/functions/...). Resolved at runtime via
-  // import.meta.url. The path is predictable because the buildStart hook
-  // emits each virtual module as a chunk with a fixed fileName (e.g.
-  // graphql-handler.js), preventing Rollup from nesting it under assets/
-  // or inlining it into index.js.
+  // Inline the entire handler rather than delegating to a runtime helper.
+  // This removes all indirection — just a plain Fetchable exported
+  // directly from this virtual module.
+  //
+  // Using a static import (instead of import.meta.url + lazy import()) means
+  // bundlers like Netlify's nft can trace the dependency correctly without
+  // rewriting import.meta.url to the bundle entry's URL.
   const udOutDir = path.join(getPaths().api.dist, 'ud')
   const relPath = './' + path.relative(udOutDir, distPath)
 
   return `
-    import { createGraphQLHandler } from '@cedarjs/vite/ud-handlers/graphql';
-    export default createGraphQLHandler({ distUrl: new URL(${JSON.stringify(relPath)}, import.meta.url).href });
+    import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime';
+    import { createGraphQLYoga } from '@cedarjs/graphql-server';
+    import * as fnModule from ${JSON.stringify(relPath)};
+
+    let yogaInitPromise = null;
+
+    function getYoga() {
+      if (!yogaInitPromise) {
+        yogaInitPromise = createGraphQLYoga(fnModule.__rw_graphqlOptions).then(
+          ({ yoga }) => ({ yoga, graphqlOptions: fnModule.__rw_graphqlOptions })
+        );
+      }
+      return yogaInitPromise;
+    }
+
+    export default {
+      async fetch(request) {
+        const { yoga, graphqlOptions } = await getYoga();
+        const cedarContext = await buildCedarContext(request, {
+          authDecoder: graphqlOptions ? graphqlOptions.authDecoder : undefined,
+        });
+        const event = await requestToLegacyEvent(request, cedarContext);
+        return yoga.handle(request, { request, cedarContext, event, requestContext: undefined });
+      }
+    };
   `
 }
 
 function generateFunctionModule(distPath: string): string {
+  // Inline the entire handler rather than delegating to a runtime helper.
+  // This removes all indirection — just a plain Fetchable exported
+  // directly from this virtual module.
+  //
+  // Using a static import (instead of import.meta.url + lazy import()) means
+  // bundlers like Netlify's nft can trace the dependency correctly without
+  // rewriting import.meta.url to the bundle entry's URL.
   const udOutDir = path.join(getPaths().api.dist, 'ud')
   const relPath = './' + path.relative(udOutDir, distPath)
 
+  const notFoundMsg = JSON.stringify(
+    `Handler not found in ${relPath}. Expected ` +
+      '`export async function handleRequest(request, ctx)`, ' +
+      '`export default { handleRequest }`, ' +
+      'or a legacy Lambda-shaped `handler`.',
+  )
+
   return `
-    import { createFunctionHandler } from '@cedarjs/vite/ud-handlers/function';
-    export default createFunctionHandler({ distUrl: new URL(${JSON.stringify(relPath)}, import.meta.url).href });
+    import { wrapLegacyHandler, buildCedarContext } from '@cedarjs/api/runtime';
+    import * as fnModule from ${JSON.stringify(relPath)};
+
+    const nativeHandler =
+      fnModule.handleRequest ??
+      fnModule.default?.handleRequest;
+
+    const legacyFn =
+      fnModule.handler ??
+      fnModule.default?.handler;
+
+    if (!nativeHandler && !legacyFn) {
+      throw new Error(${notFoundMsg});
+    }
+
+    const _handler = nativeHandler ?? wrapLegacyHandler(legacyFn);
+
+    export default {
+      async fetch(request) {
+        const ctx = await buildCedarContext(request);
+        return _handler(request, ctx);
+      }
+    };
   `
 }
