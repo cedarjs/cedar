@@ -9,28 +9,21 @@ export * from './transforms.js'
 export * from './cors.js'
 export * from './event.js'
 
-// Use native `require` for CJS builds, and create a require function with the
-// base dir set to the dir of this file for ESM builds
-const customRequire =
-  // Look out for a stubbed require function (@rollup will stub it)
-  // @ts-expect-error - Using `0, ` to work around bundler magic
-  typeof require === 'function' && !(0, require).toString().includes('@rollup')
-    ? require
-    : createRequire(import.meta.url)
+// Locate the package.json of @cedarjs/api by walking up from this file's
+// directory. Because of how we nest cjs and esm build output we have to walk
+// up one or two levels to find the correct package.json file
 
-const cedarApiPath = customRequire.resolve('@cedarjs/api')
-const cedarApiRequire = createRequire(cedarApiPath)
+const currentDir = import.meta.dirname ?? __dirname
+const cedarApiRequire = createRequire(import.meta.url ?? __filename)
 
-let packageJson = cedarApiRequire('./package.json')
+let packageJson = cedarApiRequire(`${currentDir}/package.json`)
 
-// Because of how we build the package we might have to walk up the directory
-// tree a few times to find the correct package.json file
 if (packageJson?.name !== '@cedarjs/api') {
-  packageJson = cedarApiRequire('../package.json')
+  packageJson = cedarApiRequire(`${currentDir}/../package.json`)
 }
 
 if (packageJson?.name !== '@cedarjs/api') {
-  packageJson = cedarApiRequire('../../package.json')
+  packageJson = cedarApiRequire(`${currentDir}/../../package.json`)
 }
 
 export const prismaVersion = packageJson?.dependencies['@prisma/client']
