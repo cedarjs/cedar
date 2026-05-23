@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
 
 export * from './auth/index.js'
 export * from './errors.js'
@@ -9,24 +10,50 @@ export * from './transforms.js'
 export * from './cors.js'
 export * from './event.js'
 
-// Locate the package.json of @cedarjs/api by walking up from this file's
-// directory. Because of how we nest cjs and esm build output we have to walk
-// up one or two levels to find the correct package.json file
+// Locate the package.json for @cedarjs/api.
+//
+// We use import.meta.resolve (ESM, uses the import export condition) to find
+// the package entry point URL, then derive the package root from that path.
+// This is correct both when this file is loaded directly from node_modules AND
+// when it has been inlined by esbuild into a UD handler bundle - in the latter
+// case import.meta.dirname would point to the bundle file rather than the
+// @cedarjs/api package dir, but import.meta.resolve always resolves relative
+// to this source file's original URL regardless of bundling.
+//
+// In the CJS build the bundler replaces import.meta with {}, so we fall back
+// to the CJS globals __dirname and __filename.
 
-const currentDir = import.meta.dirname ?? __dirname
-const cedarApiRequire = createRequire(import.meta.url ?? __filename)
-
-let packageJson = cedarApiRequire(`${currentDir}/package.json`)
-
-if (packageJson?.name !== '@cedarjs/api') {
-  packageJson = cedarApiRequire(`${currentDir}/../package.json`)
+type PackageJson = {
+  name?: string
+  version?: string
+  dependencies?: Record<string, string>
 }
 
-if (packageJson?.name !== '@cedarjs/api') {
-  packageJson = cedarApiRequire(`${currentDir}/../../package.json`)
+let packageJson: PackageJson | undefined
+
+if ((import.meta as { resolve?: unknown }).resolve) {
+  const cedarApiEntryUrl = import.meta.resolve('@cedarjs/api')
+  const cedarApiDir = fileURLToPath(new URL('.', cedarApiEntryUrl))
+  const cedarApiRequire = createRequire(cedarApiEntryUrl)
+  packageJson = cedarApiRequire(`${cedarApiDir}/package.json`)
+
+  if (packageJson?.name !== '@cedarjs/api') {
+    packageJson = cedarApiRequire(`${cedarApiDir}../package.json`)
+  }
+} else {
+  const cedarApiRequire = createRequire(__filename)
+  packageJson = cedarApiRequire(`${__dirname}/package.json`)
+
+  if (packageJson?.name !== '@cedarjs/api') {
+    packageJson = cedarApiRequire(`${__dirname}/../package.json`)
+  }
+
+  if (packageJson?.name !== '@cedarjs/api') {
+    packageJson = cedarApiRequire(`${__dirname}/../../package.json`)
+  }
 }
 
-export const prismaVersion = packageJson?.dependencies['@prisma/client']
+export const prismaVersion = packageJson?.dependencies?.['@prisma/client']
 /** @deprecated - use `cedarVersion` instead */
 export const redwoodVersion = packageJson?.version
 /** @deprecated - use `cedarVersion` instead */
