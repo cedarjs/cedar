@@ -248,7 +248,7 @@ export function cedarUniversalDeployPlugin(
       return undefined
     },
 
-    load(id) {
+    async load(id) {
       // Skip during client builds.
       if (this.environment?.name !== 'ssr') {
         return undefined
@@ -275,28 +275,160 @@ export function cedarUniversalDeployPlugin(
   }
 }
 
-function generateGraphQLModule(distPath: string): string {
-  // Relative path from the UD output directory (api/dist/ud) to the function
-  // dist file (api/dist/functions/...). Resolved at runtime via
-  // import.meta.url. The path is predictable because the buildStart hook
-  // emits each virtual module as a chunk with a fixed fileName (e.g.
-  // graphql-handler.js), preventing Rollup from nesting it under assets/
-  // or inlining it into index.js.
-  const udOutDir = path.join(getPaths().api.dist, 'ud')
-  const relPath = './' + path.relative(udOutDir, distPath)
+/**
+ * Bundle a compiled api/dist/functions file into a self-contained ESM string
+ * using esbuild. All relative/local imports are inlined; node_modules remain
+ * external (nft handles those at deploy time).
+ *
+ * The trailing `export { ... }` block that esbuild appends is stripped so the
+ * output can be safely embedded as a fragment inside a larger virtual module
+ * without polluting that module's own exports. After stripping, all exported
+ * names become plain `var`/`function` declarations that the surrounding wrapper
+ * code can reference directly.
+ *
+ * Keeping node_modules external means the bundle stays small and avoids
+ * duplicating large deps (graphql-server, yoga, etc.) that are already present
+ * in the Lambda's node_modules.
+ */
+async function bundleDistFile(distPath: string): Promise<string> {
+  const { build } = await import('esbuild')
+
+  const result = await build({
+    entryPoints: [distPath],
+    bundle: true,
+    write: false,
+    format: 'esm',
+    platform: 'node',
+    target: 'node24',
+    packages: 'external',
+    logLevel: 'silent',
+  })
+
+  // Process the trailing `export { name1, name2, X as default };` block that
+  // esbuild appends for ESM format. We embed the output as an inline fragment,
+  // so most exported bindings become plain local variables. However, we
+  // preserve the `default` export by transforming `X as default` into a local
+  // `const __cedar_default = X` declaration so wrapper code can detect a
+  // plain default-exported function.
+  let text = result.outputFiles[0].text
+
+  const exportBlock = text.match(/\nexport\s*\{([^}]*)\};\s*$/)
+  if (exportBlock) {
+    const defaultExportMatch = exportBlock[1].match(
+      /(?:^|,)\s*(\w+)\s+as\s+default\s*(?:,|$)/,
+    )
+    if (defaultExportMatch) {
+      const defaultBinding = defaultExportMatch[1]
+      text =
+        text.replace(/\nexport\s*\{[^}]*\};\s*$/, '') +
+        `\nconst __cedar_default = ${defaultBinding};`
+    } else {
+      text = text.replace(/\nexport\s*\{[^}]*\};\s*$/, '')
+    }
+  }
+
+  return text
+}
+
+async function generateGraphQLModule(distPath: string): Promise<string> {
+  // Bundle the compiled graphql function file so that all relative imports
+  // (sdls, services, directives, etc.) are inlined. node_modules dependencies
+  // (yoga, graphql-server, prisma, etc.) stay external — Netlify's nft traces
+  // those normally from the deployed node_modules.
+  //
+  // This approach avoids every cross-file import problem:
+  //   - No import.meta.url relative paths that break when nft inlines modules
+  //   - No dynamic import() strings that nft can't trace
+  //   - No build-time Rollup resolution of files that don't exist yet
+  //
+  // The __rw_graphqlOptions export from the bundled code is used directly
+  // by createGraphQLYoga, so we can initialise yoga synchronously from the
+  // inline bundle rather than going through a separate file import.
+  const bundledCode = await bundleDistFile(distPath)
 
   return `
-    import { createGraphQLHandler } from '@cedarjs/vite/ud-handlers/graphql';
-    export default createGraphQLHandler({ distUrl: new URL(${JSON.stringify(relPath)}, import.meta.url).href });
+    import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime';
+    import { createGraphQLYoga } from '@cedarjs/graphql-server';
+
+    // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
+    ${bundledCode}
+
+    let yogaInitPromise = null;
+
+    function getYoga() {
+      if (!yogaInitPromise) {
+        yogaInitPromise = createGraphQLYoga(__rw_graphqlOptions).then(
+          ({ yoga }) => ({ yoga, graphqlOptions: __rw_graphqlOptions })
+        );
+      }
+      return yogaInitPromise;
+    }
+
+    export default {
+      async fetch(request) {
+        const { yoga, graphqlOptions } = await getYoga();
+        const cedarContext = await buildCedarContext(request, {
+          authDecoder: graphqlOptions ? graphqlOptions.authDecoder : undefined,
+        });
+        const event = await requestToLegacyEvent(request, cedarContext);
+        return yoga.handle(request, { request, cedarContext, event, requestContext: undefined });
+      }
+    };
   `
 }
 
-function generateFunctionModule(distPath: string): string {
-  const udOutDir = path.join(getPaths().api.dist, 'ud')
-  const relPath = './' + path.relative(udOutDir, distPath)
+async function generateFunctionModule(distPath: string): Promise<string> {
+  // Bundle the compiled function file so all relative imports are inlined.
+  // See generateGraphQLModule for a full explanation.
+  const bundledCode = await bundleDistFile(distPath)
+
+  const notFoundMsg = JSON.stringify(
+    `Handler not found in ${path.basename(distPath)}. Expected ` +
+      '`export async function handleRequest(request, ctx)`, ' +
+      '`export default async (request, ctx) => Response`, ' +
+      '`export default { handleRequest }`, ' +
+      'or a legacy Lambda-shaped `handler`.',
+  )
 
   return `
-    import { createFunctionHandler } from '@cedarjs/vite/ud-handlers/function';
-    export default createFunctionHandler({ distUrl: new URL(${JSON.stringify(relPath)}, import.meta.url).href });
+    import { wrapLegacyHandler, buildCedarContext } from '@cedarjs/api/runtime';
+
+    // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
+    ${bundledCode}
+
+    const nativeHandler = (() => {
+      // Prefer named handleRequest export
+      if (typeof handleRequest !== 'undefined') { return handleRequest; }
+      // Handle export default { handleRequest } pattern
+      if (typeof __cedar_default !== 'undefined' && __cedar_default && typeof __cedar_default.handleRequest === 'function') {
+        return __cedar_default.handleRequest;
+      }
+      // Handle plain default-exported async function: export default async (req) => Response
+      if (typeof __cedar_default !== 'undefined' && typeof __cedar_default === 'function') {
+        return __cedar_default;
+      }
+      return undefined;
+    })();
+
+    const legacyFn = (() => {
+      if (typeof handler !== 'undefined') { return handler; }
+      if (typeof __cedar_default !== 'undefined' && __cedar_default && typeof __cedar_default.handler === 'function') {
+        return __cedar_default.handler;
+      }
+      return undefined;
+    })();
+
+    if (!nativeHandler && !legacyFn) {
+      throw new Error(${notFoundMsg});
+    }
+
+    const _handler = nativeHandler ?? wrapLegacyHandler(legacyFn);
+
+    export default {
+      async fetch(request) {
+        const ctx = await buildCedarContext(request);
+        return _handler(request, ctx);
+      }
+    };
   `
 }
