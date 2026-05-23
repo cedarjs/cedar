@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
 
 export * from './auth/index.js'
 export * from './errors.js'
@@ -9,31 +10,52 @@ export * from './transforms.js'
 export * from './cors.js'
 export * from './event.js'
 
-// Use native `require` for CJS builds, and create a require function with the
-// base dir set to the dir of this file for ESM builds
-const customRequire =
-  // Look out for a stubbed require function (@rollup will stub it)
-  // @ts-expect-error - Using `0, ` to work around bundler magic
-  typeof require === 'function' && !(0, require).toString().includes('@rollup')
-    ? require
-    : createRequire(import.meta.url)
+// Locate the package.json for @cedarjs/api.
+//
+// We use import.meta.resolve (ESM, uses the import export condition) to find
+// the package entry point URL, then derive the package root from that path.
+// This is correct both when this file is loaded directly from node_modules AND
+// when it has been inlined by esbuild into a UD handler bundle - in the latter
+// case import.meta.dirname would point to the bundle file rather than the
+// @cedarjs/api package dir, but import.meta.resolve always resolves relative
+// to this source file's original URL regardless of bundling.
+//
+// In the CJS build the bundler replaces import.meta with {}, so we fall back
+// to the CJS globals __dirname and __filename.
 
-const cedarApiPath = customRequire.resolve('@cedarjs/api')
-const cedarApiRequire = createRequire(cedarApiPath)
-
-let packageJson = cedarApiRequire('./package.json')
-
-// Because of how we build the package we might have to walk up the directory
-// tree a few times to find the correct package.json file
-if (packageJson?.name !== '@cedarjs/api') {
-  packageJson = cedarApiRequire('../package.json')
+type PackageJson = {
+  name?: string
+  version?: string
+  dependencies?: Record<string, string>
 }
 
-if (packageJson?.name !== '@cedarjs/api') {
-  packageJson = cedarApiRequire('../../package.json')
+let packageJson: PackageJson | undefined
+
+// @ts-expect-error - import.meta is replaced with {} in CJS build, so .resolve
+// is undefined, but TS's typings declare it as always present
+if (import.meta.resolve) {
+  const cedarApiEntryUrl = import.meta.resolve('@cedarjs/api')
+  const cedarApiDir = fileURLToPath(new URL('.', cedarApiEntryUrl))
+  const cedarApiRequire = createRequire(cedarApiEntryUrl)
+  packageJson = cedarApiRequire(`${cedarApiDir}/package.json`)
+
+  if (packageJson?.name !== '@cedarjs/api') {
+    packageJson = cedarApiRequire(`${cedarApiDir}../package.json`)
+  }
+} else {
+  const cedarApiRequire = createRequire(__filename)
+  packageJson = cedarApiRequire(`${__dirname}/package.json`)
+
+  if (packageJson?.name !== '@cedarjs/api') {
+    packageJson = cedarApiRequire(`${__dirname}/../package.json`)
+  }
+
+  if (packageJson?.name !== '@cedarjs/api') {
+    packageJson = cedarApiRequire(`${__dirname}/../../package.json`)
+  }
 }
 
-export const prismaVersion = packageJson?.dependencies['@prisma/client']
+export const prismaVersion = packageJson?.dependencies?.['@prisma/client']
 /** @deprecated - use `cedarVersion` instead */
 export const redwoodVersion = packageJson?.version
 /** @deprecated - use `cedarVersion` instead */
