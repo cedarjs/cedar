@@ -1,7 +1,5 @@
 import type { Argv } from 'yargs'
 
-import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
-
 export const command = 'universal-deploy'
 
 export const description = 'Setup Universal Deploy'
@@ -20,11 +18,7 @@ export interface Args {
 }
 
 export async function handler({ force }: Args) {
-  recordTelemetryAttributes({
-    command: 'setup deploy universal-deploy',
-    force,
-  })
-
   const { handler } = await import('./universalDeployHandler.js')
+
   return handler({ force })
 }

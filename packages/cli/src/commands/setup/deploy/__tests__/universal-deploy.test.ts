@@ -64,16 +64,24 @@ export default defineConfig({
     expect(result).toBe(input)
   })
 
-  it('adds both cedar and UD plugin when no import from @cedarjs/vite exists', () => {
+  it('throws when no import from @cedarjs/vite exists', () => {
     const input = `import dns from 'dns'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [cedar()],
 })`
-    const result = mergeImport(input)
-    expect(result).toContain(
-      `import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'`,
+    expect(() => mergeImport(input)).toThrow(
+      'No import from @cedarjs/vite found',
+    )
+  })
+
+  it('throws when no imports exist at all', () => {
+    const input = `export default defineConfig({
+  plugins: [cedar()],
+})`
+    expect(() => mergeImport(input)).toThrow(
+      'No import from @cedarjs/vite found',
     )
   })
 

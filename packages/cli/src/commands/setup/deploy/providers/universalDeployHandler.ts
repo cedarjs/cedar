@@ -105,6 +105,7 @@ function findCedarViteImportLine(lines: string[]): number {
       return i
     }
   }
+
   // Then look for a continuation line like "} from '@cedarjs/vite'"
   for (let i = 0; i < lines.length; i++) {
     if (/from\s+['"]@cedarjs\/vite['"]/.test(lines[i])) {
@@ -114,9 +115,11 @@ function findCedarViteImportLine(lines: string[]): number {
           return j
         }
       }
+
       return i
     }
   }
+
   return -1
 }
 
@@ -126,17 +129,8 @@ export function mergeImport(content: string): string {
 
   if (importIndex === -1) {
     // No import from @cedarjs/vite — add both cedar and the UD plugin
-    const viteImportIndex = lines.findIndex((line) =>
-      /^import\s+.*\s+from\s+['"]vite['"];?\s*$/.test(line),
-    )
-    if (viteImportIndex !== -1) {
-      lines.splice(
-        viteImportIndex + 1,
-        0,
-        `import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'`,
-      )
-    }
-    return lines.join('\n')
+
+    throw new Error('No import from @cedarjs/vite found')
   }
 
   const importLine = lines[importIndex]
@@ -145,14 +139,18 @@ export function mergeImport(content: string): string {
   const singleLineNamed = importLine.match(
     /^(import\s*\{\s*)([^}]*?)(\s*\}\s*from\s+['"]@cedarjs\/vite['"];?)$/,
   )
+
   if (singleLineNamed) {
     const specifiers = singleLineNamed[2].trim()
+
     if (specifiers.includes('cedarUniversalDeployPlugin')) {
       return content
     }
+
     lines[importIndex] = specifiers
       ? `${singleLineNamed[1]}${specifiers}, cedarUniversalDeployPlugin${singleLineNamed[3]}`
       : `${singleLineNamed[1]}cedarUniversalDeployPlugin${singleLineNamed[3]}`
+
     return lines.join('\n')
   }
 
@@ -162,6 +160,7 @@ export function mergeImport(content: string): string {
   //   } from '@cedarjs/vite'
   // Find the closing line
   let closeIndex = importIndex
+
   for (let i = importIndex + 1; i < lines.length; i++) {
     if (/}\s*from\s+['"]@cedarjs\/vite['"]/.test(lines[i])) {
       closeIndex = i
@@ -172,12 +171,15 @@ export function mergeImport(content: string): string {
   if (closeIndex > importIndex) {
     const specifiersLines = lines.slice(importIndex + 1, closeIndex)
     const allSpecifiers = specifiersLines.join(' ')
+
     if (allSpecifiers.includes('cedarUniversalDeployPlugin')) {
       return content
     }
+
     const indentMatch = specifiersLines[0]?.match(/^(\s+)/)
     const indent = indentMatch?.[1] || '  '
     lines.splice(closeIndex, 0, `${indent}cedarUniversalDeployPlugin,`)
+
     return lines.join('\n')
   }
 
@@ -185,12 +187,14 @@ export function mergeImport(content: string): string {
   const defaultMatch = importLine.match(
     /^import\s+(\w+)\s+from\s+['"]@cedarjs\/vite['"];?\s*$/,
   )
+
   if (defaultMatch) {
     // $2 includes the leading space, so no extra space before it
     lines[importIndex] = importLine.replace(
       /(import\s+\w+)(\s+from\s+['"]@cedarjs\/vite['"];?)/,
       '$1, { cedarUniversalDeployPlugin }$2',
     )
+
     return lines.join('\n')
   }
 
@@ -227,6 +231,7 @@ export function addPluginToConfig(content: string): string {
 
   // Multi-line case — first find the closing ]
   let closeIndex = -1
+
   for (let i = pluginsLineIndex + 1; i < lines.length; i++) {
     const trimmed = lines[i].trim()
     if (trimmed === ']' || trimmed === '],') {
@@ -234,6 +239,7 @@ export function addPluginToConfig(content: string): string {
       break
     }
   }
+
   if (closeIndex === -1) {
     return content
   }
@@ -244,14 +250,17 @@ export function addPluginToConfig(content: string): string {
   const firstEntryIndent = (() => {
     for (let i = pluginsLineIndex + 1; i < closeIndex; i++) {
       const trimmed = lines[i].trim()
+
       if (trimmed) {
         return lines[i].match(/^\s*/)?.[0] || '  '
       }
     }
+
     return pluginsLineIndent + '  '
   })()
 
   const prevLine = lines[closeIndex - 1]?.trimEnd()
+
   if (
     prevLine &&
     !prevLine.endsWith(',') &&
@@ -259,6 +268,7 @@ export function addPluginToConfig(content: string): string {
     !prevLine.endsWith('[')
   ) {
     const commentIdx = prevLine.search(/\s+\/\/|(?<!\\)\/\*/)
+
     if (commentIdx !== -1) {
       lines[closeIndex - 1] =
         prevLine.slice(0, commentIdx) + ',' + prevLine.slice(commentIdx)
@@ -266,10 +276,12 @@ export function addPluginToConfig(content: string): string {
       lines[closeIndex - 1] = prevLine + ','
     }
   }
+
   lines.splice(
     closeIndex,
     0,
     `${firstEntryIndent}cedarUniversalDeployPlugin(),`,
   )
+
   return lines.join('\n')
 }
