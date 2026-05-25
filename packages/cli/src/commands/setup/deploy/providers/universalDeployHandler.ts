@@ -25,7 +25,7 @@ const notes = [
   `  ${c.highlight('yarn cedar setup deploy netlify --ud')}`,
   `  ${c.highlight('yarn cedar setup deploy vercel --ud')}`,
   '',
-  'See: https://cedarjs.com/docs/deploy#universal-deploy',
+  'See: https://cedarjs.com/docs/deploy/universal-deploy',
 ]
 
 export async function handler() {
