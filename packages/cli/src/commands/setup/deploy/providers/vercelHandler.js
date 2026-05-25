@@ -64,7 +64,10 @@ function addVercelPluginToViteConfigTask() {
 
       let content = fs.readFileSync(viteConfigPath, 'utf-8')
 
-      if (content.includes('vite-plugin-vercel')) {
+      if (
+        content.includes('vite-plugin-vercel') &&
+        content.includes('vercel(')
+      ) {
         task.skip('Vercel plugin is already configured.')
         return
       }
