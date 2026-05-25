@@ -200,6 +200,56 @@ describe('addPluginToConfig', () => {
   })
 })
 
+async function setupHandlerTest(viteConfigContent: string) {
+  const memfs = await import('memfs')
+
+  vi.doMock('node:fs', async () => ({
+    ...memfs.fs,
+    default: memfs.fs,
+  }))
+
+  vi.doMock('@cedarjs/project-config', () => ({
+    getPaths: () => ({
+      base: '/cedar-app',
+      web: { base: '/cedar-app/web' },
+      api: { base: '/cedar-app/api' },
+    }),
+    getConfigPath: () => '/cedar-app/cedar.toml',
+  }))
+
+  vi.doMock('@cedarjs/cli-helpers', async () => {
+    const cliHelpers = await vi.importActual('@cedarjs/cli-helpers')
+    return {
+      getPaths: () => ({
+        base: '/cedar-app',
+        web: { base: '/cedar-app/web' },
+        api: { base: '/cedar-app/api' },
+      }),
+      isTypeScriptProject: () => true,
+      recordTelemetryAttributes: vi.fn(),
+      colors: cliHelpers.colors,
+    }
+  })
+
+  vi.doMock('@cedarjs/telemetry', () => ({ errorTelemetry: vi.fn() }))
+
+  vi.doMock('../../../../lib/index.js', () => ({
+    printSetupNotes: () => ({
+      title: 'One more thing...',
+      task: vi.fn(),
+    }),
+  }))
+
+  const vol = memfs.vol
+  vol.fromJSON({
+    '/cedar-app/web/vite.config.ts': viteConfigContent,
+  })
+
+  const { handler } = await import('../providers/universalDeployHandler.js')
+
+  return { handler, vol }
+}
+
 describe('handler integration', () => {
   beforeEach(() => {
     process.env.CEDAR_CWD = '/cedar-app'
@@ -207,47 +257,8 @@ describe('handler integration', () => {
   })
 
   it('adds cedarUniversalDeployPlugin to a vite.config.ts with named import', async () => {
-    const memfs = await import('memfs')
-    vi.doMock('node:fs', async () => ({
-      ...memfs.fs,
-      default: memfs.fs,
-    }))
-
-    vi.doMock('@cedarjs/project-config', () => ({
-      getPaths: () => ({
-        base: '/cedar-app',
-        web: { base: '/cedar-app/web' },
-        api: { base: '/cedar-app/api' },
-      }),
-      getConfigPath: () => '/cedar-app/cedar.toml',
-    }))
-
-    vi.doMock('@cedarjs/cli-helpers', async () => {
-      const cliHelpers = await vi.importActual('@cedarjs/cli-helpers')
-      return {
-        getPaths: () => ({
-          base: '/cedar-app',
-          web: { base: '/cedar-app/web' },
-          api: { base: '/cedar-app/api' },
-        }),
-        isTypeScriptProject: () => true,
-        recordTelemetryAttributes: vi.fn(),
-        colors: cliHelpers.colors,
-      }
-    })
-
-    vi.doMock('@cedarjs/telemetry', () => ({ errorTelemetry: vi.fn() }))
-
-    vi.doMock('../../../../lib/index.js', () => ({
-      printSetupNotes: () => ({
-        title: 'One more thing...',
-        task: vi.fn(),
-      }),
-    }))
-
-    const vol = memfs.vol
-    vol.fromJSON({
-      '/cedar-app/web/vite.config.ts': `import dns from 'dns'
+    const { handler, vol } = await setupHandlerTest(
+      `import dns from 'dns'
 import { defineConfig } from 'vite'
 import { cedar } from '@cedarjs/vite'
 
@@ -256,11 +267,9 @@ dns.setDefaultResultOrder('verbatim')
 export default defineConfig({
   plugins: [cedar()],
 })`,
-    })
+    )
 
-    const { handler } = await import('../providers/universalDeployHandler.js')
-
-    await handler({ force: false })
+    await handler()
 
     const written = (vol.toJSON() as Record<string, string>)[
       '/cedar-app/web/vite.config.ts'

@@ -14,10 +14,6 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 // @ts-expect-error - No types for JS files
 import { printSetupNotes } from '../../../../lib/index.js'
 
-export interface Args {
-  force: boolean
-}
-
 const notes = [
   'Universal Deploy is set up!',
   '',
@@ -26,21 +22,14 @@ const notes = [
   `  ${c.highlight('yarn cedar serve --ud')} — serve it locally`,
 ]
 
-export async function handler({ force }: Args) {
+export async function handler() {
   recordTelemetryAttributes({
     command: 'setup deploy universal-deploy',
   })
 
   const tasks = new Listr(
-    [
-      addUniversalDeployPluginToViteConfig({
-        overwriteExisting: force,
-      }),
-      printSetupNotes(notes),
-    ],
-    {
-      rendererOptions: { collapseSubtasks: false },
-    },
+    [addUniversalDeployPluginToViteConfig(), printSetupNotes(notes)],
+    { rendererOptions: { collapseSubtasks: false } },
   )
 
   try {
@@ -52,9 +41,7 @@ export async function handler({ force }: Args) {
   }
 }
 
-function addUniversalDeployPluginToViteConfig({
-  overwriteExisting = false,
-}: { overwriteExisting?: boolean } = {}) {
+function addUniversalDeployPluginToViteConfig() {
   return {
     title: 'Adding cedarUniversalDeployPlugin to vite config...',
     task: async (_ctx: unknown, task: { skip: (msg: string) => void }) => {
@@ -72,19 +59,8 @@ function addUniversalDeployPluginToViteConfig({
       let content = fs.readFileSync(viteConfigPath, 'utf-8')
 
       if (content.includes('cedarUniversalDeployPlugin')) {
-        if (overwriteExisting) {
-          content = content
-            .replace(/,\s*cedarUniversalDeployPlugin\s*\(\s*\)/g, '')
-            .replace(/cedarUniversalDeployPlugin\s*\(\s*\),\s*/g, '')
-            .replace(
-              /^import\s*\{\s*[^}]*cedarUniversalDeployPlugin[^}]*\}\s*from\s*['"]@cedarjs\/vite['"];?\s*\n?/gm,
-              '',
-            )
-            .replace(/\n{3,}/g, '\n\n')
-        } else {
-          task.skip('cedarUniversalDeployPlugin is already configured.')
-          return
-        }
+        task.skip('cedarUniversalDeployPlugin is already configured.')
+        return
       }
 
       content = mergeImport(content)
