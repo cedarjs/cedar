@@ -76,34 +76,59 @@ function addNetlifyPluginsToViteConfigTask() {
         return
       }
 
-      // Add import statements before the vite import
+      // Add import statements
       if (!hasNetlifyPlugin || !hasNetlifyCompat) {
-        content = content.replace(
+        const newContent = content.replace(
           /(import\s+\{[^}]*\}\s+from\s+['"]vite['"];?)/,
           (match) => {
             let result = match
+
             if (!hasNetlifyPlugin) {
               result = `import netlify from '@netlify/vite-plugin'\n${result}`
             }
+
             if (!hasNetlifyCompat) {
               result = `import netlifyCompat from '@universal-deploy/netlify/vite'\n${result}`
             }
+
             return result
           },
         )
+
+        if (newContent === content) {
+          // No 'vite' named import found — prepend at the top of the file
+          let prepend = ''
+
+          if (!hasNetlifyPlugin) {
+            prepend += "import netlify from '@netlify/vite-plugin'\n"
+          }
+
+          if (!hasNetlifyCompat) {
+            prepend +=
+              "import netlifyCompat from '@universal-deploy/netlify/vite'\n"
+          }
+
+          content = prepend + content
+        } else {
+          content = newContent
+        }
       }
 
       // Add plugin calls before cedar() in the plugins array
       if (!content.includes('netlifyCompat(')) {
         content = content.replace(
-          /(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
-          (match, prefix, beforeCedar, cedarCall) => {
-            const hasNewline = beforeCedar.includes('\n')
-            if (hasNewline) {
-              const indent = beforeCedar.match(/\n(\s*)$/)?.[1] || '  '
-              return `${prefix}${beforeCedar}  netlify({ build: { enabled: true } }),\n${indent}netlifyCompat(),\n${indent}${cedarCall}`
-            }
-            return `${prefix}netlify({ build: { enabled: true } }), netlifyCompat(), ${beforeCedar}${cedarCall}`
+          /(\s*)(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
+          (_match, leadingWs, prefix, beforeCedar, cedarCall) => {
+            const indent = beforeCedar.includes('\n')
+              ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
+              : leadingWs + '  '
+
+            return (
+              `${leadingWs}${prefix}\n` +
+              `${indent}netlify({ build: { enabled: true } }),\n` +
+              `${indent}netlifyCompat(),\n ` +
+              `${indent}${cedarCall}`
+            )
           },
         )
       }

@@ -6,7 +6,12 @@ import { Listr } from 'listr2'
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-import { addPackagesTask, getPaths, printSetupNotes, writeFile } from '../../../../lib/index.js'
+import {
+  addPackagesTask,
+  getPaths,
+  printSetupNotes,
+  writeFile,
+} from '../../../../lib/index.js'
 import { updateApiURLTask, verifyUDSetupTask } from '../helpers/index.js'
 
 export async function handler({ force, ud }) {
@@ -64,22 +69,28 @@ function addVercelPluginToViteConfigTask() {
         return
       }
 
-      // Add import statement before the vite import
-      content = content.replace(
+      // Add import statement
+      const newContent = content.replace(
         /(import\s+\{[^}]*\}\s+from\s+['"]vite['"];?)/,
         "import { vercel } from 'vite-plugin-vercel/vite'\n$1",
       )
 
+      if (newContent === content) {
+        // No 'vite' named import found — prepend at the top of the file
+        content = "import { vercel } from 'vite-plugin-vercel/vite'\n" + content
+      } else {
+        content = newContent
+      }
+
       // Add plugin call before cedar() in the plugins array
       content = content.replace(
-        /(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
-        (match, prefix, beforeCedar, cedarCall) => {
-          const hasNewline = beforeCedar.includes('\n')
-          if (hasNewline) {
-            const indent = beforeCedar.match(/\n(\s*)$/)?.[1] || '  '
-            return `${prefix}${beforeCedar}  vercel(),\n${indent}${cedarCall}`
-          }
-          return `${prefix}vercel(), ${beforeCedar}${cedarCall}`
+        /(\s*)(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
+        (_match, leadingWs, prefix, beforeCedar, cedarCall) => {
+          const indent = beforeCedar.includes('\n')
+            ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
+            : leadingWs + '  '
+
+          return `${leadingWs}${prefix}\n${indent}vercel(),\n${indent}${cedarCall}`
         },
       )
 
