@@ -24,7 +24,7 @@ export async function handler({ force, ud }) {
   const tasks = new Listr(
     [
       ud && verifyUDSetupTask(),
-      ud && installVercelPackagesTask(),
+      ud && (await installVercelPackagesTask()),
       ud && addVercelPluginToViteConfigTask(),
       !ud && updateApiURLTask('/api'),
       ud
