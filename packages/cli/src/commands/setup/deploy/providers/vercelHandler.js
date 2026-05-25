@@ -90,7 +90,13 @@ function addVercelPluginToViteConfigTask() {
             ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
             : leadingWs + '  '
 
-          return `${leadingWs}${prefix}\n${indent}vercel(),\n${indent}${cedarCall}`
+          const before = beforeCedar.replace(/\s*$/, '')
+
+          return (
+            `${leadingWs}${prefix}\n` +
+            `${indent}vercel(),${before}\n` +
+            `${indent}${cedarCall}`
+          )
         },
       )
 

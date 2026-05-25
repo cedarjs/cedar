@@ -122,11 +122,12 @@ function addNetlifyPluginsToViteConfigTask() {
             const indent = beforeCedar.includes('\n')
               ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
               : leadingWs + '  '
+            const before = beforeCedar.replace(/\s*$/, '')
 
             return (
               `${leadingWs}${prefix}\n` +
               `${indent}netlify({ build: { enabled: true } }),\n` +
-              `${indent}netlifyCompat(),\n` +
+              `${indent}netlifyCompat(),${before}\n` +
               `${indent}${cedarCall}`
             )
           },
