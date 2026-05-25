@@ -98,6 +98,32 @@ export const addFilesTask = ({
   }
 }
 
+export const verifyUDSetupTask = () => {
+  return {
+    title: 'Checking if Universal Deploy is set up...',
+    task: () => {
+      const paths = getPaths()
+      const viteConfigTs = path.join(paths.web.base, 'vite.config.ts')
+      const viteConfigJs = path.join(paths.web.base, 'vite.config.js')
+      const viteConfigPath = fs.existsSync(viteConfigTs)
+        ? viteConfigTs
+        : viteConfigJs
+
+      if (!fs.existsSync(viteConfigPath)) {
+        throw new Error('Vite config file not found')
+      }
+
+      const content = fs.readFileSync(viteConfigPath, 'utf-8')
+
+      if (!content.includes('cedarUniversalDeployPlugin')) {
+        throw new Error(
+          'Universal Deploy is not set up. Please run `yarn cedar setup deploy universal-deploy` first.',
+        )
+      }
+    },
+  }
+}
+
 export const addToGitIgnoreTask = ({ paths }) => {
   return {
     title: 'Updating .gitignore...',

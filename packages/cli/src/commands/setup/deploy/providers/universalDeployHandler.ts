@@ -20,6 +20,12 @@ const notes = [
   'Next steps:',
   `  ${c.highlight('yarn cedar build --ud')} — build the Universal Deploy server entry`,
   `  ${c.highlight('yarn cedar serve --ud')} — serve it locally`,
+  '',
+  'To deploy, pick a deployment target, for example:',
+  `  ${c.highlight('yarn cedar setup deploy netlify --ud')}`,
+  `  ${c.highlight('yarn cedar setup deploy vercel --ud')}`,
+  '',
+  'See: https://cedarjs.com/docs/deploy#universal-deploy',
 ]
 
 export async function handler() {
