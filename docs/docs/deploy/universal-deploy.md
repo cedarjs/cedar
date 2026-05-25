@@ -36,6 +36,23 @@ yarn cedar serve --ud
 
 Once Universal Deploy is set up, configure your hosting provider:
 
+### Node.js (cloud server, VPS, container)
+
+No additional setup needed. After building, serve directly with:
+
+```shell
+yarn cedar build --ud
+yarn cedar serve --ud
+```
+
+This runs the server using [srvx](https://github.com/h3-org/srvx) — a portable HTTP server that wraps the Fetch-native entry. Use `--port` and `--host` to configure the listener:
+
+```shell
+yarn cedar serve --ud --port 8080 --host 0.0.0.0
+```
+
+For production on a cloud VM or container, build once and run `cedar serve --ud` as your process entry point (behind a reverse proxy or load balancer as needed).
+
 ### Netlify
 
 ```shell
@@ -54,7 +71,7 @@ This installs `@vercel/vite-plugin` and `@universal-deploy/vercel`, adds the Ver
 
 ## How it works
 
-The `--ud` build step (`yarn cedar build --ud`) produces a server entry at `dist/server/entry.js` that exports:
+The `--ud` build step (`yarn cedar build --ud`) produces a server entry at `api/dist/ud/index.js` that exports:
 
 ```ts
 export default {
