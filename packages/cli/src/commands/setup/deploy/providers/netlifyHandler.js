@@ -126,7 +126,7 @@ function addNetlifyPluginsToViteConfigTask() {
             return (
               `${leadingWs}${prefix}\n` +
               `${indent}netlify({ build: { enabled: true } }),\n` +
-              `${indent}netlifyCompat(),\n ` +
+              `${indent}netlifyCompat(),\n` +
               `${indent}${cedarCall}`
             )
           },
