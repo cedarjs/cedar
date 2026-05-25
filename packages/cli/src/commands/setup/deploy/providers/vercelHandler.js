@@ -64,44 +64,48 @@ function addVercelPluginToViteConfigTask() {
 
       let content = fs.readFileSync(viteConfigPath, 'utf-8')
 
-      if (
-        content.includes('vite-plugin-vercel') &&
-        content.includes('vercel(')
-      ) {
+      const hasVercelPlugin = content.includes('vite-plugin-vercel')
+
+      if (hasVercelPlugin && content.includes('vercel(')) {
         task.skip('Vercel plugin is already configured.')
         return
       }
 
       // Add import statement
-      const newContent = content.replace(
-        /(import\s+\{[^}]*\}\s+from\s+['"]vite['"];?)/,
-        "import { vercel } from 'vite-plugin-vercel/vite'\n$1",
-      )
+      if (!hasVercelPlugin) {
+        const newContent = content.replace(
+          /(import\s+\{[^}]*\}\s+from\s+['"]vite['"];?)/,
+          "import { vercel } from 'vite-plugin-vercel/vite'\n$1",
+        )
 
-      if (newContent === content) {
-        // No 'vite' named import found — prepend at the top of the file
-        content = "import { vercel } from 'vite-plugin-vercel/vite'\n" + content
-      } else {
-        content = newContent
+        if (newContent === content) {
+          // No 'vite' named import found — prepend at the top of the file
+          content =
+            "import { vercel } from 'vite-plugin-vercel/vite'\n" + content
+        } else {
+          content = newContent
+        }
       }
 
       // Add plugin call before cedar() in the plugins array
-      content = content.replace(
-        /(\s*)(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
-        (_match, leadingWs, prefix, beforeCedar, cedarCall) => {
-          const indent = beforeCedar.includes('\n')
-            ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
-            : leadingWs + '  '
+      if (!content.includes('vercel(')) {
+        content = content.replace(
+          /(\s*)(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
+          (_match, leadingWs, prefix, beforeCedar, cedarCall) => {
+            const indent = beforeCedar.includes('\n')
+              ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
+              : leadingWs + '  '
 
-          const before = beforeCedar.replace(/\s*$/, '')
+            const before = beforeCedar.replace(/\s*$/, '')
 
-          return (
-            `${leadingWs}${prefix}\n` +
-            `${indent}vercel(),${before}\n` +
-            `${indent}${cedarCall}`
-          )
-        },
-      )
+            return (
+              `${leadingWs}${prefix}\n` +
+              `${indent}vercel(),${before}\n` +
+              `${indent}${cedarCall}`
+            )
+          },
+        )
+      }
 
       fs.writeFileSync(viteConfigPath, content)
     },
