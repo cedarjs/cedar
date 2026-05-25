@@ -91,8 +91,4 @@ You need to run `yarn cedar build --ud` before `yarn cedar serve --ud`. The `--u
 
 **`cedarUniversalDeployPlugin is already configured`**
 
-The setup command detected the plugin is already present. Use `--force` to overwrite:
-
-```shell
-yarn cedar setup deploy universal-deploy --force
-```
+The setup command detected the plugin is already present and skipped the step. No action needed — your Vite config is already set up correctly.
