@@ -8,6 +8,8 @@ import * as setupDeployFlightcontrol from './providers/flightcontrol.js'
 import * as setupDeployNetlify from './providers/netlify.js'
 import * as setupDeployRender from './providers/render.js'
 import * as setupDeployServerless from './providers/serverless.js'
+// @ts-expect-error - No types for JS files
+import * as setupDeployUniversalDeploy from './providers/universal-deploy.js'
 import * as setupDeployVercel from './providers/vercel.js'
 
 export const builder = (yargs) =>
@@ -18,6 +20,7 @@ export const builder = (yargs) =>
     .command(setupDeployNetlify)
     .command(setupDeployRender)
     .command(setupDeployServerless)
+    .command(setupDeployUniversalDeploy)
     .command(setupDeployVercel)
     .demandCommand()
     .option('force', {
