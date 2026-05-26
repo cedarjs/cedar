@@ -45,10 +45,10 @@ yarn cedar build --ud
 yarn cedar serve --ud
 ```
 
-This runs the server using [srvx](https://github.com/h3-org/srvx) — a portable HTTP server that wraps the Fetch-native entry. Use `--port` and `--host` to configure the listener:
+This runs the server using [srvx](https://github.com/h3-org/srvx) — a portable HTTP server that wraps the Fetch-native entry. Use `--api-port`, `--api-host`, `--web-port`, and `--web-host` to configure the listeners:
 
 ```shell
-yarn cedar serve --ud --port 8080 --host 0.0.0.0
+yarn cedar serve --ud --api-port 8911 --api-host 0.0.0.0 --web-port 8910 --web-host 0.0.0.0
 ```
 
 For production on a cloud VM or container, build once and run `cedar serve --ud` as your process entry point (behind a reverse proxy or load balancer as needed).
@@ -67,7 +67,7 @@ This installs `@netlify/vite-plugin` and `@universal-deploy/netlify`, adds the r
 yarn cedar setup deploy vercel --ud
 ```
 
-This installs `@vercel/vite-plugin` and `@universal-deploy/vercel`, adds the Vercel Vite plugin, and writes a `vercel.json` configured for Universal Deploy.
+This installs `vite-plugin-vercel`, adds the Vercel Vite plugin, and writes a `vercel.json` configured for Universal Deploy.
 
 ## How it works
 
