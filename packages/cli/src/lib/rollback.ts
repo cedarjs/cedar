@@ -92,7 +92,7 @@ export async function executeRollback(
     }
   }
   if (task) {
-    task.title = `Reverted because: ${task.task.message.error}`
+    task.title = `Reverted because: ${task.task.message?.error ?? 'unknown error'}`
   }
 }
 
