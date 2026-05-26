@@ -45,7 +45,7 @@ yarn cedar build --ud
 yarn cedar serve --ud
 ```
 
-This runs the server using [srvx](https://github.com/h3-org/srvx) — a portable HTTP server that wraps the Fetch-native entry. Use `--api-port`, `--api-host`, `--web-port`, and `--web-host` to configure the listeners:
+This runs the server using [srvx](https://github.com/h3js/srvx) — a portable HTTP server that wraps the Fetch-native entry. Use `--api-port`, `--api-host`, `--web-port`, and `--web-host` to configure the listeners:
 
 ```shell
 yarn cedar serve --ud --api-port 8911 --api-host 0.0.0.0 --web-port 8910 --web-host 0.0.0.0
