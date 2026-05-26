@@ -223,7 +223,7 @@ export function cedarUniversalDeployPlugin(
         this.emitFile({
           type: 'chunk',
           id: resolvedId,
-          fileName: safeName + '-handler.js',
+          fileName: 'chunks/' + safeName + '-handler.js',
         })
       }
     },
