@@ -183,7 +183,7 @@ describe('netlify with --ud', () => {
       p.endsWith('netlify.toml'),
     )
     expect(netlifyToml).toBeDefined()
-    expect(filesystem[netlifyToml]).toContain('api/dist/ud')
+    expect(filesystem[netlifyToml]).toContain('api/dist/functions')
     expect(filesystem[netlifyToml]).toContain('build --ud')
 
     // Verify vite config has the Netlify plugin imports
