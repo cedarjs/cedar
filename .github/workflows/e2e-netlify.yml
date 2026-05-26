@@ -33,19 +33,16 @@ jobs:
           rm -rf ../cedar-test-app/api/db/migrations
           node_modules/.bin/cedar prisma migrate dev --name init-neon
 
+      - name: 🔗 Link Netlify site
+        working-directory: ../cedar-test-app
+        run: npx netlify link --id "$SITE_ID" --filter web
+
       - name: 🔑 Set database URL on Netlify
+        working-directory: ../cedar-test-app
         run: |
-          . ../cedar-test-app/.env
-          ACCOUNT_ID=$(curl -s "https://api.netlify.com/api/v1/sites/${SITE_ID}" \
-            -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" | jq -r '.account_id')
-          for VAR in DATABASE_URL DIRECT_DATABASE_URL; do
-            VALUE="${!VAR}"
-            curl -s -X PUT \
-              "https://api.netlify.com/api/v1/accounts/${ACCOUNT_ID}/env/${VAR}?site_id=${SITE_ID}" \
-              -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d "$(printf '{"key":"%s","scopes":["builds","functions","post_processing","runtime"],"values":[{"context":"all","value":"%s"}]}' "$VAR" "$VALUE")"
-          done
+          . .env
+          npx netlify env:set DATABASE_URL "$DATABASE_URL" --filter web
+          npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
 
       - name: 🔧 Set up Universal Deploy
         run: node_modules/.bin/cedar setup deploy universal-deploy
@@ -53,18 +50,11 @@ jobs:
       - name: 🔧 Set up Netlify deploy (UD)
         run: node_modules/.bin/cedar setup deploy netlify --ud
 
-      - name: 🏗️ Build for Netlify
-        run: node_modules/.bin/cedar build --ud
-
-      - name: 🚀 Deploy to Netlify
+      - name: 🚀 Build & Deploy to Netlify
         id: netlify-deploy
+        working-directory: ../cedar-test-app
         run: |
-          OUTPUT=$(npx netlify deploy \
-            --prod \
-            --dir=../cedar-test-app/web/dist \
-            --functions=../cedar-test-app/api/dist/ud \
-            --site="$SITE_ID" \
-            --json)
+          OUTPUT=$(npx netlify deploy --filter web --prod --json)
           echo "$OUTPUT"
           echo "deploy-url=$(echo "$OUTPUT" | jq -r '.url')" >> "$GITHUB_OUTPUT"
 
