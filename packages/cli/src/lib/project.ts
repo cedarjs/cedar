@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'path'
 
+// @ts-expect-error - No types for JS files
 import { getPaths } from './index.js'
 
 export const isTypeScriptProject = () => {
@@ -11,10 +12,12 @@ export const isTypeScriptProject = () => {
   )
 }
 
-export function workspaces({ includePackages = false } = {}) {
+export function workspaces({
+  includePackages = false,
+}: { includePackages?: boolean } = {}) {
   const cedarPaths = getPaths()
 
-  let workspaces = []
+  let workspaces: string[] = []
 
   if (fs.existsSync(path.join(cedarPaths.web.base, 'package.json'))) {
     workspaces = [...workspaces, 'web']

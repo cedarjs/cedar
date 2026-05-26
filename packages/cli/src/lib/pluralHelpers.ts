@@ -6,11 +6,11 @@ import {
   addSingularPlural,
 } from '@cedarjs/utils/cedarPluralize'
 
-export const isWordPluralizable = (word) => {
+export const isWordPluralizable = (word: string) => {
   return isPlural(word) !== isSingular(word)
 }
 
-export const validatePlural = (plural, singular) => {
+export const validatePlural = (plural: string, singular: string) => {
   const trimmedPlural = plural.trim()
   if (trimmedPlural === singular) {
     return 'Plural can not be same as singular.'
@@ -33,6 +33,10 @@ export const ensureUniquePlural = async ({
   model,
   isDestroyer = false,
   forcePrompt = false,
+}: {
+  model: string
+  isDestroyer?: boolean
+  forcePrompt?: boolean
 }) => {
   if (!forcePrompt && isWordPluralizable(model)) {
     return
@@ -49,14 +53,14 @@ export const ensureUniquePlural = async ({
   const promptMessage = isDestroyer ? destroyMessage : generateMessage
 
   // News => Newses; Equipment => Equipments
-  const initialPlural = model.slice(-1) === 's' ? `${model}es` : `${model}s`
+  const initialPlural = model.endsWith('s') ? `${model}es` : `${model}s`
 
   const promptResult = await prompts({
-    type: 'text',
-    name: 'plural',
+    type: 'text' as const,
+    name: 'plural' as const,
     message: promptMessage,
     initial: initialPlural,
-    validate: (pluralInput) => validatePlural(pluralInput, model),
+    validate: (pluralInput: string) => validatePlural(pluralInput, model),
   })
 
   // Quick-fix is to remove that control char u0017, which is prepended if

@@ -6,14 +6,20 @@ import path from 'path'
 import { getPaths } from '@cedarjs/project-config'
 
 /**
- * Spawn a background process with the stdout/stderr redirected to log files within the `.cedar` directory.
- * Stdin will not be available to the process as it will be set to the 'ignore' value.
+ * Spawn a background process with the stdout/stderr redirected to log files
+ * within the `.cedar` directory. Stdin will not be available to the process as
+ * it will be set to the 'ignore' value.
  *
- * @param {string} name A name for this background process, will be used to name the log files
+ * @param {string} name A name for this background process, will be used to name
+ *                      the log files
  * @param {string} cmd Command to pass to the `spawn` function
  * @param {string[]} args Arguments to pass to the `spawn` function
  */
-export function spawnBackgroundProcess(name, cmd, args) {
+export function spawnBackgroundProcess(
+  name: string,
+  cmd: string,
+  args: string[],
+) {
   const logDirectory = path.join(getPaths().generated.base, 'logs')
   fs.mkdirSync(logDirectory, { recursive: true })
 
@@ -51,7 +57,7 @@ export function spawnBackgroundProcess(name, cmd, args) {
       detached: false,
       windowsHide: false,
       shell: true,
-      stdio: ['ignore', stdout, stderr],
+      stdio: ['ignore' as const, stdout, stderr],
     }
 
     // Spawn and detach the process
@@ -68,7 +74,7 @@ export function spawnBackgroundProcess(name, cmd, args) {
   } else {
     const spawnOptions = {
       detached: true,
-      stdio: ['ignore', stdout, stderr],
+      stdio: ['ignore' as const, stdout, stderr],
     }
 
     // Spawn and detach the process
