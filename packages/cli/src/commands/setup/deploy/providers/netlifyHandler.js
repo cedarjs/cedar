@@ -155,7 +155,7 @@ export const handler = async ({ force, ud }) => {
   const tasks = new Listr(
     [
       ud && verifyUDSetupTask(),
-      ud && installNetlifyPackagesTask(),
+      ud && (await installNetlifyPackagesTask()),
       ud && addNetlifyPluginsToViteConfigTask(),
       !ud && updateApiURLTask('/.netlify/functions'),
       addFilesTask({ files: ud ? filesUd : files, force }),
