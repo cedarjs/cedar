@@ -53,3 +53,21 @@
 
 - Prefer `rg` for searching and keep changes focused to the relevant package(s).
 - Avoid touching unrelated files unless required by the change.
+
+## E2E Netlify Deploy Test
+
+- Test files in `tasks/netlify-tests/`:
+  - `vitest.config.mts` — vitest runner config (setupFiles, include patterns)
+  - `vitest.setup.mts` — validates `NETLIFY_DEPLOY_URL` env var, sets `process.env.DEPLOY_URL`
+  - `netlify.test.mts` — tests API `handleRequest`, legacy handlers, GraphQL, and web SPA shell against deployed Netlify URL
+- CI workflow in `.github/workflows/e2e-netlify.yml`:
+  - Uses `__fixtures__/test-project-esm/` as the test project (ESM, needed by Netlify vite plugin)
+  - Runs tarsync to link local packages
+  - Runs `yarn cedar setup neon` to provision a temporary Neon Postgres database and configure Prisma
+  - Sets `DATABASE_URL` and `DIRECT_DATABASE_URL` on the Netlify site via `netlify env:set` (so deployed functions can connect)
+  - Uses `CEDAR_CWD=/tmp/cedar-test-app` env var for all `yarn cedar` commands (so CLI resolves from workspace root while operating on the temp project)
+  - Links site with `netlify link`, then deploys via `npx netlify deploy --prod` (no flags needed since linked)
+- CI orchestration in `.github/workflows/ci.yml` — `e2e-netlify` job calls the workflow, runs only on `cedarjs/cedar` repo
+- API function URLs on Netlify use `/.netlify/functions/<name>` (default Netlify function URL format)
+- Added `api/src/functions/hello.ts` (handleRequest) and `legacyHello.ts` (legacy handler) to `__fixtures__/test-project-esm` for testing both export formats without DB dependency
+- Blocked on: `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN` GitHub secrets (user has a site ready, needs to add as secrets)

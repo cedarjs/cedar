@@ -1,0 +1,6 @@
+[build]
+  command = ""
+  publish = "web/dist"
+
+[functions]
+  directory = "api/dist/ud"

@@ -1,0 +1,75 @@
+name: E2E - Netlify Deploy
+
+on:
+  workflow_call:
+
+jobs:
+  e2e-netlify:
+    runs-on: ubuntu-latest
+
+    env:
+      REDWOOD_CI: 1
+      REDWOOD_VERBOSE_TELEMETRY: 1
+      CEDAR_CWD: ../cedar-test-app
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+    steps:
+      - name: Checkout the framework code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 📋 Set up test project
+        run: cp -r __fixtures__/test-project-esm ../cedar-test-app
+
+      - name: 🔗 Link local packages via tarsync
+        run: yarn project:tarsync ../cedar-test-app
+
+      - name: 🗄️ Set up Neon database
+        run: |
+          node_modules/.bin/cedar setup neon
+          rm -rf ../cedar-test-app/api/db/migrations
+          node_modules/.bin/cedar prisma migrate dev --name init-neon
+
+      - name: 🔑 Set database URL on Netlify
+        run: |
+          . ../cedar-test-app/.env
+          ACCOUNT_ID=$(curl -s "https://api.netlify.com/api/v1/sites/${SITE_ID}" \
+            -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" | jq -r '.account_id')
+          for VAR in DATABASE_URL DIRECT_DATABASE_URL; do
+            VALUE="${!VAR}"
+            curl -s -X PUT \
+              "https://api.netlify.com/api/v1/accounts/${ACCOUNT_ID}/env/${VAR}?site_id=${SITE_ID}" \
+              -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "$(printf '{"key":"%s","scopes":["builds","functions","post_processing","runtime"],"values":[{"context":"all","value":"%s"}]}' "$VAR" "$VALUE")"
+          done
+
+      - name: 🔧 Set up Universal Deploy
+        run: node_modules/.bin/cedar setup deploy universal-deploy
+
+      - name: 🔧 Set up Netlify deploy (UD)
+        run: node_modules/.bin/cedar setup deploy netlify --ud
+
+      - name: 🏗️ Build for Netlify
+        run: node_modules/.bin/cedar build --ud
+
+      - name: 🚀 Deploy to Netlify
+        id: netlify-deploy
+        run: |
+          OUTPUT=$(npx netlify deploy \
+            --prod \
+            --dir=../cedar-test-app/web/dist \
+            --functions=../cedar-test-app/api/dist/ud \
+            --site="$SITE_ID" \
+            --json)
+          echo "$OUTPUT"
+          echo "deploy-url=$(echo "$OUTPUT" | jq -r '.url')" >> "$GITHUB_OUTPUT"
+
+      - name: 🧪 Run Netlify e2e tests
+        run: yarn vitest run
+        working-directory: tasks/netlify-tests
+        env:
+          NETLIFY_DEPLOY_URL: ${{ steps.netlify-deploy.outputs.deploy-url }}

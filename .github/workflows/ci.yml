@@ -243,6 +243,13 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
+  e2e-netlify:
+    needs: check
+    if: github.repository == 'cedarjs/cedar'
+    name: E2E Netlify deploy
+    uses: ./.github/workflows/e2e-netlify.yml
+    secrets: inherit
+
   ci-status-check:
     needs:
       - check
@@ -260,6 +267,7 @@ jobs:
       - server-tests
       - ud-tests
       - background-jobs-e2e
+      - e2e-netlify
     if: always()
 
     name: ✅ CI Status Check
