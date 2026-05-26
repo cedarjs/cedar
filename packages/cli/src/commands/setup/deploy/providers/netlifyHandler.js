@@ -13,6 +13,7 @@ import {
 } from '../../../../lib/index.js'
 import {
   addFilesTask,
+  insertPluginsBeforeCedar,
   updateApiURLTask,
   verifyUDSetupTask,
 } from '../helpers/index.js'
@@ -116,22 +117,17 @@ function addNetlifyPluginsToViteConfigTask() {
 
       // Add plugin calls before cedar() in the plugins array
       if (!content.includes('netlifyCompat(')) {
-        content = content.replace(
-          /(\s*)(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
-          (_match, leadingWs, prefix, beforeCedar, cedarCall) => {
-            const indent = beforeCedar.includes('\n')
-              ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
-              : leadingWs + '  '
-            const before = beforeCedar.replace(/\s*$/, '')
+        const result = insertPluginsBeforeCedar({
+          content,
+          pluginCodes: [
+            'netlify({ build: { enabled: true } })',
+            'netlifyCompat()',
+          ],
+        })
 
-            return (
-              `${leadingWs}${prefix}\n` +
-              `${indent}netlify({ build: { enabled: true } }),\n` +
-              `${indent}netlifyCompat(),${before}\n` +
-              `${indent}${cedarCall}`
-            )
-          },
-        )
+        if (result) {
+          content = result
+        }
       }
 
       fs.writeFileSync(viteConfigPath, content)
