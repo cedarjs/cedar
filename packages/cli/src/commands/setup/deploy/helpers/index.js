@@ -1,8 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import * as parser from '@babel/parser'
+import * as t from '@babel/types'
 import execa from 'execa'
 import { Listr } from 'listr2'
+import * as recast from 'recast'
 
 import { getConfigPath, getConfig } from '@cedarjs/project-config'
 
@@ -179,6 +182,138 @@ export function splitPluginEntries(str) {
   }
 
   return entries
+}
+
+/**
+ * Converts a 1-based line/column position to a character index.
+ */
+function posToIndex(str, line, column) {
+  const lines = str.split('\n')
+  let index = 0
+  for (let i = 0; i < line - 1; i++) {
+    index += lines[i].length + 1
+  }
+  return index + column
+}
+
+/**
+ * Inserts plugin call expressions before `cedar()` in the `plugins` array
+ * of `defineConfig({...})` inside a vite config file.
+ *
+ * Uses recast only for position-finding, then does text-level insertion to
+ * preserve all original formatting, comments, and blank lines.
+ *
+ * @param {string}        content       - The full file content.
+ * @param {string[]}      pluginCodes   - Source strings for each plugin call
+ *                                        (e.g. `["netlifyCompat()"]`).
+ * @returns Modified source string, or `null` if `cedar()` was not found.
+ */
+export function insertPluginsBeforeCedar({ content, pluginCodes }) {
+  const ast = recast.parse(content, {
+    parser: {
+      parse(source) {
+        return parser.parse(source, {
+          sourceType: 'module',
+          plugins: ['typescript', 'jsx'],
+        })
+      },
+    },
+  })
+
+  const defaultExport = ast.program.body.find(
+    (node) =>
+      t.isExportDefaultDeclaration(node) &&
+      t.isCallExpression(node.declaration) &&
+      t.isIdentifier(node.declaration.callee) &&
+      node.declaration.callee.name === 'defineConfig',
+  )
+
+  if (!defaultExport) {
+    return null
+  }
+
+  const configArg = defaultExport.declaration.arguments[0]
+  if (!t.isObjectExpression(configArg)) {
+    return null
+  }
+
+  const pluginsProp = configArg.properties.find(
+    (prop) =>
+      t.isObjectProperty(prop) &&
+      t.isIdentifier(prop.key) &&
+      prop.key.name === 'plugins' &&
+      t.isArrayExpression(prop.value),
+  )
+
+  if (!pluginsProp) {
+    return null
+  }
+
+  const elements = pluginsProp.value.elements
+  const cedarIndex = elements.findIndex(
+    (el) =>
+      t.isCallExpression(el) &&
+      t.isIdentifier(el.callee) &&
+      el.callee.name === 'cedar',
+  )
+
+  if (cedarIndex === -1) {
+    return null
+  }
+
+  const cedarNode = elements[cedarIndex]
+
+  // Check if the array is inline (all elements on the same line as [)
+  const arrayNode = pluginsProp.value
+  const isInline = cedarNode.loc.start.line === arrayNode.loc.start.line
+
+  if (isInline) {
+    const startPos = posToIndex(
+      content,
+      arrayNode.loc.start.line,
+      arrayNode.loc.start.column,
+    )
+    const endPos = posToIndex(
+      content,
+      arrayNode.loc.end.line,
+      arrayNode.loc.end.column,
+    )
+
+    const precedingText = content.slice(0, startPos)
+    const followingText = content.slice(endPos)
+
+    const existingCodes = elements.map((el) =>
+      content.slice(
+        posToIndex(content, el.loc.start.line, el.loc.start.column),
+        posToIndex(content, el.loc.end.line, el.loc.end.column),
+      ),
+    )
+
+    const lines = content.split('\n')
+    const pluginsLine = pluginsProp.loc.start.line
+    const pluginsIndent = lines[pluginsLine - 1].match(/^\s*/)[0]
+    const elemIndent = pluginsIndent + '  '
+
+    const allCodes = [...existingCodes]
+    allCodes.splice(cedarIndex, 0, ...pluginCodes)
+
+    const multiline = [
+      '[',
+      ...allCodes.map((code) => `${elemIndent}${code},`),
+      `${pluginsIndent}]`,
+    ].join('\n')
+
+    return precedingText + multiline + followingText
+  }
+
+  // Multiline: insert at start of cedar()'s line (after the preceding \n)
+  const cedarLine = cedarNode.loc.start.line
+  const insertPos = posToIndex(content, cedarLine, 0)
+  const lines = content.split('\n')
+  const indent = lines[cedarLine - 1].match(/^\s*/)[0]
+  const insertion = pluginCodes.map((code) => `${indent}${code},\n`).join('')
+
+  return content.slice(0, insertPos) + insertion + content.slice(insertPos)
 }
 
 export const addToGitIgnoreTask = ({ paths }) => {

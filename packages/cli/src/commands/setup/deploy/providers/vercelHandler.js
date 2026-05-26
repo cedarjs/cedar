@@ -13,7 +13,7 @@ import {
   writeFile,
 } from '../../../../lib/index.js'
 import {
-  splitPluginEntries,
+  insertPluginsBeforeCedar,
   updateApiURLTask,
   verifyUDSetupTask,
 } from '../helpers/index.js'
@@ -93,64 +93,13 @@ function addVercelPluginToViteConfigTask() {
 
       // Add plugin call before cedar() in the plugins array
       if (!content.includes('vercel(')) {
-        const pluginsRegex = /(\s*)(plugins\s*:\s*\[)/
-        const match = pluginsRegex.exec(content)
-        if (match) {
-          const leadingWs = match[1]
-          const prefix = match[2]
-          const start = match.index + match[0].length
+        const result = insertPluginsBeforeCedar({
+          content,
+          pluginCodes: ['vercel()'],
+        })
 
-          // Find matching closing bracket by tracking depth,
-          // skipping brackets inside string literals
-          let depth = 1
-          let end = start
-          let quote = null
-
-          while (depth > 0 && end < content.length) {
-            const ch = content[end]
-
-            if (quote !== null) {
-              if (ch === quote && content[end - 1] !== '\\') {
-                quote = null
-              }
-            } else if (ch === "'" || ch === '"' || ch === '`') {
-              quote = ch
-            } else if (ch === '[') {
-              depth++
-            } else if (ch === ']') {
-              depth--
-            }
-
-            if (depth > 0) {
-              end++
-            }
-          }
-
-          const entries = content.slice(start, end)
-          const closingMatch = content.slice(end, end + 2).match(/^\]\s*,?/)
-
-          if (!closingMatch) {
-            task.skip('Could not parse plugins array')
-            return
-          }
-
-          const closing = closingMatch[0]
-          const existing = splitPluginEntries(entries.trim())
-          const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
-
-          if (cedarIndex !== -1) {
-            existing.splice(cedarIndex, 0, 'vercel()')
-
-            const indent = leadingWs.replace(/^\n/, '')
-            const entryIndent = indent + '  '
-            const entriesStr = existing
-              .map((e) => `${entryIndent}${e},`)
-              .join('\n')
-
-            const before = content.slice(0, match.index)
-            const after = content.slice(end + closing.length)
-            content = `${before}${leadingWs}${prefix}\n${entriesStr}\n${indent}${closing}${after}`
-          }
+        if (result) {
+          content = result
         }
       }
 
