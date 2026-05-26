@@ -11,7 +11,7 @@ publish = "web/dist"
 NODE_VERSION = "24"
 
 [functions]
-directory = "api/dist/functions"
+directory = "api/dist/ud"
 
 # To use Netlify Dev, install Netlify's CLI (\`netlify-cli\`) from NPM and use
 # \`netlify link\` to connect your local project to a site on Netlify. Then run
