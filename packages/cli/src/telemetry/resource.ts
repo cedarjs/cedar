@@ -11,9 +11,13 @@ import { getPaths, getRawConfig } from '@cedarjs/project-config'
 import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
 
 import {
-  name as packageName,
-  version as packageVersion,
+  name as _packageName,
+  version as _packageVersion,
+  // @ts-expect-error - No types for JS files
 } from '../../package.js'
+
+const packageName: string = _packageName
+const packageVersion: string = _packageVersion
 
 export async function getResources() {
   // Read the UUID from the file within .cedar or generate a new one if it
@@ -36,7 +40,7 @@ export async function getResources() {
         fs.writeFileSync(telemetryFile, UID)
       }
     }
-  } catch (_error) {
+  } catch {
     // We can ignore any errors here, we'll just use the generated UID in this case
   }
 
@@ -63,7 +67,7 @@ export async function getResources() {
   const mem = await system.mem()
 
   // Record any specific development environment
-  let developmentEnvironment = undefined
+  let developmentEnvironment: string | undefined = undefined
   // Gitpod
   if (Object.keys(process.env).some((key) => key.startsWith('GITPOD_'))) {
     developmentEnvironment = 'gitpod'
@@ -77,7 +81,9 @@ export async function getResources() {
   const project = new RWProject()
 
   const routes = project.getRouter().routes
-  const prerenderedRoutes = routes.filter((route) => route.hasPrerender)
+  const prerenderedRoutes = routes.filter(
+    (route: { hasPrerender: boolean }) => route.hasPrerender,
+  )
   const complexity = [
     routes.length,
     prerenderedRoutes.length,
