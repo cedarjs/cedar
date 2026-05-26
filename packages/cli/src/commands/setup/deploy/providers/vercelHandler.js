@@ -12,7 +12,11 @@ import {
   printSetupNotes,
   writeFile,
 } from '../../../../lib/index.js'
-import { updateApiURLTask, verifyUDSetupTask } from '../helpers/index.js'
+import {
+  insertPluginsBeforeCedar,
+  updateApiURLTask,
+  verifyUDSetupTask,
+} from '../helpers/index.js'
 
 export async function handler({ force, ud }) {
   recordTelemetryAttributes({
@@ -89,22 +93,14 @@ function addVercelPluginToViteConfigTask() {
 
       // Add plugin call before cedar() in the plugins array
       if (!content.includes('vercel(')) {
-        content = content.replace(
-          /(\s*)(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
-          (_match, leadingWs, prefix, beforeCedar, cedarCall) => {
-            const indent = beforeCedar.includes('\n')
-              ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
-              : leadingWs + '  '
+        const result = insertPluginsBeforeCedar({
+          content,
+          pluginCodes: ['vercel()'],
+        })
 
-            const before = beforeCedar.replace(/\s*$/, '')
-
-            return (
-              `${leadingWs}${prefix}\n` +
-              `${indent}vercel(),${before}\n` +
-              `${indent}${cedarCall}`
-            )
-          },
-        )
+        if (result) {
+          content = result
+        }
       }
 
       fs.writeFileSync(viteConfigPath, content)
