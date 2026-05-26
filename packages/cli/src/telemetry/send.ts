@@ -1,8 +1,10 @@
 import fs from 'node:fs'
 import path from 'path'
 
+import { ExportResultCode } from '@opentelemetry/core'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { Resource } from '@opentelemetry/resources'
+import type { ReadableSpan } from '@opentelemetry/sdk-trace-node'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -28,6 +30,7 @@ async function main() {
   console.time('Computed resource information')
   const customResourceData = await getResources()
   console.timeEnd('Computed resource information')
+  // @ts-expect-error - getResources return type has any fields from envinfo
   const resource = Resource.default().merge(new Resource(customResourceData))
 
   const url =
@@ -38,7 +41,8 @@ async function main() {
   })
   console.log(`Sending telemetry data to '${url}'`)
 
-  // Go through all telemetry files and send the new spans to the telemetry collector
+  // Go through all telemetry files and send the new spans to the telemetry
+  // collector
   for (const [index, file] of telemetryFiles.entries()) {
     // '_' denotes a file that has already been sent
     if (file.startsWith('_')) {
@@ -47,7 +51,7 @@ async function main() {
     console.log(`Sending data from telemetry file '${file}'`)
 
     // Read the saved spans
-    let spans = []
+    let spans: Record<string, unknown>[] = []
     try {
       spans = JSON.parse(fs.readFileSync(path.join(telemetryDir, file), 'utf8'))
     } catch (error) {
@@ -60,7 +64,8 @@ async function main() {
 
     if (!Array.isArray(spans)) {
       console.error(
-        `Telemetry file '${file}' does not contain an array of spans. Deleting this file to prevent further errors.`,
+        `Telemetry file '${file}' does not contain an array of spans. ` +
+          'Deleting this file to prevent further errors.',
       )
       fs.unlinkSync(path.join(telemetryDir, file))
       continue
@@ -68,33 +73,40 @@ async function main() {
 
     /**
      * We have to fix some of the span properties because we serialized the span
-     * to JSON and then deserialized it. This means that some of the properties that
-     * were functions are now just objects and that some of the properties were
-     * renamed.
+     * to JSON and then deserialized it. This means that some of the properties
+     * that were functions are now just objects and that some of the properties
+     * were renamed.
      */
     for (const span of spans) {
       span.resource = resource
       span.attributes ??= span._attributes ?? {}
       span.spanContext = () => span._spanContext
 
-      // This is only for visibility - we current do not record any events on the backend anyway.
-      // We do this for the time being because we don't want unsanitized error messages to be sent
+      // This is only for visibility - we current do not record any events on
+      // the backend anyway. We do this for the time being because we don't want
+      // unsanitized error messages to be sent
       span.events = []
     }
 
-    traceExporter.export(spans, ({ code, error }) => {
-      if (code !== 0) {
-        console.error('Encountered:')
-        console.error(error)
-        console.error('while exporting the following spans:')
-        console.error(spans)
-      }
-    })
+    // Spans were serialized by CustomFileExporter as ReadableSpan-like objects,
+    // but after JSON round-trip we lose the type. They are structurally
+    // compatible at runtime, so the cast is safe.
+    traceExporter.export(
+      spans as unknown as ReadableSpan[],
+      ({ code, error }) => {
+        if (code !== ExportResultCode.SUCCESS) {
+          console.error('Encountered:')
+          console.error(error)
+          console.error('while exporting the following spans:')
+          console.error(spans)
+        }
+      },
+    )
 
     /**
-     * We have to rewrite the file because we recomputed the resource information
-     * and we also denote that the spans have been sent by adding a '_' prefix to
-     * the file name.
+     * We have to rewrite the file because we recomputed the resource
+     * information and we also denote that the spans have been sent by adding a
+     * '_' prefix to the file name.
      */
     fs.writeFileSync(
       path.join(telemetryDir, `_${file}`),

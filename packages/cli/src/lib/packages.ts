@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import execa from 'execa'
 
+// @ts-expect-error - No types for JS files
 import { getPaths } from './index.js'
 
 // Note: Have to add backslash (\) before @ below for intellisense to display
@@ -15,10 +16,12 @@ import { getPaths } from './index.js'
  *
  * @param {string} name The name of the module to install
  * @param {string} version The version of the module to install, otherwise the same as that of \@cedarjs/cli
- * @param {boolean} isDevDependency Whether to install as a devDependency or not
  * @returns Whether the module was installed or not
  */
-export async function installModule(name, version = undefined) {
+export async function installModule(
+  name: string,
+  version: string | undefined = undefined,
+) {
   if (isModuleInstalled(name)) {
     return false
   }
@@ -42,10 +45,10 @@ export async function installModule(name, version = undefined) {
  * If no remote version can not be found which matches the local cli version
  * then the latest canary version will be used.
  *
- * @param {string} module A redwoodjs module, e.g. \@cedarjs/web
- * @returns {boolean} Whether the module was installed or not
+ * @param module A redwoodjs module, e.g. \@cedarjs/web
+ * @returns Whether the module was installed or not
  */
-export async function installRedwoodModule(module) {
+export async function installRedwoodModule(module: string) {
   const packageJson = await import('@cedarjs/cli/package.json', {
     with: { type: 'json' },
   })
@@ -58,7 +61,7 @@ export async function installRedwoodModule(module) {
       version = version.split('+')[0]
     }
 
-    let packument
+    let packument: { versions?: Record<string, unknown>; error?: string }
 
     try {
       const packumentResponse = await fetch(
@@ -72,11 +75,13 @@ export async function installRedwoodModule(module) {
       }
     } catch (error) {
       throw new Error(
-        `Couldn't fetch packument for ${module}: ${error.message}`,
+        `Couldn't fetch packument for ${module}: ${error instanceof Error ? error.message : String(error)}`,
       )
     }
 
-    const versionIsPublished = Object.keys(packument.versions).includes(version)
+    const versionIsPublished = Object.keys(packument.versions ?? {}).includes(
+      version,
+    )
 
     if (!versionIsPublished) {
       // Fallback to canary. This is most likely because it's a new package
@@ -104,12 +109,12 @@ export async function installRedwoodModule(module) {
  *
  * @param {string} module
  */
-export function isModuleInstalled(module) {
+export function isModuleInstalled(module: string) {
   const { dependencies, devDependencies } = JSON.parse(
     fs.readFileSync(path.join(getPaths().base, 'package.json'), 'utf-8'),
   )
 
-  const deps = {
+  const deps: Record<string, string | undefined> = {
     ...dependencies,
     ...devDependencies,
   }
@@ -125,9 +130,11 @@ export function isModuleInstalled(module) {
   //
   // We can't use require.resolve here because it caches the exception
   // Making it impossible to require when we actually do install it...
-  return createdRequire.resolve
-    .paths(`${module}/package.json`)
-    .some((requireResolvePath) => {
-      return fs.existsSync(path.join(requireResolvePath, module))
-    })
+  return (
+    createdRequire.resolve
+      .paths(`${module}/package.json`)
+      ?.some((requireResolvePath: string) => {
+        return fs.existsSync(path.join(requireResolvePath, module))
+      }) ?? false
+  )
 }

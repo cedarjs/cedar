@@ -1,5 +1,6 @@
 // This file is safe to statically import in the CLI
 import { terminalLink } from 'termi-link'
+import type { Argv, Options, PositionalOptions } from 'yargs'
 
 // Don't import anything here that isn't already imported by the CLI
 import { isTypeScriptProject } from '@cedarjs/cli-helpers'
@@ -10,9 +11,8 @@ import { isTypeScriptProject } from '@cedarjs/cli-helpers'
  * The reason for this is that this in turn will call `isTypeScriptProject`,
  * and that has side effects that will break `cwd` functionality if called
  * before `cwd` is initialized.
- * @type {() => Record<string, import('yargs').Options>}
  */
-export function getYargsDefaults() {
+export function getYargsDefaults(): Record<string, Options> {
   return {
     force: {
       alias: 'f',
@@ -29,7 +29,10 @@ export function getYargsDefaults() {
   }
 }
 
-const appendPositionalsToCmd = (commandString, positionalsObj) => {
+const appendPositionalsToCmd = (
+  commandString: string,
+  positionalsObj: Record<string, PositionalOptions>,
+) => {
   // Add positionals like `page <name>` + ` [path]` if specified
   if (Object.keys(positionalsObj).length > 0) {
     const positionalNames = Object.keys(positionalsObj)
@@ -42,12 +45,22 @@ const appendPositionalsToCmd = (commandString, positionalsObj) => {
   }
 }
 
-export function createCommand(componentName, positionalsObj = {}) {
+export function createCommand(
+  componentName: string,
+  positionalsObj: Record<string, PositionalOptions> = {},
+) {
   return appendPositionalsToCmd(`${componentName} <name>`, positionalsObj)
 }
 
-export function createDescription(componentName) {
+export function createDescription(componentName: string) {
   return `Generate a ${componentName} component`
+}
+
+interface CreateBuilderConfig {
+  componentName: string
+  optionsObj?: Record<string, Options> | (() => Record<string, Options>)
+  positionalsObj?: Record<string, PositionalOptions>
+  addStories?: boolean
 }
 
 /**
@@ -82,8 +95,8 @@ export function createBuilder({
   optionsObj,
   positionalsObj,
   addStories,
-}) {
-  return (yargs) => {
+}: CreateBuilderConfig) {
+  return (yargs: Argv) => {
     yargs
       .positional('name', {
         description: `Name of the ${componentName}`,
@@ -138,8 +151,8 @@ export function createBuilder({
   }
 }
 
-export function createHandler(componentName) {
-  return async function handler(argv) {
+export function createHandler(componentName: string) {
+  return async function handler(argv: unknown) {
     const { handler: importedHandler } = await import(
       `./${componentName}/${componentName}Handler.js`
     )

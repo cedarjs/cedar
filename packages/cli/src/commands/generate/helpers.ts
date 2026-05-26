@@ -11,12 +11,22 @@ import pascalcase from 'pascalcase'
 
 import { pluralize, isPlural, isSingular } from '@cedarjs/utils/cedarPluralize'
 
+interface ModelField {
+  name: string
+  relationName?: string
+  type: string
+}
+
+interface Model {
+  fields: ModelField[]
+}
+
 /**
  * Creates a route path, either returning the existing path if passed, or
  * creating one based on the name. If the passed path is just a route parameter
  * a new path based on the name is created, with the parameter appended to it
  */
-export const pathName = (path, name) => {
+export const pathName = (path: string | undefined, name: string) => {
   let routePath = path
 
   if (path && path.startsWith('{') && path.endsWith('}')) {
@@ -30,8 +40,10 @@ export const pathName = (path, name) => {
   return routePath
 }
 
-/** @type {(name: string, generatorName: string) => string } **/
-export function removeGeneratorName(name, generatorName) {
+export function removeGeneratorName(
+  name: string,
+  generatorName: string,
+): string {
   // page -> Page
   const pascalComponentName = pascalcase(generatorName)
 
@@ -41,7 +53,7 @@ export function removeGeneratorName(name, generatorName) {
   return coercedName
 }
 
-export const validateName = (name) => {
+export const validateName = (name: string) => {
   if (name.match(/^\W/)) {
     throw new Error(
       'The <name> argument must start with a letter, number or underscore.',
@@ -50,25 +62,25 @@ export const validateName = (name) => {
 }
 
 // Returns all relations to other models
-export const relationsForModel = (model) => {
+export const relationsForModel = (model: Model) => {
   return model.fields
-    .filter((f) => f.relationName)
-    .map((field) => {
+    .filter((f: ModelField) => f.relationName)
+    .map((field: ModelField) => {
       return field.name
     })
 }
 
 // Returns only relations that are of datatype Int
-export const intForeignKeysForModel = (model) => {
+export const intForeignKeysForModel = (model: Model) => {
   return model.fields
-    .filter((f) => f.name.match(/Id$/) && f.type === 'Int')
-    .map((f) => f.name)
+    .filter((f: ModelField) => f.name.match(/Id$/) && f.type === 'Int')
+    .map((f: ModelField) => f.name)
 }
 
 /**
  * Adds "List" to the end of words we can't pluralize
  */
-export const forcePluralizeWord = (word) => {
+export const forcePluralizeWord = (word: string) => {
   // If word is both plural and singular (like equipment), then append "List"
   if (isPlural(word) && isSingular(word)) {
     return pascalcase(`${word}_list`)
@@ -77,28 +89,32 @@ export const forcePluralizeWord = (word) => {
   return pluralize(word)
 }
 
-/** @type {(paramType: 'Int' | 'Float' | 'Boolean' | 'String') => string } **/
-export const mapRouteParamTypeToTsType = (paramType) => {
-  const routeParamToTsType = {
-    Int: 'number',
-    Float: 'number',
-    Boolean: 'boolean',
-    String: 'string',
-  }
+const routeParamToTsType: Record<string, string> = {
+  Int: 'number',
+  Float: 'number',
+  Boolean: 'boolean',
+  String: 'string',
+}
+
+export const mapRouteParamTypeToTsType = (
+  paramType: keyof typeof routeParamToTsType,
+) => {
   return routeParamToTsType[paramType] || 'unknown'
 }
 
-/** @type {(scalarType: 'String' | 'Boolean' | 'Int' | 'BigInt' | 'Float' | 'Decimal' | 'DateTime' | 'Bytes' ) => string } **/
-export const mapPrismaScalarToPagePropTsType = (scalarType) => {
-  const prismaScalarToTsType = {
-    String: 'string',
-    Boolean: 'boolean',
-    Int: 'number',
-    BigInt: 'number',
-    Float: 'number',
-    Decimal: 'number',
-    DateTime: 'string',
-    Bytes: 'Uint8Array',
-  }
+const prismaScalarToTsType: Record<string, string> = {
+  String: 'string',
+  Boolean: 'boolean',
+  Int: 'number',
+  BigInt: 'number',
+  Float: 'number',
+  Decimal: 'number',
+  DateTime: 'string',
+  Bytes: 'Uint8Array',
+}
+
+export const mapPrismaScalarToPagePropTsType = (
+  scalarType: keyof typeof prismaScalarToTsType,
+) => {
   return prismaScalarToTsType[scalarType] || 'unknown'
 }
