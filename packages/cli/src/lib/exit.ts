@@ -7,6 +7,14 @@ import {
   recordTelemetryError,
 } from '@cedarjs/cli-helpers'
 
+interface ExitWithErrorOptions {
+  exitCode?: number
+  message?: string
+  epilogue?: string
+  includeEpilogue?: boolean
+  includeReferenceCode?: boolean
+}
+
 const discordLink = terminalLink('Discord', 'https://cedarjs.com/discord')
 const githubLink = terminalLink('GitHub', 'https://github.com/cedarjs/cedar')
 const DEFAULT_ERROR_EPILOGUE = [
@@ -16,17 +24,33 @@ const DEFAULT_ERROR_EPILOGUE = [
 ].join('\n')
 
 export function exitWithError(
-  error,
-  { exitCode, message, epilogue, includeEpilogue, includeReferenceCode } = {},
+  error: unknown,
+  {
+    exitCode,
+    message,
+    epilogue,
+    includeEpilogue,
+    includeReferenceCode,
+  }: ExitWithErrorOptions = {},
 ) {
   // Set the default values
-  exitCode ??= error?.exitCode ?? 1
+  if (error && typeof error === 'object' && 'exitCode' in error) {
+    exitCode ??= typeof error.exitCode === 'number' ? error.exitCode : 1
+  }
+
+  exitCode ??= 1
   epilogue ??= DEFAULT_ERROR_EPILOGUE
   includeEpilogue ??= true
   includeReferenceCode ??= true
 
   // Determine the correct error message
-  message ??= error.stack ?? (error.toString() || 'Unknown error')
+  if (message === undefined) {
+    if (error instanceof Error && error.stack) {
+      message = error.stack
+    } else {
+      message = String(error) || 'Unknown error'
+    }
+  }
 
   // Generate a unique reference code for the error which can be used to look up
   // the error in telemetry if needed and if the user chooses to share it
@@ -55,7 +79,7 @@ export function exitWithError(
   console.error(content)
 
   // Record the error in telemetry
-  recordTelemetryError(error ?? new Error(message))
+  recordTelemetryError(error ?? new Error(message ?? ''))
   recordTelemetryAttributes({ errorReferenceCode })
 
   process.exit(exitCode)

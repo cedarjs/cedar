@@ -1,17 +1,30 @@
 import fs from 'node:fs'
 import path from 'path'
 
+interface RollbackStepFunc {
+  type: 'func'
+  func: () => unknown
+}
+
+interface RollbackStepFile {
+  type: 'file'
+  path: string
+  content: Buffer | null
+}
+
+type RollbackStep = RollbackStepFunc | RollbackStepFile
+
 // The stack containing rollback actions
-let rollback = []
+const rollback: RollbackStep[] = []
 
 /**
  * Adds a function call to the rollback stack, this function will be called when the rollback is executed
  *
- * @param {function} func - The function to call
- * @param {boolean} [atEnd=false] - If true inserts at the bottom of the stack instead of the top
+ * @param func - The function to call
+ * @param [atEnd=false] - If true inserts at the bottom of the stack instead of the top
  */
-export function addFunctionToRollback(func, atEnd = false) {
-  const step = { type: 'func', func: func }
+export function addFunctionToRollback(func: () => unknown, atEnd = false) {
+  const step: RollbackStep = { type: 'func', func: func }
   if (atEnd) {
     rollback.unshift(step)
   } else {
@@ -22,14 +35,14 @@ export function addFunctionToRollback(func, atEnd = false) {
 /**
  * Adds a file call to the rollback stack, when the rollback is executed the file will deleted if it does not currently exist or will be restored to its current state
  *
- * @param {string} path - Path to the file
- * @param {boolean} [atEnd=false] - If true inserts at the bottom of the stack instead of the top
+ * @param path - Path to the file
+ * @param [atEnd=false] - If true inserts at the bottom of the stack instead of the top
  */
-export function addFileToRollback(path, atEnd = false) {
-  const step = {
+export function addFileToRollback(filePath: string, atEnd = false) {
+  const step: RollbackStep = {
     type: 'file',
-    path: path,
-    content: fs.existsSync(path) ? fs.readFileSync(path) : null,
+    path: filePath,
+    content: fs.existsSync(filePath) ? fs.readFileSync(filePath) : null,
   }
   if (atEnd) {
     rollback.unshift(step)
@@ -44,12 +57,15 @@ export function addFileToRollback(path, atEnd = false) {
  * @param {object|null} [ctx=null] - The listr2 ctx
  * @param {object|null} [task=null] - The listr2 task
  */
-export async function executeRollback(_ = null, task = null) {
+export async function executeRollback(
+  _: unknown = null,
+  task: { title: string; task: { message: { error: string } } } | null = null,
+) {
   if (task) {
     task.title = 'Reverting generator actions...'
   }
   while (rollback.length > 0) {
-    const step = rollback.pop()
+    const step = rollback.pop() as RollbackStep
     switch (step.type) {
       case 'func':
         await step.func()
@@ -76,7 +92,7 @@ export async function executeRollback(_ = null, task = null) {
     }
   }
   if (task) {
-    task.title = `Reverted because: ${task.task.message.error}`
+    task.title = `Reverted because: ${task.task.message?.error ?? 'unknown error'}`
   }
 }
 
@@ -88,9 +104,12 @@ export function resetRollback() {
 }
 
 /**
- * Resets the current rollback stack and assigns all of the tasks to have a listr2 rollback function which call {@link executeRollback}
+ * Resets the current rollback stack and assigns all of the tasks to have a
+ * listr2 rollback function which call {@link executeRollback}
  */
-export function prepareForRollback(tasks) {
+export function prepareForRollback(tasks: {
+  tasks?: { task: { rollback: typeof executeRollback } }[]
+}) {
   resetRollback()
   tasks.tasks?.forEach((task) => {
     task.task.rollback = executeRollback

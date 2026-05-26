@@ -1,6 +1,9 @@
 import fs from 'node:fs'
 import path from 'path'
 
+import type { ExportResult } from '@opentelemetry/core'
+import type { ReadableSpan } from '@opentelemetry/sdk-trace-node'
+
 import { getPaths } from '@cedarjs/project-config'
 
 /**
@@ -11,13 +14,13 @@ export class CustomFileExporter {
    * @type string
    * @private
    */
-  #storageFileName
+  #storageFileName: string
 
   /**
    * @type string
    * @private
    */
-  #storageFilePath
+  #storageFilePath: string
 
   /**
    * @type boolean
@@ -44,16 +47,29 @@ export class CustomFileExporter {
    * Called to export sampled {@link ReadableSpan}s.
    * @param spans the list of sampled Spans to be exported.
    */
-  export(spans, resultCallback) {
-    for (let i = 0; i < spans.length; i++) {
-      const span = spans[i]
-      delete span['_spanProcessor'] // This is a circular reference and will cause issues with JSON.stringify
+  export(
+    spans: ReadableSpan[],
+    resultCallback: (result: ExportResult) => void,
+  ) {
+    for (const span of spans) {
       fs.appendFileSync(
         this.#storageFilePath,
-        JSON.stringify(span, undefined, 2),
+        JSON.stringify(
+          span,
+          (key, value) => {
+            if (key === '_spanProcessor') {
+              return undefined
+            }
+
+            return value
+          },
+          2,
+        ),
       )
+
       fs.appendFileSync(this.#storageFilePath, ',')
     }
+
     resultCallback({ code: 0 })
   }
 
