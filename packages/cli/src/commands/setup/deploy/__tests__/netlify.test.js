@@ -187,29 +187,63 @@ describe('netlify with --ud', () => {
     expect(filesystem[netlifyToml]).toContain('build --ud')
 
     // Verify vite config has the Netlify plugin imports
-    const viteConfig = filesystem['/cedar-app/web/vite.config.ts']
-    expect(viteConfig).toContain("import netlify from '@netlify/vite-plugin'")
-    expect(viteConfig).toContain(
-      "import netlifyCompat from '@universal-deploy/netlify/vite'",
-    )
+    expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
+      "import dns from 'dns'
 
-    // Verify vite config has the Netlify plugin calls before cedar()
-    expect(viteConfig).toContain('netlify({ build: { enabled: true } })')
-    expect(viteConfig).toContain('netlifyCompat()')
+      import netlifyCompat from '@universal-deploy/netlify/vite'
+      import netlify from '@netlify/vite-plugin'
+      import { defineConfig } from 'vite'
 
-    // Verify existing plugins are preserved
-    expect(viteConfig).toContain('myPlugin()')
-    expect(viteConfig).toContain('cedar()')
-    expect(viteConfig).toContain('cedarUniversalDeployPlugin()')
+      import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'
 
-    // Verify myPlugin() appears before the Netlify plugins
-    const myPluginIndex = viteConfig.indexOf('myPlugin()')
-    const netlifyIndex = viteConfig.indexOf('netlify({')
-    expect(myPluginIndex).toBeLessThan(netlifyIndex)
+      import myPlugin from 'my-plugin'
 
-    // Verify no blank lines between plugin entries
-    const pluginSection = viteConfig.match(/plugins:\s*\[([\s\S]*?)\]/)[1]
-    expect(pluginSection.trim()).toBeTruthy()
-    expect(pluginSection).not.toContain('\n\n')
+      dns.setDefaultResultOrder('verbatim')
+
+      export default defineConfig({
+        plugins: [
+          myPlugin(),
+          netlify({ build: { enabled: true } }),
+          netlifyCompat(),
+          cedar(),
+          cedarUniversalDeployPlugin(),
+        ],
+      })"
+    `)
+  })
+
+  it('handles inline plugin format correctly', async () => {
+    vol.fromJSON({
+      '/cedar-app/web/vite.config.ts': [
+        "import { defineConfig } from 'vite'",
+        '',
+        "import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'",
+        '',
+        'export default defineConfig({',
+        '  plugins: [cedar(), cedarUniversalDeployPlugin()],',
+        '})',
+      ].join('\n'),
+    })
+
+    await handler({ force: true, ud: true })
+
+    const filesystem = vol.toJSON()
+
+    expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
+      "import netlifyCompat from '@universal-deploy/netlify/vite'
+      import netlify from '@netlify/vite-plugin'
+      import { defineConfig } from 'vite'
+
+      import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'
+
+      export default defineConfig({
+        plugins: [
+          netlify({ build: { enabled: true } }),
+          netlifyCompat(),
+          cedar(),
+          cedarUniversalDeployPlugin(),
+        ],
+      })"
+    `)
   })
 })

@@ -122,8 +122,12 @@ function addNetlifyPluginsToViteConfigTask() {
             const existing = entries
               .trim()
               .split(/\n/)
-              .map((line) => line.trim().replace(/,$/, ''))
-              .filter(Boolean)
+              .flatMap((line) =>
+                line
+                  .split(',')
+                  .map((splitLine) => splitLine.trim().replace(/,$/, ''))
+                  .filter(Boolean),
+              )
 
             const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
 
