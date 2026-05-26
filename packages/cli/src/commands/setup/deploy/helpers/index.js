@@ -126,15 +126,33 @@ export const verifyUDSetupTask = () => {
 
 /**
  * Splits a comma-separated string of plugin entries into an array, respecting
- * bracket depth so commas inside function arguments (e.g. `somePlugin({ mode:
- * 'ssr', ssr: true })`) are not treated as entry separators.
+ * bracket depth and string literals so commas inside function arguments
+ * (e.g. `somePlugin({ mode: 'ssr', ssr: true })` or `plugin("a, b")`) are
+ * not treated as entry separators.
  */
 export function splitPluginEntries(str) {
   const entries = []
   let current = ''
   let depth = 0
+  let quote = null
 
   for (const ch of str) {
+    if (quote !== null) {
+      current += ch
+
+      if (ch === quote && current.at(-2) !== '\\') {
+        quote = null
+      }
+
+      continue
+    }
+
+    if (ch === "'" || ch === '"' || ch === '`') {
+      quote = ch
+      current += ch
+      continue
+    }
+
     if (ch === ',' && depth === 0) {
       const trimmed = current.trim().replace(/,$/, '')
 

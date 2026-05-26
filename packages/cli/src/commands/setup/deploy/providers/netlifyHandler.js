@@ -124,14 +124,24 @@ function addNetlifyPluginsToViteConfigTask() {
           const prefix = match[2]
           const start = match.index + match[0].length
 
-          // Find matching closing bracket by tracking depth
+          // Find matching closing bracket by tracking depth,
+          // skipping brackets inside string literals
           let depth = 1
           let end = start
+          let quote = null
 
           while (depth > 0 && end < content.length) {
-            if (content[end] === '[') {
+            const ch = content[end]
+
+            if (quote !== null) {
+              if (ch === quote && content[end - 1] !== '\\') {
+                quote = null
+              }
+            } else if (ch === "'" || ch === '"' || ch === '`') {
+              quote = ch
+            } else if (ch === '[') {
               depth++
-            } else if (content[end] === ']') {
+            } else if (ch === ']') {
               depth--
             }
 
@@ -149,9 +159,7 @@ function addNetlifyPluginsToViteConfigTask() {
           }
 
           const closing = closingMatch[0]
-
           const existing = splitPluginEntries(entries.trim())
-
           const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
 
           if (cedarIndex !== -1) {
