@@ -125,10 +125,7 @@ function addVercelPluginToViteConfigTask() {
 
           const closing = closingMatch[0]
 
-          const existing = entries
-            .trim()
-            .split(/\n/)
-            .flatMap((line) => splitPluginEntries(line))
+          const existing = splitPluginEntries(entries.trim())
 
           const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
 
