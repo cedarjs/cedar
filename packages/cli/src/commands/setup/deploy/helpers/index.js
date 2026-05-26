@@ -124,6 +124,45 @@ export const verifyUDSetupTask = () => {
   }
 }
 
+/**
+ * Splits a comma-separated string of plugin entries into an array, respecting
+ * bracket depth so commas inside function arguments (e.g. `somePlugin({ mode:
+ * 'ssr', ssr: true })`) are not treated as entry separators.
+ */
+export function splitPluginEntries(str) {
+  const entries = []
+  let current = ''
+  let depth = 0
+
+  for (const ch of str) {
+    if (ch === ',' && depth === 0) {
+      const trimmed = current.trim().replace(/,$/, '')
+
+      if (trimmed) {
+        entries.push(trimmed)
+      }
+
+      current = ''
+    } else {
+      if (ch === '(' || ch === '[' || ch === '{') {
+        depth++
+      } else if (ch === ')' || ch === ']' || ch === '}') {
+        depth--
+      }
+
+      current += ch
+    }
+  }
+
+  const trimmed = current.trim().replace(/,$/, '')
+
+  if (trimmed) {
+    entries.push(trimmed)
+  }
+
+  return entries
+}
+
 export const addToGitIgnoreTask = ({ paths }) => {
   return {
     title: 'Updating .gitignore...',

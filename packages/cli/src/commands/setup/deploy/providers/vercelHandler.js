@@ -12,7 +12,11 @@ import {
   printSetupNotes,
   writeFile,
 } from '../../../../lib/index.js'
-import { updateApiURLTask, verifyUDSetupTask } from '../helpers/index.js'
+import {
+  splitPluginEntries,
+  updateApiURLTask,
+  verifyUDSetupTask,
+} from '../helpers/index.js'
 
 export async function handler({ force, ud }) {
   recordTelemetryAttributes({
@@ -91,22 +95,19 @@ function addVercelPluginToViteConfigTask() {
       if (!content.includes('vercel(')) {
         content = content.replace(
           /(\s*)(plugins\s*:\s*\[)([\s\S]*?)(\]\s*,?)/,
-          (_match, leadingWs, prefix, entries, closing) => {
+          (match, leadingWs, prefix, entries, closing) => {
             const existing = entries
               .trim()
               .split(/\n/)
-              .flatMap((line) =>
-                line
-                  .split(',')
-                  .map((splitLine) => splitLine.trim().replace(/,$/, ''))
-                  .filter(Boolean),
-              )
+              .flatMap((line) => splitPluginEntries(line))
 
             const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
 
-            if (cedarIndex !== -1) {
-              existing.splice(cedarIndex, 0, 'vercel()')
+            if (cedarIndex === -1) {
+              return match
             }
+
+            existing.splice(cedarIndex, 0, 'vercel()')
 
             const indent = leadingWs.replace(/^\n/, '')
             const entryIndent = indent + '  '

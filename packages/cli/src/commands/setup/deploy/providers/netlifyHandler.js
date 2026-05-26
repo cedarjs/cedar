@@ -13,6 +13,7 @@ import {
 } from '../../../../lib/index.js'
 import {
   addFilesTask,
+  splitPluginEntries,
   updateApiURLTask,
   verifyUDSetupTask,
 } from '../helpers/index.js'
@@ -118,27 +119,24 @@ function addNetlifyPluginsToViteConfigTask() {
       if (!content.includes('netlifyCompat(')) {
         content = content.replace(
           /(\s*)(plugins\s*:\s*\[)([\s\S]*?)(\]\s*,?)/,
-          (_match, leadingWs, prefix, entries, closing) => {
+          (match, leadingWs, prefix, entries, closing) => {
             const existing = entries
               .trim()
               .split(/\n/)
-              .flatMap((line) =>
-                line
-                  .split(',')
-                  .map((splitLine) => splitLine.trim().replace(/,$/, ''))
-                  .filter(Boolean),
-              )
+              .flatMap((line) => splitPluginEntries(line))
 
             const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
 
-            if (cedarIndex !== -1) {
-              existing.splice(
-                cedarIndex,
-                0,
-                'netlify({ build: { enabled: true } })',
-                'netlifyCompat()',
-              )
+            if (cedarIndex === -1) {
+              return match
             }
+
+            existing.splice(
+              cedarIndex,
+              0,
+              'netlify({ build: { enabled: true } })',
+              'netlifyCompat()',
+            )
 
             const indent = leadingWs.replace(/^\n/, '')
             const entryIndent = indent + '  '
