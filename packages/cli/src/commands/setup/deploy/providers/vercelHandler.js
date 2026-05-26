@@ -93,20 +93,46 @@ function addVercelPluginToViteConfigTask() {
 
       // Add plugin call before cedar() in the plugins array
       if (!content.includes('vercel(')) {
-        content = content.replace(
-          /(\s*)(plugins\s*:\s*\[)([\s\S]*?)(\]\s*,?)/,
-          (match, leadingWs, prefix, entries, closing) => {
-            const existing = entries
-              .trim()
-              .split(/\n/)
-              .flatMap((line) => splitPluginEntries(line))
+        const pluginsRegex = /(\s*)(plugins\s*:\s*\[)/
+        const match = pluginsRegex.exec(content)
+        if (match) {
+          const leadingWs = match[1]
+          const prefix = match[2]
+          const start = match.index + match[0].length
 
-            const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
-
-            if (cedarIndex === -1) {
-              return match
+          // Find matching closing bracket by tracking depth
+          let depth = 1
+          let end = start
+          while (depth > 0 && end < content.length) {
+            if (content[end] === '[') {
+              depth++
+            } else if (content[end] === ']') {
+              depth--
             }
 
+            if (depth > 0) {
+              end++
+            }
+          }
+
+          const entries = content.slice(start, end)
+          const closingMatch = content.slice(end, end + 2).match(/^\]\s*,?/)
+
+          if (!closingMatch) {
+            task.skip('Could not parse plugins array')
+            return
+          }
+
+          const closing = closingMatch[0]
+
+          const existing = entries
+            .trim()
+            .split(/\n/)
+            .flatMap((line) => splitPluginEntries(line))
+
+          const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
+
+          if (cedarIndex !== -1) {
             existing.splice(cedarIndex, 0, 'vercel()')
 
             const indent = leadingWs.replace(/^\n/, '')
@@ -115,9 +141,11 @@ function addVercelPluginToViteConfigTask() {
               .map((e) => `${entryIndent}${e},`)
               .join('\n')
 
-            return `${leadingWs}${prefix}\n${entriesStr}\n${indent}${closing}`
-          },
-        )
+            const before = content.slice(0, match.index)
+            const after = content.slice(end + closing.length)
+            content = `${before}${leadingWs}${prefix}\n${entriesStr}\n${indent}${closing}${after}`
+          }
+        }
       }
 
       fs.writeFileSync(viteConfigPath, content)
