@@ -117,19 +117,32 @@ function addNetlifyPluginsToViteConfigTask() {
       // Add plugin calls before cedar() in the plugins array
       if (!content.includes('netlifyCompat(')) {
         content = content.replace(
-          /(\s*)(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
-          (_match, leadingWs, prefix, beforeCedar, cedarCall) => {
-            const indent = beforeCedar.includes('\n')
-              ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
-              : leadingWs + '  '
-            const before = beforeCedar.replace(/\s*$/, '')
+          /(\s*)(plugins\s*:\s*\[)([\s\S]*?)(\]\s*,?)/,
+          (_match, leadingWs, prefix, entries, closing) => {
+            const existing = entries
+              .trim()
+              .split(/\n/)
+              .map((line) => line.trim().replace(/,$/, ''))
+              .filter(Boolean)
 
-            return (
-              `${leadingWs}${prefix}\n` +
-              `${indent}netlify({ build: { enabled: true } }),\n` +
-              `${indent}netlifyCompat(),${before}\n` +
-              `${indent}${cedarCall}`
-            )
+            const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
+
+            if (cedarIndex !== -1) {
+              existing.splice(
+                cedarIndex,
+                0,
+                'netlify({ build: { enabled: true } })',
+                'netlifyCompat()',
+              )
+            }
+
+            const indent = leadingWs.replace(/^\n/, '')
+            const entryIndent = indent + '  '
+            const entriesStr = existing
+              .map((e) => `${entryIndent}${e},`)
+              .join('\n')
+
+            return `${leadingWs}${prefix}\n${entriesStr}\n${indent}${closing}`
           },
         )
       }

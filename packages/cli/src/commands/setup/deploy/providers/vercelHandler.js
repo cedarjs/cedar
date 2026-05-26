@@ -90,19 +90,27 @@ function addVercelPluginToViteConfigTask() {
       // Add plugin call before cedar() in the plugins array
       if (!content.includes('vercel(')) {
         content = content.replace(
-          /(\s*)(plugins:\s*\[)([\s\S]*?)(cedar\s*\()/,
-          (_match, leadingWs, prefix, beforeCedar, cedarCall) => {
-            const indent = beforeCedar.includes('\n')
-              ? beforeCedar.match(/\n(\s*)$/)?.[1] || leadingWs + '  '
-              : leadingWs + '  '
+          /(\s*)(plugins\s*:\s*\[)([\s\S]*?)(\]\s*,?)/,
+          (_match, leadingWs, prefix, entries, closing) => {
+            const existing = entries
+              .trim()
+              .split(/\n/)
+              .map((line) => line.trim().replace(/,$/, ''))
+              .filter(Boolean)
 
-            const before = beforeCedar.replace(/\s*$/, '')
+            const cedarIndex = existing.findIndex((e) => /^cedar\s*\(/.test(e))
 
-            return (
-              `${leadingWs}${prefix}\n` +
-              `${indent}vercel(),${before}\n` +
-              `${indent}${cedarCall}`
-            )
+            if (cedarIndex !== -1) {
+              existing.splice(cedarIndex, 0, 'vercel()')
+            }
+
+            const indent = leadingWs.replace(/^\n/, '')
+            const entryIndent = indent + '  '
+            const entriesStr = existing
+              .map((e) => `${entryIndent}${e},`)
+              .join('\n')
+
+            return `${leadingWs}${prefix}\n${entriesStr}\n${indent}${closing}`
           },
         )
       }

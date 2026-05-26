@@ -1,4 +1,5 @@
 process.env.CEDAR_CWD = '/cedar-app'
+
 vi.mock('node:fs', async () => {
   const memfs = await import('memfs')
   return {
@@ -6,12 +7,23 @@ vi.mock('node:fs', async () => {
     default: memfs.fs,
   }
 })
+
 vi.mock('@cedarjs/project-config', async (importOriginal) => {
   const actual = await importOriginal()
   return {
     ...actual,
     getConfigPath: vi.fn(() => '/cedar-app/cedar.toml'),
   }
+})
+
+vi.mock('listr2', async (importOriginal) => {
+  const mod = await importOriginal()
+
+  const Listr = vi.fn((tasks, options) => {
+    return new mod.Listr(tasks, { ...options, renderer: 'silent' })
+  })
+
+  return { ...mod, Listr }
 })
 
 import fs from 'node:fs'
@@ -25,6 +37,7 @@ import '../../../../lib/test'
 
 import { getPaths } from '../../../../lib/index.js'
 import { updateApiURLTask } from '../helpers/index.js'
+import { handler } from '../providers/netlifyHandler'
 
 vi.mock('../../../../lib', async (importOriginal) => {
   const { printSetupNotes } = await importOriginal()
@@ -53,6 +66,10 @@ vi.mock('../../../../lib', async (importOriginal) => {
         fs.writeFileSync(key, fileNameToContentMap[key])
       }
     },
+    addPackagesTask: vi.fn(() => ({
+      title: 'mock install',
+      task: vi.fn(),
+    })),
   }
 })
 
@@ -63,32 +80,31 @@ beforeEach(() => {
 
   vi.mocked(getPaths).mockReturnValue({
     base: '/cedar-app',
+    web: { base: '/cedar-app/web' },
   })
 
   vol.fromJSON({
     [mockConfigPath]: `[web]
-  title = "Cedar App"
-  port = 8910
-  apiUrl = "/.api/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-cedar-toml#api-paths
-  includeEnvironmentVariables = [
-    # Add any ENV vars that should be available to the web side to this array
-    # See https://cedarjs.com/docs/environment-variables#web
-  ]
-[api]
-  port = 8911
-[browser]
-  open = true
-`,
+      title = "Cedar App"
+      port = 8910
+      apiUrl = "/.api/functions" # you can customize graphql and dbAuth urls individually too: see https://cedarjs.com/docs/app-configuration-cedar-toml#api-paths
+      includeEnvironmentVariables = [
+        # Add any ENV vars that should be available to the web side to this array
+        # See https://cedarjs.com/docs/environment-variables#web
+      ]
+    [api]
+      port = 8911
+    [browser]
+      open = true
+  `,
   })
 })
 
 describe('netlify', () => {
   it('should call the handler without error', async () => {
-    const netlify = await import('../providers/netlifyHandler')
-
     let error = undefined
     try {
-      await netlify.handler({ force: true })
+      await handler({ force: true })
     } catch (err) {
       error = err
     }
@@ -119,5 +135,81 @@ describe('netlify', () => {
     )
     expect(netlifyTomlPath).toBeDefined()
     expect(filesystem[netlifyTomlPath]).toMatchSnapshot()
+  })
+})
+
+describe('netlify with --ud', () => {
+  beforeEach(() => {
+    vol.reset()
+    vol.fromJSON({
+      [mockConfigPath]: `[web]
+        title = "Cedar App"
+        port = 8910
+        apiUrl = "/.api/functions"
+        [api]
+        port = 8911
+        [browser]
+        open = true
+      `,
+      '/cedar-app/web/vite.config.ts': [
+        "import dns from 'dns'",
+        '',
+        "import { defineConfig } from 'vite'",
+        '',
+        "import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'",
+        '',
+        "import myPlugin from 'my-plugin'",
+        '',
+        "dns.setDefaultResultOrder('verbatim')",
+        '',
+        'export default defineConfig({',
+        '  plugins: [',
+        '    myPlugin(),',
+        '    cedar(),',
+        '    cedarUniversalDeployPlugin(),',
+        '  ],',
+        '})',
+      ].join('\n'),
+    })
+  })
+
+  it('adds Netlify plugins to vite config and writes UD netlify.toml', async () => {
+    await handler({ force: true, ud: true })
+
+    const filesystem = vol.toJSON()
+
+    // Verify UD-specific netlify.toml
+    const netlifyToml = Object.keys(filesystem).find((p) =>
+      p.endsWith('netlify.toml'),
+    )
+    expect(netlifyToml).toBeDefined()
+    expect(filesystem[netlifyToml]).toContain('api/dist/ud')
+    expect(filesystem[netlifyToml]).toContain('build --ud')
+
+    // Verify vite config has the Netlify plugin imports
+    const viteConfig = filesystem['/cedar-app/web/vite.config.ts']
+    expect(viteConfig).toContain("import netlify from '@netlify/vite-plugin'")
+    expect(viteConfig).toContain(
+      "import netlifyCompat from '@universal-deploy/netlify/vite'",
+    )
+
+    // Verify vite config has the Netlify plugin calls before cedar()
+    expect(viteConfig).toContain('netlify({ build: { enabled: true } })')
+    expect(viteConfig).toContain('netlifyCompat()')
+
+    // Verify existing plugins are preserved
+    expect(viteConfig).toContain('myPlugin()')
+    expect(viteConfig).toContain('cedar()')
+    expect(viteConfig).toContain('cedarUniversalDeployPlugin()')
+
+    // Verify myPlugin() appears before the Netlify plugins
+    const myPluginIndex = viteConfig.indexOf('myPlugin()')
+    const netlifyIndex = viteConfig.indexOf('netlify({')
+    expect(myPluginIndex).toBeLessThan(netlifyIndex)
+
+    // Verify no blank lines between plugin entries
+    const pluginSection = viteConfig.match(/plugins:\s*\[([\s\S]*?)\]/)[1]
+    expect(pluginSection.trim()).toBeTruthy()
+    expect(pluginSection).not.toContain('\n\n')
   })
 })
