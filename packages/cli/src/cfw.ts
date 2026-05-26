@@ -11,7 +11,8 @@ import { getConfigPath } from '@cedarjs/project-config'
 
 const config = new Configstore('@cedarjs/cli')
 
-const CFW_PATH = process.env.CFW_PATH || config.get('CFW_PATH')
+const CFW_PATH: string | undefined =
+  process.env.CFW_PATH || config.get('CFW_PATH')
 
 if (!CFW_PATH) {
   console.error('Error: You must specify the path to Cedar Framework')
@@ -49,11 +50,8 @@ try {
   execa.sync('yarn', [...command], {
     stdio: 'inherit',
     cwd: absCfwPath,
-    env: {
-      CEDAR_CWD: projectPath,
-    },
+    env: { ...process.env, CEDAR_CWD: projectPath },
   })
-} catch (e) {
+} catch {
   console.log()
-  //
 }
