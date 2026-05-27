@@ -771,6 +771,49 @@ async function rebuildTestProject() {
 
   await tuiTask({
     step: 11,
+    title: 'Add test functions',
+    task: async () => {
+      const functionsDir = path.join(
+        OUTPUT_PROJECT_PATH,
+        'api',
+        'src',
+        'functions',
+      )
+
+      fs.writeFileSync(
+        path.join(functionsDir, 'hello.ts'),
+        [
+          'export async function handleRequest(request: Request) {',
+          '  return new Response(',
+          "    JSON.stringify({ data: 'hello from cedar', url: request.url }),",
+          '    {',
+          '      status: 200,',
+          "      headers: { 'Content-Type': 'application/json' },",
+          '    }',
+          '  )',
+          '}',
+          '',
+        ].join('\n'),
+      )
+
+      fs.writeFileSync(
+        path.join(functionsDir, 'legacyHello.ts'),
+        [
+          'export const handler = async (_event: any, _context: any) => {',
+          '  return {',
+          '    statusCode: 200,',
+          "    headers: { 'Content-Type': 'application/json' },",
+          "    body: JSON.stringify({ data: 'hello from legacy handler' }),",
+          '  }',
+          '}',
+          '',
+        ].join('\n'),
+      )
+    },
+  })
+
+  await tuiTask({
+    step: 12,
     title: 'Running prisma migrate reset',
     task: () => {
       return exec(
@@ -782,7 +825,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 12,
+    step: 13,
     title: 'Lint --fix all the things',
     task: async () => {
       try {
@@ -813,7 +856,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 13,
+    step: 14,
     title: 'Replace and Cleanup Fixture',
     task: async () => {
       // @TODO: This only works on UNIX, we should use path.join everywhere
@@ -895,7 +938,7 @@ async function rebuildTestProject() {
   })
 
   await tuiTask({
-    step: 14,
+    step: 15,
     title: 'All done!',
     task: () => {
       console.log('-'.repeat(30))

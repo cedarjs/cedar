@@ -1,0 +1,82 @@
+name: E2E - Netlify Deploy
+
+on:
+  workflow_call:
+
+jobs:
+  e2e-netlify:
+    runs-on: ubuntu-latest
+
+    env:
+      REDWOOD_CI: 1
+      REDWOOD_VERBOSE_TELEMETRY: 1
+      YARN_ENABLE_HARDENED_MODE: 0
+      YARN_ENABLE_IMMUTABLE_INSTALLS: false
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+    steps:
+      - name: Checkout the framework code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 📋 Set up test project
+        run: cp -r __fixtures__/test-project-esm ../cedar-test-app
+
+      - name: 🔗 Link local packages via tarsync
+        run: yarn project:tarsync ../cedar-test-app
+
+      - name: 🗄️ Set up Neon database
+        working-directory: ../cedar-test-app
+        run: |
+          # The fixture has SQLite migrations with SQLite-specific SQL. They
+          # can't run on Postgres, so remove them before setup neon creates the
+          # fresh Postgres baseline migration.
+          rm -rf api/db/migrations
+          yarn cedar setup neon
+
+      - name: 🔗 Link Netlify site
+        working-directory: ../cedar-test-app
+        run: npx netlify link --id "$SITE_ID" --filter web
+
+      - name: 🔧 Set up Universal Deploy
+        working-directory: ../cedar-test-app
+        run: yarn cedar setup deploy universal-deploy
+
+      - name: 🔧 Set up Netlify deploy (UD)
+        working-directory: ../cedar-test-app
+        run: yarn cedar setup deploy netlify --ud
+
+      - name: 🏗️ Build locally
+        working-directory: ../cedar-test-app
+        run: |
+          # Read URLs from .env directly instead of sourcing — the URL contains
+          # & (query parameter separator) which bash interprets as a background
+          # operator when sourcing the file, truncating the value.
+          DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
+          DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
+          export DATABASE_URL DIRECT_DATABASE_URL
+          yarn cedar build --ud --apiRootPath=/.api/functions
+          yarn cedar prisma migrate deploy
+          yarn cedar data-migrate up
+
+      - name: 🚀 Deploy to Netlify
+        id: netlify-deploy
+        working-directory: ../cedar-test-app
+        run: |
+          DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
+          DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
+          export DATABASE_URL DIRECT_DATABASE_URL
+          npx netlify env:set DATABASE_URL "$DATABASE_URL" --filter web
+          npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
+          OUTPUT=$(npx netlify deploy --filter web --prod --json --no-build)
+          echo "$OUTPUT"
+          echo "deploy-url=$(echo "$OUTPUT" | jq -r '.url')" >> "$GITHUB_OUTPUT"
+
+      - name: 🧪 Run Netlify e2e tests
+        run: yarn vitest run
+        working-directory: tasks/netlify-tests
+        env:
+          NETLIFY_DEPLOY_URL: ${{ steps.netlify-deploy.outputs.deploy-url }}
