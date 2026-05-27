@@ -37,12 +37,6 @@ jobs:
           rm -rf api/db/migrations
           yarn cedar setup neon
 
-          # Clean up any failed migration records the Netlify deploy might
-          # encounter (e.g. if it picks up stale env vars from a prior run).
-          . .env
-          yarn prisma db execute --url "$DIRECT_DATABASE_URL" --stdin <<< \
-            "UPDATE _prisma_migrations SET migration_status = 'applied' WHERE migration_status = 'failed'" 2>/dev/null || true
-
       - name: 🔗 Link Netlify site
         working-directory: ../cedar-test-app
         run: npx netlify link --id "$SITE_ID" --filter web
@@ -55,7 +49,7 @@ jobs:
         working-directory: ../cedar-test-app
         run: yarn cedar setup deploy netlify --ud
 
-      - name: 🔑 Set database URL on Netlify
+      - name: 🏗️ Build locally
         working-directory: ../cedar-test-app
         run: |
           # Read URLs from .env directly instead of sourcing — the URL contains
@@ -64,21 +58,20 @@ jobs:
           DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
           DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
           export DATABASE_URL DIRECT_DATABASE_URL
-          npx netlify env:set DATABASE_URL "$DATABASE_URL" --filter web
-          npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
-          echo "Verifying env vars were set..."
-          npx netlify env:get DATABASE_URL --filter web | head -5
-          npx netlify env:get DIRECT_DATABASE_URL --filter web | head -5
+          yarn cedar build --ud --apiRootPath=/.api/functions
+          yarn cedar prisma migrate deploy
+          yarn cedar data-migrate up
 
-          # Also pin the URLs in netlify.toml so the build always uses the
-          # correct database regardless of env var propagation timing.
-          python3 -c "import os;u=os.environ['DATABASE_URL'];d=os.environ['DIRECT_DATABASE_URL'];f=open('netlify.toml','r');c=f.read();f.close();f=open('netlify.toml','w');f.write(c.replace('NODE_VERSION = \"24\"',f'NODE_VERSION = \"24\"\nDATABASE_URL = \"{u}\"\nDIRECT_DATABASE_URL = \"{d}\"'));f.close()"
-
-      - name: 🚀 Build & Deploy to Netlify
+      - name: 🚀 Deploy to Netlify
         id: netlify-deploy
         working-directory: ../cedar-test-app
         run: |
-          OUTPUT=$(npx netlify deploy --filter web --prod --json)
+          DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
+          DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
+          export DATABASE_URL DIRECT_DATABASE_URL
+          npx netlify env:set DATABASE_URL "$DATABASE_URL" --filter web
+          npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
+          OUTPUT=$(npx netlify deploy --filter web --prod --json --no-build)
           echo "$OUTPUT"
           echo "deploy-url=$(echo "$OUTPUT" | jq -r '.url')" >> "$GITHUB_OUTPUT"
 
