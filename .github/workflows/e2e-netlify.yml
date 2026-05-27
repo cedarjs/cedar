@@ -67,19 +67,7 @@ jobs:
 
           # Also pin the URLs in netlify.toml so the build always uses the
           # correct database regardless of env var propagation timing.
-          python3 -c "
-import os
-url = os.environ['DATABASE_URL']
-direct_url = os.environ['DIRECT_DATABASE_URL']
-with open('netlify.toml', 'r') as f:
-    content = f.read()
-content = content.replace(
-    'NODE_VERSION = \"24\"',
-    f'NODE_VERSION = \"24\"\nDATABASE_URL = \"{url}\"\nDIRECT_DATABASE_URL = \"{direct_url}\"'
-)
-with open('netlify.toml', 'w') as f:
-    f.write(content)
-"
+          python3 -c "import os;u=os.environ['DATABASE_URL'];d=os.environ['DIRECT_DATABASE_URL'];f=open('netlify.toml','r');c=f.read();f.close();f=open('netlify.toml','w');f.write(c.replace('NODE_VERSION = \"24\"',f'NODE_VERSION = \"24\"\nDATABASE_URL = \"{u}\"\nDIRECT_DATABASE_URL = \"{d}\"'));f.close()"
 
       - name: 🚀 Build & Deploy to Netlify
         id: netlify-deploy
