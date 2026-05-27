@@ -64,14 +64,27 @@ jobs:
 
       - name: 🔗 Link Vercel project
         working-directory: ../cedar-test-app
-        run: npx vercel link --project "${{ steps.create-project.outputs.project-name }}" --token "$VERCEL_TOKEN" --yes
+        run: |
+          npx vercel link --project "${{ steps.create-project.outputs.project-name }}" --token "$VERCEL_TOKEN" --yes
+          echo "--- .vercel contents ---"
+          ls -la .vercel/ 2>/dev/null || echo "No .vercel directory"
+          cat .vercel/project.json 2>/dev/null || echo "No project.json"
+          echo "--- .vercel/output contents ---"
+          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output directory"
+          ls .vercel/output/functions/ 2>/dev/null || echo "No functions directory"
+          cat .vercel/output/config.json 2>/dev/null | head -20 || echo "No config.json"
 
       - name: 🚀 Deploy to Vercel
         id: vercel-deploy
         working-directory: ../cedar-test-app
         run: |
-          OUTPUT=$(npx vercel deploy --prebuilt --prod --json --token "$VERCEL_TOKEN" 2>&1)
+          OUTPUT=$(npx vercel deploy --prebuilt --prod --json --token "$VERCEL_TOKEN" 2>&1) || EXIT_CODE=$?
+          echo "--- deploy output ---"
           echo "$OUTPUT"
+          echo "--- end output ---"
+          if [ -n "$EXIT_CODE" ] && [ "$EXIT_CODE" -ne 0 ]; then
+            exit "$EXIT_CODE"
+          fi
           echo "deploy-url=$(echo "$OUTPUT" | jq -r '.url')" >> "$GITHUB_OUTPUT"
 
       - name: 🧪 Run Vercel e2e tests

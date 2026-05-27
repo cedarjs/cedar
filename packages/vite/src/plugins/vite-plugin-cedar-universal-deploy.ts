@@ -5,7 +5,7 @@ import type { Plugin } from 'vite'
 
 import type { CedarRouteRecord } from '@cedarjs/api/runtime'
 import { findApiServerFunctions } from '@cedarjs/internal/dist/files.js'
-import { getPaths, getConfig } from '@cedarjs/project-config'
+import { getPaths } from '@cedarjs/project-config'
 
 export interface CedarUniversalDeployPluginOptions {
   apiRootPath?: string
@@ -168,11 +168,8 @@ export function cedarUniversalDeployPlugin(
   // CEDAR_API_ROOT_PATH is set by buildUDApiServer when the --apiRootPath CLI
   // flag is passed. It takes precedence over the option value in the user's
   // vite config so CI/deploy can override without editing tracked files.
-  // Falls back to web.apiUrl from cedar.toml (e.g. "/.api/functions") so that
-  // API routes don't collide with SPA routes.
-  const configApiUrl = getConfig().web?.apiUrl as string | undefined
   const effectiveApiRootPath =
-    process.env.CEDAR_API_ROOT_PATH ?? options.apiRootPath ?? configApiUrl
+    process.env.CEDAR_API_ROOT_PATH ?? options.apiRootPath
   const routes = discoverCedarRoutes(effectiveApiRootPath ?? '/')
 
   let entriesInjected = false
