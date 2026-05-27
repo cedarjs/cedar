@@ -81,7 +81,7 @@ jobs:
           if [ -n "$EXIT_CODE" ] && [ "$EXIT_CODE" -ne 0 ]; then
             exit "$EXIT_CODE"
           fi
-          echo "deploy-url=$(echo "$OUTPUT" | jq -r '.url')" >> "$GITHUB_OUTPUT"
+          echo "deploy-url=$(echo "$OUTPUT" | tail -1 | jq -r '.url')" >> "$GITHUB_OUTPUT"
 
       - name: 🧪 Run Vercel e2e tests
         run: yarn vitest run
