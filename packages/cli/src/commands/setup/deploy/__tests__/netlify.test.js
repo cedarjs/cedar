@@ -246,4 +246,53 @@ describe('netlify with --ud', () => {
       })"
     `)
   })
+
+  it('handles arrow-function wrapped defineConfig with destructured mode arg', async () => {
+    vol.fromJSON({
+      '/cedar-app/web/vite.config.ts': [
+        "import dns from 'node:dns'",
+        '',
+        "import { defineConfig } from 'vite'",
+        '',
+        "import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'",
+        '',
+        "dns.setDefaultResultOrder('verbatim')",
+        '',
+        'export default defineConfig(({ mode }) => ({',
+        '  plugins: [cedar({ mode }), cedarUniversalDeployPlugin()],',
+        '  test: {',
+        "    environment: 'jsdom',",
+        '  },',
+        '}))',
+      ].join('\n'),
+    })
+
+    await handler({ force: true, ud: true })
+
+    const filesystem = vol.toJSON()
+
+    expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
+      "import dns from 'node:dns'
+
+      import netlifyCompat from '@universal-deploy/netlify/vite'
+      import netlify from '@netlify/vite-plugin'
+      import { defineConfig } from 'vite'
+
+      import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'
+
+      dns.setDefaultResultOrder('verbatim')
+
+      export default defineConfig(({ mode }) => ({
+        plugins: [
+          netlify({ build: { enabled: true } }),
+          netlifyCompat(),
+          cedar({ mode }),
+          cedarUniversalDeployPlugin(),
+        ],
+        test: {
+          environment: 'jsdom',
+        },
+      }))"
+    `)
+  })
 })
