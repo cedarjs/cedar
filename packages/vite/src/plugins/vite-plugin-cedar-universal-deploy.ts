@@ -5,7 +5,7 @@ import type { Plugin } from 'vite'
 
 import type { CedarRouteRecord } from '@cedarjs/api/runtime'
 import { findApiServerFunctions } from '@cedarjs/internal/dist/files.js'
-import { getPaths } from '@cedarjs/project-config'
+import { getPaths, getConfig } from '@cedarjs/project-config'
 
 export interface CedarUniversalDeployPluginOptions {
   apiRootPath?: string
@@ -13,6 +13,8 @@ export interface CedarUniversalDeployPluginOptions {
 
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
+
+const SSR_ENVIRONMENT_NAMES = new Set(['ssr', 'vercel_node', 'vercel_edge'])
 
 /**
  * The Symbol.for key used by @universal-deploy/store to persist entries on
@@ -166,8 +168,11 @@ export function cedarUniversalDeployPlugin(
   // CEDAR_API_ROOT_PATH is set by buildUDApiServer when the --apiRootPath CLI
   // flag is passed. It takes precedence over the option value in the user's
   // vite config so CI/deploy can override without editing tracked files.
+  // Falls back to web.apiUrl from cedar.toml (e.g. "/.api/functions") so that
+  // API routes don't collide with SPA routes.
+  const configApiUrl = getConfig().web?.apiUrl as string | undefined
   const effectiveApiRootPath =
-    process.env.CEDAR_API_ROOT_PATH ?? options.apiRootPath
+    process.env.CEDAR_API_ROOT_PATH ?? options.apiRootPath ?? configApiUrl
   const routes = discoverCedarRoutes(effectiveApiRootPath ?? '/')
 
   let entriesInjected = false
@@ -178,14 +183,7 @@ export function cedarUniversalDeployPlugin(
 
     config: {
       order: 'pre',
-      handler(_config, env) {
-        // Only register routes for SSR builds. During client builds the
-        // emitted chunks would reference paths that don't exist (e.g.
-        // new URL("./../functions/...")), causing Rollup resolution errors.
-        if (!env.isSsrBuild) {
-          return
-        }
-
+      handler() {
         if (entriesInjected) {
           return
         }
@@ -197,7 +195,11 @@ export function cedarUniversalDeployPlugin(
         clearCedarEntries()
 
         // Register per-route API entries so UD adapters can split on
-        // individual functions (e.g. Cloudflare Workers).
+        // individual functions (e.g. Cloudflare Workers). Entries are
+        // registered unconditionally so that they are available in the UD
+        // store before provider plugins (e.g. vite-plugin-vercel) read them
+        // during their configEnvironment hooks. The virtual module hooks
+        // below gate resolution to SSR-like environments only.
         for (const route of routes) {
           addEntry(toEntryMeta(route))
         }
@@ -205,8 +207,9 @@ export function cedarUniversalDeployPlugin(
     },
 
     buildStart() {
-      // Skip during client builds — the emitted chunks reference Node.js
-      // builtins and paths that only exist during SSR builds.
+      // Only emit chunks for the legacy 'ssr' environment (buildUDApiServer).
+      // In the builder API, provider environments (vercel_node, etc.) get
+      // their input from the UD store via their own configEnvironment hooks.
       if (this.environment?.name !== 'ssr') {
         return
       }
@@ -229,9 +232,9 @@ export function cedarUniversalDeployPlugin(
     },
 
     resolveId(id) {
-      // Skip during client builds — the virtual modules reference Node.js
-      // APIs and paths that only work in an SSR context.
-      if (this.environment?.name !== 'ssr') {
+      // Only resolve virtual modules for SSR-like environments. Client and
+      // raw API builds should not see these virtual modules.
+      if (!SSR_ENVIRONMENT_NAMES.has(this.environment?.name ?? '')) {
         return undefined
       }
 
@@ -249,8 +252,8 @@ export function cedarUniversalDeployPlugin(
     },
 
     async load(id) {
-      // Skip during client builds.
-      if (this.environment?.name !== 'ssr') {
+      // Only load virtual modules for SSR-like environments.
+      if (!SSR_ENVIRONMENT_NAMES.has(this.environment?.name ?? '')) {
         return undefined
       }
 

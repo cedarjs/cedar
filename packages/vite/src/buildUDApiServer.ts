@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { cp, rm } from 'node:fs/promises'
 import path from 'node:path'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -53,6 +54,23 @@ export async function buildUDApiServer({
   // after vite loads the user's configFile.
   if (apiRootPath !== undefined) {
     process.env.CEDAR_API_ROOT_PATH = apiRootPath
+  }
+
+  // The user's Vite config may include provider plugins (e.g. vercel())
+  // that clean their output directory (e.g. .vercel/output) during
+  // buildStart. Since buildUDApiServer loads the same config, those
+  // cleanup hooks fire again and delete artifacts produced by the prior
+  // buildCedarApp step. Save and restore provider output directories to
+  // prevent this.
+  const providerOutputDirs = [path.join(cedarPaths.base, '.vercel', 'output')]
+  const savedDirs = new Map<string, string>()
+
+  for (const dir of providerOutputDirs) {
+    if (fs.existsSync(dir)) {
+      const tmpDir = dir + '.cedar-ud-backup'
+      await cp(dir, tmpDir, { recursive: true, force: true })
+      savedDirs.set(dir, tmpDir)
+    }
   }
 
   try {
@@ -122,6 +140,15 @@ export async function buildUDApiServer({
       JSON.stringify({ type: 'module' }, null, 2),
     )
   } finally {
+    // Restore provider output directories that were saved before the build.
+    for (const [dir, tmpDir] of savedDirs) {
+      if (fs.existsSync(tmpDir)) {
+        await rm(dir, { recursive: true, force: true }).catch(() => {})
+        await cp(tmpDir, dir, { recursive: true, force: true })
+        await rm(tmpDir, { recursive: true, force: true }).catch(() => {})
+      }
+    }
+
     if (apiRootPath !== undefined) {
       delete process.env.CEDAR_API_ROOT_PATH
     }
