@@ -31,9 +31,9 @@ jobs:
 
       - name: 🗄️ Set up Neon database
         run: |
-          node_modules/.bin/cedar setup neon
+          yarn cedar setup neon
           rm -rf ../cedar-test-app/api/db/migrations
-          node_modules/.bin/cedar prisma migrate dev --name init-neon
+          yarn cedar prisma migrate dev --name init-neon
 
       - name: 🔗 Link Netlify site
         working-directory: ../cedar-test-app
@@ -47,10 +47,10 @@ jobs:
           npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
 
       - name: 🔧 Set up Universal Deploy
-        run: node_modules/.bin/cedar setup deploy universal-deploy
+        run: yarn cedar setup deploy universal-deploy
 
       - name: 🔧 Set up Netlify deploy (UD)
-        run: node_modules/.bin/cedar setup deploy netlify --ud
+        run: yarn cedar setup deploy netlify --ud
 
       - name: 🚀 Build & Deploy to Netlify
         id: netlify-deploy
