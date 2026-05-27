@@ -86,7 +86,7 @@ fetchMock.mockImplementation(async (_url, options) => {
       text: () => '',
       json: () => ({
         data: {
-          redwood: {
+          cedar: {
             currentUser: {
               ...loggedInUser,
               roles: loggedInUser?.app_metadata?.roles,
