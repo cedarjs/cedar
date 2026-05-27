@@ -246,8 +246,15 @@ jobs:
   e2e-netlify:
     needs: check
     if: github.repository == 'cedarjs/cedar'
-    name: E2E Netlify deploy
+    name: 🔷 E2E Netlify deploy
     uses: ./.github/workflows/e2e-netlify.yml
+    secrets: inherit
+
+  e2e-vercel:
+    needs: check
+    if: github.repository == 'cedarjs/cedar'
+    name: ▲ E2E Vercel deploy
+    uses: ./.github/workflows/e2e-vercel.yml
     secrets: inherit
 
   ci-status-check:
@@ -268,6 +275,7 @@ jobs:
       - ud-tests
       - background-jobs-e2e
       - e2e-netlify
+      - e2e-vercel
     if: always()
 
     name: ✅ CI Status Check

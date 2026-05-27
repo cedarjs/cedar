@@ -1,10 +1,10 @@
-name: 🔷 E2E - Netlify Deploy
+name: ▲ E2E - Vercel Deploy
 
 on:
   workflow_call:
 
 jobs:
-  e2e-netlify:
+  e2e-vercel:
     runs-on: ubuntu-latest
 
     env:
@@ -12,8 +12,7 @@ jobs:
       CEDAR_VERBOSE_TELEMETRY: 1
       YARN_ENABLE_HARDENED_MODE: 0
       YARN_ENABLE_IMMUTABLE_INSTALLS: false
-      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
     steps:
       - name: Checkout the framework code
@@ -31,30 +30,20 @@ jobs:
       - name: 🗄️ Set up Neon database
         working-directory: ../cedar-test-app
         run: |
-          # The fixture has SQLite migrations with SQLite-specific SQL. They
-          # can't run on Postgres, so remove them before setup neon creates the
-          # fresh Postgres baseline migration.
           rm -rf api/db/migrations
           yarn cedar setup neon
-
-      - name: 🔗 Link Netlify site
-        working-directory: ../cedar-test-app
-        run: npx netlify link --id "$SITE_ID" --filter web
 
       - name: 🔧 Set up Universal Deploy
         working-directory: ../cedar-test-app
         run: yarn cedar setup deploy universal-deploy
 
-      - name: 🔧 Set up Netlify deploy (UD)
+      - name: 🔧 Set up Vercel deploy (UD)
         working-directory: ../cedar-test-app
-        run: yarn cedar setup deploy netlify --ud
+        run: yarn cedar setup deploy vercel --ud
 
       - name: 🏗️ Build locally
         working-directory: ../cedar-test-app
         run: |
-          # Read URLs from .env directly instead of sourcing — the URL contains
-          # & (query parameter separator) which bash interprets as a background
-          # operator when sourcing the file, truncating the value.
           DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
           DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
           export DATABASE_URL DIRECT_DATABASE_URL
@@ -62,21 +51,31 @@ jobs:
           yarn cedar prisma migrate deploy
           yarn cedar data-migrate up
 
-      - name: 🚀 Deploy to Netlify
-        id: netlify-deploy
+      - name: 🆕 Create Vercel project
+        id: create-project
+        run: |
+          PROJECT_NAME="cedar-e2e-$(date +%s)"
+          RESPONSE=$(curl -s -X POST "https://api.vercel.com/v10/projects" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"$PROJECT_NAME\"}")
+          echo "project-id=$(echo "$RESPONSE" | jq -r '.id')" >> "$GITHUB_OUTPUT"
+          echo "project-name=$PROJECT_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: 🔗 Link Vercel project
+        working-directory: ../cedar-test-app
+        run: npx vercel link --project "${{ steps.create-project.outputs.project-name }}" --token "$VERCEL_TOKEN" --yes
+
+      - name: 🚀 Deploy to Vercel
+        id: vercel-deploy
         working-directory: ../cedar-test-app
         run: |
-          DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
-          DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
-          export DATABASE_URL DIRECT_DATABASE_URL
-          npx netlify env:set DATABASE_URL "$DATABASE_URL" --filter web
-          npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
-          OUTPUT=$(npx netlify deploy --filter web --prod --json --no-build)
+          OUTPUT=$(npx vercel deploy --prebuilt --prod --json --token "$VERCEL_TOKEN" 2>&1)
           echo "$OUTPUT"
           echo "deploy-url=$(echo "$OUTPUT" | jq -r '.url')" >> "$GITHUB_OUTPUT"
 
-      - name: 🧪 Run Netlify e2e tests
+      - name: 🧪 Run Vercel e2e tests
         run: yarn vitest run
-        working-directory: tasks/netlify-tests
+        working-directory: tasks/vercel-tests
         env:
-          NETLIFY_DEPLOY_URL: ${{ steps.netlify-deploy.outputs.deploy-url }}
+          VERCEL_DEPLOY_URL: ${{ steps.vercel-deploy.outputs.deploy-url }}
