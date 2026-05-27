@@ -295,4 +295,82 @@ describe('netlify with --ud', () => {
       }))"
     `)
   })
+
+  it('handles arrow function with explicit block body and return statement', async () => {
+    vol.fromJSON({
+      '/cedar-app/web/vite.config.ts': [
+        "import { defineConfig } from 'vite'",
+        '',
+        "import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'",
+        '',
+        'export default defineConfig(({ mode }) => {',
+        '  return {',
+        '    plugins: [cedar({ mode }), cedarUniversalDeployPlugin()],',
+        '  }',
+        '})',
+      ].join('\n'),
+    })
+
+    await handler({ force: true, ud: true })
+
+    const filesystem = vol.toJSON()
+
+    expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
+      "import netlifyCompat from '@universal-deploy/netlify/vite'
+      import netlify from '@netlify/vite-plugin'
+      import { defineConfig } from 'vite'
+
+      import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'
+
+      export default defineConfig(({ mode }) => {
+        return {
+          plugins: [
+            netlify({ build: { enabled: true } }),
+            netlifyCompat(),
+            cedar({ mode }),
+            cedarUniversalDeployPlugin(),
+          ],
+        }
+      })"
+    `)
+  })
+
+  it('handles regular function expression with return statement', async () => {
+    vol.fromJSON({
+      '/cedar-app/web/vite.config.ts': [
+        "import { defineConfig } from 'vite'",
+        '',
+        "import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'",
+        '',
+        'export default defineConfig(function ({ mode }) {',
+        '  return {',
+        '    plugins: [cedar({ mode }), cedarUniversalDeployPlugin()],',
+        '  }',
+        '})',
+      ].join('\n'),
+    })
+
+    await handler({ force: true, ud: true })
+
+    const filesystem = vol.toJSON()
+
+    expect(filesystem['/cedar-app/web/vite.config.ts']).toMatchInlineSnapshot(`
+      "import netlifyCompat from '@universal-deploy/netlify/vite'
+      import netlify from '@netlify/vite-plugin'
+      import { defineConfig } from 'vite'
+
+      import { cedar, cedarUniversalDeployPlugin } from '@cedarjs/vite'
+
+      export default defineConfig(function ({ mode }) {
+        return {
+          plugins: [
+            netlify({ build: { enabled: true } }),
+            netlifyCompat(),
+            cedar({ mode }),
+            cedarUniversalDeployPlugin(),
+          ],
+        }
+      })"
+    `)
+  })
 })
