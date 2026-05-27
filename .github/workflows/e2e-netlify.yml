@@ -47,6 +47,14 @@ jobs:
         working-directory: ../cedar-test-app
         run: npx netlify link --id "$SITE_ID" --filter web
 
+      - name: 🔧 Set up Universal Deploy
+        working-directory: ../cedar-test-app
+        run: yarn cedar setup deploy universal-deploy
+
+      - name: 🔧 Set up Netlify deploy (UD)
+        working-directory: ../cedar-test-app
+        run: yarn cedar setup deploy netlify --ud
+
       - name: 🔑 Set database URL on Netlify
         working-directory: ../cedar-test-app
         run: |
@@ -57,13 +65,21 @@ jobs:
           npx netlify env:get DATABASE_URL --filter web | head -5
           npx netlify env:get DIRECT_DATABASE_URL --filter web | head -5
 
-      - name: 🔧 Set up Universal Deploy
-        working-directory: ../cedar-test-app
-        run: yarn cedar setup deploy universal-deploy
-
-      - name: 🔧 Set up Netlify deploy (UD)
-        working-directory: ../cedar-test-app
-        run: yarn cedar setup deploy netlify --ud
+          # Also pin the URLs in netlify.toml so the build always uses the
+          # correct database regardless of env var propagation timing.
+          python3 -c "
+import os
+url = os.environ['DATABASE_URL']
+direct_url = os.environ['DIRECT_DATABASE_URL']
+with open('netlify.toml', 'r') as f:
+    content = f.read()
+content = content.replace(
+    'NODE_VERSION = \"24\"',
+    f'NODE_VERSION = \"24\"\nDATABASE_URL = \"{url}\"\nDIRECT_DATABASE_URL = \"{direct_url}\"'
+)
+with open('netlify.toml', 'w') as f:
+    f.write(content)
+"
 
       - name: 🚀 Build & Deploy to Netlify
         id: netlify-deploy
