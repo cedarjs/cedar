@@ -56,6 +56,16 @@ jobs:
         working-directory: ../cedar-test-app
         run: yarn cedar setup deploy netlify --ud
 
+      - name: 🔍 Diagnose migration state
+        working-directory: ../cedar-test-app
+        run: |
+          echo "=== Migration files ==="
+          ls api/db/migrations/ 2>/dev/null || echo "(none)"
+
+          echo ""
+          echo "=== prisma migrate status ==="
+          yarn cedar prisma migrate status 2>&1 || true
+
       - name: 🚀 Build & Deploy to Netlify
         id: netlify-deploy
         working-directory: ../cedar-test-app
