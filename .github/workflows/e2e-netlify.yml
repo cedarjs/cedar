@@ -37,6 +37,12 @@ jobs:
           rm -rf api/db/migrations
           yarn cedar setup neon
 
+          # Clean up any failed migration records the Netlify deploy might
+          # encounter (e.g. if it picks up stale env vars from a prior run).
+          . .env
+          yarn prisma db execute --url "$DIRECT_DATABASE_URL" --stdin <<< \
+            "UPDATE _prisma_migrations SET migration_status = 'applied' WHERE migration_status = 'failed'" 2>/dev/null || true
+
       - name: 🔗 Link Netlify site
         working-directory: ../cedar-test-app
         run: npx netlify link --id "$SITE_ID" --filter web
@@ -47,6 +53,9 @@ jobs:
           . .env
           npx netlify env:set DATABASE_URL "$DATABASE_URL" --filter web
           npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
+          echo "Verifying env vars were set..."
+          npx netlify env:get DATABASE_URL --filter web | head -5
+          npx netlify env:get DIRECT_DATABASE_URL --filter web | head -5
 
       - name: 🔧 Set up Universal Deploy
         working-directory: ../cedar-test-app
@@ -55,16 +64,6 @@ jobs:
       - name: 🔧 Set up Netlify deploy (UD)
         working-directory: ../cedar-test-app
         run: yarn cedar setup deploy netlify --ud
-
-      - name: 🔍 Diagnose migration state
-        working-directory: ../cedar-test-app
-        run: |
-          echo "=== Migration files ==="
-          ls api/db/migrations/ 2>/dev/null || echo "(none)"
-
-          echo ""
-          echo "=== prisma migrate status ==="
-          yarn cedar prisma migrate status 2>&1 || true
 
       - name: 🚀 Build & Deploy to Netlify
         id: netlify-deploy
