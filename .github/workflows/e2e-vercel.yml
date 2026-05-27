@@ -81,7 +81,9 @@ jobs:
           if [ -n "$EXIT_CODE" ] && [ "$EXIT_CODE" -ne 0 ]; then
             exit "$EXIT_CODE"
           fi
-          echo "deploy-url=$(echo "$OUTPUT" | sed -n '/^{/,$ p' | jq -r '.url')" >> "$GITHUB_OUTPUT"
+          # Use the production alias URL rather than the deployment URL, which
+          # may be behind Vercel's deployment protection (returns 401).
+          echo "deploy-url=https://${{ steps.create-project.outputs.project-name }}.vercel.app" >> "$GITHUB_OUTPUT"
 
       - name: 🧪 Run Vercel e2e tests
         run: yarn vitest run
