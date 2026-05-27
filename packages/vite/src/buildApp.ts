@@ -108,7 +108,10 @@ export async function buildCedarApp({
             // EVAL and INVALID_ANNOTATION come from third-party packages
             // (Prisma, graphql-scalars) and are harmless — the code works
             // correctly at runtime despite Rollup's concerns.
-            if (warning.code === 'EVAL' || warning.code === 'INVALID_ANNOTATION') {
+            if (
+              warning.code === 'EVAL' ||
+              warning.code === 'INVALID_ANNOTATION'
+            ) {
               return
             }
             warn(warning)
@@ -183,6 +186,23 @@ export async function buildCedarApp({
             await builder.build(builder.environments.api)
           }
         },
+      },
+    },
+    // Resolve bare-specifier dynamic imports from node_modules as external
+    // before Rollup attempts resolution, avoiding UNRESOLVED_IMPORT warnings
+    // for optional peer dependencies (e.g. @simplewebauthn/server).
+    {
+      name: 'cedar-optional-peer-deps',
+      resolveDynamicImport(specifier, importer) {
+        if (
+          typeof specifier === 'string' &&
+          !specifier.startsWith('.') &&
+          !specifier.startsWith('/') &&
+          importer?.includes('node_modules')
+        ) {
+          return { id: specifier, external: true }
+        }
+        return null
       },
     },
   ]
