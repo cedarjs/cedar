@@ -140,6 +140,51 @@ function posToIndex(str, line, column) {
 }
 
 /**
+ * Unwraps the config object from a `defineConfig(...)` call argument.
+ *
+ * Handles both direct object and arrow/function wrappers:
+ *   defineConfig({...})                    → ObjectExpression
+ *   defineConfig(({ mode }) => ({...}))    → ObjectExpression   (arrow, implicit return)
+ *   defineConfig(() => { return {...} })   → ObjectExpression   (arrow, explicit return)
+ *   defineConfig(function() { return {} }) → ObjectExpression   (function expression)
+ *
+ * @param {object} arg - A babel AST node.
+ * @returns The inner ObjectExpression, or `null` if not found.
+ */
+function resolveConfigObject(arg) {
+  if (t.isObjectExpression(arg)) {
+    return arg
+  }
+
+  if (t.isArrowFunctionExpression(arg)) {
+    // Implicit return: ({...})
+    if (t.isObjectExpression(arg.body)) {
+      return arg.body
+    }
+    // Block body with explicit return: { return {...} }
+    if (t.isBlockStatement(arg.body)) {
+      const returnStmt = arg.body.body.find((s) => t.isReturnStatement(s))
+      if (returnStmt && t.isObjectExpression(returnStmt.argument)) {
+        return returnStmt.argument
+      }
+    }
+    return null
+  }
+
+  if (t.isFunctionExpression(arg)) {
+    if (t.isBlockStatement(arg.body)) {
+      const returnStmt = arg.body.body.find((s) => t.isReturnStatement(s))
+      if (returnStmt && t.isObjectExpression(returnStmt.argument)) {
+        return returnStmt.argument
+      }
+    }
+    return null
+  }
+
+  return null
+}
+
+/**
  * Inserts plugin call expressions before `cedar()` in the `plugins` array
  * of `defineConfig({...})` inside a vite config file.
  *
@@ -175,8 +220,8 @@ export function insertPluginsBeforeCedar({ content, pluginCodes }) {
     return null
   }
 
-  const configArg = defaultExport.declaration.arguments[0]
-  if (!t.isObjectExpression(configArg)) {
+  const configArg = resolveConfigObject(defaultExport.declaration.arguments[0])
+  if (!configArg) {
     return null
   }
 
