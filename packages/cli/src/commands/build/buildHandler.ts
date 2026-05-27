@@ -377,6 +377,13 @@ export const handler = async ({
           process.chdir(cedarPaths.web.base)
 
           try {
+            // Propagate --apiRootPath to the plugin via env var before
+            // buildCedarApp so that vite-plugin-vercel creates the correct
+            // route prefixes in .vercel/output/config.json.
+            if (apiRootPath !== undefined) {
+              process.env.CEDAR_API_ROOT_PATH = apiRootPath
+            }
+
             await buildCedarApp({ verbose, workspace })
           } finally {
             process.chdir(originalCwd)

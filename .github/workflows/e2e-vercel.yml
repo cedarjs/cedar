@@ -55,12 +55,8 @@ jobs:
         id: create-project
         run: |
           PROJECT_NAME="cedar-e2e-$(date +%s)"
-          RESPONSE=$(curl -s -X POST "https://api.vercel.com/v10/projects" \
-            -H "Authorization: Bearer $VERCEL_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"name\":\"$PROJECT_NAME\"}")
-          echo "project-id=$(echo "$RESPONSE" | jq -r '.id')" >> "$GITHUB_OUTPUT"
           echo "project-name=$PROJECT_NAME" >> "$GITHUB_OUTPUT"
+          npx vercel projects add "$PROJECT_NAME" --token "$VERCEL_TOKEN"
 
       - name: 🔗 Link Vercel project
         working-directory: ../cedar-test-app
@@ -78,7 +74,7 @@ jobs:
         id: vercel-deploy
         working-directory: ../cedar-test-app
         run: |
-          OUTPUT=$(VERCEL_SKIP_AUTO_DETECTION_CONFIRMATION=1 npx vercel deploy --prebuilt --prod --json --token "$VERCEL_TOKEN" 2>&1) || EXIT_CODE=$?
+          OUTPUT=$(npx vercel deploy --prebuilt --prod --json --token "$VERCEL_TOKEN" 2>&1) || EXIT_CODE=$?
           echo "--- deploy output ---"
           echo "$OUTPUT"
           echo "--- end output ---"
