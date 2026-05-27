@@ -33,7 +33,9 @@ jobs:
         run: |
           yarn cedar setup neon
           rm -rf api/db/migrations
-          yarn cedar prisma migrate dev --name init-neon
+          yarn cedar prisma migrate reset --force --skip-seed
+          yarn cedar prisma migrate dev --create-only --name init-neon
+          yarn cedar prisma generate
 
       - name: 🔗 Link Netlify site
         working-directory: ../cedar-test-app
