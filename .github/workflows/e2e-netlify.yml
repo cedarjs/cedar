@@ -52,12 +52,6 @@ jobs:
       - name: 🏗️ Build locally
         working-directory: ../cedar-test-app
         run: |
-          # Read URLs from .env directly instead of sourcing — the URL contains
-          # & (query parameter separator) which bash interprets as a background
-          # operator when sourcing the file, truncating the value.
-          DATABASE_URL="$(sed -n 's/^DATABASE_URL=//p' .env)"
-          DIRECT_DATABASE_URL="$(sed -n 's/^DIRECT_DATABASE_URL=//p' .env)"
-          export DATABASE_URL DIRECT_DATABASE_URL
           yarn cedar build --ud --apiRootPath=/.api/functions
           yarn cedar prisma migrate deploy
           yarn cedar data-migrate up
