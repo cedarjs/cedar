@@ -43,7 +43,7 @@ const templateVariables = (name) => {
 }
 
 export async function handler({ name, type, force, verbose, silent }) {
-  const redwoodPaths = getPaths()
+  const cedarPaths = getPaths()
   const ts = isTypeScriptProject()
   name = pluralize.singular(name.toLowerCase())
 
@@ -95,7 +95,7 @@ export async function handler({ name, type, force, verbose, silent }) {
           )
 
           const sdlFile = path.join(
-            redwoodPaths.api.graphql,
+            cedarPaths.api.graphql,
             `${name}.sdl.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
 
@@ -113,7 +113,7 @@ export async function handler({ name, type, force, verbose, silent }) {
             `blank.service.ts.template`,
           )
           const serviceFile = path.join(
-            redwoodPaths.api.services,
+            cedarPaths.api.services,
             `${name}`,
             `${name}.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
@@ -133,7 +133,7 @@ export async function handler({ name, type, force, verbose, silent }) {
           )
 
           const exampleFile = path.join(
-            redwoodPaths.api.subscriptions,
+            cedarPaths.api.subscriptions,
             `${name}`,
             `${name}.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
@@ -192,7 +192,7 @@ export async function handler({ name, type, force, verbose, silent }) {
             `blank.sdl.ts.template`,
           )
           const sdlFile = path.join(
-            redwoodPaths.api.graphql,
+            cedarPaths.api.graphql,
             `${name}.sdl.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
           const sdlContent = ts
@@ -209,7 +209,7 @@ export async function handler({ name, type, force, verbose, silent }) {
           )
 
           const serviceFile = path.join(
-            redwoodPaths.api.services,
+            cedarPaths.api.services,
             `${name}`,
             `${name}.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )

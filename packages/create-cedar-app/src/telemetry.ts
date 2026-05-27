@@ -76,7 +76,7 @@ export async function startTelemetry(): Promise<void> {
       'cpu.count': cpu.physicalCores,
       'memory.gb': Math.round(mem.total / 1073741824),
       'env.node_env': process.env.NODE_ENV || undefined,
-      'ci.redwood': !!process.env.REDWOOD_CI,
+      'ci.redwood': !!process.env.CEDAR_CI,
       'ci.isci': ci.isCI,
       'dev.environment': developmentEnvironment,
       uid: UID,

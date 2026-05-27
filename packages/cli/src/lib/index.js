@@ -399,8 +399,8 @@ const wrapWithSet = (
  * Update the project's routes file.
  */
 export const addRoutesToRouterTask = (routes, layout, setProps = {}) => {
-  const redwoodPaths = getPaths()
-  const routesContent = readFile(redwoodPaths.web.routes).toString()
+  const cedarPaths = getPaths()
+  const routesContent = readFile(cedarPaths.web.routes).toString()
   let newRoutes = routes.filter((route) => !routesContent.match(route))
 
   if (newRoutes.length) {
@@ -435,7 +435,7 @@ export const addRoutesToRouterTask = (routes, layout, setProps = {}) => {
       `${routerStart + routesBatch + newLineAndIndent}`,
     )
 
-    writeFile(redwoodPaths.web.routes, newRoutesContent, {
+    writeFile(cedarPaths.web.routes, newRoutesContent, {
       overwriteExisting: true,
     })
   }
@@ -480,8 +480,8 @@ const removeEmtpySet = (routesContent, layout) => {
  * @param {string[]} routes - Route names
  */
 export const removeRoutesFromRouterTask = (routes, layout) => {
-  const redwoodPaths = getPaths()
-  const routesContent = readFile(redwoodPaths.web.routes).toString()
+  const cedarPaths = getPaths()
+  const routesContent = readFile(cedarPaths.web.routes).toString()
   const newRoutesContent = routes.reduce((content, route) => {
     const matchRouteByName = new RegExp(`\\s*<Route[^>]*name="${route}"[^>]*/>`)
     return content.replace(matchRouteByName, '')
@@ -491,7 +491,7 @@ export const removeRoutesFromRouterTask = (routes, layout) => {
     ? removeEmtpySet(newRoutesContent, layout)
     : newRoutesContent
 
-  writeFile(redwoodPaths.web.routes, routesWithoutEmptySet, {
+  writeFile(cedarPaths.web.routes, routesWithoutEmptySet, {
     overwriteExisting: true,
   })
 }
@@ -600,8 +600,8 @@ export const getDefaultArgs = (builder) => {
  * i.e. check for the existence of .vscode folder in root project directory
  */
 export const usingVSCode = () => {
-  const redwoodPaths = getPaths()
-  const VS_CODE_PATH = path.join(redwoodPaths.base, '.vscode')
+  const cedarPaths = getPaths()
+  const VS_CODE_PATH = path.join(cedarPaths.base, '.vscode')
   return fs.existsSync(VS_CODE_PATH)
 }
 

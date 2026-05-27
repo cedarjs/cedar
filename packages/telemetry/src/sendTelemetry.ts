@@ -71,7 +71,7 @@ const SENSITIVE_ARG_POSITIONS: SensitiveArgPositions = {
 }
 
 interface Args {
-  redwoodVersion?: string
+  cedarVersion?: string
   command?: string
 }
 
@@ -112,8 +112,8 @@ const getInfo = async (presets: Args = {}) => {
     yarnVersion: info.Binaries?.Yarn?.version,
     npmVersion: info.Binaries?.npm?.version,
     vsCodeVersion: info.IDEs?.VSCode?.version,
-    redwoodVersion:
-      presets.redwoodVersion || info.npmPackages?.['@cedarjs/core']?.installed,
+    cedarVersion:
+      presets.cedarVersion || info.npmPackages?.['@cedarjs/core']?.installed,
     system: `${cpu.physicalCores}.${Math.round(mem.total / 1073741824)}`,
     webBundler: 'vite', // Hardcoded as this is now the only supported bundler
     experiments,
@@ -199,9 +199,9 @@ const buildPayload = async () => {
     duration: argv.duration ? parseInt(argv.duration) : null,
     uid: uniqueId(),
     ci: ci.isCI,
-    redwoodCi: !!process.env.REDWOOD_CI,
+    cedarCi: !!process.env.CEDAR_CI,
     NODE_ENV: process.env.NODE_ENV || null,
-    ...(await getInfo({ redwoodVersion: argv.rwVersion, command })),
+    ...(await getInfo({ cedarVersion: argv.rwVersion, command })),
   }
 
   if (argv.error) {

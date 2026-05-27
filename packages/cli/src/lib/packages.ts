@@ -27,7 +27,7 @@ export async function installModule(
   }
 
   if (version === undefined) {
-    return installRedwoodModule(name)
+    return installCedarModule(name)
   } else {
     await execa.command(`yarn add -D ${name}@${version}`, {
       stdio: 'inherit',
@@ -39,16 +39,16 @@ export async function installModule(
 }
 
 /**
- * Installs a Redwood module into a user's project keeping the version
+ * Installs a Cedar module into a user's project keeping the version
  * consistent with that of \@cedarjs/cli.
  * If the module is already installed, this function does nothing.
  * If no remote version can not be found which matches the local cli version
  * then the latest canary version will be used.
  *
- * @param module A redwoodjs module, e.g. \@cedarjs/web
+ * @param module A cedarjs module, e.g. \@cedarjs/web
  * @returns Whether the module was installed or not
  */
-export async function installRedwoodModule(module: string) {
+export async function installCedarModule(module: string) {
   const packageJson = await import('@cedarjs/cli/package.json', {
     with: { type: 'json' },
   })
