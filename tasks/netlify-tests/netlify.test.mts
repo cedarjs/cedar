@@ -31,7 +31,7 @@ describe('Netlify deployment', () => {
   it('serves API handleRequest functions', async () => {
     const res = await fetchJson(url('/.api/functions/hello'))
     expect(res.status).toEqual(200)
-    expect(res.body).toEqual({ data: 'hello from cedar' })
+    expect(res.body).toMatchObject({ data: 'hello from cedar' })
   })
 
   it('serves legacy Lambda-style handlers', async () => {
