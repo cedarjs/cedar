@@ -10,6 +10,7 @@ jobs:
     env:
       REDWOOD_CI: 1
       REDWOOD_VERBOSE_TELEMETRY: 1
+      YARN_ENABLE_HARDENED_MODE: 0
       CEDAR_CWD: ../cedar-test-app
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
