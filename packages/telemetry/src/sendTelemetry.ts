@@ -199,7 +199,7 @@ const buildPayload = async () => {
     duration: argv.duration ? parseInt(argv.duration) : null,
     uid: uniqueId(),
     ci: ci.isCI,
-    redwoodCi: !!process.env.REDWOOD_CI,
+    cedarCi: !!process.env.CEDAR_CI,
     NODE_ENV: process.env.NODE_ENV || null,
     ...(await getInfo({ cedarVersion: argv.rwVersion, command })),
   }
