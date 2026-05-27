@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import execa from 'execa'
 import { Listr } from 'listr2'
+import prompts from 'prompts'
 
 import { colors, getPaths, installPackages } from '@cedarjs/cli-helpers'
 import { addWorkspacePackages } from '@cedarjs/cli-helpers/packageManager/packages'
@@ -12,7 +13,7 @@ import type { Args } from './neon.js'
 
 const cedarPaths = getPaths()
 
-export async function handler({ force }: Args) {
+export async function handler({ force, migrations, verbose }: Args) {
   const schemaPath = path.join(cedarPaths.api.base, 'db', 'schema.prisma')
   const dbTsPath = path.join(cedarPaths.api.src, 'lib', 'db.ts')
   const prismaConfigPathCjs = path.join(
@@ -40,6 +41,24 @@ export async function handler({ force }: Args) {
   }
 
   const notes: string[] = []
+
+  // Resolve whether to run migrations: flag > prompt
+  let runMigrations = migrations
+  if (runMigrations === undefined) {
+    const response = await prompts({
+      type: 'toggle',
+      name: 'runMigrations',
+      message: 'Run Prisma migrations now?',
+      initial: true,
+      active: 'Yes',
+      inactive: 'No',
+    })
+    // prompts returns undefined for the value if the user ctrl-c's
+    if (response.runMigrations === undefined) {
+      process.exit(0)
+    }
+    runMigrations = response.runMigrations
+  }
 
   const tasks = new Listr(
     [
@@ -344,6 +363,10 @@ export async function handler({ force }: Args) {
             return true
           }
 
+          if (!runMigrations) {
+            return 'Skipped (--no-migrations)'
+          }
+
           if (ctx.skipWithNote) {
             return 'DATABASE_URL already configured — skipping migration'
           }
@@ -363,7 +386,9 @@ export async function handler({ force }: Args) {
             'yarn cedar prisma migrate dev --name init-neon',
             {
               cwd: cedarPaths.base,
-              stdio: ['inherit', 'inherit', 'pipe'],
+              stdio: verbose
+                ? 'inherit'
+                : ['inherit', 'inherit', 'pipe'],
               reject: false,
               env: {
                 ...process.env,
@@ -374,10 +399,13 @@ export async function handler({ force }: Args) {
 
           if (result.exitCode !== 0) {
             throw new Error(
-              'Prisma migration failed:\n\n' +
-                result.stderr +
-                '\n\nYou can try running it manually:\n' +
-                '  yarn cedar prisma migrate dev --name init-neon',
+              verbose
+                ? 'Prisma migration failed. You can try running it manually:\n' +
+                  '  yarn cedar prisma migrate dev --name init-neon'
+                : 'Prisma migration failed:\n\n' +
+                  result.stderr +
+                  '\n\nYou can try running it manually:\n' +
+                  '  yarn cedar prisma migrate dev --name init-neon',
             )
           }
         },
