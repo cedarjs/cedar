@@ -391,10 +391,10 @@ export const generateTypeDefGlobalContext = () => {
  */
 export const generateViteClientTypesDirective = () => {
   const viteClientDirective = `/// <reference types="vite/client" />`
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
 
   const viteClientDirectivePath = path.join(
-    redwoodProjectPaths.generated.types.includes,
+    cedarProjectPaths.generated.types.includes,
     'web-vite-client.d.ts',
   )
   fs.writeFileSync(viteClientDirectivePath, viteClientDirective)
@@ -410,13 +410,10 @@ declare module '@storybook/react' {
 }
 `
 
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
 
   const packageJson = JSON.parse(
-    fs.readFileSync(
-      path.join(redwoodProjectPaths.base, 'package.json'),
-      'utf-8',
-    ),
+    fs.readFileSync(path.join(cedarProjectPaths.base, 'package.json'), 'utf-8'),
   )
 
   const hasCliStorybookVite = Object.keys(
@@ -428,7 +425,7 @@ declare module '@storybook/react' {
   }
 
   const stubStorybookTypesFilePath = path.join(
-    redwoodProjectPaths.generated.types.includes,
+    cedarProjectPaths.generated.types.includes,
     'web-storybook.d.ts',
   )
   fs.writeFileSync(stubStorybookTypesFilePath, stubStorybookTypesFileContent)

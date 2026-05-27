@@ -177,9 +177,9 @@ export const mockedUserMeta: { currentUser: Record<string, unknown> | null } = {
 
 export const mockCurrentUser = (user: Record<string, unknown> | null) => {
   mockedUserMeta.currentUser = user
-  mockGraphQLQuery('__REDWOOD__AUTH_GET_CURRENT_USER', () => {
+  mockGraphQLQuery('__CEDAR__AUTH_GET_CURRENT_USER', () => {
     return {
-      redwood: {
+      cedar: {
         currentUser: user,
       },
     }

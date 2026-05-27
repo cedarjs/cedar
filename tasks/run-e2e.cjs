@@ -64,7 +64,7 @@ function createCedarJsApp({ typescript }) {
       ].filter(Boolean),
       {
         cwd: path.join(CEDARJS_FRAMEWORK_PATH, 'packages/create-cedar-app'),
-        env: { REDWOOD_CI: '1' },
+        env: { CEDAR_CI: '1' },
         shell: true,
         stdio: 'inherit',
       },
@@ -142,7 +142,7 @@ const runDevServerInBackground = () => {
       stdio: 'inherit',
       env: {
         CEDAR_DELAY_API_RESTART: '500',
-        REDWOOD_CI: '1',
+        CEDAR_CI: '1',
       },
     })
   } catch (e) {

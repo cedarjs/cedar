@@ -11,13 +11,13 @@ export interface TelemetryInfo {
 
 // Note: The fields and their names are constrained by the telemetry API
 interface TelemetryPayload {
+  cedarCi: boolean
   ci: boolean
   command: string
   complexity: string
   duration: number
   error?: string
   experiments?: string[]
-  redwoodCi: boolean
   system: string
   type: 'command'
 }
@@ -39,7 +39,7 @@ function buildPayload(
 
   // Detect CI environments
   const isCi = ci.isCI
-  const isRedwoodCi = !!process.env.REDWOOD_CI
+  const isCedarCi = !!process.env.CEDAR_CI
 
   // Note: The complexity field is required by the API so we are using a placeholder value
   const complexity = '-1.-1.-1.-1.-1'
@@ -53,7 +53,7 @@ function buildPayload(
     complexity,
     duration,
     experiments,
-    redwoodCi: isRedwoodCi,
+    cedarCi: isCedarCi,
     system,
     type: 'command',
   }

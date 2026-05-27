@@ -84,9 +84,9 @@ export async function handler({
   const usingTS = isTypeScriptProject()
   const mainFileName = usingTS ? 'main.ts' : 'main.js'
 
-  const redwoodProjectPaths = getPaths()
+  const cedarProjectPaths = getPaths()
   const storybookConfigPath = path.dirname(
-    `${redwoodProjectPaths.web.storybook}/${mainFileName}`,
+    `${cedarProjectPaths.web.storybook}/${mainFileName}`,
   )
 
   const storybookMainFilePath = path.join(storybookConfigPath, mainFileName)

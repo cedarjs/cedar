@@ -709,12 +709,12 @@ const addHelperPackages = async (task) => {
 const addSetImport = (task) => {
   const routesPath = getPaths().web.routes
   const routesContent = readFile(routesPath).toString()
-  const [redwoodRouterImport, importStart, spacing, importContent, importEnd] =
+  const [cedarRouterImport, importStart, spacing, importContent, importEnd] =
     routesContent.match(
       /(import {)(\s*)([^]*)(} from ['"]@cedarjs\/router['"])/,
     ) || []
 
-  if (!redwoodRouterImport) {
+  if (!cedarRouterImport) {
     task.skip(
       "Couldn't add Set import from @cedarjs/router to Routes.{jsx,tsx}",
     )
@@ -726,7 +726,7 @@ const addSetImport = (task) => {
     return 'Skipping Set import'
   }
   const newRoutesContent = routesContent.replace(
-    redwoodRouterImport,
+    cedarRouterImport,
     importStart +
       spacing +
       PACKAGE_SET +

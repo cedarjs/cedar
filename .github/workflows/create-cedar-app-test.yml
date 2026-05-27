@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      REDWOOD_CI: 1
+      CEDAR_CI: 1
       REDWOOD_DISABLE_TELEMETRY: 1
 
     steps:

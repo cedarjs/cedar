@@ -33,12 +33,12 @@ const removeSetImport = () => {
     return 'Skipping removal of Set import in Routes.{jsx,tsx}'
   }
 
-  const [redwoodRouterImport] = routesContent.match(
+  const [cedarRouterImport] = routesContent.match(
     /import {[^]*} from '@cedarjs\/router'/,
   )
-  const removedSetImport = redwoodRouterImport.replace(/,*\s*Set,*/, '')
+  const removedSetImport = cedarRouterImport.replace(/,*\s*Set,*/, '')
   const newRoutesContent = routesContent.replace(
-    redwoodRouterImport,
+    cedarRouterImport,
     removedSetImport,
   )
   writeFile(routesPath, newRoutesContent, { overwriteExisting: true })

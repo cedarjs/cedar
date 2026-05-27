@@ -62,7 +62,7 @@ export function createRedwoodJSApp({
       ].filter(Boolean),
       {
         cwd: path.join(frameworkPath, 'packages/create-cedar-app'),
-        env: { REDWOOD_CI: '1' },
+        env: { CEDAR_CI: '1' },
         shell: true,
         stdio: verbose ? 'inherit' : 'ignore',
       },

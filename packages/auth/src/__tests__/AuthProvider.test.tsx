@@ -52,14 +52,14 @@ globalThis.RWJS_API_GRAPHQL_URL = '/.netlify/functions/graphql'
 
 let mockedIsAuthenticatedStatus = false
 const server = setupServer(
-  graphql.query('__REDWOOD__AUTH_GET_CURRENT_USER', (_req, res, ctx) => {
+  graphql.query('__CEDAR__AUTH_GET_CURRENT_USER', (_req, res, ctx) => {
     if (!mockedIsAuthenticatedStatus) {
       return res(ctx.status(500))
     }
 
     return res(
       ctx.data({
-        redwood: {
+        cedar: {
           currentUser: CURRENT_USER_DATA,
         },
       }),

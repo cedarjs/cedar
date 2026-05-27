@@ -43,11 +43,11 @@ async function handleExamplesPreference(includeExamples) {
 }
 
 export async function handler(args) {
-  const redwoodPaths = getPaths()
+  const cedarPaths = getPaths()
   const ts = isTypeScriptProject()
 
   const realtimeLibFilePath = path.join(
-    redwoodPaths.api.lib,
+    cedarPaths.api.lib,
     `realtime.${isTypeScriptProject() ? 'ts' : 'js'}`,
   )
   const force = args.force || false
@@ -114,7 +114,7 @@ export async function handler(args) {
           }
 
           const exampleFile = path.join(
-            redwoodPaths.api.subscriptions,
+            cedarPaths.api.subscriptions,
             'countdown',
             `countdown.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
@@ -151,7 +151,7 @@ export async function handler(args) {
           )
 
           const sdlFile = path.join(
-            redwoodPaths.api.graphql,
+            cedarPaths.api.graphql,
             `rooms.sdl.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
 
@@ -172,7 +172,7 @@ export async function handler(args) {
             'utf-8',
           )
           const serviceFile = path.join(
-            redwoodPaths.api.services,
+            cedarPaths.api.services,
             'rooms',
             `rooms.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
@@ -203,7 +203,7 @@ export async function handler(args) {
           }
 
           const exampleFile = path.join(
-            redwoodPaths.api.subscriptions,
+            cedarPaths.api.subscriptions,
             'newMessage',
             `newMessage.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
@@ -247,7 +247,7 @@ export async function handler(args) {
           )
 
           const sdlFile = path.join(
-            redwoodPaths.api.graphql,
+            cedarPaths.api.graphql,
             `auctions.sdl.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
 
@@ -268,7 +268,7 @@ export async function handler(args) {
             'utf-8',
           )
           const serviceFile = path.join(
-            redwoodPaths.api.services,
+            cedarPaths.api.services,
             'auctions',
             `auctions.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
@@ -307,7 +307,7 @@ export async function handler(args) {
           )
 
           const sdlFile = path.join(
-            redwoodPaths.api.graphql,
+            cedarPaths.api.graphql,
             `fastAndSlowFields.sdl.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
 
@@ -328,7 +328,7 @@ export async function handler(args) {
             'utf-8',
           )
           const serviceFile = path.join(
-            redwoodPaths.api.services,
+            cedarPaths.api.services,
             'fastAndSlowFields',
             `fastAndSlowFields.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
@@ -367,7 +367,7 @@ export async function handler(args) {
           )
 
           const sdlFile = path.join(
-            redwoodPaths.api.graphql,
+            cedarPaths.api.graphql,
             `alphabet.sdl.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
 
@@ -388,7 +388,7 @@ export async function handler(args) {
             'utf-8',
           )
           const serviceFile = path.join(
-            redwoodPaths.api.services,
+            cedarPaths.api.services,
             'alphabet',
             `alphabet.${isTypeScriptProject() ? 'ts' : 'js'}`,
           )
