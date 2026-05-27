@@ -748,4 +748,3 @@ Once SquadSync is running:
 This is the main value proposition for Cedar users: gqlorm removes repetitive
 GraphQL boilerplate for predictable models without forcing the whole app into a
 single abstraction.
-
