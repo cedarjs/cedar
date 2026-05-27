@@ -11,13 +11,13 @@ export interface TelemetryInfo {
 
 // Note: The fields and their names are constrained by the telemetry API
 interface TelemetryPayload {
+  cedarCi: boolean
   ci: boolean
   command: string
   complexity: string
   duration: number
   error?: string
   experiments?: string[]
-  cedarCi: boolean
   system: string
   type: 'command'
 }
