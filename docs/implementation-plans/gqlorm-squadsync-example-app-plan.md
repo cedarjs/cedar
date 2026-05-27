@@ -87,9 +87,10 @@ model User {
   // gqlorm auto-hides these by heuristic (no directive needed):
   // resetToken, resetTokenExpiresAt would be auto-hidden too
 
-  memberships  Membership[]
-  assignedTasks Task[]      @relation("TaskAssignee")
-  savedFilters SavedFilter[] @relation("SavedFilterOwner")
+  memberships          Membership[]
+  assignedTasks        Task[]        @relation("TaskAssignee")
+  savedFilters         SavedFilter[] @relation("SavedFilterOwner")
+  assignedSavedFilters SavedFilter[] @relation("SavedFilterAssignee")
 }
 
 // Default gqlorm convention: model named "Organization" with a
