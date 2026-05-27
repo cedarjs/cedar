@@ -94,6 +94,25 @@ export async function buildCedarApp({
             }
             return false
           },
+          onwarn(warning, warn) {
+            // UNRESOLVED_IMPORT for bare imports inside node_modules are
+            // optional/peer dependencies that are already externalized by
+            // the external() function above. Skip the noise — they'll be
+            // resolved at runtime (or fail gracefully).
+            if (
+              warning.code === 'UNRESOLVED_IMPORT' &&
+              warning.id?.includes('node_modules')
+            ) {
+              return
+            }
+            // EVAL and INVALID_ANNOTATION come from third-party packages
+            // (Prisma, graphql-scalars) and are harmless — the code works
+            // correctly at runtime despite Rollup's concerns.
+            if (warning.code === 'EVAL' || warning.code === 'INVALID_ANNOTATION') {
+              return
+            }
+            warn(warning)
+          },
         },
       },
     }
