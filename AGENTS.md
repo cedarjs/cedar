@@ -53,3 +53,26 @@
 
 - Prefer `rg` for searching and keep changes focused to the relevant package(s).
 - Avoid touching unrelated files unless required by the change.
+
+## E2E Netlify Deploy Test
+
+- Test files in `tasks/netlify-tests/`:
+  - `vitest.config.mts` — vitest runner config (setupFiles, include patterns)
+  - `vitest.setup.mts` — validates `NETLIFY_DEPLOY_URL` env var, sets `process.env.DEPLOY_URL`
+  - `netlify.test.mts` — tests API `handleRequest`, legacy handlers, and web SPA shell against deployed Netlify URL
+- CI workflow in `.github/workflows/e2e-netlify.yml`:
+  - Uses `__fixtures__/test-project-esm/` as the test project (ESM, needed by Netlify vite plugin)
+  - Runs tarsync to link local packages
+  - Removes SQLite migrations (`rm -rf api/db/migrations`), then runs `yarn cedar setup neon` to provision a fresh Neon Postgres database and create Postgres baseline migration
+  - Links site with `netlify link --id "$SITE_ID" --filter web`
+  - Runs `yarn cedar setup deploy universal-deploy`, then `yarn cedar setup deploy netlify --ud`
+  - Sets `DATABASE_URL` and `DIRECT_DATABASE_URL` on the Netlify site via `netlify env:set --filter web` AND injects them into `netlify.toml` (`[build.environment]`) to bypass env var propagation lag on Netlify
+  - All test-project commands use `working-directory: ../cedar-test-app` (not `CEDAR_CWD`)
+  - Deploys via `npx netlify deploy --filter web --prod --json`
+- CI orchestration in `.github/workflows/ci.yml` — `e2e-netlify` job calls the workflow, runs only on `cedarjs/cedar` repo
+- API function URLs on Netlify use `/.api/functions/<name>` (configured via `apiRootPath`; routed through the `server` function from `@netlify/vite-plugin` which has `path: "/*"`)
+- Fixture functions in `__fixtures__/test-project-esm/api/src/functions/`:
+  - `hello.ts` — `handleRequest` export, returns `{ data, url }`
+  - `legacyHello.ts` — legacy handler export, returns `{ data }`
+  - Both created by step 11 of `tasks/test-project/rebuild-test-project-fixture.mts`
+- Secrets `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN` are set as GitHub secrets
