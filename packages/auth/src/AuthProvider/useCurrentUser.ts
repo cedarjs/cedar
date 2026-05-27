@@ -19,14 +19,13 @@ export const useCurrentUser = (authImplementation: AuthImplementation) => {
         authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        query:
-          'query __REDWOOD__AUTH_GET_CURRENT_USER { redwood { currentUser } }',
+        query: 'query __CEDAR__AUTH_GET_CURRENT_USER { cedar { currentUser } }',
       }),
     })
 
     if (response.ok) {
       const { data } = await response.json()
-      return data?.redwood?.currentUser
+      return data?.cedar?.currentUser
     } else {
       throw new Error(
         `Could not fetch current user: ${response.statusText} (${response.status})`,

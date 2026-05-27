@@ -79,7 +79,7 @@ fetchMock.mockImplementation(async (_url, options) => {
 
   if (
     body.query ===
-    'query __REDWOOD__AUTH_GET_CURRENT_USER { redwood { currentUser } }'
+    'query __CEDAR__AUTH_GET_CURRENT_USER { cedar { currentUser } }'
   ) {
     return {
       ok: true,

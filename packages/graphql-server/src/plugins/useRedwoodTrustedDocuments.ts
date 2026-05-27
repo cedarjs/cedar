@@ -24,15 +24,15 @@ export type RedwoodTrustedDocumentOptions = Omit<
     | { disabled?: false; store: Readonly<Record<string, string>> }
   )
 
-const REDWOOD__AUTH_GET_CURRENT_USER_QUERY =
-  '{"query":"query __REDWOOD__AUTH_GET_CURRENT_USER { redwood { currentUser } }"}'
+const CEDAR__AUTH_GET_CURRENT_USER_QUERY =
+  '{"query":"query __CEDAR__AUTH_GET_CURRENT_USER { cedar { currentUser } }"}'
 const CEDAR__STUDIO_RESYNC_MAIL_RENDERERS_MUTATION =
   '{"query":"mutation { resyncMailRenderers }"}'
 const CEDAR__STUDIO_TEMPLATE_MUTATION =
   '{"query":"mutation { resyncMailTemplate }"}'
 
 /**
- * When using Redwood Auth, we want to allow the known, trusted `redwood.currentUser` query to be
+ * When using Cedar Auth, we want to allow the known, trusted `cedar.currentUser` query to be
  * executed without a persisted operation.
  *
  * This is because the `currentUser` query is a special case that is used to get
@@ -44,7 +44,7 @@ const CEDAR__STUDIO_TEMPLATE_MUTATION =
  * The usePersistedOperations plugin relies on this function to determine if a request
  * should be allowed to execute via its allowArbitraryOperations option.
  */
-const allowRedwoodAuthCurrentUserQuery = async (request: Request) => {
+const allowCedarAuthCurrentUserQuery = async (request: Request) => {
   const headers = request.headers
   const hasContentType = headers.get('content-type') === 'application/json'
   const hasAuthProvider = !!headers.get('auth-provider')
@@ -53,7 +53,7 @@ const allowRedwoodAuthCurrentUserQuery = async (request: Request) => {
     hasContentType && hasAuthProvider && hasAuthorization
 
   const query = await request.text()
-  const hasAllowedQuery = query === REDWOOD__AUTH_GET_CURRENT_USER_QUERY
+  const hasAllowedQuery = query === CEDAR__AUTH_GET_CURRENT_USER_QUERY
 
   return hasAllowedHeaders && hasAllowedQuery
 }
@@ -117,7 +117,7 @@ export const useRedwoodTrustedDocuments = (
         }
       }
       return (
-        allowRedwoodAuthCurrentUserQuery(request) ||
+        allowCedarAuthCurrentUserQuery(request) ||
         allowCedarStudioResyncMailMutations(request)
       )
     },
