@@ -94,6 +94,18 @@ export async function buildCedarApp({
             }
             return false
           },
+          // Prisma internals uses `eval()` for path resolution which Rollup
+          // warns about. The code is safe and works correctly at runtime.
+          // Tracked upstream: https://github.com/prisma/prisma/issues/20752
+          onwarn(warning, warn) {
+            if (
+              warning.code === 'EVAL' &&
+              warning.id?.includes('@prisma/internals')
+            ) {
+              return
+            }
+            warn(warning)
+          },
         },
       },
     }
