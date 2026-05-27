@@ -5,7 +5,7 @@ function deployUrl() {
   if (!url) {
     throw new Error(
       'DEPLOY_URL environment variable not set. ' +
-        'Run with NETLIFY_DEPLOY_URL or BASE_URL set.',
+        'Run with NETLIFY_DEPLOY_URL set.',
     )
   }
   return url

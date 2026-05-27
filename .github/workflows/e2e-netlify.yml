@@ -58,7 +58,11 @@ jobs:
       - name: 🔑 Set database URL on Netlify
         working-directory: ../cedar-test-app
         run: |
+          # Use set -a to auto-export variables sourced from .env to child
+          # processes (Python subprocess needs DATABASE_URL in its env).
+          set -a
           . .env
+          set +a
           npx netlify env:set DATABASE_URL "$DATABASE_URL" --filter web
           npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
           echo "Verifying env vars were set..."

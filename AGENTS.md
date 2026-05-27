@@ -59,15 +59,20 @@
 - Test files in `tasks/netlify-tests/`:
   - `vitest.config.mts` — vitest runner config (setupFiles, include patterns)
   - `vitest.setup.mts` — validates `NETLIFY_DEPLOY_URL` env var, sets `process.env.DEPLOY_URL`
-  - `netlify.test.mts` — tests API `handleRequest`, legacy handlers, GraphQL, and web SPA shell against deployed Netlify URL
+  - `netlify.test.mts` — tests API `handleRequest`, legacy handlers, and web SPA shell against deployed Netlify URL
 - CI workflow in `.github/workflows/e2e-netlify.yml`:
   - Uses `__fixtures__/test-project-esm/` as the test project (ESM, needed by Netlify vite plugin)
   - Runs tarsync to link local packages
-  - Runs `yarn cedar setup neon` to provision a temporary Neon Postgres database and configure Prisma
-  - Sets `DATABASE_URL` and `DIRECT_DATABASE_URL` on the Netlify site via `netlify env:set` (so deployed functions can connect)
-  - Uses `CEDAR_CWD=../cedar-test-app` env var for all `yarn cedar` commands (so CLI resolves from workspace root while operating on the test project at a sibling path)
-  - Links site with `netlify link --filter web`, sets DB env vars via `netlify env:set --filter web`, then deploys via `npx netlify deploy --filter web --prod --json`
+  - Removes SQLite migrations (`rm -rf api/db/migrations`), then runs `yarn cedar setup neon` to provision a fresh Neon Postgres database and create Postgres baseline migration
+  - Links site with `netlify link --id "$SITE_ID" --filter web`
+  - Runs `yarn cedar setup deploy universal-deploy`, then `yarn cedar setup deploy netlify --ud`
+  - Sets `DATABASE_URL` and `DIRECT_DATABASE_URL` on the Netlify site via `netlify env:set --filter web` AND injects them into `netlify.toml` (`[build.environment]`) to bypass env var propagation lag on Netlify
+  - All test-project commands use `working-directory: ../cedar-test-app` (not `CEDAR_CWD`)
+  - Deploys via `npx netlify deploy --filter web --prod --json`
 - CI orchestration in `.github/workflows/ci.yml` — `e2e-netlify` job calls the workflow, runs only on `cedarjs/cedar` repo
 - API function URLs on Netlify use `/.api/functions/<name>` (configured via `apiRootPath`; routed through the `server` function from `@netlify/vite-plugin` which has `path: "/*"`)
-- Added `api/src/functions/hello.ts` (handleRequest) and `legacyHello.ts` (legacy handler) to `__fixtures__/test-project-esm` for testing both export formats without DB dependency
-- Blocked on: `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN` GitHub secrets (user has a site ready, needs to add as secrets)
+- Fixture functions in `__fixtures__/test-project-esm/api/src/functions/`:
+  - `hello.ts` — `handleRequest` export, returns `{ data, url }`
+  - `legacyHello.ts` — legacy handler export, returns `{ data }`
+  - Both created by step 11 of `tasks/test-project/rebuild-test-project-fixture.mts`
+- Secrets `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN` are set as GitHub secrets
