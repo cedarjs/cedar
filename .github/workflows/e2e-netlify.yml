@@ -31,11 +31,11 @@ jobs:
       - name: 🗄️ Set up Neon database
         working-directory: ../cedar-test-app
         run: |
-          yarn cedar setup neon
+          # The fixture has SQLite migrations with SQLite-specific SQL. They
+          # can't run on Postgres, so remove them before setup neon creates the
+          # fresh Postgres baseline migration.
           rm -rf api/db/migrations
-          yarn cedar prisma migrate reset --force --skip-seed
-          yarn cedar prisma migrate dev --create-only --name init-neon
-          yarn cedar prisma generate
+          yarn cedar setup neon
 
       - name: 🔗 Link Netlify site
         working-directory: ../cedar-test-app
