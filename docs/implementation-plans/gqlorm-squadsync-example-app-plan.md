@@ -89,7 +89,7 @@ model User {
 
   memberships  Membership[]
   assignedTasks Task[]      @relation("TaskAssignee")
-  savedFilters SavedFilter[]
+  savedFilters SavedFilter[] @relation("SavedFilterOwner")
 }
 
 // Default gqlorm convention: model named "Organization" with a
@@ -143,7 +143,7 @@ model SavedFilter {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  user         User         @relation(fields: [userId], references: [id])
+  user         User         @relation("SavedFilterOwner", fields: [userId], references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
   assignee     User?        @relation("SavedFilterAssignee", fields: [assigneeId], references: [id])
 }
@@ -417,7 +417,7 @@ A natural composition is:
 Use `useLiveQuery` to fetch tasks for the current organization:
 
 ```tsx
-import { useLiveQuery } from '@cedarjs/web'
+import { useLiveQuery } from '@cedarjs/gqlorm'
 
 interface TaskBoardProps {
   organizationId: number
@@ -458,7 +458,7 @@ Key gqlorm behavior:
 Use `useLiveQuery` to fetch only the current user's saved filters for the org:
 
 ```tsx
-import { useLiveQuery } from '@cedarjs/web'
+import { useLiveQuery } from '@cedarjs/gqlorm'
 
 interface SavedFilterListProps {
   organizationId: number
@@ -748,3 +748,4 @@ Once SquadSync is running:
 This is the main value proposition for Cedar users: gqlorm removes repetitive
 GraphQL boilerplate for predictable models without forcing the whole app into a
 single abstraction.
+
