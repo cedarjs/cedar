@@ -12,7 +12,6 @@ jobs:
       REDWOOD_VERBOSE_TELEMETRY: 1
       YARN_ENABLE_HARDENED_MODE: 0
       YARN_ENABLE_IMMUTABLE_INSTALLS: false
-      CEDAR_CWD: ../cedar-test-app
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
@@ -30,9 +29,10 @@ jobs:
         run: yarn project:tarsync ../cedar-test-app
 
       - name: 🗄️ Set up Neon database
+        working-directory: ../cedar-test-app
         run: |
           yarn cedar setup neon
-          rm -rf ../cedar-test-app/api/db/migrations
+          rm -rf api/db/migrations
           yarn cedar prisma migrate dev --name init-neon
 
       - name: 🔗 Link Netlify site
@@ -47,9 +47,11 @@ jobs:
           npx netlify env:set DIRECT_DATABASE_URL "$DIRECT_DATABASE_URL" --filter web
 
       - name: 🔧 Set up Universal Deploy
+        working-directory: ../cedar-test-app
         run: yarn cedar setup deploy universal-deploy
 
       - name: 🔧 Set up Netlify deploy (UD)
+        working-directory: ../cedar-test-app
         run: yarn cedar setup deploy netlify --ud
 
       - name: 🚀 Build & Deploy to Netlify
