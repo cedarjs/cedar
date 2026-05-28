@@ -42,7 +42,7 @@ jobs:
             ~/.cache/ms-playwright
             ~/Library/Caches/ms-playwright
             ~\AppData\Local\ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
 
       - name: 🎭 Install playwright dependencies
         run: npx playwright install --with-deps chromium
