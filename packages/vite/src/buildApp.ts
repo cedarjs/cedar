@@ -94,6 +94,18 @@ export async function buildCedarApp({
             }
             return false
           },
+          // graphql-scalars places `/*#__PURE__*/` on object literal exports
+          // which Rollup can't interpret (only valid before call/new expressions).
+          // Tracked upstream: https://github.com/graphql-hive/graphql-scalars/issues/2869
+          onwarn(warning, warn) {
+            if (
+              warning.code === 'INVALID_ANNOTATION' &&
+              warning.id?.includes('graphql-scalars')
+            ) {
+              return
+            }
+            warn(warning)
+          },
         },
       },
     }
