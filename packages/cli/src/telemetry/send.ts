@@ -18,7 +18,7 @@ async function main() {
       " - passing the '--no-telemetry' flag when using the CLI",
   )
   console.log(
-    'Information about Redwood telemetry can be found at:\n - https://telemetry.redwoodjs.com\n',
+    'Information about Cedar telemetry can be found at:\n - https://telemetry.redwoodjs.com\n',
   )
 
   // Get all telemetry files

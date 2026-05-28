@@ -272,7 +272,7 @@ export const sendTelemetry = async () => {
     const payload = await buildPayload()
 
     if (verboseTelemetry) {
-      console.info('Redwood Telemetry Payload', payload)
+      console.info('Cedar Telemetry Payload', payload)
     }
 
     const response = await fetch(telemetryUrl, {
@@ -282,7 +282,7 @@ export const sendTelemetry = async () => {
     })
 
     if (verboseTelemetry) {
-      console.info('Redwood Telemetry Response:', response)
+      console.info('Cedar Telemetry Response:', response)
     }
 
     // Normally we would report on any non-error response here (like a 500)
