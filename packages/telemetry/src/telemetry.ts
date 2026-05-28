@@ -11,9 +11,11 @@ const spawnProcess = (...args: string[]) => {
 
   const spawnOptions: Partial<SpawnOptions> = isWindows
     ? {
-        stdio: process.env.CEDAR_VERBOSE_TELEMETRY
-          ? ['ignore', 'inherit', 'inherit']
-          : 'ignore',
+        stdio:
+          process.env.CEDAR_VERBOSE_TELEMETRY ||
+          process.env.REDWOOD_VERBOSE_TELEMETRY
+            ? ['ignore', 'inherit', 'inherit']
+            : 'ignore',
         // The following options run the process in the background without a console window, even though they don't look like they would.
         // See https://github.com/nodejs/node/issues/21825#issuecomment-503766781 for information
         detached: false,
@@ -21,10 +23,16 @@ const spawnProcess = (...args: string[]) => {
         shell: true,
       }
     : {
-        stdio: process.env.CEDAR_VERBOSE_TELEMETRY
-          ? ['ignore', 'inherit', 'inherit']
-          : 'ignore',
-        detached: process.env.CEDAR_VERBOSE_TELEMETRY ? false : true,
+        stdio:
+          process.env.CEDAR_VERBOSE_TELEMETRY ||
+          process.env.REDWOOD_VERBOSE_TELEMETRY
+            ? ['ignore', 'inherit', 'inherit']
+            : 'ignore',
+        detached:
+          process.env.CEDAR_VERBOSE_TELEMETRY ||
+          process.env.REDWOOD_VERBOSE_TELEMETRY
+            ? false
+            : true,
         windowsHide: true,
       }
 
