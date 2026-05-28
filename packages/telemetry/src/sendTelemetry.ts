@@ -265,11 +265,13 @@ export const sendTelemetry = async () => {
     process.env.CEDAR_REDIRECT_TELEMETRY ||
     process.env.REDWOOD_REDIRECT_TELEMETRY ||
     'https://telemetry.redwoodjs.com/api/v1/telemetry'
+  const verboseTelemetry =
+    process.env.CEDAR_VERBOSE_TELEMETRY || process.env.REDWOOD_VERBOSE_TELEMETRY
 
   try {
     const payload = await buildPayload()
 
-    if (process.env.CEDAR_VERBOSE_TELEMETRY) {
+    if (verboseTelemetry) {
       console.info('Redwood Telemetry Payload', payload)
     }
 
@@ -279,20 +281,20 @@ export const sendTelemetry = async () => {
       headers: { 'Content-Type': 'application/json' },
     })
 
-    if (process.env.CEDAR_VERBOSE_TELEMETRY) {
+    if (verboseTelemetry) {
       console.info('Redwood Telemetry Response:', response)
     }
 
     // Normally we would report on any non-error response here (like a 500)
     // but since the process is spawned and stdout/stderr is ignored, it can
     // never be seen by the user, so ignore.
-    if (process.env.CEDAR_VERBOSE_TELEMETRY && response.status !== 200) {
+    if (verboseTelemetry && response.status !== 200) {
       console.error('Error from telemetry insert:', await response.text())
     }
   } catch (e) {
     // service interruption: network down or telemetry API not responding
     // don't let telemetry errors bubble up to user, just do nothing.
-    if (process.env.CEDAR_VERBOSE_TELEMETRY) {
+    if (verboseTelemetry) {
       console.error('Uncaught error in telemetry:', e)
     }
   }

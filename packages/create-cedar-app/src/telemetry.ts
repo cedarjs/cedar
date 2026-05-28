@@ -111,7 +111,10 @@ export async function shutdownTelemetry(): Promise<void> {
   } catch (error) {
     // We silence this error for user experience unless verbose telemetry is
     // enabled
-    if (process.env.CEDAR_VERBOSE_TELEMETRY) {
+    if (
+      process.env.CEDAR_VERBOSE_TELEMETRY ||
+      process.env.REDWOOD_VERBOSE_TELEMETRY
+    ) {
       console.error('Telemetry: shutdown error', error)
     }
   }
