@@ -262,6 +262,7 @@ function uniqueId() {
 // actually call the API with telemetry data
 export const sendTelemetry = async () => {
   const telemetryUrl =
+    process.env.CEDAR_REDIRECT_TELEMETRY ||
     process.env.REDWOOD_REDIRECT_TELEMETRY ||
     'https://telemetry.redwoodjs.com/api/v1/telemetry'
 

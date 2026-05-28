@@ -36,6 +36,7 @@ async function main() {
   const resource = Resource.default().merge(new Resource(customResourceData))
 
   const url =
+    process.env.CEDAR_REDIRECT_TELEMETRY ||
     process.env.REDWOOD_REDIRECT_TELEMETRY ||
     'https://quark.quantumparticle.io/v1/traces'
   const traceExporter = new OTLPTraceExporter({

@@ -86,6 +86,7 @@ export async function startTelemetry(): Promise<void> {
   // Tracing
   traceExporter = new OTLPTraceExporter({
     url:
+      process.env.CEDAR_REDIRECT_TELEMETRY ||
       process.env.REDWOOD_REDIRECT_TELEMETRY ||
       'https://quark.quantumparticle.io/v1/traces',
   })
