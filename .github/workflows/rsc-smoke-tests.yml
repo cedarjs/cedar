@@ -39,7 +39,6 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
 
       - name: 🎭 Install playwright dependencies
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
       - name: 🐘 Run RSC serve smoke tests
