@@ -1,4 +1,4 @@
-name: E2E - Netlify Deploy
+name: 🔷 E2E - Netlify Deploy
 
 on:
   workflow_call:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      REDWOOD_CI: 1
+      CEDAR_CI: 1
       REDWOOD_VERBOSE_TELEMETRY: 1
       YARN_ENABLE_HARDENED_MODE: 0
       YARN_ENABLE_IMMUTABLE_INSTALLS: false
