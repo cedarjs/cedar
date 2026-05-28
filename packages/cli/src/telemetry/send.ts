@@ -13,7 +13,9 @@ import { getResources } from './resource.js'
 async function main() {
   // Log out the telemetry notice
   console.log(
-    "You can disable telemetry by:\n - setting the 'REDWOOD_DISABLE_TELEMETRY' environment variable\n - passing the '--no-telemetry' flag when using the CLI",
+    'You can disable telemetry by:\n' +
+      " - setting the 'CEDAR_DISABLE_TELEMETRY' environment variable\n" +
+      " - passing the '--no-telemetry' flag when using the CLI",
   )
   console.log(
     'Information about Redwood telemetry can be found at:\n - https://telemetry.redwoodjs.com\n',

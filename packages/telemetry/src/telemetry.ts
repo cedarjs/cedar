@@ -11,7 +11,7 @@ const spawnProcess = (...args: string[]) => {
 
   const spawnOptions: Partial<SpawnOptions> = isWindows
     ? {
-        stdio: process.env.REDWOOD_VERBOSE_TELEMETRY
+        stdio: process.env.CEDAR_VERBOSE_TELEMETRY
           ? ['ignore', 'inherit', 'inherit']
           : 'ignore',
         // The following options run the process in the background without a console window, even though they don't look like they would.
@@ -21,10 +21,10 @@ const spawnProcess = (...args: string[]) => {
         shell: true,
       }
     : {
-        stdio: process.env.REDWOOD_VERBOSE_TELEMETRY
+        stdio: process.env.CEDAR_VERBOSE_TELEMETRY
           ? ['ignore', 'inherit', 'inherit']
           : 'ignore',
-        detached: process.env.REDWOOD_VERBOSE_TELEMETRY ? false : true,
+        detached: process.env.CEDAR_VERBOSE_TELEMETRY ? false : true,
         windowsHide: true,
       }
 
@@ -46,7 +46,10 @@ export const timedTelemetry = async (
   options: Record<string, unknown>,
   func: (...args: any[]) => any,
 ) => {
-  if (process.env.REDWOOD_DISABLE_TELEMETRY) {
+  if (
+    process.env.CEDAR_DISABLE_TELEMETRY ||
+    process.env.REDWOOD_DISABLE_TELEMETRY
+  ) {
     return func.call(this)
   }
 
@@ -67,7 +70,10 @@ export const timedTelemetry = async (
 }
 
 export const errorTelemetry = async (argv: string[], error: any) => {
-  if (process.env.REDWOOD_DISABLE_TELEMETRY) {
+  if (
+    process.env.CEDAR_DISABLE_TELEMETRY ||
+    process.env.REDWOOD_DISABLE_TELEMETRY
+  ) {
     return
   }
 
@@ -76,7 +82,10 @@ export const errorTelemetry = async (argv: string[], error: any) => {
 
 // used as yargs middleware when any command is invoked
 export const telemetryMiddleware = async () => {
-  if (process.env.REDWOOD_DISABLE_TELEMETRY) {
+  if (
+    process.env.CEDAR_DISABLE_TELEMETRY ||
+    process.env.REDWOOD_DISABLE_TELEMETRY
+  ) {
     return
   }
 
