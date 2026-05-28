@@ -28,13 +28,12 @@ jobs:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
           GITHUB_TOKEN: ${{ github.token }}
 
-      - name: 🎭 Install playwright dependencies
-        if: runner.os == 'Windows'
-        run: npx playwright install chromium
+      - name: 🎭 Install Playwright OS dependencies
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps chromium
 
       - name: 🎭 Install playwright dependencies
-        if: runner.os != 'Windows'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: 🐘 Run RSC serve smoke tests
         working-directory: tasks/smoke-tests/rsc

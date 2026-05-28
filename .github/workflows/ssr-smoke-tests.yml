@@ -34,13 +34,12 @@ jobs:
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 
-      - name: 🎭 Install playwright dependencies
-        if: runner.os == 'Windows'
-        run: npx playwright install chromium
+      - name: 🎭 Install Playwright OS dependencies
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps chromium
 
       - name: 🎭 Install playwright dependencies
-        if: runner.os != 'Windows'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Run SSR [DEV] smoke tests
         working-directory: ./tasks/smoke-tests/streaming-ssr-dev
