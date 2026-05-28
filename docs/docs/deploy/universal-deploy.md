@@ -85,16 +85,16 @@ Two related but distinct concepts control this:
   apiUrl = "/.api/functions"
 ```
 
-`apiUrl` is a **web-side configuration** that tells the Cedar web dev server
-which URL paths should be proxied to the API server. In the browser,
+`apiUrl` is a **web-side configuration** that tells the Cedar web server which
+URL paths should be proxied to the API server. In the browser,
 `globalThis.RWJS_API_URL` is set to this value so your web code knows where to
 send API requests.
 
-During local development with `yarn cedar serve --ud` or `yarn cedar serve web`,
-the web dev server (port 8910) intercepts requests matching `apiUrl`,
-**strips the prefix**, and forwards them to the API server (port 8911). So a
-browser request to `http://localhost:8910/.api/functions/hello` reaches the API
-server as `/hello`.
+During local testing with `yarn cedar serve --ud` or `yarn cedar serve web`,
+the web server (port 8910) intercepts requests matching `apiUrl`, **strips the
+prefix**, and forwards them to the API server (port 8911). So a browser request
+to `http://localhost:8910/.api/functions/hello` reaches the API server as
+`/hello`.
 
 ### `--apiRootPath` (CLI flag)
 
