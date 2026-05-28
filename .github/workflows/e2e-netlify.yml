@@ -1,4 +1,4 @@
-name: E2E - Netlify Deploy
+name: 🔷 E2E - Netlify Deploy
 
 on:
   workflow_call:

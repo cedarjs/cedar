@@ -246,7 +246,7 @@ jobs:
   e2e-netlify:
     needs: check
     if: github.repository == 'cedarjs/cedar'
-    name: E2E Netlify deploy
+    name: 🔷 E2E Netlify deploy
     uses: ./.github/workflows/e2e-netlify.yml
     secrets: inherit
 
