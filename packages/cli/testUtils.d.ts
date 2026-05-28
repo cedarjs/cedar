@@ -69,6 +69,7 @@ declare global {
 
   namespace NodeJS {
     interface ProcessEnv {
+      CEDAR_DISABLE_TELEMETRY: string
       REDWOOD_DISABLE_TELEMETRY: string
     }
   }

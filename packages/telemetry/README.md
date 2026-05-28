@@ -32,7 +32,7 @@ Set an environment variable, either in your app's .env file, or anywhere that
 creates variables for your user space, like `.bashrc` or `.bash_profile`:
 
 ```terminal
-REDWOOD_DISABLE_TELEMETRY=1
+CEDAR_DISABLE_TELEMETRY=1
 ```
 
 ## About
@@ -41,10 +41,11 @@ See: https://telemetry.redwoodjs.com
 
 ## Troubleshooting
 
-If you suspect problems with telemetry when running CRWA, you can set the verbose flag to help diagnose issues.
+If you suspect problems with telemetry when running CCA, you can set the verbose
+flag to help diagnose issues.
 
 For example,
 
 ```terminal
-REDWOOD_VERBOSE_TELEMETRY=true yarn create-cedar-app bazinga
+CEDAR_VERBOSE_TELEMETRY=true yarn create-cedar-app bazinga
 ```

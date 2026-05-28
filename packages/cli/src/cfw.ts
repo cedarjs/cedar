@@ -50,7 +50,8 @@ try {
   execa.sync('yarn', [...command], {
     stdio: 'inherit',
     cwd: absCfwPath,
-    // @ts-expect-error - testUtils.d.ts augments ProcessEnv with REDWOOD_DISABLE_TELEMETRY
+    // @ts-expect-error - testUtils.d.ts augments ProcessEnv with
+    // CEDAR_DISABLE_TELEMETRY
     env: { CEDAR_CWD: projectPath },
   })
 } catch {

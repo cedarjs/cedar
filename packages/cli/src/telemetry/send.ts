@@ -13,10 +13,12 @@ import { getResources } from './resource.js'
 async function main() {
   // Log out the telemetry notice
   console.log(
-    "You can disable telemetry by:\n - setting the 'REDWOOD_DISABLE_TELEMETRY' environment variable\n - passing the '--no-telemetry' flag when using the CLI",
+    'You can disable telemetry by:\n' +
+      " - setting the 'CEDAR_DISABLE_TELEMETRY' environment variable\n" +
+      " - passing the '--no-telemetry' flag when using the CLI",
   )
   console.log(
-    'Information about Redwood telemetry can be found at:\n - https://telemetry.redwoodjs.com\n',
+    'Information about Cedar telemetry can be found at:\n - https://telemetry.redwoodjs.com\n',
   )
 
   // Get all telemetry files
@@ -34,6 +36,7 @@ async function main() {
   const resource = Resource.default().merge(new Resource(customResourceData))
 
   const url =
+    process.env.CEDAR_REDIRECT_TELEMETRY ||
     process.env.REDWOOD_REDIRECT_TELEMETRY ||
     'https://quark.quantumparticle.io/v1/traces'
   const traceExporter = new OTLPTraceExporter({

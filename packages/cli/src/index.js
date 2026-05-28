@@ -68,12 +68,14 @@ import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
 let { cwd, telemetry, help, version } = Parser(hideBin(process.argv), {
   // Telemetry is enabled by default, but can be disabled in two ways
   // - by passing a `--telemetry false` option
-  // - by setting a `REDWOOD_DISABLE_TELEMETRY` env var
+  // - by setting a `CEDAR_DISABLE_TELEMETRY` env var
   boolean: ['telemetry'],
   default: {
     telemetry:
-      process.env.REDWOOD_DISABLE_TELEMETRY === undefined ||
-      process.env.REDWOOD_DISABLE_TELEMETRY === '',
+      (process.env.CEDAR_DISABLE_TELEMETRY === undefined ||
+        process.env.CEDAR_DISABLE_TELEMETRY === '') &&
+      (process.env.REDWOOD_DISABLE_TELEMETRY === undefined ||
+        process.env.REDWOOD_DISABLE_TELEMETRY === ''),
   },
 })
 cwd ??= process.env.CEDAR_CWD
