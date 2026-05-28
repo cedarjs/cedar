@@ -139,7 +139,7 @@ const vercelConfig = {
 
 const vercelUDConfig = {
   build: {
-    command: 'yarn cedar build --ud --verbose',
+    command: 'yarn cedar build --ud --verbose --apiRootPath=/.api/functions',
     env: {
       ENABLE_EXPERIMENTAL_COREPACK: '1',
     },
