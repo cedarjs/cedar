@@ -71,7 +71,10 @@ This installs `vite-plugin-vercel`, adds the Vercel Vite plugin, and writes a `v
 
 ## API route prefix
 
-When deploying with Universal Deploy, API routes (your functions under `api/src/functions/`) need a URL prefix to avoid colliding with your web app's SPA routes. For example, a `hello` function should be accessible at `/.api/functions/hello`, not `/hello`.
+When deploying with Universal Deploy, API routes (your functions under
+`api/src/functions/`) need a URL prefix to avoid colliding with your web app's
+SPA routes. For example, a `hello` function should be accessible at
+`/.api/functions/hello`, not `/hello`.
 
 Two related but distinct concepts control this:
 
@@ -82,9 +85,16 @@ Two related but distinct concepts control this:
   apiUrl = "/.api/functions"
 ```
 
-`apiUrl` is a **web-side configuration** — it tells the Cedar web dev server which URL paths should be proxied to the API server. In the browser, `globalThis.RWJS_API_URL` is set to this value so your web code knows where to send API requests.
+`apiUrl` is a **web-side configuration** that tells the Cedar web server which
+URL paths should be proxied to the API server. In the browser,
+`globalThis.RWJS_API_URL` is set to this value so your web code knows where to
+send API requests.
 
-During local development with `yarn cedar serve --ud` or `yarn cedar serve web`, the web dev server (port 8910) intercepts requests matching `apiUrl`, **strips the prefix**, and forwards them to the API server (port 8911). So a browser request to `http://localhost:8910/.api/functions/hello` reaches the API server as `/hello`.
+During local testing with `yarn cedar serve --ud` or `yarn cedar serve web`,
+the web server (port 8910) intercepts requests matching `apiUrl`, **strips the
+prefix**, and forwards them to the API server (port 8911). So a browser request
+to `http://localhost:8910/.api/functions/hello` reaches the API server as
+`/hello`.
 
 ### `--apiRootPath` (CLI flag)
 
@@ -92,13 +102,23 @@ During local development with `yarn cedar serve --ud` or `yarn cedar serve web`,
 yarn cedar build --ud --apiRootPath=/.api/functions
 ```
 
-`--apiRootPath` is a **build-time configuration** for the `cedarUniversalDeployPlugin`. It determines the route prefix baked into the Universal Deploy server entry (`api/dist/ud/index.js`).
+`--apiRootPath` is a **build-time configuration** for the
+`cedarUniversalDeployPlugin`. It determines the route prefix baked into the
+Universal Deploy server entry (`api/dist/ud/index.js`).
 
-When the flag is not passed, `apiRootPath` defaults to `/`, meaning routes are registered at `/hello`, `/graphql`, etc. This is correct for local development where the web dev server strips the prefix before forwarding.
+When the flag is not passed, `apiRootPath` defaults to `/`, meaning routes are
+registered at `/hello`, `/graphql`, etc. This is correct for local development
+where the web dev server strips the prefix before forwarding.
 
-When deploying to a serverless provider (Netlify, Vercel), the provider routes requests at the prefixed path directly to your functions — there is no dev server to strip the prefix. You must set `--apiRootPath=/.api/functions` so routes are registered at `/.api/functions/hello`, matching how the provider forwards requests.
+When deploying to a serverless provider (Netlify, Vercel), the provider routes
+requests at the prefixed path directly to your functions. There is no dev server
+to strip the prefix, so you must set `--apiRootPath=/.api/functions` so routes
+are registered at `/.api/functions/hello`, matching how the provider forwards
+requests.
 
-Both `yarn cedar setup deploy netlify --ud` and `yarn cedar setup deploy vercel --ud` configure this automatically in their build commands.
+Both `yarn cedar setup deploy netlify --ud` and
+`yarn cedar setup deploy vercel --ud` configure this automatically in their
+build commands.
 
 ### `CEDAR_API_ROOT_PATH` (environment variable)
 
@@ -106,7 +126,12 @@ Both `yarn cedar setup deploy netlify --ud` and `yarn cedar setup deploy vercel 
 CEDAR_API_ROOT_PATH=/.api/functions yarn cedar build --ud
 ```
 
-The `CEDAR_API_ROOT_PATH` environment variable can be used instead of the `--apiRootPath` CLI flag. It takes precedence over any value set in `cedarUniversalDeployPlugin` options, but the `--apiRootPath` CLI flag takes precedence over the environment variable when both are set. This is useful for CI/CD environments where you want to configure the prefix via environment injection without modifying source files or build commands.
+The `CEDAR_API_ROOT_PATH` environment variable can be used instead of the
+`--apiRootPath` CLI flag. It takes precedence over any value set in
+`cedarUniversalDeployPlugin` options, but the `--apiRootPath` CLI flag takes
+precedence over the environment variable when both are set. This is useful for
+CI/CD environments where you want to configure the prefix via environment
+injection without modifying source files or build commands.
 
 ### Summary
 

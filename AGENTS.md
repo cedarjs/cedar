@@ -66,9 +66,10 @@
   - Removes SQLite migrations (`rm -rf api/db/migrations`), then runs `yarn cedar setup neon` to provision a fresh Neon Postgres database and create Postgres baseline migration
   - Links site with `netlify link --id "$SITE_ID" --filter web`
   - Runs `yarn cedar setup deploy universal-deploy`, then `yarn cedar setup deploy netlify --ud`
-  - Sets `DATABASE_URL` and `DIRECT_DATABASE_URL` on the Netlify site via `netlify env:set --filter web` AND injects them into `netlify.toml` (`[build.environment]`) to bypass env var propagation lag on Netlify
+  - Builds locally (`yarn cedar build --ud --apiRootPath=/.api/functions`, then `yarn cedar prisma migrate deploy`, then `yarn cedar data-migrate up`) using `.env` database URLs
+  - Sets `DATABASE_URL` and `DIRECT_DATABASE_URL` on the Netlify site via `netlify env:set --filter web` for runtime access
+  - Deploys via `npx netlify deploy --filter web --prod --json --no-build`
   - All test-project commands use `working-directory: ../cedar-test-app` (not `CEDAR_CWD`)
-  - Deploys via `npx netlify deploy --filter web --prod --json`
 - CI orchestration in `.github/workflows/ci.yml` — `e2e-netlify` job calls the workflow, runs only on `cedarjs/cedar` repo
 - API function URLs on Netlify use `/.api/functions/<name>` (configured via `apiRootPath`; routed through the `server` function from `@netlify/vite-plugin` which has `path: "/*"`)
 - Fixture functions in `__fixtures__/test-project-esm/api/src/functions/`:

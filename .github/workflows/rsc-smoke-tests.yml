@@ -13,7 +13,7 @@ jobs:
 
     env:
       CEDAR_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
+      CEDAR_VERBOSE_TELEMETRY: 1
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -28,8 +28,12 @@ jobs:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
           GITHUB_TOKEN: ${{ github.token }}
 
+      - name: 🎭 Install Playwright OS dependencies
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps chromium
+
       - name: 🎭 Install playwright dependencies
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: 🐘 Run RSC serve smoke tests
         working-directory: tasks/smoke-tests/rsc

@@ -88,32 +88,35 @@ export async function buildCedarApp({
           external: (id: string) => {
             if (id.startsWith('node:')) {
               return true
-            }
-            if (!id.startsWith('.') && !path.isAbsolute(id)) {
+            } else if (!id.startsWith('.') && !path.isAbsolute(id)) {
               return true
             }
+
             return false
           },
           onwarn(warning, warn) {
-            // UNRESOLVED_IMPORT for bare imports inside node_modules are
-            // optional/peer dependencies that are already externalized by
-            // the external() function above. Skip the noise — they'll be
-            // resolved at runtime (or fail gracefully).
+            // Prisma internals uses `eval()` for path resolution which Rollup
+            // warns about. The code is safe and works correctly at runtime.
+            // Tracked upstream: https://github.com/prisma/prisma/issues/20752
             if (
-              warning.code === 'UNRESOLVED_IMPORT' &&
-              warning.id?.includes('node_modules')
+              warning.code === 'EVAL' &&
+              warning.id?.includes('@prisma/internals')
             ) {
               return
             }
-            // EVAL and INVALID_ANNOTATION come from third-party packages
-            // (Prisma, graphql-scalars) and are harmless — the code works
-            // correctly at runtime despite Rollup's concerns.
+
+            // graphql-scalars places `/*#__PURE__*/` on object literal exports
+            // which Rollup can't interpret (only valid before call/new
+            // expressions).
+            // Tracked upstream:
+            // https://github.com/graphql-hive/graphql-scalars/issues/2869
             if (
-              warning.code === 'EVAL' ||
-              warning.code === 'INVALID_ANNOTATION'
+              warning.code === 'INVALID_ANNOTATION' &&
+              warning.id?.includes('graphql-scalars')
             ) {
               return
             }
+
             warn(warning)
           },
         },

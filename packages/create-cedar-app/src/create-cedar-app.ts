@@ -40,13 +40,15 @@ import { tui } from './tui.js'
 
 // Telemetry can be disabled in two ways:
 // - by passing `--telemetry false`  or `--no-telemetry`
-// - by setting the `REDWOOD_DISABLE_TELEMETRY` env var to `1`
+// - by setting the `CEDAR_DISABLE_TELEMETRY` env var to `1`
 const { telemetry } = Parser(hideBin(process.argv), {
   boolean: ['telemetry'],
   default: {
     telemetry:
-      process.env.REDWOOD_DISABLE_TELEMETRY === undefined ||
-      process.env.REDWOOD_DISABLE_TELEMETRY === '',
+      (process.env.CEDAR_DISABLE_TELEMETRY === undefined ||
+        process.env.CEDAR_DISABLE_TELEMETRY === '') &&
+      (process.env.REDWOOD_DISABLE_TELEMETRY === undefined ||
+        process.env.REDWOOD_DISABLE_TELEMETRY === ''),
   },
 })
 
