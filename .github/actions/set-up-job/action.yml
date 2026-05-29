@@ -33,7 +33,9 @@ runs:
     - name: ⬢ Set up Node.js
       uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
       with:
-        node-version: 24
+        # Pin Windows to 24.15.0 to avoid libuv 1.52.x assertion bug on file watching.
+        # See https://github.com/libuv/libuv/issues/5010
+        node-version: ${{ runner.os == 'Windows' && '24.15.0' || '24' }}
 
     # We have to enable Corepack again for Windows. 🤷
     # In general, we're waiting on [this issue](https://github.com/actions/setup-node/issues/531)
