@@ -125,6 +125,23 @@ export class RWEnvHelper extends BaseNode {
 }
 
 /**
+ * Well-known Node.js runtime environment variables that are set by the
+ * runtime or tooling and should never need to be defined in a .env file.
+ */
+const NODE_BUILTIN_ENV_VARS = new Set([
+  'NODE_ENV',
+  'NODE_PATH',
+  'NODE_OPTIONS',
+  'NODE_TLS_REJECT_UNAUTHORIZED',
+  'NODE_EXTRA_CA_CERTS',
+  'NODE_DEBUG',
+  'NODE_DISABLE_COLORS',
+  'NODE_NO_WARNINGS',
+  'NODE_PENDING_DEPRECATION',
+  'NODE_REPL_HISTORY',
+])
+
+/**
  * An occurrence of process.env somewhere in the codebase
  */
 class ProcessDotEnvExpression extends BaseNode {
@@ -161,6 +178,11 @@ class ProcessDotEnvExpression extends BaseNode {
   *diagnostics() {
     const { key, location, value_as_available } = this
     const { uri, range } = location
+
+    // Node.js runtime variables are set by the runtime/tooling, not .env files
+    if (NODE_BUILTIN_ENV_VARS.has(key)) {
+      return
+    }
 
     if (typeof value_as_available === 'undefined') {
       // the value is not available
