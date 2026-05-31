@@ -49,7 +49,15 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
     const defaultCedarViteConfig: ViteUserConfig = {
       root: cedarPaths.web.base,
       resolve: {
-        alias: workspaceAliases,
+        alias: {
+          ...workspaceAliases,
+          // In test mode, register the virtual module alias so that
+          // MockProviders can resolve the user's Routes file. This mirrors
+          // what Jest's moduleNameMapper does for the same module name.
+          ...(env.mode === 'test'
+            ? { '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarPaths.web.routes }
+            : {}),
+        },
       },
       // @MARK: when we have these aliases, the warnings from the FE server go
       // away BUT, if you have imports like this:
@@ -201,3 +209,4 @@ function getRollupInput(userConfig: ViteUserConfig, ssr: boolean) {
 
   return cedarPaths.web.html
 }
+
