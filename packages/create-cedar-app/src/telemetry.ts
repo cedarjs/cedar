@@ -76,7 +76,7 @@ export async function startTelemetry(): Promise<void> {
       'cpu.count': cpu.physicalCores,
       'memory.gb': Math.round(mem.total / 1073741824),
       'env.node_env': process.env.NODE_ENV || undefined,
-      'ci.redwood': !!process.env.REDWOOD_CI,
+      'ci.redwood': !!process.env.CEDAR_CI,
       'ci.isci': ci.isCI,
       'dev.environment': developmentEnvironment,
       uid: UID,
@@ -86,6 +86,7 @@ export async function startTelemetry(): Promise<void> {
   // Tracing
   traceExporter = new OTLPTraceExporter({
     url:
+      process.env.CEDAR_REDIRECT_TELEMETRY ||
       process.env.REDWOOD_REDIRECT_TELEMETRY ||
       'https://quark.quantumparticle.io/v1/traces',
   })
@@ -110,7 +111,10 @@ export async function shutdownTelemetry(): Promise<void> {
   } catch (error) {
     // We silence this error for user experience unless verbose telemetry is
     // enabled
-    if (process.env.REDWOOD_VERBOSE_TELEMETRY) {
+    if (
+      process.env.CEDAR_VERBOSE_TELEMETRY ||
+      process.env.REDWOOD_VERBOSE_TELEMETRY
+    ) {
       console.error('Telemetry: shutdown error', error)
     }
   }

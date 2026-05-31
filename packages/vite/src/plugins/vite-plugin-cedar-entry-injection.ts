@@ -7,9 +7,9 @@ import { normalizePath } from 'vite'
 import { getPaths } from '@cedarjs/project-config'
 
 export function cedarEntryInjectionPlugin(): Plugin {
-  const rwPaths = getPaths()
+  const cedarPaths = getPaths()
 
-  const clientEntryPath = rwPaths.web.entryClient
+  const clientEntryPath = cedarPaths.web.entryClient
 
   if (!clientEntryPath) {
     throw new Error(
@@ -18,16 +18,40 @@ export function cedarEntryInjectionPlugin(): Plugin {
     )
   }
 
-  const relativeEntryPath = path.relative(rwPaths.web.src, clientEntryPath)
+  const relativeEntryPath = normalizePath(
+    path.relative(cedarPaths.web.base, clientEntryPath),
+  )
 
   return {
     name: 'cedar-entry-injection',
+
+    // Vite's dependency optimizer and dev server resolve the script tag
+    // src="/src/entry.client.{tsx,jsx}" as an absolute filesystem path
+    // (/src/entry.client.tsx) instead of relative to the Vite root.
+    // This hook maps it to the real file path so Vite can find it.
+    resolveId(id) {
+      if (id === '/' + relativeEntryPath) {
+        return clientEntryPath
+      }
+
+      return null
+    },
 
     // ---------- Bundle injection ----------
     // Used by Vite during dev, to inject the entrypoint.
     transformIndexHtml: {
       order: 'pre',
-      handler: (html: string) => {
+      handler: (html: string, ctx) => {
+        // Only inject for the project's own index.html, not for other
+        // consumers of this plugin (e.g. Storybook). If ctx.filename is
+        // not set or doesn't match Cedar's index.html, skip injection.
+        if (
+          !ctx.filename ||
+          normalizePath(ctx.filename) !== normalizePath(cedarPaths.web.html)
+        ) {
+          return html
+        }
+
         // So we inject the entrypoint with the correct extension .tsx vs .jsx
 
         // And then inject the entry
@@ -49,7 +73,7 @@ export function cedarEntryInjectionPlugin(): Plugin {
     transform: (code: string, id: string) => {
       if (
         fs.existsSync(clientEntryPath) &&
-        normalizePath(id) === normalizePath(rwPaths.web.html)
+        normalizePath(id) === normalizePath(cedarPaths.web.html)
       ) {
         return {
           code: code.replace(

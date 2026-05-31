@@ -88,11 +88,36 @@ export async function buildCedarApp({
           external: (id: string) => {
             if (id.startsWith('node:')) {
               return true
-            }
-            if (!id.startsWith('.') && !path.isAbsolute(id)) {
+            } else if (!id.startsWith('.') && !path.isAbsolute(id)) {
               return true
             }
+
             return false
+          },
+          onwarn(warning, warn) {
+            // Prisma internals uses `eval()` for path resolution which Rollup
+            // warns about. The code is safe and works correctly at runtime.
+            // Tracked upstream: https://github.com/prisma/prisma/issues/20752
+            if (
+              warning.code === 'EVAL' &&
+              warning.id?.includes('@prisma/internals')
+            ) {
+              return
+            }
+
+            // graphql-scalars places `/*#__PURE__*/` on object literal exports
+            // which Rollup can't interpret (only valid before call/new
+            // expressions).
+            // Tracked upstream:
+            // https://github.com/graphql-hive/graphql-scalars/issues/2869
+            if (
+              warning.code === 'INVALID_ANNOTATION' &&
+              warning.id?.includes('graphql-scalars')
+            ) {
+              return
+            }
+
+            warn(warning)
           },
         },
       },

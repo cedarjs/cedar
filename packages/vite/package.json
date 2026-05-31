@@ -40,37 +40,7 @@
       "import": "./dist/build/build.js",
       "default": "./dist/cjs/build/build.js"
     },
-    "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs",
-    "./ud-handlers/graphql": {
-      "import": {
-        "types": "./dist/ud-handlers/graphql.d.ts",
-        "default": "./dist/ud-handlers/graphql.js"
-      },
-      "require": {
-        "types": "./dist/cjs/ud-handlers/graphql.d.ts",
-        "default": "./dist/cjs/ud-handlers/graphql.js"
-      }
-    },
-    "./ud-handlers/function": {
-      "import": {
-        "types": "./dist/ud-handlers/function.d.ts",
-        "default": "./dist/ud-handlers/function.js"
-      },
-      "require": {
-        "types": "./dist/cjs/ud-handlers/function.d.ts",
-        "default": "./dist/cjs/ud-handlers/function.js"
-      }
-    },
-    "./ud-handlers/catch-all": {
-      "import": {
-        "types": "./dist/ud-handlers/catch-all.d.ts",
-        "default": "./dist/ud-handlers/catch-all.js"
-      },
-      "require": {
-        "types": "./dist/cjs/ud-handlers/catch-all.d.ts",
-        "default": "./dist/cjs/ud-handlers/catch-all.js"
-      }
-    }
+    "./bins/cedar-vite-build.mjs": "./bins/cedar-vite-build.mjs"
   },
   "bin": {
     "cedar-dev-fe": "./dist/devFeServer.js",
@@ -100,7 +70,6 @@
     "@babel/parser": "7.29.3",
     "@babel/traverse": "7.29.0",
     "@cedarjs/api": "workspace:*",
-    "@cedarjs/api-server": "workspace:*",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/context": "workspace:*",
@@ -155,7 +124,7 @@
     "glob": "11.1.0",
     "memfs": "4.57.2",
     "publint": "0.3.21",
-    "rollup": "4.60.2",
+    "rollup": "4.60.4",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

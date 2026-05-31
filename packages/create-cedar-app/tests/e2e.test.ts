@@ -28,8 +28,32 @@ for (const dir of ['esm-js', 'esm-ts', 'js', 'ts']) {
 
 cd(projectPath)
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function removeGeneratedApp() {
+  // Git can still be finishing work in .git/objects right after the generator
+  // exits, so retry cleanup a few times to avoid flaky local and CI runs.
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await fs.rm('./cedar-app', { recursive: true, force: true })
+      return
+    } catch (error) {
+      if (attempt === 3) {
+        console.warn(
+          'Warning: failed to remove ./cedar-app during test cleanup',
+        )
+        console.warn(error)
+
+        return
+      }
+
+      await sleep(500)
+    }
+  }
+}
+
 afterEach(async () => {
-  await fs.rm('./cedar-app', { recursive: true, force: true })
+  await removeGeneratedApp()
 })
 
 describe('create-cedar-app', () => {
@@ -104,8 +128,12 @@ describe('create-cedar-app', () => {
       await $`yarn create-cedar-app --unknown-options`.timeout(2500)
       // Fail the test if the function didn't throw.
       expect(true).toEqual(false)
-    } catch (p) {
-      expect(p.exitCode).toEqual(1)
+    } catch (error) {
+      if (typeof error === 'object' && error !== null && 'exitCode' in error) {
+        expect(error.exitCode).toEqual(1)
+      } else {
+        throw error
+      }
     }
   })
 })

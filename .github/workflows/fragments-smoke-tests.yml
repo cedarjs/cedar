@@ -12,8 +12,8 @@ jobs:
     runs-on: ${{ inputs.os }}
 
     env:
-      REDWOOD_CI: 1
-      REDWOOD_VERBOSE_TELEMETRY: 1
+      CEDAR_CI: 1
+      CEDAR_VERBOSE_TELEMETRY: 1
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -34,8 +34,12 @@ jobs:
         env:
           REDWOOD_DISABLE_TELEMETRY: 1
 
+      - name: 🎭 Install Playwright OS dependencies
+        if: runner.os == 'Linux'
+        run: npx playwright install-deps chromium
+
       - name: 🎭 Install playwright dependencies
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Run Fragments dev smoke tests
         working-directory: ./tasks/smoke-tests/fragments-dev

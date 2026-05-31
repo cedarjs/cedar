@@ -5,9 +5,10 @@ import path from 'path'
 
 import { exec } from '@actions/exec'
 
-console.log(
-  `Telemetry is being redirected to ${process.env.REDWOOD_REDIRECT_TELEMETRY}`,
-)
+const redirectUrl =
+  process.env.CEDAR_REDIRECT_TELEMETRY || process.env.REDWOOD_REDIRECT_TELEMETRY
+
+console.log(`Telemetry is being redirected to ${redirectUrl}`)
 
 // Setup fake telemetry server
 const server = http.createServer((req, res) => {
@@ -27,8 +28,8 @@ const server = http.createServer((req, res) => {
 })
 
 // Run the fake telemetry server at the redirected location
-const host = process.env.REDWOOD_REDIRECT_TELEMETRY.split(':')[1].slice(2)
-const port = parseInt(process.env.REDWOOD_REDIRECT_TELEMETRY.split(':')[2])
+const host = redirectUrl.split(':')[1].slice(2)
+const port = parseInt(redirectUrl.split(':')[2])
 server.listen(port, host, () => {
   console.log(`Telemetry listener is running on http://${host}:${port}`)
 })
