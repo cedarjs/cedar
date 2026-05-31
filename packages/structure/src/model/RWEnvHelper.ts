@@ -127,18 +127,16 @@ export class RWEnvHelper extends BaseNode {
 /**
  * Well-known Node.js runtime environment variables that are set by the
  * runtime or tooling and should never need to be defined in a .env file.
+ * There are more variables that can be added here if needed
+ * https://nodejs.org/docs/latest/api/cli.html#environment-variables-1
  */
 const NODE_BUILTIN_ENV_VARS = new Set([
   'NODE_ENV',
   'NODE_PATH',
   'NODE_OPTIONS',
-  'NODE_TLS_REJECT_UNAUTHORIZED',
-  'NODE_EXTRA_CA_CERTS',
   'NODE_DEBUG',
   'NODE_DISABLE_COLORS',
   'NODE_NO_WARNINGS',
-  'NODE_PENDING_DEPRECATION',
-  'NODE_REPL_HISTORY',
 ])
 
 /**
