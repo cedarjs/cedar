@@ -127,7 +127,9 @@ export class RWEnvHelper extends BaseNode {
 /**
  * Well-known Node.js runtime environment variables that are set by the
  * runtime or tooling and should never need to be defined in a .env file.
- * There are more variables that can be added here if needed
+ * There are more variables that can be added here if needed. But at that point
+ * it might make more sense to allow users to configure this in their
+ * `cedar.toml` config file.
  * https://nodejs.org/docs/latest/api/cli.html#environment-variables-1
  */
 const NODE_BUILTIN_ENV_VARS = new Set([
