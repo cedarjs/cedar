@@ -52,8 +52,7 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
         alias: {
           ...workspaceAliases,
           // In test mode, register the virtual module alias so that
-          // MockProviders can resolve the user's Routes file. This mirrors
-          // what Jest's moduleNameMapper does for the same module name.
+          // MockProviders can resolve the user's Routes file
           ...(env.mode === 'test'
             ? { '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarPaths.web.routes }
             : {}),
