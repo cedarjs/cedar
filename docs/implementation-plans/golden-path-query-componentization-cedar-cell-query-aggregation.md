@@ -1,8 +1,8 @@
 ## User
 
-Cool, please outline what query aggregation would look like in Cedar. Don't go
-too deep, just give me an overview please with some practical examples of what
-it would look like in a Cedar app
+Please outline what query aggregation would look like in Cedar. Don't go too
+deep, just give me an overview please with some practical examples of what it
+would look like in a Cedar app
 
 ## Assistant
 
