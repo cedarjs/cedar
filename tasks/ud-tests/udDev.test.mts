@@ -49,7 +49,7 @@ describe('cedar dev --ud', () => {
     const webRes = await fetch(`${BASE_URL}/`)
     expect(webRes.status).toEqual(200)
     const webText = await webRes.text()
-    expect(webText).toContain('<div id="redwood-app">')
+    expect(webText).toContain('<div id="cedar-app">')
     expect(webText).toContain('<script type="module"')
 
     // 4. Native handleRequest function
