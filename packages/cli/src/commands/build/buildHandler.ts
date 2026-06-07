@@ -173,9 +173,10 @@ export const handler = async ({
     .filter(Boolean)
     .join(' and ')} support...`
 
-  // When --apiRootPath is passed via CLI, propagate it via env var so
-  // cedarUniversalDeployPlugin can use it instead of the value from the user's
-  // Vite config (if they have set it there)
+  // When --apiRootPath is passed via CLI, propagate it to
+  // cedarUniversalDeployPlugin via an env var so the plugin can use the cli
+  // argument value instead of the value from the user's Vite config (if they
+  // have set it there)
   if (apiRootPath !== undefined) {
     process.env.CEDAR_API_ROOT_PATH = apiRootPath
   }
