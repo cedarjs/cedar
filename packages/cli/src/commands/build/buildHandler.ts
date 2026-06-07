@@ -380,53 +380,6 @@ export const handler = async ({
             await buildCedarApp({ verbose, workspace })
           } finally {
             process.chdir(originalCwd)
-
-            // vite-plugin-vercel uses process.cwd() at module load time to
-            // determine its output directory. Since cwd was the web directory
-            // when the plugin was loaded, the output ends up at
-            // web/.vercel/output instead of the project root. Move it to the
-            // correct location.
-            const misplacedVercelOutput = path.join(
-              cedarPaths.web.base,
-              '.vercel',
-              'output',
-            )
-            const correctVercelOutput = path.join(
-              cedarPaths.base,
-              '.vercel',
-              'output',
-            )
-
-            if (
-              fs.existsSync(misplacedVercelOutput) &&
-              misplacedVercelOutput !== correctVercelOutput
-            ) {
-              fs.cpSync(misplacedVercelOutput, correctVercelOutput, {
-                recursive: true,
-                force: true,
-              })
-              fs.rmSync(misplacedVercelOutput, {
-                recursive: true,
-                force: true,
-              })
-
-              // vite-plugin-vercel's vercel_client environment copies static
-              // files from the client environment's outDir during its
-              // generateBundle hook. However, when cwd is changed to web/
-              // before buildCedarApp, the plugin's path resolution may fail.
-              // Manually copy static files to ensure they're available.
-              const vercelStaticDir = path.join(correctVercelOutput, 'static')
-              if (
-                workspace.includes('web') &&
-                fs.existsSync(cedarPaths.web.dist) &&
-                fs.existsSync(vercelStaticDir)
-              ) {
-                fs.cpSync(cedarPaths.web.dist, vercelStaticDir, {
-                  recursive: true,
-                  force: true,
-                })
-              }
-            }
           }
 
           // Streaming SSR does not use the index.html file.
