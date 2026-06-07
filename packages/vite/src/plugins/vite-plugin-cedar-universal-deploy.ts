@@ -223,6 +223,7 @@ export function cedarUniversalDeployPlugin(
         this.emitFile({
           type: 'chunk',
           id: resolvedId,
+          // Emit the functions into a sub-dir to "hide" them from Netlify
           fileName: 'chunks/' + safeName + '-handler.js',
         })
       }
