@@ -261,7 +261,7 @@ export function cedarUniversalDeployPlugin(
       const viteEnv = this.environment
 
       // Only load virtual modules for environments that consume UD entries.
-      if (viteEnv.config.consumer !== 'server' || viteEnv.name === 'api') {
+      if (viteEnv.config.consumer === 'client' || viteEnv.name === 'api') {
         return undefined
       }
 
