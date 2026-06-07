@@ -14,7 +14,7 @@ export interface CedarUniversalDeployPluginOptions {
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
 
-const SSR_ENVIRONMENT_NAMES = new Set(['ssr', 'vercel_node', 'vercel_edge'])
+const UD_RESOLVE_ENVIRONMENTS = new Set(['ssr', 'vercel_node', 'vercel_edge'])
 
 /**
  * The Symbol.for key used by @universal-deploy/store to persist entries on
@@ -204,9 +204,10 @@ export function cedarUniversalDeployPlugin(
     },
 
     buildStart() {
-      // Only emit chunks for the legacy 'ssr' environment (buildUDApiServer).
-      // In the builder API, provider environments (vercel_node, etc.) get
-      // their input from the UD store via their own configEnvironment hooks.
+      // Emit chunks only for the 'ssr' environment (the name Vite assigns when
+      // `build.ssr: true` is set in buildUDApiServer). In the builder API path
+      // (buildCedarApp), provider environments like vercel_node/vercel_edge
+      // get their input from the UD store via configEnvironment hooks instead.
       if (this.environment?.name !== 'ssr') {
         return
       }
@@ -223,15 +224,16 @@ export function cedarUniversalDeployPlugin(
         this.emitFile({
           type: 'chunk',
           id: resolvedId,
+          // Emit the functions into a sub-dir to "hide" them from Netlify
           fileName: 'chunks/' + safeName + '-handler.js',
         })
       }
     },
 
     resolveId(id) {
-      // Only resolve virtual modules for SSR-like environments. Client and
-      // raw API builds should not see these virtual modules.
-      if (!SSR_ENVIRONMENT_NAMES.has(this.environment?.name ?? '')) {
+      // Only resolve virtual modules for environments that consume UD entries.
+      // Client and raw API builds should not see these virtual modules.
+      if (!UD_RESOLVE_ENVIRONMENTS.has(this.environment?.name ?? '')) {
         return undefined
       }
 
@@ -249,8 +251,8 @@ export function cedarUniversalDeployPlugin(
     },
 
     async load(id) {
-      // Only load virtual modules for SSR-like environments.
-      if (!SSR_ENVIRONMENT_NAMES.has(this.environment?.name ?? '')) {
+      // Only load virtual modules for environments that consume UD entries.
+      if (!UD_RESOLVE_ENVIRONMENTS.has(this.environment?.name ?? '')) {
         return undefined
       }
 
