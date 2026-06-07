@@ -453,43 +453,59 @@ export const handler = async ({
     ud &&
       workspace.includes('api') && {
         title: 'Bundling API server entry (Universal Deploy)...',
-        task: async () => {
-          await buildUDApiServer({ verbose, apiRootPath })
+        task: () => {
+          return buildUDApiServer({ verbose })
         },
       },
   ].filter((t): t is ListrTask => Boolean(t))
 
-  const triggerPrerender = async () => {
-    console.log('Starting prerendering...')
-    if (prerenderRoutes.length === 0) {
-      console.log(
-        `You have not marked any routes to "prerender" in your ${terminalLink(
-          'Routes',
-          'file://' + cedarPaths.web.routes,
-        )}.`,
-      )
-
-      return
-    }
-
-    // Running a separate process here, otherwise it wouldn't pick up the
-    // generated Prisma Client due to require module caching
-    await runBin('cedar', ['prerender'], {
-      stdio: 'inherit',
-      cwd: cedarPaths.web.base,
-    })
+  // When --apiRootPath is passed via CLI we propagate it to
+  // cedarUniversalDeployPlugin via an env var so the plugin can use the cli
+  // argument value instead of the value from the user's Vite config (if they
+  // have set it there)
+  if (apiRootPath !== undefined) {
+    process.env.CEDAR_API_ROOT_PATH = apiRootPath
   }
 
-  const jobs = new Listr(tasks, {
-    renderer: verbose ? 'verbose' : undefined,
-  })
+  try {
+    await timedTelemetry(process.argv, { type: 'build' }, async () => {
+      const jobs = new Listr(tasks, {
+        renderer: verbose ? 'verbose' : undefined,
+      })
 
-  await timedTelemetry(process.argv, { type: 'build' }, async () => {
-    await jobs.run()
+      await jobs.run()
 
-    if (workspace.includes('web') && prerender && prismaSchemaExists) {
-      // This step is outside Listr so that it prints clearer, complete messages
-      await triggerPrerender()
-    }
+      if (workspace.includes('web') && prerender && prismaSchemaExists) {
+        // This step is outside Listr so that it prints clearer, complete
+        // messages
+        await triggerPrerender(prerenderRoutes)
+      }
+    })
+  } finally {
+    delete process.env.CEDAR_API_ROOT_PATH
+  }
+}
+
+type Routes = ReturnType<typeof detectPrerenderRoutes>
+async function triggerPrerender(prerenderRoutes: Routes) {
+  const cedarPaths = getPaths()
+
+  console.log('Starting prerendering...')
+  if (prerenderRoutes.length === 0) {
+    console.log(
+      `You have not marked any routes to "prerender" in your ${terminalLink(
+        'Routes',
+        'file://' + cedarPaths.web.routes,
+      )}.`,
+    )
+
+    return
+  }
+
+  // Running a separate process here, otherwise it wouldn't pick up the
+  // generated Prisma Client due to require module caching
+  await runBin('cedar', ['prerender'], {
+    stdio: 'inherit',
+    cwd: cedarPaths.web.base,
   })
 }

@@ -6,7 +6,6 @@ import { getPaths } from '@cedarjs/project-config'
 
 export interface BuildUDApiServerOptions {
   verbose?: boolean
-  apiRootPath?: string
 }
 
 /**
@@ -35,7 +34,6 @@ export interface BuildUDApiServerOptions {
  */
 export async function buildUDApiServer({
   verbose = false,
-  apiRootPath,
 }: BuildUDApiServerOptions = {}) {
   const { build } = await import('vite')
   const { catchAll, devServer } = await import('@universal-deploy/vite')
@@ -104,7 +102,6 @@ export async function buildUDApiServer({
           },
         },
       ],
-
       // Legacy ssr flag approach. The explicit rollupOptions.input prevents the
       // "index.html as SSR entry" error. Vite will also build a 'client'
       // environment from the user's config file (wasteful but harmless), and
@@ -139,10 +136,6 @@ export async function buildUDApiServer({
         await cp(tmpDir, dir, { recursive: true, force: true })
         await rm(tmpDir, { recursive: true, force: true }).catch(() => {})
       }
-    }
-
-    if (apiRootPath !== undefined) {
-      delete process.env.CEDAR_API_ROOT_PATH
     }
   }
 }
