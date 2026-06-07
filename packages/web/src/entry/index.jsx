@@ -13,7 +13,7 @@ const cedarAppElement =
 
 if (!cedarAppElement) {
   throw new Error(
-    'Could not find an element with ID "cedar-app" or "redwood-app". Please' +
+    'Could not find an element with ID "cedar-app" or "redwood-app". Please ' +
       'ensure one exists in your `web/index.html` file.',
   )
 }
