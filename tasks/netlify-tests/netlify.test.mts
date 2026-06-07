@@ -38,7 +38,7 @@ describe('Netlify deployment', () => {
     const res = await fetchJson(url('/.api/functions/legacyHello'))
     expect(res.status).toEqual(200)
     expect(res.body).toEqual({ data: 'hello from legacy handler' })
-  }, 15_000)
+  })
 
   // GraphQL handler returns 502 when routed through the `server` function wrapper
   // because `createGraphQLHandler` (legacy handler) returns an APIGateway-style
