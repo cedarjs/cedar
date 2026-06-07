@@ -47,14 +47,6 @@ export async function buildUDApiServer({
   // collide with the existing esbuild output under api/dist/.
   const outDir = path.join(cedarPaths.api.dist, 'ud')
 
-  // When --apiRootPath is passed via CLI, propagate it to the plugin via
-  // an env var so the plugin can override whatever value was set in the
-  // user's vite config. This avoids modifying the opaque plugin instance
-  // after vite loads the user's configFile.
-  if (apiRootPath !== undefined) {
-    process.env.CEDAR_API_ROOT_PATH = apiRootPath
-  }
-
   try {
     await build({
       // Load the user's Vite config so all plugins (Cedar's UD plugin,
