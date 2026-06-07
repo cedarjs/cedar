@@ -72,7 +72,7 @@ describe('cedar serve api --ud', () => {
     const webRes = await fetch(`http://localhost:${WEB_PORT}/`)
     expect(webRes.status).toEqual(200)
     const webText = await webRes.text()
-    expect(webText).toContain('<div id="redwood-app">')
+    expect(webText).toContain('<div id="cedar-app">')
     expect(webText).toContain('<script type="module"')
   }, 90_000)
 })

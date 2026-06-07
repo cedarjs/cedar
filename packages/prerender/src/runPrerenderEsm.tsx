@@ -398,7 +398,7 @@ export const runPrerender = async ({
 
   insertChunkLoadingScript(indexHtmlTree, renderPath)
 
-  indexHtmlTree('#redwood-app').append(componentAsHtml)
+  indexHtmlTree('#cedar-app, #redwood-app').append(componentAsHtml)
 
   const renderOutput = indexHtmlTree.html()
 

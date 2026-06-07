@@ -19,9 +19,11 @@ let isPrerendered = false
 // SSR and streaming changes how we mount the React app (we render the whole page, including head and body)
 // This logic is no longer valid and needs to be rethought
 if (typeof window !== 'undefined') {
-  const redwoodAppElement = document.getElementById('redwood-app')
+  const cedarAppElement =
+    document.getElementById('cedar-app') ??
+    document.getElementById('redwood-app')
 
-  if (redwoodAppElement && redwoodAppElement.children.length > 0) {
+  if (cedarAppElement && cedarAppElement.children.length > 0) {
     isPrerendered = true
   }
 }

@@ -3,13 +3,13 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import Routes from './Routes'
 
-const redwoodAppElement = document.getElementById('redwood-app')
+const cedarAppElement = document.getElementById('cedar-app')
 
-if (!redwoodAppElement) {
-  throw new Error("Could not find an element with ID 'redwood-app'")
+if (!cedarAppElement) {
+  throw new Error("Could not find an element with ID 'cedar-app'")
 }
 
-const root = createRoot(redwoodAppElement)
+const root = createRoot(cedarAppElement)
 root.render(
   <App>
     <Routes />
