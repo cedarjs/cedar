@@ -205,9 +205,13 @@ export function cedarUniversalDeployPlugin(
     },
 
     buildStart() {
-      // Skip during client builds. The emitted chunks reference Node.js
-      // builtins and paths that are only relevant for server builds.
-      if (this.environment.config.consumer === 'client') {
+      // Only run during the default 'ssr' build.
+      // The emitted chunks reference Node.js builtins and paths that are only
+      // relevant for server builds, so we can't run this for client builds.
+      // We also skip custom environments (they'd have other names) because
+      // those custom environments all currently get their inputs from the UD
+      // store via configEnvironment hooks instead
+      if (this.environment.name !== 'ssr') {
         return
       }
 
@@ -230,9 +234,13 @@ export function cedarUniversalDeployPlugin(
     },
 
     resolveId(id) {
+      const viteEnv = this.environment
+
       // Skip during client builds. The virtual modules reference Node.js
       // APIs and paths that only make sense for server builds.
-      if (this.environment.config.consumer === 'client') {
+      // Also skip for the 'api' environment, because raw 'api' builds should
+      // not see the virtual modules
+      if (viteEnv.config.consumer === 'client' || viteEnv.name === 'api') {
         return undefined
       }
 
@@ -250,8 +258,10 @@ export function cedarUniversalDeployPlugin(
     },
 
     async load(id) {
-      // Skip during client builds.
-      if (this.environment.config.consumer === 'client') {
+      const viteEnv = this.environment
+
+      // Only load virtual modules for environments that consume UD entries.
+      if (viteEnv.config.consumer !== 'server' || viteEnv.name === 'api') {
         return undefined
       }
 
