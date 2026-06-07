@@ -61,6 +61,6 @@ describe('Vercel deployment', () => {
     const res = await fetch(url('/'))
     expect(res.status).toEqual(200)
     const text = await res.text()
-    expect(text).toContain('<div id="redwood-app">')
+    expect(text).toContain('<div id="cedar-app">')
   })
 })
