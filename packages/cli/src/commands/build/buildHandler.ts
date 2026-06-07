@@ -173,14 +173,6 @@ export const handler = async ({
     .filter(Boolean)
     .join(' and ')} support...`
 
-  // When --apiRootPath is passed via CLI, propagate it to
-  // cedarUniversalDeployPlugin via an env var so the plugin can use the cli
-  // argument value instead of the value from the user's Vite config (if they
-  // have set it there)
-  if (apiRootPath !== undefined) {
-    process.env.CEDAR_API_ROOT_PATH = apiRootPath
-  }
-
   const tasks = [
     shouldGeneratePrismaClient && {
       title: 'Generating Prisma Client...',
@@ -406,8 +398,8 @@ export const handler = async ({
     ud &&
       workspace.includes('api') && {
         title: 'Bundling API server entry (Universal Deploy)...',
-        task: async () => {
-          await buildUDApiServer({ verbose, apiRootPath })
+        task: () => {
+          return buildUDApiServer({ verbose })
         },
       },
   ].filter((t): t is ListrTask => Boolean(t))
@@ -437,12 +429,25 @@ export const handler = async ({
     renderer: verbose ? 'verbose' : undefined,
   })
 
-  await timedTelemetry(process.argv, { type: 'build' }, async () => {
-    await jobs.run()
+  // When --apiRootPath is passed via CLI, propagate it to
+  // cedarUniversalDeployPlugin via an env var so the plugin can use the cli
+  // argument value instead of the value from the user's Vite config (if they
+  // have set it there)
+  if (apiRootPath !== undefined) {
+    process.env.CEDAR_API_ROOT_PATH = apiRootPath
+  }
 
-    if (workspace.includes('web') && prerender && prismaSchemaExists) {
-      // This step is outside Listr so that it prints clearer, complete messages
-      await triggerPrerender()
-    }
-  })
+  try {
+    await timedTelemetry(process.argv, { type: 'build' }, async () => {
+      await jobs.run()
+
+      if (workspace.includes('web') && prerender && prismaSchemaExists) {
+        // This step is outside Listr so that it prints clearer, complete
+        // messages
+        await triggerPrerender()
+      }
+    })
+  } finally {
+    delete process.env.CEDAR_API_ROOT_PATH
+  }
 }
