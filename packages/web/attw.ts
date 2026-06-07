@@ -8,7 +8,7 @@ interface Problem {
 
 await $({
   nothrow: true,
-})`yarn attw -P --exclude-entrypoints webpackEntry forceEsmApollo -f json > .attw.json`
+})`yarn attw -P --exclude-entrypoints forceEsmApollo -f json > .attw.json`
 const output = await $`cat .attw.json`
 await $`rm .attw.json`
 
