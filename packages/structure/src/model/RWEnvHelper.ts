@@ -125,6 +125,24 @@ export class RWEnvHelper extends BaseNode {
 }
 
 /**
+ * Well-known Node.js runtime environment variables that are set by the
+ * runtime or tooling and should never need to be defined in a .env file.
+ * There are more variables that can be added here if needed. But at that point
+ * it might make more sense to allow users to configure this in their
+ * `cedar.toml` config file. Or maybe just never warn on anything that starts
+ * with `NODE_*`
+ * https://nodejs.org/docs/latest/api/cli.html#environment-variables-1
+ */
+const NODE_BUILTIN_ENV_VARS = new Set([
+  'NODE_ENV',
+  'NODE_PATH',
+  'NODE_OPTIONS',
+  'NODE_DEBUG',
+  'NODE_DISABLE_COLORS',
+  'NODE_NO_WARNINGS',
+])
+
+/**
  * An occurrence of process.env somewhere in the codebase
  */
 class ProcessDotEnvExpression extends BaseNode {
@@ -161,6 +179,11 @@ class ProcessDotEnvExpression extends BaseNode {
   *diagnostics() {
     const { key, location, value_as_available } = this
     const { uri, range } = location
+
+    // Node.js runtime variables are set by the runtime/tooling, not .env files
+    if (NODE_BUILTIN_ENV_VARS.has(key)) {
+      return
+    }
 
     if (typeof value_as_available === 'undefined') {
       // the value is not available
