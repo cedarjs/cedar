@@ -14,8 +14,6 @@ export interface CedarUniversalDeployPluginOptions {
 const VIRTUAL_CEDAR_FN_PREFIX = 'virtual:cedar-api:fn:'
 const RESOLVED_CEDAR_FN_PREFIX = '\0virtual:cedar-api:fn:'
 
-const UD_RESOLVE_ENVIRONMENTS = new Set(['ssr', 'vercel_node', 'vercel_edge'])
-
 /**
  * The Symbol.for key used by @universal-deploy/store to persist entries on
  * globalThis across Vite plugin instances and separate build calls.
@@ -231,9 +229,11 @@ export function cedarUniversalDeployPlugin(
     },
 
     resolveId(id) {
+      const viteEnv = this.environment
+
       // Only resolve virtual modules for environments that consume UD entries.
       // Client and raw API builds should not see these virtual modules.
-      if (!UD_RESOLVE_ENVIRONMENTS.has(this.environment?.name ?? '')) {
+      if (viteEnv.config.consumer !== 'server' || viteEnv.name === 'env') {
         return undefined
       }
 
@@ -251,8 +251,10 @@ export function cedarUniversalDeployPlugin(
     },
 
     async load(id) {
+      const viteEnv = this.environment
+
       // Only load virtual modules for environments that consume UD entries.
-      if (!UD_RESOLVE_ENVIRONMENTS.has(this.environment?.name ?? '')) {
+      if (viteEnv.config.consumer !== 'server' || viteEnv.name === 'env') {
         return undefined
       }
 
