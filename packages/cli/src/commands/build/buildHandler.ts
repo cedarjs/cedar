@@ -173,6 +173,13 @@ export const handler = async ({
     .filter(Boolean)
     .join(' and ')} support...`
 
+  // When --apiRootPath is passed via CLI, propagate it via env var so
+  // cedarUniversalDeployPlugin can use it instead of the value from the user's
+  // Vite config (if they have set it there)
+  if (apiRootPath !== undefined) {
+    process.env.CEDAR_API_ROOT_PATH = apiRootPath
+  }
+
   const tasks = [
     shouldGeneratePrismaClient && {
       title: 'Generating Prisma Client...',
@@ -377,13 +384,6 @@ export const handler = async ({
           process.chdir(cedarPaths.web.base)
 
           try {
-            // Propagate --apiRootPath to the plugin via env var before
-            // buildCedarApp so that vite-plugin-vercel creates the correct
-            // route prefixes in .vercel/output/config.json.
-            if (apiRootPath !== undefined) {
-              process.env.CEDAR_API_ROOT_PATH = apiRootPath
-            }
-
             await buildCedarApp({ verbose, workspace })
           } finally {
             process.chdir(originalCwd)
