@@ -24,8 +24,7 @@ export const buildFeServer = async ({ verbose, webDir }: BuildOptions = {}) => {
 
   if (!viteConfigPath) {
     throw new Error(
-      'Vite config not found. You need to setup your project with Vite ' +
-        'using `yarn cedar setup vite`',
+      'Vite config not found. Please set up Vite before building.',
     )
   }
 
