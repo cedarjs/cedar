@@ -205,9 +205,9 @@ export function cedarUniversalDeployPlugin(
     },
 
     buildStart() {
-      // Skip during client builds — the emitted chunks reference Node.js
-      // builtins and paths that only exist during SSR builds.
-      if (this.environment?.name !== 'ssr') {
+      // Skip during client builds. The emitted chunks reference Node.js
+      // builtins and paths that are only relevant for server builds.
+      if (this.environment.config.consumer === 'client') {
         return
       }
 
@@ -230,9 +230,9 @@ export function cedarUniversalDeployPlugin(
     },
 
     resolveId(id) {
-      // Skip during client builds — the virtual modules reference Node.js
-      // APIs and paths that only work in an SSR context.
-      if (this.environment?.name !== 'ssr') {
+      // Skip during client builds. The virtual modules reference Node.js
+      // APIs and paths that only make sense for server builds.
+      if (this.environment.config.consumer === 'client') {
         return undefined
       }
 
@@ -251,7 +251,7 @@ export function cedarUniversalDeployPlugin(
 
     async load(id) {
       // Skip during client builds.
-      if (this.environment?.name !== 'ssr') {
+      if (this.environment.config.consumer === 'client') {
         return undefined
       }
 
