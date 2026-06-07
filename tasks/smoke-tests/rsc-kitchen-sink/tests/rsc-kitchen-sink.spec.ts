@@ -100,13 +100,13 @@ test('Submitting the form should return a response', async ({ page }) => {
   const h1 = await page.locator('h1').innerText()
   expect(h1).toMatch(/Hello Anonymous!!/)
 
-  const pageText = await page.locator('#redwood-app > div').innerText()
+  const pageText = await page.locator('#cedar-app > div').innerText()
   expect(pageText).toMatch('This form has been sent 0 times')
 
   await page.getByRole('textbox').fill('Hello World')
   await page.getByRole('button').getByText('Send').click()
 
-  const submittedPageText = page.locator('#redwood-app > div')
+  const submittedPageText = page.locator('#cedar-app > div')
   await expect(submittedPageText).toHaveText(/This form has been sent 1 times/)
 
   // Expect an echo of our message back from the server
