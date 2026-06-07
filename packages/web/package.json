@@ -83,9 +83,6 @@
       "require": "./dist/cjs/graphql.js",
       "import": "./dist/graphql.js"
     },
-    "./webpackEntry": {
-      "default": "./dist/entry/index.js"
-    },
     "./toast": {
       "import": {
         "types": "./dist/toast/index.d.ts",
@@ -127,8 +124,7 @@
   "files": [
     "dist",
     "apollo",
-    "toast",
-    "src/entry"
+    "toast"
   ],
   "scripts": {
     "build": "tsx ./build.ts && yarn build:types",

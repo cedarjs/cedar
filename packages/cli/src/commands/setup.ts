@@ -34,9 +34,6 @@ import * as setupTsconfig from './setup/tsconfig/tsconfig.js'
 import * as setupUi from './setup/ui/ui.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupUploads from './setup/uploads/uploads.js'
-// @ts-expect-error - Types not available for JS files
-import * as setupVite from './setup/vite/vite.js'
-
 export const command = 'setup <command>'
 export const description = 'Initialize project config and install packages'
 
@@ -64,7 +61,6 @@ export const builder = (yargs: Argv) =>
     // @ts-expect-error - Yargs TS types aren't very good
     .command(setupUi)
     .command(setupUploads)
-    .command(setupVite)
     .demandCommand()
     // @ts-expect-error - Yargs TS types aren't very good
     .middleware(detectCedarVersion)

@@ -245,7 +245,7 @@ jobs:
 
   e2e-netlify:
     needs: check
-    if: github.repository == 'cedarjs/cedar'
+    if: github.repository == 'cedarjs/cedar' && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
     name: 🔷 E2E Netlify deploy
     uses: ./.github/workflows/e2e-netlify.yml
     secrets: inherit
