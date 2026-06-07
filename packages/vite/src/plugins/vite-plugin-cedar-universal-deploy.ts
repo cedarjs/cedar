@@ -202,10 +202,11 @@ export function cedarUniversalDeployPlugin(
     },
 
     buildStart() {
-      // Emit chunks only for the 'ssr' environment (the name Vite assigns when
-      // `build.ssr: true` is set in buildUDApiServer). In the builder API path
-      // (buildCedarApp), provider environments like vercel_node/vercel_edge
-      // get their input from the UD store via configEnvironment hooks instead.
+      // Skip during client builds. The emitted chunks reference Node.js
+      // builtins and paths that only exist during SSR builds.
+      // This also skips custom environments (because they'd have other names).
+      // Those custom environments all currently get their inputs from the UD
+      // store via configEnvironment hooks instead
       if (this.environment?.name !== 'ssr') {
         return
       }
