@@ -211,37 +211,6 @@ export async function buildCedarApp({
           ) {
             await builder.build(builder.environments.api)
           }
-
-          // When a provider plugin (e.g. vite-plugin-vercel) is active, its
-          // custom client environment ("vercel_client") is responsible for
-          // copying the client output into the provider's output directory
-          // (e.g. .vercel/output/static/). However, vite-plugin-vercel's
-          // vercel_client build always fails with "Could not resolve entry
-          // module index.html" because Vite 7's consumer:"client" environments
-          // unconditionally add index.html to the input list, overriding the
-          // dummy entry the plugin configures. The plugin catches and ignores
-          // this error, which means its generateBundle hook (that performs the
-          // copy) never fires.
-          //
-          // As a workaround, we detect when a provider output directory exists
-          // (.vercel/output) and manually copy the client build output into
-          // the expected static subdirectory. This must happen here (after the
-          // client build, before the vercel plugin's buildApp hook) so the
-          // backup taken by buildUDApiServer captures the static files.
-          const vercelOutputDir = path.join(
-            cedarPaths.base,
-            '.vercel',
-            'output',
-          )
-
-          if (workspace.includes('web') && fs.existsSync(vercelOutputDir)) {
-            const webDist = cedarPaths.web.dist
-            const vercelStaticDir = path.join(vercelOutputDir, 'static')
-            if (fs.existsSync(webDist)) {
-              fs.mkdirSync(vercelStaticDir, { recursive: true })
-              fs.cpSync(webDist, vercelStaticDir, { recursive: true })
-            }
-          }
         },
       },
     },
