@@ -90,7 +90,7 @@
     "react": "19.2.3"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.3",
     "@cedarjs/framework-tools": "workspace:*",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "14.3.1",

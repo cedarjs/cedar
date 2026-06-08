@@ -198,7 +198,7 @@
     "vite": "7.3.5"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.3",
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
     "graphql-tag": "2.12.6",
