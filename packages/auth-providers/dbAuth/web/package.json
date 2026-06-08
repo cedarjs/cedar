@@ -44,7 +44,7 @@
     "@simplewebauthn/browser": "10.0.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.3",
     "@cedarjs/framework-tools": "workspace:*",
     "@simplewebauthn/types": "10.0.0",
     "@types/react": "^18.2.55",

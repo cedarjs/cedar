@@ -57,7 +57,7 @@
     "prepublishOnly": "NODE_ENV=production yarn build"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.3",
     "@cedarjs/framework-tools": "workspace:*",
     "concurrently": "9.2.1",
     "publint": "0.3.21",

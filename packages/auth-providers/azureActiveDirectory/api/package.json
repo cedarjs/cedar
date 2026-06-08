@@ -43,7 +43,7 @@
     "jwks-rsa": "3.2.2"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.3",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/aws-lambda": "8.10.161",
