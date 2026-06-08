@@ -112,6 +112,13 @@ run('yarn cedar setup deploy universal-deploy', { cwd: testProjectDir })
 log('Setting up Vercel deploy (UD)...')
 run('yarn cedar setup deploy vercel --ud', { cwd: testProjectDir })
 
+// Override vite-plugin-vercel with local tarball if provided
+const vercelPluginTarball = process.env.VERCEL_PLUGIN_TARBALL
+if (vercelPluginTarball) {
+  log(`Installing local vite-plugin-vercel: ${vercelPluginTarball}`)
+  run(`yarn add "${vercelPluginTarball}"`, { cwd: testProjectDir })
+}
+
 // ─── Step 4: Build ───────────────────────────────────────────────────────────
 
 log('Building app with --ud...')
