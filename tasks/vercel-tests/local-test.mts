@@ -121,7 +121,7 @@ process.env.DIRECT_DATABASE_URL = 'file:./db/dev.db'
 // Prerendering may fail without a real database, but .vercel/output is created
 // before prerender runs, so we tolerate the failure.
 try {
-  run('yarn cedar build --ud --apiRootPath=/.api/functions', {
+  run('yarn cedar build --ud --apiRootPath=/.api/functions --no-prerender', {
     cwd: testProjectDir,
   })
 } catch {
@@ -225,21 +225,13 @@ if (!process.env.VERCEL_TOKEN) {
   vercelFlag = `--token ${process.env.VERCEL_TOKEN}`
 }
 
-// Create temporary Vercel project
 const projectName = `cedar-local-${Math.floor(Date.now() / 1000)}`
-log(`Creating Vercel project: ${projectName}`)
-runQuiet(`npx vercel projects add "${projectName}" ${vercelFlag}`)
 
-// Link project
-log('Linking Vercel project...')
-runQuiet(`npx vercel link --project "${projectName}" ${vercelFlag} --yes`)
-
-// Deploy
+// Deploy (creates project if it doesn't exist)
 log('Deploying to Vercel...')
-let deployOutput: string
 try {
-  deployOutput = run(
-    `npx vercel deploy --prebuilt --prod --json --yes ${vercelFlag}`,
+  run(
+    `npx vercel deploy --prebuilt --prod --yes --name "${projectName}" ${vercelFlag}`,
     {
       cwd: testProjectDir,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -250,18 +242,9 @@ try {
   fail('Vercel deploy failed')
 }
 
-// Extract deployment URL
-let deployUrl = ''
-try {
-  const data = JSON.parse(deployOutput)
-  deployUrl = data.url || data.inspectorUrl || ''
-} catch {
-  // JSON parse failed
-}
-
-if (!deployUrl) {
-  deployUrl = `https://${projectName}.vercel.app`
-}
+// Use the production alias URL rather than the deployment URL, which
+// may be behind Vercel's deployment protection (returns 401).
+const deployUrl = `https://${projectName}.vercel.app`
 
 log(`Deployed to: ${deployUrl}`)
 
