@@ -86,8 +86,9 @@ process.on('exit', cleanup)
 process.on('SIGINT', () => process.exit(130))
 process.on('SIGTERM', () => process.exit(143))
 
-const rndBytes = crypto.randomBytes(4).toString('hex')
-const testProjectDir = path.join(os.tmpdir(), `cedar-vercel-test.${rndBytes}`)
+const randomBytes = crypto.randomBytes(4).toString('hex')
+const testProjectName = `cedar-vercel-test-${randomBytes}`
+const testProjectDir = path.join(os.tmpdir(), testProjectName)
 fs.mkdirSync(testProjectDir, { recursive: true })
 
 // ─── Step 1: Build packages ──────────────────────────────────────────────────
@@ -225,13 +226,11 @@ if (!process.env.VERCEL_TOKEN) {
   vercelFlag = `--token ${process.env.VERCEL_TOKEN}`
 }
 
-const projectName = `cedar-local-${Math.floor(Date.now() / 1000)}`
-
 // Deploy (creates project if it doesn't exist)
 log('Deploying to Vercel...')
 try {
   run(
-    `npx vercel deploy --prebuilt --prod --yes --name "${projectName}" ${vercelFlag}`,
+    `npx vercel deploy --prebuilt --prod --yes --name "${testProjectName}" ${vercelFlag}`,
     {
       cwd: testProjectDir,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -244,7 +243,7 @@ try {
 
 // Use the production alias URL rather than the deployment URL, which
 // may be behind Vercel's deployment protection (returns 401).
-const deployUrl = `https://${projectName}.vercel.app`
+const deployUrl = `https://${testProjectName}.vercel.app`
 
 log(`Deployed to: ${deployUrl}`)
 
@@ -265,5 +264,5 @@ run(
 ok('All tests passed!')
 
 // Cleanup Vercel project
-log(`Cleaning up Vercel project: ${projectName}`)
-runQuiet(`echo "y" | npx vercel projects rm "${projectName}" ${vercelFlag}`)
+log(`Cleaning up Vercel project: ${testProjectName}`)
+runQuiet(`echo "y" | npx vercel projects rm "${testProjectName}" ${vercelFlag}`)
