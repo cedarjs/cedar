@@ -118,34 +118,51 @@ export async function buildCedarApp({
 
   const plugins: PluginOption[] = [
     // Suppress noisy warnings from third-party dependencies across all
-    // environments. Moved out of the client environment's rollupOptions.onwarn
-    // so it also applies to the api and vercel_client builds.
+    // environments by injecting onwarn into every environment's rollupOptions.
     {
       name: 'cedar-suppress-third-party-warnings',
-      onwarn(warning, warn) {
-        // Prisma internals uses `eval()` for path resolution which produces
-        // EVAL warnings. The code is safe and works correctly at runtime.
-        // Tracked upstream: https://github.com/prisma/prisma/issues/20752
-        if (
-          warning.code === 'EVAL' &&
-          warning.id?.includes('@prisma/internals')
-        ) {
-          return
+      configResolved(config) {
+        function onwarn(warning: any, warn: (w: any) => void) {
+          // Prisma internals uses `eval()` for path resolution which produces
+          // EVAL warnings. The code is safe and works correctly at runtime.
+          // Tracked upstream: https://github.com/prisma/prisma/issues/20752
+          if (
+            warning.code === 'EVAL' &&
+            warning.id?.includes('@prisma/internals')
+          ) {
+            return
+          }
+
+          // graphql-scalars places `/*#__PURE__*/` on object literal exports
+          // which Rolldown can't interpret (only valid before call/new
+          // expressions).
+          // Tracked upstream:
+          // https://github.com/graphql-hive/graphql-scalars/issues/2869
+          if (
+            warning.code === 'INVALID_ANNOTATION' &&
+            warning.id?.includes('graphql-scalars')
+          ) {
+            return
+          }
+
+          // Optional peer dependencies (e.g. @simplewebauthn/server) are
+          // dynamically imported from node_modules and expected to be external.
+          // Rolldown still emits UNRESOLVED_IMPORT warnings for these even when
+          // marked external via resolveDynamicImport.
+          if (
+            warning.code === 'UNRESOLVED_IMPORT' &&
+            warning.id?.includes('node_modules')
+          ) {
+            return
+          }
+
+          warn(warning)
         }
 
-        // graphql-scalars places `/*#__PURE__*/` on object literal exports
-        // which Rolldown can't interpret (only valid before call/new
-        // expressions).
-        // Tracked upstream:
-        // https://github.com/graphql-hive/graphql-scalars/issues/2869
-        if (
-          warning.code === 'INVALID_ANNOTATION' &&
-          warning.id?.includes('graphql-scalars')
-        ) {
-          return
+        for (const env of Object.values(config.environments ?? {})) {
+          env.build.rollupOptions ??= {}
+          env.build.rollupOptions.onwarn = onwarn
         }
-
-        warn(warning)
       },
     },
     {
