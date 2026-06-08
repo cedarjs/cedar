@@ -18,7 +18,7 @@
   "packageManager": "yarn@4.14.1",
   "resolutions": {
     "react-is": "19.2.3",
-    "vite": "7.3.2"
+    "vite": "7.3.5"
   },
   "dependenciesMeta": {
     "@clerk/shared": {
