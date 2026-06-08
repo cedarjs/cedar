@@ -62,7 +62,7 @@
     "uuid": "11.1.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.3",
     "@cedarjs/api": "4.2.0",
     "@cedarjs/framework-tools": "4.2.0",
     "@simplewebauthn/server": "10.0.1",

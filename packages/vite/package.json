@@ -112,7 +112,7 @@
     "yargs-parser": "21.1.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.3",
     "@hyrious/esbuild-plugin-commonjs": "0.2.6",
     "@types/aws-lambda": "8.10.161",
     "@types/busboy": "^1",

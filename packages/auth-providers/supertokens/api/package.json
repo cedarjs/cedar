@@ -43,7 +43,7 @@
     "jwks-rsa": "3.2.2"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@arethetypeswrong/cli": "0.18.3",
     "@cedarjs/api": "4.2.0",
     "@cedarjs/framework-tools": "4.2.0",
     "@types/jsonwebtoken": "9.0.10",
