@@ -17,5 +17,5 @@ beforeAll(() => {
     )
   }
 
-  process.env.DEPLOY_URL = VERCEL_DEPLOY_URL.replace(/\/+$/, '')
+  process.env.VERCEL_DEPLOY_URL = VERCEL_DEPLOY_URL.replace(/\/+$/, '')
 })

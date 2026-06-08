@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 function deployUrl() {
-  const url = process.env.DEPLOY_URL
+  const url = process.env.VERCEL_DEPLOY_URL
   if (!url) {
     throw new Error(
-      'DEPLOY_URL environment variable not set. ' +
-        'Run with VERCEL_DEPLOY_URL set.',
+      'VERCEL_DEPLOY_URL environment variable not set. ' +
+        'Example: VERCEL_DEPLOY_URL=https://your-site.vercel.app yarn vitest run',
     )
   }
   return url
