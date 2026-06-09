@@ -169,7 +169,8 @@ export async function buildCedarApp({
           typeof specifier === 'string' &&
           !specifier.startsWith('.') &&
           !specifier.startsWith('/') &&
-          importer?.includes('node_modules')
+          importer?.includes('node_modules') &&
+          this.environment.config.consumer === 'server'
         ) {
           return { id: specifier, external: true }
         }
