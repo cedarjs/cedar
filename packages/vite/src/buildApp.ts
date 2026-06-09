@@ -154,6 +154,24 @@ export async function buildCedarApp({
         }
       },
     },
+    // Resolve bare-specifier dynamic imports from node_modules as external
+    // before Rollup attempts resolution, avoiding UNRESOLVED_IMPORT warnings
+    // for optional peer dependencies (e.g. @simplewebauthn/server).
+    {
+      name: 'cedar-optional-peer-deps',
+      resolveDynamicImport(specifier, importer) {
+        if (
+          typeof specifier === 'string' &&
+          !specifier.startsWith('.') &&
+          !specifier.startsWith('/') &&
+          importer?.includes('node_modules')
+        ) {
+          return { id: specifier, external: true }
+        }
+
+        return null
+      },
+    },
     {
       name: 'cedar-build-app-cleanup',
       configResolved(config) {
