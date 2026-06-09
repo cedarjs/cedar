@@ -150,10 +150,12 @@ export async function buildCedarApp({
 
         for (const env of Object.values(config.environments ?? {})) {
           env.build.rollupOptions ??= {}
-          const existingOnwarn = env.build.rollupOptions.onwarn || (() => {})
-          env.build.rollupOptions.onwarn = (warning, warn) => {
-            onwarn(warning, (w) => existingOnwarn(w, warn))
-          }
+          const existingOnwarn = env.build.rollupOptions.onwarn
+          env.build.rollupOptions.onwarn = existingOnwarn
+            ? (warning, warn) => {
+                onwarn(warning, (w) => existingOnwarn(w, warn))
+              }
+            : onwarn
         }
       },
     },
