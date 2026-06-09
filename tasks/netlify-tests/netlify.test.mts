@@ -53,6 +53,43 @@ describe('Netlify deployment', () => {
     })
   })
 
+  it('validates email via GraphQL createContact mutation', async () => {
+    const gql = JSON.stringify({
+      query:
+        'mutation { createContact(input: { name: "Test", email: "invalid", message: "Hello" }) { id } }',
+    })
+    const res = await fetchJson(url('/.api/functions/graphql'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: gql,
+    })
+    expect(res.status).toEqual(200)
+    expect(res.body.errors).toBeDefined()
+    expect(res.body.errors[0].message).toContain('Invalid email')
+  })
+
+  it('validates email via shared @my-org/validators package', async () => {
+    const res = await fetchJson(
+      url('/.api/functions/hello?email=test@example.com'),
+    )
+    expect(res.status).toEqual(200)
+    expect(res.body).toMatchObject({
+      data: 'hello from cedar',
+      email: 'test@example.com',
+      valid: true,
+    })
+  })
+
+  it('rejects invalid email via shared @my-org/validators package', async () => {
+    const res = await fetchJson(url('/.api/functions/hello?email=invalid'))
+    expect(res.status).toEqual(200)
+    expect(res.body).toMatchObject({
+      data: 'hello from cedar',
+      email: 'invalid',
+      valid: false,
+    })
+  })
+
   it('serves web SPA shell', async () => {
     const res = await fetch(url('/'))
     expect(res.status).toEqual(200)
