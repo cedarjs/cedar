@@ -94,31 +94,6 @@ export async function buildCedarApp({
 
             return false
           },
-          onwarn(warning, warn) {
-            // Prisma internals uses `eval()` for path resolution which Rollup
-            // warns about. The code is safe and works correctly at runtime.
-            // Tracked upstream: https://github.com/prisma/prisma/issues/20752
-            if (
-              warning.code === 'EVAL' &&
-              warning.id?.includes('@prisma/internals')
-            ) {
-              return
-            }
-
-            // graphql-scalars places `/*#__PURE__*/` on object literal exports
-            // which Rollup can't interpret (only valid before call/new
-            // expressions).
-            // Tracked upstream:
-            // https://github.com/graphql-hive/graphql-scalars/issues/2869
-            if (
-              warning.code === 'INVALID_ANNOTATION' &&
-              warning.id?.includes('graphql-scalars')
-            ) {
-              return
-            }
-
-            warn(warning)
-          },
         },
       },
     }
@@ -142,6 +117,43 @@ export async function buildCedarApp({
     : {}
 
   const plugins: PluginOption[] = [
+    // Suppress noisy warnings from third-party dependencies across all
+    // environments by injecting onwarn into every environment's rollupOptions.
+    {
+      name: 'cedar-suppress-third-party-warnings',
+      configResolved(config) {
+        function onwarn(warning: any, warn: (w: any) => void) {
+          // Prisma internals uses `eval()` for path resolution which produces
+          // EVAL warnings. The code is safe and works correctly at runtime.
+          // Tracked upstream: https://github.com/prisma/prisma/issues/20752
+          if (
+            warning.code === 'EVAL' &&
+            warning.id?.includes('@prisma/internals')
+          ) {
+            return
+          }
+
+          // graphql-scalars places `/*#__PURE__*/` on object literal exports
+          // which Rolldown can't interpret (only valid before call/new
+          // expressions).
+          // Tracked upstream:
+          // https://github.com/graphql-hive/graphql-scalars/issues/2869
+          if (
+            warning.code === 'INVALID_ANNOTATION' &&
+            warning.id?.includes('graphql-scalars')
+          ) {
+            return
+          }
+
+          warn(warning)
+        }
+
+        for (const env of Object.values(config.environments ?? {})) {
+          env.build.rollupOptions ??= {}
+          env.build.rollupOptions.onwarn = onwarn
+        }
+      },
+    },
     {
       name: 'cedar-build-app-cleanup',
       configResolved(config) {
