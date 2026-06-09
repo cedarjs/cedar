@@ -178,14 +178,7 @@ export function cedarUniversalDeployPlugin(
 
     config: {
       order: 'pre',
-      handler(_config, env) {
-        // Only register routes for SSR builds. During client builds the
-        // emitted chunks would reference paths that don't exist (e.g.
-        // new URL("./../functions/...")), causing Rollup resolution errors.
-        if (!env.isSsrBuild) {
-          return
-        }
-
+      handler() {
         if (entriesInjected) {
           return
         }
@@ -197,7 +190,11 @@ export function cedarUniversalDeployPlugin(
         clearCedarEntries()
 
         // Register per-route API entries so UD adapters can split on
-        // individual functions (e.g. Cloudflare Workers).
+        // individual functions (e.g. Cloudflare Workers). Entries are
+        // registered unconditionally so that they are available in the UD
+        // store before provider plugins (e.g. vite-plugin-vercel) read them
+        // during their configEnvironment hooks. The virtual module hooks
+        // below gate resolution to SSR-like environments only.
         for (const route of routes) {
           addEntry(toEntryMeta(route))
         }
