@@ -186,16 +186,19 @@ export async function buildCedarApp({
           delete (config.environments as Record<string, unknown>).ssr
         }
       },
+    },
+    {
+      name: 'cedar-build-app',
       buildApp: {
         order: 'pre',
         async handler(builder) {
-          // Vite 7's default buildApp is a no-op. The fallback only builds
-          // environments if NONE have been built yet. When a third-party
-          // plugin (e.g. vite-plugin-vercel) adds a `buildApp` hook that
-          // builds its own environments, the fallback is skipped because
-          // some environments are already marked as built. We must
-          // explicitly build Cedar's `client` and `api` environments here
-          // to ensure they are produced regardless of what other plugins do.
+          // Vite 7's default buildApp is a no-op. Vite's built-in fallback only
+          // builds environments if NONE have been built yet. When a third-party
+          // plugin (e.g. vite-plugin-vercel) adds a `buildApp` hook that builds
+          // its own environments, the fallback is skipped because some
+          // environments are already marked as built. We must explicitly build
+          // Cedar's `client` and `api` environments here to ensure they are
+          // produced regardless of what other plugins do.
           if (
             workspace.includes('web') &&
             builder.environments.client &&
