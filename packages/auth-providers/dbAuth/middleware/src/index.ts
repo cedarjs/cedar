@@ -146,10 +146,7 @@ async function validateSession({
     // If there's no session cookie the return value will be `null`.
     // If there is a session cookie, but it can't be decrypted, an error will
     // be thrown
-    decryptedSession = dbAuthSession(
-      req as Request,
-      generateCookieName(cookieName),
-    )
+    decryptedSession = dbAuthSession(req, generateCookieName(cookieName))
   } catch (e) {
     if (process.env.NODE_ENV === 'development') {
       console.debug('Could not decrypt dbAuth session', e)

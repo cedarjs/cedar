@@ -144,7 +144,7 @@ export function cellTransformPlugin(): Plugin {
               ],
               source: { type: 'StringLiteral' as const, value: importFrom },
             }
-            path.node.body.unshift(importDeclaration as any)
+            path.node.body.unshift(importDeclaration)
 
             // Create the object properties for the createCell call
             const objectProperties = [
@@ -185,7 +185,7 @@ export function cellTransformPlugin(): Plugin {
                 ],
               },
             }
-            path.node.body.push(exportDefaultDeclaration as any)
+            path.node.body.push(exportDefaultDeclaration)
           },
         })
 

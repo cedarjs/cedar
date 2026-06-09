@@ -42,7 +42,7 @@ export const verifyAuth0Token = (
     jwt.verify(
       bearerToken,
       (header, callback) => {
-        client.getSigningKey(header.kid as string, (error, key) => {
+        client.getSigningKey(header.kid, (error, key) => {
           callback(error, key?.getPublicKey())
         })
       },

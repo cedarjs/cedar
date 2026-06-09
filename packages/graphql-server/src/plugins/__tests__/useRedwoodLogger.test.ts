@@ -321,7 +321,7 @@ describe('Populates context', () => {
         setResult() {
           return undefined
         },
-      } as MockOnExecuteDonePayload)
+      })
 
       await watchFileCreated(logFile)
 
@@ -410,7 +410,7 @@ describe('Populates context', () => {
         setResult() {
           return undefined
         },
-      } as MockOnExecuteDonePayload)
+      })
 
       await watchFileCreated(logFile)
 

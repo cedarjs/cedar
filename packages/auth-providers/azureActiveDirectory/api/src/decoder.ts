@@ -34,7 +34,7 @@ export const authDecoder: Decoder = async (token: string, type: string) => {
     jwt.verify(
       token,
       (header, callback) => {
-        client.getSigningKey(header.kid as string, (error, key) => {
+        client.getSigningKey(header.kid, (error, key) => {
           try {
             callback(error, key?.getPublicKey())
           } catch (err) {

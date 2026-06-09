@@ -116,12 +116,12 @@ describe('useRedwoodAuthContext', () => {
         request,
         event: legacyEvent,
         requestContext: undefined,
-      } as MockContextBuildingArgs['context'],
+      },
       extendContext,
       breakContextBuilding() {
         return undefined
       },
-    } as MockContextBuildingArgs)
+    })
 
     expect(apiAuth.getAuthenticationContext).toHaveBeenCalledWith({
       authDecoder,
@@ -173,7 +173,7 @@ describe('useRedwoodAuthContext', () => {
         breakContextBuilding() {
           return undefined
         },
-      } as MockContextBuildingArgs),
+      }),
     ).rejects.toEqual(
       new Error('Exception in getCurrentUser: Could not fetch user from db.'),
     )

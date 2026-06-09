@@ -34,7 +34,7 @@ function extractRootFieldData<T>(
     return undefined
   }
 
-  return Object.values(payload)[0] as T | undefined
+  return Object.values(payload)[0]
 }
 
 export function useLiveQuery<T, TDb extends object = FrameworkDbClient>(
