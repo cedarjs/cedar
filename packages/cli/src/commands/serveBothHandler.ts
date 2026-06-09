@@ -110,7 +110,7 @@ export const bothSsrRscServerHandler = async (
   rscEnabled?: boolean,
 ) => {
   const apiPromise = apiServerHandler({
-    apiRootPath: argv.apiRootPath,
+    apiRootPath: argv.apiRootPath ?? getAPIRootPath(),
     host: argv.apiHost,
     port: argv.apiPort,
   })
