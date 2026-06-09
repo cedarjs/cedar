@@ -1,4 +1,3 @@
-import type { FederationMeta } from '@graphql-codegen/plugin-helpers'
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers'
 import { TypeScriptResolversVisitor } from '@graphql-codegen/typescript-resolvers'
 import { DeclarationBlock } from '@graphql-codegen/visitor-plugin-common'
@@ -15,7 +14,7 @@ export class RwTypeScriptResolversVisitor extends TypeScriptResolversVisitor {
     schema: GraphQLSchema,
   ) {
     // Pass an empty FederationMeta object since we don't use Apollo Federation.
-    super(pluginConfig, schema, {} as FederationMeta)
+    super(pluginConfig, schema, {})
   }
 
   FieldDefinition(

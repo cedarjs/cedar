@@ -112,12 +112,12 @@ describe('fetch-native GraphQL context preference', () => {
           request,
           event: legacyEvent,
           requestContext: undefined,
-        } as MockContextBuildingArgs['context'],
+        },
         extendContext,
         breakContextBuilding() {
           return undefined
         },
-      } as MockContextBuildingArgs)
+      })
 
       expect(apiAuth.getAuthenticationContext).toHaveBeenCalledWith({
         authDecoder,
@@ -152,7 +152,7 @@ describe('fetch-native GraphQL context preference', () => {
         breakContextBuilding() {
           return undefined
         },
-      } as MockContextBuildingArgs)
+      })
 
       expect(apiAuth.getAuthenticationContext).toHaveBeenCalledWith({
         authDecoder,

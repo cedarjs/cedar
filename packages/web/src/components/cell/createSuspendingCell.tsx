@@ -89,7 +89,7 @@ export function createSuspendingCell<
      * Right now, Cells don't render `children`.
      */
     const { children: _, ...variables } = props
-    const options = beforeQuery(variables as CellProps)
+    const options = beforeQuery(variables)
     const query = typeof QUERY === 'function' ? QUERY(options) : QUERY
     const [queryRef, other] = useBackgroundQuery(query, options)
 

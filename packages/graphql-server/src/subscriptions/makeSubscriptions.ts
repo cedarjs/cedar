@@ -32,7 +32,7 @@ export const makeSubscriptions = (
         schema: exports.schema,
         resolvers: exports[SubscriptionNameFromFile] || exports.default,
         name: SubscriptionNameFromFile,
-      } as RedwoodSubscription
+      }
 
       return [subscription]
     },

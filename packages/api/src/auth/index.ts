@@ -149,7 +149,7 @@ export const getAuthenticationContext = async ({
     schema = 'cookie'
     // If type is set in the header, use Bearer token auth (priority 2)
   } else if (typeFromHeader) {
-    const parsedAuthHeader = parseAuthorizationHeader(event as any)
+    const parsedAuthHeader = parseAuthorizationHeader(event)
     token = parsedAuthHeader.token
     type = typeFromHeader
     schema = parsedAuthHeader.schema

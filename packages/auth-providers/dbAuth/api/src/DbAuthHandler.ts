@@ -833,8 +833,7 @@ export class DbAuthHandler<
     let verification: VerifiedAuthenticationResponse
     try {
       const opts: VerifyAuthenticationResponseOpts = {
-        response: this.normalizedRequest
-          ?.jsonBody as AuthenticationResponseJSON, // by this point jsonBody has been validated
+        response: this.normalizedRequest?.jsonBody, // by this point jsonBody has been validated
         expectedChallenge: user[this.options.authFields.challenge as string],
         expectedOrigin: webAuthnOptions.origin,
         expectedRPID: webAuthnOptions.domain,
@@ -1018,7 +1017,7 @@ export class DbAuthHandler<
     let verification: VerifiedRegistrationResponse
     try {
       const options: VerifyRegistrationResponseOpts = {
-        response: this.normalizedRequest.jsonBody as RegistrationResponseJSON, // by this point jsonBody has been validated
+        response: this.normalizedRequest.jsonBody, // by this point jsonBody has been validated
         expectedChallenge: user[this.options.authFields.challenge as string],
         expectedOrigin: this.options.webAuthn.origin,
         expectedRPID: this.options.webAuthn.domain,

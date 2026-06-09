@@ -110,7 +110,7 @@ export const formatLevel = (level: any) => {
   return emoji + padding
 }
 
-export const formatLoadTime = (elapsedTime: any) => {
+export const formatLoadTime = (elapsedTime: string) => {
   const elapsed = parseInt(elapsedTime, 10)
   const time = prettyMs(elapsed)
   return ansis.gray(time)

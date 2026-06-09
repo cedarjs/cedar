@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   realtimeTs: '',
   serverTs: '',
   isEsm: false,
-  writtenFiles: {} as Record<string, string>,
+  writtenFiles: {},
 }))
 
 vi.mock('node:fs', async () => {
