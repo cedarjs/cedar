@@ -1,8 +1,16 @@
-export const createYargsForComponentDestroy = ({ componentName }) => {
+import type { Argv } from 'yargs'
+
+interface CreateYargsOptions {
+  componentName: string
+}
+
+export const createYargsForComponentDestroy = ({
+  componentName,
+}: CreateYargsOptions) => {
   return {
     command: `${componentName} <name>`,
     description: `Destroy a ${componentName} component`,
-    builder: (yargs) => {
+    builder: (yargs: Argv) => {
       yargs.positional('name', {
         description: `Name of the ${componentName}`,
         type: 'string',
@@ -11,8 +19,8 @@ export const createYargsForComponentDestroy = ({ componentName }) => {
   }
 }
 
-export function createHandler(componentName) {
-  return async (argv) => {
+export function createHandler(componentName: string) {
+  return async (argv: Record<string, unknown>) => {
     const importedHandler = await import(
       `./${componentName}/${componentName}Handler.js`
     )

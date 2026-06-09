@@ -4,7 +4,25 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 import { deleteFilesTask } from '../../lib/index.js'
 
-const tasks = ({ componentName, filesFn, name }) =>
+type FilesFunction = (
+  args: Record<string, unknown>,
+) => Promise<Record<string, string>>
+
+type HandlerOptions = { name: string } & Record<string, unknown>
+
+type PreTasksFn = (
+  options: HandlerOptions,
+) => Promise<HandlerOptions> | HandlerOptions
+
+const tasks = ({
+  componentName,
+  filesFn,
+  name,
+}: {
+  componentName: string
+  filesFn: FilesFunction
+  name: string
+}) =>
   new Listr(
     [
       {
@@ -22,9 +40,13 @@ export function createHandler({
   componentName,
   preTasksFn = (options) => options,
   filesFn,
+}: {
+  componentName: string
+  preTasksFn?: PreTasksFn
+  filesFn: FilesFunction
 }) {
   return {
-    handler: async (options) => {
+    handler: async (options: HandlerOptions) => {
       recordTelemetryAttributes({
         command: `destroy ${componentName}`,
       })
