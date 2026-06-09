@@ -1,3 +1,4 @@
+import { ServiceValidationError } from '@cedarjs/api'
 import { validateEmail } from '@my-org/validators'
 import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
@@ -18,7 +19,7 @@ export const createContact: MutationResolvers['createContact'] = ({
   input,
 }) => {
   if (!validateEmail(input.email)) {
-    throw new Error('Invalid email >' + input.email + '<')
+    throw new ServiceValidationError('Invalid email >' + input.email + '<')
   } else {
     console.log('Creating contact with email:', input.email)
   }

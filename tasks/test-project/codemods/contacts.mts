@@ -14,9 +14,20 @@ export default (file: FileInfo, api: API) => {
     j.stringLiteral('@my-org/validators'),
   )
 
+  const serviceValidationErrorImport = j.importDeclaration(
+    [
+      j.importSpecifier(
+        j.identifier('ServiceValidationError'),
+        j.identifier('ServiceValidationError'),
+      ),
+    ],
+    j.stringLiteral('@cedarjs/api'),
+  )
+
   // Add `import { validateEmail } from '@my-org/validators'` to the top of the
   // file
   root.get().node.program.body.unshift(validateImport)
+  root.get().node.program.body.unshift(serviceValidationErrorImport)
 
   // Insert this if-statment at the top of the `createContact` service function
   // if (!validateEmail(input.email)) {
@@ -45,7 +56,7 @@ export default (file: FileInfo, api: API) => {
 
         const ifBody = j.blockStatement([
           j.throwStatement(
-            j.newExpression(j.identifier('Error'), [
+            j.newExpression(j.identifier('ServiceValidationError'), [
               j.binaryExpression(
                 '+',
                 j.binaryExpression(
