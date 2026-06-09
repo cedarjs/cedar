@@ -94,31 +94,6 @@ export async function buildCedarApp({
 
             return false
           },
-          onwarn(warning, warn) {
-            // Prisma internals uses `eval()` for path resolution which Rollup
-            // warns about. The code is safe and works correctly at runtime.
-            // Tracked upstream: https://github.com/prisma/prisma/issues/20752
-            if (
-              warning.code === 'EVAL' &&
-              warning.id?.includes('@prisma/internals')
-            ) {
-              return
-            }
-
-            // graphql-scalars places `/*#__PURE__*/` on object literal exports
-            // which Rollup can't interpret (only valid before call/new
-            // expressions).
-            // Tracked upstream:
-            // https://github.com/graphql-hive/graphql-scalars/issues/2869
-            if (
-              warning.code === 'INVALID_ANNOTATION' &&
-              warning.id?.includes('graphql-scalars')
-            ) {
-              return
-            }
-
-            warn(warning)
-          },
         },
       },
     }
@@ -142,6 +117,66 @@ export async function buildCedarApp({
     : {}
 
   const plugins: PluginOption[] = [
+    // Suppress noisy warnings from third-party dependencies across all
+    // environments by injecting onwarn into every environment's rollupOptions.
+    {
+      name: 'cedar-suppress-third-party-warnings',
+      configResolved(config) {
+        function onwarn(warning: any, warn: (w: any) => void) {
+          // Prisma internals uses `eval()` for path resolution which produces
+          // EVAL warnings. The code is safe and works correctly at runtime.
+          // Tracked upstream: https://github.com/prisma/prisma/issues/20752
+          if (
+            warning.code === 'EVAL' &&
+            warning.id?.includes('@prisma/internals')
+          ) {
+            return
+          }
+
+          // graphql-scalars places `/*#__PURE__*/` on object literal exports
+          // which Rolldown can't interpret (only valid before call/new
+          // expressions).
+          // Tracked upstream:
+          // https://github.com/graphql-hive/graphql-scalars/issues/2869
+          if (
+            warning.code === 'INVALID_ANNOTATION' &&
+            warning.id?.includes('graphql-scalars')
+          ) {
+            return
+          }
+
+          warn(warning)
+        }
+
+        for (const env of Object.values(config.environments ?? {})) {
+          env.build.rollupOptions ??= {}
+          const existingOnwarn = env.build.rollupOptions.onwarn
+          env.build.rollupOptions.onwarn = existingOnwarn
+            ? (warning, warn) => {
+                onwarn(warning, (w) => existingOnwarn(w, warn))
+              }
+            : onwarn
+        }
+      },
+    },
+    // Resolve bare-specifier dynamic imports from node_modules as external
+    // before Rollup attempts resolution, avoiding UNRESOLVED_IMPORT warnings
+    // for optional peer dependencies (e.g. @simplewebauthn/server).
+    {
+      name: 'cedar-optional-peer-deps',
+      resolveDynamicImport(specifier, importer) {
+        if (
+          typeof specifier === 'string' &&
+          !specifier.startsWith('.') &&
+          !specifier.startsWith('/') &&
+          importer?.includes('node_modules')
+        ) {
+          return { id: specifier, external: true }
+        }
+
+        return null
+      },
+    },
     {
       name: 'cedar-build-app-cleanup',
       configResolved(config) {
