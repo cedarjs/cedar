@@ -1,7 +1,6 @@
 import path from 'path'
 
 import concurrently from 'concurrently'
-import execa from 'execa'
 
 import { handler as apiServerHandler } from '@cedarjs/api-server/cjs/apiCliConfigHandler'
 import {
@@ -10,10 +9,11 @@ import {
   getWebHost,
   getWebPort,
 } from '@cedarjs/api-server/cjs/cliHelpers'
+import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
 
 type ServeBothArgv = {
@@ -45,7 +45,7 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
   ) {
     logSkippingFastifyWebServer()
 
-    await execa('yarn', ['cedar-serve-fe'], {
+    await runBin('cedar-serve-fe', [], {
       cwd: getPaths().web.base,
       stdio: 'inherit',
     })
@@ -55,27 +55,27 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
     argv.webPort ??= getWebPort()
     argv.webHost ??= getWebHost()
 
+    const apiRootPath = argv.apiRootPath || ''
+
     const apiProxyTarget = [
       'http://',
       argv.apiHost.includes(':') ? `[${argv.apiHost}]` : argv.apiHost,
       ':',
       argv.apiPort,
-      argv.apiRootPath,
+      apiRootPath,
     ].join('')
 
     const { result } = concurrently(
       [
         {
           name: 'api',
-          command: `yarn node ${path.join('dist', 'server.js')} --apiPort ${
-            argv.apiPort
-          } --apiHost ${argv.apiHost} --apiRootPath ${argv.apiRootPath}`,
+          command: `${formatRunBinCommand('node', [path.join('dist', 'server.js'), '--apiPort', String(argv.apiPort), '--apiHost', argv.apiHost, '--apiRootPath', apiRootPath])}`,
           cwd: getPaths().api.base,
           prefixColor: 'cyan',
         },
         {
           name: 'web',
-          command: `yarn cedar-web-server --port ${argv.webPort} --host ${argv.webHost} --api-proxy-target ${apiProxyTarget}`,
+          command: `${formatRunBinCommand('cedar-web-server', ['--port', String(argv.webPort), '--host', argv.webHost, '--api-proxy-target', apiProxyTarget])}`,
           cwd: getPaths().base,
           prefixColor: 'blue',
         },
@@ -115,7 +115,7 @@ export const bothSsrRscServerHandler = async (
 
   // TODO (RSC): More gracefully handle Ctrl-C
   // Right now you get a big red error box when you kill the process
-  const fePromise = execa('yarn', ['cedar-serve-fe'], {
+  const fePromise = runBin('cedar-serve-fe', [], {
     cwd: getPaths().web.base,
     stdio: 'inherit',
     env: rscEnabled
