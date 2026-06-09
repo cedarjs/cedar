@@ -7,6 +7,7 @@ import { handler as apiServerHandler } from '@cedarjs/api-server/cjs/apiCliConfi
 import {
   getAPIHost,
   getAPIPort,
+  getAPIRootPath,
   getWebHost,
   getWebPort,
 } from '@cedarjs/api-server/cjs/cliHelpers'
@@ -55,12 +56,14 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
     argv.webPort ??= getWebPort()
     argv.webHost ??= getWebHost()
 
+    const apiRootPath = argv.apiRootPath ?? getAPIRootPath()
+
     const apiProxyTarget = [
       'http://',
       argv.apiHost.includes(':') ? `[${argv.apiHost}]` : argv.apiHost,
       ':',
       argv.apiPort,
-      argv.apiRootPath,
+      apiRootPath,
     ].join('')
 
     const { result } = concurrently(
@@ -69,7 +72,7 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
           name: 'api',
           command: `yarn node ${path.join('dist', 'server.js')} --apiPort ${
             argv.apiPort
-          } --apiHost ${argv.apiHost} --apiRootPath ${argv.apiRootPath}`,
+          } --apiHost ${argv.apiHost} --apiRootPath ${apiRootPath}`,
           cwd: getPaths().api.base,
           prefixColor: 'cyan',
         },
