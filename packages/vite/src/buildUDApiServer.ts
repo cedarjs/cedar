@@ -45,69 +45,97 @@ export async function buildUDApiServer({
   // collide with the existing esbuild output under api/dist/.
   const outDir = path.join(cedarPaths.api.dist, 'ud')
 
-  await build({
-    // Load the user's Vite config so all plugins (Cedar's UD plugin,
-    // provider plugins, etc.) run during the build.
-    configFile: cedarPaths.web.viteConfig,
-    logLevel: verbose ? 'info' : 'warn',
+  // The user's Vite config may include provider plugins (e.g. vercel())
+  // that clean their output directory (e.g. .vercel/output) during
+  // buildStart. Since buildUDApiServer loads the same config, those
+  // cleanup hooks fire again and delete artifacts produced by the prior
+  // buildCedarApp step. Save and restore provider output directories to
+  // prevent this.
+  const providerOutputDirs = [path.join(cedarPaths.base, '.vercel', 'output')]
+  const savedDirs = new Map<string, string>()
 
-    plugins: [
-      // catchAll() generates the rou3-based route dispatcher
-      // (virtual:ud:catch-all). devServer() provides Vite dev support for
-      // cedar dev --ud.
-      //
-      // NOTE: We intentionally do NOT use universalDeploy() here — that
-      // plugin auto-detects deployment targets and would embed the Node
-      // HTTP server startup code into the output. Our plugin list is
-      // adapter-free: the output is a pure Fetchable export, and cedar
-      // serve wraps it in srvx at runtime.
-      catchAll(),
-      devServer(),
+  for (const dir of providerOutputDirs) {
+    if (fs.existsSync(dir)) {
+      const tmpDir = dir + '.cedar-ud-backup'
+      await fs.promises.cp(dir, tmpDir, { recursive: true, force: true })
+      savedDirs.set(dir, tmpDir)
+    }
+  }
 
-      // Warn if no Cedar API routes were registered — likely means the
-      // user's vite config is missing cedarUniversalDeployPlugin or there
-      // are no API functions to serve.
-      {
-        name: 'cedar-ud-verify-routes',
-        configResolved() {
-          const entries = getAllEntries()
-          if (entries.length === 0) {
-            console.warn(
-              '\n  Warning: No Universal Deploy API routes were registered.',
-              '\n  The built server entry will be an empty router (404 for all',
-              '\n  requests). Check that you have API functions under',
-              '\n  `api/src/functions/` and that your vite config includes',
-              '\n  `cedarUniversalDeployPlugin()`.\n',
-            )
-          }
+  try {
+    await build({
+      // Load the user's Vite config so all plugins (Cedar's UD plugin,
+      // provider plugins, etc.) run during the build.
+      configFile: cedarPaths.web.viteConfig,
+      logLevel: verbose ? 'info' : 'warn',
+
+      plugins: [
+        // catchAll() generates the rou3-based route dispatcher
+        // (virtual:ud:catch-all). devServer() provides Vite dev support for
+        // cedar dev --ud.
+        //
+        // NOTE: We intentionally do NOT use universalDeploy() here — that
+        // plugin auto-detects deployment targets and would embed the Node
+        // HTTP server startup code into the output. Our plugin list is
+        // adapter-free: the output is a pure Fetchable export, and cedar
+        // serve wraps it in srvx at runtime.
+        catchAll(),
+        devServer(),
+
+        // Warn if no Cedar API routes were registered — likely means the
+        // user's vite config is missing cedarUniversalDeployPlugin or there
+        // are no API functions to serve.
+        {
+          name: 'cedar-ud-verify-routes',
+          configResolved() {
+            const entries = getAllEntries()
+            if (entries.length === 0) {
+              console.warn(
+                '\n  Warning: No Universal Deploy API routes were registered.',
+                '\n  The built server entry will be an empty router (404 for all',
+                '\n  requests). Check that you have API functions under',
+                '\n  `api/src/functions/` and that your vite config includes',
+                '\n  `cedarUniversalDeployPlugin()`.\n',
+              )
+            }
+          },
+        },
+      ],
+      // Legacy ssr flag approach. The explicit rollupOptions.input prevents the
+      // "index.html as SSR entry" error. Vite will also build a 'client'
+      // environment from the user's config file (wasteful but harmless), and
+      // the 'ssr' environment produces our canonical Fetchable artifact at
+      // api/dist/ud/index.js.
+      build: {
+        ssr: true,
+        outDir,
+        rollupOptions: {
+          input: catchAllEntry,
+          output: {
+            entryFileNames: 'index.js',
+          },
         },
       },
-    ],
+    })
 
-    // Legacy ssr flag approach. The explicit rollupOptions.input prevents the
-    // "index.html as SSR entry" error. Vite will also build a 'client'
-    // environment from the user's config file (wasteful but harmless), and
-    // the 'ssr' environment produces our canonical Fetchable artifact at
-    // api/dist/ud/index.js.
-    build: {
-      ssr: true,
-      outDir,
-      rollupOptions: {
-        input: catchAllEntry,
-        output: {
-          entryFileNames: 'index.js',
-        },
-      },
-    },
-  })
-
-  // Write a package.json to mark the UD output directory as ESM. This
-  // ensures Node.js treats .js files (index.js, handler chunks) as ES
-  // modules regardless of the parent package.json type setting.
-  // TODO: Probably remove this - It's here to support CJS apps, but I'm not
-  // sure we'll ever be able to fully support that with UD
-  fs.writeFileSync(
-    path.join(outDir, 'package.json'),
-    JSON.stringify({ type: 'module' }, null, 2),
-  )
+    // Write a package.json to mark the UD output directory as ESM. This ensures
+    // Node.js treats .js files (index.js, handler chunks) as ES modules
+    // regardless of the parent package.json type setting.
+    // TODO: Probably remove this - It's here to support CJS apps, but I'm not
+    // sure we'll ever be able to fully support that with UD
+    fs.writeFileSync(
+      path.join(outDir, 'package.json'),
+      JSON.stringify({ type: 'module' }, null, 2),
+    )
+  } finally {
+    // Restore provider output directories that were saved before the build.
+    for (const [dir, tmpDir] of savedDirs) {
+      if (fs.existsSync(tmpDir)) {
+        const opts = { recursive: true, force: true }
+        await fs.promises.rm(dir, opts).catch(() => {})
+        await fs.promises.cp(tmpDir, dir, opts)
+        await fs.promises.rm(tmpDir, opts).catch(() => {})
+      }
+    }
+  }
 }

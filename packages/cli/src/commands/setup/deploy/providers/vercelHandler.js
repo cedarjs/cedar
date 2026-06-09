@@ -91,11 +91,16 @@ function addVercelPluginToViteConfigTask() {
         }
       }
 
-      // Add plugin call before cedar() in the plugins array
+      // Add plugin call before cedar() in the plugins array.
+      // outDir is set to '../.vercel/output' because vite-plugin-vercel
+      // resolves outDir relative to the Vite root (web/), but the output
+      // must land at the project root. This also avoids a bug where the
+      // plugin captures process.cwd() at module load time instead of build
+      // time.
       if (!content.includes('vercel(')) {
         const result = insertPluginsBeforeCedar({
           content,
-          pluginCodes: ['vercel()'],
+          pluginCodes: ["vercel({ outDir: '../.vercel/output' })"],
         })
 
         if (result) {
