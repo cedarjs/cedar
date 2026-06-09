@@ -91,185 +91,186 @@ const testProjectName = `cedar-vercel-test-${randomBytes}`
 const testProjectDir = path.join(os.tmpdir(), testProjectName)
 fs.mkdirSync(testProjectDir, { recursive: true })
 
-// ─── Step 1: Build packages ──────────────────────────────────────────────────
-
-log('Building Cedar packages...')
-run('yarn build', { cwd: REPO_ROOT, stdio: 'inherit' })
-
-// ─── Step 2: Set up test project ─────────────────────────────────────────────
-
-log(`Setting up test project at ${testProjectDir}`)
-run(`cp -r "${FIXTURE_DIR}/." "${testProjectDir}"`)
-
-log('Linking local packages via tarsync...')
-run(`yarn project:tarsync "${testProjectDir}"`, { cwd: REPO_ROOT })
-
-// ─── Step 3: Set up Universal Deploy + Vercel ────────────────────────────────
-
-log('Setting up Universal Deploy...')
-run('yarn cedar setup deploy universal-deploy', { cwd: testProjectDir })
-
-log('Setting up Vercel deploy (UD)...')
-run('yarn cedar setup deploy vercel --ud', { cwd: testProjectDir })
-
-// Override vite-plugin-vercel with local tarball if provided
-const vercelPluginTarball = process.env.VERCEL_PLUGIN_TARBALL
-if (vercelPluginTarball) {
-  log(`Installing local vite-plugin-vercel: ${vercelPluginTarball}`)
-  run(`yarn add "${vercelPluginTarball}"`, { cwd: testProjectDir })
+function step1buildPackages() {
+  log('Building Cedar packages...')
+  run('yarn build', { cwd: REPO_ROOT, stdio: 'inherit' })
 }
 
-// ─── Step 4: Build ───────────────────────────────────────────────────────────
+function step2setupTestProject() {
+  log(`Setting up test project at ${testProjectDir}`)
+  run(`cp -r "${FIXTURE_DIR}/." "${testProjectDir}"`)
 
-log('Building app with --ud...')
+  log('Linking local packages via tarsync...')
+  run(`yarn project:tarsync "${testProjectDir}"`, { cwd: REPO_ROOT })
+}
 
-process.env.DATABASE_URL = 'file:./db/dev.db'
-process.env.DIRECT_DATABASE_URL = 'file:./db/dev.db'
+function step3setupUniversalDeployAndVercel() {
+  log('Setting up Universal Deploy...')
+  run('yarn cedar setup deploy universal-deploy', { cwd: testProjectDir })
 
-// Prerendering may fail without a real database, but .vercel/output is created
-// before prerender runs, so we tolerate the failure.
-try {
+  log('Setting up Vercel deploy (UD)...')
+  run('yarn cedar setup deploy vercel --ud', { cwd: testProjectDir })
+
+  // Override vite-plugin-vercel with local tarball if provided
+  const vercelPluginTarball = process.env.VERCEL_PLUGIN_TARBALL
+  if (vercelPluginTarball) {
+    log(`Installing local vite-plugin-vercel: ${vercelPluginTarball}`)
+    run(`yarn add "${vercelPluginTarball}"`, { cwd: testProjectDir })
+  }
+}
+
+function step4buildApp() {
+  log('Building app with --ud...')
+
+  process.env.DATABASE_URL = 'file:./db/dev.db'
+  process.env.DIRECT_DATABASE_URL = 'file:./db/dev.db'
+
   run('yarn cedar build --ud --apiRootPath=/.api/functions --no-prerender', {
     cwd: testProjectDir,
   })
-} catch {
-  warn('Build exited with errors (likely prerender), checking output anyway...')
 }
 
-// ─── Step 5: Verify .vercel/output/ structure ────────────────────────────────
+function step5verifyOutput() {
+  log('Verifying .vercel/output/ structure...')
 
-log('Verifying .vercel/output/ structure...')
+  const vercelOut = path.join(testProjectDir, '.vercel', 'output')
 
-const vercelOut = path.join(testProjectDir, '.vercel', 'output')
-
-assert(fs.existsSync(vercelOut), '.vercel/output/ does not exist')
-assert(
-  fs.existsSync(path.join(vercelOut, 'config.json')),
-  '.vercel/output/config.json missing',
-)
-assert(
-  fs.existsSync(path.join(vercelOut, 'functions')),
-  '.vercel/output/functions/ missing',
-)
-assert(
-  fs.existsSync(path.join(vercelOut, 'static')),
-  '.vercel/output/static/ missing',
-)
-assert(
-  fs.existsSync(path.join(vercelOut, 'static', 'index.html')),
-  '.vercel/output/static/index.html missing',
-)
-
-const indexHtml = fs.readFileSync(
-  path.join(vercelOut, 'static', 'index.html'),
-  'utf-8',
-)
-assert(
-  indexHtml.includes('id="cedar-app"'),
-  'static/index.html does not contain id="cedar-app"',
-)
-ok('static/index.html contains id="cedar-app"')
-
-const configJson = JSON.parse(
-  fs.readFileSync(path.join(vercelOut, 'config.json'), 'utf-8'),
-)
-assert('routes' in configJson, 'config.json does not have routes')
-ok('config.json has routes')
-
-if (JSON.stringify(configJson).includes('"filesystem"')) {
-  ok('config.json has { handle: "filesystem" } for static file serving')
-} else {
-  warn(
-    'config.json missing { handle: "filesystem" } — static files may not be served',
+  assert(fs.existsSync(vercelOut), '.vercel/output/ does not exist')
+  assert(
+    fs.existsSync(path.join(vercelOut, 'config.json')),
+    '.vercel/output/config.json missing',
   )
-}
+  assert(
+    fs.existsSync(path.join(vercelOut, 'functions')),
+    '.vercel/output/functions/ missing',
+  )
+  assert(
+    fs.existsSync(path.join(vercelOut, 'static')),
+    '.vercel/output/static/ missing',
+  )
+  assert(
+    fs.existsSync(path.join(vercelOut, 'static', 'index.html')),
+    '.vercel/output/static/index.html missing',
+  )
 
-log('API functions found:')
-for (const name of fs.readdirSync(path.join(vercelOut, 'functions'))) {
-  console.log(`  ${name}`)
-}
+  const indexHtml = fs.readFileSync(
+    path.join(vercelOut, 'static', 'index.html'),
+    'utf-8',
+  )
+  assert(
+    indexHtml.includes('id="cedar-app"'),
+    'static/index.html does not contain id="cedar-app"',
+  )
+  ok('static/index.html contains id="cedar-app"')
 
-console.log()
-ok('Build output verification passed!')
-console.log()
+  const configJson = JSON.parse(
+    fs.readFileSync(path.join(vercelOut, 'config.json'), 'utf-8'),
+  )
+  assert('routes' in configJson, 'config.json does not have routes')
+  ok('config.json has routes')
 
-// Print directory listing
-log('Output directory contents:')
-const files: string[] = []
-function walk(dir: string) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) {
-      walk(full)
-    } else {
-      files.push(`  ${path.relative(testProjectDir, full)}`)
-    }
-  }
-}
-walk(vercelOut)
-files.sort().forEach((f) => console.log(f))
-
-// ─── Step 6: Deploy (optional) ───────────────────────────────────────────────
-
-if (!args.deploy) {
-  console.log()
-  log('Skipping deploy (run with --deploy to deploy to Vercel)')
-  log(`Test project kept at: ${testProjectDir}`)
-  process.exit(0)
-}
-
-// Check for Vercel token or CLI login
-let vercelFlag = ''
-if (!process.env.VERCEL_TOKEN) {
-  const whoami = runQuiet('npx vercel whoami')
-  if (!whoami) {
-    fail(
-      'VERCEL_TOKEN not set and vercel CLI not logged in. Run: npx vercel login',
+  if (JSON.stringify(configJson).includes('"filesystem"')) {
+    ok('config.json has { handle: "filesystem" } for static file serving')
+  } else {
+    warn(
+      'config.json missing { handle: "filesystem" } — static files may not be served',
     )
   }
-  log('Using vercel CLI login (no VERCEL_TOKEN set)')
-} else {
-  log('Using VERCEL_TOKEN')
-  vercelFlag = `--token ${process.env.VERCEL_TOKEN}`
+
+  log('API functions found:')
+  for (const name of fs.readdirSync(path.join(vercelOut, 'functions'))) {
+    console.log(`  ${name}`)
+  }
+
+  console.log()
+  ok('Build output verification passed!')
+  console.log()
+
+  // Print directory listing
+  log('Output directory contents:')
+  const files: string[] = []
+  function walk(dir: string) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name)
+      if (entry.isDirectory()) {
+        walk(full)
+      } else {
+        files.push(`  ${path.relative(testProjectDir, full)}`)
+      }
+    }
+  }
+  walk(vercelOut)
+  files.sort().forEach((f) => console.log(f))
 }
 
-// Deploy (creates project if it doesn't exist)
-log('Deploying to Vercel...')
-try {
-  run(
-    `npx vercel deploy --prebuilt --prod --yes --name "${testProjectName}" ${vercelFlag}`,
-    {
-      cwd: testProjectDir,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    },
-  )
-} catch (e: any) {
-  console.error(e.stdout || e.message)
-  fail('Vercel deploy failed')
-}
+async function step6deploy() {
+  if (!args.deploy) {
+    console.log()
+    log('Skipping deploy (run with --deploy to deploy to Vercel)')
+    log(`Test project kept at: ${testProjectDir}`)
+    process.exit(0)
+  }
 
-// Use the production alias URL rather than the deployment URL, which
-// may be behind Vercel's deployment protection (returns 401).
-const deployUrl = `https://${testProjectName}.vercel.app`
+  // Check for Vercel token or CLI login
+  let vercelFlag = ''
+  if (!process.env.VERCEL_TOKEN) {
+    const whoami = runQuiet('npx vercel whoami')
+    if (!whoami) {
+      fail(
+        'VERCEL_TOKEN not set and vercel CLI not logged in. Run: npx vercel login',
+      )
+    }
+    log('Using vercel CLI login (no VERCEL_TOKEN set)')
+  } else {
+    log('Using VERCEL_TOKEN')
+    vercelFlag = `--token ${process.env.VERCEL_TOKEN}`
+  }
 
-log(`Deployed to: ${deployUrl}`)
+  // Deploy (creates project if it doesn't exist)
+  log('Deploying to Vercel...')
+  try {
+    run(
+      `npx vercel deploy --prebuilt --prod --yes --name "${testProjectName}" ${vercelFlag}`,
+      {
+        cwd: testProjectDir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    )
+  } catch (e: any) {
+    console.error(e.stdout || e.message)
+    fail('Vercel deploy failed')
+  }
 
-// Wait for deployment to be ready
-log('Waiting for deployment to be ready...')
-await new Promise((r) => setTimeout(r, 5000))
+  // Use the production alias URL rather than the deployment URL, which
+  // may be behind Vercel's deployment protection (returns 401).
+  const deployUrl = `https://${testProjectName}.vercel.app`
 
-// Run tests
-log('Running tests...')
-run(
-  `VERCEL_DEPLOY_URL="${deployUrl}" yarn vitest run tasks/vercel-tests/vercel.test.mts`,
-  {
+  log(`Deployed to: ${deployUrl}`)
+
+  // Wait for deployment to be ready
+  log('Waiting for deployment to be ready...')
+  await new Promise((r) => setTimeout(r, 5000))
+
+  // Run tests
+  log('Running tests...')
+  const ciTestScript = 'tasks/vercel-tests/vercel.test.mts'
+  run(`VERCEL_DEPLOY_URL="${deployUrl}" yarn vitest run ${ciTestScript}`, {
     cwd: REPO_ROOT,
     stdio: 'inherit',
-  },
-)
+  })
 
-ok('All tests passed!')
+  ok('All tests passed!')
 
-// Cleanup Vercel project
-log(`Cleaning up Vercel project: ${testProjectName}`)
-runQuiet(`echo "y" | npx vercel projects rm "${testProjectName}" ${vercelFlag}`)
+  // Cleanup Vercel project
+  log(`Cleaning up Vercel project: ${testProjectName}`)
+  runQuiet(
+    `echo "y" | npx vercel projects rm "${testProjectName}" ${vercelFlag}`,
+  )
+}
+
+step1buildPackages()
+step2setupTestProject()
+step3setupUniversalDeployAndVercel()
+step4buildApp()
+step5verifyOutput()
+await step6deploy()

@@ -32,4 +32,3 @@ packages/create-cedar-app/create-cedar-app.tgz
 .nx/*
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
-.vercel

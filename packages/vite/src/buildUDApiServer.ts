@@ -119,9 +119,9 @@ export async function buildUDApiServer({
       },
     })
 
-    // Write a package.json to mark the UD output directory as ESM. This
-    // ensures Node.js treats .js files (index.js, handler chunks) as ES
-    // modules regardless of the parent package.json type setting.
+    // Write a package.json to mark the UD output directory as ESM. This ensures
+    // Node.js treats .js files (index.js, handler chunks) as ES modules
+    // regardless of the parent package.json type setting.
     // TODO: Probably remove this - It's here to support CJS apps, but I'm not
     // sure we'll ever be able to fully support that with UD
     fs.writeFileSync(

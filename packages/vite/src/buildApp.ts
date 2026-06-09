@@ -145,17 +145,6 @@ export async function buildCedarApp({
             return
           }
 
-          // Optional peer dependencies (e.g. @simplewebauthn/server) are
-          // dynamically imported from node_modules and expected to be external.
-          // Rolldown still emits UNRESOLVED_IMPORT warnings for these even when
-          // marked external via resolveDynamicImport.
-          if (
-            warning.code === 'UNRESOLVED_IMPORT' &&
-            warning.id?.includes('node_modules')
-          ) {
-            return
-          }
-
           warn(warning)
         }
 
