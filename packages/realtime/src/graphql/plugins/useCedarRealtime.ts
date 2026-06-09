@@ -192,7 +192,9 @@ export const useCedarRealtime = (
         options.liveQueries.store.redis.channel || 'live-query-invalidations',
         inMemoryLiveQueryStore,
       )
-      liveQueryPlugin = useLiveQuery({ liveQueryStore })
+      liveQueryPlugin = useLiveQuery({
+        liveQueryStore: liveQueryStore as unknown as InMemoryLiveQueryStore,
+      })
     } else {
       throw new Error('Invalid live query store configuration.')
     }
