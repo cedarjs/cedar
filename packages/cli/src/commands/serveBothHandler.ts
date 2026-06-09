@@ -6,6 +6,7 @@ import { handler as apiServerHandler } from '@cedarjs/api-server/cjs/apiCliConfi
 import {
   getAPIHost,
   getAPIPort,
+  getAPIRootPath,
   getWebHost,
   getWebPort,
 } from '@cedarjs/api-server/cjs/cliHelpers'
@@ -55,7 +56,7 @@ export const bothServerFileHandler = async (argv: ServeBothArgv) => {
     argv.webPort ??= getWebPort()
     argv.webHost ??= getWebHost()
 
-    const apiRootPath = argv.apiRootPath || ''
+    const apiRootPath = argv.apiRootPath ?? getAPIRootPath()
 
     const apiProxyTarget = [
       'http://',
@@ -108,7 +109,7 @@ export const bothSsrRscServerHandler = async (
   rscEnabled?: boolean,
 ) => {
   const apiPromise = apiServerHandler({
-    apiRootPath: argv.apiRootPath,
+    apiRootPath: argv.apiRootPath ?? getAPIRootPath(),
     host: argv.apiHost,
     port: argv.apiPort,
   })
