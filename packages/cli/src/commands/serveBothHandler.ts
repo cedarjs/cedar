@@ -14,7 +14,6 @@ import {
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
-// @ts-expect-error - Types not available for JS files
 import { exitWithError } from '../lib/exit.js'
 
 type ServeBothArgv = {
