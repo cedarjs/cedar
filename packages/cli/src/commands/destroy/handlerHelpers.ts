@@ -8,9 +8,11 @@ type FilesFunction = (
   args: Record<string, unknown>,
 ) => Promise<Record<string, string>>
 
+type HandlerOptions = { name: string } & Record<string, unknown>
+
 type PreTasksFn = (
-  options: Record<string, unknown>,
-) => Promise<Record<string, unknown>> | Record<string, unknown>
+  options: HandlerOptions,
+) => Promise<HandlerOptions> | HandlerOptions
 
 const tasks = ({
   componentName,
@@ -44,12 +46,12 @@ export function createHandler({
   filesFn: FilesFunction
 }) {
   return {
-    handler: async (options: Record<string, unknown>) => {
+    handler: async (options: HandlerOptions) => {
       recordTelemetryAttributes({
         command: `destroy ${componentName}`,
       })
       options = await preTasksFn({ ...options, isDestroyer: true })
-      await tasks({ componentName, filesFn, name: options.name as string }).run()
+      await tasks({ componentName, filesFn, name: options.name }).run()
     },
     tasks,
   }
