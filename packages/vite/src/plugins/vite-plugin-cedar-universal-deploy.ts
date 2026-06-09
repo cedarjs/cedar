@@ -413,7 +413,15 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
           authDecoder: graphqlOptions ? graphqlOptions.authDecoder : undefined,
         });
         const event = await requestToLegacyEvent(request, cedarContext);
-        return yoga.handle(request, { request, cedarContext, event, requestContext: undefined });
+        const response = await yoga.handle(request, { request, cedarContext, event, requestContext: undefined });
+        // GraphQL Yoga returns a PonyfillResponse from @whatwg-node/fetch
+        // which is not an instanceof the native Response class. Netlify's
+        // bootstrap checks instanceof Response, so we wrap it.
+        return new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        });
       }
     };
   `
