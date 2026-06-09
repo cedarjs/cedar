@@ -2,7 +2,6 @@ import type { Argv } from 'yargs'
 
 interface CreateYargsOptions {
   componentName: string
-  filesFn?: (args: Record<string, unknown>) => Promise<Record<string, string>>
 }
 
 export const createYargsForComponentDestroy = ({
