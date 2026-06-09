@@ -48,6 +48,7 @@
 - Commit history follows Conventional Commits with scopes, e.g. `feat(realtime): ...`, `fix(cli): ...`, `chore(deps): ...`.
 - PRs should include a clear summary, testing notes (commands run), and linked issues when applicable.
 - Add screenshots or CLI output when changes affect user-facing behavior.
+- Use `gh api repos/cedarjs/cedar/pulls/<pr-number>/comments -jq '.[] | {user: .user.login, path: .path, line: .line, body: .body}'` to get review comments for a PR. If you don't already know the PR number you can run `gh pr status --json number --jq .currentBranch.number` to get it
 
 ## Agent-Specific Notes
 
