@@ -252,7 +252,7 @@ jobs:
 
   e2e-vercel:
     needs: check
-    if: github.repository == 'cedarjs/cedar'
+    if: github.repository == 'cedarjs/cedar' && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
     name: ▲ E2E Vercel deploy
     uses: ./.github/workflows/e2e-vercel.yml
     secrets: inherit
