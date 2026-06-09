@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import { cp, rm } from 'node:fs/promises'
 import path from 'node:path'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -58,7 +57,7 @@ export async function buildUDApiServer({
   for (const dir of providerOutputDirs) {
     if (fs.existsSync(dir)) {
       const tmpDir = dir + '.cedar-ud-backup'
-      await cp(dir, tmpDir, { recursive: true, force: true })
+      await fs.promises.cp(dir, tmpDir, { recursive: true, force: true })
       savedDirs.set(dir, tmpDir)
     }
   }
@@ -132,9 +131,10 @@ export async function buildUDApiServer({
     // Restore provider output directories that were saved before the build.
     for (const [dir, tmpDir] of savedDirs) {
       if (fs.existsSync(tmpDir)) {
-        await rm(dir, { recursive: true, force: true }).catch(() => {})
-        await cp(tmpDir, dir, { recursive: true, force: true })
-        await rm(tmpDir, { recursive: true, force: true }).catch(() => {})
+        const opts = { recursive: true, force: true }
+        await fs.promises.rm(dir, opts).catch(() => {})
+        await fs.promises.cp(tmpDir, dir, opts)
+        await fs.promises.rm(tmpDir, opts).catch(() => {})
       }
     }
   }
