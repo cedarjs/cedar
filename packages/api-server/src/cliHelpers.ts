@@ -13,6 +13,10 @@ export function getAPIPort() {
     : getConfig().api.port
 }
 
+export function getAPIRootPath() {
+  return process.env.CEDAR_API_ROOT_PATH ?? '/'
+}
+
 export function getWebHost() {
   let host = process.env.REDWOOD_WEB_HOST
   host ??= getConfig().web.host
