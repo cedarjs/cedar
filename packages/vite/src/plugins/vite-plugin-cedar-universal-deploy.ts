@@ -308,7 +308,29 @@ async function bundleDistFile(distPath: string): Promise<string> {
     format: 'esm',
     platform: 'node',
     target: 'node24',
-    packages: 'external',
+    plugins: [
+      {
+        name: 'ud-external',
+        setup(build) {
+          build.onResolve({ filter: /^[^.]/ }, (args) => {
+            // Let esbuild resolve absolute paths and node: imports normally
+            if (args.path.startsWith('node:') || args.path.startsWith('/')) {
+              return
+            }
+
+            // Inline api/ workspace imports (e.g.
+            // api/db/generated/prisma/client.mts) so they don't rely on
+            // yarn workspace symlinks at runtime on the deployed platform.
+            if (args.path.startsWith('api/')) {
+              return
+            }
+
+            // Externalize all other bare specifiers (npm packages).
+            return { external: true }
+          })
+        },
+      },
+    ],
     logLevel: 'silent',
   })
 
@@ -354,12 +376,24 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   // inline bundle rather than going through a separate file import.
   const bundledCode = await bundleDistFile(distPath)
 
+  // Strip the dead `createGraphQLHandler` call that esbuild preserved from
+  // the original graphql.ts. The UD wrapper uses `createGraphQLYoga`
+  // directly, so this legacy handler init is unnecessary and introduces
+  // wasteful eager Yoga initialization (plus the Prisma client import) on
+  // module load.
+  // Note: no $ anchor — the dead call appears in the middle of the bundled code,
+  // followed by the Lambda-shaped handler wrapper from api/dist/functions/graphql.ts.
+  const cleanedCode = bundledCode.replace(
+    /\n\s*(?:var|const)\s+\w+\s*=\s*createGraphQLHandler\s*\([^)]*\)\s*;?/,
+    '\n',
+  )
+
   return `
     import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime';
     import { createGraphQLYoga } from '@cedarjs/graphql-server';
 
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
-    ${bundledCode}
+    ${cleanedCode}
 
     let yogaInitPromise = null;
 

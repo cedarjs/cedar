@@ -37,11 +37,7 @@ describe('Vercel deployment', () => {
     expect(res.body).toEqual({ data: 'hello from legacy handler' })
   })
 
-  // GraphQL handler returns 502 when routed through the `server` function wrapper
-  // because `createGraphQLHandler` (legacy handler) returns an APIGateway-style
-  // response which the UD catch-all doesn't convert to a Response correctly for
-  // non-trivial handlers. Skipping until fixed upstream.
-  it.skip('serves GraphQL endpoint', async () => {
+  it('serves GraphQL endpoint', async () => {
     const gql = JSON.stringify({ query: '{ posts { id } }' })
     const res = await fetchJson(url('/.api/functions/graphql'), {
       method: 'POST',
