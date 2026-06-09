@@ -218,11 +218,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@arethetypeswrong/cli@npm:0.18.2":
-  version: 0.18.2
-  resolution: "@arethetypeswrong/cli@npm:0.18.2"
+"@arethetypeswrong/cli@npm:0.18.3":
+  version: 0.18.3
+  resolution: "@arethetypeswrong/cli@npm:0.18.3"
   dependencies:
-    "@arethetypeswrong/core": "npm:0.18.2"
+    "@arethetypeswrong/core": "npm:0.18.3"
     chalk: "npm:^4.1.2"
     cli-table3: "npm:^0.6.3"
     commander: "npm:^10.0.1"
@@ -230,24 +230,24 @@ __metadata:
     marked-terminal: "npm:^7.1.0"
     semver: "npm:^7.5.4"
   bin:
-    attw: dist/index.js
-  checksum: 10c0/15fa8ee8659aa7b163c08f3d739247fe44d838b1aa5cefe125d8c90c03955fbc1e5a7c76885c354ec217a07c8fdcb5f5dc297188cadf626b303b1ae85232c51e
+    attw: ./dist/index.js
+  checksum: 10c0/ce4e5b3e33bca5928561ed94286a7f3d35da13905ddcb358940ed41237e59767398dfb8c42a0dc00275b66147ea78f8958e209afe99010d75b05243f974444b1
   languageName: node
   linkType: hard
 
-"@arethetypeswrong/core@npm:0.18.2":
-  version: 0.18.2
-  resolution: "@arethetypeswrong/core@npm:0.18.2"
+"@arethetypeswrong/core@npm:0.18.3":
+  version: 0.18.3
+  resolution: "@arethetypeswrong/core@npm:0.18.3"
   dependencies:
     "@andrewbranch/untar.js": "npm:^1.0.3"
     "@loaderkit/resolve": "npm:^1.0.2"
     cjs-module-lexer: "npm:^1.2.3"
-    fflate: "npm:^0.8.2"
+    fflate: "npm:^0.8.3"
     lru-cache: "npm:^11.0.1"
     semver: "npm:^7.5.4"
     typescript: "npm:5.6.1-rc"
     validate-npm-package-name: "npm:^5.0.0"
-  checksum: 10c0/465b4e6bf41a236b265108d21e88e75f6940959d6611d7daf989b69c875cf84fdaf77a539d0d5ce1d2602b7eadeba22da54994247a4825d8ad473685ad7e860e
+  checksum: 10c0/e4d7aefd03e4e1a622561a972379b27defa9a9dd484b23581b76c93c5f6740e43a4fec6e96d84d6cacc1d526c5c6cb6db2061e4ab809a713cae88128407be079
   languageName: node
   linkType: hard
 
@@ -2192,7 +2192,7 @@ __metadata:
     fastify: "npm:5.8.5"
     fastify-raw-body: "npm:5.0.0"
     graphql-yoga: "npm:5.21.0"
-    memfs: "npm:4.57.2"
+    memfs: "npm:4.57.6"
     picoquery: "npm:2.5.0"
     pino-abstract-transport: "npm:1.2.0"
     pretty-bytes: "npm:5.6.0"
@@ -2270,7 +2270,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-api@workspace:packages/auth-providers/auth0/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -2288,7 +2288,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-auth0-setup@workspace:packages/auth-providers/auth0/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2323,7 +2323,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-azure-active-directory-api@workspace:packages/auth-providers/azureActiveDirectory/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.161"
@@ -2342,7 +2342,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-azure-active-directory-setup@workspace:packages/auth-providers/azureActiveDirectory/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2378,7 +2378,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-clerk-api@workspace:packages/auth-providers/clerk/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/backend": "npm:1.34.0"
@@ -2395,7 +2395,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-clerk-setup@workspace:packages/auth-providers/clerk/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2430,7 +2430,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-custom-setup@workspace:packages/auth-providers/custom/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2446,7 +2446,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-api@workspace:packages/auth-providers/dbAuth/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
@@ -2466,7 +2466,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-middleware@workspace:packages/auth-providers/dbAuth/middleware"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth-dbauth-api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
@@ -2505,7 +2505,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-dbauth-web@workspace:packages/auth-providers/dbAuth/web"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@simplewebauthn/browser": "npm:10.0.0"
@@ -2524,7 +2524,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-firebase-api@workspace:packages/auth-providers/firebase/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.161"
@@ -2541,7 +2541,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-firebase-setup@workspace:packages/auth-providers/firebase/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2576,7 +2576,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-netlify-api@workspace:packages/auth-providers/netlify/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/aws-lambda": "npm:8.10.161"
@@ -2594,7 +2594,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-netlify-setup@workspace:packages/auth-providers/netlify/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2629,7 +2629,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-api@workspace:packages/auth-providers/supabase/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.10.3"
@@ -2648,7 +2648,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-middleware@workspace:packages/auth-providers/supabase/middleware"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/auth-supabase-api": "workspace:*"
@@ -2670,7 +2670,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supabase-setup@workspace:packages/auth-providers/supabase/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
@@ -2705,7 +2705,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supertokens-api@workspace:packages/auth-providers/supertokens/api"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/jsonwebtoken": "npm:9.0.10"
@@ -2725,12 +2725,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth-supertokens-setup@workspace:packages/auth-providers/supertokens/setup"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/cli-helpers": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@types/yargs": "npm:17.0.35"
     concurrently: "npm:9.2.1"
-    memfs: "npm:4.57.2"
+    memfs: "npm:4.57.6"
     publint: "npm:0.3.21"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -2761,7 +2761,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/auth@workspace:packages/auth"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/framework-tools": "workspace:*"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
@@ -2821,7 +2821,7 @@ __metadata:
     dotenv-defaults: "npm:5.0.2"
     execa: "npm:5.1.1"
     listr2: "npm:10.2.1"
-    memfs: "npm:4.57.2"
+    memfs: "npm:4.57.6"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
@@ -2940,7 +2940,7 @@ __metadata:
     latest-version: "npm:9.0.0"
     listr2: "npm:10.2.1"
     lodash: "npm:4.18.1"
-    memfs: "npm:4.57.2"
+    memfs: "npm:4.57.6"
     node-ssh: "npm:13.2.1"
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
@@ -2998,7 +2998,7 @@ __metadata:
     fast-glob: "npm:3.3.3"
     graphql: "npm:16.13.2"
     jscodeshift: "npm:17.3.0"
-    memfs: "npm:4.57.2"
+    memfs: "npm:4.57.6"
     pascalcase: "npm:1.0.0"
     prettier: "npm:3.8.3"
     publint: "npm:0.3.21"
@@ -3017,7 +3017,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/context@workspace:packages/context"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/framework-tools": "workspace:*"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.21"
@@ -3187,7 +3187,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/framework-tools@workspace:packages/framework-tools"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     esbuild: "npm:0.27.7"
     fast-glob: "npm:3.3.3"
     tsx: "npm:4.21.0"
@@ -3203,7 +3203,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/gqlorm@workspace:packages/gqlorm"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
     "@cedarjs/auth": "workspace:*"
@@ -3274,7 +3274,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/internal@workspace:packages/internal"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.3"
     "@babel/plugin-transform-react-jsx": "npm:7.28.6"
@@ -3508,7 +3508,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/project-config@workspace:packages/project-config"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/framework-tools": "workspace:*"
     "@prisma/internals": "npm:7.8.0"
     concurrently: "npm:9.2.1"
@@ -3536,8 +3536,8 @@ __metadata:
     "@envelop/types": "npm:5.2.1"
     "@graphql-tools/schema": "npm:10.0.33"
     "@graphql-tools/utils": "npm:10.11.0"
-    "@graphql-yoga/plugin-defer-stream": "npm:3.21.0"
-    "@graphql-yoga/plugin-graphql-sse": "npm:3.21.0"
+    "@graphql-yoga/plugin-defer-stream": "npm:3.21.1"
+    "@graphql-yoga/plugin-graphql-sse": "npm:3.21.1"
     "@graphql-yoga/redis-event-target": "npm:3.0.3"
     "@graphql-yoga/subscription": "npm:5.0.5"
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
@@ -3578,7 +3578,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/router@workspace:packages/router"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
     "@cedarjs/auth": "workspace:*"
@@ -3620,7 +3620,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/storage@workspace:packages/storage"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@prisma/adapter-better-sqlite3": "npm:7.8.0"
@@ -3765,7 +3765,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@ast-grep/napi": "npm:0.42.2"
     "@babel/generator": "npm:7.29.1"
     "@babel/parser": "npm:7.29.3"
@@ -3811,7 +3811,7 @@ __metadata:
     glob: "npm:11.1.0"
     http-proxy-middleware: "npm:3.0.5"
     isbot: "npm:5.1.40"
-    memfs: "npm:4.57.2"
+    memfs: "npm:4.57.6"
     publint: "npm:0.3.21"
     react: "npm:19.2.3"
     react-server-dom-webpack: "npm:19.2.4"
@@ -3861,7 +3861,7 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:3.14.1"
     "@apollo/client-react-streaming": "npm:0.12.3"
-    "@arethetypeswrong/cli": "npm:0.18.2"
+    "@arethetypeswrong/cli": "npm:0.18.3"
     "@babel/cli": "npm:7.28.6"
     "@babel/core": "npm:^7.26.10"
     "@babel/plugin-transform-runtime": "npm:7.29.0"
@@ -6485,28 +6485,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-defer-stream@npm:3.21.0":
-  version: 3.21.0
-  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.21.0"
+"@graphql-yoga/plugin-defer-stream@npm:3.21.1":
+  version: 3.21.1
+  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.21.1"
   dependencies:
     "@graphql-tools/utils": "npm:^10.11.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.21.0
-  checksum: 10c0/bcc501d607eee2bab4f83cc6ed40af6c0432e9bda7ea5ca96ab8584f0b70b17f8f9c91cdb92d7fe656128e24e9fd2ffa2d0df5a5d827b1523deb07f69f64da88
+    graphql-yoga: ^5.21.1
+  checksum: 10c0/16a9335dd0755b725a63754033ecd1588519f36f1af2f5c786634e86545b1255ea8eec33b0529d474b052cccb46dee0eb7df1ac7d8f7c6620bc13fce50040cbe
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-graphql-sse@npm:3.21.0":
-  version: 3.21.0
-  resolution: "@graphql-yoga/plugin-graphql-sse@npm:3.21.0"
+"@graphql-yoga/plugin-graphql-sse@npm:3.21.1":
+  version: 3.21.1
+  resolution: "@graphql-yoga/plugin-graphql-sse@npm:3.21.1"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql-sse: "npm:^2.0.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.21.0
-  checksum: 10c0/24fd588b81b077cd80f3d6064c6713ff43ed11edba40f517b8db7231ea261cf6a9063dcec0d30a72697e52a9e78bb1ef961cda4cfa1a2b536d0010d4ffaee432
+    graphql-yoga: ^5.21.1
+  checksum: 10c0/fb52f22441d8d1d678f3afd8e906294848b837dc94697793dc73ee8cb28ffe908dec44477dcf59d330584a71e01ee6e039c94c2350b7ab780a2d990c7c2dfc81
   languageName: node
   linkType: hard
 
@@ -7318,106 +7318,106 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/fs-core@npm:4.57.2":
-  version: 4.57.2
-  resolution: "@jsonjoy.com/fs-core@npm:4.57.2"
+"@jsonjoy.com/fs-core@npm:4.57.6":
+  version: 4.57.6
+  resolution: "@jsonjoy.com/fs-core@npm:4.57.6"
   dependencies:
-    "@jsonjoy.com/fs-node-builtins": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-utils": "npm:4.57.2"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-utils": "npm:4.57.6"
     thingies: "npm:^2.5.0"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/645aee9e5acb71f1ada52812f0121fbe234b2581f3ec9d9de3c0992afb4e4877468bc7494c9a14a0e1eca545a1a10953af29080138adcdeef8e8126732374d69
+  checksum: 10c0/31969b3459c0f220862fd5f5dda98910ef61dd36aab9bd43300f57465e5e54d3b2b988332f95c540bfccc3214080e5cf9c3bf9fa31ea159654f1d22920f50241
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/fs-fsa@npm:4.57.2":
-  version: 4.57.2
-  resolution: "@jsonjoy.com/fs-fsa@npm:4.57.2"
+"@jsonjoy.com/fs-fsa@npm:4.57.6":
+  version: 4.57.6
+  resolution: "@jsonjoy.com/fs-fsa@npm:4.57.6"
   dependencies:
-    "@jsonjoy.com/fs-core": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-builtins": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-utils": "npm:4.57.2"
+    "@jsonjoy.com/fs-core": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-utils": "npm:4.57.6"
     thingies: "npm:^2.5.0"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/065c6501a026cfcdff573d8b16fa6bfbc19569908847e2e4f355de29c6d90f0a6ed969477ce5417546727e41668496de37866088d925645efb9189f7018b6a9c
+  checksum: 10c0/99c89c296a086aebc1347ec13827a8c7fb27b8fbc3c37922f2d14550778d897f9d3416fc4e2de8ed487617878e62a2a8fd5ae296129e29e677bff783f1f9e3d1
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/fs-node-builtins@npm:4.57.2":
-  version: 4.57.2
-  resolution: "@jsonjoy.com/fs-node-builtins@npm:4.57.2"
+"@jsonjoy.com/fs-node-builtins@npm:4.57.6":
+  version: 4.57.6
+  resolution: "@jsonjoy.com/fs-node-builtins@npm:4.57.6"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/3f0f3da483a20ff730da268859afd079cf20f775c354d11bdfdd46e7da24ebd794eaa085e0d7c91abcac65cc64c10c91b213498a626c5466c220785da2d5590f
+  checksum: 10c0/5bd06bb8ff4a3740e2843e71b5729432b1058ffefb545113d6ddbbd3a3ffbf6d67d7fa2b8042f048d46368635afeede1d3efe0e9f0d08be14912f162ea87e29b
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/fs-node-to-fsa@npm:4.57.2":
-  version: 4.57.2
-  resolution: "@jsonjoy.com/fs-node-to-fsa@npm:4.57.2"
+"@jsonjoy.com/fs-node-to-fsa@npm:4.57.6":
+  version: 4.57.6
+  resolution: "@jsonjoy.com/fs-node-to-fsa@npm:4.57.6"
   dependencies:
-    "@jsonjoy.com/fs-fsa": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-builtins": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-utils": "npm:4.57.2"
+    "@jsonjoy.com/fs-fsa": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-utils": "npm:4.57.6"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/0c41505df5f8ca2a43f2a8b0a6d49e97078ae5fb2297d36e6eeba742913e5beed4a0bf8f626931670ed7ea9bdb499b90b4b100a74fa7f2ac550ebde8f06c2316
+  checksum: 10c0/024712b4ed6527ea79683e358a94be0dd51884b5ecf11da5b11dd848c8f9705f8b010271fa8ffb2090899737c0330d97d376b41477fff188b3982d9a7e64c0f8
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/fs-node-utils@npm:4.57.2":
-  version: 4.57.2
-  resolution: "@jsonjoy.com/fs-node-utils@npm:4.57.2"
+"@jsonjoy.com/fs-node-utils@npm:4.57.6":
+  version: 4.57.6
+  resolution: "@jsonjoy.com/fs-node-utils@npm:4.57.6"
   dependencies:
-    "@jsonjoy.com/fs-node-builtins": "npm:4.57.2"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.57.6"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/fc4fcbd6d682a1b576449e78eac8e4c08b1cb05ff6b36db32a0f47b29d54e4c42ab06fbc3ca38d0d3199fc2f48ef72b261e2cc31f40d66e7fe1f4486984ee508
+  checksum: 10c0/001f4dc2e6104cd7890c98b26b138f728b8a9f3776392b28e9b3497f3aa16e8ae6561943cb9dd8155446755025998ba24184a2cc0eeda60bae6670300c62a9fe
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/fs-node@npm:4.57.2":
-  version: 4.57.2
-  resolution: "@jsonjoy.com/fs-node@npm:4.57.2"
+"@jsonjoy.com/fs-node@npm:4.57.6":
+  version: 4.57.6
+  resolution: "@jsonjoy.com/fs-node@npm:4.57.6"
   dependencies:
-    "@jsonjoy.com/fs-core": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-builtins": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-utils": "npm:4.57.2"
-    "@jsonjoy.com/fs-print": "npm:4.57.2"
-    "@jsonjoy.com/fs-snapshot": "npm:4.57.2"
+    "@jsonjoy.com/fs-core": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-utils": "npm:4.57.6"
+    "@jsonjoy.com/fs-print": "npm:4.57.6"
+    "@jsonjoy.com/fs-snapshot": "npm:4.57.6"
     glob-to-regex.js: "npm:^1.0.0"
     thingies: "npm:^2.5.0"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/ac7cf9c490fb30d7410397f544bd6f12aeff1837a96b5799136fae25b89b85eac9c8983dbe167bcd6804a03897865920fe0b22ef80cba40eba857e6212f31e5b
+  checksum: 10c0/b8d3b4a33ce4345bf56fe93c6f1c95046f0cea4bb366f59873cbdc61ed4d97d0c25a93cb3d23a0558da0c98c4d604b8da47357b678d62d41a81a8518f22ead83
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/fs-print@npm:4.57.2":
-  version: 4.57.2
-  resolution: "@jsonjoy.com/fs-print@npm:4.57.2"
+"@jsonjoy.com/fs-print@npm:4.57.6":
+  version: 4.57.6
+  resolution: "@jsonjoy.com/fs-print@npm:4.57.6"
   dependencies:
-    "@jsonjoy.com/fs-node-utils": "npm:4.57.2"
+    "@jsonjoy.com/fs-node-utils": "npm:4.57.6"
     tree-dump: "npm:^1.1.0"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/e175863f66c1e6bbead5390cc0c6b0e7cbf28b34d6620abb5ec4ca1137487808d465c62dc651852aaf9dbf3bf9a182b455113027fcb609ac4f61cde37b90cc58
+  checksum: 10c0/b5ea71dd618c7a083d6683e1edf4d7034d9a764b42483bb4e75d4c700eec74d39d11440d389e2843bc9a9d0b37ee56bd1f0f8053eb3d4882cd75cdfd3a82b0d1
   languageName: node
   linkType: hard
 
-"@jsonjoy.com/fs-snapshot@npm:4.57.2":
-  version: 4.57.2
-  resolution: "@jsonjoy.com/fs-snapshot@npm:4.57.2"
+"@jsonjoy.com/fs-snapshot@npm:4.57.6":
+  version: 4.57.6
+  resolution: "@jsonjoy.com/fs-snapshot@npm:4.57.6"
   dependencies:
     "@jsonjoy.com/buffers": "npm:^17.65.0"
-    "@jsonjoy.com/fs-node-utils": "npm:4.57.2"
+    "@jsonjoy.com/fs-node-utils": "npm:4.57.6"
     "@jsonjoy.com/json-pack": "npm:^17.65.0"
     "@jsonjoy.com/util": "npm:^17.65.0"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/23909b203f40d555cfb48472c17b57666cd94ad104ed5b1399cd95a25222e5abc4ca7e8df53778b8665b8c7f0fb921bc71080026c81abc6f34d03fb68830154e
+  checksum: 10c0/07465463d9e2c90a811511976f38fc1374bf397973d1b4e3eff395ca490ed2005a6e215726be9be1e0a69689957b0cdeed5a49bd23983d427d06847b8885af9e
   languageName: node
   linkType: hard
 
@@ -16945,10 +16945,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fflate@npm:^0.8.2":
-  version: 0.8.2
-  resolution: "fflate@npm:0.8.2"
-  checksum: 10c0/03448d630c0a583abea594835a9fdb2aaf7d67787055a761515bf4ed862913cfd693b4c4ffd5c3f3b355a70cf1e19033e9ae5aedcca103188aaff91b8bd6e293
+"fflate@npm:^0.8.3":
+  version: 0.8.3
+  resolution: "fflate@npm:0.8.3"
+  checksum: 10c0/eab181ca37f5348ae76d4b6f840e0026e30220e33153289ac942222d8b9638237d486507dbcc09878d724095bd354993a2ee48bbee99c8f2c6440d4448719aa7
   languageName: node
   linkType: hard
 
@@ -20565,90 +20565,90 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lefthook-darwin-arm64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-darwin-arm64@npm:2.1.6"
+"lefthook-darwin-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-darwin-arm64@npm:2.1.9"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-darwin-x64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-darwin-x64@npm:2.1.6"
+"lefthook-darwin-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-darwin-x64@npm:2.1.9"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-freebsd-arm64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-freebsd-arm64@npm:2.1.6"
+"lefthook-freebsd-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-freebsd-arm64@npm:2.1.9"
   conditions: os=freebsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-freebsd-x64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-freebsd-x64@npm:2.1.6"
+"lefthook-freebsd-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-freebsd-x64@npm:2.1.9"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-linux-arm64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-linux-arm64@npm:2.1.6"
+"lefthook-linux-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-linux-arm64@npm:2.1.9"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-linux-x64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-linux-x64@npm:2.1.6"
+"lefthook-linux-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-linux-x64@npm:2.1.9"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-openbsd-arm64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-openbsd-arm64@npm:2.1.6"
+"lefthook-openbsd-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-openbsd-arm64@npm:2.1.9"
   conditions: os=openbsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-openbsd-x64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-openbsd-x64@npm:2.1.6"
+"lefthook-openbsd-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-openbsd-x64@npm:2.1.9"
   conditions: os=openbsd & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook-windows-arm64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-windows-arm64@npm:2.1.6"
+"lefthook-windows-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-windows-arm64@npm:2.1.9"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"lefthook-windows-x64@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook-windows-x64@npm:2.1.6"
+"lefthook-windows-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-windows-x64@npm:2.1.9"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"lefthook@npm:2.1.6":
-  version: 2.1.6
-  resolution: "lefthook@npm:2.1.6"
+"lefthook@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook@npm:2.1.9"
   dependencies:
-    lefthook-darwin-arm64: "npm:2.1.6"
-    lefthook-darwin-x64: "npm:2.1.6"
-    lefthook-freebsd-arm64: "npm:2.1.6"
-    lefthook-freebsd-x64: "npm:2.1.6"
-    lefthook-linux-arm64: "npm:2.1.6"
-    lefthook-linux-x64: "npm:2.1.6"
-    lefthook-openbsd-arm64: "npm:2.1.6"
-    lefthook-openbsd-x64: "npm:2.1.6"
-    lefthook-windows-arm64: "npm:2.1.6"
-    lefthook-windows-x64: "npm:2.1.6"
+    lefthook-darwin-arm64: "npm:2.1.9"
+    lefthook-darwin-x64: "npm:2.1.9"
+    lefthook-freebsd-arm64: "npm:2.1.9"
+    lefthook-freebsd-x64: "npm:2.1.9"
+    lefthook-linux-arm64: "npm:2.1.9"
+    lefthook-linux-x64: "npm:2.1.9"
+    lefthook-openbsd-arm64: "npm:2.1.9"
+    lefthook-openbsd-x64: "npm:2.1.9"
+    lefthook-windows-arm64: "npm:2.1.9"
+    lefthook-windows-x64: "npm:2.1.9"
   dependenciesMeta:
     lefthook-darwin-arm64:
       optional: true
@@ -20672,7 +20672,7 @@ __metadata:
       optional: true
   bin:
     lefthook: bin/index.js
-  checksum: 10c0/3ccbe60951ebf59e35e02ca10dc8942a4455ec106f0f14a5fed2e40f000b5b57190594f3be87715d5a9a8b0cf93de33902cbd3c94688e116ffc07ad1760cfe9e
+  checksum: 10c0/676d9798942439d1cd5373bb0b2c9907f6a8097b29c05cc028d87d897d2a2cfe15a8f7e4f40b02fa93cd1ae0f02528f24053a10fb5c5967210a9c23f3c7b5059
   languageName: node
   linkType: hard
 
@@ -21331,18 +21331,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"memfs@npm:4.57.2, memfs@npm:^4.17.0":
-  version: 4.57.2
-  resolution: "memfs@npm:4.57.2"
+"memfs@npm:4.57.6, memfs@npm:^4.17.0":
+  version: 4.57.6
+  resolution: "memfs@npm:4.57.6"
   dependencies:
-    "@jsonjoy.com/fs-core": "npm:4.57.2"
-    "@jsonjoy.com/fs-fsa": "npm:4.57.2"
-    "@jsonjoy.com/fs-node": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-builtins": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-to-fsa": "npm:4.57.2"
-    "@jsonjoy.com/fs-node-utils": "npm:4.57.2"
-    "@jsonjoy.com/fs-print": "npm:4.57.2"
-    "@jsonjoy.com/fs-snapshot": "npm:4.57.2"
+    "@jsonjoy.com/fs-core": "npm:4.57.6"
+    "@jsonjoy.com/fs-fsa": "npm:4.57.6"
+    "@jsonjoy.com/fs-node": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-builtins": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-to-fsa": "npm:4.57.6"
+    "@jsonjoy.com/fs-node-utils": "npm:4.57.6"
+    "@jsonjoy.com/fs-print": "npm:4.57.6"
+    "@jsonjoy.com/fs-snapshot": "npm:4.57.6"
     "@jsonjoy.com/json-pack": "npm:^1.11.0"
     "@jsonjoy.com/util": "npm:^1.9.0"
     glob-to-regex.js: "npm:^1.0.1"
@@ -21351,7 +21351,7 @@ __metadata:
     tslib: "npm:^2.0.0"
   peerDependencies:
     tslib: 2
-  checksum: 10c0/432c31c378ddb69bf5d7a068bb32e71fb5c5bd322982379b77d9b1ddc0c12fedd74c60b4f5c81b945cb55d275bad3a690c235eab9c0dbd6dde1515500460bfc8
+  checksum: 10c0/b07c1e8578c4a6efa23af5a421befedc81e072bc7b472ab6d6ac38d5d07c4bf8f6bc5a99054536191aefccf37cafd9141b4d64ae0cbd806e85d4b029d8af40cf
   languageName: node
   linkType: hard
 
@@ -25672,7 +25672,7 @@ __metadata:
     human-id: "npm:^4.1.1"
     jest: "npm:29.7.0"
     jscodeshift: "npm:17.3.0"
-    lefthook: "npm:2.1.6"
+    lefthook: "npm:2.1.9"
     listr2: "npm:10.2.1"
     make-dir-cli: "npm:4.0.0"
     msw: "npm:1.3.5"

@@ -150,8 +150,31 @@ export async function buildCedarApp({
 
         for (const env of Object.values(config.environments ?? {})) {
           env.build.rollupOptions ??= {}
-          env.build.rollupOptions.onwarn = onwarn
+          const existingOnwarn = env.build.rollupOptions.onwarn
+          env.build.rollupOptions.onwarn = existingOnwarn
+            ? (warning, warn) => {
+                onwarn(warning, (w) => existingOnwarn(w, warn))
+              }
+            : onwarn
         }
+      },
+    },
+    // Resolve bare-specifier dynamic imports from node_modules as external
+    // before Rollup attempts resolution, avoiding UNRESOLVED_IMPORT warnings
+    // for optional peer dependencies (e.g. @simplewebauthn/server).
+    {
+      name: 'cedar-optional-peer-deps',
+      resolveDynamicImport(specifier, importer) {
+        if (
+          typeof specifier === 'string' &&
+          !specifier.startsWith('.') &&
+          !specifier.startsWith('/') &&
+          importer?.includes('node_modules')
+        ) {
+          return { id: specifier, external: true }
+        }
+
+        return null
       },
     },
     {
@@ -204,24 +227,6 @@ export async function buildCedarApp({
             await builder.build(builder.environments.api)
           }
         },
-      },
-    },
-    // Resolve bare-specifier dynamic imports from node_modules as external
-    // before Rollup attempts resolution, avoiding UNRESOLVED_IMPORT warnings
-    // for optional peer dependencies (e.g. @simplewebauthn/server).
-    {
-      name: 'cedar-optional-peer-deps',
-      resolveDynamicImport(specifier, importer) {
-        if (
-          typeof specifier === 'string' &&
-          !specifier.startsWith('.') &&
-          !specifier.startsWith('/') &&
-          importer?.includes('node_modules')
-        ) {
-          return { id: specifier, external: true }
-        }
-
-        return null
       },
     },
   ]
