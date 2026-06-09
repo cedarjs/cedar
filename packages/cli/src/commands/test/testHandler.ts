@@ -4,12 +4,12 @@ import path from 'node:path'
 import execa from 'execa'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { runBin } from '@cedarjs/cli-helpers/packageManager/exec'
 import { ensurePosixPath } from '@cedarjs/project-config'
 import { errorTelemetry, timedTelemetry } from '@cedarjs/telemetry'
 
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../../lib/index.js'
-// @ts-expect-error - Types not available for JS files
 import * as project from '../../lib/project.js'
 
 import { warnIfNonStandardDatasourceUrl } from './datasourceWarning.js'
@@ -193,7 +193,7 @@ export const handler = async ({
     // so we're running it via execa, since `jest.run()` is a bit unstable.
     // https://github.com/facebook/jest/issues/5048
     const runCommand = async () => {
-      await execa('yarn', ['jest', ...jestArgs], {
+      await runBin('jest', jestArgs, {
         cwd: rwjsPaths.base,
         stdio: 'inherit',
         env: { ...process.env, DATABASE_URL },
