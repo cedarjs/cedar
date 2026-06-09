@@ -57,9 +57,9 @@ function run(
   return typeof result === 'string' ? result.trim() : ''
 }
 
-function runQuiet(cmd: string): string {
+function runQuiet(cmd: string, opts?: ExecSyncOptions): string {
   try {
-    return run(cmd, { stdio: ['ignore', 'pipe', 'pipe'] })
+    return run(cmd, { stdio: ['ignore', 'pipe', 'pipe'], ...opts })
   } catch {
     return ''
   }
@@ -283,15 +283,21 @@ async function step8deploy() {
     if (dbUrl) {
       log('Setting DATABASE_URL on Vercel project...')
       runQuiet(
-        `echo "${dbUrl}" | npx vercel env add DATABASE_URL production --yes ${vercelFlag}`,
-        { cwd: testProjectDir },
+        `echo "$CEDAR_DB_URL" | npx vercel env add DATABASE_URL production --yes ${vercelFlag}`,
+        {
+          cwd: testProjectDir,
+          env: { ...process.env, CEDAR_DB_URL: dbUrl },
+        },
       )
     }
     if (directDbUrl) {
       log('Setting DIRECT_DATABASE_URL on Vercel project...')
       runQuiet(
-        `echo "${directDbUrl}" | npx vercel env add DIRECT_DATABASE_URL production --yes ${vercelFlag}`,
-        { cwd: testProjectDir },
+        `echo "$CEDAR_DIRECT_DB_URL" | npx vercel env add DIRECT_DATABASE_URL production --yes ${vercelFlag}`,
+        {
+          cwd: testProjectDir,
+          env: { ...process.env, CEDAR_DIRECT_DB_URL: directDbUrl },
+        },
       )
     }
   }

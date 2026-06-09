@@ -384,7 +384,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   // Note: no $ anchor — the dead call appears in the middle of the bundled code,
   // followed by the Lambda-shaped handler wrapper from api/dist/functions/graphql.ts.
   const cleanedCode = bundledCode.replace(
-    /\n\s*(?:var|const)\s+\w+\s*=\s*createGraphQLHandler\s*\([^)]*\)\s*;?/,
+    /\n\s*(?:var|const)\s+\w+\s*=\s*createGraphQLHandler\s*\(.*\)\s*;?/,
     '\n',
   )
 
