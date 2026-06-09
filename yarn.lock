@@ -2952,7 +2952,7 @@ __metadata:
     rimraf: "npm:6.1.3"
     semver: "npm:7.7.4"
     smol-toml: "npm:1.6.1"
-    srvx: "npm:0.11.15"
+    srvx: "npm:0.11.16"
     string-env-interpolation: "npm:1.0.1"
     systeminformation: "npm:5.31.5"
     termi-link: "npm:1.1.0"
@@ -26569,12 +26569,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"srvx@npm:*, srvx@npm:0.11.15, srvx@npm:^0.11.9":
-  version: 0.11.15
-  resolution: "srvx@npm:0.11.15"
+"srvx@npm:*, srvx@npm:0.11.16, srvx@npm:^0.11.9":
+  version: 0.11.16
+  resolution: "srvx@npm:0.11.16"
   bin:
     srvx: bin/srvx.mjs
-  checksum: 10c0/3f72be7bfb321ad21ae7698a721f1a16b855313d1fa8498a0d68adbec65f8f2d2c5a83cf37849f6489c7403870535a70958976636df3d5274cd785b61b7aa635
+  checksum: 10c0/cd3ed12c12481e2852409a7dfaa8c1ae0a7264769e9239e4a34da48033029c2ce4b2bccfd648a49f9bb10d13c4be91fcdbdb50feb08bf3de19bc8cfe71efa0a2
   languageName: node
   linkType: hard
 
