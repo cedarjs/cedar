@@ -45,7 +45,7 @@ const initSupabaseAuthMiddleware = ({
       // Supabase decoder actually doesn't care about the token/cookieHeader
       // We just pass it in for consistency with other auth providers
       const decoded = await authDecoder(cookieHeader, type, {
-        event: req as Request,
+        event: req,
       })
 
       const currentUser = await getCurrentUser(

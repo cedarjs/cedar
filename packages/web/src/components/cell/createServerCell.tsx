@@ -67,7 +67,7 @@ export function createServerCell<
 
       return <Success {...data} {...props} />
     } catch (error) {
-      return <FailureComponent error={error as any} />
+      return <FailureComponent error={error} />
     }
   }
 
