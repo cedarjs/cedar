@@ -30,28 +30,44 @@ type PackageJson = {
 }
 
 let packageJson: PackageJson | undefined
+let importMetaError: Error | undefined
 
 // @ts-expect-error - import.meta is replaced with {} in CJS build, so .resolve
 // is undefined, but TS's typings declare it as always present
 if (import.meta.resolve) {
-  const cedarApiEntryUrl = import.meta.resolve('@cedarjs/api')
-  const cedarApiDir = fileURLToPath(new URL('.', cedarApiEntryUrl))
-  const cedarApiRequire = createRequire(cedarApiEntryUrl)
-  packageJson = cedarApiRequire(`${cedarApiDir}/package.json`)
+  try {
+    const cedarApiEntryUrl = import.meta.resolve('@cedarjs/api')
+    const cedarApiDir = fileURLToPath(new URL('.', cedarApiEntryUrl))
+    const cedarApiRequire = createRequire(cedarApiEntryUrl)
+    packageJson = cedarApiRequire(`${cedarApiDir}/package.json`)
 
-  if (packageJson?.name !== '@cedarjs/api') {
-    packageJson = cedarApiRequire(`${cedarApiDir}../package.json`)
+    if (packageJson?.name !== '@cedarjs/api') {
+      packageJson = cedarApiRequire(`${cedarApiDir}../package.json`)
+    }
+  } catch (error) {
+    // If the code above fails for whatever reason, I want to try the
+    // `createRequire` fallback below.
+    importMetaError = error instanceof Error ? error : new Error(String(error))
   }
-} else {
-  const cedarApiRequire = createRequire(__filename)
-  packageJson = cedarApiRequire(`${__dirname}/package.json`)
+}
 
-  if (packageJson?.name !== '@cedarjs/api') {
-    packageJson = cedarApiRequire(`${__dirname}/../package.json`)
-  }
+if (!packageJson) {
+  try {
+    const cedarApiRequire = createRequire(__filename)
+    packageJson = cedarApiRequire(`${__dirname}/package.json`)
 
-  if (packageJson?.name !== '@cedarjs/api') {
-    packageJson = cedarApiRequire(`${__dirname}/../../package.json`)
+    if (packageJson?.name !== '@cedarjs/api') {
+      packageJson = cedarApiRequire(`${__dirname}/../package.json`)
+    }
+
+    if (packageJson?.name !== '@cedarjs/api') {
+      packageJson = cedarApiRequire(`${__dirname}/../../package.json`)
+    }
+  } catch (error) {
+    throw new Error(
+      'Could not read package.json to determine package version',
+      { cause: importMetaError ?? error },
+    )
   }
 }
 
