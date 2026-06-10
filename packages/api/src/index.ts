@@ -30,6 +30,7 @@ type PackageJson = {
 }
 
 let packageJson: PackageJson | undefined
+let importMetaError: Error | undefined
 
 // @ts-expect-error - import.meta is replaced with {} in CJS build, so .resolve
 // is undefined, but TS's typings declare it as always present
@@ -43,9 +44,10 @@ if (import.meta.resolve) {
     if (packageJson?.name !== '@cedarjs/api') {
       packageJson = cedarApiRequire(`${cedarApiDir}../package.json`)
     }
-  } catch {
-    // import.meta.resolve can fail when this code is bundled (e.g. by Rolldown)
-    // and the package is not installed separately at runtime.
+  } catch (error) {
+    // If the code above fails for whatever reason, I want to try the
+    // `createRequire` fallback below.
+    importMetaError = error instanceof Error ? error : new Error(String(error))
   }
 }
 
@@ -64,7 +66,7 @@ if (!packageJson) {
   } catch (error) {
     throw new Error(
       'Could not read package.json to determine package version',
-      { cause: error },
+      { cause: importMetaError ?? error },
     )
   }
 }
