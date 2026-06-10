@@ -61,8 +61,11 @@ if (!packageJson) {
     if (packageJson?.name !== '@cedarjs/api') {
       packageJson = cedarApiRequire(`${__dirname}/../../package.json`)
     }
-  } catch {
-    // Fallback if __dirname is not available or doesn't point to the package
+  } catch (error) {
+    throw new Error(
+      'Could not read package.json to determine package version',
+      { cause: error },
+    )
   }
 }
 
