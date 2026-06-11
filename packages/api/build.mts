@@ -8,7 +8,14 @@ import {
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8')) as {
   version: string
-  dependencies?: Record<string, string>
+  dependencies: Record<string, string>
+}
+
+if (!pkg.version) {
+  throw new Error('build error: No version specified')
+}
+if (!pkg.dependencies['@prisma/client']) {
+  throw new Error('build error: @prisma/client is not available')
 }
 
 // Some comments I wish I had a better place for...
@@ -28,7 +35,7 @@ await build({
     define: {
       __CEDAR_API_VERSION__: JSON.stringify(pkg.version),
       __PRISMA_CLIENT_VERSION__: JSON.stringify(
-        pkg.dependencies?.['@prisma/client'],
+        pkg.dependencies['@prisma/client'],
       ),
     },
   },
