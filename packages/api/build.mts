@@ -6,6 +6,11 @@ import {
   defaultIgnorePatterns,
 } from '@cedarjs/framework-tools'
 
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8')) as {
+  version: string
+  dependencies?: Record<string, string>
+}
+
 // Some comments I wish I had a better place for...
 //  - The `exports` field in package.json must have the "types" condition first
 //    See the end of this section:
@@ -20,9 +25,11 @@ await build({
     tsconfig: 'tsconfig.cjs.json',
     outdir: 'dist/cjs',
     packages: 'external',
-    logOverride: {
-      // We need this for src/index.ts when we create a require function
-      'empty-import-meta': 'silent',
+    define: {
+      __CEDAR_API_VERSION__: JSON.stringify(pkg.version),
+      __PRISMA_CLIENT_VERSION__: JSON.stringify(
+        pkg.dependencies?.['@prisma/client'],
+      ),
     },
   },
 })
@@ -37,6 +44,12 @@ await build({
     tsconfig: 'tsconfig.build.json',
     format: 'esm',
     packages: 'external',
+    define: {
+      __CEDAR_API_VERSION__: JSON.stringify(pkg.version),
+      __PRISMA_CLIENT_VERSION__: JSON.stringify(
+        pkg.dependencies?.['@prisma/client'],
+      ),
+    },
   },
 })
 
