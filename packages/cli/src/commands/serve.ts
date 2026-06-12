@@ -14,7 +14,6 @@ import * as webServerCLIConfig from '@cedarjs/web-server'
 
 // @ts-expect-error - Types not available for JS files
 import { getPaths, getConfig } from '../lib/index.js'
-// @ts-expect-error - Types not available for JS files
 import { serverFileExists } from '../lib/project.js'
 
 import { webSsrServerHandler } from './serveWebHandler.js'
@@ -75,6 +74,7 @@ async function startUDServer(
 export const command = 'serve [side]'
 export const description =
   'Start a server for serving both the api and web sides'
+
 type ServeArgv = Record<string, unknown> & {
   _: (string | number)[]
   port?: number

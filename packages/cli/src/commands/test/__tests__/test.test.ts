@@ -13,6 +13,10 @@ vi.mock('execa', () => ({
   })),
 }))
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
+
 import { handler } from '../testHandler.js'
 
 vi.mock('@cedarjs/structure', () => {
