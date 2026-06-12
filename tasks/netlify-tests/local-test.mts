@@ -28,7 +28,7 @@ if (args.help) {
   console.log(`Usage: node local-test.mts [--deploy] [--keep]
 
   --deploy, -d   Deploy to Netlify and run tests against live URL
-  --keep, -k     Don't delete the test project directory on exit`)
+  --keep, -k     Don't delete the test project directory or the Netlify site on exit`)
   process.exit(0)
 }
 
@@ -307,8 +307,12 @@ async function step8deploy() {
   ok('All tests passed!')
 
   // Cleanup Netlify site
-  log(`Cleaning up Netlify site: ${testProjectName}`)
-  runQuiet(`npx netlify sites:delete --force "${siteId}"`)
+  if (args.keep) {
+    log(`Keeping Netlify site: ${testProjectName}`)
+  } else {
+    log(`Cleaning up Netlify site: ${testProjectName}`)
+    runQuiet(`npx netlify sites:delete --force "${siteId}"`)
+  }
 }
 
 step1buildPackages()

@@ -28,7 +28,7 @@ if (args.help) {
   console.log(`Usage: node local-test.mts [--deploy] [--keep]
 
   --deploy, -d   Deploy to Vercel and run tests against live URL
-  --keep, -k     Don't delete the test project directory on exit`)
+  --keep, -k     Don't delete the test project directory or the Vercel project on exit`)
   process.exit(0)
 }
 
@@ -338,10 +338,14 @@ async function step8deploy() {
   ok('All tests passed!')
 
   // Cleanup Vercel project
-  log(`Cleaning up Vercel project: ${testProjectName}`)
-  runQuiet(
-    `echo "y" | npx vercel projects rm "${testProjectName}" ${vercelFlag}`,
-  )
+  if (args.keep) {
+    log(`Keeping Vercel project: ${testProjectName}`)
+  } else {
+    log(`Cleaning up Vercel project: ${testProjectName}`)
+    runQuiet(
+      `echo "y" | npx vercel projects rm "${testProjectName}" ${vercelFlag}`,
+    )
+  }
 }
 
 step1buildPackages()
