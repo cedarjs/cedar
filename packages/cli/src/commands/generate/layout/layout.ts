@@ -6,7 +6,9 @@ import {
   getYargsDefaults,
 } from '../yargsCommandHelpers.js'
 
-const optionsObj = () => ({
+import type { Options } from 'yargs'
+
+const optionsObj = (): Record<string, Options> => ({
   skipLink: {
     default: false,
     description: 'Generate with skip link',

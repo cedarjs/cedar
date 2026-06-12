@@ -8,7 +8,7 @@ import {
 const positionalsObj = {
   path: {
     description: 'URL path to the page, or just {param}. Defaults to name',
-    type: 'string',
+    type: 'string' as const,
   },
 }
 
