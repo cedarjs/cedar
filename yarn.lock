@@ -2180,7 +2180,7 @@ __metadata:
     "@cedarjs/web-server": "workspace:*"
     "@fastify/multipart": "npm:9.4.0"
     "@fastify/url-data": "npm:6.0.3"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/dotenv-defaults": "npm:^5.0.0"
     "@types/split2": "npm:4.2.3"
     "@types/yargs": "npm:17.0.35"
@@ -2226,7 +2226,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@prisma/client": "npm:7.8.0"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
     "@types/memjs": "npm:1"
     "@types/pascalcase": "npm:1.0.3"
@@ -2326,7 +2326,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
@@ -2382,7 +2382,7 @@ __metadata:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@clerk/backend": "npm:1.34.0"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.21"
     tsx: "npm:4.21.0"
@@ -2472,7 +2472,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/web": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.21"
     ts-toolbelt: "npm:9.6.0"
@@ -2527,7 +2527,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     concurrently: "npm:9.2.1"
     firebase-admin: "npm:13.8.0"
     publint: "npm:0.3.21"
@@ -2579,7 +2579,7 @@ __metadata:
     "@arethetypeswrong/cli": "npm:0.18.3"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
@@ -2633,7 +2633,7 @@ __metadata:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "npm:0.10.3"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
     concurrently: "npm:9.2.1"
     jsonwebtoken: "npm:9.0.3"
@@ -2656,7 +2656,7 @@ __metadata:
     "@cedarjs/graphql-server": "workspace:*"
     "@cedarjs/web": "workspace:*"
     "@supabase/ssr": "npm:0.10.3"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     concurrently: "npm:9.2.1"
     publint: "npm:0.3.21"
     ts-toolbelt: "npm:9.6.0"
@@ -2954,7 +2954,7 @@ __metadata:
     smol-toml: "npm:1.6.1"
     srvx: "npm:0.11.16"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.31.5"
+    systeminformation: "npm:5.31.7"
     termi-link: "npm:1.1.0"
     title-case: "npm:3.0.3"
     ts-dedent: "npm:2.2.0"
@@ -3247,9 +3247,9 @@ __metadata:
     "@graphql-tools/merge": "npm:9.1.9"
     "@graphql-tools/schema": "npm:10.0.33"
     "@graphql-tools/utils": "npm:10.11.0"
-    "@graphql-yoga/plugin-persisted-operations": "npm:3.21.1"
+    "@graphql-yoga/plugin-persisted-operations": "npm:3.21.2"
     "@opentelemetry/api": "npm:1.9.1"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/jsonwebtoken": "npm:9.0.10"
     "@types/lodash": "npm:4.17.24"
     "@whatwg-node/fetch": "npm:0.10.13"
@@ -3316,7 +3316,7 @@ __metadata:
     rimraf: "npm:6.1.3"
     source-map: "npm:0.7.6"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.31.5"
+    systeminformation: "npm:5.31.7"
     termi-link: "npm:1.1.0"
     ts-node: "npm:10.9.2"
     tsx: "npm:4.21.0"
@@ -3536,8 +3536,8 @@ __metadata:
     "@envelop/types": "npm:5.2.1"
     "@graphql-tools/schema": "npm:10.0.33"
     "@graphql-tools/utils": "npm:10.11.0"
-    "@graphql-yoga/plugin-defer-stream": "npm:3.21.1"
-    "@graphql-yoga/plugin-graphql-sse": "npm:3.21.1"
+    "@graphql-yoga/plugin-defer-stream": "npm:3.21.2"
+    "@graphql-yoga/plugin-graphql-sse": "npm:3.21.2"
     "@graphql-yoga/redis-event-target": "npm:3.0.3"
     "@graphql-yoga/subscription": "npm:5.0.5"
     "@n1ru4l/graphql-live-query": "npm:0.10.0"
@@ -3676,7 +3676,7 @@ __metadata:
     "@whatwg-node/fetch": "npm:0.10.13"
     ci-info: "npm:4.4.0"
     envinfo: "npm:7.21.0"
-    systeminformation: "npm:5.31.5"
+    systeminformation: "npm:5.31.7"
     tsx: "npm:4.21.0"
     typescript: "npm:5.9.3"
     uuid: "npm:11.1.0"
@@ -3700,7 +3700,7 @@ __metadata:
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:14.3.1"
     "@testing-library/user-event": "npm:14.6.1"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/babel-core": "npm:6.25.10"
     "@types/jest": "npm:29.5.14"
     "@types/node": "npm:24.10.4"
@@ -3784,7 +3784,7 @@ __metadata:
     "@fastify/url-data": "npm:6.0.3"
     "@hyrious/esbuild-plugin-commonjs": "npm:0.2.6"
     "@swc/core": "npm:1.15.33"
-    "@types/aws-lambda": "npm:8.10.161"
+    "@types/aws-lambda": "npm:8.10.162"
     "@types/busboy": "npm:^1"
     "@types/express": "npm:4"
     "@types/react": "npm:^18.2.55"
@@ -6485,40 +6485,40 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-defer-stream@npm:3.21.1":
-  version: 3.21.1
-  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.21.1"
+"@graphql-yoga/plugin-defer-stream@npm:3.21.2":
+  version: 3.21.2
+  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.21.2"
   dependencies:
     "@graphql-tools/utils": "npm:^10.11.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.21.1
-  checksum: 10c0/16a9335dd0755b725a63754033ecd1588519f36f1af2f5c786634e86545b1255ea8eec33b0529d474b052cccb46dee0eb7df1ac7d8f7c6620bc13fce50040cbe
+    graphql-yoga: ^5.21.2
+  checksum: 10c0/049782c15040d3b23214714c37b7d821b039d1e05a41fe809ef2d9fde883698270f645b4a7f198c594bc245eb1b7ca6204d3a67c766051c12906699f8dcd7a2a
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-graphql-sse@npm:3.21.1":
-  version: 3.21.1
-  resolution: "@graphql-yoga/plugin-graphql-sse@npm:3.21.1"
+"@graphql-yoga/plugin-graphql-sse@npm:3.21.2":
+  version: 3.21.2
+  resolution: "@graphql-yoga/plugin-graphql-sse@npm:3.21.2"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql-sse: "npm:^2.0.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.21.1
-  checksum: 10c0/fb52f22441d8d1d678f3afd8e906294848b837dc94697793dc73ee8cb28ffe908dec44477dcf59d330584a71e01ee6e039c94c2350b7ab780a2d990c7c2dfc81
+    graphql-yoga: ^5.21.2
+  checksum: 10c0/465a70caeef9afc125707caa300e0aed8466e8e408ee4fd3d31f26a8974d551ac637af384cbf91b076eef80812644caa44e55d54099b0a252fca7f7a3c9833f4
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-persisted-operations@npm:3.21.1":
-  version: 3.21.1
-  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.21.1"
+"@graphql-yoga/plugin-persisted-operations@npm:3.21.2":
+  version: 3.21.2
+  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.21.2"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.21.1
-  checksum: 10c0/b8c7388c5056670a902c2c47e608666b8ede024e64c775fcc89f7ec98b2ae9b0f39f319bb7d3f8664fdb8dc6273949431891a3f1826c15052be902bdb0bce449
+    graphql-yoga: ^5.21.2
+  checksum: 10c0/03d80f16e30001b0997c67e5a8cc7538336ebff4d97c8694d51d437043b993554cb012823d74d218313d92d5619a13dd30e75308818d13f1283d93142af5517c
   languageName: node
   linkType: hard
 
@@ -10388,10 +10388,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/aws-lambda@npm:8.10.161":
-  version: 8.10.161
-  resolution: "@types/aws-lambda@npm:8.10.161"
-  checksum: 10c0/5a779901bb29a1989fe0ef30e4a515522af8fc66c237e0eedc954ab650651920540196b4629df25068c130a05a2a6142f661db7e26c7fbacc17ce11338367eb1
+"@types/aws-lambda@npm:8.10.162":
+  version: 8.10.162
+  resolution: "@types/aws-lambda@npm:8.10.162"
+  checksum: 10c0/0b93ebe339bf79d40e0811fb6ba658b425a5f9a45c2b07a2240e4260036ac949e6e5a5776db6269bc71218f127b046d7793f950f61ed7e94262b4fecf643eb7c
   languageName: node
   linkType: hard
 
@@ -14371,7 +14371,7 @@ __metadata:
     gradient-string: "npm:3.0.0"
     klaw-sync: "npm:7.0.0"
     semver: "npm:7.7.4"
-    systeminformation: "npm:5.31.5"
+    systeminformation: "npm:5.31.7"
     termi-link: "npm:1.1.0"
     tsx: "npm:4.21.0"
     untildify: "npm:4.0.0"
@@ -27242,12 +27242,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"systeminformation@npm:5.31.5":
-  version: 5.31.5
-  resolution: "systeminformation@npm:5.31.5"
+"systeminformation@npm:5.31.7":
+  version: 5.31.7
+  resolution: "systeminformation@npm:5.31.7"
   bin:
     systeminformation: lib/cli.js
-  checksum: 10c0/d536dfb01529fd99e6c7c0f4239e309b0f5102b4816d9b14287b81033dd86b882fe238fee5a212d09ff8f368cc5eee618cc96bd196ce705af22f5acae9a5e773
+  checksum: 10c0/0da74c1a74c3db401112abc7b5703aa2f42877558d8db9ce0a08eff7eb2b1a2c9415637adab42a17a25e4bb2075eb92fbba43283fb7ebdb701d9dd25d5c8a531
   conditions: (os=darwin | os=linux | os=win32 | os=freebsd | os=openbsd | os=netbsd | os=sunos | os=android)
   languageName: node
   linkType: hard
