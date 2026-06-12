@@ -1,3 +1,5 @@
+import type { Options } from 'yargs'
+
 import {
   createCommand,
   createDescription,
@@ -5,8 +7,6 @@ import {
   createHandler,
   getYargsDefaults,
 } from '../yargsCommandHelpers.js'
-
-import type { Options } from 'yargs'
 
 const optionsObj = (): Record<string, Options> => ({
   skipLink: {
