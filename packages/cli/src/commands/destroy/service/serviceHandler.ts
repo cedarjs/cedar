@@ -12,8 +12,8 @@ import { createHandler } from '../handlerHelpers.js'
 // Better solution would be to split file paths resolving and template
 // rendering into separate functions. See more in this PR discussion:
 // https://github.com/redwoodjs/redwood/pull/487#issue-411204396
-const filesWithTemplateVars = (templateVars) => {
-  return (args) => files({ ...args, ...templateVars })
+const filesWithTemplateVars = (templateVars: Record<string, unknown>) => {
+  return (args: Record<string, unknown>) => files({ ...args, ...templateVars })
 }
 
 export const { handler, tasks } = createHandler({

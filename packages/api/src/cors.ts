@@ -63,7 +63,7 @@ export function createCorsContext(cors: CorsConfig | undefined) {
       return request.method === 'OPTIONS'
     },
     getRequestHeaders(request: PartialRequest): CorsHeaders {
-      const eventHeaders = new Headers(request.headers as HeadersInit)
+      const eventHeaders = new Headers(request.headers)
       const requestCorsHeaders = new Headers(corsHeaders)
 
       if (cors?.origin) {

@@ -5,6 +5,5 @@ interface ServerErrorsContextProps {
   [key: string]: string
 }
 
-export const ServerErrorsContext = React.createContext(
-  {} as ServerErrorsContextProps,
-)
+export const ServerErrorsContext =
+  React.createContext<ServerErrorsContextProps>({})

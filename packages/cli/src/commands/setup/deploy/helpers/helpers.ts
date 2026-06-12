@@ -1,5 +1,5 @@
-export function createHandler(componentName) {
-  return async function handler(argv) {
+export function createHandler(componentName: string) {
+  return async function handler(argv: Record<string, unknown>) {
     const { handler: importedHandler } = await import(
       `../providers/${componentName}Handler.js`
     )

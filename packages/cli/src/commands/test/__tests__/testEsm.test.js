@@ -8,6 +8,10 @@ vi.mock('execa', () => ({
   })),
 }))
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
+
 import execa from 'execa'
 import { vi, afterEach, test, expect } from 'vitest'
 

@@ -262,7 +262,7 @@ export const defaultLogLevels: LogLevel[] = ['info', 'warn', 'error']
  */
 export const emitLogLevels = (setLogLevels: LogLevel[]): LogDefinition[] => {
   return setLogLevels?.map((level) => {
-    return { emit: 'event', level } as LogDefinition
+    return { emit: 'event', level }
   })
 }
 
