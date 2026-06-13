@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import boxen from 'boxen'
+import execa from 'execa'
 import { Listr } from 'listr2'
 import * as toml from 'smol-toml'
 import { env as envInterpolation } from 'string-env-interpolation'
@@ -614,6 +615,52 @@ export const commands = (yargs, ssh) => {
   return servers
 }
 
+export const warnIfUnpushedCommits = async () => {
+  try {
+    const { stdout } = await execa('git', ['log', '@{u}..', '--oneline'], {
+      cwd: getPaths().base,
+    })
+    const unpushedCommits = stdout.trim()
+
+    if (!unpushedCommits) {
+      return
+    }
+
+    console.warn(
+      c.warning('\nWarning: You have local commits that have not been pushed:'),
+    )
+    console.warn(
+      unpushedCommits
+        .split('\n')
+        .map((line) => `  ${line}`)
+        .join('\n'),
+    )
+    console.warn(
+      c.warning(
+        'The server will pull from the remote, so these commits will not be deployed.\n',
+      ),
+    )
+
+    const { default: prompts } = await import('prompts')
+    const { confirmed } = await prompts({
+      type: 'confirm',
+      name: 'confirmed',
+      message: 'Deploy anyway?',
+      initial: false,
+    })
+
+    if (!confirmed) {
+      console.log('Aborting deploy. Push your commits and try again.')
+      process.exit(1)
+    }
+  } catch (e) {
+    console.error(
+      c.error('\nCould not check for unpushed commits before deploying.'),
+    )
+    throw e
+  }
+}
+
 export const handler = async (yargs) => {
   const { SshExecutor } = await import('./SshExecutor.js')
 
@@ -627,6 +674,10 @@ export const handler = async (yargs) => {
         'Please run `yarn cedar setup deploy baremetal` before deploying',
     )
     process.exit(1)
+  }
+
+  if (yargs.gitCheck) {
+    await warnIfUnpushedCommits()
   }
 
   const ssh = new SshExecutor(yargs.verbose)
