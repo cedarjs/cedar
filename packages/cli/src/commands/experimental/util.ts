@@ -7,7 +7,7 @@ import { terminalLink } from 'termi-link'
 import { getPaths } from '../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../lib/project.js'
 
-function link(topicId: string, isTerminal = false): string {
+function link(topicId: string, isTerminal = false) {
   const communityLink = `https://community.redwoodjs.com/t/${topicId}`
 
   if (isTerminal) {
