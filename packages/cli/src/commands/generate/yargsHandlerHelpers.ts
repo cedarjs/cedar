@@ -11,9 +11,9 @@ import path from 'node:path'
 
 import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
-import pascalcase from 'pascalcase'
 import type { ListrTask } from 'listr2'
-import type { Argv, PositionalOptions, Options } from 'yargs'
+import pascalcase from 'pascalcase'
+import type { Argv, Options, PositionalOptions } from 'yargs'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'

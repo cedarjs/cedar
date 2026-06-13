@@ -8,7 +8,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 export const DEFAULT_LENGTH = 32
 
 export const generateSecret = (length = DEFAULT_LENGTH): string => {
-  return crypto.randomBytes(length).toString('base64')
+  return crypto.randomBytes(Math.trunc(length)).toString('base64')
 }
 
 export const command = 'secret'
