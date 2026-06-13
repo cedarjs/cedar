@@ -92,6 +92,12 @@ export const builder = (yargs) => {
     type: 'boolean',
   })
 
+  yargs.option('git-check', {
+    describe: 'Check for unpushed commits before deploying',
+    default: true,
+    type: 'boolean',
+  })
+
   // TODO: Allow option to pass --sides and only deploy select sides instead of all, always
 
   yargs.epilogue(
@@ -103,7 +109,27 @@ export const builder = (yargs) => {
 }
 
 export async function handler(yargs) {
+<<<<<<< HEAD
   const { handler: importedHandler } =
+=======
+  recordTelemetryAttributes({
+    command: 'deploy baremetal',
+    firstRun: yargs.firstRun,
+    df: yargs.df,
+    update: yargs.update,
+    install: yargs.install,
+    migrate: yargs.migrate,
+    build: yargs.build,
+    restart: yargs.restart,
+    cleanup: yargs.cleanup,
+    maintenance: yargs.maintenance,
+    rollback: yargs.rollback,
+    verbose: yargs.verbose,
+    gitCheck: yargs.gitCheck,
+  })
+
+  const { handler: baremetalHandler } =
+>>>>>>> 727aa28c93 (feat(baremetal)!: warn on unpushed commits before deploying (#1904))
     await import('./baremetal/baremetalHandler.js')
 
   return importedHandler(yargs)
