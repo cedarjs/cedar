@@ -31,7 +31,7 @@ import {
 } from './yargsCommandHelpers.js'
 
 interface CustomOrDefaultTemplatePathArgs {
-  side: string
+  side: 'web' | 'api'
   generator: string
   templatePath: string
 }
@@ -88,7 +88,7 @@ export const customOrDefaultTemplatePath = ({
 
 interface TemplateForFileArgs {
   name: string
-  side: string
+  side: 'web' | 'api'
   sidePathSection?: string
   generator: string
   outputPath: string
@@ -108,9 +108,10 @@ export const templateForFile = async ({
   templatePath,
   templateVars,
 }: TemplateForFileArgs): Promise<[string, string]> => {
+  const sideBase = getPaths()[side]
   const basePath = sidePathSection
-    ? getPaths()[side as 'web' | 'api'][sidePathSection as string]
-    : getPaths()[side as 'web' | 'api']
+    ? (sideBase as Record<string, string>)[sidePathSection]
+    : sideBase
   const fullOutputPath = path.join(basePath as string, outputPath)
   const fullTemplatePath = customOrDefaultTemplatePath({
     generator,
@@ -248,10 +249,14 @@ export function createHandler({
       }
       await tasks.run()
     } catch (e) {
-      const err = e as Error & { exitCode?: number }
-      errorTelemetry(process.argv, err.message)
-      console.error(c.error(err.message))
-      process.exit(err?.exitCode || 1)
+      const message = e instanceof Error ? e.message : String(e)
+      const exitCode =
+        e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+          ? e.exitCode
+          : 1
+      errorTelemetry(process.argv, message)
+      console.error(c.error(message))
+      process.exit(exitCode)
     }
   }
 }
