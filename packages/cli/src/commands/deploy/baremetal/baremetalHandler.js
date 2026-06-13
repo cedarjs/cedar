@@ -616,41 +616,48 @@ export const commands = (yargs, ssh) => {
 }
 
 export const warnIfUnpushedCommits = async () => {
-  const { stdout } = await execa('git', ['log', '@{u}..', '--oneline'], {
-    cwd: getPaths().base,
-  })
-  const unpushedCommits = stdout.trim()
+  try {
+    const { stdout } = await execa('git', ['log', '@{u}..', '--oneline'], {
+      cwd: getPaths().base,
+    })
+    const unpushedCommits = stdout.trim()
 
-  if (!unpushedCommits) {
-    return
-  }
+    if (!unpushedCommits) {
+      return
+    }
 
-  console.warn(
-    c.warning('\nWarning: You have local commits that have not been pushed:'),
-  )
-  console.warn(
-    unpushedCommits
-      .split('\n')
-      .map((line) => `  ${line}`)
-      .join('\n'),
-  )
-  console.warn(
-    c.warning(
-      'The server will pull from the remote, so these commits will not be deployed.\n',
-    ),
-  )
+    console.warn(
+      c.warning('\nWarning: You have local commits that have not been pushed:'),
+    )
+    console.warn(
+      unpushedCommits
+        .split('\n')
+        .map((line) => `  ${line}`)
+        .join('\n'),
+    )
+    console.warn(
+      c.warning(
+        'The server will pull from the remote, so these commits will not be deployed.\n',
+      ),
+    )
 
-  const { default: prompts } = await import('prompts')
-  const { confirmed } = await prompts({
-    type: 'confirm',
-    name: 'confirmed',
-    message: 'Deploy anyway?',
-    initial: false,
-  })
+    const { default: prompts } = await import('prompts')
+    const { confirmed } = await prompts({
+      type: 'confirm',
+      name: 'confirmed',
+      message: 'Deploy anyway?',
+      initial: false,
+    })
 
-  if (!confirmed) {
-    console.log('Aborting deploy. Push your commits and try again.')
-    process.exit(1)
+    if (!confirmed) {
+      console.log('Aborting deploy. Push your commits and try again.')
+      process.exit(1)
+    }
+  } catch (e) {
+    console.error(
+      c.error('\nCould not check for unpushed commits before deploying.'),
+    )
+    throw e
   }
 }
 
