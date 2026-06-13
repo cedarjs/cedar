@@ -93,9 +93,9 @@ export const builder = (yargs) => {
     type: 'boolean',
   })
 
-  yargs.option('skip-git-check', {
-    describe: 'Skip check for unpushed commits before deploying',
-    default: false,
+  yargs.option('git-check', {
+    describe: 'Check for unpushed commits before deploying',
+    default: true,
     type: 'boolean',
   })
 
@@ -123,7 +123,7 @@ export async function handler(yargs) {
     maintenance: yargs.maintenance,
     rollback: yargs.rollback,
     verbose: yargs.verbose,
-    skipGitCheck: yargs.skipGitCheck,
+    gitCheck: yargs.gitCheck,
   })
 
   const { handler: baremetalHandler } =
