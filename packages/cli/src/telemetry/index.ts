@@ -13,29 +13,11 @@ import { spawnBackgroundProcess } from '../lib/background.js'
 
 import { CustomFileExporter } from './exporter.js'
 
-/**
- * @type NodeTracerProvider
- */
-let traceProvider
+let traceProvider: NodeTracerProvider
+let traceProcessor: SimpleSpanProcessor
+let traceExporter: CustomFileExporter
 
-/**
- * @type SimpleSpanProcessor
- */
-let traceProcessor
-
-/**
- * @type CustomFileExporter
- */
-let traceExporter
-
-/**
- * @type boolean
- */
 let isStarted = false
-
-/**
- * @type boolean
- */
 let isShutdown = false
 
 export async function startTelemetry() {
@@ -75,7 +57,7 @@ export async function startTelemetry() {
     // behaviour of nodejs for various signals.
     const cleanArgv = hideBin(process.argv)
     if (!cleanArgv.includes('sb') && !cleanArgv.includes('storybook')) {
-      for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
+      for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP'] as const) {
         process.on(signal, () => {
           if (process.listenerCount(signal) === 1) {
             process.exit()

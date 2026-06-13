@@ -12,6 +12,8 @@ import path from 'node:path'
 import { camelCase } from 'change-case'
 import { Listr } from 'listr2'
 import pascalcase from 'pascalcase'
+import type { ListrTask } from 'listr2'
+import type { Argv, PositionalOptions, Options } from 'yargs'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
 import { ensurePosixPath, getConfig } from '@cedarjs/project-config'
@@ -28,6 +30,12 @@ import {
   createBuilder,
 } from './yargsCommandHelpers.js'
 
+interface CustomOrDefaultTemplatePathArgs {
+  side: string
+  generator: string
+  templatePath: string
+}
+
 /**
  * Returns the full path to a custom generator template, if found in the app.
  * Otherwise the default Cedar template.
@@ -36,7 +44,7 @@ export const customOrDefaultTemplatePath = ({
   side,
   generator,
   templatePath,
-}) => {
+}: CustomOrDefaultTemplatePathArgs): string => {
   // Default template for this generator, e.g.
   // ./page/templates/page.tsx.template
   const defaultPath = path.join(
@@ -57,21 +65,36 @@ export const customOrDefaultTemplatePath = ({
 
   // Old, deprecated, custom template path, e.g.
   // /path/to/app/web/generators/page/page.tsx.template
-  const deprecatedCustomPath = getPaths()[side].generators
-    ? path.join(getPaths()[side].generators, generator, templatePath)
+  const deprecatedCustomPath = getPaths()[side as 'web' | 'api'].generators
+    ? path.join(
+        getPaths()[side as 'web' | 'api'].generators as string,
+        generator,
+        templatePath,
+      )
     : undefined
 
   if (fs.existsSync(customPath)) {
     return customPath
   } else if (deprecatedCustomPath && fs.existsSync(deprecatedCustomPath)) {
     console.log(
-      `Having generator templates in ${getPaths()[side].generators} has been ` +
+      `Having generator templates in ${getPaths()[side as 'web' | 'api'].generators} has been ` +
         `deprecated. Please move them to ${getPaths().generatorTemplates}.`,
     )
     return deprecatedCustomPath
   } else {
     return defaultPath
   }
+}
+
+interface TemplateForFileArgs {
+  name: string
+  side: string
+  sidePathSection?: string
+  generator: string
+  outputPath: string
+  templatePath: string
+  templateVars?: Record<string, unknown>
+  [key: string]: unknown
 }
 
 // TODO: Create a function that calls templateForFile for all the files in a
@@ -84,11 +107,11 @@ export const templateForFile = async ({
   outputPath,
   templatePath,
   templateVars,
-}) => {
+}: TemplateForFileArgs): Promise<[string, string]> => {
   const basePath = sidePathSection
-    ? getPaths()[side][sidePathSection]
-    : getPaths()[side]
-  const fullOutputPath = path.join(basePath, outputPath)
+    ? getPaths()[side as 'web' | 'api'][sidePathSection as string]
+    : getPaths()[side as 'web' | 'api']
+  const fullOutputPath = path.join(basePath as string, outputPath)
   const fullTemplatePath = customOrDefaultTemplatePath({
     generator,
     templatePath,
@@ -106,6 +129,17 @@ export const templateForFile = async ({
   return [fullOutputPath, content]
 }
 
+interface TemplateForComponentFileArgs {
+  name: string
+  suffix?: string
+  extension?: string
+  webPathSection?: string
+  apiPathSection?: string
+  generator: string
+  templatePath: string
+  templateVars?: Record<string, unknown>
+}
+
 /**
  * Reduces boilerplate for generating an output path and content to write to
  * disk for a component.
@@ -119,7 +153,7 @@ export const templateForComponentFile = async ({
   generator,
   templatePath,
   templateVars,
-}) => {
+}: TemplateForComponentFileArgs): Promise<[string, string]> => {
   const side = webPathSection ? 'web' : 'api'
   const caseFn = side === 'web' ? pascalcase : camelCase
   const componentName = caseFn(name) + suffix
@@ -138,7 +172,7 @@ export const templateForComponentFile = async ({
   })
 }
 
-export const validateName = (name) => {
+export const validateName = (name: string): void => {
   if (name.match(/^\W/)) {
     throw new Error(
       'The <name> argument must start with a letter, number or underscore.',
@@ -146,13 +180,30 @@ export const validateName = (name) => {
   }
 }
 
+interface HandlerArgv {
+  name: string
+  tests?: boolean
+  stories?: boolean
+  verbose?: boolean
+  rollback?: boolean
+  force?: boolean
+  [key: string]: unknown
+}
+
+interface CreateHandlerConfig {
+  componentName: string
+  preTasksFn?: (argv: HandlerArgv) => HandlerArgv | Promise<HandlerArgv>
+  filesFn: (argv: HandlerArgv) => Promise<Record<string, string>>
+  includeAdditionalTasks?: (argv: HandlerArgv) => ListrTask[]
+}
+
 export function createHandler({
   componentName,
   preTasksFn = (argv) => argv,
   filesFn,
   includeAdditionalTasks = () => [],
-}) {
-  return async (argv) => {
+}: CreateHandlerConfig) {
+  return async (argv: HandlerArgv) => {
     recordTelemetryAttributes({
       command: `generate ${componentName}`,
       tests: argv.tests,
@@ -188,7 +239,7 @@ export function createHandler({
         {
           rendererOptions: { collapseSubtasks: false },
           exitOnError: true,
-          renderer: argv.verbose && 'verbose',
+          renderer: argv.verbose ? 'verbose' : undefined,
         },
       )
 
@@ -197,11 +248,23 @@ export function createHandler({
       }
       await tasks.run()
     } catch (e) {
-      errorTelemetry(process.argv, e.message)
-      console.error(c.error(e.message))
-      process.exit(e?.exitCode || 1)
+      const err = e as Error & { exitCode?: number }
+      errorTelemetry(process.argv, err.message)
+      console.error(c.error(err.message))
+      process.exit(err?.exitCode || 1)
     }
   }
+}
+
+interface CreateYargsForComponentGenerationConfig {
+  componentName: string
+  preTasksFn?: (options: HandlerArgv) => HandlerArgv | Promise<HandlerArgv>
+  /** filesFn is not used if generator implements its own `handler` */
+  filesFn?: (argv: HandlerArgv) => Promise<Record<string, string>>
+  optionsObj?: Record<string, Options> | (() => Record<string, Options>)
+  positionalsObj?: Record<string, PositionalOptions>
+  /** function that takes the options object and returns an array of listr tasks */
+  includeAdditionalTasks?: (argv: HandlerArgv) => ListrTask[]
 }
 
 // TODO: Remove this function. This is only temporarily to be able to split one
@@ -214,12 +277,12 @@ export const createYargsForComponentGeneration = ({
   componentName,
   preTasksFn = (options) => options,
   /** filesFn is not used if generator implements its own `handler` */
-  filesFn = () => ({}),
+  filesFn = async () => ({}),
   optionsObj,
   positionalsObj = {},
   /** function that takes the options object and returns an array of listr tasks */
   includeAdditionalTasks = () => [],
-}) => {
+}: CreateYargsForComponentGenerationConfig) => {
   return {
     command: createCommand(componentName, positionalsObj),
     description: createDescription(componentName),
