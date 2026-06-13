@@ -109,10 +109,21 @@ export const templateForFile = async ({
   templateVars,
 }: TemplateForFileArgs): Promise<[string, string]> => {
   const sideBase = getPaths()[side]
-  const basePath = sidePathSection
-    ? (sideBase as Record<string, string>)[sidePathSection]
-    : sideBase
-  const fullOutputPath = path.join(basePath as string, outputPath)
+  let basePath: string
+  if (sidePathSection) {
+    const value = Object.entries(sideBase).find(
+      ([k]) => k === sidePathSection,
+    )?.[1]
+    if (typeof value !== 'string') {
+      throw new Error(
+        `Unknown or non-string path section: "${sidePathSection}"`,
+      )
+    }
+    basePath = value
+  } else {
+    basePath = sideBase.src
+  }
+  const fullOutputPath = path.join(basePath, outputPath)
   const fullTemplatePath = customOrDefaultTemplatePath({
     generator,
     templatePath,
