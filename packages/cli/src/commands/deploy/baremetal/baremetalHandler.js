@@ -616,51 +616,41 @@ export const commands = (yargs, ssh) => {
 }
 
 export const warnIfUnpushedCommits = async () => {
-  try {
-    const { stdout } = await execa('git', ['log', '@{u}..', '--oneline'], {
-      cwd: getPaths().base,
-    })
-    const unpushedCommits = stdout.trim()
+  const { stdout } = await execa('git', ['log', '@{u}..', '--oneline'], {
+    cwd: getPaths().base,
+  })
+  const unpushedCommits = stdout.trim()
 
-    if (!unpushedCommits) {
-      return
-    }
+  if (!unpushedCommits) {
+    return
+  }
 
-    console.warn(
-      c.warning('\nWarning: You have local commits that have not been pushed:'),
-    )
-    console.warn(
-      unpushedCommits
-        .split('\n')
-        .map((line) => `  ${line}`)
-        .join('\n'),
-    )
-    console.warn(
-      c.warning(
-        'The server will pull from the remote, so these commits will not be deployed.\n',
-      ),
-    )
+  console.warn(
+    c.warning('\nWarning: You have local commits that have not been pushed:'),
+  )
+  console.warn(
+    unpushedCommits
+      .split('\n')
+      .map((line) => `  ${line}`)
+      .join('\n'),
+  )
+  console.warn(
+    c.warning(
+      'The server will pull from the remote, so these commits will not be deployed.\n',
+    ),
+  )
 
-    const { default: prompts } = await import('prompts')
-    const { confirmed } = await prompts({
-      type: 'confirm',
-      name: 'confirmed',
-      message: 'Deploy anyway?',
-      initial: false,
-    })
+  const { default: prompts } = await import('prompts')
+  const { confirmed } = await prompts({
+    type: 'confirm',
+    name: 'confirmed',
+    message: 'Deploy anyway?',
+    initial: false,
+  })
 
-    if (!confirmed) {
-      console.log('Aborting deploy. Push your commits and try again.')
-      process.exit(1)
-    }
-  } catch (e) {
-    // No upstream tracking branch set (exit code 128) — skip the check silently
-    if (e?.exitCode === 128) {
-      return
-    }
-    // Unexpected error — surface it rather than silently swallowing it
-    console.error(c.warning('Warning: Could not check for unpushed commits.'))
-    throw e
+  if (!confirmed) {
+    console.log('Aborting deploy. Push your commits and try again.')
+    process.exit(1)
   }
 }
 
