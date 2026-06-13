@@ -651,10 +651,16 @@ export const warnIfUnpushedCommits = async () => {
 
     if (!confirmed) {
       console.log('Aborting deploy. Push your commits and try again.')
-      process.exit(0)
+      process.exit(1)
     }
-  } catch {
-    // No upstream tracking branch set, or git is unavailable — skip the check
+  } catch (e) {
+    // No upstream tracking branch set (exit code 128) — skip the check silently
+    if (e?.exitCode === 128) {
+      return
+    }
+    // Unexpected error — surface it rather than silently swallowing it
+    console.error(c.warning('Warning: Could not check for unpushed commits.'))
+    throw e
   }
 }
 
@@ -673,7 +679,7 @@ export const handler = async (yargs) => {
     process.exit(1)
   }
 
-  if (!yargs.skipGitCheck) {
+  if (yargs.gitCheck) {
     await warnIfUnpushedCommits()
   }
 
