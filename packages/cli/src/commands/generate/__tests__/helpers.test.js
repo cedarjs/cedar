@@ -66,7 +66,6 @@ test('customOrDefaultTemplatePath returns the app path with proper side, generat
   )
 })
 
-
 test('templateForComponentFile creates a proper output path for files', async () => {
   const names = ['FooBar', 'fooBar', 'foo-bar', 'foo_bar']
 
