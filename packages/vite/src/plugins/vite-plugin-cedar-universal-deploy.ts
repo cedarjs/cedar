@@ -299,15 +299,12 @@ export function cedarUniversalDeployPlugin(
  * duplicating large deps (graphql-server, yoga, etc.) that are already present
  * in the Lambda's node_modules.
  */
-interface BundleDistFileOptions {
-  /** If provided, bundle only these named exports via a synthetic entry point. */
-  onlyExports?: string[]
+interface Opts {
+  /** Exclusive list of named exports to bundle */
+  include?: string[]
 }
 
-async function bundleDistFile(
-  distPath: string,
-  options: BundleDistFileOptions = {},
-): Promise<string> {
+async function bundleDistFile(distPath: string, options: Opts = {}) {
   const { build } = await import('esbuild')
 
   const buildOptions: BuildOptions = {
@@ -343,13 +340,15 @@ async function bundleDistFile(
     logLevel: 'silent',
   }
 
-  if (options.onlyExports && options.onlyExports.length > 0) {
+  if (options.include && options.include.length > 0) {
     // Bundle only the requested named exports. This lets esbuild tree-shake
-    // everything else, including dead top-level calls like createGraphQLHandler.
+    // everything else, including dead top-level calls like createGraphQLHandler
     const resolveDir = path.dirname(distPath)
     const relativeDistPath = './' + path.basename(distPath)
-    const exportList = options.onlyExports.join(', ')
+    const exportList = options.include.join(', ')
     buildOptions.stdin = {
+      // Use stdin to define a synthetic entry point that exports only the
+      // requested named exports
       contents: `export { ${exportList} } from ${JSON.stringify(relativeDistPath)}`,
       resolveDir,
       loader: 'js',
@@ -411,7 +410,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   // initialization (plus the Prisma client import) on module load. By only
   // requesting __rw_graphqlOptions, esbuild tree-shakes the rest away.
   const bundledCode = await bundleDistFile(distPath, {
-    onlyExports: ['__rw_graphqlOptions'],
+    include: ['__rw_graphqlOptions'],
   })
 
   return `
