@@ -1,6 +1,7 @@
 import path from 'node:path'
 
 import { addEntry, type EntryMeta } from '@universal-deploy/store'
+import type { BuildOptions } from 'esbuild'
 import type { Plugin } from 'vite'
 
 import type { CedarRouteRecord } from '@cedarjs/api/runtime'
@@ -298,11 +299,15 @@ export function cedarUniversalDeployPlugin(
  * duplicating large deps (graphql-server, yoga, etc.) that are already present
  * in the Lambda's node_modules.
  */
-async function bundleDistFile(distPath: string): Promise<string> {
+interface Opts {
+  /** Exclusive list of named exports to bundle */
+  include?: string[]
+}
+
+async function bundleDistFile(distPath: string, options: Opts = {}) {
   const { build } = await import('esbuild')
 
-  const result = await build({
-    entryPoints: [distPath],
+  const buildOptions: BuildOptions = {
     bundle: true,
     write: false,
     format: 'esm',
@@ -333,7 +338,30 @@ async function bundleDistFile(distPath: string): Promise<string> {
       },
     ],
     logLevel: 'silent',
-  })
+  }
+
+  if (options.include && options.include.length > 0) {
+    // Bundle only the requested named exports. This lets esbuild tree-shake
+    // everything else, including dead top-level calls like createGraphQLHandler
+    const resolveDir = path.dirname(distPath)
+    const relativeDistPath = './' + path.basename(distPath)
+    const exportList = options.include.join(', ')
+    buildOptions.stdin = {
+      // Use stdin to define a synthetic entry point that exports only the
+      // requested named exports
+      contents: `export { ${exportList} } from ${JSON.stringify(relativeDistPath)}`,
+      resolveDir,
+      loader: 'js',
+    }
+  } else {
+    buildOptions.entryPoints = [distPath]
+  }
+
+  const result = await build(buildOptions)
+
+  if (!result.outputFiles || result.outputFiles.length === 0) {
+    throw new Error('esbuild bundle produced no output files')
+  }
 
   // Process the trailing `export { name1, name2, X as default };` block that
   // esbuild appends for ESM format. We embed the output as an inline fragment,
@@ -375,26 +403,22 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   // The __cedar_graphqlOptions export from the bundled code is used directly
   // by createGraphQLYoga, so we can initialise yoga synchronously from the
   // inline bundle rather than going through a separate file import.
-  const bundledCode = await bundleDistFile(distPath)
-
-  // Strip the dead `createGraphQLHandler` call that esbuild preserved from
-  // the original graphql.ts. The UD wrapper uses `createGraphQLYoga`
-  // directly, so this legacy handler init is unnecessary and introduces
-  // wasteful eager Yoga initialization (plus the Prisma client import) on
-  // module load.
-  // Note: the dead call appears in the middle of the bundled code, followed by
-  // the Lambda-shaped handler wrapper from api/dist/functions/graphql.ts.
-  const cleanedCode = bundledCode.replace(
-    /\n\s*(?:var|const)\s+\w+\s*=\s*createGraphQLHandler\s*\(.*\)\s*;?/,
-    '\n',
-  )
+  //
+  // Bundle only the graphql options export. The UD wrapper uses
+  // createGraphQLYoga directly, so the legacy createGraphQLHandler call and
+  // its handler export are unnecessary and would trigger wasteful eager Yoga
+  // initialization (plus the Prisma client import) on module load. By only
+  // requesting __cedar_graphqlOptions, esbuild tree-shakes the rest away.
+  const bundledCode = await bundleDistFile(distPath, {
+    include: ['__cedar_graphqlOptions'],
+  })
 
   return `
     import { buildCedarContext, requestToLegacyEvent } from '@cedarjs/api/runtime';
     import { createGraphQLYoga } from '@cedarjs/graphql-server';
 
     // Inlined bundle of ${path.basename(distPath)} (node_modules kept external)
-    ${cleanedCode}
+    ${bundledCode}
 
     let yogaInitPromise = null;
 
