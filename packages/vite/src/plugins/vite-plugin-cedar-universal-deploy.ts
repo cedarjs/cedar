@@ -305,6 +305,10 @@ interface Opts {
 }
 
 async function bundleDistFile(distPath: string, options: Opts = {}) {
+  // esbuild is lazily imported because it is only needed during server function
+  // bundling. Keeping it dynamic avoids loading esbuild's native binaries in
+  // Vite contexts where this plugin is loaded but bundleDistFile is unused
+  // (e.g. web dev server, client builds).
   const { build } = await import('esbuild')
 
   const buildOptions: BuildOptions = {
