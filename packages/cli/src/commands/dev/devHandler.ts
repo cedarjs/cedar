@@ -6,6 +6,7 @@ import concurrently from 'concurrently'
 import type { Command } from 'concurrently'
 
 import { recordTelemetryAttributes, colors as c } from '@cedarjs/cli-helpers'
+import { formatRunBinCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { shutdownPort } from '@cedarjs/internal/dist/dev'
 import { generateGqlormArtifacts } from '@cedarjs/internal/dist/generate/gqlormSchema'
 import { getConfig, getConfigPath } from '@cedarjs/project-config'
@@ -252,7 +253,7 @@ export const handler = async ({
     }
 
     return [
-      `yarn cross-env NODE_ENV=development cedar-unified-dev`,
+      `${formatRunBinCommand('cross-env', ['NODE_ENV=development', 'cedar-unified-dev'])}`,
       `  --port ${webAvailablePort}`,
       `  --apiPort ${apiAvailablePort}`,
       getApiDebugFlag(apiDebugPort, apiAvailablePort),
@@ -317,17 +318,11 @@ export const handler = async ({
 
       jobs.push({
         name: 'api',
-        command: [
-          'yarn nodemon',
-          '  --quiet',
-          `  --watch "${cedarConfigPath}"`,
-          `  --exec "yarn ${serverWatchCommand}`,
-          `    --port ${apiAvailablePort}`,
-          `    ${getApiDebugFlag(apiDebugPort, apiAvailablePort)}`,
-          `    | cedar-log-formatter"`,
-        ]
-          .join(' ')
-          .replace(/\s+/g, ' '),
+        command: formatRunBinCommand('nodemon', [
+          '--quiet',
+          `--watch "${cedarConfigPath}"`,
+          `--exec "${formatRunBinCommand(serverWatchCommand)} --port ${apiAvailablePort} ${getApiDebugFlag(apiDebugPort, apiAvailablePort)} | cedar-log-formatter"`,
+        ]),
         env: {
           NODE_ENV: 'development',
           NODE_OPTIONS: getDevNodeOptions(),
@@ -338,10 +333,10 @@ export const handler = async ({
     }
 
     if (workspace.includes('web')) {
-      let webCommand = `yarn cross-env NODE_ENV=development cedar-vite-dev ${forward}`
+      let webCommand = `${formatRunBinCommand('cross-env', ['NODE_ENV=development', 'cedar-vite-dev'])} ${forward}`
 
       if (streamingSsrEnabled) {
-        webCommand = `yarn cross-env NODE_ENV=development cedar-dev-fe ${forward}`
+        webCommand = `${formatRunBinCommand('cross-env', ['NODE_ENV=development', 'cedar-dev-fe'])} ${forward}`
       }
 
       jobs.push({
@@ -357,7 +352,7 @@ export const handler = async ({
   if (generate) {
     jobs.push({
       name: 'gen',
-      command: 'yarn cedar-gen-watch',
+      command: formatRunBinCommand('cedar-gen-watch'),
       prefixColor: 'green',
     })
   }

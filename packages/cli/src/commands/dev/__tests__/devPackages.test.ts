@@ -42,6 +42,10 @@ vi.mock('@cedarjs/internal/dist/dev', () => {
   }
 })
 
+vi.mock('@cedarjs/project-config/packageManager', () => ({
+  getPackageManager: vi.fn(() => 'yarn'),
+}))
+
 vi.mock('@cedarjs/project-config', async (importActual) => {
   const actualProjectConfig = await importActual<typeof ProjectConfig>()
 
