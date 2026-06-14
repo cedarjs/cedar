@@ -400,7 +400,7 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
   //   - No dynamic import() strings that nft can't trace
   //   - No build-time Rollup resolution of files that don't exist yet
   //
-  // The __rw_graphqlOptions export from the bundled code is used directly
+  // The __cedar_graphqlOptions export from the bundled code is used directly
   // by createGraphQLYoga, so we can initialise yoga synchronously from the
   // inline bundle rather than going through a separate file import.
   //
@@ -424,8 +424,8 @@ async function generateGraphQLModule(distPath: string): Promise<string> {
 
     function getYoga() {
       if (!yogaInitPromise) {
-        yogaInitPromise = createGraphQLYoga(__rw_graphqlOptions).then(
-          ({ yoga }) => ({ yoga, graphqlOptions: __rw_graphqlOptions })
+        yogaInitPromise = createGraphQLYoga(__cedar_graphqlOptions).then(
+          ({ yoga }) => ({ yoga, graphqlOptions: __cedar_graphqlOptions })
         );
       }
       return yogaInitPromise;

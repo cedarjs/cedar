@@ -17,5 +17,5 @@ const config = () => ({
     db.$disconnect()
   },
 })
-export const __rw_graphqlOptions = config()
-export const handler = createGraphQLHandler(__rw_graphqlOptions)
+export const __cedar_graphqlOptions = config()
+export const handler = createGraphQLHandler(__cedar_graphqlOptions)

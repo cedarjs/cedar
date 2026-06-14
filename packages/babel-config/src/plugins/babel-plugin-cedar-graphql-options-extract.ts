@@ -3,7 +3,7 @@ import type { NodePath, PluginObj, PluginPass, types } from '@babel/core'
 // This extracts the options passed to the graphql function and stores them in
 // an exported variable so they can be imported elsewhere.
 
-const exportVariableName = '__rw_graphqlOptions'
+const exportVariableName = '__cedar_graphqlOptions'
 
 function optionsConstNode(
   t: typeof types,
@@ -34,7 +34,7 @@ function optionsConstNode(
 
 export default function ({ types: t }: { types: typeof types }): PluginObj {
   return {
-    name: 'babel-plugin-redwood-graphql-options-extract',
+    name: 'babel-plugin-cedar-graphql-options-extract',
     visitor: {
       Program(path, state) {
         // Find all imports of the 'createGraphQLHandler' function from '@cedarjs/graphql-server'
