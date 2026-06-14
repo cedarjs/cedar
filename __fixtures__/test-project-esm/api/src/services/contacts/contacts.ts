@@ -1,4 +1,3 @@
-import { ServiceValidationError } from '@cedarjs/api'
 import { validateEmail } from '@my-org/validators'
 import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
