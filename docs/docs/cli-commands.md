@@ -1846,9 +1846,9 @@ If you wanted to customize the page generator template, run the command:
 yarn rw setup generator page
 ```
 
-And then check `web/generators/page` for the page, storybook and test template files. You don't need to keep all of these templates—you could customize just `page.tsx.template` and delete the others and they would still be generated, but using the default Cedar templates.
+And then check `generatorTemplates/web/page` for the page, storybook and test template files. You don't need to keep all of these templates—you could customize just `page.tsx.template` and delete the others and they would still be generated, but using the default Cedar templates.
 
-The only exception to this rule is the scaffold templates. You'll get four directories, `assets`, `components`, `layouts` and `pages`. If you want to customize any one of the templates in those directories, you will need to keep all the other files inside of that same directory, even if you make no changes besides the one you care about. (This is due to the way the scaffold looks up its template files.) For example, if you wanted to customize only the index page of the scaffold (the one that lists all available records in the database) you would edit `web/generators/scaffold/pages/NamesPage.tsx.template` and keep the other pages in that directory. You _could_ delete the other three directories (`assets`, `components`, `layouts`) if you don't need to customize them.
+The only exception to this rule is the scaffold templates. You'll get four directories, `assets`, `components`, `layouts` and `pages`. If you want to customize any one of the templates in those directories, you will need to keep all the other files inside of that same directory, even if you make no changes besides the one you care about. (This is due to the way the scaffold looks up its template files.) For example, if you wanted to customize only the index page of the scaffold (the one that lists all available records in the database) you would edit `generatorTemplates/web/scaffold/pages/NamesPage.tsx.template` and keep the other pages in that directory. You _could_ delete the other three directories (`assets`, `components`, `layouts`) if you don't need to customize them.
 
 **Name Variants**
 
@@ -1878,7 +1878,7 @@ Copying the cell generator templates:
 yarn run v1.22.4
 $ /redwood-app/node_modules/.bin/rw setup generator cell
 ✔ Copying generator templates...
-✔ Wrote templates to /web/generators/cell
+✔ Wrote templates to /generatorTemplates/web/cell
 ✨ Done in 2.33s.
 ```
 

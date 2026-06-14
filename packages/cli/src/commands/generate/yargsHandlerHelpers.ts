@@ -64,20 +64,8 @@ export const customOrDefaultTemplatePath = ({
     templatePath,
   )
 
-  // Old, deprecated, custom template path, e.g.
-  // /path/to/app/web/generators/page/page.tsx.template
-  const deprecatedCustomPath = getPaths()[side].generators
-    ? path.join(getPaths()[side].generators as string, generator, templatePath)
-    : undefined
-
   if (fs.existsSync(customPath)) {
     return customPath
-  } else if (deprecatedCustomPath && fs.existsSync(deprecatedCustomPath)) {
-    console.log(
-      `Having generator templates in ${getPaths()[side as 'web' | 'api'].generators} has been ` +
-        `deprecated. Please move them to ${getPaths().generatorTemplates}.`,
-    )
-    return deprecatedCustomPath
   } else {
     return defaultPath
   }
@@ -85,7 +73,7 @@ export const customOrDefaultTemplatePath = ({
 
 interface TemplateForFileArgs {
   name: string
-  side: 'web' | 'api'
+  side: 'web' | 'api' | 'scripts'
   sidePathSection?: string
   generator: string
   outputPath: string

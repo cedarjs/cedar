@@ -1,3 +1,13 @@
+## Custom generator templates path removed
+
+The deprecated `api/generators/` and `web/generators/` directories for custom
+generator templates are no longer supported. This was deprecated in v2.3.0.
+
+Move any custom templates to the root `generatorTemplates/` directory instead:
+
+- `api/generators/<generator>/<template>` → `generatorTemplates/api/<generator>/<template>`
+- `web/generators/<generator>/<template>` → `generatorTemplates/web/<generator>/<template>`
+
 ## RWJS_DELAY_RESTART removed
 
 The `RWJS_DELAY_RESTART` environment variable has been removed. It was renamed
