@@ -1,12 +1,14 @@
+import type { Argv } from 'yargs'
+
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
+// @ts-expect-error - no types for JS files
 import { deployBuilder } from './helpers/deployBuilder.js'
 
 export const command = 'netlify [...commands]'
 export const description = 'Build command for Netlify deploy'
 
-export const builder = (yargs: { option: Function; epilogue: Function }) =>
-  deployBuilder(yargs)
+export const builder = (yargs: Argv) => deployBuilder(yargs)
 
 export async function handler(yargs: {
   build: boolean
@@ -20,6 +22,7 @@ export async function handler(yargs: {
     dataMigrate: yargs.dataMigrate,
   })
 
+  // @ts-expect-error - no types for JS files
   const { deployHandler } = await import('./helpers/deployHandler.js')
 
   return deployHandler(yargs)
