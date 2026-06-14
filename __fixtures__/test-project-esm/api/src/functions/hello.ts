@@ -7,11 +7,16 @@ export async function handleRequest(request: Request) {
   if (email) {
     const valid = validateEmail(email)
     return new Response(
-      JSON.stringify({ data: 'hello from cedar', url: request.url, email, valid }),
+      JSON.stringify({
+        data: 'hello from cedar',
+        url: request.url,
+        email,
+        valid,
+      }),
       {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-      },
+      }
     )
   }
 
