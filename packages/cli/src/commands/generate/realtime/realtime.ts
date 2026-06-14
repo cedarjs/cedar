@@ -5,7 +5,10 @@ export const command = 'realtime <name>'
 export const description =
   'Generate a subscription or live query used with RedwoodJS Realtime'
 
-export function builder(yargs) {
+export function builder(yargs: {
+  positional: Function
+  option: Function
+}): void {
   yargs
     .positional('name', {
       type: 'string',
@@ -33,7 +36,12 @@ export function builder(yargs) {
     })
 }
 
-export async function handler(options) {
+export async function handler(options: {
+  name: string
+  type?: 'liveQuery' | 'subscription'
+  force: boolean
+  verbose: boolean
+}): Promise<void> {
   recordTelemetryAttributes({
     command: 'generate realtime',
     type: options.type,

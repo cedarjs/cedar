@@ -5,9 +5,14 @@ import { deployBuilder } from './helpers/deployBuilder.js'
 export const command = 'netlify [...commands]'
 export const description = 'Build command for Netlify deploy'
 
-export const builder = (yargs) => deployBuilder(yargs)
+export const builder = (yargs: { option: Function; epilogue: Function }) =>
+  deployBuilder(yargs)
 
-export async function handler(yargs) {
+export async function handler(yargs: {
+  build: boolean
+  prisma: boolean
+  dataMigrate: boolean
+}): Promise<void> {
   recordTelemetryAttributes({
     command: 'deploy netlify',
     build: yargs.build,

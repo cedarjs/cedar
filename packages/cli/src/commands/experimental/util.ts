@@ -7,7 +7,7 @@ import { terminalLink } from 'termi-link'
 import { getPaths } from '../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../lib/project.js'
 
-function link(topicId, isTerminal = false) {
+function link(topicId: string, isTerminal = false): string {
   const communityLink = `https://community.redwoodjs.com/t/${topicId}`
 
   if (isTerminal) {
@@ -17,7 +17,12 @@ function link(topicId, isTerminal = false) {
   }
 }
 
-export function getEpilogue(command, description, topicId, isTerminal = false) {
+export function getEpilogue(
+  command: string,
+  description: string,
+  topicId: string | undefined,
+  isTerminal = false,
+): string {
   let epilogue =
     `This is an experimental feature to: ${description}.\n\n` +
     `If you need help with ${command}, please join our Discord community.\n` +
@@ -32,7 +37,11 @@ export function getEpilogue(command, description, topicId, isTerminal = false) {
   return epilogue
 }
 
-export function printTaskEpilogue(command, description, topicId) {
+export function printTaskEpilogue(
+  command: string,
+  description: string,
+  topicId: string | undefined,
+): void {
   const orangeLine = ansis.hex('#ff845e')('-'.repeat(64))
 
   console.log(
@@ -46,7 +55,7 @@ export function printTaskEpilogue(command, description, topicId) {
   console.log(`${orangeLine}\n`)
 }
 
-export const isServerFileSetup = () => {
+export const isServerFileSetup = (): boolean => {
   if (!serverFileExists()) {
     throw new Error(
       'CedarJS Realtime requires a serverful environment. Please run `yarn ' +
@@ -57,7 +66,7 @@ export const isServerFileSetup = () => {
   return true
 }
 
-export const realtimeExists = () => {
+export const realtimeExists = (): boolean => {
   const realtimePath = path.join(
     getPaths().api.lib,
     `realtime.${isTypeScriptProject() ? 'ts' : 'js'}`,
@@ -65,7 +74,7 @@ export const realtimeExists = () => {
   return fs.existsSync(realtimePath)
 }
 
-export const isRealtimeSetup = () => {
+export const isRealtimeSetup = (): boolean => {
   if (!realtimeExists()) {
     throw new Error(
       'Adding realtime events requires that CedarJS Realtime is setup. ' +

@@ -4,7 +4,11 @@ import { createHandler, getYargsDefaults } from '../yargsCommandHelpers.js'
 
 export const command = 'script <name>'
 export const description = 'Generate a command line script'
-export const builder = (yargs) => {
+export const builder = (yargs: {
+  positional: Function
+  option: Function
+  epilogue: Function
+}) => {
   yargs
     .positional('name', {
       description: 'A descriptor of what this script does',

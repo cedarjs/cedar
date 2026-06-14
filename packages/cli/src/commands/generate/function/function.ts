@@ -9,7 +9,11 @@ export const description = 'Generate a Function'
 // however, functions shouldn't have a `stories` option. createYargs...
 // should be reversed to provide `getYargsDefaults` as the default configuration
 // and accept a configuration such as its CURRENT default to append onto a command.
-export const builder = (yargs) => {
+export const builder = (yargs: {
+  positional: Function
+  option: Function
+  epilogue: Function
+}) => {
   yargs
     .positional('name', {
       description: 'Name of the Function',

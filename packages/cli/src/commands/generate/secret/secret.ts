@@ -6,7 +6,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 export const DEFAULT_LENGTH = 32
 
-export const generateSecret = (length = DEFAULT_LENGTH) => {
+export const generateSecret = (length = DEFAULT_LENGTH): string => {
   return crypto.randomBytes(length).toString('base64')
 }
 
@@ -14,7 +14,7 @@ export const command = 'secret'
 export const description =
   'Generates a secret key using a cryptographically-secure source of entropy'
 
-export const builder = (yargs) =>
+export const builder = (yargs: { option: Function; epilogue: Function }) =>
   yargs
     .option('length', {
       description: 'Length of the generated secret',
@@ -35,7 +35,7 @@ export const builder = (yargs) =>
       )}`,
     )
 
-export const handler = ({ length, raw }) => {
+export const handler = ({ length, raw }: { length: number; raw: boolean }) => {
   recordTelemetryAttributes({
     command: 'generate secret',
     length,
