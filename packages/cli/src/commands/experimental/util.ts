@@ -4,6 +4,7 @@ import path from 'node:path'
 import ansis from 'ansis'
 import { terminalLink } from 'termi-link'
 
+// @ts-expect-error - no types for JS files
 import { getPaths } from '../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../lib/project.js'
 
@@ -20,7 +21,7 @@ function link(topicId: string, isTerminal = false) {
 export function getEpilogue(
   command: string,
   description: string,
-  topicId: string,
+  topicId?: string,
   isTerminal = false,
 ): string {
   let epilogue =

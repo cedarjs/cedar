@@ -14,8 +14,11 @@ export function checkNodeVersion(): NodeVersionCheck {
   const pVersionC = semver.clean(pVersion)
   const LOWER_BOUND = 'v24.0.0'
 
+  // pVersionC is null if the version string is invalid
   if (!pVersionC) {
-    // If semver can't parse the version string, let it through
+    checks.ok = false
+    checks.message = `Invalid Node.js version: ${pVersion}`
+
     return checks
   }
 
