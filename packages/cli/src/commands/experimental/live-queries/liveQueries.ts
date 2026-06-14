@@ -2,7 +2,6 @@ import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
-// @ts-expect-error - No types for JS files
 import { getEpilogue } from '../util.js'
 
 export const command = 'setup-live-queries'

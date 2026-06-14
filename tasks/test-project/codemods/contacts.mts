@@ -29,9 +29,15 @@ export default (file: FileInfo, api: API) => {
   root.get().node.program.body.unshift(validateImport)
   root.get().node.program.body.unshift(serviceValidationErrorImport)
 
+  // Add `import { ServiceValidationError } from '@cedarjs/api'` after the
+  // types/graphql import
+  root
+    .find(j.ImportDeclaration, { source: { value: 'types/graphql' } })
+    .insertAfter(serviceValidationErrorImport)
+
   // Insert this if-statment at the top of the `createContact` service function
   // if (!validateEmail(input.email)) {
-  //   throw new Error('Invalid email')
+  //   throw new ServiceValidationError('Invalid email')
   // } else {
   //   console.log('Creating contact with email:', input.email)
   // }

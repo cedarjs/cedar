@@ -2,6 +2,8 @@ import { ServiceValidationError } from '@cedarjs/api'
 import { validateEmail } from '@my-org/validators'
 import type { QueryResolvers, MutationResolvers } from 'types/graphql'
 
+import { ServiceValidationError } from '@cedarjs/api'
+
 // Testing aliased imports with extensions
 import { db } from 'src/lib/db.js'
 
