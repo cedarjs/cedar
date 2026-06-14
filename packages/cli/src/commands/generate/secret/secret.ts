@@ -1,24 +1,25 @@
 import crypto from 'node:crypto'
 
 import { terminalLink } from 'termi-link'
+import type { Argv } from 'yargs'
 
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers'
 
 export const DEFAULT_LENGTH = 32
 
 export const generateSecret = (length = DEFAULT_LENGTH): string => {
-  return crypto.randomBytes(length).toString('base64')
+  return crypto.randomBytes(Math.trunc(length)).toString('base64')
 }
 
 export const command = 'secret'
 export const description =
   'Generates a secret key using a cryptographically-secure source of entropy'
 
-export const builder = (yargs: { option: Function; epilogue: Function }) =>
+export const builder = (yargs: Argv) =>
   yargs
     .option('length', {
       description: 'Length of the generated secret',
-      type: 'integer',
+      type: 'number',
       required: false,
       default: DEFAULT_LENGTH,
     })
